@@ -1817,6 +1817,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (wParam == 'C') { game_state = 6; config_step = 0; InvalidateRect(hwnd, NULL, TRUE); }
                 else if (wParam == 'X') { ImportReplay(); }
                 else if (wParam == 'S') { game_state = 7; InvalidateRect(hwnd, NULL, TRUE); }
+                else if (wParam == VK_ESCAPE) { PostMessage(hwnd, WM_CLOSE, 0, 0); }
                 else if (wParam == VK_RETURN) {
                     is_replay_mode = 0;
                     InitGame(); SetTimer(hwnd, TIMER_ID, current_speed, NULL);
@@ -1887,7 +1888,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (game_state == 6) { // Config
-                if (config_step == 0) bind_up = wParam;
+                if (wParam == VK_ESCAPE) { game_state = 0; }
+                else if (config_step == 0) bind_up = wParam;
                 else if (config_step == 1) bind_down = wParam;
                 else if (config_step == 2) bind_left = wParam;
                 else if (config_step == 3) bind_right = wParam;
@@ -1900,15 +1902,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (game_state == 7) { // Stats Export
                 if (wParam == 'C') ExportMatchStatsCSV();
                 else if (wParam == 'R') ExportReplay();
-                else if (wParam == VK_ESCAPE || wParam == VK_RETURN) game_state = 0;
+                else if (wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == 'S') game_state = 0;
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (game_state == 5) {
-                if (wParam == VK_RETURN || wParam == VK_ESCAPE) { game_state = 0; InvalidateRect(hwnd, NULL, TRUE); }
+                if (wParam == VK_RETURN || wParam == VK_ESCAPE || wParam == 'H' || wParam == VK_F1) { game_state = 0; InvalidateRect(hwnd, NULL, TRUE); }
             } else if (game_state == 3) {
-                if (wParam == bind_pause) { game_state = 1; SetTimer(hwnd, TIMER_ID, current_speed, NULL); }
-                else if (wParam == 'Q') { SaveGameState(); game_state = 0; InvalidateRect(hwnd, NULL, TRUE); }
+                if (wParam == bind_pause || wParam == 'P' || wParam == VK_ESCAPE) { game_state = 1; SetTimer(hwnd, TIMER_ID, current_speed, NULL); }
+                else if (wParam == 'Q' || wParam == 'S') { SaveGameState(); game_state = 0; InvalidateRect(hwnd, NULL, TRUE); }
             } else if (game_state == 2 || game_state == 4) {
-                if (wParam == VK_RETURN && !is_high_score_entry) { game_state = 0; InvalidateRect(hwnd, NULL, TRUE); }
+                if ((wParam == VK_RETURN || wParam == VK_ESCAPE) && !is_high_score_entry) { game_state = 0; InvalidateRect(hwnd, NULL, TRUE); }
             } else if (game_state == 1) { // Playing
                 if (!is_replay_mode) {
                     char a = 0;
@@ -1926,7 +1928,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         replay_event_count++;
                     }
                 }
-                if (wParam == bind_pause) { game_state = 3; KillTimer(hwnd, TIMER_ID); InvalidateRect(hwnd, NULL, TRUE); }
+                if (wParam == bind_pause || wParam == 'P' || wParam == VK_ESCAPE) { game_state = 3; KillTimer(hwnd, TIMER_ID); InvalidateRect(hwnd, NULL, TRUE); }
+                else if (wParam == VK_F1 || wParam == 'H') { game_state = 5; KillTimer(hwnd, TIMER_ID); InvalidateRect(hwnd, NULL, TRUE); }
             }
             break;
         }
@@ -1949,6 +1952,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBRUSH bg = CreateSolidBrush(RGB(15, 15, 26)); FillRect(hdc, &logicalRect, bg); DeleteObject(bg);
 
             HFONT hFont = CreateFontA(-20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            HFONT hFontSmall = CreateFontA(-14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
 
             SetBkMode(hdc, TRANSPARENT);
@@ -1958,19 +1962,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 char buf[64];
                 SetTextColor(hdc, RGB(0, 210, 211));
                 TextOutA(hdc, 160, 15, "KSNAKE ARCADE", 13);
+
+                SelectObject(hdc, hFontSmall);
                 SetTextColor(hdc, RGB(255, 255, 255));
-                wsprintfA(buf, "M - Mode: %s", mode_names[game_mode]); TextOutA(hdc, 110, 55, buf, lstrlenA(buf));
-                wsprintfA(buf, "1-3 - Difficulty: %s", difficulty==0?"Easy":difficulty==1?"Med":"Hard"); TextOutA(hdc, 110, 85, buf, lstrlenA(buf));
-                wsprintfA(buf, "W - Toggle Wrap: %s", (wrap_mode||game_mode==3)?"ON":"OFF"); TextOutA(hdc, 110, 115, buf, lstrlenA(buf));
-                TextOutA(hdc, 110, 145, "E - Custom Map Editor", 21);
-                TextOutA(hdc, 110, 175, "C - Config Keys", 15);
-                TextOutA(hdc, 110, 205, "S - Match Stats (Last)", 22);
-                TextOutA(hdc, 110, 235, "X - Play Replay (.ksr)", 22);
-                TextOutA(hdc, 110, 265, "Press H / F1 for Help & Scores", 30);
-                TextOutA(hdc, 110, 295, "R - Resume Saved Game", 21);
-                TextOutA(hdc, 110, 325, "Move: WASD/Arrows | Skills: G,F,M", 33);
+                wsprintfA(buf, "M - Mode: %s", mode_names[game_mode]); TextOutA(hdc, 110, 50, buf, lstrlenA(buf));
+                wsprintfA(buf, "1-3 - Difficulty: %s", difficulty==0?"Easy":difficulty==1?"Med":"Hard"); TextOutA(hdc, 110, 75, buf, lstrlenA(buf));
+                wsprintfA(buf, "W - Toggle Wrap: %s", (wrap_mode||game_mode==3)?"ON":"OFF"); TextOutA(hdc, 110, 100, buf, lstrlenA(buf));
+                TextOutA(hdc, 110, 125, "E - Custom Map Editor", 21);
+                TextOutA(hdc, 110, 150, "C - Config Keys", 15);
+                TextOutA(hdc, 110, 175, "S - Match Stats (Last)", 22);
+                TextOutA(hdc, 110, 200, "X - Play Replay (.ksr)", 22);
+                TextOutA(hdc, 110, 225, "R - Resume Saved Game", 21);
+                TextOutA(hdc, 110, 250, "Move: WASD/Arrows | Skills: G,F,M | Pause: P/ESC", 48);
+
+                SetTextColor(hdc, RGB(72, 219, 251));
+                TextOutA(hdc, 110, 280, "[F1 / H] Full Help & Scores", 27);
+
+                SelectObject(hdc, hFont);
                 SetTextColor(hdc, RGB(76, 209, 55));
-                TextOutA(hdc, 120, 395, "[ Press ENTER to Play ]", 23);
+                TextOutA(hdc, 120, 320, "[ Press ENTER to Play ]", 23);
+
+                SelectObject(hdc, hFontSmall);
+                SetTextColor(hdc, RGB(251, 197, 49));
+                wsprintfA(buf, "Top Record: %s - %d pts (%s)", leaderboard[0].name, leaderboard[0].score, leaderboard[0].mode);
+                TextOutA(hdc, 90, 370, buf, lstrlenA(buf));
+
+                SetTextColor(hdc, RGB(164, 176, 190));
+                TextOutA(hdc, 150, 410, "[ESC] Exit Game", 15);
             } else if (game_state == 8) { // MAP EDITOR
                 int gx, gy, i;
                 char buf[128];
@@ -2005,12 +2023,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DeleteObject(curPen);
                 }
                 // Editor Controls HUD
-                wsprintfA(buf, "Brush: %s | [1]Wall [2]Portal A [3]Portal B [4]Erase", 
+                SelectObject(hdc, hFontSmall);
+                wsprintfA(buf, "Tool: %s | [1]Wall [2]Portal A [3]Portal B [4]Erase", 
                     editor_brush==0?"Wall":(editor_brush==1?"Portal A":(editor_brush==2?"Portal B":"Erase")));
                 SetTextColor(hdc, RGB(72, 219, 251));
                 TextOutA(hdc, 10, 550, buf, lstrlenA(buf));
                 SetTextColor(hdc, RGB(255, 255, 255));
-                TextOutA(hdc, 10, 575, "[SPACE/Click]Place | [C]Clear [B]Border [R]Maze | [T/ENTER]Test | [ESC]Back", 74);
+                TextOutA(hdc, 10, 570, "[SPACE/Click] Draw  |  [C] Clear  |  [B] Border  |  [R] Maze", 60);
+                TextOutA(hdc, 10, 590, "[T/ENTER] Play  |  [S] Save  |  [ESC] Menu", 42);
             } else if (game_state == 9) { // BRANCH SELECTION OVERLAY
                 SetTextColor(hdc, RGB(251, 197, 49));
                 TextOutA(hdc, 120, 80, "CHOOSE CAMPAIGN ROUTE", 21);
@@ -2070,23 +2090,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int i;
                 SetTextColor(hdc, RGB(0, 210, 211));
                 TextOutA(hdc, 160, 30, "HIGH SCORES & HELP", 18);
+
+                SelectObject(hdc, hFontSmall);
                 SetTextColor(hdc, RGB(255, 255, 255));
-                TextOutA(hdc, 40, 75, "Controls: WASD/Arrows to Move, P to Pause", 41);
-                TextOutA(hdc, 40, 105, "Skills: G=Ghost, F=Freeze, M=Magnet", 35);
-                TextOutA(hdc, 40, 135, "Modes: Classic, Maze, Ramp, Campaign, VS, Custom, Gauntlet", 59);
+                TextOutA(hdc, 40, 75, "Controls: WASD/Arrows to Move, P/ESC to Pause", 45);
+                TextOutA(hdc, 40, 100, "Skills: G=Ghost, F=Freeze, M=Magnet", 35);
+                TextOutA(hdc, 40, 125, "Modes: Classic, Maze, Ramp, Campaign, VS, Custom, Gauntlet", 59);
+
                 SetTextColor(hdc, RGB(251, 197, 49));
                 for(i=0; i<5; i++) {
                     char lbuf[64];
                     wsprintfA(lbuf, "%d. %s - %d pts (%s)", i+1, leaderboard[i].name, leaderboard[i].score, leaderboard[i].mode);
-                    TextOutA(hdc, 100, 180 + i * 30, lbuf, lstrlenA(lbuf));
+                    TextOutA(hdc, 80, 160 + i * 28, lbuf, lstrlenA(lbuf));
                 }
+                SelectObject(hdc, hFont);
                 SetTextColor(hdc, RGB(0, 210, 211));
-                TextOutA(hdc, 140, 380, "Press ENTER to Return", 21);
+                TextOutA(hdc, 100, 330, "[ ENTER / ESC / F1 to Return ]", 30);
             } else if (game_state == 3) {
                 SetTextColor(hdc, RGB(251, 197, 49));
                 TextOutA(hdc, 210, 200, "PAUSED", 6);
+                SelectObject(hdc, hFontSmall);
                 SetTextColor(hdc, RGB(255, 255, 255));
-                TextOutA(hdc, 120, 250, "PAUSE: Resume  |  Q: Save & Exit", 28);
+                TextOutA(hdc, 110, 250, "[P / ESC] Resume   |   [S / Q] Save & Exit", 42);
+                SelectObject(hdc, hFont);
             } else if (game_state == 2) {
                 char sbuf[32];
                 SetTextColor(hdc, RGB(255, 71, 87));
@@ -2101,9 +2127,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetTextColor(hdc, RGB(255, 255, 255));
                     wsprintfA(ibuf, "Initials: [%s]", initials_input);
                     TextOutA(hdc, 170, 320, ibuf, lstrlenA(ibuf));
-                    TextOutA(hdc, 110, 370, "Type Initials & Press ENTER", 27);
+                    SelectObject(hdc, hFontSmall);
+                    TextOutA(hdc, 130, 370, "Type Initials & Press ENTER", 27);
+                    SelectObject(hdc, hFont);
                 } else {
-                    TextOutA(hdc, 140, 270, "Press ENTER to Return", 21);
+                    SelectObject(hdc, hFontSmall);
+                    TextOutA(hdc, 130, 270, "Press ENTER or ESC to Return", 28);
+                    SelectObject(hdc, hFont);
                 }
             } else if (game_state == 4) { // VICTORY!
                 SetTextColor(hdc, RGB(255, 215, 0));
@@ -2116,8 +2146,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetTextColor(hdc, RGB(76, 209, 55));
                     TextOutA(hdc, 110, 210, "STAGE 30 MASTER VICTORY!", 24);
                 }
+                SelectObject(hdc, hFontSmall);
                 SetTextColor(hdc, RGB(255, 255, 255));
-                TextOutA(hdc, 140, 300, "Press ENTER to Return", 21);
+                TextOutA(hdc, 130, 300, "Press ENTER or ESC to Return", 28);
+                SelectObject(hdc, hFont);
             } else { // PLAYING
                 int i, r, gx, gy;
                 char score_text[64];
@@ -2272,6 +2304,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             SelectObject(hdc, oldFont);
             DeleteObject(hFont);
+            DeleteObject(hFontSmall);
             EndPaint(hwnd, &ps);
             break;
         }
@@ -2311,7 +2344,7 @@ void MainEntry() {
     RECT rect = {0, 0, winWidth, winHeight};
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
 
-    hwnd = CreateWindowExA(0, "KSnakeApp", "KSnake Arcade - Loop 10 [Map Editor & Gauntlet]", (WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN) & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+    hwnd = CreateWindowExA(0, "KSnakeApp", "KSnake Arcade [Press H or F1 for Help]", (WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN) & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);

@@ -35,9 +35,13 @@
         .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
         .branch-card { background: #1f1f33; border: 2px solid #48dbfb; border-radius: 8px; padding: 10px; margin: 6px 0; width: 90%; cursor: pointer; transition: all 0.2s; text-align: left; }
         .branch-card:hover { transform: scale(1.02); border-color: #fbc531; background: #292942; }
+        .toast-container { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+        .toast { background: #22223b; color: #48dbfb; border: 1px solid #48dbfb; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.6); opacity: 0; transform: translateY(-10px); transition: all 0.25s ease-out; pointer-events: auto; text-align: center; }
+        .toast.show { opacity: 1; transform: translateY(0); }
     </style>
 </head>
 <body>
+    <div id="toastContainer" class="toast-container"></div>
     <div id="gameContainer">
         <div id="header">
             <span id="scoreDisplay">Score: 0</span>
@@ -63,7 +67,7 @@
                     <button class="btn" onclick="startNewGame()">[ENTER] Play</button>
                     <button class="btn" onclick="openMapEditor()">[E] Map Editor</button>
                     <button class="btn" id="resumeBtn" onclick="resumeGame()" style="display:none;">[R] Resume</button>
-                    <button class="btn" onclick="showLeaderboard()">[H] Scores / Help</button>
+                    <button class="btn" onclick="showLeaderboard()">[H / F1] Help & Scores</button>
                     <button class="btn" onclick="showExportImport()">[D] Data Ex/Imp</button>
                     <button class="btn" onclick="showConfig()">[C] Keybinds</button>
                     <button class="btn" onclick="showStatsExport()" id="btnStatsExport" style="display:none;">[S] Stats</button>
@@ -115,21 +119,26 @@
                     <input type="text" id="initialsInput" maxlength="3" value="AAA">
                     <button class="btn" onclick="saveScoreEntry()">Save</button>
                 </div>
-                <p style="margin-top: 8px;">Press <b style="color:#00d2d3">ENTER</b> to Return</p>
+                <p style="margin-top: 8px;">Press <b style="color:#00d2d3">ENTER</b> or <b style="color:#00d2d3">ESC</b> to Return</p>
+                <button class="btn" onclick="showMenu()" style="margin-top:4px;">Back to Menu</button>
             </div>
 
             <!-- PAUSE OVERLAY -->
             <div id="pauseOverlay" class="overlay" style="display:none;">
                 <h2 style="color: #fbc531;">PAUSED</h2>
-                <p>Press <b style="color:#00d2d3">P</b> to Resume</p>
-                <p>Press <b style="color:#4cd137">S</b> to Save & Exit</p>
+                <p>Press <b style="color:#00d2d3">P</b> or <b style="color:#00d2d3">ESC</b> to Resume</p>
+                <p>Press <b style="color:#4cd137">S</b> or <b style="color:#4cd137">Q</b> to Save & Exit</p>
+                <div style="display:flex; gap:8px; margin-top:10px;">
+                    <button class="btn" onclick="resumeFromPause()">[P] Resume</button>
+                    <button class="btn" onclick="saveAndExit()">[S] Save & Exit</button>
+                </div>
             </div>
 
             <!-- LEADERBOARD & HELP OVERLAY -->
             <div id="leaderboardOverlay" class="overlay" style="display:none;">
                 <h2>HIGH SCORES & HELP</h2>
                 <div style="font-size: 12px; text-align: left; margin-bottom: 8px; background: rgba(0,0,0,0.5); padding: 8px; border-radius: 4px; border: 1px solid #3d3d5c;">
-                    <b style="color:#00d2d3">Controls:</b> WASD / Arrows to Move, P to Pause.<br>
+                    <b style="color:#00d2d3">Controls:</b> WASD / Arrows to Move, P/ESC to Pause, H/F1 for Help.<br>
                     <b style="color:#4cd137">Skills:</b> G = Ghost mode, F = Freeze/Slow, M = Magnet.<br>
                     <b style="color:#fbc531">Modes:</b> Classic, Maze, Ramp, Wrap, Campaign, VS, Custom, Gauntlet!
                 </div>
@@ -139,23 +148,27 @@
                     </thead>
                     <tbody id="leaderboardBody"></tbody>
                 </table>
-                <button class="btn" onclick="hideOverlays()">Back to Menu</button>
+                <button class="btn" onclick="showMenu()" style="margin-top:8px;">[ESC / H] Back to Menu</button>
             </div>
 
             <!-- KEYBINDS OVERLAY -->
             <div id="configOverlay" class="overlay" style="display:none;">
                 <h2>KEYBINDINGS</h2>
-                <div style="font-size:13px; text-align:left; width:80%; margin:auto;">
-                    <div>Up: <input type="text" id="bindUp" maxlength="10" style="width:60px" readonly></div>
-                    <div>Down: <input type="text" id="bindDown" maxlength="10" style="width:60px" readonly></div>
-                    <div>Left: <input type="text" id="bindLeft" maxlength="10" style="width:60px" readonly></div>
-                    <div>Right: <input type="text" id="bindRight" maxlength="10" style="width:60px" readonly></div>
-                    <div>Ghost: <input type="text" id="bindGhost" maxlength="10" style="width:60px" readonly></div>
-                    <div>Freeze: <input type="text" id="bindFreeze" maxlength="10" style="width:60px" readonly></div>
-                    <div>Magnet: <input type="text" id="bindMagnet" maxlength="10" style="width:60px" readonly></div>
+                <p style="font-size:12px; color:#8395a7; margin-bottom:6px;">Click an input to rebind, then press a key:</p>
+                <div style="font-size:13px; text-align:left; width:80%; margin:auto; display:flex; flex-direction:column; gap:4px;">
+                    <div>Up: <input type="text" id="bindUp" style="width:110px; cursor:pointer;" readonly onclick="startRebind('up', this)"></div>
+                    <div>Down: <input type="text" id="bindDown" style="width:110px; cursor:pointer;" readonly onclick="startRebind('down', this)"></div>
+                    <div>Left: <input type="text" id="bindLeft" style="width:110px; cursor:pointer;" readonly onclick="startRebind('left', this)"></div>
+                    <div>Right: <input type="text" id="bindRight" style="width:110px; cursor:pointer;" readonly onclick="startRebind('right', this)"></div>
+                    <div>Ghost: <input type="text" id="bindGhost" style="width:110px; cursor:pointer;" readonly onclick="startRebind('ghost', this)"></div>
+                    <div>Freeze: <input type="text" id="bindFreeze" style="width:110px; cursor:pointer;" readonly onclick="startRebind('freeze', this)"></div>
+                    <div>Magnet: <input type="text" id="bindMagnet" style="width:110px; cursor:pointer;" readonly onclick="startRebind('magnet', this)"></div>
                 </div>
-                <button class="btn" onclick="saveBinds()">Save Binds</button>
-                <button class="btn" onclick="hideOverlays()">Cancel</button>
+                <div style="margin-top:10px; display:flex; gap:6px;">
+                    <button class="btn" onclick="saveBinds()">Save Binds</button>
+                    <button class="btn" onclick="resetBinds()">Defaults</button>
+                    <button class="btn" onclick="showMenu()">[ESC] Back</button>
+                </div>
             </div>
             
             <!-- MATCH STATS OVERLAY -->
@@ -166,8 +179,8 @@
                     <button class="btn" onclick="exportStatsCSV()">Export CSV</button>
                     <button class="btn" onclick="exportStatsJSON()">Export JSON</button>
                 </div>
-                <button class="btn" onclick="exportReplay()">Export Replay (.ksr)</button>
-                <button class="btn" onclick="hideOverlays()">Close</button>
+                <button class="btn" onclick="exportReplay()" style="margin-top:4px;">Export Replay (.ksr)</button>
+                <button class="btn" onclick="showMenu()" style="margin-top:4px;">[ESC] Close</button>
             </div>
 
             <!-- EXPORT / IMPORT OVERLAY -->
@@ -180,7 +193,7 @@
                     <button class="btn" onclick="copyDataText()">Copy JSON</button>
                     <button class="btn" onclick="importData()">Import JSON</button>
                 </div>
-                <button class="btn" onclick="hideOverlays()" style="margin-top: 6px;">Back</button>
+                <button class="btn" onclick="showMenu()" style="margin-top: 6px;">[ESC] Back</button>
             </div>
         </div>
 
@@ -200,7 +213,7 @@
             <div class="legend-item"><span class="dot" style="background:#e74c3c"></span>Magma</div>
         </div>
 
-        <div id="controlsHint">WASD/Arrows: Move &bull; G/F/M: Skills &bull; P: Pause &bull; E: Map Editor</div>
+        <div id="controlsHint">WASD/Arrows: Move &bull; G/F/M: Skills &bull; P/ESC: Pause &bull; H/F1: Help &bull; E: Editor</div>
     </div>
 
     <script>
@@ -418,7 +431,7 @@
 
         function editorSave() {
             localStorage.setItem('ksnakeCustomObstacles', JSON.stringify(customObstacles));
-            alert("Custom Map saved successfully!");
+            showToast("Custom Map saved successfully!");
         }
 
         function startCustomGame() {
@@ -519,7 +532,13 @@
             exportImportOverlay.style.display = 'none';
             configOverlay.style.display = 'none';
             statsExportOverlay.style.display = 'none';
-            if (gameState === 0) menuOverlay.style.display = 'flex';
+        }
+
+        function showMenu() {
+            hideOverlays();
+            gameState = 0;
+            menuOverlay.style.display = 'flex';
+            updateMenuUI();
         }
 
         function initGauntletStage(stage) {
@@ -1165,6 +1184,20 @@
             leaderboardOverlay.style.display = 'flex';
         }
 
+        function showToast(msg, duration = 3000) {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerText = msg;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 250);
+            }, duration);
+        }
+
         function showExportImport() {
             hideOverlays();
             document.getElementById('dataBox').value = JSON.stringify({
@@ -1173,33 +1206,253 @@
             exportImportOverlay.style.display = 'flex';
         }
 
+        function exportData() {
+            const data = document.getElementById('dataBox').value;
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ksnake_backup.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast("Backup file exported!");
+        }
+
         function copyDataText() {
             const box = document.getElementById('dataBox');
             box.select();
             navigator.clipboard.writeText(box.value);
-            alert("Data copied to clipboard!");
+            showToast("Data copied to clipboard!");
         }
 
         function importData() {
             try {
                 const d = JSON.parse(document.getElementById('dataBox').value);
-                if (d.gamesPlayed) gamesPlayed = d.gamesPlayed;
-                if (d.totalApples) totalApples = d.totalApples;
+                if (d.gamesPlayed !== undefined) gamesPlayed = d.gamesPlayed;
+                if (d.totalApples !== undefined) totalApples = d.totalApples;
                 if (d.leaderboard) leaderboard = d.leaderboard;
                 if (d.customObstacles) customObstacles = d.customObstacles;
+                if (d.keyBinds) keyBinds = d.keyBinds;
                 localStorage.setItem('ksnakeGamesPlayed', gamesPlayed);
                 localStorage.setItem('ksnakeTotalApples', totalApples);
                 localStorage.setItem('ksnakeLeaderboard', JSON.stringify(leaderboard));
                 localStorage.setItem('ksnakeCustomObstacles', JSON.stringify(customObstacles));
-                updateMenuUI();
-                alert("Data imported successfully!");
+                localStorage.setItem('ksnakeKeyBinds', JSON.stringify(keyBinds));
+                showToast("Data imported successfully!");
+                showMenu();
+            } catch(e) { showToast("Invalid JSON data format."); }
+        }
+
+        // Keybindings Management
+        let activeRebindKey = null;
+        let activeRebindInput = null;
+
+        function showConfig() {
+            hideOverlays();
+            activeRebindKey = null;
+            activeRebindInput = null;
+            document.getElementById('bindUp').value = (keyBinds.up || 'W').toUpperCase();
+            document.getElementById('bindDown').value = (keyBinds.down || 'S').toUpperCase();
+            document.getElementById('bindLeft').value = (keyBinds.left || 'A').toUpperCase();
+            document.getElementById('bindRight').value = (keyBinds.right || 'D').toUpperCase();
+            document.getElementById('bindGhost').value = (keyBinds.ghost || 'G').toUpperCase();
+            document.getElementById('bindFreeze').value = (keyBinds.freeze || 'F').toUpperCase();
+            document.getElementById('bindMagnet').value = (keyBinds.magnet || 'M').toUpperCase();
+            configOverlay.style.display = 'flex';
+        }
+
+        function startRebind(action, el) {
+            if (activeRebindInput) {
+                activeRebindInput.style.borderColor = '#48dbfb';
+                activeRebindInput.value = (keyBinds[activeRebindKey] || '').toUpperCase();
+            }
+            activeRebindKey = action;
+            activeRebindInput = el;
+            el.style.borderColor = '#fbc531';
+            el.value = 'PRESS KEY...';
+        }
+
+        function saveBinds() {
+            localStorage.setItem('ksnakeKeyBinds', JSON.stringify(keyBinds));
+            showToast("Keybindings saved!");
+            showMenu();
+        }
+
+        function resetBinds() {
+            keyBinds = {
+                up: 'w', down: 's', left: 'a', right: 'd',
+                ghost: 'g', freeze: 'f', magnet: 'm', pause: 'p'
+            };
+            showConfig();
+            showToast("Keybindings reset to defaults.");
+        }
+
+        // Match Stats & Replays
+        function showStatsExport() {
+            hideOverlays();
+            const stats = lastMatchStats || {
+                ticks: matchTicks,
+                apples: matchApplesEaten,
+                coverage: Math.round((gridCoverage.size / 400) * 100),
+                score: score,
+                mode: gameMode
+            };
+            document.getElementById('matchStatsText').innerText = 
+                `Mode: ${stats.mode ? stats.mode.toUpperCase() : 'CLASSIC'}\n` +
+                `Score: ${stats.score !== undefined ? stats.score : score} pts\n` +
+                `Ticks Survived: ${stats.ticks}\n` +
+                `Apples Eaten: ${stats.apples}\n` +
+                `Grid Coverage: ${stats.coverage}%`;
+            statsExportOverlay.style.display = 'flex';
+        }
+
+        function exportStatsCSV() {
+            const stats = lastMatchStats || { ticks: matchTicks, apples: matchApplesEaten, coverage: Math.round((gridCoverage.size / 400) * 100), score, mode: gameMode };
+            const csv = `Metric,Value\nTicks Alive,${stats.ticks}\nApples Eaten,${stats.apples}\nCoverage,${stats.coverage}%\nScore,${stats.score || score}\nMode,${stats.mode || gameMode}\nDate,${new Date().toLocaleDateString()}\n`;
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ksnake_stats.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast("Stats CSV exported!");
+        }
+
+        function exportStatsJSON() {
+            const stats = lastMatchStats || { ticks: matchTicks, apples: matchApplesEaten, coverage: Math.round((gridCoverage.size / 400) * 100), score, mode: gameMode };
+            const blob = new Blob([JSON.stringify(stats, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ksnake_stats.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast("Stats JSON exported!");
+        }
+
+        function exportReplay() {
+            if (!lastReplayData) { showToast("No replay data for current match."); return; }
+            const blob = new Blob([JSON.stringify(lastReplayData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ksnake_replay.ksr';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast("Replay (.ksr) exported!");
+        }
+
+        // Save & Resume Functionality
+        function saveAndExit() {
+            if (gameState !== 3 && gameState !== 1) return;
+            const saveState = {
+                snake, dir, lastDir, food, score, scoreMult, currentSpeed,
+                gameMode, wrapMode, difficulty, obstacles, campaignLevel,
+                campaignBranch, gauntletStage, applesEaten,
+                ghostCd, ghostActive, freezeCd, freezeActive, magnetCd, magnetActive
+            };
+            localStorage.setItem('ksnakeSaveState', JSON.stringify(saveState));
+            if (gameLoop) clearInterval(gameLoop);
+            showToast("Game saved! Press [R] in menu to Resume.");
+            showMenu();
+        }
+
+        function resumeFromPause() {
+            hideOverlays();
+            gameState = 1;
+            if (gameLoop) clearInterval(gameLoop);
+            gameLoop = setInterval(update, currentSpeed);
+        }
+
+        function resumeGame() {
+            const raw = localStorage.getItem('ksnakeSaveState');
+            if (!raw) {
+                showToast("No saved game to resume.");
+                return;
+            }
+            try {
+                const s = JSON.parse(raw);
+                snake = s.snake || [{x: 5, y: 5}];
+                dir = s.dir || {x: 1, y: 0};
+                lastDir = s.lastDir || {x: 1, y: 0};
+                food = s.food || {x: 10, y: 10};
+                score = s.score || 0;
+                scoreMult = s.scoreMult || 10;
+                currentSpeed = s.currentSpeed || 150;
+                gameMode = s.gameMode || 'classic';
+                wrapMode = !!s.wrapMode;
+                difficulty = s.difficulty !== undefined ? s.difficulty : 1;
+                obstacles = s.obstacles || [];
+                campaignLevel = s.campaignLevel || 1;
+                campaignBranch = s.campaignBranch || 0;
+                gauntletStage = s.gauntletStage || 0;
+                applesEaten = s.applesEaten || 0;
+                ghostCd = s.ghostCd || 0;
+                ghostActive = s.ghostActive || 0;
+                freezeCd = s.freezeCd || 0;
+                freezeActive = s.freezeActive || 0;
+                magnetCd = s.magnetCd || 0;
+                magnetActive = s.magnetActive || 0;
+                localStorage.removeItem('ksnakeSaveState');
                 hideOverlays();
-            } catch(e) { alert("Invalid JSON data."); }
+                gameState = 1;
+                document.getElementById('scoreDisplay').innerText = `Score: ${score}`;
+                document.getElementById('modeDisplay').innerText = `Mode: ${gameMode.charAt(0).toUpperCase() + gameMode.slice(1)}`;
+                updateSkillsUI();
+                if (gameLoop) clearInterval(gameLoop);
+                gameLoop = setInterval(update, currentSpeed);
+                requestAnimationFrame(draw);
+                showToast("Game resumed!");
+            } catch(e) {
+                showToast("Failed to restore saved game.");
+            }
+        }
+
+        function isAnySubOverlayOpen() {
+            return leaderboardOverlay.style.display === 'flex' ||
+                   configOverlay.style.display === 'flex' ||
+                   statsExportOverlay.style.display === 'flex' ||
+                   exportImportOverlay.style.display === 'flex';
         }
 
         // Keyboard Controls
         window.addEventListener('keydown', e => {
             const k = e.key.toLowerCase();
+
+            // Key rebinding mode in config overlay
+            if (activeRebindKey && configOverlay.style.display === 'flex') {
+                e.preventDefault();
+                if (e.key === 'Escape') {
+                    activeRebindInput.style.borderColor = '#48dbfb';
+                    activeRebindInput.value = (keyBinds[activeRebindKey] || '').toUpperCase();
+                    activeRebindKey = null;
+                    activeRebindInput = null;
+                    return;
+                }
+                const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+                keyBinds[activeRebindKey] = key;
+                activeRebindInput.value = key.toUpperCase();
+                activeRebindInput.style.borderColor = '#4cd137';
+                showToast(`Bound ${activeRebindKey.toUpperCase()} to ${key.toUpperCase()}`);
+                activeRebindKey = null;
+                activeRebindInput = null;
+                return;
+            }
+
+            // If a sub-overlay is open, let ESC or H/F1 close it back to menu
+            if (isAnySubOverlayOpen()) {
+                if (e.key === 'Escape' || e.key === 'Enter') {
+                    showMenu();
+                    return;
+                }
+                if (leaderboardOverlay.style.display === 'flex' && (k === 'h' || e.key === 'F1')) {
+                    showMenu();
+                    return;
+                }
+                return;
+            }
+
             if (gameState === 0) {
                 if (k === 'm') cycleMode();
                 else if (k === '1') { difficulty = 0; updateMenuUI(); }
@@ -1208,6 +1461,10 @@
                 else if (k === 'w') { wrapMode = !wrapMode; updateMenuUI(); }
                 else if (k === 'e' || k === 'o') openMapEditor();
                 else if (k === 'h' || e.key === 'F1') showLeaderboard();
+                else if (k === 'c') showConfig();
+                else if (k === 'd') showExportImport();
+                else if (k === 's') showStatsExport();
+                else if (k === 'r') resumeGame();
                 else if (e.key === 'Enter') startNewGame();
             } else if (gameState === 8) { // Map Editor Hotkeys
                 if (k === '1') setEditorTool('wall');
@@ -1227,27 +1484,30 @@
                 else if (k === keyBinds.ghost) activateSkill('G');
                 else if (k === keyBinds.freeze) activateSkill('F');
                 else if (k === keyBinds.magnet) activateSkill('M');
-                else if (k === keyBinds.pause) {
+                else if (k === keyBinds.pause || e.key === 'Escape') {
                     gameState = 3;
                     clearInterval(gameLoop);
                     pauseOverlay.style.display = 'flex';
+                } else if (k === 'h' || e.key === 'F1') {
+                    gameState = 3;
+                    clearInterval(gameLoop);
+                    showLeaderboard();
                 }
             } else if (gameState === 3) {
-                if (k === keyBinds.pause) {
-                    hideOverlays();
-                    gameState = 1;
-                    gameLoop = setInterval(update, currentSpeed);
+                if (k === keyBinds.pause || e.key === 'Escape' || k === 'p') {
+                    resumeFromPause();
+                } else if (k === 's' || k === 'q') {
+                    saveAndExit();
                 }
             } else if (gameState === 2 || gameState === 4) {
-                if (e.key === 'Enter') {
-                    hideOverlays();
-                    gameState = 0;
-                    updateMenuUI();
+                if (e.key === 'Enter' || e.key === 'Escape') {
+                    showMenu();
                 }
             }
         });
 
         updateMenuUI();
+        showToast("Welcome to KSnake! Press [H] or [F1] for Help.", 3500);
     </script>
 </body>
 </html>
