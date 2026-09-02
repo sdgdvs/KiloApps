@@ -182,6 +182,8 @@
   let freezeCharges = 2;
   let freezeTimerMs = 0;
   let shakeTimer = 0;
+  let screenShakeIntensity = 0;
+  let screenShakeAngle = 0;
   let distortionTimer = 0;
   let distortX = 0, distortY = 0;
 
@@ -202,6 +204,7 @@
   let popups = [];
   let lineFlashes = [];
   let shockwaves = [];
+  let speedMotes = [];
 
   function saveLeaderboard(newScore, modeIdx, linesCleared, timeMs) {
       let modeLabel = modeNames[modeIdx];
@@ -271,30 +274,85 @@
       return !!localStorage.getItem('ktetris_saved_game');
   }
 
-  function addParticle(x, y, vx, vy, color, size = 3, life = 20, type = 0) {
-      particles.push({x, y, vx, vy, color, size, life, maxLife: life, type});
+  function triggerScreenShake(intensity, rotationalForce = 0.035) {
+      screenShakeIntensity = Math.max(screenShakeIntensity, intensity);
+      screenShakeAngle = (Math.random() - 0.5) * rotationalForce * intensity;
+  }
+
+  function addShockwave(x, y, color = '#00f0f0', maxR = 140, is3D = false) {
+      // Inner high-speed compression wave
+      shockwaves.push({
+          x, y, radius: 4, maxRadius: maxR * 0.72,
+          life: 18, maxLife: 18, color: '#ffffff',
+          isInner: true, is3D: is3D
+      });
+      // Outer dispersion halo
+      shockwaves.push({
+          x, y, radius: 8, maxRadius: maxR,
+          life: 28, maxLife: 28, color: color,
+          isInner: false, is3D: is3D
+      });
+  }
+
+  function addParticle(x, y, vx, vy, color, size = 3, life = 20, type = 0, rot = 0, vRot = 0) {
+      particles.push({x, y, prevX: x, prevY: y, vx, vy, color, size, life, maxLife: life, type, rot, vRot});
   }
 
   function addPopup(x, y, text, color = '#ffffff') {
       popups.push({x, y, text, color, life: 45, maxLife: 45});
   }
 
+  function addLayeredExplosion(cx, cy, baseColor, isBig = false) {
+      addShockwave(cx, cy, baseColor, isBig ? 180 : 130, true);
+      triggerScreenShake(isBig ? 18 : 10, isBig ? 0.035 : 0.02);
+
+      // Layer 0: Incandescent needle core sparks with velocity trails
+      let sparkCount = isBig ? 24 : 12;
+      for (let i = 0; i < sparkCount; i++) {
+          let ang = Math.random() * Math.PI * 2;
+          let spd = 3.5 + Math.random() * 5.5;
+          addParticle(cx, cy, Math.cos(ang) * spd, Math.sin(ang) * spd, (i % 2 === 0) ? '#ffffff' : baseColor, 2.2 + Math.random() * 1.5, 18 + Math.floor(Math.random() * 8), 0);
+      }
+
+      // Layer 1: Expanding buoyant plasma smoke puffs with negative gravity & drag
+      let smokeCount = isBig ? 16 : 8;
+      for (let i = 0; i < smokeCount; i++) {
+          let ang = Math.random() * Math.PI * 2;
+          let spd = 0.8 + Math.random() * 2.0;
+          addParticle(cx + (Math.random() - 0.5) * 6, cy + (Math.random() - 0.5) * 6, Math.cos(ang) * spd, Math.sin(ang) * spd - 0.8, baseColor, 4 + Math.random() * 4, 26 + Math.floor(Math.random() * 10), 1);
+      }
+
+      // Layer 2: Heavy kinematic cyber debris shards with tumbling rotation & gravity bounce
+      let shardCount = isBig ? 18 : 10;
+      for (let i = 0; i < shardCount; i++) {
+          let ang = Math.random() * Math.PI * 2;
+          let spd = 2.0 + Math.random() * 4.0;
+          addParticle(cx, cy, Math.cos(ang) * spd, Math.sin(ang) * spd - 2.5, (i % 2 === 0) ? '#00f0f0' : baseColor, 3 + Math.random() * 3, 30 + Math.floor(Math.random() * 10), 2, Math.random() * Math.PI * 2, (Math.random() - 0.5) * 0.45);
+      }
+
+      // Layer 3: Radiant golden/cyan celebration energy stars with rotation
+      let starCount = isBig ? 12 : 6;
+      for (let i = 0; i < starCount; i++) {
+          let ang = Math.random() * Math.PI * 2;
+          let spd = 1.5 + Math.random() * 3.0;
+          addParticle(cx, cy, Math.cos(ang) * spd, Math.sin(ang) * spd, (i % 2 === 0) ? '#ffd700' : '#00ffff', 4.5 + Math.random() * 2.5, 32 + Math.floor(Math.random() * 10), 3, Math.random() * Math.PI * 2, (Math.random() - 0.5) * 0.3);
+      }
+  }
+
   function triggerLineFlash(yRow) {
       lineFlashes.push({y: yRow, life: 18, maxLife: 18});
-      shockwaves.push({x: BOARD_W / 2, y: yRow * CELL + CELL / 2, radius: 10, maxRadius: 150, life: 25, maxLife: 25, color: '#ffffff'});
-      for (let i = 0; i < 25; i++) {
+      addShockwave(BOARD_W / 2, yRow * CELL + CELL / 2, '#00ffff', 160, true);
+      for (let i = 0; i < 28; i++) {
           let px = randomFloat() * BOARD_W;
           let py = yRow * CELL + CELL / 2;
-          let vx = (randomFloat() - 0.5) * 7;
-          let vy = (randomFloat() - 0.5) * 7;
           let pColors = ['#ffffff', '#ffff55', '#00ffff', '#ff9900', '#ff33ff'];
-          addParticle(px, py, vx, vy, pColors[Math.floor(randomFloat() * pColors.length)], randomFloat() * 3 + 2, 25, 0);
+          addParticle(px, py, (randomFloat() - 0.5) * 8, (randomFloat() - 0.5) * 8, pColors[Math.floor(randomFloat() * pColors.length)], randomFloat() * 3 + 2, 25, 0);
       }
   }
 
   function spawnHardDropImpact(x, y) {
-      shockwaves.push({x: (x + 2.5) * CELL, y: (y + 2.5) * CELL, radius: 5, maxRadius: 100, life: 20, maxLife: 20, color: 'rgba(255,255,255,0.8)'});
-      shockwaves.push({x: (x + 2.5) * CELL, y: (y + 2.5) * CELL, radius: 10, maxRadius: 130, life: 25, maxLife: 25, color: 'rgba(0,255,200,0.6)'});
+      addShockwave((x + 2.5) * CELL, (y + 2.5) * CELL, '#00ffc8', 130, false);
+      triggerScreenShake(7, 0.02);
       distortionTimer = 15;
       distortX = (x + 2.5) * CELL;
       distortY = (y + 2.5) * CELL;
@@ -313,6 +371,29 @@
       // Add a smoke cloud at bottom
       for (let i = 0; i < 8; i++) {
           addParticle((gridX + 0.5) * CELL + (randomFloat() - 0.5) * CELL * 3, endY * CELL + CELL, (randomFloat() - 0.5) * 8, -randomFloat() * 2, 'rgba(255,255,255,0.3)', 6, 25, 1);
+      }
+  }
+
+  function updateSpeedMotes() {
+      if (speedMotes.length < 25) {
+          speedMotes.push({
+              x: Math.random() * BOARD_W,
+              y: Math.random() * (H * CELL),
+              vy: 0.8 + Math.random() * 1.6,
+              vx: (Math.random() - 0.5) * 0.4,
+              size: 1.0 + Math.random() * 1.5,
+              alpha: 0.2 + Math.random() * 0.5,
+              hue: Math.random() > 0.5 ? '#00f0f0' : '#ffd700'
+          });
+      }
+      for (let i = speedMotes.length - 1; i >= 0; i--) {
+          let m = speedMotes[i];
+          m.y += m.vy;
+          m.x += m.vx + Math.sin(m.y * 0.05) * 0.2;
+          if (m.y > H * CELL) {
+              m.y = 0;
+              m.x = Math.random() * BOARD_W;
+          }
       }
   }
 
@@ -356,15 +437,15 @@
   function useRowNuke() {
       if (nukeCharges <= 0 || gameOver || isPaused || startScreen || winScreen || showLeaderboard) return;
       nukeCharges--;
+      triggerScreenShake(18, 0.035);
+      addLayeredExplosion(BOARD_W / 2, (H - 2) * CELL, '#ff6600', true);
       for (let k = 0; k < 3; k++) {
           let rY = H - 1 - k;
           triggerLineFlash(rY);
           for (let x = 0; x < W; x++) {
               if (grid[rY][x] > 0) {
                   let pCol = colors[grid[rY][x]];
-                  for (let p = 0; p < 4; p++) addParticle((x + 0.5) * CELL, (rY + 0.5) * CELL, (randomFloat() - 0.5) * 10, -randomFloat() * 8 - 2, pCol, 2, 20, 0);
-                  for (let p = 0; p < 2; p++) addParticle((x + 0.5) * CELL, (rY + 0.5) * CELL, (randomFloat() - 0.5) * 4, -randomFloat() * 4, 'rgba(255,100,0,0.5)', 5, 30, 1);
-                  for (let p = 0; p < 2; p++) addParticle((x + 0.5) * CELL, (rY + 0.5) * CELL, (randomFloat() - 0.5) * 8, -randomFloat() * 6 - 2, pCol, 3, 25, 2);
+                  addLayeredExplosion((x + 0.5) * CELL, (rY + 0.5) * CELL, pCol, false);
               }
           }
       }
@@ -453,15 +534,14 @@
           for (let y = 0; y < H; y++) {
               for (let x = 0; x < W; x++) {
                   if (explodeCenters[y][x]) {
+                      addLayeredExplosion(x * CELL + CELL / 2, y * CELL + CELL / 2, '#ff3333', true);
                       for (let dy = -2; dy <= 2; dy++) {
                           for (let dx = -2; dx <= 2; dx++) {
                               let ny = y + dy, nx = x + dx;
                               if (ny >= 0 && ny < H && nx >= 0 && nx < W) {
                                   if (grid[ny][nx] > 0) {
                                       let pCol = colors[grid[ny][nx]];
-                                      for(let k=0; k<6; k++) addParticle((nx + 0.5)*CELL, (ny + 0.5)*CELL, (randomFloat()-0.5)*12, (randomFloat()-0.5)*12, pCol, 2+randomFloat()*2, 20+randomFloat()*10, 0);
-                                      for(let k=0; k<4; k++) addParticle((nx + 0.5)*CELL, (ny + 0.5)*CELL, (randomFloat()-0.5)*6, (randomFloat()-0.5)*6, pCol, 4+randomFloat()*3, 30+randomFloat()*10, 1);
-                                      for(let k=0; k<3; k++) addParticle((nx + 0.5)*CELL, (ny + 0.5)*CELL, (randomFloat()-0.5)*10, -3-randomFloat()*5, pCol, 3+randomFloat()*2, 25+randomFloat()*10, 2);
+                                      addLayeredExplosion((nx + 0.5) * CELL, (ny + 0.5) * CELL, pCol, false);
                                   }
                                   grid[ny][nx] = 0;
                               }
@@ -469,7 +549,6 @@
                       }
                       score += 500;
                       addPopup(BOARD_W / 2, H * CELL / 2, "BOMB BOOM! +500", "#ff3333");
-                      shockwaves.push({x: x * CELL + CELL / 2, y: y * CELL + CELL / 2, radius: 20, maxRadius: 200, life: 30, maxLife: 30, color: '#ff3333'});
                       playSound(150, 'sawtooth', 0.1); setTimeout(() => playSound(100, 'square', 0.2), 100);
                   }
               }
@@ -478,15 +557,17 @@
 
       if (linesCleared > 0) {
           if (linesCleared >= 1 && linesCleared <= 5) statLines[linesCleared - 1]++;
-          if (linesCleared > 1) {
-              shakeTimer = linesCleared * 8;
-              shockwaves.push({x: BOARD_W / 2, y: (cy + 2) * CELL, radius: 10, maxRadius: 250 + linesCleared * 50, life: 40, maxLife: 40, color: '#ffffff', is3D: true, lines: linesCleared});
+          let popupText = ["", "SINGLE! +100", "DOUBLE! +300", "TRIPLE! +500", "TETRIS! +800", "PENTRIS! +1200"][linesCleared] || "CLEARED!";
+          let popupColor = ["", "#00ffff", "#00ff00", "#ffa500", "#ff00ff", "#ffd700"][linesCleared] || "#ffffff";
+          let shakeAmount = [0, 5, 8, 12, 17, 24][linesCleared] || 15;
+          triggerScreenShake(shakeAmount, 0.02 + linesCleared * 0.005);
+          addShockwave(BOARD_W / 2, (cy + 2) * CELL, popupColor, 180 + linesCleared * 40, true);
+          if (linesCleared >= 3) {
+              addLayeredExplosion(BOARD_W / 2, (cy + 2) * CELL, popupColor, linesCleared >= 4);
           }
           combo++;
           playSound(1000 + linesCleared * 200 + combo * 100, 'square', 0.1);
           
-          let popupText = ["", "SINGLE! +100", "DOUBLE! +300", "TRIPLE! +500", "TETRIS! +800", "PENTRIS! +1200"][linesCleared] || "CLEARED!";
-          let popupColor = ["", "#00ffff", "#00ff00", "#ffa500", "#ff00ff", "#ffd700"][linesCleared] || "#ffffff";
           addPopup(BOARD_W / 2 - 20, (cy + 2) * CELL, popupText, popupColor);
           if (combo > 1) {
               addPopup(BOARD_W / 2 - 10, (cy + 2) * CELL + 16, "COMBO x" + combo + "!", "#ff4444");
@@ -1001,9 +1082,10 @@
       ctx.restore();
 
       let offX = 0, offY = 0;
-      if (shakeTimer > 0) {
-          offX = Math.floor(randomFloat() * 7) - 3;
-          offY = Math.floor(randomFloat() * 7) - 3;
+      if (screenShakeIntensity > 0.05) {
+          let shakeMag = screenShakeIntensity * screenShakeIntensity * 0.04;
+          offX = Math.sin(tick * 0.065) * shakeMag;
+          offY = Math.cos(tick * 0.075) * shakeMag;
       }
       
       // Grid background lines with localized distortion
@@ -1069,6 +1151,73 @@
       }
       ctx.restore();
 
+      // Pulsating Energy Perimeter Inlay Border
+      let periPulse = 0.35 + 0.25 * Math.sin(tick * 0.008);
+      ctx.save();
+      ctx.strokeStyle = `rgba(0, 240, 240, ${periPulse})`;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(offX + 2, offY + 2, BOARD_W - 4, H * CELL - 4);
+
+      // Traveling Specular Glint along perimeter
+      let pW = BOARD_W - 4, pH = H * CELL - 4;
+      let periTotal = (pW + pH) * 2;
+      let gDist = (tick * 0.25) % periTotal;
+      let gx = 2, gy = 2;
+      if (gDist < pW) { gx = 2 + gDist; gy = 2; }
+      else if (gDist < pW + pH) { gx = 2 + pW; gy = 2 + (gDist - pW); }
+      else if (gDist < pW * 2 + pH) { gx = 2 + pW - (gDist - (pW + pH)); gy = 2 + pH; }
+      else { gx = 2; gy = 2 + pH - (gDist - (pW * 2 + pH)); }
+
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = '#00ffff';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(offX + gx, offY + gy, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Ornate Cybernetic Arcade HUD Corner Reticle L-Brackets with Tech Notches
+      ctx.strokeStyle = '#00d2d3';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#00d2d3';
+      ctx.shadowBlur = 6;
+      let arm = 14;
+      ctx.beginPath();
+      // Top-Left (3, 3)
+      ctx.moveTo(offX + 3, offY + 3 + arm); ctx.lineTo(offX + 3, offY + 3); ctx.lineTo(offX + 3 + arm, offY + 3);
+      ctx.moveTo(offX + 6, offY + 6); ctx.lineTo(offX + 9, offY + 6);
+      // Top-Right (BOARD_W - 3, 3)
+      ctx.moveTo(offX + BOARD_W - 3 - arm, offY + 3); ctx.lineTo(offX + BOARD_W - 3, offY + 3); ctx.lineTo(offX + BOARD_W - 3, offY + 3 + arm);
+      ctx.moveTo(offX + BOARD_W - 6, offY + 6); ctx.lineTo(offX + BOARD_W - 9, offY + 6);
+      // Bottom-Left (3, H * CELL - 3)
+      ctx.moveTo(offX + 3, offY + H * CELL - 3 - arm); ctx.lineTo(offX + 3, offY + H * CELL - 3); ctx.lineTo(offX + 3 + arm, offY + H * CELL - 3);
+      ctx.moveTo(offX + 6, offY + H * CELL - 6); ctx.lineTo(offX + 9, offY + H * CELL - 6);
+      // Bottom-Right (BOARD_W - 3, H * CELL - 3)
+      ctx.moveTo(offX + BOARD_W - 3 - arm, offY + H * CELL - 3); ctx.lineTo(offX + BOARD_W - 3, offY + H * CELL - 3); ctx.lineTo(offX + BOARD_W - 3, offY + H * CELL - 3 - arm);
+      ctx.moveTo(offX + BOARD_W - 6, offY + H * CELL - 6); ctx.lineTo(offX + BOARD_W - 9, offY + H * CELL - 6);
+      ctx.stroke();
+
+      // Glowing Status Diodes
+      let diodes = ['#00ffcc', '#ffd700', '#ff3366', '#00f0f0'];
+      ctx.fillStyle = diodes[Math.floor(tick / 180) % 4];
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.beginPath();
+      ctx.arc(offX + 4, offY + 4, 2, 0, Math.PI * 2);
+      ctx.arc(offX + BOARD_W - 4, offY + 4, 2, 0, Math.PI * 2);
+      ctx.arc(offX + 4, offY + H * CELL - 4, 2, 0, Math.PI * 2);
+      ctx.arc(offX + BOARD_W - 4, offY + H * CELL - 4, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Dynamic Speed Dust Motes
+      for (let m of speedMotes) {
+          ctx.fillStyle = m.hue;
+          ctx.globalAlpha = m.alpha;
+          ctx.beginPath();
+          ctx.arc(offX + m.x, offY + m.y, m.size, 0, Math.PI * 2);
+          ctx.fill();
+      }
+      ctx.restore();
+
       // Board blocks
       for (let y = 0; y < H; y++) {
           for (let x = 0; x < W; x++) {
@@ -1122,11 +1271,10 @@
           ctx.save();
           ctx.globalAlpha = alpha;
           ctx.strokeStyle = sw.color;
-          ctx.lineWidth = 2 + 2 * alpha;
+          ctx.lineWidth = sw.isInner ? (3 + 3 * alpha) : (1.5 + 2 * alpha);
+          ctx.shadowColor = sw.color;
+          ctx.shadowBlur = sw.isInner ? 12 : 6;
           if (sw.is3D) {
-              ctx.lineWidth = 3 + 4 * alpha;
-              ctx.shadowColor = sw.color;
-              ctx.shadowBlur = 10;
               let numRings = sw.lines || 2;
               for(let j=0; j<numRings; j++) {
                   let rOff = r - j * 15 * (1 - alpha);
@@ -1146,28 +1294,48 @@
           if (sw.life <= 0) shockwaves.splice(i, 1);
       }
 
-      // Particles
+      // Particles (4 distinct layers)
       for (let p of particles) {
           let alpha = p.life / p.maxLife;
           ctx.save();
           ctx.globalAlpha = alpha;
-          if (p.type === 1) { // Smoke
+          if (p.type === 1) { // Layer 1: Expanding buoyant plasma smoke puff
               ctx.fillStyle = p.color;
               ctx.beginPath();
-              ctx.arc(offX + p.x, offY + p.y, p.size + (1-alpha)*10, 0, Math.PI * 2);
+              ctx.arc(offX + p.x, offY + p.y, p.size + (1-alpha)*8, 0, Math.PI * 2);
               ctx.fill();
-          } else if (p.type === 2) { // Fragment
+          } else if (p.type === 2) { // Layer 2: Heavy kinematic cyber debris shard with tumbling rotation
               ctx.fillStyle = p.color;
               ctx.translate(offX + p.x, offY + p.y);
-              ctx.rotate(p.life * 0.2);
+              ctx.rotate(p.rot || (p.life * 0.2));
               ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
-          } else { // Spark
+          } else if (p.type === 3) { // Layer 3: Radiant golden/cyan celebration energy star
               ctx.fillStyle = p.color;
               ctx.shadowColor = p.color;
-              ctx.shadowBlur = 4;
+              ctx.shadowBlur = 8;
+              ctx.translate(offX + p.x, offY + p.y);
+              ctx.rotate(p.rot || (p.life * 0.25));
+              let s = p.size;
               ctx.beginPath();
-              ctx.arc(offX + p.x, offY + p.y, p.size, 0, Math.PI * 2);
+              ctx.moveTo(0, -s);
+              ctx.lineTo(s * 0.3, -s * 0.3);
+              ctx.lineTo(s, 0);
+              ctx.lineTo(s * 0.3, s * 0.3);
+              ctx.lineTo(0, s);
+              ctx.lineTo(-s * 0.3, s * 0.3);
+              ctx.lineTo(-s, 0);
+              ctx.lineTo(-s * 0.3, -s * 0.3);
+              ctx.closePath();
               ctx.fill();
+          } else { // Layer 0: Incandescent needle core spark with velocity trail
+              ctx.strokeStyle = p.color;
+              ctx.shadowColor = p.color;
+              ctx.shadowBlur = 6;
+              ctx.lineWidth = p.size || 2;
+              ctx.beginPath();
+              ctx.moveTo(offX + p.x, offY + p.y);
+              ctx.lineTo(offX + (p.prevX || p.x), offY + (p.prevY || p.y));
+              ctx.stroke();
           }
           ctx.restore();
       }
@@ -1586,15 +1754,42 @@
           }
       }
 
-      // Update particle physics
+      // Update screen shake with quadratic physics decay and rotational damping
+      screenShakeIntensity *= 0.90;
+      screenShakeAngle *= 0.88;
+      if (screenShakeIntensity < 0.05) { screenShakeIntensity = 0; screenShakeAngle = 0; }
+
+      // Update particle physics (4 layers)
       for (let i = particles.length - 1; i >= 0; i--) {
           let p = particles[i];
+          p.prevX = p.x;
+          p.prevY = p.y;
           p.x += p.vx;
           p.y += p.vy;
-          p.vy += 0.15;
+          if (p.type === 1) { // Smoke
+              p.vy -= 0.04;
+              p.vx *= 0.94;
+              p.vy *= 0.94;
+          } else if (p.type === 2) { // Debris fragment
+              p.vy += 0.22;
+              p.vx *= 0.97;
+              p.rot = (p.rot || 0) + (p.vRot || 0.1);
+              if (p.y >= H * CELL - 4) {
+                  p.y = H * CELL - 4;
+                  p.vy = -p.vy * 0.45;
+              }
+          } else if (p.type === 3) { // Celebration star
+              p.rot = (p.rot || 0) + (p.vRot || 0.15);
+              p.vx *= 0.96;
+              p.vy *= 0.96;
+          } else { // Sparks
+              p.vy += 0.14;
+          }
           p.life--;
           if (p.life <= 0) particles.splice(i, 1);
       }
+
+      updateSpeedMotes();
 
       // Update popups
       for (let i = popups.length - 1; i >= 0; i--) {
