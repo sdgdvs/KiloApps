@@ -22,6 +22,20 @@
         .stud.bl { bottom: 4px; left: 4px; }
         .stud.br { bottom: 4px; right: 4px; }
 
+        .filigree { position: absolute; width: 20px; height: 20px; pointer-events: none; z-index: 6; }
+        .filigree.tl { top: 6px; left: 6px; border-top: 2px solid #ffd700; border-left: 2px solid #ffd700; box-shadow: -1px -1px 3px rgba(255,215,0,0.6); }
+        .filigree.tr { top: 6px; right: 6px; border-top: 2px solid #ffd700; border-right: 2px solid #ffd700; box-shadow: 1px -1px 3px rgba(255,215,0,0.6); }
+        .filigree.bl { bottom: 6px; left: 6px; border-bottom: 2px solid #ffd700; border-left: 2px solid #ffd700; box-shadow: -1px 1px 3px rgba(255,215,0,0.6); }
+        .filigree.br { bottom: 6px; right: 6px; border-bottom: 2px solid #ffd700; border-right: 2px solid #ffd700; box-shadow: 1px 1px 3px rgba(255,215,0,0.6); }
+        .filigree::after { content: ''; position: absolute; width: 9px; height: 9px; border: 1.5px solid rgba(255,215,0,0.7); }
+        .filigree.tl::after { top: 3px; left: 3px; border-right: none; border-bottom: none; }
+        .filigree.tr::after { top: 3px; right: 3px; border-left: none; border-bottom: none; }
+        .filigree.bl::after { bottom: 3px; left: 3px; border-right: none; border-top: none; }
+        .filigree.br::after { bottom: 3px; right: 3px; border-left: none; border-top: none; }
+
+        .inlay-shimmer { position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px; border: 1.5px solid rgba(218, 165, 32, 0.45); border-radius: 9px; pointer-events: none; z-index: 4; box-shadow: inset 0 0 6px rgba(255, 215, 0, 0.25), 0 0 4px rgba(255, 215, 0, 0.2); animation: inlayGlow 2.5s infinite alternate ease-in-out; }
+        @keyframes inlayGlow { 0% { opacity: 0.35; border-color: rgba(218, 165, 32, 0.3); } 100% { opacity: 0.85; border-color: rgba(255, 215, 0, 0.7); box-shadow: inset 0 0 10px rgba(255, 215, 0, 0.4), 0 0 6px rgba(255, 215, 0, 0.35); } }
+
         .board { display: grid; gap: 3px; background: #0f361a; padding: 3px; border-radius: 6px; box-shadow: inset 0 0 12px rgba(0,0,0,0.85); position: relative; z-index: 1; background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noise)" opacity="0.12"/></svg>'); }
         .cell { background: radial-gradient(circle at 40% 40%, var(--cell-bg-light, #236c39), var(--cell-bg, #144623)); width: var(--cell-size, 45px); height: var(--cell-size, 45px); display: flex; justify-content: center; align-items: center; cursor: pointer; transition: background 0.2s, transform 0.1s; position: relative; border-radius: 3px; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.15), inset -1px -1px 3px rgba(0,0,0,0.5); }
         .cell:hover { background: radial-gradient(circle at 40% 40%, #2f8e4b, #1a562c); }
@@ -270,8 +284,11 @@
     
     <div id="message"></div>
     <div class="board-wrapper" id="board-wrapper">
+        <div class="inlay-shimmer"></div>
         <div class="stud tl"></div><div class="stud tr"></div>
         <div class="stud bl"></div><div class="stud br"></div>
+        <div class="filigree tl"></div><div class="filigree tr"></div>
+        <div class="filigree bl"></div><div class="filigree br"></div>
         <canvas id="fx-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;"></canvas>
         <div id="board" class="board"></div>
     </div>
@@ -670,25 +687,119 @@
             resetTimer();
         }
 
-        // Particle FX system
+        // Multi-Layer Kinematic Particle FX & Procedural Screen-Shake System
         let particles = [];
         let animFrameId = null;
+        let screenShake = 0;
 
-        function spawnSparks(x, y, count = 12, color = '#ffd700') {
-            for (let i = 0; i < count; i++) {
+        function triggerScreenShake(amt) {
+            screenShake = Math.min(screenShake + amt, 16);
+            if (!animFrameId) updateParticles();
+        }
+
+        function spawnMultiLayerExplosion(x, y, colorScheme = 'gold', intensity = 1.0) {
+            // Layer 1: Incandescent Core Sparks with needle trails
+            const sparkCount = Math.floor(14 * intensity);
+            const sparkColors = colorScheme === 'cyan' ? ['#ffffff', '#00f5d4', '#80ffea', '#00bbf9'] :
+                                colorScheme === 'bomb' ? ['#ffffff', '#ff4500', '#ffd700', '#ff0055'] :
+                                colorScheme === 'freeze' ? ['#ffffff', '#00f5d4', '#e0f7fa', '#80deea'] :
+                                ['#ffffff', '#fff3a8', '#ffd700', '#ffaa00'];
+            for (let i = 0; i < sparkCount; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const speed = 1.5 + Math.random() * 4;
+                const speed = (2.2 + Math.random() * 5.0) * intensity;
                 particles.push({
+                    type: 'spark',
+                    x, y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 0.6,
+                    life: 1.0,
+                    decay: 0.035 + Math.random() * 0.03,
+                    size: 2.0 + Math.random() * 2.0,
+                    color: sparkColors[Math.floor(Math.random() * sparkColors.length)]
+                });
+            }
+
+            // Layer 2: Expanding Buoyant Smoke Puffs
+            const smokeCount = Math.floor(5 * intensity);
+            const smokeColor = colorScheme === 'bomb' ? 'rgba(70, 45, 35, ' :
+                               colorScheme === 'freeze' ? 'rgba(180, 230, 245, ' :
+                               colorScheme === 'cyan' ? 'rgba(20, 45, 60, ' : 'rgba(140, 125, 100, ';
+            for (let i = 0; i < smokeCount; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 0.6 + Math.random() * 1.6;
+                particles.push({
+                    type: 'smoke',
+                    x: x + (Math.random() - 0.5) * 8,
+                    y: y + (Math.random() - 0.5) * 8,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 0.5,
+                    life: 1.0,
+                    decay: 0.022 + Math.random() * 0.02,
+                    size: 6 + Math.random() * 8,
+                    growth: 0.45 + Math.random() * 0.4,
+                    color: smokeColor
+                });
+            }
+
+            // Layer 3: Heavy Kinematic Stone / Lacquer Shards (Gravity + Drag + Tumbling)
+            const shardCount = Math.floor(7 * intensity);
+            const shardColor = colorScheme === 'cyan' ? '#00f5d4' :
+                               colorScheme === 'bomb' ? '#331100' :
+                               colorScheme === 'freeze' ? '#b2ebf2' : '#1a1a1a';
+            for (let i = 0; i < shardCount; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = (1.8 + Math.random() * 3.8) * intensity;
+                particles.push({
+                    type: 'shard',
+                    x, y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 1.8,
+                    rot: Math.random() * Math.PI * 2,
+                    vrot: (Math.random() - 0.5) * 0.4,
+                    life: 1.0,
+                    decay: 0.025 + Math.random() * 0.02,
+                    size: 3 + Math.random() * 3,
+                    color: shardColor
+                });
+            }
+
+            // Layer 4: Radiant Golden Celebration Stars
+            const starCount = Math.floor(5 * intensity);
+            for (let i = 0; i < starCount; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1.0 + Math.random() * 2.8;
+                particles.push({
+                    type: 'star',
                     x, y,
                     vx: Math.cos(angle) * speed,
                     vy: Math.sin(angle) * speed - 0.8,
+                    rot: Math.random() * Math.PI,
+                    vrot: (Math.random() - 0.5) * 0.25,
                     life: 1.0,
-                    decay: 0.03 + Math.random() * 0.04,
-                    size: 2.5 + Math.random() * 3.5,
-                    color
+                    decay: 0.025 + Math.random() * 0.02,
+                    size: 4 + Math.random() * 4,
+                    color: colorScheme === 'bomb' ? '#ffaa00' : (colorScheme === 'cyan' ? '#00f5d4' : '#ffd700')
                 });
             }
+
+            // Concentric Shockwave Ring
+            particles.push({
+                type: 'shockwave',
+                x, y,
+                radius: 3,
+                maxRadius: 28 * intensity,
+                life: 1.0,
+                decay: 0.06,
+                color: colorScheme === 'bomb' ? '#ff4500' : (colorScheme === 'cyan' || colorScheme === 'freeze' ? '#00f5d4' : '#ffd700')
+            });
+
             if (!animFrameId) updateParticles();
+        }
+
+        function spawnSparks(x, y, count = 12, color = '#ffd700') {
+            const scheme = (color === '#ff4500' || color === '#ffcc00') ? 'bomb' :
+                           (color === '#00f5d4') ? 'cyan' : 'gold';
+            spawnMultiLayerExplosion(x, y, scheme, Math.max(0.7, count / 14));
         }
 
         function spawnVictoryConfetti() {
@@ -696,8 +807,9 @@
             const canvas = document.getElementById('fx-canvas');
             if (!canvas) return;
             const w = canvas.width, h = canvas.height;
-            for (let i = 0; i < 100; i++) {
+            for (let i = 0; i < 90; i++) {
                 particles.push({
+                    type: 'confetti',
                     x: Math.random() * w,
                     y: Math.random() * (h * 0.3),
                     vx: (Math.random() - 0.5) * 5,
@@ -709,7 +821,39 @@
                     shape: Math.random() > 0.5 ? 'rect' : 'circle'
                 });
             }
+            // Add celebration stars and screen shake
+            for (let i = 0; i < 20; i++) {
+                particles.push({
+                    type: 'star',
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    vx: (Math.random() - 0.5) * 3,
+                    vy: (Math.random() - 0.5) * 3,
+                    rot: Math.random() * Math.PI,
+                    vrot: 0.1,
+                    life: 1.0,
+                    decay: 0.015,
+                    size: 5 + Math.random() * 5,
+                    color: '#ffd700'
+                });
+            }
+            triggerScreenShake(6.0);
             if (!animFrameId) updateParticles();
+        }
+
+        function drawStarShape(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+            let rot = Math.PI / 2 * 3;
+            let step = Math.PI / spikes;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - outerRadius);
+            for (let i = 0; i < spikes; i++) {
+                ctx.lineTo(cx + Math.cos(rot) * outerRadius, cy + Math.sin(rot) * outerRadius);
+                rot += step;
+                ctx.lineTo(cx + Math.cos(rot) * innerRadius, cy + Math.sin(rot) * innerRadius);
+                rot += step;
+            }
+            ctx.closePath();
+            ctx.fill();
         }
 
         function updateParticles() {
@@ -717,30 +861,95 @@
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Procedural screen-shake decay & rotational damping
+            if (screenShake > 0.05) {
+                screenShake *= 0.86;
+                const sAng = Math.random() * Math.PI * 2;
+                const sx = Math.cos(sAng) * screenShake;
+                const sy = Math.sin(sAng) * screenShake;
+                const sRot = (Math.random() - 0.5) * screenShake * 0.2;
+                const wrapper = document.getElementById('board-wrapper');
+                if (wrapper) wrapper.style.transform = `translate(${sx.toFixed(1)}px, ${sy.toFixed(1)}px) rotate(${sRot.toFixed(2)}deg)`;
+            } else if (screenShake > 0) {
+                screenShake = 0;
+                const wrapper = document.getElementById('board-wrapper');
+                if (wrapper) wrapper.style.transform = '';
+            }
             
             for (let i = particles.length - 1; i >= 0; i--) {
                 const p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
                 p.life -= p.decay;
                 if (p.life <= 0) {
                     particles.splice(i, 1);
                     continue;
                 }
+
                 ctx.save();
-                ctx.globalAlpha = p.life;
-                ctx.fillStyle = p.color;
-                if (p.shape === 'rect') {
-                    ctx.fillRect(p.x, p.y, p.size, p.size * 1.4);
-                } else {
+                ctx.globalAlpha = Math.max(0, p.life);
+
+                if (p.type === 'spark') {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vx *= 0.95;
+                    p.vy *= 0.95;
+                    ctx.strokeStyle = p.color;
+                    ctx.lineWidth = p.size;
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p.x - p.vx * 2.2, p.y - p.vy * 2.2);
+                    ctx.stroke();
+                } else if (p.type === 'smoke') {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy -= 0.03;
+                    p.size += p.growth;
+                    ctx.fillStyle = p.color + (p.life * 0.45) + ')';
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                     ctx.fill();
+                } else if (p.type === 'shard') {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.22; // Gravity
+                    p.vx *= 0.96; // Air drag
+                    p.rot += p.vrot;
+                    ctx.fillStyle = p.color;
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot);
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                } else if (p.type === 'star') {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.rot += p.vrot;
+                    ctx.fillStyle = p.color;
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot);
+                    drawStarShape(ctx, 0, 0, 4, p.size, p.size * 0.35);
+                } else if (p.type === 'shockwave') {
+                    p.radius += (p.maxRadius - p.radius) * 0.22;
+                    ctx.strokeStyle = p.color;
+                    ctx.lineWidth = Math.max(1, p.life * 2.5);
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                } else { // confetti
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    ctx.fillStyle = p.color;
+                    if (p.shape === 'rect') {
+                        ctx.fillRect(p.x, p.y, p.size, p.size * 1.4);
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
                 }
                 ctx.restore();
             }
             
-            if (particles.length > 0) {
+            if (particles.length > 0 || screenShake > 0) {
                 animFrameId = requestAnimationFrame(updateParticles);
             } else {
                 animFrameId = null;
@@ -843,6 +1052,7 @@
                 playSound('freeze');
                 const wrapper = document.getElementById('board-wrapper');
                 if (wrapper) spawnSparks(wrapper.clientWidth / 2, wrapper.clientHeight / 2, 35, '#00f5d4');
+                triggerScreenShake(4.0);
                 renderBoard();
                 resetTimer();
             }
@@ -972,6 +1182,7 @@
                         }
                     }
                     playSound('bomb');
+                    triggerScreenShake(11.0);
                     
                     const cellEl = document.getElementById('cell-' + index);
                     if (cellEl) {
@@ -979,8 +1190,7 @@
                         const wrapperRect = document.getElementById('board-wrapper').getBoundingClientRect();
                         const cx = rect.left - wrapperRect.left + rect.width / 2;
                         const cy = rect.top - wrapperRect.top + rect.height / 2;
-                        spawnSparks(cx, cy, 30, '#ff4500');
-                        spawnSparks(cx, cy, 20, '#ffcc00');
+                        spawnMultiLayerExplosion(cx, cy, 'bomb', 2.0);
                     }
                     
                     currentPlayer = WHITE;
@@ -1005,6 +1215,7 @@
                 
                 if (hasBonusTile) {
                     playSound('bonus');
+                    triggerScreenShake(3.5 + flips.length * 0.4);
                     const r = Math.floor(index / boardWidth);
                     const c = index % boardWidth;
                     const opponent = currentPlayer === BLACK ? WHITE : BLACK;
@@ -1020,6 +1231,17 @@
                     }
                 } else {
                     playSound('place');
+                    triggerScreenShake(1.6 + flips.length * 0.35);
+                }
+
+                // Spawn concentric placement ripple shockwave on board
+                const cellEl = document.getElementById('cell-' + index);
+                if (cellEl) {
+                    const rect = cellEl.getBoundingClientRect();
+                    const wrapperRect = document.getElementById('board-wrapper').getBoundingClientRect();
+                    const cx = rect.left - wrapperRect.left + rect.width / 2;
+                    const cy = rect.top - wrapperRect.top + rect.height / 2;
+                    spawnMultiLayerExplosion(cx, cy, currentPlayer === BLACK ? 'gold' : 'cyan', 0.7);
                 }
                 
                 currentPlayer = currentPlayer === BLACK ? WHITE : BLACK;
@@ -1167,6 +1389,7 @@
 
                 if (hasBonusTile) {
                     playSound('bonus');
+                    triggerScreenShake(3.5 + flips.length * 0.4);
                     const r = Math.floor(bestMove / boardWidth);
                     const c = bestMove % boardWidth;
                     for (let [dr, dc] of DIRS) {
@@ -1181,6 +1404,17 @@
                     }
                 } else {
                     playSound('place');
+                    triggerScreenShake(1.6 + flips.length * 0.35);
+                }
+
+                // Concentric placement shockwave
+                const cellEl = document.getElementById('cell-' + bestMove);
+                if (cellEl) {
+                    const rect = cellEl.getBoundingClientRect();
+                    const wrapperRect = document.getElementById('board-wrapper').getBoundingClientRect();
+                    const cx = rect.left - wrapperRect.left + rect.width / 2;
+                    const cy = rect.top - wrapperRect.top + rect.height / 2;
+                    spawnMultiLayerExplosion(cx, cy, 'cyan', 0.7);
                 }
 
                 currentPlayer = BLACK;

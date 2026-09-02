@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KReversi
 - KQuest
 - KSpace
 - KPac
@@ -147,8 +146,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KWords
 - KWizard
 - KMystery
+- KReversi
 
 ## Completed Work Log
+
+- **KReversi (Loop 4):** Implemented highly polished visual effects including procedural screen-shake driven by quadratic physics decay on disc placements, double-flip bonuses, freeze power-ups, bomb detonations, and victory celebrations (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and flicker-free double-buffered BitBlt viewport offset in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core sparks with needle trails, expanding buoyant smoke puffs, heavy kinematic stone/lacquer shards with gravity, drag, and tumbling rotation physics, and radiant golden celebration stars), dual-tier concentric placement shockwave ripple rings radiating across the board upon disc drops, ornate Art Deco golden corner filigree L-brackets on the mahogany board frame corners, and a pulsating golden perimeter inlay border shimmer in both Web Canvas (kreversi.html) and Native C Win32 GDI (KReversi/main.c).
 
 - **KWords (Loop 7):** Implemented highly polished visual effects including procedural screen-shake driven by quadratic physics decay on word solves, secret discoveries, ice shatters, and victory bursts (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and flicker-free double-buffered BitBlt viewport offset in Native C Win32 GDI), multi-layered particle explosions featuring 4 distinct layers (incandescent core sparks with needle trails, expanding buoyant smoke puffs, heavy kinematic architectural ice and wood tile shards with gravity, drag, and floor bounce physics, and radiant golden celebration stars) upon word matches, thawing frozen tiles, radar/hint activations, and stage victories, dual-tier concentric ground shockwave ripple rings, ornate Art Deco golden corner filigree L-brackets and pulsating perimeter inlay shimmer on mahogany board frames, and delicate specular highlight bevel sheen across tile faces in both Web Canvas (kwords.html) and Native C Win32 GDI (KWords/main.c).
 
