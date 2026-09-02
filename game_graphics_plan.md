@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KTowers
 - KWords
 - KReversi
 - KQuest
@@ -145,7 +144,10 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KFreecell
 - KSudoku
 - KGo
+- KTowers
 ## Completed Work Log
+
+- **KTowers (Loop 7):** Implemented highly polished visual effects including procedural screen-shake driven by quadratic physics decay on block landings, move errors, teleports, and victory scoring (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and flicker-free double-buffered BitBlt viewport offset in Native C Win32 GDI), multi-layered particle explosions featuring 4 distinct layers (incandescent core sparks with needle trails, expanding buoyant smoke puffs, heavy kinematic architectural concrete & glass shards with gravity, drag, and ground bounce physics, and radiant golden celebration stars) upon landings, teleports, and stage victory celebrations, dual-tier concentric ground shockwave ripple rings, ornate Art Deco golden corner filigree L-brackets and pulsating perimeter inlay shimmer on concrete launchpad pedestals, sweeping specular glass reflection sheen across skyscraper facades, and rotating rooftop searchlight beacon cones into the night sky in both Web Canvas (ktowers.html) and Native C Win32 GDI (KTowers/main.c).
 
 - **KGo (Loop 7):** Implemented highly polished visual effects including procedural screen-shake driven by quadratic physics decay on stone captures, move errors/violations, and victory scoring (replacing static CSS with continuous requestAnimationFrame mathematical translation/rotation in Web Canvas, and replacing SetViewportOrgEx single-buffered jitter with flicker-free double-buffered BitBlt viewport offset in Native C Win32 GDI), multi-layered particle explosions featuring 4 distinct layers (incandescent core sparks, expanding buoyant smoke puffs, heavy kinematic slate/shell stone shard debris with gravity and tumbling rotation, and radiant golden celebration stars) upon stone captures and stage victories, and distinct procedural visual variations including ornate Japanese gold leaf corner filigree brackets on the Goban board frame, pulsating golden perimeter inlay shimmer, dual-tier concentric placement shockwave rings, and enhanced obsidian crescent sheen (slate) and delicate curved growth grain striations (clam shell) on stones in both Web Canvas (kgo.html) and Native C Win32 GDI (KGo/main.c).
 
