@@ -1,0 +1,454 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KSanctuary - Wasteland Shelter RPG</title>
+    <style>
+        :root {
+            --bg-color: #0d0f0c;
+            --panel-bg: #141a14;
+            --border-color: #3b533b;
+            --text-color: #79c379;
+            --text-dim: #4e824e;
+            --accent-color: #a3e635;
+            --warning-color: #eab308;
+            --danger-color: #ef4444;
+            --font-stack: 'Courier New', Courier, monospace, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-stack);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 8px;
+        }
+
+        /* Scanline CRT overlay */
+        body::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 26, 18, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 3px;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0.6;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            background-color: var(--panel-bg);
+            padding: 8px 14px;
+            margin-bottom: 8px;
+        }
+
+        .title-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--accent-color);
+            letter-spacing: 2px;
+            text-shadow: 0 0 6px rgba(163, 230, 53, 0.4);
+        }
+
+        .badge {
+            font-size: 11px;
+            background: rgba(59, 83, 59, 0.4);
+            border: 1px solid var(--border-color);
+            padding: 2px 6px;
+            border-radius: 2px;
+            color: var(--text-dim);
+        }
+
+        .time-display {
+            font-size: 14px;
+            color: var(--accent-color);
+        }
+
+        /* Resource status bar */
+        #res-bar {
+            display: flex;
+            gap: 12px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .res-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            border-right: 1px solid rgba(59, 83, 59, 0.5);
+            padding-right: 12px;
+        }
+
+        .res-item:last-child {
+            border-right: none;
+        }
+
+        .res-label {
+            color: var(--text-dim);
+            text-transform: uppercase;
+            font-size: 11px;
+        }
+
+        .res-val {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        /* Main Game Area */
+        #main-container {
+            display: flex;
+            flex: 1;
+            gap: 8px;
+            min-height: 0;
+        }
+
+        #shelter-view {
+            flex: 3;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+        }
+
+        .section-header {
+            font-size: 13px;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 4px;
+            margin-bottom: 6px;
+        }
+
+        #rooms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 10px;
+            flex: 1;
+        }
+
+        .room-card {
+            background: #0f140f;
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: 2px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 90px;
+            transition: border-color 0.15s;
+        }
+
+        .room-card:hover {
+            border-color: var(--accent-color);
+        }
+
+        .room-name {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 4px;
+        }
+
+        .room-stats {
+            font-size: 11px;
+            color: var(--text-dim);
+            line-height: 1.4;
+        }
+
+        /* Sidebar: Control Panel and Log */
+        #sidebar {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 240px;
+        }
+
+        .side-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #controls {
+            gap: 6px;
+        }
+
+        .btn {
+            background: #182218;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            font-family: inherit;
+            font-size: 12px;
+            padding: 8px 12px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.15s;
+            text-transform: uppercase;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: #233523;
+            color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .btn-primary {
+            background: #1f361f;
+            border-color: #4ade80;
+            color: #4ade80;
+            font-weight: bold;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #2b4c2b;
+            color: #86efac;
+            box-shadow: 0 0 8px rgba(74, 222, 128, 0.3);
+        }
+
+        #log-panel {
+            flex: 1;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #log-output {
+            flex: 1;
+            overflow-y: auto;
+            font-size: 11px;
+            line-height: 1.4;
+            color: var(--text-dim);
+            padding-right: 4px;
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+            border-left: 2px solid var(--border-color);
+            padding-left: 6px;
+        }
+
+        .log-entry.info {
+            color: var(--text-color);
+            border-left-color: var(--accent-color);
+        }
+
+        .log-entry.warn {
+            color: var(--warning-color);
+            border-left-color: var(--warning-color);
+        }
+
+        .log-entry.danger {
+            color: var(--danger-color);
+            border-left-color: var(--danger-color);
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--text-dim);
+            padding: 4px 8px;
+            border: 1px solid var(--border-color);
+            background: var(--panel-bg);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="title-group">
+            <span class="app-title">KSANCTUARY</span>
+            <span class="badge">SHELTER OVERSEER SYSTEM // VAULT 704</span>
+        </div>
+        <div class="time-display" id="time-display">CYCLE: DAY 1</div>
+    </header>
+
+    <div id="res-bar">
+        <div class="res-item">
+            <span class="res-label">POP:</span>
+            <span class="res-val" id="res-pop">5/10</span>
+        </div>
+        <div class="res-item">
+            <span class="res-label">FOOD:</span>
+            <span class="res-val" id="res-food">25</span>
+        </div>
+        <div class="res-item">
+            <span class="res-label">WATER:</span>
+            <span class="res-val" id="res-water">25</span>
+        </div>
+        <div class="res-item">
+            <span class="res-label">POWER:</span>
+            <span class="res-val" id="res-power">20</span>
+        </div>
+        <div class="res-item">
+            <span class="res-label">SCRAP:</span>
+            <span class="res-val" id="res-scrap">50</span>
+        </div>
+        <div class="res-item">
+            <span class="res-label">MORALE:</span>
+            <span class="res-val" id="res-morale">80%</span>
+        </div>
+        <div class="res-item">
+            <span class="res-label">DEFENSE:</span>
+            <span class="res-val" id="res-defense">15</span>
+        </div>
+    </div>
+
+    <div id="main-container">
+        <section id="shelter-view">
+            <div class="section-header">Shelter Facilities Grid</div>
+            <div id="rooms-grid">
+                <div class="room-card">
+                    <div>
+                        <div class="room-name">OVERSEER COMMAND</div>
+                        <div class="room-stats">Level 1 - Core Terminal<br>Power: -2/cycle</div>
+                    </div>
+                    <div class="room-stats">Assigned: 1/1</div>
+                </div>
+                <div class="room-card">
+                    <div>
+                        <div class="room-name">GENERATOR ROOM</div>
+                        <div class="room-stats">Level 1 - Output +10<br>Fuel: Scrap</div>
+                    </div>
+                    <div class="room-stats">Assigned: 1/2</div>
+                </div>
+                <div class="room-card">
+                    <div>
+                        <div class="room-name">WATER PURIFIER</div>
+                        <div class="room-stats">Level 1 - Clean Wells<br>Output: +6 Water</div>
+                    </div>
+                    <div class="room-stats">Assigned: 1/2</div>
+                </div>
+                <div class="room-card">
+                    <div>
+                        <div class="room-name">HYDROPONICS BAY</div>
+                        <div class="room-stats">Level 1 - Basic Crops<br>Output: +6 Food</div>
+                    </div>
+                    <div class="room-stats">Assigned: 1/2</div>
+                </div>
+                <div class="room-card">
+                    <div>
+                        <div class="room-name">LIVING QUARTERS</div>
+                        <div class="room-stats">Level 1 - Bunks<br>Cap: 10 Survivors</div>
+                    </div>
+                    <div class="room-stats">Beds: 5 occupied</div>
+                </div>
+                <div class="room-card" style="border-style: dashed; opacity: 0.6;">
+                    <div>
+                        <div class="room-name">[EXPANSION PLOT]</div>
+                        <div class="room-stats">Unexcavated Rock<br>Cost: 40 Scrap</div>
+                    </div>
+                    <div class="room-stats">Ready to Clear</div>
+                </div>
+            </div>
+        </section>
+
+        <aside id="sidebar">
+            <div class="side-panel" id="controls">
+                <div class="section-header">Overseer Directives</div>
+                <button class="btn btn-primary" id="btn-next-cycle" onclick="advanceCycle()">Advance Day Cycle</button>
+                <button class="btn" onclick="logEvent('Scout dispatched to Wasteland Sector 4.', 'info')">Dispatch Scavenger</button>
+                <button class="btn" onclick="logEvent('Facility maintenance scheduled.', 'info')">Facility Management</button>
+                <button class="btn" onclick="logEvent('Survivor roster inspected.', 'info')">Survivor Roster</button>
+            </div>
+
+            <div class="side-panel" id="log-panel">
+                <div class="section-header">Sanctuary Log</div>
+                <div id="log-output">
+                    <div class="log-entry info">[Day 1 06:00] Vault seal confirmed airtight. Reactor operational.</div>
+                    <div class="log-entry info">[Day 1 07:15] 5 survivors reported for morning muster.</div>
+                    <div class="log-entry">[Day 1 08:00] Perimeter sensors detect quiet wasteland sands.</div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <footer>
+        <span>KSANCTUARY v1.0.0 // POST-COLLAPSE VAULT SYSTEM</span>
+        <span>STATUS: SECURE // ATMOSPHERE: RECYCLED</span>
+    </footer>
+
+    <script>
+        const state = {
+            day: 1,
+            population: 5,
+            maxPop: 10,
+            food: 25,
+            water: 25,
+            power: 20,
+            scrap: 50,
+            morale: 80,
+            defense: 15
+        };
+
+        function updateUI() {
+            document.getElementById('time-display').textContent = `CYCLE: DAY ${state.day}`;
+            document.getElementById('res-pop').textContent = `${state.population}/${state.maxPop}`;
+            document.getElementById('res-food').textContent = state.food;
+            document.getElementById('res-water').textContent = state.water;
+            document.getElementById('res-power').textContent = state.power;
+            document.getElementById('res-scrap').textContent = state.scrap;
+            document.getElementById('res-morale').textContent = `${state.morale}%`;
+            document.getElementById('res-defense').textContent = state.defense;
+        }
+
+        function logEvent(msg, type = '') {
+            const logOut = document.getElementById('log-output');
+            const div = document.createElement('div');
+            div.className = `log-entry ${type}`;
+            const timeStr = `[Day ${state.day} 12:00]`;
+            div.textContent = `${timeStr} ${msg}`;
+            logOut.prepend(div);
+        }
+
+        function advanceCycle() {
+            state.day++;
+            // Basic balance delta for skeleton testing
+            state.food = Math.max(0, state.food - state.population + 6);
+            state.water = Math.max(0, state.water - state.population + 6);
+            logEvent(`Cycle progressed to Day ${state.day}. Rations consumed, facilities gathered output.`, 'info');
+            updateUI();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            updateUI();
+        });
+    </script>
+</body>
+</html>
