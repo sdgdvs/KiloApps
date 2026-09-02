@@ -172,19 +172,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             hUpgradeToolsBtn = CreateWindow("BUTTON", "Tools ($200)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 S(10), S(440), S(110), S(30), hwnd, (HMENU) 9, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hNextDayBtn = CreateWindow("BUTTON", "Sleep (Next Day)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+            hNextDayBtn = CreateWindow("BUTTON", "Sleep [Space]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
                 S(130), S(440), S(140), S(30), hwnd, (HMENU) 1, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hUpgradeBtn = CreateWindow("BUTTON", "Fertilizer ($100)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 S(280), S(440), S(120), S(30), hwnd, (HMENU) 6, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
-            hSeedBtns[0] = CreateWindow("BUTTON", "Wheat (-$5) [Sp/Fa]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP,
-                S(10), S(480), S(140), S(20), hwnd, (HMENU) 2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hSeedBtns[1] = CreateWindow("BUTTON", "Corn (-$10) [Su]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
-                S(160), S(480), S(130), S(20), hwnd, (HMENU) 3, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hSeedBtns[2] = CreateWindow("BUTTON", "Tomato (-$15) [Su/Fa]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
-                S(10), S(505), S(140), S(20), hwnd, (HMENU) 4, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hSeedBtns[3] = CreateWindow("BUTTON", "Pumpkin (-$25) [Fa]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
-                S(160), S(505), S(140), S(20), hwnd, (HMENU) 5, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hSeedBtns[0] = CreateWindow("BUTTON", "[1] Wheat (-$5) [Sp/Fa]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP,
+                S(10), S(480), S(145), S(20), hwnd, (HMENU) 2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hSeedBtns[1] = CreateWindow("BUTTON", "[2] Corn (-$10) [Su]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
+                S(160), S(480), S(145), S(20), hwnd, (HMENU) 3, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hSeedBtns[2] = CreateWindow("BUTTON", "[3] Tomato (-$15) [Su/Fa]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
+                S(10), S(505), S(145), S(20), hwnd, (HMENU) 4, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hSeedBtns[3] = CreateWindow("BUTTON", "[4] Pumpkin (-$25) [Fa]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
+                S(160), S(505), S(145), S(20), hwnd, (HMENU) 5, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
                 
             hBuyChickenBtn = CreateWindow("BUTTON", "Chicken ($50)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 S(310), S(480), S(100), S(20), hwnd, (HMENU) 7, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
@@ -210,6 +210,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_KEYDOWN:
             if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
                 SendMessage(hwnd, WM_COMMAND, 14, 0);
+            } else if (wParam == VK_SPACE) {
+                SendMessage(hwnd, WM_COMMAND, 1, 0);
+            } else if (wParam >= '1' && wParam <= '4') {
+                SendMessage(hwnd, WM_COMMAND, 2 + (wParam - '1'), 0);
             }
             return 0;
         case WM_COMMAND:
@@ -308,10 +312,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             }
             if (LOWORD(wParam) == 14) {
-                MessageBox(hwnd, "How to Play:\nClick Grass to Till. Select a seed and click tilled soil to Plant.\nClick planted seed to Water (daily!). Click grown crop to Harvest.\n\nCrops:\nWheat: Grow 2d, Val $10 (Mill $25), Sp/Fa\nCorn: Grow 3d, Val $20, Su\nTomato: Grow 4d, Val $30, Su/Fa\nPumpkin: Grow 5d, Val $50, Fa\n\nAnimals:\nChicken: $5/day (Mayo $15/day)\nCow: $15/day (Cheese $40/day)\n\nWeather:\nClear: Need 1 water\nRain: Auto-waters crops\nDrought: Need 2 water\nCrows: Eats crops (Buy Scarecrow!)", "Farmer's Almanac", MB_OK | MB_ICONINFORMATION);
+                MessageBox(hwnd, "How to Play:\nClick Grass to Till. Select a seed and click tilled soil to Plant.\nClick planted seed to Water (daily!). Click grown crop to Harvest.\n\nCrops:\nWheat: Grow 2d, Val $10 (Mill $25), Sp/Fa\nCorn: Grow 3d, Val $20, Su\nTomato: Grow 4d, Val $30, Su/Fa\nPumpkin: Grow 5d, Val $50, Fa\n\nAnimals:\nChicken: $5/day (Mayo $15/day)\nCow: $15/day (Cheese $40/day)\n\nWeather:\nClear: Need 1 water\nRain: Auto-waters crops\nDrought: Need 2 water\nCrows: Eats crops (Buy Scarecrow!)\n\nShortcuts:\n[1]-[4]: Select Seed\n[Space]: Sleep (Next Day)\n[H] or [F1]: Open Almanac", "Farmer's Almanac", MB_OK | MB_ICONINFORMATION);
             }
             if (LOWORD(wParam) >= 2 && LOWORD(wParam) <= 5) {
                 selected_seed = LOWORD(wParam) - 2;
+                CheckRadioButton(hwnd, 2, 5, LOWORD(wParam));
             }
             return 0;
         case WM_TIMER:
@@ -508,7 +513,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SelectObject(hdc, hGuiFont);
             SetBkMode(hdc, TRANSPARENT);
             SetTextColor(hdc, time_of_day ? RGB(200,200,200) : RGB(50,50,50));
-            const char* inst = "Till->Plant->Water->Harvest | Press H or F1 for Almanac";
+            const char* inst = "Till->Plant->Water->Harvest | Keys: 1-4, Space, H/F1";
             TextOut(hdc, OFFSET_X, 8, inst, lstrlen(inst));
 
             for (int y = 0; y < GRID_ROWS; y++) {
@@ -839,6 +844,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 
     MSG msg = {0};
     while (GetMessage(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN) {
+            if (msg.wParam == VK_F1 || msg.wParam == 'H' || msg.wParam == 'h') {
+                SendMessage(hwnd, WM_COMMAND, 14, 0);
+                continue;
+            }
+            if (msg.wParam == VK_SPACE) {
+                SendMessage(hwnd, WM_COMMAND, 1, 0);
+                continue;
+            }
+            if (msg.wParam >= '1' && msg.wParam <= '4') {
+                int seedCmd = 2 + (msg.wParam - '1');
+                SendMessage(hwnd, WM_COMMAND, seedCmd, 0);
+                continue;
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }

@@ -34,6 +34,39 @@
         }
         h2 { margin: 0 0 10px 0; text-align: center; text-transform: uppercase; letter-spacing: 2px; text-shadow: 1px 1px 0px #FFCC80; }
         p { margin: 15px 0 0 0; text-align: center; font-weight: bold; font-size: 14px; }
+        button {
+            transition: filter 0.15s ease, transform 0.1s ease;
+        }
+        button:hover:not(:disabled) {
+            filter: brightness(1.12);
+        }
+        button:active:not(:disabled) {
+            transform: scale(0.97);
+        }
+        button:disabled {
+            opacity: 0.65;
+            cursor: not-allowed !important;
+        }
+        .toast-notify {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(62, 39, 35, 0.95);
+            color: #FFF3E0;
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 999;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            border: 2px solid #81C784;
+            max-width: 90vw;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -43,15 +76,15 @@
             🐔 Chickens: <span id="chickensSpan">0</span> | 🐄 Cows: <span id="cowsSpan">0</span> | 🧍 Scarecrow: <span id="scarecrowSpan">No</span>
         </div>
         <canvas id="gameCanvas" width="400" height="400"></canvas>
-        <p>Click: Grass(Till) &rarr; Soil(Plant) &rarr; 🌱(Water) &rarr; 🌾(Harvest) | <span style="color:#2196F3;">Press H or F1 for Almanac</span></p>
+        <p>Click: Grass(Till) &rarr; Soil(Plant) &rarr; 🌱(Water) &rarr; 🌾(Harvest) | <span style="color:#2196F3;">Shortcuts: [1-4] Seeds, [Space] Sleep, [H/F1] Almanac</span></p>
         <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:15px;">
             <div style="width:100%; margin-bottom: 5px; font-size: 14px;">
-                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="0" checked> Wheat (-$5) [Sp/Fa]</label>
-                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="1"> Corn (-$10) [Su]</label>
-                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="2"> Tomato (-$15) [Su/Fa]</label>
-                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="3"> Pumpkin (-$25) [Fa]</label>
+                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="0" checked> [1] Wheat (-$5) [Sp/Fa]</label>
+                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="1"> [2] Corn (-$10) [Su]</label>
+                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="2"> [3] Tomato (-$15) [Su/Fa]</label>
+                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="3"> [4] Pumpkin (-$25) [Fa]</label>
             </div>
-            <button onclick="nextDay()" style="padding:10px 20px; font-size:16px; background-color:#FF9800; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Sleep (Next Day)</button>
+            <button onclick="nextDay()" style="padding:10px 20px; font-size:16px; background-color:#FF9800; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Sleep [Space]</button>
             <button id="upgradeBtn" onclick="buyUpgrade()" style="padding:10px 20px; font-size:16px; background-color:#4CAF50; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Fertilizer ($100)</button>
             <button id="upgradeToolsBtn" onclick="buyToolsUpgrade()" style="padding:10px 20px; font-size:16px; background-color:#2196F3; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Upgrade Tools ($200)</button>
         </div>
@@ -64,12 +97,12 @@
             <button id="millBtn" onclick="buyMill()" style="padding:5px 10px; font-size:14px; background-color:#D7CCC8; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Buy Mill ($150)</button>
             <button id="mayoBtn" onclick="buyMayoMaker()" style="padding:5px 10px; font-size:14px; background-color:#FFF9C4; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Buy Mayo Maker ($100)</button>
             <button id="cheeseBtn" onclick="buyCheesePress()" style="padding:5px 10px; font-size:14px; background-color:#FFE082; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Buy Cheese Press ($200)</button>
-            <button onclick="showHelp()" style="padding:5px 10px; font-size:14px; background-color:#2196F3; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Almanac (H/F1)</button>
+            <button onclick="showHelp()" style="padding:5px 10px; font-size:14px; background-color:#2196F3; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Almanac [H / F1]</button>
         </div>
     </div>
-    <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:100; justify-content:center; align-items:center;">
-        <div style="background:#FFF3E0; padding:20px; border-radius:10px; border:4px solid #8D6E63; max-width:500px; max-height:80vh; overflow-y:auto;">
-            <h2 style="color:#5D4037;">Farmer's Almanac</h2>
+    <div id="helpModal" onclick="if(event.target===this) hideHelp();" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:100; justify-content:center; align-items:center;">
+        <div style="background:#FFF3E0; padding:20px; border-radius:10px; border:4px solid #8D6E63; max-width:500px; max-height:80vh; overflow-y:auto; box-shadow: 0 8px 24px rgba(0,0,0,0.4);">
+            <h2 style="color:#5D4037; margin-top:0;">Farmer's Almanac</h2>
             <div style="color:#4E342E; font-size:14px; line-height:1.4;">
                 <p style="text-align:left;"><strong>How to Play:</strong><br>
                 Click a grass tile to <strong>Till</strong> it.<br>
@@ -89,24 +122,62 @@
                 🌧️ Rain: Auto-waters crops<br>
                 🏜️ Drought: Need 2 water<br>
                 🐦 Crows: Can eat crops (Buy a Scarecrow!)</p>
+                <p style="text-align:left; background:rgba(141,110,99,0.15); padding:8px 12px; border-radius:6px;"><strong>Keyboard Shortcuts:</strong><br>
+                <strong>[1] - [4]</strong>: Select Seed (Wheat, Corn, Tomato, Pumpkin)<br>
+                <strong>[Space]</strong>: Sleep / Next Day<br>
+                <strong>[H] or [F1]</strong>: Toggle Farmer's Almanac<br>
+                <strong>[Esc]</strong>: Close Almanac Dialog</p>
             </div>
-            <div style="text-align:center; margin-top:20px;">
-                <button onclick="hideHelp()" style="padding:10px 20px; font-weight:bold; background-color:#FF9800; border:none; border-radius:5px; color:white; cursor:pointer;">Close</button>
+            <div style="text-align:center; margin-top:15px;">
+                <button onclick="hideHelp()" style="padding:10px 24px; font-weight:bold; background-color:#FF9800; border:none; border-radius:5px; color:white; cursor:pointer;">Close [Esc]</button>
             </div>
         </div>
     </div>
+    <div id="kfarmToast" class="toast-notify"></div>
     <script>
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('kfarmToast');
+            if (!toast) return;
+            toast.textContent = msg;
+            toast.style.borderColor = isError ? '#F44336' : '#81C784';
+            toast.style.opacity = '1';
+            clearTimeout(toast.timer);
+            toast.timer = setTimeout(() => {
+                toast.style.opacity = '0';
+            }, 2500);
+        }
+
         function showHelp() { document.getElementById('helpModal').style.display = 'flex'; }
         function hideHelp() { document.getElementById('helpModal').style.display = 'none'; }
 
         document.addEventListener('keydown', (e) => {
+            const modal = document.getElementById('helpModal');
+            const isModalOpen = (modal.style.display === 'flex');
+
             if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
-                if (e.key === 'F1') e.preventDefault();
-                const modal = document.getElementById('helpModal');
-                if (modal.style.display === 'none' || modal.style.display === '') {
-                    showHelp();
-                } else {
-                    hideHelp();
+                e.preventDefault();
+                if (isModalOpen) hideHelp();
+                else showHelp();
+                return;
+            }
+            if (e.key === 'Escape' && isModalOpen) {
+                e.preventDefault();
+                hideHelp();
+                return;
+            }
+            if (isModalOpen) return;
+
+            if (e.key === ' ' || e.code === 'Space') {
+                e.preventDefault();
+                nextDay();
+                return;
+            }
+            if (e.key >= '1' && e.key <= '4') {
+                const idx = parseInt(e.key) - 1;
+                const radios = document.querySelectorAll('input[name="seed"]');
+                if (radios[idx]) {
+                    radios[idx].checked = true;
+                    showToast(`Selected seed: [${e.key}] ${cropData[idx].name} ($${cropData[idx].cost})`);
                 }
             }
         });
@@ -285,6 +356,9 @@
                 playSound('chicken');
                 updateMoney();
                 updateAnimals();
+                showToast(`🐔 Bought a Chicken! Total: ${chickens} ($${chickens * (hasMayoMaker ? 15 : 5)}/day)`);
+            } else {
+                showToast(`⚠️ Need $50 for a Chicken (You have $${money})`, true);
             }
         }
 
@@ -295,11 +369,15 @@
                 playSound('cow');
                 updateMoney();
                 updateAnimals();
+                showToast(`🐄 Bought a Cow! Total: ${cows} ($${cows * (hasCheesePress ? 40 : 15)}/day)`);
+            } else {
+                showToast(`⚠️ Need $150 for a Cow (You have $${money})`, true);
             }
         }
 
         function buyScarecrow() {
-            if (!hasScarecrow && money >= 100) {
+            if (hasScarecrow) return;
+            if (money >= 100) {
                 money -= 100;
                 hasScarecrow = true;
                 updateMoney();
@@ -308,6 +386,9 @@
                 btn.innerText = 'Scarecrow (Owned)';
                 btn.style.backgroundColor = '#9E9E9E';
                 btn.disabled = true;
+                showToast('🧍 Scarecrow installed! Crops protected from crows!');
+            } else {
+                showToast(`⚠️ Need $100 for a Scarecrow (You have $${money})`, true);
             }
         }
 
@@ -316,7 +397,8 @@
         }
 
         function buyUpgrade() {
-            if (!fertilizerBought && money >= 100) {
+            if (fertilizerBought) return;
+            if (money >= 100) {
                 money -= 100;
                 fertilizerBought = true;
                 cropData.forEach(c => { if (c.growthTime > 1) c.growthTime--; });
@@ -325,23 +407,31 @@
                 btn.innerText = 'Fertilizer (Owned)';
                 btn.style.backgroundColor = '#9E9E9E';
                 btn.disabled = true;
+                showToast('🌱 Fertilizer purchased! All crops now mature 1 day faster!');
+            } else {
+                showToast(`⚠️ Need $100 for Fertilizer (You have $${money})`, true);
             }
         }
 
         function buyToolsUpgrade() {
-            if (!toolsUpgraded && money >= 200) {
+            if (toolsUpgraded) return;
+            if (money >= 200) {
                 money -= 200;
                 toolsUpgraded = true;
                 updateMoney();
                 const btn = document.getElementById('upgradeToolsBtn');
-                btn.innerText = 'Tools Upgraded';
+                btn.innerText = 'Tools Upgraded (3x3)';
                 btn.style.backgroundColor = '#9E9E9E';
                 btn.disabled = true;
+                showToast('✨ Tools Upgraded! Tilling, watering, and harvesting now affect a 3x3 area!');
+            } else {
+                showToast(`⚠️ Need $200 to Upgrade Tools (You have $${money})`, true);
             }
         }
 
         function buyMill() {
-            if (!hasMill && money >= 150) {
+            if (hasMill) return;
+            if (money >= 150) {
                 money -= 150;
                 hasMill = true;
                 cropData[0].value = 25; // Wheat -> Flour
@@ -350,11 +440,15 @@
                 btn.innerText = 'Mill (Owned)';
                 btn.style.backgroundColor = '#9E9E9E';
                 btn.disabled = true;
+                showToast('🏭 Mill purchased! Wheat now processes into flour for $25 (was $10)!');
+            } else {
+                showToast(`⚠️ Need $150 for the Mill (You have $${money})`, true);
             }
         }
 
         function buyMayoMaker() {
-            if (!hasMayoMaker && money >= 100) {
+            if (hasMayoMaker) return;
+            if (money >= 100) {
                 money -= 100;
                 hasMayoMaker = true;
                 updateMoney();
@@ -362,11 +456,15 @@
                 btn.innerText = 'Mayo Maker (Owned)';
                 btn.style.backgroundColor = '#9E9E9E';
                 btn.disabled = true;
+                showToast('🥚 Mayo Maker purchased! Chickens now produce Mayo for $15/day (was $5)!');
+            } else {
+                showToast(`⚠️ Need $100 for Mayo Maker (You have $${money})`, true);
             }
         }
 
         function buyCheesePress() {
-            if (!hasCheesePress && money >= 200) {
+            if (hasCheesePress) return;
+            if (money >= 200) {
                 money -= 200;
                 hasCheesePress = true;
                 updateMoney();
@@ -374,6 +472,9 @@
                 btn.innerText = 'Cheese Press (Owned)';
                 btn.style.backgroundColor = '#9E9E9E';
                 btn.disabled = true;
+                showToast('🧀 Cheese Press purchased! Cows now produce Cheese for $40/day (was $15)!');
+            } else {
+                showToast(`⚠️ Need $200 for Cheese Press (You have $${money})`, true);
             }
         }
         
@@ -643,13 +744,18 @@
                             const seedInput = document.querySelector('input[name="seed"]:checked');
                             const cType = seedInput ? parseInt(seedInput.value) : 0;
                             const currentSeason = Math.floor((day - 1) / 7) % 4;
-                            if (cropData[cType].seasons.includes(currentSeason) && money >= cropData[cType].cost) {
+                            if (!cropData[cType].seasons.includes(currentSeason)) {
+                                showToast(`⚠️ ${cropData[cType].name} cannot be planted in ${seasons[currentSeason]}!`, true);
+                            } else if (money < cropData[cType].cost) {
+                                showToast(`⚠️ Need $${cropData[cType].cost} for ${cropData[cType].name} seed (You have $${money})`, true);
+                            } else {
                                 money -= cropData[cType].cost;
                                 updateMoney();
                                 cell.type = 2;
                                 cell.growth = 0;
                                 cell.cropType = cType;
                                 spawnParticles(x * CELL_SIZE, y * CELL_SIZE, '#8BC34A', 10);
+                                showToast(`Planted ${cropData[cType].name} (-$${cropData[cType].cost})`);
                             }
                         } else if (action === 'water' && cell.type === 2) {
                             const req = weather === 'Drought' ? 2 : 1;
@@ -658,12 +764,14 @@
                                 spawnWaterParticles(x * CELL_SIZE + CELL_SIZE/2, y * CELL_SIZE + CELL_SIZE/2);
                             }
                         } else if (action === 'harvest' && cell.type === 3) {
-                            money += cropData[cell.cropType].value;
+                            const val = cropData[cell.cropType].value;
+                            money += val;
                             updateMoney();
                             cell.type = 1;
                             cell.watered = 0;
                             spawnExplosion(x * CELL_SIZE, y * CELL_SIZE);
                             shakeAmount += 15;
+                            showToast(`🌾 Harvested ${cropData[cell.cropType].name} (+$${val})!`);
                         }
                     }
                 }
@@ -681,7 +789,8 @@
                 document.getElementById('daySpan').innerText = day;
                 document.getElementById('seasonSpan').innerText = seasons[currentSeason];
                 timeOfDay = 'day';
-                money += (chickens * (hasMayoMaker ? 15 : 5)) + (cows * (hasCheesePress ? 40 : 15));
+                const animalIncome = (chickens * (hasMayoMaker ? 15 : 5)) + (cows * (hasCheesePress ? 40 : 15));
+                money += animalIncome;
                 updateMoney();
                 for (let cell of grid) {
                     if (cell.type === 2 || cell.type === 3) {
@@ -719,9 +828,12 @@
                 document.getElementById('seasonSpan').innerText = seasons[currentSeason];
                 document.getElementById('weatherSpan').innerText = weather;
 
-                timeOfDay = 'day';
-                money += (chickens * (hasMayoMaker ? 15 : 5)) + (cows * (hasCheesePress ? 40 : 15));
-                updateMoney();
+                let morningMsg = `🌅 Day ${day} (${seasons[currentSeason]}) - ${weather}`;
+                if (animalIncome > 0) morningMsg += ` | Animals: +$${animalIncome}`;
+                if (weather === 'Rain') morningMsg += ` | 🌧️ Rain watered crops!`;
+                else if (weather === 'Drought') morningMsg += ` | 🏜️ Drought: crops need 2x water!`;
+                else if (weather === 'Crows') morningMsg += hasScarecrow ? ` | 🧍 Scarecrow protected crops!` : ` | 🐦 Crows raided unprotected crops!`;
+                showToast(morningMsg);
             }, 1000);
         }
 
