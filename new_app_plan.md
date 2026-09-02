@@ -53,28 +53,28 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KStellar (Space exploration and trading RPG)
-**Phase:** 14 (next to do)
-**Status:** Deep Expansion
+**App:** KSanctuary (Post-apocalyptic wasteland survival & base building RPG)
+**Phase:** 1 (next to do)
+**Status:** Creation
 
-- [x] Phase 1: Scaffold KStellar directory (`KStellar/`), create web HTML skeleton (`KiloOS/public/apps/kstellar.html`), register in App.jsx.
-- [x] Phase 2: Basic UI for starship dashboard showing fuel, credits, cargo space, and a map of local star systems.
-- [x] Phase 3: Native C version (`KStellar/main.c`, `build.bat`) using Win32 API with functional parity.
-- [x] Phase 4: Sci-fi aesthetic styling (deep space black backgrounds, neon blue/green accents, monospaced fonts, scanlines).
-- [x] Phase 5: Implement space travel mechanics (traveling consumes fuel, takes time, triggers random encounters).
-- [x] Phase 6: Implement commodity trading system (buy low on agricultural planets, sell high on industrial/mining planets).
-- [x] Phase 7: Add a ship upgrade system (buy better engines for less fuel usage, larger cargo bays, better shields/weapons).
-- [x] Phase 8: Introduce hostile encounters (space pirates) with turn-based tactical space combat (attack, evade, use items).
-- [x] Phase 9: Implement a mission/bounty board at space stations for additional credit opportunities.
-- [x] Phase 10: Add procedural generation for a large galaxy with multiple sectors and varied planetary economies.
-- [x] Phase 11: Special stellar phenomena events (black holes, solar flares, derelict ships to salvage).
-- [x] Phase 12: Add a faction reputation system (actions affect standing with Galactic Federation, Pirates, Traders).
-- [x] Phase 13: Sound Effects — warp drives, lasers, UI blips, ambient space drone (Web Audio / Win32 Beep).
-- [ ] Phase 14: Comprehensive Help & Star Captain's Manual — How-to-play, trading tips, combat guide.
+- [ ] Phase 1: Scaffold KSanctuary directory (`KSanctuary/`), create web HTML skeleton (`KiloOS/public/apps/ksanctuary.html`), register in App.jsx.
+- [ ] Phase 2: Basic UI for wasteland shelter showing population, food, water, power, scrap, and day cycle.
+- [ ] Phase 3: Native C version (`KSanctuary/main.c`, `build.bat`) using Win32 API with functional parity.
+- [ ] Phase 4: Post-apocalyptic retro-terminal aesthetic (rust/amber/monochrome CRT styling, distressed borders).
+- [ ] Phase 5: Implement room construction and expansion (living quarters, water purifiers, hydroponic farms, power generators).
+- [ ] Phase 6: Implement survivor recruitment and assignment (assign survivors to facilities to generate daily resources).
+- [ ] Phase 7: Wasteland exploration and scavenging runs (send scouts into ruins for scrap, medical supplies, and blueprints).
+- [ ] Phase 8: Raider attack events and base defense mechanics (turrets, barricades, survivor combat readiness).
+- [ ] Phase 9: Technology research tree (unlock advanced water filtration, hydroponics, reinforced defenses, solar arrays).
+- [ ] Phase 10: Environmental disasters and weather hazards (radiation storms, droughts, toxic rain, cold snaps).
+- [ ] Phase 11: Wasteland caravan trading system (nomadic traders visit to exchange surplus supplies and rare items).
+- [ ] Phase 12: Morale and health system (treat radiation sickness, manage rations and water quality to avoid unrest).
+- [ ] Phase 13: Sound Effects — Geiger counter clicks, construction hums, alarm sirens, ambient wasteland wind (Web Audio / Win32 Beep).
+- [ ] Phase 14: Comprehensive Help & Overseer's Survival Manual — How-to-play, survival strategies, facility guide.
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
-2. Implement the feature in BOTH `KiloOS/public/apps/kstellar.html` AND `KStellar/main.c`.
+2. Implement the feature in BOTH `KiloOS/public/apps/ksanctuary.html` AND `KSanctuary/main.c`.
 3. Mark the phase as `[x]` in this plan file.
 4. Update the **Phase** number to the next unchecked phase.
 5. Commit and push both the code changes and this plan file update.
@@ -136,6 +136,7 @@ When starting a new app, you MUST write concrete phase descriptions for Phases 5
 Use the game/utility feature priority lists above for inspiration, but write specific descriptions tailored to the app.
 
 ## Completed Apps
+- KStellar (Phase 14 completed: Added Comprehensive Help & Star Captain's Manual to both versions)
 - KColosseum (Phase 14 completed: Added Comprehensive Help & Lanista's Guide to both versions)
 - KMystery (Phase 14 completed: Added Comprehensive Help & Detective's Manual to both versions)
 - KTrader (Phase 14 completed: Added Comprehensive Help & Captain's Log to both versions)
@@ -172,7 +173,7 @@ Use the game/utility feature priority lists above for inspiration, but write spe
 ## Possible Future Apps (pick from here or invent your own)
 
 ### 🎮 GAMES — DEEP FANTASY & SCI-FI (PRIORITY)
-- **KSanctuary** — Base-building survival game in a post-apocalyptic wasteland. Manage resources, defend against raids, and research tech.
+- **KSubmarine** — Deep-sea underwater exploration and survival game. Manage hull pressure, oxygen, sonar navigation, undersea fauna, and abyssal trenches.
 
 ### 🛠️ Utilities (lower priority — create 1 for every 2-3 games)
 - **KPomodoro** — Focus timer with work/break cycles, session history, daily stats.

@@ -113,6 +113,15 @@ void GenerateGalaxy() {
 #define ID_BTN_SOUND_TOGGLE 160
 #define ID_BTN_DRONE_TOGGLE 161
 
+#define ID_BTN_MANUAL 170
+#define ID_BTN_MAN_TAB_1 171
+#define ID_BTN_MAN_TAB_2 172
+#define ID_BTN_MAN_TAB_3 173
+#define ID_BTN_MAN_TAB_4 174
+#define ID_BTN_MAN_TAB_5 175
+#define ID_BTN_MAN_BACK 176
+#define ID_BTN_MAN_CODEX 177
+
 #define SFX_BLIP 1
 #define SFX_WARP 2
 #define SFX_LASER 3
@@ -204,11 +213,17 @@ HWND hBtnCombatAttack, hBtnCombatEvade, hBtnCombatUseTech, hBtnCombatFlee;
 HWND hBtnMissions, hBtnMissionAccept1, hBtnMissionAccept2, hBtnMissionAbandon, hBtnMissionBack;
 HWND hBtnFactions, hBtnFactDonate, hBtnFactDues, hBtnFactBribe, hBtnFactBack;
 HWND hBtnInvestigate;
+HWND hBtnManual, hBtnManTab1, hBtnManTab2, hBtnManTab3, hBtnManTab4, hBtnManTab5, hBtnManBack, hBtnManCodex;
 
 int selectedSystem = -1;
 int currentSystemId = 0;
 int inMissionsView = 0;
 int inFactionsView = 0;
+int inManualView = 0;
+int manualTab = 0;
+
+void HideManualButtons();
+void ShowManualView(HWND hwnd, int tab);
 
 int repFed = 10;
 int repTraders = 15;
@@ -311,9 +326,110 @@ void UpdateDashboard() {
     }
 }
 
-void ShowStationView(HWND hwnd) {
+void HideManualButtons() {
+    ShowWindow(hBtnManTab1, SW_HIDE);
+    ShowWindow(hBtnManTab2, SW_HIDE);
+    ShowWindow(hBtnManTab3, SW_HIDE);
+    ShowWindow(hBtnManTab4, SW_HIDE);
+    ShowWindow(hBtnManTab5, SW_HIDE);
+    ShowWindow(hBtnManCodex, SW_HIDE);
+    ShowWindow(hBtnManBack, SW_HIDE);
+}
+
+void ShowManualView(HWND hwnd, int tab) {
+    inManualView = 1;
     inMissionsView = 0;
     inFactionsView = 0;
+    manualTab = tab;
+
+    ShowWindow(hBtnCourse, SW_HIDE);
+    ShowWindow(hBtnMissions, SW_HIDE);
+    ShowWindow(hBtnFactions, SW_HIDE);
+    ShowWindow(hBtnInvestigate, SW_HIDE);
+    ShowWindow(hBtnBuyFood, SW_HIDE);
+    ShowWindow(hBtnSellFood, SW_HIDE);
+    ShowWindow(hBtnBuyMinerals, SW_HIDE);
+    ShowWindow(hBtnSellMinerals, SW_HIDE);
+    ShowWindow(hBtnBuyTech, SW_HIDE);
+    ShowWindow(hBtnSellTech, SW_HIDE);
+    ShowWindow(hBtnUpgEngine, SW_HIDE);
+    ShowWindow(hBtnUpgCargo, SW_HIDE);
+    ShowWindow(hBtnUpgWeapon, SW_HIDE);
+    ShowWindow(hBtnUpgShield, SW_HIDE);
+
+    ShowWindow(hBtnMissionAccept1, SW_HIDE);
+    ShowWindow(hBtnMissionAccept2, SW_HIDE);
+    ShowWindow(hBtnMissionAbandon, SW_HIDE);
+    ShowWindow(hBtnMissionBack, SW_HIDE);
+
+    ShowWindow(hBtnFactDonate, SW_HIDE);
+    ShowWindow(hBtnFactDues, SW_HIDE);
+    ShowWindow(hBtnFactBribe, SW_HIDE);
+    ShowWindow(hBtnFactBack, SW_HIDE);
+
+    ShowWindow(hBtnManTab1, SW_SHOW);
+    ShowWindow(hBtnManTab2, SW_SHOW);
+    ShowWindow(hBtnManTab3, SW_SHOW);
+    ShowWindow(hBtnManTab4, SW_SHOW);
+    ShowWindow(hBtnManTab5, SW_SHOW);
+    ShowWindow(hBtnManCodex, SW_SHOW);
+    ShowWindow(hBtnManBack, SW_SHOW);
+
+    char infoText[1024];
+    if (tab == 0) {
+        strcpy(infoText, "--- 1. FLIGHT & NAV ---\n\n"
+                         "30 systems across 5 sectors.\n"
+                         "- Click star to view info & prices.\n"
+                         "- 'Set Course' to warp jump.\n"
+                         "  Fuel cost = Dist / (2*EngLvl).\n"
+                         "- Click current system (cyan) to dock.\n"
+                         "- Zero Hull triggers emergency rescue\n"
+                         "  tug back to Sol (-500C fee).");
+    } else if (tab == 1) {
+        strcpy(infoText, "--- 2. COMMODITY TRADING ---\n\n"
+                         "Economies & Multipliers:\n"
+                         "- Agri: Food 0.5x, Min 1.5x, Tech 1.8x\n"
+                         "- Mining: Min 0.5x, Food 1.5x, Tech 1.5x\n"
+                         "- Ind: Tech 0.8x, Food 1.3x, Min 1.2x\n"
+                         "- Tech Hub: Tech 0.5x, Food 1.5x, Min 1.5x\n"
+                         "- Sol: Baseline 1.0x on all goods.\n\n"
+                         "Pro Tip: Buy Tech at Tech Hubs (~50C),\n"
+                         "sell at Agri worlds (~200C) for 300% profit!");
+    } else if (tab == 2) {
+        strcpy(infoText, "--- 3. TACTICAL COMBAT ---\n\n"
+                         "Pirate ambushes: 25% on warp jumps.\n\n"
+                         "- Attack: Blasters (15-30 + 10/WpnLvl).\n"
+                         "  +20% dmg with Fed friendly alliance.\n"
+                         "- Evade: Halves damage + 35% counter.\n"
+                         "- Use Tech: EMP pulse. Costs 1 Tech or\n"
+                         "  5% fuel. Deals 30-55 armor-pierce dmg!\n"
+                         "- Flee: Sub-light burn (50% + 10%*Eng).");
+    } else if (tab == 3) {
+        strcpy(infoText, "--- 4. FACTIONS & DIPLOMACY ---\n\n"
+                         "Reputation Perks (Friendly >= +15):\n"
+                         "- FEDERATION: +20% Attack dmg & +15%\n"
+                         "  bounty reward bonus. (Donate 350C)\n"
+                         "- TRADERS: 10% buy disc / sell markup\n"
+                         "  on all market goods. (Dues 300C)\n"
+                         "- PIRATES: Safe passage & 150C tribute\n"
+                         "  instead of attacks! (Bribe 400C)");
+    } else if (tab == 4) {
+        strcpy(infoText, "--- 5. ANOMALIES & SHIPYARD ---\n\n"
+                         "Stellar Phenomena:\n"
+                         "- Black Hole: 600-800C, +5 Fed (hull dmg).\n"
+                         "- Solar Flare: +35% Fuel, 350-450C, +4 Trd.\n"
+                         "- Derelict: 400-550C, +30 Hull, 1T+1M, +5 Pir.\n\n"
+                         "Shipyard: Upgrade Engine (fuel eff),\n"
+                         "Cargo (+50t), Weapons (+dmg), Shields (+Hull).");
+    }
+    SetWindowText(hInfoArea, infoText);
+}
+
+void ShowStationView(HWND hwnd) {
+    inManualView = 0;
+    inMissionsView = 0;
+    inFactionsView = 0;
+    HideManualButtons();
     
     ShowWindow(hBtnMissionAccept1, SW_HIDE);
     ShowWindow(hBtnMissionAccept2, SW_HIDE);
@@ -369,8 +485,10 @@ void ShowStationView(HWND hwnd) {
 }
 
 void ShowMissionsView(HWND hwnd) {
+    inManualView = 0;
     inMissionsView = 1;
     inFactionsView = 0;
+    HideManualButtons();
     
     ShowWindow(hBtnMissions, SW_HIDE);
     ShowWindow(hBtnFactions, SW_HIDE);
@@ -428,8 +546,10 @@ void ShowMissionsView(HWND hwnd) {
 }
 
 void ShowFactionsView(HWND hwnd) {
+    inManualView = 0;
     inFactionsView = 1;
     inMissionsView = 0;
+    HideManualButtons();
 
     ShowWindow(hBtnMissions, SW_HIDE);
     ShowWindow(hBtnFactions, SW_HIDE);
@@ -479,6 +599,8 @@ void UpdateCombatUI(HWND hwnd) {
 
 void EndCombat(HWND hwnd) {
     inCombat = 0;
+    inManualView = 0;
+    HideManualButtons();
     ShowWindow(hBtnCombatAttack, SW_HIDE);
     ShowWindow(hBtnCombatEvade, SW_HIDE);
     ShowWindow(hBtnCombatUseTech, SW_HIDE);
@@ -520,8 +642,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hMissionText = CreateWindow("STATIC", "", WS_VISIBLE | WS_CHILD, 20, 45, 435, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hMissionText, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            hBtnSoundToggle = CreateWindow("BUTTON", "SND: ON", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 465, 42, 95, 22, hwnd, (HMENU)ID_BTN_SOUND_TOGGLE, NULL, NULL);
-            hBtnDroneToggle = CreateWindow("BUTTON", "DRN: ON", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 570, 42, 95, 22, hwnd, (HMENU)ID_BTN_DRONE_TOGGLE, NULL, NULL);
+            hBtnManual = CreateWindow("BUTTON", "MANUAL", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 42, 68, 22, hwnd, (HMENU)ID_BTN_MANUAL, NULL, NULL);
+            hBtnSoundToggle = CreateWindow("BUTTON", "SND: ON", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 513, 42, 76, 22, hwnd, (HMENU)ID_BTN_SOUND_TOGGLE, NULL, NULL);
+            hBtnDroneToggle = CreateWindow("BUTTON", "DRN: ON", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 594, 42, 76, 22, hwnd, (HMENU)ID_BTN_DRONE_TOGGLE, NULL, NULL);
 
             hDroneThread = CreateThread(NULL, 0, AmbientDroneThread, NULL, 0, NULL);
             
@@ -561,6 +684,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hBtnFactDues = CreateWindow("BUTTON", "Guild Dues (300)", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 310, 195, 25, hwnd, (HMENU)ID_BTN_FACT_DUES, NULL, NULL);
             hBtnFactBribe = CreateWindow("BUTTON", "Bribe Pirate (400)", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 340, 195, 25, hwnd, (HMENU)ID_BTN_FACT_BRIBE, NULL, NULL);
             hBtnFactBack = CreateWindow("BUTTON", "Back", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 375, 195, 25, hwnd, (HMENU)ID_BTN_FACT_BACK, NULL, NULL);
+
+            hBtnManTab1 = CreateWindow("BUTTON", "1.Flight", WS_CHILD | BS_OWNERDRAW, 440, 280, 95, 25, hwnd, (HMENU)ID_BTN_MAN_TAB_1, NULL, NULL);
+            hBtnManTab2 = CreateWindow("BUTTON", "2.Trade", WS_CHILD | BS_OWNERDRAW, 540, 280, 95, 25, hwnd, (HMENU)ID_BTN_MAN_TAB_2, NULL, NULL);
+            hBtnManTab3 = CreateWindow("BUTTON", "3.Combat", WS_CHILD | BS_OWNERDRAW, 440, 310, 95, 25, hwnd, (HMENU)ID_BTN_MAN_TAB_3, NULL, NULL);
+            hBtnManTab4 = CreateWindow("BUTTON", "4.Faction", WS_CHILD | BS_OWNERDRAW, 540, 310, 95, 25, hwnd, (HMENU)ID_BTN_MAN_TAB_4, NULL, NULL);
+            hBtnManTab5 = CreateWindow("BUTTON", "5.Systems", WS_CHILD | BS_OWNERDRAW, 440, 340, 95, 25, hwnd, (HMENU)ID_BTN_MAN_TAB_5, NULL, NULL);
+            hBtnManCodex = CreateWindow("BUTTON", "Full Codex", WS_CHILD | BS_OWNERDRAW, 540, 340, 95, 25, hwnd, (HMENU)ID_BTN_MAN_CODEX, NULL, NULL);
+            hBtnManBack = CreateWindow("BUTTON", "Back to Station", WS_CHILD | BS_OWNERDRAW, 440, 375, 195, 25, hwnd, (HMENU)ID_BTN_MAN_BACK, NULL, NULL);
+
+            HideManualButtons();
 
             ShowWindow(hBtnCourse, SW_HIDE);
             ShowWindow(hBtnMissions, SW_HIDE);
@@ -749,6 +882,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         
                     SetWindowText(hInfoArea, infoText);
                     if (selectedSystem != currentSystemId) {
+                        inManualView = 0;
+                        HideManualButtons();
                         ShowWindow(hBtnCourse, SW_SHOW);
                         ShowWindow(hBtnMissions, SW_HIDE);
                         ShowWindow(hBtnFactions, SW_HIDE);
@@ -838,6 +973,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         enemyHull = enemyMaxHull;
                         strcpy(combatLog, "Pirate intercepts your ship!\nTactical combat initiated.\n");
                         
+                        inManualView = 0;
+                        HideManualButtons();
                         ShowWindow(hBtnCourse, SW_HIDE);
                         ShowWindow(hBtnMissions, SW_HIDE);
                         ShowWindow(hBtnFactions, SW_HIDE);
@@ -1190,6 +1327,73 @@ encounter_processed:
                 
                 ShowStationView(hwnd);
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == ID_BTN_MANUAL) {
+                PlaySfx(SFX_BLIP);
+                if (inManualView) {
+                    ShowStationView(hwnd);
+                } else {
+                    ShowManualView(hwnd, 0);
+                }
+            } else if (LOWORD(wParam) == ID_BTN_MAN_TAB_1) {
+                PlaySfx(SFX_BLIP);
+                ShowManualView(hwnd, 0);
+            } else if (LOWORD(wParam) == ID_BTN_MAN_TAB_2) {
+                PlaySfx(SFX_BLIP);
+                ShowManualView(hwnd, 1);
+            } else if (LOWORD(wParam) == ID_BTN_MAN_TAB_3) {
+                PlaySfx(SFX_BLIP);
+                ShowManualView(hwnd, 2);
+            } else if (LOWORD(wParam) == ID_BTN_MAN_TAB_4) {
+                PlaySfx(SFX_BLIP);
+                ShowManualView(hwnd, 3);
+            } else if (LOWORD(wParam) == ID_BTN_MAN_TAB_5) {
+                PlaySfx(SFX_BLIP);
+                ShowManualView(hwnd, 4);
+            } else if (LOWORD(wParam) == ID_BTN_MAN_CODEX) {
+                PlaySfx(SFX_BLIP);
+                MessageBox(hwnd,
+                    "=== STAR CAPTAIN'S MANUAL & CODEX ===\n\n"
+                    "[1. FLIGHT & NAVIGATION]\n"
+                    "Galaxy: 30 star systems across 5 sectors (Alpha, Beta, Gamma, Delta, Omega).\n"
+                    "Click systems to inspect, 'Set Course' to warp. Fuel burn = Dist / (2 * Engine Lvl).\n"
+                    "Click current system (cyan) to dock. Zero Hull causes emergency tow to Sol (-500C max).\n\n"
+                    "[2. COMMODITY TRADING]\n"
+                    "Agri Worlds: Cheap Food (0.5x), High Tech (1.8x).\n"
+                    "Mining Outposts: Cheap Minerals (0.5x), High Food & Tech (1.5x).\n"
+                    "Industrial: Moderate Tech (0.8x), High Food (1.3x), Minerals (1.2x).\n"
+                    "Tech Hubs: Cheap Tech (0.5x), High Food & Minerals (1.5x).\n"
+                    "Trading Route: Buy Tech at Tech Hubs, sell at Agri worlds for >300% profit!\n\n"
+                    "[3. TACTICAL COMBAT]\n"
+                    "Pirate ambushes occur on 25% of hyperspace jumps.\n"
+                    "Attack: Base 15-30 dmg + 10/Wpn Lvl (+20% with Fed alliance).\n"
+                    "Evade: 50% damage reduction + 35% counter-attack chance.\n"
+                    "Use Tech: EMP shockwave (costs 1 Tech or 5% fuel) for 30-55 armor-piercing damage.\n"
+                    "Flee: Escape chance is 50% + 10% * Engine Level.\n\n"
+                    "[4. FACTION STANDING]\n"
+                    "Federation (>= +15): +20% ATK & +15% Bounty reward bonus. (Donate 350C: +15 Fed, -8 Pir)\n"
+                    "Traders (>= +15): 10% buy discount & 10% sell markup on all goods. (Dues 300C: +15 Trd)\n"
+                    "Pirates (>= +15): Peaceful safe passage + 150C tribute gift. (Bribe 400C: +15 Pir, -8 Fed)\n\n"
+                    "[5. ANOMALIES & SHIPYARD]\n"
+                    "Black Holes (600-800C), Solar Flares (+35% fuel, 350-450C), Derelicts (+30 hull, cargo).\n"
+                    "Upgrade Engine, Cargo (+50t), Weapons, and Shields at any orbital shipyard.",
+                    "Star Captain's Manual & Codex",
+                    MB_OK | MB_ICONINFORMATION);
+            } else if (LOWORD(wParam) == ID_BTN_MAN_BACK) {
+                PlaySfx(SFX_BLIP);
+                ShowStationView(hwnd);
+            }
+            return 0;
+        }
+        case WM_KEYDOWN: {
+            if (wParam == 'M' || wParam == 'm' || wParam == 'H' || wParam == 'h') {
+                PlaySfx(SFX_BLIP);
+                if (inManualView) ShowStationView(hwnd);
+                else ShowManualView(hwnd, 0);
+            } else if (wParam == VK_ESCAPE) {
+                if (inManualView) {
+                    PlaySfx(SFX_BLIP);
+                    ShowStationView(hwnd);
+                }
             }
             return 0;
         }
@@ -1222,7 +1426,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     HWND hwnd = CreateWindowEx(
         0,
         CLASS_NAME,
-        "KStellar Phase 13",
+        "KStellar Phase 14 - Star Captain's Manual",
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, 700, 550,
         NULL,

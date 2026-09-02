@@ -156,6 +156,7 @@
             <div class="stat">CREDITS: ₭<span id="credits">1,000</span></div>
             <div class="stat">CARGO: <span id="cargo-used">0</span>/<span id="cargo-max">50</span> TONS</div>
             <div style="display:flex; gap:8px; align-items:center;">
+                <button id="manual-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#ffff00; color:#ffff00;" onclick="openManual()">📖 MANUAL (M)</button>
                 <button id="audio-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="toggleAudio()">🔊 AUDIO: ON</button>
                 <button id="drone-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="toggleDrone()">🌌 DRONE: ON</button>
             </div>
@@ -195,6 +196,28 @@
                 <button class="action-btn" onclick="combatAction('evade')">Evade</button>
                 <button class="action-btn" onclick="combatAction('tech')">Use Tech</button>
                 <button class="action-btn" onclick="combatAction('flee')">Flee</button>
+            </div>
+        </div>
+        <div id="manual-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(3,8,16,0.96); z-index:150; flex-direction:column; padding:20px; box-sizing:border-box;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #00ffcc; padding-bottom:8px; margin-bottom:10px;">
+                <h2 style="margin:0; color:#00ffcc; font-size:18px; letter-spacing:1px; text-shadow:0 0 10px #00ffcc;">★ STAR CAPTAIN'S MANUAL &amp; CODEX</h2>
+                <button class="action-btn" style="margin:0; padding:4px 12px; font-size:12px; border-color:#ffff00; color:#ffff00;" onclick="closeManual()">[X] CLOSE (ESC)</button>
+            </div>
+            <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
+                <button id="man-tab-0" class="action-btn" style="margin:0; padding:5px 8px; font-size:11px;" onclick="switchManualTab(0)">1. FLIGHT &amp; NAV</button>
+                <button id="man-tab-1" class="action-btn" style="margin:0; padding:5px 8px; font-size:11px;" onclick="switchManualTab(1)">2. COMMODITY TRADING</button>
+                <button id="man-tab-2" class="action-btn" style="margin:0; padding:5px 8px; font-size:11px;" onclick="switchManualTab(2)">3. TACTICAL COMBAT</button>
+                <button id="man-tab-3" class="action-btn" style="margin:0; padding:5px 8px; font-size:11px;" onclick="switchManualTab(3)">4. FACTIONS &amp; DIPLOMACY</button>
+                <button id="man-tab-4" class="action-btn" style="margin:0; padding:5px 8px; font-size:11px;" onclick="switchManualTab(4)">5. ANOMALIES &amp; UPGRADES</button>
+            </div>
+            <div id="manual-content" style="flex:1; border:1px solid #00ffcc; padding:15px; overflow-y:auto; background:rgba(0,18,28,0.8); font-size:13px; line-height:1.6; color:#d0ffff; box-shadow:inset 0 0 15px rgba(0,255,204,0.15);"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; font-size:12px; color:#66cccc;">
+                <span id="manual-tab-indicator">Section 1 of 5</span>
+                <div style="display:flex; gap:8px;">
+                    <button class="action-btn" style="margin:0; padding:4px 12px; font-size:11px;" onclick="prevManualTab()">← PREV</button>
+                    <button class="action-btn" style="margin:0; padding:4px 12px; font-size:11px;" onclick="nextManualTab()">NEXT →</button>
+                    <button class="action-btn" style="margin:0; padding:4px 12px; font-size:11px; border-color:#ffff00; color:#ffff00;" onclick="closeManual()">RESUME FLIGHT</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1033,6 +1056,7 @@
                 <div style="display:flex; gap:10px;">
                     <button class="action-btn" style="flex:1; margin:0; padding:10px; border-color:#ff00ff; color:#ff00ff;" onclick="viewMissions()">MISSIONS</button>
                     <button class="action-btn" style="flex:1; margin:0; padding:10px; border-color:#00ffff; color:#00ffff;" onclick="viewFactions()">FACTIONS</button>
+                    <button class="action-btn" style="flex:1; margin:0; padding:10px; border-color:#ffff00; color:#ffff00;" onclick="openManual()">MANUAL</button>
                 </div>`;
             }
             infoEl.innerHTML = html;
@@ -1232,6 +1256,211 @@
                 mapEl.appendChild(label);
             });
         }
+
+        // --- Star Captain's Manual & Codex (Phase 14) ---
+        let currentManualTab = 0;
+        const manualTabs = [
+            {
+                title: "1. FLIGHT, NAVIGATION & SHIP PROTOCOLS",
+                html: `
+                    <h3 style="color:#00ffcc; margin-top:0;">STAR SYSTEM NAVIGATION</h3>
+                    <p>The known galaxy encompasses <strong>30 star systems</strong> spanning 5 major sectors (<em>Alpha, Beta, Gamma, Delta, Omega</em>). You begin your voyage at <strong>Sol</strong> in Sector Alpha.</p>
+                    <ul style="padding-left:20px;">
+                        <li><strong>System Selection:</strong> Click any star dot on the tactical map to scan its planetary telemetry, sector, coordinates, and market prices.</li>
+                        <li><strong>Warp Jump:</strong> Click <em>"SET COURSE"</em> to engage your hyperdrive. Warp travel consumes fuel proportional to distance and inversely proportional to your <strong>Engine Level</strong>.</li>
+                        <li><strong>Orbital Docking:</strong> Click your current system (highlighted in cyan) to dock at the local orbital space station, granting access to trading, shipyards, mission boards, and diplomacy.</li>
+                    </ul>
+                    <h3 style="color:#00ffcc;">SHIP STATUS &amp; EMERGENCY TOW</h3>
+                    <ul style="padding-left:20px;">
+                        <li><strong>Hull Integrity:</strong> Your ship's primary structural armor. Hostile attacks and severe stellar anomalies damage hull integrity.</li>
+                        <li><strong>Catastrophic Failure:</strong> If Hull reaches 0, automated emergency distress beacons fire. An emergency salvage tug rescues your escape capsule and tows your vessel back to <strong>Sol</strong>, incurring an emergency tow fee of up to ₭500!</li>
+                        <li><strong>Fuel Management:</strong> Warp jumps require adequate fuel reserves. Refuel by harvesting solar flare plasma, docking at stations, or salvaging derelict fuel tanks. Always keep sufficient fuel for escape jumps!</li>
+                    </ul>
+                `
+            },
+            {
+                title: "2. COMMODITY TRADING & SECTOR ECONOMIES",
+                html: `
+                    <h3 style="color:#00ffcc; margin-top:0;">ECONOMIC ARCHETYPES &amp; PRICE MULTIPLIERS</h3>
+                    <p>Every star system operates on a specialized planetary economy that governs its supply, demand, and market valuation:</p>
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:12px; font-size:12px; border:1px solid #005555;">
+                        <tr style="background:#002233; color:#00ffcc; text-align:left;">
+                            <th style="padding:6px; border:1px solid #005555;">Economy</th>
+                            <th style="padding:6px; border:1px solid #005555;">Food</th>
+                            <th style="padding:6px; border:1px solid #005555;">Minerals</th>
+                            <th style="padding:6px; border:1px solid #005555;">Tech</th>
+                            <th style="padding:6px; border:1px solid #005555;">Primary Strategy</th>
+                        </tr>
+                        <tr>
+                            <td style="padding:5px; border:1px solid #005555; font-weight:bold; color:#aaffaa;">Agricultural</td>
+                            <td style="padding:5px; border:1px solid #005555; color:#00ff00;">CHEAP (0.5x)</td>
+                            <td style="padding:5px; border:1px solid #005555; color:#ffaa55;">HIGH (1.5x)</td>
+                            <td style="padding:5px; border:1px solid #005555; color:#ff6666;">PEAK (1.8x)</td>
+                            <td style="padding:5px; border:1px solid #005555;">Buy Food here; Sell Tech for massive profit</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:5px; border:1px solid #005555; font-weight:bold; color:#ffdd88;">Mining</td>
+                            <td style="padding:5px; border:1px solid #005555; color:#ffaa55;">HIGH (1.5x)</td>
+                            <td style="padding:5px; border:1px solid #005555; color:#00ff00;">CHEAP (0.5x)</td>
+                            <td style="padding:5px; border:1px solid #005555; color:#ffaa55;">HIGH (1.5x)</td>
+                            <td style="padding:5px; border:1px solid #005555;">Buy Minerals here; Sell Food &amp; Tech</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:5px; border:1px solid #005555; font-weight:bold; color:#ffaaee;">Industrial</td>
+                            <td style="padding:5px; border:1px solid #005555; color:#ffaa55;">HIGH (1.3x)</td>
+                            <td style="padding:5px; border:1px solid #005555; color:#ffcc66;">MED (1.2x)</td>
+                            <td style="padding:5px; border:1px solid #005555; color:#88ffcc;">LOW (0.8x)</td>
+                            <td style="padding:5px; border:1px solid #005555;">Buy Tech; Sell raw Minerals and Food</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:5px; border:1px solid #005555; font-weight:bold; color:#88ffff;">Tech Hub</td>
+                            <td style="padding:5px; border:1px solid #005555; color:#ffaa55;">HIGH (1.5x)</td>
+                            <td style="padding:5px; border:1px solid #005555; color:#ffaa55;">HIGH (1.5x)</td>
+                            <td style="padding:5px; border:1px solid #005555; color:#00ff00;">CHEAP (0.5x)</td>
+                            <td style="padding:5px; border:1px solid #005555;">Buy Tech here for huge margin export</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:5px; border:1px solid #005555; font-weight:bold; color:#ffffaa;">Trading Hub (Sol)</td>
+                            <td style="padding:5px; border:1px solid #005555;">BASE (1.0x)</td>
+                            <td style="padding:5px; border:1px solid #005555;">BASE (1.0x)</td>
+                            <td style="padding:5px; border:1px solid #005555;">BASE (1.0x)</td>
+                            <td style="padding:5px; border:1px solid #005555;">Standard central benchmark exchange</td>
+                        </tr>
+                    </table>
+                    <h3 style="color:#00ffcc;">GOLDEN TRADE ROUTE FORMULAS</h3>
+                    <ul style="padding-left:20px;">
+                        <li><strong>The Silicon Circuit:</strong> Buy Tech at <em>Tech Hubs</em> (~₭50-75) → Warp to <em>Agricultural</em> systems → Sell Tech (~₭180-270) for over <strong>300% return on investment</strong>!</li>
+                        <li><strong>The Food Run:</strong> Buy Food at <em>Agricultural</em> worlds (~₭10-15) → Sell at <em>Tech Hubs</em> or <em>Mining</em> worlds (~₭30-45).</li>
+                        <li><strong>Traders Guild Leverage:</strong> Achieving Friendly standing (≥+15) gives an automatic 10% discount on purchases and 10% bonus on sales, compounding profit margins exponentially!</li>
+                    </ul>
+                `
+            },
+            {
+                title: "3. TACTICAL COMBAT & SHIP DEFENSE",
+                html: `
+                    <h3 style="color:#00ffcc; margin-top:0;">HOSTILE PIRATE INTERCEPTIONS</h3>
+                    <p>Warp jumps carry a <strong>25% chance of pirate ambush</strong>. Pirate vessels grow deadlier the deeper you explore into outer sectors.</p>
+                    <h3 style="color:#00ffcc;">TACTICAL COMBAT ACTIONS</h3>
+                    <ul style="padding-left:20px;">
+                        <li><strong>ATTACK:</strong> Fires high-energy pulse blasters. Base damage is 15-30, augmented by your <strong>Weapon Level</strong> (+10 damage per level) and Galactic Federation standing (+20% bonus if Friendly).</li>
+                        <li><strong>EVADE:</strong> Performs high-G combat thruster evasions. Halves incoming pirate damage for the turn and gives a <strong>35% chance to counter-attack</strong>!</li>
+                        <li><strong>USE TECH (EMP BURST):</strong> Discharges an overloaded electronic counter-measure pulse. Uses 1 ton of Tech cargo (or 5% fuel reserve if no Tech cargo). Inflicts <strong>30-55 direct armor-piercing damage</strong>, completely ignoring pirate shields!</li>
+                        <li><strong>FLEE:</strong> Overcharges sub-light engines for an emergency disengage. Success chance: <code>50% + (Engine Level * 10%)</code>. Higher engine upgrades guarantee reliable escapes!</li>
+                    </ul>
+                    <h3 style="color:#00ffcc;">COMBAT SURVIVAL TIPS</h3>
+                    <ul style="padding-left:20px;">
+                        <li>If your hull is low, lead with <strong>Evade</strong> or <strong>Flee</strong> to preserve your ship.</li>
+                        <li>Keep at least 1-2 tons of Tech in your hold as emergency EMP ammunition for tough skirmishes.</li>
+                        <li>Befriending the <strong>Pirate Syndicate</strong> (+15 rep) turns hostile ambushes into peaceful salutes with ₭150 tribute payments!</li>
+                    </ul>
+                `
+            },
+            {
+                title: "4. FACTIONS, REPUTATION & DIPLOMACY",
+                html: `
+                    <h3 style="color:#00ffcc; margin-top:0;">THE THREE MAJOR POWERS</h3>
+                    <p>Your actions in the quadrant continuously adjust your political standing with the galaxy's three dominating factions:</p>
+                    <div style="border-left:3px solid #00ffff; padding-left:10px; margin-bottom:10px;">
+                        <strong style="color:#00ffff;">GALACTIC FEDERATION:</strong> Peacekeepers and interstellar naval patrol.
+                        <br><strong>Tier Threshold:</strong> Friendly at ≥+15 standing.
+                        <br><strong>Faction Perk:</strong> <strong>+20% Attack Damage</strong> in all combat and <strong>+15% Bounty Credits</strong> on all station mission bounties.
+                        <br><strong>Diplomatic Action:</strong> Donate ₭350 to Naval Patrols (+15 Fed, -8 Pirates).
+                    </div>
+                    <div style="border-left:3px solid #00ff88; padding-left:10px; margin-bottom:10px;">
+                        <strong style="color:#00ff88;">TRADERS GUILD:</strong> Mercantile consortium governing trade corridors and cargo commerce.
+                        <br><strong>Tier Threshold:</strong> Friendly at ≥+15 standing.
+                        <br><strong>Faction Perk:</strong> <strong>10% Purchase Discount</strong> and <strong>+10% Sale Bonus</strong> across all commodities on every planet.
+                        <br><strong>Diplomatic Action:</strong> Pay ₭300 annual Guild Dues (+15 Traders Guild).
+                    </div>
+                    <div style="border-left:3px solid #ff6666; padding-left:10px; margin-bottom:10px;">
+                        <strong style="color:#ff6666;">PIRATE SYNDICATE:</strong> Outlaw corsairs, smugglers, and independent raiders.
+                        <br><strong>Tier Threshold:</strong> Friendly at ≥+15 standing.
+                        <br><strong>Faction Perk:</strong> <strong>Safe Passage &amp; Tribute</strong> — random pirate ambushes become friendly encounters that gift you <strong>₭150 in tribute</strong>!
+                        <br><strong>Diplomatic Action:</strong> Bribe Syndicate contacts with ₭400 (+15 Pirates, -8 Federation).
+                    </div>
+                `
+            },
+            {
+                title: "5. STELLAR PHENOMENA, UPGRADES & MISSIONS",
+                html: `
+                    <h3 style="color:#00ffcc; margin-top:0;">STELLAR PHENOMENA (ANOMALIES)</h3>
+                    <p>Rare astronomical anomalies periodically appear at systems across the galaxy map, designated by pulsing energy halos:</p>
+                    <ul style="padding-left:20px;">
+                        <li><strong style="color:#ff00ff;">Black Hole (Purple Ring):</strong> Deploy deep-graviton scientific probes into the event horizon. Yields <strong>₭600-800 Credits</strong> and +5 Federation reputation, but gravitational shear inflicts hull damage (mitigated by Shield Level).</li>
+                        <li><strong style="color:#ffaa00;">Solar Flare (Orange Ring):</strong> Extend magnetic collector scoops into coronal ejections. Harvests <strong>+35% Fuel</strong> and synthesizes plasma cells worth <strong>₭350-450 Credits</strong> (+4 Traders Guild rep), with minor radiation hull damage.</li>
+                        <li><strong style="color:#88ccff;">Derelict Ship (Cyan Ring):</strong> Send an EVA salvage boarding party. Recovers <strong>₭400-550 Credits</strong>, restores <strong>+30 Hull</strong>, and retrieves <strong>1 ton of Tech + 1 ton of Minerals</strong> (+5 Pirates rep, +1 Traders rep, -2 Fed).</li>
+                    </ul>
+                    <h3 style="color:#00ffcc;">SHIPYARD UPGRADE MATRIX</h3>
+                    <ul style="padding-left:20px;">
+                        <li><strong>Engine (₭1000 * Lvl):</strong> Drastically decreases fuel consumed per warp jump (fuel cost divided by Engine Level) and increases combat flee success rate.</li>
+                        <li><strong>Cargo Hold (₭1500 * Lvl):</strong> Expands maximum cargo storage by +50 tons per tier.</li>
+                        <li><strong>Weapons (₭2000 * Lvl):</strong> Mounts enhanced pulse blasters (+10 damage per tier).</li>
+                        <li><strong>Shield Matrix (₭2000 * Lvl):</strong> Increases maximum Hull capacity (+50 Hull per tier) and reduces damage suffered during Black Hole and Solar Flare operations.</li>
+                    </ul>
+                    <h3 style="color:#00ffcc;">STATION MISSION BOARDS</h3>
+                    <p>Every orbital station posts dynamic contracts: <em>Delivery runs</em> (earn guaranteed credits and Traders Guild reputation upon arrival) and <em>Bounties</em> (hunt pirate targets at coordinates for large payouts and Federation standing).</p>
+                `
+            }
+        ];
+
+        window.openManual = function() {
+            playBlip();
+            document.getElementById('manual-modal').style.display = 'flex';
+            switchManualTab(currentManualTab);
+        };
+
+        window.closeManual = function() {
+            playBlip();
+            document.getElementById('manual-modal').style.display = 'none';
+        };
+
+        window.switchManualTab = function(idx) {
+            playBlip();
+            currentManualTab = idx;
+            for (let i = 0; i < manualTabs.length; i++) {
+                const tabBtn = document.getElementById('man-tab-' + i);
+                if (tabBtn) {
+                    if (i === idx) {
+                        tabBtn.style.backgroundColor = '#00ffcc';
+                        tabBtn.style.color = '#000';
+                        tabBtn.style.boxShadow = '0 0 15px #00ffcc';
+                    } else {
+                        tabBtn.style.backgroundColor = '#000';
+                        tabBtn.style.color = '#00ffcc';
+                        tabBtn.style.boxShadow = 'none';
+                    }
+                }
+            }
+            const contentEl = document.getElementById('manual-content');
+            contentEl.innerHTML = manualTabs[idx].html;
+            contentEl.scrollTop = 0;
+            document.getElementById('manual-tab-indicator').innerText = `Section ${idx + 1} of ${manualTabs.length}: ${manualTabs[idx].title}`;
+        };
+
+        window.prevManualTab = function() {
+            let nextIdx = (currentManualTab - 1 + manualTabs.length) % manualTabs.length;
+            switchManualTab(nextIdx);
+        };
+
+        window.nextManualTab = function() {
+            let nextIdx = (currentManualTab + 1) % manualTabs.length;
+            switchManualTab(nextIdx);
+        };
+
+        window.addEventListener('keydown', (e) => {
+            const modal = document.getElementById('manual-modal');
+            if (e.key === 'm' || e.key === 'M' || e.key === 'h' || e.key === 'H') {
+                if (modal.style.display === 'flex') {
+                    closeManual();
+                } else {
+                    openManual();
+                }
+            } else if (e.key === 'Escape') {
+                if (modal.style.display === 'flex') {
+                    closeManual();
+                }
+            }
+        });
 
         renderMap();
         updateDashboard();
