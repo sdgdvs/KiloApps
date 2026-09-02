@@ -263,6 +263,175 @@
     border-radius: 3px;
     margin-right: 3px;
   }
+
+  /* Modal Overlay & Help Dialog */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(4, 6, 12, 0.78);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: termFadeIn 0.15s ease-out;
+  }
+  .modal-overlay.open {
+    display: flex;
+  }
+  @keyframes termFadeIn {
+    from { opacity: 0; transform: scale(0.97); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .modal-card {
+    background: #0c101a;
+    border: 1px solid var(--term-border);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75), 0 0 24px rgba(0, 255, 102, 0.12);
+    border-radius: 8px;
+    width: 90%;
+    max-width: 680px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-header {
+    background: var(--term-header-bg);
+    border-bottom: 1px solid var(--term-border);
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-title {
+    font-size: 15px;
+    font-weight: bold;
+    color: var(--term-sys);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .modal-close-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .modal-close-btn:hover {
+    color: #ff4444;
+    background: rgba(255, 68, 68, 0.15);
+  }
+  .modal-body {
+    padding: 16px;
+    overflow-y: auto;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #cbd5e1;
+  }
+  .modal-body::-webkit-scrollbar { width: 6px; }
+  .modal-body::-webkit-scrollbar-thumb { background: rgba(0,255,102,0.2); border-radius: 3px; }
+  .modal-section {
+    margin-bottom: 16px;
+  }
+  .modal-section:last-child {
+    margin-bottom: 0;
+  }
+  .modal-section-title {
+    color: var(--term-fg);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: bold;
+    border-bottom: 1px solid rgba(0, 255, 102, 0.2);
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .cmd-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .cmd-table td {
+    padding: 4px 8px;
+    vertical-align: top;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  }
+  .cmd-table td.code-cell {
+    width: 170px;
+    white-space: nowrap;
+  }
+  .cmd-table code {
+    background: rgba(0, 255, 102, 0.08);
+    border: 1px solid rgba(0, 255, 102, 0.2);
+    color: var(--term-fg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: var(--term-font);
+    font-size: 11px;
+  }
+  .cmd-desc {
+    color: #94a3b8;
+  }
+  .modal-footer {
+    background: var(--term-header-bg);
+    border-top: 1px solid var(--term-border);
+    padding: 10px 16px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  /* Toast Notification Container */
+  #toastContainer {
+    position: fixed;
+    bottom: 35px;
+    right: 20px;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .toast {
+    background: rgba(14, 18, 28, 0.96);
+    border: 1px solid var(--term-border);
+    border-left: 4px solid var(--term-fg);
+    color: #e2e8f0;
+    padding: 8px 14px;
+    border-radius: 4px;
+    font-size: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 10px rgba(0, 255, 102, 0.1);
+    animation: toastSlideIn 0.2s ease-out;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: auto;
+    max-width: 340px;
+    word-break: break-word;
+  }
+  .toast.toast-sys {
+    border-left-color: var(--term-sys);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 10px rgba(0, 217, 255, 0.15);
+  }
+  .toast.toast-warn {
+    border-left-color: var(--term-warn);
+  }
+  .toast.toast-err {
+    border-left-color: var(--term-err);
+  }
+  .toast.hide {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  @keyframes toastSlideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 </style>
 </head>
 <body>
@@ -275,7 +444,7 @@
   <div class="toolbar-actions">
     <button class="btn-action" id="btnExportLog" title="Download Session Log">💾 Export Log</button>
     <button class="btn-action" id="btnClear" title="Clear Screen (Ctrl+L)">🧹 Clear</button>
-    <button class="btn-action" id="btnHelp" title="Show Help">❓ Help</button>
+    <button class="btn-action" id="btnHelp" title="Show Help Reference (F1 or 'h')">❓ Help (F1)</button>
   </div>
 </header>
 
@@ -293,14 +462,84 @@
 
 <div id="statusbar">
   <div>
-    <span><span class="shortcut-tag">Press h or F1</span>for Help</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">F1 / h</span>Help</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">Ctrl+T</span>New Tab</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">Ctrl+W</span>Close Tab</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+R</span>Reverse Search</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Tab</span>Autocomplete</span> &nbsp;|&nbsp; 
-    <span><span class="shortcut-tag">Ctrl+T</span>New Tab</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+L</span>Clear</span>
   </div>
   <div id="tabStatusInfo">Tab 1/1</div>
 </div>
+
+<!-- Terminal Help Modal Dialog -->
+<div id="helpModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">
+        <span>⚡</span> KTerm Command &amp; Shortcut Reference
+      </div>
+      <button class="modal-close-btn" id="btnModalClose" title="Close (Escape)">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-title">⌨️ Keyboard Shortcuts</div>
+        <table class="cmd-table">
+          <tr><td class="code-cell"><code>F1</code> or <code>h</code></td><td class="cmd-desc">Open / toggle this Help Reference guide</td></tr>
+          <tr><td class="code-cell"><code>Ctrl + T</code></td><td class="cmd-desc">Open a new terminal tab session</td></tr>
+          <tr><td class="code-cell"><code>Ctrl + W</code></td><td class="cmd-desc">Close the current terminal tab</td></tr>
+          <tr><td class="code-cell"><code>Ctrl + R</code></td><td class="cmd-desc">Incremental reverse search through command history</td></tr>
+          <tr><td class="code-cell"><code>Ctrl + L</code></td><td class="cmd-desc">Clear terminal screen output (or <code>cls</code> / <code>clear</code>)</td></tr>
+          <tr><td class="code-cell"><code>Ctrl + C</code></td><td class="cmd-desc">Cancel current command input line</td></tr>
+          <tr><td class="code-cell"><code>Tab</code></td><td class="cmd-desc">Auto-complete commands, aliases, and file paths</td></tr>
+          <tr><td class="code-cell"><code>↑ / ↓ Arrows</code></td><td class="cmd-desc">Navigate through previous command history</td></tr>
+          <tr><td class="code-cell"><code>Escape</code></td><td class="cmd-desc">Dismiss this dialog or cancel reverse search</td></tr>
+        </table>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">📁 File &amp; Navigation Commands</div>
+        <table class="cmd-table">
+          <tr><td class="code-cell"><code>dir</code> / <code>ls</code> [path]</td><td class="cmd-desc">List files and folders in directory</td></tr>
+          <tr><td class="code-cell"><code>cd</code> [dir]</td><td class="cmd-desc">Change directory (e.g. <code>cd Documents</code>, <code>cd ..</code>)</td></tr>
+          <tr><td class="code-cell"><code>type</code> / <code>cat</code> &lt;file&gt;</td><td class="cmd-desc">View text file contents (e.g. <code>type readme.txt</code>)</td></tr>
+          <tr><td class="code-cell"><code>mkdir</code> &lt;folder&gt;</td><td class="cmd-desc">Create a new sub-directory in virtual file system</td></tr>
+        </table>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">🛠️ System &amp; Utility Commands</div>
+        <table class="cmd-table">
+          <tr><td class="code-cell"><code>help</code></td><td class="cmd-desc">Show command summary &amp; open quick reference</td></tr>
+          <tr><td class="code-cell"><code>ver</code> / <code>sysinfo</code></td><td class="cmd-desc">Display KiloOS terminal operating system version</td></tr>
+          <tr><td class="code-cell"><code>echo</code> &lt;text&gt;</td><td class="cmd-desc">Print message with variable expansion (<code>$VAR</code>, <code>%VAR%</code>)</td></tr>
+          <tr><td class="code-cell"><code>date</code> / <code>time</code></td><td class="cmd-desc">Print current system calendar date or local time</td></tr>
+          <tr><td class="code-cell"><code>whoami</code></td><td class="cmd-desc">Show current session user name</td></tr>
+          <tr><td class="code-cell"><code>export-log</code> [file]</td><td class="cmd-desc">Export current session log to downloadable text file</td></tr>
+          <tr><td class="code-cell"><code>newtab</code> [name]</td><td class="cmd-desc">Create a new named terminal tab session</td></tr>
+          <tr><td class="code-cell"><code>exit</code> / <code>closetab</code></td><td class="cmd-desc">Close current tab session</td></tr>
+        </table>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">🚀 Advanced Shell Features</div>
+        <table class="cmd-table">
+          <tr><td class="code-cell"><code>alias</code> [name=cmd]</td><td class="cmd-desc">Create or list custom command aliases (e.g. <code>alias gs="dir"</code>)</td></tr>
+          <tr><td class="code-cell"><code>unalias</code> &lt;name&gt;</td><td class="cmd-desc">Delete a previously defined custom alias</td></tr>
+          <tr><td class="code-cell"><code>export</code> VAR=val</td><td class="cmd-desc">Set environment variable (view all with <code>env</code>)</td></tr>
+          <tr><td class="code-cell"><code>macro</code> record &lt;name&gt;</td><td class="cmd-desc">Record a sequence of terminal commands (stop with <code>macro stop</code>)</td></tr>
+          <tr><td class="code-cell"><code>macro</code> play &lt;name&gt;</td><td class="cmd-desc">Replay a saved command macro (view all with <code>macro list</code>)</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-action" id="btnModalCloseFooter">Got It (Esc)</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification Container -->
+<div id="toastContainer" aria-live="polite"></div>
 
 <script>
   const output = document.getElementById('output');
@@ -423,6 +662,9 @@
 
     switchTab(id);
     renderTabs();
+    if (sessions.length > 1) {
+      showToast(`Opened session ${sessionName}`, "sys");
+    }
   }
 
   function getActiveSession() {
@@ -455,6 +697,7 @@
     
     const index = sessions.findIndex(s => s.id === id);
     if (index !== -1) {
+      const name = sessions[index].name;
       sessions.splice(index, 1);
       if (activeSessionId === id) {
         const nextActive = sessions[Math.min(index, sessions.length - 1)];
@@ -462,6 +705,7 @@
       } else {
         renderTabs();
       }
+      showToast(`Closed ${name}`, "warn");
     }
   }
 
@@ -610,6 +854,7 @@
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     print(`Session log exported successfully.`, "log-system");
+    showToast("💾 Session log exported successfully", "sys");
   }
 
   function execute(cmdStr) {
@@ -637,7 +882,9 @@
       }
 
       if (cmd === 'help') {
-          print("Available KTerm Commands:");
+          openHelpModal();
+          showToast("Help guide opened (Esc to close)", "sys");
+          print("Available KTerm Commands (Quick Help Modal opened):");
           print("  help          - Show available commands");
           print("  ver           - Display OS version");
           print("  clear / cls   - Clear screen");
@@ -1107,6 +1354,54 @@
       }
   }
 
+  // Modal & Toast UI Elements
+  const helpModal = document.getElementById('helpModal');
+  const btnModalClose = document.getElementById('btnModalClose');
+  const btnModalCloseFooter = document.getElementById('btnModalCloseFooter');
+  const toastContainer = document.getElementById('toastContainer');
+
+  function showToast(message, type = 'success', duration = 3500) {
+    if (!toastContainer) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type === 'sys' ? 'toast-sys' : type === 'warn' ? 'toast-warn' : type === 'err' ? 'toast-err' : ''}`;
+    toast.textContent = message;
+    toastContainer.appendChild(toast);
+
+    setTimeout(() => {
+      toast.classList.add('hide');
+      setTimeout(() => toast.remove(), 260);
+    }, duration);
+  }
+
+  function openHelpModal() {
+    if (helpModal) {
+      helpModal.classList.add('open');
+    }
+  }
+
+  function closeHelpModal() {
+    if (helpModal) {
+      helpModal.classList.remove('open');
+      input.focus();
+    }
+  }
+
+  function toggleHelpModal() {
+    if (helpModal && helpModal.classList.contains('open')) {
+      closeHelpModal();
+    } else {
+      openHelpModal();
+    }
+  }
+
+  if (btnModalClose) btnModalClose.addEventListener('click', closeHelpModal);
+  if (btnModalCloseFooter) btnModalCloseFooter.addEventListener('click', closeHelpModal);
+  if (helpModal) {
+    helpModal.addEventListener('click', (e) => {
+      if (e.target === helpModal) closeHelpModal();
+    });
+  }
+
   // Header Buttons Click Listeners
   btnNewTab.addEventListener('click', () => createNewTab());
   btnExportLog.addEventListener('click', () => exportSessionLog());
@@ -1114,20 +1409,65 @@
     output.innerHTML = '';
     const s = getActiveSession();
     if (s) s.outputHTML = '';
+    showToast("Terminal screen cleared", "sys");
   });
-  btnHelp.addEventListener('click', () => execute('help'));
+  btnHelp.addEventListener('click', () => toggleHelpModal());
+
+  // Global Keydown Handler for reliable accessibility from any focus state
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'F1') {
+      e.preventDefault();
+      toggleHelpModal();
+      return;
+    }
+    if (e.key === 'Escape') {
+      if (helpModal && helpModal.classList.contains('open')) {
+        e.preventDefault();
+        closeHelpModal();
+        return;
+      }
+    }
+    if (e.ctrlKey && e.key.toLowerCase() === 't') {
+      e.preventDefault();
+      createNewTab();
+      return;
+    }
+    if (e.ctrlKey && e.key.toLowerCase() === 'w') {
+      e.preventDefault();
+      if (sessions.length > 1) {
+        closeTab(activeSessionId);
+      }
+      return;
+    }
+    if (e.ctrlKey && e.key.toLowerCase() === 'l') {
+      e.preventDefault();
+      output.innerHTML = '';
+      const s = getActiveSession();
+      if (s) s.outputHTML = '';
+      showToast("Terminal screen cleared", "sys");
+      return;
+    }
+    // If modal is closed and input not focused, typing regular alphanumeric keys redirects to input
+    if (helpModal && !helpModal.classList.contains('open') && document.activeElement !== input) {
+      const isPrintable = e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey;
+      if (isPrintable) {
+        input.focus();
+      }
+    }
+  });
 
   document.addEventListener('click', (e) => {
-      // Focus input if not text selected and not clicking on header buttons
-      if (e.target.closest('#header')) return;
+      // Focus input if not text selected and not clicking on header/modal
+      if (e.target.closest('#header') || e.target.closest('.modal-card')) return;
       const selection = window.getSelection();
       if (!selection || selection.toString().length === 0) {
           input.focus();
       }
   });
 
-  // Initialize first session tab
+  // Initialize first session tab and startup toast
   createNewTab("Tab 1");
+  showToast("Welcome to KTerm! Press F1 or 'h' for Help | Ctrl+T: New Tab", "sys", 5000);
 </script>
 </body>
 </html>

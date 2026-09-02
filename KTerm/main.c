@@ -106,9 +106,17 @@ typedef struct {
     char* outputBuffer;
 } TabSession;
 
-HWND hTab, hOut, hIn;
+#define IDC_PROMPT 103
+
+HWND hTab, hOut, hIn, hPrompt;
 WNDPROC oldEditProc;
+WNDPROC oldOutProc;
 HFONT g_hFont = NULL;
+HFONT g_hTabFont = NULL;
+HBRUSH g_hBgBrush = NULL;
+
+void ShowHelpDialog(HWND hwnd);
+void UpdatePromptDisplay();
 
 TabSession g_tabs[MAX_TABS];
 int g_tabCount = 0;
@@ -167,6 +175,73 @@ void AppendOutput(const char* text) {
     SendMessageA(hOut, EM_SETSEL, len, len);
     SendMessageA(hOut, EM_REPLACESEL, FALSE, (LPARAM)text);
     SendMessageA(hOut, EM_REPLACESEL, FALSE, (LPARAM)"\r\n");
+    SendMessageA(hOut, EM_SCROLLCARET, 0, 0);
+}
+
+void ShowHelpDialog(HWND hwnd) {
+    const char* helpText = 
+        "KTerm - Advanced Terminal Quick Reference\r\n\r\n"
+        "KEYBOARD SHORTCUTS:\r\n"
+        "  F1 / 'h'         - Open this Help guide\r\n"
+        "  Ctrl + T         - Open a new terminal tab\r\n"
+        "  Ctrl + W         - Close active terminal tab\r\n"
+        "  Ctrl + R         - Incremental reverse search (Ctrl+R again cycles)\r\n"
+        "  Ctrl + L / 'cls' - Clear terminal screen\r\n"
+        "  Ctrl + C         - Cancel current input command line\r\n"
+        "  Tab              - Autocomplete commands and file paths\r\n"
+        "  Up / Down Arrow  - Navigate command history\r\n\r\n"
+        "BUILT-IN COMMANDS:\r\n"
+        "  help             - Show command reference\r\n"
+        "  ver              - Show OS and terminal version\r\n"
+        "  dir / ls         - List directory contents\r\n"
+        "  cd [path]        - Change current directory\r\n"
+        "  type / cat <file>- Read text file contents\r\n"
+        "  echo [text]      - Print text (supports %VAR% & $VAR)\r\n"
+        "  mkdir [folder]   - Create directory\r\n"
+        "  date / time      - System calendar date or time\r\n"
+        "  whoami           - Display current user\r\n"
+        "  alias            - Custom aliases (alias name=cmd, unalias)\r\n"
+        "  export / env     - Set environment variables (export VAR=val, unset)\r\n"
+        "  macro            - Macro scripts (record, stop, play, list)\r\n"
+        "  export-log [file]- Export session output to text file\r\n"
+        "  newtab [name]    - Open a new named terminal tab session\r\n"
+        "  exit / closetab  - Close tab session or exit application";
+
+    MessageBoxA(hwnd, helpText, "KTerm - Command & Shortcut Guide", MB_OK | MB_ICONINFORMATION);
+}
+
+void UpdatePromptDisplay() {
+    if (!hPrompt || !hIn || g_activeTab < 0 || g_activeTab >= g_tabCount) return;
+    TabSession* tab = &g_tabs[g_activeTab];
+    char pBuf[MAX_PATH + 8];
+    wsprintfA(pBuf, "%s> ", tab->currentDir);
+    SetWindowTextA(hPrompt, pBuf);
+
+    HWND hParent = GetParent(hPrompt);
+    if (!hParent) return;
+
+    RECT rc;
+    GetClientRect(hParent, &rc);
+    int w = rc.right;
+    int h = rc.bottom;
+    int tabH = 28;
+    int inH = 28;
+    int outH = h - tabH - inH;
+    if (outH < 0) outH = 0;
+
+    HDC hdc = GetDC(hPrompt);
+    HFONT oldF = (HFONT)SelectObject(hdc, g_hFont ? g_hFont : (HFONT)GetStockObject(DEFAULT_GUI_FONT));
+    SIZE sz;
+    GetTextExtentPoint32A(hdc, pBuf, lstrlenA(pBuf), &sz);
+    SelectObject(hdc, oldF);
+    ReleaseDC(hPrompt, hdc);
+
+    int promptW = sz.cx + 10;
+    if (promptW > w / 2) promptW = w / 2;
+    if (promptW < 40) promptW = 40;
+
+    MoveWindow(hPrompt, 0, tabH + outH, promptW, inH, TRUE);
+    MoveWindow(hIn, promptW, tabH + outH, w - promptW, inH, TRUE);
 }
 
 void SaveActiveTabOutput() {
@@ -252,12 +327,14 @@ void AddNewTab(const char* title) {
     
     if (g_tabCount == 1) {
         AppendOutput(banner);
+        UpdatePromptDisplay();
     } else {
         lstrcpynA(g_tabs[tabIndex].outputBuffer, banner, OUT_BUF_SIZE);
         TabCtrl_SetCurSel(hTab, tabIndex);
         SaveActiveTabOutput();
         g_activeTab = tabIndex;
         LoadTabOutput(g_activeTab);
+        UpdatePromptDisplay();
     }
 }
 
@@ -266,6 +343,7 @@ void SwitchTab(int newIdx) {
     SaveActiveTabOutput();
     g_activeTab = newIdx;
     LoadTabOutput(g_activeTab);
+    UpdatePromptDisplay();
     SetFocus(hIn);
 }
 
@@ -645,6 +723,7 @@ void ProcessCommand(const char* rawCmd) {
                     tie.mask = TCIF_TEXT;
                     tie.pszText = tab->title;
                     TabCtrl_SetItem(hTab, g_activeTab, &tie);
+                    UpdatePromptDisplay();
                 } else {
                     AppendOutput("Directory not found.");
                 }
@@ -915,8 +994,33 @@ LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
     if (msg == WM_KEYDOWN) {
         if (wParam == VK_F1) {
-            ProcessCommand("help");
+            ShowHelpDialog(GetParent(hwnd));
             return 0;
+        }
+
+        if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == 'T') {
+            AddNewTab(NULL);
+            return 0;
+        }
+
+        if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == 'W') {
+            ProcessCommand("closetab");
+            return 0;
+        }
+
+        if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == 'C') {
+            DWORD sSel = 0, eSel = 0;
+            SendMessageA(hIn, EM_GETSEL, (WPARAM)&sSel, (LPARAM)&eSel);
+            if (sSel == eSel) {
+                char cancelLine[300];
+                char cur[256];
+                GetWindowTextA(hIn, cur, sizeof(cur));
+                FormatPathPrompt(cancelLine, sizeof(cancelLine), tab->currentDir, cur);
+                my_strcat(cancelLine, "^C");
+                AppendOutput(cancelLine);
+                SetWindowTextA(hIn, "");
+                return 0;
+            }
         }
 
         if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == 'R') {
@@ -1007,6 +1111,37 @@ LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     return CallWindowProc(oldEditProc, hwnd, msg, wParam, lParam);
 }
 
+LRESULT CALLBACK OutEditProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_KEYDOWN) {
+        if (wParam == VK_F1) {
+            ShowHelpDialog(GetParent(hwnd));
+            return 0;
+        }
+        if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == 'T') {
+            AddNewTab(NULL);
+            return 0;
+        }
+        if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == 'W') {
+            ProcessCommand("closetab");
+            return 0;
+        }
+        if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == 'L') {
+            SetWindowTextA(hOut, "");
+            return 0;
+        }
+        // If not copy/selection key or navigation, redirect keystroke to hIn
+        if (wParam != VK_CONTROL && wParam != VK_SHIFT && wParam != VK_MENU &&
+            wParam != VK_LEFT && wParam != VK_RIGHT && wParam != VK_UP && wParam != VK_DOWN &&
+            wParam != VK_PRIOR && wParam != VK_NEXT && wParam != VK_HOME && wParam != VK_END &&
+            !((GetKeyState(VK_CONTROL) & 0x8000) && (wParam == 'C' || wParam == 'A'))) {
+            SetFocus(hIn);
+            SendMessageA(hIn, msg, wParam, lParam);
+            return 0;
+        }
+    }
+    return CallWindowProc(oldOutProc, hwnd, msg, wParam, lParam);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
@@ -1021,24 +1156,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hOut = CreateWindowExA(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
                                   0, 0, 0, 0, hwnd, (HMENU)IDC_OUT, GetModuleHandle(NULL), NULL);
 
+            hPrompt = CreateWindowExA(0, "STATIC", "C:\\> ", WS_CHILD | WS_VISIBLE | SS_LEFT | SS_CENTERIMAGE,
+                                     0, 0, 0, 0, hwnd, (HMENU)IDC_PROMPT, GetModuleHandle(NULL), NULL);
+
             hIn = CreateWindowExA(0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
                                  0, 0, 0, 0, hwnd, (HMENU)IDC_IN, GetModuleHandle(NULL), NULL);
             
             SendMessageA(hOut, EM_SETLIMITTEXT, OUT_BUF_SIZE, 0);
 
             SendMessageA(hOut, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(8, 8));
-            SendMessageA(hIn, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(8, 8));
+            SendMessageA(hIn, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(6, 6));
 #ifndef EM_SETCUEBANNER
 #define EM_SETCUEBANNER 0x1501
 #endif
-            SendMessageW(hIn, EM_SETCUEBANNER, FALSE, (LPARAM)L"Type a command... (Press 'h' or F1 for Help)");
+            SendMessageW(hIn, EM_SETCUEBANNER, FALSE, (LPARAM)L"Type a command... (Press 'h' or F1 for Help | Ctrl+T: New Tab)");
 
             g_hFont = CreateFontA(-16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
-            SendMessageA(hTab, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), 0);
+            g_hTabFont = CreateFontA(-12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            g_hBgBrush = CreateSolidBrush(RGB(9, 11, 16));
+
+            SendMessageA(hTab, WM_SETFONT, (WPARAM)g_hTabFont, 0);
             SendMessageA(hOut, WM_SETFONT, (WPARAM)g_hFont, 0);
+            SendMessageA(hPrompt, WM_SETFONT, (WPARAM)g_hFont, 0);
             SendMessageA(hIn, WM_SETFONT, (WPARAM)g_hFont, 0);
             
             oldEditProc = (WNDPROC)SetWindowLongPtrA(hIn, GWLP_WNDPROC, (LONG_PTR)EditProc);
+            oldOutProc = (WNDPROC)SetWindowLongPtrA(hOut, GWLP_WNDPROC, (LONG_PTR)OutEditProc);
             
             AddNewTab("Tab 1");
             break;
@@ -1054,15 +1197,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_SIZE: {
             int w = LOWORD(lParam);
             int h = HIWORD(lParam);
-            int tabH = 26;
-            int inH = 24;
+            int tabH = 28;
+            int inH = 28;
             int outH = h - tabH - inH;
             if (outH < 0) outH = 0;
 
             MoveWindow(hTab, 0, 0, w, tabH, TRUE);
             MoveWindow(hOut, 0, tabH, w, outH, TRUE);
-            MoveWindow(hIn, 0, tabH + outH, w, inH, TRUE);
+            UpdatePromptDisplay();
             break;
+        }
+        case WM_GETMINMAXINFO: {
+            LPMINMAXINFO lpMMI = (LPMINMAXINFO)lParam;
+            lpMMI->ptMinTrackSize.x = 520;
+            lpMMI->ptMinTrackSize.y = 360;
+            return 0;
         }
         case WM_SETFOCUS:
             SetFocus(hIn);
@@ -1070,9 +1219,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CTLCOLORSTATIC:
         case WM_CTLCOLOREDIT: {
             HDC hdc = (HDC)wParam;
-            SetTextColor(hdc, RGB(0, 255, 0));
-            SetBkColor(hdc, RGB(0, 0, 0));
-            return (LRESULT)GetStockObject(BLACK_BRUSH);
+            if ((HWND)lParam == hPrompt) {
+                SetTextColor(hdc, RGB(0, 217, 255));
+            } else {
+                SetTextColor(hdc, RGB(0, 255, 102));
+            }
+            SetBkColor(hdc, RGB(9, 11, 16));
+            return (LRESULT)g_hBgBrush;
         }
         case WM_DESTROY:
             for (int i = 0; i < g_tabCount; i++) {
@@ -1081,6 +1234,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             if (g_hFont) DeleteObject(g_hFont);
+            if (g_hTabFont) DeleteObject(g_hTabFont);
+            if (g_hBgBrush) DeleteObject(g_hBgBrush);
             PostQuitMessage(0);
             break;
         default:
@@ -1103,7 +1258,7 @@ void MainEntry() {
 
     RECT rect = {0, 0, 960, 600};
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
-    HWND hwnd = CreateWindowExA(0, "KTermApp", "KTerm - Press 'h' or F1 for Help", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+    HWND hwnd = CreateWindowExA(0, "KTermApp", "KTerm - Advanced Terminal (Press 'h' or F1 for Help | Ctrl+T: New Tab)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
