@@ -215,6 +215,26 @@ typedef struct {
     int phase;
 } LogEntry;
 
+// Construction Blueprints
+#define MAX_BLUEPRINTS 6
+typedef struct {
+    char id[16];
+    char name[32];
+    char desc[80];
+    int cost;
+    int powerProd;
+    int powerCost;
+    int foodProd;
+    int waterProd;
+    int scrapProd;
+    int maxWorkers;
+    int powerPriority;
+    int popBoost;
+    int defenseBoost;
+    char benefit[48];
+    int built;
+} RoomBlueprint;
+
 // Game State
 typedef struct {
     int day;
@@ -235,9 +255,14 @@ typedef struct {
     int policyWater; // 0: Full (1.0), 1: Strict (0.5), 2: Minimal (0.25)
     int policyPower; // 0: Balanced, 1: Life Support, 2: Production
     
-    // Facilities (7)
-    Facility facilities[7];
+    // Facilities (up to 16)
+    Facility facilities[16];
     int numFacilities;
+    
+    // Construction Blueprints & Sub-tab
+    RoomBlueprint blueprints[MAX_BLUEPRINTS];
+    int numBlueprints;
+    int facilitySubTab; // 0: Active Facilities, 1: Construct Blueprints
     
     // Survivors
     Survivor survivors[MAX_SURVIVORS];
@@ -315,6 +340,9 @@ enum {
     BTN_REPORT,
     BTN_CLEARLOG,
     BTN_FAC_WORKER,
+    BTN_FAC_SUBTAB,
+    BTN_FAC_UPGRADE,
+    BTN_CONSTRUCT_ROOM,
     BTN_SURV_JOB,
     BTN_DISPATCH_SCOUT,
     BTN_POLICY_FOOD,
@@ -646,6 +674,96 @@ static void InitGameState() {
     g_state.facilities[6].scrapProd = 4;
     g_state.facilities[6].powerPriority = 4;
 
+    // 6 Construction Blueprints & Sub-Tab
+    g_state.facilitySubTab = 0;
+    g_state.numBlueprints = 6;
+
+    strcpy(g_state.blueprints[0].id, "gen_sub");
+    strcpy(g_state.blueprints[0].name, "BIO-TURBINE SUB-STATION");
+    strcpy(g_state.blueprints[0].desc, "Auxiliary geothermal & bio-fuel turbine generating power.");
+    g_state.blueprints[0].cost = 45;
+    g_state.blueprints[0].powerProd = 18;
+    g_state.blueprints[0].powerCost = 0;
+    g_state.blueprints[0].foodProd = 0;
+    g_state.blueprints[0].waterProd = 0;
+    g_state.blueprints[0].scrapProd = 0;
+    g_state.blueprints[0].maxWorkers = 2;
+    g_state.blueprints[0].powerPriority = 0;
+    strcpy(g_state.blueprints[0].benefit, "+18 kW Base Power Generation");
+    g_state.blueprints[0].built = 0;
+
+    strcpy(g_state.blueprints[1].id, "water_deep");
+    strcpy(g_state.blueprints[1].name, "DEEP WELL PURIFIER");
+    strcpy(g_state.blueprints[1].desc, "Subterranean bore-well with reverse-osmosis filtration.");
+    g_state.blueprints[1].cost = 40;
+    g_state.blueprints[1].powerProd = 0;
+    g_state.blueprints[1].foodProd = 0;
+    g_state.blueprints[1].waterProd = 7;
+    g_state.blueprints[1].scrapProd = 0;
+    g_state.blueprints[1].powerCost = 4;
+    g_state.blueprints[1].maxWorkers = 2;
+    g_state.blueprints[1].powerPriority = 2;
+    strcpy(g_state.blueprints[1].benefit, "+7 Water/worker (Draw: -4 kW)");
+    g_state.blueprints[1].built = 0;
+
+    strcpy(g_state.blueprints[2].id, "farm_aero");
+    strcpy(g_state.blueprints[2].name, "AEROPONIC GREEN BAY");
+    strcpy(g_state.blueprints[2].desc, "High-yield vertical misting racks cultivating crops.");
+    g_state.blueprints[2].cost = 40;
+    g_state.blueprints[2].powerProd = 0;
+    g_state.blueprints[2].foodProd = 7;
+    g_state.blueprints[2].waterProd = 0;
+    g_state.blueprints[2].scrapProd = 0;
+    g_state.blueprints[2].powerCost = 4;
+    g_state.blueprints[2].maxWorkers = 2;
+    g_state.blueprints[2].powerPriority = 2;
+    strcpy(g_state.blueprints[2].benefit, "+7 Food/worker (Draw: -4 kW)");
+    g_state.blueprints[2].built = 0;
+
+    strcpy(g_state.blueprints[3].id, "quarters_ext");
+    strcpy(g_state.blueprints[3].name, "BARRACKS EXPANSION");
+    strcpy(g_state.blueprints[3].desc, "Reinforced bulkhead sector with triple sleeper pods.");
+    g_state.blueprints[3].cost = 35;
+    g_state.blueprints[3].powerProd = 0;
+    g_state.blueprints[3].foodProd = 0;
+    g_state.blueprints[3].waterProd = 0;
+    g_state.blueprints[3].scrapProd = 0;
+    g_state.blueprints[3].powerCost = 2;
+    g_state.blueprints[3].maxWorkers = 0;
+    g_state.blueprints[3].powerPriority = 3;
+    g_state.blueprints[3].popBoost = 6;
+    strcpy(g_state.blueprints[3].benefit, "+6 Vault Citizen Capacity");
+    g_state.blueprints[3].built = 0;
+
+    strcpy(g_state.blueprints[4].id, "security");
+    strcpy(g_state.blueprints[4].name, "SECURITY TURRET BASTION");
+    strcpy(g_state.blueprints[4].desc, "Automated 50-cal sentry turrets and blast-door armor.");
+    g_state.blueprints[4].cost = 50;
+    g_state.blueprints[4].powerProd = 0;
+    g_state.blueprints[4].foodProd = 0;
+    g_state.blueprints[4].waterProd = 0;
+    g_state.blueprints[4].scrapProd = 0;
+    g_state.blueprints[4].powerCost = 3;
+    g_state.blueprints[4].maxWorkers = 1;
+    g_state.blueprints[4].powerPriority = 1;
+    g_state.blueprints[4].defenseBoost = 15;
+    strcpy(g_state.blueprints[4].benefit, "+15 Vault Defense Rating");
+    g_state.blueprints[4].built = 0;
+
+    strcpy(g_state.blueprints[5].id, "smelter");
+    strcpy(g_state.blueprints[5].name, "SCRAP SMELTER CRUSHER");
+    strcpy(g_state.blueprints[5].desc, "Heavy magnetic furnace to melt down wasteland junk.");
+    g_state.blueprints[5].cost = 45;
+    g_state.blueprints[5].powerProd = 0;
+    g_state.blueprints[5].foodProd = 0;
+    g_state.blueprints[5].waterProd = 0;
+    g_state.blueprints[5].scrapProd = 5;
+    g_state.blueprints[5].powerCost = 3;
+    g_state.blueprints[5].maxWorkers = 2;
+    g_state.blueprints[5].powerPriority = 4;
+    strcpy(g_state.blueprints[5].benefit, "+5 Tech Scrap/worker (-3 kW)");
+    g_state.blueprints[5].built = 0;
+
     // Survivors
     g_state.numSurvivors = 5;
     const char* sNames[] = { "Laura Martinez", "Marcus Vance", "Elena Rostova", "Caleb Stone", "Dr. Arthur Ross" };
@@ -955,7 +1073,7 @@ static void DrawHUD(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int startY) {
 static void DrawFacilitiesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, int y, int w, int h) {
     SelectObject(hdc, hFontBold);
     SetTextColor(hdc, COL_TEXT_BRIGHT);
-    TextOutA(hdc, x, y, "SHELTER FACILITIES & WORKER ALLOCATIONS", 39);
+    TextOutA(hdc, x, y, "SHELTER FACILITIES & ROOM ENGINEERING", 37);
     
     int idle = GetUnassignedCount();
     char idleStr[40];
@@ -964,83 +1082,182 @@ static void DrawFacilitiesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x
     SetTextColor(hdc, idle > 0 ? COL_GREEN : COL_TEXT_DIM);
     TextOutA(hdc, x + w - 160, y, idleStr, (int)strlen(idleStr));
 
-    int startY = y + 22;
-    int cardH = 58;
-    int gap = 6;
+    // Sub-tab Bar
+    int subTabY = y + 20;
+    int subTabW = 180;
+    char tab1[48], tab2[48];
+    sprintf(tab1, "ACTIVE FACILITIES (%d)", g_state.numFacilities);
+    int availBp = 0;
+    for (int b = 0; b < g_state.numBlueprints; b++) {
+        if (!g_state.blueprints[b].built) availBp++;
+    }
+    sprintf(tab2, "CONSTRUCT ROOMS (%d AVAIL)", availBp);
+
+    COLORREF t1Bg = (g_state.facilitySubTab == 0) ? COL_BTN_HOVER : COL_DARK_CARD;
+    COLORREF t1Txt = (g_state.facilitySubTab == 0) ? COL_TEXT_BRIGHT : COL_TEXT_DIM;
+    COLORREF t1Bdr = (g_state.facilitySubTab == 0) ? COL_BORDER_HI : COL_BORDER;
+    DrawButtonControl(hdc, hFontSmall, x, subTabY, subTabW, 22, tab1, t1Txt, t1Bg, t1Bdr, BTN_FAC_SUBTAB, 0, 0);
+
+    COLORREF t2Bg = (g_state.facilitySubTab == 1) ? COL_BTN_HOVER : COL_DARK_CARD;
+    COLORREF t2Txt = (g_state.facilitySubTab == 1) ? COL_TEXT_BRIGHT : COL_TEXT_DIM;
+    COLORREF t2Bdr = (g_state.facilitySubTab == 1) ? COL_BORDER_HI : COL_BORDER;
+    DrawButtonControl(hdc, hFontSmall, x + subTabW + 8, subTabY, subTabW + 20, 22, tab2, t2Txt, t2Bg, t2Bdr, BTN_FAC_SUBTAB, 1, 0);
+
+    int startY = y + 48;
     int isBlackout = (g_state.powerGen < g_state.powerLoad);
 
-    for (int i = 0; i < g_state.numFacilities; i++) {
-        Facility* fac = &g_state.facilities[i];
-        int cy = startY + i * (cardH + gap);
+    if (g_state.facilitySubTab == 0) {
+        // Active Facilities Grid (2 Columns)
+        int colW = (w - 10) / 2;
+        int cardH = 68;
+        int gapY = 6;
 
-        DrawStyledBox(hdc, x, cy, w, cardH, COL_DARK_CARD, COL_BORDER);
+        for (int i = 0; i < g_state.numFacilities; i++) {
+            Facility* fac = &g_state.facilities[i];
+            int col = i % 2;
+            int row = i / 2;
+            int cx = x + col * (colW + 10);
+            int cy = startY + row * (cardH + gapY);
 
-        // Name
-        SelectObject(hdc, hFontBold);
-        SetTextColor(hdc, COL_TEXT_BRIGHT);
-        TextOutA(hdc, x + 8, cy + 6, fac->name, (int)strlen(fac->name));
+            DrawStyledBox(hdc, cx, cy, colW, cardH, COL_DARK_CARD, COL_BORDER);
 
-        // Status Badge
-        const char* stText = "ONLINE";
-        COLORREF stColor = COL_GREEN;
-        if (fac->powerProd > 0) {
-            stText = "GENERATING";
-            stColor = COL_GREEN;
-        } else if (isBlackout && fac->powerPriority > 2) {
-            stText = "BROWNOUT";
-            stColor = COL_RED;
-        } else if (fac->maxWorkers > 0 && fac->assigned == 0) {
-            stText = "UNSTAFFED";
-            stColor = COL_AMBER;
-        }
-        SelectObject(hdc, hFontSmall);
-        SetTextColor(hdc, stColor);
-        TextOutA(hdc, x + 240, cy + 6, stText, (int)strlen(stText));
-
-        // Desc
-        SetTextColor(hdc, COL_TEXT_DIM);
-        TextOutA(hdc, x + 8, cy + 24, fac->desc, (int)strlen(fac->desc));
-
-        // Stats output line
-        char outBuf[64];
-        if (fac->powerProd > 0) {
-            int outP = fac->assigned > 0 ? (fac->powerProd + (fac->assigned - 1) * 8) : 6;
-            sprintf(outBuf, "Output: +%d kW Power | Self-Sufficient", outP);
-        } else if (fac->foodProd > 0) {
-            sprintf(outBuf, "Output: +%d Food/cyc | Draw: -%d kW", fac->foodProd * fac->assigned, fac->powerCost);
-        } else if (fac->waterProd > 0) {
-            sprintf(outBuf, "Output: +%d Water/cyc | Draw: -%d kW", fac->waterProd * fac->assigned, fac->powerCost);
-        } else if (fac->scrapProd > 0) {
-            sprintf(outBuf, "Output: +%d Scrap/cyc | Draw: -%d kW", fac->scrapProd * fac->assigned, fac->powerCost);
-        } else if (strcmp(fac->id, "quarters") == 0) {
-            sprintf(outBuf, "Cap: 10 Dwellers (+Beds) | Draw: -%d kW", fac->powerCost);
-        } else {
-            sprintf(outBuf, "Medical and bio-filtration | Draw: -%d kW", fac->powerCost);
-        }
-        SetTextColor(hdc, COL_TEXT_MAIN);
-        TextOutA(hdc, x + 8, cy + 39, outBuf, (int)strlen(outBuf));
-
-        // Worker controls
-        if (fac->maxWorkers > 0) {
-            char staffBuf[24];
-            sprintf(staffBuf, "Staff: %d/%d", fac->assigned, fac->maxWorkers);
+            // Row 1: Name + Level + Status
             SelectObject(hdc, hFontBold);
             SetTextColor(hdc, COL_TEXT_BRIGHT);
-            TextOutA(hdc, x + w - 120, cy + 18, staffBuf, (int)strlen(staffBuf));
+            TextOutA(hdc, cx + 6, cy + 5, fac->name, (int)strlen(fac->name));
 
-            // [-] button
-            COLORREF btnMinusBg = (fac->assigned > 0) ? COL_BTN_BG : COL_DARK_CARD;
-            COLORREF btnMinusTxt = (fac->assigned > 0) ? COL_TEXT_MAIN : COL_TEXT_DIM;
-            DrawButtonControl(hdc, hFontBold, x + w - 50, cy + 16, 20, 22, "-", btnMinusTxt, btnMinusBg, COL_BORDER, BTN_FAC_WORKER, i, -1);
-
-            // [+] button
-            COLORREF btnPlusBg = (fac->assigned < fac->maxWorkers && idle > 0) ? COL_BTN_BG : COL_DARK_CARD;
-            COLORREF btnPlusTxt = (fac->assigned < fac->maxWorkers && idle > 0) ? COL_TEXT_BRIGHT : COL_TEXT_DIM;
-            DrawButtonControl(hdc, hFontBold, x + w - 26, cy + 16, 20, 22, "+", btnPlusTxt, btnPlusBg, COL_BORDER, BTN_FAC_WORKER, i, 1);
-        } else {
+            char lvlBuf[12];
+            sprintf(lvlBuf, "LV%d", fac->level);
             SelectObject(hdc, hFontSmall);
+            SetTextColor(hdc, COL_AMBER);
+            TextOutA(hdc, cx + 165, cy + 6, lvlBuf, (int)strlen(lvlBuf));
+
+            const char* stText = "ONLINE";
+            COLORREF stColor = COL_GREEN;
+            if (fac->powerProd > 0) {
+                stText = "GEN";
+                stColor = COL_GREEN;
+            } else if (isBlackout && fac->powerPriority > 2) {
+                stText = "BROWNOUT";
+                stColor = COL_RED;
+            } else if (fac->maxWorkers > 0 && fac->assigned == 0) {
+                stText = "UNSTAFFED";
+                stColor = COL_AMBER;
+            }
+            SetTextColor(hdc, stColor);
+            TextOutA(hdc, cx + colW - 65, cy + 6, stText, (int)strlen(stText));
+
+            // Row 2: Stats output line
+            char outBuf[64];
+            if (fac->powerProd > 0) {
+                int outP = fac->assigned > 0 ? (fac->powerProd + (fac->assigned - 1) * 8) : 6;
+                sprintf(outBuf, "Out: +%d kW Power | Self-Sufficient", outP);
+            } else if (fac->foodProd > 0) {
+                sprintf(outBuf, "Out: +%d Food/cyc | Draw: -%d kW", fac->foodProd * fac->assigned, fac->powerCost);
+            } else if (fac->waterProd > 0) {
+                sprintf(outBuf, "Out: +%d Water/cyc | Draw: -%d kW", fac->waterProd * fac->assigned, fac->powerCost);
+            } else if (fac->scrapProd > 0) {
+                sprintf(outBuf, "Out: +%d Scrap/cyc | Draw: -%d kW", fac->scrapProd * fac->assigned, fac->powerCost);
+            } else if (strcmp(fac->id, "quarters") == 0 || strcmp(fac->id, "quarters_ext") == 0) {
+                sprintf(outBuf, "Cap: +%d Dwellers | Draw: -%d kW", 10 + (fac->level - 1) * 4, fac->powerCost);
+            } else if (strcmp(fac->id, "security") == 0) {
+                sprintf(outBuf, "Defense: +%d Armor | Draw: -%d kW", 15 + (fac->level - 1) * 10, fac->powerCost);
+            } else {
+                sprintf(outBuf, "Medical Triage | Draw: -%d kW", fac->powerCost);
+            }
+            SetTextColor(hdc, COL_TEXT_MAIN);
+            TextOutA(hdc, cx + 6, cy + 24, outBuf, (int)strlen(outBuf));
+
+            // Row 3: Staff [-] [+] controls and Upgrade Button
+            if (fac->maxWorkers > 0) {
+                char staffBuf[20];
+                sprintf(staffBuf, "Staff: %d/%d", fac->assigned, fac->maxWorkers);
+                SetTextColor(hdc, COL_TEXT_DIM);
+                TextOutA(hdc, cx + 6, cy + 45, staffBuf, (int)strlen(staffBuf));
+
+                // [-] button
+                COLORREF btnMinusBg = (fac->assigned > 0) ? COL_BTN_BG : COL_DARK_CARD;
+                COLORREF btnMinusTxt = (fac->assigned > 0) ? COL_TEXT_MAIN : COL_TEXT_DIM;
+                DrawButtonControl(hdc, hFontBold, cx + 80, cy + 42, 18, 20, "-", btnMinusTxt, btnMinusBg, COL_BORDER, BTN_FAC_WORKER, i, -1);
+
+                // [+] button
+                COLORREF btnPlusBg = (fac->assigned < fac->maxWorkers && idle > 0) ? COL_BTN_BG : COL_DARK_CARD;
+                COLORREF btnPlusTxt = (fac->assigned < fac->maxWorkers && idle > 0) ? COL_TEXT_BRIGHT : COL_TEXT_DIM;
+                DrawButtonControl(hdc, hFontBold, cx + 102, cy + 42, 18, 20, "+", btnPlusTxt, btnPlusBg, COL_BORDER, BTN_FAC_WORKER, i, 1);
+            } else {
+                SetTextColor(hdc, COL_TEXT_DIM);
+                TextOutA(hdc, cx + 6, cy + 45, "Automated Facility", 18);
+            }
+
+            // Upgrade Button
+            if (fac->level < 3) {
+                int uCost = fac->level * 30;
+                char uBuf[24];
+                sprintf(uBuf, "UPG LV%d (%dS)", fac->level + 1, uCost);
+                COLORREF uBg = (g_state.scrap >= uCost) ? COL_BTN_BG : COL_DARK_CARD;
+                COLORREF uTxt = (g_state.scrap >= uCost) ? COL_AMBER : COL_TEXT_DIM;
+                DrawButtonControl(hdc, hFontSmall, cx + colW - 110, cy + 42, 104, 20, uBuf, uTxt, uBg, COL_BORDER, BTN_FAC_UPGRADE, i, 0);
+            } else {
+                SetTextColor(hdc, COL_TEXT_DIM);
+                RECT rcMax = { cx + colW - 110, cy + 42, cx + colW - 6, cy + 62 };
+                DrawTextA(hdc, "[MAX LEVEL]", -1, &rcMax, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            }
+        }
+    } else {
+        // Room Construction Blueprints (2 Columns)
+        int colW = (w - 10) / 2;
+        int cardH = 92;
+        int gapY = 8;
+
+        for (int i = 0; i < g_state.numBlueprints; i++) {
+            RoomBlueprint* bp = &g_state.blueprints[i];
+            int col = i % 2;
+            int row = i / 2;
+            int cx = x + col * (colW + 10);
+            int cy = startY + row * (cardH + gapY);
+
+            DrawStyledBox(hdc, cx, cy, colW, cardH, COL_DARK_CARD, COL_BORDER);
+
+            // Name + Cost / Status
+            SelectObject(hdc, hFontBold);
+            SetTextColor(hdc, COL_TEXT_BRIGHT);
+            TextOutA(hdc, cx + 8, cy + 6, bp->name, (int)strlen(bp->name));
+
+            SelectObject(hdc, hFontSmall);
+            if (bp->built) {
+                SetTextColor(hdc, COL_GREEN);
+                TextOutA(hdc, cx + colW - 55, cy + 6, "BUILT", 5);
+            } else {
+                char costBuf[16];
+                sprintf(costBuf, "%d SCRAP", bp->cost);
+                SetTextColor(hdc, COL_AMBER);
+                TextOutA(hdc, cx + colW - 68, cy + 6, costBuf, (int)strlen(costBuf));
+            }
+
+            // Desc
             SetTextColor(hdc, COL_TEXT_DIM);
-            TextOutA(hdc, x + w - 85, cy + 20, "Automated", 9);
+            TextOutA(hdc, cx + 8, cy + 25, bp->desc, (int)strlen(bp->desc));
+
+            // Benefit
+            SetTextColor(hdc, COL_GREEN);
+            char benBuf[64];
+            sprintf(benBuf, "Benefit: %s", bp->benefit);
+            TextOutA(hdc, cx + 8, cy + 45, benBuf, (int)strlen(benBuf));
+
+            // Action button
+            if (bp->built) {
+                SetTextColor(hdc, COL_GREEN);
+                RECT rcOp = { cx + colW - 180, cy + 64, cx + colW - 10, cy + 86 };
+                DrawTextA(hdc, "[ OPERATIONAL & ONLINE ]", -1, &rcOp, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            } else {
+                char bBuf[32];
+                sprintf(bBuf, "CONSTRUCT (%d SCRAP)", bp->cost);
+                int canAfford = (g_state.scrap >= bp->cost);
+                COLORREF cBg = canAfford ? RGB(25, 50, 30) : COL_DARK_CARD;
+                COLORREF cTxt = canAfford ? COL_TEXT_BRIGHT : COL_TEXT_DIM;
+                COLORREF cBdr = canAfford ? COL_GREEN : COL_BORDER;
+                DrawButtonControl(hdc, hFontBold, cx + colW - 185, cy + 64, 178, 22, bBuf, cTxt, cBg, cBdr, BTN_CONSTRUCT_ROOM, i, 0);
+            }
         }
     }
 }
@@ -1336,7 +1553,13 @@ static void DrawManualView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, in
     TextOutA(hdc, x + 20, curY, "* Click THEME or press [T] to cycle. Click CRT or press [C] to toggle raster scanlines.", 87); curY += lineH + 6;
 
     SetTextColor(hdc, COL_AMBER);
-    TextOutA(hdc, x + 12, curY, "5. KEYBOARD SHORTCUTS:", 22); curY += lineH;
+    TextOutA(hdc, x + 12, curY, "5. ROOM CONSTRUCTION & FACILITY EXPANSION:", 42); curY += lineH;
+    SetTextColor(hdc, COL_TEXT_MAIN);
+    TextOutA(hdc, x + 20, curY, "* Upgrade Facilities: Click [UPG] to upgrade rooms up to Lv 3, boosting output & worker slots.", 94); curY += lineH;
+    TextOutA(hdc, x + 20, curY, "* Construct Rooms: Switch to [CONSTRUCT ROOMS] subtab to excavate new generators, wells, farms.", 95); curY += lineH + 6;
+
+    SetTextColor(hdc, COL_AMBER);
+    TextOutA(hdc, x + 12, curY, "6. KEYBOARD SHORTCUTS:", 22); curY += lineH;
     SetTextColor(hdc, COL_TEXT_MAIN);
     TextOutA(hdc, x + 20, curY, "[SPACE] Advance Cycle | [1-5] Tabs | [T] Theme | [C] CRT | [A] Auto | [H] Help | [R] Reset", 90);
 }
@@ -1574,6 +1797,80 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                                 AddLog(buf, 0);
                                 PlaySfx(1);
                             }
+                        }
+                    } else if (bId == BTN_FAC_SUBTAB) {
+                        g_state.facilitySubTab = p1;
+                        PlaySfx(1);
+                    } else if (bId == BTN_FAC_UPGRADE) {
+                        Facility* fac = &g_state.facilities[p1];
+                        int uCost = fac->level * 30;
+                        if (g_state.scrap >= uCost && fac->level < 3) {
+                            g_state.scrap -= uCost;
+                            fac->level++;
+                            char bonusMsg[48] = "";
+                            if (fac->powerProd > 0) {
+                                fac->powerProd += 10;
+                                fac->maxWorkers++;
+                                strcpy(bonusMsg, "+10 kW & +1 staff slot");
+                            } else if (fac->foodProd > 0) {
+                                fac->foodProd += 3;
+                                fac->maxWorkers++;
+                                strcpy(bonusMsg, "+3 Food & +1 staff slot");
+                            } else if (fac->waterProd > 0) {
+                                fac->waterProd += 3;
+                                fac->maxWorkers++;
+                                strcpy(bonusMsg, "+3 Water & +1 staff slot");
+                            } else if (fac->scrapProd > 0) {
+                                fac->scrapProd += 2;
+                                fac->maxWorkers++;
+                                strcpy(bonusMsg, "+2 Scrap & +1 staff slot");
+                            } else if (strcmp(fac->id, "quarters") == 0 || strcmp(fac->id, "quarters_ext") == 0) {
+                                g_state.maxPop += 4;
+                                strcpy(bonusMsg, "+4 Vault Capacity");
+                            } else if (strcmp(fac->id, "security") == 0) {
+                                g_state.defense += 10;
+                                strcpy(bonusMsg, "+10 Defense Rating");
+                            } else if (strcmp(fac->id, "cmd") == 0) {
+                                g_state.defense += 5;
+                                strcpy(bonusMsg, "+5 Sensor Defense");
+                            } else if (strcmp(fac->id, "infirmary") == 0) {
+                                strcpy(bonusMsg, "Faster Medical Recovery");
+                            }
+                            char buf[128];
+                            sprintf(buf, "UPGRADE: %s upgraded to Level %d! (%s)", fac->name, fac->level, bonusMsg);
+                            AddLog(buf, 3);
+                            PlaySfx(2);
+                        } else {
+                            PlaySfx(3);
+                        }
+                    } else if (bId == BTN_CONSTRUCT_ROOM) {
+                        RoomBlueprint* bp = &g_state.blueprints[p1];
+                        if (g_state.scrap >= bp->cost && !bp->built && g_state.numFacilities < 16) {
+                            g_state.scrap -= bp->cost;
+                            bp->built = 1;
+                            Facility* nf = &g_state.facilities[g_state.numFacilities++];
+                            strcpy(nf->id, bp->id);
+                            strcpy(nf->name, bp->name);
+                            strcpy(nf->desc, bp->desc);
+                            nf->level = 1;
+                            nf->maxWorkers = bp->maxWorkers;
+                            nf->assigned = 0;
+                            nf->powerCost = bp->powerCost;
+                            nf->powerProd = bp->powerProd;
+                            nf->foodProd = bp->foodProd;
+                            nf->waterProd = bp->waterProd;
+                            nf->scrapProd = bp->scrapProd;
+                            nf->powerPriority = bp->powerPriority;
+
+                            if (bp->popBoost > 0) g_state.maxPop += bp->popBoost;
+                            if (bp->defenseBoost > 0) g_state.defense += bp->defenseBoost;
+
+                            char buf[128];
+                            sprintf(buf, "CONSTRUCTION: %s excavated and brought online!", bp->name);
+                            AddLog(buf, 3);
+                            PlaySfx(2);
+                        } else {
+                            PlaySfx(3);
                         }
                     } else if (bId == BTN_SURV_JOB) {
                         Survivor* surv = &g_state.survivors[p1];

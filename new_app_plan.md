@@ -54,14 +54,14 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KSanctuary (Post-apocalyptic wasteland survival & base building RPG)
-**Phase:** 5 (next to do)
+**Phase:** 6 (next to do)
 **Status:** Deep Expansion
 
 - [x] Phase 1: Scaffold KSanctuary directory (`KSanctuary/`), create web HTML skeleton (`KiloOS/public/apps/ksanctuary.html`), register in App.jsx.
 - [x] Phase 2: Basic UI for wasteland shelter showing population, food, water, power, scrap, and day cycle.
 - [x] Phase 3: Native C version (`KSanctuary/main.c`, `build.bat`) using Win32 API with functional parity.
 - [x] Phase 4: Post-apocalyptic retro-terminal aesthetic (rust/amber/monochrome CRT styling, distressed borders).
-- [ ] Phase 5: Implement room construction and expansion (living quarters, water purifiers, hydroponic farms, power generators).
+- [x] Phase 5: Implement room construction and expansion (living quarters, water purifiers, hydroponic farms, power generators).
 - [ ] Phase 6: Implement survivor recruitment and assignment (assign survivors to facilities to generate daily resources).
 - [ ] Phase 7: Wasteland exploration and scavenging runs (send scouts into ruins for scrap, medical supplies, and blueprints).
 - [ ] Phase 8: Raider attack events and base defense mechanics (turrets, barricades, survivor combat readiness).

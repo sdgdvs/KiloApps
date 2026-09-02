@@ -622,6 +622,98 @@
         .status-offline { background: rgba(239, 68, 68, 0.2); color: var(--danger-red); border: 1px solid rgba(239, 68, 68, 0.4); }
         .status-idle { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.4); }
 
+        /* Room Construction & Sub-Tabs */
+        .subtab-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .subtab-btn {
+            background: var(--btn-bg);
+            border: 1px solid var(--panel-border);
+            color: var(--text-dim);
+            font-family: inherit;
+            font-size: 10px;
+            padding: 4px 10px;
+            cursor: pointer;
+            border-radius: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.15s;
+        }
+
+        .subtab-btn:hover {
+            color: var(--text-bright);
+            border-color: var(--border-corner);
+        }
+
+        .subtab-btn.active {
+            color: var(--text-bright);
+            border-color: var(--border-corner);
+            background: var(--btn-hover);
+            font-weight: bold;
+            box-shadow: 0 0 6px var(--crt-glow);
+        }
+
+        .btn-upgrade {
+            background: var(--btn-bg);
+            border: 1px solid var(--panel-border);
+            color: var(--accent-amber);
+            font-family: inherit;
+            font-size: 10px;
+            padding: 3px 7px;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: all 0.15s;
+        }
+
+        .btn-upgrade:hover:not(:disabled) {
+            background: var(--btn-hover);
+            border-color: var(--accent-amber);
+            color: var(--text-bright);
+            box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-upgrade:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            color: var(--text-dim);
+            border-color: var(--panel-border);
+        }
+
+        .blueprints-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 8px;
+        }
+
+        .bp-card {
+            background: var(--card-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 2px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            position: relative;
+        }
+
+        .bp-card::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 5px; height: 5px;
+            border-top: 2px solid var(--border-corner);
+            border-left: 2px solid var(--border-corner);
+            pointer-events: none;
+        }
+
+        .bp-card.built {
+            border-color: rgba(16, 185, 129, 0.35);
+            opacity: 0.85;
+        }
+
         /* Survivors View */
         .survivor-list {
             display: flex;
@@ -1079,11 +1171,28 @@
             <!-- FACILITIES VIEW -->
             <div id="view-facilities" class="tab-content">
                 <div class="panel-title">
-                    <span>Shelter Facilities & Worker Allocations</span>
+                    <span>Shelter Facilities & Room Engineering</span>
                     <span style="color: var(--text-dim); font-size:10px;">Available Unassigned Workers: <strong id="lbl-unassigned" style="color:var(--text-bright);">0</strong></span>
                 </div>
-                <div class="facilities-grid" id="facilities-grid">
-                    <!-- Injected by JavaScript -->
+
+                <div class="subtab-bar">
+                    <button class="subtab-btn active" id="btn-facsub-rooms" onclick="switchFacilitySubTab('rooms')">ACTIVE FACILITIES (<span id="lbl-active-count">7</span>)</button>
+                    <button class="subtab-btn" id="btn-facsub-build" onclick="switchFacilitySubTab('build')">CONSTRUCT ROOMS & EXPANSION (<span id="lbl-avail-bp-count">6</span> AVAILABLE)</button>
+                </div>
+
+                <div id="fac-subview-rooms">
+                    <div class="facilities-grid" id="facilities-grid">
+                        <!-- Injected by JavaScript -->
+                    </div>
+                </div>
+
+                <div id="fac-subview-build" style="display:none;">
+                    <div style="font-size:11px; color:var(--text-dim); margin-bottom:8px; line-height:1.4;">
+                        Vault Engineering Terminal: Authorize sub-level excavation and construction to expand power generation, water purification, food cultivation, living quarters, and shelter defense.
+                    </div>
+                    <div class="blueprints-grid" id="blueprints-grid">
+                        <!-- Injected by JavaScript -->
+                    </div>
                 </div>
             </div>
 
@@ -1237,6 +1346,10 @@
                 <br>
                 <p><strong>4. RETRO-TERMINAL CRT THEMES & AESTHETICS:</strong></p>
                 <p>Switch between authentic post-apocalyptic display themes using the <strong>THEME</strong> button or press <strong>[T]</strong>: Amber CRT (Phosphor P3), Wasteland Rust (Scorched Iron), Phosphor Green (P1), or Monochrome (P4 Radar). Toggle CRT raster scanlines with <strong>[C]</strong>.</p>
+                <br>
+                <p><strong>5. ROOM CONSTRUCTION & FACILITY EXPANSION:</strong></p>
+                <p>&bull; <strong>Upgrades:</strong> Upgrade existing facilities up to Level 3 using Tech Scrap. Upgrades boost output (power, food, water, scrap), unlock extra staff worker slots, and enlarge shelter citizen capacity!</p>
+                <p>&bull; <strong>Construction:</strong> Switch to the <em>CONSTRUCT ROOMS & EXPANSION</em> sub-tab to excavate new specialized chambers: Auxiliary Bio-Turbines, Deep Well Purifiers, Aeroponic Green Bays, Barracks Extensions (+6 Cap), Turret Bastions (+15 Defense), and Scrap Smelters!</p>
             </div>
         </div>
     </div>
@@ -1518,6 +1631,101 @@
                     potentialScrap: 40
                 }
             ],
+            facilitySubTab: 'rooms',
+            blueprints: [
+                {
+                    id: 'gen_sub',
+                    name: 'BIO-TURBINE SUB-STATION',
+                    desc: 'Auxiliary geothermal & bio-fuel turbine generating supplemental power.',
+                    cost: 45,
+                    powerProd: 18,
+                    powerCost: 0,
+                    foodProd: 0,
+                    waterProd: 0,
+                    scrapProd: 0,
+                    maxWorkers: 2,
+                    powerPriority: 0,
+                    built: false,
+                    benefit: '+18 kW Base Power Generation'
+                },
+                {
+                    id: 'water_deep',
+                    name: 'DEEP WELL PURIFIER',
+                    desc: 'Subterranean bore-well with reverse-osmosis filtration system.',
+                    cost: 40,
+                    powerProd: 0,
+                    powerCost: 4,
+                    foodProd: 0,
+                    waterProd: 7,
+                    scrapProd: 0,
+                    maxWorkers: 2,
+                    powerPriority: 2,
+                    built: false,
+                    benefit: '+7 Water/worker (Draw: -4 kW)'
+                },
+                {
+                    id: 'farm_aero',
+                    name: 'AEROPONIC GREEN BAY',
+                    desc: 'High-yield vertical misting racks cultivating irradiated crops.',
+                    cost: 40,
+                    powerProd: 0,
+                    powerCost: 4,
+                    foodProd: 7,
+                    waterProd: 0,
+                    scrapProd: 0,
+                    maxWorkers: 2,
+                    powerPriority: 2,
+                    built: false,
+                    benefit: '+7 Food/worker (Draw: -4 kW)'
+                },
+                {
+                    id: 'quarters_ext',
+                    name: 'BARRACKS EXPANSION',
+                    desc: 'Reinforced bulkhead sector fitted with triple-deck sleeper pods (+6 Cap).',
+                    cost: 35,
+                    powerProd: 0,
+                    powerCost: 2,
+                    foodProd: 0,
+                    waterProd: 0,
+                    scrapProd: 0,
+                    maxWorkers: 0,
+                    powerPriority: 3,
+                    built: false,
+                    popBoost: 6,
+                    benefit: '+6 Vault Citizen Capacity'
+                },
+                {
+                    id: 'security',
+                    name: 'SECURITY TURRET BASTION',
+                    desc: 'Automated 50-cal sentry turrets and blast-door reinforcement (+15 Defense).',
+                    cost: 50,
+                    powerProd: 0,
+                    powerCost: 3,
+                    foodProd: 0,
+                    waterProd: 0,
+                    scrapProd: 0,
+                    maxWorkers: 1,
+                    powerPriority: 1,
+                    built: false,
+                    defenseBoost: 15,
+                    benefit: '+15 Vault Defense Rating'
+                },
+                {
+                    id: 'smelter',
+                    name: 'SCRAP SMELTER CRUSHER',
+                    desc: 'Heavy magnetic furnace to melt down irradiated wasteland salvage.',
+                    cost: 45,
+                    powerProd: 0,
+                    powerCost: 3,
+                    foodProd: 0,
+                    waterProd: 0,
+                    scrapProd: 5,
+                    maxWorkers: 2,
+                    powerPriority: 4,
+                    built: false,
+                    benefit: '+5 Tech Scrap/worker (Draw: -3 kW)'
+                }
+            ],
             lastSummary: null
         };
 
@@ -1539,6 +1747,11 @@
                     // Basic sanity check
                     if (parsed.facilities && parsed.survivors) {
                         state = parsed;
+                        if (!state.blueprints) state.blueprints = JSON.parse(JSON.stringify(defaultState.blueprints));
+                        if (!state.facilitySubTab) state.facilitySubTab = 'rooms';
+                        state.facilities.forEach(f => {
+                            if (!f.level) f.level = 1;
+                        });
                     }
                 }
             } catch (e) {}
@@ -1717,8 +1930,9 @@
                 else if (fac.foodProd > 0) yieldText = `Output: +${fac.foodProd * fac.assigned} Food / cycle`;
                 else if (fac.waterProd > 0) yieldText = `Output: +${fac.waterProd * fac.assigned} Water / cycle`;
                 else if (fac.scrapProd > 0) yieldText = `Output: +${fac.scrapProd * fac.assigned} Scrap / cycle`;
-                else if (fac.id === 'quarters') yieldText = `Capacity: 10 Dwellers (+Beds)`;
+                else if (fac.id === 'quarters' || fac.id === 'quarters_ext') yieldText = `Capacity: +${10 + ((fac.level||1)-1)*4} Dwellers`;
                 else if (fac.id === 'infirmary') yieldText = `Function: Heals sick survivors`;
+                else if (fac.id === 'security') yieldText = `Defense: +${15 + ((fac.level||1)-1)*10} Base Shielding`;
                 else if (fac.id === 'cmd') yieldText = `Command: Radar & System Controls`;
 
                 let workerControlHtml = '';
@@ -1734,9 +1948,17 @@
                     `;
                 }
 
+                const curLvl = fac.level || 1;
+                const upgCost = curLvl * 30;
+                const canUpgrade = curLvl < 3 && state.scrap >= upgCost;
+                const upgBtnText = curLvl >= 3 ? 'MAX LEVEL' : `UPGRADE LV${curLvl + 1} (${upgCost}S)`;
+
                 card.innerHTML = `
                     <div class="fac-top">
-                        <span class="fac-name">${fac.name}</span>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span class="fac-name">${fac.name}</span>
+                            <span class="fac-level" style="color:var(--accent-amber); font-weight:bold; font-size:10px;">LVL ${curLvl}</span>
+                        </div>
                         ${statusHtml}
                     </div>
                     <div class="fac-stats">
@@ -1745,10 +1967,166 @@
                         <span style="color:var(--text-dim);">Power Draw: ${fac.powerCost > 0 ? `-${fac.powerCost} kW` : 'Self-Sufficient'}</span>
                     </div>
                     ${workerControlHtml}
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; padding-top:4px; border-top:1px dashed var(--panel-border);">
+                        <span style="font-size:9px; color:var(--text-dim);">${curLvl >= 3 ? 'MAX EXPANSION' : `Next Lvl: ${upgCost} Scrap`}</span>
+                        <button class="btn-upgrade" onclick="upgradeFacility('${fac.id}')" ${!canUpgrade ? 'disabled' : ''}>
+                            ${upgBtnText}
+                        </button>
+                    </div>
                 `;
 
                 grid.appendChild(card);
             });
+
+            renderBlueprints();
+        }
+
+        function renderBlueprints() {
+            const grid = document.getElementById('blueprints-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            state.blueprints.forEach(bp => {
+                const card = document.createElement('div');
+                card.className = `bp-card ${bp.built ? 'built' : ''}`;
+
+                let btnHtml = '';
+                if (bp.built) {
+                    btnHtml = `<button class="btn-upgrade" disabled style="color:var(--accent-green); font-weight:bold;">[ OPERATIONAL & ONLINE ]</button>`;
+                } else {
+                    const canAfford = state.scrap >= bp.cost;
+                    btnHtml = `<button class="btn-upgrade" onclick="constructRoom('${bp.id}')" ${!canAfford ? 'disabled' : ''} style="color:${canAfford ? 'var(--text-bright)' : 'var(--text-dim)'}; font-weight:bold; padding:5px 8px;">CONSTRUCT ROOM (${bp.cost} SCRAP)</button>`;
+                }
+
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:12px; font-weight:bold; color:var(--text-bright);">${bp.name}</span>
+                        <span style="font-size:10px; color:${bp.built ? 'var(--accent-green)' : 'var(--accent-amber)'}; font-weight:bold;">${bp.built ? 'BUILT' : `${bp.cost} SCRAP`}</span>
+                    </div>
+                    <div style="font-size:10px; color:var(--text-dim);">${bp.desc}</div>
+                    <div style="font-size:10px; color:var(--text-main);"><strong>Benefit:</strong> ${bp.benefit}</div>
+                    <div style="display:flex; justify-content:flex-end; margin-top:4px;">
+                        ${btnHtml}
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+
+            // Update counter badges
+            const activeEl = document.getElementById('lbl-active-count');
+            if (activeEl) activeEl.textContent = state.facilities.length;
+            const availBpEl = document.getElementById('lbl-avail-bp-count');
+            if (availBpEl) availBpEl.textContent = state.blueprints.filter(b => !b.built).length;
+        }
+
+        function switchFacilitySubTab(subTab) {
+            state.facilitySubTab = subTab;
+            const roomsView = document.getElementById('fac-subview-rooms');
+            const buildView = document.getElementById('fac-subview-build');
+            const btnRooms = document.getElementById('btn-facsub-rooms');
+            const btnBuild = document.getElementById('btn-facsub-build');
+
+            if (subTab === 'build') {
+                if (roomsView) roomsView.style.display = 'none';
+                if (buildView) buildView.style.display = 'block';
+                if (btnRooms) btnRooms.classList.remove('active');
+                if (btnBuild) btnBuild.classList.add('active');
+            } else {
+                if (roomsView) roomsView.style.display = 'block';
+                if (buildView) buildView.style.display = 'none';
+                if (btnRooms) btnRooms.classList.add('active');
+                if (btnBuild) btnBuild.classList.remove('active');
+            }
+            playSound('click');
+        }
+
+        function upgradeFacility(facId) {
+            const fac = state.facilities.find(f => f.id === facId);
+            if (!fac) return;
+            if (!fac.level) fac.level = 1;
+            if (fac.level >= 3) {
+                logEvent(`${fac.name} is already at maximum level 3 expansion!`, 'warn');
+                return;
+            }
+            const cost = fac.level * 30;
+            if (state.scrap < cost) {
+                logEvent(`Insufficient scrap to upgrade ${fac.name}! Need ${cost} scrap.`, 'warn');
+                playSound('alert');
+                return;
+            }
+            state.scrap -= cost;
+            fac.level++;
+
+            let bonusMsg = '';
+            if (fac.powerProd > 0) {
+                fac.powerProd += 10;
+                fac.maxWorkers++;
+                bonusMsg = '+10 kW Generation & +1 staff slot';
+            } else if (fac.foodProd > 0) {
+                fac.foodProd += 3;
+                fac.maxWorkers++;
+                bonusMsg = '+3 Food/worker & +1 staff slot';
+            } else if (fac.waterProd > 0) {
+                fac.waterProd += 3;
+                fac.maxWorkers++;
+                bonusMsg = '+3 Water/worker & +1 staff slot';
+            } else if (fac.scrapProd > 0) {
+                fac.scrapProd += 2;
+                fac.maxWorkers++;
+                bonusMsg = '+2 Scrap/worker & +1 staff slot';
+            } else if (fac.id === 'quarters' || fac.id === 'quarters_ext') {
+                state.maxPop += 4;
+                bonusMsg = '+4 Vault Capacity';
+            } else if (fac.id === 'security') {
+                state.defense += 10;
+                bonusMsg = '+10 Vault Defense';
+            } else if (fac.id === 'cmd') {
+                state.defense += 5;
+                bonusMsg = '+5 Sensor Defense';
+            } else if (fac.id === 'infirmary') {
+                bonusMsg = 'Enhanced medical triage & faster recovery';
+            }
+
+            logEvent(`UPGRADE: ${fac.name} upgraded to Level ${fac.level}! (${bonusMsg})`, 'cycle');
+            playSound('cycle');
+            updateAll();
+        }
+
+        function constructRoom(bpId) {
+            const bp = state.blueprints.find(b => b.id === bpId);
+            if (!bp || bp.built) return;
+            if (state.scrap < bp.cost) {
+                logEvent(`Insufficient tech scrap to construct ${bp.name}! Need ${bp.cost} scrap.`, 'warn');
+                playSound('alert');
+                return;
+            }
+
+            state.scrap -= bp.cost;
+            bp.built = true;
+
+            const newFac = {
+                id: bp.id,
+                name: bp.name,
+                desc: bp.desc,
+                level: 1,
+                maxWorkers: bp.maxWorkers,
+                assigned: 0,
+                powerCost: bp.powerCost,
+                powerPriority: bp.powerPriority,
+                foodProd: bp.foodProd,
+                waterProd: bp.waterProd,
+                scrapProd: bp.scrapProd,
+                powerProd: bp.powerProd
+            };
+            state.facilities.push(newFac);
+
+            if (bp.popBoost) state.maxPop += bp.popBoost;
+            if (bp.defenseBoost) state.defense += bp.defenseBoost;
+
+            logEvent(`CONSTRUCTION: ${bp.name} excavated and brought online!`, 'cycle');
+            playSound('cycle');
+            updateAll();
         }
 
         function renderSurvivors() {
