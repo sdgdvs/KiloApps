@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KSolitaire
+**Target App:** KTerm
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KSolitaire
 - KTerm
 - KSynth
 - KTask
@@ -105,6 +104,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KSnake
 - KTetris
 - KSpace
+- KSolitaire
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
 - KSpace: Usability and UI issues fixed (replaced blocking alert modals with sleek cybernetic toast notifications, added startup welcome toast, redesigned non-wrapping responsive skill buttons, added visible in-game pause/help HUD controls and pause-menu help routing in web; implemented full mouse click WM_LBUTTONDOWN navigation, added ClearType multi-tiered typography fixing HUD clipping off-screen, and eliminated GDI font leaks in native C).
@@ -189,7 +189,6 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KSnake: Usability and UI issues fixed (added WS_CLIPCHILDREN to native C window styles to prevent flickering, mapped F1 to help overlay in both versions, updated visual instructions to mention F1, and verified 540x680 bounds in App.jsx).
 - KSpace: Usability and UI issues fixed (added WS_CLIPCHILDREN and F1 hotkey support to native, implemented F1 support in web, updated instructions to state 'PRESS [H] OR [F1] FOR HELP', verified bounds).
 - KType: Usability and UI issues fixed (canvas scaling relative to devicePixelRatio applied in web for crisp text, automatic toggleHelp() on load added for first-time users, native currentMode default swapped to Help screen, SetProcessDPIAware validated).
-- KSolitaire: Usability and UI issues fixed (added F1 hotkey to native and web, added WS_CLIPCHILDREN to native, fixed native compilation errors, updated explicit instructions for F1/H help, verified 920x800 bounds).
 - KTerm: Usability and UI issues fixed (added WS_CLIPCHILDREN to native, explicitly mapped F1 for Help in both versions, added missing native linkers, updated UI text, verified 960x600 bounds).
 - KRogue: Usability and UI issues fixed (implemented negative font height and SetProcessDPIAware for crisp native text, added optimizeLegibility to web, verified 1000x720 bounds, updated help instructions).
 - KGraph: Usability and UI issues fixed (added WS_CLIPCHILDREN and F1 hotkey support to native, implemented F1 support in web, updated button labels and instructions, verified 1024x768 bounds).
@@ -200,3 +199,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KFortress: Usability and UI issues fixed (implemented negative font heights in native C for crisp DPI scaling, added optimizeLegibility to web CSS, and updated web UI Help button to explicitly display the 'H' hotkey).
 - KAlchemy: Usability and UI issues fixed (updated App.jsx auto-opening bounds to 1200x800, added negative font heights for crisp text in native C, applied devicePixelRatio canvas scaling for crisp visuals in web canvas, and added optimizeLegibility).
 - KFarm: Usability and UI issues fixed (added non-blocking toast notifications for weather, market transactions, out-of-season warnings, and crop actions in web; fixed duplicate morning animal money bug in web nextDay(); added 1-4 seed selection and Space for Sleep shortcuts across web and native; added global message loop hotkey interception in native; updated button labels and Farmer's Almanac with explicit shortcuts; increased App.jsx window bounds to 620x760).
+- KSolitaire: Usability and UI issues fixed (mapped F1 to Help dialog and H to Hints across web and native with explicit toolbar and status bar labels, added non-blocking toast notifications with welcome prompt on startup and clear feedback for hints/skills/stats, added Escape key and backdrop-click modal dismissal in web, and updated window title and menu shortcuts in native C).

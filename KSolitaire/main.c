@@ -1464,7 +1464,8 @@ void ShowHelpDialog(HWND hwnd) {
         "CONTROLS & SHORTCUTS:\n"
         "- Left Click: Select & Move cards between columns\n"
         "- Double-Click / Right-Click: Fast auto-move card to foundation\n"
-        "- [F1] / [H]: Smart Hint\n"
+        "- [F1]: Help & Rules\n"
+        "- [H] / [Ctrl+H]: Smart Hint\n"
         "- [F2]: New Game\n"
         "- [U] / [Ctrl+Z]: Undo Move | [Ctrl+Y]: Redo Move\n"
         "- [Ctrl+F]: Auto-Finish (when all hidden cards are cleared)";
@@ -1482,7 +1483,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenu(hGameMenu, MF_SEPARATOR, 0, NULL);
             AppendMenu(hGameMenu, MF_STRING, ID_UNDO, "Undo\tCtrl+Z");
             AppendMenu(hGameMenu, MF_STRING, ID_REDO, "Redo\tCtrl+Y");
-            AppendMenu(hGameMenu, MF_STRING, ID_HINT, "Hint\tCtrl+H");
+            AppendMenu(hGameMenu, MF_STRING, ID_HINT, "Hint\tH");
             AppendMenu(hGameMenu, MF_STRING, ID_AUTOFINISH, "Auto-Finish\tCtrl+F");
             AppendMenu(hGameMenu, MF_SEPARATOR, 0, NULL);
             AppendMenu(hGameMenu, MF_STRING, ID_STATS, "Statistics");
@@ -1529,8 +1530,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hFeltMenu, "Felt Color");
 
             HMENU hHelpMenu = CreatePopupMenu();
-            AppendMenu(hHelpMenu, MF_STRING, ID_HELP_RULES, "How to Play & Shortcuts");
-            AppendMenu(hHelpMenu, MF_STRING, ID_HINT, "Hint\tF1");
+            AppendMenu(hHelpMenu, MF_STRING, ID_HELP_RULES, "How to Play & Shortcuts\tF1");
+            AppendMenu(hHelpMenu, MF_STRING, ID_HINT, "Hint\tH");
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hHelpMenu, "Help");
 
             SetMenu(hwnd, hMenu);
@@ -1605,7 +1606,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_KEYDOWN: {
             if (wParam == VK_F2) NewGame(hwnd);
-            else if (wParam == VK_F1) GiveHint(hwnd);
+            else if (wParam == VK_F1 || wParam == VK_HELP) ShowHelpDialog(hwnd);
             else if (wParam == 'W' || wParam == 'w') UseMagicWand(hwnd);
             else if (wParam == 'X' || wParam == 'x') UseXRayVision(hwnd);
             else if (wParam == 'S' || wParam == 's') UseShuffleStock(hwnd);
@@ -2067,15 +2068,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             char statusText[320];
 
             if (state.gameMode == 1) {
-                wsprintfA(statusText, "Time: %02d:%02d  Moves: %d  Score: %d  [Stg %d/20]  Wand(W):%d  XRay(X):%d  Shuf(S):%d  [H: Hint]",
+                wsprintfA(statusText, "Time: %02d:%02d  Moves: %d  Score: %d  [Stg %d/20]  Wand(W):%d  XRay(X):%d  Shuf(S):%d  [F1: Help | H: Hint]",
                     state.timerSeconds / 60, state.timerSeconds % 60, state.moves, state.score, state.campaignStage,
                     state.wandCharges, state.xrayCharges, state.shuffleCharges);
             } else if (state.gameMode == 2) {
-                wsprintfA(statusText, "Time: %02d:%02d  Moves: %d  Cash: $%d  Bank: $%d  Wand(W):%d  XRay(X):%d  Shuf(S):%d  [H: Hint]",
+                wsprintfA(statusText, "Time: %02d:%02d  Moves: %d  Cash: $%d  Bank: $%d  Wand(W):%d  XRay(X):%d  Shuf(S):%d  [F1: Help | H: Hint]",
                     state.timerSeconds / 60, state.timerSeconds % 60, state.moves, state.score, stats.vegasCash,
                     state.wandCharges, state.xrayCharges, state.shuffleCharges);
             } else {
-                wsprintfA(statusText, "Time: %02d:%02d  Moves: %d  Score: %d  (Draw %d)  Wand(W):%d  XRay(X):%d  Shuf(S):%d  [H: Hint]",
+                wsprintfA(statusText, "Time: %02d:%02d  Moves: %d  Score: %d  (Draw %d)  Wand(W):%d  XRay(X):%d  Shuf(S):%d  [F1: Help | H: Hint]",
                     state.timerSeconds / 60, state.timerSeconds % 60, state.moves, state.score, state.drawMode,
                     state.wandCharges, state.xrayCharges, state.shuffleCharges);
             }
@@ -2274,7 +2275,7 @@ void MainEntry() {
     RECT rc = {0, 0, 920, 800};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, TRUE); // TRUE because we have a menu
 
-    HWND hwnd = CreateWindowEx(0, "KSolitaireApp", "KSolitaire - Klondike Solitaire (Press [H] or [F1] for Hint)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+    HWND hwnd = CreateWindowEx(0, "KSolitaireApp", "KSolitaire - Klondike Solitaire (Press [F1] for Help, [H] for Hint)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);

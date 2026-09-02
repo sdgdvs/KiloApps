@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KSolitaire - Klondike Solitaire (Press [H] or [F1] for Hint)</title>
+<title>KSolitaire - Klondike Solitaire (Press [F1] for Help, [H] for Hint)</title>
 <style>
   :root {
     --bg-color: #0d5c2e;
@@ -641,6 +641,32 @@
     20% { opacity: 0.5; }
     80% { opacity: 0.5; }
     100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+  /* Toast Notification */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(50px);
+    background: rgba(15, 23, 42, 0.95);
+    color: #ffd700;
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 12px rgba(255, 215, 0, 0.2);
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 13.5px;
+    font-weight: 600;
+    z-index: 10000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    backdrop-filter: blur(8px);
+  }
+  #toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
 </style>
 </head>
@@ -687,7 +713,7 @@
 
     <button id="undo-btn" class="btn" onclick="undoMove()" disabled title="Free Undo (U / Ctrl+Z)">↩ Undo</button>
     <button id="redo-btn" class="btn" onclick="redoMove()" disabled title="Redo (Ctrl+Y)">↪ Redo</button>
-    <button class="btn btn-warning" onclick="giveHint()" title="Hint (Ctrl+H)">💡 Hint</button>
+    <button class="btn btn-warning" onclick="giveHint()" title="Smart Hint [H / Ctrl+H]">💡 Hint [H]</button>
     <button id="autofinish-btn" class="btn btn-success" onclick="autoFinish()" disabled title="Auto Complete remaining cards">✨ Auto-Finish</button>
 
     <select id="theme-select" class="btn" onchange="changeTheme(this.value)">
@@ -705,13 +731,13 @@
       <option value="#450a0a">Felt: Deep Crimson</option>
     </select>
 
-    <button class="btn" onclick="openStatsModal()">📊 Stats</button>
-    <button class="btn" onclick="openHelpModal()">📖 Help</button>
+    <button class="btn" onclick="openStatsModal()" title="Game Statistics">📊 Stats</button>
+    <button class="btn" onclick="openHelpModal()" title="How to Play & Rules [F1]">📖 Help [F1]</button>
     <button class="btn" onclick="toggleSound()"><span id="sound-icon">🔊</span></button>
   </div>
 
   <div id="mode-info" class="mode-banner">
-    <span id="mode-desc">Classic Klondike Solitaire - Standard Rules (Press [H] or [F1] for Hint)</span>
+    <span id="mode-desc">Classic Klondike Solitaire - Standard Rules (Press [F1] for Help, [H] for Hint)</span>
     <span id="sub-info"></span>
   </div>
 </header>
@@ -751,7 +777,7 @@
 </div>
 
 <!-- Stats Modal -->
-<div id="stats-modal" class="modal-overlay">
+<div id="stats-modal" class="modal-overlay" onclick="if(event.target===this)closeStatsModal()">
   <div class="modal">
     <div class="modal-header">
       <div class="modal-title">Game Statistics</div>
@@ -782,7 +808,7 @@
 </div>
 
 <!-- Help Modal -->
-<div id="help-modal" class="modal-overlay">
+<div id="help-modal" class="modal-overlay" onclick="if(event.target===this)closeHelpModal()">
   <div class="modal" style="max-width: 540px;">
     <div class="modal-header">
       <div class="modal-title">📖 How to Play & Rules</div>
@@ -805,7 +831,8 @@
       <div style="color:#ffd700; font-weight:700; font-size:14px; border-bottom:1px solid rgba(255,215,0,0.25); padding-bottom:3px;">Controls & Shortcuts</div>
       <div><strong>• Left-Click:</strong> Select and move cards between tableau columns or foundations.</div>
       <div><strong>• Double-Click / Right-Click:</strong> Instantly auto-play card to foundation.</div>
-      <div><strong>• [F1] / [H]:</strong> Smart Hint | <strong>[U] / [Ctrl+Z]:</strong> Undo | <strong>[Ctrl+Y]:</strong> Redo</div>
+      <div><strong>• [F1] / [?]:</strong> Open/Close Help | <strong>[H] / [Ctrl+H]:</strong> Smart Hint</div>
+      <div><strong>• [Esc]:</strong> Close Modals | <strong>[U] / [Ctrl+Z]:</strong> Undo | <strong>[Ctrl+Y]:</strong> Redo</div>
       <div><strong>• [Ctrl+F]:</strong> Auto-Finish when all remaining cards are face-up.</div>
     </div>
     <div style="display:flex; justify-content: flex-end; margin-top: 14px;">
@@ -991,15 +1018,51 @@ function playSound(name) {
   }
 }
 
+// --- Toast Notification System ---
+let toastTimeout = null;
+function showToast(msg, duration = 3000) {
+  let toast = document.getElementById('toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.classList.add('show');
+  if (toastTimeout) clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => {
+    toast.classList.remove('show');
+  }, duration);
+}
+
+function toggleHelpModal() {
+  let modal = document.getElementById('help-modal');
+  if (modal && modal.classList.contains('active')) {
+    closeHelpModal();
+  } else {
+    openHelpModal();
+  }
+}
+
 // --- Initialization ---
 function init() {
   loadStats();
   populateStageSelect();
   loadSavedGame();
 
+  showToast("Welcome to KSolitaire! Press [F1] for Help & Rules, [H] for Hint.", 4500);
+
   window.addEventListener('keydown', (e) => {
     let k = e.key.toLowerCase();
-    if (e.ctrlKey && k === 'z') { e.preventDefault(); undoMove(); }
+    if (e.key === 'Escape') {
+      closeHelpModal();
+      closeStatsModal();
+    }
+    else if (e.key === 'F1' || (e.key === '?' && !e.ctrlKey)) {
+      e.preventDefault();
+      toggleHelpModal();
+    }
+    else if (e.ctrlKey && k === 'z') { e.preventDefault(); undoMove(); }
     else if (e.ctrlKey && k === 'y') { e.preventDefault(); redoMove(); }
     else if (e.ctrlKey && k === 'h') { e.preventDefault(); giveHint(); }
     else if (e.ctrlKey && k === 'f') { e.preventDefault(); autoFinish(); }
@@ -1008,7 +1071,6 @@ function init() {
     else if (k === 's' && !e.ctrlKey) { useShuffleStock(); }
     else if (k === 'u' && !e.ctrlKey) { undoMove(); }
     else if (k === 'h' && !e.ctrlKey) { giveHint(); }
-    else if (e.key === 'F1') { e.preventDefault(); giveHint(); }
   });
 }
 
@@ -1408,7 +1470,11 @@ function thawAdjacent(colA, colB) {
 
 // --- Active Skills Implementation ---
 function useMagicWand() {
-  if (wandCharges <= 0 || gameWon) { playSound('error'); return; }
+  if (wandCharges <= 0 || gameWon) {
+    playSound('error');
+    showToast("No Magic Wand charges remaining!");
+    return;
+  }
 
   // 1. Search tableau top cards
   for (let t = 0; t < 7; t++) {
@@ -1426,6 +1492,7 @@ function useMagicWand() {
             }
             attemptMove({ type: 'tableau', pileIdx: t, cardIdx: tableau[t].length - 1 }, 'foundation', f);
             playSound('skill');
+            showToast("🪄 Magic Wand moved a card to Foundation!");
             return;
           }
         }
@@ -1447,16 +1514,22 @@ function useMagicWand() {
         }
         attemptMove({ type: 'waste', pileIdx: 0, cardIdx: waste.length - 1 }, 'foundation', f);
         playSound('skill');
+        showToast("🪄 Magic Wand moved waste card to Foundation!");
         return;
       }
     }
   }
 
   playSound('error');
+  showToast("No cards currently eligible to move to Foundation!");
 }
 
 function useXRayVision() {
-  if (xrayCharges <= 0 || gameWon) { playSound('error'); return; }
+  if (xrayCharges <= 0 || gameWon) {
+    playSound('error');
+    showToast("No X-Ray Vision charges remaining!");
+    return;
+  }
   xrayCharges--;
   xrayTimer = 5;
   if (vegasRules) {
@@ -1466,6 +1539,7 @@ function useXRayVision() {
     if (scoreCount < 0) scoreCount = 0;
   }
   playSound('skill');
+  showToast("👁️ X-Ray Vision active (revealing face-down cards for 5s)!");
 
   if (xrayInterval) clearInterval(xrayInterval);
   xrayInterval = setInterval(() => {
@@ -1486,8 +1560,16 @@ function stopXRay() {
 }
 
 function useShuffleStock() {
-  if (shuffleCharges <= 0 || gameWon) { playSound('error'); return; }
-  if (stock.length === 0 && waste.length === 0) { playSound('error'); return; }
+  if (shuffleCharges <= 0 || gameWon) {
+    playSound('error');
+    showToast("No Shuffle Stock charges remaining!");
+    return;
+  }
+  if (stock.length === 0 && waste.length === 0) {
+    playSound('error');
+    showToast("Stock and waste piles are empty!");
+    return;
+  }
 
   saveState(true);
   shuffleCharges--;
@@ -1504,6 +1586,7 @@ function useShuffleStock() {
   stock = shuffle(pool);
   movesCount++;
   playSound('skill');
+  showToast("🔀 Stock and waste piles reshuffled!");
   isDealing = true;
   render();
   isDealing = false;
@@ -1792,18 +1875,22 @@ function giveHint() {
   }
 
   playTone(250, 'sawtooth', 0.2);
+  showToast("No obvious moves available! Draw from stock or use a skill.");
 }
 
 function highlightHint() {
   if (!activeHint) return;
   if (activeHint.srcType === 'stock') {
     document.getElementById('stock-slot').classList.add('hint-src');
+    showToast("💡 Hint: Draw a card from the stock pile.");
   } else if (activeHint.srcType === 'waste') {
     let wasteSlot = document.getElementById('waste-slot');
     if (wasteSlot.lastElementChild) wasteSlot.lastElementChild.classList.add('hint-src');
+    showToast("💡 Hint: Move waste card to target highlight.");
   } else if (activeHint.srcType === 'tableau') {
     let tSlot = document.getElementById(`tableau-${activeHint.srcPile}`);
     if (tSlot.children[activeHint.srcCardIdx]) tSlot.children[activeHint.srcCardIdx].classList.add('hint-src');
+    showToast("💡 Hint: Move highlighted card to target highlight.");
   }
 
   if (activeHint.dstType === 'foundation') {
@@ -2314,6 +2401,7 @@ function resetStats() {
     stats = { played: 0, wins: 0, currentStreak: 0, bestStreak: 0, highScore: 0, vegasCash: 0, maxCampaignStage: 1, bestTimeD1: null, bestTimeD3: null };
     saveStats();
     openStatsModal();
+    showToast("Game statistics have been reset.");
   }
 }
 
@@ -2323,6 +2411,7 @@ function exportStats() {
   dlAnchorElem.setAttribute("href", dataStr);
   dlAnchorElem.setAttribute("download", "ksolitaire_stats.json");
   dlAnchorElem.click();
+  showToast("Statistics exported to ksolitaire_stats.json");
 }
 
 function importStats(event) {
@@ -2346,12 +2435,12 @@ function importStats(event) {
         };
         saveStats();
         openStatsModal();
-        alert("Statistics imported successfully!");
+        showToast("Statistics imported successfully!");
       } else {
-        alert("Invalid JSON format.");
+        showToast("Error: Invalid JSON format.");
       }
     } catch(err) {
-      alert("Error reading JSON file.");
+      showToast("Error reading JSON file.");
     }
   };
   reader.readAsText(file);
