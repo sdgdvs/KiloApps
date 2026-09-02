@@ -340,8 +340,19 @@ typedef struct {
     int techAutoTooling;
     int techCombatStims;
     
+    // Environmental Disasters & Weather Hazards (Phase 10)
+    int weatherType; // 0: Clear, 1: Rad Storm, 2: Drought, 3: Toxic Rain, 4: Cold Snap
+    int weatherDaysLeft;
+    int weatherSeverity;
+    int forecastType;
+    int forecastEtaDays;
+    int forecastSeverity;
+    int cmRadBulkhead;
+    int cmThermalOverdrive;
+    int cmAcidNeutralizerDays;
+
     // Active Tab
-    int currentTab; // 0: Facilities, 1: Survivors, 2: Expeditions, 3: Defense, 4: Research, 5: Directives, 6: Manual
+    int currentTab; // 0: Facilities, 1: Survivors, 2: Expeditions, 3: Defense, 4: Research, 5: Hazards, 6: Directives, 7: Manual
     
     int autoRun;
 } GameState;
@@ -415,6 +426,11 @@ enum {
     BTN_DEF_TOGGLE_GUARD,
     BTN_DEF_TEST_RAID,
     BTN_RESEARCH_TECH,
+    BTN_HAZARD_TOGGLE_BULKHEAD,
+    BTN_HAZARD_OVERPUMP,
+    BTN_HAZARD_NEUTRALIZER,
+    BTN_HAZARD_TOGGLE_THERMAL,
+    BTN_HAZARD_SIMULATE,
     BTN_CLOSE_RAID_MODAL,
     BTN_CLOSE_MODAL
 };
@@ -703,8 +719,33 @@ static void CalculateTotals(float* foodProd, float* foodNeed, float* waterProd, 
         *powerGen += 10;
     }
 
+    // Weather Hazards Impact (Phase 10)
+    if (g_state.weatherType == 1) { // Rad Storm
+        if (!g_state.techRadShield) {
+            *powerGen = (*powerGen > 5) ? (*powerGen - 5) : 6;
+        }
+    } else if (g_state.weatherType == 2) { // Drought
+        *waterProd *= 0.5f;
+    } else if (g_state.weatherType == 4) { // Cold Snap
+        *powerGen = (int)(*powerGen * 0.65f);
+        if (!g_state.cmThermalOverdrive) {
+            *powerLoad += 4;
+        }
+    }
+
+    // Countermeasure Auxiliary Power Draws
+    if (g_state.cmRadBulkhead) {
+        *powerLoad += 5;
+    }
+    if (g_state.cmThermalOverdrive) {
+        *powerLoad += 4;
+    }
+
     float foodPer = (g_state.policyFood == 1) ? 0.5f : ((g_state.policyFood == 2) ? 0.25f : 1.0f);
     float waterPer = (g_state.policyWater == 1) ? 0.5f : ((g_state.policyWater == 2) ? 0.25f : 1.0f);
+    if (g_state.weatherType == 2) {
+        waterPer *= 1.5f; // +50% water thirst during drought
+    }
 
     *foodNeed = g_state.population * foodPer;
     *waterNeed = g_state.population * waterPer;
@@ -1078,6 +1119,102 @@ static void ProcessNewDay() {
     } else if (g_state.raidThreatDays == 1) {
         AddLog("RADAR WARNING: Raider vanguard spotted 5km away! Raid expected tomorrow!", 1);
         PlaySfx(3);
+    }
+
+    // Phase 10: Environmental Disasters & Weather Progression
+    if (g_state.cmAcidNeutralizerDays > 0) {
+        g_state.cmAcidNeutralizerDays--;
+    }
+
+    if (g_state.weatherDaysLeft > 0) {
+        g_state.weatherDaysLeft--;
+        if (g_state.weatherDaysLeft <= 0) {
+            g_state.weatherType = 0;
+            AddLog("WEATHER CLEARED: Hostile weather hazard subsided. Atmospheric conditions stable.", 3);
+        }
+    }
+
+    g_state.forecastEtaDays--;
+    if (g_state.forecastEtaDays <= 0) {
+        g_state.weatherType = g_state.forecastType;
+        g_state.weatherDaysLeft = 2 + (rand() % 2);
+        const char* wNames[] = { "Calm Skies", "Ion Radiation Storm", "Scorching Drought", "Corrosive Acid Rain", "Sub-Zero Cold Snap" };
+        char wAlert[160];
+        sprintf(wAlert, "METEOROLOGICAL ALERT: [%s] struck the shelter! Review Hazards console.", wNames[g_state.weatherType]);
+        AddLog(wAlert, 2);
+        PlaySfx(3);
+
+        g_state.forecastType = 1 + (rand() % 4);
+        g_state.forecastEtaDays = 4 + (rand() % 3);
+    } else if (g_state.forecastEtaDays == 1) {
+        const char* wNames[] = { "Calm Skies", "Ion Radiation Storm", "Scorching Drought", "Corrosive Acid Rain", "Sub-Zero Cold Snap" };
+        char fAlert[160];
+        sprintf(fAlert, "DOPPLER WARNING: [%s] is 1 day away from striking vault perimeter!", wNames[g_state.forecastType]);
+        AddLog(fAlert, 1);
+        PlaySfx(3);
+    }
+
+    // Hazard Daily Damage
+    if (g_state.weatherType == 1) { // Rad Storm
+        g_state.exteriorRads = 13.0f + (rand() % 50) / 10.0f;
+        int hasShield = g_state.cmRadBulkhead || g_state.techRadShield;
+        if (!hasShield) {
+            for (int b = 0; b < g_state.numBlueprints; b++) {
+                if (strcmp(g_state.blueprints[b].id, "bp_radshield") == 0 && g_state.blueprints[b].built) {
+                    hasShield = 1; break;
+                }
+            }
+        }
+        if (hasShield) {
+            AddLog("RAD-SHIELD: Lead bulkheads & nano-coatings absorbed gamma fallout storm.", 0);
+        } else {
+            for (int s = 0; s < g_state.numSurvivors; s++) {
+                g_state.survivors[s].health -= 12;
+                if (g_state.survivors[s].health < 10) g_state.survivors[s].health = 10;
+                g_state.survivors[s].morale -= 8;
+                if (g_state.survivors[s].morale < 15) g_state.survivors[s].morale = 15;
+            }
+            AddLog("RADIATION SICKNESS: Gamma storm penetrated vents! Dwellers suffered radiation trauma (-12 HP)!", 2);
+            PlaySfx(3);
+        }
+    } else if (g_state.weatherType == 2) { // Drought
+        g_state.exteriorRads = 5.2f + (rand() % 8) / 10.0f;
+        AddLog("DROUGHT: Arid heatwave dried up surface aquifers. Water yields depleted.", 1);
+    } else if (g_state.weatherType == 3) { // Acid Rain
+        g_state.exteriorRads = 6.5f + (rand() % 15) / 10.0f;
+        if (g_state.cmAcidNeutralizerDays > 0) {
+            AddLog("NEUTRALIZER ACTIVE: Alkaline coating protected barricades from acid rain.", 0);
+        } else {
+            int acidDmg = 25 + (rand() % 12);
+            g_state.barricadeHp -= acidDmg;
+            if (g_state.barricadeHp < 0) g_state.barricadeHp = 0;
+            for (int s = 0; s < g_state.numSurvivors; s++) {
+                if (strcmp(g_state.survivors[s].job, "security") == 0 || strcmp(g_state.survivors[s].job, "unassigned") == 0) {
+                    g_state.survivors[s].health -= 6;
+                    if (g_state.survivors[s].health < 10) g_state.survivors[s].health = 10;
+                }
+            }
+            char acidBuf[128];
+            sprintf(acidBuf, "ACID EROSION: Acid rain corroded barricades (-%d HP) & burned outdoor guards.", acidDmg);
+            AddLog(acidBuf, 1);
+        }
+    } else if (g_state.weatherType == 4) { // Cold Snap
+        g_state.exteriorRads = 3.8f + (rand() % 5) / 10.0f;
+        int isBlackout = (g_state.powerGen < g_state.powerLoad);
+        if (isBlackout && !g_state.cmThermalOverdrive) {
+            for (int s = 0; s < g_state.numSurvivors; s++) {
+                g_state.survivors[s].health -= 15;
+                if (g_state.survivors[s].health < 5) g_state.survivors[s].health = 5;
+                g_state.survivors[s].morale -= 12;
+                if (g_state.survivors[s].morale < 10) g_state.survivors[s].morale = 10;
+            }
+            AddLog("HYPOTHERMIA: Power brownout during Sub-Zero Cold Snap froze living bunks (-15 HP)!", 2);
+            PlaySfx(3);
+        } else {
+            AddLog("NUCLEAR FROST: Sub-zero frost reduced bio-fuel generator power efficiency.", 0);
+        }
+    } else {
+        g_state.exteriorRads = 4.0f + (rand() % 6) / 10.0f;
     }
 
     TriggerDailyEvent();
@@ -1572,6 +1709,17 @@ static void InitGameState() {
     strcpy(g_state.expeditions[4].blueprintId, "bp_genevault");
     strcpy(g_state.expeditions[4].blueprintReward, "Hydroponic Gene-Vault");
     g_state.expeditions[4].hasStimpack = 0;
+
+    // Phase 10: Environmental Disasters & Weather
+    g_state.weatherType = 0;
+    g_state.weatherDaysLeft = 0;
+    g_state.weatherSeverity = 1;
+    g_state.forecastType = 1;
+    g_state.forecastEtaDays = 3;
+    g_state.forecastSeverity = 2;
+    g_state.cmRadBulkhead = 0;
+    g_state.cmThermalOverdrive = 0;
+    g_state.cmAcidNeutralizerDays = 0;
 
     g_state.logCount = 0;
     AddLog("Vault 704 Overseer System initialized. All security bulkheads sealed.", 3);
@@ -2706,6 +2854,224 @@ static void DrawResearchView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, 
     }
 }
 
+
+static void DrawHazardsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, int y, int w, int h) {
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, x, y, "ENVIRONMENTAL DISASTERS & WEATHER HAZARDS", 41);
+
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, COL_GREEN);
+    TextOutA(hdc, x + w - 160, y, "SENSOR ARRAY: ONLINE", 20);
+
+    const char* wNames[] = { "Calm Irradiated Skies", "Ion Radiation Storm", "Scorching Drought", "Corrosive Acid Rain", "Sub-Zero Cold Snap" };
+    const char* wDescs[] = {
+        "Standard background radiation. Atmospheric currents are stable with minimal ionic disturbance.",
+        "Intense gamma fallout storm. Radiation spikes to 15+ Rads/h. Penetrates unshielded airlocks.",
+        "Extreme heatwave drying aquifers. Water production cut 50%, dweller thirst increases 50%.",
+        "Toxic chemical precipitation dissolving steel armor. Barricades sustain -30 HP/day erosion.",
+        "Cryogenic frost freezing generator fuel conduits (-35% Gen). Habitat requires active heating."
+    };
+
+    // 1. Current Atmospheric Conditions Box
+    int boxH = 68;
+    DrawStyledBox(hdc, x, y + 20, w, boxH, COL_DARK_CARD, (g_state.weatherType == 0) ? COL_BORDER : ((g_state.weatherType == 1 || g_state.weatherType == 3) ? COL_RED : COL_AMBER));
+
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, x + 8, y + 26, "SURFACE IONIZATION & METEOROLOGY TELEMETRY", 42);
+
+    SelectObject(hdc, hFontBold);
+    COLORREF wTitleCol = (g_state.weatherType == 0) ? COL_TEXT_BRIGHT : ((g_state.weatherType == 1 || g_state.weatherType == 3) ? COL_RED : COL_AMBER);
+    SetTextColor(hdc, wTitleCol);
+    char wTitleBuf[64];
+    sprintf(wTitleBuf, "[ %s ]", wNames[g_state.weatherType]);
+    TextOutA(hdc, x + 8, y + 42, wTitleBuf, (int)strlen(wTitleBuf));
+
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, COL_TEXT_MAIN);
+    TextOutA(hdc, x + 8, y + 62, wDescs[g_state.weatherType], (int)strlen(wDescs[g_state.weatherType]));
+
+    char radBuf[48], durBuf[32];
+    sprintf(radBuf, "Rads: %.1f Rads/h", g_state.exteriorRads);
+    if (g_state.weatherType == 0) strcpy(durBuf, "Duration: Calm");
+    else sprintf(durBuf, "Duration: %dd left", g_state.weatherDaysLeft);
+
+    SetTextColor(hdc, (g_state.exteriorRads > 10.0f) ? COL_RED : COL_AMBER);
+    TextOutA(hdc, x + w - 140, y + 26, radBuf, (int)strlen(radBuf));
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, x + w - 140, y + 44, durBuf, (int)strlen(durBuf));
+
+    // 2. Early Warning Doppler Radar Forecast Box
+    int foreY = y + 20 + boxH + 8;
+    int foreH = 50;
+    DrawStyledBox(hdc, x, foreY, w, foreH, COL_PANEL_BG, COL_BORDER_HI);
+
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_AMBER);
+    TextOutA(hdc, x + 8, foreY + 6, "DOPPLER RADAR EARLY WARNING FORECAST", 36);
+
+    char etaBuf[32];
+    if (g_state.forecastEtaDays <= 1) strcpy(etaBuf, "INCOMING TOMORROW!");
+    else sprintf(etaBuf, "INCOMING IN %d DAYS", g_state.forecastEtaDays);
+    SetTextColor(hdc, (g_state.forecastEtaDays <= 1) ? COL_RED : COL_AMBER);
+    TextOutA(hdc, x + w - 160, foreY + 6, etaBuf, (int)strlen(etaBuf));
+
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    char fProjBuf[128];
+    sprintf(fProjBuf, "Projected Hazard: %s (Tier %d) - Recommend preparing appropriate countermeasures.", wNames[g_state.forecastType], g_state.forecastSeverity);
+    TextOutA(hdc, x + 8, foreY + 26, fProjBuf, (int)strlen(fProjBuf));
+
+    // 3. Hazard Modifiers (4 Cards in 2x2 Grid)
+    int modY = foreY + foreH + 8;
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, x, modY, "ACTIVE ATMOSPHERIC IMPACT & MODIFIERS", 37);
+
+    int cardStartY = modY + 18;
+    int colW = (w - 8) / 2;
+    int cardH = 52;
+
+    // Card 1: Rad Exposure
+    DrawStyledBox(hdc, x, cardStartY, colW, cardH, COL_DARK_CARD, COL_BORDER);
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, (g_state.weatherType == 1) ? COL_RED : COL_TEXT_BRIGHT);
+    TextOutA(hdc, x + 6, cardStartY + 4, "1. RADIATION EXPOSURE", 21);
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, (g_state.weatherType == 1) ? COL_RED : COL_GREEN);
+    int hasShield = g_state.cmRadBulkhead || g_state.techRadShield;
+    if (g_state.weatherType == 1) {
+        TextOutA(hdc, x + 6, cardStartY + 20, hasShield ? "Status: Protected by Bulkhead / Nano-Shield" : "CRITICAL: Unshielded sickness (-12 HP/d)!", hasShield ? 43 : 42);
+    } else {
+        TextOutA(hdc, x + 6, cardStartY + 20, "Status: Safe baseline radiation levels", 38);
+    }
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, x + 6, cardStartY + 34, "Shielding blocks gamma storm sickness.", 38);
+
+    // Card 2: Hydrological Drought
+    DrawStyledBox(hdc, x + colW + 8, cardStartY, colW, cardH, COL_DARK_CARD, COL_BORDER);
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, (g_state.weatherType == 2) ? COL_AMBER : COL_TEXT_BRIGHT);
+    TextOutA(hdc, x + colW + 14, cardStartY + 4, "2. HYDROLOGICAL WATER IMPACT", 28);
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, (g_state.weatherType == 2) ? COL_RED : COL_GREEN);
+    if (g_state.weatherType == 2) {
+        TextOutA(hdc, x + colW + 14, cardStartY + 20, "DROUGHT ACTIVE: -50% Water Yield, +50% Thirst", 45);
+    } else {
+        TextOutA(hdc, x + colW + 14, cardStartY + 20, "Aquifer Yield: 100% | Evaporation: Normal", 41);
+    }
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, x + colW + 14, cardStartY + 34, "Aquifer overpumping restores emergency water.", 45);
+
+    // Card 3: Acid Corrosion
+    DrawStyledBox(hdc, x, cardStartY + cardH + 6, colW, cardH, COL_DARK_CARD, COL_BORDER);
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, (g_state.weatherType == 3) ? COL_RED : COL_TEXT_BRIGHT);
+    TextOutA(hdc, x + 6, cardStartY + cardH + 10, "3. ACID RAIN & BARRICADE EROSION", 32);
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, (g_state.weatherType == 3) ? COL_RED : COL_GREEN);
+    if (g_state.weatherType == 3) {
+        TextOutA(hdc, x + 6, cardStartY + cardH + 26, (g_state.cmAcidNeutralizerDays > 0) ? "Neutralizer Active: Acid corrosion blocked" : "CORROSION: Barricades taking -30 HP/day!", (g_state.cmAcidNeutralizerDays > 0) ? 42 : 40);
+    } else {
+        TextOutA(hdc, x + 6, cardStartY + cardH + 26, "Precipitation: Neutral pH | Corrosion: 0", 40);
+    }
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, x + 6, cardStartY + cardH + 38, "Alkaline wash repairs & grants 2d acid immunity.", 48);
+
+    // Card 4: Cold Snap Frost
+    DrawStyledBox(hdc, x + colW + 8, cardStartY + cardH + 6, colW, cardH, COL_DARK_CARD, COL_BORDER);
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, (g_state.weatherType == 4) ? COL_CYAN : COL_TEXT_BRIGHT);
+    TextOutA(hdc, x + colW + 14, cardStartY + cardH + 10, "4. SUB-ZERO CRYO BLIGHT", 23);
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, (g_state.weatherType == 4) ? COL_CYAN : COL_GREEN);
+    if (g_state.weatherType == 4) {
+        TextOutA(hdc, x + colW + 14, cardStartY + cardH + 26, g_state.cmThermalOverdrive ? "Heating Active: Thermal overdrive online" : "FROST ALERT: -35% Power Gen, +4 kW Heat Load", g_state.cmThermalOverdrive ? 40 : 44);
+    } else {
+        TextOutA(hdc, x + colW + 14, cardStartY + cardH + 26, "Habitat Temp: 22°C | Power Gen: 100%", 36);
+    }
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, x + colW + 14, cardStartY + cardH + 38, "Auxiliary thermal overdrive negates cold penalties.", 51);
+
+    // 4. Countermeasures & Mitigation Systems
+    int cmY = cardStartY + cardH * 2 + 18;
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, x, cmY, "EMERGENCY HAZARD MITIGATION & COUNTERMEASURES", 45);
+
+    int cmBtnY = cmY + 18;
+    int cmW = (w - 18) / 4;
+    int cmH = 58;
+
+    // CM 1: Bulkhead
+    COLORREF b1Bg = g_state.cmRadBulkhead ? RGB(25, 50, 30) : COL_DARK_CARD;
+    COLORREF b1Txt = g_state.cmRadBulkhead ? COL_GREEN : COL_TEXT_DIM;
+    COLORREF b1Bdr = g_state.cmRadBulkhead ? COL_GREEN : COL_BORDER;
+    DrawStyledBox(hdc, x, cmBtnY, cmW, cmH, b1Bg, b1Bdr);
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, x + 4, cmBtnY + 4, "RAD BULKHEAD SEAL", 17);
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, x + 4, cmBtnY + 18, "Draw: 5 kW Power", 16);
+    DrawButtonControl(hdc, hFontSmall, x + 4, cmBtnY + 34, cmW - 8, 20, g_state.cmRadBulkhead ? "DISENGAGE" : "ENGAGE SEAL", g_state.cmRadBulkhead ? COL_RED : COL_TEXT_BRIGHT, COL_BTN_BG, COL_BORDER, BTN_HAZARD_TOGGLE_BULKHEAD, 0, 0);
+
+    // CM 2: Overpump
+    DrawStyledBox(hdc, x + cmW + 6, cmBtnY, cmW, cmH, COL_DARK_CARD, COL_BORDER);
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, x + cmW + 10, cmBtnY + 4, "AQUIFER OVERPUMP", 16);
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, x + cmW + 10, cmBtnY + 18, "Cost: 15 Scrap (+8 W)", 21);
+    int canPump = (g_state.scrap >= 15.0f);
+    DrawButtonControl(hdc, hFontSmall, x + cmW + 10, cmBtnY + 34, cmW - 8, 20, "PUMP WATER", canPump ? COL_GREEN : COL_TEXT_DIM, COL_BTN_BG, COL_BORDER, BTN_HAZARD_OVERPUMP, 0, 0);
+
+    // CM 3: Neutralizer
+    int isNeut = (g_state.cmAcidNeutralizerDays > 0);
+    COLORREF nBg = isNeut ? RGB(25, 45, 30) : COL_DARK_CARD;
+    COLORREF nBdr = isNeut ? COL_GREEN : COL_BORDER;
+    DrawStyledBox(hdc, x + (cmW + 6) * 2, cmBtnY, cmW, cmH, nBg, nBdr);
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, x + (cmW + 6) * 2 + 4, cmBtnY + 4, "ACID NEUTRALIZER", 16);
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, isNeut ? COL_GREEN : COL_TEXT_DIM);
+    char nBuf[32];
+    if (isNeut) sprintf(nBuf, "Active (%dd left)", g_state.cmAcidNeutralizerDays);
+    else strcpy(nBuf, "Cost: 12S (+25 HP)");
+    TextOutA(hdc, x + (cmW + 6) * 2 + 4, cmBtnY + 18, nBuf, (int)strlen(nBuf));
+    int canNeut = (g_state.scrap >= 12.0f);
+    DrawButtonControl(hdc, hFontSmall, x + (cmW + 6) * 2 + 4, cmBtnY + 34, cmW - 8, 20, "SPRAY WASH", canNeut ? COL_TEXT_BRIGHT : COL_TEXT_DIM, COL_BTN_BG, COL_BORDER, BTN_HAZARD_NEUTRALIZER, 0, 0);
+
+    // CM 4: Thermal Overdrive
+    COLORREF tBg = g_state.cmThermalOverdrive ? RGB(20, 45, 55) : COL_DARK_CARD;
+    COLORREF tBdr = g_state.cmThermalOverdrive ? COL_CYAN : COL_BORDER;
+    DrawStyledBox(hdc, x + (cmW + 6) * 3, cmBtnY, cmW, cmH, tBg, tBdr);
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, x + (cmW + 6) * 3 + 4, cmBtnY + 4, "THERMAL OVERDRIVE", 17);
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, x + (cmW + 6) * 3 + 4, cmBtnY + 18, "Draw: 4 kW Power", 16);
+    DrawButtonControl(hdc, hFontSmall, x + (cmW + 6) * 3 + 4, cmBtnY + 34, cmW - 8, 20, g_state.cmThermalOverdrive ? "DISABLE" : "ENGAGE HEAT", g_state.cmThermalOverdrive ? COL_RED : COL_CYAN, COL_BTN_BG, COL_BORDER, BTN_HAZARD_TOGGLE_THERMAL, 0, 0);
+
+    // 5. Simulation Drill Buttons
+    int simY = cmBtnY + cmH + 10;
+    DrawStyledBox(hdc, x, simY, w, 32, COL_DARK_CARD, COL_BORDER);
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, x + 6, simY + 8, "SIMULATE HAZARD DRILL:", 22);
+
+    int sBtnW = 75;
+    DrawButtonControl(hdc, hFontSmall, x + 160, simY + 5, sBtnW, 22, "RAD STORM", COL_RED, COL_PANEL_BG, COL_BORDER, BTN_HAZARD_SIMULATE, 1, 0);
+    DrawButtonControl(hdc, hFontSmall, x + 160 + (sBtnW + 4), simY + 5, sBtnW, 22, "DROUGHT", COL_AMBER, COL_PANEL_BG, COL_BORDER, BTN_HAZARD_SIMULATE, 2, 0);
+    DrawButtonControl(hdc, hFontSmall, x + 160 + (sBtnW + 4) * 2, simY + 5, sBtnW, 22, "ACID RAIN", COL_GREEN, COL_PANEL_BG, COL_BORDER, BTN_HAZARD_SIMULATE, 3, 0);
+    DrawButtonControl(hdc, hFontSmall, x + 160 + (sBtnW + 4) * 3, simY + 5, sBtnW, 22, "COLD SNAP", COL_CYAN, COL_PANEL_BG, COL_BORDER, BTN_HAZARD_SIMULATE, 4, 0);
+    DrawButtonControl(hdc, hFontSmall, x + 160 + (sBtnW + 4) * 4, simY + 5, sBtnW, 22, "CLEAR SKY", COL_TEXT_MAIN, COL_PANEL_BG, COL_BORDER, BTN_HAZARD_SIMULATE, 0, 0);
+}
+
 static void DrawPoliciesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, int y, int w, int h) {
     SelectObject(hdc, hFontBold);
     SetTextColor(hdc, COL_TEXT_BRIGHT);
@@ -2878,9 +3244,17 @@ static void DrawManualView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, in
     TextOutA(hdc, x + 20, curY, "  photovoltaic solar arrays, reinforced blast defenses, sensor radars, and stimpacks.", 85); curY += lineH + 4;
 
     SetTextColor(hdc, COL_AMBER);
-    TextOutA(hdc, x + 12, curY, "9. KEYBOARD SHORTCUTS:", 22); curY += lineH;
+    TextOutA(hdc, x + 12, curY, "9. ENVIRONMENTAL DISASTERS & WEATHER HAZARDS (PHASE 10):", 56); curY += lineH;
     SetTextColor(hdc, COL_TEXT_MAIN);
-    TextOutA(hdc, x + 20, curY, "[SPACE] Advance Cycle | [1-7] Tabs | [T] Theme | [C] CRT | [A] Auto | [H] Help | [R] Reset", 90);
+    TextOutA(hdc, x + 20, curY, "* Radiation Storms: Surges rads to 15+ Rads/h. Engage Airlock Rad-Bulkheads or research Rad Shield.", 99); curY += lineH;
+    TextOutA(hdc, x + 20, curY, "* Droughts: Halves water purifier production and increases thirst. Activate Deep Aquifer Overpump.", 98); curY += lineH;
+    TextOutA(hdc, x + 20, curY, "* Acid Rain: Corrodes blast barricades (-30 HP/d). Spray Alkaline Corrosion Neutralizer wash.", 93); curY += lineH;
+    TextOutA(hdc, x + 20, curY, "* Cold Snaps: Freezes bio-generators (-35% Gen). Engage Auxiliary Thermal Overdrive heaters.", 92); curY += lineH + 4;
+
+    SetTextColor(hdc, COL_AMBER);
+    TextOutA(hdc, x + 12, curY, "10. KEYBOARD SHORTCUTS:", 23); curY += lineH;
+    SetTextColor(hdc, COL_TEXT_MAIN);
+    TextOutA(hdc, x + 20, curY, "[SPACE] Advance Cycle | [1-8] Tabs | [T] Theme | [C] CRT | [A] Auto | [H] Help | [R] Reset", 90);
 }
 
 static void DrawSidebar(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, int y, int w, int h) {
@@ -3588,18 +3962,19 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 "[3] SCAVENGE",
                 "[4] DEFENSE",
                 "[5] RESEARCH",
-                "[6] POLICIES",
-                "[7] MANUAL"
+                "[6] HAZARDS",
+                "[7] POLICIES",
+                "[8] MANUAL"
             };
             int tabX = 10;
-            int tabW = 89;
-            for (int t = 0; t < 7; t++) {
+            int tabW = 78;
+            for (int t = 0; t < 8; t++) {
                 int active = (g_state.currentTab == t);
                 COLORREF bg = active ? COL_BTN_HOVER : COL_DARK_CARD;
                 COLORREF bdr = active ? COL_BORDER_HI : COL_BORDER;
                 COLORREF txt = active ? COL_TEXT_BRIGHT : COL_TEXT_DIM;
                 DrawButtonControl(memDC, hFontSmall, tabX, 114, tabW, 26, tabNames[t], txt, bg, bdr, BTN_TAB, t, 0);
-                tabX += tabW + 3;
+                tabX += tabW + 2;
             }
 
             // Main Content Area
@@ -3621,8 +3996,10 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             } else if (g_state.currentTab == 4) {
                 DrawResearchView(memDC, hFontBold, hFontSmall, 20, areaY + 10, contentW - 20, areaH - 20);
             } else if (g_state.currentTab == 5) {
-                DrawPoliciesView(memDC, hFontBold, hFontSmall, 20, areaY + 10, contentW - 20, areaH - 20);
+                DrawHazardsView(memDC, hFontBold, hFontSmall, 20, areaY + 10, contentW - 20, areaH - 20);
             } else if (g_state.currentTab == 6) {
+                DrawPoliciesView(memDC, hFontBold, hFontSmall, 20, areaY + 10, contentW - 20, areaH - 20);
+            } else if (g_state.currentTab == 7) {
                 DrawManualView(memDC, hFontBold, hFontSmall, 20, areaY + 10, contentW - 20, areaH - 20);
             }
 

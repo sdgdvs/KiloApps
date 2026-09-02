@@ -1310,6 +1310,108 @@
             background: var(--panel-bg);
             border-radius: 2px;
         }
+
+        /* Weather Hazards & Environmental Disasters CSS (Phase 10) */
+        .hazard-overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .hazard-card {
+            background: var(--card-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 2px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            position: relative;
+        }
+
+        .hazard-card::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 5px; height: 5px;
+            border-top: 2px solid var(--border-corner);
+            border-left: 2px solid var(--border-corner);
+            pointer-events: none;
+        }
+
+        .hazard-card-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-bright);
+        }
+
+        .weather-radar-box {
+            background: #111a14;
+            border: 1px solid var(--border-corner);
+            padding: 8px 12px;
+            border-radius: 2px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.6);
+            position: relative;
+        }
+
+        .weather-radar-box::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 6px; height: 6px;
+            border-top: 2px solid var(--accent-green);
+            border-left: 2px solid var(--accent-green);
+        }
+
+        .countermeasures-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .cm-card {
+            background: var(--card-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 2px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 6px;
+            position: relative;
+        }
+
+        .cm-card.active {
+            border-color: var(--accent-green);
+            background: rgba(16, 185, 129, 0.08);
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
+        }
+
+        .badge-hazard {
+            font-size: 9px;
+            padding: 1px 6px;
+            border-radius: 2px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge-hazard-rad { background: rgba(239, 68, 68, 0.2); color: var(--danger-red); border: 1px solid rgba(239, 68, 68, 0.4); }
+        .badge-hazard-drought { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.4); }
+        .badge-hazard-toxic { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+        .badge-hazard-cold { background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.4); }
+        .badge-hazard-calm { background: rgba(110, 231, 183, 0.15); color: var(--text-main); border: 1px solid var(--panel-border); }
+
     </style>
 </head>
 <body>
@@ -1426,6 +1528,17 @@
             </div>
             <div class="hud-sub" id="hud-rads">Exterior: 4.2 Rads/h</div>
         </div>
+        <div class="hud-card" id="hud-card-weather" style="cursor:pointer;" onclick="switchTab('hazards')">
+            <div class="hud-card-header">
+                <span>ATMOSPHERE</span>
+                <span id="hud-weather-badge" class="badge-hazard badge-hazard-calm">CALM</span>
+            </div>
+            <div class="hud-val">
+                <span id="hud-weather-icon" style="font-size:15px;">🌤️</span>
+                <span id="hud-weather-title" style="font-size:12px;">Calm Skies</span>
+            </div>
+            <div class="hud-sub" id="hud-weather-sub">Exterior: 4.2 Rads/h</div>
+        </div>
     </div>
 
     <!-- Navigation Tabs -->
@@ -1435,7 +1548,8 @@
         <button class="tab-btn" id="tab-btn-expeditions" onclick="switchTab('expeditions')">[3] WASTELAND SCAVENGING</button>
         <button class="tab-btn" id="tab-btn-defense" onclick="switchTab('defense')">[4] BASE DEFENSE & SECURITY</button>
         <button class="tab-btn" id="tab-btn-research" onclick="switchTab('research')">[5] TECH RESEARCH TREE</button>
-        <button class="tab-btn" id="tab-btn-policies" onclick="switchTab('policies')">[6] OVERSEER DIRECTIVES</button>
+        <button class="tab-btn" id="tab-btn-hazards" onclick="switchTab('hazards')">[6] WEATHER & HAZARDS</button>
+        <button class="tab-btn" id="tab-btn-policies" onclick="switchTab('policies')">[7] OVERSEER DIRECTIVES</button>
     </div>
 
     <!-- Main Workspace -->
@@ -1530,6 +1644,223 @@
                 </div>
                 <div class="scavenge-grid" id="scavenge-grid">
                     <!-- Injected by JavaScript -->
+                </div>
+            </div>
+
+
+            <!-- WEATHER & HAZARDS VIEW (Phase 10) -->
+            <div id="view-hazards" class="tab-content" style="display:none;">
+                <div class="panel-title">
+                    <span>Environmental Disasters & Wasteland Weather Hazards</span>
+                    <span style="color: var(--text-dim); font-size:10px;">Atmospheric Sensor Array: <strong id="lbl-hazards-status" style="color:var(--accent-green);">ONLINE</strong></span>
+                </div>
+
+                <!-- Live Atmospheric Conditions Card -->
+                <div class="weather-radar-box">
+                    <div>
+                        <div style="font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px;">Doppler Surface Meteorology & Ionization Sensor</div>
+                        <div style="font-size:14px; font-weight:bold; color:var(--text-bright); display:flex; align-items:center; gap:8px; margin-top:2px;">
+                            <span id="lbl-weather-main-icon" style="font-size:18px;">🌤️</span>
+                            <span id="lbl-weather-main-title">CALM IRRADIATED SKIES</span>
+                            <span id="lbl-weather-main-badge" class="badge-hazard badge-hazard-calm">STABLE CONDITIONS</span>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-main); margin-top:4px;" id="lbl-weather-main-desc">
+                            Standard background radiation levels. Surface wind currents are steady with low ionic turbulence.
+                        </div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:10px; color:var(--text-dim);">SURFACE RADIATION:</div>
+                        <div style="font-size:16px; font-weight:bold; color:var(--text-bright);" id="lbl-weather-rads-val">4.2 Rads/h</div>
+                        <div style="font-size:9px; color:var(--text-dim);" id="lbl-weather-duration-val">Duration: Indefinite</div>
+                    </div>
+                </div>
+
+                <!-- Early Warning Doppler Radar Forecast -->
+                <div class="distressed-panel" style="background:var(--card-bg); border:1px solid var(--panel-border); padding:8px 10px; border-radius:2px; margin-bottom:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <div style="font-size:11px; font-weight:bold; color:var(--accent-amber); display:flex; align-items:center; gap:6px;">
+                            <span>📡 DOPPLER RADAR EARLY WARNING FORECAST</span>
+                        </div>
+                        <span id="lbl-forecast-eta-badge" style="font-size:10px; font-weight:bold; color:var(--accent-amber); background:rgba(245,158,11,0.15); padding:2px 6px; border:1px solid rgba(245,158,11,0.3); border-radius:2px;">
+                            INCOMING IN 3 DAYS
+                        </span>
+                    </div>
+                    <div style="font-size:10px; color:var(--text-bright);" id="lbl-forecast-title">
+                        PROJECTED HAZARD: Ion Radiation Storm (Severity: Elevated)
+                    </div>
+                    <div style="font-size:10px; color:var(--text-dim); margin-top:2px;" id="lbl-forecast-desc">
+                        Massive radioactive dust clouds approaching from the eastern ruins. Recommend preparing Airlock Rad-Bulkhead seals or researching Rad-Shield Nano-Coatings.
+                    </div>
+                </div>
+
+                <!-- Active Hazard Impact Modifiers Grid -->
+                <div class="panel-title" style="margin-top:6px;">
+                    <span>Active Atmospheric Impact & Hazard Modifiers</span>
+                    <span style="color:var(--text-dim); font-size:10px;">Live Telemetry</span>
+                </div>
+                <div class="hazard-overview-grid">
+                    <div class="hazard-card">
+                        <div class="hazard-card-title">
+                            <span>1. RADIATION EXPOSURE</span>
+                            <span id="lbl-mod-rad-badge" class="badge-hazard badge-hazard-calm">NORMAL</span>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-dim);">
+                            Ambient ionization penetrating outer vents. Unshielded dwellers suffer radiation sickness and trauma.
+                        </div>
+                        <div style="font-size:10px; color:var(--text-main);" id="lbl-mod-rad-detail">
+                            Status: Safe &bull; Rad-Shield Protection: <strong style="color:var(--accent-green);" id="lbl-radshield-status">ACTIVE</strong>
+                        </div>
+                    </div>
+
+                    <div class="hazard-card">
+                        <div class="hazard-card-title">
+                            <span>2. HYDROLOGICAL WATER IMPACT</span>
+                            <span id="lbl-mod-water-badge" class="badge-hazard badge-hazard-calm">STABLE</span>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-dim);">
+                            Aquifer evaporation and drought heatwaves cut groundwater filtration and spike dweller thirst.
+                        </div>
+                        <div style="font-size:10px; color:var(--text-main);" id="lbl-mod-water-detail">
+                            Filtration Yield: 100% &bull; Evaporation Rate: Normal
+                        </div>
+                    </div>
+
+                    <div class="hazard-card">
+                        <div class="hazard-card-title">
+                            <span>3. ACID RAIN & BARRICADE EROSION</span>
+                            <span id="lbl-mod-acid-badge" class="badge-hazard badge-hazard-calm">INERT</span>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-dim);">
+                            Corrosive chemical storm dissolve blast doors and outer catwalks. Dwellers outside suffer chemical burns.
+                        </div>
+                        <div style="font-size:10px; color:var(--text-main);" id="lbl-mod-acid-detail">
+                            Precipitation pH: Neutral &bull; Barricade Corrosion: 0 HP/d
+                        </div>
+                    </div>
+
+                    <div class="hazard-card">
+                        <div class="hazard-card-title">
+                            <span>4. CRYO FROST & POWER DEMAND</span>
+                            <span id="lbl-mod-cold-badge" class="badge-hazard badge-hazard-calm">NOMINAL</span>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-dim);">
+                            Sub-zero nuclear cold snaps freeze bio-fuel conduits (-35% Gen) and increase living quarter heating power demand (+4 kW).
+                        </div>
+                        <div style="font-size:10px; color:var(--text-main);" id="lbl-mod-cold-detail">
+                            Conduit Temperature: 22°C &bull; Habitat Thermal Draw: Standard
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Emergency Countermeasures & Mitigation Deck -->
+                <div class="panel-title" style="margin-top:10px;">
+                    <span>Emergency Shelter Countermeasures & Hazard Mitigation Systems</span>
+                    <span style="color:var(--text-dim); font-size:10px;">Overseer Control Console</span>
+                </div>
+                <div class="countermeasures-grid">
+                    <!-- CM 1: Radiation Bulkhead Airlock Gate -->
+                    <div class="cm-card" id="cm-card-bulkhead">
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <strong style="font-size:11px; color:var(--text-bright);">AIRLOCK RAD-BULKHEAD SEAL</strong>
+                                <span id="lbl-cm-bulkhead-badge" style="font-size:9px; color:var(--text-dim); font-weight:bold;">STANDBY</span>
+                            </div>
+                            <div style="font-size:10px; color:var(--text-dim); margin-top:2px;">
+                                Seals emergency lead-alloy blast baffles over all external vents. Prevents all radiation storm sickness and dweller damage. (Draw: 5 kW Power)
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; padding-top:4px; border-top:1px dashed var(--panel-border);">
+                            <span style="font-size:9px; color:var(--text-dim);">Draw: 5 kW Auxiliary Power</span>
+                            <button class="btn-upgrade" onclick="toggleCountermeasure('radBulkhead')" id="btn-toggle-bulkhead" style="font-weight:bold;">
+                                ENGAGE BULKHEAD SEAL
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- CM 2: Subterranean Aquifer Overpump -->
+                    <div class="cm-card" id="cm-card-overpump">
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <strong style="font-size:11px; color:var(--text-bright);">DEEP AQUIFER OVERPUMP</strong>
+                                <span id="lbl-cm-pump-badge" style="font-size:9px; color:var(--accent-green); font-weight:bold;">READY</span>
+                            </div>
+                            <div style="font-size:10px; color:var(--text-dim); margin-top:2px;">
+                                Injects pneumatic pressure into subterranean bedrock aquifers to extract emergency water during droughts. (+8 Water immediately)
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; padding-top:4px; border-top:1px dashed var(--panel-border);">
+                            <span style="font-size:9px; color:var(--text-dim);">Cost: 15 Tech Scrap</span>
+                            <button class="btn-upgrade" onclick="triggerCountermeasureAction('overpump')" id="btn-action-overpump" style="font-weight:bold;">
+                                ACTIVATE OVERPUMP (+8 W)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- CM 3: Alkaline Corrosion Neutralizer Wash -->
+                    <div class="cm-card" id="cm-card-neutralizer">
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <strong style="font-size:11px; color:var(--text-bright);">ACID CORROSION NEUTRALIZER</strong>
+                                <span id="lbl-cm-acid-badge" style="font-size:9px; color:var(--text-dim); font-weight:bold;">INACTIVE</span>
+                            </div>
+                            <div style="font-size:10px; color:var(--text-dim); margin-top:2px;">
+                                Sprays basic alkaline wash over barricades and outer chambers. Repairs +25 Barricade HP and neutralizes toxic rain corrosion for 1 day.
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; padding-top:4px; border-top:1px dashed var(--panel-border);">
+                            <span style="font-size:9px; color:var(--text-dim);">Cost: 12 Tech Scrap</span>
+                            <button class="btn-upgrade" onclick="triggerCountermeasureAction('neutralizer')" id="btn-action-neutralizer" style="font-weight:bold;">
+                                SPRAY NEUTRALIZER (+25 HP)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- CM 4: Habitat Auxiliary Thermal Overdrive -->
+                    <div class="cm-card" id="cm-card-thermal">
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <strong style="font-size:11px; color:var(--text-bright);">AUXILIARY THERMAL OVERDRIVE</strong>
+                                <span id="lbl-cm-thermal-badge" style="font-size:9px; color:var(--text-dim); font-weight:bold;">OFFLINE</span>
+                            </div>
+                            <div style="font-size:10px; color:var(--text-dim); margin-top:2px;">
+                                Routes high-temperature generator cooling loop directly into dwelling quarters. Eliminates cold snap hypothermia and frost penalties. (Draw: 4 kW)
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; padding-top:4px; border-top:1px dashed var(--panel-border);">
+                            <span style="font-size:9px; color:var(--text-dim);">Draw: 4 kW Grid Power</span>
+                            <button class="btn-upgrade" onclick="toggleCountermeasure('thermalOverdrive')" id="btn-toggle-thermal" style="font-weight:bold;">
+                                OVERDRIVE HEATERS
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simulation & Emergency Weather Drills -->
+                <div class="panel-title" style="margin-top:10px;">
+                    <span>Overseer Emergency Hazard Simulation & Testing Terminal</span>
+                    <span style="color:var(--text-dim); font-size:10px;">Diagnostics Console</span>
+                </div>
+                <div class="distressed-panel" style="background:var(--card-bg); border:1px solid var(--panel-border); padding:8px 10px; border-radius:2px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                    <div style="font-size:10px; color:var(--text-dim);">
+                        Trigger emergency weather hazard scenarios to test shelter preparedness and countermeasure response:
+                    </div>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                        <button class="btn-upgrade" onclick="simulateHazard(1)" style="font-size:9px; color:var(--danger-red); border-color:var(--danger-red);">
+                            ☢ RAD STORM
+                        </button>
+                        <button class="btn-upgrade" onclick="simulateHazard(2)" style="font-size:9px; color:var(--accent-amber); border-color:var(--accent-amber);">
+                            ☀️ DROUGHT
+                        </button>
+                        <button class="btn-upgrade" onclick="simulateHazard(3)" style="font-size:9px; color:#34d399; border-color:#34d399;">
+                            🌧️ TOXIC RAIN
+                        </button>
+                        <button class="btn-upgrade" onclick="simulateHazard(4)" style="font-size:9px; color:var(--accent-cyan); border-color:var(--accent-cyan);">
+                            ❄️ COLD SNAP
+                        </button>
+                        <button class="btn-upgrade" onclick="simulateHazard(0)" style="font-size:9px; color:var(--text-main); border-color:var(--panel-border);">
+                            🌤️ CLEAR SKY
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -1824,6 +2155,13 @@
                 <p>&bull; <strong>Automated Sentry Turrets:</strong> Twin 50-cal automated turrets deliver deadly suppressive fire (+18 Def each, 3 kW Draw). Fabricate more turrets or overclock targeting sensors for high defense bonuses.</p>
                 <p>&bull; <strong>Survivor Combat Readiness:</strong> Run combat drills to train vault dwellers in firearm defense. Assign high-Strength survivors as Security Guards to repel attacking raider warbands!</p>
                 <p>&bull; <strong>Raider Warband Incursions:</strong> Surface radar detects hostile dust clouds. If total Vault Defense exceeds raider attack power, the warband is crushed and valuable scrap and meds are salvaged. If breached, raiders steal food and scrap, damage barricades, and injure dwellers!</p>
+                <br>
+                <p><strong>9. ENVIRONMENTAL DISASTERS & WEATHER HAZARDS (PHASE 10):</strong></p>
+                <p>&bull; <strong>Radiation Storms:</strong> Surface ionization spikes rads to 15+ Rads/h. Unshielded citizens suffer radiation sickness (-HP, -Morale) unless Airlock Rad-Bulkheads are engaged or Rad-Shield Nano-Coatings tech is researched.</p>
+                <p>&bull; <strong>Wasteland Droughts:</strong> Scorching heatwaves reduce Water Purifier output by 50% and increase citizen water consumption by 50%. Activate Subterranean Aquifer Overpumps to replenish emergency water.</p>
+                <p>&bull; <strong>Toxic Acid Rain:</strong> Highly corrosive fallout dissolves perimeter barricades (-30 HP/day) and burns outdoor militia. Deploy Alkaline Corrosion Neutralizer wash to protect blast doors.</p>
+                <p>&bull; <strong>Sub-Zero Cold Snaps:</strong> Freezing cryo-blizzards cut Bio-Generator power output by 35% and increase habitat heating load by +4 kW. Power blackouts cause hypothermia unless Auxiliary Thermal Overdrive is activated.</p>
+                <p>&bull; <strong>Doppler Radar Early Warning:</strong> Monitor the Weather & Hazards tab for upcoming forecast hazards, ETA countdowns, and preparatory advice.</p>
             </div>
         </div>
     </div>
@@ -1925,6 +2263,22 @@
                     gain.gain.linearRampToValueAtTime(0.001, now + 0.22);
                     osc.start(now);
                     osc.stop(now + 0.22);
+                } else if (type === 'hazard') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.exponentialRampToValueAtTime(60, now + 0.35);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } else if (type === 'pump') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(320, now);
+                    osc.frequency.setValueAtTime(480, now + 0.08);
+                    gain.gain.setValueAtTime(0.07, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
                 }
             } catch (e) {
                 // Ignore audio restriction errors
@@ -2446,6 +2800,23 @@
                 auto_tooling: false,
                 combat_stims: false
             },
+            weather: {
+                type: 0, // 0: Clear, 1: Rad Storm, 2: Drought, 3: Toxic Rain, 4: Cold Snap
+                name: 'Calm Irradiated Skies',
+                daysLeft: 0,
+                severity: 1
+            },
+            forecast: {
+                type: 1,
+                name: 'Ion Radiation Storm',
+                etaDays: 3,
+                severity: 2
+            },
+            countermeasures: {
+                radBulkhead: false,
+                thermalOverdrive: false,
+                acidNeutralizerDays: 0
+            },
             lastSummary: null
         };
 
@@ -2608,6 +2979,15 @@
                         if (state.turretOverclock === undefined) state.turretOverclock = false;
                         if (state.combatDrillLevel === undefined) state.combatDrillLevel = 1;
                         if (state.raidThreatDays === undefined) state.raidThreatDays = 3;
+                        if (!state.weather) {
+                            state.weather = JSON.parse(JSON.stringify(defaultState.weather));
+                        }
+                        if (!state.forecast) {
+                            state.forecast = JSON.parse(JSON.stringify(defaultState.forecast));
+                        }
+                        if (!state.countermeasures) {
+                            state.countermeasures = JSON.parse(JSON.stringify(defaultState.countermeasures));
+                        }
                     }
                 }
             } catch (e) {}
@@ -2717,6 +3097,34 @@
             }
             if (state.researched && state.researched.solar_arrays) {
                 totalPowerGen += 10;
+            }
+
+            // Apply Weather Hazards Impact (Phase 10)
+            const wType = (state.weather && state.weather.type !== undefined) ? state.weather.type : 0;
+            if (wType === 1) { // Radiation Storm
+                // Solar panels output disrupted by ion interference unless rad shielded
+                if (state.researched && !state.researched.rad_shielding) {
+                    totalPowerGen = Math.max(6, totalPowerGen - 5);
+                }
+            } else if (wType === 2) { // Drought Heatwave
+                // Aquifer water depletion (-50% water yield, +50% water consumption)
+                totalWaterProd = Math.floor(totalWaterProd * 0.5);
+                totalWaterNeed = Math.round(totalWaterNeed * 1.5);
+            } else if (wType === 4) { // Sub-Zero Cold Snap
+                // Bio-generators lose power efficiency (-35% power gen)
+                totalPowerGen = Math.round(totalPowerGen * 0.65);
+                // Living quarters require auxiliary heating draw
+                if (!state.countermeasures || !state.countermeasures.thermalOverdrive) {
+                    totalPowerLoad += 4;
+                }
+            }
+
+            // Countermeasure auxiliary power draws
+            if (state.countermeasures && state.countermeasures.radBulkhead) {
+                totalPowerLoad += 5;
+            }
+            if (state.countermeasures && state.countermeasures.thermalOverdrive) {
+                totalPowerLoad += 4;
             }
 
             const netFood = totalFoodProd - totalFoodNeed;
@@ -3160,6 +3568,290 @@
             }
         }
 
+
+        // Weather Hazard Definitions & Simulation Engine (Phase 10)
+        const WEATHER_TYPES = [
+            {
+                id: 0,
+                name: 'Calm Irradiated Skies',
+                icon: '🌤️',
+                badgeClass: 'badge-hazard-calm',
+                badgeText: 'STABLE CONDITIONS',
+                desc: 'Standard background radiation levels. Surface wind currents are steady with low ionic turbulence.',
+                modRad: 'Standard Background (4.0 Rads/h)',
+                modWater: 'Normal Filtration Yield (100%)',
+                modAcid: 'Neutral Rain pH (0 Barricade Wear)',
+                modCold: 'Normal Habitat Temperature (22°C)'
+            },
+            {
+                id: 1,
+                name: 'Ion Radiation Storm',
+                icon: '☢️',
+                badgeClass: 'badge-hazard-rad',
+                badgeText: 'RADIATION HAZARD',
+                desc: 'Intense atmospheric fallout storm with heavy gamma radiation. Penetrates unshielded vents.',
+                modRad: 'CRITICAL (+14.0 Rads/h) &bull; Dwellers take radiation trauma',
+                modWater: 'Water filters operating on high ion load',
+                modAcid: 'Slight electrical ionization',
+                modCold: 'Electrical interference on surface arrays'
+            },
+            {
+                id: 2,
+                name: 'Scorching Wasteland Drought',
+                icon: '☀️',
+                badgeClass: 'badge-hazard-drought',
+                badgeText: 'DROUGHT HEATWAVE',
+                desc: 'Extreme arid temperatures and dry heatwave. Subterranean aquifer filtration reduced by 50%.',
+                modRad: 'Elevated surface heat & haze',
+                modWater: 'WATER CRISIS: -50% Purifier Yield & +50% Dweller Thirst',
+                modAcid: 'Dry dust crust on barricades',
+                modCold: 'High heat (no heating draw)'
+            },
+            {
+                id: 3,
+                name: 'Corrosive Acid Rain',
+                icon: '🌧️',
+                badgeClass: 'badge-hazard-toxic',
+                badgeText: 'ACIDIC PRECIPITATION',
+                desc: 'Toxic sulfur-chemical storm clouds dissolving metal structures. Barricades sustain acid erosion.',
+                modRad: 'Chemical particle suspension in air',
+                modWater: 'Filtration vats working overtime',
+                modAcid: 'CORROSIVE: Barricades lose -30 HP/day & burns unassigned militia',
+                modCold: 'Moderate chemical drizzle'
+            },
+            {
+                id: 4,
+                name: 'Sub-Zero Nuclear Cold Snap',
+                icon: '❄️',
+                badgeClass: 'badge-hazard-cold',
+                badgeText: 'FREEZING CRYO-BLIGHT',
+                desc: 'Cryogenic wasteland frost freezing generator conduits (-35% Gen). Habitat requires active heating.',
+                modRad: 'Crystalline fallout frost',
+                modWater: 'Surface wellhead freezing risk',
+                modAcid: 'Frozen acid residue',
+                modCold: 'FROSTBITE: -35% Power Generation & +4 kW Habitat Heating Demand'
+            }
+        ];
+
+        function renderHazardsView() {
+            if (!state.weather) state.weather = JSON.parse(JSON.stringify(defaultState.weather));
+            if (!state.forecast) state.forecast = JSON.parse(JSON.stringify(defaultState.forecast));
+            if (!state.countermeasures) state.countermeasures = JSON.parse(JSON.stringify(defaultState.countermeasures));
+
+            const curW = WEATHER_TYPES[state.weather.type] || WEATHER_TYPES[0];
+            const foreW = WEATHER_TYPES[state.forecast.type] || WEATHER_TYPES[1];
+
+            // Live Weather Box
+            const iconEl = document.getElementById('lbl-weather-main-icon');
+            if (iconEl) iconEl.textContent = curW.icon;
+            const titleEl = document.getElementById('lbl-weather-main-title');
+            if (titleEl) titleEl.textContent = curW.name.toUpperCase();
+            const badgeEl = document.getElementById('lbl-weather-main-badge');
+            if (badgeEl) {
+                badgeEl.className = `badge-hazard ${curW.badgeClass}`;
+                badgeEl.textContent = curW.badgeText;
+            }
+            const descEl = document.getElementById('lbl-weather-main-desc');
+            if (descEl) descEl.textContent = curW.desc;
+            const radsEl = document.getElementById('lbl-weather-rads-val');
+            if (radsEl) radsEl.textContent = `${state.exteriorRads.toFixed(1)} Rads/h`;
+            const durEl = document.getElementById('lbl-weather-duration-val');
+            if (durEl) durEl.textContent = state.weather.type === 0 ? 'Duration: Calm Indefinite' : `Duration: ${state.weather.daysLeft} Cycle(s) Left`;
+
+            // Doppler Radar Forecast Box
+            const foreTitle = document.getElementById('lbl-forecast-title');
+            if (foreTitle) foreTitle.textContent = `PROJECTED HAZARD: ${foreW.name} (Tier ${state.forecast.severity || 2})`;
+            const foreDesc = document.getElementById('lbl-forecast-desc');
+            if (foreDesc) foreDesc.textContent = `Doppler radar predicts incoming ${foreW.name} in ${state.forecast.etaDays} day(s). Recommended action: Prepare appropriate shelter countermeasures.`;
+            const foreEtaBadge = document.getElementById('lbl-forecast-eta-badge');
+            if (foreEtaBadge) {
+                foreEtaBadge.textContent = state.forecast.etaDays <= 1 ? 'INCOMING TOMORROW!' : `INCOMING IN ${state.forecast.etaDays} DAYS`;
+                foreEtaBadge.style.color = state.forecast.etaDays <= 1 ? 'var(--danger-red)' : 'var(--accent-amber)';
+            }
+
+            // Hazard Modifiers
+            const hasRadShield = (state.countermeasures.radBulkhead || (state.researched && state.researched.rad_shielding) || state.facilities.some(f => f.id === 'bp_radshield'));
+            const modRadDetail = document.getElementById('lbl-mod-rad-detail');
+            if (modRadDetail) {
+                modRadDetail.innerHTML = state.weather.type === 1 ?
+                    `<span style="color:${hasRadShield ? 'var(--accent-green)' : 'var(--danger-red)'}; font-weight:bold;">${hasRadShield ? 'PROTECTED: Rad-Shield / Bulkhead active (0 Dweller Trauma)' : 'WARNING: Unshielded radiation exposure (-15 HP/d)!'}</span>` :
+                    `Status: Safe &bull; Rad-Shield Protection: <strong style="color:var(--accent-green);">${hasRadShield ? 'READY' : 'STANDBY'}</strong>`;
+            }
+            const modRadBadge = document.getElementById('lbl-mod-rad-badge');
+            if (modRadBadge) {
+                modRadBadge.className = state.weather.type === 1 ? 'badge-hazard badge-hazard-rad' : 'badge-hazard badge-hazard-calm';
+                modRadBadge.textContent = state.weather.type === 1 ? 'ACTIVE HAZARD' : 'NORMAL';
+            }
+
+            const modWaterDetail = document.getElementById('lbl-mod-water-detail');
+            if (modWaterDetail) {
+                modWaterDetail.innerHTML = state.weather.type === 2 ?
+                    '<span style="color:var(--danger-red); font-weight:bold;">DROUGHT IN EFFECT: -50% Purifier Yield, +50% Water Demand!</span>' :
+                    'Filtration Yield: 100% &bull; Evaporation Rate: Normal';
+            }
+            const modWaterBadge = document.getElementById('lbl-mod-water-badge');
+            if (modWaterBadge) {
+                modWaterBadge.className = state.weather.type === 2 ? 'badge-hazard badge-hazard-drought' : 'badge-hazard badge-hazard-calm';
+                modWaterBadge.textContent = state.weather.type === 2 ? 'DROUGHT SEVERE' : 'STABLE';
+            }
+
+            const modAcidDetail = document.getElementById('lbl-mod-acid-detail');
+            if (modAcidDetail) {
+                const neutralActive = state.countermeasures.acidNeutralizerDays > 0;
+                modAcidDetail.innerHTML = state.weather.type === 3 ?
+                    `<span style="color:${neutralActive ? 'var(--accent-green)' : 'var(--danger-red)'}; font-weight:bold;">${neutralActive ? `NEUTRALIZED: Alkaline wash protecting barricades (${state.countermeasures.acidNeutralizerDays}d left)` : 'CORROSION: Barricades taking -30 HP acid damage/day!'}</span>` :
+                    'Precipitation pH: Neutral &bull; Barricade Corrosion: 0 HP/d';
+            }
+            const modAcidBadge = document.getElementById('lbl-mod-acid-badge');
+            if (modAcidBadge) {
+                modAcidBadge.className = state.weather.type === 3 ? 'badge-hazard badge-hazard-toxic' : 'badge-hazard badge-hazard-calm';
+                modAcidBadge.textContent = state.weather.type === 3 ? 'ACID STORM' : 'INERT';
+            }
+
+            const modColdDetail = document.getElementById('lbl-mod-cold-detail');
+            if (modColdDetail) {
+                const thermalActive = state.countermeasures.thermalOverdrive;
+                modColdDetail.innerHTML = state.weather.type === 4 ?
+                    `<span style="color:${thermalActive ? 'var(--accent-green)' : 'var(--accent-cyan)'}; font-weight:bold;">${thermalActive ? 'HEATING ACTIVE: Thermal overdrive preventing hypothermia (Draw: 4 kW)' : 'FROST ALERT: -35% Power Gen & +4 kW Heating Demand!'}</span>` :
+                    'Conduit Temperature: 22°C &bull; Habitat Thermal Draw: Standard';
+            }
+            const modColdBadge = document.getElementById('lbl-mod-cold-badge');
+            if (modColdBadge) {
+                modColdBadge.className = state.weather.type === 4 ? 'badge-hazard badge-hazard-cold' : 'badge-hazard badge-hazard-calm';
+                modColdBadge.textContent = state.weather.type === 4 ? 'SUB-ZERO FROST' : 'NOMINAL';
+            }
+
+            // Countermeasure Card States
+            const cardBulk = document.getElementById('cm-card-bulkhead');
+            const badgeBulk = document.getElementById('lbl-cm-bulkhead-badge');
+            const btnBulk = document.getElementById('btn-toggle-bulkhead');
+            if (cardBulk && badgeBulk && btnBulk) {
+                if (state.countermeasures.radBulkhead) {
+                    cardBulk.classList.add('active');
+                    badgeBulk.textContent = 'ENGAGED (5 kW Draw)';
+                    badgeBulk.style.color = 'var(--accent-green)';
+                    btnBulk.textContent = 'DISENGAGE SEAL';
+                    btnBulk.style.color = 'var(--danger-red)';
+                } else {
+                    cardBulk.classList.remove('active');
+                    badgeBulk.textContent = 'STANDBY';
+                    badgeBulk.style.color = 'var(--text-dim)';
+                    btnBulk.textContent = 'ENGAGE BULKHEAD SEAL';
+                    btnBulk.style.color = 'var(--text-bright)';
+                }
+            }
+
+            const badgePump = document.getElementById('lbl-cm-pump-badge');
+            const btnPump = document.getElementById('btn-action-overpump');
+            if (badgePump && btnPump) {
+                const canAfford = state.scrap >= 15;
+                btnPump.disabled = !canAfford;
+                btnPump.style.color = canAfford ? 'var(--accent-green)' : 'var(--text-dim)';
+            }
+
+            const cardAcid = document.getElementById('cm-card-neutralizer');
+            const badgeAcid = document.getElementById('lbl-cm-acid-badge');
+            const btnAcid = document.getElementById('btn-action-neutralizer');
+            if (cardAcid && badgeAcid && btnAcid) {
+                const canAfford = state.scrap >= 12;
+                btnAcid.disabled = !canAfford;
+                if (state.countermeasures.acidNeutralizerDays > 0) {
+                    cardAcid.classList.add('active');
+                    badgeAcid.textContent = `ACTIVE (${state.countermeasures.acidNeutralizerDays}d Remaining)`;
+                    badgeAcid.style.color = 'var(--accent-green)';
+                } else {
+                    cardAcid.classList.remove('active');
+                    badgeAcid.textContent = 'INACTIVE';
+                    badgeAcid.style.color = 'var(--text-dim)';
+                }
+            }
+
+            const cardTherm = document.getElementById('cm-card-thermal');
+            const badgeTherm = document.getElementById('lbl-cm-thermal-badge');
+            const btnTherm = document.getElementById('btn-toggle-thermal');
+            if (cardTherm && badgeTherm && btnTherm) {
+                if (state.countermeasures.thermalOverdrive) {
+                    cardTherm.classList.add('active');
+                    badgeTherm.textContent = 'ONLINE (4 kW Draw)';
+                    badgeTherm.style.color = 'var(--accent-cyan)';
+                    btnTherm.textContent = 'DISABLE OVERDRIVE';
+                    btnTherm.style.color = 'var(--danger-red)';
+                } else {
+                    cardTherm.classList.remove('active');
+                    badgeTherm.textContent = 'OFFLINE';
+                    badgeTherm.style.color = 'var(--text-dim)';
+                    btnTherm.textContent = 'OVERDRIVE HEATERS';
+                    btnTherm.style.color = 'var(--text-bright)';
+                }
+            }
+
+            // HUD Weather Card
+            const hudBadge = document.getElementById('hud-weather-badge');
+            if (hudBadge) {
+                hudBadge.className = `badge-hazard ${curW.badgeClass}`;
+                hudBadge.textContent = state.weather.type === 0 ? 'CALM' : curW.badgeText.split(' ')[0];
+            }
+            const hudIcon = document.getElementById('hud-weather-icon');
+            if (hudIcon) hudIcon.textContent = curW.icon;
+            const hudTitle = document.getElementById('hud-weather-title');
+            if (hudTitle) hudTitle.textContent = curW.name;
+            const hudSub = document.getElementById('hud-weather-sub');
+            if (hudSub) hudSub.textContent = state.weather.type === 0 ? `Exterior: ${state.exteriorRads.toFixed(1)} Rads/h` : `Duration: ${state.weather.daysLeft}d Left`;
+        }
+
+        function toggleCountermeasure(type) {
+            if (!state.countermeasures) state.countermeasures = {};
+            if (type === 'radBulkhead') {
+                state.countermeasures.radBulkhead = !state.countermeasures.radBulkhead;
+                logEvent(`COUNTERMEASURE: Airlock Rad-Bulkhead ${state.countermeasures.radBulkhead ? 'SEALED (5 kW auxiliary power draw engaged)' : 'OPENED to standby'}.`, 'info');
+                playSound('click');
+            } else if (type === 'thermalOverdrive') {
+                state.countermeasures.thermalOverdrive = !state.countermeasures.thermalOverdrive;
+                logEvent(`COUNTERMEASURE: Habitat Auxiliary Thermal Overdrive ${state.countermeasures.thermalOverdrive ? 'ACTIVATED (4 kW heating draw online)' : 'DEACTIVATED'}.`, 'info');
+                playSound('click');
+            }
+            updateAll();
+        }
+
+        function triggerCountermeasureAction(type) {
+            if (type === 'overpump') {
+                const cost = 15;
+                if (state.scrap < cost) {
+                    logEvent(`Insufficient Tech Scrap to overpump deep aquifers! Need ${cost} scrap.`, 'warn');
+                    playSound('alert');
+                    return;
+                }
+                state.scrap -= cost;
+                state.water += 8;
+                logEvent(`COUNTERMEASURE: Deep Aquifer Overpump pressurized! Restored +8 Water to reservoir.`, 'cycle');
+                playSound('pump');
+            } else if (type === 'neutralizer') {
+                const cost = 12;
+                if (state.scrap < cost) {
+                    logEvent(`Insufficient Tech Scrap to fabricate chemical neutralizer! Need ${cost} scrap.`, 'warn');
+                    playSound('alert');
+                    return;
+                }
+                state.scrap -= cost;
+                if (!state.countermeasures) state.countermeasures = {};
+                state.countermeasures.acidNeutralizerDays = 2;
+                state.barricadeHp = Math.min(state.barricadeMaxHp || 100, (state.barricadeHp || 100) + 25);
+                logEvent(`COUNTERMEASURE: Alkaline Corrosion Wash sprayed across barricades (+25 HP & 2 days acid immunity).`, 'cycle');
+                playSound('pump');
+            }
+            updateAll();
+        }
+
+        function simulateHazard(type) {
+            if (!state.weather) state.weather = {};
+            state.weather.type = type;
+            state.weather.daysLeft = type === 0 ? 0 : 2;
+            const wInfo = WEATHER_TYPES[type] || WEATHER_TYPES[0];
+            logEvent(`WEATHER SIMULATION: Overseer triggered scenario [${wInfo.name.toUpperCase()}].`, 'cycle');
+            playSound(type === 0 ? 'click' : 'hazard');
+            updateAll();
+        }
+
         function updateAll() {
             renderHUD();
             renderFacilities();
@@ -3167,6 +3859,7 @@
             renderExpeditions();
             renderDefenseView();
             renderResearchTree();
+            renderHazardsView();
             saveState();
         }
 
@@ -4109,7 +4802,7 @@
 
         // Tab Switching
         function switchTab(tabId) {
-            const tabs = ['facilities', 'survivors', 'expeditions', 'defense', 'research', 'policies'];
+            const tabs = ['facilities', 'survivors', 'expeditions', 'defense', 'research', 'hazards', 'policies'];
             tabs.forEach(t => {
                 const view = document.getElementById(`view-${t}`);
                 if (view) view.style.display = t === tabId ? 'block' : 'none';
@@ -4295,7 +4988,10 @@
                 playSound('alert');
             }
 
-            // 5. Random Wasteland Event
+            // 5. Environmental Weather Disasters & Hazard Simulation (Phase 10)
+            processWeatherDay();
+
+            // 5b. Random Wasteland Event
             triggerDailyEvent();
 
             // 6. Record Summary for report
@@ -4308,6 +5004,97 @@
             };
 
             logEvent(`=== CYCLE DAY ${state.day} COMMENCED. Rations distributed, reactor cycled. ===`, 'cycle');
+        }
+
+        function processWeatherDay() {
+            if (!state.weather) state.weather = JSON.parse(JSON.stringify(defaultState.weather));
+            if (!state.forecast) state.forecast = JSON.parse(JSON.stringify(defaultState.forecast));
+            if (!state.countermeasures) state.countermeasures = JSON.parse(JSON.stringify(defaultState.countermeasures));
+
+            // Decrement active countermeasure timers
+            if (state.countermeasures.acidNeutralizerDays > 0) {
+                state.countermeasures.acidNeutralizerDays--;
+            }
+
+            // Weather Duration Progression
+            if (state.weather.daysLeft > 0) {
+                state.weather.daysLeft--;
+                if (state.weather.daysLeft <= 0) {
+                    state.weather.type = 0; // Clears to calm
+                    logEvent('WEATHER CLEARED: Hostile weather hazard subsided. Irradiated skies have returned to calm baseline.', 'cycle');
+                }
+            }
+
+            // Forecast Progression
+            state.forecast.etaDays--;
+            if (state.forecast.etaDays <= 0) {
+                // Incoming hazard strikes!
+                state.weather.type = state.forecast.type;
+                state.weather.daysLeft = 2 + Math.floor(Math.random() * 2);
+                const struck = WEATHER_TYPES[state.weather.type] || WEATHER_TYPES[1];
+                logEvent(`⚠ METEOROLOGICAL ALERT: [${struck.name.toUpperCase()}] has struck the shelter! Review Weather & Hazards console.`, 'crit');
+                playSound('hazard');
+
+                // Pick next forecast hazard (types 1-4)
+                const nextType = 1 + Math.floor(Math.random() * 4);
+                state.forecast.type = nextType;
+                state.forecast.etaDays = 4 + Math.floor(Math.random() * 3);
+            } else if (state.forecast.etaDays === 1) {
+                const nextHazard = WEATHER_TYPES[state.forecast.type] || WEATHER_TYPES[1];
+                logEvent(`DOPPLER WARNING: [${nextHazard.name}] is 1 day away from striking the vault perimeter!`, 'warn');
+                playSound('alert');
+            }
+
+            // Daily Hazard Impact Execution
+            const curType = state.weather.type;
+            if (curType === 1) { // Radiation Storm
+                state.exteriorRads = 13.0 + Math.random() * 5.0;
+                const hasShield = state.countermeasures.radBulkhead || (state.researched && state.researched.rad_shielding) || state.facilities.some(f => f.id === 'bp_radshield');
+                if (hasShield) {
+                    logEvent('RAD-SHIELD: Radiation Bulkhead and lead nano-coatings absorbed gamma fallout storm.', 'info');
+                } else {
+                    let sickCount = 0;
+                    state.survivors.forEach(s => {
+                        s.health = Math.max(10, s.health - 12);
+                        s.morale = Math.max(15, s.morale - 8);
+                        sickCount++;
+                    });
+                    logEvent(`⚠ RADIATION SICKNESS: Gamma radiation penetrated unshielded airlocks! ${sickCount} dwellers suffered radiation sickness (-12 HP)!`, 'crit');
+                    playSound('alert');
+                }
+            } else if (curType === 2) { // Drought
+                state.exteriorRads = 5.2 + Math.random() * 0.8;
+                logEvent('DROUGHT: Arid heatwave dried up surface aquifers. Water yields depleted.', 'warn');
+            } else if (curType === 3) { // Toxic Acid Rain
+                state.exteriorRads = 6.5 + Math.random() * 1.5;
+                if (state.countermeasures.acidNeutralizerDays > 0) {
+                    logEvent('NEUTRALIZER ACTIVE: Alkaline coating neutralized corrosive acid rain on barricades.', 'info');
+                } else {
+                    const acidDmg = 25 + Math.floor(Math.random() * 12);
+                    state.barricadeHp = Math.max(0, (state.barricadeHp || 100) - acidDmg);
+                    state.survivors.forEach(s => {
+                        if (s.job === 'security' || s.job === 'unassigned') {
+                            s.health = Math.max(10, s.health - 6);
+                        }
+                    });
+                    logEvent(`⚠ ACID EROSION: Corrosive precipitation dissolved barricades (-${acidDmg} HP) and burned outdoor guards.`, 'warn');
+                }
+            } else if (curType === 4) { // Cold Snap
+                state.exteriorRads = 3.8 + Math.random() * 0.5;
+                const isBlackout = state.powerGen < state.powerLoad;
+                if (isBlackout && !state.countermeasures.thermalOverdrive) {
+                    state.survivors.forEach(s => {
+                        s.health = Math.max(5, s.health - 15);
+                        s.morale = Math.max(10, s.morale - 12);
+                    });
+                    logEvent('⚠ HYPOTHERMIA: Power brownout during Sub-Zero Cold Snap froze habitat modules! Dwellers suffered severe frostbite (-15 HP)!', 'crit');
+                    playSound('alert');
+                } else {
+                    logEvent('NUCLEAR FROST: Sub-zero blizzards reduced bio-fuel generator efficiency.', 'info');
+                }
+            } else {
+                state.exteriorRads = 4.0 + Math.random() * 0.6;
+            }
         }
 
         function triggerDailyEvent() {
@@ -4411,6 +5198,8 @@
             } else if (e.code === 'Digit5') {
                 switchTab('research');
             } else if (e.code === 'Digit6') {
+                switchTab('hazards');
+            } else if (e.code === 'Digit7') {
                 switchTab('policies');
             } else if (e.code === 'KeyT') {
                 toggleTheme();
