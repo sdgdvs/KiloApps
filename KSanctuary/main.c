@@ -235,6 +235,18 @@ typedef struct {
     int built;
 } RoomBlueprint;
 
+// Candidates for Recruitment
+#define MAX_CANDIDATES 6
+typedef struct {
+    char id[16];
+    char name[48];
+    char role[32];
+    char trait[48];
+    int health;
+    int morale;
+    int str, agi, inte;
+} Candidate;
+
 // Game State
 typedef struct {
     int day;
@@ -264,9 +276,12 @@ typedef struct {
     int numBlueprints;
     int facilitySubTab; // 0: Active Facilities, 1: Construct Blueprints
     
-    // Survivors
+    // Survivors & Recruitment
     Survivor survivors[MAX_SURVIVORS];
     int numSurvivors;
+    Candidate candidates[MAX_CANDIDATES];
+    int numCandidates;
+    int survivorSubTab; // 0: Active Citizens, 1: Radio Beacon & Airlock
     
     // Expeditions (3)
     Expedition expeditions[MAX_EXPEDITIONS];
@@ -344,6 +359,11 @@ enum {
     BTN_FAC_UPGRADE,
     BTN_CONSTRUCT_ROOM,
     BTN_SURV_JOB,
+    BTN_SURV_SUBTAB,
+    BTN_BROADCAST_PING,
+    BTN_BROADCAST_SPEC,
+    BTN_ADMIT_CANDIDATE,
+    BTN_DISMISS_CANDIDATE,
     BTN_DISPATCH_SCOUT,
     BTN_POLICY_FOOD,
     BTN_POLICY_WATER,
@@ -386,6 +406,37 @@ static Survivor* GetFirstUnassignedSurvivor() {
     return NULL;
 }
 
+static float GetWorkerEfficiency(const Survivor* s, const Facility* fac) {
+    float eff = 1.0f;
+    if (s->health < 40) eff -= 0.35f;
+    else if (s->health >= 85) eff += 0.15f;
+
+    if (s->morale < 40) eff -= 0.25f;
+    else if (s->morale >= 80) eff += 0.15f;
+
+    float statBonus = 0.0f;
+    if (strcmp(fac->id, "farm") == 0 || strcmp(fac->id, "farm_aero") == 0) {
+        if (s->agi > 5) statBonus += (s->agi - 5) * 0.15f;
+        if (s->str > 5) statBonus += (s->str - 5) * 0.05f;
+    } else if (strcmp(fac->id, "water") == 0 || strcmp(fac->id, "water_deep") == 0) {
+        if (s->inte > 5) statBonus += (s->inte - 5) * 0.20f;
+    } else if (strcmp(fac->id, "gen") == 0 || strcmp(fac->id, "gen_sub") == 0) {
+        int combo = s->str + s->inte;
+        if (combo > 10) statBonus += (combo - 10) * 0.10f;
+    } else if (strcmp(fac->id, "workshop") == 0 || strcmp(fac->id, "smelter") == 0) {
+        if (s->str > 5) statBonus += (s->str - 5) * 0.15f;
+        if (s->agi > 5) statBonus += (s->agi - 5) * 0.05f;
+    } else if (strcmp(fac->id, "cmd") == 0 || strcmp(fac->id, "infirmary") == 0) {
+        if (s->inte > 5) statBonus += (s->inte - 5) * 0.15f;
+    } else if (strcmp(fac->id, "security") == 0) {
+        if (s->str > 5) statBonus += (s->str - 5) * 0.15f;
+    }
+
+    eff += statBonus;
+    if (eff < 0.2f) eff = 0.2f;
+    return eff;
+}
+
 static void CalculateTotals(float* foodProd, float* foodNeed, float* waterProd, float* waterNeed, int* powerGen, int* powerLoad, float* scrapProd) {
     *foodProd = 0;
     *waterProd = 0;
@@ -397,18 +448,29 @@ static void CalculateTotals(float* foodProd, float* foodNeed, float* waterProd, 
 
     for (int i = 0; i < g_state.numFacilities; i++) {
         Facility* fac = &g_state.facilities[i];
+
+        int assignedCount = 0;
+        float effSum = 0.0f;
+        for (int s = 0; s < g_state.numSurvivors; s++) {
+            if (strcmp(g_state.survivors[s].job, fac->id) == 0) {
+                assignedCount++;
+                effSum += GetWorkerEfficiency(&g_state.survivors[s], fac);
+            }
+        }
+        fac->assigned = assignedCount;
+
         if (fac->powerProd > 0) {
-            *powerGen += (fac->assigned > 0 ? (fac->powerProd + (fac->assigned - 1) * 8) : 6);
+            *powerGen += (assignedCount > 0 ? (int)(fac->powerProd + effSum * 8.0f) : 6);
         } else {
             *powerLoad += fac->powerCost;
         }
 
-        if (fac->assigned > 0) {
+        if (assignedCount > 0) {
             int isPowered = (!isBlackout || fac->powerPriority <= 2);
             if (isPowered) {
-                *foodProd += fac->foodProd * fac->assigned;
-                *waterProd += fac->waterProd * fac->assigned;
-                *scrapProd += fac->scrapProd * fac->assigned;
+                *foodProd += fac->foodProd * effSum;
+                *waterProd += fac->waterProd * effSum;
+                *scrapProd += fac->scrapProd * effSum;
             }
         }
     }
@@ -420,31 +482,76 @@ static void CalculateTotals(float* foodProd, float* foodNeed, float* waterProd, 
     *waterNeed = g_state.population * waterPer;
 }
 
+static void GenerateCandidate(Candidate* c, int isSpecialist) {
+    const char* fnames[] = { "Jax", "Talia", "Dex", "Wren", "Rory", "Cassian", "Sloan", "Zeke", "Nova", "Silas", "Daphne", "Gideon", "Kira", "Nolan", "Vera", "Rook" };
+    const char* lnames[] = { "Cross", "Vance", "Mercer", "Gant", "Holloway", "Kane", "Sterling", "Blackwood", "Frost", "Carver" };
+    int fi = rand() % 16;
+    int li = rand() % 10;
+    sprintf(c->id, "c_%d", (int)time(NULL) % 10000 + rand() % 1000);
+    sprintf(c->name, "%s %s", fnames[fi], lnames[li]);
+
+    if (isSpecialist) {
+        int r = rand() % 5;
+        if (r == 0) {
+            strcpy(c->role, "Master Agronomist");
+            strcpy(c->trait, "Bio-Harvester (+30% Crops)");
+            c->str = 4 + rand() % 3; c->agi = 7 + rand() % 3; c->inte = 6 + rand() % 3;
+        } else if (r == 1) {
+            strcpy(c->role, "Chief Grid Engineer");
+            strcpy(c->trait, "Turbine Guru (+30% Power)");
+            c->str = 6 + rand() % 3; c->agi = 4 + rand() % 3; c->inte = 7 + rand() % 3;
+        } else if (r == 2) {
+            strcpy(c->role, "Filtration Chemist");
+            strcpy(c->trait, "Pure Flow (+30% Water)");
+            c->str = 4 + rand() % 3; c->agi = 5 + rand() % 3; c->inte = 8 + rand() % 2;
+        } else if (r == 3) {
+            strcpy(c->role, "Combat Scavenger");
+            strcpy(c->trait, "Salvage Instinct (+30% Scrap)");
+            c->str = 7 + rand() % 3; c->agi = 7 + rand() % 3; c->inte = 4 + rand() % 3;
+        } else {
+            strcpy(c->role, "Trauma Surgeon");
+            strcpy(c->trait, "Field Triage (+Healing)");
+            c->str = 4 + rand() % 3; c->agi = 6 + rand() % 3; c->inte = 8 + rand() % 2;
+        }
+    } else {
+        int r = rand() % 5;
+        if (r == 0) {
+            strcpy(c->role, "Wasteland Drifter");
+            strcpy(c->trait, "Hardy (+10% Survival)");
+            c->str = 4 + rand() % 4; c->agi = 4 + rand() % 4; c->inte = 4 + rand() % 4;
+        } else if (r == 1) {
+            strcpy(c->role, "Salvage Scout");
+            strcpy(c->trait, "Eagle Eye (+Scrap)");
+            c->str = 5 + rand() % 3; c->agi = 6 + rand() % 3; c->inte = 4 + rand() % 3;
+        } else if (r == 2) {
+            strcpy(c->role, "Settlement Farmer");
+            strcpy(c->trait, "Crop Tender (+Food)");
+            c->str = 4 + rand() % 4; c->agi = 6 + rand() % 4; c->inte = 5 + rand() % 3;
+        } else if (r == 3) {
+            strcpy(c->role, "Apprentice Mechanic");
+            strcpy(c->trait, "Wrench Hand (+Power)");
+            c->str = 6 + rand() % 3; c->agi = 4 + rand() % 4; c->inte = 5 + rand() % 3;
+        } else {
+            strcpy(c->role, "Caravan Outrider");
+            strcpy(c->trait, "Vigilant (+Defense)");
+            c->str = 6 + rand() % 3; c->agi = 6 + rand() % 3; c->inte = 4 + rand() % 3;
+        }
+    }
+
+    c->health = 80 + rand() % 20;
+    c->morale = 70 + rand() % 25;
+}
+
 static void TriggerDailyEvent() {
     int roll = rand() % 100;
-    if (roll < 22) {
-        if (g_state.population < g_state.maxPop && g_state.numSurvivors < MAX_SURVIVORS) {
-            const char* fnames[] = { "Silas", "Daphne", "Gideon", "Kira", "Nolan", "Vera", "Rook" };
-            const char* lnames[] = { "Cross", "Vance", "Mercer", "Gant", "Holloway", "Kane" };
-            int fi = rand() % 7;
-            int li = rand() % 6;
-            Survivor* ns = &g_state.survivors[g_state.numSurvivors++];
-            sprintf(ns->id, "s_%d", (int)time(NULL) % 10000 + g_state.numSurvivors);
-            sprintf(ns->name, "%s %s", fnames[fi], lnames[li]);
-            strcpy(ns->role, "Wasteland Refugee");
-            ns->health = 85;
-            ns->hunger = 10;
-            ns->thirst = 15;
-            ns->morale = 75;
-            strcpy(ns->job, "unassigned");
-            ns->str = 4 + rand() % 4;
-            ns->agi = 4 + rand() % 4;
-            ns->inte = 4 + rand() % 4;
-            g_state.population = g_state.numSurvivors;
-
+    if (roll < 25) {
+        if (g_state.numCandidates < MAX_CANDIDATES) {
+            Candidate* c = &g_state.candidates[g_state.numCandidates++];
+            GenerateCandidate(c, rand() % 4 == 0);
             char buf[128];
-            sprintf(buf, "AIRLOCK ALERT: Wanderer %s was admitted to the vault!", ns->name);
+            sprintf(buf, "AIRLOCK SENSOR: Refugee %s (%s) detected! Review at Radio Beacon.", c->name, c->role);
             AddLog(buf, 3);
+            PlaySfx(4);
         }
     } else if (roll < 42) {
         g_state.exteriorRads += 1.5f;
@@ -789,6 +896,29 @@ static void InitGameState() {
         g_state.survivors[i].inte = sInt[i];
     }
 
+    // Candidates & Recruitment
+    g_state.survivorSubTab = 0;
+    g_state.numCandidates = 2;
+    strcpy(g_state.candidates[0].id, "c1");
+    strcpy(g_state.candidates[0].name, "Jonas Ward");
+    strcpy(g_state.candidates[0].role, "Wasteland Machinist");
+    strcpy(g_state.candidates[0].trait, "Overclock: +25% Power");
+    g_state.candidates[0].health = 85;
+    g_state.candidates[0].morale = 80;
+    g_state.candidates[0].str = 7;
+    g_state.candidates[0].agi = 4;
+    g_state.candidates[0].inte = 7;
+
+    strcpy(g_state.candidates[1].id, "c2");
+    strcpy(g_state.candidates[1].name, "Mira Chen");
+    strcpy(g_state.candidates[1].role, "Desert Botanist");
+    strcpy(g_state.candidates[1].trait, "Green Thumb: +25% Hydro");
+    g_state.candidates[1].health = 90;
+    g_state.candidates[1].morale = 85;
+    g_state.candidates[1].str = 4;
+    g_state.candidates[1].agi = 8;
+    g_state.candidates[1].inte = 6;
+
     // Expeditions
     g_state.numExpeditions = 3;
     strcpy(g_state.expeditions[0].id, "exp1");
@@ -1109,7 +1239,7 @@ static void DrawFacilitiesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x
     if (g_state.facilitySubTab == 0) {
         // Active Facilities Grid (2 Columns)
         int colW = (w - 10) / 2;
-        int cardH = 68;
+        int cardH = 72;
         int gapY = 6;
 
         for (int i = 0; i < g_state.numFacilities; i++) {
@@ -1124,13 +1254,13 @@ static void DrawFacilitiesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x
             // Row 1: Name + Level + Status
             SelectObject(hdc, hFontBold);
             SetTextColor(hdc, COL_TEXT_BRIGHT);
-            TextOutA(hdc, cx + 6, cy + 5, fac->name, (int)strlen(fac->name));
+            TextOutA(hdc, cx + 6, cy + 4, fac->name, (int)strlen(fac->name));
 
             char lvlBuf[12];
             sprintf(lvlBuf, "LV%d", fac->level);
             SelectObject(hdc, hFontSmall);
             SetTextColor(hdc, COL_AMBER);
-            TextOutA(hdc, cx + 165, cy + 6, lvlBuf, (int)strlen(lvlBuf));
+            TextOutA(hdc, cx + 165, cy + 5, lvlBuf, (int)strlen(lvlBuf));
 
             const char* stText = "ONLINE";
             COLORREF stColor = COL_GREEN;
@@ -1145,48 +1275,78 @@ static void DrawFacilitiesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x
                 stColor = COL_AMBER;
             }
             SetTextColor(hdc, stColor);
-            TextOutA(hdc, cx + colW - 65, cy + 6, stText, (int)strlen(stText));
+            TextOutA(hdc, cx + colW - 65, cy + 5, stText, (int)strlen(stText));
 
-            // Row 2: Stats output line
+            // Row 2: Stats output line with efficiency calculation
+            int assignedCount = 0;
+            float effSum = 0.0f;
+            char staffNames[64] = "";
+            for (int s = 0; s < g_state.numSurvivors; s++) {
+                if (strcmp(g_state.survivors[s].job, fac->id) == 0) {
+                    assignedCount++;
+                    float weff = GetWorkerEfficiency(&g_state.survivors[s], fac);
+                    effSum += weff;
+                    if (strlen(staffNames) < 32) {
+                        char namePart[16];
+                        sscanf(g_state.survivors[s].name, "%15s", namePart);
+                        if (strlen(staffNames) > 0) strcat(staffNames, ", ");
+                        char ebuf[24];
+                        sprintf(ebuf, "%s(%d%%)", namePart, (int)(weff * 100));
+                        strcat(staffNames, ebuf);
+                    }
+                }
+            }
+
             char outBuf[64];
             if (fac->powerProd > 0) {
-                int outP = fac->assigned > 0 ? (fac->powerProd + (fac->assigned - 1) * 8) : 6;
+                int outP = (assignedCount > 0 ? (int)(fac->powerProd + effSum * 8.0f) : 6);
                 sprintf(outBuf, "Out: +%d kW Power | Self-Sufficient", outP);
             } else if (fac->foodProd > 0) {
-                sprintf(outBuf, "Out: +%d Food/cyc | Draw: -%d kW", fac->foodProd * fac->assigned, fac->powerCost);
+                sprintf(outBuf, "Out: +%d Food/cyc | Draw: -%d kW", (int)(fac->foodProd * effSum), fac->powerCost);
             } else if (fac->waterProd > 0) {
-                sprintf(outBuf, "Out: +%d Water/cyc | Draw: -%d kW", fac->waterProd * fac->assigned, fac->powerCost);
+                sprintf(outBuf, "Out: +%d Water/cyc | Draw: -%d kW", (int)(fac->waterProd * effSum), fac->powerCost);
             } else if (fac->scrapProd > 0) {
-                sprintf(outBuf, "Out: +%d Scrap/cyc | Draw: -%d kW", fac->scrapProd * fac->assigned, fac->powerCost);
+                sprintf(outBuf, "Out: +%d Scrap/cyc | Draw: -%d kW", (int)(fac->scrapProd * effSum), fac->powerCost);
             } else if (strcmp(fac->id, "quarters") == 0 || strcmp(fac->id, "quarters_ext") == 0) {
                 sprintf(outBuf, "Cap: +%d Dwellers | Draw: -%d kW", 10 + (fac->level - 1) * 4, fac->powerCost);
             } else if (strcmp(fac->id, "security") == 0) {
-                sprintf(outBuf, "Defense: +%d Armor | Draw: -%d kW", 15 + (fac->level - 1) * 10, fac->powerCost);
+                sprintf(outBuf, "Defense: +%d Armor | Draw: -%d kW", 15 + (fac->level - 1) * 10 + assignedCount * 8, fac->powerCost);
             } else {
-                sprintf(outBuf, "Medical Triage | Draw: -%d kW", fac->powerCost);
+                sprintf(outBuf, "Medical Triage (%d Staff) | -%d kW", assignedCount, fac->powerCost);
             }
             SetTextColor(hdc, COL_TEXT_MAIN);
-            TextOutA(hdc, cx + 6, cy + 24, outBuf, (int)strlen(outBuf));
+            TextOutA(hdc, cx + 6, cy + 19, outBuf, (int)strlen(outBuf));
 
-            // Row 3: Staff [-] [+] controls and Upgrade Button
+            // Row 3: Staff names
+            if (strlen(staffNames) > 0) {
+                char sBuf[80];
+                sprintf(sBuf, "Staff: %s", staffNames);
+                SetTextColor(hdc, COL_TEXT_DIM);
+                TextOutA(hdc, cx + 6, cy + 34, sBuf, (int)strlen(sBuf));
+            } else if (fac->maxWorkers > 0) {
+                SetTextColor(hdc, COL_TEXT_DIM);
+                TextOutA(hdc, cx + 6, cy + 34, "Staff: None (Assign idle survivor below)", 40);
+            } else {
+                SetTextColor(hdc, COL_TEXT_DIM);
+                TextOutA(hdc, cx + 6, cy + 34, "Automated Life Support Chamber", 30);
+            }
+
+            // Row 4: Staff [-] [+] controls and Upgrade Button
             if (fac->maxWorkers > 0) {
                 char staffBuf[20];
-                sprintf(staffBuf, "Staff: %d/%d", fac->assigned, fac->maxWorkers);
+                sprintf(staffBuf, "%d/%d Workers", fac->assigned, fac->maxWorkers);
                 SetTextColor(hdc, COL_TEXT_DIM);
-                TextOutA(hdc, cx + 6, cy + 45, staffBuf, (int)strlen(staffBuf));
+                TextOutA(hdc, cx + 6, cy + 50, staffBuf, (int)strlen(staffBuf));
 
                 // [-] button
                 COLORREF btnMinusBg = (fac->assigned > 0) ? COL_BTN_BG : COL_DARK_CARD;
                 COLORREF btnMinusTxt = (fac->assigned > 0) ? COL_TEXT_MAIN : COL_TEXT_DIM;
-                DrawButtonControl(hdc, hFontBold, cx + 80, cy + 42, 18, 20, "-", btnMinusTxt, btnMinusBg, COL_BORDER, BTN_FAC_WORKER, i, -1);
+                DrawButtonControl(hdc, hFontBold, cx + 75, cy + 48, 18, 19, "-", btnMinusTxt, btnMinusBg, COL_BORDER, BTN_FAC_WORKER, i, -1);
 
                 // [+] button
                 COLORREF btnPlusBg = (fac->assigned < fac->maxWorkers && idle > 0) ? COL_BTN_BG : COL_DARK_CARD;
                 COLORREF btnPlusTxt = (fac->assigned < fac->maxWorkers && idle > 0) ? COL_TEXT_BRIGHT : COL_TEXT_DIM;
-                DrawButtonControl(hdc, hFontBold, cx + 102, cy + 42, 18, 20, "+", btnPlusTxt, btnPlusBg, COL_BORDER, BTN_FAC_WORKER, i, 1);
-            } else {
-                SetTextColor(hdc, COL_TEXT_DIM);
-                TextOutA(hdc, cx + 6, cy + 45, "Automated Facility", 18);
+                DrawButtonControl(hdc, hFontBold, cx + 96, cy + 48, 18, 19, "+", btnPlusTxt, btnPlusBg, COL_BORDER, BTN_FAC_WORKER, i, 1);
             }
 
             // Upgrade Button
@@ -1196,10 +1356,10 @@ static void DrawFacilitiesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x
                 sprintf(uBuf, "UPG LV%d (%dS)", fac->level + 1, uCost);
                 COLORREF uBg = (g_state.scrap >= uCost) ? COL_BTN_BG : COL_DARK_CARD;
                 COLORREF uTxt = (g_state.scrap >= uCost) ? COL_AMBER : COL_TEXT_DIM;
-                DrawButtonControl(hdc, hFontSmall, cx + colW - 110, cy + 42, 104, 20, uBuf, uTxt, uBg, COL_BORDER, BTN_FAC_UPGRADE, i, 0);
+                DrawButtonControl(hdc, hFontSmall, cx + colW - 105, cy + 48, 98, 19, uBuf, uTxt, uBg, COL_BORDER, BTN_FAC_UPGRADE, i, 0);
             } else {
                 SetTextColor(hdc, COL_TEXT_DIM);
-                RECT rcMax = { cx + colW - 110, cy + 42, cx + colW - 6, cy + 62 };
+                RECT rcMax = { cx + colW - 105, cy + 48, cx + colW - 6, cy + 67 };
                 DrawTextA(hdc, "[MAX LEVEL]", -1, &rcMax, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             }
         }
@@ -1265,7 +1425,7 @@ static void DrawFacilitiesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x
 static void DrawSurvivorsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, int y, int w, int h) {
     SelectObject(hdc, hFontBold);
     SetTextColor(hdc, COL_TEXT_BRIGHT);
-    TextOutA(hdc, x, y, "SHELTER CITIZENS & HEALTH STATUS", 32);
+    TextOutA(hdc, x, y, "SHELTER CITIZENS & RECRUITMENT BEACON", 37);
 
     char capBuf[32];
     sprintf(capBuf, "Capacity: %d/%d Dwellers", g_state.population, g_state.maxPop);
@@ -1273,68 +1433,188 @@ static void DrawSurvivorsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x,
     SetTextColor(hdc, COL_TEXT_DIM);
     TextOutA(hdc, x + w - 170, y, capBuf, (int)strlen(capBuf));
 
-    int startY = y + 22;
-    int cardH = 58;
-    int gap = 6;
+    // Sub-tab buttons
+    int subTabY = y + 20;
+    int subTabW = 180;
+    char tab1[48], tab2[48];
+    sprintf(tab1, "ACTIVE CITIZENS (%d)", g_state.numSurvivors);
+    sprintf(tab2, "RADIO BEACON & AIRLOCK (%d)", g_state.numCandidates);
 
-    for (int i = 0; i < g_state.numSurvivors; i++) {
-        Survivor* s = &g_state.survivors[i];
-        int cy = startY + i * (cardH + gap);
+    COLORREF t1Bg = (g_state.survivorSubTab == 0) ? COL_BTN_HOVER : COL_DARK_CARD;
+    COLORREF t1Txt = (g_state.survivorSubTab == 0) ? COL_TEXT_BRIGHT : COL_TEXT_DIM;
+    COLORREF t1Bdr = (g_state.survivorSubTab == 0) ? COL_BORDER_HI : COL_BORDER;
+    DrawButtonControl(hdc, hFontSmall, x, subTabY, subTabW, 22, tab1, t1Txt, t1Bg, t1Bdr, BTN_SURV_SUBTAB, 0, 0);
 
-        DrawStyledBox(hdc, x, cy, w, cardH, COL_DARK_CARD, COL_BORDER);
+    COLORREF t2Bg = (g_state.survivorSubTab == 1) ? COL_BTN_HOVER : COL_DARK_CARD;
+    COLORREF t2Txt = (g_state.survivorSubTab == 1) ? COL_TEXT_BRIGHT : COL_TEXT_DIM;
+    COLORREF t2Bdr = (g_state.survivorSubTab == 1) ? COL_BORDER_HI : COL_BORDER;
+    DrawButtonControl(hdc, hFontSmall, x + subTabW + 8, subTabY, subTabW + 40, 22, tab2, t2Txt, t2Bg, t2Bdr, BTN_SURV_SUBTAB, 1, 0);
 
-        // Name & Role
-        SelectObject(hdc, hFontBold);
-        SetTextColor(hdc, COL_TEXT_BRIGHT);
-        TextOutA(hdc, x + 8, cy + 6, s->name, (int)strlen(s->name));
+    int startY = y + 48;
 
-        char roleBuf[48];
-        sprintf(roleBuf, "%s | S:%d A:%d I:%d", s->role, s->str, s->agi, s->inte);
-        SelectObject(hdc, hFontSmall);
-        SetTextColor(hdc, COL_TEXT_DIM);
-        TextOutA(hdc, x + 8, cy + 24, roleBuf, (int)strlen(roleBuf));
+    if (g_state.survivorSubTab == 0) {
+        // ACTIVE CITIZENS LIST
+        int cardH = 58;
+        int gap = 6;
 
-        // Health Bar
-        TextOutA(hdc, x + 230, cy + 6, "HEALTH", 6);
-        char hpVal[8];
-        sprintf(hpVal, "%d%%", s->health);
-        TextOutA(hdc, x + 315, cy + 6, hpVal, (int)strlen(hpVal));
-        COLORREF hpColor = s->health < 40 ? COL_RED : (s->health < 75 ? COL_AMBER : COL_GREEN);
-        DrawProgressBar(hdc, x + 230, cy + 20, 110, 8, s->health / 100.0f, hpColor);
+        for (int i = 0; i < g_state.numSurvivors; i++) {
+            Survivor* s = &g_state.survivors[i];
+            int cy = startY + i * (cardH + gap);
+            if (cy + cardH > y + h + 20) break;
 
-        // Morale Bar
-        TextOutA(hdc, x + 230, cy + 32, "MORALE", 6);
-        char morVal[8];
-        sprintf(morVal, "%d%%", s->morale);
-        TextOutA(hdc, x + 315, cy + 32, morVal, (int)strlen(morVal));
-        DrawProgressBar(hdc, x + 230, cy + 44, 110, 8, s->morale / 100.0f, COL_AMBER);
+            DrawStyledBox(hdc, x, cy, w, cardH, COL_DARK_CARD, COL_BORDER);
 
-        // Current Job & Reassignment Button
-        char jobLabel[32];
-        if (strcmp(s->job, "unassigned") == 0 || strlen(s->job) == 0) {
-            strcpy(jobLabel, "[ Idle / Unassigned ]");
-        } else if (strcmp(s->job, "expedition") == 0) {
-            strcpy(jobLabel, "[ On Expedition ]");
-        } else {
-            Facility* fac = NULL;
-            for (int f = 0; f < g_state.numFacilities; f++) {
-                if (strcmp(g_state.facilities[f].id, s->job) == 0) {
-                    fac = &g_state.facilities[f];
-                    break;
+            // Name & Role
+            SelectObject(hdc, hFontBold);
+            SetTextColor(hdc, COL_TEXT_BRIGHT);
+            TextOutA(hdc, x + 8, cy + 6, s->name, (int)strlen(s->name));
+
+            char roleBuf[64];
+            sprintf(roleBuf, "%s | STR:%d AGI:%d INT:%d", s->role, s->str, s->agi, s->inte);
+            SelectObject(hdc, hFontSmall);
+            SetTextColor(hdc, COL_TEXT_DIM);
+            TextOutA(hdc, x + 8, cy + 24, roleBuf, (int)strlen(roleBuf));
+
+            // Health Bar
+            TextOutA(hdc, x + 230, cy + 6, "HEALTH", 6);
+            char hpVal[8];
+            sprintf(hpVal, "%d%%", s->health);
+            TextOutA(hdc, x + 315, cy + 6, hpVal, (int)strlen(hpVal));
+            COLORREF hpColor = s->health < 40 ? COL_RED : (s->health < 75 ? COL_AMBER : COL_GREEN);
+            DrawProgressBar(hdc, x + 230, cy + 20, 110, 8, s->health / 100.0f, hpColor);
+
+            // Morale Bar
+            TextOutA(hdc, x + 230, cy + 32, "MORALE", 6);
+            char morVal[8];
+            sprintf(morVal, "%d%%", s->morale);
+            TextOutA(hdc, x + 315, cy + 32, morVal, (int)strlen(morVal));
+            DrawProgressBar(hdc, x + 230, cy + 44, 110, 8, s->morale / 100.0f, COL_AMBER);
+
+            // Current Job & Efficiency Badge
+            char jobLabel[48];
+            if (strcmp(s->job, "unassigned") == 0 || strlen(s->job) == 0) {
+                strcpy(jobLabel, "[ Idle / Unassigned ]");
+            } else if (strcmp(s->job, "expedition") == 0) {
+                strcpy(jobLabel, "[ On Expedition ]");
+            } else {
+                Facility* fac = NULL;
+                for (int f = 0; f < g_state.numFacilities; f++) {
+                    if (strcmp(g_state.facilities[f].id, s->job) == 0) {
+                        fac = &g_state.facilities[f];
+                        break;
+                    }
+                }
+                if (fac) {
+                    float eff = GetWorkerEfficiency(s, fac);
+                    sprintf(jobLabel, "[ %s (%d%%) ]", fac->name, (int)(eff * 100));
+                } else {
+                    strcpy(jobLabel, "[ Assigned ]");
                 }
             }
-            if (fac) sprintf(jobLabel, "[ %s ]", fac->name);
-            else strcpy(jobLabel, "[ Assigned ]");
-        }
 
-        if (strcmp(s->job, "expedition") == 0) {
-            DrawStyledBox(hdc, x + w - 190, cy + 14, 180, 28, COL_DARK_CARD, COL_BORDER);
+            if (strcmp(s->job, "expedition") == 0) {
+                DrawStyledBox(hdc, x + w - 195, cy + 14, 190, 28, COL_DARK_CARD, COL_BORDER);
+                SelectObject(hdc, hFontSmall);
+                SetTextColor(hdc, COL_AMBER);
+                RECT rc = { x + w - 195, cy + 14, x + w - 5, cy + 42 };
+                DrawTextA(hdc, "ON WASTELAND EXP", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            } else {
+                DrawButtonControl(hdc, hFontSmall, x + w - 195, cy + 14, 190, 28, jobLabel, COL_TEXT_MAIN, COL_BTN_BG, COL_BORDER, BTN_SURV_JOB, i, 0);
+            }
+        }
+    } else {
+        // RADIO BEACON & AIRLOCK TERMINAL
+        // Top Broadcast Box
+        int boxH = 68;
+        DrawStyledBox(hdc, x, startY, w, boxH, COL_DARK_CARD, COL_BORDER);
+
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, COL_TEXT_BRIGHT);
+        TextOutA(hdc, x + 8, startY + 6, "EMERGENCY BROADCAST TRANSMITTER // FREQ 104.7 MHz", 49);
+
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COL_GREEN);
+        TextOutA(hdc, x + w - 120, startY + 6, "ANTENNA ONLINE", 14);
+
+        SetTextColor(hdc, COL_TEXT_DIM);
+        TextOutA(hdc, x + 8, startY + 22, "Pulse radio frequencies across the wastes to guide refugees and specialists to Vault 704's outer airlock.", 105);
+
+        // Broadcast Buttons
+        int canPing = (g_state.scrap >= 15 && g_state.powerGen >= 10);
+        COLORREF pingBg = canPing ? RGB(25, 45, 30) : COL_DARK_CARD;
+        COLORREF pingTxt = canPing ? COL_TEXT_BRIGHT : COL_TEXT_DIM;
+        COLORREF pingBdr = canPing ? COL_GREEN : COL_BORDER;
+        DrawButtonControl(hdc, hFontBold, x + 8, startY + 38, 260, 22, "TRANSMIT PING (15 Scrap, 10 kW)", pingTxt, pingBg, pingBdr, BTN_BROADCAST_PING, 0, 0);
+
+        int canSpec = (g_state.scrap >= 25 && g_state.food >= 10.0f);
+        COLORREF specBg = canSpec ? RGB(45, 35, 15) : COL_DARK_CARD;
+        COLORREF specTxt = canSpec ? COL_AMBER : COL_TEXT_DIM;
+        COLORREF specBdr = canSpec ? COL_AMBER : COL_BORDER;
+        DrawButtonControl(hdc, hFontBold, x + 276, startY + 38, 280, 22, "SPECIALIST BEACON (25 Scrap, 10 Food)", specTxt, specBg, specBdr, BTN_BROADCAST_SPEC, 0, 0);
+
+        // Candidates List Header
+        int candStartY = startY + boxH + 8;
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, COL_TEXT_BRIGHT);
+        TextOutA(hdc, x, candStartY, "PENDING AIRLOCK CANDIDATES & REFUGEES", 37);
+
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COL_TEXT_DIM);
+        char clrBuf[48];
+        sprintf(clrBuf, "Waiting at Blast Door: %d", g_state.numCandidates);
+        TextOutA(hdc, x + w - 170, candStartY, clrBuf, (int)strlen(clrBuf));
+
+        int cardY = candStartY + 18;
+        int cardH = 62;
+        int gap = 6;
+
+        if (g_state.numCandidates == 0) {
+            DrawStyledBox(hdc, x, cardY, w, 60, COL_DARK_CARD, COL_BORDER);
             SelectObject(hdc, hFontSmall);
-            SetTextColor(hdc, COL_AMBER);
-            RECT rc = { x + w - 190, cy + 14, x + w - 10, cy + 42 };
-            DrawTextA(hdc, "ON WASTELAND EXP", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            SetTextColor(hdc, COL_TEXT_DIM);
+            RECT rcEmpty = { x, cardY, x + w, cardY + 60 };
+            DrawTextA(hdc, "No wasteland refugees currently at the airlock.\nUse the Emergency Broadcast Transmitter above to pulse radio signals across the wasteland.", -1, &rcEmpty, DT_CENTER | DT_VCENTER);
         } else {
-            DrawButtonControl(hdc, hFontSmall, x + w - 190, cy + 14, 180, 28, jobLabel, COL_TEXT_MAIN, COL_BTN_BG, COL_BORDER, BTN_SURV_JOB, i, 0);
+            for (int i = 0; i < g_state.numCandidates; i++) {
+                Candidate* c = &g_state.candidates[i];
+                int cy = cardY + i * (cardH + gap);
+                if (cy + cardH > y + h + 20) break;
+
+                DrawStyledBox(hdc, x, cy, w, cardH, COL_DARK_CARD, COL_BORDER);
+
+                // Candidate Name & Role
+                SelectObject(hdc, hFontBold);
+                SetTextColor(hdc, COL_TEXT_BRIGHT);
+                TextOutA(hdc, x + 8, cy + 6, c->name, (int)strlen(c->name));
+
+                SelectObject(hdc, hFontSmall);
+                SetTextColor(hdc, COL_AMBER);
+                TextOutA(hdc, x + 180, cy + 7, c->role, (int)strlen(c->role));
+
+                // Trait
+                char trBuf[64];
+                sprintf(trBuf, "Trait: %s", c->trait);
+                SetTextColor(hdc, COL_TEXT_MAIN);
+                TextOutA(hdc, x + 8, cy + 24, trBuf, (int)strlen(trBuf));
+
+                // Stats & Condition
+                char statBuf[64];
+                sprintf(statBuf, "STR:%d AGI:%d INT:%d | Health:%d%% Morale:%d%%", c->str, c->agi, c->inte, c->health, c->morale);
+                SetTextColor(hdc, COL_TEXT_DIM);
+                TextOutA(hdc, x + 8, cy + 42, statBuf, (int)strlen(statBuf));
+
+                // Actions: Turn Away & Admit
+                int canAdmit = (g_state.population < g_state.maxPop && g_state.numSurvivors < MAX_SURVIVORS);
+
+                // Turn away button
+                DrawButtonControl(hdc, hFontSmall, x + w - 180, cy + 18, 80, 26, "TURN AWAY", COL_RED, COL_DARK_CARD, COL_BORDER, BTN_DISMISS_CANDIDATE, i, 0);
+
+                // Admit button
+                COLORREF adBg = canAdmit ? RGB(25, 45, 30) : COL_DARK_CARD;
+                COLORREF adTxt = canAdmit ? COL_GREEN : COL_TEXT_DIM;
+                COLORREF adBdr = canAdmit ? COL_GREEN : COL_BORDER;
+                DrawButtonControl(hdc, hFontBold, x + w - 94, cy + 18, 90, 26, canAdmit ? "ADMIT" : "FULL", adTxt, adBg, adBdr, BTN_ADMIT_CANDIDATE, i, 0);
+            }
         }
     }
 }
@@ -1908,6 +2188,84 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         }
                         if (!assigned) strcpy(surv->job, "unassigned");
                         PlaySfx(1);
+                    } else if (bId == BTN_SURV_SUBTAB) {
+                        g_state.survivorSubTab = p1;
+                        PlaySfx(1);
+                    } else if (bId == BTN_BROADCAST_PING) {
+                        if (g_state.scrap >= 15 && g_state.powerGen >= 10) {
+                            g_state.scrap -= 15;
+                            int count = (rand() % 100 > 40) ? 2 : 1;
+                            for (int k = 0; k < count; k++) {
+                                if (g_state.numCandidates < MAX_CANDIDATES) {
+                                    GenerateCandidate(&g_state.candidates[g_state.numCandidates++], 0);
+                                }
+                            }
+                            char buf[128];
+                            sprintf(buf, "RADIO: Emergency signal ping attracted %d refugee(s) to the airlock!", count);
+                            AddLog(buf, 4);
+                            PlaySfx(4);
+                        } else {
+                            AddLog("RADIO: Insufficient scrap (15) or reactor power (10 kW) to broadcast ping!", 1);
+                            PlaySfx(3);
+                        }
+                    } else if (bId == BTN_BROADCAST_SPEC) {
+                        if (g_state.scrap >= 25 && g_state.food >= 10.0f) {
+                            g_state.scrap -= 25;
+                            g_state.food -= 10.0f;
+                            if (g_state.numCandidates < MAX_CANDIDATES) {
+                                Candidate* cand = &g_state.candidates[g_state.numCandidates++];
+                                GenerateCandidate(cand, 1);
+                                char buf[128];
+                                sprintf(buf, "RADIO: Directional beacon attracted specialist %s (%s) to the airlock!", cand->name, cand->role);
+                                AddLog(buf, 3);
+                                PlaySfx(2);
+                            }
+                        } else {
+                            AddLog("RADIO: Insufficient scrap (25) or food (10) for specialist beacon!", 1);
+                            PlaySfx(3);
+                        }
+                    } else if (bId == BTN_ADMIT_CANDIDATE) {
+                        if (g_state.population < g_state.maxPop && g_state.numSurvivors < MAX_SURVIVORS && p1 >= 0 && p1 < g_state.numCandidates) {
+                            Candidate* c = &g_state.candidates[p1];
+                            Survivor* s = &g_state.survivors[g_state.numSurvivors++];
+                            sprintf(s->id, "s_%d", (int)time(NULL) % 10000 + g_state.numSurvivors);
+                            strcpy(s->name, c->name);
+                            strcpy(s->role, c->role);
+                            strcpy(s->job, "unassigned");
+                            s->health = c->health;
+                            s->morale = c->morale;
+                            s->hunger = 0;
+                            s->thirst = 0;
+                            s->str = c->str;
+                            s->agi = c->agi;
+                            s->inte = c->inte;
+                            g_state.population = g_state.numSurvivors;
+
+                            char buf[128];
+                            sprintf(buf, "AIRLOCK: Clearance granted! %s (%s) admitted to the vault.", c->name, c->role);
+                            AddLog(buf, 3);
+                            PlaySfx(2);
+
+                            for (int k = p1; k < g_state.numCandidates - 1; k++) {
+                                g_state.candidates[k] = g_state.candidates[k + 1];
+                            }
+                            g_state.numCandidates--;
+                        } else {
+                            AddLog("AIRLOCK: Quarters are full! Expand living barracks first.", 1);
+                            PlaySfx(3);
+                        }
+                    } else if (bId == BTN_DISMISS_CANDIDATE) {
+                        if (p1 >= 0 && p1 < g_state.numCandidates) {
+                            char buf[128];
+                            sprintf(buf, "AIRLOCK: Clearance denied. %s was turned away into the wastes.", g_state.candidates[p1].name);
+                            AddLog(buf, 0);
+                            PlaySfx(1);
+
+                            for (int k = p1; k < g_state.numCandidates - 1; k++) {
+                                g_state.candidates[k] = g_state.candidates[k + 1];
+                            }
+                            g_state.numCandidates--;
+                        }
                     } else if (bId == BTN_DISPATCH_SCOUT) {
                         Expedition* exp = &g_state.expeditions[p1];
                         Survivor* scout = GetFirstUnassignedSurvivor();
