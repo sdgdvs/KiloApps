@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KSanctuary - Wasteland Shelter RPG</title>
     <style>
-        :root {
+        :root, body.theme-green {
             --bg-color: #0b0f0c;
             --panel-bg: #121913;
             --panel-header: #1a251b;
             --panel-border: #2f4530;
+            --border-corner: #528a55;
             --text-main: #6ee7b7;
             --text-dim: #3d7a5b;
             --text-bright: #a7f3d0;
@@ -18,6 +19,73 @@
             --accent-cyan: #06b6d4;
             --danger-red: #ef4444;
             --danger-glow: rgba(239, 68, 68, 0.35);
+            --crt-glow: rgba(110, 231, 183, 0.35);
+            --btn-bg: #182319;
+            --btn-hover: #233425;
+            --card-bg: #0f1610;
+            --font-mono: 'Consolas', 'Courier New', Courier, monospace;
+        }
+
+        body.theme-amber {
+            --bg-color: #100b05;
+            --panel-bg: #1c1309;
+            --panel-header: #2a1b0d;
+            --panel-border: #5e3a18;
+            --border-corner: #d97706;
+            --text-main: #fbbf24;
+            --text-dim: #925418;
+            --text-bright: #fef3c7;
+            --accent-amber: #f59e0b;
+            --accent-green: #34d399;
+            --accent-cyan: #38bdf8;
+            --danger-red: #f87171;
+            --danger-glow: rgba(248, 113, 113, 0.4);
+            --crt-glow: rgba(251, 191, 36, 0.35);
+            --btn-bg: #26190c;
+            --btn-hover: #3d2713;
+            --card-bg: #160f07;
+            --font-mono: 'Consolas', 'Courier New', Courier, monospace;
+        }
+
+        body.theme-rust {
+            --bg-color: #120b08;
+            --panel-bg: #1c110b;
+            --panel-header: #2b1a11;
+            --panel-border: #69331e;
+            --border-corner: #ea580c;
+            --text-main: #f97316;
+            --text-dim: #9a4220;
+            --text-bright: #ffedd5;
+            --accent-amber: #f59e0b;
+            --accent-green: #10b981;
+            --accent-cyan: #06b6d4;
+            --danger-red: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.4);
+            --crt-glow: rgba(249, 115, 22, 0.35);
+            --btn-bg: #27160e;
+            --btn-hover: #3e2217;
+            --card-bg: #150c07;
+            --font-mono: 'Consolas', 'Courier New', Courier, monospace;
+        }
+
+        body.theme-mono {
+            --bg-color: #0c0f14;
+            --panel-bg: #131923;
+            --panel-header: #1c2433;
+            --panel-border: #3b4d66;
+            --border-corner: #94a3b8;
+            --text-main: #cbd5e1;
+            --text-dim: #64748b;
+            --text-bright: #f8fafc;
+            --accent-amber: #fbbf24;
+            --accent-green: #38bdf8;
+            --accent-cyan: #e2e8f0;
+            --danger-red: #f43f5e;
+            --danger-glow: rgba(244, 63, 94, 0.4);
+            --crt-glow: rgba(203, 213, 225, 0.3);
+            --btn-bg: #1b2331;
+            --btn-hover: #293549;
+            --card-bg: #10151d;
             --font-mono: 'Consolas', 'Courier New', Courier, monospace;
         }
 
@@ -38,17 +106,47 @@
             overflow: hidden;
             padding: 6px;
             font-size: 12px;
+            transition: background-color 0.2s, color 0.2s;
         }
 
-        /* CRT Overlay Effect */
+        /* CRT Overlay & Curvature Vignette Effect */
         .scanlines {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
-            background: linear-gradient(rgba(18, 26, 18, 0) 50%, rgba(0, 0, 0, 0.35) 50%);
-            background-size: 100% 3px;
+            background: linear-gradient(rgba(18, 26, 18, 0) 50%, rgba(0, 0, 0, 0.42) 50%),
+                        radial-gradient(circle at center, transparent 60%, rgba(0, 0, 0, 0.75) 100%);
+            background-size: 100% 3px, 100% 100%;
             pointer-events: none;
             z-index: 999;
-            opacity: 0.55;
+            opacity: 0.65;
+        }
+
+        /* Distressed Corner Brackets on Panels */
+        .distressed-panel, header, #content-panel, .panel-box, footer, .modal-box {
+            position: relative;
+            box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.6);
+        }
+
+        .distressed-panel::before, header::before, #content-panel::before, .panel-box::before, footer::before, .modal-box::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 7px; height: 7px;
+            border-top: 2px solid var(--border-corner);
+            border-left: 2px solid var(--border-corner);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .distressed-panel::after, header::after, #content-panel::after, .panel-box::after, footer::after, .modal-box::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; right: -1px;
+            width: 7px; height: 7px;
+            border-bottom: 2px solid var(--border-corner);
+            border-right: 2px solid var(--border-corner);
+            pointer-events: none;
+            z-index: 2;
         }
 
         /* Top Header */
@@ -94,7 +192,7 @@
         }
 
         .btn-header {
-            background: #182319;
+            background: var(--btn-bg);
             border: 1px solid var(--panel-border);
             color: var(--text-main);
             padding: 3px 8px;
@@ -106,9 +204,10 @@
         }
 
         .btn-header:hover {
-            border-color: var(--text-bright);
+            border-color: var(--border-corner);
             color: var(--text-bright);
-            background: #233425;
+            background: var(--btn-hover);
+            box-shadow: 0 0 6px var(--crt-glow);
         }
 
         /* Status & Resource HUD */
@@ -127,6 +226,27 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            position: relative;
+        }
+
+        .hud-card::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 5px; height: 5px;
+            border-top: 2px solid var(--border-corner);
+            border-left: 2px solid var(--border-corner);
+            pointer-events: none;
+        }
+
+        .hud-card::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; right: -1px;
+            width: 5px; height: 5px;
+            border-bottom: 2px solid var(--border-corner);
+            border-right: 2px solid var(--border-corner);
+            pointer-events: none;
         }
 
         .hud-card-header {
@@ -147,6 +267,7 @@
             display: flex;
             align-items: baseline;
             gap: 4px;
+            text-shadow: 0 0 6px var(--crt-glow);
         }
 
         .hud-delta {
@@ -176,7 +297,7 @@
         }
 
         .tab-btn {
-            background: #141c15;
+            background: var(--btn-bg);
             border: 1px solid var(--panel-border);
             color: var(--text-dim);
             font-family: inherit;
@@ -190,16 +311,17 @@
         }
 
         .tab-btn:hover {
-            color: var(--text-main);
-            border-color: var(--text-main);
+            color: var(--text-bright);
+            border-color: var(--border-corner);
+            background: var(--btn-hover);
         }
 
         .tab-btn.active {
-            background: #1f2f21;
+            background: var(--btn-hover);
             color: var(--text-bright);
-            border-color: var(--accent-green);
+            border-color: var(--border-corner);
             font-weight: bold;
-            box-shadow: inset 0 0 6px rgba(16, 185, 129, 0.2);
+            box-shadow: inset 0 0 8px var(--crt-glow), 0 0 6px var(--crt-glow);
         }
 
         /* Main Game Layout */
@@ -250,18 +372,40 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            text-shadow: 0 0 6px var(--crt-glow);
         }
 
         /* Day Cycle Control Box */
         #cycle-box {
-            background: #151f16;
-            border: 1px solid var(--accent-green);
+            background: var(--panel-bg);
+            border: 1px solid var(--border-corner);
             padding: 8px;
             border-radius: 2px;
             display: flex;
             flex-direction: column;
             gap: 6px;
-            box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5), 0 0 10px var(--crt-glow);
+            position: relative;
+        }
+
+        #cycle-box::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 6px; height: 6px;
+            border-top: 2px solid var(--border-corner);
+            border-left: 2px solid var(--border-corner);
+            pointer-events: none;
+        }
+
+        #cycle-box::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; right: -1px;
+            width: 6px; height: 6px;
+            border-bottom: 2px solid var(--border-corner);
+            border-right: 2px solid var(--border-corner);
+            pointer-events: none;
         }
 
         .cycle-time-row {
@@ -275,6 +419,7 @@
             font-weight: bold;
             color: var(--text-bright);
             letter-spacing: 1px;
+            text-shadow: 0 0 6px var(--crt-glow);
         }
 
         .cycle-phase-badge {
@@ -290,7 +435,7 @@
         .cycle-progress-wrap {
             width: 100%;
             height: 6px;
-            background: #0d140e;
+            background: var(--bg-color);
             border: 1px solid var(--panel-border);
             border-radius: 3px;
             overflow: hidden;
@@ -304,9 +449,9 @@
         }
 
         .btn-advance {
-            background: #193b21;
-            border: 1px solid var(--accent-green);
-            color: #ecfdf5;
+            background: var(--btn-bg);
+            border: 1px solid var(--border-corner);
+            color: var(--text-bright);
             font-family: inherit;
             font-size: 12px;
             font-weight: bold;
@@ -317,13 +462,14 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             transition: all 0.15s;
-            box-shadow: 0 0 8px rgba(16, 185, 129, 0.25);
+            box-shadow: 0 0 8px var(--crt-glow);
         }
 
         .btn-advance:hover {
-            background: #23542f;
+            background: var(--btn-hover);
             color: #fff;
-            box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+            box-shadow: 0 0 14px var(--crt-glow);
+            border-color: var(--text-bright);
         }
 
         .btn-advance:active {
@@ -337,7 +483,7 @@
 
         .btn-small {
             flex: 1;
-            background: #141d15;
+            background: var(--btn-bg);
             border: 1px solid var(--panel-border);
             color: var(--text-dim);
             font-family: inherit;
@@ -350,8 +496,9 @@
         }
 
         .btn-small:hover {
-            color: var(--text-main);
-            border-color: var(--text-main);
+            color: var(--text-bright);
+            border-color: var(--border-corner);
+            background: var(--btn-hover);
         }
 
         /* Facilities Grid */
@@ -362,7 +509,7 @@
         }
 
         .fac-card {
-            background: #0f1610;
+            background: var(--card-bg);
             border: 1px solid var(--panel-border);
             border-radius: 2px;
             padding: 8px;
@@ -373,9 +520,19 @@
             position: relative;
         }
 
+        .fac-card::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 4px; height: 4px;
+            border-top: 1px solid var(--border-corner);
+            border-left: 1px solid var(--border-corner);
+            pointer-events: none;
+        }
+
         .fac-card:hover {
-            border-color: var(--text-main);
-            background: #131d14;
+            border-color: var(--border-corner);
+            background: var(--btn-hover);
         }
 
         .fac-top {
@@ -430,7 +587,7 @@
         .btn-worker {
             width: 20px;
             height: 20px;
-            background: #1b281d;
+            background: var(--btn-bg);
             border: 1px solid var(--panel-border);
             color: var(--text-bright);
             font-family: inherit;
@@ -444,8 +601,8 @@
         }
 
         .btn-worker:hover:not(:disabled) {
-            background: #2a3e2d;
-            border-color: var(--accent-green);
+            background: var(--btn-hover);
+            border-color: var(--border-corner);
         }
 
         .btn-worker:disabled {
@@ -473,7 +630,7 @@
         }
 
         .survivor-row {
-            background: #0f1610;
+            background: var(--card-bg);
             border: 1px solid var(--panel-border);
             border-radius: 2px;
             padding: 8px;
@@ -481,10 +638,21 @@
             justify-content: space-between;
             align-items: center;
             gap: 8px;
+            position: relative;
+        }
+
+        .survivor-row::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 4px; height: 4px;
+            border-top: 1px solid var(--border-corner);
+            border-left: 1px solid var(--border-corner);
+            pointer-events: none;
         }
 
         .survivor-row:hover {
-            border-color: var(--text-main);
+            border-color: var(--border-corner);
         }
 
         .survivor-identity {
@@ -526,7 +694,7 @@
 
         .meter-bar {
             height: 5px;
-            background: #080c09;
+            background: var(--bg-color);
             border: 1px solid var(--panel-border);
             border-radius: 2px;
             overflow: hidden;
@@ -546,7 +714,7 @@
 
         .select-assign {
             width: 100%;
-            background: #141e16;
+            background: var(--btn-bg);
             color: var(--text-main);
             border: 1px solid var(--panel-border);
             padding: 3px 6px;
@@ -558,7 +726,7 @@
 
         .select-assign:focus {
             outline: none;
-            border-color: var(--text-bright);
+            border-color: var(--border-corner);
         }
 
         /* Log Panel */
@@ -584,23 +752,34 @@
         .log-item {
             padding: 3px 6px;
             border-left: 2px solid var(--panel-border);
-            background: rgba(18, 25, 19, 0.4);
+            background: rgba(0, 0, 0, 0.25);
             border-radius: 0 2px 2px 0;
         }
 
         .log-item.info { color: var(--text-main); border-left-color: var(--text-main); }
         .log-item.warn { color: var(--accent-amber); border-left-color: var(--accent-amber); }
         .log-item.crit { color: var(--danger-red); border-left-color: var(--danger-red); background: rgba(239, 68, 68, 0.1); }
-        .log-item.cycle { color: var(--text-bright); border-left-color: var(--accent-green); font-weight: bold; }
+        .log-item.cycle { color: var(--text-bright); border-left-color: var(--border-corner); font-weight: bold; }
         .log-item.scout { color: var(--accent-cyan); border-left-color: var(--accent-cyan); }
 
         /* Directives / Policies View */
         .policy-group {
             margin-bottom: 12px;
-            background: #0f1610;
+            background: var(--card-bg);
             border: 1px solid var(--panel-border);
             padding: 10px;
             border-radius: 2px;
+            position: relative;
+        }
+
+        .policy-group::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 4px; height: 4px;
+            border-top: 1px solid var(--border-corner);
+            border-left: 1px solid var(--border-corner);
+            pointer-events: none;
         }
 
         .policy-title {
@@ -608,6 +787,7 @@
             font-weight: bold;
             color: var(--text-bright);
             margin-bottom: 6px;
+            text-shadow: 0 0 6px var(--crt-glow);
         }
 
         .policy-options {
@@ -617,7 +797,7 @@
         }
 
         .policy-opt {
-            background: #152017;
+            background: var(--btn-bg);
             border: 1px solid var(--panel-border);
             padding: 6px 8px;
             border-radius: 2px;
@@ -626,13 +806,14 @@
         }
 
         .policy-opt:hover {
-            border-color: var(--text-main);
+            border-color: var(--border-corner);
+            background: var(--btn-hover);
         }
 
         .policy-opt.active {
-            border-color: var(--accent-green);
-            background: #1c2c1f;
-            box-shadow: inset 0 0 6px rgba(16, 185, 129, 0.25);
+            border-color: var(--border-corner);
+            background: var(--btn-hover);
+            box-shadow: inset 0 0 6px var(--crt-glow);
         }
 
         .policy-name {
@@ -656,13 +837,24 @@
         }
 
         .scout-card {
-            background: #0f1610;
+            background: var(--card-bg);
             border: 1px solid var(--panel-border);
             padding: 8px;
             border-radius: 2px;
             display: flex;
             flex-direction: column;
             gap: 4px;
+            position: relative;
+        }
+
+        .scout-card::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 4px; height: 4px;
+            border-top: 1px solid var(--border-corner);
+            border-left: 1px solid var(--border-corner);
+            pointer-events: none;
         }
 
         .scout-name {
@@ -678,8 +870,8 @@
 
         .btn-dispatch {
             margin-top: 4px;
-            background: #1a2c1d;
-            border: 1px solid var(--accent-green);
+            background: var(--btn-bg);
+            border: 1px solid var(--border-corner);
             color: var(--text-bright);
             font-family: inherit;
             font-size: 11px;
@@ -690,7 +882,8 @@
         }
 
         .btn-dispatch:hover:not(:disabled) {
-            background: #25402a;
+            background: var(--btn-hover);
+            box-shadow: 0 0 8px var(--crt-glow);
         }
 
         .btn-dispatch:disabled {
@@ -703,7 +896,7 @@
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(5, 10, 6, 0.85);
+            background: rgba(0, 0, 0, 0.85);
             display: none;
             justify-content: center;
             align-items: center;
@@ -712,14 +905,14 @@
 
         .modal-box {
             background: var(--panel-bg);
-            border: 2px solid var(--accent-green);
+            border: 2px solid var(--border-corner);
             padding: 16px;
             width: 90%;
             max-width: 520px;
             max-height: 80vh;
             overflow-y: auto;
             border-radius: 2px;
-            box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
+            box-shadow: 0 0 25px var(--crt-glow);
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -777,8 +970,9 @@
             <span class="badge-terminal">VAULT 704 // OVERSEER OS v1.2</span>
         </div>
         <div class="header-actions">
+            <button class="btn-header" onclick="toggleTheme()" id="btn-theme">THEME: AMBER CRT</button>
             <button class="btn-header" onclick="toggleAudio()" id="btn-audio">AUDIO: ON</button>
-            <button class="btn-header" onclick="toggleScanlines()">CRT: ON</button>
+            <button class="btn-header" onclick="toggleScanlines()" id="btn-scanlines">CRT: ON</button>
             <button class="btn-header" onclick="showHelpModal()">HELP / MANUAL</button>
             <button class="btn-header" onclick="resetShelter()">RESET</button>
         </div>
@@ -1040,6 +1234,9 @@
                 <br>
                 <p><strong>3. THE DAY CYCLE:</strong></p>
                 <p>Press <strong>[ADVANCE DAY CYCLE]</strong> (or hit <strong>SPACEBAR</strong>) to process 1 full day of consumption, production, recovery, and wasteland encounters.</p>
+                <br>
+                <p><strong>4. RETRO-TERMINAL CRT THEMES & AESTHETICS:</strong></p>
+                <p>Switch between authentic post-apocalyptic display themes using the <strong>THEME</strong> button or press <strong>[T]</strong>: Amber CRT (Phosphor P3), Wasteland Rust (Scorched Iron), Phosphor Green (P1), or Monochrome (P4 Radar). Toggle CRT raster scanlines with <strong>[C]</strong>.</p>
             </div>
         </div>
     </div>
@@ -1129,7 +1326,34 @@
 
         function toggleScanlines() {
             const el = document.getElementById('scanlines-el');
-            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+            const isHidden = el.style.display === 'none';
+            el.style.display = isHidden ? 'block' : 'none';
+            const btn = document.getElementById('btn-scanlines');
+            if (btn) btn.textContent = `CRT: ${isHidden ? 'ON' : 'OFF'}`;
+            playSound('click');
+        }
+
+        const THEMES = [
+            { id: 'theme-amber', label: 'THEME: AMBER CRT' },
+            { id: 'theme-rust', label: 'THEME: WASTELAND RUST' },
+            { id: 'theme-green', label: 'THEME: PHOSPHOR GREEN' },
+            { id: 'theme-mono', label: 'THEME: MONOCHROME' }
+        ];
+        let currentThemeIndex = 0;
+
+        function applyTheme(index) {
+            currentThemeIndex = (index + THEMES.length) % THEMES.length;
+            THEMES.forEach(t => document.body.classList.remove(t.id));
+            document.body.classList.add(THEMES[currentThemeIndex].id);
+            const btn = document.getElementById('btn-theme');
+            if (btn) btn.textContent = THEMES[currentThemeIndex].label;
+            try {
+                localStorage.setItem('ksanctuary_theme', currentThemeIndex.toString());
+            } catch (e) {}
+        }
+
+        function toggleTheme() {
+            applyTheme(currentThemeIndex + 1);
             playSound('click');
         }
 
@@ -1955,11 +2179,25 @@
                 switchTab('expeditions');
             } else if (e.code === 'Digit4') {
                 switchTab('policies');
+            } else if (e.code === 'KeyT') {
+                toggleTheme();
+            } else if (e.code === 'KeyC') {
+                toggleScanlines();
             }
         });
 
         // Initialize on load
         window.addEventListener('DOMContentLoaded', () => {
+            try {
+                const savedTheme = localStorage.getItem('ksanctuary_theme');
+                if (savedTheme !== null) {
+                    applyTheme(parseInt(savedTheme, 10) || 0);
+                } else {
+                    applyTheme(0);
+                }
+            } catch (e) {
+                applyTheme(0);
+            }
             loadState();
             logEvent('Vault 704 Overseer System initialized. All security bulkheads sealed.', 'cycle');
             logEvent('Life support and biometric sensors operating on standby power.', 'info');

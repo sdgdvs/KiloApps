@@ -10,23 +10,137 @@
 #define WINDOW_HEIGHT 720
 #define IDT_AUTORUN 101
 
-// Color Palette
-#define COL_BG          RGB(11, 15, 12)
-#define COL_PANEL_BG    RGB(18, 25, 19)
-#define COL_PANEL_HDR   RGB(26, 37, 27)
-#define COL_BORDER      RGB(47, 69, 48)
-#define COL_BORDER_HI   RGB(75, 110, 78)
-#define COL_TEXT_MAIN   RGB(110, 231, 183)
-#define COL_TEXT_DIM    RGB(61, 122, 91)
-#define COL_TEXT_BRIGHT RGB(167, 243, 208)
-#define COL_AMBER       RGB(245, 158, 11)
-#define COL_GREEN       RGB(16, 185, 129)
-#define COL_CYAN        RGB(6, 182, 212)
-#define COL_RED         RGB(239, 68, 68)
-#define COL_DARK_CARD   RGB(15, 22, 16)
-#define COL_BTN_BG      RGB(24, 35, 25)
-#define COL_BTN_HOVER   RGB(35, 52, 37)
-#define COL_BAR_BG      RGB(8, 12, 9)
+// Terminal Aesthetic Themes
+typedef enum {
+    THEME_AMBER = 0,
+    THEME_RUST,
+    THEME_GREEN,
+    THEME_MONO,
+    THEME_COUNT
+} TerminalTheme;
+
+typedef struct {
+    const char* name;
+    COLORREF bg;
+    COLORREF panelBg;
+    COLORREF panelHdr;
+    COLORREF border;
+    COLORREF borderCorner;
+    COLORREF textMain;
+    COLORREF textDim;
+    COLORREF textBright;
+    COLORREF amber;
+    COLORREF green;
+    COLORREF cyan;
+    COLORREF red;
+    COLORREF darkCard;
+    COLORREF btnBg;
+    COLORREF btnHover;
+    COLORREF barBg;
+} ThemePalette;
+
+static const ThemePalette g_palettes[THEME_COUNT] = {
+    // THEME_AMBER (P3 Phosphor Amber CRT)
+    {
+        "AMBER CRT",
+        RGB(16, 11, 5),      // bg
+        RGB(28, 19, 9),      // panelBg
+        RGB(42, 27, 13),     // panelHdr
+        RGB(94, 58, 24),     // border
+        RGB(217, 119, 6),    // borderCorner
+        RGB(251, 191, 36),   // textMain
+        RGB(146, 84, 24),    // textDim
+        RGB(254, 243, 199),  // textBright
+        RGB(245, 158, 11),   // amber
+        RGB(52, 211, 153),   // green
+        RGB(56, 189, 248),   // cyan
+        RGB(248, 113, 113),  // red
+        RGB(22, 15, 7),      // darkCard
+        RGB(38, 25, 12),     // btnBg
+        RGB(61, 39, 19),     // btnHover
+        RGB(10, 7, 3)        // barBg
+    },
+    // THEME_RUST (Wasteland Rust / Scorched Iron)
+    {
+        "WASTELAND RUST",
+        RGB(18, 11, 8),      // bg
+        RGB(28, 17, 11),     // panelBg
+        RGB(43, 26, 17),     // panelHdr
+        RGB(105, 51, 30),    // border
+        RGB(234, 88, 12),    // borderCorner
+        RGB(249, 115, 22),   // textMain
+        RGB(154, 66, 32),    // textDim
+        RGB(255, 237, 213),  // textBright
+        RGB(245, 158, 11),   // amber
+        RGB(16, 185, 129),   // green
+        RGB(6, 182, 212),    // cyan
+        RGB(239, 68, 68),    // red
+        RGB(21, 12, 7),      // darkCard
+        RGB(39, 22, 14),     // btnBg
+        RGB(62, 34, 23),     // btnHover
+        RGB(11, 7, 4)        // barBg
+    },
+    // THEME_GREEN (Classic Phosphor P1 Green)
+    {
+        "PHOSPHOR GREEN",
+        RGB(11, 15, 12),     // bg
+        RGB(18, 25, 19),     // panelBg
+        RGB(26, 37, 27),     // panelHdr
+        RGB(47, 69, 48),     // border
+        RGB(82, 138, 85),    // borderCorner
+        RGB(110, 231, 183),  // textMain
+        RGB(61, 122, 91),    // textDim
+        RGB(167, 243, 208),  // textBright
+        RGB(245, 158, 11),   // amber
+        RGB(16, 185, 129),   // green
+        RGB(6, 182, 212),    // cyan
+        RGB(239, 68, 68),    // red
+        RGB(15, 22, 16),     // darkCard
+        RGB(24, 35, 25),     // btnBg
+        RGB(35, 52, 37),     // btnHover
+        RGB(8, 12, 9)        // barBg
+    },
+    // THEME_MONO (P4 Monochrome Radar White)
+    {
+        "MONOCHROME",
+        RGB(12, 15, 20),     // bg
+        RGB(19, 25, 35),     // panelBg
+        RGB(28, 36, 51),     // panelHdr
+        RGB(59, 77, 102),    // border
+        RGB(148, 163, 184),  // borderCorner
+        RGB(203, 213, 225),  // textMain
+        RGB(100, 116, 139),  // textDim
+        RGB(248, 250, 252),  // textBright
+        RGB(251, 191, 36),   // amber
+        RGB(56, 189, 248),   // green
+        RGB(226, 232, 240),  // cyan
+        RGB(244, 63, 94),    // red
+        RGB(16, 21, 29),     // darkCard
+        RGB(27, 35, 49),     // btnBg
+        RGB(41, 53, 73),     // btnHover
+        RGB(8, 10, 14)       // barBg
+    }
+};
+
+static int g_currentTheme = THEME_AMBER;
+static int g_crtScanlines = 1;
+
+#define COL_BG          (g_palettes[g_currentTheme].bg)
+#define COL_PANEL_BG    (g_palettes[g_currentTheme].panelBg)
+#define COL_PANEL_HDR   (g_palettes[g_currentTheme].panelHdr)
+#define COL_BORDER      (g_palettes[g_currentTheme].border)
+#define COL_BORDER_HI   (g_palettes[g_currentTheme].borderCorner)
+#define COL_TEXT_MAIN   (g_palettes[g_currentTheme].textMain)
+#define COL_TEXT_DIM    (g_palettes[g_currentTheme].textDim)
+#define COL_TEXT_BRIGHT (g_palettes[g_currentTheme].textBright)
+#define COL_AMBER       (g_palettes[g_currentTheme].amber)
+#define COL_GREEN       (g_palettes[g_currentTheme].green)
+#define COL_CYAN        (g_palettes[g_currentTheme].cyan)
+#define COL_RED         (g_palettes[g_currentTheme].red)
+#define COL_DARK_CARD   (g_palettes[g_currentTheme].darkCard)
+#define COL_BTN_BG      (g_palettes[g_currentTheme].btnBg)
+#define COL_BTN_HOVER   (g_palettes[g_currentTheme].btnHover)
+#define COL_BAR_BG      (g_palettes[g_currentTheme].barBg)
 
 // Audio Thread
 static int g_soundEnabled = 1;
@@ -189,6 +303,8 @@ static void AddButton(int x, int y, int w, int h, int id, int p1, int p2) {
 // Button IDs
 enum {
     BTN_NONE = 0,
+    BTN_THEME,
+    BTN_CRT,
     BTN_AUDIO,
     BTN_HELP,
     BTN_RESET,
@@ -607,6 +723,37 @@ static void DrawBoxBorder(HDC hdc, int x, int y, int w, int h, COLORREF color) {
 static void DrawStyledBox(HDC hdc, int x, int y, int w, int h, COLORREF bgCol, COLORREF borderCol) {
     FillSolidRect(hdc, x, y, w, h, bgCol);
     DrawBoxBorder(hdc, x, y, w, h, borderCol);
+
+    // Distressed retro-terminal corner brackets
+    if (w >= 18 && h >= 18) {
+        COLORREF cornerCol = COL_BORDER_HI;
+        HPEN hPen = CreatePen(PS_SOLID, 1, cornerCol);
+        HPEN oldPen = (HPEN)SelectObject(hdc, hPen);
+        int blen = (w > 60 && h > 35) ? 5 : 3;
+
+        // Top-left corner bracket
+        MoveToEx(hdc, x, y + blen, NULL);
+        LineTo(hdc, x, y);
+        LineTo(hdc, x + blen + 1, y);
+
+        // Top-right corner bracket
+        MoveToEx(hdc, x + w - 1 - blen, y, NULL);
+        LineTo(hdc, x + w - 1, y);
+        LineTo(hdc, x + w - 1, y + blen + 1);
+
+        // Bottom-left corner bracket
+        MoveToEx(hdc, x, y + h - 1 - blen, NULL);
+        LineTo(hdc, x, y + h - 1);
+        LineTo(hdc, x + blen + 1, y + h - 1);
+
+        // Bottom-right corner bracket
+        MoveToEx(hdc, x + w - 1 - blen, y + h - 1, NULL);
+        LineTo(hdc, x + w - 1, y + h - 1);
+        LineTo(hdc, x + w - 1, y + h - 1 - blen);
+
+        SelectObject(hdc, oldPen);
+        DeleteObject(hPen);
+    }
 }
 
 static void DrawButtonControl(HDC hdc, HFONT hFont, int x, int y, int w, int h, const char* label, COLORREF textCol, COLORREF bgCol, COLORREF borderCol, int btnId, int p1, int p2) {
@@ -1071,8 +1218,8 @@ static void DrawPoliciesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, 
         int bx = x + 10 + i * (optW + spacing);
         int by = curY + 30;
         int active = (g_state.policyFood == i);
-        COLORREF bg = active ? RGB(28, 44, 31) : COL_PANEL_BG;
-        COLORREF bdr = active ? COL_GREEN : COL_BORDER;
+        COLORREF bg = active ? COL_BTN_HOVER : COL_PANEL_BG;
+        COLORREF bdr = active ? COL_BORDER_HI : COL_BORDER;
 
         DrawStyledBox(hdc, bx, by, optW, optH, bg, bdr);
         SelectObject(hdc, hFontBold);
@@ -1102,8 +1249,8 @@ static void DrawPoliciesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, 
         int bx = x + 10 + i * (optW + spacing);
         int by = curY + 30;
         int active = (g_state.policyWater == i);
-        COLORREF bg = active ? RGB(28, 44, 31) : COL_PANEL_BG;
-        COLORREF bdr = active ? COL_GREEN : COL_BORDER;
+        COLORREF bg = active ? COL_BTN_HOVER : COL_PANEL_BG;
+        COLORREF bdr = active ? COL_BORDER_HI : COL_BORDER;
 
         DrawStyledBox(hdc, bx, by, optW, optH, bg, bdr);
         SelectObject(hdc, hFontBold);
@@ -1133,8 +1280,8 @@ static void DrawPoliciesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, 
         int bx = x + 10 + i * (optW + spacing);
         int by = curY + 30;
         int active = (g_state.policyPower == i);
-        COLORREF bg = active ? RGB(28, 44, 31) : COL_PANEL_BG;
-        COLORREF bdr = active ? COL_GREEN : COL_BORDER;
+        COLORREF bg = active ? COL_BTN_HOVER : COL_PANEL_BG;
+        COLORREF bdr = active ? COL_BORDER_HI : COL_BORDER;
 
         DrawStyledBox(hdc, bx, by, optW, optH, bg, bdr);
         SelectObject(hdc, hFontBold);
@@ -1183,9 +1330,15 @@ static void DrawManualView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, in
     TextOutA(hdc, x + 20, curY, "* Higher risk expeditions offer larger payouts but take longer to return.", 72); curY += lineH + 6;
 
     SetTextColor(hdc, COL_AMBER);
-    TextOutA(hdc, x + 12, curY, "4. KEYBOARD SHORTCUTS:", 22); curY += lineH;
+    TextOutA(hdc, x + 12, curY, "4. RETRO-TERMINAL CRT THEMES & SCANLINES:", 41); curY += lineH;
     SetTextColor(hdc, COL_TEXT_MAIN);
-    TextOutA(hdc, x + 20, curY, "[SPACE] Advance Cycle  |  [1-5] Switch Tabs  |  [A] Auto-run  |  [H] Help  |  [R] Reset", 86);
+    TextOutA(hdc, x + 20, curY, "* 4 Color Schemes: Amber CRT (P3), Wasteland Rust, Phosphor Green (P1), and Monochrome (P4).", 92); curY += lineH;
+    TextOutA(hdc, x + 20, curY, "* Click THEME or press [T] to cycle. Click CRT or press [C] to toggle raster scanlines.", 87); curY += lineH + 6;
+
+    SetTextColor(hdc, COL_AMBER);
+    TextOutA(hdc, x + 12, curY, "5. KEYBOARD SHORTCUTS:", 22); curY += lineH;
+    SetTextColor(hdc, COL_TEXT_MAIN);
+    TextOutA(hdc, x + 20, curY, "[SPACE] Advance Cycle | [1-5] Tabs | [T] Theme | [C] CRT | [A] Auto | [H] Help | [R] Reset", 90);
 }
 
 static void DrawSidebar(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, int y, int w, int h) {
@@ -1333,6 +1486,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 g_state.currentTab = 4;
                 PlaySfx(1);
                 InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'T' || wParam == 't') {
+                g_currentTheme = (g_currentTheme + 1) % THEME_COUNT;
+                PlaySfx(1);
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'C' || wParam == 'c') {
+                g_crtScanlines = !g_crtScanlines;
+                PlaySfx(1);
+                InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'R' || wParam == 'r') {
                 InitGameState();
                 PlaySfx(3);
@@ -1352,7 +1513,13 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     int p1 = g_buttons[i].param1;
                     int p2 = g_buttons[i].param2;
 
-                    if (bId == BTN_AUDIO) {
+                    if (bId == BTN_THEME) {
+                        g_currentTheme = (g_currentTheme + 1) % THEME_COUNT;
+                        PlaySfx(1);
+                    } else if (bId == BTN_CRT) {
+                        g_crtScanlines = !g_crtScanlines;
+                        PlaySfx(1);
+                    } else if (bId == BTN_AUDIO) {
                         g_soundEnabled = !g_soundEnabled;
                         PlaySfx(1);
                     } else if (bId == BTN_HELP) {
@@ -1527,10 +1694,15 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 
             // Header Buttons
             int rightX = clientW - 20;
-            DrawButtonControl(memDC, hFontSmall, rightX - 70, 14, 60, 24, "RESET", COL_TEXT_DIM, COL_BTN_BG, COL_BORDER, BTN_RESET, 0, 0);
-            DrawButtonControl(memDC, hFontSmall, rightX - 165, 14, 85, 24, "HELP / MANUAL", COL_TEXT_MAIN, COL_BTN_BG, COL_BORDER, BTN_HELP, 0, 0);
+            DrawButtonControl(memDC, hFontSmall, rightX - 55, 14, 50, 24, "RESET", COL_TEXT_DIM, COL_BTN_BG, COL_BORDER, BTN_RESET, 0, 0);
+            DrawButtonControl(memDC, hFontSmall, rightX - 145, 14, 85, 24, "HELP / MANUAL", COL_TEXT_MAIN, COL_BTN_BG, COL_BORDER, BTN_HELP, 0, 0);
+            const char* crtLabel = g_crtScanlines ? "CRT: ON" : "CRT: OFF";
+            DrawButtonControl(memDC, hFontSmall, rightX - 215, 14, 65, 24, crtLabel, g_crtScanlines ? COL_GREEN : COL_TEXT_DIM, COL_BTN_BG, COL_BORDER, BTN_CRT, 0, 0);
             const char* audLabel = g_soundEnabled ? "AUDIO: ON" : "AUDIO: OFF";
-            DrawButtonControl(memDC, hFontSmall, rightX - 255, 14, 80, 24, audLabel, g_soundEnabled ? COL_GREEN : COL_TEXT_DIM, COL_BTN_BG, COL_BORDER, BTN_AUDIO, 0, 0);
+            DrawButtonControl(memDC, hFontSmall, rightX - 295, 14, 75, 24, audLabel, g_soundEnabled ? COL_GREEN : COL_TEXT_DIM, COL_BTN_BG, COL_BORDER, BTN_AUDIO, 0, 0);
+            char themeLabel[40];
+            sprintf(themeLabel, "THEME: %s", g_palettes[g_currentTheme].name);
+            DrawButtonControl(memDC, hFontSmall, rightX - 445, 14, 145, 24, themeLabel, COL_TEXT_BRIGHT, COL_BTN_BG, COL_BORDER_HI, BTN_THEME, 0, 0);
 
             // Resource HUD (y: 48 to 110)
             DrawHUD(memDC, hFontBold, hFontSmall, 48);
@@ -1547,8 +1719,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             int tabW = 126;
             for (int t = 0; t < 5; t++) {
                 int active = (g_state.currentTab == t);
-                COLORREF bg = active ? RGB(31, 47, 33) : COL_DARK_CARD;
-                COLORREF bdr = active ? COL_GREEN : COL_BORDER;
+                COLORREF bg = active ? COL_BTN_HOVER : COL_DARK_CARD;
+                COLORREF bdr = active ? COL_BORDER_HI : COL_BORDER;
                 COLORREF txt = active ? COL_TEXT_BRIGHT : COL_TEXT_DIM;
                 DrawButtonControl(memDC, hFontSmall, tabX, 114, tabW, 26, tabNames[t], txt, bg, bdr, BTN_TAB, t, 0);
                 tabX += tabW + 5;
@@ -1588,6 +1760,18 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             // Summary Modal if open
             if (g_state.showSummary) {
                 DrawSummaryModal(memDC, hFontBold, hFontSmall);
+            }
+
+            // CRT scanlines overlay
+            if (g_crtScanlines) {
+                HPEN hScanPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
+                HPEN oldScanPen = (HPEN)SelectObject(memDC, hScanPen);
+                for (int sy = 0; sy < clientH; sy += 4) {
+                    MoveToEx(memDC, 0, sy, NULL);
+                    LineTo(memDC, clientW, sy);
+                }
+                SelectObject(memDC, oldScanPen);
+                DeleteObject(hScanPen);
             }
 
             // Blit to screen
