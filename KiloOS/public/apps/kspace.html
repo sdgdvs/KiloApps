@@ -533,9 +533,12 @@ window.addEventListener('load', () => {
     } catch (e) {}
   }
 
-  // --- PARTICLES, SHOCKWAVES & DEBRIS (Loop 2) ---
-  function addShockwave(x, y, maxR = 35, color = '#00e5ff', speed = 2.2) {
-    shockwaves.push({ x: x, y: y, r: 4, maxR: maxR, color: color, alpha: 1.0, speed: speed });
+  // --- PARTICLES, SHOCKWAVES & DEBRIS (Loop 8 Enhanced Engine) ---
+  function addShockwave(x, y, maxR = 35, color = '#00e5ff', speed = 2.4) {
+    // Primary high-energy compression shockwave ring
+    shockwaves.push({ x: x, y: y, r: 4, maxR: maxR, color: color, alpha: 1.0, speed: speed, isOuter: false });
+    // Secondary outer ion dispersion halo
+    shockwaves.push({ x: x, y: y, r: 2, maxR: maxR * 1.35, color: '#ffffff', alpha: 0.75, speed: speed * 1.45, isOuter: true });
   }
 
   function addDebrisChunk(x, y, count = 6, color = '#ff9100') {
@@ -547,12 +550,12 @@ window.addEventListener('load', () => {
         vx: Math.cos(angle) * spd,
         vy: Math.sin(angle) * spd,
         rot: randomFloat() * Math.PI * 2,
-        vrot: (randomFloat() - 0.5) * 0.3,
+        vrot: (randomFloat() - 0.5) * 0.35,
         size: 3 + randomFloat() * 5,
         color: color,
         shape: Math.floor(randomFloat() * 3),
         life: 1.0,
-        decay: 0.02 + randomFloat() * 0.03
+        decay: 0.018 + randomFloat() * 0.025
       });
     }
   }
@@ -566,26 +569,71 @@ window.addEventListener('load', () => {
   }
 
   function addExplosion(x, y, count = 14, color = null) {
-    screenShake += Math.floor(count / 4);
-    if (screenShake > 20) screenShake = 20;
+    screenShake += Math.floor(count / 3);
+    if (screenShake > 25) screenShake = 25;
 
-    for (let i = 0; i < count; i++) {
+    // Layer 0: Incandescent Core Needle Sparks with Velocity Trails
+    let sparkCount = Math.max(6, Math.floor(count * 0.75));
+    for (let i = 0; i < sparkCount; i++) {
       let angle = randomFloat() * Math.PI * 2;
-      let speedMult = (i % 3 === 0) ? 1.5 : 0.8;
-      let speed = (0.8 + randomFloat() * 4.0) * speedMult;
+      let spd = 2.5 + randomFloat() * 5.0;
       explosions.push({
+        layer: 0,
         x: x, y: y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
+        vx: Math.cos(angle) * spd,
+        vy: Math.sin(angle) * spd,
         life: 1.0,
-        decay: 0.025 + randomFloat() * 0.04,
-        size: 2 + randomFloat() * 3.5,
-        color: (i % 3 === 0) ? '#ffffff' : (color || (randomFloat() < 0.5 ? '#ff4500' : (randomFloat() < 0.5 ? '#ffa500' : '#ffff00')))
+        decay: 0.035 + randomFloat() * 0.045,
+        size: 1.2 + randomFloat() * 1.5,
+        color: (i % 3 === 0) ? '#ffffff' : (color || (randomFloat() < 0.5 ? '#00e5ff' : '#ffea00'))
       });
     }
+
+    // Layer 1: Expanding Buoyant Plasma Smoke Puffs
+    let smokeCount = Math.max(4, Math.floor(count * 0.5));
+    for (let i = 0; i < smokeCount; i++) {
+      let angle = randomFloat() * Math.PI * 2;
+      let spd = 0.5 + randomFloat() * 2.0;
+      explosions.push({
+        layer: 1,
+        x: x, y: y,
+        vx: Math.cos(angle) * spd,
+        vy: Math.sin(angle) * spd - 0.3,
+        life: 1.0,
+        decay: 0.02 + randomFloat() * 0.025,
+        size: 3.5 + randomFloat() * 4.0,
+        color: (randomFloat() < 0.4 ? '#ff3d00' : (randomFloat() < 0.5 ? '#ff9100' : '#4a148c'))
+      });
+    }
+
+    // Layer 2: Heavy Kinematic Armor & Hull Debris Shards (via debris system)
     if (count >= 10) {
-      addShockwave(x, y, count * 2.2, color || '#ff5722');
-      addDebrisChunk(x, y, Math.min(12, Math.floor(count / 2)), color || '#ff9800');
+      addDebrisChunk(x, y, Math.min(14, Math.floor(count * 0.6)), color || '#ff9800');
+    }
+
+    // Layer 3: Radiant Celebration Energy Stars
+    if (count >= 12) {
+      let starCount = Math.min(8, Math.floor(count * 0.35));
+      for (let i = 0; i < starCount; i++) {
+        let angle = (i / starCount) * Math.PI * 2 + randomFloat() * 0.3;
+        let spd = 1.2 + randomFloat() * 2.8;
+        explosions.push({
+          layer: 3,
+          x: x, y: y,
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd,
+          life: 1.0,
+          decay: 0.018 + randomFloat() * 0.02,
+          size: 4.0 + randomFloat() * 3.0,
+          rot: randomFloat() * Math.PI,
+          vrot: (randomFloat() - 0.5) * 0.25,
+          color: (randomFloat() < 0.5 ? '#ffd700' : '#ffffff')
+        });
+      }
+    }
+
+    if (count >= 10) {
+      addShockwave(x, y, count * 2.4, color || '#ff5722');
     }
   }
 
@@ -594,6 +642,18 @@ window.addEventListener('load', () => {
       let ex = explosions[i];
       ex.x += ex.vx;
       ex.y += ex.vy;
+      if (ex.layer === 1) {
+        ex.vx *= 0.92;
+        ex.vy *= 0.92;
+        ex.vy -= 0.04; // buoyant upward drift
+      } else if (ex.layer === 0) {
+        ex.vx *= 0.96;
+        ex.vy *= 0.96;
+      } else if (ex.layer === 3) {
+        ex.vx *= 0.94;
+        ex.vy *= 0.94;
+        if (ex.rot !== undefined) ex.rot += ex.vrot;
+      }
       ex.life -= ex.decay;
       if (ex.life <= 0) explosions.splice(i, 1);
     }
@@ -602,11 +662,48 @@ window.addEventListener('load', () => {
   function drawExplosions() {
     for (let ex of explosions) {
       ctx.save();
-      ctx.globalAlpha = Math.max(0, ex.life);
-      ctx.fillStyle = ex.color;
-      ctx.beginPath();
-      ctx.arc(ex.x, ex.y, ex.size * ex.life, 0, Math.PI * 2);
-      ctx.fill();
+      let alpha = Math.max(0, ex.life);
+      ctx.globalAlpha = alpha;
+
+      if (ex.layer === 0) {
+        // Incandescent needle core spark with velocity trail
+        ctx.strokeStyle = ex.color;
+        ctx.lineWidth = ex.size;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(ex.x, ex.y);
+        ctx.lineTo(ex.x - ex.vx * 2.4, ex.y - ex.vy * 2.4);
+        ctx.stroke();
+      } else if (ex.layer === 1) {
+        // Expanding buoyant plasma smoke puff
+        let r = ex.size * (0.8 + (1.0 - alpha) * 1.6);
+        ctx.fillStyle = ex.color;
+        ctx.beginPath();
+        ctx.arc(ex.x, ex.y, r, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (ex.layer === 3) {
+        // Radiant 4-point energy star
+        ctx.translate(ex.x, ex.y);
+        ctx.rotate(ex.rot || 0);
+        let s = ex.size * (0.5 + alpha * 0.5);
+        ctx.fillStyle = ex.color;
+        ctx.beginPath();
+        ctx.moveTo(0, -s);
+        ctx.lineTo(s * 0.25, -s * 0.25);
+        ctx.lineTo(s, 0);
+        ctx.lineTo(s * 0.25, s * 0.25);
+        ctx.lineTo(0, s);
+        ctx.lineTo(-s * 0.25, s * 0.25);
+        ctx.lineTo(-s, 0);
+        ctx.lineTo(-s * 0.25, -s * 0.25);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        ctx.fillStyle = ex.color;
+        ctx.beginPath();
+        ctx.arc(ex.x, ex.y, ex.size * alpha, 0, Math.PI * 2);
+        ctx.fill();
+      }
       ctx.restore();
     }
   }
@@ -1145,7 +1242,10 @@ window.addEventListener('load', () => {
   function update() {
     if (bombFlash > 0) bombFlash--;
     if (bossDeathFlash > 0) bossDeathFlash -= 5;
-    if (screenShake > 0) screenShake--;
+    if (screenShake > 0) {
+      screenShake *= 0.88;
+      if (screenShake < 0.15) screenShake = 0;
+    }
     if (hyperJumpTimer > 0) hyperJumpTimer--;
 
     if (gameState !== STATE_PLAYING) {
@@ -1851,6 +1951,15 @@ window.addEventListener('load', () => {
       ctx.fillStyle = '#00b0ff';
       ctx.beginPath(); ctx.moveTo(5, 0); ctx.lineTo(10, 8); ctx.lineTo(8, 10); ctx.lineTo(2, 10); ctx.lineTo(0, 8); ctx.closePath(); ctx.fill();
 
+      // Specular sheen sweep on drone wing
+      let dSheen = ((frame * 1.5 + d * 10) % 20) - 5;
+      ctx.save();
+      ctx.beginPath(); ctx.moveTo(5, 0); ctx.lineTo(10, 8); ctx.lineTo(8, 10); ctx.lineTo(2, 10); ctx.lineTo(0, 8); ctx.closePath();
+      ctx.clip();
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+      ctx.fillRect(0, dSheen, 12, 3);
+      ctx.restore();
+
       // Cockpit
       ctx.fillStyle = '#ffea00';
       ctx.beginPath(); ctx.arc(5, 5, 2.5, 0, Math.PI * 2); ctx.fill();
@@ -1896,6 +2005,15 @@ window.addEventListener('load', () => {
     ctx.fillStyle = '#ffffff';
     ctx.beginPath(); ctx.moveTo(8, 20); ctx.lineTo(10, 20 + flameH * 0.6); ctx.lineTo(12, 20); ctx.closePath(); ctx.fill();
 
+    // Trailing ion plume motes behind main thrusters
+    for (let m = 0; m < 3; m++) {
+      let my = 21 + ((frame * 2 + m * 6) % 16);
+      let mx = 10 + Math.sin(frame * 0.6 + m * 1.5) * 2.5;
+      let mAlpha = Math.max(0, 1.0 - (my - 21) / 16);
+      ctx.fillStyle = (frame % 2 === 0) ? `rgba(0, 229, 255, ${mAlpha})` : `rgba(255, 234, 0, ${mAlpha})`;
+      ctx.fillRect(mx - 1, my, 2, 2);
+    }
+
     // Wingtip Thrusters
     ctx.fillStyle = overchargeTimer > 0 ? '#ffea00' : '#00e5ff';
     ctx.fillRect(0, 16, 2, 4 + (frame % 2) * 2);
@@ -1906,6 +2024,21 @@ window.addEventListener('load', () => {
     ctx.beginPath();
     ctx.moveTo(10, 0); ctx.lineTo(20, 16); ctx.lineTo(15, 20); ctx.lineTo(10, 15); ctx.lineTo(5, 20); ctx.lineTo(0, 16);
     ctx.closePath(); ctx.fill();
+
+    // Specular Sheen Sweep Highlight Across Hull Facets
+    let sheenY = ((frame * 1.6) % 36) - 8;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(10, 0); ctx.lineTo(20, 16); ctx.lineTo(15, 20); ctx.lineTo(10, 15); ctx.lineTo(5, 20); ctx.lineTo(0, 16);
+    ctx.closePath();
+    ctx.clip();
+    let sheenGrad = ctx.createLinearGradient(0, sheenY, 15, sheenY + 10);
+    sheenGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+    sheenGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.7)');
+    sheenGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = sheenGrad;
+    ctx.fillRect(0, 0, 20, 24);
+    ctx.restore();
 
     // Cockpit Canopy
     ctx.fillStyle = overchargeTimer > 0 ? '#00e5ff' : '#ffffff';
@@ -2173,10 +2306,13 @@ window.addEventListener('load', () => {
     }
 
     ctx.save();
-    if (screenShake > 0) {
-      let dx = (Math.random() - 0.5) * screenShake;
-      let dy = (Math.random() - 0.5) * screenShake;
-      ctx.translate(dx, dy);
+    if (screenShake > 0.1) {
+      let shakeRot = Math.sin(frameCount * 1.3) * (screenShake / 25) * 0.035;
+      let dx = Math.sin(frameCount * 1.7) * screenShake * 0.75;
+      let dy = Math.cos(frameCount * 1.5) * screenShake * 0.75;
+      ctx.translate(W / 2, H / 2);
+      ctx.rotate(shakeRot);
+      ctx.translate(-W / 2 + dx, -H / 2 + dy);
     }
 
     // Dynamic Background
@@ -2291,10 +2427,16 @@ window.addEventListener('load', () => {
 
       for (let i = shockwaves.length - 1; i >= 0; i--) {
         let sw = shockwaves[i];
-        sw.r += sw.speed; sw.alpha -= 0.04;
+        sw.r += sw.speed;
+        sw.alpha -= (sw.isOuter ? 0.035 : 0.04);
         if (sw.alpha <= 0 || sw.r >= sw.maxR) { shockwaves.splice(i, 1); continue; }
-        ctx.save(); ctx.strokeStyle = sw.color; ctx.globalAlpha = Math.max(0, sw.alpha); ctx.lineWidth = 2.5;
-        ctx.beginPath(); ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2); ctx.stroke();
+        ctx.save();
+        ctx.strokeStyle = sw.color;
+        ctx.globalAlpha = Math.max(0, sw.alpha);
+        ctx.lineWidth = sw.isOuter ? 1.5 : 2.5;
+        ctx.beginPath();
+        ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
+        ctx.stroke();
         ctx.restore();
       }
 
@@ -2321,12 +2463,96 @@ window.addEventListener('load', () => {
 
       drawExplosions();
       drawHUD();
+      drawSciFiHUDFrame(ctx, frameCount);
 
       if (gameState === STATE_PAUSED) drawPauseScreen();
       if (gameState === STATE_GAMEOVER) drawGameOverScreen();
       if (gameState === STATE_VICTORY) drawVictoryScreen();
     }
     
+    ctx.restore();
+  }
+
+  function drawSciFiHUDFrame(ctx, frame) {
+    ctx.save();
+    // Pulsating Energy Perimeter Inlay
+    let borderAlpha = 0.25 + Math.sin(frame * 0.08) * 0.12;
+    ctx.strokeStyle = `rgba(0, 229, 255, ${borderAlpha})`;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(5, 5, W - 10, H - 10);
+
+    ctx.strokeStyle = `rgba(0, 229, 255, ${borderAlpha * 0.4})`;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(8, 8, W - 16, H - 16);
+
+    // Traveling Specular Glint along Perimeter
+    let perimW = W - 10;
+    let perimH = H - 10;
+    let totalLen = 2 * (perimW + perimH);
+    let glintPos = (frame * 3.5) % totalLen;
+    let gx = 5, gy = 5;
+    if (glintPos < perimW) {
+      gx = 5 + glintPos; gy = 5;
+    } else if (glintPos < perimW + perimH) {
+      gx = 5 + perimW; gy = 5 + (glintPos - perimW);
+    } else if (glintPos < 2 * perimW + perimH) {
+      gx = 5 + perimW - (glintPos - perimW - perimH); gy = 5 + perimH;
+    } else {
+      gx = 5; gy = 5 + perimH - (glintPos - 2 * perimW - perimH);
+    }
+    
+    let glintGrad = ctx.createRadialGradient(gx, gy, 0, gx, gy, 8);
+    glintGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+    glintGrad.addColorStop(0.4, 'rgba(0, 229, 255, 0.7)');
+    glintGrad.addColorStop(1, 'rgba(0, 229, 255, 0)');
+    ctx.fillStyle = glintGrad;
+    ctx.beginPath();
+    ctx.arc(gx, gy, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 4 Ornate Cybernetic Corner Reticles (L-Brackets)
+    drawCyberReticle(ctx, 5, 5, 0);                 // Top-Left
+    drawCyberReticle(ctx, W - 5, 5, Math.PI / 2);     // Top-Right
+    drawCyberReticle(ctx, W - 5, H - 5, Math.PI);     // Bottom-Right
+    drawCyberReticle(ctx, 5, H - 5, -Math.PI / 2);    // Bottom-Left
+    ctx.restore();
+  }
+
+  function drawCyberReticle(ctx, x, y, rot) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+
+    // Primary Bracket L-Bar
+    ctx.strokeStyle = '#00e5ff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, 20);
+    ctx.lineTo(0, 5);
+    ctx.lineTo(5, 0);
+    ctx.lineTo(20, 0);
+    ctx.stroke();
+
+    // Tech Chamfer and Tick Marks
+    ctx.strokeStyle = '#ffea00';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(9, 2);
+    ctx.lineTo(9, 5);
+    ctx.moveTo(15, 2);
+    ctx.lineTo(15, 5);
+    ctx.moveTo(2, 9);
+    ctx.lineTo(5, 9);
+    ctx.moveTo(2, 15);
+    ctx.lineTo(5, 15);
+    ctx.stroke();
+
+    // Illuminated Corner Status Diode
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(4, 4, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+
     ctx.restore();
   }
 

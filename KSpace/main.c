@@ -13,7 +13,7 @@ long _ftol2(float f) { return (long)f; }
 #define MAX_EBULLETS 60
 #define MAX_POWERUPS 12
 #define MAX_STARS 60
-#define MAX_PARTICLES 80
+#define MAX_PARTICLES 120
 #define MAX_LEADERBOARD 5
 
 // --- GAME STATES ---
@@ -27,6 +27,17 @@ long _ftol2(float f) { return (long)f; }
 #define STATE_HELP 7
 #define STATE_KEYBINDS 8
 #define STATE_REPLAY 9
+
+static const signed char s_SinTable[16] = {
+    0, 48, 90, 117, 127, 117, 90, 48,
+    0, -48, -90, -117, -127, -117, -90, -48
+};
+static int FastSin(int angle) {
+    return (int)s_SinTable[(angle & 15)];
+}
+static int FastCos(int angle) {
+    return (int)s_SinTable[((angle + 4) & 15)];
+}
 
 int kbUp = VK_UP, kbDown = VK_DOWN, kbLeft = VK_LEFT, kbRight = VK_RIGHT;
 int kbFire = VK_SPACE, kbTimeStop = 'T', kbDash = 'D', kbBomb = 'B', kbShield = 'S', kbPause = 'P', kbOvercharge = 'O';
@@ -48,10 +59,10 @@ unsigned int initialSeed = 999;
 
 typedef struct { float x, y, active, dx, dy, type; int hp, maxHp, timer, cloaked; int isElite, squadId, shield; } Ent;
 typedef struct { float x, y, speed; int size, layer; } Star;
-typedef struct { float x, y, vx, vy; int life, maxLife; COLORREF color; int wType; } Particle;
+typedef struct { float x, y, vx, vy; int life, maxLife; COLORREF color; int layer; float size; } Particle;
 typedef struct { int score, wave, mode; } LeaderEntry;
 
-typedef struct { float x, y, r, maxR, speed, alpha; COLORREF color; int life; } Shockwave;
+typedef struct { float x, y, r, maxR, speed, alpha; COLORREF color; int life; int isOuter; } Shockwave;
 typedef struct { float x, y, vx, vy, size, rot, vrot, life, decay; COLORREF color; int shape; } Debris;
 typedef struct { float x, y, r, maxR, alpha; COLORREF color; int life; } ShieldRipple;
 typedef struct { float x, y, size; int life, maxLife; COLORREF color; } MuzzleFlash;
@@ -219,14 +230,27 @@ void PlaySnd(int type) {
     if (hThread) CloseHandle(hThread);
 }
 
-// Loop 2 Visual Effects Generators
+// Loop 8 Visual Effects Generators
 void AddShockwave(float x, float y, float maxR, COLORREF col) {
+    // Primary compression shockwave ring
     for (int i = 0; i < MAX_SHOCKWAVES; i++) {
         if (shockwaves[i].life <= 0) {
             shockwaves[i].x = x; shockwaves[i].y = y;
             shockwaves[i].r = 4.0f; shockwaves[i].maxR = maxR;
-            shockwaves[i].speed = 2.2f; shockwaves[i].alpha = 1.0f;
+            shockwaves[i].speed = 2.4f; shockwaves[i].alpha = 1.0f;
             shockwaves[i].color = col; shockwaves[i].life = 1;
+            shockwaves[i].isOuter = 0;
+            break;
+        }
+    }
+    // Secondary outer ion dispersion halo
+    for (int i = 0; i < MAX_SHOCKWAVES; i++) {
+        if (shockwaves[i].life <= 0) {
+            shockwaves[i].x = x; shockwaves[i].y = y;
+            shockwaves[i].r = 2.0f; shockwaves[i].maxR = maxR * 1.35f;
+            shockwaves[i].speed = 3.4f; shockwaves[i].alpha = 0.8f;
+            shockwaves[i].color = RGB(255, 255, 255); shockwaves[i].life = 1;
+            shockwaves[i].isOuter = 1;
             break;
         }
     }
@@ -245,7 +269,7 @@ void AddDebrisChunk(float x, float y, int count, COLORREF col) {
             debris[i].color = col;
             debris[i].shape = rnd() % 3;
             debris[i].life = 1.0f;
-            debris[i].decay = 0.02f + (float)(rnd() % 20) / 1000.0f;
+            debris[i].decay = 0.018f + (float)(rnd() % 20) / 1000.0f;
             added++;
         }
     }
@@ -273,28 +297,83 @@ void AddMuzzleFlash(float x, float y, COLORREF col, float size) {
     }
 }
 
-// Particle Explosions (Loop 2 Enhanced)
+// Particle Explosions (Loop 8 Multi-Layer Kinematic Engine)
 void AddExplosion(float x, float y, int count, COLORREF col) {
-    screenShake += count / 4;
-    if (screenShake > 20) screenShake = 20;
+    screenShake += count / 3;
+    if (screenShake > 25) screenShake = 25;
     
+    // Layer 0: Incandescent core needle sparks
+    int sparkCount = (count * 3) / 4;
+    if (sparkCount < 6) sparkCount = 6;
     int added = 0;
-    for (int i = 0; i < MAX_PARTICLES && added < count; i++) {
+    for (int i = 0; i < MAX_PARTICLES && added < sparkCount; i++) {
         if (particles[i].life <= 0) {
             particles[i].x = x;
             particles[i].y = y;
-            float speedMult = (added % 3 == 0) ? 1.5f : 0.8f;
-            particles[i].vx = (float)((int)(rnd() % 11) - 5) * speedMult;
-            particles[i].vy = (float)((int)(rnd() % 11) - 5) * speedMult;
-            particles[i].life = 14 + (rnd() % 16);
+            float spd = 2.0f + (float)(rnd() % 15) * 0.25f;
+            int angleIdx = rnd() % 16;
+            particles[i].vx = ((float)FastCos(angleIdx) / 127.0f) * spd;
+            particles[i].vy = ((float)FastSin(angleIdx) / 127.0f) * spd;
+            particles[i].life = 10 + (rnd() % 12);
             particles[i].maxLife = particles[i].life;
-            particles[i].color = (added % 3 == 0) ? RGB(255,255,255) : col;
+            particles[i].color = (added % 2 == 0) ? RGB(255, 255, 255) : ((rnd() % 2 == 0) ? RGB(0, 229, 255) : RGB(255, 234, 0));
+            particles[i].layer = 0;
+            particles[i].size = 1.5f;
             added++;
         }
     }
+
+    // Layer 1: Expanding buoyant plasma smoke puffs
+    int smokeCount = count / 2;
+    if (smokeCount < 4) smokeCount = 4;
+    added = 0;
+    for (int i = 0; i < MAX_PARTICLES && added < smokeCount; i++) {
+        if (particles[i].life <= 0) {
+            particles[i].x = x;
+            particles[i].y = y;
+            float spd = 0.5f + (float)(rnd() % 10) * 0.15f;
+            int angleIdx = rnd() % 16;
+            particles[i].vx = ((float)FastCos(angleIdx) / 127.0f) * spd;
+            particles[i].vy = ((float)FastSin(angleIdx) / 127.0f) * spd - 0.4f;
+            particles[i].life = 18 + (rnd() % 16);
+            particles[i].maxLife = particles[i].life;
+            particles[i].color = (rnd() % 2 == 0) ? RGB(255, 60, 0) : RGB(255, 145, 0);
+            particles[i].layer = 1;
+            particles[i].size = 3.0f + (float)(rnd() % 3);
+            added++;
+        }
+    }
+
+    // Layer 2: Heavy armor debris chunks
     if (count >= 10) {
-        AddShockwave(x, y, (float)count * 2.2f, col);
-        AddDebrisChunk(x, y, (count / 2 > 10 ? 10 : count / 2), col);
+        AddDebrisChunk(x, y, (count / 2 > 12 ? 12 : count / 2), col);
+    }
+
+    // Layer 3: Radiant celebration energy stars
+    if (count >= 12) {
+        int starCount = count / 3;
+        if (starCount > 6) starCount = 6;
+        added = 0;
+        for (int i = 0; i < MAX_PARTICLES && added < starCount; i++) {
+            if (particles[i].life <= 0) {
+                particles[i].x = x;
+                particles[i].y = y;
+                float spd = 1.0f + (float)(rnd() % 10) * 0.2f;
+                int angleIdx = (added * 16 / starCount) & 15;
+                particles[i].vx = ((float)FastCos(angleIdx) / 127.0f) * spd;
+                particles[i].vy = ((float)FastSin(angleIdx) / 127.0f) * spd;
+                particles[i].life = 20 + (rnd() % 10);
+                particles[i].maxLife = particles[i].life;
+                particles[i].color = (added % 2 == 0) ? RGB(255, 215, 0) : RGB(255, 255, 255);
+                particles[i].layer = 3;
+                particles[i].size = 4.0f + (float)(rnd() % 3);
+                added++;
+            }
+        }
+    }
+
+    if (count >= 10) {
+        AddShockwave(x, y, (float)count * 2.4f, col);
     }
 }
 
@@ -308,26 +387,64 @@ void UpdateParticles() {
         if (particles[i].life > 0) {
             particles[i].x += particles[i].vx;
             particles[i].y += particles[i].vy;
+            if (particles[i].layer == 1) {
+                particles[i].vx *= 0.92f;
+                particles[i].vy *= 0.92f;
+                particles[i].vy -= 0.05f; // buoyant drift
+            } else if (particles[i].layer == 0) {
+                particles[i].vx *= 0.96f;
+                particles[i].vy *= 0.96f;
+            } else if (particles[i].layer == 3) {
+                particles[i].vx *= 0.94f;
+                particles[i].vy *= 0.94f;
+            }
             particles[i].life--;
         }
     }
 }
 
 void DrawParticles(HDC hdc) {
-    HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
-    HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
     for (int i = 0; i < MAX_PARTICLES; i++) {
         if (particles[i].life > 0) {
-            HBRUSH pbr = CreateSolidBrush(particles[i].color);
-            HBRUSH oldBr = (HBRUSH)SelectObject(hdc, pbr);
-            int sz = (particles[i].life > 8) ? 3 : 2;
-            RECT pr = {(int)particles[i].x, (int)particles[i].y, (int)particles[i].x + sz, (int)particles[i].y + sz};
-            FillRect(hdc, &pr, pbr);
-            SelectObject(hdc, oldBr);
-            DeleteObject(pbr);
+            if (particles[i].layer == 0) {
+                // Needle spark along motion vector
+                HPEN ppen = CreatePen(PS_SOLID, (int)particles[i].size > 0 ? (int)particles[i].size : 1, particles[i].color);
+                HPEN oldP = (HPEN)SelectObject(hdc, ppen);
+                MoveToEx(hdc, (int)particles[i].x, (int)particles[i].y, NULL);
+                LineTo(hdc, (int)(particles[i].x - particles[i].vx * 2.2f), (int)(particles[i].y - particles[i].vy * 2.2f));
+                SelectObject(hdc, oldP);
+                DeleteObject(ppen);
+            } else if (particles[i].layer == 1) {
+                // Expanding plasma smoke puff
+                int r = (int)(particles[i].size * (0.8f + (1.0f - (float)particles[i].life / (float)particles[i].maxLife) * 1.4f));
+                HBRUSH pbr = CreateSolidBrush(particles[i].color);
+                HBRUSH oldBr = (HBRUSH)SelectObject(hdc, pbr);
+                HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
+                HPEN oldP = (HPEN)SelectObject(hdc, nullPen);
+                Ellipse(hdc, (int)particles[i].x - r, (int)particles[i].y - r, (int)particles[i].x + r, (int)particles[i].y + r);
+                SelectObject(hdc, oldBr);
+                SelectObject(hdc, oldP);
+                DeleteObject(pbr);
+            } else if (particles[i].layer == 3) {
+                // Radiant 4-point energy star
+                int sz = (int)particles[i].size;
+                HPEN spen = CreatePen(PS_SOLID, 2, particles[i].color);
+                HPEN oldP = (HPEN)SelectObject(hdc, spen);
+                MoveToEx(hdc, (int)particles[i].x - sz, (int)particles[i].y, NULL);
+                LineTo(hdc, (int)particles[i].x + sz, (int)particles[i].y);
+                MoveToEx(hdc, (int)particles[i].x, (int)particles[i].y - sz, NULL);
+                LineTo(hdc, (int)particles[i].x, (int)particles[i].y + sz);
+                SelectObject(hdc, oldP);
+                DeleteObject(spen);
+            } else {
+                HBRUSH pbr = CreateSolidBrush(particles[i].color);
+                int sz = (particles[i].life > 8) ? 3 : 2;
+                RECT pr = {(int)particles[i].x, (int)particles[i].y, (int)particles[i].x + sz, (int)particles[i].y + sz};
+                FillRect(hdc, &pr, pbr);
+                DeleteObject(pbr);
+            }
         }
     }
-    SelectObject(hdc, oldPen);
 }
 
 // Registry Persistence
@@ -1175,7 +1292,7 @@ void ApplyPowerup(int type) {
 void Update() {
     if (bombFlash > 0) bombFlash--;
     if (bossDeathFlash > 0) bossDeathFlash -= 5;
-    if (screenShake > 0) screenShake--;
+    if (screenShake > 0) screenShake = (screenShake * 88) / 100;
     if (hyperJumpTimer > 0) hyperJumpTimer--;
     if (gameState != STATE_PLAYING) return;
     timeSurvivedFrames++;
@@ -1953,6 +2070,24 @@ void DrawPlayerShipGDI(HDC hdc, int x, int y, int shield, int frame) {
     Polygon(hdc, wingPts, 6);
     SelectObject(hdc, oldBr); DeleteObject(wbr);
 
+    // Specular sheen sweep highlight across hull
+    int sheenY = ((frame * 2) % 22);
+    HPEN sheenPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+    HPEN oPen2 = (HPEN)SelectObject(hdc, sheenPen);
+    MoveToEx(hdc, x + 10 - sheenY / 3, y + sheenY, NULL);
+    LineTo(hdc, x + 10 + sheenY / 3, y + sheenY + 1);
+    SelectObject(hdc, oPen2); DeleteObject(sheenPen);
+
+    // Trailing engine ion exhaust motes
+    for (int m = 0; m < 3; m++) {
+        int my = y + 21 + ((frame * 2 + m * 6) % 15);
+        int mx = x + 10 + (FastSin(frame * 2 + m * 4) * 3) / 127;
+        HBRUSH mbr = CreateSolidBrush((m % 2 == 0) ? RGB(0, 229, 255) : RGB(255, 234, 0));
+        RECT mr = {mx - 1, my, mx + 1, my + 2};
+        FillRect(hdc, &mr, mbr);
+        DeleteObject(mbr);
+    }
+
     // Cockpit
     HBRUSH cbr = CreateSolidBrush(overchargeTimer > 0 ? RGB(0, 229, 255) : RGB(255, 255, 255));
     SelectObject(hdc, cbr);
@@ -2128,6 +2263,14 @@ void DrawDroneWingsGDI(HDC hdc, int frame) {
         Polygon(hdc, pts, 5);
         SelectObject(hdc, oldBr); DeleteObject(dbr);
 
+        // Specular glint on drone wing
+        int dSheen = ((frame * 2 + d * 8) % 10);
+        HPEN dpen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+        HPEN oP = (HPEN)SelectObject(hdc, dpen);
+        MoveToEx(hdc, dx + 3, dy + dSheen, NULL);
+        LineTo(hdc, dx + 7, dy + dSheen);
+        SelectObject(hdc, oP); DeleteObject(dpen);
+
         // Drone Plasma Cockpit
         HBRUSH cbr = CreateSolidBrush(RGB(255, 234, 0));
         SelectObject(hdc, cbr);
@@ -2163,6 +2306,76 @@ void DrawHyperJumpEffectGDI(HDC hdc, int frame) {
         LineTo(hdc, ex, ey);
     }
     SelectObject(hdc, oldPen); DeleteObject(wPen);
+}
+
+void DrawCyberReticleGDI(HDC hdc, int x, int y, int dirX, int dirY) {
+    HPEN cpen = CreatePen(PS_SOLID, 2, RGB(0, 229, 255));
+    HPEN oldPen = (HPEN)SelectObject(hdc, cpen);
+
+    // L-bar with 45-degree chamfer
+    MoveToEx(hdc, x, y + dirY * 20, NULL);
+    LineTo(hdc, x, y + dirY * 5);
+    LineTo(hdc, x + dirX * 5, y);
+    LineTo(hdc, x + dirX * 20, y);
+
+    // Tech tick marks
+    HPEN ypen = CreatePen(PS_SOLID, 1, RGB(255, 234, 0));
+    SelectObject(hdc, ypen);
+    MoveToEx(hdc, x + dirX * 9, y + dirY * 2, NULL); LineTo(hdc, x + dirX * 9, y + dirY * 5);
+    MoveToEx(hdc, x + dirX * 15, y + dirY * 2, NULL); LineTo(hdc, x + dirX * 15, y + dirY * 5);
+    MoveToEx(hdc, x + dirX * 2, y + dirY * 9, NULL); LineTo(hdc, x + dirX * 5, y + dirY * 9);
+    MoveToEx(hdc, x + dirX * 2, y + dirY * 15, NULL); LineTo(hdc, x + dirX * 5, y + dirY * 15);
+
+    // Corner status diode
+    HBRUSH dbr = CreateSolidBrush(RGB(255, 255, 255));
+    HBRUSH oldBr = (HBRUSH)SelectObject(hdc, dbr);
+    RECT dr = {x + dirX * 3 - 1, y + dirY * 3 - 1, x + dirX * 3 + 2, y + dirY * 3 + 2};
+    FillRect(hdc, &dr, dbr);
+
+    SelectObject(hdc, oldBr); SelectObject(hdc, oldPen);
+    DeleteObject(cpen); DeleteObject(ypen); DeleteObject(dbr);
+}
+
+void DrawSciFiHUDFrame(HDC hdc, int frame) {
+    int shim = 160 + (FastSin(frame * 2) * 60) / 127;
+    COLORREF hudCol = RGB(0, shim, 255);
+    HPEN hHudPen = CreatePen(PS_SOLID, 1, hudCol);
+    HPEN oldPen = (HPEN)SelectObject(hdc, hHudPen);
+    HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
+    HBRUSH oldBr = (HBRUSH)SelectObject(hdc, nullBr);
+
+    // Outer & inner perimeter
+    Rectangle(hdc, 5, 5, W - 5, H - 5);
+    Rectangle(hdc, 8, 8, W - 8, H - 8);
+
+    // Traveling Specular Glint along Perimeter
+    int perimW = W - 10;
+    int perimH = H - 10;
+    int totalLen = 2 * (perimW + perimH);
+    int glintPos = (frame * 4) % totalLen;
+    int gx = 5, gy = 5;
+    if (glintPos < perimW) {
+        gx = 5 + glintPos; gy = 5;
+    } else if (glintPos < perimW + perimH) {
+        gx = 5 + perimW; gy = 5 + (glintPos - perimW);
+    } else if (glintPos < 2 * perimW + perimH) {
+        gx = 5 + perimW - (glintPos - perimW - perimH); gy = 5 + perimH;
+    } else {
+        gx = 5; gy = 5 + perimH - (glintPos - 2 * perimW - perimH);
+    }
+    HBRUSH gbr = CreateSolidBrush(RGB(255, 255, 255));
+    RECT gr = {gx - 2, gy - 2, gx + 3, gy + 3};
+    FillRect(hdc, &gr, gbr);
+    DeleteObject(gbr);
+
+    // 4 Corner Cybernetic Reticles
+    DrawCyberReticleGDI(hdc, 5, 5, 1, 1);          // Top-Left
+    DrawCyberReticleGDI(hdc, W - 5, 5, -1, 1);     // Top-Right
+    DrawCyberReticleGDI(hdc, W - 5, H - 5, -1, -1); // Bottom-Right
+    DrawCyberReticleGDI(hdc, 5, H - 5, 1, -1);     // Bottom-Left
+
+    SelectObject(hdc, oldPen); SelectObject(hdc, oldBr);
+    DeleteObject(hHudPen);
 }
 
 void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
@@ -2499,12 +2712,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
             HBITMAP oldBm = (HBITMAP)SelectObject(memDC, hbm);
-            
-            if (screenShake > 0) {
-                int dx = (rnd() % (screenShake + 1)) - (screenShake / 2);
-                int dy = (rnd() % (screenShake + 1)) - (screenShake / 2);
-                SetWindowOrgEx(memDC, dx, dy, NULL);
-            }
             
             HFONT hFont = NULL;
             HFONT oldFont = NULL;
@@ -2855,7 +3062,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             shockwaves[i].r += shockwaves[i].speed;
                             if (shockwaves[i].r >= shockwaves[i].maxR) shockwaves[i].life = 0;
                             else {
-                                HPEN swPen = CreatePen(PS_SOLID, 2, shockwaves[i].color);
+                                HPEN swPen = CreatePen(PS_SOLID, shockwaves[i].isOuter ? 1 : 2, shockwaves[i].color);
                                 HPEN oldP = (HPEN)SelectObject(memDC, swPen);
                                 HBRUSH oldB = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
                                 int r = (int)shockwaves[i].r;
@@ -2967,6 +3174,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
 
+                    // Cybernetic Sci-Fi HUD Frame & Pulsating Perimeter Inlay
+                    DrawSciFiHUDFrame(memDC, frameCount);
+
                     if (gameState == STATE_PAUSED) {
                         SetTextColor(memDC, RGB(255, 234, 0));
                         TextOutA(memDC, W/2 - 50, 120, "SYSTEM PAUSED", 13);
@@ -3008,7 +3218,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SelectObject(memDC, oldFont);
                 DeleteObject(hFont);
             }
-            BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
+            int shakeOffsetX = 0;
+            int shakeOffsetY = 0;
+            if (screenShake > 0) {
+                shakeOffsetX = (screenShake * FastSin(frameCount * 2)) / 250;
+                shakeOffsetY = (screenShake * FastCos(frameCount * 2)) / 250;
+            }
+            BitBlt(hdc, shakeOffsetX, shakeOffsetY, W, H, memDC, 0, 0, SRCCOPY);
+            if (shakeOffsetX != 0 || shakeOffsetY != 0) {
+                HBRUSH blk = (HBRUSH)GetStockObject(BLACK_BRUSH);
+                if (shakeOffsetX > 0) { RECT r = {0, 0, shakeOffsetX, H}; FillRect(hdc, &r, blk); }
+                if (shakeOffsetX < 0) { RECT r = {W + shakeOffsetX, 0, W, H}; FillRect(hdc, &r, blk); }
+                if (shakeOffsetY > 0) { RECT r = {0, 0, W, shakeOffsetY}; FillRect(hdc, &r, blk); }
+                if (shakeOffsetY < 0) { RECT r = {0, H + shakeOffsetY, W, H}; FillRect(hdc, &r, blk); }
+            }
             SelectObject(memDC, oldBm);
             DeleteObject(hbm);
             DeleteDC(memDC);

@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KSpace
 - KPac
 - KSnake
 - KTetris
@@ -147,8 +146,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMystery
 - KReversi
 - KQuest
+- KSpace
 
 ## Completed Work Log
+
+- **KSpace (Loop 8):** Implemented highly polished visual effects including procedural screen-shake driven by quadratic physics decay and rotational damping on weapon impacts, bomb detonations, and boss destruction (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and CRT-free FastSin/FastCos trigonometric physics decay with double-buffered viewport rendering in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails, expanding buoyant plasma smoke puffs with negative gravity and drag deceleration, heavy kinematic armor & hull shards with tumbling rotation physics, and radiant golden/cyan celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer ion dispersion halo, ornate cybernetic Sci-Fi HUD corner reticle L-brackets with tech notches and glowing status diodes, a pulsating energy perimeter inlay border with a traveling specular glint along the viewport frame, sweeping specular sheen highlights traversing player ship hull facets and drone companion wings, and dynamic trailing engine ion exhaust motes in both Web Canvas (kspace.html) and Native C Win32 GDI (KSpace/main.c).
 
 - **KQuest (Loop 7):** Implemented highly polished visual effects including procedural screen-shake driven by quadratic physics decay and rotational damping on melee attacks, critical strikes, spell impacts (Fireball, Lightning Storm, Berserk Might), taking heavy damage, and victory celebrations (continuous requestAnimationFrame mathematical translation and rotation in Web Canvas, and CRT-free FastSin/FastCos trigonometric physics decay with double-buffered viewport rendering in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails, expanding buoyant smoke puffs with negative gravity, heavy kinematic stone & armor shards with gravity, drag, and floor bounce physics, and radiant golden celebration stars), dual-tier concentric ground shockwave ripple rings with perspective compression radiating across the battlefield, ornate Medieval RPG golden corner filigree L-brackets with rivet detailing, a pulsating golden perimeter inlay border with a traveling specular glint along the combat arena frame, and sweeping specular sheen highlights traversing player weapon blades (sword, daggers) and pulsating mana crystal auras (staff) in both Web Canvas (kquest.html) and Native C Win32 GDI (KQuest/main.c).
 
