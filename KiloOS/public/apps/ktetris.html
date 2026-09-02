@@ -9,8 +9,19 @@
 </style>
 </head>
 <body>
+<div id="toast" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(18, 22, 34, 0.95); border: 1px solid #00f0f0; color: #00f0f0; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 16px rgba(0,240,240,0.35); opacity: 0; pointer-events: none; transition: opacity 0.3s ease; z-index: 1000; font-family: 'Segoe UI', system-ui, sans-serif;"></div>
 <canvas id="gameCanvas"></canvas>
 <script>
+  function showToast(msg, dur = 3500) {
+      const t = document.getElementById('toast');
+      if (!t) return;
+      t.innerText = msg;
+      t.style.opacity = '1';
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => { t.style.opacity = '0'; }, dur);
+  }
+  setTimeout(() => showToast("Welcome to KTetris! Press 'H' or F1 for Help & Controls", 4500), 400);
+
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playSound(freq, type, dur) {
       try {
@@ -126,10 +137,12 @@
       let cStr = `Score,Lines,Pieces,Time,TetrisRate,Single,Double,Triple,Tetris,Pentris\n${score},${lines},${piecesPlaced},${formatTime(modeTimerMs)},${tr},${statLines[0]},${statLines[1]},${statLines[2]},${statLines[3]},${statLines[4]}`;
       let a1 = document.createElement('a'); a1.href = URL.createObjectURL(new Blob([jStr])); a1.download = 'ktetris_stats.json'; a1.click();
       let a2 = document.createElement('a'); a2.href = URL.createObjectURL(new Blob([cStr])); a2.download = 'ktetris_stats.csv'; a2.click();
+      showToast("Match stats exported to CSV & JSON!");
   }
 
   function exportLeaderboard() {
       let a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(leaderboard, null, 2)])); a.download = 'ktetris_hiscores.json'; a.click();
+      showToast("Leaderboard exported to JSON!");
   }
   function importLeaderboard() {
       let input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
@@ -152,6 +165,7 @@
                               .sort((a, b) => b.score - a.score)
                               .slice(0, 5);
                           localStorage.setItem('ktetris_leaderboard', JSON.stringify(leaderboard));
+                          showToast("Leaderboard imported successfully!");
                       }
                   } catch(err) {}
               };
@@ -220,6 +234,7 @@
       };
       localStorage.setItem('ktetris_saved_game', JSON.stringify(state));
       addPopup(BOARD_W / 2 - 30, H * CELL / 2, "GAME SAVED!", "#00ffff");
+      showToast("Game state saved!");
       playSound(800, 'sine', 0.15);
   }
 
@@ -244,6 +259,7 @@
           dropInterval = Math.max(40, 500 - (level - 1) * 20);
           lastLevel = level; levelUpTimer = 0;
           addPopup(BOARD_W / 2 - 35, H * CELL / 2, "GAME RESUMED!", "#00ff66");
+          showToast("Game state resumed!");
           playSound(600, 'square', 0.2);
           return true;
       } catch(e) {
@@ -617,7 +633,7 @@
       return (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs + '.' + tenths;
   }
 
-  // Interactive Skill Button Clicks
+  // Interactive Skill Button Clicks & Menu Navigation
   canvas.addEventListener('click', e => {
       const rect = canvas.getBoundingClientRect();
       const winW = window.innerWidth;
@@ -625,11 +641,45 @@
       const scale = Math.min(winW / 370, winH / 510) * 0.98;
       const mx = (e.clientX - rect.left) / scale;
       const my = (e.clientY - rect.top) / scale;
-      if (!gameOver && !isPaused && !startScreen && !winScreen && !showLeaderboard && !showHelp) {
+
+      if (showHelp) {
+          showHelp = false;
+          return;
+      }
+
+      if (startScreen) {
+          if (mx >= 35 && mx <= 335) {
+              if (my >= 115 && my <= 145) { gameMode = MODE_MARATHON; startScreen = false; score = 0; isReplaying = false; init(); return; }
+              if (my >= 145 && my <= 175) { gameMode = MODE_SPRINT;   startScreen = false; score = 0; isReplaying = false; init(); return; }
+              if (my >= 175 && my <= 205) { gameMode = MODE_ULTRA;    startScreen = false; score = 0; isReplaying = false; init(); return; }
+              if (my >= 205 && my <= 235) { gameMode = MODE_CAMPAIGN; startScreen = false; campaignLevel = 1; score = 0; isReplaying = false; init(); return; }
+              if (my >= 235 && my <= 265) { showLeaderboard = true; startScreen = false; return; }
+              if (my >= 265 && my <= 295) { showHelp = true; return; }
+              if (my >= 360 && my <= 390 && hasSavedGame()) { isReplaying = false; loadGameState(); return; }
+              if (my >= 320 && my <= 350) { showKeybinds = true; bindIndex = 0; startScreen = false; return; }
+              if (my >= 295 && my <= 325 && savedReplay) { isReplaying = true; currentReplay = savedReplay; startScreen = false; init(); return; }
+          }
+          if (my >= 455 && my <= 480) { showHelp = true; return; }
+          if (my >= 480 && my <= 505) { showLeaderboard = true; startScreen = false; return; }
+          return;
+      }
+
+      if (showLeaderboard) {
+          if (my >= 400 && my <= 450) { showLeaderboard = false; startScreen = true; }
+          return;
+      }
+
+      if (winScreen || gameOver) {
+          startScreen = true; winScreen = false; gameOver = false;
+          return;
+      }
+
+      if (!gameOver && !isPaused && !startScreen && !winScreen && !showLeaderboard && !showHelp && !showKeybinds) {
           if (mx >= SIDEBAR_X && mx <= SIDEBAR_X + 140) {
               if (my >= 380 && my <= 400) useRowNuke();
               else if (my >= 400 && my <= 420) usePieceSwap();
               else if (my >= 420 && my <= 440) useGravityFreeze();
+              else if (my >= 468 && my <= 498) showHelp = true;
           }
       }
   });
@@ -644,11 +694,12 @@
           keybinds[bindNames[bindIndex]] = key;
           localStorage.setItem('ktetris_keys', JSON.stringify(keybinds));
           bindIndex++;
-          if (bindIndex >= bindNames.length) { showKeybinds = false; startScreen = true; }
+          if (bindIndex >= bindNames.length) { showKeybinds = false; startScreen = true; showToast("Keybinds updated!"); }
           return;
       }
-if (showHelp) {
-          if (e.key.toLowerCase() === 'h' || e.key === 'Escape' || e.key === 'Enter') {
+      if (showHelp) {
+          if (e.key === 'F1' || e.key.toLowerCase() === 'h' || e.key === 'Escape' || e.key === 'Enter') {
+              e.preventDefault();
               showHelp = false;
           }
           return;
@@ -661,7 +712,7 @@ if (showHelp) {
           if (e.key === '4') { gameMode = MODE_CAMPAIGN; startScreen = false; campaignLevel = 1; score = 0; isReplaying = false; init(); return; }
           if (e.key === '5' || e.key.toLowerCase() === 'l') { showLeaderboard = true; startScreen = false; return; }
           if (e.key.toLowerCase() === 'v' || e.key.toLowerCase() === 'r') { isReplaying = false; loadGameState(); return; }
-          if (e.key.toLowerCase() === 'h') { showHelp = true; return; }
+          if (e.key === 'F1' || e.key.toLowerCase() === 'h') { e.preventDefault(); showHelp = true; return; }
           if (e.key.toLowerCase() === 'k') { showKeybinds = true; bindIndex = 0; startScreen = false; return; }
           if (e.key.toLowerCase() === 'w' && savedReplay) { isReplaying = true; currentReplay = savedReplay; startScreen = false; init(); return; }
           return;
@@ -675,12 +726,12 @@ if (showHelp) {
       if (winScreen || gameOver) {
           if (e.key === 'Enter') { startScreen = true; winScreen = false; gameOver = false; return; }
           if (e.key.toLowerCase() === 'e') { exportStats(); return; }
-          if (e.key.toLowerCase() === 's' && !isReplaying) { localStorage.setItem('ktetris_replay', JSON.stringify(currentReplay)); addPopup(BOARD_W/2-25, H*CELL/2, "REPLAY SAVED!", "#00ff00"); savedReplay = currentReplay; return; }
+          if (e.key.toLowerCase() === 's' && !isReplaying) { localStorage.setItem('ktetris_replay', JSON.stringify(currentReplay)); addPopup(BOARD_W/2-25, H*CELL/2, "REPLAY SAVED!", "#00ff00"); savedReplay = currentReplay; showToast("Replay saved!"); return; }
           return;
       }
 
       if (key === keybinds.pause) { isPaused = !isPaused; return; }
-      if (key === 'h') { showHelp = true; return; }
+      if (e.key === 'F1' || key === 'h') { e.preventDefault(); showHelp = true; return; }
       if (key === 'v') { saveGameState(); return; }
       if (key === keybinds.nuke) { useRowNuke(); if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'nuke'}); return; }
       if (key === keybinds.swap) { usePieceSwap(); if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'swap'}); return; }
@@ -1272,7 +1323,7 @@ if (showHelp) {
       ctx.fillText('[Arrows] Move/Rot', SIDEBAR_X, 452);
       ctx.fillText('[Space] Hard Drop', SIDEBAR_X, 468);
       ctx.fillStyle = '#00ffcc';
-      ctx.fillText('[H] Help / Controls', SIDEBAR_X, 484);
+      ctx.fillText('[H/F1] Help', SIDEBAR_X, 484);
 
       // Screens & Overlays
       if (showHelp) {
@@ -1296,14 +1347,14 @@ if (showHelp) {
               "F          : Use Freeze Skill",
               "P          : Pause Game",
               "V          : Save Game",
-              "H          : Toggle Help"
+              "H or F1    : Toggle Help"
           ];
           hints.forEach((h, idx) => {
               ctx.fillText(h, 60, 90 + idx * 25);
           });
           ctx.fillStyle = '#666677';
           ctx.textAlign = 'center';
-          ctx.fillText('Press H, ESC, or ENTER to return', 370 / 2, 480);
+          ctx.fillText('Press H, F1, ESC, or ENTER to return', 370 / 2, 480);
           ctx.textAlign = 'left';
       } else if (showKeybinds) {
           ctx.fillStyle = 'rgba(10, 11, 16, 0.94)';
@@ -1417,7 +1468,7 @@ if (showHelp) {
 
           let yOffset = 125 + 5 * 32;
           ctx.fillStyle = '#ffaa00';
-          ctx.fillText('[H]. Help & Controls', 70, yOffset);
+          ctx.fillText('[H / F1]. Help & Controls', 70, yOffset);
           ctx.fillStyle = '#00ccff';
           ctx.fillText('[K]. Configure Keybinds', 70, yOffset + 96);
           if (savedReplay) { ctx.fillStyle = '#ff55aa'; ctx.fillText('[W]. Watch Last Replay', 70, yOffset + 64); }
@@ -1432,7 +1483,7 @@ if (showHelp) {
           ctx.fillStyle = '#ffff00';
           ctx.font = 'bold 12px system-ui, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('Press [H] for Help / Controls', 370 / 2, 470);
+          ctx.fillText('Press [H] or F1 for Help / Controls', 370 / 2, 470);
           ctx.fillStyle = '#666677';
           ctx.font = '11px system-ui, sans-serif';
           ctx.fillText('Press [L] for Leaderboard', 370 / 2, 490);

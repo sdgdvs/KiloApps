@@ -132,6 +132,19 @@ double sin(double x) {
     return -1.0 + (lx - 4712) / 1570.0;
 }
 
+double cos(double x) {
+    return sin(x + 1.5707963267948966);
+}
+
+double sqrt(double x) {
+    if (x <= 0.0) return 0.0;
+    double guess = (x > 1.0) ? x * 0.5 : 1.0;
+    for (int i = 0; i < 12; i++) {
+        guess = 0.5 * (guess + x / guess);
+    }
+    return guess;
+}
+
 int shake_timer = 0;
 int distortion_timer = 0;
 double distort_x = 0;
@@ -451,6 +464,7 @@ typedef struct {
     COLORREF color;
     int size;
     int life;
+    int max_life;
     int type;
 } Particle;
 #define MAX_PARTICLES 128
@@ -1383,12 +1397,50 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             int mx = (int)((LOWORD(lParam) - offsetX) / scale);
             int my = (int)((HIWORD(lParam) - offsetY) / scale);
+
+            if (show_help) {
+                show_help = 0;
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+
+            if (start_screen) {
+                if (mx >= 35 && mx <= total_w - 35) {
+                    if (my >= 110 && my <= 135) { game_mode = MODE_MARATHON; start_screen = 0; score = 0; InitGame(); InvalidateRect(hwnd, NULL, FALSE); break; }
+                    if (my >= 140 && my <= 165) { game_mode = MODE_SPRINT;   start_screen = 0; score = 0; InitGame(); InvalidateRect(hwnd, NULL, FALSE); break; }
+                    if (my >= 170 && my <= 195) { game_mode = MODE_ULTRA;    start_screen = 0; score = 0; InitGame(); InvalidateRect(hwnd, NULL, FALSE); break; }
+                    if (my >= 200 && my <= 225) { game_mode = MODE_CAMPAIGN; start_screen = 0; campaign_level = 1; score = 0; InitGame(); InvalidateRect(hwnd, NULL, FALSE); break; }
+                    if (my >= 230 && my <= 255) { show_leaderboard = 1; start_screen = 0; InvalidateRect(hwnd, NULL, FALSE); break; }
+                    if (my >= 260 && my <= 285) { show_help = 1; InvalidateRect(hwnd, NULL, FALSE); break; }
+                    if (HasSavedGame() && my >= 290 && my <= 315) { LoadGameStateFromFile(); InvalidateRect(hwnd, NULL, FALSE); break; }
+                    if (my >= 320 && my <= 345) { show_keybinds = 1; bind_index = 0; start_screen = 0; InvalidateRect(hwnd, NULL, FALSE); break; }
+                    if (has_saved_replay && my >= 350 && my <= 375) { is_replaying = 1; start_screen = 0; InitGame(); InvalidateRect(hwnd, NULL, FALSE); break; }
+                }
+                if (my >= 455 && my <= 480) { show_help = 1; InvalidateRect(hwnd, NULL, FALSE); break; }
+                if (my >= 480 && my <= 505) { show_leaderboard = 1; start_screen = 0; InvalidateRect(hwnd, NULL, FALSE); break; }
+                break;
+            }
+
+            if (show_leaderboard) {
+                if (my >= 405 && my <= 440) { show_leaderboard = 0; start_screen = 1; InvalidateRect(hwnd, NULL, FALSE); }
+                break;
+            }
+
+            if (game_over || win_screen) {
+                if (my >= H * CELL_SIZE / 2 && my <= H * CELL_SIZE / 2 + 65) {
+                    start_screen = 1; game_over = 0; win_screen = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+                break;
+            }
+
             if (!game_over && !is_paused && !start_screen && !win_screen && !show_leaderboard && !show_help && !show_keybinds && !is_replaying) {
                 int sideX = W * CELL_SIZE + 15;
                 if (mx >= sideX && mx <= sideX + 140) {
                     if (my >= 378 && my <= 398) { UseRowNuke(); InvalidateRect(hwnd, NULL, FALSE); }
                     else if (my >= 398 && my <= 415) { UsePieceSwap(); InvalidateRect(hwnd, NULL, FALSE); }
                     else if (my >= 415 && my <= 435) { UseGravityFreeze(); InvalidateRect(hwnd, NULL, FALSE); }
+                    else if (my >= 465 && my <= 495) { show_help = 1; InvalidateRect(hwnd, NULL, FALSE); }
                 }
             }
             break;
@@ -1409,7 +1461,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             if (show_help) {
-                if (wParam == 'H' || wParam == VK_ESCAPE || wParam == VK_RETURN) {
+                if (wParam == 'H' || wParam == VK_F1 || wParam == VK_ESCAPE || wParam == VK_RETURN) {
                     show_help = 0;
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
@@ -1423,7 +1475,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (wParam == '4') { game_mode = MODE_CAMPAIGN; start_screen = 0; campaign_level = 1; score = 0; InitGame(); }
                 if (wParam == '5' || wParam == 'L') { show_leaderboard = 1; start_screen = 0; }
                 if (wParam == 'V' || wParam == 'R') { LoadGameStateFromFile(); }
-                if (wParam == 'H') { show_help = 1; }
+                if (wParam == 'H' || wParam == VK_F1) { show_help = 1; }
                 if (wParam == 'K') { show_keybinds = 1; bind_index = 0; start_screen = 0; }
                 if (wParam == 'W' && has_saved_replay) { is_replaying = 1; start_screen = 0; InitGame(); }
 
@@ -1467,7 +1519,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (is_replaying) return 0;
                 
                 if (wParam == keys.pause) { is_paused = !is_paused; InvalidateRect(hwnd, NULL, FALSE); break; }
-                if (wParam == 'H') { show_help = 1; InvalidateRect(hwnd, NULL, FALSE); break; }
+                if (wParam == 'H' || wParam == VK_F1) { show_help = 1; InvalidateRect(hwnd, NULL, FALSE); break; }
                 if (wParam == 'V') { SaveGameStateToFile(); AddPopup((float)(W * CELL_SIZE / 2 - 30), (float)(H * CELL_SIZE / 2), "GAME SAVED!", RGB(0, 255, 255)); InvalidateRect(hwnd, NULL, FALSE); break; }
                 if (wParam == keys.nuke) { UseRowNuke(); if(current_replay.count < 5000) { current_replay.events[current_replay.count].tick = replay_tick; current_replay.events[current_replay.count].key = 'B'; current_replay.count++; } InvalidateRect(hwnd, NULL, FALSE); break; }
                 if (wParam == keys.swap) { UsePieceSwap(); if(current_replay.count < 5000) { current_replay.events[current_replay.count].tick = replay_tick; current_replay.events[current_replay.count].key = 'S'; current_replay.count++; } InvalidateRect(hwnd, NULL, FALSE); break; }
@@ -1714,7 +1766,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             // Draw Shockwaves
-            HBRUSH nullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+            nullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
             HBRUSH oldB = (HBRUSH)SelectObject(memDC, nullBrush);
             for (int i = 0; i < num_shockwaves; i++) {
                 float alpha = (float)shockwaves[i].life / shockwaves[i].max_life;
@@ -1934,7 +1986,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOutA(memDC, sideX, 442, "[Arrows] Move/Rot", 17);
             TextOutA(memDC, sideX, 458, "[Space] Hard Drop", 17);
             SetTextColor(memDC, RGB(0, 255, 204));
-            TextOutA(memDC, sideX, 474, "[H] Help / Controls", 19);
+            TextOutA(memDC, sideX, 474, "[H/F1] Help", 11);
 
             // Overlays & Screens
             SelectObject(memDC, g_hFontMain);
@@ -1960,14 +2012,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "F          : Use Freeze Skill",
                     "P          : Pause Game",
                     "V          : Save Game",
-                    "H          : Toggle Help"
+                    "H or F1    : Toggle Help"
                 };
                 for (int i = 0; i < 11; i++) {
                     TextOutA(memDC, 60, 90 + i * 25, hints[i], lstrlenA(hints[i]));
                 }
                 
                 SetTextColor(memDC, RGB(100, 100, 120));
-                TextOutA(memDC, total_w / 2 - 110, 480, "Press H, ESC, or ENTER to return", 32);
+                TextOutA(memDC, total_w / 2 - 125, 480, "Press H, F1, ESC, or ENTER to return", 36);
             } else if (show_keybinds) {
                 HBRUSH ov = CreateSolidBrush(RGB(10, 11, 16)); RECT ovRc = {0, 0, total_w, total_h}; FillRect(memDC, &ovRc, ov); DeleteObject(ov);
                 SetTextColor(memDC, RGB(0, 255, 255)); TextOutA(memDC, total_w / 2 - 60, 40, "KEYBINDS CONFIG", 15);
@@ -2059,7 +2111,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(memDC, 45, 235, "5 / [L]. High Scores", 20);
 
                 SetTextColor(memDC, RGB(255, 170, 0));
-                TextOutA(memDC, 45, 265, "[H]. Help & Controls", 20);
+                TextOutA(memDC, 45, 265, "[H / F1]. Help & Controls", 25);
 
                 if (HasSavedGame()) {
                     SetTextColor(memDC, RGB(255, 0, 255));
@@ -2067,7 +2119,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
 
                 SetTextColor(memDC, RGB(255, 255, 0));
-                TextOutA(memDC, total_w / 2 - 110, 465, "Press [H] for Help / Controls", 29);
+                TextOutA(memDC, total_w / 2 - 110, 465, "Press [H] or F1 for Help", 24);
                 SetTextColor(memDC, RGB(136, 136, 170));
                 TextOutA(memDC, total_w / 2 - 100, 485, "Press [L] for Leaderboard", 25);
                 SetTextColor(memDC, RGB(0, 204, 255));
@@ -2122,11 +2174,11 @@ void MainEntry() {
     int defaultW = (W * CELL_SIZE + 170) * 3 / 2;
     int defaultH = (H * CELL_SIZE + 110) * 3 / 2;
     RECT r = {0, 0, defaultW, defaultH};
-    AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW, FALSE);
+    AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, FALSE);
     int winWidth = r.right - r.left;
     int winHeight = r.bottom - r.top;
 
-    HWND hwnd = CreateWindowEx(0, "KTetrisApp", "KTetris", WS_OVERLAPPEDWINDOW,
+    HWND hwnd = CreateWindowEx(0, "KTetrisApp", "KTetris", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, winWidth, winHeight, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);

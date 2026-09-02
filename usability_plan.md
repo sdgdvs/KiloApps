@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KTetris
+**Target App:** KSpace
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KTetris
 - KSpace
 - KSolitaire
 - KTerm
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KPaint
 - KFarm
 - KSnake
+- KTetris
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KTetris: Usability and UI issues fixed (fixed math linker unresolved externals and struct compiler errors, added WS_CLIPCHILDREN to eliminate native flicker, mapped F1 and H help across web and native with explicit labels, implemented full mouse click menu navigation and help toggling in web and native, and added startup welcome toast and non-blocking notification system in web).
 - KSnake: Usability and UI issues fixed (implemented missing save/resume game state, interactive keybind rebinding, match stats export CSV/JSON/Replay, non-blocking toast notifications replacing alert modals, sub-overlay ESC/Enter handling, and startup welcome toast in web; added crisp hFontSmall typography eliminating text clipping, enhanced menu layout with top record display, and added full ESC/P/S/Q pause/exit and F1 help navigation in native C).
 - KPaint: Usability and UI issues fixed (added modern dark Help modal dialog and non-blocking toast notifications in web, mapped F1 and tool shortcuts B/E/L/R/C/G/A/W/S across web and native, updated startup canvas text, window title, and Help button to explicitly show F1/H shortcut, and added startup welcome toast).
 - KZip: Usability and UI issues fixed (aligned native listbox with Consolas monospace font and column header, added empty state prompts and status messages to both web and native, updated Help button/dialog with explicit F1/H shortcuts, added non-blocking toast notifications and fallback local file loading in web, and added Enter/Esc shortcut support and WM_GETMINMAXINFO layout constraints in native).
@@ -185,7 +186,6 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KMedia: Usability and UI issues fixed (added WS_CLIPCHILDREN to native C window styles to prevent flickering, and applied text-rendering: optimizeLegibility to web CSS).
 - KNet: Usability and UI issues fixed (added WS_CLIPCHILDREN to native C window styles, added explicit F1 hotkey support and help labels to both versions, verified App.jsx bounds 960x720).
 - KSnake: Usability and UI issues fixed (added WS_CLIPCHILDREN to native C window styles to prevent flickering, mapped F1 to help overlay in both versions, updated visual instructions to mention F1, and verified 540x680 bounds in App.jsx).
-- KTetris: FAILED (Subagent timed out after 8 minutes).
 - KSpace: Usability and UI issues fixed (added WS_CLIPCHILDREN and F1 hotkey support to native, implemented F1 support in web, updated instructions to state 'PRESS [H] OR [F1] FOR HELP', verified bounds).
 - KType: Usability and UI issues fixed (canvas scaling relative to devicePixelRatio applied in web for crisp text, automatic toggleHelp() on load added for first-time users, native currentMode default swapped to Help screen, SetProcessDPIAware validated).
 - KSolitaire: Usability and UI issues fixed (added F1 hotkey to native and web, added WS_CLIPCHILDREN to native, fixed native compilation errors, updated explicit instructions for F1/H help, verified 920x800 bounds).
