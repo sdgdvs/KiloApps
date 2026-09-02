@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KWords
 - KReversi
 - KQuest
 - KSpace
@@ -145,7 +144,13 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSudoku
 - KGo
 - KTowers
+- KWords
+- KWizard
+- KMystery
+
 ## Completed Work Log
+
+- **KWords (Loop 7):** Implemented highly polished visual effects including procedural screen-shake driven by quadratic physics decay on word solves, secret discoveries, ice shatters, and victory bursts (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and flicker-free double-buffered BitBlt viewport offset in Native C Win32 GDI), multi-layered particle explosions featuring 4 distinct layers (incandescent core sparks with needle trails, expanding buoyant smoke puffs, heavy kinematic architectural ice and wood tile shards with gravity, drag, and floor bounce physics, and radiant golden celebration stars) upon word matches, thawing frozen tiles, radar/hint activations, and stage victories, dual-tier concentric ground shockwave ripple rings, ornate Art Deco golden corner filigree L-brackets and pulsating perimeter inlay shimmer on mahogany board frames, and delicate specular highlight bevel sheen across tile faces in both Web Canvas (kwords.html) and Native C Win32 GDI (KWords/main.c).
 
 - **KTowers (Loop 7):** Implemented highly polished visual effects including procedural screen-shake driven by quadratic physics decay on block landings, move errors, teleports, and victory scoring (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and flicker-free double-buffered BitBlt viewport offset in Native C Win32 GDI), multi-layered particle explosions featuring 4 distinct layers (incandescent core sparks with needle trails, expanding buoyant smoke puffs, heavy kinematic architectural concrete & glass shards with gravity, drag, and ground bounce physics, and radiant golden celebration stars) upon landings, teleports, and stage victory celebrations, dual-tier concentric ground shockwave ripple rings, ornate Art Deco golden corner filigree L-brackets and pulsating perimeter inlay shimmer on concrete launchpad pedestals, sweeping specular glass reflection sheen across skyscraper facades, and rotating rooftop searchlight beacon cones into the night sky in both Web Canvas (ktowers.html) and Native C Win32 GDI (KTowers/main.c).
 

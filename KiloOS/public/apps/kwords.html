@@ -55,6 +55,62 @@
     position: relative;
     padding: 10px;
     overflow: hidden;
+    will-change: transform;
+  }
+  .grid-container::before {
+    content: '';
+    position: absolute;
+    top: 6px; left: 6px;
+    width: 22px; height: 22px;
+    border-top: 3px solid #f59e0b;
+    border-left: 3px solid #f59e0b;
+    box-shadow: -1px -1px 6px rgba(245, 158, 11, 0.6);
+    pointer-events: none;
+    z-index: 12;
+  }
+  .grid-container::after {
+    content: '';
+    position: absolute;
+    bottom: 6px; right: 6px;
+    width: 22px; height: 22px;
+    border-bottom: 3px solid #f59e0b;
+    border-right: 3px solid #f59e0b;
+    box-shadow: 1px 1px 6px rgba(245, 158, 11, 0.6);
+    pointer-events: none;
+    z-index: 12;
+  }
+  .filigree-tr {
+    position: absolute;
+    top: 6px; right: 6px;
+    width: 22px; height: 22px;
+    border-top: 3px solid #f59e0b;
+    border-right: 3px solid #f59e0b;
+    box-shadow: 1px -1px 6px rgba(245, 158, 11, 0.6);
+    pointer-events: none;
+    z-index: 12;
+  }
+  .filigree-bl {
+    position: absolute;
+    bottom: 6px; left: 6px;
+    width: 22px; height: 22px;
+    border-bottom: 3px solid #f59e0b;
+    border-left: 3px solid #f59e0b;
+    box-shadow: -1px 1px 6px rgba(245, 158, 11, 0.6);
+    pointer-events: none;
+    z-index: 12;
+  }
+  .perimeter-shimmer {
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, transparent, rgba(250, 204, 21, 0.85), transparent);
+    background-size: 200% 100%;
+    animation: goldShimmer 3s linear infinite;
+    pointer-events: none;
+    z-index: 13;
+  }
+  @keyframes goldShimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
   }
   .words-list {
     flex: 1;
@@ -100,6 +156,14 @@
     transition: transform 0.1s ease, background 0.2s ease, box-shadow 0.2s ease;
     transform-style: preserve-3d;
   }
+  .cell::before {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px; right: 45%; height: 2px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 2px;
+    pointer-events: none;
+  }
   .cell:hover {
     transform: translateY(-2px) scale(1.03);
     box-shadow: 0 10px 15px rgba(0,0,0,0.6), inset 1px 1px 2px rgba(255,255,255,0.9), 0 5px 0 #1a365d;
@@ -117,22 +181,6 @@
     0% { filter: brightness(1) drop-shadow(0 0 0px #fff); }
     50% { filter: brightness(1.5) drop-shadow(0 0 10px #4fd1c5); transform: translateY(-3px) scale(1.05); }
     100% { filter: brightness(1) drop-shadow(0 0 0px #fff); }
-  }
-  @keyframes screenShake {
-    0% { transform: translate(2px, 1px) rotate(0deg); }
-    10% { transform: translate(-1px, -2px) rotate(-1deg); }
-    20% { transform: translate(-3px, 0px) rotate(1deg); }
-    30% { transform: translate(0px, 2px) rotate(0deg); }
-    40% { transform: translate(1px, -1px) rotate(1deg); }
-    50% { transform: translate(-1px, 2px) rotate(-1deg); }
-    60% { transform: translate(-3px, 1px) rotate(0deg); }
-    70% { transform: translate(2px, 1px) rotate(-1deg); }
-    80% { transform: translate(-1px, -1px) rotate(1deg); }
-    90% { transform: translate(2px, 2px) rotate(0deg); }
-    100% { transform: translate(0px, 0px) rotate(0deg); }
-  }
-  .shake {
-    animation: screenShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
   }
   .tile-char {
     font-family: 'Georgia', 'Times New Roman', serif;
@@ -412,6 +460,9 @@
   </div>
   <div class="container">
     <div class="grid-container">
+      <div class="perimeter-shimmer"></div>
+      <div class="filigree-tr"></div>
+      <div class="filigree-bl"></div>
       <canvas id="confetti-canvas"></canvas>
       <div id="secret-banner">SECRET WORD FOUND! (+500 PTS)</div>
       <div class="grid" id="grid"></div>
@@ -1381,18 +1432,158 @@
     }
 
     let activeParticles = [];
+    let activeShockwaves = [];
     let particleLoopActive = false;
 
-    function triggerScreenShake() {
+    // Procedural Screen-Shake driven by quadratic physics decay & rotational damping
+    let shakeIntensity = 0;
+    let shakeDuration = 0;
+    let shakeTimer = 0;
+    let shakeAnimId = null;
+
+    function triggerScreenShake(intensity = 12, duration = 20) {
+        if (intensity > shakeIntensity || shakeTimer <= 0) {
+            shakeIntensity = intensity;
+            shakeDuration = duration > 0 ? duration : 20;
+            shakeTimer = shakeDuration;
+        }
+        if (!shakeAnimId) {
+            shakeAnimId = requestAnimationFrame(updateScreenShake);
+        }
+    }
+
+    function updateScreenShake() {
         const container = document.querySelector('.grid-container');
-        container.classList.remove('shake');
-        void container.offsetWidth; // trigger reflow
-        container.classList.add('shake');
+        if (shakeTimer > 0) {
+            const t = shakeTimer / shakeDuration;
+            const decay = t * t; // Quadratic physics decay
+            const amp = shakeIntensity * decay;
+            const tick = performance.now() * 0.05;
+            const ox = (Math.sin(tick * 1.7) * 0.7 + Math.cos(tick * 2.3) * 0.3) * amp;
+            const oy = (Math.cos(tick * 1.9) * 0.8 + Math.sin(tick * 2.5) * 0.2) * amp;
+            const rot = Math.sin(tick * 2.1) * (amp * 0.12);
+            if (container) {
+                container.style.transform = `translate(${ox.toFixed(2)}px, ${oy.toFixed(2)}px) rotate(${rot.toFixed(2)}deg)`;
+            }
+            shakeTimer--;
+            shakeAnimId = requestAnimationFrame(updateScreenShake);
+        } else {
+            if (container) {
+                container.style.transform = '';
+            }
+            shakeIntensity = 0;
+            shakeAnimId = null;
+        }
+    }
+
+    function spawnShockwave(x, y, maxRadius = 70, color = '#f59e0b') {
+        activeShockwaves.push({
+            x: x, y: y,
+            radius: 4,
+            maxRadius: maxRadius,
+            speed: (maxRadius - 4) / 18,
+            color: color,
+            life: 18,
+            maxLife: 18
+        });
+        if (!particleLoopActive) {
+            particleLoopActive = true;
+            requestAnimationFrame(particleLoop);
+        }
+    }
+
+    // 4-Layer Particle System: Core Sparks, Smoke Puffs, Heavy Debris, Celebration Stars
+    function spawnExplosionLayers(cx, cy, baseCol = '#f59e0b', intensity = 6) {
+        const canvas = document.getElementById('confetti-canvas');
+        if (canvas.width === 0 || canvas.width === 300) {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+
+        // 1. Incandescent Core Sparks (fast needle trails)
+        const sparkCount = intensity * 4;
+        for (let i = 0; i < sparkCount; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 4.0 + Math.random() * 8.0;
+            activeParticles.push({
+                x: cx, y: cy,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                color: Math.random() > 0.4 ? '#ffffff' : baseCol,
+                size: 2,
+                life: 1.0,
+                decay: 0.04 + Math.random() * 0.03,
+                layer: 'core_spark'
+            });
+        }
+
+        // 2. Expanding Buoyant Smoke Puffs
+        const smokeCount = intensity * 2;
+        for (let i = 0; i < smokeCount; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 0.8 + Math.random() * 2.5;
+            activeParticles.push({
+                x: cx + (Math.random() - 0.5) * 16,
+                y: cy + (Math.random() - 0.5) * 16,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 0.8,
+                color: 'rgba(148, 163, 184, 0.4)',
+                size: 5 + Math.random() * 4,
+                life: 1.0,
+                decay: 0.02 + Math.random() * 0.015,
+                layer: 'smoke_puff'
+            });
+        }
+
+        // 3. Heavy Kinematic Architectural Debris (ice & wood tile shards with bounce)
+        const debrisCount = intensity * 3;
+        const dColors = [baseCol, '#b3f2ff', '#e2e8f0', '#f6ad55', '#ffffff'];
+        for (let i = 0; i < debrisCount; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 3.0 + Math.random() * 6.0;
+            activeParticles.push({
+                x: cx, y: cy,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 2.0,
+                color: dColors[Math.floor(Math.random() * dColors.length)],
+                size: 3 + Math.random() * 4,
+                angle: Math.random() * Math.PI * 2,
+                rotSpeed: (Math.random() - 0.5) * 0.25,
+                life: 1.0,
+                decay: 0.018 + Math.random() * 0.015,
+                layer: 'heavy_debris'
+            });
+        }
+
+        // 4. Radiant Golden Celebration Stars
+        const starCount = intensity * 2;
+        const sColors = ['#fef08a', '#facc15', '#fbbf24', '#ffffff'];
+        for (let i = 0; i < starCount; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 1.5 + Math.random() * 3.5;
+            activeParticles.push({
+                x: cx, y: cy,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                color: sColors[Math.floor(Math.random() * sColors.length)],
+                size: 3 + Math.random() * 3,
+                angle: Math.random() * Math.PI,
+                rotSpeed: 0.08,
+                life: 1.0,
+                decay: 0.015 + Math.random() * 0.01,
+                layer: 'celebration_star'
+            });
+        }
+
+        if (!particleLoopActive) {
+            particleLoopActive = true;
+            requestAnimationFrame(particleLoop);
+        }
     }
 
     function spawnParticles(x, y, type) {
         const canvas = document.getElementById('confetti-canvas');
-        if (canvas.width === 0 || canvas.width === 300) { // default width is 300
+        if (canvas.width === 0 || canvas.width === 300) {
             canvas.width = canvas.parentElement.clientWidth;
             canvas.height = canvas.parentElement.clientHeight;
         }
@@ -1406,59 +1597,21 @@
                     vy: -(Math.random() * 0.5 + 0.2),
                     color: 'rgba(255, 230, 180, 0.6)',
                     size: Math.random() * 2.5 + 0.5,
-                    life: 1.0, decay: 0, type: 'dust'
+                    life: 1.0, decay: 0, layer: 'dust'
                 });
             }
         } else if (type === 'ice') {
-            triggerScreenShake();
-            for(let i=0; i<30; i++) {
-                activeParticles.push({
-                    x: x, y: y,
-                    vx: (Math.random() - 0.5) * 12, vy: (Math.random() - 0.5) * 12 - 4,
-                    color: Math.random() > 0.5 ? '#b3f2ff' : '#ffffff',
-                    size: Math.random() * 6 + 2,
-                    life: 1.0, decay: Math.random() * 0.03 + 0.02, type: 'ice'
-                });
-            }
-            for(let i=0; i<15; i++) {
-                activeParticles.push({
-                    x: x, y: y,
-                    vx: (Math.random() - 0.5) * 5, vy: (Math.random() - 0.5) * 5 - 1,
-                    color: 'rgba(200, 255, 255, 0.7)',
-                    size: Math.random() * 8 + 4,
-                    life: 1.0, decay: Math.random() * 0.05 + 0.04, type: 'dust'
-                });
-            }
+            triggerScreenShake(8, 15);
+            spawnShockwave(x, y, 65, '#b3f2ff');
+            spawnExplosionLayers(x, y, '#b3f2ff', 6);
         } else if (type === 'spark') {
-            for(let i=0; i<40; i++) {
-                activeParticles.push({
-                    x: x, y: y,
-                    vx: (Math.random() - 0.5) * 15, vy: (Math.random() - 0.5) * 15,
-                    color: ['#ffd700', '#ff8c00', '#ff00ff', '#ffffff'][Math.floor(Math.random() * 4)],
-                    size: Math.random() * 5 + 2,
-                    life: 1.0, decay: Math.random() * 0.03 + 0.02, type: 'spark'
-                });
-            }
+            triggerScreenShake(6, 12);
+            spawnShockwave(x, y, 50, '#ffd700');
+            spawnExplosionLayers(x, y, '#ffd700', 5);
         } else if (type === 'explosion') {
-            triggerScreenShake();
-            for(let i=0; i<50; i++) {
-                activeParticles.push({
-                    x: x, y: y,
-                    vx: (Math.random() - 0.5) * 20, vy: (Math.random() - 0.5) * 20,
-                    color: ['#ff5500', '#ffaa00', '#ffff00', '#ffffff'][Math.floor(Math.random() * 4)],
-                    size: Math.random() * 6 + 2,
-                    life: 1.0, decay: Math.random() * 0.04 + 0.02, type: 'spark'
-                });
-            }
-            for(let i=0; i<20; i++) {
-                activeParticles.push({
-                    x: x, y: y,
-                    vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8,
-                    color: 'rgba(150, 150, 150, 0.5)',
-                    size: Math.random() * 12 + 6,
-                    life: 1.0, decay: Math.random() * 0.02 + 0.01, type: 'dust'
-                });
-            }
+            triggerScreenShake(14, 22);
+            spawnShockwave(x, y, 85, '#f6ad55');
+            spawnExplosionLayers(x, y, '#f6ad55', 7);
         } else if (type === 'confetti') {
             for(let i=0; i<60; i++) {
                 activeParticles.push({
@@ -1468,7 +1621,7 @@
                     vy: Math.random() * 3 + 2,
                     color: ['#ffe066', '#68d391', '#63b3ed', '#f6ad55', '#fc8181', '#b794f4'][Math.floor(Math.random() * 6)],
                     size: Math.random() * 6 + 4,
-                    life: 1.0, decay: 0, type: 'confetti'
+                    life: 1.0, decay: 0, layer: 'confetti'
                 });
             }
         }
@@ -1484,42 +1637,129 @@
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
+        // Draw Shockwave Ripples
+        for (let i = activeShockwaves.length - 1; i >= 0; i--) {
+            const sw = activeShockwaves[i];
+            sw.radius += sw.speed;
+            sw.life--;
+            const alpha = Math.max(0, sw.life / sw.maxLife);
+            ctx.save();
+            ctx.strokeStyle = sw.color;
+            ctx.lineWidth = sw.life > 8 ? 3 : 1.5;
+            ctx.globalAlpha = alpha * 0.85;
+            ctx.beginPath();
+            ctx.ellipse(sw.x, sw.y, sw.radius, sw.radius * 0.6, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            if (sw.radius > 16) {
+                ctx.globalAlpha = alpha * 0.4;
+                ctx.beginPath();
+                ctx.ellipse(sw.x, sw.y, sw.radius * 0.65, sw.radius * 0.65 * 0.6, 0, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            ctx.restore();
+            if (sw.life <= 0) activeShockwaves.splice(i, 1);
+        }
+
+        // Draw Particles
         for (let i = activeParticles.length - 1; i >= 0; i--) {
             let p = activeParticles[i];
             p.x += p.vx;
             p.y += p.vy;
             
-            if (p.type === 'confetti') {
+            if (p.layer === 'confetti') {
                 if (p.y > canvas.height) p.y = -10;
+                ctx.save();
+                ctx.fillStyle = p.color;
                 ctx.globalAlpha = 1.0;
-            } else if (p.type === 'dust') {
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+                ctx.restore();
+            } else if (p.layer === 'dust') {
                 p.x += Math.sin(p.y * 0.02) * 0.2;
                 if (p.y < -10) p.y = canvas.height + 10;
                 if (p.x < -10) p.x = canvas.width + 10;
                 if (p.x > canvas.width + 10) p.x = -10;
+                ctx.save();
+                ctx.fillStyle = p.color;
                 ctx.globalAlpha = 0.6;
-            } else {
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+                ctx.restore();
+            } else if (p.layer === 'core_spark') {
+                p.vx *= 0.92;
+                p.vy *= 0.92;
                 p.life -= p.decay;
-                p.vy += 0.2; // gravity
-                ctx.globalAlpha = p.life;
-            }
-            
-            ctx.fillStyle = p.color;
-            if (p.type === 'spark') {
+                ctx.save();
+                ctx.strokeStyle = p.color;
+                ctx.lineWidth = 2;
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.x - p.vx * 2.2, p.y - p.vy * 2.2);
+                ctx.stroke();
+                ctx.restore();
+            } else if (p.layer === 'smoke_puff') {
+                p.size += 0.35;
+                p.vy -= 0.03;
+                p.vx *= 0.96;
+                p.life -= p.decay;
+                ctx.save();
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = Math.max(0, p.life * 0.4);
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                 ctx.fill();
-            } else {
-                ctx.fillRect(p.x, p.y, p.size, p.size);
+                ctx.restore();
+            } else if (p.layer === 'heavy_debris') {
+                p.vy += 0.30;
+                p.vx *= 0.98;
+                p.angle += p.rotSpeed;
+                if (p.y >= canvas.height - 20) {
+                    p.y = canvas.height - 20;
+                    p.vy = -p.vy * 0.45;
+                    p.vx *= 0.7;
+                }
+                p.life -= p.decay;
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.angle);
+                ctx.fillStyle = p.color;
+                ctx.strokeStyle = '#1e293b';
+                ctx.lineWidth = 1;
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.beginPath();
+                ctx.moveTo(0, -p.size);
+                ctx.lineTo(p.size, 0);
+                ctx.lineTo(0, p.size);
+                ctx.lineTo(-p.size, 0);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+            } else if (p.layer === 'celebration_star') {
+                p.vx += Math.sin(performance.now() * 0.01 + i) * 0.08;
+                p.vy += 0.02;
+                p.angle += p.rotSpeed;
+                p.life -= p.decay;
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.angle);
+                ctx.strokeStyle = p.color;
+                ctx.lineWidth = 1.5;
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.beginPath();
+                ctx.moveTo(-p.size, 0); ctx.lineTo(p.size, 0);
+                ctx.moveTo(0, -p.size); ctx.lineTo(0, p.size);
+                ctx.stroke();
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(-1, -1, 2, 2);
+                ctx.restore();
             }
             
             if (p.life <= 0) {
                 activeParticles.splice(i, 1);
             }
         }
-        ctx.globalAlpha = 1.0;
         
-        if (activeParticles.length > 0) {
+        if (activeParticles.length > 0 || activeShockwaves.length > 0) {
             requestAnimationFrame(particleLoop);
         } else {
             particleLoopActive = false;
