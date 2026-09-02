@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KMaze
 - KColony
 - KFortress
 - KColosseum
@@ -148,8 +147,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KTetris
 - KCyber
 - KBreakout
+- KMaze
 
 ## Completed Work Log
+
+- **KMaze (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational camera damping on minotaur trampling, trap triggers, boss encounters, and wall destructions (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and trigonometric FastSin/FastCos physics decay with camera ray plane tilt in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails, expanding buoyant plasma smoke puffs with negative gravity and drag deceleration, heavy kinematic stone & crystal shards with tumbling rotation physics and floor bounce, and radiant golden/cyan celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer dispersion halo rendered on both 3D raycasting surfaces and 2D viewport overlays, ornate cybernetic / dungeon arcade HUD corner reticle L-brackets with tech/relic notches and glowing status diodes, a pulsating energy perimeter inlay border with a traveling specular glint along the 3D maze frame, sculpted equipment highlights with diagonal specular sheen sweeps across the pickaxe blade and compass brass bezel, and dynamic trailing speed dust motes and atmospheric floating dungeon embers in both Web Canvas (kmaze.html) and Native C Win32 GDI (KMaze/main.c).
 
 - **KBreakout (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on brick destructions, explosive cascade chain reactions, laser prism refractions, quantum resonance shocks, paddle power hits, boss impacts, ball losses, and stage completions (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and trigonometric FastSin/FastCos physics decay with double-buffered viewport rendering in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails, expanding buoyant plasma smoke puffs with negative gravity and drag deceleration, heavy kinematic debris & glass/brick shards with tumbling rotation physics and floor bounce, and radiant golden/cyan celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer dispersion halo, ornate cybernetic arcade HUD corner reticle L-brackets with tech notches and glowing status diodes, a pulsating energy perimeter inlay border with a traveling specular glint along the breakout playfield frame, sculpted bricks with diagonal specular sheen sweep highlights traversing block bevels, sculpted metallic cyber paddle with underside dual ion thruster nozzles and animated flickering exhaust flame motes, and dynamic trailing speed dust motes in both Web Canvas (kbreakout.html) and Native C Win32 GDI (KBreakout/main.c).
 

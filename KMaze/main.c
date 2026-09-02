@@ -305,7 +305,7 @@ int isCrouching = 0;
 
 int muzzleFlashTimer = 0;
 int recoilOffset = 0;
-typedef struct { float x, y, radius; int life; } Shockwave;
+typedef struct { float x, y, radius, outerRadius; int life; } Shockwave;
 Shockwave shockwaves[10];
 int shockwaveCount = 0;
 
@@ -313,7 +313,8 @@ void AddShockwave(float x, float y) {
     if (shockwaveCount < 10) {
         shockwaves[shockwaveCount].x = x;
         shockwaves[shockwaveCount].y = y;
-        shockwaves[shockwaveCount].radius = 0;
+        shockwaves[shockwaveCount].radius = 0.1f;
+        shockwaves[shockwaveCount].outerRadius = 0.25f;
         shockwaves[shockwaveCount].life = 20;
         shockwaveCount++;
     }
@@ -321,7 +322,8 @@ void AddShockwave(float x, float y) {
 void UpdateShockwaves() {
     int write = 0;
     for (int i = 0; i < shockwaveCount; i++) {
-        shockwaves[i].radius += 0.3f;
+        shockwaves[i].radius += 0.35f;
+        shockwaves[i].outerRadius += 0.55f;
         shockwaves[i].life--;
         if (shockwaves[i].life > 0) {
             shockwaves[write++] = shockwaves[i];
@@ -331,9 +333,13 @@ void UpdateShockwaves() {
 }
 
 int screenShakeTimer = 0;
+int screenShakeMaxTimer = 0;
 float screenShakeIntensity = 0.0f;
 void AddScreenShake(int duration, float intensity) {
-    if (screenShakeTimer < duration) screenShakeTimer = duration;
+    if (screenShakeTimer < duration) {
+        screenShakeTimer = duration;
+        screenShakeMaxTimer = duration;
+    }
     if (screenShakeIntensity < intensity) screenShakeIntensity = intensity;
 }
 
@@ -358,29 +364,102 @@ int replayCurFrame = 0;
 DWORD textures[50][256];
 DWORD animFrameCount = 0;
 
-// Particles
-#define MAX_PARTICLES 256
+// Multi-Layered Kinematic Particles (4 Layers)
+// Layer 0: Incandescent core needle sparks
+// Layer 1: Expanding buoyant plasma/smoke puffs
+// Layer 2: Heavy kinematic stone & crystal shards with gravity and bounce
+// Layer 3: Radiant celebration energy stars
+#define MAX_PARTICLES 384
 typedef struct {
     float x, y;
     float vx, vy;
     int life, maxLife;
     COLORREF color;
+    int layer;
+    float rot, vrot;
+    float size;
+    int polyType;
 } Particle;
 Particle particles[MAX_PARTICLES];
 int particleCount = 0;
+
+// Ambient atmospheric dungeon motes
+#define MAX_MOTES 28
+typedef struct {
+    float x, y;
+    float vx, vy;
+    float size;
+    float phase;
+    int isGold;
+} AmbientMote;
+AmbientMote ambientMotes[MAX_MOTES];
+int motesInitialized = 0;
+
+void InitAmbientMotes() {
+    for (int i = 0; i < MAX_MOTES; i++) {
+        ambientMotes[i].x = (float)(rand() % 320);
+        ambientMotes[i].y = (float)(rand() % 240);
+        ambientMotes[i].vx = ((rand() % 100) / 100.0f - 0.5f) * 0.35f;
+        ambientMotes[i].vy = -0.15f - ((rand() % 100) / 100.0f) * 0.25f;
+        ambientMotes[i].size = 1.0f + ((rand() % 100) / 100.0f) * 1.5f;
+        ambientMotes[i].phase = ((rand() % 628) / 100.0f);
+        ambientMotes[i].isGold = (rand() % 100 > 45) ? 1 : 0;
+    }
+    motesInitialized = 1;
+}
 
 void AddParticles(float x, float y, COLORREF color, int count) {
     for (int i = 0; i < count; i++) {
         if (particleCount < MAX_PARTICLES) {
             float angle = (float)(rand() % 628) / 100.0f;
-            float spd = 1.0f + (float)(rand() % 400) / 100.0f;
-            particles[particleCount].x = x + ((rand() % 20) - 10);
-            particles[particleCount].y = y + ((rand() % 20) - 10);
-            particles[particleCount].vx = (float)cos(angle) * spd;
-            particles[particleCount].vy = (float)sin(angle) * spd;
-            particles[particleCount].life = 20 + rand() % 20;
-            particles[particleCount].maxLife = particles[particleCount].life;
-            particles[particleCount].color = color;
+            int roll = rand() % 100;
+            particles[particleCount].x = x + ((rand() % 16) - 8);
+            particles[particleCount].y = y + ((rand() % 16) - 8);
+            particles[particleCount].rot = (float)(rand() % 628) / 100.0f;
+            particles[particleCount].vrot = ((rand() % 100) / 100.0f - 0.5f) * 0.35f;
+            particles[particleCount].polyType = rand() % 3;
+
+            if (roll < 40) {
+                // Layer 0: Incandescent needle sparks
+                float spd = 3.5f + (float)(rand() % 500) / 100.0f;
+                particles[particleCount].layer = 0;
+                particles[particleCount].vx = (float)cos(angle) * spd;
+                particles[particleCount].vy = (float)sin(angle) * spd;
+                particles[particleCount].life = 12 + rand() % 14;
+                particles[particleCount].maxLife = particles[particleCount].life;
+                particles[particleCount].size = 1.5f;
+                particles[particleCount].color = (rand() % 100 > 40) ? RGB(255, 255, 255) : color;
+            } else if (roll < 65) {
+                // Layer 1: Expanding buoyant plasma/smoke puffs
+                float spd = 0.6f + (float)(rand() % 200) / 100.0f;
+                particles[particleCount].layer = 1;
+                particles[particleCount].vx = (float)cos(angle) * spd;
+                particles[particleCount].vy = (float)sin(angle) * spd - 0.8f;
+                particles[particleCount].life = 25 + rand() % 20;
+                particles[particleCount].maxLife = particles[particleCount].life;
+                particles[particleCount].size = 3.5f + (float)(rand() % 200) / 100.0f;
+                particles[particleCount].color = color;
+            } else if (roll < 85) {
+                // Layer 2: Heavy kinematic debris & crystal/stone shards
+                float spd = 1.8f + (float)(rand() % 350) / 100.0f;
+                particles[particleCount].layer = 2;
+                particles[particleCount].vx = (float)cos(angle) * spd;
+                particles[particleCount].vy = (float)sin(angle) * spd - 1.2f;
+                particles[particleCount].life = 35 + rand() % 25;
+                particles[particleCount].maxLife = particles[particleCount].life;
+                particles[particleCount].size = 2.5f + (float)(rand() % 250) / 100.0f;
+                particles[particleCount].color = color;
+            } else {
+                // Layer 3: Radiant celebration energy stars
+                float spd = 1.0f + (float)(rand() % 250) / 100.0f;
+                particles[particleCount].layer = 3;
+                particles[particleCount].vx = (float)cos(angle) * spd;
+                particles[particleCount].vy = (float)sin(angle) * spd;
+                particles[particleCount].life = 28 + rand() % 22;
+                particles[particleCount].maxLife = particles[particleCount].life;
+                particles[particleCount].size = 4.0f + (float)(rand() % 200) / 100.0f;
+                particles[particleCount].color = color;
+            }
             particleCount++;
         }
     }
@@ -389,6 +468,26 @@ void AddParticles(float x, float y, COLORREF color, int count) {
 void UpdateParticles() {
     int write = 0;
     for (int i = 0; i < particleCount; i++) {
+        if (particles[i].layer == 0) {
+            particles[i].vx *= 0.94f;
+            particles[i].vy *= 0.94f;
+        } else if (particles[i].layer == 1) {
+            particles[i].vy -= 0.06f;
+            particles[i].vx *= 0.96f;
+            particles[i].size += 0.12f;
+        } else if (particles[i].layer == 2) {
+            particles[i].vy += 0.16f;
+            particles[i].vx *= 0.97f;
+            particles[i].rot += particles[i].vrot;
+            if (particles[i].y >= 235.0f && particles[i].vy > 0.0f) {
+                particles[i].y = 235.0f;
+                particles[i].vy = -particles[i].vy * 0.45f;
+                particles[i].vrot *= 0.6f;
+            }
+        } else if (particles[i].layer == 3) {
+            particles[i].vx *= 0.95f;
+            particles[i].vy *= 0.95f;
+        }
         particles[i].x += particles[i].vx;
         particles[i].y += particles[i].vy;
         particles[i].life--;
@@ -397,6 +496,15 @@ void UpdateParticles() {
         }
     }
     particleCount = write;
+
+    if (!motesInitialized) InitAmbientMotes();
+    for (int i = 0; i < MAX_MOTES; i++) {
+        ambientMotes[i].x += ambientMotes[i].vx + (float)sin(animFrameCount * 0.05f + ambientMotes[i].phase) * 0.2f;
+        ambientMotes[i].y += ambientMotes[i].vy;
+        if (ambientMotes[i].y < 0.0f) { ambientMotes[i].y = 240.0f; ambientMotes[i].x = (float)(rand() % 320); }
+        if (ambientMotes[i].x < 0.0f) ambientMotes[i].x = 320.0f;
+        if (ambientMotes[i].x > 320.0f) ambientMotes[i].x = 0.0f;
+    }
 }
 
 // Procedural 16x16 Texture Generator
@@ -1285,7 +1393,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (damageFlinchTimer > 0) damageFlinchTimer--;
             if (screenShakeTimer > 0) {
                 screenShakeTimer--;
-                if (screenShakeTimer == 0) screenShakeIntensity = 0.0f;
+                if (screenShakeTimer == 0) {
+                    screenShakeIntensity = 0.0f;
+                    screenShakeMaxTimer = 0;
+                }
             }
             if (msgTimer > 0) msgTimer--;
             
@@ -1866,11 +1977,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     drawPlaneY -= skew * drawDX;
                 }
                 if (screenShakeTimer > 0) {
-                    float shakeX = ((rand() % 100) / 100.0f - 0.5f) * screenShakeIntensity;
-                    float shakeY = ((rand() % 100) / 100.0f - 0.5f) * screenShakeIntensity;
-                    drawPlaneX += shakeX;
-                    drawPlaneY += shakeY;
-                    drawDX += shakeX * 0.5f;
+                    float p = (screenShakeMaxTimer > 0) ? ((float)screenShakeTimer / (float)screenShakeMaxTimer) : ((float)screenShakeTimer / 30.0f);
+                    float mag = screenShakeIntensity * (p * p);
+                    float oscSin = (float)sin(animFrameCount * 2.2f) * mag;
+                    float oscCos = (float)cos(animFrameCount * 2.7f) * mag;
+                    float tilt = (float)sin(animFrameCount * 1.5f) * mag * 0.18f;
+                    drawPlaneX += tilt * drawDY + oscSin * 0.35f;
+                    drawPlaneY += -tilt * drawDX + oscCos * 0.35f;
+                    drawDX += oscSin * 0.22f;
+                    drawDY += oscCos * 0.22f;
                 }
 
                 // 1. Ceiling & Floor Casting with Dynamic Multi-Source Point Lighting
@@ -1945,8 +2060,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                         float swDist = 0.0f;
                         for (int i = 0; i < shockwaveCount; i++) {
-                            float d = (float)fabs(sqrt((floorX - shockwaves[i].x)*(floorX - shockwaves[i].x) + (floorY - shockwaves[i].y)*(floorY - shockwaves[i].y)) - shockwaves[i].radius);
-                            if (d < 0.5f) { swDist += (0.5f - d) * (shockwaves[i].life / 20.0f); }
+                            float dist = (float)sqrt((floorX - shockwaves[i].x)*(floorX - shockwaves[i].x) + (floorY - shockwaves[i].y)*(floorY - shockwaves[i].y));
+                            float dInner = (float)fabs(dist - shockwaves[i].radius);
+                            if (dInner < 0.45f) { swDist += (0.45f - dInner) * (shockwaves[i].life / 20.0f) * 1.5f; }
+                            float dOuter = (float)fabs(dist - shockwaves[i].outerRadius);
+                            if (dOuter < 0.65f) { swDist += (0.65f - dOuter) * (shockwaves[i].life / 20.0f) * 0.75f; }
                         }
 
                         floorX += floorStepX;
@@ -2088,8 +2206,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                     float swDist = 0.0f;
                     for (int i = 0; i < shockwaveCount; i++) {
-                        float d = (float)fabs(sqrt((actualWX - shockwaves[i].x)*(actualWX - shockwaves[i].x) + (actualWY - shockwaves[i].y)*(actualWY - shockwaves[i].y)) - shockwaves[i].radius);
-                        if (d < 0.5f) { swDist += (0.5f - d) * (shockwaves[i].life / 20.0f); }
+                        float dist = (float)sqrt((actualWX - shockwaves[i].x)*(actualWX - shockwaves[i].x) + (actualWY - shockwaves[i].y)*(actualWY - shockwaves[i].y));
+                        float dInner = (float)fabs(dist - shockwaves[i].radius);
+                        if (dInner < 0.45f) { swDist += (0.45f - dInner) * (shockwaves[i].life / 20.0f) * 1.5f; }
+                        float dOuter = (float)fabs(dist - shockwaves[i].outerRadius);
+                        if (dOuter < 0.65f) { swDist += (0.65f - dOuter) * (shockwaves[i].life / 20.0f) * 0.75f; }
                     }
                     
                     for (int y = actualStart; y <= actualEnd; y++) {
@@ -2116,27 +2237,183 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
-            // Draw HUD equipment & GDI overlay elements on hdcMem
+            // 1. Ambient atmospheric motes on hdcMem
+            for (int i = 0; i < MAX_MOTES; i++) {
+                int mx = (int)ambientMotes[i].x;
+                int my = (int)ambientMotes[i].y;
+                if (mx >= 0 && mx < W && my >= 0 && my < H) {
+                    COLORREF mCol = ambientMotes[i].isGold ? RGB(255, 204, 68) : RGB(160, 224, 255);
+                    SetPixel(hdcMem, mx, my, mCol);
+                    if (ambientMotes[i].size > 1.8f && mx + 1 < W && my + 1 < H) {
+                        SetPixel(hdcMem, mx + 1, my, RGB(255, 255, 255));
+                        SetPixel(hdcMem, mx, my + 1, mCol);
+                    }
+                }
+            }
+
+            // 2. Dual-tier 2D concentric shockwave rings on hdcMem
+            for (int i = 0; i < shockwaveCount; i++) {
+                if (shockwaves[i].life > 0) {
+                    int rInner = (int)(shockwaves[i].radius * 24.0f);
+                    int rOuter = (int)(shockwaves[i].outerRadius * 24.0f);
+                    HPEN ringP1 = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+                    HPEN ringP2 = CreatePen(PS_SOLID, 2, RGB(0, 229, 255));
+                    HGDIOBJ oldPen = SelectObject(hdcMem, ringP1);
+                    HGDIOBJ oldBrush = SelectObject(hdcMem, GetStockObject(NULL_BRUSH));
+                    if (rInner > 0 && rInner < W) {
+                        Ellipse(hdcMem, W/2 - rInner, H/2 - rInner, W/2 + rInner, H/2 + rInner);
+                    }
+                    SelectObject(hdcMem, ringP2);
+                    if (rOuter > 0 && rOuter < W) {
+                        Ellipse(hdcMem, W/2 - rOuter, H/2 - rOuter, W/2 + rOuter, H/2 + rOuter);
+                    }
+                    SelectObject(hdcMem, oldPen);
+                    SelectObject(hdcMem, oldBrush);
+                    DeleteObject(ringP1);
+                    DeleteObject(ringP2);
+                }
+            }
+
+            // 3. Multi-Layered Kinematic Particles (4 Layers)
             for (int i = 0; i < particleCount; i++) {
                 int px = (int)particles[i].x;
                 int py = (int)particles[i].y;
                 if (px >= 0 && px < W && py >= 0 && py < H) {
-                    float ratio = (float)particles[i].life / particles[i].maxLife;
-                    int size = (int)(ratio * 6.0f) + 1;
-                    
-                    HBRUSH pb = CreateSolidBrush(particles[i].color);
-                    RECT pr = {px - size/2, py - size/2, px + size/2 + 1, py + size/2 + 1};
-                    FillRect(hdcMem, &pr, pb);
-                    DeleteObject(pb);
-                    
-                    if (size > 2) {
-                        HBRUSH pb2 = CreateSolidBrush(RGB(255, 255, 255));
-                        RECT pr2 = {px - size/4, py - size/4, px + size/4 + 1, py + size/4 + 1};
-                        FillRect(hdcMem, &pr2, pb2);
-                        DeleteObject(pb2);
+                    float ratio = (float)particles[i].life / (float)particles[i].maxLife;
+                    if (particles[i].layer == 0) {
+                        // Layer 0: Incandescent needle sparks with velocity trails
+                        HPEN sparkP = CreatePen(PS_SOLID, 1, particles[i].color);
+                        HGDIOBJ op = SelectObject(hdcMem, sparkP);
+                        MoveToEx(hdcMem, px, py, NULL);
+                        LineTo(hdcMem, px - (int)(particles[i].vx * 2.2f), py - (int)(particles[i].vy * 2.2f));
+                        SelectObject(hdcMem, op);
+                        DeleteObject(sparkP);
+                    } else if (particles[i].layer == 1) {
+                        // Layer 1: Expanding buoyant plasma/smoke puffs
+                        int sz = (int)(particles[i].size * (1.2f - ratio * 0.4f)) + 1;
+                        HBRUSH sb = CreateSolidBrush(particles[i].color);
+                        HPEN sp = CreatePen(PS_SOLID, 1, particles[i].color);
+                        HGDIOBJ ob = SelectObject(hdcMem, sb);
+                        HGDIOBJ op = SelectObject(hdcMem, sp);
+                        Ellipse(hdcMem, px - sz, py - sz, px + sz, py + sz);
+                        SelectObject(hdcMem, ob);
+                        SelectObject(hdcMem, op);
+                        DeleteObject(sb);
+                        DeleteObject(sp);
+                    } else if (particles[i].layer == 2) {
+                        // Layer 2: Heavy kinematic tumbling debris & stone/crystal shards
+                        int s = (int)particles[i].size;
+                        if (s < 2) s = 2;
+                        POINT pts[4];
+                        float a = particles[i].rot;
+                        float ca = (float)cos(a), sa = (float)sin(a);
+                        if (particles[i].polyType == 0) {
+                            pts[0].x = px + (int)(-sa * s); pts[0].y = py + (int)(ca * s);
+                            pts[1].x = px + (int)(ca * s * 0.86f + sa * s * 0.5f); pts[1].y = py + (int)(sa * s * 0.86f - ca * s * 0.5f);
+                            pts[2].x = px + (int)(-ca * s * 0.86f + sa * s * 0.5f); pts[2].y = py + (int)(-sa * s * 0.86f - ca * s * 0.5f);
+                            HBRUSH rb = CreateSolidBrush(particles[i].color);
+                            HPEN rp = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+                            HGDIOBJ ob = SelectObject(hdcMem, rb);
+                            HGDIOBJ op = SelectObject(hdcMem, rp);
+                            Polygon(hdcMem, pts, 3);
+                            SelectObject(hdcMem, ob); SelectObject(hdcMem, op);
+                            DeleteObject(rb); DeleteObject(rp);
+                        } else {
+                            pts[0].x = px + (int)(-sa * s); pts[0].y = py + (int)(ca * s);
+                            pts[1].x = px + (int)(ca * s * 0.7f); pts[1].y = py + (int)(sa * s * 0.7f);
+                            pts[2].x = px + (int)(sa * s); pts[2].y = py + (int)(-ca * s);
+                            pts[3].x = px + (int)(-ca * s * 0.7f); pts[3].y = py + (int)(-sa * s * 0.7f);
+                            HBRUSH rb = CreateSolidBrush(particles[i].color);
+                            HPEN rp = CreatePen(PS_SOLID, 1, particles[i].color);
+                            HGDIOBJ ob = SelectObject(hdcMem, rb);
+                            HGDIOBJ op = SelectObject(hdcMem, rp);
+                            Polygon(hdcMem, pts, 4);
+                            SelectObject(hdcMem, ob); SelectObject(hdcMem, op);
+                            DeleteObject(rb); DeleteObject(rp);
+                        }
+                    } else {
+                        // Layer 3: Radiant celebration energy stars
+                        int rad = (int)(particles[i].size * (0.7f + 0.4f * sin(animFrameCount * 0.3f + particles[i].life)));
+                        if (rad < 2) rad = 2;
+                        POINT pts[8];
+                        pts[0].x = px; pts[0].y = py - rad;
+                        pts[1].x = px + rad / 3; pts[1].y = py - rad / 3;
+                        pts[2].x = px + rad; pts[2].y = py;
+                        pts[3].x = px + rad / 3; pts[3].y = py + rad / 3;
+                        pts[4].x = px; pts[4].y = py + rad;
+                        pts[5].x = px - rad / 3; pts[5].y = py + rad / 3;
+                        pts[6].x = px - rad; pts[6].y = py;
+                        pts[7].x = px - rad / 3; pts[7].y = py - rad / 3;
+                        HBRUSH stb = CreateSolidBrush(particles[i].color);
+                        HPEN stp = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+                        HGDIOBJ ob = SelectObject(hdcMem, stb);
+                        HGDIOBJ op = SelectObject(hdcMem, stp);
+                        Polygon(hdcMem, pts, 8);
+                        SelectObject(hdcMem, ob); SelectObject(hdcMem, op);
+                        DeleteObject(stb); DeleteObject(stp);
                     }
                 }
             }
+
+            // 4. Perimeter Inlay Border & Traveling Specular Glint
+            HPEN borderP = CreatePen(PS_SOLID, 1, RGB(0, 80, 100));
+            HGDIOBJ oldBP = SelectObject(hdcMem, borderP);
+            HGDIOBJ oldBB = SelectObject(hdcMem, GetStockObject(NULL_BRUSH));
+            Rectangle(hdcMem, 3, 3, W - 3, H - 3);
+            SelectObject(hdcMem, oldBP);
+            SelectObject(hdcMem, oldBB);
+            DeleteObject(borderP);
+
+            // Traveling Specular Glint
+            int perim = 2 * (W - 6 + H - 6);
+            int glintDist = (animFrameCount * 4) % perim;
+            int gx = 3, gy = 3;
+            int wSide = W - 6, hSide = H - 6;
+            if (glintDist < wSide) { gx = 3 + glintDist; gy = 3; }
+            else if (glintDist < wSide + hSide) { gx = 3 + wSide; gy = 3 + (glintDist - wSide); }
+            else if (glintDist < 2 * wSide + hSide) { gx = 3 + wSide - (glintDist - wSide - hSide); gy = 3 + hSide; }
+            else { gx = 3; gy = 3 + hSide - (glintDist - 2 * wSide - hSide); }
+            
+            HBRUSH glintB = CreateSolidBrush(RGB(255, 255, 255));
+            HPEN glintP = CreatePen(PS_SOLID, 1, RGB(0, 229, 255));
+            SelectObject(hdcMem, glintB); SelectObject(hdcMem, glintP);
+            Ellipse(hdcMem, gx - 2, gy - 2, gx + 3, gy + 3);
+            DeleteObject(glintB); DeleteObject(glintP);
+
+            // Ornate Corner Reticle L-Brackets with Pulsating Runic Diodes
+            struct { int x, y, dx, dy; } corners[4] = {
+                { 10, 10, 1, 1 },
+                { W - 10, 10, -1, 1 },
+                { 10, H - 10, 1, -1 },
+                { W - 10, H - 10, -1, -1 }
+            };
+            HPEN bracketP = CreatePen(PS_SOLID, 2, RGB(0, 200, 230));
+            HPEN notchP = CreatePen(PS_SOLID, 1, RGB(180, 240, 255));
+            int dG = 160 + (int)(90.0f * sin(animFrameCount * 0.1f));
+            if (dG > 255) dG = 255; if (dG < 0) dG = 0;
+            HBRUSH diodeB = CreateSolidBrush(RGB(0, dG, 180));
+            HPEN diodeP = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+
+            for (int c = 0; c < 4; c++) {
+                SelectObject(hdcMem, bracketP);
+                MoveToEx(hdcMem, corners[c].x + corners[c].dx * 14, corners[c].y, NULL);
+                LineTo(hdcMem, corners[c].x, corners[c].y);
+                LineTo(hdcMem, corners[c].x, corners[c].y + corners[c].dy * 14);
+
+                SelectObject(hdcMem, notchP);
+                MoveToEx(hdcMem, corners[c].x + corners[c].dx * 7, corners[c].y - corners[c].dy * 2, NULL);
+                LineTo(hdcMem, corners[c].x + corners[c].dx * 7, corners[c].y + corners[c].dy * 3);
+                MoveToEx(hdcMem, corners[c].x - corners[c].dx * 2, corners[c].y + corners[c].dy * 7, NULL);
+                LineTo(hdcMem, corners[c].x + corners[c].dx * 3, corners[c].y + corners[c].dy * 7);
+
+                SelectObject(hdcMem, diodeB);
+                SelectObject(hdcMem, diodeP);
+                Ellipse(hdcMem, corners[c].x - 2, corners[c].y - 2, corners[c].x + 3, corners[c].y + 3);
+            }
+            DeleteObject(bracketP);
+            DeleteObject(notchP);
+            DeleteObject(diodeB);
+            DeleteObject(diodeP);
 
             static float bobTime = 0.0f;
             static float lastPX = 1.5f, lastPY = 1.5f;
@@ -2225,6 +2502,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SelectObject(hdcMem, headP);
                     MoveToEx(hdcMem, bx + 10, by - 5, NULL); LineTo(hdcMem, bx + 28, by + 12);
                     DeleteObject(handleP); DeleteObject(headP);
+
+                    // Specular sheen sweep highlight across pickaxe head
+                    float sheenT = (float)((animFrameCount * 2) % 20) / 20.0f;
+                    int sx = (bx + 10) + (int)(18.0f * sheenT);
+                    int sy = (by - 5) + (int)(17.0f * sheenT);
+                    HBRUSH sheenB = CreateSolidBrush(RGB(255, 255, 255));
+                    HPEN sheenP = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+                    SelectObject(hdcMem, sheenB); SelectObject(hdcMem, sheenP);
+                    Ellipse(hdcMem, sx - 1, sy - 1, sx + 2, sy + 2);
+                    DeleteObject(sheenB); DeleteObject(sheenP);
+
+                    // Trailing sparks when swinging
+                    if (abs(swing) > 2 && (rand() % 100 > 50) && particleCount < MAX_PARTICLES) {
+                        particles[particleCount].x = (float)(bx + 28 + (rand() % 6 - 3));
+                        particles[particleCount].y = (float)(by + 12 + (rand() % 6 - 3));
+                        particles[particleCount].vx = ((rand() % 100) / 100.0f - 0.5f) * 2.0f - 1.0f;
+                        particles[particleCount].vy = ((rand() % 100) / 100.0f - 0.5f) * 2.0f - 1.0f;
+                        particles[particleCount].layer = 0;
+                        particles[particleCount].life = 8;
+                        particles[particleCount].maxLife = 8;
+                        particles[particleCount].size = 1.5f;
+                        particles[particleCount].color = RGB(255, 215, 0);
+                        particleCount++;
+                    }
                 }
             }
 
