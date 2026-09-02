@@ -1037,6 +1037,85 @@
             border-color: var(--panel-border);
         }
 
+        /* Defense & Raider Security styling */
+        .def-overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .def-card {
+            background: var(--card-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 2px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            position: relative;
+        }
+
+        .def-card::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 5px; height: 5px;
+            border-top: 2px solid var(--border-corner);
+            border-left: 2px solid var(--border-corner);
+            pointer-events: none;
+        }
+
+        .def-card-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-bright);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dashed var(--panel-border);
+            padding-bottom: 4px;
+        }
+
+        .def-stat-val {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text-bright);
+            letter-spacing: 0.5px;
+        }
+
+        .def-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+
+        .raid-radar-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--danger-red);
+            box-shadow: inset 0 0 10px var(--danger-glow);
+            padding: 10px;
+            border-radius: 2px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .guard-roster-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 8px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 2px;
+            font-size: 11px;
+        }
+
         /* Modal styling */
         .modal-overlay {
             position: fixed;
@@ -1224,10 +1303,11 @@
 
     <!-- Navigation Tabs -->
     <div id="tab-bar">
-        <button class="tab-btn active" onclick="switchTab('facilities')">[1] FACILITIES & POWER</button>
-        <button class="tab-btn" onclick="switchTab('survivors')">[2] SURVIVOR ROSTER</button>
-        <button class="tab-btn" onclick="switchTab('expeditions')">[3] WASTELAND SCAVENGING</button>
-        <button class="tab-btn" onclick="switchTab('policies')">[4] OVERSEER DIRECTIVES</button>
+        <button class="tab-btn active" id="tab-btn-facilities" onclick="switchTab('facilities')">[1] FACILITIES & POWER</button>
+        <button class="tab-btn" id="tab-btn-survivors" onclick="switchTab('survivors')">[2] SURVIVOR ROSTER</button>
+        <button class="tab-btn" id="tab-btn-expeditions" onclick="switchTab('expeditions')">[3] WASTELAND SCAVENGING</button>
+        <button class="tab-btn" id="tab-btn-defense" onclick="switchTab('defense')">[4] BASE DEFENSE & SECURITY</button>
+        <button class="tab-btn" id="tab-btn-policies" onclick="switchTab('policies')">[5] OVERSEER DIRECTIVES</button>
     </div>
 
     <!-- Main Workspace -->
@@ -1386,6 +1466,125 @@
                     </div>
                 </div>
             </div>
+
+            <!-- BASE DEFENSE & SECURITY VIEW -->
+            <div id="view-defense" class="tab-content" style="display:none;">
+                <div class="panel-title">
+                    <span>Vault Defense Perimeter & Raider Defense Command</span>
+                    <span style="color: var(--text-dim); font-size:10px;">Total Rating: <strong id="lbl-total-def" style="color:var(--accent-green); font-size:12px;">35 pts</strong></span>
+                </div>
+
+                <!-- Threat Radar Banner -->
+                <div class="raid-radar-box">
+                    <div>
+                        <div style="font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px;">Surface Seismic & Motion Radar</div>
+                        <div style="font-size:13px; font-weight:bold; color:var(--danger-red); text-shadow:0 0 8px var(--danger-glow);" id="lbl-raid-radar-text">
+                            HOSTILE SCOUTS DETECTED // ETA: 3 DAYS
+                        </div>
+                        <div style="font-size:10px; color:var(--text-main); margin-top:2px;" id="lbl-raid-threat-desc">
+                            Expected Warband: Rustfang Marauders (Estimated Assault Power: 30-45)
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn-upgrade" onclick="testRaiderAssault()" style="color:var(--danger-red); border-color:var(--danger-red); font-weight:bold; padding:6px 12px;">
+                            SCRAMBLE GUARDS & TEST DEFENSES
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Defense Modules Grid -->
+                <div class="def-overview-grid">
+                    <!-- Module 1: Perimeter Barricades -->
+                    <div class="def-card">
+                        <div class="def-card-title">
+                            <span>PERIMETER BARRICADES</span>
+                            <span id="lbl-barricade-status" style="color:var(--accent-green);">100/100 HP</span>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-dim); margin-top:2px;">
+                            Reinforced steel scrap blast-walls and sandbag breastworks absorbing raider explosive charges.
+                        </div>
+                        <div class="meter-bar" style="margin:4px 0;">
+                            <div class="meter-fill" id="barricade-hp-fill" style="width:100%; background:var(--accent-green);"></div>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-main);">
+                            Defense Contribution: <strong id="lbl-barricade-contrib" style="color:var(--text-bright);">+20 pts</strong> (0.2x HP)
+                        </div>
+                        <div class="def-actions">
+                            <button class="btn-upgrade" onclick="repairBarricade()" id="btn-repair-barricade">
+                                REPAIR (+30 HP // 15 SCRAP)
+                            </button>
+                            <button class="btn-upgrade" onclick="reinforceBarricade()" id="btn-reinforce-barricade">
+                                REINFORCE (+25 MAX // 35 SCRAP)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Module 2: Automated Sentry Turrets -->
+                    <div class="def-card">
+                        <div class="def-card-title">
+                            <span>SENTRY TURRETS</span>
+                            <span id="lbl-turret-count-badge" style="color:var(--accent-amber);">1 MOUNTED</span>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-dim); margin-top:2px;">
+                            Auto-targeting 50-cal twin cannons mounted along outer perimeter catwalks. (Draws 3 kW/turret)
+                        </div>
+                        <div class="def-stat-val" id="lbl-turret-power">
+                            18 <span style="font-size:11px; color:var(--text-dim);">Defense Points</span>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-main);">
+                            Status: <strong id="lbl-turret-status" style="color:var(--accent-green);">ONLINE (3 kW)</strong> &bull; Overclock: <span id="lbl-turret-oc">STANDBY</span>
+                        </div>
+                        <div class="def-actions">
+                            <button class="btn-upgrade" onclick="buildTurret()" id="btn-build-turret">
+                                FABRICATE TURRET (+18 DEF // 45 SCRAP)
+                            </button>
+                            <button class="btn-upgrade" onclick="overclockTurrets()" id="btn-oc-turret">
+                                OVERCLOCK SENSORS (+10 DEF // 20 SCRAP)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Module 3: Survivor Combat Readiness -->
+                    <div class="def-card">
+                        <div class="def-card-title">
+                            <span>COMBAT READINESS & DRILLS</span>
+                            <span id="lbl-drill-level-badge" style="color:var(--accent-cyan);">DRILL LV 1</span>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-dim); margin-top:2px;">
+                            Weapons drills, barricade tactical positions, and guard combat readiness enhance dweller combat power.
+                        </div>
+                        <div class="def-stat-val" id="lbl-guard-contrib">
+                            12 <span style="font-size:11px; color:var(--text-dim);">Guard Defense</span>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-main);">
+                            Active Guards: <strong id="lbl-guard-count" style="color:var(--text-bright);">1</strong> &bull; Passive Militia: <strong id="lbl-militia-count" style="color:var(--text-dim);">4</strong>
+                        </div>
+                        <div class="def-actions">
+                            <button class="btn-upgrade" onclick="runCombatDrill()" id="btn-combat-drill">
+                                RUN COMBAT DRILL (+READINESS // 12 SCRAP)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guard Assignment & Citizen Readiness Roster -->
+                <div class="panel-title" style="margin-top:10px;">
+                    <span>Security Guard Postings & Citizen Combat Readiness</span>
+                    <span style="color:var(--text-dim); font-size:10px;">Assign High-STR Survivors as Guards</span>
+                </div>
+                <div id="guard-roster-list" style="display:flex; flex-direction:column; gap:4px; margin-bottom:12px;">
+                    <!-- Injected by JavaScript -->
+                </div>
+
+                <!-- Last Battle Tactical Debrief -->
+                <div class="panel-title" style="margin-top:10px;">
+                    <span>Last Raider Encounter Tactical Debrief</span>
+                    <span id="lbl-last-raid-date" style="color:var(--text-dim); font-size:10px;">No Recent Incursions</span>
+                </div>
+                <div id="raid-debrief-box" class="distressed-panel" style="background:var(--card-bg); border:1px solid var(--panel-border); padding:10px; border-radius:2px; font-size:11px; line-height:1.5;">
+                    <div style="color:var(--text-dim);">The perimeter remains quiet. Ensure barricades and sentry turrets are primed before the next raiding clan arrives.</div>
+                </div>
+            </div>
         </main>
 
         <!-- Sidebar: Day Cycle Controller & Terminal Log -->
@@ -1463,6 +1662,12 @@
                 <p>&bull; <strong>Exploration Runs:</strong> Send unassigned citizens out past the airlock into ruins (Supermarkets, Power Substations, Hospital Wings, Military Armories, and Vault 811).</p>
                 <p>&bull; <strong>Medical Supplies (Meds):</strong> Scavenge sterile pharmaceuticals and stimpacks to heal wounded dwellers (-1 Med restores +35 HP) or equip scouts before high-hazard sorties.</p>
                 <p>&bull; <strong>Lost Blueprints:</strong> Scouts with high Intelligence can decrypt encrypted archives in ruins to recover exclusive facility blueprints (Fusion Micro-Reactor, Automated Surgery Wing, Rad-Shield Airlock Gate, Hydroponic Gene-Vault) and construct them in Engineering!</p>
+                <br>
+                <p><strong>8. BASE DEFENSE & RAIDER ATTACK MECHANICS:</strong></p>
+                <p>&bull; <strong>Perimeter Barricades:</strong> Heavy scrap blast-doors protect vault inhabitants. Damaged barricades reduce defense contribution; repair them with scrap (+30 HP) or reinforce them for higher maximum integrity (+25 Max HP).</p>
+                <p>&bull; <strong>Automated Sentry Turrets:</strong> Twin 50-cal automated turrets deliver deadly suppressive fire (+18 Def each, 3 kW Draw). Fabricate more turrets or overclock targeting sensors for high defense bonuses.</p>
+                <p>&bull; <strong>Survivor Combat Readiness:</strong> Run combat drills to train vault dwellers in firearm defense. Assign high-Strength survivors as Security Guards to repel attacking raider warbands!</p>
+                <p>&bull; <strong>Raider Warband Incursions:</strong> Surface radar detects hostile dust clouds. If total Vault Defense exceeds raider attack power, the warband is crushed and valuable scrap and meds are salvaged. If breached, raiders steal food and scrap, damage barricades, and injure dwellers!</p>
             </div>
         </div>
     </div>
@@ -1488,6 +1693,19 @@
                 <button class="btn-close" onclick="closeModal('scout-modal')">&times;</button>
             </div>
             <div id="scout-modal-body" style="font-size: 11px; line-height: 1.5; color: var(--text-main);">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Raider Attack Battle Modal -->
+    <div class="modal-overlay" id="raid-modal">
+        <div class="modal-box" style="border-color: var(--danger-red); box-shadow: 0 0 25px var(--danger-glow);">
+            <div class="modal-header">
+                <div class="modal-title" id="raid-modal-title" style="color: var(--danger-red);">RAIDER ATTACK REPORT</div>
+                <button class="btn-close" onclick="closeModal('raid-modal')">&times;</button>
+            </div>
+            <div id="raid-modal-body" style="font-size: 11px; line-height: 1.5; color: var(--text-main);">
                 <!-- Populated dynamically -->
             </div>
         </div>
@@ -1608,7 +1826,14 @@
             powerLoad: 16,
             scrap: 55,
             morale: 85,
-            defense: 15,
+            defense: 35,
+            barricadeHp: 100,
+            barricadeMaxHp: 100,
+            turretCount: 1,
+            turretOverclock: false,
+            combatDrillLevel: 1,
+            raidThreatDays: 3,
+            lastRaidReport: null,
             exteriorRads: 4.2,
             meds: 5,
             policies: {
@@ -2021,6 +2246,12 @@
                         state.facilities.forEach(f => {
                             if (!f.level) f.level = 1;
                         });
+                        if (state.barricadeHp === undefined) state.barricadeHp = 100;
+                        if (state.barricadeMaxHp === undefined) state.barricadeMaxHp = 100;
+                        if (state.turretCount === undefined) state.turretCount = 1;
+                        if (state.turretOverclock === undefined) state.turretOverclock = false;
+                        if (state.combatDrillLevel === undefined) state.combatDrillLevel = 1;
+                        if (state.raidThreatDays === undefined) state.raidThreatDays = 3;
                     }
                 }
             } catch (e) {}
@@ -2139,6 +2370,411 @@
 
         function getUnassignedSurvivors() {
             return state.survivors.filter(s => !s.job || s.job === 'unassigned');
+        }
+
+        // Base Defense & Security Calculations
+        function getDefenseBreakdown() {
+            const baseHull = 10;
+            const barricadeDef = Math.floor((state.barricadeHp || 100) * 0.2);
+            const turretDef = (state.turretCount || 1) * 18 + (state.turretOverclock ? 10 : 0);
+
+            let facilityDef = 0;
+            state.facilities.forEach(f => {
+                if (f.id === 'security') facilityDef += 15 + ((f.level || 1) - 1) * 10;
+                else if (f.id === 'cmd') facilityDef += (f.level || 1) * 5;
+                else if (f.id === 'bp_radshield') facilityDef += 25;
+            });
+
+            let guardDef = 0;
+            let activeGuards = 0;
+            let passiveMilitia = 0;
+            const drillBonus = (state.combatDrillLevel || 1) * 3;
+
+            state.survivors.forEach(s => {
+                if (s.job === 'security') {
+                    activeGuards++;
+                    guardDef += (s.str * 2) + drillBonus;
+                } else if (s.job !== 'expedition') {
+                    passiveMilitia++;
+                    guardDef += Math.floor(s.str * 0.5);
+                }
+            });
+
+            const total = baseHull + barricadeDef + turretDef + facilityDef + guardDef;
+            return {
+                total,
+                baseHull,
+                barricadeDef,
+                turretDef,
+                facilityDef,
+                guardDef,
+                activeGuards,
+                passiveMilitia
+            };
+        }
+
+        function repairBarricade() {
+            if ((state.barricadeHp || 100) >= (state.barricadeMaxHp || 100)) {
+                logEvent('Perimeter barricades are already at full integrity!', 'info');
+                return;
+            }
+            const cost = 15;
+            if (state.scrap < cost) {
+                logEvent(`Insufficient tech scrap to repair barricades! Need ${cost} scrap.`, 'warn');
+                playSound('alert');
+                return;
+            }
+            state.scrap -= cost;
+            state.barricadeHp = Math.min(state.barricadeMaxHp || 100, (state.barricadeHp || 100) + 30);
+            logEvent(`DEFENSE: Perimeter barricades repaired to ${state.barricadeHp}/${state.barricadeMaxHp} HP!`, 'cycle');
+            playSound('cycle');
+            updateAll();
+        }
+
+        function reinforceBarricade() {
+            const cost = 35;
+            if (state.scrap < cost) {
+                logEvent(`Insufficient scrap to reinforce bulkheads! Need ${cost} scrap.`, 'warn');
+                playSound('alert');
+                return;
+            }
+            state.scrap -= cost;
+            state.barricadeMaxHp = (state.barricadeMaxHp || 100) + 25;
+            state.barricadeHp = (state.barricadeHp || 100) + 25;
+            logEvent(`DEFENSE: Perimeter blast doors reinforced! Max HP now ${state.barricadeMaxHp} (+5 Defense).`, 'cycle');
+            playSound('cycle');
+            updateAll();
+        }
+
+        function buildTurret() {
+            const cost = 45;
+            if (state.scrap < cost) {
+                logEvent(`Insufficient tech scrap to fabricate Sentry Turret! Need ${cost} scrap.`, 'warn');
+                playSound('alert');
+                return;
+            }
+            state.scrap -= cost;
+            state.turretCount = (state.turretCount || 1) + 1;
+            logEvent(`DEFENSE: 50-Cal Sentry Turret #${state.turretCount} fabricated and mounted on outer bulkhead! (+18 Defense)`, 'cycle');
+            playSound('cycle');
+            updateAll();
+        }
+
+        function overclockTurrets() {
+            const cost = 20;
+            if (state.turretOverclock) {
+                logEvent('Sentry targeting sensors are already overclocked!', 'info');
+                return;
+            }
+            if (state.scrap < cost) {
+                logEvent(`Insufficient scrap to overclock targeting! Need ${cost} scrap.`, 'warn');
+                playSound('alert');
+                return;
+            }
+            state.scrap -= cost;
+            state.turretOverclock = true;
+            logEvent('DEFENSE: Sentry targeting processors overclocked! Auto-aim precision maximized (+10 Defense).', 'cycle');
+            playSound('cycle');
+            updateAll();
+        }
+
+        function runCombatDrill() {
+            const cost = 12;
+            if (state.scrap < cost) {
+                logEvent(`Insufficient scrap for combat drill ammunition! Need ${cost} scrap.`, 'warn');
+                playSound('alert');
+                return;
+            }
+            state.scrap -= cost;
+            state.combatDrillLevel = (state.combatDrillLevel || 1) + 1;
+            state.morale = Math.min(100, state.morale + 3);
+            logEvent(`DEFENSE: Combat readiness drill executed! Dweller tactical training raised to Level ${state.combatDrillLevel}.`, 'cycle');
+            playSound('cycle');
+            updateAll();
+        }
+
+        function toggleSurvivorGuard(survId) {
+            const surv = state.survivors.find(s => s.id === survId);
+            if (!surv) return;
+            if (surv.job === 'security') {
+                surv.job = 'unassigned';
+                logEvent(`GUARD POST: ${surv.name} relieved from perimeter security watch.`, 'info');
+            } else {
+                surv.job = 'security';
+                logEvent(`GUARD POST: ${surv.name} (STR ${surv.str}) armed and posted on perimeter guard duty!`, 'cycle');
+            }
+            playSound('click');
+            updateAll();
+        }
+
+        function triggerRaiderAttack(isManual = false) {
+            const defInfo = getDefenseBreakdown();
+            const totalDef = defInfo.total;
+
+            const clans = [
+                { name: 'Rustfang Marauders', baseAtk: 30, desc: 'Scavenger bandits armed with pipe rifles and scrap cleavers' },
+                { name: 'Iron Skull Warband', baseAtk: 48, desc: 'Armored wasteland raiders driving spiked battle buggies' },
+                { name: 'Rad-Scorpion Pack & Reavers', baseAtk: 65, desc: 'Mutant beasts led by cybernetic wasteland slavers' },
+                { name: 'Dune Stalker Syndicate', baseAtk: 85, desc: 'High-tech mercenaries with heavy plasma cannons and armor' },
+                { name: 'Super-Mutant Overlord Siege', baseAtk: 110, desc: 'Massive irradiated brutes wielding concrete rebar clubs' }
+            ];
+
+            let clanIdx = 0;
+            if (state.day >= 12) clanIdx = 4;
+            else if (state.day >= 9) clanIdx = 3;
+            else if (state.day >= 6) clanIdx = 2;
+            else if (state.day >= 3) clanIdx = 1;
+
+            const clan = clans[clanIdx];
+            const variance = Math.floor(Math.random() * 15) - 7;
+            const assaultPower = Math.max(20, clan.baseAtk + variance);
+
+            const won = totalDef >= assaultPower;
+            let dmgToBarricade = 0;
+            let scrapGained = 0;
+            let medsGained = 0;
+            let foodStolen = 0;
+            let scrapStolen = 0;
+            let injuredCount = 0;
+
+            if (won) {
+                // Victory
+                dmgToBarricade = Math.floor((assaultPower / Math.max(1, totalDef)) * 25);
+                state.barricadeHp = Math.max(0, (state.barricadeHp || 100) - dmgToBarricade);
+                scrapGained = 20 + Math.floor(Math.random() * 25);
+                medsGained = Math.random() < 0.6 ? 1 : 2;
+                state.scrap += scrapGained;
+                state.meds = (state.meds || 0) + medsGained;
+                state.morale = Math.min(100, state.morale + 6);
+
+                logEvent(`★ RAID REPELLED: ${clan.name} (Atk ${assaultPower}) repelled by Vault Defenses (${totalDef} pts)! Salvaged +${scrapGained} Scrap, +${medsGained} Meds. Barricades took ${dmgToBarricade} damage.`, 'cycle');
+                playSound('cycle');
+            } else {
+                // Breach
+                const deficit = assaultPower - totalDef;
+                dmgToBarricade = Math.min(state.barricadeHp || 100, 30 + Math.floor(deficit * 0.8));
+                state.barricadeHp = Math.max(0, (state.barricadeHp || 100) - dmgToBarricade);
+
+                foodStolen = Math.min(Math.floor(state.food), 10 + Math.floor(deficit * 0.5));
+                scrapStolen = Math.min(Math.floor(state.scrap), 15 + Math.floor(deficit * 0.6));
+                state.food = Math.max(0, state.food - foodStolen);
+                state.scrap = Math.max(0, state.scrap - scrapStolen);
+                state.morale = Math.max(15, state.morale - 12);
+
+                state.survivors.forEach(s => {
+                    if (s.job === 'security' || Math.random() < 0.4) {
+                        const wound = 15 + Math.floor(Math.random() * 25);
+                        s.health = Math.max(10, s.health - wound);
+                        injuredCount++;
+                    }
+                });
+
+                logEvent(`⚠ CRITICAL BREACH: ${clan.name} (Atk ${assaultPower}) overwhelmed Vault Defenses (${totalDef} pts)! Perimeter breached! Stole ${foodStolen} Food, ${scrapStolen} Scrap. ${injuredCount} survivor(s) wounded. Barricades took -${dmgToBarricade} HP!`, 'crit');
+                playSound('alert');
+            }
+
+            state.lastRaidReport = {
+                day: state.day,
+                clan: clan.name,
+                clanDesc: clan.desc,
+                assaultPower,
+                totalDef,
+                won,
+                dmgToBarricade,
+                scrapGained,
+                medsGained,
+                foodStolen,
+                scrapStolen,
+                injuredCount
+            };
+
+            showRaidModal();
+            updateAll();
+        }
+
+        function testRaiderAssault() {
+            triggerRaiderAttack(true);
+        }
+
+        function showRaidModal() {
+            const report = state.lastRaidReport;
+            if (!report) return;
+
+            const modalTitle = document.getElementById('raid-modal-title');
+            if (modalTitle) {
+                modalTitle.textContent = report.won ? '★ BATTLE DEBRIEF // PERIMETER HELD' : '⚠ PERIMETER BREACH // COMBAT CASUALTY REPORT';
+                modalTitle.style.color = report.won ? 'var(--accent-green)' : 'var(--danger-red)';
+            }
+
+            const body = document.getElementById('raid-modal-body');
+            if (body) {
+                body.innerHTML = `
+                    <div style="background:#111612; border:1px solid ${report.won ? 'var(--accent-green)' : 'var(--danger-red)'}; padding:10px; border-radius:2px; margin-bottom:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <strong style="font-size:13px; color:var(--text-bright);">${report.clan}</strong>
+                            <span style="font-size:10px; font-weight:bold; color:${report.won ? 'var(--accent-green)' : 'var(--danger-red)'}; background:${report.won ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}; padding:2px 6px; border:1px solid ${report.won ? 'var(--accent-green)' : 'var(--danger-red)'}; border-radius:2px;">
+                                ${report.won ? 'WARBAND REPELLED' : 'PERIMETER COMPROMISED'}
+                            </span>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-dim); margin-bottom:8px;">${report.clanDesc}</div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:11px; margin-bottom:6px;">
+                            <div>Enemy Assault Power: <strong style="color:var(--danger-red);">${report.assaultPower} pts</strong></div>
+                            <div>Vault Defense Rating: <strong style="color:var(--accent-green);">${report.totalDef} pts</strong></div>
+                        </div>
+                    </div>
+                    <div style="font-size:11px; line-height:1.6;">
+                        ${report.won ? `
+                            <p style="color:var(--accent-green);"><strong>Outcome: Total Tactical Victory!</strong> Sentry turrets laid down devastating crossfire while armed defenders held the barricades.</p>
+                            <p>&bull; <strong>Loot Salvaged:</strong> +${report.scrapGained} Tech Scrap, +${report.medsGained} Medpacks.</p>
+                            <p>&bull; <strong>Barricade Impact:</strong> Sustained -${report.dmgToBarricade} HP wear from shrapnel.</p>
+                            <p>&bull; <strong>Morale:</strong> +6% Vault Confidence.</p>
+                        ` : `
+                            <p style="color:var(--danger-red);"><strong>Outcome: Defense Breached!</strong> The raiding warband overwhelmed the outer gates before being forced back.</p>
+                            <p>&bull; <strong>Supplies Stolen:</strong> -${report.foodStolen} Food Rations, -${report.scrapStolen} Tech Scrap.</p>
+                            <p>&bull; <strong>Casualties:</strong> ${report.injuredCount} citizen(s) wounded in close-quarters combat.</p>
+                            <p>&bull; <strong>Barricade Damage:</strong> Blast doors sustained -${report.dmgToBarricade} HP structural trauma.</p>
+                        `}
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; margin-top:10px;">
+                        <button class="btn-upgrade" onclick="closeModal('raid-modal')" style="padding:6px 16px; font-weight:bold;">
+                            ACKNOWLEDGE DEBRIEF
+                        </button>
+                    </div>
+                `;
+            }
+
+            const modal = document.getElementById('raid-modal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function renderDefenseView() {
+            const def = getDefenseBreakdown();
+            state.defense = def.total;
+
+            const lblTotal = document.getElementById('lbl-total-def');
+            if (lblTotal) lblTotal.textContent = `${def.total} pts`;
+
+            // Barricades
+            const barHp = state.barricadeHp !== undefined ? state.barricadeHp : 100;
+            const barMax = state.barricadeMaxHp !== undefined ? state.barricadeMaxHp : 100;
+            const lblBarStat = document.getElementById('lbl-barricade-status');
+            if (lblBarStat) {
+                lblBarStat.textContent = `${barHp}/${barMax} HP`;
+                lblBarStat.style.color = barHp < 40 ? 'var(--danger-red)' : (barHp < 75 ? 'var(--accent-amber)' : 'var(--accent-green)');
+            }
+            const barFill = document.getElementById('barricade-hp-fill');
+            if (barFill) {
+                const pct = Math.round((barHp / barMax) * 100);
+                barFill.style.width = `${pct}%`;
+                barFill.style.background = barHp < 40 ? 'var(--danger-red)' : (barHp < 75 ? 'var(--accent-amber)' : 'var(--accent-green)');
+            }
+            const lblBarContrib = document.getElementById('lbl-barricade-contrib');
+            if (lblBarContrib) lblBarContrib.textContent = `+${def.barricadeDef} pts`;
+
+            // Turrets
+            const tCount = state.turretCount || 1;
+            const lblTBadge = document.getElementById('lbl-turret-count-badge');
+            if (lblTBadge) lblTBadge.textContent = `${tCount} MOUNTED`;
+            const lblTPower = document.getElementById('lbl-turret-power');
+            if (lblTPower) lblTPower.innerHTML = `${def.turretDef} <span style="font-size:11px; color:var(--text-dim);">Defense Points</span>`;
+            const lblTStat = document.getElementById('lbl-turret-status');
+            if (lblTStat) lblTStat.textContent = `ONLINE (${tCount * 3} kW Draw)`;
+            const lblTOc = document.getElementById('lbl-turret-oc');
+            if (lblTOc) {
+                lblTOc.textContent = state.turretOverclock ? 'OVERCLOCKED (+10)' : 'STANDBY';
+                lblTOc.style.color = state.turretOverclock ? 'var(--accent-green)' : 'var(--text-dim)';
+            }
+
+            // Readiness
+            const drillLvl = state.combatDrillLevel || 1;
+            const lblDrillBadge = document.getElementById('lbl-drill-level-badge');
+            if (lblDrillBadge) lblDrillBadge.textContent = `DRILL LV ${drillLvl}`;
+            const lblGuardContrib = document.getElementById('lbl-guard-contrib');
+            if (lblGuardContrib) lblGuardContrib.innerHTML = `${def.guardDef} <span style="font-size:11px; color:var(--text-dim);">Guard Defense</span>`;
+            const lblGuardCount = document.getElementById('lbl-guard-count');
+            if (lblGuardCount) lblGuardCount.textContent = def.activeGuards;
+            const lblMilitiaCount = document.getElementById('lbl-militia-count');
+            if (lblMilitiaCount) lblMilitiaCount.textContent = def.passiveMilitia;
+
+            // Radar
+            const threatDays = state.raidThreatDays !== undefined ? state.raidThreatDays : 3;
+            const lblRadarText = document.getElementById('lbl-raid-radar-text');
+            if (lblRadarText) {
+                if (threatDays <= 1) {
+                    lblRadarText.textContent = 'HOSTILE WARBAND DETECTED // ASSAULT EXPECTED TOMORROW!';
+                    lblRadarText.style.color = 'var(--danger-red)';
+                } else {
+                    lblRadarText.textContent = `HOSTILE SCOUTS ON RADAR // ETA: ${threatDays} DAYS`;
+                    lblRadarText.style.color = threatDays === 2 ? 'var(--accent-amber)' : 'var(--text-bright)';
+                }
+            }
+            const lblRadarDesc = document.getElementById('lbl-raid-threat-desc');
+            if (lblRadarDesc) {
+                const clans = ['Rustfang Marauders (~35 Atk)', 'Iron Skull Warband (~50 Atk)', 'Rad-Scorpion Reavers (~70 Atk)', 'Dune Stalkers (~90 Atk)', 'Super-Mutant Siege (~110 Atk)'];
+                let cIdx = Math.min(4, Math.floor(state.day / 3));
+                lblRadarDesc.textContent = `Projected Incursion: ${clans[cIdx]} &bull; Threat Index: ${threatDays <= 1 ? 'CRITICAL' : 'ELEVATED'}`;
+            }
+
+            // Guard Roster
+            const rosterEl = document.getElementById('guard-roster-list');
+            if (rosterEl) {
+                rosterEl.innerHTML = '';
+                state.survivors.forEach(s => {
+                    const isGuard = s.job === 'security';
+                    const item = document.createElement('div');
+                    item.className = 'guard-roster-item';
+                    const contribution = isGuard ? (s.str * 2 + drillLvl * 3) : Math.floor(s.str * 0.5);
+
+                    item.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-weight:bold; color:var(--text-bright);">${s.name}</span>
+                            <span style="font-size:10px; color:var(--text-dim);">${s.role}</span>
+                            <span style="font-size:10px; color:var(--accent-amber); font-weight:bold;">STR ${s.str}</span>
+                            <span style="font-size:10px; color:${isGuard ? 'var(--accent-green)' : 'var(--text-dim)'}; font-weight:bold;">
+                                ${isGuard ? `[ACTIVE GUARD: +${contribution} DEF]` : `[Militia: +${contribution} Def]`}
+                            </span>
+                        </div>
+                        <div>
+                            <button class="btn-upgrade" onclick="toggleSurvivorGuard('${s.id}')" style="font-size:9px; padding:2px 8px; color:${isGuard ? 'var(--danger-red)' : 'var(--accent-green)'}; border-color:${isGuard ? 'var(--panel-border)' : 'var(--border-corner)'};">
+                                ${isGuard ? 'RELIEVE GUARD' : 'POST ON GUARD WATCH'}
+                            </button>
+                        </div>
+                    `;
+                    rosterEl.appendChild(item);
+                });
+            }
+
+            // Debrief Box
+            const debriefBox = document.getElementById('raid-debrief-box');
+            const lblLastDate = document.getElementById('lbl-last-raid-date');
+            if (debriefBox && lblLastDate) {
+                if (state.lastRaidReport) {
+                    const r = state.lastRaidReport;
+                    lblLastDate.textContent = `Day ${r.day} Incident`;
+                    debriefBox.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <strong style="color:var(--text-bright); font-size:12px;">${r.clan}</strong>
+                            <span style="font-weight:bold; color:${r.won ? 'var(--accent-green)' : 'var(--danger-red)'};">
+                                ${r.won ? 'PERIMETER HELD (VICTORY)' : 'PERIMETER BREACHED'}
+                            </span>
+                        </div>
+                        <div style="color:var(--text-dim); font-size:10px; margin-bottom:4px;">${r.clanDesc}</div>
+                        <div>Combat Engagement: Enemy Atk <strong>${r.assaultPower}</strong> vs Vault Defense <strong>${r.totalDef}</strong>.</div>
+                        <div style="margin-top:2px;">
+                            ${r.won ? `Salvaged: <strong style="color:var(--accent-green);">+${r.scrapGained} Scrap, +${r.medsGained} Meds</strong>. Barricade wear: -${r.dmgToBarricade} HP.` : `Lost: <strong style="color:var(--danger-red);">${r.foodStolen} Food, ${r.scrapStolen} Scrap</strong>. Casualties: ${r.injuredCount} wounded. Barricades: -${r.dmgToBarricade} HP.`}
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function updateAll() {
+            renderHUD();
+            renderFacilities();
+            renderSurvivors();
+            renderExpeditions();
+            renderDefenseView();
+            saveState();
         }
 
         // Render Functions
@@ -2958,15 +3594,16 @@
 
         // Tab Switching
         function switchTab(tabId) {
-            const tabs = ['facilities', 'survivors', 'expeditions', 'policies'];
+            const tabs = ['facilities', 'survivors', 'expeditions', 'defense', 'policies'];
             tabs.forEach(t => {
                 const view = document.getElementById(`view-${t}`);
                 if (view) view.style.display = t === tabId ? 'block' : 'none';
+                const btn = document.getElementById(`tab-btn-${t}`);
+                if (btn) {
+                    if (t === tabId) btn.classList.add('active');
+                    else btn.classList.remove('active');
+                }
             });
-
-            const buttons = document.querySelectorAll('.tab-btn');
-            buttons.forEach(b => b.classList.remove('active'));
-            if (event && event.currentTarget) event.currentTarget.classList.add('active');
 
             playSound('click');
         }
@@ -3130,6 +3767,17 @@
                 }
             }
 
+            // 4c. Raider Incursions & Radar Progression
+            if (state.raidThreatDays === undefined) state.raidThreatDays = 3;
+            state.raidThreatDays--;
+            if (state.raidThreatDays <= 0) {
+                triggerRaiderAttack(false);
+                state.raidThreatDays = 3 + Math.floor(Math.random() * 3);
+            } else if (state.raidThreatDays === 1) {
+                logEvent(`RADAR WARNING: Raider vanguard spotted 5km away! Raid imminent on tomorrow's cycle!`, 'warn');
+                playSound('alert');
+            }
+
             // 5. Random Wasteland Event
             triggerDailyEvent();
 
@@ -3242,6 +3890,8 @@
             } else if (e.code === 'Digit3') {
                 switchTab('expeditions');
             } else if (e.code === 'Digit4') {
+                switchTab('defense');
+            } else if (e.code === 'Digit5') {
                 switchTab('policies');
             } else if (e.code === 'KeyT') {
                 toggleTheme();

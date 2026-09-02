@@ -268,6 +268,23 @@ typedef struct {
     int meds;
     float morale;
     int defense;
+    int barricadeHp;
+    int barricadeMaxHp;
+    int turretCount;
+    int turretOverclock;
+    int combatDrillLevel;
+    int raidThreatDays;
+    char lastRaidClan[48];
+    int lastRaidAtk;
+    int lastRaidDef;
+    int lastRaidWon;
+    int lastRaidScrap;
+    int lastRaidMeds;
+    int lastRaidDmg;
+    int lastRaidFoodStolen;
+    int lastRaidScrapStolen;
+    int lastRaidInjured;
+    int showRaidModal;
     float exteriorRads;
     
     // Policies
@@ -312,7 +329,7 @@ typedef struct {
     int showHelp;
     
     // Active Tab
-    int currentTab; // 0: Facilities, 1: Survivors, 2: Expeditions, 3: Directives, 4: Manual
+    int currentTab; // 0: Facilities, 1: Survivors, 2: Expeditions, 3: Defense, 4: Directives, 5: Manual
     
     int autoRun;
 } GameState;
@@ -378,6 +395,14 @@ enum {
     BTN_POLICY_FOOD,
     BTN_POLICY_WATER,
     BTN_POLICY_POWER,
+    BTN_DEF_REPAIR,
+    BTN_DEF_REINFORCE,
+    BTN_DEF_TURRET,
+    BTN_DEF_OVERCLOCK,
+    BTN_DEF_DRILL,
+    BTN_DEF_TOGGLE_GUARD,
+    BTN_DEF_TEST_RAID,
+    BTN_CLOSE_RAID_MODAL,
     BTN_CLOSE_MODAL
 };
 
@@ -447,6 +472,33 @@ static float GetWorkerEfficiency(const Survivor* s, const Facility* fac) {
     return eff;
 }
 
+static int CalculateTotalDefense() {
+    int baseHull = 10;
+    int maxBar = (g_state.barricadeMaxHp > 0) ? g_state.barricadeMaxHp : 100;
+    int barDef = (g_state.barricadeHp * 20) / maxBar;
+    int turDef = g_state.turretCount * 18 + (g_state.turretOverclock ? 10 : 0);
+    int facDef = 0;
+    for (int f = 0; f < g_state.numFacilities; f++) {
+        if (strcmp(g_state.facilities[f].id, "security") == 0) {
+            facDef += 15 + (g_state.facilities[f].level - 1) * 10;
+        } else if (strcmp(g_state.facilities[f].id, "cmd") == 0) {
+            facDef += g_state.facilities[f].level * 5;
+        } else if (strcmp(g_state.facilities[f].id, "bp_radshield") == 0) {
+            facDef += 25;
+        }
+    }
+    int guardDef = 0;
+    int drillBonus = g_state.combatDrillLevel * 3;
+    for (int s = 0; s < g_state.numSurvivors; s++) {
+        if (strcmp(g_state.survivors[s].job, "security") == 0) {
+            guardDef += (g_state.survivors[s].str * 2) + drillBonus;
+        } else if (strcmp(g_state.survivors[s].job, "expedition") != 0) {
+            guardDef += g_state.survivors[s].str / 2;
+        }
+    }
+    return baseHull + barDef + turDef + facDef + guardDef;
+}
+
 static void CalculateTotals(float* foodProd, float* foodNeed, float* waterProd, float* waterNeed, int* powerGen, int* powerLoad, float* scrapProd) {
     *foodProd = 0;
     *waterProd = 0;
@@ -490,6 +542,7 @@ static void CalculateTotals(float* foodProd, float* foodNeed, float* waterProd, 
 
     *foodNeed = g_state.population * foodPer;
     *waterNeed = g_state.population * waterPer;
+    g_state.defense = CalculateTotalDefense();
 }
 
 static void GenerateCandidate(Candidate* c, int isSpecialist) {
@@ -574,6 +627,111 @@ static void TriggerDailyEvent() {
         sprintf(buf, "MAINTENANCE: Engineering recovered +%d scrap from disused conduits.", scrapBonus);
         AddLog(buf, 0);
     }
+}
+
+static void TriggerRaiderAttack(int isManual) {
+    int totalDef = CalculateTotalDefense();
+    g_state.defense = totalDef;
+
+    const char* clanNames[] = {
+        "Rustfang Marauders",
+        "Iron Skull Warband",
+        "Rad-Scorpion Reavers",
+        "Dune Stalker Syndicate",
+        "Super-Mutant Siege"
+    };
+    const char* clanDescs[] = {
+        "Scavenger bandits armed with pipe rifles and scrap cleavers.",
+        "Armored wasteland raiders driving spiked battle buggies.",
+        "Mutant beasts led by cybernetic wasteland slavers.",
+        "High-tech mercenaries with heavy plasma weaponry.",
+        "Massive irradiated brutes wielding concrete rebar clubs."
+    };
+    int baseAtks[] = { 30, 48, 65, 85, 110 };
+
+    int clanIdx = 0;
+    if (g_state.day >= 12) clanIdx = 4;
+    else if (g_state.day >= 9) clanIdx = 3;
+    else if (g_state.day >= 6) clanIdx = 2;
+    else if (g_state.day >= 3) clanIdx = 1;
+
+    int variance = (rand() % 15) - 7;
+    int assaultPower = baseAtks[clanIdx] + variance;
+    if (assaultPower < 20) assaultPower = 20;
+
+    int won = (totalDef >= assaultPower);
+    g_state.lastRaidWon = won;
+    strncpy(g_state.lastRaidClan, clanNames[clanIdx], sizeof(g_state.lastRaidClan) - 1);
+    g_state.lastRaidAtk = assaultPower;
+    g_state.lastRaidDef = totalDef;
+
+    if (won) {
+        int maxB = (g_state.barricadeMaxHp > 0) ? g_state.barricadeMaxHp : 100;
+        int dmg = (assaultPower * 25) / (totalDef > 0 ? totalDef : 1);
+        if (dmg < 5) dmg = 5;
+        g_state.barricadeHp -= dmg;
+        if (g_state.barricadeHp < 0) g_state.barricadeHp = 0;
+        g_state.lastRaidDmg = dmg;
+
+        int scrapGained = 20 + rand() % 25;
+        int medsGained = (rand() % 100 < 60) ? 1 : 2;
+        g_state.scrap += scrapGained;
+        g_state.meds += medsGained;
+        g_state.morale += 6.0f;
+        if (g_state.morale > 100.0f) g_state.morale = 100.0f;
+
+        g_state.lastRaidScrap = scrapGained;
+        g_state.lastRaidMeds = medsGained;
+        g_state.lastRaidFoodStolen = 0;
+        g_state.lastRaidScrapStolen = 0;
+        g_state.lastRaidInjured = 0;
+
+        char logBuf[160];
+        sprintf(logBuf, "RAID REPELLED: %s (Atk %d) crushed by Vault Defenses (%d pts)! Salvaged +%d Scrap, +%d Meds.",
+            clanNames[clanIdx], assaultPower, totalDef, scrapGained, medsGained);
+        AddLog(logBuf, 3);
+        PlaySfx(2);
+    } else {
+        int deficit = assaultPower - totalDef;
+        int dmg = 30 + (deficit * 8) / 10;
+        g_state.barricadeHp -= dmg;
+        if (g_state.barricadeHp < 0) g_state.barricadeHp = 0;
+        g_state.lastRaidDmg = dmg;
+
+        int foodStolen = 10 + deficit / 2;
+        if (foodStolen > (int)g_state.food) foodStolen = (int)g_state.food;
+        int scrapStolen = 15 + (deficit * 6) / 10;
+        if (scrapStolen > (int)g_state.scrap) scrapStolen = (int)g_state.scrap;
+
+        g_state.food -= foodStolen;
+        g_state.scrap -= scrapStolen;
+        g_state.morale -= 12.0f;
+        if (g_state.morale < 15.0f) g_state.morale = 15.0f;
+
+        int injuredCount = 0;
+        for (int s = 0; s < g_state.numSurvivors; s++) {
+            if (strcmp(g_state.survivors[s].job, "security") == 0 || rand() % 100 < 40) {
+                int wound = 15 + rand() % 25;
+                g_state.survivors[s].health -= wound;
+                if (g_state.survivors[s].health < 10) g_state.survivors[s].health = 10;
+                injuredCount++;
+            }
+        }
+
+        g_state.lastRaidScrap = 0;
+        g_state.lastRaidMeds = 0;
+        g_state.lastRaidFoodStolen = foodStolen;
+        g_state.lastRaidScrapStolen = scrapStolen;
+        g_state.lastRaidInjured = injuredCount;
+
+        char logBuf[160];
+        sprintf(logBuf, "BREACH: %s (Atk %d) breached Defenses (%d pts)! Stole %d Food, %d Scrap. %d injured!",
+            clanNames[clanIdx], assaultPower, totalDef, foodStolen, scrapStolen, injuredCount);
+        AddLog(logBuf, 2);
+        PlaySfx(3);
+    }
+
+    g_state.showRaidModal = 1;
 }
 
 static void ProcessNewDay() {
@@ -742,6 +900,16 @@ static void ProcessNewDay() {
         }
     }
 
+    // Raider Incursion Countdown
+    g_state.raidThreatDays--;
+    if (g_state.raidThreatDays <= 0) {
+        TriggerRaiderAttack(0);
+        g_state.raidThreatDays = 3 + rand() % 3;
+    } else if (g_state.raidThreatDays == 1) {
+        AddLog("RADAR WARNING: Raider vanguard spotted 5km away! Raid expected tomorrow!", 1);
+        PlaySfx(3);
+    }
+
     TriggerDailyEvent();
 
     g_state.summaryDay = g_state.day;
@@ -782,7 +950,16 @@ static void InitGameState() {
     g_state.scrap = 55.0f;
     g_state.meds = 5;
     g_state.morale = 85.0f;
-    g_state.defense = 15;
+    g_state.defense = 35;
+    g_state.barricadeHp = 100;
+    g_state.barricadeMaxHp = 100;
+    g_state.turretCount = 1;
+    g_state.turretOverclock = 0;
+    g_state.combatDrillLevel = 1;
+    g_state.raidThreatDays = 3;
+    strcpy(g_state.lastRaidClan, "None yet");
+    g_state.lastRaidWon = 1;
+    g_state.showRaidModal = 0;
     g_state.exteriorRads = 4.2f;
 
     g_state.policyFood = 0;
@@ -1962,6 +2139,230 @@ static void DrawExpeditionsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int 
     }
 }
 
+static void DrawDefenseView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, int y, int w, int h) {
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, x, y, "VAULT DEFENSE PERIMETER & RAIDER SECURITY", 41);
+
+    int totalDef = CalculateTotalDefense();
+    g_state.defense = totalDef;
+
+    char totBuf[32];
+    sprintf(totBuf, "Total Rating: %d pts", totalDef);
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_GREEN);
+    TextOutA(hdc, x + w - 160, y, totBuf, (int)strlen(totBuf));
+
+    // 1. Radar Alert Banner
+    int radY = y + 20;
+    int radH = 46;
+    DrawStyledBox(hdc, x, radY, w, radH, RGB(25, 12, 10), COL_RED);
+
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, x + 8, radY + 4, "SURFACE SEISMIC RADAR // HOSTILE TRACKING", 41);
+
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_RED);
+    char radarMsg[80];
+    if (g_state.raidThreatDays <= 1) {
+        sprintf(radarMsg, "HOSTILE WARBAND DETECTED // ASSAULT IMMINENT TOMORROW!");
+    } else {
+        sprintf(radarMsg, "HOSTILE SCOUTS ON SENSORS // ETA: %d DAYS", g_state.raidThreatDays);
+    }
+    TextOutA(hdc, x + 8, radY + 18, radarMsg, (int)strlen(radarMsg));
+
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, COL_TEXT_MAIN);
+    const char* pClans[] = { "Rustfang Marauders (~35)", "Iron Skull Warband (~50)", "Rad-Scorpion Reavers (~70)", "Dune Stalkers (~90)", "Super-Mutant Siege (~110)" };
+    int cIdx = g_state.day / 3;
+    if (cIdx > 4) cIdx = 4;
+    char pBuf[64];
+    sprintf(pBuf, "Projected Warband: %s", pClans[cIdx]);
+    TextOutA(hdc, x + 8, radY + 31, pBuf, (int)strlen(pBuf));
+
+    // Scramble / Test Raid Button
+    DrawButtonControl(hdc, hFontBold, x + w - 180, radY + 10, 170, 26, "TEST DEFENSES [RAID]", COL_RED, COL_DARK_CARD, COL_RED, BTN_DEF_TEST_RAID, 0, 0);
+
+    // 2. Three Fortification Cards
+    int cardY = radY + radH + 8;
+    int cardW = (w - 16) / 3;
+    int cardH = 100;
+
+    // Card 1: Barricades
+    DrawStyledBox(hdc, x, cardY, cardW, cardH, COL_DARK_CARD, COL_BORDER);
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, x + 8, cardY + 6, "PERIMETER BARRICADES", 20);
+
+    char barBuf[32];
+    sprintf(barBuf, "%d/%d HP", g_state.barricadeHp, g_state.barricadeMaxHp);
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, g_state.barricadeHp < 40 ? COL_RED : (g_state.barricadeHp < 75 ? COL_AMBER : COL_GREEN));
+    TextOutA(hdc, x + cardW - 75, cardY + 7, barBuf, (int)strlen(barBuf));
+
+    float barPct = (float)g_state.barricadeHp / (float)(g_state.barricadeMaxHp > 0 ? g_state.barricadeMaxHp : 100);
+    DrawProgressBar(hdc, x + 8, cardY + 22, cardW - 16, 6, barPct, g_state.barricadeHp < 40 ? COL_RED : COL_GREEN);
+
+    char bDefBuf[32];
+    sprintf(bDefBuf, "Defense: +%d pts (0.2x HP)", (g_state.barricadeHp * 20) / (g_state.barricadeMaxHp > 0 ? g_state.barricadeMaxHp : 100));
+    SetTextColor(hdc, COL_TEXT_MAIN);
+    TextOutA(hdc, x + 8, cardY + 34, bDefBuf, (int)strlen(bDefBuf));
+
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, x + 8, cardY + 48, "Steel blast-doors absorb shock", 30);
+
+    COLORREF rBg = (g_state.scrap >= 15 && g_state.barricadeHp < g_state.barricadeMaxHp) ? COL_BTN_BG : COL_DARK_CARD;
+    COLORREF rTxt = (g_state.scrap >= 15 && g_state.barricadeHp < g_state.barricadeMaxHp) ? COL_GREEN : COL_TEXT_DIM;
+    DrawButtonControl(hdc, hFontSmall, x + 8, cardY + 68, (cardW - 20) / 2, 22, "REPAIR (15S)", rTxt, rBg, COL_BORDER, BTN_DEF_REPAIR, 0, 0);
+
+    COLORREF rfBg = (g_state.scrap >= 35) ? COL_BTN_BG : COL_DARK_CARD;
+    COLORREF rfTxt = (g_state.scrap >= 35) ? COL_AMBER : COL_TEXT_DIM;
+    DrawButtonControl(hdc, hFontSmall, x + 12 + (cardW - 20) / 2, cardY + 68, (cardW - 20) / 2, 22, "MAX+25 (35S)", rfTxt, rfBg, COL_BORDER, BTN_DEF_REINFORCE, 0, 0);
+
+    // Card 2: Turrets
+    int c2X = x + cardW + 8;
+    DrawStyledBox(hdc, c2X, cardY, cardW, cardH, COL_DARK_CARD, COL_BORDER);
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, c2X + 8, cardY + 6, "SENTRY TURRETS", 14);
+
+    char turBuf[24];
+    sprintf(turBuf, "%d MOUNTED", g_state.turretCount);
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, COL_AMBER);
+    TextOutA(hdc, c2X + cardW - 75, cardY + 7, turBuf, (int)strlen(turBuf));
+
+    char tPowerBuf[48];
+    sprintf(tPowerBuf, "Output: +%d Def pts", g_state.turretCount * 18 + (g_state.turretOverclock ? 10 : 0));
+    SetTextColor(hdc, COL_TEXT_MAIN);
+    TextOutA(hdc, c2X + 8, cardY + 22, tPowerBuf, (int)strlen(tPowerBuf));
+
+    char tDrawBuf[48];
+    sprintf(tDrawBuf, "Draw: -%d kW | OC: %s", g_state.turretCount * 3, g_state.turretOverclock ? "ON (+10)" : "OFF");
+    SetTextColor(hdc, g_state.turretOverclock ? COL_GREEN : COL_TEXT_DIM);
+    TextOutA(hdc, c2X + 8, cardY + 36, tDrawBuf, (int)strlen(tDrawBuf));
+
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, c2X + 8, cardY + 50, "Twin 50-cal crossfire sentries", 30);
+
+    COLORREF bTurBg = (g_state.scrap >= 45) ? COL_BTN_BG : COL_DARK_CARD;
+    COLORREF bTurTxt = (g_state.scrap >= 45) ? COL_GREEN : COL_TEXT_DIM;
+    DrawButtonControl(hdc, hFontSmall, c2X + 8, cardY + 68, (cardW - 20) / 2, 22, "+TURRET(45S)", bTurTxt, bTurBg, COL_BORDER, BTN_DEF_TURRET, 0, 0);
+
+    COLORREF ocBg = (!g_state.turretOverclock && g_state.scrap >= 20) ? COL_BTN_BG : COL_DARK_CARD;
+    COLORREF ocTxt = (!g_state.turretOverclock && g_state.scrap >= 20) ? COL_AMBER : COL_TEXT_DIM;
+    DrawButtonControl(hdc, hFontSmall, c2X + 12 + (cardW - 20) / 2, cardY + 68, (cardW - 20) / 2, 22, "OVERCLK(20S)", ocTxt, ocBg, COL_BORDER, BTN_DEF_OVERCLOCK, 0, 0);
+
+    // Card 3: Combat Readiness
+    int c3X = c2X + cardW + 8;
+    DrawStyledBox(hdc, c3X, cardY, cardW, cardH, COL_DARK_CARD, COL_BORDER);
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, c3X + 8, cardY + 6, "COMBAT DRILLS", 13);
+
+    char drBuf[24];
+    sprintf(drBuf, "DRILL LV %d", g_state.combatDrillLevel);
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, COL_CYAN);
+    TextOutA(hdc, c3X + cardW - 75, cardY + 7, drBuf, (int)strlen(drBuf));
+
+    int activeG = 0;
+    int guardPower = 0;
+    int dBonus = g_state.combatDrillLevel * 3;
+    for (int s = 0; s < g_state.numSurvivors; s++) {
+        if (strcmp(g_state.survivors[s].job, "security") == 0) {
+            activeG++;
+            guardPower += (g_state.survivors[s].str * 2) + dBonus;
+        } else if (strcmp(g_state.survivors[s].job, "expedition") != 0) {
+            guardPower += g_state.survivors[s].str / 2;
+        }
+    }
+
+    char gPowBuf[48];
+    sprintf(gPowBuf, "Guard Def: +%d pts", guardPower);
+    SetTextColor(hdc, COL_TEXT_MAIN);
+    TextOutA(hdc, c3X + 8, cardY + 22, gPowBuf, (int)strlen(gPowBuf));
+
+    char gCntBuf[48];
+    sprintf(gCntBuf, "Guards: %d | Militia: %d", activeG, g_state.numSurvivors - activeG);
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, c3X + 8, cardY + 36, gCntBuf, (int)strlen(gCntBuf));
+
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, c3X + 8, cardY + 50, "+3 Def bonus per drill level", 28);
+
+    COLORREF drBg = (g_state.scrap >= 12) ? COL_BTN_BG : COL_DARK_CARD;
+    COLORREF drTxt = (g_state.scrap >= 12) ? COL_CYAN : COL_TEXT_DIM;
+    DrawButtonControl(hdc, hFontSmall, c3X + 8, cardY + 68, cardW - 16, 22, "RUN DRILL (12 SCRAP)", drTxt, drBg, COL_BORDER, BTN_DEF_DRILL, 0, 0);
+
+    // 3. Guard Roster List
+    int rosterY = cardY + cardH + 8;
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, x, rosterY, "SECURITY POSTINGS & CITIZEN READINESS", 37);
+
+    int rStartY = rosterY + 18;
+    int rowH = 24;
+    for (int s = 0; s < g_state.numSurvivors && s < 5; s++) {
+        Survivor* surv = &g_state.survivors[s];
+        int ry = rStartY + s * (rowH + 3);
+        int isGuard = (strcmp(surv->job, "security") == 0);
+
+        DrawStyledBox(hdc, x, ry, w, rowH, COL_PANEL_BG, isGuard ? COL_GREEN : COL_BORDER);
+
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, COL_TEXT_BRIGHT);
+        TextOutA(hdc, x + 8, ry + 4, surv->name, (int)strlen(surv->name));
+
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COL_TEXT_DIM);
+        char roleBuf[48];
+        sprintf(roleBuf, "%s (STR:%d AGI:%d)", surv->role, surv->str, surv->agi);
+        TextOutA(hdc, x + 150, ry + 5, roleBuf, (int)strlen(roleBuf));
+
+        int contrib = isGuard ? (surv->str * 2 + dBonus) : (surv->str / 2);
+        char cBuf[32];
+        sprintf(cBuf, "+%d Def", contrib);
+        SetTextColor(hdc, isGuard ? COL_GREEN : COL_TEXT_DIM);
+        TextOutA(hdc, x + 340, ry + 5, cBuf, (int)strlen(cBuf));
+
+        const char* gText = isGuard ? "RELIEVE GUARD" : "POST GUARD";
+        COLORREF gTxt = isGuard ? COL_RED : COL_GREEN;
+        COLORREF gBg = isGuard ? RGB(35, 15, 15) : RGB(15, 35, 20);
+        DrawButtonControl(hdc, hFontSmall, x + w - 105, ry + 2, 98, 20, gText, gTxt, gBg, isGuard ? COL_RED : COL_BORDER, BTN_DEF_TOGGLE_GUARD, s, 0);
+    }
+
+    // 4. Last Battle Tactical Debrief Box
+    int debriefY = rStartY + (g_state.numSurvivors < 5 ? g_state.numSurvivors : 5) * (rowH + 3) + 6;
+    DrawStyledBox(hdc, x, debriefY, w, 50, COL_DARK_CARD, COL_BORDER);
+
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, x + 8, debriefY + 5, "LAST INCURSION DEBRIEF:", 23);
+
+    SelectObject(hdc, hFontSmall);
+    if (g_state.lastRaidAtk > 0) {
+        SetTextColor(hdc, g_state.lastRaidWon ? COL_GREEN : COL_RED);
+        TextOutA(hdc, x + 175, debriefY + 5, g_state.lastRaidWon ? "[PERIMETER HELD - VICTORY]" : "[PERIMETER BREACHED]", g_state.lastRaidWon ? 26 : 20);
+
+        char debBuf[160];
+        if (g_state.lastRaidWon) {
+            sprintf(debBuf, "Repelled %s (Atk %d vs Def %d). Salvaged +%d Scrap, +%d Meds. Barricades: -%d HP.",
+                g_state.lastRaidClan, g_state.lastRaidAtk, g_state.lastRaidDef, g_state.lastRaidScrap, g_state.lastRaidMeds, g_state.lastRaidDmg);
+        } else {
+            sprintf(debBuf, "Breached by %s (Atk %d vs Def %d). Lost %d Food, %d Scrap. %d injured! Barricades: -%d HP.",
+                g_state.lastRaidClan, g_state.lastRaidAtk, g_state.lastRaidDef, g_state.lastRaidFoodStolen, g_state.lastRaidScrapStolen, g_state.lastRaidInjured, g_state.lastRaidDmg);
+        }
+        SetTextColor(hdc, COL_TEXT_MAIN);
+        TextOutA(hdc, x + 8, debriefY + 22, debBuf, (int)strlen(debBuf));
+    } else {
+        SetTextColor(hdc, COL_TEXT_DIM);
+        TextOutA(hdc, x + 175, debriefY + 5, "[NO RECENT HOSTILE ENGAGEMENTS]", 31);
+        TextOutA(hdc, x + 8, debriefY + 22, "Perimeter sensors report all quiet. Keep turrets powered and barricades reinforced.", 83);
+    }
+}
+
 static void DrawPoliciesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, int y, int w, int h) {
     SelectObject(hdc, hFontBold);
     SetTextColor(hdc, COL_TEXT_BRIGHT);
@@ -2121,9 +2522,16 @@ static void DrawManualView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, in
     TextOutA(hdc, x + 20, curY, "* Medical Triage: Use Meds on wounded citizens (+35 HP) or equip Stimpacks before expeditions.", 94); curY += lineH + 4;
 
     SetTextColor(hdc, COL_AMBER);
-    TextOutA(hdc, x + 12, curY, "7. KEYBOARD SHORTCUTS:", 22); curY += lineH;
+    TextOutA(hdc, x + 12, curY, "7. BASE DEFENSE & RAIDER WARBANDS:", 34); curY += lineH;
     SetTextColor(hdc, COL_TEXT_MAIN);
-    TextOutA(hdc, x + 20, curY, "[SPACE] Advance Cycle | [1-5] Tabs | [T] Theme | [C] CRT | [A] Auto | [H] Help | [R] Reset", 90);
+    TextOutA(hdc, x + 20, curY, "* Barricades & Sentry Turrets: Blast-doors absorb trauma; twin 50-cal turrets deal suppressive fire.", 99); curY += lineH;
+    TextOutA(hdc, x + 20, curY, "* Drills & Guards: Assign high-STR survivors as guards; run combat drills to boost defense.", 90); curY += lineH;
+    TextOutA(hdc, x + 20, curY, "* Raider Assaults: Surface radar tracks raiders. Exceeding attack power repels raiders & salvages loot!", 102); curY += lineH + 4;
+
+    SetTextColor(hdc, COL_AMBER);
+    TextOutA(hdc, x + 12, curY, "8. KEYBOARD SHORTCUTS:", 22); curY += lineH;
+    SetTextColor(hdc, COL_TEXT_MAIN);
+    TextOutA(hdc, x + 20, curY, "[SPACE] Advance Cycle | [1-6] Tabs | [T] Theme | [C] CRT | [A] Auto | [H] Help | [R] Reset", 90);
 }
 
 static void DrawSidebar(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, int y, int w, int h) {
@@ -2238,6 +2646,61 @@ static void DrawSummaryModal(HDC hdc, HFONT hFontBold, HFONT hFontSmall) {
     DrawButtonControl(hdc, hFontBold, mx + (modalW - 140) / 2, my + modalH - 42, 140, 28, "CLOSE REPORT", COL_TEXT_BRIGHT, COL_BTN_BG, COL_GREEN, BTN_CLOSE_MODAL, 0, 0);
 }
 
+static void DrawRaidModal(HDC hdc, HFONT hFontBold, HFONT hFontSmall) {
+    // Dim overlay
+    FillSolidRect(hdc, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, RGB(5, 10, 6));
+
+    int modalW = 520;
+    int modalH = 260;
+    int mx = (WINDOW_WIDTH - modalW) / 2;
+    int my = (WINDOW_HEIGHT - modalH) / 2;
+
+    COLORREF borderCol = g_state.lastRaidWon ? COL_GREEN : COL_RED;
+    DrawStyledBox(hdc, mx, my, modalW, modalH, COL_PANEL_BG, borderCol);
+
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, borderCol);
+    TextOutA(hdc, mx + 16, my + 14, g_state.lastRaidWon ? "★ BATTLE DEBRIEF // PERIMETER HELD" : "⚠ PERIMETER BREACH // CASUALTY REPORT", g_state.lastRaidWon ? 34 : 37);
+
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    char clanBuf[64];
+    sprintf(clanBuf, "Enemy: %s (Assault Power: %d pts)", g_state.lastRaidClan, g_state.lastRaidAtk);
+    TextOutA(hdc, mx + 16, my + 42, clanBuf, (int)strlen(clanBuf));
+
+    SelectObject(hdc, hFontSmall);
+    char defBuf[64];
+    sprintf(defBuf, "Vault Total Defense Rating: %d pts", g_state.lastRaidDef);
+    SetTextColor(hdc, COL_GREEN);
+    TextOutA(hdc, mx + 16, my + 64, defBuf, (int)strlen(defBuf));
+
+    int curY = my + 92;
+    SetTextColor(hdc, COL_TEXT_MAIN);
+    if (g_state.lastRaidWon) {
+        TextOutA(hdc, mx + 16, curY, "TACTICAL VICTORY: Twin sentry turrets and fortified barricades held the line!", 78); curY += 22;
+        char lBuf[80];
+        sprintf(lBuf, "* Salvaged Loot: +%d Tech Scrap, +%d Medpacks from fallen raiders.", g_state.lastRaidScrap, g_state.lastRaidMeds);
+        SetTextColor(hdc, COL_GREEN);
+        TextOutA(hdc, mx + 16, curY, lBuf, (int)strlen(lBuf)); curY += 22;
+        char bBuf[80];
+        sprintf(bBuf, "* Perimeter Impact: Barricades absorbed explosive shrapnel (-%d HP).", g_state.lastRaidDmg);
+        SetTextColor(hdc, COL_TEXT_DIM);
+        TextOutA(hdc, mx + 16, curY, bBuf, (int)strlen(bBuf));
+    } else {
+        SetTextColor(hdc, COL_RED);
+        TextOutA(hdc, mx + 16, curY, "BREACH COMPROMISE: Raider assault broke through outer blast bulkheads!", 70); curY += 22;
+        char stBuf[80];
+        sprintf(stBuf, "* Supplies Stolen: -%d Food Rations, -%d Tech Scrap.", g_state.lastRaidFoodStolen, g_state.lastRaidScrapStolen);
+        TextOutA(hdc, mx + 16, curY, stBuf, (int)strlen(stBuf)); curY += 22;
+        char casBuf[80];
+        sprintf(casBuf, "* Casualties: %d citizens wounded. Barricades sustained -%d HP trauma.", g_state.lastRaidInjured, g_state.lastRaidDmg);
+        SetTextColor(hdc, COL_AMBER);
+        TextOutA(hdc, mx + 16, curY, casBuf, (int)strlen(casBuf));
+    }
+
+    DrawButtonControl(hdc, hFontBold, mx + modalW - 200, my + modalH - 40, 180, 26, "ACKNOWLEDGE [OK]", COL_TEXT_BRIGHT, COL_BTN_BG, borderCol, BTN_CLOSE_RAID_MODAL, 0, 0);
+}
+
 // Main Window Procedure
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
@@ -2257,7 +2720,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             if (wParam == VK_SPACE) {
                 AdvanceCycle();
                 InvalidateRect(hwnd, NULL, FALSE);
-            } else if (wParam >= '1' && wParam <= '5') {
+            } else if (wParam >= '1' && wParam <= '6') {
                 g_state.currentTab = (int)(wParam - '1');
                 PlaySfx(1);
                 InvalidateRect(hwnd, NULL, FALSE);
@@ -2268,7 +2731,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 PlaySfx(1);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'H' || wParam == 'h') {
-                g_state.currentTab = 4;
+                g_state.currentTab = 5;
                 PlaySfx(1);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'T' || wParam == 't') {
@@ -2308,7 +2771,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         g_soundEnabled = !g_soundEnabled;
                         PlaySfx(1);
                     } else if (bId == BTN_HELP) {
-                        g_state.currentTab = 4;
+                        g_state.currentTab = 5;
                         PlaySfx(1);
                     } else if (bId == BTN_RESET) {
                         if (MessageBoxA(hwnd, "Initiate Vault Emergency Reboot? All progress resets to Day 1.", "Reset Sanctuary", MB_YESNO | MB_ICONWARNING) == IDYES) {
@@ -2619,6 +3082,84 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         sprintf(buf, "Overseer updated POWER protocol to [%s].", pText[p1]);
                         AddLog(buf, 0);
                         PlaySfx(1);
+                    } else if (bId == BTN_DEF_REPAIR) {
+                        if (g_state.scrap >= 15 && g_state.barricadeHp < g_state.barricadeMaxHp) {
+                            g_state.scrap -= 15;
+                            g_state.barricadeHp += 30;
+                            if (g_state.barricadeHp > g_state.barricadeMaxHp) g_state.barricadeHp = g_state.barricadeMaxHp;
+                            char buf[128];
+                            sprintf(buf, "DEFENSE: Perimeter barricades repaired to %d/%d HP!", g_state.barricadeHp, g_state.barricadeMaxHp);
+                            AddLog(buf, 3);
+                            PlaySfx(2);
+                        } else {
+                            PlaySfx(3);
+                        }
+                    } else if (bId == BTN_DEF_REINFORCE) {
+                        if (g_state.scrap >= 35) {
+                            g_state.scrap -= 35;
+                            g_state.barricadeMaxHp += 25;
+                            g_state.barricadeHp += 25;
+                            char buf[128];
+                            sprintf(buf, "DEFENSE: Blast-doors reinforced! Max HP now %d (+5 Def).", g_state.barricadeMaxHp);
+                            AddLog(buf, 3);
+                            PlaySfx(2);
+                        } else {
+                            PlaySfx(3);
+                        }
+                    } else if (bId == BTN_DEF_TURRET) {
+                        if (g_state.scrap >= 45) {
+                            g_state.scrap -= 45;
+                            g_state.turretCount++;
+                            char buf[128];
+                            sprintf(buf, "DEFENSE: 50-Cal Sentry Turret #%d mounted on outer bulkhead! (+18 Def)", g_state.turretCount);
+                            AddLog(buf, 3);
+                            PlaySfx(2);
+                        } else {
+                            PlaySfx(3);
+                        }
+                    } else if (bId == BTN_DEF_OVERCLOCK) {
+                        if (!g_state.turretOverclock && g_state.scrap >= 20) {
+                            g_state.scrap -= 20;
+                            g_state.turretOverclock = 1;
+                            AddLog("DEFENSE: Sentry targeting overclocked! Auto-aim precision maximized (+10 Def).", 3);
+                            PlaySfx(2);
+                        } else {
+                            PlaySfx(3);
+                        }
+                    } else if (bId == BTN_DEF_DRILL) {
+                        if (g_state.scrap >= 12) {
+                            g_state.scrap -= 12;
+                            g_state.combatDrillLevel++;
+                            g_state.morale += 3.0f;
+                            if (g_state.morale > 100.0f) g_state.morale = 100.0f;
+                            char buf[128];
+                            sprintf(buf, "DEFENSE: Combat drill complete! Citizen tactical readiness raised to Lv %d.", g_state.combatDrillLevel);
+                            AddLog(buf, 3);
+                            PlaySfx(2);
+                        } else {
+                            PlaySfx(3);
+                        }
+                    } else if (bId == BTN_DEF_TOGGLE_GUARD) {
+                        if (p1 >= 0 && p1 < g_state.numSurvivors) {
+                            Survivor* surv = &g_state.survivors[p1];
+                            if (strcmp(surv->job, "security") == 0) {
+                                strcpy(surv->job, "unassigned");
+                                char buf[128];
+                                sprintf(buf, "GUARD: %s relieved from perimeter watch.", surv->name);
+                                AddLog(buf, 0);
+                            } else {
+                                strcpy(surv->job, "security");
+                                char buf[128];
+                                sprintf(buf, "GUARD: %s (STR %d) assigned to perimeter security duty!", surv->name, surv->str);
+                                AddLog(buf, 3);
+                            }
+                            PlaySfx(1);
+                        }
+                    } else if (bId == BTN_DEF_TEST_RAID) {
+                        TriggerRaiderAttack(1);
+                    } else if (bId == BTN_CLOSE_RAID_MODAL) {
+                        g_state.showRaidModal = 0;
+                        PlaySfx(1);
                     } else if (bId == BTN_CLOSE_MODAL) {
                         g_state.showSummary = 0;
                         PlaySfx(1);
@@ -2684,21 +3225,22 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 
             // Tabs Bar (y: 114 to 142)
             const char* tabNames[] = {
-                "[1] FACILITIES & POWER",
-                "[2] SURVIVOR ROSTER",
-                "[3] WASTELAND SCAVENGING",
-                "[4] OVERSEER DIRECTIVES",
-                "[5] HELP / MANUAL"
+                "[1] FACILITIES",
+                "[2] CITIZENS",
+                "[3] SCAVENGE",
+                "[4] DEFENSE",
+                "[5] POLICIES",
+                "[6] MANUAL"
             };
             int tabX = 10;
-            int tabW = 126;
-            for (int t = 0; t < 5; t++) {
+            int tabW = 104;
+            for (int t = 0; t < 6; t++) {
                 int active = (g_state.currentTab == t);
                 COLORREF bg = active ? COL_BTN_HOVER : COL_DARK_CARD;
                 COLORREF bdr = active ? COL_BORDER_HI : COL_BORDER;
                 COLORREF txt = active ? COL_TEXT_BRIGHT : COL_TEXT_DIM;
                 DrawButtonControl(memDC, hFontSmall, tabX, 114, tabW, 26, tabNames[t], txt, bg, bdr, BTN_TAB, t, 0);
-                tabX += tabW + 5;
+                tabX += tabW + 3;
             }
 
             // Main Content Area
@@ -2716,8 +3258,10 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             } else if (g_state.currentTab == 2) {
                 DrawExpeditionsView(memDC, hFontBold, hFontSmall, 20, areaY + 10, contentW - 20, areaH - 20);
             } else if (g_state.currentTab == 3) {
-                DrawPoliciesView(memDC, hFontBold, hFontSmall, 20, areaY + 10, contentW - 20, areaH - 20);
+                DrawDefenseView(memDC, hFontBold, hFontSmall, 20, areaY + 10, contentW - 20, areaH - 20);
             } else if (g_state.currentTab == 4) {
+                DrawPoliciesView(memDC, hFontBold, hFontSmall, 20, areaY + 10, contentW - 20, areaH - 20);
+            } else if (g_state.currentTab == 5) {
                 DrawManualView(memDC, hFontBold, hFontSmall, 20, areaY + 10, contentW - 20, areaH - 20);
             }
 
@@ -2735,6 +3279,11 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             // Summary Modal if open
             if (g_state.showSummary) {
                 DrawSummaryModal(memDC, hFontBold, hFontSmall);
+            }
+
+            // Raid Modal if open
+            if (g_state.showRaidModal) {
+                DrawRaidModal(memDC, hFontBold, hFontSmall);
             }
 
             // CRT scanlines overlay
