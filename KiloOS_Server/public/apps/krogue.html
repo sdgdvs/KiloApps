@@ -9,6 +9,8 @@
         body {
             background: #07090e; color: #e2e8f0;
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             min-height: 100vh; overflow: hidden; padding: 4px;
         }
@@ -42,10 +44,11 @@
         .bar-container {
             width: 95px; height: 14px; background: #2d3748; border-radius: 7px; overflow: hidden;
             display: inline-block; position: relative; vertical-align: middle; border: 1px solid #4a5568;
+            box-shadow: inset 1px 2px 4px rgba(0,0,0,0.8), inset -1px -1px 2px rgba(255,255,255,0.1);
         }
-        .bar-fill-hp { height: 100%; background: linear-gradient(90deg, #e53e3e, #f56565); transition: width 0.2s; }
-        .bar-fill-mp { height: 100%; background: linear-gradient(90deg, #3182ce, #63b3ed); transition: width 0.2s; }
-        .bar-fill-food { height: 100%; background: linear-gradient(90deg, #dd6b20, #ed8936); transition: width 0.2s; }
+        .bar-fill-hp { height: 100%; background: linear-gradient(90deg, #e53e3e, #f56565); transition: width 0.2s; box-shadow: inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.3); }
+        .bar-fill-mp { height: 100%; background: linear-gradient(90deg, #3182ce, #63b3ed); transition: width 0.2s; box-shadow: inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.3); }
+        .bar-fill-food { height: 100%; background: linear-gradient(90deg, #dd6b20, #ed8936); transition: width 0.2s; box-shadow: inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.3); }
         .bar-text {
             position: absolute; width: 100%; height: 100%; top: 0; left: 0;
             text-align: center; font-size: 10px; line-height: 14px; color: #fff; text-shadow: 1px 1px 2px #000;
@@ -103,6 +106,16 @@
             padding: 20px; width: 620px; max-width: 95%; max-height: 90%; overflow-y: auto;
             box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
+        #modal-inventory .modal-card {
+            background: linear-gradient(135deg, #4e342e 0%, #3e2723 100%);
+            border: 2px solid #5d4037;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.9), 0 10px 30px rgba(0,0,0,0.8);
+            background-image: repeating-radial-gradient(circle at 0 0, transparent 0, #1a0f0c 10px), repeating-linear-gradient(#3e2723, #3e2723);
+            background-blend-mode: overlay;
+        }
+        #modal-inventory .equip-slot, #modal-inventory .inv-item {
+            background: rgba(0, 0, 0, 0.4); border: 1px solid #5d4037;
+        }
         .modal-header {
             font-size: 22px; font-weight: bold; color: #f6ad55; text-align: center; margin-bottom: 14px;
             border-bottom: 1px solid #30363d; padding-bottom: 8px;
@@ -117,7 +130,7 @@
         .btn-modal-close:hover { background: #30363d; color: #fff; }
 
         /* Class Selector Grid */
-        .class-grid { display: flex; gap: 12px; margin-bottom: 16px; }
+        .class-grid { display: flex; gap: 12px; margin-bottom: 12px; }
         .class-card {
             flex: 1; background: #0d1117; border: 2px solid #30363d; border-radius: 8px;
             padding: 12px; cursor: pointer; transition: all 0.2s; text-align: center;
@@ -128,14 +141,25 @@
         .class-title { font-weight: bold; font-size: 15px; color: #e2e8f0; margin-bottom: 4px; }
         .class-desc { font-size: 11px; color: #a0aec0; line-height: 1.3; }
 
-        .race-grid { display: flex; gap: 10px; margin-bottom: 16px; }
+        .loadout-grid { display: flex; gap: 10px; margin-bottom: 14px; }
+        .loadout-card {
+            flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
+            padding: 8px 10px; cursor: pointer; text-align: left; transition: all 0.2s;
+        }
+        .loadout-card:hover { border-color: #63b3ed; transform: translateY(-1px); }
+        .loadout-card.selected { border-color: #ecc94b; background: #1c2128; box-shadow: 0 0 8px rgba(236, 201, 75, 0.25); }
+        .loadout-title { font-weight: bold; font-size: 12px; color: #ecc94b; margin-bottom: 3px; }
+        .loadout-gear { font-size: 11px; color: #63b3ed; margin-bottom: 2px; }
+        .loadout-desc { font-size: 10px; color: #a0aec0; line-height: 1.25; }
+
+        .race-grid { display: flex; gap: 10px; margin-bottom: 14px; }
         .race-card {
             flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
             padding: 8px; cursor: pointer; text-align: center; font-size: 12px; font-weight: bold;
         }
         .race-card.selected { border-color: #68d391; background: #1c2128; color: #68d391; }
 
-        .seed-input-group { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; }
+        .seed-input-group { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; }
         .seed-input {
             flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
             padding: 6px 12px; color: #e2e8f0; font-family: monospace; font-size: 14px;
@@ -166,10 +190,34 @@
         .lead-table th { background: #21262d; color: #f6ad55; text-align: left; padding: 6px 8px; }
         .lead-table td { padding: 6px 8px; border-bottom: 1px solid #21262d; }
         .lead-table tr:hover { background: #161b22; }
+
+        /* Toast Notifications */
+        #toast-container {
+            position: absolute; top: 16px; right: 16px; z-index: 9999;
+            display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+        }
+        .toast {
+            background: rgba(17, 21, 32, 0.96);
+            color: #e2e8f0; border: 1px solid #4a5568; border-radius: 8px;
+            padding: 10px 16px; font-size: 13px; font-weight: 600;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.7);
+            display: flex; align-items: center; gap: 8px;
+            animation: toast-in 0.25s ease-out;
+            pointer-events: auto;
+        }
+        .toast-success { border-color: #38a169; color: #68d391; }
+        .toast-info { border-color: #4299e1; color: #63b3ed; }
+        .toast-warning { border-color: #dd6b20; color: #f6ad55; }
+        .toast-error { border-color: #e53e3e; color: #fc8181; }
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
     <div id="game-container">
+        <div id="toast-container"></div>
         <div id="canvas-wrapper">
             <canvas id="gameCanvas" width="880" height="440"></canvas>
         </div>
@@ -206,20 +254,20 @@
                 <button id="btn-class-ability" class="btn-action btn-ability" onclick="useClassAbility()">[A] Berserk Slash</button>
                 <button class="btn-action btn-spell" onclick="openSpellbook()">[M] Spellbook</button>
                 <button class="btn-action btn-inv" onclick="openInventory()">[I] Inventory & Gear</button>
-                <button class="btn-action btn-lead" onclick="openLeaderboard()">[H] Leaderboard</button>
+                <button class="btn-action btn-lead" onclick="openLeaderboard()">[T] Leaderboard</button>
                 <button class="btn-action" onclick="openKeybinds()">[K] Controls & Rebind</button>
-                <button class="btn-action" onclick="openHelp()">[?] Help</button>
-                <button class="btn-action" onclick="saveGame()">[S] Quick Save</button>
-                <button class="btn-action" onclick="loadGame()">[L] Load Game</button>
+                <button class="btn-action" style="border-color: #4299e1; background: #1a365d;" onclick="openHelp()">[H / F1] Help</button>
+                <button class="btn-action" onclick="saveGame()">[F5 / S] Quick Save</button>
+                <button class="btn-action" onclick="loadGame()">[F9 / L] Load Game</button>
             </div>
             <div id="msg-box"></div>
             <div class="controls-hint">
-                [Arrows/WASD] Move | [.] Wait | [A] Ability | [M] Spells | [I] Inventory | [H] Leaderboard | [K] Keybinds | [?] Help | [S] Save | [L] Load
+                [Arrows/Numpad] Move | [.] Wait | [A] Ability | [M] Spells | [I] Inventory | [T] Leaderboard | [K] Keybinds | [H / F1] Help | [F5 / S] Save | [F9 / L] Load
             </div>
         </div>
 
         <!-- Character Select Modal -->
-        <div id="modal-char-select" class="modal-overlay" style="display: none;">
+        <div id="modal-char-select" class="modal-overlay" style="display: none;" onclick="if(event.target === this) closeModal('modal-char-select')">
             <div class="modal-card">
                 <div class="modal-header">⚔️ CHOOSE YOUR HERO ⚔️</div>
                 
@@ -228,28 +276,33 @@
                     <div class="class-card selected" id="card-warrior" onclick="selectClass('warrior')">
                         <div class="class-icon">⚔️</div>
                         <div class="class-title">Warrior</div>
-                        <div class="class-desc">High HP (35), +4 STR, Heavy Armor. Ability: <b>Berserk Slash</b> (Cleaves adjacent enemies).</div>
+                        <div class="class-desc">High HP (35), +4 STR, Heavy Armor. Ability: <b>Berserk Cleave</b>.</div>
                     </div>
                     <div class="class-card" id="card-mage" onclick="selectClass('mage')">
                         <div class="class-icon">🔮</div>
                         <div class="class-title">Mage</div>
-                        <div class="class-desc">High MP (50), Spell Boost. Starts with Magic Missile & Fireball. Ability: <b>Arcane Burst</b>.</div>
+                        <div class="class-desc">High MP (50), Magic Spells. Passive MP regen. Ability: <b>Arcane Nova</b>.</div>
                     </div>
                     <div class="class-card" id="card-rogue" onclick="selectClass('rogue')">
                         <div class="class-icon">🗡️</div>
                         <div class="class-title">Rogue</div>
-                        <div class="class-desc">High DEX (+4), Bow/Dagger master. Ability: <b>Shadow Step</b> (Teleport + Invisibility).</div>
+                        <div class="class-desc">High DEX (+4), Stealth & Dodge. Trap disarm. Ability: <b>Shadow Step</b>.</div>
                     </div>
                 </div>
 
-                <div style="font-size: 12px; color: #a0aec0; margin-bottom: 6px; font-weight: bold;">2. Select Race</div>
+                <div style="font-size: 12px; color: #a0aec0; margin-bottom: 6px; font-weight: bold;">2. Choose Starting Loadout Archetype</div>
+                <div class="loadout-grid" id="loadout-container">
+                    <!-- Populated dynamically based on chosen class -->
+                </div>
+
+                <div style="font-size: 12px; color: #a0aec0; margin-bottom: 6px; font-weight: bold;">3. Select Race</div>
                 <div class="race-grid">
                     <div class="race-card selected" id="race-human" onclick="selectRace('human')">Human (+2 All, +15% XP)</div>
                     <div class="race-card" id="race-elf" onclick="selectRace('elf')">Elf (+4 DEX, +10 MP, +1 Sight)</div>
                     <div class="race-card" id="race-dwarf" onclick="selectRace('dwarf')">Dwarf (+8 HP, +3 DEF, Poison Res)</div>
                 </div>
 
-                <div style="font-size: 12px; color: #a0aec0; margin-bottom: 6px; font-weight: bold;">3. Dungeon Seed</div>
+                <div style="font-size: 12px; color: #a0aec0; margin-bottom: 6px; font-weight: bold;">4. Dungeon Seed</div>
                 <div class="seed-input-group">
                     <input type="text" id="seed-input" class="seed-input" value="KR-7492" placeholder="Custom Seed String">
                     <button class="btn-modal-close" onclick="generateRandomSeed()">🎲 Random Seed</button>
@@ -257,13 +310,13 @@
 
                 <div class="modal-close" style="display: flex; gap: 10px; justify-content: center;">
                     <button class="btn-action btn-ability" style="padding: 10px 24px; font-size: 14px;" onclick="confirmStartGame()">Begin Dungeon Crawl</button>
-                    <button class="btn-modal-close" onclick="closeModal('modal-char-select')">Cancel</button>
+                    <button class="btn-modal-close" onclick="closeModal('modal-char-select')">Cancel [ESC]</button>
                 </div>
             </div>
         </div>
 
         <!-- Inventory & Equipment Modal -->
-        <div id="modal-inventory" class="modal-overlay" style="display: none;">
+        <div id="modal-inventory" class="modal-overlay" style="display: none;" onclick="if(event.target === this) closeModal('modal-inventory')">
             <div class="modal-card">
                 <div class="modal-header">🎒 INVENTORY & EQUIPMENT</div>
                 
@@ -303,7 +356,7 @@
         </div>
 
         <!-- Spellbook Modal -->
-        <div id="modal-spellbook" class="modal-overlay" style="display: none;">
+        <div id="modal-spellbook" class="modal-overlay" style="display: none;" onclick="if(event.target === this) closeModal('modal-spellbook')">
             <div class="modal-card">
                 <div class="modal-header">📜 MAGIC SPELLBOOK</div>
                 <div id="spell-list-container" style="display: flex; flex-direction: column; gap: 8px;">
@@ -316,7 +369,7 @@
         </div>
 
         <!-- Leaderboard Modal -->
-        <div id="modal-leaderboard" class="modal-overlay" style="display: none;">
+        <div id="modal-leaderboard" class="modal-overlay" style="display: none;" onclick="if(event.target === this) closeModal('modal-leaderboard')">
             <div class="modal-card">
                 <div class="modal-header">🏆 DUNGEON RUN HISTORY</div>
                 <div style="max-height: 260px; overflow-y: auto;">
@@ -350,7 +403,7 @@
         <input type="file" id="import-json-file" accept=".json" style="display: none;" onchange="handleImportJSONFile(event)">
 
         <!-- Keybindings Modal -->
-        <div id="modal-keybinds" class="modal-overlay" style="display: none;">
+        <div id="modal-keybinds" class="modal-overlay" style="display: none;" onclick="if(event.target === this) closeModal('modal-keybinds')">
             <div class="modal-card" style="width: 480px; max-width: 95%;">
                 <div class="modal-header">⌨️ KEYBINDINGS & CONTROLS</div>
                 <div id="keybinds-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow-y: auto; padding: 4px;">
@@ -365,17 +418,20 @@
         </div>
 
         <!-- Help Modal -->
-        <div id="modal-help" class="modal-overlay" style="display: none;">
+        <div id="modal-help" class="modal-overlay" style="display: none;" onclick="if(event.target === this) closeModal('modal-help')">
             <div class="modal-card">
                 <div class="modal-header">📖 HOW TO PLAY KROGUE</div>
-                <div style="font-size: 13px; color: #a0aec0; line-height: 1.5;">
-                    <p><b style="color:#63b3ed;">Goal:</b> Descend through 40 floors to slay Astaroth!</p>
-                    <p><b style="color:#63b3ed;">Movement:</b> Use Arrow Keys / WASD / Custom Keybinds to move/attack. Press [.] or Numpad 5 to wait a turn.</p>
-                    <p><b style="color:#63b3ed;">Combat:</b> Bump into enemies to attack. Ranged weapons require targeting [F].</p>
-                    <p><b style="color:#63b3ed;">Classes & Magic:</b> Each class has a unique ability [A]. Mages start with spells [M].</p>
-                    <p><b style="color:#63b3ed;">Custom Keybinds:</b> Press [K] to rebind controls to your liking.</p>
-                    <p><b style="color:#63b3ed;">Run Stats JSON:</b> Export/Import your leaderboard JSON on the [H] Leaderboard screen.</p>
-                    <p><b style="color:#63b3ed;">Food & Healing:</b> Eat Food to prevent starvation. Use Potions to heal [I].</p>
+                <div style="font-size: 13px; color: #a0aec0; line-height: 1.6;">
+                    <p><b style="color:#63b3ed;">Goal:</b> Descend through 50 floors into the Caverns of Chaos to defeat True Astaroth!</p>
+                    <p><b style="color:#63b3ed;">Movement:</b> Use <b>Arrow Keys</b> or <b>Numpad</b> (8/2/4/6) to move. Press <b>[.]</b> or <b>[Space]</b> or <b>Numpad 5</b> to wait a turn.</p>
+                    <p><b style="color:#63b3ed;">Combat:</b> Walk into an adjacent enemy to strike with your weapon. Bows target with <b>[F]</b>.</p>
+                    <p><b style="color:#63b3ed;">Class Abilities:</b> Press <b>[A]</b> to trigger your active class power (e.g. Berserk Slash, Arcane Nova, Shadow Step).</p>
+                    <p><b style="color:#63b3ed;">Spellbook:</b> Press <b>[M]</b> to view and cast known magic spells (Mage starts with Magic Missile & Heal).</p>
+                    <p><b style="color:#63b3ed;">Inventory & Gear:</b> Press <b>[I]</b> to manage carried items, quaff potions, equip weapons/armor, and eat food.</p>
+                    <p><b style="color:#63b3ed;">Key Rebinding:</b> Press <b>[K]</b> to customize controls to your personal setup.</p>
+                    <p><b style="color:#63b3ed;">Quicksave / Quickload:</b> Press <b>[F5]</b> or <b>[S]</b> to save run, <b>[F9]</b> or <b>[L]</b> to resume.</p>
+                    <p><b style="color:#63b3ed;">Run History / Export:</b> Press <b>[T]</b> for the Leaderboard and JSON Export/Import.</p>
+                    <p><b style="color:#63b3ed;">Shortcut:</b> Press <b>[H]</b> or <b>[F1]</b> anytime to open this guide.</p>
                 </div>
                 <div class="modal-close">
                     <button class="btn-modal-close" onclick="closeModal('modal-help')">Close [ESC]</button>
@@ -450,7 +506,7 @@
         let monsters = [];
         let items = [];
         let traps = [];
-        let msgs = ["Welcome to KRogue!", "Press [?] for Help.", "Choose your Hero & descend 30 levels to slay Astaroth!"];
+        let msgs = ["Welcome to KRogue!", "Press [H] or [F1] for Help & Instructions.", "Choose your Hero & descend 50 levels to slay True Astaroth!"];
         let state = 0; // 0=main menu, 1=playing, 2=dead, 3=victory, 4=targeting, 5=char creation
         let difficulty = 0;
         let dlevel = 1;
@@ -462,11 +518,52 @@
         // Character Select state temp variables
         let selectedClass = 'warrior';
         let selectedRace = 'human';
+        let selectedLoadout = 0;
+
+        const LOADOUT_DATA = {
+            warrior: [
+                { id: 0, title: "🛡️ Vanguard", gear: "Broadsword (+4) & Tower Shield (+3)", perk: "Shield Bastion (25% Mitigation)" },
+                { id: 1, title: "🪓 Berserker", gear: "Battle Greataxe (+6) & Fury", perk: "Blood Fury (+ATK per missing HP)" },
+                { id: 2, title: "✝️ Paladin", gear: "Blessed Flail (+4) & Holy Aegis", perk: "Holy Aura (+HP regen & vs Undead)" }
+            ],
+            mage: [
+                { id: 0, title: "🔥 Elementalist", gear: "Elemental Staff (+3) & Spells", perk: "Elemental Burn & Slow effects" },
+                { id: 1, title: "💀 Necromancer", gear: "Shadow Scythe (+4) & Siphon", perk: "Soul Reaper (+5 HP/+3 MP per kill)" },
+                { id: 2, title: "✨ Arcanist", gear: "Aether Wand (+2) & Meteor", perk: "Aether Resonance (-25% MP cost & regen)" }
+            ],
+            rogue: [
+                { id: 0, title: "🗡️ Assassin", gear: "Dual Daggers (+3) & Venom", perk: "Assassinate (3.5x Stealth Ambush Crit)" },
+                { id: 1, title: "🏹 Ranger", gear: "Elven Longbow (+5) & Quiver", perk: "Eagle Eye (Piercing arrows & vision)" },
+                { id: 2, title: "🗝️ Shadow Thief", gear: "Jeweled Stiletto (+2) & Cloak", perk: "Acrobatic Dodge (25% evasion & trap disarm)" }
+            ]
+        };
 
         // Particles & visual effects
         let particles = [];
         let floatTexts = [];
         let attackAnims = [];
+        let decals = [];
+        let screenShake = 0;
+        let shockwaves = [];
+
+        function showToast(msg, type = 'info', duration = 3200) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            let icon = 'ℹ️';
+            if (type === 'success') icon = '⚔️';
+            if (type === 'warning') icon = '⚠️';
+            if (type === 'error') icon = '❌';
+            toast.innerHTML = `<span>${icon}</span><span>${escapeHTML(msg)}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.transition = 'opacity 0.3s, transform 0.3s';
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-10px)';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
 
         function addMsg(m, type = 'normal') {
             msgs.push({ text: m, type: type });
@@ -495,7 +592,7 @@
             });
         }
 
-        function addParticles(x, y, color, count = 10) {
+        function addParticles(x, y, color, count = 10, isFire = false) {
             for (let i = 0; i < count; i++) {
                 let angle = Math.random() * Math.PI * 2;
                 let speed = 1 + Math.random() * 4;
@@ -506,9 +603,38 @@
                     vy: Math.sin(angle) * speed,
                     color: color,
                     size: 2 + Math.random() * 4,
-                    life: 1.0
+                    life: 1.0,
+                    gravity: 0,
+                    isFire: isFire
                 });
             }
+        }
+
+        function addDebrisParticles(x, y, color, count = 20) {
+            for (let i = 0; i < count; i++) {
+                let angle = Math.random() * Math.PI + Math.PI; // Upwards mostly
+                let speed = 2 + Math.random() * 6;
+                particles.push({
+                    x: (x + 0.5) * TILE,
+                    y: (y + 0.5) * TILE,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    color: color,
+                    size: 2 + Math.random() * 5,
+                    life: 1.5,
+                    gravity: 0.4,
+                    isFire: false
+                });
+            }
+        }
+
+        function addExplosion(x, y, size = 1) {
+            screenShake = 15 * size;
+            shockwaves.push({x: x, y: y, radius: 0, life: 1.5, maxLife: 1.5});
+            addParticles(x, y, '#ffffff', 15 * size, true);
+            addParticles(x, y, '#f6ad55', 25 * size, true);
+            addParticles(x, y, '#e53e3e', 20 * size, true);
+            addDebrisParticles(x, y, '#a0aec0', 15 * size);
         }
 
         function addAttackAnim(x, y, targetX, targetY, color = '#fc8181') {
@@ -529,8 +655,8 @@
             if (lvl <= 20) return 'inferno';
             if (lvl <= 25) return 'void';
             if (lvl <= 30) return 'celestial';
-            return 'abyss';
-            return 'celestial';
+            if (lvl <= 40) return 'abyss';
+            return 'true_sanctuary';
         }
 
         function getBiomeName(lvl) {
@@ -540,19 +666,42 @@
             if (lvl <= 20) return 'Inferno';
             if (lvl <= 25) return 'Void';
             if (lvl <= 30) return 'Celestial Sanctuary';
-            return 'The Abyss';
-            return 'Celestial Sanctuary';
+            if (lvl <= 40) return 'The Abyss';
+            return 'True Celestial Sanctuary';
         }
 
         // Setup Character Select Modal
         function openCharSelect() {
             document.getElementById('modal-char-select').style.display = 'flex';
+            renderLoadoutCards();
         }
 
         function selectClass(c) {
             selectedClass = c;
+            selectedLoadout = 0;
             document.querySelectorAll('.class-card').forEach(el => el.classList.remove('selected'));
             document.getElementById(`card-${c}`).classList.add('selected');
+            renderLoadoutCards();
+        }
+
+        function selectLoadout(idx) {
+            selectedLoadout = idx;
+            document.querySelectorAll('.loadout-card').forEach(el => el.classList.remove('selected'));
+            let el = document.getElementById(`loadout-${idx}`);
+            if (el) el.classList.add('selected');
+        }
+
+        function renderLoadoutCards() {
+            let container = document.getElementById('loadout-container');
+            if (!container) return;
+            let list = LOADOUT_DATA[selectedClass] || [];
+            container.innerHTML = list.map(item => `
+                <div class="loadout-card ${item.id === selectedLoadout ? 'selected' : ''}" id="loadout-${item.id}" onclick="selectLoadout(${item.id})">
+                    <div class="loadout-title">${item.title}</div>
+                    <div class="loadout-gear">${item.gear}</div>
+                    <div class="loadout-desc">${item.perk}</div>
+                </div>
+            `).join('');
         }
 
         function selectRace(r) {
@@ -569,41 +718,83 @@
         function confirmStartGame() {
             let seedVal = document.getElementById('seed-input').value.trim() || "KR-1000";
             closeModal('modal-char-select');
-            startNewGame(selectedClass, selectedRace, seedVal);
+            startNewGame(selectedClass, selectedRace, seedVal, selectedLoadout);
         }
 
-        function startNewGame(cls, race, seedStr) {
+        function startNewGame(cls, race, seedStr, loadout = 0) {
             dlevel = 1;
             total_kills = 0;
             msgs = [];
             currentSeedVal = seedFromString(seedStr);
+            knownSpells = { missile: true };
 
             player = {
                 x: 2, y: 2,
                 hp: 25, max_hp: 25, mp: 30, max_mp: 30,
                 xp: 0, level: 1, gold: 0, hunger: 400, max_hunger: 400,
-                str: 10, dex: 10, def: 2, atk: 4,
-                class: cls, race: race, seedStr: seedStr,
-                invisible_turns: 0, poisoned_turns: 0, rooted_turns: 0, berserk_turns: 0
+                str: 10, dex: 10, tou: 10, int_stat: 10, wil: 10, def: 2, atk: 4,
+                class: cls, loadout: loadout, race: race, seedStr: seedStr,
+                invisible_turns: 0, poisoned_turns: 0, rooted_turns: 0, berserk_turns: 0,
+                turn_parity: 0
             };
 
-            // Stat and Starting Gear Adjustments
+            equipment = { weapon: null, armor: null, shield: null, ring: null };
+
+            // Stat, Gear and Loadout adjustments
             if (cls === 'warrior') {
                 player.max_hp = player.hp = 35; player.str += 4; player.atk += 3;
-                equipment.weapon = { name: "Iron Broadsword", type: "weapon", val: 4, fg: "#319795" };
-                equipment.armor = { name: "Chainmail Vest", type: "armor", val: 3, fg: "#cbd5e0" };
-                document.getElementById('btn-class-ability').innerText = "[A] Berserk Slash (10 MP)";
+                document.getElementById('btn-class-ability').innerText = "[A] Berserk Cleave (8 MP)";
+                if (loadout === 0) { // Vanguard
+                    equipment.weapon = { name: "Iron Broadsword", type: "weapon", val: 4, fg: "#319795" };
+                    equipment.shield = { name: "Iron Kite Shield", type: "shield", val: 3, fg: "#ecc94b" };
+                    equipment.armor = { name: "Chainmail Armor", type: "armor", val: 3, fg: "#cbd5e0" };
+                } else if (loadout === 1) { // Berserker
+                    player.str += 3; player.atk += 3;
+                    equipment.weapon = { name: "Battle Greataxe", type: "weapon", val: 6, fg: "#e53e3e" };
+                    equipment.armor = { name: "Leather Tunic", type: "armor", val: 1, fg: "#dd6b20" };
+                } else { // Paladin
+                    player.max_hp = player.hp = 40;
+                    equipment.weapon = { name: "Blessed Flail", type: "weapon", val: 4, fg: "#ecc94b" };
+                    equipment.shield = { name: "Tower Shield", type: "shield", val: 3, fg: "#ecc94b" };
+                    equipment.ring = { name: "Ring of Vitality", type: "ring", val: 15, fg: "#f6ad55" };
+                }
             } else if (cls === 'mage') {
                 player.max_hp = player.hp = 20; player.max_mp = player.mp = 50; player.str -= 2;
-                equipment.weapon = { name: "Arcane Wand", type: "weapon", val: 2, fg: "#b794f4" };
-                equipment.armor = { name: "Mage Robes", type: "armor", val: 1, fg: "#805ad5" };
-                knownSpells['fireball'] = true;
-                document.getElementById('btn-class-ability').innerText = "[A] Arcane Burst (10 MP)";
+                document.getElementById('btn-class-ability').innerText = "[A] Arcane Nova (10 MP)";
+                if (loadout === 0) { // Elementalist
+                    knownSpells['fireball'] = true;
+                    knownSpells['freeze'] = true;
+                    equipment.weapon = { name: "Elemental Staff", type: "weapon", val: 3, fg: "#ed8936" };
+                    equipment.armor = { name: "Arcane Robes", type: "armor", val: 1, fg: "#805ad5" };
+                } else if (loadout === 1) { // Necromancer
+                    knownSpells['invisibility'] = true;
+                    knownSpells['heal'] = true;
+                    equipment.weapon = { name: "Shadow Scythe", type: "weapon", val: 4, fg: "#805ad5" };
+                    equipment.armor = { name: "Robe of the Damned", type: "armor", val: 2, fg: "#4a5568" };
+                } else { // Arcanist
+                    knownSpells['meteor'] = true;
+                    knownSpells['blessing'] = true;
+                    player.max_mp = player.mp = 65;
+                    equipment.weapon = { name: "Aether Wand", type: "weapon", val: 2, fg: "#b794f4" };
+                    equipment.armor = { name: "Celestial Cloak", type: "armor", val: 2, fg: "#63b3ed" };
+                    equipment.ring = { name: "Ring of Wisdom", type: "ring", val: 20, fg: "#b794f4" };
+                }
             } else if (cls === 'rogue') {
                 player.max_hp = player.hp = 26; player.dex += 4; player.atk += 2;
-                equipment.weapon = { name: "Dual Daggers", type: "weapon", val: 3, fg: "#4fd1c5" };
-                equipment.armor = { name: "Leather Jerkin", type: "armor", val: 2, fg: "#dd6b20" };
                 document.getElementById('btn-class-ability').innerText = "[A] Shadow Step (8 MP)";
+                if (loadout === 0) { // Assassin
+                    player.dex += 2;
+                    equipment.weapon = { name: "Serrated Daggers", type: "weapon", val: 3, fg: "#4fd1c5" };
+                    equipment.armor = { name: "Leather Cuirass", type: "armor", val: 2, fg: "#dd6b20" };
+                } else if (loadout === 1) { // Ranger
+                    equipment.weapon = { name: "Elven Longbow", type: "weapon", val: 5, fg: "#48bb78" };
+                    equipment.armor = { name: "Ranger Cloak", type: "armor", val: 2, fg: "#38a169" };
+                } else { // Shadow Thief
+                    player.gold += 100;
+                    equipment.weapon = { name: "Jeweled Stiletto", type: "weapon", val: 2, fg: "#ecc94b" };
+                    equipment.armor = { name: "Cloak of Shadows", type: "armor", val: 2, fg: "#718096" };
+                    equipment.ring = { name: "Ring of Agility", type: "ring", val: 4, fg: "#63b3ed" };
+                }
             }
 
             if (race === 'elf') { player.dex += 4; player.max_mp += 10; player.mp += 10; }
@@ -611,13 +802,14 @@
             else if (race === 'human') { player.str += 2; player.dex += 2; }
 
             inventory = [
-                { name: "Health Potion", type: "heal", val: 20, fg: "#f56565" },
+                { name: "Health Potion", type: "heal", val: 30, fg: "#f56565" },
                 { name: "Food Ration", type: "food", val: 250, fg: "#ed8936" }
             ];
 
             state = 1;
-            addMsg(`Journey Begun! Class: ${cls.toUpperCase()} | Seed: ${seedStr}`, 'good');
-            addMsg("Descend 40 floors & conquer Astaroth the Fallen!");
+            let lName = LOADOUT_DATA[cls] && LOADOUT_DATA[cls][loadout] ? LOADOUT_DATA[cls][loadout].title : "Standard";
+            addMsg(`Journey Begun! Class: ${cls.toUpperCase()} (${lName}) | Seed: ${seedStr}`, 'good');
+            addMsg("Descend 50 floors & conquer True Astaroth! Use [A] for Class Ability.");
             initMap();
         }
 
@@ -635,21 +827,21 @@
             map[2][2] = '.';
             
             // Stairs
-            if (dlevel % 10 === 0 && dlevel !== 40) {
+            if (dlevel % 10 === 0 && dlevel !== 50) {
                 let hp = Math.floor(100 + dlevel * 5);
                 monsters.push({
                     x: COLS - 5, y: ROWS - 5, hp: hp, max_hp: hp, ch: 'B', name: 'Resurrected Boss', boss: false, turn: 0
                 });
             }
-            if (dlevel < 40) {
+            if (dlevel < 50) {
                 items.push({ x: COLS - 3, y: ROWS - 3, ch: '>', type: 'stairs' });
                 map[ROWS - 3][COLS - 3] = '.';
             } else {
-                let hp = Math.floor(800 * (1 + difficulty * 0.5));
+                let hp = Math.floor(1500 * (1 + difficulty * 0.5));
                 monsters.push({
-                    x: COLS - 5, y: ROWS - 5, hp: hp, max_hp: hp, ch: '&', name: 'Astaroth the Fallen', boss: true, turn: 0
+                    x: COLS - 5, y: ROWS - 5, hp: hp, max_hp: hp, ch: '&', name: 'True Astaroth', boss: true, turn: 0
                 });
-                addMsg("ASTAROTH THE FALLEN AWAITS AT THE CENTER OF THE SANCTUARY!", 'msg-combat');
+                addMsg("TRUE ASTAROTH AWAITS AT THE CENTER OF THE SANCTUARY!", 'msg-combat');
             }
 
             // Shrines, Food & Equipment Drops
@@ -716,11 +908,16 @@
                     else if (r < 0.50) { type = 't'; hp = 130; name = 'Titan'; }
                     else if (r < 0.75) { type = 'E'; hp = 80; name = 'Beholder'; }
                     else { type = 'U'; hp = 150; name = 'Shadow Behemoth'; }
-                } else {
+                } else if (dlevel <= 40) {
                     if (r < 0.25) { type = 'v'; hp = 180; name = 'Void Walker'; }
                     else if (r < 0.50) { type = 'f'; hp = 250; name = 'Abyss Fiend'; }
                     else if (r < 0.75) { type = 'w'; hp = 300; name = 'Deep Worm'; }
                     else { type = 'O'; hp = 400; name = 'Abyssal Overlord'; }
+                } else {
+                    if (r < 0.25) { type = 'S'; hp = 300; name = 'Seraphim'; }
+                    else if (r < 0.50) { type = 'N'; hp = 400; name = 'Nephilim'; }
+                    else if (r < 0.75) { type = 'J'; hp = 600; name = 'Juggernaut'; }
+                    else { type = 'E'; hp = 500; name = 'Eldritch God'; }
                 }
 
                 hp = Math.floor(hp * (1 + difficulty * 0.4 + dlevel * 0.05));
@@ -760,6 +957,7 @@
             else if (biome === 'void') { baseColor = '#553c9a'; accentColor = '#44337a'; }
             else if (biome === 'celestial') { baseColor = '#d69e2e'; accentColor = '#b7791f'; }
             else if (biome === 'abyss') { baseColor = '#2d004b'; accentColor = '#1a0033'; mortarColor = '#0d001a'; }
+            else if (biome === 'true_sanctuary') { baseColor = '#e2e8f0'; accentColor = '#cbd5e0'; mortarColor = '#ffffff'; }
 
             // Fog / Torch flicker
             let alpha = 1.0;
@@ -775,17 +973,57 @@
             
             // Texture variation
             let crack = (x * 17 + y * 31) % 10;
+            let variation = (x * 11 + y * 43) % 4;
             
-            ctx.fillRect(px + 1, py + 1, TILE - 2, 9);
-            ctx.fillRect(px + 1, py + 11, TILE / 2 - 2, 9);
-            ctx.fillRect(px + TILE / 2 + 1, py + 11, TILE / 2 - 2, 9);
-            ctx.fillStyle = accentColor;
-            ctx.fillRect(px + 2, py + 8, TILE - 4, 2);
-            
-            if (crack > 7) {
-                ctx.fillStyle = mortarColor;
-                ctx.fillRect(px + 4, py + 4, 2, 4);
+            if (variation === 0) {
+                ctx.fillRect(px + 1, py + 1, TILE - 2, 9);
+                ctx.fillRect(px + 1, py + 11, TILE / 2 - 2, 9);
+                ctx.fillRect(px + TILE / 2 + 1, py + 11, TILE / 2 - 2, 9);
+                ctx.fillStyle = accentColor;
+                ctx.fillRect(px + 2, py + 8, TILE - 4, 2);
+            } else if (variation === 1) {
+                ctx.fillRect(px + 1, py + 1, TILE / 2 - 2, 9);
+                ctx.fillRect(px + TILE / 2 + 1, py + 1, TILE / 2 - 2, 9);
+                ctx.fillRect(px + 1, py + 11, TILE - 2, 9);
+                ctx.fillStyle = accentColor;
+                ctx.fillRect(px + 2, py + 18, TILE - 4, 2);
+            } else if (variation === 2) {
+                ctx.fillRect(px + 1, py + 1, TILE - 2, 6);
+                ctx.fillRect(px + 1, py + 8, TILE - 2, 6);
+                ctx.fillRect(px + 1, py + 15, TILE - 2, 5);
+                ctx.fillStyle = accentColor;
+                ctx.fillRect(px + 2, py + 5, TILE - 4, 1);
+            } else {
+                ctx.fillRect(px + 1, py + 1, TILE - 2, TILE - 2);
+                ctx.fillStyle = accentColor;
+                ctx.fillRect(px + 4, py + 4, TILE - 8, TILE - 8);
             }
+            
+            if (crack > 6) {
+                ctx.fillStyle = (biome === 'inferno') ? '#dd6b20' : (biome === 'void' ? '#805ad5' : mortarColor);
+                ctx.fillRect(px + 4, py + 4, 2, 4);
+                if (biome === 'inferno' || biome === 'void') ctx.fillRect(px + 5, py + 2, 2, 2);
+                if (crack === 9) { // deep crack
+                    ctx.fillRect(px + 6, py + 8, 3, 3);
+                    ctx.fillRect(px + 8, py + 11, 2, 4);
+                }
+            }
+            
+            if (biome === 'sewers' && (x * 7 + y * 13) % 4 === 0) {
+                ctx.fillStyle = '#22543d'; // Vines
+                ctx.fillRect(px + 2, py, 2, 10);
+                ctx.fillRect(px + 4, py + 2, 2, 6);
+                ctx.fillStyle = '#2f855a';
+                ctx.fillRect(px + 3, py + 4, 4, 4);
+            } else if (biome === 'crypt' && (x * 11 + y * 5) % 6 === 0) {
+                ctx.fillStyle = '#cbd5e0'; // Skulls on walls
+                ctx.fillRect(px + 12, py + 3, 6, 6);
+                ctx.fillStyle = '#1a202c';
+                ctx.fillRect(px + 13, py + 4, 2, 2);
+                ctx.fillRect(px + 16, py + 4, 2, 2);
+                ctx.fillRect(px + 14, py + 7, 2, 1);
+            }
+            
             ctx.globalAlpha = 1.0;
         }
 
@@ -799,6 +1037,7 @@
             else if (biome === 'void') bg = '#1e1427';
             else if (biome === 'celestial') bg = '#1a2733';
             else if (biome === 'abyss') bg = '#0d001a';
+            else if (biome === 'true_sanctuary') bg = '#a0aec0';
 
             // Fog / Torch flicker
             let alpha = 1.0;
@@ -810,14 +1049,50 @@
             ctx.globalAlpha = Math.max(0.1, alpha);
 
             ctx.fillStyle = bg; ctx.fillRect(px, py, TILE, TILE);
-            ctx.fillStyle = 'rgba(255,255,255,0.04)';
             
             let pebble = (x * 23 + y * 19) % 5;
+            let tileStyle = (x * 7 + y * 11) % 3;
+            
+            if (tileStyle === 1) {
+                ctx.fillStyle = 'rgba(0,0,0,0.15)';
+                ctx.fillRect(px, py, TILE, 1);
+                ctx.fillRect(px, py, 1, TILE);
+            } else if (tileStyle === 2) {
+                ctx.fillStyle = 'rgba(255,255,255,0.02)';
+                ctx.fillRect(px + 2, py + 2, TILE - 4, TILE - 4);
+            }
+            
             if (pebble === 0) {
+                ctx.fillStyle = (biome === 'inferno') ? '#c53030' : (biome === 'crypt' ? '#a0aec0' : 'rgba(255,255,255,0.06)');
                 ctx.fillRect(px + 4, py + 4, 3, 3);
+                ctx.fillStyle = (biome === 'inferno') ? '#dd6b20' : 'rgba(255,255,255,0.04)';
                 ctx.fillRect(px + 14, py + 12, 2, 2);
+                if (biome === 'sewers') {
+                    ctx.fillStyle = '#2f855a';
+                    ctx.fillRect(px + 2, py + 14, 4, 2);
+                }
             } else if (pebble === 1) {
-                ctx.fillRect(px + 8, py + 8, 4, 2);
+                if (biome === 'sewers') {
+                    ctx.fillStyle = '#22543d'; // slime puddle
+                    ctx.fillRect(px + 6, py + 6, 8, 6);
+                    ctx.fillStyle = '#48bb78'; // slime highlight
+                    ctx.fillRect(px + 8, py + 8, 2, 2);
+                } else if (biome === 'caves') {
+                    ctx.fillStyle = '#4a5568'; // rock cluster
+                    ctx.fillRect(px + 8, py + 8, 4, 4);
+                    ctx.fillRect(px + 6, py + 10, 2, 2);
+                } else {
+                    ctx.fillStyle = 'rgba(255,255,255,0.04)';
+                    ctx.fillRect(px + 8, py + 8, 4, 2);
+                    ctx.fillRect(px + 10, py + 4, 2, 2);
+                }
+            } else if (pebble === 2) {
+                if (biome === 'inferno') {
+                    ctx.fillStyle = '#dd6b20'; // small lava pool
+                    ctx.fillRect(px + 10, py + 10, 6, 4);
+                    ctx.fillStyle = '#f6ad55';
+                    ctx.fillRect(px + 12, py + 11, 2, 2);
+                }
             }
             
             ctx.globalAlpha = 1.0;
@@ -826,6 +1101,9 @@
         function drawPlayerSprite(px, py) {
             let bob = Math.sin(frameCount * 0.15) * 1.5;
             let cx = px + TILE / 2, cy = py + TILE / 2 + bob;
+
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.beginPath(); ctx.ellipse(cx, py + TILE - 4, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
 
             if (player.invisible_turns > 0) {
                 ctx.fillStyle = 'rgba(183, 148, 244, 0.4)';
@@ -846,9 +1124,20 @@
             ctx.beginPath(); ctx.moveTo(cx + 6, cy + 2); ctx.lineTo(cx + 10, cy - 6); ctx.stroke();
         }
 
-        function drawMonsterSprite(px, py, type) {
+        function drawMonsterSprite(m) {
+            let px = m.x * TILE, py = m.y * TILE;
+            let type = m.ch, hp = m.max_hp, current_hp = m.hp;
             let cx = px + TILE / 2, cy = py + TILE / 2;
             let bob = Math.sin(frameCount * 0.12 + px) * 1.2;
+            let isEnraged = (m.boss && current_hp < hp / 2);
+
+            if (type !== '&' && type !== 'O' && type !== 'w' && type !== 'B') {
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                ctx.beginPath(); ctx.ellipse(cx, py + TILE - 4, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
+            } else {
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                ctx.beginPath(); ctx.ellipse(cx, py + TILE - 4, 14, 5, 0, 0, Math.PI * 2); ctx.fill();
+            }
 
             if (type === 'N') {
                 ctx.fillStyle = '#00ffff'; ctx.beginPath(); ctx.arc(cx, cy, 7, 0, Math.PI * 2); ctx.fill();
@@ -862,13 +1151,32 @@
                 ctx.fillStyle = '#555555'; ctx.fillRect(cx - 10, cy - 10 + bob, 20, 20);
             } else if (type === 'r') {
                 ctx.fillStyle = '#d69e2e'; ctx.beginPath(); ctx.ellipse(cx, cy + 2 + bob, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
+            } else if (type === 's') { // Slime
+                ctx.fillStyle = hp > 40 ? '#e53e3e' : (hp > 15 ? '#3182ce' : '#38a169');
+                ctx.beginPath(); ctx.arc(cx, cy + 2 + bob, 7, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#000'; ctx.fillRect(cx - 3, cy + bob, 2, 2); ctx.fillRect(cx + 1, cy + bob, 2, 2); // eyes
             } else if (type === 'b') {
                 ctx.fillStyle = '#805ad5'; ctx.beginPath(); ctx.arc(cx, cy + bob, 6, 0, Math.PI * 2); ctx.fill();
-            } else if (type === 'o') {
-                ctx.fillStyle = '#38a169'; ctx.fillRect(cx - 5, cy - 6 + bob, 10, 12);
-            } else if (type === '&') {
-                ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 9, cy - 10 + bob, 18, 19);
-                ctx.fillStyle = '#ecc94b'; ctx.fillRect(cx - 7, cy - 7 + bob, 14, 8);
+            } else if (type === 'g' || type === 'o') {
+                ctx.fillStyle = (type === 'o' || hp > 20) ? '#2f855a' : '#48bb78'; 
+                ctx.fillRect(cx - 5, cy - 6 + bob, 10, 12);
+                ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 2, cy - 3 + bob, 2, 2); ctx.fillRect(cx + 2, cy - 3 + bob, 2, 2); // eyes
+                
+                ctx.strokeStyle = '#a0aec0'; ctx.lineWidth = 2;
+                if ((m.x + m.y) % 3 === 0) { // Sword
+                    ctx.beginPath(); ctx.moveTo(cx + 6, cy + 2 + bob); ctx.lineTo(cx + 10, cy - 6 + bob); ctx.stroke();
+                } else { // Spear
+                    ctx.beginPath(); ctx.moveTo(cx + 6, cy + 6 + bob); ctx.lineTo(cx + 6, cy - 8 + bob); ctx.stroke();
+                }
+            } else if (type === '&' || m.boss) {
+                if (isEnraged) {
+                    ctx.fillStyle = '#ff00ff'; ctx.fillRect(cx - 9, cy - 10 + bob, 18, 19);
+                    ctx.fillStyle = '#ff0000'; ctx.fillRect(cx - 7, cy - 7 + bob, 14, 8);
+                    ctx.fillStyle = '#ffffff'; ctx.fillRect(cx - 4, cy - 4 + bob, 3, 3); ctx.fillRect(cx + 1, cy - 4 + bob, 3, 3); // enraged eyes
+                } else {
+                    ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 9, cy - 10 + bob, 18, 19);
+                    ctx.fillStyle = '#ecc94b'; ctx.fillRect(cx - 7, cy - 7 + bob, 14, 8);
+                }
             } else {
                 ctx.fillStyle = '#fc8181'; ctx.fillRect(cx - 5, cy - 5, 10, 10);
             }
@@ -876,7 +1184,20 @@
 
         function render() {
             frameCount++;
+            if (screenShake > 0) {
+                screenShake *= 0.92;
+                if (screenShake < 0.5) screenShake = 0;
+            }
             ctx.clearRect(0, 0, C_WIDTH, C_HEIGHT);
+            ctx.save();
+            if (screenShake > 0) {
+                let dx = (Math.random() - 0.5) * screenShake * 1.5;
+                let dy = (Math.random() - 0.5) * screenShake * 1.5;
+                let angle = (Math.random() - 0.5) * screenShake * 0.003;
+                ctx.translate(C_WIDTH/2, C_HEIGHT/2);
+                ctx.rotate(angle);
+                ctx.translate(-C_WIDTH/2 + dx, -C_HEIGHT/2 + dy);
+            }
 
             let biome = getBiome(dlevel);
 
@@ -892,7 +1213,7 @@
                 ctx.fillText("Press [ENTER] to Select Hero & Start Run", C_WIDTH / 2, 260);
 
                 ctx.fillStyle = '#a0aec0'; ctx.font = '14px sans-serif';
-                ctx.fillText("Press [H] for Leaderboard  |  Press [?] for Help  |  Press [L] to Resume Saved Run", C_WIDTH / 2, 310);
+                ctx.fillText("Press [T] Leaderboard  |  Press [H / F1] Help  |  Press [K] Keybinds  |  Press [L] Resume Run", C_WIDTH / 2, 310);
                 return;
             }
 
@@ -911,7 +1232,7 @@
                     ctx.fillText("ASTAROTH THE FALLEN IS DEFEATED!", C_WIDTH / 2, 220);
                 }
                 ctx.fillStyle = '#cbd5e0'; ctx.font = '16px sans-serif';
-                ctx.fillText("Press [R] to Restart Run  |  Press [H] to View Leaderboard", C_WIDTH / 2, 310);
+                ctx.fillText("Press [R] to Restart Run  |  Press [T] to View Leaderboard", C_WIDTH / 2, 310);
                 return;
             }
 
@@ -933,11 +1254,34 @@
             });
 
             items.forEach(it => {
-                ctx.fillStyle = it.fg || '#ecc94b'; ctx.font = 'bold 16px monospace'; ctx.textAlign = 'center';
-                ctx.fillText(it.ch || '*', (it.x + 0.5) * TILE, (it.y + 0.75) * TILE);
+                let ix = it.x * TILE + TILE / 2;
+                let iy = it.y * TILE + TILE / 2;
+                
+                if (it.type === 'weapon') {
+                    ctx.strokeStyle = it.fg || '#63b3ed'; ctx.lineWidth = 2;
+                    if (it.name.includes('Sword') || it.name.includes('Dagger')) {
+                        ctx.beginPath(); ctx.moveTo(ix - 4, iy + 4); ctx.lineTo(ix + 6, iy - 6); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(ix - 6, iy + 2); ctx.lineTo(ix - 2, iy + 6); ctx.stroke(); // crossguard
+                    } else if (it.name.includes('Bow')) {
+                        ctx.beginPath(); ctx.arc(ix, iy, 6, -Math.PI/2, Math.PI/2); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(ix, iy-6); ctx.lineTo(ix, iy+6); ctx.stroke(); // string
+                    } else { // Spear / Hammer
+                        ctx.beginPath(); ctx.moveTo(ix - 4, iy + 6); ctx.lineTo(ix + 4, iy - 6); ctx.stroke();
+                        ctx.fillStyle = it.fg || '#63b3ed'; ctx.fillRect(ix + 2, iy - 8, 4, 4); // tip
+                    }
+                } else if (it.type === 'armor') {
+                    ctx.fillStyle = it.fg || '#cbd5e0';
+                    ctx.fillRect(ix - 5, iy - 4, 10, 8);
+                } else if (it.type === 'shield') {
+                    ctx.fillStyle = it.fg || '#ecc94b';
+                    ctx.beginPath(); ctx.moveTo(ix - 5, iy - 5); ctx.lineTo(ix + 5, iy - 5); ctx.lineTo(ix, iy + 6); ctx.fill();
+                } else {
+                    ctx.fillStyle = it.fg || '#ecc94b'; ctx.font = 'bold 16px monospace'; ctx.textAlign = 'center';
+                    ctx.fillText(it.ch || '*', (it.x + 0.5) * TILE, (it.y + 0.75) * TILE);
+                }
             });
 
-            monsters.forEach(m => drawMonsterSprite(m.x * TILE, m.y * TILE, m.ch));
+            monsters.forEach(m => drawMonsterSprite(m));
             drawPlayerSprite(player.x * TILE, player.y * TILE);
 
             // Targeting Reticle
@@ -946,12 +1290,58 @@
                 ctx.strokeRect(targetX * TILE, targetY * TILE, TILE, TILE);
             }
 
+            // Decal FX
+            for (let i = decals.length - 1; i >= 0; i--) {
+                let d = decals[i];
+                let distSq = (player.x - d.x)*(player.x - d.x) + (player.y - d.y)*(player.y - d.y);
+                if (map[d.y][d.x] !== '#' && distSq <= 80) {
+                    let alpha = 1.0 - (distSq / 160);
+                    if (alpha > 0) {
+                        ctx.globalAlpha = Math.max(0, (d.life / 100) * alpha);
+                        ctx.fillStyle = d.color;
+                        let px = d.x * TILE, py = d.y * TILE;
+                        ctx.beginPath();
+                        ctx.arc(px + 8, py + 14, 4, 0, Math.PI*2);
+                        ctx.arc(px + 14, py + 10, 2, 0, Math.PI*2);
+                        ctx.arc(px + 6, py + 8, 2, 0, Math.PI*2);
+                        ctx.fill();
+                        ctx.globalAlpha = 1.0;
+                    }
+                }
+                if (state === 1) d.life -= 0.2;
+                if (d.life <= 0) decals.splice(i, 1);
+            }
+
             // Particle FX
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life -= 0.05;
-                ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(0, p.life);
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+                if (p.gravity) p.vy += p.gravity;
+                p.vx *= 0.93; // kinematic drag
+                p.vy *= 0.93;
+                let c = p.color;
+                if (p.isFire) c = p.life > 0.6 ? '#ffffff' : (p.life > 0.3 ? '#f6ad55' : '#e53e3e');
+                ctx.fillStyle = c; ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (0.5 + p.life * 0.5), 0, Math.PI * 2); ctx.fill();
                 ctx.globalAlpha = 1.0; if (p.life <= 0) particles.splice(i, 1);
+            }
+            
+            // Shockwave FX
+            for (let i = shockwaves.length - 1; i >= 0; i--) {
+                let sw = shockwaves[i];
+                sw.radius += 1.5 + (sw.life * 1.0); // expands faster initially
+                sw.life -= 0.05;
+                if (sw.life <= 0) {
+                    shockwaves.splice(i, 1);
+                    continue;
+                }
+                let alpha = sw.maxLife ? sw.life / sw.maxLife : sw.life;
+                ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2 + alpha * 4;
+                ctx.beginPath();
+                ctx.ellipse((sw.x + 0.5) * TILE, (sw.y + 0.5) * TILE, sw.radius * TILE, sw.radius * TILE * 0.7, 0, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.globalAlpha = 1.0;
             }
 
             // Floating Text
@@ -971,7 +1361,8 @@
             document.getElementById('food-bar').style.width = (Math.max(0, player.hunger) / player.max_hunger * 100) + '%';
             document.getElementById('food-text').innerText = `${player.hunger}/${player.max_hunger}`;
 
-            document.getElementById('val-class').innerText = player.class.toUpperCase();
+            let lName = LOADOUT_DATA[player.class] && LOADOUT_DATA[player.class][player.loadout] ? LOADOUT_DATA[player.class][player.loadout].title.split(' ')[1] : "";
+            document.getElementById('val-class').innerText = `${player.class.toUpperCase()}${lName ? ' (' + lName + ')' : ''}`;
             document.getElementById('val-lvl').innerText = player.level;
             document.getElementById('val-xp').innerText = player.xp;
             document.getElementById('val-gold').innerText = player.gold;
@@ -984,6 +1375,7 @@
             if (player.poisoned_turns > 0) statusHTML += `<span class="status-pill status-poison">POISON (${player.poisoned_turns})</span>`;
             if (player.berserk_turns > 0) statusHTML += `<span class="status-pill status-berserk">BERSERK (${player.berserk_turns})</span>`;
             document.getElementById('status-indicators').innerHTML = statusHTML;
+            ctx.restore();
         }
 
         function gameLoop() { render(); requestAnimationFrame(gameLoop); }
@@ -992,33 +1384,71 @@
         function useClassAbility() {
             if (state !== 1) return;
             if (player.class === 'warrior') {
-                if (player.mp < 10) { addMsg("Not enough MP for Berserk Slash (10 MP)!"); return; }
-                player.mp -= 10; player.berserk_turns = 4;
-                addMsg("BERSERK SLASH! Next attacks deal 2x damage & cleave!", 'msg-magic');
-                addParticles(player.x, player.y, '#e53e3e', 25);
-            } else if (player.class === 'mage') {
-                if (player.mp < 10) { addMsg("Not enough MP for Arcane Burst (10 MP)!"); return; }
-                player.mp -= 10;
-                addMsg("ARCANE BURST! Knocked back surrounding foes!", 'msg-magic');
-                addParticles(player.x, player.y, '#b794f4', 30);
+                if (player.mp < 8) { addMsg("Not enough MP for Berserk Cleave (8 MP required)!"); return; }
+                player.mp -= 8; player.berserk_turns = 5;
+                addMsg("WAR CRY & BERSERK CLEAVE! 360-degree sweep strikes surrounding foes!", 'msg-magic');
+                addParticles(player.x, player.y, '#e53e3e', 30);
+                screenShake = 12;
+                shockwaves.push({x: player.x, y: player.y, radius: 0, life: 1.2});
                 for (let dy = -1; dy <= 1; dy++) {
                     for (let dx = -1; dx <= 1; dx++) {
+                        if (dx === 0 && dy === 0) continue;
                         let mIdx = monsters.findIndex(m => m.x === player.x + dx && m.y === player.y + dy);
                         if (mIdx >= 0) {
-                            monsters[mIdx].hp -= 20 + player.level * 4;
-                            addFloatText(monsters[mIdx].x, monsters[mIdx].y, `-20`, '#b794f4');
+                            let cdmg = player.atk * 2 + 10;
+                            monsters[mIdx].hp -= cdmg;
+                            addFloatText(monsters[mIdx].x, monsters[mIdx].y, `-${cdmg}`, '#e53e3e');
+                            addParticles(monsters[mIdx].x, monsters[mIdx].y, '#f56565', 10);
+                            if (monsters[mIdx].hp <= 0) {
+                                addMsg(`${monsters[mIdx].name} is cleaved in two!`, 'good');
+                                player.xp += 10; total_kills++;
+                                monsters.splice(mIdx, 1);
+                            }
+                        }
+                    }
+                }
+            } else if (player.class === 'mage') {
+                if (player.mp < 10) { addMsg("Not enough MP for Arcane Nova (10 MP required)!"); return; }
+                player.mp -= 10;
+                addMsg("ARCANE NOVA! Massive shockwave blasts and knocks back enemies!", 'msg-magic');
+                addParticles(player.x, player.y, '#b794f4', 35);
+                screenShake = 10;
+                shockwaves.push({x: player.x, y: player.y, radius: 0, life: 1.5});
+                for (let dy = -2; dy <= 2; dy++) {
+                    for (let dx = -2; dx <= 2; dx++) {
+                        if (dx === 0 && dy === 0) continue;
+                        let mIdx = monsters.findIndex(m => m.x === player.x + dx && m.y === player.y + dy);
+                        if (mIdx >= 0) {
+                            let mdmg = 25 + player.level * 5;
+                            monsters[mIdx].hp -= mdmg;
+                            addFloatText(monsters[mIdx].x, monsters[mIdx].y, `-${mdmg}`, '#b794f4');
+                            // Knockback
+                            let kx = monsters[mIdx].x + Math.sign(dx);
+                            let ky = monsters[mIdx].y + Math.sign(dy);
+                            if (kx >= 0 && kx < COLS && ky >= 0 && ky < ROWS && map[ky][kx] !== '#' && !monsters.some(other => other !== monsters[mIdx] && other.x === kx && other.y === ky)) {
+                                monsters[mIdx].x = kx; monsters[mIdx].y = ky;
+                            }
+                            if (monsters[mIdx].hp <= 0) {
+                                addMsg(`${monsters[mIdx].name} dissolves into arcane dust!`, 'good');
+                                player.xp += 10; total_kills++;
+                                monsters.splice(mIdx, 1);
+                            }
                         }
                     }
                 }
             } else if (player.class === 'rogue') {
-                if (player.mp < 8) { addMsg("Not enough MP for Shadow Step (8 MP)!"); return; }
-                player.mp -= 8; player.invisible_turns = 4;
-                let rx = player.x + rngRange(-3, 3), ry = player.y + rngRange(-3, 3);
-                if (rx > 1 && rx < COLS - 1 && ry > 1 && ry < ROWS - 1 && map[ry][rx] !== '#') {
-                    player.x = rx; player.y = ry;
+                if (player.mp < 8) { addMsg("Not enough MP for Shadow Step (8 MP required)!"); return; }
+                player.mp -= 8; player.invisible_turns = 6;
+                addParticles(player.x, player.y, '#718096', 30);
+                for (let attempt = 0; attempt < 20; attempt++) {
+                    let rx = player.x + rngRange(-3, 3);
+                    let ry = player.y + rngRange(-3, 3);
+                    if (rx >= 1 && rx < COLS - 1 && ry >= 1 && ry < ROWS - 1 && map[ry][rx] !== '#' && !monsters.some(m => m.x === rx && m.y === ry)) {
+                        player.x = rx; player.y = ry;
+                        break;
+                    }
                 }
-                addMsg("SHADOW STEP! Teleported & became invisible!", 'msg-magic');
-                addParticles(player.x, player.y, '#38a169', 20);
+                addMsg("SHADOW STEP! You drop a smoke bomb, vanish into stealth, and blink away!", 'msg-magic');
             }
             endTurn();
         }
@@ -1147,7 +1577,21 @@
                         if (mIdx >= 0) monsters[mIdx].hp -= 35;
                     }
                 }
-                addParticles(targetX, targetY, '#e53e3e', 30); addMsg("FIREBALL EXPLOSION!", 'msg-magic');
+                addExplosion(targetX, targetY, 1.5); addMsg("FIREBALL EXPLOSION!", 'msg-magic');
+            } else if (activeTargetSpell === 'meteor') {
+                player.mp -= 12;
+                for (let dy = -2; dy <= 2; dy++) {
+                    for (let dx = -2; dx <= 2; dx++) {
+                        let mIdx = monsters.findIndex(m => m.x === targetX + dx && m.y === targetY + dy);
+                        if (mIdx >= 0) monsters[mIdx].hp -= 60;
+                    }
+                }
+                addExplosion(targetX, targetY, 2.5); addMsg("METEOR STRIKE ANNIHILATION!", 'msg-magic');
+            } else if (activeTargetSpell === 'missile') {
+                player.mp -= 3;
+                let mIdx = monsters.findIndex(m => m.x === targetX && m.y === targetY);
+                if (mIdx >= 0) monsters[mIdx].hp -= 15;
+                addParticles(targetX, targetY, '#63b3ed', 15); addMsg("MAGIC MISSILE!", 'msg-magic');
             }
             state = 1; endTurn();
         }
@@ -1157,22 +1601,22 @@
 
         // Default Keybindings Definition
         const defaultKeybinds = {
-            moveUp: { label: 'Move Up (North)', keys: ['ArrowUp', 'w', 'W', 'k', 'Numpad8'] },
-            moveDown: { label: 'Move Down (South)', keys: ['ArrowDown', 's', 'S', 'j', 'Numpad2'] },
-            moveLeft: { label: 'Move Left (West)', keys: ['ArrowLeft', 'a', 'A', 'h', 'Numpad4'] },
-            moveRight: { label: 'Move Right (East)', keys: ['ArrowRight', 'd', 'D', 'l', 'Numpad6'] },
-            waitTurn: { label: 'Wait / Skip Turn', keys: ['.', 'z', 'Z', ' ', 'Numpad5'] },
+            moveUp: { label: 'Move Up (North)', keys: ['ArrowUp', 'Numpad8'] },
+            moveDown: { label: 'Move Down (South)', keys: ['ArrowDown', 'Numpad2'] },
+            moveLeft: { label: 'Move Left (West)', keys: ['ArrowLeft', 'Numpad4'] },
+            moveRight: { label: 'Move Right (East)', keys: ['ArrowRight', 'Numpad6'] },
+            waitTurn: { label: 'Wait / Skip Turn', keys: ['.', ' ', 'Numpad5'] },
             useAbility: { label: 'Class Ability', keys: ['a', 'A'] },
             openInventory: { label: 'Inventory & Gear', keys: ['i', 'I'] },
             openSpellbook: { label: 'Magic Spellbook', keys: ['m', 'M'] },
-            openLeaderboard: { label: 'Leaderboard', keys: ['h', 'H'] },
+            openLeaderboard: { label: 'Leaderboard', keys: ['t', 'T'] },
             openKeybinds: { label: 'Keybinding Config', keys: ['k', 'K'] },
-            openHelp: { label: 'Help / Guide', keys: ['?', '/'] },
+            openHelp: { label: 'Help / Guide', keys: ['h', 'H', 'F1', '?'] },
             saveState: { label: 'Quick Save', keys: ['F5', 's', 'S'] },
             loadState: { label: 'Quick Load', keys: ['F9', 'l', 'L'] }
         };
 
-        let keybinds = JSON.parse(localStorage.getItem('krogue_keybinds') || 'null');
+        let keybinds = JSON.parse(localStorage.getItem('krogue_keybinds_v3') || 'null');
         if (!keybinds) { keybinds = JSON.parse(JSON.stringify(defaultKeybinds)); }
 
         function isActionKey(e, actionName) {
@@ -1217,9 +1661,10 @@
 
         function resetKeybinds() {
             keybinds = JSON.parse(JSON.stringify(defaultKeybinds));
-            localStorage.setItem('krogue_keybinds', JSON.stringify(keybinds));
+            localStorage.setItem('krogue_keybinds_v3', JSON.stringify(keybinds));
             rebindingAction = null;
             document.getElementById('keybinds-notice').innerText = 'Controls reset to default.';
+            showToast('Controls reset to default.', 'info');
             renderKeybindsList();
         }
 
@@ -1234,6 +1679,7 @@
             a.click();
             URL.revokeObjectURL(url);
             addMsg("Exported run leaderboard to krogue_leaderboard.json!", 'good');
+            showToast("Exported run leaderboard to JSON!", 'success');
         }
 
         function importLeaderboardJSON() {
@@ -1263,8 +1709,9 @@
                     localStorage.setItem('krogue_leaderboard', JSON.stringify(history));
                     openLeaderboard();
                     addMsg(`Imported ${addedCount} run history entries!`, 'good');
+                    showToast(`Imported ${addedCount} run history entries!`, 'success');
                 } catch(err) {
-                    alert("Failed to parse JSON file: " + err.message);
+                    showToast("Failed to parse JSON file: " + err.message, 'error');
                 }
             };
             reader.readAsText(file);
@@ -1276,6 +1723,7 @@
                 localStorage.removeItem('krogue_leaderboard');
                 openLeaderboard();
                 addMsg("Leaderboard history cleared.", 'good');
+                showToast("Leaderboard history cleared.", 'info');
             }
         }
 
@@ -1304,8 +1752,9 @@
         function saveRunToLeaderboard(result) {
             let history = JSON.parse(localStorage.getItem('krogue_leaderboard') || '[]');
             let score = dlevel * 100 + total_kills * 25 + player.gold * 2 + player.level * 50;
+            let lTitle = LOADOUT_DATA[player.class] && LOADOUT_DATA[player.class][player.loadout] ? LOADOUT_DATA[player.class][player.loadout].title : player.class.toUpperCase();
             history.push({
-                name: "Hero", class: player.class, floor: dlevel, kills: total_kills,
+                name: "Hero", class: `${player.class.toUpperCase()} (${lTitle.replace(/[^a-zA-Z0-9 ]/g, '').trim()})`, floor: dlevel, kills: total_kills,
                 gold: player.gold, score: score, seed: player.seedStr, result: result, date: new Date().toLocaleDateString()
             });
             history.sort((a, b) => b.score - a.score);
@@ -1319,6 +1768,14 @@
         }
 
         function endTurn() {
+            player.turn_parity = (player.turn_parity || 0) + 1;
+            if (player.class === 'mage' && player.turn_parity % 3 === 0 && player.mp < player.max_mp) {
+                player.mp++;
+            }
+            if (player.class === 'warrior' && player.loadout === 2 && player.turn_parity % 4 === 0 && player.hp < player.max_hp) {
+                player.hp++;
+            }
+
             if (player.invisible_turns > 0) player.invisible_turns--;
             if (player.berserk_turns > 0) player.berserk_turns--;
             if (player.poisoned_turns > 0) { player.hp--; player.poisoned_turns--; if (player.hp <= 0) { triggerGameOver(); return; } }
@@ -1330,18 +1787,33 @@
             for (let i = monsters.length - 1; i >= 0; i--) {
                 let m = monsters[i];
                 if (m.hp <= 0) {
-                    addParticles(m.x, m.y, '#fc8181', 15);
+                    if (m.boss) {
+                        addExplosion(m.x, m.y, 3.0);
+                        setTimeout(() => { state = 3; saveRunToLeaderboard('VICTORY'); }, 2000);
+                    } else {
+                        addParticles(m.x, m.y, '#fc8181', 15);
+                    }
                     addMsg(`${m.name} dies!`, 'good');
+                    decals.push({x: m.x, y: m.y, color: (m.ch === 's' ? '#3182ce' : '#8a0303'), life: 100});
                     player.xp += 8; total_kills++;
-                    if (m.boss) { state = 3; saveRunToLeaderboard('VICTORY'); return; }
                     monsters.splice(i, 1);
                     continue;
                 }
                 m.turn++;
                 let mdx = Math.sign(player.x - m.x), mdy = Math.sign(player.y - m.y);
                 if (m.x + mdx === player.x && m.y + mdy === player.y) {
+                    if (player.class === 'rogue') {
+                        let dodgeChance = player.loadout === 2 ? 0.25 : 0.15;
+                        if (Math.random() < dodgeChance) {
+                            addMsg(`You acrobatically DODGE ${m.name}'s attack!`, 'good');
+                            addFloatText(player.x, player.y, 'DODGE!', '#68d391');
+                            continue;
+                        }
+                    }
                     let calcDef = player.def + (equipment.armor ? equipment.armor.val : 0) + (equipment.shield ? equipment.shield.val : 0);
+                    if (player.class === 'warrior' && player.loadout === 0) calcDef += 2; // Vanguard Shield Bastion
                     let dmg = Math.max(1, 3 + Math.floor(dlevel * 0.5) - calcDef);
+                    if (player.class === 'warrior' && player.loadout === 0) dmg = Math.max(1, Math.floor(dmg * 0.75));
                     player.hp -= dmg;
                     addMsg(`${m.name} strikes you for ${dmg} dmg.`, 'msg-combat');
                     addFloatText(player.x, player.y, `-${dmg}`, '#e53e3e');
@@ -1361,7 +1833,11 @@
             try {
                 localStorage.setItem('krogue_save', JSON.stringify({ player, equipment, inventory, dlevel, total_kills, msgs }));
                 addMsg("Run Saved to Storage!", 'good');
-            } catch(e) { addMsg("Failed to save."); }
+                showToast("Run Saved to Storage!", 'success');
+            } catch(e) { 
+                addMsg("Failed to save."); 
+                showToast("Failed to save run.", 'error');
+            }
         }
 
         function loadGame() {
@@ -1371,17 +1847,31 @@
                     let d = JSON.parse(s);
                     player = d.player; equipment = d.equipment; inventory = d.inventory; dlevel = d.dlevel; total_kills = d.total_kills;
                     state = 1; addMsg("Run Resumed!", 'good'); initMap();
-                } else addMsg("No saved run found.");
-            } catch(e) { addMsg("Failed to load."); }
+                    showToast("Run Resumed!", 'success');
+                } else {
+                    addMsg("No saved run found.");
+                    showToast("No saved run found.", 'warning');
+                }
+            } catch(e) { 
+                addMsg("Failed to load."); 
+                showToast("Failed to load run.", 'error');
+            }
         }
 
         // Key Listeners
         window.addEventListener('keydown', e => {
+            if (e.key === 'F1') {
+                e.preventDefault();
+                openHelp();
+                return;
+            }
+
             if (rebindingAction) {
                 if (e.key !== 'Escape') {
                     keybinds[rebindingAction].keys = [e.key];
-                    localStorage.setItem('krogue_keybinds', JSON.stringify(keybinds));
+                    localStorage.setItem('krogue_keybinds_v3', JSON.stringify(keybinds));
                     document.getElementById('keybinds-notice').innerText = `Bound ${keybinds[rebindingAction].label} to [${e.key}]!`;
+                    showToast(`Bound ${keybinds[rebindingAction].label} to [${e.key}]!`, 'success');
                 } else {
                     document.getElementById('keybinds-notice').innerText = 'Rebinding cancelled.';
                 }
@@ -1399,25 +1889,53 @@
 
             if (state === 0) {
                 if (e.key === 'Enter') openCharSelect();
-                if (isActionKey(e, 'openLeaderboard') || e.key === 'h' || e.key === 'H') openLeaderboard();
+                if (isActionKey(e, 'openLeaderboard') || e.key === 't' || e.key === 'T') openLeaderboard();
                 if (isActionKey(e, 'openKeybinds') || e.key === 'k' || e.key === 'K') openKeybinds();
-                if (isActionKey(e, 'loadState') || e.key === 'l' || e.key === 'L') loadGame();
-                if (isActionKey(e, 'openHelp') || e.key === '?' || e.key === '/') openHelp();
+                if (isActionKey(e, 'loadState') || e.key === 'l' || e.key === 'L' || e.key === 'F9') loadGame();
+                if (isActionKey(e, 'openHelp') || e.key === 'h' || e.key === 'H' || e.key === 'F1' || e.key === '?') openHelp();
             } else if (state === 1) {
+                if (isActionKey(e, 'openHelp') || e.key === 'h' || e.key === 'H' || e.key === 'F1' || e.key === '?') {
+                    openHelp();
+                    return;
+                }
+                if (isActionKey(e, 'useAbility') || e.key === 'a' || e.key === 'A') {
+                    useClassAbility();
+                    return;
+                }
+                if (isActionKey(e, 'openInventory') || e.key === 'i' || e.key === 'I') {
+                    openInventory();
+                    return;
+                }
+                if (isActionKey(e, 'openSpellbook') || e.key === 'm' || e.key === 'M') {
+                    openSpellbook();
+                    return;
+                }
+                if (isActionKey(e, 'openLeaderboard') || e.key === 't' || e.key === 'T') {
+                    openLeaderboard();
+                    return;
+                }
+                if (isActionKey(e, 'openKeybinds') || e.key === 'k' || e.key === 'K') {
+                    openKeybinds();
+                    return;
+                }
+                if (isActionKey(e, 'saveState') || e.key === 'F5' || e.key === 's' || e.key === 'S') {
+                    saveGame();
+                    return;
+                }
+                if (isActionKey(e, 'loadState') || e.key === 'F9' || e.key === 'l' || e.key === 'L') {
+                    loadGame();
+                    return;
+                }
+                if (isActionKey(e, 'waitTurn')) {
+                    endTurn();
+                    return;
+                }
+
                 let dx = 0, dy = 0, turn = false;
                 if (isActionKey(e, 'moveUp')) { dy = -1; turn = true; }
                 else if (isActionKey(e, 'moveDown')) { dy = 1; turn = true; }
                 else if (isActionKey(e, 'moveLeft')) { dx = -1; turn = true; }
                 else if (isActionKey(e, 'moveRight')) { dx = 1; turn = true; }
-                else if (isActionKey(e, 'waitTurn')) endTurn();
-                else if (isActionKey(e, 'useAbility')) useClassAbility();
-                else if (isActionKey(e, 'openInventory')) openInventory();
-                else if (isActionKey(e, 'openSpellbook')) openSpellbook();
-                else if (isActionKey(e, 'openLeaderboard')) openLeaderboard();
-                else if (isActionKey(e, 'openKeybinds')) openKeybinds();
-                else if (isActionKey(e, 'openHelp')) openHelp();
-                else if (isActionKey(e, 'saveState')) saveGame();
-                else if (isActionKey(e, 'loadState')) loadGame();
 
                 if (turn && (dx !== 0 || dy !== 0)) {
                     if (player.rooted_turns > 0) {
@@ -1429,15 +1947,60 @@
                         let mIdx = monsters.findIndex(m => m.x === nx && m.y === ny);
                         if (mIdx >= 0) {
                             let calcAtk = player.atk + (equipment.weapon ? equipment.weapon.val : 0);
-                            if (player.berserk_turns > 0) calcAtk *= 2;
-                            monsters[mIdx].hp -= calcAtk;
-                            addMsg(`You strike ${monsters[mIdx].name} for ${calcAtk} dmg!`);
+                            if (player.berserk_turns > 0) calcAtk = Math.floor(calcAtk * 2);
+                            if (player.class === 'warrior' && player.loadout === 1) { // Blood Fury
+                                let missing = player.max_hp - player.hp;
+                                if (missing > 0) calcAtk += Math.floor(missing / 8);
+                            }
+                            if (player.class === 'warrior' && player.loadout === 2 && ['z', 's', 'w', 'D', 'L', 'B', '&'].includes(monsters[mIdx].ch)) {
+                                calcAtk = Math.floor(calcAtk * 1.5);
+                            }
+                            let critChance = player.class === 'rogue' ? (player.loadout === 0 ? 0.35 : 0.25) : 0.15;
+                            let isCrit = Math.random() < critChance;
+                            let isStealth = false;
+                            if (player.invisible_turns > 0) {
+                                isStealth = true;
+                                calcAtk = Math.floor(calcAtk * 3.5);
+                                player.invisible_turns = 0;
+                            } else if (isCrit) {
+                                calcAtk = Math.floor(calcAtk * 1.5);
+                            }
+                            if (isCrit || isStealth) {
+                                screenShake = 10;
+                                shockwaves.push({x: nx, y: ny, radius: 0, life: 1.0});
+                                if (isStealth) addMsg(`STEALTH AMBUSH STRIKE on ${monsters[mIdx].name} for ${calcAtk} dmg!`, 'msg-magic');
+                                else addMsg(`CRITICAL HIT on ${monsters[mIdx].name} for ${calcAtk} dmg!`, 'msg-magic');
+                            } else {
+                                addMsg(`You strike ${monsters[mIdx].name} for ${calcAtk} dmg!`);
+                            }
                             addFloatText(nx, ny, `-${calcAtk}`, '#e53e3e');
+                            monsters[mIdx].hp -= calcAtk;
+                            if (player.class === 'mage' && player.loadout === 0 && Math.random() < 0.4) {
+                                addMsg("Elemental burns ignite the target!", 'msg-magic');
+                                monsters[mIdx].hp -= 5;
+                            }
+                            if (player.class === 'rogue' && player.loadout === 0 && Math.random() < 0.5) {
+                                addMsg("Venomous toxin infects the wound!", 'msg-magic');
+                                monsters[mIdx].hp -= 4;
+                            }
                             if (monsters[mIdx].hp <= 0) {
-                                addParticles(monsters[mIdx].x, monsters[mIdx].y, '#fc8181', 15);
+                                if (player.class === 'mage' && player.loadout === 1) { // Necromancer Soul Reaper
+                                    player.hp = Math.min(player.max_hp, player.hp + 5);
+                                    player.mp = Math.min(player.max_mp, player.mp + 3);
+                                    addMsg("Soul Reaper: +5 HP, +3 MP!", 'msg-magic');
+                                }
+                                if (monsters[mIdx].boss) {
+                                    addDebrisParticles(monsters[mIdx].x, monsters[mIdx].y, '#ecc94b', 80);
+                                    addDebrisParticles(monsters[mIdx].x, monsters[mIdx].y, '#e53e3e', 40);
+                                    screenShake = 30;
+                                    shockwaves.push({x: monsters[mIdx].x, y: monsters[mIdx].y, radius: 0, life: 1.5});
+                                    setTimeout(() => { state = 3; saveRunToLeaderboard('VICTORY'); }, 2000);
+                                } else {
+                                    addParticles(monsters[mIdx].x, monsters[mIdx].y, '#fc8181', 15);
+                                }
                                 addMsg(`${monsters[mIdx].name} dies!`, 'good');
+                                decals.push({x: monsters[mIdx].x, y: monsters[mIdx].y, color: (monsters[mIdx].ch === 's' ? '#3182ce' : '#8a0303'), life: 100});
                                 player.xp += 8; total_kills++;
-                                if (monsters[mIdx].boss) { state = 3; saveRunToLeaderboard('VICTORY'); return; }
                                 monsters.splice(mIdx, 1);
                             }
                         } else {
@@ -1450,6 +2013,15 @@
                             }
                             let trapIdx = traps.findIndex(t => t.x === nx && t.y === ny);
                             if (trapIdx >= 0 && !traps[trapIdx].revealed) {
+                                if (player.class === 'rogue') {
+                                    let disarmChance = player.loadout === 2 ? 1.0 : 0.75;
+                                    if (Math.random() < disarmChance) {
+                                        traps[trapIdx].revealed = true;
+                                        addMsg("Your keen rogue senses detect and safely disarm the trap!", 'good');
+                                        endTurn();
+                                        return;
+                                    }
+                                }
                                 traps[trapIdx].revealed = true;
                                 let ty = traps[trapIdx].type;
                                 if(ty === 'poison') { player.poisoned_turns = 10; addMsg("Triggered a poison trap!", 'msg-combat'); }
@@ -1473,12 +2045,15 @@
                 if (e.key === 'Enter') executeTargetSpell();
             } else if (state === 2 || state === 3) {
                 if (e.key === 'r' || e.key === 'R') openCharSelect();
-                if (e.key === 'h' || e.key === 'H') openLeaderboard();
+                if (e.key === 't' || e.key === 'T') openLeaderboard();
             }
         });
 
         // Start Loop
         gameLoop();
+        setTimeout(() => {
+            showToast("Welcome to KRogue! Press [H] or [F1] for Help.", "info", 4500);
+        }, 500);
     </script>
 </body>
 </html>

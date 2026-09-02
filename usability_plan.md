@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KRogue
+**Target App:** KSys
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KRogue
 - KSys
 - KTodo
 - KConverter
@@ -105,6 +104,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTerm
 - KSynth
 - KTask
+- KRogue
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
 - KTask: Usability and UI issues fixed (added dedicated Help modal dialog with full shortcut and feature reference, added Help [F1] header button, interactive task card selection, Delete key task termination, 1-3 tab switching shortcuts, and backdrop click modal dismissal in web; fixed critical bug where typing 'H' in filter edit triggered help messagebox, added Enter to filter/focus list, Enter/I to inspect, updated toolbar labels with explicit shortcut hints, added comprehensive ShowHelpDialog, eliminated GDI font leak, and improved button layout in native C).
@@ -189,7 +189,6 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KSnake: Usability and UI issues fixed (added WS_CLIPCHILDREN to native C window styles to prevent flickering, mapped F1 to help overlay in both versions, updated visual instructions to mention F1, and verified 540x680 bounds in App.jsx).
 - KSpace: Usability and UI issues fixed (added WS_CLIPCHILDREN and F1 hotkey support to native, implemented F1 support in web, updated instructions to state 'PRESS [H] OR [F1] FOR HELP', verified bounds).
 - KType: Usability and UI issues fixed (canvas scaling relative to devicePixelRatio applied in web for crisp text, automatic toggleHelp() on load added for first-time users, native currentMode default swapped to Help screen, SetProcessDPIAware validated).
-- KRogue: Usability and UI issues fixed (implemented negative font height and SetProcessDPIAware for crisp native text, added optimizeLegibility to web, verified 1000x720 bounds, updated help instructions).
 - KGraph: Usability and UI issues fixed (added WS_CLIPCHILDREN and F1 hotkey support to native, implemented F1 support in web, updated button labels and instructions, verified 1024x768 bounds).
 - KRead: Usability and UI issues fixed (added F1 help shortcut to web, explicitly instructed F1/H usage on web/native startup UI, enabled crisp native text rendering via negative font heights, and adjusted native layout clipping via AdjustWindowRect).
 - KJournal: Usability and UI issues fixed (added min-width/min-height layout constraints to web version, explicitly updated web instructions to state 'H' or F1, and mapped F1 to help; added explicit 'H' help instructions to all native terminal sub-menus and resolved sub-menu help routing in main.c).
@@ -201,3 +200,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KSolitaire: Usability and UI issues fixed (mapped F1 to Help dialog and H to Hints across web and native with explicit toolbar and status bar labels, added non-blocking toast notifications with welcome prompt on startup and clear feedback for hints/skills/stats, added Escape key and backdrop-click modal dismissal in web, and updated window title and menu shortcuts in native C).
 - KTerm: Usability and UI issues fixed (integrated cyber-themed Help Modal dialog, non-blocking toast notifications with startup welcome toast, explicit F1/H toolbar & status bar shortcuts, and global key navigation in web; implemented dedicated authentic prompt display, Ctrl+T new tab, Ctrl+W close tab, Ctrl+C line cancel, output window key forwarding, F1 Help dialog, Segoe UI tab font, and vertical layout bounds in native C).
 - KSynth: Usability and UI issues fixed (replaced blocking alert modals with sleek cybernetic toast notifications, added startup welcome toast, made help modal non-blocking with Escape and backdrop dismissal, and updated window dimensions to 980x820 in web; added visible Help [F1] button, removed blocking startup MessageBox, fixed F1 hotkey handling across edit controls, and added transparent static control backgrounds in native C).
+- KRogue: Usability and UI issues fixed (resolved critical keybinding conflict where movement keys intercepted Ability [A] and Help [H], mapped F1 and H to Help with explicit button/HUD labels across web and native, added non-blocking toast notifications with startup welcome toast and quicksave/load feedback, added modal backdrop dismissal and enhanced Help guide in web; added WS_CLIPCHILDREN to eliminate native flicker, updated window title and in-game HUD with F1/H, and added F1 hotkey handling across character creation and game states in native C).

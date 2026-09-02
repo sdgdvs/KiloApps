@@ -1283,7 +1283,7 @@ void finalize_character() {
     
     add_msg("Welcome to KRogue!");
     add_msg("Find the stairs '>'. Defeat evil. Use [A] for Class Ability!");
-    add_msg("Press 'H' or '?' for help. F5 to quicksave.");
+    add_msg("Press 'H' or F1 for help. F5 to quicksave.");
     
     generate_map();
 }
@@ -2428,7 +2428,7 @@ void draw_game(HDC hdc) {
             TextOutA(memDC, 0, (H + 1 + i) * char_h, g.msgs[MAX_MSGS - 1 - i], str_len(g.msgs[MAX_MSGS - 1 - i]));
         }
         SetTextColor(memDC, RGB(150, 150, 150));
-        const char* hint = "[Arrows]:Move/Atk | [.]:Wait | [A]:Ability | [I]:Inv | [C]:Char | [M]:Spells | [H]:Help";
+        const char* hint = "[Arrows]:Move | [.]:Wait | [A]:Ability | [I]:Inv | [C]:Char | [M]:Spells | [H/F1]:Help";
         TextOutA(memDC, 0, (H + 5) * char_h, hint, str_len(hint));
         
         if(g.state == 3) {
@@ -2538,7 +2538,7 @@ void draw_game(HDC hdc) {
         TextOutA(memDC, 20, 165, buf, str_len(buf));
 
         SetTextColor(memDC, RGB(255, 215, 0));
-        TextOutA(memDC, 20, 195, "Press T: Leaderboard | Press K: Keybinds | Press H: Help", 56);
+        TextOutA(memDC, 20, 195, "Press T: Leaderboard | Press K: Keybinds | Press H/F1: Help", 59);
 
         SetTextColor(memDC, RGB(255, 255, 255));
         TextOutA(memDC, 20, 225, "Press ENTER to begin your journey...", 36);
@@ -2710,8 +2710,8 @@ void draw_game(HDC hdc) {
         TextOutA(memDC, 20, y, "M         Spells menu", 21); y += char_h;
         TextOutA(memDC, 20, y, "V         Message log", 21); y += char_h;
         TextOutA(memDC, 20, y, "F         Fire bow (requires bow equipped)", 42); y += char_h;
-        TextOutA(memDC, 20, y, "F5 / F9   Quicksave / Quickload", 31); y += char_h;
-        TextOutA(memDC, 20, y, "H or ?    This help screen", 26); y += char_h;
+        TextOutA(memDC, 20, y, "F5 / F9       Quicksave / Quickload", 35); y += char_h;
+        TextOutA(memDC, 20, y, "H, ?, or F1   This help screen", 30); y += char_h;
         y += 5;
         SetTextColor(memDC, RGB(100, 200, 255));
         TextOutA(memDC, 20, y, "-- Combat Tips --", 17); y += char_h;
@@ -3075,7 +3075,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 else if(wParam == g_keybinds.sheet || wParam == 'C') g.state = 5;
                 else if(wParam == g_keybinds.spells || wParam == 'M') g.state = 6;
                 else if(wParam == g_keybinds.log || wParam == 'V') g.state = 8;
-                else if(wParam == g_keybinds.help || wParam == VK_OEM_2) g.state = 7;
+                else if(wParam == g_keybinds.help || wParam == VK_OEM_2 || wParam == VK_F1 || wParam == 'H') g.state = 7;
                 else if(wParam == g_keybinds.keybinds_menu || wParam == 'K') g.state = 12;
                 else if(wParam == g_keybinds.save || wParam == VK_F5) save_game();
                 else if(wParam == g_keybinds.load || wParam == VK_F9) load_game();
@@ -3126,7 +3126,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 else if(wParam == 'S') g.seed = (g.seed * 3 + 1234) % 90000 + 1000;
                 else if(wParam == 'T') g.state = 11;
                 else if(wParam == 'K') g.state = 12;
-                else if(wParam == VK_OEM_2 || wParam == 'H') g.state = 7;
+                else if(wParam == VK_OEM_2 || wParam == 'H' || wParam == VK_F1) g.state = 7;
                 else if(wParam == VK_RETURN) finalize_character();
             } else if(g.state == 11) { // leaderboard
                 if(wParam == VK_ESCAPE || wParam == 'T') g.state = (g.dlevel == 0 ? 4 : 0);
@@ -3279,7 +3279,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                 }
             } else if(g.state == 7) { // help
-                if(wParam == VK_ESCAPE || wParam == VK_OEM_2 || wParam == 'H') g.state = g.dlevel == 0 ? 4 : 0;
+                if(wParam == VK_ESCAPE || wParam == VK_OEM_2 || wParam == 'H' || wParam == VK_F1) g.state = g.dlevel == 0 ? 4 : 0;
             } else if(g.state == 8) { // message log
                 if(wParam == VK_ESCAPE || wParam == 'V') g.state = 0;
             }
@@ -3309,13 +3309,13 @@ void __stdcall MainEntry() {
     
     RegisterClassA(&wc);
     
-    DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+    DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN;
     RECT r = {0, 0, W * char_w, TOTAL_H * char_h};
     AdjustWindowRect(&r, style, FALSE);
     int win_w = r.right - r.left;
     int win_h = r.bottom - r.top;
     
-    g_hwnd = CreateWindowExA(0, "KRogueClass", "KRogue", style, CW_USEDEFAULT, CW_USEDEFAULT, win_w, win_h, NULL, NULL, hInstance, NULL);
+    g_hwnd = CreateWindowExA(0, "KRogueClass", "KRogue - [Press 'H' or F1 for Help]", style, CW_USEDEFAULT, CW_USEDEFAULT, win_w, win_h, NULL, NULL, hInstance, NULL);
     
     ShowWindow(g_hwnd, SW_SHOW);
     
