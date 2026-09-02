@@ -17,8 +17,11 @@ HWND hBtnExportCSV = NULL;
 HWND hBtnExportJSON = NULL;
 HWND hBtnHelp = NULL;
 HWND hStatusText = NULL;
+HFONT g_hFont = NULL;
 WNDPROC g_OldEditProc = NULL;
 WNDPROC g_OldListProc = NULL;
+
+void ShowHelpDialog(HWND hwnd);
 
 void my_utoa(DWORD num, char* str) {
     int i = 0;
@@ -156,15 +159,17 @@ void LayoutControls(HWND hwnd) {
     MoveWindow(hListBox, 10, 42, width - 20, height - 105, TRUE);
     
     int btnY = height - 58;
-    MoveWindow(hBtnRefresh, 10, btnY, 65, 24, TRUE);
-    MoveWindow(hBtnPriority, 80, btnY, 75, 24, TRUE);
-    MoveWindow(hBtnInspect, 160, btnY, 70, 24, TRUE);
-    MoveWindow(hBtnExportCSV, 235, btnY, 45, 24, TRUE);
-    MoveWindow(hBtnExportJSON, 285, btnY, 45, 24, TRUE);
-    MoveWindow(hBtnHelp, 335, btnY, 50, 24, TRUE);
-    int endTaskX = width - 90;
-    if (endTaskX < 395) endTaskX = 395;
-    MoveWindow(hBtnEndTask, endTaskX, btnY, 80, 24, TRUE);
+    int curX = 10;
+    MoveWindow(hBtnRefresh, curX, btnY, 85, 24, TRUE); curX += 90;
+    MoveWindow(hBtnPriority, curX, btnY, 85, 24, TRUE); curX += 90;
+    MoveWindow(hBtnInspect, curX, btnY, 80, 24, TRUE); curX += 85;
+    MoveWindow(hBtnExportCSV, curX, btnY, 45, 24, TRUE); curX += 50;
+    MoveWindow(hBtnExportJSON, curX, btnY, 45, 24, TRUE); curX += 50;
+    MoveWindow(hBtnHelp, curX, btnY, 75, 24, TRUE); curX += 80;
+
+    int endTaskX = width - 115;
+    if (endTaskX < curX + 5) endTaskX = curX + 5;
+    MoveWindow(hBtnEndTask, endTaskX, btnY, 105, 24, TRUE);
 
     MoveWindow(hStatusText, 10, height - 28, width - 20, 20, TRUE);
 }
@@ -738,6 +743,26 @@ void PerformExportJSON(HWND hwnd) {
     MessageBoxA(hwnd, "Process list snapshot exported to 'ktask_export.json'!", "Export Complete", MB_OK | MB_ICONINFORMATION);
 }
 
+void ShowHelpDialog(HWND hwnd) {
+    MessageBoxA(hwnd,
+        "KTask Process Monitor\r\n\r\n"
+        "Keyboard Shortcuts:\r\n"
+        "  F1 or H   : View this Help dialog\r\n"
+        "  F5 or R   : Refresh active process list\r\n"
+        "  Del       : Terminate selected process\r\n"
+        "  Enter / I : Deep Inspect selected process\r\n"
+        "  Esc       : Clear search filter / dismiss\r\n\r\n"
+        "Toolbar Buttons:\r\n"
+        "  - Refresh [F5]: Live snapshot of running processes\r\n"
+        "  - Set Priority: Cycle priority (Normal -> High -> Below Normal)\r\n"
+        "  - Inspect [I] : View Threads, Loaded DLLs, and Memory Map\r\n"
+        "  - CSV / JSON  : Export process snapshot data\r\n"
+        "  - Help [F1]   : Show shortcuts & documentation\r\n"
+        "  - End Task [Del]: Safely terminate unresponsive process\r\n\r\n"
+        "Double-click any process to open Deep Inspector.",
+        "KTask Help & Shortcuts", MB_OK | MB_ICONINFORMATION);
+}
+
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == WM_KEYDOWN) {
         if (wParam == VK_F5) {
@@ -747,8 +772,12 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             SetWindowTextA(hwnd, "");
             RefreshList();
             return 0;
-        } else if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
-            MessageBoxA(GetParent(hwnd), "Shortcuts:\r\nF5 / R: Refresh\r\nDel: End Task\r\nI: Inspect Process\r\nH / F1: Help", "KTask Help", MB_OK | MB_ICONINFORMATION);
+        } else if (wParam == VK_RETURN) {
+            RefreshList();
+            if (hListBox) SetFocus(hListBox);
+            return 0;
+        } else if (wParam == VK_F1) {
+            ShowHelpDialog(GetParent(hwnd));
             return 0;
         }
     }
@@ -763,11 +792,11 @@ LRESULT CALLBACK ListSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         } else if (wParam == VK_DELETE) {
             PerformEndTask(GetParent(hwnd));
             return 0;
-        } else if (wParam == 'I' || wParam == 'i') {
+        } else if (wParam == 'I' || wParam == 'i' || wParam == VK_RETURN) {
             PerformInspectProcess(GetParent(hwnd));
             return 0;
         } else if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
-            MessageBoxA(GetParent(hwnd), "Shortcuts:\r\nF5 / R: Refresh\r\nDel: End Task\r\nI: Inspect Process\r\nH / F1: Help", "KTask Help", MB_OK | MB_ICONINFORMATION);
+            ShowHelpDialog(GetParent(hwnd));
             return 0;
         }
     }
@@ -787,34 +816,40 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 #ifndef EM_SETCUEBANNER
 #define EM_SETCUEBANNER 0x1501
 #endif
-            SendMessageW(hSearchBox, EM_SETCUEBANNER, 0, (LPARAM)L"Filter by Name... (Press 'H' or F1 for Help)");
+            SendMessageW(hSearchBox, EM_SETCUEBANNER, 0, (LPARAM)L"Filter by Name or PID... (Enter: focus list | F1: Help)");
             hListBox = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_NOINTEGRALHEIGHT, 10, 45, 360, 165, hwnd, (HMENU)4, NULL, NULL);
             hStatusText = CreateWindowA("STATIC", "Processes: 0", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 215, 360, 20, hwnd, (HMENU)5, NULL, NULL);
 
-            NONCLIENTMETRICSA ncm;
-            ncm.cbSize = sizeof(NONCLIENTMETRICSA);
-            SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSA), &ncm, 0);
-            HFONT hFont = CreateFontIndirectA(&ncm.lfMessageFont);
-            if (!hFont) hFont = CreateFontA(-13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
-            SendMessageA(hSearchBox, WM_SETFONT, (WPARAM)hFont, FALSE);
-            SendMessageA(hListBox, WM_SETFONT, (WPARAM)hFont, FALSE);
-            SendMessageA(hStatusText, WM_SETFONT, (WPARAM)hFont, FALSE);
+            g_hFont = CreateFontA(-13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            if (!g_hFont) {
+                NONCLIENTMETRICSA ncm;
+                ncm.cbSize = sizeof(NONCLIENTMETRICSA);
+                SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSA), &ncm, 0);
+                g_hFont = CreateFontIndirectA(&ncm.lfMessageFont);
+            }
+            if (g_hFont) {
+                SendMessageA(hSearchBox, WM_SETFONT, (WPARAM)g_hFont, FALSE);
+                SendMessageA(hListBox, WM_SETFONT, (WPARAM)g_hFont, FALSE);
+                SendMessageA(hStatusText, WM_SETFONT, (WPARAM)g_hFont, FALSE);
+            }
 
-            hBtnRefresh = CreateWindowA("BUTTON", "Refresh", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 240, 65, 25, hwnd, (HMENU)1, NULL, NULL);
-            hBtnPriority = CreateWindowA("BUTTON", "Set Priority", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 80, 240, 75, 25, hwnd, (HMENU)6, NULL, NULL);
-            hBtnInspect = CreateWindowA("BUTTON", "Inspect", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 160, 240, 70, 25, hwnd, (HMENU)9, NULL, NULL);
-            hBtnExportCSV = CreateWindowA("BUTTON", "CSV", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 235, 240, 45, 25, hwnd, (HMENU)7, NULL, NULL);
-            hBtnExportJSON = CreateWindowA("BUTTON", "JSON", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 285, 240, 45, 25, hwnd, (HMENU)8, NULL, NULL);
-            hBtnHelp = CreateWindowA("BUTTON", "Help", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 335, 240, 50, 25, hwnd, (HMENU)10, NULL, NULL);
-            hBtnEndTask = CreateWindowA("BUTTON", "End Task", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 395, 240, 85, 25, hwnd, (HMENU)2, NULL, NULL);
+            hBtnRefresh = CreateWindowA("BUTTON", "Refresh [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 240, 85, 25, hwnd, (HMENU)1, NULL, NULL);
+            hBtnPriority = CreateWindowA("BUTTON", "Set Priority", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 100, 240, 85, 25, hwnd, (HMENU)6, NULL, NULL);
+            hBtnInspect = CreateWindowA("BUTTON", "Inspect [I]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 190, 240, 80, 25, hwnd, (HMENU)9, NULL, NULL);
+            hBtnExportCSV = CreateWindowA("BUTTON", "CSV", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 275, 240, 45, 25, hwnd, (HMENU)7, NULL, NULL);
+            hBtnExportJSON = CreateWindowA("BUTTON", "JSON", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 325, 240, 45, 25, hwnd, (HMENU)8, NULL, NULL);
+            hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 375, 240, 75, 25, hwnd, (HMENU)10, NULL, NULL);
+            hBtnEndTask = CreateWindowA("BUTTON", "End Task [Del]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 455, 240, 105, 25, hwnd, (HMENU)2, NULL, NULL);
             
-            SendMessageA(hBtnRefresh, WM_SETFONT, (WPARAM)hFont, FALSE);
-            SendMessageA(hBtnPriority, WM_SETFONT, (WPARAM)hFont, FALSE);
-            SendMessageA(hBtnInspect, WM_SETFONT, (WPARAM)hFont, FALSE);
-            SendMessageA(hBtnExportCSV, WM_SETFONT, (WPARAM)hFont, FALSE);
-            SendMessageA(hBtnExportJSON, WM_SETFONT, (WPARAM)hFont, FALSE);
-            SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hFont, FALSE);
-            SendMessageA(hBtnEndTask, WM_SETFONT, (WPARAM)hFont, FALSE);
+            if (g_hFont) {
+                SendMessageA(hBtnRefresh, WM_SETFONT, (WPARAM)g_hFont, FALSE);
+                SendMessageA(hBtnPriority, WM_SETFONT, (WPARAM)g_hFont, FALSE);
+                SendMessageA(hBtnInspect, WM_SETFONT, (WPARAM)g_hFont, FALSE);
+                SendMessageA(hBtnExportCSV, WM_SETFONT, (WPARAM)g_hFont, FALSE);
+                SendMessageA(hBtnExportJSON, WM_SETFONT, (WPARAM)g_hFont, FALSE);
+                SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)g_hFont, FALSE);
+                SendMessageA(hBtnEndTask, WM_SETFONT, (WPARAM)g_hFont, FALSE);
+            }
 
             g_OldEditProc = (WNDPROC)SetWindowLongPtrA(hSearchBox, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
             g_OldListProc = (WNDPROC)SetWindowLongPtrA(hListBox, GWLP_WNDPROC, (LONG_PTR)ListSubclassProc);
@@ -851,7 +886,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (id == 9) {
                 PerformInspectProcess(hwnd);
             } else if (id == 10) {
-                MessageBoxA(hwnd, "Shortcuts:\r\nF5 / R: Refresh\r\nDel: End Task\r\nI: Inspect Process\r\nH / F1: Help", "KTask Help", MB_OK | MB_ICONINFORMATION);
+                ShowHelpDialog(hwnd);
             } else if (id == 4 && code == LBN_DBLCLK) {
                 PerformInspectProcess(hwnd);
             }
@@ -865,17 +900,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (wParam == VK_DELETE) {
                 PerformEndTask(hwnd);
                 return 0;
-            } else if (wParam == 'I' || wParam == 'i') {
+            } else if (wParam == 'I' || wParam == 'i' || wParam == VK_RETURN) {
                 PerformInspectProcess(hwnd);
                 return 0;
             } else if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
-                MessageBoxA(hwnd, "Shortcuts:\r\nF5 / R: Refresh\r\nDel: End Task\r\nI: Inspect Process\r\nH / F1: Help", "KTask Help", MB_OK | MB_ICONINFORMATION);
+                ShowHelpDialog(hwnd);
                 return 0;
             }
             break;
 
         case WM_DESTROY:
             KillTimer(hwnd, 1);
+            if (g_hFont) {
+                DeleteObject(g_hFont);
+                g_hFont = NULL;
+            }
             PostQuitMessage(0);
             return 0;
     }
@@ -896,7 +935,7 @@ void __stdcall MainEntry() {
     RECT rc = {0, 0, 800, 600};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
     
-    HWND hwnd = CreateWindowExA(0, "KTaskClass", "KTask Process Monitor (F5/R: Refresh, Del: End Task, H/F1: Help)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KTaskClass", "KTask Process Monitor (F1/H: Help | F5/R: Refresh | Del: End Task | I/Enter: Inspect)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
