@@ -37,22 +37,63 @@ void PlayGameSound(int type) {
 
 int animFrame = 0;
 
+#define PARTICLE_SPARK 0
+#define PARTICLE_SMOKE 1
+#define PARTICLE_DEBRIS 2
+#define PARTICLE_STAR 3
+
 typedef struct {
     float x, y;
     float vx, vy;
-    int life;
+    int type;
+    int life, maxLife;
+    float size;
+    float rot, vrot;
     COLORREF color;
 } Particle;
-Particle particles[600];
+Particle particles[800];
 int particleCount = 0;
 
+typedef struct {
+    float x, y;
+    float r1, maxR1, speed1;
+    float r2, maxR2, speed2;
+    int life, maxLife;
+    COLORREF color;
+} Shockwave;
+Shockwave shockwaves[32];
+int shockwaveCount = 0;
+
+void SpawnShockwave(float x, float y, COLORREF color) {
+    if (shockwaveCount < 32) {
+        shockwaves[shockwaveCount].x = x;
+        shockwaves[shockwaveCount].y = y;
+        shockwaves[shockwaveCount].r1 = 2.0f;
+        shockwaves[shockwaveCount].maxR1 = 40.0f;
+        shockwaves[shockwaveCount].speed1 = 3.0f;
+        shockwaves[shockwaveCount].r2 = 1.0f;
+        shockwaves[shockwaveCount].maxR2 = 25.0f;
+        shockwaves[shockwaveCount].speed2 = 2.0f;
+        shockwaves[shockwaveCount].life = 16;
+        shockwaves[shockwaveCount].maxLife = 16;
+        shockwaves[shockwaveCount].color = color;
+        shockwaveCount++;
+    }
+}
+
 void SpawnParticles(float x, float y, COLORREF color, int count) {
-    for (int i = 0; i < count && particleCount < 600; i++) {
+    for (int i = 0; i < count && particleCount < 800; i++) {
+        float angle = ((rand() % 628) / 100.0f);
+        float speed = ((rand() % 60) + 20) / 10.0f;
         particles[particleCount].x = x;
         particles[particleCount].y = y;
-        particles[particleCount].vx = ((rand() % 100) - 50) / 10.0f;
-        particles[particleCount].vy = ((rand() % 100) - 50) / 10.0f;
-        particles[particleCount].life = 10 + (rand() % 12);
+        particles[particleCount].vx = cosf(angle) * speed;
+        particles[particleCount].vy = sinf(angle) * speed;
+        particles[particleCount].type = PARTICLE_SPARK;
+        particles[particleCount].life = particles[particleCount].maxLife = 12 + (rand() % 10);
+        particles[particleCount].size = 2.0f;
+        particles[particleCount].rot = 0;
+        particles[particleCount].vrot = 0;
         particles[particleCount].color = color;
         particleCount++;
     }
@@ -61,11 +102,90 @@ void SpawnParticles(float x, float y, COLORREF color, int count) {
 int shakeTicks = 0;
 
 void SpawnExplosion(float x, float y) {
-    SpawnParticles(x, y, RGB(255, 255, 255), 30);
-    SpawnParticles(x, y, RGB(255, 136, 0), 40);
-    SpawnParticles(x, y, RGB(255, 50, 0), 30);
-    SpawnParticles(x, y, RGB(100, 100, 100), 40);
-    shakeTicks = 15;
+    // Layer 1: Incandescent Core Needle Sparks
+    for (int i = 0; i < 24 && particleCount < 800; i++) {
+        float angle = ((rand() % 628) / 100.0f);
+        float speed = ((rand() % 80) + 30) / 10.0f;
+        particles[particleCount].x = x;
+        particles[particleCount].y = y;
+        particles[particleCount].vx = cosf(angle) * speed;
+        particles[particleCount].vy = sinf(angle) * speed;
+        particles[particleCount].type = PARTICLE_SPARK;
+        particles[particleCount].life = particles[particleCount].maxLife = 10 + (rand() % 8);
+        particles[particleCount].size = 2.0f;
+        particles[particleCount].rot = 0;
+        particles[particleCount].vrot = 0;
+        particles[particleCount].color = (i % 2 == 0) ? RGB(255, 255, 255) : RGB(0, 255, 255);
+        particleCount++;
+    }
+    // Layer 2: Expanding Buoyant Plasma/Smoke Puffs
+    for (int i = 0; i < 16 && particleCount < 800; i++) {
+        float angle = ((rand() % 628) / 100.0f);
+        float speed = ((rand() % 40) + 10) / 10.0f;
+        particles[particleCount].x = x;
+        particles[particleCount].y = y;
+        particles[particleCount].vx = cosf(angle) * speed;
+        particles[particleCount].vy = sinf(angle) * speed - 0.8f;
+        particles[particleCount].type = PARTICLE_SMOKE;
+        particles[particleCount].life = particles[particleCount].maxLife = 14 + (rand() % 10);
+        particles[particleCount].size = 3.0f + (rand() % 3);
+        particles[particleCount].rot = 0;
+        particles[particleCount].vrot = 0;
+        particles[particleCount].color = (i % 3 == 0) ? RGB(255, 85, 0) : ((i % 3 == 1) ? RGB(255, 170, 0) : RGB(80, 80, 80));
+        particleCount++;
+    }
+    // Layer 3: Heavy Kinematic Debris Shards (Gravity & Tumbling)
+    for (int i = 0; i < 14 && particleCount < 800; i++) {
+        float angle = ((rand() % 628) / 100.0f);
+        float speed = ((rand() % 60) + 20) / 10.0f;
+        particles[particleCount].x = x;
+        particles[particleCount].y = y;
+        particles[particleCount].vx = cosf(angle) * speed;
+        particles[particleCount].vy = sinf(angle) * speed - 1.5f;
+        particles[particleCount].type = PARTICLE_DEBRIS;
+        particles[particleCount].life = particles[particleCount].maxLife = 16 + (rand() % 10);
+        particles[particleCount].size = 3.0f;
+        particles[particleCount].rot = (rand() % 628) / 100.0f;
+        particles[particleCount].vrot = ((rand() % 40) - 20) / 100.0f;
+        particles[particleCount].color = (i % 2 == 0) ? RGB(255, 0, 255) : RGB(170, 170, 170);
+        particleCount++;
+    }
+    // Layer 4: Radiant Celebration Energy Stars
+    for (int i = 0; i < 8 && particleCount < 800; i++) {
+        float angle = ((rand() % 628) / 100.0f);
+        float speed = ((rand() % 40) + 15) / 10.0f;
+        particles[particleCount].x = x;
+        particles[particleCount].y = y;
+        particles[particleCount].vx = cosf(angle) * speed;
+        particles[particleCount].vy = sinf(angle) * speed;
+        particles[particleCount].type = PARTICLE_STAR;
+        particles[particleCount].life = particles[particleCount].maxLife = 12 + (rand() % 8);
+        particles[particleCount].size = 4.0f;
+        particles[particleCount].rot = 0;
+        particles[particleCount].vrot = 0;
+        particles[particleCount].color = RGB(255, 255, 0);
+        particleCount++;
+    }
+    SpawnShockwave(x, y, RGB(0, 255, 255));
+    shakeTicks = 18;
+}
+
+void SpawnCelebrationStars(float x, float y, COLORREF color, int count) {
+    for (int i = 0; i < count && particleCount < 800; i++) {
+        float angle = ((rand() % 628) / 100.0f);
+        float speed = ((rand() % 50) + 15) / 10.0f;
+        particles[particleCount].x = x;
+        particles[particleCount].y = y;
+        particles[particleCount].vx = cosf(angle) * speed;
+        particles[particleCount].vy = sinf(angle) * speed;
+        particles[particleCount].type = PARTICLE_STAR;
+        particles[particleCount].life = particles[particleCount].maxLife = 15 + (rand() % 10);
+        particles[particleCount].size = 4.0f + (rand() % 3);
+        particles[particleCount].rot = 0;
+        particles[particleCount].vrot = 0;
+        particles[particleCount].color = color;
+        particleCount++;
+    }
 }
 
 typedef struct {
@@ -349,8 +469,9 @@ void DrawGrid(HDC hdc, HFONT hFont) {
     int effOffsetX = OFFSET_X;
     int effOffsetY = OFFSET_Y;
     if (shakeTicks > 0) {
-        effOffsetX += (rand() % 11) - 5;
-        effOffsetY += (rand() % 11) - 5;
+        float shakeFactor = (float)shakeTicks / 18.0f;
+        effOffsetX += (int)(sinf(animFrame * 1.5f) * (shakeFactor * 7.0f));
+        effOffsetY += (int)(cosf(animFrame * 1.2f) * (shakeFactor * 7.0f));
     }
     
     if (hbmTerrain) {
@@ -383,6 +504,8 @@ void DrawGrid(HDC hdc, HFONT hFont) {
         }
     }
 
+    int glintCell = (animFrame * 2) % (GRID_W + GRID_H);
+
     for (int y = 0; y < GRID_H; y++) {
         for (int x = 0; x < GRID_W; x++) {
             RECT rc = { effOffsetX + x * CELL_SIZE, effOffsetY + y * CELL_SIZE, effOffsetX + (x + 1) * CELL_SIZE, effOffsetY + (y + 1) * CELL_SIZE };
@@ -395,11 +518,11 @@ void DrawGrid(HDC hdc, HFONT hFont) {
             COLORREF textCol = RGB(0, 255, 255);
             
             if (t > 20) { bgCol = RGB(51, 0, 0); borderCol = RGB(255, 0, 0); textCol = RGB(255, 0, 0); }
-            else if (t == 1) { bgCol = RGB(51, 51, 0); borderCol = RGB(255, 255, 0); textCol = RGB(255, 255, 0); }
-            else if (t == 2) { bgCol = RGB(0, 51, 0); borderCol = RGB(0, 255, 0); textCol = RGB(0, 255, 0); }
+            else if (t == 1) { bgCol = RGB(16, 32, 64); borderCol = RGB(0, 255, 255); textCol = RGB(0, 255, 255); }
+            else if (t == 2) { bgCol = RGB(0, 38, 14); borderCol = RGB(0, 255, 102); textCol = RGB(0, 255, 102); }
             else if (t == 3) { bgCol = RGB(51, 0, 51); borderCol = RGB(255, 0, 255); textCol = RGB(255, 0, 255); }
-            else if (t == 4) { bgCol = RGB(0, 51, 51); borderCol = RGB(0, 255, 255); textCol = RGB(0, 255, 255); }
-            else if (t == 5) { bgCol = RGB(51, 17, 0); borderCol = RGB(255, 136, 0); textCol = RGB(255, 136, 0); }
+            else if (t == 4) { bgCol = RGB(0, 43, 51); borderCol = RGB(0, 255, 255); textCol = RGB(0, 255, 255); }
+            else if (t == 5) { bgCol = RGB(51, 21, 0); borderCol = RGB(255, 136, 0); textCol = RGB(255, 136, 0); }
             else if (t == 6) { bgCol = RGB(34, 0, 51); borderCol = RGB(170, 0, 255); textCol = RGB(170, 0, 255); }
             else if (t == 7) { bgCol = RGB(0, 51, 34); borderCol = RGB(0, 255, 170); textCol = RGB(0, 255, 170); }
             else if (t == 8) { bgCol = RGB(34, 51, 0); borderCol = RGB(170, 255, 0); textCol = RGB(170, 255, 0); }
@@ -407,13 +530,13 @@ void DrawGrid(HDC hdc, HFONT hFont) {
             else if (t == 10) { bgCol = RGB(34, 34, 34); borderCol = RGB(136, 136, 136); textCol = RGB(136, 136, 136); }
             else if (t == 11) { bgCol = RGB(51, 34, 0); borderCol = RGB(255, 170, 0); textCol = RGB(255, 170, 0); }
             else if (t == 12) { bgCol = RGB(68, 68, 68); borderCol = RGB(204, 204, 204); textCol = RGB(204, 204, 204); }
-            else if (t == 13) { bgCol = RGB(51, 15, 0); borderCol = RGB(255, 80, 0); textCol = RGB(255, 100, 0); } // Geo
-            else if (t == 14) { bgCol = RGB(0, 45, 30); borderCol = RGB(0, 255, 180); textCol = RGB(50, 255, 180); } // Bio
-            else if (t == 15) { bgCol = RGB(0, 30, 60); borderCol = RGB(0, 180, 255); textCol = RGB(0, 200, 255); } // Shield
-            else if (t == 16) { bgCol = RGB(30, 45, 10); borderCol = RGB(200, 255, 0); textCol = RGB(220, 255, 50); } // Drone
-            else if (t == 17) { bgCol = RGB(15, 30, 45); borderCol = RGB(255, 200, 0); textCol = RGB(255, 220, 50); } // Trade Port
-            else if (t == 18) { bgCol = RGB(35, 20, 10); borderCol = RGB(220, 110, 40); textCol = RGB(255, 140, 50); } // Cavern Drill
-            else if (t == 19) { bgCol = RGB(10, 20, 50); borderCol = RGB(0, 200, 255); textCol = RGB(100, 220, 255); } // Orbital Beacon
+            else if (t == 13) { bgCol = RGB(68, 20, 0); borderCol = RGB(255, 102, 0); textCol = RGB(255, 120, 0); } // Geo
+            else if (t == 14) { bgCol = RGB(0, 51, 34); borderCol = RGB(0, 255, 180); textCol = RGB(50, 255, 180); } // Bio
+            else if (t == 15) { bgCol = RGB(0, 34, 68); borderCol = RGB(0, 204, 255); textCol = RGB(0, 220, 255); } // Shield
+            else if (t == 16) { bgCol = RGB(34, 51, 0); borderCol = RGB(204, 255, 0); textCol = RGB(220, 255, 50); } // Drone
+            else if (t == 17) { bgCol = RGB(21, 37, 53); borderCol = RGB(255, 170, 0); textCol = RGB(255, 200, 50); } // Trade Port
+            else if (t == 18) { bgCol = RGB(53, 32, 16); borderCol = RGB(238, 102, 34); textCol = RGB(255, 140, 50); } // Cavern Drill
+            else if (t == 19) { bgCol = RGB(16, 32, 64); borderCol = RGB(0, 204, 255); textCol = RGB(100, 220, 255); } // Orbital Beacon
             
             if (t > 0) {
                 if (t == 9 || t == 11 || t == 7 || t == 13 || t == 15 || t == 17 || t == 18 || t == 19) {
@@ -438,6 +561,16 @@ void DrawGrid(HDC hdc, HFONT hFont) {
                 HBRUSH brush = CreateSolidBrush(bgCol);
                 FillRect(hdc, &rc, brush);
                 DeleteObject(brush);
+
+                // High-Tech Diagonal Specular Sheen Sweep Highlight
+                if ((x + y) == glintCell && (t == 1 || t == 7 || t == 9 || t == 13 || t == 14 || t == 15 || t == 19)) {
+                    HPEN glintPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+                    HPEN oldGp = SelectObject(hdc, glintPen);
+                    MoveToEx(hdc, rc.left + 2, rc.bottom - 2, NULL);
+                    LineTo(hdc, rc.right - 2, rc.top + 2);
+                    SelectObject(hdc, oldGp);
+                    DeleteObject(glintPen);
+                }
             }
             
             HPEN pen = CreatePen(PS_SOLID, 1, t > 0 ? borderCol : RGB(0, 51, 51));
@@ -632,7 +765,92 @@ void DrawGrid(HDC hdc, HFONT hFont) {
         }
     }
     
-    // Weather Particle Overlays
+    // 1. Ornate Cybernetic Colony Defense Arcade HUD Reticle L-Brackets around Grid
+    int gw = GRID_W * CELL_SIZE, gh = GRID_H * CELL_SIZE;
+    HPEN hudPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
+    HPEN oldHp = SelectObject(hdc, hudPen);
+    // Top-Left
+    MoveToEx(hdc, effOffsetX - 4, effOffsetY + 14, NULL); LineTo(hdc, effOffsetX - 4, effOffsetY - 4); LineTo(hdc, effOffsetX + 14, effOffsetY - 4);
+    // Top-Right
+    MoveToEx(hdc, effOffsetX + gw - 14, effOffsetY - 4, NULL); LineTo(hdc, effOffsetX + gw + 4, effOffsetY - 4); LineTo(hdc, effOffsetX + gw + 4, effOffsetY + 14);
+    // Bottom-Left
+    MoveToEx(hdc, effOffsetX - 4, effOffsetY + gh - 14, NULL); LineTo(hdc, effOffsetX - 4, effOffsetY + gh + 4); LineTo(hdc, effOffsetX + 14, effOffsetY + gh + 4);
+    // Bottom-Right
+    MoveToEx(hdc, effOffsetX + gw - 14, effOffsetY + gh + 4, NULL); LineTo(hdc, effOffsetX + gw + 4, effOffsetY + gh + 4); LineTo(hdc, effOffsetX + gw + 4, effOffsetY + gh - 14);
+    SelectObject(hdc, oldHp);
+    DeleteObject(hudPen);
+
+    // Glowing Status Diodes on Grid Frame
+    HBRUSH diodeBr = CreateSolidBrush(((animFrame % 12) < 6) ? RGB(0, 255, 255) : RGB(0, 150, 150));
+    HBRUSH oldDb = SelectObject(hdc, diodeBr);
+    HPEN nullP = CreatePen(PS_NULL, 0, 0);
+    HPEN oldNp = SelectObject(hdc, nullP);
+    Ellipse(hdc, effOffsetX - 3, effOffsetY - 3, effOffsetX + 1, effOffsetY + 1);
+    Ellipse(hdc, effOffsetX + gw - 1, effOffsetY - 3, effOffsetX + gw + 3, effOffsetY + 1);
+    Ellipse(hdc, effOffsetX - 3, effOffsetY + gh - 1, effOffsetX + 1, effOffsetY + gh + 3);
+    Ellipse(hdc, effOffsetX + gw - 1, effOffsetY + gh - 1, effOffsetX + gw + 3, effOffsetY + gh + 3);
+    SelectObject(hdc, oldNp); DeleteObject(nullP);
+    SelectObject(hdc, oldDb); DeleteObject(diodeBr);
+
+    // Traveling Specular Glint along Perimeter Frame
+    int borderLen = (gw + gh) * 2;
+    int bGlint = (animFrame * 8) % borderLen;
+    int glintX = effOffsetX, glintY = effOffsetY;
+    if (bGlint < gw) { glintX += bGlint; glintY += 0; }
+    else if (bGlint < gw + gh) { glintX += gw; glintY += (bGlint - gw); }
+    else if (bGlint < gw * 2 + gh) { glintX += gw - (bGlint - (gw + gh)); glintY += gh; }
+    else { glintX += 0; glintY += gh - (bGlint - (gw * 2 + gh)); }
+    
+    HBRUSH glintB = CreateSolidBrush(RGB(255, 255, 255));
+    HBRUSH oldGb = SelectObject(hdc, glintB);
+    Ellipse(hdc, glintX - 3, glintY - 3, glintX + 3, glintY + 3);
+    SelectObject(hdc, oldGb); DeleteObject(glintB);
+
+    // 2. Atmospheric Planetary Biome Motes
+    if (planetType == 0) { // Mars Prime Red Dust
+        for (int i = 0; i < 30; i++) {
+            int mx = (animFrame * 2 + i * 47) % (GRID_W * CELL_SIZE);
+            int my = (i * 37 + (int)(sinf(animFrame * 0.1f + i) * 6)) % (GRID_H * CELL_SIZE);
+            HPEN p = CreatePen(PS_SOLID, 1, RGB(255, 120, 60));
+            HPEN oldP = SelectObject(hdc, p);
+            MoveToEx(hdc, effOffsetX + mx, effOffsetY + my, NULL);
+            LineTo(hdc, effOffsetX + mx + 2, effOffsetY + my);
+            SelectObject(hdc, oldP); DeleteObject(p);
+        }
+    } else if (planetType == 1) { // Gliese Cryo Ice Crystals
+        for (int i = 0; i < 35; i++) {
+            int mx = (animFrame * 2 + i * 31) % (GRID_W * CELL_SIZE);
+            int my = (animFrame * 3 + i * 53) % (GRID_H * CELL_SIZE);
+            HPEN p = CreatePen(PS_SOLID, 1, RGB(180, 230, 255));
+            HPEN oldP = SelectObject(hdc, p);
+            MoveToEx(hdc, effOffsetX + mx, effOffsetY + my, NULL);
+            LineTo(hdc, effOffsetX + mx + 2, effOffsetY + my + 2);
+            SelectObject(hdc, oldP); DeleteObject(p);
+        }
+    } else if (planetType == 2) { // Kepler Volcanic Fiery Embers
+        for (int i = 0; i < 30; i++) {
+            int mx = (i * 43 + (int)(sinf(animFrame * 0.15f + i) * 8)) % (GRID_W * CELL_SIZE);
+            int my = (GRID_H * CELL_SIZE) - ((animFrame * 3 + i * 41) % (GRID_H * CELL_SIZE));
+            COLORREF ec = (i % 2 == 0) ? RGB(255, 100, 0) : RGB(255, 220, 50);
+            HPEN p = CreatePen(PS_SOLID, 2, ec);
+            HPEN oldP = SelectObject(hdc, p);
+            MoveToEx(hdc, effOffsetX + mx, effOffsetY + my, NULL);
+            LineTo(hdc, effOffsetX + mx, effOffsetY + my - 2);
+            SelectObject(hdc, oldP); DeleteObject(p);
+        }
+    } else if (planetType == 3) { // Proxima Acid Bioluminescent Spores
+        for (int i = 0; i < 30; i++) {
+            int mx = (i * 39 + (int)(sinf(animFrame * 0.08f + i) * 10)) % (GRID_W * CELL_SIZE);
+            int my = (i * 49 + (int)(cosf(animFrame * 0.08f + i) * 10)) % (GRID_H * CELL_SIZE);
+            HPEN p = CreatePen(PS_SOLID, 1, RGB(80, 255, 120));
+            HPEN oldP = SelectObject(hdc, p);
+            MoveToEx(hdc, effOffsetX + mx, effOffsetY + my, NULL);
+            LineTo(hdc, effOffsetX + mx + 1, effOffsetY + my + 1);
+            SelectObject(hdc, oldP); DeleteObject(p);
+        }
+    }
+
+    // 3. Weather Particle Overlays
     if (dustStormTicks > 0 || weatherType == 1) { // Dust Storm
         for (int i = 0; i < 150; i++) {
             int x = (animFrame * 15 + i * 17) % (GRID_W * CELL_SIZE);
@@ -663,18 +881,9 @@ void DrawGrid(HDC hdc, HFONT hFont) {
             LineTo(hdc, effOffsetX + x + 2, effOffsetY + y + 10);
             SelectObject(hdc, oldP); DeleteObject(p);
         }
-    } else {
-        for (int i = 0; i < 40; i++) {
-            int x = (animFrame * 5 + i * 31) % (GRID_W * CELL_SIZE);
-            int y = (i * 47) % (GRID_H * CELL_SIZE);
-            HPEN p = CreatePen(PS_SOLID, 1, RGB(30, 50, 70));
-            HPEN oldP = SelectObject(hdc, p);
-            MoveToEx(hdc, effOffsetX + x, effOffsetY + y, NULL);
-            LineTo(hdc, effOffsetX + x + 10, effOffsetY + y);
-            SelectObject(hdc, oldP); DeleteObject(p);
-        }
     }
     
+    // 4. Aliens
     for (int i = 0; i < alienCount; i++) {
         RECT rc = { effOffsetX + aliens[i].x * CELL_SIZE, effOffsetY + aliens[i].y * CELL_SIZE, effOffsetX + (aliens[i].x + 1) * CELL_SIZE, effOffsetY + (aliens[i].y + 1) * CELL_SIZE };
         COLORREF alienCol = RGB(255, 0, 255);
@@ -690,17 +899,72 @@ void DrawGrid(HDC hdc, HFONT hFont) {
         SelectObject(hdc, oldP); DeleteObject(p2);
     }
     
+    // 5. Dual-Tier Concentric Shockwave Ripple Rings
+    for (int i = 0; i < shockwaveCount; i++) {
+        HPEN sp1 = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+        HPEN oldSp1 = SelectObject(hdc, sp1);
+        HBRUSH nullB = (HBRUSH)GetStockObject(NULL_BRUSH);
+        HBRUSH oldSb = SelectObject(hdc, nullB);
+        int sx = (int)shockwaves[i].x + (effOffsetX - OFFSET_X);
+        int sy = (int)shockwaves[i].y + (effOffsetY - OFFSET_Y);
+        int r1 = (int)shockwaves[i].r1;
+        Ellipse(hdc, sx - r1, sy - r1, sx + r1, sy + r1);
+        
+        HPEN sp2 = CreatePen(PS_SOLID, 1, shockwaves[i].color);
+        SelectObject(hdc, sp2);
+        int r2 = (int)shockwaves[i].r2;
+        Ellipse(hdc, sx - r2, sy - r2, sx + r2, sy + r2);
+        
+        SelectObject(hdc, oldSb);
+        SelectObject(hdc, oldSp1);
+        DeleteObject(sp2);
+        DeleteObject(sp1);
+    }
+
+    // 6. Multi-Layered Kinematic Particle Simulation Drawing
     for (int i = 0; i < particleCount; i++) {
-        HBRUSH b = CreateSolidBrush(particles[i].color);
-        HPEN p = CreatePen(PS_SOLID, 1, particles[i].color);
-        HBRUSH oldB = SelectObject(hdc, b);
-        HPEN oldP = SelectObject(hdc, p);
         int px = (int)particles[i].x + (effOffsetX - OFFSET_X);
         int py = (int)particles[i].y + (effOffsetY - OFFSET_Y);
-        Ellipse(hdc, px - 2, py - 2, px + 2, py + 2);
-        SelectObject(hdc, oldP); SelectObject(hdc, oldB);
-        DeleteObject(p); DeleteObject(b);
+
+        if (particles[i].type == PARTICLE_SPARK) {
+            HPEN p = CreatePen(PS_SOLID, (int)particles[i].size, particles[i].color);
+            HPEN oldP = SelectObject(hdc, p);
+            MoveToEx(hdc, px, py, NULL);
+            LineTo(hdc, px - (int)(particles[i].vx * 2.0f), py - (int)(particles[i].vy * 2.0f));
+            SelectObject(hdc, oldP);
+            DeleteObject(p);
+        } else if (particles[i].type == PARTICLE_SMOKE) {
+            HBRUSH b = CreateSolidBrush(particles[i].color);
+            HPEN p = CreatePen(PS_SOLID, 1, particles[i].color);
+            HBRUSH oldB = SelectObject(hdc, b);
+            HPEN oldP = SelectObject(hdc, p);
+            int r = (int)particles[i].size;
+            Ellipse(hdc, px - r, py - r, px + r, py + r);
+            SelectObject(hdc, oldP); SelectObject(hdc, oldB);
+            DeleteObject(p); DeleteObject(b);
+        } else if (particles[i].type == PARTICLE_DEBRIS) {
+            HBRUSH b = CreateSolidBrush(particles[i].color);
+            HPEN p = CreatePen(PS_SOLID, 1, particles[i].color);
+            HBRUSH oldB = SelectObject(hdc, b);
+            HPEN oldP = SelectObject(hdc, p);
+            int s = (int)particles[i].size;
+            Rectangle(hdc, px - s, py - s, px + s, py + s);
+            SelectObject(hdc, oldP); SelectObject(hdc, oldB);
+            DeleteObject(p); DeleteObject(b);
+        } else if (particles[i].type == PARTICLE_STAR) {
+            HBRUSH b = CreateSolidBrush(particles[i].color);
+            HPEN p = CreatePen(PS_SOLID, 1, particles[i].color);
+            HBRUSH oldB = SelectObject(hdc, b);
+            HPEN oldP = SelectObject(hdc, p);
+            int s = (int)particles[i].size;
+            POINT starPts[4] = {{px, py - s}, {px + s, py}, {px, py + s}, {px - s, py}};
+            Polygon(hdc, starPts, 4);
+            SelectObject(hdc, oldP); SelectObject(hdc, oldB);
+            DeleteObject(p); DeleteObject(b);
+        }
     }
+
+    // 7. Projectiles
     for (int i = 0; i < projCount; i++) {
         HBRUSH b = CreateSolidBrush(projectiles[i].color);
         HPEN p = CreatePen(PS_SOLID, 1, projectiles[i].color);
@@ -730,6 +994,17 @@ void DrawUI(HDC hdc, HFONT hFont) {
     HPEN hdrPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 255));
     HPEN oldPen = SelectObject(hdc, hdrPen);
     Rectangle(hdc, rcTop.left, rcTop.top, rcTop.right, rcTop.bottom);
+
+    // Corner reticles on top bar
+    HPEN reticlePen = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
+    SelectObject(hdc, reticlePen);
+    MoveToEx(hdc, rcTop.left + 2, rcTop.top + 8, NULL); LineTo(hdc, rcTop.left + 2, rcTop.top + 2); LineTo(hdc, rcTop.left + 8, rcTop.top + 2);
+    MoveToEx(hdc, rcTop.right - 8, rcTop.top + 2, NULL); LineTo(hdc, rcTop.right - 2, rcTop.top + 2); LineTo(hdc, rcTop.right - 2, rcTop.top + 8);
+    MoveToEx(hdc, rcTop.left + 2, rcTop.bottom - 8, NULL); LineTo(hdc, rcTop.left + 2, rcTop.bottom - 2); LineTo(hdc, rcTop.left + 8, rcTop.bottom - 2);
+    MoveToEx(hdc, rcTop.right - 8, rcTop.bottom - 2, NULL); LineTo(hdc, rcTop.right - 2, rcTop.bottom - 2); LineTo(hdc, rcTop.right - 2, rcTop.bottom - 8);
+    SelectObject(hdc, hdrPen);
+    DeleteObject(reticlePen);
+
     DrawText(hdc, buf, -1, &rcTop, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
     sprintf(buf, "FOOD:%d  PWR:%d/%d  MAT:%d  ADVM:%d  POP:%d/%d  HAP:%d%%  SCI:%d", food, power, maxPower, mat, advm, pop, maxPop, happiness, sci);
@@ -960,9 +1235,33 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 for (int i = 0; i < particleCount; i++) {
                     particles[i].x += particles[i].vx;
                     particles[i].y += particles[i].vy;
+                    if (particles[i].type == PARTICLE_SPARK) {
+                        particles[i].vx *= 0.93f;
+                        particles[i].vy *= 0.93f;
+                    } else if (particles[i].type == PARTICLE_SMOKE) {
+                        particles[i].vx *= 0.91f;
+                        particles[i].vy *= 0.91f;
+                        particles[i].size += 0.10f;
+                    } else if (particles[i].type == PARTICLE_DEBRIS) {
+                        particles[i].vy += 0.20f; // gravity
+                        particles[i].rot += particles[i].vrot;
+                        particles[i].vx *= 0.96f;
+                    } else if (particles[i].type == PARTICLE_STAR) {
+                        particles[i].vx *= 0.94f;
+                        particles[i].vy *= 0.94f;
+                    }
                     particles[i].life--;
                     if (particles[i].life <= 0) {
                         particles[i] = particles[--particleCount];
+                        i--;
+                    }
+                }
+                for (int i = 0; i < shockwaveCount; i++) {
+                    shockwaves[i].r1 += shockwaves[i].speed1;
+                    shockwaves[i].r2 += shockwaves[i].speed2;
+                    shockwaves[i].life--;
+                    if (shockwaves[i].life <= 0) {
+                        shockwaves[i] = shockwaves[--shockwaveCount];
                         i--;
                     }
                 }
@@ -1386,34 +1685,47 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         // Research Tree Unlocks
                         else if (id == 101 && sci >= 50 && !unlockedHydro) {
                             sci -= 50; unlockedHydro = 1; PlayGameSound(5);
+                            SpawnCelebrationStars(OFFSET_X + 200, OFFSET_Y + 200, RGB(170, 255, 0), 20);
                         } else if (id == 104 && sci >= 75 && !unlockedFactory) {
                             sci -= 75; unlockedFactory = 1; PlayGameSound(5);
+                            SpawnCelebrationStars(OFFSET_X + 200, OFFSET_Y + 200, RGB(200, 200, 200), 20);
                         } else if (id == 102 && sci >= 100 && !unlockedNuke) {
                             sci -= 100; unlockedNuke = 1; PlayGameSound(5);
+                            SpawnCelebrationStars(OFFSET_X + 200, OFFSET_Y + 200, RGB(0, 255, 170), 25);
                         } else if (id == 105 && sci >= 120 && !unlockedSolar4) {
                             sci -= 120; unlockedSolar4 = 1; PlayGameSound(5);
+                            SpawnCelebrationStars(OFFSET_X + 200, OFFSET_Y + 200, RGB(255, 255, 0), 25);
                             MessageBox(hwnd, "Solar Grid IV Unlocked! Solar Panels now generate +50% power.", "Tech Breakthrough", MB_OK | MB_ICONINFORMATION);
                         } else if (id == 103 && sci >= 150 && !unlockedLaser) {
                             sci -= 150; unlockedLaser = 1; PlayGameSound(5);
+                            SpawnCelebrationStars(OFFSET_X + 200, OFFSET_Y + 200, RGB(255, 50, 50), 25);
                         } else if (id == 106 && sci >= 180 && !unlockedXenoArmor) {
                             sci -= 180; unlockedXenoArmor = 1; PlayGameSound(5);
+                            SpawnCelebrationStars(OFFSET_X + 200, OFFSET_Y + 200, RGB(170, 0, 255), 25);
                             MessageBox(hwnd, "Xenobiology Armor Upgraded! Walls now retaliate against aliens and lasers/turrets deal +1 damage.", "Tech Breakthrough", MB_OK | MB_ICONINFORMATION);
                         } else if (id == 107 && sci >= 200 && !unlockedGeo) {
                             sci -= 200; unlockedGeo = 1; PlayGameSound(5);
+                            SpawnCelebrationStars(OFFSET_X + 200, OFFSET_Y + 200, RGB(255, 100, 0), 25);
                         } else if (id == 108 && sci >= 250 && !unlockedBio) {
                             sci -= 250; unlockedBio = 1; PlayGameSound(5);
+                            SpawnCelebrationStars(OFFSET_X + 200, OFFSET_Y + 200, RGB(0, 255, 180), 25);
                         } else if (id == 109 && sci >= 300 && !unlockedShield) {
                             sci -= 300; unlockedShield = 1; PlayGameSound(5);
+                            SpawnCelebrationStars(OFFSET_X + 200, OFFSET_Y + 200, RGB(0, 200, 255), 30);
                         } else if (id == 111 && sci >= 350 && !unlockedTrade) {
                             sci -= 350; unlockedTrade = 1; PlayGameSound(5);
+                            SpawnCelebrationStars(OFFSET_X + 200, OFFSET_Y + 200, RGB(255, 200, 0), 30);
                             MessageBox(hwnd, "Trade Port Tech Unlocked! Build Trade Ports to attract freighters and establish interstellar commerce.", "Tech Breakthrough", MB_OK | MB_ICONINFORMATION);
                         } else if (id == 110 && sci >= 400 && !unlockedDrone) {
                             sci -= 400; unlockedDrone = 1; PlayGameSound(5);
+                            SpawnCelebrationStars(OFFSET_X + 200, OFFSET_Y + 200, RGB(200, 255, 0), 30);
                         } else if (id == 112 && sci >= 450 && !unlockedCavern) {
                             sci -= 450; unlockedCavern = 1; PlayGameSound(5);
+                            SpawnCelebrationStars(OFFSET_X + 200, OFFSET_Y + 200, RGB(255, 140, 50), 30);
                             MessageBox(hwnd, "Cavern Excavator Unlocked! Build Cavern Drills to tap deep geothermal magma and harvest pristine geodes immune to surface disasters.", "Tech Breakthrough", MB_OK | MB_ICONINFORMATION);
                         } else if (id == 113 && sci >= 500 && !unlockedOrbital) {
                             sci -= 500; unlockedOrbital = 1; PlayGameSound(5);
+                            SpawnCelebrationStars(OFFSET_X + 200, OFFSET_Y + 200, RGB(0, 255, 255), 35);
                             MessageBox(hwnd, "Orbital Defense Uplink Unlocked! Establish beacons to connect with the fleet, intercept meteors, and call orbital bombardments.", "Tech Breakthrough", MB_OK | MB_ICONINFORMATION);
                         }
                         // Expeditions & Operations

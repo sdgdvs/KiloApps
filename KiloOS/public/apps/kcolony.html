@@ -606,34 +606,33 @@
         }
 
         const SVGS = {
-            S: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="4" width="16" height="12" fill="#224" stroke="#ff0" stroke-width="1"/><line x1="6" y1="4" x2="6" y2="16" stroke="#ff0" stroke-width="1"/><line x1="10" y1="4" x2="10" y2="16" stroke="#ff0" stroke-width="1"/><line x1="14" y1="4" x2="14" y2="16" stroke="#ff0" stroke-width="1"/></svg>')}`,
-            F: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="8" width="18" height="11" fill="#030"/><path d="M4,18 Q4,10 7,6 M10,18 Q10,8 13,5 M16,18 Q16,11 19,7" stroke="#0f0" fill="none" stroke-width="1.5"/></svg>')}`,
-            M: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M4,20 L10,5 L16,20" fill="none" stroke="#f0f" stroke-width="2"/><circle cx="10" cy="5" r="2" fill="#f0f"/><rect x="8" y="10" width="4" height="10" fill="#303" stroke="#f0f"/></svg>')}`,
-            H: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2,18 A8,8 0 0,1 18,18 Z" fill="#033" stroke="#0ff" stroke-width="1.5"/><rect x="8" y="12" width="4" height="6" fill="#0ff"/></svg>')}`,
-            B: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="4" width="10" height="14" fill="#310" stroke="#f80" stroke-width="1.5"/><rect x="8" y="2" width="4" height="2" fill="#f80"/><rect x="7" y="10" width="6" height="6" fill="#f80"><animate attributeName="opacity" values="1;0.2;1" dur="1s" repeatCount="indefinite"/></rect></svg>')}`,
-            L: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M8,2 L12,2 L12,8 L18,18 L2,18 L8,8 Z" fill="#203" stroke="#a0f" stroke-width="1.5"/><ellipse cx="10" cy="14" rx="2" ry="2" fill="#a0f"><animate attributeName="rx" values="2;6;2" dur="1s" repeatCount="indefinite"/></ellipse></svg>')}`,
-            N: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M5,18 L7,6 L13,6 L15,18 Z" fill="#032" stroke="#0fa" stroke-width="1.5"/><circle cx="10" cy="12" r="3" fill="#0fa"><animate attributeName="r" values="3;4.5;3" dur="0.8s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.5;1" dur="0.8s" repeatCount="indefinite"/></circle></svg>')}`,
-            Y: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="12" width="16" height="6" fill="#230" stroke="#af0" stroke-width="1"/><path d="M4,12 C4,6 8,6 10,2 C12,6 16,6 16,12" fill="none" stroke="#af0" stroke-width="1.5"/></svg>')}`,
-            D: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="14" width="12" height="6" fill="#300" stroke="#f00"/><circle cx="10" cy="10" r="4" fill="#f00"/><line x1="10" y1="10" x2="10" y2="2" stroke="#f00" stroke-width="2"/></svg>')}`,
-            W: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="18" height="18" fill="#222" stroke="#888"/><line x1="1" y1="7" x2="19" y2="7" stroke="#888"/><line x1="1" y1="13" x2="19" y2="13" stroke="#888"/><line x1="7" y1="1" x2="7" y2="7" stroke="#888"/><line x1="14" y1="7" x2="14" y2="13" stroke="#888"/><line x1="7" y1="13" x2="7" y2="19" stroke="#888"/></svg>')}`,
-            T: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polygon points="2,18 18,18 14,10 6,10" fill="#320" stroke="#fa0"/><rect x="8" y="2" width="4" height="8" fill="#fa0"/></svg>')}`,
-            C: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polygon points="2,18 18,18 18,8 14,12 14,6 10,10 10,4 2,8" fill="#444" stroke="#ccc"/><rect x="15" y="2" width="2" height="6" fill="#ccc"/></svg>')}`,
-            G: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="12" width="14" height="6" fill="#420" stroke="#f60"/><polygon points="7,12 10,4 13,12" fill="#f80"/><circle cx="10" cy="3" r="2" fill="#ffaa00"><animate attributeName="opacity" values="0.3;1;0.3" dur="0.8s" repeatCount="indefinite"/></circle></svg>')}`,
-            V: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2,18 A8,8 0 0,1 18,18 Z" fill="#032" stroke="#0fa" stroke-width="1.5"/><circle cx="10" cy="11" r="5" fill="#0f8"><animate attributeName="r" values="4;5.5;4" dur="1.5s" repeatCount="indefinite"/></circle></svg>')}`,
-            E: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polygon points="10,2 17,6 17,14 10,18 3,14 3,6" fill="#024" stroke="#0df" stroke-width="1.5"/><circle cx="10" cy="10" r="3" fill="#0ff"><animate attributeName="opacity" values="0.4;1;0.4" dur="0.6s" repeatCount="indefinite"/></circle></svg>')}`,
-            U: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="14" width="14" height="4" fill="#230" stroke="#cf0"/><rect x="6" y="6" width="8" height="5" fill="#cf0"/><line x1="3" y1="5" x2="17" y2="5" stroke="#cf0" stroke-width="1.5"><animate attributeName="y1" values="5;7;5" dur="0.5s" repeatCount="indefinite"/><animate attributeName="y2" values="5;7;5" dur="0.5s" repeatCount="indefinite"/></line></svg>')}`,
-            P: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="16" height="16" fill="#123" stroke="#fa0" stroke-width="1.5"/><line x1="5" y1="5" x2="15" y2="15" stroke="#fa0"/><line x1="15" y1="5" x2="5" y2="15" stroke="#fa0"/><circle cx="10" cy="10" r="4" fill="#fc0"><animate attributeName="opacity" values="0.5;1;0.5" dur="0.8s" repeatCount="indefinite"/></circle></svg>')}`,
-            K: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polygon points="10,2 3,17 17,17" fill="#321" stroke="#e62" stroke-width="1.5"/><rect x="8" y="8" width="4" height="6" fill="#f84"><animate attributeName="y" values="8;12;8" dur="0.4s" repeatCount="indefinite"/></rect><ellipse cx="10" cy="17" rx="5" ry="2" fill="#f40"/></svg>')}`,
-            O: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M3,16 Q10,6 17,16" stroke="#0cf" fill="none" stroke-width="1.5"/><line x1="10" y1="16" x2="10" y2="2" stroke="#0cf" stroke-width="2"/><circle cx="10" cy="3" r="2.5" fill="#aef"><animate attributeName="r" values="2;4;2" dur="0.5s" repeatCount="indefinite"/></circle></svg>')}`,
-            X: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><line x1="2" y1="2" x2="18" y2="18" stroke="#f00" stroke-width="3"/><line x1="18" y1="2" x2="2" y2="18" stroke="#f00" stroke-width="3"/></svg>')}`,
-            A: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="8" fill="#505" stroke="#f0f"/><circle cx="7" cy="9" r="2" fill="#000"/><circle cx="13" cy="9" r="2" fill="#000"/><path d="M7,14 Q10,16 13,14" stroke="#000" fill="none" stroke-width="1.5"/></svg>')}`
+            S: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1a3366"/><stop offset="50%" stop-color="#0066cc"/><stop offset="100%" stop-color="#001a33"/></linearGradient></defs><rect x="1" y="3" width="18" height="14" rx="2" fill="url(#sg)" stroke="#00ffff" stroke-width="1"/><line x1="1" y1="7.5" x2="19" y2="7.5" stroke="#00ffff" stroke-width="0.75" opacity="0.8"/><line x1="1" y1="12.5" x2="19" y2="12.5" stroke="#00ffff" stroke-width="0.75" opacity="0.8"/><line x1="7" y1="3" x2="7" y2="17" stroke="#00ffff" stroke-width="0.75" opacity="0.8"/><line x1="13" y1="3" x2="13" y2="17" stroke="#00ffff" stroke-width="0.75" opacity="0.8"/><polygon points="2,4 6,4 3,16 2,16" fill="rgba(255,255,255,0.4)"/><circle cx="10" cy="10" r="1.5" fill="#ffff00"><animate attributeName="opacity" values="0.6;1;0.6" dur="1s" repeatCount="indefinite"/></circle></svg>')}`,
+            F: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="fg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#004411"/><stop offset="100%" stop-color="#001a05"/></linearGradient></defs><rect x="1" y="7" width="18" height="12" rx="1" fill="url(#fg)" stroke="#00ff66" stroke-width="1"/><path d="M4,18 Q4,10 7,6 M10,18 Q10,7 13,4 M16,18 Q16,11 19,7" stroke="#33ff88" fill="none" stroke-width="1.75"/><circle cx="7" cy="6" r="1.5" fill="#ffff33"/><circle cx="13" cy="4" r="1.5" fill="#ffff33"/><circle cx="19" cy="7" r="1.5" fill="#ffff33"/><ellipse cx="10" cy="17" rx="8" ry="1.5" fill="#003300" opacity="0.6"/></svg>')}`,
+            M: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="mg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#660066"/><stop offset="100%" stop-color="#220022"/></linearGradient></defs><path d="M3,19 L10,3 L17,19 Z" fill="url(#mg)" stroke="#ff00ff" stroke-width="1.2"/><polygon points="10,5 12,12 8,12" fill="#ff66ff"/><rect x="8" y="11" width="4" height="8" fill="#1a001a" stroke="#ff00ff" stroke-width="1"/><circle cx="10" cy="3" r="2" fill="#ffffff"><animate attributeName="opacity" values="0.4;1;0.4" dur="0.8s" repeatCount="indefinite"/></circle><polygon points="4,18 7,18 5,14" fill="#ff00ff"/></svg>')}`,
+            H: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="hg" cx="50%" cy="30%" r="70%"><stop offset="0%" stop-color="#006688"/><stop offset="70%" stop-color="#002233"/><stop offset="100%" stop-color="#00111a"/></radialGradient></defs><path d="M2,18 A8,8 0 0,1 18,18 Z" fill="url(#hg)" stroke="#00ffff" stroke-width="1.5"/><rect x="8" y="12" width="4" height="6" fill="#00ffff" rx="1"/><line x1="2" y1="18" x2="18" y2="18" stroke="#00ffff" stroke-width="1.5"/><circle cx="6" cy="11" r="1.5" fill="#ffffff" opacity="0.8"/><circle cx="14" cy="11" r="1.5" fill="#ffffff" opacity="0.8"/><path d="M4,17 A6,6 0 0,1 10,7" stroke="rgba(255,255,255,0.4)" stroke-width="1" fill="none"/></svg>')}`,
+            B: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#663300"/><stop offset="50%" stop-color="#cc6600"/><stop offset="100%" stop-color="#331a00"/></linearGradient></defs><rect x="4" y="5" width="12" height="13" rx="2" fill="url(#bg)" stroke="#ff8800" stroke-width="1.2"/><rect x="7" y="2" width="6" height="3" rx="1" fill="#ffaa00"/><rect x="6" y="8" width="8" height="8" rx="1" fill="#ffaa00"><animate attributeName="opacity" values="1;0.3;1" dur="0.9s" repeatCount="indefinite"/></rect><line x1="10" y1="9" x2="10" y2="15" stroke="#ffffff" stroke-width="1.5"/></svg>')}`,
+            L: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#440088"/><stop offset="100%" stop-color="#1a0033"/></linearGradient></defs><path d="M8,2 L12,2 L12,7 L18,17 L2,17 L8,7 Z" fill="url(#lg)" stroke="#aa00ff" stroke-width="1.5"/><ellipse cx="10" cy="13" rx="3" ry="2" fill="#dd66ff"><animate attributeName="rx" values="2;5.5;2" dur="0.9s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;1;0.6" dur="0.9s" repeatCount="indefinite"/></ellipse><circle cx="10" cy="2" r="1.5" fill="#ffffff"/><line x1="6" y1="17" x2="14" y2="17" stroke="#ff00ff" stroke-width="2"/></svg>')}`,
+            N: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ng" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#005533"/><stop offset="100%" stop-color="#002211"/></linearGradient></defs><path d="M5,18 L7,5 L13,5 L15,18 Z" fill="url(#ng)" stroke="#00ffaa" stroke-width="1.5"/><circle cx="10" cy="11" r="3.5" fill="#00ffaa"><animate attributeName="r" values="2.5;4.5;2.5" dur="0.75s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.4;1" dur="0.75s" repeatCount="indefinite"/></circle><polygon points="10,8 11.5,12 8.5,12" fill="#ffffff"/><line x1="4" y1="18" x2="16" y2="18" stroke="#00ffaa" stroke-width="2"/></svg>')}`,
+            Y: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="yg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#335500"/><stop offset="100%" stop-color="#112200"/></linearGradient></defs><rect x="2" y="11" width="16" height="7" rx="1" fill="url(#yg)" stroke="#aaff00" stroke-width="1.2"/><path d="M4,11 C4,5 8,5 10,2 C12,5 16,5 16,11" fill="none" stroke="#ccff00" stroke-width="1.5"/><circle cx="10" cy="3" r="1.5" fill="#ffff00"/><circle cx="6" cy="8" r="1" fill="#aaff00"/><circle cx="14" cy="8" r="1" fill="#aaff00"/></svg>')}`,
+            D: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="dg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#880000"/><stop offset="100%" stop-color="#330000"/></linearGradient></defs><rect x="3" y="13" width="14" height="6" rx="1" fill="url(#dg)" stroke="#ff0000" stroke-width="1.2"/><circle cx="10" cy="9" r="4.5" fill="#ff0000" stroke="#ffffff" stroke-width="0.75"/><line x1="10" y1="9" x2="10" y2="1" stroke="#ff3333" stroke-width="2.5"/><circle cx="10" cy="1" r="2" fill="#ffffff"><animate attributeName="r" values="1.5;2.5;1.5" dur="0.4s" repeatCount="indefinite"/></circle></svg>')}`,
+            W: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="18" height="18" fill="#2a2a2a" stroke="#aaaaaa" stroke-width="1.5"/><line x1="1" y1="6" x2="19" y2="6" stroke="#888888" stroke-width="1"/><line x1="1" y1="12" x2="19" y2="12" stroke="#888888" stroke-width="1"/><line x1="7" y1="1" x2="7" y2="6" stroke="#888888" stroke-width="1"/><line x1="13" y1="6" x2="13" y2="12" stroke="#888888" stroke-width="1"/><line x1="7" y1="12" x2="7" y2="19" stroke="#888888" stroke-width="1"/><polygon points="2,2 5,2 3,18 2,18" fill="rgba(255,255,255,0.2)"/></svg>')}`,
+            T: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polygon points="2,18 18,18 15,10 5,10" fill="#442a00" stroke="#ffaa00" stroke-width="1.2"/><rect x="7" y="3" width="6" height="7" fill="#ffaa00" rx="1"/><line x1="8.5" y1="3" x2="8.5" y2="0" stroke="#ffffff" stroke-width="1.5"/><line x1="11.5" y1="3" x2="11.5" y2="0" stroke="#ffffff" stroke-width="1.5"/><circle cx="10" cy="14" r="2" fill="#ff3300"/></svg>')}`,
+            C: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polygon points="2,18 18,18 18,8 14,12 14,6 10,10 10,4 2,8" fill="#3a3a3a" stroke="#e0e0e0" stroke-width="1.2"/><rect x="14.5" y="2" width="2.5" height="5" fill="#e0e0e0"/><circle cx="6" cy="13" r="2" fill="#ffaa00"><animate attributeName="opacity" values="0.4;1;0.4" dur="0.6s" repeatCount="indefinite"/></circle></svg>')}`,
+            G: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="12" width="14" height="6" rx="1" fill="#441a00" stroke="#ff6600" stroke-width="1.2"/><polygon points="6,12 10,3 14,12" fill="#ff8800"/><circle cx="10" cy="3" r="2.5" fill="#ffff00"><animate attributeName="opacity" values="0.3;1;0.3" dur="0.6s" repeatCount="indefinite"/><animate attributeName="r" values="2;3.2;2" dur="0.6s" repeatCount="indefinite"/></circle></svg>')}`,
+            V: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2,18 A8,8 0 0,1 18,18 Z" fill="#003322" stroke="#00ffb4" stroke-width="1.5"/><circle cx="10" cy="11" r="5" fill="#00ff88"><animate attributeName="r" values="4;5.8;4" dur="1.2s" repeatCount="indefinite"/></circle><polygon points="7,15 10,9 13,15" fill="#004411"/><circle cx="10" cy="6" r="1.5" fill="#ffffff"/></svg>')}`,
+            E: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polygon points="10,1 18,5 18,15 10,19 2,15 2,5" fill="#002244" stroke="#00ccff" stroke-width="1.5"/><circle cx="10" cy="10" r="4" fill="#00ffff"><animate attributeName="opacity" values="0.3;1;0.3" dur="0.5s" repeatCount="indefinite"/><animate attributeName="r" values="3;5;3" dur="0.5s" repeatCount="indefinite"/></circle><line x1="10" y1="1" x2="10" y2="19" stroke="#ffffff" stroke-width="0.75"/></svg>')}`,
+            U: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="14" width="16" height="4" rx="1" fill="#223300" stroke="#ccff00" stroke-width="1.2"/><rect x="5" y="6" width="10" height="5" rx="1" fill="#ccff00"/><line x1="2" y1="5" x2="18" y2="5" stroke="#ccff00" stroke-width="1.5"><animate attributeName="y1" values="5;7.5;5" dur="0.4s" repeatCount="indefinite"/><animate attributeName="y2" values="5;7.5;5" dur="0.4s" repeatCount="indefinite"/></line><circle cx="7" cy="8.5" r="1" fill="#000"/><circle cx="13" cy="8.5" r="1" fill="#000"/></svg>')}`,
+            P: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="18" height="18" rx="2" fill="#152535" stroke="#ffaa00" stroke-width="1.5"/><line x1="4" y1="4" x2="16" y2="16" stroke="#ffaa00" stroke-width="1.2"/><line x1="16" y1="4" x2="4" y2="16" stroke="#ffaa00" stroke-width="1.2"/><circle cx="10" cy="10" r="4.5" fill="#ffcc00"><animate attributeName="opacity" values="0.5;1;0.5" dur="0.7s" repeatCount="indefinite"/></circle></svg>')}`,
+            K: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polygon points="10,2 3,17 17,17" fill="#352010" stroke="#ee6622" stroke-width="1.5"/><rect x="8" y="7" width="4" height="7" fill="#ff8844"><animate attributeName="y" values="7;11;7" dur="0.35s" repeatCount="indefinite"/></rect><ellipse cx="10" cy="17" rx="6" ry="2" fill="#ff3300"/></svg>')}`,
+            O: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2,16 Q10,5 18,16" stroke="#00ccff" fill="none" stroke-width="1.8"/><line x1="10" y1="16" x2="10" y2="2" stroke="#00ccff" stroke-width="2"/><circle cx="10" cy="2" r="3" fill="#aaccff"><animate attributeName="r" values="2;4.5;2" dur="0.45s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.4;1" dur="0.45s" repeatCount="indefinite"/></circle></svg>')}`,
+            X: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><line x1="2" y1="2" x2="18" y2="18" stroke="#ff0000" stroke-width="3.5"/><line x1="18" y1="2" x2="2" y2="18" stroke="#ff0000" stroke-width="3.5"/><circle cx="10" cy="10" r="3" fill="#ffaa00"><animate attributeName="r" values="1;4;1" dur="0.3s" repeatCount="indefinite"/></circle></svg>')}`,
+            A: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="8" fill="#660066" stroke="#ff00ff" stroke-width="1.5"/><circle cx="6.5" cy="8.5" r="2.5" fill="#000"/><circle cx="13.5" cy="8.5" r="2.5" fill="#000"/><circle cx="6.5" cy="8.5" r="1" fill="#ff0000"/><circle cx="13.5" cy="8.5" r="1" fill="#ff0000"/><path d="M6,14 Q10,17 14,14" stroke="#ff00ff" fill="none" stroke-width="1.8"/><polygon points="9,2 10,5 11,2" fill="#ff00ff"/></svg>')}`
         };
 
         function renderCell(x, y) {
             const idx = y * GRID_W + x;
             const cell = document.getElementById(`cell-${x}-${y}`);
             const t = grid[idx];
-            let seed = (y * GRID_W + x);
             cell.innerHTML = '';
             cell.style.backgroundImage = 'none';
             cell.style.backgroundSize = 'cover';
@@ -642,18 +641,18 @@
             else cell.classList.remove('flicker');
 
             if (t > 20) { cell.style.backgroundImage = `url("${SVGS.X}")`; cell.style.backgroundColor = '#330000'; cell.style.borderColor = '#ff0000'; }
-            else if (t === 1) { cell.style.backgroundImage = `url("${SVGS.S}")`; cell.style.backgroundColor = '#333300'; cell.style.borderColor = '#ffff00'; }
-            else if (t === 2) { cell.style.backgroundImage = `url("${SVGS.F}")`; cell.style.backgroundColor = '#003300'; cell.style.borderColor = '#00ff00'; }
+            else if (t === 1) { cell.style.backgroundImage = `url("${SVGS.S}")`; cell.style.backgroundColor = '#102040'; cell.style.borderColor = '#00ffff'; }
+            else if (t === 2) { cell.style.backgroundImage = `url("${SVGS.F}")`; cell.style.backgroundColor = '#00260e'; cell.style.borderColor = '#00ff66'; }
             else if (t === 3) { cell.style.backgroundImage = `url("${SVGS.M}")`; cell.style.backgroundColor = '#330033'; cell.style.borderColor = '#ff00ff'; }
-            else if (t === 4) { cell.style.backgroundImage = `url("${SVGS.H}")`; cell.style.backgroundColor = '#003333'; cell.style.borderColor = '#00ffff'; }
-            else if (t === 5) { cell.style.backgroundImage = `url("${SVGS.B}")`; cell.style.backgroundColor = '#331100'; cell.style.borderColor = '#ff8800'; }
+            else if (t === 4) { cell.style.backgroundImage = `url("${SVGS.H}")`; cell.style.backgroundColor = '#002b33'; cell.style.borderColor = '#00ffff'; }
+            else if (t === 5) { cell.style.backgroundImage = `url("${SVGS.B}")`; cell.style.backgroundColor = '#331500'; cell.style.borderColor = '#ff8800'; }
             else if (t === 6) { cell.style.backgroundImage = `url("${SVGS.L}")`; cell.style.backgroundColor = '#220033'; cell.style.borderColor = '#aa00ff'; }
             else if (t === 7) { cell.style.backgroundImage = `url("${SVGS.N}")`; cell.style.backgroundColor = '#003322'; cell.style.borderColor = '#00ffaa'; }
             else if (t === 8) { cell.style.backgroundImage = `url("${SVGS.Y}")`; cell.style.backgroundColor = '#223300'; cell.style.borderColor = '#aaff00'; }
             else if (t === 9) { cell.style.backgroundImage = `url("${SVGS.D}")`; cell.style.backgroundColor = '#330000'; cell.style.borderColor = '#ff0000'; }
             else if (t === 10) { cell.style.backgroundImage = `url("${SVGS.W}")`; cell.style.backgroundColor = '#222222'; cell.style.borderColor = '#888888'; }
             else if (t === 11) { cell.style.backgroundImage = `url("${SVGS.T}")`; cell.style.backgroundColor = '#332200'; cell.style.borderColor = '#ffaa00'; }
-            else if (t === 12) { cell.style.backgroundImage = `url("${SVGS.C}")`; cell.style.backgroundColor = '#444444'; cell.style.borderColor = '#cccccc'; }
+            else if (t === 12) { cell.style.backgroundImage = `url("${SVGS.C}")`; cell.style.backgroundColor = '#333333'; cell.style.borderColor = '#cccccc'; }
             else if (t === 13) { cell.style.backgroundImage = `url("${SVGS.G}")`; cell.style.backgroundColor = '#441100'; cell.style.borderColor = '#ff6600'; }
             else if (t === 14) { cell.style.backgroundImage = `url("${SVGS.V}")`; cell.style.backgroundColor = '#003322'; cell.style.borderColor = '#00ffb4'; }
             else if (t === 15) { cell.style.backgroundImage = `url("${SVGS.E}")`; cell.style.backgroundColor = '#002244'; cell.style.borderColor = '#00ccff'; }
@@ -664,7 +663,7 @@
             else { cell.style.backgroundColor = 'transparent'; cell.style.borderColor = 'rgba(0,51,51,0.5)'; }
 
             if (isShielded(x, y) && t > 0) {
-                cell.style.boxShadow = 'inset 0 0 6px rgba(0,200,255,0.6)';
+                cell.style.boxShadow = 'inset 0 0 8px rgba(0,200,255,0.7)';
             } else {
                 cell.style.boxShadow = 'none';
             }
@@ -680,121 +679,128 @@
             }
         }
 
-        let isShaking = false;
-        function shakeScreen() {
-            if (isShaking) return;
-            isShaking = true;
-            let count = 15;
-            const gridEl = document.getElementById('grid');
-            function animShake() {
-                if (count <= 0) {
-                    gridEl.style.transform = 'translate(0, 0)';
-                    isShaking = false;
-                    return;
-                }
-                count--;
-                const sx = (Math.random() - 0.5) * 15;
-                const sy = (Math.random() - 0.5) * 15;
-                gridEl.style.transform = `translate(${sx}px, ${sy}px)`;
-                requestAnimationFrame(animShake);
-            }
-            requestAnimationFrame(animShake);
+        // Continuous Procedural Screen Shake Engine
+        let shakeIntensity = 0;
+        let shakeTimer = 0;
+        function triggerScreenShake(amount = 12) {
+            shakeIntensity = Math.max(shakeIntensity, amount);
         }
+
+        // Multi-Layered Kinematic Particle Engine & Shockwave System
+        let activeParticles = [];
+        let activeShockwaves = [];
+        let activeProjectiles = [];
 
         function spawnExplosion(gx, gy) {
-            const gridEl = document.getElementById('grid');
-            const flash = document.createElement('div');
-            flash.style.position = 'absolute';
-            flash.style.left = (2 + gx * 21 + 10) + 'px';
-            flash.style.top = (2 + gy * 21 + 10) + 'px';
-            flash.style.width = '40px';
-            flash.style.height = '40px';
-            flash.style.background = 'white';
-            flash.style.borderRadius = '50%';
-            flash.style.transform = 'translate(-50%, -50%)';
-            flash.style.boxShadow = '0 0 30px 15px #ffaa00';
-            flash.style.zIndex = '10';
-            gridEl.appendChild(flash);
+            const px = gx * 21 + 10;
+            const py = gy * 21 + 10;
             
-            let start = performance.now();
-            function animFlash(t) {
-                let progress = (t - start) / 300;
-                if (progress > 1) { flash.remove(); return; }
-                flash.style.opacity = 1 - Math.pow(progress, 2);
-                flash.style.transform = `translate(-50%, -50%) scale(${1 + progress * 3})`;
-                requestAnimationFrame(animFlash);
+            // Layer 1: Incandescent Core Needle Sparks
+            for (let i = 0; i < 28; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 140 + 40;
+                activeParticles.push({
+                    type: 'spark', x: px, y: py,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                    life: 1.0, maxLife: 0.35 + Math.random() * 0.25,
+                    color: (i % 2 === 0) ? '#ffffff' : '#00ffff',
+                    size: Math.random() * 2.5 + 1.5
+                });
             }
-            requestAnimationFrame(animFlash);
-            
-            spawnParticles(gx, gy, '#ffffff', 25);
-            setTimeout(() => spawnParticles(gx, gy, '#ffaa00', 35), 50);
-            setTimeout(() => spawnParticles(gx, gy, '#ff3300', 35), 100);
-            setTimeout(() => spawnParticles(gx, gy, '#555555', 45), 150);
-            shakeScreen();
+
+            // Layer 2: Expanding Buoyant Plasma/Smoke Puffs
+            for (let i = 0; i < 18; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 45 + 15;
+                activeParticles.push({
+                    type: 'smoke', x: px, y: py,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 15,
+                    life: 1.0, maxLife: 0.6 + Math.random() * 0.4,
+                    color: (i % 3 === 0) ? '#ff5500' : (i % 3 === 1 ? '#ffaa00' : '#444444'),
+                    size: Math.random() * 6 + 4, grow: 18
+                });
+            }
+
+            // Layer 3: Heavy Kinematic Debris & Mineral Shards (Gravity & Tumbling)
+            for (let i = 0; i < 16; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 90 + 30;
+                activeParticles.push({
+                    type: 'debris', x: px, y: py,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 35,
+                    life: 1.0, maxLife: 0.7 + Math.random() * 0.3,
+                    color: (i % 2 === 0) ? '#ff00ff' : '#aaaaaa',
+                    size: Math.random() * 4 + 2.5,
+                    rot: Math.random() * Math.PI * 2, vrot: (Math.random() - 0.5) * 15
+                });
+            }
+
+            // Layer 4: Radiant Celebration Energy Stars
+            for (let i = 0; i < 8; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 60 + 20;
+                activeParticles.push({
+                    type: 'star', x: px, y: py,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                    life: 1.0, maxLife: 0.5 + Math.random() * 0.3,
+                    color: '#ffff00', size: Math.random() * 4 + 3
+                });
+            }
+
+            // Dual-Tier Concentric Shockwave Ripple Rings
+            activeShockwaves.push({
+                x: px, y: py,
+                r1: 2, maxR1: 45, speed1: 120,
+                r2: 1, maxR2: 30, speed2: 80,
+                life: 1.0, maxLife: 0.4,
+                color: '#00ffff'
+            });
+
+            triggerScreenShake(14);
         }
 
-        function spawnParticles(gx, gy, color, count=15) {
-            const gridEl = document.getElementById('grid');
-            for(let i=0; i<count; i++) {
-                const p = document.createElement('div');
-                p.className = 'particle';
-                p.style.backgroundColor = color;
-                p.style.width = (Math.random()*4+2)+'px';
-                p.style.height = p.style.width;
-                p.style.left = (2 + gx * 21 + 10) + 'px';
-                p.style.top = (2 + gy * 21 + 10) + 'px';
-                p.style.transform = 'translate(-50%, -50%)';
-                
-                const speed = Math.random() * 80 + 20;
+        function spawnParticles(gx, gy, color='#00ffff', count=15) {
+            const px = gx * 21 + 10;
+            const py = gy * 21 + 10;
+            for (let i = 0; i < count; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const vx = Math.cos(angle) * speed;
-                const vy = Math.sin(angle) * speed;
-                
-                gridEl.appendChild(p);
-                
-                let start = performance.now();
-                function anim(t) {
-                    let progress = (t - start) / 600;
-                    if (progress > 1) { p.remove(); return; }
-                    p.style.transform = `translate(calc(-50% + ${vx * progress}px), calc(-50% + ${vy * progress}px))`;
-                    p.style.opacity = 1 - progress;
-                    requestAnimationFrame(anim);
-                }
-                requestAnimationFrame(anim);
+                const speed = Math.random() * 70 + 20;
+                activeParticles.push({
+                    type: 'spark', x: px, y: py,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                    life: 1.0, maxLife: 0.4 + Math.random() * 0.25,
+                    color: color, size: Math.random() * 2.5 + 1.2
+                });
+            }
+        }
+
+        function spawnCelebrationStars(gx, gy, color='#ffd700', count=12) {
+            const px = gx * 21 + 10;
+            const py = gy * 21 + 10;
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 65 + 15;
+                activeParticles.push({
+                    type: 'star', x: px, y: py,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                    life: 1.0, maxLife: 0.6 + Math.random() * 0.3,
+                    color: color, size: Math.random() * 5 + 3
+                });
             }
         }
 
         function fireProjectile(x1, y1, x2, y2, color) {
-            const gridEl = document.getElementById('grid');
-            const p = document.createElement('div');
-            p.className = 'projectile';
-            p.style.backgroundColor = color;
-            p.style.boxShadow = `0 0 8px ${color}`;
-            p.style.width = '4px';
-            p.style.height = '4px';
-            p.style.borderRadius = '50%';
-            
-            const startX = 2 + x1 * 21 + 10;
-            const startY = 2 + y1 * 21 + 10;
-            const endX = 2 + x2 * 21 + 10;
-            const endY = 2 + y2 * 21 + 10;
-            
-            p.style.left = startX + 'px';
-            p.style.top = startY + 'px';
-            gridEl.appendChild(p);
-            
-            let start = performance.now();
-            function anim(t) {
-                let progress = (t - start) / 150; 
-                if (progress > 1) { p.remove(); return; }
-                p.style.left = (startX + (endX - startX) * progress) + 'px';
-                p.style.top = (startY + (endY - startY) * progress) + 'px';
-                requestAnimationFrame(anim);
-            }
-            requestAnimationFrame(anim);
+            activeProjectiles.push({
+                x: x1 * 21 + 10, y: y1 * 21 + 10,
+                tx: x2 * 21 + 10, ty: y2 * 21 + 10,
+                color: color, progress: 0, speed: 6.0
+            });
         }
 
         let dustOffset = 0;
+        let globalAnimTime = 0;
+        let lastTimestamp = 0;
+
         function generateTerrain() {
             const canvas = document.getElementById('bg-canvas');
             if (!canvas) return;
@@ -822,13 +828,77 @@
             }
         }
 
-        function renderWeatherFX() {
+        function renderWeatherFX(timestamp) {
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            const dt = Math.min((timestamp - lastTimestamp) / 1000, 0.1);
+            lastTimestamp = timestamp;
+            globalAnimTime += dt;
+
+            // Continuous Procedural Screen Shake
+            const gridEl = document.getElementById('grid');
+            if (gridEl) {
+                if (shakeIntensity > 0.05) {
+                    shakeTimer += dt;
+                    shakeIntensity *= Math.pow(0.88, dt * 60);
+                    const sx = Math.sin(shakeTimer * 50) * shakeIntensity;
+                    const sy = Math.cos(shakeTimer * 38) * shakeIntensity;
+                    const sRot = Math.sin(shakeTimer * 26) * (shakeIntensity * 0.08);
+                    gridEl.style.transform = `translate(${sx.toFixed(2)}px, ${sy.toFixed(2)}px) rotate(${sRot.toFixed(2)}deg)`;
+                } else {
+                    shakeIntensity = 0;
+                    gridEl.style.transform = 'translate(0px, 0px) rotate(0deg)';
+                }
+            }
+
             const canvas = document.getElementById('fg-canvas');
-            if (!canvas) return;
+            if (!canvas) {
+                requestAnimationFrame(renderWeatherFX);
+                return;
+            }
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, 400, 400);
 
-            // Draw Shield field outlines on overlay
+            // 1. Ornate Cybernetic / Colony Defense Arcade HUD Reticle L-Brackets
+            const bracketSize = 12;
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 2;
+            // Top-Left
+            ctx.beginPath(); ctx.moveTo(4, 4 + bracketSize); ctx.lineTo(4, 4); ctx.lineTo(4 + bracketSize, 4); ctx.stroke();
+            // Top-Right
+            ctx.beginPath(); ctx.moveTo(396 - bracketSize, 4); ctx.lineTo(396, 4); ctx.lineTo(396, 4 + bracketSize); ctx.stroke();
+            // Bottom-Left
+            ctx.beginPath(); ctx.moveTo(4, 396 - bracketSize); ctx.lineTo(4, 396); ctx.lineTo(4 + bracketSize, 396); ctx.stroke();
+            // Bottom-Right
+            ctx.beginPath(); ctx.moveTo(396 - bracketSize, 396); ctx.lineTo(396, 396); ctx.lineTo(396, 396 - bracketSize); ctx.stroke();
+
+            // Status Diodes
+            const diodePulse = 0.5 + 0.5 * Math.sin(globalAnimTime * 4);
+            ctx.fillStyle = `rgba(0, 255, 255, ${diodePulse})`;
+            ctx.fillRect(5, 5, 2, 2);
+            ctx.fillRect(393, 5, 2, 2);
+            ctx.fillRect(5, 393, 2, 2);
+            ctx.fillRect(393, 393, 2, 2);
+
+            // 2. Pulsating Energy Perimeter Inlay Border with Traveling Specular Glint
+            const glintPos = ((globalAnimTime * 100) % 1600);
+            ctx.strokeStyle = `rgba(0, 255, 255, ${0.25 + 0.15 * Math.sin(globalAnimTime * 3)})`;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(2, 2, 396, 396);
+
+            // Draw traveling glint along border
+            let gx = 0, gy = 0;
+            if (glintPos < 400) { gx = glintPos; gy = 2; }
+            else if (glintPos < 800) { gx = 398; gy = glintPos - 400; }
+            else if (glintPos < 1200) { gx = 398 - (glintPos - 800); gy = 398; }
+            else { gx = 2; gy = 398 - (glintPos - 1200); }
+            const grad = ctx.createRadialGradient(gx, gy, 0, gx, gy, 18);
+            grad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+            grad.addColorStop(0.5, 'rgba(0, 255, 255, 0.4)');
+            grad.addColorStop(1, 'rgba(0, 255, 255, 0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(gx - 18, gy - 18, 36, 36);
+
+            // 3. Draw Shield field outlines on overlay
             for (let y = 0; y < GRID_H; y++) {
                 for (let x = 0; x < GRID_W; x++) {
                     if (grid[y * GRID_W + x] === 15) {
@@ -836,7 +906,8 @@
                         let minY = Math.max(0, y - 2) * 21;
                         let maxX = (Math.min(GRID_W - 1, x + 2) + 1) * 21;
                         let maxY = (Math.min(GRID_H - 1, y + 2) + 1) * 21;
-                        ctx.strokeStyle = 'rgba(0, 200, 255, 0.4)';
+                        const pulseAlpha = 0.35 + 0.25 * Math.sin(globalAnimTime * 5 + x + y);
+                        ctx.strokeStyle = `rgba(0, 200, 255, ${pulseAlpha})`;
                         ctx.lineWidth = 1.5;
                         ctx.setLineDash([4, 4]);
                         ctx.strokeRect(minX, minY, maxX - minX, maxY - minY);
@@ -845,11 +916,44 @@
                 }
             }
 
+            // 4. Atmospheric Planetary Biome Motes
+            if (planetType === 0) { // Mars Red Dust Motes
+                ctx.fillStyle = 'rgba(255, 120, 60, 0.35)';
+                for (let i = 0; i < 30; i++) {
+                    let mx = (globalAnimTime * 25 + i * 47) % 400;
+                    let my = (i * 37 + Math.sin(globalAnimTime * 2 + i) * 8) % 400;
+                    ctx.fillRect(mx, my, 1.5, 1.5);
+                }
+            } else if (planetType === 1) { // Gliese Cryo Ice Snowflakes
+                ctx.fillStyle = 'rgba(180, 230, 255, 0.45)';
+                for (let i = 0; i < 35; i++) {
+                    let mx = (globalAnimTime * 15 + i * 31) % 400;
+                    let my = (globalAnimTime * 20 + i * 53) % 400;
+                    ctx.fillRect(mx, my, 2, 2);
+                }
+            } else if (planetType === 2) { // Kepler Volcanic Fiery Embers
+                for (let i = 0; i < 30; i++) {
+                    let mx = (i * 43 + Math.sin(globalAnimTime * 3 + i) * 12) % 400;
+                    let my = 400 - ((globalAnimTime * 35 + i * 41) % 400);
+                    ctx.fillStyle = (i % 2 === 0) ? 'rgba(255, 100, 0, 0.5)' : 'rgba(255, 220, 50, 0.6)';
+                    ctx.fillRect(mx, my, 2, 2);
+                }
+            } else if (planetType === 3) { // Proxima Acid Bioluminescent Spores
+                for (let i = 0; i < 30; i++) {
+                    let mx = (i * 39 + Math.sin(globalAnimTime * 1.5 + i) * 15) % 400;
+                    let my = (i * 49 + Math.cos(globalAnimTime * 1.8 + i) * 15) % 400;
+                    const sporeAlpha = 0.3 + 0.3 * Math.sin(globalAnimTime * 3 + i);
+                    ctx.fillStyle = `rgba(80, 255, 120, ${sporeAlpha})`;
+                    ctx.beginPath(); ctx.arc(mx, my, 1.8, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+
+            // 5. Active Weather Overlays
             if (dustStormTicks > 0 || weatherType === 1) { // Dust Storm
                 dustOffset += 3;
-                ctx.fillStyle = 'rgba(255, 150, 0, 0.15)';
+                ctx.fillStyle = 'rgba(255, 150, 0, 0.18)';
                 ctx.fillRect(0, 0, 400, 400);
-                ctx.fillStyle = 'rgba(255, 200, 100, 0.4)';
+                ctx.fillStyle = 'rgba(255, 200, 100, 0.5)';
                 for(let i=0; i<120; i++) {
                     let x = (dustOffset * 5 + i * 17) % 400;
                     let y = (i * 29) % 400;
@@ -857,9 +961,9 @@
                 }
             } else if (weatherType === 3) { // Blizzard
                 dustOffset += 2;
-                ctx.fillStyle = 'rgba(200, 240, 255, 0.12)';
+                ctx.fillStyle = 'rgba(200, 240, 255, 0.16)';
                 ctx.fillRect(0, 0, 400, 400);
-                ctx.fillStyle = 'rgba(220, 245, 255, 0.6)';
+                ctx.fillStyle = 'rgba(220, 245, 255, 0.7)';
                 for(let i=0; i<120; i++) {
                     let x = (dustOffset * 4 + i * 23) % 400;
                     let y = (dustOffset * 3 + i * 37) % 400;
@@ -867,15 +971,126 @@
                 }
             } else if (weatherType === 4) { // Acid Rain
                 dustOffset += 4;
-                ctx.fillStyle = 'rgba(50, 255, 100, 0.08)';
+                ctx.fillStyle = 'rgba(50, 255, 100, 0.12)';
                 ctx.fillRect(0, 0, 400, 400);
-                ctx.fillStyle = 'rgba(80, 255, 120, 0.5)';
+                ctx.fillStyle = 'rgba(80, 255, 120, 0.6)';
                 for(let i=0; i<100; i++) {
                     let x = (dustOffset * 2 + i * 19) % 400;
                     let y = (dustOffset * 6 + i * 29) % 400;
                     ctx.fillRect(x, y, 2, 8);
                 }
             }
+
+            // 6. Concentric Dual-Tier Shockwave Ripple Rings
+            for (let i = activeShockwaves.length - 1; i >= 0; i--) {
+                const sw = activeShockwaves[i];
+                sw.life -= dt / sw.maxLife;
+                if (sw.life <= 0) {
+                    activeShockwaves.splice(i, 1);
+                    continue;
+                }
+                const prog = 1 - sw.life;
+                // Inner high-speed compression wave
+                const r1 = sw.r1 + prog * (sw.maxR1 - sw.r1);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${sw.life * 0.9})`;
+                ctx.lineWidth = 2.5 * sw.life;
+                ctx.beginPath(); ctx.arc(sw.x, sw.y, r1, 0, Math.PI * 2); ctx.stroke();
+
+                // Outer dispersion halo
+                const r2 = sw.r2 + prog * (sw.maxR2 - sw.r2);
+                ctx.strokeStyle = `rgba(0, 255, 255, ${sw.life * 0.5})`;
+                ctx.lineWidth = 1.5 * sw.life;
+                ctx.beginPath(); ctx.arc(sw.x, sw.y, r2, 0, Math.PI * 2); ctx.stroke();
+            }
+
+            // 7. Multi-Layered Kinematic Particle Simulation & Drawing
+            for (let i = activeParticles.length - 1; i >= 0; i--) {
+                const p = activeParticles[i];
+                p.life -= dt / p.maxLife;
+                if (p.life <= 0) {
+                    activeParticles.splice(i, 1);
+                    continue;
+                }
+                const alpha = Math.max(0, p.life);
+
+                if (p.type === 'spark') {
+                    p.x += p.vx * dt;
+                    p.y += p.vy * dt;
+                    p.vx *= 0.92;
+                    p.vy *= 0.92;
+                    ctx.strokeStyle = p.color;
+                    ctx.globalAlpha = alpha;
+                    ctx.lineWidth = p.size;
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p.x - p.vx * dt * 2, p.y - p.vy * dt * 2);
+                    ctx.stroke();
+                    ctx.globalAlpha = 1.0;
+                } else if (p.type === 'smoke') {
+                    p.x += p.vx * dt;
+                    p.y += p.vy * dt;
+                    p.vx *= 0.90;
+                    p.vy *= 0.90;
+                    const r = p.size + (1 - p.life) * p.grow;
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = alpha * 0.45;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
+                    ctx.globalAlpha = 1.0;
+                } else if (p.type === 'debris') {
+                    p.x += p.vx * dt;
+                    p.y += p.vy * dt;
+                    p.vy += 80 * dt; // Gravity
+                    p.vx *= 0.95;
+                    p.rot += p.vrot * dt;
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot);
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = alpha;
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                    ctx.restore();
+                    ctx.globalAlpha = 1.0;
+                } else if (p.type === 'star') {
+                    p.x += p.vx * dt;
+                    p.y += p.vy * dt;
+                    p.vx *= 0.93;
+                    p.vy *= 0.93;
+                    const s = p.size * (0.8 + 0.4 * Math.sin(p.life * 15));
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = alpha;
+                    ctx.beginPath();
+                    ctx.moveTo(0, -s); ctx.lineTo(s * 0.3, -s * 0.3); ctx.lineTo(s, 0);
+                    ctx.lineTo(s * 0.3, s * 0.3); ctx.lineTo(0, s); ctx.lineTo(-s * 0.3, s * 0.3);
+                    ctx.lineTo(-s, 0); ctx.lineTo(-s * 0.3, -s * 0.3); ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                    ctx.globalAlpha = 1.0;
+                }
+            }
+
+            // 8. Projectiles
+            for (let i = activeProjectiles.length - 1; i >= 0; i--) {
+                const pr = activeProjectiles[i];
+                pr.progress += dt * pr.speed;
+                if (pr.progress >= 1.0) {
+                    spawnParticles((pr.tx - 10) / 21, (pr.ty - 10) / 21, pr.color, 8);
+                    activeProjectiles.splice(i, 1);
+                    continue;
+                }
+                const curX = pr.x + (pr.tx - pr.x) * pr.progress;
+                const curY = pr.y + (pr.ty - pr.y) * pr.progress;
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath(); ctx.arc(curX, curY, 2.5, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = pr.color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(curX, curY);
+                ctx.lineTo(curX - (pr.tx - pr.x) * 0.15, curY - (pr.ty - pr.y) * 0.15);
+                ctx.stroke();
+            }
+
             requestAnimationFrame(renderWeatherFX);
         }
 
