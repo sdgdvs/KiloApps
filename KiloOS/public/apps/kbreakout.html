@@ -177,53 +177,119 @@ let bricks = [];
 let brick_hp = [];
 let bricks_left = 0;
 
-// Particle, Trail & Effect system
+// Particle, Trail & Effect system (Loop 8 Upgraded)
 let particles = [];
 let shockwaves = [];
-let screenShake = 0;
+let screenShakeIntensity = 0;
+let screenShakeAngle = 0;
+let dustMotes = [];
+let dustMotesInit = false;
 let keys = {};
 
-// Web Audio API
-let audioCtx = null;
-function initAudio() {
-    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+function triggerScreenShake(intensity, rot = 0.04) {
+    if (intensity > screenShakeIntensity) {
+        screenShakeIntensity = intensity;
+        screenShakeAngle = (Math.random() - 0.5) * rot * intensity;
+    }
 }
 
-function playTone(f, type, dur) {
-    if(!audioCtx) return;
-    try {
-        let osc = audioCtx.createOscillator();
-        let gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(f, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + dur);
-    } catch(e){}
+function initDustMotes() {
+    dustMotes = [];
+    for (let i = 0; i < 28; i++) {
+        dustMotes.push({
+            x: Math.random() * w,
+            y: Math.random() * (h - 35) + 35,
+            vx: (Math.random() - 0.5) * 0.4,
+            vy: 0.3 + Math.random() * 0.6,
+            size: 1 + Math.random() * 1.5,
+            alpha: 0.2 + Math.random() * 0.4,
+            color: Math.random() > 0.5 ? '#00e5ff' : '#ffd700'
+        });
+    }
+    dustMotesInit = true;
 }
 
-function spawnParticles(x, y, color, count) {
-    for (let i = 0; i < count; i++) {
+function updateDustMotes() {
+    if (!dustMotesInit) initDustMotes();
+    for (let dm of dustMotes) {
+        dm.x += dm.vx;
+        dm.y += dm.vy;
+        if (dm.y > h - 10) { dm.y = 35; dm.x = Math.random() * w; }
+        if (dm.x < 0) dm.x = w;
+        if (dm.x > w) dm.x = 0;
+    }
+}
+
+// 4-Layer Kinematic Particle Explosion Engine
+function spawnParticles(x, y, color, count = 16) {
+    // Layer 0: Incandescent core needle sparks with velocity trails
+    let c0 = Math.max(2, Math.floor(count * 0.35));
+    for (let i = 0; i < c0; i++) {
         let angle = Math.random() * Math.PI * 2;
-        let spd = 1 + Math.random() * 5;
+        let spd = 3.0 + Math.random() * 5.0;
+        let ml = 14 + Math.floor(Math.random() * 12);
         particles.push({
-            x: x, y: y,
-            vx: Math.cos(angle) * spd,
-            vy: Math.sin(angle) * spd - 2,
-            size: 2 + Math.random() * 4,
-            life: 1.0,
-            color: color,
-            type: Math.random() > 0.6 ? 0 : (Math.random() > 0.5 ? 1 : 2)
+            type: 0, x: x, y: y, prevX: x, prevY: y,
+            vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd - 1.5,
+            color: '#ffffff', size: 1.5 + Math.random(),
+            life: 1.0, maxLife: ml, currentLife: ml
+        });
+    }
+    // Layer 1: Expanding buoyant plasma smoke puffs with negative gravity and drag
+    let c1 = Math.max(2, Math.floor(count * 0.30));
+    for (let i = 0; i < c1; i++) {
+        let angle = Math.random() * Math.PI * 2;
+        let spd = 0.6 + Math.random() * 1.8;
+        let ml = 24 + Math.floor(Math.random() * 16);
+        particles.push({
+            type: 1, x: x, y: y, prevX: x, prevY: y,
+            vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd - 1.0,
+            color: color || '#88ccff', size: 3.0 + Math.random() * 3.5,
+            life: 1.0, maxLife: ml, currentLife: ml
+        });
+    }
+    // Layer 2: Heavy kinematic debris & glass/brick shards with tumbling rotation & bounce
+    let c2 = Math.max(2, Math.floor(count * 0.25));
+    for (let i = 0; i < c2; i++) {
+        let angle = Math.random() * Math.PI * 2;
+        let spd = 2.0 + Math.random() * 4.5;
+        let ml = 28 + Math.floor(Math.random() * 16);
+        particles.push({
+            type: 2, x: x, y: y, prevX: x, prevY: y,
+            vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd - 2.5,
+            color: color || '#ffaa00', size: 2.5 + Math.random() * 2.5,
+            rot: Math.random() * Math.PI * 2, vRot: (Math.random() - 0.5) * 0.35,
+            life: 1.0, maxLife: ml, currentLife: ml
+        });
+    }
+    // Layer 3: Radiant golden/cyan celebration energy stars
+    let c3 = Math.max(1, Math.floor(count * 0.15));
+    for (let i = 0; i < c3; i++) {
+        let angle = Math.random() * Math.PI * 2;
+        let spd = 1.2 + Math.random() * 3.0;
+        let ml = 22 + Math.floor(Math.random() * 14);
+        particles.push({
+            type: 3, x: x, y: y, prevX: x, prevY: y,
+            vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd,
+            color: (Math.random() > 0.5) ? '#ffd700' : '#00ffff', size: 3.5 + Math.random() * 2.5,
+            rot: Math.random() * Math.PI * 2, vRot: (Math.random() - 0.5) * 0.25,
+            life: 1.0, maxLife: ml, currentLife: ml
         });
     }
 }
 
-function spawnShockwave(x, y, color) {
-    shockwaves.push({ x: x, y: y, r: 0, maxR: 30 + Math.random() * 20, life: 1.0, color: color });
+// Dual-Tier Concentric Shockwave Ripple Rings
+function spawnShockwave(x, y, color = '#00ffff') {
+    // Inner high-speed compression wave
+    shockwaves.push({
+        x: x, y: y, r: 2, maxR: 26 + Math.random() * 8,
+        speed: 3.0, life: 1.0, color: '#ffffff', isInner: true, width: 2.5
+    });
+    // Outer dispersion halo
+    shockwaves.push({
+        x: x, y: y, r: 4, maxR: 44 + Math.random() * 16,
+        speed: 1.8, life: 1.0, color: color, isInner: false, width: 1.8
+    });
 }
 
 function spawnGravityWell(x, y, mass, type) {
@@ -411,6 +477,24 @@ function drawBrick(r, c, type, bx, by, hp) {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
     ctx.fillRect(bx + 1, by + BR_H - 3, BR_W - 2, 2);
     ctx.fillRect(bx + BR_W - 3, by + 1, 2, BR_H - 2);
+
+    // Sculpted brick glossy specular sheen highlight traversing block bevels
+    let sheenPhase = ((frame * 1.5 + c * 8 + r * 14) % 180);
+    if (sheenPhase >= 0 && sheenPhase <= BR_W + 10) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(bx + 1, by + 1, BR_W - 2, BR_H - 2);
+        ctx.clip();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.beginPath();
+        ctx.moveTo(bx + sheenPhase - 6, by + BR_H);
+        ctx.lineTo(bx + sheenPhase - 1, by + BR_H);
+        ctx.lineTo(bx + sheenPhase + 7, by);
+        ctx.lineTo(bx + sheenPhase + 2, by);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    }
 
     if (type === 11) {
         // Quantum Resonance Brick: pulsing core + diamond boundary
@@ -766,6 +850,7 @@ function update() {
             if ((dur_barrier > 0 || aegis_layers > 0) && b.y >= h - 20) {
                 b.y = h - 20; b.dy = -Math.abs(b.dy);
                 spawnParticles(b.x, h - 10, '#00ffff', 6);
+                triggerScreenShake(2.5, 0.02);
             }
 
             if (b.y + 8 > h - 40 && b.y < h - 40 + pad_h && b.x + 8 > pad_x && b.x < pad_x + pad_w) {
@@ -774,8 +859,9 @@ function update() {
                 let hit = (b.x + 4) - (pad_x + pad_w / 2);
                 b.dx = hit * 0.22;
                 if (Math.abs(b.dx) < 1.0) b.dx = b.dx >= 0 ? 1.5 : -1.5;
-                spawnParticles(b.x + 4, h - 40, '#00ffff', 5);
+                spawnParticles(b.x + 4, h - 40, '#00ffff', 8);
                 spawnShockwave(b.x + 4, h - 40, '#00ffff');
+                triggerScreenShake(4.0, 0.025);
                 playTone(400, 'sine', 0.1);
             }
 
@@ -790,6 +876,7 @@ function update() {
 
                     if (type === 11 || active_resonance_catalyst) {
                         triggerQuantumResonance(r, c);
+                        triggerScreenShake(12.0, 0.04);
                         if (dur_fire <= 0 && !active_supernova) b.dy = -b.dy;
                     } else if (type === 10) {
                         bricks[r][c] = 0; bricks_left--; score += 30 * chaosMult; lifetime_bricks++;
@@ -798,18 +885,23 @@ function update() {
                         spawnLaser(bx, by, 7, 0, 2);
                         spawnLaser(bx, by, 0, -7, 2);
                         spawnLaser(bx, by, 0, 7, 2);
-                        spawnParticles(bx, by, '#00ffff', 14);
+                        spawnParticles(bx, by, '#00ffff', 18);
                         spawnShockwave(bx, by, '#00ffff');
+                        triggerScreenShake(8.0, 0.03);
                         if (dur_fire <= 0 && !active_supernova) b.dy = -b.dy;
                     } else if (type === 9) {
+                        triggerScreenShake(3.0, 0.02);
                         if (dur_fire <= 0 && !active_supernova) b.dy = -b.dy;
                         else { bricks[r][c] = 0; bricks_left--; score += 50 * chaosMult; nano_alloys += 2; }
                     } else if (type === 4) {
                         bricks[r][c] = 0; bricks_left--; plasma_shards += 2;
                         if (dur_fire <= 0 && !active_supernova) b.dy = -b.dy;
                         triggerExplosion(r, c);
+                        triggerScreenShake(14.0, 0.05);
                     } else {
-                        spawnParticles(bx, by, getBrickColor(type, r, c), 8);
+                        spawnParticles(bx, by, getBrickColor(type, r, c), 12);
+                        spawnShockwave(bx, by, getBrickColor(type, r, c));
+                        triggerScreenShake(3.0, 0.02);
                         plasma_shards++;
                         if (dur_fire > 0 || active_supernova) {
                             bricks[r][c] = 0; bricks_left--; score += 15 * chaosMult; lifetime_bricks++;
@@ -827,6 +919,7 @@ function update() {
 
                     if (bricks_left <= 0 && !boss_active) {
                         level++;
+                        triggerScreenShake(12.0, 0.04);
                         if (level > 40) { state = 3; saveGameData(); } else initLevel();
                         break;
                     }
@@ -837,8 +930,10 @@ function update() {
         balls = balls.filter(b => b.y <= h || dur_barrier > 0 || aegis_layers > 0);
         if (balls.length === 0) {
             lives--;
+            triggerScreenShake(12.0, 0.04);
             if (lives <= 0) {
                 state = 2; saveGameData();
+                triggerScreenShake(16.0, 0.05);
                 playTone(120, 'sawtooth', 0.5);
             } else {
                 initLevel();
@@ -859,6 +954,290 @@ function update() {
     document.getElementById('btn-barrier').className = 'skill-btn ' + (dur_barrier > 0 ? 'active' : (cd_barrier <= 0 ? 'ready' : ''));
     document.getElementById('btn-grav').className = 'skill-btn ' + (dur_gravity > 0 ? 'active' : (cd_gravity <= 0 ? 'ready' : ''));
     document.getElementById('btn-sat').className = 'skill-btn ' + (dur_satellite > 0 ? 'active' : (cd_satellite <= 0 ? 'ready' : ''));
+
+    // Update screen shake with quadratic physics decay and rotational damping
+    screenShakeIntensity *= 0.90;
+    screenShakeAngle *= 0.88;
+    if (screenShakeIntensity < 0.05) { screenShakeIntensity = 0; screenShakeAngle = 0; }
+
+    // Dual-tier concentric shockwaves update
+    for (let i = shockwaves.length - 1; i >= 0; i--) {
+        let sw = shockwaves[i];
+        sw.r += sw.speed;
+        sw.life -= (sw.isInner ? 0.055 : 0.032);
+        if (sw.life <= 0 || sw.r >= sw.maxR) shockwaves.splice(i, 1);
+    }
+
+    // 4-Layer Kinematic Particles update
+    for (let i = particles.length - 1; i >= 0; i--) {
+        let p = particles[i];
+        p.prevX = p.x;
+        p.prevY = p.y;
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.type === 0) {
+            p.vy += 0.16;
+        } else if (p.type === 1) {
+            p.vy -= 0.035;
+            p.vx *= 0.93;
+            p.vy *= 0.93;
+        } else if (p.type === 2) {
+            p.vy += 0.24;
+            p.vx *= 0.97;
+            p.rot = (p.rot || 0) + (p.vRot || 0.15);
+            if (p.y >= h - 12) {
+                p.y = h - 12;
+                p.vy = -p.vy * 0.45;
+            }
+        } else if (p.type === 3) {
+            p.vx *= 0.95;
+            p.vy *= 0.95;
+            p.rot = (p.rot || 0) + (p.vRot || 0.2);
+        }
+        p.currentLife--;
+        p.life = Math.max(0, p.currentLife / p.maxLife);
+        if (p.currentLife <= 0) particles.splice(i, 1);
+    }
+
+    updateDustMotes();
+}
+
+function drawDustMotes(ctx) {
+    ctx.save();
+    for (let dm of dustMotes) {
+        let a = dm.alpha * (0.7 + 0.3 * Math.sin(frame * 0.05 + dm.x));
+        ctx.globalAlpha = a;
+        ctx.fillStyle = dm.color;
+        ctx.fillRect(dm.x, dm.y, dm.size, dm.size);
+    }
+    ctx.restore();
+}
+
+function drawPerimeterInlay(ctx) {
+    ctx.save();
+    let bx = 3, by = 31, bw = w - 6, bh = h - 34;
+    let pulseAlpha = 0.25 + Math.sin(frame * 0.08) * 0.15;
+    
+    // Pulsating energy perimeter inlay border
+    ctx.strokeStyle = chaos_mode ? `rgba(200, 50, 255, ${pulseAlpha})` : `rgba(0, 220, 255, ${pulseAlpha})`;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(bx, by, bw, bh);
+
+    // Traveling specular glint comet along perimeter
+    let perim = 2 * (bw + bh);
+    let glintDist = (frame * 3.5) % perim;
+    let gx = bx, gy = by;
+    if (glintDist < bw) {
+        gx = bx + glintDist; gy = by;
+    } else if (glintDist < bw + bh) {
+        gx = bx + bw; gy = by + (glintDist - bw);
+    } else if (glintDist < 2 * bw + bh) {
+        gx = bx + bw - (glintDist - (bw + bh)); gy = by + bh;
+    } else {
+        gx = bx; gy = by + bh - (glintDist - (2 * bw + bh));
+    }
+
+    let gGrad = ctx.createRadialGradient(gx, gy, 0, gx, gy, 8);
+    gGrad.addColorStop(0, '#ffffff');
+    gGrad.addColorStop(0.4, chaos_mode ? '#ff88ff' : '#00ffff');
+    gGrad.addColorStop(1, 'rgba(0, 255, 255, 0)');
+    ctx.fillStyle = gGrad;
+    ctx.beginPath();
+    ctx.arc(gx, gy, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+}
+
+function drawHUDCornerReticles(ctx) {
+    ctx.save();
+    const size = 16;
+    const diodePulse = Math.sin(frame * 0.1) * 0.3 + 0.7;
+    const corners = [
+        { x: 5, y: 33, dx: 1, dy: 1 },
+        { x: w - 5, y: 33, dx: -1, dy: 1 },
+        { x: 5, y: h - 5, dx: 1, dy: -1 },
+        { x: w - 5, y: h - 5, dx: -1, dy: -1 }
+    ];
+
+    for (let c of corners) {
+        ctx.strokeStyle = '#00ffff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(c.x, c.y + c.dy * size);
+        ctx.lineTo(c.x, c.y);
+        ctx.lineTo(c.x + c.dx * size, c.y);
+        ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.6)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(c.x + c.dx * 6, c.y + c.dy * 3);
+        ctx.lineTo(c.x + c.dx * 12, c.y + c.dy * 3);
+        ctx.stroke();
+
+        let diodeColor = chaos_mode ? `rgba(255, 60, 255, ${diodePulse})` : `rgba(0, 255, 200, ${diodePulse})`;
+        ctx.fillStyle = diodeColor;
+        ctx.beginPath();
+        ctx.arc(c.x + c.dx * 3, c.y + c.dy * 3, 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(c.x + c.dx * 3, c.y + c.dy * 3, 0.8, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
+function drawSculptedPaddle(ctx, px, py, pw, ph) {
+    ctx.save();
+    // Dual ion thruster nozzles & flickering exhaust at underside
+    let thrustFlicker = (frame % 4 < 2) ? 1.0 : 0.7;
+    let tLeftX = px + 8, tRightX = px + pw - 8, tY = py + ph;
+    
+    let tGrad = ctx.createLinearGradient(0, tY, 0, tY + 8 * thrustFlicker);
+    tGrad.addColorStop(0, '#ffffff');
+    tGrad.addColorStop(0.3, '#00ffff');
+    tGrad.addColorStop(1, 'rgba(0, 150, 255, 0)');
+    ctx.fillStyle = tGrad;
+    ctx.beginPath();
+    ctx.moveTo(tLeftX - 4, tY); ctx.lineTo(tLeftX + 4, tY); ctx.lineTo(tLeftX, tY + 7 * thrustFlicker);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(tRightX - 4, tY); ctx.lineTo(tRightX + 4, tY); ctx.lineTo(tRightX, tY + 7 * thrustFlicker);
+    ctx.closePath(); ctx.fill();
+
+    // Sculpted metallic beveled chassis
+    let baseColor1 = dur_laser > 0 ? '#00e5ff' : (chaos_mode ? '#cc44ff' : '#00d2ff');
+    let baseColor2 = dur_laser > 0 ? '#005577' : (chaos_mode ? '#551177' : '#004466');
+    let pGrad = ctx.createLinearGradient(px, py, px, py + ph);
+    pGrad.addColorStop(0, '#e0f7ff');
+    pGrad.addColorStop(0.25, baseColor1);
+    pGrad.addColorStop(0.75, baseColor2);
+    pGrad.addColorStop(1, '#0a1020');
+    
+    ctx.fillStyle = pGrad;
+    ctx.strokeStyle = '#00ffff';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(px, py, pw, ph, 4);
+    ctx.fill();
+    ctx.stroke();
+
+    // Inner glowing core energy bar
+    let coreW = Math.max(8, pw * 0.45);
+    let coreX = px + (pw - coreW) / 2;
+    let corePulse = Math.sin(frame * 0.15) * 0.25 + 0.75;
+    ctx.fillStyle = `rgba(255, 255, 255, ${corePulse * 0.9})`;
+    ctx.fillRect(coreX, py + 3, coreW, ph - 6);
+
+    // Traveling specular sheen highlight traversing paddle top bevel
+    let pSheenX = ((frame * 2.5) % (pw + 30)) - 15;
+    if (pSheenX > -10 && pSheenX < pw + 10) {
+        let sGrad = ctx.createLinearGradient(px + pSheenX - 8, py, px + pSheenX + 8, py);
+        sGrad.addColorStop(0, 'rgba(255,255,255,0)');
+        sGrad.addColorStop(0.5, 'rgba(255,255,255,0.85)');
+        sGrad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = sGrad;
+        ctx.fillRect(px + 2, py + 1, pw - 4, 2);
+    }
+    ctx.restore();
+}
+
+function drawBallTrails(ctx) {
+    for (let b of balls) {
+        let tLen = b.trail.length;
+        for (let t = 0; t < tLen; t++) {
+            let pt = b.trail[t];
+            let prog = (t + 1) / tLen;
+            ctx.save();
+            ctx.globalAlpha = prog * 0.55;
+            ctx.fillStyle = (dur_fire > 0 || active_supernova) ? '#ff6600' : (chaos_mode ? '#ff44ff' : '#00e5ff');
+            ctx.beginPath();
+            ctx.arc(pt.x + 4, pt.y + 4, 1.5 + prog * 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+        // Main glowing ball
+        ctx.save();
+        let bGrad = ctx.createRadialGradient(b.x + 3, b.y + 3, 1, b.x + 4, b.y + 4, 5);
+        bGrad.addColorStop(0, '#ffffff');
+        bGrad.addColorStop(0.5, (dur_fire > 0 || active_supernova) ? '#ffaa00' : (chaos_mode ? '#ff88ff' : '#00ffff'));
+        bGrad.addColorStop(1, (dur_fire > 0 || active_supernova) ? '#ff2200' : (chaos_mode ? '#aa00aa' : '#0066aa'));
+        ctx.fillStyle = bGrad;
+        ctx.beginPath();
+        ctx.arc(b.x + 4, b.y + 4, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+}
+
+function drawDualShockwaves(ctx) {
+    for (let sw of shockwaves) {
+        if (sw.life > 0) {
+            ctx.save();
+            ctx.strokeStyle = sw.color;
+            ctx.lineWidth = Math.max(1, sw.width * sw.life);
+            ctx.globalAlpha = Math.min(1.0, sw.life * (sw.isInner ? 1.0 : 0.8));
+            ctx.beginPath();
+            ctx.ellipse(sw.x, sw.y, sw.r, sw.r * 0.65, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+}
+
+function drawParticles4Layers(ctx) {
+    for (let p of particles) {
+        if (p.life <= 0) continue;
+        ctx.save();
+        ctx.globalAlpha = Math.min(1.0, p.life * 1.2);
+        if (p.type === 0) {
+            // Layer 0: Incandescent Needle sparks with velocity trail
+            ctx.strokeStyle = p.color;
+            ctx.lineWidth = p.size;
+            ctx.beginPath();
+            ctx.moveTo(p.prevX, p.prevY);
+            ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+        } else if (p.type === 1) {
+            // Layer 1: Expanding buoyant plasma smoke puff
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            let rad = p.size * (1.8 - p.life * 0.8);
+            ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (p.type === 2) {
+            // Layer 2: Heavy kinematic debris shard with rotation
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot || 0);
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            let s = p.size;
+            ctx.moveTo(-s, -s/2);
+            ctx.lineTo(s, -s/3);
+            ctx.lineTo(s/2, s);
+            ctx.closePath();
+            ctx.fill();
+        } else if (p.type === 3) {
+            // Layer 3: Radiant golden/cyan celebration energy star
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot || 0);
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            let outer = p.size * 1.5;
+            let inner = p.size * 0.4;
+            for (let pt = 0; pt < 8; pt++) {
+                let r = (pt % 2 === 0) ? outer : inner;
+                let a = (pt * Math.PI) / 4;
+                let px = Math.cos(a) * r;
+                let py = Math.sin(a) * r;
+                if (pt === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.fill();
+        }
+        ctx.restore();
+    }
 }
 
 function render() {
@@ -866,6 +1245,20 @@ function render() {
 
     ctx.fillStyle = chaos_mode ? '#160a1e' : '#10101a';
     ctx.fillRect(0, 0, w, h);
+
+    ctx.save();
+    // Continuous procedural screen-shake with quadratic physics decay and rotational damping
+    if (screenShakeIntensity > 0.05) {
+        let sx = (Math.random() - 0.5) * screenShakeIntensity * 1.5;
+        let sy = (Math.random() - 0.5) * screenShakeIntensity * 1.5;
+        ctx.translate(w / 2 + sx, h / 2 + sy);
+        ctx.rotate(screenShakeAngle);
+        ctx.translate(-w / 2, -h / 2);
+    }
+
+    // Dynamic background dust motes & perimeter inlay
+    drawDustMotes(ctx);
+    drawPerimeterInlay(ctx);
 
     if (state === 0) {
         ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Segoe UI'; ctx.textAlign = 'center';
@@ -922,31 +1315,23 @@ function render() {
             ctx.stroke();
         }
 
-        ctx.fillStyle = (dur_laser > 0 ? '#00cccc' : (chaos_mode ? '#cc44ff' : '#00ffff'));
-        ctx.fillRect(pad_x, h - 40, pad_w, pad_h);
+        // Sculpted paddle with thrusters, metallic chassis, and specular sheen
+        drawSculptedPaddle(ctx, pad_x, h - 40, pad_w, pad_h);
 
-        ctx.fillStyle = '#ff00ff';
+        // Lasers
         for (let l of lasers) {
             ctx.fillStyle = l.type === 1 ? '#ff66ff' : (l.type === 2 ? '#00ffcc' : '#00ffff');
             ctx.fillRect(l.x - 2, l.y - 5, 4, 10);
         }
 
-        for (let b of balls) {
-            ctx.fillStyle = (dur_fire > 0 || active_supernova ? '#ff5500' : (chaos_mode ? '#ff66ff' : '#00ffff'));
-            ctx.beginPath();
-            ctx.arc(b.x + 4, b.y + 4, 4, 0, Math.PI * 2);
-            ctx.fill();
-        }
+        // Ball Trails and Balls
+        drawBallTrails(ctx);
 
-        for (let p of particles) {
-            if (p.life > 0) {
-                ctx.fillStyle = p.color;
-                ctx.fillRect(p.x, p.y, p.size, p.size);
-                p.life -= 0.04;
-                p.x += p.vx; p.y += p.vy;
-            }
-        }
-        particles = particles.filter(p => p.life > 0);
+        // Dual-tier concentric shockwaves
+        drawDualShockwaves(ctx);
+
+        // 4-Layer Kinematic Particles
+        drawParticles4Layers(ctx);
 
         if (dur_barrier > 0 || aegis_layers > 0) {
             ctx.strokeStyle = aegis_layers > 0 ? '#ffcc00' : '#00ffff';
@@ -956,6 +1341,11 @@ function render() {
             ctx.stroke();
         }
     }
+
+    // Ornate Cybernetic Arcade HUD Corner Reticle L-Brackets
+    drawHUDCornerReticles(ctx);
+
+    ctx.restore();
 }
 
 function loop() {
