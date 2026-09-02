@@ -85,8 +85,12 @@ typedef struct {
 
 // --- GLOBAL GAME DATA ---
 int gameState = STATE_MENU;
+int previousState = STATE_MENU;
 int menuIndex = 0;
 int modeIndex = MODE_CLASSIC;
+static HFONT hFontTitle = NULL;
+static HFONT hFontMenu = NULL;
+static HFONT hFontHUD = NULL;
 
 Ent p = { W/2.0f - 10.0f, H - 60.0f, 1.0f, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0 };
 int shieldActive = 0;
@@ -2641,6 +2645,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE:
             seed = GetTickCount();
             LoadLeaderboard();
+            hFontTitle = CreateFontA(-18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+            hFontMenu = CreateFontA(-13, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+            hFontHUD = CreateFontA(-11, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
             for (int i = 0; i < MAX_STARS; i++) {
                 stars[i].x = (float)(rnd() % W);
                 stars[i].y = (float)(rnd() % H);
@@ -2654,10 +2661,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_KEYDOWN:
             if (gameState == STATE_MENU) {
+                int opts = HasSavedGame() ? 6 : 5;
                 if (wParam == 'H' || wParam == VK_F1) {
+                    previousState = STATE_MENU;
                     gameState = STATE_HELP;
                 } else {
-                    int opts = HasSavedGame() ? 5 : 4;
                     if (wParam == VK_UP || wParam == 'W') menuIndex = (menuIndex - 1 + opts) % opts;
                     else if (wParam == VK_DOWN || wParam == 'S') menuIndex = (menuIndex + 1) % opts;
                     else if (wParam == VK_RETURN || wParam == VK_SPACE) {
@@ -2666,11 +2674,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         else if (saved && menuIndex == 1) LoadGameState();
                         else if ((!saved && menuIndex == 1) || (saved && menuIndex == 2)) gameState = STATE_LEADERBOARD;
                         else if ((!saved && menuIndex == 2) || (saved && menuIndex == 3)) gameState = STATE_MODE_SELECT;
-                        else if ((!saved && menuIndex == 3) || (saved && menuIndex == 4)) { ExportHighScoresJSON(); MessageBoxA(hwnd, "Exported kspace_highscores.json", "Export", MB_OK); }
+                        else if ((!saved && menuIndex == 3) || (saved && menuIndex == 4)) { previousState = STATE_MENU; gameState = STATE_HELP; }
+                        else if ((!saved && menuIndex == 4) || (saved && menuIndex == 5)) { ExportHighScoresJSON(); }
                     }
                 }
             } else if (gameState == STATE_HELP) {
-                if (wParam == 'H' || wParam == VK_F1 || wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE) gameState = STATE_MENU;
+                if (wParam == 'H' || wParam == VK_F1 || wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE) {
+                    gameState = (previousState == STATE_PLAYING || previousState == STATE_PAUSED) ? STATE_PAUSED : STATE_MENU;
+                }
             } else if (gameState == STATE_MODE_SELECT) {
                 if (wParam == VK_UP || wParam == 'W') modeIndex = (modeIndex - 1 + 3) % 3;
                 else if (wParam == VK_DOWN || wParam == 'S') modeIndex = (modeIndex + 1) % 3;
@@ -2678,6 +2689,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (wParam == VK_ESCAPE) gameState = STATE_MENU;
             } else if (gameState == STATE_PLAYING) {
                 if (wParam == kbPause || wParam == VK_ESCAPE) { gameState = STATE_PAUSED; menuIndex = 0; }
+                else if (wParam == 'H' || wParam == VK_F1) { previousState = STATE_PLAYING; gameState = STATE_HELP; }
                 else if (wParam == kbHyperJump || wParam == 'J') UseHyperJump();
                 else if (wParam == kbDeployDrone || wParam == 'W') DeployDroneWing();
                 else if (wParam == kbTimeStop) UseTimeStop();
@@ -2686,20 +2698,84 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (wParam == kbShield) UseHyperShield();
                 else if (wParam == kbOvercharge || wParam == 'O' || wParam == 'C') UseOvercharge();
             } else if (gameState == STATE_PAUSED) {
-                if (wParam == VK_UP || wParam == 'W') menuIndex = (menuIndex - 1 + 4) % 4;
-                else if (wParam == VK_DOWN || wParam == 'S') menuIndex = (menuIndex + 1) % 4;
+                if (wParam == 'H' || wParam == VK_F1) { previousState = STATE_PAUSED; gameState = STATE_HELP; }
+                else if (wParam == VK_UP || wParam == 'W') menuIndex = (menuIndex - 1 + 5) % 5;
+                else if (wParam == VK_DOWN || wParam == 'S') menuIndex = (menuIndex + 1) % 5;
                 else if (wParam == VK_RETURN || wParam == VK_SPACE) {
                     if (menuIndex == 0) gameState = STATE_PLAYING;
-                    else if (menuIndex == 1) SaveGameState();
-                    else if (menuIndex == 2) LoadGameState();
-                    else if (menuIndex == 3) gameState = STATE_MENU;
+                    else if (menuIndex == 1) { previousState = STATE_PAUSED; gameState = STATE_HELP; }
+                    else if (menuIndex == 2) SaveGameState();
+                    else if (menuIndex == 3) LoadGameState();
+                    else if (menuIndex == 4) gameState = STATE_MENU;
                 } else if (wParam == 'P' || wParam == VK_ESCAPE) gameState = STATE_PLAYING;
-            } else if (gameState == STATE_LEADERBOARD || gameState == STATE_GAMEOVER || gameState == STATE_VICTORY || gameState == STATE_HELP) {
+            } else if (gameState == STATE_LEADERBOARD || gameState == STATE_GAMEOVER || gameState == STATE_VICTORY) {
                 if (wParam == VK_RETURN || wParam == VK_SPACE || wParam == VK_ESCAPE) gameState = STATE_MENU;
-                if ((gameState == STATE_GAMEOVER || gameState == STATE_VICTORY) && wParam == 'E') { ExportStatsCSV(); MessageBoxA(hwnd, "Exported CSV", "Export", MB_OK); }
-                if ((gameState == STATE_GAMEOVER || gameState == STATE_VICTORY) && wParam == 'J') { ExportStatsJSON(); MessageBoxA(hwnd, "Exported JSON", "Export", MB_OK); }
+                if ((gameState == STATE_GAMEOVER || gameState == STATE_VICTORY) && wParam == 'E') { ExportStatsCSV(); }
+                if ((gameState == STATE_GAMEOVER || gameState == STATE_VICTORY) && wParam == 'J') { ExportStatsJSON(); }
             }
             break;
+
+        case WM_LBUTTONDOWN: {
+            int mx = LOWORD(lParam);
+            int my = HIWORD(lParam);
+            if (gameState == STATE_MENU) {
+                if (my >= H - 48 && my <= H - 15) {
+                    previousState = STATE_MENU;
+                    gameState = STATE_HELP;
+                } else {
+                    int saved = HasSavedGame();
+                    int count = saved ? 6 : 5;
+                    for (int i = 0; i < count; i++) {
+                        int y = 175 + i * 32;
+                        if (my >= y - 12 && my <= y + 18) {
+                            menuIndex = i;
+                            if (menuIndex == 0) StartNewGame(MODE_CLASSIC);
+                            else if (saved && menuIndex == 1) LoadGameState();
+                            else if ((!saved && menuIndex == 1) || (saved && menuIndex == 2)) gameState = STATE_LEADERBOARD;
+                            else if ((!saved && menuIndex == 2) || (saved && menuIndex == 3)) gameState = STATE_MODE_SELECT;
+                            else if ((!saved && menuIndex == 3) || (saved && menuIndex == 4)) { previousState = STATE_MENU; gameState = STATE_HELP; }
+                            else if ((!saved && menuIndex == 4) || (saved && menuIndex == 5)) { ExportHighScoresJSON(); }
+                            break;
+                        }
+                    }
+                }
+            } else if (gameState == STATE_MODE_SELECT) {
+                for (int i = 0; i < 3; i++) {
+                    int y = 170 + i * 50;
+                    if (my >= y - 10 && my <= y + 30) {
+                        modeIndex = i;
+                        StartNewGame(modeIndex);
+                        break;
+                    }
+                }
+            } else if (gameState == STATE_PAUSED) {
+                for (int i = 0; i < 5; i++) {
+                    int y = 175 + i * 34;
+                    if (my >= y - 12 && my <= y + 18) {
+                        menuIndex = i;
+                        if (menuIndex == 0) gameState = STATE_PLAYING;
+                        else if (menuIndex == 1) { previousState = STATE_PAUSED; gameState = STATE_HELP; }
+                        else if (menuIndex == 2) SaveGameState();
+                        else if (menuIndex == 3) LoadGameState();
+                        else if (menuIndex == 4) gameState = STATE_MENU;
+                        break;
+                    }
+                }
+            } else if (gameState == STATE_PLAYING) {
+                if (mx >= W - 52 && mx <= W - 30 && my >= 4 && my <= 26) {
+                    previousState = STATE_PLAYING;
+                    gameState = STATE_HELP;
+                } else if (mx >= W - 28 && mx <= W - 8 && my >= 4 && my <= 26) {
+                    gameState = STATE_PAUSED;
+                    menuIndex = 0;
+                }
+            } else if (gameState == STATE_HELP) {
+                gameState = (previousState == STATE_PLAYING || previousState == STATE_PAUSED) ? STATE_PAUSED : STATE_MENU;
+            } else if (gameState == STATE_LEADERBOARD || gameState == STATE_GAMEOVER || gameState == STATE_VICTORY) {
+                gameState = STATE_MENU;
+            }
+            break;
+        }
 
         case WM_TIMER:
             Update();
@@ -2899,23 +2975,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
 
                 SetBkMode(memDC, TRANSPARENT);
-                hFont = CreateFontA(-16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, NONANTIALIASED_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
-                oldFont = (HFONT)SelectObject(memDC, hFont);
+                oldFont = (HFONT)SelectObject(memDC, hFontMenu);
 
                 if (gameState == STATE_MENU) {
+                    SelectObject(memDC, hFontTitle);
                     SetTextColor(memDC, RGB(0, 229, 255));
-                    TextOutA(memDC, W/2 - 40, 90, "KSPACE", 6);
+                    TextOutA(memDC, W/2 - 40, 65, "KSPACE", 6);
+                    SelectObject(memDC, hFontHUD);
                     SetTextColor(memDC, RGB(128, 216, 255));
-                    TextOutA(memDC, W/2 - 80, 120, "Loop 11 Space Command", 21);
+                    TextOutA(memDC, W/2 - 70, 92, "Loop 11 Space Command", 21);
 
                     int saved = HasSavedGame();
-                    char* opts[] = {"START NEW GAME", "RESUME SAVED GAME", "HIGH SCORES", "SELECT GAME MODE", "EXPORT SCORES"};
-                    int count = saved ? 5 : 4;
-                    int optIdxs[] = {0, 1, 2, 3, 4};
-                    if (!saved) { optIdxs[1] = 2; optIdxs[2] = 3; optIdxs[3] = 4; }
+                    char* opts[] = {"START NEW GAME", "RESUME SAVED GAME", "HIGH SCORES", "SELECT GAME MODE", "HOW TO PLAY", "EXPORT SCORES"};
+                    int count = saved ? 6 : 5;
+                    int optIdxs[] = {0, 1, 2, 3, 4, 5};
+                    if (!saved) { optIdxs[1] = 2; optIdxs[2] = 3; optIdxs[3] = 4; optIdxs[4] = 5; }
 
+                    SelectObject(memDC, hFontMenu);
                     for (int i = 0; i < count; i++) {
-                        int y = 200 + i * 35;
+                        int y = 160 + i * 32;
                         if (i == menuIndex) {
                             SetTextColor(memDC, RGB(255, 234, 0));
                             char buf[64]; wsprintfA(buf, "> %s <", opts[optIdxs[i]]);
@@ -2925,11 +3003,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             TextOutA(memDC, W/2 - lstrlenA(opts[optIdxs[i]])*4, y, opts[optIdxs[i]], lstrlenA(opts[optIdxs[i]]));
                         }
                     }
+
+                    // Help button badge at bottom
+                    HBRUSH hlpBg = CreateSolidBrush(RGB(10, 30, 60));
+                    RECT hlpRc = {W/2 - 115, H - 46, W/2 + 115, H - 20};
+                    FillRect(memDC, &hlpRc, hlpBg);
+                    DeleteObject(hlpBg);
+                    HPEN hlpPen = CreatePen(PS_SOLID, 1, RGB(0, 229, 255));
+                    HGDIOBJ oldP = SelectObject(memDC, hlpPen);
+                    HGDIOBJ nullB = SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                    Rectangle(memDC, hlpRc.left, hlpRc.top, hlpRc.right, hlpRc.bottom);
+                    SelectObject(memDC, oldP); SelectObject(memDC, nullB);
+                    DeleteObject(hlpPen);
+
                     SetTextColor(memDC, RGB(255, 234, 0));
-                    TextOutA(memDC, W/2 - 80, H - 30, "PRESS [H] OR [F1] FOR HELP", 26);
+                    SelectObject(memDC, hFontHUD);
+                    TextOutA(memDC, W/2 - 80, H - 36, "PRESS [H] OR [F1] FOR HELP", 26);
                 } else if (gameState == STATE_MODE_SELECT) {
+                    SelectObject(memDC, hFontTitle);
                     SetTextColor(memDC, RGB(255, 234, 0));
-                    TextOutA(memDC, W/2 - 65, 80, "SELECT GAME MODE", 16);
+                    TextOutA(memDC, W/2 - 75, 75, "SELECT GAME MODE", 16);
+                    SelectObject(memDC, hFontMenu);
                     char* modes[] = {"Classic 20-Wave Campaign", "Endurance Wave", "Boss Rush"};
                     for (int i = 0; i < 3; i++) {
                         int y = 170 + i * 50;
@@ -2942,15 +3036,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             TextOutA(memDC, W/2 - lstrlenA(modes[i])*4, y, modes[i], lstrlenA(modes[i]));
                         }
                     }
+                    SelectObject(memDC, hFontHUD);
                     SetTextColor(memDC, RGB(255, 23, 68));
-                    TextOutA(memDC, W/2 - 80, H - 40, "Press ENTER to Launch", 21);
+                    TextOutA(memDC, W/2 - 75, H - 40, "Press ENTER to Launch", 21);
                 } else if (gameState == STATE_HELP) {
+                    SelectObject(memDC, hFontTitle);
                     SetTextColor(memDC, RGB(0, 229, 255));
-                    TextOutA(memDC, W/2 - 45, 30, "HOW TO PLAY", 11);
+                    TextOutA(memDC, W/2 - 50, 24, "HOW TO PLAY", 11);
+                    SelectObject(memDC, hFontHUD);
                     SetTextColor(memDC, RGB(255, 255, 255));
                     char* lines[] = {
                         "ARROWS : Move Ship",
                         "SPACE  : Fire Weapon",
+                        "P      : Pause Game",
                         "",
                         "--- LOOP 11 SYSTEMS ---",
                         "J : Hyper-Jump Warp Drive",
@@ -2966,14 +3064,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         "B:Bomb R:Rapid T:Time",
                         "W:Drone Pod O:Overcharge Core"
                     };
-                    for (int i = 0; i < 16; i++) {
-                        TextOutA(memDC, W/2 - 100, 60 + i * 18, lines[i], lstrlenA(lines[i]));
+                    for (int i = 0; i < 17; i++) {
+                        TextOutA(memDC, 20, 50 + i * 16, lines[i], lstrlenA(lines[i]));
                     }
                     SetTextColor(memDC, RGB(255, 234, 0));
-                    TextOutA(memDC, W/2 - 90, H - 30, "Press [H] or ENTER to return", 28);
+                    TextOutA(memDC, W/2 - 90, H - 28, "Press [H] or ENTER to return", 28);
                 } else if (gameState == STATE_LEADERBOARD) {
+                    SelectObject(memDC, hFontTitle);
                     SetTextColor(memDC, RGB(0, 229, 255));
-                    TextOutA(memDC, W/2 - 60, 60, "TOP COMMANDERS", 14);
+                    TextOutA(memDC, W/2 - 65, 60, "TOP COMMANDERS", 14);
+                    SelectObject(memDC, hFontHUD);
                     for (int i = 0; i < MAX_LEADERBOARD; i++) {
                         char buf[64];
                         wsprintfA(buf, "#%d   Score:%d  Wave:%d", i + 1, leaderboard[i].score, leaderboard[i].wave);
@@ -3116,15 +3216,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         TextOutA(memDC, W/2 - lstrlenA(bStr)*4, 41, bStr, lstrlenA(bStr));
                     }
 
+                    // Pause [||] and Help [?] indicators at top right
+                    HBRUSH pBg = CreateSolidBrush(RGB(10, 25, 50));
+                    RECT rHlp = {W - 48, 4, W - 28, 20};
+                    RECT rPau = {W - 24, 4, W - 4, 20};
+                    FillRect(memDC, &rHlp, pBg);
+                    FillRect(memDC, &rPau, pBg);
+                    DeleteObject(pBg);
+                    HPEN boxPen = CreatePen(PS_SOLID, 1, RGB(0, 229, 255));
+                    HGDIOBJ oldBoxP = SelectObject(memDC, boxPen);
+                    HGDIOBJ nullBr = SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                    Rectangle(memDC, rHlp.left, rHlp.top, rHlp.right, rHlp.bottom);
+                    Rectangle(memDC, rPau.left, rPau.top, rPau.right, rPau.bottom);
+                    SelectObject(memDC, oldBoxP); SelectObject(memDC, nullBr);
+                    DeleteObject(boxPen);
+
+                    SelectObject(memDC, hFontHUD);
+                    SetTextColor(memDC, RGB(0, 229, 255));
+                    TextOutA(memDC, W - 40, 5, "?", 1);
+                    TextOutA(memDC, W - 17, 5, "||", 2);
+
                     // HUD
                     SetTextColor(memDC, RGB(255, 255, 255));
                     char hudStr[64];
-                    wsprintfA(hudStr, "SCORE: %d  HIGH: %d  WAVE: %d/20", score, highScore, wave);
-                    TextOutA(memDC, 10, 10, hudStr, lstrlenA(hudStr));
+                    wsprintfA(hudStr, "SCORE: %d  HIGH: %d  W:%d/20", score, highScore, wave);
+                    TextOutA(memDC, 10, 6, hudStr, lstrlenA(hudStr));
 
                     char statStr[64];
                     wsprintfA(statStr, "HP: %d  B:[B]%d  Drones:[W]%d/2", p.hp, bombCount, droneCount);
-                    TextOutA(memDC, 10, 26, statStr, lstrlenA(statStr));
+                    TextOutA(memDC, 10, 22, statStr, lstrlenA(statStr));
 
                     // Overcharge & Hyper-Jump Status
                     char ocStr[96];
@@ -3132,15 +3252,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         wsprintfA(ocStr, "[J]HYPER-JUMP WARP ACTIVE!");
                         SetTextColor(memDC, (frameCount % 4 < 2) ? RGB(255, 234, 0) : RGB(0, 229, 255));
                     } else if (overchargeTimer > 0) {
-                        wsprintfA(ocStr, "[O]OVERCHARGE: ACTIVE (%ds)  [J]Jump:%d%%", overchargeTimer / 60 + 1, hyperJumpEnergy);
+                        wsprintfA(ocStr, "[O]OVERCHARGE: (%ds)  [J]Jump:%d%%", overchargeTimer / 60 + 1, hyperJumpEnergy);
                         SetTextColor(memDC, (frameCount % 4 < 2) ? RGB(255, 234, 0) : RGB(0, 229, 255));
                     } else {
-                        wsprintfA(ocStr, "[O]Overcharge: %d%% %s  [J]Jump: %d%%%s",
+                        wsprintfA(ocStr, "[O]OC:%d%% %s  [J]Jump:%d%%%s",
                             overchargeEnergy, overchargeEnergy >= 100 ? "[RDY]" : "",
                             hyperJumpEnergy, hyperJumpEnergy >= 100 ? "[RDY]" : "");
                         SetTextColor(memDC, (overchargeEnergy >= 100 || hyperJumpEnergy >= 100) ? RGB(255, 234, 0) : RGB(0, 230, 118));
                     }
-                    TextOutA(memDC, 10, H - 38, ocStr, lstrlenA(ocStr));
+                    TextOutA(memDC, 10, H - 36, ocStr, lstrlenA(ocStr));
 
                     // Skill Badges Status
                     char skillStr[96];
@@ -3149,7 +3269,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         invincibleTimer > 0 ? "ACT" : (dashCooldown <= 0 ? "RDY" : "CD"),
                         hyperShieldTimer > 0 ? "ACT" : (hyperShieldCooldown <= 0 ? "RDY" : "CD"));
                     SetTextColor(memDC, RGB(0, 230, 118));
-                    TextOutA(memDC, 10, H - 22, skillStr, lstrlenA(skillStr));
+                    TextOutA(memDC, 10, H - 20, skillStr, lstrlenA(skillStr));
 
                     if (bossActive) {
                         HBRUSH barBg = CreateSolidBrush(RGB(30, 30, 30));
@@ -3178,11 +3298,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DrawSciFiHUDFrame(memDC, frameCount);
 
                     if (gameState == STATE_PAUSED) {
+                        SelectObject(memDC, hFontTitle);
                         SetTextColor(memDC, RGB(255, 234, 0));
-                        TextOutA(memDC, W/2 - 50, 120, "SYSTEM PAUSED", 13);
-                        char* opts[] = {"RESUME GAME", "SAVE GAME STATE", "LOAD GAME STATE", "QUIT TO MENU"};
-                        for (int i = 0; i < 4; i++) {
-                            int y = 190 + i * 35;
+                        TextOutA(memDC, W/2 - 60, 100, "SYSTEM PAUSED", 13);
+                        SelectObject(memDC, hFontMenu);
+                        char* opts[] = {"RESUME GAME", "HOW TO PLAY", "SAVE GAME STATE", "LOAD GAME STATE", "QUIT TO MENU"};
+                        for (int i = 0; i < 5; i++) {
+                            int y = 160 + i * 34;
                             if (i == menuIndex) {
                                 SetTextColor(memDC, RGB(0, 229, 255));
                                 char buf[64]; wsprintfA(buf, "> %s <", opts[i]);
@@ -3192,31 +3314,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 TextOutA(memDC, W/2 - lstrlenA(opts[i])*4, y, opts[i], lstrlenA(opts[i]));
                             }
                         }
+                        SelectObject(memDC, hFontHUD);
+                        SetTextColor(memDC, RGB(128, 216, 255));
+                        TextOutA(memDC, W/2 - 95, H - 35, "Press [P] to Resume | [H] for Help", 34);
                     } else if (gameState == STATE_GAMEOVER) {
+                        SelectObject(memDC, hFontTitle);
                         SetTextColor(memDC, RGB(255, 23, 68));
-                        TextOutA(memDC, W/2 - 55, H/2 - 30, "MISSION FAILED", 14);
+                        TextOutA(memDC, W/2 - 65, H/2 - 40, "MISSION FAILED", 14);
+                        SelectObject(memDC, hFontHUD);
                         SetTextColor(memDC, RGB(255, 255, 255));
                         char finalStr[64];
                         wsprintfA(finalStr, "FINAL SCORE: %d", score);
-                        TextOutA(memDC, W/2 - lstrlenA(finalStr)*4, H/2, finalStr, lstrlenA(finalStr));
-                        TextOutA(memDC, W/2 - 80, H/2 + 30, "ENTER:Menu E:CSV J:JSON", 23);
+                        TextOutA(memDC, W/2 - lstrlenA(finalStr)*3, H/2 - 10, finalStr, lstrlenA(finalStr));
+                        TextOutA(memDC, W/2 - 80, H/2 + 25, "ENTER:Menu E:CSV J:JSON", 23);
                     } else if (gameState == STATE_VICTORY) {
+                        SelectObject(memDC, hFontTitle);
                         SetTextColor(memDC, RGB(0, 230, 118));
-                        TextOutA(memDC, W/2 - 65, H/2 - 40, "CAMPAIGN VICTORY!", 17);
+                        TextOutA(memDC, W/2 - 75, H/2 - 45, "CAMPAIGN VICTORY!", 17);
+                        SelectObject(memDC, hFontHUD);
                         SetTextColor(memDC, RGB(255, 234, 0));
-                        TextOutA(memDC, W/2 - 80, H/2 - 15, "Alien Mothership Destroyed", 26);
+                        TextOutA(memDC, W/2 - 80, H/2 - 20, "Alien Mothership Destroyed", 26);
                         SetTextColor(memDC, RGB(255, 255, 255));
                         char finalStr[64];
                         wsprintfA(finalStr, "FINAL SCORE: %d", score);
-                        TextOutA(memDC, W/2 - lstrlenA(finalStr)*4, H/2 + 15, finalStr, lstrlenA(finalStr));
-                        TextOutA(memDC, W/2 - 80, H/2 + 45, "ENTER:Menu E:CSV J:JSON", 23);
+                        TextOutA(memDC, W/2 - lstrlenA(finalStr)*3, H/2 + 5, finalStr, lstrlenA(finalStr));
+                        TextOutA(memDC, W/2 - 80, H/2 + 35, "ENTER:Menu E:CSV J:JSON", 23);
                     }
                 }
             }
 
             if (oldFont) {
                 SelectObject(memDC, oldFont);
-                DeleteObject(hFont);
             }
             int shakeOffsetX = 0;
             int shakeOffsetY = 0;
@@ -3240,6 +3368,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         case WM_DESTROY:
+            if (hFontTitle) DeleteObject(hFontTitle);
+            if (hFontMenu) DeleteObject(hFontMenu);
+            if (hFontHUD) DeleteObject(hFontHUD);
             KillTimer(hwnd, 1);
             PostQuitMessage(0);
             break;

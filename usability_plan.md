@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KSpace
+**Target App:** KSolitaire
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KSpace
 - KSolitaire
 - KTerm
 - KSynth
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KFarm
 - KSnake
 - KTetris
+- KSpace
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KSpace: Usability and UI issues fixed (replaced blocking alert modals with sleek cybernetic toast notifications, added startup welcome toast, redesigned non-wrapping responsive skill buttons, added visible in-game pause/help HUD controls and pause-menu help routing in web; implemented full mouse click WM_LBUTTONDOWN navigation, added ClearType multi-tiered typography fixing HUD clipping off-screen, and eliminated GDI font leaks in native C).
 - KTetris: Usability and UI issues fixed (fixed math linker unresolved externals and struct compiler errors, added WS_CLIPCHILDREN to eliminate native flicker, mapped F1 and H help across web and native with explicit labels, implemented full mouse click menu navigation and help toggling in web and native, and added startup welcome toast and non-blocking notification system in web).
 - KSnake: Usability and UI issues fixed (implemented missing save/resume game state, interactive keybind rebinding, match stats export CSV/JSON/Replay, non-blocking toast notifications replacing alert modals, sub-overlay ESC/Enter handling, and startup welcome toast in web; added crisp hFontSmall typography eliminating text clipping, enhanced menu layout with top record display, and added full ESC/P/S/Q pause/exit and F1 help navigation in native C).
 - KPaint: Usability and UI issues fixed (added modern dark Help modal dialog and non-blocking toast notifications in web, mapped F1 and tool shortcuts B/E/L/R/C/G/A/W/S across web and native, updated startup canvas text, window title, and Help button to explicitly show F1/H shortcut, and added startup welcome toast).

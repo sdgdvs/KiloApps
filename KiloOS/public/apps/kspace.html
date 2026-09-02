@@ -7,6 +7,11 @@
 window.addEventListener('load', () => {
     if (window.resizeTo) window.resizeTo(340, 520);
     if (window.parent) window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 340, height: 520 }, '*');
+    setTimeout(() => {
+      if (typeof showToast === 'function') {
+        showToast('🚀 KSPACE: Press [H] or [F1] for Controls', 'info', 4000);
+      }
+    }, 400);
 });
 </script>
 <style>
@@ -21,6 +26,7 @@ window.addEventListener('load', () => {
     font-family: 'Courier New', Courier, monospace;
     color: #fff;
     text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
   }
   #gameContainer {
     position: relative;
@@ -38,29 +44,77 @@ window.addEventListener('load', () => {
     height: 100%;
     display: block;
   }
+  #toastContainer {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    pointer-events: none;
+    width: 92%;
+    max-width: 300px;
+  }
+  .toast {
+    background: rgba(10, 25, 50, 0.95);
+    border: 1px solid #00e5ff;
+    color: #00e5ff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 11px;
+    font-weight: bold;
+    text-align: center;
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.4);
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .toast.warning {
+    border-color: #ff1744;
+    color: #ff5252;
+    box-shadow: 0 0 12px rgba(255, 23, 68, 0.4);
+  }
+  .toast.success {
+    border-color: #00e676;
+    color: #69f0ae;
+    box-shadow: 0 0 12px rgba(0, 230, 118, 0.4);
+  }
   .skill-bar {
     position: absolute;
-    bottom: 5px;
+    bottom: 4px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 4px;
+    gap: 2px;
     z-index: 10;
-    width: 95%;
+    width: 98%;
     justify-content: center;
   }
   .skill-btn {
-    background: rgba(10, 25, 50, 0.85);
+    flex: 1;
+    min-width: 0;
+    background: rgba(10, 25, 50, 0.88);
     border: 1px solid #00e5ff;
     color: #00e5ff;
-    padding: 4px 6px;
-    border-radius: 4px;
+    padding: 3px 1px;
+    border-radius: 3px;
     font-family: monospace;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: bold;
     cursor: pointer;
-    box-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
+    box-shadow: 0 0 6px rgba(0, 229, 255, 0.3);
     transition: all 0.15s ease;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .skill-btn:hover {
     background: #00e5ff;
@@ -77,12 +131,13 @@ window.addEventListener('load', () => {
 </head>
 <body>
 <div id="gameContainer">
+  <div id="toastContainer"></div>
   <canvas id="gameCanvas" width="320" height="480" tabindex="0" role="img" aria-label="KSpace space shooter game canvas"></canvas>
   <div class="skill-bar" id="skillBar" style="display:none;">
-    <button class="skill-btn" id="btnHyperJump" onclick="useHyperJump()">[J] JUMP</button>
+    <button class="skill-btn" id="btnHyperJump" onclick="useHyperJump()">[J] WARP</button>
     <button class="skill-btn" id="btnDrone" onclick="deployDroneWing()">[W] DRONE</button>
-    <button class="skill-btn" id="btnOvercharge" onclick="useOvercharge()">[O] OVERCHARGE</button>
-    <button class="skill-btn" id="btnTimeStop" onclick="useTimeStop()">[T] STOP</button>
+    <button class="skill-btn" id="btnOvercharge" onclick="useOvercharge()">[O] OVER</button>
+    <button class="skill-btn" id="btnTimeStop" onclick="useTimeStop()">[T] TIME</button>
     <button class="skill-btn" id="btnDash" onclick="useTacticalDash()">[D] DASH</button>
     <button class="skill-btn" id="btnBomb" onclick="useSmartBomb()">[B] BOMB</button>
     <button class="skill-btn" id="btnShield" onclick="useHyperShield()">[S] SHIELD</button>
@@ -133,8 +188,22 @@ window.addEventListener('load', () => {
   let currentReplay = null;
   let replayIndex = 0;
   let lastReplaySaved = null;
-
   let waitForKeybind = null;
+  let previousState = STATE_MENU;
+
+  function showToast(msg, type = 'info', duration = 3000) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = msg;
+    container.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('show'));
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
+  }
 
   function exportStats() {
     let acc = shotsFired > 0 ? ((shotsHit / shotsFired) * 100).toFixed(1) : 0;
@@ -142,16 +211,19 @@ window.addEventListener('load', () => {
     let json = JSON.stringify(data, null, 2);
     let blob = new Blob([json], { type: 'application/json' });
     let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'kspace_stats.json'; a.click();
+    showToast('Mission stats exported (JSON)', 'success');
   }
   function exportCSV() {
     let acc = shotsFired > 0 ? ((shotsHit / shotsFired) * 100).toFixed(1) : 0;
     let csv = `Score,Wave,Mode,EnemiesKilled,TimeSurvivedSec,ShotsFired,ShotsHit,AccuracyPct\n${score},${wave},${MODES[modeIndex].name},${enemiesKilled},${Math.floor(timeSurvivedFrames/60)},${shotsFired},${shotsHit},${acc}`;
     let blob = new Blob([csv], { type: 'text/csv' });
     let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'kspace_stats.csv'; a.click();
+    showToast('Mission stats exported (CSV)', 'success');
   }
   function exportHighScores() {
     let blob = new Blob([JSON.stringify(leaderboard, null, 2)], { type: 'application/json' });
     let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'kspace_highscores.json'; a.click();
+    showToast('Leaderboard exported (JSON)', 'success');
   }
   function importHighScores() {
     let input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
@@ -171,19 +243,20 @@ window.addEventListener('load', () => {
                 mode: String(item.mode || 'Classic 20-Wave Campaign')
               })).sort((a, b) => b.score - a.score).slice(0, 5);
               saveLeaderboard();
-              alert('Imported!');
-            } else { alert('No valid high scores found'); }
-          } else { alert('Invalid JSON format'); }
-        } catch(err) { alert('Invalid JSON'); }
+              showToast('High scores imported successfully!', 'success');
+            } else { showToast('No valid high scores found', 'warning'); }
+          } else { showToast('Invalid JSON format', 'warning'); }
+        } catch(err) { showToast('Invalid JSON file', 'warning'); }
       };
       reader.readAsText(file);
     };
     input.click();
   }
   function exportReplay() {
-    if (!lastReplaySaved) { alert('No replay available!'); return; }
+    if (!lastReplaySaved) { showToast('No replay available yet!', 'warning'); return; }
     let blob = new Blob([JSON.stringify(lastReplaySaved)], { type: 'application/json' });
     let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'kspace_replay.json'; a.click();
+    showToast('Mission replay exported (JSON)', 'success');
   }
   function loadReplay() {
     let input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
@@ -196,9 +269,10 @@ window.addEventListener('load', () => {
           let data = JSON.parse(ev.target.result);
           if (data && data.seed && data.frames) {
              lastReplaySaved = data;
+             showToast('Starting replay...', 'info');
              startReplay(data);
-          } else { alert('Invalid replay'); }
-        } catch(err) { alert('Invalid JSON'); }
+          } else { showToast('Invalid replay file', 'warning'); }
+        } catch(err) { showToast('Invalid JSON file', 'warning'); }
       };
       reader.readAsText(file);
     };
@@ -898,12 +972,14 @@ window.addEventListener('load', () => {
     const keyLower = e.key ? e.key.toLowerCase() : '';
 
     if (gameState === STATE_MENU) {
+      let optCount = hasSavedGame() ? 7 : 6;
       if (keyLower === 'h' || e.key === 'F1') {
+        previousState = STATE_MENU;
         gameState = STATE_HELP;
       } else if (e.key === 'ArrowUp' || keyLower === 'w') {
-        menuIndex = (menuIndex - 1 + (hasSavedGame() ? 6 : 5)) % (hasSavedGame() ? 6 : 5);
+        menuIndex = (menuIndex - 1 + optCount) % optCount;
       } else if (e.key === 'ArrowDown' || keyLower === 's') {
-        menuIndex = (menuIndex + 1) % (hasSavedGame() ? 6 : 5);
+        menuIndex = (menuIndex + 1) % optCount;
       } else if (e.key === 'Enter' || e.key === ' ') {
         handleMenuSelect();
       }
@@ -914,7 +990,7 @@ window.addEventListener('load', () => {
       else if (e.key === 'Enter') waitForKeybind = Object.keys(keybinds)[menuIndex];
     } else if (gameState === STATE_HELP) {
       if (keyLower === 'h' || e.key === 'F1' || e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
-        gameState = STATE_MENU;
+        gameState = (previousState === STATE_PLAYING || previousState === STATE_PAUSED) ? STATE_PAUSED : STATE_MENU;
       }
     } else if (gameState === STATE_MODE_SELECT) {
       if (e.key === 'ArrowUp' || keyLower === 'w') {
@@ -930,6 +1006,9 @@ window.addEventListener('load', () => {
       if (keyLower === 'p' || e.key === 'Escape') {
         gameState = STATE_PAUSED;
         menuIndex = 0;
+      } else if (keyLower === 'h' || e.key === 'F1') {
+        previousState = STATE_PLAYING;
+        gameState = STATE_HELP;
       } else if (keyLower === keybinds.timeStop) {
         useTimeStop();
       } else if (keyLower === keybinds.dash) {
@@ -940,10 +1019,13 @@ window.addEventListener('load', () => {
         useHyperShield();
       }
     } else if (gameState === STATE_PAUSED) {
-      if (e.key === 'ArrowUp' || keyLower === 'w') {
-        menuIndex = (menuIndex - 1 + 4) % 4;
+      if (keyLower === 'h' || e.key === 'F1') {
+        previousState = STATE_PAUSED;
+        gameState = STATE_HELP;
+      } else if (e.key === 'ArrowUp' || keyLower === 'w') {
+        menuIndex = (menuIndex - 1 + 5) % 5;
       } else if (e.key === 'ArrowDown' || keyLower === 's') {
-        menuIndex = (menuIndex + 1) % 4;
+        menuIndex = (menuIndex + 1) % 5;
       } else if (e.key === 'Enter' || e.key === ' ') {
         handlePauseSelect();
       } else if (keyLower === keybinds.pause || e.key === 'Escape') {
@@ -975,14 +1057,19 @@ window.addEventListener('load', () => {
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 
     if (gameState === STATE_MENU) {
-      let optCount = hasSavedGame() ? 6 : 5;
+      let optCount = hasSavedGame() ? 7 : 6;
       for (let i = 0; i < optCount; i++) {
-        let btnY = 170 + i * 40;
-        if (mx >= 50 && mx <= 270 && my >= btnY - 15 && my <= btnY + 15) {
+        let btnY = 150 + i * 34;
+        if (mx >= 40 && mx <= 280 && my >= btnY - 14 && my <= btnY + 14) {
           menuIndex = i;
           handleMenuSelect();
-          break;
+          return;
         }
+      }
+      if (my >= H - 52 && my <= H - 15) {
+        previousState = STATE_MENU;
+        gameState = STATE_HELP;
+        return;
       }
     } else if (gameState === STATE_MODE_SELECT) {
       for (let i = 0; i < MODES.length; i++) {
@@ -990,24 +1077,33 @@ window.addEventListener('load', () => {
         if (mx >= 40 && mx <= 280 && my >= btnY - 20 && my <= btnY + 25) {
           modeIndex = i;
           startNewGame(modeIndex);
-          break;
+          return;
         }
       }
     } else if (gameState === STATE_PAUSED) {
-      for (let i = 0; i < 4; i++) {
-        let btnY = 200 + i * 40;
-        if (mx >= 50 && mx <= 270 && my >= btnY - 15 && my <= btnY + 15) {
+      for (let i = 0; i < 5; i++) {
+        let btnY = 175 + i * 36;
+        if (mx >= 40 && mx <= 280 && my >= btnY - 14 && my <= btnY + 14) {
           menuIndex = i;
           handlePauseSelect();
-          break;
+          return;
         }
       }
-    } else if (gameState === STATE_LEADERBOARD || gameState === STATE_GAMEOVER || gameState === STATE_VICTORY || gameState === STATE_HELP) {
+    } else if (gameState === STATE_HELP) {
+      gameState = (previousState === STATE_PLAYING || previousState === STATE_PAUSED) ? STATE_PAUSED : STATE_MENU;
+      return;
+    } else if (gameState === STATE_LEADERBOARD || gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) {
       gameState = STATE_MENU;
+      return;
     } else if (gameState === STATE_PLAYING) {
-      if (mx > W - 40 && my < 40) {
+      if (mx >= W - 28 && mx <= W - 8 && my >= 4 && my <= 26) {
         gameState = STATE_PAUSED;
         menuIndex = 0;
+        return;
+      } else if (mx >= W - 54 && mx <= W - 32 && my >= 4 && my <= 26) {
+        previousState = STATE_PLAYING;
+        gameState = STATE_HELP;
+        return;
       }
     }
   });
@@ -1026,7 +1122,7 @@ window.addEventListener('load', () => {
     let saved = hasSavedGame();
     let opts = ['NEW_GAME'];
     if (saved) opts.push('RESUME');
-    opts.push('LEADERBOARD', 'MODE_SELECT', 'KEYBINDS', 'LOAD_REPLAY');
+    opts.push('LEADERBOARD', 'MODE_SELECT', 'KEYBINDS', 'LOAD_REPLAY', 'HELP');
     let sel = opts[menuIndex];
     if (sel === 'NEW_GAME') startNewGame(0);
     else if (sel === 'RESUME') loadGameState();
@@ -1034,13 +1130,21 @@ window.addEventListener('load', () => {
     else if (sel === 'MODE_SELECT') gameState = STATE_MODE_SELECT;
     else if (sel === 'KEYBINDS') gameState = STATE_KEYBINDS;
     else if (sel === 'LOAD_REPLAY') loadReplay();
+    else if (sel === 'HELP') { previousState = STATE_MENU; gameState = STATE_HELP; }
   }
 
   function handlePauseSelect() {
     if (menuIndex === 0) gameState = STATE_PLAYING;
-    else if (menuIndex === 1) saveGameState();
-    else if (menuIndex === 2) { if (!loadGameState()) alert("No saved game!"); }
-    else if (menuIndex === 3) gameState = STATE_MENU;
+    else if (menuIndex === 1) { previousState = STATE_PAUSED; gameState = STATE_HELP; }
+    else if (menuIndex === 2) { saveGameState(); showToast('Game progress saved!', 'success'); }
+    else if (menuIndex === 3) {
+      if (!loadGameState()) {
+        showToast("No saved game found!", "warning");
+      } else {
+        showToast('Game progress loaded!', 'success');
+      }
+    }
+    else if (menuIndex === 4) gameState = STATE_MENU;
   }
 
   function startNewGame(modeIdx, forceSeed = null) {
@@ -1840,36 +1944,44 @@ window.addEventListener('load', () => {
 
     if (bJump) {
       if (hyperJumpTimer > 0) { bJump.className = 'skill-btn'; bJump.innerText = '[J] WARP'; }
-      else if (hyperJumpEnergy >= 100) { bJump.className = 'skill-btn'; bJump.innerText = '[J] JUMP (RDY)'; }
+      else if (hyperJumpEnergy >= 100) { bJump.className = 'skill-btn'; bJump.innerText = '[J] RDY'; }
       else { bJump.className = 'skill-btn cooldown'; bJump.innerText = `[J] ${hyperJumpEnergy}%`; }
     }
 
     if (bDrone) {
-      bDrone.innerText = `[W] DRONES (${droneCount}/2)`;
+      bDrone.innerText = `[W] ${droneCount}/2`;
       bDrone.className = droneCount < 2 ? 'skill-btn' : 'skill-btn cooldown';
     }
 
     if (bOc) {
       if (overchargeTimer > 0) { bOc.className = 'skill-btn'; bOc.innerText = `[O] ${Math.ceil(overchargeTimer/60)}s`; }
-      else if (overchargeEnergy >= 100) { bOc.className = 'skill-btn'; bOc.innerText = '[O] OVERCHARGE'; }
+      else if (overchargeEnergy >= 100) { bOc.className = 'skill-btn'; bOc.innerText = '[O] RDY'; }
       else { bOc.className = 'skill-btn cooldown'; bOc.innerText = `[O] ${overchargeEnergy}%`; }
     }
 
-    if (timeStopTimer > 0) { bStop.className = 'skill-btn'; bStop.innerText = '[T] ACTIVE'; }
-    else if (timeStopCooldown > 0) { bStop.className = 'skill-btn cooldown'; bStop.innerText = `[T] ${Math.ceil(timeStopCooldown/60)}s`; }
-    else { bStop.className = 'skill-btn'; bStop.innerText = '[T] STOP'; }
+    if (bStop) {
+      if (timeStopTimer > 0) { bStop.className = 'skill-btn'; bStop.innerText = '[T] ACT'; }
+      else if (timeStopCooldown > 0) { bStop.className = 'skill-btn cooldown'; bStop.innerText = `[T] ${Math.ceil(timeStopCooldown/60)}s`; }
+      else { bStop.className = 'skill-btn'; bStop.innerText = '[T] TIME'; }
+    }
 
-    if (invincibleTimer > 0) { bDash.className = 'skill-btn'; bDash.innerText = '[D] WARP'; }
-    else if (dashCooldown > 0) { bDash.className = 'skill-btn cooldown'; bDash.innerText = `[D] ${Math.ceil(dashCooldown/60)}s`; }
-    else { bDash.className = 'skill-btn'; bDash.innerText = '[D] DASH'; }
+    if (bDash) {
+      if (invincibleTimer > 0) { bDash.className = 'skill-btn'; bDash.innerText = '[D] ACT'; }
+      else if (dashCooldown > 0) { bDash.className = 'skill-btn cooldown'; bDash.innerText = `[D] ${Math.ceil(dashCooldown/60)}s`; }
+      else { bDash.className = 'skill-btn'; bDash.innerText = '[D] DASH'; }
+    }
 
-    bBomb.innerText = `[B] BOMB (${p.bombs})`;
-    if (p.bombs <= 0) bBomb.className = 'skill-btn cooldown';
-    else bBomb.className = 'skill-btn';
+    if (bBomb) {
+      bBomb.innerText = `[B] x${p.bombs}`;
+      if (p.bombs <= 0) bBomb.className = 'skill-btn cooldown';
+      else bBomb.className = 'skill-btn';
+    }
 
-    if (hyperShieldTimer > 0) { bShield.className = 'skill-btn'; bShield.innerText = '[S] BARRIER'; }
-    else if (hyperShieldCooldown > 0) { bShield.className = 'skill-btn cooldown'; bShield.innerText = `[S] ${Math.ceil(hyperShieldCooldown/60)}s`; }
-    else { bShield.className = 'skill-btn'; bShield.innerText = '[S] SHIELD'; }
+    if (bShield) {
+      if (hyperShieldTimer > 0) { bShield.className = 'skill-btn'; bShield.innerText = '[S] ACT'; }
+      else if (hyperShieldCooldown > 0) { bShield.className = 'skill-btn cooldown'; bShield.innerText = `[S] ${Math.ceil(hyperShieldCooldown/60)}s`; }
+      else { bShield.className = 'skill-btn'; bShield.innerText = '[S] SHLD'; }
+    }
   }
 
   function handleEnemyDefeat(e, index) {
@@ -2560,9 +2672,24 @@ window.addEventListener('load', () => {
     ctx.fillStyle = '#ffffff';
     ctx.font = '12px monospace';
     ctx.textAlign = 'left';
-    ctx.fillText(isReplaying ? `REPLAY - SCORE: ${score}` : `SCORE: ${score}`, 10, 18);
-    ctx.fillText(`HIGH: ${highScore}`, 120, 18);
-    ctx.fillText(`WAVE: ${wave}/20`, W - 85, 18);
+    ctx.fillText(isReplaying ? `REP: ${score}` : `SCORE: ${score}`, 10, 18);
+    ctx.fillText(`HI: ${highScore}`, 105, 18);
+    ctx.fillText(`W:${wave}/20`, 185, 18);
+
+    // Visible Pause [||] and Help [?] buttons in HUD
+    ctx.fillStyle = 'rgba(10, 25, 50, 0.85)';
+    ctx.fillRect(W - 52, 4, 20, 18);
+    ctx.fillRect(W - 28, 4, 20, 18);
+    ctx.strokeStyle = '#00e5ff';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(W - 52, 4, 20, 18);
+    ctx.strokeRect(W - 28, 4, 20, 18);
+    ctx.fillStyle = '#00e5ff';
+    ctx.font = 'bold 10px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('?', W - 42, 17);
+    ctx.fillText('||', W - 18, 17);
+    ctx.textAlign = 'left';
 
     ctx.fillStyle = '#ff1744';
     for (let i = 0; i < p.hp; i++) ctx.fillRect(10 + i * 12, 26, 8, 8);
@@ -2609,49 +2736,56 @@ window.addEventListener('load', () => {
     ctx.fillStyle = '#00e5ff';
     ctx.font = 'bold 32px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('KSPACE', W / 2, 80);
+    ctx.fillText('KSPACE', W / 2, 70);
 
     ctx.fillStyle = '#80d8ff';
     ctx.font = '12px monospace';
-    ctx.fillText('Loop 11 Space Command', W / 2, 110);
+    ctx.fillText('Loop 11 Space Command', W / 2, 98);
 
     let saved = hasSavedGame();
     let options = ['START NEW GAME'];
     if (saved) options.push('RESUME SAVED GAME');
-    options.push('HIGH SCORES', 'SELECT GAME MODE', 'KEYBINDS', 'LOAD REPLAY');
+    options.push('HIGH SCORES', 'SELECT GAME MODE', 'KEYBINDS', 'LOAD REPLAY', 'HOW TO PLAY');
 
     for (let i = 0; i < options.length; i++) {
-      let y = 170 + i * 40;
+      let y = 150 + i * 34;
       if (i === menuIndex) {
         ctx.fillStyle = '#ffea00';
-        ctx.font = 'bold 16px monospace';
+        ctx.font = 'bold 15px monospace';
         ctx.fillText(`> ${options[i]} <`, W / 2, y);
       } else {
         ctx.fillStyle = '#ffffff';
-        ctx.font = '14px monospace';
+        ctx.font = '13px monospace';
         ctx.fillText(options[i], W / 2, y);
       }
     }
 
+    // Help button prompt at bottom
+    ctx.fillStyle = 'rgba(0, 229, 255, 0.12)';
+    ctx.fillRect(W / 2 - 115, H - 46, 230, 26);
+    ctx.strokeStyle = '#00e5ff';
+    ctx.strokeRect(W / 2 - 115, H - 46, 230, 26);
+
     ctx.fillStyle = '#ffea00';
-    ctx.font = 'bold 14px monospace';
-    ctx.fillText('PRESS [H] OR [F1] FOR HELP', W / 2, H - 30);
+    ctx.font = 'bold 12px monospace';
+    ctx.fillText('PRESS [H] OR [F1] FOR HELP', W / 2, H - 29);
     ctx.textAlign = 'left';
   }
 
   function drawHelpScreen() {
-    ctx.fillStyle = 'rgba(5, 5, 18, 0.95)';
+    ctx.fillStyle = 'rgba(5, 5, 18, 0.96)';
     ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = '#00e5ff';
-    ctx.font = 'bold 24px monospace';
+    ctx.font = 'bold 22px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('HOW TO PLAY', W / 2, 50);
+    ctx.fillText('MISSION CONTROLS', W / 2, 45);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = '12px monospace';
+    ctx.font = '11px monospace';
     let instructions = [
       "ARROWS / DRAG : Move Ship",
       "SPACE / CLICK : Fire Weapon",
+      "[P] / [||]    : Pause Game",
       "",
       "--- LOOP 11 SYSTEMS ---",
       "[J] : Hyper-Jump Warp Drive",
@@ -2660,7 +2794,7 @@ window.addEventListener('load', () => {
       "[T] : Time Stop (Chrono)",
       "[D] : Tactical Dash (Invinc.)",
       "[B] : Smart Bomb (Clear)",
-      "[S] : Hyper Shield (Protect)",
+      "[S] : Hyper Shield (Barrier)",
       "",
       "--- POWERUP PODS ---",
       "S:Spread L:Laser H:Shield",
@@ -2668,12 +2802,12 @@ window.addEventListener('load', () => {
       "W:Drone Pod O:Overcharge Core"
     ];
     for (let i = 0; i < instructions.length; i++) {
-      ctx.fillText(instructions[i], W / 2, 85 + i * 18);
+      ctx.fillText(instructions[i], W / 2, 75 + i * 17);
     }
 
     ctx.fillStyle = '#ffea00';
-    ctx.font = '14px monospace';
-    ctx.fillText('Press [H] or ENTER to return', W / 2, H - 30);
+    ctx.font = 'bold 13px monospace';
+    ctx.fillText('Press [H], [ESC], or Click to return', W / 2, H - 25);
     ctx.textAlign = 'left';
   }
 
@@ -2740,26 +2874,30 @@ window.addEventListener('load', () => {
   }
 
   function drawPauseScreen() {
-    ctx.fillStyle = 'rgba(5, 5, 18, 0.85)';
+    ctx.fillStyle = 'rgba(5, 5, 18, 0.88)';
     ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = '#ffea00';
     ctx.font = 'bold 24px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('SYSTEM PAUSED', W / 2, 120);
+    ctx.fillText('SYSTEM PAUSED', W / 2, 110);
 
-    let options = ['RESUME GAME', 'SAVE GAME STATE', 'LOAD GAME STATE', 'QUIT TO MENU'];
+    let options = ['RESUME GAME', 'MISSION CONTROLS', 'SAVE GAME STATE', 'LOAD GAME STATE', 'QUIT TO MENU'];
     for (let i = 0; i < options.length; i++) {
-      let y = 200 + i * 40;
+      let y = 175 + i * 36;
       if (i === menuIndex) {
         ctx.fillStyle = '#00e5ff';
-        ctx.font = 'bold 16px monospace';
+        ctx.font = 'bold 15px monospace';
         ctx.fillText(`> ${options[i]} <`, W / 2, y);
       } else {
         ctx.fillStyle = '#ffffff';
-        ctx.font = '14px monospace';
+        ctx.font = '13px monospace';
         ctx.fillText(options[i], W / 2, y);
       }
     }
+    ctx.fillStyle = '#80d8ff';
+    ctx.font = '12px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Press [P] to Resume | [H] for Help', W / 2, H - 35);
     ctx.textAlign = 'left';
   }
 
