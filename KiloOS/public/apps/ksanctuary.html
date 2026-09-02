@@ -1116,6 +1116,133 @@
             font-size: 11px;
         }
 
+        /* Tech Research Tree styling */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .tech-card {
+            background: var(--card-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 2px;
+            padding: 9px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .tech-card.researched {
+            border-color: var(--accent-green);
+            background: rgba(16, 185, 129, 0.05);
+            box-shadow: inset 0 0 10px rgba(16, 185, 129, 0.15);
+        }
+
+        .tech-card.available {
+            border-color: var(--border-corner);
+        }
+
+        .tech-card.locked {
+            opacity: 0.65;
+            border-style: dashed;
+        }
+
+        .tech-card::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 5px; height: 5px;
+            border-top: 2px solid var(--border-corner);
+            border-left: 2px solid var(--border-corner);
+            pointer-events: none;
+        }
+
+        .tech-card.researched::before {
+            border-color: var(--accent-green);
+        }
+
+        .tech-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dashed var(--panel-border);
+            padding-bottom: 4px;
+        }
+
+        .tech-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-bright);
+            letter-spacing: 0.5px;
+        }
+
+        .tech-tag {
+            font-size: 9px;
+            padding: 1px 5px;
+            border-radius: 2px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            color: var(--accent-amber);
+        }
+
+        .tech-tag.tag-support {
+            background: rgba(6, 182, 212, 0.15);
+            border-color: rgba(6, 182, 212, 0.4);
+            color: var(--accent-cyan);
+        }
+
+        .tech-tag.tag-security {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: var(--danger-red);
+        }
+
+        .tech-tag.tag-energy {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: rgba(245, 158, 11, 0.4);
+            color: var(--accent-amber);
+        }
+
+        .tech-desc {
+            font-size: 10px;
+            color: var(--text-dim);
+            line-height: 1.35;
+        }
+
+        .tech-benefit-box {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 2px;
+            padding: 5px 7px;
+            font-size: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .tech-benefit {
+            color: var(--accent-green);
+        }
+
+        .tech-req-text {
+            font-size: 9px;
+            color: var(--danger-red);
+        }
+
+        .tech-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 4px;
+        }
+
         /* Modal styling */
         .modal-overlay {
             position: fixed;
@@ -1307,7 +1434,8 @@
         <button class="tab-btn" id="tab-btn-survivors" onclick="switchTab('survivors')">[2] SURVIVOR ROSTER</button>
         <button class="tab-btn" id="tab-btn-expeditions" onclick="switchTab('expeditions')">[3] WASTELAND SCAVENGING</button>
         <button class="tab-btn" id="tab-btn-defense" onclick="switchTab('defense')">[4] BASE DEFENSE & SECURITY</button>
-        <button class="tab-btn" id="tab-btn-policies" onclick="switchTab('policies')">[5] OVERSEER DIRECTIVES</button>
+        <button class="tab-btn" id="tab-btn-research" onclick="switchTab('research')">[5] TECH RESEARCH TREE</button>
+        <button class="tab-btn" id="tab-btn-policies" onclick="switchTab('policies')">[6] OVERSEER DIRECTIVES</button>
     </div>
 
     <!-- Main Workspace -->
@@ -1583,6 +1711,34 @@
                 </div>
                 <div id="raid-debrief-box" class="distressed-panel" style="background:var(--card-bg); border:1px solid var(--panel-border); padding:10px; border-radius:2px; font-size:11px; line-height:1.5;">
                     <div style="color:var(--text-dim);">The perimeter remains quiet. Ensure barricades and sentry turrets are primed before the next raiding clan arrives.</div>
+                </div>
+            </div>
+
+            <!-- RESEARCH VIEW -->
+            <div id="view-research" class="tab-content" style="display:none;">
+                <div class="panel-title">
+                    <span>R&D Science Terminal // Technology Research Tree</span>
+                    <span style="color: var(--text-dim); font-size:10px;">Status: <strong id="lbl-tech-progress" style="color:var(--text-bright);">0 / 8 Researched</strong></span>
+                </div>
+
+                <div class="distressed-panel" style="background:var(--card-bg); border:1px solid var(--panel-border); padding:10px; border-radius:2px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                    <div>
+                        <div style="font-size:12px; font-weight:bold; color:var(--text-bright); display:flex; align-items:center; gap:6px;">
+                            <span>VAULT LABORATORY PROTOCOL 704</span>
+                            <span class="badge-terminal" style="color:var(--accent-green); border-color:var(--accent-green);">R&D ONLINE</span>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-dim); margin-top:2px;">
+                            Invest Tech Scrap into advanced post-nuclear technologies. Unlocks advanced water purification, hydroponics, reinforced defenses, solar arrays, and vital shelter passives.
+                        </div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:10px; color:var(--text-dim);">AVAILABLE TECH SCRAP:</div>
+                        <div style="font-size:16px; font-weight:bold; color:var(--text-bright);" id="lbl-research-scrap">55 Scrap</div>
+                    </div>
+                </div>
+
+                <div class="tech-grid" id="tech-tree-grid">
+                    <!-- Injected by JavaScript -->
                 </div>
             </div>
         </main>
@@ -2204,10 +2360,197 @@
                     locked: true,
                     discoverSource: 'Vault 811 Tech Archive',
                     benefit: '+12 Food/worker (Super-Crops)'
+                },
+                // Tech Research Unlocked Blueprints (Phase 9)
+                {
+                    id: 'bp_adv_water',
+                    name: 'DEEP FILTRATION RESERVOIR',
+                    desc: 'Ultra-purification ion vats removing all heavy radioactive isotopes from deep aquifers.',
+                    cost: 55,
+                    powerProd: 0,
+                    powerCost: 4,
+                    foodProd: 0,
+                    waterProd: 14,
+                    scrapProd: 0,
+                    maxWorkers: 2,
+                    powerPriority: 2,
+                    built: false,
+                    locked: true,
+                    reqTech: 'adv_water',
+                    discoverSource: 'Advanced Water Filtration Tech',
+                    benefit: '+14 Water/worker (Advanced Filtration)'
+                },
+                {
+                    id: 'bp_hydro_tower',
+                    name: 'VERTICAL HYDROPONIC TOWER',
+                    desc: 'Automated aeroponic towers delivering accelerated high-yield nutrient-rich harvests.',
+                    cost: 55,
+                    powerProd: 0,
+                    powerCost: 4,
+                    foodProd: 14,
+                    waterProd: 0,
+                    scrapProd: 0,
+                    maxWorkers: 2,
+                    powerPriority: 2,
+                    built: false,
+                    locked: true,
+                    reqTech: 'hydroponics',
+                    discoverSource: 'Hydroponics Tech',
+                    benefit: '+14 Food/worker (Vertical Farm)'
+                },
+                {
+                    id: 'bp_solar',
+                    name: 'SURFACE SOLAR ARRAY',
+                    desc: 'Roof-mounted photovoltaic cells providing reliable clean power without fuel or workers.',
+                    cost: 50,
+                    powerProd: 20,
+                    powerCost: 0,
+                    foodProd: 0,
+                    waterProd: 0,
+                    scrapProd: 0,
+                    maxWorkers: 0,
+                    powerPriority: 0,
+                    built: false,
+                    locked: true,
+                    reqTech: 'solar_arrays',
+                    discoverSource: 'Solar Arrays Tech',
+                    benefit: '+20 kW Clean Solar Power (0 Workers)'
+                },
+                {
+                    id: 'bp_heavy_bastion',
+                    name: 'HEAVY VULCAN BASTION',
+                    desc: 'Dual rotary autocannons and reinforced bunker embrasure shielding the airlock.',
+                    cost: 65,
+                    powerProd: 0,
+                    powerCost: 4,
+                    foodProd: 0,
+                    waterProd: 0,
+                    scrapProd: 0,
+                    maxWorkers: 1,
+                    powerPriority: 1,
+                    defenseBoost: 30,
+                    built: false,
+                    locked: true,
+                    reqTech: 'reinforced_def',
+                    discoverSource: 'Reinforced Defenses Tech',
+                    benefit: '+30 Vault Defense Rating'
                 }
             ],
+            researched: {
+                adv_water: false,
+                hydroponics: false,
+                solar_arrays: false,
+                reinforced_def: false,
+                rad_shielding: false,
+                deep_sensors: false,
+                auto_tooling: false,
+                combat_stims: false
+            },
             lastSummary: null
         };
+
+        const technologies = [
+            {
+                id: 'adv_water',
+                name: 'ADVANCED WATER FILTRATION',
+                tag: 'LIFE SUPPORT',
+                tagClass: 'tag-support',
+                icon: '💧',
+                desc: 'Multi-stage reverse osmosis and sub-micron particulate filtration eliminates radioactive fallout.',
+                benefit: '+50% Water yield from purifiers & unlocks Deep Filtration Reservoir blueprint.',
+                cost: 40,
+                req: null,
+                reqName: null,
+                unlockBp: 'bp_adv_water'
+            },
+            {
+                id: 'hydroponics',
+                name: 'HYDROPONIC CULTIVATION',
+                tag: 'LIFE SUPPORT',
+                tagClass: 'tag-support',
+                icon: '🌱',
+                desc: 'Nutrient-dense recirculating solution and dual-spectrum UV grow lamps accelerate crop harvests.',
+                benefit: '+25% Food production yield across vault & unlocks Vertical Hydroponic Tower blueprint.',
+                cost: 50,
+                req: 'adv_water',
+                reqName: 'Advanced Water Filtration',
+                unlockBp: 'bp_hydro_tower'
+            },
+            {
+                id: 'solar_arrays',
+                name: 'PHOTOVOLTAIC SOLAR ARRAYS',
+                tag: 'ENERGY',
+                tagClass: 'tag-energy',
+                icon: '⚡',
+                desc: 'High-efficiency silicon-perovskite surface panels capture ambient wasteland radiation and sunlight.',
+                benefit: '+10 kW auxiliary power grid boost & unlocks Surface Solar Array blueprint (0 workers).',
+                cost: 45,
+                req: null,
+                reqName: null,
+                unlockBp: 'bp_solar'
+            },
+            {
+                id: 'reinforced_def',
+                name: 'REINFORCED DEFENSE GRID',
+                tag: 'SECURITY',
+                tagClass: 'tag-security',
+                icon: '🛡️',
+                desc: 'Hardened titanium-alloy ballistic plating and automated shock coils fortify the perimeter.',
+                benefit: '+100 Max Barricade HP, +15 Base Defense, -25% raider breach damage & Heavy Bastion blueprint.',
+                cost: 55,
+                req: null,
+                reqName: null,
+                unlockBp: 'bp_heavy_bastion'
+            },
+            {
+                id: 'rad_shielding',
+                name: 'RAD-SHIELD NANO-COATINGS',
+                tag: 'BIO-TECH',
+                tagClass: 'tag-support',
+                icon: '☣️',
+                desc: 'Lead-ceramic polymer sealants applied to ventilation ducts and shelter airlocks.',
+                benefit: 'Cuts radiation exposure hazard in half (-50% Rad Hazard) and speeds dweller recovery.',
+                cost: 45,
+                req: null,
+                reqName: null
+            },
+            {
+                id: 'deep_sensors',
+                name: 'DEEP SCAVENGER SENSORS',
+                tag: 'EXPLORATION',
+                tagClass: 'tag-energy',
+                icon: '📡',
+                desc: 'Subterranean RF radar and magnetic resonance detectors guide scout teams to buried ruins.',
+                benefit: '+35% Scrap yields on scavenging runs & doubles blueprint discovery probability.',
+                cost: 50,
+                req: 'solar_arrays',
+                reqName: 'Photovoltaic Solar Arrays'
+            },
+            {
+                id: 'auto_tooling',
+                name: 'AUTOMATED TOOLING BENCHES',
+                tag: 'ENGINEERING',
+                tagClass: 'tag-energy',
+                icon: '🔧',
+                desc: 'Computerized pneumatic presses and plasma cutters accelerate shelter fabrication.',
+                benefit: '-25% Tech Scrap cost for all room construction, facility upgrades, and defense turrets.',
+                cost: 60,
+                req: 'hydroponics',
+                reqName: 'Hydroponic Cultivation'
+            },
+            {
+                id: 'combat_stims',
+                name: 'CYBERNETIC COMBAT STIMS',
+                tag: 'SECURITY',
+                tagClass: 'tag-security',
+                icon: '💉',
+                desc: 'Adrenal neural injectors and subcutaneous ballistic mesh for shelter security guards.',
+                benefit: '+35% Guard defense combat power and reduces dweller wound severity during raids.',
+                cost: 65,
+                req: 'reinforced_def',
+                reqName: 'Reinforced Defense Grid'
+            }
+        ];
 
         let state = JSON.parse(JSON.stringify(defaultState));
         let autoRunTimer = null;
@@ -2227,12 +2570,25 @@
                     // Basic sanity check
                     if (parsed.facilities && parsed.survivors) {
                         state = parsed;
+                        if (!state.researched) {
+                            state.researched = JSON.parse(JSON.stringify(defaultState.researched));
+                        } else {
+                            Object.keys(defaultState.researched).forEach(k => {
+                                if (state.researched[k] === undefined) state.researched[k] = false;
+                            });
+                        }
                         if (state.meds === undefined) state.meds = 5;
                         if (!state.blueprints || state.blueprints.length < defaultState.blueprints.length) {
                             const curBps = state.blueprints || [];
                             defaultState.blueprints.forEach(dbp => {
-                                if (!curBps.some(b => b.id === dbp.id)) {
-                                    curBps.push(JSON.parse(JSON.stringify(dbp)));
+                                const existing = curBps.find(b => b.id === dbp.id);
+                                if (!existing) {
+                                    const copy = JSON.parse(JSON.stringify(dbp));
+                                    if (copy.reqTech && state.researched[copy.reqTech]) copy.locked = false;
+                                    curBps.push(copy);
+                                } else {
+                                    if (dbp.reqTech) existing.reqTech = dbp.reqTech;
+                                    if (existing.reqTech && state.researched[existing.reqTech]) existing.locked = false;
                                 }
                             });
                             state.blueprints = curBps;
@@ -2352,6 +2708,17 @@
             const totalFoodNeed = state.population * foodPerPerson;
             const totalWaterNeed = state.population * waterPerPerson;
 
+            // Apply Technology Research Tree bonuses
+            if (state.researched && state.researched.adv_water) {
+                totalWaterProd = Math.round(totalWaterProd * 1.5);
+            }
+            if (state.researched && state.researched.hydroponics) {
+                totalFoodProd = Math.round(totalFoodProd * 1.25);
+            }
+            if (state.researched && state.researched.solar_arrays) {
+                totalPowerGen += 10;
+            }
+
             const netFood = totalFoodProd - totalFoodNeed;
             const netWater = totalWaterProd - totalWaterNeed;
 
@@ -2368,13 +2735,23 @@
             };
         }
 
+        function getScrapDiscount(baseCost) {
+            if (state.researched && state.researched.auto_tooling) {
+                return Math.floor(baseCost * 0.75);
+            }
+            return baseCost;
+        }
+
         function getUnassignedSurvivors() {
             return state.survivors.filter(s => !s.job || s.job === 'unassigned');
         }
 
         // Base Defense & Security Calculations
         function getDefenseBreakdown() {
-            const baseHull = 10;
+            let baseHull = 10;
+            if (state.researched && state.researched.reinforced_def) {
+                baseHull += 15;
+            }
             const barricadeDef = Math.floor((state.barricadeHp || 100) * 0.2);
             const turretDef = (state.turretCount || 1) * 18 + (state.turretOverclock ? 10 : 0);
 
@@ -2383,6 +2760,7 @@
                 if (f.id === 'security') facilityDef += 15 + ((f.level || 1) - 1) * 10;
                 else if (f.id === 'cmd') facilityDef += (f.level || 1) * 5;
                 else if (f.id === 'bp_radshield') facilityDef += 25;
+                else if (f.id === 'bp_heavy_bastion') facilityDef += 30;
             });
 
             let guardDef = 0;
@@ -2399,6 +2777,10 @@
                     guardDef += Math.floor(s.str * 0.5);
                 }
             });
+
+            if (state.researched && state.researched.combat_stims) {
+                guardDef = Math.round(guardDef * 1.35);
+            }
 
             const total = baseHull + barricadeDef + turretDef + facilityDef + guardDef;
             return {
@@ -2418,7 +2800,7 @@
                 logEvent('Perimeter barricades are already at full integrity!', 'info');
                 return;
             }
-            const cost = 15;
+            const cost = getScrapDiscount(15);
             if (state.scrap < cost) {
                 logEvent(`Insufficient tech scrap to repair barricades! Need ${cost} scrap.`, 'warn');
                 playSound('alert');
@@ -2432,7 +2814,7 @@
         }
 
         function reinforceBarricade() {
-            const cost = 35;
+            const cost = getScrapDiscount(35);
             if (state.scrap < cost) {
                 logEvent(`Insufficient scrap to reinforce bulkheads! Need ${cost} scrap.`, 'warn');
                 playSound('alert');
@@ -2447,7 +2829,7 @@
         }
 
         function buildTurret() {
-            const cost = 45;
+            const cost = getScrapDiscount(45);
             if (state.scrap < cost) {
                 logEvent(`Insufficient tech scrap to fabricate Sentry Turret! Need ${cost} scrap.`, 'warn');
                 playSound('alert');
@@ -2461,7 +2843,7 @@
         }
 
         function overclockTurrets() {
-            const cost = 20;
+            const cost = getScrapDiscount(20);
             if (state.turretOverclock) {
                 logEvent('Sentry targeting sensors are already overclocked!', 'info');
                 return;
@@ -2479,7 +2861,7 @@
         }
 
         function runCombatDrill() {
-            const cost = 12;
+            const cost = getScrapDiscount(12);
             if (state.scrap < cost) {
                 logEvent(`Insufficient scrap for combat drill ammunition! Need ${cost} scrap.`, 'warn');
                 playSound('alert');
@@ -2540,6 +2922,9 @@
             if (won) {
                 // Victory
                 dmgToBarricade = Math.floor((assaultPower / Math.max(1, totalDef)) * 25);
+                if (state.researched && state.researched.reinforced_def) {
+                    dmgToBarricade = Math.floor(dmgToBarricade * 0.75);
+                }
                 state.barricadeHp = Math.max(0, (state.barricadeHp || 100) - dmgToBarricade);
                 scrapGained = 20 + Math.floor(Math.random() * 25);
                 medsGained = Math.random() < 0.6 ? 1 : 2;
@@ -2552,7 +2937,11 @@
             } else {
                 // Breach
                 const deficit = assaultPower - totalDef;
-                dmgToBarricade = Math.min(state.barricadeHp || 100, 30 + Math.floor(deficit * 0.8));
+                let rawDmg = 30 + Math.floor(deficit * 0.8);
+                if (state.researched && state.researched.reinforced_def) {
+                    rawDmg = Math.floor(rawDmg * 0.75);
+                }
+                dmgToBarricade = Math.min(state.barricadeHp || 100, rawDmg);
                 state.barricadeHp = Math.max(0, (state.barricadeHp || 100) - dmgToBarricade);
 
                 foodStolen = Math.min(Math.floor(state.food), 10 + Math.floor(deficit * 0.5));
@@ -2563,7 +2952,10 @@
 
                 state.survivors.forEach(s => {
                     if (s.job === 'security' || Math.random() < 0.4) {
-                        const wound = 15 + Math.floor(Math.random() * 25);
+                        let wound = 15 + Math.floor(Math.random() * 25);
+                        if (state.researched && state.researched.combat_stims) {
+                            wound = Math.floor(wound * 0.65);
+                        }
                         s.health = Math.max(10, s.health - wound);
                         injuredCount++;
                     }
@@ -2774,6 +3166,7 @@
             renderSurvivors();
             renderExpeditions();
             renderDefenseView();
+            renderResearchTree();
             saveState();
         }
 
@@ -2977,20 +3370,26 @@
                 const card = document.createElement('div');
                 card.className = `bp-card ${bp.built ? 'built' : ''}`;
 
+                const cost = getScrapDiscount(bp.cost);
                 let btnHtml = '';
                 if (bp.built) {
                     btnHtml = `<button class="btn-upgrade" disabled style="color:var(--accent-green); font-weight:bold;">[ OPERATIONAL & ONLINE ]</button>`;
                 } else if (bp.locked) {
-                    btnHtml = `<button class="btn-upgrade" disabled style="color:var(--accent-amber); font-size:9px; border-color:var(--panel-border); background:transparent;">[ LOCKED // DISCOVER IN: ${bp.discoverSource || 'RUINS'} ]</button>`;
+                    let lockText = `DISCOVER IN: ${bp.discoverSource || 'RUINS'}`;
+                    if (bp.reqTech) {
+                        const tInfo = technologies.find(t => t.id === bp.reqTech);
+                        lockText = `REQUIRES RESEARCH: ${tInfo ? tInfo.name : bp.reqTech}`;
+                    }
+                    btnHtml = `<button class="btn-upgrade" disabled style="color:var(--accent-amber); font-size:9px; border-color:var(--panel-border); background:transparent;">[ LOCKED // ${lockText} ]</button>`;
                 } else {
-                    const canAfford = state.scrap >= bp.cost;
-                    btnHtml = `<button class="btn-upgrade" onclick="constructRoom('${bp.id}')" ${!canAfford ? 'disabled' : ''} style="color:${canAfford ? 'var(--text-bright)' : 'var(--text-dim)'}; font-weight:bold; padding:5px 8px;">CONSTRUCT ROOM (${bp.cost} SCRAP)</button>`;
+                    const canAfford = state.scrap >= cost;
+                    btnHtml = `<button class="btn-upgrade" onclick="constructRoom('${bp.id}')" ${!canAfford ? 'disabled' : ''} style="color:${canAfford ? 'var(--text-bright)' : 'var(--text-dim)'}; font-weight:bold; padding:5px 8px;">CONSTRUCT ROOM (${cost} SCRAP)</button>`;
                 }
 
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <span style="font-size:12px; font-weight:bold; color:var(--text-bright);">${bp.name}</span>
-                        <span style="font-size:10px; color:${bp.built ? 'var(--accent-green)' : (bp.locked ? 'var(--accent-amber)' : 'var(--accent-amber)')}; font-weight:bold;">${bp.built ? 'BUILT' : (bp.locked ? 'LOCKED BLUEPRINT' : `${bp.cost} SCRAP`)}</span>
+                        <span style="font-size:10px; color:${bp.built ? 'var(--accent-green)' : (bp.locked ? 'var(--accent-amber)' : 'var(--accent-amber)')}; font-weight:bold;">${bp.built ? 'BUILT' : (bp.locked ? 'LOCKED BLUEPRINT' : `${cost} SCRAP`)}</span>
                     </div>
                     <div style="font-size:10px; color:var(--text-dim);">${bp.desc}</div>
                     <div style="font-size:10px; color:var(--text-main);"><strong>Benefit:</strong> ${bp.benefit}</div>
@@ -3038,7 +3437,8 @@
                 logEvent(`${fac.name} is already at maximum level 3 expansion!`, 'warn');
                 return;
             }
-            const cost = fac.level * 30;
+            const baseCost = fac.level * 30;
+            const cost = getScrapDiscount(baseCost);
             if (state.scrap < cost) {
                 logEvent(`Insufficient scrap to upgrade ${fac.name}! Need ${cost} scrap.`, 'warn');
                 playSound('alert');
@@ -3084,14 +3484,15 @@
 
         function constructRoom(bpId) {
             const bp = state.blueprints.find(b => b.id === bpId);
-            if (!bp || bp.built) return;
-            if (state.scrap < bp.cost) {
-                logEvent(`Insufficient tech scrap to construct ${bp.name}! Need ${bp.cost} scrap.`, 'warn');
+            if (!bp || bp.built || bp.locked) return;
+            const cost = getScrapDiscount(bp.cost);
+            if (state.scrap < cost) {
+                logEvent(`Insufficient tech scrap to construct ${bp.name}! Need ${cost} scrap.`, 'warn');
                 playSound('alert');
                 return;
             }
 
-            state.scrap -= bp.cost;
+            state.scrap -= cost;
             bp.built = true;
 
             const newFac = {
@@ -3114,6 +3515,120 @@
             if (bp.defenseBoost) state.defense += bp.defenseBoost;
 
             logEvent(`CONSTRUCTION: ${bp.name} excavated and brought online!`, 'cycle');
+            playSound('cycle');
+            updateAll();
+        }
+
+        // Technology Research Tree Functions
+        function renderResearchTree() {
+            const grid = document.getElementById('tech-tree-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            const scrapEl = document.getElementById('lbl-research-scrap');
+            if (scrapEl) scrapEl.textContent = `${Math.floor(state.scrap)} Scrap`;
+
+            let researchedCount = 0;
+            technologies.forEach(t => {
+                if (state.researched && state.researched[t.id]) researchedCount++;
+            });
+            const progressEl = document.getElementById('lbl-tech-progress');
+            if (progressEl) progressEl.textContent = `${researchedCount} / ${technologies.length} Researched`;
+
+            technologies.forEach(tech => {
+                const card = document.createElement('div');
+                const isResearched = state.researched && state.researched[tech.id];
+                const reqMet = !tech.req || (state.researched && state.researched[tech.req]);
+                const cost = getScrapDiscount(tech.cost);
+                const canAfford = state.scrap >= cost;
+
+                let statusClass = 'locked';
+                if (isResearched) statusClass = 'researched';
+                else if (reqMet) statusClass = 'available';
+
+                card.className = `tech-card ${statusClass}`;
+
+                let btnHtml = '';
+                if (isResearched) {
+                    btnHtml = `<button class="btn-upgrade" disabled style="color:var(--accent-green); font-weight:bold; border-color:var(--accent-green); background:rgba(16,185,129,0.1);">[ ★ RESEARCH COMPLETED ]</button>`;
+                } else if (!reqMet) {
+                    btnHtml = `<button class="btn-upgrade" disabled style="color:var(--danger-red); font-size:9px; border-color:var(--panel-border); background:transparent;">[ LOCKED // PREREQ REQUIRED ]</button>`;
+                } else {
+                    btnHtml = `<button class="btn-upgrade" onclick="researchTech('${tech.id}')" ${!canAfford ? 'disabled' : ''} style="color:${canAfford ? 'var(--text-bright)' : 'var(--text-dim)'}; font-weight:bold; padding:5px 10px;">RESEARCH (${cost} SCRAP)</button>`;
+                }
+
+                let reqHtml = '';
+                if (tech.reqName) {
+                    reqHtml = `<div class="tech-req-text" style="color:${reqMet ? 'var(--accent-green)' : 'var(--danger-red)'}; font-size:9px;">
+                        Prerequisite: ${tech.reqName} ${reqMet ? '✓ [RESEARCHED]' : '✗ [LOCKED]'}
+                    </div>`;
+                }
+
+                card.innerHTML = `
+                    <div class="tech-card-header">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span style="font-size:14px;">${tech.icon}</span>
+                            <span class="tech-title">${tech.name}</span>
+                        </div>
+                        <span class="tech-tag ${tech.tagClass}">${tech.tag}</span>
+                    </div>
+                    <div class="tech-desc">${tech.desc}</div>
+                    <div class="tech-benefit-box">
+                        <div class="tech-benefit"><strong style="color:var(--text-bright);">Bonus:</strong> ${tech.benefit}</div>
+                        ${reqHtml}
+                    </div>
+                    <div class="tech-footer">
+                        <div style="font-size:10px; font-weight:bold; color:${isResearched ? 'var(--accent-green)' : (canAfford ? 'var(--accent-amber)' : 'var(--danger-red)')};">
+                            ${isResearched ? 'STATUS: ACTIVE PROTOCOL' : `COST: ${cost} TECH SCRAP${state.researched && state.researched.auto_tooling ? ' (-25%)' : ''}`}
+                        </div>
+                        ${btnHtml}
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        function researchTech(techId) {
+            const tech = technologies.find(t => t.id === techId);
+            if (!tech) return;
+            if (state.researched && state.researched[techId]) {
+                logEvent(`Technology ${tech.name} is already researched and operational!`, 'info');
+                return;
+            }
+
+            if (tech.req && (!state.researched || !state.researched[tech.req])) {
+                logEvent(`Research halted: ${tech.name} requires ${tech.reqName}!`, 'warn');
+                playSound('alert');
+                return;
+            }
+
+            const cost = getScrapDiscount(tech.cost);
+            if (state.scrap < cost) {
+                logEvent(`Insufficient Tech Scrap to research ${tech.name}! Need ${cost} scrap.`, 'warn');
+                playSound('alert');
+                return;
+            }
+
+            state.scrap -= cost;
+            if (!state.researched) state.researched = {};
+            state.researched[techId] = true;
+
+            // Handle immediate unlocks
+            if (techId === 'reinforced_def') {
+                state.barricadeMaxHp = (state.barricadeMaxHp || 100) + 100;
+                state.barricadeHp = (state.barricadeHp || 100) + 100;
+            }
+
+            // Unlock corresponding blueprint if any
+            if (tech.unlockBp) {
+                const bp = state.blueprints.find(b => b.id === tech.unlockBp);
+                if (bp) {
+                    bp.locked = false;
+                }
+            }
+
+            logEvent(`★ RESEARCH COMPLETED: [${tech.name}] operational! ${tech.benefit}`, 'cycle');
             playSound('cycle');
             updateAll();
         }
@@ -3594,7 +4109,7 @@
 
         // Tab Switching
         function switchTab(tabId) {
-            const tabs = ['facilities', 'survivors', 'expeditions', 'defense', 'policies'];
+            const tabs = ['facilities', 'survivors', 'expeditions', 'defense', 'research', 'policies'];
             tabs.forEach(t => {
                 const view = document.getElementById(`view-${t}`);
                 if (view) view.style.display = t === tabId ? 'block' : 'none';
@@ -3702,7 +4217,8 @@
 
                         // Loot calculations
                         const foodFound = Math.floor(exp.potentialFood * (0.8 + Math.random() * 0.4) * (1 + (agi - 5) * 0.05));
-                        const scrapFound = Math.floor(exp.potentialScrap * (0.8 + Math.random() * 0.4) * (1 + (intVal - 5) * 0.08));
+                        let scrapMult = (state.researched && state.researched.deep_sensors) ? 1.35 : 1.0;
+                        const scrapFound = Math.floor(exp.potentialScrap * (0.8 + Math.random() * 0.4) * (1 + (intVal - 5) * 0.08) * scrapMult);
                         const medsFound = Math.max(1, Math.round((exp.potentialMeds || 2) * (0.7 + Math.random() * 0.6) * (1 + (agi - 5) * 0.05)));
 
                         state.food += foodFound;
@@ -3734,7 +4250,8 @@
                             const bp = state.blueprints ? state.blueprints.find(b => b.id === exp.blueprintId) : null;
                             if (bp && bp.locked) {
                                 const roll = Math.random() * 100;
-                                const chance = 35 + intVal * 7;
+                                const sensorBonus = (state.researched && state.researched.deep_sensors) ? 30 : 0;
+                                const chance = 35 + intVal * 7 + sensorBonus;
                                 if (roll <= chance || exp.riskLevel >= 4) {
                                     bp.locked = false;
                                     bpMsg = ` ★ BLUEPRINT DISCOVERED: [${bp.name}] unlocked in Engineering!`;
@@ -3892,6 +4409,8 @@
             } else if (e.code === 'Digit4') {
                 switchTab('defense');
             } else if (e.code === 'Digit5') {
+                switchTab('research');
+            } else if (e.code === 'Digit6') {
                 switchTab('policies');
             } else if (e.code === 'KeyT') {
                 toggleTheme();

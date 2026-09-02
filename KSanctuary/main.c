@@ -221,7 +221,7 @@ typedef struct {
 } LogEntry;
 
 // Construction Blueprints
-#define MAX_BLUEPRINTS 10
+#define MAX_BLUEPRINTS 16
 typedef struct {
     char id[16];
     char name[32];
@@ -240,6 +240,8 @@ typedef struct {
     int built;
     int locked;
     char discoverSource[32];
+    char reqTech[24];
+    char reqTechName[32];
 } RoomBlueprint;
 
 // Candidates for Recruitment
@@ -278,9 +280,9 @@ typedef struct {
     int lastRaidAtk;
     int lastRaidDef;
     int lastRaidWon;
+    int lastRaidDmg;
     int lastRaidScrap;
     int lastRaidMeds;
-    int lastRaidDmg;
     int lastRaidFoodStolen;
     int lastRaidScrapStolen;
     int lastRaidInjured;
@@ -328,8 +330,18 @@ typedef struct {
     // Help Modal
     int showHelp;
     
+    // Technology Research Tree
+    int techWaterFilt;
+    int techHydroponics;
+    int techSolarArrays;
+    int techReinforcedDef;
+    int techRadShield;
+    int techDeepSensors;
+    int techAutoTooling;
+    int techCombatStims;
+    
     // Active Tab
-    int currentTab; // 0: Facilities, 1: Survivors, 2: Expeditions, 3: Defense, 4: Directives, 5: Manual
+    int currentTab; // 0: Facilities, 1: Survivors, 2: Expeditions, 3: Defense, 4: Research, 5: Directives, 6: Manual
     
     int autoRun;
 } GameState;
@@ -344,7 +356,7 @@ typedef struct {
     int param2;
 } ClickableButton;
 
-#define MAX_BUTTONS 100
+#define MAX_BUTTONS 150
 static ClickableButton g_buttons[MAX_BUTTONS];
 static int g_buttonCount = 0;
 
@@ -402,6 +414,7 @@ enum {
     BTN_DEF_DRILL,
     BTN_DEF_TOGGLE_GUARD,
     BTN_DEF_TEST_RAID,
+    BTN_RESEARCH_TECH,
     BTN_CLOSE_RAID_MODAL,
     BTN_CLOSE_MODAL
 };
@@ -472,8 +485,145 @@ static float GetWorkerEfficiency(const Survivor* s, const Facility* fac) {
     return eff;
 }
 
+// Technology Research Tree Data & Logic
+typedef struct {
+    int id;
+    char name[36];
+    char tag[20];
+    char desc[90];
+    char benefit[90];
+    int cost;
+    int reqTechId;
+    char reqTechName[36];
+    char unlockBp[20];
+} TechInfo;
+
+static const TechInfo g_techTree[8] = {
+    { 0, "ADVANCED WATER FILTRATION", "LIFE SUPPORT",
+      "Multi-stage reverse osmosis & particulate filtration eliminates isotopes.",
+      "+50% Water yield & Unlocks Deep Filtration Reservoir", 40, -1, "", "bp_adv_water" },
+    { 1, "HYDROPONIC CULTIVATION", "LIFE SUPPORT",
+      "Nutrient-dense recirculating solution & dual-spectrum UV grow lamps.",
+      "+25% Food yield & Unlocks Vertical Hydroponic Tower", 50, 0, "Advanced Water Filtration", "bp_hydro_tower" },
+    { 2, "PHOTOVOLTAIC SOLAR ARRAYS", "ENERGY",
+      "High-efficiency silicon panels capture ambient radiation and sunlight.",
+      "+10 kW aux power boost & Unlocks Surface Solar Array", 45, -1, "", "bp_solar" },
+    { 3, "REINFORCED DEFENSE GRID", "SECURITY",
+      "Hardened titanium ballistic plating & electrified perimeter barrier.",
+      "+100 Barricade HP, +15 Def, -25% Raid Dmg & Heavy Bastion", 55, -1, "", "bp_heavy_bastion" },
+    { 4, "RAD-SHIELD NANO-COATINGS", "BIO-TECH",
+      "Lead-ceramic polymer sealants applied to vents & shelter airlocks.",
+      "-50% Radiation sickness hazard & faster convalescence", 45, -1, "", "" },
+    { 5, "DEEP SCAVENGER SENSORS", "EXPLORATION",
+      "Subterranean RF radar & magnetic resonance detectors for scouts.",
+      "+35% Expedition scrap yield & 2x Blueprint discovery rate", 50, 2, "Photovoltaic Solar Arrays", "" },
+    { 6, "AUTOMATED TOOLING BENCHES", "ENGINEERING",
+      "Computerized pneumatic presses & plasma cutters for rapid manufacture.",
+      "-25% Scrap cost for all rooms, upgrades, and defenses", 60, 1, "Hydroponic Cultivation", "" },
+    { 7, "CYBERNETIC COMBAT STIMS", "SECURITY",
+      "Adrenal neural injectors & subcutaneous ballistic mesh for guards.",
+      "+35% Guard defense power & protects against raid casualties", 65, 3, "Reinforced Defense Grid", "" }
+};
+
+static int IsTechResearched(int techId) {
+    switch (techId) {
+        case 0: return g_state.techWaterFilt;
+        case 1: return g_state.techHydroponics;
+        case 2: return g_state.techSolarArrays;
+        case 3: return g_state.techReinforcedDef;
+        case 4: return g_state.techRadShield;
+        case 5: return g_state.techDeepSensors;
+        case 6: return g_state.techAutoTooling;
+        case 7: return g_state.techCombatStims;
+    }
+    return 0;
+}
+
+static int GetResearchedCount() {
+    int count = 0;
+    for (int i = 0; i < 8; i++) {
+        if (IsTechResearched(i)) count++;
+    }
+    return count;
+}
+
+static int GetEffectiveScrapCost(int baseCost) {
+    if (g_state.techAutoTooling) {
+        return (baseCost * 3) / 4;
+    }
+    return baseCost;
+}
+
+static void DoResearch(int techId) {
+    if (techId < 0 || techId >= 8) return;
+    if (IsTechResearched(techId)) return;
+
+    const TechInfo* ti = &g_techTree[techId];
+    if (ti->reqTechId >= 0 && !IsTechResearched(ti->reqTechId)) {
+        char buf[128];
+        sprintf(buf, "Research halted: [%s] requires %s!", ti->name, ti->reqTechName);
+        AddLog(buf, 1);
+        PlaySfx(3);
+        return;
+    }
+
+    int cost = GetEffectiveScrapCost(ti->cost);
+    if (g_state.scrap < (float)cost) {
+        char buf[128];
+        sprintf(buf, "Insufficient Tech Scrap! Need %d scrap for %s.", cost, ti->name);
+        AddLog(buf, 1);
+        PlaySfx(3);
+        return;
+    }
+
+    g_state.scrap -= (float)cost;
+    switch (techId) {
+        case 0:
+            g_state.techWaterFilt = 1;
+            break;
+        case 1:
+            g_state.techHydroponics = 1;
+            break;
+        case 2:
+            g_state.techSolarArrays = 1;
+            break;
+        case 3:
+            g_state.techReinforcedDef = 1;
+            g_state.barricadeMaxHp += 100;
+            g_state.barricadeHp += 100;
+            break;
+        case 4:
+            g_state.techRadShield = 1;
+            break;
+        case 5:
+            g_state.techDeepSensors = 1;
+            break;
+        case 6:
+            g_state.techAutoTooling = 1;
+            break;
+        case 7:
+            g_state.techCombatStims = 1;
+            break;
+    }
+
+    // Unlock blueprint if attached
+    if (strlen(ti->unlockBp) > 0) {
+        for (int b = 0; b < g_state.numBlueprints; b++) {
+            if (strcmp(g_state.blueprints[b].id, ti->unlockBp) == 0) {
+                g_state.blueprints[b].locked = 0;
+            }
+        }
+    }
+
+    char logBuf[160];
+    sprintf(logBuf, "RESEARCH COMPLETE: [%s] operational! (%s)", ti->name, ti->benefit);
+    AddLog(logBuf, 3);
+    PlaySfx(2);
+}
+
 static int CalculateTotalDefense() {
     int baseHull = 10;
+    if (g_state.techReinforcedDef) baseHull += 15;
     int maxBar = (g_state.barricadeMaxHp > 0) ? g_state.barricadeMaxHp : 100;
     int barDef = (g_state.barricadeHp * 20) / maxBar;
     int turDef = g_state.turretCount * 18 + (g_state.turretOverclock ? 10 : 0);
@@ -485,6 +635,8 @@ static int CalculateTotalDefense() {
             facDef += g_state.facilities[f].level * 5;
         } else if (strcmp(g_state.facilities[f].id, "bp_radshield") == 0) {
             facDef += 25;
+        } else if (strcmp(g_state.facilities[f].id, "bp_heavy_bastion") == 0) {
+            facDef += 30;
         }
     }
     int guardDef = 0;
@@ -495,6 +647,9 @@ static int CalculateTotalDefense() {
         } else if (strcmp(g_state.survivors[s].job, "expedition") != 0) {
             guardDef += g_state.survivors[s].str / 2;
         }
+    }
+    if (g_state.techCombatStims) {
+        guardDef = (int)(guardDef * 1.35f);
     }
     return baseHull + barDef + turDef + facDef + guardDef;
 }
@@ -535,6 +690,17 @@ static void CalculateTotals(float* foodProd, float* foodNeed, float* waterProd, 
                 *scrapProd += fac->scrapProd * effSum;
             }
         }
+    }
+
+    // Technology Tree bonuses
+    if (g_state.techWaterFilt) {
+        *waterProd *= 1.5f;
+    }
+    if (g_state.techHydroponics) {
+        *foodProd *= 1.25f;
+    }
+    if (g_state.techSolarArrays) {
+        *powerGen += 10;
     }
 
     float foodPer = (g_state.policyFood == 1) ? 0.5f : ((g_state.policyFood == 2) ? 0.25f : 1.0f);
@@ -668,6 +834,7 @@ static void TriggerRaiderAttack(int isManual) {
     if (won) {
         int maxB = (g_state.barricadeMaxHp > 0) ? g_state.barricadeMaxHp : 100;
         int dmg = (assaultPower * 25) / (totalDef > 0 ? totalDef : 1);
+        if (g_state.techReinforcedDef) dmg = (dmg * 3) / 4;
         if (dmg < 5) dmg = 5;
         g_state.barricadeHp -= dmg;
         if (g_state.barricadeHp < 0) g_state.barricadeHp = 0;
@@ -694,6 +861,7 @@ static void TriggerRaiderAttack(int isManual) {
     } else {
         int deficit = assaultPower - totalDef;
         int dmg = 30 + (deficit * 8) / 10;
+        if (g_state.techReinforcedDef) dmg = (dmg * 3) / 4;
         g_state.barricadeHp -= dmg;
         if (g_state.barricadeHp < 0) g_state.barricadeHp = 0;
         g_state.lastRaidDmg = dmg;
@@ -712,6 +880,7 @@ static void TriggerRaiderAttack(int isManual) {
         for (int s = 0; s < g_state.numSurvivors; s++) {
             if (strcmp(g_state.survivors[s].job, "security") == 0 || rand() % 100 < 40) {
                 int wound = 15 + rand() % 25;
+                if (g_state.techCombatStims) wound = (wound * 65) / 100;
                 g_state.survivors[s].health -= wound;
                 if (g_state.survivors[s].health < 10) g_state.survivors[s].health = 10;
                 injuredCount++;
@@ -819,6 +988,7 @@ static void ProcessNewDay() {
 
                 int fFound = (int)(exp->potentialFood * fMult);
                 int sFound = (int)(exp->potentialScrap * sMult);
+                if (g_state.techDeepSensors) sFound = (int)(sFound * 1.35f);
                 int mFound = (int)(exp->potentialMeds * mMult);
                 if (mFound < 1) mFound = 1;
 
@@ -851,7 +1021,7 @@ static void ProcessNewDay() {
                     for (int b = 0; b < g_state.numBlueprints; b++) {
                         if (strcmp(g_state.blueprints[b].id, exp->blueprintId) == 0 && g_state.blueprints[b].locked) {
                             int roll = rand() % 100;
-                            int chance = 35 + inte * 7;
+                            int chance = 35 + inte * 7 + (g_state.techDeepSensors ? 30 : 0);
                             if (roll <= chance || exp->riskLevel >= 4) {
                                 g_state.blueprints[b].locked = 0;
                                 sprintf(bpMsg, " * BLUEPRINT: [%s] unlocked!", g_state.blueprints[b].name);
@@ -1203,6 +1373,85 @@ static void InitGameState() {
     g_state.blueprints[9].built = 0;
     g_state.blueprints[9].locked = 1;
     strcpy(g_state.blueprints[9].discoverSource, "Vault 811 Archive");
+
+    // 10: bp_adv_water
+    strcpy(g_state.blueprints[10].id, "bp_adv_water");
+    strcpy(g_state.blueprints[10].name, "DEEP FILTRATION RESERVOIR");
+    strcpy(g_state.blueprints[10].desc, "Ultra-purification ion vats removing all radioactive isotopes.");
+    g_state.blueprints[10].cost = 55;
+    g_state.blueprints[10].powerProd = 0;
+    g_state.blueprints[10].foodProd = 0;
+    g_state.blueprints[10].waterProd = 14;
+    g_state.blueprints[10].scrapProd = 0;
+    g_state.blueprints[10].powerCost = 4;
+    g_state.blueprints[10].maxWorkers = 2;
+    g_state.blueprints[10].powerPriority = 2;
+    strcpy(g_state.blueprints[10].benefit, "+14 Water/worker (Adv Filtration)");
+    g_state.blueprints[10].built = 0;
+    g_state.blueprints[10].locked = 1;
+    strcpy(g_state.blueprints[10].discoverSource, "Adv Water Tech");
+    strcpy(g_state.blueprints[10].reqTech, "adv_water");
+    strcpy(g_state.blueprints[10].reqTechName, "Adv Water Filtration");
+
+    // 11: bp_hydro_tower
+    strcpy(g_state.blueprints[11].id, "bp_hydro_tower");
+    strcpy(g_state.blueprints[11].name, "VERTICAL HYDROPONIC TOWER");
+    strcpy(g_state.blueprints[11].desc, "Automated aeroponic towers delivering high-yield crop harvests.");
+    g_state.blueprints[11].cost = 55;
+    g_state.blueprints[11].powerProd = 0;
+    g_state.blueprints[11].foodProd = 14;
+    g_state.blueprints[11].waterProd = 0;
+    g_state.blueprints[11].scrapProd = 0;
+    g_state.blueprints[11].powerCost = 4;
+    g_state.blueprints[11].maxWorkers = 2;
+    g_state.blueprints[11].powerPriority = 2;
+    strcpy(g_state.blueprints[11].benefit, "+14 Food/worker (Vertical Farm)");
+    g_state.blueprints[11].built = 0;
+    g_state.blueprints[11].locked = 1;
+    strcpy(g_state.blueprints[11].discoverSource, "Hydroponics Tech");
+    strcpy(g_state.blueprints[11].reqTech, "hydroponics");
+    strcpy(g_state.blueprints[11].reqTechName, "Hydroponic Cultivation");
+
+    // 12: bp_solar
+    strcpy(g_state.blueprints[12].id, "bp_solar");
+    strcpy(g_state.blueprints[12].name, "SURFACE SOLAR ARRAY");
+    strcpy(g_state.blueprints[12].desc, "Roof-mounted photovoltaic cells providing clean power without fuel.");
+    g_state.blueprints[12].cost = 50;
+    g_state.blueprints[12].powerProd = 20;
+    g_state.blueprints[12].powerCost = 0;
+    g_state.blueprints[12].foodProd = 0;
+    g_state.blueprints[12].waterProd = 0;
+    g_state.blueprints[12].scrapProd = 0;
+    g_state.blueprints[12].maxWorkers = 0;
+    g_state.blueprints[12].powerPriority = 0;
+    strcpy(g_state.blueprints[12].benefit, "+20 kW Clean Power (0 Workers)");
+    g_state.blueprints[12].built = 0;
+    g_state.blueprints[12].locked = 1;
+    strcpy(g_state.blueprints[12].discoverSource, "Solar Arrays Tech");
+    strcpy(g_state.blueprints[12].reqTech, "solar_arrays");
+    strcpy(g_state.blueprints[12].reqTechName, "Photovoltaic Solar");
+
+    // 13: bp_heavy_bastion
+    strcpy(g_state.blueprints[13].id, "bp_heavy_bastion");
+    strcpy(g_state.blueprints[13].name, "HEAVY VULCAN BASTION");
+    strcpy(g_state.blueprints[13].desc, "Dual rotary autocannons & bunker embrasure shielding the airlock.");
+    g_state.blueprints[13].cost = 65;
+    g_state.blueprints[13].powerProd = 0;
+    g_state.blueprints[13].powerCost = 4;
+    g_state.blueprints[13].foodProd = 0;
+    g_state.blueprints[13].waterProd = 0;
+    g_state.blueprints[13].scrapProd = 0;
+    g_state.blueprints[13].maxWorkers = 1;
+    g_state.blueprints[13].powerPriority = 1;
+    g_state.blueprints[13].defenseBoost = 30;
+    strcpy(g_state.blueprints[13].benefit, "+30 Vault Defense Rating");
+    g_state.blueprints[13].built = 0;
+    g_state.blueprints[13].locked = 1;
+    strcpy(g_state.blueprints[13].discoverSource, "Reinforced Def Tech");
+    strcpy(g_state.blueprints[13].reqTech, "reinforced_def");
+    strcpy(g_state.blueprints[13].reqTechName, "Reinforced Defenses");
+
+    g_state.numBlueprints = 14;
 
     // Survivors
     g_state.numSurvivors = 5;
@@ -1759,10 +2008,10 @@ static void DrawFacilitiesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x
             }
         }
     } else {
-        // Room Construction Blueprints (2 Columns, 5 Rows)
+        // Room Construction Blueprints (2 Columns, 7 Rows)
         int colW = (w - 10) / 2;
-        int cardH = 78;
-        int gapY = 6;
+        int cardH = 62;
+        int gapY = 4;
 
         for (int i = 0; i < g_state.numBlueprints; i++) {
             RoomBlueprint* bp = &g_state.blueprints[i];
@@ -1773,54 +2022,56 @@ static void DrawFacilitiesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x
 
             DrawStyledBox(hdc, cx, cy, colW, cardH, COL_DARK_CARD, COL_BORDER);
 
+            int cost = GetEffectiveScrapCost(bp->cost);
+
             // Name + Cost / Status
             SelectObject(hdc, hFontBold);
             SetTextColor(hdc, COL_TEXT_BRIGHT);
-            TextOutA(hdc, cx + 8, cy + 5, bp->name, (int)strlen(bp->name));
+            TextOutA(hdc, cx + 6, cy + 4, bp->name, (int)strlen(bp->name));
 
             SelectObject(hdc, hFontSmall);
             if (bp->built) {
                 SetTextColor(hdc, COL_GREEN);
-                TextOutA(hdc, cx + colW - 55, cy + 5, "BUILT", 5);
+                TextOutA(hdc, cx + colW - 55, cy + 4, "BUILT", 5);
             } else if (bp->locked) {
                 SetTextColor(hdc, COL_AMBER);
-                TextOutA(hdc, cx + colW - 105, cy + 5, "LOCKED BLUEPRINT", 16);
+                TextOutA(hdc, cx + colW - 95, cy + 4, "LOCKED", 6);
             } else {
                 char costBuf[16];
-                sprintf(costBuf, "%d SCRAP", bp->cost);
+                sprintf(costBuf, "%d SCRAP", cost);
                 SetTextColor(hdc, COL_AMBER);
-                TextOutA(hdc, cx + colW - 68, cy + 5, costBuf, (int)strlen(costBuf));
+                TextOutA(hdc, cx + colW - 68, cy + 4, costBuf, (int)strlen(costBuf));
             }
-
-            // Desc
-            SetTextColor(hdc, COL_TEXT_DIM);
-            TextOutA(hdc, cx + 8, cy + 22, bp->desc, (int)strlen(bp->desc));
 
             // Benefit
             SetTextColor(hdc, COL_GREEN);
             char benBuf[64];
             sprintf(benBuf, "Benefit: %s", bp->benefit);
-            TextOutA(hdc, cx + 8, cy + 39, benBuf, (int)strlen(benBuf));
+            TextOutA(hdc, cx + 6, cy + 20, benBuf, (int)strlen(benBuf));
 
             // Action button
             if (bp->built) {
                 SetTextColor(hdc, COL_GREEN);
-                RECT rcOp = { cx + colW - 180, cy + 54, cx + colW - 10, cy + 74 };
-                DrawTextA(hdc, "[ OPERATIONAL & ONLINE ]", -1, &rcOp, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                RECT rcOp = { cx + colW - 180, cy + 38, cx + colW - 8, cy + 58 };
+                DrawTextA(hdc, "[ OPERATIONAL & ONLINE ]", -1, &rcOp, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
             } else if (bp->locked) {
                 SetTextColor(hdc, COL_AMBER);
-                RECT rcLk = { cx + colW - 220, cy + 54, cx + colW - 10, cy + 74 };
+                RECT rcLk = { cx + colW - 240, cy + 38, cx + colW - 8, cy + 58 };
                 char lkBuf[64];
-                sprintf(lkBuf, "[ LOCKED: %s ]", bp->discoverSource);
+                if (strlen(bp->reqTechName) > 0) {
+                    sprintf(lkBuf, "[ REQ TECH: %s ]", bp->reqTechName);
+                } else {
+                    sprintf(lkBuf, "[ DISCOVER IN: %s ]", bp->discoverSource);
+                }
                 DrawTextA(hdc, lkBuf, -1, &rcLk, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
             } else {
                 char bBuf[32];
-                sprintf(bBuf, "CONSTRUCT (%d SCRAP)", bp->cost);
-                int canAfford = (g_state.scrap >= bp->cost);
+                sprintf(bBuf, "CONSTRUCT (%d SCRAP)", cost);
+                int canAfford = (g_state.scrap >= (float)cost);
                 COLORREF cBg = canAfford ? RGB(25, 50, 30) : COL_DARK_CARD;
                 COLORREF cTxt = canAfford ? COL_TEXT_BRIGHT : COL_TEXT_DIM;
                 COLORREF cBdr = canAfford ? COL_GREEN : COL_BORDER;
-                DrawButtonControl(hdc, hFontBold, cx + colW - 185, cy + 54, 178, 20, bBuf, cTxt, cBg, cBdr, BTN_CONSTRUCT_ROOM, i, 0);
+                DrawButtonControl(hdc, hFontBold, cx + colW - 185, cy + 38, 178, 20, bBuf, cTxt, cBg, cBdr, BTN_CONSTRUCT_ROOM, i, 0);
             }
         }
     }
@@ -2363,6 +2614,98 @@ static void DrawDefenseView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, i
     }
 }
 
+static void DrawResearchView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, int y, int w, int h) {
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, x, y, "R&D SCIENCE TERMINAL // TECHNOLOGY RESEARCH TREE", 48);
+
+    char statBuf[64];
+    sprintf(statBuf, "Active Technologies: %d / 8 Researched", GetResearchedCount());
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, COL_GREEN);
+    TextOutA(hdc, x + w - 240, y, statBuf, (int)strlen(statBuf));
+
+    // Summary banner
+    int bannerH = 22;
+    DrawStyledBox(hdc, x, y + 20, w, bannerH, COL_DARK_CARD, COL_BORDER);
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, x + 8, y + 23, "Invest Tech Scrap to unlock advanced facilities and permanent shelter-wide passive perks.", 89);
+    char scrapBuf[32];
+    sprintf(scrapBuf, "Available Scrap: %.0f", g_state.scrap);
+    SetTextColor(hdc, COL_AMBER);
+    TextOutA(hdc, x + w - 150, y + 23, scrapBuf, (int)strlen(scrapBuf));
+
+    int startY = y + 48;
+    int colW = (w - 10) / 2;
+    int cardH = 92;
+    int gapY = 8;
+
+    for (int i = 0; i < 8; i++) {
+        const TechInfo* ti = &g_techTree[i];
+        int col = i % 2;
+        int row = i / 2;
+        int cx = x + col * (colW + 10);
+        int cy = startY + row * (cardH + gapY);
+
+        int isRes = IsTechResearched(i);
+        int reqMet = (ti->reqTechId < 0) || IsTechResearched(ti->reqTechId);
+        int cost = GetEffectiveScrapCost(ti->cost);
+        int canAfford = (g_state.scrap >= (float)cost);
+
+        COLORREF borderCol = isRes ? COL_GREEN : (reqMet ? COL_BORDER_HI : COL_BORDER);
+        COLORREF bgCol = isRes ? RGB(15, 30, 20) : COL_DARK_CARD;
+        DrawStyledBox(hdc, cx, cy, colW, cardH, bgCol, borderCol);
+
+        // Header: Name + Tag
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, isRes ? COL_GREEN : COL_TEXT_BRIGHT);
+        TextOutA(hdc, cx + 8, cy + 5, ti->name, (int)strlen(ti->name));
+
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COL_AMBER);
+        char tagBuf[24];
+        sprintf(tagBuf, "[%s]", ti->tag);
+        TextOutA(hdc, cx + colW - (int)strlen(tagBuf) * 7 - 8, cy + 5, tagBuf, (int)strlen(tagBuf));
+
+        // Description
+        SetTextColor(hdc, COL_TEXT_DIM);
+        TextOutA(hdc, cx + 8, cy + 22, ti->desc, (int)strlen(ti->desc));
+
+        // Benefit
+        SetTextColor(hdc, COL_GREEN);
+        char benBuf[96];
+        sprintf(benBuf, "Bonus: %s", ti->benefit);
+        TextOutA(hdc, cx + 8, cy + 39, benBuf, (int)strlen(benBuf));
+
+        // Prereq line
+        if (strlen(ti->reqTechName) > 0) {
+            char reqBuf[64];
+            sprintf(reqBuf, "Req: %s %s", ti->reqTechName, reqMet ? "(MET)" : "(LOCKED)");
+            SetTextColor(hdc, reqMet ? COL_GREEN : COL_RED);
+            TextOutA(hdc, cx + 8, cy + 56, reqBuf, (int)strlen(reqBuf));
+        }
+
+        // Action button or Status
+        if (isRes) {
+            SetTextColor(hdc, COL_GREEN);
+            RECT rc = { cx + colW - 190, cy + 68, cx + colW - 8, cy + 88 };
+            DrawTextA(hdc, "[* RESEARCH ACTIVE]", -1, &rc, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
+        } else if (!reqMet) {
+            SetTextColor(hdc, COL_RED);
+            RECT rc = { cx + colW - 200, cy + 68, cx + colW - 8, cy + 88 };
+            DrawTextA(hdc, "[LOCKED: PREREQ REQUIRED]", -1, &rc, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
+        } else {
+            char bText[36];
+            sprintf(bText, "RESEARCH (%d SCRAP)", cost);
+            COLORREF cBg = canAfford ? RGB(25, 45, 25) : COL_PANEL_BG;
+            COLORREF cTxt = canAfford ? COL_TEXT_BRIGHT : COL_TEXT_DIM;
+            COLORREF cBdr = canAfford ? COL_GREEN : COL_BORDER;
+            DrawButtonControl(hdc, hFontBold, cx + colW - 165, cy + 68, 158, 20, bText, cTxt, cBg, cBdr, BTN_RESEARCH_TECH, i, 0);
+        }
+    }
+}
+
 static void DrawPoliciesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, int y, int w, int h) {
     SelectObject(hdc, hFontBold);
     SetTextColor(hdc, COL_TEXT_BRIGHT);
@@ -2529,9 +2872,15 @@ static void DrawManualView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, in
     TextOutA(hdc, x + 20, curY, "* Raider Assaults: Surface radar tracks raiders. Exceeding attack power repels raiders & salvages loot!", 102); curY += lineH + 4;
 
     SetTextColor(hdc, COL_AMBER);
-    TextOutA(hdc, x + 12, curY, "8. KEYBOARD SHORTCUTS:", 22); curY += lineH;
+    TextOutA(hdc, x + 12, curY, "8. TECHNOLOGY RESEARCH & UPGRADE BLUEPRINTS:", 44); curY += lineH;
     SetTextColor(hdc, COL_TEXT_MAIN);
-    TextOutA(hdc, x + 20, curY, "[SPACE] Advance Cycle | [1-6] Tabs | [T] Theme | [C] CRT | [A] Auto | [H] Help | [R] Reset", 90);
+    TextOutA(hdc, x + 20, curY, "* Research Tree: Invest scrap in [5] RESEARCH to unlock advanced water filtration, hydroponics,", 95); curY += lineH;
+    TextOutA(hdc, x + 20, curY, "  photovoltaic solar arrays, reinforced blast defenses, sensor radars, and stimpacks.", 85); curY += lineH + 4;
+
+    SetTextColor(hdc, COL_AMBER);
+    TextOutA(hdc, x + 12, curY, "9. KEYBOARD SHORTCUTS:", 22); curY += lineH;
+    SetTextColor(hdc, COL_TEXT_MAIN);
+    TextOutA(hdc, x + 20, curY, "[SPACE] Advance Cycle | [1-7] Tabs | [T] Theme | [C] CRT | [A] Auto | [H] Help | [R] Reset", 90);
 }
 
 static void DrawSidebar(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, int y, int w, int h) {
@@ -2720,7 +3069,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             if (wParam == VK_SPACE) {
                 AdvanceCycle();
                 InvalidateRect(hwnd, NULL, FALSE);
-            } else if (wParam >= '1' && wParam <= '6') {
+            } else if (wParam >= '1' && wParam <= '7') {
                 g_state.currentTab = (int)(wParam - '1');
                 PlaySfx(1);
                 InvalidateRect(hwnd, NULL, FALSE);
@@ -2731,7 +3080,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 PlaySfx(1);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'H' || wParam == 'h') {
-                g_state.currentTab = 5;
+                g_state.currentTab = 6;
                 PlaySfx(1);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'T' || wParam == 't') {
@@ -2771,7 +3120,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         g_soundEnabled = !g_soundEnabled;
                         PlaySfx(1);
                     } else if (bId == BTN_HELP) {
-                        g_state.currentTab = 5;
+                        g_state.currentTab = 6;
                         PlaySfx(1);
                     } else if (bId == BTN_RESET) {
                         if (MessageBoxA(hwnd, "Initiate Vault Emergency Reboot? All progress resets to Day 1.", "Reset Sanctuary", MB_YESNO | MB_ICONWARNING) == IDYES) {
@@ -2828,9 +3177,10 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         PlaySfx(1);
                     } else if (bId == BTN_FAC_UPGRADE) {
                         Facility* fac = &g_state.facilities[p1];
-                        int uCost = fac->level * 30;
-                        if (g_state.scrap >= uCost && fac->level < 3) {
-                            g_state.scrap -= uCost;
+                        int baseCost = fac->level * 30;
+                        int uCost = GetEffectiveScrapCost(baseCost);
+                        if (g_state.scrap >= (float)uCost && fac->level < 3) {
+                            g_state.scrap -= (float)uCost;
                             fac->level++;
                             char bonusMsg[48] = "";
                             if (fac->powerProd > 0) {
@@ -2870,8 +3220,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         }
                     } else if (bId == BTN_CONSTRUCT_ROOM) {
                         RoomBlueprint* bp = &g_state.blueprints[p1];
-                        if (g_state.scrap >= bp->cost && !bp->built && !bp->locked && g_state.numFacilities < 16) {
-                            g_state.scrap -= bp->cost;
+                        int cost = GetEffectiveScrapCost(bp->cost);
+                        if (g_state.scrap >= (float)cost && !bp->built && !bp->locked && g_state.numFacilities < 16) {
+                            g_state.scrap -= (float)cost;
                             bp->built = 1;
                             Facility* nf = &g_state.facilities[g_state.numFacilities++];
                             strcpy(nf->id, bp->id);
@@ -3083,8 +3434,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         AddLog(buf, 0);
                         PlaySfx(1);
                     } else if (bId == BTN_DEF_REPAIR) {
-                        if (g_state.scrap >= 15 && g_state.barricadeHp < g_state.barricadeMaxHp) {
-                            g_state.scrap -= 15;
+                        int cost = GetEffectiveScrapCost(15);
+                        if (g_state.scrap >= (float)cost && g_state.barricadeHp < g_state.barricadeMaxHp) {
+                            g_state.scrap -= (float)cost;
                             g_state.barricadeHp += 30;
                             if (g_state.barricadeHp > g_state.barricadeMaxHp) g_state.barricadeHp = g_state.barricadeMaxHp;
                             char buf[128];
@@ -3095,8 +3447,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             PlaySfx(3);
                         }
                     } else if (bId == BTN_DEF_REINFORCE) {
-                        if (g_state.scrap >= 35) {
-                            g_state.scrap -= 35;
+                        int cost = GetEffectiveScrapCost(35);
+                        if (g_state.scrap >= (float)cost) {
+                            g_state.scrap -= (float)cost;
                             g_state.barricadeMaxHp += 25;
                             g_state.barricadeHp += 25;
                             char buf[128];
@@ -3107,8 +3460,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             PlaySfx(3);
                         }
                     } else if (bId == BTN_DEF_TURRET) {
-                        if (g_state.scrap >= 45) {
-                            g_state.scrap -= 45;
+                        int cost = GetEffectiveScrapCost(45);
+                        if (g_state.scrap >= (float)cost) {
+                            g_state.scrap -= (float)cost;
                             g_state.turretCount++;
                             char buf[128];
                             sprintf(buf, "DEFENSE: 50-Cal Sentry Turret #%d mounted on outer bulkhead! (+18 Def)", g_state.turretCount);
@@ -3118,8 +3472,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             PlaySfx(3);
                         }
                     } else if (bId == BTN_DEF_OVERCLOCK) {
-                        if (!g_state.turretOverclock && g_state.scrap >= 20) {
-                            g_state.scrap -= 20;
+                        int cost = GetEffectiveScrapCost(20);
+                        if (!g_state.turretOverclock && g_state.scrap >= (float)cost) {
+                            g_state.scrap -= (float)cost;
                             g_state.turretOverclock = 1;
                             AddLog("DEFENSE: Sentry targeting overclocked! Auto-aim precision maximized (+10 Def).", 3);
                             PlaySfx(2);
@@ -3127,8 +3482,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             PlaySfx(3);
                         }
                     } else if (bId == BTN_DEF_DRILL) {
-                        if (g_state.scrap >= 12) {
-                            g_state.scrap -= 12;
+                        int cost = GetEffectiveScrapCost(12);
+                        if (g_state.scrap >= (float)cost) {
+                            g_state.scrap -= (float)cost;
                             g_state.combatDrillLevel++;
                             g_state.morale += 3.0f;
                             if (g_state.morale > 100.0f) g_state.morale = 100.0f;
@@ -3157,6 +3513,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         }
                     } else if (bId == BTN_DEF_TEST_RAID) {
                         TriggerRaiderAttack(1);
+                    } else if (bId == BTN_RESEARCH_TECH) {
+                        DoResearch(p1);
                     } else if (bId == BTN_CLOSE_RAID_MODAL) {
                         g_state.showRaidModal = 0;
                         PlaySfx(1);
@@ -3229,12 +3587,13 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 "[2] CITIZENS",
                 "[3] SCAVENGE",
                 "[4] DEFENSE",
-                "[5] POLICIES",
-                "[6] MANUAL"
+                "[5] RESEARCH",
+                "[6] POLICIES",
+                "[7] MANUAL"
             };
             int tabX = 10;
-            int tabW = 104;
-            for (int t = 0; t < 6; t++) {
+            int tabW = 89;
+            for (int t = 0; t < 7; t++) {
                 int active = (g_state.currentTab == t);
                 COLORREF bg = active ? COL_BTN_HOVER : COL_DARK_CARD;
                 COLORREF bdr = active ? COL_BORDER_HI : COL_BORDER;
@@ -3260,8 +3619,10 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             } else if (g_state.currentTab == 3) {
                 DrawDefenseView(memDC, hFontBold, hFontSmall, 20, areaY + 10, contentW - 20, areaH - 20);
             } else if (g_state.currentTab == 4) {
-                DrawPoliciesView(memDC, hFontBold, hFontSmall, 20, areaY + 10, contentW - 20, areaH - 20);
+                DrawResearchView(memDC, hFontBold, hFontSmall, 20, areaY + 10, contentW - 20, areaH - 20);
             } else if (g_state.currentTab == 5) {
+                DrawPoliciesView(memDC, hFontBold, hFontSmall, 20, areaY + 10, contentW - 20, areaH - 20);
+            } else if (g_state.currentTab == 6) {
                 DrawManualView(memDC, hFontBold, hFontSmall, 20, areaY + 10, contentW - 20, areaH - 20);
             }
 
