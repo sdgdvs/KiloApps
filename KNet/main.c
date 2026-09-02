@@ -24,6 +24,7 @@ HWND hExportBtn;
 HWND hClearBtn;
 HWND hFilterEdit;
 HWND hContentEdit;
+HBRUSH g_hEditBgBrush = NULL;
 
 // History State
 char history[100][512];
@@ -470,6 +471,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE: {
             HFONT hFont = CreateFontA(-14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             HFONT hFontMono = CreateFontA(-14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Consolas");
+            g_hEditBgBrush = CreateSolidBrush(RGB(5, 8, 17));
             
             // Top Nav Row
             hBtnBack = CreateWindowEx(0, "BUTTON", "<", WS_CHILD | WS_VISIBLE | WS_DISABLED, 10, 10, 30, 24, hwnd, (HMENU)2, NULL, NULL);
@@ -478,10 +480,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnForward = CreateWindowEx(0, "BUTTON", ">", WS_CHILD | WS_VISIBLE | WS_DISABLED, 45, 10, 30, 24, hwnd, (HMENU)3, NULL, NULL);
             SendMessage(hBtnForward, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hUrlEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "http://example.com", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 85, 10, W - 340, 24, hwnd, NULL, NULL, NULL);
+            hUrlEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "http://example.com", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 85, 10, W - 385, 24, hwnd, NULL, NULL, NULL);
             SendMessage(hUrlEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hBookmarks = CreateWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, W - 250, 10, 135, 180, hwnd, (HMENU)4, NULL, NULL);
+            hBookmarks = CreateWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, W - 295, 10, 135, 180, hwnd, (HMENU)4, NULL, NULL);
             SendMessage(hBookmarks, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"Bookmarks...");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"http://example.com");
@@ -496,7 +498,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"sniff");
             SendMessage(hBookmarks, CB_SETCURSEL, 0, 0);
             
-            HWND hHelpBtn = CreateWindowEx(0, "BUTTON", "?", WS_CHILD | WS_VISIBLE, W - 110, 10, 30, 24, hwnd, (HMENU)10, NULL, NULL);
+            HWND hHelpBtn = CreateWindowEx(0, "BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE, W - 155, 10, 75, 24, hwnd, (HMENU)10, NULL, NULL);
             SendMessage(hHelpBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             hGoBtn = CreateWindowEx(0, "BUTTON", "Fetch", WS_CHILD | WS_VISIBLE, W - 75, 10, 65, 24, hwnd, (HMENU)1, NULL, NULL);
@@ -522,17 +524,39 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hFilterEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             // Output Display Area
-            hContentEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "KNet 2.0 Diagnostic Suite initialized.\r\nEnter target URL/IP above and click Fetch, Ping Stats, or Port Scan.\r\n(Press 'h' or F1 for help)",
+            hContentEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT",
+                "KNet 2.0 Network Diagnostic Suite Ready.\r\n"
+                "------------------------------------------------------------\r\n"
+                "- Enter URL or target host above and press Enter (or Fetch).\r\n"
+                "- Click 'Ping Stats' for continuous latency/loss statistics.\r\n"
+                "- Click 'Port Scan' to audit common server ports.\r\n"
+                "- Click 'View Logs' or type in the filter box to filter traffic.\r\n"
+                "- Click 'Export Log' to save all activity to CSV.\r\n"
+                "- Press 'H' or F1 at any time for Help & shortcut reference.\r\n"
+                "------------------------------------------------------------\r\n",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
                 10, 74, W - 35, H - 125, hwnd, NULL, NULL, NULL);
             SendMessage(hContentEdit, WM_SETFONT, (WPARAM)hFontMono, TRUE);
+            break;
+        }
+        case WM_CTLCOLORSTATIC:
+        case WM_CTLCOLOREDIT: {
+            HWND hCtrl = (HWND)lParam;
+            if (hCtrl == hContentEdit) {
+                HDC hdc = (HDC)wParam;
+                SetTextColor(hdc, RGB(226, 232, 240));
+                SetBkColor(hdc, RGB(5, 8, 17));
+                return (LRESULT)g_hEditBgBrush;
+            }
             break;
         }
         case WM_COMMAND: {
             int wmId = LOWORD(wParam);
             int wmEvent = HIWORD(wParam);
             
-            if (wmId == 4 && wmEvent == CBN_SELCHANGE) {
+            if (lParam == (LPARAM)hFilterEdit && wmEvent == EN_CHANGE) {
+                DisplayLogSummary();
+            } else if (wmId == 4 && wmEvent == CBN_SELCHANGE) {
                 int idx = SendMessage(hBookmarks, CB_GETCURSEL, 0, 0);
                 if (idx > 0) {
                     char buf[256];
@@ -574,7 +598,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (wmId == 9) { // View Logs
                 DisplayLogSummary();
             } else if (wmId == 10) { // Help
-                MessageBoxA(hwnd, "KNet Help:\n\n- Enter a URL or use Bookmarks.\n- Click Fetch for HTTP GET.\n- Use Ping Stats for latency test.\n- Use Port Scan to check open ports.\n- Logs can be exported to CSV.", "KNet Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd, "KNet Help & Shortcuts:\n\n- Enter a URL or select from Bookmarks.\n- Press Enter in URL box or click Fetch for HTTP GET.\n- Use Ping Stats for latency & packet loss testing.\n- Use Port Scan to check open ports.\n- Type in the filter box to filter traffic logs live.\n- Click Export Log to save CSV.\n- Press 'H' or F1 anytime for this menu.", "KNet Help", MB_OK | MB_ICONINFORMATION);
             }
             break;
         }
@@ -590,18 +614,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hBtnBack, 10, 10, 30, 24, TRUE);
             MoveWindow(hBtnForward, 45, 10, 30, 24, TRUE);
             
-            int urlWidth = (nw > 350) ? (nw - 340) : 10;
-            MoveWindow(hUrlEdit, 85, 10, urlWidth, 24, TRUE);
-            
-            int bkX = (nw > 250) ? (nw - 250) : 0;
-            MoveWindow(hBookmarks, bkX, 10, 135, 180, TRUE);
-            
-            int helpX = (nw > 110) ? (nw - 110) : 0;
-            HWND hHelpBtn = GetDlgItem(hwnd, 10);
-            if (hHelpBtn) MoveWindow(hHelpBtn, helpX, 10, 30, 24, TRUE);
-            
             int goX = (nw > 75) ? (nw - 75) : 0;
             MoveWindow(hGoBtn, goX, 10, 65, 24, TRUE);
+
+            int helpX = (nw > 155) ? (nw - 155) : 0;
+            HWND hHelpBtn = GetDlgItem(hwnd, 10);
+            if (hHelpBtn) MoveWindow(hHelpBtn, helpX, 10, 75, 24, TRUE);
+
+            int bkX = (nw > 295) ? (nw - 295) : 0;
+            MoveWindow(hBookmarks, bkX, 10, 135, 180, TRUE);
+
+            int urlWidth = (bkX > 90) ? (bkX - 90) : 10;
+            MoveWindow(hUrlEdit, 85, 10, urlWidth, 24, TRUE);
             
             MoveWindow(hPingBtn, 10, 42, 85, 24, TRUE);
             MoveWindow(hScanBtn, 100, 42, 85, 24, TRUE);
@@ -620,6 +644,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            if (g_hEditBgBrush) {
+                DeleteObject(g_hEditBgBrush);
+                g_hEditBgBrush = NULL;
+            }
             PostQuitMessage(0);
             break;
         default:
@@ -658,8 +686,20 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
-        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1) && GetFocus() != hUrlEdit && GetFocus() != hFilterEdit) {
-            MessageBoxA(hwnd, "KNet Help:\n\n- Enter a URL or use Bookmarks.\n- Click Fetch for HTTP GET.\n- Use Ping Stats for latency test.\n- Use Port Scan to check open ports.\n- Logs can be exported to CSV.\n- Press 'h' or F1 anytime for this menu.", "KNet Help", MB_OK | MB_ICONINFORMATION);
+        if (msg.message == WM_KEYDOWN) {
+            if (msg.wParam == VK_F1 || ((msg.wParam == 'H' || msg.wParam == 'h') && GetFocus() != hUrlEdit && GetFocus() != hFilterEdit)) {
+                MessageBoxA(hwnd, "KNet Help & Shortcuts:\n\n- Enter a URL or select from Bookmarks.\n- Press Enter in URL box or click Fetch for HTTP GET.\n- Use Ping Stats for latency & packet loss testing.\n- Use Port Scan to check open ports.\n- Type in the filter box to filter traffic logs live.\n- Click Export Log to save CSV.\n- Press 'H' or F1 anytime for this menu.", "KNet Help", MB_OK | MB_ICONINFORMATION);
+                continue;
+            }
+            if (msg.wParam == VK_RETURN) {
+                if (GetFocus() == hUrlEdit) {
+                    FetchUrl(hwnd, TRUE);
+                    continue;
+                } else if (GetFocus() == hFilterEdit) {
+                    DisplayLogSummary();
+                    continue;
+                }
+            }
         }
         TranslateMessage(&msg);
         DispatchMessage(&msg);

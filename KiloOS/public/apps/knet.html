@@ -383,6 +383,109 @@
     margin-right: 6px;
     box-shadow: 0 0 6px var(--success);
   }
+
+  /* Modal Overlay & Help Dialog */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: knetFadeIn 0.15s ease-out;
+  }
+  .modal-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    width: 90%;
+    max-width: 580px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px var(--accent-glow);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.6);
+  }
+  .modal-body {
+    padding: 16px;
+    overflow-y: auto;
+    max-height: 70vh;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.6);
+  }
+  .help-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+  }
+  .help-table th, .help-table td {
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .help-table th {
+    color: var(--accent);
+    background: rgba(255,255,255,0.02);
+  }
+  .help-table code {
+    font-family: var(--font-mono);
+    color: var(--accent);
+    background: rgba(56, 189, 248, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  /* Toast Notification */
+  .toast-notification {
+    position: fixed;
+    bottom: 35px;
+    right: 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--accent);
+    color: var(--text-main);
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+    z-index: 2000;
+  }
+  .toast-notification.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .toast-notification.warning {
+    border-color: var(--warning);
+  }
+  .toast-notification.error {
+    border-color: var(--danger);
+  }
+  @keyframes knetFadeIn {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+  }
 </style>
 </head>
 <body>
@@ -392,7 +495,7 @@
     <div class="logo-title">
       <div class="logo-icon">K</div> KNet
     </div>
-    <button class="btn" id="btnHelp" title="Help" style="padding: 6px 10px;">?</button>
+    <button class="btn" id="btnHelp" title="Help (F1)"><span style="color:var(--accent);font-weight:bold;">?</span> Help (F1)</button>
     <button class="btn" id="btnBack" title="Back" disabled>&lt;</button>
     <button class="btn" id="btnForward" title="Forward" disabled>&gt;</button>
     <input type="text" class="input-url" id="urlInput" value="http://example.com" placeholder="Enter URL or target host (e.g. http://example.com, 8.8.8.8)..." />
@@ -433,7 +536,7 @@
       </div>
     </div>
     <div class="content-box" id="httpContentArea">Welcome to KNet 2.0 Web Interface.
-Ready. Select a target URL above and click Execute.
+Ready. Select a target URL above and click Execute (or press Enter in URL box).
 (Press 'h' or F1 for help)</div>
   </div>
 
@@ -473,7 +576,8 @@ Ready. Select a target URL above and click Execute.
     <div class="panel" style="flex: 1;">
       <div class="panel-title">
         <span>Real-time Latency Chart (ms)</span>
-        <div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <input type="text" class="input-url" id="pingTargetInput" value="8.8.8.8" placeholder="Host / IP..." style="width:130px; padding:4px 8px; font-size:12px;" />
           <button class="btn" id="btnStartPing">Start Continuous Ping</button>
           <button class="btn btn-danger" id="btnStopPing" disabled>Stop</button>
           <button class="btn" id="btnClearPing">Reset Stats</button>
@@ -630,6 +734,46 @@ Ready. Select a target URL above and click Execute.
   </div>
 </footer>
 
+<!-- Help Modal Dialog -->
+<div id="helpModal" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="logo-icon">K</div>
+        <strong style="font-size:15px; color:var(--accent);">KNet Help & Shortcut Guide</strong>
+      </div>
+      <button class="btn" id="btnCloseHelp" style="padding:2px 8px; font-size:16px;">&times;</button>
+    </div>
+    <div class="modal-body">
+      <table class="help-table">
+        <thead>
+          <tr><th>Key / Action</th><th>Function</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>F1</code> or <code>H</code></td><td>Open / Close this Help dialog</td></tr>
+          <tr><td><code>Enter</code> in URL Bar</td><td>Execute HTTP request / diagnostic</td></tr>
+          <tr><td><code>Enter</code> in Ping Target</td><td>Start continuous latency test</td></tr>
+          <tr><td><code>Enter</code> in Port Inputs</td><td>Start custom port scan</td></tr>
+          <tr><td><code>Enter</code> in Filter / Search</td><td>Filter response text or traffic log live</td></tr>
+          <tr><td><code>Esc</code></td><td>Close Help dialog</td></tr>
+          <tr><td><code>🌐 HTTP Inspector</code></td><td>Inspect web pages, REST endpoints, and status codes</td></tr>
+          <tr><td><code>📡 Ping & Latency</code></td><td>Continuous latency testing, packet loss & jitter chart</td></tr>
+          <tr><td><code>🔍 Port Monitor</code></td><td>Audit standard or custom ports on target host</td></tr>
+          <tr><td><code>📋 Traffic Log</code></td><td>Filter traffic records live, export to CSV/JSON</td></tr>
+          <tr><td><code>🛠️ Net Utils</code></td><td>DNS lookup, WHOIS, Traceroute, and interface config</td></tr>
+          <tr><td><code>🦈 Sniffer</code></td><td>Simulate live packet traffic inspection</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:12px; font-size:12px; color:var(--text-muted);">
+        💡 <strong>Tip:</strong> Native KNet.exe performs direct WinInet requests. Web KNet uses corsproxy for web inspector requests.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="btnHelpOk">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
   // Navigation & Workspace State
   const urlInput = document.getElementById('urlInput');
@@ -649,9 +793,39 @@ Ready. Select a target URL above and click Execute.
   let logIdCounter = 1;
   let totalBytesTransferred = 0;
 
-  document.getElementById('btnHelp').onclick = () => {
-    alert("KNet Help:\n\n- Select a target URL or type one.\n- Use tabs to switch between HTTP, Ping, Scan, and Logs.\n- View latency stats and export logs.\n- Press 'h' or F1 anytime for this menu.");
-  };
+  // Toast notification helper
+  function showToast(msg, type = 'info') {
+    let toast = document.getElementById('knetToast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'knetToast';
+      toast.className = 'toast-notification';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.className = `toast-notification show ${type}`;
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => {
+      toast.className = 'toast-notification';
+    }, 2800);
+  }
+
+  // Help Modal Toggle
+  const helpModal = document.getElementById('helpModal');
+  function toggleHelp(show) {
+    if (!helpModal) return;
+    const isVisible = helpModal.style.display !== 'none';
+    const nextState = (typeof show === 'boolean') ? show : !isVisible;
+    helpModal.style.display = nextState ? 'flex' : 'none';
+  }
+
+  document.getElementById('btnHelp').onclick = () => toggleHelp(true);
+  document.getElementById('btnCloseHelp').onclick = () => toggleHelp(false);
+  document.getElementById('btnHelpOk').onclick = () => toggleHelp(false);
+
+  helpModal.addEventListener('click', (e) => {
+    if (e.target === helpModal) toggleHelp(false);
+  });
 
   // Tab Navigation
   const tabBtns = document.querySelectorAll('.tab-btn');
@@ -663,6 +837,9 @@ Ready. Select a target URL above and click Execute.
       tabContents.forEach(c => c.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById(btn.dataset.tab).classList.add('active');
+      if (btn.dataset.tab === 'tab-ping') {
+        setTimeout(resizeCanvas, 60);
+      }
     });
   });
 
@@ -671,13 +848,72 @@ Ready. Select a target URL above and click Execute.
     btnForward.disabled = navIdx >= navHistory.length - 1;
   }
 
-  // Add global keydown listener for help
+  // Global keydown listener
   window.addEventListener('keydown', (e) => {
-    if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-      if (e.key === 'F1') e.preventDefault();
-      alert("KNet Help:\n\n- Select a target URL or type one.\n- Use tabs to switch between HTTP, Ping, Scan, and Logs.\n- View latency stats and export logs.\n- Press 'h' or F1 anytime for this menu.");
+    if (e.key === 'F1') {
+      e.preventDefault();
+      toggleHelp();
+      return;
+    }
+    if (e.key === 'Escape' && helpModal && helpModal.style.display !== 'none') {
+      toggleHelp(false);
+      return;
+    }
+    if ((e.key === 'h' || e.key === 'H') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+      toggleHelp();
     }
   });
+
+  // Enter key navigation on inputs
+  urlInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      btnGo.click();
+    }
+  });
+
+  const pingTargetInput = document.getElementById('pingTargetInput');
+  if (pingTargetInput) {
+    pingTargetInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('btnStartPing').click();
+      }
+    });
+  }
+
+  const scanTargetInput = document.getElementById('scanTargetInput');
+  const scanPortsInput = document.getElementById('scanPortsInput');
+  [scanTargetInput, scanPortsInput].forEach(inp => {
+    if (inp) {
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          document.getElementById('btnRunScan').click();
+        }
+      });
+    }
+  });
+
+  const httpSearchInput = document.getElementById('httpSearchInput');
+  if (httpSearchInput) {
+    httpSearchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('btnSearchHttp').click();
+      }
+    });
+  }
+
+  const utilTargetInput = document.getElementById('utilTargetInput');
+  if (utilTargetInput) {
+    utilTargetInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('btnDns').click();
+      }
+    });
+  }
 
   function addTrafficLog(type, target, status, statusCode, latencyMs, bytes, rawData = '') {
     const entry = {
@@ -782,9 +1018,9 @@ Ready. Select a target URL above and click Execute.
     const text = httpContentArea.textContent;
     const idx = text.toLowerCase().indexOf(q.toLowerCase());
     if (idx !== -1) {
-      alert(`Match found at character position ${idx}!`);
+      showToast(`Match found at character position ${idx}!`, 'info');
     } else {
-      alert("No matching text found in current response body.");
+      showToast("No matching text found in current response body.", 'warning');
     }
   };
   document.getElementById('btnClearHttp').onclick = () => {
@@ -801,18 +1037,25 @@ Ready. Select a target URL above and click Execute.
   const ctx = canvas.getContext('2d');
 
   function resizeCanvas() {
-    const dpr = window.devicePixelRatio || 1;
     const rect = canvas.parentElement.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const dpr = window.devicePixelRatio || 1;
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     drawPingChart();
   }
   window.addEventListener('resize', resizeCanvas);
   setTimeout(resizeCanvas, 100);
 
   function drawPingChart() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
+    if (!w || !h) return;
+    ctx.clearRect(0, 0, w, h);
     if (pingHistoryData.length < 2) return;
 
     ctx.beginPath();
@@ -820,25 +1063,26 @@ Ready. Select a target URL above and click Execute.
     ctx.lineWidth = 2;
 
     const maxVal = Math.max(100, ...pingHistoryData);
-    const stepX = canvas.width / (Math.max(pingHistoryData.length - 1, 1));
+    const stepX = w / (Math.max(pingHistoryData.length - 1, 1));
 
     for (let i = 0; i < pingHistoryData.length; i++) {
       const x = i * stepX;
-      const y = canvas.height - (pingHistoryData[i] / maxVal) * (canvas.height - 20) - 10;
+      const y = h - (pingHistoryData[i] / maxVal) * (h - 20) - 10;
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
     ctx.stroke();
 
     // Fill area under line
-    ctx.lineTo((pingHistoryData.length - 1) * stepX, canvas.height);
-    ctx.lineTo(0, canvas.height);
+    ctx.lineTo((pingHistoryData.length - 1) * stepX, h);
+    ctx.lineTo(0, h);
     ctx.fillStyle = 'rgba(56, 189, 248, 0.1)';
     ctx.fill();
   }
 
   async function runPingOnce(targetHost) {
-    const host = targetHost || urlInput.value.trim() || '8.8.8.8';
+    const pingInp = document.getElementById('pingTargetInput');
+    const host = targetHost || (pingInp ? pingInp.value.trim() : '') || urlInput.value.trim() || '8.8.8.8';
     pingStats.sent++;
     const startTime = performance.now();
     let success = false;
@@ -1041,12 +1285,14 @@ Ready. Select a target URL above and click Execute.
     renderLogs();
     lblLogCount.textContent = '0';
     lblTotalBytes.textContent = '0 B';
+    showToast('Traffic logs cleared.', 'info');
   };
 
   // Log Export & Import
   document.getElementById('btnExportJson').onclick = () => {
     const jsonStr = JSON.stringify(trafficLogs, null, 2);
     downloadFile(jsonStr, 'knet_traffic_log.json', 'application/json');
+    showToast('Exported logs to knet_traffic_log.json', 'info');
   };
 
   document.getElementById('btnExportCsv').onclick = () => {
@@ -1055,6 +1301,7 @@ Ready. Select a target URL above and click Execute.
       csv += `"${l.id}","${l.time}","${l.timestamp}","${l.type}","${l.target}","${l.status}","${l.statusCode}","${l.latency}","${l.bytes}"\n`;
     });
     downloadFile(csv, 'knet_traffic_log.csv', 'text/csv');
+    showToast('Exported logs to knet_traffic_log.csv', 'info');
   };
 
   function downloadFile(content, fileName, mimeType) {
@@ -1081,10 +1328,10 @@ Ready. Select a target URL above and click Execute.
         if (Array.isArray(imported)) {
           trafficLogs = imported.concat(trafficLogs);
           renderLogs();
-          alert(`Successfully imported ${imported.length} traffic log records!`);
+          showToast(`Imported ${imported.length} traffic log records!`, 'info');
         }
       } catch (err) {
-        alert("Failed to parse log file. Ensure valid JSON array format.");
+        showToast('Failed to parse log file. Ensure valid JSON array format.', 'error');
       }
     };
     reader.readAsText(file);
