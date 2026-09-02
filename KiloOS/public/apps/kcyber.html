@@ -93,8 +93,8 @@
       <input type="text" id="cmd-input" autocomplete="off" spellcheck="false" autofocus />
     </div>
   </div>
-  <div id="visuals" style="position: absolute; right: 30px; top: 30px; width: 120px; height: 120px; pointer-events: none; z-index: 50;">
-    <canvas id="gfxCanvas" width="120" height="120"></canvas>
+  <div id="visuals" style="position: absolute; right: 25px; top: 25px; width: 180px; height: 160px; pointer-events: none; z-index: 50; background: rgba(0, 15, 5, 0.85); border: 1px solid #00ff6644; border-radius: 4px; box-shadow: 0 0 15px rgba(0, 255, 100, 0.15);">
+    <canvas id="gfxCanvas" width="180" height="160"></canvas>
   </div>
   <script>
     const outputDiv = document.getElementById('output');
@@ -188,16 +188,82 @@
       }
     }
 
+    // --- GRAPHICS ENGINE: SPRITE ANIMATIONS, HUD & PARTICLES ---
+    let animTick = 0;
+    let shakeAmount = 0;
+    const particles = [];
+    const maxParticles = 140;
+
+    function spawnBurst(x, y, count, type, color, speed=1) {
+      for (let i = 0; i < count; i++) {
+        if (particles.length >= maxParticles) particles.shift();
+        const angle = Math.random() * Math.PI * 2;
+        const spd = (Math.random() * 3 + 1.2) * speed;
+        particles.push({
+          x: x + (Math.random() - 0.5) * 10,
+          y: y + (Math.random() - 0.5) * 10,
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd,
+          life: 1.0,
+          decay: Math.random() * 0.035 + 0.02,
+          color: color,
+          type: type, // 'spark', 'bit', 'debris', 'star'
+          size: Math.random() * 3 + 2,
+          rot: Math.random() * Math.PI * 2,
+          vrot: (Math.random() - 0.5) * 0.2,
+          char: Math.random() > 0.5 ? '1' : '0'
+        });
+      }
+    }
+
+    function spawnAmbient() {
+      if (particles.length >= maxParticles) return;
+      if (Math.random() < 0.3) {
+        const x = 30 + Math.random() * 120;
+        const y = 145;
+        let color = '#00ff88';
+        let type = 'bit';
+        if (hacking_node) {
+          color = ice_frozen_ticks > 0 ? '#00e5ff' : '#ff3344';
+          type = ice_frozen_ticks > 0 ? 'star' : 'spark';
+        } else if (connected_node) {
+          color = '#00ffff';
+          type = 'bit';
+        }
+        particles.push({
+          x: x,
+          y: y,
+          vx: (Math.random() - 0.5) * 0.8,
+          vy: -(Math.random() * 1.5 + 0.8),
+          life: 1.0,
+          decay: Math.random() * 0.02 + 0.015,
+          color: color,
+          type: type,
+          size: Math.random() * 2 + 2,
+          rot: 0,
+          vrot: (Math.random() - 0.5) * 0.1,
+          char: Math.random() > 0.5 ? '1' : '0'
+        });
+      }
+    }
+
     function iceAttack() {
       if (hacking_node || connected_node) {
         if (ice_frozen_ticks > 0) {
           ice_frozen_ticks--;
           printLine(`[${ice_name}] ICE is blinded...`);
+          spawnBurst(90, 80, 15, 'star', '#00e5ff');
         } else {
           playAlarm();
           player_mem -= ice_damage;
+          shakeAmount = 12;
+          spawnBurst(90, 80, 30, 'spark', '#ff3333');
+          spawnBurst(90, 80, 16, 'debris', '#ff0044');
           if (player_mem <= 0) {
             player_mem = 0;
+            shakeAmount = 24;
+            spawnBurst(90, 80, 60, 'debris', '#ff0000');
+            spawnBurst(90, 80, 45, 'spark', '#ffffff');
             printLine(`[${ice_name}] FATAL: Memory depleted. Connection forcefully terminated.`);
             playAccessDenied();
             hacking_node = null;
@@ -216,59 +282,450 @@
 
     function drawVisuals() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const cx = 90;
+      const cy = 82;
+
+      // 1. HUD Reticle & Corner Brackets
+      ctx.lineWidth = 2;
+      let hudColor = '#00ff66';
+      let titleText = '[SYS://DECK.OS]';
       if (hacking_node) {
-        // Main Enemy (ICE)
-        ctx.strokeStyle = '#ff3232';
-        ctx.fillStyle = '#640000';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(60, 5);
-        ctx.lineTo(110, 35);
-        ctx.lineTo(110, 85);
-        ctx.lineTo(60, 115);
-        ctx.lineTo(10, 85);
-        ctx.lineTo(10, 35);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-        
-        ctx.beginPath();
-        ctx.moveTo(30, 45); ctx.lineTo(45, 60);
-        ctx.moveTo(90, 45); ctx.lineTo(75, 60);
-        ctx.stroke();
+        hudColor = ice_frozen_ticks > 0 ? '#00e5ff' : '#ff3333';
+        titleText = ice_frozen_ticks > 0 ? '[ICE://STUNNED]' : `[ICE://${ice_name.toUpperCase()}]`;
       } else if (connected_node) {
-        // Key Item (Data File)
-        ctx.strokeStyle = '#00ffff';
-        ctx.fillStyle = '#003232';
-        ctx.lineWidth = 2;
-        ctx.fillRect(30, 5, 60, 90);
-        ctx.strokeRect(30, 5, 60, 90);
-        
+        hudColor = '#00ffff';
+        titleText = `[DATA://NODE_0${connected_node}]`;
+      }
+      ctx.strokeStyle = hudColor;
+
+      // Corner L-brackets
+      const bLen = 10;
+      // Top-Left
+      ctx.beginPath();
+      ctx.moveTo(6, 6 + bLen); ctx.lineTo(6, 6); ctx.lineTo(6 + bLen, 6);
+      // Top-Right
+      ctx.moveTo(174 - bLen, 6); ctx.lineTo(174, 6); ctx.lineTo(174, 6 + bLen);
+      // Bottom-Left
+      ctx.moveTo(6, 154 - bLen); ctx.lineTo(6, 154); ctx.lineTo(6 + bLen, 154);
+      // Bottom-Right
+      ctx.moveTo(174 - bLen, 154); ctx.lineTo(174, 154); ctx.lineTo(174, 154 - bLen);
+      ctx.stroke();
+
+      // Top Header Title & Status Diode
+      ctx.fillStyle = hudColor;
+      ctx.font = 'bold 10px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(titleText, 24, 17);
+
+      // Blinking diode
+      const diodeAlpha = 0.5 + Math.sin(animTick * 0.15) * 0.5;
+      ctx.fillStyle = hudColor;
+      ctx.globalAlpha = diodeAlpha;
+      ctx.beginPath();
+      ctx.arc(14, 14, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1.0;
+
+      // 2. Animated Sprites
+      if (hacking_node) {
+        // --- MAIN ENEMY: ICE DAEMON ---
+        const pulse = 1.0 + Math.sin(animTick * 0.09) * 0.12;
+        const glitchX = (Math.random() < 0.08 ? (Math.random() - 0.5) * 6 : 0);
+
+        if (ice_frozen_ticks > 0) {
+          // Frozen Crystalline Barrier
+          ctx.strokeStyle = '#00e5ff';
+          ctx.fillStyle = 'rgba(0, 40, 70, 0.7)';
+          ctx.lineWidth = 2;
+
+          // Outer frost snowflake ring
+          for (let a = 0; a < 6; a++) {
+            const rad = (animTick * 0.02) + a * (Math.PI / 3);
+            const fx = cx + Math.cos(rad) * 45;
+            const fy = cy + Math.sin(rad) * 45;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(fx, fy);
+            ctx.stroke();
+
+            // Diamond crystal at tip
+            ctx.beginPath();
+            ctx.arc(fx, fy, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          }
+
+          // Frozen Core
+          ctx.beginPath();
+          for (let i = 0; i < 6; i++) {
+            const ang = i * (Math.PI / 3) + (Math.PI / 6);
+            const r = 28;
+            const px = cx + Math.cos(ang) * r;
+            const py = cy + Math.sin(ang) * r;
+            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          // Frozen Stun Badge
+          ctx.fillStyle = '#00e5ff';
+          ctx.font = 'bold 9px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('BLINDED', cx, cy + 50);
+
+        } else {
+          // ACTIVE ICE DAEMON: Orbiting Razor Defense Shards & Pulsing Core
+          const shardCount = 6;
+          for (let s = 0; s < shardCount; s++) {
+            const sAngle = (animTick * 0.04) + s * ((Math.PI * 2) / shardCount);
+            const sDist = 44 * pulse;
+            const sx = cx + glitchX + Math.cos(sAngle) * sDist;
+            const sy = cy + Math.sin(sAngle) * sDist;
+
+            // Connecting Laser Link
+            ctx.strokeStyle = 'rgba(255, 50, 50, 0.35)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(cx + glitchX, cy);
+            ctx.lineTo(sx, sy);
+            ctx.stroke();
+
+            // Razor Shard (triangular polygon pointing outward)
+            ctx.save();
+            ctx.translate(sx, sy);
+            ctx.rotate(sAngle + Math.PI / 2);
+            ctx.fillStyle = '#ff1122';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(0, -9);
+            ctx.lineTo(5, 5);
+            ctx.lineTo(0, 2);
+            ctx.lineTo(-5, 5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          // Central Demonic ICE Polygon
+          ctx.save();
+          ctx.translate(cx + glitchX, cy);
+          ctx.scale(pulse, pulse);
+
+          // Outer Hazard Shield
+          ctx.strokeStyle = '#ff3333';
+          ctx.fillStyle = 'rgba(120, 0, 0, 0.85)';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          const octVerts = 8;
+          for (let i = 0; i < octVerts; i++) {
+            const rad = i * ((Math.PI * 2) / octVerts);
+            const r = (i % 2 === 0) ? 28 : 18;
+            const px = Math.cos(rad) * r;
+            const py = Math.sin(rad) * r;
+            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          // Inner Visor Slit
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(-18, -4, 36, 8);
+          ctx.strokeStyle = '#ff6666';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(-18, -4, 36, 8);
+
+          // Sweeping Laser Eye
+          const eyeX = Math.sin(animTick * 0.08) * 12;
+          ctx.fillStyle = '#ff0000';
+          ctx.beginPath();
+          ctx.arc(eyeX, 0, 3, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.restore();
+        }
+
+      } else if (connected_node) {
+        // --- KEY ITEM: CLASSIFIED DATA CORE / PAYLOAD ---
+        const bobY = Math.sin(animTick * 0.05) * 5;
+
+        // Holographic Extraction Beam
+        const grad = ctx.createLinearGradient(cx, 140, cx, cy + bobY);
+        grad.addColorStop(0, 'rgba(0, 255, 255, 0.3)');
+        grad.addColorStop(1, 'rgba(0, 255, 255, 0.0)');
+        ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.moveTo(40, 20); ctx.lineTo(80, 20);
-        ctx.moveTo(40, 35); ctx.lineTo(80, 35);
-        ctx.moveTo(40, 50); ctx.lineTo(60, 50);
-        ctx.stroke();
-      } else {
-        // Player (Cyberdeck)
-        ctx.strokeStyle = '#00ff00';
-        ctx.fillStyle = '#003200';
-        ctx.lineWidth = 2;
-        
-        // Screen
-        ctx.fillRect(30, 15, 60, 50);
-        ctx.strokeRect(30, 15, 60, 50);
-        
-        // Base
-        ctx.beginPath();
-        ctx.moveTo(30, 65);
-        ctx.lineTo(90, 65);
-        ctx.lineTo(110, 95);
-        ctx.lineTo(10, 95);
+        ctx.moveTo(cx - 30, 140);
+        ctx.lineTo(cx + 30, 140);
+        ctx.lineTo(cx + 18, cy + bobY + 25);
+        ctx.lineTo(cx - 18, cy + bobY + 25);
         ctx.closePath();
         ctx.fill();
+
+        // Dual Intersecting Holographic Data Rings
+        ctx.lineWidth = 1.5;
+        // Ring 1
+        ctx.save();
+        ctx.translate(cx, cy + bobY);
+        ctx.rotate(animTick * 0.03);
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.6)';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 42, 16, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+
+        // Ring 2 (tilted counter-rotating)
+        ctx.save();
+        ctx.translate(cx, cy + bobY);
+        ctx.rotate(-animTick * 0.025 + Math.PI / 4);
+        ctx.strokeStyle = 'rgba(0, 200, 255, 0.5)';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 40, 15, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+
+        // High-Tech Data Cartridge
+        const cartW = 44;
+        const cartH = 58;
+        const cartX = cx - cartW / 2;
+        const cartY = cy + bobY - cartH / 2;
+
+        ctx.fillStyle = '#011c22';
+        ctx.fillRect(cartX, cartY, cartW, cartH);
+        ctx.strokeStyle = '#00ffff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(cartX, cartY, cartW, cartH);
+
+        // Gold connector pins
+        ctx.fillStyle = '#ffd700';
+        for (let p = 0; p < 5; p++) {
+          ctx.fillRect(cartX + 6 + p * 7, cartY + cartH - 4, 4, 4);
+        }
+
+        // Circuit tracks on cartridge
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cartX + 8, cartY + 12); ctx.lineTo(cartX + 22, cartY + 12); ctx.lineTo(cartX + 22, cartY + 24);
+        ctx.moveTo(cartX + cartW - 8, cartY + 18); ctx.lineTo(cartX + 28, cartY + 18); ctx.lineTo(cartX + 28, cartY + 28);
+        ctx.stroke();
+
+        // Central Microchip
+        ctx.fillStyle = '#004455';
+        ctx.fillRect(cx - 10, cy + bobY - 8, 20, 16);
+        ctx.strokeStyle = '#00ffcc';
+        ctx.strokeRect(cx - 10, cy + bobY - 8, 20, 16);
+
+        // Traveling Specular Sheen Stripe
+        const sheenOff = (animTick * 2) % (cartH + 30);
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(cartX, cartY, cartW, cartH);
+        ctx.clip();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(cartX - 10, cartY + sheenOff - 10);
+        ctx.lineTo(cartX + cartW + 10, cartY + sheenOff + 10);
+        ctx.stroke();
+        ctx.restore();
+
+        // Label
+        ctx.fillStyle = '#00ffff';
+        ctx.font = 'bold 8px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`SEC-DAT`, cx, cartY + cartH - 8);
+
+      } else {
+        // --- PLAYER: CYBERDECK CONSOLE ---
+        const bobY = Math.sin(animTick * 0.04) * 3.5;
+
+        // Holographic Pedestal Ring
+        ctx.save();
+        ctx.translate(cx, cy + 42 + bobY * 0.4);
+        ctx.strokeStyle = 'rgba(0, 255, 100, 0.35)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 52, 14, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Rotating radar beacon blip on pedestal
+        const pedAng = animTick * 0.05;
+        const bx = Math.cos(pedAng) * 52;
+        const by = Math.sin(pedAng) * 14;
+        ctx.fillStyle = '#00ffaa';
+        ctx.beginPath();
+        ctx.arc(bx, by, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Cyberdeck Keyboard Base (Wedge / Trapezoid)
+        const baseY = cy + 12 + bobY;
+        ctx.fillStyle = '#02240b';
+        ctx.strokeStyle = '#00ff66';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cx - 40, baseY);
+        ctx.lineTo(cx + 40, baseY);
+        ctx.lineTo(cx + 50, baseY + 26);
+        ctx.lineTo(cx - 50, baseY + 26);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Keyboard Key Grid Lines
+        ctx.strokeStyle = 'rgba(0, 255, 100, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cx - 36, baseY + 8); ctx.lineTo(cx + 36, baseY + 8);
+        ctx.moveTo(cx - 42, baseY + 16); ctx.lineTo(cx + 42, baseY + 16);
+        ctx.stroke();
+
+        // 4 Diagnostic Front Edge Status LEDs
+        const ledColors = ['#00ff66', '#ffff00', '#00ffff', '#ff00ff'];
+        for (let l = 0; l < 4; l++) {
+          const lOn = ((Math.floor(animTick / 8) + l) % 4) === 0;
+          ctx.fillStyle = lOn ? ledColors[l] : 'rgba(0, 50, 20, 0.6)';
+          ctx.beginPath();
+          ctx.arc(cx - 30 + l * 20, baseY + 22, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Angled Cyberdeck Screen Display
+        const scrW = 68;
+        const scrH = 38;
+        const scrX = cx - scrW / 2;
+        const scrY = baseY - scrH + 2;
+
+        ctx.fillStyle = '#001405';
+        ctx.fillRect(scrX, scrY, scrW, scrH);
+        ctx.strokeStyle = '#00ff66';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(scrX, scrY, scrW, scrH);
+
+        // Animated Oscilloscope / Neural Waveform on Screen
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(scrX + 2, scrY + 2, scrW - 4, scrH - 4);
+        ctx.clip();
+
+        // Subtle screen grid
+        ctx.strokeStyle = 'rgba(0, 255, 100, 0.15)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(scrX, scrY + scrH / 2); ctx.lineTo(scrX + scrW, scrY + scrH / 2);
+        ctx.moveTo(cx, scrY); ctx.lineTo(cx, scrY + scrH);
+        ctx.stroke();
+
+        // Green Oscilloscope Sine Wave
+        ctx.strokeStyle = '#00ff88';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        for (let sx = 0; sx < scrW - 4; sx += 2) {
+          const waveY = (scrY + scrH / 2) + Math.sin((sx + animTick * 4) * 0.2) * 8;
+          if (sx === 0) ctx.moveTo(scrX + 2 + sx, waveY);
+          else ctx.lineTo(scrX + 2 + sx, waveY);
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        // Cyber Antenna / Neural Interface Jack
+        const antX = cx - 36;
+        const antY = scrY + 6;
+        ctx.strokeStyle = '#00ff66';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(antX, antY + 8);
+        ctx.lineTo(antX - 8, antY - 8);
+        ctx.stroke();
+        ctx.fillStyle = '#00ffaa';
+        ctx.beginPath();
+        ctx.arc(antX - 8, antY - 8, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Radiating Concentric Transmission Signal Arcs
+        const sigR = (animTick * 1.5) % 24;
+        const sigAlpha = 1.0 - (sigR / 24);
+        ctx.strokeStyle = `rgba(0, 255, 170, ${sigAlpha})`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(antX - 8, antY - 8, sigR, -Math.PI * 0.75, 0.25);
         ctx.stroke();
       }
+
+      // 3. Multi-Layered Particle System
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.type === 'debris') {
+          p.vy += 0.12; // gravity
+          p.rot += p.vrot;
+        } else if (p.type === 'spark') {
+          p.vx *= 0.93;
+          p.vy *= 0.93;
+        }
+        p.life -= p.decay;
+
+        if (p.life <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.life);
+
+        if (p.type === 'spark') {
+          ctx.strokeStyle = p.color;
+          ctx.lineWidth = p.size;
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p.x - p.vx * 2, p.y - p.vy * 2);
+          ctx.stroke();
+        } else if (p.type === 'bit') {
+          ctx.fillStyle = p.color;
+          ctx.font = 'bold 9px monospace';
+          ctx.fillText(p.char, p.x, p.y);
+        } else if (p.type === 'debris') {
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        } else if (p.type === 'star') {
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = p.color;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(p.x - p.size * 2, p.y); ctx.lineTo(p.x + p.size * 2, p.y);
+          ctx.moveTo(p.x, p.y - p.size * 2); ctx.lineTo(p.x, p.y + p.size * 2);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }
+
+    function renderLoop() {
+      animTick++;
+      spawnAmbient();
+
+      // Procedural Screen Shake
+      if (shakeAmount > 0) {
+        const sx = (Math.random() - 0.5) * shakeAmount * 2;
+        const sy = (Math.random() - 0.5) * shakeAmount * 2;
+        terminalDiv.style.transform = `translate(${sx}px, ${sy}px)`;
+        shakeAmount = Math.max(0, shakeAmount * 0.88 - 0.05);
+      } else {
+        terminalDiv.style.transform = '';
+      }
+
+      drawVisuals();
+      requestAnimationFrame(renderLoop);
     }
 
     function updatePrompt() {
@@ -281,7 +738,6 @@
       } else {
         promptSpan.textContent = `root@cyberdeck:~# `;
       }
-      drawVisuals();
     }
 
     function printLine(text) {
@@ -401,6 +857,8 @@
           if (tool_cloak > 0) {
             tool_cloak--;
             ice_frozen_ticks += 2;
+            spawnBurst(90, 80, 25, 'star', '#00e5ff');
+            spawnBurst(90, 80, 20, 'spark', '#00ffff');
             printLine(`[CLOAK] Activated. ${tool_cloak} remaining. ICE blinded for 2 cycles.`);
           } else {
             printLine(`[CLOAK] Out of charges.`);
@@ -411,6 +869,7 @@
         if (guess === 'slow') {
           if (tool_slow > 0) {
             tool_slow--;
+            spawnBurst(90, 80, 25, 'spark', '#ffff00');
             printLine(`[SLOW] Activated. ${tool_slow} remaining. Trace speed halved.`);
             if (ice_interval) clearInterval(ice_interval);
             let current_interval = 3000 - (player_heat * 15);
@@ -456,6 +915,9 @@
         
         if (exact === 4) {
           playAccessGranted();
+          shakeAmount = 6;
+          spawnBurst(90, 80, 45, 'star', '#00ffcc');
+          spawnBurst(90, 80, 30, 'spark', '#ffff33');
           printLine(`ACCESS GRANTED. Connected to node [${hacking_node}].`);
           connected_node = hacking_node;
           hacking_node = null;
@@ -463,11 +925,16 @@
         } else {
           hacking_attempts--;
           playTone(300, 'square', 0.1, 0.1);
+          shakeAmount = 4;
+          spawnBurst(90, 80, 15, 'spark', '#ffaa00');
           printLine(`Result: ${exact} EXACT, ${partial} PARTIAL`);
           if (hacking_attempts > 0) {
             printLine(`Attempts remaining: ${hacking_attempts}`);
           } else {
             playAccessDenied();
+            shakeAmount = 14;
+            spawnBurst(90, 80, 40, 'spark', '#ff2222');
+            spawnBurst(90, 80, 20, 'debris', '#aa0000');
             printLine("ACCESS DENIED. TRACE DETECTED. CONNECTION TERMINATED.");
             player_heat += 20;
             if (player_heat > 100) player_heat = 100;
@@ -514,6 +981,8 @@
              if (file.name !== "empty" && fname === file.name) {
                printLine(`Downloading ${fname}...`);
                player_credits += file.value;
+               spawnBurst(90, 80, 35, 'bit', '#00ffff');
+               spawnBurst(90, 80, 20, 'star', '#ffffff');
                printLine(`Download complete. Data value: ${file.value} credits.`);
                if (active_mission && active_mission.file === file.name && active_mission.node === connected_node) {
                  printLine(`CONTRACT COMPLETE! Reward transferred.`);
@@ -723,6 +1192,7 @@
       if (e.key !== 'Enter') {
         playKeyClack();
       } else {
+        spawnBurst(90, 80, 8, 'spark', '#00ff66');
         processCommand(cmdInput.value);
         cmdInput.value = '';
       }
@@ -733,7 +1203,7 @@
     printLine("Loading modules... OK");
     printLine("Initializing memory... OK");
     printLine("Type 'help' for a list of commands.");
-    drawVisuals();
+    requestAnimationFrame(renderLoop);
   </script>
 </body>
 </html>
