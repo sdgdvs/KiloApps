@@ -194,29 +194,34 @@ typedef struct {
     int str, agi, inte;
 } Survivor;
 
-#define MAX_EXPEDITIONS 3
+#define MAX_EXPEDITIONS 5
 typedef struct {
     char id[16];
     char name[40];
     char desc[90];
     int duration;
-    char risk[24];
+    char risk[32];
+    int riskLevel;
     char assignedScout[16]; // id or empty
     int daysRemaining;
     int potentialFood;
     int potentialScrap;
+    int potentialMeds;
+    char blueprintId[16];
+    char blueprintReward[32];
+    int hasStimpack;
 } Expedition;
 
 #define MAX_LOG_ENTRIES 60
 typedef struct {
-    char text[128];
+    char text[160];
     int type; // 0: info, 1: warn, 2: crit, 3: cycle, 4: scout
     int day;
     int phase;
 } LogEntry;
 
 // Construction Blueprints
-#define MAX_BLUEPRINTS 6
+#define MAX_BLUEPRINTS 10
 typedef struct {
     char id[16];
     char name[32];
@@ -233,6 +238,8 @@ typedef struct {
     int defenseBoost;
     char benefit[48];
     int built;
+    int locked;
+    char discoverSource[32];
 } RoomBlueprint;
 
 // Candidates for Recruitment
@@ -258,6 +265,7 @@ typedef struct {
     int powerGen;
     int powerLoad;
     float scrap;
+    int meds;
     float morale;
     int defense;
     float exteriorRads;
@@ -365,6 +373,8 @@ enum {
     BTN_ADMIT_CANDIDATE,
     BTN_DISMISS_CANDIDATE,
     BTN_DISPATCH_SCOUT,
+    BTN_EXP_STIM_TOGGLE,
+    BTN_TREAT_SURV,
     BTN_POLICY_FOOD,
     BTN_POLICY_WATER,
     BTN_POLICY_POWER,
@@ -641,21 +651,94 @@ static void ProcessNewDay() {
                         break;
                     }
                 }
-                int fFound = (int)(exp->potentialFood * (0.8f + (rand() % 40) / 100.0f));
-                int sFound = (int)(exp->potentialScrap * (0.8f + (rand() % 40) / 100.0f));
+                int agi = scout ? scout->agi : 5;
+                int str = scout ? scout->str : 5;
+                int inte = scout ? scout->inte : 5;
+
+                float fMult = (0.8f + (rand() % 40) / 100.0f) * (1.0f + (agi - 5) * 0.05f);
+                float sMult = (0.8f + (rand() % 40) / 100.0f) * (1.0f + (inte - 5) * 0.08f);
+                float mMult = (0.7f + (rand() % 60) / 100.0f) * (1.0f + (agi - 5) * 0.05f);
+
+                int fFound = (int)(exp->potentialFood * fMult);
+                int sFound = (int)(exp->potentialScrap * sMult);
+                int mFound = (int)(exp->potentialMeds * mMult);
+                if (mFound < 1) mFound = 1;
+
                 g_state.food += fFound;
                 g_state.scrap += sFound;
-                if (scout) {
-                    strcpy(scout->job, "unassigned");
-                    scout->morale += 10;
-                    if (scout->morale > 100) scout->morale = 100;
+                g_state.meds += mFound;
+
+                // Hazard damage
+                int baseDmg = (exp->riskLevel == 4) ? (30 + rand() % 25) : ((exp->riskLevel == 3) ? (20 + rand() % 20) : ((exp->riskLevel == 2) ? (12 + rand() % 15) : (5 + rand() % 10)));
+                int dmg = baseDmg - str * 2 - (int)(agi * 1.5f);
+                if (dmg < 0) dmg = 0;
+                int stimUsed = 0;
+                if (exp->hasStimpack && dmg > 10) {
+                    dmg = (int)(dmg * 0.4f);
+                    stimUsed = 1;
                 }
-                char buf[128];
-                sprintf(buf, "%s returned from %s! Salvaged: +%d Food, +%d Scrap.", scout ? scout->name : "Scout", exp->name, fFound, sFound);
-                AddLog(buf, 4);
+
+                if (scout) {
+                    scout->health -= dmg;
+                    if (scout->health < 15) scout->health = 15;
+                    strcpy(scout->job, "unassigned");
+                    scout->morale += (dmg > 25) ? -10 : 10;
+                    if (scout->morale > 100) scout->morale = 100;
+                    if (scout->morale < 20) scout->morale = 20;
+                }
+
+                // Blueprint Decryption
+                char bpMsg[64] = "";
+                if (strlen(exp->blueprintId) > 0) {
+                    for (int b = 0; b < g_state.numBlueprints; b++) {
+                        if (strcmp(g_state.blueprints[b].id, exp->blueprintId) == 0 && g_state.blueprints[b].locked) {
+                            int roll = rand() % 100;
+                            int chance = 35 + inte * 7;
+                            if (roll <= chance || exp->riskLevel >= 4) {
+                                g_state.blueprints[b].locked = 0;
+                                sprintf(bpMsg, " * BLUEPRINT: [%s] unlocked!", g_state.blueprints[b].name);
+                            }
+                            break;
+                        }
+                    }
+                }
+
                 exp->assignedScout[0] = '\0';
-                PlaySfx(4);
+                exp->hasStimpack = 0;
+
+                char buf[160];
+                sprintf(buf, "%s returned from %s! Salvaged: +%d Food, +%d Scrap, +%d Meds. [-%d HP]%s%s", scout ? scout->name : "Scout", exp->name, fFound, sFound, mFound, dmg, stimUsed ? " (Stimpack stabilized)" : "", bpMsg);
+                AddLog(buf, strlen(bpMsg) > 0 ? 3 : 4);
+                PlaySfx(strlen(bpMsg) > 0 ? 2 : 4);
             }
+        }
+    }
+
+    // Medical triage in Infirmary
+    int hasDoctor = 0;
+    for (int s = 0; s < g_state.numSurvivors; s++) {
+        if (strcmp(g_state.survivors[s].job, "infirmary") == 0) { hasDoctor = 1; break; }
+    }
+    int hasSurg = 0;
+    for (int b = 0; b < g_state.numBlueprints; b++) {
+        if (strcmp(g_state.blueprints[b].id, "bp_medsurge") == 0 && g_state.blueprints[b].built) { hasSurg = 1; break; }
+    }
+    if (hasDoctor || hasSurg) {
+        int woundedCount = 0;
+        for (int s = 0; s < g_state.numSurvivors; s++) {
+            if (g_state.survivors[s].health < 90) woundedCount++;
+        }
+        if (woundedCount > 0 && (g_state.meds > 0 || hasSurg)) {
+            if (!hasSurg && g_state.meds > 0) g_state.meds--;
+            for (int s = 0; s < g_state.numSurvivors; s++) {
+                if (g_state.survivors[s].health < 90) {
+                    g_state.survivors[s].health += (hasSurg ? 25 : 15);
+                    if (g_state.survivors[s].health > 100) g_state.survivors[s].health = 100;
+                }
+            }
+            char medBuf[128];
+            sprintf(medBuf, "MED-LAB: Triage treatment administered to %d injured dweller(s).", woundedCount);
+            AddLog(medBuf, 0);
         }
     }
 
@@ -697,6 +780,7 @@ static void InitGameState() {
     g_state.powerGen = 22;
     g_state.powerLoad = 16;
     g_state.scrap = 55.0f;
+    g_state.meds = 5;
     g_state.morale = 85.0f;
     g_state.defense = 15;
     g_state.exteriorRads = 4.2f;
@@ -781,9 +865,9 @@ static void InitGameState() {
     g_state.facilities[6].scrapProd = 4;
     g_state.facilities[6].powerPriority = 4;
 
-    // 6 Construction Blueprints & Sub-Tab
+    // 10 Construction Blueprints & Sub-Tab
     g_state.facilitySubTab = 0;
-    g_state.numBlueprints = 6;
+    g_state.numBlueprints = 10;
 
     strcpy(g_state.blueprints[0].id, "gen_sub");
     strcpy(g_state.blueprints[0].name, "BIO-TURBINE SUB-STATION");
@@ -798,6 +882,7 @@ static void InitGameState() {
     g_state.blueprints[0].powerPriority = 0;
     strcpy(g_state.blueprints[0].benefit, "+18 kW Base Power Generation");
     g_state.blueprints[0].built = 0;
+    g_state.blueprints[0].locked = 0;
 
     strcpy(g_state.blueprints[1].id, "water_deep");
     strcpy(g_state.blueprints[1].name, "DEEP WELL PURIFIER");
@@ -812,6 +897,7 @@ static void InitGameState() {
     g_state.blueprints[1].powerPriority = 2;
     strcpy(g_state.blueprints[1].benefit, "+7 Water/worker (Draw: -4 kW)");
     g_state.blueprints[1].built = 0;
+    g_state.blueprints[1].locked = 0;
 
     strcpy(g_state.blueprints[2].id, "farm_aero");
     strcpy(g_state.blueprints[2].name, "AEROPONIC GREEN BAY");
@@ -826,6 +912,7 @@ static void InitGameState() {
     g_state.blueprints[2].powerPriority = 2;
     strcpy(g_state.blueprints[2].benefit, "+7 Food/worker (Draw: -4 kW)");
     g_state.blueprints[2].built = 0;
+    g_state.blueprints[2].locked = 0;
 
     strcpy(g_state.blueprints[3].id, "quarters_ext");
     strcpy(g_state.blueprints[3].name, "BARRACKS EXPANSION");
@@ -841,6 +928,7 @@ static void InitGameState() {
     g_state.blueprints[3].popBoost = 6;
     strcpy(g_state.blueprints[3].benefit, "+6 Vault Citizen Capacity");
     g_state.blueprints[3].built = 0;
+    g_state.blueprints[3].locked = 0;
 
     strcpy(g_state.blueprints[4].id, "security");
     strcpy(g_state.blueprints[4].name, "SECURITY TURRET BASTION");
@@ -856,6 +944,7 @@ static void InitGameState() {
     g_state.blueprints[4].defenseBoost = 15;
     strcpy(g_state.blueprints[4].benefit, "+15 Vault Defense Rating");
     g_state.blueprints[4].built = 0;
+    g_state.blueprints[4].locked = 0;
 
     strcpy(g_state.blueprints[5].id, "smelter");
     strcpy(g_state.blueprints[5].name, "SCRAP SMELTER CRUSHER");
@@ -870,6 +959,73 @@ static void InitGameState() {
     g_state.blueprints[5].powerPriority = 4;
     strcpy(g_state.blueprints[5].benefit, "+5 Tech Scrap/worker (-3 kW)");
     g_state.blueprints[5].built = 0;
+    g_state.blueprints[5].locked = 0;
+
+    // Discoverable Blueprints
+    strcpy(g_state.blueprints[6].id, "bp_fusion");
+    strcpy(g_state.blueprints[6].name, "FUSION MICRO-REACTOR");
+    strcpy(g_state.blueprints[6].desc, "High-density atomic cell recovered from Substation.");
+    g_state.blueprints[6].cost = 65;
+    g_state.blueprints[6].powerProd = 35;
+    g_state.blueprints[6].powerCost = 0;
+    g_state.blueprints[6].foodProd = 0;
+    g_state.blueprints[6].waterProd = 0;
+    g_state.blueprints[6].scrapProd = 0;
+    g_state.blueprints[6].maxWorkers = 2;
+    g_state.blueprints[6].powerPriority = 0;
+    strcpy(g_state.blueprints[6].benefit, "+35 kW Nuclear Power");
+    g_state.blueprints[6].built = 0;
+    g_state.blueprints[6].locked = 1;
+    strcpy(g_state.blueprints[6].discoverSource, "Substation Ruins");
+
+    strcpy(g_state.blueprints[7].id, "bp_medsurge");
+    strcpy(g_state.blueprints[7].name, "AUTOMATED SURGERY WING");
+    strcpy(g_state.blueprints[7].desc, "Robotic surgical theater & reconstruction pods.");
+    g_state.blueprints[7].cost = 55;
+    g_state.blueprints[7].powerProd = 0;
+    g_state.blueprints[7].foodProd = 0;
+    g_state.blueprints[7].waterProd = 0;
+    g_state.blueprints[7].scrapProd = 0;
+    g_state.blueprints[7].powerCost = 4;
+    g_state.blueprints[7].maxWorkers = 1;
+    g_state.blueprints[7].powerPriority = 1;
+    strcpy(g_state.blueprints[7].benefit, "+Auto-heals Wounded (+25 HP/d)");
+    g_state.blueprints[7].built = 0;
+    g_state.blueprints[7].locked = 1;
+    strcpy(g_state.blueprints[7].discoverSource, "Hospital Complex");
+
+    strcpy(g_state.blueprints[8].id, "bp_radshield");
+    strcpy(g_state.blueprints[8].name, "RAD-SHIELD AIRLOCK GATE");
+    strcpy(g_state.blueprints[8].desc, "Electromagnetic shielding plates from Military Armory.");
+    g_state.blueprints[8].cost = 60;
+    g_state.blueprints[8].powerProd = 0;
+    g_state.blueprints[8].foodProd = 0;
+    g_state.blueprints[8].waterProd = 0;
+    g_state.blueprints[8].scrapProd = 0;
+    g_state.blueprints[8].powerCost = 3;
+    g_state.blueprints[8].maxWorkers = 1;
+    g_state.blueprints[8].powerPriority = 1;
+    g_state.blueprints[8].defenseBoost = 25;
+    strcpy(g_state.blueprints[8].benefit, "+25 Defense & Rad Protection");
+    g_state.blueprints[8].built = 0;
+    g_state.blueprints[8].locked = 1;
+    strcpy(g_state.blueprints[8].discoverSource, "Military Armory");
+
+    strcpy(g_state.blueprints[9].id, "bp_genevault");
+    strcpy(g_state.blueprints[9].name, "HYDROPONIC GENE-VAULT");
+    strcpy(g_state.blueprints[9].desc, "Irradiated hybrid seed incubator from Vault 811.");
+    g_state.blueprints[9].cost = 60;
+    g_state.blueprints[9].powerProd = 0;
+    g_state.blueprints[9].foodProd = 12;
+    g_state.blueprints[9].waterProd = 0;
+    g_state.blueprints[9].scrapProd = 0;
+    g_state.blueprints[9].powerCost = 5;
+    g_state.blueprints[9].maxWorkers = 2;
+    g_state.blueprints[9].powerPriority = 2;
+    strcpy(g_state.blueprints[9].benefit, "+12 Food/worker (Super-Crops)");
+    g_state.blueprints[9].built = 0;
+    g_state.blueprints[9].locked = 1;
+    strcpy(g_state.blueprints[9].discoverSource, "Vault 811 Archive");
 
     // Survivors
     g_state.numSurvivors = 5;
@@ -919,34 +1075,77 @@ static void InitGameState() {
     g_state.candidates[1].agi = 8;
     g_state.candidates[1].inte = 6;
 
-    // Expeditions
-    g_state.numExpeditions = 3;
+    // Expeditions (5 Ruins)
+    g_state.numExpeditions = 5;
     strcpy(g_state.expeditions[0].id, "exp1");
     strcpy(g_state.expeditions[0].name, "Old Supermarket Ruins");
-    strcpy(g_state.expeditions[0].desc, "Warehouse 4km north. High food caches.");
+    strcpy(g_state.expeditions[0].desc, "Warehouse 4km north. Food caches & basic supplies.");
     g_state.expeditions[0].duration = 1;
     strcpy(g_state.expeditions[0].risk, "Low Risk");
+    g_state.expeditions[0].riskLevel = 1;
     g_state.expeditions[0].assignedScout[0] = '\0';
-    g_state.expeditions[0].potentialFood = 15;
-    g_state.expeditions[0].potentialScrap = 10;
+    g_state.expeditions[0].potentialFood = 18;
+    g_state.expeditions[0].potentialScrap = 12;
+    g_state.expeditions[0].potentialMeds = 2;
+    g_state.expeditions[0].blueprintId[0] = '\0';
+    g_state.expeditions[0].blueprintReward[0] = '\0';
+    g_state.expeditions[0].hasStimpack = 0;
 
     strcpy(g_state.expeditions[1].id, "exp2");
     strcpy(g_state.expeditions[1].name, "Derelict Power Substation");
-    strcpy(g_state.expeditions[1].desc, "Transformer yard with capacitors and copper wiring.");
+    strcpy(g_state.expeditions[1].desc, "Transformer yard with capacitors & reactor schematics.");
     g_state.expeditions[1].duration = 2;
     strcpy(g_state.expeditions[1].risk, "Moderate Risk");
+    g_state.expeditions[1].riskLevel = 2;
     g_state.expeditions[1].assignedScout[0] = '\0';
-    g_state.expeditions[1].potentialFood = 5;
-    g_state.expeditions[1].potentialScrap = 28;
+    g_state.expeditions[1].potentialFood = 6;
+    g_state.expeditions[1].potentialScrap = 32;
+    g_state.expeditions[1].potentialMeds = 2;
+    strcpy(g_state.expeditions[1].blueprintId, "bp_fusion");
+    strcpy(g_state.expeditions[1].blueprintReward, "Fusion Micro-Reactor");
+    g_state.expeditions[1].hasStimpack = 0;
 
     strcpy(g_state.expeditions[2].id, "exp3");
-    strcpy(g_state.expeditions[2].name, "Military Convoy Wreckage");
-    strcpy(g_state.expeditions[2].desc, "Armored trucks along highway 80. Weaponry & parts.");
+    strcpy(g_state.expeditions[2].name, "County Hospital Complex");
+    strcpy(g_state.expeditions[2].desc, "Surgical wing. Pharmaceuticals & surgery blueprints.");
     g_state.expeditions[2].duration = 2;
-    strcpy(g_state.expeditions[2].risk, "High Hazard");
+    strcpy(g_state.expeditions[2].risk, "Hazardous (Toxic)");
+    g_state.expeditions[2].riskLevel = 2;
     g_state.expeditions[2].assignedScout[0] = '\0';
-    g_state.expeditions[2].potentialFood = 12;
-    g_state.expeditions[2].potentialScrap = 40;
+    g_state.expeditions[2].potentialFood = 8;
+    g_state.expeditions[2].potentialScrap = 20;
+    g_state.expeditions[2].potentialMeds = 7;
+    strcpy(g_state.expeditions[2].blueprintId, "bp_medsurge");
+    strcpy(g_state.expeditions[2].blueprintReward, "Automated Surgery Wing");
+    g_state.expeditions[2].hasStimpack = 0;
+
+    strcpy(g_state.expeditions[3].id, "exp4");
+    strcpy(g_state.expeditions[3].name, "Military Armory Wreckage");
+    strcpy(g_state.expeditions[3].desc, "Highway 80 motor pool. Weaponry, alloy & blast armor.");
+    g_state.expeditions[3].duration = 2;
+    strcpy(g_state.expeditions[3].risk, "High Hazard (Mines)");
+    g_state.expeditions[3].riskLevel = 3;
+    g_state.expeditions[3].assignedScout[0] = '\0';
+    g_state.expeditions[3].potentialFood = 10;
+    g_state.expeditions[3].potentialScrap = 45;
+    g_state.expeditions[3].potentialMeds = 3;
+    strcpy(g_state.expeditions[3].blueprintId, "bp_radshield");
+    strcpy(g_state.expeditions[3].blueprintReward, "Rad-Shield Airlock Gate");
+    g_state.expeditions[3].hasStimpack = 0;
+
+    strcpy(g_state.expeditions[4].id, "exp5");
+    strcpy(g_state.expeditions[4].name, "Vault 811 Tech Archive");
+    strcpy(g_state.expeditions[4].desc, "Buried test vault. Experimental gene-vault schematics.");
+    g_state.expeditions[4].duration = 3;
+    strcpy(g_state.expeditions[4].risk, "Extreme Peril");
+    g_state.expeditions[4].riskLevel = 4;
+    g_state.expeditions[4].assignedScout[0] = '\0';
+    g_state.expeditions[4].potentialFood = 22;
+    g_state.expeditions[4].potentialScrap = 75;
+    g_state.expeditions[4].potentialMeds = 8;
+    strcpy(g_state.expeditions[4].blueprintId, "bp_genevault");
+    strcpy(g_state.expeditions[4].blueprintReward, "Hydroponic Gene-Vault");
+    g_state.expeditions[4].hasStimpack = 0;
 
     g_state.logCount = 0;
     AddLog("Vault 704 Overseer System initialized. All security bulkheads sealed.", 3);
@@ -1032,9 +1231,9 @@ static void DrawHUD(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int startY) {
     g_state.powerGen = pGen;
     g_state.powerLoad = pLoad;
 
-    int cardW = 138;
+    int cardW = 120;
     int cardH = 58;
-    int spacing = 6;
+    int spacing = 5;
     int curX = 10;
 
     int idleCount = GetUnassignedCount();
@@ -1071,7 +1270,7 @@ static void DrawHUD(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int startY) {
     DrawStyledBox(hdc, curX, startY, cardW, cardH, COL_PANEL_BG, COL_BORDER);
     SelectObject(hdc, hFontSmall);
     SetTextColor(hdc, COL_TEXT_DIM);
-    TextOutA(hdc, curX + 6, startY + 4, "FOOD RATIONS", 12);
+    TextOutA(hdc, curX + 6, startY + 4, "FOOD", 4);
     int daysFood = (fNeed > 0.0f) ? (int)(g_state.food / fNeed) : 99;
     char fDaysBuf[16];
     sprintf(fDaysBuf, "%dd left", daysFood);
@@ -1097,7 +1296,7 @@ static void DrawHUD(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int startY) {
     DrawStyledBox(hdc, curX, startY, cardW, cardH, COL_PANEL_BG, COL_BORDER);
     SelectObject(hdc, hFontSmall);
     SetTextColor(hdc, COL_TEXT_DIM);
-    TextOutA(hdc, curX + 6, startY + 4, "WATER PURITY", 12);
+    TextOutA(hdc, curX + 6, startY + 4, "WATER", 5);
     int daysWater = (wNeed > 0.0f) ? (int)(g_state.water / wNeed) : 99;
     char wDaysBuf[16];
     sprintf(wDaysBuf, "%dd left", daysWater);
@@ -1136,7 +1335,7 @@ static void DrawHUD(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int startY) {
     TextOutA(hdc, curX + 6, startY + 18, pwrVal, (int)strlen(pwrVal));
     SelectObject(hdc, hFontSmall);
     SetTextColor(hdc, COL_TEXT_DIM);
-    TextOutA(hdc, curX + 40, startY + 22, "kW Gen", 6);
+    TextOutA(hdc, curX + 38, startY + 22, "kW Gen", 6);
     char pSubBuf[32];
     sprintf(pSubBuf, "Demand: %d kW", pLoad);
     TextOutA(hdc, curX + 6, startY + 40, pSubBuf, (int)strlen(pSubBuf));
@@ -1146,7 +1345,7 @@ static void DrawHUD(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int startY) {
     DrawStyledBox(hdc, curX, startY, cardW, cardH, COL_PANEL_BG, COL_BORDER);
     SelectObject(hdc, hFontSmall);
     SetTextColor(hdc, COL_TEXT_DIM);
-    TextOutA(hdc, curX + 6, startY + 4, "SCRAP / TECH", 12);
+    TextOutA(hdc, curX + 6, startY + 4, "SCRAP", 5);
     TextOutA(hdc, curX + cardW - 42, startY + 4, "STOCK", 5);
     SelectObject(hdc, hFontBold);
     SetTextColor(hdc, COL_TEXT_BRIGHT);
@@ -1162,7 +1361,26 @@ static void DrawHUD(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int startY) {
     TextOutA(hdc, curX + 6, startY + 40, "Salvage parts", 13);
     curX += cardW + spacing;
 
-    // 6. Morale
+    // 6. Meds / Stims
+    DrawStyledBox(hdc, curX, startY, cardW, cardH, COL_PANEL_BG, COL_BORDER);
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, curX + 6, startY + 4, "MEDS/STIMS", 10);
+    const char* medStat = (g_state.meds <= 0) ? "NONE" : ((g_state.meds < 3) ? "LOW" : "STOCKED");
+    SetTextColor(hdc, (g_state.meds <= 0) ? COL_RED : ((g_state.meds < 3) ? COL_AMBER : COL_GREEN));
+    TextOutA(hdc, curX + cardW - 50, startY + 4, medStat, (int)strlen(medStat));
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    char medVal[16];
+    sprintf(medVal, "%d", g_state.meds);
+    TextOutA(hdc, curX + 6, startY + 18, medVal, (int)strlen(medVal));
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, curX + 30, startY + 22, "packs", 5);
+    TextOutA(hdc, curX + 6, startY + 40, "Triage & Scavenge", 17);
+    curX += cardW + spacing;
+
+    // 7. Morale
     DrawStyledBox(hdc, curX, startY, cardW, cardH, COL_PANEL_BG, COL_BORDER);
     SelectObject(hdc, hFontSmall);
     SetTextColor(hdc, COL_TEXT_DIM);
@@ -1172,7 +1390,7 @@ static void DrawHUD(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int startY) {
     else if (g_state.morale < 45.0f) mLabel = "MUTINOUS";
     else if (g_state.morale < 70.0f) mLabel = "ANXIOUS";
     SetTextColor(hdc, g_state.morale >= 80.0f ? COL_GREEN : (g_state.morale < 50.0f ? COL_RED : COL_AMBER));
-    TextOutA(hdc, curX + cardW - 60, startY + 4, mLabel, (int)strlen(mLabel));
+    TextOutA(hdc, curX + cardW - 55, startY + 4, mLabel, (int)strlen(mLabel));
     SelectObject(hdc, hFontBold);
     SetTextColor(hdc, COL_TEXT_BRIGHT);
     char morVal[16];
@@ -1183,11 +1401,11 @@ static void DrawHUD(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int startY) {
     TextOutA(hdc, curX + 6, startY + 40, "Vault stability", 15);
     curX += cardW + spacing;
 
-    // 7. Defense & Rads
+    // 8. Defense & Rads
     DrawStyledBox(hdc, curX, startY, cardW, cardH, COL_PANEL_BG, COL_BORDER);
     SelectObject(hdc, hFontSmall);
     SetTextColor(hdc, COL_TEXT_DIM);
-    TextOutA(hdc, curX + 6, startY + 4, "DEFENSE / RADS", 14);
+    TextOutA(hdc, curX + 6, startY + 4, "DEFENSE", 7);
     SelectObject(hdc, hFontBold);
     SetTextColor(hdc, COL_TEXT_BRIGHT);
     char defVal[16];
@@ -1219,7 +1437,7 @@ static void DrawFacilitiesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x
     sprintf(tab1, "ACTIVE FACILITIES (%d)", g_state.numFacilities);
     int availBp = 0;
     for (int b = 0; b < g_state.numBlueprints; b++) {
-        if (!g_state.blueprints[b].built) availBp++;
+        if (!g_state.blueprints[b].built && !g_state.blueprints[b].locked) availBp++;
     }
     sprintf(tab2, "CONSTRUCT ROOMS (%d AVAIL)", availBp);
 
@@ -1364,10 +1582,10 @@ static void DrawFacilitiesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x
             }
         }
     } else {
-        // Room Construction Blueprints (2 Columns)
+        // Room Construction Blueprints (2 Columns, 5 Rows)
         int colW = (w - 10) / 2;
-        int cardH = 92;
-        int gapY = 8;
+        int cardH = 78;
+        int gapY = 6;
 
         for (int i = 0; i < g_state.numBlueprints; i++) {
             RoomBlueprint* bp = &g_state.blueprints[i];
@@ -1381,34 +1599,43 @@ static void DrawFacilitiesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x
             // Name + Cost / Status
             SelectObject(hdc, hFontBold);
             SetTextColor(hdc, COL_TEXT_BRIGHT);
-            TextOutA(hdc, cx + 8, cy + 6, bp->name, (int)strlen(bp->name));
+            TextOutA(hdc, cx + 8, cy + 5, bp->name, (int)strlen(bp->name));
 
             SelectObject(hdc, hFontSmall);
             if (bp->built) {
                 SetTextColor(hdc, COL_GREEN);
-                TextOutA(hdc, cx + colW - 55, cy + 6, "BUILT", 5);
+                TextOutA(hdc, cx + colW - 55, cy + 5, "BUILT", 5);
+            } else if (bp->locked) {
+                SetTextColor(hdc, COL_AMBER);
+                TextOutA(hdc, cx + colW - 105, cy + 5, "LOCKED BLUEPRINT", 16);
             } else {
                 char costBuf[16];
                 sprintf(costBuf, "%d SCRAP", bp->cost);
                 SetTextColor(hdc, COL_AMBER);
-                TextOutA(hdc, cx + colW - 68, cy + 6, costBuf, (int)strlen(costBuf));
+                TextOutA(hdc, cx + colW - 68, cy + 5, costBuf, (int)strlen(costBuf));
             }
 
             // Desc
             SetTextColor(hdc, COL_TEXT_DIM);
-            TextOutA(hdc, cx + 8, cy + 25, bp->desc, (int)strlen(bp->desc));
+            TextOutA(hdc, cx + 8, cy + 22, bp->desc, (int)strlen(bp->desc));
 
             // Benefit
             SetTextColor(hdc, COL_GREEN);
             char benBuf[64];
             sprintf(benBuf, "Benefit: %s", bp->benefit);
-            TextOutA(hdc, cx + 8, cy + 45, benBuf, (int)strlen(benBuf));
+            TextOutA(hdc, cx + 8, cy + 39, benBuf, (int)strlen(benBuf));
 
             // Action button
             if (bp->built) {
                 SetTextColor(hdc, COL_GREEN);
-                RECT rcOp = { cx + colW - 180, cy + 64, cx + colW - 10, cy + 86 };
+                RECT rcOp = { cx + colW - 180, cy + 54, cx + colW - 10, cy + 74 };
                 DrawTextA(hdc, "[ OPERATIONAL & ONLINE ]", -1, &rcOp, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            } else if (bp->locked) {
+                SetTextColor(hdc, COL_AMBER);
+                RECT rcLk = { cx + colW - 220, cy + 54, cx + colW - 10, cy + 74 };
+                char lkBuf[64];
+                sprintf(lkBuf, "[ LOCKED: %s ]", bp->discoverSource);
+                DrawTextA(hdc, lkBuf, -1, &rcLk, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
             } else {
                 char bBuf[32];
                 sprintf(bBuf, "CONSTRUCT (%d SCRAP)", bp->cost);
@@ -1416,7 +1643,7 @@ static void DrawFacilitiesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x
                 COLORREF cBg = canAfford ? RGB(25, 50, 30) : COL_DARK_CARD;
                 COLORREF cTxt = canAfford ? COL_TEXT_BRIGHT : COL_TEXT_DIM;
                 COLORREF cBdr = canAfford ? COL_GREEN : COL_BORDER;
-                DrawButtonControl(hdc, hFontBold, cx + colW - 185, cy + 64, 178, 22, bBuf, cTxt, cBg, cBdr, BTN_CONSTRUCT_ROOM, i, 0);
+                DrawButtonControl(hdc, hFontBold, cx + colW - 185, cy + 54, 178, 20, bBuf, cTxt, cBg, cBdr, BTN_CONSTRUCT_ROOM, i, 0);
             }
         }
     }
@@ -1519,7 +1746,11 @@ static void DrawSurvivorsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x,
                 RECT rc = { x + w - 195, cy + 14, x + w - 5, cy + 42 };
                 DrawTextA(hdc, "ON WASTELAND EXP", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             } else {
-                DrawButtonControl(hdc, hFontSmall, x + w - 195, cy + 14, 190, 28, jobLabel, COL_TEXT_MAIN, COL_BTN_BG, COL_BORDER, BTN_SURV_JOB, i, 0);
+                int jobW = (s->health < 100 && g_state.meds > 0) ? 132 : 190;
+                DrawButtonControl(hdc, hFontSmall, x + w - 195, cy + 14, jobW, 28, jobLabel, COL_TEXT_MAIN, COL_BTN_BG, COL_BORDER, BTN_SURV_JOB, i, 0);
+                if (s->health < 100 && g_state.meds > 0) {
+                    DrawButtonControl(hdc, hFontSmall, x + w - 58, cy + 14, 54, 28, "HEAL (-1M)", COL_GREEN, RGB(25, 45, 30), COL_GREEN, BTN_TREAT_SURV, i, 0);
+                }
             }
         }
     } else {
@@ -1628,18 +1859,18 @@ static void DrawExpeditionsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int 
     for (int i = 0; i < g_state.numExpeditions; i++) {
         if (strlen(g_state.expeditions[i].assignedScout) > 0) activeCount++;
     }
-    char actBuf[32];
-    sprintf(actBuf, "Active Expeditions: %d", activeCount);
+    char actBuf[64];
+    sprintf(actBuf, "Active: %d | Meds Reserve: %d Packs", activeCount, g_state.meds);
     SelectObject(hdc, hFontSmall);
     SetTextColor(hdc, activeCount > 0 ? COL_AMBER : COL_TEXT_DIM);
-    TextOutA(hdc, x + w - 160, y, actBuf, (int)strlen(actBuf));
+    TextOutA(hdc, x + w - 240, y, actBuf, (int)strlen(actBuf));
 
     SetTextColor(hdc, COL_TEXT_DIM);
-    TextOutA(hdc, x, y + 20, "Send unassigned survivors past the airlock to scavenge for food, scrap, and tech.", 81);
+    TextOutA(hdc, x, y + 18, "Scout wasteland ruins for Scrap, Food, Meds, and Lost Room Blueprints. Higher hazards yield richer rewards.", 107);
 
-    int startY = y + 42;
-    int cardH = 100;
-    int gap = 12;
+    int startY = y + 36;
+    int cardH = 82;
+    int gap = 6;
     int unassigned = GetUnassignedCount();
 
     for (int i = 0; i < g_state.numExpeditions; i++) {
@@ -1648,41 +1879,85 @@ static void DrawExpeditionsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int 
 
         DrawStyledBox(hdc, x, cy, w, cardH, COL_DARK_CARD, COL_BORDER);
 
-        // Name
+        // Name & Hazard Badge
         SelectObject(hdc, hFontBold);
-        SetTextColor(hdc, COL_AMBER);
-        TextOutA(hdc, x + 10, cy + 10, exp->name, (int)strlen(exp->name));
+        SetTextColor(hdc, COL_TEXT_BRIGHT);
+        TextOutA(hdc, x + 8, cy + 6, exp->name, (int)strlen(exp->name));
 
-        // Risk & Duration
         SelectObject(hdc, hFontSmall);
+        COLORREF riskCol = (exp->riskLevel == 1) ? COL_GREEN : ((exp->riskLevel == 2) ? COL_AMBER : COL_RED);
+        SetTextColor(hdc, riskCol);
+        char rBuf[48];
+        sprintf(rBuf, "[ %s - TIER %d ]", exp->risk, exp->riskLevel);
+        TextOutA(hdc, x + 240, cy + 6, rBuf, (int)strlen(rBuf));
+
         SetTextColor(hdc, COL_TEXT_DIM);
-        char riskBuf[64];
-        sprintf(riskBuf, "%s | Est. Duration: %d Cycle(s)", exp->risk, exp->duration);
-        TextOutA(hdc, x + 10, cy + 30, riskBuf, (int)strlen(riskBuf));
+        char durBuf[32];
+        sprintf(durBuf, "Duration: %d Cycle(s)", exp->duration);
+        TextOutA(hdc, x + 380, cy + 6, durBuf, (int)strlen(durBuf));
 
         // Desc
         SetTextColor(hdc, COL_TEXT_MAIN);
-        TextOutA(hdc, x + 10, cy + 50, exp->desc, (int)strlen(exp->desc));
+        TextOutA(hdc, x + 8, cy + 24, exp->desc, (int)strlen(exp->desc));
 
-        // Yield
-        char yldBuf[64];
-        sprintf(yldBuf, "Potential Yield: ~%d Food, ~%d Scrap", exp->potentialFood, exp->potentialScrap);
+        // Yields & Blueprint
+        char yldBuf[80];
+        sprintf(yldBuf, "Yields: ~%d Food, ~%d Scrap, ~%d Meds", exp->potentialFood, exp->potentialScrap, exp->potentialMeds);
         SetTextColor(hdc, COL_TEXT_BRIGHT);
-        TextOutA(hdc, x + 10, cy + 70, yldBuf, (int)strlen(yldBuf));
+        TextOutA(hdc, x + 8, cy + 42, yldBuf, (int)strlen(yldBuf));
 
-        // Button / Status
+        if (strlen(exp->blueprintReward) > 0) {
+            int isUnlocked = 0;
+            for (int b = 0; b < g_state.numBlueprints; b++) {
+                if (strcmp(g_state.blueprints[b].id, exp->blueprintId) == 0 && !g_state.blueprints[b].locked) {
+                    isUnlocked = 1;
+                    break;
+                }
+            }
+            char bpBuf[64];
+            if (isUnlocked) {
+                sprintf(bpBuf, "[* BLUEPRINT DECRYPTED: %s]", exp->blueprintReward);
+                SetTextColor(hdc, COL_GREEN);
+            } else {
+                sprintf(bpBuf, "[ARCHIVE TECH: %s]", exp->blueprintReward);
+                SetTextColor(hdc, COL_AMBER);
+            }
+            TextOutA(hdc, x + 8, cy + 60, bpBuf, (int)strlen(bpBuf));
+        }
+
+        // Action / Status Controls (Right side)
         if (strlen(exp->assignedScout) > 0) {
+            Survivor* scout = NULL;
+            for (int s = 0; s < g_state.numSurvivors; s++) {
+                if (strcmp(g_state.survivors[s].id, exp->assignedScout) == 0) {
+                    scout = &g_state.survivors[s];
+                    break;
+                }
+            }
             char progBuf[48];
-            sprintf(progBuf, "IN PROGRESS (%dd left)", exp->daysRemaining);
-            DrawStyledBox(hdc, x + w - 180, cy + 34, 165, 32, COL_PANEL_BG, COL_AMBER);
+            sprintf(progBuf, "EXPLORING (%dd left)", exp->daysRemaining);
+            DrawStyledBox(hdc, x + w - 215, cy + 10, 205, 30, COL_PANEL_BG, COL_AMBER);
             SelectObject(hdc, hFontBold);
             SetTextColor(hdc, COL_AMBER);
-            RECT rc = { x + w - 180, cy + 34, x + w - 15, cy + 66 };
+            RECT rc = { x + w - 215, cy + 10, x + w - 10, cy + 40 };
             DrawTextA(hdc, progBuf, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+            SelectObject(hdc, hFontSmall);
+            SetTextColor(hdc, COL_TEXT_DIM);
+            char scBuf[64];
+            sprintf(scBuf, "Scout: %s%s", scout ? scout->name : "Scout", exp->hasStimpack ? " (+Stim)" : "");
+            TextOutA(hdc, x + w - 215, cy + 46, scBuf, (int)strlen(scBuf));
         } else {
+            // Stimpack toggle button
+            COLORREF stimBg = exp->hasStimpack ? RGB(25, 45, 30) : COL_DARK_CARD;
+            COLORREF stimTxt = exp->hasStimpack ? COL_GREEN : COL_TEXT_DIM;
+            COLORREF stimBdr = exp->hasStimpack ? COL_GREEN : COL_BORDER;
+            DrawButtonControl(hdc, hFontSmall, x + w - 220, cy + 24, 75, 28, exp->hasStimpack ? "STIM: ON" : "STIM: OFF", stimTxt, stimBg, stimBdr, BTN_EXP_STIM_TOGGLE, i, 0);
+
+            // Dispatch Button
             COLORREF btnBg = (unassigned > 0) ? RGB(25, 45, 30) : COL_DARK_CARD;
             COLORREF btnTxt = (unassigned > 0) ? COL_TEXT_BRIGHT : COL_TEXT_DIM;
-            DrawButtonControl(hdc, hFontBold, x + w - 180, cy + 34, 165, 32, "DISPATCH SCOUT", btnTxt, btnBg, unassigned > 0 ? COL_GREEN : COL_BORDER, BTN_DISPATCH_SCOUT, i, 0);
+            DrawButtonControl(hdc, hFontBold, x + w - 140, cy + 24, 130, 28, "DISPATCH SCOUT", btnTxt, btnBg, unassigned > 0 ? COL_GREEN : COL_BORDER, BTN_DISPATCH_SCOUT, i, 0);
         }
     }
 }
@@ -1839,7 +2114,14 @@ static void DrawManualView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, in
     TextOutA(hdc, x + 20, curY, "* Construct Rooms: Switch to [CONSTRUCT ROOMS] subtab to excavate new generators, wells, farms.", 95); curY += lineH + 6;
 
     SetTextColor(hdc, COL_AMBER);
-    TextOutA(hdc, x + 12, curY, "6. KEYBOARD SHORTCUTS:", 22); curY += lineH;
+    TextOutA(hdc, x + 12, curY, "6. WASTELAND EXPLORATION, MEDS & BLUEPRINT DISCOVERY:", 53); curY += lineH;
+    SetTextColor(hdc, COL_TEXT_MAIN);
+    TextOutA(hdc, x + 20, curY, "* 5 Ruins: Explore Supermarket, Substation, Hospital, Armory, and Vault 811 Tech Archive.", 88); curY += lineH;
+    TextOutA(hdc, x + 20, curY, "* Scout Attributes: STR lowers damage, AGI boosts forage yields, INT decrypts lost blueprints.", 93); curY += lineH;
+    TextOutA(hdc, x + 20, curY, "* Medical Triage: Use Meds on wounded citizens (+35 HP) or equip Stimpacks before expeditions.", 94); curY += lineH + 4;
+
+    SetTextColor(hdc, COL_AMBER);
+    TextOutA(hdc, x + 12, curY, "7. KEYBOARD SHORTCUTS:", 22); curY += lineH;
     SetTextColor(hdc, COL_TEXT_MAIN);
     TextOutA(hdc, x + 20, curY, "[SPACE] Advance Cycle | [1-5] Tabs | [T] Theme | [C] CRT | [A] Auto | [H] Help | [R] Reset", 90);
 }
@@ -2125,7 +2407,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         }
                     } else if (bId == BTN_CONSTRUCT_ROOM) {
                         RoomBlueprint* bp = &g_state.blueprints[p1];
-                        if (g_state.scrap >= bp->cost && !bp->built && g_state.numFacilities < 16) {
+                        if (g_state.scrap >= bp->cost && !bp->built && !bp->locked && g_state.numFacilities < 16) {
                             g_state.scrap -= bp->cost;
                             bp->built = 1;
                             Facility* nf = &g_state.facilities[g_state.numFacilities++];
@@ -2270,13 +2552,51 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         Expedition* exp = &g_state.expeditions[p1];
                         Survivor* scout = GetFirstUnassignedSurvivor();
                         if (scout && strlen(exp->assignedScout) == 0) {
+                            if (exp->hasStimpack) {
+                                if (g_state.meds > 0) {
+                                    g_state.meds--;
+                                } else {
+                                    exp->hasStimpack = 0;
+                                }
+                            }
                             strcpy(scout->job, "expedition");
                             strcpy(exp->assignedScout, scout->id);
                             exp->daysRemaining = exp->duration;
                             char buf[128];
-                            sprintf(buf, "Scout %s dispatched to %s.", scout->name, exp->name);
+                            sprintf(buf, "Scout %s dispatched to %s%s.", scout->name, exp->name, exp->hasStimpack ? " (Stimpack equipped)" : "");
                             AddLog(buf, 4);
                             PlaySfx(4);
+                        }
+                    } else if (bId == BTN_EXP_STIM_TOGGLE) {
+                        Expedition* exp = &g_state.expeditions[p1];
+                        if (strlen(exp->assignedScout) == 0) {
+                            if (!exp->hasStimpack) {
+                                if (g_state.meds > 0) {
+                                    exp->hasStimpack = 1;
+                                    PlaySfx(1);
+                                } else {
+                                    AddLog("No medical supplies in vault stock to equip Stimpack!", 1);
+                                    PlaySfx(3);
+                                }
+                            } else {
+                                exp->hasStimpack = 0;
+                                PlaySfx(1);
+                            }
+                        }
+                    } else if (bId == BTN_TREAT_SURV) {
+                        if (p1 >= 0 && p1 < g_state.numSurvivors && g_state.meds > 0) {
+                            Survivor* surv = &g_state.survivors[p1];
+                            if (surv->health < 100) {
+                                g_state.meds--;
+                                surv->health += 35;
+                                if (surv->health > 100) surv->health = 100;
+                                surv->morale += 10;
+                                if (surv->morale > 100) surv->morale = 100;
+                                char buf[128];
+                                sprintf(buf, "MEDICAL: Stimpack administered to %s. Health restored to %d%%.", surv->name, surv->health);
+                                AddLog(buf, 3);
+                                PlaySfx(2);
+                            }
                         }
                     } else if (bId == BTN_POLICY_FOOD) {
                         g_state.policyFood = p1;

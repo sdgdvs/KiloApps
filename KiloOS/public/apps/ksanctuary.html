@@ -931,33 +931,82 @@
         .scout-card {
             background: var(--card-bg);
             border: 1px solid var(--panel-border);
-            padding: 8px;
+            padding: 10px;
             border-radius: 2px;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
             position: relative;
+            transition: all 0.15s;
+        }
+
+        .scout-card:hover {
+            border-color: var(--border-corner);
         }
 
         .scout-card::before {
             content: '';
             position: absolute;
             top: -1px; left: -1px;
-            width: 4px; height: 4px;
-            border-top: 1px solid var(--border-corner);
-            border-left: 1px solid var(--border-corner);
+            width: 5px; height: 5px;
+            border-top: 2px solid var(--border-corner);
+            border-left: 2px solid var(--border-corner);
             pointer-events: none;
         }
 
         .scout-name {
-            font-size: 12px;
+            font-size: 13px;
             font-weight: bold;
-            color: var(--accent-amber);
+            color: var(--text-bright);
+            letter-spacing: 0.5px;
         }
 
         .scout-risk {
             font-size: 10px;
             color: var(--text-dim);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .risk-badge {
+            font-size: 9px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 2px;
+            text-transform: uppercase;
+        }
+
+        .risk-low { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.4); }
+        .risk-mod { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.4); }
+        .risk-high { background: rgba(249, 115, 22, 0.15); color: #f97316; border: 1px solid rgba(249, 115, 22, 0.4); }
+        .risk-extreme { background: rgba(239, 68, 68, 0.2); color: var(--danger-red); border: 1px solid rgba(239, 68, 68, 0.5); }
+
+        .scout-rewards {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(47, 69, 48, 0.5);
+            border-radius: 2px;
+            padding: 6px 8px;
+            font-size: 10px;
+            color: var(--text-dim);
+            line-height: 1.4;
+        }
+
+        .reward-highlight {
+            color: var(--text-bright);
+            font-weight: bold;
+        }
+
+        .blueprint-tag {
+            display: inline-block;
+            background: rgba(6, 182, 212, 0.15);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            padding: 2px 6px;
+            border-radius: 2px;
+            font-size: 9px;
+            font-weight: bold;
+            margin-top: 3px;
         }
 
         .btn-dispatch {
@@ -967,15 +1016,19 @@
             color: var(--text-bright);
             font-family: inherit;
             font-size: 11px;
-            padding: 5px;
+            padding: 6px 10px;
             cursor: pointer;
             border-radius: 2px;
             text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            transition: all 0.15s;
         }
 
         .btn-dispatch:hover:not(:disabled) {
             background: var(--btn-hover);
             box-shadow: 0 0 8px var(--crt-glow);
+            color: #fff;
         }
 
         .btn-dispatch:disabled {
@@ -1134,6 +1187,18 @@
 
         <div class="hud-card">
             <div class="hud-card-header">
+                <span>MEDS / STIMS</span>
+                <span id="hud-meds-status">TRIAGE</span>
+            </div>
+            <div class="hud-val">
+                <span id="hud-meds">5</span>
+                <span class="hud-delta delta-pos">packs</span>
+            </div>
+            <div class="hud-sub" id="hud-meds-sub">Heal & Rad-cure</div>
+        </div>
+
+        <div class="hud-card">
+            <div class="hud-card-header">
                 <span>MORALE</span>
                 <span id="hud-morale-text">CONTENT</span>
             </div>
@@ -1250,11 +1315,11 @@
             <div id="view-expeditions" class="tab-content" style="display:none;">
                 <div class="panel-title">
                     <span>Wasteland Survey & Scavenging Runs</span>
-                    <span style="color: var(--text-dim); font-size:10px;">Active Expeditions: <strong id="lbl-active-scouts" style="color:var(--accent-amber);">0</strong></span>
+                    <span style="color: var(--text-dim); font-size:10px;">Active Expeditions: <strong id="lbl-active-scouts" style="color:var(--accent-amber);">0</strong> | Medical Stock: <strong id="lbl-exp-meds" style="color:var(--accent-green);">5</strong> packs</span>
                 </div>
-                <p style="color: var(--text-dim); margin-bottom: 8px; font-size: 11px;">
-                    Send unassigned survivors out past the airlock to scavenge for food, tech scrap, and medical supplies. Expeditions take 1-2 day cycles to return.
-                </p>
+                <div style="font-size:11px; color:var(--text-dim); margin-bottom:8px; line-height:1.4;">
+                    Dispatch scouts into irradiated ruins across the wasteland to salvage food, tech scrap, medical supplies, and lost facility blueprints. Scout attributes influence outcomes: <strong>STR</strong> mitigates ruin combat wounds, <strong>AGI</strong> increases loot yields and hazard evasion, and <strong>INT</strong> unlocks technology blueprints.
+                </div>
                 <div class="scavenge-grid" id="scavenge-grid">
                     <!-- Injected by JavaScript -->
                 </div>
@@ -1393,6 +1458,11 @@
                 <p><strong>6. SURVIVOR RECRUITMENT & ATTRIBUTE ASSIGNMENT:</strong></p>
                 <p>&bull; <strong>Attribute Alignment:</strong> Matching survivor attributes to their work station boosts efficiency (up to 150%+). Agility & Strength benefit Farms; Intelligence benefits Water Purifiers, Medical, and Command; Strength & Intelligence power Generators; Strength powers Scrap Workshops and Defense Turrets.</p>
                 <p>&bull; <strong>Radio Recruitment Beacon:</strong> Switch to the <em>RADIO BEACON & AIRLOCK</em> sub-tab to pulse distress pings or broadcast specialist beacons to attract new survivors across the wasteland. Review candidates and admit them into the vault if quarters capacity allows.</p>
+                <br>
+                <p><strong>7. WASTELAND RUINS & BLUEPRINT DISCOVERY:</strong></p>
+                <p>&bull; <strong>Exploration Runs:</strong> Send unassigned citizens out past the airlock into ruins (Supermarkets, Power Substations, Hospital Wings, Military Armories, and Vault 811).</p>
+                <p>&bull; <strong>Medical Supplies (Meds):</strong> Scavenge sterile pharmaceuticals and stimpacks to heal wounded dwellers (-1 Med restores +35 HP) or equip scouts before high-hazard sorties.</p>
+                <p>&bull; <strong>Lost Blueprints:</strong> Scouts with high Intelligence can decrypt encrypted archives in ruins to recover exclusive facility blueprints (Fusion Micro-Reactor, Automated Surgery Wing, Rad-Shield Airlock Gate, Hydroponic Gene-Vault) and construct them in Engineering!</p>
             </div>
         </div>
     </div>
@@ -1405,6 +1475,19 @@
                 <button class="btn-close" onclick="closeModal('summary-modal')">&times;</button>
             </div>
             <div id="summary-body" style="font-size: 11px; line-height: 1.5; color: var(--text-main);">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scout Dispatch Modal -->
+    <div class="modal-overlay" id="scout-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title" id="scout-modal-title">DISPATCH WASTELAND EXPEDITION</div>
+                <button class="btn-close" onclick="closeModal('scout-modal')">&times;</button>
+            </div>
+            <div id="scout-modal-body" style="font-size: 11px; line-height: 1.5; color: var(--text-main);">
                 <!-- Populated dynamically -->
             </div>
         </div>
@@ -1527,6 +1610,7 @@
             morale: 85,
             defense: 15,
             exteriorRads: 4.2,
+            meds: 5,
             policies: {
                 food: 'normal',   // normal, half, starve
                 water: 'normal',  // normal, half, minimal
@@ -1648,35 +1732,82 @@
                 {
                     id: 'exp1',
                     name: 'Old Supermarket Ruins',
-                    desc: 'Supermarket warehouse 4km north. High food caches.',
+                    desc: 'Supermarket warehouse 4km north. High food caches & basic supplies.',
                     duration: 1,
                     risk: 'Low Risk',
+                    riskLevel: 1,
                     assignedScout: null,
+                    hasStimpack: false,
                     daysRemaining: 0,
-                    potentialFood: 15,
-                    potentialScrap: 10
+                    potentialFood: 18,
+                    potentialScrap: 12,
+                    potentialMeds: 2,
+                    blueprintId: null,
+                    blueprintReward: null
                 },
                 {
                     id: 'exp2',
                     name: 'Derelict Power Substation',
-                    desc: 'Transformer yard with high voltage capacitors and copper wiring.',
+                    desc: 'High voltage transformer yard. Industrial copper wiring & reactor schematics.',
                     duration: 2,
                     risk: 'Moderate Risk',
+                    riskLevel: 2,
                     assignedScout: null,
+                    hasStimpack: false,
                     daysRemaining: 0,
-                    potentialFood: 5,
-                    potentialScrap: 28
+                    potentialFood: 6,
+                    potentialScrap: 32,
+                    potentialMeds: 2,
+                    blueprintId: 'bp_fusion',
+                    blueprintReward: 'Fusion Micro-Reactor'
                 },
                 {
                     id: 'exp3',
-                    name: 'Military Convoy Wreckage',
-                    desc: 'Armored trucks abandoned along highway 80. Weaponry & medicine.',
+                    name: 'County Hospital Complex',
+                    desc: 'Ruined surgical wing. Sterile pharmaceuticals, triage beds & medical tech.',
                     duration: 2,
-                    risk: 'High Hazard',
+                    risk: 'Hazardous (Toxic)',
+                    riskLevel: 2,
                     assignedScout: null,
+                    hasStimpack: false,
                     daysRemaining: 0,
-                    potentialFood: 12,
-                    potentialScrap: 40
+                    potentialFood: 8,
+                    potentialScrap: 20,
+                    potentialMeds: 7,
+                    blueprintId: 'bp_medsurge',
+                    blueprintReward: 'Automated Surgery Wing'
+                },
+                {
+                    id: 'exp4',
+                    name: 'Military Armory Wreckage',
+                    desc: 'Armored motor pool along highway 80. Weaponry, heavy alloy & blast armor.',
+                    duration: 2,
+                    risk: 'High Hazard (Mines)',
+                    riskLevel: 3,
+                    assignedScout: null,
+                    hasStimpack: false,
+                    daysRemaining: 0,
+                    potentialFood: 10,
+                    potentialScrap: 45,
+                    potentialMeds: 3,
+                    blueprintId: 'bp_radshield',
+                    blueprintReward: 'Rad-Shield Airlock Gate'
+                },
+                {
+                    id: 'exp5',
+                    name: 'Vault 811 Tech Archive',
+                    desc: 'Buried subterranean test vault overrun by mutants. Experimental gene-vault schematics.',
+                    duration: 3,
+                    risk: 'Extreme Peril (Super-Mutants)',
+                    riskLevel: 4,
+                    assignedScout: null,
+                    hasStimpack: false,
+                    daysRemaining: 0,
+                    potentialFood: 22,
+                    potentialScrap: 75,
+                    potentialMeds: 8,
+                    blueprintId: 'bp_genevault',
+                    blueprintReward: 'Hydroponic Gene-Vault'
                 }
             ],
             facilitySubTab: 'rooms',
@@ -1694,6 +1825,7 @@
                     maxWorkers: 2,
                     powerPriority: 0,
                     built: false,
+                    locked: false,
                     benefit: '+18 kW Base Power Generation'
                 },
                 {
@@ -1709,6 +1841,7 @@
                     maxWorkers: 2,
                     powerPriority: 2,
                     built: false,
+                    locked: false,
                     benefit: '+7 Water/worker (Draw: -4 kW)'
                 },
                 {
@@ -1724,6 +1857,7 @@
                     maxWorkers: 2,
                     powerPriority: 2,
                     built: false,
+                    locked: false,
                     benefit: '+7 Food/worker (Draw: -4 kW)'
                 },
                 {
@@ -1739,6 +1873,7 @@
                     maxWorkers: 0,
                     powerPriority: 3,
                     built: false,
+                    locked: false,
                     popBoost: 6,
                     benefit: '+6 Vault Citizen Capacity'
                 },
@@ -1755,6 +1890,7 @@
                     maxWorkers: 1,
                     powerPriority: 1,
                     built: false,
+                    locked: false,
                     defenseBoost: 15,
                     benefit: '+15 Vault Defense Rating'
                 },
@@ -1771,7 +1907,78 @@
                     maxWorkers: 2,
                     powerPriority: 4,
                     built: false,
+                    locked: false,
                     benefit: '+5 Tech Scrap/worker (Draw: -3 kW)'
+                },
+                // Discoverable Expedition Blueprints (Phase 7)
+                {
+                    id: 'bp_fusion',
+                    name: 'FUSION MICRO-REACTOR',
+                    desc: 'High-density compact atomic cell discovered in Substation ruins.',
+                    cost: 65,
+                    powerProd: 35,
+                    powerCost: 0,
+                    foodProd: 0,
+                    waterProd: 0,
+                    scrapProd: 0,
+                    maxWorkers: 2,
+                    powerPriority: 0,
+                    built: false,
+                    locked: true,
+                    discoverSource: 'Derelict Power Substation',
+                    benefit: '+35 kW Nuclear Grid Power'
+                },
+                {
+                    id: 'bp_medsurge',
+                    name: 'AUTOMATED SURGERY WING',
+                    desc: 'Robotic surgical theater and bio-reconstruction vats recovered from Hospital.',
+                    cost: 55,
+                    powerProd: 0,
+                    powerCost: 4,
+                    foodProd: 0,
+                    waterProd: 0,
+                    scrapProd: 0,
+                    maxWorkers: 1,
+                    powerPriority: 1,
+                    built: false,
+                    locked: true,
+                    discoverSource: 'County Hospital Complex',
+                    benefit: '+Auto-heals Wounded Citizens (+25 HP/day)'
+                },
+                {
+                    id: 'bp_radshield',
+                    name: 'RAD-SHIELD AIRLOCK GATE',
+                    desc: 'Heavy electromagnetic shielding plates scavenged from Military Armory.',
+                    cost: 60,
+                    powerProd: 0,
+                    powerCost: 3,
+                    foodProd: 0,
+                    waterProd: 0,
+                    scrapProd: 0,
+                    maxWorkers: 1,
+                    powerPriority: 1,
+                    built: false,
+                    locked: true,
+                    defenseBoost: 25,
+                    discoverSource: 'Military Armory Wreckage',
+                    benefit: '+25 Vault Defense & Rad Protection'
+                },
+                {
+                    id: 'bp_genevault',
+                    name: 'HYDROPONIC GENE-VAULT',
+                    desc: 'Irradiated hybrid seed incubator recovered from Vault 811 test chambers.',
+                    cost: 60,
+                    powerProd: 0,
+                    powerCost: 5,
+                    foodProd: 12,
+                    waterProd: 0,
+                    scrapProd: 0,
+                    maxWorkers: 2,
+                    powerPriority: 2,
+                    built: false,
+                    locked: true,
+                    discoverSource: 'Vault 811 Tech Archive',
+                    benefit: '+12 Food/worker (Super-Crops)'
                 }
             ],
             lastSummary: null
@@ -1795,7 +2002,19 @@
                     // Basic sanity check
                     if (parsed.facilities && parsed.survivors) {
                         state = parsed;
-                        if (!state.blueprints) state.blueprints = JSON.parse(JSON.stringify(defaultState.blueprints));
+                        if (state.meds === undefined) state.meds = 5;
+                        if (!state.blueprints || state.blueprints.length < defaultState.blueprints.length) {
+                            const curBps = state.blueprints || [];
+                            defaultState.blueprints.forEach(dbp => {
+                                if (!curBps.some(b => b.id === dbp.id)) {
+                                    curBps.push(JSON.parse(JSON.stringify(dbp)));
+                                }
+                            });
+                            state.blueprints = curBps;
+                        }
+                        if (!state.expeditions || state.expeditions.length < defaultState.expeditions.length) {
+                            state.expeditions = JSON.parse(JSON.stringify(defaultState.expeditions));
+                        }
                         if (!state.facilitySubTab) state.facilitySubTab = 'rooms';
                         if (!state.survivorSubTab) state.survivorSubTab = 'roster';
                         if (!state.candidates) state.candidates = JSON.parse(JSON.stringify(defaultState.candidates));
@@ -1979,6 +2198,18 @@
             document.getElementById('hud-scrap').textContent = Math.floor(state.scrap);
             document.getElementById('hud-scrap-rate').textContent = `+${totals.scrapProd}/cyc`;
 
+            // Meds & Stimpacks
+            const medsEl = document.getElementById('hud-meds');
+            if (medsEl) medsEl.textContent = state.meds || 0;
+            const expMedsEl = document.getElementById('lbl-exp-meds');
+            if (expMedsEl) expMedsEl.textContent = state.meds || 0;
+            const medsStatEl = document.getElementById('hud-meds-status');
+            if (medsStatEl) {
+                if ((state.meds || 0) <= 0) medsStatEl.textContent = 'CRITICAL';
+                else if ((state.meds || 0) < 3) medsStatEl.textContent = 'LOW';
+                else medsStatEl.textContent = 'STOCKED';
+            }
+
             // Morale
             document.getElementById('hud-morale').textContent = `${Math.round(state.morale)}%`;
             let moraleLabel = 'CONTENT';
@@ -2113,6 +2344,8 @@
                 let btnHtml = '';
                 if (bp.built) {
                     btnHtml = `<button class="btn-upgrade" disabled style="color:var(--accent-green); font-weight:bold;">[ OPERATIONAL & ONLINE ]</button>`;
+                } else if (bp.locked) {
+                    btnHtml = `<button class="btn-upgrade" disabled style="color:var(--accent-amber); font-size:9px; border-color:var(--panel-border); background:transparent;">[ LOCKED // DISCOVER IN: ${bp.discoverSource || 'RUINS'} ]</button>`;
                 } else {
                     const canAfford = state.scrap >= bp.cost;
                     btnHtml = `<button class="btn-upgrade" onclick="constructRoom('${bp.id}')" ${!canAfford ? 'disabled' : ''} style="color:${canAfford ? 'var(--text-bright)' : 'var(--text-dim)'}; font-weight:bold; padding:5px 8px;">CONSTRUCT ROOM (${bp.cost} SCRAP)</button>`;
@@ -2121,7 +2354,7 @@
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <span style="font-size:12px; font-weight:bold; color:var(--text-bright);">${bp.name}</span>
-                        <span style="font-size:10px; color:${bp.built ? 'var(--accent-green)' : 'var(--accent-amber)'}; font-weight:bold;">${bp.built ? 'BUILT' : `${bp.cost} SCRAP`}</span>
+                        <span style="font-size:10px; color:${bp.built ? 'var(--accent-green)' : (bp.locked ? 'var(--accent-amber)' : 'var(--accent-amber)')}; font-weight:bold;">${bp.built ? 'BUILT' : (bp.locked ? 'LOCKED BLUEPRINT' : `${bp.cost} SCRAP`)}</span>
                     </div>
                     <div style="font-size:10px; color:var(--text-dim);">${bp.desc}</div>
                     <div style="font-size:10px; color:var(--text-main);"><strong>Benefit:</strong> ${bp.benefit}</div>
@@ -2137,7 +2370,7 @@
             const activeEl = document.getElementById('lbl-active-count');
             if (activeEl) activeEl.textContent = state.facilities.length;
             const availBpEl = document.getElementById('lbl-avail-bp-count');
-            if (availBpEl) availBpEl.textContent = state.blueprints.filter(b => !b.built).length;
+            if (availBpEl) availBpEl.textContent = state.blueprints.filter(b => !b.built && !b.locked).length;
         }
 
         function switchFacilitySubTab(subTab) {
@@ -2300,10 +2533,11 @@
                             <div class="meter-bar"><div class="meter-fill" style="width: ${surv.morale}%; background: var(--accent-amber);"></div></div>
                         </div>
                     </div>
-                    <div class="survivor-assign">
+                    <div class="survivor-assign" style="display:flex; flex-direction:column; gap:3px;">
                         <select class="select-assign" onchange="assignSurvivorJob('${surv.id}', this.value)">
                             ${optionsHtml}
                         </select>
+                        ${surv.health < 100 ? `<button class="btn-upgrade" onclick="treatSurvivor('${surv.id}')" ${(state.meds||0) <= 0 ? 'disabled' : ''} style="font-size:9px; padding:2px 4px; color:${(state.meds||0) > 0 ? 'var(--accent-green)' : 'var(--text-dim)'}; border-color:${(state.meds||0) > 0 ? 'var(--border-corner)' : 'var(--panel-border)'};">TREAT (-1 MED)</button>` : ''}
                     </div>
                 `;
 
@@ -2311,6 +2545,22 @@
             });
 
             renderCandidates();
+        }
+
+        function treatSurvivor(survId) {
+            if ((state.meds || 0) <= 0) {
+                logEvent('No medical supplies available in shelter reserves!', 'warn');
+                playSound('alert');
+                return;
+            }
+            const surv = state.survivors.find(s => s.id === survId);
+            if (!surv) return;
+            state.meds--;
+            surv.health = Math.min(100, surv.health + 35);
+            surv.morale = Math.min(100, surv.morale + 8);
+            logEvent(`MEDICAL: Stimpack administered to ${surv.name}. Health restored to ${surv.health}%.`, 'cycle');
+            playSound('cycle');
+            updateAll();
         }
 
         function renderCandidates() {
@@ -2501,6 +2751,7 @@
 
         function renderExpeditions() {
             const grid = document.getElementById('scavenge-grid');
+            if (!grid) return;
             grid.innerHTML = '';
             const unassigned = getUnassignedSurvivors();
 
@@ -2509,111 +2760,186 @@
                 const card = document.createElement('div');
                 card.className = 'scout-card';
 
+                let riskClass = 'risk-low';
+                if (exp.riskLevel === 2) riskClass = 'risk-mod';
+                else if (exp.riskLevel === 3) riskClass = 'risk-high';
+                else if (exp.riskLevel === 4) riskClass = 'risk-extreme';
+
+                let scoutInfoHtml = '';
                 let btnHtml = '';
+
                 if (exp.assignedScout) {
                     activeCount++;
-                    btnHtml = `<button class="btn-dispatch" disabled style="color:var(--accent-amber);">IN PROGRESS (${exp.daysRemaining}d left)</button>`;
+                    const scout = state.survivors.find(s => s.id === exp.assignedScout);
+                    const scoutName = scout ? scout.name : 'Active Scout';
+                    const scoutRole = scout ? scout.role : 'Scavenger';
+                    scoutInfoHtml = `
+                        <div style="background:rgba(0,0,0,0.35); border:1px solid var(--border-corner); padding:6px 8px; border-radius:2px; font-size:10px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="color:var(--text-bright); font-weight:bold;">Assigned Scout: ${scoutName}</span>
+                                <span style="color:var(--accent-amber); font-weight:bold;">${exp.daysRemaining} Cycle(s) Left</span>
+                            </div>
+                            <div style="font-size:9px; color:var(--text-dim); margin-top:2px;">
+                                ${scoutRole} ${scout ? `&bull; STR:${scout.str} AGI:${scout.agi} INT:${scout.int}` : ''}
+                                ${exp.hasStimpack ? ' &bull; <strong style="color:var(--accent-green);">Stimpack Equipped</strong>' : ''}
+                            </div>
+                        </div>
+                    `;
+                    btnHtml = `<button class="btn-dispatch" disabled style="color:var(--accent-amber); border-color:var(--panel-border);">EXPLORATION IN PROGRESS</button>`;
                 } else {
-                    btnHtml = `<button class="btn-dispatch" onclick="dispatchScout('${exp.id}')" ${unassigned.length === 0 ? 'disabled' : ''}>DISPATCH SCOUT</button>`;
+                    btnHtml = `<button class="btn-dispatch" onclick="openScoutModal('${exp.id}')" ${unassigned.length === 0 ? 'disabled' : ''}>
+                        ${unassigned.length === 0 ? 'NO IDLE SCOUTS' : 'SELECT & DISPATCH SCOUT'}
+                    </button>`;
+                }
+
+                let bpDisplay = '';
+                if (exp.blueprintReward) {
+                    const bp = state.blueprints ? state.blueprints.find(b => b.id === exp.blueprintId) : null;
+                    const isDiscovered = bp && !bp.locked;
+                    bpDisplay = `
+                        <div style="margin-top:2px;">
+                            <span class="blueprint-tag" style="${isDiscovered ? 'border-color:var(--accent-green); color:var(--accent-green);' : ''}">
+                                ${isDiscovered ? `&#10003; BLUEPRINT DECRYPTED: ${exp.blueprintReward}` : `LOST BLUEPRINT: ${exp.blueprintReward}`}
+                            </span>
+                        </div>
+                    `;
                 }
 
                 card.innerHTML = `
-                    <div class="scout-name">${exp.name}</div>
-                    <div class="scout-risk">${exp.risk} &bull; Est. Duration: ${exp.duration} Cycle(s)</div>
-                    <div style="font-size:10px; color:var(--text-main); margin-top:2px;">${exp.desc}</div>
-                    <div style="font-size:10px; color:var(--text-bright); margin-top:4px;">Yield: ~${exp.potentialFood} Food, ~${exp.potentialScrap} Scrap</div>
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                        <span class="scout-name">${exp.name}</span>
+                        <span class="risk-badge ${riskClass}">${exp.risk}</span>
+                    </div>
+                    <div class="scout-risk">
+                        <span>Duration: <strong>${exp.duration} Day(s)</strong></span>
+                        <span style="color:var(--text-dim);">Hazard Tier ${exp.riskLevel || 1}</span>
+                    </div>
+                    <div style="font-size:10px; color:var(--text-main); line-height:1.35;">${exp.desc}</div>
+                    
+                    <div class="scout-rewards">
+                        <div>Potential Yields: <strong class="reward-highlight">~${exp.potentialFood} Food</strong>, <strong class="reward-highlight">~${exp.potentialScrap} Tech Scrap</strong>, <strong class="reward-highlight">~${exp.potentialMeds} Meds</strong></div>
+                        ${bpDisplay}
+                    </div>
+
+                    ${scoutInfoHtml}
                     ${btnHtml}
                 `;
 
                 grid.appendChild(card);
             });
 
-            document.getElementById('lbl-active-scouts').textContent = activeCount;
+            const activeScoutsEl = document.getElementById('lbl-active-scouts');
+            if (activeScoutsEl) activeScoutsEl.textContent = activeCount;
+            const expMedsEl = document.getElementById('lbl-exp-meds');
+            if (expMedsEl) expMedsEl.textContent = state.meds || 0;
         }
 
-        function updateAll() {
-            renderHUD();
-            renderFacilities();
-            renderSurvivors();
-            renderExpeditions();
-            saveState();
-        }
-
-        // Worker & Survivor Assignment Logic
-        function changeWorker(facId, delta) {
-            const fac = state.facilities.find(f => f.id === facId);
-            if (!fac) return;
-
-            if (delta > 0) {
-                const unassigned = getUnassignedSurvivors();
-                if (unassigned.length > 0 && fac.assigned < fac.maxWorkers) {
-                    const worker = unassigned[0];
-                    worker.job = fac.id;
-                    fac.assigned++;
-                    logEvent(`${worker.name} assigned to ${fac.name}.`, 'info');
-                    playSound('click');
-                }
-            } else if (delta < 0) {
-                if (fac.assigned > 0) {
-                    const worker = state.survivors.find(s => s.job === fac.id);
-                    if (worker) {
-                        worker.job = 'unassigned';
-                    }
-                    fac.assigned--;
-                    logEvent(`Worker removed from ${fac.name}.`, 'info');
-                    playSound('click');
-                }
-            }
-
-            updateAll();
-        }
-
-        function assignSurvivorJob(survivorId, newJob) {
-            const surv = state.survivors.find(s => s.id === survivorId);
-            if (!surv) return;
-
-            // Unassign from old facility
-            if (surv.job && surv.job !== 'unassigned') {
-                const oldFac = state.facilities.find(f => f.id === surv.job);
-                if (oldFac && oldFac.assigned > 0) {
-                    oldFac.assigned--;
-                }
-            }
-
-            if (newJob === 'unassigned') {
-                surv.job = 'unassigned';
-                logEvent(`${surv.name} was set to Idle.`, 'info');
-            } else {
-                const newFac = state.facilities.find(f => f.id === newJob);
-                if (newFac) {
-                    if (newFac.assigned < newFac.maxWorkers) {
-                        newFac.assigned++;
-                        surv.job = newJob;
-                        logEvent(`${surv.name} reassigned to ${newFac.name}.`, 'info');
-                    } else {
-                        logEvent(`${newFac.name} is already at maximum staffing!`, 'warn');
-                        surv.job = 'unassigned';
-                    }
-                }
-            }
-
-            playSound('click');
-            updateAll();
-        }
-
-        function dispatchScout(expId) {
+        function openScoutModal(expId) {
             const exp = state.expeditions.find(e => e.id === expId);
+            if (!exp) return;
             const unassigned = getUnassignedSurvivors();
-            if (!exp || unassigned.length === 0) return;
+            if (unassigned.length === 0) {
+                logEvent("No unassigned idle survivors available to dispatch as scouts! Reassign a worker first.", "warn");
+                playSound('alert');
+                return;
+            }
 
-            const scout = unassigned[0];
+            const titleEl = document.getElementById('scout-modal-title');
+            if (titleEl) titleEl.textContent = `DISPATCH SCOUT: ${exp.name}`;
+
+            let optionsHtml = '';
+            unassigned.forEach((s, idx) => {
+                const survRating = Math.min(95, 50 + s.str * 4 + s.agi * 4);
+                const bpChance = Math.min(85, 35 + s.int * 6);
+                optionsHtml += `
+                    <div class="policy-opt ${idx === 0 ? 'active' : ''}" style="margin-bottom:6px; padding:8px;" onclick="selectScoutCandidate('${s.id}', this)">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-weight:bold; color:var(--text-bright);">${s.name} (${s.role})</span>
+                            <span style="font-size:10px; color:var(--accent-green); font-weight:bold;">Health: ${s.health}%</span>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-dim); margin-top:2px;">
+                            Attributes: <strong style="color:var(--text-bright);">STR ${s.str}</strong> &bull; <strong style="color:var(--text-bright);">AGI ${s.agi}</strong> &bull; <strong style="color:var(--text-bright);">INT ${s.int}</strong>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-main); margin-top:2px;">
+                            Hazard Survival: <strong>${survRating}%</strong> &bull; Blueprint Decrypt: <strong>${bpChance}%</strong>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const hasMeds = (state.meds || 0) > 0;
+            const bodyEl = document.getElementById('scout-modal-body');
+            bodyEl.innerHTML = `
+                <div style="margin-bottom:8px;">
+                    <div style="font-size:12px; color:var(--accent-amber); font-weight:bold;">${exp.name} &bull; ${exp.risk}</div>
+                    <div style="font-size:10px; color:var(--text-dim); margin-top:2px;">${exp.desc}</div>
+                    <div style="font-size:10px; color:var(--text-main); margin-top:3px;">
+                        Est. Duration: <strong>${exp.duration} Cycle(s)</strong> &bull; Expected Loot: <strong>~${exp.potentialFood} Food, ~${exp.potentialScrap} Scrap, ~${exp.potentialMeds} Meds</strong>
+                        ${exp.blueprintReward ? `<br><span class="blueprint-tag">ARCHIVE BLUEPRINT: ${exp.blueprintReward}</span>` : ''}
+                    </div>
+                </div>
+
+                <div class="panel-title" style="margin-top:10px;">Select Scout Candidate</div>
+                <div id="scout-candidates-list" data-selected="${unassigned[0].id}">
+                    ${optionsHtml}
+                </div>
+
+                <div style="margin-top:10px; padding:8px; background:rgba(0,0,0,0.3); border:1px solid var(--panel-border); border-radius:2px;">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:11px; color:var(--text-bright);">
+                        <input type="checkbox" id="chk-pack-stim" ${hasMeds ? '' : 'disabled'}>
+                        <span>Pack Emergency Trauma Stimpack (-1 Meds in stock, prevents severe hazard trauma)</span>
+                    </label>
+                    <div style="font-size:9px; color:var(--text-dim); margin-left:24px; margin-top:2px;">Current Vault Medical Reserve: ${state.meds || 0} pack(s)</div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
+                    <button class="btn-upgrade" onclick="closeModal('scout-modal')" style="border-color:var(--panel-border); color:var(--text-dim);">CANCEL</button>
+                    <button class="btn-dispatch" onclick="confirmDispatchScout('${exp.id}')" style="padding:6px 14px;">LAUNCH EXPEDITION</button>
+                </div>
+            `;
+
+            document.getElementById('scout-modal').style.display = 'flex';
+            playSound('click');
+        }
+
+        function selectScoutCandidate(survId, el) {
+            const list = document.getElementById('scout-candidates-list');
+            if (list) list.setAttribute('data-selected', survId);
+            const options = list.querySelectorAll('.policy-opt');
+            options.forEach(opt => opt.classList.remove('active'));
+            el.classList.add('active');
+            playSound('click');
+        }
+
+        function confirmDispatchScout(expId) {
+            const exp = state.expeditions.find(e => e.id === expId);
+            if (!exp) return;
+            const list = document.getElementById('scout-candidates-list');
+            const survId = list ? list.getAttribute('data-selected') : null;
+            const scout = state.survivors.find(s => s.id === survId);
+            if (!scout) return;
+
+            const chkStim = document.getElementById('chk-pack-stim');
+            const packStim = chkStim && chkStim.checked && (state.meds || 0) > 0;
+            if (packStim) {
+                state.meds--;
+                exp.hasStimpack = true;
+            } else {
+                exp.hasStimpack = false;
+            }
+
             scout.job = 'expedition';
             exp.assignedScout = scout.id;
             exp.daysRemaining = exp.duration;
 
-            logEvent(`Scout ${scout.name} geared up and dispatched to ${exp.name}.`, 'scout');
+            closeModal('scout-modal');
+            logEvent(`SCOUT DISPATCHED: ${scout.name} geared up and embarked for ${exp.name} (Duration: ${exp.duration}d)${packStim ? ' [Equipped with Stimpack]' : ''}.`, 'scout');
             playSound('scout');
             updateAll();
+        }
+
+        function dispatchScout(expId) {
+            openScoutModal(expId);
         }
 
         // Policies
@@ -2733,24 +3059,76 @@
                         // Scout returns!
                         const scout = state.survivors.find(s => s.id === exp.assignedScout);
                         const scoutName = scout ? scout.name : 'Scout';
+                        const agi = scout ? scout.agi : 5;
+                        const str = scout ? scout.str : 5;
+                        const intVal = scout ? scout.int : 5;
 
-                        const foodFound = Math.floor(exp.potentialFood * (0.8 + Math.random() * 0.4));
-                        const scrapFound = Math.floor(exp.potentialScrap * (0.8 + Math.random() * 0.4));
+                        // Loot calculations
+                        const foodFound = Math.floor(exp.potentialFood * (0.8 + Math.random() * 0.4) * (1 + (agi - 5) * 0.05));
+                        const scrapFound = Math.floor(exp.potentialScrap * (0.8 + Math.random() * 0.4) * (1 + (intVal - 5) * 0.08));
+                        const medsFound = Math.max(1, Math.round((exp.potentialMeds || 2) * (0.7 + Math.random() * 0.6) * (1 + (agi - 5) * 0.05)));
 
                         state.food += foodFound;
                         state.scrap += scrapFound;
+                        state.meds = (state.meds || 0) + medsFound;
+
+                        // Hazard damage & risk calculation
+                        let baseDmg = 5;
+                        if (exp.riskLevel === 2) baseDmg = 12 + Math.floor(Math.random() * 15);
+                        else if (exp.riskLevel === 3) baseDmg = 20 + Math.floor(Math.random() * 20);
+                        else if (exp.riskLevel === 4) baseDmg = 30 + Math.floor(Math.random() * 25);
+
+                        let dmg = Math.max(0, baseDmg - str * 2 - Math.floor(agi * 1.5));
+                        let stimUsed = false;
+                        if (exp.hasStimpack && dmg > 10) {
+                            dmg = Math.floor(dmg * 0.4);
+                            stimUsed = true;
+                        }
 
                         if (scout) {
+                            scout.health = Math.max(15, scout.health - dmg);
                             scout.job = 'unassigned';
-                            scout.morale = Math.min(100, scout.morale + 10);
+                            scout.morale = Math.min(100, Math.max(25, scout.morale + (dmg > 25 ? -10 : 10)));
+                        }
+
+                        // Blueprint Decryption roll
+                        let bpMsg = '';
+                        if (exp.blueprintId) {
+                            const bp = state.blueprints ? state.blueprints.find(b => b.id === exp.blueprintId) : null;
+                            if (bp && bp.locked) {
+                                const roll = Math.random() * 100;
+                                const chance = 35 + intVal * 7;
+                                if (roll <= chance || exp.riskLevel >= 4) {
+                                    bp.locked = false;
+                                    bpMsg = ` ★ BLUEPRINT DISCOVERED: [${bp.name}] unlocked in Engineering!`;
+                                }
+                            }
                         }
 
                         exp.assignedScout = null;
-                        logEvent(`${scoutName} returned safely from ${exp.name}! Salvaged: +${foodFound} Food, +${scrapFound} Scrap.`, 'cycle');
-                        playSound('scout');
+                        exp.hasStimpack = false;
+
+                        const dmgMsg = dmg > 0 ? ` [Sustained -${dmg} HP trauma${stimUsed ? ', stabilized by Stimpack' : ''}]` : ' [No injuries sustained]';
+                        logEvent(`EXPEDITION RETURN: ${scoutName} returned from ${exp.name}! Salvaged: +${foodFound} Food, +${scrapFound} Scrap, +${medsFound} Meds.${dmgMsg}${bpMsg}`, bpMsg ? 'cycle' : 'scout');
+                        playSound(bpMsg ? 'cycle' : 'scout');
                     }
                 }
             });
+
+            // 4b. Medical Infirmary & Auto-surgery triage
+            const infirmaryFac = state.facilities.find(f => f.id === 'infirmary');
+            const hasDoctor = infirmaryFac && infirmaryFac.assigned > 0;
+            const hasSurgWing = state.facilities.some(f => f.id === 'bp_medsurge');
+            if (hasDoctor || hasSurgWing) {
+                const wounded = state.survivors.filter(s => s.health < 90);
+                if (wounded.length > 0 && ((state.meds || 0) > 0 || hasSurgWing)) {
+                    if (!hasSurgWing && state.meds > 0) state.meds--;
+                    wounded.forEach(w => {
+                        w.health = Math.min(100, w.health + (hasSurgWing ? 25 : 15));
+                    });
+                    logEvent(`MED-LAB: Medical triage administered to ${wounded.length} injured dweller(s).`, 'info');
+                }
+            }
 
             // 5. Random Wasteland Event
             triggerDailyEvent();
