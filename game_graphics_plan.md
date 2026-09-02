@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KPac
 - KSnake
 - KTetris
 - KCyber
@@ -147,8 +146,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KReversi
 - KQuest
 - KSpace
+- KPac
 
 ## Completed Work Log
+
+- **KPac (Loop 8):** Implemented highly polished visual effects including procedural screen-shake driven by quadratic physics decay and rotational damping on ghost eats, player death, void pulse bombs, and victory bursts (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and trigonometric FastSin/FastCos physics decay with double-buffered viewport rendering in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails, expanding buoyant plasma/spirit smoke puffs with negative gravity and drag deceleration, heavy kinematic cyber debris shards with tumbling rotation physics, and radiant golden/cyan celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer dispersion halo, ornate cybernetic arcade HUD corner reticle L-brackets with tech notches and glowing status diodes, a pulsating energy perimeter inlay border with a traveling specular glint along the maze perimeter, glossy specular sheen highlights traversing Pac-Man and ghosts, and dynamic trailing speed dust motes in both Web Canvas (kpac.html) and Native C Win32 GDI (KPac/main.c).
 
 - **KSpace (Loop 8):** Implemented highly polished visual effects including procedural screen-shake driven by quadratic physics decay and rotational damping on weapon impacts, bomb detonations, and boss destruction (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and CRT-free FastSin/FastCos trigonometric physics decay with double-buffered viewport rendering in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails, expanding buoyant plasma smoke puffs with negative gravity and drag deceleration, heavy kinematic armor & hull shards with tumbling rotation physics, and radiant golden/cyan celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer ion dispersion halo, ornate cybernetic Sci-Fi HUD corner reticle L-brackets with tech notches and glowing status diodes, a pulsating energy perimeter inlay border with a traveling specular glint along the viewport frame, sweeping specular sheen highlights traversing player ship hull facets and drone companion wings, and dynamic trailing engine ion exhaust motes in both Web Canvas (kspace.html) and Native C Win32 GDI (KSpace/main.c).
 
