@@ -402,7 +402,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(hdcMem, RGB(150, 150, 150));
             SetBkMode(hdcMem, TRANSPARENT);
             HFONT hOldF = (HFONT)SelectObject(hdcMem, hWelcomeFont);
-            TextOutA(hdcMem, 20, 20, "Welcome to KPaint Pro! Press H for Help", 39);
+            TextOutA(hdcMem, 20, 20, "Welcome to KPaint Pro! Press F1 or H for Help", 45);
             SelectObject(hdcMem, hOldF);
             DeleteObject(hWelcomeFont);
             
@@ -453,7 +453,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnEdge = CreateWindowA("BUTTON", "Edge", WS_CHILD | WS_VISIBLE, 5, 435, 58, 22, hwnd, (HMENU)506, NULL, NULL);
             hBtnSharpen = CreateWindowA("BUTTON", "Sharpen", WS_CHILD | WS_VISIBLE, 68, 435, 58, 22, hwnd, (HMENU)507, NULL, NULL);
             hBtnEmboss = CreateWindowA("BUTTON", "Emboss", WS_CHILD | WS_VISIBLE, 5, 460, 58, 22, hwnd, (HMENU)508, NULL, NULL);
-            hBtnHelp = CreateWindowA("BUTTON", "Help", WS_CHILD | WS_VISIBLE, 5, 485, 121, 22, hwnd, (HMENU)701, NULL, NULL);
+            hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE, 5, 485, 121, 22, hwnd, (HMENU)701, NULL, NULL);
 
             // Set Fonts
             HWND controls[] = {
@@ -556,7 +556,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             if (id == 601) { PerformUndo(); InvalidateRect(hwnd, NULL, FALSE); }
             if (id == 602) { PerformRedo(); InvalidateRect(hwnd, NULL, FALSE); }
-            if (id == 701) { MessageBoxA(hwnd, "Welcome to KPaint Pro!\n\nTools:\n- Brush, Line, Rect, Ellipse, Spray, Eraser\n\nShortcuts:\n- Ctrl+Z : Undo\n- Ctrl+Y : Redo\n- H : Help", "KPaint Help", MB_OK | MB_ICONINFORMATION); }
+            if (id == 701) { MessageBoxA(hwnd, "Welcome to KPaint Pro!\n\nTools:\n- Brush (B)\n- Line (L)\n- Rect (R)\n- Ellipse (C)\n- Spray (S)\n- Eraser (E)\n\nShortcuts:\n- Ctrl+Z : Undo\n- Ctrl+Y : Redo\n- F1 or H : Help", "KPaint Help", MB_OK | MB_ICONINFORMATION); }
             break;
         }
         case WM_KEYDOWN: {
@@ -568,8 +568,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     PerformRedo();
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
-            } else if (wParam == 'H' || wParam == 'h') {
-                MessageBoxA(hwnd, "Welcome to KPaint Pro!\n\nTools:\n- Brush, Line, Rect, Ellipse, Spray, Eraser\n\nShortcuts:\n- Ctrl+Z : Undo\n- Ctrl+Y : Redo\n- H : Help", "KPaint Help", MB_OK | MB_ICONINFORMATION);
+            } else if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
+                MessageBoxA(hwnd, "Welcome to KPaint Pro!\n\nTools:\n- Brush (B)\n- Line (L)\n- Rect (R)\n- Ellipse (C)\n- Spray (S)\n- Eraser (E)\n\nShortcuts:\n- Ctrl+Z : Undo\n- Ctrl+Y : Redo\n- F1 or H : Help", "KPaint Help", MB_OK | MB_ICONINFORMATION);
+            } else if (wParam == 'B' || wParam == 'b') {
+                currentTool = 0; UpdatePen();
+            } else if (wParam == 'L' || wParam == 'l') {
+                currentTool = 1; UpdatePen();
+            } else if (wParam == 'R' || wParam == 'r') {
+                currentTool = 2; UpdatePen();
+            } else if (wParam == 'C' || wParam == 'c') {
+                currentTool = 3; UpdatePen();
+            } else if (wParam == 'S' || wParam == 's') {
+                currentTool = 4; UpdatePen();
+            } else if (wParam == 'E' || wParam == 'e') {
+                currentTool = 5; UpdatePen();
             }
             break;
         }
@@ -752,7 +764,7 @@ void __stdcall MainEntry() {
     RegisterClassA(&wc);
     RECT wr = {0, 0, 1100, 750};
     AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_HSCROLL | WS_CLIPCHILDREN, FALSE);
-    HWND hwnd = CreateWindowExA(0, "KPaintClass", "KPaint Pro - Press H for Help", WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_HSCROLL | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KPaintClass", "KPaint Pro - Press F1 or H for Help", WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_HSCROLL | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

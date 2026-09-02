@@ -379,6 +379,151 @@
     display: block;
   }
 
+  /* Modal Backdrop & Dialog */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.15s ease-out;
+  }
+  .modal-backdrop.show {
+    display: flex;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .modal-dialog {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    width: 90%;
+    max-width: 520px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 20px rgba(59, 130, 246, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--panel-border);
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .modal-title {
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-main);
+  }
+  .modal-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 20px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .modal-close-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .modal-body {
+    padding: 16px 18px;
+    overflow-y: auto;
+    max-height: 65vh;
+  }
+  .modal-footer {
+    padding: 12px 18px;
+    border-top: 1px solid var(--panel-border);
+    display: flex;
+    justify-content: flex-end;
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .help-section-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #60a5fa;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .shortcut-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+  }
+  .shortcut-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-main);
+  }
+  kbd {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.5);
+    color: #f3f4f6;
+    display: inline-block;
+    font-family: monospace;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    padding: 3px 6px;
+    min-width: 22px;
+    text-align: center;
+  }
+  .help-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .help-list strong {
+    color: var(--text-main);
+  }
+  /* Toast Notification */
+  .toast-notification {
+    position: fixed;
+    bottom: 40px;
+    right: 20px;
+    background: rgba(24, 27, 40, 0.95);
+    border: 1px solid var(--primary);
+    color: var(--text-main);
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .toast-notification.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
 </style>
 </head>
 <body>
@@ -407,9 +552,9 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
         Save to OS
       </button>
-      <button class="btn btn-accent" onclick="showHelp()">
+      <button class="btn btn-accent" onclick="showHelp()" title="Help &amp; Shortcuts (F1 or H)">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-        Help
+        Help (F1)
       </button>
       
       <div class="export-dropdown">
@@ -429,6 +574,52 @@
 
   <input type="file" id="img-loader" style="display:none" accept="image/*" onchange="importImage(event)">
 
+  <!-- Help Modal Dialog -->
+  <div id="help-modal" class="modal-backdrop" onclick="handleBackdropClick(event)">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          KPaint Pro - Shortcuts &amp; Guide
+        </div>
+        <button class="modal-close-btn" onclick="closeHelp()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="help-section-title">Keyboard Shortcuts</div>
+        <div class="shortcut-grid">
+          <div class="shortcut-item"><kbd>B</kbd><span>Brush Tool</span></div>
+          <div class="shortcut-item"><kbd>E</kbd><span>Eraser</span></div>
+          <div class="shortcut-item"><kbd>L</kbd><span>Line Tool</span></div>
+          <div class="shortcut-item"><kbd>R</kbd><span>Rectangle</span></div>
+          <div class="shortcut-item"><kbd>C</kbd><span>Ellipse / Circle</span></div>
+          <div class="shortcut-item"><kbd>G</kbd><span>Flood Fill</span></div>
+          <div class="shortcut-item"><kbd>A</kbd><span>Spray / Airbrush</span></div>
+          <div class="shortcut-item"><kbd>W</kbd><span>Magic Wand</span></div>
+          <div class="shortcut-item"><kbd>S</kbd><span>Lasso Selection</span></div>
+          <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>Z</kbd><span>Undo</span></div>
+          <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>Y</kbd><span>Redo</span></div>
+          <div class="shortcut-item"><kbd>F1</kbd> / <kbd>H</kbd><span>Toggle Help</span></div>
+          <div class="shortcut-item"><kbd>Esc</kbd><span>Close Dialog</span></div>
+        </div>
+
+        <div class="help-section-title" style="margin-top: 14px;">Drawing &amp; Features</div>
+        <ul class="help-list">
+          <li><strong>Drawing Tools:</strong> Pick any tool from the sidebar or press its shortcut. Adjust brush size and square/round shapes.</li>
+          <li><strong>Color Palette:</strong> Select from 4 curated palettes or choose custom colors with the picker.</li>
+          <li><strong>Layers:</strong> Add transparent layers, re-order, toggle visibility, and merge layers down.</li>
+          <li><strong>Filters &amp; Transforms:</strong> Invert colors, grayscale, adjust brightness/contrast, edge detect, sharpen, and rotate/flip.</li>
+          <li><strong>Export:</strong> Export your art directly to PNG, WEBP, or BMP, or save to the KiloOS filesystem.</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-accent" style="padding: 8px 24px; font-weight: 600;" onclick="closeHelp()">Got it!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast-notification"></div>
+
   <div class="workspace">
     <!-- Sidebar Controls -->
     <div class="sidebar">
@@ -442,7 +633,7 @@
           <button class="btn" id="tool-rect" onclick="setTool('rect')" title="Rectangle (R)">Rect</button>
           <button class="btn" id="tool-ellipse" onclick="setTool('ellipse')" title="Ellipse (C)">Ellipse</button>
           <button class="btn" id="tool-fill" onclick="setTool('fill')" title="Bucket Fill (G)">Fill</button>
-          <button class="btn" id="tool-spray" onclick="setTool('spray')" title="Airbrush">Spray</button>
+          <button class="btn" id="tool-spray" onclick="setTool('spray')" title="Spray / Airbrush (A)">Spray</button>
           
           <button class="btn" id="tool-wand" onclick="setTool('wand')" title="Magic Wand (W)">Wand</button>
           <button class="btn" id="tool-lasso" onclick="setTool('lasso')" title="Lasso (S)">Lasso</button>
@@ -574,7 +765,7 @@
       <span>Pos: <strong id="lbl-pos">0, 0</strong></span>
       <span>Tool: <strong id="lbl-tool">Brush</strong></span>
     </div>
-    <div>Press <strong>Ctrl+Z</strong> Undo | <strong>B</strong> Brush | <strong>E</strong> Eraser | <strong>G</strong> Fill | <strong>H</strong> Help</div>
+    <div>Press <strong>Ctrl+Z</strong> Undo | <strong>B</strong> Brush | <strong>E</strong> Eraser | <strong>G</strong> Fill | <strong>F1 / H</strong> Help</div>
   </div>
 
   <script>
@@ -1307,7 +1498,7 @@
         const img = new Image();
         img.onload = () => {
           if (img.width > 4096 || img.height > 4096) {
-            alert("Image exceeds maximum dimensions (4096x4096).");
+            showToast("Image exceeds maximum dimensions (4096x4096).", 4000);
             return;
           }
           if (img.width !== canvas.width || img.height !== canvas.height) {
@@ -1331,7 +1522,7 @@
       }
       const data = canvas.toDataURL('image/png');
       await sendToOS({ type: 'VFS_WRITE', path: currentVfsPath, data });
-      alert("Saved image to KiloOS Filesystem!");
+      showToast("Saved image to KiloOS Filesystem!");
     }
 
     function exportPNG() {
@@ -1350,9 +1541,59 @@
     window.addEventListener('touchend', endPosition);
     canvas.addEventListener('touchmove', e => { e.preventDefault(); draw(e); }, { passive: false });
 
+    // Toast Notification Manager
+    let toastTimer = null;
+    function showToast(msg, duration = 3000) {
+      const t = document.getElementById('toast');
+      if (!t) return;
+      t.innerText = msg;
+      t.classList.add('show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        t.classList.remove('show');
+      }, duration);
+    }
+
+    // Help Modal Logic
+    function toggleHelp() {
+      const m = document.getElementById('help-modal');
+      if (!m) return;
+      if (m.classList.contains('show')) {
+        closeHelp();
+      } else {
+        showHelp();
+      }
+    }
+
+    function showHelp() {
+      const m = document.getElementById('help-modal');
+      if (m) m.classList.add('show');
+    }
+
+    function closeHelp() {
+      const m = document.getElementById('help-modal');
+      if (m) m.classList.remove('show');
+    }
+
+    function handleBackdropClick(e) {
+      if (e.target.id === 'help-modal') closeHelp();
+    }
+
     // Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
+      if (e.key === 'F1') {
+        e.preventDefault();
+        toggleHelp();
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        closeHelp();
+        return;
+      }
+
       if (e.ctrlKey || e.metaKey) {
         if (e.key === 'z' || e.key === 'Z') {
           if (e.shiftKey) redo(); else undo();
@@ -1369,13 +1610,12 @@
         else if (k === 'r') setTool('rect');
         else if (k === 'c') setTool('ellipse');
         else if (k === 'g') setTool('fill');
-        else if (k === 'h') showHelp();
+        else if (k === 'a') setTool('spray');
+        else if (k === 'w') setTool('wand');
+        else if (k === 's') setTool('lasso');
+        else if (k === 'h') toggleHelp();
       }
     });
-
-    function showHelp() {
-      alert("KPaint Pro Help\n\nTools: Brush, Line, Rect, Ellipse, Fill, Spray, Eraser\n\nShortcuts:\nCtrl+Z : Undo\nCtrl+Y : Redo\nB : Brush\nE : Eraser\nL : Line\nR : Rect\nC : Ellipse\nG : Fill\nH : Help");
-    }
 
     // Hash VFS Load support
     window.onload = () => {
@@ -1385,6 +1625,9 @@
         const path = window.location.hash.substring(1);
         if (path) loadVFSFile(path);
       }
+      setTimeout(() => {
+        showToast("Welcome to KPaint Pro! Press F1 or H for Help", 4000);
+      }, 300);
     };
 
     async function loadVFSFile(path) {
@@ -1394,7 +1637,7 @@
         const img = new Image();
         img.onload = () => {
           if (img.width > 4096 || img.height > 4096) {
-            alert("Image exceeds maximum dimensions (4096x4096).");
+            showToast("Image exceeds maximum dimensions (4096x4096).", 4000);
             return;
           }
           if (img.width !== canvas.width || img.height !== canvas.height) {

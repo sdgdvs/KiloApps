@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KPaint
+**Target App:** KFarm
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KPaint
 - KFarm
 - KSnake
 - KTetris
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KMedia
 - KNet
 - KZip
+- KPaint
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KPaint: Usability and UI issues fixed (added modern dark Help modal dialog and non-blocking toast notifications in web, mapped F1 and tool shortcuts B/E/L/R/C/G/A/W/S across web and native, updated startup canvas text, window title, and Help button to explicitly show F1/H shortcut, and added startup welcome toast).
 - KZip: Usability and UI issues fixed (aligned native listbox with Consolas monospace font and column header, added empty state prompts and status messages to both web and native, updated Help button/dialog with explicit F1/H shortcuts, added non-blocking toast notifications and fallback local file loading in web, and added Enter/Esc shortcut support and WM_GETMINMAXINFO layout constraints in native).
 - KNet: Usability and UI issues fixed (added Help modal dialog, toast feedback, Enter-to-execute on all inputs, and high-DPI canvas scaling in web; added dark terminal styling, live filter on typing, Enter-to-fetch/filter, and global F1 shortcut in native).
 - KMedia: Usability and UI issues fixed (added drag & drop file loading, visual empty state, seek buttons, volume mute toggle, non-blocking toast notifications, video click play/pause and dblclick fullscreen to web; fixed play/pause toggle bug, added live playback time/status indicator, seek buttons, and F1 hotkey handling in edit controls to native C).
