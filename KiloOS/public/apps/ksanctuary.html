@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,15 +6,19 @@
     <title>KSanctuary - Wasteland Shelter RPG</title>
     <style>
         :root {
-            --bg-color: #0d0f0c;
-            --panel-bg: #141a14;
-            --border-color: #3b533b;
-            --text-color: #79c379;
-            --text-dim: #4e824e;
-            --accent-color: #a3e635;
-            --warning-color: #eab308;
-            --danger-color: #ef4444;
-            --font-stack: 'Courier New', Courier, monospace, monospace;
+            --bg-color: #0b0f0c;
+            --panel-bg: #121913;
+            --panel-header: #1a251b;
+            --panel-border: #2f4530;
+            --text-main: #6ee7b7;
+            --text-dim: #3d7a5b;
+            --text-bright: #a7f3d0;
+            --accent-amber: #f59e0b;
+            --accent-green: #10b981;
+            --accent-cyan: #06b6d4;
+            --danger-red: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.35);
+            --font-mono: 'Consolas', 'Courier New', Courier, monospace;
         }
 
         * {
@@ -26,222 +30,541 @@
 
         body {
             background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: var(--font-stack);
+            color: var(--text-main);
+            font-family: var(--font-mono);
             height: 100vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            padding: 8px;
+            padding: 6px;
+            font-size: 12px;
         }
 
-        /* Scanline CRT overlay */
-        body::after {
-            content: " ";
-            display: block;
-            position: absolute;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 26, 18, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+        /* CRT Overlay Effect */
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(18, 26, 18, 0) 50%, rgba(0, 0, 0, 0.35) 50%);
             background-size: 100% 3px;
             pointer-events: none;
-            z-index: 100;
-            opacity: 0.6;
+            z-index: 999;
+            opacity: 0.55;
         }
 
+        /* Top Header */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--panel-border);
             background-color: var(--panel-bg);
-            padding: 8px 14px;
-            margin-bottom: 8px;
+            padding: 6px 12px;
+            margin-bottom: 6px;
+            border-radius: 2px;
         }
 
         .title-group {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         .app-title {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: bold;
-            color: var(--accent-color);
+            color: var(--text-bright);
             letter-spacing: 2px;
-            text-shadow: 0 0 6px rgba(163, 230, 53, 0.4);
+            text-shadow: 0 0 8px rgba(110, 231, 183, 0.4);
         }
 
-        .badge {
-            font-size: 11px;
-            background: rgba(59, 83, 59, 0.4);
-            border: 1px solid var(--border-color);
-            padding: 2px 6px;
+        .badge-terminal {
+            font-size: 10px;
+            background: rgba(47, 69, 48, 0.4);
+            border: 1px solid var(--panel-border);
+            padding: 2px 7px;
             border-radius: 2px;
             color: var(--text-dim);
+            letter-spacing: 1px;
         }
 
-        .time-display {
-            font-size: 14px;
-            color: var(--accent-color);
-        }
-
-        /* Resource status bar */
-        #res-bar {
-            display: flex;
-            gap: 12px;
-            background: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            padding: 8px 12px;
-            margin-bottom: 8px;
-            flex-wrap: wrap;
-        }
-
-        .res-item {
+        .header-actions {
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 13px;
-            border-right: 1px solid rgba(59, 83, 59, 0.5);
-            padding-right: 12px;
-        }
-
-        .res-item:last-child {
-            border-right: none;
-        }
-
-        .res-label {
-            color: var(--text-dim);
-            text-transform: uppercase;
-            font-size: 11px;
-        }
-
-        .res-val {
-            color: var(--accent-color);
-            font-weight: bold;
-        }
-
-        /* Main Game Area */
-        #main-container {
-            display: flex;
-            flex: 1;
             gap: 8px;
-            min-height: 0;
         }
 
-        #shelter-view {
-            flex: 3;
-            background: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            overflow-y: auto;
+        .btn-header {
+            background: #182319;
+            border: 1px solid var(--panel-border);
+            color: var(--text-main);
+            padding: 3px 8px;
+            font-family: inherit;
+            font-size: 11px;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: all 0.15s;
         }
 
-        .section-header {
-            font-size: 13px;
-            color: var(--accent-color);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 1px dashed var(--border-color);
-            padding-bottom: 4px;
+        .btn-header:hover {
+            border-color: var(--text-bright);
+            color: var(--text-bright);
+            background: #233425;
+        }
+
+        /* Status & Resource HUD */
+        #hud-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 6px;
             margin-bottom: 6px;
         }
 
-        #rooms-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 10px;
-            flex: 1;
-        }
-
-        .room-card {
-            background: #0f140f;
-            border: 1px solid var(--border-color);
-            padding: 10px;
+        .hud-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            padding: 6px 8px;
             border-radius: 2px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            min-height: 90px;
-            transition: border-color 0.15s;
         }
 
-        .room-card:hover {
-            border-color: var(--accent-color);
-        }
-
-        .room-name {
-            font-size: 12px;
-            font-weight: bold;
-            color: var(--accent-color);
-            margin-bottom: 4px;
-        }
-
-        .room-stats {
-            font-size: 11px;
+        .hud-card-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
             color: var(--text-dim);
-            line-height: 1.4;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 0.5px;
         }
 
-        /* Sidebar: Control Panel and Log */
+        .hud-val {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text-bright);
+            margin: 2px 0;
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+
+        .hud-delta {
+            font-size: 10px;
+            font-weight: normal;
+        }
+
+        .delta-pos { color: var(--accent-green); }
+        .delta-neg { color: var(--danger-red); }
+        .delta-neu { color: var(--text-dim); }
+
+        .hud-sub {
+            font-size: 9px;
+            color: var(--text-dim);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Tab Navigation */
+        #tab-bar {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 6px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 4px;
+        }
+
+        .tab-btn {
+            background: #141c15;
+            border: 1px solid var(--panel-border);
+            color: var(--text-dim);
+            font-family: inherit;
+            font-size: 11px;
+            padding: 5px 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 2px;
+            transition: all 0.15s;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+            border-color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            background: #1f2f21;
+            color: var(--text-bright);
+            border-color: var(--accent-green);
+            font-weight: bold;
+            box-shadow: inset 0 0 6px rgba(16, 185, 129, 0.2);
+        }
+
+        /* Main Game Layout */
+        #main-area {
+            display: flex;
+            flex: 1;
+            gap: 6px;
+            min-height: 0;
+        }
+
+        #content-panel {
+            flex: 3;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            padding: 8px;
+            border-radius: 2px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
         #sidebar {
             flex: 2;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            min-width: 240px;
+            gap: 6px;
+            min-width: 280px;
+            max-width: 380px;
         }
 
-        .side-panel {
+        .panel-box {
             background: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            padding: 10px;
+            border: 1px solid var(--panel-border);
+            padding: 8px;
+            border-radius: 2px;
             display: flex;
             flex-direction: column;
         }
 
-        #controls {
-            gap: 6px;
+        .panel-title {
+            font-size: 11px;
+            color: var(--text-bright);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px dashed var(--panel-border);
+            padding-bottom: 4px;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .btn {
-            background: #182218;
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
+        /* Day Cycle Control Box */
+        #cycle-box {
+            background: #151f16;
+            border: 1px solid var(--accent-green);
+            padding: 8px;
+            border-radius: 2px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+        }
+
+        .cycle-time-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cycle-day-badge {
+            font-size: 15px;
+            font-weight: bold;
+            color: var(--text-bright);
+            letter-spacing: 1px;
+        }
+
+        .cycle-phase-badge {
+            font-size: 11px;
+            color: var(--accent-amber);
+            font-weight: bold;
+            padding: 2px 6px;
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            border-radius: 2px;
+        }
+
+        .cycle-progress-wrap {
+            width: 100%;
+            height: 6px;
+            background: #0d140e;
+            border: 1px solid var(--panel-border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .cycle-progress-fill {
+            height: 100%;
+            width: 25%;
+            background: var(--accent-green);
+            transition: width 0.3s;
+        }
+
+        .btn-advance {
+            background: #193b21;
+            border: 1px solid var(--accent-green);
+            color: #ecfdf5;
             font-family: inherit;
             font-size: 12px;
-            padding: 8px 12px;
+            font-weight: bold;
+            padding: 9px 12px;
             cursor: pointer;
-            text-align: left;
-            transition: all 0.15s;
+            border-radius: 2px;
+            text-align: center;
             text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.15s;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.25);
         }
 
-        .btn:hover:not(:disabled) {
-            background: #233523;
-            color: var(--accent-color);
-            border-color: var(--accent-color);
+        .btn-advance:hover {
+            background: #23542f;
+            color: #fff;
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
         }
 
-        .btn-primary {
-            background: #1f361f;
-            border-color: #4ade80;
-            color: #4ade80;
+        .btn-advance:active {
+            transform: scale(0.99);
+        }
+
+        .cycle-btn-group {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-small {
+            flex: 1;
+            background: #141d15;
+            border: 1px solid var(--panel-border);
+            color: var(--text-dim);
+            font-family: inherit;
+            font-size: 10px;
+            padding: 4px;
+            cursor: pointer;
+            border-radius: 2px;
+            text-align: center;
+            transition: all 0.15s;
+        }
+
+        .btn-small:hover {
+            color: var(--text-main);
+            border-color: var(--text-main);
+        }
+
+        /* Facilities Grid */
+        .facilities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 8px;
+        }
+
+        .fac-card {
+            background: #0f1610;
+            border: 1px solid var(--panel-border);
+            border-radius: 2px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: all 0.15s;
+            position: relative;
+        }
+
+        .fac-card:hover {
+            border-color: var(--text-main);
+            background: #131d14;
+        }
+
+        .fac-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .fac-name {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--text-bright);
+        }
+
+        .fac-level {
+            font-size: 10px;
+            color: var(--text-dim);
+        }
+
+        .fac-stats {
+            font-size: 11px;
+            line-height: 1.35;
+            color: var(--text-dim);
+        }
+
+        .fac-stats strong {
+            color: var(--text-main);
+        }
+
+        .fac-workers {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px 6px;
+            border: 1px solid rgba(47, 69, 48, 0.5);
+            border-radius: 2px;
+            margin-top: 2px;
+        }
+
+        .worker-count {
+            font-size: 11px;
+            color: var(--text-bright);
             font-weight: bold;
         }
 
-        .btn-primary:hover:not(:disabled) {
-            background: #2b4c2b;
-            color: #86efac;
-            box-shadow: 0 0 8px rgba(74, 222, 128, 0.3);
+        .worker-controls {
+            display: flex;
+            gap: 4px;
         }
 
+        .btn-worker {
+            width: 20px;
+            height: 20px;
+            background: #1b281d;
+            border: 1px solid var(--panel-border);
+            color: var(--text-bright);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 2px;
+        }
+
+        .btn-worker:hover:not(:disabled) {
+            background: #2a3e2d;
+            border-color: var(--accent-green);
+        }
+
+        .btn-worker:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .fac-status {
+            font-size: 9px;
+            padding: 1px 5px;
+            border-radius: 2px;
+            display: inline-block;
+            text-transform: uppercase;
+        }
+
+        .status-online { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.4); }
+        .status-offline { background: rgba(239, 68, 68, 0.2); color: var(--danger-red); border: 1px solid rgba(239, 68, 68, 0.4); }
+        .status-idle { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.4); }
+
+        /* Survivors View */
+        .survivor-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .survivor-row {
+            background: #0f1610;
+            border: 1px solid var(--panel-border);
+            border-radius: 2px;
+            padding: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .survivor-row:hover {
+            border-color: var(--text-main);
+        }
+
+        .survivor-identity {
+            display: flex;
+            flex-direction: column;
+            min-width: 140px;
+        }
+
+        .survivor-name {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--text-bright);
+        }
+
+        .survivor-role {
+            font-size: 10px;
+            color: var(--text-dim);
+        }
+
+        .survivor-meters {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .meter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+        }
+
+        .meter-label {
+            font-size: 9px;
+            color: var(--text-dim);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .meter-bar {
+            height: 5px;
+            background: #080c09;
+            border: 1px solid var(--panel-border);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .meter-fill {
+            height: 100%;
+            background: var(--accent-green);
+        }
+
+        .meter-fill.warn { background: var(--accent-amber); }
+        .meter-fill.crit { background: var(--danger-red); }
+
+        .survivor-assign {
+            min-width: 130px;
+        }
+
+        .select-assign {
+            width: 100%;
+            background: #141e16;
+            color: var(--text-main);
+            border: 1px solid var(--panel-border);
+            padding: 3px 6px;
+            font-family: inherit;
+            font-size: 10px;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        .select-assign:focus {
+            outline: none;
+            border-color: var(--text-bright);
+        }
+
+        /* Log Panel */
         #log-panel {
             flex: 1;
-            min-height: 150px;
+            min-height: 180px;
             display: flex;
             flex-direction: column;
         }
@@ -250,204 +573,1397 @@
             flex: 1;
             overflow-y: auto;
             font-size: 11px;
-            line-height: 1.4;
+            line-height: 1.45;
             color: var(--text-dim);
             padding-right: 4px;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 3px;
         }
 
-        .log-entry {
-            margin-bottom: 4px;
-            border-left: 2px solid var(--border-color);
-            padding-left: 6px;
+        .log-item {
+            padding: 3px 6px;
+            border-left: 2px solid var(--panel-border);
+            background: rgba(18, 25, 19, 0.4);
+            border-radius: 0 2px 2px 0;
         }
 
-        .log-entry.info {
-            color: var(--text-color);
-            border-left-color: var(--accent-color);
+        .log-item.info { color: var(--text-main); border-left-color: var(--text-main); }
+        .log-item.warn { color: var(--accent-amber); border-left-color: var(--accent-amber); }
+        .log-item.crit { color: var(--danger-red); border-left-color: var(--danger-red); background: rgba(239, 68, 68, 0.1); }
+        .log-item.cycle { color: var(--text-bright); border-left-color: var(--accent-green); font-weight: bold; }
+        .log-item.scout { color: var(--accent-cyan); border-left-color: var(--accent-cyan); }
+
+        /* Directives / Policies View */
+        .policy-group {
+            margin-bottom: 12px;
+            background: #0f1610;
+            border: 1px solid var(--panel-border);
+            padding: 10px;
+            border-radius: 2px;
         }
 
-        .log-entry.warn {
-            color: var(--warning-color);
-            border-left-color: var(--warning-color);
+        .policy-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--text-bright);
+            margin-bottom: 6px;
         }
 
-        .log-entry.danger {
-            color: var(--danger-color);
-            border-left-color: var(--danger-color);
+        .policy-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 6px;
+        }
+
+        .policy-opt {
+            background: #152017;
+            border: 1px solid var(--panel-border);
+            padding: 6px 8px;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .policy-opt:hover {
+            border-color: var(--text-main);
+        }
+
+        .policy-opt.active {
+            border-color: var(--accent-green);
+            background: #1c2c1f;
+            box-shadow: inset 0 0 6px rgba(16, 185, 129, 0.25);
+        }
+
+        .policy-name {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-bright);
+        }
+
+        .policy-desc {
+            font-size: 9px;
+            color: var(--text-dim);
+            margin-top: 2px;
+            line-height: 1.3;
+        }
+
+        /* Wasteland Expeditions View */
+        .scavenge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 8px;
+        }
+
+        .scout-card {
+            background: #0f1610;
+            border: 1px solid var(--panel-border);
+            padding: 8px;
+            border-radius: 2px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .scout-name {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--accent-amber);
+        }
+
+        .scout-risk {
+            font-size: 10px;
+            color: var(--text-dim);
+        }
+
+        .btn-dispatch {
+            margin-top: 4px;
+            background: #1a2c1d;
+            border: 1px solid var(--accent-green);
+            color: var(--text-bright);
+            font-family: inherit;
+            font-size: 11px;
+            padding: 5px;
+            cursor: pointer;
+            border-radius: 2px;
+            text-transform: uppercase;
+        }
+
+        .btn-dispatch:hover:not(:disabled) {
+            background: #25402a;
+        }
+
+        .btn-dispatch:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            border-color: var(--panel-border);
+        }
+
+        /* Modal styling */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(5, 10, 6, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-box {
+            background: var(--panel-bg);
+            border: 2px solid var(--accent-green);
+            padding: 16px;
+            width: 90%;
+            max-width: 520px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border-radius: 2px;
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 6px;
+        }
+
+        .modal-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--text-bright);
+            letter-spacing: 1px;
+        }
+
+        .btn-close {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn-close:hover {
+            color: var(--danger-red);
         }
 
         /* Footer */
         footer {
-            margin-top: 8px;
+            margin-top: 6px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 11px;
+            font-size: 10px;
             color: var(--text-dim);
-            padding: 4px 8px;
-            border: 1px solid var(--border-color);
+            padding: 4px 10px;
+            border: 1px solid var(--panel-border);
             background: var(--panel-bg);
+            border-radius: 2px;
         }
     </style>
 </head>
 <body>
+    <div class="scanlines" id="scanlines-el"></div>
+
     <header>
         <div class="title-group">
             <span class="app-title">KSANCTUARY</span>
-            <span class="badge">SHELTER OVERSEER SYSTEM // VAULT 704</span>
+            <span class="badge-terminal">VAULT 704 // OVERSEER OS v1.2</span>
         </div>
-        <div class="time-display" id="time-display">CYCLE: DAY 1</div>
+        <div class="header-actions">
+            <button class="btn-header" onclick="toggleAudio()" id="btn-audio">AUDIO: ON</button>
+            <button class="btn-header" onclick="toggleScanlines()">CRT: ON</button>
+            <button class="btn-header" onclick="showHelpModal()">HELP / MANUAL</button>
+            <button class="btn-header" onclick="resetShelter()">RESET</button>
+        </div>
     </header>
 
-    <div id="res-bar">
-        <div class="res-item">
-            <span class="res-label">POP:</span>
-            <span class="res-val" id="res-pop">5/10</span>
+    <!-- Top Resource HUD -->
+    <div id="hud-container">
+        <div class="hud-card">
+            <div class="hud-card-header">
+                <span>POPULATION</span>
+                <span id="hud-pop-cap">5/10</span>
+            </div>
+            <div class="hud-val">
+                <span id="hud-pop">5</span>
+                <span class="hud-delta delta-neu" id="hud-idle-count">(0 Idle)</span>
+            </div>
+            <div class="hud-sub" id="hud-pop-sub">Healthy: 5 | Sick: 0</div>
         </div>
-        <div class="res-item">
-            <span class="res-label">FOOD:</span>
-            <span class="res-val" id="res-food">25</span>
+
+        <div class="hud-card">
+            <div class="hud-card-header">
+                <span>FOOD RATIONS</span>
+                <span id="hud-food-days">5 days</span>
+            </div>
+            <div class="hud-val">
+                <span id="hud-food">25</span>
+                <span class="hud-delta" id="hud-food-rate">+1/cyc</span>
+            </div>
+            <div class="hud-sub" id="hud-food-sub">Prod: +6 | Need: -5</div>
         </div>
-        <div class="res-item">
-            <span class="res-label">WATER:</span>
-            <span class="res-val" id="res-water">25</span>
+
+        <div class="hud-card">
+            <div class="hud-card-header">
+                <span>WATER PURITY</span>
+                <span id="hud-water-days">5 days</span>
+            </div>
+            <div class="hud-val">
+                <span id="hud-water">25</span>
+                <span class="hud-delta" id="hud-water-rate">+1/cyc</span>
+            </div>
+            <div class="hud-sub" id="hud-water-sub">Prod: +6 | Need: -5</div>
         </div>
-        <div class="res-item">
-            <span class="res-label">POWER:</span>
-            <span class="res-val" id="res-power">20</span>
+
+        <div class="hud-card">
+            <div class="hud-card-header">
+                <span>POWER GRID</span>
+                <span id="hud-power-load">80% Load</span>
+            </div>
+            <div class="hud-val">
+                <span id="hud-power">20</span>
+                <span class="hud-delta" id="hud-power-rate">kW Gen</span>
+            </div>
+            <div class="hud-sub" id="hud-power-sub">Gen: 20 kW | Load: 16 kW</div>
         </div>
-        <div class="res-item">
-            <span class="res-label">SCRAP:</span>
-            <span class="res-val" id="res-scrap">50</span>
+
+        <div class="hud-card">
+            <div class="hud-card-header">
+                <span>SCRAP / TECH</span>
+                <span>STOCK</span>
+            </div>
+            <div class="hud-val">
+                <span id="hud-scrap">50</span>
+                <span class="hud-delta delta-pos" id="hud-scrap-rate">+0/cyc</span>
+            </div>
+            <div class="hud-sub">Salvage for building</div>
         </div>
-        <div class="res-item">
-            <span class="res-label">MORALE:</span>
-            <span class="res-val" id="res-morale">80%</span>
+
+        <div class="hud-card">
+            <div class="hud-card-header">
+                <span>MORALE</span>
+                <span id="hud-morale-text">CONTENT</span>
+            </div>
+            <div class="hud-val">
+                <span id="hud-morale">82%</span>
+                <span class="hud-delta delta-neu" id="hud-morale-rate">0%</span>
+            </div>
+            <div class="hud-sub">Shelter stability</div>
         </div>
-        <div class="res-item">
-            <span class="res-label">DEFENSE:</span>
-            <span class="res-val" id="res-defense">15</span>
+
+        <div class="hud-card">
+            <div class="hud-card-header">
+                <span>DEFENSE / RADS</span>
+                <span>LEVEL 1</span>
+            </div>
+            <div class="hud-val">
+                <span id="hud-defense">15</span>
+                <span class="hud-delta delta-neu">pts</span>
+            </div>
+            <div class="hud-sub" id="hud-rads">Exterior: 4.2 Rads/h</div>
         </div>
     </div>
 
-    <div id="main-container">
-        <section id="shelter-view">
-            <div class="section-header">Shelter Facilities Grid</div>
-            <div id="rooms-grid">
-                <div class="room-card">
-                    <div>
-                        <div class="room-name">OVERSEER COMMAND</div>
-                        <div class="room-stats">Level 1 - Core Terminal<br>Power: -2/cycle</div>
-                    </div>
-                    <div class="room-stats">Assigned: 1/1</div>
+    <!-- Navigation Tabs -->
+    <div id="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('facilities')">[1] FACILITIES & POWER</button>
+        <button class="tab-btn" onclick="switchTab('survivors')">[2] SURVIVOR ROSTER</button>
+        <button class="tab-btn" onclick="switchTab('expeditions')">[3] WASTELAND SCAVENGING</button>
+        <button class="tab-btn" onclick="switchTab('policies')">[4] OVERSEER DIRECTIVES</button>
+    </div>
+
+    <!-- Main Workspace -->
+    <div id="main-area">
+        <main id="content-panel">
+            <!-- FACILITIES VIEW -->
+            <div id="view-facilities" class="tab-content">
+                <div class="panel-title">
+                    <span>Shelter Facilities & Worker Allocations</span>
+                    <span style="color: var(--text-dim); font-size:10px;">Available Unassigned Workers: <strong id="lbl-unassigned" style="color:var(--text-bright);">0</strong></span>
                 </div>
-                <div class="room-card">
-                    <div>
-                        <div class="room-name">GENERATOR ROOM</div>
-                        <div class="room-stats">Level 1 - Output +10<br>Fuel: Scrap</div>
-                    </div>
-                    <div class="room-stats">Assigned: 1/2</div>
-                </div>
-                <div class="room-card">
-                    <div>
-                        <div class="room-name">WATER PURIFIER</div>
-                        <div class="room-stats">Level 1 - Clean Wells<br>Output: +6 Water</div>
-                    </div>
-                    <div class="room-stats">Assigned: 1/2</div>
-                </div>
-                <div class="room-card">
-                    <div>
-                        <div class="room-name">HYDROPONICS BAY</div>
-                        <div class="room-stats">Level 1 - Basic Crops<br>Output: +6 Food</div>
-                    </div>
-                    <div class="room-stats">Assigned: 1/2</div>
-                </div>
-                <div class="room-card">
-                    <div>
-                        <div class="room-name">LIVING QUARTERS</div>
-                        <div class="room-stats">Level 1 - Bunks<br>Cap: 10 Survivors</div>
-                    </div>
-                    <div class="room-stats">Beds: 5 occupied</div>
-                </div>
-                <div class="room-card" style="border-style: dashed; opacity: 0.6;">
-                    <div>
-                        <div class="room-name">[EXPANSION PLOT]</div>
-                        <div class="room-stats">Unexcavated Rock<br>Cost: 40 Scrap</div>
-                    </div>
-                    <div class="room-stats">Ready to Clear</div>
+                <div class="facilities-grid" id="facilities-grid">
+                    <!-- Injected by JavaScript -->
                 </div>
             </div>
-        </section>
 
+            <!-- SURVIVORS VIEW -->
+            <div id="view-survivors" class="tab-content" style="display:none;">
+                <div class="panel-title">
+                    <span>Shelter Citizens & Health Status</span>
+                    <span style="color: var(--text-dim); font-size:10px;">Max Quarters Capacity: <strong id="lbl-max-pop" style="color:var(--text-bright);">10</strong></span>
+                </div>
+                <div class="survivor-list" id="survivor-list">
+                    <!-- Injected by JavaScript -->
+                </div>
+            </div>
+
+            <!-- EXPEDITIONS VIEW -->
+            <div id="view-expeditions" class="tab-content" style="display:none;">
+                <div class="panel-title">
+                    <span>Wasteland Survey & Scavenging Runs</span>
+                    <span style="color: var(--text-dim); font-size:10px;">Active Expeditions: <strong id="lbl-active-scouts" style="color:var(--accent-amber);">0</strong></span>
+                </div>
+                <p style="color: var(--text-dim); margin-bottom: 8px; font-size: 11px;">
+                    Send unassigned survivors out past the airlock to scavenge for food, tech scrap, and medical supplies. Expeditions take 1-2 day cycles to return.
+                </p>
+                <div class="scavenge-grid" id="scavenge-grid">
+                    <!-- Injected by JavaScript -->
+                </div>
+            </div>
+
+            <!-- POLICIES VIEW -->
+            <div id="view-policies" class="tab-content" style="display:none;">
+                <div class="panel-title">
+                    <span>Overseer Protocols & Rationing Directives</span>
+                    <span style="color: var(--text-dim); font-size:10px;">Directives take effect on next cycle</span>
+                </div>
+
+                <div class="policy-group">
+                    <div class="policy-title">Food Rations Protocol</div>
+                    <div class="policy-options" id="policy-food-group">
+                        <div class="policy-opt active" onclick="setPolicy('food', 'normal')">
+                            <div class="policy-name">Standard Rations</div>
+                            <div class="policy-desc">1 Food/citizen. Normal morale, zero malnutrition.</div>
+                        </div>
+                        <div class="policy-opt" onclick="setPolicy('food', 'half')">
+                            <div class="policy-name">Half Rations</div>
+                            <div class="policy-desc">0.5 Food/citizen. Saves food, -4% morale/cycle.</div>
+                        </div>
+                        <div class="policy-opt" onclick="setPolicy('food', 'starve')">
+                            <div class="policy-name">Strict Emergency</div>
+                            <div class="policy-desc">0.25 Food/citizen. -12% morale, risk of sickness.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="policy-group">
+                    <div class="policy-title">Water Conservation Protocol</div>
+                    <div class="policy-options" id="policy-water-group">
+                        <div class="policy-opt active" onclick="setPolicy('water', 'normal')">
+                            <div class="policy-name">Full Allocation</div>
+                            <div class="policy-desc">1 Water/citizen. Crisp & filtered, +2% morale.</div>
+                        </div>
+                        <div class="policy-opt" onclick="setPolicy('water', 'half')">
+                            <div class="policy-name">Strict Rationing</div>
+                            <div class="policy-desc">0.5 Water/citizen. Conserves water, -3% morale.</div>
+                        </div>
+                        <div class="policy-opt" onclick="setPolicy('water', 'minimal')">
+                            <div class="policy-name">Moisture Recovery Only</div>
+                            <div class="policy-desc">0.25 Water/citizen. Heavy thirst, -10% morale.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="policy-group">
+                    <div class="policy-title">Reactor Power Priority</div>
+                    <div class="policy-options" id="policy-power-group">
+                        <div class="policy-opt active" onclick="setPolicy('power', 'balanced')">
+                            <div class="policy-name">Balanced Grid</div>
+                            <div class="policy-desc">Distribute wattage evenly across all active rooms.</div>
+                        </div>
+                        <div class="policy-opt" onclick="setPolicy('power', 'lifesupport')">
+                            <div class="policy-name">Life Support First</div>
+                            <div class="policy-desc">Infirmary and Living Quarters never lose power in brownouts.</div>
+                        </div>
+                        <div class="policy-opt" onclick="setPolicy('power', 'production')">
+                            <div class="policy-name">Resource Priority</div>
+                            <div class="policy-desc">Farms and Water Purifiers stay powered at all costs.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Sidebar: Day Cycle Controller & Terminal Log -->
         <aside id="sidebar">
-            <div class="side-panel" id="controls">
-                <div class="section-header">Overseer Directives</div>
-                <button class="btn btn-primary" id="btn-next-cycle" onclick="advanceCycle()">Advance Day Cycle</button>
-                <button class="btn" onclick="logEvent('Scout dispatched to Wasteland Sector 4.', 'info')">Dispatch Scavenger</button>
-                <button class="btn" onclick="logEvent('Facility maintenance scheduled.', 'info')">Facility Management</button>
-                <button class="btn" onclick="logEvent('Survivor roster inspected.', 'info')">Survivor Roster</button>
+            <div id="cycle-box">
+                <div class="cycle-time-row">
+                    <div class="cycle-day-badge" id="lbl-cycle-day">CYCLE: DAY 1</div>
+                    <div class="cycle-phase-badge" id="lbl-cycle-phase">DAWN (06:00)</div>
+                </div>
+                <div class="cycle-progress-wrap">
+                    <div class="cycle-progress-fill" id="cycle-progress"></div>
+                </div>
+                <button class="btn-advance" id="btn-advance" onclick="advanceCycle()">
+                    ADVANCE DAY CYCLE [SPACE]
+                </button>
+                <div class="cycle-btn-group">
+                    <button class="btn-small" id="btn-autorun" onclick="toggleAutoRun()">AUTO-RUN: OFF</button>
+                    <button class="btn-small" onclick="fastForwardCycles(3)">+3 DAYS</button>
+                    <button class="btn-small" onclick="showDailySummaryModal()">CYCLE REPORT</button>
+                </div>
             </div>
 
-            <div class="side-panel" id="log-panel">
-                <div class="section-header">Sanctuary Log</div>
+            <!-- Terminal Log -->
+            <div class="panel-box" id="log-panel">
+                <div class="panel-title">
+                    <span>Overseer Terminal Log</span>
+                    <button class="btn-header" style="font-size:9px; padding:1px 5px;" onclick="clearLog()">CLEAR</button>
+                </div>
                 <div id="log-output">
-                    <div class="log-entry info">[Day 1 06:00] Vault seal confirmed airtight. Reactor operational.</div>
-                    <div class="log-entry info">[Day 1 07:15] 5 survivors reported for morning muster.</div>
-                    <div class="log-entry">[Day 1 08:00] Perimeter sensors detect quiet wasteland sands.</div>
+                    <!-- Injected by JavaScript -->
                 </div>
             </div>
         </aside>
     </div>
 
+    <!-- Footer -->
     <footer>
-        <span>KSANCTUARY v1.0.0 // POST-COLLAPSE VAULT SYSTEM</span>
-        <span>STATUS: SECURE // ATMOSPHERE: RECYCLED</span>
+        <span>KSANCTUARY // OVERSEER OPERATING PROTOCOL 704</span>
+        <span id="footer-status">VAULT STATUS: SECURE &bull; AIRLOCK CLOSED &bull; SENSORS NORMAL</span>
     </footer>
 
+    <!-- Help / Manual Modal -->
+    <div class="modal-overlay" id="help-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title">OVERSEER SURVIVAL HANDBOOK</div>
+                <button class="btn-close" onclick="closeModal('help-modal')">&times;</button>
+            </div>
+            <div style="font-size: 11px; line-height: 1.5; color: var(--text-main);">
+                <p><strong>WELCOME, OVERSEER.</strong> Your directive is to sustain Vault 704 and shepherd its survivors through the nuclear fallout.</p>
+                <br>
+                <p><strong>1. RESOURCE BALANCING:</strong></p>
+                <p>&bull; <strong>Food & Water:</strong> Each citizen consumes rations daily based on your Overseer Directives. If reserves hit zero, survivors starve, lose morale, and suffer radiation/sickness.</p>
+                <p>&bull; <strong>Power:</strong> Facilities require electrical power from the Generator Room. If power load exceeds generation, brownouts will disable non-essential facilities.</p>
+                <p>&bull; <strong>Scrap:</strong> Gathered by Scavenger teams in the Wasteland or fabricated in the Workshop. Needed for repairs and room expansion.</p>
+                <br>
+                <p><strong>2. WORKER ALLOCATION:</strong></p>
+                <p>Assign your unassigned citizens to production facilities (Hydroponics, Purifiers, Generators). Facilities with assigned workers produce more resources each day cycle!</p>
+                <br>
+                <p><strong>3. THE DAY CYCLE:</strong></p>
+                <p>Press <strong>[ADVANCE DAY CYCLE]</strong> (or hit <strong>SPACEBAR</strong>) to process 1 full day of consumption, production, recovery, and wasteland encounters.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cycle Summary Modal -->
+    <div class="modal-overlay" id="summary-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title" id="sum-modal-title">DAY 1 REPORT</div>
+                <button class="btn-close" onclick="closeModal('summary-modal')">&times;</button>
+            </div>
+            <div id="summary-body" style="font-size: 11px; line-height: 1.5; color: var(--text-main);">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+
     <script>
-        const state = {
+        // Audio Synthesizer (Web Audio API)
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) audioCtx = new AudioContext();
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                if (!audioCtx) return;
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'click') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.exponentialRampToValueAtTime(300, now + 0.04);
+                    gain.gain.setValueAtTime(0.04, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.04);
+                    osc.start(now);
+                    osc.stop(now + 0.04);
+                } else if (type === 'cycle') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(554.37, now + 0.08);
+                    osc.frequency.setValueAtTime(659.25, now + 0.16);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.28);
+                    osc.start(now);
+                    osc.stop(now + 0.28);
+                } else if (type === 'alert') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.setValueAtTime(180, now + 0.12);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'scout') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(783.99, now + 0.1);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.22);
+                    osc.start(now);
+                    osc.stop(now + 0.22);
+                }
+            } catch (e) {
+                // Ignore audio restriction errors
+            }
+        }
+
+        function toggleAudio() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('btn-audio').textContent = `AUDIO: ${soundEnabled ? 'ON' : 'OFF'}`;
+            playSound('click');
+        }
+
+        function toggleScanlines() {
+            const el = document.getElementById('scanlines-el');
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+            playSound('click');
+        }
+
+        // Shelter State Model
+        const defaultState = {
             day: 1,
+            phase: 0, // 0: Dawn, 1: Noon, 2: Dusk, 3: Night
             population: 5,
             maxPop: 10,
-            food: 25,
-            water: 25,
-            power: 20,
-            scrap: 50,
-            morale: 80,
-            defense: 15
+            food: 30,
+            water: 30,
+            powerGen: 22,
+            powerLoad: 16,
+            scrap: 55,
+            morale: 85,
+            defense: 15,
+            exteriorRads: 4.2,
+            policies: {
+                food: 'normal',   // normal, half, starve
+                water: 'normal',  // normal, half, minimal
+                power: 'balanced' // balanced, lifesupport, production
+            },
+            facilities: [
+                {
+                    id: 'cmd',
+                    name: 'OVERSEER COMMAND',
+                    desc: 'Central security terminal & vital sensor hub.',
+                    level: 1,
+                    maxWorkers: 1,
+                    assigned: 1,
+                    powerCost: 2,
+                    powerPriority: 1,
+                    foodProd: 0,
+                    waterProd: 0,
+                    scrapProd: 0,
+                    powerProd: 0
+                },
+                {
+                    id: 'gen',
+                    name: 'DIESEL-BIO GENERATOR',
+                    desc: 'Main electrical turbine supplying power grid.',
+                    level: 1,
+                    maxWorkers: 2,
+                    assigned: 1,
+                    powerCost: 0,
+                    powerPriority: 0,
+                    foodProd: 0,
+                    waterProd: 0,
+                    scrapProd: 0,
+                    powerProd: 22
+                },
+                {
+                    id: 'water',
+                    name: 'WATER PURIFIER',
+                    desc: 'Deep groundwater radiation filtration system.',
+                    level: 1,
+                    maxWorkers: 2,
+                    assigned: 1,
+                    powerCost: 5,
+                    powerPriority: 2,
+                    foodProd: 0,
+                    waterProd: 8,
+                    scrapProd: 0,
+                    powerProd: 0
+                },
+                {
+                    id: 'farm',
+                    name: 'HYDROPONICS BAY',
+                    desc: 'UV-spectrum crop beds producing enriched nutrient paste.',
+                    level: 1,
+                    maxWorkers: 2,
+                    assigned: 1,
+                    powerCost: 5,
+                    powerPriority: 2,
+                    foodProd: 8,
+                    waterProd: 0,
+                    scrapProd: 0,
+                    powerProd: 0
+                },
+                {
+                    id: 'quarters',
+                    name: 'LIVING QUARTERS',
+                    desc: 'Bunk beds and privacy partitions for vault dwellers.',
+                    level: 1,
+                    maxWorkers: 0,
+                    assigned: 0,
+                    powerCost: 2,
+                    powerPriority: 3,
+                    foodProd: 0,
+                    waterProd: 0,
+                    scrapProd: 0,
+                    powerProd: 0
+                },
+                {
+                    id: 'infirmary',
+                    name: 'MED-LAB INFIRMARY',
+                    desc: 'Decontamination showers and surgical beds.',
+                    level: 1,
+                    maxWorkers: 1,
+                    assigned: 1,
+                    powerCost: 2,
+                    powerPriority: 1,
+                    foodProd: 0,
+                    waterProd: 0,
+                    scrapProd: 0,
+                    powerProd: 0
+                },
+                {
+                    id: 'workshop',
+                    name: 'SCRAP WORKSHOP',
+                    desc: 'Tool benches to reforge wasteland junk into usable tech.',
+                    level: 1,
+                    maxWorkers: 2,
+                    assigned: 0,
+                    powerCost: 3,
+                    powerPriority: 4,
+                    foodProd: 0,
+                    waterProd: 0,
+                    scrapProd: 4,
+                    powerProd: 0
+                }
+            ],
+            survivors: [
+                { id: 's1', name: 'Laura Martinez', role: 'Chief Overseer', health: 100, hunger: 0, thirst: 0, morale: 90, job: 'cmd', str: 4, agi: 5, int: 8 },
+                { id: 's2', name: 'Marcus Vance', role: 'Senior Engineer', health: 95, hunger: 0, thirst: 0, morale: 85, job: 'gen', str: 6, agi: 4, int: 7 },
+                { id: 's3', name: 'Elena Rostova', role: 'Hydrologist', health: 100, hunger: 0, thirst: 0, morale: 80, job: 'water', str: 5, agi: 5, int: 6 },
+                { id: 's4', name: 'Caleb Stone', role: 'Agronomist', health: 90, hunger: 0, thirst: 0, morale: 85, job: 'farm', str: 5, agi: 6, int: 6 },
+                { id: 's5', name: 'Dr. Arthur Ross', role: 'Vault Physician', health: 100, hunger: 0, thirst: 0, morale: 88, job: 'infirmary', str: 3, agi: 4, int: 9 }
+            ],
+            expeditions: [
+                {
+                    id: 'exp1',
+                    name: 'Old Supermarket Ruins',
+                    desc: 'Supermarket warehouse 4km north. High food caches.',
+                    duration: 1,
+                    risk: 'Low Risk',
+                    assignedScout: null,
+                    daysRemaining: 0,
+                    potentialFood: 15,
+                    potentialScrap: 10
+                },
+                {
+                    id: 'exp2',
+                    name: 'Derelict Power Substation',
+                    desc: 'Transformer yard with high voltage capacitors and copper wiring.',
+                    duration: 2,
+                    risk: 'Moderate Risk',
+                    assignedScout: null,
+                    daysRemaining: 0,
+                    potentialFood: 5,
+                    potentialScrap: 28
+                },
+                {
+                    id: 'exp3',
+                    name: 'Military Convoy Wreckage',
+                    desc: 'Armored trucks abandoned along highway 80. Weaponry & medicine.',
+                    duration: 2,
+                    risk: 'High Hazard',
+                    assignedScout: null,
+                    daysRemaining: 0,
+                    potentialFood: 12,
+                    potentialScrap: 40
+                }
+            ],
+            lastSummary: null
         };
 
-        function updateUI() {
-            document.getElementById('time-display').textContent = `CYCLE: DAY ${state.day}`;
-            document.getElementById('res-pop').textContent = `${state.population}/${state.maxPop}`;
-            document.getElementById('res-food').textContent = state.food;
-            document.getElementById('res-water').textContent = state.water;
-            document.getElementById('res-power').textContent = state.power;
-            document.getElementById('res-scrap').textContent = state.scrap;
-            document.getElementById('res-morale').textContent = `${state.morale}%`;
-            document.getElementById('res-defense').textContent = state.defense;
+        let state = JSON.parse(JSON.stringify(defaultState));
+        let autoRunTimer = null;
+
+        // Save & Load State
+        function saveState() {
+            try {
+                localStorage.setItem('ksanctuary_save', JSON.stringify(state));
+            } catch (e) {}
         }
 
+        function loadState() {
+            try {
+                const raw = localStorage.getItem('ksanctuary_save');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    // Basic sanity check
+                    if (parsed.facilities && parsed.survivors) {
+                        state = parsed;
+                    }
+                }
+            } catch (e) {}
+        }
+
+        function resetShelter() {
+            if (confirm("Initiate Vault Emergency Reboot? All progress will reset to Day 1.")) {
+                state = JSON.parse(JSON.stringify(defaultState));
+                localStorage.removeItem('ksanctuary_save');
+                logEvent('Vault Overseer OS restarted. Standard emergency parameters restored.', 'crit');
+                updateAll();
+                playSound('alert');
+            }
+        }
+
+        // Calculation Helpers
+        function getTotals() {
+            let totalFoodProd = 0;
+            let totalWaterProd = 0;
+            let totalPowerGen = 0;
+            let totalPowerLoad = 0;
+            let totalScrapProd = 0;
+
+            const isBlackout = state.powerGen < state.powerLoad;
+
+            state.facilities.forEach(fac => {
+                if (fac.powerProd > 0) {
+                    // Generators produce base + worker bonus
+                    totalPowerGen += fac.assigned > 0 ? (fac.powerProd + (fac.assigned - 1) * 8) : 6;
+                } else {
+                    totalPowerLoad += fac.powerCost;
+                }
+
+                if (fac.assigned > 0) {
+                    // If facility is powered
+                    const isPowered = !isBlackout || fac.powerPriority <= 2;
+                    if (isPowered) {
+                        totalFoodProd += fac.foodProd * (fac.assigned);
+                        totalWaterProd += fac.waterProd * (fac.assigned);
+                        totalScrapProd += fac.scrapProd * (fac.assigned);
+                    }
+                }
+            });
+
+            // Consumption rates based on policy
+            let foodPerPerson = 1;
+            if (state.policies.food === 'half') foodPerPerson = 0.5;
+            if (state.policies.food === 'starve') foodPerPerson = 0.25;
+
+            let waterPerPerson = 1;
+            if (state.policies.water === 'half') waterPerPerson = 0.5;
+            if (state.policies.water === 'minimal') waterPerPerson = 0.25;
+
+            const totalFoodNeed = state.population * foodPerPerson;
+            const totalWaterNeed = state.population * waterPerPerson;
+
+            const netFood = totalFoodProd - totalFoodNeed;
+            const netWater = totalWaterProd - totalWaterNeed;
+
+            return {
+                foodProd: totalFoodProd,
+                foodNeed: totalFoodNeed,
+                netFood,
+                waterProd: totalWaterProd,
+                waterNeed: totalWaterNeed,
+                netWater,
+                powerGen: totalPowerGen,
+                powerLoad: totalPowerLoad,
+                scrapProd: totalScrapProd
+            };
+        }
+
+        function getUnassignedSurvivors() {
+            return state.survivors.filter(s => !s.job || s.job === 'unassigned');
+        }
+
+        // Render Functions
+        function renderHUD() {
+            const totals = getTotals();
+            state.powerGen = totals.powerGen;
+            state.powerLoad = totals.powerLoad;
+
+            // Population
+            document.getElementById('hud-pop').textContent = state.population;
+            document.getElementById('hud-pop-cap').textContent = `${state.population}/${state.maxPop}`;
+            const unassignedCount = getUnassignedSurvivors().length;
+            const idleEl = document.getElementById('hud-idle-count');
+            idleEl.textContent = `(${unassignedCount} Idle)`;
+            idleEl.className = unassignedCount > 0 ? 'hud-delta delta-pos' : 'hud-delta delta-neu';
+
+            const sickCount = state.survivors.filter(s => s.health < 50).length;
+            document.getElementById('hud-pop-sub').textContent = `Healthy: ${state.population - sickCount} | Sick: ${sickCount}`;
+            document.getElementById('lbl-unassigned').textContent = unassignedCount;
+            document.getElementById('lbl-max-pop').textContent = state.maxPop;
+
+            // Food
+            document.getElementById('hud-food').textContent = Math.floor(state.food);
+            const foodRateEl = document.getElementById('hud-food-rate');
+            const signF = totals.netFood >= 0 ? '+' : '';
+            foodRateEl.textContent = `${signF}${totals.netFood.toFixed(1)}/cyc`;
+            foodRateEl.className = totals.netFood >= 0 ? 'hud-delta delta-pos' : 'hud-delta delta-neg';
+            const daysFood = totals.foodNeed > 0 ? Math.floor(state.food / totals.foodNeed) : 99;
+            document.getElementById('hud-food-days').textContent = `${daysFood} days`;
+            document.getElementById('hud-food-sub').textContent = `Prod: +${totals.foodProd} | Need: -${totals.foodNeed.toFixed(1)}`;
+
+            // Water
+            document.getElementById('hud-water').textContent = Math.floor(state.water);
+            const waterRateEl = document.getElementById('hud-water-rate');
+            const signW = totals.netWater >= 0 ? '+' : '';
+            waterRateEl.textContent = `${signW}${totals.netWater.toFixed(1)}/cyc`;
+            waterRateEl.className = totals.netWater >= 0 ? 'hud-delta delta-pos' : 'hud-delta delta-neg';
+            const daysWater = totals.waterNeed > 0 ? Math.floor(state.water / totals.waterNeed) : 99;
+            document.getElementById('hud-water-days').textContent = `${daysWater} days`;
+            document.getElementById('hud-water-sub').textContent = `Prod: +${totals.waterProd} | Need: -${totals.waterNeed.toFixed(1)}`;
+
+            // Power
+            document.getElementById('hud-power').textContent = totals.powerGen;
+            const loadPct = totals.powerGen > 0 ? Math.round((totals.powerLoad / totals.powerGen) * 100) : 100;
+            const loadEl = document.getElementById('hud-power-load');
+            loadEl.textContent = `${loadPct}% Load`;
+            loadEl.style.color = loadPct > 100 ? 'var(--danger-red)' : (loadPct > 85 ? 'var(--accent-amber)' : 'var(--text-dim)');
+            document.getElementById('hud-power-sub').textContent = `Gen: ${totals.powerGen} kW | Load: ${totals.powerLoad} kW`;
+
+            // Scrap
+            document.getElementById('hud-scrap').textContent = Math.floor(state.scrap);
+            document.getElementById('hud-scrap-rate').textContent = `+${totals.scrapProd}/cyc`;
+
+            // Morale
+            document.getElementById('hud-morale').textContent = `${Math.round(state.morale)}%`;
+            let moraleLabel = 'CONTENT';
+            if (state.morale >= 90) moraleLabel = 'THRIVING';
+            else if (state.morale < 70 && state.morale >= 45) moraleLabel = 'ANXIOUS';
+            else if (state.morale < 45) moraleLabel = 'MUTINOUS';
+            document.getElementById('hud-morale-text').textContent = moraleLabel;
+
+            // Defense & Rads
+            document.getElementById('hud-defense').textContent = state.defense;
+            document.getElementById('hud-rads').textContent = `Exterior: ${state.exteriorRads.toFixed(1)} Rads/h`;
+
+            // Day / Phase Banner
+            document.getElementById('lbl-cycle-day').textContent = `CYCLE: DAY ${state.day}`;
+            const phases = [
+                { name: 'DAWN (06:00)', pct: 25 },
+                { name: 'MIDDAY (12:00)', pct: 50 },
+                { name: 'DUSK (18:00)', pct: 75 },
+                { name: 'NIGHT (24:00)', pct: 100 }
+            ];
+            const curPhase = phases[state.phase] || phases[0];
+            document.getElementById('lbl-cycle-phase').textContent = curPhase.name;
+            document.getElementById('cycle-progress').style.width = `${curPhase.pct}%`;
+        }
+
+        function renderFacilities() {
+            const grid = document.getElementById('facilities-grid');
+            grid.innerHTML = '';
+            const unassigned = getUnassignedSurvivors().length;
+            const isBlackout = state.powerGen < state.powerLoad;
+
+            state.facilities.forEach(fac => {
+                const card = document.createElement('div');
+                card.className = 'fac-card';
+
+                let statusHtml = '';
+                if (fac.powerProd > 0) {
+                    statusHtml = '<span class="fac-status status-online">GENERATING</span>';
+                } else if (isBlackout && fac.powerPriority > 2) {
+                    statusHtml = '<span class="fac-status status-offline">BROWNOUT</span>';
+                } else if (fac.maxWorkers > 0 && fac.assigned === 0) {
+                    statusHtml = '<span class="fac-status status-idle">UNSTAFFED</span>';
+                } else {
+                    statusHtml = '<span class="fac-status status-online">ONLINE</span>';
+                }
+
+                let yieldText = '';
+                if (fac.powerProd > 0) yieldText = `Output: +${fac.assigned > 0 ? (fac.powerProd + (fac.assigned - 1) * 8) : 6} kW Power`;
+                else if (fac.foodProd > 0) yieldText = `Output: +${fac.foodProd * fac.assigned} Food / cycle`;
+                else if (fac.waterProd > 0) yieldText = `Output: +${fac.waterProd * fac.assigned} Water / cycle`;
+                else if (fac.scrapProd > 0) yieldText = `Output: +${fac.scrapProd * fac.assigned} Scrap / cycle`;
+                else if (fac.id === 'quarters') yieldText = `Capacity: 10 Dwellers (+Beds)`;
+                else if (fac.id === 'infirmary') yieldText = `Function: Heals sick survivors`;
+                else if (fac.id === 'cmd') yieldText = `Command: Radar & System Controls`;
+
+                let workerControlHtml = '';
+                if (fac.maxWorkers > 0) {
+                    workerControlHtml = `
+                        <div class="fac-workers">
+                            <span class="worker-count">Staff: ${fac.assigned}/${fac.maxWorkers}</span>
+                            <div class="worker-controls">
+                                <button class="btn-worker" onclick="changeWorker('${fac.id}', -1)" ${fac.assigned <= 0 ? 'disabled' : ''}>-</button>
+                                <button class="btn-worker" onclick="changeWorker('${fac.id}', 1)" ${fac.assigned >= fac.maxWorkers || unassigned <= 0 ? 'disabled' : ''}>+</button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="fac-top">
+                        <span class="fac-name">${fac.name}</span>
+                        ${statusHtml}
+                    </div>
+                    <div class="fac-stats">
+                        ${fac.desc}<br>
+                        <strong>${yieldText}</strong><br>
+                        <span style="color:var(--text-dim);">Power Draw: ${fac.powerCost > 0 ? `-${fac.powerCost} kW` : 'Self-Sufficient'}</span>
+                    </div>
+                    ${workerControlHtml}
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        function renderSurvivors() {
+            const list = document.getElementById('survivor-list');
+            list.innerHTML = '';
+
+            state.survivors.forEach(surv => {
+                const row = document.createElement('div');
+                row.className = 'survivor-row';
+
+                // Health condition
+                let healthClass = '';
+                if (surv.health < 40) healthClass = 'crit';
+                else if (surv.health < 75) healthClass = 'warn';
+
+                // Job Options
+                let optionsHtml = `<option value="unassigned" ${surv.job === 'unassigned' || !surv.job ? 'selected' : ''}>[ Unassigned / Idle ]</option>`;
+                state.facilities.forEach(f => {
+                    if (f.maxWorkers > 0) {
+                        const isCurrent = surv.job === f.id;
+                        optionsHtml += `<option value="${f.id}" ${isCurrent ? 'selected' : ''}>${f.name} (${f.assigned}/${f.maxWorkers})</option>`;
+                    }
+                });
+
+                row.innerHTML = `
+                    <div class="survivor-identity">
+                        <span class="survivor-name">${surv.name}</span>
+                        <span class="survivor-role">${surv.role} &bull; S:${surv.str} A:${surv.agi} I:${surv.int}</span>
+                    </div>
+                    <div class="survivor-meters">
+                        <div class="meter-group">
+                            <div class="meter-label"><span>HEALTH</span><span>${surv.health}%</span></div>
+                            <div class="meter-bar"><div class="meter-fill ${healthClass}" style="width: ${surv.health}%"></div></div>
+                        </div>
+                        <div class="meter-group">
+                            <div class="meter-label"><span>MORALE</span><span>${surv.morale}%</span></div>
+                            <div class="meter-bar"><div class="meter-fill" style="width: ${surv.morale}%; background: var(--accent-amber);"></div></div>
+                        </div>
+                    </div>
+                    <div class="survivor-assign">
+                        <select class="select-assign" onchange="assignSurvivorJob('${surv.id}', this.value)">
+                            ${optionsHtml}
+                        </select>
+                    </div>
+                `;
+
+                list.appendChild(row);
+            });
+        }
+
+        function renderExpeditions() {
+            const grid = document.getElementById('scavenge-grid');
+            grid.innerHTML = '';
+            const unassigned = getUnassignedSurvivors();
+
+            let activeCount = 0;
+            state.expeditions.forEach(exp => {
+                const card = document.createElement('div');
+                card.className = 'scout-card';
+
+                let btnHtml = '';
+                if (exp.assignedScout) {
+                    activeCount++;
+                    btnHtml = `<button class="btn-dispatch" disabled style="color:var(--accent-amber);">IN PROGRESS (${exp.daysRemaining}d left)</button>`;
+                } else {
+                    btnHtml = `<button class="btn-dispatch" onclick="dispatchScout('${exp.id}')" ${unassigned.length === 0 ? 'disabled' : ''}>DISPATCH SCOUT</button>`;
+                }
+
+                card.innerHTML = `
+                    <div class="scout-name">${exp.name}</div>
+                    <div class="scout-risk">${exp.risk} &bull; Est. Duration: ${exp.duration} Cycle(s)</div>
+                    <div style="font-size:10px; color:var(--text-main); margin-top:2px;">${exp.desc}</div>
+                    <div style="font-size:10px; color:var(--text-bright); margin-top:4px;">Yield: ~${exp.potentialFood} Food, ~${exp.potentialScrap} Scrap</div>
+                    ${btnHtml}
+                `;
+
+                grid.appendChild(card);
+            });
+
+            document.getElementById('lbl-active-scouts').textContent = activeCount;
+        }
+
+        function updateAll() {
+            renderHUD();
+            renderFacilities();
+            renderSurvivors();
+            renderExpeditions();
+            saveState();
+        }
+
+        // Worker & Survivor Assignment Logic
+        function changeWorker(facId, delta) {
+            const fac = state.facilities.find(f => f.id === facId);
+            if (!fac) return;
+
+            if (delta > 0) {
+                const unassigned = getUnassignedSurvivors();
+                if (unassigned.length > 0 && fac.assigned < fac.maxWorkers) {
+                    const worker = unassigned[0];
+                    worker.job = fac.id;
+                    fac.assigned++;
+                    logEvent(`${worker.name} assigned to ${fac.name}.`, 'info');
+                    playSound('click');
+                }
+            } else if (delta < 0) {
+                if (fac.assigned > 0) {
+                    const worker = state.survivors.find(s => s.job === fac.id);
+                    if (worker) {
+                        worker.job = 'unassigned';
+                    }
+                    fac.assigned--;
+                    logEvent(`Worker removed from ${fac.name}.`, 'info');
+                    playSound('click');
+                }
+            }
+
+            updateAll();
+        }
+
+        function assignSurvivorJob(survivorId, newJob) {
+            const surv = state.survivors.find(s => s.id === survivorId);
+            if (!surv) return;
+
+            // Unassign from old facility
+            if (surv.job && surv.job !== 'unassigned') {
+                const oldFac = state.facilities.find(f => f.id === surv.job);
+                if (oldFac && oldFac.assigned > 0) {
+                    oldFac.assigned--;
+                }
+            }
+
+            if (newJob === 'unassigned') {
+                surv.job = 'unassigned';
+                logEvent(`${surv.name} was set to Idle.`, 'info');
+            } else {
+                const newFac = state.facilities.find(f => f.id === newJob);
+                if (newFac) {
+                    if (newFac.assigned < newFac.maxWorkers) {
+                        newFac.assigned++;
+                        surv.job = newJob;
+                        logEvent(`${surv.name} reassigned to ${newFac.name}.`, 'info');
+                    } else {
+                        logEvent(`${newFac.name} is already at maximum staffing!`, 'warn');
+                        surv.job = 'unassigned';
+                    }
+                }
+            }
+
+            playSound('click');
+            updateAll();
+        }
+
+        function dispatchScout(expId) {
+            const exp = state.expeditions.find(e => e.id === expId);
+            const unassigned = getUnassignedSurvivors();
+            if (!exp || unassigned.length === 0) return;
+
+            const scout = unassigned[0];
+            scout.job = 'expedition';
+            exp.assignedScout = scout.id;
+            exp.daysRemaining = exp.duration;
+
+            logEvent(`Scout ${scout.name} geared up and dispatched to ${exp.name}.`, 'scout');
+            playSound('scout');
+            updateAll();
+        }
+
+        // Policies
+        function setPolicy(type, value) {
+            state.policies[type] = value;
+            const container = document.getElementById(`policy-${type}-group`);
+            if (container) {
+                const options = container.querySelectorAll('.policy-opt');
+                options.forEach(opt => opt.classList.remove('active'));
+                event.currentTarget.classList.add('active');
+            }
+            logEvent(`Overseer updated ${type.toUpperCase()} protocol to [${value.toUpperCase()}].`, 'info');
+            playSound('click');
+            updateAll();
+        }
+
+        // Tab Switching
+        function switchTab(tabId) {
+            const tabs = ['facilities', 'survivors', 'expeditions', 'policies'];
+            tabs.forEach(t => {
+                const view = document.getElementById(`view-${t}`);
+                if (view) view.style.display = t === tabId ? 'block' : 'none';
+            });
+
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(b => b.classList.remove('active'));
+            if (event && event.currentTarget) event.currentTarget.classList.add('active');
+
+            playSound('click');
+        }
+
+        // Terminal Log
         function logEvent(msg, type = '') {
-            const logOut = document.getElementById('log-output');
+            const out = document.getElementById('log-output');
             const div = document.createElement('div');
-            div.className = `log-entry ${type}`;
-            const timeStr = `[Day ${state.day} 12:00]`;
+            div.className = `log-item ${type}`;
+            const timeStr = `[D${state.day} P${state.phase + 1}]`;
             div.textContent = `${timeStr} ${msg}`;
-            logOut.prepend(div);
+            out.appendChild(div);
+
+            // Limit log length
+            while (out.children.length > 50) {
+                out.removeChild(out.firstChild);
+            }
         }
 
+        function clearLog() {
+            document.getElementById('log-output').innerHTML = '';
+            playSound('click');
+        }
+
+        // Day Cycle Simulation Engine
         function advanceCycle() {
-            state.day++;
-            // Basic balance delta for skeleton testing
-            state.food = Math.max(0, state.food - state.population + 6);
-            state.water = Math.max(0, state.water - state.population + 6);
-            logEvent(`Cycle progressed to Day ${state.day}. Rations consumed, facilities gathered output.`, 'info');
-            updateUI();
+            state.phase++;
+            if (state.phase >= 4) {
+                state.phase = 0;
+                processNewDay();
+            } else {
+                logEvent(`Sun shifted across the irradiated horizon. Time: ${['Dawn', 'Midday', 'Dusk', 'Night'][state.phase]}.`, 'info');
+                playSound('click');
+            }
+            updateAll();
         }
 
+        function processNewDay() {
+            state.day++;
+            playSound('cycle');
+
+            const totals = getTotals();
+
+            // 1. Resource changes
+            state.food = Math.max(0, state.food + totals.foodProd - totals.foodNeed);
+            state.water = Math.max(0, state.water + totals.waterProd - totals.waterNeed);
+            state.scrap = Math.max(0, state.scrap + totals.scrapProd);
+
+            // 2. Starvation & Thirst effects
+            let starvationEvents = 0;
+            let thirstEvents = 0;
+
+            if (state.food <= 0) {
+                starvationEvents++;
+                state.morale = Math.max(10, state.morale - 8);
+                state.survivors.forEach(s => {
+                    s.health = Math.max(10, s.health - 12);
+                    s.hunger = Math.min(100, s.hunger + 25);
+                });
+                logEvent(`CRITICAL: Food storages depleted! Survivors are starving!`, 'crit');
+                playSound('alert');
+            }
+
+            if (state.water <= 0) {
+                thirstEvents++;
+                state.morale = Math.max(10, state.morale - 12);
+                state.survivors.forEach(s => {
+                    s.health = Math.max(5, s.health - 18);
+                    s.thirst = Math.min(100, s.thirst + 30);
+                });
+                logEvent(`CRITICAL: Water tanks bone dry! Severe dehydration spreading!`, 'crit');
+                playSound('alert');
+            }
+
+            // 3. Health & Morale recovery if fed
+            if (state.food > 0 && state.water > 0) {
+                state.survivors.forEach(s => {
+                    if (s.health < 100) s.health = Math.min(100, s.health + 5);
+                    s.hunger = Math.max(0, s.hunger - 15);
+                    s.thirst = Math.max(0, s.thirst - 20);
+                });
+                state.morale = Math.min(100, state.morale + 1);
+            }
+
+            // 4. Progress Expeditions
+            state.expeditions.forEach(exp => {
+                if (exp.assignedScout) {
+                    exp.daysRemaining--;
+                    if (exp.daysRemaining <= 0) {
+                        // Scout returns!
+                        const scout = state.survivors.find(s => s.id === exp.assignedScout);
+                        const scoutName = scout ? scout.name : 'Scout';
+
+                        const foodFound = Math.floor(exp.potentialFood * (0.8 + Math.random() * 0.4));
+                        const scrapFound = Math.floor(exp.potentialScrap * (0.8 + Math.random() * 0.4));
+
+                        state.food += foodFound;
+                        state.scrap += scrapFound;
+
+                        if (scout) {
+                            scout.job = 'unassigned';
+                            scout.morale = Math.min(100, scout.morale + 10);
+                        }
+
+                        exp.assignedScout = null;
+                        logEvent(`${scoutName} returned safely from ${exp.name}! Salvaged: +${foodFound} Food, +${scrapFound} Scrap.`, 'cycle');
+                        playSound('scout');
+                    }
+                }
+            });
+
+            // 5. Random Wasteland Event
+            triggerDailyEvent();
+
+            // 6. Record Summary for report
+            state.lastSummary = {
+                day: state.day,
+                foodDelta: totals.foodProd - totals.foodNeed,
+                waterDelta: totals.waterProd - totals.waterNeed,
+                scrapDelta: totals.scrapProd,
+                morale: Math.round(state.morale)
+            };
+
+            logEvent(`=== CYCLE DAY ${state.day} COMMENCED. Rations distributed, reactor cycled. ===`, 'cycle');
+        }
+
+        function triggerDailyEvent() {
+            const roll = Math.random();
+            if (roll < 0.22) {
+                // Radio distress call / migrant arriving
+                if (state.population < state.maxPop) {
+                    const firstNames = ['Silas', 'Daphne', 'Gideon', 'Kira', 'Nolan', 'Vera', 'Rook'];
+                    const lastNames = ['Cross', 'Vance', 'Mercer', 'Gant', 'Holloway', 'Kane'];
+                    const newName = `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
+                    const newSurv = {
+                        id: 's_' + Date.now(),
+                        name: newName,
+                        role: 'Wasteland Refugee',
+                        health: 85,
+                        hunger: 10,
+                        thirst: 15,
+                        morale: 75,
+                        job: 'unassigned',
+                        str: 4 + Math.floor(Math.random() * 4),
+                        agi: 4 + Math.floor(Math.random() * 4),
+                        int: 4 + Math.floor(Math.random() * 4)
+                    };
+                    state.survivors.push(newSurv);
+                    state.population = state.survivors.length;
+                    logEvent(`AIRLOCK ALERT: A weary wanderer (${newName}) knocked on the blast door and was admitted!`, 'cycle');
+                }
+            } else if (roll < 0.40) {
+                // Dust Storm
+                state.exteriorRads = Math.min(15, state.exteriorRads + 1.5);
+                logEvent(`ENVIRONMENTAL: Heavy radioactive dust storm whipping across the surface. Exterior rads increased.`, 'warn');
+            } else if (roll < 0.55) {
+                // Minor reactor hum / scrap salvage
+                const scrapBonus = 6 + Math.floor(Math.random() * 8);
+                state.scrap += scrapBonus;
+                logEvent(`MAINTENANCE: Engineering recovered +${scrapBonus} scrap from disused conduits.`, 'info');
+            }
+        }
+
+        function fastForwardCycles(count) {
+            for (let i = 0; i < count; i++) {
+                processNewDay();
+            }
+            updateAll();
+        }
+
+        function toggleAutoRun() {
+            const btn = document.getElementById('btn-autorun');
+            if (autoRunTimer) {
+                clearInterval(autoRunTimer);
+                autoRunTimer = null;
+                btn.textContent = 'AUTO-RUN: OFF';
+                btn.style.color = 'var(--text-dim)';
+            } else {
+                autoRunTimer = setInterval(() => {
+                    advanceCycle();
+                }, 1800);
+                btn.textContent = 'AUTO-RUN: ON';
+                btn.style.color = 'var(--accent-green)';
+            }
+            playSound('click');
+        }
+
+        // Modals
+        function showHelpModal() {
+            document.getElementById('help-modal').style.display = 'flex';
+            playSound('click');
+        }
+
+        function showDailySummaryModal() {
+            if (!state.lastSummary) {
+                state.lastSummary = {
+                    day: state.day,
+                    foodDelta: 0,
+                    waterDelta: 0,
+                    scrapDelta: 0,
+                    morale: Math.round(state.morale)
+                };
+            }
+
+            document.getElementById('sum-modal-title').textContent = `OVERSEER LOG // CYCLE DAY ${state.lastSummary.day} SUMMARY`;
+            const sumBody = document.getElementById('summary-body');
+            sumBody.innerHTML = `
+                <div style="background:#111a12; border:1px solid var(--panel-border); padding:10px; border-radius:2px; margin-bottom:8px;">
+                    <p><strong>Population:</strong> ${state.population} / ${state.maxPop} Survivors</p>
+                    <p><strong>Food Balance:</strong> ${state.lastSummary.foodDelta >= 0 ? '+' : ''}${state.lastSummary.foodDelta.toFixed(1)} / day</p>
+                    <p><strong>Water Balance:</strong> ${state.lastSummary.waterDelta >= 0 ? '+' : ''}${state.lastSummary.waterDelta.toFixed(1)} / day</p>
+                    <p><strong>Power Balance:</strong> ${state.powerGen} kW Gen / ${state.powerLoad} kW Demand</p>
+                    <p><strong>Vault Morale:</strong> ${state.lastSummary.morale}%</p>
+                </div>
+                <p>Ensure active worker assignments across facilities to prevent deficits. Use <strong>[Spacebar]</strong> to advance subsequent days.</p>
+            `;
+            document.getElementById('summary-modal').style.display = 'flex';
+            playSound('click');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+            playSound('click');
+        }
+
+        // Hotkey bindings
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+                e.preventDefault();
+                advanceCycle();
+            } else if (e.code === 'Digit1') {
+                switchTab('facilities');
+            } else if (e.code === 'Digit2') {
+                switchTab('survivors');
+            } else if (e.code === 'Digit3') {
+                switchTab('expeditions');
+            } else if (e.code === 'Digit4') {
+                switchTab('policies');
+            }
+        });
+
+        // Initialize on load
         window.addEventListener('DOMContentLoaded', () => {
-            updateUI();
+            loadState();
+            logEvent('Vault 704 Overseer System initialized. All security bulkheads sealed.', 'cycle');
+            logEvent('Life support and biometric sensors operating on standby power.', 'info');
+            updateAll();
         });
     </script>
 </body>
