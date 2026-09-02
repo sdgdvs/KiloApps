@@ -52,6 +52,9 @@ void RenderHelpTabLog();
 extern int g_GdiScreenShakeTimer;
 extern int g_GdiScreenShakeIntensity;
 extern int g_GdiRedFlashTimer;
+void TriggerGdiScreenShake(int intensity);
+void AddGdiShockwave(int x, int y, COLORREF color, int maxRadius);
+void AddGdiParticles(int x, int y, COLORREF color, int count, int multilayer);
 void AddGdiFloatText(const char* text, int x, int y, COLORREF color, int isCrit);
 
 #define MAX_INV_SLOTS 30
@@ -2175,9 +2178,10 @@ void EnemyTurn() {
     char ftxt[16];
     wsprintfA(ftxt, "-%d", dmg);
     AddGdiFloatText(ftxt, 140, 70, RGB(243, 139, 168), isMassive);
+    AddGdiParticles(140, 70, RGB(243, 139, 168), isMassive ? 25 : 12, isMassive);
+    AddGdiShockwave(140, 85, RGB(243, 139, 168), isMassive ? 70 : 45);
+    TriggerGdiScreenShake(isMassive ? 14 : 6);
     if (isMassive) {
-        g_GdiScreenShakeTimer = 15;
-        g_GdiScreenShakeIntensity = 10;
         g_GdiRedFlashTimer = 20;
     }
 
@@ -2249,6 +2253,9 @@ void CombatVictory() {
     char msg[128];
     wsprintfA(msg, "🎉 VICTORY! Defeated %s! Gained +%d XP and +%d Gold!", currentEnemy.name, currentEnemy.xp, rewardGold);
     LogMessage(msg);
+    AddGdiShockwave(380, 70, RGB(249, 226, 175), 90);
+    TriggerGdiScreenShake(10);
+    AddGdiParticles(380, 70, RGB(249, 226, 175), 35, 1);
 
     player.xp += currentEnemy.xp;
     player.gold += rewardGold;
@@ -2763,6 +2770,9 @@ void HandleButton1() {
         char ftxt[16];
         wsprintfA(ftxt, "-%d", dmg);
         AddGdiFloatText(ftxt, 560, 65, RGB(249, 226, 175), isCrit);
+        AddGdiParticles(560, 65, isCrit ? RGB(249, 226, 175) : RGB(243, 139, 168), isCrit ? 25 : 12, isCrit);
+        AddGdiShockwave(560, 80, isCrit ? RGB(249, 226, 175) : RGB(243, 139, 168), isCrit ? 75 : 50);
+        TriggerGdiScreenShake(isCrit ? 12 : 6);
 
         // Weapon Enchantment Effects
         if (lstrcmpA(player.weaponPrefix, "Flaming") == 0) {
@@ -3920,27 +3930,128 @@ void AddGdiFloatText(const char* text, int x, int y, COLORREF color, int isCrit)
     }
 }
 
+#define GDI_MAX_PARTICLES 256
+#define PT_SPARK 0
+#define PT_SMOKE 1
+#define PT_SHARD 2
+#define PT_STAR  3
+
 typedef struct {
-    int x, y;
-    int vx, vy;
+    float x, y;
+    float vx, vy;
     COLORREF color;
     int life, maxLife;
-    int multilayer;
+    int type;
+    float size;
+    float rot, rotSpeed;
 } GdiParticle;
 
-static GdiParticle g_GdiParticles[128];
+static GdiParticle g_GdiParticles[GDI_MAX_PARTICLES];
 static int g_GdiParticleCount = 0;
 
+typedef struct {
+    int x, y;
+    float radius, maxRadius;
+    COLORREF color;
+    int life, maxLife;
+} GdiShockwave;
+
+static GdiShockwave g_GdiShockwaves[16];
+static int g_GdiShockwaveCount = 0;
+
+static const signed char s_SinTable[16] = {
+    0, 48, 90, 117, 127, 117, 90, 48,
+    0, -48, -90, -117, -127, -117, -90, -48
+};
+static int FastSin(int angle) {
+    return (int)s_SinTable[(angle & 15)];
+}
+static int FastCos(int angle) {
+    return (int)s_SinTable[((angle + 4) & 15)];
+}
+
+static int g_GdiShakeAmp = 0;
+static int g_GdiShakeAngle = 0;
+int g_GdiScreenShakeTimer = 0;
+int g_GdiScreenShakeIntensity = 0;
+int g_GdiRedFlashTimer = 0;
+
+void TriggerGdiScreenShake(int intensity) {
+    if (intensity > g_GdiShakeAmp) {
+        g_GdiShakeAmp = intensity;
+    }
+}
+
+void AddGdiShockwave(int x, int y, COLORREF color, int maxRadius) {
+    if (g_GdiShockwaveCount < 16) {
+        g_GdiShockwaves[g_GdiShockwaveCount].x = x;
+        g_GdiShockwaves[g_GdiShockwaveCount].y = y;
+        g_GdiShockwaves[g_GdiShockwaveCount].radius = 4.0f;
+        g_GdiShockwaves[g_GdiShockwaveCount].maxRadius = (float)maxRadius;
+        g_GdiShockwaves[g_GdiShockwaveCount].color = color;
+        g_GdiShockwaves[g_GdiShockwaveCount].life = 0;
+        g_GdiShockwaves[g_GdiShockwaveCount].maxLife = 20;
+        g_GdiShockwaveCount++;
+    }
+}
+
 void AddGdiParticles(int x, int y, COLORREF color, int count, int multilayer) {
-    for (int i = 0; i < count && g_GdiParticleCount < 128; i++) {
-        g_GdiParticles[g_GdiParticleCount].x = x;
-        g_GdiParticles[g_GdiParticleCount].y = y;
-        g_GdiParticles[g_GdiParticleCount].vx = (xrand() % 9) - 4;
-        g_GdiParticles[g_GdiParticleCount].vy = (xrand() % 7) - 4;
-        g_GdiParticles[g_GdiParticleCount].color = color;
-        g_GdiParticles[g_GdiParticleCount].life = 0;
-        g_GdiParticles[g_GdiParticleCount].maxLife = 20 + (xrand() % 15);
-        g_GdiParticleCount++;
+    // Layer 1: Incandescent needle core sparks
+    int sparkCount = count * 2 / 5;
+    if (sparkCount < 4) sparkCount = 4;
+    for (int i = 0; i < sparkCount && g_GdiParticleCount < GDI_MAX_PARTICLES; i++) {
+        GdiParticle* p = &g_GdiParticles[g_GdiParticleCount++];
+        p->type = PT_SPARK;
+        p->x = (float)x; p->y = (float)y;
+        p->vx = (float)((xrand() % 15) - 7);
+        p->vy = (float)((xrand() % 13) - 7);
+        p->color = ((xrand() % 2) == 0) ? RGB(255, 255, 255) : color;
+        p->size = 2.0f;
+        p->rot = 0; p->rotSpeed = 0;
+        p->life = 0; p->maxLife = 14 + (xrand() % 10);
+    }
+    // Layer 2: Expanding buoyant smoke puffs
+    int smokeCount = count * 3 / 10;
+    if (smokeCount < 3) smokeCount = 3;
+    for (int i = 0; i < smokeCount && g_GdiParticleCount < GDI_MAX_PARTICLES; i++) {
+        GdiParticle* p = &g_GdiParticles[g_GdiParticleCount++];
+        p->type = PT_SMOKE;
+        p->x = (float)(x + (xrand() % 11) - 5);
+        p->y = (float)(y + (xrand() % 9) - 4);
+        p->vx = (float)((xrand() % 5) - 2);
+        p->vy = -1.0f - (float)(xrand() % 3);
+        p->color = RGB(88, 91, 112);
+        p->size = 4.0f + (float)(xrand() % 4);
+        p->rot = 0; p->rotSpeed = 0;
+        p->life = 0; p->maxLife = 20 + (xrand() % 12);
+    }
+    // Layer 3: Heavy kinematic debris / stone shards
+    int shardCount = count / 4;
+    if (shardCount < 3) shardCount = 3;
+    for (int i = 0; i < shardCount && g_GdiParticleCount < GDI_MAX_PARTICLES; i++) {
+        GdiParticle* p = &g_GdiParticles[g_GdiParticleCount++];
+        p->type = PT_SHARD;
+        p->x = (float)x; p->y = (float)y;
+        p->vx = (float)((xrand() % 11) - 5);
+        p->vy = -2.0f - (float)(xrand() % 5);
+        p->color = color;
+        p->size = 3.0f + (float)(xrand() % 4);
+        p->rot = (float)(xrand() % 360);
+        p->rotSpeed = 0.2f * (float)((xrand() % 5) - 2);
+        p->life = 0; p->maxLife = 28 + (xrand() % 14);
+    }
+    // Layer 4: Radiant golden celebration stars
+    int starCount = multilayer ? (count * 3 / 10) : 2;
+    for (int i = 0; i < starCount && g_GdiParticleCount < GDI_MAX_PARTICLES; i++) {
+        GdiParticle* p = &g_GdiParticles[g_GdiParticleCount++];
+        p->type = PT_STAR;
+        p->x = (float)x; p->y = (float)y;
+        p->vx = (float)((xrand() % 7) - 3);
+        p->vy = -1.5f - (float)(xrand() % 4);
+        p->color = ((xrand() % 2) == 0) ? RGB(249, 226, 175) : RGB(250, 179, 135);
+        p->size = 4.0f + (float)(xrand() % 3);
+        p->rot = 0; p->rotSpeed = 0.2f;
+        p->life = 0; p->maxLife = 25 + (xrand() % 15);
     }
 }
 
@@ -3960,14 +4071,13 @@ static int g_GdiBannerActive = 0;
 static int g_GdiBannerTimer = 0;
 static char g_GdiBannerTitle[32] = "VICTORY!";
 
-static int g_GdiScreenShakeTimer = 0;
-static int g_GdiScreenShakeIntensity = 0;
-static int g_GdiRedFlashTimer = 0;
-
 void TriggerGdiVictoryBanner(const char* title) {
     g_GdiBannerActive = 1;
     g_GdiBannerTimer = 0;
     lstrcpyA(g_GdiBannerTitle, title);
+    AddGdiShockwave(380, 70, RGB(249, 226, 175), 80);
+    TriggerGdiScreenShake(10);
+    AddGdiParticles(380, 70, RGB(249, 226, 175), 35, 1);
 }
 
 void DrawGdiHeroSprite(HDC hdc, int x, int y, const char* heroClass, int frame, const char* wpnName, const char* armName) {
@@ -4089,6 +4199,13 @@ void DrawGdiHeroSprite(HDC hdc, int x, int y, const char* heroClass, int frame, 
             MoveToEx(hdc, x + 14, sy + 15, NULL); LineTo(hdc, x + 14, sy - 20);
         }
         SelectObject(hdc, hOldP); DeleteObject(hSwP);
+
+        // Specular glint sheen sweep on blade
+        int glintY = -15 + ((frame * 2) % 30);
+        HPEN hGlintP = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+        HPEN hOldGP = (HPEN)SelectObject(hdc, hGlintP);
+        MoveToEx(hdc, x + 13, sy + glintY, NULL); LineTo(hdc, x + 16, sy + glintY);
+        SelectObject(hdc, hOldGP); DeleteObject(hGlintP);
     }
 
     if (player.poisonedTurns > 0) {
@@ -4235,9 +4352,14 @@ void RenderGdiScene(HDC hdc, int w, int h) {
 
     int shakeX = 0, shakeY = 0;
     if (g_GdiScreenShakeTimer > 0) {
-        g_GdiScreenShakeTimer--;
-        shakeX = (xrand() % (g_GdiScreenShakeIntensity * 2 + 1)) - g_GdiScreenShakeIntensity;
-        shakeY = (xrand() % (g_GdiScreenShakeIntensity * 2 + 1)) - g_GdiScreenShakeIntensity;
+        TriggerGdiScreenShake(g_GdiScreenShakeIntensity ? g_GdiScreenShakeIntensity : 12);
+        g_GdiScreenShakeTimer = 0;
+    }
+    if (g_GdiShakeAmp > 0) {
+        g_GdiShakeAngle = (g_GdiShakeAngle + 3) & 15;
+        shakeX = (FastCos(g_GdiShakeAngle) * g_GdiShakeAmp) / 127;
+        shakeY = (FastSin(g_GdiShakeAngle) * g_GdiShakeAmp) / 127;
+        g_GdiShakeAmp = (g_GdiShakeAmp * 86) / 100;
     }
     SetViewportOrgEx(hdc, shakeX, shakeY, NULL);
 
@@ -4295,6 +4417,45 @@ void RenderGdiScene(HDC hdc, int w, int h) {
         }
     }
 
+    // Render Dual-Tier Concentric Ground Shockwaves
+    for (int i = g_GdiShockwaveCount - 1; i >= 0; i--) {
+        GdiShockwave* sw = &g_GdiShockwaves[i];
+        sw->life++;
+        sw->radius += 4.5f;
+        int r = (int)sw->radius;
+        int ry = (int)(sw->radius * 0.42f);
+        if (ry < 1) ry = 1;
+
+        // Primary ripple ring
+        HPEN hSwPen = CreatePen(PS_SOLID, 2, sw->color);
+        HPEN hOldP = (HPEN)SelectObject(hdc, hSwPen);
+        HBRUSH hNullB = (HBRUSH)GetStockObject(NULL_BRUSH);
+        HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hNullB);
+        Ellipse(hdc, sw->x - r, sw->y - ry, sw->x + r, sw->y + ry);
+
+        // Secondary harmonic inner ring
+        if (r > 10) {
+            int ir = r * 2 / 3;
+            int iry = ry * 2 / 3;
+            if (iry < 1) iry = 1;
+            HPEN hSwPen2 = CreatePen(PS_DOT, 1, RGB(255, 255, 255));
+            SelectObject(hdc, hSwPen2);
+            DeleteObject(hSwPen);
+            Ellipse(hdc, sw->x - ir, sw->y - iry, sw->x + ir, sw->y + iry);
+            SelectObject(hdc, hOldP);
+            DeleteObject(hSwPen2);
+        } else {
+            SelectObject(hdc, hOldP);
+            DeleteObject(hSwPen);
+        }
+        SelectObject(hdc, hOldB);
+
+        if (sw->life >= sw->maxLife || sw->radius >= sw->maxRadius) {
+            g_GdiShockwaves[i] = g_GdiShockwaves[g_GdiShockwaveCount - 1];
+            g_GdiShockwaveCount--;
+        }
+    }
+
     int heroX = 140;
     int heroY = 70;
     int monsterX = 560;
@@ -4341,24 +4502,82 @@ void RenderGdiScene(HDC hdc, int w, int h) {
         if (g_GdiSpellFxProgress >= g_GdiSpellFxMax) {
             if (g_GdiSpellFxType == 1) {
                 AddGdiParticles(monsterX, monsterY + 10, RGB(250, 179, 135), 40, 1);
+                AddGdiShockwave(monsterX, monsterY + 10, RGB(250, 179, 135), 70);
+                TriggerGdiScreenShake(14);
+            } else if (g_GdiSpellFxType == 2) {
+                AddGdiShockwave(monsterX, monsterY + 10, RGB(137, 220, 235), 65);
+                TriggerGdiScreenShake(10);
             }
             g_GdiSpellFxType = 0;
         }
     }
 
+    // 4-Layer Kinematic Particle Engine
     for (int i = g_GdiParticleCount - 1; i >= 0; i--) {
         GdiParticle* pt = &g_GdiParticles[i];
-        pt->x += pt->vx;
-        pt->y += pt->vy;
-        if (pt->multilayer) {
-            pt->vy += 1; // gravity
-        }
         pt->life++;
-        HBRUSH hPtB = CreateSolidBrush(pt->color);
-        HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hPtB);
-        int radius = pt->multilayer ? 4 : 2;
-        Ellipse(hdc, pt->x - radius, pt->y - radius, pt->x + radius + 1, pt->y + radius + 1);
-        SelectObject(hdc, hOldB); DeleteObject(hPtB);
+
+        if (pt->type == PT_SPARK) {
+            pt->x += pt->vx;
+            pt->y += pt->vy;
+            pt->vx *= 0.92f;
+            pt->vy *= 0.92f;
+            HPEN hSpkPen = CreatePen(PS_SOLID, 2, pt->color);
+            HPEN hOldP = (HPEN)SelectObject(hdc, hSpkPen);
+            MoveToEx(hdc, (int)pt->x, (int)pt->y, NULL);
+            LineTo(hdc, (int)(pt->x - pt->vx * 2.0f), (int)(pt->y - pt->vy * 2.0f));
+            SelectObject(hdc, hOldP);
+            DeleteObject(hSpkPen);
+
+        } else if (pt->type == PT_SMOKE) {
+            pt->x += pt->vx;
+            pt->y += pt->vy;
+            pt->vy -= 0.04f; // buoyant rise
+            pt->size += 0.3f;
+            HBRUSH hSmkB = CreateSolidBrush(pt->color);
+            HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hSmkB);
+            HPEN hNullP = (HPEN)GetStockObject(NULL_PEN);
+            HPEN hOldP = (HPEN)SelectObject(hdc, hNullP);
+            int s = (int)pt->size;
+            Ellipse(hdc, (int)pt->x - s, (int)pt->y - s, (int)pt->x + s, (int)pt->y + s);
+            SelectObject(hdc, hOldP);
+            SelectObject(hdc, hOldB);
+            DeleteObject(hSmkB);
+
+        } else if (pt->type == PT_SHARD) {
+            pt->x += pt->vx;
+            pt->y += pt->vy;
+            pt->vy += 0.35f; // gravity
+            pt->vx *= 0.98f;
+            // Floor bounce
+            if (pt->y > 85.0f) {
+                pt->y = 85.0f;
+                pt->vy = -pt->vy * 0.5f;
+                pt->vx *= 0.75f;
+            }
+            HBRUSH hShdB = CreateSolidBrush(pt->color);
+            HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hShdB);
+            int s = (int)pt->size;
+            RECT r = {(int)pt->x - s/2, (int)pt->y - s/2, (int)pt->x + s/2 + 1, (int)pt->y + s/2 + 1};
+            FillRect(hdc, &r, hShdB);
+            SelectObject(hdc, hOldB);
+            DeleteObject(hShdB);
+
+        } else if (pt->type == PT_STAR) {
+            pt->x += pt->vx;
+            pt->y += pt->vy;
+            pt->vy += 0.08f;
+            HPEN hStarPen = CreatePen(PS_SOLID, 2, pt->color);
+            HPEN hOldP = (HPEN)SelectObject(hdc, hStarPen);
+            int s = (int)pt->size;
+            MoveToEx(hdc, (int)pt->x - s, (int)pt->y, NULL);
+            LineTo(hdc, (int)pt->x + s + 1, (int)pt->y);
+            MoveToEx(hdc, (int)pt->x, (int)pt->y - s, NULL);
+            LineTo(hdc, (int)pt->x, (int)pt->y + s + 1);
+            SelectObject(hdc, hOldP);
+            DeleteObject(hStarPen);
+        }
+
         if (pt->life >= pt->maxLife) {
             g_GdiParticles[i] = g_GdiParticles[g_GdiParticleCount - 1];
             g_GdiParticleCount--;
@@ -4419,6 +4638,61 @@ void RenderGdiScene(HDC hdc, int w, int h) {
         SelectObject(hdc, hOldF); DeleteObject(hBanFont);
 
         if (g_GdiBannerTimer > 90) g_GdiBannerActive = 0;
+    }
+
+    // Ornate Medieval Golden Filigree HUD Frame & Pulsating Perimeter Inlay
+    {
+        int shim = 190 + (FastSin(g_GfxFrame) * 45) / 127;
+        COLORREF goldC = RGB(shim, (shim * 85) / 100, 120);
+        HPEN hGoldPen = CreatePen(PS_SOLID, 1, goldC);
+        HPEN hOldP = (HPEN)SelectObject(hdc, hGoldPen);
+        HBRUSH hNullB = (HBRUSH)GetStockObject(NULL_BRUSH);
+        HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hNullB);
+
+        // Outer & inner border
+        Rectangle(hdc, 3, 3, w - 3, h - 3);
+        Rectangle(hdc, 6, 6, w - 6, h - 6);
+
+        // 4 Corner Filigree L-Brackets
+        // Top-Left
+        MoveToEx(hdc, 3, 22, NULL); LineTo(hdc, 3, 3); LineTo(hdc, 22, 3);
+        MoveToEx(hdc, 6, 16, NULL); LineTo(hdc, 6, 6); LineTo(hdc, 16, 6);
+        // Top-Right
+        MoveToEx(hdc, w - 23, 3, NULL); LineTo(hdc, w - 4, 3); LineTo(hdc, w - 4, 22);
+        MoveToEx(hdc, w - 17, 6, NULL); LineTo(hdc, w - 7, 6); LineTo(hdc, w - 7, 16);
+        // Bottom-Left
+        MoveToEx(hdc, 3, h - 23, NULL); LineTo(hdc, 3, h - 4); LineTo(hdc, 22, h - 4);
+        MoveToEx(hdc, 6, h - 17, NULL); LineTo(hdc, 6, h - 7); LineTo(hdc, 16, h - 7);
+        // Bottom-Right
+        MoveToEx(hdc, w - 23, h - 4, NULL); LineTo(hdc, w - 4, h - 4); LineTo(hdc, w - 4, h - 23);
+        MoveToEx(hdc, w - 17, h - 7, NULL); LineTo(hdc, w - 7, h - 7); LineTo(hdc, w - 7, h - 17);
+
+        // Corner rivets
+        HBRUSH hRivetB = CreateSolidBrush(RGB(249, 226, 175));
+        SelectObject(hdc, hRivetB);
+        Ellipse(hdc, 7, 7, 12, 12);
+        Ellipse(hdc, w - 12, 7, w - 7, 12);
+        Ellipse(hdc, 7, h - 12, 12, h - 7);
+        Ellipse(hdc, w - 12, h - 12, w - 7, h - 7);
+        DeleteObject(hRivetB);
+
+        // Traveling golden glint dot along perimeter
+        int perim = (w + h) * 2;
+        int glintD = (g_GfxFrame * 5) % perim;
+        int gx = 4, gy = 4;
+        if (glintD < w) { gx = glintD; gy = 4; }
+        else if (glintD < w + h) { gx = w - 4; gy = glintD - w; }
+        else if (glintD < w * 2 + h) { gx = w - (glintD - (w + h)); gy = h - 4; }
+        else { gx = 4; gy = h - (glintD - (w * 2 + h)); }
+
+        HBRUSH hGlintB = CreateSolidBrush(RGB(255, 255, 255));
+        SelectObject(hdc, hGlintB);
+        Ellipse(hdc, gx - 2, gy - 2, gx + 3, gy + 3);
+        DeleteObject(hGlintB);
+
+        SelectObject(hdc, hOldP);
+        SelectObject(hdc, hOldB);
+        DeleteObject(hGoldPen);
     }
 }
 

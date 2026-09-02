@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KQuest
 - KSpace
 - KPac
 - KSnake
@@ -147,8 +146,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KWizard
 - KMystery
 - KReversi
+- KQuest
 
 ## Completed Work Log
+
+- **KQuest (Loop 7):** Implemented highly polished visual effects including procedural screen-shake driven by quadratic physics decay and rotational damping on melee attacks, critical strikes, spell impacts (Fireball, Lightning Storm, Berserk Might), taking heavy damage, and victory celebrations (continuous requestAnimationFrame mathematical translation and rotation in Web Canvas, and CRT-free FastSin/FastCos trigonometric physics decay with double-buffered viewport rendering in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails, expanding buoyant smoke puffs with negative gravity, heavy kinematic stone & armor shards with gravity, drag, and floor bounce physics, and radiant golden celebration stars), dual-tier concentric ground shockwave ripple rings with perspective compression radiating across the battlefield, ornate Medieval RPG golden corner filigree L-brackets with rivet detailing, a pulsating golden perimeter inlay border with a traveling specular glint along the combat arena frame, and sweeping specular sheen highlights traversing player weapon blades (sword, daggers) and pulsating mana crystal auras (staff) in both Web Canvas (kquest.html) and Native C Win32 GDI (KQuest/main.c).
 
 - **KReversi (Loop 4):** Implemented highly polished visual effects including procedural screen-shake driven by quadratic physics decay on disc placements, double-flip bonuses, freeze power-ups, bomb detonations, and victory celebrations (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and flicker-free double-buffered BitBlt viewport offset in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core sparks with needle trails, expanding buoyant smoke puffs, heavy kinematic stone/lacquer shards with gravity, drag, and tumbling rotation physics, and radiant golden celebration stars), dual-tier concentric placement shockwave ripple rings radiating across the board upon disc drops, ornate Art Deco golden corner filigree L-brackets on the mahogany board frame corners, and a pulsating golden perimeter inlay border shimmer in both Web Canvas (kreversi.html) and Native C Win32 GDI (KReversi/main.c).
 
