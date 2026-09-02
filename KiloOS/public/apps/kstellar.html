@@ -155,6 +155,10 @@
             <div class="stat">FUEL: <span id="fuel">100</span>%</div>
             <div class="stat">CREDITS: ₭<span id="credits">1,000</span></div>
             <div class="stat">CARGO: <span id="cargo-used">0</span>/<span id="cargo-max">50</span> TONS</div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button id="audio-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="toggleAudio()">🔊 AUDIO: ON</button>
+                <button id="drone-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="toggleDrone()">🌌 DRONE: ON</button>
+            </div>
         </div>
         <div id="faction-bar" style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:10px; padding:6px 10px; border:1px solid #00ffcc; background:rgba(0,25,35,0.7); box-shadow: 0 0 10px rgba(0,255,204,0.2);">
             <span>FEDERATION: <span id="rep-fed" style="color:#00ffff; font-weight:bold;">+10 (Neutral)</span></span>
@@ -196,6 +200,291 @@
     </div>
 
     <script>
+        // --- Web Audio Synthesizer & Sound Effects System ---
+        let audioCtx = null;
+        let soundEnabled = true;
+        let droneEnabled = true;
+        let droneGain = null;
+        let droneOsc1 = null;
+        let droneOsc2 = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtxClass) {
+                    audioCtx = new AudioCtxClass();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            if (audioCtx && soundEnabled && droneEnabled && !droneOsc1) {
+                startAmbientDrone();
+            }
+        }
+
+        function startAmbientDrone() {
+            if (!audioCtx || !soundEnabled || !droneEnabled || droneOsc1) return;
+            try {
+                droneGain = audioCtx.createGain();
+                droneGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(140, audioCtx.currentTime);
+
+                droneOsc1 = audioCtx.createOscillator();
+                droneOsc1.type = 'sawtooth';
+                droneOsc1.frequency.setValueAtTime(55, audioCtx.currentTime);
+
+                droneOsc2 = audioCtx.createOscillator();
+                droneOsc2.type = 'sine';
+                droneOsc2.frequency.setValueAtTime(57.5, audioCtx.currentTime);
+
+                droneOsc1.connect(filter);
+                droneOsc2.connect(filter);
+                filter.connect(droneGain);
+                droneGain.connect(audioCtx.destination);
+
+                droneOsc1.start();
+                droneOsc2.start();
+            } catch(e) {}
+        }
+
+        function stopAmbientDrone() {
+            if (droneOsc1) {
+                try {
+                    droneOsc1.stop();
+                    droneOsc2.stop();
+                    droneOsc1.disconnect();
+                    droneOsc2.disconnect();
+                    if (droneGain) droneGain.disconnect();
+                } catch(e) {}
+                droneOsc1 = null;
+                droneOsc2 = null;
+                droneGain = null;
+            }
+        }
+
+        window.toggleAudio = function() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('audio-toggle-btn');
+            if (soundEnabled) {
+                initAudio();
+                if (droneEnabled) startAmbientDrone();
+                if (btn) btn.innerText = "🔊 AUDIO: ON";
+                playBlip();
+            } else {
+                stopAmbientDrone();
+                if (btn) btn.innerText = "🔇 AUDIO: OFF";
+            }
+        };
+
+        window.toggleDrone = function() {
+            droneEnabled = !droneEnabled;
+            const btn = document.getElementById('drone-toggle-btn');
+            if (droneEnabled) {
+                initAudio();
+                startAmbientDrone();
+                if (btn) btn.innerText = "🌌 DRONE: ON";
+                playBlip();
+            } else {
+                stopAmbientDrone();
+                if (btn) btn.innerText = "🌌 DRONE: OFF";
+            }
+        };
+
+        function playBlip() {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+            try {
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(900, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.04);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.04);
+            } catch(e) {}
+        }
+
+        function playWarp() {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+            try {
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const oscSub = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                const filter = audioCtx.createBiquadFilter();
+
+                osc.type = 'sawtooth';
+                oscSub.type = 'sine';
+                filter.type = 'lowpass';
+
+                osc.frequency.setValueAtTime(80, now);
+                osc.frequency.exponentialRampToValueAtTime(550, now + 0.5);
+                osc.frequency.exponentialRampToValueAtTime(120, now + 0.9);
+
+                oscSub.frequency.setValueAtTime(45, now);
+                oscSub.frequency.exponentialRampToValueAtTime(280, now + 0.5);
+                oscSub.frequency.exponentialRampToValueAtTime(60, now + 0.9);
+
+                filter.frequency.setValueAtTime(200, now);
+                filter.frequency.exponentialRampToValueAtTime(1800, now + 0.5);
+                filter.frequency.exponentialRampToValueAtTime(250, now + 0.9);
+
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.linearRampToValueAtTime(0.25, now + 0.4);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+
+                osc.connect(filter);
+                oscSub.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(now);
+                oscSub.start(now);
+                osc.stop(now + 0.9);
+                oscSub.stop(now + 0.9);
+            } catch(e) {}
+        }
+
+        function playLaser() {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+            try {
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(950, now);
+                osc.frequency.exponentialRampToValueAtTime(120, now + 0.18);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.005, now + 0.18);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.18);
+            } catch(e) {}
+        }
+
+        function playEnemyLaser() {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+            try {
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(420, now);
+                osc.frequency.exponentialRampToValueAtTime(70, now + 0.22);
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.exponentialRampToValueAtTime(0.005, now + 0.22);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.22);
+            } catch(e) {}
+        }
+
+        function playUpgrade() {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+            try {
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const now = audioCtx.currentTime + idx * 0.08;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.exponentialRampToValueAtTime(0.005, now + 0.15);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                });
+            } catch(e) {}
+        }
+
+        function playExplosion() {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+            try {
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(140, now);
+                osc.frequency.exponentialRampToValueAtTime(30, now + 0.4);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.005, now + 0.4);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } catch(e) {}
+        }
+
+        function playPhenom() {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+            try {
+                const notes = [440, 554, 659, 880, 1108];
+                notes.forEach((freq, idx) => {
+                    const now = audioCtx.currentTime + idx * 0.07;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.exponentialRampToValueAtTime(0.005, now + 0.3);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                });
+            } catch(e) {}
+        }
+
+        function playHeal() {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+            try {
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(900, now + 0.25);
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.exponentialRampToValueAtTime(0.005, now + 0.25);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } catch(e) {}
+        }
+
+        document.addEventListener('click', () => {
+            if (!audioCtx) initAudio();
+        }, { once: true });
+
         let systems = [];
         const economyTypes = [
             { name: "Agricultural", foodMult: 0.5, minMult: 1.5, techMult: 1.8 },
@@ -372,8 +661,10 @@
                 else if (type === 'shield') { shieldLevel++; maxHull = 100 + (shieldLevel - 1) * 50; hull = maxHull; }
                 updateDashboard();
                 showSystemInfo(systems.find(s => s.id === currentSystemId));
+                playUpgrade();
                 alert(type.toUpperCase() + " upgraded!");
             } else {
+                playBlip();
                 alert("Not enough credits!");
             }
         };
@@ -387,9 +678,12 @@
                 adjustRep(0, 1, 0);
                 updateDashboard();
                 showSystemInfo(sys);
+                playBlip();
             } else if (getCargoUsed() >= cargoMax) {
+                playBlip();
                 alert("Cargo hold is full!");
             } else {
+                playBlip();
                 alert("Not enough credits!");
             }
         };
@@ -403,13 +697,16 @@
                 adjustRep(0, 1, 0);
                 updateDashboard();
                 showSystemInfo(sys);
+                playBlip();
             } else {
+                playBlip();
                 alert("You don't have any " + item + " to sell!");
             }
         };
 
         window.travelTo = function(sysId) {
             if (sysId === currentSystemId) {
+                playBlip();
                 alert("You are already in this system.");
                 return;
             }
@@ -420,10 +717,12 @@
             if (fuelCost < 1) fuelCost = 1;
             
             if (fuel < fuelCost) {
+                playBlip();
                 alert("Not enough fuel! You need " + fuelCost + "% fuel to reach " + target.name + ".");
                 return;
             }
             
+            playWarp();
             fuel -= fuelCost;
             currentSystemId = sysId;
             generateStationMissions();
@@ -506,6 +805,7 @@
         };
 
         function startCombat() {
+            playEnemyLaser();
             inCombat = true;
             enemyMaxHull = 30 + currentSystemId * 20;
             enemyHull = enemyMaxHull;
@@ -531,6 +831,7 @@
             let playerEvading = false;
             
             if (action === 'attack') {
+                playLaser();
                 let baseDmg = 10 + weaponLevel * 10;
                 let fedBonus = repFed >= 15 ? 1.2 : 1.0;
                 let dmg = Math.floor(baseDmg * fedBonus * (0.8 + Math.random() * 0.4));
@@ -538,6 +839,7 @@
                 let aidText = repFed >= 15 ? " (Federation escort aids attack!)" : "";
                 logCombat(`You attack and deal ${dmg} damage!${aidText}`);
             } else if (action === 'evade') {
+                playBlip();
                 playerEvading = true;
                 logCombat(`You take evasive maneuvers.`);
             } else if (action === 'tech') {
@@ -545,22 +847,27 @@
                     cargo.tech--;
                     let heal = 40;
                     hull = Math.min(maxHull, hull + heal);
+                    playHeal();
                     logCombat(`Used 1 Tech cargo to repair ${heal} hull.`);
                 } else {
+                    playBlip();
                     logCombat(`No Tech cargo available to use!`);
                     return;
                 }
             } else if (action === 'flee') {
                 if (Math.random() < 0.5) {
+                    playWarp();
                     logCombat(`Successfully escaped!`);
                     setTimeout(endCombat, 1500);
                     return;
                 } else {
+                    playBlip();
                     logCombat(`Failed to escape!`);
                 }
             }
             
             if (enemyHull <= 0) {
+                playExplosion();
                 let bounty = 100 + currentSystemId * 50;
                 credits += bounty;
                 adjustRep(6, 3, -8);
@@ -584,6 +891,7 @@
             if (Math.random() < hitChance) {
                 let eDmg = Math.floor((5 + currentSystemId * 5) * (0.8 + Math.random() * 0.4));
                 hull -= eDmg;
+                setTimeout(playEnemyLaser, 200);
                 logCombat(`Pirate hits you for ${eDmg} damage!`);
             } else {
                 logCombat(`Pirate's attack misses!`);
@@ -592,6 +900,7 @@
             updateCombatUI();
             
             if (hull <= 0) {
+                playExplosion();
                 logCombat(`CRITICAL: Hull integrity lost! Emergency tow to Sol.`);
                 setTimeout(() => {
                     hull = maxHull;
@@ -611,6 +920,7 @@
         };
 
         window.viewMissions = function() {
+            playBlip();
             let html = `<h3>MISSION BOARD</h3>`;
             if (activeMission) {
                 html += `<p style="color:#ff00ff;"><strong>Active Mission:</strong> ${activeMission.type === 'delivery' ? 'Deliver to' : 'Hunt bounty in'} ${activeMission.targetName} for ₭${activeMission.reward}</p>`;
@@ -638,9 +948,11 @@
 
         window.acceptMission = function(idx) {
             if (activeMission) {
+                playBlip();
                 alert("You already have an active mission! Abandon it first to accept a new one.");
                 return;
             }
+            playBlip();
             activeMission = currentStationMissions[idx];
             currentStationMissions.splice(idx, 1);
             updateDashboard();
@@ -648,12 +960,14 @@
         };
 
         window.abandonMission = function() {
+            playBlip();
             activeMission = null;
             updateDashboard();
             viewMissions();
         };
 
         function showSystemInfo(sys) {
+            playBlip();
             let phenomBadge = "";
             if (sys.phenomenon && sys.phenomenon !== "None") {
                 let pColor = sys.phenomenon === "Black Hole" ? "#ff00ff" : (sys.phenomenon === "Solar Flare" ? "#ffaa00" : "#aaccff");
@@ -725,6 +1039,7 @@
         }
 
         window.viewFactions = function() {
+            playBlip();
             let fedTier = getFactionTier(repFed);
             let trdTier = getFactionTier(repTraders);
             let pirTier = getFactionTier(repPirates);
@@ -770,36 +1085,42 @@
 
         window.donateFed = function() {
             if (credits >= 350) {
+                playBlip();
                 credits -= 350;
                 adjustRep(15, 0, -8);
                 updateDashboard();
                 viewFactions();
                 alert("You donated ₭350 to the Galactic Federation Naval Fleet.\nReputation: +15 Federation, -8 Pirate Syndicate.");
             } else {
+                playBlip();
                 alert("Not enough credits to donate!");
             }
         };
 
         window.payGuildDues = function() {
             if (credits >= 300) {
+                playBlip();
                 credits -= 300;
                 adjustRep(0, 15, 0);
                 updateDashboard();
                 viewFactions();
                 alert("You paid ₭300 in Traders Guild annual dues.\nReputation: +15 Traders Guild.");
             } else {
+                playBlip();
                 alert("Not enough credits for guild dues!");
             }
         };
 
         window.bribePirates = function() {
             if (credits >= 400) {
+                playBlip();
                 credits -= 400;
                 adjustRep(-8, 0, 15);
                 updateDashboard();
                 viewFactions();
                 alert("You slipped ₭400 to a Syndicate shadow contact.\nReputation: +15 Pirate Syndicate, -8 Galactic Federation.");
             } else {
+                playBlip();
                 alert("Not enough credits for bribe!");
             }
         };
@@ -807,6 +1128,7 @@
         window.investigatePhenomenon = function() {
             const sys = systems.find(s => s.id === currentSystemId);
             if (!sys || !sys.phenomenon || sys.phenomenon === "None") return;
+            playPhenom();
 
             let title = "";
             let details = "";
@@ -851,6 +1173,7 @@
             alert(`[${title}]\n\n${details}`);
 
             if (hull <= 0) {
+                playExplosion();
                 alert("CRITICAL: Fatal damage sustained during operation! Emergency tow to Sol.");
                 hull = maxHull;
                 credits = Math.max(0, credits - 500);

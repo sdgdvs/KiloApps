@@ -110,6 +110,87 @@ void GenerateGalaxy() {
 #define ID_BTN_FACT_BRIBE 153
 #define ID_BTN_FACT_BACK 154
 
+#define ID_BTN_SOUND_TOGGLE 160
+#define ID_BTN_DRONE_TOGGLE 161
+
+#define SFX_BLIP 1
+#define SFX_WARP 2
+#define SFX_LASER 3
+#define SFX_ENEMY_LASER 4
+#define SFX_UPGRADE 5
+#define SFX_EXPLOSION 6
+#define SFX_PHENOM 7
+#define SFX_HEAL 8
+
+HWND hBtnSoundToggle, hBtnDroneToggle;
+
+int soundEnabled = 1;
+int droneEnabled = 1;
+HANDLE hDroneThread = NULL;
+volatile int droneRunning = 1;
+
+extern int inCombat;
+
+DWORD WINAPI SoundEffectThread(LPVOID lpParam) {
+    if (!soundEnabled) return 0;
+    int type = (int)(intptr_t)lpParam;
+    if (type == SFX_BLIP) {
+        Beep(1200, 30);
+    } else if (type == SFX_WARP) {
+        Beep(160, 50);
+        Beep(260, 60);
+        Beep(420, 80);
+        Beep(650, 100);
+        Beep(320, 100);
+    } else if (type == SFX_LASER) {
+        Beep(1100, 30);
+        Beep(700, 35);
+        Beep(350, 45);
+    } else if (type == SFX_ENEMY_LASER) {
+        Beep(380, 40);
+        Beep(180, 60);
+    } else if (type == SFX_UPGRADE) {
+        Beep(523, 70);
+        Beep(659, 70);
+        Beep(784, 70);
+        Beep(1046, 120);
+    } else if (type == SFX_EXPLOSION) {
+        Beep(180, 70);
+        Beep(120, 90);
+        Beep(70, 140);
+    } else if (type == SFX_PHENOM) {
+        Beep(440, 80);
+        Beep(660, 80);
+        Beep(880, 100);
+        Beep(1320, 120);
+    } else if (type == SFX_HEAL) {
+        Beep(500, 60);
+        Beep(850, 90);
+    }
+    return 0;
+}
+
+void PlaySfx(int type) {
+    if (!soundEnabled) return;
+    CreateThread(NULL, 0, SoundEffectThread, (LPVOID)(intptr_t)type, 0, NULL);
+}
+
+DWORD WINAPI AmbientDroneThread(LPVOID lpParam) {
+    while (droneRunning) {
+        if (soundEnabled && droneEnabled && !inCombat) {
+            Beep(55, 120);
+            Sleep(2500);
+            if (soundEnabled && droneEnabled && !inCombat) {
+                Beep(65, 90);
+                Sleep(2500);
+            }
+        } else {
+            Sleep(300);
+        }
+    }
+    return 0;
+}
+
 typedef struct {
     int type; // 0=None, 1=Delivery, 2=Bounty
     int targetId;
@@ -436,8 +517,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HWND h4 = CreateWindow("STATIC", "LOCAL SYSTEMS", WS_VISIBLE | WS_CHILD, 440, 60, 150, 20, hwnd, NULL, NULL, NULL);
             SendMessage(h4, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hMissionText = CreateWindow("STATIC", "", WS_VISIBLE | WS_CHILD, 20, 45, 650, 20, hwnd, NULL, NULL, NULL);
+            hMissionText = CreateWindow("STATIC", "", WS_VISIBLE | WS_CHILD, 20, 45, 435, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hMissionText, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hBtnSoundToggle = CreateWindow("BUTTON", "SND: ON", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 465, 42, 95, 22, hwnd, (HMENU)ID_BTN_SOUND_TOGGLE, NULL, NULL);
+            hBtnDroneToggle = CreateWindow("BUTTON", "DRN: ON", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 570, 42, 95, 22, hwnd, (HMENU)ID_BTN_DRONE_TOGGLE, NULL, NULL);
+
+            hDroneThread = CreateThread(NULL, 0, AmbientDroneThread, NULL, 0, NULL);
             
             hInfoArea = CreateWindow("STATIC", "Select a system on the map for details.", WS_VISIBLE | WS_CHILD, 440, 85, 230, 185, hwnd, NULL, NULL, NULL);
             SendMessage(hInfoArea, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -637,6 +723,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 int py = 70 + (systems[i].y * 400 / 100);
                 
                 if (abs(mx - px) < 15 && abs(my - py) < 15) {
+                    PlaySfx(SFX_BLIP);
                     selectedSystem = i;
                     inMissionsView = 0;
                     inFactionsView = 0;
@@ -704,10 +791,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if (fuelCost < 1) fuelCost = 1;
                 
                 if (fuel < fuelCost) {
+                    PlaySfx(SFX_BLIP);
                     char msg[128];
                     sprintf(msg, "Not enough fuel! You need %d%% fuel.", fuelCost);
                     MessageBox(hwnd, msg, "Warning", MB_OK | MB_ICONWARNING);
                 } else {
+                    PlaySfx(SFX_WARP);
                     fuel -= fuelCost;
                     currentSystemId = selectedSystem;
                     GenerateStationMissions();
@@ -743,6 +832,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             MessageBox(hwnd, "Alert: Hostile pirate vessel encountered!", "Navigation Log", MB_OK);
                         }
                         
+                        PlaySfx(SFX_ENEMY_LASER);
                         inCombat = 1;
                         enemyMaxHull = 30 + currentSystemId * 20;
                         enemyHull = enemyMaxHull;
@@ -823,6 +913,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     
 encounter_processed:
                     if (hull <= 0) {
+                        PlaySfx(SFX_EXPLOSION);
                         strcat(resultMsg, "\n\nCRITICAL: Hull integrity lost during transit! Emergency tow to Sol.");
                         hull = maxHull;
                         credits -= 500;
@@ -845,34 +936,41 @@ encounter_processed:
                 char turnMsg[256] = "";
                 
                 if (cmd == ID_BTN_COMBAT_ATTACK) {
+                    PlaySfx(SFX_LASER);
                     int baseDmg = (10 + weaponLevel * 10) * (80 + rand() % 40) / 100;
                     if (repFed >= 15) baseDmg = baseDmg * 12 / 10;
                     enemyHull -= baseDmg;
                     if (repFed >= 15) sprintf(turnMsg, "You attack for %d damage! (Fed escort assists)\n", baseDmg);
                     else sprintf(turnMsg, "You attack and deal %d damage!\n", baseDmg);
                 } else if (cmd == ID_BTN_COMBAT_EVADE) {
+                    PlaySfx(SFX_BLIP);
                     playerEvading = 1;
                     sprintf(turnMsg, "You take evasive maneuvers.\n");
                 } else if (cmd == ID_BTN_COMBAT_USE_TECH) {
                     if (cargoTech > 0) {
+                        PlaySfx(SFX_HEAL);
                         cargoTech--;
                         hull += 40;
                         if (hull > maxHull) hull = maxHull;
                         sprintf(turnMsg, "Used 1 Tech cargo to repair hull.\n");
                     } else {
+                        PlaySfx(SFX_BLIP);
                         sprintf(turnMsg, "No Tech cargo available to use!\n");
                     }
                 } else if (cmd == ID_BTN_COMBAT_FLEE) {
                     if (rand() % 100 < 50) {
+                        PlaySfx(SFX_WARP);
                         MessageBox(hwnd, "Successfully escaped!", "Flee", MB_OK);
                         EndCombat(hwnd);
                         return 0;
                     } else {
+                        PlaySfx(SFX_BLIP);
                         sprintf(turnMsg, "Failed to escape!\n");
                     }
                 }
                 
                 if (enemyHull <= 0) {
+                    PlaySfx(SFX_EXPLOSION);
                     int bounty = 100 + currentSystemId * 50;
                     credits += bounty;
                     AdjustRep(6, 3, -8);
@@ -895,6 +993,7 @@ encounter_processed:
                 
                 int hitChance = playerEvading ? 50 : 90;
                 if (rand() % 100 < hitChance) {
+                    PlaySfx(SFX_ENEMY_LASER);
                     int eDmg = (5 + currentSystemId * 5) * (80 + rand() % 40) / 100;
                     hull -= eDmg;
                     char hitMsg[64];
@@ -908,6 +1007,7 @@ encounter_processed:
                 UpdateCombatUI(hwnd);
                 
                 if (hull <= 0) {
+                    PlaySfx(SFX_EXPLOSION);
                     MessageBox(hwnd, "CRITICAL: Hull integrity lost! Emergency tow to Sol.", "Defeat", MB_OK);
                     hull = maxHull;
                     credits -= 500;
@@ -941,31 +1041,46 @@ encounter_processed:
                     sPrice = GetSellPrice(sys->tech_price);
                     if (cargoTech > 0) { credits += sPrice; cargoTech--; AdjustRep(0, 1, 0); }
                 }
+                PlaySfx(SFX_BLIP);
                 UpdateDashboard();
                 ShowStationView(hwnd);
             } else if (LOWORD(wParam) >= ID_BTN_UPG_ENGINE && LOWORD(wParam) <= ID_BTN_UPG_SHIELD && selectedSystem == currentSystemId) {
                 int cmd = LOWORD(wParam);
+                int cost = 0;
+                int upgraded = 0;
                 if (cmd == ID_BTN_UPG_ENGINE) {
-                    int cost = 1000 * engineLevel;
-                    if (credits >= cost) { credits -= cost; engineLevel++; }
+                    cost = 1000 * engineLevel;
+                    if (credits >= cost) { credits -= cost; engineLevel++; upgraded = 1; }
                 } else if (cmd == ID_BTN_UPG_CARGO) {
-                    int cost = 1500 * cargoLevel;
-                    if (credits >= cost) { credits -= cost; cargoLevel++; cargoMax = 50 * cargoLevel; }
+                    cost = 1500 * cargoLevel;
+                    if (credits >= cost) { credits -= cost; cargoLevel++; cargoMax = 50 * cargoLevel; upgraded = 1; }
                 } else if (cmd == ID_BTN_UPG_WEAPON) {
-                    int cost = 2000 * weaponLevel;
-                    if (credits >= cost) { credits -= cost; weaponLevel++; }
+                    cost = 2000 * weaponLevel;
+                    if (credits >= cost) { credits -= cost; weaponLevel++; upgraded = 1; }
                 } else if (cmd == ID_BTN_UPG_SHIELD) {
-                    int cost = 2000 * shieldLevel;
-                    if (credits >= cost) { credits -= cost; shieldLevel++; maxHull = 100 + (shieldLevel - 1) * 50; hull = maxHull; }
+                    cost = 2000 * shieldLevel;
+                    if (credits >= cost) { credits -= cost; shieldLevel++; maxHull = 100 + (shieldLevel - 1) * 50; hull = maxHull; upgraded = 1; }
                 }
-                
+                if (upgraded) PlaySfx(SFX_UPGRADE);
+                else PlaySfx(SFX_BLIP);
                 UpdateDashboard();
                 ShowStationView(hwnd);
+            } else if (LOWORD(wParam) == ID_BTN_SOUND_TOGGLE) {
+                soundEnabled = !soundEnabled;
+                SetWindowText(hBtnSoundToggle, soundEnabled ? "SND: ON" : "SND: OFF");
+                if (soundEnabled) PlaySfx(SFX_BLIP);
+            } else if (LOWORD(wParam) == ID_BTN_DRONE_TOGGLE) {
+                droneEnabled = !droneEnabled;
+                SetWindowText(hBtnDroneToggle, droneEnabled ? "DRN: ON" : "DRN: OFF");
+                if (soundEnabled) PlaySfx(SFX_BLIP);
             } else if (LOWORD(wParam) == ID_BTN_MISSIONS) {
+                PlaySfx(SFX_BLIP);
                 ShowMissionsView(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_FACTIONS) {
+                PlaySfx(SFX_BLIP);
                 ShowFactionsView(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_FACT_DONATE) {
+                PlaySfx(SFX_BLIP);
                 if (credits >= 350) {
                     credits -= 350;
                     AdjustRep(15, 0, -8);
@@ -976,6 +1091,7 @@ encounter_processed:
                     MessageBox(hwnd, "Not enough credits to donate!", "Diplomacy", MB_OK | MB_ICONWARNING);
                 }
             } else if (LOWORD(wParam) == ID_BTN_FACT_DUES) {
+                PlaySfx(SFX_BLIP);
                 if (credits >= 300) {
                     credits -= 300;
                     AdjustRep(0, 15, 0);
@@ -986,6 +1102,7 @@ encounter_processed:
                     MessageBox(hwnd, "Not enough credits for guild dues!", "Diplomacy", MB_OK | MB_ICONWARNING);
                 }
             } else if (LOWORD(wParam) == ID_BTN_FACT_BRIBE) {
+                PlaySfx(SFX_BLIP);
                 if (credits >= 400) {
                     credits -= 400;
                     AdjustRep(-8, 0, 15);
@@ -996,26 +1113,32 @@ encounter_processed:
                     MessageBox(hwnd, "Not enough credits for bribe!", "Diplomacy", MB_OK | MB_ICONWARNING);
                 }
             } else if (LOWORD(wParam) == ID_BTN_FACT_BACK) {
+                PlaySfx(SFX_BLIP);
                 ShowStationView(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_MISSION_ACCEPT_1) {
+                PlaySfx(SFX_BLIP);
                 activeMission = stationMissions[0];
                 stationMissions[0].type = 0;
                 UpdateDashboard();
                 ShowMissionsView(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_MISSION_ACCEPT_2) {
+                PlaySfx(SFX_BLIP);
                 activeMission = stationMissions[1];
                 stationMissions[1].type = 0;
                 UpdateDashboard();
                 ShowMissionsView(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_MISSION_ABANDON) {
+                PlaySfx(SFX_BLIP);
                 activeMission.type = 0;
                 UpdateDashboard();
                 ShowMissionsView(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_MISSION_BACK) {
+                PlaySfx(SFX_BLIP);
                 ShowStationView(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_INVESTIGATE && selectedSystem == currentSystemId) {
                 System *sys = &systems[currentSystemId];
                 if (sys->phenomenon == 0) return 0;
+                PlaySfx(SFX_PHENOM);
                 
                 char phenomMsg[512] = "";
                 if (sys->phenomenon == 1) { // Black Hole
@@ -1057,6 +1180,7 @@ encounter_processed:
                 MessageBox(hwnd, phenomMsg, "Phenomenon Report", MB_OK);
                 
                 if (hull <= 0) {
+                    PlaySfx(SFX_EXPLOSION);
                     MessageBox(hwnd, "CRITICAL: Fatal damage sustained during operation! Emergency tow to Sol.", "Disaster", MB_OK);
                     hull = maxHull;
                     credits -= 500;
@@ -1070,6 +1194,11 @@ encounter_processed:
             return 0;
         }
         case WM_DESTROY: {
+            droneRunning = 0;
+            if (hDroneThread) {
+                WaitForSingleObject(hDroneThread, 500);
+                CloseHandle(hDroneThread);
+            }
             if (hFont) DeleteObject(hFont);
             if (hBgBrush) DeleteObject(hBgBrush);
             PostQuitMessage(0);
@@ -1093,7 +1222,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     HWND hwnd = CreateWindowEx(
         0,
         CLASS_NAME,
-        "KStellar Phase 12",
+        "KStellar Phase 13",
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, 700, 550,
         NULL,
