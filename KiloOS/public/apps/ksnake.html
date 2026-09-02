@@ -263,14 +263,108 @@
         let matchTicks = 0;
         let matchApplesEaten = 0;
         let gridCoverage = new Set();
-        let screenShakeTimer = 0;
-        let shockwaveTimer = 0;
-        let shockwave = {x: 0, y: 0};
+        let screenShake = 0;
+        let frameCount = 0;
+        let shockwaves = [];
+        let particles = [];
+        let trailMotes = [];
         let oilSlicks = [];
         let magmaHazards = [];
         let isReplayMode = false;
         let replayTick = 0;
         let replayEvents = {};
+
+        function addShockwave(x, y, color) {
+            shockwaves.push({x, y, r: 2, r2: 1, maxR: 40, color, alpha: 1.0});
+        }
+
+        function addSparks(cx, cy, color, count = 12) {
+            for (let i = 0; i < count; i++) {
+                let ang = Math.random() * Math.PI * 2;
+                let spd = 2.0 + Math.random() * 4.2;
+                particles.push({
+                    x: cx, y: cy,
+                    vx: Math.cos(ang) * spd,
+                    vy: Math.sin(ang) * spd,
+                    color: color,
+                    type: 0, // Layer 0: Incandescent needle core spark with velocity trails
+                    size: 2,
+                    rot: 0, vRot: 0,
+                    life: 20, maxLife: 20
+                });
+            }
+        }
+
+        function addExplosion(cx, cy, color, isBig = false) {
+            addShockwave(cx, cy, color);
+            if (isBig) addShockwave(cx, cy, '#ffffff');
+            // Layer 0: Incandescent needle core sparks
+            addSparks(cx, cy, color, isBig ? 24 : 12);
+            addSparks(cx, cy, '#ffffff', isBig ? 12 : 6);
+            // Layer 1: Expanding buoyant plasma/spirit smoke puffs with negative gravity
+            let smokeCount = isBig ? 16 : 8;
+            for (let i = 0; i < smokeCount; i++) {
+                let ang = Math.random() * Math.PI * 2;
+                let spd = 0.5 + Math.random() * 1.5;
+                particles.push({
+                    x: cx, y: cy,
+                    vx: Math.cos(ang) * spd,
+                    vy: Math.sin(ang) * spd - 0.5,
+                    color: color,
+                    type: 1,
+                    size: 3 + Math.random() * 3,
+                    rot: 0, vRot: 0,
+                    life: 24, maxLife: 24
+                });
+            }
+            // Layer 2: Heavy kinematic cyber debris shards with tumbling rotation
+            let shardCount = isBig ? 18 : 10;
+            for (let i = 0; i < shardCount; i++) {
+                let ang = Math.random() * Math.PI * 2;
+                let spd = 1.2 + Math.random() * 3.0;
+                particles.push({
+                    x: cx, y: cy,
+                    vx: Math.cos(ang) * spd,
+                    vy: Math.sin(ang) * spd - 1.2,
+                    color: (i % 2 === 0) ? '#00e5ff' : color,
+                    type: 2,
+                    size: 3 + Math.random() * 2,
+                    rot: Math.random() * Math.PI * 2,
+                    vRot: (Math.random() - 0.5) * 0.4,
+                    life: 28, maxLife: 28
+                });
+            }
+            // Layer 3: Radiant golden/cyan celebration energy stars
+            let starCount = isBig ? 12 : 6;
+            for (let i = 0; i < starCount; i++) {
+                let ang = Math.random() * Math.PI * 2;
+                let spd = 1.0 + Math.random() * 2.2;
+                particles.push({
+                    x: cx, y: cy,
+                    vx: Math.cos(ang) * spd,
+                    vy: Math.sin(ang) * spd,
+                    color: (i % 2 === 0) ? '#ffd700' : '#00d2d3',
+                    type: 3,
+                    size: 4 + Math.random() * 2,
+                    rot: 0, vRot: 0.15,
+                    life: 30, maxLife: 30
+                });
+            }
+            screenShake = Math.max(screenShake, isBig ? 20 : 12);
+        }
+
+        function addTrailMote(x, y, color) {
+            if (trailMotes.length < 50) {
+                trailMotes.push({
+                    x: x + (Math.random() - 0.5) * 6,
+                    y: y + (Math.random() - 0.5) * 6,
+                    color: color,
+                    life: 14,
+                    maxLife: 14,
+                    size: 2.5
+                });
+            }
+        }
         
         // Keybindings
         let keyBinds = JSON.parse(localStorage.getItem('ksnakeKeyBinds')) || {
@@ -740,8 +834,10 @@
             matchTicks = 0;
             matchApplesEaten = 0;
             gridCoverage.clear();
-            screenShakeTimer = 0;
-            shockwaveTimer = 0;
+            screenShake = 0;
+            particles = [];
+            shockwaves = [];
+            trailMotes = [];
             oilSlicks = [];
             magmaHazards = [];
 
@@ -825,9 +921,21 @@
 
         function activateSkill(s) {
             if (gameState !== 1) return;
-            if (s === 'G' && ghostCd === 0) { ghostActive = 50; ghostCd = 150; playSound('skill'); }
-            if (s === 'F' && freezeCd === 0) { freezeActive = 100; freezeCd = 200; playSound('skill'); }
-            if (s === 'M' && magnetCd === 0) { magnetActive = 80; magnetCd = 150; playSound('skill'); }
+            if (s === 'G' && ghostCd === 0) {
+                ghostActive = 50; ghostCd = 150; playSound('skill');
+                addShockwave(snake[0].x * CELL + CELL/2, snake[0].y * CELL + CELL/2, '#00d2d3');
+                screenShake = Math.max(screenShake, 8);
+            }
+            if (s === 'F' && freezeCd === 0) {
+                freezeActive = 100; freezeCd = 200; playSound('skill');
+                addShockwave(snake[0].x * CELL + CELL/2, snake[0].y * CELL + CELL/2, '#48dbfb');
+                screenShake = Math.max(screenShake, 8);
+            }
+            if (s === 'M' && magnetCd === 0) {
+                magnetActive = 80; magnetCd = 150; playSound('skill');
+                addShockwave(snake[0].x * CELL + CELL/2, snake[0].y * CELL + CELL/2, '#fbc531');
+                screenShake = Math.max(screenShake, 8);
+            }
             updateSkillsUI();
         }
 
@@ -841,9 +949,6 @@
             if (gameState !== 1) return;
             matchTicks++;
             gridCoverage.add(`${snake[0].x},${snake[0].y}`);
-
-            if (screenShakeTimer > 0) screenShakeTimer--;
-            if (shockwaveTimer > 0) shockwaveTimer--;
 
             if (ghostActive > 0) ghostActive--;
             if (ghostCd > 0) ghostCd--;
@@ -863,6 +968,12 @@
             if (speedActiveTimer > 0) speedActiveTimer--;
             updateSkillsUI();
 
+            // Emit speed trail motes
+            if (snake.length > 0) {
+                let tail = snake[snake.length - 1];
+                addTrailMote(tail.x * CELL + CELL/2, tail.y * CELL + CELL/2, (ghostActive > 0) ? '#00d2d3' : (speedActiveTimer > 0 ? '#e67e22' : '#2ecc71'));
+            }
+
             // Update Rivals & Boss
             updateCPURivals();
             updateBossLogic();
@@ -871,8 +982,17 @@
             let head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
 
             if (portalActive) {
-                if (portalA && head.x === portalA.x && head.y === portalA.y) head = {...portalB};
-                else if (portalB && head.x === portalB.x && head.y === portalB.y) head = {...portalA};
+                if (portalA && head.x === portalA.x && head.y === portalA.y) {
+                    addShockwave(portalA.x * CELL + CELL/2, portalA.y * CELL + CELL/2, '#00d2d3');
+                    head = {...portalB};
+                    addShockwave(portalB.x * CELL + CELL/2, portalB.y * CELL + CELL/2, '#9b59b6');
+                    screenShake = Math.max(screenShake, 8);
+                } else if (portalB && head.x === portalB.x && head.y === portalB.y) {
+                    addShockwave(portalB.x * CELL + CELL/2, portalB.y * CELL + CELL/2, '#9b59b6');
+                    head = {...portalA};
+                    addShockwave(portalA.x * CELL + CELL/2, portalA.y * CELL + CELL/2, '#00d2d3');
+                    screenShake = Math.max(screenShake, 8);
+                }
             }
 
             const effectiveWrap = wrapMode || (gameMode === 'wrap');
@@ -897,14 +1017,16 @@
                     if (head.x === o.x && head.y === o.y) {
                         score = Math.max(0, score - 50);
                         poisonActiveTimer = 50;
-                        screenShakeTimer = 15;
+                        addExplosion(head.x * CELL + CELL/2, head.y * CELL + CELL/2, '#8e44ad', false);
+                        screenShake = Math.max(screenShake, 14);
                         oilSlicks.splice(idx, 1);
                     }
                 });
                 magmaHazards.forEach((m) => {
                     if (head.x === m.x && head.y === m.y) {
                         score = Math.max(0, score - 100);
-                        screenShakeTimer = 20;
+                        addExplosion(head.x * CELL + CELL/2, head.y * CELL + CELL/2, '#e74c3c', false);
+                        screenShake = Math.max(screenShake, 16);
                     }
                 });
             }
@@ -914,6 +1036,9 @@
             // Eat Food
             if (food && head.x === food.x && head.y === food.y) {
                 playSound('eat');
+                addSparks(head.x * CELL + CELL/2, head.y * CELL + CELL/2, '#ff4757', 10);
+                addShockwave(head.x * CELL + CELL/2, head.y * CELL + CELL/2, '#ff4757');
+                screenShake = Math.max(screenShake, 6);
                 let gain = scoreMult;
                 if (gameMode === 'campaign' && campaignBranch === 1) gain = Math.floor(gain * 2.5);
                 score += gain;
@@ -925,8 +1050,12 @@
                 if (boss.alive) {
                     boss.hp--;
                     updateBossBar();
+                    addExplosion(boss.body[0].x * CELL + CELL/2, boss.body[0].y * CELL + CELL/2, '#ff0055', false);
+                    screenShake = Math.max(screenShake, 12);
                     if (boss.hp <= 0) {
                         boss.alive = false;
+                        addExplosion(boss.body[0].x * CELL + CELL/2, boss.body[0].y * CELL + CELL/2, '#00d2d3', true);
+                        screenShake = Math.max(screenShake, 24);
                         if (gameMode === 'gauntlet') {
                             if (gauntletStage < 3) {
                                 gauntletStage++;
@@ -966,23 +1095,30 @@
             // Eat Special Fruits
             if (goldenApple && head.x === goldenApple.x && head.y === goldenApple.y) {
                 score += 500;
+                addExplosion(goldenApple.x * CELL + CELL/2, goldenApple.y * CELL + CELL/2, '#ffd700', true);
+                screenShake = Math.max(screenShake, 16);
                 goldenApple = null;
                 playSound('skill');
             }
             if (poisonBerry && head.x === poisonBerry.x && head.y === poisonBerry.y) {
                 score = Math.max(0, score - 200);
                 poisonActiveTimer = 50;
-                screenShakeTimer = 25;
+                addExplosion(poisonBerry.x * CELL + CELL/2, poisonBerry.y * CELL + CELL/2, '#8e44ad', false);
+                screenShake = Math.max(screenShake, 16);
                 poisonBerry = null;
             }
             if (speedBerry && head.x === speedBerry.x && head.y === speedBerry.y) {
                 score += 300;
                 speedActiveTimer = 50;
+                addExplosion(speedBerry.x * CELL + CELL/2, speedBerry.y * CELL + CELL/2, '#e67e22', false);
+                screenShake = Math.max(screenShake, 12);
                 speedBerry = null;
             }
             if (ghostBerry && head.x === ghostBerry.x && head.y === ghostBerry.y) {
                 score += 300;
                 ghostActive = 150;
+                addExplosion(ghostBerry.x * CELL + CELL/2, ghostBerry.y * CELL + CELL/2, '#00d2d3', false);
+                screenShake = Math.max(screenShake, 12);
                 ghostBerry = null;
             }
 
@@ -1053,11 +1189,16 @@
             gameState = 2;
             clearInterval(gameLoop);
             hideOverlays();
+            if (snake.length > 0) {
+                addExplosion(snake[0].x * CELL + CELL/2, snake[0].y * CELL + CELL/2, '#ff4757', true);
+            }
+            screenShake = Math.max(screenShake, 22);
             document.getElementById('finalScoreText').innerText = `Final Score: ${score}`;
             const lowestHigh = leaderboard.length < 5 ? 0 : leaderboard[leaderboard.length-1].score;
             document.getElementById('highScoreEntry').style.display = (score > lowestHigh) ? 'block' : 'none';
             gameOverOverlay.style.display = 'flex';
             lastMatchStats = { ticks: matchTicks, apples: matchApplesEaten, coverage: Math.round((gridCoverage.size / 400) * 100) };
+            requestAnimationFrame(draw);
         }
 
         function triggerVictory() {
@@ -1065,102 +1206,603 @@
             gameState = 4;
             clearInterval(gameLoop);
             hideOverlays();
+            if (snake.length > 0) {
+                addExplosion(snake[0].x * CELL + CELL/2, snake[0].y * CELL + CELL/2, '#ffd700', true);
+            }
+            screenShake = Math.max(screenShake, 24);
             document.getElementById('gameOverTitle').innerText = (gameMode === 'gauntlet') ? 'GAUNTLET CONQUERED!' : 'CAMPAIGN MASTER!';
             document.getElementById('gameOverTitle').style.color = '#ffd700';
             document.getElementById('finalScoreText').innerText = `Victory Score: ${score}`;
             gameOverOverlay.style.display = 'flex';
+            requestAnimationFrame(draw);
+        }
+
+        function drawAppleSprite(ctx, cx, cy, anim) {
+            // Apple body with 3D gradient
+            let grad = ctx.createRadialGradient(cx - 3, cy - 3, 1, cx, cy, 9);
+            grad.addColorStop(0, '#ff6b81');
+            grad.addColorStop(0.7, '#ee5253');
+            grad.addColorStop(1, '#b33939');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(cx, cy + 1, 7.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Indent at top
+            ctx.fillStyle = '#7f1d1d';
+            ctx.beginPath();
+            ctx.arc(cx, cy - 6, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Stem
+            ctx.strokeStyle = '#574b90';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - 5);
+            ctx.quadraticCurveTo(cx + 2, cy - 9, cx + 4, cy - 10);
+            ctx.stroke();
+
+            // Leaf
+            ctx.fillStyle = '#2ed573';
+            ctx.beginPath();
+            ctx.ellipse(cx + 4, cy - 8, 3.5, 1.8, 0.6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Glossy Specular Sheen Arc
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+            ctx.beginPath();
+            ctx.ellipse(cx - 3, cy - 2, 3, 1.8, -0.6, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawGoldenAppleSprite(ctx, cx, cy, anim) {
+            // Pulsing golden aura
+            let auraPulse = 0.35 + 0.25 * Math.sin(anim * 0.2);
+            ctx.fillStyle = `rgba(255, 215, 0, ${auraPulse * 0.5})`;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 11 + Math.sin(anim * 0.2) * 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Golden body
+            let grad = ctx.createRadialGradient(cx - 3, cy - 3, 1, cx, cy, 9);
+            grad.addColorStop(0, '#fff275');
+            grad.addColorStop(0.6, '#ffd700');
+            grad.addColorStop(1, '#b8860b');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(cx, cy + 1, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Stem
+            ctx.strokeStyle = '#d4ac0d';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - 5);
+            ctx.quadraticCurveTo(cx + 2, cy - 9, cx + 4, cy - 10);
+            ctx.stroke();
+
+            // Golden leaf
+            ctx.fillStyle = '#f9ca24';
+            ctx.beginPath();
+            ctx.ellipse(cx + 4, cy - 8, 3.5, 1.8, 0.6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Rotating 4-point sparkle star
+            let starAng = anim * 0.08;
+            ctx.save();
+            ctx.translate(cx - 2, cy - 2);
+            ctx.rotate(starAng);
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(-3, 0); ctx.lineTo(3, 0);
+            ctx.moveTo(0, -3); ctx.lineTo(0, 3);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawSpecialFruitSprite(ctx, cx, cy, type, anim) {
+            if (type === 'poison') {
+                // Blackberry cluster with toxic purple aura
+                ctx.fillStyle = 'rgba(142, 68, 173, 0.3)';
+                ctx.beginPath(); ctx.arc(cx, cy, 9, 0, Math.PI*2); ctx.fill();
+                const offsets = [
+                    {dx:-3, dy:-3}, {dx:3, dy:-3}, {dx:0, dy:-1},
+                    {dx:-4, dy:3}, {dx:4, dy:3}, {dx:0, dy:5}
+                ];
+                offsets.forEach(o => {
+                    let grad = ctx.createRadialGradient(cx + o.dx - 1, cy + o.dy - 1, 0.5, cx + o.dx, cy + o.dy, 4);
+                    grad.addColorStop(0, '#be2edd');
+                    grad.addColorStop(1, '#481557');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath(); ctx.arc(cx + o.dx, cy + o.dy, 3.2, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                    ctx.fillRect(cx + o.dx - 1, cy + o.dy - 1.5, 1.2, 1.2);
+                });
+            } else if (type === 'speed') {
+                // Fiery orange orb with energy core
+                let grad = ctx.createRadialGradient(cx, cy, 1, cx, cy, 8);
+                grad.addColorStop(0, '#f9ca24');
+                grad.addColorStop(0.5, '#f0932b');
+                grad.addColorStop(1, '#eb4d4b');
+                ctx.fillStyle = grad;
+                ctx.beginPath(); ctx.arc(cx, cy, 7.5, 0, Math.PI * 2); ctx.fill();
+                // Electric lightning ring
+                ctx.strokeStyle = '#f6e58d';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                for (let a = 0; a < Math.PI * 2; a += 0.8) {
+                    let r = 8 + (Math.sin(anim * 0.3 + a * 3) * 2);
+                    let px = cx + Math.cos(a) * r, py = cy + Math.sin(a) * r;
+                    if (a === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+                }
+                ctx.closePath(); ctx.stroke();
+                ctx.fillStyle = '#fff';
+                ctx.beginPath(); ctx.arc(cx - 2, cy - 2, 2, 0, Math.PI*2); ctx.fill();
+            } else if (type === 'ghost') {
+                // Ethereal cyan orb with floating mist halo
+                let pulse = 0.4 + 0.3 * Math.sin(anim * 0.2);
+                ctx.fillStyle = `rgba(0, 210, 211, ${pulse * 0.5})`;
+                ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI*2); ctx.fill();
+                let grad = ctx.createRadialGradient(cx, cy, 1, cx, cy, 7);
+                grad.addColorStop(0, '#e0ffff');
+                grad.addColorStop(0.6, '#00d2d3');
+                grad.addColorStop(1, '#01a3a4');
+                ctx.fillStyle = grad;
+                ctx.beginPath(); ctx.arc(cx, cy, 7, 0, Math.PI*2); ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.arc(cx, cy, 5, anim * 0.1, anim * 0.1 + Math.PI); ctx.stroke();
+            }
+        }
+
+        function drawViperHead(ctx, cx, cy, d_x, d_y, isGhost, isSpeed, anim) {
+            ctx.save();
+            ctx.translate(cx, cy);
+            let angle = Math.atan2(d_y, d_x);
+            ctx.rotate(angle);
+
+            // Head silhouette (tapered wedge)
+            let headGrad = ctx.createRadialGradient(-2, 0, 2, 0, 0, 10);
+            if (isGhost) {
+                headGrad.addColorStop(0, '#e0ffff');
+                headGrad.addColorStop(1, '#00b4d8');
+            } else if (isSpeed) {
+                headGrad.addColorStop(0, '#f9ca24');
+                headGrad.addColorStop(1, '#e67e22');
+            } else {
+                headGrad.addColorStop(0, '#2ecc71');
+                headGrad.addColorStop(0.7, '#27ae60');
+                headGrad.addColorStop(1, '#1b6b3e');
+            }
+            ctx.fillStyle = headGrad;
+            ctx.beginPath();
+            ctx.moveTo(9, 0); // Snout
+            ctx.lineTo(4, -8); // Left cheek
+            ctx.quadraticCurveTo(-6, -7, -8, -4);
+            ctx.lineTo(-8, 4);
+            ctx.quadraticCurveTo(-6, 7, 4, 8); // Right cheek
+            ctx.closePath();
+            ctx.fill();
+
+            // Head outline
+            ctx.strokeStyle = isGhost ? '#00e5ff' : '#145a32';
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+
+            // Reptilian eyes with vertical slit pupil
+            const drawEye = (ey) => {
+                ctx.fillStyle = isGhost ? '#e0ffff' : '#f1c40f';
+                ctx.beginPath();
+                ctx.ellipse(2, ey, 2.8, 1.8, 0, 0, Math.PI * 2);
+                ctx.fill();
+                // Slit pupil
+                ctx.fillStyle = '#0a0a12';
+                ctx.beginPath();
+                ctx.ellipse(2, ey, 2.0, 0.7, 0, 0, Math.PI * 2);
+                ctx.fill();
+            };
+            drawEye(-4);
+            drawEye(4);
+
+            // Nostrils
+            ctx.fillStyle = '#0f381e';
+            ctx.fillRect(6, -2, 1.2, 1.2);
+            ctx.fillRect(6, 1, 1.2, 1.2);
+
+            // Flicking forked tongue
+            let tongueCycle = Math.sin(anim * 0.4);
+            if (tongueCycle > 0.2) {
+                let tLen = 6 + tongueCycle * 5;
+                ctx.strokeStyle = '#ff4757';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.moveTo(9, 0);
+                ctx.lineTo(9 + tLen, 0);
+                ctx.lineTo(9 + tLen + 3, -2);
+                ctx.moveTo(9 + tLen, 0);
+                ctx.lineTo(9 + tLen + 3, 2);
+                ctx.stroke();
+            }
+
+            // Glossy Specular Sheen Arc
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+            ctx.beginPath();
+            ctx.ellipse(-1, -2, 4, 2, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawSnakeSegment(ctx, cx, cy, idx, total, isGhost, isSpeed, anim) {
+            let radius = Math.max(5, (CELL / 2) - (idx / total) * 3);
+            
+            // Scaled body segment
+            let grad = ctx.createRadialGradient(cx - 2, cy - 2, 1, cx, cy, radius);
+            if (isGhost) {
+                grad.addColorStop(0, '#cbf3f0');
+                grad.addColorStop(1, 'rgba(0, 180, 216, 0.8)');
+            } else if (isSpeed) {
+                grad.addColorStop(0, '#fed330');
+                grad.addColorStop(1, '#fa8231');
+            } else {
+                let pct = idx / total;
+                let c1 = pct < 0.5 ? '#2ecc71' : '#26de81';
+                let c2 = pct < 0.5 ? '#20bf6b' : '#0fb9b1';
+                grad.addColorStop(0, c1);
+                grad.addColorStop(1, c2);
+            }
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Outer scale rim
+            ctx.strokeStyle = isGhost ? 'rgba(0, 229, 255, 0.6)' : 'rgba(10, 61, 35, 0.6)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Specular sheen dot
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+            ctx.beginPath();
+            ctx.arc(cx - radius * 0.35, cy - radius * 0.35, radius * 0.28, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Traveling specular sheen ripple down spine
+            let spineWave = Math.sin(anim * 0.25 - idx * 0.45);
+            if (spineWave > 0.65) {
+                ctx.fillStyle = `rgba(255, 255, 255, ${(spineWave - 0.65) * 2.2})`;
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius * 0.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawObstacleSprite(ctx, ox, oy) {
+            let px = ox * CELL, py = oy * CELL;
+            // 3D Beveled Metallic Barrier
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillRect(px, py, CELL, CELL);
+
+            // Inner dark inset
+            ctx.fillStyle = '#1e272e';
+            ctx.fillRect(px + 2, py + 2, CELL - 4, CELL - 4);
+
+            // Diagonal Hazard Warning Stripes
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(px + 3, py + 3, CELL - 6, CELL - 6);
+            ctx.clip();
+            ctx.strokeStyle = '#fbc531';
+            ctx.lineWidth = 3;
+            for (let d = -CELL; d < CELL * 2; d += 7) {
+                ctx.beginPath();
+                ctx.moveTo(px + d, py);
+                ctx.lineTo(px + d + CELL, py + CELL);
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            // Bevel highlights
+            ctx.strokeStyle = '#7f8c8d';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(px + 0.5, py + 0.5, CELL - 1, CELL - 1);
+
+            // Neon Corner Rivets
+            ctx.fillStyle = '#00d2d3';
+            ctx.fillRect(px + 1, py + 1, 1.5, 1.5);
+            ctx.fillRect(px + CELL - 2.5, py + 1, 1.5, 1.5);
+            ctx.fillRect(px + 1, py + CELL - 2.5, 1.5, 1.5);
+            ctx.fillRect(px + CELL - 2.5, py + CELL - 2.5, 1.5, 1.5);
+        }
+
+        function drawPortalSprite(ctx, cx, cy, color, anim) {
+            // Dual-ring vortex
+            let r1 = 8 + Math.sin(anim * 0.2) * 1.5;
+            let r2 = 5 + Math.cos(anim * 0.25) * 1.2;
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.8;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r1, anim * 0.15, anim * 0.15 + Math.PI * 1.6);
+            ctx.stroke();
+
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r2, -anim * 0.2, -anim * 0.2 + Math.PI * 1.5);
+            ctx.stroke();
+
+            // Glowing core
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+            ctx.fill();
         }
 
         function draw() {
+            frameCount++;
             ctx.clearRect(0, 0, 400, 400);
 
-            // Draw Background Grid
+            // Screen-shake physics decay with rotational damping
+            if (screenShake > 0.05) screenShake *= 0.88; else screenShake = 0;
+
+            ctx.save();
+            if (screenShake > 0.05) {
+                let shakeAngle = Math.sin(frameCount * 1.7) * (screenShake * 0.006);
+                let sx = Math.sin(frameCount * 2.3) * screenShake * 0.8;
+                let sy = Math.cos(frameCount * 2.9) * screenShake * 0.8;
+                ctx.translate(200, 200);
+                ctx.rotate(shakeAngle);
+                ctx.translate(-200 + sx, -200 + sy);
+            }
+
+            // Draw Cyber Grid Background
             for(let x=0; x<WIDTH; x++) {
                 for(let y=0; y<HEIGHT; y++) {
-                    ctx.fillStyle = (x + y) % 2 === 0 ? '#0f111a' : '#141724';
+                    ctx.fillStyle = (x + y) % 2 === 0 ? '#0d111d' : '#121626';
                     ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
+                    if ((x * 13 + y * 7) % 19 === 0) {
+                        ctx.fillStyle = 'rgba(72, 219, 251, 0.12)';
+                        ctx.fillRect(x * CELL + 8, y * CELL + 8, 3, 3);
+                    }
                 }
             }
 
+            // Pulsating Energy Perimeter Inlay Border
+            let periPulse = 0.35 + 0.25 * Math.sin(frameCount * 0.15);
+            ctx.strokeStyle = `rgba(0, 210, 211, ${periPulse})`;
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(3, 3, 394, 394);
+
+            // Traveling Specular Glint along perimeter (total = 394 * 4 = 1576)
+            let periTotal = 394 * 4;
+            let gDist = (frameCount * 5) % periTotal;
+            let gx = 3, gy = 3;
+            if (gDist < 394) { gx = 3 + gDist; gy = 3; }
+            else if (gDist < 788) { gx = 397; gy = 3 + (gDist - 394); }
+            else if (gDist < 1182) { gx = 397 - (gDist - 788); gy = 397; }
+            else { gx = 3; gy = 397 - (gDist - 1182); }
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(gx, gy, 2.5, 0, Math.PI * 2); ctx.fill();
+
+            // Ornate Cybernetic Arcade HUD Corner Reticle L-Brackets with Tech Notches
+            ctx.strokeStyle = '#00d2d3';
+            ctx.lineWidth = 2;
+            let arm = 14;
+            ctx.beginPath();
+            // Top-Left (4, 4)
+            ctx.moveTo(4, 4 + arm); ctx.lineTo(4, 4); ctx.lineTo(4 + arm, 4);
+            ctx.moveTo(7, 7); ctx.lineTo(10, 7);
+            // Top-Right (396, 4)
+            ctx.moveTo(396 - arm, 4); ctx.lineTo(396, 4); ctx.lineTo(396, 4 + arm);
+            ctx.moveTo(393, 7); ctx.lineTo(390, 7);
+            // Bottom-Left (4, 396)
+            ctx.moveTo(4, 396 - arm); ctx.lineTo(4, 396); ctx.lineTo(4 + arm, 396);
+            ctx.moveTo(7, 393); ctx.lineTo(10, 393);
+            // Bottom-Right (396, 396)
+            ctx.moveTo(396 - arm, 396); ctx.lineTo(396, 396); ctx.lineTo(396, 396 - arm);
+            ctx.moveTo(393, 393); ctx.lineTo(390, 393);
+            ctx.stroke();
+
+            // Glowing Status Diodes
+            let diodes = ['#00ffcc', '#ffd700', '#ff4757', '#00d2d3'];
+            ctx.fillStyle = diodes[Math.floor(frameCount / 10) % 4];
+            ctx.beginPath();
+            ctx.arc(5, 5, 2, 0, Math.PI * 2);
+            ctx.arc(395, 5, 2, 0, Math.PI * 2);
+            ctx.arc(5, 395, 2, 0, Math.PI * 2);
+            ctx.arc(395, 395, 2, 0, Math.PI * 2);
+            ctx.fill();
+
             // Draw Obstacles
-            ctx.fillStyle = '#576574';
-            obstacles.forEach(o => {
-                ctx.fillRect(o.x * CELL, o.y * CELL, CELL, CELL);
-                ctx.strokeStyle = '#8395a7';
-                ctx.strokeRect(o.x * CELL, o.y * CELL, CELL, CELL);
-            });
+            obstacles.forEach(o => drawObstacleSprite(ctx, o.x, o.y));
 
             // Draw Portals
             if (portalActive) {
-                if (portalA) {
-                    ctx.fillStyle = '#00d2d3';
-                    ctx.beginPath(); ctx.arc(portalA.x * CELL + CELL/2, portalA.y * CELL + CELL/2, CELL/2 - 2, 0, Math.PI*2); ctx.fill();
-                }
-                if (portalB) {
-                    ctx.fillStyle = '#9b59b6';
-                    ctx.beginPath(); ctx.arc(portalB.x * CELL + CELL/2, portalB.y * CELL + CELL/2, CELL/2 - 2, 0, Math.PI*2); ctx.fill();
-                }
+                if (portalA) drawPortalSprite(ctx, portalA.x * CELL + CELL/2, portalA.y * CELL + CELL/2, '#00d2d3', frameCount);
+                if (portalB) drawPortalSprite(ctx, portalB.x * CELL + CELL/2, portalB.y * CELL + CELL/2, '#9b59b6', frameCount);
             }
 
             // Draw Hazards
-            ctx.fillStyle = '#1e272e';
             oilSlicks.forEach(o => {
-                ctx.beginPath(); ctx.arc(o.x * CELL + CELL/2, o.y * CELL + CELL/2, CELL/2 - 3, 0, Math.PI*2); ctx.fill();
+                let ox = o.x * CELL + CELL/2, oy = o.y * CELL + CELL/2;
+                ctx.fillStyle = '#141419';
+                ctx.beginPath(); ctx.ellipse(ox, oy, CELL/2 - 2, CELL/2 - 4, 0.4, 0, Math.PI*2); ctx.fill();
+                // Iridescent oil sheen
+                ctx.strokeStyle = 'rgba(155, 89, 182, 0.6)';
+                ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.arc(ox - 1, oy - 1, CELL/2 - 5, 0, Math.PI); ctx.stroke();
             });
-            ctx.fillStyle = '#e74c3c';
             magmaHazards.forEach(m => {
-                ctx.beginPath(); ctx.arc(m.x * CELL + CELL/2, m.y * CELL + CELL/2, CELL/2 - 2, 0, Math.PI*2); ctx.fill();
+                let mx = m.x * CELL + CELL/2, my = m.y * CELL + CELL/2;
+                let p = Math.sin(frameCount * 0.25) * 1.5;
+                ctx.fillStyle = '#e74c3c';
+                ctx.beginPath(); ctx.arc(mx, my, CELL/2 - 2 + p, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#f39c12';
+                ctx.beginPath(); ctx.arc(mx, my, CELL/3, 0, Math.PI*2); ctx.fill();
             });
 
             // Draw Food & Berries
-            if (food) {
-                ctx.fillStyle = '#ff4757';
-                ctx.beginPath(); ctx.arc(food.x * CELL + CELL/2, food.y * CELL + CELL/2, CELL/2 - 2, 0, Math.PI*2); ctx.fill();
-            }
-            if (goldenApple) {
-                ctx.fillStyle = '#ffd700';
-                ctx.beginPath(); ctx.arc(goldenApple.x * CELL + CELL/2, goldenApple.y * CELL + CELL/2, CELL/2 - 2, 0, Math.PI*2); ctx.fill();
-            }
-            if (poisonBerry) {
-                ctx.fillStyle = '#8e44ad';
-                ctx.beginPath(); ctx.arc(poisonBerry.x * CELL + CELL/2, poisonBerry.y * CELL + CELL/2, CELL/2 - 2, 0, Math.PI*2); ctx.fill();
-            }
-            if (speedBerry) {
-                ctx.fillStyle = '#e67e22';
-                ctx.beginPath(); ctx.arc(speedBerry.x * CELL + CELL/2, speedBerry.y * CELL + CELL/2, CELL/2 - 2, 0, Math.PI*2); ctx.fill();
-            }
-            if (ghostBerry) {
-                ctx.fillStyle = '#00d2d3';
-                ctx.beginPath(); ctx.arc(ghostBerry.x * CELL + CELL/2, ghostBerry.y * CELL + CELL/2, CELL/2 - 2, 0, Math.PI*2); ctx.fill();
-            }
+            if (food) drawAppleSprite(ctx, food.x * CELL + CELL/2, food.y * CELL + CELL/2, frameCount);
+            if (goldenApple) drawGoldenAppleSprite(ctx, goldenApple.x * CELL + CELL/2, goldenApple.y * CELL + CELL/2, frameCount);
+            if (poisonBerry) drawSpecialFruitSprite(ctx, poisonBerry.x * CELL + CELL/2, poisonBerry.y * CELL + CELL/2, 'poison', frameCount);
+            if (speedBerry) drawSpecialFruitSprite(ctx, speedBerry.x * CELL + CELL/2, speedBerry.y * CELL + CELL/2, 'speed', frameCount);
+            if (ghostBerry) drawSpecialFruitSprite(ctx, ghostBerry.x * CELL + CELL/2, ghostBerry.y * CELL + CELL/2, 'ghost', frameCount);
 
             // Draw Rivals
             rivals.forEach(r => {
                 if (!r.alive) return;
-                ctx.fillStyle = r.type === 1 ? '#e74c3c' : '#34495e';
                 r.body.forEach((b, idx) => {
-                    ctx.beginPath(); ctx.arc(b.x * CELL + CELL/2, b.y * CELL + CELL/2, (idx===0 ? CELL/2-1 : CELL/2-3), 0, Math.PI*2); ctx.fill();
+                    let rx = b.x * CELL + CELL/2, ry = b.y * CELL + CELL/2;
+                    let grad = ctx.createRadialGradient(rx - 2, ry - 2, 1, rx, ry, CELL/2 - 2);
+                    grad.addColorStop(0, r.type === 1 ? '#ff7675' : '#74b9ff');
+                    grad.addColorStop(1, r.type === 1 ? '#d63031' : '#0984e3');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath(); ctx.arc(rx, ry, idx===0 ? CELL/2 - 1 : CELL/2 - 3, 0, Math.PI*2); ctx.fill();
+                    if (idx === 0) {
+                        ctx.fillStyle = '#ffeaa7';
+                        ctx.fillRect(rx - 1, ry - 2, 3, 2);
+                    }
                 });
             });
 
             // Draw Boss
             if (boss.alive && (!boss.invisible || Math.floor(Date.now() / 150) % 2 === 0)) {
-                const bColors = ['#2d3436', '#00b4d8', '#e63946', '#7209b7'];
-                ctx.fillStyle = bColors[boss.type] || '#2d3436';
-                boss.body.forEach(b => {
-                    ctx.fillRect(b.x * CELL + 1, b.y * CELL + 1, CELL - 2, CELL - 2);
+                const bColors = ['#ff0055', '#00b4d8', '#e67e22', '#7209b7'];
+                let bColor = bColors[boss.type] || '#ff0055';
+                boss.body.forEach((b, idx) => {
+                    let bx = b.x * CELL + CELL/2, by = b.y * CELL + CELL/2;
+                    let rad = idx === 0 ? CELL/2 + 1 : CELL/2 - 1;
+                    let grad = ctx.createRadialGradient(bx - 3, by - 3, 1, bx, by, rad);
+                    grad.addColorStop(0, '#ffffff');
+                    grad.addColorStop(0.3, bColor);
+                    grad.addColorStop(1, '#111122');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath(); ctx.arc(bx, by, rad, 0, Math.PI*2); ctx.fill();
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    if (idx === 0) {
+                        // Menacing glowing eyes
+                        ctx.fillStyle = '#fbc531';
+                        ctx.beginPath();
+                        ctx.arc(bx - 3, by - 2, 2, 0, Math.PI*2);
+                        ctx.arc(bx + 3, by - 2, 2, 0, Math.PI*2);
+                        ctx.fill();
+                    }
                 });
             }
 
-            // Draw Snake
-            snake.forEach((s, idx) => {
-                ctx.fillStyle = (ghostActive > 0) ? '#00d2d3' : (idx === 0 ? '#2ecc71' : '#27ae60');
+            // Draw Trail Motes
+            for (let i = 0; i < trailMotes.length; i++) {
+                let tm = trailMotes[i];
+                let alpha = tm.life / tm.maxLife;
+                ctx.fillStyle = tm.color;
+                ctx.globalAlpha = alpha * 0.6;
                 ctx.beginPath();
-                ctx.arc(s.x * CELL + CELL/2, s.y * CELL + CELL/2, (idx === 0 ? CELL/2 : CELL/2 - 1), 0, Math.PI*2);
+                ctx.arc(tm.x, tm.y, tm.size * alpha, 0, Math.PI * 2);
                 ctx.fill();
-            });
+                tm.life--;
+                if (tm.life <= 0) { trailMotes.splice(i, 1); i--; }
+            }
+            ctx.globalAlpha = 1.0;
 
-            if (gameState === 1) requestAnimationFrame(draw);
+            // Draw Snake
+            for (let i = snake.length - 1; i >= 0; i--) {
+                let s = snake[i];
+                let cx = s.x * CELL + CELL/2, cy = s.y * CELL + CELL/2;
+                if (i === 0) {
+                    drawViperHead(ctx, cx, cy, dir.x, dir.y, ghostActive > 0, speedActiveTimer > 0, frameCount);
+                } else {
+                    drawSnakeSegment(ctx, cx, cy, i, snake.length, ghostActive > 0, speedActiveTimer > 0, frameCount);
+                }
+            }
+
+            // Draw Dual-Tier Concentric Shockwave Ripple Rings
+            for (let i = 0; i < shockwaves.length; i++) {
+                let sw = shockwaves[i];
+                sw.r += 2.2;
+                sw.r2 += 3.5;
+                sw.alpha -= 0.045;
+                if (sw.alpha <= 0 || sw.r >= sw.maxR) {
+                    shockwaves.splice(i, 1); i--;
+                    continue;
+                }
+                ctx.save();
+                // Inner compression wave
+                ctx.strokeStyle = sw.color;
+                ctx.globalAlpha = sw.alpha * 0.9;
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Outer dispersion halo
+                ctx.strokeStyle = '#ffffff';
+                ctx.globalAlpha = sw.alpha * 0.5;
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.arc(sw.x, sw.y, sw.r2, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // Draw Multi-Layered Kinematic Particles (Layers 0, 1, 2, 3)
+            for (let i = 0; i < particles.length; i++) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life--;
+                if (p.life <= 0) { particles.splice(i, 1); i--; continue; }
+
+                let alpha = p.life / p.maxLife;
+                ctx.save();
+                ctx.globalAlpha = alpha;
+
+                if (p.type === 0) { // Layer 0: Incandescent needle core spark with velocity trail
+                    ctx.strokeStyle = p.color;
+                    ctx.lineWidth = 1.8;
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p.x - p.vx * 2.2, p.y - p.vy * 2.2);
+                    ctx.stroke();
+                } else if (p.type === 1) { // Layer 1: Expanding buoyant smoke puff with negative gravity
+                    p.vy -= 0.05; // Upward drift
+                    p.vx *= 0.96;
+                    let r = p.size * (1.8 - alpha * 0.8);
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (p.type === 2) { // Layer 2: Heavy kinematic cyber debris shard with tumbling rotation
+                    p.vy += 0.15; // Gravity
+                    p.rot += p.vRot;
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot);
+                    ctx.fillStyle = p.color;
+                    let s = p.size;
+                    ctx.fillRect(-s/2, -s/2, s, s);
+                } else if (p.type === 3) { // Layer 3: Radiant golden/cyan celebration energy star
+                    p.vx *= 0.94;
+                    p.vy *= 0.94;
+                    let s = p.size * (0.8 + 0.4 * Math.sin(frameCount * 0.4));
+                    ctx.strokeStyle = p.color;
+                    ctx.lineWidth = 1.6;
+                    ctx.beginPath();
+                    ctx.moveTo(p.x - s, p.y); ctx.lineTo(p.x + s, p.y);
+                    ctx.moveTo(p.x, p.y - s); ctx.lineTo(p.x, p.y + s);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
+
+            ctx.restore(); // Restore screen shake transform
+
+            if (gameState === 1 || particles.length > 0 || shockwaves.length > 0 || screenShake > 0.05) {
+                requestAnimationFrame(draw);
+            }
         }
 
         function saveScoreEntry() {

@@ -62,9 +62,29 @@ struct Boss {
     int invisible;
 };
 
-struct Particle { int x, y, vx, vy, life; COLORREF color; };
-struct Particle particles[500];
+typedef struct {
+    int x, y;
+    int vx, vy;
+    int life, max_life;
+    COLORREF color;
+    int type; // 0=Needle spark, 1=Smoke puff, 2=Heavy shard, 3=Energy star
+    int size;
+    int rot, vrot;
+} Particle;
+#define MAX_PARTICLES 450
+Particle particles[MAX_PARTICLES];
 int particle_count = 0;
+
+typedef struct {
+    int x, y;
+    int r1, r2;
+    int max_r;
+    int alpha;
+    COLORREF color;
+} ShockwaveRing;
+#define MAX_SHOCKWAVES 16
+ShockwaveRing shockwaves[MAX_SHOCKWAVES];
+int num_shockwaves = 0;
 
 int screen_shake_timer = 0;
 int shockwave_timer = 0;
@@ -215,22 +235,146 @@ int random_int(int max) {
     return ((rng_state >> 16) & 0x7FFF) % max;
 }
 
+static int FastSin(int idx) {
+    idx = ((idx % 16) + 16) % 16;
+    return sin_tab16[idx];
+}
+static int FastCos(int idx) {
+    idx = ((idx % 16) + 16) % 16;
+    return cos_tab16[idx];
+}
+
+void AddShockwaveRing(int x, int y, COLORREF color) {
+    if (num_shockwaves < MAX_SHOCKWAVES) {
+        shockwaves[num_shockwaves].x = x;
+        shockwaves[num_shockwaves].y = y;
+        shockwaves[num_shockwaves].r1 = 2;
+        shockwaves[num_shockwaves].r2 = 1;
+        shockwaves[num_shockwaves].max_r = 38;
+        shockwaves[num_shockwaves].alpha = 20;
+        shockwaves[num_shockwaves].color = color;
+        num_shockwaves++;
+    }
+}
+
+void AddSparks(int cx, int cy, COLORREF color, int count) {
+    int i;
+    for (i = 0; i < count && particle_count < MAX_PARTICLES; i++) {
+        int ang = random_int(16);
+        int spd = 2 + random_int(4);
+        particles[particle_count].x = cx;
+        particles[particle_count].y = cy;
+        particles[particle_count].vx = (FastCos(ang) * spd) / 25;
+        particles[particle_count].vy = (FastSin(ang) * spd) / 25;
+        particles[particle_count].life = 16 + random_int(8);
+        particles[particle_count].max_life = particles[particle_count].life;
+        particles[particle_count].color = color;
+        particles[particle_count].type = 0;
+        particles[particle_count].size = 2;
+        particles[particle_count].rot = 0;
+        particles[particle_count].vrot = 0;
+        particle_count++;
+    }
+}
+
 void SpawnExplosion(int x, int y, COLORREF base_color, int is_big) {
     int i;
-    int count = is_big ? 45 : 12;
-    for (i = 0; i < count; i++) {
-        if (particle_count < 500) {
-            particles[particle_count].x = x;
-            particles[particle_count].y = y;
-            particles[particle_count].vx = (random_int(is_big ? 13 : 7) - (is_big ? 6 : 3));
-            particles[particle_count].vy = (random_int(is_big ? 13 : 7) - (is_big ? 6 : 3));
-            particles[particle_count].life = (is_big ? 15 : 10) + random_int(10);
-            
-            if (is_big && i % 3 == 0) particles[particle_count].color = RGB(255,255,255);
-            else if (is_big && i % 3 == 1) particles[particle_count].color = RGB(255,221,85);
-            else particles[particle_count].color = base_color;
-            
-            particle_count++;
+    int smoke_count = is_big ? 14 : 7;
+    int shard_count = is_big ? 16 : 8;
+    int star_count = is_big ? 10 : 5;
+
+    AddShockwaveRing(x, y, base_color);
+    if (is_big) AddShockwaveRing(x, y, RGB(255, 255, 255));
+
+    // Layer 0: Incandescent needle core sparks
+    AddSparks(x, y, base_color, is_big ? 22 : 12);
+    AddSparks(x, y, RGB(255, 255, 255), is_big ? 12 : 6);
+
+    // Layer 1: Expanding buoyant smoke puffs with negative gravity
+    for (i = 0; i < smoke_count && particle_count < MAX_PARTICLES; i++) {
+        int ang = random_int(16);
+        int spd = 1 + random_int(3);
+        particles[particle_count].x = x;
+        particles[particle_count].y = y;
+        particles[particle_count].vx = (FastCos(ang) * spd) / 35;
+        particles[particle_count].vy = ((FastSin(ang) * spd) / 35) - 1;
+        particles[particle_count].life = 18 + random_int(8);
+        particles[particle_count].max_life = particles[particle_count].life;
+        particles[particle_count].color = base_color;
+        particles[particle_count].type = 1;
+        particles[particle_count].size = 3 + random_int(3);
+        particles[particle_count].rot = 0;
+        particles[particle_count].vrot = 0;
+        particle_count++;
+    }
+
+    // Layer 2: Heavy kinematic cyber debris shards with tumbling rotation and gravity
+    for (i = 0; i < shard_count && particle_count < MAX_PARTICLES; i++) {
+        int ang = random_int(16);
+        int spd = 2 + random_int(4);
+        particles[particle_count].x = x;
+        particles[particle_count].y = y;
+        particles[particle_count].vx = (FastCos(ang) * spd) / 30;
+        particles[particle_count].vy = ((FastSin(ang) * spd) / 30) - 2;
+        particles[particle_count].life = 20 + random_int(8);
+        particles[particle_count].max_life = particles[particle_count].life;
+        particles[particle_count].color = (i % 2 == 0) ? RGB(0, 229, 255) : base_color;
+        particles[particle_count].type = 2;
+        particles[particle_count].size = 3 + random_int(2);
+        particles[particle_count].rot = random_int(16);
+        particles[particle_count].vrot = (random_int(3) - 1);
+        particle_count++;
+    }
+
+    // Layer 3: Radiant golden/cyan celebration energy stars
+    for (i = 0; i < star_count && particle_count < MAX_PARTICLES; i++) {
+        int ang = random_int(16);
+        int spd = 1 + random_int(3);
+        particles[particle_count].x = x;
+        particles[particle_count].y = y;
+        particles[particle_count].vx = (FastCos(ang) * spd) / 35;
+        particles[particle_count].vy = (FastSin(ang) * spd) / 35;
+        particles[particle_count].life = 22 + random_int(8);
+        particles[particle_count].max_life = particles[particle_count].life;
+        particles[particle_count].color = (i % 2 == 0) ? RGB(255, 215, 0) : RGB(0, 229, 255);
+        particles[particle_count].type = 3;
+        particles[particle_count].size = 4 + random_int(2);
+        particles[particle_count].rot = 0;
+        particles[particle_count].vrot = 1;
+        particle_count++;
+    }
+}
+
+void UpdateParticles(void) {
+    int i;
+    for (i = 0; i < particle_count; i++) {
+        particles[i].x += particles[i].vx;
+        particles[i].y += particles[i].vy;
+        if (particles[i].type == 1) {
+            particles[i].vy -= 1;
+        } else if (particles[i].type == 2) {
+            particles[i].vy += 1;
+            particles[i].rot = (particles[i].rot + particles[i].vrot + 16) % 16;
+        }
+        particles[i].life--;
+        if (particles[i].life <= 0) {
+            particles[i] = particles[particle_count - 1];
+            particle_count--;
+            i--;
+        }
+    }
+}
+
+void UpdateShockwaves(void) {
+    int i;
+    for (i = 0; i < num_shockwaves; i++) {
+        shockwaves[i].r1 += 2;
+        shockwaves[i].r2 += 3;
+        shockwaves[i].alpha--;
+        if (shockwaves[i].alpha <= 0 || shockwaves[i].r1 >= shockwaves[i].max_r) {
+            shockwaves[i] = shockwaves[num_shockwaves - 1];
+            num_shockwaves--;
+            i--;
         }
     }
 }
@@ -1450,8 +1594,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_TIMER: {
             int i, r, effective_wrap, gain, spd;
             if (game_state == 1 || game_state == 2) {
-                if (screen_shake_timer > 0) { screen_shake_timer--; InvalidateRect(hwnd, NULL, TRUE); }
-                if (shockwave_timer > 0) { shockwave_timer--; InvalidateRect(hwnd, NULL, TRUE); }
+                if (screen_shake_timer > 0) { screen_shake_timer--; InvalidateRect(hwnd, NULL, FALSE); }
+                if (shockwave_timer > 0) { shockwave_timer--; InvalidateRect(hwnd, NULL, FALSE); }
+                UpdateParticles();
+                UpdateShockwaves();
+                if (particle_count > 0 || num_shockwaves > 0) InvalidateRect(hwnd, NULL, FALSE);
             }
             if (boss_banner_timer > 0) boss_banner_timer--;
             if (game_state != 1) break;
@@ -1460,6 +1607,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (!grid_coverage[snake[0].x][snake[0].y]) {
                 grid_coverage[snake[0].x][snake[0].y] = 1;
                 grid_coverage_count++;
+            }
+
+            // Emit speed dust trail motes
+            if (snake_len > 0 && particle_count < MAX_PARTICLES) {
+                particles[particle_count].x = snake[snake_len - 1].x * CELL_SIZE + CELL_SIZE/2 + (random_int(5) - 2);
+                particles[particle_count].y = snake[snake_len - 1].y * CELL_SIZE + 45 + CELL_SIZE/2 + (random_int(5) - 2);
+                particles[particle_count].vx = 0;
+                particles[particle_count].vy = 0;
+                particles[particle_count].life = 6 + random_int(4);
+                particles[particle_count].max_life = particles[particle_count].life;
+                particles[particle_count].color = (ghost_active > 0) ? RGB(0, 210, 211) : (speed_active_timer > 0 ? RGB(230, 126, 34) : RGB(46, 204, 113));
+                particles[particle_count].type = 1;
+                particles[particle_count].size = 2;
+                particles[particle_count].rot = 0;
+                particles[particle_count].vrot = 0;
+                particle_count++;
             }
 
             if (is_replay_mode) {
@@ -1934,19 +2097,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
 
+        case WM_ERASEBKGND:
+            return 1;
+
         case WM_PAINT: {
-            PAINTSTRUCT ps; HDC hdc = BeginPaint(hwnd, &ps);
-            int dpi = GetDeviceCaps(hdc, LOGPIXELSX);
+            PAINTSTRUCT ps; HDC paintDC = BeginPaint(hwnd, &ps);
+            int dpi = GetDeviceCaps(paintDC, LOGPIXELSX);
             float scale = dpi / 96.0f;
-            SetGraphicsMode(hdc, GM_ADVANCED);
             
+            HDC hdc = CreateCompatibleDC(paintDC);
+            HBITMAP hbm = CreateCompatibleBitmap(paintDC, 520, 620);
+            HBITMAP oldBmp = (HBITMAP)SelectObject(hdc, hbm);
+
             float dx = 0.0f, dy = 0.0f;
             if (screen_shake_timer > 0) {
-                dx = (random_int(10) - 5) * (screen_shake_timer / 15.0f);
-                dy = (random_int(10) - 5) * (screen_shake_timer / 15.0f);
+                dx = (FastSin(anim_tick * 3) * screen_shake_timer * 12) / 1000.0f;
+                dy = (FastCos(anim_tick * 4) * screen_shake_timer * 12) / 1000.0f;
             }
-            XFORM xform = { scale, 0.0f, 0.0f, scale, dx * scale, dy * scale };
-            SetWorldTransform(hdc, &xform);
+            SetWindowOrgEx(hdc, -(int)dx, -(int)dy, NULL);
 
             RECT logicalRect = {0, 0, 520, 620};
             HBRUSH bg = CreateSolidBrush(RGB(15, 15, 26)); FillRect(hdc, &logicalRect, bg); DeleteObject(bg);
@@ -2172,6 +2340,61 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 DeleteObject(bg1); DeleteObject(bg2); DeleteObject(detail);
 
+                // Pulsating Energy Perimeter Inlay Border
+                int periPulse = 120 + (FastSin(anim_tick * 2) * 60) / 100;
+                HPEN periPen = CreatePen(PS_SOLID, 1, RGB(10, periPulse / 2, periPulse));
+                HPEN oldPeriP = (HPEN)SelectObject(hdc, periPen);
+                SelectObject(hdc, (HBRUSH)GetStockObject(HOLLOW_BRUSH));
+                Rectangle(hdc, 2, 47, 498, 543);
+                SelectObject(hdc, oldPeriP);
+                DeleteObject(periPen);
+
+                // Traveling Specular Glint along perimeter (perimeter = 496 * 4 = 1984)
+                int periTotal = 1984;
+                int gDist = (anim_tick * 8) % periTotal;
+                int gx_glint = 2, gy_glint = 47;
+                if (gDist < 496) { gx_glint = 2 + gDist; gy_glint = 47; }
+                else if (gDist < 992) { gx_glint = 498; gy_glint = 47 + (gDist - 496); }
+                else if (gDist < 1488) { gx_glint = 498 - (gDist - 992); gy_glint = 543; }
+                else { gx_glint = 2; gy_glint = 543 - (gDist - 1488); }
+                HBRUSH glintBr = CreateSolidBrush(RGB(255, 255, 255));
+                HBRUSH oldGlint = (HBRUSH)SelectObject(hdc, glintBr);
+                HPEN oldNullP = (HPEN)SelectObject(hdc, (HPEN)GetStockObject(NULL_PEN));
+                Ellipse(hdc, gx_glint - 2, gy_glint - 2, gx_glint + 3, gy_glint + 3);
+                SelectObject(hdc, oldGlint); SelectObject(hdc, oldNullP);
+                DeleteObject(glintBr);
+
+                // Ornate Cybernetic Arcade HUD Corner Reticle L-Brackets with Tech Notches
+                HPEN reticlePen = CreatePen(PS_SOLID, 2, RGB(0, 210, 211));
+                HPEN oldRetP = (HPEN)SelectObject(hdc, reticlePen);
+                int armLen = 14;
+                // Top-Left (4, 49)
+                MoveToEx(hdc, 4, 49 + armLen, NULL); LineTo(hdc, 4, 49); LineTo(hdc, 4 + armLen, 49);
+                MoveToEx(hdc, 7, 52, NULL); LineTo(hdc, 10, 52);
+                // Top-Right (496, 49)
+                MoveToEx(hdc, 496 - armLen, 49, NULL); LineTo(hdc, 496, 49); LineTo(hdc, 496, 49 + armLen);
+                MoveToEx(hdc, 493, 52, NULL); LineTo(hdc, 490, 52);
+                // Bottom-Left (4, 541)
+                MoveToEx(hdc, 4, 541 - armLen, NULL); LineTo(hdc, 4, 541); LineTo(hdc, 4 + armLen, 541);
+                MoveToEx(hdc, 7, 538, NULL); LineTo(hdc, 10, 538);
+                // Bottom-Right (496, 541)
+                MoveToEx(hdc, 496 - armLen, 541, NULL); LineTo(hdc, 496, 541); LineTo(hdc, 496, 541 - armLen);
+                MoveToEx(hdc, 493, 538, NULL); LineTo(hdc, 490, 538);
+                SelectObject(hdc, oldRetP);
+                DeleteObject(reticlePen);
+
+                // Glowing Status Diodes
+                COLORREF diodeColors[4] = { RGB(0, 255, 200), RGB(255, 215, 0), RGB(255, 71, 87), RGB(0, 210, 211) };
+                HBRUSH diodeBr = CreateSolidBrush(diodeColors[(anim_tick / 5) % 4]);
+                HBRUSH oldDiode = (HBRUSH)SelectObject(hdc, diodeBr);
+                HPEN oldDiodeP = (HPEN)SelectObject(hdc, (HPEN)GetStockObject(NULL_PEN));
+                Ellipse(hdc, 3, 48, 7, 52);
+                Ellipse(hdc, 493, 48, 497, 52);
+                Ellipse(hdc, 3, 538, 7, 542);
+                Ellipse(hdc, 493, 538, 497, 542);
+                SelectObject(hdc, oldDiode); SelectObject(hdc, oldDiodeP);
+                DeleteObject(diodeBr);
+
                 for(i = 0; i < num_obstacles; i++) DrawObstacleGDI(hdc, obstacles[i].x, obstacles[i].y);
                 
                 for(i = 0; i < num_oil_slicks; i++) {
@@ -2240,15 +2463,50 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DrawSnakeSegmentGDI(hdc, snake[i].x, snake[i].y, i, snake_len, ghost_active > 0, (i==0?dir_x:0), (i==0?dir_y:0));
                 }
 
-                // Particles
+                // 4-Layer Particles rendering
                 for(i = 0; i < particle_count; i++) {
-                    HBRUSH pBrush = CreateSolidBrush(particles[i].color);
-                    HPEN pPen = (HPEN)GetStockObject(NULL_PEN);
-                    HBRUSH oldB = (HBRUSH)SelectObject(hdc, pBrush);
-                    HPEN oldP = (HPEN)SelectObject(hdc, pPen);
-                    Ellipse(hdc, particles[i].x - 2, particles[i].y - 2, particles[i].x + 3, particles[i].y + 3);
-                    SelectObject(hdc, oldB); SelectObject(hdc, oldP);
-                    DeleteObject(pBrush);
+                    if (particles[i].type == 0) { // Layer 0: Needle sparks with line trails
+                        HPEN sparkPen = CreatePen(PS_SOLID, 1, particles[i].color);
+                        HPEN op = (HPEN)SelectObject(hdc, sparkPen);
+                        MoveToEx(hdc, particles[i].x, particles[i].y, NULL);
+                        LineTo(hdc, particles[i].x - particles[i].vx * 2, particles[i].y - particles[i].vy * 2);
+                        SelectObject(hdc, op);
+                        DeleteObject(sparkPen);
+                    } else if (particles[i].type == 1) { // Layer 1: Buoyant smoke puffs
+                        HBRUSH smkBr = CreateSolidBrush(particles[i].color);
+                        HBRUSH ob = (HBRUSH)SelectObject(hdc, smkBr);
+                        HPEN op = (HPEN)SelectObject(hdc, (HPEN)GetStockObject(NULL_PEN));
+                        int s = particles[i].size;
+                        Ellipse(hdc, particles[i].x - s, particles[i].y - s, particles[i].x + s + 1, particles[i].y + s + 1);
+                        SelectObject(hdc, ob); SelectObject(hdc, op);
+                        DeleteObject(smkBr);
+                    } else if (particles[i].type == 2) { // Layer 2: Heavy debris shards with tumbling rotation
+                        HBRUSH debBr = CreateSolidBrush(particles[i].color);
+                        HBRUSH ob = (HBRUSH)SelectObject(hdc, debBr);
+                        HPEN debPen = CreatePen(PS_SOLID, 1, RGB(10, 20, 30));
+                        HPEN op = (HPEN)SelectObject(hdc, debPen);
+                        int s = particles[i].size;
+                        int c = FastCos(particles[i].rot) * s / 100;
+                        int sn = FastSin(particles[i].rot) * s / 100;
+                        POINT dpts[4];
+                        dpts[0].x = particles[i].x - c; dpts[0].y = particles[i].y - sn;
+                        dpts[1].x = particles[i].x + sn; dpts[1].y = particles[i].y - c;
+                        dpts[2].x = particles[i].x + c; dpts[2].y = particles[i].y + sn;
+                        dpts[3].x = particles[i].x - sn; dpts[3].y = particles[i].y + c;
+                        Polygon(hdc, dpts, 4);
+                        SelectObject(hdc, ob); SelectObject(hdc, op);
+                        DeleteObject(debBr); DeleteObject(debPen);
+                    } else if (particles[i].type == 3) { // Layer 3: Radiant celebration energy stars
+                        HPEN starPen = CreatePen(PS_SOLID, 1, particles[i].color);
+                        HPEN op = (HPEN)SelectObject(hdc, starPen);
+                        int s = particles[i].size;
+                        MoveToEx(hdc, particles[i].x - s, particles[i].y, NULL);
+                        LineTo(hdc, particles[i].x + s + 1, particles[i].y);
+                        MoveToEx(hdc, particles[i].x, particles[i].y - s, NULL);
+                        LineTo(hdc, particles[i].x, particles[i].y + s + 1);
+                        SelectObject(hdc, op);
+                        DeleteObject(starPen);
+                    }
                 }
 
                 // Weather Effects: Rain / Sparks
@@ -2287,24 +2545,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetTextColor(hdc, RGB(72, 219, 251));
                 TextOutA(hdc, 10, 560, hud_text, lstrlenA(hud_text));
 
-                if (shockwave_timer > 0) {
-                    int max_r = 150;
-                    int r = max_r - (shockwave_timer * max_r / 30);
-                    int cx = shockwave_x * CELL_SIZE + CELL_SIZE/2;
-                    int cy = shockwave_y * CELL_SIZE + 45 + CELL_SIZE/2;
-                    HPEN swPen = CreatePen(PS_SOLID, 1 + (shockwave_timer / 10), RGB(255, 255, 255));
-                    HPEN oldP = (HPEN)SelectObject(hdc, swPen);
-                    HBRUSH oldB = (HBRUSH)SelectObject(hdc, (HBRUSH)GetStockObject(HOLLOW_BRUSH));
-                    Ellipse(hdc, cx - r, cy - r, cx + r, cy + r);
-                    Ellipse(hdc, cx - r*3/4, cy - r*3/4, cx + r*3/4, cy + r*3/4);
-                    SelectObject(hdc, oldP); SelectObject(hdc, oldB);
-                    DeleteObject(swPen);
+                // Dual-tier shockwaves
+                for (i = 0; i < num_shockwaves; i++) {
+                    int scx = shockwaves[i].x, scy = shockwaves[i].y;
+                    int r1 = shockwaves[i].r1, r2 = shockwaves[i].r2;
+                    HPEN sw1Pen = CreatePen(PS_SOLID, 2, shockwaves[i].color);
+                    HPEN oP1 = (HPEN)SelectObject(hdc, sw1Pen);
+                    HBRUSH oB1 = (HBRUSH)SelectObject(hdc, (HBRUSH)GetStockObject(HOLLOW_BRUSH));
+                    Ellipse(hdc, scx - r1, scy - r1, scx + r1, scy + r1);
+                    SelectObject(hdc, oP1);
+                    DeleteObject(sw1Pen);
+
+                    HPEN sw2Pen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+                    HPEN oP2 = (HPEN)SelectObject(hdc, sw2Pen);
+                    Ellipse(hdc, scx - r2, scy - r2, scx + r2, scy + r2);
+                    SelectObject(hdc, oP2); SelectObject(hdc, oB1);
+                    DeleteObject(sw2Pen);
                 }
             }
 
             SelectObject(hdc, oldFont);
             DeleteObject(hFont);
             DeleteObject(hFontSmall);
+
+            SetWindowOrgEx(hdc, 0, 0, NULL);
+            XFORM xform = { scale, 0.0f, 0.0f, scale, 0.0f, 0.0f };
+            SetGraphicsMode(paintDC, GM_ADVANCED);
+            SetWorldTransform(paintDC, &xform);
+            BitBlt(paintDC, 0, 0, 520, 620, hdc, 0, 0, SRCCOPY);
+            SelectObject(hdc, oldBmp);
+            DeleteObject(hbm);
+            DeleteDC(hdc);
+
             EndPaint(hwnd, &ps);
             break;
         }

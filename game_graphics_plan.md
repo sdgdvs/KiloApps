@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KSnake
 - KTetris
 - KCyber
 - KBreakout
@@ -147,8 +146,12 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KQuest
 - KSpace
 - KPac
+- KSanctuary
+- KSnake
 
 ## Completed Work Log
+
+- **KSnake (Loop 8):** Implemented highly polished visual effects including procedural screen-shake driven by quadratic physics decay and rotational damping on food eating, golden apples, hazard impacts, boss attacks/defeats, and game over/victory bursts (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and trigonometric FastSin/FastCos physics decay with double-buffered viewport rendering in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails, expanding buoyant plasma/spirit smoke puffs with negative gravity and drag deceleration, heavy kinematic cyber debris shards with tumbling rotation physics, and radiant golden/cyan celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer dispersion halo, ornate cybernetic arcade HUD corner reticle L-brackets with tech notches and glowing status diodes, a pulsating energy perimeter inlay border with a traveling specular glint along the playfield perimeter, sculpted viper head and scale segments with glossy specular sheen highlights traversing the body spine, and dynamic trailing speed dust motes in both Web Canvas (ksnake.html) and Native C Win32 GDI (KSnake/main.c).
 
 - **KPac (Loop 8):** Implemented highly polished visual effects including procedural screen-shake driven by quadratic physics decay and rotational damping on ghost eats, player death, void pulse bombs, and victory bursts (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and trigonometric FastSin/FastCos physics decay with double-buffered viewport rendering in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails, expanding buoyant plasma/spirit smoke puffs with negative gravity and drag deceleration, heavy kinematic cyber debris shards with tumbling rotation physics, and radiant golden/cyan celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer dispersion halo, ornate cybernetic arcade HUD corner reticle L-brackets with tech notches and glowing status diodes, a pulsating energy perimeter inlay border with a traveling specular glint along the maze perimeter, glossy specular sheen highlights traversing Pac-Man and ghosts, and dynamic trailing speed dust motes in both Web Canvas (kpac.html) and Native C Win32 GDI (KPac/main.c).
 
