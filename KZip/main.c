@@ -14,8 +14,8 @@
 
 HWND hListBox, hEditSearch, hChkRegex, hEditPassword, hComboCompress;
 HWND hBtnOpen, hBtnAdd, hBtnRemove, hBtnPack, hBtnExtractSel, hBtnExtractAll, hBtnBatchExtract, hBtnVerify, hBtnPreview, hBtnHelp;
-HWND hStatus;
-HFONT hFont;
+HWND hStatus, hHeader;
+HFONT hFont, hMonoFont;
 
 typedef struct {
     char name[256];
@@ -189,6 +189,31 @@ int RegexMatch(const char* str, const char* pattern) {
     return !*str;
 }
 
+void ShowHelp(HWND hwnd) {
+    MessageBoxA(hwnd,
+        "KZip Archiver Studio Help\n\n"
+        "Operations:\n"
+        "  * Open .kza: Open an existing archive\n"
+        "  * Add File: Add files to archive (or Drag & Drop)\n"
+        "  * Remove: Remove selected file (or Del key)\n"
+        "  * Pack .kza: Compress and save archive to .kza\n"
+        "  * Ext. Sel: Extract selected file\n"
+        "  * Ext. All: Extract all files\n"
+        "  * Batch Ext: Extract multiple .kza archives\n"
+        "  * Verify: Check CRC32 integrity of all files\n"
+        "  * Preview: Inspect file details & hex dump\n\n"
+        "Search & Filtering:\n"
+        "  * Filter: Instant search (wildcard * and . supported with Regex)\n"
+        "  * Password: Optional archive password\n\n"
+        "Keyboard Shortcuts:\n"
+        "  * F1 or 'H': Show this Help dialog\n"
+        "  * Enter / Double-Click: Extract / Preview selected file\n"
+        "  * Delete: Remove selected file\n"
+        "  * Escape (in Filter): Clear search filter",
+        "KZip Archiver Studio - Help",
+        MB_OK | MB_ICONINFORMATION);
+}
+
 void RefreshList() {
     SendMessage(hListBox, LB_RESETCONTENT, 0, 0);
     numVisible = 0;
@@ -218,7 +243,7 @@ void RefreshList() {
             }
 
             char itemBuf[384];
-            wsprintfA(itemBuf, "%-24s | %lu B -> %lu B (%d%%) | CRC: 0x%08X | %s",
+            wsprintfA(itemBuf, "  %-30s | %10lu B -> %10lu B (%3d%%) | 0x%08X | %-6s",
                 archive[i].name,
                 archive[i].uncompSize,
                 archive[i].compSize,
@@ -231,6 +256,12 @@ void RefreshList() {
         }
     }
 
+    if (numFiles == 0) {
+        SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)"  (Archive is empty. Click 'Add File' or drag & drop files here to begin)");
+    } else if (numVisible == 0) {
+        SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)"  (No files match current search filter. Press Esc in search to clear)");
+    }
+
     int overallRatio = 0;
     if (totalUncomp > 0) {
         overallRatio = 100 - (int)((totalComp * 100) / totalUncomp);
@@ -239,9 +270,9 @@ void RefreshList() {
 
     char statusBuf[256];
     if (numFiles == 0) {
-        lstrcpyA(statusBuf, "Ready. Press 'H' or F1 for Help.");
+        lstrcpyA(statusBuf, "Ready. Archive is empty (Drag & drop files or click 'Add File'). Press 'H' or F1 for Help.");
     } else {
-        wsprintfA(statusBuf, "Files: %d | Total Raw: %lu B | Compressed: %lu B | Savings: %d%% | Press 'H' or F1 for Help",
+        wsprintfA(statusBuf, "Files: %d | Raw: %lu B -> Packed: %lu B | Saved: %d%% | Double-click/Enter to extract | F1 for Help",
             numFiles, totalUncomp, totalComp, overallRatio);
     }
     SetWindowTextA(hStatus, statusBuf);
@@ -657,45 +688,53 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
             hFont = CreateFontA(-14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hMonoFont = CreateFontA(-13, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
 
             // Search Bar Label & Field
             CreateWindowEx(0, "STATIC", "Filter:", WS_CHILD | WS_VISIBLE, 10, 12, 40, 20, hwnd, NULL, NULL, NULL);
-            hEditSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCRAWL, 55, 10, 100, 22, hwnd, (HMENU)101, NULL, NULL);
-            hChkRegex = CreateWindowEx(0, "BUTTON", "Regex", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 160, 12, 60, 20, hwnd, (HMENU)105, NULL, NULL);
+            hEditSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCRAWL, 52, 10, 110, 22, hwnd, (HMENU)101, NULL, NULL);
+            hChkRegex = CreateWindowEx(0, "BUTTON", "Regex", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 168, 12, 60, 20, hwnd, (HMENU)105, NULL, NULL);
 
             // Compress Mode Combo
-            CreateWindowEx(0, "STATIC", "Method:", WS_CHILD | WS_VISIBLE, 220, 12, 50, 20, hwnd, NULL, NULL, NULL);
-            hComboCompress = CreateWindowEx(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 270, 10, 100, 120, hwnd, (HMENU)102, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Method:", WS_CHILD | WS_VISIBLE, 238, 12, 52, 20, hwnd, NULL, NULL, NULL);
+            hComboCompress = CreateWindowEx(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 292, 10, 110, 120, hwnd, (HMENU)102, NULL, NULL);
             SendMessageA(hComboCompress, CB_ADDSTRING, 0, (LPARAM)"Store (0%)");
             SendMessageA(hComboCompress, CB_ADDSTRING, 0, (LPARAM)"RLE Fast");
             SendMessage(hComboCompress, CB_SETCURSEL, 1, 0);
 
             // Password Field
-            CreateWindowEx(0, "STATIC", "Pass:", WS_CHILD | WS_VISIBLE, 380, 12, 35, 20, hwnd, NULL, NULL, NULL);
-            hEditPassword = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_PASSWORD | ES_AUTOHSCRAWL, 415, 10, 100, 22, hwnd, (HMENU)103, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Password:", WS_CHILD | WS_VISIBLE, 414, 12, 65, 20, hwnd, NULL, NULL, NULL);
+            hEditPassword = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_PASSWORD | ES_AUTOHSCRAWL, 482, 10, 110, 22, hwnd, (HMENU)103, NULL, NULL);
 
-            // Action Buttons Row
-            hBtnOpen = CreateWindowEx(0, "BUTTON", "Open", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, H - 75, 60, 24, hwnd, (HMENU)1, NULL, NULL);
-            hBtnAdd = CreateWindowEx(0, "BUTTON", "Add File", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 75, H - 75, 60, 24, hwnd, (HMENU)2, NULL, NULL);
-            hBtnRemove = CreateWindowEx(0, "BUTTON", "Remove", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 140, H - 75, 60, 24, hwnd, (HMENU)5, NULL, NULL);
-            hBtnPack = CreateWindowEx(0, "BUTTON", "Pack", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 205, H - 75, 60, 24, hwnd, (HMENU)3, NULL, NULL);
-            hBtnExtractSel = CreateWindowEx(0, "BUTTON", "Ext. Sel", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 270, H - 75, 65, 24, hwnd, (HMENU)4, NULL, NULL);
-            hBtnExtractAll = CreateWindowEx(0, "BUTTON", "Ext. All", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 340, H - 75, 65, 24, hwnd, (HMENU)6, NULL, NULL);
-            hBtnBatchExtract = CreateWindowEx(0, "BUTTON", "Batch Ext", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 410, H - 75, 70, 24, hwnd, (HMENU)8, NULL, NULL);
-            hBtnVerify = CreateWindowEx(0, "BUTTON", "Verify", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 485, H - 75, 60, 24, hwnd, (HMENU)7, NULL, NULL);
-            hBtnPreview = CreateWindowEx(0, "BUTTON", "Preview", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 550, H - 75, 65, 24, hwnd, (HMENU)9, NULL, NULL);
-            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 620, H - 75, 50, 24, hwnd, (HMENU)10, NULL, NULL);
+            // Column Header
+            hHeader = CreateWindowEx(0, "STATIC",
+                "  Filename                       |    Original ->      Packed (Saved) |  CRC32   | Method",
+                WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 36, W - 35, 18, hwnd, NULL, NULL, NULL);
 
             // ListBox
             hListBox = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "",
                 WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,
-                10, 40, W - 35, H - 125, hwnd, (HMENU)100, NULL, NULL);
+                10, 56, W - 35, H - 138, hwnd, (HMENU)100, NULL, NULL);
+
+            // Action Buttons Row
+            hBtnOpen = CreateWindowEx(0, "BUTTON", "Open .kza", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, H - 72, 72, 26, hwnd, (HMENU)1, NULL, NULL);
+            hBtnAdd = CreateWindowEx(0, "BUTTON", "Add File", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 87, H - 72, 72, 26, hwnd, (HMENU)2, NULL, NULL);
+            hBtnRemove = CreateWindowEx(0, "BUTTON", "Remove", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 164, H - 72, 70, 26, hwnd, (HMENU)5, NULL, NULL);
+            hBtnPack = CreateWindowEx(0, "BUTTON", "Pack .kza", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 239, H - 72, 75, 26, hwnd, (HMENU)3, NULL, NULL);
+            hBtnExtractSel = CreateWindowEx(0, "BUTTON", "Ext. Sel", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 319, H - 72, 75, 26, hwnd, (HMENU)4, NULL, NULL);
+            hBtnExtractAll = CreateWindowEx(0, "BUTTON", "Ext. All", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 399, H - 72, 75, 26, hwnd, (HMENU)6, NULL, NULL);
+            hBtnBatchExtract = CreateWindowEx(0, "BUTTON", "Batch Ext", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 479, H - 72, 78, 26, hwnd, (HMENU)8, NULL, NULL);
+            hBtnVerify = CreateWindowEx(0, "BUTTON", "Verify", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 562, H - 72, 68, 26, hwnd, (HMENU)7, NULL, NULL);
+            hBtnPreview = CreateWindowEx(0, "BUTTON", "Preview", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 635, H - 72, 68, 26, hwnd, (HMENU)9, NULL, NULL);
+            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 708, H - 72, 75, 26, hwnd, (HMENU)10, NULL, NULL);
 
             // Status Bar Label
-            hStatus = CreateWindowEx(WS_EX_STATICEDGE, "STATIC", "Ready. Press 'H' or F1 for Help.", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, H - 45, W - 35, 20, hwnd, NULL, NULL, NULL);
+            hStatus = CreateWindowEx(WS_EX_STATICEDGE, "STATIC", "Ready. Archive is empty (Drag & drop files or click 'Add File'). Press 'H' or F1 for Help.", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, H - 38, W - 35, 24, hwnd, NULL, NULL, NULL);
 
             // Set Fonts
             EnumChildWindows(hwnd, SetFontEnumProc, (LPARAM)hFont);
+            SendMessage(hListBox, WM_SETFONT, (WPARAM)hMonoFont, TRUE);
+            SendMessage(hHeader, WM_SETFONT, (WPARAM)hMonoFont, TRUE);
 
             DragAcceptFiles(hwnd, TRUE);
             break;
@@ -831,35 +870,48 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     MessageBoxA(NULL, "Please select a file to preview.", "KZip", MB_OK | MB_ICONWARNING);
                 }
             } else if (id == 10) { // Help
-                MessageBoxA(hwnd, "KZip Help:\n\nOpen .kza: Open archive\nAdd File: Add to archive\nPack .kza: Save archive\nExtract: Extract files\n\nKeyboard:\n'H' or F1 - This help\nDelete - Remove selected file", "Help", MB_OK | MB_ICONINFORMATION);
+                ShowHelp(hwnd);
             } else if (id == 105 && code == BN_CLICKED) { // Regex Checkbox
                 RefreshList();
             }
             break;
         }
+        case WM_CTLCOLORSTATIC: {
+            HDC hdcStatic = (HDC)wParam;
+            SetBkMode(hdcStatic, TRANSPARENT);
+            return (INT_PTR)GetSysColorBrush(COLOR_BTNFACE);
+        }
+        case WM_GETMINMAXINFO: {
+            LPMINMAXINFO mmi = (LPMINMAXINFO)lParam;
+            mmi->ptMinTrackSize.x = 800;
+            mmi->ptMinTrackSize.y = 420;
+            break;
+        }
         case WM_SIZE: {
             int nw = LOWORD(lParam);
             int nh = HIWORD(lParam);
-            MoveWindow(hListBox, 10, 40, nw - 20, nh - 120, TRUE);
+            if (hHeader) MoveWindow(hHeader, 10, 36, nw - 20, 18, TRUE);
+            MoveWindow(hListBox, 10, 56, nw - 20, nh - 138, TRUE);
 
-            int btnY = nh - 70;
-            MoveWindow(hBtnOpen, 10, btnY, 60, 24, TRUE);
-            MoveWindow(hBtnAdd, 75, btnY, 60, 24, TRUE);
-            MoveWindow(hBtnRemove, 140, btnY, 60, 24, TRUE);
-            MoveWindow(hBtnPack, 205, btnY, 60, 24, TRUE);
-            MoveWindow(hBtnExtractSel, 270, btnY, 65, 24, TRUE);
-            MoveWindow(hBtnExtractAll, 340, btnY, 65, 24, TRUE);
-            MoveWindow(hBtnBatchExtract, 410, btnY, 70, 24, TRUE);
-            MoveWindow(hBtnVerify, 485, btnY, 60, 24, TRUE);
-            MoveWindow(hBtnPreview, 550, btnY, 65, 24, TRUE);
-            MoveWindow(hBtnHelp, 620, btnY, 50, 24, TRUE);
+            int btnY = nh - 72;
+            MoveWindow(hBtnOpen, 10, btnY, 72, 26, TRUE);
+            MoveWindow(hBtnAdd, 87, btnY, 72, 26, TRUE);
+            MoveWindow(hBtnRemove, 164, btnY, 70, 26, TRUE);
+            MoveWindow(hBtnPack, 239, btnY, 75, 26, TRUE);
+            MoveWindow(hBtnExtractSel, 319, btnY, 75, 26, TRUE);
+            MoveWindow(hBtnExtractAll, 399, btnY, 75, 26, TRUE);
+            MoveWindow(hBtnBatchExtract, 479, btnY, 78, 26, TRUE);
+            MoveWindow(hBtnVerify, 562, btnY, 68, 26, TRUE);
+            MoveWindow(hBtnPreview, 635, btnY, 68, 26, TRUE);
+            MoveWindow(hBtnHelp, 708, btnY, 75, 26, TRUE);
 
-            MoveWindow(hStatus, 10, nh - 35, nw - 20, 22, TRUE);
+            MoveWindow(hStatus, 10, nh - 38, nw - 20, 24, TRUE);
             break;
         }
         case WM_DESTROY:
             ClearArchive();
             if (hFont) DeleteObject(hFont);
+            if (hMonoFont) DeleteObject(hMonoFont);
             PostQuitMessage(0);
             break;
         default:
@@ -899,12 +951,23 @@ void MainEntry() {
             if (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1) {
                 HWND hFocus = GetFocus();
                 if (hFocus != hEditSearch && hFocus != hEditPassword) {
-                    MessageBoxA(hwnd, "KZip Help:\n\nOpen .kza: Open archive\nAdd File: Add to archive\nPack .kza: Save archive\nExtract: Extract files\n\nKeyboard:\n'H' or F1 - This help\nDelete - Remove selected file", "Help", MB_OK | MB_ICONINFORMATION);
+                    ShowHelp(hwnd);
                 }
             } else if (msg.wParam == VK_DELETE) {
                 HWND hFocus = GetFocus();
                 if (hFocus == hListBox) {
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(5, BN_CLICKED), (LPARAM)hBtnRemove);
+                }
+            } else if (msg.wParam == VK_RETURN) {
+                HWND hFocus = GetFocus();
+                if (hFocus == hListBox) {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(9, BN_CLICKED), (LPARAM)hBtnPreview);
+                }
+            } else if (msg.wParam == VK_ESCAPE) {
+                HWND hFocus = GetFocus();
+                if (hFocus == hEditSearch) {
+                    SetWindowTextA(hEditSearch, "");
+                    RefreshList();
                 }
             }
         }
