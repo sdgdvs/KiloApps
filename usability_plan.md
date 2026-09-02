@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KSynth
+**Target App:** KTask
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KSynth
 - KTask
 - KRogue
 - KSys
@@ -105,6 +104,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KSpace
 - KSolitaire
 - KTerm
+- KSynth
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
 - KSpace: Usability and UI issues fixed (replaced blocking alert modals with sleek cybernetic toast notifications, added startup welcome toast, redesigned non-wrapping responsive skill buttons, added visible in-game pause/help HUD controls and pause-menu help routing in web; implemented full mouse click WM_LBUTTONDOWN navigation, added ClearType multi-tiered typography fixing HUD clipping off-screen, and eliminated GDI font leaks in native C).
@@ -157,7 +157,6 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTodo: Usability and UI issues fixed (fixed native bug where typing 'H' in EDIT controls incorrectly triggered help, verified 800x600 bounds and existing web hotkey logic).
 - KSys: Usability and UI issues fixed (mapped F1 for help natively and on web, explicitly stated F1 support in UI labels/buttons, verified 1024x768 bounds, compiled successfully).
 - KTask: Usability and UI issues fixed (mapped F1 for help across native subclasses and web, explicitly stated F1 support in UI labels and window title, verified bounds and crisp fonts).
-- KSynth: Usability and UI issues fixed (increased App.jsx bounds to 950x750, added WS_CLIPCHILDREN to native, verified F1/? help hotkeys, checked explicit help instructions and crisp typography).
 - KPaint: Usability and UI issues fixed (updated App.jsx and native bounds to 1100x750 for proper canvas fit, enforced AdjustWindowRect, verified crisp text and existing help visibility).
 - KZip: Usability and UI issues fixed (added WS_CLIPCHILDREN to native C window styles to prevent flickering, mapped F1 to help in both versions, and explicitly updated instructions to state 'Press H or F1 for Help').
 - KPac: Usability and UI issues fixed (adjusted App.jsx bounds to 340x520, synced native dimensions and added offsets, added WS_CLIPCHILDREN and negative font heights for crisp text, added F1 hotkey handling and explicit help text in both versions).
@@ -200,3 +199,4 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KFarm: Usability and UI issues fixed (added non-blocking toast notifications for weather, market transactions, out-of-season warnings, and crop actions in web; fixed duplicate morning animal money bug in web nextDay(); added 1-4 seed selection and Space for Sleep shortcuts across web and native; added global message loop hotkey interception in native; updated button labels and Farmer's Almanac with explicit shortcuts; increased App.jsx window bounds to 620x760).
 - KSolitaire: Usability and UI issues fixed (mapped F1 to Help dialog and H to Hints across web and native with explicit toolbar and status bar labels, added non-blocking toast notifications with welcome prompt on startup and clear feedback for hints/skills/stats, added Escape key and backdrop-click modal dismissal in web, and updated window title and menu shortcuts in native C).
 - KTerm: Usability and UI issues fixed (integrated cyber-themed Help Modal dialog, non-blocking toast notifications with startup welcome toast, explicit F1/H toolbar & status bar shortcuts, and global key navigation in web; implemented dedicated authentic prompt display, Ctrl+T new tab, Ctrl+W close tab, Ctrl+C line cancel, output window key forwarding, F1 Help dialog, Segoe UI tab font, and vertical layout bounds in native C).
+- KSynth: Usability and UI issues fixed (replaced blocking alert modals with sleek cybernetic toast notifications, added startup welcome toast, made help modal non-blocking with Escape and backdrop dismissal, and updated window dimensions to 980x820 in web; added visible Help [F1] button, removed blocking startup MessageBox, fixed F1 hotkey handling across edit controls, and added transparent static control backgrounds in native C).

@@ -6,7 +6,7 @@
 #define W 660
 #define H 450
 
-HWND hComboPreset, hComboWave, hBtnPlay, hBtnSeq, hFreq, hAttack, hDecay, hSustain, hRelease;
+HWND hComboPreset, hComboWave, hBtnPlay, hBtnSeq, hBtnHelp, hFreq, hAttack, hDecay, hSustain, hRelease;
 HWND hDelayTime, hDelayFdbk, hDelayMix;
 HWND hComboArp, hArpBpm, hArpOct;
 HWND hScopeWnd;
@@ -344,6 +344,24 @@ BOOL CALLBACK SetFontProc(HWND child, LPARAM hFont) {
     return TRUE;
 }
 
+void ShowHelp(HWND hwnd) {
+    MessageBoxA(hwnd,
+        "KSynth Workstation Pro - Keyboard & Controls Guide\n\n"
+        "Musical Keys (Octave 4):\n"
+        "  White Keys: [A]=C4, [S]=D4, [D]=E4, [F]=F4, [G]=G4, [H]=A4, [J]=B4, [K]=C5\n"
+        "  Black Keys: [W]=C#4, [E]=D#4, [T]=F#4, [Y]=G#4, [U]=A#4\n\n"
+        "Controls:\n"
+        "  Preset: Select synthesized instrument patches\n"
+        "  Waveform: Sine, Square, Sawtooth, Triangle, Noise\n"
+        "  ADSR: Attack, Decay, Sustain, Release times\n"
+        "  Delay: Delay time, Feedback, and Wet/Dry Mix\n"
+        "  Arpeggiator: Up, Down, Up-Down, Random arpeggios\n\n"
+        "Shortcuts:\n"
+        "  [F1] or [?] : Open this Help guide\n"
+        "  [A-K]       : Trigger real-time synthesizer notes",
+        "KSynth Workstation Help", MB_OK | MB_ICONINFORMATION);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     static HFONT hFont = NULL;
     switch (msg) {
@@ -409,9 +427,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hComboArp, CB_ADDSTRING, 0, (LPARAM)"Random");
             SendMessage(hComboArp, CB_SETCURSEL, 0, 0);
 
-            // Play Buttons
-            hBtnPlay = CreateScaledWindowEx(0, "BUTTON", "▶ Play Tone", WS_CHILD | WS_VISIBLE, 15, 360, 110, 32, hwnd, (HMENU)1, NULL, NULL);
-            hBtnSeq  = CreateScaledWindowEx(0, "BUTTON", "⚡ Run Arp", WS_CHILD | WS_VISIBLE, 140, 360, 120, 32, hwnd, (HMENU)2, NULL, NULL);
+            // Play & Help Buttons
+            hBtnPlay = CreateScaledWindowEx(0, "BUTTON", "▶ Play Tone", WS_CHILD | WS_VISIBLE, 15, 360, 105, 32, hwnd, (HMENU)1, NULL, NULL);
+            hBtnSeq  = CreateScaledWindowEx(0, "BUTTON", "⚡ Run Arp", WS_CHILD | WS_VISIBLE, 125, 360, 105, 32, hwnd, (HMENU)2, NULL, NULL);
+            hBtnHelp = CreateScaledWindowEx(0, "BUTTON", "❓ Help [F1]", WS_CHILD | WS_VISIBLE, 235, 360, 105, 32, hwnd, (HMENU)3, NULL, NULL);
 
             // Oscilloscope Box Window
             WNDCLASS sc = {0};
@@ -420,18 +439,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             sc.lpszClassName = "KSynthScope";
             RegisterClass(&sc);
 
-            hScopeWnd = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "KSynthScope", "", WS_CHILD | WS_VISIBLE, 280, 12, 330, 240, hwnd, NULL, GetModuleHandle(NULL), NULL);
+            hScopeWnd = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "KSynthScope", "", WS_CHILD | WS_VISIBLE, 280, 12, 350, 230, hwnd, NULL, GetModuleHandle(NULL), NULL);
 
-            CreateScaledWindowEx(0, "STATIC", "Keyboard mapping:\nKeys [A, W, S, E, D, F, T, G, Y, H, U, J, K]\nTrigger notes C4 to C5 in real-time.\nPress F1 or '?' for Help.", WS_CHILD | WS_VISIBLE, 280, 260, 330, 60, hwnd, NULL, NULL, NULL);
+            CreateScaledWindowEx(0, "STATIC", "Keyboard Mapping (C4 to C5):\nWhite: [A, S, D, F, G, H, J, K] (C, D, E, F, G, A, B, C)\nBlack: [W, E, T, Y, U] (C#, D#, F#, G#, A#)\nPress F1, '?', or click Help for shortcuts.", WS_CHILD | WS_VISIBLE, 280, 252, 350, 75, hwnd, NULL, NULL, NULL);
+
+            CreateScaledWindowEx(0, "STATIC", "KSynth Workstation | 44.1 kHz 16-bit Mono", WS_CHILD | WS_VISIBLE, 350, 368, 280, 20, hwnd, NULL, NULL, NULL);
 
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
             break;
+        }
+        case WM_CTLCOLORSTATIC: {
+            HDC hdcStatic = (HDC)wParam;
+            SetBkMode(hdcStatic, TRANSPARENT);
+            return (LRESULT)GetStockObject(NULL_BRUSH);
         }
         case WM_COMMAND: {
             if (LOWORD(wParam) == 1) {
                 PlayTone();
             } else if (LOWORD(wParam) == 2) {
                 PlayArpeggiator();
+            } else if (LOWORD(wParam) == 3) {
+                ShowHelp(hwnd);
             } else if (HIWORD(wParam) == CBN_SELCHANGE && (HWND)lParam == hComboPreset) {
                 int sel = SendMessage(hComboPreset, CB_GETCURSEL, 0, 0);
                 ApplyPreset(sel);
@@ -477,25 +505,23 @@ void MainEntry() {
     int windowWidth = rect.right - rect.left;
     int windowHeight = rect.bottom - rect.top;
 
-    HWND hwnd = CreateWindowEx(0, "KSynthApp", "KSynth Workstation Pro", (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN,
+    HWND hwnd = CreateWindowEx(0, "KSynthApp", "KSynth Workstation Pro [Press F1 for Help]", (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
-    
-    MessageBoxA(hwnd, "Welcome to KSynth Workstation Pro!\n\nKeyboard mapping:\n[A-K] : Play notes C4 to C5 in real-time.\n[F1] or [?] : Toggle Help.", "KSynth Instructions", MB_OK | MB_ICONINFORMATION);
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
         if (msg.message == WM_KEYDOWN && !(msg.lParam & 0x40000000)) {
+            WPARAM key = msg.wParam;
+            if (key == VK_OEM_2 || key == VK_F1) {
+                ShowHelp(hwnd);
+                continue;
+            }
             HWND hFocus = GetFocus();
-            if (hFocus != hFreq && hFocus != hAttack && hFocus != hDecay && hFocus != hSustain && hFocus != hRelease) {
-                WPARAM key = msg.wParam;
-                if (key == VK_OEM_2 || key == VK_F1) {
-                    MessageBoxA(hwnd, "Keyboard Shortcuts:\n[A-K] : Play notes C4 to C5\n[F1] or [?] : Toggle Help", "KSynth Help", MB_OK | MB_ICONINFORMATION);
-                    continue;
-                }
-                
+            if (hFocus != hFreq && hFocus != hAttack && hFocus != hDecay && hFocus != hSustain && hFocus != hRelease &&
+                hFocus != hDelayTime && hFocus != hDelayFdbk && hFocus != hDelayMix) {
                 double noteMap[256] = {0};
                 noteMap['A'] = 261.63; noteMap['W'] = 277.18; noteMap['S'] = 293.66;
                 noteMap['E'] = 311.13; noteMap['D'] = 329.63; noteMap['F'] = 349.23;

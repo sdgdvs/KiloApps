@@ -30,11 +30,12 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     min-width: 850px;
-    min-height: 650px;
+    min-height: 550px;
     display: flex;
     flex-direction: column;
     height: 100vh;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     padding: 12px;
     gap: 10px;
   }
@@ -139,7 +140,9 @@
     grid-template-rows: auto auto 1fr;
     gap: 10px;
     flex: 1;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 6px;
   }
 
   .panel {
@@ -381,19 +384,78 @@
     opacity: 0.6;
     pointer-events: none;
   }
+
+  /* Toast Notifications */
+  #toastContainer {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 10000;
+    pointer-events: none;
+  }
+  .toast {
+    background: #161922;
+    border: 1px solid var(--accent-cyan);
+    color: var(--text-main);
+    padding: 9px 15px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: auto;
+    animation: toastSlideIn 0.25s ease-out forwards;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  .toast.success { border-color: var(--accent-green); }
+  .toast.error { border-color: var(--accent-pink); }
+  .toast.info { border-color: var(--accent-cyan); }
+  @keyframes toastSlideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 </style>
 </head>
-<body data-width="900" data-height="700">
-  <div id="helpModal" style="display:flex; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center; flex-direction:column; color:#fff;">
-    <div style="background:#161922; border:1px solid #00f3ff; padding:20px; border-radius:8px; max-width:400px; text-align:center;">
-      <h2 style="color:#00f3ff; margin-bottom:10px;">Welcome to KSynth!</h2>
-      <p style="margin-bottom:10px;">Keyboard Shortcuts:</p>
-      <ul style="list-style:none; padding:0; margin-bottom:20px; color:#aaa; font-size:14px; text-align:left;">
-        <li style="margin-bottom:5px;"><b>[A-K]</b> : Play notes C4 to C5</li>
-        <li style="margin-bottom:5px;"><b>[Z] / [X]</b> : Shift octave down / up</li>
-        <li style="margin-bottom:5px;"><b>[F1] / [?]</b> : Toggle this help menu</li>
-      </ul>
-      <button class="btn btn-primary" onclick="document.getElementById('helpModal').style.display='none'">Close</button>
+<body data-width="980" data-height="820">
+  <div id="toastContainer"></div>
+
+  <div id="helpModal" onclick="if(event.target===this) toggleHelp(false)" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; justify-content:center; align-items:center; flex-direction:column; color:#fff; backdrop-filter:blur(3px);">
+    <div style="background:#161922; border:1px solid var(--accent-cyan); padding:22px; border-radius:10px; max-width:500px; width:92%; box-shadow:0 10px 30px rgba(0,243,255,0.25);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px;">
+        <h2 style="color:var(--accent-cyan); font-size:17px; display:flex; align-items:center; gap:8px;">
+          <span>🎹</span> KSynth Workstation Pro Guide
+        </h2>
+        <button class="btn" onclick="toggleHelp(false)" style="padding:2px 8px; font-size:14px;">✕</button>
+      </div>
+      <div style="font-size:13px; color:#ccc; display:flex; flex-direction:column; gap:10px; max-height:60vh; overflow-y:auto; padding-right:4px;">
+        <div>
+          <div style="font-weight:700; color:var(--accent-yellow); margin-bottom:4px;">Musical Keyboard (Octave 4)</div>
+          <div style="background:#0e1118; padding:8px 12px; border-radius:6px; font-family:Consolas, monospace; font-size:12px; line-height:1.6;">
+            <div>White: <b>[A]</b> C4 &bull; <b>[S]</b> D4 &bull; <b>[D]</b> E4 &bull; <b>[F]</b> F4 &bull; <b>[G]</b> G4 &bull; <b>[H]</b> A4 &bull; <b>[J]</b> B4 &bull; <b>[K]</b> C5</div>
+            <div>Black: <b>[W]</b> C#4 &bull; <b>[E]</b> D#4 &bull; <b>[T]</b> F#4 &bull; <b>[Y]</b> G#4 &bull; <b>[U]</b> A#4</div>
+          </div>
+        </div>
+        <div>
+          <div style="font-weight:700; color:var(--accent-yellow); margin-bottom:4px;">Synthesizer Controls & Shortcuts</div>
+          <ul style="list-style:none; padding-left:0; display:flex; flex-direction:column; gap:4px; font-size:12px;">
+            <li><b>[Z] / [X]</b> : Shift keyboard octave down / up (-2 to +2)</li>
+            <li><b>[F1] / [?]</b> : Toggle this Help guide</li>
+            <li><b>[Esc]</b> : Close Help guide</li>
+            <li><b>Dual Oscillators</b> : Morph waveforms (Saw, Square, Sine, Tri, Noise), detune, and blend</li>
+            <li><b>Resonant Filter & Delay</b> : Sculpt harmonics and add stereo-timed echoes</li>
+            <li><b>16-Step Sequencer</b> : Click steps to toggle and customize pitch per step</li>
+            <li><b>Arpeggiator</b> : Latch mode sustains pattern cycling across octaves</li>
+          </ul>
+        </div>
+      </div>
+      <div style="margin-top:14px; display:flex; justify-content:flex-end;">
+        <button class="btn btn-primary" onclick="toggleHelp(false)" style="padding:6px 20px;">Got It</button>
+      </div>
     </div>
   </div>
 
@@ -423,7 +485,7 @@
       <button id="btnImportSeq" class="btn">📥 Import Seq</button>
       <input type="file" id="seqFileInput" accept=".json" style="display:none;">
       
-      <button id="btnHelp" class="btn" onclick="document.getElementById('helpModal').style.display='flex'">❓ Help [F1]</button>
+      <button id="btnHelp" class="btn" onclick="toggleHelp()">❓ Help [F1]</button>
     </div>
   </header>
 
@@ -631,6 +693,43 @@
   </div>
 
 <script>
+  // ----------------------------------------------------
+  // Toast & Help Modal Helpers
+  // ----------------------------------------------------
+  function showToast(message, type = 'info', duration = 3200) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    let icon = 'ℹ️';
+    if (type === 'success') icon = '✅';
+    else if (type === 'error') icon = '⚠️';
+    toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(12px)';
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
+  }
+
+  function toggleHelp(show) {
+    const hm = document.getElementById('helpModal');
+    if (!hm) return;
+    if (show === undefined) {
+      hm.style.display = (hm.style.display === 'none' || !hm.style.display) ? 'flex' : 'none';
+    } else {
+      hm.style.display = show ? 'flex' : 'none';
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      showToast("🎵 Welcome to KSynth! Press [A-K] to play, [F1] for Help", "info", 4500);
+    }, 400);
+  });
+
   // ----------------------------------------------------
   // Audio Context & Graph Setup
   // ----------------------------------------------------
@@ -1325,14 +1424,16 @@
 
   window.addEventListener('keydown', (e) => {
     if (e.repeat) return;
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-
-    if (e.key === '?' || e.key === 'F1') {
-      if (e.key === 'F1') e.preventDefault();
-      const hm = document.getElementById('helpModal');
-      hm.style.display = hm.style.display === 'none' ? 'flex' : 'none';
+    if (e.key === 'Escape') {
+      toggleHelp(false);
       return;
     }
+    if (e.key === '?' || e.key === 'F1') {
+      if (e.key === 'F1') e.preventDefault();
+      toggleHelp();
+      return;
+    }
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
 
     const key = e.key.toLowerCase();
     if (key === 'z') {
@@ -1509,6 +1610,7 @@
     a.download = 'ksynth_preset.json';
     a.click();
     URL.revokeObjectURL(url);
+    showToast('Preset exported as ksynth_preset.json', 'success');
   });
 
   // Import Preset JSON
@@ -1522,9 +1624,9 @@
       try {
         const p = JSON.parse(event.target.result);
         applyPreset(p);
-        alert('Preset loaded successfully!');
+        showToast('Preset loaded successfully!', 'success');
       } catch (err) {
-        alert('Failed to parse preset file.');
+        showToast('Failed to parse preset file.', 'error');
       }
     };
     reader.readAsText(file);
@@ -1543,6 +1645,7 @@
     a.download = 'ksynth_sequence.json';
     a.click();
     URL.revokeObjectURL(url);
+    showToast('Sequence exported as ksynth_sequence.json', 'success');
   });
 
   // Import Sequence JSON
@@ -1570,10 +1673,10 @@
             }
           });
           updateSeqGridActive();
-          alert('Sequence loaded successfully!');
+          showToast('Sequence loaded successfully!', 'success');
         }
       } catch (err) {
-        alert('Failed to parse sequence file.');
+        showToast('Failed to parse sequence file.', 'error');
       }
     };
     reader.readAsText(file);
