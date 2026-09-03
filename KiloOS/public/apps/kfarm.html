@@ -290,6 +290,7 @@
         let shakeDecay = 0.9;
 
         const particles = [];
+        const shockwaves = [];
         const clouds = Array.from({length: 5}, () => ({ 
             x: Math.random() * 400, 
             y: Math.random() * 200, 
@@ -297,35 +298,143 @@
             size: 20 + Math.random() * 30 
         }));
 
-        function spawnExplosion(x, y) {
+        // Ambient seasonal particles (blossoms, sunbeams, autumn leaves, snowflakes)
+        const seasonParticles = Array.from({length: 30}, () => ({
+            x: Math.random() * 400,
+            y: Math.random() * 400,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: 0.3 + Math.random() * 0.6,
+            rot: Math.random() * Math.PI * 2,
+            vrot: (Math.random() - 0.5) * 0.05,
+            size: 3 + Math.random() * 4,
+            sway: Math.random() * Math.PI * 2
+        }));
+
+        // Roaming animals
+        const chickensList = [
+            { x: 40, y: 35, tx: 70, ty: 50, dir: 1, peck: 0, moveTimer: 30 },
+            { x: 350, y: 340, tx: 320, ty: 360, dir: -1, peck: 0, moveTimer: 70 },
+            { x: 330, y: 60, tx: 360, ty: 80, dir: 1, peck: 0, moveTimer: 110 }
+        ];
+        const cowsList = [
+            { x: 60, y: 340, tx: 90, ty: 350, dir: 1, chew: 0, moveTimer: 50 },
+            { x: 340, y: 200, tx: 310, ty: 220, dir: -1, chew: 0, moveTimer: 120 }
+        ];
+
+        function spawnShockwave(x, y, color = 'rgba(255, 215, 0, 0.8)', maxRadius = 50) {
+            shockwaves.push({
+                x, y,
+                radius: 4,
+                maxRadius: maxRadius,
+                speed: 2.5,
+                color: color,
+                alpha: 1.0,
+                width: 3.5
+            });
+            // Outer dispersion halo
+            shockwaves.push({
+                x, y,
+                radius: 8,
+                maxRadius: maxRadius * 1.35,
+                speed: 3.8,
+                color: 'rgba(255, 255, 255, 0.6)',
+                alpha: 0.8,
+                width: 1.5
+            });
+        }
+
+        // Multi-Layered Kinematic Particle Explosion Engine (4 Distinct Layers)
+        function spawnExplosion(x, y, cropType = 0) {
             const cx = x + CELL_SIZE / 2;
             const cy = y + CELL_SIZE / 2;
-            for (let i = 0; i < 20; i++) {
+            const colors = ['#FFC107', '#4CAF50', '#F44336', '#FF9800'];
+            const cropColor = colors[cropType] || '#FFD700';
+
+            // Tier 1: Incandescent Core Needle Sparks (High velocity, drag)
+            for (let i = 0; i < 24; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 3.5 + Math.random() * 5.5;
                 particles.push({
                     x: cx, y: cy,
-                    vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 1) * 8 - 2,
-                    life: 1.5 + Math.random(), color: '#FFD700', type: 'spark'
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 1.5,
+                    life: 1.2 + Math.random() * 0.6,
+                    maxLife: 1.8,
+                    color: '#FFF9C4',
+                    glowColor: cropColor,
+                    type: 'needle',
+                    drag: 0.94
                 });
             }
+
+            // Tier 2: Expanding Buoyant Smoke / Floral Pollen Puffs (Negative gravity, expansion)
+            for (let i = 0; i < 14; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 0.8 + Math.random() * 2.2;
+                particles.push({
+                    x: cx + (Math.random() - 0.5) * 10,
+                    y: cy + (Math.random() - 0.5) * 10,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 1.2,
+                    radius: 4 + Math.random() * 5,
+                    growth: 0.22,
+                    life: 1.0 + Math.random() * 0.5,
+                    maxLife: 1.5,
+                    color: cropColor,
+                    type: 'smoke'
+                });
+            }
+
+            // Tier 3: Heavy Kinematic Dirt & Crop Shard Debris (Gravity, floor bounce, tumbling)
+            for (let i = 0; i < 12; i++) {
+                particles.push({
+                    x: cx, y: cy,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: -(2.5 + Math.random() * 5),
+                    angle: Math.random() * Math.PI * 2,
+                    vAngle: (Math.random() - 0.5) * 0.35,
+                    size: 3 + Math.random() * 4,
+                    life: 1.5,
+                    maxLife: 1.5,
+                    color: Math.random() < 0.5 ? '#5D4037' : cropColor,
+                    type: 'shard',
+                    groundY: cy + 18
+                });
+            }
+
+            // Tier 4: Radiant Golden Celebration Energy Stars (Twinkling radiance)
             for (let i = 0; i < 10; i++) {
                 particles.push({
                     x: cx, y: cy,
-                    vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 1) * 4 - 4,
-                    life: 2.0 + Math.random(), color: '#FFF', type: 'star'
+                    vx: (Math.random() - 0.5) * 3.5,
+                    vy: -(1.5 + Math.random() * 4),
+                    life: 1.8 + Math.random() * 0.8,
+                    maxLife: 2.6,
+                    color: '#FFFDE7',
+                    starColor: '#FFD700',
+                    type: 'star'
                 });
             }
+
+            spawnShockwave(cx, cy, cropColor, 45);
         }
 
         function spawnParticles(x, y, color, count) {
+            const cx = x + CELL_SIZE / 2;
+            const cy = y + CELL_SIZE / 2;
             for (let i = 0; i < count; i++) {
                 particles.push({
-                    x: x + CELL_SIZE / 2,
-                    y: y + CELL_SIZE / 2,
+                    x: cx, y: cy,
                     vx: (Math.random() - 0.5) * 4,
                     vy: (Math.random() - 1) * 4 - 1,
                     life: 1.0,
-                    color: color
+                    maxLife: 1.0,
+                    color: color,
+                    type: 'basic'
                 });
+            }
+            if (count >= 10) {
+                spawnShockwave(cx, cy, color, 30);
             }
         }
 
@@ -337,6 +446,7 @@
                     vx: (Math.random() - 0.5) * 2,
                     vy: -4 - Math.random() * 2,
                     life: 1.5,
+                    maxLife: 1.5,
                     color: '#2196F3',
                     type: 'water',
                     targetY: targetY + (Math.random() - 0.5) * 10
@@ -356,6 +466,8 @@
                 playSound('chicken');
                 updateMoney();
                 updateAnimals();
+                spawnExplosion(40, 40, 0);
+                shakeAmount += 6;
                 showToast(`🐔 Bought a Chicken! Total: ${chickens} ($${chickens * (hasMayoMaker ? 15 : 5)}/day)`);
             } else {
                 showToast(`⚠️ Need $50 for a Chicken (You have $${money})`, true);
@@ -369,6 +481,8 @@
                 playSound('cow');
                 updateMoney();
                 updateAnimals();
+                spawnExplosion(60, 320, 1);
+                shakeAmount += 8;
                 showToast(`🐄 Bought a Cow! Total: ${cows} ($${cows * (hasCheesePress ? 40 : 15)}/day)`);
             } else {
                 showToast(`⚠️ Need $150 for a Cow (You have $${money})`, true);
@@ -386,6 +500,8 @@
                 btn.innerText = 'Scarecrow (Owned)';
                 btn.style.backgroundColor = '#9E9E9E';
                 btn.disabled = true;
+                spawnShockwave(375, 25, '#FFD700', 60);
+                shakeAmount += 10;
                 showToast('🧍 Scarecrow installed! Crops protected from crows!');
             } else {
                 showToast(`⚠️ Need $100 for a Scarecrow (You have $${money})`, true);
@@ -407,6 +523,8 @@
                 btn.innerText = 'Fertilizer (Owned)';
                 btn.style.backgroundColor = '#9E9E9E';
                 btn.disabled = true;
+                spawnShockwave(200, 200, '#81C784', 80);
+                shakeAmount += 8;
                 showToast('🌱 Fertilizer purchased! All crops now mature 1 day faster!');
             } else {
                 showToast(`⚠️ Need $100 for Fertilizer (You have $${money})`, true);
@@ -423,6 +541,8 @@
                 btn.innerText = 'Tools Upgraded (3x3)';
                 btn.style.backgroundColor = '#9E9E9E';
                 btn.disabled = true;
+                spawnShockwave(200, 200, '#42A5F5', 90);
+                shakeAmount += 12;
                 showToast('✨ Tools Upgraded! Tilling, watering, and harvesting now affect a 3x3 area!');
             } else {
                 showToast(`⚠️ Need $200 to Upgrade Tools (You have $${money})`, true);
@@ -440,6 +560,8 @@
                 btn.innerText = 'Mill (Owned)';
                 btn.style.backgroundColor = '#9E9E9E';
                 btn.disabled = true;
+                spawnShockwave(30, 30, '#FFE082', 60);
+                shakeAmount += 8;
                 showToast('🏭 Mill purchased! Wheat now processes into flour for $25 (was $10)!');
             } else {
                 showToast(`⚠️ Need $150 for the Mill (You have $${money})`, true);
@@ -456,6 +578,8 @@
                 btn.innerText = 'Mayo Maker (Owned)';
                 btn.style.backgroundColor = '#9E9E9E';
                 btn.disabled = true;
+                spawnShockwave(200, 200, '#FFF59D', 60);
+                shakeAmount += 8;
                 showToast('🥚 Mayo Maker purchased! Chickens now produce Mayo for $15/day (was $5)!');
             } else {
                 showToast(`⚠️ Need $100 for Mayo Maker (You have $${money})`, true);
@@ -472,6 +596,8 @@
                 btn.innerText = 'Cheese Press (Owned)';
                 btn.style.backgroundColor = '#9E9E9E';
                 btn.disabled = true;
+                spawnShockwave(200, 200, '#FFE082', 70);
+                shakeAmount += 10;
                 showToast('🧀 Cheese Press purchased! Cows now produce Cheese for $40/day (was $15)!');
             } else {
                 showToast(`⚠️ Need $200 for Cheese Press (You have $${money})`, true);
@@ -548,7 +674,389 @@
                 ctx.fillStyle = night ? '#1B5E20' : '#4CAF50';
                 ctx.fillRect(-2, -8, 4, 6);
             }
+
+            // Specular sheen sweep traversing ripe crops
+            const sheenPos = ((time * 0.001 + (x * 7 + y * 13) * 0.1) % 2) - 1;
+            if (sheenPos > -0.5 && sheenPos < 0.5) {
+                ctx.save();
+                ctx.globalAlpha = 0.35 * (1 - Math.abs(sheenPos) * 2);
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(-10 + sheenPos * 25, 10);
+                ctx.lineTo(5 + sheenPos * 25, -12);
+                ctx.stroke();
+                ctx.restore();
+            }
+
             ctx.restore();
+        }
+
+        // Animated Chicken Sprite
+        function drawChicken(ctx, ch, time) {
+            ctx.save();
+            ctx.translate(ch.x, ch.y);
+            ctx.scale(ch.dir, 1);
+            const bob = Math.sin(time * 0.01 + ch.x) * 2;
+            const peckOff = ch.peck > 0 ? 3 : 0;
+
+            // Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.beginPath();
+            ctx.ellipse(0, 6, 6, 3, 0, 0, Math.PI*2);
+            ctx.fill();
+
+            // Legs
+            ctx.strokeStyle = '#FFA000';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(-2, 2); ctx.lineTo(-2, 6);
+            ctx.moveTo(2, 2); ctx.lineTo(2, 6);
+            ctx.stroke();
+
+            // Body
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.ellipse(0, bob, 6, 5, 0, 0, Math.PI*2);
+            ctx.fill();
+
+            // Wing
+            ctx.fillStyle = '#EEEEEE';
+            ctx.beginPath();
+            ctx.ellipse(-1, bob + 1, 3.5, 2.5, 0.2, 0, Math.PI*2);
+            ctx.fill();
+
+            // Head & Comb
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.arc(4, bob - 3 + peckOff, 3.5, 0, Math.PI*2);
+            ctx.fill();
+
+            // Comb
+            ctx.fillStyle = '#E53935';
+            ctx.beginPath();
+            ctx.arc(4, bob - 7 + peckOff, 1.8, 0, Math.PI*2);
+            ctx.fill();
+
+            // Beak
+            ctx.fillStyle = '#FF9800';
+            ctx.beginPath();
+            ctx.moveTo(6, bob - 3 + peckOff);
+            ctx.lineTo(9, bob - 2 + peckOff);
+            ctx.lineTo(6, bob - 1 + peckOff);
+            ctx.fill();
+
+            // Eye
+            ctx.fillStyle = '#212121';
+            ctx.beginPath();
+            ctx.arc(5, bob - 4 + peckOff, 0.8, 0, Math.PI*2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        // Animated Cow Sprite
+        function drawCow(ctx, cow, time) {
+            ctx.save();
+            ctx.translate(cow.x, cow.y);
+            ctx.scale(cow.dir, 1);
+            const wag = Math.sin(time * 0.005 + cow.x) * 3;
+            const chewBob = cow.chew > 0 ? Math.sin(time * 0.02) * 1.5 : 0;
+
+            // Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.beginPath();
+            ctx.ellipse(0, 10, 14, 5, 0, 0, Math.PI*2);
+            ctx.fill();
+
+            // Legs
+            ctx.fillStyle = '#E0E0E0';
+            ctx.fillRect(-8, 2, 3, 8);
+            ctx.fillRect(-3, 2, 3, 8);
+            ctx.fillRect(3, 2, 3, 8);
+            ctx.fillRect(8, 2, 3, 8);
+
+            // Hooves
+            ctx.fillStyle = '#424242';
+            ctx.fillRect(-8, 8, 3, 2);
+            ctx.fillRect(-3, 8, 3, 2);
+            ctx.fillRect(3, 8, 3, 2);
+            ctx.fillRect(8, 8, 3, 2);
+
+            // Tail
+            ctx.strokeStyle = '#212121';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(-10, -3);
+            ctx.quadraticCurveTo(-14 + wag, 2, -13 + wag, 6);
+            ctx.stroke();
+
+            // Body
+            ctx.fillStyle = '#FAFAFA';
+            ctx.beginPath();
+            ctx.roundRect(-10, -8, 18, 12, 3);
+            ctx.fill();
+
+            // Black Patches
+            ctx.fillStyle = '#212121';
+            ctx.beginPath();
+            ctx.arc(-4, -4, 4, 0, Math.PI*2);
+            ctx.arc(3, -2, 3, 0, Math.PI*2);
+            ctx.fill();
+
+            // Head
+            ctx.fillStyle = '#FAFAFA';
+            ctx.beginPath();
+            ctx.roundRect(6, -11 + chewBob, 9, 10, 2);
+            ctx.fill();
+
+            // Pink Snout
+            ctx.fillStyle = '#F8BBD0';
+            ctx.beginPath();
+            ctx.roundRect(11, -7 + chewBob, 5, 6, 2);
+            ctx.fill();
+            ctx.fillStyle = '#880E4F';
+            ctx.fillRect(13, -5 + chewBob, 1, 1.5);
+            ctx.fillRect(13, -3 + chewBob, 1, 1.5);
+
+            // Horns & Ears
+            ctx.fillStyle = '#FFF9C4';
+            ctx.fillRect(8, -13 + chewBob, 2, 3);
+            ctx.fillStyle = '#212121';
+            ctx.beginPath();
+            ctx.ellipse(6, -10 + chewBob, 2, 3, -0.5, 0, Math.PI*2);
+            ctx.fill();
+
+            // Eye
+            ctx.fillStyle = '#212121';
+            ctx.beginPath();
+            ctx.arc(9, -8 + chewBob, 1, 0, Math.PI*2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        // Scarecrow Sprite
+        function drawScarecrow(ctx, x, y, time) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            // Post
+            ctx.fillStyle = '#5D4037';
+            ctx.fillRect(-2, -10, 4, 30);
+            ctx.fillRect(-14, -4, 28, 3);
+
+            // Body/Coat
+            ctx.fillStyle = '#1E88E5';
+            ctx.beginPath();
+            ctx.moveTo(-7, -4);
+            ctx.lineTo(7, -4);
+            ctx.lineTo(9, 12);
+            ctx.lineTo(-9, 12);
+            ctx.closePath();
+            ctx.fill();
+
+            // Patches
+            ctx.fillStyle = '#FF9800';
+            ctx.fillRect(-4, 2, 3, 3);
+            ctx.fillStyle = '#4CAF50';
+            ctx.fillRect(2, 5, 3, 3);
+
+            // Straw Head
+            ctx.fillStyle = '#FFF59D';
+            ctx.beginPath();
+            ctx.arc(0, -9, 6, 0, Math.PI*2);
+            ctx.fill();
+
+            // Eyes & Stitched Smile
+            ctx.fillStyle = '#3E2723';
+            ctx.fillRect(-3, -11, 2, 2);
+            ctx.fillRect(1, -11, 2, 2);
+            ctx.beginPath();
+            ctx.arc(0, -8, 3, 0.2, Math.PI - 0.2);
+            ctx.stroke();
+
+            // Straw Hat
+            ctx.fillStyle = '#D7CCC8';
+            ctx.beginPath();
+            ctx.ellipse(0, -13, 11, 3, 0, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = '#8D6E63';
+            ctx.fillRect(-5, -19, 10, 6);
+
+            // Fluttering Red Scarf
+            const wave = Math.sin(time * 0.006) * 4;
+            ctx.strokeStyle = '#E53935';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(0, -4);
+            ctx.quadraticCurveTo(8, -2 + wave, 14, 2 + wave * 1.5);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        // Animated Windmill / Mill
+        function drawWindmill(ctx, x, y, time) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            // Stone base
+            ctx.fillStyle = '#8D6E63';
+            ctx.beginPath();
+            ctx.moveTo(-10, 18);
+            ctx.lineTo(10, 18);
+            ctx.lineTo(7, -6);
+            ctx.lineTo(-7, -6);
+            ctx.closePath();
+            ctx.fill();
+
+            // Roof
+            ctx.fillStyle = '#C62828';
+            ctx.beginPath();
+            ctx.moveTo(-9, -6);
+            ctx.lineTo(0, -16);
+            ctx.lineTo(9, -6);
+            ctx.closePath();
+            ctx.fill();
+
+            // Door
+            ctx.fillStyle = '#3E2723';
+            ctx.fillRect(-3, 8, 6, 10);
+
+            // Rotating Sails
+            const rot = time * 0.0018;
+            ctx.save();
+            ctx.translate(0, -6);
+            ctx.rotate(rot);
+
+            ctx.strokeStyle = '#5D4037';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 4; i++) {
+                ctx.rotate(Math.PI / 2);
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(18, 0);
+                ctx.stroke();
+                ctx.fillStyle = 'rgba(255, 248, 225, 0.85)';
+                ctx.fillRect(4, -4, 12, 4);
+            }
+            ctx.restore();
+
+            ctx.restore();
+        }
+
+        // Ornate Corner Filigree L-Brackets and Pulsating Border with Traveling Specular Glint
+        function drawOrnateBorderAndGlint(ctx, time) {
+            const w = 400;
+            const h = 400;
+
+            // Pulsating golden/wood border
+            const pulse = (Math.sin(time * 0.004) + 1) * 0.5;
+            ctx.strokeStyle = `rgba(255, 215, 0, ${0.4 + pulse * 0.35})`;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(3, 3, w - 6, h - 6);
+
+            // 4 Ornate Corner Filigree L-Brackets
+            const bracketSize = 22;
+            const corners = [
+                { x: 3, y: 3, dx: 1, dy: 1 },
+                { x: w - 3, y: 3, dx: -1, dy: 1 },
+                { x: 3, y: h - 3, dx: 1, dy: -1 },
+                { x: w - 3, y: h - 3, dx: -1, dy: -1 }
+            ];
+
+            corners.forEach(c => {
+                ctx.save();
+                ctx.strokeStyle = '#FFD700';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(c.x, c.y + c.dy * bracketSize);
+                ctx.lineTo(c.x, c.y);
+                ctx.lineTo(c.x + c.dx * bracketSize, c.y);
+                ctx.stroke();
+
+                // Inner filigree notch
+                ctx.strokeStyle = '#FFA000';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(c.x + c.dx * 6, c.y + c.dy * (bracketSize - 6));
+                ctx.lineTo(c.x + c.dx * 6, c.y + c.dy * 6);
+                ctx.lineTo(c.x + c.dx * (bracketSize - 6), c.y + c.dy * 6);
+                ctx.stroke();
+
+                // Corner Rivet
+                ctx.fillStyle = '#FFE082';
+                ctx.beginPath();
+                ctx.arc(c.x + c.dx * 8, c.y + c.dy * 8, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // Traveling Specular Glint along perimeter
+            const perimeter = (w + h) * 2;
+            const glintDist = (time * 0.22) % perimeter;
+            let gx = 0, gy = 0;
+            if (glintDist < w) {
+                gx = glintDist; gy = 3;
+            } else if (glintDist < w + h) {
+                gx = w - 3; gy = glintDist - w;
+            } else if (glintDist < w * 2 + h) {
+                gx = w - (glintDist - (w + h)); gy = h - 3;
+            } else {
+                gx = 3; gy = h - (glintDist - (w * 2 + h));
+            }
+
+            const grad = ctx.createRadialGradient(gx, gy, 0, gx, gy, 14);
+            grad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+            grad.addColorStop(0.4, 'rgba(255, 235, 59, 0.6)');
+            grad.addColorStop(1, 'rgba(255, 215, 0, 0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(gx, gy, 14, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Seasonal Ambient Atmospheric Particles
+        function drawSeasonalWeatherParticles(ctx, season, time) {
+            seasonParticles.forEach(p => {
+                p.y += p.vy;
+                p.x += Math.sin(time * 0.002 + p.sway) * 0.6 + p.vx;
+                p.rot += p.vrot;
+
+                if (p.y > 410) { p.y = -10; p.x = Math.random() * 400; }
+                if (p.x < -10) p.x = 410;
+                if (p.x > 410) p.x = -10;
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rot);
+
+                if (season === 0) { // Spring: Cherry Blossom Petals
+                    ctx.fillStyle = 'rgba(255, 182, 193, 0.65)';
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, p.size, p.size * 0.55, 0.4, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (season === 1) { // Summer: Sunbeam Motes
+                    ctx.fillStyle = 'rgba(255, 235, 59, 0.5)';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, p.size * 0.5, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (season === 2) { // Fall: Autumn Leaves
+                    ctx.fillStyle = (p.sway > 3) ? 'rgba(230, 81, 0, 0.7)' : 'rgba(251, 140, 0, 0.7)';
+                    ctx.beginPath();
+                    ctx.moveTo(0, -p.size);
+                    ctx.quadraticCurveTo(p.size, 0, 0, p.size);
+                    ctx.quadraticCurveTo(-p.size, 0, 0, -p.size);
+                    ctx.fill();
+                } else if (season === 3) { // Winter: Snowflakes
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, p.size * 0.45, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            });
         }
 
         function draw(timestamp = 0) {
@@ -640,6 +1148,59 @@
                     }
                 }
             }
+
+            // Draw Structures & Animals
+            if (hasMill) {
+                drawWindmill(ctx, 25, 25, timestamp);
+            }
+            if (hasScarecrow) {
+                drawScarecrow(ctx, 375, 25, timestamp);
+            }
+
+            // Update & Draw Chickens
+            const activeChickens = Math.min(chickens, chickensList.length);
+            for (let i = 0; i < activeChickens; i++) {
+                const ch = chickensList[i];
+                ch.moveTimer--;
+                if (ch.moveTimer <= 0) {
+                    ch.moveTimer = 40 + Math.floor(Math.random() * 80);
+                    ch.tx = 20 + Math.random() * 360;
+                    ch.ty = 20 + Math.random() * 360;
+                    ch.peck = Math.random() < 0.4 ? 20 : 0;
+                }
+                const cdx = ch.tx - ch.x;
+                const cdy = ch.ty - ch.y;
+                if (Math.abs(cdx) > 1) {
+                    ch.x += Math.sign(cdx) * 0.6;
+                    ch.dir = Math.sign(cdx);
+                }
+                if (Math.abs(cdy) > 1) ch.y += Math.sign(cdy) * 0.6;
+                if (ch.peck > 0) ch.peck--;
+                drawChicken(ctx, ch, timestamp);
+            }
+
+            // Update & Draw Cows
+            const activeCows = Math.min(cows, cowsList.length);
+            for (let i = 0; i < activeCows; i++) {
+                const cow = cowsList[i];
+                cow.moveTimer--;
+                if (cow.moveTimer <= 0) {
+                    cow.moveTimer = 60 + Math.floor(Math.random() * 120);
+                    cow.tx = 30 + Math.random() * 340;
+                    cow.ty = 30 + Math.random() * 340;
+                    cow.chew = Math.random() < 0.5 ? 40 : 0;
+                }
+                const cdx = cow.tx - cow.x;
+                const cdy = cow.ty - cow.y;
+                if (Math.abs(cdx) > 1) {
+                    cow.x += Math.sign(cdx) * 0.4;
+                    cow.dir = Math.sign(cdx);
+                }
+                if (Math.abs(cdy) > 1) cow.y += Math.sign(cdy) * 0.4;
+                if (cow.chew > 0) cow.chew--;
+                drawCow(ctx, cow, timestamp);
+            }
+
             // Slow scrolling translucent clouds
             ctx.fillStyle = timeOfDay === 'night' ? 'rgba(200,200,220,0.1)' : 'rgba(255,255,255,0.3)';
             clouds.forEach(c => {
@@ -662,44 +1223,122 @@
                 }
             }
 
+            // Seasonal Atmospheric Weather Particles
+            if (timeOfDay === 'day') {
+                drawSeasonalWeatherParticles(ctx, currentSeason, timestamp);
+            }
+
             // Stylized day/night cycle color overlay that slowly shifts based on internal time
             const cycle = (timestamp % 60000) / 60000;
             const r = Math.sin(cycle * Math.PI * 2) * 30 + 30;
             const g = Math.cos(cycle * Math.PI * 2) * 20 + 20;
             const b = Math.sin(cycle * Math.PI * 2 + Math.PI) * 40 + 40;
-            ctx.fillStyle = `rgba(${Math.floor(r)}, ${Math.floor(g)}, ${Math.floor(b)}, 0.15)`;
+            ctx.fillStyle = `rgba(${Math.floor(r)}, ${Math.floor(g)}, ${Math.floor(b)}, 0.12)`;
             ctx.fillRect(0, 0, 400, 400);
 
+            // Dual-Tier Shockwaves
+            for (let i = shockwaves.length - 1; i >= 0; i--) {
+                const sw = shockwaves[i];
+                sw.radius += sw.speed;
+                sw.alpha -= 0.035;
+                if (sw.alpha <= 0 || sw.radius >= sw.maxRadius) {
+                    shockwaves.splice(i, 1);
+                } else {
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0, sw.alpha);
+                    ctx.strokeStyle = sw.color;
+                    ctx.lineWidth = sw.width;
+                    ctx.beginPath();
+                    ctx.ellipse(sw.x, sw.y, sw.radius, sw.radius * 0.75, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+
+            // 4-Tier Particle Engine Update & Render
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i];
                 p.x += p.vx;
                 p.y += p.vy;
-                p.vy += (p.type === 'star' || p.type === 'spark') ? 0.05 : 0.2; 
-                if (p.type === 'water' && p.vy > 0 && p.y > p.targetY) {
-                    p.type = 'splash';
-                    p.vy = -1 - Math.random();
-                    p.vx = (Math.random() - 0.5) * 3;
+
+                if (p.drag) { p.vx *= p.drag; p.vy *= p.drag; }
+
+                if (p.type === 'needle') {
+                    p.vy += 0.06;
+                    p.life -= 0.025;
+                } else if (p.type === 'smoke') {
+                    p.vy -= 0.02; // Buoyant upward
+                    if (p.radius && p.growth) p.radius += p.growth;
+                    p.life -= 0.02;
+                } else if (p.type === 'shard') {
+                    p.vy += 0.35; // Heavy gravity
+                    p.angle += p.vAngle;
+                    if (p.groundY && p.y > p.groundY) {
+                        p.y = p.groundY;
+                        p.vy = -p.vy * 0.45;
+                        p.vx *= 0.6;
+                    }
+                    p.life -= 0.025;
+                } else if (p.type === 'star') {
+                    p.vy += 0.05;
+                    p.life -= 0.02;
+                } else {
+                    p.vy += (p.type === 'water') ? 0.2 : 0.15;
+                    if (p.type === 'water' && p.vy > 0 && p.y > p.targetY) {
+                        p.type = 'splash';
+                        p.vy = -1 - Math.random();
+                        p.vx = (Math.random() - 0.5) * 3;
+                    }
+                    p.life -= 0.02;
                 }
-                p.life -= 0.02;
+
                 if (p.life <= 0) {
                     particles.splice(i, 1);
                 } else {
-                    ctx.globalAlpha = Math.max(0, p.life > 1 ? 1 : p.life);
-                    if (p.type === 'star') {
+                    const normLife = Math.max(0, p.life / (p.maxLife || 1.0));
+                    ctx.save();
+                    ctx.globalAlpha = Math.min(1.0, normLife);
+
+                    if (p.type === 'needle') {
+                        ctx.strokeStyle = p.color;
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p.x - p.vx * 2, p.y - p.vy * 2);
+                        ctx.stroke();
+                    } else if (p.type === 'smoke') {
                         ctx.fillStyle = p.color;
-                        ctx.beginPath(); ctx.arc(p.x, p.y, 2 + p.life, 0, Math.PI*2); ctx.fill();
-                    } else if (p.type === 'spark') {
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.radius || 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else if (p.type === 'shard') {
+                        ctx.translate(p.x, p.y);
+                        ctx.rotate(p.angle);
                         ctx.fillStyle = p.color;
-                        ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
-                        ctx.fillStyle = 'rgba(255,140,0,0.5)';
-                        ctx.fillRect(p.x - 4, p.y - 4, 8, 8);
+                        ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                    } else if (p.type === 'star') {
+                        ctx.translate(p.x, p.y);
+                        ctx.fillStyle = p.color;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 2 + normLife * 2, 0, Math.PI * 2);
+                        ctx.fill();
+                        // 4-point twinkle cross
+                        ctx.strokeStyle = p.starColor || '#FFD700';
+                        ctx.lineWidth = 1.2;
+                        ctx.beginPath();
+                        ctx.moveTo(-6 * normLife, 0); ctx.lineTo(6 * normLife, 0);
+                        ctx.moveTo(0, -6 * normLife); ctx.lineTo(0, 6 * normLife);
+                        ctx.stroke();
                     } else {
                         ctx.fillStyle = p.color;
                         ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
                     }
-                    ctx.globalAlpha = 1.0;
+                    ctx.restore();
                 }
             }
+
+            // Ornate Corner Filigree & Pulsating Perimeter Inlay with Specular Glint
+            drawOrnateBorderAndGlint(ctx, timestamp);
 
             ctx.restore();
             requestAnimationFrame(draw);
@@ -765,13 +1404,14 @@
                             }
                         } else if (action === 'harvest' && cell.type === 3) {
                             const val = cropData[cell.cropType].value;
+                            const cType = cell.cropType;
                             money += val;
                             updateMoney();
                             cell.type = 1;
                             cell.watered = 0;
-                            spawnExplosion(x * CELL_SIZE, y * CELL_SIZE);
+                            spawnExplosion(x * CELL_SIZE, y * CELL_SIZE, cType);
                             shakeAmount += 15;
-                            showToast(`🌾 Harvested ${cropData[cell.cropType].name} (+$${val})!`);
+                            showToast(`🌾 Harvested ${cropData[cType].name} (+$${val})!`);
                         }
                     }
                 }
@@ -789,6 +1429,8 @@
                 document.getElementById('daySpan').innerText = day;
                 document.getElementById('seasonSpan').innerText = seasons[currentSeason];
                 timeOfDay = 'day';
+                spawnShockwave(200, 200, '#FFF59D', 130);
+                shakeAmount += 8;
                 const animalIncome = (chickens * (hasMayoMaker ? 15 : 5)) + (cows * (hasCheesePress ? 40 : 15));
                 money += animalIncome;
                 updateMoney();

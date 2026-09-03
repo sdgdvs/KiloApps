@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KFarm
 - KAlchemy
 - KRogue
 - KChess
@@ -148,8 +147,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KColony
 - KFortress
 - KColosseum
+- KFarm
 
 ## Completed Work Log
+
+- **KFarm (Loop 6):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on harvests, tilling, morning sunrises, animal additions, upgrade unlocks, and crow raids (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and trigonometric FastSin/FastCos physics decay with double-buffered viewport rendering in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant smoke & floral pollen puffs with negative gravity and expansion growth, heavy kinematic dirt & crop shard debris with gravity and floor bounce physics, and radiant golden celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer dispersion halo radiating upon crop harvests, tilling, upgrade unlocks, and morning sunrises, ornate rustic agricultural arcade HUD corner filigree L-brackets with rivet detailing, a pulsating golden energy perimeter inlay border with a traveling specular glint along the farm field frame, animated roaming livestock sprites (white chickens with bobbing pecks, wings, and red combs; spotted grazing cows with wagging tails, horns, pink snouts, and grass-chewing cycles), animated Windmill sails with continuous rotation when owned, custom Scarecrow sprite with blue tunic, straw hat, and wind-fluttering red scarf when owned, diagonal specular sheen sweeps traversing ripe crops, and seasonal ambient atmospheric weather particles (Spring cherry blossom petals, Summer golden sun motes, Fall fluttering autumn leaves, Winter crystalline snowflakes) in both Web Canvas (kfarm.html) and Native C Win32 GDI (KFarm/main.c).
 
 - **KColosseum (Loop 1):** Replaced text-based UI placeholders with custom-drawn graphical sprites and animations in both Web Canvas (kcolosseum.html) and Native Win32 GDI (KColosseum/main.c). Implemented custom graphical sprite models for Player Gladiator (with skin tones, Roman crested Murmillo helmet, Lorica segmentata / muscle cuirass armor, Scutum shield, and Gladius / Trident weapons), Enemy Gladiators, Ferocious Lion (with muscular tawny coat, golden mane, sharp claws/fangs, and pouncing leap), Armed Chariot (with horse, chassis, eagle crest, spear driver, and spinning spoked wheel scythes), and Twin Gladiators fighting in tandem. Added continuous animation loops with idle breathing bobbing, attack lunges with weapon slash trails, defense shield stance with gold glowing barrier, hit reaction recoils with damage flash, showboating cheering with star particle bursts, victory cheers, procedural screen-shake decay, multi-layered particle system (incandescent needle sparks, dust puffs, armor shards, thrown gold Denarii coins, medical sponges), Roman Colosseum sandstone arches, and filigree gold corner brackets.
 

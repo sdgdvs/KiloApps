@@ -34,12 +34,61 @@ typedef struct {
     float x, y;
     float vx, vy;
     int life;
+    int maxLife;
     COLORREF color;
-    int type;
+    int type; // 0=basic, 1=water, 2=needle/spark, 3=star, 4=smoke, 5=shard
     float targetY;
+    float drag;
+    float angle, vAngle;
+    int size;
 } Particle;
 #define MAX_PARTICLES 400
 Particle particles[MAX_PARTICLES] = {0};
+
+typedef struct {
+    float x, y;
+    float radius, maxRadius;
+    float speed;
+    COLORREF color;
+    int life;
+    int maxLife;
+    float width;
+} Shockwave;
+#define MAX_SHOCKWAVES 16
+Shockwave shockwaves[MAX_SHOCKWAVES] = {0};
+
+typedef struct {
+    float x, y;
+    float vx, vy;
+    float rot, vrot;
+    int size;
+    float sway;
+} SeasonParticle;
+#define MAX_SEASON_PARTICLES 30
+SeasonParticle season_particles[MAX_SEASON_PARTICLES] = {0};
+
+typedef struct {
+    float x, y, tx, ty;
+    int dir;
+    int peck;
+    int moveTimer;
+} ChickenState;
+ChickenState chickens_list[3] = {
+    { 40.0f, 45.0f, 70.0f, 55.0f, 1, 0, 30 },
+    { 350.0f, 340.0f, 320.0f, 360.0f, -1, 0, 70 },
+    { 330.0f, 60.0f, 360.0f, 80.0f, 1, 0, 110 }
+};
+
+typedef struct {
+    float x, y, tx, ty;
+    int dir;
+    int chew;
+    int moveTimer;
+} CowState;
+CowState cows_list[2] = {
+    { 60.0f, 340.0f, 90.0f, 350.0f, 1, 0, 50 },
+    { 340.0f, 200.0f, 310.0f, 220.0f, -1, 0, 120 }
+};
 
 float shake_amount = 0.0f;
 
@@ -47,32 +96,91 @@ typedef struct { float x, y, speed; int size; } Cloud;
 #define MAX_CLOUDS 5
 Cloud clouds[MAX_CLOUDS] = {0};
 
-void SpawnExplosionParticles(float x, float y) {
-    int spawned_sparks = 0;
+void SpawnShockwave(float x, float y, COLORREF color, float maxRadius) {
+    for (int i = 0; i < MAX_SHOCKWAVES; i++) {
+        if (shockwaves[i].life <= 0) {
+            shockwaves[i].x = x; shockwaves[i].y = y;
+            shockwaves[i].radius = 4.0f;
+            shockwaves[i].maxRadius = maxRadius;
+            shockwaves[i].speed = 2.5f;
+            shockwaves[i].color = color;
+            shockwaves[i].life = 30;
+            shockwaves[i].maxLife = 30;
+            shockwaves[i].width = 3.0f;
+            break;
+        }
+    }
+}
+
+void SpawnExplosionParticles(float x, float y, int cropType) {
+    COLORREF crop_colors[4] = { RGB(255, 193, 7), RGB(76, 175, 80), RGB(244, 67, 54), RGB(255, 152, 0) };
+    COLORREF cColor = (cropType >= 0 && cropType < 4) ? crop_colors[cropType] : RGB(255, 215, 0);
+
+    int spawned_needles = 0;
+    int spawned_smoke = 0;
+    int spawned_shards = 0;
     int spawned_stars = 0;
+
     for (int i = 0; i < MAX_PARTICLES; i++) {
         if (particles[i].life <= 0) {
-            if (spawned_sparks < 20) {
+            if (spawned_needles < 24) {
+                // Tier 1: Incandescent Core Needle Sparks
+                float angle = (float)(rand() % 628) / 100.0f;
+                float speed = 3.0f + (float)(rand() % 50) / 10.0f;
                 particles[i].x = x; particles[i].y = y;
-                particles[i].vx = (float)((rand() % 100) - 50) / 10.0f;
-                particles[i].vy = (float)((rand() % 100) - 100) / 10.0f - 2.0f;
-                particles[i].life = 150;
-                particles[i].color = RGB(255, 215, 0); // Gold
-                particles[i].type = 2; // spark
-                spawned_sparks++;
+                particles[i].vx = (float)cos(angle) * speed;
+                particles[i].vy = (float)sin(angle) * speed - 1.5f;
+                particles[i].life = 70;
+                particles[i].maxLife = 70;
+                particles[i].color = RGB(255, 250, 200);
+                particles[i].type = 2; // needle/spark
+                particles[i].drag = 0.94f;
+                spawned_needles++;
+            } else if (spawned_smoke < 12) {
+                // Tier 2: Expanding Buoyant Smoke / Pollen Puffs
+                float angle = (float)(rand() % 628) / 100.0f;
+                float speed = 0.8f + (float)(rand() % 20) / 10.0f;
+                particles[i].x = x + (float)((rand() % 20) - 10);
+                particles[i].y = y + (float)((rand() % 20) - 10);
+                particles[i].vx = (float)cos(angle) * speed;
+                particles[i].vy = (float)sin(angle) * speed - 1.0f;
+                particles[i].life = 60;
+                particles[i].maxLife = 60;
+                particles[i].color = cColor;
+                particles[i].type = 4; // smoke
+                particles[i].size = 4;
+                particles[i].drag = 0.97f;
+                spawned_smoke++;
+            } else if (spawned_shards < 12) {
+                // Tier 3: Heavy Kinematic Shards / Debris
+                particles[i].x = x; particles[i].y = y;
+                particles[i].vx = (float)((rand() % 100) - 50) / 12.0f;
+                particles[i].vy = -(2.5f + (float)(rand() % 40) / 10.0f);
+                particles[i].life = 80;
+                particles[i].maxLife = 80;
+                particles[i].color = (rand() % 2 == 0) ? RGB(93, 64, 55) : cColor;
+                particles[i].type = 5; // shard
+                particles[i].targetY = y + 18.0f;
+                particles[i].size = 3 + rand() % 4;
+                particles[i].drag = 0.98f;
+                spawned_shards++;
             } else if (spawned_stars < 10) {
+                // Tier 4: Radiant Golden Celebration Stars
                 particles[i].x = x; particles[i].y = y;
-                particles[i].vx = (float)((rand() % 100) - 50) / 15.0f;
-                particles[i].vy = (float)((rand() % 100) - 100) / 10.0f - 4.0f;
-                particles[i].life = 200;
+                particles[i].vx = (float)((rand() % 100) - 50) / 20.0f;
+                particles[i].vy = -(1.5f + (float)(rand() % 40) / 15.0f);
+                particles[i].life = 100;
+                particles[i].maxLife = 100;
                 particles[i].color = RGB(255, 255, 255);
                 particles[i].type = 3; // star
+                particles[i].drag = 0.98f;
                 spawned_stars++;
             } else {
                 break;
             }
         }
     }
+    SpawnShockwave(x, y, cColor, 45.0f);
 }
 
 void SpawnParticles(float x, float y, COLORREF color, int count) {
@@ -84,10 +192,15 @@ void SpawnParticles(float x, float y, COLORREF color, int count) {
             particles[i].vx = (float)((rand() % 100) - 50) / 20.0f;
             particles[i].vy = (float)((rand() % 100) - 100) / 20.0f - 2.0f;
             particles[i].life = 100;
+            particles[i].maxLife = 100;
             particles[i].color = color;
             particles[i].type = 0;
+            particles[i].drag = 0.98f;
             spawned++;
         }
+    }
+    if (count >= 10) {
+        SpawnShockwave(x, y, color, 30.0f);
     }
 }
 
@@ -100,8 +213,10 @@ void SpawnWaterParticles(float targetX, float targetY, int count) {
             particles[i].vx = (float)((rand() % 100) - 50) / 25.0f;
             particles[i].vy = -4.0f - (float)(rand() % 100) / 50.0f;
             particles[i].life = 150;
+            particles[i].maxLife = 150;
             particles[i].color = RGB(33, 150, 243);
             particles[i].type = 1;
+            particles[i].drag = 0.98f;
             particles[i].targetY = targetY + (float)((rand() % 100) - 50) / 10.0f;
             spawned++;
         }
@@ -170,6 +285,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 clouds[i].speed = 0.5f + (float)(rand() % 20) / 10.0f;
                 clouds[i].size = 20 + rand() % 30;
             }
+            for (int i = 0; i < MAX_SEASON_PARTICLES; i++) {
+                season_particles[i].x = (float)(rand() % 400);
+                season_particles[i].y = (float)(rand() % 400);
+                season_particles[i].vx = (float)((rand() % 100) - 50) / 100.0f;
+                season_particles[i].vy = 0.5f + (float)(rand() % 100) / 100.0f;
+                season_particles[i].size = 3 + rand() % 4;
+                season_particles[i].sway = (float)(rand() % 628) / 100.0f;
+            }
             hUpgradeToolsBtn = CreateWindow("BUTTON", "Tools ($200)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                 S(10), S(440), S(110), S(30), hwnd, (HMENU) 9, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hNextDayBtn = CreateWindow("BUTTON", "Sleep [Space]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
@@ -230,6 +353,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     for(int i=0; i<4; i++) if (growth_times[i] > 1) growth_times[i]--;
                     EnableWindow(hUpgradeBtn, FALSE);
                     SetWindowText(hUpgradeBtn, "Fertilizer (Owned)");
+                    SpawnShockwave(210.0f, 230.0f, RGB(129, 199, 132), 80.0f);
+                    shake_amount += 8.0f;
                     UpdateTitle(hwnd);
                 } else {
                     MessageBeep(MB_ICONERROR);
@@ -240,6 +365,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     money -= 50;
                     chickens++;
                     PlaySoundEffect(4);
+                    SpawnExplosionParticles(40.0f, 45.0f, 0);
+                    shake_amount += 6.0f;
                     UpdateTitle(hwnd);
                 } else {
                     MessageBeep(MB_ICONERROR);
@@ -250,6 +377,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     money -= 150;
                     cows++;
                     PlaySoundEffect(5);
+                    SpawnExplosionParticles(60.0f, 340.0f, 1);
+                    shake_amount += 8.0f;
                     UpdateTitle(hwnd);
                 } else {
                     MessageBeep(MB_ICONERROR);
@@ -261,6 +390,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     tools_upgraded = 1;
                     EnableWindow(hUpgradeToolsBtn, FALSE);
                     SetWindowText(hUpgradeToolsBtn, "Tools (Owned)");
+                    SpawnShockwave(210.0f, 230.0f, RGB(66, 165, 245), 90.0f);
+                    shake_amount += 12.0f;
                     UpdateTitle(hwnd);
                 } else {
                     MessageBeep(MB_ICONERROR);
@@ -272,6 +403,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     has_scarecrow = 1;
                     EnableWindow(hBuyScarecrowBtn, FALSE);
                     SetWindowText(hBuyScarecrowBtn, "Scarecrow (Owned)");
+                    SpawnShockwave(380.0f, 50.0f, RGB(255, 215, 0), 60.0f);
+                    shake_amount += 10.0f;
                     UpdateTitle(hwnd);
                 } else {
                     MessageBeep(MB_ICONERROR);
@@ -284,6 +417,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     sell_values[0] = 25;
                     EnableWindow(hMillBtn, FALSE);
                     SetWindowText(hMillBtn, "Mill (Owned)");
+                    SpawnShockwave(30.0f, 50.0f, RGB(255, 224, 130), 60.0f);
+                    shake_amount += 8.0f;
                     UpdateTitle(hwnd);
                 } else {
                     MessageBeep(MB_ICONERROR);
@@ -295,6 +430,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     has_mayo_maker = 1;
                     EnableWindow(hMayoBtn, FALSE);
                     SetWindowText(hMayoBtn, "Mayo (Owned)");
+                    SpawnShockwave(210.0f, 230.0f, RGB(255, 245, 157), 60.0f);
+                    shake_amount += 8.0f;
                     UpdateTitle(hwnd);
                 } else {
                     MessageBeep(MB_ICONERROR);
@@ -306,6 +443,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     has_cheese_press = 1;
                     EnableWindow(hCheeseBtn, FALSE);
                     SetWindowText(hCheeseBtn, "Cheese (Owned)");
+                    SpawnShockwave(210.0f, 230.0f, RGB(255, 224, 130), 70.0f);
+                    shake_amount += 10.0f;
                     UpdateTitle(hwnd);
                 } else {
                     MessageBeep(MB_ICONERROR);
@@ -330,12 +469,84 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     clouds[i].x += clouds[i].speed;
                     if (clouds[i].x > 500) clouds[i].x = (float)(-clouds[i].size * 2);
                 }
+                for (int i = 0; i < MAX_SEASON_PARTICLES; i++) {
+                    season_particles[i].y += season_particles[i].vy;
+                    season_particles[i].x += (float)sin(GetTickCount() * 0.002f + season_particles[i].sway) * 0.6f + season_particles[i].vx;
+                    if (season_particles[i].y > 420.0f) {
+                        season_particles[i].y = -10.0f;
+                        season_particles[i].x = (float)(rand() % 400);
+                    }
+                    if (season_particles[i].x < -10.0f) season_particles[i].x = 410.0f;
+                    if (season_particles[i].x > 410.0f) season_particles[i].x = -10.0f;
+                }
+                for (int i = 0; i < MAX_SHOCKWAVES; i++) {
+                    if (shockwaves[i].life > 0) {
+                        shockwaves[i].radius += shockwaves[i].speed;
+                        shockwaves[i].life--;
+                    }
+                }
+                // Update roaming chickens
+                int actCh = (chickens < 3) ? chickens : 3;
+                for (int i = 0; i < actCh; i++) {
+                    chickens_list[i].moveTimer--;
+                    if (chickens_list[i].moveTimer <= 0) {
+                        chickens_list[i].moveTimer = 40 + rand() % 80;
+                        chickens_list[i].tx = (float)(20 + rand() % 360);
+                        chickens_list[i].ty = (float)(20 + rand() % 360);
+                        chickens_list[i].peck = (rand() % 100 < 40) ? 20 : 0;
+                    }
+                    float dx = chickens_list[i].tx - chickens_list[i].x;
+                    float dy = chickens_list[i].ty - chickens_list[i].y;
+                    if (fabsf(dx) > 1.0f) {
+                        chickens_list[i].x += (dx > 0 ? 0.6f : -0.6f);
+                        chickens_list[i].dir = (dx > 0 ? 1 : -1);
+                    }
+                    if (fabsf(dy) > 1.0f) chickens_list[i].y += (dy > 0 ? 0.6f : -0.6f);
+                    if (chickens_list[i].peck > 0) chickens_list[i].peck--;
+                }
+                // Update roaming cows
+                int actCw = (cows < 2) ? cows : 2;
+                for (int i = 0; i < actCw; i++) {
+                    cows_list[i].moveTimer--;
+                    if (cows_list[i].moveTimer <= 0) {
+                        cows_list[i].moveTimer = 60 + rand() % 120;
+                        cows_list[i].tx = (float)(30 + rand() % 340);
+                        cows_list[i].ty = (float)(30 + rand() % 340);
+                        cows_list[i].chew = (rand() % 100 < 50) ? 40 : 0;
+                    }
+                    float dx = cows_list[i].tx - cows_list[i].x;
+                    float dy = cows_list[i].ty - cows_list[i].y;
+                    if (fabsf(dx) > 1.0f) {
+                        cows_list[i].x += (dx > 0 ? 0.4f : -0.4f);
+                        cows_list[i].dir = (dx > 0 ? 1 : -1);
+                    }
+                    if (fabsf(dy) > 1.0f) cows_list[i].y += (dy > 0 ? 0.4f : -0.4f);
+                    if (cows_list[i].chew > 0) cows_list[i].chew--;
+                }
                 for (int i = 0; i < MAX_PARTICLES; i++) {
                     if (particles[i].life > 0) {
                         particles[i].x += particles[i].vx;
                         particles[i].y += particles[i].vy;
-                        if (particles[i].type == 2 || particles[i].type == 3) {
-                            particles[i].vy += 0.1f; // less gravity
+                        if (particles[i].drag > 0.0f) {
+                            particles[i].vx *= particles[i].drag;
+                            particles[i].vy *= particles[i].drag;
+                        }
+                        if (particles[i].type == 2) { // needle
+                            particles[i].vy += 0.08f;
+                            particles[i].life -= 2;
+                        } else if (particles[i].type == 3) { // star
+                            particles[i].vy += 0.05f;
+                            particles[i].life -= 2;
+                        } else if (particles[i].type == 4) { // smoke
+                            particles[i].vy -= 0.04f;
+                            particles[i].life -= 2;
+                        } else if (particles[i].type == 5) { // shard
+                            particles[i].vy += 0.4f;
+                            if (particles[i].targetY > 0 && particles[i].y > particles[i].targetY) {
+                                particles[i].y = particles[i].targetY;
+                                particles[i].vy = -particles[i].vy * 0.45f;
+                                particles[i].vx *= 0.6f;
+                            }
                             particles[i].life -= 2;
                         } else {
                             particles[i].vy += 0.5f; // gravity
@@ -357,6 +568,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 current_day++;
                 current_season = ((current_day - 1) / 7) % 4;
                 time_of_day = 0;
+                SpawnShockwave(210.0f, 230.0f, RGB(255, 245, 157), 130.0f);
+                shake_amount += 8.0f;
                 money += (chickens * (has_mayo_maker ? 15 : 5)) + (cows * (has_cheese_press ? 40 : 15));
                 for (int i = 0; i < GRID_COLS * GRID_ROWS; i++) {
                     if (grid[i].type == 2 || grid[i].type == 3) {
@@ -453,8 +666,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             }
                         } else if (action == 3 && grid[idx].type == 3) {
                             money += sell_values[grid[idx].cropType];
+                            int cType = grid[idx].cropType;
                             grid[idx].type = 1; grid[idx].watered = 0;
-                            SpawnExplosionParticles((float)px, (float)py);
+                            SpawnExplosionParticles((float)px, (float)py, cType);
                             shake_amount += 15.0f;
                         }
                     }
@@ -681,6 +895,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                 DeleteObject(hOrange);
                                 DeleteObject(hDarkOrange);
                             }
+
+                            // Specular sheen sweep on crops
+                            HPEN hSheenPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+                            SelectObject(hdc, hSheenPen);
+                            MoveToEx(hdc, cx - 6, cy - 4, NULL); LineTo(hdc, cx - 2, cy - 8);
+                            DeleteObject(hSheenPen);
                         }
                         ModifyWorldTransform(hdc, NULL, MWT_IDENTITY);
                         SetGraphicsMode(hdc, GM_COMPATIBLE);
@@ -697,6 +917,151 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             DeleteObject(hPumpkinPen);
             DeleteObject(hSproutPen);
             DeleteObject(hGridPen);
+
+            // Draw Windmill Sprite if owned
+            if (has_mill) {
+                int wx = OFFSET_X + 20;
+                int wy = OFFSET_Y + 20;
+                HBRUSH hMillBase = CreateSolidBrush(RGB(141, 110, 99));
+                HBRUSH hMillRoof = CreateSolidBrush(RGB(198, 40, 40));
+                HBRUSH hMillDoor = CreateSolidBrush(RGB(62, 39, 35));
+                POINT pts[4] = { {wx - 10, wy + 16}, {wx + 10, wy + 16}, {wx + 7, wy - 6}, {wx - 7, wy - 6} };
+                HBRUSH hOld = (HBRUSH)SelectObject(hdc, hMillBase);
+                SelectObject(hdc, GetStockObject(NULL_PEN));
+                Polygon(hdc, pts, 4);
+                SelectObject(hdc, hMillRoof);
+                POINT rpts[3] = { {wx - 9, wy - 6}, {wx, wy - 16}, {wx + 9, wy - 6} };
+                Polygon(hdc, rpts, 3);
+                SelectObject(hdc, hMillDoor);
+                Rectangle(hdc, wx - 3, wy + 8, wx + 3, wy + 16);
+                SelectObject(hdc, hOld);
+                DeleteObject(hMillBase);
+                DeleteObject(hMillRoof);
+                DeleteObject(hMillDoor);
+
+                // Rotating windmill sails
+                float rotAngle = (float)(GetTickCount() % 10000) / 10000.0f * 6.28318f;
+                HPEN hSailPen = CreatePen(PS_SOLID, 2, RGB(93, 64, 55));
+                SelectObject(hdc, hSailPen);
+                for (int s = 0; s < 4; s++) {
+                    float a = rotAngle + s * 1.57079f;
+                    int sx = wx + (int)(cos(a) * 16.0f);
+                    int sy = (wy - 6) + (int)(sin(a) * 16.0f);
+                    MoveToEx(hdc, wx, wy - 6, NULL); LineTo(hdc, sx, sy);
+                }
+                DeleteObject(hSailPen);
+            }
+
+            // Draw Scarecrow Sprite if owned
+            if (has_scarecrow) {
+                int scx = OFFSET_X + GRID_COLS * CELL_SIZE - 20;
+                int scy = OFFSET_Y + 25;
+                // Post
+                HBRUSH hPostBrush = CreateSolidBrush(RGB(93, 64, 55));
+                RECT postR = { scx - 2, scy - 10, scx + 2, scy + 20 };
+                FillRect(hdc, &postR, hPostBrush);
+                RECT armR = { scx - 12, scy - 4, scx + 12, scy };
+                FillRect(hdc, &armR, hPostBrush);
+                DeleteObject(hPostBrush);
+
+                // Coat
+                HBRUSH hCoat = CreateSolidBrush(RGB(30, 136, 229));
+                POINT cpts[4] = { {scx - 7, scy - 4}, {scx + 7, scy - 4}, {scx + 9, scy + 10}, {scx - 9, scy + 10} };
+                HBRUSH hOld = (HBRUSH)SelectObject(hdc, hCoat);
+                SelectObject(hdc, GetStockObject(NULL_PEN));
+                Polygon(hdc, cpts, 4);
+                SelectObject(hdc, hOld);
+                DeleteObject(hCoat);
+
+                // Straw Head & Hat
+                HBRUSH hHead = CreateSolidBrush(RGB(255, 245, 157));
+                SelectObject(hdc, hHead);
+                Ellipse(hdc, scx - 5, scy - 14, scx + 5, scy - 4);
+                DeleteObject(hHead);
+
+                HBRUSH hHat = CreateSolidBrush(RGB(141, 110, 99));
+                SelectObject(hdc, hHat);
+                Ellipse(hdc, scx - 9, scy - 15, scx + 9, scy - 11);
+                RECT hatTop = { scx - 4, scy - 20, scx + 4, scy - 14 };
+                FillRect(hdc, &hatTop, hHat);
+                DeleteObject(hHat);
+
+                // Red Scarf
+                HPEN hScarfPen = CreatePen(PS_SOLID, 2, RGB(229, 57, 53));
+                SelectObject(hdc, hScarfPen);
+                int scarfWave = (int)(sin(GetTickCount() * 0.006f) * 3.0f);
+                MoveToEx(hdc, scx, scy - 4, NULL); LineTo(hdc, scx + 10, scy - 2 + scarfWave);
+                DeleteObject(hScarfPen);
+            }
+
+            // Draw Roaming Chickens
+            int drawCh = (chickens < 3) ? chickens : 3;
+            for (int i = 0; i < drawCh; i++) {
+                int cx = OFFSET_X + (int)chickens_list[i].x;
+                int cy = OFFSET_Y + (int)chickens_list[i].y;
+                int dir = chickens_list[i].dir;
+                int bob = (int)(sin(GetTickCount() * 0.01f + chickens_list[i].x) * 2.0f);
+                int peckOff = (chickens_list[i].peck > 0) ? 3 : 0;
+
+                HBRUSH hChBody = CreateSolidBrush(RGB(255, 255, 255));
+                HBRUSH hOld = (HBRUSH)SelectObject(hdc, hChBody);
+                SelectObject(hdc, GetStockObject(NULL_PEN));
+                Ellipse(hdc, cx - 6, cy + bob - 4, cx + 6, cy + bob + 4);
+                Ellipse(hdc, cx + dir*3 - 3, cy + bob - 7 + peckOff, cx + dir*3 + 3, cy + bob - 1 + peckOff);
+
+                HBRUSH hComb = CreateSolidBrush(RGB(229, 57, 53));
+                SelectObject(hdc, hComb);
+                Ellipse(hdc, cx + dir*3 - 1, cy + bob - 9 + peckOff, cx + dir*3 + 2, cy + bob - 6 + peckOff);
+                DeleteObject(hComb);
+
+                HBRUSH hBeak = CreateSolidBrush(RGB(255, 152, 0));
+                SelectObject(hdc, hBeak);
+                POINT bpts[3] = { {cx + dir*5, cy + bob - 5 + peckOff}, {cx + dir*8, cy + bob - 4 + peckOff}, {cx + dir*5, cy + bob - 3 + peckOff} };
+                Polygon(hdc, bpts, 3);
+                DeleteObject(hBeak);
+
+                SelectObject(hdc, hOld);
+                DeleteObject(hChBody);
+            }
+
+            // Draw Roaming Cows
+            int drawCw = (cows < 2) ? cows : 2;
+            for (int i = 0; i < drawCw; i++) {
+                int cx = OFFSET_X + (int)cows_list[i].x;
+                int cy = OFFSET_Y + (int)cows_list[i].y;
+                int dir = cows_list[i].dir;
+                int chewBob = (cows_list[i].chew > 0) ? (int)(sin(GetTickCount() * 0.02f) * 1.5f) : 0;
+
+                HBRUSH hCowBody = CreateSolidBrush(RGB(250, 250, 250));
+                HBRUSH hOld = (HBRUSH)SelectObject(hdc, hCowBody);
+                SelectObject(hdc, GetStockObject(NULL_PEN));
+                RECT bodyR = { cx - 9, cy - 6, cx + 9, cy + 4 };
+                Rectangle(hdc, bodyR.left, bodyR.top, bodyR.right, bodyR.bottom);
+                // Legs
+                Rectangle(hdc, cx - 7, cy + 4, cx - 4, cy + 9);
+                Rectangle(hdc, cx + 4, cy + 4, cx + 7, cy + 9);
+
+                // Black patches
+                HBRUSH hPatch = CreateSolidBrush(RGB(33, 33, 33));
+                SelectObject(hdc, hPatch);
+                Ellipse(hdc, cx - 4, cy - 4, cx + 2, cy + 2);
+                DeleteObject(hPatch);
+
+                // Head
+                SelectObject(hdc, hCowBody);
+                RECT headR = { cx + dir*6 - 4, cy - 9 + chewBob, cx + dir*6 + 5, cy + chewBob };
+                Rectangle(hdc, headR.left, headR.top, headR.right, headR.bottom);
+
+                // Pink Snout
+                HBRUSH hSnout = CreateSolidBrush(RGB(248, 187, 208));
+                SelectObject(hdc, hSnout);
+                RECT snoutR = { cx + dir*9 - 2, cy - 6 + chewBob, cx + dir*9 + 4, cy + chewBob };
+                Rectangle(hdc, snoutR.left, snoutR.top, snoutR.right, snoutR.bottom);
+                DeleteObject(hSnout);
+
+                SelectObject(hdc, hOld);
+                DeleteObject(hCowBody);
+            }
 
             // Slow scrolling translucent clouds (hatch brush for stylized look)
             HBRUSH hCloudBrush = CreateHatchBrush(HS_BDIAGONAL, time_of_day ? RGB(80, 80, 100) : RGB(255, 255, 255));
@@ -726,25 +1091,96 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 DeleteObject(hRain);
             }
 
+            // Draw Seasonal Atmospheric Weather Particles
+            if (time_of_day == 0) {
+                for (int i = 0; i < MAX_SEASON_PARTICLES; i++) {
+                    int px = (int)season_particles[i].x;
+                    int py = (int)season_particles[i].y;
+                    int psz = season_particles[i].size;
+                    if (current_season == 0) { // Spring: Cherry Blossom
+                        HBRUSH hPetal = CreateSolidBrush(RGB(255, 182, 193));
+                        HBRUSH hOld = (HBRUSH)SelectObject(hdc, hPetal);
+                        SelectObject(hdc, GetStockObject(NULL_PEN));
+                        Ellipse(hdc, px - psz, py - psz/2, px + psz, py + psz/2);
+                        SelectObject(hdc, hOld);
+                        DeleteObject(hPetal);
+                    } else if (current_season == 1) { // Summer: Golden Sun Motes
+                        HBRUSH hMote = CreateSolidBrush(RGB(255, 235, 59));
+                        HBRUSH hOld = (HBRUSH)SelectObject(hdc, hMote);
+                        SelectObject(hdc, GetStockObject(NULL_PEN));
+                        Ellipse(hdc, px - 2, py - 2, px + 2, py + 2);
+                        SelectObject(hdc, hOld);
+                        DeleteObject(hMote);
+                    } else if (current_season == 2) { // Fall: Autumn Leaves
+                        HBRUSH hLeaf = CreateSolidBrush((i % 2 == 0) ? RGB(230, 81, 0) : RGB(251, 140, 0));
+                        HBRUSH hOld = (HBRUSH)SelectObject(hdc, hLeaf);
+                        SelectObject(hdc, GetStockObject(NULL_PEN));
+                        POINT lpts[4] = { {px, py - psz}, {px + psz, py}, {px, py + psz}, {px - psz, py} };
+                        Polygon(hdc, lpts, 4);
+                        SelectObject(hdc, hOld);
+                        DeleteObject(hLeaf);
+                    } else if (current_season == 3) { // Winter: Snowflakes
+                        HBRUSH hSnow = CreateSolidBrush(RGB(255, 255, 255));
+                        HBRUSH hOld = (HBRUSH)SelectObject(hdc, hSnow);
+                        SelectObject(hdc, GetStockObject(NULL_PEN));
+                        Ellipse(hdc, px - 2, py - 2, px + 2, py + 2);
+                        SelectObject(hdc, hOld);
+                        DeleteObject(hSnow);
+                    }
+                }
+            }
+
+            // Draw Shockwaves
+            for (int i = 0; i < MAX_SHOCKWAVES; i++) {
+                if (shockwaves[i].life > 0) {
+                    HPEN hSWPen = CreatePen(PS_SOLID, 2, shockwaves[i].color);
+                    HPEN hOldP = (HPEN)SelectObject(hdc, hSWPen);
+                    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                    int r = (int)shockwaves[i].radius;
+                    Ellipse(hdc, (int)shockwaves[i].x - r, (int)shockwaves[i].y - (int)(r * 0.75f),
+                                 (int)shockwaves[i].x + r, (int)shockwaves[i].y + (int)(r * 0.75f));
+                    SelectObject(hdc, hOldP);
+                    DeleteObject(hSWPen);
+                }
+            }
+
+            // Draw 4-Tier Kinematic Particles
             for (int i = 0; i < MAX_PARTICLES; i++) {
                 if (particles[i].life > 0) {
-                    if (particles[i].type == 3) {
+                    if (particles[i].type == 3) { // Star
                         HBRUSH hPBrush = CreateSolidBrush(particles[i].color);
                         HBRUSH hOld = (HBRUSH)SelectObject(hdc, hPBrush);
                         SelectObject(hdc, GetStockObject(NULL_PEN));
                         Ellipse(hdc, (int)particles[i].x - 3, (int)particles[i].y - 3, (int)particles[i].x + 4, (int)particles[i].y + 4);
+                        HPEN hStarPen = CreatePen(PS_SOLID, 1, RGB(255, 215, 0));
+                        SelectObject(hdc, hStarPen);
+                        MoveToEx(hdc, (int)particles[i].x - 5, (int)particles[i].y, NULL);
+                        LineTo(hdc, (int)particles[i].x + 6, (int)particles[i].y);
+                        MoveToEx(hdc, (int)particles[i].x, (int)particles[i].y - 5, NULL);
+                        LineTo(hdc, (int)particles[i].x, (int)particles[i].y + 6);
+                        DeleteObject(hStarPen);
                         SelectObject(hdc, hOld);
                         DeleteObject(hPBrush);
-                    } else if (particles[i].type == 2) {
-                        HBRUSH hPBrush = CreateSolidBrush(particles[i].color);
-                        RECT pr = { (int)particles[i].x - 2, (int)particles[i].y - 2, (int)particles[i].x + 3, (int)particles[i].y + 3 };
-                        FillRect(hdc, &pr, hPBrush);
-                        DeleteObject(hPBrush);
-                        HBRUSH hGlow = CreateSolidBrush(RGB(255, 140, 0));
-                        HBRUSH hOld = (HBRUSH)SelectObject(hdc, hGlow);
-                        FrameRect(hdc, &pr, hGlow);
+                    } else if (particles[i].type == 2) { // Needle / Spark
+                        HPEN hNeedlePen = CreatePen(PS_SOLID, 2, particles[i].color);
+                        HPEN hOld = (HPEN)SelectObject(hdc, hNeedlePen);
+                        MoveToEx(hdc, (int)particles[i].x, (int)particles[i].y, NULL);
+                        LineTo(hdc, (int)(particles[i].x - particles[i].vx * 2.0f), (int)(particles[i].y - particles[i].vy * 2.0f));
                         SelectObject(hdc, hOld);
-                        DeleteObject(hGlow);
+                        DeleteObject(hNeedlePen);
+                    } else if (particles[i].type == 4) { // Smoke / Pollen
+                        HBRUSH hSmokeBrush = CreateSolidBrush(particles[i].color);
+                        HBRUSH hOld = (HBRUSH)SelectObject(hdc, hSmokeBrush);
+                        SelectObject(hdc, GetStockObject(NULL_PEN));
+                        int sz = particles[i].size;
+                        Ellipse(hdc, (int)particles[i].x - sz, (int)particles[i].y - sz, (int)particles[i].x + sz, (int)particles[i].y + sz);
+                        SelectObject(hdc, hOld);
+                        DeleteObject(hSmokeBrush);
+                    } else if (particles[i].type == 5) { // Shard
+                        HBRUSH hShardBrush = CreateSolidBrush(particles[i].color);
+                        RECT pr = { (int)particles[i].x - 2, (int)particles[i].y - 2, (int)particles[i].x + particles[i].size, (int)particles[i].y + particles[i].size };
+                        FillRect(hdc, &pr, hShardBrush);
+                        DeleteObject(hShardBrush);
                     } else {
                         HBRUSH hPBrush = CreateSolidBrush(particles[i].color);
                         RECT pr = { (int)particles[i].x - 2, (int)particles[i].y - 2, (int)particles[i].x + 3, (int)particles[i].y + 3 };
@@ -753,6 +1189,68 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                 }
             }
+
+            // Ornate Rustic Corner Filigree L-Brackets and Pulsating Perimeter Inlay Border
+            int gridW = GRID_COLS * CELL_SIZE;
+            int gridH = GRID_ROWS * CELL_SIZE;
+            int left = OFFSET_X;
+            int top = OFFSET_Y;
+            int right = OFFSET_X + gridW;
+            int bottom = OFFSET_Y + gridH;
+
+            // Pulsating golden border
+            DWORD bTick = GetTickCount();
+            int bPulse = (int)(sin(bTick * 0.004f) * 40.0f + 200.0f);
+            HPEN hBorderPen = CreatePen(PS_SOLID, 2, RGB(255, bPulse, 0));
+            HPEN hOldBPen = (HPEN)SelectObject(hdc, hBorderPen);
+            SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Rectangle(hdc, left - 2, top - 2, right + 2, bottom + 2);
+            SelectObject(hdc, hOldBPen);
+            DeleteObject(hBorderPen);
+
+            // 4 Corner Filigree L-Brackets
+            HPEN hBracketPen = CreatePen(PS_SOLID, 3, RGB(255, 215, 0));
+            SelectObject(hdc, hBracketPen);
+            int bLen = 18;
+            // Top-Left
+            MoveToEx(hdc, left - 2, top - 2 + bLen, NULL); LineTo(hdc, left - 2, top - 2); LineTo(hdc, left - 2 + bLen, top - 2);
+            // Top-Right
+            MoveToEx(hdc, right + 2 - bLen, top - 2, NULL); LineTo(hdc, right + 2, top - 2); LineTo(hdc, right + 2, top - 2 + bLen);
+            // Bottom-Left
+            MoveToEx(hdc, left - 2, bottom + 2 - bLen, NULL); LineTo(hdc, left - 2, bottom + 2); LineTo(hdc, left - 2 + bLen, bottom + 2);
+            // Bottom-Right
+            MoveToEx(hdc, right + 2 - bLen, bottom + 2, NULL); LineTo(hdc, right + 2, bottom + 2); LineTo(hdc, right + 2, bottom + 2 - bLen);
+            DeleteObject(hBracketPen);
+
+            // Corner Rivets
+            HBRUSH hRivet = CreateSolidBrush(RGB(255, 224, 130));
+            HBRUSH hOldR = (HBRUSH)SelectObject(hdc, hRivet);
+            SelectObject(hdc, GetStockObject(NULL_PEN));
+            Ellipse(hdc, left + 4, top + 4, left + 8, top + 8);
+            Ellipse(hdc, right - 8, top + 4, right - 4, top + 8);
+            Ellipse(hdc, left + 4, bottom - 8, left + 8, bottom - 4);
+            Ellipse(hdc, right - 8, bottom - 8, right - 4, bottom - 4);
+            SelectObject(hdc, hOldR);
+            DeleteObject(hRivet);
+
+            // Traveling Specular Glint along perimeter
+            int perimeter = (gridW + gridH) * 2;
+            int glintDist = (int)(bTick * 0.22f) % perimeter;
+            int gx = 0, gy = 0;
+            if (glintDist < gridW) {
+                gx = left + glintDist; gy = top - 2;
+            } else if (glintDist < gridW + gridH) {
+                gx = right + 2; gy = top + (glintDist - gridW);
+            } else if (glintDist < gridW * 2 + gridH) {
+                gx = right - (glintDist - (gridW + gridH)); gy = bottom + 2;
+            } else {
+                gx = left - 2; gy = bottom - (glintDist - (gridW * 2 + gridH));
+            }
+            HBRUSH hGlintBrush = CreateSolidBrush(RGB(255, 255, 255));
+            HBRUSH hOldG = (HBRUSH)SelectObject(hdc, hGlintBrush);
+            Ellipse(hdc, gx - 4, gy - 4, gx + 4, gy + 4);
+            SelectObject(hdc, hOldG);
+            DeleteObject(hGlintBrush);
 
             // Stylized day/night cycle color overlay that slowly shifts based on internal time
             DWORD tick = GetTickCount();
