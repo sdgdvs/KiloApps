@@ -1323,15 +1323,105 @@
             background: var(--panel-bg);
             border: 2px solid var(--border-corner);
             padding: 16px;
-            width: 90%;
-            max-width: 520px;
-            max-height: 80vh;
+            width: 95%;
+            max-width: 680px;
+            max-height: 85vh;
             overflow-y: auto;
             border-radius: 2px;
             box-shadow: 0 0 25px var(--crt-glow);
             display: flex;
             flex-direction: column;
             gap: 12px;
+        }
+
+        .help-tab-bar {
+            display: flex;
+            gap: 4px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 6px;
+            overflow-x: auto;
+        }
+
+        .help-tab-btn {
+            background: var(--btn-bg);
+            border: 1px solid var(--panel-border);
+            color: var(--text-dim);
+            font-family: inherit;
+            font-size: 10px;
+            padding: 4px 8px;
+            cursor: pointer;
+            border-radius: 2px;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+
+        .help-tab-btn:hover {
+            color: var(--text-bright);
+            border-color: var(--border-corner);
+        }
+
+        .help-tab-btn.active {
+            background: var(--btn-hover);
+            color: var(--text-bright);
+            border-color: var(--border-corner);
+            font-weight: bold;
+            box-shadow: inset 0 0 6px var(--crt-glow);
+        }
+
+        .guide-section {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 11px;
+            line-height: 1.45;
+            color: var(--text-main);
+        }
+
+        .guide-section.active {
+            display: flex;
+        }
+
+        .guide-card {
+            background: var(--card-bg);
+            border: 1px solid var(--panel-border);
+            padding: 8px 10px;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .guide-card::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 5px; height: 5px;
+            border-top: 2px solid var(--border-corner);
+            border-left: 2px solid var(--border-corner);
+        }
+
+        .guide-card-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-bright);
+            margin-bottom: 4px;
+        }
+
+        .guide-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            margin-top: 4px;
+        }
+
+        .guide-table th, .guide-table td {
+            border: 1px solid var(--panel-border);
+            padding: 4px 6px;
+            text-align: left;
+        }
+
+        .guide-table th {
+            background: rgba(0, 0, 0, 0.4);
+            color: var(--text-bright);
+            font-weight: bold;
         }
 
         .modal-header {
@@ -2449,62 +2539,141 @@
         <span id="footer-status">VAULT STATUS: SECURE &bull; AIRLOCK CLOSED &bull; SENSORS NORMAL</span>
     </footer>
 
-    <!-- Help / Manual Modal -->
+    <!-- Help / Overseer's Survival Manual Modal -->
     <div class="modal-overlay" id="help-modal">
         <div class="modal-box">
             <div class="modal-header">
-                <div class="modal-title">OVERSEER SURVIVAL HANDBOOK</div>
+                <div class="modal-title">OVERSEER'S SURVIVAL MANUAL & FACILITY CODEX</div>
                 <button class="btn-close" onclick="closeModal('help-modal')">&times;</button>
             </div>
-            <div style="font-size: 11px; line-height: 1.5; color: var(--text-main);">
-                <p><strong>WELCOME, OVERSEER.</strong> Your directive is to sustain Vault 704 and shepherd its survivors through the nuclear fallout.</p>
-                <br>
-                <p><strong>1. RESOURCE BALANCING:</strong></p>
-                <p>&bull; <strong>Food & Water:</strong> Each citizen consumes rations daily based on your Overseer Directives. If reserves hit zero, survivors starve, lose morale, and suffer radiation/sickness.</p>
-                <p>&bull; <strong>Power:</strong> Facilities require electrical power from the Generator Room. If power load exceeds generation, brownouts will disable non-essential facilities.</p>
-                <p>&bull; <strong>Scrap:</strong> Gathered by Scavenger teams in the Wasteland or fabricated in the Workshop. Needed for repairs and room expansion.</p>
-                <br>
-                <p><strong>2. WORKER ALLOCATION:</strong></p>
-                <p>Assign your unassigned citizens to production facilities (Hydroponics, Purifiers, Generators). Facilities with assigned workers produce more resources each day cycle!</p>
-                <br>
-                <p><strong>3. THE DAY CYCLE:</strong></p>
-                <p>Press <strong>[ADVANCE DAY CYCLE]</strong> (or hit <strong>SPACEBAR</strong>) to process 1 full day of consumption, production, recovery, and wasteland encounters.</p>
-                <br>
-                <p><strong>4. RETRO-TERMINAL CRT THEMES & AESTHETICS:</strong></p>
-                <p>Switch between authentic post-apocalyptic display themes using the <strong>THEME</strong> button or press <strong>[T]</strong>: Amber CRT (Phosphor P3), Wasteland Rust (Scorched Iron), Phosphor Green (P1), or Monochrome (P4 Radar). Toggle CRT raster scanlines with <strong>[C]</strong>.</p>
-                <br>
-                <p><strong>5. ROOM CONSTRUCTION & FACILITY EXPANSION:</strong></p>
-                <p>&bull; <strong>Upgrades:</strong> Upgrade existing facilities up to Level 3 using Tech Scrap. Upgrades boost output (power, food, water, scrap), unlock extra staff worker slots, and enlarge shelter citizen capacity!</p>
-                <p>&bull; <strong>Construction:</strong> Switch to the <em>CONSTRUCT ROOMS & EXPANSION</em> sub-tab to excavate new specialized chambers: Auxiliary Bio-Turbines, Deep Well Purifiers, Aeroponic Green Bays, Barracks Extensions (+6 Cap), Turret Bastions (+15 Defense), and Scrap Smelters!</p>
-                <br>
-                <p><strong>6. SURVIVOR RECRUITMENT & ATTRIBUTE ASSIGNMENT:</strong></p>
-                <p>&bull; <strong>Attribute Alignment:</strong> Matching survivor attributes to their work station boosts efficiency (up to 150%+). Agility & Strength benefit Farms; Intelligence benefits Water Purifiers, Medical, and Command; Strength & Intelligence power Generators; Strength powers Scrap Workshops and Defense Turrets.</p>
-                <p>&bull; <strong>Radio Recruitment Beacon:</strong> Switch to the <em>RADIO BEACON & AIRLOCK</em> sub-tab to pulse distress pings or broadcast specialist beacons to attract new survivors across the wasteland. Review candidates and admit them into the vault if quarters capacity allows.</p>
-                <br>
-                <p><strong>7. WASTELAND RUINS & BLUEPRINT DISCOVERY:</strong></p>
-                <p>&bull; <strong>Exploration Runs:</strong> Send unassigned citizens out past the airlock into ruins (Supermarkets, Power Substations, Hospital Wings, Military Armories, and Vault 811).</p>
-                <p>&bull; <strong>Medical Supplies (Meds):</strong> Scavenge sterile pharmaceuticals and stimpacks to heal wounded dwellers (-1 Med restores +35 HP) or equip scouts before high-hazard sorties.</p>
-                <p>&bull; <strong>Lost Blueprints:</strong> Scouts with high Intelligence can decrypt encrypted archives in ruins to recover exclusive facility blueprints (Fusion Micro-Reactor, Automated Surgery Wing, Rad-Shield Airlock Gate, Hydroponic Gene-Vault) and construct them in Engineering!</p>
-                <br>
-                <p><strong>8. BASE DEFENSE & RAIDER ATTACK MECHANICS:</strong></p>
-                <p>&bull; <strong>Perimeter Barricades:</strong> Heavy scrap blast-doors protect vault inhabitants. Damaged barricades reduce defense contribution; repair them with scrap (+30 HP) or reinforce them for higher maximum integrity (+25 Max HP).</p>
-                <p>&bull; <strong>Automated Sentry Turrets:</strong> Twin 50-cal automated turrets deliver deadly suppressive fire (+18 Def each, 3 kW Draw). Fabricate more turrets or overclock targeting sensors for high defense bonuses.</p>
-                <p>&bull; <strong>Survivor Combat Readiness:</strong> Run combat drills to train vault dwellers in firearm defense. Assign high-Strength survivors as Security Guards to repel attacking raider warbands!</p>
-                <p>&bull; <strong>Raider Warband Incursions:</strong> Surface radar detects hostile dust clouds. If total Vault Defense exceeds raider attack power, the warband is crushed and valuable scrap and meds are salvaged. If breached, raiders steal food and scrap, damage barricades, and injure dwellers!</p>
-                <br>
-                <p><strong>9. ENVIRONMENTAL DISASTERS & WEATHER HAZARDS (PHASE 10):</strong></p>
-                <p>&bull; <strong>Radiation Storms:</strong> Surface ionization spikes rads to 15+ Rads/h. Unshielded citizens suffer radiation sickness (-HP, -Morale) unless Airlock Rad-Bulkheads are engaged or Rad-Shield Nano-Coatings tech is researched.</p>
-                <p>&bull; <strong>Wasteland Droughts:</strong> Scorching heatwaves reduce Water Purifier output by 50% and increase citizen water consumption by 50%. Activate Subterranean Aquifer Overpumps to replenish emergency water.</p>
-                <p>&bull; <strong>Toxic Acid Rain:</strong> Highly corrosive fallout dissolves perimeter barricades (-30 HP/day) and burns outdoor militia. Deploy Alkaline Corrosion Neutralizer wash to protect blast doors.</p>
-                <p>&bull; <strong>Sub-Zero Cold Snaps:</strong> Freezing cryo-blizzards cut Bio-Generator power output by 35% and increase habitat heating load by +4 kW. Power blackouts cause hypothermia unless Auxiliary Thermal Overdrive is activated.</p>
-                <p>&bull; <strong>Doppler Radar Early Warning:</strong> Monitor the Weather & Hazards tab for upcoming forecast hazards, ETA countdowns, and preparatory advice.</p>
-                <br>
-                <p><strong>10. WASTELAND CARAVAN TRADING SYSTEM (PHASE 11):</strong></p>
-                <p>&bull; <strong>Nomadic Caravans:</strong> Distinct merchant factions (Dust Striders, Rust Brotherhood, Apothecaries, Cyber-Salvagers, and Lone Wanderers) visit the vault airlock with specialized inventories.</p>
-                <p>&bull; <strong>Barter Economy:</strong> Buy emergency food rations, purified water casks, medical stimpacks, and scrap bundles. Sell vault surplus back to traders.</p>
-                <p>&bull; <strong>Rare Artifacts:</strong> Purchase unique high-tier items: Rad-Away casks (heals rad sickness), Super-Growth enzymes (+30 Food), Ballistic Armor (+25 Barricade Max HP), Sentry Targeting Chips (+12 Def), and Luxury Cassettes (+20% Morale).</p>
-                <p>&bull; <strong>Barter Trust & Discounts:</strong> Completing trades increases your Barter Reputation level (up to Level 5 Revered), granting up to 25% trade discounts and improved barter rates!</p>
-                <p>&bull; <strong>Hail Caravans:</strong> If no caravan is present, broadcast a high-gain radio hail (15 Scrap, 10 kW) to summon a merchant immediately.</p>
+
+            <!-- Manual Sub-Tabs -->
+            <div class="help-tab-bar">
+                <button class="help-tab-btn active" id="btn-guide-basics" onclick="switchHelpTab('basics')">[1] SURVIVAL BASICS</button>
+                <button class="help-tab-btn" id="btn-guide-facilities" onclick="switchHelpTab('facilities')">[2] FACILITY CODEX</button>
+                <button class="help-tab-btn" id="btn-guide-expeditions" onclick="switchHelpTab('expeditions')">[3] WASTELAND & COMBAT</button>
+                <button class="help-tab-btn" id="btn-guide-hazards" onclick="switchHelpTab('hazards')">[4] HAZARDS & TRADING</button>
+                <button class="help-tab-btn" id="btn-guide-controls" onclick="switchHelpTab('controls')">[5] DIRECTIVES & HOTKEYS</button>
+            </div>
+
+            <!-- SECTION 1: SURVIVAL BASICS -->
+            <div class="guide-section active" id="guide-sec-basics">
+                <div class="guide-card">
+                    <div class="guide-card-title">OVERSEER MANDATE & DAY CYCLE EXECUTION</div>
+                    <p>Welcome, Overseer. You have been appointed to manage Vault 704. Your directive is to shepherd its survivor population through atomic fallout, harsh radioactive weather hazards, and mutant/raider incursions.</p>
+                    <p style="margin-top:4px;">Press <strong>[ADVANCE DAY CYCLE]</strong> or tap the <strong>[SPACEBAR]</strong> to cycle through the 4 day quarters: Dawn (06:00), Midday (12:00), Dusk (18:00), and Night (24:00). Each full cycle processes resource yields, food and water consumption, radiation buildup, recovery, and wasteland events.</p>
+                </div>
+
+                <div class="guide-card">
+                    <div class="guide-card-title">PRIMARY VAULT RESOURCE BALANCES</div>
+                    <p>&bull; <strong>Food Rations:</strong> Dwellers consume food daily (1.0x baseline under Standard Rations). If reserves drop to 0, starvation sets in, dealing -15 HP and -12 Morale daily.</p>
+                    <p>&bull; <strong>Purified Water:</strong> Water is critical for biological hydration and decontamination. Insufficient water accelerates dehydration sickness and rad buildup.</p>
+                    <p>&bull; <strong>Reactor Power (kW):</strong> Generated by Bio-Generators and Solar/Fusion plants. If total Power Load exceeds Generation, non-essential facilities suffer Brownouts.</p>
+                    <p>&bull; <strong>Tech Scrap:</strong> Universal currency and building material used for room construction, upgrades, sentry turret manufacturing, barricade reinforcement, and caravan barter.</p>
+                    <p>&bull; <strong>Medical Stimpacks (Meds):</strong> Used for triage to restore +35 HP, cleanse radiation, or equip scouts before dangerous wasteland sorties.</p>
+                </div>
+
+                <div class="guide-card">
+                    <div class="guide-card-title">MORALE & CIVIL ORDER THRESHOLDS</div>
+                    <table class="guide-table">
+                        <tr><th>Morale</th><th>Status</th><th>Effects & Risks</th></tr>
+                        <tr><td style="color:var(--accent-green);">80% - 100%</td><td>THRIVING / ECSTATIC</td><td>+15% Worker Efficiency bonus, rapid healing, 0% unrest risk.</td></tr>
+                        <tr><td style="color:var(--accent-cyan);">55% - 79%</td><td>CONTENT</td><td>Normal operational productivity.</td></tr>
+                        <tr><td style="color:var(--accent-amber);">35% - 54%</td><td>DISCONTENT / UNREST</td><td>Worker strikes, sabotage risk (-Scrap, -Barricade HP), -15% efficiency.</td></tr>
+                        <tr><td style="color:var(--danger-red);">0% - 34%</td><td>MUTINOUS RIOT</td><td>Violent riots, stolen rations/scrap, citizen injuries. Declare Martial Law to suppress!</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECTION 2: FACILITY CODEX -->
+            <div class="guide-section" id="guide-sec-facilities">
+                <div class="guide-card">
+                    <div class="guide-card-title">CORE FACILITIES & ROOM ENGINEERING</div>
+                    <table class="guide-table">
+                        <tr><th>Facility</th><th>Function & Base Output</th><th>Optimal Stats</th><th>Upgrades</th></tr>
+                        <tr><td><strong>Living Quarters</strong></td><td>Provides shelter bunks (+10 Max Pop base).</td><td>Intelligence</td><td>+4 Pop Cap per level.</td></tr>
+                        <tr><td><strong>Hydroponic Bay</strong></td><td>Grows synthetic crops (+6 Food/cyc, -4 kW).</td><td>Strength, Agility</td><td>+4 Food & +1 Worker slot/lvl.</td></tr>
+                        <tr><td><strong>Water Purifier</strong></td><td>Filters aquifer silt (+6 Water/cyc, -4 kW).</td><td>Intelligence</td><td>+4 Water & +1 Worker slot/lvl.</td></tr>
+                        <tr><td><strong>Bio-Generator</strong></td><td>Generates reactor power (+20 kW Gen).</td><td>Strength, Intelligence</td><td>+10 kW & +1 Worker slot/lvl.</td></tr>
+                        <tr><td><strong>Workshop Smelter</strong></td><td>Fabricates scrap salvage (+3 Scrap/cyc, -4 kW).</td><td>Strength</td><td>+2 Scrap & +1 Worker slot/lvl.</td></tr>
+                        <tr><td><strong>Infirmary Ward</strong></td><td>Triages injured and irradiated dwellers (-4 kW).</td><td>Intelligence</td><td>Faster healing & rad reduction.</td></tr>
+                        <tr><td><strong>Security Armory</strong></td><td>Houses militia & armor (+15 Base Def, -4 kW).</td><td>Strength</td><td>+10 Base Def & guard slots.</td></tr>
+                    </table>
+                </div>
+
+                <div class="guide-card">
+                    <div class="guide-card-title">DISCOVERABLE BLUEPRINT STRUCTURES</div>
+                    <p>&bull; <strong>Solar Collector Array:</strong> Generates +18 kW clean renewable energy at 0 scrap fuel cost.</p>
+                    <p>&bull; <strong>Deep Aquifer Well:</strong> Taps subterranean artesian water for +12 Purified Water/cyc.</p>
+                    <p>&bull; <strong>Aeroponic Green Bay:</strong> Advanced high-density nutrient mist farming for +14 Food/cyc.</p>
+                    <p>&bull; <strong>Fusion Micro-Reactor:</strong> Compact nuclear reactor producing +45 kW heavy power.</p>
+                    <p>&bull; <strong>Automated Surgery:</strong> Cybernetic medical station restoring dweller health automatically.</p>
+                    <p>&bull; <strong>Rad-Shield Bulkhead:</strong> Heavy lead-lined blast doors completely neutralizing Radiation Storms.</p>
+                </div>
+            </div>
+
+            <!-- SECTION 3: WASTELAND & COMBAT -->
+            <div class="guide-section" id="guide-sec-expeditions">
+                <div class="guide-card">
+                    <div class="guide-card-title">WASTELAND EXPEDITION ZONES & RISK PROFILES</div>
+                    <table class="guide-table">
+                        <tr><th>Zone</th><th>Duration</th><th>Risk Level</th><th>Potential Rewards</th></tr>
+                        <tr><td><strong>Ruined Supermarket</strong></td><td>1 Day</td><td>LOW (15%)</td><td>+12 Food, +10 Scrap</td></tr>
+                        <tr><td><strong>Substation Power Grid</strong></td><td>2 Days</td><td>MEDIUM (30%)</td><td>+25 Scrap, Solar Array Blueprint</td></tr>
+                        <tr><td><strong>Hospital Trauma Wing</strong></td><td>2 Days</td><td>MEDIUM (35%)</td><td>+4 Medpacks, Surgery Blueprint</td></tr>
+                        <tr><td><strong>Military Armory Bunker</strong></td><td>3 Days</td><td>HIGH (55%)</td><td>+40 Scrap, +2 Meds, Turret Bastion BP</td></tr>
+                        <tr><td><strong>Vault 811 Tech Archive</strong></td><td>4 Days</td><td>EXTREME (70%)</td><td>+55 Scrap, +3 Meds, Fusion Reactor BP</td></tr>
+                    </table>
+                    <p style="margin-top:4px; font-size:10px; color:var(--text-dim);">&bull; Equipping a Medical Stimpack before dispatch guarantees scout survival if a mortal wound is sustained!</p>
+                </div>
+
+                <div class="guide-card">
+                    <div class="guide-card-title">PERIMETER DEFENSE & RAIDER WARBANDS</div>
+                    <p>&bull; <strong>Perimeter Barricades:</strong> Blast doors absorb incoming siege trauma. Repair with 15 Scrap (+30 HP) or Reinforce for 35 Scrap (+25 Max HP).</p>
+                    <p>&bull; <strong>Automated Sentry Turrets:</strong> Twin 50-cal turrets deal suppressive crossfire (+18 Defense each, 3 kW Draw). Overclock sensors for +10 Def bonus.</p>
+                    <p>&bull; <strong>Combat Readiness Drills:</strong> Train dwellers in firearm defense (12 Scrap) to increase defense contribution for all posted guards.</p>
+                    <p>&bull; <strong>Raider Assaults:</strong> If Vault Defense >= Raider Assault Power, the attack is repelled, granting salvaged scrap and medical supplies. If breached, raiders steal rations/scrap and inflict severe trauma!</p>
+                </div>
+            </div>
+
+            <!-- SECTION 4: HAZARDS & TRADING -->
+            <div class="guide-section" id="guide-sec-hazards">
+                <div class="guide-card">
+                    <div class="guide-card-title">ENVIRONMENTAL WEATHER HAZARDS & COUNTERMEASURES</div>
+                    <p>&bull; <strong>Radiation Storm:</strong> Spikes surface radiation to 15+ Rads/h. Unshielded citizens suffer radiation sickness. <em>Counter:</em> Engage Airlock Rad-Bulkheads or research Rad-Shield Nano-Coatings.</p>
+                    <p>&bull; <strong>Wasteland Drought:</strong> Halves water purifier production and increases citizen thirst by 50%. <em>Counter:</em> Activate Subterranean Aquifer Overpump.</p>
+                    <p>&bull; <strong>Toxic Acid Rain:</strong> Corrosive fallout dissolves blast doors (-30 HP/day). <em>Counter:</em> Spray Alkaline Corrosion Neutralizer wash.</p>
+                    <p>&bull; <strong>Nuclear Cold Snap:</strong> Freezes bio-generators (-35% Gen) and spikes heating load (+4 kW). <em>Counter:</em> Engage Auxiliary Thermal Overdrive.</p>
+                </div>
+
+                <div class="guide-card">
+                    <div class="guide-card-title">NOMADIC CARAVAN TRADING & BARTER REPUTATION</div>
+                    <p>&bull; <strong>Visiting Merchant Factions:</strong> Dust Striders (General Provisions), Rust Brotherhood (Heavy Scrap & Armor), Apothecaries (Stimpacks & Rad-Away), Cyber-Salvagers (High-tech modules), and Lone Wanderers.</p>
+                    <p>&bull; <strong>Barter Trust Levels:</strong> Conducting trades increases your Reputation (Lv 1 Neutral up to Lv 5 Revered), granting up to a 25% trade discount!</p>
+                    <p>&bull; <strong>Radio Caravan Hail:</strong> If no merchant is present, broadcast a high-gain radio beacon (15 Scrap, 10 kW) to summon a trader immediately.</p>
+                </div>
+            </div>
+
+            <!-- SECTION 5: DIRECTIVES & HOTKEYS -->
+            <div class="guide-section" id="guide-sec-controls">
+                <div class="guide-card">
+                    <div class="guide-card-title">OVERSEER DIRECTIVES & HEALTH POLICIES</div>
+                    <p>&bull; <strong>Food Policies:</strong> Feast (1.5x food, +6% morale, rapid healing), Standard (1.0x), Half Rations (0.5x, -4% morale), Strict Emergency (0.25x, starvation warning).</p>
+                    <p>&bull; <strong>Water Policies:</strong> Full Pure (1.0x water, +2% morale), Strict (0.5x, -3% morale), Recycled Silt (0.25x, +8 Rads contamination risk).</p>
+                    <p>&bull; <strong>Special Directives:</strong> Communal Feast (15 Food for +15% Morale), Luxury Broadcast (20 Scrap for +12% Morale), Overseer Address (+6% Morale), Martial Law (halts strikes & mutinies).</p>
+                </div>
+
+                <div class="guide-card">
+                    <div class="guide-card-title">KEYBOARD SHORTCUTS & DISPLAY CONTROLS</div>
+                    <table class="guide-table">
+                        <tr><th>Key</th><th>Function</th><th>Description</th></tr>
+                        <tr><td><strong>[SPACE]</strong></td><td>Advance Day Cycle</td><td>Processes 1 full cycle of consumption, production, and wasteland events.</td></tr>
+                        <tr><td><strong>[1] - [8]</strong></td><td>Console Navigation</td><td>Switch between Facilities, Survivors, Expeditions, Defense, Research, Hazards, Caravan, Directives.</td></tr>
+                        <tr><td><strong>[T]</strong></td><td>Cycle CRT Theme</td><td>Toggles Amber (P3), Wasteland Rust, Phosphor Green (P1), and Monochrome (P4).</td></tr>
+                        <tr><td><strong>[C]</strong></td><td>Toggle Scanlines</td><td>Toggles CRT raster scanline overlay on/off.</td></tr>
+                        <tr><td><strong>[A]</strong></td><td>Toggle Auto-Run</td><td>Automatically steps cycles forward every 1.8 seconds.</td></tr>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -6674,9 +6843,24 @@
             playSound('click');
         }
 
-        // Modals
+        // Modals & Manual Navigation
         function showHelpModal() {
             document.getElementById('help-modal').style.display = 'flex';
+            playSound('click');
+        }
+
+        function switchHelpTab(tabId) {
+            const tabs = ['basics', 'facilities', 'expeditions', 'hazards', 'controls'];
+            tabs.forEach(t => {
+                const btn = document.getElementById('btn-guide-' + t);
+                const sec = document.getElementById('guide-sec-' + t);
+                if (btn) btn.classList.remove('active');
+                if (sec) sec.classList.remove('active');
+            });
+            const activeBtn = document.getElementById('btn-guide-' + tabId);
+            const activeSec = document.getElementById('guide-sec-' + tabId);
+            if (activeBtn) activeBtn.classList.add('active');
+            if (activeSec) activeSec.classList.add('active');
             playSound('click');
         }
 
@@ -6737,6 +6921,10 @@
                 toggleTheme();
             } else if (e.code === 'KeyC') {
                 toggleScanlines();
+            } else if (e.code === 'KeyH') {
+                showHelpModal();
+            } else if (e.code === 'KeyA') {
+                toggleAutoRun();
             }
         });
 

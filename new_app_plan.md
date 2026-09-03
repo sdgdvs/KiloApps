@@ -53,28 +53,28 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KSanctuary (Post-apocalyptic wasteland survival & base building RPG)
-**Phase:** 14 (next to do)
-**Status:** Deep Expansion
+**App:** KSubmarine (Deep-sea underwater exploration & abyssal survival RPG)
+**Phase:** 1 (next to do)
+**Status:** Creation
 
-- [x] Phase 1: Scaffold KSanctuary directory (`KSanctuary/`), create web HTML skeleton (`KiloOS/public/apps/ksanctuary.html`), register in App.jsx.
-- [x] Phase 2: Basic UI for wasteland shelter showing population, food, water, power, scrap, and day cycle.
-- [x] Phase 3: Native C version (`KSanctuary/main.c`, `build.bat`) using Win32 API with functional parity.
-- [x] Phase 4: Post-apocalyptic retro-terminal aesthetic (rust/amber/monochrome CRT styling, distressed borders).
-- [x] Phase 5: Implement room construction and expansion (living quarters, water purifiers, hydroponic farms, power generators).
-- [x] Phase 6: Implement survivor recruitment and assignment (assign survivors to facilities to generate daily resources).
-- [x] Phase 7: Wasteland exploration and scavenging runs (send scouts into ruins for scrap, medical supplies, and blueprints).
-- [x] Phase 8: Raider attack events and base defense mechanics (turrets, barricades, survivor combat readiness).
-- [x] Phase 9: Technology research tree (unlock advanced water filtration, hydroponics, reinforced defenses, solar arrays).
-- [x] Phase 10: Environmental disasters and weather hazards (radiation storms, droughts, toxic rain, cold snaps).
-- [x] Phase 11: Wasteland caravan trading system (nomadic traders visit to exchange surplus supplies and rare items).
-- [x] Phase 12: Morale and health system (treat radiation sickness, manage rations and water quality to avoid unrest).
-- [x] Phase 13: Sound Effects — Geiger counter clicks, construction hums, alarm sirens, ambient wasteland wind (Web Audio / Win32 Beep).
-- [ ] Phase 14: Comprehensive Help & Overseer's Survival Manual — How-to-play, survival strategies, facility guide.
+- [ ] Phase 1: Scaffold KSubmarine directory (`KSubmarine/`), create web HTML skeleton (`KiloOS/public/apps/ksubmarine.html`), register in App.jsx.
+- [ ] Phase 2: Core bathyscaphe dashboard (depth gauge, hull pressure integrity, oxygen scrubber, battery bank, sonar ping, ballast dive engine).
+- [ ] Phase 3: Native C version (`KSubmarine/main.c`, `build.bat`) using Win32 API with functional parity.
+- [ ] Phase 4: Submersible oceanic CRT themes & deep-water scanlines (abyssal cyan, emerald sonar, amber depth, monochrome radar).
+- [ ] Phase 5: Deep ocean navigation & trench exploration (steer through continental shelf, hydrothermal vents, abyssal trenches).
+- [ ] Phase 6: Submarine module upgrades & engineering (titanium hull plating, high-output ballast pumps, nuclear battery, high-lux searchlights).
+- [ ] Phase 7: Sonar scanning & abyssal fauna encounters (detect bioluminescent leviathans, giant squids, deep sea trenches, hydrothermal flora).
+- [ ] Phase 8: Resource salvage & dredging claw system (harvest manganese nodules, rare sea minerals, lost sunken wrecks, black smoker crystals).
+- [ ] Phase 9: Hull breach & emergency flood management (repair bulkhead leaks, manage bilge pumps, equalize internal air pressure).
+- [ ] Phase 10: Research lab & deep-sea biology discovery (catalog alien abyssal species, research pressure-resistant polymers, bioluminescent enzymes).
+- [ ] Phase 11: Surface support ship & underwater trading outposts (dock with deep research stations, trade minerals for torpedoes and batteries).
+- [ ] Phase 12: Torpedo defense & undersea combat (defend against hostile leviathans and robotic dredging drones with acoustic decoys and torpedoes).
+- [ ] Phase 13: Sound Effects — Sonar pings, deep-sea whale song, ballast blow hisses, hull pressure groans, torpedo launches (Web Audio / Win32 Beep).
+- [ ] Phase 14: Comprehensive Help & Captain's Submersible Manual — Dive mechanics, navigation charts, fauna codex, and survival tactics.
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
-2. Implement the feature in BOTH `KiloOS/public/apps/ksanctuary.html` AND `KSanctuary/main.c`.
+2. Implement the feature in BOTH `KiloOS/public/apps/ksubmarine.html` AND `KSubmarine/main.c`.
 3. Mark the phase as `[x]` in this plan file.
 4. Update the **Phase** number to the next unchecked phase.
 5. Commit and push both the code changes and this plan file update.
@@ -136,6 +136,7 @@ When starting a new app, you MUST write concrete phase descriptions for Phases 5
 Use the game/utility feature priority lists above for inspiration, but write specific descriptions tailored to the app.
 
 ## Completed Apps
+- KSanctuary (Phase 14 completed: Added Comprehensive Help & Overseer's Survival Manual & Facility Codex to both versions)
 - KStellar (Phase 14 completed: Added Comprehensive Help & Star Captain's Manual to both versions)
 - KColosseum (Phase 14 completed: Added Comprehensive Help & Lanista's Guide to both versions)
 - KMystery (Phase 14 completed: Added Comprehensive Help & Detective's Manual to both versions)
@@ -173,7 +174,8 @@ Use the game/utility feature priority lists above for inspiration, but write spe
 ## Possible Future Apps (pick from here or invent your own)
 
 ### 🎮 GAMES — DEEP FANTASY & SCI-FI (PRIORITY)
-- **KSubmarine** — Deep-sea underwater exploration and survival game. Manage hull pressure, oxygen, sonar navigation, undersea fauna, and abyssal trenches.
+- **KStarDredge** — Deep space asteroid mining and salvage RPG with derelict vessels, pirate raiders, and orbital refining stations.
+- **KAbyss** — Abyssal dungeon crawler with magical relics, ancient runes, and procedural crypts.
 
 ### 🛠️ Utilities (lower priority — create 1 for every 2-3 games)
 - **KPomodoro** — Focus timer with work/break cycles, session history, daily stats.

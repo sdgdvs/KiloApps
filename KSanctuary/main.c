@@ -436,8 +436,9 @@ typedef struct {
     int caravanTradesCount;
     int caravanRareBought[5];
 
-    // Active Tab
+    // Active Tab & Manual Sub-tab
     int currentTab; // 0: Facilities, 1: Survivors, 2: Expeditions, 3: Defense, 4: Research, 5: Hazards, 6: Caravan, 7: Directives, 8: Manual
+    int manualSubTab; // 0: Basics, 1: Facilities, 2: Expeditions, 3: Hazards, 4: Controls
     
     int autoRun;
 } GameState;
@@ -547,6 +548,7 @@ enum {
     BTN_TRADE_RARE,
     BTN_TRADE_SELL,
     BTN_HAIL_CARAVAN,
+    BTN_MANUAL_SUBTAB,
     BTN_CLOSE_RAID_MODAL,
     BTN_CLOSE_MODAL
 };
@@ -2209,6 +2211,7 @@ static void InitGameState() {
     g_state.caravanTradesCount = 0;
     for (int k = 0; k < 5; k++) g_state.caravanRareBought[k] = 0;
 
+    g_state.manualSubTab = 0;
     g_state.logCount = 0;
     AddLog("Vault 704 Overseer System initialized. All security bulkheads sealed.", 3);
     AddLog("Life support and biometric sensors operating on standby power.", 0);
@@ -3983,86 +3986,171 @@ static void DrawManualView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, in
     DrawStyledBox(hdc, x, y, w, h, COL_DARK_CARD, COL_BORDER);
     SelectObject(hdc, hFontBold);
     SetTextColor(hdc, COL_TEXT_BRIGHT);
-    TextOutA(hdc, x + 12, y + 10, "OVERSEER SURVIVAL HANDBOOK & DIRECTIVES", 39);
+    TextOutA(hdc, x + 10, y + 8, "OVERSEER'S SURVIVAL MANUAL & FACILITY CODEX", 43);
 
-    SelectObject(hdc, hFontSmall);
-    SetTextColor(hdc, COL_TEXT_MAIN);
-    int curY = y + 36;
-    int lineH = 17;
+    // Sub-tab Bar
+    int subTabY = y + 26;
+    int subTabW = (w - 24) / 5;
+    const char* subNames[] = {
+        "[1] BASICS",
+        "[2] FACILITIES",
+        "[3] COMBAT",
+        "[4] HAZARDS",
+        "[5] DIRECTIVES"
+    };
 
-    TextOutA(hdc, x + 12, curY, "WELCOME, OVERSEER. Your mission is to shepherd Vault 704 through nuclear fallout.", 80); curY += lineH + 4;
-    
-    SetTextColor(hdc, COL_AMBER);
-    TextOutA(hdc, x + 12, curY, "1. RESOURCE MANAGEMENT:", 23); curY += lineH;
-    SetTextColor(hdc, COL_TEXT_MAIN);
-    TextOutA(hdc, x + 20, curY, "* Food & Water: Citizens consume rations each day cycle based on Overseer Directives.", 85); curY += lineH;
-    TextOutA(hdc, x + 20, curY, "* Power Grid: Facilities draw wattage. Insufficient power triggers brownouts in non-essentials.", 95); curY += lineH;
-    TextOutA(hdc, x + 20, curY, "* Scrap / Tech: Essential for expansion, crafting, and emergency repairs.", 73); curY += lineH + 6;
+    for (int t = 0; t < 5; t++) {
+        int sx = x + 10 + t * (subTabW + 2);
+        int active = (g_state.manualSubTab == t);
+        COLORREF bg = active ? COL_BTN_HOVER : COL_PANEL_BG;
+        COLORREF bdr = active ? COL_BORDER_HI : COL_BORDER;
+        COLORREF txt = active ? COL_TEXT_BRIGHT : COL_TEXT_DIM;
+        DrawButtonControl(hdc, hFontSmall, sx, subTabY, subTabW, 22, subNames[t], txt, bg, bdr, BTN_MANUAL_SUBTAB, t, 0);
+    }
 
-    SetTextColor(hdc, COL_AMBER);
-    TextOutA(hdc, x + 12, curY, "2. WORKFORCE ASSIGNMENT:", 24); curY += lineH;
-    SetTextColor(hdc, COL_TEXT_MAIN);
-    TextOutA(hdc, x + 20, curY, "* Staff Hydroponics, Purifiers, and Bio-Generators with workers to dramatically boost output.", 92); curY += lineH;
-    TextOutA(hdc, x + 20, curY, "* Click [-] and [+] on the Facilities tab, or click the job button in Survivor Roster to reassign.", 98); curY += lineH + 6;
+    int curY = y + 54;
+    int lineH = 16;
 
-    SetTextColor(hdc, COL_AMBER);
-    TextOutA(hdc, x + 12, curY, "3. EXPEDITIONS & SURFACE SCAVENGING:", 36); curY += lineH;
-    SetTextColor(hdc, COL_TEXT_MAIN);
-    TextOutA(hdc, x + 20, curY, "* Dispatch idle survivors into ruins to forage for emergency food stockpiles and scrap caches.", 94); curY += lineH;
-    TextOutA(hdc, x + 20, curY, "* Higher risk expeditions offer larger payouts but take longer to return.", 72); curY += lineH + 6;
+    if (g_state.manualSubTab == 0) {
+        // --- 1. SURVIVAL BASICS & RESOURCE MANAGEMENT ---
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, COL_AMBER);
+        TextOutA(hdc, x + 10, curY, "1. OVERSEER MANDATE & DAY CYCLE OPERATIONS", 42); curY += lineH + 2;
 
-    SetTextColor(hdc, COL_AMBER);
-    TextOutA(hdc, x + 12, curY, "4. RETRO-TERMINAL CRT THEMES & SCANLINES:", 41); curY += lineH;
-    SetTextColor(hdc, COL_TEXT_MAIN);
-    TextOutA(hdc, x + 20, curY, "* 4 Color Schemes: Amber CRT (P3), Wasteland Rust, Phosphor Green (P1), and Monochrome (P4).", 92); curY += lineH;
-    TextOutA(hdc, x + 20, curY, "* Click THEME or press [T] to cycle. Click CRT or press [C] to toggle raster scanlines.", 87); curY += lineH + 6;
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COL_TEXT_MAIN);
+        TextOutA(hdc, x + 16, curY, "* Mandate: Sustain Vault 704 and shepherd dwellers through radioactive wasteland hazards.", 89); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Day Cycle: Press [SPACE] to cycle Dawn -> Midday -> Dusk -> Night (yields, rations & events).", 95); curY += lineH + 4;
 
-    SetTextColor(hdc, COL_AMBER);
-    TextOutA(hdc, x + 12, curY, "5. ROOM CONSTRUCTION & FACILITY EXPANSION:", 42); curY += lineH;
-    SetTextColor(hdc, COL_TEXT_MAIN);
-    TextOutA(hdc, x + 20, curY, "* Upgrade Facilities: Click [UPG] to upgrade rooms up to Lv 3, boosting output & worker slots.", 94); curY += lineH;
-    TextOutA(hdc, x + 20, curY, "* Construct Rooms: Switch to [CONSTRUCT ROOMS] subtab to excavate new generators, wells, farms.", 95); curY += lineH + 6;
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, COL_AMBER);
+        TextOutA(hdc, x + 10, curY, "2. CORE VAULT RESOURCE BALANCES", 31); curY += lineH + 2;
 
-    SetTextColor(hdc, COL_AMBER);
-    TextOutA(hdc, x + 12, curY, "6. WASTELAND EXPLORATION, MEDS & BLUEPRINT DISCOVERY:", 53); curY += lineH;
-    SetTextColor(hdc, COL_TEXT_MAIN);
-    TextOutA(hdc, x + 20, curY, "* 5 Ruins: Explore Supermarket, Substation, Hospital, Armory, and Vault 811 Tech Archive.", 88); curY += lineH;
-    TextOutA(hdc, x + 20, curY, "* Scout Attributes: STR lowers damage, AGI boosts forage yields, INT decrypts lost blueprints.", 93); curY += lineH;
-    TextOutA(hdc, x + 20, curY, "* Medical Triage: Use Meds on wounded citizens (+35 HP) or equip Stimpacks before expeditions.", 94); curY += lineH + 4;
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COL_TEXT_MAIN);
+        TextOutA(hdc, x + 16, curY, "* Food Rations: Citizens consume rations daily. Deficits cause starvation (-15 HP, -12 Morale).", 95); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Purified Water: Essential for hydration and decontamination. Impure water causes severe rad sickness.", 103); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Power Grid (kW): Insufficient generator wattage triggers brownouts in non-essential rooms.", 93); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Tech Scrap: Universal material for room upgrades, sentry turrets, repairs & caravan trading.", 94); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Medical Stimpacks (Meds): Used to restore +35 HP, cleanse radiation, or equip scouts.", 88); curY += lineH + 4;
 
-    SetTextColor(hdc, COL_AMBER);
-    TextOutA(hdc, x + 12, curY, "7. BASE DEFENSE & RAIDER WARBANDS:", 34); curY += lineH;
-    SetTextColor(hdc, COL_TEXT_MAIN);
-    TextOutA(hdc, x + 20, curY, "* Barricades & Sentry Turrets: Blast-doors absorb trauma; twin 50-cal turrets deal suppressive fire.", 99); curY += lineH;
-    TextOutA(hdc, x + 20, curY, "* Drills & Guards: Assign high-STR survivors as guards; run combat drills to boost defense.", 90); curY += lineH;
-    TextOutA(hdc, x + 20, curY, "* Raider Assaults: Surface radar tracks raiders. Exceeding attack power repels raiders & salvages loot!", 102); curY += lineH + 4;
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, COL_AMBER);
+        TextOutA(hdc, x + 10, curY, "3. MORALE & CIVIL ORDER DYNAMICS", 32); curY += lineH + 2;
 
-    SetTextColor(hdc, COL_AMBER);
-    TextOutA(hdc, x + 12, curY, "8. TECHNOLOGY RESEARCH & UPGRADE BLUEPRINTS:", 44); curY += lineH;
-    SetTextColor(hdc, COL_TEXT_MAIN);
-    TextOutA(hdc, x + 20, curY, "* Research Tree: Invest scrap in [5] RESEARCH to unlock advanced water filtration, hydroponics,", 95); curY += lineH;
-    TextOutA(hdc, x + 20, curY, "  photovoltaic solar arrays, reinforced blast defenses, sensor radars, and stimpacks.", 85); curY += lineH + 4;
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COL_GREEN);
+        TextOutA(hdc, x + 16, curY, "* 80%-100% (Thriving): +15% Worker efficiency bonus, faster natural healing, 0% unrest.", 88); curY += lineH;
+        SetTextColor(hdc, COL_CYAN);
+        TextOutA(hdc, x + 16, curY, "* 55%-79% (Content): Nominal operational efficiency across all facility workstations.", 86); curY += lineH;
+        SetTextColor(hdc, COL_AMBER);
+        TextOutA(hdc, x + 16, curY, "* 35%-54% (Unrest): Worker strikes & sabotage risk (-Scrap, -Barricade HP).", 76); curY += lineH;
+        SetTextColor(hdc, COL_RED);
+        TextOutA(hdc, x + 16, curY, "* 0%-34% (Mutiny): Violent riots! Rations looted, dwellers hurt. Declare Martial Law to quell!", 94);
 
-    SetTextColor(hdc, COL_AMBER);
-    TextOutA(hdc, x + 12, curY, "9. ENVIRONMENTAL DISASTERS & WEATHER HAZARDS (PHASE 10):", 56); curY += lineH;
-    SetTextColor(hdc, COL_TEXT_MAIN);
-    TextOutA(hdc, x + 20, curY, "* Radiation Storms: Surges rads to 15+ Rads/h. Engage Airlock Rad-Bulkheads or research Rad Shield.", 99); curY += lineH;
-    TextOutA(hdc, x + 20, curY, "* Droughts: Halves water purifier production and increases thirst. Activate Deep Aquifer Overpump.", 98); curY += lineH;
-    TextOutA(hdc, x + 20, curY, "* Acid Rain: Corrodes blast barricades (-30 HP/d). Spray Alkaline Corrosion Neutralizer wash.", 93); curY += lineH;
-    TextOutA(hdc, x + 20, curY, "* Cold Snaps: Freezes bio-generators (-35% Gen). Engage Auxiliary Thermal Overdrive heaters.", 92); curY += lineH + 4;
+    } else if (g_state.manualSubTab == 1) {
+        // --- 2. FACILITY & BLUEPRINT CODEX ---
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, COL_AMBER);
+        TextOutA(hdc, x + 10, curY, "1. CORE SHELTER FACILITIES & WORKER ATTRIBUTES", 46); curY += lineH + 2;
 
-    SetTextColor(hdc, COL_AMBER);
-    TextOutA(hdc, x + 12, curY, "10. WASTELAND CARAVAN TRADING SYSTEM (PHASE 11):", 48); curY += lineH;
-    SetTextColor(hdc, COL_TEXT_MAIN);
-    TextOutA(hdc, x + 20, curY, "* Nomadic Caravans: 5 merchant factions visit the airlock (Dust Striders, Rust Brotherhood, etc).", 98); curY += lineH;
-    TextOutA(hdc, x + 20, curY, "* Barter Economy: Buy food, purified water, stimpacks, and scrap. Sell vault surplus back to traders.", 101); curY += lineH;
-    TextOutA(hdc, x + 20, curY, "* Rare Artifacts: Buy Rad-Away casks, Super-Growth enzymes, Armor Plates (+25 Max HP), Targeting chips.", 103); curY += lineH;
-    TextOutA(hdc, x + 20, curY, "* Barter Trust & Hailing: Trades raise trust up to 25% discount. Broadcast radio hail to summon traders.", 103); curY += lineH + 4;
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COL_TEXT_MAIN);
+        TextOutA(hdc, x + 16, curY, "* Living Quarters: Provides shelter bunks (+10 Max Pop base, +4/lvl). Favors Intelligence.", 91); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Hydroponic Bay: Grows food (+6 Food/cyc, -4 kW). Favors Strength & Agility (up to +150% output).", 99); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Water Purifier: Filters silt (+6 Water/cyc, -4 kW). Favors Intelligence for purity boost.", 92); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Bio-Generator: Generates reactor power (+20 kW Gen). Favors Strength & Intelligence.", 87); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Workshop Smelter: Fabricates scrap (+3 Scrap/cyc, -4 kW). Favors Strength.", 76); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Security Armory: Houses perimeter militia (+15 Base Defense, -4 kW). Favors Strength.", 88); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Infirmary Ward: Medical triage station for healing wounded and irradiated dwellers (-4 kW).", 94); curY += lineH + 4;
 
-    SetTextColor(hdc, COL_AMBER);
-    TextOutA(hdc, x + 12, curY, "11. KEYBOARD SHORTCUTS:", 23); curY += lineH;
-    SetTextColor(hdc, COL_TEXT_MAIN);
-    TextOutA(hdc, x + 20, curY, "[SPACE] Advance Cycle | [1-9] Tabs | [T] Theme | [C] CRT | [A] Auto | [H] Help | [R] Reset", 90);
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, COL_AMBER);
+        TextOutA(hdc, x + 10, curY, "2. DISCOVERABLE BLUEPRINT STRUCTURES (EXCAVATION)", 49); curY += lineH + 2;
+
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COL_TEXT_MAIN);
+        TextOutA(hdc, x + 16, curY, "* Solar Collector Array: Generates +18 kW clean power at zero scrap fuel consumption.", 86); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Deep Aquifer Well: Taps subterranean artesian water veins for +12 Purified Water/cyc.", 87); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Aeroponic Green Bay: Advanced high-density nutrient mist farming for +14 Food/cyc.", 84); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Fusion Micro-Reactor: Heavy nuclear fusion producing +45 kW reactor wattage.", 79); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Rad-Shield Bulkhead: Heavy lead-lined blast airlock completely shielding against storms.", 90);
+
+    } else if (g_state.manualSubTab == 2) {
+        // --- 3. WASTELAND EXPEDITIONS & COMBAT ---
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, COL_AMBER);
+        TextOutA(hdc, x + 10, curY, "1. WASTELAND EXPLORATION & BLUEPRINT DECRYPTION", 47); curY += lineH + 2;
+
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COL_TEXT_MAIN);
+        TextOutA(hdc, x + 16, curY, "* Ruined Supermarket (1d, Low Risk 15%): Forages +12 Food & +10 Scrap.", 70); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Substation Grid (2d, Med Risk 30%): +25 Scrap, chance for Solar Array Blueprint.", 82); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Hospital Wing (2d, Med Risk 35%): +4 Medpacks, chance for Surgery Wing Blueprint.", 83); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Military Armory (3d, High Risk 55%): +40 Scrap, +2 Meds, Turret Bastion Blueprint.", 84); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Vault 811 Archive (4d, Extreme 70%): +55 Scrap, +3 Meds, Fusion Reactor Blueprint.", 84); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Stimpack Protection: Equipping a Medpack before sortie guarantees survival if ambushed!", 89); curY += lineH + 4;
+
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, COL_AMBER);
+        TextOutA(hdc, x + 10, curY, "2. BASE DEFENSE & RAIDER ASSAULTS", 33); curY += lineH + 2;
+
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COL_TEXT_MAIN);
+        TextOutA(hdc, x + 16, curY, "* Blast Barricades: Absorbs siege trauma. Repair with 15 Scrap (+30 HP) or Reinforce (35 Scrap).", 97); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* 50-Cal Sentry Turrets: Mount crossfire turrets (+18 Def each, 3 kW). Overclock for +10 Def.", 93); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Combat Drills: Spend 12 Scrap to run drills (+3 Def bonus for all posted security guards).", 92); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Incursions: If Vault Def >= Raider Atk, warband is crushed (+Scrap, +Meds salvaged).", 86);
+
+    } else if (g_state.manualSubTab == 3) {
+        // --- 4. WEATHER HAZARDS & CARAVAN TRADING ---
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, COL_AMBER);
+        TextOutA(hdc, x + 10, curY, "1. WEATHER DISASTERS & EARLY WARNING RADAR", 42); curY += lineH + 2;
+
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COL_TEXT_MAIN);
+        TextOutA(hdc, x + 16, curY, "* Radiation Storms: Rads spike to 15+ R/h. Engage Airlock Bulkheads or research Rad-Shielding.", 94); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Wasteland Drought: -50% Purifier output, +50% thirst. Activate Deep Aquifer Overpump.", 88); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Toxic Acid Rain: Corrodes blast barricades (-30 HP/d). Spray Alkaline Neutralizer wash.", 89); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Nuclear Cold Snap: -35% Bio-Gen wattage, +4 kW heating. Engage Thermal Overdrive heaters.", 91); curY += lineH + 4;
+
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, COL_AMBER);
+        TextOutA(hdc, x + 10, curY, "2. NOMADIC CARAVAN TRADING & BARTER TRUST", 41); curY += lineH + 2;
+
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COL_TEXT_MAIN);
+        TextOutA(hdc, x + 16, curY, "* 5 Factions: Dust Striders (Food/Water), Rust Brotherhood (Scrap/Armor), Apothecaries (Meds).", 94); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Rare Artifacts: Rad-Away Casks, Super-Growth Enzymes (+30 Food), Ballistic Armor Plates.", 91); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Trust Discounts: Every trade raises Barter Trust (up to Lv 5 Revered = 25% discount).", 88); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Radio Hail: Broadcast high-gain ping (15 Scrap, 10 kW) to summon a caravan immediately.", 90);
+
+    } else if (g_state.manualSubTab == 4) {
+        // --- 5. OVERSEER DIRECTIVES & KEYBOARD SHORTCUTS ---
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, COL_AMBER);
+        TextOutA(hdc, x + 10, curY, "1. OVERSEER PROTOCOLS & EMERGENCY DIRECTIVES", 44); curY += lineH + 2;
+
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COL_TEXT_MAIN);
+        TextOutA(hdc, x + 16, curY, "* Food Protocols: Feast (1.5x, +6% Morale, fast heal), Standard (1.0x), Half (0.5x), Strict (0.25x).", 100); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Water Protocols: Full Pure (1.0x, +2% Morale), Strict (0.5x), Recycled Silt (0.25x, +8 Rads).", 96); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Communal Feast: Consume 15 Food for +15% Morale boost and complete unrest suppression.", 89); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Martial Law: Dispatch armed security patrols to enforce curfew, halting all strikes/mutinies.", 95); curY += lineH + 4;
+
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, COL_AMBER);
+        TextOutA(hdc, x + 10, curY, "2. KEYBOARD COMMAND REFERENCE", 29); curY += lineH + 2;
+
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COL_TEXT_MAIN);
+        TextOutA(hdc, x + 16, curY, "* [SPACE]: Advance Day Cycle by 1 quarter (Dawn -> Midday -> Dusk -> Night).", 76); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* [1] - [9]: Quick-switch console workspace tabs (Facilities, Citizens, Scavenge, Defense, etc).", 96); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* [T]: Cycle Retro CRT Theme (Amber CRT, Wasteland Rust, Phosphor Green, Monochrome).", 86); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* [C]: Toggle CRT raster scanline overlay | [A]: Toggle Auto-Run cycle simulator.", 81); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* [S]: Toggle Audio FX | [W]: Play Wasteland Wind | [H]: Open Manual | [R]: Reset.", 82);
+    }
 }
 
 static void DrawSidebar(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, int y, int w, int h) {
@@ -4318,6 +4406,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     } else if (bId == BTN_TAB) {
                         g_state.currentTab = p1;
                         PlaySfx(1);
+                    } else if (bId == BTN_MANUAL_SUBTAB) {
+                        g_state.manualSubTab = p1;
+                        PlaySfx(SFX_CLICK);
                     } else if (bId == BTN_ADVANCE) {
                         AdvanceCycle();
                     } else if (bId == BTN_AUTORUN) {
