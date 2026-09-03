@@ -630,15 +630,27 @@
             </div>
         </section>
 
-        <!-- CENTER PANEL: ACTIVE SONAR & ACOUSTIC SWEEP -->
+        <!-- CENTER PANEL: ACTIVE SONAR & TRENCH NAVIGATION -->
         <section class="center-stage">
+            <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between; background: var(--bg-panel-header); border: 1px solid var(--border-panel); padding: 4px 8px; border-radius: 3px;">
+                <div style="display: flex; gap: 6px;">
+                    <button id="viewSonarBtn" class="active-toggle">📡 ACTIVE SONAR</button>
+                    <button id="viewNavMapBtn">🗺️ TRENCH NAVIGATION CHART</button>
+                </div>
+                <div style="font-size: 10px; color: var(--text-dim); display: flex; gap: 12px;">
+                    <span>SECTOR: <b id="currentSectorName" style="color: var(--accent-sonar);">CONTINENTAL SHELF</b></span>
+                    <span>SURVEY: <b id="surveyPtsVal" style="color: var(--accent-emerald);">0 PTS</b></span>
+                </div>
+            </div>
+
             <div class="sonar-viewport">
                 <canvas id="sonarCanvas"></canvas>
                 <div class="sonar-overlay">
                     <div>HEADING: <span id="headingVal">042° NE</span></div>
                     <div>SURGE SPEED: <span id="speedVal">0.0 KTS</span></div>
-                    <div>SEABED DIST: <span id="seabedDistVal">4,850 M</span></div>
-                    <div>ACOUSTIC ECHOES: <span id="echoCountVal">3 DETECTED</span></div>
+                    <div>COORDS: <span id="coordsVal">X: 0.00 km, Y: 0.00 km</span></div>
+                    <div>SEABED ELEV: <span id="seabedDistVal">250 M</span></div>
+                    <div>WAYPOINT: <span id="waypointInfoVal">WP-1: Emerald Kelp Shelf</span></div>
                 </div>
                 <div class="sonar-mode-tag" id="sonarModeTag">MODE: 360° PLAN SWEEP</div>
                 <div class="sonar-depth-marker" id="sonarStatusText">
@@ -648,7 +660,7 @@
 
             <!-- LOG & TELEMETRY STREAM -->
             <div class="terminal-log" id="terminalLog">
-                <div class="log-entry info"><span class="log-time">[00:00:00]</span> DSV Abyss Voyager Bathyscaphe computer online. Systems calibrated.</div>
+                <div class="log-entry info"><span class="log-time">[00:00:00]</span> DSV Abyss Voyager Bathyscaphe computer online. Navigation grid locked.</div>
                 <div class="log-entry discovery"><span class="log-time">[00:00:01]</span> High-frequency hydrophones listening. Epipelagic layer baseline established.</div>
             </div>
         </section>
@@ -656,10 +668,20 @@
         <!-- RIGHT PANEL: HELM, BALLAST & SYSTEM CONTROLS -->
         <section class="panel">
             <div class="panel-header">
-                <span>HELM & SENSORS</span>
+                <span>HELM & NAVIGATION</span>
                 <span>CMD-CTRL</span>
             </div>
             <div class="panel-body">
+                <!-- TRENCH NAVIGATION & SECTOR STEERING -->
+                <div class="gauge-group">
+                    <span style="font-size: 10px; color: var(--text-dim); font-weight: bold;">OCEAN NAVIGATION & WAYPOINTS</span>
+                    <div class="controls-grid">
+                        <button class="btn-large" id="btnNextWaypoint" style="grid-column: span 2;">🧭 CYCLE NAV WAYPOINT [WP-1]</button>
+                        <button class="btn-large" id="btnAutopilot">🎯 AUTOPILOT: OFF</button>
+                        <button class="btn-large" id="btnSurveySector">🔬 SURVEY REGION</button>
+                    </div>
+                </div>
+
                 <!-- BALLAST ENGINE CONTROLS -->
                 <div class="gauge-group">
                     <span style="font-size: 10px; color: var(--text-dim); font-weight: bold;">BALLAST DIVE ENGINE</span>
@@ -701,12 +723,12 @@
 
                 <!-- QUICK MISSION OBJECTIVE -->
                 <div class="gauge-group">
-                    <span style="font-size: 10px; color: var(--text-dim); font-weight: bold;">CURRENT EXPEDITION DIRECTIVE</span>
+                    <span style="font-size: 10px; color: var(--text-dim); font-weight: bold;">EXPEDITION OBJECTIVES</span>
                     <div style="background: var(--bg-deep); border: 1px solid var(--border-panel); padding: 6px; border-radius: 3px; font-size: 10px; line-height: 1.4;">
-                        <div>• Submerge to <b>Mesopelagic Zone (200m+)</b></div>
-                        <div>• Conduct active sonar ping sweeps</div>
-                        <div>• Balance ballast tanks for neutral trim</div>
-                        <div>• Monitor O2 scrubbers and hull pressure</div>
+                        <div>• Steer through <b>Continental Shelf</b> (0-200m)</div>
+                        <div>• Navigate <b>Twilight Canyon</b> & <b>Hydrothermal Smokers</b></div>
+                        <div>• Dive into <b>Mariana Hadal Trench</b> (4000m+)</div>
+                        <div>• Survey abyssal landmarks for research points</div>
                     </div>
                 </div>
             </div>
@@ -815,6 +837,73 @@
             }
 
             // --- BATHYSCAPHE SIMULATION STATE ---
+            const SECTORS = [
+                {
+                    id: 0,
+                    name: 'CONTINENTAL SHELF',
+                    depthRange: '0 - 200m',
+                    baseSeabed: 250,
+                    seabedVariance: 60,
+                    thermalBase: 21.4,
+                    desc: 'Sunlit epipelagic waters, expansive shallow ridges, and kelp forests.',
+                    landmarks: [
+                        { id: 'cs1', name: 'Emerald Kelp Ridge', x: 1.2, y: 1.8, depth: 140, discovered: false, pts: 50, info: 'Dense bioluminescent kelp forest anchored on shallow granite shelves.' },
+                        { id: 'cs2', name: 'Coral Siphon Reef', x: -2.1, y: 3.4, depth: 180, discovered: false, pts: 75, info: 'Ancient calcium carbonate pinnacle hosting rare benthic colonies.' }
+                    ]
+                },
+                {
+                    id: 1,
+                    name: 'TWILIGHT DROP-OFF',
+                    depthRange: '200 - 1,000m',
+                    baseSeabed: 1350,
+                    seabedVariance: 220,
+                    thermalBase: 11.2,
+                    desc: 'Midnight mesopelagic zone. Steep vertical basalt canyon walls.',
+                    landmarks: [
+                        { id: 'td1', name: 'Basalt Canyon Fault', x: 4.5, y: -2.2, depth: 650, discovered: false, pts: 100, info: 'Massive vertical subsea fault line carved by prehistoric tectonic shifts.' },
+                        { id: 'td2', name: 'Derelict Research Bathysphere', x: 2.8, y: -4.5, depth: 880, discovered: false, pts: 150, info: 'Corroded 1970s deep-sea exploration capsule with intact data core.' }
+                    ]
+                },
+                {
+                    id: 2,
+                    name: 'HYDROTHERMAL VENT FIELDS',
+                    depthRange: '1,000 - 4,000m',
+                    baseSeabed: 3800,
+                    seabedVariance: 400,
+                    thermalBase: 4.0,
+                    isThermalHotspot: true,
+                    desc: 'Volcanically active bathyal crust. Black smoker spires and superheated sulfur plumes.',
+                    landmarks: [
+                        { id: 'hv1', name: 'Prometheus Smoker Chimney', x: -5.5, y: -6.0, depth: 2450, discovered: false, pts: 200, info: 'Towering 30m polymetallic sulfide chimney venting 320°C mineral-rich fluids.' },
+                        { id: 'hv2', name: 'Sulfur Caldera Abyss', x: -3.8, y: -8.2, depth: 3200, discovered: false, pts: 250, info: 'Active magma fissure glowing with incandescent basalt fissures.' }
+                    ]
+                },
+                {
+                    id: 3,
+                    name: 'MARIANA HADAL CHASM',
+                    depthRange: '4,000 - 11,000m',
+                    baseSeabed: 10920,
+                    seabedVariance: 600,
+                    thermalBase: 1.8,
+                    desc: 'Extreme Hadalpelagic trench. Extreme hydrostatic crush depth and alien silence.',
+                    landmarks: [
+                        { id: 'ha1', name: 'Challenger Trench Arch', x: 8.4, y: 7.2, depth: 7200, discovered: false, pts: 350, info: 'Monolithic subterranean stone arch bridging the hadal subduction trench.' },
+                        { id: 'ha2', name: 'Abyssal Siren Siphon', x: 9.8, y: 10.5, depth: 10500, discovered: false, pts: 500, info: 'The deepest known tectonic rupture on Earth, echoing with acoustic resonance.' }
+                    ]
+                }
+            ];
+
+            const WAYPOINTS = [
+                { name: 'Emerald Kelp Shelf', sectorIdx: 0, x: 1.2, y: 1.8, targetDepth: 140 },
+                { name: 'Coral Siphon Reef', sectorIdx: 0, x: -2.1, y: 3.4, targetDepth: 180 },
+                { name: 'Basalt Canyon Fault', sectorIdx: 1, x: 4.5, y: -2.2, targetDepth: 650 },
+                { name: 'Derelict Bathysphere', sectorIdx: 1, x: 2.8, y: -4.5, targetDepth: 880 },
+                { name: 'Prometheus Smoker Spire', sectorIdx: 2, x: -5.5, y: -6.0, targetDepth: 2450 },
+                { name: 'Sulfur Caldera Vent', sectorIdx: 2, x: -3.8, y: -8.2, targetDepth: 3200 },
+                { name: 'Challenger Trench Arch', sectorIdx: 3, x: 8.4, y: 7.2, targetDepth: 7200 },
+                { name: 'Abyssal Siren Deep', sectorIdx: 3, x: 9.8, y: 10.5, targetDepth: 10500 }
+            ];
+
             const state = {
                 depth: 0.0,            // meters (0 to 11,000)
                 vertRate: 0.0,         // vertical descent/ascent rate m/s
@@ -825,6 +914,18 @@
                 heading: 42.0,         // degrees 0-359
                 rudderRate: 0.0,       // turning rate
                 pitch: 0.0,            // degrees trim (-15 to +15)
+
+                // Navigation & Ocean Coordinates
+                posX: 0.0,             // nautical kilometers
+                posY: 0.0,
+                distanceCruised: 0.0,  // NM
+                currentSectorIdx: 0,
+                activeWaypointIdx: 0,
+                autopilot: false,
+                surveyPoints: 0,
+                viewMode: 'sonar',     // 'sonar' or 'navmap'
+                breadcrumbs: [],       // history trail of [x, y]
+                seabedElevation: 250.0,
 
                 // Vital systems
                 hull: 100.0,           // % integrity
@@ -853,7 +954,7 @@
                 waterIntrusionRate: 0.0,
 
                 // Environment
-                temp: 21.4,            // Celsius (drops with depth)
+                temp: 21.4,            // Celsius (drops with depth, rises near hydrothermal vents)
                 salinity: 35.0,        // PSU
 
                 // Sonar & Contacts
@@ -898,9 +999,13 @@
             const tempVal = document.getElementById('tempVal');
             const headingVal = document.getElementById('headingVal');
             const speedVal = document.getElementById('speedVal');
+            const coordsVal = document.getElementById('coordsVal');
             const seabedDistVal = document.getElementById('seabedDistVal');
-            const echoCountVal = document.getElementById('echoCountVal');
+            const waypointInfoVal = document.getElementById('waypointInfoVal');
+            const currentSectorName = document.getElementById('currentSectorName');
+            const surveyPtsVal = document.getElementById('surveyPtsVal');
             const sonarStatusText = document.getElementById('sonarStatusText');
+            const sonarModeTag = document.getElementById('sonarModeTag');
             const zoneTag = document.getElementById('zoneTag');
             const terminalLog = document.getElementById('terminalLog');
 
@@ -909,6 +1014,11 @@
             const scanlineToggleBtn = document.getElementById('scanlineToggleBtn');
             const soundToggleBtn = document.getElementById('soundToggleBtn');
             const emergencyBlowBtn = document.getElementById('emergencyBlowBtn');
+            const viewSonarBtn = document.getElementById('viewSonarBtn');
+            const viewNavMapBtn = document.getElementById('viewNavMapBtn');
+            const btnNextWaypoint = document.getElementById('btnNextWaypoint');
+            const btnAutopilot = document.getElementById('btnAutopilot');
+            const btnSurveySector = document.getElementById('btnSurveySector');
             const btnFloodBallast = document.getElementById('btnFloodBallast');
             const btnPumpBallast = document.getElementById('btnPumpBallast');
             const btnTrimBow = document.getElementById('btnTrimBow');
@@ -934,6 +1044,22 @@
                 return 'HADALPELAGIC (6000M+)';
             }
 
+            function updateSectorFromDepth() {
+                let sIdx = 0;
+                if (state.depth < 200) sIdx = 0;
+                else if (state.depth < 1000) sIdx = 1;
+                else if (state.depth < 4000) sIdx = 2;
+                else sIdx = 3;
+
+                if (state.currentSectorIdx !== sIdx) {
+                    state.currentSectorIdx = sIdx;
+                    const s = SECTORS[sIdx];
+                    currentSectorName.textContent = s.name;
+                    logMessage(`TRANSITIONING SECTOR: [${s.name}] - ${s.desc}`, 'discovery');
+                    playBeep(650, 'sine', 0.25, 0.15);
+                }
+            }
+
             function logMessage(text, type = 'info') {
                 const now = new Date();
                 const timeStr = `[${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}]`;
@@ -943,6 +1069,81 @@
                 terminalLog.appendChild(div);
                 terminalLog.scrollTop = terminalLog.scrollHeight;
             }
+
+            // --- VIEW MODE TOGGLES ---
+            viewSonarBtn.addEventListener('click', () => {
+                state.viewMode = 'sonar';
+                viewSonarBtn.classList.add('active-toggle');
+                viewNavMapBtn.classList.remove('active-toggle');
+                sonarModeTag.textContent = 'MODE: 360° PLAN SWEEP';
+                playBeep(450, 'sine', 0.08);
+            });
+
+            viewNavMapBtn.addEventListener('click', () => {
+                state.viewMode = 'navmap';
+                viewNavMapBtn.classList.add('active-toggle');
+                viewSonarBtn.classList.remove('active-toggle');
+                sonarModeTag.textContent = 'MODE: 2D BATHYMETRY CHART';
+                playBeep(520, 'sine', 0.08);
+            });
+
+            // --- WAYPOINTS & AUTOPILOT ---
+            function updateWaypointUI() {
+                const wp = WAYPOINTS[state.activeWaypointIdx];
+                const dx = wp.x - state.posX;
+                const dy = wp.y - state.posY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                let bearingRad = Math.atan2(dx, dy);
+                let bearingDeg = Math.round((bearingRad * (180 / Math.PI) + 360) % 360);
+
+                btnNextWaypoint.textContent = `🧭 WAYPOINT [WP-${state.activeWaypointIdx + 1}]: ${wp.name.substring(0, 16)}`;
+                waypointInfoVal.textContent = `WP-${state.activeWaypointIdx + 1}: ${wp.name} (${dist.toFixed(2)} km @ ${String(bearingDeg).padStart(3, '0')}°)`;
+            }
+
+            btnNextWaypoint.addEventListener('click', () => {
+                state.activeWaypointIdx = (state.activeWaypointIdx + 1) % WAYPOINTS.length;
+                updateWaypointUI();
+                playBeep(500, 'triangle', 0.1);
+                const wp = WAYPOINTS[state.activeWaypointIdx];
+                logMessage(`Nav computer locked onto Waypoint [WP-${state.activeWaypointIdx + 1}]: ${wp.name} (Target Depth: ${wp.targetDepth}m).`, 'info');
+            });
+
+            btnAutopilot.addEventListener('click', () => {
+                state.autopilot = !state.autopilot;
+                btnAutopilot.textContent = state.autopilot ? '🎯 AUTOPILOT: ENGAGED' : '🎯 AUTOPILOT: OFF';
+                btnAutopilot.classList.toggle('active-toggle', state.autopilot);
+                playBeep(state.autopilot ? 600 : 350, 'sine', 0.12);
+                logMessage(`Submersible navigation autopilot ${state.autopilot ? 'ENGAGED. Auto-correcting rudder course...' : 'DISENGAGED.'}`, 'info');
+            });
+
+            btnSurveySector.addEventListener('click', () => {
+                const sector = SECTORS[state.currentSectorIdx];
+                let discoveredAny = false;
+                sector.landmarks.forEach(lm => {
+                    const dx = lm.x - state.posX;
+                    const dy = lm.y - state.posY;
+                    const distKm = Math.sqrt(dx * dx + dy * dy);
+                    const depthDiff = Math.abs(state.depth - lm.depth);
+
+                    if (distKm <= 1.5 && depthDiff <= 300) {
+                        if (!lm.discovered) {
+                            lm.discovered = true;
+                            state.surveyPoints += lm.pts;
+                            discoveredAny = true;
+                            playBeep(780, 'sine', 0.3, 0.2);
+                            logMessage(`🌟 DISCOVERY SURVEY LOGGED: [${lm.name}]! ${lm.info} (+${lm.pts} Survey Pts)`, 'discovery');
+                        } else {
+                            logMessage(`Telemetry check: [${lm.name}] within sensor range (${(distKm * 1000).toFixed(0)}m).`, 'info');
+                        }
+                    }
+                });
+
+                if (!discoveredAny) {
+                    playBeep(320, 'triangle', 0.1);
+                    logMessage(`Hydrophone & optical survey scan complete. No uncharted features within 1.5km. Steer closer to waypoints.`, 'info');
+                }
+                surveyPtsVal.textContent = `${state.surveyPoints} PTS`;
+            });
 
             // --- CONTROLS EVENT HANDLERS ---
             btnFloodBallast.addEventListener('click', () => {
@@ -1107,25 +1308,25 @@
             });
 
             applyThemeSettings();
+            updateWaypointUI();
 
-            // --- SIMULATION PHYSICS ENGINE TICK ---
+            // --- SIMULATION PHYSICS & NAVIGATION TICK ---
             let lastTime = performance.now();
+            let breadcrumbTimer = 0;
 
             function updateSimulation(dt) {
                 // 1. Buoyancy & Depth Physics
-                // Neutral ballast is around 45%. < 45% = positive buoyancy (ascend), > 45% = negative (descend)
                 const neutralBallast = 45.0;
-                const buoyancyForce = (neutralBallast - state.ballast) * 0.4; // positive ascends, negative descends
-                const pitchDescent = (state.pitch / 15.0) * (Math.abs(state.speed) * 0.3); // pitch angle pushes up/down with forward speed
+                const buoyancyForce = (neutralBallast - state.ballast) * 0.4;
+                const pitchDescent = (state.pitch / 15.0) * (Math.abs(state.speed) * 0.3);
                 
-                state.targetVertRate = -buoyancyForce - pitchDescent; // target descent speed in m/s
+                state.targetVertRate = -buoyancyForce - pitchDescent;
                 state.vertRate += (state.targetVertRate - state.vertRate) * (dt * 1.5);
                 
                 state.depth += state.vertRate * dt;
                 if (state.depth <= 0) {
                     state.depth = 0;
                     if (state.vertRate < 0) state.vertRate = 0;
-                    // When on surface, slowly recharge air & battery
                     if (state.airReservoir < 300) state.airReservoir = Math.min(300, state.airReservoir + dt * 5);
                     if (state.battery < 100) state.battery = Math.min(100, state.battery + dt * 2);
                     gridModeVal.textContent = 'SURFACE AUX/GEN';
@@ -1133,14 +1334,64 @@
                     gridModeVal.textContent = 'INTERNAL BATTERY';
                 }
 
-                // Max seabed depth limit 11,000m
                 if (state.depth > 11000) state.depth = 11000;
+                updateSectorFromDepth();
 
-                // 2. Speed Surge Physics
+                // 2. Speed Surge & Coordinate Traversal Physics
                 state.speed += (state.targetSpeed - state.speed) * (dt * 0.8);
+                
+                // Autopilot steering adjustment
+                if (state.autopilot) {
+                    const wp = WAYPOINTS[state.activeWaypointIdx];
+                    const dx = wp.x - state.posX;
+                    const dy = wp.y - state.posY;
+                    let targetBearingRad = Math.atan2(dx, dy);
+                    let targetBearingDeg = (targetBearingRad * (180 / Math.PI) + 360) % 360;
+                    
+                    let diff = targetBearingDeg - state.heading;
+                    while (diff < -180) diff += 360;
+                    while (diff > 180) diff -= 360;
 
-                // 3. Pressure & Hull Stress
-                state.pressure = 1.0 + (state.depth * 0.0995); // ~1 atm per 10m
+                    if (Math.abs(diff) > 1.0) {
+                        state.heading = (state.heading + Math.sign(diff) * Math.min(Math.abs(diff), 20.0 * dt) + 360) % 360;
+                    }
+                }
+
+                // Convert knots to km/s: 1 knot = 1.852 km/h = 0.0005144 km/s
+                const speedKmS = (state.speed * 1.852) / 3600.0;
+                const headingRad = state.heading * (Math.PI / 180);
+                const deltaX = Math.sin(headingRad) * speedKmS * dt;
+                const deltaY = Math.cos(headingRad) * speedKmS * dt;
+                state.posX += deltaX;
+                state.posY += deltaY;
+                state.distanceCruised += Math.abs(speedKmS * dt) * 0.539957; // NM
+
+                // Record breadcrumbs
+                breadcrumbTimer += dt;
+                if (breadcrumbTimer >= 1.0) {
+                    breadcrumbTimer = 0;
+                    state.breadcrumbs.push({ x: state.posX, y: state.posY });
+                    if (state.breadcrumbs.length > 40) state.breadcrumbs.shift();
+                }
+
+                // 3. Dynamic Seabed Bathymetry Calculation
+                const curSec = SECTORS[state.currentSectorIdx];
+                const terrainNoise = Math.sin(state.posX * 1.5) * Math.cos(state.posY * 1.5) * curSec.seabedVariance;
+                state.seabedElevation = curSec.baseSeabed + terrainNoise;
+
+                // Grounding collision protection
+                if (state.depth >= state.seabedElevation) {
+                    state.depth = state.seabedElevation;
+                    if (state.vertRate > 0) state.vertRate = 0;
+                    if (Math.abs(state.speed) > 2.0 && Math.random() < dt * 0.4) {
+                        state.hull = Math.max(0, state.hull - 0.5 * dt);
+                        playBeep(140, 'square', 0.15);
+                        logMessage(`WARNING: Bathyscaphe keel scraping seabed rock shelf!`, 'warning');
+                    }
+                }
+
+                // 4. Pressure & Hull Stress
+                state.pressure = 1.0 + (state.depth * 0.0995);
                 state.hullStress = Math.min(100, (state.depth / state.crushDepth) * 100);
 
                 if (state.depth > state.crushDepth) {
@@ -1156,7 +1407,7 @@
                     state.waterIntrusionRate = 0.0;
                 }
 
-                // 4. Bilge Water & Pumps
+                // 5. Bilge Water & Pumps
                 if (state.waterIntrusionRate > 0) {
                     state.bilgeWater += state.waterIntrusionRate * dt;
                 }
@@ -1165,13 +1416,14 @@
                     state.bilgeWater -= pumped;
                 }
 
-                // 5. Electrical Drain
+                // 6. Electrical Drain
                 let baseDrain = 0.3;
                 if (state.searchlights) baseDrain += 0.8;
                 if (state.throttleMode === 'HALF') baseDrain += 1.2;
                 if (state.throttleMode === 'FLANK') baseDrain += 3.5;
                 if (state.bilgePumpActive) baseDrain += 0.6;
                 if (state.scrubberAuto) baseDrain += 0.4;
+                if (state.autopilot) baseDrain += 0.3;
                 if (state.lowPowerMode) baseDrain *= 0.45;
 
                 state.powerDrain = baseDrain;
@@ -1179,7 +1431,7 @@
                     state.battery = Math.max(0, state.battery - (baseDrain * 0.015 * dt));
                 }
 
-                // 6. O2 Scrubber Simulation
+                // 7. O2 Scrubber Simulation
                 if (state.scrubberAuto && state.battery > 0) {
                     state.scrubberStatus = Math.max(10, state.scrubberStatus - dt * 0.01);
                     state.co2 = Math.min(2.0, state.co2 + dt * 0.002);
@@ -1189,16 +1441,28 @@
                     state.o2 = Math.max(0, state.o2 - dt * 0.05);
                 }
 
-                // 7. Temperature Gradient with Depth
+                // 8. Seawater Temperature Gradient & Hydrothermal Anomaly
+                let ambientTemp = 21.4;
                 if (state.depth < 200) {
-                    state.temp = 21.4 - (state.depth / 200) * 8.0;
+                    ambientTemp = 21.4 - (state.depth / 200) * 8.0;
                 } else if (state.depth < 1000) {
-                    state.temp = 13.4 - ((state.depth - 200) / 800) * 9.0;
+                    ambientTemp = 13.4 - ((state.depth - 200) / 800) * 9.0;
                 } else {
-                    state.temp = Math.max(1.2, 4.4 - ((state.depth - 1000) / 9000) * 3.2);
+                    ambientTemp = Math.max(1.2, 4.4 - ((state.depth - 1000) / 9000) * 3.2);
                 }
 
-                // 8. Update UI Gauges
+                // Check proximity to hydrothermal vent chimney
+                let thermalBoost = 0;
+                if (state.currentSectorIdx === 2) { // Hydrothermal vents
+                    const ventLm = SECTORS[2].landmarks[0];
+                    const distToVent = Math.sqrt(Math.pow(ventLm.x - state.posX, 2) + Math.pow(ventLm.y - state.posY, 2));
+                    if (distToVent < 1.0) {
+                        thermalBoost = (1.0 - distToVent) * 140.0;
+                    }
+                }
+                state.temp = ambientTemp + thermalBoost;
+
+                // 9. Update UI Gauges
                 renderTelemetryUI();
             }
 
@@ -1256,14 +1520,19 @@
 
                 pitchVal.textContent = `${state.pitch >= 0 ? '+' : ''}${state.pitch.toFixed(1)}° ${state.pitch === 0 ? 'LEVEL' : (state.pitch > 0 ? 'STERN DOWN' : 'BOW DOWN')}`;
                 tempVal.textContent = `${state.temp.toFixed(1)} °C`;
+                if (state.temp > 50) tempVal.style.color = 'var(--accent-red)';
+                else if (state.temp > 25) tempVal.style.color = 'var(--accent-amber)';
+                else tempVal.style.color = 'var(--accent-sonar)';
 
                 headingVal.textContent = `${String(Math.round(state.heading)).padStart(3, '0')}°`;
                 speedVal.textContent = `${state.speed.toFixed(1)} KTS`;
-                seabedDistVal.textContent = `${Math.max(0, Math.round(11000 - state.depth))} M`;
+                coordsVal.textContent = `X: ${state.posX >= 0 ? '+' : ''}${state.posX.toFixed(2)}km, Y: ${state.posY >= 0 ? '+' : ''}${state.posY.toFixed(2)}km`;
+                seabedDistVal.textContent = `${Math.round(state.seabedElevation)} M (DIST: ${Math.max(0, Math.round(state.seabedElevation - state.depth))}m)`;
                 zoneTag.textContent = getZoneName(state.depth);
+                updateWaypointUI();
             }
 
-            // --- SONAR RADAR CANVAS RENDERER ---
+            // --- CANVAS RENDERER: SONAR & 2D BATHYMETRY CHART ---
             const canvas = document.getElementById('sonarCanvas');
             const ctx = canvas.getContext('2d');
             let sweepAngle = 0;
@@ -1322,15 +1591,7 @@
             window.addEventListener('resize', resizeCanvas);
             resizeCanvas();
 
-            function drawSonar() {
-                const w = canvas.width;
-                const h = canvas.height;
-                const cx = w / 2;
-                const cy = h / 2;
-                const dpr = window.devicePixelRatio || 1;
-                const maxR = Math.min(cx, cy) - 20 * dpr;
-                const palette = THEME_PALETTES[currentTheme] || THEME_PALETTES['theme-abyss'];
-
+            function drawSonarView(w, h, cx, cy, dpr, maxR, palette) {
                 // Dark background with persistence trail
                 ctx.fillStyle = palette.radarBg;
                 ctx.fillRect(0, 0, w, h);
@@ -1438,13 +1699,153 @@
                 });
             }
 
+            function drawNavMapChart(w, h, cx, cy, dpr, palette) {
+                // Clear map background
+                ctx.fillStyle = '#01080e';
+                ctx.fillRect(0, 0, w, h);
+
+                // Grid scale: 1 km = 25px * dpr
+                const scale = 22 * dpr;
+
+                // Draw Coordinate Grid Lines
+                ctx.strokeStyle = 'rgba(19, 60, 90, 0.4)';
+                ctx.lineWidth = 1 * dpr;
+                ctx.beginPath();
+                for (let x = -15; x <= 15; x += 2) {
+                    const gx = cx + (x - state.posX) * scale;
+                    if (gx >= 0 && gx <= w) {
+                        ctx.moveTo(gx, 0);
+                        ctx.lineTo(gx, h);
+                    }
+                }
+                for (let y = -15; y <= 15; y += 2) {
+                    const gy = cy + (y - state.posY) * scale;
+                    if (gy >= 0 && gy <= h) {
+                        ctx.moveTo(0, gy);
+                        ctx.lineTo(w, gy);
+                    }
+                }
+                ctx.stroke();
+
+                // Draw Bathymetric Topography Contour Circles / Fissures
+                ctx.strokeStyle = 'rgba(0, 210, 255, 0.15)';
+                ctx.lineWidth = 1.5 * dpr;
+                SECTORS.forEach((sec, sIdx) => {
+                    const secCenterX = cx + ((sIdx === 0 ? 0 : (sIdx === 1 ? 3 : (sIdx === 2 ? -4 : 8))) - state.posX) * scale;
+                    const secCenterY = cy + ((sIdx === 0 ? 2 : (sIdx === 1 ? -3 : (sIdx === 2 ? -7 : 8))) - state.posY) * scale;
+                    
+                    ctx.beginPath();
+                    ctx.arc(secCenterX, secCenterY, 3.5 * scale, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    ctx.fillStyle = palette.ringText;
+                    ctx.font = `bold ${8 * dpr}px monospace`;
+                    ctx.fillText(`SECTOR: ${sec.name}`, secCenterX - 45 * dpr, secCenterY - 3.8 * scale);
+                });
+
+                // Thermal Smokers Anomaly Ring
+                const ventX = cx + (-5.5 - state.posX) * scale;
+                const ventY = cy + (-6.0 - state.posY) * scale;
+                ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+                ctx.beginPath();
+                ctx.arc(ventX, ventY, 1.2 * scale, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.7)';
+                ctx.font = `${8 * dpr}px monospace`;
+                ctx.fillText('♨ HYDROTHERMAL THERMAL SPOUT', ventX - 50 * dpr, ventY + 18 * dpr);
+
+                // Breadcrumb trail
+                if (state.breadcrumbs.length > 1) {
+                    ctx.strokeStyle = palette.vessel;
+                    ctx.lineWidth = 1.5 * dpr;
+                    ctx.beginPath();
+                    for (let i = 0; i < state.breadcrumbs.length; i++) {
+                        const bx = cx + (state.breadcrumbs[i].x - state.posX) * scale;
+                        const by = cy + (state.breadcrumbs[i].y - state.posY) * scale;
+                        if (i === 0) ctx.moveTo(bx, by);
+                        else ctx.lineTo(bx, by);
+                    }
+                    ctx.stroke();
+                }
+
+                // Landmarks & Waypoints
+                WAYPOINTS.forEach((wp, idx) => {
+                    const wx = cx + (wp.x - state.posX) * scale;
+                    const wy = cy + (wp.y - state.posY) * scale;
+
+                    if (wx >= -20 && wx <= w + 20 && wy >= -20 && wy <= h + 20) {
+                        const isTarget = idx === state.activeWaypointIdx;
+                        ctx.fillStyle = isTarget ? palette.accentAmber : palette.contactActive;
+                        ctx.beginPath();
+                        ctx.arc(wx, wy, (isTarget ? 6 : 4) * dpr, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        ctx.fillStyle = isTarget ? palette.textBright : palette.ringText;
+                        ctx.font = `bold ${8 * dpr}px monospace`;
+                        ctx.fillText(`WP-${idx+1}: ${wp.name}`, wx + 8 * dpr, wy - 4 * dpr);
+                        ctx.font = `${7 * dpr}px monospace`;
+                        ctx.fillText(`${wp.targetDepth}m`, wx + 8 * dpr, wy + 7 * dpr);
+
+                        if (isTarget) {
+                            // Target course line from Submarine to active Waypoint
+                            ctx.strokeStyle = palette.accentAmber;
+                            ctx.setLineDash([4 * dpr, 4 * dpr]);
+                            ctx.beginPath();
+                            ctx.moveTo(cx, cy);
+                            ctx.lineTo(wx, wy);
+                            ctx.stroke();
+                            ctx.setLineDash([]);
+                        }
+                    }
+                });
+
+                // Submarine Vessel Center Marker
+                ctx.fillStyle = palette.vessel;
+                ctx.beginPath();
+                ctx.arc(cx, cy, 6 * dpr, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Submarine heading vector arrow
+                const hRad = (state.heading - 90) * (Math.PI / 180);
+                ctx.strokeStyle = palette.vessel;
+                ctx.lineWidth = 2.5 * dpr;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx + Math.cos(hRad) * (26 * dpr), cy + Math.sin(hRad) * (26 * dpr));
+                ctx.stroke();
+
+                // Submarine Nav Label
+                ctx.fillStyle = palette.textBright;
+                ctx.font = `bold ${9 * dpr}px monospace`;
+                ctx.fillText('DSV ABYSS (YOU)', cx + 10 * dpr, cy - 8 * dpr);
+                ctx.font = `${8 * dpr}px monospace`;
+                ctx.fillStyle = palette.ringText;
+                ctx.fillText(`DEPTH: ${Math.round(state.depth)}m | SPD: ${state.speed.toFixed(1)}kts`, cx + 10 * dpr, cy + 10 * dpr);
+            }
+
+            function drawDisplay() {
+                const w = canvas.width;
+                const h = canvas.height;
+                const cx = w / 2;
+                const cy = h / 2;
+                const dpr = window.devicePixelRatio || 1;
+                const maxR = Math.min(cx, cy) - 20 * dpr;
+                const palette = THEME_PALETTES[currentTheme] || THEME_PALETTES['theme-abyss'];
+
+                if (state.viewMode === 'sonar') {
+                    drawSonarView(w, h, cx, cy, dpr, maxR, palette);
+                } else {
+                    drawNavMapChart(w, h, cx, cy, dpr, palette);
+                }
+            }
+
             // Main Animation & Physics Loop
             function gameLoop(now) {
                 const dt = Math.min(0.1, (now - lastTime) / 1000.0);
                 lastTime = now;
 
                 updateSimulation(dt);
-                drawSonar();
+                drawDisplay();
 
                 requestAnimationFrame(gameLoop);
             }

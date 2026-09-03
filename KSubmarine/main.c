@@ -31,6 +31,11 @@
 #define ID_BTN_SOUND_TOGGLE     118
 #define ID_BTN_THEME_TOGGLE     119
 #define ID_BTN_SCANLINES_TOGGLE 120
+#define ID_BTN_VIEW_SONAR       121
+#define ID_BTN_VIEW_NAVMAP      122
+#define ID_BTN_NEXT_WAYPOINT    123
+#define ID_BTN_AUTOPILOT        124
+#define ID_BTN_SURVEY_SECTOR    125
 
 typedef enum {
     THEME_ABYSS = 0,
@@ -122,6 +127,85 @@ typedef struct {
 #define MAX_LOGS 16
 
 typedef struct {
+    char id[8];
+    char name[32];
+    float x; // km
+    float y; // km
+    float depth;
+    int discovered;
+    int pts;
+    char info[96];
+} Landmark;
+
+typedef struct {
+    int id;
+    const char* name;
+    const char* depthRange;
+    float baseSeabed;
+    float seabedVariance;
+    float thermalBase;
+    const char* desc;
+    Landmark landmarks[2];
+} SectorInfo;
+
+typedef struct {
+    char name[32];
+    int sectorIdx;
+    float x;
+    float y;
+    float targetDepth;
+} NavWaypoint;
+
+#define SECTOR_COUNT 4
+#define WAYPOINT_COUNT 8
+
+static SectorInfo g_sectors[SECTOR_COUNT] = {
+    {
+        0, "CONTINENTAL SHELF", "0 - 200m", 250.0f, 60.0f, 21.4f,
+        "Sunlit epipelagic waters, expansive shallow ridges.",
+        {
+            { "cs1", "Emerald Kelp Ridge", 1.2f, 1.8f, 140.0f, 0, 50, "Dense bioluminescent kelp forest on shallow granite." },
+            { "cs2", "Coral Siphon Reef", -2.1f, 3.4f, 180.0f, 0, 75, "Ancient carbonate pinnacle hosting rare benthic colonies." }
+        }
+    },
+    {
+        1, "TWILIGHT DROP-OFF", "200 - 1,000m", 1350.0f, 220.0f, 11.2f,
+        "Midnight mesopelagic zone. Steep vertical basalt walls.",
+        {
+            { "td1", "Basalt Canyon Fault", 4.5f, -2.2f, 650.0f, 0, 100, "Massive vertical subsea fault carved by tectonic shifts." },
+            { "td2", "Derelict Bathysphere", 2.8f, -4.5f, 880.0f, 0, 150, "Corroded 1970s deep-sea exploration capsule with data core." }
+        }
+    },
+    {
+        2, "HYDROTHERMAL VENTS", "1,000 - 4,000m", 3800.0f, 400.0f, 4.0f,
+        "Active bathyal crust. Black smokers and superheated sulfur plumes.",
+        {
+            { "hv1", "Prometheus Smoker", -5.5f, -6.0f, 2450.0f, 0, 200, "Towering 30m sulfide chimney venting 320 deg C fluid." },
+            { "hv2", "Sulfur Caldera Vent", -3.8f, -8.2f, 3200.0f, 0, 250, "Active magma fissure glowing with incandescent basalt." }
+        }
+    },
+    {
+        3, "HADAL TRENCH CHASM", "4,000 - 11,000m", 10920.0f, 600.0f, 1.8f,
+        "Extreme Hadalpelagic trench. Extreme crush depth and silence.",
+        {
+            { "ha1", "Challenger Arch", 8.4f, 7.2f, 7200.0f, 0, 350, "Monolithic stone arch bridging the hadal subduction trench." },
+            { "ha2", "Abyssal Siren Deep", 9.8f, 10.5f, 10500.0f, 0, 500, "Deepest tectonic rupture on Earth, echoing with acoustic pulses." }
+        }
+    }
+};
+
+static const NavWaypoint g_waypoints[WAYPOINT_COUNT] = {
+    { "Emerald Kelp Shelf", 0, 1.2f, 1.8f, 140.0f },
+    { "Coral Siphon Reef", 0, -2.1f, 3.4f, 180.0f },
+    { "Basalt Canyon Fault", 1, 4.5f, -2.2f, 650.0f },
+    { "Derelict Bathysphere", 1, 2.8f, -4.5f, 880.0f },
+    { "Prometheus Smoker", 2, -5.5f, -6.0f, 2450.0f },
+    { "Sulfur Caldera Vent", 2, -3.8f, -8.2f, 3200.0f },
+    { "Challenger Arch", 3, 8.4f, 7.2f, 7200.0f },
+    { "Abyssal Siren Deep", 3, 9.8f, 10.5f, 10500.0f }
+};
+
+typedef struct {
     float depth;            // meters (0 - 11000)
     float vertRate;         // m/s
     float targetVertRate;
@@ -130,6 +214,20 @@ typedef struct {
     int throttleMode;       // 0: REV, 1: STOP, 2: HALF, 3: FLANK
     float heading;          // degrees (0 - 359)
     float pitch;            // degrees (-15 to +15)
+
+    // Navigation & Ocean Coordinates
+    float posX;
+    float posY;
+    float distanceCruised;
+    int currentSectorIdx;
+    int activeWaypointIdx;
+    int autopilot;
+    int surveyPoints;
+    int viewMode;           // 0: Sonar, 1: Nav Map
+    float breadcrumbsX[32];
+    float breadcrumbsY[32];
+    int breadcrumbCount;
+    float seabedElevation;
 
     // Vital systems
     float hull;             // 0 - 100%
@@ -235,6 +333,18 @@ void InitSubmarineState(void) {
     g_sub.heading = 42.0f;
     g_sub.pitch = 0.0f;
 
+    // Navigation & Coordinates
+    g_sub.posX = 0.0f;
+    g_sub.posY = 0.0f;
+    g_sub.distanceCruised = 0.0f;
+    g_sub.currentSectorIdx = 0;
+    g_sub.activeWaypointIdx = 0;
+    g_sub.autopilot = 0;
+    g_sub.surveyPoints = 0;
+    g_sub.viewMode = 0; // 0: Sonar, 1: Nav Map
+    g_sub.breadcrumbCount = 0;
+    g_sub.seabedElevation = 250.0f;
+
     g_sub.hull = 100.0f;
     g_sub.crushDepth = 4500.0f;
     g_sub.pressure = 1.0f;
@@ -275,7 +385,7 @@ void InitSubmarineState(void) {
 
     g_sub.logCount = 0;
     AddLog("DSV Abyss Voyager Bathyscaphe computer online. Systems nominal.", g_themes[THEME_ABYSS].textPrimary);
-    AddLog("High-frequency hydrophones active. Epipelagic layer baseline calibrated.", g_themes[THEME_ABYSS].accentEmerald);
+    AddLog("Navigation grid locked. Epipelagic layer baseline calibrated.", g_themes[THEME_ABYSS].accentEmerald);
 }
 
 const char* GetZoneName(float depth) {
@@ -304,7 +414,80 @@ void UpdateSimulation(float dt) {
     }
     if (g_sub.depth > 11000.0f) g_sub.depth = 11000.0f;
 
+    // Sector transition
+    int sIdx = 0;
+    if (g_sub.depth < 200.0f) sIdx = 0;
+    else if (g_sub.depth < 1000.0f) sIdx = 1;
+    else if (g_sub.depth < 4000.0f) sIdx = 2;
+    else sIdx = 3;
+
+    if (g_sub.currentSectorIdx != sIdx) {
+        g_sub.currentSectorIdx = sIdx;
+        char sMsg[128];
+        snprintf(sMsg, sizeof(sMsg), "TRANSITIONING SECTOR: [%s] - %s", g_sectors[sIdx].name, g_sectors[sIdx].desc);
+        AddLog(sMsg, th->accentSonar);
+        PlaySoundAsync(650, 120);
+    }
+
+    // Speed surge
     g_sub.speed += (g_sub.targetSpeed - g_sub.speed) * (dt * 0.8f);
+
+    // Autopilot course correction
+    if (g_sub.autopilot) {
+        const NavWaypoint* wp = &g_waypoints[g_sub.activeWaypointIdx];
+        float dx = wp->x - g_sub.posX;
+        float dy = wp->y - g_sub.posY;
+        float targetRad = atan2f(dx, dy);
+        float targetDeg = fmodf(targetRad * (180.0f / 3.14159265f) + 360.0f, 360.0f);
+        float diff = targetDeg - g_sub.heading;
+        while (diff < -180.0f) diff += 360.0f;
+        while (diff > 180.0f) diff -= 360.0f;
+        if (fabsf(diff) > 1.0f) {
+            float step = (diff > 0 ? 1.0f : -1.0f) * min(fabsf(diff), 20.0f * dt);
+            g_sub.heading = fmodf(g_sub.heading + step + 360.0f, 360.0f);
+        }
+    }
+
+    // Coordinate traversal (1 knot = 1.852 km/h = 0.0005144 km/s)
+    float speedKmS = (g_sub.speed * 1.852f) / 3600.0f;
+    float hRad = g_sub.heading * (3.14159265f / 180.0f);
+    g_sub.posX += sinf(hRad) * speedKmS * dt;
+    g_sub.posY += cosf(hRad) * speedKmS * dt;
+    g_sub.distanceCruised += fabsf(speedKmS * dt) * 0.539957f;
+
+    // Breadcrumb trail
+    static float s_bcTimer = 0.0f;
+    s_bcTimer += dt;
+    if (s_bcTimer >= 1.0f) {
+        s_bcTimer = 0.0f;
+        if (g_sub.breadcrumbCount < 32) {
+            g_sub.breadcrumbsX[g_sub.breadcrumbCount] = g_sub.posX;
+            g_sub.breadcrumbsY[g_sub.breadcrumbCount] = g_sub.posY;
+            g_sub.breadcrumbCount++;
+        } else {
+            for (int i = 0; i < 31; i++) {
+                g_sub.breadcrumbsX[i] = g_sub.breadcrumbsX[i+1];
+                g_sub.breadcrumbsY[i] = g_sub.breadcrumbsY[i+1];
+            }
+            g_sub.breadcrumbsX[31] = g_sub.posX;
+            g_sub.breadcrumbsY[31] = g_sub.posY;
+        }
+    }
+
+    // Dynamic Seabed
+    SectorInfo* curSec = &g_sectors[g_sub.currentSectorIdx];
+    float terrainNoise = sinf(g_sub.posX * 1.5f) * cosf(g_sub.posY * 1.5f) * curSec->seabedVariance;
+    g_sub.seabedElevation = curSec->baseSeabed + terrainNoise;
+
+    if (g_sub.depth >= g_sub.seabedElevation) {
+        g_sub.depth = g_sub.seabedElevation;
+        if (g_sub.vertRate > 0.0f) g_sub.vertRate = 0.0f;
+        if (fabsf(g_sub.speed) > 2.0f && (rand() % 100) < 3) {
+            g_sub.hull = max(0.0f, g_sub.hull - 0.5f * dt);
+            PlaySoundAsync(140, 100);
+            AddLog("WARNING: Keel scraping seabed rock shelf!", th->accentAmber);
+        }
+    }
 
     g_sub.pressure = 1.0f + (g_sub.depth * 0.0995f);
     g_sub.hullStress = min(100.0f, (g_sub.depth / g_sub.crushDepth) * 100.0f);
@@ -336,6 +519,7 @@ void UpdateSimulation(float dt) {
     if (g_sub.throttleMode == 3) baseDrain += 3.5f;
     if (g_sub.bilgePumpActive) baseDrain += 0.6f;
     if (g_sub.scrubberAuto) baseDrain += 0.4f;
+    if (g_sub.autopilot) baseDrain += 0.3f;
     if (g_sub.lowPowerMode) baseDrain *= 0.45f;
 
     g_sub.powerDrain = baseDrain;
@@ -352,13 +536,26 @@ void UpdateSimulation(float dt) {
         g_sub.o2 = max(0.0f, g_sub.o2 - dt * 0.05f);
     }
 
+    // Seawater Temp & Thermal Smoker Anomaly
+    float ambientTemp = 21.4f;
     if (g_sub.depth < 200.0f) {
-        g_sub.temp = 21.4f - (g_sub.depth / 200.0f) * 8.0f;
+        ambientTemp = 21.4f - (g_sub.depth / 200.0f) * 8.0f;
     } else if (g_sub.depth < 1000.0f) {
-        g_sub.temp = 13.4f - ((g_sub.depth - 200.0f) / 800.0f) * 9.0f;
+        ambientTemp = 13.4f - ((g_sub.depth - 200.0f) / 800.0f) * 9.0f;
     } else {
-        g_sub.temp = max(1.2f, 4.4f - ((g_sub.depth - 1000.0f) / 9000.0f) * 3.2f);
+        ambientTemp = max(1.2f, 4.4f - ((g_sub.depth - 1000.0f) / 9000.0f) * 3.2f);
     }
+
+    float thermalBoost = 0.0f;
+    if (g_sub.currentSectorIdx == 2) {
+        float dx = -5.5f - g_sub.posX;
+        float dy = -6.0f - g_sub.posY;
+        float distToVent = sqrtf(dx * dx + dy * dy);
+        if (distToVent < 1.0f) {
+            thermalBoost = (1.0f - distToVent) * 140.0f;
+        }
+    }
+    g_sub.temp = ambientTemp + thermalBoost;
 
     g_sub.sweepAngle += 0.035f;
     if (g_sub.sweepAngle >= 6.2831853f) g_sub.sweepAngle -= 6.2831853f;
@@ -440,6 +637,120 @@ void DrawCustomButton(HDC hdc, int id, int x, int y, int w, int h, const char* l
     int tx = x + (w - sz.cx) / 2;
     int ty = y + (h - sz.cy) / 2;
     TextOutA(hdc, tx, ty, label, (int)strlen(label));
+}
+
+void DrawNavMapChart(HDC hdc, int cx, int cy, int mapW, int mapH, const SubmarineTheme* th) {
+    RECT rcMap = { cx - mapW / 2, cy - mapH / 2, cx + mapW / 2, cy + mapH / 2 };
+    HBRUSH hBrMap = CreateSolidBrush(RGB(1, 8, 14));
+    FillRect(hdc, &rcMap, hBrMap);
+    DeleteObject(hBrMap);
+
+    float scale = 18.0f; // 1 km = 18 px
+
+    // Coordinate Grid Lines
+    HPEN hPenGrid = CreatePen(PS_SOLID, 1, RGB(19, 60, 90));
+    HPEN hPenOld = (HPEN)SelectObject(hdc, hPenGrid);
+
+    for (int gx = -15; gx <= 15; gx += 3) {
+        int sx = cx + (int)((gx - g_sub.posX) * scale);
+        if (sx >= rcMap.left && sx <= rcMap.right) {
+            MoveToEx(hdc, sx, rcMap.top, NULL);
+            LineTo(hdc, sx, rcMap.bottom);
+        }
+    }
+    for (int gy = -15; gy <= 15; gy += 3) {
+        int sy = cy + (int)((gy - g_sub.posY) * scale);
+        if (sy >= rcMap.top && sy <= rcMap.bottom) {
+            MoveToEx(hdc, rcMap.left, sy, NULL);
+            LineTo(hdc, rcMap.right, sy);
+        }
+    }
+
+    // Sector Region Circles
+    HPEN hPenSec = CreatePen(PS_SOLID, 1, RGB(0, 180, 220));
+    SelectObject(hdc, hPenSec);
+    HBRUSH hBrNull = (HBRUSH)GetStockObject(NULL_BRUSH);
+    SelectObject(hdc, hBrNull);
+
+    for (int i = 0; i < SECTOR_COUNT; i++) {
+        float sxCoord = (i == 0 ? 0.0f : (i == 1 ? 3.0f : (i == 2 ? -4.0f : 8.0f)));
+        float syCoord = (i == 0 ? 2.0f : (i == 1 ? -3.0f : (i == 2 ? -7.0f : 8.0f)));
+        int scx = cx + (int)((sxCoord - g_sub.posX) * scale);
+        int scy = cy + (int)((syCoord - g_sub.posY) * scale);
+        int rad = (int)(3.5f * scale);
+        Ellipse(hdc, scx - rad, scy - rad, scx + rad, scy + rad);
+        SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, scx - 40, scy - rad - 12, g_sectors[i].name, (int)strlen(g_sectors[i].name));
+    }
+    DeleteObject(hPenSec);
+
+    // Hydrothermal Hotspot Circle
+    int vx = cx + (int)((-5.5f - g_sub.posX) * scale);
+    int vy = cy + (int)((-6.0f - g_sub.posY) * scale);
+    HPEN hPenVent = CreatePen(PS_SOLID, 1, RGB(239, 68, 68));
+    SelectObject(hdc, hPenVent);
+    Ellipse(hdc, vx - 20, vy - 20, vx + 20, vy + 20);
+    SetTextColor(hdc, RGB(239, 68, 68));
+    TextOutA(hdc, vx - 50, vy + 22, "THERMAL SPOUT", 13);
+    DeleteObject(hPenVent);
+
+    // Breadcrumbs
+    if (g_sub.breadcrumbCount > 1) {
+        HPEN hPenTrail = CreatePen(PS_SOLID, 1, th->accentEmerald);
+        SelectObject(hdc, hPenTrail);
+        for (int i = 0; i < g_sub.breadcrumbCount; i++) {
+            int bx = cx + (int)((g_sub.breadcrumbsX[i] - g_sub.posX) * scale);
+            int by = cy + (int)((g_sub.breadcrumbsY[i] - g_sub.posY) * scale);
+            if (i == 0) MoveToEx(hdc, bx, by, NULL);
+            else LineTo(hdc, bx, by);
+        }
+        DeleteObject(hPenTrail);
+    }
+
+    // Waypoints
+    for (int i = 0; i < WAYPOINT_COUNT; i++) {
+        const NavWaypoint* wp = &g_waypoints[i];
+        int wx = cx + (int)((wp->x - g_sub.posX) * scale);
+        int wy = cy + (int)((wp->y - g_sub.posY) * scale);
+        int isTarget = (i == g_sub.activeWaypointIdx);
+
+        HBRUSH hBrWp = CreateSolidBrush(isTarget ? th->accentAmber : th->accentSonar);
+        SelectObject(hdc, hBrWp);
+        Ellipse(hdc, wx - 4, wy - 4, wx + 4, wy + 4);
+        DeleteObject(hBrWp);
+
+        char buf[64];
+        snprintf(buf, sizeof(buf), "WP-%d: %s (%.0fm)", i + 1, wp->name, wp->targetDepth);
+        SetTextColor(hdc, isTarget ? th->textBright : th->textDim);
+        TextOutA(hdc, wx + 6, wy - 6, buf, (int)strlen(buf));
+
+        if (isTarget) {
+            HPEN hPenCourse = CreatePen(PS_DOT, 1, th->accentAmber);
+            SelectObject(hdc, hPenCourse);
+            MoveToEx(hdc, cx, cy, NULL);
+            LineTo(hdc, wx, wy);
+            DeleteObject(hPenCourse);
+        }
+    }
+
+    // Vessel Center
+    HBRUSH hBrSub = CreateSolidBrush(th->accentEmerald);
+    SelectObject(hdc, hBrSub);
+    Ellipse(hdc, cx - 5, cy - 5, cx + 5, cy + 5);
+    DeleteObject(hBrSub);
+
+    float hRad = (g_sub.heading - 90.0f) * (3.14159265f / 180.0f);
+    HPEN hPenHeading = CreatePen(PS_SOLID, 2, th->accentEmerald);
+    SelectObject(hdc, hPenHeading);
+    MoveToEx(hdc, cx, cy, NULL);
+    LineTo(hdc, cx + (int)(cosf(hRad) * 22), cy + (int)(sinf(hRad) * 22));
+    DeleteObject(hPenHeading);
+
+    SetTextColor(hdc, th->textBright);
+    TextOutA(hdc, cx + 8, cy - 18, "DSV ABYSS (YOU)", 15);
+
+    SelectObject(hdc, hPenOld);
+    DeleteObject(hPenGrid);
 }
 
 void DrawUI(HDC hdc, RECT* rcClient) {
@@ -591,99 +902,116 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     TextOutA(hdc, gx, gy, buf, (int)strlen(buf));
     gy += 16;
     snprintf(buf, sizeof(buf), "SEAWATER TEMP: %.1f deg C", g_sub.temp);
-    SetTextColor(hdc, th->accentSonar);
+    SetTextColor(hdc, g_sub.temp > 50.0f ? th->accentRed : (g_sub.temp > 25.0f ? th->accentAmber : th->accentSonar));
     TextOutA(hdc, gx, gy, buf, (int)strlen(buf));
 
+    // Center Stage Panels
     int sonarH = (panelH * 60) / 100;
     int logH = panelH - sonarH - 8;
     int logY = panelY + sonarH + 8;
 
-    DrawPanelBox(hdc, centerX, panelY, centerW, sonarH, "ACTIVE SONAR & ACOUSTIC SWEEP", "360 deg SCAN", th->accentEmerald, th);
+    char secTag[64];
+    snprintf(secTag, sizeof(secTag), "SECTOR: %s | SURVEY: %d PTS", g_sectors[g_sub.currentSectorIdx].name, g_sub.surveyPoints);
+    DrawPanelBox(hdc, centerX, panelY, centerW, sonarH, "DEEP OCEAN & TRENCH EXPLORATION", secTag, th->accentEmerald, th);
 
-    int sonarContentY = panelY + 28;
-    int sonarContentH = sonarH - 32;
+    // View switch buttons inside center panel header
+    DrawCustomButton(hdc, ID_BTN_VIEW_SONAR, centerX + 8, panelY + 28, 120, 20, "SONAR RADAR", g_sub.viewMode == 0, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_VIEW_NAVMAP, centerX + 132, panelY + 28, 140, 20, "TRENCH NAV CHART", g_sub.viewMode == 1, th->accentSonar, th);
+
+    int sonarContentY = panelY + 52;
+    int sonarContentH = sonarH - 58;
     int scx = centerX + centerW / 2;
     int scy = sonarContentY + sonarContentH / 2;
-    int sRadius = min(centerW, sonarContentH) / 2 - 16;
+    int sRadius = min(centerW, sonarContentH) / 2 - 12;
 
-    RECT rcRadar = { scx - sRadius - 10, scy - sRadius - 10, scx + sRadius + 10, scy + sRadius + 10 };
-    HBRUSH hBrRadar = CreateSolidBrush(th->radarBg);
-    FillRect(hdc, &rcRadar, hBrRadar);
-    DeleteObject(hBrRadar);
+    if (g_sub.viewMode == 0) {
+        RECT rcRadar = { scx - sRadius - 10, scy - sRadius - 10, scx + sRadius + 10, scy + sRadius + 10 };
+        HBRUSH hBrRadar = CreateSolidBrush(th->radarBg);
+        FillRect(hdc, &rcRadar, hBrRadar);
+        DeleteObject(hBrRadar);
 
-    HPEN hPenRing = CreatePen(PS_SOLID, 1, th->radarRing);
-    HPEN hPenOld = (HPEN)SelectObject(hdc, hPenRing);
-    HBRUSH hBrNull = (HBRUSH)GetStockObject(NULL_BRUSH);
-    HBRUSH hBrOld = (HBRUSH)SelectObject(hdc, hBrNull);
+        HPEN hPenRing = CreatePen(PS_SOLID, 1, th->radarRing);
+        HPEN hPenOld = (HPEN)SelectObject(hdc, hPenRing);
+        HBRUSH hBrNull = (HBRUSH)GetStockObject(NULL_BRUSH);
+        HBRUSH hBrOld = (HBRUSH)SelectObject(hdc, hBrNull);
 
-    for (int r = 1; r <= 4; r++) {
-        int curR = (sRadius * r) / 4;
-        Ellipse(hdc, scx - curR, scy - curR, scx + curR, scy + curR);
-    }
-    MoveToEx(hdc, scx - sRadius, scy, NULL);
-    LineTo(hdc, scx + sRadius, scy);
-    MoveToEx(hdc, scx, scy - sRadius, NULL);
-    LineTo(hdc, scx, scy + sRadius);
-
-    HPEN hPenSweep = CreatePen(PS_SOLID, 2, th->accentSonar);
-    SelectObject(hdc, hPenSweep);
-    int sx = scx + (int)(cosf(g_sub.sweepAngle) * sRadius);
-    int sy = scy + (int)(sinf(g_sub.sweepAngle) * sRadius);
-    MoveToEx(hdc, scx, scy, NULL);
-    LineTo(hdc, sx, sy);
-    DeleteObject(hPenSweep);
-
-    if (g_sub.isPinging && g_sub.pingRadius > 0.0f) {
-        HPEN hPenPing = CreatePen(PS_SOLID, 2, th->accentSonar);
-        SelectObject(hdc, hPenPing);
-        int pr = (int)min((float)sRadius, g_sub.pingRadius);
-        Ellipse(hdc, scx - pr, scy - pr, scx + pr, scy + pr);
-        DeleteObject(hPenPing);
-    }
-
-    HBRUSH hBrSub = CreateSolidBrush(th->accentEmerald);
-    SelectObject(hdc, hBrSub);
-    Ellipse(hdc, scx - 4, scy - 4, scx + 4, scy + 4);
-    DeleteObject(hBrSub);
-
-    float hRad = (g_sub.heading - 90.0f) * (3.14159265f / 180.0f);
-    HPEN hPenHeading = CreatePen(PS_SOLID, 2, th->accentEmerald);
-    SelectObject(hdc, hPenHeading);
-    MoveToEx(hdc, scx, scy, NULL);
-    LineTo(hdc, scx + (int)(cosf(hRad) * 16), scy + (int)(sinf(hRad) * 16));
-    DeleteObject(hPenHeading);
-
-    SelectObject(hdc, g_hFontSmall);
-    for (int i = 0; i < g_sub.contactCount; i++) {
-        SonarContact* c = &g_sub.contacts[i];
-        int cx = scx + (int)(cosf(c->angle) * (sRadius * c->dist));
-        int cy = scy + (int)(sinf(c->angle) * (sRadius * c->dist));
-
-        float angleDiff = fabsf(g_sub.sweepAngle - c->angle);
-        int isSwept = (angleDiff < 0.25f) || (g_sub.isPinging && fabsf(g_sub.pingRadius - sRadius * c->dist) < 20.0f);
-
-        HBRUSH hBrContact = CreateSolidBrush(isSwept ? th->accentSonar : th->radarRing);
-        SelectObject(hdc, hBrContact);
-        Ellipse(hdc, cx - 3, cy - 3, cx + 3, cy + 3);
-        DeleteObject(hBrContact);
-
-        if (isSwept) {
-            SetTextColor(hdc, th->textBright);
-            TextOutA(hdc, cx + 6, cy - 6, c->label, (int)strlen(c->label));
-            snprintf(buf, sizeof(buf), "%.0fm", c->dist * 2000.0f);
-            SetTextColor(hdc, th->textDim);
-            TextOutA(hdc, cx + 6, cy + 4, buf, (int)strlen(buf));
+        for (int r = 1; r <= 4; r++) {
+            int curR = (sRadius * r) / 4;
+            Ellipse(hdc, scx - curR, scy - curR, scx + curR, scy + curR);
         }
-    }
+        MoveToEx(hdc, scx - sRadius, scy, NULL);
+        LineTo(hdc, scx + sRadius, scy);
+        MoveToEx(hdc, scx, scy - sRadius, NULL);
+        LineTo(hdc, scx, scy + sRadius);
 
-    SelectObject(hdc, hPenOld);
-    SelectObject(hdc, hBrOld);
-    DeleteObject(hPenRing);
+        HPEN hPenSweep = CreatePen(PS_SOLID, 2, th->accentSonar);
+        SelectObject(hdc, hPenSweep);
+        int sx = scx + (int)(cosf(g_sub.sweepAngle) * sRadius);
+        int sy = scy + (int)(sinf(g_sub.sweepAngle) * sRadius);
+        MoveToEx(hdc, scx, scy, NULL);
+        LineTo(hdc, sx, sy);
+        DeleteObject(hPenSweep);
+
+        if (g_sub.isPinging && g_sub.pingRadius > 0.0f) {
+            HPEN hPenPing = CreatePen(PS_SOLID, 2, th->accentSonar);
+            SelectObject(hdc, hPenPing);
+            int pr = (int)min((float)sRadius, g_sub.pingRadius);
+            Ellipse(hdc, scx - pr, scy - pr, scx + pr, scy + pr);
+            DeleteObject(hPenPing);
+        }
+
+        HBRUSH hBrSub = CreateSolidBrush(th->accentEmerald);
+        SelectObject(hdc, hBrSub);
+        Ellipse(hdc, scx - 4, scy - 4, scx + 4, scy + 4);
+        DeleteObject(hBrSub);
+
+        float hRad = (g_sub.heading - 90.0f) * (3.14159265f / 180.0f);
+        HPEN hPenHeading = CreatePen(PS_SOLID, 2, th->accentEmerald);
+        SelectObject(hdc, hPenHeading);
+        MoveToEx(hdc, scx, scy, NULL);
+        LineTo(hdc, scx + (int)(cosf(hRad) * 16), scy + (int)(sinf(hRad) * 16));
+        DeleteObject(hPenHeading);
+
+        SelectObject(hdc, g_hFontSmall);
+        for (int i = 0; i < g_sub.contactCount; i++) {
+            SonarContact* c = &g_sub.contacts[i];
+            int cx = scx + (int)(cosf(c->angle) * (sRadius * c->dist));
+            int cy = scy + (int)(sinf(c->angle) * (sRadius * c->dist));
+
+            float angleDiff = fabsf(g_sub.sweepAngle - c->angle);
+            int isSwept = (angleDiff < 0.25f) || (g_sub.isPinging && fabsf(g_sub.pingRadius - sRadius * c->dist) < 20.0f);
+
+            HBRUSH hBrContact = CreateSolidBrush(isSwept ? th->accentSonar : th->radarRing);
+            SelectObject(hdc, hBrContact);
+            Ellipse(hdc, cx - 3, cy - 3, cx + 3, cy + 3);
+            DeleteObject(hBrContact);
+
+            if (isSwept) {
+                SetTextColor(hdc, th->textBright);
+                TextOutA(hdc, cx + 6, cy - 6, c->label, (int)strlen(c->label));
+                snprintf(buf, sizeof(buf), "%.0fm", c->dist * 2000.0f);
+                SetTextColor(hdc, th->textDim);
+                TextOutA(hdc, cx + 6, cy + 4, buf, (int)strlen(buf));
+            }
+        }
+
+        SelectObject(hdc, hPenOld);
+        SelectObject(hdc, hBrOld);
+        DeleteObject(hPenRing);
+    } else {
+        DrawNavMapChart(hdc, scx, scy, centerW - 20, sonarContentH - 8, th);
+    }
 
     SelectObject(hdc, g_hFontSmall);
     SetTextColor(hdc, th->textPrimary);
-    snprintf(buf, sizeof(buf), "HEADING: %03.0f deg  SPEED: %.1f KTS  SEABED: %.0f M", g_sub.heading, g_sub.speed, max(0.0f, 11000.0f - g_sub.depth));
-    TextOutA(hdc, centerX + 10, sonarContentY + 6, buf, (int)strlen(buf));
+    const NavWaypoint* curWp = &g_waypoints[g_sub.activeWaypointIdx];
+    float wdx = curWp->x - g_sub.posX;
+    float wdy = curWp->y - g_sub.posY;
+    float wDist = sqrtf(wdx * wdx + wdy * wdy);
+    snprintf(buf, sizeof(buf), "COORDS: X:%+.2fkm Y:%+.2fkm | SEABED: %.0fM (DIST: %.0fm) | WP-%d: %s (%.2fkm)",
+             g_sub.posX, g_sub.posY, g_sub.seabedElevation, max(0.0f, g_sub.seabedElevation - g_sub.depth),
+             g_sub.activeWaypointIdx + 1, curWp->name, wDist);
+    TextOutA(hdc, centerX + 10, sonarH + 16, buf, (int)strlen(buf));
 
     DrawPanelBox(hdc, centerX, logY, centerW, logH, "SYSTEM LOG & TELEMETRY STREAM", "LIVE", th->accentSonar, th);
     int logLineY = logY + 28;
@@ -697,7 +1025,7 @@ void DrawUI(HDC hdc, RECT* rcClient) {
         if (logLineY > logY + logH - 16) break;
     }
 
-    DrawPanelBox(hdc, rightX, panelY, rightW, panelH, "HELM & SUBSYSTEM COMMAND", "CMD-CTRL", th->accentSonar, th);
+    DrawPanelBox(hdc, rightX, panelY, rightW, panelH, "HELM & NAVIGATION", "CMD-CTRL", th->accentSonar, th);
 
     int cy = panelY + 30;
     int bw = (rightW - 24) / 2;
@@ -705,73 +1033,84 @@ void DrawUI(HDC hdc, RECT* rcClient) {
 
     SelectObject(hdc, g_hFontSmall);
     SetTextColor(hdc, th->textDim);
+    TextOutA(hdc, bx, cy, "OCEAN NAVIGATION & WAYPOINTS", 28);
+    cy += 14;
+
+    snprintf(buf, sizeof(buf), "WAYPOINT [WP-%d]: %.10s", g_sub.activeWaypointIdx + 1, g_waypoints[g_sub.activeWaypointIdx].name);
+    DrawCustomButton(hdc, ID_BTN_NEXT_WAYPOINT, bx, cy, rightW - 18, 22, buf, 0, th->accentSonar, th);
+    cy += 26;
+
+    DrawCustomButton(hdc, ID_BTN_AUTOPILOT, bx, cy, bw, 22, g_sub.autopilot ? "AUTOPILOT: ON" : "AUTOPILOT: OFF", g_sub.autopilot, th->accentEmerald, th);
+    DrawCustomButton(hdc, ID_BTN_SURVEY_SECTOR, bx + bw + 6, cy, bw, 22, "SURVEY REGION", 0, th->textPrimary, th);
+    cy += 28;
+
+    SetTextColor(hdc, th->textDim);
     TextOutA(hdc, bx, cy, "BALLAST DIVE ENGINE", 19);
     cy += 14;
 
-    DrawCustomButton(hdc, ID_BTN_FLOOD_BALLAST, bx, cy, bw, 24, "FLOOD BALLAST (+)", 0, th->textPrimary, th);
-    DrawCustomButton(hdc, ID_BTN_BLOW_BALLAST, bx + bw + 6, cy, bw, 24, "BLOW BALLAST (-)", 0, th->accentEmerald, th);
-    cy += 28;
+    DrawCustomButton(hdc, ID_BTN_FLOOD_BALLAST, bx, cy, bw, 22, "FLOOD BALLAST (+)", 0, th->textPrimary, th);
+    DrawCustomButton(hdc, ID_BTN_BLOW_BALLAST, bx + bw + 6, cy, bw, 22, "BLOW BALLAST (-)", 0, th->accentEmerald, th);
+    cy += 26;
 
-    DrawCustomButton(hdc, ID_BTN_TRIM_BOW, bx, cy, bw, 24, "TRIM BOW (-1 deg)", 0, th->textPrimary, th);
-    DrawCustomButton(hdc, ID_BTN_TRIM_STERN, bx + bw + 6, cy, bw, 24, "TRIM STERN (+1 deg)", 0, th->textPrimary, th);
-    cy += 28;
+    DrawCustomButton(hdc, ID_BTN_TRIM_BOW, bx, cy, bw, 22, "TRIM BOW (-1 deg)", 0, th->textPrimary, th);
+    DrawCustomButton(hdc, ID_BTN_TRIM_STERN, bx + bw + 6, cy, bw, 22, "TRIM STERN (+1 deg)", 0, th->textPrimary, th);
+    cy += 26;
 
-    DrawCustomButton(hdc, ID_BTN_SONAR_PING, bx, cy, rightW - 18, 26, "ACOUSTIC SONAR PING", g_sub.isPinging, th->accentSonar, th);
-    cy += 34;
+    DrawCustomButton(hdc, ID_BTN_SONAR_PING, bx, cy, rightW - 18, 24, "ACOUSTIC SONAR PING", g_sub.isPinging, th->accentSonar, th);
+    cy += 30;
 
     SetTextColor(hdc, th->textDim);
     TextOutA(hdc, bx, cy, "PROPULSION THROTTLE", 19);
     cy += 14;
 
     int bw3 = (rightW - 28) / 3;
-    DrawCustomButton(hdc, ID_BTN_THROTTLE_REV, bx, cy, bw3, 22, "REV", g_sub.throttleMode == 0, th->accentAmber, th);
-    DrawCustomButton(hdc, ID_BTN_THROTTLE_STOP, bx + bw3 + 4, cy, bw3, 22, "STOP", g_sub.throttleMode == 1, th->accentSonar, th);
-    DrawCustomButton(hdc, ID_BTN_THROTTLE_HALF, bx + (bw3 + 4) * 2, cy, bw3, 22, "HALF", g_sub.throttleMode == 2, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_THROTTLE_REV, bx, cy, bw3, 20, "REV", g_sub.throttleMode == 0, th->accentAmber, th);
+    DrawCustomButton(hdc, ID_BTN_THROTTLE_STOP, bx + bw3 + 4, cy, bw3, 20, "STOP", g_sub.throttleMode == 1, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_THROTTLE_HALF, bx + (bw3 + 4) * 2, cy, bw3, 20, "HALF", g_sub.throttleMode == 2, th->accentSonar, th);
+    cy += 24;
+
+    DrawCustomButton(hdc, ID_BTN_THROTTLE_FLANK, bx, cy, rightW - 18, 22, "FLANK SPEED (FULL AHEAD)", g_sub.throttleMode == 3, th->accentAmber, th);
     cy += 26;
 
-    DrawCustomButton(hdc, ID_BTN_THROTTLE_FLANK, bx, cy, rightW - 18, 24, "FLANK SPEED (FULL AHEAD)", g_sub.throttleMode == 3, th->accentAmber, th);
+    DrawCustomButton(hdc, ID_BTN_RUDDER_PORT, bx, cy, bw, 22, "< RUDDER PORT", 0, th->textPrimary, th);
+    DrawCustomButton(hdc, ID_BTN_RUDDER_STBD, bx + bw + 6, cy, bw, 22, "RUDDER STBD >", 0, th->textPrimary, th);
     cy += 28;
-
-    DrawCustomButton(hdc, ID_BTN_RUDDER_PORT, bx, cy, bw, 24, "< RUDDER PORT", 0, th->textPrimary, th);
-    DrawCustomButton(hdc, ID_BTN_RUDDER_STBD, bx + bw + 6, cy, bw, 24, "RUDDER STBD >", 0, th->textPrimary, th);
-    cy += 34;
 
     SetTextColor(hdc, th->textDim);
     TextOutA(hdc, bx, cy, "SUBSYSTEM MANAGEMENT", 20);
     cy += 14;
 
     snprintf(buf, sizeof(buf), "SEARCHLIGHTS: %s", g_sub.searchlights ? "ENGAGED [HIGH LUX]" : "OFF");
-    DrawCustomButton(hdc, ID_BTN_SEARCHLIGHTS, bx, cy, rightW - 18, 22, buf, g_sub.searchlights, th->accentSonar, th);
-    cy += 26;
+    DrawCustomButton(hdc, ID_BTN_SEARCHLIGHTS, bx, cy, rightW - 18, 20, buf, g_sub.searchlights, th->accentSonar, th);
+    cy += 24;
 
     snprintf(buf, sizeof(buf), "O2 SCRUBBER: %s", g_sub.scrubberAuto ? "AUTO [ONLINE]" : "MANUAL [STANDBY]");
-    DrawCustomButton(hdc, ID_BTN_SCRUBBER, bx, cy, rightW - 18, 22, buf, g_sub.scrubberAuto, th->accentEmerald, th);
-    cy += 26;
+    DrawCustomButton(hdc, ID_BTN_SCRUBBER, bx, cy, rightW - 18, 20, buf, g_sub.scrubberAuto, th->accentEmerald, th);
+    cy += 24;
 
     snprintf(buf, sizeof(buf), "PURGE EMERGENCY O2 (%d LEFT)", g_sub.o2PurgeCount);
-    DrawCustomButton(hdc, ID_BTN_O2_PURGE, bx, cy, rightW - 18, 22, buf, 0, th->textPrimary, th);
-    cy += 26;
+    DrawCustomButton(hdc, ID_BTN_O2_PURGE, bx, cy, rightW - 18, 20, buf, 0, th->textPrimary, th);
+    cy += 24;
 
     snprintf(buf, sizeof(buf), "BILGE PUMPS: %s", g_sub.bilgePumpActive ? "RUNNING [MAX]" : "AUTO (STANDBY)");
-    DrawCustomButton(hdc, ID_BTN_BILGE_PUMP, bx, cy, rightW - 18, 22, buf, g_sub.bilgePumpActive, th->accentAmber, th);
-    cy += 26;
+    DrawCustomButton(hdc, ID_BTN_BILGE_PUMP, bx, cy, rightW - 18, 20, buf, g_sub.bilgePumpActive, th->accentAmber, th);
+    cy += 24;
 
     snprintf(buf, sizeof(buf), "ECO LOW-POWER: %s", g_sub.lowPowerMode ? "ACTIVE" : "OFF");
-    DrawCustomButton(hdc, ID_BTN_LOW_POWER, bx, cy, rightW - 18, 22, buf, g_sub.lowPowerMode, th->accentEmerald, th);
-    cy += 32;
+    DrawCustomButton(hdc, ID_BTN_LOW_POWER, bx, cy, rightW - 18, 20, buf, g_sub.lowPowerMode, th->accentEmerald, th);
+    cy += 28;
 
-    RECT rcDirect = { bx, cy, rightX + rightW - 10, panelY + panelH - 10 };
+    RECT rcDirect = { bx, cy, rightX + rightW - 10, panelY + panelH - 8 };
     HBRUSH hBrDirect = CreateSolidBrush(th->bgDeep);
     FillRect(hdc, &rcDirect, hBrDirect);
     FrameRect(hdc, &rcDirect, hBrBrd);
     DeleteObject(hBrDirect);
     SetTextColor(hdc, th->textDim);
-    TextOutA(hdc, bx + 6, cy + 4, "CURRENT DIRECTIVE:", 18);
+    TextOutA(hdc, bx + 6, cy + 2, "CURRENT DIRECTIVE:", 18);
     SetTextColor(hdc, th->textBright);
-    TextOutA(hdc, bx + 6, cy + 20, "- Submerge to Mesopelagic (200m+)", 33);
-    TextOutA(hdc, bx + 6, cy + 34, "- Conduct active sonar ping sweep", 33);
-    TextOutA(hdc, bx + 6, cy + 48, "- Balance ballast for neutral trim", 34);
-    TextOutA(hdc, bx + 6, cy + 62, "- Monitor O2 & hydrostatic stress", 33);
+    TextOutA(hdc, bx + 6, cy + 16, "- Steer Continental Shelf & Vents", 33);
+    TextOutA(hdc, bx + 6, cy + 30, "- Dive into Hadal Trench (4000m+)", 33);
+    TextOutA(hdc, bx + 6, cy + 44, "- Survey landmarks for research", 31);
 
     // Deep-water CRT scanlines raster overlay
     if (g_sub.scanlinesEnabled) {
@@ -790,7 +1129,10 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
     int margin = 8;
     int panelY = 44;
     int panelH = clientH - panelY - margin;
+    int leftW = 280;
     int rightW = 290;
+    int centerW = clientW - leftW - rightW - (margin * 4);
+    int centerX = leftW + (margin * 2);
     int rightX = clientW - rightW - margin;
 
     if (my >= 6 && my <= 30) {
@@ -800,56 +1142,71 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
         if (mx >= clientW - 142 && mx <= clientW - 12) return ID_BTN_EMERGENCY_BLOW;
     }
 
+    // View toggles in center panel
+    if (my >= panelY + 28 && my <= panelY + 48) {
+        if (mx >= centerX + 8 && mx <= centerX + 128) return ID_BTN_VIEW_SONAR;
+        if (mx >= centerX + 132 && mx <= centerX + 272) return ID_BTN_VIEW_NAVMAP;
+    }
+
     int cy = panelY + 30;
     int bw = (rightW - 24) / 2;
     int bx = rightX + 8;
     cy += 14;
 
-    if (my >= cy && my <= cy + 24) {
+    if (my >= cy && my <= cy + 22 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_NEXT_WAYPOINT;
+    cy += 26;
+
+    if (my >= cy && my <= cy + 22) {
+        if (mx >= bx && mx <= bx + bw) return ID_BTN_AUTOPILOT;
+        if (mx >= bx + bw + 6 && mx <= bx + bw * 2 + 6) return ID_BTN_SURVEY_SECTOR;
+    }
+    cy += 28 + 14;
+
+    if (my >= cy && my <= cy + 22) {
         if (mx >= bx && mx <= bx + bw) return ID_BTN_FLOOD_BALLAST;
         if (mx >= bx + bw + 6 && mx <= bx + bw * 2 + 6) return ID_BTN_BLOW_BALLAST;
     }
-    cy += 28;
+    cy += 26;
 
-    if (my >= cy && my <= cy + 24) {
+    if (my >= cy && my <= cy + 22) {
         if (mx >= bx && mx <= bx + bw) return ID_BTN_TRIM_BOW;
         if (mx >= bx + bw + 6 && mx <= bx + bw * 2 + 6) return ID_BTN_TRIM_STERN;
-    }
-    cy += 28;
-
-    if (my >= cy && my <= cy + 26 && mx >= bx && mx <= bx + rightW - 18) {
-        return ID_BTN_SONAR_PING;
-    }
-    cy += 34 + 14;
-
-    int bw3 = (rightW - 28) / 3;
-    if (my >= cy && my <= cy + 22) {
-        if (mx >= bx && mx <= bx + bw3) return ID_BTN_THROTTLE_REV;
-        if (mx >= bx + bw3 + 4 && mx <= bx + bw3 * 2 + 4) return ID_BTN_THROTTLE_STOP;
-        if (mx >= bx + (bw3 + 4) * 2 && mx <= bx + (bw3 + 4) * 3) return ID_BTN_THROTTLE_HALF;
     }
     cy += 26;
 
     if (my >= cy && my <= cy + 24 && mx >= bx && mx <= bx + rightW - 18) {
+        return ID_BTN_SONAR_PING;
+    }
+    cy += 30 + 14;
+
+    int bw3 = (rightW - 28) / 3;
+    if (my >= cy && my <= cy + 20) {
+        if (mx >= bx && mx <= bx + bw3) return ID_BTN_THROTTLE_REV;
+        if (mx >= bx + bw3 + 4 && mx <= bx + bw3 * 2 + 4) return ID_BTN_THROTTLE_STOP;
+        if (mx >= bx + (bw3 + 4) * 2 && mx <= bx + (bw3 + 4) * 3) return ID_BTN_THROTTLE_HALF;
+    }
+    cy += 24;
+
+    if (my >= cy && my <= cy + 22 && mx >= bx && mx <= bx + rightW - 18) {
         return ID_BTN_THROTTLE_FLANK;
     }
-    cy += 28;
+    cy += 26;
 
-    if (my >= cy && my <= cy + 24) {
+    if (my >= cy && my <= cy + 22) {
         if (mx >= bx && mx <= bx + bw) return ID_BTN_RUDDER_PORT;
         if (mx >= bx + bw + 6 && mx <= bx + bw * 2 + 6) return ID_BTN_RUDDER_STBD;
     }
-    cy += 34 + 14;
+    cy += 28 + 14;
 
-    if (my >= cy && my <= cy + 22 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_SEARCHLIGHTS;
-    cy += 26;
-    if (my >= cy && my <= cy + 22 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_SCRUBBER;
-    cy += 26;
-    if (my >= cy && my <= cy + 22 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_O2_PURGE;
-    cy += 26;
-    if (my >= cy && my <= cy + 22 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_BILGE_PUMP;
-    cy += 26;
-    if (my >= cy && my <= cy + 22 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_LOW_POWER;
+    if (my >= cy && my <= cy + 20 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_SEARCHLIGHTS;
+    cy += 24;
+    if (my >= cy && my <= cy + 20 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_SCRUBBER;
+    cy += 24;
+    if (my >= cy && my <= cy + 20 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_O2_PURGE;
+    cy += 24;
+    if (my >= cy && my <= cy + 20 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_BILGE_PUMP;
+    cy += 24;
+    if (my >= cy && my <= cy + 20 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_LOW_POWER;
 
     return 0;
 }
@@ -873,6 +1230,63 @@ void HandleCommand(int cmdId) {
             PlaySoundAsync(g_sub.scanlinesEnabled ? 520 : 320, 80);
             snprintf(msg, sizeof(msg), "Deep-water CRT scanline raster %s.", g_sub.scanlinesEnabled ? "ENGAGED" : "BYPASSED");
             AddLog(msg, th->textDim);
+            break;
+        }
+
+        case ID_BTN_VIEW_SONAR:
+            g_sub.viewMode = 0;
+            PlaySoundAsync(450, 60);
+            break;
+
+        case ID_BTN_VIEW_NAVMAP:
+            g_sub.viewMode = 1;
+            PlaySoundAsync(520, 60);
+            break;
+
+        case ID_BTN_NEXT_WAYPOINT: {
+            g_sub.activeWaypointIdx = (g_sub.activeWaypointIdx + 1) % WAYPOINT_COUNT;
+            PlaySoundAsync(500, 80);
+            const NavWaypoint* wp = &g_waypoints[g_sub.activeWaypointIdx];
+            snprintf(msg, sizeof(msg), "Nav locked to [WP-%d]: %s (Target Depth: %.0fm)", g_sub.activeWaypointIdx + 1, wp->name, wp->targetDepth);
+            AddLog(msg, th->accentEmerald);
+            break;
+        }
+
+        case ID_BTN_AUTOPILOT:
+            g_sub.autopilot = !g_sub.autopilot;
+            PlaySoundAsync(g_sub.autopilot ? 600 : 350, 100);
+            snprintf(msg, sizeof(msg), "Submersible autopilot %s.", g_sub.autopilot ? "ENGAGED" : "DISENGAGED");
+            AddLog(msg, th->textPrimary);
+            break;
+
+        case ID_BTN_SURVEY_SECTOR: {
+            SectorInfo* sec = &g_sectors[g_sub.currentSectorIdx];
+            int found = 0;
+            for (int i = 0; i < 2; i++) {
+                Landmark* lm = &sec->landmarks[i];
+                float dx = lm->x - g_sub.posX;
+                float dy = lm->y - g_sub.posY;
+                float distKm = sqrtf(dx * dx + dy * dy);
+                float depthDiff = fabsf(g_sub.depth - lm->depth);
+
+                if (distKm <= 1.5f && depthDiff <= 300.0f) {
+                    if (!lm->discovered) {
+                        lm->discovered = 1;
+                        g_sub.surveyPoints += lm->pts;
+                        found = 1;
+                        PlaySoundAsync(780, 200);
+                        snprintf(msg, sizeof(msg), "DISCOVERY LOGGED: [%s]! %s (+%d Pts)", lm->name, lm->info, lm->pts);
+                        AddLog(msg, th->accentEmerald);
+                    } else {
+                        snprintf(msg, sizeof(msg), "Landmark in sensor range: [%s] (%.0fm)", lm->name, distKm * 1000.0f);
+                        AddLog(msg, th->textDim);
+                    }
+                }
+            }
+            if (!found) {
+                PlaySoundAsync(320, 80);
+                AddLog("Survey complete. No uncharted features within 1.5km. Cruise towards waypoints.", th->textDim);
+            }
             break;
         }
 
