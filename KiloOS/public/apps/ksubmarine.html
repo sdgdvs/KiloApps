@@ -717,6 +717,49 @@
         .type-flora { background: rgba(52, 211, 153, 0.2); color: #34d399; border: 1px solid #34d399; }
         .type-trench { background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid #fbbf24; }
         .type-leviathan { background: rgba(239, 68, 68, 0.25); color: #f87171; border: 1px solid #ef4444; font-weight: 900; }
+        .type-salvage { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; font-weight: bold; }
+
+        /* Cargo & Salvage Grid */
+        .cargo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 8px;
+        }
+
+        .cargo-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .salvage-nodes-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            overflow-y: auto;
+            max-height: 180px;
+        }
+
+        .salvage-node-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-panel);
+            border-radius: 3px;
+            padding: 6px;
+            font-size: 9px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .salvage-node-card.harvested {
+            opacity: 0.5;
+            border-style: dotted;
+        }
     </style>
 </head>
 <body class="theme-abyss">
@@ -838,6 +881,21 @@
                     </div>
                 </div>
 
+                <!-- CARGO HOLD & PAYLOAD (PHASE 8) -->
+                <div class="gauge-group">
+                    <div class="gauge-label-row">
+                        <span>CARGO HOLD PAYLOAD</span>
+                        <span class="gauge-value" id="cargoVal">0.0 / 500 KG</span>
+                    </div>
+                    <div class="gauge-bar-track">
+                        <div class="gauge-bar-fill" id="cargoBar" style="width: 0%; background: var(--accent-amber);"></div>
+                    </div>
+                    <div class="gauge-subtext">
+                        <span>EST. VALUE: <b id="cargoValueVal">0 PTS</b></span>
+                        <span id="clawStatusVal">CLAW: STOWED</span>
+                    </div>
+                </div>
+
                 <!-- TRIMS & ATTITUDE -->
                 <div class="gauge-group">
                     <div class="micro-meter">
@@ -859,6 +917,7 @@
                     <button id="viewSonarBtn" class="active-toggle">📡 ACTIVE SONAR</button>
                     <button id="viewNavMapBtn">🗺️ TRENCH NAV</button>
                     <button id="viewCodexBtn">🧬 FAUNA CODEX</button>
+                    <button id="viewCargoBtn">💎 CARGO & SALVAGE</button>
                     <button id="viewEngineeringBtn">⚙️ ENGINEERING BAY</button>
                 </div>
                 <div style="font-size: 10px; color: var(--text-dim); display: flex; gap: 12px; align-items: center;">
@@ -921,6 +980,36 @@
                     </div>
                     <div class="codex-grid" id="codexGrid">
                         <!-- Dynamic Fauna Cards generated via JS -->
+                    </div>
+                </div>
+
+                <!-- CARGO HOLD & RESOURCE SALVAGE OVERLAY (PHASE 8) -->
+                <div class="overlay-view" id="cargoView">
+                    <div class="overlay-header-row">
+                        <div>
+                            <span style="font-weight: bold; color: var(--text-bright); font-size: 11px;">🗜️ SUBMERSIBLE CARGO HOLD & RESOURCE SALVAGE</span>
+                            <span style="font-size: 10px; color: var(--text-dim); margin-left: 8px;" id="cargoCapacityText">HOLD: 0 / 500 KG (0%) | TOTAL VALUE: 0 PTS</span>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button id="btnOffloadCargo" style="font-size: 10px; border-color: var(--accent-emerald); color: var(--accent-emerald); font-weight: bold;">💎 TRANSSHIP TO BUOY (+0 PTS)</button>
+                            <div class="eng-credits-badge" id="cargoCreditsDisplay">RESEARCH CREDITS: 150 PTS</div>
+                        </div>
+                    </div>
+
+                    <!-- Resource Categories Grid -->
+                    <div class="cargo-grid" id="cargoGrid">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+
+                    <!-- Salvage Nodes & Sunken Wrecks Map List -->
+                    <div style="margin-top: 6px; border-top: 1px solid var(--border-panel); padding-top: 6px;">
+                        <div style="font-size: 10px; font-weight: bold; color: var(--text-bright); margin-bottom: 4px; display: flex; justify-content: space-between;">
+                            <span>🗺️ KNOWN ABYSSAL SALVAGE SITES & DERELICT WRECKS</span>
+                            <span style="font-size: 9px; color: var(--text-dim);">Navigate near site (<150m) & Deploy Claw to harvest</span>
+                        </div>
+                        <div class="salvage-nodes-list" id="salvageNodesList">
+                            <!-- Populated dynamically via JS -->
+                        </div>
                     </div>
                 </div>
 
@@ -1093,14 +1182,26 @@
                     </div>
                 </div>
 
+                <!-- DREDGING CLAW & SALVAGE HARVESTER (PHASE 8) -->
+                <div class="gauge-group">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 10px; color: var(--text-dim); font-weight: bold;">🗜️ DREDGING CLAW & SALVAGE</span>
+                        <span style="font-size: 9px; color: var(--accent-emerald);" id="cargoHoldBadge">0 / 500 KG</span>
+                    </div>
+                    <div class="controls-grid">
+                        <button class="btn-large" id="btnToggleClaw" style="grid-column: span 2;">🗜️ DREDGING CLAW: RETRACTED</button>
+                        <button class="btn-large" id="btnDredgeSeabed" style="grid-column: span 2; border-color: var(--accent-amber); color: var(--accent-amber); font-weight: bold;">⛏️ HARVEST SALVAGE / DREDGE</button>
+                    </div>
+                </div>
+
                 <!-- QUICK MISSION OBJECTIVE -->
                 <div class="gauge-group">
                     <span style="font-size: 10px; color: var(--text-dim); font-weight: bold;">EXPEDITION DIRECTIVES</span>
                     <div style="background: var(--bg-deep); border: 1px solid var(--border-panel); padding: 6px; border-radius: 3px; font-size: 10px; line-height: 1.4;">
                         <div>• Detect & Scan <b>Abyssal Leviathans</b> & <b>Squids</b></div>
-                        <div>• Catalog <b>Hydrothermal Flora</b> & <b>Rift Faults</b></div>
-                        <div>• Dive into <b>Mariana Hadal Trench</b> (4000m+)</div>
-                        <div>• Complete <b>12/12 Fauna Codex Discoveries</b></div>
+                        <div>• Harvest <b>Manganese Nodules</b> & <b>Sunken Wrecks</b></div>
+                        <div>• Dredge <b>Black Smoker Crystals</b> & <b>Hadal Prisms</b></div>
+                        <div>• Complete <b>12/12 Fauna</b> & <b>8/8 Salvage Sites</b></div>
                     </div>
                 </div>
             </div>
@@ -1263,6 +1364,116 @@
                     osc.stop(now + 0.4);
                 } catch(e) {}
             }
+
+            // Phase 8 Dredging Claw & Mineral Salvage Audio
+            function playClawServoSound() {
+                if (!soundEnabled) return;
+                try {
+                    initAudio();
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    const now = audioCtx.currentTime;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(240, now);
+                    osc.frequency.exponentialRampToValueAtTime(80, now + 0.4);
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.45);
+                } catch(e) {}
+            }
+
+            function playMineralChimeSound() {
+                if (!soundEnabled) return;
+                try {
+                    initAudio();
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    const now = audioCtx.currentTime;
+                    [880, 1174, 1568].forEach((freq, i) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, now + i * 0.08);
+                        gain.gain.setValueAtTime(0.12, now + i * 0.08);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.08 + 0.3);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now + i * 0.08);
+                        osc.stop(now + i * 0.08 + 0.3);
+                    });
+                } catch(e) {}
+            }
+
+            // --- BATHYSCAPHE SIMULATION STATE ---
+            const RESOURCE_TYPES = {
+                manganese: { key: 'manganese', name: 'Manganese Nodules', unitWeight: 15, unitVal: 20, icon: '🪨', desc: 'Ferromanganese nodules rich in nickel, cobalt & copper' },
+                sunkenGold: { key: 'sunkenGold', name: 'Sunken Galleon Relics', unitWeight: 35, unitVal: 70, icon: '🪙', desc: 'Ancient Spanish silver bullion & gold doubloons' },
+                titaniumScrap: { key: 'titaniumScrap', name: 'Titanium Wreckage Scraps', unitWeight: 30, unitVal: 55, icon: '🛡️', desc: 'High-tensile submarine alloy plating & structural beams' },
+                smokerCrystals: { key: 'smokerCrystals', name: 'Black Smoker Crystals', unitWeight: 20, unitVal: 65, icon: '🔥', desc: 'Hydrothermal copper-iron chalcopyrite & pyrite crystals' },
+                hadalPrisms: { key: 'hadalPrisms', name: 'Mariana Hadal Prisms', unitWeight: 25, unitVal: 160, icon: '💎', desc: 'Ultra-compressed Hadal quartz & deep-abyss silica geodes' }
+            };
+
+            // --- ABYSSAL SALVAGE NODES & SUNKEN WRECKS (PHASE 8) ---
+            const SALVAGE_NODES = [
+                // Sector 0: Continental Shelf (0-200m)
+                {
+                    id: 's01', name: 'Manganese Nodule Bed Alpha', type: 'salvage', resKey: 'manganese', sectorIdx: 0,
+                    depth: 140, x: 0.5, y: 1.5, qty: 4, weight: 60, val: 80,
+                    desc: 'High-density ferromanganese nodule field scattered across the shallow continental shelf.',
+                    harvested: false
+                },
+                {
+                    id: 's02', name: 'Sunken Galleon "San Pedro"', type: 'salvage', resKey: 'sunkenGold', sectorIdx: 0,
+                    depth: 175, x: -1.8, y: 2.8, qty: 2, weight: 70, val: 140,
+                    desc: '17th-century wooden Spanish galleon wreck holding preserved bullion chests and artifacts.',
+                    harvested: false
+                },
+
+                // Sector 1: Twilight Drop-Off (200-1000m)
+                {
+                    id: 's03', name: 'Derelict Titanium Submersible', type: 'salvage', resKey: 'titaniumScrap', sectorIdx: 1,
+                    depth: 720, x: 3.5, y: -2.0, qty: 3, weight: 90, val: 165,
+                    desc: '1980s experimental deep-dive vessel hull with intact high-tensile titanium bulkheads.',
+                    harvested: false
+                },
+                {
+                    id: 's04', name: 'Polymetallic Sulfide Mound', type: 'salvage', resKey: 'manganese', sectorIdx: 1,
+                    depth: 950, x: 4.2, y: -3.6, qty: 5, weight: 75, val: 100,
+                    desc: 'Massive seafloor mound composed of concentrated copper, zinc, and silver sulfides.',
+                    harvested: false
+                },
+
+                // Sector 2: Hydrothermal Vents (1000-4000m)
+                {
+                    id: 's05', name: 'Black Smoker Chimney Crystals', type: 'salvage', resKey: 'smokerCrystals', sectorIdx: 2,
+                    depth: 2600, x: -5.2, y: -5.8, qty: 4, weight: 80, val: 260,
+                    desc: 'Precipitated hydrothermal crystals formed from superheated 350°C mineral vent plumes.',
+                    harvested: false
+                },
+                {
+                    id: 's06', name: 'Chalcopyrite Magma Fissure', type: 'salvage', resKey: 'smokerCrystals', sectorIdx: 2,
+                    depth: 3400, x: -3.5, y: -8.0, qty: 3, weight: 60, val: 195,
+                    desc: 'Volcanic magma rift coated in golden chalcopyrite and rare-earth telluride minerals.',
+                    harvested: false
+                },
+
+                // Sector 3: Mariana Hadal Chasm (4000-11000m)
+                {
+                    id: 's07', name: 'Hadal Xenophyophore Geodes', type: 'salvage', resKey: 'hadalPrisms', sectorIdx: 3,
+                    depth: 7800, x: 8.8, y: 7.0, qty: 2, weight: 50, val: 320,
+                    desc: 'Extremely rare silica quartz geodes crystallized under 800 atm of Hadal pressure.',
+                    harvested: false
+                },
+                {
+                    id: 's08', name: 'Mariana Challenger Void Core', type: 'salvage', resKey: 'hadalPrisms', sectorIdx: 3,
+                    depth: 10700, x: 10.0, y: 10.8, qty: 3, weight: 75, val: 480,
+                    desc: 'Prehistoric nickel-iron extraterrestrial meteorite core resting at the Challenger abyss.',
+                    harvested: false
+                }
+            ];
 
             // --- BATHYSCAPHE SIMULATION STATE ---
             const SECTORS = [
@@ -1488,6 +1699,21 @@
                 scanProgress: 0.0,
                 contacts: [],
 
+                // Phase 8: Cargo Hold & Dredging Claw System
+                cargo: {
+                    manganese: 0,
+                    sunkenGold: 0,
+                    titaniumScrap: 0,
+                    smokerCrystals: 0,
+                    hadalPrisms: 0,
+                    totalWeight: 0,
+                    maxWeight: 500,
+                    totalValue: 0
+                },
+                clawDeployed: false,
+                isDredging: false,
+                dredgeProgress: 0.0,
+
                 // Vital systems
                 hull: 100.0,           // % integrity
                 crushDepth: 4500.0,    // meters before extreme catastrophic crush
@@ -1550,6 +1776,10 @@
             const bilgeBar = document.getElementById('bilgeBar');
             const leakVal = document.getElementById('leakVal');
             const pumpRateVal = document.getElementById('pumpRateVal');
+            const cargoVal = document.getElementById('cargoVal');
+            const cargoBar = document.getElementById('cargoBar');
+            const cargoValueVal = document.getElementById('cargoValueVal');
+            const clawStatusVal = document.getElementById('clawStatusVal');
             const pitchVal = document.getElementById('pitchVal');
             const tempVal = document.getElementById('tempVal');
             const headingVal = document.getElementById('headingVal');
@@ -1570,10 +1800,22 @@
             const codexGrid = document.getElementById('codexGrid');
             const codexCountText = document.getElementById('codexCountText');
             const codexCreditsDisplay = document.getElementById('codexCreditsDisplay');
+            const cargoView = document.getElementById('cargoView');
+            const cargoCapacityText = document.getElementById('cargoCapacityText');
+            const btnOffloadCargo = document.getElementById('btnOffloadCargo');
+            const cargoCreditsDisplay = document.getElementById('cargoCreditsDisplay');
+            const cargoGrid = document.getElementById('cargoGrid');
+            const salvageNodesList = document.getElementById('salvageNodesList');
             const viewSonarBtn = document.getElementById('viewSonarBtn');
             const viewNavMapBtn = document.getElementById('viewNavMapBtn');
             const viewCodexBtn = document.getElementById('viewCodexBtn');
+            const viewCargoBtn = document.getElementById('viewCargoBtn');
             const viewEngineeringBtn = document.getElementById('viewEngineeringBtn');
+
+            // Dredging Claw Controls
+            const cargoHoldBadge = document.getElementById('cargoHoldBadge');
+            const btnToggleClaw = document.getElementById('btnToggleClaw');
+            const btnDredgeSeabed = document.getElementById('btnDredgeSeabed');
 
             // Engineering Elements
             const engCreditsDisplay = document.getElementById('engCreditsDisplay');
@@ -1675,9 +1917,10 @@
             // --- VIEW MODE TOGGLES ---
             function setViewMode(mode) {
                 state.viewMode = mode;
-                [viewSonarBtn, viewNavMapBtn, viewCodexBtn, viewEngineeringBtn].forEach(b => b.classList.remove('active-toggle'));
+                [viewSonarBtn, viewNavMapBtn, viewCodexBtn, viewCargoBtn, viewEngineeringBtn].forEach(b => b.classList.remove('active-toggle'));
                 engineeringView.classList.remove('active');
                 codexView.classList.remove('active');
+                cargoView.classList.remove('active');
                 document.getElementById('sonarOverlay').style.display = 'none';
                 sonarTargetHud.style.display = 'none';
 
@@ -1698,6 +1941,12 @@
                     sonarModeTag.textContent = 'MODE: ABYSSAL FAUNA CODEX';
                     renderCodexUI();
                     playBeep(620, 'sine', 0.08);
+                } else if (mode === 'cargo') {
+                    viewCargoBtn.classList.add('active-toggle');
+                    cargoView.classList.add('active');
+                    sonarModeTag.textContent = 'MODE: CARGO HOLD & RESOURCE SALVAGE';
+                    renderCargoUI();
+                    playBeep(540, 'triangle', 0.08);
                 } else if (mode === 'engineering') {
                     viewEngineeringBtn.classList.add('active-toggle');
                     engineeringView.classList.add('active');
@@ -1710,6 +1959,7 @@
             viewSonarBtn.addEventListener('click', () => setViewMode('sonar'));
             viewNavMapBtn.addEventListener('click', () => setViewMode('navmap'));
             viewCodexBtn.addEventListener('click', () => setViewMode('codex'));
+            viewCargoBtn.addEventListener('click', () => setViewMode('cargo'));
             viewEngineeringBtn.addEventListener('click', () => setViewMode('engineering'));
 
             // --- ENGINEERING UPGRADES & RESEARCH ---
@@ -1891,30 +2141,259 @@
                 });
             }
 
-            // --- ACTIVE SONAR TARGET LOCKING & BIO-SCAN ENGINE (PHASE 7) ---
-            function getSectorFauna() {
-                return FAUNA_CATALOG.filter(f => f.sectorIdx === state.currentSectorIdx);
+            // --- CARGO HOLD & RESOURCE SALVAGE SYSTEM (PHASE 8) ---
+            function recalculateCargo() {
+                let totalW = 0;
+                let totalV = 0;
+                for (let k in RESOURCE_TYPES) {
+                    const r = RESOURCE_TYPES[k];
+                    const count = state.cargo[k] || 0;
+                    totalW += count * r.unitWeight;
+                    totalV += count * r.unitVal;
+                }
+                state.cargo.totalWeight = totalW;
+                state.cargo.totalValue = totalV;
+            }
+
+            function renderCargoUI() {
+                recalculateCargo();
+                const pct = Math.round((state.cargo.totalWeight / state.cargo.maxWeight) * 100);
+                cargoCapacityText.textContent = `HOLD: ${state.cargo.totalWeight} / ${state.cargo.maxWeight} KG (${pct}%) | TOTAL VALUE: ${state.cargo.totalValue} PTS`;
+                btnOffloadCargo.textContent = `💎 TRANSSHIP TO BUOY (+${state.cargo.totalValue} PTS)`;
+                btnOffloadCargo.disabled = state.cargo.totalValue === 0;
+                cargoCreditsDisplay.textContent = `RESEARCH CREDITS: ${state.surveyPoints} PTS`;
+
+                // Render Cargo items grid
+                cargoGrid.innerHTML = '';
+                for (let k in RESOURCE_TYPES) {
+                    const r = RESOURCE_TYPES[k];
+                    const qty = state.cargo[k] || 0;
+                    const itemWeight = qty * r.unitWeight;
+                    const itemVal = qty * r.unitVal;
+
+                    const card = document.createElement('div');
+                    card.className = 'cargo-card';
+                    card.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: bold; font-size: 11px; color: var(--text-bright);">${r.icon} ${r.name}</span>
+                            <span style="font-weight: bold; color: var(--accent-amber); font-size: 11px;">x${qty}</span>
+                        </div>
+                        <div style="font-size: 9px; color: var(--text-dim); line-height: 1.3;">${r.desc}</div>
+                        <div class="eng-stat-row" style="margin-top: 4px;">
+                            <span>PAYLOAD: <b>${itemWeight} KG</b></span>
+                            <span>MARKET: <b>+${itemVal} PTS</b></span>
+                        </div>
+                    `;
+                    cargoGrid.appendChild(card);
+                }
+
+                // Render Salvage Nodes in Sector
+                salvageNodesList.innerHTML = '';
+                SALVAGE_NODES.forEach(sn => {
+                    const r = RESOURCE_TYPES[sn.resKey];
+                    const secName = SECTORS[sn.sectorIdx].name;
+                    const dx = sn.x - state.posX;
+                    const dy = sn.y - state.posY;
+                    const distM = Math.round(Math.sqrt(dx * dx + dy * dy) * 1000);
+                    const depthDiff = Math.abs(Math.round(state.depth - sn.depth));
+
+                    const nodeCard = document.createElement('div');
+                    nodeCard.className = `salvage-node-card ${sn.harvested ? 'harvested' : ''}`;
+                    nodeCard.innerHTML = `
+                        <div>
+                            <div style="font-weight: bold; color: ${sn.harvested ? 'var(--text-dim)' : 'var(--text-bright)'};">
+                                ${r.icon} ${sn.name}
+                            </div>
+                            <div style="color: var(--text-dim); font-size: 8.5px;">
+                                ${secName} (~${sn.depth}m) | Dist: ${distM}m (ΔZ: ${depthDiff}m)
+                            </div>
+                        </div>
+                        <div>
+                            ${sn.harvested ? 
+                                `<span style="color: var(--text-dim); font-weight: bold;">[HARVESTED]</span>` :
+                                `<button onclick="window.lockSalvageSite('${sn.id}')" style="padding: 2px 6px; font-size: 9px; border-color: var(--accent-amber); color: var(--accent-amber);">🎯 LOCK</button>`
+                            }
+                        </div>
+                    `;
+                    salvageNodesList.appendChild(nodeCard);
+                });
+            }
+
+            window.lockSalvageSite = function(siteId) {
+                const sContacts = getAllSectorContacts();
+                const idx = sContacts.findIndex(c => c.id === siteId);
+                if (idx !== -1) {
+                    state.selectedTargetIdx = idx;
+                    setViewMode('sonar');
+                    updateTargetHUD();
+                    playBeep(700, 'triangle', 0.1);
+                    logMessage(`🎯 Navigation target locked onto Salvage Site [${siteId.toUpperCase()}].`, 'info');
+                }
+            };
+
+            function toggleDredgingClaw() {
+                state.clawDeployed = !state.clawDeployed;
+                btnToggleClaw.textContent = state.clawDeployed ? '🗜️ DREDGING CLAW: DEPLOYED [HYDRAULIC ACTIVE]' : '🗜️ DREDGING CLAW: RETRACTED';
+                btnToggleClaw.classList.toggle('active-toggle', state.clawDeployed);
+                clawStatusVal.textContent = state.clawDeployed ? 'CLAW: DEPLOYED' : 'CLAW: STOWED';
+                clawStatusVal.style.color = state.clawDeployed ? 'var(--accent-amber)' : 'var(--text-dim)';
+                playClawServoSound();
+                logMessage(`Hydraulic dredging claw arm ${state.clawDeployed ? 'DEPLOYED. Hydraulic pressure primed for mineral salvage.' : 'RETRACTED and stowed in hull bay.'}`, 'info');
+            }
+
+            function initiateDredgeAction() {
+                if (!state.clawDeployed) {
+                    toggleDredgingClaw();
+                }
+
+                if (state.isDredging) return;
+
+                // Check speed restriction (< 3.0 kts)
+                if (Math.abs(state.speed) > 3.0) {
+                    playBeep(200, 'square', 0.2);
+                    logMessage(`DREDGING ABORTED: Submersible speed too high (${state.speed.toFixed(1)} kts). Reduce throttle below 3.0 kts to prevent arm damage!`, 'warning');
+                    return;
+                }
+
+                // Check cargo capacity
+                recalculateCargo();
+                if (state.cargo.totalWeight >= state.cargo.maxWeight) {
+                    playBeep(220, 'square', 0.25);
+                    logMessage(`DREDGING ERROR: Cargo hold full (${state.cargo.totalWeight}/${state.cargo.maxWeight} KG)! Transship cargo to buoy first.`, 'critical');
+                    return;
+                }
+
+                const sContacts = getAllSectorContacts();
+                const currentContact = (sContacts.length > 0 && state.selectedTargetIdx < sContacts.length) ? sContacts[state.selectedTargetIdx] : null;
+
+                // Check proximity to locked salvage node or seabed
+                let targetNode = null;
+                if (currentContact && currentContact.isSalvage && !currentContact.harvested) {
+                    const dx = currentContact.x - state.posX;
+                    const dy = currentContact.y - state.posY;
+                    const distM = Math.round(Math.sqrt(dx * dx + dy * dy) * 1000);
+                    const depthDiff = Math.abs(Math.round(state.depth - currentContact.depth));
+                    if (distM <= 160 && depthDiff <= 70) {
+                        targetNode = currentContact;
+                    }
+                }
+
+                const distToSeabed = Math.max(0, state.seabedElevation - state.depth);
+                if (!targetNode && distToSeabed > 45) {
+                    playBeep(220, 'square', 0.2);
+                    logMessage(`DREDGING CLAW OUT OF REACH: Submersible is ${distToSeabed.toFixed(0)}m above seabed. Dive closer (<35m) or steer to a locked salvage node!`, 'warning');
+                    return;
+                }
+
+                state.isDredging = true;
+                state.dredgeProgress = 0;
+                playClawServoSound();
+                logMessage(`🗜️ Hydraulic dredging claw arm clamping into seabed strata...`, 'info');
+
+                let dredgeInterval = setInterval(() => {
+                    state.dredgeProgress += 20;
+                    scanProgressBar.style.width = `${state.dredgeProgress}%`;
+                    playBeep(180 + state.dredgeProgress * 6, 'sawtooth', 0.08, 0.1);
+
+                    if (state.dredgeProgress >= 100) {
+                        clearInterval(dredgeInterval);
+                        state.isDredging = false;
+                        scanProgressBar.style.width = '0%';
+
+                        if (targetNode) {
+                            targetNode.harvested = true;
+                            const resKey = targetNode.resKey;
+                            const qty = targetNode.qty;
+                            state.cargo[resKey] = (state.cargo[resKey] || 0) + qty;
+                            const bonusPts = Math.round(targetNode.val * state.surveyMultiplier);
+                            state.surveyPoints += bonusPts;
+                            recalculateCargo();
+                            playMineralChimeSound();
+                            logMessage(`💎 SALVAGE RECOVERED: [${targetNode.name}]! Harvested ${qty}x ${RESOURCE_TYPES[resKey].name} (+${bonusPts} Research Credits & +${targetNode.weight} KG payload)`, 'discovery');
+                        } else {
+                            // General seabed dredging (harvests 2x Manganese Nodules)
+                            state.cargo.manganese += 2;
+                            const yieldPts = Math.round(30 * state.surveyMultiplier);
+                            state.surveyPoints += yieldPts;
+                            recalculateCargo();
+                            playMineralChimeSound();
+                            logMessage(`⛏️ BENTHIC DREDGING COMPLETE: Harvested 2x Manganese Nodules from sediment (+${yieldPts} Credits & +30 KG payload)`, 'discovery');
+                        }
+
+                        renderCargoUI();
+                        renderEngineeringUI();
+                        updateTargetHUD();
+                    }
+                }, 250);
+            }
+
+            function offloadCargoToBuoy() {
+                recalculateCargo();
+                if (state.cargo.totalValue <= 0) {
+                    playBeep(220, 'square', 0.15);
+                    logMessage(`Cargo hold is currently empty. Dredge nodules or salvage wrecks to collect minerals.`, 'info');
+                    return;
+                }
+
+                const offloadedVal = state.cargo.totalValue;
+                const offloadedWeight = state.cargo.totalWeight;
+                state.surveyPoints += offloadedVal;
+
+                for (let k in state.cargo) {
+                    if (typeof state.cargo[k] === 'number') state.cargo[k] = 0;
+                }
+                state.cargo.maxWeight = 500;
+                recalculateCargo();
+
+                playMineralChimeSound();
+                playBeep(980, 'sine', 0.3, 0.2);
+                logMessage(`🚢 CARGO TRANSSHIPMENT COMPLETE: Offloaded ${offloadedWeight} KG of abyssal minerals to surface support ship for +${offloadedVal} Research Credits!`, 'discovery');
+
+                renderCargoUI();
+                renderEngineeringUI();
+            }
+
+            btnToggleClaw.addEventListener('click', toggleDredgingClaw);
+            btnDredgeSeabed.addEventListener('click', initiateDredgeAction);
+            btnOffloadCargo.addEventListener('click', offloadCargoToBuoy);
+
+            // --- UNIFIED ACTIVE SONAR CONTACT TRACKER (FAUNA & SALVAGE NODES) ---
+            function getAllSectorContacts() {
+                const sFauna = FAUNA_CATALOG.filter(f => f.sectorIdx === state.currentSectorIdx).map(f => ({
+                    ...f,
+                    isSalvage: false
+                }));
+
+                const sSalvage = SALVAGE_NODES.filter(s => s.sectorIdx === state.currentSectorIdx).map(s => ({
+                    ...s,
+                    isSalvage: true,
+                    lumens: '0 LUX (REFLECTIVE)',
+                    freq: 'SONAR RETURN 220 HZ',
+                    discovered: s.harvested
+                }));
+
+                return [...sFauna, ...sSalvage];
             }
 
             function cycleTarget() {
-                const sFauna = getSectorFauna();
-                if (sFauna.length === 0) return;
-                state.selectedTargetIdx = (state.selectedTargetIdx + 1) % sFauna.length;
+                const sContacts = getAllSectorContacts();
+                if (sContacts.length === 0) return;
+                state.selectedTargetIdx = (state.selectedTargetIdx + 1) % sContacts.length;
                 updateTargetHUD();
                 playBeep(700, 'triangle', 0.08, 0.12);
             }
 
             function updateTargetHUD() {
-                const sFauna = getSectorFauna();
-                if (sFauna.length === 0) {
+                const sContacts = getAllSectorContacts();
+                if (sContacts.length === 0) {
                     tgtNameVal.textContent = 'NO CONTACTS IN SECTOR';
                     targetStatusBadge.textContent = 'STANDBY';
                     btnLockTarget.textContent = '🎯 TARGET LOCK: NONE';
                     return;
                 }
 
-                if (state.selectedTargetIdx >= sFauna.length) state.selectedTargetIdx = 0;
-                const target = sFauna[state.selectedTargetIdx];
+                if (state.selectedTargetIdx >= sContacts.length) state.selectedTargetIdx = 0;
+                const target = sContacts[state.selectedTargetIdx];
 
                 const dx = target.x - state.posX;
                 const dy = target.y - state.posY;
@@ -1922,22 +2401,51 @@
                 const distM = Math.round(distKm * 1000);
                 const depthDiff = Math.abs(Math.round(state.depth - target.depth));
 
-                tgtNameVal.textContent = target.discovered ? target.name : `CONTACT [${target.id.toUpperCase()}] ${target.type.toUpperCase()}`;
-                tgtTypeVal.textContent = target.type.toUpperCase();
-                tgtDistVal.textContent = `${distM}m (ΔZ: ${depthDiff}m)`;
-                tgtLumensVal.textContent = target.lumens;
-                tgtFreqVal.textContent = target.freq;
+                if (target.isSalvage) {
+                    tgtNameVal.textContent = target.harvested ? `[HARVESTED] ${target.name}` : `💎 ${target.name}`;
+                    tgtTypeVal.textContent = 'SALVAGE NODE';
+                    tgtDistVal.textContent = `${distM}m (ΔZ: ${depthDiff}m)`;
+                    tgtLumensVal.textContent = `VAL: ${target.val} PTS`;
+                    tgtFreqVal.textContent = `WT: ${target.weight} KG`;
 
-                targetStatusBadge.textContent = target.discovered ? 'SCANNED' : (distM < 800 && depthDiff < 300 ? 'IN SCAN RANGE' : 'TRACKING');
-                targetStatusBadge.style.color = target.discovered ? 'var(--accent-emerald)' : (distM < 800 && depthDiff < 300 ? 'var(--accent-sonar)' : 'var(--accent-amber)');
+                    targetStatusBadge.textContent = target.harvested ? 'DEPLETED' : (distM < 160 && depthDiff < 70 ? 'IN CLAW RANGE' : 'TRACKING');
+                    targetStatusBadge.style.color = target.harvested ? 'var(--text-dim)' : (distM < 160 && depthDiff < 70 ? 'var(--accent-amber)' : 'var(--accent-sonar)');
 
-                btnLockTarget.textContent = `🎯 LOCKED: ${target.discovered ? target.name.substring(0, 16) : target.id.toUpperCase()} (${distM}m)`;
+                    btnLockTarget.textContent = `🎯 LOCKED: ${target.name.substring(0, 16)} (${distM}m)`;
+                    btnHudScanTarget.textContent = '⛏️ DREDGE NODE';
+                    btnScanTarget.textContent = '⛏️ HARVEST SALVAGE NODE';
+                } else {
+                    tgtNameVal.textContent = target.discovered ? target.name : `CONTACT [${target.id.toUpperCase()}] ${target.type.toUpperCase()}`;
+                    tgtTypeVal.textContent = target.type.toUpperCase();
+                    tgtDistVal.textContent = `${distM}m (ΔZ: ${depthDiff}m)`;
+                    tgtLumensVal.textContent = target.lumens;
+                    tgtFreqVal.textContent = target.freq;
+
+                    targetStatusBadge.textContent = target.discovered ? 'SCANNED' : (distM < 800 && depthDiff < 300 ? 'IN SCAN RANGE' : 'TRACKING');
+                    targetStatusBadge.style.color = target.discovered ? 'var(--accent-emerald)' : (distM < 800 && depthDiff < 300 ? 'var(--accent-sonar)' : 'var(--accent-amber)');
+
+                    btnLockTarget.textContent = `🎯 LOCKED: ${target.discovered ? target.name.substring(0, 16) : target.id.toUpperCase()} (${distM}m)`;
+                    btnHudScanTarget.textContent = '🔬 BIO-SCAN';
+                    btnScanTarget.textContent = '🔬 BIO-ACOUSTIC SCAN TARGET';
+                }
+            }
+
+            function handleTargetAction() {
+                const sContacts = getAllSectorContacts();
+                if (sContacts.length === 0) return;
+                const target = sContacts[state.selectedTargetIdx];
+                if (target.isSalvage) {
+                    initiateDredgeAction();
+                } else {
+                    initiateBioScan();
+                }
             }
 
             function initiateBioScan() {
-                const sFauna = getSectorFauna();
-                if (sFauna.length === 0) return;
-                const target = sFauna[state.selectedTargetIdx];
+                const sContacts = getAllSectorContacts();
+                if (sContacts.length === 0) return;
+                const target = sContacts[state.selectedTargetIdx];
+                if (target.isSalvage) return initiateDredgeAction();
 
                 const dx = target.x - state.posX;
                 const dy = target.y - state.posY;
@@ -1992,8 +2500,8 @@
 
             btnHudNextTarget.addEventListener('click', cycleTarget);
             btnLockTarget.addEventListener('click', cycleTarget);
-            btnHudScanTarget.addEventListener('click', initiateBioScan);
-            btnScanTarget.addEventListener('click', initiateBioScan);
+            btnHudScanTarget.addEventListener('click', handleTargetAction);
+            btnScanTarget.addEventListener('click', handleTargetAction);
 
             // --- WAYPOINTS & AUTOPILOT ---
             function updateWaypointUI() {
@@ -2369,6 +2877,7 @@
                 // 6. Electrical Drain & Passive Nuclear Regeneration
                 let baseDrain = 0.3;
                 if (state.searchlights) baseDrain += (0.8 / state.upgrades.lights);
+                if (state.clawDeployed) baseDrain += 0.4; // Hydraulic claw servo power draw
                 if (state.throttleMode === 'HALF') baseDrain += 1.2;
                 if (state.throttleMode === 'FLANK') baseDrain += 3.5;
                 if (state.bilgePumpActive) baseDrain += 0.6;
@@ -2473,6 +2982,15 @@
                 bilgeBar.style.width = `${Math.min(100, state.bilgeWater * 2.5)}%`;
                 leakVal.textContent = `${state.waterIntrusionRate.toFixed(1)} GPM`;
                 pumpRateVal.textContent = state.bilgePumpActive ? '10.0 GPM' : '0.0 GPM';
+
+                // Cargo Telemetry Updates
+                recalculateCargo();
+                cargoVal.textContent = `${state.cargo.totalWeight} / ${state.cargo.maxWeight} KG`;
+                cargoBar.style.width = `${Math.min(100, (state.cargo.totalWeight / state.cargo.maxWeight) * 100)}%`;
+                cargoValueVal.textContent = `${state.cargo.totalValue} PTS`;
+                cargoHoldBadge.textContent = `${state.cargo.totalWeight} / ${state.cargo.maxWeight} KG`;
+                clawStatusVal.textContent = state.clawDeployed ? 'CLAW: DEPLOYED' : 'CLAW: STOWED';
+                clawStatusVal.style.color = state.clawDeployed ? 'var(--accent-amber)' : 'var(--text-dim)';
 
                 pitchVal.textContent = `${state.pitch >= 0 ? '+' : ''}${state.pitch.toFixed(1)}° ${state.pitch === 0 ? 'LEVEL' : (state.pitch > 0 ? 'STERN DOWN' : 'BOW DOWN')}`;
                 tempVal.textContent = `${state.temp.toFixed(1)} °C`;
@@ -2623,9 +3141,9 @@
                 ctx.lineTo(cx + Math.cos(headingRad) * (18 * dpr), cy + Math.sin(headingRad) * (18 * dpr));
                 ctx.stroke();
 
-                // Sonar Contacts from Current Sector Fauna (Phase 7)
-                const sFauna = getSectorFauna();
-                sFauna.forEach((c, idx) => {
+                // Unified Sonar Contacts (Fauna + Salvage Nodes)
+                const sContacts = getAllSectorContacts();
+                sContacts.forEach((c, idx) => {
                     // Compute position relative to submarine (maxR represents 2.0 km radius)
                     const relX = (c.x - state.posX) / 2.0;
                     const relY = (c.y - state.posY) / 2.0;
@@ -2642,7 +3160,8 @@
                     const isSelected = idx === state.selectedTargetIdx;
 
                     let contactColor = palette.contactActive;
-                    if (c.type === 'leviathan') contactColor = '#f43f5e';
+                    if (c.isSalvage) contactColor = '#fbbf24'; // Gold for salvage
+                    else if (c.type === 'leviathan') contactColor = '#f43f5e';
                     else if (c.type === 'squid') contactColor = '#f472b6';
                     else if (c.type === 'flora') contactColor = '#34d399';
                     else if (c.type === 'trench') contactColor = '#fbbf24';
@@ -2653,7 +3172,16 @@
                         ctx.shadowBlur = isSelected ? 14 : 8;
                         ctx.beginPath();
                         
-                        if (c.type === 'leviathan') {
+                        if (c.isSalvage) {
+                            // Diamond icon for salvage nodes
+                            const dS = 5.5 * dpr;
+                            ctx.moveTo(cX, cY - dS);
+                            ctx.lineTo(cX + dS, cY);
+                            ctx.lineTo(cX, cY + dS);
+                            ctx.lineTo(cX - dS, cY);
+                            ctx.closePath();
+                            ctx.fill();
+                        } else if (c.type === 'leviathan') {
                             // Large multi-arc leviathan echo
                             ctx.arc(cX, cY, 7 * dpr, 0, Math.PI * 2);
                             ctx.fill();
@@ -2677,7 +3205,7 @@
                         // Contact labels
                         ctx.fillStyle = palette.textBright;
                         ctx.font = `bold ${8.5 * dpr}px monospace`;
-                        const displayName = c.discovered ? c.name : `[${c.type.toUpperCase()}]`;
+                        const displayName = c.isSalvage ? (c.harvested ? `[DEPLETED]` : `💎 ${c.name}`) : (c.discovered ? c.name : `[${c.type.toUpperCase()}]`);
                         ctx.fillText(displayName, cX + 8 * dpr, cY - 4 * dpr);
                         
                         ctx.font = `${7.5 * dpr}px monospace`;
@@ -2686,13 +3214,19 @@
                     } else {
                         ctx.fillStyle = palette.contactDim;
                         ctx.beginPath();
-                        ctx.arc(cX, cY, 3 * dpr, 0, Math.PI * 2);
-                        ctx.fill();
+                        if (c.isSalvage) {
+                            const dS = 3 * dpr;
+                            ctx.moveTo(cX, cY - dS); ctx.lineTo(cX + dS, cY); ctx.lineTo(cX, cY + dS); ctx.lineTo(cX - dS, cY); ctx.closePath();
+                            ctx.fill();
+                        } else {
+                            ctx.arc(cX, cY, 3 * dpr, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
                     }
 
                     // Targeting Reticle for Selected Contact
                     if (isSelected) {
-                        ctx.strokeStyle = '#38bdf8';
+                        ctx.strokeStyle = c.isSalvage ? '#fbbf24' : '#38bdf8';
                         ctx.lineWidth = 1.5 * dpr;
                         const boxS = 10 * dpr;
                         
@@ -2716,7 +3250,7 @@
                         ctx.stroke();
 
                         // Target vector line from center to locked contact
-                        ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+                        ctx.strokeStyle = c.isSalvage ? 'rgba(251, 191, 36, 0.35)' : 'rgba(56, 189, 248, 0.35)';
                         ctx.setLineDash([3 * dpr, 3 * dpr]);
                         ctx.beginPath();
                         ctx.moveTo(cx, cy);
@@ -2795,6 +3329,23 @@
                     }
                     ctx.stroke();
                 }
+
+                // Salvage Nodes on Nav Map (Phase 8)
+                SALVAGE_NODES.forEach(sn => {
+                    const sx = cx + (sn.x - state.posX) * scale;
+                    const sy = cy + (sn.y - state.posY) * scale;
+                    if (sx >= -20 && sx <= w + 20 && sy >= -20 && sy <= h + 20) {
+                        ctx.fillStyle = sn.harvested ? 'rgba(251, 191, 36, 0.3)' : '#fbbf24';
+                        ctx.beginPath();
+                        const sRad = 4.5 * dpr;
+                        ctx.moveTo(sx, sy - sRad); ctx.lineTo(sx + sRad, sy); ctx.lineTo(sx, sy + sRad); ctx.lineTo(sx - sRad, sy); ctx.closePath();
+                        ctx.fill();
+
+                        ctx.fillStyle = sn.harvested ? palette.ringText : palette.textBright;
+                        ctx.font = `bold ${7.5 * dpr}px monospace`;
+                        ctx.fillText(`💎 ${sn.name}`, sx + 6 * dpr, sy - 3 * dpr);
+                    }
+                });
 
                 // Landmarks & Waypoints
                 WAYPOINTS.forEach((wp, idx) => {

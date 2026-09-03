@@ -47,6 +47,10 @@
 #define ID_BTN_SCAN_TARGET      134
 #define ID_BTN_HUD_NEXT_TARGET  135
 #define ID_BTN_HUD_SCAN_TARGET  136
+#define ID_BTN_VIEW_CARGO       137
+#define ID_BTN_TOGGLE_CLAW      138
+#define ID_BTN_DREDGE_SEABED    139
+#define ID_BTN_OFFLOAD_CARGO    140
 
 typedef enum {
     THEME_ABYSS = 0,
@@ -315,6 +319,70 @@ static FaunaAnomaly g_fauna[FAUNA_COUNT] = {
     { "f12", "Challenger Deep Subduction Rift", 3, 3, 10850.0f, 10.2f, 11.0f, 0.0f, 0.0f, "The deepest subduction rupture on Earth, echoing with gravitational distortion.", "150 LUX (GRAVITATIONAL)", "8 HZ INFRASOUND", "Primordial Abyssal Abyss", 400, 0 }
 };
 
+// --- RESOURCE SALVAGE & DREDGING (PHASE 8) ---
+typedef struct {
+    const char* key;
+    const char* name;
+    float unitWeight;
+    int unitVal;
+    const char* desc;
+} ResourceDef;
+
+static const ResourceDef g_resDefs[5] = {
+    { "manganese", "Manganese Nodules", 15.0f, 20, "Ferromanganese nodules rich in nickel, cobalt & copper." },
+    { "sunkenGold", "Sunken Galleon Relics", 35.0f, 70, "Ancient Spanish silver bullion & gold doubloons." },
+    { "titaniumScrap", "Titanium Wreckage Scraps", 30.0f, 55, "High-tensile submarine alloy plating & structural beams." },
+    { "smokerCrystals", "Black Smoker Crystals", 20.0f, 65, "Hydrothermal copper-iron chalcopyrite & pyrite crystals." },
+    { "hadalPrisms", "Mariana Hadal Prisms", 25.0f, 160, "Ultra-compressed Hadal quartz & deep-abyss silica geodes." }
+};
+
+typedef struct {
+    char id[8];
+    char name[32];
+    int resKey; // 0: manganese, 1: sunkenGold, 2: titaniumScrap, 3: smokerCrystals, 4: hadalPrisms
+    int sectorIdx;
+    float depth;
+    float x, y;
+    int qty;
+    float weight;
+    int val;
+    char desc[128];
+    int harvested;
+} SalvageNode;
+
+#define SALVAGE_NODE_COUNT 8
+
+static SalvageNode g_salvageNodes[SALVAGE_NODE_COUNT] = {
+    // Sector 0: Continental Shelf (0-200m)
+    { "s01", "Manganese Nodule Bed Alpha", 0, 0, 140.0f, 0.5f, 1.5f, 4, 60.0f, 80, "High-density ferromanganese nodule field scattered across continental shelf.", 0 },
+    { "s02", "Sunken Galleon San Pedro", 1, 0, 175.0f, -1.8f, 2.8f, 2, 70.0f, 140, "17th-century Spanish galleon wreck holding bullion chests and artifacts.", 0 },
+
+    // Sector 1: Twilight Drop-Off (200-1000m)
+    { "s03", "Derelict Titanium Sub", 2, 1, 720.0f, 3.5f, -2.0f, 3, 90.0f, 165, "1980s experimental deep-dive vessel with intact titanium bulkheads.", 0 },
+    { "s04", "Polymetallic Sulfide Mound", 0, 1, 950.0f, 4.2f, -3.6f, 5, 75.0f, 100, "Massive seafloor mound of concentrated copper, zinc, and silver sulfides.", 0 },
+
+    // Sector 2: Hydrothermal Vents (1000-4000m)
+    { "s05", "Smoker Chimney Crystals", 3, 2, 2600.0f, -5.2f, -5.8f, 4, 80.0f, 260, "Hydrothermal crystals precipitated from 350 deg C mineral vent plumes.", 0 },
+    { "s06", "Chalcopyrite Magma Fissure", 3, 2, 3400.0f, -3.5f, -8.0f, 3, 60.0f, 195, "Volcanic magma rift coated in chalcopyrite and telluride minerals.", 0 },
+
+    // Sector 3: Mariana Hadal Chasm (4000-11000m)
+    { "s07", "Hadal Xenophyophore Geodes", 4, 3, 7800.0f, 8.8f, 7.0f, 2, 50.0f, 320, "Silica quartz geodes crystallized under 800 atm of Hadal pressure.", 0 },
+    { "s08", "Mariana Challenger Void Core", 4, 3, 10700.0f, 10.0f, 10.8f, 3, 75.0f, 480, "Prehistoric extraterrestrial meteorite core resting at Challenger abyss.", 0 }
+};
+
+typedef struct {
+    int isSalvage;
+    int index;
+    char name[32];
+    char id[8];
+    float x, y, depth;
+    int discovered;
+    int type; // 0..4 for fauna, 5 for salvage
+    int ptsOrVal;
+    char lumens[32];
+    char freq[32];
+} UnifiedContact;
+
 typedef struct {
     float depth;            // meters (0 - 11000)
     float vertRate;         // m/s
@@ -333,7 +401,7 @@ typedef struct {
     int activeWaypointIdx;
     int autopilot;
     int surveyPoints;
-    int viewMode;           // 0: Sonar, 1: Nav Map, 2: Codex, 3: Engineering
+    int viewMode;           // 0: Sonar, 1: Nav Map, 2: Codex, 3: Cargo, 4: Engineering
     float breadcrumbsX[32];
     float breadcrumbsY[32];
     int breadcrumbCount;
@@ -357,10 +425,23 @@ typedef struct {
     int milestone6000;
     int milestone10000;
 
-    // Phase 7: Fauna Target Locking & Bio-Scan
+    // Target Locking & Bio-Scan
     int selectedTargetIdx;
     int isScanningTarget;
     float scanProgress;
+
+    // Phase 8: Cargo Hold & Dredging Claw System
+    int cargoManganese;
+    int cargoSunkenGold;
+    int cargoTitaniumScrap;
+    int cargoSmokerCrystals;
+    int cargoHadalPrisms;
+    float cargoTotalWeight;
+    float cargoMaxWeight;
+    int cargoTotalValue;
+    int clawDeployed;
+    int isDredging;
+    float dredgeProgress;
 
     // Vital systems
     float hull;             // 0 - 100%
@@ -417,11 +498,15 @@ static HFONT g_hFontBold = NULL;
 
 void PlaySoundAsync(DWORD freq, DWORD duration);
 void PlayLeviathanHarmonic(void);
+void PlayClawServo(void);
+void PlayMineralChime(void);
 void AddLog(const char* text, COLORREF color);
 void InitSubmarineState(void);
 void UpdateSimulation(float dt);
 void DrawUI(HDC hdc, RECT* rcClient);
 int GetSectorFaunaIndices(int sectorIdx, int outIndices[3]);
+int GetUnifiedContacts(int sectorIdx, UnifiedContact outContacts[8]);
+void RecalculateCargo(void);
 
 DWORD WINAPI SoundThreadProc(LPVOID lpParam) {
     DWORD packed = (DWORD)(UINT_PTR)lpParam;
@@ -449,6 +534,34 @@ DWORD WINAPI LeviathanSoundThreadProc(LPVOID lpParam) {
 void PlayLeviathanHarmonic(void) {
     if (!g_sub.soundEnabled) return;
     CreateThread(NULL, 0, LeviathanSoundThreadProc, NULL, 0, NULL);
+}
+
+DWORD WINAPI ClawServoSoundThreadProc(LPVOID lpParam) {
+    Beep(240, 100);
+    Sleep(20);
+    Beep(160, 120);
+    Sleep(20);
+    Beep(90, 140);
+    return 0;
+}
+
+void PlayClawServo(void) {
+    if (!g_sub.soundEnabled) return;
+    CreateThread(NULL, 0, ClawServoSoundThreadProc, NULL, 0, NULL);
+}
+
+DWORD WINAPI MineralChimeSoundThreadProc(LPVOID lpParam) {
+    Beep(880, 80);
+    Sleep(15);
+    Beep(1174, 100);
+    Sleep(15);
+    Beep(1568, 140);
+    return 0;
+}
+
+void PlayMineralChime(void) {
+    if (!g_sub.soundEnabled) return;
+    CreateThread(NULL, 0, MineralChimeSoundThreadProc, NULL, 0, NULL);
 }
 
 void AddLog(const char* text, COLORREF color) {
@@ -481,6 +594,71 @@ int GetSectorFaunaIndices(int sectorIdx, int outIndices[3]) {
     return count;
 }
 
+int GetUnifiedContacts(int sectorIdx, UnifiedContact outContacts[8]) {
+    int count = 0;
+    for (int i = 0; i < FAUNA_COUNT; i++) {
+        if (g_fauna[i].sectorIdx == sectorIdx) {
+            if (count < 8) {
+                UnifiedContact* c = &outContacts[count++];
+                c->isSalvage = 0;
+                c->index = i;
+                strncpy(c->name, g_fauna[i].name, sizeof(c->name) - 1);
+                c->name[sizeof(c->name) - 1] = '\0';
+                strncpy(c->id, g_fauna[i].id, sizeof(c->id) - 1);
+                c->id[sizeof(c->id) - 1] = '\0';
+                c->x = g_fauna[i].x;
+                c->y = g_fauna[i].y;
+                c->depth = g_fauna[i].depth;
+                c->discovered = g_fauna[i].discovered;
+                c->type = g_fauna[i].type;
+                c->ptsOrVal = g_fauna[i].pts;
+                strncpy(c->lumens, g_fauna[i].lumens, sizeof(c->lumens) - 1);
+                c->lumens[sizeof(c->lumens) - 1] = '\0';
+                strncpy(c->freq, g_fauna[i].freq, sizeof(c->freq) - 1);
+                c->freq[sizeof(c->freq) - 1] = '\0';
+            }
+        }
+    }
+    for (int j = 0; j < SALVAGE_NODE_COUNT; j++) {
+        if (g_salvageNodes[j].sectorIdx == sectorIdx) {
+            if (count < 8) {
+                UnifiedContact* c = &outContacts[count++];
+                c->isSalvage = 1;
+                c->index = j;
+                strncpy(c->name, g_salvageNodes[j].name, sizeof(c->name) - 1);
+                c->name[sizeof(c->name) - 1] = '\0';
+                strncpy(c->id, g_salvageNodes[j].id, sizeof(c->id) - 1);
+                c->id[sizeof(c->id) - 1] = '\0';
+                c->x = g_salvageNodes[j].x;
+                c->y = g_salvageNodes[j].y;
+                c->depth = g_salvageNodes[j].depth;
+                c->discovered = g_salvageNodes[j].harvested;
+                c->type = 5; // salvage
+                c->ptsOrVal = g_salvageNodes[j].val;
+                strncpy(c->lumens, "0 LUX (REFLECT)", sizeof(c->lumens) - 1);
+                c->lumens[sizeof(c->lumens) - 1] = '\0';
+                strncpy(c->freq, "SONAR 220 HZ", sizeof(c->freq) - 1);
+                c->freq[sizeof(c->freq) - 1] = '\0';
+            }
+        }
+    }
+    return count;
+}
+
+void RecalculateCargo(void) {
+    g_sub.cargoTotalWeight = (g_sub.cargoManganese * g_resDefs[0].unitWeight) +
+                             (g_sub.cargoSunkenGold * g_resDefs[1].unitWeight) +
+                             (g_sub.cargoTitaniumScrap * g_resDefs[2].unitWeight) +
+                             (g_sub.cargoSmokerCrystals * g_resDefs[3].unitWeight) +
+                             (g_sub.cargoHadalPrisms * g_resDefs[4].unitWeight);
+
+    g_sub.cargoTotalValue = (g_sub.cargoManganese * g_resDefs[0].unitVal) +
+                            (g_sub.cargoSunkenGold * g_resDefs[1].unitVal) +
+                            (g_sub.cargoTitaniumScrap * g_resDefs[2].unitVal) +
+                            (g_sub.cargoSmokerCrystals * g_resDefs[3].unitVal) +
+                            (g_sub.cargoHadalPrisms * g_resDefs[4].unitVal);
+}
+
 void InitSubmarineState(void) {
     memset(&g_sub, 0, sizeof(g_sub));
     g_sub.depth = 0.0f;
@@ -500,7 +678,7 @@ void InitSubmarineState(void) {
     g_sub.activeWaypointIdx = 0;
     g_sub.autopilot = 0;
     g_sub.surveyPoints = 150; // Research Credits
-    g_sub.viewMode = 0; // 0: Sonar, 1: Nav Map, 2: Codex, 3: Engineering
+    g_sub.viewMode = 0; // 0: Sonar, 1: Nav Map, 2: Codex, 3: Cargo, 4: Engineering
     g_sub.breadcrumbCount = 0;
     g_sub.seabedElevation = 250.0f;
 
@@ -522,10 +700,22 @@ void InitSubmarineState(void) {
     g_sub.milestone6000 = 0;
     g_sub.milestone10000 = 0;
 
-    // Phase 7 Target Locking & Bio-Scan
+    // Target Locking & Bio-Scan
     g_sub.selectedTargetIdx = 0;
     g_sub.isScanningTarget = 0;
     g_sub.scanProgress = 0.0f;
+
+    // Phase 8 Cargo Hold & Dredging Claw
+    g_sub.cargoManganese = 0;
+    g_sub.cargoSunkenGold = 0;
+    g_sub.cargoTitaniumScrap = 0;
+    g_sub.cargoSmokerCrystals = 0;
+    g_sub.cargoHadalPrisms = 0;
+    g_sub.cargoMaxWeight = 500.0f;
+    g_sub.clawDeployed = 0;
+    g_sub.isDredging = 0;
+    g_sub.dredgeProgress = 0.0f;
+    RecalculateCargo();
 
     g_sub.hull = 100.0f;
     g_sub.crushDepth = 4500.0f;
@@ -562,6 +752,7 @@ void InitSubmarineState(void) {
     g_sub.logCount = 0;
     AddLog("DSV Abyss Voyager Bathyscaphe computer online. Systems nominal.", g_themes[THEME_ABYSS].textPrimary);
     AddLog("Active sonar & biological hydrophone array online. Listening...", g_themes[THEME_ABYSS].accentEmerald);
+    AddLog("Hydraulic dredging claw & mineral cargo bay calibrated.", g_themes[THEME_ABYSS].accentAmber);
 }
 
 const char* GetZoneName(float depth) {
@@ -575,7 +766,8 @@ const char* GetZoneName(float depth) {
 void UpdateSimulation(float dt) {
     const SubmarineTheme* th = &g_themes[g_sub.currentTheme];
     float neutralBallast = 45.0f;
-    float buoyancyForce = (neutralBallast - g_sub.ballast) * 0.4f;
+    float cargoPenalty = g_sub.cargoTotalWeight * 0.04f;
+    float buoyancyForce = (neutralBallast - g_sub.ballast) * 0.4f - (cargoPenalty * 0.01f);
     float pitchDescent = (g_sub.pitch / 15.0f) * (fabsf(g_sub.speed) * 0.3f);
 
     g_sub.targetVertRate = -buoyancyForce - pitchDescent;
@@ -693,35 +885,92 @@ void UpdateSimulation(float dt) {
         }
     }
 
-    // Bio-Scan Progress Update (Phase 7)
+    // Bio-Scan Progress Update
     if (g_sub.isScanningTarget) {
         g_sub.scanProgress += dt * 60.0f;
         if (g_sub.scanProgress >= 100.0f) {
             g_sub.isScanningTarget = 0;
             g_sub.scanProgress = 0.0f;
 
-            int secFauna[3];
-            int fCount = GetSectorFaunaIndices(g_sub.currentSectorIdx, secFauna);
-            if (fCount > 0 && g_sub.selectedTargetIdx < fCount) {
-                int fIdx = secFauna[g_sub.selectedTargetIdx];
-                FaunaAnomaly* target = &g_fauna[fIdx];
-                if (!target->discovered) {
-                    target->discovered = 1;
-                    int ptsAwarded = (int)(target->pts * g_sub.surveyMultiplier);
-                    g_sub.surveyPoints += ptsAwarded;
+            UnifiedContact contacts[8];
+            int cCount = GetUnifiedContacts(g_sub.currentSectorIdx, contacts);
+            if (cCount > 0 && g_sub.selectedTargetIdx < cCount) {
+                UnifiedContact* tgt = &contacts[g_sub.selectedTargetIdx];
+                if (!tgt->isSalvage) {
+                    FaunaAnomaly* target = &g_fauna[tgt->index];
+                    if (!target->discovered) {
+                        target->discovered = 1;
+                        int ptsAwarded = (int)(target->pts * g_sub.surveyMultiplier);
+                        g_sub.surveyPoints += ptsAwarded;
 
-                    if (target->type == 4) { // Leviathan
-                        PlayLeviathanHarmonic();
-                        char msg[128];
-                        snprintf(msg, sizeof(msg), "🚨 LEVIATHAN SCANNED: [%s]! %s (+%d PTS)", target->name, target->desc, ptsAwarded);
-                        AddLog(msg, RGB(244, 63, 94));
-                    } else {
-                        PlaySoundAsync(1100, 200);
-                        char msg[128];
-                        snprintf(msg, sizeof(msg), "BIO-SCAN COMPLETE: [%s]! %s (+%d PTS)", target->name, target->desc, ptsAwarded);
-                        AddLog(msg, th->accentEmerald);
+                        if (target->type == 4) { // Leviathan
+                            PlayLeviathanHarmonic();
+                            char msg[128];
+                            snprintf(msg, sizeof(msg), "🚨 LEVIATHAN SCANNED: [%s]! %s (+%d PTS)", target->name, target->desc, ptsAwarded);
+                            AddLog(msg, RGB(244, 63, 94));
+                        } else {
+                            PlaySoundAsync(1100, 200);
+                            char msg[128];
+                            snprintf(msg, sizeof(msg), "BIO-SCAN COMPLETE: [%s]! %s (+%d PTS)", target->name, target->desc, ptsAwarded);
+                            AddLog(msg, th->accentEmerald);
+                        }
                     }
                 }
+            }
+        }
+    }
+
+    // Dredging Claw Action Progress (Phase 8)
+    if (g_sub.isDredging) {
+        g_sub.dredgeProgress += dt * 50.0f;
+        if (g_sub.dredgeProgress >= 100.0f) {
+            g_sub.isDredging = 0;
+            g_sub.dredgeProgress = 0.0f;
+
+            UnifiedContact contacts[8];
+            int cCount = GetUnifiedContacts(g_sub.currentSectorIdx, contacts);
+            UnifiedContact* target = (cCount > 0 && g_sub.selectedTargetIdx < cCount) ? &contacts[g_sub.selectedTargetIdx] : NULL;
+
+            SalvageNode* harvestNode = NULL;
+            if (target && target->isSalvage && !target->discovered) {
+                float dx = target->x - g_sub.posX;
+                float dy = target->y - g_sub.posY;
+                float distM = sqrtf(dx * dx + dy * dy) * 1000.0f;
+                float depthDiff = fabsf(g_sub.depth - target->depth);
+                if (distM <= 220.0f && depthDiff <= 90.0f) {
+                    harvestNode = &g_salvageNodes[target->index];
+                }
+            }
+
+            if (harvestNode && !harvestNode->harvested) {
+                harvestNode->harvested = 1;
+                int rk = harvestNode->resKey;
+                if (rk == 0) g_sub.cargoManganese += harvestNode->qty;
+                else if (rk == 1) g_sub.cargoSunkenGold += harvestNode->qty;
+                else if (rk == 2) g_sub.cargoTitaniumScrap += harvestNode->qty;
+                else if (rk == 3) g_sub.cargoSmokerCrystals += harvestNode->qty;
+                else if (rk == 4) g_sub.cargoHadalPrisms += harvestNode->qty;
+
+                int bonusPts = (int)(harvestNode->val * g_sub.surveyMultiplier);
+                g_sub.surveyPoints += bonusPts;
+                RecalculateCargo();
+                PlayMineralChime();
+
+                char sMsg[128];
+                snprintf(sMsg, sizeof(sMsg), "💎 SALVAGE RECOVERED: [%s]! Harvested %dx %s (+%d PTS)",
+                         harvestNode->name, harvestNode->qty, g_resDefs[rk].name, bonusPts);
+                AddLog(sMsg, th->accentEmerald);
+            } else {
+                // General seabed dredging
+                g_sub.cargoManganese += 2;
+                int yieldPts = (int)(30 * g_sub.surveyMultiplier);
+                g_sub.surveyPoints += yieldPts;
+                RecalculateCargo();
+                PlayMineralChime();
+
+                char sMsg[128];
+                snprintf(sMsg, sizeof(sMsg), "⛏️ BENTHIC DREDGING COMPLETE: Harvested 2x Manganese Nodules (+%d PTS)", yieldPts);
+                AddLog(sMsg, th->accentEmerald);
             }
         }
     }
@@ -769,6 +1018,7 @@ void UpdateSimulation(float dt) {
 
     float baseDrain = 0.3f;
     if (g_sub.searchlights) baseDrain += (0.8f / g_sub.upgradeLights);
+    if (g_sub.clawDeployed) baseDrain += 0.4f;
     if (g_sub.throttleMode == 2) baseDrain += 1.2f;
     if (g_sub.throttleMode == 3) baseDrain += 3.5f;
     if (g_sub.bilgePumpActive) baseDrain += 0.6f;
@@ -992,6 +1242,26 @@ void DrawNavMapChart(HDC hdc, int cx, int cy, int mapW, int mapH, const Submarin
         }
     }
 
+    // Salvage Nodes on Nav Map
+    for (int i = 0; i < SALVAGE_NODE_COUNT; i++) {
+        const SalvageNode* sn = &g_salvageNodes[i];
+        int sx = cx + (int)((sn->x - g_sub.posX) * scale);
+        int sy = cy + (int)((sn->y - g_sub.posY) * scale);
+
+        if (sx >= rcMap.left + 5 && sx <= rcMap.right - 5 && sy >= rcMap.top + 5 && sy <= rcMap.bottom - 5) {
+            HBRUSH hBrSn = CreateSolidBrush(sn->harvested ? th->borderPanel : RGB(251, 191, 36));
+            SelectObject(hdc, hBrSn);
+            POINT pts[4] = { { sx, sy - 5 }, { sx + 5, sy }, { sx, sy + 5 }, { sx - 5, sy } };
+            Polygon(hdc, pts, 4);
+            DeleteObject(hBrSn);
+
+            if (!sn->harvested) {
+                SetTextColor(hdc, RGB(251, 191, 36));
+                TextOutA(hdc, sx + 7, sy - 6, sn->name, (int)strlen(sn->name));
+            }
+        }
+    }
+
     // Vessel Center
     HBRUSH hBrSub = CreateSolidBrush(th->accentEmerald);
     SelectObject(hdc, hBrSub);
@@ -1087,6 +1357,128 @@ void DrawFaunaCodex(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* t
             snprintf(dBuf, sizeof(dBuf), "UNSCANNED (YIELD: +%d PTS)", f->pts);
             TextOutA(hdc, cx + 6, cy + cardH - 14, dBuf, (int)strlen(dBuf));
         }
+    }
+}
+
+// --- DRAW CARGO HOLD & RESOURCE SALVAGE VIEW (PHASE 8) ---
+void DrawCargoHoldView(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* th) {
+    RECT rcBg = { x, y, x + w, y + h };
+    HBRUSH hBr = CreateSolidBrush(th->bgDeep);
+    FillRect(hdc, &rcBg, hBr);
+    DeleteObject(hBr);
+
+    RecalculateCargo();
+    int pct = (int)((g_sub.cargoTotalWeight / g_sub.cargoMaxWeight) * 100.0f);
+
+    char hdrBuf[128];
+    snprintf(hdrBuf, sizeof(hdrBuf), "HOLD PAYLOAD: %.0f / %.0f KG (%d%%) | EST. VALUE: %d PTS",
+             g_sub.cargoTotalWeight, g_sub.cargoMaxWeight, pct, g_sub.cargoTotalValue);
+
+    SelectObject(hdc, g_hFontBold);
+    SetTextColor(hdc, th->accentAmber);
+    TextOutA(hdc, x + 10, y + 6, hdrBuf, (int)strlen(hdrBuf));
+
+    // Transship Button in Header
+    char offloadBuf[64];
+    snprintf(offloadBuf, sizeof(offloadBuf), "TRANSSHIP (+%d PTS)", g_sub.cargoTotalValue);
+    DrawCustomButton(hdc, ID_BTN_OFFLOAD_CARGO, x + w - 170, y + 4, 160, 20, offloadBuf, 0, g_sub.cargoTotalValue > 0 ? th->accentEmerald : th->textDim, th);
+
+    // Left Column: 5 Resource Categories Grid
+    int leftGridW = (w * 54) / 100;
+    int rightListW = w - leftGridW - 14;
+    int leftGridX = x + 6;
+    int rightListX = leftGridX + leftGridW + 8;
+    int contentY = y + 28;
+    int contentH = h - 34;
+
+    int itemH = (contentH - 8) / 5;
+    for (int i = 0; i < 5; i++) {
+        const ResourceDef* r = &g_resDefs[i];
+        int qty = (i == 0 ? g_sub.cargoManganese :
+                  (i == 1 ? g_sub.cargoSunkenGold :
+                  (i == 2 ? g_sub.cargoTitaniumScrap :
+                  (i == 3 ? g_sub.cargoSmokerCrystals : g_sub.cargoHadalPrisms))));
+
+        float curWeight = qty * r->unitWeight;
+        int curVal = qty * r->unitVal;
+
+        int iy = contentY + i * (itemH + 2);
+        RECT rcCard = { leftGridX, iy, leftGridX + leftGridW, iy + itemH };
+        HBRUSH hBrP = CreateSolidBrush(th->bgPanel);
+        HBRUSH hBrB = CreateSolidBrush(qty > 0 ? th->accentAmber : th->borderPanel);
+        FillRect(hdc, &rcCard, hBrP);
+        FrameRect(hdc, &rcCard, hBrB);
+        DeleteObject(hBrP);
+        DeleteObject(hBrB);
+
+        SelectObject(hdc, g_hFontBold);
+        SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, leftGridX + 6, iy + 3, r->name, (int)strlen(r->name));
+
+        char qBuf[32];
+        snprintf(qBuf, sizeof(qBuf), "x%d", qty);
+        SetTextColor(hdc, qty > 0 ? th->accentAmber : th->textDim);
+        SIZE sz;
+        GetTextExtentPoint32A(hdc, qBuf, (int)strlen(qBuf), &sz);
+        TextOutA(hdc, leftGridX + leftGridW - sz.cx - 8, iy + 3, qBuf, (int)strlen(qBuf));
+
+        SelectObject(hdc, g_hFontSmall);
+        SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, leftGridX + 6, iy + 16, r->desc, (int)strlen(r->desc));
+
+        char sBuf[64];
+        snprintf(sBuf, sizeof(sBuf), "Payload: %.0f KG   Market: +%d PTS", curWeight, curVal);
+        SetTextColor(hdc, th->textPrimary);
+        TextOutA(hdc, leftGridX + 6, iy + itemH - 14, sBuf, (int)strlen(sBuf));
+    }
+
+    // Right Column: Salvage Nodes in Sector
+    SelectObject(hdc, g_hFontBold);
+    SetTextColor(hdc, th->textBright);
+    TextOutA(hdc, rightListX + 4, contentY + 2, "SECTOR SALVAGE NODES", 20);
+
+    int nodeItemH = (contentH - 24) / 4;
+    int snCount = 0;
+    for (int i = 0; i < SALVAGE_NODE_COUNT; i++) {
+        SalvageNode* sn = &g_salvageNodes[i];
+        if (sn->sectorIdx != g_sub.currentSectorIdx) continue;
+
+        int ny = contentY + 20 + snCount * (nodeItemH + 4);
+        RECT rcNode = { rightListX, ny, rightListX + rightListW, ny + nodeItemH };
+        HBRUSH hBrP = CreateSolidBrush(th->bgPanel);
+        HBRUSH hBrB = CreateSolidBrush(sn->harvested ? th->borderPanel : th->accentAmber);
+        FillRect(hdc, &rcNode, hBrP);
+        FrameRect(hdc, &rcNode, hBrB);
+        DeleteObject(hBrP);
+        DeleteObject(hBrB);
+
+        float dx = sn->x - g_sub.posX;
+        float dy = sn->y - g_sub.posY;
+        float distM = sqrtf(dx * dx + dy * dy) * 1000.0f;
+        float depthDiff = fabsf(g_sub.depth - sn->depth);
+
+        SelectObject(hdc, g_hFontBold);
+        SetTextColor(hdc, sn->harvested ? th->textDim : th->textBright);
+        TextOutA(hdc, rightListX + 6, ny + 4, sn->name, (int)strlen(sn->name));
+
+        SelectObject(hdc, g_hFontSmall);
+        SetTextColor(hdc, th->textDim);
+        char dBuf[64];
+        snprintf(dBuf, sizeof(dBuf), "Depth: %.0fm | Dist: %.0fm (ΔZ: %.0fm)", sn->depth, distM, depthDiff);
+        TextOutA(hdc, rightListX + 6, ny + 18, dBuf, (int)strlen(dBuf));
+
+        if (sn->harvested) {
+            SetTextColor(hdc, th->textDim);
+            TextOutA(hdc, rightListX + 6, ny + nodeItemH - 14, "[HARVESTED / DEPLETED]", 22);
+        } else {
+            char yBuf[64];
+            snprintf(yBuf, sizeof(yBuf), "YIELD: %dx %s (+%d PTS)", sn->qty, g_resDefs[sn->resKey].name, (int)(sn->val * g_sub.surveyMultiplier));
+            SetTextColor(hdc, th->accentAmber);
+            TextOutA(hdc, rightListX + 6, ny + nodeItemH - 14, yBuf, (int)strlen(yBuf));
+        }
+
+        snCount++;
+        if (snCount >= 4) break;
     }
 }
 
@@ -1402,7 +1794,24 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     snprintf(buf, sizeof(buf), "INTRUSION: %.1f GPM  PUMP: %s", g_sub.waterIntrusionRate, g_sub.bilgePumpActive ? "ACTIVE" : "STANDBY");
     SetTextColor(hdc, th->textDim);
     TextOutA(hdc, gx, gy, buf, (int)strlen(buf));
-    gy += 24;
+    gy += 22;
+
+    // Phase 8: Cargo Hold Payload Gauge
+    SetTextColor(hdc, th->textDim);
+    TextOutA(hdc, gx, gy, "CARGO HOLD PAYLOAD", 18);
+    RecalculateCargo();
+    snprintf(buf, sizeof(buf), "%.0f / %.0f KG", g_sub.cargoTotalWeight, g_sub.cargoMaxWeight);
+    SetTextColor(hdc, th->textBright);
+    GetTextExtentPoint32A(hdc, buf, (int)strlen(buf), &sz);
+    TextOutA(hdc, gx + gw - sz.cx, gy, buf, (int)strlen(buf));
+    gy += 15;
+    float cargoPct = min(100.0f, (g_sub.cargoTotalWeight / g_sub.cargoMaxWeight) * 100.0f);
+    DrawGaugeBar(hdc, gx, gy, gw, 10, cargoPct, th->accentAmber, th);
+    gy += 12;
+    snprintf(buf, sizeof(buf), "EST: %d PTS   CLAW: %s", g_sub.cargoTotalValue, g_sub.clawDeployed ? "DEPLOYED" : "STOWED");
+    SetTextColor(hdc, g_sub.clawDeployed ? th->accentAmber : th->textDim);
+    TextOutA(hdc, gx, gy, buf, (int)strlen(buf));
+    gy += 22;
 
     snprintf(buf, sizeof(buf), "PITCH TRIM: %+.1f deg (%s)", g_sub.pitch, g_sub.pitch == 0.0f ? "LEVEL" : (g_sub.pitch > 0.0f ? "STERN DOWN" : "BOW DOWN"));
     SetTextColor(hdc, th->textBright);
@@ -1421,12 +1830,13 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     snprintf(secTag, sizeof(secTag), "SECTOR: %s | SURVEY: %d PTS", g_sectors[g_sub.currentSectorIdx].name, g_sub.surveyPoints);
     DrawPanelBox(hdc, centerX, panelY, centerW, sonarH, "DEEP OCEAN & FAUNA EXPLORATION", secTag, th->accentEmerald, th);
 
-    // View switch buttons inside center panel header
-    int btnViewW = (centerW - 140) / 4;
-    DrawCustomButton(hdc, ID_BTN_VIEW_SONAR, centerX + 8, panelY + 28, btnViewW - 2, 20, "SONAR RADAR", g_sub.viewMode == 0, th->accentSonar, th);
-    DrawCustomButton(hdc, ID_BTN_VIEW_NAVMAP, centerX + 6 + btnViewW, panelY + 28, btnViewW - 2, 20, "TRENCH NAV", g_sub.viewMode == 1, th->accentSonar, th);
-    DrawCustomButton(hdc, ID_BTN_VIEW_CODEX, centerX + 4 + btnViewW * 2, panelY + 28, btnViewW - 2, 20, "FAUNA CODEX", g_sub.viewMode == 2, th->accentSonar, th);
-    DrawCustomButton(hdc, ID_BTN_VIEW_ENG, centerX + 2 + btnViewW * 3, panelY + 28, btnViewW - 2, 20, "ENGINEERING", g_sub.viewMode == 3, th->accentSonar, th);
+    // View switch buttons inside center panel header (5 views)
+    int btnViewW = (centerW - 140) / 5;
+    DrawCustomButton(hdc, ID_BTN_VIEW_SONAR, centerX + 8, panelY + 28, btnViewW - 2, 20, "SONAR", g_sub.viewMode == 0, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_VIEW_NAVMAP, centerX + 6 + btnViewW, panelY + 28, btnViewW - 2, 20, "TRENCH", g_sub.viewMode == 1, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_VIEW_CODEX, centerX + 4 + btnViewW * 2, panelY + 28, btnViewW - 2, 20, "CODEX", g_sub.viewMode == 2, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_VIEW_CARGO, centerX + 2 + btnViewW * 3, panelY + 28, btnViewW - 2, 20, "CARGO", g_sub.viewMode == 3, th->accentAmber, th);
+    DrawCustomButton(hdc, ID_BTN_VIEW_ENG, centerX + btnViewW * 4, panelY + 28, btnViewW - 2, 20, "ENGINEERING", g_sub.viewMode == 4, th->accentSonar, th);
     DrawCustomButton(hdc, ID_BTN_FIELD_DIAG, centerX + centerW - 128, panelY + 28, 120, 20, "+35 PTS DIAG", 0, th->accentAmber, th);
 
     int sonarContentY = panelY + 52;
@@ -1483,15 +1893,15 @@ void DrawUI(HDC hdc, RECT* rcClient) {
         LineTo(hdc, scx + (int)(cosf(hRad) * 16), scy + (int)(sinf(hRad) * 16));
         DeleteObject(hPenHeading);
 
-        // Sonar Contacts from Current Sector Fauna (Phase 7)
-        int secFauna[3];
-        int fCount = GetSectorFaunaIndices(g_sub.currentSectorIdx, secFauna);
+        // Unified Sonar Contacts (Fauna + Salvage Nodes)
+        UnifiedContact contacts[8];
+        int fCount = GetUnifiedContacts(g_sub.currentSectorIdx, contacts);
 
         SelectObject(hdc, g_hFontSmall);
         for (int i = 0; i < fCount; i++) {
-            FaunaAnomaly* f = &g_fauna[secFauna[i]];
-            float relX = (f->x - g_sub.posX) / 2.0f;
-            float relY = (f->y - g_sub.posY) / 2.0f;
+            UnifiedContact* c = &contacts[i];
+            float relX = (c->x - g_sub.posX) / 2.0f;
+            float relY = (c->y - g_sub.posY) / 2.0f;
             float distNorm = sqrtf(relX * relX + relY * relY);
 
             if (distNorm > 1.05f) continue;
@@ -1505,20 +1915,27 @@ void DrawUI(HDC hdc, RECT* rcClient) {
             int isSelected = (i == g_sub.selectedTargetIdx);
 
             COLORREF cClr = th->accentSonar;
-            if (f->type == 4) cClr = RGB(244, 63, 94); // Leviathan
-            else if (f->type == 1) cClr = RGB(244, 114, 182); // Squid
-            else if (f->type == 2) cClr = th->accentEmerald; // Flora
-            else if (f->type == 3) cClr = th->accentAmber; // Trench
+            if (c->isSalvage) cClr = RGB(251, 191, 36);
+            else if (c->type == 4) cClr = RGB(244, 63, 94); // Leviathan
+            else if (c->type == 1) cClr = RGB(244, 114, 182); // Squid
+            else if (c->type == 2) cClr = th->accentEmerald; // Flora
+            else if (c->type == 3) cClr = th->accentAmber; // Trench
 
             HBRUSH hBrContact = CreateSolidBrush(isSwept || isSelected ? cClr : th->radarRing);
             SelectObject(hdc, hBrContact);
-            int dotRad = (f->type == 4 ? 6 : (f->type == 1 ? 4 : 3));
-            Ellipse(hdc, fcx - dotRad, fcy - dotRad, fcx + dotRad, fcy + dotRad);
+
+            if (c->isSalvage) {
+                POINT pts[4] = { { fcx, fcy - 4 }, { fcx + 4, fcy }, { fcx, fcy + 4 }, { fcx - 4, fcy } };
+                Polygon(hdc, pts, 4);
+            } else {
+                int dotRad = (c->type == 4 ? 6 : (c->type == 1 ? 4 : 3));
+                Ellipse(hdc, fcx - dotRad, fcy - dotRad, fcx + dotRad, fcy + dotRad);
+            }
             DeleteObject(hBrContact);
 
             if (isSwept || isSelected) {
                 SetTextColor(hdc, th->textBright);
-                const char* dName = f->discovered ? f->name : (f->type == 4 ? "[LEVIATHAN]" : (f->type == 1 ? "[SQUID]" : (f->type == 2 ? "[FLORA]" : "[FAUNA]")));
+                const char* dName = c->discovered ? c->name : (c->isSalvage ? "[SALVAGE SITE]" : (c->type == 4 ? "[LEVIATHAN]" : (c->type == 1 ? "[SQUID]" : (c->type == 2 ? "[FLORA]" : "[FAUNA]"))));
                 TextOutA(hdc, fcx + 8, fcy - 6, dName, (int)strlen(dName));
                 snprintf(buf, sizeof(buf), "%.0fm", distNorm * 2000.0f);
                 SetTextColor(hdc, th->textDim);
@@ -1527,7 +1944,7 @@ void DrawUI(HDC hdc, RECT* rcClient) {
 
             // Targeting Reticle for Locked Target
             if (isSelected) {
-                HPEN hPenReticle = CreatePen(PS_SOLID, 1, th->textPrimary);
+                HPEN hPenReticle = CreatePen(PS_SOLID, 1, c->isSalvage ? RGB(251, 191, 36) : th->textPrimary);
                 SelectObject(hdc, hPenReticle);
                 int bs = 8;
                 MoveToEx(hdc, fcx - bs, fcy - bs + 3, NULL); LineTo(hdc, fcx - bs, fcy - bs); LineTo(hdc, fcx - bs + 3, fcy - bs);
@@ -1536,7 +1953,7 @@ void DrawUI(HDC hdc, RECT* rcClient) {
                 MoveToEx(hdc, fcx + bs - 3, fcy + bs, NULL); LineTo(hdc, fcx + bs, fcy + bs); LineTo(hdc, fcx + bs, fcy + bs - 3);
 
                 // Dotted course line from center
-                HPEN hPenVec = CreatePen(PS_DOT, 1, th->textPrimary);
+                HPEN hPenVec = CreatePen(PS_DOT, 1, c->isSalvage ? RGB(251, 191, 36) : th->textPrimary);
                 SelectObject(hdc, hPenVec);
                 MoveToEx(hdc, scx, scy, NULL);
                 LineTo(hdc, fcx, fcy);
@@ -1547,7 +1964,7 @@ void DrawUI(HDC hdc, RECT* rcClient) {
 
         // Top-Right Target HUD Box in Sonar View
         if (fCount > 0 && g_sub.selectedTargetIdx < fCount) {
-            FaunaAnomaly* tgt = &g_fauna[secFauna[g_sub.selectedTargetIdx]];
+            UnifiedContact* tgt = &contacts[g_sub.selectedTargetIdx];
             float dx = tgt->x - g_sub.posX;
             float dy = tgt->y - g_sub.posY;
             float distM = sqrtf(dx * dx + dy * dy) * 1000.0f;
@@ -1560,15 +1977,15 @@ void DrawUI(HDC hdc, RECT* rcClient) {
 
             RECT rcHud = { hudX, hudY, hudX + hudW, hudY + hudH };
             HBRUSH hBrHud = CreateSolidBrush(RGB(7, 23, 36));
-            HBRUSH hBrHdrB = CreateSolidBrush(th->borderPanel);
+            HBRUSH hBrHdrB = CreateSolidBrush(tgt->isSalvage ? RGB(251, 191, 36) : th->borderPanel);
             FillRect(hdc, &rcHud, hBrHud);
             FrameRect(hdc, &rcHud, hBrHdrB);
             DeleteObject(hBrHud);
             DeleteObject(hBrHdrB);
 
             SelectObject(hdc, g_hFontSmall);
-            SetTextColor(hdc, th->accentEmerald);
-            TextOutA(hdc, hudX + 6, hudY + 4, "🎯 TARGET TRACKER", 17);
+            SetTextColor(hdc, tgt->isSalvage ? RGB(251, 191, 36) : th->accentEmerald);
+            TextOutA(hdc, hudX + 6, hudY + 4, tgt->isSalvage ? "💎 SALVAGE TRACKER" : "🎯 TARGET TRACKER", 18);
 
             SetTextColor(hdc, th->textBright);
             snprintf(buf, sizeof(buf), "%.16s", tgt->discovered ? tgt->name : tgt->id);
@@ -1578,14 +1995,15 @@ void DrawUI(HDC hdc, RECT* rcClient) {
             snprintf(buf, sizeof(buf), "Dist: %.0fm  ΔZ: %.0fm", distM, depthDiff);
             TextOutA(hdc, hudX + 6, hudY + 32, buf, (int)strlen(buf));
 
-            snprintf(buf, sizeof(buf), "Lumens: %.12s", tgt->lumens);
+            snprintf(buf, sizeof(buf), "%s: %s", tgt->isSalvage ? "Freq" : "Lumens", tgt->isSalvage ? tgt->freq : tgt->lumens);
             TextOutA(hdc, hudX + 6, hudY + 46, buf, (int)strlen(buf));
 
-            if (g_sub.isScanningTarget) {
-                DrawGaugeBar(hdc, hudX + 6, hudY + 62, hudW - 12, 8, g_sub.scanProgress, th->accentEmerald, th);
+            if (g_sub.isScanningTarget || g_sub.isDredging) {
+                DrawGaugeBar(hdc, hudX + 6, hudY + 62, hudW - 12, 8, g_sub.isDredging ? g_sub.dredgeProgress : g_sub.scanProgress, tgt->isSalvage ? th->accentAmber : th->accentEmerald, th);
             } else {
                 DrawCustomButton(hdc, ID_BTN_HUD_NEXT_TARGET, hudX + 6, hudY + 58, (hudW - 16) / 2, 18, "NEXT", 0, th->textPrimary, th);
-                DrawCustomButton(hdc, ID_BTN_HUD_SCAN_TARGET, hudX + 8 + (hudW - 16) / 2, hudY + 58, (hudW - 16) / 2, 18, "SCAN", 0, th->accentEmerald, th);
+                const char* actLabel = tgt->isSalvage ? "DREDGE" : "SCAN";
+                DrawCustomButton(hdc, ID_BTN_HUD_SCAN_TARGET, hudX + 8 + (hudW - 16) / 2, hudY + 58, (hudW - 16) / 2, 18, actLabel, 0, tgt->isSalvage ? th->accentAmber : th->accentEmerald, th);
             }
         }
 
@@ -1596,6 +2014,8 @@ void DrawUI(HDC hdc, RECT* rcClient) {
         DrawNavMapChart(hdc, scx, scy, centerW - 20, sonarContentH - 8, th);
     } else if (g_sub.viewMode == 2) {
         DrawFaunaCodex(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
+    } else if (g_sub.viewMode == 3) {
+        DrawCargoHoldView(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
     } else {
         DrawEngineeringBay(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
     }
@@ -1629,16 +2049,16 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     int bw = (rightW - 24) / 2;
     int bx = rightX + 8;
 
-    // SONAR TARGET SCANNER (PHASE 7)
+    // SONAR TARGET TRACKER
     SelectObject(hdc, g_hFontSmall);
     SetTextColor(hdc, th->textDim);
-    TextOutA(hdc, bx, cy, "SONAR TARGET TRACKER & BIO-SCAN", 31);
+    TextOutA(hdc, bx, cy, "SONAR TARGET TRACKER & SCANNER", 30);
     cy += 14;
 
-    int secFauna[3];
-    int fCount = GetSectorFaunaIndices(g_sub.currentSectorIdx, secFauna);
-    if (fCount > 0 && g_sub.selectedTargetIdx < fCount) {
-        FaunaAnomaly* tgt = &g_fauna[secFauna[g_sub.selectedTargetIdx]];
+    UnifiedContact rContacts[8];
+    int rfCount = GetUnifiedContacts(g_sub.currentSectorIdx, rContacts);
+    if (rfCount > 0 && g_sub.selectedTargetIdx < rfCount) {
+        UnifiedContact* tgt = &rContacts[g_sub.selectedTargetIdx];
         snprintf(buf, sizeof(buf), "🎯 LOCKED: %.14s", tgt->discovered ? tgt->name : tgt->id);
     } else {
         snprintf(buf, sizeof(buf), "🎯 TARGET LOCK: NONE");
@@ -1646,7 +2066,7 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     DrawCustomButton(hdc, ID_BTN_LOCK_TARGET, bx, cy, rightW - 18, 20, buf, 0, th->accentSonar, th);
     cy += 22;
 
-    DrawCustomButton(hdc, ID_BTN_SCAN_TARGET, bx, cy, rightW - 18, 20, "🔬 BIO-ACOUSTIC SCAN TARGET", g_sub.isScanningTarget, th->accentEmerald, th);
+    DrawCustomButton(hdc, ID_BTN_SCAN_TARGET, bx, cy, rightW - 18, 20, "🔬 BIO-SCAN / HARVEST TARGET", g_sub.isScanningTarget || g_sub.isDredging, th->accentEmerald, th);
     cy += 26;
 
     SetTextColor(hdc, th->textDim);
@@ -1694,8 +2114,16 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     cy += 24;
 
     SetTextColor(hdc, th->textDim);
-    TextOutA(hdc, bx, cy, "SUBSYSTEM MANAGEMENT", 20);
+    TextOutA(hdc, bx, cy, "SUBSYSTEMS & DREDGING CLAW", 26);
     cy += 14;
+
+    snprintf(buf, sizeof(buf), "🗜️ DREDGING CLAW: %s", g_sub.clawDeployed ? "DEPLOYED [ACTIVE]" : "RETRACTED");
+    DrawCustomButton(hdc, ID_BTN_TOGGLE_CLAW, bx, cy, rightW - 18, 18, buf, g_sub.clawDeployed, th->accentAmber, th);
+    cy += 20;
+
+    snprintf(buf, sizeof(buf), "⛏️ DREDGE SEABED / SALVAGE");
+    DrawCustomButton(hdc, ID_BTN_DREDGE_SEABED, bx, cy, rightW - 18, 18, buf, g_sub.isDredging, th->accentAmber, th);
+    cy += 20;
 
     snprintf(buf, sizeof(buf), "SEARCHLIGHTS: %s", g_sub.searchlights ? "ENGAGED [HIGH LUX]" : "OFF");
     DrawCustomButton(hdc, ID_BTN_SEARCHLIGHTS, bx, cy, rightW - 18, 18, buf, g_sub.searchlights, th->accentSonar, th);
@@ -1726,7 +2154,7 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     TextOutA(hdc, bx + 6, cy + 2, "DIRECTIVES:", 11);
     SetTextColor(hdc, th->textBright);
     TextOutA(hdc, bx + 6, cy + 15, "- Detect Leviathans & Squids", 28);
-    TextOutA(hdc, bx + 6, cy + 28, "- Catalog 12/12 Fauna Codex", 27);
+    TextOutA(hdc, bx + 6, cy + 28, "- Harvest 8/8 Salvage Sites", 27);
     TextOutA(hdc, bx + 6, cy + 41, "- Dive Hadal Trench (4000m+)", 28);
 
     // Deep-water CRT scanlines raster overlay
@@ -1759,13 +2187,14 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
         if (mx >= clientW - 142 && mx <= clientW - 12) return ID_BTN_EMERGENCY_BLOW;
     }
 
-    // View toggles in center panel
+    // View toggles in center panel (5 buttons)
     if (my >= panelY + 28 && my <= panelY + 48) {
-        int btnViewW = (centerW - 140) / 4;
+        int btnViewW = (centerW - 140) / 5;
         if (mx >= centerX + 8 && mx <= centerX + 8 + btnViewW - 2) return ID_BTN_VIEW_SONAR;
         if (mx >= centerX + 6 + btnViewW && mx <= centerX + 6 + btnViewW * 2 - 2) return ID_BTN_VIEW_NAVMAP;
         if (mx >= centerX + 4 + btnViewW * 2 && mx <= centerX + 4 + btnViewW * 3 - 2) return ID_BTN_VIEW_CODEX;
-        if (mx >= centerX + 2 + btnViewW * 3 && mx <= centerX + 2 + btnViewW * 4 - 2) return ID_BTN_VIEW_ENG;
+        if (mx >= centerX + 2 + btnViewW * 3 && mx <= centerX + 2 + btnViewW * 4 - 2) return ID_BTN_VIEW_CARGO;
+        if (mx >= centerX + btnViewW * 4 && mx <= centerX + btnViewW * 5 - 2) return ID_BTN_VIEW_ENG;
         if (mx >= centerX + centerW - 128 && mx <= centerX + centerW - 8) return ID_BTN_FIELD_DIAG;
     }
 
@@ -1781,7 +2210,17 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
         }
     }
 
-    if (g_sub.viewMode == 3) { // Engineering Bay
+    // Cargo View (viewMode 3) Transship button
+    if (g_sub.viewMode == 3) {
+        int sonarContentY = panelY + 52;
+        int offX = centerX + 6 + centerW - 12 - 170;
+        int offY = sonarContentY + 4 + 4;
+        if (my >= offY && my <= offY + 20 && mx >= offX && mx <= offX + 160) {
+            return ID_BTN_OFFLOAD_CARGO;
+        }
+    }
+
+    if (g_sub.viewMode == 4) { // Engineering Bay
         int sonarH = (panelH * 60) / 100;
         int sonarContentY = panelY + 52;
         int sonarContentH = sonarH - 58;
@@ -1863,6 +2302,10 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
     }
     cy += 24 + 14;
 
+    if (my >= cy && my <= cy + 18 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_TOGGLE_CLAW;
+    cy += 20;
+    if (my >= cy && my <= cy + 18 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_DREDGE_SEABED;
+    cy += 20;
     if (my >= cy && my <= cy + 18 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_SEARCHLIGHTS;
     cy += 20;
     if (my >= cy && my <= cy + 18 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_SCRUBBER;
@@ -1913,50 +2356,154 @@ void HandleCommand(int cmdId) {
             PlaySoundAsync(620, 80);
             break;
 
-        case ID_BTN_VIEW_ENG:
+        case ID_BTN_VIEW_CARGO:
             g_sub.viewMode = 3;
+            PlaySoundAsync(540, 80);
+            break;
+
+        case ID_BTN_VIEW_ENG:
+            g_sub.viewMode = 4;
             PlaySoundAsync(580, 80);
             break;
 
         case ID_BTN_LOCK_TARGET:
         case ID_BTN_HUD_NEXT_TARGET: {
-            int secFauna[3];
-            int fCount = GetSectorFaunaIndices(g_sub.currentSectorIdx, secFauna);
+            UnifiedContact contacts[8];
+            int fCount = GetUnifiedContacts(g_sub.currentSectorIdx, contacts);
             if (fCount > 0) {
                 g_sub.selectedTargetIdx = (g_sub.selectedTargetIdx + 1) % fCount;
-                FaunaAnomaly* tgt = &g_fauna[secFauna[g_sub.selectedTargetIdx]];
+                UnifiedContact* tgt = &contacts[g_sub.selectedTargetIdx];
                 PlaySoundAsync(700, 80);
-                snprintf(msg, sizeof(msg), "Acoustic tracking locked onto target [%s].", tgt->discovered ? tgt->name : tgt->id);
-                AddLog(msg, th->accentSonar);
+                snprintf(msg, sizeof(msg), "Sonar tracking locked onto [%s] (%s).", tgt->discovered ? tgt->name : tgt->id, tgt->isSalvage ? "SALVAGE" : "FAUNA");
+                AddLog(msg, tgt->isSalvage ? th->accentAmber : th->accentSonar);
             }
             break;
         }
 
         case ID_BTN_SCAN_TARGET:
         case ID_BTN_HUD_SCAN_TARGET: {
-            int secFauna[3];
-            int fCount = GetSectorFaunaIndices(g_sub.currentSectorIdx, secFauna);
+            UnifiedContact contacts[8];
+            int fCount = GetUnifiedContacts(g_sub.currentSectorIdx, contacts);
             if (fCount > 0 && g_sub.selectedTargetIdx < fCount) {
-                FaunaAnomaly* tgt = &g_fauna[secFauna[g_sub.selectedTargetIdx]];
+                UnifiedContact* tgt = &contacts[g_sub.selectedTargetIdx];
                 float dx = tgt->x - g_sub.posX;
                 float dy = tgt->y - g_sub.posY;
                 float distM = sqrtf(dx * dx + dy * dy) * 1000.0f;
                 float depthDiff = fabsf(g_sub.depth - tgt->depth);
-                float maxRange = max(900.0f, g_sub.opticalRange * 1.8f);
 
-                if (distM <= maxRange && depthDiff <= 450.0f) {
-                    if (!g_sub.isScanningTarget) {
-                        g_sub.isScanningTarget = 1;
-                        g_sub.scanProgress = 0.0f;
-                        PlaySoundAsync(1200, 150);
-                        snprintf(msg, sizeof(msg), "Bio-acoustic hydrophone scan initiated on [%s]...", tgt->name);
-                        AddLog(msg, th->textPrimary);
+                if (tgt->isSalvage) {
+                    if (distM <= 220.0f && depthDiff <= 90.0f) {
+                        if (!g_sub.clawDeployed) {
+                            g_sub.clawDeployed = 1;
+                            PlayClawServo();
+                        }
+                        if (!g_sub.isDredging) {
+                            g_sub.isDredging = 1;
+                            g_sub.dredgeProgress = 0.0f;
+                            PlayClawServo();
+                            snprintf(msg, sizeof(msg), "🗜️ Salvage claw dredging site [%s]...", tgt->name);
+                            AddLog(msg, th->accentAmber);
+                        }
+                    } else {
+                        PlaySoundAsync(220, 150);
+                        snprintf(msg, sizeof(msg), "SALVAGE SITE OUT OF REACH: %.0fm away (Depth diff: %.0fm). Steer closer!", distM, depthDiff);
+                        AddLog(msg, th->accentAmber);
                     }
                 } else {
-                    PlaySoundAsync(220, 150);
-                    snprintf(msg, sizeof(msg), "TARGET OUT OF RANGE: %.0fm away (Depth diff: %.0fm). Steer closer!", distM, depthDiff);
-                    AddLog(msg, th->accentAmber);
+                    float maxRange = max(900.0f, g_sub.opticalRange * 1.8f);
+                    if (distM <= maxRange && depthDiff <= 450.0f) {
+                        if (!g_sub.isScanningTarget) {
+                            g_sub.isScanningTarget = 1;
+                            g_sub.scanProgress = 0.0f;
+                            PlaySoundAsync(1200, 150);
+                            snprintf(msg, sizeof(msg), "Bio-acoustic hydrophone scan initiated on [%s]...", tgt->name);
+                            AddLog(msg, th->textPrimary);
+                        }
+                    } else {
+                        PlaySoundAsync(220, 150);
+                        snprintf(msg, sizeof(msg), "TARGET OUT OF RANGE: %.0fm away (Depth diff: %.0fm). Steer closer!", distM, depthDiff);
+                        AddLog(msg, th->accentAmber);
+                    }
                 }
+            }
+            break;
+        }
+
+        case ID_BTN_TOGGLE_CLAW:
+            g_sub.clawDeployed = !g_sub.clawDeployed;
+            PlayClawServo();
+            snprintf(msg, sizeof(msg), "Hydraulic dredging claw arm %s.", g_sub.clawDeployed ? "DEPLOYED [ACTIVE]" : "RETRACTED [STOWED]");
+            AddLog(msg, th->accentAmber);
+            break;
+
+        case ID_BTN_DREDGE_SEABED: {
+            if (!g_sub.clawDeployed) {
+                g_sub.clawDeployed = 1;
+                PlayClawServo();
+            }
+
+            if (g_sub.isDredging) break;
+
+            if (fabsf(g_sub.speed) > 3.0f) {
+                PlaySoundAsync(200, 150);
+                snprintf(msg, sizeof(msg), "DREDGING ABORTED: Speed too high (%.1f kts). Reduce throttle below 3.0 kts!", g_sub.speed);
+                AddLog(msg, th->accentAmber);
+                break;
+            }
+
+            RecalculateCargo();
+            if (g_sub.cargoTotalWeight >= g_sub.cargoMaxWeight) {
+                PlaySoundAsync(200, 150);
+                AddLog("DREDGING ERROR: Cargo hold full! Transship minerals to support ship.", th->accentRed);
+                break;
+            }
+
+            float distToSeabed = max(0.0f, g_sub.seabedElevation - g_sub.depth);
+            UnifiedContact contacts[8];
+            int cCount = GetUnifiedContacts(g_sub.currentSectorIdx, contacts);
+            UnifiedContact* curTgt = (cCount > 0 && g_sub.selectedTargetIdx < cCount) ? &contacts[g_sub.selectedTargetIdx] : NULL;
+
+            int nearSalvage = 0;
+            if (curTgt && curTgt->isSalvage) {
+                float dx = curTgt->x - g_sub.posX;
+                float dy = curTgt->y - g_sub.posY;
+                float distM = sqrtf(dx * dx + dy * dy) * 1000.0f;
+                float depthDiff = fabsf(g_sub.depth - curTgt->depth);
+                if (distM <= 220.0f && depthDiff <= 90.0f) nearSalvage = 1;
+            }
+
+            if (!nearSalvage && distToSeabed > 45.0f) {
+                PlaySoundAsync(220, 150);
+                snprintf(msg, sizeof(msg), "DREDGING CLAW OUT OF REACH: Sub is %.0fm above seabed. Dive closer (<45m)!", distToSeabed);
+                AddLog(msg, th->accentAmber);
+                break;
+            }
+
+            g_sub.isDredging = 1;
+            g_sub.dredgeProgress = 0.0f;
+            PlayClawServo();
+            AddLog("🗜️ Hydraulic dredging claw arm clamping into seabed sediment strata...", th->textPrimary);
+            break;
+        }
+
+        case ID_BTN_OFFLOAD_CARGO: {
+            RecalculateCargo();
+            if (g_sub.cargoTotalValue <= 0) {
+                PlaySoundAsync(220, 100);
+                AddLog("Cargo hold is empty. Dredge nodules or salvage wrecks first.", th->textDim);
+            } else {
+                int pts = g_sub.cargoTotalValue;
+                float offWeight = g_sub.cargoTotalWeight;
+                g_sub.surveyPoints += pts;
+                g_sub.cargoManganese = 0;
+                g_sub.cargoSunkenGold = 0;
+                g_sub.cargoTitaniumScrap = 0;
+                g_sub.cargoSmokerCrystals = 0;
+                g_sub.cargoHadalPrisms = 0;
+                RecalculateCargo();
+                PlayMineralChime();
+                snprintf(msg, sizeof(msg), "🚢 TRANSSHIPMENT COMPLETE: Offloaded %.0f KG of minerals for +%d Research Credits!", offWeight, pts);
+                AddLog(msg, th->accentEmerald);
             }
             break;
         }
