@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- K2048
 - KDarts
 - KSimon
 - KTrader
@@ -149,8 +148,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMines
 - KSubmarine
 - KAsteroids
+- K2048
 
 ## Completed Work Log
+
+- **K2048 (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on tile merges (512+), bomb explosions, power-up triggers (Upgrade, Hammer, Rotate, Undo), board resets, and game over / victory bursts (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and trigonometric my_sin/my_cos physics decay with double-buffered viewport rendering in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant smoke & plasma puffs with negative gravity and radius growth, heavy kinematic tile & shard debris with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion halo radiating upon high-value tile merges, bomb detonations, power-up triggers, and stage clears, ornate cybernetic arcade HUD corner filigree L-brackets with tech notches and gold rivet accents at all four arena corners, a pulsating energy perimeter inlay border with an animated traveling specular glint traversing the outer playfield rectangle, sculpted tile highlights with diagonal specular sheen sweeps traversing high-tier tiles, and atmospheric floating cyber dust particles in both Web Canvas (k2048.html) and Native C Win32 GDI (K2048/main.c).
 
 - **KAsteroids (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on ship deaths, asteroid detonations, UFO explosions, smart bomb / EMP blasts, hyperspace leaps, and game over / victory bursts (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and trigonometric SetViewportOrgEx physics decay with double-buffered viewport rendering in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant smoke & plasma puffs with negative gravity and radius growth, heavy kinematic rock & hull debris shards with tumbling rotation and drag physics, and radiant golden celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer dispersion halo radiating upon detonations, ornate cybernetic Sci-Fi arcade HUD corner filigree L-brackets with tech notches and gold rivet accents at all four arena corners, a pulsating energy perimeter inlay border with an animated traveling specular glint traversing the outer playfield rectangle, sculpted ship hull highlights with diagonal specular sheen sweeps traversing fuselage facets and cockpit canopy glow, and atmospheric floating cosmic dust particles in both Web Canvas (kasteroids.html) and Native C Win32 GDI (KAsteroids/main.c).
 
