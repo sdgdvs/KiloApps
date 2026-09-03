@@ -77,11 +77,8 @@ void UpdateStatusBar() {
     int selChars = (int)(end - start);
 
     char stat1[128], stat2[128], stat3[128];
-    if (g_Tabs[g_ActiveTab].szPath[0] != 0) {
-        wsprintfA(stat1, "%s%s", g_Tabs[g_ActiveTab].szPath, g_Tabs[g_ActiveTab].isModified ? " *" : "");
-    } else {
-        wsprintfA(stat1, "%s%s", g_Tabs[g_ActiveTab].szTitle, g_Tabs[g_ActiveTab].isModified ? " *" : "");
-    }
+    const char* docName = g_Tabs[g_ActiveTab].szPath[0] ? g_Tabs[g_ActiveTab].szPath : g_Tabs[g_ActiveTab].szTitle;
+    wsprintfA(stat1, "%s%s", docName, g_Tabs[g_ActiveTab].isModified ? " *" : "");
 
     if (selChars > 0) {
         wsprintfA(stat2, "Ln %d, Col %d (Sel %d)", (int)lineIdx + 1, colIdx, selChars);
@@ -93,6 +90,13 @@ void UpdateStatusBar() {
     SendMessageA(g_hStatus, SB_SETTEXTA, 0, (LPARAM)stat1);
     SendMessageA(g_hStatus, SB_SETTEXTA, 1, (LPARAM)stat2);
     SendMessageA(g_hStatus, SB_SETTEXTA, 2, (LPARAM)stat3);
+    SendMessageA(g_hStatus, SB_SETTEXTA, 3, (LPARAM)"[F1] Help / Guide");
+
+    if (g_hMainWnd) {
+        char winTitle[160];
+        wsprintfA(winTitle, "KPad Pro - [%s%s] - Press F1 for Help", g_Tabs[g_ActiveTab].szTitle, g_Tabs[g_ActiveTab].isModified ? " *" : "");
+        SetWindowTextA(g_hMainWnd, winTitle);
+    }
 }
 
 void ResizeControls(int width, int height) {
@@ -938,8 +942,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Create Status Window
             g_hStatus = CreateStatusWindowA(WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP, "", hwnd, 100);
-            int parts[3] = { 280, 460, -1 };
-            SendMessage(g_hStatus, SB_SETPARTS, 3, (LPARAM)parts);
+            int parts[4] = { 250, 410, 580, -1 };
+            SendMessage(g_hStatus, SB_SETPARTS, 4, (LPARAM)parts);
 
             // Create Tab Control
             g_hTabCtrl = CreateWindowExA(0, WC_TABCONTROLA, "", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE,
@@ -1058,13 +1062,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     break;
                 case ID_HELP_SHORTCUTS:
-                    MessageBoxA(hwnd, "KPad Pro Keyboard Shortcuts:\n\nCtrl+N: New Document\nCtrl+O: Open Local File\nCtrl+S: Save\nCtrl+T: New Tab\nCtrl+W: Close Tab\nCtrl+F: Find\nCtrl+H: Replace\nCtrl+E: Encrypt Buffer\nCtrl+D: Decrypt Buffer\nAlt+Z: Toggle Word Wrap\nF5: Insert Time/Date\nF1: Show this help", "Keyboard Shortcuts", MB_OK | MB_ICONINFORMATION);
+                    MessageBoxA(hwnd,
+                        "KPad Pro - Keyboard Shortcuts Guide\n\n"
+                        "DOCUMENT & TABS:\n"
+                        "  • Ctrl+N / Ctrl+T  : New Document / Tab\n"
+                        "  • Ctrl+O           : Open File\n"
+                        "  • Ctrl+S           : Save Document\n"
+                        "  • Ctrl+W           : Close Active Tab\n"
+                        "  • Ctrl+1 .. 9      : Switch to Tab 1-9\n"
+                        "  • Ctrl+Tab         : Next Tab Cycle\n\n"
+                        "EDITING & SEARCH:\n"
+                        "  • Ctrl+F / Ctrl+H  : Find / Replace\n"
+                        "  • Ctrl+A           : Select All\n"
+                        "  • Alt+Z            : Toggle Word Wrap\n"
+                        "  • F5               : Insert Date & Time\n\n"
+                        "SECURITY & TOOLS:\n"
+                        "  • Ctrl+E           : Encrypt Document\n"
+                        "  • Ctrl+D           : Decrypt Document\n"
+                        "  • F1               : Show this Help Guide",
+                        "KPad Pro User Guide [F1]", MB_OK | MB_ICONINFORMATION);
                     break;
                 case ID_HELP_ABOUT:
-                    MessageBoxA(hwnd, "KPad Pro\nAdvanced Text & Code Editor with AES & RC4 Encryption Suite", "About", MB_OK | MB_ICONINFORMATION);
+                    MessageBoxA(hwnd, "KPad Pro v1.4\nAdvanced Text & Code Editor with AES & RC4 Encryption Suite\nPart of KiloOS Suite", "About KPad Pro", MB_OK | MB_ICONINFORMATION);
                     break;
             }
             break;
+        }
+
+        case WM_GETMINMAXINFO: {
+            LPMINMAXINFO lpMMI = (LPMINMAXINFO)lParam;
+            lpMMI->ptMinTrackSize.x = 480;
+            lpMMI->ptMinTrackSize.y = 360;
+            return 0;
         }
 
         case WM_NOTIFY: {
@@ -1171,6 +1200,27 @@ void MainEntry() {
             }
             if (msg.wParam == VK_F1) {
                 SendMessage(hwnd, WM_COMMAND, ID_HELP_SHORTCUTS, 0);
+                continue;
+            }
+            if (ctrl && msg.wParam >= '1' && msg.wParam <= '9') {
+                int target = (int)(msg.wParam - '1');
+                if (target < g_NumTabs) {
+                    SwitchTab(target);
+                }
+                continue;
+            }
+            if (ctrl && msg.wParam == VK_TAB) {
+                if (g_NumTabs > 1) {
+                    BOOL shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+                    int nextTab = shift ? (g_ActiveTab - 1 + g_NumTabs) % g_NumTabs : (g_ActiveTab + 1) % g_NumTabs;
+                    SwitchTab(nextTab);
+                }
+                continue;
+            }
+            if (ctrl && msg.wParam == 'A') {
+                if (g_NumTabs > 0 && g_Tabs[g_ActiveTab].hEdit) {
+                    SendMessage(g_Tabs[g_ActiveTab].hEdit, EM_SETSEL, 0, -1);
+                }
                 continue;
             }
             if (ctrl && msg.wParam == 'N') {
