@@ -33,7 +33,7 @@ fclose_t m_fclose;
 HMODULE hMsvcrt = NULL;
 HWND hCategory, hInput, hOutput, hFrom, hTo, hPrecision, hFormat;
 HWND hBatchOutput, hHistoryOutput, hFavCombo, hFormulaStatic;
-HWND hBtnSingle, hBtnBatch, hBtnFavs, hBtnHistory, hBtnExpress;
+HWND hBtnSingle, hBtnBatch, hBtnFavs, hBtnHistory, hBtnExpress, hBtnHelp;
 HWND hExpressInput, hExpressOutput, hExpressPresetBtns[6];
 HFONT hFont = NULL, hFontBold = NULL;
 WNDPROC OldEditProc = NULL;
@@ -41,6 +41,8 @@ WNDPROC OldEditProc = NULL;
 char buffer[1024];
 char historyBuffer[4096];
 int currentMode = 0; // 0=Single, 1=Batch, 2=Favs, 3=History, 4=Express
+
+void ShowHelpDialog(HWND hwnd);
 
 // Categories and Units
 const char* catNames[] = {"Length", "Weight", "Temperature", "Data Storage", "Speed", "Area", "Volume", "Time", "Pressure"};
@@ -534,6 +536,29 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
     return CallWindowProcA(OldEditProc, hwnd, msg, wParam, lParam);
 }
 
+void ShowHelpDialog(HWND hwnd) {
+    MessageBoxA(hwnd,
+        "========================================\r\n"
+        "   KCONVERTER PRO - QUICK GUIDE\r\n"
+        "========================================\r\n\r\n"
+        "NAVIGATION & SHORTCUTS:\r\n"
+        "  [F1] or [H]  : Display this Help guide\r\n"
+        "  [1] - [5]    : Switch Tab Modes:\r\n"
+        "                 1: Single, 2: Batch, 3: Favs, 4: History, 5: Parser\r\n"
+        "  [Enter]      : Calculate / Evaluate active expression\r\n"
+        "  [⇄ Swap]    : Invert From and To units\r\n"
+        "  [⭐ Pin]     : Save conversion pair to Favorites\r\n\r\n"
+        "FEATURES:\r\n"
+        "  - Single Convert : Bi-directional unit conversion with live formula\r\n"
+        "  - Batch Mode     : See conversion to all units in the category at once\r\n"
+        "  - Favorites      : Instant recall of pinned unit pairs\r\n"
+        "  - History Log    : Conversion audit trail with export to text\r\n"
+        "  - Smart Parser   : Evaluates phrases like '100 km/h to m/s' or '50 psi to bar'\r\n\r\n"
+        "PHYSICAL CATEGORIES (9 total):\r\n"
+        "  Length, Weight, Temperature, Data Storage, Speed, Area, Volume, Time, Pressure",
+        "KConverter Pro Help", MB_OK | MB_ICONINFORMATION);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
@@ -552,53 +577,55 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             CreateWindowA("STATIC", "Category:", WS_CHILD | WS_VISIBLE, 10, 10, 60, 20, hwnd, NULL, NULL, NULL);
             hCategory = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 75, 8, 120, 150, hwnd, (HMENU)1002, NULL, NULL);
 
-            CreateWindowA("STATIC", "Prec:", WS_CHILD | WS_VISIBLE, 210, 10, 35, 20, hwnd, NULL, NULL, NULL);
-            hPrecision = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 250, 8, 70, 150, hwnd, (HMENU)1003, NULL, NULL);
+            CreateWindowA("STATIC", "Prec:", WS_CHILD | WS_VISIBLE, 205, 10, 35, 20, hwnd, NULL, NULL, NULL);
+            hPrecision = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 245, 8, 70, 150, hwnd, (HMENU)1003, NULL, NULL);
 
-            CreateWindowA("STATIC", "Fmt:", WS_CHILD | WS_VISIBLE, 335, 10, 30, 20, hwnd, NULL, NULL, NULL);
-            hFormat = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 370, 8, 100, 150, hwnd, (HMENU)1004, NULL, NULL);
+            CreateWindowA("STATIC", "Fmt:", WS_CHILD | WS_VISIBLE, 325, 10, 30, 20, hwnd, NULL, NULL, NULL);
+            hFormat = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 360, 8, 95, 150, hwnd, (HMENU)1004, NULL, NULL);
+
+            hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 465, 8, 80, 24, hwnd, (HMENU)6001, NULL, NULL);
 
             // Mode Tab Buttons
-            hBtnSingle = CreateWindowA("BUTTON", "Single", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 38, 55, 24, hwnd, (HMENU)2001, NULL, NULL);
-            hBtnBatch = CreateWindowA("BUTTON", "Batch Mode", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 70, 38, 75, 24, hwnd, (HMENU)2002, NULL, NULL);
-            hBtnFavs = CreateWindowA("BUTTON", "Favorites", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 150, 38, 65, 24, hwnd, (HMENU)2003, NULL, NULL);
-            hBtnHistory = CreateWindowA("BUTTON", "History Log", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 220, 38, 75, 24, hwnd, (HMENU)2004, NULL, NULL);
-            hBtnExpress = CreateWindowA("BUTTON", "Smart Parser", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 300, 38, 90, 24, hwnd, (HMENU)2005, NULL, NULL);
+            hBtnSingle = CreateWindowA("BUTTON", "[1] Single", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 38, 75, 24, hwnd, (HMENU)2001, NULL, NULL);
+            hBtnBatch = CreateWindowA("BUTTON", "[2] Batch", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 90, 38, 75, 24, hwnd, (HMENU)2002, NULL, NULL);
+            hBtnFavs = CreateWindowA("BUTTON", "[3] Favs", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 170, 38, 70, 24, hwnd, (HMENU)2003, NULL, NULL);
+            hBtnHistory = CreateWindowA("BUTTON", "[4] History", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 245, 38, 80, 24, hwnd, (HMENU)2004, NULL, NULL);
+            hBtnExpress = CreateWindowA("BUTTON", "[5] Parser ⚡", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 330, 38, 95, 24, hwnd, (HMENU)2005, NULL, NULL);
 
             // Single View Controls
             CreateWindowA("STATIC", "Input:", WS_CHILD | WS_VISIBLE, 10, 72, 45, 20, hwnd, NULL, NULL, NULL);
-            hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "1", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 60, 70, 100, 22, hwnd, (HMENU)1005, NULL, NULL);
+            hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "1", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 60, 70, 100, 24, hwnd, (HMENU)1005, NULL, NULL);
             OldEditProc = (WNDPROC)SetWindowLongPtrA(hInput, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
 
             CreateWindowA("STATIC", "From:", WS_CHILD | WS_VISIBLE, 170, 72, 40, 20, hwnd, NULL, NULL, NULL);
-            hFrom = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 210, 70, 140, 150, hwnd, (HMENU)1006, NULL, NULL);
+            hFrom = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 215, 70, 140, 150, hwnd, (HMENU)1006, NULL, NULL);
 
-            CreateWindowA("BUTTON", "⇄ Swap", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 360, 70, 60, 22, hwnd, (HMENU)3001, NULL, NULL);
-            CreateWindowA("BUTTON", "⭐ Pin", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 430, 70, 50, 22, hwnd, (HMENU)3002, NULL, NULL);
+            CreateWindowA("BUTTON", "⇄ Swap", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 365, 70, 65, 24, hwnd, (HMENU)3001, NULL, NULL);
+            CreateWindowA("BUTTON", "⭐ Pin", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 435, 70, 55, 24, hwnd, (HMENU)3002, NULL, NULL);
 
             CreateWindowA("STATIC", "To:", WS_CHILD | WS_VISIBLE, 170, 102, 40, 20, hwnd, NULL, NULL, NULL);
-            hTo = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 210, 100, 140, 150, hwnd, (HMENU)1007, NULL, NULL);
+            hTo = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 215, 100, 140, 150, hwnd, (HMENU)1007, NULL, NULL);
 
             CreateWindowA("STATIC", "Result:", WS_CHILD | WS_VISIBLE, 10, 132, 50, 20, hwnd, NULL, NULL, NULL);
-            hOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_READONLY | ES_AUTOHSCROLL, 60, 130, 290, 22, hwnd, NULL, NULL, NULL);
-            CreateWindowA("BUTTON", "Convert", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 360, 100, 120, 52, hwnd, (HMENU)1001, NULL, NULL);
+            hOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_READONLY | ES_AUTOHSCROLL, 60, 130, 295, 24, hwnd, NULL, NULL, NULL);
+            CreateWindowA("BUTTON", "Convert", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 365, 100, 125, 54, hwnd, (HMENU)1001, NULL, NULL);
 
-            hFormulaStatic = CreateWindowA("STATIC", "Formula: 1 Meter = 1 Meter", WS_CHILD | WS_VISIBLE, 10, 160, 500, 20, hwnd, NULL, NULL, NULL);
+            hFormulaStatic = CreateWindowA("STATIC", "Formula: 1 Meter = 1 Meter", WS_CHILD | WS_VISIBLE, 10, 164, 520, 20, hwnd, NULL, NULL, NULL);
 
             // Batch View Output
-            hBatchOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_BORDER | ES_MULTILINE | ES_READONLY | WS_VSCROLL, 10, 70, 560, 250, hwnd, NULL, NULL, NULL);
+            hBatchOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_BORDER | ES_MULTILINE | ES_READONLY | WS_VSCROLL, 10, 70, 560, 260, hwnd, NULL, NULL, NULL);
 
             // Favorites View
-            hFavCombo = CreateWindowA("COMBOBOX", NULL, WS_CHILD | CBS_DROPDOWNLIST, 10, 70, 400, 150, hwnd, (HMENU)3003, NULL, NULL);
+            hFavCombo = CreateWindowA("COMBOBOX", NULL, WS_CHILD | CBS_DROPDOWNLIST, 10, 70, 420, 150, hwnd, (HMENU)3003, NULL, NULL);
 
             // History Log View
-            hHistoryOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_BORDER | ES_MULTILINE | ES_READONLY | WS_VSCROLL, 10, 70, 560, 250, hwnd, NULL, NULL, NULL);
-            CreateWindowA("BUTTON", "Export History Log", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 330, 130, 24, hwnd, (HMENU)4001, NULL, NULL);
+            hHistoryOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_BORDER | ES_MULTILINE | ES_READONLY | WS_VSCROLL, 10, 70, 560, 260, hwnd, NULL, NULL, NULL);
+            CreateWindowA("BUTTON", "Export History Log", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 340, 140, 26, hwnd, (HMENU)4001, NULL, NULL);
 
             // Smart Parser View Controls
-            hExpressInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "100 km/h to m/s", WS_CHILD | ES_AUTOHSCROLL, 10, 70, 380, 22, hwnd, (HMENU)5010, NULL, NULL);
+            hExpressInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "100 km/h to m/s", WS_CHILD | ES_AUTOHSCROLL, 10, 70, 390, 24, hwnd, (HMENU)5010, NULL, NULL);
             SetWindowLongPtrA(hExpressInput, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
-            CreateWindowA("BUTTON", "Evaluate", WS_CHILD | BS_PUSHBUTTON, 400, 70, 80, 22, hwnd, (HMENU)5000, NULL, NULL);
+            CreateWindowA("BUTTON", "Evaluate", WS_CHILD | BS_PUSHBUTTON, 410, 70, 80, 24, hwnd, (HMENU)5000, NULL, NULL);
 
             hExpressPresetBtns[0] = CreateWindowA("BUTTON", "100km/h->m/s", WS_CHILD | BS_PUSHBUTTON, 10, 98, 90, 22, hwnd, (HMENU)5001, NULL, NULL);
             hExpressPresetBtns[1] = CreateWindowA("BUTTON", "50psi->bar", WS_CHILD | BS_PUSHBUTTON, 105, 98, 75, 22, hwnd, (HMENU)5002, NULL, NULL);
@@ -607,12 +634,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hExpressPresetBtns[4] = CreateWindowA("BUTTON", "5000m2->acre", WS_CHILD | BS_PUSHBUTTON, 335, 98, 90, 22, hwnd, (HMENU)5005, NULL, NULL);
             hExpressPresetBtns[5] = CreateWindowA("BUTTON", "5gal->l", WS_CHILD | BS_PUSHBUTTON, 430, 98, 55, 22, hwnd, (HMENU)5006, NULL, NULL);
 
-            hExpressOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_BORDER | ES_MULTILINE | ES_READONLY | WS_VSCROLL, 10, 126, 560, 195, hwnd, NULL, NULL, NULL);
+            hExpressOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_BORDER | ES_MULTILINE | ES_READONLY | WS_VSCROLL, 10, 126, 560, 204, hwnd, NULL, NULL, NULL);
 
-            HWND hHelpText = CreateWindowA("STATIC", "[H] or [F1] for Help", WS_CHILD | WS_VISIBLE, 400, 42, 140, 20, hwnd, NULL, NULL, NULL);
-            
             RegisterHotKey(hwnd, 1, 0, VK_F1);
-            RegisterHotKey(hwnd, 2, 0, 'H');
 
             // Populate Category Combo
             for (int i = 0; i < numCats; i++) {
@@ -635,12 +659,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             PopulateUnits(0);
 
-            hFont = CreateFontA(-15, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
-            hFontBold = CreateFontA(-15, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hFont = CreateFontA(-14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hFontBold = CreateFontA(-14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
 
             SendMessageA(hCategory, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hPrecision, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hFormat, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hBtnSingle, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hBtnBatch, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hBtnFavs, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hBtnHistory, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hBtnExpress, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hInput, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hFrom, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hTo, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -654,7 +684,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             for (int i = 0; i < 6; i++) {
                 if (hExpressPresetBtns[i]) SendMessageA(hExpressPresetBtns[i], WM_SETFONT, (WPARAM)hFont, TRUE);
             }
-            SendMessageA(hHelpText, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             UpdateViewVisibility();
             DoConvert();
@@ -665,7 +694,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int wmId = LOWORD(wParam);
             int wmEvent = HIWORD(wParam);
 
-            if (wmId == 1001) { // Convert Button
+            if (wmId == 6001) { // Help Button
+                ShowHelpDialog(hwnd);
+            } else if (wmId == 1001) { // Convert Button
                 DoConvert();
             } else if (wmId == 1005 && wmEvent == EN_CHANGE) { // Live input update
                 DoConvert();
@@ -732,9 +763,47 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
+        case WM_KEYDOWN: {
+            HWND hFocus = GetFocus();
+            BOOL isEditing = (hFocus == hInput || hFocus == hExpressInput || hFocus == hHistoryOutput || hFocus == hBatchOutput);
+            if (wParam == VK_F1) {
+                ShowHelpDialog(hwnd);
+                return 0;
+            }
+            if (!isEditing) {
+                if (wParam == '1') {
+                    currentMode = 0;
+                    UpdateViewVisibility();
+                    DoConvert();
+                    return 0;
+                } else if (wParam == '2') {
+                    currentMode = 1;
+                    UpdateViewVisibility();
+                    DoConvert();
+                    return 0;
+                } else if (wParam == '3') {
+                    currentMode = 2;
+                    UpdateViewVisibility();
+                    return 0;
+                } else if (wParam == '4') {
+                    currentMode = 3;
+                    UpdateViewVisibility();
+                    return 0;
+                } else if (wParam == '5') {
+                    currentMode = 4;
+                    UpdateViewVisibility();
+                    DoExpressParse();
+                    return 0;
+                } else if (wParam == 'H' || wParam == 'h') {
+                    ShowHelpDialog(hwnd);
+                    return 0;
+                }
+            }
+            break;
+        }
         case WM_HOTKEY: {
-            if (wParam == 1 || wParam == 2) {
-                MessageBoxA(hwnd, "KConverter Pro Help:\n\n- Single Convert: Convert between two units.\n- Batch Mode: See all units at once.\n- Favorites: Pin favorite pairs.\n- Smart Parser: Type natural expressions like '100 km/h to m/s' or '50 psi to bar'.", "Help", MB_OK | MB_ICONINFORMATION);
+            if (wParam == 1) {
+                ShowHelpDialog(hwnd);
             }
             break;
         }
@@ -743,7 +812,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (hFontBold) { DeleteObject(hFontBold); hFontBold = NULL; }
             if (hMsvcrt) { FreeLibrary(hMsvcrt); hMsvcrt = NULL; }
             UnregisterHotKey(hwnd, 1);
-            UnregisterHotKey(hwnd, 2);
             PostQuitMessage(0);
             return 0;
     }
@@ -766,9 +834,9 @@ void __stdcall MainEntry() {
 
     RegisterClassA(&wc);
     
-    RECT rect = { 0, 0, 620, 460 };
+    RECT rect = { 0, 0, 660, 480 };
     AdjustWindowRect(&rect, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
-    HWND hwnd = CreateWindowExA(0, "KConvClass", "KConverter Pro", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KConvClass", "KConverter Pro - [F1] Help", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

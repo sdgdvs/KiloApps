@@ -389,6 +389,10 @@
     transform: translateY(0);
   }
 
+  .toast.success { border-color: #10b981; }
+  .toast.warning { border-color: #f59e0b; color: #fef3c7; }
+  .toast.error { border-color: #ef4444; color: #fca5a5; }
+
   /* Hidden view state */
   .view-pane {
     display: none;
@@ -406,6 +410,112 @@
     width: 100%;
     margin-bottom: 8px;
   }
+
+  /* Help Modal Dialog */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1500;
+    padding: 16px;
+  }
+
+  .modal-overlay.open {
+    display: flex;
+  }
+
+  .modal-dialog {
+    background: #0f172a;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 640px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+    animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+  }
+
+  @keyframes modalPop {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--panel-border);
+    background: rgba(30, 41, 59, 0.5);
+  }
+
+  .modal-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent-blue);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .modal-body {
+    padding: 16px 18px;
+    overflow-y: auto;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .modal-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent-blue);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 4px;
+  }
+
+  .key-badge {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: monospace;
+    font-size: 11px;
+    color: #fff;
+  }
+
+  .btn-help {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(168, 85, 247, 0.35));
+    border-color: rgba(56, 189, 248, 0.5);
+    color: #e0f2fe;
+  }
+
+  .btn-help:hover {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.45), rgba(168, 85, 247, 0.55));
+    border-color: #38bdf8;
+  }
+
+  .nav-tab .badge {
+    font-size: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--text-muted);
+    margin-left: 4px;
+  }
 </style>
 </head>
 <body>
@@ -414,7 +524,7 @@
     <header class="header">
       <div class="title-group">
         <div class="app-logo">K</div>
-        <div class="header-title">KConverter Pro <span style="font-size: 12px; color: var(--accent-blue); font-weight: 600; margin-left: 8px;">[Press H or F1 for Help]</span></div>
+        <div class="header-title">KConverter Pro <span style="font-size: 11px; color: var(--accent-blue); font-weight: 600; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.25); padding: 2px 6px; border-radius: 4px; -webkit-text-fill-color: var(--accent-blue);">Press H / F1</span></div>
       </div>
       
       <div class="controls-bar">
@@ -433,20 +543,21 @@
           <label for="notationSel">Format:</label>
           <select id="notationSel" onchange="convert(); renderBatch(); parseExpressInput();" class="btn-sm" aria-label="Notation Format">
             <option value="std" selected>Standard</option>
-            <option value="sci">Scientific (1e+N)</option>
+            <option value="sci">Scientific</option>
           </select>
         </div>
+        <button class="btn-sm btn-help" onclick="toggleHelpModal(true)" title="Help & Reference (F1 / H)">❓ Help [F1]</button>
       </div>
     </header>
 
     <!-- Top Navigation Tabs -->
     <nav class="nav-tabs" role="tablist">
-      <div class="nav-tab active" role="tab" id="tab-single" onclick="switchView('single')">Single Convert</div>
-      <div class="nav-tab" role="tab" id="tab-batch" onclick="switchView('batch')">Batch Mode</div>
-      <div class="nav-tab" role="tab" id="tab-express" onclick="switchView('express')">Smart Parser ⚡</div>
-      <div class="nav-tab" role="tab" id="tab-fav" onclick="switchView('fav')">Favorites ⭐</div>
-      <div class="nav-tab" role="tab" id="tab-custom" onclick="switchView('custom')">Custom Units 🛠️</div>
-      <div class="nav-tab" role="tab" id="tab-history" onclick="switchView('history')">History Log 📜</div>
+      <div class="nav-tab active" role="tab" id="tab-single" onclick="switchView('single')">Single Convert <span class="badge">1</span></div>
+      <div class="nav-tab" role="tab" id="tab-batch" onclick="switchView('batch')">Batch Mode <span class="badge">2</span></div>
+      <div class="nav-tab" role="tab" id="tab-express" onclick="switchView('express')">Smart Parser ⚡ <span class="badge">3</span></div>
+      <div class="nav-tab" role="tab" id="tab-fav" onclick="switchView('fav')">Favorites ⭐ <span class="badge">4</span></div>
+      <div class="nav-tab" role="tab" id="tab-custom" onclick="switchView('custom')">Custom Units 🛠️ <span class="badge">5</span></div>
+      <div class="nav-tab" role="tab" id="tab-history" onclick="switchView('history')">History Log 📜 <span class="badge">6</span></div>
     </nav>
 
     <!-- Main Content Panel -->
@@ -458,18 +569,26 @@
       <section id="view-single" class="view-pane active">
         <div class="convert-grid">
           <div class="row">
-            <label for="inputVal">From</label>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label for="inputVal">From Value</label>
+              <div class="quick-val-bar">
+                <button class="btn-sm" onclick="setInputValue(1)">1</button>
+                <button class="btn-sm" onclick="setInputValue(10)">10</button>
+                <button class="btn-sm" onclick="setInputValue(100)">100</button>
+                <button class="btn-sm" onclick="clearInputValue()" title="Clear Value">✕</button>
+              </div>
+            </div>
             <input type="number" id="inputVal" value="1" step="any" oninput="convert()" aria-label="Value to convert" />
             <select id="unitFrom" onchange="convert()" aria-label="Unit from"></select>
           </div>
 
-          <button class="swap-btn" onclick="swapUnits()" title="Swap Units" aria-label="Swap units">⇄</button>
+          <button class="swap-btn" onclick="swapUnits()" title="Swap Units (⇄)" aria-label="Swap units">⇄</button>
 
           <div class="row">
             <label for="outputVal">To (Result)</label>
             <div style="display: flex; gap: 6px;">
               <input type="text" id="outputVal" readonly style="flex:1; background: rgba(0,0,0,0.4);" aria-label="Converted output" aria-live="polite" />
-              <button onclick="copyToClipboard(document.getElementById('outputVal').value)" title="Copy Result" aria-label="Copy result">📋</button>
+              <button onclick="copyToClipboard(document.getElementById('outputVal').value)" title="Copy Result" aria-label="Copy result">📋 Copy</button>
             </div>
             <select id="unitTo" onchange="convert()" aria-label="Unit to"></select>
           </div>
@@ -613,6 +732,55 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <!-- Help Modal Dialog -->
+  <div id="helpModal" class="modal-overlay" onclick="handleBackdropClick(event)">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalHelpTitle">
+      <div class="modal-header">
+        <div id="modalHelpTitle" class="modal-title">
+          <span>⚡ KConverter Pro Guide & Reference</span>
+        </div>
+        <button class="btn-sm" onclick="toggleHelpModal(false)" style="padding: 4px 8px;">✕ Close [Esc]</button>
+      </div>
+      <div class="modal-body">
+        <div>
+          <div class="modal-section-title">Navigation & Shortcuts</div>
+          <p style="margin: 4px 0;">
+            <span class="key-badge">1</span> Single Convert &nbsp;|&nbsp;
+            <span class="key-badge">2</span> Batch Mode &nbsp;|&nbsp;
+            <span class="key-badge">3</span> Smart Parser &nbsp;|&nbsp;
+            <span class="key-badge">4</span> Favorites &nbsp;|&nbsp;
+            <span class="key-badge">5</span> Custom Units &nbsp;|&nbsp;
+            <span class="key-badge">6</span> History Log
+          </p>
+          <p style="margin: 4px 0;">
+            <span class="key-badge">H</span> or <span class="key-badge">F1</span> Toggle this Help Dialog &nbsp;|&nbsp;
+            <span class="key-badge">Esc</span> Close Modal &nbsp;|&nbsp;
+            <span class="key-badge">Enter</span> Evaluate / Calculate
+          </p>
+        </div>
+
+        <div>
+          <div class="modal-section-title">Key Features</div>
+          <ul style="margin: 4px 0 0 18px; padding: 0;">
+            <li><strong>Single Convert:</strong> Instant bi-directional unit conversion with live formula breakdown.</li>
+            <li><strong>Batch Mode:</strong> Simultaneously view conversions across all units in the selected category.</li>
+            <li><strong>Smart Parser:</strong> Evaluate natural language strings like <code>100 km/h to m/s</code> or <code>50 psi to bar</code>.</li>
+            <li><strong>Favorites:</strong> Pin frequent conversion pairs with ⭐ for 1-click loading.</li>
+            <li><strong>Custom Units:</strong> Add proprietary or custom engineering scale factors.</li>
+            <li><strong>History Log:</strong> Automatic audit trail with export to CSV/JSON.</li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="modal-section-title">Supported Physical Categories</div>
+          <p style="margin: 4px 0;">
+            Length (m, km, cm, mm, mi, yd, ft, in, nmi), Weight (kg, g, mg, t, lb, oz, st), Temperature (°C, °F, K), Data (B, KB, MB, GB, TB, PB), Speed (m/s, km/h, mph, knot, ft/s), Area (m², km², ft², acre, ha), Volume (L, mL, m³, gal, qt, fl oz), Time (sec, min, hr, day, wk, yr), Pressure (Pa, kPa, bar, psi, atm, mmHg).
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div id="toast" class="toast">Copied to clipboard!</div>
@@ -871,25 +1039,90 @@
         factInp.addEventListener('keydown', handleEnter);
       }
 
-      // Help keyboard shortcut
+      // Enter key in single input
+      const inpVal = document.getElementById('inputVal');
+      if (inpVal) {
+        inpVal.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') convert();
+        });
+      }
+
+      // Global keyboard navigation
       document.addEventListener('keydown', (e) => {
-        if ((e.key.toLowerCase() === 'h' || e.key === 'F1') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
-          if (e.key === 'F1') e.preventDefault();
-          alert('KConverter Pro Help:\n\n- Single Convert: Convert between two units instantly.\n- Batch Mode: See how one value converts to all other units in the category.\n- Smart Parser: Type natural expressions like "100 km/h to m/s" or "50 psi to bar".\n- Favorites: Pin frequent conversions for quick access.\n- Custom Units: Define your own units relative to the base unit.\n- History Log: Keeps track of your conversions.');
+        const isEditing = e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA';
+        
+        // Escape closes Help Modal
+        if (e.key === 'Escape') {
+          toggleHelpModal(false);
+          return;
+        }
+
+        // F1 or H for help
+        if (e.key === 'F1' || (!isEditing && e.key.toLowerCase() === 'h')) {
+          e.preventDefault();
+          toggleHelpModal();
+          return;
+        }
+
+        // 1-6 view switching when not editing
+        if (!isEditing && !e.ctrlKey && !e.altKey && !e.metaKey) {
+          if (e.key === '1') switchView('single');
+          else if (e.key === '2') switchView('batch');
+          else if (e.key === '3') switchView('express');
+          else if (e.key === '4') switchView('fav');
+          else if (e.key === '5') switchView('custom');
+          else if (e.key === '6') switchView('history');
         }
       });
+
+      // Welcome Toast
+      setTimeout(() => {
+        showToast('⚡ Welcome to KConverter Pro! Press F1 or H for help.');
+      }, 350);
     };
 
-    function showToast(msg) {
+    let toastTimer = null;
+    function showToast(msg, type = 'info') {
       const toast = document.getElementById('toast');
+      toast.className = 'toast show ' + type;
       toast.innerText = msg || 'Copied to clipboard!';
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2000);
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
+    function toggleHelpModal(forceOpen) {
+      const modal = document.getElementById('helpModal');
+      if (forceOpen === undefined) {
+        modal.classList.toggle('open');
+      } else if (forceOpen) {
+        modal.classList.add('open');
+      } else {
+        modal.classList.remove('open');
+      }
+    }
+
+    function handleBackdropClick(e) {
+      if (e.target.id === 'helpModal') {
+        toggleHelpModal(false);
+      }
     }
 
     function copyToClipboard(text) {
       if (!text) return;
-      navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!'));
+      navigator.clipboard.writeText(text).then(() => showToast('📋 Copied to clipboard!', 'success'));
+    }
+
+    function setInputValue(v) {
+      document.getElementById('inputVal').value = v;
+      convert();
+    }
+
+    function clearInputValue() {
+      document.getElementById('inputVal').value = '';
+      convert();
+      document.getElementById('inputVal').focus();
     }
 
     function switchView(viewName) {
@@ -1237,10 +1470,10 @@
       if (!favorites.some(f => f.category === fav.category && f.fromKey === fav.fromKey && f.toKey === fav.toKey)) {
         favorites.push(fav);
         localStorage.setItem('kconv_favs', JSON.stringify(favorites));
-        showToast('Pinned to Favorites! ⭐');
+        showToast('⭐ Pinned to Favorites!', 'success');
         renderFavorites();
       } else {
-        showToast('Pair already pinned!');
+        showToast('Pair already in favorites!', 'warning');
       }
     }
 
@@ -1249,7 +1482,7 @@
       container.innerHTML = '';
 
       if (favorites.length === 0) {
-        container.innerHTML = '<div style="color: var(--text-muted); font-size: 13px;">No pinned favorites yet. Click "Pin Pair" in Single Convert mode!</div>';
+        container.innerHTML = '<div style="color: var(--text-muted); font-size: 13px;">No pinned favorites yet. Click "⭐ Pin Pair" in Single Convert mode!</div>';
         return;
       }
 
@@ -1272,6 +1505,7 @@
       favorites = favorites.filter(f => f.id !== id);
       localStorage.setItem('kconv_favs', JSON.stringify(favorites));
       renderFavorites();
+      showToast('Favorite removed');
     }
 
     function loadFavorite(fav) {
@@ -1280,6 +1514,7 @@
       document.getElementById('unitTo').value = fav.toKey;
       switchView('single');
       convert();
+      showToast(`Loaded: ${fav.fromName} ➔ ${fav.toName}`);
     }
 
     /* CUSTOM UNITS SYSTEM */
@@ -1289,7 +1524,7 @@
       const factor = parseFloat(document.getElementById('customFactor').value);
 
       if (!name || isNaN(factor) || factor <= 0) {
-        alert('Please provide a valid Unit Name and positive numerical Factor.');
+        showToast('⚠️ Please provide a valid Unit Name and factor > 0', 'warning');
         return;
       }
 
@@ -1306,7 +1541,7 @@
       document.getElementById('customUnitName').value = '';
       document.getElementById('customFactor').value = '';
 
-      showToast(`Custom Unit "${name}" added!`);
+      showToast(`Custom Unit "${name}" added!`, 'success');
       renderCustomUnitsTable();
       populateDropdowns();
     }
@@ -1340,13 +1575,14 @@
       renderCustomUnitsTable();
       populateDropdowns();
       convert();
+      showToast('Custom unit deleted');
     }
 
     /* HISTORY LOG SYSTEM */
     let lastLogTime = 0;
     function logHistory(catKey, fromVal, fromName, toValStr, toName) {
       const now = Date.now();
-      if (now - lastLogTime < 1500) return; // avoid logging on every keystroke
+      if (now - lastLogTime < 1500) return;
       lastLogTime = now;
 
       const item = {
@@ -1357,7 +1593,7 @@
       };
 
       historyLog.unshift(item);
-      if (historyLog.length > 50) historyLog.pop(); // keep last 50
+      if (historyLog.length > 50) historyLog.pop();
       localStorage.setItem('kconv_history', JSON.stringify(historyLog));
     }
 
@@ -1391,12 +1627,12 @@
       historyLog = [];
       localStorage.removeItem('kconv_history');
       renderHistory();
-      showToast('History cleared');
+      showToast('🗑️ History cleared');
     }
 
     function exportHistoryCSV() {
       if (historyLog.length === 0) {
-        alert('History is empty!');
+        showToast('⚠️ History is empty!', 'warning');
         return;
       }
       let csv = 'Time,Category,From,To\n';
@@ -1411,11 +1647,12 @@
       a.download = 'kconverter_history.csv';
       a.click();
       URL.revokeObjectURL(url);
+      showToast('📥 Exported CSV');
     }
 
     function exportHistoryJSON() {
       if (historyLog.length === 0) {
-        alert('History is empty!');
+        showToast('⚠️ History is empty!', 'warning');
         return;
       }
       const json = JSON.stringify(historyLog, null, 2);
@@ -1426,6 +1663,7 @@
       a.download = 'kconverter_history.json';
       a.click();
       URL.revokeObjectURL(url);
+      showToast('📥 Exported JSON');
     }
   </script>
 </body>

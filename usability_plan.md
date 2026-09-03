@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KConverter
+**Target App:** KGraph
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KConverter
 - KGraph
 - KTimer
 - KContacts
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KRogue
 - KSys
 - KTodo
+- KConverter
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KConverter: Usability and UI issues fixed (replaced blocking alerts with cybernetic Help modal dialog and non-blocking toast notifications with startup welcome toast, added 1-6 tab switching shortcuts, Escape and backdrop-click modal dismissal, quick value presets [1, 10, 100, Clear], and explicit F1/H header button in web; fixed critical bug where typing 'H' in expressions like 'km/h' triggered help, added explicit Help [F1] button, [1-5] tab switching hotkeys, ShowHelpDialog guide, updated window title with F1 help hint, and expanded client bounds in native C).
 - KTask: Usability and UI issues fixed (added dedicated Help modal dialog with full shortcut and feature reference, added Help [F1] header button, interactive task card selection, Delete key task termination, 1-3 tab switching shortcuts, and backdrop click modal dismissal in web; fixed critical bug where typing 'H' in filter edit triggered help messagebox, added Enter to filter/focus list, Enter/I to inspect, updated toolbar labels with explicit shortcut hints, added comprehensive ShowHelpDialog, eliminated GDI font leak, and improved button layout in native C).
 - KSpace: Usability and UI issues fixed (replaced blocking alert modals with sleek cybernetic toast notifications, added startup welcome toast, redesigned non-wrapping responsive skill buttons, added visible in-game pause/help HUD controls and pause-menu help routing in web; implemented full mouse click WM_LBUTTONDOWN navigation, added ClearType multi-tiered typography fixing HUD clipping off-screen, and eliminated GDI font leaks in native C).
 - KTetris: Usability and UI issues fixed (fixed math linker unresolved externals and struct compiler errors, added WS_CLIPCHILDREN to eliminate native flicker, mapped F1 and H help across web and native with explicit labels, implemented full mouse click menu navigation and help toggling in web and native, and added startup welcome toast and non-blocking notification system in web).

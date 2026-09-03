@@ -34,6 +34,9 @@
     color: var(--text-primary); 
     user-select: none;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   .app-container { 
@@ -386,6 +389,10 @@
     transform: translateY(0);
   }
 
+  .toast.success { border-color: #10b981; }
+  .toast.warning { border-color: #f59e0b; color: #fef3c7; }
+  .toast.error { border-color: #ef4444; color: #fca5a5; }
+
   /* Hidden view state */
   .view-pane {
     display: none;
@@ -403,6 +410,112 @@
     width: 100%;
     margin-bottom: 8px;
   }
+
+  /* Help Modal Dialog */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1500;
+    padding: 16px;
+  }
+
+  .modal-overlay.open {
+    display: flex;
+  }
+
+  .modal-dialog {
+    background: #0f172a;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 640px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+    animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+  }
+
+  @keyframes modalPop {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--panel-border);
+    background: rgba(30, 41, 59, 0.5);
+  }
+
+  .modal-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent-blue);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .modal-body {
+    padding: 16px 18px;
+    overflow-y: auto;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .modal-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent-blue);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 4px;
+  }
+
+  .key-badge {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: monospace;
+    font-size: 11px;
+    color: #fff;
+  }
+
+  .btn-help {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(168, 85, 247, 0.35));
+    border-color: rgba(56, 189, 248, 0.5);
+    color: #e0f2fe;
+  }
+
+  .btn-help:hover {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.45), rgba(168, 85, 247, 0.55));
+    border-color: #38bdf8;
+  }
+
+  .nav-tab .badge {
+    font-size: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--text-muted);
+    margin-left: 4px;
+  }
 </style>
 </head>
 <body>
@@ -411,13 +524,13 @@
     <header class="header">
       <div class="title-group">
         <div class="app-logo">K</div>
-        <div class="header-title">KConverter Pro</div>
+        <div class="header-title">KConverter Pro <span style="font-size: 11px; color: var(--accent-blue); font-weight: 600; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.25); padding: 2px 6px; border-radius: 4px; -webkit-text-fill-color: var(--accent-blue);">Press H / F1</span></div>
       </div>
       
       <div class="controls-bar">
         <div class="control-group">
           <label for="precisionSel">Decimals:</label>
-          <select id="precisionSel" onchange="convert(); renderBatch();" class="btn-sm" aria-label="Decimal Precision">
+          <select id="precisionSel" onchange="convert(); renderBatch(); parseExpressInput();" class="btn-sm" aria-label="Decimal Precision">
             <option value="auto">Auto</option>
             <option value="0">0</option>
             <option value="2">2</option>
@@ -428,21 +541,23 @@
         </div>
         <div class="control-group">
           <label for="notationSel">Format:</label>
-          <select id="notationSel" onchange="convert(); renderBatch();" class="btn-sm" aria-label="Notation Format">
+          <select id="notationSel" onchange="convert(); renderBatch(); parseExpressInput();" class="btn-sm" aria-label="Notation Format">
             <option value="std" selected>Standard</option>
-            <option value="sci">Scientific (1e+N)</option>
+            <option value="sci">Scientific</option>
           </select>
         </div>
+        <button class="btn-sm btn-help" onclick="toggleHelpModal(true)" title="Help & Reference (F1 / H)">❓ Help [F1]</button>
       </div>
     </header>
 
     <!-- Top Navigation Tabs -->
     <nav class="nav-tabs" role="tablist">
-      <div class="nav-tab active" role="tab" id="tab-single" onclick="switchView('single')">Single Convert</div>
-      <div class="nav-tab" role="tab" id="tab-batch" onclick="switchView('batch')">Batch Mode</div>
-      <div class="nav-tab" role="tab" id="tab-fav" onclick="switchView('fav')">Favorites ⭐</div>
-      <div class="nav-tab" role="tab" id="tab-custom" onclick="switchView('custom')">Custom Units 🛠️</div>
-      <div class="nav-tab" role="tab" id="tab-history" onclick="switchView('history')">History Log 📜</div>
+      <div class="nav-tab active" role="tab" id="tab-single" onclick="switchView('single')">Single Convert <span class="badge">1</span></div>
+      <div class="nav-tab" role="tab" id="tab-batch" onclick="switchView('batch')">Batch Mode <span class="badge">2</span></div>
+      <div class="nav-tab" role="tab" id="tab-express" onclick="switchView('express')">Smart Parser ⚡ <span class="badge">3</span></div>
+      <div class="nav-tab" role="tab" id="tab-fav" onclick="switchView('fav')">Favorites ⭐ <span class="badge">4</span></div>
+      <div class="nav-tab" role="tab" id="tab-custom" onclick="switchView('custom')">Custom Units 🛠️ <span class="badge">5</span></div>
+      <div class="nav-tab" role="tab" id="tab-history" onclick="switchView('history')">History Log 📜 <span class="badge">6</span></div>
     </nav>
 
     <!-- Main Content Panel -->
@@ -454,18 +569,26 @@
       <section id="view-single" class="view-pane active">
         <div class="convert-grid">
           <div class="row">
-            <label for="inputVal">From</label>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label for="inputVal">From Value</label>
+              <div class="quick-val-bar">
+                <button class="btn-sm" onclick="setInputValue(1)">1</button>
+                <button class="btn-sm" onclick="setInputValue(10)">10</button>
+                <button class="btn-sm" onclick="setInputValue(100)">100</button>
+                <button class="btn-sm" onclick="clearInputValue()" title="Clear Value">✕</button>
+              </div>
+            </div>
             <input type="number" id="inputVal" value="1" step="any" oninput="convert()" aria-label="Value to convert" />
             <select id="unitFrom" onchange="convert()" aria-label="Unit from"></select>
           </div>
 
-          <button class="swap-btn" onclick="swapUnits()" title="Swap Units" aria-label="Swap units">⇄</button>
+          <button class="swap-btn" onclick="swapUnits()" title="Swap Units (⇄)" aria-label="Swap units">⇄</button>
 
           <div class="row">
             <label for="outputVal">To (Result)</label>
             <div style="display: flex; gap: 6px;">
               <input type="text" id="outputVal" readonly style="flex:1; background: rgba(0,0,0,0.4);" aria-label="Converted output" aria-live="polite" />
-              <button onclick="copyToClipboard(document.getElementById('outputVal').value)" title="Copy Result" aria-label="Copy result">📋</button>
+              <button onclick="copyToClipboard(document.getElementById('outputVal').value)" title="Copy Result" aria-label="Copy result">📋 Copy</button>
             </div>
             <select id="unitTo" onchange="convert()" aria-label="Unit to"></select>
           </div>
@@ -508,6 +631,29 @@
             </thead>
             <tbody id="batchTableBody"></tbody>
           </table>
+        </div>
+      </section>
+
+      <!-- VIEW: SMART PARSER -->
+      <section id="view-express" class="view-pane">
+        <div class="row" style="background: var(--card-bg); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--panel-border);">
+          <label for="expressInput">Natural Language & Engineering Expression Parser</label>
+          <div style="display: flex; gap: 8px; margin-top: 6px;">
+            <input type="text" id="expressInput" placeholder="e.g. 100 km/h to m/s or 50 psi to bar" value="100 km/h to m/s" style="flex: 1; font-size: 15px; font-weight: 500;" oninput="parseExpressInput()" aria-label="Expression input" />
+            <button onclick="parseExpressInput()" style="padding: 8px 16px;">⚡ Evaluate</button>
+          </div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
+            <span style="font-size: 11px; color: var(--text-muted); align-self: center;">Presets:</span>
+            <button class="btn-sm" onclick="setExpressPreset('100 km/h to m/s')">100 km/h ➔ m/s</button>
+            <button class="btn-sm" onclick="setExpressPreset('50 psi to bar')">50 psi ➔ bar</button>
+            <button class="btn-sm" onclick="setExpressPreset('250 f to c')">250 °F ➔ °C</button>
+            <button class="btn-sm" onclick="setExpressPreset('1024 mb to gb')">1024 MB ➔ GB</button>
+            <button class="btn-sm" onclick="setExpressPreset('5000 m^2 to acre')">5000 m² ➔ acre</button>
+            <button class="btn-sm" onclick="setExpressPreset('5 gal to l')">5 gal ➔ L</button>
+          </div>
+        </div>
+
+        <div id="expressResultCard" style="background: var(--card-bg); border: 1px solid var(--panel-border); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; gap: 12px;">
         </div>
       </section>
 
@@ -588,6 +734,55 @@
     </main>
   </div>
 
+  <!-- Help Modal Dialog -->
+  <div id="helpModal" class="modal-overlay" onclick="handleBackdropClick(event)">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalHelpTitle">
+      <div class="modal-header">
+        <div id="modalHelpTitle" class="modal-title">
+          <span>⚡ KConverter Pro Guide & Reference</span>
+        </div>
+        <button class="btn-sm" onclick="toggleHelpModal(false)" style="padding: 4px 8px;">✕ Close [Esc]</button>
+      </div>
+      <div class="modal-body">
+        <div>
+          <div class="modal-section-title">Navigation & Shortcuts</div>
+          <p style="margin: 4px 0;">
+            <span class="key-badge">1</span> Single Convert &nbsp;|&nbsp;
+            <span class="key-badge">2</span> Batch Mode &nbsp;|&nbsp;
+            <span class="key-badge">3</span> Smart Parser &nbsp;|&nbsp;
+            <span class="key-badge">4</span> Favorites &nbsp;|&nbsp;
+            <span class="key-badge">5</span> Custom Units &nbsp;|&nbsp;
+            <span class="key-badge">6</span> History Log
+          </p>
+          <p style="margin: 4px 0;">
+            <span class="key-badge">H</span> or <span class="key-badge">F1</span> Toggle this Help Dialog &nbsp;|&nbsp;
+            <span class="key-badge">Esc</span> Close Modal &nbsp;|&nbsp;
+            <span class="key-badge">Enter</span> Evaluate / Calculate
+          </p>
+        </div>
+
+        <div>
+          <div class="modal-section-title">Key Features</div>
+          <ul style="margin: 4px 0 0 18px; padding: 0;">
+            <li><strong>Single Convert:</strong> Instant bi-directional unit conversion with live formula breakdown.</li>
+            <li><strong>Batch Mode:</strong> Simultaneously view conversions across all units in the selected category.</li>
+            <li><strong>Smart Parser:</strong> Evaluate natural language strings like <code>100 km/h to m/s</code> or <code>50 psi to bar</code>.</li>
+            <li><strong>Favorites:</strong> Pin frequent conversion pairs with ⭐ for 1-click loading.</li>
+            <li><strong>Custom Units:</strong> Add proprietary or custom engineering scale factors.</li>
+            <li><strong>History Log:</strong> Automatic audit trail with export to CSV/JSON.</li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="modal-section-title">Supported Physical Categories</div>
+          <p style="margin: 4px 0;">
+            Length (m, km, cm, mm, mi, yd, ft, in, nmi), Weight (kg, g, mg, t, lb, oz, st), Temperature (°C, °F, K), Data (B, KB, MB, GB, TB, PB), Speed (m/s, km/h, mph, knot, ft/s), Area (m², km², ft², acre, ha), Volume (L, mL, m³, gal, qt, fl oz), Time (sec, min, hr, day, wk, yr), Pressure (Pa, kPa, bar, psi, atm, mmHg).
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast">Copied to clipboard!</div>
 
   <script>
@@ -655,6 +850,14 @@
         day: { name: 'Days', factor: 86400 },
         wk: { name: 'Weeks', factor: 604800 },
         yr: { name: 'Years (365d)', factor: 31536000 }
+      },
+      pressure: {
+        pa: { name: 'Pascal (Pa)', factor: 1 },
+        kpa: { name: 'Kilopascal (kPa)', factor: 1000 },
+        bar: { name: 'Bar', factor: 100000 },
+        psi: { name: 'PSI (lb/in²)', factor: 6894.757293 },
+        atm: { name: 'Atmosphere (atm)', factor: 101325 },
+        mmhg: { name: 'mmHg (Torr)', factor: 133.322368 }
       }
     };
 
@@ -666,8 +869,139 @@
       speed: 'Speed',
       area: 'Area',
       volume: 'Volume',
-      time: 'Time'
+      time: 'Time',
+      pressure: 'Pressure'
     };
+
+    const expressAliasTable = [
+      // Length
+      { token: 'm', cat: 'length', key: 'm', dim: 'Length [L]' },
+      { token: 'meter', cat: 'length', key: 'm', dim: 'Length [L]' },
+      { token: 'meters', cat: 'length', key: 'm', dim: 'Length [L]' },
+      { token: 'km', cat: 'length', key: 'km', dim: 'Length [L]' },
+      { token: 'kilometer', cat: 'length', key: 'km', dim: 'Length [L]' },
+      { token: 'kilometers', cat: 'length', key: 'km', dim: 'Length [L]' },
+      { token: 'cm', cat: 'length', key: 'cm', dim: 'Length [L]' },
+      { token: 'mm', cat: 'length', key: 'mm', dim: 'Length [L]' },
+      { token: 'mi', cat: 'length', key: 'mi', dim: 'Length [L]' },
+      { token: 'mile', cat: 'length', key: 'mi', dim: 'Length [L]' },
+      { token: 'miles', cat: 'length', key: 'mi', dim: 'Length [L]' },
+      { token: 'yd', cat: 'length', key: 'yd', dim: 'Length [L]' },
+      { token: 'ft', cat: 'length', key: 'ft', dim: 'Length [L]' },
+      { token: 'feet', cat: 'length', key: 'ft', dim: 'Length [L]' },
+      { token: 'in', cat: 'length', key: 'in', dim: 'Length [L]' },
+      { token: 'inch', cat: 'length', key: 'in', dim: 'Length [L]' },
+      { token: 'inches', cat: 'length', key: 'in', dim: 'Length [L]' },
+      { token: 'nmi', cat: 'length', key: 'nmi', dim: 'Length [L]' },
+
+      // Weight
+      { token: 'kg', cat: 'weight', key: 'kg', dim: 'Mass [M]' },
+      { token: 'kilogram', cat: 'weight', key: 'kg', dim: 'Mass [M]' },
+      { token: 'kilograms', cat: 'weight', key: 'kg', dim: 'Mass [M]' },
+      { token: 'g', cat: 'weight', key: 'g', dim: 'Mass [M]' },
+      { token: 'gram', cat: 'weight', key: 'g', dim: 'Mass [M]' },
+      { token: 'mg', cat: 'weight', key: 'mg', dim: 'Mass [M]' },
+      { token: 't', cat: 'weight', key: 't', dim: 'Mass [M]' },
+      { token: 'lb', cat: 'weight', key: 'lb', dim: 'Mass [M]' },
+      { token: 'lbs', cat: 'weight', key: 'lb', dim: 'Mass [M]' },
+      { token: 'pound', cat: 'weight', key: 'lb', dim: 'Mass [M]' },
+      { token: 'pounds', cat: 'weight', key: 'lb', dim: 'Mass [M]' },
+      { token: 'oz', cat: 'weight', key: 'oz', dim: 'Mass [M]' },
+      { token: 'ounce', cat: 'weight', key: 'oz', dim: 'Mass [M]' },
+      { token: 'st', cat: 'weight', key: 'st', dim: 'Mass [M]' },
+
+      // Temp
+      { token: 'c', cat: 'temp', key: 'c', dim: 'Temperature [Θ]' },
+      { token: 'celsius', cat: 'temp', key: 'c', dim: 'Temperature [Θ]' },
+      { token: 'degc', cat: 'temp', key: 'c', dim: 'Temperature [Θ]' },
+      { token: 'f', cat: 'temp', key: 'f', dim: 'Temperature [Θ]' },
+      { token: 'fahrenheit', cat: 'temp', key: 'f', dim: 'Temperature [Θ]' },
+      { token: 'degf', cat: 'temp', key: 'f', dim: 'Temperature [Θ]' },
+      { token: 'k', cat: 'temp', key: 'k', dim: 'Temperature [Θ]' },
+      { token: 'kelvin', cat: 'temp', key: 'k', dim: 'Temperature [Θ]' },
+
+      // Data
+      { token: 'b', cat: 'data', key: 'b', dim: 'Information [Bits]' },
+      { token: 'byte', cat: 'data', key: 'b', dim: 'Information [Bits]' },
+      { token: 'bytes', cat: 'data', key: 'b', dim: 'Information [Bits]' },
+      { token: 'kb', cat: 'data', key: 'kb', dim: 'Information [Bits]' },
+      { token: 'mb', cat: 'data', key: 'mb', dim: 'Information [Bits]' },
+      { token: 'gb', cat: 'data', key: 'gb', dim: 'Information [Bits]' },
+      { token: 'tb', cat: 'data', key: 'tb', dim: 'Information [Bits]' },
+      { token: 'pb', cat: 'data', key: 'pb', dim: 'Information [Bits]' },
+
+      // Speed
+      { token: 'm/s', cat: 'speed', key: 'mps', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'mps', cat: 'speed', key: 'mps', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'km/h', cat: 'speed', key: 'kph', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'kph', cat: 'speed', key: 'kph', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'kmh', cat: 'speed', key: 'kph', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'mph', cat: 'speed', key: 'mph', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'knot', cat: 'speed', key: 'knot', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'knots', cat: 'speed', key: 'knot', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'ft/s', cat: 'speed', key: 'fps', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'fps', cat: 'speed', key: 'fps', dim: 'Velocity [L · T⁻¹]' },
+
+      // Area
+      { token: 'm^2', cat: 'area', key: 'sqm', dim: 'Area [L²]' },
+      { token: 'sqm', cat: 'area', key: 'sqm', dim: 'Area [L²]' },
+      { token: 'm2', cat: 'area', key: 'sqm', dim: 'Area [L²]' },
+      { token: 'km^2', cat: 'area', key: 'sqkm', dim: 'Area [L²]' },
+      { token: 'sqkm', cat: 'area', key: 'sqkm', dim: 'Area [L²]' },
+      { token: 'km2', cat: 'area', key: 'sqkm', dim: 'Area [L²]' },
+      { token: 'ft^2', cat: 'area', key: 'sqft', dim: 'Area [L²]' },
+      { token: 'sqft', cat: 'area', key: 'sqft', dim: 'Area [L²]' },
+      { token: 'ft2', cat: 'area', key: 'sqft', dim: 'Area [L²]' },
+      { token: 'acre', cat: 'area', key: 'acre', dim: 'Area [L²]' },
+      { token: 'acres', cat: 'area', key: 'acre', dim: 'Area [L²]' },
+      { token: 'ha', cat: 'area', key: 'ha', dim: 'Area [L²]' },
+
+      // Volume
+      { token: 'l', cat: 'volume', key: 'l', dim: 'Volume [L³]' },
+      { token: 'liter', cat: 'volume', key: 'l', dim: 'Volume [L³]' },
+      { token: 'liters', cat: 'volume', key: 'l', dim: 'Volume [L³]' },
+      { token: 'ml', cat: 'volume', key: 'ml', dim: 'Volume [L³]' },
+      { token: 'm^3', cat: 'volume', key: 'cbm', dim: 'Volume [L³]' },
+      { token: 'cbm', cat: 'volume', key: 'cbm', dim: 'Volume [L³]' },
+      { token: 'm3', cat: 'volume', key: 'cbm', dim: 'Volume [L³]' },
+      { token: 'gal', cat: 'volume', key: 'gal', dim: 'Volume [L³]' },
+      { token: 'gallon', cat: 'volume', key: 'gal', dim: 'Volume [L³]' },
+      { token: 'gallons', cat: 'volume', key: 'gal', dim: 'Volume [L³]' },
+      { token: 'qt', cat: 'volume', key: 'qt', dim: 'Volume [L³]' },
+      { token: 'floz', cat: 'volume', key: 'floz', dim: 'Volume [L³]' },
+
+      // Time
+      { token: 's', cat: 'time', key: 'sec', dim: 'Time [T]' },
+      { token: 'sec', cat: 'time', key: 'sec', dim: 'Time [T]' },
+      { token: 'second', cat: 'time', key: 'sec', dim: 'Time [T]' },
+      { token: 'seconds', cat: 'time', key: 'sec', dim: 'Time [T]' },
+      { token: 'min', cat: 'time', key: 'min', dim: 'Time [T]' },
+      { token: 'minute', cat: 'time', key: 'min', dim: 'Time [T]' },
+      { token: 'minutes', cat: 'time', key: 'min', dim: 'Time [T]' },
+      { token: 'h', cat: 'time', key: 'hr', dim: 'Time [T]' },
+      { token: 'hr', cat: 'time', key: 'hr', dim: 'Time [T]' },
+      { token: 'hour', cat: 'time', key: 'hr', dim: 'Time [T]' },
+      { token: 'hours', cat: 'time', key: 'hr', dim: 'Time [T]' },
+      { token: 'd', cat: 'time', key: 'day', dim: 'Time [T]' },
+      { token: 'day', cat: 'time', key: 'day', dim: 'Time [T]' },
+      { token: 'days', cat: 'time', key: 'day', dim: 'Time [T]' },
+      { token: 'wk', cat: 'time', key: 'wk', dim: 'Time [T]' },
+      { token: 'week', cat: 'time', key: 'wk', dim: 'Time [T]' },
+      { token: 'weeks', cat: 'time', key: 'wk', dim: 'Time [T]' },
+      { token: 'yr', cat: 'time', key: 'yr', dim: 'Time [T]' },
+      { token: 'year', cat: 'time', key: 'yr', dim: 'Time [T]' },
+      { token: 'years', cat: 'time', key: 'yr', dim: 'Time [T]' },
+
+      // Pressure
+      { token: 'pa', cat: 'pressure', key: 'pa', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
+      { token: 'pascal', cat: 'pressure', key: 'pa', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
+      { token: 'kpa', cat: 'pressure', key: 'kpa', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
+      { token: 'bar', cat: 'pressure', key: 'bar', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
+      { token: 'psi', cat: 'pressure', key: 'psi', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
+      { token: 'atm', cat: 'pressure', key: 'atm', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
+      { token: 'mmhg', cat: 'pressure', key: 'mmhg', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
+      { token: 'torr', cat: 'pressure', key: 'mmhg', dim: 'Pressure [M · L⁻¹ · T⁻²]' }
+    ];
 
     let currentCategory = 'length';
     let favorites = JSON.parse(localStorage.getItem('kconv_favs') || '[]');
@@ -686,12 +1020,15 @@
 
     // Initialize App
     window.onload = () => {
+      if (window.resizeTo) window.resizeTo(900, 650);
+      if (window.parent) window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 900, height: 650 }, '*');
       renderCategories();
       populateDropdowns();
       renderCustomUnitsTable();
       renderFavorites();
       renderHistory();
       convert();
+      parseExpressInput();
 
       // Enter key shortcut for custom units
       const nameInp = document.getElementById('customUnitName');
@@ -701,18 +1038,91 @@
         nameInp.addEventListener('keydown', handleEnter);
         factInp.addEventListener('keydown', handleEnter);
       }
+
+      // Enter key in single input
+      const inpVal = document.getElementById('inputVal');
+      if (inpVal) {
+        inpVal.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') convert();
+        });
+      }
+
+      // Global keyboard navigation
+      document.addEventListener('keydown', (e) => {
+        const isEditing = e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA';
+        
+        // Escape closes Help Modal
+        if (e.key === 'Escape') {
+          toggleHelpModal(false);
+          return;
+        }
+
+        // F1 or H for help
+        if (e.key === 'F1' || (!isEditing && e.key.toLowerCase() === 'h')) {
+          e.preventDefault();
+          toggleHelpModal();
+          return;
+        }
+
+        // 1-6 view switching when not editing
+        if (!isEditing && !e.ctrlKey && !e.altKey && !e.metaKey) {
+          if (e.key === '1') switchView('single');
+          else if (e.key === '2') switchView('batch');
+          else if (e.key === '3') switchView('express');
+          else if (e.key === '4') switchView('fav');
+          else if (e.key === '5') switchView('custom');
+          else if (e.key === '6') switchView('history');
+        }
+      });
+
+      // Welcome Toast
+      setTimeout(() => {
+        showToast('⚡ Welcome to KConverter Pro! Press F1 or H for help.');
+      }, 350);
     };
 
-    function showToast(msg) {
+    let toastTimer = null;
+    function showToast(msg, type = 'info') {
       const toast = document.getElementById('toast');
+      toast.className = 'toast show ' + type;
       toast.innerText = msg || 'Copied to clipboard!';
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2000);
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
+    function toggleHelpModal(forceOpen) {
+      const modal = document.getElementById('helpModal');
+      if (forceOpen === undefined) {
+        modal.classList.toggle('open');
+      } else if (forceOpen) {
+        modal.classList.add('open');
+      } else {
+        modal.classList.remove('open');
+      }
+    }
+
+    function handleBackdropClick(e) {
+      if (e.target.id === 'helpModal') {
+        toggleHelpModal(false);
+      }
     }
 
     function copyToClipboard(text) {
       if (!text) return;
-      navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!'));
+      navigator.clipboard.writeText(text).then(() => showToast('📋 Copied to clipboard!', 'success'));
+    }
+
+    function setInputValue(v) {
+      document.getElementById('inputVal').value = v;
+      convert();
+    }
+
+    function clearInputValue() {
+      document.getElementById('inputVal').value = '';
+      convert();
+      document.getElementById('inputVal').focus();
     }
 
     function switchView(viewName) {
@@ -726,6 +1136,7 @@
       document.getElementById(`view-${viewName}`).classList.add('active');
 
       if (viewName === 'batch') renderBatch();
+      if (viewName === 'express') parseExpressInput();
       if (viewName === 'fav') renderFavorites();
       if (viewName === 'history') renderHistory();
     }
@@ -854,7 +1265,7 @@
       if (isBelowAbsZero) formulaStr += ' ⚠️ (Below Abs Zero)';
       document.getElementById('formulaText').innerText = formulaStr;
 
-      // Log conversion to history (throttled)
+      // Log conversion to history
       logHistory(currentCategory, val, fromName, formattedResult, toName);
     }
 
@@ -918,6 +1329,128 @@
       }
     }
 
+    /* SMART EXPRESSION PARSER MODE */
+    function matchExpressAlias(tok) {
+      if (!tok) return null;
+      const clean = tok.toLowerCase().trim().replace(/[\s\t]+/g, '');
+      return expressAliasTable.find(a => a.token === clean) || null;
+    }
+
+    function setExpressPreset(exprStr) {
+      const inp = document.getElementById('expressInput');
+      if (inp) {
+        inp.value = exprStr;
+        parseExpressInput();
+      }
+    }
+
+    function parseExpressInput() {
+      const card = document.getElementById('expressResultCard');
+      const valStr = document.getElementById('expressInput').value.trim();
+      if (!valStr || !card) return;
+
+      const numMatch = valStr.match(/^([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)\s*(.*)$/);
+      if (!numMatch) {
+        card.innerHTML = `<div style="color: #f87171; font-weight: 500;">⚠️ Invalid expression layout. Format: "&lt;number&gt; &lt;unit1&gt; to &lt;unit2&gt;"</div>`;
+        return;
+      }
+
+      const numVal = parseFloat(numMatch[1]);
+      const rest = numMatch[2].trim();
+
+      const parts = rest.split(/\s*(?:to|->|=|in)\s*/i);
+      if (parts.length < 2) {
+        card.innerHTML = `<div style="color: #f87171; font-weight: 500;">⚠️ Please include a destination unit (e.g. "100 km/h to m/s" or "50 psi to bar")</div>`;
+        return;
+      }
+
+      const fromAlias = matchExpressAlias(parts[0]);
+      const toAlias = matchExpressAlias(parts[1]);
+
+      if (!fromAlias || !toAlias) {
+        card.innerHTML = `
+          <div style="color: #f87171; font-weight: 600; font-size: 14px;">⚠️ Expression Parsing Error</div>
+          <div style="font-size: 12px; color: var(--text-secondary);">
+            Could not match unit tokens:<br/>
+            - Source Unit "${escapeHTML(parts[0])}": ${fromAlias ? '✅ Recognized' : '❌ Unrecognized'}<br/>
+            - Target Unit "${escapeHTML(parts[1])}": ${toAlias ? '✅ Recognized' : '❌ Unrecognized'}
+          </div>
+        `;
+        return;
+      }
+
+      if (fromAlias.cat !== toAlias.cat) {
+        card.innerHTML = `
+          <div style="color: #ef4444; font-weight: 700; font-size: 14px;">🚫 Incompatible Physical Dimensions</div>
+          <div style="font-size: 13px; color: var(--text-primary); background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: var(--radius-sm); border: 1px solid rgba(239, 68, 68, 0.3);">
+            Cannot convert <strong>${escapeHTML(fromAlias.dim)}</strong> to <strong>${escapeHTML(toAlias.dim)}</strong>.
+          </div>
+        `;
+        return;
+      }
+
+      const catKey = fromAlias.cat;
+      const modeUnits = getAllUnitsForCategory(catKey);
+      const uFrom = modeUnits[fromAlias.key];
+      const uTo = modeUnits[toAlias.key];
+
+      if (!uFrom || !uTo) return;
+
+      let result = 0;
+      if (catKey === 'temp') {
+        let celsius = 0;
+        if (fromAlias.key === 'c') celsius = numVal;
+        else if (fromAlias.key === 'f') celsius = (numVal - 32) * 5/9;
+        else if (fromAlias.key === 'k') celsius = numVal - 273.15;
+
+        if (toAlias.key === 'c') result = celsius;
+        else if (toAlias.key === 'f') result = (celsius * 9/5) + 32;
+        else if (toAlias.key === 'k') result = celsius + 273.15;
+      } else {
+        const fromFactor = uFrom.factor || 1;
+        const toFactor = uTo.factor || 1;
+        result = (numVal * fromFactor) / toFactor;
+      }
+
+      const formatted = formatNumber(result);
+
+      card.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Evaluated Result</div>
+            <div style="font-size: 26px; font-weight: 800; color: var(--accent-blue); line-height: 1.2;">
+              ${escapeHTML(formatted)} <span style="font-size: 16px; font-weight: 600; color: var(--text-primary);">${escapeHTML(uTo.name)}</span>
+            </div>
+          </div>
+          <div style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); padding: 6px 12px; border-radius: 20px; font-size: 12px; color: var(--accent-blue); font-weight: 600;">
+            ${escapeHTML(fromAlias.dim)}
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: var(--radius-sm);">
+          <div>
+            <span style="font-size: 11px; color: var(--text-muted);">Category:</span>
+            <div style="font-size: 13px; font-weight: 600;">${escapeHTML(categories[catKey])}</div>
+          </div>
+          <div>
+            <span style="font-size: 11px; color: var(--text-muted);">From Unit:</span>
+            <div style="font-size: 13px; font-weight: 600;">${escapeHTML(uFrom.name)}</div>
+          </div>
+          <div>
+            <span style="font-size: 11px; color: var(--text-muted);">To Unit:</span>
+            <div style="font-size: 13px; font-weight: 600;">${escapeHTML(uTo.name)}</div>
+          </div>
+        </div>
+
+        <div style="font-size: 12px; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--panel-border);">
+          <span><strong>Formula:</strong> ${numVal} ${escapeHTML(uFrom.name)} = ${escapeHTML(formatted)} ${escapeHTML(uTo.name)}</span>
+          <button class="btn-sm" onclick="copyToClipboard('${numVal} ${escapeHTML(uFrom.name)} = ${escapeHTML(formatted)} ${escapeHTML(uTo.name)}')">📋 Copy Eq</button>
+        </div>
+      `;
+
+      logHistory(catKey, numVal, uFrom.name, formatted, uTo.name);
+    }
+
     /* FAVORITES SYSTEM */
     function pinCurrentFavorite() {
       const fromKey = document.getElementById('unitFrom').value;
@@ -934,14 +1467,13 @@
         toName: modeUnits[toKey].name
       };
 
-      // avoid duplicate
       if (!favorites.some(f => f.category === fav.category && f.fromKey === fav.fromKey && f.toKey === fav.toKey)) {
         favorites.push(fav);
         localStorage.setItem('kconv_favs', JSON.stringify(favorites));
-        showToast('Pinned to Favorites! ⭐');
+        showToast('⭐ Pinned to Favorites!', 'success');
         renderFavorites();
       } else {
-        showToast('Pair already pinned!');
+        showToast('Pair already in favorites!', 'warning');
       }
     }
 
@@ -950,7 +1482,7 @@
       container.innerHTML = '';
 
       if (favorites.length === 0) {
-        container.innerHTML = '<div style="color: var(--text-muted); font-size: 13px;">No pinned favorites yet. Click "Pin Pair" in Single Convert mode!</div>';
+        container.innerHTML = '<div style="color: var(--text-muted); font-size: 13px;">No pinned favorites yet. Click "⭐ Pin Pair" in Single Convert mode!</div>';
         return;
       }
 
@@ -973,6 +1505,7 @@
       favorites = favorites.filter(f => f.id !== id);
       localStorage.setItem('kconv_favs', JSON.stringify(favorites));
       renderFavorites();
+      showToast('Favorite removed');
     }
 
     function loadFavorite(fav) {
@@ -981,6 +1514,7 @@
       document.getElementById('unitTo').value = fav.toKey;
       switchView('single');
       convert();
+      showToast(`Loaded: ${fav.fromName} ➔ ${fav.toName}`);
     }
 
     /* CUSTOM UNITS SYSTEM */
@@ -990,7 +1524,7 @@
       const factor = parseFloat(document.getElementById('customFactor').value);
 
       if (!name || isNaN(factor) || factor <= 0) {
-        alert('Please provide a valid Unit Name and positive numerical Factor.');
+        showToast('⚠️ Please provide a valid Unit Name and factor > 0', 'warning');
         return;
       }
 
@@ -1007,7 +1541,7 @@
       document.getElementById('customUnitName').value = '';
       document.getElementById('customFactor').value = '';
 
-      showToast(`Custom Unit "${name}" added!`);
+      showToast(`Custom Unit "${name}" added!`, 'success');
       renderCustomUnitsTable();
       populateDropdowns();
     }
@@ -1041,13 +1575,14 @@
       renderCustomUnitsTable();
       populateDropdowns();
       convert();
+      showToast('Custom unit deleted');
     }
 
     /* HISTORY LOG SYSTEM */
     let lastLogTime = 0;
     function logHistory(catKey, fromVal, fromName, toValStr, toName) {
       const now = Date.now();
-      if (now - lastLogTime < 1500) return; // avoid logging on every keystroke
+      if (now - lastLogTime < 1500) return;
       lastLogTime = now;
 
       const item = {
@@ -1058,7 +1593,7 @@
       };
 
       historyLog.unshift(item);
-      if (historyLog.length > 50) historyLog.pop(); // keep last 50
+      if (historyLog.length > 50) historyLog.pop();
       localStorage.setItem('kconv_history', JSON.stringify(historyLog));
     }
 
@@ -1092,12 +1627,12 @@
       historyLog = [];
       localStorage.removeItem('kconv_history');
       renderHistory();
-      showToast('History cleared');
+      showToast('🗑️ History cleared');
     }
 
     function exportHistoryCSV() {
       if (historyLog.length === 0) {
-        alert('History is empty!');
+        showToast('⚠️ History is empty!', 'warning');
         return;
       }
       let csv = 'Time,Category,From,To\n';
@@ -1112,11 +1647,12 @@
       a.download = 'kconverter_history.csv';
       a.click();
       URL.revokeObjectURL(url);
+      showToast('📥 Exported CSV');
     }
 
     function exportHistoryJSON() {
       if (historyLog.length === 0) {
-        alert('History is empty!');
+        showToast('⚠️ History is empty!', 'warning');
         return;
       }
       const json = JSON.stringify(historyLog, null, 2);
@@ -1127,6 +1663,7 @@
       a.download = 'kconverter_history.json';
       a.click();
       URL.revokeObjectURL(url);
+      showToast('📥 Exported JSON');
     }
   </script>
 </body>
