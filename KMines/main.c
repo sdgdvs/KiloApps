@@ -1,5 +1,8 @@
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <math.h>
+
+int _fltused = 1;
+
 void* __cdecl memset(void* p, int c, size_t sz) {
     char* pb = (char*)p;
     while (sz--) *pb++ = (char)c;
@@ -63,24 +66,75 @@ DWORD sonarTick = 0;
 DWORD detectorTick = 0;
 int detectorR = -1;
 int detectorC = -1;
-DWORD shockwaveTick = 0;
-float shockwaveX = 0, shockwaveY = 0;
+
+// Screen Shake with quadratic decay
 int shakeIntensity = 0;
 DWORD shakeTick = 0;
+DWORD shakeDuration = 0;
 
-// Particle System (Explosions & Treasure Bursts)
+// 16-step trigonometric lookup tables
+static const int sin_tab16[16] = { 0, 38, 71, 92, 100, 92, 71, 38, 0, -38, -71, -92, -100, -92, -71, -38 };
+static const int cos_tab16[16] = { 100, 92, 71, 38, 0, -38, -71, -92, -100, -92, -71, -38, 0, 38, 71, 92 };
+
+static int FastSin(int idx) {
+    idx = ((idx % 16) + 16) % 16;
+    return sin_tab16[idx];
+}
+static int FastCos(int idx) {
+    idx = ((idx % 16) + 16) % 16;
+    return cos_tab16[idx];
+}
+
+// Multi-Layer Kinematic Particle System
+// Layer 0: Incandescent core needle sparks
+// Layer 1: Expanding buoyant smoke & plasma puffs
+// Layer 2: Heavy kinematic rock/debris shards with tumbling rotation & bounce physics
+// Layer 3: Radiant golden celebration energy stars
 typedef struct {
     float x, y;
+    float prev_x, prev_y;
     float vx, vy;
     float life;
     float maxLife;
     float size;
     COLORREF color;
+    int layer;
+    float rot;
+    float vrot;
+    float gravity;
+    float drag;
 } Particle;
 
-#define MAX_PARTICLES 400
+#define MAX_PARTICLES 450
 Particle particles[MAX_PARTICLES];
 int particleCount = 0;
+
+// Dual-Tier Concentric Shockwaves
+typedef struct {
+    float x, y;
+    float radius;
+    float maxRadius;
+    float speed;
+    float life;
+    float decay;
+    COLORREF color;
+    int isInner;
+} Shockwave;
+
+#define MAX_SHOCKWAVES 32
+Shockwave shockwaves[MAX_SHOCKWAVES];
+int shockwaveCount = 0;
+
+// Ambient Cyber Dust Motes
+#define MAX_DUST 36
+typedef struct {
+    float x, y;
+    float vx, vy;
+    float size;
+    COLORREF color;
+} DustMote;
+DustMote dustMotes[MAX_DUST];
+int dustInit = 0;
 
 static unsigned int seed = 0;
 
@@ -100,105 +154,361 @@ static int parse_int(const char** p) {
     return val;
 }
 
+void TriggerScreenShake(int intensity, DWORD durationMs) {
+    shakeIntensity = intensity;
+    shakeTick = GetTickCount();
+    shakeDuration = durationMs;
+}
+
+void SpawnShockwave(float cx, float cy, COLORREF color, int isInner, float maxR, float speed) {
+    if (shockwaveCount < MAX_SHOCKWAVES) {
+        Shockwave* sw = &shockwaves[shockwaveCount++];
+        sw->x = cx;
+        sw->y = cy;
+        sw->radius = 1.0f;
+        sw->maxRadius = maxR;
+        sw->speed = speed;
+        sw->life = 1.0f;
+        sw->decay = isInner ? 0.035f : 0.02f;
+        sw->color = color;
+        sw->isInner = isInner;
+    }
+}
+
 void SpawnExplosion(float cx, float cy) {
-    COLORREF colors[6] = {
-        RGB(255, 60, 20),   // Fire Red
-        RGB(255, 200, 40),  // Gold Spark
-        RGB(255, 120, 0),   // Flame Ember
-        RGB(80, 80, 90),    // Dark Smoke
-        RGB(200, 200, 200), // Debris
-        RGB(255, 255, 255)  // Flash
+    // Dual-tier concentric shockwaves
+    SpawnShockwave(cx, cy, RGB(255, 60, 90), 1, 140.0f, 6.5f);
+    SpawnShockwave(cx, cy, RGB(255, 140, 40), 0, 200.0f, 4.0f);
+    TriggerScreenShake(16, 500);
+
+    COLORREF sparkColors[5] = {
+        RGB(255, 255, 255),
+        RGB(255, 220, 60),
+        RGB(255, 90, 40),
+        RGB(255, 160, 80),
+        RGB(120, 200, 255)
     };
-    for (int i = 0; i < 70; i++) {
+
+    COLORREF smokeColors[3] = {
+        RGB(40, 42, 50),
+        RGB(65, 70, 85),
+        RGB(30, 32, 40)
+    };
+
+    COLORREF debrisColors[4] = {
+        RGB(60, 70, 95),
+        RGB(40, 45, 60),
+        RGB(247, 118, 142),
+        RGB(224, 175, 104)
+    };
+
+    // Layer 0: Incandescent core needle sparks
+    for (int i = 0; i < 35; i++) {
         if (particleCount < MAX_PARTICLES) {
             Particle* p = &particles[particleCount++];
             p->x = cx; p->y = cy;
-            float angle = (float)(my_rand() % 360) * 3.14159f / 180.0f;
-            float speed = (float)(my_rand() % 120) / 10.0f;
-            p->vx = cos(angle) * speed;
-            p->vy = sin(angle) * speed - 2.0f;
-            p->maxLife = 20.0f + (float)(my_rand() % 40);
+            p->prev_x = cx; p->prev_y = cy;
+            int angleIdx = my_rand() % 16;
+            float speed = 3.0f + (float)(my_rand() % 70) / 10.0f;
+            p->vx = ((float)FastCos(angleIdx) / 100.0f) * speed;
+            p->vy = ((float)FastSin(angleIdx) / 100.0f) * speed - 1.5f;
+            p->maxLife = 20.0f + (float)(my_rand() % 20);
             p->life = p->maxLife;
-            p->size = (my_rand() % 4 == 0) ? (4.0f + (float)(my_rand() % 5)) : (2.0f + (float)(my_rand() % 3));
-            p->color = colors[my_rand() % 6];
+            p->size = 1.5f + (float)(my_rand() % 2);
+            p->color = sparkColors[my_rand() % 5];
+            p->layer = 0;
+            p->gravity = 0.08f;
+            p->drag = 0.94f;
+        }
+    }
+
+    // Layer 1: Expanding buoyant smoke & plasma puffs
+    for (int i = 0; i < 20; i++) {
+        if (particleCount < MAX_PARTICLES) {
+            Particle* p = &particles[particleCount++];
+            p->x = cx; p->y = cy;
+            p->prev_x = cx; p->prev_y = cy;
+            int angleIdx = my_rand() % 16;
+            float speed = 0.5f + (float)(my_rand() % 25) / 10.0f;
+            p->vx = ((float)FastCos(angleIdx) / 100.0f) * speed;
+            p->vy = ((float)FastSin(angleIdx) / 100.0f) * speed - 1.0f;
+            p->maxLife = 30.0f + (float)(my_rand() % 25);
+            p->life = p->maxLife;
+            p->size = 5.0f + (float)(my_rand() % 8);
+            p->color = smokeColors[my_rand() % 3];
+            p->layer = 1;
+            p->gravity = -0.04f; // buoyant rise
+            p->drag = 0.96f;
+        }
+    }
+
+    // Layer 2: Heavy rock & cyber debris shards
+    for (int i = 0; i < 25; i++) {
+        if (particleCount < MAX_PARTICLES) {
+            Particle* p = &particles[particleCount++];
+            p->x = cx; p->y = cy;
+            p->prev_x = cx; p->prev_y = cy;
+            int angleIdx = my_rand() % 16;
+            float speed = 2.0f + (float)(my_rand() % 50) / 10.0f;
+            p->vx = ((float)FastCos(angleIdx) / 100.0f) * speed;
+            p->vy = ((float)FastSin(angleIdx) / 100.0f) * speed - 2.5f;
+            p->maxLife = 35.0f + (float)(my_rand() % 30);
+            p->life = p->maxLife;
+            p->size = 3.0f + (float)(my_rand() % 4);
+            p->color = debrisColors[my_rand() % 4];
+            p->layer = 2;
+            p->rot = (float)(my_rand() % 16);
+            p->vrot = ((float)(my_rand() % 20) - 10.0f) / 10.0f;
+            p->gravity = 0.18f;
+            p->drag = 0.98f;
         }
     }
 }
 
 void SpawnDustFX(float cx, float cy) {
-    for (int i = 0; i < 15; i++) {
+    for (int i = 0; i < 12; i++) {
         if (particleCount < MAX_PARTICLES) {
             Particle* p = &particles[particleCount++];
             p->x = cx; p->y = cy;
-            p->vx = (float)((my_rand() % 100) - 50) / 15.0f;
-            p->vy = -(float)(my_rand() % 50) / 20.0f;
-            p->maxLife = 10.0f + (float)(my_rand() % 15);
+            p->prev_x = cx; p->prev_y = cy;
+            p->vx = (float)((my_rand() % 60) - 30) / 15.0f;
+            p->vy = -(float)(my_rand() % 40) / 15.0f - 0.5f;
+            p->maxLife = 12.0f + (float)(my_rand() % 15);
             p->life = p->maxLife;
             p->size = 1.5f + (float)(my_rand() % 2);
-            p->color = RGB(150, 150, 140);
+            p->color = RGB(160, 170, 195);
+            p->layer = 0;
+            p->gravity = 0.05f;
+            p->drag = 0.95f;
         }
     }
 }
 
 void SpawnTreasureFX(float cx, float cy) {
-    COLORREF colors[4] = {
-        RGB(255, 215, 0),   // Gold
-        RGB(255, 235, 120), // Light Gold
-        RGB(56, 189, 248),  // Magic Cyan
-        RGB(255, 255, 255)  // White Sparkle
+    SpawnShockwave(cx, cy, RGB(255, 215, 0), 1, 120.0f, 5.0f);
+    SpawnShockwave(cx, cy, RGB(56, 189, 248), 0, 160.0f, 3.5f);
+    TriggerScreenShake(7, 300);
+
+    COLORREF starColors[4] = {
+        RGB(255, 215, 0),
+        RGB(255, 245, 140),
+        RGB(56, 189, 248),
+        RGB(255, 255, 255)
     };
+
+    // Layer 3: Radiant golden celebration energy stars
     for (int i = 0; i < 30; i++) {
         if (particleCount < MAX_PARTICLES) {
             Particle* p = &particles[particleCount++];
             p->x = cx; p->y = cy;
-            p->vx = (float)((my_rand() % 100) - 50) / 8.0f;
-            p->vy = (float)((my_rand() % 100) - 50) / 8.0f - 2.0f;
-            p->maxLife = 20.0f + (float)(my_rand() % 20);
+            p->prev_x = cx; p->prev_y = cy;
+            int angleIdx = my_rand() % 16;
+            float speed = 1.5f + (float)(my_rand() % 40) / 10.0f;
+            p->vx = ((float)FastCos(angleIdx) / 100.0f) * speed;
+            p->vy = ((float)FastSin(angleIdx) / 100.0f) * speed - 2.0f;
+            p->maxLife = 25.0f + (float)(my_rand() % 25);
             p->life = p->maxLife;
-            p->size = 2.5f + (float)(my_rand() % 3);
-            p->color = colors[my_rand() % 4];
+            p->size = 3.0f + (float)(my_rand() % 3);
+            p->color = starColors[my_rand() % 4];
+            p->layer = 3;
+            p->rot = (float)(my_rand() % 16);
+            p->vrot = ((float)(my_rand() % 20) - 10.0f) / 10.0f;
+            p->gravity = 0.10f;
+            p->drag = 0.97f;
         }
+    }
+}
+
+void SpawnVictoryFX() {
+    SpawnShockwave((float)(cols * CELL_SIZE / 2), (float)(rows * CELL_SIZE / 2 + HEADER_HEIGHT), RGB(122, 162, 247), 0, 300.0f, 6.0f);
+    TriggerScreenShake(12, 600);
+
+    COLORREF victoryColors[6] = {
+        RGB(122, 162, 247),
+        RGB(158, 206, 106),
+        RGB(224, 175, 104),
+        RGB(187, 154, 247),
+        RGB(125, 207, 255),
+        RGB(247, 118, 142)
+    };
+
+    for (int i = 0; i < 60; i++) {
+        if (particleCount < MAX_PARTICLES) {
+            Particle* p = &particles[particleCount++];
+            p->x = (float)(my_rand() % (cols * CELL_SIZE));
+            p->y = (float)(HEADER_HEIGHT + my_rand() % (rows * CELL_SIZE / 2));
+            p->prev_x = p->x; p->prev_y = p->y;
+            p->vx = (float)((my_rand() % 60) - 30) / 15.0f;
+            p->vy = (float)(my_rand() % 30) / 10.0f + 1.0f;
+            p->maxLife = 35.0f + (float)(my_rand() % 35);
+            p->life = p->maxLife;
+            p->size = 3.5f + (float)(my_rand() % 4);
+            p->color = victoryColors[my_rand() % 6];
+            p->layer = 3;
+            p->rot = (float)(my_rand() % 16);
+            p->vrot = ((float)(my_rand() % 20) - 10.0f) / 10.0f;
+            p->gravity = 0.08f;
+            p->drag = 0.99f;
+        }
+    }
+}
+
+void InitDustMotes() {
+    for (int i = 0; i < MAX_DUST; i++) {
+        dustMotes[i].x = (float)(my_rand() % (cols * CELL_SIZE));
+        dustMotes[i].y = (float)(HEADER_HEIGHT + my_rand() % (rows * CELL_SIZE));
+        dustMotes[i].vx = ((float)(my_rand() % 20 - 10)) / 30.0f;
+        dustMotes[i].vy = -((float)(my_rand() % 20 + 5)) / 30.0f;
+        dustMotes[i].size = 1.0f + (float)(my_rand() % 2);
+        dustMotes[i].color = (my_rand() % 2 == 0) ? RGB(122, 162, 247) : RGB(224, 175, 104);
+    }
+    dustInit = 1;
+}
+
+void UpdateDustMotes() {
+    if (!dustInit) InitDustMotes();
+    for (int i = 0; i < MAX_DUST; i++) {
+        dustMotes[i].x += dustMotes[i].vx;
+        dustMotes[i].y += dustMotes[i].vy;
+        if (dustMotes[i].y < (float)HEADER_HEIGHT) {
+            dustMotes[i].y = (float)(rows * CELL_SIZE + HEADER_HEIGHT);
+            dustMotes[i].x = (float)(my_rand() % (cols * CELL_SIZE));
+        }
+        if (dustMotes[i].x < 0) dustMotes[i].x = (float)(cols * CELL_SIZE);
+        if (dustMotes[i].x > (float)(cols * CELL_SIZE)) dustMotes[i].x = 0.0f;
     }
 }
 
 void UpdateParticles() {
-    int active = 0;
+    int activeP = 0;
     for (int i = 0; i < particleCount; i++) {
         Particle* p = &particles[i];
         if (p->life > 0) {
+            p->prev_x = p->x;
+            p->prev_y = p->y;
             p->x += p->vx;
             p->y += p->vy;
-            p->vy += 0.15f; // gravity
-            p->vx *= 0.96f; // drag
-            
-            // Bounce off edges
-            if (p->x - p->size < 0) { p->x = p->size; p->vx *= -0.7f; }
-            if (p->x + p->size > cols * CELL_SIZE) { p->x = (float)(cols * CELL_SIZE) - p->size; p->vx *= -0.7f; }
-            if (p->y + p->size > rows * CELL_SIZE + HEADER_HEIGHT) { p->y = (float)(rows * CELL_SIZE + HEADER_HEIGHT) - p->size; p->vy *= -0.7f; }
+            p->vy += p->gravity;
+            p->vx *= p->drag;
+            p->rot += p->vrot;
+
+            // Bounce physics for debris
+            if (p->layer == 2) {
+                if (p->y + p->size > (float)(rows * CELL_SIZE + HEADER_HEIGHT)) {
+                    p->y = (float)(rows * CELL_SIZE + HEADER_HEIGHT) - p->size;
+                    p->vy *= -0.65f;
+                    p->vx *= 0.85f;
+                    p->vrot *= 0.7f;
+                }
+                if (p->x - p->size < 0) { p->x = p->size; p->vx *= -0.65f; }
+                if (p->x + p->size > (float)(cols * CELL_SIZE)) { p->x = (float)(cols * CELL_SIZE) - p->size; p->vx *= -0.65f; }
+            }
 
             p->life -= 1.0f;
-            particles[active++] = *p;
+            particles[activeP++] = *p;
         }
     }
-    particleCount = active;
+    particleCount = activeP;
+
+    int activeSW = 0;
+    for (int i = 0; i < shockwaveCount; i++) {
+        Shockwave* sw = &shockwaves[i];
+        if (sw->life > 0 && sw->radius < sw->maxRadius) {
+            sw->radius += sw->speed;
+            sw->life -= sw->decay;
+            shockwaves[activeSW++] = *sw;
+        }
+    }
+    shockwaveCount = activeSW;
+
+    UpdateDustMotes();
+}
+
+void DrawStarPolygon(HDC hdc, int cx, int cy, int size, COLORREF color) {
+    POINT pts[8] = {
+        { cx, cy - size },
+        { cx + size/3, cy - size/3 },
+        { cx + size, cy },
+        { cx + size/3, cy + size/3 },
+        { cx, cy + size },
+        { cx - size/3, cy + size/3 },
+        { cx - size, cy },
+        { cx - size/3, cy - size/3 }
+    };
+    HBRUSH hbr = CreateSolidBrush(color);
+    HPEN hPen = CreatePen(PS_SOLID, 1, color);
+    HGDIOBJ oldBr = SelectObject(hdc, hbr);
+    HGDIOBJ oldPen = SelectObject(hdc, hPen);
+    Polygon(hdc, pts, 8);
+    SelectObject(hdc, oldBr);
+    SelectObject(hdc, oldPen);
+    DeleteObject(hbr);
+    DeleteObject(hPen);
 }
 
 void DrawParticles(HDC hdc) {
+    // 1. Dust motes
+    for (int i = 0; i < MAX_DUST; i++) {
+        SetPixel(hdc, (int)dustMotes[i].x, (int)dustMotes[i].y, dustMotes[i].color);
+        if (dustMotes[i].size > 1.2f) {
+            SetPixel(hdc, (int)dustMotes[i].x + 1, (int)dustMotes[i].y, dustMotes[i].color);
+        }
+    }
+
+    // 2. Dual-tier Concentric Shockwaves
+    for (int i = 0; i < shockwaveCount; i++) {
+        Shockwave* sw = &shockwaves[i];
+        if (sw->life > 0) {
+            int width = sw->isInner ? 3 : 5;
+            HPEN hPen = CreatePen(PS_SOLID, width, sw->color);
+            HGDIOBJ oldPen = SelectObject(hdc, hPen);
+            HGDIOBJ oldBr = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            int r = (int)sw->radius;
+            Ellipse(hdc, (int)sw->x - r, (int)sw->y - r, (int)sw->x + r, (int)sw->y + r);
+            SelectObject(hdc, oldBr);
+            SelectObject(hdc, oldPen);
+            DeleteObject(hPen);
+        }
+    }
+
+    // 3. Multi-layer particles
     for (int i = 0; i < particleCount; i++) {
         Particle* p = &particles[i];
         if (p->life > 0) {
             float ratio = p->life / p->maxLife;
-            int r = (int)(p->size * (0.3f + 0.7f * ratio)); 
-            if (r < 1) r = 1;
-            HBRUSH hbr = CreateSolidBrush(p->color);
-            HPEN hPen = CreatePen(PS_SOLID, 1, p->color);
-            HGDIOBJ oldBr = SelectObject(hdc, hbr);
-            HGDIOBJ oldPen = SelectObject(hdc, hPen);
-            Ellipse(hdc, (int)(p->x - r), (int)(p->y - r), (int)(p->x + r), (int)(p->y + r));
-            SelectObject(hdc, oldBr);
-            SelectObject(hdc, oldPen);
-            DeleteObject(hbr);
-            DeleteObject(hPen);
+            if (p->layer == 0) {
+                // Needle spark trail
+                HPEN hPen = CreatePen(PS_SOLID, (int)p->size, p->color);
+                HGDIOBJ oldPen = SelectObject(hdc, hPen);
+                MoveToEx(hdc, (int)p->prev_x, (int)p->prev_y, NULL);
+                LineTo(hdc, (int)p->x, (int)p->y);
+                SelectObject(hdc, oldPen);
+                DeleteObject(hPen);
+            } else if (p->layer == 1) {
+                // Expanding buoyant smoke puff
+                int r = (int)(p->size * (0.8f + 0.4f * (1.0f - ratio)));
+                if (r < 1) r = 1;
+                HBRUSH hbr = CreateSolidBrush(p->color);
+                HGDIOBJ oldBr = SelectObject(hdc, hbr);
+                HGDIOBJ oldPen = SelectObject(hdc, GetStockObject(NULL_PEN));
+                Ellipse(hdc, (int)(p->x - r), (int)(p->y - r), (int)(p->x + r), (int)(p->y + r));
+                SelectObject(hdc, oldBr);
+                SelectObject(hdc, oldPen);
+                DeleteObject(hbr);
+            } else if (p->layer == 2) {
+                // Tumbling debris shard
+                int sz = (int)(p->size * (0.5f + 0.5f * ratio));
+                if (sz < 1) sz = 1;
+                RECT rc = { (int)p->x - sz, (int)p->y - sz, (int)p->x + sz, (int)p->y + sz };
+                HBRUSH hbr = CreateSolidBrush(p->color);
+                FillRect(hdc, &rc, hbr);
+                DeleteObject(hbr);
+            } else if (p->layer == 3) {
+                // Golden celebration star
+                int sz = (int)(p->size * (0.5f + 0.5f * ratio));
+                if (sz < 2) sz = 2;
+                DrawStarPolygon(hdc, (int)p->x, (int)p->y, sz, p->color);
+            }
         }
     }
 }
@@ -337,7 +647,7 @@ void InitCampaignLevel(HWND hwnd) {
     initialized = 0; gameOver = 0; timeElapsed = 0; flagsPlaced = 0; memset(grid, 0, sizeof(grid));
     void ResizeWindow(HWND);
     ResizeWindow(hwnd);
-    InvalidateRect(hwnd, NULL, TRUE);
+    InvalidateRect(hwnd, NULL, FALSE);
 }
 
 int CountMines(int r, int c) {
@@ -423,11 +733,6 @@ void Reveal(int startR, int startC) {
             int px = c * CELL_SIZE + CELL_SIZE / 2;
             int py = r * CELL_SIZE + HEADER_HEIGHT + CELL_SIZE / 2;
             SpawnExplosion((float)px, (float)py);
-            shockwaveTick = GetTickCount();
-            shockwaveX = (float)px;
-            shockwaveY = (float)py;
-            shakeTick = shockwaveTick;
-            shakeIntensity = 15;
 
             if (shields > 0) {
                 shields--;
@@ -491,6 +796,7 @@ void UseSonarScan(HWND hwnd) {
         }
         Beep(2000, 120);
         sonarTick = GetTickCount();
+        TriggerScreenShake(6, 300);
         wsprintfA(statusMsg, "SONAR SCAN ACTIVATED! (3x3)");
         statusMsgTime = GetTickCount() + 2000;
         InvalidateRect(hwnd, NULL, FALSE);
@@ -518,6 +824,7 @@ void UseDetectorBot(HWND hwnd) {
                 detectorTick = GetTickCount();
                 detectorR = r;
                 detectorC = c;
+                TriggerScreenShake(5, 250);
                 Beep(1400, 100);
                 wsprintfA(statusMsg, "FLAG-BOT AUTO-FLAGGED MINE!");
                 statusMsgTime = GetTickCount() + 2000;
@@ -532,6 +839,7 @@ void UseBlastShield(HWND hwnd) {
     if (shields <= 0 || !initialized || gameOver) return;
     wsprintfA(statusMsg, "BLAST SHIELD ACTIVE (%d CHARGES)", shields);
     statusMsgTime = GetTickCount() + 2000;
+    TriggerScreenShake(4, 200);
     Beep(1200, 100);
 }
 
@@ -598,7 +906,7 @@ void DrawSmiley(HDC hdc, int cx, int cy, int size, int state) {
 }
 
 void DrawNumberSprite(HDC hdc, int x, int y, int size, int m) {
-    char szNum[2] = { m + '0', 0 };
+    char szNum[2] = { (char)(m + '0'), 0 };
     RECT rcCell = { x, y, x + size, y + size };
     HFONT hFont;
     COLORREF c;
@@ -716,13 +1024,13 @@ void DrawChestSprite(HDC hdc, int x, int y, int size) {
     HBRUSH hbrLid = CreateSolidBrush(RGB(255, 215, 0));
     SelectObject(hdc, hbrLid);
     RoundRect(hdc, cx - 8, cy - 8, cx + 8, cy - 2, 4, 4);
-    SelectObject(hdc, hbrGold); // Swap out before delete
+    SelectObject(hdc, hbrGold);
     DeleteObject(hbrLid);
     // Lock
     HBRUSH hbrLock = CreateSolidBrush(RGB(50, 50, 60));
     SelectObject(hdc, hbrLock);
     Ellipse(hdc, cx - 2, cy - 3, cx + 2, cy + 1);
-    SelectObject(hdc, oldBr); // Restore old
+    SelectObject(hdc, oldBr);
     DeleteObject(hbrLock);
 
     SelectObject(hdc, oldPen);
@@ -788,15 +1096,15 @@ void DrawQuestionSprite(HDC hdc, int x, int y, int size) {
 
 void DrawScorchMarks(HDC hdc, int x, int y, int size, int m) {
     if (m < 3) return;
-    int seed = (x * 73 + y * 37) % 100;
+    int seedVal = (x * 73 + y * 37) % 100;
     HPEN hPen = CreatePen(PS_SOLID, 1, RGB(10, 12, 16));
     HGDIOBJ oldPen = SelectObject(hdc, hPen);
     int cx = x + size / 2, cy = y + size / 2;
     for(int i = 0; i < m; i++) {
-        float angle = (float)((seed + i) * 137) * 3.14159f / 180.0f;
-        int len = 4 + ((seed * i) % (size/2 - 2));
-        int dx = (int)(cos(angle) * len);
-        int dy = (int)(sin(angle) * len);
+        int angleIdx = (seedVal + i * 3) % 16;
+        int len = 4 + ((seedVal * i) % (size/2 - 2));
+        int dx = (FastCos(angleIdx) * len) / 100;
+        int dy = (FastSin(angleIdx) * len) / 100;
         MoveToEx(hdc, cx, cy, NULL);
         LineTo(hdc, cx + dx, cy + dy);
     }
@@ -807,39 +1115,44 @@ void DrawScorchMarks(HDC hdc, int x, int y, int size, int m) {
 void Draw3DTile(HDC hdc, int x, int y, int size, int isRevealed, int isPressed) {
     RECT rc = { x, y, x + size, y + size };
     if (isRevealed) {
-        HBRUSH hbrRev = CreateSolidBrush(RGB(24, 28, 40));
+        HBRUSH hbrRev = CreateSolidBrush(RGB(22, 24, 36));
         FillRect(hdc, &rc, hbrRev); DeleteObject(hbrRev);
         
         // Terrain texture (dirt/rock details)
-        int seed = (x * 73 + y * 37) % 100;
+        int seedVal = (x * 73 + y * 37) % 100;
         for(int i = 0; i < 6; i++) {
-            int dx = (seed * (i + 1) * 13) % size;
-            int dy = (seed * (i + 1) * 17) % size;
-            int dotColor = ((i % 2) == 0) ? RGB(20, 22, 32) : RGB(30, 34, 48);
-            if (i == 5) dotColor = RGB(40, 45, 60); // subtle highlight
+            int dx = (seedVal * (i + 1) * 13) % size;
+            int dy = (seedVal * (i + 1) * 17) % size;
+            int dotColor = ((i % 2) == 0) ? RGB(18, 20, 30) : RGB(28, 32, 46);
+            if (i == 5) dotColor = RGB(38, 44, 62); // subtle highlight
             SetPixel(hdc, x + dx, y + dy, dotColor);
             SetPixel(hdc, x + dx + 1, y + dy, dotColor);
         }
 
-        HPEN hDarkInner = CreatePen(PS_SOLID, 1, RGB(15, 18, 26));
+        // Specular sheen diagonal tick
+        SetPixel(hdc, x + 2, y + 2, RGB(60, 70, 95));
+        SetPixel(hdc, x + 3, y + 2, RGB(60, 70, 95));
+        SetPixel(hdc, x + 2, y + 3, RGB(60, 70, 95));
+
+        HPEN hDarkInner = CreatePen(PS_SOLID, 1, RGB(12, 14, 22));
         HGDIOBJ oldPen = SelectObject(hdc, hDarkInner);
         MoveToEx(hdc, x, y + size - 1, NULL); LineTo(hdc, x, y); LineTo(hdc, x + size - 1, y);
         SelectObject(hdc, oldPen); DeleteObject(hDarkInner);
     } else {
-        HBRUSH hbrUnrev = CreateSolidBrush(RGB(65, 75, 100));
+        HBRUSH hbrUnrev = CreateSolidBrush(RGB(61, 70, 99));
         FillRect(hdc, &rc, hbrUnrev); DeleteObject(hbrUnrev);
         
-        // Add subtle unrevealed noise texture
-        int seed = (x * 19 + y * 53) % 100;
+        // Subtle unrevealed cyber pattern
+        int seedVal = (x * 19 + y * 53) % 100;
         for(int i = 0; i < 4; i++) {
-            int dx = (seed * (i + 1) * 23) % size;
-            int dy = (seed * (i + 1) * 29) % size;
-            SetPixel(hdc, x + dx, y + dy, RGB(75, 85, 115));
-            SetPixel(hdc, x + dx + 1, y + dy + 1, RGB(55, 65, 90));
+            int dx = (seedVal * (i + 1) * 23) % size;
+            int dy = (seedVal * (i + 1) * 29) % size;
+            SetPixel(hdc, x + dx, y + dy, RGB(75, 88, 120));
+            SetPixel(hdc, x + dx + 1, y + dy + 1, RGB(45, 52, 75));
         }
 
-        HPEN hWhiteHi = CreatePen(PS_SOLID, 2, RGB(140, 155, 190));
-        HPEN hDarkLo  = CreatePen(PS_SOLID, 2, RGB(30, 35, 50));
+        HPEN hWhiteHi = CreatePen(PS_SOLID, 2, RGB(145, 165, 205));
+        HPEN hDarkLo  = CreatePen(PS_SOLID, 2, RGB(25, 30, 45));
         HGDIOBJ oldPen = SelectObject(hdc, hWhiteHi);
         MoveToEx(hdc, x, y + size - 1, NULL); LineTo(hdc, x, y); LineTo(hdc, x + size - 1, y);
         SelectObject(hdc, hDarkLo);
@@ -849,30 +1162,41 @@ void Draw3DTile(HDC hdc, int x, int y, int size, int isRevealed, int isPressed) 
     }
 }
 
-void DrawBoard(HWND hwnd, HDC hdc) {
+// Ornate Cybernetic Corner Filigree L-Brackets with Tech Rivets
+void DrawCornerBracket(HDC hdc, int x, int y, int alignX, int alignY) {
+    HPEN hPen = CreatePen(PS_SOLID, 2, RGB(122, 162, 247));
+    HGDIOBJ oldPen = SelectObject(hdc, hPen);
+    
+    int len = 10;
+    int armX = alignX ? -len : len;
+    int armY = alignY ? -len : len;
+
+    MoveToEx(hdc, x + armX, y, NULL);
+    LineTo(hdc, x, y);
+    LineTo(hdc, x, y + armY);
+
+    SelectObject(hdc, oldPen);
+    DeleteObject(hPen);
+
+    // Glowing Gold Tech Rivet Dot
+    int rx = alignX ? x - 3 : x + 2;
+    int ry = alignY ? y - 3 : y + 2;
+    SetPixel(hdc, rx, ry, RGB(245, 215, 0));
+    SetPixel(hdc, rx + 1, ry, RGB(245, 215, 0));
+    SetPixel(hdc, rx, ry + 1, RGB(245, 215, 0));
+    SetPixel(hdc, rx + 1, ry + 1, RGB(245, 215, 0));
+}
+
+void DrawBoardToDC(HWND hwnd, HDC hdc) {
     DWORD tick = GetTickCount();
     
-    POINT oldOrg;
-    int isShaking = 0;
-    DWORD elapsedShake = tick - shakeTick;
-    if (elapsedShake < 500 && shakeIntensity > 0) {
-        float decay = 1.0f - ((float)elapsedShake / 500.0f);
-        int currentIntensity = (int)(shakeIntensity * decay);
-        if (currentIntensity > 0) {
-            int sx = (my_rand() % (currentIntensity * 2 + 1)) - currentIntensity;
-            int sy = (my_rand() % (currentIntensity * 2 + 1)) - currentIntensity;
-            SetViewportOrgEx(hdc, sx, sy, &oldOrg);
-            isShaking = 1;
-        }
-    }
-
     RECT rcFull = { 0, 0, cols * CELL_SIZE, rows * CELL_SIZE + HEADER_HEIGHT };
     HBRUSH hbrBg = CreateSolidBrush(RGB(18, 20, 29));
     FillRect(hdc, &rcFull, hbrBg); DeleteObject(hbrBg);
 
     // Metallic frame around the entire window
-    HPEN hFrameHi = CreatePen(PS_SOLID, 4, RGB(180, 190, 210));
-    HPEN hFrameLo = CreatePen(PS_SOLID, 4, RGB(40, 50, 70));
+    HPEN hFrameHi = CreatePen(PS_SOLID, 3, RGB(180, 195, 225));
+    HPEN hFrameLo = CreatePen(PS_SOLID, 3, RGB(35, 45, 65));
     HGDIOBJ oldPenF = SelectObject(hdc, hFrameHi);
     MoveToEx(hdc, 0, rcFull.bottom, NULL); LineTo(hdc, 0, 0); LineTo(hdc, rcFull.right, 0);
     SelectObject(hdc, hFrameLo);
@@ -881,27 +1205,27 @@ void DrawBoard(HWND hwnd, HDC hdc) {
     DeleteObject(hFrameHi); DeleteObject(hFrameLo);
 
     RECT rcHeader = { 0, 0, cols * CELL_SIZE, HEADER_HEIGHT };
-    HBRUSH hbrHeader = CreateSolidBrush(RGB(40, 45, 60)); // slightly lighter metallic header
+    HBRUSH hbrHeader = CreateSolidBrush(RGB(38, 44, 58));
     FillRect(hdc, &rcHeader, hbrHeader); DeleteObject(hbrHeader);
 
-    HPEN hHeaderBorder = CreatePen(PS_SOLID, 2, RGB(60, 70, 95));
+    HPEN hHeaderBorder = CreatePen(PS_SOLID, 2, RGB(55, 65, 90));
     HGDIOBJ oldPen = SelectObject(hdc, hHeaderBorder);
     MoveToEx(hdc, 0, HEADER_HEIGHT - 1, NULL); LineTo(hdc, cols * CELL_SIZE, HEADER_HEIGHT - 1);
     SelectObject(hdc, oldPen); DeleteObject(hHeaderBorder);
 
     HFONT hLcdFont = CreateFontA(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Courier New");
     HGDIOBJ oldFont = SelectObject(hdc, hLcdFont);
-    SetBkMode(hdc, OPAQUE); SetBkColor(hdc, RGB(10, 10, 15));
+    SetBkMode(hdc, OPAQUE); SetBkColor(hdc, RGB(9, 10, 15));
 
     char szMines[16];
     wsprintfA(szMines, "%03d", mines - flagsPlaced);
     RECT rcMineBox = { 10, 10, 60, 38 };
-    HBRUSH hbrLcd = CreateSolidBrush(RGB(10, 10, 15));
+    HBRUSH hbrLcd = CreateSolidBrush(RGB(9, 10, 15));
     FillRect(hdc, &rcMineBox, hbrLcd);
     
     // Bevel around Mine Box
-    HPEN hBoxLo = CreatePen(PS_SOLID, 2, RGB(20, 25, 35));
-    HPEN hBoxHi = CreatePen(PS_SOLID, 2, RGB(80, 90, 110));
+    HPEN hBoxLo = CreatePen(PS_SOLID, 2, RGB(18, 22, 32));
+    HPEN hBoxHi = CreatePen(PS_SOLID, 2, RGB(75, 85, 110));
     SelectObject(hdc, hBoxLo);
     MoveToEx(hdc, 10, 38, NULL); LineTo(hdc, 10, 10); LineTo(hdc, 60, 10);
     SelectObject(hdc, hBoxHi);
@@ -956,7 +1280,6 @@ void DrawBoard(HWND hwnd, HDC hdc) {
         DrawTextA(hdc, szMode, -1, &rcMode, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     }
     
-    // Select back the LCD font before deleting the sub font to prevent GDI handle leak
     SelectObject(hdc, hLcdFont);
     DeleteObject(hSubFont);
 
@@ -968,7 +1291,6 @@ void DrawBoard(HWND hwnd, HDC hdc) {
         for (int c = 0; c < cols; c++) {
             int x = c * CELL_SIZE;
             int y = r * CELL_SIZE + HEADER_HEIGHT;
-            RECT rcCell = { x, y, x + CELL_SIZE, y + CELL_SIZE };
             
             int isRev = (grid[r][c] & CELL_REVEALED);
             Draw3DTile(hdc, x, y, CELL_SIZE, isRev, 0);
@@ -988,6 +1310,8 @@ void DrawBoard(HWND hwnd, HDC hdc) {
                     DrawFlagSprite(hdc, x, y, CELL_SIZE, tick, flagTick[r][c]);
                 } else if (grid[r][c] & CELL_QUESTION) {
                     DrawQuestionSprite(hdc, x, y, CELL_SIZE);
+                } else if ((grid[r][c] & CELL_CHEST) && gameOver) {
+                    DrawChestSprite(hdc, x, y, CELL_SIZE);
                 }
             }
         }
@@ -995,6 +1319,28 @@ void DrawBoard(HWND hwnd, HDC hdc) {
     SelectObject(hdc, oldFont);
     DeleteObject(hNumFont);
     DeleteObject(hLcdFont);
+
+    // Ornate Cybernetic Corner Filigree L-Brackets on Board Corners
+    DrawCornerBracket(hdc, 2, HEADER_HEIGHT + 2, 0, 0);
+    DrawCornerBracket(hdc, cols * CELL_SIZE - 2, HEADER_HEIGHT + 2, 1, 0);
+    DrawCornerBracket(hdc, 2, rows * CELL_SIZE + HEADER_HEIGHT - 2, 0, 1);
+    DrawCornerBracket(hdc, cols * CELL_SIZE - 2, rows * CELL_SIZE + HEADER_HEIGHT - 2, 1, 1);
+
+    // Pulsating Perimeter Inlay Border with Traveling Specular Glint
+    int glintPerim = 2 * (cols * CELL_SIZE + rows * CELL_SIZE);
+    int glintPos = (int)((tick / 15) % glintPerim);
+    int gx = 0, gy = HEADER_HEIGHT;
+    if (glintPos < cols * CELL_SIZE) { gx = glintPos; gy = HEADER_HEIGHT; }
+    else if (glintPos < cols * CELL_SIZE + rows * CELL_SIZE) { gx = cols * CELL_SIZE - 1; gy = HEADER_HEIGHT + glintPos - cols * CELL_SIZE; }
+    else if (glintPos < 2 * cols * CELL_SIZE + rows * CELL_SIZE) { gx = cols * CELL_SIZE - (glintPos - (cols * CELL_SIZE + rows * CELL_SIZE)); gy = rows * CELL_SIZE + HEADER_HEIGHT - 1; }
+    else { gx = 0; gy = rows * CELL_SIZE + HEADER_HEIGHT - (glintPos - (2 * cols * CELL_SIZE + rows * CELL_SIZE)); }
+    
+    // Draw glint node
+    SetPixel(hdc, gx, gy, RGB(255, 255, 255));
+    SetPixel(hdc, gx + 1, gy, RGB(122, 162, 247));
+    SetPixel(hdc, gx - 1, gy, RGB(122, 162, 247));
+    SetPixel(hdc, gx, gy + 1, RGB(122, 162, 247));
+    SetPixel(hdc, gx, gy - 1, RGB(122, 162, 247));
 
     DrawParticles(hdc);
 
@@ -1012,7 +1358,7 @@ void DrawBoard(HWND hwnd, HDC hdc) {
     if (tick - sonarTick < 1000) {
         int maxR = cols * CELL_SIZE;
         if (rows * CELL_SIZE > maxR) maxR = rows * CELL_SIZE;
-        int radius = (tick - sonarTick) * maxR / 1000;
+        int radius = (int)((tick - sonarTick) * maxR / 1000);
         HPEN hRadarPen = CreatePen(PS_SOLID, 3, RGB(56, 189, 248));
         HGDIOBJ oldPenR = SelectObject(hdc, hRadarPen);
         SelectObject(hdc, GetStockObject(NULL_BRUSH));
@@ -1030,7 +1376,7 @@ void DrawBoard(HWND hwnd, HDC hdc) {
         DeleteObject(hLaserPen);
 
         // Sweeping scanner line
-        int scanY = HEADER_HEIGHT + ((tick - detectorTick) * (rows * CELL_SIZE) / 1500);
+        int scanY = HEADER_HEIGHT + (int)((tick - detectorTick) * (rows * CELL_SIZE) / 1500);
         HPEN hScanPen = CreatePen(PS_SOLID, 3, RGB(74, 222, 128));
         oldPenL = SelectObject(hdc, hScanPen);
         MoveToEx(hdc, 0, scanY, NULL);
@@ -1038,21 +1384,38 @@ void DrawBoard(HWND hwnd, HDC hdc) {
         SelectObject(hdc, oldPenL);
         DeleteObject(hScanPen);
     }
+}
 
-    if (tick - shockwaveTick < 400) {
-        float t = (float)(tick - shockwaveTick) / 400.0f;
-        int radius = (int)(t * 300.0f);
-        HPEN hWave = CreatePen(PS_SOLID, (int)((1.0f - t) * 12.0f) + 1, RGB(255, 60, 80));
-        HGDIOBJ oldPen = SelectObject(hdc, hWave);
-        SelectObject(hdc, GetStockObject(NULL_BRUSH));
-        Ellipse(hdc, (int)shockwaveX - radius, (int)shockwaveY - radius, (int)shockwaveX + radius, (int)shockwaveY + radius);
-        SelectObject(hdc, oldPen);
-        DeleteObject(hWave);
+// Double-Buffered Render Loop with Continuous Procedural Screen Shake
+void DrawBoard(HWND hwnd, HDC hdc) {
+    int totalW = cols * CELL_SIZE;
+    int totalH = rows * CELL_SIZE + HEADER_HEIGHT;
+
+    HDC memDC = CreateCompatibleDC(hdc);
+    HBITMAP memBM = CreateCompatibleBitmap(hdc, totalW, totalH);
+    HGDIOBJ oldBM = SelectObject(memDC, memBM);
+
+    DrawBoardToDC(hwnd, memDC);
+
+    DWORD tick = GetTickCount();
+    DWORD elapsedShake = tick - shakeTick;
+    int sx = 0, sy = 0;
+
+    if (shakeDuration > 0 && elapsedShake < shakeDuration && shakeIntensity > 0) {
+        float progress = (float)(shakeDuration - elapsedShake) / (float)shakeDuration;
+        float decay = progress * progress; // Quadratic physics decay
+        int curInt = (int)((float)shakeIntensity * decay);
+        if (curInt > 0) {
+            sx = (my_rand() % (curInt * 2 + 1)) - curInt;
+            sy = (my_rand() % (curInt * 2 + 1)) - curInt;
+        }
     }
 
-    if (isShaking) {
-        SetViewportOrgEx(hdc, oldOrg.x, oldOrg.y, NULL);
-    }
+    BitBlt(hdc, sx, sy, totalW, totalH, memDC, 0, 0, SRCCOPY);
+
+    SelectObject(memDC, oldBM);
+    DeleteObject(memBM);
+    DeleteDC(memDC);
 }
 
 int CheckWin() {
@@ -1102,12 +1465,14 @@ void HandleReveal(HWND hwnd, int x, int y) {
     
     if (gameOver) {
         for(int r=0;r<rows;r++) for(int c=0;c<cols;c++) if(grid[r][c]&CELL_MINE) grid[r][c]|=CELL_REVEALED;
+        TriggerScreenShake(14, 500);
         InvalidateRect(hwnd, NULL, FALSE);
         MessageBoxA(hwnd, "Boom! Click Smiley to restart.", "Game Over", MB_OK);
     } else if (CheckWin()) {
         gameOver = 1;
         KillTimer(hwnd, 1);
         Beep(1500, 300);
+        SpawnVictoryFX();
         totalWins++;
         SaveBest();
         if (!campaignMode && timeElapsed < bestTimes[currentDiff]) {
@@ -1129,7 +1494,7 @@ void HandleReveal(HWND hwnd, int x, int y) {
             memset(grid, 0, sizeof(grid));
             gameOver = 0;
             flagsPlaced = 0;
-            InvalidateRect(hwnd, NULL, TRUE);
+            InvalidateRect(hwnd, NULL, FALSE);
         } else {
             MessageBoxA(hwnd, "You Win! Click Smiley to restart.", "Congratulations", MB_OK);
         }
@@ -1144,7 +1509,7 @@ void ResizeWindow(HWND hwnd) {
         (rcWindow.right - rcWindow.left) + (cols * CELL_SIZE - (rcClient.right - rcClient.left)),
         (rcWindow.bottom - rcWindow.top) + (rows * CELL_SIZE + HEADER_HEIGHT - (rcClient.bottom - rcClient.top)),
         SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
-    InvalidateRect(hwnd, NULL, TRUE);
+    InvalidateRect(hwnd, NULL, FALSE);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -1152,8 +1517,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE:
             mainHwnd = hwnd;
             LoadBest();
+            InitDustMotes();
             SetTimer(hwnd, 2, 33, NULL);
             break;
+        case WM_ERASEBKGND:
+            return 1; // Prevent flicker in double buffering
         case WM_TIMER:
             if (wParam == 1 && !gameOver && initialized) {
                 if (rushMode) {
@@ -1161,6 +1529,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (rushTime <= 0) {
                         rushTime = 0; gameOver = 1; KillTimer(hwnd, 1); Beep(200, 500);
                         for(int r=0;r<rows;r++) for(int c=0;c<cols;c++) if(grid[r][c]&CELL_MINE) grid[r][c]|=CELL_REVEALED;
+                        TriggerScreenShake(12, 500);
                         InvalidateRect(hwnd, NULL, FALSE);
                         MessageBoxA(hwnd, "Time's Up! Click Smiley to restart.", "Game Over", MB_OK);
                     }
@@ -1169,6 +1538,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (speedrunTime <= 0) {
                         speedrunTime = 0; gameOver = 1; KillTimer(hwnd, 1); Beep(200, 500);
                         for(int r=0;r<rows;r++) for(int c=0;c<cols;c++) if(grid[r][c]&CELL_MINE) grid[r][c]|=CELL_REVEALED;
+                        TriggerScreenShake(12, 500);
                         InvalidateRect(hwnd, NULL, FALSE);
                         MessageBoxA(hwnd, "Speedrun Time Expired! Click Smiley to restart.", "Stage Failed", MB_OK);
                     }
@@ -1178,19 +1548,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 2) {
-                if (my_rand() % 100 < 30) {
-                    if (particleCount < MAX_PARTICLES) {
-                        Particle* p = &particles[particleCount++];
-                        p->x = (float)(my_rand() % (cols * CELL_SIZE));
-                        p->y = (float)(HEADER_HEIGHT + my_rand() % (rows * CELL_SIZE));
-                        p->vx = (float)((my_rand() % 20) - 10) / 20.0f;
-                        p->vy = (float)((my_rand() % 10) - 15) / 10.0f;
-                        p->maxLife = 25.0f + (float)(my_rand() % 25);
-                        p->life = p->maxLife;
-                        p->size = 1.0f + (float)(my_rand() % 2);
-                        p->color = RGB(122, 162, 247);
-                    }
-                }
                 UpdateParticles();
                 InvalidateRect(hwnd, NULL, FALSE);
             }
@@ -1213,8 +1570,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (rushMode) { rushTime = 60; rushScore = 0; }
                 initialized = 0; memset(grid, 0, sizeof(grid)); gameOver = 0;
                 if (!rushMode && !isSpeedrun) timeElapsed = 0;
-                flagsPlaced = 0; shields = 0; detectors = 0; sonars = 0; particleCount = 0;
-                InvalidateRect(hwnd, NULL, TRUE);
+                flagsPlaced = 0; shields = 0; detectors = 0; sonars = 0; particleCount = 0; shockwaveCount = 0;
+                InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }
 

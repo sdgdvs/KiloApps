@@ -15,21 +15,21 @@
     --success: #9ece6a;
     --warning: #e0af68;
     --border: #3b4261;
-  }
+    --gold: #facc15;
   }
   body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: radial-gradient(circle at 50% 50%, #1e2230 0%, #090a0f 100%); color: #c0caf5; user-select: none; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
   
-  #bg-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: 0.6; }
-  .game-container { position: relative; z-index: 1; background: var(--card-bg); padding: 18px; border-radius: 14px; box-shadow: 0 15px 35px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 14px; max-width: 98vw; max-height: 98vh; }
+  #bg-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: 0.7; }
+  .game-container { position: relative; z-index: 1; background: var(--card-bg); padding: 18px; border-radius: 14px; box-shadow: 0 15px 35px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.15); border: 2px solid var(--border); display: flex; flex-direction: column; gap: 12px; max-width: 98vw; max-height: 98vh; transform-origin: center center; }
   
   .diff-bar { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
-  .diff-bar button { background: #292e42; border: 1px solid var(--border); color: #a9b1d6; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; transition: all 0.2s; }
-  .diff-bar button:hover { background: #3b4261; color: #fff; }
-  .diff-bar button.active { background: var(--primary); color: #15161e; border-color: var(--primary); box-shadow: 0 0 12px rgba(122, 162, 247, 0.4); }
+  .diff-bar button { background: #292e42; border: 1px solid var(--border); color: #a9b1d6; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; transition: all 0.2s; position: relative; overflow: hidden; }
+  .diff-bar button:hover { background: #3b4261; color: #fff; box-shadow: 0 0 10px rgba(122, 162, 247, 0.3); }
+  .diff-bar button.active { background: var(--primary); color: #15161e; border-color: var(--primary); box-shadow: 0 0 14px rgba(122, 162, 247, 0.5); font-weight: 700; }
 
-  .status-banner { text-align: center; font-size: 12px; font-weight: 700; color: var(--warning); background: #12131c; padding: 4px 10px; border-radius: 6px; border: 1px solid #292e42; min-height: 18px; text-shadow: 0 0 8px rgba(224, 175, 104, 0.5); }
+  .status-banner { text-align: center; font-size: 12px; font-weight: 700; color: var(--warning); background: #12131c; padding: 4px 10px; border-radius: 6px; border: 1px solid #292e42; min-height: 18px; text-shadow: 0 0 8px rgba(224, 175, 104, 0.5); letter-spacing: 0.5px; }
 
-  .toolbar { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(to bottom, #2b3042, #181b26); padding: 8px 14px; border-radius: 6px; border: 2px solid #5a6482; box-shadow: inset 0 2px 5px rgba(255,255,255,0.1), 0 4px 10px rgba(0,0,0,0.6); margin-bottom: 4px; }
+  .toolbar { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(to bottom, #2b3042, #181b26); padding: 8px 14px; border-radius: 6px; border: 2px solid #5a6482; box-shadow: inset 0 2px 5px rgba(255,255,255,0.1), 0 4px 10px rgba(0,0,0,0.6); margin-bottom: 2px; }
   
   .counter { font-family: 'JetBrains Mono', monospace; font-size: 22px; color: var(--danger); text-shadow: 0 0 10px rgba(247, 118, 142, 0.6); background: #090a0f; padding: 3px 10px; border-radius: 4px; border: 2px inset #5a6482; box-shadow: inset 0 2px 6px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.2); min-width: 48px; text-align: center; }
   
@@ -37,9 +37,32 @@
   .face-btn:active { transform: scale(0.92); box-shadow: 0 2px 4px rgba(0,0,0,0.6); }
   .face-btn svg { width: 32px; height: 32px; }
 
-  .board-wrapper { position: relative; display: flex; justify-content: center; overflow: hidden; border: 4px ridge #6c7a9c; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.8); background: #0f111a; }
+  .board-wrapper { position: relative; display: flex; justify-content: center; overflow: hidden; border: 4px ridge #6c7a9c; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.85); background: #0f111a; }
 
-  .board { display: grid; grid-template-columns: repeat(10, 26px); grid-template-rows: repeat(10, 26px); gap: 2px; background: repeating-linear-gradient(45deg, #12141d, #12141d 8px, #171a25 8px, #171a25 16px); padding: 4px; }
+  /* Cybernetic Corner Filigree L-Brackets */
+  .corner-bracket { position: absolute; width: 14px; height: 14px; pointer-events: none; z-index: 12; }
+  .corner-tl { top: 2px; left: 2px; border-top: 3px solid #7aa2f7; border-left: 3px solid #7aa2f7; }
+  .corner-tr { top: 2px; right: 2px; border-top: 3px solid #7aa2f7; border-right: 3px solid #7aa2f7; }
+  .corner-bl { bottom: 2px; left: 2px; border-bottom: 3px solid #7aa2f7; border-left: 3px solid #7aa2f7; }
+  .corner-br { bottom: 2px; right: 2px; border-bottom: 3px solid #7aa2f7; border-right: 3px solid #7aa2f7; }
+  .corner-dot { position: absolute; width: 4px; height: 4px; background: #e0af68; border-radius: 50%; box-shadow: 0 0 4px #e0af68; }
+  .corner-tl .corner-dot { top: 1px; left: 1px; }
+  .corner-tr .corner-dot { top: 1px; right: 1px; }
+  .corner-bl .corner-dot { bottom: 1px; left: 1px; }
+  .corner-br .corner-dot { bottom: 1px; right: 1px; }
+
+  /* Pulsating perimeter inlay border glint */
+  .board-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border: 1px solid rgba(122, 162, 247, 0.35);
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 11;
+  }
+
+  .board { display: grid; grid-template-columns: repeat(10, 26px); grid-template-rows: repeat(10, 26px); gap: 2px; background: repeating-linear-gradient(45deg, #12141d, #12141d 8px, #171a25 8px, #171a25 16px); padding: 4px; position: relative; }
   
   .cell { position: relative; width: 26px; height: 26px; box-sizing: border-box; background: var(--tile-hidden); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.15s, transform 0.08s, filter 0.15s;
     box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.35), inset -1px -1px 0px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0,0,0,0.3);
@@ -47,6 +70,7 @@
     border-left: 1px solid rgba(255, 255, 255, 0.3);
     border-bottom: 1px solid rgba(0, 0, 0, 0.4);
     border-right: 1px solid rgba(0, 0, 0, 0.4);
+    overflow: hidden;
   }
   .cell:hover:not(.revealed) { filter: brightness(1.25); }
   .cell:active:not(.revealed) { transform: scale(0.93); }
@@ -55,6 +79,16 @@
   
   .cell.mine { background: radial-gradient(circle, #f7768e 0%, #7a1d2e 100%); box-shadow: 0 0 14px rgba(247, 118, 142, 0.8); }
   .cell.chest { background: radial-gradient(circle, #facc15 0%, #854d0e 100%); box-shadow: 0 0 14px rgba(250, 204, 21, 0.8); }
+
+  /* Specular sheen sweep effect */
+  .cell.revealed::after {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0) 100%);
+    pointer-events: none;
+  }
   
   /* Digit custom vivid retro colors and fonts */
   .c1 { color: #38bdf8; text-shadow: 0 0 8px rgba(56, 189, 248, 0.4); font-family: 'Consolas', monospace; font-size: 18px; } 
@@ -99,15 +133,7 @@
   }
   .flag-anim-container { animation: flag-drop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; transform-origin: bottom center; }
 
-  @keyframes screen-shake {
-    0%, 100% { transform: translate(0, 0) rotate(0deg); }
-    15%, 45%, 75% { transform: translate(-6px, 6px) rotate(-1deg); }
-    30%, 60%, 90% { transform: translate(6px, -6px) rotate(1deg); }
-  }
-  .screen-shake { animation: screen-shake 0.4s ease-out; }
-
-  #fx-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 10; }
-</style>
+  #fx-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 10; width: 100%; height: 100%; }
 </style>
 </head>
 <body>
@@ -135,6 +161,10 @@
     </div>
 
     <div class="board-wrapper">
+      <div class="corner-bracket corner-tl"><div class="corner-dot"></div></div>
+      <div class="corner-bracket corner-tr"><div class="corner-dot"></div></div>
+      <div class="corner-bracket corner-bl"><div class="corner-dot"></div></div>
+      <div class="corner-bracket corner-br"><div class="corner-dot"></div></div>
       <div class="board" id="board" oncontextmenu="return false;"></div>
       <canvas id="fx-canvas"></canvas>
     </div>
@@ -207,33 +237,45 @@
       { r: 24, c: 24, m: 160, chests: 5, speedrun: 200 }
     ];
 
-    // Particle FX
+    // Particle FX & Shockwaves
     const fxCanvas = document.getElementById('fx-canvas');
     const fxCtx = fxCanvas.getContext('2d');
     let particles = [];
+    let shockwaves = [];
     let fxAnimFrame = null;
+    let borderGlintAngle = 0;
 
     // Background Dust FX
     const bgCanvas = document.getElementById('bg-canvas');
     const bgCtx = bgCanvas.getContext('2d');
     let bgDust = [];
     
-    // Screen Shake State
+    // Continuous Procedural Screen Shake State
     let shakeIntensity = 0;
-    let shakeTime = 0;
+    let shakeDuration = 0;
+    let shakeTimeRemaining = 0;
+    let lastAnimTime = performance.now();
+
+    function triggerScreenShake(intensity, durationMs = 450) {
+      shakeIntensity = intensity;
+      shakeDuration = durationMs;
+      shakeTimeRemaining = durationMs;
+      if (!fxAnimFrame) fxAnimFrame = requestAnimationFrame(updateFX);
+    }
 
     function initBgDust() {
       bgCanvas.width = window.innerWidth;
       bgCanvas.height = window.innerHeight;
       bgDust = [];
-      for (let i = 0; i < 60; i++) {
+      for (let i = 0; i < 70; i++) {
         bgDust.push({
           x: Math.random() * bgCanvas.width,
           y: Math.random() * bgCanvas.height,
-          vx: (Math.random() - 0.5) * 0.5,
+          vx: (Math.random() - 0.5) * 0.4,
           vy: Math.random() * -0.5 - 0.2,
-          size: Math.random() * 2 + 1,
-          alpha: Math.random() * 0.5 + 0.1
+          size: Math.random() * 2.2 + 0.8,
+          alpha: Math.random() * 0.45 + 0.15,
+          color: Math.random() > 0.3 ? '#7aa2f7' : (Math.random() > 0.5 ? '#e0af68' : '#7dcfff')
         });
       }
     }
@@ -247,77 +289,123 @@
         if (p.x < -10) p.x = bgCanvas.width + 10;
         if (p.x > bgCanvas.width + 10) p.x = -10;
         
-        bgCtx.fillStyle = `rgba(122, 162, 247, ${p.alpha})`;
+        bgCtx.globalAlpha = p.alpha;
+        bgCtx.fillStyle = p.color;
         bgCtx.beginPath();
         bgCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         bgCtx.fill();
       }
+      bgCtx.globalAlpha = 1.0;
       requestAnimationFrame(animateBgDust);
     }
-    window.addEventListener('resize', initBgDust);
+    window.addEventListener('resize', () => { initBgDust(); resizeFxCanvas(); });
     initBgDust();
     animateBgDust();
 
     function resizeFxCanvas() {
       const board = document.getElementById('board');
-      fxCanvas.width = board.offsetWidth;
-      fxCanvas.height = board.offsetHeight;
+      if (board) {
+        fxCanvas.width = board.offsetWidth || 300;
+        fxCanvas.height = board.offsetHeight || 300;
+      }
     }
 
+    // 4-Layer Kinematic Explosion Engine
     function spawnExplosionFX(cx, cy, isTrigger = false) {
       if (isTrigger) {
-          particles.push({
-              isShockwave: true, x: cx, y: cy, radius: 0,
-              life: 1.0, decay: 0.015
-          });
-          shakeIntensity = 15;
-          shakeTime = 500;
+        // Dual-tier concentric shockwaves (inner high-speed compression + outer dispersion halo)
+        shockwaves.push({
+          x: cx, y: cy, radius: 2, maxRadius: 180,
+          life: 1.0, decay: 0.025, speed: 9, isInner: true, color: '#f7768e'
+        });
+        shockwaves.push({
+          x: cx, y: cy, radius: 0, maxRadius: 260,
+          life: 1.0, decay: 0.016, speed: 5.5, isInner: false, color: '#ff9e64'
+        });
+        triggerScreenShake(16, 500);
       }
-      const colors = ['#f7768e', '#fbbf24', '#ff9e64', '#ffffff'];
-      const smokeColors = ['rgba(40,40,45,0.8)', 'rgba(80,80,90,0.6)'];
-      // Multi-stage debris chunks
-      for (let i = 0; i < 45; i++) {
+
+      const sparkColors = ['#ffffff', '#fbbf24', '#f7768e', '#ff9e64', '#7dcfff'];
+      const smokeColors = ['rgba(45,45,55,0.85)', 'rgba(70,75,90,0.65)', 'rgba(30,30,40,0.9)'];
+      const debrisColors = ['#3d4663', '#272c40', '#5a6482', '#f7768e', '#e0af68'];
+
+      // Layer 0: Incandescent core needle sparks with velocity trails
+      for (let i = 0; i < 35; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const speed = 2 + Math.random() * 8;
-        const size = Math.random() < 0.2 ? 5 + Math.random() * 4 : 2 + Math.random() * 3; // some big chunks
+        const speed = 4 + Math.random() * 9;
         particles.push({
+          layer: 0, // Needle sparks
           x: cx, y: cy,
+          prevX: cx, prevY: cy,
           vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed - 2.5,
-          size: size,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          life: 1.0, decay: 0.015 + Math.random() * 0.02
+          vy: Math.sin(angle) * speed - 2.0,
+          size: 1.5 + Math.random() * 2,
+          color: sparkColors[Math.floor(Math.random() * sparkColors.length)],
+          life: 1.0, decay: 0.02 + Math.random() * 0.025,
+          drag: 0.94
         });
       }
-      // Smoke layered effect
-      for (let i = 0; i < 20; i++) {
+
+      // Layer 1: Expanding buoyant smoke & plasma puffs
+      for (let i = 0; i < 22; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 3;
+        const speed = 0.5 + Math.random() * 3.2;
         particles.push({
-          isSmoke: true,
+          layer: 1, // Buoyant smoke
           x: cx, y: cy,
           vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed - 1.0,
-          size: 10 + Math.random() * 15,
+          vy: Math.sin(angle) * speed - 1.2,
+          size: 6 + Math.random() * 10,
+          growth: 0.4 + Math.random() * 0.5,
           color: smokeColors[Math.floor(Math.random() * smokeColors.length)],
-          life: 1.0, decay: 0.01 + Math.random() * 0.01
+          life: 1.0, decay: 0.012 + Math.random() * 0.012
         });
       }
-      if (!fxAnimFrame) updateFX();
+
+      // Layer 2: Heavy kinematic rock & cyber debris shards with tumbling rotation and floor bounce
+      for (let i = 0; i < 25; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 2.5 + Math.random() * 6.5;
+        const pts = [];
+        const numPts = 3 + Math.floor(Math.random() * 3);
+        const rad = 3 + Math.random() * 4;
+        for (let j = 0; j < numPts; j++) {
+          const a = (j / numPts) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+          const r = rad * (0.6 + Math.random() * 0.8);
+          pts.push({ x: Math.cos(a) * r, y: Math.sin(a) * r });
+        }
+        particles.push({
+          layer: 2, // Debris shards
+          x: cx, y: cy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 3.5,
+          rot: Math.random() * Math.PI * 2,
+          vrot: (Math.random() - 0.5) * 0.35,
+          pts: pts,
+          color: debrisColors[Math.floor(Math.random() * debrisColors.length)],
+          life: 1.0, decay: 0.014 + Math.random() * 0.018,
+          gravity: 0.18, drag: 0.98
+        });
+      }
+
+      if (!fxAnimFrame) fxAnimFrame = requestAnimationFrame(updateFX);
     }
 
     function spawnDustFX(cx, cy) {
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 12; i++) {
         particles.push({
+          layer: 0,
           x: cx, y: cy,
-          vx: (Math.random() - 0.5) * 2,
-          vy: -Math.random() * 1.5,
-          size: 1 + Math.random() * 2,
-          color: 'rgba(200, 200, 200, 0.6)',
-          life: 1.0, decay: 0.03 + Math.random() * 0.02
+          prevX: cx, prevY: cy,
+          vx: (Math.random() - 0.5) * 2.5,
+          vy: -Math.random() * 2.0 - 0.5,
+          size: 1.2 + Math.random() * 2,
+          color: 'rgba(200, 210, 235, 0.7)',
+          life: 1.0, decay: 0.035 + Math.random() * 0.02,
+          drag: 0.96
         });
       }
-      if (!fxAnimFrame) updateFX();
+      if (!fxAnimFrame) fxAnimFrame = requestAnimationFrame(updateFX);
     }
 
     function getCrackSVG(m, seed) {
@@ -335,136 +423,288 @@
     }
 
     function spawnTreasureFX(cx, cy) {
-      const colors = ['#facc15', '#fef08a', '#38bdf8', '#ffffff', '#e0af68'];
-      for (let i = 0; i < 30; i++) {
+      shockwaves.push({
+        x: cx, y: cy, radius: 2, maxRadius: 140,
+        life: 1.0, decay: 0.022, speed: 6, isInner: true, color: '#facc15'
+      });
+      shockwaves.push({
+        x: cx, y: cy, radius: 0, maxRadius: 200,
+        life: 1.0, decay: 0.015, speed: 4, isInner: false, color: '#38bdf8'
+      });
+      triggerScreenShake(7, 300);
+
+      const colors = ['#facc15', '#fef08a', '#38bdf8', '#ffffff', '#e0af68', '#4ade80'];
+      // Layer 3: Golden celebration stars
+      for (let i = 0; i < 35; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const speed = 1.5 + Math.random() * 4.0;
+        const speed = 2.0 + Math.random() * 5.0;
         particles.push({
+          layer: 3, // Golden celebration energy stars
           x: cx, y: cy,
           vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed - 2.0,
-          size: 2 + Math.random() * 3,
+          vy: Math.sin(angle) * speed - 3.0,
+          size: 3 + Math.random() * 4,
+          rot: Math.random() * Math.PI * 2,
+          vrot: (Math.random() - 0.5) * 0.25,
           color: colors[Math.floor(Math.random() * colors.length)],
-          life: 1.0, decay: 0.015 + Math.random() * 0.025
+          life: 1.0, decay: 0.016 + Math.random() * 0.02,
+          gravity: 0.12, drag: 0.97
         });
       }
-      if (!fxAnimFrame) updateFX();
+      if (!fxAnimFrame) fxAnimFrame = requestAnimationFrame(updateFX);
     }
 
     function spawnVictoryFX() {
-      const colors = ['#7aa2f7', '#9ece6a', '#e0af68', '#bb9af7', '#7dcfff', '#f7768e'];
-      for (let i = 0; i < 60; i++) {
+      shockwaves.push({
+        x: fxCanvas.width / 2, y: fxCanvas.height / 2, radius: 5, maxRadius: 350,
+        life: 1.0, decay: 0.012, speed: 7, isInner: false, color: '#7aa2f7'
+      });
+      triggerScreenShake(12, 600);
+
+      const colors = ['#7aa2f7', '#9ece6a', '#e0af68', '#bb9af7', '#7dcfff', '#f7768e', '#facc15'];
+      for (let i = 0; i < 75; i++) {
         particles.push({
+          layer: 3,
           x: Math.random() * fxCanvas.width,
-          y: Math.random() * (fxCanvas.height * 0.5),
-          vx: (Math.random() - 0.5) * 3,
-          vy: Math.random() * 2 + 1,
-          size: 3 + Math.random() * 4,
+          y: Math.random() * (fxCanvas.height * 0.4),
+          vx: (Math.random() - 0.5) * 4,
+          vy: Math.random() * 2.5 + 1.0,
+          size: 3.5 + Math.random() * 4.5,
+          rot: Math.random() * Math.PI * 2,
+          vrot: (Math.random() - 0.5) * 0.3,
           color: colors[Math.floor(Math.random() * colors.length)],
-          life: 1.0, decay: 0.01 + Math.random() * 0.015
+          life: 1.0, decay: 0.009 + Math.random() * 0.012,
+          gravity: 0.08, drag: 0.99
         });
       }
-      if (!fxAnimFrame) updateFX();
+      if (!fxAnimFrame) fxAnimFrame = requestAnimationFrame(updateFX);
+    }
+
+    function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+      let rot = Math.PI / 2 * 3;
+      let x = cx;
+      let y = cy;
+      let step = Math.PI / spikes;
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - outerRadius);
+      for (let i = 0; i < spikes; i++) {
+        x = cx + Math.cos(rot) * outerRadius;
+        y = cy + Math.sin(rot) * outerRadius;
+        ctx.lineTo(x, y);
+        rot += step;
+
+        x = cx + Math.cos(rot) * innerRadius;
+        y = cy + Math.sin(rot) * innerRadius;
+        ctx.lineTo(x, y);
+        rot += step;
+      }
+      ctx.lineTo(cx, cy - outerRadius);
+      ctx.closePath();
+      ctx.fill();
     }
 
     function updateFX() {
+      const now = performance.now();
+      const dt = Math.min(32, now - lastAnimTime);
+      lastAnimTime = now;
+
       fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        if (p.isShockwave) {
-            p.radius += 12;
-            p.life -= p.decay;
-            if (p.life <= 0) { particles.splice(i, 1); continue; }
-            fxCtx.strokeStyle = `rgba(247, 118, 142, ${p.life})`;
-            fxCtx.lineWidth = 10 * p.life;
-            fxCtx.beginPath();
-            fxCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-            fxCtx.stroke();
-            continue;
-        }
-        if (p.isSmoke) {
-            p.x += p.vx; p.y += p.vy;
-            p.size += 0.5; // procedural growth for smoke
-            p.life -= p.decay;
-            if (p.life <= 0) { particles.splice(i, 1); continue; }
-            fxCtx.globalAlpha = Math.max(0, p.life);
-            fxCtx.fillStyle = p.color;
-            fxCtx.beginPath();
-            fxCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            fxCtx.fill();
-            continue;
-        }
-        
-        p.x += p.vx; p.y += p.vy;
-        p.vy += 0.12; p.vx *= 0.97;
-        p.life -= p.decay;
+      
+      // Draw border glint traveling around board frame
+      borderGlintAngle += 0.03;
+      const bw = fxCanvas.width;
+      const bh = fxCanvas.height;
+      if (bw > 10 && bh > 10) {
+        const perim = 2 * (bw + bh);
+        const glintPos = ((borderGlintAngle * 60) % perim + perim) % perim;
+        let gx = 0, gy = 0;
+        if (glintPos < bw) { gx = glintPos; gy = 0; }
+        else if (glintPos < bw + bh) { gx = bw; gy = glintPos - bw; }
+        else if (glintPos < 2 * bw + bh) { gx = bw - (glintPos - (bw + bh)); gy = bh; }
+        else { gx = 0; gy = bh - (glintPos - (2 * bw + bh)); }
 
-        if (p.life <= 0) { particles.splice(i, 1); continue; }
-
-        // Bounce physics
-        if (p.x - p.size < 0) { p.x = p.size; p.vx *= -0.7; }
-        if (p.x + p.size > fxCanvas.width) { p.x = fxCanvas.width - p.size; p.vx *= -0.7; }
-        if (p.y + p.size > fxCanvas.height) { p.y = fxCanvas.height - p.size; p.vy *= -0.7; }
-
-        fxCtx.globalAlpha = Math.max(0, p.life);
-        fxCtx.fillStyle = p.color;
+        const radGrad = fxCtx.createRadialGradient(gx, gy, 0, gx, gy, 20);
+        radGrad.addColorStop(0, 'rgba(122, 162, 247, 0.9)');
+        radGrad.addColorStop(0.5, 'rgba(122, 162, 247, 0.4)');
+        radGrad.addColorStop(1, 'rgba(122, 162, 247, 0)');
+        fxCtx.fillStyle = radGrad;
         fxCtx.beginPath();
-        fxCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        fxCtx.arc(gx, gy, 20, 0, Math.PI * 2);
         fxCtx.fill();
       }
-      fxCtx.globalAlpha = 1.0;
-      
-      let now = Date.now();
-      let keepAnimating = false;
-      
+
+      // 1. Dual-tier Concentric Shockwaves
+      for (let i = shockwaves.length - 1; i >= 0; i--) {
+        const sw = shockwaves[i];
+        sw.radius += sw.speed;
+        sw.life -= sw.decay;
+        if (sw.life <= 0 || sw.radius >= sw.maxRadius) {
+          shockwaves.splice(i, 1);
+          continue;
+        }
+        fxCtx.save();
+        fxCtx.strokeStyle = sw.color;
+        fxCtx.globalAlpha = Math.max(0, sw.life * 0.85);
+        fxCtx.lineWidth = sw.isInner ? (6 * sw.life + 1) : (12 * sw.life + 1);
+        fxCtx.beginPath();
+        fxCtx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+        fxCtx.stroke();
+        fxCtx.restore();
+      }
+
+      // 2. Multi-Layer Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.life -= p.decay;
+        if (p.life <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+
+        fxCtx.save();
+        fxCtx.globalAlpha = Math.max(0, p.life);
+
+        if (p.layer === 0) {
+          // Needle spark with line trail
+          p.prevX = p.x;
+          p.prevY = p.y;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.1;
+          p.vx *= (p.drag || 0.95);
+          p.vy *= (p.drag || 0.95);
+
+          fxCtx.strokeStyle = p.color;
+          fxCtx.lineWidth = p.size;
+          fxCtx.lineCap = 'round';
+          fxCtx.beginPath();
+          fxCtx.moveTo(p.prevX, p.prevY);
+          fxCtx.lineTo(p.x, p.y);
+          fxCtx.stroke();
+
+        } else if (p.layer === 1) {
+          // Buoyant smoke & plasma puff
+          p.x += p.vx;
+          p.y += p.vy;
+          p.size += (p.growth || 0.3);
+          p.vx *= 0.96;
+          p.vy *= 0.96;
+
+          fxCtx.fillStyle = p.color;
+          fxCtx.beginPath();
+          fxCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          fxCtx.fill();
+
+        } else if (p.layer === 2) {
+          // Heavy debris shard with tumbling rotation & bounce physics
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += (p.gravity || 0.18);
+          p.vx *= (p.drag || 0.98);
+          p.rot += (p.vrot || 0.1);
+
+          // Floor bounce
+          if (p.y > fxCanvas.height - 4) {
+            p.y = fxCanvas.height - 4;
+            p.vy *= -0.65;
+            p.vx *= 0.85;
+            p.vrot *= 0.7;
+          }
+          if (p.x < 4) { p.x = 4; p.vx *= -0.65; }
+          if (p.x > fxCanvas.width - 4) { p.x = fxCanvas.width - 4; p.vx *= -0.65; }
+
+          fxCtx.translate(p.x, p.y);
+          fxCtx.rotate(p.rot);
+          fxCtx.fillStyle = p.color;
+          fxCtx.beginPath();
+          if (p.pts && p.pts.length > 0) {
+            fxCtx.moveTo(p.pts[0].x, p.pts[0].y);
+            for (let j = 1; j < p.pts.length; j++) {
+              fxCtx.lineTo(p.pts[j].x, p.pts[j].y);
+            }
+            fxCtx.closePath();
+          } else {
+            fxCtx.rect(-3, -3, 6, 6);
+          }
+          fxCtx.fill();
+
+        } else if (p.layer === 3) {
+          // Radiant golden celebration energy star
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += (p.gravity || 0.12);
+          p.vx *= (p.drag || 0.98);
+          p.rot += (p.vrot || 0.15);
+
+          fxCtx.translate(p.x, p.y);
+          fxCtx.rotate(p.rot);
+          fxCtx.fillStyle = p.color;
+          drawStar(fxCtx, 0, 0, 4, p.size, p.size * 0.4);
+        }
+
+        fxCtx.restore();
+      }
+
+      // 3. Continuous Procedural Screen Shake with quadratic decay & rotational damping
       const gc = document.querySelector('.game-container');
-      if (shakeTime > 0) {
-          let progress = shakeTime / 500;
-          let currentInt = shakeIntensity * progress;
-          let sx = (Math.random() * currentInt * 2) - currentInt;
-          let sy = (Math.random() * currentInt * 2) - currentInt;
-          gc.style.transform = `translate(${sx}px, ${sy}px)`;
-          shakeTime -= 16;
-          keepAnimating = true;
+      if (shakeTimeRemaining > 0 && shakeDuration > 0) {
+        const progress = shakeTimeRemaining / shakeDuration;
+        const decay = progress * progress; // Quadratic physics decay
+        const curInt = shakeIntensity * decay;
+        const sx = (Math.random() * 2 - 1) * curInt;
+        const sy = (Math.random() * 2 - 1) * curInt;
+        const srot = (Math.random() * 2 - 1) * curInt * 0.15; // Rotational damping
+        gc.style.transform = `translate(${sx.toFixed(2)}px, ${sy.toFixed(2)}px) rotate(${srot.toFixed(2)}deg)`;
+        shakeTimeRemaining -= dt;
       } else {
-          gc.style.transform = `none`;
+        gc.style.transform = 'none';
+        shakeTimeRemaining = 0;
       }
 
-      if (now - sonarTick < 1000) {
-          let radius = (now - sonarTick) * Math.max(fxCanvas.width, fxCanvas.height) / 1000;
-          fxCtx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
-          fxCtx.lineWidth = 3;
-          fxCtx.beginPath();
-          fxCtx.arc(fxCanvas.width / 2, fxCanvas.height / 2, radius, 0, Math.PI * 2);
-          fxCtx.stroke();
-          keepAnimating = true;
+      // 4. Sonar & Detector Beam Visual Overlays
+      const curTick = Date.now();
+      if (curTick - sonarTick < 1000) {
+        const radius = (curTick - sonarTick) * Math.max(fxCanvas.width, fxCanvas.height) / 1000;
+        fxCtx.save();
+        fxCtx.strokeStyle = 'rgba(56, 189, 248, 0.85)';
+        fxCtx.lineWidth = 3.5;
+        fxCtx.beginPath();
+        fxCtx.arc(fxCanvas.width / 2, fxCanvas.height / 2, radius, 0, Math.PI * 2);
+        fxCtx.stroke();
+        fxCtx.restore();
       }
       
-      if (now - detectorTick < 1500 && detectorR !== -1) {
-          let px = detectorC * (COLS > 18 ? 22 : 26) + 12;
-          let py = detectorR * (COLS > 18 ? 22 : 26) + 12;
-          let alpha = Math.max(0, 1.0 - (now - detectorTick)/1500);
-          
-          // Laser line
-          fxCtx.strokeStyle = `rgba(74, 222, 128, ${alpha * 0.8})`;
-          fxCtx.lineWidth = 2;
-          fxCtx.beginPath();
-          fxCtx.moveTo(fxCanvas.width / 2, 0);
-          fxCtx.lineTo(px, py);
-          fxCtx.stroke();
-          
-          // Sweeping scanner effect
-          let scanY = (now - detectorTick) / 1500 * fxCanvas.height;
-          fxCtx.fillStyle = `rgba(74, 222, 128, ${alpha * 0.3})`;
-          fxCtx.fillRect(0, scanY - 10, fxCanvas.width, 20);
-          fxCtx.fillStyle = `rgba(74, 222, 128, ${alpha * 0.8})`;
-          fxCtx.fillRect(0, scanY - 2, fxCanvas.width, 4);
-          
-          keepAnimating = true;
+      if (curTick - detectorTick < 1500 && detectorR !== -1) {
+        const cellSize = COLS > 18 ? 22 : 26;
+        const px = detectorC * cellSize + 12;
+        const py = detectorR * cellSize + 12;
+        const alpha = Math.max(0, 1.0 - (curTick - detectorTick)/1500);
+        
+        fxCtx.save();
+        // Laser guide line
+        fxCtx.strokeStyle = `rgba(74, 222, 128, ${alpha * 0.85})`;
+        fxCtx.lineWidth = 2.5;
+        fxCtx.beginPath();
+        fxCtx.moveTo(fxCanvas.width / 2, 0);
+        fxCtx.lineTo(px, py);
+        fxCtx.stroke();
+        
+        // Sweeping scanner beam
+        const scanY = (curTick - detectorTick) / 1500 * fxCanvas.height;
+        fxCtx.fillStyle = `rgba(74, 222, 128, ${alpha * 0.25})`;
+        fxCtx.fillRect(0, scanY - 12, fxCanvas.width, 24);
+        fxCtx.fillStyle = `rgba(74, 222, 128, ${alpha * 0.85})`;
+        fxCtx.fillRect(0, scanY - 2, fxCanvas.width, 4);
+        fxCtx.restore();
       }
 
-      if (particles.length > 0 || keepAnimating) fxAnimFrame = requestAnimationFrame(updateFX);
-      else fxAnimFrame = null;
+      const keepAnimating = (particles.length > 0 || shockwaves.length > 0 || shakeTimeRemaining > 0 || (curTick - sonarTick < 1000) || (curTick - detectorTick < 1500));
+      if (keepAnimating) {
+        fxAnimFrame = requestAnimationFrame(updateFX);
+      } else {
+        fxAnimFrame = null;
+      }
     }
     
     function playSound(freq, duration, type='sine') {
@@ -583,9 +823,9 @@
       }
 
       if (shields > 0) {
-          document.getElementById('board').classList.add('shield-active');
+        document.getElementById('board').classList.add('shield-active');
       } else {
-          document.getElementById('board').classList.remove('shield-active');
+        document.getElementById('board').classList.remove('shield-active');
       }
     }
 
@@ -598,6 +838,7 @@
       comboCount = 0;
       comboMultiplier = 1;
       particles = [];
+      shockwaves = [];
       bestTime = localStorage.getItem('kmines_bestTime_' + currentDiff) || 999;
       totalPlayed = parseInt(localStorage.getItem('kmines_totalPlayed') || '0');
       totalWins = parseInt(localStorage.getItem('kmines_totalWins') || '0');
@@ -608,14 +849,14 @@
       document.getElementById('time-count').innerText = formatNumber(rushMode ? rushTime : (isSpeedrun ? speedrunTime : time));
       
       if (rushMode) {
-          document.getElementById('best-count').innerText = formatNumber(bestRush);
-          document.getElementById('stats-count').innerText = "Score: " + rushScore;
+        document.getElementById('best-count').innerText = formatNumber(bestRush);
+        document.getElementById('stats-count').innerText = "Score: " + rushScore;
       } else if (campaignMode) {
-          document.getElementById('best-count').innerText = formatNumber(campaignLevel);
-          document.getElementById('stats-count').innerText = "Stage " + campaignLevel;
+        document.getElementById('best-count').innerText = formatNumber(campaignLevel);
+        document.getElementById('stats-count').innerText = "Stage " + campaignLevel;
       } else {
-          document.getElementById('best-count').innerText = formatNumber(bestTime);
-          document.getElementById('stats-count').innerText = "P:" + totalPlayed + " W:" + totalWins;
+        document.getElementById('best-count').innerText = formatNumber(bestTime);
+        document.getElementById('stats-count').innerText = "P:" + totalPlayed + " W:" + totalWins;
       }
       
       updateUIStatus();
@@ -629,104 +870,107 @@
     }
 
     function useSonarScan() {
-        if (sonars <= 0 || gameOver || !initialized) return;
-        let targetR = -1, targetC = -1;
-        for (let i = 0; i < 1000; i++) {
-            let r = Math.floor(Math.random() * ROWS);
-            let c = Math.floor(Math.random() * COLS);
-            if (!(grid[r][c] & 2)) { targetR = r; targetC = c; break; }
-        }
-        if (targetR !== -1) {
-            sonars--;
-            for (let i = -1; i <= 1; i++) {
-                for (let j = -1; j <= 1; j++) {
-                    let nr = targetR + i, nc = targetC + j;
-                    if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
-                        if (!(grid[nr][nc] & 8)) {
-                            if (!(grid[nr][nc] & 2) && !(grid[nr][nc] & 4)) reveal(nr, nc);
-                        }
-                    }
-                }
+      if (sonars <= 0 || gameOver || !initialized) return;
+      let targetR = -1, targetC = -1;
+      for (let i = 0; i < 1000; i++) {
+        let r = Math.floor(Math.random() * ROWS);
+        let c = Math.floor(Math.random() * COLS);
+        if (!(grid[r][c] & 2)) { targetR = r; targetC = c; break; }
+      }
+      if (targetR !== -1) {
+        sonars--;
+        for (let i = -1; i <= 1; i++) {
+          for (let j = -1; j <= 1; j++) {
+            let nr = targetR + i, nc = targetC + j;
+            if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+              if (!(grid[nr][nc] & 8)) {
+                if (!(grid[nr][nc] & 2) && !(grid[nr][nc] & 4)) reveal(nr, nc);
+              }
             }
-            document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
-            playSound(2000, 0.15, 'triangle');
-            sonarTick = Date.now();
-            if (!fxAnimFrame) updateFX();
-            updateUIStatus();
-            render();
-            if (checkWin() && !gameOver) handleWin();
+          }
         }
+        document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
+        playSound(2000, 0.15, 'triangle');
+        sonarTick = Date.now();
+        triggerScreenShake(6, 300);
+        if (!fxAnimFrame) fxAnimFrame = requestAnimationFrame(updateFX);
+        updateUIStatus();
+        render();
+        if (checkWin() && !gameOver) handleWin();
+      }
     }
 
     function useDetectorBot() {
-        if (detectors <= 0 || gameOver || !initialized) return;
-        for (let r = 0; r < ROWS; r++) {
-            for (let c = 0; c < COLS; c++) {
-                if ((grid[r][c] & 8) && !(grid[r][c] & 4) && !(grid[r][c] & 2)) {
-                    grid[r][c] |= 4;
-                    flags++;
-                    detectors--;
-                    document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
-                    playSound(1400, 0.12, 'sine');
-                    detectorTick = Date.now();
-                    detectorR = r;
-                    detectorC = c;
-                    if (!fxAnimFrame) updateFX();
-                    updateUIStatus();
-                    render();
-                    return;
-                }
-            }
+      if (detectors <= 0 || gameOver || !initialized) return;
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if ((grid[r][c] & 8) && !(grid[r][c] & 4) && !(grid[r][c] & 2)) {
+            grid[r][c] |= 4;
+            flags++;
+            detectors--;
+            document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
+            playSound(1400, 0.12, 'sine');
+            detectorTick = Date.now();
+            detectorR = r;
+            detectorC = c;
+            triggerScreenShake(5, 250);
+            if (!fxAnimFrame) fxAnimFrame = requestAnimationFrame(updateFX);
+            updateUIStatus();
+            render();
+            return;
+          }
         }
+      }
     }
 
     function useBlastShield() {
-        if (shields <= 0 || gameOver || !initialized) return;
-        playSound(1200, 0.1, 'sine');
-        document.getElementById('status-text').innerText = `BLAST SHIELD ACTIVE (${shields} Charges)`;
+      if (shields <= 0 || gameOver || !initialized) return;
+      playSound(1200, 0.1, 'sine');
+      document.getElementById('status-text').innerText = `BLAST SHIELD ACTIVE (${shields} Charges)`;
+      triggerScreenShake(4, 200);
     }
 
     function resetLevel() {
-        if (campaignMode) initCampaignLevel();
-        else setDiff(currentDiff);
+      if (campaignMode) initCampaignLevel();
+      else setDiff(currentDiff);
     }
 
     function toggleCampaign() {
-        campaignMode = !campaignMode;
-        rushMode = false;
-        document.getElementById('btn-camp').innerText = campaignMode ? `Camp ${campaignLevel}/20 (C)` : "Camp: Off (C)";
-        document.getElementById('btn-camp').classList.toggle('active', campaignMode);
-        if (campaignMode) {
-            campaignLevel = 1;
-            initCampaignLevel();
-        } else {
-            setDiff('easy');
-        }
+      campaignMode = !campaignMode;
+      rushMode = false;
+      document.getElementById('btn-camp').innerText = campaignMode ? `Camp ${campaignLevel}/20 (C)` : "Camp: Off (C)";
+      document.getElementById('btn-camp').classList.toggle('active', campaignMode);
+      if (campaignMode) {
+        campaignLevel = 1;
+        initCampaignLevel();
+      } else {
+        setDiff('easy');
+      }
     }
 
     function initCampaignLevel() {
-        if (campaignLevel >= 1 && campaignLevel <= 20) {
-            let s = campaignStages[campaignLevel - 1];
-            ROWS = s.r; COLS = s.c; MINES = s.m; chestsToPlace = s.chests;
-            isSpeedrun = s.speedrun > 0;
-            speedrunTime = s.speedrun;
+      if (campaignLevel >= 1 && campaignLevel <= 20) {
+        let s = campaignStages[campaignLevel - 1];
+        ROWS = s.r; COLS = s.c; MINES = s.m; chestsToPlace = s.chests;
+        isSpeedrun = s.speedrun > 0;
+        speedrunTime = s.speedrun;
 
-            shields = campaignLevel >= 5 ? (campaignLevel >= 11 ? 3 : 2) : 1;
-            detectors = 2 + Math.floor(campaignLevel / 4);
-            sonars = 1 + Math.floor(campaignLevel / 3);
-        } else {
-            campaignMode = false;
-            document.getElementById('btn-camp').innerText = "Camp: Off (C)";
-            document.getElementById('btn-camp').classList.remove('active');
-            setDiff('easy');
-            alert("CAMPAIGN COMPLETE! You cleared all 20 stages!");
-            return;
-        }
+        shields = campaignLevel >= 5 ? (campaignLevel >= 11 ? 3 : 2) : 1;
+        detectors = 2 + Math.floor(campaignLevel / 4);
+        sonars = 1 + Math.floor(campaignLevel / 3);
+      } else {
+        campaignMode = false;
+        document.getElementById('btn-camp').innerText = "Camp: Off (C)";
+        document.getElementById('btn-camp').classList.remove('active');
+        setDiff('easy');
+        alert("CAMPAIGN COMPLETE! You cleared all 20 stages!");
+        return;
+      }
 
-        document.querySelectorAll('.diff-bar button').forEach(b => b.classList.remove('active'));
-        document.getElementById('btn-camp').classList.add('active');
-        document.getElementById('btn-camp').innerText = `Camp ${campaignLevel}/20 (C)`;
-        init();
+      document.querySelectorAll('.diff-bar button').forEach(b => b.classList.remove('active'));
+      document.getElementById('btn-camp').classList.add('active');
+      document.getElementById('btn-camp').innerText = `Camp ${campaignLevel}/20 (C)`;
+      init();
     }
 
     function startRush() {
@@ -764,33 +1008,35 @@
       clearInterval(timer);
       timer = setInterval(() => {
         if (rushMode) {
-            rushTime--;
-            if (rushTime <= 0) {
-                rushTime = 0;
-                gameOver = true;
-                clearInterval(timer);
-                for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]&8) grid[i][j]|=2;
-                setFaceState('dead');
-                playSound(150, 0.5, 'sawtooth');
-                render();
-            }
-            document.getElementById('time-count').innerText = formatNumber(rushTime);
+          rushTime--;
+          if (rushTime <= 0) {
+            rushTime = 0;
+            gameOver = true;
+            clearInterval(timer);
+            for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]&8) grid[i][j]|=2;
+            setFaceState('dead');
+            playSound(150, 0.5, 'sawtooth');
+            triggerScreenShake(12, 500);
+            render();
+          }
+          document.getElementById('time-count').innerText = formatNumber(rushTime);
         } else if (isSpeedrun) {
-            speedrunTime--;
-            if (speedrunTime <= 0) {
-                speedrunTime = 0;
-                gameOver = true;
-                clearInterval(timer);
-                for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]&8) grid[i][j]|=2;
-                setFaceState('dead');
-                playSound(150, 0.5, 'sawtooth');
-                render();
-            }
-            document.getElementById('time-count').innerText = formatNumber(speedrunTime);
+          speedrunTime--;
+          if (speedrunTime <= 0) {
+            speedrunTime = 0;
+            gameOver = true;
+            clearInterval(timer);
+            for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]&8) grid[i][j]|=2;
+            setFaceState('dead');
+            playSound(150, 0.5, 'sawtooth');
+            triggerScreenShake(12, 500);
+            render();
+          }
+          document.getElementById('time-count').innerText = formatNumber(speedrunTime);
         } else {
-            time++;
-            if (time > 999) time = 999;
-            document.getElementById('time-count').innerText = formatNumber(time);
+          time++;
+          if (time > 999) time = 999;
+          document.getElementById('time-count').innerText = formatNumber(time);
         }
       }, 1000);
     }
@@ -852,6 +1098,7 @@
       if (grid[startR][startC] & 2 || grid[startR][startC] & 4) return;
       
       let q = [[startR, startC]];
+      const cellSize = COLS > 18 ? 22 : 26;
 
       let now = Date.now();
       if (lastRevealTime > 0 && now - lastRevealTime <= 2000) comboCount++;
@@ -870,8 +1117,8 @@
         // Chest opened!
         if (grid[r][c] & 32) {
           grid[r][c] &= ~32;
-          const px = c * (COLS > 18 ? 22 : 26) + 12;
-          const py = r * (COLS > 18 ? 22 : 26) + 12;
+          const px = c * cellSize + 12;
+          const py = r * cellSize + 12;
           spawnTreasureFX(px, py);
 
           let reward = Math.random();
@@ -887,8 +1134,8 @@
         }
         
         if (grid[r][c] & 8) {
-          const px = c * (COLS > 18 ? 22 : 26) + 12;
-          const py = r * (COLS > 18 ? 22 : 26) + 12;
+          const px = c * cellSize + 12;
+          const py = r * cellSize + 12;
           spawnExplosionFX(px, py, true);
 
           if (shields > 0) {
@@ -934,15 +1181,15 @@
       playSound(800, 0.5, 'square');
       spawnVictoryFX();
       if (rushMode) {
-          rushScore += 100 * comboMultiplier;
-          rushTime += 15;
-          if (rushTime > 999) rushTime = 999;
-          if (rushScore > bestRush) {
-              bestRush = rushScore;
-              localStorage.setItem('kmines_bestRush', bestRush);
-          }
-          init();
-          return;
+        rushScore += 100 * comboMultiplier;
+        rushTime += 15;
+        if (rushTime > 999) rushTime = 999;
+        if (rushScore > bestRush) {
+          bestRush = rushScore;
+          localStorage.setItem('kmines_bestRush', bestRush);
+        }
+        init();
+        return;
       }
       
       gameOver = true;
@@ -950,9 +1197,9 @@
       totalWins++;
       localStorage.setItem('kmines_totalWins', totalWins);
       if (!campaignMode && time < bestTime) {
-          bestTime = time;
-          localStorage.setItem('kmines_bestTime_' + currentDiff, bestTime);
-          document.getElementById('best-count').innerText = formatNumber(bestTime);
+        bestTime = time;
+        localStorage.setItem('kmines_bestTime_' + currentDiff, bestTime);
+        document.getElementById('best-count').innerText = formatNumber(bestTime);
       }
       setFaceState('win');
       flags = MINES;
@@ -960,11 +1207,11 @@
       for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]&8) grid[i][j]|=4;
       render();
       if (campaignMode) {
-          setTimeout(() => {
-              alert(`STAGE ${campaignLevel} COMPLETE!`);
-              campaignLevel++;
-              initCampaignLevel();
-          }, 100);
+        setTimeout(() => {
+          alert(`STAGE ${campaignLevel} COMPLETE!`);
+          campaignLevel++;
+          initCampaignLevel();
+        }, 100);
       }
     }
 
@@ -1005,6 +1252,7 @@
         clearInterval(timer);
         for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]&8) grid[i][j]|=2;
         setFaceState('dead');
+        triggerScreenShake(14, 500);
         render();
       } else if (checkWin()) {
         handleWin();
@@ -1018,6 +1266,7 @@
     function handleRightClick(r, c) {
       if (gameOver || !initialized) return;
       if (!(grid[r][c] & 2)) {
+        const cellSize = COLS > 18 ? 22 : 26;
         if (grid[r][c] & 4) {
           grid[r][c] &= ~4; grid[r][c] |= 16; flags--;
           playSound(600, 0.1, 'triangle');
@@ -1027,8 +1276,8 @@
         } else {
           grid[r][c] |= 4; flags++;
           playSound(800, 0.1, 'triangle');
-          const px = c * (COLS > 18 ? 22 : 26) + 13;
-          const py = r * (COLS > 18 ? 22 : 26) + 20;
+          const px = c * cellSize + 13;
+          const py = r * cellSize + 20;
           spawnDustFX(px, py);
         }
         document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
