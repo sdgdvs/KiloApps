@@ -53,11 +53,11 @@
   }
 
   .sidebar-header {
-    padding: 16px;
+    padding: 14px 16px;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
   }
 
   .app-title-bar {
@@ -67,7 +67,7 @@
   }
 
   .app-title {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 700;
     display: flex;
     align-items: center;
@@ -78,7 +78,7 @@
   .contact-count-badge {
     background: #374151;
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: 11px;
     padding: 2px 8px;
     border-radius: 12px;
     font-weight: 600;
@@ -87,23 +87,24 @@
   .action-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 6px;
   }
 
   .btn {
     background: var(--bg-card);
     color: var(--text-main);
     border: 1px solid var(--border-color);
-    padding: 8px 12px;
+    padding: 7px 10px;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
     transition: all 0.15s ease;
+    font-family: inherit;
   }
 
   .btn:hover {
@@ -136,21 +137,33 @@
     color: #fff;
   }
 
+  .btn-badge {
+    font-size: 10px;
+    opacity: 0.75;
+    background: rgba(0,0,0,0.25);
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin-left: 2px;
+  }
+
   /* Search & Filters */
   .search-box {
     position: relative;
+    display: flex;
+    align-items: center;
   }
 
   .search-box input {
     width: 100%;
-    padding: 9px 12px 9px 34px;
+    padding: 8px 30px 8px 32px;
     background: #1f2937;
     border: 1px solid var(--border-color);
     border-radius: 6px;
     color: #fff;
-    font-size: 13px;
+    font-size: 12px;
     outline: none;
     transition: border-color 0.2s;
+    font-family: inherit;
   }
 
   .search-box input:focus {
@@ -160,24 +173,39 @@
   .search-icon {
     position: absolute;
     left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 12px;
+    pointer-events: none;
+  }
+
+  .search-clear {
+    position: absolute;
+    right: 8px;
     color: var(--text-muted);
     font-size: 14px;
+    cursor: pointer;
+    display: none;
+    padding: 2px 4px;
+    line-height: 1;
+    border-radius: 50%;
+  }
+  .search-clear:hover {
+    color: #fff;
+    background: #374151;
   }
 
   .category-pills {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     overflow-x: auto;
-    padding: 4px 0;
+    padding: 2px 0;
     scrollbar-width: none;
   }
   .category-pills::-webkit-scrollbar { display: none; }
 
   .pill {
-    padding: 4px 10px;
-    border-radius: 14px;
+    padding: 3px 8px;
+    border-radius: 12px;
     font-size: 11px;
     font-weight: 600;
     background: #1f2937;
@@ -186,6 +214,9 @@
     cursor: pointer;
     white-space: nowrap;
     transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
   }
 
   .pill:hover {
@@ -199,105 +230,26 @@
     border-color: var(--accent-blue);
   }
 
-  /* Contact List */
-  .contact-list {
-    flex: 1;
-    overflow-y: auto;
+  .pill-count {
+    font-size: 9px;
+    opacity: 0.8;
+    background: rgba(0,0,0,0.25);
+    padding: 0 4px;
+    border-radius: 8px;
   }
-
-  .contact-item {
-    padding: 12px 16px;
-    border-bottom: 1px solid #1f2937;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-
-  .contact-item:hover {
-    background: #1f2937;
-  }
-
-  .contact-item.active {
-    background: #1e293b;
-    border-left: 4px solid var(--accent-blue);
-  }
-
-  .avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 14px;
-    color: #fff;
-    flex-shrink: 0;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  }
-
-  .contact-info {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .contact-name-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2px;
-  }
-
-  .contact-name {
-    font-weight: 600;
-    font-size: 14px;
-    color: #f3f4f6;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .fav-star {
-    color: var(--accent-yellow);
-    font-size: 13px;
-  }
-
-  .contact-sub {
-    font-size: 12px;
-    color: var(--text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .category-badge {
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 600;
-    text-transform: uppercase;
-  }
-
-  .badge-Work { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
-  .badge-Personal { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-  .badge-Family { background: rgba(139, 92, 246, 0.2); color: #c084fc; }
-  .badge-Friends { background: rgba(236, 72, 153, 0.2); color: #f472b6; }
-  .badge-Other { background: rgba(107, 114, 128, 0.2); color: #9ca3af; }
 
   /* Tag Badges & Tag Pills */
   .tag-pills {
     display: flex;
     gap: 4px;
     overflow-x: auto;
-    padding: 4px 0 2px 0;
+    padding: 2px 0;
     scrollbar-width: none;
   }
   .tag-pills::-webkit-scrollbar { display: none; }
 
   .tag-pill {
-    padding: 2px 8px;
+    padding: 2px 7px;
     border-radius: 10px;
     font-size: 10px;
     font-weight: 600;
@@ -350,6 +302,93 @@
     margin-top: 8px;
   }
 
+  /* Contact List */
+  .contact-list {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .contact-item {
+    padding: 10px 14px;
+    border-bottom: 1px solid #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .contact-item:hover {
+    background: #1f2937;
+  }
+
+  .contact-item.active {
+    background: #1e293b;
+    border-left: 4px solid var(--accent-blue);
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .contact-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .contact-name-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2px;
+  }
+
+  .contact-name {
+    font-weight: 600;
+    font-size: 13px;
+    color: #f3f4f6;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .fav-star {
+    color: var(--accent-yellow);
+    font-size: 13px;
+  }
+
+  .contact-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .category-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .badge-Work { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+  .badge-Personal { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+  .badge-Family { background: rgba(139, 92, 246, 0.2); color: #c084fc; }
+  .badge-Friends { background: rgba(236, 72, 153, 0.2); color: #f472b6; }
+  .badge-Other { background: rgba(107, 114, 128, 0.2); color: #9ca3af; }
+
   /* Details Panel */
   .details-panel {
     flex: 1;
@@ -367,6 +406,7 @@
     align-items: center;
     color: var(--text-muted);
     gap: 12px;
+    padding: 20px;
   }
 
   .empty-state-icon {
@@ -375,33 +415,35 @@
   }
 
   .details-header {
-    padding: 24px;
+    padding: 20px 24px;
     background: var(--bg-card);
     border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 18px;
   }
 
   .avatar-lg {
-    width: 72px;
-    height: 72px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 26px;
+    font-size: 24px;
     color: #fff;
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    flex-shrink: 0;
   }
 
   .header-details {
     flex: 1;
+    min-width: 0;
   }
 
   .header-name {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 700;
     color: #fff;
     display: flex;
@@ -413,31 +455,32 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-top: 6px;
+    margin-top: 4px;
   }
 
   .quick-actions {
     display: flex;
-    gap: 8px;
-    margin-top: 14px;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
   }
 
   .details-body {
-    padding: 24px;
+    padding: 20px 24px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    max-width: 600px;
+    gap: 16px;
+    max-width: 650px;
   }
 
   .form-group {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 5px;
   }
 
   .form-group label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -445,14 +488,15 @@
   }
 
   .form-group input, .form-group select, .form-group textarea {
-    padding: 10px 12px;
+    padding: 8px 10px;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 6px;
     color: #fff;
-    font-size: 14px;
+    font-size: 13px;
     outline: none;
     font-family: inherit;
+    transition: border-color 0.15s;
   }
 
   .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
@@ -462,7 +506,7 @@
   .form-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
+    gap: 14px;
   }
 
   .checkbox-group {
@@ -479,6 +523,90 @@
     cursor: pointer;
   }
 
+  /* Modals */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(2px);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-content {
+    background: var(--bg-card);
+    padding: 22px;
+    border-radius: 8px;
+    max-width: 440px;
+    width: 90%;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+    animation: fadeIn 0.15s ease-out;
+  }
+
+  .modal-title {
+    margin-bottom: 12px;
+    font-size: 17px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #fff;
+  }
+
+  .modal-shortcuts-list {
+    margin-left: 18px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .modal-shortcuts-list kbd {
+    background: #0f172a;
+    border: 1px solid #475569;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 11px;
+    color: #93c5fd;
+    font-family: monospace;
+  }
+
+  .export-option-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 16px 0;
+  }
+
+  .export-card {
+    background: #0f172a;
+    border: 1px solid var(--border-color);
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+  }
+  .export-card:hover {
+    border-color: var(--accent-blue);
+    background: #1e293b;
+  }
+  .export-card-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: #fff;
+    margin-bottom: 3px;
+  }
+  .export-card-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
   /* Toast notification */
   .toast-container {
     position: fixed;
@@ -487,22 +615,24 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    z-index: 1000;
+    z-index: 3000;
+    pointer-events: none;
   }
 
   .toast {
     background: #1e293b;
     color: #fff;
     border: 1px solid var(--accent-blue);
-    padding: 10px 16px;
+    padding: 9px 15px;
     border-radius: 6px;
-    font-size: 13px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    font-size: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     animation: fadeIn 0.2s ease-out;
+    pointer-events: auto;
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
@@ -523,26 +653,27 @@
       </div>
 
       <div class="action-grid">
-        <button class="btn btn-primary" id="btnNew"><span>+</span> Add</button>
+        <button class="btn btn-primary" id="btnNew"><span>+</span> Add <span class="btn-badge">N</span></button>
         <button class="btn btn-secondary" id="btnMerge"><span>🧹</span> Merge</button>
         <button class="btn btn-secondary" id="btnImport"><span>📥</span> Import</button>
         <button class="btn btn-secondary" id="btnExport"><span>📤</span> Export</button>
-        <button class="btn btn-secondary" onclick="document.getElementById('helpModal').style.display='flex'" style="grid-column: span 2;"><span>❓</span> Help (Press H)</button>
+        <button class="btn btn-secondary" id="btnHelp" style="grid-column: span 2;"><span>❓</span> Help &amp; Guide <span class="btn-badge">F1 / H</span></button>
       </div>
 
       <div class="search-box">
         <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" placeholder="Search contacts by name, email, phone..." aria-label="Search contacts">
+        <input type="text" id="searchInput" placeholder="Search contacts (or #tag)... [/]" aria-label="Search contacts">
+        <span class="search-clear" id="searchClear" title="Clear search">✕</span>
       </div>
 
       <div class="category-pills" id="categoryPills">
-        <div class="pill active" data-cat="All">All</div>
-        <div class="pill" data-cat="Favorites">★ Favorites</div>
-        <div class="pill" data-cat="Work">Work</div>
-        <div class="pill" data-cat="Personal">Personal</div>
-        <div class="pill" data-cat="Family">Family</div>
-        <div class="pill" data-cat="Friends">Friends</div>
-        <div class="pill" data-cat="Other">Other</div>
+        <div class="pill active" data-cat="All" title="Press 1">All <span class="pill-count" id="countAll">0</span></div>
+        <div class="pill" data-cat="Favorites" title="Press 2">★ Favs <span class="pill-count" id="countFav">0</span></div>
+        <div class="pill" data-cat="Work" title="Press 3">Work <span class="pill-count" id="countWork">0</span></div>
+        <div class="pill" data-cat="Personal" title="Press 4">Personal <span class="pill-count" id="countPersonal">0</span></div>
+        <div class="pill" data-cat="Family" title="Press 5">Family <span class="pill-count" id="countFamily">0</span></div>
+        <div class="pill" data-cat="Friends" title="Press 6">Friends <span class="pill-count" id="countFriends">0</span></div>
+        <div class="pill" data-cat="Other" title="Press 7">Other <span class="pill-count" id="countOther">0</span></div>
       </div>
 
       <div class="tag-pills" id="tagPills" style="display: none;">
@@ -560,7 +691,8 @@
     <div class="empty-state" id="emptyState">
       <div class="empty-state-icon">👤</div>
       <div style="font-size: 16px; font-weight: 600;">No Contact Selected</div>
-      <div>Select a contact from the list or create a new one.</div>
+      <div>Select a contact from the list or press <strong style="color:var(--accent-blue);">+ Add</strong> to create a new one.</div>
+      <div style="font-size: 12px; margin-top: 8px;">Press <kbd style="background:#1e293b; padding:2px 6px; border-radius:4px; border:1px solid #334155;">F1</kbd> or <kbd style="background:#1e293b; padding:2px 6px; border-radius:4px; border:1px solid #334155;">H</kbd> for Help</div>
     </div>
 
     <div id="contentView" style="display: none; width: 100%;">
@@ -637,11 +769,11 @@
 
         <div class="checkbox-group">
           <input type="checkbox" id="inpFav">
-          <label for="inpFav" style="font-size: 14px; font-weight: 500; color: #fff; cursor: pointer;">Add to Favorites ★</label>
+          <label for="inpFav" style="font-size: 13px; font-weight: 500; color: #fff; cursor: pointer;">Add to Favorites ★</label>
         </div>
 
-        <div style="display: flex; gap: 12px; margin-top: 10px;">
-          <button class="btn btn-primary" id="btnSave" style="padding: 10px 24px;"><span>💾</span> Save Changes</button>
+        <div style="display: flex; gap: 10px; margin-top: 6px;">
+          <button class="btn btn-primary" id="btnSave" style="padding: 9px 20px;"><span>💾</span> Save Changes <span class="btn-badge">Ctrl+S / Enter</span></button>
         </div>
       </div>
     </div>
@@ -651,16 +783,67 @@
   <input type="file" id="fileInput" accept=".vcf,.csv,.json,.txt">
 
   <!-- Help Modal -->
-  <div id="helpModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
-    <div style="background: var(--bg-card); padding: 24px; border-radius: 8px; max-width: 400px; border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-      <h2 style="margin-bottom: 12px; font-size: 18px;">KContacts Help</h2>
-      <ul style="margin-left: 20px; margin-bottom: 16px; font-size: 14px; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">
-        <li>Use the sidebar to search or filter contacts.</li>
-        <li>Click <strong>+ Add</strong> to create a new one.</li>
-        <li>Fill out the form on the right and click <strong>Save Changes</strong>.</li>
-        <li>Press <strong>Esc</strong> to close this help dialog.</li>
+  <div id="helpModal" class="modal-backdrop">
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-title"><span>📇</span> KContacts User Guide &amp; Shortcuts</div>
+      <ul class="modal-shortcuts-list">
+        <li><kbd>F1</kbd> or <kbd>H</kbd> : Open / close this help guide</li>
+        <li><kbd>Esc</kbd> : Close modals or clear current search query</li>
+        <li><kbd>1</kbd> - <kbd>7</kbd> : Quick switch categories (All, Favs, Work, Personal, etc.)</li>
+        <li><kbd>Ctrl+S</kbd> or <kbd>Enter</kbd> (in form) : Save contact details</li>
+        <li><kbd>N</kbd> or <kbd>Ctrl+N</kbd> : Create new contact draft</li>
+        <li><kbd>/</kbd> or <kbd>Ctrl+F</kbd> : Focus search input</li>
+        <li><kbd>↑</kbd> / <kbd>↓</kbd> : Navigate through contact list</li>
+        <li><kbd>Delete</kbd> : Delete selected contact</li>
       </ul>
-      <button class="btn btn-primary" onclick="document.getElementById('helpModal').style.display='none'" style="width: 100%;">Got it</button>
+      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5;">
+        <strong>Features:</strong><br>
+        • <strong>Merge Duplicates:</strong> Cleans up matching contact names and consolidates tags.<br>
+        • <strong>Export:</strong> Markdown Directory, JSON Database, vCard 3.0, and CSV.<br>
+        • <strong>Import:</strong> Auto-detects JSON, vCards, or CSV spreadsheets.
+      </div>
+      <button class="btn btn-primary" id="btnCloseHelp" style="width: 100%;">Got it</button>
+    </div>
+  </div>
+
+  <!-- Export Modal -->
+  <div id="exportModal" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-title"><span>📤</span> Export Contacts Directory</div>
+      <div style="font-size: 12px; color: var(--text-muted);">Choose your desired export format:</div>
+      <div class="export-option-grid">
+        <div class="export-card" data-fmt="md">
+          <div class="export-card-title">📝 Markdown</div>
+          <div class="export-card-desc">Formatted directory with categories &amp; links (.md)</div>
+        </div>
+        <div class="export-card" data-fmt="json">
+          <div class="export-card-title">📦 JSON</div>
+          <div class="export-card-desc">Full structured database backup (.json)</div>
+        </div>
+        <div class="export-card" data-fmt="vcf">
+          <div class="export-card-title">📇 vCard 3.0</div>
+          <div class="export-card-desc">Standard address book file for phone/OS (.vcf)</div>
+        </div>
+        <div class="export-card" data-fmt="csv">
+          <div class="export-card-title">📊 CSV</div>
+          <div class="export-card-desc">Spreadsheet table for Excel / Sheets (.csv)</div>
+        </div>
+      </div>
+      <button class="btn btn-secondary" id="btnCloseExport" style="width: 100%;">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Delete Confirm Modal -->
+  <div id="deleteModal" class="modal-backdrop">
+    <div class="modal-content" style="max-width: 360px;">
+      <div class="modal-title" style="color: var(--accent-red);"><span>🗑️</span> Delete Contact</div>
+      <div id="deleteModalText" style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+        Are you sure you want to delete this contact?
+      </div>
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button class="btn btn-secondary" id="btnCancelDelete">Cancel</button>
+        <button class="btn btn-danger" id="btnConfirmDelete">Delete Contact</button>
+      </div>
     </div>
   </div>
 
@@ -675,29 +858,21 @@
     let selectedTag = null;
     const MAX_CONTACTS = 1000;
 
-    // Help Modal Keydown
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'F1') {
-        e.preventDefault();
-        document.getElementById('helpModal').style.display = 'flex';
-      } else if ((e.key === 'h' || e.key === 'H') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-        e.preventDefault();
-        document.getElementById('helpModal').style.display = 'flex';
-      }
-      if (e.key === 'Escape') {
-        document.getElementById('helpModal').style.display = 'none';
-      }
-    });
-
     // Dom Elements
     const contactList = document.getElementById('contactList');
     const contactCount = document.getElementById('contactCount');
     const searchInput = document.getElementById('searchInput');
+    const searchClear = document.getElementById('searchClear');
     const categoryPills = document.getElementById('categoryPills');
     const tagPills = document.getElementById('tagPills');
     const emptyState = document.getElementById('emptyState');
     const contentView = document.getElementById('contentView');
     const fileInput = document.getElementById('fileInput');
+
+    const helpModal = document.getElementById('helpModal');
+    const exportModal = document.getElementById('exportModal');
+    const deleteModal = document.getElementById('deleteModal');
+    const deleteModalText = document.getElementById('deleteModalText');
 
     const headerAvatar = document.getElementById('headerAvatar');
     const headerName = document.getElementById('headerName');
@@ -729,6 +904,38 @@
         setTimeout(() => toast.remove(), 300);
       }, 2500);
     }
+
+    // Modal Helpers
+    function openHelp() {
+      helpModal.style.display = 'flex';
+    }
+    function closeHelp() {
+      helpModal.style.display = 'none';
+    }
+    function openExport() {
+      if (contacts.length === 0) {
+        showToast('No contacts to export.');
+        return;
+      }
+      exportModal.style.display = 'flex';
+    }
+    function closeExport() {
+      exportModal.style.display = 'none';
+    }
+    function closeDeleteModal() {
+      deleteModal.style.display = 'none';
+    }
+
+    // Backdrop click dismissals
+    [helpModal, exportModal, deleteModal].forEach(modal => {
+      modal.onclick = (e) => {
+        if (e.target === modal) modal.style.display = 'none';
+      };
+    });
+    document.getElementById('btnCloseHelp').onclick = closeHelp;
+    document.getElementById('btnCloseExport').onclick = closeExport;
+    document.getElementById('btnCancelDelete').onclick = closeDeleteModal;
+    document.getElementById('btnHelp').onclick = openHelp;
 
     // Utility: Initials Generator
     function getInitials(name) {
@@ -764,6 +971,25 @@
         return tagData.split(/[,;\s]+/).map(t => t.trim().replace(/^#/, '')).filter(Boolean);
       }
       return [];
+    }
+
+    // Update Category Pill Badges
+    function updateCategoryCounts() {
+      const counts = { All: contacts.length, Favorites: 0, Work: 0, Personal: 0, Family: 0, Friends: 0, Other: 0 };
+      contacts.forEach(c => {
+        if (c.fav) counts.Favorites++;
+        const cat = c.category || 'Other';
+        if (counts[cat] !== undefined) counts[cat]++;
+        else counts.Other++;
+      });
+
+      document.getElementById('countAll').textContent = counts.All;
+      document.getElementById('countFav').textContent = counts.Favorites;
+      document.getElementById('countWork').textContent = counts.Work;
+      document.getElementById('countPersonal').textContent = counts.Personal;
+      document.getElementById('countFamily').textContent = counts.Family;
+      document.getElementById('countFriends').textContent = counts.Friends;
+      document.getElementById('countOther').textContent = counts.Other;
     }
 
     // Default Seed Data
@@ -843,6 +1069,7 @@
       } catch (e) {
         showToast('Storage quota exceeded. Could not save to localStorage.');
       }
+      updateCategoryCounts();
     }
 
     // Refresh Dynamic Tag Filter Pills
@@ -891,6 +1118,7 @@
     // Render Contact List
     function renderList() {
       const rawQuery = searchInput.value.substring(0, 100).toLowerCase().trim();
+      searchClear.style.display = rawQuery ? 'block' : 'none';
       contactList.innerHTML = '';
 
       const filtered = contacts.filter(c => {
@@ -916,12 +1144,16 @@
         return matchesQuery && matchesCat && matchesTag;
       });
 
-      contactCount.textContent = `${contacts.length} Contact${contacts.length === 1 ? '' : 's'}`;
+      if (rawQuery || currentFilter !== 'All' || selectedTag) {
+        contactCount.textContent = `${filtered.length} / ${contacts.length}`;
+      } else {
+        contactCount.textContent = `${contacts.length} Contact${contacts.length === 1 ? '' : 's'}`;
+      }
 
       if (filtered.length === 0) {
         const emptyDiv = document.createElement('div');
-        emptyDiv.style.cssText = 'padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;';
-        emptyDiv.textContent = 'No matching contacts found.';
+        emptyDiv.style.cssText = 'padding: 24px 16px; text-align: center; color: var(--text-muted); font-size: 13px;';
+        emptyDiv.innerHTML = '<div>🔍 No matching contacts found.</div><div style="font-size:11px; margin-top:6px;">Try clearing search or filters.</div>';
         contactList.appendChild(emptyDiv);
         return;
       }
@@ -1058,7 +1290,7 @@
     }
 
     // Create New Contact
-    document.getElementById('btnNew').onclick = () => {
+    function createNewContact() {
       if (contacts.length >= MAX_CONTACTS) {
         showToast(`Contact limit (${MAX_CONTACTS}) reached.`);
         return;
@@ -1079,18 +1311,24 @@
       saveContacts();
       updateTagPills();
       selectContact(newContact.id);
+      setTimeout(() => {
+        inpName.focus();
+        inpName.select();
+      }, 50);
       showToast('Created new contact draft');
-    };
+    }
+    document.getElementById('btnNew').onclick = createNewContact;
 
     // Save Contact
-    document.getElementById('btnSave').onclick = () => {
+    function saveCurrentContact() {
       if (!selectedId) return;
       const c = contacts.find(item => item.id === selectedId);
       if (!c) return;
 
       const trimmedName = inpName.value.trim().substring(0, 100);
       if (!trimmedName) {
-        alert('Contact name cannot be empty.');
+        showToast('⚠️ Contact name cannot be empty');
+        inpName.focus();
         return;
       }
 
@@ -1107,25 +1345,44 @@
       saveContacts();
       updateTagPills();
       selectContact(selectedId);
-      showToast('Contact updated successfully');
-    };
+      showToast('💾 Contact updated successfully');
+    }
+    document.getElementById('btnSave').onclick = saveCurrentContact;
 
-    // Delete Contact
+    // Enter key to save on inputs
+    [inpName, inpPhone, inpEmail, inpCompany, inpTitle, inpTags].forEach(el => {
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          saveCurrentContact();
+        }
+      });
+    });
+
+    // Delete Contact Modal Trigger
     document.getElementById('btnDelete').onclick = () => {
       if (!selectedId) return;
       const c = contacts.find(item => item.id === selectedId);
       if (!c) return;
 
-      if (confirm(`Are you sure you want to delete "${c.name}"?`)) {
-        contacts = contacts.filter(item => item.id !== selectedId);
-        selectedId = null;
-        saveContacts();
-        updateTagPills();
-        renderList();
-        emptyState.style.display = 'flex';
-        contentView.style.display = 'none';
-        showToast('Contact deleted');
-      }
+      deleteModalText.textContent = `Are you sure you want to permanently delete "${c.name || 'Unnamed'}"?`;
+      deleteModal.style.display = 'flex';
+    };
+
+    // Confirm Delete
+    document.getElementById('btnConfirmDelete').onclick = () => {
+      if (!selectedId) return;
+      const c = contacts.find(item => item.id === selectedId);
+      const name = c ? c.name : 'Contact';
+      contacts = contacts.filter(item => item.id !== selectedId);
+      selectedId = null;
+      saveContacts();
+      updateTagPills();
+      renderList();
+      emptyState.style.display = 'flex';
+      contentView.style.display = 'none';
+      closeDeleteModal();
+      showToast(`🗑️ Deleted "${name}"`);
     };
 
     // Quick Action: Call
@@ -1135,9 +1392,9 @@
       if (c && c.phone) {
         const safePhone = c.phone.replace(/[^0-9+\-\s()]/g, '');
         window.open(`tel:${encodeURIComponent(safePhone)}`, '_self');
-        showToast(`Dialing ${c.phone}...`);
+        showToast(`📞 Dialing ${c.phone}...`);
       } else {
-        showToast('No phone number specified');
+        showToast('⚠️ No phone number specified');
       }
     };
 
@@ -1148,9 +1405,9 @@
       if (c && c.email) {
         const safeEmail = c.email.replace(/[^\w.@+\-]/g, '');
         window.open(`mailto:${encodeURIComponent(safeEmail)}`, '_self');
-        showToast(`Opening email to ${c.email}...`);
+        showToast(`✉️ Opening email to ${c.email}...`);
       } else {
-        showToast('No email address specified');
+        showToast('⚠️ No email address specified');
       }
     };
 
@@ -1162,9 +1419,9 @@
         const tagsStr = (c.tags && c.tags.length > 0) ? `\nTags: ${c.tags.map(t => '#' + t).join(' ')}` : '';
         const text = `Name: ${c.name}\nPhone: ${c.phone}\nEmail: ${c.email}\nCategory: ${c.category}\nCompany: ${c.company}${tagsStr}\nNotes: ${c.notes}`;
         navigator.clipboard.writeText(text).then(() => {
-          showToast('Copied contact info to clipboard');
+          showToast('📋 Copied contact info to clipboard');
         }).catch(() => {
-          showToast('Failed to copy to clipboard');
+          showToast('⚠️ Failed to copy to clipboard');
         });
       }
     };
@@ -1178,21 +1435,21 @@
         inpFav.checked = c.fav;
         saveContacts();
         selectContact(selectedId);
-        showToast(c.fav ? 'Added to favorites' : 'Removed from favorites');
+        showToast(c.fav ? '★ Added to favorites' : '☆ Removed from favorites');
       }
     };
 
     // Contact Duplicates Merger
     document.getElementById('btnMerge').onclick = () => {
       if (contacts.length < 2) {
-        showToast('Not enough contacts to merge');
+        showToast('ℹ️ Not enough contacts to merge');
         return;
       }
 
       let mergedCount = 0;
       const map = new Map();
-
       const uniqueList = [];
+
       for (const c of contacts) {
         const key = (c.name || '').toLowerCase().trim();
         if (key && map.has(key)) {
@@ -1228,28 +1485,30 @@
         updateTagPills();
         renderList();
         if (selectedId) selectContact(selectedId);
-        showToast(`Merged ${mergedCount} duplicate contact(s)!`);
+        showToast(`🧹 Merged ${mergedCount} duplicate contact(s)!`);
       } else {
-        showToast('No duplicate contacts found.');
+        showToast('ℹ️ No duplicate contacts found');
       }
     };
 
-    // Export Handler (Markdown, JSON, vCard, CSV)
-    document.getElementById('btnExport').onclick = () => {
-      if (contacts.length === 0) {
-        showToast('No contacts to export');
-        return;
-      }
+    // Export Modal Handler
+    document.getElementById('btnExport').onclick = openExport;
 
-      const mode = prompt("Export Format:\n- 'md' for Markdown Contact Directory\n- 'json' for JSON Full Database\n- 'vcf' for vCard 3.0\n- 'csv' for Spreadsheet CSV", "md");
-      if (!mode) return;
+    document.querySelectorAll('.export-card').forEach(card => {
+      card.onclick = () => {
+        const fmt = card.getAttribute('data-fmt');
+        closeExport();
+        doExport(fmt);
+      };
+    });
 
-      const format = mode.toLowerCase().trim();
+    function doExport(format) {
+      if (contacts.length === 0) return;
       let content = '';
       let filename = '';
       let mimeType = '';
 
-      if (format === 'md' || format === 'markdown') {
+      if (format === 'md') {
         const total = contacts.length;
         const favs = contacts.filter(c => c.fav).length;
         const now = new Date().toLocaleDateString();
@@ -1339,8 +1598,8 @@
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
-      showToast(`Exported ${contacts.length} contacts to ${filename}`);
-    };
+      showToast(`📤 Exported ${contacts.length} contacts to ${filename}`);
+    }
 
     // Import (.vcf / .csv / .json)
     document.getElementById('btnImport').onclick = () => {
@@ -1380,7 +1639,7 @@
               });
             }
           } catch (err) {
-            showToast('Invalid JSON file.');
+            showToast('⚠️ Invalid JSON file.');
           }
         } else if (file.name.endsWith('.vcf') || text.includes('BEGIN:VCARD')) {
           const cards = text.split(/END:VCARD/i);
@@ -1442,7 +1701,7 @@
         saveContacts();
         updateTagPills();
         renderList();
-        showToast(`Successfully imported ${count} contacts!`);
+        showToast(`📥 Successfully imported ${count} contacts!`);
         fileInput.value = '';
       };
       reader.readAsText(file);
@@ -1452,22 +1711,126 @@
     categoryPills.onclick = (e) => {
       const pill = e.target.closest('.pill');
       if (!pill) return;
-
-      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-      pill.classList.add('active');
-      currentFilter = pill.getAttribute('data-cat');
-      renderList();
+      selectCategoryFilter(pill.getAttribute('data-cat'));
     };
 
-    // Search Listener
+    function selectCategoryFilter(cat) {
+      document.querySelectorAll('.pill').forEach(p => {
+        if (p.getAttribute('data-cat') === cat) p.classList.add('active');
+        else p.classList.remove('active');
+      });
+      currentFilter = cat;
+      renderList();
+    }
+
+    // Search Listener & Clear
     searchInput.oninput = renderList;
+    searchClear.onclick = () => {
+      searchInput.value = '';
+      renderList();
+      searchInput.focus();
+    };
+
+    // Keyboard Navigation & Shortcuts
+    const CATEGORIES_LIST = ['All', 'Favorites', 'Work', 'Personal', 'Family', 'Friends', 'Other'];
+
+    document.addEventListener('keydown', (e) => {
+      const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT';
+
+      // Global Escape
+      if (e.key === 'Escape') {
+        if (helpModal.style.display === 'flex') { closeHelp(); return; }
+        if (exportModal.style.display === 'flex') { closeExport(); return; }
+        if (deleteModal.style.display === 'flex') { closeDeleteModal(); return; }
+        if (searchInput.value) {
+          searchInput.value = '';
+          renderList();
+          return;
+        }
+        if (selectedTag) {
+          selectedTag = null;
+          updateTagPills();
+          renderList();
+          return;
+        }
+      }
+
+      // Help hotkeys
+      if (e.key === 'F1' || ((e.key === 'h' || e.key === 'H') && !isInput)) {
+        e.preventDefault();
+        if (helpModal.style.display === 'flex') closeHelp();
+        else openHelp();
+        return;
+      }
+
+      // Ctrl+S / Cmd+S save
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        saveCurrentContact();
+        return;
+      }
+
+      // Focus search: '/' or Ctrl+F
+      if (!isInput && (e.key === '/' || ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')))) {
+        e.preventDefault();
+        searchInput.focus();
+        searchInput.select();
+        return;
+      }
+
+      // Non-input hotkeys
+      if (!isInput) {
+        // Quick Category Switch (1 - 7)
+        if (e.key >= '1' && e.key <= '7') {
+          const idx = parseInt(e.key, 10) - 1;
+          if (idx >= 0 && idx < CATEGORIES_LIST.length) {
+            e.preventDefault();
+            selectCategoryFilter(CATEGORIES_LIST[idx]);
+            showToast(`Filter: ${CATEGORIES_LIST[idx]}`);
+          }
+          return;
+        }
+
+        // New Contact (N or Ctrl+N)
+        if (e.key === 'n' || e.key === 'N') {
+          e.preventDefault();
+          createNewContact();
+          return;
+        }
+
+        // Arrow Navigation
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          const items = Array.from(document.querySelectorAll('.contact-item'));
+          if (items.length > 0) {
+            e.preventDefault();
+            const currentIdx = items.findIndex(el => el.classList.contains('active'));
+            let nextIdx = 0;
+            if (e.key === 'ArrowDown') {
+              nextIdx = currentIdx < items.length - 1 ? currentIdx + 1 : 0;
+            } else {
+              nextIdx = currentIdx > 0 ? currentIdx - 1 : items.length - 1;
+            }
+            items[nextIdx].click();
+            items[nextIdx].scrollIntoView({ block: 'nearest' });
+          }
+          return;
+        }
+
+        // Delete key
+        if (e.key === 'Delete' && selectedId) {
+          e.preventDefault();
+          document.getElementById('btnDelete').click();
+          return;
+        }
+      }
+    });
 
     // Initialization
     if (window.resizeTo) window.resizeTo(830, 565);
     seedData();
     updateTagPills();
     renderList();
-    setTimeout(() => showToast("Welcome to KContacts! Press H or F1 for Help."), 500);
+    setTimeout(() => showToast("📇 Welcome to KContacts! Press F1 or H for Help."), 400);
   </script>
 </body>
 </html>
