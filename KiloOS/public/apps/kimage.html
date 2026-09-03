@@ -363,6 +363,162 @@
     transition: width 0.1s linear;
   }
 
+  /* Toast Notification System */
+  .toast-container {
+    position: fixed;
+    bottom: 60px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 9999;
+    pointer-events: none;
+  }
+  .toast {
+    padding: 10px 16px;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-left: 4px solid var(--accent);
+    color: var(--text-main);
+    border-radius: 6px;
+    font-size: 13px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    pointer-events: auto;
+    animation: toastIn 0.25s ease-out forwards;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 360px;
+  }
+  .toast.success { border-left-color: var(--success); }
+  .toast.warning { border-left-color: #f59e0b; }
+  .toast.error { border-left-color: var(--danger); }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(12px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Modal Dialog */
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9998;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .modal-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .modal-window {
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    width: 580px;
+    max-width: 90vw;
+    max-height: 85vh;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: scale(0.95);
+    transition: transform 0.2s ease;
+  }
+  .modal-backdrop.active .modal-window {
+    transform: scale(1);
+  }
+  .modal-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0,0,0,0.2);
+  }
+  .modal-header h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #cbd5e1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .modal-body::-webkit-scrollbar { width: 6px; }
+  .modal-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+  .modal-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent-hover);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .shortcut-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .shortcut-item {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    padding: 6px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .shortcut-item kbd {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 11px;
+    font-family: monospace;
+    color: #93c5fd;
+  }
+  .modal-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--glass-border);
+    display: flex;
+    justify-content: flex-end;
+    background: rgba(0,0,0,0.2);
+  }
+
+  .key-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.12);
+    border-radius: 3px;
+    font-size: 10px;
+    padding: 1px 4px;
+    margin-right: 3px;
+    color: var(--accent-hover);
+    font-family: monospace;
+  }
+
   /* Utility classes */
   .row { display: flex; gap: 8px; align-items: center; }
   .hidden { display: none !important; }
@@ -388,16 +544,16 @@
       </button>
       <button id="btnHelp" aria-label="Help">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        Help
+        Help [F1]
       </button>
     </div>
 
     <!-- Zoom & Quick Actions -->
     <div class="toolbar-section hidden" id="viewTools">
-      <button id="btnZoomOut" class="icon-btn" title="Zoom Out">-</button>
+      <button id="btnZoomOut" class="icon-btn" title="Zoom Out (-)">-</button>
       <span id="zoomLevel" style="font-size:12px; min-width:44px; text-align:center;">100%</span>
-      <button id="btnZoomIn" class="icon-btn" title="Zoom In">+</button>
-      <button id="btnZoomReset" title="Fit to Screen">1:1</button>
+      <button id="btnZoomIn" class="icon-btn" title="Zoom In (+)">+</button>
+      <button id="btnZoomReset" title="Fit to Screen (0)">1:1</button>
       <button id="btnToggleRight" title="Histogram & Metadata">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         Inspector
@@ -411,11 +567,11 @@
     <!-- Left Sidebar: Controls -->
     <div class="side-panel hidden" id="leftPanel">
       <div class="panel-tabs">
-        <button class="tab-btn active" data-tab="tabAdjust">Adjust</button>
-        <button class="tab-btn" data-tab="tabKernel">Kernel FX</button>
-        <button class="tab-btn" data-tab="tabTransform">Transform</button>
-        <button class="tab-btn" data-tab="tabResize">Resize</button>
-        <button class="tab-btn" data-tab="tabDraw">Draw</button>
+        <button class="tab-btn active" data-tab="tabAdjust"><span class="key-badge">1</span> Adjust</button>
+        <button class="tab-btn" data-tab="tabKernel"><span class="key-badge">2</span> Kernel FX</button>
+        <button class="tab-btn" data-tab="tabTransform"><span class="key-badge">3</span> Transform</button>
+        <button class="tab-btn" data-tab="tabResize"><span class="key-badge">4</span> Resize</button>
+        <button class="tab-btn" data-tab="tabDraw"><span class="key-badge">5</span> Draw</button>
       </div>
 
       <div class="panel-content">
@@ -619,6 +775,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         <div class="drop-zone-text">Drag & drop image files here</div>
         <div class="drop-subtext">or click "Open Image(s)" above to browse (Supports PNG, JPG, WEBP, BMP, GIF)<br><br>Press <b>H</b> or <b>F1</b> for Help</div>
+        <button id="btnLoadSample" class="primary" style="margin-top: 10px; padding: 9px 18px; font-size: 13px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Load Demo Image
+        </button>
       </div>
 
       <!-- Canvas Wrapper -->
@@ -706,6 +866,57 @@
     </div>
   </div>
 
+  <!-- Help Modal Dialog -->
+  <div class="modal-backdrop" id="helpModal">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          KImage Pro Studio Guide
+        </h3>
+        <button class="icon-btn" id="btnCloseHelp" aria-label="Close Help" style="padding:4px 8px; font-size:16px;">✕</button>
+      </div>
+      <div class="modal-body">
+        <div>
+          <div class="modal-section-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.001M10 8h.001M14 8h.001M18 8h.001M8 12h.001M12 12h.001M16 12h.001M7 16h10"/></svg>
+            Keyboard Shortcuts
+          </div>
+          <div class="shortcut-list">
+            <div class="shortcut-item"><span>Help Guide</span><kbd>H</kbd> / <kbd>F1</kbd></div>
+            <div class="shortcut-item"><span>Open Image(s)</span><kbd>O</kbd> / <kbd>Ctrl+O</kbd></div>
+            <div class="shortcut-item"><span>Export / Save</span><kbd>Ctrl+S</kbd></div>
+            <div class="shortcut-item"><span>Slideshow Play/Pause</span><kbd>Space</kbd></div>
+            <div class="shortcut-item"><span>Previous / Next Image</span><kbd>←</kbd> / <kbd>→</kbd></div>
+            <div class="shortcut-item"><span>Toggle Fullscreen</span><kbd>F</kbd></div>
+            <div class="shortcut-item"><span>Zoom In / Out / 1:1</span><kbd>+</kbd> / <kbd>-</kbd> / <kbd>0</kbd></div>
+            <div class="shortcut-item"><span>Switch Tabs 1-5</span><kbd>1</kbd> .. <kbd>5</kbd></div>
+            <div class="shortcut-item"><span>Close Modal / Cancel</span><kbd>Esc</kbd></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="modal-section-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            Feature Overview
+          </div>
+          <p>• <b>Adjust & Presets:</b> Real-time GPU/Canvas brightness, contrast, saturation, blur, and 8 cinematic color presets (Grayscale, Sepia, Invert, Vintage, Warm, Cool, Dramatic).</p>
+          <p>• <b>Spatial Convolution Matrix:</b> Professional 3x3 kernels (Sharpen, Unsharp Mask, Laplacian Edge, Sobel H/V, Emboss, Gaussian Blur, Ridge Detection) with custom weights, auto-divisor, and channel targeting.</p>
+          <p>• <b>Transform & Interactive Crop:</b> Lossless 90° rotations, horizontal/vertical flipping, and aspect-ratio constrained rectangle crop tool.</p>
+          <p>• <b>Resize & Multi-Format Export:</b> High-precision interpolation, aspect-locking, and export to PNG, JPEG, WEBP, and 32-bit BMP.</p>
+          <p>• <b>Annotation Brush:</b> Freehand vector drawing overlay with live color picker and variable brush radius.</p>
+          <p>• <b>Inspector Panel:</b> Subsampled multi-channel RGB luminance histogram & full EXIF camera metadata decoder.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="primary" id="btnDismissHelp">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
 <script>
   if (window.resizeTo) window.resizeTo(1000, 700);
 
@@ -748,11 +959,151 @@
     slideshowBar: document.getElementById('slideshowBar')
   };
 
+  // Toast System
+  function showToast(msg, type = 'info', duration = 3000) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    let iconSvg = '';
+    if (type === 'success') {
+      iconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+    } else if (type === 'error') {
+      iconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+    } else if (type === 'warning') {
+      iconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+    } else {
+      iconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+    }
+
+    toast.innerHTML = `${iconSvg}<span>${msg}</span>`;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(8px) scale(0.95)';
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
+  }
+
+  // Help Modal Handlers
+  const helpModal = document.getElementById('helpModal');
+  function openHelpModal() {
+    if (helpModal) helpModal.classList.add('active');
+  }
+  function closeHelpModal() {
+    if (helpModal) helpModal.classList.remove('active');
+  }
+  document.getElementById('btnCloseHelp')?.addEventListener('click', closeHelpModal);
+  document.getElementById('btnDismissHelp')?.addEventListener('click', closeHelpModal);
+  if (helpModal) {
+    helpModal.addEventListener('click', (e) => {
+      if (e.target === helpModal) closeHelpModal();
+    });
+  }
+
+  // Sample Demo Image Generator
+  function loadSampleImage() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 800;
+    canvas.height = 600;
+    const ctx = canvas.getContext('2d');
+
+    // Gradient Background
+    const grad = ctx.createLinearGradient(0, 0, 800, 600);
+    grad.addColorStop(0, '#0f172a');
+    grad.addColorStop(0.3, '#1e1b4b');
+    grad.addColorStop(0.7, '#312e81');
+    grad.addColorStop(1, '#065f46');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 800, 600);
+
+    // Grid lines
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < 800; x += 40) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 600); ctx.stroke();
+    }
+    for (let y = 0; y < 600; y += 40) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(800, y); ctx.stroke();
+    }
+
+    // Glowing Radial Circle
+    const sunGrad = ctx.createRadialGradient(400, 240, 10, 400, 240, 180);
+    sunGrad.addColorStop(0, '#fbbf24');
+    sunGrad.addColorStop(0.5, '#f97316');
+    sunGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = sunGrad;
+    ctx.beginPath(); ctx.arc(400, 240, 180, 0, Math.PI * 2); ctx.fill();
+
+    // Geometric Silhouettes
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath();
+    ctx.moveTo(0, 600);
+    ctx.lineTo(150, 320);
+    ctx.lineTo(350, 480);
+    ctx.lineTo(550, 280);
+    ctx.lineTo(800, 520);
+    ctx.lineTo(800, 600);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.moveTo(0, 600);
+    ctx.lineTo(250, 420);
+    ctx.lineTo(450, 530);
+    ctx.lineTo(680, 380);
+    ctx.lineTo(800, 490);
+    ctx.lineTo(800, 600);
+    ctx.closePath();
+    ctx.fill();
+
+    // Color swatches
+    const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'];
+    colors.forEach((c, idx) => {
+      ctx.fillStyle = c;
+      ctx.fillRect(80 + idx * 80, 530, 60, 25);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(80 + idx * 80, 530, 60, 25);
+    });
+
+    // Typography
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 36px Inter, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('KImage Pro Studio', 400, 120);
+
+    ctx.font = '16px Inter, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('High-Fidelity Canvas • 3x3 Spatial Convolution • EXIF & Histogram Inspector', 400, 160);
+
+    const dataUrl = canvas.toDataURL('image/png');
+    const img = new Image();
+    img.onload = () => {
+      const demoItem = {
+        file: { name: 'kimage_demo.png', size: 124800, type: 'image/png' },
+        img,
+        name: 'kimage_demo.png',
+        size: '122 KB',
+        type: 'image/png',
+        exif: { camera: 'KiloOS Virtual Studio', date: '2026-09-03', exposure: '1/250s', aperture: 'f/2.8', iso: 'ISO 100', software: 'KImage Pro v2.0' }
+      };
+      state.playlist = [demoItem];
+      selectImage(0);
+      showToast('Loaded demo studio image! Try filters, adjustments, or draw brush.', 'success');
+    };
+    img.src = dataUrl;
+  }
+  document.getElementById('btnLoadSample')?.addEventListener('click', loadSampleImage);
+
   // Setup Event Listeners
   ui.btnOpen.onclick = () => ui.fileInput.click();
   ui.fileInput.onchange = (e) => loadFiles(e.target.files);
   if (ui.btnHelp) {
-    ui.btnHelp.onclick = () => alert("KImage Pro Help\n\nShortcuts:\n- Left/Right Arrow: Navigate images\n- Space: Play/Pause Slideshow\n- F: Toggle Fullscreen\n- O: Open Images\n- H/F1: Help");
+    ui.btnHelp.onclick = openHelpModal;
   }
 
   // Drag & Drop
@@ -762,18 +1113,83 @@
     if (e.dataTransfer.files.length) loadFiles(e.dataTransfer.files);
   };
 
+  function switchTab(tabId) {
+    const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+    if (!btn) return;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-page').forEach(p => p.classList.add('hidden'));
+    btn.classList.add('active');
+    document.getElementById(tabId)?.classList.remove('hidden');
+  }
+
   // Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    const ctrl = e.ctrlKey || e.metaKey;
+
+    if (e.key === 'Escape') {
+      if (helpModal && helpModal.classList.contains('active')) {
+        closeHelpModal();
+      } else if (state.crop.active) {
+        state.crop.active = false;
+        document.getElementById('btnToggleCrop')?.classList.remove('primary');
+        document.getElementById('cropControls')?.classList.add('hidden');
+        ui.cropOverlay.style.display = 'none';
+        showToast('Crop cancelled', 'info');
+      } else if (state.draw.active) {
+        state.draw.active = false;
+        document.getElementById('btnToggleDraw')?.classList.remove('primary');
+        ui.mainCanvas.style.cursor = 'default';
+        showToast('Brush deactivated', 'info');
+      }
+      return;
+    }
+
+    if (ctrl && (e.key === 's' || e.key === 'S')) {
+      e.preventDefault();
+      switchTab('tabResize');
+      showToast('Opened Export / Save tab', 'info');
+      return;
+    }
+
+    if (ctrl && (e.key === 'o' || e.key === 'O')) {
+      e.preventDefault();
+      ui.fileInput.click();
+      return;
+    }
+
     if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
-      if (e.key === 'F1') e.preventDefault();
-      alert("KImage Pro Help\n\nShortcuts:\n- Left/Right Arrow: Navigate images\n- Space: Play/Pause Slideshow\n- F: Toggle Fullscreen\n- O: Open Images\n- H/F1: Help");
+      e.preventDefault();
+      openHelpModal();
     } else if (e.key === 'o' || e.key === 'O') {
       ui.fileInput.click();
+    } else if (e.key === '1') {
+      switchTab('tabAdjust');
+    } else if (e.key === '2') {
+      switchTab('tabKernel');
+    } else if (e.key === '3') {
+      switchTab('tabTransform');
+    } else if (e.key === '4') {
+      switchTab('tabResize');
+    } else if (e.key === '5') {
+      switchTab('tabDraw');
+    } else if (e.key === '+' || e.key === '=') {
+      state.zoom = Math.min(5, state.zoom * 1.2);
+      renderCanvas();
+    } else if (e.key === '-' || e.key === '_') {
+      state.zoom = Math.max(0.2, state.zoom / 1.2);
+      renderCanvas();
+    } else if (e.key === '0') {
+      state.zoom = 1;
+      renderCanvas();
     } else if (e.key === 'ArrowLeft') {
-      selectImage((state.currentIndex - 1 + state.playlist.length) % state.playlist.length);
+      if (state.playlist.length > 0) {
+        selectImage((state.currentIndex - 1 + state.playlist.length) % state.playlist.length);
+      }
     } else if (e.key === 'ArrowRight') {
-      selectImage((state.currentIndex + 1) % state.playlist.length);
+      if (state.playlist.length > 0) {
+        selectImage((state.currentIndex + 1) % state.playlist.length);
+      }
     } else if (e.key === ' ') {
       e.preventDefault();
       toggleSlideshow();
@@ -785,11 +1201,7 @@
   // Tab switching
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.onclick = () => {
-      if (!btn.dataset.tab) return;
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-page').forEach(p => p.classList.add('hidden'));
-      btn.classList.add('active');
-      document.getElementById(btn.dataset.tab).classList.remove('hidden');
+      if (btn.dataset.tab) switchTab(btn.dataset.tab);
     };
   });
 
@@ -809,7 +1221,7 @@
         const img = new Image();
         img.onload = () => {
           if (img.width <= 0 || img.height <= 0 || img.width > 8192 || img.height > 8192) {
-            alert(`Image ${file.name} dimensions out of bounds (max 8192x8192).`);
+            showToast(`Image ${file.name} dimensions out of bounds (max 8192x8192).`, 'error');
             loadedCount++;
             if (loadedCount === validFiles.length && state.playlist.length > 0) {
               updatePlaylistUI();
@@ -1033,7 +1445,11 @@
     document.querySelectorAll('.preset-grid button').forEach(b => b.classList.remove('active'));
     document.getElementById('btnFilterNone')?.classList.add('active');
   }
-  document.getElementById('btnResetAdjustments').onclick = () => { resetAdjustments(); renderCanvas(); };
+  document.getElementById('btnResetAdjustments').onclick = () => {
+    resetAdjustments();
+    renderCanvas();
+    showToast("Adjustments reset to default", "info");
+  };
 
   // Presets
   const presets = ['None', 'Grayscale', 'Sepia', 'Invert', 'Vintage', 'Warm', 'Cool', 'Dramatic'];
@@ -1045,6 +1461,7 @@
         el.classList.add('active');
         state.adjustments.preset = p.toLowerCase();
         renderCanvas();
+        showToast(`Applied ${p} filter preset`, "info");
       };
     }
   });
@@ -1094,10 +1511,12 @@
       if (v > 0) sum += v;
     });
     document.getElementById('kernelDivisor').value = sum > 0 ? sum : 1;
+    showToast("Auto-computed kernel divisor", "info");
   };
 
   document.getElementById('btnNormalizeKernel').onclick = () => {
     document.getElementById('kernelBias').value = 128;
+    showToast("Set bias offset to +128", "info");
   };
 
   function applyConvolutionMatrix() {
@@ -1188,6 +1607,7 @@
     newImg.onload = () => {
       state.playlist[state.currentIndex].img = newImg;
       renderCanvas();
+      showToast("Applied convolution matrix filter", "success");
     };
     newImg.src = offCanvas.toDataURL();
   }
@@ -1201,20 +1621,21 @@
     origImg.onload = () => {
       item.img = origImg;
       renderCanvas();
+      showToast("Reverted to original base image", "info");
     };
     origImg.src = URL.createObjectURL(item.file);
   };
 
   // Transformations
-  document.getElementById('btnRotateCCW').onclick = () => { state.rotation = (state.rotation - 90 + 360) % 360; renderCanvas(); };
-  document.getElementById('btnRotateCW').onclick = () => { state.rotation = (state.rotation + 90) % 360; renderCanvas(); };
-  document.getElementById('btnFlipH').onclick = () => { state.flipH *= -1; renderCanvas(); };
-  document.getElementById('btnFlipV').onclick = () => { state.flipV *= -1; renderCanvas(); };
+  document.getElementById('btnRotateCCW').onclick = () => { state.rotation = (state.rotation - 90 + 360) % 360; renderCanvas(); showToast("Rotated -90°", "info"); };
+  document.getElementById('btnRotateCW').onclick = () => { state.rotation = (state.rotation + 90) % 360; renderCanvas(); showToast("Rotated +90°", "info"); };
+  document.getElementById('btnFlipH').onclick = () => { state.flipH *= -1; renderCanvas(); showToast("Flipped horizontally", "info"); };
+  document.getElementById('btnFlipV').onclick = () => { state.flipV *= -1; renderCanvas(); showToast("Flipped vertically", "info"); };
 
   // Zoom
   ui.btnZoomIn.onclick = () => { state.zoom = Math.min(5, state.zoom * 1.2); renderCanvas(); };
   ui.btnZoomOut.onclick = () => { state.zoom = Math.max(0.2, state.zoom / 1.2); renderCanvas(); };
-  ui.btnZoomReset.onclick = () => { state.zoom = 1; renderCanvas(); };
+  ui.btnZoomReset.onclick = () => { state.zoom = 1; renderCanvas(); showToast("Zoom reset (1:1)", "info"); };
 
   // Toggle Right Inspector
   document.getElementById('btnToggleRight').onclick = () => {
@@ -1236,6 +1657,7 @@
       state.crop.w = ui.mainCanvas.width * 0.8;
       state.crop.h = ui.mainCanvas.height * 0.8;
       updateCropOverlayUI();
+      showToast("Crop tool active: drag frame to position", "info");
     }
   };
 
@@ -1273,6 +1695,7 @@
       cropControls.classList.add('hidden');
       ui.cropOverlay.style.display = 'none';
       selectImage(state.currentIndex);
+      showToast("Cropped image successfully", "success");
     };
     newImg.src = croppedCtx.canvas.toDataURL();
   };
@@ -1281,6 +1704,7 @@
     btnToggleCrop.classList.remove('primary');
     cropControls.classList.add('hidden');
     ui.cropOverlay.style.display = 'none';
+    showToast("Crop cancelled", "info");
   };
 
   // Resize
@@ -1300,7 +1724,10 @@
   document.getElementById('btnApplyResize').onclick = () => {
     const w = parseInt(document.getElementById('inputWidth').value);
     const h = parseInt(document.getElementById('inputHeight').value);
-    if (!w || !h || w > 8192 || h > 8192 || w < 1 || h < 1) return;
+    if (!w || !h || w > 8192 || h > 8192 || w < 1 || h < 1) {
+      showToast("Invalid dimensions (must be 1 to 8192 px)", "error");
+      return;
+    }
 
     const resCtx = document.createElement('canvas').getContext('2d');
     resCtx.canvas.width = w;
@@ -1311,6 +1738,7 @@
     newImg.onload = () => {
       state.playlist[state.currentIndex].img = newImg;
       selectImage(state.currentIndex);
+      showToast(`Resized image to ${w} × ${h} px`, "success");
     };
     newImg.src = resCtx.canvas.toDataURL();
   };
@@ -1321,6 +1749,7 @@
     state.draw.active = !state.draw.active;
     btnToggleDraw.classList.toggle('primary', state.draw.active);
     ui.mainCanvas.style.cursor = state.draw.active ? 'crosshair' : 'default';
+    showToast(state.draw.active ? "Annotation brush enabled" : "Annotation brush disabled", "info");
   };
   document.getElementById('drawColor').oninput = (e) => state.draw.color = e.target.value;
   document.getElementById('sliderBrushSize').oninput = (e) => {
@@ -1330,6 +1759,7 @@
   document.getElementById('btnClearDrawings').onclick = () => {
     state.draw.paths = [];
     renderCanvas();
+    showToast("Cleared drawing annotations", "info");
   };
 
   ui.mainCanvas.onmousedown = (e) => {
@@ -1370,8 +1800,9 @@
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-page').forEach(p => p.classList.add('hidden'));
     const tabResizeBtn = document.querySelector('[data-tab="tabResize"]');
-    tabResizeBtn.classList.add('active');
-    document.getElementById('tabResize').classList.remove('hidden');
+    tabResizeBtn?.classList.add('active');
+    document.getElementById('tabResize')?.classList.remove('hidden');
+    showToast("Configure format & download", "info");
   };
 
   document.getElementById('btnExportDownload').onclick = () => {
@@ -1389,6 +1820,7 @@
       link.href = ui.mainCanvas.toDataURL(fmt, quality);
     }
     link.click();
+    showToast("Export download started", "success");
   };
 
   function canvasToBMP(canvas) {
@@ -1441,6 +1873,10 @@
   btnPlayPause.onclick = toggleSlideshow;
 
   function toggleSlideshow() {
+    if (state.playlist.length === 0) {
+      showToast("No images in playlist to present", "warning");
+      return;
+    }
     state.slideshow.playing = !state.slideshow.playing;
     btnPlayPause.textContent = state.slideshow.playing ? '⏸ Pause' : '▶ Play';
     ui.slideshowProgress.classList.toggle('hidden', !state.slideshow.playing);
@@ -1448,9 +1884,11 @@
     if (state.slideshow.playing) {
       state.slideshow.startTime = performance.now();
       runSlideshowLoop();
+      showToast("Slideshow started (Space to pause)", "info");
     } else {
       cancelAnimationFrame(state.slideshow.animFrame);
       ui.slideshowBar.style.width = '0%';
+      showToast("Slideshow paused", "info");
     }
   }
 
@@ -1589,6 +2027,11 @@
     const divisor = gcd(w, h);
     return `${w / divisor}:${h / divisor}`;
   }
+
+  // Startup Welcome Notification
+  setTimeout(() => {
+    showToast("Welcome to KImage Pro! Press H or F1 for Help.", "info", 5000);
+  }, 350);
 </script>
 </body>
 </html>

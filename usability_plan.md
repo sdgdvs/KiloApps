@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KImage
+**Target App:** KCalc
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KImage
 - KCalc
 - KHex
 - KCalendar
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KJournal
 - KBase
 - KPad
+- KImage
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KImage: Usability and UI issues fixed (replaced blocking browser alerts with custom cybernetic Help modal dialog and non-blocking toast notifications with startup welcome toast, added 1-click Load Demo Image button on empty state, added 1-5 tab switching shortcuts with visible numeric badges, Escape and backdrop-click modal/crop dismissal, Ctrl+S export shortcut, +/-/0 zoom shortcuts, and explicit Help [F1] header button in web; updated native C with ShowHelpDialog comprehensive guide, explicit Help [F1] toolbar button, global message loop hotkey interception for F1/H/Ctrl+S/Ctrl+O/Esc, and expanded keyboard filter and navigation shortcuts).
 - KPad: Usability and UI issues fixed (eliminated blocking browser alerts/prompts/confirms with custom cybernetic modal dialogs for unsaved changes and password-protected exports, added non-blocking toast notifications with startup welcome toast, added top navigation Help [F1] button, added tab numbering badges with Ctrl+1-9 hotkeys in web; updated native C with 4-part status bar including [F1] Help indicator, dynamic window title with help hint, WM_GETMINMAXINFO minimum dimensions, ShowHelpDialog user guide, and message loop hotkeys Ctrl+1-9, Ctrl+Tab, Ctrl+A, and F1).
 - KBase: Usability and UI issues fixed (replaced blocking browser alerts with custom cybernetic Help modal dialog and non-blocking toast notifications with startup welcome toast, added 1-5 tab switching shortcuts with visible numeric badges, Escape and backdrop-click modal dismissal, and explicit F1/H header button in web; fixed critical bug where typing 'H' in edit controls intercepted input and triggered help dialog, added explicit Help [F1] button, comprehensive ShowHelpDialog user guide, and window title hint with F1 shortcut in native C).
 - KJournal: Usability and UI issues fixed (replaced blocking browser confirms with custom modal confirmation dialog for entry deletion, template overwrite, and PIN removal, added non-blocking toast notifications with startup welcome toast, empty-state 1-click Quick Starter chips, search clear button, and keyboard shortcuts F1/H, Esc, Ctrl+S save, Ctrl+N new/today, Ctrl+T templates, Ctrl+F search, and 1-6 quick mood selection in web; fixed critical JSON export omission of journal entry text in native C with JSON escaping, added backup file import support, clarified save/finish prompts with EOF/Ctrl+Z, updated help guide and title hint, and verified 1100x750 synchronized bounds).

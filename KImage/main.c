@@ -612,6 +612,37 @@ void DrawRGBHistogram(HDC hdc, RECT rc) {
     DeleteObject(hPenB);
 }
 
+void ShowHelpDialog(HWND hwnd) {
+    MessageBoxA(hwnd,
+        "KImage Pro - High-Fidelity Image Studio\n\n"
+        "KEYBOARD SHORTCUTS:\n"
+        "• O / Ctrl+O : Open BMP Image / Scan Directory\n"
+        "• Ctrl+S : Save / Export Current Image\n"
+        "• H / F1 : Open this Help Guide\n"
+        "• Space : Play / Pause Slideshow\n"
+        "• Left / Right Arrow : Previous / Next Image\n"
+        "• + / - : Zoom In / Out\n"
+        "• 0 / Home : Reset Zoom (1:1)\n"
+        "• S : Sharpen Convolution Filter\n"
+        "• E : Edge Detection Filter\n"
+        "• G : Grayscale Filter\n"
+        "• P : Sepia Filter\n"
+        "• I : Invert Colors\n"
+        "• B : 3x3 Box Blur\n"
+        "• R : Reset to Original Base Image\n"
+        "• Esc : Cancel Crop / Deselect Tools\n\n"
+        "TOOLBAR CONTROLS:\n"
+        "• Open / Save: Load or export 32-bit BMP files\n"
+        "• Rotate & Flip: ↺ -90°, ↻ +90°, Horizontal & Vertical Flip\n"
+        "• Color FX: Grayscale, Sepia, Invert, Blur, Brightness (+/-)\n"
+        "• Spatial Kernels: Sharpen, Edge Detect, Emboss, Sobel\n"
+        "• Interactive Crop: Drag bounding box to crop canvas\n"
+        "• Annotation Draw: Freehand blue brush tool\n"
+        "• Slideshow: Auto-cycles all BMPs in directory (2.5s interval)\n"
+        "• Sidebar: Live RGB Color Histogram & Image Metadata\n",
+        "KImage Pro User Guide", MB_OK | MB_ICONINFORMATION);
+}
+
 // Window Procedure
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
@@ -630,8 +661,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtn = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE, x, y, 46, btnH, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 49;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Help", WS_CHILD | WS_VISIBLE, x, y, 42, btnH, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 45;
+            hBtn = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE, x, y, 62, btnH, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 65;
 
             hBtn = CreateWindowEx(0, "BUTTON", "-", WS_CHILD | WS_VISIBLE, x, y, 24, btnH, hwnd, (HMENU)ID_BTN_ZOOM_OUT, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 27;
@@ -716,7 +747,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SaveFileDlg(hwnd);
                     break;
                 case ID_BTN_HELP:
-                    MessageBoxA(hwnd, "KImage Pro Help\n\nShortcuts:\n- O: Open File\n- S: Sharpen Filter\n- E: Edge Detect\n- H/F1: Help\n- Space: Play/Pause Slideshow\n- Left/Right: Navigate Images\n", "Help", MB_OK | MB_ICONINFORMATION);
+                    ShowHelpDialog(hwnd);
                     break;
                 case ID_BTN_ZOOM_IN:
                     g_zoom *= 1.2f;
@@ -846,14 +877,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_SHARPEN, 0);
             } else if (wParam == 'E') {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_EDGE, 0);
+            } else if (wParam == 'G') {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_GRAYSCALE, 0);
+            } else if (wParam == 'P') {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_SEPIA, 0);
+            } else if (wParam == 'I') {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_INVERT, 0);
+            } else if (wParam == 'B') {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_BLUR, 0);
+            } else if (wParam == 'R') {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_RESET, 0);
             } else if (wParam == 'H' || wParam == VK_F1) {
-                MessageBoxA(hwnd, "KImage Pro Help\n\nShortcuts:\n- O: Open File\n- S: Sharpen Filter\n- E: Edge Detect\n- H/F1: Help\n- Space: Play/Pause Slideshow\n- Left/Right: Navigate Images\n", "Help", MB_OK | MB_ICONINFORMATION);
+                ShowHelpDialog(hwnd);
             } else if (wParam == VK_SPACE) {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_PLAY, 0);
             } else if (wParam == VK_LEFT) {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_PREV, 0);
             } else if (wParam == VK_RIGHT) {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_NEXT, 0);
+            } else if (wParam == VK_OEM_PLUS || wParam == VK_ADD) {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_ZOOM_IN, 0);
+            } else if (wParam == VK_OEM_MINUS || wParam == VK_SUBTRACT) {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_ZOOM_OUT, 0);
+            } else if (wParam == '0' || wParam == VK_HOME) {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_ZOOM_RESET, 0);
             }
             break;
         }
@@ -1099,6 +1146,28 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
+        if (msg.message == WM_KEYDOWN) {
+            BOOL ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+            if (msg.wParam == VK_F1 || (!ctrl && (msg.wParam == 'H' || msg.wParam == 'h'))) {
+                ShowHelpDialog(hwnd);
+                continue;
+            } else if (ctrl && (msg.wParam == 'S' || msg.wParam == 's')) {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_SAVE, 0);
+                continue;
+            } else if (ctrl && (msg.wParam == 'O' || msg.wParam == 'o')) {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_OPEN, 0);
+                continue;
+            } else if (msg.wParam == VK_ESCAPE) {
+                if (g_cropMode || g_drawMode) {
+                    g_cropMode = 0;
+                    g_drawMode = 0;
+                    if (g_hBtnCrop) SendMessage(g_hBtnCrop, BM_SETCHECK, BST_UNCHECKED, 0);
+                    if (g_hBtnDraw) SendMessage(g_hBtnDraw, BM_SETCHECK, BST_UNCHECKED, 0);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    continue;
+                }
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
