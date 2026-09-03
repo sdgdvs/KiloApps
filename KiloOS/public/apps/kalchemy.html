@@ -183,6 +183,29 @@
       transition: box-shadow 0.3s ease;
     }
 
+    .panel::before, .panel::after {
+      content: '';
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .panel::before {
+      top: 4px;
+      left: 4px;
+      border-top: 2px solid var(--accent-gold);
+      border-left: 2px solid var(--accent-gold);
+    }
+
+    .panel::after {
+      top: 4px;
+      right: 4px;
+      border-top: 2px solid var(--accent-gold);
+      border-right: 2px solid var(--accent-gold);
+    }
+
     .panel:hover {
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 18px var(--glow-purple);
     }
@@ -388,24 +411,24 @@
       box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.8), 0 0 20px var(--glow-purple);
     }
 
-    .crucible-panel::before {
-      content: 'ᛟ';
+    .crucible-panel .traveling-glint {
       position: absolute;
-      top: 15px;
-      left: 20px;
-      font-size: 1.5rem;
-      color: rgba(243, 156, 18, 0.3);
-      text-shadow: 0 0 6px var(--accent-gold);
+      inset: 0;
+      border-radius: 12px;
+      pointer-events: none;
+      border: 1px solid transparent;
+      background: linear-gradient(120deg, transparent, rgba(243, 156, 18, 0.6), transparent, rgba(155, 89, 182, 0.6), transparent) border-box;
+      -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      animation: borderGlint 5s linear infinite;
+      z-index: 4;
     }
 
-    .crucible-panel::after {
-      content: 'ᚱ';
-      position: absolute;
-      top: 15px;
-      right: 20px;
-      font-size: 1.5rem;
-      color: rgba(155, 89, 182, 0.3);
-      text-shadow: 0 0 6px var(--accent-purple);
+    @keyframes borderGlint {
+      0% { opacity: 0.3; filter: hue-rotate(0deg); }
+      50% { opacity: 0.8; filter: hue-rotate(90deg); }
+      100% { opacity: 0.3; filter: hue-rotate(0deg); }
     }
 
     /* Transmutation Circle & Vessel */
@@ -456,9 +479,28 @@
       align-items: center;
       justify-content: center;
       position: relative;
+      overflow: hidden;
       box-shadow: 15px 25px 30px rgba(0, 0, 0, 0.8), 0 0 35px var(--glow-purple), inset 0 0 20px rgba(155, 89, 182, 0.4);
       transition: all 0.3s ease;
       z-index: 2;
+    }
+
+    .crucible-vessel::before {
+      content: '';
+      position: absolute;
+      top: -60%;
+      left: -60%;
+      width: 220%;
+      height: 220%;
+      background: linear-gradient(135deg, transparent 42%, rgba(255, 255, 255, 0.22) 50%, transparent 58%);
+      transform: rotate(25deg);
+      animation: vesselSheen 4.5s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes vesselSheen {
+      0% { transform: translateY(-130%) rotate(25deg); }
+      25%, 100% { transform: translateY(130%) rotate(25deg); }
     }
 
     .crucible-vessel.reacting {
@@ -2278,6 +2320,7 @@
 
     <!-- Center: Laboratory Panel -->
     <div class="panel crucible-panel">
+      <div class="traveling-glint"></div>
       <!-- Game Mode Selector Bar -->
       <div class="mode-selector-bar">
         <button class="mode-tab active" id="mode-tab-0" onclick="setGameMode(0)">🧪 Classic</button>
@@ -3926,6 +3969,7 @@
 
         triggerToast("🥣 Potion Brewed!", `Brewed ${potionName} ${potionIcon}!`, potionIcon);
         addLog(`🥣 <strong>POTION BREWING:</strong> Combined <strong>${selectedSlots[0].name}</strong> ${selectedSlots[0].icon} + <strong>${selectedSlots[1].name}</strong> ${selectedSlots[1].icon} to brew <strong>${potionName}</strong> ${potionIcon}!`, true, false, false, 'oracle');
+        triggerTransmuteFX('#2ecc71');
         playBrewingSound();
       } else {
         essence += 15;
@@ -3935,6 +3979,7 @@
 
         triggerToast("🧪 Minor Tonic Brewed", "Brewed Minor Tonic (+15 Essence, +15 Dust)", '🧪');
         addLog(`🧪 <strong>POTION BREWING:</strong> Brewed a <strong>Minor Tonic</strong> from ${selectedSlots[0].name} + ${selectedSlots[1].name}! (+15 Essence, +15 Dust)`, false, false, false);
+        triggerTransmuteFX('#3498db');
         playChime(350, 'triangle', 0.25);
       }
 
@@ -4569,6 +4614,7 @@
 
       triggerToast("⚗️ Retort Distillation", `Extracted ${ing1.name} ${ing1.icon} (+${essGain} Essence, +${dustGain} Dust)`, ing1.icon);
       addLog(`⚗️ <strong>RETORT DISTILLATION:</strong> Distilled <strong>${el.name}</strong> ${el.icon} to extract primary essence <strong>${ing1.name}</strong> ${ing1.icon}! (+${essGain} Essence, +${dustGain} Dust)`, true, false, false, 'retort');
+      triggerTransmuteFX('#3498db');
       playRetortSound();
     }
 
@@ -4612,6 +4658,7 @@
 
       triggerToast("🧪 Alembic Extraction", `Extracted ${ing2.name} ${ing2.icon} (+${essGain} Essence, +${dustGain} Dust)`, ing2.icon);
       addLog(`🧪 <strong>ALEMBIC EXTRACTION:</strong> Extracted secondary essence <strong>${ing2.name}</strong> ${ing2.icon} from <strong>${el.name}</strong> ${el.icon}! (+${essGain} Essence, +${dustGain} Dust)`, true, false, false, 'alembic');
+      triggerTransmuteFX('#9b59b6');
       playAlembicSound();
     }
 
@@ -4643,6 +4690,7 @@
 
       triggerToast("🔨 Anvil Crushed", `Smashed ${el.name} ${el.icon} (+${essenceGain} Essence, +${dustGain} Dust)`, '💥');
       addLog(`🔨 <strong>ANVIL ESSENCE HARVEST:</strong> Smashed <strong>${el.name}</strong> ${el.icon} [Tier ${el.tier}] into pure base essence! (+${essenceGain} Essence, +${dustGain} Alchemical Dust)`, true, false, false, 'anvil');
+      triggerTransmuteFX('#e67e22');
       playAnvilSound();
     }
 
@@ -5271,13 +5319,15 @@
     updateSlotsUI();
     setGameMode(gameMode);
   
-    // --- Particle System ---
+    // --- Loop 7 Multi-Layer Kinematic Particle, Shockwave & Screen-Shake Engine ---
     const fxCanvas = document.getElementById('fxCanvas');
     const fctx = fxCanvas.getContext('2d');
     const envCanvas = document.getElementById('envCanvas');
     const ectx = envCanvas.getContext('2d');
     let particles = [];
+    let shockwaves = [];
     let dustMotes = [];
+
     function resizeCanvas() {
       fxCanvas.width = window.innerWidth;
       fxCanvas.height = window.innerHeight;
@@ -5289,91 +5339,240 @@
         dustMotes.push({
           x: Math.random() * window.innerWidth,
           y: Math.random() * window.innerHeight,
-          r: Math.random() * 1.5 + 0.5,
-          vx: (Math.random() - 0.5) * 0.2,
-          vy: (Math.random() - 0.5) * 0.2 - 0.1,
-          alpha: Math.random() * 0.6 + 0.1,
-          phase: Math.random() * Math.PI * 2
+          r: Math.random() * 2.0 + 0.6,
+          vx: (Math.random() - 0.5) * 0.3,
+          vy: - (Math.random() * 0.4 + 0.15),
+          alpha: Math.random() * 0.6 + 0.2,
+          phase: Math.random() * Math.PI * 2,
+          color: Math.random() > 0.4 ? 'rgba(243, 156, 18, ' : 'rgba(176, 92, 219, '
         });
       }
     }
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    let shakeTime = 0;
+    let shakeAmp = 0;
+
+    function applyScreenShake(intensity) {
+      shakeAmp = Math.max(shakeAmp, intensity);
+    }
+
     function spawnExplosion(x, y, color) {
-      shakeTime = 15;
-      for(let i=0; i<60; i++) {
+      applyScreenShake(15);
+
+      // Layer 0: Dual-tier concentric shockwave ripple rings
+      shockwaves.push({
+        x: x, y: y,
+        r: 6, maxR: 120,
+        speed: 5.5,
+        alpha: 1.0,
+        color: color || '#f1c40f',
+        tier: 0
+      });
+      shockwaves.push({
+        x: x, y: y,
+        r: 2, maxR: 165,
+        speed: 3.5,
+        alpha: 0.7,
+        color: '#f39c12',
+        tier: 1
+      });
+
+      // Layer 1: Incandescent Core Needle Sparks with velocity trails & drag
+      for(let i=0; i<35; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const spd = Math.random() * 18 + 5;
         particles.push({
           x: x, y: y,
-          vx: (Math.random()-0.5)*15, vy: (Math.random()-0.5)*15 - 4,
-          life: 1.2, decay: 0.015 + Math.random()*0.02,
-          color: color,
-          type: 'core'
+          vx: Math.cos(ang) * spd,
+          vy: Math.sin(ang) * spd - 3,
+          life: 1.0,
+          decay: 0.025 + Math.random() * 0.025,
+          color: '#ffffff',
+          size: Math.random() * 2.5 + 1.2,
+          type: 'needle',
+          drag: 0.92
         });
-        if (i % 2 === 0) {
-          particles.push({
-            x: x, y: y,
-            vx: (Math.random()-0.5)*25, vy: (Math.random()-0.5)*25 - 6,
-            life: 0.8, decay: 0.03 + Math.random()*0.02,
-            color: '#fff',
-            type: 'spark'
-          });
-        }
+      }
+
+      // Layer 2: Expanding Buoyant Ethereal Smoke & Steam Puffs (negative gravity & expansion)
+      for(let i=0; i<25; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const spd = Math.random() * 5.5 + 1.5;
+        particles.push({
+          x: x + (Math.random() - 0.5) * 14,
+          y: y + (Math.random() - 0.5) * 14,
+          vx: Math.cos(ang) * spd,
+          vy: Math.sin(ang) * spd - 3.5,
+          life: 1.0,
+          decay: 0.012 + Math.random() * 0.015,
+          color: color || '#9b59b6',
+          size: Math.random() * 6 + 6,
+          maxSize: Math.random() * 26 + 18,
+          type: 'smoke',
+          drag: 0.95
+        });
+      }
+
+      // Layer 3: Heavy Kinematic Crystal / Elemental Shards (gravity, drag & tumbling rotation)
+      for(let i=0; i<28; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const spd = Math.random() * 12 + 3;
+        particles.push({
+          x: x, y: y,
+          vx: Math.cos(ang) * spd,
+          vy: Math.sin(ang) * spd - 4.5,
+          life: 1.0,
+          decay: 0.015 + Math.random() * 0.018,
+          color: color || '#3498db',
+          size: Math.random() * 5 + 3,
+          rot: Math.random() * Math.PI * 2,
+          vrot: (Math.random() - 0.5) * 0.35,
+          type: 'shard',
+          gravity: 0.35,
+          drag: 0.98
+        });
+      }
+
+      // Layer 4: Radiant Golden Celebration Energy Stars
+      for(let i=0; i<20; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const spd = Math.random() * 10 + 3;
+        particles.push({
+          x: x, y: y,
+          vx: Math.cos(ang) * spd,
+          vy: Math.sin(ang) * spd - 2,
+          life: 1.0,
+          decay: 0.018 + Math.random() * 0.018,
+          color: '#f1c40f',
+          size: Math.random() * 7 + 4,
+          rot: Math.random() * Math.PI,
+          vrot: (Math.random() - 0.5) * 0.15,
+          type: 'star',
+          drag: 0.96
+        });
       }
     }
 
     function updateParticles() {
-      fctx.clearRect(0,0,fxCanvas.width, fxCanvas.height);
+      fctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
       
-      if (shakeTime > 0) {
-        let dx = (Math.random() - 0.5) * shakeTime * 1.5;
-        let dy = (Math.random() - 0.5) * shakeTime * 1.5;
-        document.body.style.transform = `translate(${dx}px, ${dy}px)`;
-        shakeTime--;
-        if (shakeTime <= 0) document.body.style.transform = '';
+      // Procedural Screen Shake with Quadratic Decay and Rotational Damping
+      if (shakeAmp > 0.05) {
+        const dx = (Math.random() - 0.5) * shakeAmp * 1.5;
+        const dy = (Math.random() - 0.5) * shakeAmp * 1.5;
+        const rot = (Math.random() - 0.5) * shakeAmp * 0.08;
+        document.body.style.transform = `translate(${dx}px, ${dy}px) rotate(${rot}deg)`;
+        shakeAmp *= 0.88;
+      } else if (document.body.style.transform) {
+        document.body.style.transform = '';
+        shakeAmp = 0;
       }
 
-      for(let i=particles.length-1; i>=0; i--) {
-        let p = particles[i];
+      // Render Shockwaves
+      for(let i = shockwaves.length - 1; i >= 0; i--) {
+        const sw = shockwaves[i];
+        sw.r += sw.speed;
+        const progress = sw.r / sw.maxR;
+        if (progress >= 1.0) {
+          shockwaves.splice(i, 1);
+          continue;
+        }
+        fctx.save();
+        fctx.beginPath();
+        fctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
+        fctx.strokeStyle = sw.color;
+        fctx.globalAlpha = sw.alpha * (1 - progress);
+        fctx.lineWidth = sw.tier === 0 ? 3.5 : 2.0;
+        fctx.shadowColor = sw.color;
+        fctx.shadowBlur = sw.tier === 0 ? 15 : 8;
+        fctx.stroke();
+        fctx.restore();
+      }
+
+      // Render Particles
+      for(let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
         p.x += p.vx;
         p.y += p.vy;
+        p.vx *= (p.drag || 0.98);
+        p.vy *= (p.drag || 0.98);
+        if (p.gravity) p.vy += p.gravity;
+        if (p.vrot) p.rot += p.vrot;
         p.life -= p.decay;
-        if(p.life <= 0) {
+
+        if (p.life <= 0) {
           particles.splice(i, 1);
           continue;
         }
-        fctx.globalAlpha = p.life;
-        fctx.fillStyle = p.color;
-        fctx.beginPath();
-        if (p.type === 'spark') {
-          fctx.arc(p.x, p.y, p.life * 2, 0, Math.PI*2);
-        } else {
-          fctx.arc(p.x, p.y, p.life * 5 + 1, 0, Math.PI*2);
-        }
-        fctx.fill();
-      }
-      fctx.globalAlpha = 1.0;
 
-      // Update Environmental Dust Motes
-      ectx.clearRect(0,0,envCanvas.width, envCanvas.height);
-      ectx.fillStyle = "rgba(243, 156, 18, 1)"; // Gold color
+        fctx.save();
+        fctx.globalAlpha = Math.max(0, p.life);
+
+        if (p.type === 'needle') {
+          fctx.strokeStyle = p.color;
+          fctx.lineWidth = p.size;
+          fctx.beginPath();
+          fctx.moveTo(p.x, p.y);
+          fctx.lineTo(p.x - p.vx * 1.5, p.y - p.vy * 1.5);
+          fctx.stroke();
+        } else if (p.type === 'smoke') {
+          const curR = p.size + (p.maxSize - p.size) * (1 - p.life);
+          fctx.fillStyle = p.color;
+          fctx.globalAlpha = Math.max(0, p.life * 0.45);
+          fctx.beginPath();
+          fctx.arc(p.x, p.y, curR, 0, Math.PI * 2);
+          fctx.fill();
+        } else if (p.type === 'shard') {
+          fctx.fillStyle = p.color;
+          fctx.translate(p.x, p.y);
+          fctx.rotate(p.rot);
+          fctx.beginPath();
+          fctx.moveTo(0, -p.size);
+          fctx.lineTo(p.size * 0.7, 0);
+          fctx.lineTo(0, p.size * 1.2);
+          fctx.lineTo(-p.size * 0.7, 0);
+          fctx.closePath();
+          fctx.fill();
+        } else if (p.type === 'star') {
+          fctx.fillStyle = p.color;
+          fctx.translate(p.x, p.y);
+          fctx.rotate(p.rot);
+          fctx.beginPath();
+          const s = p.size * (0.6 + p.life * 0.6);
+          fctx.moveTo(0, -s);
+          fctx.lineTo(s * 0.25, -s * 0.25);
+          fctx.lineTo(s, 0);
+          fctx.lineTo(s * 0.25, s * 0.25);
+          fctx.lineTo(0, s);
+          fctx.lineTo(-s * 0.25, s * 0.25);
+          fctx.lineTo(-s, 0);
+          fctx.lineTo(-s * 0.25, -s * 0.25);
+          fctx.closePath();
+          fctx.fill();
+        }
+
+        fctx.restore();
+      }
+
+      // Update Environmental Mystical Dust & Arcane Motes
+      ectx.clearRect(0, 0, envCanvas.width, envCanvas.height);
       for(let i=0; i<dustMotes.length; i++) {
-        let m = dustMotes[i];
-        m.x += m.vx;
+        const m = dustMotes[i];
+        m.x += m.vx + Math.sin(m.phase) * 0.3;
         m.y += m.vy;
-        m.phase += 0.02;
+        m.phase += 0.025;
         if(m.x < 0) m.x = envCanvas.width;
         if(m.x > envCanvas.width) m.x = 0;
         if(m.y < 0) m.y = envCanvas.height;
         if(m.y > envCanvas.height) m.y = 0;
         
-        ectx.globalAlpha = m.alpha * (0.5 + Math.sin(m.phase)*0.5);
+        const alpha = m.alpha * (0.5 + Math.sin(m.phase) * 0.5);
+        ectx.fillStyle = m.color + alpha + ')';
         ectx.beginPath();
-        ectx.arc(m.x, m.y, m.r, 0, Math.PI*2);
+        ectx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
         ectx.fill();
       }
-      ectx.globalAlpha = 1.0;
 
       requestAnimationFrame(updateParticles);
     }

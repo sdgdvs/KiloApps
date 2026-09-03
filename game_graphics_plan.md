@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KAlchemy
 - KRogue
 - KChess
 - KPong
@@ -148,8 +147,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KFortress
 - KColosseum
 - KFarm
+- KAlchemy
 
 ## Completed Work Log
+
+- **KAlchemy (Loop 7):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on transmutations, discoveries, potion brewing, retort/alembic extractions, and anvil crushing (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and trigonometric FastSin/FastCos physics decay with a 33ms dedicated animation timer and double-buffered viewport rendering in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant smoke & steam puffs with negative gravity and expansion growth, heavy kinematic crystal shards & elemental debris with gravity, drag, and tumbling rotation physics, and radiant golden celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer dispersion halo radiating upon transmutations and discoveries, ornate arcane alchemical HUD corner filigree L-brackets with rivet detailing on all grimoire, crucible, and journal panels, a pulsating arcane energy perimeter inlay border with a traveling specular glint along the crucible frame, sculpted alchemical vessel highlights with diagonal specular sheen sweeps traversing the crucible, retort, alembic, and potion vials, and ambient atmospheric floating arcane embers and mystic dust motes in both Web Canvas (kalchemy.html) and Native C Win32 GDI (KAlchemy/main.c).
 
 - **KFarm (Loop 6):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on harvests, tilling, morning sunrises, animal additions, upgrade unlocks, and crow raids (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and trigonometric FastSin/FastCos physics decay with double-buffered viewport rendering in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant smoke & floral pollen puffs with negative gravity and expansion growth, heavy kinematic dirt & crop shard debris with gravity and floor bounce physics, and radiant golden celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer dispersion halo radiating upon crop harvests, tilling, upgrade unlocks, and morning sunrises, ornate rustic agricultural arcade HUD corner filigree L-brackets with rivet detailing, a pulsating golden energy perimeter inlay border with a traveling specular glint along the farm field frame, animated roaming livestock sprites (white chickens with bobbing pecks, wings, and red combs; spotted grazing cows with wagging tails, horns, pink snouts, and grass-chewing cycles), animated Windmill sails with continuous rotation when owned, custom Scarecrow sprite with blue tunic, straw hat, and wind-fluttering red scarf when owned, diagonal specular sheen sweeps traversing ripe crops, and seasonal ambient atmospheric weather particles (Spring cherry blossom petals, Summer golden sun motes, Fall fluttering autumn leaves, Winter crystalline snowflakes) in both Web Canvas (kfarm.html) and Native C Win32 GDI (KFarm/main.c).
 
