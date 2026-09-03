@@ -351,13 +351,38 @@ typedef struct {
     int cmThermalOverdrive;
     int cmAcidNeutralizerDays;
 
+    // Wasteland Caravan Trading System (Phase 11)
+    int caravanPresent;
+    int caravanFaction;
+    int caravanDaysLeft;
+    int caravanEtaDays;
+    int caravanRepLevel;
+    int caravanTradesCount;
+    int caravanRareBought[5];
+
     // Active Tab
-    int currentTab; // 0: Facilities, 1: Survivors, 2: Expeditions, 3: Defense, 4: Research, 5: Hazards, 6: Directives, 7: Manual
+    int currentTab; // 0: Facilities, 1: Survivors, 2: Expeditions, 3: Defense, 4: Research, 5: Hazards, 6: Caravan, 7: Directives, 8: Manual
     
     int autoRun;
 } GameState;
 
 static GameState g_state;
+
+// Caravan Faction Info
+typedef struct {
+    char name[48];
+    char merchant[48];
+    char quote[128];
+    char badge[24];
+} CaravanFactionInfo;
+
+static const CaravanFactionInfo g_caravanFactions[5] = {
+    { "DUST STRIDER GUILD", "Silas Vance", "Clean water and non-irradiated grain from the southern salt pans.", "DUST STRIDERS" },
+    { "RUST BROTHERHOOD SCRAPPERS", "Forge-Master Vane", "Heavy alloy plating, reinforced bolts, and salvaged military tech.", "RUST BROTHERHOOD" },
+    { "APOTHECARY NOMAD ENCLAVE", "Sister Morrigan", "Sterile pharmaceuticals, anti-rad tonics, and trauma stimpacks.", "APOTHECARY" },
+    { "THE ARCHIVE CYBER-SALVAGERS", "Techno-Sage Kael", "Pre-war micro-fusion cells, encrypted keys, and high-gain antenna parts.", "CYBER-ARCHIVE" },
+    { "LONE WASTELAND WANDERER", "Echo the Drifter", "Found some strange curios in the buried ruins. Willing to barter.", "LONE WANDERER" }
+};
 
 // Clickable UI Region tracking
 typedef struct {
@@ -431,6 +456,10 @@ enum {
     BTN_HAZARD_NEUTRALIZER,
     BTN_HAZARD_TOGGLE_THERMAL,
     BTN_HAZARD_SIMULATE,
+    BTN_TRADE_BUY,
+    BTN_TRADE_RARE,
+    BTN_TRADE_SELL,
+    BTN_HAIL_CARAVAN,
     BTN_CLOSE_RAID_MODAL,
     BTN_CLOSE_MODAL
 };
@@ -810,6 +839,196 @@ static void GenerateCandidate(Candidate* c, int isSpecialist) {
 
     c->health = 80 + rand() % 20;
     c->morale = 70 + rand() % 25;
+}
+
+static float GetCaravanDiscount() {
+    int lvl = g_state.caravanRepLevel;
+    if (lvl == 2) return 0.05f;
+    if (lvl == 3) return 0.10f;
+    if (lvl == 4) return 0.15f;
+    if (lvl >= 5) return 0.25f;
+    return 0.0f;
+}
+
+static int GetDiscountedTradeCost(int baseCost) {
+    float disc = GetCaravanDiscount();
+    int c = (int)((float)baseCost * (1.0f - disc) + 0.5f);
+    return c < 1 ? 1 : c;
+}
+
+static void AddCaravanTradeRep() {
+    g_state.caravanTradesCount++;
+    int req = 3;
+    if (g_state.caravanRepLevel == 2) req = 8;
+    else if (g_state.caravanRepLevel == 3) req = 15;
+    else if (g_state.caravanRepLevel == 4) req = 25;
+
+    if (g_state.caravanTradesCount >= req && g_state.caravanRepLevel < 5) {
+        g_state.caravanRepLevel++;
+        char buf[128];
+        const char* repNames[] = { "", "Neutral", "Welcomed (5% Disc)", "Trusted (10% Disc)", "Honored (15% Disc)", "Revered (25% Disc)" };
+        sprintf(buf, "★ CARAVAN REPUTATION: Barter Trust raised to Level %d [%s]!", g_state.caravanRepLevel, repNames[g_state.caravanRepLevel]);
+        AddLog(buf, 3);
+    }
+}
+
+static void BuyCaravanItem(int itemId) {
+    if (!g_state.caravanPresent) return;
+    int costs[] = { 8, 8, 30, 12 };
+    if (itemId < 0 || itemId >= 4) return;
+    int cost = GetDiscountedTradeCost(costs[itemId]);
+    if (g_state.scrap < (float)cost) {
+        AddLog("CARAVAN: Insufficient Tech Scrap for trade transaction!", 1);
+        PlaySfx(3);
+        return;
+    }
+
+    g_state.scrap -= (float)cost;
+    if (itemId == 0) {
+        g_state.food += 10.0f;
+        AddLog("CARAVAN: Purchased Small Food Rations Crate (+10 Food).", 3);
+    } else if (itemId == 1) {
+        g_state.water += 10.0f;
+        AddLog("CARAVAN: Purchased Purified Water Jug Pack (+10 Water).", 3);
+    } else if (itemId == 2) {
+        g_state.food += 25.0f;
+        g_state.water += 25.0f;
+        AddLog("CARAVAN: Purchased Bulk Food & Water Bulkhead Crate (+25 Food, +25 Water).", 3);
+    } else if (itemId == 3) {
+        g_state.meds += 2;
+        AddLog("CARAVAN: Purchased Surgical Stimpacks Pack (+2 Meds).", 3);
+    }
+
+    AddCaravanTradeRep();
+    PlaySfx(2);
+}
+
+static void BuyRareItem(int rareIdx) {
+    if (!g_state.caravanPresent || rareIdx < 0 || rareIdx >= 5) return;
+    if (g_state.caravanRareBought[rareIdx]) return;
+
+    int rCosts[] = { 22, 25, 28, 35, 18 };
+    int cost = GetDiscountedTradeCost(rCosts[rareIdx]);
+    if (g_state.scrap < (float)cost) {
+        AddLog("CARAVAN: Insufficient Tech Scrap to purchase rare artifact!", 1);
+        PlaySfx(3);
+        return;
+    }
+
+    g_state.scrap -= (float)cost;
+    g_state.caravanRareBought[rareIdx] = 1;
+    AddCaravanTradeRep();
+
+    if (rareIdx == 0) { // Rad-away
+        for (int i = 0; i < g_state.numSurvivors; i++) {
+            g_state.survivors[i].health += 20;
+            if (g_state.survivors[i].health > 100) g_state.survivors[i].health = 100;
+        }
+        if (g_state.exteriorRads > 3.0f) g_state.exteriorRads -= 3.0f;
+        AddLog("★ RARE ARTIFACT: Rad-Away Anti-Toxin Cask administered! All survivors healed +20 HP.", 3);
+    } else if (rareIdx == 1) { // Super enzyme
+        g_state.food += 30.0f;
+        AddLog("★ RARE ARTIFACT: Hydroponic Super-Growth Enzyme applied (+30 Food).", 3);
+    } else if (rareIdx == 2) { // Armor plates
+        g_state.barricadeMaxHp += 25;
+        g_state.barricadeHp = g_state.barricadeMaxHp;
+        AddLog("★ RARE ARTIFACT: Heavy Ballistic Armor welded! Barricades repaired & Max HP raised.", 3);
+    } else if (rareIdx == 3) { // Targeting module
+        g_state.defense += 12;
+        AddLog("★ RARE ARTIFACT: Sentry Targeting Overdrive Module installed (+12 Base Def).", 3);
+    } else if (rareIdx == 4) { // Luxury cassettes
+        g_state.morale += 20.0f;
+        if (g_state.morale > 100.0f) g_state.morale = 100.0f;
+        AddLog("★ RARE ARTIFACT: Pre-war Luxury Coffee & Cassettes distributed! Vault Morale +20%.", 3);
+    }
+
+    PlaySfx(2);
+}
+
+static void SellSurplusItem(int sellIdx) {
+    if (!g_state.caravanPresent) return;
+    if (sellIdx == 0) {
+        if (g_state.food >= 15.0f) {
+            g_state.food -= 15.0f;
+            g_state.scrap += 10.0f;
+            AddCaravanTradeRep();
+            AddLog("CARAVAN: Exported 15 Food Rations (+10 Tech Scrap).", 3);
+            PlaySfx(2);
+        } else {
+            AddLog("CARAVAN: Insufficient food surplus to export (need 15)!", 1);
+            PlaySfx(3);
+        }
+    } else if (sellIdx == 1) {
+        if (g_state.water >= 15.0f) {
+            g_state.water -= 15.0f;
+            g_state.scrap += 10.0f;
+            AddCaravanTradeRep();
+            AddLog("CARAVAN: Exported 15 Purified Water (+10 Tech Scrap).", 3);
+            PlaySfx(2);
+        } else {
+            AddLog("CARAVAN: Insufficient water surplus to export (need 15)!", 1);
+            PlaySfx(3);
+        }
+    } else if (sellIdx == 2) {
+        if (g_state.scrap >= 20.0f) {
+            g_state.scrap -= 20.0f;
+            g_state.meds += 2;
+            AddCaravanTradeRep();
+            AddLog("CARAVAN: Bartered 20 Tech Scrap for 2 Medical Stimpacks.", 3);
+            PlaySfx(2);
+        } else {
+            AddLog("CARAVAN: Insufficient scrap to barter for meds (need 20)!", 1);
+            PlaySfx(3);
+        }
+    }
+}
+
+static void HailCaravan() {
+    if (g_state.scrap >= 15.0f && g_state.powerGen >= 10) {
+        g_state.scrap -= 15.0f;
+        g_state.caravanPresent = 1;
+        g_state.caravanFaction = (g_state.caravanFaction + 1 + rand() % 4) % 5;
+        g_state.caravanDaysLeft = 3;
+        g_state.caravanEtaDays = 0;
+        for (int k = 0; k < 5; k++) g_state.caravanRareBought[k] = 0;
+
+        char buf[128];
+        sprintf(buf, "RADIO BEACON: Commercial hail sent! [%s] (%s) arrived at the airlock!", g_caravanFactions[g_state.caravanFaction].badge, g_caravanFactions[g_state.caravanFaction].merchant);
+        AddLog(buf, 3);
+        PlaySfx(2);
+    } else {
+        AddLog("RADIO: Insufficient scrap (15) or reactor power (10 kW) to broadcast trade beacon!", 1);
+        PlaySfx(3);
+    }
+}
+
+static void ProcessCaravanDay() {
+    if (g_state.caravanPresent) {
+        g_state.caravanDaysLeft--;
+        if (g_state.caravanDaysLeft <= 0) {
+            g_state.caravanPresent = 0;
+            g_state.caravanEtaDays = 3 + rand() % 2;
+            char buf[128];
+            sprintf(buf, "CARAVAN DEPARTURE: [%s] departed into the wasteland. Next caravan in %d days.", g_caravanFactions[g_state.caravanFaction].badge, g_state.caravanEtaDays);
+            AddLog(buf, 0);
+        }
+    } else {
+        g_state.caravanEtaDays--;
+        if (g_state.caravanEtaDays <= 0) {
+            g_state.caravanPresent = 1;
+            g_state.caravanFaction = (g_state.caravanFaction + 1 + rand() % 3) % 5;
+            g_state.caravanDaysLeft = 2 + rand() % 2;
+            g_state.caravanEtaDays = 0;
+            for (int k = 0; k < 5; k++) g_state.caravanRareBought[k] = 0;
+
+            char buf[128];
+            sprintf(buf, "CARAVAN ARRIVAL: Nomadic merchants from [%s] arrived at the airlock!", g_caravanFactions[g_state.caravanFaction].badge);
+            AddLog(buf, 3);
+            PlaySfx(2);
+        } else if (g_state.caravanEtaDays == 1) {
+            AddLog("RADIO SENSORS: Dust cloud detected on radar. Nomadic caravan arriving tomorrow.", 0);
+        }
+    }
 }
 
 static void TriggerDailyEvent() {
@@ -1218,6 +1437,7 @@ static void ProcessNewDay() {
     }
 
     TriggerDailyEvent();
+    ProcessCaravanDay();
 
     g_state.summaryDay = g_state.day;
     g_state.sumFoodDelta = netFood;
@@ -1720,6 +1940,15 @@ static void InitGameState() {
     g_state.cmRadBulkhead = 0;
     g_state.cmThermalOverdrive = 0;
     g_state.cmAcidNeutralizerDays = 0;
+
+    // Phase 11: Wasteland Caravan Trading System
+    g_state.caravanPresent = 1;
+    g_state.caravanFaction = 0;
+    g_state.caravanDaysLeft = 2;
+    g_state.caravanEtaDays = 0;
+    g_state.caravanRepLevel = 1;
+    g_state.caravanTradesCount = 0;
+    for (int k = 0; k < 5; k++) g_state.caravanRareBought[k] = 0;
 
     g_state.logCount = 0;
     AddLog("Vault 704 Overseer System initialized. All security bulkheads sealed.", 3);
@@ -3072,6 +3301,186 @@ static void DrawHazardsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, i
     DrawButtonControl(hdc, hFontSmall, x + 160 + (sBtnW + 4) * 4, simY + 5, sBtnW, 22, "CLEAR SKY", COL_TEXT_MAIN, COL_PANEL_BG, COL_BORDER, BTN_HAZARD_SIMULATE, 0, 0);
 }
 
+static void DrawTradingView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, int y, int w, int h) {
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, x, y, "WASTELAND NOMADIC CARAVAN & BARTER TRADING", 43);
+
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, g_state.caravanPresent ? COL_GREEN : COL_RED);
+    TextOutA(hdc, x + w - 160, y, g_state.caravanPresent ? "AIRLOCK DECK: OPEN" : "AIRLOCK DECK: CLOSED", g_state.caravanPresent ? 18 : 20);
+
+    int curY = y + 20;
+
+    // 1. Merchant Header Box
+    int bnrH = 58;
+    const CaravanFactionInfo* fInfo = &g_caravanFactions[g_state.caravanFaction % 5];
+    DrawStyledBox(hdc, x, curY, w, bnrH, COL_DARK_CARD, g_state.caravanPresent ? COL_AMBER : COL_BORDER);
+
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, g_state.caravanPresent ? COL_AMBER : COL_TEXT_DIM);
+    char fTitle[80];
+    if (g_state.caravanPresent) {
+        sprintf(fTitle, "[%s] - %s", fInfo->badge, fInfo->merchant);
+    } else {
+        strcpy(fTitle, "[NO VISITING TRADER] - Airlock Merchant Bay Empty");
+    }
+    TextOutA(hdc, x + 8, curY + 6, fTitle, (int)strlen(fTitle));
+
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, COL_TEXT_MAIN);
+    if (g_state.caravanPresent) {
+        TextOutA(hdc, x + 8, curY + 24, fInfo->quote, (int)strlen(fInfo->quote));
+    } else {
+        char nextBuf[96];
+        sprintf(nextBuf, "The caravan traveled into the wastes. Next merchant scheduled to arrive in %d days.", g_state.caravanEtaDays);
+        TextOutA(hdc, x + 8, curY + 24, nextBuf, (int)strlen(nextBuf));
+    }
+
+    // Trust level
+    float disc = GetCaravanDiscount();
+    int discPct = (int)(disc * 100.0f);
+    const char* repNames[] = { "Neutral", "Welcomed", "Trusted", "Honored", "Revered" };
+    int repIdx = g_state.caravanRepLevel - 1;
+    if (repIdx < 0) repIdx = 0;
+    if (repIdx > 4) repIdx = 4;
+
+    char repBuf[96];
+    sprintf(repBuf, "Barter Trust: %s (Lv %d) | Discount: %d%% | Trades Done: %d", repNames[repIdx], g_state.caravanRepLevel, discPct, g_state.caravanTradesCount);
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, x + 8, curY + 40, repBuf, (int)strlen(repBuf));
+
+    // Status on right + Hail button
+    char statBuf[32];
+    if (g_state.caravanPresent) sprintf(statBuf, "%d DAYS IN PORT", g_state.caravanDaysLeft);
+    else sprintf(statBuf, "ETA: %d DAYS", g_state.caravanEtaDays);
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, g_state.caravanPresent ? COL_TEXT_BRIGHT : COL_TEXT_DIM);
+    TextOutA(hdc, x + w - 170, curY + 6, statBuf, (int)strlen(statBuf));
+
+    int canHail = (g_state.scrap >= 15.0f && g_state.powerGen >= 10);
+    DrawButtonControl(hdc, hFontSmall, x + w - 175, curY + 28, 168, 22, "HAIL CARAVAN (15S, 10kW)", canHail ? COL_AMBER : COL_TEXT_DIM, COL_BTN_BG, COL_BORDER, BTN_HAIL_CARAVAN, 0, 0);
+
+    curY += bnrH + 8;
+
+    // 2. Standard Supplies (4 Cards in 2x2 Grid)
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, x, curY, "1. PROVISIONS & VITAL STOCK (BUY WITH SCRAP)", 43);
+    curY += 18;
+
+    int colW = (w - 8) / 2;
+    int cardH = 50;
+
+    const char* supNames[] = { "FOOD RATIONS (SMALL)", "PURIFIED WATER (JUG)", "BULK FOOD & WATER CRATE", "SURGICAL STIMPACKS (2-PK)" };
+    const char* supDescs[] = { "Nutrient biscuits & meat (+10 Food)", "Triple-filtered aquifer water (+10 Water)", "+25 Food & +25 Purified Water", "Sterile syringes & coagulants (+2 Meds)" };
+    int supCosts[] = { 8, 8, 30, 12 };
+
+    for (int i = 0; i < 4; i++) {
+        int cx = (i % 2 == 0) ? x : x + colW + 8;
+        int cy = curY + (i / 2) * (cardH + 6);
+
+        int cost = GetDiscountedTradeCost(supCosts[i]);
+        int canAfford = g_state.caravanPresent && (g_state.scrap >= (float)cost);
+
+        DrawStyledBox(hdc, cx, cy, colW, cardH, COL_DARK_CARD, COL_BORDER);
+
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, COL_TEXT_BRIGHT);
+        TextOutA(hdc, cx + 6, cy + 4, supNames[i], (int)strlen(supNames[i]));
+
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COL_TEXT_DIM);
+        TextOutA(hdc, cx + 6, cy + 20, supDescs[i], (int)strlen(supDescs[i]));
+
+        char bText[32];
+        sprintf(bText, "BUY (%dS)", cost);
+        DrawButtonControl(hdc, hFontSmall, cx + colW - 85, cy + 14, 78, 22, bText, canAfford ? COL_GREEN : COL_TEXT_DIM, COL_BTN_BG, COL_BORDER, BTN_TRADE_BUY, i, 0);
+    }
+
+    curY += (cardH + 6) * 2 + 6;
+
+    // 3. Rare Artifacts (3 Cards in a row)
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_AMBER);
+    TextOutA(hdc, x, curY, "2. EXCLUSIVE CARAVAN ARTIFACTS & SPECIALTY TECH", 46);
+    curY += 18;
+
+    int rColW = (w - 12) / 3;
+    int rCardH = 78;
+
+    const char* rNames[] = { "RAD-AWAY CASK", "SUPER-GROWTH ENZYME", "BALLISTIC PLATES", "TARGETING MODULE", "LUXURY CASSETTES" };
+    const char* rDescs[] = { "Cleanses radiation illness", "+30 Food to storage", "+25 Max HP & repair", "+12 Base Defense", "+20% Vault Morale" };
+    int rCosts[] = { 22, 25, 28, 35, 18 };
+
+    for (int i = 0; i < 3; i++) {
+        int rx = x + i * (rColW + 6);
+        int ry = curY;
+
+        int cost = GetDiscountedTradeCost(rCosts[i]);
+        int isBought = g_state.caravanRareBought[i];
+        int canAfford = g_state.caravanPresent && !isBought && (g_state.scrap >= (float)cost);
+
+        COLORREF rBdr = isBought ? COL_GREEN : (canAfford ? COL_AMBER : COL_BORDER);
+        DrawStyledBox(hdc, rx, ry, rColW, rCardH, COL_DARK_CARD, rBdr);
+
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, isBought ? COL_GREEN : COL_TEXT_BRIGHT);
+        TextOutA(hdc, rx + 6, ry + 4, rNames[i], (int)strlen(rNames[i]));
+
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COL_TEXT_DIM);
+        TextOutA(hdc, rx + 6, ry + 20, rDescs[i], (int)strlen(rDescs[i]));
+
+        char cBuf[32];
+        sprintf(cBuf, "Price: %d Tech Scrap", cost);
+        SetTextColor(hdc, COL_AMBER);
+        TextOutA(hdc, rx + 6, ry + 36, cBuf, (int)strlen(cBuf));
+
+        if (isBought) {
+            SetTextColor(hdc, COL_GREEN);
+            TextOutA(hdc, rx + 6, ry + 54, "[* ACQUIRED]", 12);
+        } else {
+            char bTxt[32];
+            sprintf(bTxt, "PURCHASE (%dS)", cost);
+            DrawButtonControl(hdc, hFontSmall, rx + 6, ry + 52, rColW - 12, 20, bTxt, canAfford ? COL_TEXT_BRIGHT : COL_TEXT_DIM, COL_BTN_BG, COL_BORDER, BTN_TRADE_RARE, i, 0);
+        }
+    }
+
+    curY += rCardH + 10;
+
+    // 4. Surplus Export (3 Cards in a row)
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, x, curY, "3. SHELTER SURPLUS EXPORT BARTER", 32);
+    curY += 18;
+
+    const char* expNames[] = { "EXPORT FOOD", "EXPORT WATER", "BARTER FOR MEDS" };
+    const char* expDescs[] = { "Sell 15 Food -> +10 Scrap", "Sell 15 Water -> +10 Scrap", "Sell 20 Scrap -> +2 Meds" };
+
+    for (int i = 0; i < 3; i++) {
+        int ex = x + i * (rColW + 6);
+        int ey = curY;
+
+        int canSell = g_state.caravanPresent;
+        if (i == 0 && g_state.food < 15.0f) canSell = 0;
+        if (i == 1 && g_state.water < 15.0f) canSell = 0;
+        if (i == 2 && g_state.scrap < 20.0f) canSell = 0;
+
+        DrawStyledBox(hdc, ex, ey, rColW, 46, COL_DARK_CARD, COL_BORDER);
+
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, COL_TEXT_BRIGHT);
+        TextOutA(hdc, ex + 6, ey + 4, expNames[i], (int)strlen(expNames[i]));
+
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COL_TEXT_DIM);
+        TextOutA(hdc, ex + 6, ey + 20, expDescs[i], (int)strlen(expDescs[i]));
+
+        DrawButtonControl(hdc, hFontSmall, ex + rColW - 68, ey + 10, 62, 24, "BARTER", canSell ? COL_AMBER : COL_TEXT_DIM, COL_BTN_BG, COL_BORDER, BTN_TRADE_SELL, i, 0);
+    }
+}
+
 static void DrawPoliciesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, int y, int w, int h) {
     SelectObject(hdc, hFontBold);
     SetTextColor(hdc, COL_TEXT_BRIGHT);
@@ -3252,9 +3661,17 @@ static void DrawManualView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, in
     TextOutA(hdc, x + 20, curY, "* Cold Snaps: Freezes bio-generators (-35% Gen). Engage Auxiliary Thermal Overdrive heaters.", 92); curY += lineH + 4;
 
     SetTextColor(hdc, COL_AMBER);
-    TextOutA(hdc, x + 12, curY, "10. KEYBOARD SHORTCUTS:", 23); curY += lineH;
+    TextOutA(hdc, x + 12, curY, "10. WASTELAND CARAVAN TRADING SYSTEM (PHASE 11):", 48); curY += lineH;
     SetTextColor(hdc, COL_TEXT_MAIN);
-    TextOutA(hdc, x + 20, curY, "[SPACE] Advance Cycle | [1-8] Tabs | [T] Theme | [C] CRT | [A] Auto | [H] Help | [R] Reset", 90);
+    TextOutA(hdc, x + 20, curY, "* Nomadic Caravans: 5 merchant factions visit the airlock (Dust Striders, Rust Brotherhood, etc).", 98); curY += lineH;
+    TextOutA(hdc, x + 20, curY, "* Barter Economy: Buy food, purified water, stimpacks, and scrap. Sell vault surplus back to traders.", 101); curY += lineH;
+    TextOutA(hdc, x + 20, curY, "* Rare Artifacts: Buy Rad-Away casks, Super-Growth enzymes, Armor Plates (+25 Max HP), Targeting chips.", 103); curY += lineH;
+    TextOutA(hdc, x + 20, curY, "* Barter Trust & Hailing: Trades raise trust up to 25% discount. Broadcast radio hail to summon traders.", 103); curY += lineH + 4;
+
+    SetTextColor(hdc, COL_AMBER);
+    TextOutA(hdc, x + 12, curY, "11. KEYBOARD SHORTCUTS:", 23); curY += lineH;
+    SetTextColor(hdc, COL_TEXT_MAIN);
+    TextOutA(hdc, x + 20, curY, "[SPACE] Advance Cycle | [1-9] Tabs | [T] Theme | [C] CRT | [A] Auto | [H] Help | [R] Reset", 90);
 }
 
 static void DrawSidebar(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, int y, int w, int h) {
@@ -3443,7 +3860,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             if (wParam == VK_SPACE) {
                 AdvanceCycle();
                 InvalidateRect(hwnd, NULL, FALSE);
-            } else if (wParam >= '1' && wParam <= '7') {
+            } else if (wParam >= '1' && wParam <= '9') {
                 g_state.currentTab = (int)(wParam - '1');
                 PlaySfx(1);
                 InvalidateRect(hwnd, NULL, FALSE);
@@ -3454,7 +3871,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 PlaySfx(1);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'H' || wParam == 'h') {
-                g_state.currentTab = 6;
+                g_state.currentTab = 8;
                 PlaySfx(1);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'T' || wParam == 't') {
@@ -3494,7 +3911,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         g_soundEnabled = !g_soundEnabled;
                         PlaySfx(1);
                     } else if (bId == BTN_HELP) {
-                        g_state.currentTab = 6;
+                        g_state.currentTab = 8;
                         PlaySfx(1);
                     } else if (bId == BTN_RESET) {
                         if (MessageBoxA(hwnd, "Initiate Vault Emergency Reboot? All progress resets to Day 1.", "Reset Sanctuary", MB_YESNO | MB_ICONWARNING) == IDYES) {
@@ -3889,6 +4306,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         TriggerRaiderAttack(1);
                     } else if (bId == BTN_RESEARCH_TECH) {
                         DoResearch(p1);
+                    } else if (bId == BTN_TRADE_BUY) {
+                        BuyCaravanItem(p1);
+                    } else if (bId == BTN_TRADE_RARE) {
+                        BuyRareItem(p1);
+                    } else if (bId == BTN_TRADE_SELL) {
+                        SellSurplusItem(p1);
+                    } else if (bId == BTN_HAIL_CARAVAN) {
+                        HailCaravan();
                     } else if (bId == BTN_CLOSE_RAID_MODAL) {
                         g_state.showRaidModal = 0;
                         PlaySfx(1);
@@ -3963,12 +4388,13 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 "[4] DEFENSE",
                 "[5] RESEARCH",
                 "[6] HAZARDS",
-                "[7] POLICIES",
-                "[8] MANUAL"
+                "[7] CARAVAN",
+                "[8] DIRECTIVES",
+                "[9] MANUAL"
             };
             int tabX = 10;
-            int tabW = 78;
-            for (int t = 0; t < 8; t++) {
+            int tabW = 68;
+            for (int t = 0; t < 9; t++) {
                 int active = (g_state.currentTab == t);
                 COLORREF bg = active ? COL_BTN_HOVER : COL_DARK_CARD;
                 COLORREF bdr = active ? COL_BORDER_HI : COL_BORDER;
@@ -3998,8 +4424,10 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             } else if (g_state.currentTab == 5) {
                 DrawHazardsView(memDC, hFontBold, hFontSmall, 20, areaY + 10, contentW - 20, areaH - 20);
             } else if (g_state.currentTab == 6) {
-                DrawPoliciesView(memDC, hFontBold, hFontSmall, 20, areaY + 10, contentW - 20, areaH - 20);
+                DrawTradingView(memDC, hFontBold, hFontSmall, 20, areaY + 10, contentW - 20, areaH - 20);
             } else if (g_state.currentTab == 7) {
+                DrawPoliciesView(memDC, hFontBold, hFontSmall, 20, areaY + 10, contentW - 20, areaH - 20);
+            } else if (g_state.currentTab == 8) {
                 DrawManualView(memDC, hFontBold, hFontSmall, 20, areaY + 10, contentW - 20, areaH - 20);
             }
 

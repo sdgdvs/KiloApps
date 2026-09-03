@@ -1412,6 +1412,123 @@
         .badge-hazard-cold { background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.4); }
         .badge-hazard-calm { background: rgba(110, 231, 183, 0.15); color: var(--text-main); border: 1px solid var(--panel-border); }
 
+        /* Wasteland Caravan Trading CSS (Phase 11) */
+        .caravan-banner-box {
+            background: #151d16;
+            border: 1px solid var(--border-corner);
+            padding: 10px 12px;
+            border-radius: 2px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.6), 0 0 8px var(--crt-glow);
+            position: relative;
+        }
+
+        .caravan-banner-box::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 6px; height: 6px;
+            border-top: 2px solid var(--accent-amber);
+            border-left: 2px solid var(--accent-amber);
+        }
+
+        .caravan-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .trade-card {
+            background: var(--card-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 2px;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 6px;
+            position: relative;
+            transition: all 0.15s;
+        }
+
+        .trade-card:hover {
+            border-color: var(--border-corner);
+        }
+
+        .trade-card::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 5px; height: 5px;
+            border-top: 2px solid var(--border-corner);
+            border-left: 2px solid var(--border-corner);
+            pointer-events: none;
+        }
+
+        .trade-card.rare-card {
+            border-color: rgba(245, 158, 11, 0.4);
+            background: rgba(245, 158, 11, 0.04);
+        }
+
+        .trade-card.rare-card::before {
+            border-color: var(--accent-amber);
+        }
+
+        .badge-faction {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 2px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-faction-dust { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.5); }
+        .badge-faction-rust { background: rgba(249, 115, 22, 0.2); color: #f97316; border: 1px solid rgba(249, 115, 22, 0.5); }
+        .badge-faction-med { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.5); }
+        .badge-faction-cyber { background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.5); }
+        .badge-faction-wanderer { background: rgba(110, 231, 183, 0.2); color: var(--text-bright); border: 1px solid var(--panel-border); }
+
+        .btn-trade {
+            background: var(--btn-bg);
+            border: 1px solid var(--panel-border);
+            color: var(--text-bright);
+            font-family: inherit;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 4px 8px;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: all 0.15s;
+        }
+
+        .btn-trade:hover:not(:disabled) {
+            background: var(--btn-hover);
+            border-color: var(--border-corner);
+            box-shadow: 0 0 6px var(--crt-glow);
+        }
+
+        .btn-trade:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .btn-trade-sell {
+            color: var(--accent-amber);
+            border-color: rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-trade-sell:hover:not(:disabled) {
+            border-color: var(--accent-amber);
+            box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
+        }
+
     </style>
 </head>
 <body>
@@ -1549,7 +1666,8 @@
         <button class="tab-btn" id="tab-btn-defense" onclick="switchTab('defense')">[4] BASE DEFENSE & SECURITY</button>
         <button class="tab-btn" id="tab-btn-research" onclick="switchTab('research')">[5] TECH RESEARCH TREE</button>
         <button class="tab-btn" id="tab-btn-hazards" onclick="switchTab('hazards')">[6] WEATHER & HAZARDS</button>
-        <button class="tab-btn" id="tab-btn-policies" onclick="switchTab('policies')">[7] OVERSEER DIRECTIVES</button>
+        <button class="tab-btn" id="tab-btn-traders" onclick="switchTab('traders')">[7] WASTELAND CARAVAN</button>
+        <button class="tab-btn" id="tab-btn-policies" onclick="switchTab('policies')">[8] OVERSEER DIRECTIVES</button>
     </div>
 
     <!-- Main Workspace -->
@@ -1864,6 +1982,64 @@
                 </div>
             </div>
 
+            <!-- WASTELAND CARAVAN VIEW (Phase 11) -->
+            <div id="view-traders" class="tab-content" style="display:none;">
+                <div class="panel-title">
+                    <span>Wasteland Caravan Merchant & Barter Terminal</span>
+                    <span style="color: var(--text-dim); font-size:10px;">Airlock Trading Deck: <strong id="lbl-trader-deck-status" style="color:var(--accent-green);">OPEN</strong></span>
+                </div>
+
+                <!-- Visiting Merchant Header Banner -->
+                <div class="caravan-banner-box" id="caravan-banner">
+                    <div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span id="lbl-trader-faction-badge" class="badge-faction badge-faction-dust">DUST STRIDER GUILD</span>
+                            <span id="lbl-trader-merchant-name" style="font-size:13px; font-weight:bold; color:var(--text-bright);">Master Trader Silas Vance</span>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-main); margin-top:3px;" id="lbl-trader-quote">
+                            "Clean water and non-irradiated grain from the southern salt pans. Everything has a price."
+                        </div>
+                        <div style="font-size:9px; color:var(--text-dim); margin-top:3px;" id="lbl-trader-rep-desc">
+                            Barter Trust: <strong style="color:var(--accent-amber);" id="lbl-trader-rep-name">Level 1 (Neutral)</strong> &bull; Discount: <span id="lbl-trader-discount">0%</span> &bull; Lifetime Trades: <span id="lbl-trader-trades-count">0</span>
+                        </div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:10px; color:var(--text-dim);">CARAVAN STATUS:</div>
+                        <div style="font-size:15px; font-weight:bold; color:var(--text-bright);" id="lbl-trader-timer">2 DAYS IN PORT</div>
+                        <button class="btn-upgrade" onclick="hailCaravan()" id="btn-hail-caravan" style="margin-top:4px; font-size:9px; padding:3px 8px; font-weight:bold;">
+                            HAIL NEW CARAVAN (15S, 10 kW)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Section 1: Standard Supplies & Provisions Market -->
+                <div class="panel-title" style="margin-top:8px;">
+                    <span>Caravan Inventory // Provisions & Vital Stock</span>
+                    <span style="color:var(--text-dim); font-size:10px;">Available Tech Scrap: <strong style="color:var(--accent-amber);" id="lbl-trade-scrap">55</strong></span>
+                </div>
+                <div class="caravan-grid" id="caravan-market-grid">
+                    <!-- Injected by JavaScript -->
+                </div>
+
+                <!-- Section 2: Rare Artifacts & Specialty Caravan Tech -->
+                <div class="panel-title" style="margin-top:6px;">
+                    <span>Exclusive Caravan Artifacts & Specialty Tech</span>
+                    <span style="color:var(--accent-amber); font-size:10px;">Limited Expedition Stock</span>
+                </div>
+                <div class="caravan-grid" id="caravan-rare-grid">
+                    <!-- Injected by JavaScript -->
+                </div>
+
+                <!-- Section 3: Shelter Surplus Barter & Export -->
+                <div class="panel-title" style="margin-top:6px;">
+                    <span>Shelter Surplus Barter // Export Surplus for Tech Scrap & Meds</span>
+                    <span style="color:var(--text-dim); font-size:10px;">Overseer Trade Directives</span>
+                </div>
+                <div class="caravan-grid" id="caravan-export-grid">
+                    <!-- Injected by JavaScript -->
+                </div>
+            </div>
+
             <!-- POLICIES VIEW -->
             <div id="view-policies" class="tab-content" style="display:none;">
                 <div class="panel-title">
@@ -2162,6 +2338,13 @@
                 <p>&bull; <strong>Toxic Acid Rain:</strong> Highly corrosive fallout dissolves perimeter barricades (-30 HP/day) and burns outdoor militia. Deploy Alkaline Corrosion Neutralizer wash to protect blast doors.</p>
                 <p>&bull; <strong>Sub-Zero Cold Snaps:</strong> Freezing cryo-blizzards cut Bio-Generator power output by 35% and increase habitat heating load by +4 kW. Power blackouts cause hypothermia unless Auxiliary Thermal Overdrive is activated.</p>
                 <p>&bull; <strong>Doppler Radar Early Warning:</strong> Monitor the Weather & Hazards tab for upcoming forecast hazards, ETA countdowns, and preparatory advice.</p>
+                <br>
+                <p><strong>10. WASTELAND CARAVAN TRADING SYSTEM (PHASE 11):</strong></p>
+                <p>&bull; <strong>Nomadic Caravans:</strong> Distinct merchant factions (Dust Striders, Rust Brotherhood, Apothecaries, Cyber-Salvagers, and Lone Wanderers) visit the vault airlock with specialized inventories.</p>
+                <p>&bull; <strong>Barter Economy:</strong> Buy emergency food rations, purified water casks, medical stimpacks, and scrap bundles. Sell vault surplus back to traders.</p>
+                <p>&bull; <strong>Rare Artifacts:</strong> Purchase unique high-tier items: Rad-Away casks (heals rad sickness), Super-Growth enzymes (+30 Food), Ballistic Armor (+25 Barricade Max HP), Sentry Targeting Chips (+12 Def), and Luxury Cassettes (+20% Morale).</p>
+                <p>&bull; <strong>Barter Trust & Discounts:</strong> Completing trades increases your Barter Reputation level (up to Level 5 Revered), granting up to 25% trade discounts and improved barter rates!</p>
+                <p>&bull; <strong>Hail Caravans:</strong> If no caravan is present, broadcast a high-gain radio hail (15 Scrap, 10 kW) to summon a merchant immediately.</p>
             </div>
         </div>
     </div>
@@ -2279,6 +2462,14 @@
                     gain.gain.linearRampToValueAtTime(0.001, now + 0.2);
                     osc.start(now);
                     osc.stop(now + 0.2);
+                } else if (type === 'trade') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(659.25, now);
+                    osc.frequency.setValueAtTime(880, now + 0.08);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.22);
+                    osc.start(now);
+                    osc.stop(now + 0.22);
                 }
             } catch (e) {
                 // Ignore audio restriction errors
@@ -2817,8 +3008,74 @@
                 thermalOverdrive: false,
                 acidNeutralizerDays: 0
             },
+            caravan: {
+                present: true,
+                factionIndex: 0,
+                daysLeft: 2,
+                etaDays: 0,
+                reputationLevel: 1, // 1: Neutral, 2: Welcomed (5%), 3: Trusted (10%), 4: Honored (15%), 5: Revered (25%)
+                tradesCompleted: 0,
+                rareStock: [
+                    { id: 'rare_radaway', name: 'RAD-AWAY ANTI-TOXIN CASK', desc: 'Medical decontamination cask clearing all radiation exposure.', cost: 22, bought: false, benefit: 'Clears all radiation sickness & restores +20 HP shelter-wide.' },
+                    { id: 'rare_enzyme', name: 'HYDROPONIC SUPER-GROWTH ENZYME', desc: 'Concentrated growth accelerant from the botanical labs.', cost: 25, bought: false, benefit: 'Instantly grants +30 Food Rations to vault stores.' },
+                    { id: 'rare_armor', name: 'HEAVY BALLISTIC ARMOR PLATES', desc: 'Pre-war heavy alloy plates to weld onto outer barricades.', cost: 28, bought: false, benefit: 'Fully repairs Barricades and grants +25 Max HP permanently.' },
+                    { id: 'rare_target', name: 'SENTRY TARGETING OVERDRIVE CHIP', desc: 'Military neural targeting processor for auto-turrets.', cost: 35, bought: false, benefit: 'Permanently increases Vault Defense Rating by +12 pts.' },
+                    { id: 'rare_lux', name: 'VAULT LUXURY COFFEE & CASSETTES', desc: 'Pre-war luxury beans and music cassettes for dwellers.', cost: 18, bought: false, benefit: 'Instantly increases Vault Morale by +20%.' }
+                ]
+            },
             lastSummary: null
         };
+
+        const CARAVAN_FACTIONS = [
+            {
+                id: 'dust',
+                name: 'DUST STRIDER GUILD',
+                badgeClass: 'badge-faction-dust',
+                merchantName: 'Master Trader Silas Vance',
+                quote: '"Clean water and non-irradiated grain from the southern salt pans. Everything has a price."',
+                stockBonus: 'Food & Purified Water Supplies'
+            },
+            {
+                id: 'rust',
+                name: 'RUST BROTHERHOOD SCRAPPERS',
+                badgeClass: 'badge-faction-rust',
+                merchantName: 'Forge-Master Vane',
+                quote: '"Heavy alloy plating, reinforced bolts, and salvaged military tech from Highway 80."',
+                stockBonus: 'Tech Scrap & Defense Hardware'
+            },
+            {
+                id: 'apothecary',
+                name: 'APOTHECARY NOMAD ENCLAVE',
+                badgeClass: 'badge-faction-med',
+                merchantName: 'Sister Morrigan',
+                quote: '"Sterile pharmaceuticals, anti-rad tonics, and trauma stimpacks for surviving the fallout."',
+                stockBonus: 'Medical Supplies & Anti-Rad Tonics'
+            },
+            {
+                id: 'cyber',
+                name: 'THE ARCHIVE CYBER-SALVAGERS',
+                badgeClass: 'badge-faction-cyber',
+                merchantName: 'Techno-Sage Kael',
+                quote: '"Pre-war micro-fusion cells, encrypted blueprint keys, and high-frequency antenna parts."',
+                stockBonus: 'Rare Tech Artifacts & Blueprints'
+            },
+            {
+                id: 'wanderer',
+                name: 'LONE WASTELAND WANDERER',
+                badgeClass: 'badge-faction-wanderer',
+                merchantName: 'Echo the Drifter',
+                quote: '"Found some strange curios in the buried ruins. Willing to barter for a warm meal."',
+                stockBonus: 'Discounted Oddities & Curios'
+            }
+        ];
+
+        const REPUTATION_TIERS = [
+            { level: 1, name: 'Level 1 (Neutral)', discount: 0, nextReq: 3 },
+            { level: 2, name: 'Level 2 (Welcomed)', discount: 0.05, nextReq: 8 },
+            { level: 3, name: 'Level 3 (Trusted)', discount: 0.10, nextReq: 15 },
+            { level: 4, name: 'Level 4 (Honored)', discount: 0.15, nextReq: 25 },
+            { level: 5, name: 'Level 5 (Revered)', discount: 0.25, nextReq: 999 }
+        ];
 
         const technologies = [
             {
@@ -2987,6 +3244,9 @@
                         }
                         if (!state.countermeasures) {
                             state.countermeasures = JSON.parse(JSON.stringify(defaultState.countermeasures));
+                        }
+                        if (!state.caravan) {
+                            state.caravan = JSON.parse(JSON.stringify(defaultState.caravan));
                         }
                     }
                 }
@@ -3852,6 +4112,347 @@
             updateAll();
         }
 
+        function getTraderDiscount() {
+            if (!state.caravan) return 0;
+            const rep = REPUTATION_TIERS.find(r => r.level === (state.caravan.reputationLevel || 1));
+            return rep ? rep.discount : 0;
+        }
+
+        function getDiscountedPrice(basePrice) {
+            const disc = getTraderDiscount();
+            return Math.max(1, Math.round(basePrice * (1 - disc)));
+        }
+
+        function renderCaravanView() {
+            if (!state.caravan) state.caravan = JSON.parse(JSON.stringify(defaultState.caravan));
+            const c = state.caravan;
+            const faction = CARAVAN_FACTIONS[c.factionIndex % CARAVAN_FACTIONS.length];
+            const rep = REPUTATION_TIERS.find(r => r.level === (c.reputationLevel || 1)) || REPUTATION_TIERS[0];
+            const discountPct = Math.round(rep.discount * 100);
+
+            // Deck Status
+            const deckStatusEl = document.getElementById('lbl-trader-deck-status');
+            if (deckStatusEl) {
+                deckStatusEl.textContent = c.present ? 'OPEN' : 'DEPARTED';
+                deckStatusEl.style.color = c.present ? 'var(--accent-green)' : 'var(--danger-red)';
+            }
+
+            // Banner
+            const factionBadge = document.getElementById('lbl-trader-faction-badge');
+            if (factionBadge) {
+                factionBadge.className = `badge-faction ${faction.badgeClass}`;
+                factionBadge.textContent = c.present ? faction.name : 'NO VISITING TRADER';
+            }
+
+            const merchantNameEl = document.getElementById('lbl-trader-merchant-name');
+            if (merchantNameEl) {
+                merchantNameEl.textContent = c.present ? faction.merchantName : 'Airlock Barter Deck Closed';
+            }
+
+            const quoteEl = document.getElementById('lbl-trader-quote');
+            if (quoteEl) {
+                quoteEl.textContent = c.present ? faction.quote : `The nomadic caravan has packed up their pack-brahmin and traveled into the scorched wastes. Next scheduled caravan arrival in ${c.etaDays || 3} days.`;
+            }
+
+            const repNameEl = document.getElementById('lbl-trader-rep-name');
+            if (repNameEl) repNameEl.textContent = rep.name;
+            const discEl = document.getElementById('lbl-trader-discount');
+            if (discEl) discEl.textContent = `${discountPct}% Discount`;
+            const tradesCountEl = document.getElementById('lbl-trader-trades-count');
+            if (tradesCountEl) tradesCountEl.textContent = c.tradesCompleted || 0;
+
+            const timerEl = document.getElementById('lbl-trader-timer');
+            if (timerEl) {
+                if (c.present) {
+                    timerEl.textContent = `${c.daysLeft} DAY(S) IN PORT`;
+                    timerEl.style.color = c.daysLeft <= 1 ? 'var(--accent-amber)' : 'var(--text-bright)';
+                } else {
+                    timerEl.textContent = `ETA: ${c.etaDays || 3} DAYS`;
+                    timerEl.style.color = 'var(--text-dim)';
+                }
+            }
+
+            const scrapStockEl = document.getElementById('lbl-trade-scrap');
+            if (scrapStockEl) scrapStockEl.textContent = Math.floor(state.scrap);
+
+            const btnHail = document.getElementById('btn-hail-caravan');
+            if (btnHail) {
+                const canHail = state.scrap >= 15 && state.powerGen >= 10;
+                btnHail.disabled = !canHail;
+                btnHail.textContent = c.present ? 'HAIL NEW CARAVAN (15S, 10 kW)' : 'HAIL CARAVAN BEACON (15S, 10 kW)';
+            }
+
+            // Market Grid (Buy with Scrap)
+            const marketGrid = document.getElementById('caravan-market-grid');
+            if (marketGrid) {
+                marketGrid.innerHTML = '';
+                const marketItems = [
+                    { id: 'buy_food_10', name: 'FOOD RATIONS (SMALL CRATE)', desc: 'Dried desert meats and nutrient biscuits (+10 Food).', baseCost: 8, food: 10, water: 0, meds: 0 },
+                    { id: 'buy_food_25', name: 'FOOD RATIONS (BULK BULKHEAD)', desc: 'Large sealed preservation barrel (+25 Food).', baseCost: 18, food: 25, water: 0, meds: 0 },
+                    { id: 'buy_water_10', name: 'PURIFIED WATER (JUG PACK)', desc: 'Triple-filtered de-ionized groundwater (+10 Water).', baseCost: 8, food: 0, water: 10, meds: 0 },
+                    { id: 'buy_water_25', name: 'PURIFIED WATER (RESERVOIR DRUM)', desc: 'Sealed lead-shielded water cask (+25 Water).', baseCost: 18, food: 0, water: 25, meds: 0 },
+                    { id: 'buy_meds_2', name: 'MEDICAL STIMPACKS (2-PACK)', desc: 'Sterile syringes and trauma dressing (+2 Meds).', baseCost: 12, food: 0, water: 0, meds: 2 },
+                    { id: 'buy_meds_5', name: 'SURGICAL FIELD KIT (5-PACK)', desc: 'Full surgical triage kit with coagulant injectors (+5 Meds).', baseCost: 28, food: 0, water: 0, meds: 5 }
+                ];
+
+                marketItems.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'trade-card';
+                    const cost = getDiscountedPrice(item.baseCost);
+                    const canAfford = c.present && state.scrap >= cost;
+
+                    card.innerHTML = `
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <strong style="font-size:11px; color:var(--text-bright);">${item.name}</strong>
+                                <span style="font-size:10px; color:var(--accent-amber); font-weight:bold;">${cost} SCRAP</span>
+                            </div>
+                            <div style="font-size:10px; color:var(--text-dim); margin-top:2px;">${item.desc}</div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; padding-top:4px; border-top:1px dashed var(--panel-border);">
+                            <span style="font-size:9px; color:var(--text-dim);">${c.present ? (discountPct > 0 ? `Discount: -${discountPct}%` : 'Standard Barter') : 'Trader Departed'}</span>
+                            <button class="btn-trade" onclick="buyCaravanItem('${item.id}', ${cost}, ${item.food}, ${item.water}, ${item.meds})" ${!canAfford ? 'disabled' : ''}>
+                                BUY PROVISIONS
+                            </button>
+                        </div>
+                    `;
+                    marketGrid.appendChild(card);
+                });
+            }
+
+            // Rare Artifacts Grid
+            const rareGrid = document.getElementById('caravan-rare-grid');
+            if (rareGrid) {
+                rareGrid.innerHTML = '';
+                (c.rareStock || []).forEach(rare => {
+                    const card = document.createElement('div');
+                    card.className = `trade-card rare-card ${rare.bought ? 'built' : ''}`;
+                    const cost = getDiscountedPrice(rare.cost);
+                    const canAfford = c.present && !rare.bought && state.scrap >= cost;
+
+                    card.innerHTML = `
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <strong style="font-size:11px; color:var(--accent-amber);">${rare.name}</strong>
+                                <span style="font-size:10px; color:${rare.bought ? 'var(--accent-green)' : 'var(--accent-amber)'}; font-weight:bold;">${rare.bought ? 'ACQUIRED' : `${cost} SCRAP`}</span>
+                            </div>
+                            <div style="font-size:10px; color:var(--text-dim); margin-top:2px;">${rare.desc}</div>
+                            <div style="font-size:10px; color:var(--accent-green); margin-top:2px;"><strong>Effect:</strong> ${rare.benefit}</div>
+                        </div>
+                        <div style="display:flex; justify-content:flex-end; margin-top:4px; padding-top:4px; border-top:1px dashed var(--panel-border);">
+                            <button class="btn-trade" onclick="buyRareItem('${rare.id}')" ${!canAfford ? 'disabled' : ''} style="${rare.bought ? 'color:var(--accent-green); border-color:var(--accent-green);' : ''}">
+                                ${rare.bought ? '[ ★ PURCHASED ]' : `PURCHASE ARTIFACT (${cost}S)`}
+                            </button>
+                        </div>
+                    `;
+                    rareGrid.appendChild(card);
+                });
+            }
+
+            // Export / Sell Surplus Grid
+            const exportGrid = document.getElementById('caravan-export-grid');
+            if (exportGrid) {
+                exportGrid.innerHTML = '';
+                const exportItems = [
+                    { id: 'sell_food_15', name: 'EXPORT FOOD RATIONS', desc: 'Trade 15 Food Rations to caravan for Tech Scrap.', foodCost: 15, waterCost: 0, scrapCost: 0, scrapGain: 10, medsGain: 0 },
+                    { id: 'sell_water_15', name: 'EXPORT PURIFIED WATER', desc: 'Trade 15 Purified Water to caravan for Tech Scrap.', foodCost: 0, waterCost: 15, scrapCost: 0, scrapGain: 10, medsGain: 0 },
+                    { id: 'sell_scrap_meds', name: 'BARTER SCRAP FOR MEDS', desc: 'Exchange 20 Tech Scrap for 2 Medical Stimpacks.', foodCost: 0, waterCost: 0, scrapCost: 20, scrapGain: 0, medsGain: 2 }
+                ];
+
+                exportItems.forEach(exp => {
+                    const card = document.createElement('div');
+                    card.className = 'trade-card';
+                    let canSell = c.present;
+                    if (exp.foodCost > 0 && state.food < exp.foodCost) canSell = false;
+                    if (exp.waterCost > 0 && state.water < exp.waterCost) canSell = false;
+                    if (exp.scrapCost > 0 && state.scrap < exp.scrapCost) canSell = false;
+
+                    card.innerHTML = `
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <strong style="font-size:11px; color:var(--text-bright);">${exp.name}</strong>
+                                <span style="font-size:10px; color:var(--accent-green); font-weight:bold;">+${exp.scrapGain > 0 ? `${exp.scrapGain} SCRAP` : `${exp.medsGain} MEDS`}</span>
+                            </div>
+                            <div style="font-size:10px; color:var(--text-dim); margin-top:2px;">${exp.desc}</div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; padding-top:4px; border-top:1px dashed var(--panel-border);">
+                            <span style="font-size:9px; color:var(--text-dim);">${c.present ? 'Surplus Export' : 'Deck Closed'}</span>
+                            <button class="btn-trade btn-trade-sell" onclick="sellSurplusItem('${exp.id}', ${exp.foodCost}, ${exp.waterCost}, ${exp.scrapCost}, ${exp.scrapGain}, ${exp.medsGain})" ${!canSell ? 'disabled' : ''}>
+                                BARTER SURPLUS
+                            </button>
+                        </div>
+                    `;
+                    exportGrid.appendChild(card);
+                });
+            }
+        }
+
+        function addTradeReputation() {
+            if (!state.caravan) state.caravan = {};
+            state.caravan.tradesCompleted = (state.caravan.tradesCompleted || 0) + 1;
+            const curLevel = state.caravan.reputationLevel || 1;
+            const rep = REPUTATION_TIERS.find(r => r.level === curLevel) || REPUTATION_TIERS[0];
+            if (state.caravan.tradesCompleted >= rep.nextReq && curLevel < 5) {
+                state.caravan.reputationLevel++;
+                const newRep = REPUTATION_TIERS.find(r => r.level === state.caravan.reputationLevel);
+                logEvent(`★ CARAVAN REPUTATION INCREASED: Barter Trust upgraded to [${newRep.name}]! Enjoy ${Math.round(newRep.discount * 100)}% merchant discount!`, 'cycle');
+            }
+        }
+
+        function buyCaravanItem(itemId, cost, food, water, meds) {
+            if (!state.caravan || !state.caravan.present) {
+                logEvent('Cannot trade: Caravan is currently away in the wasteland!', 'warn');
+                return;
+            }
+            if (state.scrap < cost) {
+                logEvent(`Insufficient Tech Scrap! Need ${cost} scrap.`, 'warn');
+                playSound('alert');
+                return;
+            }
+
+            state.scrap -= cost;
+            if (food > 0) state.food += food;
+            if (water > 0) state.water += water;
+            if (meds > 0) state.meds = (state.meds || 0) + meds;
+
+            addTradeReputation();
+            logEvent(`TRADE COMPLETED: Purchased supplies (-${cost} Scrap) & added to reserves.`, 'cycle');
+            playSound('trade');
+            updateAll();
+        }
+
+        function buyRareItem(rareId) {
+            if (!state.caravan || !state.caravan.present) return;
+            const rare = (state.caravan.rareStock || []).find(r => r.id === rareId);
+            if (!rare || rare.bought) return;
+
+            const cost = getDiscountedPrice(rare.cost);
+            if (state.scrap < cost) {
+                logEvent(`Insufficient Tech Scrap for rare artifact! Need ${cost} scrap.`, 'warn');
+                playSound('alert');
+                return;
+            }
+
+            state.scrap -= cost;
+            rare.bought = true;
+            addTradeReputation();
+
+            if (rareId === 'rare_radaway') {
+                state.survivors.forEach(s => {
+                    s.health = Math.min(100, s.health + 20);
+                });
+                state.exteriorRads = Math.max(2.0, state.exteriorRads - 3.0);
+                logEvent('★ RARE ARTIFACT: Rad-Away Anti-Toxin administered! All dwellers restored +20 HP and cleansed of radiation trauma.', 'cycle');
+            } else if (rareId === 'rare_enzyme') {
+                state.food += 30;
+                logEvent('★ RARE ARTIFACT: Hydroponic Super-Growth Enzyme applied! Vault food stores enriched (+30 Food).', 'cycle');
+            } else if (rareId === 'rare_armor') {
+                state.barricadeMaxHp = (state.barricadeMaxHp || 100) + 25;
+                state.barricadeHp = state.barricadeMaxHp;
+                logEvent(`★ RARE ARTIFACT: Heavy Ballistic Armor Plates welded onto blast doors! Barricades fully repaired and Max HP raised to ${state.barricadeMaxHp}.`, 'cycle');
+            } else if (rareId === 'rare_target') {
+                state.defense += 12;
+                logEvent('★ RARE ARTIFACT: Sentry Targeting Overdrive Unit integrated! Base defense permanently boosted (+12 Def).', 'cycle');
+            } else if (rareId === 'rare_lux') {
+                state.morale = Math.min(100, state.morale + 20);
+                logEvent('★ RARE ARTIFACT: Vault Luxury Coffee & Music distributed! Morale surged (+20%).', 'cycle');
+            }
+
+            playSound('cycle');
+            updateAll();
+        }
+
+        function sellSurplusItem(exportId, foodCost, waterCost, scrapCost, scrapGain, medsGain) {
+            if (!state.caravan || !state.caravan.present) {
+                logEvent('Cannot trade: Caravan is currently away in the wasteland!', 'warn');
+                return;
+            }
+
+            if (foodCost > 0 && state.food < foodCost) {
+                logEvent(`Insufficient Food in storage to export! Need ${foodCost} food.`, 'warn');
+                playSound('alert');
+                return;
+            }
+            if (waterCost > 0 && state.water < waterCost) {
+                logEvent(`Insufficient Water in storage to export! Need ${waterCost} water.`, 'warn');
+                playSound('alert');
+                return;
+            }
+            if (scrapCost > 0 && state.scrap < scrapCost) {
+                logEvent(`Insufficient Scrap to barter! Need ${scrapCost} scrap.`, 'warn');
+                playSound('alert');
+                return;
+            }
+
+            if (foodCost > 0) state.food -= foodCost;
+            if (waterCost > 0) state.water -= waterCost;
+            if (scrapCost > 0) state.scrap -= scrapCost;
+
+            if (scrapGain > 0) state.scrap += scrapGain;
+            if (medsGain > 0) state.meds = (state.meds || 0) + medsGain;
+
+            addTradeReputation();
+            logEvent(`BARTER EXPORT: Sold surplus provisions to nomadic caravan! Received +${scrapGain > 0 ? `${scrapGain} Scrap` : `${medsGain} Meds`}.`, 'cycle');
+            playSound('trade');
+            updateAll();
+        }
+
+        function hailCaravan() {
+            const cost = 15;
+            const pwr = 10;
+            if (state.scrap < cost || state.powerGen < pwr) {
+                logEvent(`Insufficient resources to hail caravan! Need ${cost} scrap and ${pwr} kW power generation.`, 'warn');
+                playSound('alert');
+                return;
+            }
+
+            state.scrap -= cost;
+            if (!state.caravan) state.caravan = JSON.parse(JSON.stringify(defaultState.caravan));
+            const nextFaction = (state.caravan.factionIndex + 1 + Math.floor(Math.random() * 4)) % CARAVAN_FACTIONS.length;
+            state.caravan.present = true;
+            state.caravan.factionIndex = nextFaction;
+            state.caravan.daysLeft = 3;
+            state.caravan.etaDays = 0;
+
+            // Refresh rare stock
+            state.caravan.rareStock.forEach(r => { r.bought = false; });
+
+            const fInfo = CARAVAN_FACTIONS[nextFaction];
+            logEvent(`RADIO BEACON: Commercial frequency broadcasted! [${fInfo.name}] (${fInfo.merchantName}) arrived at the airlock!`, 'cycle');
+            playSound('trade');
+            updateAll();
+        }
+
+        function processCaravanDay() {
+            if (!state.caravan) state.caravan = JSON.parse(JSON.stringify(defaultState.caravan));
+            const c = state.caravan;
+
+            if (c.present) {
+                c.daysLeft--;
+                if (c.daysLeft <= 0) {
+                    c.present = false;
+                    c.etaDays = 3 + Math.floor(Math.random() * 2);
+                    const faction = CARAVAN_FACTIONS[c.factionIndex % CARAVAN_FACTIONS.length];
+                    logEvent(`CARAVAN DEPARTURE: [${faction.name}] packed up and left the airlock into the wasteland. Next caravan in ${c.etaDays} days.`, 'info');
+                }
+            } else {
+                c.etaDays--;
+                if (c.etaDays <= 0) {
+                    c.present = true;
+                    c.factionIndex = (c.factionIndex + 1 + Math.floor(Math.random() * 3)) % CARAVAN_FACTIONS.length;
+                    c.daysLeft = 2 + Math.floor(Math.random() * 2);
+                    c.etaDays = 0;
+                    if (c.rareStock) c.rareStock.forEach(r => { r.bought = false; });
+
+                    const faction = CARAVAN_FACTIONS[c.factionIndex % CARAVAN_FACTIONS.length];
+                    logEvent(`CARAVAN ARRIVAL: Nomadic traders from [${faction.name}] have arrived at the airlock! Review Caravan Trading Deck.`, 'cycle');
+                    playSound('trade');
+                } else if (c.etaDays === 1) {
+                    logEvent('RADIO TELEMETRY: Dust cloud detected on radar. A nomadic merchant caravan is approaching Vault 704 for tomorrow.', 'info');
+                }
+            }
+        }
+
         function updateAll() {
             renderHUD();
             renderFacilities();
@@ -3860,6 +4461,7 @@
             renderDefenseView();
             renderResearchTree();
             renderHazardsView();
+            renderCaravanView();
             saveState();
         }
 
@@ -4802,7 +5404,7 @@
 
         // Tab Switching
         function switchTab(tabId) {
-            const tabs = ['facilities', 'survivors', 'expeditions', 'defense', 'research', 'hazards', 'policies'];
+            const tabs = ['facilities', 'survivors', 'expeditions', 'defense', 'research', 'hazards', 'traders', 'policies'];
             tabs.forEach(t => {
                 const view = document.getElementById(`view-${t}`);
                 if (view) view.style.display = t === tabId ? 'block' : 'none';
@@ -4993,6 +5595,9 @@
 
             // 5b. Random Wasteland Event
             triggerDailyEvent();
+
+            // 5c. Wasteland Caravan Trading Schedule (Phase 11)
+            processCaravanDay();
 
             // 6. Record Summary for report
             state.lastSummary = {
@@ -5200,6 +5805,8 @@
             } else if (e.code === 'Digit6') {
                 switchTab('hazards');
             } else if (e.code === 'Digit7') {
+                switchTab('traders');
+            } else if (e.code === 'Digit8') {
                 switchTab('policies');
             } else if (e.code === 'KeyT') {
                 toggleTheme();
