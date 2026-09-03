@@ -498,6 +498,29 @@ BOOL CALLBACK SetFontProc(HWND child, LPARAM hFont) {
     return TRUE;
 }
 
+void ShowHelpDialog(HWND hwnd) {
+    MessageBoxA(hwnd,
+        "==========================================================\n"
+        "       KSYS WORKSTATION DIAGNOSTICS HELP GUIDE            \n"
+        "==========================================================\n\n"
+        "KEYBOARD SHORTCUTS:\n"
+        "  [1]           - Component Hardware Inspector Tab\n"
+        "  [2]           - Diagnostic Stress Benchmarks Tab\n"
+        "  [3]           - Services & Telemetry Manager Tab\n"
+        "  [4]           - Event History Logs Tab\n"
+        "  [5]           - Detailed System Report Export Tab\n"
+        "  [F1] or [H]   - Display this Help Dialog\n"
+        "  [R]           - Run All Benchmarks / Refresh Services\n\n"
+        "FEATURES:\n"
+        "  - Inspector   : Logical CPU cores, Memory load, Disk space & display.\n"
+        "  - Benchmarks  : Multi-threaded CPU matrix, RAM throughput, Disk I/O.\n"
+        "  - Services    : Live CPU usage, Win32 services & drivers filter.\n"
+        "  - Event Logs  : Diagnostic history audit trail.\n"
+        "  - Export      : Save TXT, JSON, or HTML diagnostic summaries.",
+        "KSys Diagnostics Help",
+        MB_OK | MB_ICONINFORMATION);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     static HFONT hFont = NULL;
     switch (msg) {
@@ -512,15 +535,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             TCITEM tie;
             tie.mask = TCIF_TEXT;
-            tie.pszText = "Hardware Inspector";
+            tie.pszText = "[1] Hardware Inspector";
             TabCtrl_InsertItem(hTabCtrl, 0, &tie);
-            tie.pszText = "Diagnostic Benchmarks";
+            tie.pszText = "[2] Diagnostic Benchmarks";
             TabCtrl_InsertItem(hTabCtrl, 1, &tie);
-            tie.pszText = "Services & Telemetry";
+            tie.pszText = "[3] Services & Telemetry";
             TabCtrl_InsertItem(hTabCtrl, 2, &tie);
-            tie.pszText = "Event Logs";
+            tie.pszText = "[4] Event Logs";
             TabCtrl_InsertItem(hTabCtrl, 3, &tie);
-            tie.pszText = "Report Export";
+            tie.pszText = "[5] Report Export";
             TabCtrl_InsertItem(hTabCtrl, 4, &tie);
 
             hOutput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY, 
@@ -530,18 +553,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnCpu = CreateWindow("BUTTON", "Test CPU", WS_CHILD | BS_PUSHBUTTON, 10, H - 75, 100, 25, hwnd, (HMENU)ID_BTN_CPU, NULL, NULL);
             hBtnRam = CreateWindow("BUTTON", "Test RAM", WS_CHILD | BS_PUSHBUTTON, 120, H - 75, 100, 25, hwnd, (HMENU)ID_BTN_RAM, NULL, NULL);
             hBtnDisk = CreateWindow("BUTTON", "Test Disk", WS_CHILD | BS_PUSHBUTTON, 230, H - 75, 100, 25, hwnd, (HMENU)ID_BTN_DISK, NULL, NULL);
-            hBtnAll = CreateWindow("BUTTON", "Run All Tests", WS_CHILD | BS_PUSHBUTTON, 340, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_ALL, NULL, NULL);
+            hBtnAll = CreateWindow("BUTTON", "Run All [R]", WS_CHILD | BS_PUSHBUTTON, 340, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_ALL, NULL, NULL);
 
             // Service Buttons
-            hBtnSvcRefresh = CreateWindow("BUTTON", "Refresh Services", WS_CHILD | BS_PUSHBUTTON, 10, H - 75, 140, 25, hwnd, (HMENU)ID_BTN_SVC_REFRESH, NULL, NULL);
-            hBtnSvcFilter  = CreateWindow("BUTTON", "Filter: All Services", WS_CHILD | BS_PUSHBUTTON, 160, H - 75, 160, 25, hwnd, (HMENU)ID_BTN_SVC_FILTER, NULL, NULL);
+            hBtnSvcRefresh = CreateWindow("BUTTON", "Refresh [R]", WS_CHILD | BS_PUSHBUTTON, 10, H - 75, 120, 25, hwnd, (HMENU)ID_BTN_SVC_REFRESH, NULL, NULL);
+            hBtnSvcFilter  = CreateWindow("BUTTON", "Filter: All Services", WS_CHILD | BS_PUSHBUTTON, 140, H - 75, 160, 25, hwnd, (HMENU)ID_BTN_SVC_FILTER, NULL, NULL);
 
             // Export Buttons
             hBtnExpTxt = CreateWindow("BUTTON", "Export TXT", WS_CHILD | BS_PUSHBUTTON, 10, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_EXP_TXT, NULL, NULL);
             hBtnExpJson = CreateWindow("BUTTON", "Export JSON", WS_CHILD | BS_PUSHBUTTON, 130, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_EXP_JSON, NULL, NULL);
             hBtnExpHtml = CreateWindow("BUTTON", "Export HTML", WS_CHILD | BS_PUSHBUTTON, 250, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_EXP_HTML, NULL, NULL);
 
-            hBtnHelp = CreateWindow("BUTTON", "Help (F1/H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, W - 110, H - 75, 90, 25, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            hBtnHelp = CreateWindow("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, W - 110, H - 75, 90, 25, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
 
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
 
@@ -591,7 +614,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (id == ID_BTN_EXP_HTML) {
                 ExportReport(2);
             } else if (id == ID_BTN_HELP) {
-                MessageBoxA(hwnd, "KSys Help Instructions:\n\n1. Hardware Inspector: View live system details.\n2. Diagnostic Benchmarks: Run CPU, RAM, and Disk I/O tests.\n3. Services & Telemetry: Inspect real-time CPU load & Win32 Services.\n4. Event Logs: Check background activity.\n5. Report Export: Generate and download summaries.\n\nUse the tabs to navigate.", "KSys Help", MB_OK | MB_ICONINFORMATION);
+                ShowHelpDialog(hwnd);
             }
             break;
         }
@@ -611,8 +634,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (hBtnDisk) MoveWindow(hBtnDisk, 200, nh - 38, 90, 25, TRUE);
             if (hBtnAll) MoveWindow(hBtnAll, 295, nh - 38, 110, 25, TRUE);
 
-            if (hBtnSvcRefresh) MoveWindow(hBtnSvcRefresh, 10, nh - 38, 140, 25, TRUE);
-            if (hBtnSvcFilter) MoveWindow(hBtnSvcFilter, 160, nh - 38, 160, 25, TRUE);
+            if (hBtnSvcRefresh) MoveWindow(hBtnSvcRefresh, 10, nh - 38, 120, 25, TRUE);
+            if (hBtnSvcFilter) MoveWindow(hBtnSvcFilter, 140, nh - 38, 160, 25, TRUE);
 
             if (hBtnExpTxt) MoveWindow(hBtnExpTxt, 10, nh - 38, 110, 25, TRUE);
             if (hBtnExpJson) MoveWindow(hBtnExpJson, 130, nh - 38, 110, 25, TRUE);
@@ -659,7 +682,7 @@ void MainEntry() {
     int realW = rect.right - rect.left;
     int realH = rect.bottom - rect.top;
 
-    HWND hwnd = CreateWindowEx(0, "KSysApp", "KSys Workstation Diagnostics - Press 'H' or F1 for Help", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+    HWND hwnd = CreateWindowEx(0, "KSysApp", "KSys Workstation Diagnostics - Press [1-5] for Tabs, [F1] for Help", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, realW, realH, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
@@ -667,8 +690,25 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
-        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == VK_F1)) {
-            MessageBoxA(hwnd, "KSys Help Instructions:\n\n1. Hardware Inspector: View live system details.\n2. Diagnostic Benchmarks: Run CPU, RAM, and Disk I/O tests.\n3. Services & Telemetry: Inspect real-time CPU load & Win32 Services.\n4. Event Logs: Check background activity.\n5. Report Export: Generate and download summaries.\n\nUse the tabs to navigate.", "KSys Help", MB_OK | MB_ICONINFORMATION);
+        if (msg.message == WM_KEYDOWN) {
+            if (msg.wParam >= '1' && msg.wParam <= '5') {
+                int newTab = (int)(msg.wParam - '1');
+                g_CurrentTab = newTab;
+                if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, newTab);
+                UpdateView();
+            } else if (msg.wParam == VK_F1 || msg.wParam == 'H' || msg.wParam == 'h') {
+                ShowHelpDialog(hwnd);
+            } else if (msg.wParam == 'R' || msg.wParam == 'r') {
+                if (g_CurrentTab == 1) {
+                    RunCpuBenchmark();
+                    RunRamBenchmark();
+                    RunDiskBenchmark();
+                    UpdateView();
+                } else if (g_CurrentTab == 2) {
+                    LogEvent("INFO", "Refreshed Win32 Services & Telemetry status");
+                    UpdateView();
+                }
+            }
         }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
