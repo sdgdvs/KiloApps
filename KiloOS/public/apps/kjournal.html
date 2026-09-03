@@ -396,6 +396,40 @@
     box-shadow: 0 0 6px rgba(152, 195, 121, 0.6);
   }
 
+  /* Quick Starters Bar */
+  .quick-starter-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(229, 192, 123, 0.06);
+    border: 1px dashed var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    transition: all 0.2s ease;
+  }
+  .quick-starter-chip {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-bright);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .quick-starter-chip:hover {
+    background: var(--accent-gold);
+    color: #111;
+    border-color: var(--accent-gold);
+    font-weight: 600;
+    transform: translateY(-1px);
+  }
+
   /* Notification Toast */
   #toast {
     position: fixed; bottom: 20px; right: 20px;
@@ -485,7 +519,8 @@
 
     <!-- Search Box -->
     <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Search entries & tags..." oninput="renderEntryList()">
+      <input type="text" id="searchInput" placeholder="Search entries & tags... (Ctrl+F)" oninput="handleSearchInput()">
+      <button id="clearSearchBtn" class="icon-btn" onclick="clearSearch()" title="Clear Search" style="display:none; padding:3px 7px;">✕</button>
     </div>
 
     <!-- Entry List -->
@@ -498,25 +533,34 @@
       <div class="toolbar-left">
         <div class="date-title" id="currentDateDisplay">July 24, 2026</div>
         <div class="mood-picker">
-          <button class="mood-opt" data-mood="😀" title="Happy" onclick="selectMood('😀')">😀</button>
-          <button class="mood-opt" data-mood="😊" title="Calm" onclick="selectMood('😊')">😊</button>
-          <button class="mood-opt" data-mood="😐" title="Neutral" onclick="selectMood('😐')">😐</button>
-          <button class="mood-opt" data-mood="😔" title="Sad" onclick="selectMood('😔')">😔</button>
-          <button class="mood-opt" data-mood="⚡" title="Energetic" onclick="selectMood('⚡')">⚡</button>
-          <button class="mood-opt" data-mood="🧘" title="Focused" onclick="selectMood('🧘')">🧘</button>
+          <button class="mood-opt" data-mood="😀" title="Happy [1]" onclick="selectMood('😀')">😀</button>
+          <button class="mood-opt" data-mood="😊" title="Calm [2]" onclick="selectMood('😊')">😊</button>
+          <button class="mood-opt" data-mood="😐" title="Neutral [3]" onclick="selectMood('😐')">😐</button>
+          <button class="mood-opt" data-mood="😔" title="Sad [4]" onclick="selectMood('😔')">😔</button>
+          <button class="mood-opt" data-mood="⚡" title="Energetic [5]" onclick="selectMood('⚡')">⚡</button>
+          <button class="mood-opt" data-mood="🧘" title="Focused [6]" onclick="selectMood('🧘')">🧘</button>
         </div>
       </div>
 
       <div class="toolbar-right">
-        <button class="btn" onclick="openTemplatesModal()">📋 Templates</button>
-        <button class="btn" onclick="openImportExportModal()">📥 / 📤 Data</button>
-        <button class="btn btn-danger" onclick="deleteCurrentEntry()">Delete</button>
-        <button class="btn btn-primary" onclick="saveEntry()">Save Entry</button>
+        <button class="btn" onclick="openTemplatesModal()" title="Prompt Templates (Ctrl+T)">📋 Templates <span style="font-size:10px; opacity:0.75;">[Ctrl+T]</span></button>
+        <button class="btn" onclick="openImportExportModal()" title="Import / Export Data">📥 / 📤 Data</button>
+        <button class="btn btn-danger" onclick="deleteCurrentEntry()" title="Delete Current Entry">Delete</button>
+        <button class="btn btn-primary" onclick="saveEntry()" title="Save Entry (Ctrl+S)">Save Entry <span style="font-size:10px; opacity:0.85;">[Ctrl+S]</span></button>
       </div>
     </div>
 
     <div class="editor-container">
-      <textarea id="journalArea" class="journal-editor" placeholder="Write your thoughts, ideas, or reflection for today... Use #hashtags to categorize. (Press 'H' or F1 for Help)" oninput="updateEditorStats()"></textarea>
+      <div id="quickStarterBar" class="quick-starter-bar" style="display:none;">
+        <span style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:4px;">✨ Quick Start:</span>
+        <button class="quick-starter-chip" onclick="applyTemplate('morning', 'replace')">🌅 Morning</button>
+        <button class="quick-starter-chip" onclick="applyTemplate('evening', 'replace')">🌙 Evening</button>
+        <button class="quick-starter-chip" onclick="applyTemplate('gratitude', 'replace')">🙏 Gratitude</button>
+        <button class="quick-starter-chip" onclick="applyTemplate('goals', 'replace')">🎯 Goals</button>
+        <button class="quick-starter-chip" onclick="applyTemplate('stoic', 'replace')">🏛️ Stoic</button>
+        <button class="quick-starter-chip" onclick="openTemplatesModal()">📋 More...</button>
+      </div>
+      <textarea id="journalArea" class="journal-editor" placeholder="Write your thoughts, ideas, or reflection for today... Use #hashtags to categorize. (Press 'H' or F1 for Help, Ctrl+S to Save)" oninput="updateEditorStats()"></textarea>
       <div class="editor-footer">
         <div id="editorStats">0 words | 0 chars | ~0 min read</div>
         <div id="goalProgressWrapper" class="goal-wrapper" title="Daily Writing Goal Progress">
@@ -693,26 +737,51 @@
 <!-- Toast notification -->
 <div id="toast">Saved!</div>
 
+<!-- Custom Confirmation Modal -->
+<div class="modal-backdrop" id="confirmModal">
+  <div class="modal-card" style="width: 420px; max-width: 90vw;">
+    <div class="modal-header">
+      <h3 id="confirmModalTitle">Confirm Action</h3>
+      <button class="icon-btn" onclick="closeModal('confirmModal')">✕</button>
+    </div>
+    <div class="modal-body" id="confirmModalMessage" style="font-size: 14px; line-height: 1.5; color: var(--text-bright);">
+      Are you sure you want to proceed?
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('confirmModal')">Cancel</button>
+      <button class="btn btn-danger" id="confirmModalBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <!-- Help Modal -->
 <div class="modal-backdrop" id="helpModal">
   <div class="modal-card">
     <div class="modal-header">
-      <h3>ℹ️ KJournal Help</h3>
+      <h3>ℹ️ KJournal User Guide & Shortcuts</h3>
       <button class="icon-btn" onclick="closeModal('helpModal')">✕</button>
     </div>
     <div class="modal-body" style="font-size: 14px; line-height: 1.6;">
       <p><strong>Keyboard Shortcuts:</strong></p>
       <ul style="margin-left: 20px; margin-bottom: 12px; color: var(--text-muted);">
-        <li><strong>Press 'H' or F1</strong> to open this help menu.</li>
-        <li><strong>Press 'Esc'</strong> to close any open modal.</li>
+        <li><strong style="color:var(--text-bright);">F1</strong> or <strong style="color:var(--text-bright);">H</strong> — Open this Help guide</li>
+        <li><strong style="color:var(--text-bright);">Ctrl + S</strong> — Save current journal entry immediately</li>
+        <li><strong style="color:var(--text-bright);">Ctrl + N</strong> — Jump to today's entry</li>
+        <li><strong style="color:var(--text-bright);">Ctrl + T</strong> — Open Prompt Templates Library</li>
+        <li><strong style="color:var(--text-bright);">Ctrl + F</strong> — Focus Search & Hashtag filter bar</li>
+        <li><strong style="color:var(--text-bright);">1 - 6</strong> — Quick Mood selection (Happy, Calm, Neutral, Sad, Energetic, Focused)</li>
+        <li><strong style="color:var(--text-bright);">Esc</strong> — Close active dialog / modal</li>
       </ul>
-      <p><strong>Features:</strong></p>
+      <p><strong>Core Features:</strong></p>
       <ul style="margin-left: 20px; margin-bottom: 12px; color: var(--text-muted);">
-        <li>Select a date from the calendar to view or edit entries.</li>
-        <li><strong>Guided Reflection Templates:</strong> Click '📋 Templates' in toolbar to choose from 6 structured journaling frameworks (Morning, Evening, Gratitude, Goals, Stoic, Brain Dump).</li>
-        <li><strong>Daily Writing Goal:</strong> Set a target word count in Settings and track live progress with visual bar and estimated read time.</li>
-        <li>Use hashtags (e.g. #happy) in your text to filter them easily later.</li>
-        <li>Your current writing streak, total words, and goal achievement are tracked automatically!</li>
+        <li><strong>Calendar Navigator:</strong> Pick any day from the calendar to review, edit, or start an entry.</li>
+        <li><strong>Guided Prompts & Templates:</strong> Click '📋 Templates [Ctrl+T]' to choose from 6 structured journaling frameworks (Morning, Evening, Gratitude, Goals, Stoic, Brain Dump).</li>
+        <li><strong>Quick Starters:</strong> When viewing an empty day, 1-click quick starter chips appear above the editor.</li>
+        <li><strong>Daily Writing Goal:</strong> Configure a target word count in Settings to track live visual progress and estimated reading time.</li>
+        <li><strong>Real-time Search & Hashtags:</strong> Use hashtags (e.g. #journal #work) in your text to filter them instantly.</li>
+        <li><strong>Analytics & Streaks:</strong> Track current writing streak, longest streak, total word count, and mood breakdown.</li>
+        <li><strong>PIN Lock Protection:</strong> Secure your personal entries with a 4-digit numeric PIN in Settings.</li>
+        <li><strong>Data Portability:</strong> Export backups in JSON, Markdown, or TXT format and restore anytime.</li>
       </ul>
     </div>
     <div class="modal-footer">
@@ -783,6 +852,22 @@
     }
   ];
 
+  // Confirmation Dialog State & Helper
+  let onConfirmCallback = null;
+  function showConfirmDialog(title, message, onConfirm, isDanger = true) {
+    document.getElementById('confirmModalTitle').innerText = title;
+    document.getElementById('confirmModalMessage').innerText = message;
+    const btn = document.getElementById('confirmModalBtn');
+    btn.className = isDanger ? 'btn btn-danger' : 'btn btn-primary';
+    btn.innerText = 'Confirm';
+    onConfirmCallback = onConfirm;
+    btn.onclick = () => {
+      closeModal('confirmModal');
+      if (onConfirmCallback) onConfirmCallback();
+    };
+    openModal('confirmModal');
+  }
+
   // PIN Input State
   let pinBuffer = '';
   let pinMode = 'verify'; // 'verify', 'create_1', 'create_2'
@@ -793,6 +878,15 @@
     if (window.parent && window.parent.postMessage) {
       window.parent.postMessage({ type: 'VFS_SET_WINDOW_SIZE', width: 1100, height: 750 }, '*');
     }
+
+    // Modal backdrop click-to-close
+    document.querySelectorAll('.modal-backdrop').forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('active');
+        }
+      });
+    });
 
     loadSettings();
     loadEntries();
@@ -812,6 +906,10 @@
     renderTagCloud();
     renderEntryList();
     loadSelectedEntry();
+
+    setTimeout(() => {
+      showToast("📖 Welcome to KJournal! Press 'H' or F1 for Help | Ctrl+S to Save");
+    }, 450);
   }
 
   // Local Storage Data Handling
@@ -912,27 +1010,37 @@
     if (!tmpl) return;
 
     const editor = document.getElementById('journalArea');
-    if (mode === 'replace') {
-      if (editor.value.trim().length > 0) {
-        if (!confirm('Replace current journal text with template?')) return;
-      }
-      editor.value = tmpl.content;
-    } else {
-      if (editor.value.trim().length > 0) {
-        editor.value = editor.value.trimEnd() + '\n\n' + tmpl.content;
-      } else {
+    const doApply = () => {
+      if (mode === 'replace') {
         editor.value = tmpl.content;
+      } else {
+        if (editor.value.trim().length > 0) {
+          editor.value = editor.value.trimEnd() + '\n\n' + tmpl.content;
+        } else {
+          editor.value = tmpl.content;
+        }
       }
-    }
 
-    if (tmpl.mood) {
-      selectMood(tmpl.mood, false);
-    }
+      if (tmpl.mood) {
+        selectMood(tmpl.mood, false);
+      }
 
-    updateEditorStats();
-    closeModal('templatesModal');
-    showToast(`Template "${tmpl.title}" inserted!`);
-    editor.focus();
+      updateEditorStats();
+      closeModal('templatesModal');
+      showToast(`Template "${tmpl.title}" inserted!`);
+      editor.focus();
+    };
+
+    if (mode === 'replace' && editor.value.trim().length > 0) {
+      showConfirmDialog(
+        'Replace Journal Text',
+        'Are you sure you want to replace your current journal text with this template?',
+        doApply,
+        false
+      );
+    } else {
+      doApply();
+    }
   }
 
   function updateLockBtnState() {
@@ -946,7 +1054,7 @@
     const t = document.getElementById('toast');
     t.innerText = msg;
     t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2000);
+    setTimeout(() => t.classList.remove('show'), 2200);
   }
 
   // PIN Protection System
@@ -1040,12 +1148,17 @@
   }
 
   function removePin() {
-    if (confirm('Are you sure you want to disable PIN protection?')) {
-      settings.pin = '';
-      settings.pinEnabled = false;
-      saveSettingsToStorage();
-      showToast('PIN Lock Disabled');
-    }
+    showConfirmDialog(
+      'Disable PIN Protection',
+      'Are you sure you want to disable PIN lock protection? Anyone on this computer will be able to access your journal.',
+      () => {
+        settings.pin = '';
+        settings.pinEnabled = false;
+        saveSettingsToStorage();
+        showToast('PIN Lock Disabled');
+      },
+      true
+    );
   }
 
   // Calendar Navigator Widget
@@ -1162,6 +1275,24 @@
   }
 
   // Entry List & Search
+  function handleSearchInput() {
+    const input = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+    if (clearBtn) {
+      clearBtn.style.display = input.value.length > 0 ? 'inline-block' : 'none';
+    }
+    renderEntryList();
+  }
+
+  function clearSearch() {
+    const input = document.getElementById('searchInput');
+    input.value = '';
+    const clearBtn = document.getElementById('clearSearchBtn');
+    if (clearBtn) clearBtn.style.display = 'none';
+    renderEntryList();
+    input.focus();
+  }
+
   function renderEntryList() {
     const container = document.getElementById('entryList');
     container.innerHTML = '';
@@ -1265,19 +1396,30 @@
     renderCalendar();
     renderTagCloud();
     renderEntryList();
+    updateEditorStats();
   }
 
   function deleteCurrentEntry() {
-    if (!entries[selectedDate]) return;
-    if (confirm(`Delete entry for ${formatReadableDate(selectedDate)}?`)) {
-      delete entries[selectedDate];
-      document.getElementById('journalArea').value = '';
-      saveEntriesToStorage();
-      renderCalendar();
-      renderTagCloud();
-      renderEntryList();
-      showToast('Entry deleted');
+    const text = document.getElementById('journalArea').value.trim();
+    if (!entries[selectedDate] && !text) {
+      showToast('No entry to delete for this date');
+      return;
     }
+    showConfirmDialog(
+      'Delete Entry',
+      `Are you sure you want to delete the journal entry for ${formatReadableDate(selectedDate)}? This cannot be undone.`,
+      () => {
+        delete entries[selectedDate];
+        document.getElementById('journalArea').value = '';
+        saveEntriesToStorage();
+        renderCalendar();
+        renderTagCloud();
+        renderEntryList();
+        updateEditorStats();
+        showToast('Entry deleted');
+      },
+      true
+    );
   }
 
   function updateEditorStats() {
@@ -1286,6 +1428,12 @@
     const chars = text.length;
     const readTime = words > 0 ? Math.max(1, Math.ceil(words / 200)) : 0;
     document.getElementById('editorStats').innerText = `${words} word${words === 1 ? '' : 's'} | ${chars} char${chars === 1 ? '' : 's'} | ~${readTime} min read`;
+
+    // Toggle quick starter bar
+    const quickBar = document.getElementById('quickStarterBar');
+    if (quickBar) {
+      quickBar.style.display = (words === 0 && (!entries[selectedDate] || !entries[selectedDate].text.trim())) ? 'flex' : 'none';
+    }
 
     const goalWrapper = document.getElementById('goalProgressWrapper');
     const goalLabel = document.getElementById('goalLabel');
@@ -1556,11 +1704,41 @@
     if (e.key === 'F1') {
       e.preventDefault();
       openModal('helpModal');
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      saveEntry();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
+      e.preventDefault();
+      todayCalMonth();
+      document.getElementById('journalArea').focus();
+      showToast("Jumped to today's entry");
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+      e.preventDefault();
+      const s = document.getElementById('searchInput');
+      if (s) { s.focus(); s.select(); }
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 't') {
+      e.preventDefault();
+      openTemplatesModal();
+      return;
     }
     if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
       if (e.key.toLowerCase() === 'h') {
         e.preventDefault();
         openModal('helpModal');
+        return;
+      }
+      if (e.key >= '1' && e.key <= '6') {
+        const moods = ['😀', '😊', '😐', '😔', '⚡', '🧘'];
+        selectMood(moods[parseInt(e.key, 10) - 1]);
+        return;
       }
     }
     if (e.key === 'Escape') {

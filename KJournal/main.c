@@ -423,7 +423,7 @@ void write_entry_flow(int preselected_template) {
         printf("Guided Prompts:\n%s\n", TEMPLATE_LIST[tmpl_choice].template_content);
     }
 
-    printf("\nEnter your thoughts. Type 'EOF' on a new line to save and return.\n\n");
+    printf("\nEnter your thoughts. Type 'EOF' on a new line (or Ctrl+Z / Ctrl+D then Enter) to save & return.\n\n");
 
     char line[MAX_LINE];
     int total_words = 0;
@@ -872,6 +872,47 @@ void analytics_view() {
     free(entries);
 }
 
+// Escape JSON string helper to preserve newlines and quotes
+void write_json_escaped_string(FILE *f, const char *str) {
+    if (!str) return;
+    while (*str) {
+        if (*str == '"') fprintf(f, "\\\"");
+        else if (*str == '\\') fprintf(f, "\\\\");
+        else if (*str == '\n') fprintf(f, "\\n");
+        else if (*str == '\r') { /* skip */ }
+        else if (*str == '\t') fprintf(f, "\\t");
+        else fputc(*str, f);
+        str++;
+    }
+}
+
+// Import entries from existing backup file into journal.txt
+void import_journal_file(const char *filename) {
+    FILE *in = fopen(filename, "r");
+    if (!in) {
+        printf("\nCould not open '%s' for reading.\n", filename);
+        return;
+    }
+
+    FILE *out = fopen(JOURNAL_FILE, "a");
+    if (!out) {
+        printf("\nError opening '%s' for appending.\n", JOURNAL_FILE);
+        fclose(in);
+        return;
+    }
+
+    char line[MAX_LINE];
+    int imported_lines = 0;
+    while (fgets(line, sizeof(line), in)) {
+        fputs(line, out);
+        imported_lines++;
+    }
+
+    fclose(in);
+    fclose(out);
+    printf("\nSuccessfully imported data from '%s' (%d lines processed)!\n", filename, imported_lines);
+}
+
 // Data Export & Import
 void export_import_menu() {
     while (1) {
@@ -881,7 +922,8 @@ void export_import_menu() {
         printf("=========================================\n");
         printf("1. Export to Markdown (kjournal_export.md)\n");
         printf("2. Export to JSON (kjournal_export.json)\n");
-        printf("3. Return to Main Menu\n");
+        printf("3. Import entries from file\n");
+        printf("4. Return to Main Menu\n");
         printf("H. Help / Instructions\n");
         printf("=========================================\n");
         printf("Choice: ");
@@ -921,12 +963,14 @@ void export_import_menu() {
                     fprintf(out, "  {\n");
                     fprintf(out, "    \"date\": \"%s\",\n", entries[i].date_str);
                     fprintf(out, "    \"time\": \"%s\",\n", entries[i].time_str);
-                    fprintf(out, "    \"mood\": \"%s\"\n", entries[i].mood);
-                    fprintf(out, "  }%s\n", (i == count - 1) ? "" : ",");
+                    fprintf(out, "    \"mood\": \"%s\",\n", entries[i].mood);
+                    fprintf(out, "    \"text\": \"");
+                    write_json_escaped_string(out, entries[i].content);
+                    fprintf(out, "\"\n  }%s\n", (i == count - 1) ? "" : ",");
                 }
                 fprintf(out, "]\n");
                 fclose(out);
-                printf("\nExported %d entries to 'kjournal_export.json'!\n", count);
+                printf("\nExported %d entries with full text to 'kjournal_export.json'!\n", count);
             } else {
                 printf("\nError writing to export file.\n");
             }
@@ -934,9 +978,20 @@ void export_import_menu() {
             free(entries);
             printf("Press Enter to continue...");
             getchar();
+        } else if (choice[0] == '3') {
+            printf("\nEnter filename to import (e.g. kjournal_export.md or backup.txt): ");
+            char fn[256];
+            if (fgets(fn, sizeof(fn), stdin)) {
+                fn[strcspn(fn, "\r\n")] = '\0';
+                if (strlen(fn) > 0) {
+                    import_journal_file(fn);
+                }
+            }
+            printf("Press Enter to continue...");
+            getchar();
         } else if (choice[0] == 'h' || choice[0] == 'H') {
             show_help();
-        } else if (choice[0] == '3') {
+        } else if (choice[0] == '4') {
             break;
         }
     }
@@ -944,19 +999,21 @@ void export_import_menu() {
 
 void show_help() {
     clear_screen();
-    printf("=========================================\n");
-    printf("               KJOURNAL HELP             \n");
-    printf("=========================================\n");
-    printf("Welcome to KJournal!\n\n");
-    printf("Features:\n");
-    printf("- Write new entries, auto-saved to journal.txt.\n");
-    printf("- Guided Prompts & Templates (5-Min Morning, Evening Review, Gratitude, Goals, Stoic, Brain Dump).\n");
-    printf("- Daily Writing Goal Tracking (Target: %d words) with Live Progress & Read Time.\n", DAILY_WORD_GOAL);
-    printf("- Keep track of your mood each time you write.\n");
-    printf("- Use hashtags (e.g. #happy) to easily search later.\n");
-    printf("- View your writing streaks, word counts, and mood analytics.\n");
-    printf("- Secure your journal with a 4-digit PIN lock.\n");
-    printf("- Export to Markdown or JSON, and import back!\n\n");
+    printf("====================================================\n");
+    printf("                  KJOURNAL HELP                     \n");
+    printf("====================================================\n");
+    printf("Welcome to KJournal - Personal Journal & Mood Analytics!\n\n");
+    printf("Features & Navigation:\n");
+    printf(" - [1] Write New Entry: Daily prompts, mood selection, and live word count.\n");
+    printf("       (Finish entry by typing 'EOF' on a new line or Ctrl+Z then Enter)\n");
+    printf(" - [2] View All Entries: Browse all saved entries with reading time.\n");
+    printf(" - [3] Calendar Navigator: Browse entries month by month on visual grid.\n");
+    printf(" - [4] Search & #Hashtags: Real-time keyword, hashtag (#tag), or mood filter.\n");
+    printf(" - [5] Mood & Streak Analytics: Track writing streaks, word counts, and mood charts.\n");
+    printf(" - [6] Security & PIN Lock: Protect your journal with a 4-digit PIN.\n");
+    printf(" - [7] Data Import & Export: Backup to Markdown or JSON, and restore anytime.\n");
+    printf(" - [8] Prompts & Templates Library: Choose from 6 guided journaling frameworks.\n");
+    printf(" - [H] Help / Instructions: Open this help guide anytime.\n\n");
     printf("Press Enter to return to the main menu...");
     getchar();
 }
@@ -965,7 +1022,7 @@ int main() {
 #ifdef _WIN32
     SetProcessDPIAware();
     system("mode con: cols=120 lines=40");
-    system("title KJournal - Press 'H' for Help");
+    system("title KJournal - Personal Journal & Mood Analytics [Press 'H' for Help]");
     
     HWND hwnd = GetConsoleWindow();
     if (hwnd) {
