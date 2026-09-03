@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KPong
 - KMines
 - KAsteroids
 - K2048
@@ -148,8 +147,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KAlchemy
 - KRogue
 - KChess
+- KPong
 
 ## Completed Work Log
+
+- **KPong (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on paddle smashes, powerup hits, wall bounces, and goals (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and trigonometric SetWorldTransform rotation/translation physics decay with double-buffered viewport rendering in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant smoke & plasma puffs with negative gravity and radius growth, heavy kinematic cyber debris / glass shards with tumbling rotation, gravity, drag, and floor bounce, and radiant golden celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer dispersion halo radiating upon paddle smashes and goals, ornate cybernetic arcade HUD corner filigree L-brackets with rivet detailing and tech notches at all four arena corners, a pulsating energy perimeter inlay border with an animated traveling specular glint traversing the outer playfield rectangle, sculpted paddle highlights with diagonal specular sheen sweeps traversing paddle surfaces and glowing animated energy conduits, and atmospheric floating cyber dust particles in both Web Canvas (kpong.html) and Native C Win32 GDI (KPong/main.c).
 
 - **KChess (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on piece captures, promotions, castling, check warnings, and checkmate explosions (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and trigonometric SetWorldTransform rotation/translation physics decay with double-buffered viewport rendering in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant smoke & plasma puffs with negative gravity and expansion growth, heavy kinematic polished marble & mahogany debris shards with tumbling rotation and floor bounce physics, and radiant golden celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer dispersion halo radiating upon piece captures, promotions, castling, and checkmate, ornate classical arcade HUD corner filigree L-brackets with brass rivet detailing on the main table border, chessboard border, captured piece tray, and action buttons, a pulsating golden energy perimeter inlay border with a traveling specular glint traversing the chessboard frame, sculpted piece highlights with diagonal specular sheen sweeps traversing chess piece bodies and crown jewel pulse effects, and ambient atmospheric floating warm dust motes in both Web Canvas (kchess.html) and Native C Win32 GDI (KChess/main.c).
 

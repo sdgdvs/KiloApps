@@ -24,8 +24,13 @@ typedef struct {
     float life;
     float max_life;
     int size;
+    float max_size;
     COLORREF color;
-    int type;
+    int layer; // 0: Needle spark, 1: Buoyant smoke, 2: Heavy debris, 3: Celebration star
+    float rot;
+    float rot_spd;
+    float drag;
+    float gravity;
 } Particle;
 
 typedef struct {
@@ -34,9 +39,12 @@ typedef struct {
 } BallTrailNode;
 
 typedef struct {
-    int x, y;
-    int radius;
-    int max_radius;
+    float x, y;
+    float radius;
+    float max_radius;
+    float alpha;
+    float speed;
+    int line_width;
     COLORREF color;
 } Shockwave;
 
@@ -152,6 +160,7 @@ float p1_hit_ripple = 0.0f;
 float p2_hit_ripple = 0.0f;
 float arena_pulse = 0.0f;
 float screen_shake = 0.0f;
+float screen_shake_rot = 0.0f;
 
 // Active Skills
 int skill_slow_timer = 0;
@@ -223,53 +232,110 @@ COLORREF GetBgColor() {
     return RGB(8, 12, 20);
 }
 
+// Multi-layered Kinematic Particle Explosion Engine (4 Distinct Layers)
 void AddParticles(float x, float y, COLORREF color, int count, float speed) {
+    if (screen_shake < speed * 0.75f) screen_shake = speed * 0.75f;
+    screen_shake_rot = ((float)(rand() % 100) / 100.0f - 0.5f) * 0.04f * (speed / 8.0f);
+
+    // Layer 0: Incandescent needle sparks (fast, high drag, velocity trails)
     for (int i = 0; i < count; i++) {
         for (int p = 0; p < MAX_PARTICLES; p++) {
-            if (particles[p].life <= 0) {
+            if (particles[p].life <= 0.0f) {
                 float angle = ((float)(rand() % 360)) * 3.14159f / 180.0f;
-                float spd = (0.2f + ((float)(rand() % 80) / 100.0f)) * speed;
-                particles[p].x = x;
-                particles[p].y = y;
-                particles[p].vx = cosf(angle) * spd;
-                particles[p].vy = sinf(angle) * spd;
-                particles[p].life = 1.0f;
-                particles[p].max_life = 1.0f;
-                particles[p].size = 2 + (rand() % 3);
-                particles[p].color = color;
-                particles[p].type = 0;
+                float spd = (0.5f + ((float)(rand() % 80) / 100.0f)) * speed * 1.3f;
+                particles[p].x = x; particles[p].y = y;
+                particles[p].vx = cosf(angle) * spd; particles[p].vy = sinf(angle) * spd;
+                particles[p].life = 1.0f; particles[p].max_life = 1.0f;
+                particles[p].size = 1 + (rand() % 2);
+                particles[p].max_size = (float)particles[p].size;
+                particles[p].color = RGB(255, 255, 255);
+                particles[p].layer = 0;
+                particles[p].rot = 0; particles[p].rot_spd = 0;
+                particles[p].drag = 0.94f; particles[p].gravity = 0.0f;
                 break;
             }
         }
     }
+    // Layer 1: Expanding buoyant smoke & plasma puffs (negative gravity, radius growth)
+    for (int i = 0; i < count * 2 / 3; i++) {
+        for (int p = 0; p < MAX_PARTICLES; p++) {
+            if (particles[p].life <= 0.0f) {
+                float angle = ((float)(rand() % 360)) * 3.14159f / 180.0f;
+                float spd = (0.2f + ((float)(rand() % 50) / 100.0f)) * speed * 0.6f;
+                particles[p].x = x; particles[p].y = y;
+                particles[p].vx = cosf(angle) * spd; particles[p].vy = sinf(angle) * spd - 0.4f;
+                particles[p].life = 1.0f; particles[p].max_life = 1.0f;
+                particles[p].size = 3 + (rand() % 3);
+                particles[p].max_size = 10.0f + (rand() % 6);
+                particles[p].color = color;
+                particles[p].layer = 1;
+                particles[p].rot = 0; particles[p].rot_spd = 0;
+                particles[p].drag = 0.96f; particles[p].gravity = -0.05f;
+                break;
+            }
+        }
+    }
+    // Layer 2: Heavy kinematic cyber debris / glass shards (gravity, drag, tumbling rotation, floor bounce)
     for (int i = 0; i < count / 2; i++) {
         for (int p = 0; p < MAX_PARTICLES; p++) {
-            if (particles[p].life <= 0) {
+            if (particles[p].life <= 0.0f) {
                 float angle = ((float)(rand() % 360)) * 3.14159f / 180.0f;
-                float spd = (0.8f + ((float)(rand() % 50) / 100.0f)) * speed * 1.5f;
-                particles[p].x = x;
-                particles[p].y = y;
-                particles[p].vx = cosf(angle) * spd;
-                particles[p].vy = sinf(angle) * spd;
-                particles[p].life = 0.6f;
-                particles[p].max_life = 0.6f;
-                particles[p].size = 1 + (rand() % 2);
-                particles[p].color = RGB(255, 255, 255);
-                particles[p].type = 1;
+                float spd = (0.4f + ((float)(rand() % 70) / 100.0f)) * speed;
+                particles[p].x = x; particles[p].y = y;
+                particles[p].vx = cosf(angle) * spd; particles[p].vy = sinf(angle) * spd - 1.2f;
+                particles[p].life = 1.0f; particles[p].max_life = 1.0f;
+                particles[p].size = 3 + (rand() % 3);
+                particles[p].max_size = (float)particles[p].size;
+                particles[p].color = color;
+                particles[p].layer = 2;
+                particles[p].rot = ((float)(rand() % 360)) * 3.14159f / 180.0f;
+                particles[p].rot_spd = ((float)(rand() % 60) - 30.0f) * 0.01f;
+                particles[p].drag = 0.97f; particles[p].gravity = 0.22f;
+                break;
+            }
+        }
+    }
+    // Layer 3: Radiant golden/cyan celebration energy stars
+    for (int i = 0; i < count / 3; i++) {
+        for (int p = 0; p < MAX_PARTICLES; p++) {
+            if (particles[p].life <= 0.0f) {
+                float angle = ((float)(rand() % 360)) * 3.14159f / 180.0f;
+                float spd = (0.3f + ((float)(rand() % 60) / 100.0f)) * speed * 0.9f;
+                particles[p].x = x; particles[p].y = y;
+                particles[p].vx = cosf(angle) * spd; particles[p].vy = sinf(angle) * spd;
+                particles[p].life = 1.0f; particles[p].max_life = 1.0f;
+                particles[p].size = 4 + (rand() % 3);
+                particles[p].max_size = (float)particles[p].size;
+                particles[p].color = RGB(255, 215, 0);
+                particles[p].layer = 3;
+                particles[p].rot = ((float)(rand() % 360)) * 3.14159f / 180.0f;
+                particles[p].rot_spd = ((float)(rand() % 40) - 20.0f) * 0.01f;
+                particles[p].drag = 0.95f; particles[p].gravity = 0.0f;
                 break;
             }
         }
     }
 }
 
+// Dual-tier concentric shockwave ripple rings
 void AddShockwave(int x, int y, COLORREF color) {
+    // Inner high-speed compression wave
     for (int i = 0; i < MAX_SHOCKWAVES; i++) {
-        if (shockwaves[i].radius <= 0) {
-            shockwaves[i].x = x;
-            shockwaves[i].y = y;
-            shockwaves[i].radius = 4;
-            shockwaves[i].max_radius = 28;
-            shockwaves[i].color = color;
+        if (shockwaves[i].radius <= 0.0f) {
+            shockwaves[i].x = (float)x; shockwaves[i].y = (float)y;
+            shockwaves[i].radius = 3.0f; shockwaves[i].max_radius = 36.0f;
+            shockwaves[i].alpha = 1.0f; shockwaves[i].speed = 2.8f;
+            shockwaves[i].line_width = 2; shockwaves[i].color = RGB(255, 255, 255);
+            break;
+        }
+    }
+    // Outer dispersion halo
+    for (int i = 0; i < MAX_SHOCKWAVES; i++) {
+        if (shockwaves[i].radius <= 0.0f) {
+            shockwaves[i].x = (float)x; shockwaves[i].y = (float)y;
+            shockwaves[i].radius = 5.0f; shockwaves[i].max_radius = 52.0f;
+            shockwaves[i].alpha = 0.8f; shockwaves[i].speed = 1.8f;
+            shockwaves[i].line_width = 1; shockwaves[i].color = color;
             break;
         }
     }
@@ -277,20 +343,29 @@ void AddShockwave(int x, int y, COLORREF color) {
 
 void UpdateParticles() {
     for (int i = 0; i < MAX_PARTICLES; i++) {
-        if (particles[i].life > 0) {
+        if (particles[i].life > 0.0f) {
             particles[i].x += particles[i].vx;
             particles[i].y += particles[i].vy;
-            particles[i].life -= 0.05f;
+            particles[i].vx *= particles[i].drag;
+            particles[i].vy *= particles[i].drag;
+            particles[i].vy += particles[i].gravity;
+            particles[i].rot += particles[i].rot_spd;
+            if (particles[i].layer == 2 && particles[i].y > (float)(H - 2)) {
+                particles[i].y = (float)(H - 2);
+                particles[i].vy = -particles[i].vy * 0.6f;
+            }
+            particles[i].life -= 0.035f;
         }
     }
 }
 
 void UpdateShockwaves() {
     for (int i = 0; i < MAX_SHOCKWAVES; i++) {
-        if (shockwaves[i].radius > 0) {
-            shockwaves[i].radius += 2;
-            if (shockwaves[i].radius >= shockwaves[i].max_radius) {
-                shockwaves[i].radius = 0;
+        if (shockwaves[i].radius > 0.0f) {
+            shockwaves[i].radius += shockwaves[i].speed;
+            shockwaves[i].alpha -= 0.035f;
+            if (shockwaves[i].radius >= shockwaves[i].max_radius || shockwaves[i].alpha <= 0.0f) {
+                shockwaves[i].radius = 0.0f;
             }
         }
     }
@@ -695,7 +770,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (p1_hit_ripple > 0.0f) { p1_hit_ripple -= 0.05f; if (p1_hit_ripple < 0.0f) p1_hit_ripple = 0.0f; }
             if (p2_hit_ripple > 0.0f) { p2_hit_ripple -= 0.05f; if (p2_hit_ripple < 0.0f) p2_hit_ripple = 0.0f; }
             if (arena_pulse > 0.0f) { arena_pulse -= 0.05f; if (arena_pulse < 0.0f) arena_pulse = 0.0f; }
-            if (screen_shake > 0.0f) { screen_shake *= 0.8f; if (screen_shake < 0.1f) screen_shake = 0.0f; }
+            if (screen_shake > 0.0f) { screen_shake *= 0.90f; if (screen_shake < 0.1f) screen_shake = 0.0f; }
+            if (screen_shake_rot > 0.0f) { screen_shake_rot *= 0.88f; if (screen_shake_rot < 0.001f) screen_shake_rot = 0.0f; }
 
             // Paddle Heights
             p1_pad_h = 50 - (rally * 2); if (p1_pad_h < 20) p1_pad_h = 20;
@@ -880,27 +956,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 // Walls
                 if (balls[b].y < 0) {
-                    balls[b].y = 0; balls[b].dy = -balls[b].dy; arena_pulse = 1.0f; screen_shake = 3.0f;
-                    AddParticles(balls[b].x + BALL_SIZE / 2, 0, RGB(255, 255, 255), 8, 4.0f);
-                    AddShockwave(balls[b].x + BALL_SIZE / 2, 0, GetPrimaryColor());
+                    balls[b].y = 0; balls[b].dy = -balls[b].dy; arena_pulse = 1.0f; screen_shake = 4.0f;
+                    AddParticles(balls[b].x + BALL_SIZE / 2, 0, RGB(255, 255, 255), 10, 5.0f);
+                    AddShockwave((int)(balls[b].x + BALL_SIZE / 2), 0, GetPrimaryColor());
                     MessageBeep(0xFFFFFFFF);
                 }
                 if (balls[b].y > H - BALL_SIZE) {
-                    balls[b].y = H - BALL_SIZE; balls[b].dy = -balls[b].dy; arena_pulse = 1.0f; screen_shake = 3.0f;
-                    AddParticles(balls[b].x + BALL_SIZE / 2, (float)H, RGB(255, 255, 255), 8, 4.0f);
-                    AddShockwave(balls[b].x + BALL_SIZE / 2, H, GetSecondaryColor());
+                    balls[b].y = H - BALL_SIZE; balls[b].dy = -balls[b].dy; arena_pulse = 1.0f; screen_shake = 4.0f;
+                    AddParticles(balls[b].x + BALL_SIZE / 2, (float)H, RGB(255, 255, 255), 10, 5.0f);
+                    AddShockwave((int)(balls[b].x + BALL_SIZE / 2), H, GetSecondaryColor());
                     MessageBeep(0xFFFFFFFF);
                 }
 
                 // Obstacles
                 if (has_obstacles && obs1_active && balls[b].x + BALL_SIZE > W / 2 - 10 && balls[b].x < W / 2 + 10 && balls[b].y + BALL_SIZE > obs_y && balls[b].y < obs_y + 40) {
-                    if (balls[b].is_fireball) { obs1_active = 0; obs1_respawn = 150; AddParticles(W / 2, obs_y + 20, RGB(255, 100, 0), 25, 8.0f); }
-                    else { balls[b].dx = -balls[b].dx; AddParticles(W / 2, balls[b].y + BALL_SIZE / 2, GetPrimaryColor(), 10, 4.0f); }
+                    if (balls[b].is_fireball) { obs1_active = 0; obs1_respawn = 150; AddParticles(W / 2, (float)(obs_y + 20), RGB(255, 100, 0), 25, 8.0f); }
+                    else { balls[b].dx = -balls[b].dx; AddParticles(W / 2, (float)(balls[b].y + BALL_SIZE / 2), GetPrimaryColor(), 10, 4.0f); }
                     MessageBeep(0xFFFFFFFF);
                 }
                 if (has_obstacles && obs2_active && balls[b].x + BALL_SIZE > obs2_x && balls[b].x < obs2_x + 40 && balls[b].y + BALL_SIZE > H / 2 - 10 && balls[b].y < H / 2 + 10) {
-                    if (balls[b].is_fireball) { obs2_active = 0; obs2_respawn = 150; AddParticles(obs2_x + 20, H / 2, RGB(255, 100, 0), 25, 8.0f); }
-                    else { balls[b].dy = -balls[b].dy; AddParticles(obs2_x + 20, H / 2, GetSecondaryColor(), 10, 4.0f); }
+                    if (balls[b].is_fireball) { obs2_active = 0; obs2_respawn = 150; AddParticles((float)(obs2_x + 20), H / 2, RGB(255, 100, 0), 25, 8.0f); }
+                    else { balls[b].dy = -balls[b].dy; AddParticles((float)(obs2_x + 20), H / 2, GetSecondaryColor(), 10, 4.0f); }
                     MessageBeep(0xFFFFFFFF);
                 }
 
@@ -908,8 +984,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (game_mode == 4 && campaign_level == 20 && boss_shield_hp > 0 &&
                     balls[b].x + BALL_SIZE >= W - 55 && balls[b].x <= W - 45 &&
                     balls[b].y + BALL_SIZE >= boss_shield_y && balls[b].y <= boss_shield_y + boss_shield_h && balls[b].dx > 0) {
-                    if (balls[b].is_fireball) { boss_shield_hp = 0; boss_shield_timer = 360; AddParticles(W - 50, balls[b].y + BALL_SIZE / 2, RGB(255, 50, 0), 30, 10.0f); }
-                    else { boss_shield_hp--; balls[b].dx = -balls[b].dx; AddParticles(W - 50, balls[b].y + BALL_SIZE / 2, RGB(255, 215, 0), 15, 6.0f); if (boss_shield_hp <= 0) boss_shield_timer = 360; }
+                    if (balls[b].is_fireball) { boss_shield_hp = 0; boss_shield_timer = 360; AddParticles(W - 50, (float)(balls[b].y + BALL_SIZE / 2), RGB(255, 50, 0), 30, 10.0f); }
+                    else { boss_shield_hp--; balls[b].dx = -balls[b].dx; AddParticles(W - 50, (float)(balls[b].y + BALL_SIZE / 2), RGB(255, 215, 0), 15, 6.0f); if (boss_shield_hp <= 0) boss_shield_timer = 360; }
                     MessageBeep(0xFFFFFFFF);
                 }
 
@@ -923,8 +999,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 // P1 Paddle
                 if (balls[b].x < 20 + PAD_W && balls[b].y + BALL_SIZE > p1_y && balls[b].y < p1_y + p1_pad_h) {
-                    balls[b].x = 20 + PAD_W; balls[b].dx = -balls[b].dx; balls[b].last_hitter = 1; p1_hit_ripple = 1.0f; arena_pulse = 1.0f; screen_shake = 5.0f;
-                    if (skill_fireball_ready) { balls[b].is_fireball = 1; skill_fireball_ready = 0; AddShockwave(balls[b].x, balls[b].y + BALL_SIZE / 2, RGB(255, 100, 0)); }
+                    balls[b].x = 20 + PAD_W; balls[b].dx = -balls[b].dx; balls[b].last_hitter = 1; p1_hit_ripple = 1.0f; arena_pulse = 1.0f; screen_shake = 6.0f;
+                    if (skill_fireball_ready) { balls[b].is_fireball = 1; skill_fireball_ready = 0; AddShockwave((int)balls[b].x, (int)(balls[b].y + BALL_SIZE / 2), RGB(255, 100, 0)); }
                     rally++; RecordScore(rally);
                     float hit_pos = (float)((balls[b].y + BALL_SIZE / 2.0f) - (p1_y + p1_pad_h / 2.0f)) / (p1_pad_h / 2.0f);
                     balls[b].dy += (int)(hit_pos * 5.0f);
@@ -932,17 +1008,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (balls[b].dx < 15 && balls[b].dx > -15) { balls[b].dx = balls[b].dx > 0 ? balls[b].dx + 1 : balls[b].dx - 1; }
                     COLORREF pColor = balls[b].is_fireball ? RGB(255, 100, 0) : GetPrimaryColor();
                     AddParticles((float)balls[b].x, (float)(balls[b].y + BALL_SIZE / 2), pColor, 18, 9.0f);
-                    AddShockwave(balls[b].x, balls[b].y + BALL_SIZE / 2, pColor);
+                    AddShockwave((int)balls[b].x, (int)(balls[b].y + BALL_SIZE / 2), pColor);
                     if (hit_pos > 0.8f || hit_pos < -0.8f) {
                         AddParticles((float)balls[b].x, (float)(balls[b].y + BALL_SIZE / 2), RGB(255, 255, 255), 30, 14.0f);
-                        AddShockwave(balls[b].x, balls[b].y + BALL_SIZE / 2, RGB(255, 255, 0));
+                        AddShockwave((int)balls[b].x, (int)(balls[b].y + BALL_SIZE / 2), RGB(255, 255, 0));
                     }
                     MessageBeep(0xFFFFFFFF);
                 }
 
                 // P2 Paddle
                 if (balls[b].x + BALL_SIZE > W - 20 - PAD_W && balls[b].y + BALL_SIZE > p2_y && balls[b].y < p2_y + p2_pad_h) {
-                    balls[b].x = W - 20 - PAD_W - BALL_SIZE; balls[b].dx = -balls[b].dx; balls[b].last_hitter = 2; balls[b].is_fireball = 0; p2_hit_ripple = 1.0f; arena_pulse = 1.0f; screen_shake = 5.0f;
+                    balls[b].x = W - 20 - PAD_W - BALL_SIZE; balls[b].dx = -balls[b].dx; balls[b].last_hitter = 2; balls[b].is_fireball = 0; p2_hit_ripple = 1.0f; arena_pulse = 1.0f; screen_shake = 6.0f;
                     rally++; RecordScore(rally);
                     float hit_pos = (float)((balls[b].y + BALL_SIZE / 2.0f) - (p2_y + p2_pad_h / 2.0f)) / (p2_pad_h / 2.0f);
                     balls[b].dy += (int)(hit_pos * 5.0f);
@@ -950,25 +1026,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (balls[b].dy > 12) balls[b].dy = 12; if (balls[b].dy < -12) balls[b].dy = -12;
                     if (balls[b].dx < 15 && balls[b].dx > -15) { balls[b].dx = balls[b].dx > 0 ? balls[b].dx + 1 : balls[b].dx - 1; }
                     AddParticles((float)(balls[b].x + BALL_SIZE), (float)(balls[b].y + BALL_SIZE / 2), GetSecondaryColor(), 18, 9.0f);
-                    AddShockwave(balls[b].x + BALL_SIZE, balls[b].y + BALL_SIZE / 2, GetSecondaryColor());
+                    AddShockwave((int)(balls[b].x + BALL_SIZE), (int)(balls[b].y + BALL_SIZE / 2), GetSecondaryColor());
                     if (hit_pos > 0.8f || hit_pos < -0.8f) {
                         AddParticles((float)(balls[b].x + BALL_SIZE), (float)(balls[b].y + BALL_SIZE / 2), RGB(255, 255, 255), 30, 14.0f);
-                        AddShockwave(balls[b].x + BALL_SIZE, balls[b].y + BALL_SIZE / 2, RGB(255, 255, 0));
+                        AddShockwave((int)(balls[b].x + BALL_SIZE), (int)(balls[b].y + BALL_SIZE / 2), RGB(255, 255, 0));
                     }
                     MessageBeep(0xFFFFFFFF);
                 }
 
                 // Scoring
                 if (balls[b].x < -15) {
-                    balls[b].active = 0; p2_score++; rally = 0; screen_shake = 10.0f;
-                    AddParticles(0, (float)(balls[b].y + BALL_SIZE / 2), GetSecondaryColor(), 35, 12.0f);
+                    balls[b].active = 0; p2_score++; rally = 0; screen_shake = 12.0f;
+                    AddParticles(0, (float)(balls[b].y + BALL_SIZE / 2), GetSecondaryColor(), 36, 12.0f);
                     AddShockwave(0, (int)(balls[b].y + BALL_SIZE / 2), GetSecondaryColor());
                     MessageBeep(MB_ICONEXCLAMATION);
                     if (ActiveBallCount() == 0) ResetBalls();
                 }
                 if (balls[b].x > W + 15) {
-                    balls[b].active = 0; p1_score++; rally = 0; screen_shake = 10.0f;
-                    AddParticles((float)W, (float)(balls[b].y + BALL_SIZE / 2), GetPrimaryColor(), 35, 12.0f);
+                    balls[b].active = 0; p1_score++; rally = 0; screen_shake = 12.0f;
+                    AddParticles((float)W, (float)(balls[b].y + BALL_SIZE / 2), GetPrimaryColor(), 36, 12.0f);
                     AddShockwave(W, (int)(balls[b].y + BALL_SIZE / 2), GetPrimaryColor());
                     MessageBeep(MB_ICONEXCLAMATION);
                     if (ActiveBallCount() == 0) ResetBalls();
@@ -1014,11 +1090,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             SetGraphicsMode(memDC, GM_ADVANCED);
             XFORM xform = {0};
-            xform.eM11 = (float)cw / W;
-            xform.eM22 = (float)ch / H;
-            if (screen_shake > 0.0f) {
-                xform.eDx = ((float)(rand() % 100) / 100.0f - 0.5f) * screen_shake * ((float)cw / W);
-                xform.eDy = ((float)(rand() % 100) / 100.0f - 0.5f) * screen_shake * ((float)ch / H);
+            float scaleX = (float)cw / W;
+            float scaleY = (float)ch / H;
+            if (screen_shake > 0.0f || screen_shake_rot > 0.0f) {
+                float sX = ((float)(rand() % 100) / 100.0f - 0.5f) * screen_shake * scaleX;
+                float sY = ((float)(rand() % 100) / 100.0f - 0.5f) * screen_shake * scaleY;
+                float sRot = ((float)(rand() % 100) / 100.0f - 0.5f) * screen_shake_rot;
+                float cosR = cosf(sRot);
+                float sinR = sinf(sRot);
+                xform.eM11 = cosR * scaleX;
+                xform.eM12 = sinR * scaleX;
+                xform.eM21 = -sinR * scaleY;
+                xform.eM22 = cosR * scaleY;
+                xform.eDx = (W / 2.0f) * scaleX + sX - (cosR * (W / 2.0f) * scaleX - sinR * (H / 2.0f) * scaleY);
+                xform.eDy = (H / 2.0f) * scaleY + sY - (sinR * (W / 2.0f) * scaleX + cosR * (H / 2.0f) * scaleY);
+            } else {
+                xform.eM11 = scaleX;
+                xform.eM22 = scaleY;
             }
             SetWorldTransform(memDC, &xform);
 
@@ -1208,6 +1296,56 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 LineTo(memDC, W - 2, H - 2); LineTo(memDC, 2, H - 2); LineTo(memDC, 2, 2);
                 SelectObject(memDC, oldPen); DeleteObject(borderPen);
 
+                // Pulsating Energy Perimeter Inlay Border with Traveling Specular Glint (Loop 8)
+                HPEN inlayPen = CreatePen(PS_SOLID, 1, (skill_slow_timer > 0) ? GetPrimaryColor() : RGB(0, 140, 180));
+                HPEN oldPenInlay = (HPEN)SelectObject(memDC, inlayPen);
+                MoveToEx(memDC, 6, 6, NULL); LineTo(memDC, W - 6, 6);
+                LineTo(memDC, W - 6, H - 6); LineTo(memDC, 6, H - 6); LineTo(memDC, 6, 6);
+                SelectObject(memDC, oldPenInlay); DeleteObject(inlayPen);
+
+                // Traveling Specular Glint along perimeter
+                int perimW = W - 12, perimH = H - 12;
+                int totalPerim = (perimW + perimH) * 2;
+                int glintPos = (int)(GetTickCount() * 0.18f) % totalPerim;
+                int gx = 6, gy = 6;
+                if (glintPos < perimW) { gx = 6 + glintPos; gy = 6; }
+                else if (glintPos < perimW + perimH) { gx = 6 + perimW; gy = 6 + (glintPos - perimW); }
+                else if (glintPos < perimW * 2 + perimH) { gx = 6 + perimW - (glintPos - perimW - perimH); gy = 6 + perimH; }
+                else { gx = 6; gy = 6 + perimH - (glintPos - perimW * 2 - perimH); }
+
+                HBRUSH glintBrush = CreateSolidBrush(RGB(255, 255, 255));
+                HPEN glintPen = CreatePen(PS_SOLID, 1, GetPrimaryColor());
+                HPEN oldGP = (HPEN)SelectObject(memDC, glintPen);
+                HBRUSH oldGB = (HBRUSH)SelectObject(memDC, glintBrush);
+                Ellipse(memDC, gx - 3, gy - 3, gx + 4, gy + 4);
+                SelectObject(memDC, oldGP); SelectObject(memDC, oldGB);
+                DeleteObject(glintPen); DeleteObject(glintBrush);
+
+                // Ornate Cybernetic Arcade HUD Corner Filigree L-Brackets with Rivet Detailing (Loop 8)
+                HPEN cornerPen = CreatePen(PS_SOLID, 2, GetPrimaryColor());
+                HPEN oldCP = (HPEN)SelectObject(memDC, cornerPen);
+                // Top-Left
+                MoveToEx(memDC, 6 + 24, 6, NULL); LineTo(memDC, 6 + 4, 6); LineTo(memDC, 6, 6 + 4); LineTo(memDC, 6, 6 + 24);
+                // Top-Right
+                MoveToEx(memDC, W - 6 - 24, 6, NULL); LineTo(memDC, W - 6 - 4, 6); LineTo(memDC, W - 6, 6 + 4); LineTo(memDC, W - 6, 6 + 24);
+                // Bottom-Left
+                MoveToEx(memDC, 6 + 24, H - 6, NULL); LineTo(memDC, 6 + 4, H - 6); LineTo(memDC, 6, H - 6 - 4); LineTo(memDC, 6, H - 6 - 24);
+                // Bottom-Right
+                MoveToEx(memDC, W - 6 - 24, H - 6, NULL); LineTo(memDC, W - 6 - 4, H - 6); LineTo(memDC, W - 6, H - 6 - 4); LineTo(memDC, W - 6, H - 6 - 24);
+                SelectObject(memDC, oldCP); DeleteObject(cornerPen);
+
+                // Corner gold rivets
+                HBRUSH rivetB = CreateSolidBrush(RGB(255, 215, 0));
+                HPEN rivetP = CreatePen(PS_NULL, 0, 0);
+                HPEN oldRP = (HPEN)SelectObject(memDC, rivetP);
+                HBRUSH oldRB = (HBRUSH)SelectObject(memDC, rivetB);
+                Ellipse(memDC, 10, 10, 14, 14);
+                Ellipse(memDC, W - 14, 10, W - 10, 14);
+                Ellipse(memDC, 10, H - 14, 14, H - 10);
+                Ellipse(memDC, W - 14, H - 14, W - 10, H - 10);
+                SelectObject(memDC, oldRP); SelectObject(memDC, oldRB);
+                DeleteObject(rivetP); DeleteObject(rivetB);
+
                 // Center Line & Arena Circle
                 HPEN dashPen = CreatePen(PS_DOT, 1, RGB(60, 80, 100));
                 oldPen = (HPEN)SelectObject(memDC, dashPen);
@@ -1350,7 +1488,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     HPEN pOld = (HPEN)SelectObject(memDC, p1P); HBRUSH bOld = (HBRUSH)SelectObject(memDC, p1B);
                     RoundRect(memDC, drawX, drawY, drawX + drawW, drawY + drawH, 6, 6);
                     
-                    // Procedural metallic reflection
+                    // Procedural metallic reflection & diagonal sheen sweep
                     float tOffset = GetTickCount() * 0.002f;
                     int mPosOffset = (int)(sinf(tOffset) * (drawH / 3.0f));
                     int hlY = drawY + drawH / 2 + mPosOffset - 4;
@@ -1473,28 +1611,58 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SelectObject(memDC, oldPen); SelectObject(memDC, oldBrush); DeleteObject(puP);
                 }
 
-                // Shockwaves & Particles
+                // Shockwaves & Particles (Loop 8 4-Layer Kinematic Rendering)
                 for (int i = 0; i < MAX_SHOCKWAVES; i++) {
-                    if (shockwaves[i].radius > 0) {
-                        HPEN swP = CreatePen(PS_SOLID, 2, shockwaves[i].color);
+                    if (shockwaves[i].radius > 0.0f) {
+                        HPEN swP = CreatePen(PS_SOLID, shockwaves[i].line_width, shockwaves[i].color);
                         oldPen = (HPEN)SelectObject(memDC, swP);
                         oldBrush = (HBRUSH)SelectObject(memDC, (HBRUSH)GetStockObject(NULL_BRUSH));
-                        int r = shockwaves[i].radius; Ellipse(memDC, shockwaves[i].x - r, shockwaves[i].y - r, shockwaves[i].x + r, shockwaves[i].y + r);
+                        int r = (int)shockwaves[i].radius;
+                        Ellipse(memDC, (int)shockwaves[i].x - r, (int)shockwaves[i].y - r, (int)shockwaves[i].x + r, (int)shockwaves[i].y + r);
                         SelectObject(memDC, oldPen); SelectObject(memDC, oldBrush); DeleteObject(swP);
                     }
                 }
                 for (int i = 0; i < MAX_PARTICLES; i++) {
-                    if (particles[i].life > 0) {
-                        if (particles[i].type == 1) {
+                    if (particles[i].life > 0.0f) {
+                        float alpha = particles[i].life / particles[i].max_life;
+                        if (particles[i].layer == 0) { // Needle Spark with Velocity Trail
                             HPEN pP = CreatePen(PS_SOLID, particles[i].size, particles[i].color);
                             HPEN oldP = (HPEN)SelectObject(memDC, pP);
                             MoveToEx(memDC, (int)particles[i].x, (int)particles[i].y, NULL);
-                            LineTo(memDC, (int)(particles[i].x - particles[i].vx * 2), (int)(particles[i].y - particles[i].vy * 2));
+                            LineTo(memDC, (int)(particles[i].x - particles[i].vx * 2.2f), (int)(particles[i].y - particles[i].vy * 2.2f));
                             SelectObject(memDC, oldP); DeleteObject(pP);
-                        } else {
+                        } else if (particles[i].layer == 1) { // Expanding Buoyant Smoke / Plasma Puff
+                            int curR = (int)(particles[i].size + (particles[i].max_size - particles[i].size) * (1.0f - alpha));
+                            HPEN puffPen = CreatePen(PS_SOLID, 1, particles[i].color);
+                            HBRUSH puffBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+                            HPEN oldP = (HPEN)SelectObject(memDC, puffPen);
+                            HBRUSH oldB = (HBRUSH)SelectObject(memDC, puffBrush);
+                            Ellipse(memDC, (int)particles[i].x - curR, (int)particles[i].y - curR, (int)particles[i].x + curR, (int)particles[i].y + curR);
+                            SelectObject(memDC, oldP); SelectObject(memDC, oldB); DeleteObject(puffPen);
+                        } else if (particles[i].layer == 2) { // Heavy Kinematic Debris Shard
+                            int s = particles[i].size;
+                            int px = (int)particles[i].x, py = (int)particles[i].y;
+                            float cosA = cosf(particles[i].rot), sinA = sinf(particles[i].rot);
+                            POINT pts[4];
+                            pts[0].x = px + (int)(-s * cosA - (-s) * sinA); pts[0].y = py + (int)(-s * sinA + (-s) * cosA);
+                            pts[1].x = px + (int)(s * cosA - (-s) * sinA);  pts[1].y = py + (int)(s * sinA + (-s) * cosA);
+                            pts[2].x = px + (int)(s * cosA - (s * 1.5f) * sinA); pts[2].y = py + (int)(s * sinA + (s * 1.5f) * cosA);
+                            pts[3].x = px + (int)(-s * cosA - (s * 1.5f) * sinA); pts[3].y = py + (int)(-s * sinA + (s * 1.5f) * cosA);
                             HBRUSH pB = CreateSolidBrush(particles[i].color);
-                            RECT pR = { (int)particles[i].x - particles[i].size / 2, (int)particles[i].y - particles[i].size / 2, (int)particles[i].x + particles[i].size / 2 + 1, (int)particles[i].y + particles[i].size / 2 + 1 };
-                            FillRect(memDC, &pR, pB); DeleteObject(pB);
+                            HPEN pP = CreatePen(PS_NULL, 0, 0);
+                            HPEN oldP = (HPEN)SelectObject(memDC, pP);
+                            HBRUSH oldB = (HBRUSH)SelectObject(memDC, pB);
+                            Polygon(memDC, pts, 4);
+                            SelectObject(memDC, oldP); SelectObject(memDC, oldB);
+                            DeleteObject(pP); DeleteObject(pB);
+                        } else if (particles[i].layer == 3) { // Radiant Celebration Energy Star
+                            int s = particles[i].size;
+                            int px = (int)particles[i].x, py = (int)particles[i].y;
+                            HPEN starP = CreatePen(PS_SOLID, 1, particles[i].color);
+                            HPEN oldP = (HPEN)SelectObject(memDC, starP);
+                            MoveToEx(memDC, px - s, py, NULL); LineTo(memDC, px + s + 1, py);
+                            MoveToEx(memDC, px, py - s, NULL); LineTo(memDC, px, py + s + 1);
+                            SelectObject(memDC, oldP); DeleteObject(starP);
                         }
                     }
                 }
