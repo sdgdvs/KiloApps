@@ -54,10 +54,10 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KSubmarine (Deep-sea underwater exploration & abyssal survival RPG)
-**Phase:** 1 (next to do)
+**Phase:** 2 (next to do)
 **Status:** Creation
 
-- [ ] Phase 1: Scaffold KSubmarine directory (`KSubmarine/`), create web HTML skeleton (`KiloOS/public/apps/ksubmarine.html`), register in App.jsx.
+- [x] Phase 1: Scaffold KSubmarine directory (`KSubmarine/`), create web HTML skeleton (`KiloOS/public/apps/ksubmarine.html`), register in App.jsx.
 - [ ] Phase 2: Core bathyscaphe dashboard (depth gauge, hull pressure integrity, oxygen scrubber, battery bank, sonar ping, ballast dive engine).
 - [ ] Phase 3: Native C version (`KSubmarine/main.c`, `build.bat`) using Win32 API with functional parity.
 - [ ] Phase 4: Submersible oceanic CRT themes & deep-water scanlines (abyssal cyan, emerald sonar, amber depth, monochrome radar).
