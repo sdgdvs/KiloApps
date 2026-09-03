@@ -96,6 +96,7 @@ int historyCount = 0;
 
 // View Handles
 HWND hModeBtns[5];
+HWND hHelpBtn;
 HWND hSciBtns[42];
 HWND hFinControls[14];
 HWND hStatsControls[14];
@@ -108,6 +109,7 @@ HWND hHistControls[4];
 #define ID_MODE_STATS 3005
 #define ID_MODE_CONST 3003
 #define ID_MODE_HIST  3004
+#define ID_HELP       3006
 
 #define ID_FIN_CALC_PMT  4001
 #define ID_FIN_CALC_FV   4002
@@ -149,6 +151,29 @@ int ParsePointList(const char* s, double* outX, double* outY, int maxCount) {
         if (*s) s++;
     }
     return count;
+}
+
+void ShowHelpDialog(HWND hwnd) {
+    MessageBoxA(hwnd,
+        "KCalc Pro — Scientific & Financial Suite\n\n"
+        "Calculator Modes:\n"
+        "  [1] Scientific Calculator & Keypad\n"
+        "  [2] Financial (PMT Loans, FV, Margin)\n"
+        "  [3] Statistics & Linear Regression\n"
+        "  [4] Scientific Constants Library\n"
+        "  [5] Calculation History Tape\n\n"
+        "Keyboard Shortcuts:\n"
+        "  0-9, .        : Input numbers and decimals\n"
+        "  +, -, *, /, ^ : Arithmetic and powers\n"
+        "  Enter or =    : Calculate result\n"
+        "  Backspace     : Delete last character\n"
+        "  Esc           : Clear all / Reset\n"
+        "  D             : Toggle DEG / RAD mode\n"
+        "  F1 or H       : Open this Help Guide\n"
+        "  Ctrl+1 to 5   : Switch Calculator Modes\n\n"
+        "Memory Registers:\n"
+        "  MS=Store, MR=Recall, M+=Add, M-=Sub, MC=Clear",
+        "KCalc Pro Help", MB_OK | MB_ICONINFORMATION);
 }
 
 void FormatDisplay(double val) {
@@ -420,12 +445,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hDisplayBgBrush = CreateSolidBrush(RGB(15, 23, 42));
             hEditBgBrush = CreateSolidBrush(RGB(30, 41, 59));
 
-            // Mode Selector Bar
-            hModeBtns[0] = CreateWindowA("BUTTON", "Scientific", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(10), S(8), S(64), S(26), hwnd, (HMENU)ID_MODE_SCI, NULL, NULL);
-            hModeBtns[1] = CreateWindowA("BUTTON", "Financial",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(76), S(8), S(60), S(26), hwnd, (HMENU)ID_MODE_FIN, NULL, NULL);
-            hModeBtns[2] = CreateWindowA("BUTTON", "Stats",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(138), S(8), S(52), S(26), hwnd, (HMENU)ID_MODE_STATS, NULL, NULL);
-            hModeBtns[3] = CreateWindowA("BUTTON", "Constants",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(192), S(8), S(64), S(26), hwnd, (HMENU)ID_MODE_CONST, NULL, NULL);
-            hModeBtns[4] = CreateWindowA("BUTTON", "History",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(258), S(8), S(60), S(26), hwnd, (HMENU)ID_MODE_HIST, NULL, NULL);
+            // Mode Selector Bar & Help Button
+            hModeBtns[0] = CreateWindowA("BUTTON", "[1] Sci",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(10), S(8), S(52), S(26), hwnd, (HMENU)ID_MODE_SCI, NULL, NULL);
+            hModeBtns[1] = CreateWindowA("BUTTON", "[2] Fin",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(64), S(8), S(52), S(26), hwnd, (HMENU)ID_MODE_FIN, NULL, NULL);
+            hModeBtns[2] = CreateWindowA("BUTTON", "[3] Stat", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(118), S(8), S(54), S(26), hwnd, (HMENU)ID_MODE_STATS, NULL, NULL);
+            hModeBtns[3] = CreateWindowA("BUTTON", "[4] Const",WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(174), S(8), S(56), S(26), hwnd, (HMENU)ID_MODE_CONST, NULL, NULL);
+            hModeBtns[4] = CreateWindowA("BUTTON", "[5] Hist", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(232), S(8), S(52), S(26), hwnd, (HMENU)ID_MODE_HIST, NULL, NULL);
+            hHelpBtn     = CreateWindowA("BUTTON", "? [F1]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(286), S(8), S(54), S(26), hwnd, (HMENU)ID_HELP, NULL, NULL);
 
             // Displays
             hSubDisplay = CreateWindowExA(0, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_RIGHT, S(10), S(38), S(324), S(18), hwnd, NULL, NULL, NULL);
@@ -550,6 +576,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id == ID_MODE_STATS) SetViewMode(2);
             else if (id == ID_MODE_CONST) SetViewMode(3);
             else if (id == ID_MODE_HIST) SetViewMode(4);
+            else if (id == ID_HELP) ShowHelpDialog(hwnd);
 
             else if ((id >= '0' && id <= '9') || id == '.') {
                 AppendChar(id);
@@ -789,7 +816,7 @@ void __stdcall MainEntry() {
     int winW = wr.right - wr.left;
     int winH = wr.bottom - wr.top;
 
-    HWND hwnd = CreateWindowExA(0, "KCalcClass", "KCalc Pro", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, winW, winH, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KCalcClass", "KCalc Pro - [Press F1 for Help]", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, winW, winH, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
@@ -797,36 +824,54 @@ void __stdcall MainEntry() {
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
+            HWND hFocus = GetFocus();
+            char className[32] = {0};
+            if (hFocus) GetClassNameA(hFocus, className, 32);
+            int isEditFocused = (my_strcmp(className, "Edit") == 0 || my_strcmp(className, "EDIT") == 0);
+
             int key = msg.wParam;
-            int cmd = 0;
-            if (key == 'H' || key == VK_F1) {
-                MessageBoxA(hwnd, "KCalc Pro Help:\n- Switch modes using the buttons above.\n- Keyboard shortcuts: Numpad/numbers, +, -, *, /, %, ^, Enter, Backspace, Esc.\n- Press 'D' to toggle DEG / RAD.\n- History exports to kcalc_history.txt.", "Help", MB_OK | MB_ICONINFORMATION);
+            if (key == VK_F1 || ((key == 'H' || key == 'h') && !isEditFocused)) {
+                ShowHelpDialog(hwnd);
                 continue;
             }
-            if ((key == 'D' || key == 'd') && currentMode == 0) {
+
+            // Ctrl+1 through Ctrl+5 mode switching
+            if (GetKeyState(VK_CONTROL) & 0x8000) {
+                if (key == '1') { SendMessageA(hwnd, WM_COMMAND, ID_MODE_SCI, 0); continue; }
+                if (key == '2') { SendMessageA(hwnd, WM_COMMAND, ID_MODE_FIN, 0); continue; }
+                if (key == '3') { SendMessageA(hwnd, WM_COMMAND, ID_MODE_STATS, 0); continue; }
+                if (key == '4') { SendMessageA(hwnd, WM_COMMAND, ID_MODE_CONST, 0); continue; }
+                if (key == '5') { SendMessageA(hwnd, WM_COMMAND, ID_MODE_HIST, 0); continue; }
+            }
+
+            if ((key == 'D' || key == 'd') && !isEditFocused && currentMode == 0) {
                 isDeg = !isDeg;
                 UpdateStatusText();
                 continue;
             }
-            if (key >= '0' && key <= '9') {
-                if (!(GetKeyState(VK_SHIFT) & 0x8000)) cmd = key;
-                else if (key == '8') cmd = '*';
-                else if (key == '5') cmd = '%';
-            }
-            else if (key >= VK_NUMPAD0 && key <= VK_NUMPAD9) cmd = key - VK_NUMPAD0 + '0';
-            else if (key == VK_ADD) cmd = '+';
-            else if (key == VK_OEM_PLUS) cmd = (GetKeyState(VK_SHIFT) & 0x8000) ? '+' : '=';
-            else if (key == VK_SUBTRACT || key == VK_OEM_MINUS) cmd = '-';
-            else if (key == VK_MULTIPLY) cmd = '*';
-            else if (key == VK_DIVIDE || key == VK_OEM_2 || key == VK_OEM_5) cmd = '/';
-            else if (key == VK_RETURN) cmd = '=';
-            else if (key == VK_BACK) cmd = '<';
-            else if (key == VK_ESCAPE) cmd = 'C';
-            else if (key == VK_DECIMAL || key == VK_OEM_PERIOD) cmd = '.';
-            
-            if (cmd && currentMode == 0) {
-                SendMessageA(hwnd, WM_COMMAND, cmd, 0);
-                continue;
+
+            if (!isEditFocused && currentMode == 0) {
+                int cmd = 0;
+                if (key >= '0' && key <= '9') {
+                    if (!(GetKeyState(VK_SHIFT) & 0x8000)) cmd = key;
+                    else if (key == '8') cmd = '*';
+                    else if (key == '5') cmd = '%';
+                }
+                else if (key >= VK_NUMPAD0 && key <= VK_NUMPAD9) cmd = key - VK_NUMPAD0 + '0';
+                else if (key == VK_ADD) cmd = '+';
+                else if (key == VK_OEM_PLUS) cmd = (GetKeyState(VK_SHIFT) & 0x8000) ? '+' : '=';
+                else if (key == VK_SUBTRACT || key == VK_OEM_MINUS) cmd = '-';
+                else if (key == VK_MULTIPLY) cmd = '*';
+                else if (key == VK_DIVIDE || key == VK_OEM_2 || key == VK_OEM_5) cmd = '/';
+                else if (key == VK_RETURN) cmd = '=';
+                else if (key == VK_BACK) cmd = '<';
+                else if (key == VK_ESCAPE) cmd = 'C';
+                else if (key == VK_DECIMAL || key == VK_OEM_PERIOD) cmd = '.';
+                
+                if (cmd) {
+                    SendMessageA(hwnd, WM_COMMAND, cmd, 0);
+                    continue;
+                }
             }
         }
         TranslateMessage(&msg);

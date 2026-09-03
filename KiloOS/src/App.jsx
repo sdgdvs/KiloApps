@@ -20,7 +20,7 @@ const APPS = [
   { id: 'kchat', title: 'KChat', url: '/apps/kchat.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchat.ico', w: 850, h: 650, folder: 'Network' },
   { id: 'kchatserver', title: 'KChat Server', url: '/apps/kchatserver.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchatserver.ico', w: 450, h: 350, folder: 'Network' },
   { id: 'kpad', title: 'KPad', url: '/apps/kpad.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kpad.ico', w: 800, h: 600, folder: 'Office' },
-  { id: 'kcalc', title: 'KCalc', url: '/apps/kcalc.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcalc.ico', w: 350, h: 430, folder: 'System' },
+  { id: 'kcalc', title: 'KCalc', url: '/apps/kcalc.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcalc.ico', w: 780, h: 640, folder: 'System' },
   { id: 'kpaint', title: 'KPaint', url: '/apps/kpaint.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kpaint.ico', w: 1100, h: 750, folder: 'Media' },
   { id: 'kmine', title: 'KMine', url: '/apps/kmine.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmines.ico', w: 550, h: 630, folder: 'Games' },
   { id: 'kclock', title: 'KClock', url: '/apps/kclock.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kclock.ico', w: 340, h: 580, folder: 'System' },

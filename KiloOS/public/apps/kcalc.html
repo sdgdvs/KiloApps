@@ -8,7 +8,7 @@
 <style>
   :root {
     --bg-main: #090b10;
-    --card-bg: rgba(18, 22, 32, 0.75);
+    --card-bg: rgba(18, 22, 32, 0.85);
     --btn-bg: rgba(255, 255, 255, 0.04);
     --btn-hover: rgba(255, 255, 255, 0.09);
     --btn-active: rgba(255, 255, 255, 0.16);
@@ -47,6 +47,7 @@
     gap: 10px; 
     max-width: 1200px;
     margin: 0 auto;
+    position: relative;
   }
 
   /* Header Navigation Bar */
@@ -59,6 +60,8 @@
     border-radius: 14px;
     padding: 8px 14px;
     backdrop-filter: blur(16px);
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .logo {
@@ -90,18 +93,31 @@
     border-radius: 10px;
     padding: 3px;
     border: 1px solid var(--border-color);
+    gap: 2px;
   }
 
   .tab-btn {
     border: none;
     background: transparent;
     color: var(--text-muted);
-    padding: 6px 14px;
+    padding: 6px 12px;
     font-size: 12px;
     font-weight: 600;
     border-radius: 7px;
     cursor: pointer;
     transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .tab-badge {
+    font-size: 9px;
+    opacity: 0.6;
+    background: rgba(255,255,255,0.1);
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
   }
 
   .tab-btn:hover { color: #fff; }
@@ -109,6 +125,10 @@
     background: var(--primary-gradient);
     color: #fff;
     box-shadow: 0 2px 8px var(--accent-glow);
+  }
+  .tab-btn.active .tab-badge {
+    background: rgba(255,255,255,0.25);
+    opacity: 1;
   }
 
   .header-controls {
@@ -121,15 +141,18 @@
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border-color);
     color: var(--text-main);
-    padding: 4px 10px;
-    border-radius: 6px;
+    padding: 5px 11px;
+    border-radius: 7px;
     font-size: 11px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.15s;
     font-family: 'JetBrains Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
-  .badge-btn:hover { background: rgba(255,255,255,0.1); }
+  .badge-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.2); }
   .badge-btn.active { background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
 
   /* Main Workspace Layout */
@@ -159,7 +182,7 @@
     justify-content: space-between;
     box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.7), 0 4px 20px rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(12px);
-    min-height: 100px;
+    min-height: 95px;
     position: relative;
   }
 
@@ -177,7 +200,7 @@
 
   .main-display {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 34px;
+    font-size: 32px;
     font-weight: 400;
     color: #ffffff;
     text-align: right;
@@ -203,6 +226,7 @@
     border-radius: 4px;
     background: rgba(255, 255, 255, 0.06);
     color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
   }
   .status-chip.highlight { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
 
@@ -338,6 +362,7 @@
     gap: 8px;
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 8px;
+    flex-wrap: wrap;
   }
 
   .fin-tab {
@@ -365,9 +390,16 @@
     backdrop-filter: blur(12px);
   }
 
+  .fin-card h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #f8fafc;
+  }
+
   .fin-form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 12px;
   }
 
@@ -407,6 +439,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
   }
 
   .fin-res-val {
@@ -428,7 +462,7 @@
 
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
     gap: 10px;
     margin-top: 10px;
   }
@@ -481,14 +515,14 @@
     font-size: 13px;
     outline: none;
     resize: vertical;
-    min-height: 70px;
+    min-height: 60px;
   }
   .stats-textarea:focus { border-color: #6366f1; }
 
   /* Scientific Constants Panel */
   .constants-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 10px;
     flex: 1;
     overflow-y: auto;
@@ -530,6 +564,7 @@
     display: flex;
     gap: 8px;
     align-items: center;
+    flex-wrap: wrap;
   }
 
   .search-input {
@@ -541,15 +576,16 @@
     color: #fff;
     font-size: 12px;
     outline: none;
+    min-width: 160px;
   }
 
   .action-btn {
     background: var(--btn-bg);
     border: 1px solid var(--border-color);
     color: var(--text-main);
-    padding: 8px 12px;
+    padding: 8px 14px;
     border-radius: 8px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.15s;
@@ -558,6 +594,8 @@
     gap: 5px;
   }
   .action-btn:hover { background: var(--btn-hover); border-color: rgba(255,255,255,0.2); }
+  .action-btn.danger { color: #f87171; border-color: rgba(239, 68, 68, 0.25); }
+  .action-btn.danger:hover { background: rgba(239, 68, 68, 0.2); }
 
   .history-list {
     flex: 1;
@@ -598,12 +636,164 @@
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border-color);
     color: var(--text-muted);
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
     cursor: pointer;
+    transition: all 0.15s;
   }
-  .mini-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.12); }
+  .mini-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.12); border-color: rgba(255,255,255,0.2); }
+
+  /* Modal Dialogs */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 16px;
+  }
+  .modal-overlay.active { display: flex; }
+
+  .modal-content {
+    background: #0d111a;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 580px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(99, 102, 241, 0.2);
+    display: flex;
+    flex-direction: column;
+    padding: 22px;
+    gap: 16px;
+    animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes modalPop {
+    0% { transform: scale(0.95); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 12px;
+  }
+
+  .modal-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 20px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.15s;
+  }
+  .close-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.1); }
+
+  .shortcut-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .shortcut-table th {
+    text-align: left;
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border-color);
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+  }
+  .shortcut-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  }
+  .kbd-key {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 5px;
+    padding: 2px 7px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #cbd5e1;
+    display: inline-block;
+  }
+
+  /* Memory Registers Grid */
+  .mem-reg-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .mem-reg-card {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .mem-reg-title { font-size: 11px; font-weight: 700; color: #818cf8; text-transform: uppercase; }
+  .mem-reg-val { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: #fff; word-break: break-all; }
+  .mem-reg-actions { display: flex; gap: 6px; }
+
+  /* Toast Notification */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 3000;
+    pointer-events: none;
+  }
+
+  .toast {
+    background: rgba(18, 22, 34, 0.95);
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    color: #f8fafc;
+    padding: 10px 20px;
+    border-radius: 24px;
+    font-size: 12px;
+    font-weight: 500;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 15px rgba(99, 102, 241, 0.2);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: auto;
+  }
+  .toast.show { opacity: 1; transform: translateY(0) scale(1); }
+  .toast.success { border-color: rgba(16, 185, 129, 0.5); }
+  .toast.warning { border-color: rgba(245, 158, 11, 0.5); }
+  .toast.error { border-color: rgba(239, 68, 68, 0.5); }
 
   /* Scrollbars */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -611,9 +801,10 @@
   ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
 
-  @media (max-width: 768px) {
-    .header { flex-direction: column; gap: 8px; align-items: stretch; }
-    .mode-tabs { justify-content: center; }
+  @media (max-width: 680px) {
+    .header { flex-direction: column; align-items: stretch; }
+    .mode-tabs { overflow-x: auto; }
+    .mem-reg-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -628,22 +819,36 @@
     </div>
 
     <nav class="mode-tabs">
-      <button class="tab-btn active" onclick="switchView('scientific')">Scientific</button>
-      <button class="tab-btn" onclick="switchView('financial')">Financial</button>
-      <button class="tab-btn" onclick="switchView('statistics')">Statistics</button>
-      <button class="tab-btn" onclick="switchView('constants')">Constants</button>
-      <button class="tab-btn" onclick="switchView('history')">History Tape</button>
+      <button class="tab-btn active" id="nav-btn-scientific" onclick="switchView('scientific')">
+        <span>Scientific</span>
+        <span class="tab-badge">1</span>
+      </button>
+      <button class="tab-btn" id="nav-btn-financial" onclick="switchView('financial')">
+        <span>Financial</span>
+        <span class="tab-badge">2</span>
+      </button>
+      <button class="tab-btn" id="nav-btn-statistics" onclick="switchView('statistics')">
+        <span>Statistics</span>
+        <span class="tab-badge">3</span>
+      </button>
+      <button class="tab-btn" id="nav-btn-constants" onclick="switchView('constants')">
+        <span>Constants</span>
+        <span class="tab-badge">4</span>
+      </button>
+      <button class="tab-btn" id="nav-btn-history" onclick="switchView('history')">
+        <span>History</span>
+        <span class="tab-badge">5</span>
+      </button>
     </nav>
 
     <div class="header-controls">
-      <button class="badge-btn" onclick="alert('KCalc Pro Help:\\n- Switch modes using tabs at top.\\n- Keyboard shortcuts: 0-9, ., +, -, *, /, %, ^, (, )\\n- Enter or = to calculate.\\n- Escape to clear all.\\n- Backspace to delete last.')">Help (H / F1)</button>
-      <button id="degRadBtn" class="badge-btn active" onclick="toggleDegRad()">DEG</button>
-      <button id="memBadge" class="badge-btn" onclick="showMemoryModal()">M: 0</button>
+      <button class="badge-btn" onclick="openHelpModal()" title="Help & Keyboard Shortcuts (H / F1)">Help [F1]</button>
+      <button id="degRadBtn" class="badge-btn active" onclick="toggleDegRad()" title="Toggle Degrees / Radians (D)">DEG</button>
+      <button id="memBadge" class="badge-btn" onclick="openMemoryModal()" title="Memory Registers (M)">M: 0</button>
     </div>
   </header>
 
   <!-- Workspace -->
-  <div id="helpToast" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(99, 102, 241, 0.9); color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; z-index: 1000; pointer-events: none; transition: opacity 0.5s; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">Press 'H' or F1 for help</div>
   <main class="workspace">
     <div class="calc-pane">
       <!-- Screen Display -->
@@ -673,7 +878,7 @@
           <button class="calc-btn mem" onclick="memAdd()" title="Memory Add">M+</button>
           <button class="calc-btn mem" onclick="memSub()" title="Memory Subtract">M-</button>
           <button class="calc-btn danger" onclick="backspace()" title="Backspace">⌫</button>
-          <button class="calc-btn danger" onclick="clearAll()" title="Clear All">C</button>
+          <button class="calc-btn danger" onclick="clearAll()" title="Clear All (Esc)">C</button>
 
           <!-- Row 1: Trigonometric -->
           <button class="calc-btn func" onclick="append('sin(')">sin</button>
@@ -886,7 +1091,7 @@
 
           <!-- Tool 1: 1-Variable Stats -->
           <div id="stat-1var-card" class="fin-card">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
               <h3 style="margin:0;">Descriptive Statistics (1-Var)</h3>
               <div style="display:flex; gap:6px;">
                 <button class="mini-btn" onclick="loadSample1VarData()">Load Example Data</button>
@@ -925,7 +1130,7 @@
               </div>
               <div class="stat-tile">
                 <div class="stat-label">Min / Max / Range</div>
-                <div id="stat-minmax" class="stat-val" style="font-size:13px;">14 / 67 (Range: 53)</div>
+                <div id="stat-minmax" class="stat-val" style="font-size:12px;">14 / 67 (Range: 53)</div>
               </div>
               <div class="stat-tile">
                 <div class="stat-label">Sample Std Dev (s)</div>
@@ -949,7 +1154,7 @@
 
           <!-- Tool 2: 2-Variable Linear Regression -->
           <div id="stat-2var-card" class="fin-card" style="display:none;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
               <h3 style="margin:0;">Linear Regression Analysis (y = mx + b)</h3>
               <div style="display:flex; gap:6px;">
                 <button class="mini-btn" onclick="loadSample2VarData()">Load Example Points</button>
@@ -965,7 +1170,7 @@
             <div class="stats-grid">
               <div class="stat-tile" style="grid-column: span 2;">
                 <div class="stat-label">Linear Regression Model</div>
-                <div id="reg-equation" class="stat-val" style="color:#34d399; font-size:18px;">y = 2.3400x + 0.1200</div>
+                <div id="reg-equation" class="stat-val" style="color:#34d399; font-size:16px;">y = 2.3400x + 0.1200</div>
               </div>
               <div class="stat-tile">
                 <div class="stat-label">Slope (m)</div>
@@ -987,8 +1192,8 @@
               </div>
               <div class="stat-tile" style="grid-column: span 2;">
                 <div class="stat-label">Estimate y given x:</div>
-                <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
-                  <input type="number" id="reg-pred-x" value="6" style="width:90px; padding:6px 10px; font-size:13px;" oninput="predictRegressionY()">
+                <div style="display:flex; gap:8px; align-items:center; margin-top:4px; flex-wrap:wrap;">
+                  <input type="number" id="reg-pred-x" value="6" style="width:80px; padding:6px 10px; font-size:13px;" oninput="predictRegressionY()">
                   <span style="font-size:13px; color:var(--text-muted);">→ ŷ =</span>
                   <span id="reg-pred-y" class="stat-val" style="color:#818cf8;">14.1600</span>
                   <button class="mini-btn" onclick="sendToCalc(document.getElementById('reg-pred-y').textContent)">Use ŷ</button>
@@ -1025,6 +1230,108 @@
   </main>
 </div>
 
+<!-- Modal Dialogs -->
+<div id="modalOverlay" class="modal-overlay" onclick="handleBackdropClick(event)">
+  <!-- Help Modal -->
+  <div id="helpModal" class="modal-content" style="display:none;">
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="logo-icon" style="width:20px; height:20px; font-size:11px;">?</div>
+        <span>KCalc Pro — User Guide & Shortcuts</span>
+      </div>
+      <button class="close-btn" onclick="closeModals()">✕</button>
+    </div>
+    
+    <div>
+      <h4 style="margin:0 0 8px 0; color:#818cf8; font-size:13px;">Overview & Calculator Modes</h4>
+      <p style="margin:0 0 12px 0; font-size:12px; color:var(--text-muted); line-height:1.5;">
+        KCalc Pro provides 5 comprehensive calculation environments: Scientific Keypad with formula bar, Financial calculators (PMT, FV, Margin, CAGR), Statistics & Regression suite, Scientific Constants library, and calculation History Tape.
+      </p>
+
+      <table class="shortcut-table">
+        <thead>
+          <tr>
+            <th>Shortcut</th>
+            <th>Function / Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="kbd-key">1</span> - <span class="kbd-key">5</span></td><td>Switch Calculator Modes (Scientific, Fin, Stats, Const, History)</td></tr>
+          <tr><td><span class="kbd-key">0</span> - <span class="kbd-key">9</span>, <span class="kbd-key">.</span></td><td>Enter numbers and decimals</td></tr>
+          <tr><td><span class="kbd-key">+</span>, <span class="kbd-key">-</span>, <span class="kbd-key">*</span>, <span class="kbd-key">/</span>, <span class="kbd-key">%</span>, <span class="kbd-key">^</span></td><td>Standard and power arithmetic operators</td></tr>
+          <tr><td><span class="kbd-key">(</span> , <span class="kbd-key">)</span></td><td>Parentheses for order of operations</td></tr>
+          <tr><td><span class="kbd-key">Enter</span> or <span class="kbd-key">=</span></td><td>Evaluate formula or calculate expression</td></tr>
+          <tr><td><span class="kbd-key">Backspace</span></td><td>Delete previous character / function token</td></tr>
+          <tr><td><span class="kbd-key">Esc</span></td><td>Clear display or close active modal</td></tr>
+          <tr><td><span class="kbd-key">D</span></td><td>Toggle Trigonometric Degrees / Radians mode</td></tr>
+          <tr><td><span class="kbd-key">M</span></td><td>Open Memory Registers Management Dialog</td></tr>
+          <tr><td><span class="kbd-key">H</span> or <span class="kbd-key">F1</span></td><td>Open this Help & Shortcuts Dialog</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <button class="action-btn" style="background:var(--primary); color:#fff; align-self:flex-end;" onclick="closeModals()">Close Guide</button>
+  </div>
+
+  <!-- Memory Registers Modal -->
+  <div id="memModal" class="modal-content" style="display:none;">
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="logo-icon" style="width:20px; height:20px; font-size:11px;">M</div>
+        <span>Memory Registers</span>
+      </div>
+      <button class="close-btn" onclick="closeModals()">✕</button>
+    </div>
+
+    <div class="mem-reg-grid">
+      <div class="mem-reg-card">
+        <div class="mem-reg-title">Active Memory (M)</div>
+        <div id="modal-mem-active" class="mem-reg-val">0</div>
+        <div class="mem-reg-actions">
+          <button class="mini-btn" onclick="memRecall(); closeModals();">Recall</button>
+          <button class="mini-btn" onclick="memStore(); updateModalMemVals();">Store</button>
+          <button class="mini-btn" onclick="memClear(); updateModalMemVals();">Clear</button>
+        </div>
+      </div>
+      <div class="mem-reg-card">
+        <div class="mem-reg-title">Register M1</div>
+        <div id="modal-mem-m1" class="mem-reg-val">0</div>
+        <div class="mem-reg-actions">
+          <button class="mini-btn" onclick="recallMultiMem('M1'); closeModals();">Recall</button>
+          <button class="mini-btn" onclick="storeMultiMem('M1');">Store</button>
+          <button class="mini-btn" onclick="clearMultiMem('M1');">Clear</button>
+        </div>
+      </div>
+      <div class="mem-reg-card">
+        <div class="mem-reg-title">Register M2</div>
+        <div id="modal-mem-m2" class="mem-reg-val">0</div>
+        <div class="mem-reg-actions">
+          <button class="mini-btn" onclick="recallMultiMem('M2'); closeModals();">Recall</button>
+          <button class="mini-btn" onclick="storeMultiMem('M2');">Store</button>
+          <button class="mini-btn" onclick="clearMultiMem('M2');">Clear</button>
+        </div>
+      </div>
+      <div class="mem-reg-card">
+        <div class="mem-reg-title">Register M3</div>
+        <div id="modal-mem-m3" class="mem-reg-val">0</div>
+        <div class="mem-reg-actions">
+          <button class="mini-btn" onclick="recallMultiMem('M3'); closeModals();">Recall</button>
+          <button class="mini-btn" onclick="storeMultiMem('M3');">Store</button>
+          <button class="mini-btn" onclick="clearMultiMem('M3');">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+      <button class="mini-btn" onclick="clearAllMemRegisters()">Clear All Registers</button>
+      <button class="action-btn" style="background:var(--primary); color:#fff;" onclick="closeModals()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container"></div>
+
 <script>
   // State variables
   let expr = '';
@@ -1057,21 +1364,113 @@
     populateConstants();
     render();
     loadHistoryFromStorage();
-    setTimeout(() => {
-      const toast = document.getElementById('helpToast');
-      if (toast) {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 500);
-      }
-    }, 4000);
+    showToast("Welcome to KCalc Pro • Press 'H' or F1 for Help", 'info', 4500);
   });
+
+  // Toast Notification System
+  function showToast(msg, type = 'info', duration = 3000) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    let icon = 'ℹ️';
+    if (type === 'success') icon = '✓';
+    else if (type === 'warning') icon = '⚠️';
+    else if (type === 'error') icon = '✕';
+
+    toast.innerHTML = `<span style="font-weight:700;">${icon}</span><span>${escapeHtml(msg)}</span>`;
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+      toast.classList.add('show');
+    });
+
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      }, 300);
+    }, duration);
+  }
+
+  // Modals
+  function openHelpModal() {
+    document.getElementById('modalOverlay').classList.add('active');
+    document.getElementById('helpModal').style.display = 'flex';
+    document.getElementById('memModal').style.display = 'none';
+  }
+
+  function openMemoryModal() {
+    updateModalMemVals();
+    document.getElementById('modalOverlay').classList.add('active');
+    document.getElementById('memModal').style.display = 'flex';
+    document.getElementById('helpModal').style.display = 'none';
+  }
+
+  function closeModals() {
+    document.getElementById('modalOverlay').classList.remove('active');
+    document.getElementById('helpModal').style.display = 'none';
+    document.getElementById('memModal').style.display = 'none';
+  }
+
+  function handleBackdropClick(e) {
+    if (e.target === document.getElementById('modalOverlay')) {
+      closeModals();
+    }
+  }
+
+  function updateModalMemVals() {
+    document.getElementById('modal-mem-active').textContent = formatNum(memoryStore);
+    document.getElementById('modal-mem-m1').textContent = formatNum(multiMemory.M1);
+    document.getElementById('modal-mem-m2').textContent = formatNum(multiMemory.M2);
+    document.getElementById('modal-mem-m3').textContent = formatNum(multiMemory.M3);
+  }
+
+  function storeMultiMem(reg) {
+    try {
+      let val = evalExpression(expr || '0');
+      if (!isNaN(val) && isFinite(val)) {
+        multiMemory[reg] = val;
+        updateModalMemVals();
+        showToast(`Stored ${val} in ${reg}`, 'success');
+      }
+    } catch {}
+  }
+
+  function recallMultiMem(reg) {
+    append(String(multiMemory[reg]));
+    showToast(`Recalled ${reg}`, 'info');
+  }
+
+  function clearMultiMem(reg) {
+    multiMemory[reg] = 0;
+    updateModalMemVals();
+    showToast(`Cleared ${reg}`, 'info');
+  }
+
+  function clearAllMemRegisters() {
+    memoryStore = 0.0;
+    multiMemory.M1 = 0;
+    multiMemory.M2 = 0;
+    multiMemory.M3 = 0;
+    render();
+    updateModalMemVals();
+    showToast('All memory registers cleared', 'info');
+  }
+
+  function formatNum(val) {
+    if (val === 0) return '0';
+    return Number.isInteger(val) ? String(val) : Number(val.toPrecision(8)).toString();
+  }
 
   function switchView(viewName) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
 
-    const activeTab = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.textContent.toLowerCase().includes(viewName.substring(0, 4)));
-    if (activeTab) activeTab.classList.add('active');
+    const tabBtn = document.getElementById('nav-btn-' + viewName);
+    if (tabBtn) tabBtn.classList.add('active');
 
     const panel = document.getElementById('view-' + viewName);
     if (panel) panel.classList.add('active');
@@ -1085,6 +1484,7 @@
     chip.textContent = isDeg ? 'DEG' : 'RAD';
     if (isDeg) { btn.classList.add('active'); chip.classList.add('highlight'); }
     else { btn.classList.remove('active'); chip.classList.remove('highlight'); }
+    showToast(`Angle Mode: ${isDeg ? 'Degrees (DEG)' : 'Radians (RAD)'}`, 'info', 2000);
   }
 
   function append(val) {
@@ -1142,7 +1542,7 @@
     // Memory status chip
     const memChip = document.getElementById('memChip');
     const memBadge = document.getElementById('memBadge');
-    memBadge.textContent = 'M: ' + (Number.isInteger(memoryStore) ? memoryStore : memoryStore.toFixed(2));
+    memBadge.textContent = 'M: ' + (Number.isInteger(memoryStore) ? memoryStore : Number(memoryStore.toFixed(2)));
     if (memoryStore !== 0) {
       memChip.style.display = 'inline-block';
       memBadge.classList.add('active');
@@ -1153,26 +1553,46 @@
   }
 
   // Memory functions
-  function memClear() { memoryStore = 0.0; render(); }
-  function memRecall() { append(String(memoryStore)); }
+  function memClear() {
+    memoryStore = 0.0;
+    render();
+    showToast('Active Memory Cleared', 'info');
+  }
+
+  function memRecall() {
+    append(String(memoryStore));
+    showToast('Recalled Active Memory', 'info');
+  }
+
   function memStore() {
     try {
-      let val = evalExpression(expr);
-      if (!isNaN(val) && isFinite(val)) memoryStore = val;
+      let val = evalExpression(expr || '0');
+      if (!isNaN(val) && isFinite(val)) {
+        memoryStore = val;
+        showToast(`Stored ${val} in Memory`, 'success');
+      }
     } catch {}
     render();
   }
+
   function memAdd() {
     try {
-      let val = evalExpression(expr);
-      if (!isNaN(val) && isFinite(val)) memoryStore += val;
+      let val = evalExpression(expr || '0');
+      if (!isNaN(val) && isFinite(val)) {
+        memoryStore += val;
+        showToast(`Added ${val} to Memory (Total: ${memoryStore})`, 'success');
+      }
     } catch {}
     render();
   }
+
   function memSub() {
     try {
-      let val = evalExpression(expr);
-      if (!isNaN(val) && isFinite(val)) memoryStore -= val;
+      let val = evalExpression(expr || '0');
+      if (!isNaN(val) && isFinite(val)) {
+        memoryStore -= val;
+        showToast(`Subtracted ${val} from Memory (Total: ${memoryStore})`, 'success');
+      }
     } catch {}
     render();
   }
@@ -1186,10 +1606,6 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
-  }
-
-  function showMemoryModal() {
-    alert(`Memory Registers:\nActive M: ${memoryStore}\nM1: ${multiMemory.M1}\nM2: ${multiMemory.M2}\nM3: ${multiMemory.M3}`);
   }
 
   // Safe Math Expression Evaluator
@@ -1341,6 +1757,7 @@
       pmtElem.textContent = '$' + pmt.toFixed(2);
       pmtElem.dataset.rawVal = pmt.toFixed(4);
       document.getElementById('pmt-total-interest').textContent = `Total Interest: $${Math.max(0, totalInterest).toFixed(2)}`;
+      showToast(`PMT Calculated: $${pmt.toFixed(2)}/mo`, 'success');
     }
   }
 
@@ -1356,6 +1773,7 @@
       fvElem.textContent = '$' + fv.toFixed(2);
       fvElem.dataset.rawVal = fv.toFixed(4);
       document.getElementById('fv-growth').textContent = `Total Growth: $${(fv - P).toFixed(2)}`;
+      showToast(`Future Value: $${fv.toFixed(2)}`, 'success');
     }
   }
 
@@ -1373,6 +1791,7 @@
       profitElem.dataset.rawVal = profit.toFixed(2);
       document.getElementById('margin-pct').textContent = `Margin: ${marginPct.toFixed(2)}%`;
       document.getElementById('markup-pct').textContent = `Markup: ${markupPct.toFixed(2)}%`;
+      showToast(`Gross Profit: $${profit.toFixed(2)} (${marginPct.toFixed(1)}% margin)`, 'success');
     }
   }
 
@@ -1386,6 +1805,7 @@
       const cagrElem = document.getElementById('cagr-res');
       cagrElem.textContent = cagr.toFixed(2) + '%';
       cagrElem.dataset.rawVal = cagr.toFixed(4);
+      showToast(`CAGR Rate: ${cagr.toFixed(2)}%`, 'success');
     }
   }
 
@@ -1402,11 +1822,13 @@
   function loadSample1VarData() {
     document.getElementById('stat-1var-input').value = '14, 25, 33, 42, 18, 29, 35, 42, 58, 67';
     calc1VarStats();
+    showToast('Example 1-Var dataset loaded', 'info');
   }
 
   function loadSample2VarData() {
     document.getElementById('stat-2var-input').value = '1, 2.5\n2, 4.8\n3, 7.1\n4, 9.4\n5, 11.9';
     calc2VarRegression();
+    showToast('Example 2-Var dataset loaded', 'info');
   }
 
   function parseNumbersList(text) {
@@ -1422,7 +1844,7 @@
     const raw = document.getElementById('stat-1var-input').value;
     const nums = parseNumbersList(raw);
     if (nums.length === 0) {
-      alert('Please enter valid numeric data.');
+      showToast('Please enter valid numeric data values.', 'error');
       return;
     }
 
@@ -1488,6 +1910,7 @@
     document.getElementById('stat-stderr').textContent = stdErr.toFixed(4);
 
     addHistoryEntry(`1-Var Stats (N=${n})`, `Mean=${mean.toFixed(4)}, s=${sampleStdDev.toFixed(4)}`);
+    showToast(`Descriptive Stats Computed (N=${n}, Mean=${mean.toFixed(2)})`, 'success');
   }
 
   function calc2VarRegression() {
@@ -1507,7 +1930,7 @@
     }
 
     if (points.length < 2) {
-      alert('Please enter at least 2 valid (x, y) data pairs.');
+      showToast('Please enter at least 2 valid (x, y) data pairs.', 'error');
       return;
     }
 
@@ -1524,7 +1947,7 @@
 
     const denomM = (n * sumX2 - sumX * sumX);
     if (denomM === 0) {
-      alert('Cannot compute vertical line slope (all X values are identical).');
+      showToast('Cannot compute vertical line slope (identical X values).', 'warning');
       return;
     }
 
@@ -1546,6 +1969,7 @@
 
     predictRegressionY();
     addHistoryEntry(`LinReg (N=${n})`, `y=${m.toFixed(4)}x${sign}${Math.abs(b).toFixed(4)}, r=${r.toFixed(4)}`);
+    showToast(`Linear Model Computed: y = ${m.toFixed(2)}x ${sign} ${Math.abs(b).toFixed(2)}`, 'success');
   }
 
   function predictRegressionY() {
@@ -1559,8 +1983,9 @@
   function sendToCalc(val) {
     if (val) {
       switchView('scientific');
-      expr = val;
+      expr = String(val).trim();
       render();
+      showToast(`Loaded ${val} into Calculator`, 'info');
     }
   }
 
@@ -1575,6 +2000,7 @@
       card.onclick = () => {
         switchView('scientific');
         append(String(c.val));
+        showToast(`Inserted constant ${c.symbol} (${c.name})`, 'info');
       };
       card.innerHTML = `
         <div>
@@ -1600,7 +2026,7 @@
 
   function renderHistory() {
     const list = document.getElementById('historyList');
-    const query = document.getElementById('histSearch').value.toLowerCase();
+    const query = (document.getElementById('histSearch')?.value || '').toLowerCase();
     list.innerHTML = '';
 
     const filtered = historyTape.filter(h => h.formula.toLowerCase().includes(query) || String(h.result).includes(query));
@@ -1655,12 +2081,14 @@
     switchView('scientific');
     expr = f;
     render();
+    showToast('Expression recalled to keypad', 'info');
   }
 
   function clearHistory() {
     historyTape = [];
     saveHistoryToStorage();
     renderHistory();
+    showToast('Calculation history cleared', 'info');
   }
 
   function saveHistoryToStorage() {
@@ -1677,22 +2105,24 @@
 
   // Export Tape to CSV
   function exportHistoryCSV() {
-    if (historyTape.length === 0) { alert('History is empty!'); return; }
+    if (historyTape.length === 0) { showToast('History tape is empty!', 'warning'); return; }
     let csv = 'Time,Expression,Result\n';
     historyTape.forEach(h => {
       csv += `"${h.time}","${String(h.formula).replace(/"/g, '""')}","${String(h.result).replace(/"/g, '""')}"\n`;
     });
     downloadFile('kcalc_history.csv', csv, 'text/csv');
+    showToast('Exported history to kcalc_history.csv', 'success');
   }
 
   // Export Tape to TXT
   function exportHistoryTXT() {
-    if (historyTape.length === 0) { alert('History is empty!'); return; }
+    if (historyTape.length === 0) { showToast('History tape is empty!', 'warning'); return; }
     let txt = '=== KCalc Pro Calculation History ===\n\n';
     historyTape.forEach(h => {
       txt += `[${h.time}] ${h.formula} = ${h.result}\n`;
     });
     downloadFile('kcalc_history.txt', txt, 'text/plain');
+    showToast('Exported history to kcalc_history.txt', 'success');
   }
 
   function downloadFile(filename, text, mimeType) {
@@ -1709,14 +2139,46 @@
 
   // Global Keyboard Shortcuts
   document.addEventListener('keydown', (e) => {
-    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT' || document.activeElement.tagName === 'TEXTAREA') return;
-
-    if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
-      if (e.key === 'F1') e.preventDefault();
-      alert("KCalc Pro Help:\n- Switch modes using tabs at top.\n- Keyboard shortcuts: 0-9, ., +, -, *, /, %, ^, (, )\n- Enter or = to calculate.\n- Escape to clear all.\n- Backspace to delete last.");
+    // If modal is open and Esc pressed, close modal
+    if (document.getElementById('modalOverlay').classList.contains('active')) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeModals();
+      }
       return;
     }
 
+    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT' || document.activeElement.tagName === 'TEXTAREA') return;
+
+    if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
+      e.preventDefault();
+      openHelpModal();
+      return;
+    }
+
+    if (e.key === 'd' || e.key === 'D') {
+      e.preventDefault();
+      toggleDegRad();
+      return;
+    }
+
+    if (e.key === 'm' || e.key === 'M') {
+      e.preventDefault();
+      openMemoryModal();
+      return;
+    }
+
+    // Numbers 1-5 for mode switching when in default state or combined with Alt/Ctrl
+    if (e.altKey || e.ctrlKey) {
+      if (e.key === '1') { e.preventDefault(); switchView('scientific'); }
+      else if (e.key === '2') { e.preventDefault(); switchView('financial'); }
+      else if (e.key === '3') { e.preventDefault(); switchView('statistics'); }
+      else if (e.key === '4') { e.preventDefault(); switchView('constants'); }
+      else if (e.key === '5') { e.preventDefault(); switchView('history'); }
+      return;
+    }
+
+    // Scientific keypad shortcuts
     if (e.key >= '0' && e.key <= '9') append(e.key);
     else if (e.key === '.') append('.');
     else if (e.key === '+') append('+');
