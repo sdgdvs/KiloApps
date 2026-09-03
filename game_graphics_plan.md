@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KColosseum
 - KFarm
 - KAlchemy
 - KRogue
@@ -148,8 +147,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMaze
 - KColony
 - KFortress
+- KColosseum
 
 ## Completed Work Log
+
+- **KColosseum (Loop 1):** Replaced text-based UI placeholders with custom-drawn graphical sprites and animations in both Web Canvas (kcolosseum.html) and Native Win32 GDI (KColosseum/main.c). Implemented custom graphical sprite models for Player Gladiator (with skin tones, Roman crested Murmillo helmet, Lorica segmentata / muscle cuirass armor, Scutum shield, and Gladius / Trident weapons), Enemy Gladiators, Ferocious Lion (with muscular tawny coat, golden mane, sharp claws/fangs, and pouncing leap), Armed Chariot (with horse, chassis, eagle crest, spear driver, and spinning spoked wheel scythes), and Twin Gladiators fighting in tandem. Added continuous animation loops with idle breathing bobbing, attack lunges with weapon slash trails, defense shield stance with gold glowing barrier, hit reaction recoils with damage flash, showboating cheering with star particle bursts, victory cheers, procedural screen-shake decay, multi-layered particle system (incandescent needle sparks, dust puffs, armor shards, thrown gold Denarii coins, medical sponges), Roman Colosseum sandstone arches, and filigree gold corner brackets.
 
 - **KFortress (Loop 6):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on Trebuchet strikes, meteor strikes, boss spawns/deaths (Ogre, Wyvern, Golem), dynamite explosions, cannon hits, and gate damage (continuous mathematical translation and rotation with rotational damping in Web Canvas, and trigonometric FastSin/FastCos physics decay with double-buffered viewport rendering in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant plasma/smoke puffs with negative gravity and expansion growth, heavy kinematic stone & armor shards with tumbling rotation physics and floor bounce, and radiant golden celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer dispersion halo, ornate Medieval / Fortress defense arcade HUD corner filigree L-brackets with rivet detailing and crenellated notches, a pulsating energy perimeter inlay border with a traveling specular glint along the fortress battlefield playfield frame, sculpted fortress castle keep highlights with 3D stone battlements, fluttering royal banners, and diagonal specular sheen sweeps, and biome-specific atmospheric environmental floating dust and embers across all 12 campaign maps in both Web Canvas (kfortress.html) and Native C Win32 GDI (KFortress/main.c).
 

@@ -1233,7 +1233,20 @@ def generate_fortress():
     rect(img, 6, 3, 10, 6, (220, 30, 30))
     return img
 
-
+def generate_colosseum():
+    img = new_img()
+    rect(img, 2, 2, 29, 29, (139, 0, 0)) # Imperial Roman Crimson
+    # Colosseum sandstone arches
+    rect(img, 4, 18, 27, 28, (215, 185, 140))
+    for x in (6, 12, 18, 24):
+        rect(img, x, 20, x+2, 28, (60, 40, 20))
+    # Roman helmet / golden laurel & crossed gladius
+    circle(img, 15, 11, 6, (212, 175, 55)) # Golden helmet/shield
+    rect(img, 13, 8, 17, 10, (180, 20, 20)) # Crest
+    line(img, 7, 5, 23, 21, (240, 240, 250)) # Crossed Gladius 1
+    line(img, 23, 5, 7, 21, (240, 240, 250)) # Crossed Gladius 2
+    circle(img, 15, 11, 2, (139, 0, 0))
+    return img
 
 save_ico("icons/ksudoku.ico", generate_sudoku())
 save_ico("icons/kconnect4.ico", generate_connect4())
@@ -1251,3 +1264,6 @@ save_ico("icons/kquest.ico", generate_quest())
 save_ico("icons/kstarship.ico", generate_starship())
 save_ico("icons/kalchemy.ico", generate_alchemy())
 save_ico("icons/kfortress.ico", generate_fortress())
+save_ico("icons/kcolosseum.ico", generate_colosseum())
+save_ico("KiloOS/public/assets/icons/kcolosseum.ico", generate_colosseum())
+

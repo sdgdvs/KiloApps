@@ -70,15 +70,34 @@
     font-weight: bold;
     font-family: 'Times New Roman', Times, serif;
     text-transform: uppercase;
+    transition: transform 0.05s ease, background-color 0.2s ease;
   }
   button:hover:not(:disabled) {
     background: #a52a2a;
+    transform: translateY(-1px);
+  }
+  button:active:not(:disabled) {
+    transform: translateY(1px);
   }
   button:disabled {
     background: #555;
     color: #888;
     border-color: #444;
     cursor: not-allowed;
+  }
+  .gladiator-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+  .portrait-canvas {
+    width: 44px;
+    height: 44px;
+    border: 2px solid #d4af37;
+    border-radius: 4px;
+    background: #2b1d0c;
+    flex-shrink: 0;
   }
 </style>
 </head>
@@ -99,23 +118,31 @@
       <h2>Your Gladiators</h2>
       <ul id="ownedList"></ul>
     </div>
-    </div>
   </div>
 
-  <div id="arenaPanel" style="display:none; margin:0 auto; width:80%;" class="panel">
+  <div id="arenaPanel" style="display:none; margin:0 auto; width:85%; max-width:800px;" class="panel">
     <h2>Arena Combat</h2>
+    
+    <!-- Graphical Arena Canvas Viewport -->
+    <div style="text-align:center; margin-bottom:12px; position:relative;">
+      <canvas id="arenaCanvas" width="680" height="250" style="background:#221508; border:3px solid #d4af37; border-radius:6px; box-shadow:0 6px 18px rgba(0,0,0,0.6); display:block; margin:0 auto; max-width:100%; height:auto;"></canvas>
+    </div>
+
     <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-      <div id="playerCombat" style="width:45%; padding:10px; background:#fdf5e6; border:1px solid #d4af37; border-radius:5px;"></div>
-      <div id="enemyCombat" style="width:45%; padding:10px; background:#fdf5e6; border:1px solid #d4af37; border-radius:5px;"></div>
+      <div id="playerCombat" style="width:48%; padding:10px; background:#fdf5e6; border:1px solid #d4af37; border-radius:5px;"></div>
+      <div id="enemyCombat" style="width:48%; padding:10px; background:#fdf5e6; border:1px solid #d4af37; border-radius:5px;"></div>
     </div>
+    
     <div style="text-align:center;">
-      <div id="favorDisplay" style="font-weight:bold; color:#d4af37; background:#8b0000; padding:5px; margin-bottom:10px; border-radius:5px; border:1px solid #d4af37;">Crowd Favor: 0%</div>
-      <button onclick="combatAction('attack')">Attack</button>
-      <button onclick="combatAction('defend')">Defend</button>
-      <button onclick="combatAction('showboat')">Showboat</button>
-      <button onclick="combatAction('flee')">Flee</button>
+      <div id="favorDisplay" style="font-weight:bold; color:#d4af37; background:#8b0000; padding:6px; margin-bottom:12px; border-radius:5px; border:1px solid #d4af37; letter-spacing:1px;">Crowd Favor: 0%</div>
+      <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+        <button id="btnAttack" onclick="combatAction('attack')" style="min-width:90px; font-size:1.05em; padding:8px 16px;">⚔️ Attack</button>
+        <button id="btnDefend" onclick="combatAction('defend')" style="min-width:90px; font-size:1.05em; padding:8px 16px;">🛡️ Defend</button>
+        <button id="btnShowboat" onclick="combatAction('showboat')" style="min-width:90px; font-size:1.05em; padding:8px 16px;">✨ Showboat</button>
+        <button id="btnFlee" onclick="combatAction('flee')" style="min-width:90px; font-size:1.05em; padding:8px 16px;">🏃 Flee</button>
+      </div>
     </div>
-    <div id="combatLog" style="margin-top:20px; height:150px; overflow-y:auto; background:#fff; color:#333; padding:10px; border:1px solid #ccc; font-family:monospace;"></div>
+    <div id="combatLog" style="margin-top:15px; height:130px; overflow-y:auto; background:#fff; color:#333; padding:10px; border:1px solid #ccc; font-family:monospace; font-size:0.9em;"></div>
   </div>
 
   <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
@@ -229,23 +256,23 @@
       return "Champion of Rome";
     }
 
-    const firstNames = ["Titus", "Flamma", "Spiculus", "Marcus", "Lucius", "Gaius", "Quintus", "Aulus"];
-    const epithets = ["the Strong", "the Swift", "the Bear", "the Lion", "the Fierce", "the Giant"];
+    const firstNames = ["Titus", "Flamma", "Spiculus", "Marcus", "Lucius", "Gaius", "Quintus", "Aulus", "Decimus", "Cassius"];
+    const epithets = ["the Strong", "the Swift", "the Bear", "the Lion", "the Fierce", "the Giant", "the Invincible", "the Shadow"];
 
     function generateGladiator(forArena = false) {
       const name = firstNames[Math.floor(Math.random() * firstNames.length)] + 
-                   (Math.random() > 0.5 ? " " + epithets[Math.floor(Math.random() * epithets.length)] : "");
+                   (Math.random() > 0.4 ? " " + epithets[Math.floor(Math.random() * epithets.length)] : "");
       const str = Math.floor(Math.random() * 10) + 1;
       const agi = Math.floor(Math.random() * 10) + 1;
       const vit = Math.floor(Math.random() * 10) + 1;
       let weapon = 0, armor = 0, shield = 0;
       if (forArena || Math.random() < 0.3) {
-          if (Math.random() < 0.3) weapon = Math.floor(Math.random() * 2) + 1;
-          if (Math.random() < 0.3) armor = 1;
-          if (Math.random() < 0.3) shield = 1;
+          if (Math.random() < 0.35) weapon = Math.floor(Math.random() * 2) + 1;
+          if (Math.random() < 0.35) armor = 1;
+          if (Math.random() < 0.35) shield = 1;
       }
       const cost = (str + agi + vit) * 20 + Math.floor(Math.random() * 50) + (weapon ? 50 : 0) + (armor ? 50 : 0) + (shield ? 30 : 0);
-      let g = { id: nextId++, name, cost, str, agi, vit, weapon, armor, shield, damageTaken: 0 };
+      let g = { id: nextId++, name, cost, str, agi, vit, weapon, armor, shield, damageTaken: 0, skinTone: (Math.random() > 0.5 ? '#d29a68' : '#e4b68e') };
       updateDesc(g);
       return g;
     }
@@ -268,6 +295,66 @@
     const market = [generateGladiator(), generateGladiator(), generateGladiator()];
     const owned = [];
 
+    function drawMiniPortrait(canvas, g) {
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, 44, 44);
+      // Background gradient
+      const grad = ctx.createLinearGradient(0, 0, 0, 44);
+      grad.addColorStop(0, '#5a1111');
+      grad.addColorStop(1, '#2a0606');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 44, 44);
+
+      // Body/Torso
+      ctx.fillStyle = g.armor === 1 ? '#cd7f32' : '#8b0000';
+      ctx.beginPath();
+      ctx.arc(22, 42, 14, Math.PI, 0);
+      ctx.fill();
+
+      // Head
+      ctx.fillStyle = g.skinTone || '#d29a68';
+      ctx.beginPath();
+      ctx.arc(22, 22, 9, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Helmet & Crest
+      ctx.fillStyle = '#b8860b';
+      ctx.beginPath();
+      ctx.arc(22, 19, 10, Math.PI * 0.9, Math.PI * 2.1);
+      ctx.fill();
+
+      // Red horsehair crest
+      ctx.fillStyle = '#e60000';
+      ctx.beginPath();
+      ctx.ellipse(22, 10, 8, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Visor eye slit
+      ctx.fillStyle = '#111';
+      ctx.fillRect(17, 20, 10, 2.5);
+
+      // Weapon badge on corner
+      if (g.weapon === 1) { // Gladius
+        ctx.fillStyle = '#e0e0e0';
+        ctx.fillRect(34, 4, 3, 16);
+        ctx.fillStyle = '#d4af37';
+        ctx.fillRect(32, 16, 7, 3);
+      } else if (g.weapon === 2) { // Trident
+        ctx.fillStyle = '#cd7f32';
+        ctx.fillRect(35, 4, 2, 20);
+        ctx.fillRect(32, 7, 8, 2);
+        ctx.fillRect(32, 3, 2, 5);
+        ctx.fillRect(38, 3, 2, 5);
+      }
+      if (g.shield === 1) { // Shield badge on left corner
+        ctx.fillStyle = '#8b0000';
+        ctx.strokeStyle = '#d4af37';
+        ctx.lineWidth = 1.5;
+        ctx.fillRect(4, 26, 9, 14);
+        ctx.strokeRect(4, 26, 9, 14);
+      }
+    }
+
     function refreshMarket() {
       if (funds >= 50) {
         funds -= 50;
@@ -286,43 +373,61 @@
       marketList.innerHTML = '';
       market.forEach(g => {
         const li = document.createElement('li');
+        const canvasId = `market_port_${g.id}`;
         li.innerHTML = `
-          <div>
-            <strong>${g.name}</strong> - ${g.desc}
+          <div class="gladiator-card">
+            <canvas id="${canvasId}" class="portrait-canvas" width="44" height="44"></canvas>
+            <div style="flex-grow:1;">
+              <strong>${g.name}</strong><br><span style="font-size:0.85em; color:#555;">${g.desc}</span>
+            </div>
+            <button onclick="buyGladiator(${g.id})" ${funds < g.cost ? 'disabled' : ''}>Buy (${g.cost}D)</button>
           </div>
-          <button onclick="buyGladiator(${g.id})" ${funds < g.cost ? 'disabled' : ''}>Buy (${g.cost}D)</button>
         `;
         marketList.appendChild(li);
+        setTimeout(() => {
+          const cvs = document.getElementById(canvasId);
+          if (cvs) drawMiniPortrait(cvs, g);
+        }, 10);
       });
 
       const ownedList = document.getElementById('ownedList');
       ownedList.innerHTML = '';
       if (owned.length === 0) {
-        ownedList.innerHTML = '<li><em>No gladiators owned.</em></li>';
+        ownedList.innerHTML = '<li><em>No gladiators owned. Recruit one from the market!</em></li>';
       }
       owned.forEach(g => {
         const li = document.createElement('li');
+        const canvasId = `owned_port_${g.id}`;
         li.innerHTML = `
-          <div style="margin-bottom:5px;"><strong>${g.name}</strong> - ${g.desc}</div>
-          <div style="display:flex; gap:5px; flex-wrap:wrap; margin-bottom:5px;">
+          <div class="gladiator-card" style="margin-bottom:6px;">
+            <canvas id="${canvasId}" class="portrait-canvas" width="44" height="44"></canvas>
+            <div>
+              <strong>${g.name}</strong><br><span style="font-size:0.85em; color:#555;">${g.desc}</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:5px; flex-wrap:wrap; margin-bottom:5px; width:100%;">
             <button style="font-size:0.7em" onclick="equipItem(${g.id}, 'glad')" ${funds < 50 || g.weapon === 1 ? 'disabled' : ''}>Glad(50D)</button>
             <button style="font-size:0.7em" onclick="equipItem(${g.id}, 'trid')" ${funds < 50 || g.weapon === 2 ? 'disabled' : ''}>Trid(50D)</button>
             <button style="font-size:0.7em" onclick="equipItem(${g.id}, 'armr')" ${funds < 50 || g.armor === 1 ? 'disabled' : ''}>Armr(50D)</button>
             <button style="font-size:0.7em" onclick="equipItem(${g.id}, 'shld')" ${funds < 30 || g.shield === 1 ? 'disabled' : ''}>Shld(30D)</button>
           </div>
-          <div style="display:flex; gap:5px;">
+          <div style="display:flex; gap:5px; width:100%;">
             <button style="font-size:0.7em" onclick="trainGladiator(${g.id}, 'str')" ${funds < 20 ? 'disabled' : ''}>+STR (20D)</button>
             <button style="font-size:0.7em" onclick="trainGladiator(${g.id}, 'agi')" ${funds < 20 ? 'disabled' : ''}>+AGI (20D)</button>
             <button style="font-size:0.7em" onclick="trainGladiator(${g.id}, 'vit')" ${funds < 20 ? 'disabled' : ''}>+VIT (20D)</button>
           </div>
-          <div style="margin-top:5px; display:flex; gap:5px;">
-            <button style="font-size:0.7em; background:#228b22; color:#fff;" onclick="enterArena(${g.id})" ${g.damageTaken >= getEffVit(g) * 10 ? 'disabled' : ''}>Fight in Arena</button>
-            ${g.damageTaken > 0 ? `<button style="font-size:0.7em; background:#4169e1; color:#fff;" onclick="healGladiator(${g.id})" ${(funds < g.damageTaken) ? 'disabled' : ''}>Heal (${g.damageTaken}D)</button>` : ''}
+          <div style="margin-top:6px; display:flex; gap:8px; width:100%;">
+            <button style="font-size:0.75em; background:#228b22; color:#fff;" onclick="enterArena(${g.id})" ${g.damageTaken >= getEffVit(g) * 10 ? 'disabled' : ''}>⚔️ Fight in Arena</button>
+            ${g.damageTaken > 0 ? `<button style="font-size:0.75em; background:#4169e1; color:#fff;" onclick="healGladiator(${g.id})" ${(funds < g.damageTaken) ? 'disabled' : ''}>🩹 Heal (${g.damageTaken}D)</button>` : ''}
           </div>
         `;
         li.style.flexDirection = 'column';
         li.style.alignItems = 'flex-start';
         ownedList.appendChild(li);
+        setTimeout(() => {
+          const cvs = document.getElementById(canvasId);
+          if (cvs) drawMiniPortrait(cvs, g);
+        }, 10);
       });
     }
 
@@ -378,8 +483,771 @@
     let currentFighter = null;
     let enemyFighter = null;
     let playerDefending = false;
+    let enemyDefending = false;
     let combatOver = false;
     let crowdFavor = 0;
+
+    // --- GRAPHICAL ARENA CANVAS & PARTICLE ENGINE ---
+    const arenaCanvas = document.getElementById('arenaCanvas');
+    const arenaCtx = arenaCanvas ? arenaCanvas.getContext('2d') : null;
+
+    let particles = [];
+    let floaters = [];
+    let screenShake = 0;
+    let playerState = { stance: 'idle', timer: 0, flash: 0, lunge: 0 };
+    let enemyState = { stance: 'idle', timer: 0, flash: 0, lunge: 0 };
+    let animId = null;
+
+    function addScreenShake(amt) {
+      screenShake = Math.max(screenShake, amt);
+    }
+
+    function spawnParticles(x, y, count, type, color) {
+      for (let i = 0; i < count; i++) {
+        let angle = Math.random() * Math.PI * 2;
+        let speed = Math.random() * 5 + 2;
+        if (type === 'sparks') {
+          particles.push({
+            x, y,
+            vx: Math.cos(angle) * speed * 1.5,
+            vy: Math.sin(angle) * speed * 1.5,
+            size: Math.random() * 3 + 1,
+            color: color || (Math.random() > 0.5 ? '#fff5b0' : '#ffa500'),
+            alpha: 1.0,
+            decay: Math.random() * 0.04 + 0.03,
+            type: 'spark'
+          });
+        } else if (type === 'dust') {
+          particles.push({
+            x, y,
+            vx: (Math.random() - 0.5) * 2,
+            vy: -Math.random() * 2 - 0.5,
+            size: Math.random() * 6 + 4,
+            color: '#c2a67e',
+            alpha: 0.6,
+            decay: 0.02,
+            type: 'dust'
+          });
+        } else if (type === 'shards') {
+          particles.push({
+            x, y,
+            vx: (Math.random() - 0.5) * 6,
+            vy: -Math.random() * 5 - 2,
+            rot: Math.random() * Math.PI,
+            vrot: (Math.random() - 0.5) * 0.3,
+            size: Math.random() * 5 + 3,
+            color: color || '#d4af37',
+            alpha: 1.0,
+            decay: 0.015,
+            gravity: 0.25,
+            type: 'shard'
+          });
+        } else if (type === 'coins') {
+          particles.push({
+            x: x + (Math.random() - 0.5) * 80,
+            y: -20,
+            vx: (Math.random() - 0.5) * 2,
+            vy: Math.random() * 4 + 3,
+            size: 6,
+            color: '#ffd700',
+            alpha: 1.0,
+            decay: 0.008,
+            gravity: 0.2,
+            type: 'coin',
+            rot: 0
+          });
+        } else if (type === 'heal') {
+          particles.push({
+            x: x + (Math.random() - 0.5) * 40,
+            y: y + (Math.random() - 0.5) * 30,
+            vx: (Math.random() - 0.5) * 1.5,
+            vy: -Math.random() * 2 - 1,
+            size: 6,
+            color: '#32cd32',
+            alpha: 1.0,
+            decay: 0.025,
+            type: 'cross'
+          });
+        }
+      }
+    }
+
+    function addFloatingText(text, x, y, color) {
+      floaters.push({
+        text, x, y,
+        vy: -1.2,
+        color: color || '#ffffff',
+        alpha: 1.0,
+        decay: 0.018
+      });
+    }
+
+    function drawGladiatorVisual(ctx, x, y, g, isEnemy, state, time) {
+      ctx.save();
+      
+      // Hit flash tint
+      if (state.flash > 0) {
+        ctx.shadowColor = '#ff2200';
+        ctx.shadowBlur = 15;
+      }
+
+      // Idle breathing bobbing
+      let bob = Math.sin(time * 4) * 2.5;
+      let lungeX = state.lunge || 0;
+      let drawX = x + (isEnemy ? -lungeX : lungeX);
+      let drawY = y + (state.stance === 'dead' ? 25 : bob);
+
+      if (state.stance === 'dead') {
+        // Collapsed pose
+        ctx.fillStyle = '#441111';
+        ctx.beginPath();
+        ctx.ellipse(drawX, drawY + 15, 26, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = g.skinTone || '#d29a68';
+        ctx.beginPath();
+        ctx.arc(drawX - (isEnemy ? -16 : 16), drawY + 10, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        return;
+      }
+
+      // Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.beginPath();
+      ctx.ellipse(x + (isEnemy ? -lungeX*0.6 : lungeX*0.6), y + 42, 24, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Legs / Greaves
+      ctx.fillStyle = '#8b4513';
+      ctx.fillRect(drawX - 10, drawY + 18, 6, 22);
+      ctx.fillRect(drawX + 4, drawY + 18, 6, 22);
+      // Bronze greaves
+      ctx.fillStyle = '#cd7f32';
+      ctx.fillRect(drawX - 10, drawY + 26, 6, 12);
+      ctx.fillRect(drawX + 4, drawY + 26, 6, 12);
+
+      // Torso / Tunic
+      const tunicColor = isEnemy ? '#1e3f66' : '#8b0000';
+      ctx.fillStyle = tunicColor;
+      ctx.beginPath();
+      ctx.moveTo(drawX - 14, drawY + 2);
+      ctx.lineTo(drawX + 14, drawY + 2);
+      ctx.lineTo(drawX + 16, drawY + 24);
+      ctx.lineTo(drawX - 16, drawY + 24);
+      ctx.closePath();
+      ctx.fill();
+
+      // Armor: Bronze Lorica Segmentata / Breastplate
+      if (g.armor === 1) {
+        ctx.fillStyle = '#d4af37';
+        ctx.strokeStyle = '#8b6508';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(drawX - 12, drawY + 2, 24, 18, 3);
+        ctx.fill();
+        ctx.stroke();
+        // Muscle cuirass lines & specular highlight
+        ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+        ctx.beginPath();
+        ctx.moveTo(drawX - 8, drawY + 5);
+        ctx.lineTo(drawX - 8, drawY + 14);
+        ctx.stroke();
+      }
+
+      // Head & Skin
+      ctx.fillStyle = g.skinTone || '#d29a68';
+      ctx.beginPath();
+      ctx.arc(drawX, drawY - 12, 11, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Helmet (Murmillo/Thraex bronze helmet)
+      ctx.fillStyle = '#b8860b';
+      ctx.beginPath();
+      ctx.arc(drawX, drawY - 14, 12, Math.PI * 0.85, Math.PI * 2.15);
+      ctx.fill();
+      // Cheek guards and face grill
+      ctx.fillStyle = '#8b6508';
+      ctx.fillRect(drawX - 9, drawY - 12, 4, 10);
+      ctx.fillRect(drawX + 5, drawY - 12, 4, 10);
+      ctx.fillStyle = '#1a1a1a';
+      ctx.fillRect(drawX - 6, drawY - 10, 12, 3);
+
+      // Helmet Crest (Red for Player, Black/Purple for Enemy)
+      ctx.fillStyle = isEnemy ? '#4a154b' : '#cc0000';
+      ctx.beginPath();
+      ctx.ellipse(drawX, drawY - 26, 12, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffd700';
+      ctx.fillRect(drawX - 2, drawY - 22, 4, 8);
+
+      // Defense Aura when defending
+      if (state.stance === 'defend') {
+        ctx.save();
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.arc(drawX, drawY + 6, 32, -Math.PI * 0.7, Math.PI * 0.7, isEnemy);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Shield Arm & Shield
+      let shieldX = isEnemy ? drawX - 16 : drawX + 16;
+      if (state.stance === 'defend') {
+        shieldX = isEnemy ? drawX - 10 : drawX + 10;
+      }
+      if (g.shield === 1) {
+        ctx.save();
+        ctx.fillStyle = isEnemy ? '#1e3f66' : '#990000';
+        ctx.strokeStyle = '#d4af37';
+        ctx.lineWidth = 2;
+        // Curved Scutum shield
+        ctx.beginPath();
+        ctx.roundRect(shieldX - 8, drawY - 4, 16, 32, 4);
+        ctx.fill();
+        ctx.stroke();
+        // Golden boss & lightning bolts
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath();
+        ctx.arc(shieldX, drawY + 12, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffd700';
+        ctx.beginPath();
+        ctx.moveTo(shieldX - 6, drawY + 4); ctx.lineTo(shieldX + 6, drawY + 20);
+        ctx.moveTo(shieldX + 6, drawY + 4); ctx.lineTo(shieldX - 6, drawY + 20);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Weapon Arm & Weapon
+      let weaponX = isEnemy ? drawX + 14 : drawX - 14;
+      let weaponAngle = isEnemy ? -0.3 : 0.3;
+      if (state.stance === 'attack') {
+        weaponAngle = isEnemy ? -1.6 : 1.6;
+        weaponX = isEnemy ? drawX - 18 : drawX + 18;
+      } else if (state.stance === 'showboat') {
+        weaponAngle = 0;
+        weaponX = drawX;
+        drawY -= 8;
+      }
+
+      ctx.save();
+      ctx.translate(weaponX, drawY + 4);
+      ctx.rotate(weaponAngle);
+
+      if (g.weapon === 1) { // Gladius
+        // Blade
+        ctx.fillStyle = '#f0f0f5';
+        ctx.strokeStyle = '#888899';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-3, 0);
+        ctx.lineTo(3, 0);
+        ctx.lineTo(2, -28);
+        ctx.lineTo(0, -34);
+        ctx.lineTo(-2, -28);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        // Specular sheen
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(-1, -30, 2, 24);
+        // Crossguard & Pommel
+        ctx.fillStyle = '#d4af37';
+        ctx.fillRect(-6, -1, 12, 3);
+        ctx.beginPath();
+        ctx.arc(0, 7, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (g.weapon === 2) { // Trident
+        // Shaft
+        ctx.fillStyle = '#8b5a2b';
+        ctx.fillRect(-2, -36, 4, 46);
+        // Bronze 3 prongs
+        ctx.fillStyle = '#cd7f32';
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 1;
+        ctx.fillRect(-8, -36, 16, 3);
+        ctx.fillRect(-8, -48, 3, 13);
+        ctx.fillRect(-1, -52, 3, 17);
+        ctx.fillRect(5, -48, 3, 13);
+      } else { // Fists
+        ctx.fillStyle = g.skinTone || '#d29a68';
+        ctx.beginPath();
+        ctx.arc(0, 0, 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      ctx.restore();
+    }
+
+    function drawLionVisual(ctx, x, y, state, time) {
+      ctx.save();
+      let bob = Math.sin(time * 5) * 2;
+      let lungeX = state.lunge || 0;
+      let drawX = x - lungeX;
+      let drawY = y + bob;
+
+      // Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.beginPath();
+      ctx.ellipse(x - lungeX*0.6, y + 36, 34, 10, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Tail with animated twitch
+      let tailWiggle = Math.sin(time * 7) * 0.2;
+      ctx.strokeStyle = '#c68a4c';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(drawX + 30, drawY + 8);
+      ctx.quadraticCurveTo(drawX + 45 + tailWiggle * 10, drawY - 5, drawX + 48, drawY - 14);
+      ctx.stroke();
+      ctx.fillStyle = '#5a3818';
+      ctx.beginPath();
+      ctx.arc(drawX + 48, drawY - 14, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Body (Golden tawny coat)
+      ctx.fillStyle = '#d99b59';
+      ctx.beginPath();
+      ctx.ellipse(drawX + 6, drawY + 10, 30, 18, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Paws / Legs
+      ctx.fillStyle = '#c68a4c';
+      ctx.fillRect(drawX - 16, drawY + 16, 8, 22);
+      ctx.fillRect(drawX - 4, drawY + 16, 8, 22);
+      ctx.fillRect(drawX + 16, drawY + 16, 8, 22);
+      ctx.fillRect(drawX + 26, drawY + 16, 8, 22);
+
+      // Claws
+      ctx.fillStyle = '#ffffff';
+      for (let px of [drawX - 16, drawX - 4, drawX + 16, drawX + 26]) {
+        ctx.fillRect(px - 1, drawY + 36, 3, 3);
+        ctx.fillRect(px + 4, drawY + 36, 3, 3);
+      }
+
+      // Massive Mane (Dark golden-brown layered fur)
+      ctx.fillStyle = '#6b3e14';
+      ctx.beginPath();
+      ctx.arc(drawX - 18, drawY - 2, 22, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#8a4f1a';
+      ctx.beginPath();
+      ctx.arc(drawX - 18, drawY - 2, 17, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Head & Snout
+      ctx.fillStyle = '#d99b59';
+      ctx.beginPath();
+      ctx.arc(drawX - 22, drawY - 2, 12, 0, Math.PI * 2);
+      ctx.fill();
+      // Snout
+      ctx.fillStyle = '#e8b87d';
+      ctx.beginPath();
+      ctx.arc(drawX - 30, drawY + 2, 7, 0, Math.PI * 2);
+      ctx.fill();
+      // Nose
+      ctx.fillStyle = '#221105';
+      ctx.beginPath();
+      ctx.arc(drawX - 34, drawY, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Glowing Amber Eye
+      ctx.fillStyle = '#ffcc00';
+      ctx.beginPath();
+      ctx.arc(drawX - 25, drawY - 6, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#000';
+      ctx.fillRect(drawX - 26, drawY - 8, 2, 4);
+
+      // Roaring Fangs
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.moveTo(drawX - 32, drawY + 4); ctx.lineTo(drawX - 29, drawY + 11); ctx.lineTo(drawX - 26, drawY + 4);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawChariotVisual(ctx, x, y, state, time) {
+      ctx.save();
+      let lungeX = state.lunge || 0;
+      let drawX = x - lungeX;
+      let drawY = y;
+
+      // Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.beginPath();
+      ctx.ellipse(drawX, drawY + 38, 50, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // War Horse in front
+      ctx.fillStyle = '#5c3a21';
+      ctx.beginPath();
+      ctx.ellipse(drawX - 34, drawY + 12, 18, 14, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(drawX - 44, drawY + 6);
+      ctx.lineTo(drawX - 54, drawY - 14);
+      ctx.lineTo(drawX - 40, drawY - 14);
+      ctx.closePath();
+      ctx.fill();
+      // Horse Head & Plume
+      ctx.fillStyle = '#4a2811';
+      ctx.beginPath();
+      ctx.arc(drawX - 48, drawY - 14, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#cc0000';
+      ctx.fillRect(drawX - 52, drawY - 24, 6, 10);
+
+      // Chariot Chassis
+      ctx.fillStyle = '#8b5a2b';
+      ctx.strokeStyle = '#d4af37';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(drawX - 8, drawY - 4, 34, 28, 4);
+      ctx.fill();
+      ctx.stroke();
+
+      // Roman Eagle Emblem
+      ctx.fillStyle = '#ffd700';
+      ctx.beginPath();
+      ctx.arc(drawX + 8, drawY + 8, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Driver (Gladiator with spear)
+      ctx.fillStyle = '#d29a68';
+      ctx.beginPath();
+      ctx.arc(drawX + 8, drawY - 16, 9, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#b8860b';
+      ctx.beginPath();
+      ctx.arc(drawX + 8, drawY - 18, 10, Math.PI * 0.85, Math.PI * 2.15);
+      ctx.fill();
+      // Long Spear
+      ctx.strokeStyle = '#4a2d0b';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(drawX + 8, drawY - 8);
+      ctx.lineTo(drawX - 60, drawY - 24);
+      ctx.stroke();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(drawX - 60, drawY - 26);
+      ctx.lineTo(drawX - 70, drawY - 25);
+      ctx.lineTo(drawX - 60, drawY - 22);
+      ctx.closePath();
+      ctx.fill();
+
+      // Spoked Wheel with Spinning Animation
+      let wheelRot = time * 8;
+      ctx.save();
+      ctx.translate(drawX + 12, drawY + 24);
+      ctx.rotate(wheelRot);
+      ctx.strokeStyle = '#cd7f32';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(0, 0, 16, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.lineWidth = 2;
+      for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(a) * 16, Math.sin(a) * 16);
+        ctx.stroke();
+      }
+      // Sharp Wheel Scythe Blade
+      ctx.fillStyle = '#e6e6f0';
+      ctx.beginPath();
+      ctx.moveTo(0, -4);
+      ctx.lineTo(24, 0);
+      ctx.lineTo(0, 4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      ctx.restore();
+    }
+
+    function drawArenaEnvironment(ctx, width, height, time) {
+      // Sky / Colosseum Upper Tier Gradient
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, height * 0.55);
+      skyGrad.addColorStop(0, '#1a0c02');
+      skyGrad.addColorStop(0.5, '#3a1f0a');
+      skyGrad.addColorStop(1, '#5c3314');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, width, height * 0.55);
+
+      // Colosseum Stone Arches & Columns in Background
+      ctx.fillStyle = '#7a4e28';
+      for (let x = 20; x < width; x += 65) {
+        ctx.beginPath();
+        ctx.roundRect(x, 18, 48, 70, [20, 20, 0, 0]);
+        ctx.fill();
+        // Inner dark archway opening
+        ctx.fillStyle = '#220e03';
+        ctx.beginPath();
+        ctx.roundRect(x + 6, 24, 36, 64, [16, 16, 0, 0]);
+        ctx.fill();
+        ctx.fillStyle = '#7a4e28';
+      }
+
+      // Crowd Tier Silhouettes
+      ctx.fillStyle = 'rgba(20, 8, 2, 0.7)';
+      for (let x = 10; x < width; x += 14) {
+        let crowdBob = Math.sin(time * 3 + x * 0.2) * 2;
+        ctx.beginPath();
+        ctx.arc(x, 78 + crowdBob, 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Imperial Velarium Banners with Gold Laurels
+      for (let bx of [60, width - 85]) {
+        ctx.fillStyle = '#8b0000';
+        ctx.strokeStyle = '#d4af37';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(bx, 0);
+        ctx.lineTo(bx + 30, 0);
+        ctx.lineTo(bx + 30, 60);
+        ctx.lineTo(bx + 15, 70);
+        ctx.lineTo(bx, 60);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        // Gold SPQR / Laurel
+        ctx.fillStyle = '#ffd700';
+        ctx.font = 'bold 8px serif';
+        ctx.fillText('SPQR', bx + 3, 38);
+      }
+
+      // Flickering Torches
+      for (let tx of [130, width - 145]) {
+        ctx.fillStyle = '#4a2c0f';
+        ctx.fillRect(tx, 55, 4, 25);
+        let flameFlicker = Math.sin(time * 15 + tx) * 3;
+        ctx.fillStyle = '#ff4500';
+        ctx.beginPath();
+        ctx.ellipse(tx + 2, 50, 6 + flameFlicker * 0.3, 10 + flameFlicker, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath();
+        ctx.ellipse(tx + 2, 51, 3, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Sandy Arena Floor with Perspective
+      const sandGrad = ctx.createLinearGradient(0, height * 0.5, 0, height);
+      sandGrad.addColorStop(0, '#8c6534');
+      sandGrad.addColorStop(0.3, '#b8894d');
+      sandGrad.addColorStop(1, '#cda262');
+      ctx.fillStyle = sandGrad;
+      ctx.fillRect(0, height * 0.5, width, height * 0.5);
+
+      // Arena Stone Perimeter Rim Wall
+      ctx.fillStyle = '#573a1d';
+      ctx.fillRect(0, height * 0.5 - 4, width, 8);
+      ctx.strokeStyle = '#d4af37';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, height * 0.5 - 4);
+      ctx.lineTo(width, height * 0.5 - 4);
+      ctx.stroke();
+
+      // Grit & Blood stains in the sand
+      ctx.fillStyle = 'rgba(70, 10, 10, 0.2)';
+      ctx.beginPath();
+      ctx.ellipse(width * 0.45, height * 0.72, 35, 12, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(width * 0.7, height * 0.82, 22, 8, -0.1, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Ornate Golden L-Bracket Corner Filigree
+      ctx.strokeStyle = '#d4af37';
+      ctx.lineWidth = 3;
+      const margin = 8;
+      const len = 24;
+      // Top-Left
+      ctx.beginPath(); ctx.moveTo(margin, margin + len); ctx.lineTo(margin, margin); ctx.lineTo(margin + len, margin); ctx.stroke();
+      // Top-Right
+      ctx.beginPath(); ctx.moveTo(width - margin - len, margin); ctx.lineTo(width - margin, margin); ctx.lineTo(width - margin, margin + len); ctx.stroke();
+      // Bottom-Left
+      ctx.beginPath(); ctx.moveTo(margin, height - margin - len); ctx.lineTo(margin, height - margin); ctx.lineTo(margin + len, height - margin); ctx.stroke();
+      // Bottom-Right
+      ctx.beginPath(); ctx.moveTo(width - margin - len, height - margin); ctx.lineTo(width - margin, height - margin); ctx.lineTo(width - margin, height - margin - len); ctx.stroke();
+    }
+
+    function renderArenaLoop(timestamp) {
+      if (!arenaCtx) return;
+      const time = timestamp * 0.001;
+      const w = arenaCanvas.width;
+      const h = arenaCanvas.height;
+
+      arenaCtx.save();
+      
+      // Screen Shake Application
+      if (screenShake > 0.1) {
+        let sx = (Math.random() - 0.5) * screenShake;
+        let sy = (Math.random() - 0.5) * screenShake;
+        arenaCtx.translate(sx, sy);
+        screenShake *= 0.88;
+      } else {
+        screenShake = 0;
+      }
+
+      arenaCtx.clearRect(0, 0, w, h);
+
+      // 1. Environmental Background
+      drawArenaEnvironment(arenaCtx, w, h, time);
+
+      // 2. Combatants
+      if (currentFighter) {
+        const playerX = w * 0.28;
+        const playerY = h * 0.68;
+        drawGladiatorVisual(arenaCtx, playerX, playerY, currentFighter, false, playerState, time);
+
+        // Player Name & Health Bar Overlay
+        arenaCtx.save();
+        arenaCtx.fillStyle = '#ffd700';
+        arenaCtx.font = 'bold 13px "Times New Roman"';
+        arenaCtx.textAlign = 'center';
+        arenaCtx.fillText(currentFighter.name, playerX, playerY - 44);
+
+        // Health Bar Background
+        arenaCtx.fillStyle = '#3a0808';
+        arenaCtx.strokeStyle = '#d4af37';
+        arenaCtx.lineWidth = 1;
+        arenaCtx.fillRect(playerX - 45, playerY - 38, 90, 8);
+        arenaCtx.strokeRect(playerX - 45, playerY - 38, 90, 8);
+        // Health Bar Fill
+        const hpPct = Math.max(0, Math.min(1, currentFighter.hp / currentFighter.maxHp));
+        arenaCtx.fillStyle = hpPct > 0.3 ? '#228b22' : '#cc0000';
+        arenaCtx.fillRect(playerX - 44, playerY - 37, 88 * hpPct, 6);
+        arenaCtx.restore();
+      }
+
+      if (enemyFighter) {
+        const enemyX = w * 0.72;
+        const enemyY = h * 0.68;
+
+        if (enemyFighter.isBeast) {
+          drawLionVisual(arenaCtx, enemyX, enemyY, enemyState, time);
+        } else if (enemyFighter.name === "Armed Chariot") {
+          drawChariotVisual(arenaCtx, enemyX, enemyY, enemyState, time);
+        } else if (enemyFighter.isTwins) {
+          // Draw Twin 2 slightly behind
+          drawGladiatorVisual(arenaCtx, enemyX + 26, enemyY - 8, enemyFighter, true, enemyState, time + 0.5);
+          drawGladiatorVisual(arenaCtx, enemyX - 6, enemyY + 4, enemyFighter, true, enemyState, time);
+        } else {
+          drawGladiatorVisual(arenaCtx, enemyX, enemyY, enemyFighter, true, enemyState, time);
+        }
+
+        // Enemy Name & Health Bar Overlay
+        arenaCtx.save();
+        arenaCtx.fillStyle = '#ff9999';
+        arenaCtx.font = 'bold 13px "Times New Roman"';
+        arenaCtx.textAlign = 'center';
+        arenaCtx.fillText(enemyFighter.name, enemyX, enemyY - 44);
+
+        // Health Bar Background
+        arenaCtx.fillStyle = '#3a0808';
+        arenaCtx.strokeStyle = '#d4af37';
+        arenaCtx.lineWidth = 1;
+        arenaCtx.fillRect(enemyX - 45, enemyY - 38, 90, 8);
+        arenaCtx.strokeRect(enemyX - 45, enemyY - 38, 90, 8);
+        // Health Bar Fill
+        const enemyHpPct = Math.max(0, Math.min(1, enemyFighter.hp / enemyFighter.maxHp));
+        arenaCtx.fillStyle = enemyHpPct > 0.3 ? '#cc0000' : '#880000';
+        arenaCtx.fillRect(enemyX - 44, enemyY - 37, 88 * enemyHpPct, 6);
+        arenaCtx.restore();
+      }
+
+      // 3. Particle System Update & Draw
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.gravity) p.vy += p.gravity;
+        p.alpha -= p.decay;
+
+        if (p.alpha <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+
+        arenaCtx.save();
+        arenaCtx.globalAlpha = p.alpha;
+        if (p.type === 'spark') {
+          arenaCtx.fillStyle = p.color;
+          arenaCtx.beginPath();
+          arenaCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          arenaCtx.fill();
+        } else if (p.type === 'dust') {
+          arenaCtx.fillStyle = p.color;
+          arenaCtx.beginPath();
+          arenaCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          arenaCtx.fill();
+        } else if (p.type === 'shard') {
+          p.rot += p.vrot;
+          arenaCtx.translate(p.x, p.y);
+          arenaCtx.rotate(p.rot);
+          arenaCtx.fillStyle = p.color;
+          arenaCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        } else if (p.type === 'coin') {
+          p.rot += 0.15;
+          arenaCtx.translate(p.x, p.y);
+          arenaCtx.fillStyle = p.color;
+          arenaCtx.strokeStyle = '#b8860b';
+          arenaCtx.lineWidth = 1;
+          arenaCtx.beginPath();
+          arenaCtx.ellipse(0, 0, p.size * Math.abs(Math.cos(p.rot)), p.size, 0, 0, Math.PI * 2);
+          arenaCtx.fill();
+          arenaCtx.stroke();
+        } else if (p.type === 'cross') {
+          arenaCtx.fillStyle = p.color;
+          arenaCtx.fillRect(p.x - 2, p.y - 6, 4, 12);
+          arenaCtx.fillRect(p.x - 6, p.y - 2, 12, 4);
+        }
+        arenaCtx.restore();
+      }
+
+      // 4. Floating Combat Text Popups
+      for (let i = floaters.length - 1; i >= 0; i--) {
+        const f = floaters[i];
+        f.y += f.vy;
+        f.alpha -= f.decay;
+        if (f.alpha <= 0) {
+          floaters.splice(i, 1);
+          continue;
+        }
+        arenaCtx.save();
+        arenaCtx.globalAlpha = f.alpha;
+        arenaCtx.font = 'bold 16px "Times New Roman"';
+        arenaCtx.fillStyle = f.color;
+        arenaCtx.strokeStyle = '#000000';
+        arenaCtx.lineWidth = 3;
+        arenaCtx.textAlign = 'center';
+        arenaCtx.strokeText(f.text, f.x, f.y);
+        arenaCtx.fillText(f.text, f.x, f.y);
+        arenaCtx.restore();
+      }
+
+      // 5. Decaying animation state timers
+      if (playerState.flash > 0) playerState.flash--;
+      if (enemyState.flash > 0) enemyState.flash--;
+      if (playerState.lunge > 0) playerState.lunge *= 0.85;
+      if (enemyState.lunge > 0) enemyState.lunge *= 0.85;
+
+      arenaCtx.restore();
+
+      if (document.getElementById('arenaPanel').style.display !== 'none') {
+        animId = requestAnimationFrame(renderArenaLoop);
+      }
+    }
 
     function enterArena(id) {
       currentFighter = owned.find(g => g.id === id);
@@ -390,7 +1258,7 @@
       
       enemyFighter = generateGladiator(true);
       
-      let isSpecial = (arenaLevel > 2 && Math.random() < 0.3);
+      let isSpecial = (arenaLevel > 2 && Math.random() < 0.35);
       if (isSpecial) {
         let eventType = Math.floor(Math.random() * 3);
         if (eventType === 0) {
@@ -430,26 +1298,33 @@
       playerDefending = false;
       enemyDefending = false;
       crowdFavor = 0;
+      particles = [];
+      floaters = [];
+      playerState = { stance: 'idle', timer: 0, flash: 0, lunge: 0 };
+      enemyState = { stance: 'idle', timer: 0, flash: 0, lunge: 0 };
       
       document.getElementById('dashboard').style.display = 'none';
       document.getElementById('arenaPanel').style.display = 'block';
       
       const log = document.getElementById('combatLog');
-      log.innerHTML = `<em>Match starts! ${currentFighter.name} vs ${enemyFighter.name}</em><br>`;
+      log.innerHTML = `<em>Match starts! <strong>${currentFighter.name}</strong> vs <strong>${enemyFighter.name}</strong></em><br>`;
       
       playCheer();
       updateCombatUI();
+
+      if (animId) cancelAnimationFrame(animId);
+      animId = requestAnimationFrame(renderArenaLoop);
     }
     
     function updateCombatUI() {
       document.getElementById('playerCombat').innerHTML = `
-        <h3 style="margin-top:0;">${currentFighter.name}</h3>
-        <div style="font-weight:bold; color:#8b0000;">HP: ${currentFighter.hp} / ${currentFighter.maxHp}</div>
+        <h3 style="margin-top:0; color:#8b0000;">${currentFighter.name}</h3>
+        <div style="font-weight:bold; color:#8b0000; font-size:1.1em;">HP: ${currentFighter.hp} / ${currentFighter.maxHp}</div>
         <div style="font-size:0.9em; margin-top:5px;">STR:${getEffStr(currentFighter)} AGI:${getEffAgi(currentFighter)} VIT:${getEffVit(currentFighter)}</div>
       `;
       document.getElementById('enemyCombat').innerHTML = `
-        <h3 style="margin-top:0;">${enemyFighter.name}</h3>
-        <div style="font-weight:bold; color:#8b0000;">HP: ${enemyFighter.hp} / ${enemyFighter.maxHp}</div>
+        <h3 style="margin-top:0; color:#8b0000;">${enemyFighter.name}</h3>
+        <div style="font-weight:bold; color:#8b0000; font-size:1.1em;">HP: ${enemyFighter.hp} / ${enemyFighter.maxHp}</div>
         <div style="font-size:0.9em; margin-top:5px;">STR:${getEffStr(enemyFighter)} AGI:${getEffAgi(enemyFighter)} VIT:${getEffVit(enemyFighter)}</div>
       `;
       document.getElementById('favorDisplay').innerText = `Crowd Favor: ${crowdFavor}%`;
@@ -459,14 +1334,19 @@
       if (crowdFavor >= 100) {
         crowdFavor = 0;
         playCheer();
+        addScreenShake(8);
         if (Math.random() < 0.5) {
           let gold = 50 + Math.floor(Math.random() * 51);
           funds += gold;
           logCombat(`<strong>The crowd goes wild! They throw <span style="color:#d4af37;">${gold} Denarii</span> into the arena!</strong>`);
+          spawnParticles(arenaCanvas.width * 0.5, 50, 20, 'coins');
+          addFloatingText(`+${gold}D!`, arenaCanvas.width * 0.28, 120, '#ffd700');
         } else {
           let heal = 20 + Math.floor(Math.random() * 21);
           currentFighter.hp = Math.min(currentFighter.maxHp, currentFighter.hp + heal);
           logCombat(`<strong>The crowd cheers! A medical sponge is thrown! Healed <span style="color:#228b22;">${heal} HP</span>!</strong>`);
+          spawnParticles(arenaCanvas.width * 0.28, arenaCanvas.height * 0.68, 18, 'heal');
+          addFloatingText(`+${heal} HP!`, arenaCanvas.width * 0.28, 120, '#32cd32');
         }
         updateCombatUI();
         updateUI();
@@ -478,15 +1358,19 @@
       log.innerHTML += msg + '<br>';
       log.scrollTop = log.scrollHeight;
     }
-    
-    let enemyDefending = false;
 
     function combatAction(action) {
       if (combatOver) return;
       
+      const pX = arenaCanvas.width * 0.28;
+      const pY = arenaCanvas.height * 0.68;
+      const eX = arenaCanvas.width * 0.72;
+      const eY = arenaCanvas.height * 0.68;
+
       if (action === 'flee') {
         logCombat(`${currentFighter.name} flees the arena in disgrace!`);
         playDefeat();
+        addFloatingText("FLED!", pX, pY - 30, '#ff4444');
         if (arenaLevel > 1) {
           arenaLevel--;
           logCombat(`<em>Your ludus drops to level ${arenaLevel}...</em>`);
@@ -500,16 +1384,27 @@
       if (playerDefending) {
         logCombat(`${currentFighter.name} takes a defensive stance.`);
         crowdFavor = Math.max(0, crowdFavor - 5);
+        playerState.stance = 'defend';
+        addFloatingText("DEFENDING", pX, pY - 30, '#ffd700');
+        spawnParticles(pX, pY, 8, 'dust');
       }
       
       if (action === 'showboat') {
         let favorGain = 30 + Math.floor(Math.random() * 21);
         crowdFavor += favorGain;
         logCombat(`${currentFighter.name} plays to the crowd!`);
+        playerState.stance = 'showboat';
+        setTimeout(() => { playerState.stance = 'idle'; }, 600);
+        addFloatingText(`+${favorGain}% FAVOR`, pX, pY - 30, '#ffd700');
+        spawnParticles(pX, pY - 20, 16, 'sparks', '#ffd700');
         checkCrowdFavor();
       }
       
       if (action === 'attack') {
+        playerState.stance = 'attack';
+        playerState.lunge = 45;
+        setTimeout(() => { playerState.stance = playerDefending ? 'defend' : 'idle'; }, 300);
+
         let hitChance = 75 + (getEffAgi(currentFighter) - getEffAgi(enemyFighter)) * 5;
         if (enemyDefending) hitChance -= (enemyFighter.shield === 1 ? 50 : 30);
         if (Math.random() * 100 < hitChance) {
@@ -519,16 +1414,25 @@
           crowdFavor += 5 + Math.floor(Math.random() * 11);
           logCombat(`<strong>${currentFighter.name}</strong> hits for <span style="color:#8b0000;">${dmg} damage</span>!`);
           playClash();
+          
+          enemyState.flash = 12;
+          addScreenShake(dmg > 10 ? 10 : 6);
+          spawnParticles(eX, eY, 20, 'sparks');
+          spawnParticles(eX, eY, 8, 'shards');
+          addFloatingText(`-${dmg}`, eX, eY - 30, '#ff2222');
           checkCrowdFavor();
         } else {
           crowdFavor = Math.max(0, crowdFavor - 5);
           logCombat(`<strong>${currentFighter.name}</strong> misses!`);
           playMiss();
+          addFloatingText("MISS!", eX, eY - 30, '#aaaaaa');
+          spawnParticles(eX, eY + 20, 6, 'dust');
         }
       }
       
       if (enemyFighter.hp <= 0) {
         enemyFighter.hp = 0;
+        enemyState.stance = 'dead';
         updateCombatUI();
         let reward = 100 + (arenaLevel * 50);
         if (enemyFighter.isBeast || enemyFighter.isTwins || enemyFighter.name === "Armed Chariot") {
@@ -537,70 +1441,112 @@
         logCombat(`<strong>${enemyFighter.name} is defeated! You win ${reward} Denarii!</strong>`);
         playVictory();
         funds += reward;
+        addScreenShake(14);
+        spawnParticles(pX, pY - 30, 30, 'sparks', '#ffd700');
+        spawnParticles(arenaCanvas.width * 0.5, 40, 25, 'coins');
+        addFloatingText(`VICTORY! +${reward}D`, arenaCanvas.width * 0.5, 90, '#ffd700');
+
         if (arenaLevel < 10) {
           arenaLevel++;
           logCombat(`<em>Your ludus advances to level ${arenaLevel}!</em>`);
         }
         updateUI();
         combatOver = true;
-        setTimeout(exitArena, 2000);
+        setTimeout(exitArena, 2400);
         return;
       }
       
-      enemyDefending = Math.random() < 0.25;
-      if (enemyDefending) {
-        logCombat(`${enemyFighter.name} takes a defensive stance.`);
-      } else {
-        let hitChance = 75 + (getEffAgi(enemyFighter) - getEffAgi(currentFighter)) * 5;
-        if (playerDefending) hitChance -= (currentFighter.shield === 1 ? 50 : 30);
-        
-        if (Math.random() * 100 < hitChance) {
-          let dmg = Math.max(1, getEffStr(enemyFighter) + Math.floor(Math.random() * 4));
-          if (playerDefending) dmg = Math.max(1, dmg - (currentFighter.shield === 1 ? 5 : 3));
-          currentFighter.hp -= dmg;
-          currentFighter.damageTaken += dmg;
-          logCombat(`<strong>${enemyFighter.name}</strong> hits for <span style="color:#8b0000;">${dmg} damage</span>!`);
-          playClash();
+      // Enemy Turn
+      setTimeout(() => {
+        if (combatOver) return;
+
+        enemyDefending = Math.random() < 0.25;
+        if (enemyDefending) {
+          logCombat(`${enemyFighter.name} takes a defensive stance.`);
+          enemyState.stance = 'defend';
+          addFloatingText("DEFENDING", eX, eY - 30, '#ffd700');
+          spawnParticles(eX, eY, 8, 'dust');
         } else {
-          logCombat(`<strong>${enemyFighter.name}</strong> misses!`);
-          playMiss();
-        }
-        
-        if (enemyFighter.isTwins && currentFighter.hp > 0) {
+          enemyState.stance = 'attack';
+          enemyState.lunge = 45;
+          setTimeout(() => { enemyState.stance = enemyDefending ? 'defend' : 'idle'; }, 300);
+
+          let hitChance = 75 + (getEffAgi(enemyFighter) - getEffAgi(currentFighter)) * 5;
+          if (playerDefending) hitChance -= (currentFighter.shield === 1 ? 50 : 30);
+          
           if (Math.random() * 100 < hitChance) {
             let dmg = Math.max(1, getEffStr(enemyFighter) + Math.floor(Math.random() * 4));
             if (playerDefending) dmg = Math.max(1, dmg - (currentFighter.shield === 1 ? 5 : 3));
             currentFighter.hp -= dmg;
             currentFighter.damageTaken += dmg;
-            logCombat(`<strong>${enemyFighter.name} (Twin 2)</strong> hits for <span style="color:#8b0000;">${dmg} damage</span>!`);
+            logCombat(`<strong>${enemyFighter.name}</strong> hits for <span style="color:#8b0000;">${dmg} damage</span>!`);
             playClash();
+            
+            playerState.flash = 12;
+            addScreenShake(dmg > 10 ? 10 : 6);
+            spawnParticles(pX, pY, 20, 'sparks');
+            spawnParticles(pX, pY, 8, 'shards');
+            addFloatingText(`-${dmg}`, pX, pY - 30, '#ff2222');
           } else {
-            logCombat(`<strong>${enemyFighter.name} (Twin 2)</strong> misses!`);
+            logCombat(`<strong>${enemyFighter.name}</strong> misses!`);
             playMiss();
+            addFloatingText("MISS!", pX, pY - 30, '#aaaaaa');
+            spawnParticles(pX, pY + 20, 6, 'dust');
+          }
+          
+          if (enemyFighter.isTwins && currentFighter.hp > 0) {
+            setTimeout(() => {
+              if (combatOver) return;
+              enemyState.lunge = 45;
+              if (Math.random() * 100 < hitChance) {
+                let dmg = Math.max(1, getEffStr(enemyFighter) + Math.floor(Math.random() * 4));
+                if (playerDefending) dmg = Math.max(1, dmg - (currentFighter.shield === 1 ? 5 : 3));
+                currentFighter.hp -= dmg;
+                currentFighter.damageTaken += dmg;
+                logCombat(`<strong>${enemyFighter.name} (Twin 2)</strong> hits for <span style="color:#8b0000;">${dmg} damage</span>!`);
+                playClash();
+                playerState.flash = 12;
+                addScreenShake(6);
+                spawnParticles(pX, pY, 15, 'sparks');
+                addFloatingText(`-${dmg}`, pX, pY - 30, '#ff2222');
+              } else {
+                logCombat(`<strong>${enemyFighter.name} (Twin 2)</strong> misses!`);
+                playMiss();
+                addFloatingText("MISS!", pX, pY - 30, '#aaaaaa');
+              }
+              if (currentFighter.hp <= 0) checkPlayerDeath();
+              updateCombatUI();
+            }, 350);
           }
         }
-      }
-      
-      if (currentFighter.hp <= 0) {
-        currentFighter.hp = 0;
-        updateCombatUI();
-        logCombat(`<strong>${currentFighter.name} is DEAD.</strong>`);
-        playDefeat();
-        owned.splice(owned.findIndex(g => g.id === currentFighter.id), 1);
-        if (arenaLevel > 1) {
-          arenaLevel--;
-          logCombat(`<em>Your ludus drops to level ${arenaLevel}...</em>`);
+        
+        if (currentFighter.hp <= 0) {
+          checkPlayerDeath();
         }
-        updateUI();
-        combatOver = true;
-        setTimeout(exitArena, 2000);
-        return;
-      }
-      
+        updateCombatUI();
+      }, 350);
+    }
+
+    function checkPlayerDeath() {
+      currentFighter.hp = 0;
+      playerState.stance = 'dead';
       updateCombatUI();
+      logCombat(`<strong>${currentFighter.name} is DEAD.</strong>`);
+      playDefeat();
+      addScreenShake(12);
+      addFloatingText("DEAD", arenaCanvas.width * 0.28, arenaCanvas.height * 0.68 - 30, '#ff0000');
+      owned.splice(owned.findIndex(g => g.id === currentFighter.id), 1);
+      if (arenaLevel > 1) {
+        arenaLevel--;
+        logCombat(`<em>Your ludus drops to level ${arenaLevel}...</em>`);
+      }
+      updateUI();
+      combatOver = true;
+      setTimeout(exitArena, 2400);
     }
     
     function exitArena() {
+      if (animId) cancelAnimationFrame(animId);
       document.getElementById('arenaPanel').style.display = 'none';
       document.getElementById('dashboard').style.display = 'flex';
       
