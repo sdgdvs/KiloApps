@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KBase
+**Target App:** KPad
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KBase
 - KPad
 - KImage
 - KCalc
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KContacts
 - KRead
 - KJournal
+- KBase
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KBase: Usability and UI issues fixed (replaced blocking browser alerts with custom cybernetic Help modal dialog and non-blocking toast notifications with startup welcome toast, added 1-5 tab switching shortcuts with visible numeric badges, Escape and backdrop-click modal dismissal, and explicit F1/H header button in web; fixed critical bug where typing 'H' in edit controls intercepted input and triggered help dialog, added explicit Help [F1] button, comprehensive ShowHelpDialog user guide, and window title hint with F1 shortcut in native C).
 - KJournal: Usability and UI issues fixed (replaced blocking browser confirms with custom modal confirmation dialog for entry deletion, template overwrite, and PIN removal, added non-blocking toast notifications with startup welcome toast, empty-state 1-click Quick Starter chips, search clear button, and keyboard shortcuts F1/H, Esc, Ctrl+S save, Ctrl+N new/today, Ctrl+T templates, Ctrl+F search, and 1-6 quick mood selection in web; fixed critical JSON export omission of journal entry text in native C with JSON escaping, added backup file import support, clarified save/finish prompts with EOF/Ctrl+Z, updated help guide and title hint, and verified 1100x750 synchronized bounds).
 - KRead: Usability and UI issues fixed (replaced blocking browser alerts/prompts/confirms with custom modal dialogs for Tab Renaming, Annotation Notes, and Clear Confirmation, added non-blocking toast notifications with startup welcome prompt, sample document quick-loaders on empty state, Markdown export format alongside JSON/TXT, and keyboard shortcuts F1/H, Esc, Ctrl+T, Ctrl+W, Ctrl+O, Ctrl+F, Ctrl+B, Ctrl+S, Ctrl+1-9, +/- in web; updated native C with dynamic high-DPI tab bar height calculation, full message loop hotkeys F1/H/Ctrl+T/Ctrl+W/Ctrl+O/Ctrl+F/Ctrl+B/Ctrl+S/Ctrl+1-9/Ctrl++/Ctrl+-, comprehensive ShowHelpDialog guide, dynamic window title status, and synchronized 850x620 bounds in App.jsx).
 - KContacts: Usability and UI issues fixed (replaced blocking browser alerts/prompts/confirms with sleek cyber modals for Export format selection, Delete confirmation, and Help guide, added non-blocking toast notifications with startup welcome prompt, search clear button, dynamic category count badges, Enter-to-save on inputs, and keyboard shortcuts F1/H, Esc, Ctrl+S, Ctrl+N, 1-7 category switching, and list navigation in web; updated native C with explicit button shortcut badges [+ New [N], Help [F1], Save Details [Ctrl+S]], full message loop hotkeys F1/H/Ctrl+S/Ctrl+N/1-7/Del/Esc/Ctrl+M/Ctrl+E/Ctrl+I, ShowHelpDialog user guide, and window title hint).

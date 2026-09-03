@@ -571,7 +571,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HFONT hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
             
             CreateWindowA("STATIC", "Input Buffer / Number:", WS_CHILD | WS_VISIBLE, 10, 10, 200, 18, hwnd, NULL, NULL, NULL);
-            HWND hBtnHelp = CreateWindowA("BUTTON", "Help (F1 or 'H')", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 720, 7, 140, 24, hwnd, (HMENU)99, NULL, NULL);
+            HWND hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 740, 7, 120, 24, hwnd, (HMENU)99, NULL, NULL);
             SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hFont, 0);
 
             hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "42", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_WANTRETURN,
@@ -661,7 +661,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id == 20) DoVarintEncode();
             else if (id == 21) DoMultiWidthInspect();
             else if (id == 22) DoBitfieldSlice();
-            else if (id == 99) MessageBoxA(hwnd, "KBase Help:\n\n- Convert Base: Type number and click Convert.\n- Varint/LEB128: Encode number or decode hex bytes (e.g. E5 8E 26).\n- Int Formats: Inspect int8/16/32/64 two's comp, ones' comp, sign-mag.\n- Bitfield Slice: Extract bit slice [High:Low] from Operand A.\n- Bitwise: Enter Operand A & B as Hex/Dec.\n- Strings: Encode/Decode/Hash text.\n- F1: Show this help dialog.", "KBase Help", MB_OK | MB_ICONINFORMATION);
+            else if (id == 99) {
+                MessageBoxA(hwnd,
+                    "=== KBase Studio User Guide ===\n\n"
+                    "KEYBOARD SHORTCUTS:\n"
+                    "- F1: Open this Help & Feature Guide\n"
+                    "- Enter: In Input edit box, triggers live base conversion\n\n"
+                    "FEATURES & OPERATIONS:\n"
+                    "1. Convert Base: 64-bit live conversion across Dec, Hex, and 64-bit Binary stream.\n"
+                    "2. String Suite: Base64 encode/decode, URL encode/decode, Hex encode/decode, and SHA-256 hash.\n"
+                    "3. Varint / LEB128: Encode integers or decode hex bytes (e.g. 'E5 8E 26') to ULEB128, SLEB128 & Protobuf ZigZag.\n"
+                    "4. Int Formats: Multi-width inspector for int8/16/32/64 two's comp, unsigned, 1's comp, and sign-magnitude.\n"
+                    "5. Bitfield Slice: Extract [High:Low] bit slice from Operand A and compute Popcount, CLZ, CTZ, Parity, and Power of 2.\n"
+                    "6. Bitwise Operations: AND, OR, XOR, NOT(A), SHL, SHR, ROL, and ROR between Operands A and B.",
+                    "KBase Studio - User Guide", MB_OK | MB_ICONINFORMATION);
+            }
             else if (id == 100) DoConvertBases();
             else if (id >= 10 && id <= 17) DoBitwiseOp(id);
             break;
@@ -704,7 +718,7 @@ void __stdcall MainEntry() {
     RECT rc = {0, 0, 900, 600};
     AdjustWindowRect(&rc, style, FALSE);
     
-    HWND hwnd = CreateWindowExA(0, "KBaseApp", "KBase - Universal Base & Bitwise Utility", style,
+    HWND hwnd = CreateWindowExA(0, "KBaseApp", "KBase - Universal Base & Bitwise Utility [Press F1 for Help]", style,
         CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
         
     ShowWindow(hwnd, SW_SHOW);
@@ -712,9 +726,17 @@ void __stdcall MainEntry() {
     
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
-        if (msg.message == WM_KEYDOWN && (msg.wParam == VK_F1 || msg.wParam == 'H' || msg.wParam == 'h')) {
-            SendMessageA(hwnd, WM_COMMAND, 99, 0);
-            continue;
+        if (msg.message == WM_KEYDOWN) {
+            if (msg.wParam == VK_F1) {
+                SendMessageA(hwnd, WM_COMMAND, 99, 0);
+                continue;
+            }
+            HWND hFocus = GetFocus();
+            if ((msg.wParam == 'H' || msg.wParam == 'h') &&
+                hFocus != hInput && hFocus != hEditA && hFocus != hEditB && hFocus != hOutput && hFocus != hBitDisplay) {
+                SendMessageA(hwnd, WM_COMMAND, 99, 0);
+                continue;
+            }
         }
         TranslateMessage(&msg);
         DispatchMessageA(&msg);

@@ -31,6 +31,9 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   /* Header & Navigation */
@@ -436,6 +439,7 @@
     background: rgba(255, 255, 255, 0.02);
   }
 
+  /* Toast & Notification */
   .toast {
     position: fixed;
     bottom: 20px;
@@ -451,12 +455,129 @@
     transform: translateY(10px);
     transition: all 0.3s ease;
     pointer-events: none;
-    z-index: 1000;
+    z-index: 3000;
   }
 
   .toast.show {
     opacity: 1;
     transform: translateY(0);
+  }
+
+  /* Cyber Modal Dialog */
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(10, 13, 20, 0.82);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+  }
+
+  .modal-backdrop.show {
+    display: flex;
+  }
+
+  .modal-box {
+    background: #121824;
+    border: 1px solid var(--accent-cyan);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 650px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 30px rgba(0, 240, 255, 0.25);
+    animation: modalPop 0.2s ease-out;
+    overflow: hidden;
+  }
+
+  @keyframes modalPop {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .modal-header {
+    background: #0f1522;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--card-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.3rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color 0.2s;
+  }
+
+  .modal-close:hover {
+    color: var(--accent-pink);
+  }
+
+  .modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    line-height: 1.5;
+  }
+
+  .modal-section-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--accent-green);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .shortcut-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 4px;
+    font-size: 0.85rem;
+  }
+
+  .shortcut-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--card-border);
+  }
+
+  .kbd-key {
+    background: #090c13;
+    border: 1px solid var(--accent-cyan);
+    color: var(--accent-cyan);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    display: inline-block;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
   }
 </style>
 </head>
@@ -465,13 +586,15 @@
 <header>
   <div class="brand">
     <div class="brand-icon">K</div>
-    <span>KBase Studio</span>
+    <span>KBase Studio <small style="font-weight:normal; color:var(--text-muted); margin-left:10px; font-size:0.8rem;">(Press 'H' or F1 for help)</small></span>
   </div>
   <nav>
-    <button class="tab-btn active" data-tab="tab-converter">⚡ Multi-Base</button>
-    <button class="tab-btn" data-tab="tab-bitboard">🔢 64-Bit Grid & Ops</button>
-    <button class="tab-btn" data-tab="tab-ieee">🔬 IEEE-754 Float</button>
-    <button class="tab-btn" data-tab="tab-history">📜 History & Export</button>
+    <button class="tab-btn active" data-tab="tab-converter"><span class="kbd-key" style="font-size:0.7rem; padding:1px 4px; margin-right:4px;">1</span>⚡ Multi-Base</button>
+    <button class="tab-btn" data-tab="tab-bitboard"><span class="kbd-key" style="font-size:0.7rem; padding:1px 4px; margin-right:4px;">2</span>🔢 64-Bit Grid &amp; Ops</button>
+    <button class="tab-btn" data-tab="tab-ieee"><span class="kbd-key" style="font-size:0.7rem; padding:1px 4px; margin-right:4px;">3</span>🔬 IEEE-754 Float</button>
+    <button class="tab-btn" data-tab="tab-encodings"><span class="kbd-key" style="font-size:0.7rem; padding:1px 4px; margin-right:4px;">4</span>🎛️ Varint &amp; Bitfields</button>
+    <button class="tab-btn" data-tab="tab-history"><span class="kbd-key" style="font-size:0.7rem; padding:1px 4px; margin-right:4px;">5</span>📜 History &amp; Export</button>
+    <button class="btn btn-sm btn-accent" id="btn-help-modal" style="margin-left: 6px;">❓ Help [F1]</button>
   </nav>
 </header>
 
@@ -750,6 +873,118 @@
     </div>
   </div>
 
+  <!-- TAB: ENCODINGS, VARINT & BITFIELDS -->
+  <div id="tab-encodings" class="tab-content">
+    <!-- LEB128 & Varint Suite -->
+    <div class="card">
+      <div class="card-title">
+        <span>Variable-Length Integer Suite (LEB128 &amp; Protobuf Varint)</span>
+        <span class="badge">Protobuf / Wasm / DWARF</span>
+      </div>
+      <div class="grid-2">
+        <div class="input-group">
+          <label>Integer Value (Decimal / Hex)</label>
+          <input type="text" id="varint-val-input" value="624485" placeholder="e.g. 624485, -12345, 0x9A4">
+        </div>
+        <div class="input-group">
+          <label>Hex Byte Sequence (e.g. E5 8E 26)</label>
+          <input type="text" id="varint-hex-input" value="E5 8E 26" placeholder="e.g. E5 8E 26 or AC 02">
+        </div>
+      </div>
+
+      <div class="btn-group" style="margin: 10px 0;">
+        <button class="btn btn-primary" id="btn-varint-encode">Encode Integer to Varint</button>
+        <button class="btn btn-accent" id="btn-varint-decode">Decode Hex Bytes</button>
+      </div>
+
+      <div class="grid-2" style="font-family: var(--font-mono); font-size: 0.9rem; margin-top: 10px;">
+        <div style="background:#090c13; padding:12px; border-radius:6px; border:1px solid var(--card-border);">
+          <p style="margin-bottom:6px;"><strong>ULEB128 (Unsigned):</strong> <span id="res-uleb-bytes" style="color:var(--accent-cyan); font-weight:bold;">E5 8E 26</span> (<span id="res-uleb-count">3</span> bytes)</p>
+          <p style="margin-bottom:6px;"><strong>SLEB128 (Signed):</strong> <span id="res-sleb-bytes" style="color:var(--accent-green); font-weight:bold;">E5 8E 26</span></p>
+          <p><strong>Protobuf ZigZag:</strong> <span id="res-zigzag-val" style="color:var(--accent-amber);">1248970</span> (<span id="res-zigzag-bytes">AA 9D 4C</span>)</p>
+        </div>
+        <div style="background:#090c13; padding:12px; border-radius:6px; border:1px solid var(--card-border);">
+          <p style="margin-bottom:6px;"><strong>Decoded Unsigned:</strong> <span id="res-dec-unsigned" style="color:var(--accent-cyan); font-weight:bold;">624485</span></p>
+          <p style="margin-bottom:6px;"><strong>Decoded Signed (SLEB):</strong> <span id="res-dec-signed" style="color:var(--accent-green); font-weight:bold;">624485</span></p>
+          <p><strong>Decoded ZigZag:</strong> <span id="res-dec-zigzag" style="color:var(--accent-amber);">312242</span></p>
+        </div>
+      </div>
+
+      <table class="matrix-table" style="margin-top:14px;">
+        <thead>
+          <tr>
+            <th style="width:70px;">Byte #</th>
+            <th style="width:90px;">Hex Byte</th>
+            <th>Binary Layout [MSB Cont. Bit | 7-bit Payload]</th>
+            <th>7-Bit Payload</th>
+            <th>Shift / Weight</th>
+          </tr>
+        </thead>
+        <tbody id="varint-breakdown-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Multi-Width Integer Representation Inspector -->
+    <div class="card">
+      <div class="card-title">
+        <span>Multi-Width Integer &amp; Complement Inspector</span>
+        <span class="badge">Two's / Ones' / Sign-Mag</span>
+      </div>
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th>Width</th>
+            <th>Signed (Two's Comp)</th>
+            <th>Unsigned Value</th>
+            <th>Hexadecimal</th>
+            <th>Ones' Complement</th>
+            <th>Sign-Magnitude</th>
+            <th>Range Status</th>
+          </tr>
+        </thead>
+        <tbody id="multiwidth-table-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Bitfield Slicer & Bit Metrics -->
+    <div class="card">
+      <div class="card-title">
+        <span>Structured Bitfield Slicer, Mask &amp; Bit Metrics</span>
+        <span class="badge">Bit Manipulation</span>
+      </div>
+      <div class="grid-2">
+        <div class="input-group">
+          <div class="input-header">
+            <label>High Bit Index (<span id="slice-high-label">15</span>)</label>
+            <input type="range" id="slice-high-range" min="0" max="63" value="15" style="width:140px;">
+          </div>
+        </div>
+        <div class="input-group">
+          <div class="input-header">
+            <label>Low Bit Index (<span id="slice-low-label">8</span>)</label>
+            <input type="range" id="slice-low-range" min="0" max="63" value="8" style="width:140px;">
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="font-family: var(--font-mono); font-size: 0.9rem; margin-top: 10px;">
+        <div style="background:#090c13; padding:12px; border-radius:6px; border:1px solid var(--card-border);">
+          <p style="margin-bottom:6px;"><strong>Slice Range:</strong> <span id="res-slice-range" style="color:var(--accent-cyan);">[15 : 8] (8 bits)</span></p>
+          <p style="margin-bottom:6px;"><strong>Extracted (Unsigned):</strong> <span id="res-slice-unsigned" style="color:var(--accent-green); font-weight:bold;">0 (0x00)</span></p>
+          <p style="margin-bottom:6px;"><strong>Extracted (Signed):</strong> <span id="res-slice-signed" style="color:var(--accent-amber);">0</span></p>
+          <p><strong>Generated Bitmask:</strong> <span id="res-slice-mask" style="color:var(--accent-cyan);">0x000000000000FF00</span></p>
+        </div>
+
+        <div style="background:#090c13; padding:12px; border-radius:6px; border:1px solid var(--card-border);">
+          <p style="margin-bottom:6px;"><strong>Population Count (Hamming Wt):</strong> <span id="res-metric-popcount" style="color:var(--accent-cyan); font-weight:bold;">0</span></p>
+          <p style="margin-bottom:6px;"><strong>Count Leading Zeros (CLZ):</strong> <span id="res-metric-clz" style="color:var(--accent-green); font-weight:bold;">64</span></p>
+          <p style="margin-bottom:6px;"><strong>Count Trailing Zeros (CTZ):</strong> <span id="res-metric-ctz" style="color:var(--accent-amber); font-weight:bold;">64</span></p>
+          <p><strong>Parity / Power of 2:</strong> <span id="res-metric-parity" style="color:var(--accent-pink);">Even</span> | <span id="res-metric-pow2" style="color:var(--accent-purple);">No</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- TAB 4: HISTORY LOG & EXPORT -->
   <div id="tab-history" class="tab-content">
     <div class="card">
@@ -784,6 +1019,37 @@
 </main>
 
 <div class="toast" id="toast">Copied to clipboard!</div>
+
+<!-- Help Modal Dialog -->
+<div class="modal-backdrop" id="help-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">⚡ KBase Studio &mdash; User Guide &amp; Shortcuts</div>
+      <button class="modal-close" id="btn-close-help" title="Close [Esc]">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <div class="modal-section-title">⌨️ Keyboard Shortcuts</div>
+        <table class="shortcut-table">
+          <tr><td><span class="kbd-key">F1</span> or <span class="kbd-key">H</span></td><td>Toggle this Help &amp; Shortcuts guide</td></tr>
+          <tr><td><span class="kbd-key">1</span> &ndash; <span class="kbd-key">5</span></td><td>Switch tabs (1: Multi-Base, 2: 64-Bit Grid, 3: IEEE-754, 4: Varint, 5: History)</td></tr>
+          <tr><td><span class="kbd-key">Esc</span></td><td>Close modal dialogs</td></tr>
+          <tr><td><span class="kbd-key">Enter</span></td><td>Recalculate / execute active conversion or bitwise operation</td></tr>
+        </table>
+      </div>
+      <div>
+        <div class="modal-section-title">💡 Feature Highlights</div>
+        <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem; color: var(--text-muted);">
+          <li><strong style="color:var(--accent-cyan);">Multi-Base Live Converter:</strong> Real-time 64-bit synchronization between Binary (0b), Octal (0o), Decimal, Hex (0x), Custom base (2-36), and ASCII/Unicode characters.</li>
+          <li><strong style="color:var(--accent-green);">64-Bit Toggle Grid &amp; Ops:</strong> Interactive bit manipulation board with shift, rotate (ROL/ROR), reverse, byte swap (endianness), and bitwise AND/OR/XOR/NOT/SAR operations.</li>
+          <li><strong style="color:var(--accent-amber);">IEEE-754 Inspector:</strong> Visual single (32-bit float) and double (64-bit double) breakdown with color-coded Sign, Exponent, and Mantissa bits and exact reconstruction formulas.</li>
+          <li><strong style="color:var(--accent-purple);">Varint &amp; Bitfields:</strong> LEB128 / SLEB128 / Protobuf ZigZag encoder/decoder, multi-width (int8..64) two's complement inspector, and bitfield slicer with Popcount/CLZ/CTZ diagnostics.</li>
+          <li><strong style="color:var(--text-main);">Export &amp; History:</strong> Automatic calculation logging with instant CSV and JSON export.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
   // Global State & History Storage
@@ -832,14 +1098,42 @@
   const tabs = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
 
-  tabs.forEach(tab => {
+  function selectTab(index) {
+    if (index < 0 || index >= tabs.length) return;
+    tabs.forEach(t => t.classList.remove('active'));
+    tabContents.forEach(c => c.classList.remove('active'));
+    tabs[index].classList.add('active');
+    const target = tabs[index].dataset.tab;
+    const content = document.getElementById(target);
+    if (content) content.classList.add('active');
+  }
+
+  tabs.forEach((tab, idx) => {
     tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      tabContents.forEach(c => c.classList.remove('active'));
-      tab.classList.add('active');
-      document.getElementById(tab.dataset.tab).classList.add('active');
+      selectTab(idx);
     });
   });
+
+  // Modal Dialog Handlers
+  const helpModal = document.getElementById('help-modal');
+  const btnHelpModal = document.getElementById('btn-help-modal');
+  const btnCloseHelp = document.getElementById('btn-close-help');
+
+  function openHelpModal() {
+    helpModal.classList.add('show');
+  }
+
+  function closeHelpModal() {
+    helpModal.classList.remove('show');
+  }
+
+  if (btnHelpModal) btnHelpModal.addEventListener('click', openHelpModal);
+  if (btnCloseHelp) btnCloseHelp.addEventListener('click', closeHelpModal);
+  if (helpModal) {
+    helpModal.addEventListener('click', (e) => {
+      if (e.target === helpModal) closeHelpModal();
+    });
+  }
 
   // ==========================================
   // TAB 1: SIMULTANEOUS MULTI-BASE CONVERTER
@@ -1263,12 +1557,277 @@
     addHistory('IEEE-754 Inspect', rawVal, `Float32: 0x${bits32.toString(16).toUpperCase()}`);
   }
 
-  fpInput.addEventListener('input', inspectIEEE754);
-  document.querySelectorAll('.fp-preset').forEach(btn => {
-    btn.onclick = () => {
-      fpInput.value = btn.dataset.val;
-      inspectIEEE754();
-    };
+  // ==========================================
+  // TAB: ENCODINGS, VARINT & BITFIELDS
+  // ==========================================
+  const varintValInput = document.getElementById('varint-val-input');
+  const varintHexInput = document.getElementById('varint-hex-input');
+  const sliceHighRange = document.getElementById('slice-high-range');
+  const sliceLowRange = document.getElementById('slice-low-range');
+
+  function encodeULEB128(val) {
+    let v = BigInt.asUintN(64, BigInt(val));
+    const bytes = [];
+    do {
+      let byte = Number(v & 0x7Fn);
+      v >>= 7n;
+      if (v !== 0n) byte |= 0x80;
+      bytes.push(byte);
+    } while (v !== 0n);
+    return bytes;
+  }
+
+  function encodeSLEB128(val) {
+    let v = BigInt.asIntN(64, BigInt(val));
+    const bytes = [];
+    let more = true;
+    while (more) {
+      let byte = Number(v & 0x7Fn);
+      v >>= 7n;
+      const signBit = (byte & 0x40) !== 0;
+      if ((v === 0n && !signBit) || (v === -1n && signBit)) {
+        more = false;
+      } else {
+        byte |= 0x80;
+      }
+      bytes.push(byte);
+    }
+    return bytes;
+  }
+
+  function encodeZigZag64(n) {
+    const val = BigInt.asIntN(64, BigInt(n));
+    return BigInt.asUintN(64, (val << 1n) ^ (val >> 63n));
+  }
+
+  function decodeZigZag64(n) {
+    const u = BigInt.asUintN(64, BigInt(n));
+    return BigInt.asIntN(64, (u >> 1n) ^ (-(u & 1n)));
+  }
+
+  function parseHexBytes(str) {
+    const clean = str.replace(/0x/gi, '').replace(/[\s,;-]+/g, ' ').trim();
+    if (!clean) return [];
+    return clean.split(' ').map(s => parseInt(s, 16)).filter(n => !isNaN(n));
+  }
+
+  function decodeULEB128Bytes(bytes) {
+    let res = 0n;
+    let shift = 0n;
+    for (let i = 0; i < bytes.length; i++) {
+      const b = BigInt(bytes[i]);
+      res |= (b & 0x7Fn) << shift;
+      if ((b & 0x80n) === 0n) break;
+      shift += 7n;
+    }
+    return res;
+  }
+
+  function decodeSLEB128Bytes(bytes) {
+    let res = 0n;
+    let shift = 0n;
+    let lastByte = 0;
+    for (let i = 0; i < bytes.length; i++) {
+      lastByte = bytes[i];
+      const b = BigInt(lastByte);
+      res |= (b & 0x7Fn) << shift;
+      shift += 7n;
+      if ((b & 0x80n) === 0n) break;
+    }
+    if (shift < 64n && (lastByte & 0x40) !== 0) {
+      res |= -(1n << shift);
+    }
+    return BigInt.asIntN(64, res);
+  }
+
+  function renderVarintBreakdown(bytes) {
+    const tbody = document.getElementById('varint-breakdown-body');
+    if (!tbody) return;
+    if (bytes.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No byte stream</td></tr>';
+      return;
+    }
+    tbody.innerHTML = bytes.map((b, i) => {
+      const hasCont = (b & 0x80) !== 0;
+      const payload = b & 0x7F;
+      const binStr = b.toString(2).padStart(8, '0');
+      const msb = binStr[0];
+      const rest = binStr.substring(1);
+      return `
+        <tr>
+          <td>#${i}</td>
+          <td style="color:var(--accent-cyan); font-weight:bold;">0x${b.toString(16).padStart(2, '0').toUpperCase()}</td>
+          <td style="font-family:var(--font-mono);"><span style="color:${hasCont ? 'var(--accent-pink)' : 'var(--text-muted)'}; font-weight:bold;">${msb}</span> ${rest} <span style="font-size:0.75rem; color:var(--text-muted);">(${hasCont ? 'More follows' : 'Terminal byte'})</span></td>
+          <td style="color:var(--accent-green); font-family:var(--font-mono);">${payload} (0x${payload.toString(16).toUpperCase()})</td>
+          <td style="color:var(--accent-amber); font-family:var(--font-mono);">&times; 2^${i * 7} (Weight: ${1n << BigInt(i * 7)})</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function runVarintEncode() {
+    const raw = varintValInput.value.trim();
+    let val = parseOpVal(raw);
+    if (raw.startsWith('-')) {
+      try { val = BigInt(raw); } catch(e) {}
+    }
+
+    const uleb = encodeULEB128(val);
+    const sleb = encodeSLEB128(val);
+    const zzVal = encodeZigZag64(val);
+    const zzBytes = encodeULEB128(zzVal);
+
+    const ulebHex = uleb.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+    const slebHex = sleb.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+    const zzHex = zzBytes.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+
+    document.getElementById('res-uleb-bytes').textContent = ulebHex;
+    document.getElementById('res-uleb-count').textContent = uleb.length;
+    document.getElementById('res-sleb-bytes').textContent = slebHex;
+    document.getElementById('res-zigzag-val').textContent = zzVal.toString(10);
+    document.getElementById('res-zigzag-bytes').textContent = zzHex;
+
+    varintHexInput.value = ulebHex;
+    renderVarintBreakdown(uleb);
+
+    // Update decoded preview
+    document.getElementById('res-dec-unsigned').textContent = decodeULEB128Bytes(uleb).toString(10);
+    document.getElementById('res-dec-signed').textContent = decodeSLEB128Bytes(sleb).toString(10);
+    document.getElementById('res-dec-zigzag').textContent = decodeZigZag64(decodeULEB128Bytes(zzBytes)).toString(10);
+
+    updateMultiWidthInspector(val);
+    updateBitfieldSlicer(val);
+    addHistory('Varint Encode', raw, `ULEB: ${ulebHex} | SLEB: ${slebHex}`);
+  }
+
+  function runVarintDecode() {
+    const hexStr = varintHexInput.value.trim();
+    const bytes = parseHexBytes(hexStr);
+    if (bytes.length === 0) return;
+
+    const ulebDec = decodeULEB128Bytes(bytes);
+    const slebDec = decodeSLEB128Bytes(bytes);
+    const zzDec = decodeZigZag64(ulebDec);
+
+    document.getElementById('res-dec-unsigned').textContent = ulebDec.toString(10) + ` (0x${ulebDec.toString(16).toUpperCase()})`;
+    document.getElementById('res-dec-signed').textContent = slebDec.toString(10);
+    document.getElementById('res-dec-zigzag').textContent = zzDec.toString(10);
+
+    renderVarintBreakdown(bytes);
+    updateMultiWidthInspector(ulebDec);
+    updateBitfieldSlicer(ulebDec);
+    addHistory('Varint Decode', hexStr, `Unsigned: ${ulebDec}, Signed: ${slebDec}`);
+  }
+
+  function updateMultiWidthInspector(bigVal) {
+    const tbody = document.getElementById('multiwidth-table-body');
+    if (!tbody) return;
+
+    const widths = [8, 16, 32, 64];
+    tbody.innerHTML = widths.map(w => {
+      const mask = (1n << BigInt(w)) - 1n;
+      const uVal = BigInt.asUintN(w, bigVal);
+      const sVal = BigInt.asIntN(w, bigVal);
+      const hex = '0x' + uVal.toString(16).padStart(w / 4, '0').toUpperCase();
+      const onesComp = '0x' + ((~uVal) & mask).toString(16).padStart(w / 4, '0').toUpperCase();
+
+      // Sign Magnitude calculation
+      const signBit = (uVal >> BigInt(w - 1)) & 1n;
+      const mag = uVal & ((1n << BigInt(w - 1)) - 1n);
+      const signMagHex = '0x' + ((signBit << BigInt(w - 1)) | mag).toString(16).padStart(w / 4, '0').toUpperCase();
+
+      const minS = -(1n << BigInt(w - 1));
+      const maxS = (1n << BigInt(w - 1)) - 1n;
+      const maxU = mask;
+      const inSignedRange = bigVal >= minS && bigVal <= maxS;
+      const inUnsignedRange = bigVal >= 0n && bigVal <= maxU;
+
+      let badge = '';
+      if (inSignedRange && inUnsignedRange) {
+        badge = '<span class="badge" style="color:var(--accent-green);">In Range</span>';
+      } else if (inSignedRange) {
+        badge = '<span class="badge" style="color:var(--accent-cyan);">Signed OK</span>';
+      } else if (inUnsignedRange) {
+        badge = '<span class="badge" style="color:var(--accent-amber);">Unsigned OK</span>';
+      } else {
+        badge = '<span class="badge" style="color:var(--accent-pink);">Truncated</span>';
+      }
+
+      return `
+        <tr>
+          <td><strong>${w}-Bit</strong> (${w === 8 ? 'int8 / uint8' : w === 16 ? 'int16 / uint16' : w === 32 ? 'int32 / uint32' : 'int64 / uint64'})</td>
+          <td style="color:var(--accent-green); font-family:var(--font-mono);">${sVal.toString(10)}</td>
+          <td style="color:var(--accent-cyan); font-family:var(--font-mono);">${uVal.toString(10)}</td>
+          <td style="color:var(--text-main); font-family:var(--font-mono);">${hex}</td>
+          <td style="color:var(--text-muted); font-family:var(--font-mono);">${onesComp}</td>
+          <td style="color:var(--accent-amber); font-family:var(--font-mono);">${signMagHex}</td>
+          <td>${badge}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function updateBitfieldSlicer(bigVal) {
+    let high = parseInt(sliceHighRange.value, 10);
+    let low = parseInt(sliceLowRange.value, 10);
+    if (high < low) {
+      const tmp = high;
+      high = low;
+      low = tmp;
+    }
+    document.getElementById('slice-high-label').textContent = high;
+    document.getElementById('slice-low-label').textContent = low;
+
+    const bitCount = high - low + 1;
+    document.getElementById('res-slice-range').textContent = `[${high} : ${low}] (${bitCount} bit${bitCount > 1 ? 's' : ''})`;
+
+    const u64 = BigInt.asUintN(64, bigVal);
+    const sliceMask = ((1n << BigInt(bitCount)) - 1n);
+    const extractedU = (u64 >> BigInt(low)) & sliceMask;
+    const extractedS = BigInt.asIntN(bitCount, extractedU);
+    const fullMask = sliceMask << BigInt(low);
+
+    document.getElementById('res-slice-unsigned').textContent = `${extractedU.toString(10)} (0x${extractedU.toString(16).toUpperCase()})`;
+    document.getElementById('res-slice-signed').textContent = extractedS.toString(10);
+    document.getElementById('res-slice-mask').textContent = '0x' + fullMask.toString(16).padStart(16, '0').toUpperCase();
+
+    // Metrics for full 64-bit value
+    const bin64 = u64.toString(2).padStart(64, '0');
+    let popcount = 0;
+    for (let c of bin64) if (c === '1') popcount++;
+
+    let clz = 0;
+    for (let c of bin64) {
+      if (c === '0') clz++;
+      else break;
+    }
+
+    let ctz = 0;
+    for (let i = bin64.length - 1; i >= 0; i--) {
+      if (bin64[i] === '0') ctz++;
+      else break;
+    }
+
+    const parity = popcount % 2 === 0 ? 'Even (0)' : 'Odd (1)';
+    const isPow2 = u64 > 0n && (u64 & (u64 - 1n)) === 0n ? 'Yes (2^' + (63 - clz) + ')' : 'No';
+
+    document.getElementById('res-metric-popcount').textContent = `${popcount} / 64`;
+    document.getElementById('res-metric-clz').textContent = clz;
+    document.getElementById('res-metric-ctz').textContent = ctz;
+    document.getElementById('res-metric-parity').textContent = parity;
+    document.getElementById('res-metric-pow2').textContent = isPow2;
+  }
+
+  document.getElementById('btn-varint-encode').onclick = runVarintEncode;
+  document.getElementById('btn-varint-decode').onclick = runVarintDecode;
+  varintValInput.addEventListener('input', runVarintEncode);
+  sliceHighRange.addEventListener('input', () => {
+    const val = parseOpVal(varintValInput.value);
+    updateBitfieldSlicer(val);
+  });
+  sliceLowRange.addEventListener('input', () => {
+    const val = parseOpVal(varintValInput.value);
+    updateBitfieldSlicer(val);
   });
 
   // ==========================================
@@ -1314,10 +1873,60 @@
 
   // Initialization
   window.addEventListener('DOMContentLoaded', () => {
+    if (window.resizeTo) {
+      window.resizeTo(900, 600);
+    }
     initBitboardGrid();
     renderBitboard();
     executeBitwiseOp('AND');
     inspectIEEE754();
+    runVarintEncode();
+
+    fpInput.addEventListener('input', inspectIEEE754);
+    document.querySelectorAll('.fp-preset').forEach(btn => {
+      btn.onclick = () => {
+        fpInput.value = btn.dataset.val;
+        inspectIEEE754();
+      };
+    });
+
+    // Startup Welcome Toast
+    setTimeout(() => {
+      showToast("⚡ Welcome to KBase Studio! Press F1 or 'H' for Help, 1-5 for Tabs.");
+    }, 350);
+  });
+
+  // Global Keyboard Shortcuts
+  document.addEventListener('keydown', (e) => {
+    // Escape closes modals
+    if (e.key === 'Escape') {
+      closeHelpModal();
+      return;
+    }
+
+    const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT';
+
+    // F1 works everywhere
+    if (e.key === 'F1') {
+      e.preventDefault();
+      if (helpModal.classList.contains('show')) closeHelpModal();
+      else openHelpModal();
+      return;
+    }
+
+    if (!isInput) {
+      if (e.key === 'h' || e.key === 'H') {
+        e.preventDefault();
+        if (helpModal.classList.contains('show')) closeHelpModal();
+        else openHelpModal();
+        return;
+      }
+      if (e.key >= '1' && e.key <= '5') {
+        const tabIdx = parseInt(e.key, 10) - 1;
+        selectTab(tabIdx);
+        return;
+      }
+    }
   });
 </script>
 </body>

@@ -439,6 +439,7 @@
     background: rgba(255, 255, 255, 0.02);
   }
 
+  /* Toast & Notification */
   .toast {
     position: fixed;
     bottom: 20px;
@@ -454,12 +455,129 @@
     transform: translateY(10px);
     transition: all 0.3s ease;
     pointer-events: none;
-    z-index: 1000;
+    z-index: 3000;
   }
 
   .toast.show {
     opacity: 1;
     transform: translateY(0);
+  }
+
+  /* Cyber Modal Dialog */
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(10, 13, 20, 0.82);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+  }
+
+  .modal-backdrop.show {
+    display: flex;
+  }
+
+  .modal-box {
+    background: #121824;
+    border: 1px solid var(--accent-cyan);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 650px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 30px rgba(0, 240, 255, 0.25);
+    animation: modalPop 0.2s ease-out;
+    overflow: hidden;
+  }
+
+  @keyframes modalPop {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .modal-header {
+    background: #0f1522;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--card-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.3rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color 0.2s;
+  }
+
+  .modal-close:hover {
+    color: var(--accent-pink);
+  }
+
+  .modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    line-height: 1.5;
+  }
+
+  .modal-section-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--accent-green);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .shortcut-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 4px;
+    font-size: 0.85rem;
+  }
+
+  .shortcut-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--card-border);
+  }
+
+  .kbd-key {
+    background: #090c13;
+    border: 1px solid var(--accent-cyan);
+    color: var(--accent-cyan);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    display: inline-block;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
   }
 </style>
 </head>
@@ -471,11 +589,12 @@
     <span>KBase Studio <small style="font-weight:normal; color:var(--text-muted); margin-left:10px; font-size:0.8rem;">(Press 'H' or F1 for help)</small></span>
   </div>
   <nav>
-    <button class="tab-btn active" data-tab="tab-converter">⚡ Multi-Base</button>
-    <button class="tab-btn" data-tab="tab-bitboard">🔢 64-Bit Grid & Ops</button>
-    <button class="tab-btn" data-tab="tab-ieee">🔬 IEEE-754 Float</button>
-    <button class="tab-btn" data-tab="tab-encodings">🎛️ Varint &amp; Bitfields</button>
-    <button class="tab-btn" data-tab="tab-history">📜 History &amp; Export</button>
+    <button class="tab-btn active" data-tab="tab-converter"><span class="kbd-key" style="font-size:0.7rem; padding:1px 4px; margin-right:4px;">1</span>⚡ Multi-Base</button>
+    <button class="tab-btn" data-tab="tab-bitboard"><span class="kbd-key" style="font-size:0.7rem; padding:1px 4px; margin-right:4px;">2</span>🔢 64-Bit Grid &amp; Ops</button>
+    <button class="tab-btn" data-tab="tab-ieee"><span class="kbd-key" style="font-size:0.7rem; padding:1px 4px; margin-right:4px;">3</span>🔬 IEEE-754 Float</button>
+    <button class="tab-btn" data-tab="tab-encodings"><span class="kbd-key" style="font-size:0.7rem; padding:1px 4px; margin-right:4px;">4</span>🎛️ Varint &amp; Bitfields</button>
+    <button class="tab-btn" data-tab="tab-history"><span class="kbd-key" style="font-size:0.7rem; padding:1px 4px; margin-right:4px;">5</span>📜 History &amp; Export</button>
+    <button class="btn btn-sm btn-accent" id="btn-help-modal" style="margin-left: 6px;">❓ Help [F1]</button>
   </nav>
 </header>
 
@@ -901,6 +1020,37 @@
 
 <div class="toast" id="toast">Copied to clipboard!</div>
 
+<!-- Help Modal Dialog -->
+<div class="modal-backdrop" id="help-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">⚡ KBase Studio &mdash; User Guide &amp; Shortcuts</div>
+      <button class="modal-close" id="btn-close-help" title="Close [Esc]">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <div class="modal-section-title">⌨️ Keyboard Shortcuts</div>
+        <table class="shortcut-table">
+          <tr><td><span class="kbd-key">F1</span> or <span class="kbd-key">H</span></td><td>Toggle this Help &amp; Shortcuts guide</td></tr>
+          <tr><td><span class="kbd-key">1</span> &ndash; <span class="kbd-key">5</span></td><td>Switch tabs (1: Multi-Base, 2: 64-Bit Grid, 3: IEEE-754, 4: Varint, 5: History)</td></tr>
+          <tr><td><span class="kbd-key">Esc</span></td><td>Close modal dialogs</td></tr>
+          <tr><td><span class="kbd-key">Enter</span></td><td>Recalculate / execute active conversion or bitwise operation</td></tr>
+        </table>
+      </div>
+      <div>
+        <div class="modal-section-title">💡 Feature Highlights</div>
+        <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem; color: var(--text-muted);">
+          <li><strong style="color:var(--accent-cyan);">Multi-Base Live Converter:</strong> Real-time 64-bit synchronization between Binary (0b), Octal (0o), Decimal, Hex (0x), Custom base (2-36), and ASCII/Unicode characters.</li>
+          <li><strong style="color:var(--accent-green);">64-Bit Toggle Grid &amp; Ops:</strong> Interactive bit manipulation board with shift, rotate (ROL/ROR), reverse, byte swap (endianness), and bitwise AND/OR/XOR/NOT/SAR operations.</li>
+          <li><strong style="color:var(--accent-amber);">IEEE-754 Inspector:</strong> Visual single (32-bit float) and double (64-bit double) breakdown with color-coded Sign, Exponent, and Mantissa bits and exact reconstruction formulas.</li>
+          <li><strong style="color:var(--accent-purple);">Varint &amp; Bitfields:</strong> LEB128 / SLEB128 / Protobuf ZigZag encoder/decoder, multi-width (int8..64) two's complement inspector, and bitfield slicer with Popcount/CLZ/CTZ diagnostics.</li>
+          <li><strong style="color:var(--text-main);">Export &amp; History:</strong> Automatic calculation logging with instant CSV and JSON export.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   // Global State & History Storage
   const historyLog = [];
@@ -948,14 +1098,42 @@
   const tabs = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
 
-  tabs.forEach(tab => {
+  function selectTab(index) {
+    if (index < 0 || index >= tabs.length) return;
+    tabs.forEach(t => t.classList.remove('active'));
+    tabContents.forEach(c => c.classList.remove('active'));
+    tabs[index].classList.add('active');
+    const target = tabs[index].dataset.tab;
+    const content = document.getElementById(target);
+    if (content) content.classList.add('active');
+  }
+
+  tabs.forEach((tab, idx) => {
     tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      tabContents.forEach(c => c.classList.remove('active'));
-      tab.classList.add('active');
-      document.getElementById(tab.dataset.tab).classList.add('active');
+      selectTab(idx);
     });
   });
+
+  // Modal Dialog Handlers
+  const helpModal = document.getElementById('help-modal');
+  const btnHelpModal = document.getElementById('btn-help-modal');
+  const btnCloseHelp = document.getElementById('btn-close-help');
+
+  function openHelpModal() {
+    helpModal.classList.add('show');
+  }
+
+  function closeHelpModal() {
+    helpModal.classList.remove('show');
+  }
+
+  if (btnHelpModal) btnHelpModal.addEventListener('click', openHelpModal);
+  if (btnCloseHelp) btnCloseHelp.addEventListener('click', closeHelpModal);
+  if (helpModal) {
+    helpModal.addEventListener('click', (e) => {
+      if (e.target === helpModal) closeHelpModal();
+    });
+  }
 
   // ==========================================
   // TAB 1: SIMULTANEOUS MULTI-BASE CONVERTER
@@ -1711,13 +1889,43 @@
         inspectIEEE754();
       };
     });
+
+    // Startup Welcome Toast
+    setTimeout(() => {
+      showToast("⚡ Welcome to KBase Studio! Press F1 or 'H' for Help, 1-5 for Tabs.");
+    }, 350);
   });
 
-  // Help Shortcut
+  // Global Keyboard Shortcuts
   document.addEventListener('keydown', (e) => {
-    if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-      if (e.key === 'F1') e.preventDefault();
-      alert("KBase Studio Help\n\n- Multi-Base: Live convert between bases and strings.\n- 64-Bit Grid: Click bits to toggle, or use operations.\n- IEEE-754: View internal representation of floats.\n- History: Review your past operations.");
+    // Escape closes modals
+    if (e.key === 'Escape') {
+      closeHelpModal();
+      return;
+    }
+
+    const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT';
+
+    // F1 works everywhere
+    if (e.key === 'F1') {
+      e.preventDefault();
+      if (helpModal.classList.contains('show')) closeHelpModal();
+      else openHelpModal();
+      return;
+    }
+
+    if (!isInput) {
+      if (e.key === 'h' || e.key === 'H') {
+        e.preventDefault();
+        if (helpModal.classList.contains('show')) closeHelpModal();
+        else openHelpModal();
+        return;
+      }
+      if (e.key >= '1' && e.key <= '5') {
+        const tabIdx = parseInt(e.key, 10) - 1;
+        selectTab(tabIdx);
+        return;
+      }
     }
   });
 </script>
