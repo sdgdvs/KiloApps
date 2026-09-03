@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KSimon
 - KTrader
 - KDragon
 - KSolitaire
@@ -149,8 +148,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KAsteroids
 - K2048
 - KDarts
+- KSimon
 
 ## Completed Work Log
+
+- **KSimon (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on button presses, sequence flashes, wrong buzzer errors, shield absorptions, power-up triggers (Hint, Slow, Shield, Freeze), and victory bursts (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas ksimon.html, and double-buffered viewport rendering with physics decay in Native C Win32 GDI KSimon/main.c), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant plasma/smoke puffs with negative gravity and radius growth, heavy kinematic arcade debris / plastic shards with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion halo radiating upon button activations, combo streaks, power-ups, and stage clears / game over, ornate cybernetic / retro-arcade HUD corner filigree L-brackets with tech notches and gold rivet accents at all four arena corners, a pulsating energy perimeter inlay border with an animated traveling specular glint traversing the outer playfield console ring, sculpted console highlights with diagonal specular sheen sweeps traversing button bevels and center robot mascot visor, and atmospheric floating cyber dust particles in both Web Canvas (ksimon.html) and Native C Win32 GDI (KSimon/main.c).
 
 - **KDarts (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on dart impacts (triple/double hits, bullseyes, power-ups, busts, and victory bursts) with mathematical translation/rotation in Web Canvas (kdarts.html) and trigonometric FastSin/FastCos double-buffered viewport offsets in Native C Win32 GDI (KDarts/main.c), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant chalk & smoke puffs with negative gravity and radius growth, heavy kinematic sisal fiber / wood & brass debris shards with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion halo radiating upon bullseye hits, triple-20 180s, power-up activations, and leg/match victories, ornate pub arcade HUD corner filigree L-brackets with brass rivet accents and tech notches at all four arena corners, a pulsating energy/brass perimeter inlay border with an animated traveling specular glint traversing the outer playfield frame, sculpted dartboard and dart barrel highlights with diagonal specular sheen sweeps, and atmospheric floating tavern dust motes in both Web Canvas (kdarts.html) and Native C Win32 GDI (KDarts/main.c).
 

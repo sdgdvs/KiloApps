@@ -367,7 +367,7 @@
     return 6;
   }
 
-  // --- CANVAS GRAPHICS & SPRITE ENGINE ---
+  // --- CANVAS GRAPHICS & SPRITE ENGINE (LOOP 8 POLISH) ---
   const canvas = document.getElementById('simon-canvas');
   const ctx = canvas.getContext('2d');
 
@@ -390,9 +390,33 @@
     x: 0, y: 0, radius: 40
   }));
 
-  let soundRipples = [];
-  let fireworks = [];
-  let errorShards = [];
+  // Visual Effects Engine State
+  let shakeTrauma = 0.0;
+  function addTrauma(val) {
+    shakeTrauma = Math.min(1.0, shakeTrauma + val);
+  }
+
+  // 4 Distinct Particle Layers
+  let sparkParticles = []; // Layer 1: Incandescent needle sparks with velocity trails
+  let puffParticles = [];  // Layer 2: Expanding buoyant plasma/smoke puffs
+  let debrisShards = [];   // Layer 3: Heavy kinematic arcade plastic shards with tumbling rotation & floor bounce
+  let energyStars = [];    // Layer 4: Radiant golden celebration energy stars
+  let dualShockwaves = []; // Dual-tier concentric shockwave ripple rings
+  let cyberDust = [];      // Atmospheric floating cyber dust motes
+
+  // Initialize Cyber Dust
+  for (let i = 0; i < 35; i++) {
+    cyberDust.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: (Math.random() - 0.5) * 0.4 - 0.1,
+      size: 1.0 + Math.random() * 2.0,
+      alpha: 0.2 + Math.random() * 0.5,
+      phase: Math.random() * Math.PI * 2,
+      color: Math.random() > 0.5 ? '#00ffcc' : '#33aaff'
+    });
+  }
 
   function layoutButtons() {
     const cx = canvas.width / 2;
@@ -430,34 +454,104 @@
   }
   layoutButtons();
 
+  function triggerDualShockwave(x, y, color) {
+    dualShockwaves.push({
+      x, y,
+      innerR: 10,
+      innerMax: 95,
+      outerR: 15,
+      outerMax: 130,
+      color: color || '#00ffcc',
+      alpha: 1.0
+    });
+  }
+
+  function trigger4LayerBurst(x, y, color, countMult = 1.0) {
+    // Layer 1: Needle sparks with drag & velocity
+    const sparkCount = Math.floor(18 * countMult);
+    for (let i = 0; i < sparkCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 2.5 + Math.random() * 5.0;
+      sparkParticles.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        prevX: x, prevY: y,
+        life: 1.0,
+        decay: 0.03 + Math.random() * 0.03,
+        size: 1.5 + Math.random() * 2.0,
+        color: Math.random() > 0.4 ? color : '#ffffff'
+      });
+    }
+
+    // Layer 2: Expanding buoyant plasma puffs
+    const puffCount = Math.floor(6 * countMult);
+    for (let i = 0; i < puffCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 0.5 + Math.random() * 1.5;
+      puffParticles.push({
+        x: x + (Math.random() - 0.5) * 10,
+        y: y + (Math.random() - 0.5) * 10,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 0.4,
+        radius: 3,
+        maxRadius: 16 + Math.random() * 10,
+        life: 1.0,
+        decay: 0.025 + Math.random() * 0.02,
+        color: color
+      });
+    }
+
+    // Layer 3: Kinematic heavy arcade debris shards
+    const debrisCount = Math.floor(10 * countMult);
+    for (let i = 0; i < debrisCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 2.0 + Math.random() * 4.5;
+      debrisShards.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 1.5,
+        rot: Math.random() * Math.PI * 2,
+        vRot: (Math.random() - 0.5) * 0.4,
+        life: 1.0,
+        decay: 0.018 + Math.random() * 0.018,
+        size: 3.5 + Math.random() * 4.5,
+        color: color
+      });
+    }
+
+    // Layer 4: Celebration Golden Stars
+    const starCount = Math.floor(4 * countMult);
+    for (let i = 0; i < starCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 1.0 + Math.random() * 3.0;
+      energyStars.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 0.8,
+        rot: Math.random() * Math.PI * 2,
+        vRot: (Math.random() - 0.5) * 0.2,
+        size: 4 + Math.random() * 4,
+        life: 1.0,
+        decay: 0.02 + Math.random() * 0.015,
+        color: '#ffd700'
+      });
+    }
+  }
+
   function triggerButtonFlash(index) {
     if (index >= 0 && index < getActiveButtonCount()) {
       buttonStates[index].active = true;
       buttonStates[index].glowIntensity = 1.0;
-      buttonStates[index].scale = 1.08;
+      buttonStates[index].scale = 1.15;
+      addTrauma(0.16);
 
-      soundRipples.push({
-        x: buttonStates[index].x,
-        y: buttonStates[index].y,
-        radius: 30,
-        maxRadius: 90,
-        color: buttonStates[index].glowColor,
-        alpha: 1.0
-      });
+      const bx = buttonStates[index].x;
+      const by = buttonStates[index].y;
+      const bColor = buttonStates[index].glowColor;
 
-      for (let i = 0; i < 15; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 1 + Math.random() * 3;
-        fireworks.push({
-          x: buttonStates[index].x, y: buttonStates[index].y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          life: 1.0,
-          decay: 0.03 + Math.random() * 0.03,
-          size: 2 + Math.random() * 2,
-          color: buttonStates[index].flashColor
-        });
-      }
+      triggerDualShockwave(bx, by, bColor);
+      trigger4LayerBurst(bx, by, buttonStates[index].flashColor, 0.9);
     }
   }
 
@@ -470,39 +564,118 @@
   function triggerVictoryFireworks() {
     const cx = canvas.width / 2;
     const cy = canvas.height / 2;
-    const colors = ['#00ffcc', '#ff3366', '#ffff33', '#33aaff', '#e033ff', '#33ff66', '#ffaa33', '#ff66bb'];
-    for (let i = 0; i < 60; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 2 + Math.random() * 6;
-      fireworks.push({
-        x: cx, y: cy,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 1.5,
-        life: 1.0,
-        decay: 0.015 + Math.random() * 0.02,
-        size: 3 + Math.random() * 4,
-        color: colors[Math.floor(Math.random() * colors.length)]
-      });
+    addTrauma(0.65);
+    triggerDualShockwave(cx, cy, '#ffd700');
+    triggerDualShockwave(cx, cy, '#00ffcc');
+
+    const colors = ['#00ffcc', '#ff3366', '#ffff33', '#33aaff', '#e033ff', '#33ff66', '#ffaa33', '#ff66bb', '#ffd700'];
+    for (let i = 0; i < 4; i++) {
+      setTimeout(() => {
+        const ox = cx + (Math.random() - 0.5) * 120;
+        const oy = cy + (Math.random() - 0.5) * 100;
+        const col = colors[Math.floor(Math.random() * colors.length)];
+        trigger4LayerBurst(ox, oy, col, 1.4);
+      }, i * 90);
     }
   }
 
   function triggerErrorBurst() {
     const cx = canvas.width / 2;
     const cy = canvas.height / 2;
-    for (let i = 0; i < 45; i++) {
+    addTrauma(0.85);
+    triggerDualShockwave(cx, cy, '#ff2244');
+    trigger4LayerBurst(cx, cy, '#ff2244', 2.2);
+
+    for (let i = 0; i < 20; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = 3 + Math.random() * 7;
-      errorShards.push({
+      const speed = 3 + Math.random() * 6;
+      debrisShards.push({
         x: cx, y: cy,
         vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
+        vy: Math.sin(angle) * speed - 1.0,
         rot: Math.random() * Math.PI * 2,
-        vRot: (Math.random() - 0.5) * 0.3,
+        vRot: (Math.random() - 0.5) * 0.5,
         life: 1.0,
-        decay: 0.025 + Math.random() * 0.02,
-        size: 5 + Math.random() * 6
+        decay: 0.015 + Math.random() * 0.015,
+        size: 5 + Math.random() * 6,
+        color: '#ff0033'
       });
     }
+  }
+
+  function drawStar(ctx, x, y, size, rot, color, alpha) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const aOuter = (i * 4 * Math.PI / 5) - Math.PI / 2;
+      const aInner = aOuter + (2 * Math.PI / 10);
+      const rO = size, rI = size * 0.42;
+      const pxO = Math.cos(aOuter) * rO, pyO = Math.sin(aOuter) * rO;
+      const pxI = Math.cos(aInner) * rI, pyI = Math.sin(aInner) * rI;
+      if (i === 0) ctx.moveTo(pxO, pyO); else ctx.lineTo(pxO, pyO);
+      ctx.lineTo(pxI, pyI);
+    }
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.globalAlpha = alpha;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 6;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCornerFiligree(ctx, w, h) {
+    ctx.save();
+    const corners = [
+      { x: 16, y: 16, sx: 1, sy: 1 },
+      { x: w - 16, y: 16, sx: -1, sy: 1 },
+      { x: 16, y: h - 16, sx: 1, sy: -1 },
+      { x: w - 16, y: h - 16, sx: -1, sy: -1 }
+    ];
+
+    corners.forEach(c => {
+      ctx.save();
+      ctx.translate(c.x, c.y);
+      ctx.scale(c.sx, c.sy);
+
+      // Cyber L-Bracket Outer Spine
+      ctx.strokeStyle = '#00ffcc88';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(0, 24);
+      ctx.lineTo(0, 6);
+      ctx.lineTo(6, 0);
+      ctx.lineTo(24, 0);
+      ctx.stroke();
+
+      // Inner Tech Notch
+      ctx.strokeStyle = '#ffd700aa';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(4, 18);
+      ctx.lineTo(4, 10);
+      ctx.lineTo(10, 4);
+      ctx.lineTo(18, 4);
+      ctx.stroke();
+
+      // Corner Tech Rivet
+      ctx.fillStyle = '#ffd700';
+      ctx.shadowColor = '#ffd700';
+      ctx.shadowBlur = 4;
+      ctx.beginPath();
+      ctx.arc(8, 8, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Tech end notches
+      ctx.fillStyle = '#00ffcc';
+      ctx.fillRect(-1.5, 23, 3, 3);
+      ctx.fillRect(23, -1.5, 3, 3);
+
+      ctx.restore();
+    });
+    ctx.restore();
   }
 
   function drawIcon(ctx, iconType, x, y, size, color) {
@@ -596,11 +769,46 @@
     const h = canvas.height;
     const cx = w / 2;
     const cy = h / 2;
+    const now = Date.now();
 
     ctx.clearRect(0, 0, w, h);
 
+    // Procedural Screen Shake Physics Decay & Rotational Damping
+    if (shakeTrauma > 0) {
+      shakeTrauma = Math.max(0, shakeTrauma - 0.024);
+    }
+    const intensity = shakeTrauma * shakeTrauma;
+    const shakeX = (Math.random() * 2 - 1) * intensity * 12;
+    const shakeY = (Math.random() * 2 - 1) * intensity * 12;
+    const shakeRot = (Math.random() * 2 - 1) * intensity * 0.04;
+
+    ctx.save();
+    ctx.translate(cx + shakeX, cy + shakeY);
+    ctx.rotate(shakeRot);
+    ctx.translate(-cx, -cy);
+
+    // Atmospheric Floating Cyber Dust Particles (Background Layer)
+    for (let i = 0; i < cyberDust.length; i++) {
+      const p = cyberDust[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < 0) p.x = w;
+      if (p.x > w) p.x = 0;
+      if (p.y < 0) p.y = h;
+      if (p.y > h) p.y = 0;
+
+      const alphaPulse = p.alpha * (0.6 + 0.4 * Math.sin(now * 0.003 + p.phase));
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = alphaPulse;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1.0;
+
+    // Outer Console Housing
     const consoleRadius = 185;
-    const outerGrad = ctx.createRadialGradient(cx, cy, consoleRadius - 20, cx, cy, consoleRadius);
+    const outerGrad = ctx.createRadialGradient(cx, cy, consoleRadius - 25, cx, cy, consoleRadius);
     outerGrad.addColorStop(0, '#2b2b36');
     outerGrad.addColorStop(0.7, '#15151c');
     outerGrad.addColorStop(1, '#08080a');
@@ -609,26 +817,54 @@
     ctx.beginPath();
     ctx.arc(cx, cy, consoleRadius, 0, Math.PI * 2);
     ctx.fillStyle = outerGrad;
-    ctx.shadowColor = 'rgba(0,0,0,0.7)';
-    ctx.shadowBlur = 20;
+    ctx.shadowColor = 'rgba(0,0,0,0.8)';
+    ctx.shadowBlur = 24;
     ctx.shadowOffsetY = 10;
     ctx.fill();
 
-    const rimGrad = ctx.createRadialGradient(cx - 50, cy - 50, 100, cx, cy, consoleRadius);
-    rimGrad.addColorStop(0, '#777788');
-    rimGrad.addColorStop(0.3, '#dddde8');
+    // Metallic Rim with 3D Bevel Gradient
+    const rimGrad = ctx.createRadialGradient(cx - 50, cy - 50, 80, cx, cy, consoleRadius);
+    rimGrad.addColorStop(0, '#888899');
+    rimGrad.addColorStop(0.3, '#eeeeff');
     rimGrad.addColorStop(0.5, '#444455');
-    rimGrad.addColorStop(0.8, '#aaaaac');
+    rimGrad.addColorStop(0.8, '#bbbbcc');
     rimGrad.addColorStop(1, '#22222a');
 
-    ctx.lineWidth = 10;
+    ctx.lineWidth = 12;
     ctx.strokeStyle = rimGrad;
     ctx.stroke();
 
+    // Pulsating Energy Perimeter Inlay Border
+    const neonPulse = 0.5 + 0.5 * Math.sin(now * 0.003);
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = `rgba(0, 255, 204, ${0.4 + 0.5 * neonPulse})`;
+    ctx.shadowColor = '#00ffcc';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, consoleRadius - 8, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Animated Traveling Specular Glint traversing Console Perimeter
+    const glintAngle = (now * 0.0018) % (Math.PI * 2);
+    const glintX = cx + Math.cos(glintAngle) * (consoleRadius - 6);
+    const glintY = cy + Math.sin(glintAngle) * (consoleRadius - 6);
+
+    const glintGrad = ctx.createRadialGradient(glintX, glintY, 0, glintX, glintY, 24);
+    glintGrad.addColorStop(0, '#ffffff');
+    glintGrad.addColorStop(0.3, 'rgba(0, 255, 204, 0.9)');
+    glintGrad.addColorStop(0.7, 'rgba(0, 255, 204, 0.3)');
+    glintGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = glintGrad;
+    ctx.beginPath();
+    ctx.arc(glintX, glintY, 24, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Metallic Screws
     for (let i = 0; i < 8; i++) {
       const a = (i * Math.PI / 4);
-      const sx = cx + Math.cos(a) * (consoleRadius - 8);
-      const sy = cy + Math.sin(a) * (consoleRadius - 8);
+      const sx = cx + Math.cos(a) * (consoleRadius - 6);
+      const sy = cy + Math.sin(a) * (consoleRadius - 6);
 
       ctx.beginPath();
       ctx.arc(sx, sy, 4.5, 0, Math.PI * 2);
@@ -645,29 +881,43 @@
       ctx.stroke();
     }
 
-    for (let i = soundRipples.length - 1; i >= 0; i--) {
-      const r = soundRipples[i];
+    // Dual-Tier Concentric Shockwaves
+    for (let i = dualShockwaves.length - 1; i >= 0; i--) {
+      const sw = dualShockwaves[i];
       ctx.save();
+      ctx.globalAlpha = sw.alpha;
+
+      // Inner High-Speed Compression Wave
       ctx.beginPath();
-      ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
-      ctx.strokeStyle = r.color;
-      ctx.globalAlpha = r.alpha;
-      ctx.lineWidth = 3;
+      ctx.arc(sw.x, sw.y, sw.innerR, 0, Math.PI * 2);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3.5;
+      ctx.shadowColor = sw.color;
+      ctx.shadowBlur = 8;
+      ctx.stroke();
+
+      // Outer Chromatic Dispersion Halo
+      ctx.beginPath();
+      ctx.arc(sw.x, sw.y, sw.outerR, 0, Math.PI * 2);
+      ctx.strokeStyle = sw.color;
+      ctx.lineWidth = 2.0;
       ctx.stroke();
       ctx.restore();
 
-      r.radius += 2.5;
-      r.alpha -= 0.035;
-      if (r.alpha <= 0 || r.radius >= r.maxRadius) {
-        soundRipples.splice(i, 1);
+      sw.innerR += 3.5;
+      sw.outerR += 2.8;
+      sw.alpha -= 0.038;
+      if (sw.alpha <= 0 || sw.outerR >= sw.outerMax) {
+        dualShockwaves.splice(i, 1);
       }
     }
 
+    // Render 3D Console Buttons
     const activeCount = getActiveButtonCount();
     for (let i = 0; i < activeCount; i++) {
       const btn = buttonStates[i];
       if (!btn.active && btn.glowIntensity > 0) {
-        btn.glowIntensity -= 0.05;
+        btn.glowIntensity -= 0.045;
         if (btn.glowIntensity < 0) btn.glowIntensity = 0;
       }
       if (!btn.active && btn.scale > 1.0) {
@@ -696,42 +946,61 @@
         ctx.closePath();
       }
 
+      // Button Glowing Aura / Halos
       if (btn.glowIntensity > 0 && currentMode !== 'pitch_audio') {
-        const haloGrad = ctx.createRadialGradient(0, 0, btn.radius * 0.8, 0, 0, btn.radius * 1.7);
+        const haloGrad = ctx.createRadialGradient(0, 0, btn.radius * 0.7, 0, 0, btn.radius * 1.8);
         haloGrad.addColorStop(0, btn.glowColor);
         haloGrad.addColorStop(1, 'transparent');
         ctx.fillStyle = haloGrad;
-        ctx.globalAlpha = btn.glowIntensity * 0.8;
-        tracePolygon(ctx, btn.radius * 1.7);
+        ctx.globalAlpha = btn.glowIntensity * 0.85;
+        tracePolygon(ctx, btn.radius * 1.8);
         ctx.fill();
         ctx.globalAlpha = 1.0;
       }
 
+      // Bezel Base Shadow
       tracePolygon(ctx, btn.radius + 3, 3);
       ctx.fillStyle = '#0a0a0f';
       ctx.fill();
 
-      const btnGrad = ctx.createRadialGradient(-btn.radius*0.3, -btn.radius*0.3, 5, 0, 0, btn.radius);
+      // Button Convex Surface Gradient
+      const btnGrad = ctx.createRadialGradient(-btn.radius*0.3, -btn.radius*0.3, 4, 0, 0, btn.radius);
       if (btn.active) {
         if (currentMode === 'pitch_audio' && isPlayingSequence) {
-          btnGrad.addColorStop(0, '#555566');
-          btnGrad.addColorStop(0.3, '#333344');
-          btnGrad.addColorStop(1, '#111122');
+          btnGrad.addColorStop(0, '#666677');
+          btnGrad.addColorStop(0.3, '#444455');
+          btnGrad.addColorStop(1, '#1a1a24');
         } else {
           btnGrad.addColorStop(0, '#ffffff');
           btnGrad.addColorStop(0.3, btn.flashColor);
           btnGrad.addColorStop(1, btn.glowColor);
         }
       } else {
-        btnGrad.addColorStop(0, '#ffffff88');
-        btnGrad.addColorStop(0.2, btn.baseColor);
-        btnGrad.addColorStop(1, '#000000');
+        btnGrad.addColorStop(0, '#ffffff77');
+        btnGrad.addColorStop(0.25, btn.baseColor);
+        btnGrad.addColorStop(1, '#050508');
       }
 
       tracePolygon(ctx, btn.radius);
       ctx.fillStyle = btnGrad;
       ctx.fill();
 
+      // Diagonal Specular Sheen Sweep Highlight across Button Bevel
+      const sheenPhase = ((now * 0.0015 + i * 0.7) % 3.0);
+      if (sheenPhase < 1.0) {
+        ctx.save();
+        ctx.clip(); // clip to polygon
+        const sheenX = -btn.radius * 2 + sheenPhase * (btn.radius * 4);
+        const sheenGrad = ctx.createLinearGradient(sheenX - 15, -btn.radius, sheenX + 15, btn.radius);
+        sheenGrad.addColorStop(0, 'transparent');
+        sheenGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.45)');
+        sheenGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = sheenGrad;
+        ctx.fillRect(-btn.radius * 2, -btn.radius * 2, btn.radius * 4, btn.radius * 4);
+        ctx.restore();
+      }
+
+      // 3D Bevel Top Arc / Polygon Rim
       ctx.beginPath();
       for (let j = Math.floor(sides/2); j <= sides; j++) {
          const a = j * (Math.PI * 2 / sides) + angleOffset;
@@ -740,26 +1009,28 @@
          if (j === Math.floor(sides/2)) ctx.moveTo(px, py);
          else ctx.lineTo(px, py);
       }
-      ctx.strokeStyle = btn.active ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)';
+      ctx.strokeStyle = btn.active ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.45)';
       ctx.lineWidth = 3;
       ctx.stroke();
 
       tracePolygon(ctx, btn.radius);
       ctx.strokeStyle = btn.active ? '#ffffff' : 'rgba(255,255,255,0.2)';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      const iconColor = btn.active ? '#ffffff' : '#e0e0e0';
+      // Button Icon & Keyboard Key Label
+      const iconColor = btn.active ? '#ffffff' : '#f0f0f0';
       drawIcon(ctx, btn.icon, 0, -2, btn.radius * 0.65, iconColor);
 
       ctx.font = 'bold 11px sans-serif';
-      ctx.fillStyle = btn.active ? '#ffffff' : 'rgba(255,255,255,0.6)';
+      ctx.fillStyle = btn.active ? '#ffffff' : 'rgba(255,255,255,0.7)';
       ctx.textAlign = 'center';
       ctx.fillText(btn.label, 0, btn.radius - 6);
 
       ctx.restore();
     }
 
+    // Center Metal Control Disc & CRT Display
     const discRadius = 54;
     ctx.save();
     ctx.translate(cx, cy);
@@ -773,10 +1044,31 @@
     ctx.arc(0, 0, discRadius, 0, Math.PI * 2);
     ctx.fillStyle = centerGrad;
     ctx.shadowColor = '#000';
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 12;
     ctx.fill();
 
-    const mascotFrame = Math.floor(Date.now() / 200) % 4;
+    // Center Outer Rim
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#777788';
+    ctx.stroke();
+
+    // Center Disc Specular Sheen Sweep
+    const discSheen = (now * 0.001) % 4.0;
+    if (discSheen < 1.0) {
+      ctx.save();
+      ctx.clip();
+      const dsX = -discRadius * 2 + discSheen * (discRadius * 4);
+      const dsGrad = ctx.createLinearGradient(dsX - 20, -discRadius, dsX + 20, discRadius);
+      dsGrad.addColorStop(0, 'transparent');
+      dsGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.25)');
+      dsGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = dsGrad;
+      ctx.fillRect(-discRadius, -discRadius, discRadius * 2, discRadius * 2);
+      ctx.restore();
+    }
+
+    // Animated Robot Mascot Face
+    const mascotFrame = Math.floor(now / 200) % 4;
 
     ctx.save();
     ctx.fillStyle = '#111';
@@ -813,10 +1105,7 @@
     }
     ctx.restore();
 
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = '#777788';
-    ctx.stroke();
-
+    // LED Digital Score Box
     ctx.fillStyle = '#06160e';
     ctx.strokeStyle = isTimeFrozen ? '#00ccff' : '#00ffcc44';
     ctx.lineWidth = 1.5;
@@ -843,6 +1132,7 @@
       ctx.fillText(scoreStr, 0, -8);
     }
 
+    // Center Power Indicator Status LED
     ctx.beginPath();
     ctx.arc(0, 16, 4, 0, Math.PI * 2);
     if (isPlayingSequence) ctx.fillStyle = '#ffff00';
@@ -854,7 +1144,7 @@
     ctx.fillStyle = '#888899';
     ctx.fillText('K-SIMON', 0, 26);
     
-    // Death Effect (Skull)
+    // Death Effect (Expanding Skull Burst)
     if (window.deathEffect && window.deathEffect.active) {
         const dr = 60 * window.deathEffect.scale;
         ctx.save();
@@ -869,7 +1159,6 @@
         const er = dr / 4;
         ctx.beginPath(); ctx.arc(-dr/2, -10, er, 0, Math.PI*2); ctx.fill();
         ctx.beginPath(); ctx.arc(dr/2, -10, er, 0, Math.PI*2); ctx.fill();
-        
         ctx.restore();
 
         window.deathEffect.scale += 0.05;
@@ -881,46 +1170,103 @@
 
     ctx.restore();
 
-    for (let i = fireworks.length - 1; i >= 0; i--) {
-      const p = fireworks[i];
+    // LAYER 1: Core Needle Sparks with Velocity Trails
+    for (let i = sparkParticles.length - 1; i >= 0; i--) {
+      const p = sparkParticles[i];
       ctx.save();
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx.fillStyle = p.color;
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.prevX, p.prevY);
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = p.size;
       ctx.globalAlpha = p.life;
       ctx.shadowColor = p.color;
       ctx.shadowBlur = 6;
+      ctx.stroke();
+      ctx.restore();
+
+      p.prevX = p.x;
+      p.prevY = p.y;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vx *= 0.96;
+      p.vy *= 0.96;
+      p.vy += 0.06; // slight gravity
+      p.life -= p.decay;
+      if (p.life <= 0) sparkParticles.splice(i, 1);
+    }
+
+    // LAYER 2: Expanding Buoyant Plasma / Smoke Puffs
+    for (let i = puffParticles.length - 1; i >= 0; i--) {
+      const p = puffParticles[i];
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.life * 0.45;
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 8;
       ctx.fill();
       ctx.restore();
 
       p.x += p.vx;
       p.y += p.vy;
-      p.vy += 0.08;
+      p.radius += 0.4;
       p.life -= p.decay;
-      if (p.life <= 0) fireworks.splice(i, 1);
+      if (p.life <= 0 || p.radius >= p.maxRadius) puffParticles.splice(i, 1);
     }
 
-    for (let i = errorShards.length - 1; i >= 0; i--) {
-      const p = errorShards[i];
+    // LAYER 3: Heavy Kinematic Arcade Debris Shards with Floor Bounce
+    for (let i = debrisShards.length - 1; i >= 0; i--) {
+      const p = debrisShards[i];
       ctx.save();
       ctx.translate(p.x, p.y);
       ctx.rotate(p.rot);
       ctx.beginPath();
       ctx.moveTo(-p.size, -p.size);
-      ctx.lineTo(p.size, 0);
-      ctx.lineTo(-p.size, p.size);
+      ctx.lineTo(p.size, -p.size * 0.3);
+      ctx.lineTo(p.size * 0.4, p.size);
+      ctx.lineTo(-p.size * 0.6, p.size * 0.8);
       ctx.closePath();
-      ctx.fillStyle = '#ff2244';
+      ctx.fillStyle = p.color;
       ctx.globalAlpha = p.life;
       ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1;
+      ctx.stroke();
       ctx.restore();
+
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.16; // gravity
+      p.vx *= 0.98;
+      p.rot += p.vRot;
+      p.life -= p.decay;
+
+      // Floor bounce
+      if (p.y > h - 12 && p.vy > 0) {
+        p.vy = -p.vy * 0.55;
+        p.vRot *= 0.7;
+      }
+      if (p.life <= 0) debrisShards.splice(i, 1);
+    }
+
+    // LAYER 4: Radiant Golden Celebration Energy Stars
+    for (let i = energyStars.length - 1; i >= 0; i--) {
+      const p = energyStars[i];
+      drawStar(ctx, p.x, p.y, p.size, p.rot, p.color, p.life);
 
       p.x += p.vx;
       p.y += p.vy;
       p.rot += p.vRot;
       p.life -= p.decay;
-      if (p.life <= 0) errorShards.splice(i, 1);
+      if (p.life <= 0) energyStars.splice(i, 1);
     }
+
+    // Ornate Cybernetic / Retro-Arcade HUD Corner Filigree L-Brackets
+    drawCornerFiligree(ctx, w, h);
+
+    ctx.restore(); // Restore screen shake transform
 
     requestAnimationFrame(renderCanvas);
   }
@@ -1005,6 +1351,9 @@
   function useHint() {
       if (!isPlayingSequence && sequence.length > 0 && hintsRemaining > 0) {
           hintsRemaining--;
+          addTrauma(0.35);
+          triggerDualShockwave(canvas.width / 2, canvas.height / 2, '#ffd700');
+          trigger4LayerBurst(canvas.width / 2, canvas.height / 2, '#ffd700', 1.0);
           updateDisplays();
           statusDisplay.innerText = "Hint: Watch...";
           playSequence();
@@ -1015,6 +1364,9 @@
       if (!isPlayingSequence && sequence.length > 0 && slowmoRemaining > 0) {
           slowmoRemaining--;
           isSlowmoActive = true;
+          addTrauma(0.35);
+          triggerDualShockwave(canvas.width / 2, canvas.height / 2, '#00b3b3');
+          trigger4LayerBurst(canvas.width / 2, canvas.height / 2, '#44ffff', 1.0);
           updateDisplays();
           statusDisplay.innerText = "Slow-Mo Active! Watch...";
           playSequence();
@@ -1023,6 +1375,9 @@
 
   function useShield() {
       if (shieldsRemaining > 0) {
+          addTrauma(0.25);
+          triggerDualShockwave(canvas.width / 2, canvas.height / 2, '#33aaff');
+          trigger4LayerBurst(canvas.width / 2, canvas.height / 2, '#33aaff', 0.8);
           statusDisplay.innerText = `Shield Ready! (${shieldsRemaining} available)`;
       }
   }
@@ -1031,6 +1386,9 @@
       if (!isPlayingSequence && sequence.length > 0 && freezesRemaining > 0 && !isTimeFrozen) {
           freezesRemaining--;
           isTimeFrozen = true;
+          addTrauma(0.4);
+          triggerDualShockwave(canvas.width / 2, canvas.height / 2, '#00ffff');
+          trigger4LayerBurst(canvas.width / 2, canvas.height / 2, '#00ffff', 1.2);
           statusDisplay.innerText = `Time Frozen! (${freezesRemaining} Freezes left)`;
           updateDisplays();
       }
@@ -1052,6 +1410,9 @@
                   clearInterval(inputTimer);
                   if (shieldsRemaining > 0) {
                       shieldsRemaining--;
+                      addTrauma(0.45);
+                      triggerDualShockwave(canvas.width / 2, canvas.height / 2, '#33aaff');
+                      trigger4LayerBurst(canvas.width / 2, canvas.height / 2, '#33aaff', 1.2);
                       playTone(750, 300);
                       statusDisplay.innerText = "Time Expired! Shield Absorbed Error!";
                       playerSequence = [];
@@ -1371,6 +1732,9 @@
     if (playerSequence[currentStep] !== expectedIndex) {
       if (shieldsRemaining > 0) {
           shieldsRemaining--;
+          addTrauma(0.45);
+          triggerDualShockwave(canvas.width / 2, canvas.height / 2, '#33aaff');
+          trigger4LayerBurst(canvas.width / 2, canvas.height / 2, '#33aaff', 1.2);
           playTone(750, 300);
           playerSequence = [];
           statusDisplay.innerText = `Shield Absorbed Error! (${shieldsRemaining} Shields left)`;
