@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KDarts
 - KSimon
 - KTrader
 - KDragon
@@ -149,8 +148,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSubmarine
 - KAsteroids
 - K2048
+- KDarts
 
 ## Completed Work Log
+
+- **KDarts (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on dart impacts (triple/double hits, bullseyes, power-ups, busts, and victory bursts) with mathematical translation/rotation in Web Canvas (kdarts.html) and trigonometric FastSin/FastCos double-buffered viewport offsets in Native C Win32 GDI (KDarts/main.c), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant chalk & smoke puffs with negative gravity and radius growth, heavy kinematic sisal fiber / wood & brass debris shards with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion halo radiating upon bullseye hits, triple-20 180s, power-up activations, and leg/match victories, ornate pub arcade HUD corner filigree L-brackets with brass rivet accents and tech notches at all four arena corners, a pulsating energy/brass perimeter inlay border with an animated traveling specular glint traversing the outer playfield frame, sculpted dartboard and dart barrel highlights with diagonal specular sheen sweeps, and atmospheric floating tavern dust motes in both Web Canvas (kdarts.html) and Native C Win32 GDI (KDarts/main.c).
 
 - **K2048 (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on tile merges (512+), bomb explosions, power-up triggers (Upgrade, Hammer, Rotate, Undo), board resets, and game over / victory bursts (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and trigonometric my_sin/my_cos physics decay with double-buffered viewport rendering in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant smoke & plasma puffs with negative gravity and radius growth, heavy kinematic tile & shard debris with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion halo radiating upon high-value tile merges, bomb detonations, power-up triggers, and stage clears, ornate cybernetic arcade HUD corner filigree L-brackets with tech notches and gold rivet accents at all four arena corners, a pulsating energy perimeter inlay border with an animated traveling specular glint traversing the outer playfield rectangle, sculpted tile highlights with diagonal specular sheen sweeps traversing high-tier tiles, and atmospheric floating cyber dust particles in both Web Canvas (k2048.html) and Native C Win32 GDI (K2048/main.c).
 

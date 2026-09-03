@@ -355,49 +355,133 @@ let aiTimeoutId = null;
 
 // Global FX state
 let particles = [];
+let shockwaves = [];
 let floatingTexts = [];
 let trailParticles = [];
 let shakeTime = 0;
 let shakeMag = 0;
+let shakeRot = 0;
 
-let dustMotes = Array.from({length: 40}, () => ({
+let dustMotes = Array.from({length: 45}, () => ({
     x: Math.random() * 600, 
     y: Math.random() * 600, 
-    speed: 0.5 + Math.random() * 1.0, 
-    phase: Math.random() * Math.PI * 2
+    speed: 0.4 + Math.random() * 0.9, 
+    phase: Math.random() * Math.PI * 2,
+    size: 1.0 + Math.random() * 1.8
 }));
 
 function triggerShake(mag, duration) {
     shakeMag = mag;
+    shakeRot = (Math.random() - 0.5) * (mag * 0.006);
     shakeTime = duration;
 }
 
-function spawnSparks(x, y, color, count) {
-    for (let i = 0; i < count; i++) {
+function spawnMultiLayerExplosion(x, y, baseColor, intensity = 1.0) {
+    // Layer 1: Incandescent Core Needle Sparks (fast velocity streaks, drag deceleration)
+    let sparkCount = Math.floor(18 * intensity);
+    for (let i = 0; i < sparkCount; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const speed = 1.5 + Math.random() * 5.0;
+        const speed = 3.5 + Math.random() * 8.0 * intensity;
         particles.push({
+            type: 'needle',
             x: x, y: y,
             vx: Math.cos(angle) * speed,
-            vy: Math.sin(angle) * speed - 1.0,
-            size: 1.5 + Math.random() * 3.0,
-            color: color,
+            vy: Math.sin(angle) * speed,
+            len: 4 + Math.random() * 8,
+            color: '#ffffff',
+            color2: baseColor,
             alpha: 1.0,
             life: 0,
-            maxLife: 20 + Math.random() * 20
+            maxLife: 16 + Math.random() * 16,
+            drag: 0.92
         });
     }
+
+    // Layer 2: Expanding Buoyant Chalk / Smoke Puffs (upward float, radius growth)
+    let puffCount = Math.floor(9 * intensity);
+    for (let i = 0; i < puffCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 0.6 + Math.random() * 2.2;
+        particles.push({
+            type: 'smoke',
+            x: x + (Math.random() - 0.5) * 8,
+            y: y + (Math.random() - 0.5) * 8,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 0.7,
+            radius: 4 + Math.random() * 6,
+            growth: 0.4 + Math.random() * 0.5,
+            color: baseColor,
+            alpha: 0.85,
+            life: 0,
+            maxLife: 26 + Math.random() * 22,
+            drag: 0.94
+        });
+    }
+
+    // Layer 3: Heavy Kinematic Sisal & Wood Debris Shards (gravity, drag, tumbling rotation, bounce)
+    let debrisCount = Math.floor(12 * intensity);
+    for (let i = 0; i < debrisCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 2.2 + Math.random() * 5.5 * intensity;
+        particles.push({
+            type: 'debris',
+            x: x, y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 2.8,
+            rot: Math.random() * Math.PI * 2,
+            vrot: (Math.random() - 0.5) * 0.4,
+            size: 3 + Math.random() * 4.5,
+            color: (Math.random() > 0.6) ? '#d4af37' : ((Math.random() > 0.4) ? '#f4ebd0' : '#8a6d1c'),
+            alpha: 1.0,
+            life: 0,
+            maxLife: 38 + Math.random() * 26,
+            gravity: 0.24,
+            bounce: 0.45
+        });
+    }
+
+    // Layer 4: Radiant Golden Celebration Energy Stars (rotating radiant stars)
+    let starCount = Math.floor(7 * intensity);
+    for (let i = 0; i < starCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 1.2 + Math.random() * 3.8 * intensity;
+        particles.push({
+            type: 'star',
+            x: x, y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 0.6,
+            rot: Math.random() * Math.PI * 2,
+            vrot: (Math.random() - 0.5) * 0.22,
+            size: 5 + Math.random() * 6,
+            color: '#ffd700',
+            alpha: 1.0,
+            life: 0,
+            maxLife: 32 + Math.random() * 22
+        });
+    }
+}
+
+function spawnShockwave(x, y, color, maxRadius) {
+    shockwaves.push({
+        x: x, y: y,
+        radius: 2,
+        maxRadius: maxRadius || 85,
+        color: color || '#ffd700',
+        alpha: 1.0,
+        life: 0,
+        maxLife: 28
+    });
 }
 
 function spawnFloatingText(x, y, text, color) {
     floatingTexts.push({
         x: x, y: y,
-        vy: -1.2,
+        vy: -1.3,
         text: text,
         color: color || '#ffd700',
         alpha: 1.0,
         life: 0,
-        maxLife: 50
+        maxLife: 55
     });
 }
 
@@ -438,6 +522,9 @@ function activateFocus() {
         focusActive[currentPlayer] = true;
         focusUses[currentPlayer]--;
         playSound('powerup');
+        triggerShake(6, 10);
+        spawnMultiLayerExplosion(CX, CY, '#00ff88', 1.2);
+        spawnShockwave(CX, CY, '#00ff88', 95);
         statusEl.innerText = "Precision Focus Active! Aim wobble slowed by 75%";
         updateBadges();
     }
@@ -448,6 +535,9 @@ function activateMagnet() {
         magnetActive[currentPlayer] = true;
         magnetUses[currentPlayer]--;
         playSound('powerup');
+        triggerShake(6, 10);
+        spawnMultiLayerExplosion(CX, CY, '#00d2ff', 1.2);
+        spawnShockwave(CX, CY, '#00d2ff', 95);
         statusEl.innerText = "Ring Magnet Active! Double & Triple zones expanded";
         updateBadges();
     }
@@ -458,6 +548,9 @@ function activateLaser() {
         laserActive[currentPlayer] = true;
         laserUses[currentPlayer]--;
         playSound('powerup');
+        triggerShake(6, 10);
+        spawnMultiLayerExplosion(CX, CY, '#ff0080', 1.2);
+        spawnShockwave(CX, CY, '#ff0080', 95);
         statusEl.innerText = "Laser Sight Active! Trajectory prediction line enabled.";
         updateBadges();
     }
@@ -467,6 +560,9 @@ function activateUndoDart() {
     if (undoUses[currentPlayer] > 0 && darts.length > 0) {
         undoUses[currentPlayer]--;
         playSound('powerup');
+        triggerShake(5, 8);
+        spawnMultiLayerExplosion(CX, CY, '#ffd700', 1.0);
+        spawnShockwave(CX, CY, '#ffd700', 75);
         const lastDart = darts.pop();
         dartsLeft++;
         totalDarts[currentPlayer]--;
@@ -914,6 +1010,15 @@ function throwDart(rawX, rawY) {
             }
         }
     }
+
+    if (state === 'WON') {
+        playSound('cheer');
+        triggerShake(16, 22);
+        spawnMultiLayerExplosion(CX, CY, '#ffd700', 3.0);
+        spawnShockwave(CX, CY, '#ffd700', 160);
+        spawnShockwave(CX, CY, '#00d2ff', 200);
+    }
+
     updateScoreUI();
 
     let isP2AI = (isCampaign || aiDifficulty !== 'Human');
@@ -1435,6 +1540,134 @@ function drawDetailedDart(ctx, x, y, scale, angle, styleColor, isAnimating) {
     ctx.restore();
 }
 
+function drawHUDCornerFiligree(ctx) {
+    const corners = [
+        {x: 14, y: 14, dx: 1, dy: 1},
+        {x: canvas.width - 14, y: 14, dx: -1, dy: 1},
+        {x: 14, y: canvas.height - 14, dx: 1, dy: -1},
+        {x: canvas.width - 14, y: canvas.height - 14, dx: -1, dy: -1}
+    ];
+
+    ctx.save();
+    for (let c of corners) {
+        ctx.strokeStyle = '#d4af37';
+        ctx.lineWidth = 2.5;
+        
+        // Outer L-arm
+        ctx.beginPath();
+        ctx.moveTo(c.x, c.y + c.dy * 32);
+        ctx.lineTo(c.x, c.y);
+        ctx.lineTo(c.x + c.dx * 32, c.y);
+        ctx.stroke();
+
+        // Inner decorative bracket
+        ctx.strokeStyle = '#8a6d1c';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(c.x + c.dx * 6, c.y + c.dy * 26);
+        ctx.lineTo(c.x + c.dx * 6, c.y + c.dy * 6);
+        ctx.lineTo(c.x + c.dx * 26, c.y + c.dy * 6);
+        ctx.stroke();
+
+        // Tech notch
+        ctx.beginPath();
+        ctx.moveTo(c.x + c.dx * 18, c.y);
+        ctx.lineTo(c.x + c.dx * 22, c.y + c.dy * 4);
+        ctx.lineTo(c.x + c.dx * 26, c.y);
+        ctx.fillStyle = '#ffd700';
+        ctx.fill();
+
+        // Brass corner rivet
+        ctx.beginPath();
+        ctx.arc(c.x + c.dx * 10, c.y + c.dy * 10, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffd700';
+        ctx.fill();
+        ctx.strokeStyle = '#5c4710';
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+
+        // Accent tip dot
+        ctx.beginPath();
+        ctx.arc(c.x + c.dx * 32, c.y, 1.5, 0, Math.PI * 2);
+        ctx.arc(c.x, c.y + c.dy * 32, 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
+function drawPerimeterInlay(ctx) {
+    ctx.save();
+    const margin = 10;
+    const w = canvas.width - margin * 2;
+    const h = canvas.height - margin * 2;
+
+    // Pulsating energy border
+    const pulseAlpha = 0.4 + 0.3 * Math.sin(t * 3.5);
+    ctx.strokeStyle = `rgba(212, 175, 55, ${pulseAlpha})`;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(margin, margin, w, h);
+
+    // Subtle inner glow border
+    ctx.strokeStyle = `rgba(0, 210, 255, ${pulseAlpha * 0.5})`;
+    ctx.lineWidth = 0.8;
+    ctx.strokeRect(margin + 3, margin + 3, w - 6, h - 6);
+
+    // Traveling Specular Glint along perimeter
+    const totalPerim = 2 * (w + h);
+    const glintDist = (t * 180) % totalPerim;
+    let gx = margin, gy = margin;
+
+    if (glintDist < w) {
+        gx = margin + glintDist; gy = margin;
+    } else if (glintDist < w + h) {
+        gx = margin + w; gy = margin + (glintDist - w);
+    } else if (glintDist < 2 * w + h) {
+        gx = margin + w - (glintDist - (w + h)); gy = margin + h;
+    } else {
+        gx = margin; gy = margin + h - (glintDist - (2 * w + h));
+    }
+
+    const glintGrad = ctx.createRadialGradient(gx, gy, 0, gx, gy, 18);
+    glintGrad.addColorStop(0, '#ffffff');
+    glintGrad.addColorStop(0.3, 'rgba(255, 215, 0, 0.9)');
+    glintGrad.addColorStop(0.7, 'rgba(255, 150, 50, 0.4)');
+    glintGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = glintGrad;
+    ctx.beginPath();
+    ctx.arc(gx, gy, 18, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+}
+
+function drawBoardSpecularSweep(ctx) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(CX, CY, BOARD_R * 1.35, 0, Math.PI * 2);
+    ctx.clip();
+
+    const sweepPeriod = 5.0;
+    const progress = (t * 0.4) % sweepPeriod;
+    if (progress < 1.4) {
+        const sweepRatio = progress / 1.4;
+        const sweepX = (CX - BOARD_R * 1.5) + sweepRatio * (BOARD_R * 3.0);
+        
+        ctx.save();
+        ctx.translate(sweepX, CY);
+        ctx.rotate(-Math.PI / 4);
+
+        const sheenGrad = ctx.createLinearGradient(-35, 0, 35, 0);
+        sheenGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+        sheenGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.14)');
+        sheenGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = sheenGrad;
+        ctx.fillRect(-35, -BOARD_R * 2, 70, BOARD_R * 4);
+        ctx.restore();
+    }
+    ctx.restore();
+}
+
 function update() {
     let speedMult = focusActive[currentPlayer] ? 0.25 : 1.0;
     t += 0.05 * speedMult;
@@ -1443,18 +1676,22 @@ function update() {
     wobbleX = Math.sin(t * 1.3) * amp + Math.sin(t * 0.8) * (amp * 0.6);
     wobbleY = Math.cos(t * 1.5) * amp + Math.sin(t * 0.9) * (amp * 0.6);
     
-    let shakeX = 0, shakeY = 0;
+    let shakeX = 0, shakeY = 0, shakeAngle = 0;
     if (shakeTime > 0) {
         shakeX = (Math.random() - 0.5) * shakeMag;
         shakeY = (Math.random() - 0.5) * shakeMag;
+        shakeAngle = (Math.random() - 0.5) * shakeRot;
         shakeTime--;
-        shakeMag *= 0.85;
+        shakeMag *= 0.88;
+        shakeRot *= 0.85;
     }
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     ctx.save();
-    ctx.translate(shakeX, shakeY);
+    ctx.translate(CX + shakeX, CY + shakeY);
+    ctx.rotate(shakeAngle);
+    ctx.translate(-CX, -CY);
     
     // Draw Pub Brick Wall Background
     ctx.fillStyle = '#221111';
@@ -1496,14 +1733,15 @@ function update() {
         d.y -= d.speed;
         d.x += Math.sin(t * 0.5 + d.phase) * 0.5;
         if (d.y < -10) { d.y = canvas.height + 10; d.x = Math.random() * canvas.width; }
-        let dustAlpha = 0.15 + Math.sin(t * 2 + d.phase) * 0.1;
+        let dustAlpha = 0.18 + Math.sin(t * 2 + d.phase) * 0.12;
         ctx.fillStyle = `rgba(255, 220, 150, ${dustAlpha})`;
         ctx.beginPath();
-        ctx.arc(d.x, d.y, 1 + Math.random(), 0, Math.PI * 2);
+        ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
         ctx.fill();
     }
     
     draw3DSisalDartboard();
+    drawBoardSpecularSweep(ctx);
     
     for (let i = 0; i < darts.length; i++) {
         let d = darts[i];
@@ -1515,18 +1753,24 @@ function update() {
             if (d.progress >= 1.0) {
                 d.progress = 1.0;
                 d.animating = false;
-                d.wobbleAmp = d.number === 25 ? 12 : (d.mult === 3 ? 9 : 6);
-                triggerShake(d.number === 25 ? 10 : (d.mult === 3 ? 7 : 4), 10);
+                d.wobbleAmp = d.number === 25 ? 14 : (d.mult === 3 ? 10 : 7);
                 
                 if (d.number === 25) {
                     playSound('cheer');
-                    spawnSparks(d.targetX, d.targetY, '#ffd700', 35);
-                    spawnSparks(d.targetX, d.targetY, '#ff3333', 20);
+                    triggerShake(14, 15);
+                    spawnMultiLayerExplosion(d.targetX, d.targetY, '#ffd700', 2.0);
+                    spawnShockwave(d.targetX, d.targetY, '#ffd700', 110);
+                    spawnShockwave(d.targetX, d.targetY, '#ff3333', 70);
                     spawnFloatingText(d.targetX, d.targetY - 20, d.mult === 2 ? "DOUBLE BULL! 50" : "BULLSEYE! 25", '#ffd700');
                 } else {
                     playSound('thud');
                     let col = d.mult === 3 ? '#00ff88' : (d.mult === 2 ? '#ff4444' : '#ffffff');
-                    spawnSparks(d.targetX, d.targetY, col, d.mult === 3 ? 25 : (d.mult === 2 ? 18 : 12));
+                    let intensity = d.mult === 3 ? 1.6 : (d.mult === 2 ? 1.3 : 0.8);
+                    triggerShake(d.mult === 3 ? 10 : (d.mult === 2 ? 7 : 4), 10);
+                    spawnMultiLayerExplosion(d.targetX, d.targetY, col, intensity);
+                    if (d.mult >= 2) {
+                        spawnShockwave(d.targetX, d.targetY, col, d.mult === 3 ? 85 : 65);
+                    }
                     
                     let txt = d.mult === 3 ? `TRIPLE ${d.number}! +${d.pts}` : (d.mult === 2 ? `DOUBLE ${d.number}! +${d.pts}` : (d.pts > 0 ? `+${d.pts}` : "MISS!"));
                     let txtCol = d.mult === 3 ? '#00ffcc' : (d.mult === 2 ? '#ff6666' : '#ffffff');
@@ -1561,6 +1805,36 @@ function update() {
         drawDetailedDart(ctx, renderX, renderY, scale, angle, dartColor, isAnimating);
     }
     
+    // Draw Dual-Tier Shockwaves
+    for (let i = shockwaves.length - 1; i >= 0; i--) {
+        let sw = shockwaves[i];
+        sw.life++;
+        let progress = sw.life / sw.maxLife;
+        let curR = sw.radius + (sw.maxRadius - sw.radius) * Math.pow(progress, 0.6);
+        let alpha = Math.max(0, 1.0 - progress);
+
+        // Outer Chromatic Dispersion Halo
+        ctx.beginPath();
+        ctx.arc(sw.x, sw.y, curR, 0, Math.PI * 2);
+        ctx.strokeStyle = sw.color;
+        ctx.lineWidth = Math.max(0.5, 4.0 * (1.0 - progress));
+        ctx.globalAlpha = alpha * 0.6;
+        ctx.stroke();
+
+        // Inner High-Speed Compression Wave
+        let innerR = curR * 0.75;
+        ctx.beginPath();
+        ctx.arc(sw.x, sw.y, innerR, 0, Math.PI * 2);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = Math.max(0.5, 2.5 * (1.0 - progress));
+        ctx.globalAlpha = alpha * 0.9;
+        ctx.stroke();
+
+        ctx.globalAlpha = 1.0;
+        if (sw.life >= sw.maxLife) shockwaves.splice(i, 1);
+    }
+
+    // Draw Trail Particles
     for (let i = trailParticles.length - 1; i >= 0; i--) {
         let p = trailParticles[i];
         p.life++;
@@ -1576,22 +1850,128 @@ function update() {
         if (p.life >= p.maxLife) trailParticles.splice(i, 1);
     }
 
+    // Draw Multi-Layer Kinematic Particles
     for (let i = particles.length - 1; i >= 0; i--) {
         let p = particles[i];
         p.life++;
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vy += 0.15;
-        p.alpha = 1 - (p.life / p.maxLife);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = Math.max(0, p.alpha);
-        ctx.fill();
-        ctx.globalAlpha = 1.0;
+        let progress = p.life / p.maxLife;
+        let alpha = Math.max(0, 1.0 - progress);
+
+        if (p.type === 'needle') {
+            p.vx *= (p.drag || 0.92);
+            p.vy *= (p.drag || 0.92);
+            p.x += p.vx;
+            p.y += p.vy;
+
+            let spd = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+            let len = Math.max(2, (p.len || 6) * (spd / 4.0));
+            let angle = Math.atan2(p.vy, p.vx);
+
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(angle);
+            ctx.beginPath();
+            ctx.moveTo(-len, 0);
+            ctx.lineTo(len, 0);
+            ctx.strokeStyle = p.color2 || '#ffffff';
+            ctx.lineWidth = 1.8;
+            ctx.globalAlpha = alpha;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(-len * 0.5, 0);
+            ctx.lineTo(len * 0.5, 0);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.0;
+            ctx.stroke();
+            ctx.restore();
+            ctx.globalAlpha = 1.0;
+        } else if (p.type === 'smoke') {
+            p.vx *= (p.drag || 0.94);
+            p.vy *= (p.drag || 0.94);
+            p.x += p.vx;
+            p.y += p.vy;
+            p.radius += (p.growth || 0.4);
+
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = alpha * 0.5;
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+        } else if (p.type === 'debris') {
+            p.vy += (p.gravity || 0.22);
+            p.vx *= 0.98;
+            p.x += p.vx;
+            p.y += p.vy;
+            p.rot += p.vrot;
+
+            // Floor bounce simulation
+            if (p.y > canvas.height - 15) {
+                p.y = canvas.height - 15;
+                p.vy = -p.vy * (p.bounce || 0.45);
+                p.vrot *= 0.6;
+            }
+
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = alpha;
+            ctx.beginPath();
+            ctx.moveTo(-p.size, -p.size * 0.6);
+            ctx.lineTo(p.size * 0.8, -p.size * 0.4);
+            ctx.lineTo(p.size, p.size * 0.6);
+            ctx.lineTo(-p.size * 0.5, p.size);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 0.6;
+            ctx.stroke();
+            ctx.restore();
+            ctx.globalAlpha = 1.0;
+        } else if (p.type === 'star') {
+            p.vx *= 0.96;
+            p.vy *= 0.96;
+            p.x += p.vx;
+            p.y += p.vy;
+            p.rot += p.vrot;
+
+            let curSize = p.size * (1.0 + Math.sin(p.life * 0.4) * 0.3) * (1.0 - progress * 0.5);
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = alpha;
+
+            // 4-pointed star
+            ctx.beginPath();
+            for (let s = 0; s < 4; s++) {
+                let a1 = (s * Math.PI) / 2;
+                let a2 = a1 + Math.PI / 4;
+                if (s === 0) ctx.moveTo(Math.cos(a1) * curSize, Math.sin(a1) * curSize);
+                else ctx.lineTo(Math.cos(a1) * curSize, Math.sin(a1) * curSize);
+                ctx.lineTo(Math.cos(a2) * (curSize * 0.35), Math.sin(a2) * (curSize * 0.35));
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+            ctx.globalAlpha = 1.0;
+        } else {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.15;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size || 2, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = alpha;
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+        }
+
         if (p.life >= p.maxLife) particles.splice(i, 1);
     }
 
+    // Draw Floating Score Texts
     for (let i = floatingTexts.length - 1; i >= 0; i--) {
         let ft = floatingTexts[i];
         ft.life++;
@@ -1634,7 +2014,7 @@ function update() {
         const crossColor = focusActive[currentPlayer] ? '#00ff88' : (laserActive[currentPlayer] ? '#ff0080' : '#ffff00');
         ctx.beginPath();
         ctx.moveTo(tx - 18, ty); ctx.lineTo(tx + 18, ty);
-        ctx.moveTo(tx, ty - 18); ctx.lineTo(tx, ty + 18);
+        ctx.moveTo(tx, ty - 18); ctx.lineTo(tx + 18, ty);
         ctx.strokeStyle = crossColor;
         ctx.lineWidth = 2;
         ctx.stroke();
@@ -1659,6 +2039,10 @@ function update() {
             ctx.setLineDash([]);
         }
     }
+
+    // Draw Inlay Perimeter & Ornate HUD Corner Filigree
+    drawPerimeterInlay(ctx);
+    drawHUDCornerFiligree(ctx);
 
     ctx.restore();
     
