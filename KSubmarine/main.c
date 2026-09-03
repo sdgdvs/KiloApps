@@ -42,6 +42,11 @@
 #define ID_BTN_UPG_BATTERY      129
 #define ID_BTN_UPG_LIGHTS       130
 #define ID_BTN_FIELD_DIAG       131
+#define ID_BTN_VIEW_CODEX       132
+#define ID_BTN_LOCK_TARGET      133
+#define ID_BTN_SCAN_TARGET      134
+#define ID_BTN_HUD_NEXT_TARGET  135
+#define ID_BTN_HUD_SCAN_TARGET  136
 
 typedef enum {
     THEME_ABYSS = 0,
@@ -118,13 +123,6 @@ static const SubmarineTheme g_themes[THEME_COUNT] = {
 };
 
 typedef struct {
-    float angle; // radians
-    float dist;  // 0.0 - 1.0 (normalized to sonar radius)
-    char label[32];
-    int type;    // 0: terrain, 1: fauna, 2: wreck, 3: vent
-} SonarContact;
-
-typedef struct {
     char time[12];
     char text[128];
     COLORREF color;
@@ -164,8 +162,26 @@ typedef struct {
 
 #define SECTOR_COUNT 4
 #define WAYPOINT_COUNT 8
+#define FAUNA_COUNT 12
 
-// --- UPGRADE MODULE STRUCTURES (PHASE 6) ---
+// --- FAUNA & ANOMALIES STRUCTURE (PHASE 7) ---
+typedef struct {
+    char id[8];
+    char name[32];
+    int type; // 0: Fauna, 1: Squid, 2: Flora, 3: Trench, 4: Leviathan
+    int sectorIdx;
+    float depth;
+    float x, y;
+    float vx, vy;
+    char desc[128];
+    char lumens[32];
+    char freq[32];
+    char behavior[48];
+    int pts;
+    int discovered;
+} FaunaAnomaly;
+
+// --- UPGRADE MODULE STRUCTURES ---
 typedef struct {
     int tier;
     const char* name;
@@ -277,6 +293,28 @@ static const NavWaypoint g_waypoints[WAYPOINT_COUNT] = {
     { "Abyssal Siren Deep", 3, 9.8f, 10.5f, 10500.0f }
 };
 
+static FaunaAnomaly g_fauna[FAUNA_COUNT] = {
+    // Sector 0: Continental Shelf (0-200m)
+    { "f01", "Megamouth Filter Shark", 0, 0, 120.0f, 0.8f, 1.2f, 0.04f, 0.02f, "Rare epipelagic shark with luminescent photophores along its upper jaw.", "120 LUX (CYAN)", "180 HZ LOW", "Docile Plankton Grazer", 60, 0 },
+    { "f02", "Bioluminescent Kelp Flora", 2, 0, 85.0f, 1.8f, -0.6f, 0.0f, 0.0f, "Emerald chemosynthetic algae anchored on shallow granite shelves.", "340 LUX (EMERALD)", "0 HZ (STATIC)", "Photosynthetic Benthic Organism", 50, 0 },
+    { "f03", "Pygmy Cuttlefish Pod", 1, 0, 165.0f, -1.5f, 2.2f, -0.05f, 0.03f, "Small translucent cephalopods displaying shifting chromatic ripples.", "210 LUX (AMBER)", "420 HZ PULSE", "Skittish Schooling Cephalopods", 70, 0 },
+
+    // Sector 1: Twilight Drop-Off (200-1000m)
+    { "f04", "Crown Medusa Swarm", 0, 1, 620.0f, 3.8f, -1.4f, 0.02f, -0.03f, "Colossal mesopelagic jellyfish radiating ultraviolet flash patterns.", "480 LUX (VIOLET)", "95 HZ OSC", "Drifting Mesopelagic Cnidarian", 90, 0 },
+    { "f05", "Bioluminescent Glass Squid", 1, 1, 480.0f, 2.2f, -3.8f, 0.06f, 0.04f, "Cranchiid squid with crystal mantle and twin photophore eyes.", "380 LUX (AZURE)", "640 HZ CLICKS", "Inquisitive Midwater Predator", 100, 0 },
+    { "f06", "Basalt Canyon Rift Fault", 3, 1, 840.0f, 4.8f, -2.6f, 0.0f, 0.0f, "Massive vertical tectonic fissure echoing with sub-crustal frequencies.", "40 LUX (INFRARED)", "24 HZ SUB-BASS", "Active Tectonic Fault Zone", 120, 0 },
+
+    // Sector 2: Hydrothermal Vents (1000-4000m)
+    { "f07", "Giant Riftia Tube Worms", 2, 2, 2350.0f, -5.0f, -5.4f, 0.0f, 0.0f, "Extremophile worm spires thriving in 350 deg C mineral plumes.", "180 LUX (RUBY)", "60 HZ THERMAL", "Hydrothermal Extremophile Community", 140, 0 },
+    { "f08", "Colossal Architeuthis Squid", 1, 2, 1750.0f, -3.2f, -7.5f, -0.08f, 0.05f, "14m deep squid with luminous feeding tentacles and massive eyes.", "550 LUX (DEEP CYAN)", "120 HZ RESONANCE", "Territorial Abyssal Apex Hunter", 180, 0 },
+    { "f09", "Phantom Gulper Eel", 0, 2, 3100.0f, -4.5f, -9.0f, 0.04f, -0.06f, "Abyssal predator with an expandable jaw and glowing caudal lure.", "290 LUX (MAGENTA)", "310 HZ CHIRP", "Elusive Deep-Water Stalker", 160, 0 },
+
+    // Sector 3: Mariana Hadal Chasm (4000-11000m)
+    { "f10", "Abyssal Siren Leviathan", 4, 3, 7600.0f, 8.0f, 6.8f, 0.07f, -0.05f, "Colossal primordial hadal megafauna vibrating with harmonic sub-bass songs.", "920 LUX (HARMONIC GOLD)", "18 HZ INFRASOUND", "Ancient Primordial Titan (Revered)", 300, 0 },
+    { "f11", "Bioluminescent Ghost Flora", 2, 3, 9200.0f, 9.2f, 8.5f, 0.0f, 0.0f, "Silicate mycelium clinging to hadal basalt walls pulsing with bio-electricity.", "420 LUX (PALE CYAN)", "0 HZ (STATIC)", "Silicate Hadal Chemosynthesis", 220, 0 },
+    { "f12", "Challenger Deep Subduction Rift", 3, 3, 10850.0f, 10.2f, 11.0f, 0.0f, 0.0f, "The deepest subduction rupture on Earth, echoing with gravitational distortion.", "150 LUX (GRAVITATIONAL)", "8 HZ INFRASOUND", "Primordial Abyssal Abyss", 400, 0 }
+};
+
 typedef struct {
     float depth;            // meters (0 - 11000)
     float vertRate;         // m/s
@@ -295,13 +333,13 @@ typedef struct {
     int activeWaypointIdx;
     int autopilot;
     int surveyPoints;
-    int viewMode;           // 0: Sonar, 1: Nav Map, 2: Engineering
+    int viewMode;           // 0: Sonar, 1: Nav Map, 2: Codex, 3: Engineering
     float breadcrumbsX[32];
     float breadcrumbsY[32];
     int breadcrumbCount;
     float seabedElevation;
 
-    // Upgrades & Engineering (Phase 6)
+    // Upgrades & Engineering
     int upgradeHull;
     int upgradeBallast;
     int upgradeBattery;
@@ -318,6 +356,11 @@ typedef struct {
     int milestone4000;
     int milestone6000;
     int milestone10000;
+
+    // Phase 7: Fauna Target Locking & Bio-Scan
+    int selectedTargetIdx;
+    int isScanningTarget;
+    float scanProgress;
 
     // Vital systems
     float hull;             // 0 - 100%
@@ -352,8 +395,6 @@ typedef struct {
     int isPinging;
     float pingRadius;
     float sweepAngle;
-    SonarContact contacts[4];
-    int contactCount;
 
     // Sound
     int soundEnabled;
@@ -375,10 +416,12 @@ static HFONT g_hFontSmall = NULL;
 static HFONT g_hFontBold = NULL;
 
 void PlaySoundAsync(DWORD freq, DWORD duration);
+void PlayLeviathanHarmonic(void);
 void AddLog(const char* text, COLORREF color);
 void InitSubmarineState(void);
 void UpdateSimulation(float dt);
 void DrawUI(HDC hdc, RECT* rcClient);
+int GetSectorFaunaIndices(int sectorIdx, int outIndices[3]);
 
 DWORD WINAPI SoundThreadProc(LPVOID lpParam) {
     DWORD packed = (DWORD)(UINT_PTR)lpParam;
@@ -392,6 +435,20 @@ void PlaySoundAsync(DWORD freq, DWORD duration) {
     if (!g_sub.soundEnabled) return;
     DWORD packed = MAKELONG((WORD)freq, (WORD)duration);
     CreateThread(NULL, 0, SoundThreadProc, (LPVOID)(UINT_PTR)packed, 0, NULL);
+}
+
+DWORD WINAPI LeviathanSoundThreadProc(LPVOID lpParam) {
+    Beep(85, 180);
+    Sleep(30);
+    Beep(110, 220);
+    Sleep(30);
+    Beep(65, 300);
+    return 0;
+}
+
+void PlayLeviathanHarmonic(void) {
+    if (!g_sub.soundEnabled) return;
+    CreateThread(NULL, 0, LeviathanSoundThreadProc, NULL, 0, NULL);
 }
 
 void AddLog(const char* text, COLORREF color) {
@@ -410,6 +467,18 @@ void AddLog(const char* text, COLORREF color) {
     strncpy(e->text, text, sizeof(e->text) - 1);
     e->text[sizeof(e->text) - 1] = '\0';
     e->color = color;
+}
+
+int GetSectorFaunaIndices(int sectorIdx, int outIndices[3]) {
+    int count = 0;
+    for (int i = 0; i < FAUNA_COUNT; i++) {
+        if (g_fauna[i].sectorIdx == sectorIdx) {
+            if (count < 3) {
+                outIndices[count++] = i;
+            }
+        }
+    }
+    return count;
 }
 
 void InitSubmarineState(void) {
@@ -431,11 +500,11 @@ void InitSubmarineState(void) {
     g_sub.activeWaypointIdx = 0;
     g_sub.autopilot = 0;
     g_sub.surveyPoints = 150; // Research Credits
-    g_sub.viewMode = 0; // 0: Sonar, 1: Nav Map, 2: Engineering
+    g_sub.viewMode = 0; // 0: Sonar, 1: Nav Map, 2: Codex, 3: Engineering
     g_sub.breadcrumbCount = 0;
     g_sub.seabedElevation = 250.0f;
 
-    // Upgrades & Engineering (Phase 6)
+    // Upgrades & Engineering
     g_sub.upgradeHull = 1;
     g_sub.upgradeBallast = 1;
     g_sub.upgradeBattery = 1;
@@ -452,6 +521,11 @@ void InitSubmarineState(void) {
     g_sub.milestone4000 = 0;
     g_sub.milestone6000 = 0;
     g_sub.milestone10000 = 0;
+
+    // Phase 7 Target Locking & Bio-Scan
+    g_sub.selectedTargetIdx = 0;
+    g_sub.isScanningTarget = 0;
+    g_sub.scanProgress = 0.0f;
 
     g_sub.hull = 100.0f;
     g_sub.crushDepth = 4500.0f;
@@ -485,15 +559,9 @@ void InitSubmarineState(void) {
     g_sub.currentTheme = THEME_ABYSS;
     g_sub.scanlinesEnabled = 1;
 
-    g_sub.contactCount = 4;
-    g_sub.contacts[0] = (SonarContact){ 0.8f, 0.55f, "Volcanic Ridge", 0 };
-    g_sub.contacts[1] = (SonarContact){ 2.3f, 0.38f, "Megamouth Echo", 1 };
-    g_sub.contacts[2] = (SonarContact){ 4.2f, 0.72f, "Derelict Probe", 2 };
-    g_sub.contacts[3] = (SonarContact){ 5.6f, 0.85f, "Hydrothermal Smoker", 3 };
-
     g_sub.logCount = 0;
     AddLog("DSV Abyss Voyager Bathyscaphe computer online. Systems nominal.", g_themes[THEME_ABYSS].textPrimary);
-    AddLog("Navigation grid locked. Epipelagic layer baseline calibrated.", g_themes[THEME_ABYSS].accentEmerald);
+    AddLog("Active sonar & biological hydrophone array online. Listening...", g_themes[THEME_ABYSS].accentEmerald);
 }
 
 const char* GetZoneName(float depth) {
@@ -563,6 +631,7 @@ void UpdateSimulation(float dt) {
 
     if (g_sub.currentSectorIdx != sIdx) {
         g_sub.currentSectorIdx = sIdx;
+        g_sub.selectedTargetIdx = 0;
         char sMsg[128];
         snprintf(sMsg, sizeof(sMsg), "TRANSITIONING SECTOR: [%s] - %s", g_sectors[sIdx].name, g_sectors[sIdx].desc);
         AddLog(sMsg, th->accentSonar);
@@ -611,6 +680,49 @@ void UpdateSimulation(float dt) {
             }
             g_sub.breadcrumbsX[31] = g_sub.posX;
             g_sub.breadcrumbsY[31] = g_sub.posY;
+        }
+    }
+
+    // Fauna Dynamic Roaming (Phase 7)
+    for (int i = 0; i < FAUNA_COUNT; i++) {
+        if (g_fauna[i].vx != 0.0f || g_fauna[i].vy != 0.0f) {
+            g_fauna[i].x += g_fauna[i].vx * dt * 0.2f;
+            g_fauna[i].y += g_fauna[i].vy * dt * 0.2f;
+            if (fabsf(g_fauna[i].x) > 14.0f) g_fauna[i].vx *= -1.0f;
+            if (fabsf(g_fauna[i].y) > 14.0f) g_fauna[i].vy *= -1.0f;
+        }
+    }
+
+    // Bio-Scan Progress Update (Phase 7)
+    if (g_sub.isScanningTarget) {
+        g_sub.scanProgress += dt * 60.0f;
+        if (g_sub.scanProgress >= 100.0f) {
+            g_sub.isScanningTarget = 0;
+            g_sub.scanProgress = 0.0f;
+
+            int secFauna[3];
+            int fCount = GetSectorFaunaIndices(g_sub.currentSectorIdx, secFauna);
+            if (fCount > 0 && g_sub.selectedTargetIdx < fCount) {
+                int fIdx = secFauna[g_sub.selectedTargetIdx];
+                FaunaAnomaly* target = &g_fauna[fIdx];
+                if (!target->discovered) {
+                    target->discovered = 1;
+                    int ptsAwarded = (int)(target->pts * g_sub.surveyMultiplier);
+                    g_sub.surveyPoints += ptsAwarded;
+
+                    if (target->type == 4) { // Leviathan
+                        PlayLeviathanHarmonic();
+                        char msg[128];
+                        snprintf(msg, sizeof(msg), "🚨 LEVIATHAN SCANNED: [%s]! %s (+%d PTS)", target->name, target->desc, ptsAwarded);
+                        AddLog(msg, RGB(244, 63, 94));
+                    } else {
+                        PlaySoundAsync(1100, 200);
+                        char msg[128];
+                        snprintf(msg, sizeof(msg), "BIO-SCAN COMPLETE: [%s]! %s (+%d PTS)", target->name, target->desc, ptsAwarded);
+                        AddLog(msg, th->accentEmerald);
+                    }
+                }
+            }
         }
     }
 
@@ -898,6 +1010,84 @@ void DrawNavMapChart(HDC hdc, int cx, int cy, int mapW, int mapH, const Submarin
 
     SelectObject(hdc, hPenOld);
     DeleteObject(hPenGrid);
+}
+
+// --- DRAW FAUNA & ANOMALIES CODEX VIEW (PHASE 7) ---
+void DrawFaunaCodex(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* th) {
+    RECT rcBg = { x, y, x + w, y + h };
+    HBRUSH hBr = CreateSolidBrush(th->bgDeep);
+    FillRect(hdc, &rcBg, hBr);
+    DeleteObject(hBr);
+
+    int discoveredCount = 0;
+    for (int i = 0; i < FAUNA_COUNT; i++) {
+        if (g_fauna[i].discovered) discoveredCount++;
+    }
+
+    char hdrBuf[128];
+    snprintf(hdrBuf, sizeof(hdrBuf), "ABYSSAL CODEX: %d / %d DISCOVERED (%d%%)  |  RESEARCH CREDITS: %d PTS",
+             discoveredCount, FAUNA_COUNT, (discoveredCount * 100) / FAUNA_COUNT, g_sub.surveyPoints);
+
+    SelectObject(hdc, g_hFontBold);
+    SetTextColor(hdc, th->accentEmerald);
+    TextOutA(hdc, x + 10, y + 6, hdrBuf, (int)strlen(hdrBuf));
+
+    int margin = 6;
+    int cols = 3;
+    int rows = 4;
+    int cardW = (w - margin * (cols + 1)) / cols;
+    int cardH = (h - 26 - margin * (rows + 1)) / rows;
+
+    for (int i = 0; i < FAUNA_COUNT; i++) {
+        FaunaAnomaly* f = &g_fauna[i];
+        int c = i % cols;
+        int r = i / cols;
+        int cx = x + margin + c * (cardW + margin);
+        int cy = y + 26 + margin + r * (cardH + margin);
+
+        RECT rcCard = { cx, cy, cx + cardW, cy + cardH };
+        HBRUSH hBrP = CreateSolidBrush(th->bgPanel);
+        HBRUSH hBrB = CreateSolidBrush(f->discovered ? th->accentSonar : th->borderPanel);
+        FillRect(hdc, &rcCard, hBrP);
+        FrameRect(hdc, &rcCard, hBrB);
+        DeleteObject(hBrP);
+        DeleteObject(hBrB);
+
+        const char* typeStr = f->type == 4 ? "[LEVIATHAN]" : (f->type == 1 ? "[SQUID]" : (f->type == 2 ? "[FLORA]" : (f->type == 3 ? "[TRENCH]" : "[FAUNA]")));
+        COLORREF typeClr = f->type == 4 ? RGB(244, 63, 94) : (f->type == 1 ? RGB(244, 114, 182) : (f->type == 2 ? th->accentEmerald : (f->type == 3 ? th->accentAmber : th->accentSonar)));
+
+        SelectObject(hdc, g_hFontSmall);
+        SetTextColor(hdc, typeClr);
+        TextOutA(hdc, cx + 6, cy + 4, typeStr, (int)strlen(typeStr));
+
+        if (f->discovered) {
+            SelectObject(hdc, g_hFontBold);
+            SetTextColor(hdc, th->textBright);
+            TextOutA(hdc, cx + 65, cy + 4, f->name, (int)strlen(f->name));
+
+            SelectObject(hdc, g_hFontSmall);
+            SetTextColor(hdc, th->textDim);
+            char dBuf[64];
+            snprintf(dBuf, sizeof(dBuf), "Depth: %.0fm  %s", f->depth, f->lumens);
+            TextOutA(hdc, cx + 6, cy + 18, dBuf, (int)strlen(dBuf));
+
+            SetTextColor(hdc, th->accentEmerald);
+            snprintf(dBuf, sizeof(dBuf), "SCANNED (+%d PTS)", (int)(f->pts * g_sub.surveyMultiplier));
+            TextOutA(hdc, cx + 6, cy + cardH - 14, dBuf, (int)strlen(dBuf));
+        } else {
+            SelectObject(hdc, g_hFontSmall);
+            SetTextColor(hdc, th->textDim);
+            TextOutA(hdc, cx + 65, cy + 4, "[UNDISCOVERED]", 14);
+
+            char dBuf[64];
+            snprintf(dBuf, sizeof(dBuf), "Depth: ~%.0fm  Freq: %s", f->depth, f->freq);
+            TextOutA(hdc, cx + 6, cy + 18, dBuf, (int)strlen(dBuf));
+
+            SetTextColor(hdc, th->accentAmber);
+            snprintf(dBuf, sizeof(dBuf), "UNSCANNED (YIELD: +%d PTS)", f->pts);
+            TextOutA(hdc, cx + 6, cy + cardH - 14, dBuf, (int)strlen(dBuf));
+        }
+    }
 }
 
 void DrawEngineeringBay(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* th) {
@@ -1229,13 +1419,15 @@ void DrawUI(HDC hdc, RECT* rcClient) {
 
     char secTag[64];
     snprintf(secTag, sizeof(secTag), "SECTOR: %s | SURVEY: %d PTS", g_sectors[g_sub.currentSectorIdx].name, g_sub.surveyPoints);
-    DrawPanelBox(hdc, centerX, panelY, centerW, sonarH, "DEEP OCEAN & TRENCH EXPLORATION", secTag, th->accentEmerald, th);
+    DrawPanelBox(hdc, centerX, panelY, centerW, sonarH, "DEEP OCEAN & FAUNA EXPLORATION", secTag, th->accentEmerald, th);
 
     // View switch buttons inside center panel header
-    DrawCustomButton(hdc, ID_BTN_VIEW_SONAR, centerX + 8, panelY + 28, 90, 20, "SONAR RADAR", g_sub.viewMode == 0, th->accentSonar, th);
-    DrawCustomButton(hdc, ID_BTN_VIEW_NAVMAP, centerX + 102, panelY + 28, 110, 20, "TRENCH NAV", g_sub.viewMode == 1, th->accentSonar, th);
-    DrawCustomButton(hdc, ID_BTN_VIEW_ENG, centerX + 216, panelY + 28, 120, 20, "ENGINEERING BAY", g_sub.viewMode == 2, th->accentSonar, th);
-    DrawCustomButton(hdc, ID_BTN_FIELD_DIAG, centerX + centerW - 130, panelY + 28, 122, 20, "+35 PTS DIAG", 0, th->accentAmber, th);
+    int btnViewW = (centerW - 140) / 4;
+    DrawCustomButton(hdc, ID_BTN_VIEW_SONAR, centerX + 8, panelY + 28, btnViewW - 2, 20, "SONAR RADAR", g_sub.viewMode == 0, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_VIEW_NAVMAP, centerX + 6 + btnViewW, panelY + 28, btnViewW - 2, 20, "TRENCH NAV", g_sub.viewMode == 1, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_VIEW_CODEX, centerX + 4 + btnViewW * 2, panelY + 28, btnViewW - 2, 20, "FAUNA CODEX", g_sub.viewMode == 2, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_VIEW_ENG, centerX + 2 + btnViewW * 3, panelY + 28, btnViewW - 2, 20, "ENGINEERING", g_sub.viewMode == 3, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_FIELD_DIAG, centerX + centerW - 128, panelY + 28, 120, 20, "+35 PTS DIAG", 0, th->accentAmber, th);
 
     int sonarContentY = panelY + 52;
     int sonarContentH = sonarH - 58;
@@ -1291,26 +1483,109 @@ void DrawUI(HDC hdc, RECT* rcClient) {
         LineTo(hdc, scx + (int)(cosf(hRad) * 16), scy + (int)(sinf(hRad) * 16));
         DeleteObject(hPenHeading);
 
+        // Sonar Contacts from Current Sector Fauna (Phase 7)
+        int secFauna[3];
+        int fCount = GetSectorFaunaIndices(g_sub.currentSectorIdx, secFauna);
+
         SelectObject(hdc, g_hFontSmall);
-        for (int i = 0; i < g_sub.contactCount; i++) {
-            SonarContact* c = &g_sub.contacts[i];
-            int cx = scx + (int)(cosf(c->angle) * (sRadius * c->dist));
-            int cy = scy + (int)(sinf(c->angle) * (sRadius * c->dist));
+        for (int i = 0; i < fCount; i++) {
+            FaunaAnomaly* f = &g_fauna[secFauna[i]];
+            float relX = (f->x - g_sub.posX) / 2.0f;
+            float relY = (f->y - g_sub.posY) / 2.0f;
+            float distNorm = sqrtf(relX * relX + relY * relY);
 
-            float angleDiff = fabsf(g_sub.sweepAngle - c->angle);
-            int isSwept = (angleDiff < 0.25f) || (g_sub.isPinging && fabsf(g_sub.pingRadius - sRadius * c->dist) < 20.0f);
+            if (distNorm > 1.05f) continue;
 
-            HBRUSH hBrContact = CreateSolidBrush(isSwept ? th->accentSonar : th->radarRing);
+            int fcx = scx + (int)(relX * sRadius);
+            int fcy = scy + (int)(relY * sRadius);
+
+            float angleToC = fmodf(atan2f(relY, relX) + 6.2831853f, 6.2831853f);
+            float angleDiff = fabsf(g_sub.sweepAngle - angleToC);
+            int isSwept = (angleDiff < 0.25f) || (g_sub.isPinging && fabsf(g_sub.pingRadius - sRadius * distNorm) < 20.0f);
+            int isSelected = (i == g_sub.selectedTargetIdx);
+
+            COLORREF cClr = th->accentSonar;
+            if (f->type == 4) cClr = RGB(244, 63, 94); // Leviathan
+            else if (f->type == 1) cClr = RGB(244, 114, 182); // Squid
+            else if (f->type == 2) cClr = th->accentEmerald; // Flora
+            else if (f->type == 3) cClr = th->accentAmber; // Trench
+
+            HBRUSH hBrContact = CreateSolidBrush(isSwept || isSelected ? cClr : th->radarRing);
             SelectObject(hdc, hBrContact);
-            Ellipse(hdc, cx - 3, cy - 3, cx + 3, cy + 3);
+            int dotRad = (f->type == 4 ? 6 : (f->type == 1 ? 4 : 3));
+            Ellipse(hdc, fcx - dotRad, fcy - dotRad, fcx + dotRad, fcy + dotRad);
             DeleteObject(hBrContact);
 
-            if (isSwept) {
+            if (isSwept || isSelected) {
                 SetTextColor(hdc, th->textBright);
-                TextOutA(hdc, cx + 6, cy - 6, c->label, (int)strlen(c->label));
-                snprintf(buf, sizeof(buf), "%.0fm", c->dist * 2000.0f);
+                const char* dName = f->discovered ? f->name : (f->type == 4 ? "[LEVIATHAN]" : (f->type == 1 ? "[SQUID]" : (f->type == 2 ? "[FLORA]" : "[FAUNA]")));
+                TextOutA(hdc, fcx + 8, fcy - 6, dName, (int)strlen(dName));
+                snprintf(buf, sizeof(buf), "%.0fm", distNorm * 2000.0f);
                 SetTextColor(hdc, th->textDim);
-                TextOutA(hdc, cx + 6, cy + 4, buf, (int)strlen(buf));
+                TextOutA(hdc, fcx + 8, fcy + 4, buf, (int)strlen(buf));
+            }
+
+            // Targeting Reticle for Locked Target
+            if (isSelected) {
+                HPEN hPenReticle = CreatePen(PS_SOLID, 1, th->textPrimary);
+                SelectObject(hdc, hPenReticle);
+                int bs = 8;
+                MoveToEx(hdc, fcx - bs, fcy - bs + 3, NULL); LineTo(hdc, fcx - bs, fcy - bs); LineTo(hdc, fcx - bs + 3, fcy - bs);
+                MoveToEx(hdc, fcx + bs - 3, fcy - bs, NULL); LineTo(hdc, fcx + bs, fcy - bs); LineTo(hdc, fcx + bs, fcy - bs + 3);
+                MoveToEx(hdc, fcx - bs, fcy + bs - 3, NULL); LineTo(hdc, fcx - bs, fcy + bs); LineTo(hdc, fcx - bs + 3, fcy + bs);
+                MoveToEx(hdc, fcx + bs - 3, fcy + bs, NULL); LineTo(hdc, fcx + bs, fcy + bs); LineTo(hdc, fcx + bs, fcy + bs - 3);
+
+                // Dotted course line from center
+                HPEN hPenVec = CreatePen(PS_DOT, 1, th->textPrimary);
+                SelectObject(hdc, hPenVec);
+                MoveToEx(hdc, scx, scy, NULL);
+                LineTo(hdc, fcx, fcy);
+                DeleteObject(hPenVec);
+                DeleteObject(hPenReticle);
+            }
+        }
+
+        // Top-Right Target HUD Box in Sonar View
+        if (fCount > 0 && g_sub.selectedTargetIdx < fCount) {
+            FaunaAnomaly* tgt = &g_fauna[secFauna[g_sub.selectedTargetIdx]];
+            float dx = tgt->x - g_sub.posX;
+            float dy = tgt->y - g_sub.posY;
+            float distM = sqrtf(dx * dx + dy * dy) * 1000.0f;
+            float depthDiff = fabsf(g_sub.depth - tgt->depth);
+
+            int hudW = 180;
+            int hudH = 80;
+            int hudX = centerX + centerW - hudW - 12;
+            int hudY = sonarContentY + 8;
+
+            RECT rcHud = { hudX, hudY, hudX + hudW, hudY + hudH };
+            HBRUSH hBrHud = CreateSolidBrush(RGB(7, 23, 36));
+            HBRUSH hBrHdrB = CreateSolidBrush(th->borderPanel);
+            FillRect(hdc, &rcHud, hBrHud);
+            FrameRect(hdc, &rcHud, hBrHdrB);
+            DeleteObject(hBrHud);
+            DeleteObject(hBrHdrB);
+
+            SelectObject(hdc, g_hFontSmall);
+            SetTextColor(hdc, th->accentEmerald);
+            TextOutA(hdc, hudX + 6, hudY + 4, "🎯 TARGET TRACKER", 17);
+
+            SetTextColor(hdc, th->textBright);
+            snprintf(buf, sizeof(buf), "%.16s", tgt->discovered ? tgt->name : tgt->id);
+            TextOutA(hdc, hudX + 6, hudY + 18, buf, (int)strlen(buf));
+
+            SetTextColor(hdc, th->textDim);
+            snprintf(buf, sizeof(buf), "Dist: %.0fm  ΔZ: %.0fm", distM, depthDiff);
+            TextOutA(hdc, hudX + 6, hudY + 32, buf, (int)strlen(buf));
+
+            snprintf(buf, sizeof(buf), "Lumens: %.12s", tgt->lumens);
+            TextOutA(hdc, hudX + 6, hudY + 46, buf, (int)strlen(buf));
+
+            if (g_sub.isScanningTarget) {
+                DrawGaugeBar(hdc, hudX + 6, hudY + 62, hudW - 12, 8, g_sub.scanProgress, th->accentEmerald, th);
+            } else {
+                DrawCustomButton(hdc, ID_BTN_HUD_NEXT_TARGET, hudX + 6, hudY + 58, (hudW - 16) / 2, 18, "NEXT", 0, th->textPrimary, th);
+                DrawCustomButton(hdc, ID_BTN_HUD_SCAN_TARGET, hudX + 8 + (hudW - 16) / 2, hudY + 58, (hudW - 16) / 2, 18, "SCAN", 0, th->accentEmerald, th);
             }
         }
 
@@ -1319,6 +1594,8 @@ void DrawUI(HDC hdc, RECT* rcClient) {
         DeleteObject(hPenRing);
     } else if (g_sub.viewMode == 1) {
         DrawNavMapChart(hdc, scx, scy, centerW - 20, sonarContentH - 8, th);
+    } else if (g_sub.viewMode == 2) {
+        DrawFaunaCodex(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
     } else {
         DrawEngineeringBay(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
     }
@@ -1352,33 +1629,52 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     int bw = (rightW - 24) / 2;
     int bx = rightX + 8;
 
+    // SONAR TARGET SCANNER (PHASE 7)
     SelectObject(hdc, g_hFontSmall);
+    SetTextColor(hdc, th->textDim);
+    TextOutA(hdc, bx, cy, "SONAR TARGET TRACKER & BIO-SCAN", 31);
+    cy += 14;
+
+    int secFauna[3];
+    int fCount = GetSectorFaunaIndices(g_sub.currentSectorIdx, secFauna);
+    if (fCount > 0 && g_sub.selectedTargetIdx < fCount) {
+        FaunaAnomaly* tgt = &g_fauna[secFauna[g_sub.selectedTargetIdx]];
+        snprintf(buf, sizeof(buf), "🎯 LOCKED: %.14s", tgt->discovered ? tgt->name : tgt->id);
+    } else {
+        snprintf(buf, sizeof(buf), "🎯 TARGET LOCK: NONE");
+    }
+    DrawCustomButton(hdc, ID_BTN_LOCK_TARGET, bx, cy, rightW - 18, 20, buf, 0, th->accentSonar, th);
+    cy += 22;
+
+    DrawCustomButton(hdc, ID_BTN_SCAN_TARGET, bx, cy, rightW - 18, 20, "🔬 BIO-ACOUSTIC SCAN TARGET", g_sub.isScanningTarget, th->accentEmerald, th);
+    cy += 26;
+
     SetTextColor(hdc, th->textDim);
     TextOutA(hdc, bx, cy, "OCEAN NAVIGATION & WAYPOINTS", 28);
     cy += 14;
 
     snprintf(buf, sizeof(buf), "WAYPOINT [WP-%d]: %.10s", g_sub.activeWaypointIdx + 1, g_waypoints[g_sub.activeWaypointIdx].name);
-    DrawCustomButton(hdc, ID_BTN_NEXT_WAYPOINT, bx, cy, rightW - 18, 22, buf, 0, th->accentSonar, th);
-    cy += 26;
+    DrawCustomButton(hdc, ID_BTN_NEXT_WAYPOINT, bx, cy, rightW - 18, 20, buf, 0, th->accentSonar, th);
+    cy += 22;
 
-    DrawCustomButton(hdc, ID_BTN_AUTOPILOT, bx, cy, bw, 22, g_sub.autopilot ? "AUTOPILOT: ON" : "AUTOPILOT: OFF", g_sub.autopilot, th->accentEmerald, th);
-    DrawCustomButton(hdc, ID_BTN_SURVEY_SECTOR, bx + bw + 6, cy, bw, 22, "SURVEY REGION", 0, th->textPrimary, th);
-    cy += 28;
+    DrawCustomButton(hdc, ID_BTN_AUTOPILOT, bx, cy, bw, 20, g_sub.autopilot ? "AUTOPILOT: ON" : "AUTOPILOT: OFF", g_sub.autopilot, th->accentEmerald, th);
+    DrawCustomButton(hdc, ID_BTN_SURVEY_SECTOR, bx + bw + 6, cy, bw, 20, "SURVEY REGION", 0, th->textPrimary, th);
+    cy += 24;
 
     SetTextColor(hdc, th->textDim);
     TextOutA(hdc, bx, cy, "BALLAST DIVE ENGINE", 19);
     cy += 14;
 
-    DrawCustomButton(hdc, ID_BTN_FLOOD_BALLAST, bx, cy, bw, 22, "FLOOD BALLAST (+)", 0, th->textPrimary, th);
-    DrawCustomButton(hdc, ID_BTN_BLOW_BALLAST, bx + bw + 6, cy, bw, 22, "BLOW BALLAST (-)", 0, th->accentEmerald, th);
-    cy += 26;
+    DrawCustomButton(hdc, ID_BTN_FLOOD_BALLAST, bx, cy, bw, 20, "FLOOD BALLAST (+)", 0, th->textPrimary, th);
+    DrawCustomButton(hdc, ID_BTN_BLOW_BALLAST, bx + bw + 6, cy, bw, 20, "BLOW BALLAST (-)", 0, th->accentEmerald, th);
+    cy += 22;
 
-    DrawCustomButton(hdc, ID_BTN_TRIM_BOW, bx, cy, bw, 22, "TRIM BOW (-1 deg)", 0, th->textPrimary, th);
-    DrawCustomButton(hdc, ID_BTN_TRIM_STERN, bx + bw + 6, cy, bw, 22, "TRIM STERN (+1 deg)", 0, th->textPrimary, th);
-    cy += 26;
+    DrawCustomButton(hdc, ID_BTN_TRIM_BOW, bx, cy, bw, 20, "TRIM BOW (-1 deg)", 0, th->textPrimary, th);
+    DrawCustomButton(hdc, ID_BTN_TRIM_STERN, bx + bw + 6, cy, bw, 20, "TRIM STERN (+1 deg)", 0, th->textPrimary, th);
+    cy += 22;
 
-    DrawCustomButton(hdc, ID_BTN_SONAR_PING, bx, cy, rightW - 18, 24, "ACOUSTIC SONAR PING", g_sub.isPinging, th->accentSonar, th);
-    cy += 30;
+    DrawCustomButton(hdc, ID_BTN_SONAR_PING, bx, cy, rightW - 18, 22, "ACOUSTIC SONAR PING", g_sub.isPinging, th->accentSonar, th);
+    cy += 26;
 
     SetTextColor(hdc, th->textDim);
     TextOutA(hdc, bx, cy, "PROPULSION THROTTLE", 19);
@@ -1388,38 +1684,38 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     DrawCustomButton(hdc, ID_BTN_THROTTLE_REV, bx, cy, bw3, 20, "REV", g_sub.throttleMode == 0, th->accentAmber, th);
     DrawCustomButton(hdc, ID_BTN_THROTTLE_STOP, bx + bw3 + 4, cy, bw3, 20, "STOP", g_sub.throttleMode == 1, th->accentSonar, th);
     DrawCustomButton(hdc, ID_BTN_THROTTLE_HALF, bx + (bw3 + 4) * 2, cy, bw3, 20, "HALF", g_sub.throttleMode == 2, th->accentSonar, th);
+    cy += 22;
+
+    DrawCustomButton(hdc, ID_BTN_THROTTLE_FLANK, bx, cy, rightW - 18, 20, "FLANK SPEED (FULL AHEAD)", g_sub.throttleMode == 3, th->accentAmber, th);
+    cy += 22;
+
+    DrawCustomButton(hdc, ID_BTN_RUDDER_PORT, bx, cy, bw, 20, "< RUDDER PORT", 0, th->textPrimary, th);
+    DrawCustomButton(hdc, ID_BTN_RUDDER_STBD, bx + bw + 6, cy, bw, 20, "RUDDER STBD >", 0, th->textPrimary, th);
     cy += 24;
-
-    DrawCustomButton(hdc, ID_BTN_THROTTLE_FLANK, bx, cy, rightW - 18, 22, "FLANK SPEED (FULL AHEAD)", g_sub.throttleMode == 3, th->accentAmber, th);
-    cy += 26;
-
-    DrawCustomButton(hdc, ID_BTN_RUDDER_PORT, bx, cy, bw, 22, "< RUDDER PORT", 0, th->textPrimary, th);
-    DrawCustomButton(hdc, ID_BTN_RUDDER_STBD, bx + bw + 6, cy, bw, 22, "RUDDER STBD >", 0, th->textPrimary, th);
-    cy += 28;
 
     SetTextColor(hdc, th->textDim);
     TextOutA(hdc, bx, cy, "SUBSYSTEM MANAGEMENT", 20);
     cy += 14;
 
     snprintf(buf, sizeof(buf), "SEARCHLIGHTS: %s", g_sub.searchlights ? "ENGAGED [HIGH LUX]" : "OFF");
-    DrawCustomButton(hdc, ID_BTN_SEARCHLIGHTS, bx, cy, rightW - 18, 20, buf, g_sub.searchlights, th->accentSonar, th);
-    cy += 24;
+    DrawCustomButton(hdc, ID_BTN_SEARCHLIGHTS, bx, cy, rightW - 18, 18, buf, g_sub.searchlights, th->accentSonar, th);
+    cy += 20;
 
     snprintf(buf, sizeof(buf), "O2 SCRUBBER: %s", g_sub.scrubberAuto ? "AUTO [ONLINE]" : "MANUAL [STANDBY]");
-    DrawCustomButton(hdc, ID_BTN_SCRUBBER, bx, cy, rightW - 18, 20, buf, g_sub.scrubberAuto, th->accentEmerald, th);
-    cy += 24;
+    DrawCustomButton(hdc, ID_BTN_SCRUBBER, bx, cy, rightW - 18, 18, buf, g_sub.scrubberAuto, th->accentEmerald, th);
+    cy += 20;
 
     snprintf(buf, sizeof(buf), "PURGE EMERGENCY O2 (%d LEFT)", g_sub.o2PurgeCount);
-    DrawCustomButton(hdc, ID_BTN_O2_PURGE, bx, cy, rightW - 18, 20, buf, 0, th->textPrimary, th);
-    cy += 24;
+    DrawCustomButton(hdc, ID_BTN_O2_PURGE, bx, cy, rightW - 18, 18, buf, 0, th->textPrimary, th);
+    cy += 20;
 
     snprintf(buf, sizeof(buf), "BILGE PUMPS: %s", g_sub.bilgePumpActive ? "RUNNING [MAX]" : "AUTO (STANDBY)");
-    DrawCustomButton(hdc, ID_BTN_BILGE_PUMP, bx, cy, rightW - 18, 20, buf, g_sub.bilgePumpActive, th->accentAmber, th);
-    cy += 24;
+    DrawCustomButton(hdc, ID_BTN_BILGE_PUMP, bx, cy, rightW - 18, 18, buf, g_sub.bilgePumpActive, th->accentAmber, th);
+    cy += 20;
 
     snprintf(buf, sizeof(buf), "ECO LOW-POWER: %s", g_sub.lowPowerMode ? "ACTIVE" : "OFF");
-    DrawCustomButton(hdc, ID_BTN_LOW_POWER, bx, cy, rightW - 18, 20, buf, g_sub.lowPowerMode, th->accentEmerald, th);
-    cy += 28;
+    DrawCustomButton(hdc, ID_BTN_LOW_POWER, bx, cy, rightW - 18, 18, buf, g_sub.lowPowerMode, th->accentEmerald, th);
+    cy += 22;
 
     RECT rcDirect = { bx, cy, rightX + rightW - 10, panelY + panelH - 8 };
     HBRUSH hBrDirect = CreateSolidBrush(th->bgDeep);
@@ -1427,11 +1723,11 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     FrameRect(hdc, &rcDirect, hBrBrd);
     DeleteObject(hBrDirect);
     SetTextColor(hdc, th->textDim);
-    TextOutA(hdc, bx + 6, cy + 2, "CURRENT DIRECTIVE:", 18);
+    TextOutA(hdc, bx + 6, cy + 2, "DIRECTIVES:", 11);
     SetTextColor(hdc, th->textBright);
-    TextOutA(hdc, bx + 6, cy + 16, "- Steer Continental Shelf & Vents", 33);
-    TextOutA(hdc, bx + 6, cy + 30, "- Dive into Hadal Trench (4000m+)", 33);
-    TextOutA(hdc, bx + 6, cy + 44, "- Survey landmarks for research", 31);
+    TextOutA(hdc, bx + 6, cy + 15, "- Detect Leviathans & Squids", 28);
+    TextOutA(hdc, bx + 6, cy + 28, "- Catalog 12/12 Fauna Codex", 27);
+    TextOutA(hdc, bx + 6, cy + 41, "- Dive Hadal Trench (4000m+)", 28);
 
     // Deep-water CRT scanlines raster overlay
     if (g_sub.scanlinesEnabled) {
@@ -1465,24 +1761,37 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
 
     // View toggles in center panel
     if (my >= panelY + 28 && my <= panelY + 48) {
-        if (mx >= centerX + 8 && mx <= centerX + 98) return ID_BTN_VIEW_SONAR;
-        if (mx >= centerX + 102 && mx <= centerX + 212) return ID_BTN_VIEW_NAVMAP;
-        if (mx >= centerX + 216 && mx <= centerX + 336) return ID_BTN_VIEW_ENG;
-        if (mx >= centerX + centerW - 130 && mx <= centerX + centerW - 8) return ID_BTN_FIELD_DIAG;
+        int btnViewW = (centerW - 140) / 4;
+        if (mx >= centerX + 8 && mx <= centerX + 8 + btnViewW - 2) return ID_BTN_VIEW_SONAR;
+        if (mx >= centerX + 6 + btnViewW && mx <= centerX + 6 + btnViewW * 2 - 2) return ID_BTN_VIEW_NAVMAP;
+        if (mx >= centerX + 4 + btnViewW * 2 && mx <= centerX + 4 + btnViewW * 3 - 2) return ID_BTN_VIEW_CODEX;
+        if (mx >= centerX + 2 + btnViewW * 3 && mx <= centerX + 2 + btnViewW * 4 - 2) return ID_BTN_VIEW_ENG;
+        if (mx >= centerX + centerW - 128 && mx <= centerX + centerW - 8) return ID_BTN_FIELD_DIAG;
     }
 
-    if (g_sub.viewMode == 2) {
+    // HUD buttons in Sonar view
+    if (g_sub.viewMode == 0) {
+        int sonarContentY = panelY + 52;
+        int hudW = 180;
+        int hudX = centerX + centerW - hudW - 12;
+        int hudY = sonarContentY + 8;
+        if (my >= hudY + 58 && my <= hudY + 76) {
+            if (mx >= hudX + 6 && mx <= hudX + 6 + (hudW - 16) / 2) return ID_BTN_HUD_NEXT_TARGET;
+            if (mx >= hudX + 8 + (hudW - 16) / 2 && mx <= hudX + hudW - 8) return ID_BTN_HUD_SCAN_TARGET;
+        }
+    }
+
+    if (g_sub.viewMode == 3) { // Engineering Bay
         int sonarH = (panelH * 60) / 100;
         int sonarContentY = panelY + 52;
         int sonarContentH = sonarH - 58;
         int ebX = centerX + 6;
         int ebY = sonarContentY + 4;
         int ebW = centerW - 12;
-        int ebH = sonarContentH - 8;
 
         int marginEb = 6;
         int gridW = (ebW - marginEb * 3) / 2;
-        int gridH = (ebH - marginEb * 3) / 2;
+        int gridH = (sonarContentH - 8 - marginEb * 3) / 2;
         int c1x = ebX + marginEb;
         int c2x = ebX + marginEb * 2 + gridW;
         int r1y = ebY + marginEb;
@@ -1503,31 +1812,37 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
     int bx = rightX + 8;
     cy += 14;
 
-    if (my >= cy && my <= cy + 22 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_NEXT_WAYPOINT;
-    cy += 26;
+    // SONAR TARGET TRACKER
+    if (my >= cy && my <= cy + 20 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_LOCK_TARGET;
+    cy += 22;
+    if (my >= cy && my <= cy + 20 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_SCAN_TARGET;
+    cy += 26 + 14;
 
-    if (my >= cy && my <= cy + 22) {
+    if (my >= cy && my <= cy + 20 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_NEXT_WAYPOINT;
+    cy += 22;
+
+    if (my >= cy && my <= cy + 20) {
         if (mx >= bx && mx <= bx + bw) return ID_BTN_AUTOPILOT;
         if (mx >= bx + bw + 6 && mx <= bx + bw * 2 + 6) return ID_BTN_SURVEY_SECTOR;
     }
-    cy += 28 + 14;
+    cy += 24 + 14;
 
-    if (my >= cy && my <= cy + 22) {
+    if (my >= cy && my <= cy + 20) {
         if (mx >= bx && mx <= bx + bw) return ID_BTN_FLOOD_BALLAST;
         if (mx >= bx + bw + 6 && mx <= bx + bw * 2 + 6) return ID_BTN_BLOW_BALLAST;
     }
-    cy += 26;
+    cy += 22;
 
-    if (my >= cy && my <= cy + 22) {
+    if (my >= cy && my <= cy + 20) {
         if (mx >= bx && mx <= bx + bw) return ID_BTN_TRIM_BOW;
         if (mx >= bx + bw + 6 && mx <= bx + bw * 2 + 6) return ID_BTN_TRIM_STERN;
     }
-    cy += 26;
+    cy += 22;
 
-    if (my >= cy && my <= cy + 24 && mx >= bx && mx <= bx + rightW - 18) {
+    if (my >= cy && my <= cy + 22 && mx >= bx && mx <= bx + rightW - 18) {
         return ID_BTN_SONAR_PING;
     }
-    cy += 30 + 14;
+    cy += 26 + 14;
 
     int bw3 = (rightW - 28) / 3;
     if (my >= cy && my <= cy + 20) {
@@ -1535,28 +1850,28 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
         if (mx >= bx + bw3 + 4 && mx <= bx + bw3 * 2 + 4) return ID_BTN_THROTTLE_STOP;
         if (mx >= bx + (bw3 + 4) * 2 && mx <= bx + (bw3 + 4) * 3) return ID_BTN_THROTTLE_HALF;
     }
-    cy += 24;
+    cy += 22;
 
-    if (my >= cy && my <= cy + 22 && mx >= bx && mx <= bx + rightW - 18) {
+    if (my >= cy && my <= cy + 20 && mx >= bx && mx <= bx + rightW - 18) {
         return ID_BTN_THROTTLE_FLANK;
     }
-    cy += 26;
+    cy += 22;
 
-    if (my >= cy && my <= cy + 22) {
+    if (my >= cy && my <= cy + 20) {
         if (mx >= bx && mx <= bx + bw) return ID_BTN_RUDDER_PORT;
         if (mx >= bx + bw + 6 && mx <= bx + bw * 2 + 6) return ID_BTN_RUDDER_STBD;
     }
-    cy += 28 + 14;
+    cy += 24 + 14;
 
-    if (my >= cy && my <= cy + 20 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_SEARCHLIGHTS;
-    cy += 24;
-    if (my >= cy && my <= cy + 20 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_SCRUBBER;
-    cy += 24;
-    if (my >= cy && my <= cy + 20 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_O2_PURGE;
-    cy += 24;
-    if (my >= cy && my <= cy + 20 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_BILGE_PUMP;
-    cy += 24;
-    if (my >= cy && my <= cy + 20 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_LOW_POWER;
+    if (my >= cy && my <= cy + 18 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_SEARCHLIGHTS;
+    cy += 20;
+    if (my >= cy && my <= cy + 18 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_SCRUBBER;
+    cy += 20;
+    if (my >= cy && my <= cy + 18 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_O2_PURGE;
+    cy += 20;
+    if (my >= cy && my <= cy + 18 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_BILGE_PUMP;
+    cy += 20;
+    if (my >= cy && my <= cy + 18 && mx >= bx && mx <= bx + rightW - 18) return ID_BTN_LOW_POWER;
 
     return 0;
 }
@@ -1593,10 +1908,58 @@ void HandleCommand(int cmdId) {
             PlaySoundAsync(520, 60);
             break;
 
-        case ID_BTN_VIEW_ENG:
+        case ID_BTN_VIEW_CODEX:
             g_sub.viewMode = 2;
+            PlaySoundAsync(620, 80);
+            break;
+
+        case ID_BTN_VIEW_ENG:
+            g_sub.viewMode = 3;
             PlaySoundAsync(580, 80);
             break;
+
+        case ID_BTN_LOCK_TARGET:
+        case ID_BTN_HUD_NEXT_TARGET: {
+            int secFauna[3];
+            int fCount = GetSectorFaunaIndices(g_sub.currentSectorIdx, secFauna);
+            if (fCount > 0) {
+                g_sub.selectedTargetIdx = (g_sub.selectedTargetIdx + 1) % fCount;
+                FaunaAnomaly* tgt = &g_fauna[secFauna[g_sub.selectedTargetIdx]];
+                PlaySoundAsync(700, 80);
+                snprintf(msg, sizeof(msg), "Acoustic tracking locked onto target [%s].", tgt->discovered ? tgt->name : tgt->id);
+                AddLog(msg, th->accentSonar);
+            }
+            break;
+        }
+
+        case ID_BTN_SCAN_TARGET:
+        case ID_BTN_HUD_SCAN_TARGET: {
+            int secFauna[3];
+            int fCount = GetSectorFaunaIndices(g_sub.currentSectorIdx, secFauna);
+            if (fCount > 0 && g_sub.selectedTargetIdx < fCount) {
+                FaunaAnomaly* tgt = &g_fauna[secFauna[g_sub.selectedTargetIdx]];
+                float dx = tgt->x - g_sub.posX;
+                float dy = tgt->y - g_sub.posY;
+                float distM = sqrtf(dx * dx + dy * dy) * 1000.0f;
+                float depthDiff = fabsf(g_sub.depth - tgt->depth);
+                float maxRange = max(900.0f, g_sub.opticalRange * 1.8f);
+
+                if (distM <= maxRange && depthDiff <= 450.0f) {
+                    if (!g_sub.isScanningTarget) {
+                        g_sub.isScanningTarget = 1;
+                        g_sub.scanProgress = 0.0f;
+                        PlaySoundAsync(1200, 150);
+                        snprintf(msg, sizeof(msg), "Bio-acoustic hydrophone scan initiated on [%s]...", tgt->name);
+                        AddLog(msg, th->textPrimary);
+                    }
+                } else {
+                    PlaySoundAsync(220, 150);
+                    snprintf(msg, sizeof(msg), "TARGET OUT OF RANGE: %.0fm away (Depth diff: %.0fm). Steer closer!", distM, depthDiff);
+                    AddLog(msg, th->accentAmber);
+                }
+            }
+            break;
+        }
 
         case ID_BTN_FIELD_DIAG:
             g_sub.surveyPoints += 35;
@@ -1698,17 +2061,14 @@ void HandleCommand(int cmdId) {
                         g_sub.surveyPoints += pts;
                         found = 1;
                         PlaySoundAsync(780, 200);
-                        snprintf(msg, sizeof(msg), "DISCOVERY LOGGED: [%s]! %s (+%d Credits)", lm->name, lm->info, pts);
+                        snprintf(msg, sizeof(msg), "🌟 DISCOVERY LOGGED: [%s]! %s (+%d PTS)", lm->name, lm->info, pts);
                         AddLog(msg, th->accentEmerald);
-                    } else {
-                        snprintf(msg, sizeof(msg), "Landmark in sensor range: [%s] (%.0fm)", lm->name, distKm * 1000.0f);
-                        AddLog(msg, th->textDim);
                     }
                 }
             }
             if (!found) {
                 PlaySoundAsync(320, 80);
-                AddLog("Survey complete. No features in optical range. Cruise towards waypoints.", th->textDim);
+                AddLog("Survey complete. No new uncataloged landmarks in sensor cone.", th->textDim);
             }
             break;
         }
@@ -1726,26 +2086,26 @@ void HandleCommand(int cmdId) {
             if (g_sub.airReservoir > 5.0f && g_sub.ballast > 0.0f) {
                 g_sub.ballast = max(0.0f, g_sub.ballast - g_sub.ballastStepRate);
                 g_sub.airReservoir = max(0.0f, g_sub.airReservoir - 8.0f);
-                PlaySoundAsync(600, 120);
-                snprintf(msg, sizeof(msg), "Blowing ballast with HP air: Ballast %.0f%%, Air Res: %.0f BAR.", g_sub.ballast, g_sub.airReservoir);
-                AddLog(msg, th->textPrimary);
+                PlaySoundAsync(600, 180);
+                snprintf(msg, sizeof(msg), "HP air blown: Ballast %.0f%%, Air Res: %.0f BAR.", g_sub.ballast, g_sub.airReservoir);
+                AddLog(msg, th->accentEmerald);
             } else if (g_sub.airReservoir <= 5.0f) {
                 PlaySoundAsync(180, 200);
-                AddLog("WARNING: Insufficient compressed air reservoir to blow ballast!", th->accentRed);
+                AddLog("WARNING: Low compressed air reserve to blow ballast!", th->accentRed);
             }
             break;
 
         case ID_BTN_TRIM_BOW:
             g_sub.pitch = max(-15.0f, g_sub.pitch - 2.5f);
             PlaySoundAsync(330, 80);
-            snprintf(msg, sizeof(msg), "Trim shifted forward. Submarine pitch: %+.1f deg", g_sub.pitch);
+            snprintf(msg, sizeof(msg), "Bow trim adjusted. Pitch: %+.1f deg", g_sub.pitch);
             AddLog(msg, th->textPrimary);
             break;
 
         case ID_BTN_TRIM_STERN:
             g_sub.pitch = min(15.0f, g_sub.pitch + 2.5f);
             PlaySoundAsync(330, 80);
-            snprintf(msg, sizeof(msg), "Trim shifted aft. Submarine pitch: %+.1f deg", g_sub.pitch);
+            snprintf(msg, sizeof(msg), "Stern trim adjusted. Pitch: %+.1f deg", g_sub.pitch);
             AddLog(msg, th->textPrimary);
             break;
 
@@ -1755,7 +2115,16 @@ void HandleCommand(int cmdId) {
                 g_sub.pingRadius = 0.0f;
                 g_sub.battery = max(0.0f, g_sub.battery - 0.2f);
                 PlaySoundAsync(1920, 250);
-                AddLog("Active acoustic sonar pulse generated. Omnidirectional sweep...", th->accentEmerald);
+                AddLog("Active sonar omnidirectional ping emitted.", th->accentSonar);
+
+                int secFauna[3];
+                int fCount = GetSectorFaunaIndices(g_sub.currentSectorIdx, secFauna);
+                for (int i = 0; i < fCount; i++) {
+                    FaunaAnomaly* f = &g_fauna[secFauna[i]];
+                    if (f->type == 4 && (rand() % 100) < 50) {
+                        PlayLeviathanHarmonic();
+                    }
+                }
             }
             break;
 
@@ -1763,55 +2132,55 @@ void HandleCommand(int cmdId) {
             g_sub.throttleMode = 0;
             g_sub.targetSpeed = -2.5f;
             PlaySoundAsync(380, 80);
-            AddLog("Engine telegraph set to [REV] -> Target speed: -2.5 kts", th->textPrimary);
+            AddLog("Engine telegraph: REVERSE (1/3).", th->textPrimary);
             break;
 
         case ID_BTN_THROTTLE_STOP:
             g_sub.throttleMode = 1;
             g_sub.targetSpeed = 0.0f;
             PlaySoundAsync(380, 80);
-            AddLog("Engine telegraph set to [STOP] -> Target speed: 0.0 kts", th->textPrimary);
+            AddLog("Engine telegraph: ALL STOP.", th->textPrimary);
             break;
 
         case ID_BTN_THROTTLE_HALF:
             g_sub.throttleMode = 2;
             g_sub.targetSpeed = 5.0f;
             PlaySoundAsync(380, 80);
-            AddLog("Engine telegraph set to [HALF] -> Target speed: 5.0 kts", th->textPrimary);
+            AddLog("Engine telegraph: AHEAD HALF (2/3).", th->textPrimary);
             break;
 
         case ID_BTN_THROTTLE_FLANK:
             g_sub.throttleMode = 3;
             g_sub.targetSpeed = 11.5f;
-            PlaySoundAsync(380, 80);
-            AddLog("Engine telegraph set to [FLANK] -> Target speed: 11.5 kts", th->accentAmber);
+            PlaySoundAsync(480, 120);
+            AddLog("Engine telegraph: FLANK SPEED (MAX AHEAD).", th->accentAmber);
             break;
 
         case ID_BTN_RUDDER_PORT:
             g_sub.heading = fmodf(g_sub.heading - 5.0f + 360.0f, 360.0f);
             PlaySoundAsync(450, 60);
-            snprintf(msg, sizeof(msg), "Rudder Port 5 deg -> Heading: %03.0f deg", g_sub.heading);
+            snprintf(msg, sizeof(msg), "Rudder Port 5 deg -> Heading: %.0f deg", g_sub.heading);
             AddLog(msg, th->textPrimary);
             break;
 
         case ID_BTN_RUDDER_STBD:
             g_sub.heading = fmodf(g_sub.heading + 5.0f, 360.0f);
             PlaySoundAsync(450, 60);
-            snprintf(msg, sizeof(msg), "Rudder Starboard 5 deg -> Heading: %03.0f deg", g_sub.heading);
+            snprintf(msg, sizeof(msg), "Rudder Starboard 5 deg -> Heading: %.0f deg", g_sub.heading);
             AddLog(msg, th->textPrimary);
             break;
 
         case ID_BTN_SEARCHLIGHTS:
             g_sub.searchlights = !g_sub.searchlights;
             PlaySoundAsync(520, 80);
-            snprintf(msg, sizeof(msg), "High-lux forward exploration floodlights %s.", g_sub.searchlights ? "ENGAGED" : "DISENGAGED");
+            snprintf(msg, sizeof(msg), "High-lux forward searchlights %s.", g_sub.searchlights ? "ENGAGED" : "OFF");
             AddLog(msg, th->textPrimary);
             break;
 
         case ID_BTN_SCRUBBER:
             g_sub.scrubberAuto = !g_sub.scrubberAuto;
             PlaySoundAsync(400, 80);
-            snprintf(msg, sizeof(msg), "O2 Life support scrubber switched to %s.", g_sub.scrubberAuto ? "AUTO" : "MANUAL");
+            snprintf(msg, sizeof(msg), "O2 Scrubber system set to %s.", g_sub.scrubberAuto ? "AUTO" : "MANUAL");
             AddLog(msg, th->textPrimary);
             break;
 
@@ -1820,26 +2189,26 @@ void HandleCommand(int cmdId) {
                 g_sub.o2PurgeCount--;
                 g_sub.o2 = min(100.0f, g_sub.o2 + 25.0f);
                 g_sub.co2 = max(0.04f, g_sub.co2 - 0.5f);
-                PlaySoundAsync(750, 150);
-                snprintf(msg, sizeof(msg), "Emergency O2 canister injected! O2 boosted to %.1f%%. [%d canisters remaining]", g_sub.o2, g_sub.o2PurgeCount);
+                PlaySoundAsync(750, 200);
+                snprintf(msg, sizeof(msg), "Emergency O2 canister purged! O2: %.1f%% (%d left).", g_sub.o2, g_sub.o2PurgeCount);
                 AddLog(msg, th->accentEmerald);
             } else {
                 PlaySoundAsync(180, 200);
-                AddLog("Emergency O2 canisters exhausted!", th->accentRed);
+                AddLog("Emergency O2 reserve canisters depleted!", th->accentRed);
             }
             break;
 
         case ID_BTN_BILGE_PUMP:
             g_sub.bilgePumpActive = !g_sub.bilgePumpActive;
             PlaySoundAsync(360, 80);
-            snprintf(msg, sizeof(msg), "Bilge drainage pumps set to %s.", g_sub.bilgePumpActive ? "MAX RUNNING" : "AUTO STANDBY");
+            snprintf(msg, sizeof(msg), "Bilge drainage pumps %s.", g_sub.bilgePumpActive ? "RUNNING [MAX]" : "AUTO [STANDBY]");
             AddLog(msg, th->textPrimary);
             break;
 
         case ID_BTN_LOW_POWER:
             g_sub.lowPowerMode = !g_sub.lowPowerMode;
             PlaySoundAsync(480, 80);
-            snprintf(msg, sizeof(msg), "Submersible electrical grid set to %s.", g_sub.lowPowerMode ? "EMERGENCY CONSERVATION" : "STANDARD DISTRIBUTION");
+            snprintf(msg, sizeof(msg), "Submersible ECO low-power mode %s.", g_sub.lowPowerMode ? "ACTIVE" : "OFF");
             AddLog(msg, th->textPrimary);
             break;
 
@@ -1848,47 +2217,43 @@ void HandleCommand(int cmdId) {
             g_sub.pitch = 10.0f;
             g_sub.airReservoir = max(0.0f, g_sub.airReservoir - 50.0f);
             PlaySoundAsync(700, 300);
-            AddLog("EMERGENCY MAIN BALLAST BLOW EXECUTED! Ascending at maximum positive buoyancy!", th->accentRed);
-            break;
-
-        case ID_BTN_SOUND_TOGGLE:
-            g_sub.soundEnabled = !g_sub.soundEnabled;
-            PlaySoundAsync(400, 60);
+            AddLog("EMERGENCY MAIN BALLAST BLOW EXECUTED! Maximum positive ascent!", th->accentRed);
             break;
     }
 }
 
-LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    switch (msg) {
+LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    switch (message) {
         case WM_CREATE: {
+            g_hWnd = hWnd;
             InitSubmarineState();
-            g_hFontTitle = CreateFontA(-15, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
-            g_hFontBold = CreateFontA(-12, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
-            g_hFontNormal = CreateFontA(-12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
-            g_hFontSmall = CreateFontA(-11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
             SetTimer(hWnd, TIMER_ID, TIMER_INTERVAL, NULL);
-            break;
+
+            g_hFontTitle = CreateFontA(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+            g_hFontNormal = CreateFontA(13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+            g_hFontSmall = CreateFontA(11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+            g_hFontBold = CreateFontA(12, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+            return 0;
         }
 
-        case WM_TIMER: {
+        case WM_TIMER:
             if (wParam == TIMER_ID) {
                 UpdateSimulation(TIMER_INTERVAL / 1000.0f);
                 InvalidateRect(hWnd, NULL, FALSE);
             }
-            break;
-        }
+            return 0;
 
         case WM_LBUTTONDOWN: {
             int mx = GET_X_LPARAM(lParam);
             int my = GET_Y_LPARAM(lParam);
             RECT rcClient;
             GetClientRect(hWnd, &rcClient);
-            int cmdId = HitTestButton(mx, my, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top);
-            if (cmdId != 0) {
-                HandleCommand(cmdId);
+            int cmd = HitTestButton(mx, my, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top);
+            if (cmd > 0) {
+                HandleCommand(cmd);
                 InvalidateRect(hWnd, NULL, FALSE);
             }
-            break;
+            return 0;
         }
 
         case WM_PAINT: {
@@ -1896,81 +2261,67 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC hdc = BeginPaint(hWnd, &ps);
             RECT rcClient;
             GetClientRect(hWnd, &rcClient);
-            int w = rcClient.right - rcClient.left;
-            int h = rcClient.bottom - rcClient.top;
 
             HDC hdcMem = CreateCompatibleDC(hdc);
-            HBITMAP hbmMem = CreateCompatibleBitmap(hdc, w, h);
+            HBITMAP hbmMem = CreateCompatibleBitmap(hdc, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top);
             HBITMAP hbmOld = (HBITMAP)SelectObject(hdcMem, hbmMem);
 
             DrawUI(hdcMem, &rcClient);
 
-            BitBlt(hdc, 0, 0, w, h, hdcMem, 0, 0, SRCCOPY);
+            BitBlt(hdc, 0, 0, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top, hdcMem, 0, 0, SRCCOPY);
 
             SelectObject(hdcMem, hbmOld);
             DeleteObject(hbmMem);
             DeleteDC(hdcMem);
 
             EndPaint(hWnd, &ps);
-            break;
+            return 0;
         }
 
-        case WM_ERASEBKGND:
-            return 1;
-
-        case WM_DESTROY: {
+        case WM_DESTROY:
             KillTimer(hWnd, TIMER_ID);
             if (g_hFontTitle) DeleteObject(g_hFontTitle);
-            if (g_hFontBold) DeleteObject(g_hFontBold);
             if (g_hFontNormal) DeleteObject(g_hFontNormal);
             if (g_hFontSmall) DeleteObject(g_hFontSmall);
+            if (g_hFontBold) DeleteObject(g_hFontBold);
             PostQuitMessage(0);
-            break;
-        }
+            return 0;
 
         default:
-            return DefWindowProcA(hWnd, msg, wParam, lParam);
+            return DefWindowProc(hWnd, message, wParam, lParam);
     }
-    return 0;
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-    WNDCLASSEXA wc = {0};
-    wc.cbSize = sizeof(WNDCLASSEXA);
-    wc.style = CS_HREDRAW | CS_VREDRAW;
-    wc.lpfnWndProc = WndProc;
-    wc.hInstance = hInstance;
-    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = NULL;
-    wc.lpszClassName = "KSubmarineClass";
+    WNDCLASSEXA wcex;
+    memset(&wcex, 0, sizeof(wcex));
+    wcex.cbSize = sizeof(WNDCLASSEXA);
+    wcex.style = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc = WndProc;
+    wcex.hInstance = hInstance;
+    wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wcex.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+    wcex.lpszClassName = "KSubmarineClass";
 
-    if (!RegisterClassExA(&wc)) return 0;
+    if (!RegisterClassExA(&wcex)) return 1;
 
-    int winW = 1040;
-    int winH = 740;
-    int screenW = GetSystemMetrics(SM_CXSCREEN);
-    int screenH = GetSystemMetrics(SM_CYSCREEN);
-    int posX = max(0, (screenW - winW) / 2);
-    int posY = max(0, (screenH - winH) / 2);
-
-    g_hWnd = CreateWindowExA(
-        WS_EX_APPWINDOW,
+    HWND hWnd = CreateWindowA(
         "KSubmarineClass",
-        "KSubmarine - Bathyscaphe Submersible Dashboard & Deep Trench Exploration",
-        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-        posX, posY, winW, winH,
+        "KSubmarine - Bathyscaphe Deep-Sea Submersible Dashboard",
+        WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT, 1080, 680,
         NULL, NULL, hInstance, NULL
     );
 
-    if (!g_hWnd) return 0;
+    if (!hWnd) return 1;
 
-    ShowWindow(g_hWnd, nCmdShow);
-    UpdateWindow(g_hWnd);
+    ShowWindow(hWnd, nCmdShow);
+    UpdateWindow(hWnd);
 
     MSG msg;
-    while (GetMessageA(&msg, NULL, 0, 0)) {
+    while (GetMessage(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
-        DispatchMessageA(&msg);
+        DispatchMessage(&msg);
     }
 
     return (int)msg.wParam;

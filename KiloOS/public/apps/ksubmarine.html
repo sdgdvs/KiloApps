@@ -18,6 +18,7 @@
             --accent-emerald: #10b981;
             --accent-amber: #f59e0b;
             --accent-red: #ef4444;
+            --accent-violet: #a855f7;
             --gauge-bg: #03101c;
             --btn-bg: #0c2438;
             --btn-hover: #163b5c;
@@ -40,6 +41,7 @@
             --accent-emerald: #34d399;
             --accent-amber: #fbbf24;
             --accent-red: #f87171;
+            --accent-violet: #c084fc;
             --gauge-bg: #02120b;
             --btn-bg: #0d2e20;
             --btn-hover: #164d36;
@@ -62,6 +64,7 @@
             --accent-emerald: #34d399;
             --accent-amber: #f59e0b;
             --accent-red: #f87171;
+            --accent-violet: #f472b6;
             --gauge-bg: #140b03;
             --btn-bg: #301d0a;
             --btn-hover: #4d2f10;
@@ -84,6 +87,7 @@
             --accent-emerald: #94a3b8;
             --accent-amber: #e2e8f0;
             --accent-red: #f87171;
+            --accent-violet: #e2e8f0;
             --gauge-bg: #090b0e;
             --btn-bg: #19212c;
             --btn-hover: #2b384a;
@@ -319,6 +323,7 @@
             gap: 8px;
             flex: 1;
             min-height: 0;
+            position: relative;
         }
 
         .sonar-viewport {
@@ -352,11 +357,28 @@
             padding: 4px 8px;
             border-radius: 3px;
             border: 1px solid rgba(19, 60, 90, 0.5);
+            z-index: 2;
         }
 
         .sonar-overlay span {
             color: var(--text-bright);
             font-weight: bold;
+        }
+
+        .sonar-target-hud {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            width: 220px;
+            background: rgba(7, 23, 36, 0.85);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 6px 8px;
+            font-size: 9px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 2;
         }
 
         .sonar-depth-marker {
@@ -369,18 +391,21 @@
             background: rgba(7, 23, 36, 0.85);
             padding: 3px 8px;
             border-radius: 3px;
+            z-index: 2;
         }
 
         .sonar-mode-tag {
             position: absolute;
             top: 8px;
-            right: 10px;
+            left: 50%;
+            transform: translateX(-50%);
             font-size: 10px;
             color: var(--accent-emerald);
             background: rgba(7, 23, 36, 0.8);
             border: 1px solid var(--border-panel);
             padding: 2px 6px;
             border-radius: 2px;
+            z-index: 2;
         }
 
         .controls-grid {
@@ -465,6 +490,12 @@
             color: var(--accent-emerald);
         }
 
+        .log-entry.leviathan {
+            color: #f43f5e;
+            font-weight: bold;
+            text-shadow: 0 0 6px rgba(244, 63, 94, 0.4);
+        }
+
         footer {
             background-color: var(--bg-panel-header);
             border-top: 1px solid var(--border-panel);
@@ -496,11 +527,11 @@
             padding: 2px 0;
         }
 
-        /* Engineering Bay Styles */
-        .engineering-view {
+        /* Engineering & Codex View Overlays */
+        .overlay-view {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(1, 8, 14, 0.95);
+            background: rgba(1, 8, 14, 0.96);
             padding: 10px;
             display: none;
             flex-direction: column;
@@ -509,11 +540,11 @@
             z-index: 5;
         }
 
-        .engineering-view.active {
+        .overlay-view.active {
             display: flex;
         }
 
-        .eng-header-row {
+        .overlay-header-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -631,6 +662,61 @@
             border-color: var(--border-panel);
             color: var(--text-dim);
         }
+
+        /* Fauna Codex Grid */
+        .codex-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 8px;
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .codex-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .codex-card.scanned {
+            border-color: rgba(0, 210, 255, 0.4);
+            box-shadow: 0 0 8px rgba(0, 210, 255, 0.08);
+        }
+
+        .codex-card.unscanned {
+            opacity: 0.65;
+            border-style: dashed;
+        }
+
+        .codex-card:hover {
+            border-color: var(--border-glow);
+        }
+
+        .codex-card-hdr {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .codex-type-badge {
+            font-size: 8px;
+            font-weight: bold;
+            padding: 2px 5px;
+            border-radius: 2px;
+            text-transform: uppercase;
+        }
+
+        .type-fauna { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid #38bdf8; }
+        .type-squid { background: rgba(244, 114, 182, 0.2); color: #f472b6; border: 1px solid #f472b6; }
+        .type-flora { background: rgba(52, 211, 153, 0.2); color: #34d399; border: 1px solid #34d399; }
+        .type-trench { background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid #fbbf24; }
+        .type-leviathan { background: rgba(239, 68, 68, 0.25); color: #f87171; border: 1px solid #ef4444; font-weight: 900; }
     </style>
 </head>
 <body class="theme-abyss">
@@ -766,15 +852,16 @@
             </div>
         </section>
 
-        <!-- CENTER PANEL: ACTIVE SONAR, TRENCH NAVIGATION & ENGINEERING -->
+        <!-- CENTER PANEL: ACTIVE SONAR, TRENCH NAVIGATION, CODEX & ENGINEERING -->
         <section class="center-stage">
-            <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between; background: var(--bg-panel-header); border: 1px solid var(--border-panel); padding: 4px 8px; border-radius: 3px;">
+            <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between; background: var(--bg-panel-header); border: 1px solid var(--border-panel); padding: 4px 8px; border-radius: 3px; flex-wrap: wrap;">
                 <div style="display: flex; gap: 6px;">
                     <button id="viewSonarBtn" class="active-toggle">📡 ACTIVE SONAR</button>
-                    <button id="viewNavMapBtn">🗺️ TRENCH NAVIGATION CHART</button>
+                    <button id="viewNavMapBtn">🗺️ TRENCH NAV</button>
+                    <button id="viewCodexBtn">🧬 FAUNA CODEX</button>
                     <button id="viewEngineeringBtn">⚙️ ENGINEERING BAY</button>
                 </div>
-                <div style="font-size: 10px; color: var(--text-dim); display: flex; gap: 12px;">
+                <div style="font-size: 10px; color: var(--text-dim); display: flex; gap: 12px; align-items: center;">
                     <span>SECTOR: <b id="currentSectorName" style="color: var(--accent-sonar);">CONTINENTAL SHELF</b></span>
                     <span>SURVEY: <b id="surveyPtsVal" style="color: var(--accent-emerald);">150 PTS</b></span>
                 </div>
@@ -782,6 +869,8 @@
 
             <div class="sonar-viewport">
                 <canvas id="sonarCanvas"></canvas>
+                
+                <!-- Telemetry Coordinates Overlay -->
                 <div class="sonar-overlay" id="sonarOverlay">
                     <div>HEADING: <span id="headingVal">042° NE</span></div>
                     <div>SURGE SPEED: <span id="speedVal">0.0 KTS</span></div>
@@ -789,14 +878,55 @@
                     <div>SEABED ELEV: <span id="seabedDistVal">250 M</span></div>
                     <div>WAYPOINT: <span id="waypointInfoVal">WP-1: Emerald Kelp Shelf</span></div>
                 </div>
+
+                <!-- Active Sonar Target Telemetry HUD -->
+                <div class="sonar-target-hud" id="sonarTargetHud">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-panel); padding-bottom: 2px;">
+                        <span style="font-weight: bold; color: var(--text-bright);">🎯 TARGET TRACKER</span>
+                        <span id="targetStatusBadge" style="color: var(--accent-emerald); font-weight: bold;">LOCKED</span>
+                    </div>
+                    <div>NAME: <b id="tgtNameVal" style="color: var(--accent-sonar);">Megamouth Filter Shark</b></div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>CLASS: <b id="tgtTypeVal" style="color: var(--text-bright);">FAUNA</b></span>
+                        <span>DIST: <b id="tgtDistVal" style="color: var(--accent-emerald);">520 m</b></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>LUMENS: <b id="tgtLumensVal">120 LUX</b></span>
+                        <span>FREQ: <b id="tgtFreqVal">180 HZ</b></span>
+                    </div>
+                    <div class="gauge-bar-track" style="height: 8px; margin-top: 2px;">
+                        <div class="gauge-bar-fill" id="scanProgressBar" style="width: 0%; background: var(--accent-emerald);"></div>
+                    </div>
+                    <div style="display: flex; gap: 4px; margin-top: 2px;">
+                        <button id="btnHudNextTarget" style="flex: 1; padding: 3px; font-size: 9px;">NEXT [TAB]</button>
+                        <button id="btnHudScanTarget" style="flex: 1; padding: 3px; font-size: 9px; border-color: var(--accent-emerald); color: var(--accent-emerald); font-weight: bold;">🔬 BIO-SCAN</button>
+                    </div>
+                </div>
+
                 <div class="sonar-mode-tag" id="sonarModeTag">MODE: 360° PLAN SWEEP</div>
                 <div class="sonar-depth-marker" id="sonarStatusText">
                     ACTIVE SONAR: READY
                 </div>
 
+                <!-- FAUNA & ANOMALIES CODEX OVERLAY -->
+                <div class="overlay-view" id="codexView">
+                    <div class="overlay-header-row">
+                        <div>
+                            <span style="font-weight: bold; color: var(--text-bright); font-size: 11px;">ABYSSAL FAUNA & HYDROTHERMAL ANOMALIES CODEX</span>
+                            <span style="font-size: 10px; color: var(--text-dim); margin-left: 8px;" id="codexCountText">0 / 12 CATALOGED (0%)</span>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <div class="eng-credits-badge" id="codexCreditsDisplay">RESEARCH CREDITS: 150 PTS</div>
+                        </div>
+                    </div>
+                    <div class="codex-grid" id="codexGrid">
+                        <!-- Dynamic Fauna Cards generated via JS -->
+                    </div>
+                </div>
+
                 <!-- ENGINEERING BAY OVERLAY -->
-                <div class="engineering-view" id="engineeringView">
-                    <div class="eng-header-row">
+                <div class="overlay-view" id="engineeringView">
+                    <div class="overlay-header-row">
                         <div>
                             <span style="font-weight: bold; color: var(--text-bright); font-size: 11px;">SUBMERSIBLE ENGINEERING & WORKSHOP</span>
                             <span style="font-size: 10px; color: var(--text-dim); margin-left: 8px;">Upgrade critical deep-sea systems using survey credits</span>
@@ -905,6 +1035,15 @@
                 <span>CMD-CTRL</span>
             </div>
             <div class="panel-body">
+                <!-- SONAR TARGET SCANNER (PHASE 7) -->
+                <div class="gauge-group">
+                    <span style="font-size: 10px; color: var(--text-dim); font-weight: bold;">SONAR CONTACT TRACKER & BIO-SCAN</span>
+                    <div class="controls-grid">
+                        <button class="btn-large" id="btnLockTarget" style="grid-column: span 2; border-color: var(--accent-sonar); color: var(--accent-sonar);">🎯 TARGET LOCK: NONE</button>
+                        <button class="btn-large" id="btnScanTarget" style="grid-column: span 2; border-color: var(--accent-emerald); color: var(--accent-emerald); font-weight: bold;">🔬 BIO-ACOUSTIC SCAN TARGET</button>
+                    </div>
+                </div>
+
                 <!-- TRENCH NAVIGATION & SECTOR STEERING -->
                 <div class="gauge-group">
                     <span style="font-size: 10px; color: var(--text-dim); font-weight: bold;">OCEAN NAVIGATION & WAYPOINTS</span>
@@ -956,12 +1095,12 @@
 
                 <!-- QUICK MISSION OBJECTIVE -->
                 <div class="gauge-group">
-                    <span style="font-size: 10px; color: var(--text-dim); font-weight: bold;">EXPEDITION OBJECTIVES</span>
+                    <span style="font-size: 10px; color: var(--text-dim); font-weight: bold;">EXPEDITION DIRECTIVES</span>
                     <div style="background: var(--bg-deep); border: 1px solid var(--border-panel); padding: 6px; border-radius: 3px; font-size: 10px; line-height: 1.4;">
-                        <div>• Steer through <b>Continental Shelf</b> (0-200m)</div>
-                        <div>• Navigate <b>Twilight Canyon</b> & <b>Hydrothermal Smokers</b></div>
+                        <div>• Detect & Scan <b>Abyssal Leviathans</b> & <b>Squids</b></div>
+                        <div>• Catalog <b>Hydrothermal Flora</b> & <b>Rift Faults</b></div>
                         <div>• Dive into <b>Mariana Hadal Trench</b> (4000m+)</div>
-                        <div>• Survey abyssal landmarks for research points</div>
+                        <div>• Complete <b>12/12 Fauna Codex Discoveries</b></div>
                     </div>
                 </div>
             </div>
@@ -969,7 +1108,7 @@
     </main>
 
     <footer>
-        <div>DSV ABYSS VOYAGER // BATHYSCAPHE CORE OS v2.0</div>
+        <div>DSV ABYSS VOYAGER // BATHYSCAPHE CORE OS v2.1 [FAUNA SCANNER ONLINE]</div>
         <div>GLOBAL LOC: 32°14.8' N, 164°22.1' W | MARIANA TRENCH SECTOR</div>
     </footer>
 
@@ -1069,6 +1208,62 @@
                 } catch(e) {}
             }
 
+            // Phase 7 Leviathan & Biological Vocalization Sound
+            function playLeviathanSong() {
+                if (!soundEnabled) return;
+                try {
+                    initAudio();
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    const now = audioCtx.currentTime;
+                    const osc1 = audioCtx.createOscillator();
+                    const osc2 = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc1.type = 'sawtooth';
+                    osc1.frequency.setValueAtTime(55, now);
+                    osc1.frequency.exponentialRampToValueAtTime(110, now + 1.2);
+                    osc1.frequency.exponentialRampToValueAtTime(45, now + 2.4);
+
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(165, now);
+                    osc2.frequency.exponentialRampToValueAtTime(220, now + 1.0);
+                    osc2.frequency.exponentialRampToValueAtTime(130, now + 2.4);
+
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.5);
+
+                    osc1.connect(gain);
+                    osc2.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc1.start(now);
+                    osc2.start(now);
+                    osc1.stop(now + 2.5);
+                    osc2.stop(now + 2.5);
+                } catch(e) {}
+            }
+
+            function playBioScanChirp() {
+                if (!soundEnabled) return;
+                try {
+                    initAudio();
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    const now = audioCtx.currentTime;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(1200, now);
+                    osc.frequency.exponentialRampToValueAtTime(2400, now + 0.15);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.35);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } catch(e) {}
+            }
+
             // --- BATHYSCAPHE SIMULATION STATE ---
             const SECTORS = [
                 {
@@ -1137,7 +1332,90 @@
                 { name: 'Abyssal Siren Deep', sectorIdx: 3, x: 9.8, y: 10.5, targetDepth: 10500 }
             ];
 
-            // --- UPGRADE MODULE DEFINITIONS (PHASE 6) ---
+            // --- FAUNA & ABYSSAL ANOMALIES CATALOG (PHASE 7) ---
+            const FAUNA_CATALOG = [
+                // Sector 0: Continental Shelf (0-200m)
+                {
+                    id: 'f01', name: 'Megamouth Filter Shark', type: 'fauna', sectorIdx: 0,
+                    depth: 120, x: 0.8, y: 1.2, vx: 0.04, vy: 0.02,
+                    desc: 'Rare epipelagic shark with luminescent photophores along its upper jaw to lure micro-plankton.',
+                    lumens: '120 LUX (CYAN)', freq: '180 HZ LOW', behavior: 'Docile Plankton Grazer', pts: 60, discovered: false
+                },
+                {
+                    id: 'f02', name: 'Bioluminescent Kelp Flora', type: 'flora', sectorIdx: 0,
+                    depth: 85, x: 1.8, y: -0.6, vx: 0, vy: 0,
+                    desc: 'Chemosynthetic emerald algae anchored on shallow granite shelves glowing with phosphorus chloroplasts.',
+                    lumens: '340 LUX (EMERALD)', freq: '0 HZ (STATIC)', behavior: 'Photosynthetic Benthic Organism', pts: 50, discovered: false
+                },
+                {
+                    id: 'f03', name: 'Pygmy Cuttlefish Pod', type: 'squid', sectorIdx: 0,
+                    depth: 165, x: -1.5, y: 2.2, vx: -0.05, vy: 0.03,
+                    desc: 'Small translucent cephalopod swarm displaying shifting iridescent chromatic ripples across their mantles.',
+                    lumens: '210 LUX (AMBER)', freq: '420 HZ PULSE', behavior: 'Skittish Schooling Cephalopods', pts: 70, discovered: false
+                },
+
+                // Sector 1: Twilight Drop-Off (200-1000m)
+                {
+                    id: 'f04', name: 'Crown Medusa Swarm', type: 'fauna', sectorIdx: 1,
+                    depth: 620, x: 3.8, y: -1.4, vx: 0.02, vy: -0.03,
+                    desc: 'Colossal mesopelagic scyphozoan jellyfish pulsating with concentric ultraviolet flash patterns.',
+                    lumens: '480 LUX (VIOLET)', freq: '95 HZ OSC', behavior: 'Drifting Mesopelagic Cnidarian', pts: 90, discovered: false
+                },
+                {
+                    id: 'f05', name: 'Bioluminescent Glass Squid', type: 'squid', sectorIdx: 1,
+                    depth: 480, x: 2.2, y: -3.8, vx: 0.06, vy: 0.04,
+                    desc: 'Mesopelagic cranchiid squid with crystal-clear mantle and twin bioluminescent photophore eyes.',
+                    lumens: '380 LUX (AZURE)', freq: '640 HZ CLICKS', behavior: 'Inquisitive Midwater Predator', pts: 100, discovered: false
+                },
+                {
+                    id: 'f06', name: 'Basalt Canyon Tectonic Fault', type: 'trench', sectorIdx: 1,
+                    depth: 840, x: 4.8, y: -2.6, vx: 0, vy: 0,
+                    desc: 'Massive vertical subsea tectonic fissure echoing with groaning sub-crustal seismic frequencies.',
+                    lumens: '40 LUX (INFRARED)', freq: '24 HZ SUB-BASS', behavior: 'Active Tectonic Fault Zone', pts: 120, discovered: false
+                },
+
+                // Sector 2: Hydrothermal Vents (1000-4000m)
+                {
+                    id: 'f07', name: 'Giant Riftia Tube Worms', type: 'flora', sectorIdx: 2,
+                    depth: 2350, x: -5.0, y: -5.4, vx: 0, vy: 0,
+                    desc: 'Extremophile chemosynthetic worm spires thriving in 350°C superheated mineral-rich plume chimneys.',
+                    lumens: '180 LUX (RUBY)', freq: '60 HZ THERMAL', behavior: 'Hydrothermal Extremophile Community', pts: 140, discovered: false
+                },
+                {
+                    id: 'f08', name: 'Colossal Architeuthis Squid', type: 'squid', sectorIdx: 2,
+                    depth: 1750, x: -3.2, y: -7.5, vx: -0.08, vy: 0.05,
+                    desc: '14-meter deep-sea squid with bioluminescent feeding tentacles and massive dinner-plate optical organs.',
+                    lumens: '550 LUX (DEEP CYAN)', freq: '120 HZ RESONANCE', behavior: 'Territorial Abyssal Apex Hunter', pts: 180, discovered: false
+                },
+                {
+                    id: 'f09', name: 'Phantom Gulper Eel', type: 'fauna', sectorIdx: 2,
+                    depth: 3100, x: -4.5, y: -9.0, vx: 0.04, vy: -0.06,
+                    desc: 'Serpentine abyssal predator possessing an enormous expandable jaw and a glowing pink caudal photophore.',
+                    lumens: '290 LUX (MAGENTA)', freq: '310 HZ CHIRP', behavior: 'Elusive Deep-Water Stalker', pts: 160, discovered: false
+                },
+
+                // Sector 3: Mariana Hadal Chasm (4000-11000m)
+                {
+                    id: 'f10', name: 'Abyssal Siren Leviathan', type: 'leviathan', sectorIdx: 3,
+                    depth: 7600, x: 8.0, y: 6.8, vx: 0.07, vy: -0.05,
+                    desc: 'Colossal primordial hadal megafauna resembling an armored serpentine whale, vibrating the abyss with harmonic sub-bass songs.',
+                    lumens: '920 LUX (HARMONIC GOLD)', freq: '18 HZ INFRASOUND', behavior: 'Ancient Primordial Titan (Revered)', pts: 300, discovered: false
+                },
+                {
+                    id: 'f11', name: 'Bioluminescent Ghost Flora', type: 'flora', sectorIdx: 3,
+                    depth: 9200, x: 9.2, y: 8.5, vx: 0, vy: 0,
+                    desc: 'Translucent silicate mycelium clinging to hadal basalt walls, pulsing with pale cyan bio-electricity.',
+                    lumens: '420 LUX (PALE CYAN)', freq: '0 HZ (STATIC)', behavior: 'Silicate Hadal Chemosynthesis', pts: 220, discovered: false
+                },
+                {
+                    id: 'f12', name: 'Challenger Deep Subduction Rift', type: 'trench', sectorIdx: 3,
+                    depth: 10850, x: 10.2, y: 11.0, vx: 0, vy: 0,
+                    desc: 'The deepest tectonic subduction rupture on planet Earth, echoing with gravitational and acoustic distortion.',
+                    lumens: '150 LUX (GRAVITATIONAL)', freq: '8 HZ INFRASOUND', behavior: 'Primordial Abyssal Abyss', pts: 400, discovered: false
+                }
+            ];
+
+            // --- UPGRADE MODULE DEFINITIONS ---
             const UPGRADES = {
                 hull: [
                     { tier: 1, name: 'MK I - STANDARD', cost: 0, crushDepth: 4500, maxHull: 100, desc: 'Reinforced alloy bathysphere envelope. Standard epipelagic rating.' },
@@ -1184,12 +1462,12 @@
                 activeWaypointIdx: 0,
                 autopilot: false,
                 surveyPoints: 150,     // Research credits
-                viewMode: 'sonar',     // 'sonar', 'navmap', or 'engineering'
+                viewMode: 'sonar',     // 'sonar', 'navmap', 'codex', or 'engineering'
                 breadcrumbs: [],       // history trail of [x, y]
                 seabedElevation: 250.0,
                 milestones: { 200: false, 1000: false, 4000: false, 6000: false, 10000: false },
 
-                // Module Upgrades (Phase 6)
+                // Module Upgrades
                 upgrades: {
                     hull: 1,
                     ballast: 1,
@@ -1203,6 +1481,12 @@
                 passiveBatteryRegen: 0.0,
                 surveyMultiplier: 1.0,
                 opticalRange: 250.0,
+
+                // Phase 7: Sonar Target Locking & Bio-Scan
+                selectedTargetIdx: 0,
+                isScanning: false,
+                scanProgress: 0.0,
+                contacts: [],
 
                 // Vital systems
                 hull: 100.0,           // % integrity
@@ -1231,19 +1515,13 @@
                 waterIntrusionRate: 0.0,
 
                 // Environment
-                temp: 21.4,            // Celsius (drops with depth, rises near hydrothermal vents)
+                temp: 21.4,            // Celsius
                 salinity: 35.0,        // PSU
 
-                // Sonar & Contacts
+                // Sonar
                 isPinging: false,
                 pingRadius: 0.0,
-                sonarGain: 1.0,
-                contacts: [
-                    { angle: 0.8, dist: 0.55, type: 'terrain', label: 'Volcanic Ridge' },
-                    { angle: 2.3, dist: 0.38, type: 'fauna', label: 'Megamouth Echo' },
-                    { angle: 4.2, dist: 0.72, type: 'wreck', label: 'Derelict Probe' },
-                    { angle: 5.6, dist: 0.85, type: 'vent', label: 'Hydrothermal Smoker' }
-                ]
+                sonarGain: 1.0
             };
 
             // DOM Elements
@@ -1286,9 +1564,18 @@
             const zoneTag = document.getElementById('zoneTag');
             const terminalLog = document.getElementById('terminalLog');
 
-            // Engineering Elements
+            // Overlays & Views
             const engineeringView = document.getElementById('engineeringView');
+            const codexView = document.getElementById('codexView');
+            const codexGrid = document.getElementById('codexGrid');
+            const codexCountText = document.getElementById('codexCountText');
+            const codexCreditsDisplay = document.getElementById('codexCreditsDisplay');
+            const viewSonarBtn = document.getElementById('viewSonarBtn');
+            const viewNavMapBtn = document.getElementById('viewNavMapBtn');
+            const viewCodexBtn = document.getElementById('viewCodexBtn');
             const viewEngineeringBtn = document.getElementById('viewEngineeringBtn');
+
+            // Engineering Elements
             const engCreditsDisplay = document.getElementById('engCreditsDisplay');
             const btnFieldDiagnostic = document.getElementById('btnFieldDiagnostic');
             const hullTierBadge = document.getElementById('hullTierBadge');
@@ -1312,13 +1599,25 @@
             const lightsSurveyStat = document.getElementById('lightsSurveyStat');
             const btnUpgradeLights = document.getElementById('btnUpgradeLights');
 
+            // Sonar Target Tracker HUD Elements
+            const sonarTargetHud = document.getElementById('sonarTargetHud');
+            const targetStatusBadge = document.getElementById('targetStatusBadge');
+            const tgtNameVal = document.getElementById('tgtNameVal');
+            const tgtTypeVal = document.getElementById('tgtTypeVal');
+            const tgtDistVal = document.getElementById('tgtDistVal');
+            const tgtLumensVal = document.getElementById('tgtLumensVal');
+            const tgtFreqVal = document.getElementById('tgtFreqVal');
+            const scanProgressBar = document.getElementById('scanProgressBar');
+            const btnHudNextTarget = document.getElementById('btnHudNextTarget');
+            const btnHudScanTarget = document.getElementById('btnHudScanTarget');
+            const btnLockTarget = document.getElementById('btnLockTarget');
+            const btnScanTarget = document.getElementById('btnScanTarget');
+
             // Interactive Buttons
             const themeSelect = document.getElementById('themeSelect');
             const scanlineToggleBtn = document.getElementById('scanlineToggleBtn');
             const soundToggleBtn = document.getElementById('soundToggleBtn');
             const emergencyBlowBtn = document.getElementById('emergencyBlowBtn');
-            const viewSonarBtn = document.getElementById('viewSonarBtn');
-            const viewNavMapBtn = document.getElementById('viewNavMapBtn');
             const btnNextWaypoint = document.getElementById('btnNextWaypoint');
             const btnAutopilot = document.getElementById('btnAutopilot');
             const btnSurveySector = document.getElementById('btnSurveySector');
@@ -1374,41 +1673,46 @@
             }
 
             // --- VIEW MODE TOGGLES ---
-            viewSonarBtn.addEventListener('click', () => {
-                state.viewMode = 'sonar';
-                viewSonarBtn.classList.add('active-toggle');
-                viewNavMapBtn.classList.remove('active-toggle');
-                viewEngineeringBtn.classList.remove('active-toggle');
-                document.getElementById('sonarOverlay').style.display = 'block';
+            function setViewMode(mode) {
+                state.viewMode = mode;
+                [viewSonarBtn, viewNavMapBtn, viewCodexBtn, viewEngineeringBtn].forEach(b => b.classList.remove('active-toggle'));
                 engineeringView.classList.remove('active');
-                sonarModeTag.textContent = 'MODE: 360° PLAN SWEEP';
-                playBeep(450, 'sine', 0.08);
-            });
-
-            viewNavMapBtn.addEventListener('click', () => {
-                state.viewMode = 'navmap';
-                viewNavMapBtn.classList.add('active-toggle');
-                viewSonarBtn.classList.remove('active-toggle');
-                viewEngineeringBtn.classList.remove('active-toggle');
-                document.getElementById('sonarOverlay').style.display = 'block';
-                engineeringView.classList.remove('active');
-                sonarModeTag.textContent = 'MODE: 2D BATHYMETRY CHART';
-                playBeep(520, 'sine', 0.08);
-            });
-
-            viewEngineeringBtn.addEventListener('click', () => {
-                state.viewMode = 'engineering';
-                viewEngineeringBtn.classList.add('active-toggle');
-                viewSonarBtn.classList.remove('active-toggle');
-                viewNavMapBtn.classList.remove('active-toggle');
+                codexView.classList.remove('active');
                 document.getElementById('sonarOverlay').style.display = 'none';
-                engineeringView.classList.add('active');
-                sonarModeTag.textContent = 'MODE: ENGINEERING WORKSHOP';
-                renderEngineeringUI();
-                playBeep(580, 'sine', 0.08);
-            });
+                sonarTargetHud.style.display = 'none';
 
-            // --- ENGINEERING UPGRADES & RESEARCH (PHASE 6) ---
+                if (mode === 'sonar') {
+                    viewSonarBtn.classList.add('active-toggle');
+                    document.getElementById('sonarOverlay').style.display = 'block';
+                    sonarTargetHud.style.display = 'flex';
+                    sonarModeTag.textContent = 'MODE: 360° PLAN SWEEP';
+                    playBeep(450, 'sine', 0.08);
+                } else if (mode === 'navmap') {
+                    viewNavMapBtn.classList.add('active-toggle');
+                    document.getElementById('sonarOverlay').style.display = 'block';
+                    sonarModeTag.textContent = 'MODE: 2D BATHYMETRY CHART';
+                    playBeep(520, 'sine', 0.08);
+                } else if (mode === 'codex') {
+                    viewCodexBtn.classList.add('active-toggle');
+                    codexView.classList.add('active');
+                    sonarModeTag.textContent = 'MODE: ABYSSAL FAUNA CODEX';
+                    renderCodexUI();
+                    playBeep(620, 'sine', 0.08);
+                } else if (mode === 'engineering') {
+                    viewEngineeringBtn.classList.add('active-toggle');
+                    engineeringView.classList.add('active');
+                    sonarModeTag.textContent = 'MODE: ENGINEERING WORKSHOP';
+                    renderEngineeringUI();
+                    playBeep(580, 'sine', 0.08);
+                }
+            }
+
+            viewSonarBtn.addEventListener('click', () => setViewMode('sonar'));
+            viewNavMapBtn.addEventListener('click', () => setViewMode('navmap'));
+            viewCodexBtn.addEventListener('click', () => setViewMode('codex'));
+            viewEngineeringBtn.addEventListener('click', () => setViewMode('engineering'));
+
+            // --- ENGINEERING UPGRADES & RESEARCH ---
             function applyUpgradeStats() {
                 const hDef = UPGRADES.hull[state.upgrades.hull - 1];
                 state.crushDepth = hDef.crushDepth;
@@ -1430,6 +1734,7 @@
             function renderEngineeringUI() {
                 engCreditsDisplay.textContent = `RESEARCH CREDITS: ${state.surveyPoints} PTS`;
                 surveyPtsVal.textContent = `${state.surveyPoints} PTS`;
+                codexCreditsDisplay.textContent = `RESEARCH CREDITS: ${state.surveyPoints} PTS`;
 
                 // Hull UI
                 const hTier = state.upgrades.hull;
@@ -1528,6 +1833,168 @@
                 logMessage(`Submersible diagnostic telemetry executed. Sensor calibration verified (+35 Research Credits).`, 'info');
             });
 
+            // --- FAUNA CODEX SYSTEM (PHASE 7) ---
+            function renderCodexUI() {
+                const discoveredCount = FAUNA_CATALOG.filter(f => f.discovered).length;
+                const total = FAUNA_CATALOG.length;
+                const pct = Math.round((discoveredCount / total) * 100);
+                codexCountText.textContent = `${discoveredCount} / ${total} CATALOGED (${pct}%)`;
+
+                codexGrid.innerHTML = '';
+                FAUNA_CATALOG.forEach(f => {
+                    const card = document.createElement('div');
+                    card.className = `codex-card ${f.discovered ? 'scanned' : 'unscanned'}`;
+                    
+                    const secName = SECTORS[f.sectorIdx].name;
+                    const typeClass = `type-${f.type}`;
+                    
+                    if (f.discovered) {
+                        card.innerHTML = `
+                            <div class="codex-card-hdr">
+                                <span style="font-weight: bold; font-size: 11px; color: var(--text-bright);">${f.name}</span>
+                                <span class="codex-type-badge ${typeClass}">${f.type}</span>
+                            </div>
+                            <div style="font-size: 9px; color: var(--text-dim);">${secName} (${f.depth}m)</div>
+                            <div style="font-size: 9px; color: var(--text-primary); line-height: 1.3;">${f.desc}</div>
+                            <div class="eng-stat-row">
+                                <span>LUMINESCENCE:</span>
+                                <b>${f.lumens}</b>
+                            </div>
+                            <div class="eng-stat-row">
+                                <span>BEHAVIOR:</span>
+                                <b>${f.behavior}</b>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 9px; color: var(--accent-emerald);">
+                                <span>STATUS: SCANNED</span>
+                                <b>+${Math.round(f.pts * state.surveyMultiplier)} PTS YIELD</b>
+                            </div>
+                        `;
+                    } else {
+                        card.innerHTML = `
+                            <div class="codex-card-hdr">
+                                <span style="font-weight: bold; font-size: 11px; color: var(--text-dim);">[UNDISCOVERED CONTACT]</span>
+                                <span class="codex-type-badge ${typeClass}">${f.type}</span>
+                            </div>
+                            <div style="font-size: 9px; color: var(--text-dim);">${secName} (~${f.depth}m)</div>
+                            <div style="font-size: 9px; color: var(--text-dim); font-style: italic;">Acoustic return detected on active sonar. Steer to depth and initiate bio-scan.</div>
+                            <div class="eng-stat-row">
+                                <span>ACOUSTIC FREQ:</span>
+                                <b>${f.freq}</b>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 9px; color: var(--accent-amber);">
+                                <span>STATUS: UNVERIFIED</span>
+                                <b>REWARD: +${f.pts} PTS</b>
+                            </div>
+                        `;
+                    }
+                    codexGrid.appendChild(card);
+                });
+            }
+
+            // --- ACTIVE SONAR TARGET LOCKING & BIO-SCAN ENGINE (PHASE 7) ---
+            function getSectorFauna() {
+                return FAUNA_CATALOG.filter(f => f.sectorIdx === state.currentSectorIdx);
+            }
+
+            function cycleTarget() {
+                const sFauna = getSectorFauna();
+                if (sFauna.length === 0) return;
+                state.selectedTargetIdx = (state.selectedTargetIdx + 1) % sFauna.length;
+                updateTargetHUD();
+                playBeep(700, 'triangle', 0.08, 0.12);
+            }
+
+            function updateTargetHUD() {
+                const sFauna = getSectorFauna();
+                if (sFauna.length === 0) {
+                    tgtNameVal.textContent = 'NO CONTACTS IN SECTOR';
+                    targetStatusBadge.textContent = 'STANDBY';
+                    btnLockTarget.textContent = '🎯 TARGET LOCK: NONE';
+                    return;
+                }
+
+                if (state.selectedTargetIdx >= sFauna.length) state.selectedTargetIdx = 0;
+                const target = sFauna[state.selectedTargetIdx];
+
+                const dx = target.x - state.posX;
+                const dy = target.y - state.posY;
+                const distKm = Math.sqrt(dx * dx + dy * dy);
+                const distM = Math.round(distKm * 1000);
+                const depthDiff = Math.abs(Math.round(state.depth - target.depth));
+
+                tgtNameVal.textContent = target.discovered ? target.name : `CONTACT [${target.id.toUpperCase()}] ${target.type.toUpperCase()}`;
+                tgtTypeVal.textContent = target.type.toUpperCase();
+                tgtDistVal.textContent = `${distM}m (ΔZ: ${depthDiff}m)`;
+                tgtLumensVal.textContent = target.lumens;
+                tgtFreqVal.textContent = target.freq;
+
+                targetStatusBadge.textContent = target.discovered ? 'SCANNED' : (distM < 800 && depthDiff < 300 ? 'IN SCAN RANGE' : 'TRACKING');
+                targetStatusBadge.style.color = target.discovered ? 'var(--accent-emerald)' : (distM < 800 && depthDiff < 300 ? 'var(--accent-sonar)' : 'var(--accent-amber)');
+
+                btnLockTarget.textContent = `🎯 LOCKED: ${target.discovered ? target.name.substring(0, 16) : target.id.toUpperCase()} (${distM}m)`;
+            }
+
+            function initiateBioScan() {
+                const sFauna = getSectorFauna();
+                if (sFauna.length === 0) return;
+                const target = sFauna[state.selectedTargetIdx];
+
+                const dx = target.x - state.posX;
+                const dy = target.y - state.posY;
+                const distKm = Math.sqrt(dx * dx + dy * dy);
+                const distM = Math.round(distKm * 1000);
+                const depthDiff = Math.abs(Math.round(state.depth - target.depth));
+                const scanRange = Math.max(900, state.opticalRange * 1.8);
+
+                if (distM > scanRange || depthDiff > 450) {
+                    playBeep(220, 'square', 0.2);
+                    logMessage(`TARGET OUT OF BIO-SCAN RANGE: ${target.name} is ${distM}m away (Depth Δ: ${depthDiff}m). Steer closer!`, 'warning');
+                    return;
+                }
+
+                if (state.isScanning) return;
+                state.isScanning = true;
+                state.scanProgress = 0;
+                logMessage(`🔬 Bio-acoustic hydrophone scan initiated on [${target.name}]. Emitting focused pulse...`, 'info');
+                playBioScanChirp();
+
+                let scanInterval = setInterval(() => {
+                    state.scanProgress += 25;
+                    scanProgressBar.style.width = `${state.scanProgress}%`;
+                    playBeep(600 + state.scanProgress * 8, 'sine', 0.08, 0.08);
+
+                    if (state.scanProgress >= 100) {
+                        clearInterval(scanInterval);
+                        state.isScanning = false;
+                        scanProgressBar.style.width = '0%';
+
+                        if (!target.discovered) {
+                            target.discovered = true;
+                            const ptsAwarded = Math.round(target.pts * state.surveyMultiplier);
+                            state.surveyPoints += ptsAwarded;
+                            renderEngineeringUI();
+
+                            if (target.type === 'leviathan') {
+                                playLeviathanSong();
+                                logMessage(`🚨 MAJESTIC LEVIATHAN ENCOUNTER CATALOGED: [${target.name}]! ${target.desc} (+${ptsAwarded} Research Credits)`, 'leviathan');
+                            } else {
+                                playBeep(1100, 'triangle', 0.4, 0.25);
+                                logMessage(`🧬 BIO-ACOUSTIC SCAN COMPLETE: [${target.name}]! ${target.desc} (+${ptsAwarded} Research Credits)`, 'discovery');
+                            }
+                        } else {
+                            logMessage(`Bio-acoustic telemetry updated: [${target.name}] health & frequency signature verified.`, 'info');
+                        }
+
+                        updateTargetHUD();
+                    }
+                }, 300);
+            }
+
+            btnHudNextTarget.addEventListener('click', cycleTarget);
+            btnLockTarget.addEventListener('click', cycleTarget);
+            btnHudScanTarget.addEventListener('click', initiateBioScan);
+            btnScanTarget.addEventListener('click', initiateBioScan);
+
             // --- WAYPOINTS & AUTOPILOT ---
             function updateWaypointUI() {
                 const wp = WAYPOINTS[state.activeWaypointIdx];
@@ -1583,7 +2050,7 @@
 
                 if (!discoveredAny) {
                     playBeep(320, 'triangle', 0.1);
-                    logMessage(`Hydrophone & optical survey scan complete. Optical Range: ${state.opticalRange}m. Steer closer to waypoints.`, 'info');
+                    logMessage(`Hydrophone & optical survey scan complete. Optical Range: ${state.opticalRange}m. Steer closer to waypoints or fauna.`, 'info');
                 }
                 renderEngineeringUI();
             });
@@ -1627,12 +2094,21 @@
                     state.pingRadius = 0;
                     state.battery = Math.max(0, state.battery - 0.2);
                     playSonarPingSound();
-                    logMessage(`Active sonar ping pulse generated. Omnidirectional listening...`, 'discovery');
+                    logMessage(`Active sonar ping pulse generated. Omnidirectional listening for abyssal contacts...`, 'discovery');
                     sonarStatusText.textContent = 'ACTIVE SONAR: PING EMITTED';
                     sonarStatusText.style.color = 'var(--accent-sonar)';
 
-                    state.contacts.forEach(c => {
-                        playEchoReturnSound(c.dist);
+                    const sFauna = getSectorFauna();
+                    sFauna.forEach(f => {
+                        const dx = f.x - state.posX;
+                        const dy = f.y - state.posY;
+                        const distKm = Math.sqrt(dx * dx + dy * dy);
+                        if (distKm <= 2.0) {
+                            playEchoReturnSound(distKm / 2.0);
+                            if (f.type === 'leviathan' && Math.random() < 0.5) {
+                                setTimeout(playLeviathanSong, 900);
+                            }
+                        }
                     });
                 }
             });
@@ -1753,10 +2229,12 @@
             applyThemeSettings();
             updateWaypointUI();
             renderEngineeringUI();
+            updateTargetHUD();
 
             // --- SIMULATION PHYSICS & NAVIGATION TICK ---
             let lastTime = performance.now();
             let breadcrumbTimer = 0;
+            let faunaRoamTimer = 0;
 
             function updateSimulation(dt) {
                 // 1. Buoyancy & Depth Physics
@@ -1828,6 +2306,21 @@
                     breadcrumbTimer = 0;
                     state.breadcrumbs.push({ x: state.posX, y: state.posY });
                     if (state.breadcrumbs.length > 40) state.breadcrumbs.shift();
+                }
+
+                // Fauna Dynamic Roaming & Movement
+                faunaRoamTimer += dt;
+                if (faunaRoamTimer >= 0.2) {
+                    faunaRoamTimer = 0;
+                    FAUNA_CATALOG.forEach(f => {
+                        if (f.vx !== 0 || f.vy !== 0) {
+                            f.x += f.vx * 0.01;
+                            f.y += f.vy * 0.01;
+                            // Rebound in local zone
+                            if (Math.abs(f.x) > 14) f.vx *= -1;
+                            if (Math.abs(f.y) > 14) f.vy *= -1;
+                        }
+                    });
                 }
 
                 // 3. Dynamic Seabed Bathymetry Calculation
@@ -1924,8 +2417,9 @@
                 }
                 state.temp = ambientTemp + thermalBoost;
 
-                // 9. Update UI Gauges
+                // 9. Update UI Gauges & Target HUD
                 renderTelemetryUI();
+                updateTargetHUD();
             }
 
             function renderTelemetryUI() {
@@ -2129,34 +2623,106 @@
                 ctx.lineTo(cx + Math.cos(headingRad) * (18 * dpr), cy + Math.sin(headingRad) * (18 * dpr));
                 ctx.stroke();
 
-                // Sonar Contacts
-                state.contacts.forEach(c => {
-                    const cX = cx + Math.cos(c.angle) * (maxR * c.dist);
-                    const cY = cy + Math.sin(c.angle) * (maxR * c.dist);
-                    
-                    const angleDiff = Math.abs(sweepAngle - c.angle);
-                    const isSwept = angleDiff < 0.2 || (state.isPinging && Math.abs(state.pingRadius - maxR * c.dist) < 25);
+                // Sonar Contacts from Current Sector Fauna (Phase 7)
+                const sFauna = getSectorFauna();
+                sFauna.forEach((c, idx) => {
+                    // Compute position relative to submarine (maxR represents 2.0 km radius)
+                    const relX = (c.x - state.posX) / 2.0;
+                    const relY = (c.y - state.posY) / 2.0;
+                    const distNorm = Math.sqrt(relX * relX + relY * relY);
 
-                    if (isSwept) {
-                        ctx.fillStyle = palette.contactActive;
-                        ctx.shadowColor = palette.contactActive;
-                        ctx.shadowBlur = 10;
+                    if (distNorm > 1.05) return; // outside radar screen
+
+                    const cX = cx + relX * maxR;
+                    const cY = cy + relY * maxR;
+                    
+                    const angleToC = (Math.atan2(relY, relX) + Math.PI * 2) % (Math.PI * 2);
+                    const angleDiff = Math.abs(sweepAngle - angleToC);
+                    const isSwept = angleDiff < 0.25 || (state.isPinging && Math.abs(state.pingRadius - maxR * distNorm) < 25);
+                    const isSelected = idx === state.selectedTargetIdx;
+
+                    let contactColor = palette.contactActive;
+                    if (c.type === 'leviathan') contactColor = '#f43f5e';
+                    else if (c.type === 'squid') contactColor = '#f472b6';
+                    else if (c.type === 'flora') contactColor = '#34d399';
+                    else if (c.type === 'trench') contactColor = '#fbbf24';
+
+                    if (isSwept || isSelected) {
+                        ctx.fillStyle = contactColor;
+                        ctx.shadowColor = contactColor;
+                        ctx.shadowBlur = isSelected ? 14 : 8;
                         ctx.beginPath();
-                        ctx.arc(cX, cY, 5 * dpr, 0, Math.PI * 2);
-                        ctx.fill();
+                        
+                        if (c.type === 'leviathan') {
+                            // Large multi-arc leviathan echo
+                            ctx.arc(cX, cY, 7 * dpr, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.strokeStyle = '#f43f5e';
+                            ctx.lineWidth = 1.5 * dpr;
+                            ctx.beginPath();
+                            ctx.arc(cX, cY, 12 * dpr, sweepAngle - 0.6, sweepAngle + 0.6);
+                            ctx.stroke();
+                        } else if (c.type === 'squid') {
+                            ctx.arc(cX, cY, 5 * dpr, 0, Math.PI * 2);
+                            ctx.fill();
+                        } else if (c.type === 'flora') {
+                            ctx.rect(cX - 4 * dpr, cY - 4 * dpr, 8 * dpr, 8 * dpr);
+                            ctx.fill();
+                        } else {
+                            ctx.arc(cX, cY, 4.5 * dpr, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
                         ctx.shadowBlur = 0;
 
+                        // Contact labels
                         ctx.fillStyle = palette.textBright;
-                        ctx.font = `bold ${9 * dpr}px monospace`;
-                        ctx.fillText(c.label, cX + 8 * dpr, cY - 4 * dpr);
-                        ctx.font = `${8 * dpr}px monospace`;
+                        ctx.font = `bold ${8.5 * dpr}px monospace`;
+                        const displayName = c.discovered ? c.name : `[${c.type.toUpperCase()}]`;
+                        ctx.fillText(displayName, cX + 8 * dpr, cY - 4 * dpr);
+                        
+                        ctx.font = `${7.5 * dpr}px monospace`;
                         ctx.fillStyle = palette.ringText;
-                        ctx.fillText(`${Math.round(c.dist * 2000)}m`, cX + 8 * dpr, cY + 8 * dpr);
+                        ctx.fillText(`${Math.round(distNorm * 2000)}m`, cX + 8 * dpr, cY + 7 * dpr);
                     } else {
                         ctx.fillStyle = palette.contactDim;
                         ctx.beginPath();
                         ctx.arc(cX, cY, 3 * dpr, 0, Math.PI * 2);
                         ctx.fill();
+                    }
+
+                    // Targeting Reticle for Selected Contact
+                    if (isSelected) {
+                        ctx.strokeStyle = '#38bdf8';
+                        ctx.lineWidth = 1.5 * dpr;
+                        const boxS = 10 * dpr;
+                        
+                        // Corner brackets
+                        ctx.beginPath();
+                        ctx.moveTo(cX - boxS, cY - boxS + 4 * dpr);
+                        ctx.lineTo(cX - boxS, cY - boxS);
+                        ctx.lineTo(cX - boxS + 4 * dpr, cY - boxS);
+
+                        ctx.moveTo(cX + boxS - 4 * dpr, cY - boxS);
+                        ctx.lineTo(cX + boxS, cY - boxS);
+                        ctx.lineTo(cX + boxS, cY - boxS + 4 * dpr);
+
+                        ctx.moveTo(cX + boxS, cY + boxS - 4 * dpr);
+                        ctx.lineTo(cX + boxS, cY + boxS);
+                        ctx.lineTo(cX + boxS - 4 * dpr, cY + boxS);
+
+                        ctx.moveTo(cX - boxS + 4 * dpr, cY + boxS);
+                        ctx.lineTo(cX - boxS, cY + boxS);
+                        ctx.lineTo(cX - boxS, cY + boxS - 4 * dpr);
+                        ctx.stroke();
+
+                        // Target vector line from center to locked contact
+                        ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+                        ctx.setLineDash([3 * dpr, 3 * dpr]);
+                        ctx.beginPath();
+                        ctx.moveTo(cx, cy);
+                        ctx.lineTo(cX, cY);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
                     }
                 });
             }
@@ -2249,7 +2815,6 @@
                         ctx.fillText(`${wp.targetDepth}m`, wx + 8 * dpr, wy + 7 * dpr);
 
                         if (isTarget) {
-                            // Target course line from Submarine to active Waypoint
                             ctx.strokeStyle = palette.accentAmber;
                             ctx.setLineDash([4 * dpr, 4 * dpr]);
                             ctx.beginPath();
@@ -2296,7 +2861,7 @@
 
                 if (state.viewMode === 'sonar') {
                     drawSonarView(w, h, cx, cy, dpr, maxR, palette);
-                } else {
+                } else if (state.viewMode === 'navmap') {
                     drawNavMapChart(w, h, cx, cy, dpr, palette);
                 }
             }
@@ -2317,4 +2882,3 @@
     </script>
 </body>
 </html>
-
