@@ -70,15 +70,29 @@ int kbActive = 0;
 float blitzTimeWhite = 180.0f;
 float blitzTimeBlack = 180.0f;
 
-// Particles & Slide animation
+// Multi-Layer Kinematic Particles & Concentric Shockwaves
 typedef struct {
     float x, y, vx, vy;
+    float prevX, prevY;
     COLORREF color;
-    int life;
-    int type;
+    int life, maxLife;
+    int layer; // 0=Needle spark, 1=Smoke puff, 2=Heavy shard, 3=Star
+    float size;
+    float rot, rotSpeed;
+    float drag, gravity;
 } Particle;
-Particle g_particles[256];
+Particle g_particles[512];
 int g_particleCount = 0;
+
+typedef struct {
+    float x, y, r, maxR, speed;
+    int life, maxLife;
+    COLORREF color;
+    int width;
+    int tier; // 0=inner compression, 1=outer dispersion halo
+} Shockwave;
+Shockwave g_shockwaves[64];
+int g_shockwaveCount = 0;
 
 typedef struct {
     int p;
@@ -87,10 +101,24 @@ typedef struct {
     DWORD startTime;
     DWORD duration;
     int isCapture;
+    int capturedType;
+    int isPromotion;
 } SlideAnim;
 SlideAnim g_slide = {0};
+
 DWORD g_shakeUntil = 0;
+DWORD g_shakeStartTime = 0;
+DWORD g_shakeDuration = 450;
 int g_shakeMag = 0;
+float g_shakeRot = 0.0f;
+
+static void TriggerScreenShake(int mag, DWORD duration, float rot) {
+    g_shakeMag = mag;
+    g_shakeDuration = duration;
+    g_shakeStartTime = GetTickCount();
+    g_shakeUntil = g_shakeStartTime + duration;
+    g_shakeRot = rot;
+}
 
 // Freestanding CRT replacements
 static unsigned int g_seed = 12345;
@@ -181,28 +209,188 @@ static void SaveStatsFreestanding(void) {
     }
 }
 
-static void SpawnParticles(int px, int py, int isCapture) {
-    COLORREF capColors[] = { RGB(245, 158, 11), RGB(239, 68, 68), RGB(254, 240, 138), RGB(255, 255, 255), RGB(56, 189, 248) };
-    COLORREF dustColors[] = { RGB(210, 180, 140), RGB(180, 150, 100), RGB(139, 69, 19) };
-    int count = isCapture ? 60 : 20;
-    for (int i = 0; i < count; i++) {
-        if (g_particleCount >= 256) break;
-        int isSmoke = isCapture && (my_rand() % 100 < 30);
-        int isCore = isCapture && !isSmoke && (my_rand() % 100 < 20);
-        float rx = (float)((my_rand() % 100) - 50) / 10.0f;
-        float ry = (float)((my_rand() % 100) - 50) / 10.0f;
-        float speedMod = isCapture ? 1.5f : 0.8f;
-        if (isSmoke) speedMod *= 0.5f;
-        if (isCore) speedMod *= 0.2f;
+static float my_sin(float a) {
+    while (a < -3.14159f) a += 6.28318f;
+    while (a > 3.14159f) a -= 6.28318f;
+    float a2 = a * a;
+    return a * (1.0f - a2 * (0.166666f - a2 * 0.008333f));
+}
+
+static float my_cos(float a) {
+    return my_sin(a + 1.570796f);
+}
+
+static void SpawnShockwave(int x, int y, float maxR, COLORREF color, float speed) {
+    if (g_shockwaveCount < 62) {
+        // Inner compression wave
+        g_shockwaves[g_shockwaveCount].x = (float)x;
+        g_shockwaves[g_shockwaveCount].y = (float)y;
+        g_shockwaves[g_shockwaveCount].r = 6.0f;
+        g_shockwaves[g_shockwaveCount].maxR = maxR * 0.75f;
+        g_shockwaves[g_shockwaveCount].speed = speed * 1.3f;
+        g_shockwaves[g_shockwaveCount].life = 25;
+        g_shockwaves[g_shockwaveCount].maxLife = 25;
+        g_shockwaves[g_shockwaveCount].color = color;
+        g_shockwaves[g_shockwaveCount].width = 3;
+        g_shockwaves[g_shockwaveCount].tier = 0;
+        g_shockwaveCount++;
+
+        // Outer dispersion halo
+        g_shockwaves[g_shockwaveCount].x = (float)x;
+        g_shockwaves[g_shockwaveCount].y = (float)y;
+        g_shockwaves[g_shockwaveCount].r = 2.0f;
+        g_shockwaves[g_shockwaveCount].maxR = maxR;
+        g_shockwaves[g_shockwaveCount].speed = speed * 0.9f;
+        g_shockwaves[g_shockwaveCount].life = 35;
+        g_shockwaves[g_shockwaveCount].maxLife = 35;
+        g_shockwaves[g_shockwaveCount].color = color;
+        g_shockwaves[g_shockwaveCount].width = 2;
+        g_shockwaves[g_shockwaveCount].tier = 1;
+        g_shockwaveCount++;
+    }
+}
+
+static void SpawnParticlesEx(int px, int py, int isCapture, int capturedType, int isPromotion) {
+    COLORREF capColors[] = { RGB(245, 158, 11), RGB(239, 68, 68), RGB(254, 240, 138), RGB(255, 255, 255), RGB(251, 146, 60) };
+    COLORREF promoColors[] = { RGB(254, 240, 138), RGB(255, 255, 255), RGB(56, 189, 248), RGB(94, 234, 212) };
+    COLORREF shardColors[] = { RGB(241, 245, 249), RGB(203, 213, 225), RGB(166, 103, 67), RGB(92, 43, 17), RGB(212, 175, 55), RGB(100, 116, 139) };
+    COLORREF smokeColors[] = { RGB(100, 116, 139), RGB(71, 85, 105), RGB(51, 65, 85), RGB(180, 140, 90) };
+
+    int needleCount = isCapture ? 36 : (isPromotion ? 45 : 16);
+    int smokeCount = isCapture ? 18 : (isPromotion ? 24 : 8);
+    int shardCount = isCapture ? 20 : (isPromotion ? 18 : 6);
+    int starCount = (isCapture && capturedType >= 4) ? 14 : (isPromotion ? 18 : (isCapture ? 8 : 4));
+
+    // Layer 0: Incandescent Needle sparks
+    for (int i = 0; i < needleCount; i++) {
+        if (g_particleCount >= 510) break;
+        float angle = (float)(my_rand() % 628) / 100.0f;
+        float speed = (isCapture || isPromotion) ? (3.0f + (float)(my_rand() % 45) / 10.0f) : (1.0f + (float)(my_rand() % 25) / 10.0f);
         g_particles[g_particleCount].x = (float)px;
         g_particles[g_particleCount].y = (float)py;
-        g_particles[g_particleCount].vx = rx * speedMod;
-        g_particles[g_particleCount].vy = (ry - (isCapture ? 1.0f : 0.2f)) * speedMod;
-        g_particles[g_particleCount].color = isSmoke ? RGB(100, 110, 120) : (isCapture ? capColors[my_rand() % 5] : dustColors[my_rand() % 3]);
-        g_particles[g_particleCount].life = (isCapture ? 30 : 15) + my_rand() % 20;
-        g_particles[g_particleCount].type = isSmoke ? 1 : (isCore ? 2 : 0);
+        g_particles[g_particleCount].prevX = (float)px;
+        g_particles[g_particleCount].prevY = (float)py;
+        g_particles[g_particleCount].vx = (float)(my_cos(angle) * speed);
+        g_particles[g_particleCount].vy = (float)(my_sin(angle) * speed - (isCapture ? 1.0f : 0.2f));
+        g_particles[g_particleCount].color = isPromotion ? promoColors[my_rand() % 4] : (isCapture ? capColors[my_rand() % 5] : RGB(210, 180, 140));
+        g_particles[g_particleCount].life = 25 + my_rand() % 15;
+        g_particles[g_particleCount].maxLife = g_particles[g_particleCount].life;
+        g_particles[g_particleCount].layer = 0;
+        g_particles[g_particleCount].size = 2.0f;
+        g_particles[g_particleCount].drag = 0.94f;
+        g_particles[g_particleCount].gravity = 0.0f;
+        g_particles[g_particleCount].rot = 0.0f;
+        g_particles[g_particleCount].rotSpeed = 0.0f;
         g_particleCount++;
     }
+
+    // Layer 1: Expanding Buoyant Smoke Puffs
+    for (int i = 0; i < smokeCount; i++) {
+        if (g_particleCount >= 510) break;
+        float angle = (float)(my_rand() % 628) / 100.0f;
+        float speed = 0.5f + (float)(my_rand() % 20) / 10.0f;
+        g_particles[g_particleCount].x = (float)(px + (my_rand() % 10 - 5));
+        g_particles[g_particleCount].y = (float)(py + (my_rand() % 10 - 5));
+        g_particles[g_particleCount].prevX = g_particles[g_particleCount].x;
+        g_particles[g_particleCount].prevY = g_particles[g_particleCount].y;
+        g_particles[g_particleCount].vx = (float)(my_cos(angle) * speed);
+        g_particles[g_particleCount].vy = (float)(my_sin(angle) * speed - 0.6f);
+        g_particles[g_particleCount].color = smokeColors[my_rand() % 4];
+        g_particles[g_particleCount].life = 35 + my_rand() % 20;
+        g_particles[g_particleCount].maxLife = g_particles[g_particleCount].life;
+        g_particles[g_particleCount].layer = 1;
+        g_particles[g_particleCount].size = 6.0f + (float)(my_rand() % 6);
+        g_particles[g_particleCount].drag = 0.96f;
+        g_particles[g_particleCount].gravity = -0.05f;
+        g_particles[g_particleCount].rot = 0.0f;
+        g_particles[g_particleCount].rotSpeed = 0.0f;
+        g_particleCount++;
+    }
+
+    // Layer 2: Heavy Kinematic Shards with Tumbling Rotation & Floor Bounce
+    for (int i = 0; i < shardCount; i++) {
+        if (g_particleCount >= 510) break;
+        float angle = (float)(my_rand() % 628) / 100.0f;
+        float speed = 2.0f + (float)(my_rand() % 35) / 10.0f;
+        g_particles[g_particleCount].x = (float)px;
+        g_particles[g_particleCount].y = (float)py;
+        g_particles[g_particleCount].prevX = (float)px;
+        g_particles[g_particleCount].prevY = (float)py;
+        g_particles[g_particleCount].vx = (float)(my_cos(angle) * speed);
+        g_particles[g_particleCount].vy = (float)(my_sin(angle) * speed - 2.5f);
+        g_particles[g_particleCount].color = shardColors[my_rand() % 6];
+        g_particles[g_particleCount].life = 40 + my_rand() % 25;
+        g_particles[g_particleCount].maxLife = g_particles[g_particleCount].life;
+        g_particles[g_particleCount].layer = 2;
+        g_particles[g_particleCount].size = 4.0f + (float)(my_rand() % 4);
+        g_particles[g_particleCount].drag = 0.97f;
+        g_particles[g_particleCount].gravity = 0.22f;
+        g_particles[g_particleCount].rot = (float)(my_rand() % 628) / 100.0f;
+        g_particles[g_particleCount].rotSpeed = (float)(my_rand() % 40 - 20) / 100.0f;
+        g_particleCount++;
+    }
+
+    // Layer 3: Radiant Celebration Energy Stars
+    for (int i = 0; i < starCount; i++) {
+        if (g_particleCount >= 510) break;
+        float angle = (float)(my_rand() % 628) / 100.0f;
+        float speed = 1.5f + (float)(my_rand() % 30) / 10.0f;
+        g_particles[g_particleCount].x = (float)px;
+        g_particles[g_particleCount].y = (float)py;
+        g_particles[g_particleCount].prevX = (float)px;
+        g_particles[g_particleCount].prevY = (float)py;
+        g_particles[g_particleCount].vx = (float)(my_cos(angle) * speed);
+        g_particles[g_particleCount].vy = (float)(my_sin(angle) * speed - 1.2f);
+        g_particles[g_particleCount].color = RGB(254, 240, 138);
+        g_particles[g_particleCount].life = 30 + my_rand() % 20;
+        g_particles[g_particleCount].maxLife = g_particles[g_particleCount].life;
+        g_particles[g_particleCount].layer = 3;
+        g_particles[g_particleCount].size = 5.0f + (float)(my_rand() % 4);
+        g_particles[g_particleCount].drag = 0.95f;
+        g_particles[g_particleCount].gravity = 0.0f;
+        g_particles[g_particleCount].rot = (float)(my_rand() % 628) / 100.0f;
+        g_particles[g_particleCount].rotSpeed = 0.1f;
+        g_particleCount++;
+    }
+}
+
+static void DrawFiligreeLBracket(HDC hdc, int x, int y, int w, int h, int size, COLORREF col, COLORREF rivetCol) {
+    HPEN pen = CreatePen(PS_SOLID, 2, col);
+    HBRUSH rBrush = CreateSolidBrush(rivetCol);
+    HGDIOBJ oldPen = SelectObject(hdc, pen);
+    HGDIOBJ oldBrush = SelectObject(hdc, rBrush);
+
+    int corners[4][4] = {
+        { x, y, 1, 1 },
+        { x + w, y, -1, 1 },
+        { x, y + h, 1, -1 },
+        { x + w, y + h, -1, -1 }
+    };
+
+    for (int i = 0; i < 4; i++) {
+        int cx = corners[i][0];
+        int cy = corners[i][1];
+        int dx = corners[i][2];
+        int dy = corners[i][3];
+
+        // Outer L-bracket
+        MoveToEx(hdc, cx + dx * size, cy, NULL);
+        LineTo(hdc, cx, cy);
+        LineTo(hdc, cx, cy + dy * size);
+
+        // Stepped inner notch
+        MoveToEx(hdc, cx + dx * (int)(size * 0.6f), cy + dy * 4, NULL);
+        LineTo(hdc, cx + dx * 4, cy + dy * 4);
+        LineTo(hdc, cx + dx * 4, cy + dy * (int)(size * 0.6f));
+
+        // Brass corner rivet
+        Ellipse(hdc, cx + dx * 5 - 2, cy + dy * 5 - 2, cx + dx * 5 + 3, cy + dy * 5 + 3);
+    }
+
+    SelectObject(hdc, oldBrush);
+    SelectObject(hdc, oldPen);
+    DeleteObject(rBrush);
+    DeleteObject(pen);
 }
 
 int IsSquareAttacked(int tx, int ty, int byWhite);
@@ -1328,6 +1516,19 @@ static void DrawChessPiece(HDC hdc, int p, int x, int y, int ts) {
     Ellipse(hdc, glareX, glareY, glareX + (int)(r * 0.15f), glareY + (int)(r * 0.2f));
     Ellipse(hdc, glareX - (int)(r * 0.05f), glareY + (int)(r * 0.15f), glareX + (int)(r * 0.05f), glareY + (int)(r * 0.25f));
     
+    // Diagonal Specular Sheen Sweep
+    int sheenTime = (int)((GetTickCount() + cx * 5 + cy * 5) % 2500);
+    if (sheenTime < 800) {
+        float sheenProgress = (float)sheenTime / 800.0f;
+        int sheenX = cx - (int)(r * 0.7f) + (int)((r * 1.4f) * sheenProgress);
+        HPEN sheenPen = CreatePen(PS_SOLID, 2, isWhite ? RGB(255, 255, 255) : RGB(254, 240, 138));
+        HGDIOBJ oldSheen = SelectObject(hdc, sheenPen);
+        MoveToEx(hdc, sheenX - (int)(r * 0.2f), cy + (int)(r * 0.4f), NULL);
+        LineTo(hdc, sheenX + (int)(r * 0.2f), cy - (int)(r * 0.6f));
+        SelectObject(hdc, oldSheen);
+        DeleteObject(sheenPen);
+    }
+
     SelectObject(hdc, oldBrush);
     SelectObject(hdc, oldPen);
     DeleteObject(glareBrush);
@@ -1380,6 +1581,7 @@ static void TriggerMove(HWND hwnd, int sx, int sy, int tx, int ty) {
     int p = board[sy][sx];
     int pType = p > 6 ? p - 6 : p;
     int isWhiteMove = p <= 6;
+    int isPromotion = 0;
 
     if (pType == 1 && tx == epX && ty == (isWhiteMove ? epY - 1 : epY + 1)) {
         capturedType = 1;
@@ -1389,6 +1591,10 @@ static void TriggerMove(HWND hwnd, int sx, int sy, int tx, int ty) {
 
     char san[16];
     GetSAN(sx, sy, tx, ty, p, isCaptured, san);
+
+    if (pType == 1 && ((isWhiteMove && ty == 0) || (!isWhiteMove && ty == 7))) {
+        isPromotion = 1;
+    }
 
     // Slide animation
     g_slide.p = p;
@@ -1401,6 +1607,8 @@ static void TriggerMove(HWND hwnd, int sx, int sy, int tx, int ty) {
     g_slide.startTime = GetTickCount();
     g_slide.duration = 150;
     g_slide.isCapture = isCaptured;
+    g_slide.capturedType = capturedType;
+    g_slide.isPromotion = isPromotion;
     g_slide.active = 1;
 
     board[ty][tx] = p;
@@ -1408,7 +1616,9 @@ static void TriggerMove(HWND hwnd, int sx, int sy, int tx, int ty) {
         if (isWhiteMove && ty == 0) board[ty][tx] = 5;
         else if (!isWhiteMove && ty == 7) board[ty][tx] = 11;
     }
+    int isCastling = 0;
     if (pType == 6 && my_abs(tx - sx) == 2) {
+        isCastling = 1;
         if (tx == 6) { board[ty][5] = board[ty][7]; board[ty][7] = 0; }
         else if (tx == 2) { board[ty][3] = board[ty][0]; board[ty][0] = 0; }
     }
@@ -1429,18 +1639,42 @@ static void TriggerMove(HWND hwnd, int sx, int sy, int tx, int ty) {
     board[sy][sx] = 0;
     lastMoveSx = sx; lastMoveSy = sy; lastMoveTx = tx; lastMoveTy = ty;
 
+    int targetScreenX = OX + tx * TS + TS / 2;
+    int targetScreenY = OY + ty * TS + TS / 2;
+
     if (isCaptured) {
         MessageBeep(MB_OK);
-        if (capturedType >= 2) {
-            g_shakeUntil = GetTickCount() + 500;
-            g_shakeMag = (capturedType >= 4) ? 20 : 10;
-        }
+        int mag = (capturedType >= 5) ? 24 : (capturedType >= 4 ? 18 : (capturedType >= 2 ? 14 : 9));
+        TriggerScreenShake(mag, 450, 0.025f);
+        SpawnShockwave(targetScreenX, targetScreenY, (float)(85 + capturedType * 8), capturedType >= 4 ? RGB(239, 68, 68) : RGB(245, 158, 11), 4.0f);
+    } else if (isPromotion) {
+        MessageBeep(MB_OK);
+        TriggerScreenShake(20, 500, 0.02f);
+        SpawnShockwave(targetScreenX, targetScreenY, 100.0f, RGB(94, 234, 212), 4.5f);
+    } else if (isCastling) {
+        MessageBeep(MB_OK);
+        TriggerScreenShake(10, 300, 0.01f);
+        SpawnShockwave(targetScreenX, targetScreenY, 60.0f, RGB(212, 175, 55), 3.0f);
     } else {
         MessageBeep(MB_OK);
     }
 
     whiteTurn = !whiteTurn;
     PushHistoryState(san);
+
+    // Check for check state on opponent king
+    int enemyKingX = -1, enemyKingY = -1;
+    for (int cy = 0; cy < 8; cy++) {
+        for (int cx = 0; cx < 8; cx++) {
+            if (board[cy][cx] == (whiteTurn ? 6 : 12)) {
+                enemyKingX = cx; enemyKingY = cy;
+            }
+        }
+    }
+    if (enemyKingX != -1 && IsSquareAttacked(enemyKingX, enemyKingY, !whiteTurn)) {
+        TriggerScreenShake(14, 400, 0.015f);
+        SpawnShockwave(OX + enemyKingX * TS + TS / 2, OY + enemyKingY * TS + TS / 2, 75.0f, RGB(239, 68, 68), 3.5f);
+    }
 
     int pieceCount = 0;
     int hasMinor = 0;
@@ -1471,9 +1705,13 @@ static void TriggerMove(HWND hwnd, int sx, int sy, int tx, int ty) {
         }
         if (kx != -1 && ky != -1 && IsSquareAttacked(kx, ky, !whiteTurn)) {
             winner = !whiteTurn ? 1 : 2;
+            TriggerScreenShake(26, 700, 0.035f);
+            SpawnShockwave(OX + kx * TS + TS / 2, OY + ky * TS + TS / 2, 130.0f, RGB(239, 68, 68), 5.0f);
+            SpawnParticlesEx(OX + kx * TS + TS / 2, OY + ky * TS + TS / 2, 1, 6, 1);
             if (aiMode) { if (winner == 1) statsWins++; else statsLosses++; SaveStatsFreestanding(); }
         } else {
             winner = 3;
+            TriggerScreenShake(12, 400, 0.01f);
             if (aiMode) { statsDraws++; SaveStatsFreestanding(); }
         }
     }
@@ -1656,13 +1894,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HGDIOBJ oldBM = SelectObject(memDC, memBM);
 
             SetGraphicsMode(memDC, GM_ADVANCED);
-            float shakeDx = 0.0f, shakeDy = 0.0f;
-            if (GetTickCount() < g_shakeUntil) {
-                float mag = g_shakeMag * (float)(g_shakeUntil - GetTickCount()) / 400.0f;
+            float shakeDx = 0.0f, shakeDy = 0.0f, shakeAngle = 0.0f;
+            DWORD now = GetTickCount();
+            if (now < g_shakeUntil) {
+                DWORD elapsed = now - g_shakeStartTime;
+                float progress = (float)elapsed / (float)g_shakeDuration;
+                if (progress > 1.0f) progress = 1.0f;
+                float decay = (1.0f - progress) * (1.0f - progress);
+                float mag = (float)g_shakeMag * decay;
                 shakeDx = ((float)(my_rand() % 100) / 50.0f - 1.0f) * mag;
                 shakeDy = ((float)(my_rand() % 100) / 50.0f - 1.0f) * mag;
+                shakeAngle = ((float)(my_rand() % 100) / 50.0f - 1.0f) * (g_shakeRot * decay);
             }
-            XFORM xform = { g_dpiScale, 0.0f, 0.0f, g_dpiScale, shakeDx, shakeDy };
+            float cosA = my_cos(shakeAngle);
+            float sinA = my_sin(shakeAngle);
+            float cX = (float)W * 0.5f;
+            float cY = (float)H * 0.5f;
+            XFORM xform;
+            xform.eM11 = cosA * g_dpiScale;
+            xform.eM12 = sinA * g_dpiScale;
+            xform.eM21 = -sinA * g_dpiScale;
+            xform.eM22 = cosA * g_dpiScale;
+            xform.eDx = (cX - (cX * cosA - cY * sinA) + shakeDx) * g_dpiScale;
+            xform.eDy = (cY - (cX * sinA + cY * cosA) + shakeDy) * g_dpiScale;
             SetWorldTransform(memDC, &xform);
 
             // Environmental Art: Table Surface with Wood Grain
@@ -1690,12 +1944,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(grainPen);
 
             // Dust motes
-            for (int i = 0; i < 40; i++) {
+            for (int i = 0; i < 45; i++) {
                 int mx = (i * 73 + (GetTickCount()/40) * ((i%3)+1)) % W;
                 int my = (i * 89 - (GetTickCount()/25) * ((i%2)+1)) % H;
                 if (my < 0) my += H;
-                SetPixel(memDC, mx, my, RGB(180, 150, 100));
-                SetPixel(memDC, mx+1, my, RGB(120, 90, 60));
+                SetPixel(memDC, mx, my, RGB(212, 175, 55));
+                SetPixel(memDC, mx+1, my, RGB(180, 140, 80));
             }
 
             HBRUSH frameBrush = CreateSolidBrush(RGB(45, 24, 16));
@@ -1707,10 +1961,54 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HGDIOBJ oldPen = SelectObject(memDC, goldPen);
             HGDIOBJ oldNullBrush = SelectObject(memDC, GetStockObject(NULL_BRUSH));
             RoundRect(memDC, 12, 12, W - 12, H - 12, 16, 16);
-            Rectangle(memDC, OX - 4, OY - 4, OX + TS * 8 + 4, OY + TS * 8 + 4);
             SelectObject(memDC, oldNullBrush);
             SelectObject(memDC, oldPen);
             DeleteObject(goldPen);
+
+            // Outer Frame Ornate Filigree Corner Brackets
+            DrawFiligreeLBracket(memDC, 12, 12, W - 24, H - 24, 22, RGB(212, 175, 55), RGB(254, 240, 138));
+
+            // Pulsating Golden Energy Perimeter Inlay Border
+            int pulseP = (int)((my_sin((float)now * 0.003f) + 1.0f) * 35.0f);
+            HPEN inlayPen = CreatePen(PS_SOLID, 3, RGB(212 + (pulseP / 5), 175 + (pulseP / 4), 55 + (pulseP / 2)));
+            oldPen = SelectObject(memDC, inlayPen);
+            oldNullBrush = SelectObject(memDC, GetStockObject(NULL_BRUSH));
+            RoundRect(memDC, OX - 6, OY - 6, OX + TS * 8 + 6, OY + TS * 8 + 6, 6, 6);
+            SelectObject(memDC, oldNullBrush);
+            SelectObject(memDC, oldPen);
+            DeleteObject(inlayPen);
+
+            // Board Frame Ornate Filigree Corner Brackets
+            DrawFiligreeLBracket(memDC, OX - 6, OY - 6, TS * 8 + 12, TS * 8 + 12, 16, RGB(212, 175, 55), RGB(254, 240, 138));
+
+            // Traveling Specular Glint traversing the chessboard border frame
+            int boardW = TS * 8 + 12;
+            int boardH = TS * 8 + 12;
+            int totalPerim = (boardW + boardH) * 2;
+            int glintPos = (int)(now / 8) % totalPerim;
+            int glintX = OX - 6, glintY = OY - 6;
+            if (glintPos < boardW) {
+                glintX += glintPos;
+            } else if (glintPos < boardW + boardH) {
+                glintX += boardW; glintY += (glintPos - boardW);
+            } else if (glintPos < boardW * 2 + boardH) {
+                glintX += boardW - (glintPos - boardW - boardH); glintY += boardH;
+            } else {
+                glintY += boardH - (glintPos - boardW * 2 - boardH);
+            }
+            HBRUSH glintBrush = CreateSolidBrush(RGB(255, 255, 255));
+            HBRUSH glintGold = CreateSolidBrush(RGB(254, 240, 138));
+            HPEN nullPen = CreatePen(PS_NULL, 0, 0);
+            HGDIOBJ oB = SelectObject(memDC, glintGold);
+            HGDIOBJ oP = SelectObject(memDC, nullPen);
+            Ellipse(memDC, glintX - 6, glintY - 6, glintX + 6, glintY + 6);
+            SelectObject(memDC, glintBrush);
+            Ellipse(memDC, glintX - 3, glintY - 3, glintX + 3, glintY + 3);
+            SelectObject(memDC, oB);
+            SelectObject(memDC, oP);
+            DeleteObject(glintBrush);
+            DeleteObject(glintGold);
+            DeleteObject(nullPen);
 
             int fontHeightLabel = -MulDiv(15, (int)(g_dpiScale * 96), 72);
             HFONT labelFont = CreateFontA(fontHeightLabel, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
@@ -1750,7 +2048,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             for (int y = 0; y < 8; y++) {
                 for (int x = 0; x < 8; x++) {
                     RECT rc = { OX + x * TS, OY + y * TS, OX + (x + 1) * TS, OY + (y + 1) * TS };
-                    HBRUSH brush;
                     
                     int isLight = ((x + y) % 2 == 0);
                     HBRUSH baseBrush = CreateSolidBrush(isLight ? RGB(240, 230, 210) : RGB(60, 30, 15));
@@ -1764,14 +2061,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             }
                         }
                     } else {
-                        HPEN grainPen = CreatePen(PS_SOLID, 1, RGB(45, 20, 10));
-                        oldPen = SelectObject(memDC, grainPen);
+                        HPEN grainPen2 = CreatePen(PS_SOLID, 1, RGB(45, 20, 10));
+                        oldPen = SelectObject(memDC, grainPen2);
                         for (int ty = rc.top; ty < rc.bottom; ty += 4) {
                             MoveToEx(memDC, rc.left, ty, NULL);
                             LineTo(memDC, rc.right, ty + ((x * 7) % 5) - 2);
                         }
                         SelectObject(memDC, oldPen);
-                        DeleteObject(grainPen);
+                        DeleteObject(grainPen2);
                     }
 
                     // Overlays
@@ -1781,15 +2078,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (pulse > 100) pulse = 200 - pulse; // 0 to 100
                         HPEN rPen = CreatePen(PS_SOLID, 3, RGB(239 + (pulse/10), 68 + (pulse/2), 68 + (pulse/2)));
                         HGDIOBJ oldPen3 = SelectObject(memDC, rPen);
-                        int cx = rc.left + TS/2;
-                        int cy = rc.top + TS/2;
+                        int scx = rc.left + TS/2;
+                        int scy = rc.top + TS/2;
                         int len = (int)(TS * 0.4f) + (pulse / 20);
-                        MoveToEx(memDC, cx - len, cy, NULL); LineTo(memDC, cx - len/3, cy);
-                        MoveToEx(memDC, cx + len, cy, NULL); LineTo(memDC, cx + len/3, cy);
-                        MoveToEx(memDC, cx, cy - len, NULL); LineTo(memDC, cx, cy - len/3);
-                        MoveToEx(memDC, cx, cy + len, NULL); LineTo(memDC, cx, cy + len/3);
+                        MoveToEx(memDC, scx - len, scy, NULL); LineTo(memDC, scx - len/3, scy);
+                        MoveToEx(memDC, scx + len, scy, NULL); LineTo(memDC, scx + len/3, scy);
+                        MoveToEx(memDC, scx, scy - len, NULL); LineTo(memDC, scx, scy - len/3);
+                        MoveToEx(memDC, scx, scy + len, NULL); LineTo(memDC, scx, scy + len/3);
                         HBRUSH oldNull = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
-                        Ellipse(memDC, cx - (int)(len * 0.7f), cy - (int)(len * 0.7f), cx + (int)(len * 0.7f), cy + (int)(len * 0.7f));
+                        Ellipse(memDC, scx - (int)(len * 0.7f), scy - (int)(len * 0.7f), scx + (int)(len * 0.7f), scy + (int)(len * 0.7f));
                         SelectObject(memDC, oldNull);
                         SelectObject(memDC, oldPen3);
                         DeleteObject(rPen);
@@ -1890,13 +2187,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 HBRUSH orbBrush = CreateSolidBrush(RGB(253, 230, 138));
                 HGDIOBJ oldBrushO = SelectObject(memDC, orbBrush);
-                HPEN nullPen = CreatePen(PS_NULL, 0, 0);
-                oldPenP = SelectObject(memDC, nullPen);
+                HPEN nullPen2 = CreatePen(PS_NULL, 0, 0);
+                oldPenP = SelectObject(memDC, nullPen2);
                 Ellipse(memDC, orbX - 4, orbY - 4, orbX + 4, orbY + 4);
                 SelectObject(memDC, oldPenP);
                 SelectObject(memDC, oldBrushO);
                 DeleteObject(orbBrush);
-                DeleteObject(nullPen);
+                DeleteObject(nullPen2);
             }
 
             if (hintActive && hintSx != -1 && hintTx != -1) {
@@ -1919,18 +2216,83 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawChessPiece(memDC, g_slide.p, (int)g_slide.curX, (int)g_slide.curY, TS);
             }
 
+            // Render Concentric Shockwaves
+            for (int i = 0; i < g_shockwaveCount; i++) {
+                if (g_shockwaves[i].life > 0) {
+                    float lifeFrac = (float)g_shockwaves[i].life / (float)g_shockwaves[i].maxLife;
+                    int penW = (int)((float)g_shockwaves[i].width * lifeFrac) + 1;
+                    HPEN swPen = CreatePen(PS_SOLID, penW, g_shockwaves[i].color);
+                    HGDIOBJ oldSwPen = SelectObject(memDC, swPen);
+                    HGDIOBJ oldSwBrush = SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                    int r = (int)g_shockwaves[i].r;
+                    Ellipse(memDC, (int)g_shockwaves[i].x - r, (int)g_shockwaves[i].y - r, (int)g_shockwaves[i].x + r, (int)g_shockwaves[i].y + r);
+                    SelectObject(memDC, oldSwBrush);
+                    SelectObject(memDC, oldSwPen);
+                    DeleteObject(swPen);
+                }
+            }
+
+            // Render Multi-Layer Kinematic Particles (Needle, Smoke, Shards, Stars)
             for (int i = 0; i < g_particleCount; i++) {
                 if (g_particles[i].life > 0) {
-                    HBRUSH pBrush = CreateSolidBrush(g_particles[i].color);
-                    HGDIOBJ oldPBrush = SelectObject(memDC, pBrush);
-                    HPEN oldPPen = SelectObject(memDC, GetStockObject(NULL_PEN));
-                    int size = (g_particles[i].life > 10) ? 3 : 2;
-                    if (g_particles[i].type == 1) size += (g_particles[i].life / 5);
-                    else if (g_particles[i].type == 2) size += 2;
-                    Ellipse(memDC, (int)g_particles[i].x - size, (int)g_particles[i].y - size, (int)g_particles[i].x + size, (int)g_particles[i].y + size);
-                    SelectObject(memDC, oldPPen);
-                    SelectObject(memDC, oldPBrush);
-                    DeleteObject(pBrush);
+                    if (g_particles[i].layer == 0) { // Needle Spark
+                        HPEN nPen = CreatePen(PS_SOLID, 2, g_particles[i].color);
+                        HGDIOBJ oldNPen = SelectObject(memDC, nPen);
+                        MoveToEx(memDC, (int)g_particles[i].prevX, (int)g_particles[i].prevY, NULL);
+                        LineTo(memDC, (int)g_particles[i].x, (int)g_particles[i].y);
+                        SelectObject(memDC, oldNPen);
+                        DeleteObject(nPen);
+                    } else if (g_particles[i].layer == 1) { // Smoke Puff
+                        HBRUSH smBrush = CreateSolidBrush(g_particles[i].color);
+                        HGDIOBJ oldSmBrush = SelectObject(memDC, smBrush);
+                        HPEN nullP = CreatePen(PS_NULL, 0, 0);
+                        HGDIOBJ oldNullP = SelectObject(memDC, nullP);
+                        int sz = (int)g_particles[i].size;
+                        Ellipse(memDC, (int)g_particles[i].x - sz, (int)g_particles[i].y - sz, (int)g_particles[i].x + sz, (int)g_particles[i].y + sz);
+                        SelectObject(memDC, oldNullP);
+                        SelectObject(memDC, oldSmBrush);
+                        DeleteObject(smBrush);
+                        DeleteObject(nullP);
+                    } else if (g_particles[i].layer == 2) { // Heavy Shard
+                        HBRUSH shBrush = CreateSolidBrush(g_particles[i].color);
+                        HPEN shPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
+                        HGDIOBJ oldShB = SelectObject(memDC, shBrush);
+                        HGDIOBJ oldShP = SelectObject(memDC, shPen);
+                        int s = (int)g_particles[i].size;
+                        float rot = g_particles[i].rot;
+                        float cosR = my_cos(rot);
+                        float sinR = my_sin(rot);
+                        POINT pts[4] = {
+                            { (int)(g_particles[i].x + (-s)*cosR - (-s*0.6f)*sinR), (int)(g_particles[i].y + (-s)*sinR + (-s*0.6f)*cosR) },
+                            { (int)(g_particles[i].x + (s*0.8f)*cosR - (-s*0.4f)*sinR), (int)(g_particles[i].y + (s*0.8f)*sinR + (-s*0.4f)*cosR) },
+                            { (int)(g_particles[i].x + (s*0.4f)*cosR - (s*0.7f)*sinR), (int)(g_particles[i].y + (s*0.4f)*sinR + (s*0.7f)*cosR) },
+                            { (int)(g_particles[i].x + (-s*0.6f)*cosR - (s*0.5f)*sinR), (int)(g_particles[i].y + (-s*0.6f)*sinR + (s*0.5f)*cosR) }
+                        };
+                        Polygon(memDC, pts, 4);
+                        SelectObject(memDC, oldShP);
+                        SelectObject(memDC, oldShB);
+                        DeleteObject(shBrush);
+                        DeleteObject(shPen);
+                    } else if (g_particles[i].layer == 3) { // Celebration Star
+                        HBRUSH stBrush = CreateSolidBrush(RGB(254, 240, 138));
+                        HPEN nullP = CreatePen(PS_NULL, 0, 0);
+                        HGDIOBJ oldStB = SelectObject(memDC, stBrush);
+                        HGDIOBJ oldNullP = SelectObject(memDC, nullP);
+                        int s = (int)g_particles[i].size;
+                        float rot = g_particles[i].rot;
+                        POINT spts[8];
+                        for (int k = 0; k < 8; k++) {
+                            float a = rot + (float)k * (3.14159f / 4.0f);
+                            float dist = (k % 2 == 0) ? (float)s : (float)s * 0.35f;
+                            spts[k].x = (int)(g_particles[i].x + my_cos(a) * dist);
+                            spts[k].y = (int)(g_particles[i].y + my_sin(a) * dist);
+                        }
+                        Polygon(memDC, spts, 8);
+                        SelectObject(memDC, oldNullP);
+                        SelectObject(memDC, oldStB);
+                        DeleteObject(stBrush);
+                        DeleteObject(nullP);
+                    }
                 }
             }
 
@@ -1982,24 +2344,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int initialCounts[] = {0, 8, 2, 2, 2, 1, 1, 8, 2, 2, 2, 1, 1};
 
             RECT capRc = { 20, 52, W - 20, 127 };
-            HBRUSH capBg = CreateSolidBrush(RGB(30, 20, 15));
+            HBRUSH capBg = CreateSolidBrush(RGB(15, 23, 42));
             FillRect(memDC, &capRc, capBg);
             DeleteObject(capBg);
-            HPEN hlPen = CreatePen(PS_SOLID, 2, RGB(100, 80, 70));
-            HPEN shPen = CreatePen(PS_SOLID, 2, RGB(10, 5, 0));
-            HGDIOBJ oPen = SelectObject(memDC, hlPen);
-            MoveToEx(memDC, capRc.left, capRc.bottom, NULL);
-            LineTo(memDC, capRc.left, capRc.top);
-            LineTo(memDC, capRc.right, capRc.top);
-            SelectObject(memDC, shPen);
-            LineTo(memDC, capRc.right, capRc.bottom);
-            LineTo(memDC, capRc.left, capRc.bottom);
+            HPEN capPen = CreatePen(PS_SOLID, 1, RGB(212, 175, 55));
+            HGDIOBJ oPen = SelectObject(memDC, capPen);
+            HGDIOBJ oBrush = SelectObject(memDC, GetStockObject(NULL_BRUSH));
+            RoundRect(memDC, capRc.left, capRc.top, capRc.right, capRc.bottom, 8, 8);
+            SelectObject(memDC, oBrush);
             SelectObject(memDC, oPen);
-            DeleteObject(hlPen);
-            DeleteObject(shPen);
+            DeleteObject(capPen);
+
+            DrawFiligreeLBracket(memDC, capRc.left, capRc.top, capRc.right - capRc.left, capRc.bottom - capRc.top, 12, RGB(212, 175, 55), RGB(254, 240, 138));
 
             int wLossVal = 0, bLossVal = 0;
-            int capX = 30;
+            int capX = 32;
             for (int p = 1; p <= 5; p++) {
                 int lost = initialCounts[p] - pieceCounts[p];
                 if (lost > 0) {
@@ -2010,7 +2369,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
             }
-            capX = 30;
+            capX = 32;
             for (int p = 7; p <= 11; p++) {
                 int lost = initialCounts[p] - pieceCounts[p];
                 if (lost > 0) {
@@ -2062,6 +2421,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SelectObject(memDC, oldNull);
                 SelectObject(memDC, oldPen);
                 DeleteObject(btnPen);
+
+                DrawFiligreeLBracket(memDC, btnRc.left, btnRc.top, btnRc.right - btnRc.left, btnRc.bottom - btnRc.top, 6, RGB(94, 234, 212), RGB(255, 255, 255));
 
                 SetTextColor(memDC, RGB(255, 255, 255));
                 DrawTextA(memDC, btns[i].text, -1, &btnRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
@@ -2206,11 +2567,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int activeParticles = 0;
                 for (int i = 0; i < g_particleCount; i++) {
                     if (g_particles[i].life > 0) {
+                        g_particles[i].prevX = g_particles[i].x;
+                        g_particles[i].prevY = g_particles[i].y;
                         g_particles[i].x += g_particles[i].vx;
                         g_particles[i].y += g_particles[i].vy;
-                        g_particles[i].vy += (g_particles[i].type == 1) ? -0.05f : 0.15f;
+                        g_particles[i].vx *= g_particles[i].drag;
+                        g_particles[i].vy *= g_particles[i].drag;
+                        g_particles[i].vy += g_particles[i].gravity;
+                        if (g_particles[i].layer == 1) g_particles[i].vy -= 0.05f;
+                        g_particles[i].rot += g_particles[i].rotSpeed;
+                        if (g_particles[i].layer == 2) {
+                            if (g_particles[i].y > (float)(OY + TS * 8 + 10)) {
+                                g_particles[i].y = (float)(OY + TS * 8 + 10);
+                                g_particles[i].vy = -g_particles[i].vy * 0.45f;
+                                g_particles[i].vx *= 0.7f;
+                            }
+                        }
                         g_particles[i].life--;
                         if (g_particles[i].life > 0) activeParticles++;
+                    }
+                }
+
+                int activeShockwaves = 0;
+                for (int i = 0; i < g_shockwaveCount; i++) {
+                    if (g_shockwaves[i].life > 0) {
+                        g_shockwaves[i].r += g_shockwaves[i].speed;
+                        g_shockwaves[i].life--;
+                        if (g_shockwaves[i].life > 0 && g_shockwaves[i].r < g_shockwaves[i].maxR) activeShockwaves++;
+                        else g_shockwaves[i].life = 0;
                     }
                 }
 
@@ -2218,7 +2602,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DWORD now = GetTickCount();
                     DWORD elapsed = now - g_slide.startTime;
                     if (elapsed >= g_slide.duration) {
-                        SpawnParticles((int)g_slide.targetX, (int)g_slide.targetY, g_slide.isCapture);
+                        SpawnParticlesEx((int)g_slide.targetX + TS/2, (int)g_slide.targetY + TS/2, g_slide.isCapture, g_slide.capturedType, g_slide.isPromotion);
                         g_slide.active = 0;
                     } else {
                         float t = (float)elapsed / (float)g_slide.duration;
@@ -2228,9 +2612,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
 
-                if (!g_slide.active && activeParticles == 0) {
+                if (!g_slide.active && activeParticles == 0 && activeShockwaves == 0 && GetTickCount() >= g_shakeUntil) {
                     KillTimer(hwnd, 2);
                     g_particleCount = 0;
+                    g_shockwaveCount = 0;
                 }
 
                 InvalidateRect(hwnd, NULL, FALSE);

@@ -175,9 +175,84 @@
   let lastMoveSx = -1, lastMoveSy = -1, lastMoveTx = -1, lastMoveTy = -1;
 
   let particles = [];
+  let shockwaves = [];
   let moveAnimation = null;
   let screenShakeUntil = 0;
   let screenShakeMag = 0;
+  let screenShakeRot = 0;
+  let screenShakeDuration = 450;
+  let screenShakeStartTime = 0;
+
+  function triggerScreenShake(mag = 15, duration = 450, rot = 0.02) {
+      screenShakeMag = mag;
+      screenShakeDuration = duration;
+      screenShakeStartTime = performance.now();
+      screenShakeUntil = screenShakeStartTime + duration;
+      screenShakeRot = rot;
+  }
+
+  function spawnShockwave(x, y, maxR = 80, color = '212, 175, 55', speed = 3.5) {
+      // Inner high-speed compression wave
+      shockwaves.push({
+          x: x, y: y,
+          r: 6, maxR: maxR * 0.75,
+          color: color,
+          width: 3.5,
+          speed: speed * 1.3,
+          life: 1.0,
+          decay: 0.035,
+          tier: 'inner'
+      });
+      // Outer dispersion halo
+      shockwaves.push({
+          x: x, y: y,
+          r: 2, maxR: maxR,
+          color: color,
+          width: 2.0,
+          speed: speed * 0.9,
+          life: 1.0,
+          decay: 0.022,
+          tier: 'outer'
+      });
+  }
+
+  function drawOrnateCornerFiligree(ctx, x, y, w, h, size = 18, color = '#d4af37', rivetColor = '#fef08a') {
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = rivetColor;
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'square';
+
+      const corners = [
+          { cx: x, cy: y, dx: 1, dy: 1 },
+          { cx: x + w, cy: y, dx: -1, dy: 1 },
+          { cx: x, cy: y + h, dx: 1, dy: -1 },
+          { cx: x + w, cy: y + h, dx: -1, dy: -1 }
+      ];
+
+      for (let c of corners) {
+          // Primary L-Bracket
+          ctx.beginPath();
+          ctx.moveTo(c.cx + c.dx * size, c.cy);
+          ctx.lineTo(c.cx, c.cy);
+          ctx.lineTo(c.cx, c.cy + c.dy * size);
+          ctx.stroke();
+
+          // Stepped inner filigree notch
+          ctx.beginPath();
+          ctx.moveTo(c.cx + c.dx * (size * 0.6), c.cy + c.dy * 4);
+          ctx.lineTo(c.cx + c.dx * 4, c.cy + c.dy * 4);
+          ctx.lineTo(c.cx + c.dx * 4, c.cy + c.dy * (size * 0.6));
+          ctx.stroke();
+
+          // Corner brass rivet
+          ctx.beginPath();
+          ctx.arc(c.cx + c.dx * 6, c.cy + c.dy * 6, 2.0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+      }
+      ctx.restore();
+  }
 
   function saveStats() {
       try {
@@ -242,25 +317,90 @@
       }
   }
 
-  function spawnCaptureSparks(px, py, isCapture) {
-      let count = isCapture ? 60 : 20;
-      for (let i = 0; i < count; i++) {
+  function spawnCaptureSparks(px, py, isCapture, capturedType = 1, isPromotion = false) {
+      const needleCount = isCapture ? 36 : (isPromotion ? 45 : 16);
+      const smokeCount = isCapture ? 18 : (isPromotion ? 24 : 8);
+      const shardCount = isCapture ? 22 : (isPromotion ? 20 : 6);
+      const starCount = (isCapture && capturedType >= 4) ? 16 : (isPromotion ? 20 : (isCapture ? 8 : 4));
+
+      // Layer 1: Incandescent core needle sparks with velocity trails and drag deceleration
+      for (let i = 0; i < needleCount; i++) {
           const angle = Math.random() * Math.PI * 2;
-          const isSmoke = isCapture && Math.random() < 0.3;
-          const isCore = isCapture && !isSmoke && Math.random() < 0.2;
-          let speed = isCapture ? (2.0 + Math.random() * 5.0) : (0.5 + Math.random() * 2.5);
-          if (isSmoke) speed *= 0.5;
-          if (isCore) speed *= 0.2;
-          const colors = isCapture ? ['#f59e0b', '#ef4444', '#fef08a', '#ffffff', '#38bdf8'] : ['#d2b48c', '#a0522d', '#cd853f'];
+          const speed = (isCapture || isPromotion) ? (3.0 + Math.random() * 6.5) : (1.0 + Math.random() * 3.0);
+          const colors = isPromotion ? ['#fef08a', '#ffffff', '#38bdf8', '#5eead4'] :
+                         (isCapture ? ['#f59e0b', '#ef4444', '#fef08a', '#ffffff', '#fb923c'] : ['#d2b48c', '#ffffff', '#fde68a']);
+          particles.push({
+              x: px, y: py,
+              prevX: px, prevY: py,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed - (isCapture ? 1.0 : 0.2),
+              color: colors[Math.floor(Math.random() * colors.length)],
+              size: 2.0 + Math.random() * 2.5,
+              life: 1.0,
+              decay: 0.025 + Math.random() * 0.035,
+              drag: 0.94,
+              layer: 'needle'
+          });
+      }
+
+      // Layer 2: Expanding buoyant smoke & plasma puffs with negative gravity and expansion growth
+      for (let i = 0; i < smokeCount; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 0.5 + Math.random() * 2.2;
+          const smokeColors = isPromotion ? ['rgba(56, 189, 248, 0.6)', 'rgba(94, 234, 212, 0.5)', 'rgba(253, 230, 138, 0.5)'] :
+                              (isCapture ? ['rgba(71, 85, 105, 0.7)', 'rgba(51, 65, 85, 0.6)', 'rgba(245, 158, 11, 0.4)'] : ['rgba(100, 116, 139, 0.5)', 'rgba(148, 163, 184, 0.4)']);
+          particles.push({
+              x: px + (Math.random() - 0.5) * 10,
+              y: py + (Math.random() - 0.5) * 10,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed - 0.6,
+              color: smokeColors[Math.floor(Math.random() * smokeColors.length)],
+              size: 6.0 + Math.random() * 6.0,
+              baseSize: 6.0 + Math.random() * 6.0,
+              life: 1.0,
+              decay: 0.018 + Math.random() * 0.02,
+              drag: 0.96,
+              layer: 'smoke'
+          });
+      }
+
+      // Layer 3: Heavy kinematic marble & mahogany shards with gravity, drag, tumbling rotation, and floor bounce
+      for (let i = 0; i < shardCount; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 2.0 + Math.random() * 5.0;
+          const shardColors = ['#f1f5f9', '#cbd5e1', '#a66743', '#5c2b11', '#d4af37', '#64748b'];
           particles.push({
               x: px, y: py,
               vx: Math.cos(angle) * speed,
-              vy: Math.sin(angle) * speed - (isCapture ? 0.8 : 0.2),
-              color: isSmoke ? '#475569' : colors[Math.floor(Math.random() * colors.length)],
-              size: (isSmoke ? 8.0 : (isCore ? 6.0 : 2.5)) + Math.random() * 3.5,
+              vy: Math.sin(angle) * speed - 2.5,
+              color: shardColors[Math.floor(Math.random() * shardColors.length)],
+              size: 3.5 + Math.random() * 4.0,
+              rot: Math.random() * Math.PI * 2,
+              rotSpeed: (Math.random() - 0.5) * 0.35,
               life: 1.0,
-              decay: (isCapture ? 0.02 : 0.05) + Math.random() * 0.03,
-              layer: isSmoke ? 'smoke' : (isCore ? 'core' : 'spark')
+              decay: 0.015 + Math.random() * 0.02,
+              drag: 0.97,
+              gravity: 0.22,
+              layer: 'shard'
+          });
+      }
+
+      // Layer 4: Radiant golden celebration energy stars
+      for (let i = 0; i < starCount; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 1.5 + Math.random() * 4.0;
+          particles.push({
+              x: px, y: py,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed - 1.2,
+              color: '#fef08a',
+              size: 4.0 + Math.random() * 4.5,
+              rot: Math.random() * Math.PI * 2,
+              rotSpeed: (Math.random() - 0.5) * 0.2,
+              life: 1.0,
+              decay: 0.02 + Math.random() * 0.025,
+              drag: 0.95,
+              layer: 'star'
           });
       }
   }
@@ -1031,6 +1171,7 @@
       let p = board[sy][sx];
       let pType = p > 6 ? p - 6 : p;
       let isWhiteMove = p <= 6;
+      let isPromotion = false;
 
       if (pType === 1 && tx === epX && ty === (isWhiteMove ? epY - 1 : epY + 1)) {
           capturedType = 1;
@@ -1040,6 +1181,10 @@
 
       let moveSAN = getSAN(sx, sy, tx, ty, p, isCaptured);
 
+      if (pType === 1 && ((isWhiteMove && ty === 0) || (!isWhiteMove && ty === 7))) {
+          isPromotion = true;
+      }
+
       moveAnimation = {
           p: p,
           fromX: OX + sx * TS + TS / 2,
@@ -1048,7 +1193,9 @@
           toY: OY + ty * TS + TS / 2,
           startTime: performance.now(),
           duration: 150,
-          isCapture: isCaptured
+          isCapture: isCaptured,
+          capturedType: capturedType,
+          isPromotion: isPromotion
       };
 
       board[ty][tx] = p;
@@ -1056,7 +1203,9 @@
           if (isWhiteMove && ty === 0) board[ty][tx] = 5;
           else if (!isWhiteMove && ty === 7) board[ty][tx] = 11;
       }
+      let isCastling = false;
       if (pType === 6 && Math.abs(tx - sx) === 2) {
+          isCastling = true;
           if (tx === 6) { board[ty][5] = board[ty][7]; board[ty][7] = 0; }
           else if (tx === 2) { board[ty][3] = board[ty][0]; board[ty][0] = 0; }
       }
@@ -1077,18 +1226,42 @@
       board[sy][sx] = 0;
       lastMoveSx = sx; lastMoveSy = sy; lastMoveTx = tx; lastMoveTy = ty;
 
+      let targetScreenX = OX + tx * TS + TS / 2;
+      let targetScreenY = OY + ty * TS + TS / 2;
+
       if (isCaptured) {
           playSound('capture');
-          if (capturedType >= 2) {
-              screenShakeUntil = performance.now() + 500;
-              screenShakeMag = (capturedType >= 4) ? 20 : 10;
-          }
+          let mag = capturedType >= 5 ? 24 : (capturedType >= 4 ? 18 : (capturedType >= 2 ? 14 : 9));
+          triggerScreenShake(mag, 450, 0.025);
+          spawnShockwave(targetScreenX, targetScreenY, 85 + capturedType * 8, capturedType >= 4 ? '239, 68, 68' : '245, 158, 11', 4.0);
+      } else if (isPromotion) {
+          playSound('check');
+          triggerScreenShake(20, 500, 0.02);
+          spawnShockwave(targetScreenX, targetScreenY, 100, '94, 234, 212', 4.5);
+      } else if (isCastling) {
+          playSound('move');
+          triggerScreenShake(10, 300, 0.01);
+          spawnShockwave(targetScreenX, targetScreenY, 60, '212, 175, 55', 3.0);
       } else {
           playSound('move');
       }
 
       whiteTurn = !whiteTurn;
       pushHistoryState(moveSAN);
+
+      // Check for Check state on opposing king
+      let enemyKingX = -1, enemyKingY = -1;
+      for (let cy = 0; cy < 8; cy++) {
+          for (let cx = 0; cx < 8; cx++) {
+              if (board[cy][cx] === (whiteTurn ? 6 : 12)) {
+                  enemyKingX = cx; enemyKingY = cy;
+              }
+          }
+      }
+      if (enemyKingX !== -1 && isSquareAttacked(enemyKingX, enemyKingY, !whiteTurn)) {
+          triggerScreenShake(14, 400, 0.015);
+          spawnShockwave(OX + enemyKingX * TS + TS / 2, OY + enemyKingY * TS + TS / 2, 75, '239, 68, 68', 3.5);
+      }
 
       // Check Insufficient Material (King vs King, King+Knight vs King, King+Bishop vs King)
       let pieces = [];
@@ -1125,10 +1298,14 @@
           if (kx !== -1 && ky !== -1 && isSquareAttacked(kx, ky, !whiteTurn)) {
               winner = !whiteTurn ? 1 : 2;
               playSound('check');
+              triggerScreenShake(26, 700, 0.035);
+              spawnShockwave(OX + kx * TS + TS / 2, OY + ky * TS + TS / 2, 130, '239, 68, 68', 5.0);
+              spawnCaptureSparks(OX + kx * TS + TS / 2, OY + ky * TS + TS / 2, true, 6, true);
               updateAriaStatus(winner === 1 ? "Checkmate! White Wins!" : "Checkmate! Black Wins!");
               if (aiMode) { if (winner === 1) statsWins++; else statsLosses++; saveStats(); }
           } else {
               winner = 3;
+              triggerScreenShake(12, 400, 0.01);
               updateAriaStatus("Stalemate!");
               if (aiMode) { statsDraws++; saveStats(); }
           }
@@ -1671,6 +1848,23 @@
           ctx.restore();
       }
 
+      // Diagonal Specular Sheen Sweep traversing piece facets
+      ctx.save();
+      let sheenTime = (performance.now() * 0.0012 + (x * 0.05) + (y * 0.05)) % 2.5;
+      if (sheenTime < 0.8) {
+          let sheenProgress = sheenTime / 0.8;
+          let sheenX = -r * 0.8 + (r * 1.6) * sheenProgress;
+          let sheenGrad = ctx.createLinearGradient(sheenX - r * 0.3, -r * 0.9, sheenX + r * 0.3, r * 0.9);
+          sheenGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+          sheenGrad.addColorStop(0.5, isWhite ? 'rgba(255, 255, 255, 0.45)' : 'rgba(254, 240, 138, 0.35)');
+          sheenGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+          ctx.fillStyle = sheenGrad;
+          ctx.beginPath();
+          ctx.ellipse(0, -r * 0.1, r * 0.7, r * 0.85, 0, 0, Math.PI * 2);
+          ctx.fill();
+      }
+      ctx.restore();
+
       // Visual Variations: Scratches / Veins based on position
       ctx.save();
       ctx.globalAlpha = 0.3;
@@ -1726,12 +1920,12 @@
   function initDustMotes() {
       if (dustMotes) return;
       dustMotes = [];
-      for (let i = 0; i < 40; i++) {
+      for (let i = 0; i < 45; i++) {
           dustMotes.push({
               x: Math.random() * W, y: Math.random() * H,
-              speed: 0.2 + Math.random() * 0.5,
+              speed: 0.2 + Math.random() * 0.45,
               phase: Math.random() * Math.PI * 2,
-              size: 0.5 + Math.random() * 1.5
+              size: 0.6 + Math.random() * 1.6
           });
       }
   }
@@ -1741,8 +1935,14 @@
       
       ctx.save();
       if (performance.now() < screenShakeUntil) {
-          let mag = screenShakeMag * ((screenShakeUntil - performance.now()) / 500);
-          ctx.translate((Math.random() - 0.5) * mag * 2.0, (Math.random() - 0.5) * mag * 2.0);
+          let elapsed = performance.now() - screenShakeStartTime;
+          let progress = Math.min(1.0, elapsed / screenShakeDuration);
+          let decay = (1.0 - progress) * (1.0 - progress);
+          let mag = screenShakeMag * decay;
+          let rot = Math.sin(performance.now() * 0.05) * screenShakeRot * decay;
+          ctx.translate(W / 2, H / 2);
+          ctx.rotate(rot);
+          ctx.translate(-W / 2 + (Math.sin(performance.now() * 0.06) * mag), -H / 2 + (Math.cos(performance.now() * 0.08) * mag));
       }
 
       // Environmental Art: 3D Ornate Table
@@ -1794,11 +1994,43 @@
       ctx.lineWidth = 2;
       ctx.stroke();
 
+      // Outer Ornate Filigree Corner Brackets
+      drawOrnateCornerFiligree(ctx, 12, 12, W - 24, H - 24, 22, '#d4af37', '#fef08a');
+
+      // Pulsating Golden Energy Perimeter Inlay Border
+      let perimeterPulse = (Math.sin(performance.now() * 0.003) + 1) * 0.5;
       ctx.beginPath();
       ctx.roundRect(OX - 6, OY - 6, TS * 8 + 12, TS * 8 + 12, 6);
-      ctx.strokeStyle = 'rgba(212, 175, 55, 0.4)';
+      ctx.strokeStyle = `rgba(212, 175, 55, ${0.45 + perimeterPulse * 0.45})`;
       ctx.lineWidth = 3;
       ctx.stroke();
+
+      // Board Frame Ornate Filigree Corner Brackets
+      drawOrnateCornerFiligree(ctx, OX - 6, OY - 6, TS * 8 + 12, TS * 8 + 12, 16, '#d4af37', '#fef08a');
+
+      // Traveling Specular Glint traversing the chessboard border frame
+      let boardW = TS * 8 + 12;
+      let boardH = TS * 8 + 12;
+      let totalPerim = (boardW + boardH) * 2;
+      let glintPos = (performance.now() * 0.12) % totalPerim;
+      let glintX = OX - 6, glintY = OY - 6;
+      if (glintPos < boardW) {
+          glintX += glintPos;
+      } else if (glintPos < boardW + boardH) {
+          glintX += boardW; glintY += (glintPos - boardW);
+      } else if (glintPos < boardW * 2 + boardH) {
+          glintX += boardW - (glintPos - boardW - boardH); glintY += boardH;
+      } else {
+          glintY += boardH - (glintPos - boardW * 2 - boardH);
+      }
+      let glintGrad = ctx.createRadialGradient(glintX, glintY, 0, glintX, glintY, 18);
+      glintGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+      glintGrad.addColorStop(0.4, 'rgba(253, 230, 138, 0.7)');
+      glintGrad.addColorStop(1, 'rgba(212, 175, 55, 0)');
+      ctx.fillStyle = glintGrad;
+      ctx.beginPath();
+      ctx.arc(glintX, glintY, 18, 0, Math.PI * 2);
+      ctx.fill();
 
       ctx.font = "bold 15px 'Inter', sans-serif";
       ctx.fillStyle = "#d4af37";
@@ -2045,22 +2277,95 @@
           drawChessPieceSprite(ctx, moveAnimation.p, curX, curY, TS, 1.0, 1.1);
 
           if (t >= 1.0) {
-              spawnCaptureSparks(moveAnimation.toX, moveAnimation.toY, moveAnimation.isCapture);
+              spawnCaptureSparks(moveAnimation.toX, moveAnimation.toY, moveAnimation.isCapture, moveAnimation.capturedType || 1, moveAnimation.isPromotion || false);
               moveAnimation = null;
           }
       }
 
+      // Render Concentric Shockwaves
+      for (let i = shockwaves.length - 1; i >= 0; i--) {
+          let sw = shockwaves[i];
+          sw.r += sw.speed;
+          sw.life -= sw.decay;
+          if (sw.life <= 0 || sw.r >= sw.maxR) { shockwaves.splice(i, 1); continue; }
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(${sw.color}, ${sw.life * 0.85})`;
+          ctx.lineWidth = sw.width * sw.life;
+          ctx.shadowColor = `rgba(${sw.color}, 0.8)`;
+          ctx.shadowBlur = 10;
+          ctx.stroke();
+          ctx.restore();
+      }
+
+      // Render Multi-Layer Kinematic Particles (Needle, Smoke, Shard, Star)
       for (let i = particles.length - 1; i >= 0; i--) {
           let pt = particles[i];
-          pt.x += pt.vx; pt.y += pt.vy; pt.vy += (pt.layer === 'smoke' ? -0.05 : 0.15); pt.life -= pt.decay;
+          pt.prevX = pt.x; pt.prevY = pt.y;
+          pt.x += pt.vx; pt.y += pt.vy;
+          if (pt.drag) { pt.vx *= pt.drag; pt.vy *= pt.drag; }
+          if (pt.gravity) pt.vy += pt.gravity;
+          if (pt.layer === 'smoke') pt.vy -= 0.05;
+          if (pt.rotSpeed) pt.rot += pt.rotSpeed;
+          if (pt.layer === 'shard') {
+              if (pt.y > OY + TS * 8 + 10) {
+                  pt.y = OY + TS * 8 + 10;
+                  pt.vy = -pt.vy * 0.45;
+                  pt.vx *= 0.7;
+              }
+          }
+          pt.life -= pt.decay;
           if (pt.life <= 0) { particles.splice(i, 1); continue; }
+
           ctx.save();
-          ctx.globalAlpha = pt.layer === 'smoke' ? pt.life * 0.5 : pt.life; 
-          ctx.fillStyle = pt.color;
-          if (pt.layer !== 'smoke') { ctx.shadowColor = pt.color; ctx.shadowBlur = 8; }
-          ctx.beginPath(); 
-          ctx.arc(pt.x, pt.y, pt.size * (pt.layer === 'smoke' ? (2.0 - pt.life) : pt.life), 0, Math.PI * 2); 
-          ctx.fill();
+          if (pt.layer === 'needle') {
+              ctx.globalAlpha = Math.min(1.0, pt.life * 1.2);
+              ctx.strokeStyle = pt.color;
+              ctx.lineWidth = pt.size * pt.life;
+              ctx.shadowColor = pt.color;
+              ctx.shadowBlur = 6;
+              ctx.beginPath();
+              ctx.moveTo(pt.prevX, pt.prevY);
+              ctx.lineTo(pt.x, pt.y);
+              ctx.stroke();
+          } else if (pt.layer === 'smoke') {
+              let curSize = pt.baseSize * (1.0 + (1.0 - pt.life) * 2.2);
+              ctx.globalAlpha = pt.life * 0.45;
+              ctx.fillStyle = pt.color;
+              ctx.beginPath();
+              ctx.arc(pt.x, pt.y, curSize, 0, Math.PI * 2);
+              ctx.fill();
+          } else if (pt.layer === 'shard') {
+              ctx.globalAlpha = Math.min(1.0, pt.life * 1.5);
+              ctx.fillStyle = pt.color;
+              ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+              ctx.lineWidth = 1;
+              ctx.translate(pt.x, pt.y);
+              ctx.rotate(pt.rot);
+              ctx.beginPath();
+              let s = pt.size;
+              ctx.moveTo(-s, -s * 0.6); ctx.lineTo(s * 0.8, -s * 0.4);
+              ctx.lineTo(s * 0.4, s * 0.7); ctx.lineTo(-s * 0.6, s * 0.5);
+              ctx.closePath();
+              ctx.fill(); ctx.stroke();
+          } else if (pt.layer === 'star') {
+              ctx.globalAlpha = Math.min(1.0, pt.life * 1.3);
+              ctx.fillStyle = pt.color;
+              ctx.shadowColor = '#f59e0b';
+              ctx.shadowBlur = 8;
+              ctx.translate(pt.x, pt.y);
+              ctx.rotate(pt.rot);
+              let s = pt.size * (0.5 + 0.5 * pt.life);
+              ctx.beginPath();
+              for (let st = 0; st < 4; st++) {
+                  ctx.lineTo(0, -s);
+                  ctx.lineTo(s * 0.25, -s * 0.25);
+                  ctx.rotate(Math.PI / 2);
+              }
+              ctx.closePath();
+              ctx.fill();
+          }
           ctx.restore();
       }
 
@@ -2100,26 +2405,19 @@
       
       ctx.save();
       let capBoxX = 20, capBoxY = 52, capBoxW = W - 40, capBoxH = 75;
-      ctx.fillStyle = "rgba(15, 23, 42, 0.6)";
-      ctx.fillRect(capBoxX, capBoxY, capBoxW, capBoxH);
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
-      ctx.lineWidth = 2;
+      ctx.fillStyle = "rgba(15, 23, 42, 0.75)";
       ctx.beginPath();
-      ctx.moveTo(capBoxX, capBoxY + capBoxH);
-      ctx.lineTo(capBoxX, capBoxY);
-      ctx.lineTo(capBoxX + capBoxW, capBoxY);
+      ctx.roundRect(capBoxX, capBoxY, capBoxW, capBoxH, 8);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(212, 175, 55, 0.5)";
+      ctx.lineWidth = 1.5;
       ctx.stroke();
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
-      ctx.beginPath();
-      ctx.moveTo(capBoxX + capBoxW, capBoxY);
-      ctx.lineTo(capBoxX + capBoxW, capBoxY + capBoxH);
-      ctx.lineTo(capBoxX, capBoxY + capBoxH);
-      ctx.stroke();
+      drawOrnateCornerFiligree(ctx, capBoxX, capBoxY, capBoxW, capBoxH, 12, '#d4af37', '#fef08a');
       ctx.restore();
 
       // Black's Captures (White pieces captured)
       ctx.textAlign = "left";
-      let startX = 30;
+      let startX = 32;
       whiteCaptured.forEach((p, idx) => {
           drawChessPieceSprite(ctx, p, startX + idx * 26, 65, 26, 0.85);
       });
@@ -2169,6 +2467,7 @@
           ctx.strokeStyle = '#5eead4';
           ctx.lineWidth = 1;
           ctx.stroke();
+          drawOrnateCornerFiligree(ctx, btn.x, btn.y, btn.w, btn.h, 6, 'rgba(94, 234, 212, 0.7)', '#ffffff');
 
           ctx.fillStyle = '#ffffff';
           ctx.fillText(btn.text, btn.x + btn.w / 2, btn.y + btn.h / 2);

@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KChess
 - KPong
 - KMines
 - KAsteroids
@@ -148,8 +147,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KFarm
 - KAlchemy
 - KRogue
+- KChess
 
 ## Completed Work Log
+
+- **KChess (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on piece captures, promotions, castling, check warnings, and checkmate explosions (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and trigonometric SetWorldTransform rotation/translation physics decay with double-buffered viewport rendering in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant smoke & plasma puffs with negative gravity and expansion growth, heavy kinematic polished marble & mahogany debris shards with tumbling rotation and floor bounce physics, and radiant golden celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer dispersion halo radiating upon piece captures, promotions, castling, and checkmate, ornate classical arcade HUD corner filigree L-brackets with brass rivet detailing on the main table border, chessboard border, captured piece tray, and action buttons, a pulsating golden energy perimeter inlay border with a traveling specular glint traversing the chessboard frame, sculpted piece highlights with diagonal specular sheen sweeps traversing chess piece bodies and crown jewel pulse effects, and ambient atmospheric floating warm dust motes in both Web Canvas (kchess.html) and Native C Win32 GDI (KChess/main.c).
 
 - **KRogue (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on critical strikes, berserk cleaves, fireball/meteor explosions, boss spawns/deaths, and fatal hits (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and trigonometric physics decay with double-buffered viewport rendering in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant smoke & plasma puffs with negative gravity and expansion growth, heavy kinematic dungeon stone & bone debris shards with tumbling rotation and floor bounce physics, and radiant golden celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer dispersion halo radiating upon meteors, berserk cleaves, and boss deaths, ornate Gothic RPG HUD corner filigree L-brackets with rivet detailing, a pulsating magical perimeter inlay border with a traveling specular glint traversing the dungeon viewport frame, sculpted player hero & monster highlights with diagonal specular sheen sweeps traversing armor, helmet crest, and weapon blades, and biome-specific ambient atmospheric floating dust motes and mystic embers (sewer spores, cave gold dust, crypt ghostly wisps, inferno embers, void particles, celestial stardust, abyss motes, sanctuary prisms) in both Web Canvas (krogue.html) and Native C Win32 GDI (KRogue/main.c).
 
