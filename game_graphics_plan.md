@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KRogue
 - KChess
 - KPong
 - KMines
@@ -148,8 +147,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KColosseum
 - KFarm
 - KAlchemy
+- KRogue
 
 ## Completed Work Log
+
+- **KRogue (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on critical strikes, berserk cleaves, fireball/meteor explosions, boss spawns/deaths, and fatal hits (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and trigonometric physics decay with double-buffered viewport rendering in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant smoke & plasma puffs with negative gravity and expansion growth, heavy kinematic dungeon stone & bone debris shards with tumbling rotation and floor bounce physics, and radiant golden celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer dispersion halo radiating upon meteors, berserk cleaves, and boss deaths, ornate Gothic RPG HUD corner filigree L-brackets with rivet detailing, a pulsating magical perimeter inlay border with a traveling specular glint traversing the dungeon viewport frame, sculpted player hero & monster highlights with diagonal specular sheen sweeps traversing armor, helmet crest, and weapon blades, and biome-specific ambient atmospheric floating dust motes and mystic embers (sewer spores, cave gold dust, crypt ghostly wisps, inferno embers, void particles, celestial stardust, abyss motes, sanctuary prisms) in both Web Canvas (krogue.html) and Native C Win32 GDI (KRogue/main.c).
 
 - **KAlchemy (Loop 7):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on transmutations, discoveries, potion brewing, retort/alembic extractions, and anvil crushing (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas, and trigonometric FastSin/FastCos physics decay with a 33ms dedicated animation timer and double-buffered viewport rendering in Native C Win32 GDI), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant smoke & steam puffs with negative gravity and expansion growth, heavy kinematic crystal shards & elemental debris with gravity, drag, and tumbling rotation physics, and radiant golden celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer dispersion halo radiating upon transmutations and discoveries, ornate arcane alchemical HUD corner filigree L-brackets with rivet detailing on all grimoire, crucible, and journal panels, a pulsating arcane energy perimeter inlay border with a traveling specular glint along the crucible frame, sculpted alchemical vessel highlights with diagonal specular sheen sweeps traversing the crucible, retort, alembic, and potion vials, and ambient atmospheric floating arcane embers and mystic dust motes in both Web Canvas (kalchemy.html) and Native C Win32 GDI (KAlchemy/main.c).
 

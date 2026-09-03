@@ -545,6 +545,24 @@
         let decals = [];
         let screenShake = 0;
         let shockwaves = [];
+        let ambientParticles = [];
+
+        function initAmbientParticles() {
+            ambientParticles = [];
+            for (let i = 0; i < 40; i++) {
+                ambientParticles.push({
+                    x: Math.random() * C_WIDTH,
+                    y: Math.random() * C_HEIGHT,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: -0.2 - Math.random() * 0.4,
+                    size: 1.0 + Math.random() * 2.2,
+                    life: Math.random() * 100,
+                    maxLife: 60 + Math.random() * 80,
+                    seed: Math.random() * 20
+                });
+            }
+        }
+        initAmbientParticles();
 
         function showToast(msg, type = 'info', duration = 3200) {
             const container = document.getElementById('toast-container');
@@ -592,49 +610,110 @@
             });
         }
 
+        // 4-Layer Kinematic Particle Engine
         function addParticles(x, y, color, count = 10, isFire = false) {
+            let cx = (x + 0.5) * TILE, cy = (y + 0.5) * TILE;
             for (let i = 0; i < count; i++) {
                 let angle = Math.random() * Math.PI * 2;
-                let speed = 1 + Math.random() * 4;
+                let speed = 2.0 + Math.random() * 5.0;
+                // Layer 1: Incandescent Core Needle Sparks
                 particles.push({
-                    x: (x + 0.5) * TILE,
-                    y: (y + 0.5) * TILE,
+                    type: 'spark',
+                    x: cx, y: cy,
+                    prevX: cx, prevY: cy,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    color: isFire ? '#ffffff' : color,
+                    altColor: isFire ? '#f6ad55' : color,
+                    size: 1.5 + Math.random() * 2.0,
+                    life: 1.0,
+                    decay: 0.035 + Math.random() * 0.03,
+                    drag: 0.92,
+                    isFire: isFire
+                });
+                // Layer 2: Buoyant Expanding Smoke & Plasma Puffs
+                if (i % 2 === 0) {
+                    particles.push({
+                        type: 'smoke',
+                        x: cx + (Math.random() - 0.5) * 6,
+                        y: cy + (Math.random() - 0.5) * 6,
+                        vx: Math.cos(angle) * (speed * 0.35),
+                        vy: Math.sin(angle) * (speed * 0.35) - 0.4, // negative gravity
+                        color: isFire ? '#e53e3e' : color,
+                        altColor: isFire ? '#2d3748' : '#1a202c',
+                        size: 3.0 + Math.random() * 4.0,
+                        maxSize: 12.0 + Math.random() * 8.0,
+                        life: 1.0,
+                        decay: 0.02 + Math.random() * 0.02,
+                        drag: 0.94,
+                        isFire: isFire
+                    });
+                }
+            }
+        }
+
+        function addDebrisParticles(x, y, color, count = 16) {
+            let cx = (x + 0.5) * TILE, cy = (y + 0.5) * TILE;
+            for (let i = 0; i < count; i++) {
+                let angle = Math.random() * Math.PI * 1.5 + Math.PI * 0.75; // explosive upwards arc
+                let speed = 2.5 + Math.random() * 6.5;
+                // Layer 3: Heavy Kinematic Stone/Crystal Shards & Bone Debris
+                particles.push({
+                    type: 'debris',
+                    x: cx, y: cy,
                     vx: Math.cos(angle) * speed,
                     vy: Math.sin(angle) * speed,
                     color: color,
-                    size: 2 + Math.random() * 4,
-                    life: 1.0,
-                    gravity: 0,
-                    isFire: isFire
+                    width: 3 + Math.random() * 5,
+                    height: 2 + Math.random() * 4,
+                    rot: Math.random() * Math.PI * 2,
+                    rotSpeed: (Math.random() - 0.5) * 0.4,
+                    life: 1.4,
+                    decay: 0.025,
+                    gravity: 0.32,
+                    drag: 0.97,
+                    bounce: 0.55
                 });
             }
         }
 
-        function addDebrisParticles(x, y, color, count = 20) {
+        function addStarParticles(x, y, color, count = 12) {
+            let cx = (x + 0.5) * TILE, cy = (y + 0.5) * TILE;
             for (let i = 0; i < count; i++) {
-                let angle = Math.random() * Math.PI + Math.PI; // Upwards mostly
-                let speed = 2 + Math.random() * 6;
+                let angle = Math.random() * Math.PI * 2;
+                let speed = 1.5 + Math.random() * 4.0;
+                // Layer 4: Radiant Celebration Energy Stars
                 particles.push({
-                    x: (x + 0.5) * TILE,
-                    y: (y + 0.5) * TILE,
+                    type: 'star',
+                    x: cx, y: cy,
                     vx: Math.cos(angle) * speed,
                     vy: Math.sin(angle) * speed,
                     color: color,
-                    size: 2 + Math.random() * 5,
-                    life: 1.5,
-                    gravity: 0.4,
-                    isFire: false
+                    size: 4 + Math.random() * 5,
+                    rot: Math.random() * Math.PI,
+                    rotSpeed: (Math.random() - 0.5) * 0.25,
+                    life: 1.2,
+                    decay: 0.03,
+                    drag: 0.93
                 });
             }
         }
 
         function addExplosion(x, y, size = 1) {
-            screenShake = 15 * size;
-            shockwaves.push({x: x, y: y, radius: 0, life: 1.5, maxLife: 1.5});
-            addParticles(x, y, '#ffffff', 15 * size, true);
+            screenShake = 16 * size;
+            shockwaves.push({
+                x: x, y: y,
+                innerRadius: 0,
+                outerRadius: 0,
+                life: 1.5,
+                maxLife: 1.5,
+                color: '#f6ad55'
+            });
+            addParticles(x, y, '#ffffff', 18 * size, true);
             addParticles(x, y, '#f6ad55', 25 * size, true);
             addParticles(x, y, '#e53e3e', 20 * size, true);
-            addDebrisParticles(x, y, '#a0aec0', 15 * size);
+            addDebrisParticles(x, y, '#a0aec0', 16 * size);
+            addStarParticles(x, y, '#ecc94b', 12 * size);
         }
 
         function addAttackAnim(x, y, targetX, targetY, color = '#fc8181') {
@@ -1098,111 +1177,332 @@
             ctx.globalAlpha = 1.0;
         }
 
+        function drawGothicFiligreeCorners(ctx, w, h) {
+            const size = 18;
+            const pad = 4;
+            const gold = '#d69e2e';
+            const goldLight = '#ecc94b';
+            const shadow = '#1a202c';
+
+            ctx.save();
+            const corners = [
+                { x: pad, y: pad, sx: 1, sy: 1 },
+                { x: w - pad, y: pad, sx: -1, sy: 1 },
+                { x: pad, y: h - pad, sx: 1, sy: -1 },
+                { x: w - pad, y: h - pad, sx: -1, sy: -1 }
+            ];
+
+            corners.forEach(c => {
+                ctx.save();
+                ctx.translate(c.x, c.y);
+                ctx.scale(c.sx, c.sy);
+
+                // Shadow bracket
+                ctx.strokeStyle = shadow;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(0, size);
+                ctx.lineTo(0, 0);
+                ctx.lineTo(size, 0);
+                ctx.stroke();
+
+                // Gold bracket
+                ctx.strokeStyle = gold;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(1, size - 1);
+                ctx.lineTo(1, 1);
+                ctx.lineTo(size - 1, 1);
+                ctx.stroke();
+
+                // Inner ornate notch
+                ctx.strokeStyle = goldLight;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(4, size - 4);
+                ctx.lineTo(4, 4);
+                ctx.lineTo(size - 4, 4);
+                ctx.stroke();
+
+                // Rivet dots
+                ctx.fillStyle = goldLight;
+                ctx.beginPath(); ctx.arc(3, 3, 1.5, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(size - 3, 3, 1.2, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(3, size - 3, 1.2, 0, Math.PI * 2); ctx.fill();
+
+                ctx.restore();
+            });
+            ctx.restore();
+        }
+
+        function drawPerimeterInlay(ctx, w, h) {
+            ctx.save();
+            let pulse = (Math.sin(frameCount * 0.05) + 1) * 0.5;
+            ctx.strokeStyle = `rgba(214, 158, 46, ${0.25 + pulse * 0.25})`;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(6, 6, w - 12, h - 12);
+
+            // Traveling Specular Glint
+            let totalPerim = (w - 16) * 2 + (h - 16) * 2;
+            let glintPos = (frameCount * 3.5) % totalPerim;
+            let gx = 8, gy = 8;
+            let topLen = w - 16, rightLen = h - 16, botLen = w - 16;
+            if (glintPos < topLen) {
+                gx = 8 + glintPos; gy = 8;
+            } else if (glintPos < topLen + rightLen) {
+                gx = 8 + topLen; gy = 8 + (glintPos - topLen);
+            } else if (glintPos < topLen + rightLen + botLen) {
+                gx = 8 + topLen - (glintPos - topLen - rightLen); gy = 8 + rightLen;
+            } else {
+                gx = 8; gy = 8 + rightLen - (glintPos - topLen - rightLen - botLen);
+            }
+
+            let grad = ctx.createRadialGradient(gx, gy, 0, gx, gy, 12);
+            grad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+            grad.addColorStop(0.4, 'rgba(236, 201, 75, 0.6)');
+            grad.addColorStop(1, 'rgba(236, 201, 75, 0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath(); ctx.arc(gx, gy, 12, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+        }
+
+        function drawAmbientParticles(ctx, biome) {
+            for (let i = 0; i < ambientParticles.length; i++) {
+                let ap = ambientParticles[i];
+                ap.x += ap.vx + Math.sin(frameCount * 0.03 + ap.seed) * 0.3;
+                ap.y += ap.vy;
+                ap.life++;
+                if (ap.y < -10 || ap.x < -10 || ap.x > C_WIDTH + 10 || ap.life > ap.maxLife) {
+                    ap.x = Math.random() * C_WIDTH;
+                    ap.y = C_HEIGHT + 5;
+                    ap.life = 0;
+                }
+
+                let alpha = Math.sin((ap.life / ap.maxLife) * Math.PI) * 0.55;
+                let color = 'rgba(255,255,255,' + alpha + ')';
+                if (biome === 'sewers') color = `rgba(72, 187, 120, ${alpha})`;
+                else if (biome === 'caves') color = `rgba(236, 201, 75, ${alpha * 0.7})`;
+                else if (biome === 'crypt') color = `rgba(99, 179, 237, ${alpha * 0.8})`;
+                else if (biome === 'inferno') color = `rgba(246, 173, 85, ${alpha * 0.9})`;
+                else if (biome === 'void') color = `rgba(183, 148, 244, ${alpha * 0.85})`;
+                else if (biome === 'celestial') color = `rgba(250, 240, 137, ${alpha})`;
+                else if (biome === 'abyss') color = `rgba(159, 122, 234, ${alpha * 0.8})`;
+                else if (biome === 'true_sanctuary') color = `rgba(255, 255, 255, ${alpha * 0.95})`;
+
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(ap.x, ap.y, ap.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
         function drawPlayerSprite(px, py) {
             let bob = Math.sin(frameCount * 0.15) * 1.5;
             let cx = px + TILE / 2, cy = py + TILE / 2 + bob;
+            let sheenOffset = ((frameCount * 1.2) % 30) - 15;
 
-            ctx.fillStyle = 'rgba(0,0,0,0.5)';
-            ctx.beginPath(); ctx.ellipse(cx, py + TILE - 4, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
+            // Ground shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.55)';
+            ctx.beginPath(); ctx.ellipse(cx, py + TILE - 3, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
 
+            // Stealth Cloak Aura
             if (player.invisible_turns > 0) {
-                ctx.fillStyle = 'rgba(183, 148, 244, 0.4)';
-                ctx.beginPath(); ctx.arc(cx, cy, 12, 0, Math.PI * 2); ctx.fill();
+                let invisGlow = (Math.sin(frameCount * 0.18) + 1) * 0.5;
+                ctx.fillStyle = `rgba(183, 148, 244, ${0.25 + invisGlow * 0.25})`;
+                ctx.beginPath(); ctx.arc(cx, cy, 14, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#b794f4'; ctx.lineWidth = 1;
+                ctx.stroke();
             }
 
-            // Cape / Armor Colors based on Class
-            ctx.fillStyle = player.class === 'warrior' ? '#e53e3e' : (player.class === 'mage' ? '#805ad5' : '#38a169');
+            // Berserk Fiery Aura
+            if (player.berserk_turns > 0) {
+                let bGlow = (Math.sin(frameCount * 0.25) + 1) * 0.5;
+                ctx.fillStyle = `rgba(229, 62, 62, ${0.3 + bGlow * 0.3})`;
+                ctx.beginPath(); ctx.arc(cx, cy, 15, 0, Math.PI * 2); ctx.fill();
+            }
+
+            // Cape / Robe Colors based on Class
+            let capeCol = player.class === 'warrior' ? '#e53e3e' : (player.class === 'mage' ? '#805ad5' : '#38a169');
+            let capeTrim = player.class === 'warrior' ? '#9b2c2c' : (player.class === 'mage' ? '#553c9a' : '#22543d');
+            ctx.fillStyle = capeCol;
             ctx.fillRect(cx - 7, cy - 2, 14, 10);
+            ctx.fillStyle = capeTrim;
+            ctx.fillRect(cx - 7, cy + 6, 14, 2);
+
+            // Armor Plate
             ctx.fillStyle = '#cbd5e0'; ctx.fillRect(cx - 5, cy - 4, 10, 10);
+            ctx.fillStyle = '#a0aec0'; ctx.fillRect(cx - 3, cy, 6, 5);
 
-            // Helmet
-            ctx.fillStyle = '#e2e8f0'; ctx.beginPath(); ctx.arc(cx, cy - 6, 5, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#ecc94b'; ctx.fillRect(cx - 3, cy - 7, 6, 2);
+            // Diagonal Specular Sheen Sweep on Armor
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(cx - 5, cy - 4, 10, 10);
+            ctx.clip();
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+            ctx.beginPath();
+            ctx.moveTo(cx - 10 + sheenOffset, cy + 10);
+            ctx.lineTo(cx - 5 + sheenOffset, cy - 10);
+            ctx.lineTo(cx - 1 + sheenOffset, cy - 10);
+            ctx.lineTo(cx - 6 + sheenOffset, cy + 10);
+            ctx.fill();
+            ctx.restore();
 
-            // Weapon
-            ctx.strokeStyle = '#edf2f7'; ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.moveTo(cx + 6, cy + 2); ctx.lineTo(cx + 10, cy - 6); ctx.stroke();
+            // Helmet & Crest
+            ctx.fillStyle = '#e2e8f0'; ctx.beginPath(); ctx.arc(cx, cy - 6, 5.5, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ecc94b'; ctx.fillRect(cx - 3, cy - 8, 6, 2.5); // Golden visor crest
+            ctx.fillStyle = '#1a202c'; ctx.fillRect(cx - 2.5, cy - 6, 5, 1.5); // Visor slit
+
+            // Weapon with Glint
+            ctx.strokeStyle = '#edf2f7'; ctx.lineWidth = 2.2;
+            ctx.beginPath(); ctx.moveTo(cx + 5, cy + 3); ctx.lineTo(cx + 10, cy - 7); ctx.stroke();
+            // Weapon glint tip
+            if (Math.sin(frameCount * 0.15) > 0.7) {
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath(); ctx.arc(cx + 10, cy - 7, 2, 0, Math.PI * 2); ctx.fill();
+            }
         }
 
         function drawMonsterSprite(m) {
             let px = m.x * TILE, py = m.y * TILE;
             let type = m.ch, hp = m.max_hp, current_hp = m.hp;
             let cx = px + TILE / 2, cy = py + TILE / 2;
-            let bob = Math.sin(frameCount * 0.12 + px) * 1.2;
+            let bob = Math.sin(frameCount * 0.12 + px) * 1.4;
             let isEnraged = (m.boss && current_hp < hp / 2);
 
+            // Ground Shadow
             if (type !== '&' && type !== 'O' && type !== 'w' && type !== 'B') {
                 ctx.fillStyle = 'rgba(0,0,0,0.5)';
                 ctx.beginPath(); ctx.ellipse(cx, py + TILE - 4, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
             } else {
-                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                ctx.fillStyle = 'rgba(0,0,0,0.6)';
                 ctx.beginPath(); ctx.ellipse(cx, py + TILE - 4, 14, 5, 0, 0, Math.PI * 2); ctx.fill();
             }
 
-            if (type === 'N') {
-                ctx.fillStyle = '#00ffff'; ctx.beginPath(); ctx.arc(cx, cy, 7, 0, Math.PI * 2); ctx.fill();
-            } else if (type === 'v') {
-                ctx.fillStyle = '#800080'; ctx.fillRect(cx - 5, cy - 8 + bob, 10, 16);
-            } else if (type === 'f') {
-                ctx.fillStyle = '#ff0000'; ctx.fillRect(cx - 7, cy - 7 + bob, 14, 14);
-            } else if (type === 'w') {
-                ctx.fillStyle = '#0000ff'; ctx.fillRect(cx - 8, cy - 4, 16, 8);
-            } else if (type === 'O') {
-                ctx.fillStyle = '#555555'; ctx.fillRect(cx - 10, cy - 10 + bob, 20, 20);
-            } else if (type === 'r') {
-                ctx.fillStyle = '#d69e2e'; ctx.beginPath(); ctx.ellipse(cx, cy + 2 + bob, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
+            if (type === '&' || m.boss) { // True Astaroth / Major Boss
+                // Dark Matter Flame Aura
+                let auraPulse = (Math.sin(frameCount * 0.2) + 1) * 0.5;
+                ctx.fillStyle = isEnraged ? `rgba(255, 0, 80, ${0.35 + auraPulse * 0.3})` : `rgba(229, 62, 62, ${0.3 + auraPulse * 0.25})`;
+                ctx.beginPath(); ctx.arc(cx, cy + bob, 16 + auraPulse * 3, 0, Math.PI * 2); ctx.fill();
+
+                // Demon Horns
+                ctx.fillStyle = '#742a2a';
+                ctx.beginPath();
+                ctx.moveTo(cx - 9, cy - 10 + bob); ctx.lineTo(cx - 13, cy - 18 + bob); ctx.lineTo(cx - 5, cy - 12 + bob); ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(cx + 9, cy - 10 + bob); ctx.lineTo(cx + 13, cy - 18 + bob); ctx.lineTo(cx + 5, cy - 12 + bob); ctx.fill();
+
+                // Body
+                ctx.fillStyle = isEnraged ? '#ff0055' : '#c53030';
+                ctx.fillRect(cx - 9, cy - 10 + bob, 18, 19);
+                // Armor plates
+                ctx.fillStyle = isEnraged ? '#800020' : '#742a2a';
+                ctx.fillRect(cx - 7, cy - 6 + bob, 14, 12);
+                ctx.fillStyle = '#ecc94b';
+                ctx.fillRect(cx - 4, cy - 2 + bob, 8, 4); // Core rune
+
+                // Ocular Scanner Eye Beam
+                let eyeSweep = Math.sin(frameCount * 0.15) * 4;
+                ctx.fillStyle = isEnraged ? '#ffffff' : '#f6e05e';
+                ctx.fillRect(cx - 5 + eyeSweep, cy - 7 + bob, 3, 3);
+                ctx.fillRect(cx + 2 + eyeSweep, cy - 7 + bob, 3, 3);
+
+                // Emitted demon spark motes
+                if (frameCount % 4 === 0) {
+                    particles.push({
+                        type: 'spark',
+                        x: cx + (Math.random() - 0.5) * 16,
+                        y: cy + bob + 5,
+                        prevX: cx, prevY: cy + bob,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: -1.5 - Math.random() * 2,
+                        color: isEnraged ? '#ff007f' : '#f6ad55',
+                        altColor: '#e53e3e',
+                        size: 1.5, life: 0.8, decay: 0.05, drag: 0.94, isFire: true
+                    });
+                }
+            } else if (type === 'D') { // Red Dragon
+                let flap = Math.sin(frameCount * 0.18) * 3;
+                // Wings
+                ctx.fillStyle = '#9b2c2c';
+                ctx.beginPath(); ctx.moveTo(cx - 14, cy - 6 + flap + bob); ctx.lineTo(cx - 4, cy + bob); ctx.lineTo(cx - 10, cy + 4 + bob); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(cx + 14, cy - 6 + flap + bob); ctx.lineTo(cx + 4, cy + bob); ctx.lineTo(cx + 10, cy + 4 + bob); ctx.fill();
+                // Body
+                ctx.fillStyle = '#e53e3e'; ctx.beginPath(); ctx.arc(cx, cy + bob, 8, 0, Math.PI * 2); ctx.fill();
+                // Horns
+                ctx.fillStyle = '#ecc94b';
+                ctx.beginPath(); ctx.moveTo(cx - 4, cy - 8 + bob); ctx.lineTo(cx - 6, cy - 12 + bob); ctx.lineTo(cx - 2, cy - 7 + bob); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(cx + 4, cy - 8 + bob); ctx.lineTo(cx + 6, cy - 12 + bob); ctx.lineTo(cx + 2, cy - 7 + bob); ctx.fill();
+                // Glowing eyes & nostrils
+                ctx.fillStyle = '#fefcbf'; ctx.fillRect(cx - 3, cy - 4 + bob, 2, 2); ctx.fillRect(cx + 1, cy - 4 + bob, 2, 2);
+            } else if (type === 'L' || type === 'v' || type === 'E') { // Lich / Void / Eldritch
+                // Orbiting Necrotic Runes
+                for (let k = 0; k < 3; k++) {
+                    let oAngle = frameCount * 0.08 + (k * Math.PI * 2 / 3);
+                    let ox = cx + Math.cos(oAngle) * 11;
+                    let oy = cy + bob + Math.sin(oAngle) * 6;
+                    ctx.fillStyle = type === 'L' ? '#ecc94b' : '#b794f4';
+                    ctx.fillRect(ox - 1.5, oy - 1.5, 3, 3);
+                }
+                ctx.fillStyle = type === 'L' ? '#4a5568' : (type === 'v' ? '#553c9a' : '#2d004b');
+                ctx.fillRect(cx - 6, cy - 8 + bob, 12, 16);
+                ctx.fillStyle = type === 'L' ? '#cbd5e0' : '#00ffff';
+                ctx.beginPath(); ctx.arc(cx, cy - 5 + bob, 4.5, 0, Math.PI * 2); ctx.fill(); // Skull / Eye
+                ctx.fillStyle = '#ff0000'; ctx.fillRect(cx - 2, cy - 6 + bob, 1.5, 1.5); ctx.fillRect(cx + 0.5, cy - 6 + bob, 1.5, 1.5);
             } else if (type === 's') { // Slime
                 ctx.fillStyle = hp > 40 ? '#e53e3e' : (hp > 15 ? '#3182ce' : '#38a169');
                 ctx.beginPath(); ctx.arc(cx, cy + 2 + bob, 7, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = '#000'; ctx.fillRect(cx - 3, cy + bob, 2, 2); ctx.fillRect(cx + 1, cy + bob, 2, 2); // eyes
-            } else if (type === 'b') {
-                ctx.fillStyle = '#805ad5'; ctx.beginPath(); ctx.arc(cx, cy + bob, 6, 0, Math.PI * 2); ctx.fill();
-            } else if (type === 'g' || type === 'o') {
+                ctx.fillStyle = '#ffffff'; ctx.fillRect(cx - 3, cy + bob, 2, 2); ctx.fillRect(cx + 1, cy + bob, 2, 2); // eyes
+                ctx.fillStyle = '#000000'; ctx.fillRect(cx - 2, cy + bob + 0.5, 1, 1); ctx.fillRect(cx + 2, cy + bob + 0.5, 1, 1);
+            } else if (type === 'b') { // Bat
+                let bFlap = Math.sin(frameCount * 0.3) * 4;
+                ctx.fillStyle = '#805ad5';
+                ctx.beginPath(); ctx.moveTo(cx - 8, cy - 4 + bFlap + bob); ctx.lineTo(cx, cy + bob); ctx.lineTo(cx + 8, cy - 4 + bFlap + bob); ctx.stroke();
+                ctx.beginPath(); ctx.arc(cx, cy + bob, 5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#fc8181'; ctx.fillRect(cx - 2, cy - 1 + bob, 1.5, 1.5); ctx.fillRect(cx + 0.5, cy - 1 + bob, 1.5, 1.5);
+            } else if (type === 'g' || type === 'o') { // Goblin / Orc
                 ctx.fillStyle = (type === 'o' || hp > 20) ? '#2f855a' : '#48bb78'; 
                 ctx.fillRect(cx - 5, cy - 6 + bob, 10, 12);
-                ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 2, cy - 3 + bob, 2, 2); ctx.fillRect(cx + 2, cy - 3 + bob, 2, 2); // eyes
-                
+                ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 2, cy - 3 + bob, 2, 2); ctx.fillRect(cx + 2, cy - 3 + bob, 2, 2);
                 ctx.strokeStyle = '#a0aec0'; ctx.lineWidth = 2;
                 if ((m.x + m.y) % 3 === 0) { // Sword
                     ctx.beginPath(); ctx.moveTo(cx + 6, cy + 2 + bob); ctx.lineTo(cx + 10, cy - 6 + bob); ctx.stroke();
                 } else { // Spear
                     ctx.beginPath(); ctx.moveTo(cx + 6, cy + 6 + bob); ctx.lineTo(cx + 6, cy - 8 + bob); ctx.stroke();
                 }
-            } else if (type === '&' || m.boss) {
-                if (isEnraged) {
-                    ctx.fillStyle = '#ff00ff'; ctx.fillRect(cx - 9, cy - 10 + bob, 18, 19);
-                    ctx.fillStyle = '#ff0000'; ctx.fillRect(cx - 7, cy - 7 + bob, 14, 8);
-                    ctx.fillStyle = '#ffffff'; ctx.fillRect(cx - 4, cy - 4 + bob, 3, 3); ctx.fillRect(cx + 1, cy - 4 + bob, 3, 3); // enraged eyes
-                } else {
-                    ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 9, cy - 10 + bob, 18, 19);
-                    ctx.fillStyle = '#ecc94b'; ctx.fillRect(cx - 7, cy - 7 + bob, 14, 8);
-                }
+            } else if (type === 'r') { // Rat
+                ctx.fillStyle = '#d69e2e'; ctx.beginPath(); ctx.ellipse(cx, cy + 2 + bob, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#fc8181'; ctx.fillRect(cx + 4, cy + bob, 2, 2); // Pink snout
             } else {
-                ctx.fillStyle = '#fc8181'; ctx.fillRect(cx - 5, cy - 5, 10, 10);
+                ctx.fillStyle = '#fc8181'; ctx.fillRect(cx - 5, cy - 5 + bob, 10, 10);
             }
         }
 
         function render() {
             frameCount++;
+            // Screen Shake with Quadratic Physics Decay and Rotational Damping
             if (screenShake > 0) {
-                screenShake *= 0.92;
-                if (screenShake < 0.5) screenShake = 0;
+                screenShake *= 0.91;
+                if (screenShake < 0.4) screenShake = 0;
             }
             ctx.clearRect(0, 0, C_WIDTH, C_HEIGHT);
             ctx.save();
             if (screenShake > 0) {
-                let dx = (Math.random() - 0.5) * screenShake * 1.5;
-                let dy = (Math.random() - 0.5) * screenShake * 1.5;
-                let angle = (Math.random() - 0.5) * screenShake * 0.003;
-                ctx.translate(C_WIDTH/2, C_HEIGHT/2);
+                let dx = (Math.random() - 0.5) * screenShake * 1.6;
+                let dy = (Math.random() - 0.5) * screenShake * 1.6;
+                let angle = Math.sin(frameCount * 0.4) * screenShake * 0.002;
+                ctx.translate(C_WIDTH / 2, C_HEIGHT / 2);
                 ctx.rotate(angle);
-                ctx.translate(-C_WIDTH/2 + dx, -C_HEIGHT/2 + dy);
+                ctx.translate(-C_WIDTH / 2 + dx, -C_HEIGHT / 2 + dy);
             }
 
             let biome = getBiome(dlevel);
 
             if (state === 0) { // Main Menu
                 ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, C_WIDTH, C_HEIGHT);
+                drawAmbientParticles(ctx, 'celestial');
+                drawGothicFiligreeCorners(ctx, C_WIDTH, C_HEIGHT);
+                drawPerimeterInlay(ctx, C_WIDTH, C_HEIGHT);
+
                 ctx.fillStyle = '#f6ad55'; ctx.font = 'bold 38px monospace'; ctx.textAlign = 'center';
                 ctx.fillText("K R O G U E", C_WIDTH / 2, 120);
 
@@ -1214,11 +1514,15 @@
 
                 ctx.fillStyle = '#a0aec0'; ctx.font = '14px sans-serif';
                 ctx.fillText("Press [T] Leaderboard  |  Press [H / F1] Help  |  Press [K] Keybinds  |  Press [L] Resume Run", C_WIDTH / 2, 310);
+                ctx.restore();
                 return;
             }
 
             if (state === 2 || state === 3) {
                 ctx.fillStyle = '#090a0f'; ctx.fillRect(0, 0, C_WIDTH, C_HEIGHT);
+                drawAmbientParticles(ctx, state === 3 ? 'true_sanctuary' : 'inferno');
+                drawGothicFiligreeCorners(ctx, C_WIDTH, C_HEIGHT);
+                drawPerimeterInlay(ctx, C_WIDTH, C_HEIGHT);
                 ctx.textAlign = 'center';
                 if (state === 2) {
                     ctx.fillStyle = '#e53e3e'; ctx.font = 'bold 36px monospace';
@@ -1233,10 +1537,11 @@
                 }
                 ctx.fillStyle = '#cbd5e0'; ctx.font = '16px sans-serif';
                 ctx.fillText("Press [R] to Restart Run  |  Press [T] to View Leaderboard", C_WIDTH / 2, 310);
+                ctx.restore();
                 return;
             }
 
-            // Map
+            // Map Tiles
             for (let y = 0; y < ROWS; y++) {
                 for (let x = 0; x < COLS; x++) {
                     let distSq = (player.x - x)*(player.x - x) + (player.y - y)*(player.y - y);
@@ -1244,6 +1549,9 @@
                     else drawFloorTile(x, y, biome, distSq);
                 }
             }
+
+            // Ambient Floating Dungeon Dust & Embers
+            drawAmbientParticles(ctx, biome);
 
             // Traps, Items, Monsters
             traps.forEach(tr => {
@@ -1253,21 +1561,22 @@
                 }
             });
 
+            // Dropped Items with Specular Glint Sweeps
             items.forEach(it => {
                 let ix = it.x * TILE + TILE / 2;
-                let iy = it.y * TILE + TILE / 2;
+                let iy = it.y * TILE + TILE / 2 + Math.sin(frameCount * 0.1 + it.x) * 1.5;
                 
                 if (it.type === 'weapon') {
                     ctx.strokeStyle = it.fg || '#63b3ed'; ctx.lineWidth = 2;
                     if (it.name.includes('Sword') || it.name.includes('Dagger')) {
                         ctx.beginPath(); ctx.moveTo(ix - 4, iy + 4); ctx.lineTo(ix + 6, iy - 6); ctx.stroke();
-                        ctx.beginPath(); ctx.moveTo(ix - 6, iy + 2); ctx.lineTo(ix - 2, iy + 6); ctx.stroke(); // crossguard
+                        ctx.beginPath(); ctx.moveTo(ix - 6, iy + 2); ctx.lineTo(ix - 2, iy + 6); ctx.stroke();
                     } else if (it.name.includes('Bow')) {
                         ctx.beginPath(); ctx.arc(ix, iy, 6, -Math.PI/2, Math.PI/2); ctx.stroke();
-                        ctx.beginPath(); ctx.moveTo(ix, iy-6); ctx.lineTo(ix, iy+6); ctx.stroke(); // string
-                    } else { // Spear / Hammer
+                        ctx.beginPath(); ctx.moveTo(ix, iy-6); ctx.lineTo(ix, iy+6); ctx.stroke();
+                    } else {
                         ctx.beginPath(); ctx.moveTo(ix - 4, iy + 6); ctx.lineTo(ix + 4, iy - 6); ctx.stroke();
-                        ctx.fillStyle = it.fg || '#63b3ed'; ctx.fillRect(ix + 2, iy - 8, 4, 4); // tip
+                        ctx.fillStyle = it.fg || '#63b3ed'; ctx.fillRect(ix + 2, iy - 8, 4, 4);
                     }
                 } else if (it.type === 'armor') {
                     ctx.fillStyle = it.fg || '#cbd5e0';
@@ -1280,15 +1589,6 @@
                     ctx.fillText(it.ch || '*', (it.x + 0.5) * TILE, (it.y + 0.75) * TILE);
                 }
             });
-
-            monsters.forEach(m => drawMonsterSprite(m));
-            drawPlayerSprite(player.x * TILE, player.y * TILE);
-
-            // Targeting Reticle
-            if (state === 4) {
-                ctx.strokeStyle = '#fc8181'; ctx.lineWidth = 2;
-                ctx.strokeRect(targetX * TILE, targetY * TILE, TILE, TILE);
-            }
 
             // Decal FX
             for (let i = decals.length - 1; i >= 0; i--) {
@@ -1312,36 +1612,118 @@
                 if (d.life <= 0) decals.splice(i, 1);
             }
 
-            // Particle FX
+            monsters.forEach(m => drawMonsterSprite(m));
+            drawPlayerSprite(player.x * TILE, player.y * TILE);
+
+            // Targeting Reticle
+            if (state === 4) {
+                ctx.strokeStyle = '#fc8181'; ctx.lineWidth = 2;
+                ctx.strokeRect(targetX * TILE, targetY * TILE, TILE, TILE);
+            }
+
+            // 4-Layer Kinematic Particle Engine Updates & Rendering
             for (let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life -= 0.05;
-                if (p.gravity) p.vy += p.gravity;
-                p.vx *= 0.93; // kinematic drag
-                p.vy *= 0.93;
-                let c = p.color;
-                if (p.isFire) c = p.life > 0.6 ? '#ffffff' : (p.life > 0.3 ? '#f6ad55' : '#e53e3e');
-                ctx.fillStyle = c; ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (0.5 + p.life * 0.5), 0, Math.PI * 2); ctx.fill();
-                ctx.globalAlpha = 1.0; if (p.life <= 0) particles.splice(i, 1);
+                let p = particles[i];
+                p.prevX = p.x; p.prevY = p.y;
+                p.x += p.vx; p.y += p.vy;
+                p.vx *= (p.drag || 0.93);
+                p.vy *= (p.drag || 0.93);
+                if (p.gravity) {
+                    p.vy += p.gravity;
+                    // Floor bounce
+                    let mapY = Math.floor(p.y / TILE);
+                    let mapX = Math.floor(p.x / TILE);
+                    if (mapY >= ROWS - 1 || (mapY >= 0 && mapX >= 0 && mapX < COLS && map[mapY][mapX] === '#')) {
+                        p.vy = -p.vy * (p.bounce || 0.5);
+                        p.vx *= 0.8;
+                    }
+                }
+                if (p.rotSpeed) p.rot += p.rotSpeed;
+                p.life -= (p.decay || 0.035);
+
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
+
+                if (p.type === 'spark') {
+                    // Layer 1: Needle Spark with Velocity Line Trail
+                    ctx.strokeStyle = p.color;
+                    ctx.lineWidth = p.size;
+                    ctx.beginPath();
+                    ctx.moveTo(p.prevX, p.prevY);
+                    ctx.lineTo(p.x, p.y);
+                    ctx.stroke();
+                    ctx.fillStyle = p.altColor || '#ffffff';
+                    ctx.fillRect(p.x - 1, p.y - 1, 2, 2);
+                } else if (p.type === 'smoke') {
+                    // Layer 2: Buoyant Expanding Smoke / Plasma Puff
+                    let currentRad = p.size + (p.maxSize - p.size) * (1.0 - p.life);
+                    ctx.fillStyle = p.life > 0.5 ? p.color : (p.altColor || '#2d3748');
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, currentRad, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (p.type === 'debris') {
+                    // Layer 3: Kinematic Tumbling Shard Debris
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot || 0);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.width / 2, -p.height / 2, p.width, p.height);
+                } else if (p.type === 'star') {
+                    // Layer 4: Radiant 4-Pointed Energy Star
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot || 0);
+                    ctx.fillStyle = p.color;
+                    let st = p.size * (0.5 + p.life * 0.5);
+                    ctx.beginPath();
+                    ctx.moveTo(0, -st);
+                    ctx.lineTo(st * 0.25, -st * 0.25);
+                    ctx.lineTo(st, 0);
+                    ctx.lineTo(st * 0.25, st * 0.25);
+                    ctx.lineTo(0, st);
+                    ctx.lineTo(-st * 0.25, st * 0.25);
+                    ctx.lineTo(-st, 0);
+                    ctx.lineTo(-st * 0.25, -st * 0.25);
+                    ctx.closePath();
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.size || 2, 0, Math.PI * 2); ctx.fill();
+                }
+                ctx.restore();
             }
             
-            // Shockwave FX
+            // Dual-Tier Concentric Shockwaves
             for (let i = shockwaves.length - 1; i >= 0; i--) {
                 let sw = shockwaves[i];
-                sw.radius += 1.5 + (sw.life * 1.0); // expands faster initially
-                sw.life -= 0.05;
+                sw.innerRadius += 2.2 + (sw.life * 1.4); // fast inner compression ring
+                sw.outerRadius += 1.4 + (sw.life * 0.8); // outer dispersion halo
+                sw.life -= 0.04;
                 if (sw.life <= 0) {
                     shockwaves.splice(i, 1);
                     continue;
                 }
                 let alpha = sw.maxLife ? sw.life / sw.maxLife : sw.life;
+                ctx.save();
+                // Outer Dispersion Halo
+                ctx.globalAlpha = Math.max(0, Math.min(1, alpha * 0.5));
+                ctx.strokeStyle = sw.color || '#ecc94b';
+                ctx.lineWidth = 4 + alpha * 6;
+                ctx.beginPath();
+                ctx.ellipse((sw.x + 0.5) * TILE, (sw.y + 0.5) * TILE, sw.outerRadius * TILE, sw.outerRadius * TILE * 0.7, 0, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Inner Sharp Compression Wave
                 ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
                 ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 2 + alpha * 4;
+                ctx.lineWidth = 2 + alpha * 3;
                 ctx.beginPath();
-                ctx.ellipse((sw.x + 0.5) * TILE, (sw.y + 0.5) * TILE, sw.radius * TILE, sw.radius * TILE * 0.7, 0, 0, Math.PI * 2);
+                ctx.ellipse((sw.x + 0.5) * TILE, (sw.y + 0.5) * TILE, sw.innerRadius * TILE, sw.innerRadius * TILE * 0.7, 0, 0, Math.PI * 2);
                 ctx.stroke();
-                ctx.globalAlpha = 1.0;
+                ctx.restore();
             }
 
             // Floating Text
@@ -1352,6 +1734,10 @@
                 ctx.fillText(ft.text, ft.x, ft.y); ctx.globalAlpha = 1.0;
                 if (ft.life <= 0) floatTexts.splice(i, 1);
             }
+
+            // Ornate Gothic RPG HUD Corner Filigree L-Brackets & Inlay Border
+            drawGothicFiligreeCorners(ctx, C_WIDTH, C_HEIGHT);
+            drawPerimeterInlay(ctx, C_WIDTH, C_HEIGHT);
 
             // Stats UI
             document.getElementById('hp-bar').style.width = (Math.max(0, player.hp) / player.max_hp * 100) + '%';
@@ -1387,9 +1773,10 @@
                 if (player.mp < 8) { addMsg("Not enough MP for Berserk Cleave (8 MP required)!"); return; }
                 player.mp -= 8; player.berserk_turns = 5;
                 addMsg("WAR CRY & BERSERK CLEAVE! 360-degree sweep strikes surrounding foes!", 'msg-magic');
-                addParticles(player.x, player.y, '#e53e3e', 30);
-                screenShake = 12;
-                shockwaves.push({x: player.x, y: player.y, radius: 0, life: 1.2});
+                addParticles(player.x, player.y, '#e53e3e', 30, true);
+                addDebrisParticles(player.x, player.y, '#ecc94b', 12);
+                screenShake = 14;
+                shockwaves.push({x: player.x, y: player.y, innerRadius: 0, outerRadius: 0, life: 1.3, maxLife: 1.3, color: '#e53e3e'});
                 for (let dy = -1; dy <= 1; dy++) {
                     for (let dx = -1; dx <= 1; dx++) {
                         if (dx === 0 && dy === 0) continue;
@@ -1412,8 +1799,9 @@
                 player.mp -= 10;
                 addMsg("ARCANE NOVA! Massive shockwave blasts and knocks back enemies!", 'msg-magic');
                 addParticles(player.x, player.y, '#b794f4', 35);
-                screenShake = 10;
-                shockwaves.push({x: player.x, y: player.y, radius: 0, life: 1.5});
+                addStarParticles(player.x, player.y, '#63b3ed', 15);
+                screenShake = 12;
+                shockwaves.push({x: player.x, y: player.y, innerRadius: 0, outerRadius: 0, life: 1.5, maxLife: 1.5, color: '#b794f4'});
                 for (let dy = -2; dy <= 2; dy++) {
                     for (let dx = -2; dx <= 2; dx++) {
                         if (dx === 0 && dy === 0) continue;
@@ -1440,6 +1828,8 @@
                 if (player.mp < 8) { addMsg("Not enough MP for Shadow Step (8 MP required)!"); return; }
                 player.mp -= 8; player.invisible_turns = 6;
                 addParticles(player.x, player.y, '#718096', 30);
+                addStarParticles(player.x, player.y, '#4fd1c5', 10);
+                shockwaves.push({x: player.x, y: player.y, innerRadius: 0, outerRadius: 0, life: 1.0, maxLife: 1.0, color: '#4fd1c5'});
                 for (let attempt = 0; attempt < 20; attempt++) {
                     let rx = player.x + rngRange(-3, 3);
                     let ry = player.y + rngRange(-3, 3);

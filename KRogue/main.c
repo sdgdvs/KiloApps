@@ -154,17 +154,28 @@ typedef struct {
 #define S_INVISIBILITY 6
 #define S_BLESSING 7
 
+int rand_range(int min, int max);
+
+#define P_SPARK 0
+#define P_SMOKE 1
+#define P_DEBRIS 2
+#define P_STAR 3
 
 #define MAX_PARTICLES 800
 typedef struct {
     int active;
+    int type;
     float x, y;
+    float prev_x, prev_y;
     float vx, vy;
     COLORREF color;
+    COLORREF alt_color;
     int life;
     int max_life;
+    float rot;
+    float rot_speed;
+    int size;
     int has_gravity;
-    int is_fire;
 } Particle;
 Particle particles[MAX_PARTICLES];
 
@@ -172,12 +183,27 @@ Particle particles[MAX_PARTICLES];
 typedef struct {
     int active;
     float x, y;
-    float radius;
+    float inner_radius;
+    float outer_radius;
+    COLORREF color;
     int life;
+    int max_life;
 } Shockwave;
 Shockwave shockwaves[MAX_SHOCKWAVES];
 
 int screen_shake = 0;
+int g_anim_frame = 0;
+
+#define MAX_AMBIENT 40
+typedef struct {
+    float x, y;
+    float vx, vy;
+    int size;
+    int life;
+    int max_life;
+} AmbientParticle;
+AmbientParticle g_ambient[MAX_AMBIENT];
+int g_ambient_init = 0;
 
 typedef struct {
     int active;
@@ -188,19 +214,25 @@ typedef struct {
 Decal decals[200];
 
 void spawn_particles(int x, int y, COLORREF color, int count) {
+    float cx = (float)(x * 12 + 6);
+    float cy = (float)(y * 20 + 10);
     for(int j=0; j<count; j++) {
         for(int i=0; i<MAX_PARTICLES; i++) {
             if(!particles[i].active) {
                 particles[i].active = 1;
-                particles[i].x = (float)(x * 12 + 6);
-                particles[i].y = (float)(y * 20 + 10);
-                particles[i].vx = (float)(rand_range(0, 200) - 100) / 30.0f;
-                particles[i].vy = (float)(rand_range(0, 200) - 100) / 30.0f;
+                particles[i].type = (j % 2 == 0) ? P_SPARK : P_SMOKE;
+                particles[i].x = cx;
+                particles[i].y = cy;
+                particles[i].prev_x = cx;
+                particles[i].prev_y = cy;
+                particles[i].vx = (float)(rand_range(0, 200) - 100) / 25.0f;
+                particles[i].vy = (float)(rand_range(0, 200) - 100) / 25.0f;
                 particles[i].color = color;
-                particles[i].life = rand_range(10, 30);
+                particles[i].alt_color = RGB(255, 255, 255);
+                particles[i].life = rand_range(12, 35);
                 particles[i].max_life = particles[i].life;
+                particles[i].size = (particles[i].type == P_SMOKE) ? rand_range(2, 4) : 1;
                 particles[i].has_gravity = 0;
-                particles[i].is_fire = 0;
                 break;
             }
         }
@@ -208,19 +240,25 @@ void spawn_particles(int x, int y, COLORREF color, int count) {
 }
 
 void spawn_fire_particles(int x, int y, COLORREF color, int count) {
+    float cx = (float)(x * 12 + 6);
+    float cy = (float)(y * 20 + 10);
     for(int j=0; j<count; j++) {
         for(int i=0; i<MAX_PARTICLES; i++) {
             if(!particles[i].active) {
                 particles[i].active = 1;
-                particles[i].x = (float)(x * 12 + 6);
-                particles[i].y = (float)(y * 20 + 10);
-                particles[i].vx = (float)(rand_range(0, 200) - 100) / 30.0f;
-                particles[i].vy = (float)(rand_range(0, 200) - 100) / 30.0f;
+                particles[i].type = (j % 3 == 0) ? P_SPARK : P_SMOKE;
+                particles[i].x = cx;
+                particles[i].y = cy;
+                particles[i].prev_x = cx;
+                particles[i].prev_y = cy;
+                particles[i].vx = (float)(rand_range(0, 200) - 100) / 22.0f;
+                particles[i].vy = (float)(rand_range(0, 200) - 100) / 22.0f;
                 particles[i].color = color;
+                particles[i].alt_color = RGB(255, 200, 50);
                 particles[i].life = rand_range(15, 45);
                 particles[i].max_life = particles[i].life;
+                particles[i].size = (particles[i].type == P_SMOKE) ? rand_range(2, 5) : 1;
                 particles[i].has_gravity = 0;
-                particles[i].is_fire = 1;
                 break;
             }
         }
@@ -228,19 +266,51 @@ void spawn_fire_particles(int x, int y, COLORREF color, int count) {
 }
 
 void spawn_debris_particles(int x, int y, COLORREF color, int count) {
+    float cx = (float)(x * 12 + 6);
+    float cy = (float)(y * 20 + 10);
     for(int j=0; j<count; j++) {
         for(int i=0; i<MAX_PARTICLES; i++) {
             if(!particles[i].active) {
                 particles[i].active = 1;
-                particles[i].x = (float)(x * 12 + 6);
-                particles[i].y = (float)(y * 20 + 10);
+                particles[i].type = P_DEBRIS;
+                particles[i].x = cx;
+                particles[i].y = cy;
+                particles[i].prev_x = cx;
+                particles[i].prev_y = cy;
                 particles[i].vx = (float)(rand_range(0, 200) - 100) / 15.0f;
-                particles[i].vy = -(float)(rand_range(50, 150)) / 15.0f;
+                particles[i].vy = -(float)(rand_range(40, 160)) / 15.0f;
                 particles[i].color = color;
-                particles[i].life = rand_range(15, 40);
+                particles[i].alt_color = color;
+                particles[i].life = rand_range(18, 45);
                 particles[i].max_life = particles[i].life;
+                particles[i].size = rand_range(2, 4);
                 particles[i].has_gravity = 1;
-                particles[i].is_fire = 0;
+                break;
+            }
+        }
+    }
+}
+
+void spawn_star_particles(int x, int y, COLORREF color, int count) {
+    float cx = (float)(x * 12 + 6);
+    float cy = (float)(y * 20 + 10);
+    for(int j=0; j<count; j++) {
+        for(int i=0; i<MAX_PARTICLES; i++) {
+            if(!particles[i].active) {
+                particles[i].active = 1;
+                particles[i].type = P_STAR;
+                particles[i].x = cx;
+                particles[i].y = cy;
+                particles[i].prev_x = cx;
+                particles[i].prev_y = cy;
+                particles[i].vx = (float)(rand_range(0, 200) - 100) / 25.0f;
+                particles[i].vy = (float)(rand_range(0, 200) - 100) / 25.0f;
+                particles[i].color = color;
+                particles[i].alt_color = RGB(255, 255, 255);
+                particles[i].life = rand_range(20, 50);
+                particles[i].max_life = particles[i].life;
+                particles[i].size = rand_range(3, 5);
+                particles[i].has_gravity = 0;
                 break;
             }
         }
@@ -248,45 +318,76 @@ void spawn_debris_particles(int x, int y, COLORREF color, int count) {
 }
 
 void spawn_explosion(int x, int y, int size) {
-    screen_shake = 10 * size;
+    screen_shake = 12 * size;
     for(int i=0; i<MAX_SHOCKWAVES; i++) {
         if(!shockwaves[i].active) {
             shockwaves[i].active = 1;
             shockwaves[i].x = (float)(x * 12 + 6);
             shockwaves[i].y = (float)(y * 20 + 10);
-            shockwaves[i].radius = 0;
-            shockwaves[i].life = 15 * size;
+            shockwaves[i].inner_radius = 0;
+            shockwaves[i].outer_radius = 0;
+            shockwaves[i].color = RGB(255, 180, 50);
+            shockwaves[i].life = 16 * size;
+            shockwaves[i].max_life = shockwaves[i].life;
             break;
         }
     }
-    spawn_fire_particles(x, y, RGB(255, 255, 255), 15 * size);
+    spawn_fire_particles(x, y, RGB(255, 255, 255), 18 * size);
     spawn_fire_particles(x, y, RGB(255, 150, 50), 25 * size);
-    spawn_fire_particles(x, y, RGB(255, 50, 50), 20 * size);
-    spawn_debris_particles(x, y, RGB(100, 100, 100), 10 * size);
+    spawn_fire_particles(x, y, RGB(220, 50, 50), 20 * size);
+    spawn_debris_particles(x, y, RGB(140, 140, 140), 14 * size);
+    spawn_star_particles(x, y, RGB(255, 215, 0), 10 * size);
+}
+
+void init_ambient_particles() {
+    for (int i = 0; i < MAX_AMBIENT; i++) {
+        g_ambient[i].x = (float)(rand_range(0, 80 * 12));
+        g_ambient[i].y = (float)(rand_range(0, 28 * 20));
+        g_ambient[i].vx = (float)(rand_range(0, 40) - 20) / 40.0f;
+        g_ambient[i].vy = -(float)(rand_range(10, 40)) / 40.0f;
+        g_ambient[i].size = rand_range(1, 2);
+        g_ambient[i].life = rand_range(0, 100);
+        g_ambient[i].max_life = rand_range(80, 160);
+    }
+    g_ambient_init = 1;
+}
+
+void update_ambient_particles() {
+    if (!g_ambient_init) init_ambient_particles();
+    for (int i = 0; i < MAX_AMBIENT; i++) {
+        g_ambient[i].x += g_ambient[i].vx;
+        g_ambient[i].y += g_ambient[i].vy;
+        g_ambient[i].life++;
+        if (g_ambient[i].y < 0 || g_ambient[i].x < 0 || g_ambient[i].x > 80 * 12 || g_ambient[i].life > g_ambient[i].max_life) {
+            g_ambient[i].x = (float)(rand_range(0, 80 * 12));
+            g_ambient[i].y = (float)(28 * 20);
+            g_ambient[i].life = 0;
+        }
+    }
 }
 
 void update_effects() {
+    g_anim_frame++;
     if (screen_shake > 0) {
         screen_shake = (screen_shake * 9) / 10;
         if (screen_shake == 1) screen_shake = 0;
     }
+    update_ambient_particles();
+
     for(int i=0; i<MAX_PARTICLES; i++) {
         if(particles[i].active) {
+            particles[i].prev_x = particles[i].x;
+            particles[i].prev_y = particles[i].y;
             particles[i].x += particles[i].vx;
             particles[i].y += particles[i].vy;
             if(particles[i].has_gravity) {
-                particles[i].vy += 0.4f;
+                particles[i].vy += 0.35f;
+            } else if (particles[i].type == P_SMOKE) {
+                particles[i].vy -= 0.05f; // negative gravity
             }
             
             particles[i].vx *= 0.93f;
             particles[i].vy *= 0.93f;
-            
-            if(particles[i].is_fire) {
-                float ratio = (float)particles[i].life / (float)particles[i].max_life;
-                if(ratio > 0.6f) particles[i].color = RGB(255, 255, 255);
-                else if(ratio > 0.3f) particles[i].color = RGB(255, 150, 50);
-                else particles[i].color = RGB(255, 50, 50);
-            }
             
             particles[i].life--;
             if(particles[i].life <= 0) particles[i].active = 0;
@@ -294,7 +395,8 @@ void update_effects() {
     }
     for(int i=0; i<MAX_SHOCKWAVES; i++) {
         if(shockwaves[i].active) {
-            shockwaves[i].radius += 2.0f + (shockwaves[i].life * 0.1f);
+            shockwaves[i].inner_radius += 2.2f + (shockwaves[i].life * 0.12f);
+            shockwaves[i].outer_radius += 1.4f + (shockwaves[i].life * 0.08f);
             shockwaves[i].life--;
             if(shockwaves[i].life <= 0) shockwaves[i].active = 0;
         }
@@ -304,28 +406,135 @@ void update_effects() {
 void draw_particles(HDC memDC) {
     for(int i=0; i<MAX_PARTICLES; i++) {
         if(particles[i].active) {
-            HBRUSH b = CreateSolidBrush(particles[i].color);
-            int size = 1;
-            if(particles[i].is_fire) {
-                size = 1 + (particles[i].life * 2 / particles[i].max_life);
+            if (particles[i].type == P_SPARK) {
+                HPEN sp = CreatePen(PS_SOLID, 1, particles[i].color);
+                HPEN oldP = (HPEN)SelectObject(memDC, sp);
+                MoveToEx(memDC, (int)particles[i].prev_x, (int)particles[i].prev_y, NULL);
+                LineTo(memDC, (int)particles[i].x, (int)particles[i].y);
+                SelectObject(memDC, oldP);
+                DeleteObject(sp);
+                SetPixel(memDC, (int)particles[i].x, (int)particles[i].y, RGB(255, 255, 255));
+            } else if (particles[i].type == P_SMOKE) {
+                int rad = particles[i].size + (particles[i].max_life - particles[i].life) / 7;
+                HBRUSH b = CreateSolidBrush(particles[i].color);
+                HBRUSH oldB = (HBRUSH)SelectObject(memDC, b);
+                HPEN oldP = (HPEN)SelectObject(memDC, GetStockObject(NULL_PEN));
+                Ellipse(memDC, (int)particles[i].x - rad, (int)particles[i].y - rad, (int)particles[i].x + rad, (int)particles[i].y + rad);
+                SelectObject(memDC, oldP);
+                SelectObject(memDC, oldB);
+                DeleteObject(b);
+            } else if (particles[i].type == P_DEBRIS) {
+                int s = particles[i].size;
+                HBRUSH b = CreateSolidBrush(particles[i].color);
+                RECT r = { (int)particles[i].x - s, (int)particles[i].y - s, (int)particles[i].x + s, (int)particles[i].y + s };
+                FillRect(memDC, &r, b);
+                DeleteObject(b);
+            } else if (particles[i].type == P_STAR) {
+                int st = particles[i].size;
+                int sx = (int)particles[i].x, sy = (int)particles[i].y;
+                HPEN p = CreatePen(PS_SOLID, 1, particles[i].color);
+                HPEN oldP = (HPEN)SelectObject(memDC, p);
+                MoveToEx(memDC, sx - st, sy, NULL); LineTo(memDC, sx + st + 1, sy);
+                MoveToEx(memDC, sx, sy - st, NULL); LineTo(memDC, sx, sy + st + 1);
+                SelectObject(memDC, oldP);
+                DeleteObject(p);
+                SetPixel(memDC, sx, sy, RGB(255, 255, 255));
             }
-            RECT r = { (int)particles[i].x - size, (int)particles[i].y - size, (int)particles[i].x + size + 1, (int)particles[i].y + size + 1 };
-            FillRect(memDC, &r, b);
-            DeleteObject(b);
         }
     }
     for(int i=0; i<MAX_SHOCKWAVES; i++) {
         if(shockwaves[i].active) {
-            HPEN p = CreatePen(PS_SOLID, 2 + shockwaves[i].life / 5, RGB(255, 255, 255));
-            HPEN oldP = (HPEN)SelectObject(memDC, p);
+            HPEN p1 = CreatePen(PS_SOLID, 2 + shockwaves[i].life / 7, shockwaves[i].color);
+            HPEN oldP = (HPEN)SelectObject(memDC, p1);
             HBRUSH oldB = (HBRUSH)SelectObject(memDC, GetStockObject(HOLLOW_BRUSH));
-            Ellipse(memDC, (int)(shockwaves[i].x - shockwaves[i].radius), (int)(shockwaves[i].y - shockwaves[i].radius * 0.7f),
-                           (int)(shockwaves[i].x + shockwaves[i].radius), (int)(shockwaves[i].y + shockwaves[i].radius * 0.7f));
+            Ellipse(memDC, (int)(shockwaves[i].x - shockwaves[i].outer_radius), (int)(shockwaves[i].y - shockwaves[i].outer_radius * 0.7f),
+                           (int)(shockwaves[i].x + shockwaves[i].outer_radius), (int)(shockwaves[i].y + shockwaves[i].outer_radius * 0.7f));
+            HPEN p2 = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+            SelectObject(memDC, p2);
+            Ellipse(memDC, (int)(shockwaves[i].x - shockwaves[i].inner_radius), (int)(shockwaves[i].y - shockwaves[i].inner_radius * 0.7f),
+                           (int)(shockwaves[i].x + shockwaves[i].inner_radius), (int)(shockwaves[i].y + shockwaves[i].inner_radius * 0.7f));
             SelectObject(memDC, oldB);
             SelectObject(memDC, oldP);
-            DeleteObject(p);
+            DeleteObject(p1);
+            DeleteObject(p2);
         }
     }
+}
+
+void draw_ambient_particles(HDC memDC, int dlevel) {
+    COLORREF ambCol = RGB(150, 150, 150);
+    if (dlevel <= 5) ambCol = RGB(50, 150, 80);
+    else if (dlevel <= 10) ambCol = RGB(180, 140, 50);
+    else if (dlevel <= 15) ambCol = RGB(100, 150, 220);
+    else if (dlevel <= 20) ambCol = RGB(255, 120, 50);
+    else if (dlevel <= 25) ambCol = RGB(180, 100, 240);
+    else if (dlevel <= 30) ambCol = RGB(255, 230, 100);
+    else if (dlevel <= 40) ambCol = RGB(140, 50, 200);
+    else ambCol = RGB(240, 240, 255);
+
+    for (int i = 0; i < MAX_AMBIENT; i++) {
+        int ax = (int)g_ambient[i].x;
+        int ay = (int)g_ambient[i].y;
+        SetPixel(memDC, ax, ay, ambCol);
+        if (g_ambient[i].size > 1) SetPixel(memDC, ax + 1, ay, ambCol);
+    }
+}
+
+void draw_gothic_filigree_corners(HDC memDC, int w, int h) {
+    HPEN goldPen = CreatePen(PS_SOLID, 2, RGB(214, 158, 46));
+    HPEN lightPen = CreatePen(PS_SOLID, 1, RGB(236, 201, 75));
+    HPEN oldP = (HPEN)SelectObject(memDC, goldPen);
+    int size = 18;
+    int pad = 4;
+    
+    // Top-left
+    MoveToEx(memDC, pad, pad + size, NULL); LineTo(memDC, pad, pad); LineTo(memDC, pad + size, pad);
+    // Top-right
+    MoveToEx(memDC, w - pad, pad + size, NULL); LineTo(memDC, w - pad, pad); LineTo(memDC, w - pad - size, pad);
+    // Bottom-left
+    MoveToEx(memDC, pad, h - pad - size, NULL); LineTo(memDC, pad, h - pad); LineTo(memDC, pad + size, h - pad);
+    // Bottom-right
+    MoveToEx(memDC, w - pad, h - pad - size, NULL); LineTo(memDC, w - pad, h - pad); LineTo(memDC, w - pad - size, h - pad);
+    
+    SelectObject(memDC, lightPen);
+    MoveToEx(memDC, pad + 4, pad + size - 4, NULL); LineTo(memDC, pad + 4, pad + 4); LineTo(memDC, pad + size - 4, pad + 4);
+    MoveToEx(memDC, w - pad - 4, pad + size - 4, NULL); LineTo(memDC, w - pad - 4, pad + 4); LineTo(memDC, w - pad - size + 4, pad + 4);
+    MoveToEx(memDC, pad + 4, h - pad - size + 4, NULL); LineTo(memDC, pad + 4, h - pad - 4); LineTo(memDC, pad + size - 4, h - pad - 4);
+    MoveToEx(memDC, w - pad - 4, h - pad - size + 4, NULL); LineTo(memDC, w - pad - 4, h - pad - 4); LineTo(memDC, w - pad - size + 4, h - pad - 4);
+
+    SetPixel(memDC, pad + 3, pad + 3, RGB(255, 255, 200));
+    SetPixel(memDC, w - pad - 3, pad + 3, RGB(255, 255, 200));
+    SetPixel(memDC, pad + 3, h - pad - 3, RGB(255, 255, 200));
+    SetPixel(memDC, w - pad - 3, h - pad - 3, RGB(255, 255, 200));
+
+    SelectObject(memDC, oldP);
+    DeleteObject(goldPen);
+    DeleteObject(lightPen);
+}
+
+void draw_perimeter_inlay(HDC memDC, int w, int h, int frame) {
+    HPEN p = CreatePen(PS_SOLID, 1, RGB(90, 70, 20));
+    HPEN oldP = (HPEN)SelectObject(memDC, p);
+    HBRUSH oldB = (HBRUSH)SelectObject(memDC, GetStockObject(HOLLOW_BRUSH));
+    Rectangle(memDC, 6, 6, w - 6, h - 6);
+    SelectObject(memDC, oldB);
+    SelectObject(memDC, oldP);
+    DeleteObject(p);
+
+    int total = (w - 14) * 2 + (h - 14) * 2;
+    int pos = (frame * 5) % (total > 0 ? total : 1);
+    int gx = 6, gy = 6;
+    int top = w - 14, right = h - 14, bot = w - 14;
+    if (pos < top) { gx = 6 + pos; gy = 6; }
+    else if (pos < top + right) { gx = 6 + top; gy = 6 + (pos - top); }
+    else if (pos < top + right + bot) { gx = 6 + top - (pos - top - right); gy = 6 + right; }
+    else { gx = 6; gy = 6 + right - (pos - top - right - bot); }
+
+    SetPixel(memDC, gx, gy, RGB(255, 255, 255));
+    SetPixel(memDC, gx+1, gy, RGB(255, 220, 100));
+    SetPixel(memDC, gx-1, gy, RGB(255, 220, 100));
+    SetPixel(memDC, gx, gy+1, RGB(255, 220, 100));
+    SetPixel(memDC, gx, gy-1, RGB(255, 220, 100));
 }
 
 typedef struct {
@@ -1495,10 +1704,13 @@ void combat(Entity* attacker, Entity* defender) {
         for(int i=0; i<MAX_SHOCKWAVES; i++) {
             if(!shockwaves[i].active) {
                 shockwaves[i].active = 1;
-                shockwaves[i].x = defender->x * char_w + char_w / 2;
-                shockwaves[i].y = defender->y * char_h + char_h / 2;
-                shockwaves[i].radius = 0;
+                shockwaves[i].x = (float)(defender->x * char_w + char_w / 2);
+                shockwaves[i].y = (float)(defender->y * char_h + char_h / 2);
+                shockwaves[i].inner_radius = 0;
+                shockwaves[i].outer_radius = 0;
+                shockwaves[i].color = RGB(255, 200, 50);
                 shockwaves[i].life = 15;
+                shockwaves[i].max_life = 15;
                 break;
             }
         }
@@ -2187,7 +2399,12 @@ void draw_entity_gdi(HDC memDC, int x, int y, Entity* e) {
     DeleteObject(shadowB);
     
     if (e == get_player() || e->ch == '@') {
-        HBRUSH capeB = CreateSolidBrush(RGB(0, 120, 255));
+        COLORREF capeCol = RGB(0, 120, 255);
+        if (e->class_id == CLASS_FIGHTER) capeCol = RGB(220, 50, 50);
+        else if (e->class_id == CLASS_WIZARD) capeCol = RGB(140, 50, 220);
+        else if (e->class_id == CLASS_ROGUE) capeCol = RGB(50, 180, 80);
+
+        HBRUSH capeB = CreateSolidBrush(capeCol);
         RECT capeR = { cx - 4, cy - 2, cx + 5, cy + 7 };
         FillRect(memDC, &capeR, capeB);
         DeleteObject(capeB);
@@ -2197,6 +2414,13 @@ void draw_entity_gdi(HDC memDC, int x, int y, Entity* e) {
         FillRect(memDC, &armorR, armorB);
         DeleteObject(armorB);
         
+        // Specular sheen sweep on armor
+        int sheen = (g_anim_frame * 2) % 16 - 8;
+        if (sheen >= -3 && sheen <= 3) {
+            SetPixel(memDC, cx + sheen, cy, RGB(255, 255, 255));
+            SetPixel(memDC, cx + sheen, cy - 1, RGB(255, 255, 255));
+        }
+
         HBRUSH visorB = CreateSolidBrush(RGB(255, 215, 0));
         RECT visorR = { cx - 2, cy - 6, cx + 3, cy - 4 };
         FillRect(memDC, &visorR, visorB);
@@ -2208,6 +2432,7 @@ void draw_entity_gdi(HDC memDC, int x, int y, Entity* e) {
         LineTo(memDC, cx + 6, cy - 5);
         SelectObject(memDC, oldP);
         DeleteObject(pen);
+        SetPixel(memDC, cx + 6, cy - 5, RGB(255, 255, 200));
     } else if (e->ch == 'r') {
         HBRUSH b = CreateSolidBrush(RGB(180, 180, 0));
         HBRUSH oldB = (HBRUSH)SelectObject(memDC, b);
@@ -2366,6 +2591,9 @@ void draw_game(HDC hdc) {
             }
         }
         
+        draw_ambient_particles(memDC, g.dlevel);
+        draw_particles(memDC);
+
         // UI
         SetTextColor(memDC, RGB(200,200,200));
         SetBkColor(memDC, RGB(0,0,0));
@@ -2740,6 +2968,9 @@ void draw_game(HDC hdc) {
         TextOutA(memDC, 20, y, "Press ESC, H, or ? to return.", 29);
     }
     
+    draw_gothic_filigree_corners(memDC, W * char_w, TOTAL_H * char_h);
+    draw_perimeter_inlay(memDC, W * char_w, TOTAL_H * char_h, g_anim_frame);
+
     int dx = 0, dy = 0;
     if (screen_shake > 0) {
         dx = rand_range(0, screen_shake * 2) - screen_shake;
