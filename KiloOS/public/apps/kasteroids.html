@@ -667,6 +667,25 @@
                 ctx.fill();
                 ctx.stroke();
 
+                // Diagonal specular sheen sweep across hull facets
+                let sheenPos = ((Date.now() * 0.002) % 3.0) - 1.0;
+                let sheenGrad = ctx.createLinearGradient(-15 + sheenPos * 25, -15 + sheenPos * 25, 5 + sheenPos * 25, 5 + sheenPos * 25);
+                sheenGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+                sheenGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.45)');
+                sheenGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.fillStyle = sheenGrad;
+                ctx.beginPath();
+                ctx.moveTo(18, 0);
+                ctx.lineTo(8, -6);
+                ctx.lineTo(-12, -14);
+                ctx.lineTo(-7, -4);
+                ctx.lineTo(-12, 0);
+                ctx.lineTo(-7, 4);
+                ctx.lineTo(-12, 14);
+                ctx.lineTo(8, 6);
+                ctx.closePath();
+                ctx.fill();
+
                 ctx.strokeStyle = '#0284c7';
                 ctx.lineWidth = 1.5;
                 ctx.beginPath();
@@ -1101,49 +1120,23 @@
             constructor(x, y, vx, vy, color, life, type = 'spark') {
                 this.x = x; this.y = y; this.vx = vx; this.vy = vy;
                 this.color = color; this.life = life; this.maxLife = life; this.type = type; this.active = true;
-                this.size = (type === 'smoke') ? 4 : (type === 'storm' ? 2 : 2.5);
+                this.size = (type === 'smoke') ? 4 : (type === 'star' ? 3.5 : (type === 'storm' ? 2 : 2.5));
+                this.rot = Math.random() * Math.PI * 2;
+                this.rotSpeed = (Math.random() - 0.5) * 0.15;
             }
             update() {
-                
-                if (this.isMissile && !this.isEnemy) {
-                    let bestDist = 400;
-                    let target = null;
-                    for(let u of ufos) {
-                        if(u.active) {
-                            let d = Math.hypot(this.x - u.x, this.y - u.y);
-                            if(d < bestDist) { bestDist = d; target = u; }
-                        }
-                    }
-                    if (!target) {
-                        for(let a of asteroids) {
-                            if(a.active) {
-                                let d = Math.hypot(this.x - a.x, this.y - a.y);
-                                if(d < bestDist) { bestDist = d; target = a; }
-                            }
-                        }
-                    }
-                    if (target) {
-                        let ang = Math.atan2(target.y - this.y, target.x - this.x);
-                        let speed = Math.hypot(this.vx, this.vy);
-                        let currAng = Math.atan2(this.vy, this.vx);
-                        let diff = ang - currAng;
-                        while(diff > Math.PI) diff -= Math.PI*2;
-                        while(diff < -Math.PI) diff += Math.PI*2;
-                        currAng += diff * 0.1;
-                        this.vx = Math.cos(currAng) * speed;
-                        this.vy = Math.sin(currAng) * speed;
-                    }
-                    if (Math.random() < 0.3) {
-                        particles.push(new Particle(this.x, this.y, 0, 0, '#c084fc', 15, 'smoke'));
-                        particles[particles.length-1].size = 3;
-                    }
-                }
-    
                 this.x += this.vx; this.y += this.vy;
+                this.rot += this.rotSpeed;
                 if (this.type === 'smoke') {
-                    this.size += 0.15;
-                    this.vx *= 0.95;
-                    this.vy *= 0.95;
+                    this.size += 0.16;
+                    this.vx *= 0.94;
+                    this.vy *= 0.94;
+                } else if (this.type === 'spark') {
+                    this.vx *= 0.96;
+                    this.vy *= 0.96;
+                } else if (this.type === 'star') {
+                    this.vx *= 0.93;
+                    this.vy *= 0.93;
                 }
                 this.life--;
                 if (this.life <= 0) this.active = false;
@@ -1151,15 +1144,52 @@
             draw() {
                 if (!this.active) return;
                 ctx.save();
-                ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
+                let alpha = Math.max(0, this.life / this.maxLife);
+                ctx.globalAlpha = alpha;
+
+                if (this.type === 'spark') {
+                    let speed = Math.hypot(this.vx, this.vy);
+                    let len = Math.max(3, Math.min(14, speed * 2.2));
+                    let ang = Math.atan2(this.vy, this.vx);
+                    ctx.translate(this.x, this.y);
+                    ctx.rotate(ang);
+                    ctx.strokeStyle = this.color;
+                    ctx.lineWidth = 1.8;
+                    ctx.beginPath();
+                    ctx.moveTo(-len, 0);
+                    ctx.lineTo(len, 0);
+                    ctx.stroke();
+
+                    // Core bright spark point
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 1.2, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (this.type === 'star') {
+                    ctx.translate(this.x, this.y);
+                    ctx.rotate(this.rot);
+                    let sz = this.size * (1 + Math.sin((this.maxLife - this.life) * 0.3) * 0.3);
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.moveTo(0, -sz * 2);
+                    ctx.lineTo(sz * 0.5, -sz * 0.5);
+                    ctx.lineTo(sz * 2, 0);
+                    ctx.lineTo(sz * 0.5, sz * 0.5);
+                    ctx.lineTo(0, sz * 2);
+                    ctx.lineTo(-sz * 0.5, sz * 0.5);
+                    ctx.lineTo(-sz * 2, 0);
+                    ctx.lineTo(-sz * 0.5, -sz * 0.5);
+                    ctx.closePath();
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
                 ctx.restore();
             }
         }
-
         
         class FloatingText {
             constructor(x, y, text, color) {
@@ -1187,21 +1217,22 @@
             constructor(x, y, color) {
                 this.x = x; this.y = y; this.color = color;
                 let ang = Math.random() * Math.PI * 2;
-                let spd = Math.random() * 4 + 1;
+                let spd = Math.random() * 4.5 + 1.2;
                 this.vx = Math.cos(ang) * spd; this.vy = Math.sin(ang) * spd;
                 this.rot = Math.random() * Math.PI * 2;
-                this.rotSpeed = (Math.random() - 0.5) * 0.2;
-                this.life = 45; this.maxLife = 45; this.active = true;
+                this.rotSpeed = (Math.random() - 0.5) * 0.25;
+                this.life = 48; this.maxLife = 48; this.active = true;
                 this.points = [];
-                for (let i=0; i<3; i++) {
+                for (let i = 0; i < 3; i++) {
                     this.points.push({
-                        x: (Math.random() - 0.5) * 15,
-                        y: (Math.random() - 0.5) * 15
+                        x: (Math.random() - 0.5) * 16,
+                        y: (Math.random() - 0.5) * 16
                     });
                 }
             }
             update() {
                 this.x += this.vx; this.y += this.vy;
+                this.vx *= 0.98; this.vy *= 0.98;
                 this.rot += this.rotSpeed;
                 this.life--;
                 if (this.life <= 0) this.active = false;
@@ -1211,14 +1242,18 @@
                 ctx.save();
                 ctx.translate(this.x, this.y);
                 ctx.rotate(this.rot);
-                ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
+                let alpha = Math.max(0, this.life / this.maxLife);
+                ctx.globalAlpha = alpha;
                 ctx.fillStyle = this.color;
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1;
                 ctx.beginPath();
                 ctx.moveTo(this.points[0].x, this.points[0].y);
                 ctx.lineTo(this.points[1].x, this.points[1].y);
                 ctx.lineTo(this.points[2].x, this.points[2].y);
                 ctx.closePath();
                 ctx.fill();
+                if (alpha > 0.4) ctx.stroke();
                 ctx.restore();
             }
         }
@@ -1227,22 +1262,34 @@
             constructor(x, y, color, maxRadius = 40) {
                 this.x = x; this.y = y; this.color = color;
                 this.radius = 2; this.maxRadius = maxRadius;
-                this.life = 25; this.maxLife = 25; this.active = true;
+                this.life = 28; this.maxLife = 28; this.active = true;
             }
             update() {
-                this.radius += (this.maxRadius - this.radius) * 0.15;
+                this.radius += (this.maxRadius - this.radius) * 0.16;
                 this.life--;
                 if (this.life <= 0) this.active = false;
             }
             draw() {
                 if (!this.active) return;
                 ctx.save();
-                ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
+                let alpha = Math.max(0, this.life / this.maxLife);
+                
+                // Outer dispersion halo
+                ctx.globalAlpha = alpha * 0.6;
                 ctx.strokeStyle = this.color;
-                ctx.lineWidth = 2.5;
+                ctx.lineWidth = 3.5;
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 ctx.stroke();
+
+                // Inner high-speed compression wave
+                ctx.globalAlpha = alpha;
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.8;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * 0.65, 0, Math.PI * 2);
+                ctx.stroke();
+
                 ctx.restore();
             }
         }
@@ -1271,40 +1318,6 @@
                     return; // Frozen by EMP!
                 }
                 
-                if (this.isMissile && !this.isEnemy) {
-                    let bestDist = 400;
-                    let target = null;
-                    for(let u of ufos) {
-                        if(u.active) {
-                            let d = Math.hypot(this.x - u.x, this.y - u.y);
-                            if(d < bestDist) { bestDist = d; target = u; }
-                        }
-                    }
-                    if (!target) {
-                        for(let a of asteroids) {
-                            if(a.active) {
-                                let d = Math.hypot(this.x - a.x, this.y - a.y);
-                                if(d < bestDist) { bestDist = d; target = a; }
-                            }
-                        }
-                    }
-                    if (target) {
-                        let ang = Math.atan2(target.y - this.y, target.x - this.x);
-                        let speed = Math.hypot(this.vx, this.vy);
-                        let currAng = Math.atan2(this.vy, this.vx);
-                        let diff = ang - currAng;
-                        while(diff > Math.PI) diff -= Math.PI*2;
-                        while(diff < -Math.PI) diff += Math.PI*2;
-                        currAng += diff * 0.1;
-                        this.vx = Math.cos(currAng) * speed;
-                        this.vy = Math.sin(currAng) * speed;
-                    }
-                    if (Math.random() < 0.3) {
-                        particles.push(new Particle(this.x, this.y, 0, 0, '#c084fc', 15, 'smoke'));
-                        particles[particles.length-1].size = 3;
-                    }
-                }
-    
                 this.x += this.vx;
                 this.y += this.vy;
                 this.animFrame += 0.15;
@@ -2032,17 +2045,16 @@
             }
         }
 
-        let gameOver = true;
-        let lastShootTime = 0;
-        let screenShake = 0;
+        let screenShakeTra = 0;
+        let screenShakeRot = 0;
 
         function createExplosion(x, y, color, particleCount = 30, maxRadius = 45) {
             shockwaves.push(new Shockwave(x, y, color, maxRadius));
             
-            screenShake += maxRadius * 0.15;
-            if (screenShake > 25) screenShake = 25;
+            screenShakeTra = Math.min(26, screenShakeTra + maxRadius * 0.22);
+            screenShakeRot = Math.min(0.06, screenShakeRot + (Math.random() - 0.5) * 0.04);
 
-            for (let d = 0; d < particleCount / 3; d++) {
+            for (let d = 0; d < Math.max(2, Math.floor(particleCount / 3)); d++) {
                 debrisArray.push(new Debris(x, y, color));
             }
 
@@ -2051,17 +2063,23 @@
                 let spd, type, pColor = color, sizeMult = 1;
                 
                 if (p % 4 === 0) {
-                    spd = Math.random() * 8 + 4; // fast spark layer
+                    spd = Math.random() * 8 + 4; // Layer 1: incandescent core needle sparks
                     type = 'spark';
                     pColor = '#ffffff';
-                    sizeMult = 0.6;
+                    sizeMult = 0.8;
                 } else if (p % 4 === 1) {
-                    spd = Math.random() * 3 + 1; // slow smoke layer
+                    spd = Math.random() * 2.5 + 0.8; // Layer 2: expanding buoyant smoke & plasma puffs
                     type = 'smoke';
-                    sizeMult = 1.2;
+                    sizeMult = 1.3;
+                } else if (p % 4 === 2) {
+                    spd = Math.random() * 5 + 1.5; // Layer 3: radiant golden/cyan celebration energy stars
+                    type = 'star';
+                    pColor = Math.random() > 0.4 ? '#facc15' : '#38bdf8';
+                    sizeMult = 1.0;
                 } else {
-                    spd = Math.random() * 5 + 1; // normal particle
+                    spd = Math.random() * 4 + 1.2; // Layer 4: medium velocity sparks
                     type = 'spark';
+                    pColor = color;
                 }
 
                 particles.push(new Particle(
@@ -2919,6 +2937,11 @@
                 }
             }
             
+            if (screenShakeTra > 0.001) screenShakeTra *= 0.88;
+            else screenShakeTra = 0;
+            if (Math.abs(screenShakeRot) > 0.0001) screenShakeRot *= 0.88;
+            else screenShakeRot = 0;
+
             if (!wasGameOver && gameOver) {
                 document.getElementById('menuContent').style.display = 'block';
                 document.getElementById('statsContent').style.display = 'none';
@@ -2935,13 +2958,104 @@
             Object.assign(prevKeys, keys);
         }
 
+        function drawCyberHUD() {
+            ctx.save();
+            let t = Date.now() * 0.001;
+            let w = canvas.width, h = canvas.height;
+
+            // 1. Pulsating Energy Perimeter Inlay Border
+            let borderAlpha = 0.35 + Math.sin(t * 3.0) * 0.18;
+            ctx.strokeStyle = `rgba(56, 189, 248, ${borderAlpha})`;
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(8, 8, w - 16, h - 16);
+
+            ctx.strokeStyle = `rgba(14, 165, 233, ${borderAlpha * 0.45})`;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(11, 11, w - 22, h - 22);
+
+            // Traveling specular glint traversing outer playfield perimeter
+            let periLen = 2 * (w - 16) + 2 * (h - 16);
+            let glintDist = (t * 220) % periLen;
+            let gx = 8, gy = 8;
+            if (glintDist < (w - 16)) {
+                gx = 8 + glintDist; gy = 8;
+            } else if (glintDist < (w - 16) + (h - 16)) {
+                gx = w - 8; gy = 8 + (glintDist - (w - 16));
+            } else if (glintDist < 2 * (w - 16) + (h - 16)) {
+                gx = (w - 8) - (glintDist - ((w - 16) + (h - 16))); gy = h - 8;
+            } else {
+                gx = 8; gy = (h - 8) - (glintDist - (2 * (w - 16) + (h - 16)));
+            }
+            let glintGrad = ctx.createRadialGradient(gx, gy, 0, gx, gy, 12);
+            glintGrad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            glintGrad.addColorStop(0.3, 'rgba(56, 189, 248, 0.8)');
+            glintGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+            ctx.fillStyle = glintGrad;
+            ctx.beginPath();
+            ctx.arc(gx, gy, 12, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 2. Ornate Cybernetic Arcade HUD Corner Filigree L-Brackets with tech notches & rivet accents
+            const corners = [
+                { x: 18, y: 18, sx: 1, sy: 1 },
+                { x: w - 18, y: 18, sx: -1, sy: 1 },
+                { x: 18, y: h - 18, sx: 1, sy: -1 },
+                { x: w - 18, y: h - 18, sx: -1, sy: -1 }
+            ];
+
+            corners.forEach(c => {
+                ctx.save();
+                ctx.translate(c.x, c.y);
+                ctx.scale(c.sx, c.sy);
+
+                // Outer L-bracket arm
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(35, 0);
+                ctx.lineTo(8, 0);
+                ctx.lineTo(0, 8);
+                ctx.lineTo(0, 35);
+                ctx.stroke();
+
+                // Inner decorative bracket
+                ctx.strokeStyle = 'rgba(250, 204, 21, 0.8)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(25, 6);
+                ctx.lineTo(12, 6);
+                ctx.lineTo(6, 12);
+                ctx.lineTo(6, 25);
+                ctx.stroke();
+
+                // Tech notch step
+                ctx.fillStyle = '#38bdf8';
+                ctx.fillRect(18, -2, 6, 2);
+                ctx.fillRect(-2, 18, 2, 6);
+
+                // Corner glowing golden rivet
+                ctx.fillStyle = '#facc15';
+                ctx.beginPath();
+                ctx.arc(10, 10, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            });
+
+            ctx.restore();
+        }
+
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.save();
-            if (screenShake > 0) {
-                let dx = (Math.random() - 0.5) * screenShake;
-                let dy = (Math.random() - 0.5) * screenShake;
-                ctx.translate(dx, dy);
+            if (screenShakeTra > 0.01 || Math.abs(screenShakeRot) > 0.0001) {
+                let t = Date.now();
+                let sx = Math.sin(t * 0.075) * screenShakeTra;
+                let sy = Math.cos(t * 0.065) * screenShakeTra;
+                let srot = Math.sin(t * 0.045) * screenShakeRot;
+                ctx.translate(canvas.width / 2, canvas.height / 2);
+                ctx.rotate(srot);
+                ctx.translate(-canvas.width / 2 + sx, -canvas.height / 2 + sy);
             }
             drawStarfield();
 
@@ -3003,6 +3117,10 @@
             shockwaves.forEach(s => s.draw());
             debrisArray.forEach(d => d.draw());
             floatingTexts.forEach(f => f.draw());
+
+            // Ornate Cyber HUD perimeter and corner brackets
+            drawCyberHUD();
+
             ctx.restore();
         }
 

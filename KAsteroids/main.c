@@ -93,12 +93,14 @@ typedef struct {
 typedef struct {
     float x, y;
     float vx, vy;
+    float rot;
+    float rot_speed;
     int life;
     int max_life;
     COLORREF color;
     bool active;
     float size;
-    int type; // 0 = spark, 1 = smoke, 2 = storm
+    int type; // 0 = needle spark, 1 = smoke puff, 2 = storm, 3 = energy star, 4 = stardust
 } Particle;
 
 
@@ -232,6 +234,8 @@ typedef struct { float x, y, radius, pull, anim_frame; bool active; } BlackHole;
 BlackHole black_hole = {0};
 
 bool branching_active = false;
+float screen_shake_tra = 0.0f;
+float screen_shake_rot = 0.0f;
 float screen_shake = 0.0f;
 
 Stats stats = {0};
@@ -371,24 +375,28 @@ void CreateExplosion(float x, float y, COLORREF color, int count, float max_radi
         Shockwave* sw = &shockwaves[num_shockwaves++];
         sw->x = x; sw->y = y;
         sw->radius = 2.0f; sw->max_radius = max_radius;
-        sw->life = 25; sw->max_life = 25;
+        sw->life = 28; sw->max_life = 28;
         sw->color = color; sw->active = true;
     }
 
-    screen_shake += (max_radius / 10.0f);
-    if (screen_shake > 20.0f) screen_shake = 20.0f;
+    screen_shake_tra += (max_radius * 0.22f);
+    if (screen_shake_tra > 26.0f) screen_shake_tra = 26.0f;
+    screen_shake_rot += ((rand() % 100) - 50) / 1250.0f;
+    if (screen_shake_rot > 0.06f) screen_shake_rot = 0.06f;
+    if (screen_shake_rot < -0.06f) screen_shake_rot = -0.06f;
+    screen_shake = screen_shake_tra;
 
-    for (int d = 0; d < count / 3; d++) {
+    for (int d = 0; d < count / 3 && d < 12; d++) {
         if (num_debrisArray >= 200) break;
         Debris* db = &debrisArray[num_debrisArray++];
         db->x = x; db->y = y; db->color = color;
         float ang = (rand() % 360) * 3.14159f / 180.0f;
-        float spd = 1.0f + (rand() % 40) / 10.0f;
+        float spd = 1.2f + (rand() % 45) / 10.0f;
         db->vx = cos(ang) * spd; db->vy = sin(ang) * spd;
         db->rot = (rand() % 360) * 3.14159f / 180.0f;
-        db->rot_speed = ((rand() % 100) - 50) / 250.0f;
-        db->life = 45; db->max_life = 45; db->active = true;
-        for (int i=0; i<6; i++) db->pts[i] = ((rand() % 100) - 50) / 3.0f;
+        db->rot_speed = ((rand() % 100) - 50) / 200.0f;
+        db->life = 48; db->max_life = 48; db->active = true;
+        for (int i = 0; i < 6; i++) db->pts[i] = ((rand() % 100) - 50) / 3.0f;
     }
 
     for (int p = 0; p < count; p++) {
@@ -398,24 +406,31 @@ void CreateExplosion(float x, float y, COLORREF color, int count, float max_radi
         float ang = (rand() % 360) * 3.14159f / 180.0f;
         float spd;
         if (p % 4 == 0) {
-            spd = 4.0f + (rand() % 800) / 100.0f; // fast sparks
+            spd = 4.0f + (rand() % 800) / 100.0f; // Layer 1: incandescent core needle sparks
             pt->type = 0;
-            pt->size = 1.5f;
+            pt->size = 1.8f;
             pt->color = RGB(255, 255, 255);
         } else if (p % 4 == 1) {
-            spd = 1.0f + (rand() % 300) / 100.0f; // dense smoke
+            spd = 0.8f + (rand() % 250) / 100.0f; // Layer 2: expanding buoyant smoke & plasma puffs
             pt->type = 1;
             pt->size = 4.0f + (rand() % 3);
             pt->color = color;
+        } else if (p % 4 == 2) {
+            spd = 1.5f + (rand() % 500) / 100.0f; // Layer 3: radiant golden celebration energy stars
+            pt->type = 3;
+            pt->size = 3.5f;
+            pt->color = (rand() % 2 == 0) ? RGB(250, 204, 21) : RGB(56, 189, 248);
         } else {
-            spd = 1.0f + (rand() % 500) / 100.0f; // normal
+            spd = 1.2f + (rand() % 400) / 100.0f; // Layer 4: medium velocity sparks
             pt->type = 0;
             pt->size = 2.5f + (rand() % 2);
             pt->color = color;
         }
         pt->vx = cos(ang) * spd;
         pt->vy = sin(ang) * spd;
-        pt->life = 20 + (rand() % 30);
+        pt->rot = (rand() % 360) * 3.14159f / 180.0f;
+        pt->rot_speed = ((rand() % 100) - 50) / 200.0f;
+        pt->life = 25 + (rand() % 25);
         pt->max_life = pt->life;
         pt->active = true;
     }
@@ -1318,10 +1333,11 @@ void CompactArrays() {
 }
 
 void Update() {
-    if (screen_shake > 0.0f) {
-        screen_shake -= 0.5f;
-        if (screen_shake < 0.0f) screen_shake = 0.0f;
-    }
+    if (screen_shake_tra > 0.001f) screen_shake_tra *= 0.88f;
+    else screen_shake_tra = 0.0f;
+    if (fabsf(screen_shake_rot) > 0.0001f) screen_shake_rot *= 0.88f;
+    else screen_shake_rot = 0.0f;
+    screen_shake = screen_shake_tra;
 
     if (game_over) {
         if (keys['S'] || keys['K']) { showing_stats = true; showing_help = false; }
@@ -2099,10 +2115,17 @@ void Update() {
         if (!particles[i].active) continue;
         particles[i].x += particles[i].vx;
         particles[i].y += particles[i].vy;
+        particles[i].rot += particles[i].rot_speed;
         if (particles[i].type == 1) {
-            particles[i].size += 0.15f;
-            particles[i].vx *= 0.95f;
-            particles[i].vy *= 0.95f;
+            particles[i].size += 0.16f;
+            particles[i].vx *= 0.94f;
+            particles[i].vy *= 0.94f;
+        } else if (particles[i].type == 0) {
+            particles[i].vx *= 0.96f;
+            particles[i].vy *= 0.96f;
+        } else if (particles[i].type == 3) {
+            particles[i].vx *= 0.93f;
+            particles[i].vy *= 0.93f;
         }
         particles[i].life--;
         if (particles[i].life <= 0) particles[i].active = false;
@@ -2111,7 +2134,7 @@ void Update() {
     // Update shockwaves
     for (int i = 0; i < num_shockwaves; i++) {
         if (!shockwaves[i].active) continue;
-        shockwaves[i].radius += (shockwaves[i].max_radius - shockwaves[i].radius) * 0.15f;
+        shockwaves[i].radius += (shockwaves[i].max_radius - shockwaves[i].radius) * 0.16f;
         shockwaves[i].life--;
         if (shockwaves[i].life <= 0) shockwaves[i].active = false;
     }
@@ -2160,10 +2183,93 @@ void Update() {
     }
 }
 
+void DrawCyberHUD(HDC hdc) {
+    long long t = GetTimeMs();
+    float timeSec = t * 0.001f;
+
+    // 1. Pulsating Energy Perimeter Inlay Border
+    int pulse = (int)(sin(timeSec * 3.0f) * 45.0f);
+    int bAlpha = 180 + pulse;
+    if (bAlpha > 255) bAlpha = 255;
+    if (bAlpha < 100) bAlpha = 100;
+    COLORREF borderCol = RGB(56 * bAlpha / 255, 189 * bAlpha / 255, 248 * bAlpha / 255);
+    HPEN bPen = CreatePen(PS_SOLID, 1, borderCol);
+    SelectObject(hdc, bPen);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    Rectangle(hdc, 8, 8, WIDTH - 8, HEIGHT - 8);
+    Rectangle(hdc, 11, 11, WIDTH - 11, HEIGHT - 11);
+    DeleteObject(bPen);
+
+    // Traveling specular glint traversing outer playfield perimeter
+    int periW = (WIDTH - 16);
+    int periH = (HEIGHT - 16);
+    int periLen = 2 * periW + 2 * periH;
+    int glintDist = (int)(timeSec * 220.0f) % periLen;
+    int gx = 8, gy = 8;
+    if (glintDist < periW) {
+        gx = 8 + glintDist; gy = 8;
+    } else if (glintDist < periW + periH) {
+        gx = WIDTH - 8; gy = 8 + (glintDist - periW);
+    } else if (glintDist < 2 * periW + periH) {
+        gx = (WIDTH - 8) - (glintDist - (periW + periH)); gy = HEIGHT - 8;
+    } else {
+        gx = 8; gy = (HEIGHT - 8) - (glintDist - (2 * periW + periH));
+    }
+
+    HBRUSH gBrush = CreateSolidBrush(RGB(255, 255, 255));
+    HPEN gPen = CreatePen(PS_SOLID, 1, RGB(56, 189, 248));
+    SelectObject(hdc, gBrush); SelectObject(hdc, gPen);
+    Ellipse(hdc, gx - 4, gy - 4, gx + 4, gy + 4);
+    DeleteObject(gBrush); DeleteObject(gPen);
+
+    // 2. Ornate Cybernetic Arcade HUD Corner Filigree L-Brackets with tech notches & rivet accents
+    HPEN cPen = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
+    HPEN iPen = CreatePen(PS_SOLID, 1, RGB(250, 204, 21));
+    HBRUSH rBrush = CreateSolidBrush(RGB(250, 204, 21));
+    HBRUSH notchBrush = CreateSolidBrush(RGB(56, 189, 248));
+
+    int cx[4] = { 18, WIDTH - 18, 18, WIDTH - 18 };
+    int cy[4] = { 18, 18, HEIGHT - 18, HEIGHT - 18 };
+    int sx[4] = { 1, -1, 1, -1 };
+    int sy[4] = { 1, 1, -1, -1 };
+
+    for (int i = 0; i < 4; i++) {
+        SelectObject(hdc, cPen);
+        MoveToEx(hdc, cx[i] + sx[i] * 35, cy[i], NULL);
+        LineTo(hdc, cx[i] + sx[i] * 8, cy[i]);
+        LineTo(hdc, cx[i], cy[i] + sy[i] * 8);
+        LineTo(hdc, cx[i], cy[i] + sy[i] * 35);
+
+        SelectObject(hdc, iPen);
+        MoveToEx(hdc, cx[i] + sx[i] * 25, cy[i] + sy[i] * 6, NULL);
+        LineTo(hdc, cx[i] + sx[i] * 12, cy[i] + sy[i] * 6);
+        LineTo(hdc, cx[i] + sx[i] * 6, cy[i] + sy[i] * 12);
+        LineTo(hdc, cx[i] + sx[i] * 6, cy[i] + sy[i] * 25);
+
+        // Tech notch
+        RECT nr1 = { cx[i] + (sx[i] > 0 ? 18 : -24), cy[i] + (sy[i] > 0 ? -2 : 0), cx[i] + (sx[i] > 0 ? 24 : -18), cy[i] + (sy[i] > 0 ? 0 : 2) };
+        FillRect(hdc, &nr1, notchBrush);
+        RECT nr2 = { cx[i] + (sx[i] > 0 ? -2 : 0), cy[i] + (sy[i] > 0 ? 18 : -24), cx[i] + (sx[i] > 0 ? 0 : 2), cy[i] + (sy[i] > 0 ? 24 : -18) };
+        FillRect(hdc, &nr2, notchBrush);
+
+        // Rivet
+        SelectObject(hdc, rBrush); SelectObject(hdc, GetStockObject(NULL_PEN));
+        int rx = cx[i] + sx[i] * 10;
+        int ry = cy[i] + sy[i] * 10;
+        Ellipse(hdc, rx - 2, ry - 2, rx + 2, ry + 2);
+    }
+
+    DeleteObject(cPen);
+    DeleteObject(iPen);
+    DeleteObject(rBrush);
+    DeleteObject(notchBrush);
+}
+
 void Draw(HDC hdc) {
-    if (screen_shake > 0.0f) {
-        int sx = (int)(((rand() % 100) - 50) / 50.0f * screen_shake);
-        int sy = (int)(((rand() % 100) - 50) / 50.0f * screen_shake);
+    if (screen_shake_tra > 0.01f) {
+        long long t = GetTimeMs();
+        int sx = (int)(sin(t * 0.075f) * screen_shake_tra);
+        int sy = (int)(cos(t * 0.065f) * screen_shake_tra);
         SetViewportOrgEx(hdc, sx, sy, NULL);
     }
 
@@ -2340,6 +2446,15 @@ void Draw(HDC hdc) {
         pts[7].x = (LONG)(ship.x + (8 * c - 6 * s));     pts[7].y = (LONG)(ship.y + (8 * s + 6 * c));
         Polygon(hdc, pts, 8);
         DeleteObject(hullPen); DeleteObject(hullBrush);
+
+        // Sculpted hull specular sheen sweep line
+        HPEN sheenPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+        SelectObject(hdc, sheenPen);
+        MoveToEx(hdc, (LONG)(ship.x + (14 * c - 0 * s)), (LONG)(ship.y + (14 * s + 0 * c)), NULL);
+        LineTo(hdc, (LONG)(ship.x + (2 * c - (-4) * s)), (LONG)(ship.y + (2 * s + (-4) * c)));
+        MoveToEx(hdc, (LONG)(ship.x + (6 * c - (-5) * s)), (LONG)(ship.y + (6 * s + (-5) * c)), NULL);
+        LineTo(hdc, (LONG)(ship.x + (-8 * c - (-11) * s)), (LONG)(ship.y + (-8 * s + (-11) * c)));
+        DeleteObject(sheenPen);
 
         // Cockpit Glass Canopy
         HBRUSH glassBrush = CreateSolidBrush(RGB(56, 189, 248));
@@ -2718,25 +2833,68 @@ void Draw(HDC hdc) {
         }
     }
 
-    // Draw Shockwaves
+    // Draw Shockwaves (Dual-Tier Concentric Ripple Rings)
     for (int i = 0; i < num_shockwaves; i++) {
         if (!shockwaves[i].active) continue;
+        int r = (int)shockwaves[i].radius;
+        // Outer dispersion ring
         HPEN swp = CreatePen(PS_SOLID, 2, shockwaves[i].color);
         SelectObject(hdc, swp); SelectObject(hdc, GetStockObject(NULL_BRUSH));
-        int r = (int)shockwaves[i].radius;
         Ellipse(hdc, (int)shockwaves[i].x - r, (int)shockwaves[i].y - r, (int)shockwaves[i].x + r, (int)shockwaves[i].y + r);
         DeleteObject(swp);
+
+        // Inner high-speed compression ring
+        int ir = (int)(r * 0.65f);
+        if (ir > 1) {
+            HPEN iswp = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+            SelectObject(hdc, iswp);
+            Ellipse(hdc, (int)shockwaves[i].x - ir, (int)shockwaves[i].y - ir, (int)shockwaves[i].x + ir, (int)shockwaves[i].y + ir);
+            DeleteObject(iswp);
+        }
     }
 
-    // Draw Particles
+    // Draw Particles (Multi-Layered Particle Engine)
     for (int i = 0; i < num_particles; i++) {
         if (!particles[i].active) continue;
-        HBRUSH pb = CreateSolidBrush(particles[i].color);
-        HPEN pp = CreatePen(PS_SOLID, 1, particles[i].color);
-        SelectObject(hdc, pb); SelectObject(hdc, pp);
-        int sz = (int)particles[i].size;
-        Ellipse(hdc, (int)(particles[i].x - sz), (int)(particles[i].y - sz), (int)(particles[i].x + sz), (int)(particles[i].y + sz));
-        DeleteObject(pb); DeleteObject(pp);
+        if (particles[i].type == 0) { // Incandescent needle sparks
+            float len = sqrt(particles[i].vx * particles[i].vx + particles[i].vy * particles[i].vy) * 2.2f;
+            if (len < 2.0f) len = 2.0f;
+            if (len > 12.0f) len = 12.0f;
+            float ang = atan2(particles[i].vy, particles[i].vx);
+            HPEN pp = CreatePen(PS_SOLID, 2, particles[i].color);
+            SelectObject(hdc, pp);
+            MoveToEx(hdc, (int)(particles[i].x - cos(ang) * len), (int)(particles[i].y - sin(ang) * len), NULL);
+            LineTo(hdc, (int)(particles[i].x + cos(ang) * len), (int)(particles[i].y + sin(ang) * len));
+            DeleteObject(pp);
+
+            // Core bright spark point
+            SetPixel(hdc, (int)particles[i].x, (int)particles[i].y, RGB(255, 255, 255));
+        } else if (particles[i].type == 3) { // Radiant golden celebration energy stars
+            float rot = particles[i].rot;
+            float sz = particles[i].size;
+            POINT starPts[4];
+            starPts[0].x = (LONG)(particles[i].x + cos(rot) * sz * 2.0f);
+            starPts[0].y = (LONG)(particles[i].y + sin(rot) * sz * 2.0f);
+            starPts[1].x = (LONG)(particles[i].x + cos(rot + 1.57f) * sz * 0.8f);
+            starPts[1].y = (LONG)(particles[i].y + sin(rot + 1.57f) * sz * 0.8f);
+            starPts[2].x = (LONG)(particles[i].x + cos(rot + 3.14f) * sz * 2.0f);
+            starPts[2].y = (LONG)(particles[i].y + sin(rot + 3.14f) * sz * 2.0f);
+            starPts[3].x = (LONG)(particles[i].x + cos(rot + 4.71f) * sz * 0.8f);
+            starPts[3].y = (LONG)(particles[i].y + sin(rot + 4.71f) * sz * 0.8f);
+
+            HBRUSH sb = CreateSolidBrush(particles[i].color);
+            HPEN sp = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+            SelectObject(hdc, sb); SelectObject(hdc, sp);
+            Polygon(hdc, starPts, 4);
+            DeleteObject(sb); DeleteObject(sp);
+        } else { // Smoke puffs, storm sparks
+            HBRUSH pb = CreateSolidBrush(particles[i].color);
+            HPEN pp = CreatePen(PS_SOLID, 1, particles[i].color);
+            SelectObject(hdc, pb); SelectObject(hdc, pp);
+            int sz = (int)particles[i].size;
+            Ellipse(hdc, (int)(particles[i].x - sz), (int)(particles[i].y - sz), (int)(particles[i].x + sz), (int)(particles[i].y + sz));
+            DeleteObject(pb); DeleteObject(pp);
+        }
     }
 
     // Draw PowerUps
@@ -3077,7 +3235,10 @@ void Draw(HDC hdc) {
         }
     }
 
-    if (screen_shake > 0.0f) {
+    // Ornate Cyber HUD perimeter and corner brackets
+    DrawCyberHUD(hdc);
+
+    if (screen_shake_tra > 0.01f) {
         SetViewportOrgEx(hdc, 0, 0, NULL);
     }
 }
