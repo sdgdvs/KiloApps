@@ -1607,6 +1607,7 @@
         <div class="header-actions">
             <button class="btn-header" onclick="toggleTheme()" id="btn-theme">THEME: AMBER CRT</button>
             <button class="btn-header" onclick="toggleAudio()" id="btn-audio">AUDIO: ON</button>
+            <button class="btn-header" onclick="toggleAmbientWind()" id="btn-wind">WIND: OFF</button>
             <button class="btn-header" onclick="toggleScanlines()" id="btn-scanlines">CRT: ON</button>
             <button class="btn-header" onclick="showHelpModal()">HELP / MANUAL</button>
             <button class="btn-header" onclick="resetShelter()">RESET</button>
@@ -2548,14 +2549,220 @@
     </div>
 
     <script>
-        // Audio Synthesizer (Web Audio API)
+        // Audio Synthesizer (Web Audio API) - Geiger, Construction, Siren, Ambient Wind & UI SFX
         let audioCtx = null;
         let soundEnabled = true;
+        let ambientWindNode = null;
+        let isAmbientWindPlaying = false;
 
         function initAudio() {
             if (!audioCtx) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 if (AudioContext) audioCtx = new AudioContext();
+            }
+        }
+
+        function playGeigerBurst(count = 6) {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                if (!audioCtx) return;
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const now = audioCtx.currentTime;
+                for (let i = 0; i < count; i++) {
+                    const clickTime = now + (i * 0.032) + (Math.random() * 0.04);
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'highpass';
+                    filter.frequency.setValueAtTime(1400 + Math.random() * 1200, clickTime);
+
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(1800 + Math.random() * 1600, clickTime);
+                    gain.gain.setValueAtTime(0.06, clickTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, clickTime + 0.008);
+
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start(clickTime);
+                    osc.stop(clickTime + 0.009);
+                }
+            } catch (e) {}
+        }
+
+        function playConstructionSound() {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                if (!audioCtx) return;
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const now = audioCtx.currentTime;
+
+                // Heavy motor / turbine hum
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.type = 'sawtooth';
+                osc1.frequency.setValueAtTime(65, now);
+                osc1.frequency.linearRampToValueAtTime(115, now + 0.22);
+                osc1.frequency.linearRampToValueAtTime(55, now + 0.45);
+                gain1.gain.setValueAtTime(0.08, now);
+                gain1.gain.linearRampToValueAtTime(0.001, now + 0.5);
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.5);
+
+                // Metallic clangs & impact pulses
+                [0.06, 0.20, 0.35].forEach((tOffset, idx) => {
+                    const osc2 = audioCtx.createOscillator();
+                    const gain2 = audioCtx.createGain();
+                    osc2.type = 'triangle';
+                    osc2.frequency.setValueAtTime(260 + idx * 70, now + tOffset);
+                    osc2.frequency.exponentialRampToValueAtTime(80, now + tOffset + 0.1);
+                    gain2.gain.setValueAtTime(0.09, now + tOffset);
+                    gain2.gain.exponentialRampToValueAtTime(0.001, now + tOffset + 0.1);
+                    osc2.connect(gain2);
+                    gain2.connect(audioCtx.destination);
+                    osc2.start(now + tOffset);
+                    osc2.stop(now + tOffset + 0.1);
+                });
+            } catch (e) {}
+        }
+
+        function playAlarmSiren() {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                if (!audioCtx) return;
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+
+                // Two rising/falling siren sweeps
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.linearRampToValueAtTime(880, now + 0.2);
+                osc.frequency.linearRampToValueAtTime(440, now + 0.4);
+                osc.frequency.linearRampToValueAtTime(880, now + 0.6);
+                osc.frequency.linearRampToValueAtTime(380, now + 0.85);
+
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.setValueAtTime(0.12, now + 0.7);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.88);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.88);
+            } catch (e) {}
+        }
+
+        function playWindGust() {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                if (!audioCtx) return;
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const now = audioCtx.currentTime;
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(140, now);
+                osc.frequency.linearRampToValueAtTime(220, now + 0.3);
+                osc.frequency.linearRampToValueAtTime(120, now + 0.6);
+                gain.gain.setValueAtTime(0.06, now);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.65);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.65);
+            } catch (e) {}
+        }
+
+        function toggleAmbientWind() {
+            initAudio();
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            if (isAmbientWindPlaying) {
+                stopAmbientWind();
+            } else {
+                startAmbientWind();
+            }
+        }
+
+        function startAmbientWind() {
+            if (!soundEnabled || !audioCtx || isAmbientWindPlaying) return;
+            try {
+                const bufferSize = audioCtx.sampleRate * 2;
+                const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+                let lastOut = 0.0;
+                for (let i = 0; i < bufferSize; i++) {
+                    const white = Math.random() * 2 - 1;
+                    output[i] = (lastOut + (0.02 * white)) / 1.02;
+                    lastOut = output[i];
+                    output[i] *= 3.5;
+                }
+
+                const whiteNoise = audioCtx.createBufferSource();
+                whiteNoise.buffer = noiseBuffer;
+                whiteNoise.loop = true;
+
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(240, audioCtx.currentTime);
+                filter.Q.setValueAtTime(2.5, audioCtx.currentTime);
+
+                const lfo = audioCtx.createOscillator();
+                lfo.frequency.setValueAtTime(0.18, audioCtx.currentTime);
+                const lfoGain = audioCtx.createGain();
+                lfoGain.gain.setValueAtTime(120, audioCtx.currentTime);
+                lfo.connect(lfoGain);
+                lfoGain.connect(filter.frequency);
+                lfo.start();
+
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.035, audioCtx.currentTime + 1.2);
+
+                whiteNoise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                whiteNoise.start();
+                ambientWindNode = { whiteNoise, lfo, gain };
+                isAmbientWindPlaying = true;
+                const btn = document.getElementById('btn-wind');
+                if (btn) {
+                    btn.textContent = 'WIND: ON';
+                    btn.style.borderColor = 'var(--accent-cyan)';
+                    btn.style.color = 'var(--text-bright)';
+                }
+            } catch (e) {}
+        }
+
+        function stopAmbientWind() {
+            if (!ambientWindNode || !audioCtx) return;
+            try {
+                ambientWindNode.gain.gain.linearRampToValueAtTime(0.0001, audioCtx.currentTime + 0.6);
+                const nodeRef = ambientWindNode;
+                ambientWindNode = null;
+                setTimeout(() => {
+                    if (nodeRef) {
+                        try { nodeRef.whiteNoise.stop(); nodeRef.lfo.stop(); } catch (err) {}
+                    }
+                }, 700);
+            } catch (e) {}
+            isAmbientWindPlaying = false;
+            const btn = document.getElementById('btn-wind');
+            if (btn) {
+                btn.textContent = 'WIND: OFF';
+                btn.style.borderColor = 'var(--panel-border)';
+                btn.style.color = 'var(--text-dim)';
             }
         }
 
@@ -2567,6 +2774,21 @@
                 if (audioCtx.state === 'suspended') audioCtx.resume();
 
                 const now = audioCtx.currentTime;
+
+                if (type === 'geiger') {
+                    playGeigerBurst(6);
+                    return;
+                } else if (type === 'construction') {
+                    playConstructionSound();
+                    return;
+                } else if (type === 'siren' || type === 'alarm') {
+                    playAlarmSiren();
+                    return;
+                } else if (type === 'wind') {
+                    playWindGust();
+                    return;
+                }
+
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.connect(gain);
@@ -2574,40 +2796,40 @@
 
                 if (type === 'click') {
                     osc.type = 'square';
-                    osc.frequency.setValueAtTime(600, now);
-                    osc.frequency.exponentialRampToValueAtTime(300, now + 0.04);
+                    osc.frequency.setValueAtTime(650, now);
+                    osc.frequency.exponentialRampToValueAtTime(300, now + 0.035);
                     gain.gain.setValueAtTime(0.04, now);
-                    gain.gain.linearRampToValueAtTime(0.001, now + 0.04);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.035);
                     osc.start(now);
-                    osc.stop(now + 0.04);
+                    osc.stop(now + 0.035);
                 } else if (type === 'cycle') {
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(440, now);
-                    osc.frequency.setValueAtTime(554.37, now + 0.08);
-                    osc.frequency.setValueAtTime(659.25, now + 0.16);
+                    osc.frequency.setValueAtTime(554.37, now + 0.07);
+                    osc.frequency.setValueAtTime(659.25, now + 0.14);
                     gain.gain.setValueAtTime(0.08, now);
-                    gain.gain.linearRampToValueAtTime(0.001, now + 0.28);
-                    osc.start(now);
-                    osc.stop(now + 0.28);
-                } else if (type === 'alert') {
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(220, now);
-                    osc.frequency.setValueAtTime(180, now + 0.12);
-                    gain.gain.setValueAtTime(0.1, now);
                     gain.gain.linearRampToValueAtTime(0.001, now + 0.25);
                     osc.start(now);
                     osc.stop(now + 0.25);
-                } else if (type === 'scout') {
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(523.25, now);
-                    osc.frequency.setValueAtTime(783.99, now + 0.1);
-                    gain.gain.setValueAtTime(0.08, now);
+                } else if (type === 'alert' || type === 'warn') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.setValueAtTime(180, now + 0.1);
+                    gain.gain.setValueAtTime(0.09, now);
                     gain.gain.linearRampToValueAtTime(0.001, now + 0.22);
                     osc.start(now);
                     osc.stop(now + 0.22);
+                } else if (type === 'scout') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(783.99, now + 0.09);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
                 } else if (type === 'hazard') {
                     osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.setValueAtTime(160, now);
                     osc.frequency.exponentialRampToValueAtTime(60, now + 0.35);
                     gain.gain.setValueAtTime(0.12, now);
                     gain.gain.linearRampToValueAtTime(0.001, now + 0.35);
@@ -2624,11 +2846,47 @@
                 } else if (type === 'trade') {
                     osc.type = 'triangle';
                     osc.frequency.setValueAtTime(659.25, now);
-                    osc.frequency.setValueAtTime(880, now + 0.08);
+                    osc.frequency.setValueAtTime(880, now + 0.07);
+                    osc.frequency.setValueAtTime(1174.66, now + 0.14);
                     gain.gain.setValueAtTime(0.08, now);
-                    gain.gain.linearRampToValueAtTime(0.001, now + 0.22);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.24);
                     osc.start(now);
-                    osc.stop(now + 0.22);
+                    osc.stop(now + 0.24);
+                } else if (type === 'meds' || type === 'heal') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.07);
+                    osc.frequency.setValueAtTime(880.00, now + 0.14);
+                    gain.gain.setValueAtTime(0.07, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.26);
+                    osc.start(now);
+                    osc.stop(now + 0.26);
+                } else if (type === 'research') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(987.77, now);
+                    osc.frequency.setValueAtTime(1318.51, now + 0.06);
+                    osc.frequency.setValueAtTime(1760.00, now + 0.12);
+                    osc.frequency.setValueAtTime(2093.00, now + 0.18);
+                    gain.gain.setValueAtTime(0.07, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.28);
+                    osc.start(now);
+                    osc.stop(now + 0.28);
+                } else if (type === 'turret') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(320, now);
+                    osc.frequency.setValueAtTime(260, now + 0.04);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.14);
+                    osc.start(now);
+                    osc.stop(now + 0.14);
+                } else if (type === 'repair') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(450, now);
+                    osc.frequency.setValueAtTime(280, now + 0.06);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.18);
+                    osc.start(now);
+                    osc.stop(now + 0.18);
                 }
             } catch (e) {
                 // Ignore audio restriction errors
@@ -2638,6 +2896,9 @@
         function toggleAudio() {
             soundEnabled = !soundEnabled;
             document.getElementById('btn-audio').textContent = `AUDIO: ${soundEnabled ? 'ON' : 'OFF'}`;
+            if (!soundEnabled && isAmbientWindPlaying) {
+                stopAmbientWind();
+            }
             playSound('click');
         }
 
@@ -3666,7 +3927,7 @@
             state.scrap -= cost;
             state.barricadeHp = Math.min(state.barricadeMaxHp || 100, (state.barricadeHp || 100) + 30);
             logEvent(`DEFENSE: Perimeter barricades repaired to ${state.barricadeHp}/${state.barricadeMaxHp} HP!`, 'cycle');
-            playSound('cycle');
+            playSound('repair');
             updateAll();
         }
 
@@ -3681,7 +3942,7 @@
             state.barricadeMaxHp = (state.barricadeMaxHp || 100) + 25;
             state.barricadeHp = (state.barricadeHp || 100) + 25;
             logEvent(`DEFENSE: Perimeter blast doors reinforced! Max HP now ${state.barricadeMaxHp} (+5 Defense).`, 'cycle');
-            playSound('cycle');
+            playSound('construction');
             updateAll();
         }
 
@@ -3695,7 +3956,7 @@
             state.scrap -= cost;
             state.turretCount = (state.turretCount || 1) + 1;
             logEvent(`DEFENSE: 50-Cal Sentry Turret #${state.turretCount} fabricated and mounted on outer bulkhead! (+18 Defense)`, 'cycle');
-            playSound('cycle');
+            playSound('construction');
             updateAll();
         }
 
@@ -3713,7 +3974,7 @@
             state.scrap -= cost;
             state.turretOverclock = true;
             logEvent('DEFENSE: Sentry targeting processors overclocked! Auto-aim precision maximized (+10 Defense).', 'cycle');
-            playSound('cycle');
+            playSound('turret');
             updateAll();
         }
 
@@ -3728,7 +3989,7 @@
             state.combatDrillLevel = (state.combatDrillLevel || 1) + 1;
             state.morale = Math.min(100, state.morale + 3);
             logEvent(`DEFENSE: Combat readiness drill executed! Dweller tactical training raised to Level ${state.combatDrillLevel}.`, 'cycle');
-            playSound('cycle');
+            playSound('turret');
             updateAll();
         }
 
@@ -3747,6 +4008,7 @@
         }
 
         function triggerRaiderAttack(isManual = false) {
+            playSound('siren');
             const defInfo = getDefenseBreakdown();
             const totalDef = defInfo.total;
 
@@ -3790,7 +4052,7 @@
                 state.morale = Math.min(100, state.morale + 6);
 
                 logEvent(`★ RAID REPELLED: ${clan.name} (Atk ${assaultPower}) repelled by Vault Defenses (${totalDef} pts)! Salvaged +${scrapGained} Scrap, +${medsGained} Meds. Barricades took ${dmgToBarricade} damage.`, 'cycle');
-                playSound('cycle');
+                setTimeout(() => playSound('cycle'), 900);
             } else {
                 // Breach
                 const deficit = assaultPower - totalDef;
@@ -3819,7 +4081,7 @@
                 });
 
                 logEvent(`⚠ CRITICAL BREACH: ${clan.name} (Atk ${assaultPower}) overwhelmed Vault Defenses (${totalDef} pts)! Perimeter breached! Stole ${foodStolen} Food, ${scrapStolen} Scrap. ${injuredCount} survivor(s) wounded. Barricades took -${dmgToBarricade} HP!`, 'crit');
-                playSound('alert');
+                setTimeout(() => playSound('alert'), 900);
             }
 
             state.lastRaidReport = {
@@ -4963,7 +5225,7 @@
             }
 
             logEvent(`UPGRADE: ${fac.name} upgraded to Level ${fac.level}! (${bonusMsg})`, 'cycle');
-            playSound('cycle');
+            playSound('construction');
             updateAll();
         }
 
@@ -5000,7 +5262,7 @@
             if (bp.defenseBoost) state.defense += bp.defenseBoost;
 
             logEvent(`CONSTRUCTION: ${bp.name} excavated and brought online!`, 'cycle');
-            playSound('cycle');
+            playSound('construction');
             updateAll();
         }
 
@@ -5114,7 +5376,7 @@
             }
 
             logEvent(`★ RESEARCH COMPLETED: [${tech.name}] operational! ${tech.benefit}`, 'cycle');
-            playSound('cycle');
+            playSound('research');
             updateAll();
         }
 
@@ -5226,7 +5488,7 @@
             surv.health = Math.min(100, surv.health + 35);
             surv.morale = Math.min(100, surv.morale + 8);
             logEvent(`MEDICAL: Stimpack administered to ${surv.name}. Health restored to ${surv.health}%.`, 'cycle');
-            playSound('cycle');
+            playSound('meds');
             updateAll();
         }
 
@@ -5243,7 +5505,8 @@
             surv.health = Math.min(100, surv.health + 10);
             surv.morale = Math.min(100, surv.morale + 6);
             logEvent(`RAD-AWAY: Anti-rad chelating agent administered to ${surv.name}. Radiation reduced to ${surv.rads} Rads.`, 'cycle');
-            playSound('cycle');
+            playSound('geiger');
+            setTimeout(() => playSound('meds'), 300);
             updateAll();
         }
 

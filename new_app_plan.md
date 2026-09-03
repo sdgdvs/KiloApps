@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KSanctuary (Post-apocalyptic wasteland survival & base building RPG)
-**Phase:** 13 (next to do)
+**Phase:** 14 (next to do)
 **Status:** Deep Expansion
 
 - [x] Phase 1: Scaffold KSanctuary directory (`KSanctuary/`), create web HTML skeleton (`KiloOS/public/apps/ksanctuary.html`), register in App.jsx.
@@ -69,7 +69,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 10: Environmental disasters and weather hazards (radiation storms, droughts, toxic rain, cold snaps).
 - [x] Phase 11: Wasteland caravan trading system (nomadic traders visit to exchange surplus supplies and rare items).
 - [x] Phase 12: Morale and health system (treat radiation sickness, manage rations and water quality to avoid unrest).
-- [ ] Phase 13: Sound Effects — Geiger counter clicks, construction hums, alarm sirens, ambient wasteland wind (Web Audio / Win32 Beep).
+- [x] Phase 13: Sound Effects — Geiger counter clicks, construction hums, alarm sirens, ambient wasteland wind (Web Audio / Win32 Beep).
 - [ ] Phase 14: Comprehensive Help & Overseer's Survival Manual — How-to-play, survival strategies, facility guide.
 
 ### How to execute the next phase:

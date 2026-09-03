@@ -142,20 +142,88 @@ static int g_crtScanlines = 1;
 #define COL_BTN_HOVER   (g_palettes[g_currentTheme].btnHover)
 #define COL_BAR_BG      (g_palettes[g_currentTheme].barBg)
 
-// Audio Thread
+// Audio Constants & Thread (Win32 Beep SFX)
+#define SFX_CLICK        1
+#define SFX_CYCLE        2
+#define SFX_ALERT        3
+#define SFX_SCOUT        4
+#define SFX_GEIGER       5
+#define SFX_CONSTRUCTION 6
+#define SFX_HAZARD       7
+#define SFX_TRADE        8
+#define SFX_RESEARCH     9
+#define SFX_WIND         10
+#define SFX_MEDS         11
+#define SFX_TURRET       12
+#define SFX_SIREN        13
+#define SFX_REPAIR       14
+
 static int g_soundEnabled = 1;
 
 static DWORD WINAPI SoundThreadProc(LPVOID lpParam) {
     if (!g_soundEnabled) return 0;
     int type = (int)(LONG_PTR)lpParam;
-    if (type == 1) { // Click
-        Beep(600, 30);
-    } else if (type == 2) { // Cycle
-        Beep(440, 60); Beep(554, 60); Beep(659, 80);
-    } else if (type == 3) { // Alert
-        Beep(220, 100); Beep(180, 120);
-    } else if (type == 4) { // Scout dispatch/return
-        Beep(523, 70); Beep(784, 90);
+    switch (type) {
+        case SFX_CLICK: // 1: Subtle key click
+            Beep(700, 20);
+            break;
+        case SFX_CYCLE: // 2: Melodic cycle progression
+            Beep(440, 50); Beep(554, 50); Beep(659, 70);
+            break;
+        case SFX_ALERT: // 3: Warning buzzer
+            Beep(220, 90); Beep(180, 110);
+            break;
+        case SFX_SCOUT: // 4: Expedition departure / arrival
+            Beep(523, 60); Beep(784, 80);
+            break;
+        case SFX_GEIGER: // 5: Geiger counter radiation crackles
+            Beep(2100, 6); Sleep(18);
+            Beep(1800, 6); Sleep(30);
+            Beep(2400, 6); Sleep(15);
+            Beep(1950, 6); Sleep(25);
+            Beep(2250, 6); Sleep(10);
+            Beep(1700, 6);
+            break;
+        case SFX_CONSTRUCTION: // 6: Engine hum and hydraulic impact pulses
+            Beep(110, 80); Sleep(15);
+            Beep(260, 50); Sleep(15);
+            Beep(130, 90); Sleep(15);
+            Beep(320, 60);
+            break;
+        case SFX_HAZARD: // 7: Ominous descending hazard rumble
+            Beep(240, 90); Beep(180, 110); Beep(120, 160);
+            break;
+        case SFX_TRADE: // 8: Cheerful barter / merchant chime
+            Beep(659, 45); Beep(880, 55); Beep(1175, 75);
+            break;
+        case SFX_RESEARCH: // 9: High-tech computing arpeggio
+            Beep(988, 35); Beep(1318, 45); Beep(1760, 60); Beep(2093, 75);
+            break;
+        case SFX_WIND: // 10: Howling wasteland wind whistle
+            Beep(190, 90); Beep(240, 120); Beep(210, 130); Beep(160, 110);
+            break;
+        case SFX_MEDS: // 11: Medical injector treatment
+            Beep(523, 50); Beep(659, 50); Beep(880, 75);
+            break;
+        case SFX_TURRET: // 12: Staccato defense cannon burst
+            Beep(330, 25); Sleep(20);
+            Beep(290, 25); Sleep(20);
+            Beep(350, 25); Sleep(20);
+            Beep(310, 25);
+            break;
+        case SFX_SIREN: // 13: Raider klaxon emergency alarm
+            Beep(880, 70); Beep(587, 70);
+            Beep(880, 70); Beep(587, 70);
+            Beep(880, 90);
+            break;
+        case SFX_REPAIR: // 14: Metal repair impact
+            Beep(450, 30); Sleep(10);
+            Beep(600, 30); Sleep(20);
+            Beep(300, 60);
+            break;
+        default:
+            Beep(500, 30);
+            break;
     }
     return 0;
 }
@@ -693,7 +761,7 @@ static void DoResearch(int techId) {
     char logBuf[160];
     sprintf(logBuf, "RESEARCH COMPLETE: [%s] operational! (%s)", ti->name, ti->benefit);
     AddLog(logBuf, 3);
-    PlaySfx(2);
+    PlaySfx(SFX_RESEARCH);
 }
 
 static int CalculateTotalDefense() {
@@ -908,8 +976,8 @@ static void BuyCaravanItem(int itemId) {
     if (itemId < 0 || itemId >= 4) return;
     int cost = GetDiscountedTradeCost(costs[itemId]);
     if (g_state.scrap < (float)cost) {
-        AddLog("CARAVAN: Insufficient Tech Scrap for trade transaction!", 1);
-        PlaySfx(3);
+        AddLog("CARAVAN: Insufficient Tech Scrap to complete barter!", 1);
+        PlaySfx(SFX_ALERT);
         return;
     }
 
@@ -930,7 +998,7 @@ static void BuyCaravanItem(int itemId) {
     }
 
     AddCaravanTradeRep();
-    PlaySfx(2);
+    PlaySfx(SFX_TRADE);
 }
 
 static void BuyRareItem(int rareIdx) {
@@ -941,7 +1009,7 @@ static void BuyRareItem(int rareIdx) {
     int cost = GetDiscountedTradeCost(rCosts[rareIdx]);
     if (g_state.scrap < (float)cost) {
         AddLog("CARAVAN: Insufficient Tech Scrap to purchase rare artifact!", 1);
-        PlaySfx(3);
+        PlaySfx(SFX_ALERT);
         return;
     }
 
@@ -972,7 +1040,7 @@ static void BuyRareItem(int rareIdx) {
         AddLog("★ RARE ARTIFACT: Pre-war Luxury Coffee & Cassettes distributed! Vault Morale +20%.", 3);
     }
 
-    PlaySfx(2);
+    PlaySfx(SFX_TRADE);
 }
 
 static void SellSurplusItem(int sellIdx) {
@@ -983,10 +1051,10 @@ static void SellSurplusItem(int sellIdx) {
             g_state.scrap += 10.0f;
             AddCaravanTradeRep();
             AddLog("CARAVAN: Exported 15 Food Rations (+10 Tech Scrap).", 3);
-            PlaySfx(2);
+            PlaySfx(SFX_TRADE);
         } else {
             AddLog("CARAVAN: Insufficient food surplus to export (need 15)!", 1);
-            PlaySfx(3);
+            PlaySfx(SFX_ALERT);
         }
     } else if (sellIdx == 1) {
         if (g_state.water >= 15.0f) {
@@ -994,10 +1062,10 @@ static void SellSurplusItem(int sellIdx) {
             g_state.scrap += 10.0f;
             AddCaravanTradeRep();
             AddLog("CARAVAN: Exported 15 Purified Water (+10 Tech Scrap).", 3);
-            PlaySfx(2);
+            PlaySfx(SFX_TRADE);
         } else {
             AddLog("CARAVAN: Insufficient water surplus to export (need 15)!", 1);
-            PlaySfx(3);
+            PlaySfx(SFX_ALERT);
         }
     } else if (sellIdx == 2) {
         if (g_state.scrap >= 20.0f) {
@@ -1005,10 +1073,10 @@ static void SellSurplusItem(int sellIdx) {
             g_state.meds += 2;
             AddCaravanTradeRep();
             AddLog("CARAVAN: Bartered 20 Tech Scrap for 2 Medical Stimpacks.", 3);
-            PlaySfx(2);
+            PlaySfx(SFX_TRADE);
         } else {
             AddLog("CARAVAN: Insufficient scrap to barter for meds (need 20)!", 1);
-            PlaySfx(3);
+            PlaySfx(SFX_ALERT);
         }
     }
 }
@@ -1025,10 +1093,10 @@ static void HailCaravan() {
         char buf[128];
         sprintf(buf, "RADIO BEACON: Commercial hail sent! [%s] (%s) arrived at the airlock!", g_caravanFactions[g_state.caravanFaction].badge, g_caravanFactions[g_state.caravanFaction].merchant);
         AddLog(buf, 3);
-        PlaySfx(2);
+        PlaySfx(SFX_TRADE);
     } else {
         AddLog("RADIO: Insufficient scrap (15) or reactor power (10 kW) to broadcast trade beacon!", 1);
-        PlaySfx(3);
+        PlaySfx(SFX_ALERT);
     }
 }
 
@@ -1054,7 +1122,7 @@ static void ProcessCaravanDay() {
             char buf[128];
             sprintf(buf, "CARAVAN ARRIVAL: Nomadic merchants from [%s] arrived at the airlock!", g_caravanFactions[g_state.caravanFaction].badge);
             AddLog(buf, 3);
-            PlaySfx(2);
+            PlaySfx(SFX_TRADE);
         } else if (g_state.caravanEtaDays == 1) {
             AddLog("RADIO SENSORS: Dust cloud detected on radar. Nomadic caravan arriving tomorrow.", 0);
         }
@@ -1070,7 +1138,7 @@ static void TriggerDailyEvent() {
             char buf[128];
             sprintf(buf, "AIRLOCK SENSOR: Refugee %s (%s) detected! Review at Radio Beacon.", c->name, c->role);
             AddLog(buf, 3);
-            PlaySfx(4);
+            PlaySfx(SFX_SCOUT);
         }
     } else if (roll < 42) {
         g_state.exteriorRads += 1.5f;
@@ -1086,6 +1154,7 @@ static void TriggerDailyEvent() {
 }
 
 static void TriggerRaiderAttack(int isManual) {
+    PlaySfx(SFX_SIREN);
     int totalDef = CalculateTotalDefense();
     g_state.defense = totalDef;
 
@@ -1147,7 +1216,7 @@ static void TriggerRaiderAttack(int isManual) {
         sprintf(logBuf, "RAID REPELLED: %s (Atk %d) crushed by Vault Defenses (%d pts)! Salvaged +%d Scrap, +%d Meds.",
             clanNames[clanIdx], assaultPower, totalDef, scrapGained, medsGained);
         AddLog(logBuf, 3);
-        PlaySfx(2);
+        PlaySfx(SFX_CYCLE);
     } else {
         int deficit = assaultPower - totalDef;
         int dmg = 30 + (deficit * 8) / 10;
@@ -1505,7 +1574,7 @@ static void ProcessNewDay() {
         char wAlert[160];
         sprintf(wAlert, "METEOROLOGICAL ALERT: [%s] struck the shelter! Review Hazards console.", wNames[g_state.weatherType]);
         AddLog(wAlert, 2);
-        PlaySfx(3);
+        PlaySfx(SFX_HAZARD);
 
         g_state.forecastType = 1 + (rand() % 4);
         g_state.forecastEtaDays = 4 + (rand() % 3);
@@ -1514,7 +1583,7 @@ static void ProcessNewDay() {
         char fAlert[160];
         sprintf(fAlert, "DOPPLER WARNING: [%s] is 1 day away from striking vault perimeter!", wNames[g_state.forecastType]);
         AddLog(fAlert, 1);
-        PlaySfx(3);
+        PlaySfx(SFX_ALERT);
     }
 
     // Hazard Daily Damage
@@ -1541,7 +1610,7 @@ static void ProcessNewDay() {
             }
             g_state.waterPurity = (g_state.waterPurity > 20.0f) ? (g_state.waterPurity - 20.0f) : 10.0f;
             AddLog("RADIATION SICKNESS: Gamma storm penetrated vents! Dwellers suffered +25 Rads trauma!", 2);
-            PlaySfx(3);
+            PlaySfx(SFX_GEIGER);
         }
     } else if (g_state.weatherType == 2) { // Drought
         g_state.exteriorRads = 5.2f + (rand() % 8) / 10.0f;
@@ -1575,7 +1644,7 @@ static void ProcessNewDay() {
                 if (g_state.survivors[s].morale < 10) g_state.survivors[s].morale = 10;
             }
             AddLog("HYPOTHERMIA: Power brownout during Sub-Zero Cold Snap froze living bunks (-15 HP)!", 2);
-            PlaySfx(3);
+            PlaySfx(SFX_ALERT);
         } else {
             AddLog("NUCLEAR FROST: Sub-zero frost reduced bio-fuel generator power efficiency.", 0);
         }
@@ -4198,15 +4267,21 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'T' || wParam == 't') {
                 g_currentTheme = (g_currentTheme + 1) % THEME_COUNT;
-                PlaySfx(1);
+                PlaySfx(SFX_CLICK);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'C' || wParam == 'c') {
                 g_crtScanlines = !g_crtScanlines;
-                PlaySfx(1);
+                PlaySfx(SFX_CLICK);
                 InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'S' || wParam == 's') {
+                g_soundEnabled = !g_soundEnabled;
+                PlaySfx(SFX_CLICK);
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'W' || wParam == 'w') {
+                PlaySfx(SFX_WIND);
             } else if (wParam == 'R' || wParam == 'r') {
                 InitGameState();
-                PlaySfx(3);
+                PlaySfx(SFX_ALERT);
                 InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
@@ -4327,9 +4402,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             char buf[128];
                             sprintf(buf, "UPGRADE: %s upgraded to Level %d! (%s)", fac->name, fac->level, bonusMsg);
                             AddLog(buf, 3);
-                            PlaySfx(2);
+                            PlaySfx(SFX_CONSTRUCTION);
                         } else {
-                            PlaySfx(3);
+                            PlaySfx(SFX_ALERT);
                         }
                     } else if (bId == BTN_CONSTRUCT_ROOM) {
                         RoomBlueprint* bp = &g_state.blueprints[p1];
@@ -4357,9 +4432,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             char buf[128];
                             sprintf(buf, "CONSTRUCTION: %s excavated and brought online!", bp->name);
                             AddLog(buf, 3);
-                            PlaySfx(2);
+                            PlaySfx(SFX_CONSTRUCTION);
                         } else {
-                            PlaySfx(3);
+                            PlaySfx(SFX_ALERT);
                         }
                     } else if (bId == BTN_SURV_JOB) {
                         Survivor* surv = &g_state.survivors[p1];
@@ -4396,10 +4471,10 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             }
                         }
                         if (!assigned) strcpy(surv->job, "unassigned");
-                        PlaySfx(1);
+                        PlaySfx(SFX_CLICK);
                     } else if (bId == BTN_SURV_SUBTAB) {
                         g_state.survivorSubTab = p1;
-                        PlaySfx(1);
+                        PlaySfx(SFX_CLICK);
                     } else if (bId == BTN_BROADCAST_PING) {
                         if (g_state.scrap >= 15 && g_state.powerGen >= 10) {
                             g_state.scrap -= 15;
@@ -4412,10 +4487,10 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             char buf[128];
                             sprintf(buf, "RADIO: Emergency signal ping attracted %d refugee(s) to the airlock!", count);
                             AddLog(buf, 4);
-                            PlaySfx(4);
+                            PlaySfx(SFX_SCOUT);
                         } else {
                             AddLog("RADIO: Insufficient scrap (15) or reactor power (10 kW) to broadcast ping!", 1);
-                            PlaySfx(3);
+                            PlaySfx(SFX_ALERT);
                         }
                     } else if (bId == BTN_BROADCAST_SPEC) {
                         if (g_state.scrap >= 25 && g_state.food >= 10.0f) {
@@ -4427,11 +4502,11 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                                 char buf[128];
                                 sprintf(buf, "RADIO: Directional beacon attracted specialist %s (%s) to the airlock!", cand->name, cand->role);
                                 AddLog(buf, 3);
-                                PlaySfx(2);
+                                PlaySfx(SFX_CYCLE);
                             }
                         } else {
                             AddLog("RADIO: Insufficient scrap (25) or food (10) for specialist beacon!", 1);
-                            PlaySfx(3);
+                            PlaySfx(SFX_ALERT);
                         }
                     } else if (bId == BTN_ADMIT_CANDIDATE) {
                         if (g_state.population < g_state.maxPop && g_state.numSurvivors < MAX_SURVIVORS && p1 >= 0 && p1 < g_state.numCandidates) {
@@ -4453,7 +4528,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             char buf[128];
                             sprintf(buf, "AIRLOCK: Clearance granted! %s (%s) admitted to the vault.", c->name, c->role);
                             AddLog(buf, 3);
-                            PlaySfx(2);
+                            PlaySfx(SFX_CYCLE);
 
                             for (int k = p1; k < g_state.numCandidates - 1; k++) {
                                 g_state.candidates[k] = g_state.candidates[k + 1];
@@ -4461,14 +4536,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             g_state.numCandidates--;
                         } else {
                             AddLog("AIRLOCK: Quarters are full! Expand living barracks first.", 1);
-                            PlaySfx(3);
+                            PlaySfx(SFX_ALERT);
                         }
                     } else if (bId == BTN_DISMISS_CANDIDATE) {
                         if (p1 >= 0 && p1 < g_state.numCandidates) {
                             char buf[128];
                             sprintf(buf, "AIRLOCK: Clearance denied. %s was turned away into the wastes.", g_state.candidates[p1].name);
                             AddLog(buf, 0);
-                            PlaySfx(1);
+                            PlaySfx(SFX_CLICK);
 
                             for (int k = p1; k < g_state.numCandidates - 1; k++) {
                                 g_state.candidates[k] = g_state.candidates[k + 1];
@@ -4492,7 +4567,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             char buf[128];
                             sprintf(buf, "Scout %s dispatched to %s%s.", scout->name, exp->name, exp->hasStimpack ? " (Stimpack equipped)" : "");
                             AddLog(buf, 4);
-                            PlaySfx(4);
+                            PlaySfx(SFX_SCOUT);
                         }
                     } else if (bId == BTN_EXP_STIM_TOGGLE) {
                         Expedition* exp = &g_state.expeditions[p1];
@@ -4500,14 +4575,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             if (!exp->hasStimpack) {
                                 if (g_state.meds > 0) {
                                     exp->hasStimpack = 1;
-                                    PlaySfx(1);
+                                    PlaySfx(SFX_CLICK);
                                 } else {
                                     AddLog("No medical supplies in vault stock to equip Stimpack!", 1);
-                                    PlaySfx(3);
+                                    PlaySfx(SFX_ALERT);
                                 }
                             } else {
                                 exp->hasStimpack = 0;
-                                PlaySfx(1);
+                                PlaySfx(SFX_CLICK);
                             }
                         }
                     } else if (bId == BTN_TREAT_SURV) {
@@ -4522,7 +4597,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                                 char buf[128];
                                 sprintf(buf, "MEDICAL: Stimpack administered to %s. Health restored to %d%%.", surv->name, surv->health);
                                 AddLog(buf, 3);
-                                PlaySfx(2);
+                                PlaySfx(SFX_MEDS);
                             }
                         }
                     } else if (bId == BTN_TREAT_RADAWAY) {
@@ -4539,7 +4614,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                                 char buf[128];
                                 sprintf(buf, "RAD-AWAY: Anti-rad chelating agent dosed to %s (%d Rads remaining).", surv->name, surv->rads);
                                 AddLog(buf, 3);
-                                PlaySfx(2);
+                                PlaySfx(SFX_GEIGER);
                             }
                         }
                     } else if (bId == BTN_TREAT_DECON) {
@@ -4554,7 +4629,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             char buf[128];
                             sprintf(buf, "DECON SHOWER: %s cycled through isotope wash (%d Rads remaining).", surv->name, surv->rads);
                             AddLog(buf, 0);
-                            PlaySfx(1);
+                            PlaySfx(SFX_MEDS);
                         }
                     } else if (bId == BTN_MASS_RADAWAY) {
                         if (g_state.meds >= 2 && g_state.water >= 10.0f) {
@@ -4575,7 +4650,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             char buf[128];
                             sprintf(buf, "MASS RADAWAY: Distributed anti-rad casks! %d irradiated dwellers treated (-30 Rads).", treated);
                             AddLog(buf, 3);
-                            PlaySfx(2);
+                            PlaySfx(SFX_GEIGER);
                         }
                     } else if (bId == BTN_MASS_DECON) {
                         if (g_state.water >= 15.0f && g_state.scrap >= 15.0f) {
@@ -4588,7 +4663,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                                 if (g_state.survivors[s].morale > 100) g_state.survivors[s].morale = 100;
                             }
                             AddLog("DECON FLUSH: High-pressure saline de-ionizing wash cycled through all airlocks and bunks.", 0);
-                            PlaySfx(1);
+                            PlaySfx(SFX_MEDS);
                         }
                     } else if (bId == BTN_FLUSH_FILTERS) {
                         if (g_state.scrap >= 10.0f) {
@@ -4598,21 +4673,21 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             char buf[128];
                             sprintf(buf, "FILTRATION FLUSH: Replaced activated charcoal filters. Aquifer purity: %.0f%%.", g_state.waterPurity);
                             AddLog(buf, 3);
-                            PlaySfx(2);
+                            PlaySfx(SFX_MEDS);
                         }
                     } else if (bId == BTN_STERILIZE_WATER) {
                         if (g_state.meds >= 1) {
                             g_state.meds -= 1;
                             g_state.waterPurity = 100.0f;
                             AddLog("STERILIZATION: Dosed medical iodine into reservoirs. Purity restored to 100% (Sterile).", 3);
-                            PlaySfx(2);
+                            PlaySfx(SFX_MEDS);
                         }
                     } else if (bId == BTN_FORTIFY_RATIONS) {
                         if (g_state.meds >= 1) {
                             g_state.meds -= 1;
                             g_state.fortifiedRationsDays = 3;
                             AddLog("NUTRITIONAL DIRECTIVE: Enriched vitamins blended into rations (+15% Worker Efficiency for 3 cycles).", 3);
-                            PlaySfx(2);
+                            PlaySfx(SFX_MEDS);
                         }
                     } else if (bId == BTN_COMMUNAL_FEAST) {
                         if (g_state.food >= 15.0f) {
@@ -4626,7 +4701,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                                 g_state.survivors[s].hunger = 0;
                             }
                             AddLog("COMMUNAL FEAST: Overseer hosted a vault feast (+15% Morale, Unrest suppressed)!", 3);
-                            PlaySfx(2);
+                            PlaySfx(SFX_CYCLE);
                         }
                     } else if (bId == BTN_DIST_LUXURIES) {
                         if (g_state.scrap >= 20.0f) {
@@ -4638,7 +4713,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                                 if (g_state.survivors[s].morale > 100) g_state.survivors[s].morale = 100;
                             }
                             AddLog("LUXURY BROADCAST: Distributed comfort goods & broadcasted radio orchestra (+12% Morale).", 0);
-                            PlaySfx(4);
+                            PlaySfx(SFX_TRADE);
                         }
                     } else if (bId == BTN_OVERSEER_ADDRESS) {
                         if (g_state.addressCooldown <= 0) {
@@ -4650,17 +4725,17 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                                 if (g_state.survivors[s].morale > 100) g_state.survivors[s].morale = 100;
                             }
                             AddLog("OVERSEER ADDRESS: Broadcasted an inspiring survival speech over vault PA (+6% Morale).", 0);
-                            PlaySfx(1);
+                            PlaySfx(SFX_CLICK);
                         }
                     } else if (bId == BTN_TOGGLE_MARTIAL_LAW) {
                         g_state.martialLaw = !g_state.martialLaw;
                         if (g_state.martialLaw) {
                             if (g_state.morale > 50.0f) g_state.morale = 50.0f;
                             AddLog("SECURITY DIRECTIVE: MARTIAL LAW DECLARED. Armed patrols enforce curfew. Strikes & sabotage halted.", 2);
-                            PlaySfx(3);
+                            PlaySfx(SFX_ALERT);
                         } else {
                             AddLog("SECURITY DIRECTIVE: Martial Law lifted. Normal vault civil liberties restored.", 0);
-                            PlaySfx(1);
+                            PlaySfx(SFX_CLICK);
                         }
                     } else if (bId == BTN_POLICY_FOOD) {
                         g_state.policyFood = p1;
@@ -4668,21 +4743,21 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         char buf[128];
                         sprintf(buf, "Overseer updated FOOD protocol to [%s].", pText[p1]);
                         AddLog(buf, 0);
-                        PlaySfx(1);
+                        PlaySfx(SFX_CLICK);
                     } else if (bId == BTN_POLICY_WATER) {
                         g_state.policyWater = p1;
                         const char* pText[] = { "FULL PURE", "STRICT", "RECYCLED SILT" };
                         char buf[128];
                         sprintf(buf, "Overseer updated WATER protocol to [%s].", pText[p1]);
                         AddLog(buf, 0);
-                        PlaySfx(1);
+                        PlaySfx(SFX_CLICK);
                     } else if (bId == BTN_POLICY_POWER) {
                         g_state.policyPower = p1;
                         const char* pText[] = { "BALANCED", "LIFE SUPPORT", "PRODUCTION" };
                         char buf[128];
                         sprintf(buf, "Overseer updated POWER protocol to [%s].", pText[p1]);
                         AddLog(buf, 0);
-                        PlaySfx(1);
+                        PlaySfx(SFX_CLICK);
                     } else if (bId == BTN_DEF_REPAIR) {
                         int cost = GetEffectiveScrapCost(15);
                         if (g_state.scrap >= (float)cost && g_state.barricadeHp < g_state.barricadeMaxHp) {
@@ -4692,9 +4767,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             char buf[128];
                             sprintf(buf, "DEFENSE: Perimeter barricades repaired to %d/%d HP!", g_state.barricadeHp, g_state.barricadeMaxHp);
                             AddLog(buf, 3);
-                            PlaySfx(2);
+                            PlaySfx(SFX_REPAIR);
                         } else {
-                            PlaySfx(3);
+                            PlaySfx(SFX_ALERT);
                         }
                     } else if (bId == BTN_DEF_REINFORCE) {
                         int cost = GetEffectiveScrapCost(35);
@@ -4705,9 +4780,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             char buf[128];
                             sprintf(buf, "DEFENSE: Blast-doors reinforced! Max HP now %d (+5 Def).", g_state.barricadeMaxHp);
                             AddLog(buf, 3);
-                            PlaySfx(2);
+                            PlaySfx(SFX_CONSTRUCTION);
                         } else {
-                            PlaySfx(3);
+                            PlaySfx(SFX_ALERT);
                         }
                     } else if (bId == BTN_DEF_TURRET) {
                         int cost = GetEffectiveScrapCost(45);
@@ -4717,9 +4792,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             char buf[128];
                             sprintf(buf, "DEFENSE: 50-Cal Sentry Turret #%d mounted on outer bulkhead! (+18 Def)", g_state.turretCount);
                             AddLog(buf, 3);
-                            PlaySfx(2);
+                            PlaySfx(SFX_CONSTRUCTION);
                         } else {
-                            PlaySfx(3);
+                            PlaySfx(SFX_ALERT);
                         }
                     } else if (bId == BTN_DEF_OVERCLOCK) {
                         int cost = GetEffectiveScrapCost(20);
@@ -4727,9 +4802,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             g_state.scrap -= (float)cost;
                             g_state.turretOverclock = 1;
                             AddLog("DEFENSE: Sentry targeting overclocked! Auto-aim precision maximized (+10 Def).", 3);
-                            PlaySfx(2);
+                            PlaySfx(SFX_TURRET);
                         } else {
-                            PlaySfx(3);
+                            PlaySfx(SFX_ALERT);
                         }
                     } else if (bId == BTN_DEF_DRILL) {
                         int cost = GetEffectiveScrapCost(12);
@@ -4741,9 +4816,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                             char buf[128];
                             sprintf(buf, "DEFENSE: Combat drill complete! Citizen tactical readiness raised to Lv %d.", g_state.combatDrillLevel);
                             AddLog(buf, 3);
-                            PlaySfx(2);
+                            PlaySfx(SFX_TURRET);
                         } else {
-                            PlaySfx(3);
+                            PlaySfx(SFX_ALERT);
                         }
                     } else if (bId == BTN_DEF_TOGGLE_GUARD) {
                         if (p1 >= 0 && p1 < g_state.numSurvivors) {
