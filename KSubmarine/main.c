@@ -36,6 +36,12 @@
 #define ID_BTN_NEXT_WAYPOINT    123
 #define ID_BTN_AUTOPILOT        124
 #define ID_BTN_SURVEY_SECTOR    125
+#define ID_BTN_VIEW_ENG         126
+#define ID_BTN_UPG_HULL         127
+#define ID_BTN_UPG_BALLAST      128
+#define ID_BTN_UPG_BATTERY      129
+#define ID_BTN_UPG_LIGHTS       130
+#define ID_BTN_FIELD_DIAG       131
 
 typedef enum {
     THEME_ABYSS = 0,
@@ -159,6 +165,72 @@ typedef struct {
 #define SECTOR_COUNT 4
 #define WAYPOINT_COUNT 8
 
+// --- UPGRADE MODULE STRUCTURES (PHASE 6) ---
+typedef struct {
+    int tier;
+    const char* name;
+    int cost;
+    float crushDepth;
+    float maxHull;
+    const char* desc;
+} HullUpgrade;
+
+typedef struct {
+    int tier;
+    const char* name;
+    int cost;
+    float maxAir;
+    float rate;
+    float recharge;
+    const char* desc;
+} BallastUpgrade;
+
+typedef struct {
+    int tier;
+    const char* name;
+    int cost;
+    float drainMult;
+    float regen;
+    const char* desc;
+} BatteryUpgrade;
+
+typedef struct {
+    int tier;
+    const char* name;
+    int cost;
+    float range;
+    float surveyMult;
+    const char* desc;
+} LightsUpgrade;
+
+static const HullUpgrade g_hullUpg[4] = {
+    { 1, "MK I - STANDARD", 0, 4500.0f, 100.0f, "Standard epipelagic hull." },
+    { 2, "MK II - TITANIUM CARBIDE", 150, 6800.0f, 125.0f, "Titanium-carbide shell. Bathyal rated." },
+    { 3, "MK III - GRAPHENE MESH", 350, 9200.0f, 150.0f, "Diamondoid graphene mesh bulkheads." },
+    { 4, "MK IV - HADAL MATRIX", 650, 12000.0f, 200.0f, "Superdense nano-polymer matrix. Full Hadal rated." }
+};
+
+static const BallastUpgrade g_ballastUpg[4] = {
+    { 1, "MK I - PNEUMATIC", 0, 300.0f, 10.0f, 5.0f, "Standard compressed air tanks." },
+    { 2, "MK II - CRYO-TURBO", 120, 450.0f, 15.0f, 8.0f, "Cryogenic compression pumps." },
+    { 3, "MK III - QUAD-HYDRAULIC", 300, 600.0f, 20.0f, 12.0f, "Hydraulic displacement manifolds." },
+    { 4, "MK IV - GAS EXPANDER", 550, 850.0f, 25.0f, 18.0f, "Supercritical solid-fuel gas cartridges." }
+};
+
+static const BatteryUpgrade g_batteryUpg[4] = {
+    { 1, "MK I - LI-POLYMER", 0, 1.0f, 0.0f, "Chemical lithium-polymer bank." },
+    { 2, "MK II - SILVER-ZINC", 150, 0.75f, 0.0f, "Silver-zinc deep cells (-25% load)." },
+    { 3, "MK III - PLUTONIUM RTG", 350, 0.55f, 0.12f, "Pu-238 RTG micro-core (+0.12%/s regen)." },
+    { 4, "MK IV - THORIUM CORE", 600, 0.35f, 0.28f, "Molten thorium reactor (+0.28%/s regen)." }
+};
+
+static const LightsUpgrade g_lightsUpg[4] = {
+    { 1, "MK I - HALOGEN", 0, 250.0f, 1.0f, "Halogen searchlights." },
+    { 2, "MK II - XENON ARCS", 100, 450.0f, 1.25f, "Dual xenon-arc beams (+25% survey)." },
+    { 3, "MK III - PULSED LIDAR", 250, 750.0f, 1.6f, "UV pulsed lidar scanner (+60% survey)." },
+    { 4, "MK IV - QUANTUM OPTICS", 500, 1200.0f, 2.0f, "Quantum photonic core (2.0x survey)." }
+};
+
 static SectorInfo g_sectors[SECTOR_COUNT] = {
     {
         0, "CONTINENTAL SHELF", "0 - 200m", 250.0f, 60.0f, 21.4f,
@@ -223,15 +295,33 @@ typedef struct {
     int activeWaypointIdx;
     int autopilot;
     int surveyPoints;
-    int viewMode;           // 0: Sonar, 1: Nav Map
+    int viewMode;           // 0: Sonar, 1: Nav Map, 2: Engineering
     float breadcrumbsX[32];
     float breadcrumbsY[32];
     int breadcrumbCount;
     float seabedElevation;
 
+    // Upgrades & Engineering (Phase 6)
+    int upgradeHull;
+    int upgradeBallast;
+    int upgradeBattery;
+    int upgradeLights;
+    float maxAirReservoir;
+    float airRechargeRate;
+    float ballastStepRate;
+    float powerDrainMult;
+    float passiveBatteryRegen;
+    float surveyMultiplier;
+    float opticalRange;
+    int milestone200;
+    int milestone1000;
+    int milestone4000;
+    int milestone6000;
+    int milestone10000;
+
     // Vital systems
     float hull;             // 0 - 100%
-    float crushDepth;       // 4500m
+    float crushDepth;       // 4500m (upgradable)
     float pressure;         // atm
     float hullStress;       // 0 - 100%
 
@@ -250,7 +340,7 @@ typedef struct {
 
     // Ballast & Bilge
     float ballast;          // 0 - 100% (0 = surface, 45 = neutral, 100 = heavy)
-    float airReservoir;     // 0 - 300 BAR
+    float airReservoir;     // 0 - 300 BAR (upgradable)
     float bilgeWater;       // gallons
     int bilgePumpActive;
     float waterIntrusionRate; // GPM
@@ -340,10 +430,28 @@ void InitSubmarineState(void) {
     g_sub.currentSectorIdx = 0;
     g_sub.activeWaypointIdx = 0;
     g_sub.autopilot = 0;
-    g_sub.surveyPoints = 0;
-    g_sub.viewMode = 0; // 0: Sonar, 1: Nav Map
+    g_sub.surveyPoints = 150; // Research Credits
+    g_sub.viewMode = 0; // 0: Sonar, 1: Nav Map, 2: Engineering
     g_sub.breadcrumbCount = 0;
     g_sub.seabedElevation = 250.0f;
+
+    // Upgrades & Engineering (Phase 6)
+    g_sub.upgradeHull = 1;
+    g_sub.upgradeBallast = 1;
+    g_sub.upgradeBattery = 1;
+    g_sub.upgradeLights = 1;
+    g_sub.maxAirReservoir = 300.0f;
+    g_sub.airRechargeRate = 5.0f;
+    g_sub.ballastStepRate = 10.0f;
+    g_sub.powerDrainMult = 1.0f;
+    g_sub.passiveBatteryRegen = 0.0f;
+    g_sub.surveyMultiplier = 1.0f;
+    g_sub.opticalRange = 250.0f;
+    g_sub.milestone200 = 0;
+    g_sub.milestone1000 = 0;
+    g_sub.milestone4000 = 0;
+    g_sub.milestone6000 = 0;
+    g_sub.milestone10000 = 0;
 
     g_sub.hull = 100.0f;
     g_sub.crushDepth = 4500.0f;
@@ -409,10 +517,42 @@ void UpdateSimulation(float dt) {
     if (g_sub.depth <= 0.0f) {
         g_sub.depth = 0.0f;
         if (g_sub.vertRate < 0.0f) g_sub.vertRate = 0.0f;
-        if (g_sub.airReservoir < 300.0f) g_sub.airReservoir = min(300.0f, g_sub.airReservoir + dt * 5.0f);
+        if (g_sub.airReservoir < g_sub.maxAirReservoir) g_sub.airReservoir = min(g_sub.maxAirReservoir, g_sub.airReservoir + dt * g_sub.airRechargeRate);
         if (g_sub.battery < 100.0f) g_sub.battery = min(100.0f, g_sub.battery + dt * 2.0f);
     }
     if (g_sub.depth > 11000.0f) g_sub.depth = 11000.0f;
+
+    // Depth milestone checks
+    if (g_sub.depth >= 200.0f && !g_sub.milestone200) {
+        g_sub.milestone200 = 1;
+        g_sub.surveyPoints += 75;
+        PlaySoundAsync(880, 120);
+        AddLog("DEPTH MILESTONE: Submerged past 200m! (+75 Research Credits)", th->accentEmerald);
+    }
+    if (g_sub.depth >= 1000.0f && !g_sub.milestone1000) {
+        g_sub.milestone1000 = 1;
+        g_sub.surveyPoints += 100;
+        PlaySoundAsync(880, 120);
+        AddLog("DEPTH MILESTONE: Submerged past 1000m! (+100 Research Credits)", th->accentEmerald);
+    }
+    if (g_sub.depth >= 4000.0f && !g_sub.milestone4000) {
+        g_sub.milestone4000 = 1;
+        g_sub.surveyPoints += 150;
+        PlaySoundAsync(880, 120);
+        AddLog("DEPTH MILESTONE: Submerged past 4000m! (+150 Research Credits)", th->accentEmerald);
+    }
+    if (g_sub.depth >= 6000.0f && !g_sub.milestone6000) {
+        g_sub.milestone6000 = 1;
+        g_sub.surveyPoints += 250;
+        PlaySoundAsync(880, 150);
+        AddLog("DEPTH MILESTONE: Submerged into Hadal Trench! (+250 Research Credits)", th->accentEmerald);
+    }
+    if (g_sub.depth >= 10000.0f && !g_sub.milestone10000) {
+        g_sub.milestone10000 = 1;
+        g_sub.surveyPoints += 500;
+        PlaySoundAsync(880, 200);
+        AddLog("DEPTH MILESTONE: Challenger Deep Bottom Reached! (+500 Research Credits)", th->accentEmerald);
+    }
 
     // Sector transition
     int sIdx = 0;
@@ -494,9 +634,11 @@ void UpdateSimulation(float dt) {
 
     if (g_sub.depth > g_sub.crushDepth) {
         float excess = g_sub.depth - g_sub.crushDepth;
-        float hullDamage = (excess * 0.02f + 0.5f) * dt;
+        float hullDamageReduction = 1.0f - (g_sub.upgradeHull - 1) * 0.2f;
+        if (hullDamageReduction < 0.3f) hullDamageReduction = 0.3f;
+        float hullDamage = (excess * 0.02f + 0.5f) * dt * hullDamageReduction;
         g_sub.hull = max(0.0f, g_sub.hull - hullDamage);
-        g_sub.waterIntrusionRate = excess * 0.05f;
+        g_sub.waterIntrusionRate = excess * 0.05f * hullDamageReduction;
         if ((rand() % 100) < 3) {
             PlaySoundAsync(150, 200);
             AddLog("CRUSH WARNING: Extreme hydrostatic pressure deforming hull!", th->accentRed);
@@ -509,12 +651,12 @@ void UpdateSimulation(float dt) {
         g_sub.bilgeWater += g_sub.waterIntrusionRate * dt;
     }
     if (g_sub.bilgePumpActive && g_sub.bilgeWater > 0.0f && g_sub.battery > 0.0f) {
-        float pumped = min(g_sub.bilgeWater, 10.0f * dt);
+        float pumped = min(g_sub.bilgeWater, (10.0f + (g_sub.upgradeBallast - 1) * 5.0f) * dt);
         g_sub.bilgeWater -= pumped;
     }
 
     float baseDrain = 0.3f;
-    if (g_sub.searchlights) baseDrain += 0.8f;
+    if (g_sub.searchlights) baseDrain += (0.8f / g_sub.upgradeLights);
     if (g_sub.throttleMode == 2) baseDrain += 1.2f;
     if (g_sub.throttleMode == 3) baseDrain += 3.5f;
     if (g_sub.bilgePumpActive) baseDrain += 0.6f;
@@ -522,9 +664,14 @@ void UpdateSimulation(float dt) {
     if (g_sub.autopilot) baseDrain += 0.3f;
     if (g_sub.lowPowerMode) baseDrain *= 0.45f;
 
+    baseDrain *= g_sub.powerDrainMult;
     g_sub.powerDrain = baseDrain;
+
     if (g_sub.depth > 0.0f) {
         g_sub.battery = max(0.0f, g_sub.battery - (baseDrain * 0.015f * dt));
+        if (g_sub.passiveBatteryRegen > 0.0f) {
+            g_sub.battery = min(100.0f, g_sub.battery + g_sub.passiveBatteryRegen * dt * 2.0f);
+        }
     }
 
     if (g_sub.scrubberAuto && g_sub.battery > 0.0f) {
@@ -753,6 +900,176 @@ void DrawNavMapChart(HDC hdc, int cx, int cy, int mapW, int mapH, const Submarin
     DeleteObject(hPenGrid);
 }
 
+void DrawEngineeringBay(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* th) {
+    RECT rcBg = { x, y, x + w, y + h };
+    HBRUSH hBr = CreateSolidBrush(th->bgDeep);
+    FillRect(hdc, &rcBg, hBr);
+    DeleteObject(hBr);
+
+    int margin = 6;
+    int gridW = (w - margin * 3) / 2;
+    int gridH = (h - margin * 3) / 2;
+
+    int c1x = x + margin;
+    int c2x = x + margin * 2 + gridW;
+    int r1y = y + margin;
+    int r2y = y + margin * 2 + gridH;
+
+    char buf[128];
+
+    // Card 1: Titanium Hull Plating
+    {
+        RECT rcCard = { c1x, r1y, c1x + gridW, r1y + gridH };
+        HBRUSH hBrP = CreateSolidBrush(th->bgPanel);
+        HBRUSH hBrB = CreateSolidBrush(th->borderPanel);
+        FillRect(hdc, &rcCard, hBrP);
+        FrameRect(hdc, &rcCard, hBrB);
+        DeleteObject(hBrP);
+        DeleteObject(hBrB);
+
+        int tier = g_sub.upgradeHull;
+        const HullUpgrade* upg = &g_hullUpg[tier - 1];
+
+        SelectObject(hdc, g_hFontBold);
+        SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, c1x + 8, r1y + 8, "TITANIUM HULL PLATING", 21);
+
+        SelectObject(hdc, g_hFontSmall);
+        SetTextColor(hdc, tier == 4 ? th->accentEmerald : th->accentSonar);
+        TextOutA(hdc, c1x + 8, r1y + 24, upg->name, (int)strlen(upg->name));
+
+        SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, c1x + 8, r1y + 38, upg->desc, (int)strlen(upg->desc));
+
+        snprintf(buf, sizeof(buf), "CRUSH: %.0fm   MAX HULL: %.0f%%", upg->crushDepth, upg->maxHull);
+        SetTextColor(hdc, th->textPrimary);
+        TextOutA(hdc, c1x + 8, r1y + 54, buf, (int)strlen(buf));
+
+        if (tier < 4) {
+            const HullUpgrade* nextUpg = &g_hullUpg[tier];
+            snprintf(buf, sizeof(buf), "UPGRADE -> %s (%d PTS)", nextUpg->name, nextUpg->cost);
+            int canAfford = g_sub.surveyPoints >= nextUpg->cost;
+            DrawCustomButton(hdc, ID_BTN_UPG_HULL, c1x + 8, r1y + gridH - 26, gridW - 16, 20, buf, 0, canAfford ? th->accentSonar : th->textDim, th);
+        } else {
+            DrawCustomButton(hdc, ID_BTN_UPG_HULL, c1x + 8, r1y + gridH - 26, gridW - 16, 20, "MAX TIER [OPTIMAL]", 1, th->accentEmerald, th);
+        }
+    }
+
+    // Card 2: High-Output Ballast Pumps
+    {
+        RECT rcCard = { c2x, r1y, c2x + gridW, r1y + gridH };
+        HBRUSH hBrP = CreateSolidBrush(th->bgPanel);
+        HBRUSH hBrB = CreateSolidBrush(th->borderPanel);
+        FillRect(hdc, &rcCard, hBrP);
+        FrameRect(hdc, &rcCard, hBrB);
+        DeleteObject(hBrP);
+        DeleteObject(hBrB);
+
+        int tier = g_sub.upgradeBallast;
+        const BallastUpgrade* upg = &g_ballastUpg[tier - 1];
+
+        SelectObject(hdc, g_hFontBold);
+        SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, c2x + 8, r1y + 8, "BALLAST PUMPS", 13);
+
+        SelectObject(hdc, g_hFontSmall);
+        SetTextColor(hdc, tier == 4 ? th->accentEmerald : th->accentSonar);
+        TextOutA(hdc, c2x + 8, r1y + 24, upg->name, (int)strlen(upg->name));
+
+        SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, c2x + 8, r1y + 38, upg->desc, (int)strlen(upg->desc));
+
+        snprintf(buf, sizeof(buf), "MAX AIR: %.0f BAR   RATE: %.0f%%/STEP", upg->maxAir, upg->rate);
+        SetTextColor(hdc, th->textPrimary);
+        TextOutA(hdc, c2x + 8, r1y + 54, buf, (int)strlen(buf));
+
+        if (tier < 4) {
+            const BallastUpgrade* nextUpg = &g_ballastUpg[tier];
+            snprintf(buf, sizeof(buf), "UPGRADE -> %s (%d PTS)", nextUpg->name, nextUpg->cost);
+            int canAfford = g_sub.surveyPoints >= nextUpg->cost;
+            DrawCustomButton(hdc, ID_BTN_UPG_BALLAST, c2x + 8, r1y + gridH - 26, gridW - 16, 20, buf, 0, canAfford ? th->accentSonar : th->textDim, th);
+        } else {
+            DrawCustomButton(hdc, ID_BTN_UPG_BALLAST, c2x + 8, r1y + gridH - 26, gridW - 16, 20, "MAX TIER [OPTIMAL]", 1, th->accentEmerald, th);
+        }
+    }
+
+    // Card 3: Nuclear Battery Bank
+    {
+        RECT rcCard = { c1x, r2y, c1x + gridW, r2y + gridH };
+        HBRUSH hBrP = CreateSolidBrush(th->bgPanel);
+        HBRUSH hBrB = CreateSolidBrush(th->borderPanel);
+        FillRect(hdc, &rcCard, hBrP);
+        FrameRect(hdc, &rcCard, hBrB);
+        DeleteObject(hBrP);
+        DeleteObject(hBrB);
+
+        int tier = g_sub.upgradeBattery;
+        const BatteryUpgrade* upg = &g_batteryUpg[tier - 1];
+
+        SelectObject(hdc, g_hFontBold);
+        SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, c1x + 8, r2y + 8, "NUCLEAR BATTERY BANK", 20);
+
+        SelectObject(hdc, g_hFontSmall);
+        SetTextColor(hdc, tier == 4 ? th->accentEmerald : th->accentSonar);
+        TextOutA(hdc, c1x + 8, r2y + 24, upg->name, (int)strlen(upg->name));
+
+        SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, c1x + 8, r2y + 38, upg->desc, (int)strlen(upg->desc));
+
+        snprintf(buf, sizeof(buf), "DRAIN: -%.0f%%   REGEN: %s", (1.0f - upg->drainMult) * 100.0f, upg->regen > 0.0f ? "+0.2%/s AT DEPTH" : "SURFACE");
+        SetTextColor(hdc, th->textPrimary);
+        TextOutA(hdc, c1x + 8, r2y + 54, buf, (int)strlen(buf));
+
+        if (tier < 4) {
+            const BatteryUpgrade* nextUpg = &g_batteryUpg[tier];
+            snprintf(buf, sizeof(buf), "UPGRADE -> %s (%d PTS)", nextUpg->name, nextUpg->cost);
+            int canAfford = g_sub.surveyPoints >= nextUpg->cost;
+            DrawCustomButton(hdc, ID_BTN_UPG_BATTERY, c1x + 8, r2y + gridH - 26, gridW - 16, 20, buf, 0, canAfford ? th->accentSonar : th->textDim, th);
+        } else {
+            DrawCustomButton(hdc, ID_BTN_UPG_BATTERY, c1x + 8, r2y + gridH - 26, gridW - 16, 20, "MAX TIER [OPTIMAL]", 1, th->accentEmerald, th);
+        }
+    }
+
+    // Card 4: Searchlights & Optics
+    {
+        RECT rcCard = { c2x, r2y, c2x + gridW, r2y + gridH };
+        HBRUSH hBrP = CreateSolidBrush(th->bgPanel);
+        HBRUSH hBrB = CreateSolidBrush(th->borderPanel);
+        FillRect(hdc, &rcCard, hBrP);
+        FrameRect(hdc, &rcCard, hBrB);
+        DeleteObject(hBrP);
+        DeleteObject(hBrB);
+
+        int tier = g_sub.upgradeLights;
+        const LightsUpgrade* upg = &g_lightsUpg[tier - 1];
+
+        SelectObject(hdc, g_hFontBold);
+        SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, c2x + 8, r2y + 8, "SEARCHLIGHTS & OPTICS", 21);
+
+        SelectObject(hdc, g_hFontSmall);
+        SetTextColor(hdc, tier == 4 ? th->accentEmerald : th->accentSonar);
+        TextOutA(hdc, c2x + 8, r2y + 24, upg->name, (int)strlen(upg->name));
+
+        SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, c2x + 8, r2y + 38, upg->desc, (int)strlen(upg->desc));
+
+        snprintf(buf, sizeof(buf), "RANGE: %.0fm   SURVEY: %.2fx PTS", upg->range, upg->surveyMult);
+        SetTextColor(hdc, th->textPrimary);
+        TextOutA(hdc, c2x + 8, r2y + 54, buf, (int)strlen(buf));
+
+        if (tier < 4) {
+            const LightsUpgrade* nextUpg = &g_lightsUpg[tier];
+            snprintf(buf, sizeof(buf), "UPGRADE -> %s (%d PTS)", nextUpg->name, nextUpg->cost);
+            int canAfford = g_sub.surveyPoints >= nextUpg->cost;
+            DrawCustomButton(hdc, ID_BTN_UPG_LIGHTS, c2x + 8, r2y + gridH - 26, gridW - 16, 20, buf, 0, canAfford ? th->accentSonar : th->textDim, th);
+        } else {
+            DrawCustomButton(hdc, ID_BTN_UPG_LIGHTS, c2x + 8, r2y + gridH - 26, gridW - 16, 20, "MAX TIER [OPTIMAL]", 1, th->accentEmerald, th);
+        }
+    }
+}
+
 void DrawUI(HDC hdc, RECT* rcClient) {
     int clientW = rcClient->right - rcClient->left;
     int clientH = rcClient->bottom - rcClient->top;
@@ -818,7 +1135,7 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     gy += 15;
     DrawGaugeBar(hdc, gx, gy, gw, 10, min(100.0f, (g_sub.depth / 5000.0f) * 100.0f), th->accentSonar, th);
     gy += 12;
-    snprintf(buf, sizeof(buf), "CRUSH: 4,500m   RATE: %+.2f m/s", g_sub.vertRate);
+    snprintf(buf, sizeof(buf), "CRUSH: %.0fm   RATE: %+.2f m/s", g_sub.crushDepth, g_sub.vertRate);
     SetTextColor(hdc, g_sub.vertRate > 0.0f ? th->accentAmber : (g_sub.vertRate < 0.0f ? th->accentEmerald : th->textDim));
     TextOutA(hdc, gx, gy, buf, (int)strlen(buf));
     gy += 22;
@@ -863,7 +1180,7 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     COLORREF batClr = g_sub.battery < 20.0f ? th->accentRed : (g_sub.battery < 45.0f ? th->accentAmber : th->accentEmerald);
     DrawGaugeBar(hdc, gx, gy, gw, 10, g_sub.battery, batClr, th);
     gy += 12;
-    snprintf(buf, sizeof(buf), "LOAD: %.2f kW   GRID: %s", g_sub.powerDrain, g_sub.depth <= 0.0f ? "SURFACE AUX" : "INTERNAL");
+    snprintf(buf, sizeof(buf), "LOAD: %.2f kW   GRID: %s", g_sub.powerDrain, g_sub.depth <= 0.0f ? "SURFACE AUX" : (g_sub.upgradeBattery >= 3 ? "NUCLEAR RTG" : "INTERNAL"));
     SetTextColor(hdc, th->textDim);
     TextOutA(hdc, gx, gy, buf, (int)strlen(buf));
     gy += 22;
@@ -878,7 +1195,7 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     DrawGaugeBar(hdc, gx, gy, gw, 10, g_sub.ballast, th->textPrimary, th);
     gy += 12;
     int netBuoy = (int)((45.0f - g_sub.ballast) * 25.0f);
-    snprintf(buf, sizeof(buf), "AIR RES: %.0f BAR   BUOY: %+d KG", g_sub.airReservoir, netBuoy);
+    snprintf(buf, sizeof(buf), "AIR RES: %.0f/%.0f BAR   BUOY: %+d KG", g_sub.airReservoir, g_sub.maxAirReservoir, netBuoy);
     SetTextColor(hdc, th->textDim);
     TextOutA(hdc, gx, gy, buf, (int)strlen(buf));
     gy += 22;
@@ -892,7 +1209,7 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     gy += 15;
     DrawGaugeBar(hdc, gx, gy, gw, 10, min(100.0f, g_sub.bilgeWater * 2.5f), th->accentAmber, th);
     gy += 12;
-    snprintf(buf, sizeof(buf), "INTRUSION: %.1f GPM  PUMP: %s", g_sub.waterIntrusionRate, g_sub.bilgePumpActive ? "10 GPM" : "0 GPM");
+    snprintf(buf, sizeof(buf), "INTRUSION: %.1f GPM  PUMP: %s", g_sub.waterIntrusionRate, g_sub.bilgePumpActive ? "ACTIVE" : "STANDBY");
     SetTextColor(hdc, th->textDim);
     TextOutA(hdc, gx, gy, buf, (int)strlen(buf));
     gy += 24;
@@ -915,8 +1232,10 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     DrawPanelBox(hdc, centerX, panelY, centerW, sonarH, "DEEP OCEAN & TRENCH EXPLORATION", secTag, th->accentEmerald, th);
 
     // View switch buttons inside center panel header
-    DrawCustomButton(hdc, ID_BTN_VIEW_SONAR, centerX + 8, panelY + 28, 120, 20, "SONAR RADAR", g_sub.viewMode == 0, th->accentSonar, th);
-    DrawCustomButton(hdc, ID_BTN_VIEW_NAVMAP, centerX + 132, panelY + 28, 140, 20, "TRENCH NAV CHART", g_sub.viewMode == 1, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_VIEW_SONAR, centerX + 8, panelY + 28, 90, 20, "SONAR RADAR", g_sub.viewMode == 0, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_VIEW_NAVMAP, centerX + 102, panelY + 28, 110, 20, "TRENCH NAV", g_sub.viewMode == 1, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_VIEW_ENG, centerX + 216, panelY + 28, 120, 20, "ENGINEERING BAY", g_sub.viewMode == 2, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_FIELD_DIAG, centerX + centerW - 130, panelY + 28, 122, 20, "+35 PTS DIAG", 0, th->accentAmber, th);
 
     int sonarContentY = panelY + 52;
     int sonarContentH = sonarH - 58;
@@ -998,8 +1317,10 @@ void DrawUI(HDC hdc, RECT* rcClient) {
         SelectObject(hdc, hPenOld);
         SelectObject(hdc, hBrOld);
         DeleteObject(hPenRing);
-    } else {
+    } else if (g_sub.viewMode == 1) {
         DrawNavMapChart(hdc, scx, scy, centerW - 20, sonarContentH - 8, th);
+    } else {
+        DrawEngineeringBay(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
     }
 
     SelectObject(hdc, g_hFontSmall);
@@ -1144,8 +1465,37 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
 
     // View toggles in center panel
     if (my >= panelY + 28 && my <= panelY + 48) {
-        if (mx >= centerX + 8 && mx <= centerX + 128) return ID_BTN_VIEW_SONAR;
-        if (mx >= centerX + 132 && mx <= centerX + 272) return ID_BTN_VIEW_NAVMAP;
+        if (mx >= centerX + 8 && mx <= centerX + 98) return ID_BTN_VIEW_SONAR;
+        if (mx >= centerX + 102 && mx <= centerX + 212) return ID_BTN_VIEW_NAVMAP;
+        if (mx >= centerX + 216 && mx <= centerX + 336) return ID_BTN_VIEW_ENG;
+        if (mx >= centerX + centerW - 130 && mx <= centerX + centerW - 8) return ID_BTN_FIELD_DIAG;
+    }
+
+    if (g_sub.viewMode == 2) {
+        int sonarH = (panelH * 60) / 100;
+        int sonarContentY = panelY + 52;
+        int sonarContentH = sonarH - 58;
+        int ebX = centerX + 6;
+        int ebY = sonarContentY + 4;
+        int ebW = centerW - 12;
+        int ebH = sonarContentH - 8;
+
+        int marginEb = 6;
+        int gridW = (ebW - marginEb * 3) / 2;
+        int gridH = (ebH - marginEb * 3) / 2;
+        int c1x = ebX + marginEb;
+        int c2x = ebX + marginEb * 2 + gridW;
+        int r1y = ebY + marginEb;
+        int r2y = ebY + marginEb * 2 + gridH;
+
+        if (my >= r1y + gridH - 26 && my <= r1y + gridH - 6) {
+            if (mx >= c1x + 8 && mx <= c1x + gridW - 8) return ID_BTN_UPG_HULL;
+            if (mx >= c2x + 8 && mx <= c2x + gridW - 8) return ID_BTN_UPG_BALLAST;
+        }
+        if (my >= r2y + gridH - 26 && my <= r2y + gridH - 6) {
+            if (mx >= c1x + 8 && mx <= c1x + gridW - 8) return ID_BTN_UPG_BATTERY;
+            if (mx >= c2x + 8 && mx <= c2x + gridW - 8) return ID_BTN_UPG_LIGHTS;
+        }
     }
 
     int cy = panelY + 30;
@@ -1243,6 +1593,77 @@ void HandleCommand(int cmdId) {
             PlaySoundAsync(520, 60);
             break;
 
+        case ID_BTN_VIEW_ENG:
+            g_sub.viewMode = 2;
+            PlaySoundAsync(580, 80);
+            break;
+
+        case ID_BTN_FIELD_DIAG:
+            g_sub.surveyPoints += 35;
+            PlaySoundAsync(640, 100);
+            AddLog("Submersible telemetry calibrated (+35 Research Credits).", th->textPrimary);
+            break;
+
+        case ID_BTN_UPG_HULL:
+            if (g_sub.upgradeHull < 4) {
+                const HullUpgrade* nextUpg = &g_hullUpg[g_sub.upgradeHull];
+                if (g_sub.surveyPoints >= nextUpg->cost) {
+                    g_sub.surveyPoints -= nextUpg->cost;
+                    g_sub.upgradeHull++;
+                    g_sub.crushDepth = nextUpg->crushDepth;
+                    PlaySoundAsync(920, 150);
+                    snprintf(msg, sizeof(msg), "ENGINEERING UPGRADE: [%s] installed! Crush depth: %.0fm", nextUpg->name, nextUpg->crushDepth);
+                    AddLog(msg, th->accentEmerald);
+                }
+            }
+            break;
+
+        case ID_BTN_UPG_BALLAST:
+            if (g_sub.upgradeBallast < 4) {
+                const BallastUpgrade* nextUpg = &g_ballastUpg[g_sub.upgradeBallast];
+                if (g_sub.surveyPoints >= nextUpg->cost) {
+                    g_sub.surveyPoints -= nextUpg->cost;
+                    g_sub.upgradeBallast++;
+                    g_sub.maxAirReservoir = nextUpg->maxAir;
+                    g_sub.ballastStepRate = nextUpg->rate;
+                    g_sub.airRechargeRate = nextUpg->recharge;
+                    PlaySoundAsync(920, 150);
+                    snprintf(msg, sizeof(msg), "ENGINEERING UPGRADE: [%s] installed! Max air: %.0f BAR", nextUpg->name, nextUpg->maxAir);
+                    AddLog(msg, th->accentEmerald);
+                }
+            }
+            break;
+
+        case ID_BTN_UPG_BATTERY:
+            if (g_sub.upgradeBattery < 4) {
+                const BatteryUpgrade* nextUpg = &g_batteryUpg[g_sub.upgradeBattery];
+                if (g_sub.surveyPoints >= nextUpg->cost) {
+                    g_sub.surveyPoints -= nextUpg->cost;
+                    g_sub.upgradeBattery++;
+                    g_sub.powerDrainMult = nextUpg->drainMult;
+                    g_sub.passiveBatteryRegen = nextUpg->regen;
+                    PlaySoundAsync(920, 150);
+                    snprintf(msg, sizeof(msg), "ENGINEERING UPGRADE: [%s] installed! Power drain reduced.", nextUpg->name);
+                    AddLog(msg, th->accentEmerald);
+                }
+            }
+            break;
+
+        case ID_BTN_UPG_LIGHTS:
+            if (g_sub.upgradeLights < 4) {
+                const LightsUpgrade* nextUpg = &g_lightsUpg[g_sub.upgradeLights];
+                if (g_sub.surveyPoints >= nextUpg->cost) {
+                    g_sub.surveyPoints -= nextUpg->cost;
+                    g_sub.upgradeLights++;
+                    g_sub.opticalRange = nextUpg->range;
+                    g_sub.surveyMultiplier = nextUpg->surveyMult;
+                    PlaySoundAsync(920, 150);
+                    snprintf(msg, sizeof(msg), "ENGINEERING UPGRADE: [%s] installed! Range: %.0fm (%.2fx yield)", nextUpg->name, nextUpg->range, nextUpg->surveyMult);
+                    AddLog(msg, th->accentEmerald);
+                }
+            }
+            break;
+
         case ID_BTN_NEXT_WAYPOINT: {
             g_sub.activeWaypointIdx = (g_sub.activeWaypointIdx + 1) % WAYPOINT_COUNT;
             PlaySoundAsync(500, 80);
@@ -1268,14 +1689,16 @@ void HandleCommand(int cmdId) {
                 float dy = lm->y - g_sub.posY;
                 float distKm = sqrtf(dx * dx + dy * dy);
                 float depthDiff = fabsf(g_sub.depth - lm->depth);
+                float maxRangeKm = max(1.5f, (g_sub.opticalRange / 1000.0f) * 1.6f);
 
-                if (distKm <= 1.5f && depthDiff <= 300.0f) {
+                if (distKm <= maxRangeKm && depthDiff <= 350.0f) {
                     if (!lm->discovered) {
                         lm->discovered = 1;
-                        g_sub.surveyPoints += lm->pts;
+                        int pts = (int)(lm->pts * g_sub.surveyMultiplier);
+                        g_sub.surveyPoints += pts;
                         found = 1;
                         PlaySoundAsync(780, 200);
-                        snprintf(msg, sizeof(msg), "DISCOVERY LOGGED: [%s]! %s (+%d Pts)", lm->name, lm->info, lm->pts);
+                        snprintf(msg, sizeof(msg), "DISCOVERY LOGGED: [%s]! %s (+%d Credits)", lm->name, lm->info, pts);
                         AddLog(msg, th->accentEmerald);
                     } else {
                         snprintf(msg, sizeof(msg), "Landmark in sensor range: [%s] (%.0fm)", lm->name, distKm * 1000.0f);
@@ -1285,14 +1708,14 @@ void HandleCommand(int cmdId) {
             }
             if (!found) {
                 PlaySoundAsync(320, 80);
-                AddLog("Survey complete. No uncharted features within 1.5km. Cruise towards waypoints.", th->textDim);
+                AddLog("Survey complete. No features in optical range. Cruise towards waypoints.", th->textDim);
             }
             break;
         }
 
         case ID_BTN_FLOOD_BALLAST:
             if (g_sub.ballast < 100.0f) {
-                g_sub.ballast = min(100.0f, g_sub.ballast + 10.0f);
+                g_sub.ballast = min(100.0f, g_sub.ballast + g_sub.ballastStepRate);
                 PlaySoundAsync(280, 100);
                 snprintf(msg, sizeof(msg), "Kingston flood valves opened: Ballast %.0f%% flooded.", g_sub.ballast);
                 AddLog(msg, th->textPrimary);
@@ -1301,7 +1724,7 @@ void HandleCommand(int cmdId) {
 
         case ID_BTN_BLOW_BALLAST:
             if (g_sub.airReservoir > 5.0f && g_sub.ballast > 0.0f) {
-                g_sub.ballast = max(0.0f, g_sub.ballast - 10.0f);
+                g_sub.ballast = max(0.0f, g_sub.ballast - g_sub.ballastStepRate);
                 g_sub.airReservoir = max(0.0f, g_sub.airReservoir - 8.0f);
                 PlaySoundAsync(600, 120);
                 snprintf(msg, sizeof(msg), "Blowing ballast with HP air: Ballast %.0f%%, Air Res: %.0f BAR.", g_sub.ballast, g_sub.airReservoir);

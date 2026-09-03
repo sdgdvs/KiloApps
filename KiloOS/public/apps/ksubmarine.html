@@ -495,6 +495,142 @@
             font-size: 10px;
             padding: 2px 0;
         }
+
+        /* Engineering Bay Styles */
+        .engineering-view {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(1, 8, 14, 0.95);
+            padding: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            z-index: 5;
+        }
+
+        .engineering-view.active {
+            display: flex;
+        }
+
+        .eng-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-panel);
+            padding-bottom: 6px;
+            flex-shrink: 0;
+        }
+
+        .eng-credits-badge {
+            font-size: 10px;
+            font-weight: bold;
+            color: var(--accent-emerald);
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid var(--accent-emerald);
+            padding: 3px 8px;
+            border-radius: 3px;
+        }
+
+        .eng-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .eng-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 6px;
+            position: relative;
+        }
+
+        .eng-card:hover {
+            border-color: var(--border-glow);
+        }
+
+        .eng-card-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .eng-card-title {
+            font-size: 10px;
+            font-weight: bold;
+            color: var(--text-bright);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .eng-tier-badge {
+            font-size: 9px;
+            padding: 2px 5px;
+            border-radius: 2px;
+            background: var(--btn-bg);
+            border: 1px solid var(--border-panel);
+            color: var(--accent-sonar);
+            font-weight: bold;
+        }
+
+        .eng-tier-badge.max {
+            color: var(--accent-emerald);
+            border-color: var(--accent-emerald);
+        }
+
+        .eng-card-desc {
+            font-size: 9px;
+            color: var(--text-dim);
+            line-height: 1.3;
+        }
+
+        .eng-stat-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            color: var(--text-primary);
+            background: var(--gauge-bg);
+            padding: 3px 6px;
+            border-radius: 2px;
+            border: 1px solid rgba(19, 60, 90, 0.4);
+        }
+
+        .eng-stat-row b {
+            color: var(--text-bright);
+        }
+
+        .eng-upgrade-btn {
+            padding: 5px;
+            font-size: 10px;
+            font-weight: bold;
+            text-align: center;
+            background: var(--btn-bg);
+            border: 1px solid var(--accent-sonar);
+            color: var(--accent-sonar);
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.15s ease;
+        }
+
+        .eng-upgrade-btn:hover:not(:disabled) {
+            background: var(--btn-hover);
+            color: var(--text-bright);
+            box-shadow: 0 0 8px rgba(0, 210, 255, 0.3);
+        }
+
+        .eng-upgrade-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            border-color: var(--border-panel);
+            color: var(--text-dim);
+        }
     </style>
 </head>
 <body class="theme-abyss">
@@ -630,22 +766,23 @@
             </div>
         </section>
 
-        <!-- CENTER PANEL: ACTIVE SONAR & TRENCH NAVIGATION -->
+        <!-- CENTER PANEL: ACTIVE SONAR, TRENCH NAVIGATION & ENGINEERING -->
         <section class="center-stage">
             <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between; background: var(--bg-panel-header); border: 1px solid var(--border-panel); padding: 4px 8px; border-radius: 3px;">
                 <div style="display: flex; gap: 6px;">
                     <button id="viewSonarBtn" class="active-toggle">📡 ACTIVE SONAR</button>
                     <button id="viewNavMapBtn">🗺️ TRENCH NAVIGATION CHART</button>
+                    <button id="viewEngineeringBtn">⚙️ ENGINEERING BAY</button>
                 </div>
                 <div style="font-size: 10px; color: var(--text-dim); display: flex; gap: 12px;">
                     <span>SECTOR: <b id="currentSectorName" style="color: var(--accent-sonar);">CONTINENTAL SHELF</b></span>
-                    <span>SURVEY: <b id="surveyPtsVal" style="color: var(--accent-emerald);">0 PTS</b></span>
+                    <span>SURVEY: <b id="surveyPtsVal" style="color: var(--accent-emerald);">150 PTS</b></span>
                 </div>
             </div>
 
             <div class="sonar-viewport">
                 <canvas id="sonarCanvas"></canvas>
-                <div class="sonar-overlay">
+                <div class="sonar-overlay" id="sonarOverlay">
                     <div>HEADING: <span id="headingVal">042° NE</span></div>
                     <div>SURGE SPEED: <span id="speedVal">0.0 KTS</span></div>
                     <div>COORDS: <span id="coordsVal">X: 0.00 km, Y: 0.00 km</span></div>
@@ -655,6 +792,102 @@
                 <div class="sonar-mode-tag" id="sonarModeTag">MODE: 360° PLAN SWEEP</div>
                 <div class="sonar-depth-marker" id="sonarStatusText">
                     ACTIVE SONAR: READY
+                </div>
+
+                <!-- ENGINEERING BAY OVERLAY -->
+                <div class="engineering-view" id="engineeringView">
+                    <div class="eng-header-row">
+                        <div>
+                            <span style="font-weight: bold; color: var(--text-bright); font-size: 11px;">SUBMERSIBLE ENGINEERING & WORKSHOP</span>
+                            <span style="font-size: 10px; color: var(--text-dim); margin-left: 8px;">Upgrade critical deep-sea systems using survey credits</span>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button id="btnFieldDiagnostic" style="font-size: 10px; border-color: var(--accent-amber); color: var(--accent-amber);">⚡ FIELD DIAGNOSTIC (+35 PTS)</button>
+                            <div class="eng-credits-badge" id="engCreditsDisplay">RESEARCH CREDITS: 150 PTS</div>
+                        </div>
+                    </div>
+
+                    <div class="eng-grid">
+                        <!-- MODULE 1: TITANIUM HULL -->
+                        <div class="eng-card">
+                            <div class="eng-card-title-row">
+                                <span class="eng-card-title">🛡️ TITANIUM HULL PLATING</span>
+                                <span class="eng-tier-badge" id="hullTierBadge">MK I - STANDARD</span>
+                            </div>
+                            <div class="eng-card-desc" id="hullDesc">
+                                Reinforced alloy bathysphere envelope. Protects internal compartment against immense oceanic hydrostatic pressure.
+                            </div>
+                            <div class="eng-stat-row">
+                                <span>CRUSH DEPTH:</span>
+                                <b id="hullCrushStat">4,500 m</b>
+                            </div>
+                            <div class="eng-stat-row">
+                                <span>MAX INTEGRITY:</span>
+                                <b id="hullIntegrityStat">100% (BASE)</b>
+                            </div>
+                            <button class="eng-upgrade-btn" id="btnUpgradeHull">UPGRADE -> MK II (150 PTS)</button>
+                        </div>
+
+                        <!-- MODULE 2: HIGH-OUTPUT BALLAST PUMPS -->
+                        <div class="eng-card">
+                            <div class="eng-card-title-row">
+                                <span class="eng-card-title">💨 HIGH-OUTPUT BALLAST PUMPS</span>
+                                <span class="eng-tier-badge" id="ballastTierBadge">MK I - PNEUMATIC</span>
+                            </div>
+                            <div class="eng-card-desc" id="ballastDesc">
+                                High-pressure compressed air manifolds and dual-stage turbine pumps for rapid ballast evacuation and trim control.
+                            </div>
+                            <div class="eng-stat-row">
+                                <span>MAX AIR RESERVOIR:</span>
+                                <b id="ballastAirStat">300 BAR</b>
+                            </div>
+                            <div class="eng-stat-row">
+                                <span>FLOOD / BLOW RATE:</span>
+                                <b id="ballastRateStat">10% / STEP</b>
+                            </div>
+                            <button class="eng-upgrade-btn" id="btnUpgradeBallast">UPGRADE -> MK II (120 PTS)</button>
+                        </div>
+
+                        <!-- MODULE 3: NUCLEAR BATTERY BANK -->
+                        <div class="eng-card">
+                            <div class="eng-card-title-row">
+                                <span class="eng-card-title">⚛️ NUCLEAR BATTERY BANK</span>
+                                <span class="eng-tier-badge" id="batteryTierBadge">MK I - LI-POLYMER</span>
+                            </div>
+                            <div class="eng-card-desc" id="batteryDesc">
+                                Deep-submergence isotope thermoelectric power plant. Drastically reduces electrical load and supplies continuous passive energy.
+                            </div>
+                            <div class="eng-stat-row">
+                                <span>POWER EFFICIENCY:</span>
+                                <b id="batteryEfficiencyStat">STANDARD DRAIN</b>
+                            </div>
+                            <div class="eng-stat-row">
+                                <span>PASSIVE REGEN:</span>
+                                <b id="batteryRegenStat">SURFACE ONLY</b>
+                            </div>
+                            <button class="eng-upgrade-btn" id="btnUpgradeBattery">UPGRADE -> MK II (150 PTS)</button>
+                        </div>
+
+                        <!-- MODULE 4: HIGH-LUX SEARCHLIGHTS -->
+                        <div class="eng-card">
+                            <div class="eng-card-title-row">
+                                <span class="eng-card-title">💡 HIGH-LUX SEARCHLIGHTS & OPTICS</span>
+                                <span class="eng-tier-badge" id="lightsTierBadge">MK I - HALOGEN</span>
+                            </div>
+                            <div class="eng-card-desc" id="lightsDesc">
+                                Pulsed xenon-arc floodlights and ultraviolet bathymetric lidar for penetrating deep abyssal gloom and spotting distant trench anomalies.
+                            </div>
+                            <div class="eng-stat-row">
+                                <span>OPTICAL RANGE:</span>
+                                <b id="lightsRangeStat">250 M CONE</b>
+                            </div>
+                            <div class="eng-stat-row">
+                                <span>SURVEY MULTIPLIER:</span>
+                                <b id="lightsSurveyStat">1.0x PTS</b>
+                            </div>
+                            <button class="eng-upgrade-btn" id="btnUpgradeLights">UPGRADE -> MK II (100 PTS)</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -904,6 +1137,34 @@
                 { name: 'Abyssal Siren Deep', sectorIdx: 3, x: 9.8, y: 10.5, targetDepth: 10500 }
             ];
 
+            // --- UPGRADE MODULE DEFINITIONS (PHASE 6) ---
+            const UPGRADES = {
+                hull: [
+                    { tier: 1, name: 'MK I - STANDARD', cost: 0, crushDepth: 4500, maxHull: 100, desc: 'Reinforced alloy bathysphere envelope. Standard epipelagic rating.' },
+                    { tier: 2, name: 'MK II - TITANIUM CARBIDE', cost: 150, crushDepth: 6800, maxHull: 125, desc: 'Titanium-carbide monocoque shell. Withstands extreme bathyal hydrostatic pressure.' },
+                    { tier: 3, name: 'MK III - GRAPHENE MESH', cost: 350, crushDepth: 9200, maxHull: 150, desc: 'Diamondoid graphene interwoven bulkheads. Deep abyssal trench rated.' },
+                    { tier: 4, name: 'MK IV - HADAL MATRIX', cost: 650, crushDepth: 12000, maxHull: 200, desc: 'Superdense nano-polymer matrix. Full Hadalpelagic Mariana Trench immersion certified.' }
+                ],
+                ballast: [
+                    { tier: 1, name: 'MK I - PNEUMATIC', cost: 0, maxAir: 300, rate: 10, recharge: 5, desc: 'Standard compressed air tanks and mechanical Kingston flood valves.' },
+                    { tier: 2, name: 'MK II - CRYO-TURBO', cost: 120, maxAir: 450, rate: 15, recharge: 8, desc: 'Cryogenic air compression pump. 50% larger capacity and faster surface recharging.' },
+                    { tier: 3, name: 'MK III - QUAD-HYDRAULIC', cost: 300, maxAir: 600, rate: 20, recharge: 12, desc: 'Heavy-duty hydraulic displacement manifolds. High-speed emergency ballast expulsion.' },
+                    { tier: 4, name: 'MK IV - GAS EXPANDER', cost: 550, maxAir: 850, rate: 25, recharge: 18, desc: 'Supercritical solid-fuel gas generation cartridges for instantaneous buoyancy shifts.' }
+                ],
+                battery: [
+                    { tier: 1, name: 'MK I - LI-POLYMER', cost: 0, drainMult: 1.0, regen: 0.0, desc: 'Chemical lithium-polymer battery bank. Standard electrical drain.' },
+                    { tier: 2, name: 'MK II - SILVER-ZINC', cost: 150, drainMult: 0.75, regen: 0.0, desc: 'Silver-zinc deep-cell array. Reduces overall power consumption by 25%.' },
+                    { tier: 3, name: 'MK III - PLUTONIUM RTG', cost: 350, drainMult: 0.55, regen: 0.12, desc: 'Pu-238 Radioisotope Thermoelectric Generator. Passive continuous charge even at depth.' },
+                    { tier: 4, name: 'MK IV - THORIUM CORE', cost: 600, drainMult: 0.35, regen: 0.28, desc: 'Molten-salt thorium micro-reactor. Virtually inexhaustible abyssal power supply.' }
+                ],
+                lights: [
+                    { tier: 1, name: 'MK I - HALOGEN', cost: 0, range: 250, surveyMult: 1.0, desc: 'Halogen searchlight array. Adequate for near-field navigation.' },
+                    { tier: 2, name: 'MK II - XENON ARCS', cost: 100, range: 450, surveyMult: 1.25, desc: 'Dual xenon-arc high-lux floodlights. +25% survey point extraction yield.' },
+                    { tier: 3, name: 'MK III - PULSED LIDAR', cost: 250, range: 750, surveyMult: 1.6, desc: 'Ultraviolet bathymetric lidar scanner. +60% survey points and wide sector illumination.' },
+                    { tier: 4, name: 'MK IV - QUANTUM OPTICS', cost: 500, range: 1200, surveyMult: 2.0, desc: 'Quantum bioluminescent photonic beam. 2.0x survey research yield and long-range optics.' }
+                ]
+            };
+
             const state = {
                 depth: 0.0,            // meters (0 to 11,000)
                 vertRate: 0.0,         // vertical descent/ascent rate m/s
@@ -922,10 +1183,26 @@
                 currentSectorIdx: 0,
                 activeWaypointIdx: 0,
                 autopilot: false,
-                surveyPoints: 0,
-                viewMode: 'sonar',     // 'sonar' or 'navmap'
+                surveyPoints: 150,     // Research credits
+                viewMode: 'sonar',     // 'sonar', 'navmap', or 'engineering'
                 breadcrumbs: [],       // history trail of [x, y]
                 seabedElevation: 250.0,
+                milestones: { 200: false, 1000: false, 4000: false, 6000: false, 10000: false },
+
+                // Module Upgrades (Phase 6)
+                upgrades: {
+                    hull: 1,
+                    ballast: 1,
+                    battery: 1,
+                    lights: 1
+                },
+                maxAirReservoir: 300.0,
+                airRechargeRate: 5.0,
+                ballastStepRate: 10.0,
+                powerDrainMult: 1.0,
+                passiveBatteryRegen: 0.0,
+                surveyMultiplier: 1.0,
+                opticalRange: 250.0,
 
                 // Vital systems
                 hull: 100.0,           // % integrity
@@ -1009,6 +1286,32 @@
             const zoneTag = document.getElementById('zoneTag');
             const terminalLog = document.getElementById('terminalLog');
 
+            // Engineering Elements
+            const engineeringView = document.getElementById('engineeringView');
+            const viewEngineeringBtn = document.getElementById('viewEngineeringBtn');
+            const engCreditsDisplay = document.getElementById('engCreditsDisplay');
+            const btnFieldDiagnostic = document.getElementById('btnFieldDiagnostic');
+            const hullTierBadge = document.getElementById('hullTierBadge');
+            const hullDesc = document.getElementById('hullDesc');
+            const hullCrushStat = document.getElementById('hullCrushStat');
+            const hullIntegrityStat = document.getElementById('hullIntegrityStat');
+            const btnUpgradeHull = document.getElementById('btnUpgradeHull');
+            const ballastTierBadge = document.getElementById('ballastTierBadge');
+            const ballastDesc = document.getElementById('ballastDesc');
+            const ballastAirStat = document.getElementById('ballastAirStat');
+            const ballastRateStat = document.getElementById('ballastRateStat');
+            const btnUpgradeBallast = document.getElementById('btnUpgradeBallast');
+            const batteryTierBadge = document.getElementById('batteryTierBadge');
+            const batteryDesc = document.getElementById('batteryDesc');
+            const batteryEfficiencyStat = document.getElementById('batteryEfficiencyStat');
+            const batteryRegenStat = document.getElementById('batteryRegenStat');
+            const btnUpgradeBattery = document.getElementById('btnUpgradeBattery');
+            const lightsTierBadge = document.getElementById('lightsTierBadge');
+            const lightsDesc = document.getElementById('lightsDesc');
+            const lightsRangeStat = document.getElementById('lightsRangeStat');
+            const lightsSurveyStat = document.getElementById('lightsSurveyStat');
+            const btnUpgradeLights = document.getElementById('btnUpgradeLights');
+
             // Interactive Buttons
             const themeSelect = document.getElementById('themeSelect');
             const scanlineToggleBtn = document.getElementById('scanlineToggleBtn');
@@ -1075,6 +1378,9 @@
                 state.viewMode = 'sonar';
                 viewSonarBtn.classList.add('active-toggle');
                 viewNavMapBtn.classList.remove('active-toggle');
+                viewEngineeringBtn.classList.remove('active-toggle');
+                document.getElementById('sonarOverlay').style.display = 'block';
+                engineeringView.classList.remove('active');
                 sonarModeTag.textContent = 'MODE: 360° PLAN SWEEP';
                 playBeep(450, 'sine', 0.08);
             });
@@ -1083,8 +1389,143 @@
                 state.viewMode = 'navmap';
                 viewNavMapBtn.classList.add('active-toggle');
                 viewSonarBtn.classList.remove('active-toggle');
+                viewEngineeringBtn.classList.remove('active-toggle');
+                document.getElementById('sonarOverlay').style.display = 'block';
+                engineeringView.classList.remove('active');
                 sonarModeTag.textContent = 'MODE: 2D BATHYMETRY CHART';
                 playBeep(520, 'sine', 0.08);
+            });
+
+            viewEngineeringBtn.addEventListener('click', () => {
+                state.viewMode = 'engineering';
+                viewEngineeringBtn.classList.add('active-toggle');
+                viewSonarBtn.classList.remove('active-toggle');
+                viewNavMapBtn.classList.remove('active-toggle');
+                document.getElementById('sonarOverlay').style.display = 'none';
+                engineeringView.classList.add('active');
+                sonarModeTag.textContent = 'MODE: ENGINEERING WORKSHOP';
+                renderEngineeringUI();
+                playBeep(580, 'sine', 0.08);
+            });
+
+            // --- ENGINEERING UPGRADES & RESEARCH (PHASE 6) ---
+            function applyUpgradeStats() {
+                const hDef = UPGRADES.hull[state.upgrades.hull - 1];
+                state.crushDepth = hDef.crushDepth;
+                
+                const bDef = UPGRADES.ballast[state.upgrades.ballast - 1];
+                state.maxAirReservoir = bDef.maxAir;
+                state.ballastStepRate = bDef.rate;
+                state.airRechargeRate = bDef.recharge;
+
+                const batDef = UPGRADES.battery[state.upgrades.battery - 1];
+                state.powerDrainMult = batDef.drainMult;
+                state.passiveBatteryRegen = batDef.regen;
+
+                const lDef = UPGRADES.lights[state.upgrades.lights - 1];
+                state.opticalRange = lDef.range;
+                state.surveyMultiplier = lDef.surveyMult;
+            }
+
+            function renderEngineeringUI() {
+                engCreditsDisplay.textContent = `RESEARCH CREDITS: ${state.surveyPoints} PTS`;
+                surveyPtsVal.textContent = `${state.surveyPoints} PTS`;
+
+                // Hull UI
+                const hTier = state.upgrades.hull;
+                const hDef = UPGRADES.hull[hTier - 1];
+                hullTierBadge.textContent = hDef.name;
+                hullTierBadge.className = `eng-tier-badge ${hTier === 4 ? 'max' : ''}`;
+                hullDesc.textContent = hDef.desc;
+                hullCrushStat.textContent = `${hDef.crushDepth.toLocaleString()} m`;
+                hullIntegrityStat.textContent = `${hDef.maxHull}% (MAX)`;
+                if (hTier < 4) {
+                    const nextH = UPGRADES.hull[hTier];
+                    btnUpgradeHull.textContent = `UPGRADE -> ${nextH.name} (${nextH.cost} PTS)`;
+                    btnUpgradeHull.disabled = state.surveyPoints < nextH.cost;
+                } else {
+                    btnUpgradeHull.textContent = `MAX TIER REACHED [OPTIMAL]`;
+                    btnUpgradeHull.disabled = true;
+                }
+
+                // Ballast UI
+                const bTier = state.upgrades.ballast;
+                const bDef = UPGRADES.ballast[bTier - 1];
+                ballastTierBadge.textContent = bDef.name;
+                ballastTierBadge.className = `eng-tier-badge ${bTier === 4 ? 'max' : ''}`;
+                ballastDesc.textContent = bDef.desc;
+                ballastAirStat.textContent = `${bDef.maxAir} BAR`;
+                ballastRateStat.textContent = `${bDef.rate}% / STEP (REC: +${bDef.recharge} BAR/s)`;
+                if (bTier < 4) {
+                    const nextB = UPGRADES.ballast[bTier];
+                    btnUpgradeBallast.textContent = `UPGRADE -> ${nextB.name} (${nextB.cost} PTS)`;
+                    btnUpgradeBallast.disabled = state.surveyPoints < nextB.cost;
+                } else {
+                    btnUpgradeBallast.textContent = `MAX TIER REACHED [OPTIMAL]`;
+                    btnUpgradeBallast.disabled = true;
+                }
+
+                // Battery UI
+                const batTier = state.upgrades.battery;
+                const batDef = UPGRADES.battery[batTier - 1];
+                batteryTierBadge.textContent = batDef.name;
+                batteryTierBadge.className = `eng-tier-badge ${batTier === 4 ? 'max' : ''}`;
+                batteryDesc.textContent = batDef.desc;
+                batteryEfficiencyStat.textContent = `LOAD: -${Math.round((1 - batDef.drainMult) * 100)}% DRAIN`;
+                batteryRegenStat.textContent = batDef.regen > 0 ? `+${(batDef.regen * 10).toFixed(1)}%/s AT DEPTH` : 'SURFACE ONLY';
+                if (batTier < 4) {
+                    const nextBat = UPGRADES.battery[batTier];
+                    btnUpgradeBattery.textContent = `UPGRADE -> ${nextBat.name} (${nextBat.cost} PTS)`;
+                    btnUpgradeBattery.disabled = state.surveyPoints < nextBat.cost;
+                } else {
+                    btnUpgradeBattery.textContent = `MAX TIER REACHED [OPTIMAL]`;
+                    btnUpgradeBattery.disabled = true;
+                }
+
+                // Lights UI
+                const lTier = state.upgrades.lights;
+                const lDef = UPGRADES.lights[lTier - 1];
+                lightsTierBadge.textContent = lDef.name;
+                lightsTierBadge.className = `eng-tier-badge ${lTier === 4 ? 'max' : ''}`;
+                lightsDesc.textContent = lDef.desc;
+                lightsRangeStat.textContent = `${lDef.range} M VISUAL CONE`;
+                lightsSurveyStat.textContent = `${lDef.surveyMult.toFixed(2)}x RESEARCH YIELD`;
+                if (lTier < 4) {
+                    const nextL = UPGRADES.lights[lTier];
+                    btnUpgradeLights.textContent = `UPGRADE -> ${nextL.name} (${nextL.cost} PTS)`;
+                    btnUpgradeLights.disabled = state.surveyPoints < nextL.cost;
+                } else {
+                    btnUpgradeLights.textContent = `MAX TIER REACHED [OPTIMAL]`;
+                    btnUpgradeLights.disabled = true;
+                }
+            }
+
+            function purchaseUpgrade(moduleKey) {
+                const curTier = state.upgrades[moduleKey];
+                if (curTier < 4) {
+                    const nextDef = UPGRADES[moduleKey][curTier];
+                    if (state.surveyPoints >= nextDef.cost) {
+                        state.surveyPoints -= nextDef.cost;
+                        state.upgrades[moduleKey]++;
+                        applyUpgradeStats();
+                        renderEngineeringUI();
+                        playBeep(920, 'triangle', 0.25, 0.2);
+                        setTimeout(() => playBeep(1200, 'sine', 0.2, 0.15), 100);
+                        logMessage(`🔧 ENGINEERING UPGRADE INSTALLED: [${nextDef.name}] -> ${nextDef.desc}`, 'discovery');
+                    }
+                }
+            }
+
+            btnUpgradeHull.addEventListener('click', () => purchaseUpgrade('hull'));
+            btnUpgradeBallast.addEventListener('click', () => purchaseUpgrade('ballast'));
+            btnUpgradeBattery.addEventListener('click', () => purchaseUpgrade('battery'));
+            btnUpgradeLights.addEventListener('click', () => purchaseUpgrade('lights'));
+
+            btnFieldDiagnostic.addEventListener('click', () => {
+                state.surveyPoints += 35;
+                renderEngineeringUI();
+                playBeep(640, 'sine', 0.15);
+                logMessage(`Submersible diagnostic telemetry executed. Sensor calibration verified (+35 Research Credits).`, 'info');
             });
 
             // --- WAYPOINTS & AUTOPILOT ---
@@ -1124,14 +1565,16 @@
                     const dy = lm.y - state.posY;
                     const distKm = Math.sqrt(dx * dx + dy * dy);
                     const depthDiff = Math.abs(state.depth - lm.depth);
+                    const rangeKm = Math.max(1.5, (state.opticalRange / 1000.0) * 1.6);
 
-                    if (distKm <= 1.5 && depthDiff <= 300) {
+                    if (distKm <= rangeKm && depthDiff <= 350) {
                         if (!lm.discovered) {
                             lm.discovered = true;
-                            state.surveyPoints += lm.pts;
+                            const ptsAwarded = Math.round(lm.pts * state.surveyMultiplier);
+                            state.surveyPoints += ptsAwarded;
                             discoveredAny = true;
                             playBeep(780, 'sine', 0.3, 0.2);
-                            logMessage(`🌟 DISCOVERY SURVEY LOGGED: [${lm.name}]! ${lm.info} (+${lm.pts} Survey Pts)`, 'discovery');
+                            logMessage(`🌟 DISCOVERY SURVEY LOGGED: [${lm.name}]! ${lm.info} (+${ptsAwarded} Research Credits)`, 'discovery');
                         } else {
                             logMessage(`Telemetry check: [${lm.name}] within sensor range (${(distKm * 1000).toFixed(0)}m).`, 'info');
                         }
@@ -1140,15 +1583,15 @@
 
                 if (!discoveredAny) {
                     playBeep(320, 'triangle', 0.1);
-                    logMessage(`Hydrophone & optical survey scan complete. No uncharted features within 1.5km. Steer closer to waypoints.`, 'info');
+                    logMessage(`Hydrophone & optical survey scan complete. Optical Range: ${state.opticalRange}m. Steer closer to waypoints.`, 'info');
                 }
-                surveyPtsVal.textContent = `${state.surveyPoints} PTS`;
+                renderEngineeringUI();
             });
 
             // --- CONTROLS EVENT HANDLERS ---
             btnFloodBallast.addEventListener('click', () => {
                 if (state.ballast < 100) {
-                    state.ballast = Math.min(100, state.ballast + 10);
+                    state.ballast = Math.min(100, state.ballast + state.ballastStepRate);
                     playBeep(280, 'sine', 0.15, 0.1);
                     logMessage(`Opening Kingston flood valves: Main ballast ${Math.round(state.ballast)}% flooded.`, 'info');
                 }
@@ -1156,7 +1599,7 @@
 
             btnPumpBallast.addEventListener('click', () => {
                 if (state.airReservoir > 5 && state.ballast > 0) {
-                    state.ballast = Math.max(0, state.ballast - 10);
+                    state.ballast = Math.max(0, state.ballast - state.ballastStepRate);
                     state.airReservoir = Math.max(0, state.airReservoir - 8);
                     playAirBlowSound();
                     logMessage(`Blowing ballast with HP air: Main ballast ${Math.round(state.ballast)}%, Air Res: ${Math.round(state.airReservoir)} BAR.`, 'info');
@@ -1309,6 +1752,7 @@
 
             applyThemeSettings();
             updateWaypointUI();
+            renderEngineeringUI();
 
             // --- SIMULATION PHYSICS & NAVIGATION TICK ---
             let lastTime = performance.now();
@@ -1327,15 +1771,27 @@
                 if (state.depth <= 0) {
                     state.depth = 0;
                     if (state.vertRate < 0) state.vertRate = 0;
-                    if (state.airReservoir < 300) state.airReservoir = Math.min(300, state.airReservoir + dt * 5);
+                    if (state.airReservoir < state.maxAirReservoir) state.airReservoir = Math.min(state.maxAirReservoir, state.airReservoir + dt * state.airRechargeRate);
                     if (state.battery < 100) state.battery = Math.min(100, state.battery + dt * 2);
                     gridModeVal.textContent = 'SURFACE AUX/GEN';
                 } else {
-                    gridModeVal.textContent = 'INTERNAL BATTERY';
+                    gridModeVal.textContent = state.upgrades.battery >= 3 ? 'NUCLEAR RTG CORE' : 'INTERNAL BATTERY';
                 }
 
                 if (state.depth > 11000) state.depth = 11000;
                 updateSectorFromDepth();
+
+                // Depth Record Milestone Checks
+                [200, 1000, 4000, 6000, 10000].forEach(mDepth => {
+                    if (state.depth >= mDepth && !state.milestones[mDepth]) {
+                        state.milestones[mDepth] = true;
+                        const bonus = mDepth >= 6000 ? 250 : (mDepth >= 4000 ? 150 : 75);
+                        state.surveyPoints += bonus;
+                        playBeep(880, 'triangle', 0.4, 0.2);
+                        logMessage(`🏆 DEPTH MILESTONE: Submerged past ${mDepth}m! (+${bonus} Research Credits)`, 'discovery');
+                        renderEngineeringUI();
+                    }
+                });
 
                 // 2. Speed Surge & Coordinate Traversal Physics
                 state.speed += (state.targetSpeed - state.speed) * (dt * 0.8);
@@ -1396,12 +1852,13 @@
 
                 if (state.depth > state.crushDepth) {
                     const excess = state.depth - state.crushDepth;
-                    const hullDamage = (excess * 0.02 + 0.5) * dt;
+                    const hullDamageReduction = 1.0 - (state.upgrades.hull - 1) * 0.2;
+                    const hullDamage = (excess * 0.02 + 0.5) * dt * Math.max(0.3, hullDamageReduction);
                     state.hull = Math.max(0, state.hull - hullDamage);
-                    state.waterIntrusionRate = excess * 0.05;
+                    state.waterIntrusionRate = excess * 0.05 * Math.max(0.3, hullDamageReduction);
                     if (Math.random() < dt * 0.3) {
                         playBeep(120, 'sawtooth', 0.3, 0.2);
-                        logMessage(`CRUSH WARNING: Extreme hydrostatic pressure deforming titanium hull frames!`, 'critical');
+                        logMessage(`CRUSH WARNING: Hydrostatic pressure deforming hull!`, 'critical');
                     }
                 } else {
                     state.waterIntrusionRate = 0.0;
@@ -1412,13 +1869,13 @@
                     state.bilgeWater += state.waterIntrusionRate * dt;
                 }
                 if (state.bilgePumpActive && state.bilgeWater > 0 && state.battery > 0) {
-                    const pumped = Math.min(state.bilgeWater, 10.0 * dt);
+                    const pumped = Math.min(state.bilgeWater, (10.0 + (state.upgrades.ballast - 1) * 5.0) * dt);
                     state.bilgeWater -= pumped;
                 }
 
-                // 6. Electrical Drain
+                // 6. Electrical Drain & Passive Nuclear Regeneration
                 let baseDrain = 0.3;
-                if (state.searchlights) baseDrain += 0.8;
+                if (state.searchlights) baseDrain += (0.8 / state.upgrades.lights);
                 if (state.throttleMode === 'HALF') baseDrain += 1.2;
                 if (state.throttleMode === 'FLANK') baseDrain += 3.5;
                 if (state.bilgePumpActive) baseDrain += 0.6;
@@ -1426,9 +1883,14 @@
                 if (state.autopilot) baseDrain += 0.3;
                 if (state.lowPowerMode) baseDrain *= 0.45;
 
+                baseDrain *= state.powerDrainMult;
                 state.powerDrain = baseDrain;
+
                 if (state.depth > 0) {
                     state.battery = Math.max(0, state.battery - (baseDrain * 0.015 * dt));
+                    if (state.passiveBatteryRegen > 0) {
+                        state.battery = Math.min(100, state.battery + state.passiveBatteryRegen * dt * 2.0);
+                    }
                 }
 
                 // 7. O2 Scrubber Simulation
