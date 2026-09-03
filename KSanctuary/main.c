@@ -190,6 +190,7 @@ typedef struct {
     int hunger;
     int thirst;
     int morale;
+    int rads; // 0-100 Radiation sickness
     char job[16]; // "unassigned", "cmd", "gen", "water", "farm", "infirmary", "workshop", "expedition"
     int str, agi, inte;
 } Survivor;
@@ -289,9 +290,16 @@ typedef struct {
     int showRaidModal;
     float exteriorRads;
     
+    // Morale, Health & Water Quality (Phase 12)
+    float waterPurity;
+    int martialLaw;
+    int fortifiedRationsDays;
+    int communalFeastDays;
+    int addressCooldown;
+
     // Policies
-    int policyFood;  // 0: Standard (1.0), 1: Half (0.5), 2: Strict Emergency (0.25)
-    int policyWater; // 0: Full (1.0), 1: Strict (0.5), 2: Minimal (0.25)
+    int policyFood;  // 0: Feast (1.5), 1: Standard (1.0), 2: Half (0.5), 3: Strict Emergency (0.25)
+    int policyWater; // 0: Full Pure (1.0), 1: Strict (0.5), 2: Minimal Silt (0.25)
     int policyPower; // 0: Balanced, 1: Life Support, 2: Production
     
     // Facilities (up to 16)
@@ -440,6 +448,17 @@ enum {
     BTN_DISPATCH_SCOUT,
     BTN_EXP_STIM_TOGGLE,
     BTN_TREAT_SURV,
+    BTN_TREAT_RADAWAY,
+    BTN_TREAT_DECON,
+    BTN_MASS_RADAWAY,
+    BTN_MASS_DECON,
+    BTN_FLUSH_FILTERS,
+    BTN_STERILIZE_WATER,
+    BTN_FORTIFY_RATIONS,
+    BTN_COMMUNAL_FEAST,
+    BTN_DIST_LUXURIES,
+    BTN_OVERSEER_ADDRESS,
+    BTN_TOGGLE_MARTIAL_LAW,
     BTN_POLICY_FOOD,
     BTN_POLICY_WATER,
     BTN_POLICY_POWER,
@@ -507,6 +526,17 @@ static float GetWorkerEfficiency(const Survivor* s, const Facility* fac) {
     if (s->morale < 40) eff -= 0.25f;
     else if (s->morale >= 80) eff += 0.15f;
 
+    // Radiation sickness penalty
+    if (s->rads >= 75) eff -= 0.60f;
+    else if (s->rads >= 50) eff -= 0.35f;
+    else if (s->rads >= 25) eff -= 0.15f;
+
+    // Vitamin fortification bonus
+    if (g_state.fortifiedRationsDays > 0) eff += 0.15f;
+
+    // Civil unrest worker slowdown (unless martial law)
+    if (g_state.morale < 40.0f && !g_state.martialLaw) eff -= 0.25f;
+
     float statBonus = 0.0f;
     if (strcmp(fac->id, "farm") == 0 || strcmp(fac->id, "farm_aero") == 0) {
         if (s->agi > 5) statBonus += (s->agi - 5) * 0.15f;
@@ -526,7 +556,7 @@ static float GetWorkerEfficiency(const Survivor* s, const Facility* fac) {
     }
 
     eff += statBonus;
-    if (eff < 0.2f) eff = 0.2f;
+    if (eff < 0.15f) eff = 0.15f;
     return eff;
 }
 
@@ -770,7 +800,7 @@ static void CalculateTotals(float* foodProd, float* foodNeed, float* waterProd, 
         *powerLoad += 4;
     }
 
-    float foodPer = (g_state.policyFood == 1) ? 0.5f : ((g_state.policyFood == 2) ? 0.25f : 1.0f);
+    float foodPer = (g_state.policyFood == 0) ? 1.5f : ((g_state.policyFood == 2) ? 0.5f : ((g_state.policyFood == 3) ? 0.25f : 1.0f));
     float waterPer = (g_state.policyWater == 1) ? 0.5f : ((g_state.policyWater == 2) ? 0.25f : 1.0f);
     if (g_state.weatherType == 2) {
         waterPer *= 1.5f; // +50% water thirst during drought
@@ -1174,6 +1204,27 @@ static void ProcessNewDay() {
     g_state.powerGen = pGen;
     g_state.powerLoad = pLoad;
 
+    // 1. Water Purity & Filtration Simulation
+    int hasWaterStaff = 0;
+    for (int f = 0; f < g_state.numFacilities; f++) {
+        if ((strcmp(g_state.facilities[f].id, "water") == 0 || strcmp(g_state.facilities[f].id, "water_deep") == 0) && g_state.facilities[f].assigned > 0) {
+            hasWaterStaff = 1; break;
+        }
+    }
+    if (hasWaterStaff) {
+        g_state.waterPurity += 15.0f;
+        if (g_state.waterPurity > 100.0f) g_state.waterPurity = 100.0f;
+    } else {
+        g_state.waterPurity -= 5.0f;
+        if (g_state.waterPurity < 20.0f) g_state.waterPurity = 20.0f;
+    }
+
+    if (g_state.policyWater == 2) {
+        g_state.waterPurity -= 10.0f;
+        if (g_state.waterPurity < 10.0f) g_state.waterPurity = 10.0f;
+    }
+
+    // 2. Resource Changes
     float netFood = foodP - foodN;
     float netWater = waterP - waterN;
 
@@ -1185,6 +1236,7 @@ static void ProcessNewDay() {
 
     g_state.scrap += scrapP;
 
+    // 3. Starvation & Thirst Effects
     if (g_state.food <= 0.0f) {
         g_state.morale -= 8.0f;
         if (g_state.morale < 10.0f) g_state.morale = 10.0f;
@@ -1211,20 +1263,107 @@ static void ProcessNewDay() {
         PlaySfx(3);
     }
 
-    if (g_state.food > 0.0f && g_state.water > 0.0f) {
-        for (int i = 0; i < g_state.numSurvivors; i++) {
-            if (g_state.survivors[i].health < 100) g_state.survivors[i].health += 5;
-            if (g_state.survivors[i].health > 100) g_state.survivors[i].health = 100;
-            g_state.survivors[i].hunger -= 15;
-            if (g_state.survivors[i].hunger < 0) g_state.survivors[i].hunger = 0;
-            g_state.survivors[i].thirst -= 20;
-            if (g_state.survivors[i].thirst < 0) g_state.survivors[i].thirst = 0;
-        }
-        g_state.morale += 1.0f;
+    // 4. Food & Water Policy Daily Effects
+    if (g_state.policyFood == 0 && g_state.food > 0.0f) { // Feast
+        g_state.morale += 6.0f;
         if (g_state.morale > 100.0f) g_state.morale = 100.0f;
+        for (int i = 0; i < g_state.numSurvivors; i++) {
+            g_state.survivors[i].health += 5;
+            if (g_state.survivors[i].health > 100) g_state.survivors[i].health = 100;
+            g_state.survivors[i].morale += 6;
+            if (g_state.survivors[i].morale > 100) g_state.survivors[i].morale = 100;
+        }
+    } else if (g_state.policyFood == 2) { // Half
+        g_state.morale -= 4.0f;
+        if (g_state.morale < 10.0f) g_state.morale = 10.0f;
+    } else if (g_state.policyFood == 3) { // Starve
+        g_state.morale -= 12.0f;
+        if (g_state.morale < 10.0f) g_state.morale = 10.0f;
+        for (int i = 0; i < g_state.numSurvivors; i++) {
+            g_state.survivors[i].health -= 8;
+            if (g_state.survivors[i].health < 10) g_state.survivors[i].health = 10;
+            g_state.survivors[i].hunger += 20;
+            if (g_state.survivors[i].hunger > 100) g_state.survivors[i].hunger = 100;
+        }
     }
 
-    // Expeditions update
+    if (g_state.policyWater == 0 && g_state.water > 0.0f && g_state.waterPurity >= 80.0f) {
+        g_state.morale += 2.0f;
+        if (g_state.morale > 100.0f) g_state.morale = 100.0f;
+    } else if (g_state.policyWater == 1) {
+        g_state.morale -= 3.0f;
+        if (g_state.morale < 10.0f) g_state.morale = 10.0f;
+    } else if (g_state.policyWater == 2) {
+        g_state.morale -= 10.0f;
+        if (g_state.morale < 10.0f) g_state.morale = 10.0f;
+        for (int i = 0; i < g_state.numSurvivors; i++) {
+            g_state.survivors[i].rads += 8;
+            if (g_state.survivors[i].rads > 100) g_state.survivors[i].rads = 100;
+        }
+        AddLog("WATER RECYCLING: Silt recycling contaminated dwellers with +8 Rads!", 1);
+    }
+
+    // Contaminated Aquifer rad ingestion
+    if (g_state.waterPurity < 70.0f && g_state.water > 0.0f) {
+        int radIngest = (int)((70.0f - g_state.waterPurity) * 0.25f);
+        if (radIngest < 2) radIngest = 2;
+        for (int i = 0; i < g_state.numSurvivors; i++) {
+            g_state.survivors[i].rads += radIngest;
+            if (g_state.survivors[i].rads > 100) g_state.survivors[i].rads = 100;
+        }
+        char contamBuf[128];
+        sprintf(contamBuf, "WATER CONTAMINATION: Silt in unpurified water caused +%d Rads in dwellers.", radIngest);
+        AddLog(contamBuf, 1);
+    }
+
+    // 5. Radiation Sickness & Natural Convalescence
+    int acuteSickCount = 0;
+    for (int i = 0; i < g_state.numSurvivors; i++) {
+        Survivor* s = &g_state.survivors[i];
+        if (s->rads >= 75) {
+            s->health -= 7;
+            if (s->health < 5) s->health = 5;
+            s->morale -= 8;
+            if (s->morale < 10) s->morale = 10;
+            acuteSickCount++;
+        } else if (s->rads >= 50) {
+            s->health -= 3;
+            if (s->health < 10) s->health = 10;
+            s->morale -= 4;
+            if (s->morale < 15) s->morale = 15;
+            acuteSickCount++;
+        } else if (s->rads >= 25) {
+            s->health -= 1;
+            if (s->health < 15) s->health = 15;
+            s->morale -= 2;
+            if (s->morale < 20) s->morale = 20;
+        }
+
+        if (g_state.food > 0.0f && g_state.water > 0.0f && s->rads < 50) {
+            if (s->health < 100) s->health += 4;
+            if (s->health > 100) s->health = 100;
+            s->hunger -= 15;
+            if (s->hunger < 0) s->hunger = 0;
+            s->thirst -= 20;
+            if (s->thirst < 0) s->thirst = 0;
+        }
+    }
+
+    if (acuteSickCount > 0) {
+        char radAlert[128];
+        sprintf(radAlert, "RAD SICKNESS: %d dweller(s) suffering severe radiation poisoning symptoms!", acuteSickCount);
+        AddLog(radAlert, 1);
+    }
+
+    // 6. Directives & Timers Countdown
+    if (g_state.fortifiedRationsDays > 0) {
+        g_state.fortifiedRationsDays--;
+        if (g_state.fortifiedRationsDays == 0) AddLog("NUTRITIONAL: Vitamin fortification in rations expired.", 0);
+    }
+    if (g_state.communalFeastDays > 0) g_state.communalFeastDays--;
+    if (g_state.addressCooldown > 0) g_state.addressCooldown--;
+
+    // 7. Expeditions update
     for (int i = 0; i < g_state.numExpeditions; i++) {
         Expedition* exp = &g_state.expeditions[i];
         if (strlen(exp->assignedScout) > 0) {
@@ -1256,8 +1395,9 @@ static void ProcessNewDay() {
                 g_state.scrap += sFound;
                 g_state.meds += mFound;
 
-                // Hazard damage
+                // Hazard damage & rads
                 int baseDmg = (exp->riskLevel == 4) ? (30 + rand() % 25) : ((exp->riskLevel == 3) ? (20 + rand() % 20) : ((exp->riskLevel == 2) ? (12 + rand() % 15) : (5 + rand() % 10)));
+                int baseRads = (exp->riskLevel == 4) ? 35 : ((exp->riskLevel == 3) ? 22 : ((exp->riskLevel == 2) ? 12 : 5));
                 int dmg = baseDmg - str * 2 - (int)(agi * 1.5f);
                 if (dmg < 0) dmg = 0;
                 int stimUsed = 0;
@@ -1269,6 +1409,8 @@ static void ProcessNewDay() {
                 if (scout) {
                     scout->health -= dmg;
                     if (scout->health < 15) scout->health = 15;
+                    scout->rads += baseRads;
+                    if (scout->rads > 100) scout->rads = 100;
                     strcpy(scout->job, "unassigned");
                     scout->morale += (dmg > 25) ? -10 : 10;
                     if (scout->morale > 100) scout->morale = 100;
@@ -1295,14 +1437,14 @@ static void ProcessNewDay() {
                 exp->hasStimpack = 0;
 
                 char buf[160];
-                sprintf(buf, "%s returned from %s! Salvaged: +%d Food, +%d Scrap, +%d Meds. [-%d HP]%s%s", scout ? scout->name : "Scout", exp->name, fFound, sFound, mFound, dmg, stimUsed ? " (Stimpack stabilized)" : "", bpMsg);
+                sprintf(buf, "%s returned from %s! Salvaged: +%d Food, +%d Scrap, +%d Meds. [-%d HP, +%d Rads]%s%s", scout ? scout->name : "Scout", exp->name, fFound, sFound, mFound, dmg, baseRads, stimUsed ? " (Stimpack stabilized)" : "", bpMsg);
                 AddLog(buf, strlen(bpMsg) > 0 ? 3 : 4);
                 PlaySfx(strlen(bpMsg) > 0 ? 2 : 4);
             }
         }
     }
 
-    // Medical triage in Infirmary
+    // 8. Medical triage & Radiation decontamination in Infirmary
     int hasDoctor = 0;
     for (int s = 0; s < g_state.numSurvivors; s++) {
         if (strcmp(g_state.survivors[s].job, "infirmary") == 0) { hasDoctor = 1; break; }
@@ -1312,25 +1454,27 @@ static void ProcessNewDay() {
         if (strcmp(g_state.blueprints[b].id, "bp_medsurge") == 0 && g_state.blueprints[b].built) { hasSurg = 1; break; }
     }
     if (hasDoctor || hasSurg) {
-        int woundedCount = 0;
+        int treatedCount = 0;
         for (int s = 0; s < g_state.numSurvivors; s++) {
-            if (g_state.survivors[s].health < 90) woundedCount++;
+            if (g_state.survivors[s].health < 90 || g_state.survivors[s].rads > 20) treatedCount++;
         }
-        if (woundedCount > 0 && (g_state.meds > 0 || hasSurg)) {
+        if (treatedCount > 0 && (g_state.meds > 0 || hasSurg)) {
             if (!hasSurg && g_state.meds > 0) g_state.meds--;
             for (int s = 0; s < g_state.numSurvivors; s++) {
-                if (g_state.survivors[s].health < 90) {
+                if (g_state.survivors[s].health < 90 || g_state.survivors[s].rads > 20) {
                     g_state.survivors[s].health += (hasSurg ? 25 : 15);
                     if (g_state.survivors[s].health > 100) g_state.survivors[s].health = 100;
+                    g_state.survivors[s].rads -= (hasSurg ? 20 : 10);
+                    if (g_state.survivors[s].rads < 0) g_state.survivors[s].rads = 0;
                 }
             }
             char medBuf[128];
-            sprintf(medBuf, "MED-LAB: Triage treatment administered to %d injured dweller(s).", woundedCount);
+            sprintf(medBuf, "MED-LAB: Triage & decon wash administered to %d dweller(s).", treatedCount);
             AddLog(medBuf, 0);
         }
     }
 
-    // Raider Incursion Countdown
+    // 9. Raider Incursion Countdown
     g_state.raidThreatDays--;
     if (g_state.raidThreatDays <= 0) {
         TriggerRaiderAttack(0);
@@ -1340,7 +1484,7 @@ static void ProcessNewDay() {
         PlaySfx(3);
     }
 
-    // Phase 10: Environmental Disasters & Weather Progression
+    // 10. Environmental Disasters & Weather Progression
     if (g_state.cmAcidNeutralizerDays > 0) {
         g_state.cmAcidNeutralizerDays--;
     }
@@ -1390,10 +1534,13 @@ static void ProcessNewDay() {
             for (int s = 0; s < g_state.numSurvivors; s++) {
                 g_state.survivors[s].health -= 12;
                 if (g_state.survivors[s].health < 10) g_state.survivors[s].health = 10;
+                g_state.survivors[s].rads += 25;
+                if (g_state.survivors[s].rads > 100) g_state.survivors[s].rads = 100;
                 g_state.survivors[s].morale -= 8;
                 if (g_state.survivors[s].morale < 15) g_state.survivors[s].morale = 15;
             }
-            AddLog("RADIATION SICKNESS: Gamma storm penetrated vents! Dwellers suffered radiation trauma (-12 HP)!", 2);
+            g_state.waterPurity = (g_state.waterPurity > 20.0f) ? (g_state.waterPurity - 20.0f) : 10.0f;
+            AddLog("RADIATION SICKNESS: Gamma storm penetrated vents! Dwellers suffered +25 Rads trauma!", 2);
             PlaySfx(3);
         }
     } else if (g_state.weatherType == 2) { // Drought
@@ -1434,6 +1581,45 @@ static void ProcessNewDay() {
         }
     } else {
         g_state.exteriorRads = 4.0f + (rand() % 6) / 10.0f;
+    }
+
+    // 11. Morale & Civil Unrest / Mutiny Simulation
+    if (g_state.martialLaw) {
+        if (g_state.morale > 50.0f) g_state.morale = 50.0f;
+        AddLog("MARTIAL LAW: Armed security patrols maintain mandatory vault curfew. Civil unrest suppressed.", 0);
+    } else {
+        if (g_state.morale < 25.0f) {
+            if ((rand() % 100) < 65) {
+                int fLost = (int)g_state.food;
+                if (fLost > 15) fLost = 10 + rand() % 6;
+                int sLost = (int)g_state.scrap;
+                if (sLost > 20) sLost = 10 + rand() % 11;
+                g_state.food -= fLost;
+                g_state.scrap -= sLost;
+                for (int s = 0; s < g_state.numSurvivors; s++) {
+                    if ((rand() % 100) < 40) {
+                        g_state.survivors[s].health -= 15;
+                        if (g_state.survivors[s].health < 10) g_state.survivors[s].health = 10;
+                    }
+                }
+                char riotBuf[160];
+                sprintf(riotBuf, "VAULT MUTINY: Discontent rioters broke into storage! Looted -%d Food, -%d Scrap, and injured dwellers!", fLost, sLost);
+                AddLog(riotBuf, 2);
+                PlaySfx(3);
+            }
+        } else if (g_state.morale < 45.0f) {
+            if ((rand() % 100) < 45) {
+                int sabScrap = (int)g_state.scrap;
+                if (sabScrap > 10) sabScrap = 8 + rand() % 8;
+                g_state.scrap -= sabScrap;
+                g_state.barricadeHp -= 15;
+                if (g_state.barricadeHp < 0) g_state.barricadeHp = 0;
+                char strikeBuf[160];
+                sprintf(strikeBuf, "CIVIL UNREST: Angry workers sabotaged perimeter conduits (-%d Scrap, -15 Barricade HP)!", sabScrap);
+                AddLog(strikeBuf, 1);
+                PlaySfx(3);
+            }
+        }
     }
 
     TriggerDailyEvent();
@@ -1488,10 +1674,14 @@ static void InitGameState() {
     g_state.lastRaidWon = 1;
     g_state.showRaidModal = 0;
     g_state.exteriorRads = 4.2f;
-
-    g_state.policyFood = 0;
+    g_state.policyFood = 1;
     g_state.policyWater = 0;
     g_state.policyPower = 0;
+    g_state.waterPurity = 95.0f;
+    g_state.martialLaw = 0;
+    g_state.fortifiedRationsDays = 0;
+    g_state.communalFeastDays = 0;
+    g_state.addressCooldown = 0;
 
     // 7 Facilities
     g_state.numFacilities = 7;
@@ -2486,7 +2676,7 @@ static void DrawSurvivorsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x,
 
     if (g_state.survivorSubTab == 0) {
         // ACTIVE CITIZENS LIST
-        int cardH = 58;
+        int cardH = 64;
         int gap = 6;
 
         for (int i = 0; i < g_state.numSurvivors; i++) {
@@ -2496,33 +2686,48 @@ static void DrawSurvivorsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x,
 
             DrawStyledBox(hdc, x, cy, w, cardH, COL_DARK_CARD, COL_BORDER);
 
-            // Name & Role
+            // Name & Role & Mood Badge
             SelectObject(hdc, hFontBold);
             SetTextColor(hdc, COL_TEXT_BRIGHT);
-            TextOutA(hdc, x + 8, cy + 6, s->name, (int)strlen(s->name));
+            TextOutA(hdc, x + 8, cy + 5, s->name, (int)strlen(s->name));
+
+            const char* moodStr = (s->morale >= 85) ? "[ECSTATIC]" : ((s->morale >= 65) ? "[CONTENT]" : ((s->morale >= 45) ? "[DISCONTENT]" : ((s->morale >= 25) ? "[UNREST]" : "[MUTINOUS]")));
+            COLORREF moodCol = (s->morale >= 65) ? COL_GREEN : ((s->morale >= 45) ? COL_AMBER : COL_RED);
+            SelectObject(hdc, hFontSmall);
+            SetTextColor(hdc, moodCol);
+            TextOutA(hdc, x + 125, cy + 5, moodStr, (int)strlen(moodStr));
 
             char roleBuf[64];
             sprintf(roleBuf, "%s | STR:%d AGI:%d INT:%d", s->role, s->str, s->agi, s->inte);
-            SelectObject(hdc, hFontSmall);
             SetTextColor(hdc, COL_TEXT_DIM);
-            TextOutA(hdc, x + 8, cy + 24, roleBuf, (int)strlen(roleBuf));
+            TextOutA(hdc, x + 8, cy + 22, roleBuf, (int)strlen(roleBuf));
 
+            // Column 2: Health, Morale, Radiation Meters
             // Health Bar
-            TextOutA(hdc, x + 230, cy + 6, "HEALTH", 6);
+            TextOutA(hdc, x + 200, cy + 4, "HP", 2);
             char hpVal[8];
             sprintf(hpVal, "%d%%", s->health);
-            TextOutA(hdc, x + 315, cy + 6, hpVal, (int)strlen(hpVal));
+            TextOutA(hdc, x + 265, cy + 4, hpVal, (int)strlen(hpVal));
             COLORREF hpColor = s->health < 40 ? COL_RED : (s->health < 75 ? COL_AMBER : COL_GREEN);
-            DrawProgressBar(hdc, x + 230, cy + 20, 110, 8, s->health / 100.0f, hpColor);
+            DrawProgressBar(hdc, x + 200, cy + 15, 85, 6, s->health / 100.0f, hpColor);
 
             // Morale Bar
-            TextOutA(hdc, x + 230, cy + 32, "MORALE", 6);
+            TextOutA(hdc, x + 200, cy + 23, "MOR", 3);
             char morVal[8];
             sprintf(morVal, "%d%%", s->morale);
-            TextOutA(hdc, x + 315, cy + 32, morVal, (int)strlen(morVal));
-            DrawProgressBar(hdc, x + 230, cy + 44, 110, 8, s->morale / 100.0f, COL_AMBER);
+            TextOutA(hdc, x + 265, cy + 23, morVal, (int)strlen(morVal));
+            DrawProgressBar(hdc, x + 200, cy + 34, 85, 6, s->morale / 100.0f, COL_AMBER);
 
-            // Current Job & Efficiency Badge
+            // Radiation Bar
+            TextOutA(hdc, x + 200, cy + 42, "RAD", 3);
+            char radVal[16];
+            sprintf(radVal, "%dR", s->rads);
+            COLORREF radColor = (s->rads >= 75) ? COL_RED : ((s->rads >= 50) ? RGB(255, 140, 0) : ((s->rads >= 25) ? COL_AMBER : COL_GREEN));
+            SetTextColor(hdc, radColor);
+            TextOutA(hdc, x + 265, cy + 42, radVal, (int)strlen(radVal));
+            DrawProgressBar(hdc, x + 200, cy + 53, 85, 6, s->rads / 100.0f, radColor);
+
+            // Column 3: Current Job & Action Buttons
             char jobLabel[48];
             if (strcmp(s->job, "unassigned") == 0 || strlen(s->job) == 0) {
                 strcpy(jobLabel, "[ Idle / Unassigned ]");
@@ -2545,17 +2750,30 @@ static void DrawSurvivorsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x,
             }
 
             if (strcmp(s->job, "expedition") == 0) {
-                DrawStyledBox(hdc, x + w - 195, cy + 14, 190, 28, COL_DARK_CARD, COL_BORDER);
+                DrawStyledBox(hdc, x + w - 215, cy + 8, 210, 24, COL_DARK_CARD, COL_BORDER);
                 SelectObject(hdc, hFontSmall);
                 SetTextColor(hdc, COL_AMBER);
-                RECT rc = { x + w - 195, cy + 14, x + w - 5, cy + 42 };
-                DrawTextA(hdc, "ON WASTELAND EXP", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                RECT rc = { x + w - 215, cy + 8, x + w - 5, cy + 32 };
+                DrawTextA(hdc, "ON WASTELAND EXPEDITION", -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             } else {
-                int jobW = (s->health < 100 && g_state.meds > 0) ? 132 : 190;
-                DrawButtonControl(hdc, hFontSmall, x + w - 195, cy + 14, jobW, 28, jobLabel, COL_TEXT_MAIN, COL_BTN_BG, COL_BORDER, BTN_SURV_JOB, i, 0);
-                if (s->health < 100 && g_state.meds > 0) {
-                    DrawButtonControl(hdc, hFontSmall, x + w - 58, cy + 14, 54, 28, "HEAL (-1M)", COL_GREEN, RGB(25, 45, 30), COL_GREEN, BTN_TREAT_SURV, i, 0);
-                }
+                DrawButtonControl(hdc, hFontSmall, x + w - 215, cy + 6, 210, 24, jobLabel, COL_TEXT_MAIN, COL_BTN_BG, COL_BORDER, BTN_SURV_JOB, i, 0);
+
+                // Row of Action buttons: HEAL (-1M) | RAD-AWAY (-1M) | DECON (-5W)
+                int actW = 68;
+                int actGap = 3;
+                int actX = x + w - 215;
+
+                // HEAL button
+                int canHeal = (s->health < 100 && g_state.meds > 0);
+                DrawButtonControl(hdc, hFontSmall, actX, cy + 34, actW, 24, "HEAL (-1M)", canHeal ? COL_GREEN : COL_TEXT_DIM, canHeal ? RGB(25, 45, 30) : COL_DARK_CARD, canHeal ? COL_GREEN : COL_BORDER, BTN_TREAT_SURV, i, 0);
+
+                // RAD-AWAY button
+                int canRadAway = (s->rads > 0 && g_state.meds > 0);
+                DrawButtonControl(hdc, hFontSmall, actX + actW + actGap, cy + 34, actW, 24, "RAD-AWAY", canRadAway ? COL_AMBER : COL_TEXT_DIM, canRadAway ? RGB(45, 40, 20) : COL_DARK_CARD, canRadAway ? COL_AMBER : COL_BORDER, BTN_TREAT_RADAWAY, i, 0);
+
+                // DECON SHOWER button
+                int canDecon = (s->rads > 10 && g_state.water >= 5.0f && g_state.scrap >= 5.0f);
+                DrawButtonControl(hdc, hFontSmall, actX + (actW + actGap) * 2, cy + 34, actW, 24, "DECON", canDecon ? RGB(100, 200, 255) : COL_TEXT_DIM, canDecon ? RGB(20, 35, 45) : COL_DARK_CARD, canDecon ? RGB(100, 200, 255) : COL_BORDER, BTN_TREAT_DECON, i, 0);
             }
         }
     } else {
@@ -3484,107 +3702,211 @@ static void DrawTradingView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, i
 static void DrawPoliciesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, int y, int w, int h) {
     SelectObject(hdc, hFontBold);
     SetTextColor(hdc, COL_TEXT_BRIGHT);
-    TextOutA(hdc, x, y, "OVERSEER PROTOCOLS & RATIONING DIRECTIVES", 41);
+    TextOutA(hdc, x, y, "OVERSEER PROTOCOLS, HEALTH & MORALE DIRECTIVES", 46);
 
     SelectObject(hdc, hFontSmall);
     SetTextColor(hdc, COL_TEXT_DIM);
     TextOutA(hdc, x + w - 210, y, "Directives take effect on cycle advance", 39);
 
-    int curY = y + 26;
-    int optW = 185;
-    int optH = 74;
-    int spacing = 10;
+    int curY = y + 24;
+    int topCardW = (w - 12) / 3;
+    int topCardH = 148;
 
-    // 1. Food Policies
-    DrawStyledBox(hdc, x, curY, w, 116, COL_DARK_CARD, COL_BORDER);
+    // --- TOP OVERVIEW CARDS (HEALTH, WATER PURITY, MORALE ORDER) ---
+    // 1. Shelter Health & Rads Card
+    int c1X = x;
+    DrawStyledBox(hdc, c1X, curY, topCardW, topCardH, COL_DARK_CARD, COL_BORDER);
     SelectObject(hdc, hFontBold);
     SetTextColor(hdc, COL_TEXT_BRIGHT);
-    TextOutA(hdc, x + 10, curY + 8, "FOOD RATIONS PROTOCOL", 21);
+    TextOutA(hdc, c1X + 8, curY + 6, "1. HEALTH & RADIATION", 21);
 
-    const char* fNames[] = { "Standard Rations", "Half Rations", "Strict Emergency" };
-    const char* fDesc1[] = { "1.0 Food per citizen.", "0.5 Food per citizen.", "0.25 Food per citizen." };
-    const char* fDesc2[] = { "Normal morale, 0 malnutrition.", "Conserves food, -4% morale.", "High thirst & starvation risk!" };
+    int totalSurvs = g_state.numSurvivors > 0 ? g_state.numSurvivors : 1;
+    int sumHp = 0, sumRads = 0, acuteCount = 0;
+    for (int s = 0; s < g_state.numSurvivors; s++) {
+        sumHp += g_state.survivors[s].health;
+        sumRads += g_state.survivors[s].rads;
+        if (g_state.survivors[s].rads >= 50) acuteCount++;
+    }
+    int avgHp = sumHp / totalSurvs;
+    int avgRads = sumRads / totalSurvs;
 
-    for (int i = 0; i < 3; i++) {
-        int bx = x + 10 + i * (optW + spacing);
-        int by = curY + 30;
+    char hpTxt[64], radTxt[64];
+    sprintf(hpTxt, "Avg Health: %d%% | Dwellers: %d", avgHp, g_state.numSurvivors);
+    sprintf(radTxt, "Avg Radiation: %d Rads (%d Sick)", avgRads, acuteCount);
+
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, COL_TEXT_MAIN);
+    TextOutA(hdc, c1X + 8, curY + 26, hpTxt, (int)strlen(hpTxt));
+    SetTextColor(hdc, (avgRads >= 50) ? COL_RED : ((avgRads >= 25) ? COL_AMBER : COL_GREEN));
+    TextOutA(hdc, c1X + 8, curY + 42, radTxt, (int)strlen(radTxt));
+
+    COLORREF radCol = (avgRads >= 50) ? COL_RED : ((avgRads >= 25) ? COL_AMBER : COL_GREEN);
+    DrawProgressBar(hdc, c1X + 8, curY + 58, topCardW - 16, 8, avgRads / 100.0f, radCol);
+
+    int canMassRad = (g_state.meds >= 2 && g_state.water >= 10.0f);
+    DrawButtonControl(hdc, hFontSmall, c1X + 8, curY + 76, topCardW - 16, 28, "MASS RAD-AWAY (2M, 10W)", canMassRad ? COL_AMBER : COL_TEXT_DIM, canMassRad ? RGB(45, 40, 20) : COL_DARK_CARD, canMassRad ? COL_AMBER : COL_BORDER, BTN_MASS_RADAWAY, 0, 0);
+
+    int canDeconFlush = (g_state.water >= 15.0f && g_state.scrap >= 15.0f);
+    DrawButtonControl(hdc, hFontSmall, c1X + 8, curY + 110, topCardW - 16, 28, "DECON FLUSH (15W, 15S)", canDeconFlush ? RGB(100, 200, 255) : COL_TEXT_DIM, canDeconFlush ? RGB(20, 35, 45) : COL_DARK_CARD, canDeconFlush ? RGB(100, 200, 255) : COL_BORDER, BTN_MASS_DECON, 0, 0);
+
+    // 2. Aquifer Water Purity Card
+    int c2X = x + topCardW + 6;
+    DrawStyledBox(hdc, c2X, curY, topCardW, topCardH, COL_DARK_CARD, COL_BORDER);
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, c2X + 8, curY + 6, "2. AQUIFER WATER PURITY", 23);
+
+    char purTxt[64], statusTxt[64];
+    sprintf(purTxt, "Purity Index: %.0f%%", g_state.waterPurity);
+    sprintf(statusTxt, "Quality: %s", (g_state.waterPurity >= 90.0f) ? "Sterile Pure" : ((g_state.waterPurity >= 70.0f) ? "Filtered" : "CONTAMINATED SILT"));
+
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, (g_state.waterPurity >= 80.0f) ? COL_GREEN : ((g_state.waterPurity >= 60.0f) ? COL_AMBER : COL_RED));
+    TextOutA(hdc, c2X + 8, curY + 26, purTxt, (int)strlen(purTxt));
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, c2X + 8, curY + 42, statusTxt, (int)strlen(statusTxt));
+
+    COLORREF purCol = (g_state.waterPurity >= 80.0f) ? COL_GREEN : ((g_state.waterPurity >= 60.0f) ? COL_AMBER : COL_RED);
+    DrawProgressBar(hdc, c2X + 8, curY + 58, topCardW - 16, 8, g_state.waterPurity / 100.0f, purCol);
+
+    int canFlushFilters = (g_state.scrap >= 10.0f);
+    DrawButtonControl(hdc, hFontSmall, c2X + 8, curY + 76, topCardW - 16, 28, "CARBON FILTER FLUSH (10S)", canFlushFilters ? COL_GREEN : COL_TEXT_DIM, canFlushFilters ? RGB(25, 45, 30) : COL_DARK_CARD, canFlushFilters ? COL_GREEN : COL_BORDER, BTN_FLUSH_FILTERS, 0, 0);
+
+    int canSterilize = (g_state.meds >= 1);
+    DrawButtonControl(hdc, hFontSmall, c2X + 8, curY + 110, topCardW - 16, 28, "STERILIZE RESERVOIR (1M)", canSterilize ? RGB(100, 200, 255) : COL_TEXT_DIM, canSterilize ? RGB(20, 35, 45) : COL_DARK_CARD, canSterilize ? RGB(100, 200, 255) : COL_BORDER, BTN_STERILIZE_WATER, 0, 0);
+
+    // 3. Morale & Civil Order Card
+    int c3X = x + (topCardW + 6) * 2;
+    DrawStyledBox(hdc, c3X, curY, topCardW, topCardH, COL_DARK_CARD, COL_BORDER);
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, c3X + 8, curY + 6, "3. MORALE & CIVIL ORDER", 23);
+
+    char morTxt[64], unrestTxt[64];
+    sprintf(morTxt, "Citizen Morale: %.0f%%", g_state.morale);
+    const char* uRisk = g_state.martialLaw ? "CURFEW (Suppressed)" : ((g_state.morale < 25.0f) ? "MUTINY IMMINENT" : ((g_state.morale < 45.0f) ? "STRIKE / SABOTAGE" : "Nominal (0% Risk)"));
+    sprintf(unrestTxt, "Civil Order: %s", uRisk);
+
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, (g_state.morale >= 70.0f) ? COL_GREEN : ((g_state.morale >= 45.0f) ? COL_AMBER : COL_RED));
+    TextOutA(hdc, c3X + 8, curY + 26, morTxt, (int)strlen(morTxt));
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, c3X + 8, curY + 42, unrestTxt, (int)strlen(unrestTxt));
+
+    COLORREF mCol = (g_state.morale >= 70.0f) ? COL_GREEN : ((g_state.morale >= 45.0f) ? COL_AMBER : COL_RED);
+    DrawProgressBar(hdc, c3X + 8, curY + 58, topCardW - 16, 8, g_state.morale / 100.0f, mCol);
+
+    int btnHalfW = (topCardW - 20) / 2;
+    int canFeast = (g_state.food >= 15.0f);
+    DrawButtonControl(hdc, hFontSmall, c3X + 8, curY + 76, btnHalfW, 28, "FEAST (15F)", canFeast ? COL_AMBER : COL_TEXT_DIM, canFeast ? RGB(45, 40, 20) : COL_DARK_CARD, canFeast ? COL_AMBER : COL_BORDER, BTN_COMMUNAL_FEAST, 0, 0);
+
+    int canLux = (g_state.scrap >= 20.0f);
+    DrawButtonControl(hdc, hFontSmall, c3X + 8 + btnHalfW + 4, curY + 76, btnHalfW, 28, "LUXURIES (20S)", canLux ? COL_GREEN : COL_TEXT_DIM, canLux ? RGB(25, 45, 30) : COL_DARK_CARD, canLux ? COL_GREEN : COL_BORDER, BTN_DIST_LUXURIES, 0, 0);
+
+    int canAddress = (g_state.addressCooldown <= 0);
+    char addrBuf[24];
+    sprintf(addrBuf, (g_state.addressCooldown > 0) ? "SPEECH (%dd)" : "ADDRESS (+6M)", g_state.addressCooldown);
+    DrawButtonControl(hdc, hFontSmall, c3X + 8, curY + 110, btnHalfW, 28, addrBuf, canAddress ? COL_TEXT_BRIGHT : COL_TEXT_DIM, COL_BTN_BG, COL_BORDER, BTN_OVERSEER_ADDRESS, 0, 0);
+
+    DrawButtonControl(hdc, hFontSmall, c3X + 8 + btnHalfW + 4, curY + 110, btnHalfW, 28, g_state.martialLaw ? "LIFT LAW" : "MARTIAL LAW", g_state.martialLaw ? RGB(255, 255, 255) : COL_RED, g_state.martialLaw ? COL_RED : RGB(45, 20, 20), COL_RED, BTN_TOGGLE_MARTIAL_LAW, 0, 0);
+
+    curY += topCardH + 10;
+
+    // --- BOTTOM SECTION: RATIONING POLICIES ---
+    // Food Policy (4 options across)
+    DrawStyledBox(hdc, x, curY, w, 106, COL_DARK_CARD, COL_BORDER);
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, x + 10, curY + 6, "FOOD RATIONS PROTOCOL", 21);
+
+    // Fortify button right aligned
+    int canFort = (g_state.meds >= 1);
+    char fortBuf[32];
+    sprintf(fortBuf, (g_state.fortifiedRationsDays > 0) ? "FORTIFIED (%dd)" : "FORTIFY RATIONS (1M)", g_state.fortifiedRationsDays);
+    DrawButtonControl(hdc, hFontSmall, x + w - 190, curY + 4, 180, 20, fortBuf, canFort ? COL_GREEN : COL_TEXT_DIM, canFort ? RGB(25, 45, 30) : COL_DARK_CARD, canFort ? COL_GREEN : COL_BORDER, BTN_FORTIFY_RATIONS, 0, 0);
+
+    const char* fNames[] = { "Feast Protocol", "Standard Rations", "Half Rations", "Strict Emergency" };
+    const char* fDesc1[] = { "1.5x Food/citizen.", "1.0x Food/citizen.", "0.5x Food/citizen.", "0.25x Food/citizen." };
+    const char* fDesc2[] = { "+6% Morale, Rapid heal.", "Normal baseline.", "-4% Morale, saves food.", "-12% Morale, Starvation!" };
+
+    int fOptW = (w - 32) / 4;
+    for (int i = 0; i < 4; i++) {
+        int bx = x + 10 + i * (fOptW + 4);
+        int by = curY + 28;
         int active = (g_state.policyFood == i);
         COLORREF bg = active ? COL_BTN_HOVER : COL_PANEL_BG;
         COLORREF bdr = active ? COL_BORDER_HI : COL_BORDER;
 
-        DrawStyledBox(hdc, bx, by, optW, optH, bg, bdr);
+        DrawStyledBox(hdc, bx, by, fOptW, 70, bg, bdr);
         SelectObject(hdc, hFontBold);
         SetTextColor(hdc, active ? COL_TEXT_BRIGHT : COL_TEXT_MAIN);
-        TextOutA(hdc, bx + 6, by + 6, fNames[i], (int)strlen(fNames[i]));
+        TextOutA(hdc, bx + 6, by + 4, fNames[i], (int)strlen(fNames[i]));
 
         SelectObject(hdc, hFontSmall);
         SetTextColor(hdc, COL_TEXT_DIM);
-        TextOutA(hdc, bx + 6, by + 26, fDesc1[i], (int)strlen(fDesc1[i]));
-        TextOutA(hdc, bx + 6, by + 42, fDesc2[i], (int)strlen(fDesc2[i]));
+        TextOutA(hdc, bx + 6, by + 22, fDesc1[i], (int)strlen(fDesc1[i]));
+        TextOutA(hdc, bx + 6, by + 38, fDesc2[i], (int)strlen(fDesc2[i]));
 
-        AddButton(bx, by, optW, optH, BTN_POLICY_FOOD, i, 0);
+        AddButton(bx, by, fOptW, 70, BTN_POLICY_FOOD, i, 0);
     }
-    curY += 126;
+    curY += 114;
 
-    // 2. Water Policies
-    DrawStyledBox(hdc, x, curY, w, 116, COL_DARK_CARD, COL_BORDER);
+    // Water Policy (3 options across)
+    int botHalfW = (w - 6) / 2;
+    DrawStyledBox(hdc, x, curY, botHalfW, 100, COL_DARK_CARD, COL_BORDER);
     SelectObject(hdc, hFontBold);
     SetTextColor(hdc, COL_TEXT_BRIGHT);
-    TextOutA(hdc, x + 10, curY + 8, "WATER CONSERVATION PROTOCOL", 27);
+    TextOutA(hdc, x + 10, curY + 6, "WATER CONSERVATION PROTOCOL", 27);
 
-    const char* wNames[] = { "Full Allocation", "Strict Rationing", "Moisture Recovery" };
-    const char* wDesc1[] = { "1.0 Water per citizen.", "0.5 Water per citizen.", "0.25 Water per citizen." };
-    const char* wDesc2[] = { "Crisp & filtered, +2% morale.", "Conserves water, -3% morale.", "Dehydration risk, -10% morale." };
-
+    const char* wNames[] = { "Full Pure", "Strict Rationing", "Recycled Silt" };
+    const char* wDesc1[] = { "1.0x Water (+2% Morale)", "0.5x Water (-3% Morale)", "0.25x Water (+8 Rads!)" };
+    int wOptW = (botHalfW - 20) / 3;
     for (int i = 0; i < 3; i++) {
-        int bx = x + 10 + i * (optW + spacing);
-        int by = curY + 30;
+        int bx = x + 10 + i * (wOptW + 4);
+        int by = curY + 26;
         int active = (g_state.policyWater == i);
         COLORREF bg = active ? COL_BTN_HOVER : COL_PANEL_BG;
         COLORREF bdr = active ? COL_BORDER_HI : COL_BORDER;
 
-        DrawStyledBox(hdc, bx, by, optW, optH, bg, bdr);
+        DrawStyledBox(hdc, bx, by, wOptW, 66, bg, bdr);
         SelectObject(hdc, hFontBold);
         SetTextColor(hdc, active ? COL_TEXT_BRIGHT : COL_TEXT_MAIN);
-        TextOutA(hdc, bx + 6, by + 6, wNames[i], (int)strlen(wNames[i]));
+        TextOutA(hdc, bx + 4, by + 4, wNames[i], (int)strlen(wNames[i]));
 
         SelectObject(hdc, hFontSmall);
         SetTextColor(hdc, COL_TEXT_DIM);
-        TextOutA(hdc, bx + 6, by + 26, wDesc1[i], (int)strlen(wDesc1[i]));
-        TextOutA(hdc, bx + 6, by + 42, wDesc2[i], (int)strlen(wDesc2[i]));
+        TextOutA(hdc, bx + 4, by + 22, wDesc1[i], (int)strlen(wDesc1[i]));
 
-        AddButton(bx, by, optW, optH, BTN_POLICY_WATER, i, 0);
+        AddButton(bx, by, wOptW, 66, BTN_POLICY_WATER, i, 0);
     }
-    curY += 126;
 
-    // 3. Power Policies
-    DrawStyledBox(hdc, x, curY, w, 116, COL_DARK_CARD, COL_BORDER);
+    // Power Grid Priority (3 options across)
+    int pColX = x + botHalfW + 6;
+    DrawStyledBox(hdc, pColX, curY, botHalfW, 100, COL_DARK_CARD, COL_BORDER);
     SelectObject(hdc, hFontBold);
     SetTextColor(hdc, COL_TEXT_BRIGHT);
-    TextOutA(hdc, x + 10, curY + 8, "REACTOR POWER GRID PRIORITY", 27);
+    TextOutA(hdc, pColX + 10, curY + 6, "REACTOR POWER GRID PRIORITY", 27);
 
-    const char* pNames[] = { "Balanced Grid", "Life Support Priority", "Resource Focus" };
-    const char* pDesc1[] = { "Distribute power evenly.", "Infirmary & Quarters stay on.", "Farms & Purifiers stay on." };
-    const char* pDesc2[] = { "Standard grid balancing.", "Prevents citizen casualties.", "Prevents rationing collapse." };
-
+    const char* pNames[] = { "Balanced Grid", "Life Support", "Production Priority" };
+    const char* pDesc1[] = { "Standard distribution.", "Infirmary & Quarters.", "Farms & Purifiers on." };
+    int pOptW = (botHalfW - 20) / 3;
     for (int i = 0; i < 3; i++) {
-        int bx = x + 10 + i * (optW + spacing);
-        int by = curY + 30;
+        int bx = pColX + 10 + i * (pOptW + 4);
+        int by = curY + 26;
         int active = (g_state.policyPower == i);
         COLORREF bg = active ? COL_BTN_HOVER : COL_PANEL_BG;
         COLORREF bdr = active ? COL_BORDER_HI : COL_BORDER;
 
-        DrawStyledBox(hdc, bx, by, optW, optH, bg, bdr);
+        DrawStyledBox(hdc, bx, by, pOptW, 66, bg, bdr);
         SelectObject(hdc, hFontBold);
         SetTextColor(hdc, active ? COL_TEXT_BRIGHT : COL_TEXT_MAIN);
-        TextOutA(hdc, bx + 6, by + 6, pNames[i], (int)strlen(pNames[i]));
+        TextOutA(hdc, bx + 4, by + 4, pNames[i], (int)strlen(pNames[i]));
 
         SelectObject(hdc, hFontSmall);
         SetTextColor(hdc, COL_TEXT_DIM);
-        TextOutA(hdc, bx + 6, by + 26, pDesc1[i], (int)strlen(pDesc1[i]));
-        TextOutA(hdc, bx + 6, by + 42, pDesc2[i], (int)strlen(pDesc2[i]));
+        TextOutA(hdc, bx + 4, by + 22, pDesc1[i], (int)strlen(pDesc1[i]));
 
-        AddButton(bx, by, optW, optH, BTN_POLICY_POWER, i, 0);
+        AddButton(bx, by, pOptW, 66, BTN_POLICY_POWER, i, 0);
     }
 }
 
@@ -4203,16 +4525,153 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                                 PlaySfx(2);
                             }
                         }
+                    } else if (bId == BTN_TREAT_RADAWAY) {
+                        if (p1 >= 0 && p1 < g_state.numSurvivors && g_state.meds > 0) {
+                            Survivor* surv = &g_state.survivors[p1];
+                            if (surv->rads > 0) {
+                                g_state.meds--;
+                                surv->rads -= 45;
+                                if (surv->rads < 0) surv->rads = 0;
+                                surv->health += 10;
+                                if (surv->health > 100) surv->health = 100;
+                                surv->morale += 6;
+                                if (surv->morale > 100) surv->morale = 100;
+                                char buf[128];
+                                sprintf(buf, "RAD-AWAY: Anti-rad chelating agent dosed to %s (%d Rads remaining).", surv->name, surv->rads);
+                                AddLog(buf, 3);
+                                PlaySfx(2);
+                            }
+                        }
+                    } else if (bId == BTN_TREAT_DECON) {
+                        if (p1 >= 0 && p1 < g_state.numSurvivors && g_state.water >= 5.0f && g_state.scrap >= 5.0f) {
+                            Survivor* surv = &g_state.survivors[p1];
+                            g_state.water -= 5.0f;
+                            g_state.scrap -= 5.0f;
+                            surv->rads -= 25;
+                            if (surv->rads < 0) surv->rads = 0;
+                            surv->morale += 3;
+                            if (surv->morale > 100) surv->morale = 100;
+                            char buf[128];
+                            sprintf(buf, "DECON SHOWER: %s cycled through isotope wash (%d Rads remaining).", surv->name, surv->rads);
+                            AddLog(buf, 0);
+                            PlaySfx(1);
+                        }
+                    } else if (bId == BTN_MASS_RADAWAY) {
+                        if (g_state.meds >= 2 && g_state.water >= 10.0f) {
+                            g_state.meds -= 2;
+                            g_state.water -= 10.0f;
+                            int treated = 0;
+                            for (int s = 0; s < g_state.numSurvivors; s++) {
+                                if (g_state.survivors[s].rads > 0) {
+                                    g_state.survivors[s].rads -= 30;
+                                    if (g_state.survivors[s].rads < 0) g_state.survivors[s].rads = 0;
+                                    g_state.survivors[s].health += 10;
+                                    if (g_state.survivors[s].health > 100) g_state.survivors[s].health = 100;
+                                    g_state.survivors[s].morale += 4;
+                                    if (g_state.survivors[s].morale > 100) g_state.survivors[s].morale = 100;
+                                    treated++;
+                                }
+                            }
+                            char buf[128];
+                            sprintf(buf, "MASS RADAWAY: Distributed anti-rad casks! %d irradiated dwellers treated (-30 Rads).", treated);
+                            AddLog(buf, 3);
+                            PlaySfx(2);
+                        }
+                    } else if (bId == BTN_MASS_DECON) {
+                        if (g_state.water >= 15.0f && g_state.scrap >= 15.0f) {
+                            g_state.water -= 15.0f;
+                            g_state.scrap -= 15.0f;
+                            for (int s = 0; s < g_state.numSurvivors; s++) {
+                                g_state.survivors[s].rads -= 20;
+                                if (g_state.survivors[s].rads < 0) g_state.survivors[s].rads = 0;
+                                g_state.survivors[s].morale += 3;
+                                if (g_state.survivors[s].morale > 100) g_state.survivors[s].morale = 100;
+                            }
+                            AddLog("DECON FLUSH: High-pressure saline de-ionizing wash cycled through all airlocks and bunks.", 0);
+                            PlaySfx(1);
+                        }
+                    } else if (bId == BTN_FLUSH_FILTERS) {
+                        if (g_state.scrap >= 10.0f) {
+                            g_state.scrap -= 10.0f;
+                            g_state.waterPurity += 30.0f;
+                            if (g_state.waterPurity > 100.0f) g_state.waterPurity = 100.0f;
+                            char buf[128];
+                            sprintf(buf, "FILTRATION FLUSH: Replaced activated charcoal filters. Aquifer purity: %.0f%%.", g_state.waterPurity);
+                            AddLog(buf, 3);
+                            PlaySfx(2);
+                        }
+                    } else if (bId == BTN_STERILIZE_WATER) {
+                        if (g_state.meds >= 1) {
+                            g_state.meds -= 1;
+                            g_state.waterPurity = 100.0f;
+                            AddLog("STERILIZATION: Dosed medical iodine into reservoirs. Purity restored to 100% (Sterile).", 3);
+                            PlaySfx(2);
+                        }
+                    } else if (bId == BTN_FORTIFY_RATIONS) {
+                        if (g_state.meds >= 1) {
+                            g_state.meds -= 1;
+                            g_state.fortifiedRationsDays = 3;
+                            AddLog("NUTRITIONAL DIRECTIVE: Enriched vitamins blended into rations (+15% Worker Efficiency for 3 cycles).", 3);
+                            PlaySfx(2);
+                        }
+                    } else if (bId == BTN_COMMUNAL_FEAST) {
+                        if (g_state.food >= 15.0f) {
+                            g_state.food -= 15.0f;
+                            g_state.communalFeastDays = 3;
+                            g_state.morale += 15.0f;
+                            if (g_state.morale > 100.0f) g_state.morale = 100.0f;
+                            for (int s = 0; s < g_state.numSurvivors; s++) {
+                                g_state.survivors[s].morale += 15;
+                                if (g_state.survivors[s].morale > 100) g_state.survivors[s].morale = 100;
+                                g_state.survivors[s].hunger = 0;
+                            }
+                            AddLog("COMMUNAL FEAST: Overseer hosted a vault feast (+15% Morale, Unrest suppressed)!", 3);
+                            PlaySfx(2);
+                        }
+                    } else if (bId == BTN_DIST_LUXURIES) {
+                        if (g_state.scrap >= 20.0f) {
+                            g_state.scrap -= 20.0f;
+                            g_state.morale += 12.0f;
+                            if (g_state.morale > 100.0f) g_state.morale = 100.0f;
+                            for (int s = 0; s < g_state.numSurvivors; s++) {
+                                g_state.survivors[s].morale += 12;
+                                if (g_state.survivors[s].morale > 100) g_state.survivors[s].morale = 100;
+                            }
+                            AddLog("LUXURY BROADCAST: Distributed comfort goods & broadcasted radio orchestra (+12% Morale).", 0);
+                            PlaySfx(4);
+                        }
+                    } else if (bId == BTN_OVERSEER_ADDRESS) {
+                        if (g_state.addressCooldown <= 0) {
+                            g_state.addressCooldown = 3;
+                            g_state.morale += 6.0f;
+                            if (g_state.morale > 100.0f) g_state.morale = 100.0f;
+                            for (int s = 0; s < g_state.numSurvivors; s++) {
+                                g_state.survivors[s].morale += 6;
+                                if (g_state.survivors[s].morale > 100) g_state.survivors[s].morale = 100;
+                            }
+                            AddLog("OVERSEER ADDRESS: Broadcasted an inspiring survival speech over vault PA (+6% Morale).", 0);
+                            PlaySfx(1);
+                        }
+                    } else if (bId == BTN_TOGGLE_MARTIAL_LAW) {
+                        g_state.martialLaw = !g_state.martialLaw;
+                        if (g_state.martialLaw) {
+                            if (g_state.morale > 50.0f) g_state.morale = 50.0f;
+                            AddLog("SECURITY DIRECTIVE: MARTIAL LAW DECLARED. Armed patrols enforce curfew. Strikes & sabotage halted.", 2);
+                            PlaySfx(3);
+                        } else {
+                            AddLog("SECURITY DIRECTIVE: Martial Law lifted. Normal vault civil liberties restored.", 0);
+                            PlaySfx(1);
+                        }
                     } else if (bId == BTN_POLICY_FOOD) {
                         g_state.policyFood = p1;
-                        const char* pText[] = { "STANDARD", "HALF", "STRICT EMERGENCY" };
+                        const char* pText[] = { "FEAST", "STANDARD", "HALF", "STRICT EMERGENCY" };
                         char buf[128];
                         sprintf(buf, "Overseer updated FOOD protocol to [%s].", pText[p1]);
                         AddLog(buf, 0);
                         PlaySfx(1);
                     } else if (bId == BTN_POLICY_WATER) {
                         g_state.policyWater = p1;
-                        const char* pText[] = { "FULL", "STRICT", "MINIMAL" };
+                        const char* pText[] = { "FULL PURE", "STRICT", "RECYCLED SILT" };
                         char buf[128];
                         sprintf(buf, "Overseer updated WATER protocol to [%s].", pText[p1]);
                         AddLog(buf, 0);

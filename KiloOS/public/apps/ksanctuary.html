@@ -921,6 +921,71 @@
             line-height: 1.3;
         }
 
+        /* Health & Morale System Styling */
+        .health-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .health-card {
+            background: var(--card-bg);
+            border: 1px solid var(--panel-border);
+            padding: 10px;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .health-card::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 5px; height: 5px;
+            border-top: 2px solid var(--border-corner);
+            border-left: 2px solid var(--border-corner);
+            pointer-events: none;
+        }
+
+        .rad-meter-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--panel-border);
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 2px 0 4px 0;
+        }
+
+        .rad-meter-fill {
+            height: 100%;
+            transition: width 0.3s;
+        }
+
+        .rad-clean { background: var(--accent-green); }
+        .rad-mild { background: var(--accent-amber); }
+        .rad-mod { background: #f97316; }
+        .rad-crit { background: var(--danger-red); box-shadow: 0 0 6px var(--danger-glow); }
+
+        .badge-mood {
+            font-size: 9px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 2px;
+            text-transform: uppercase;
+        }
+
+        .mood-ecstatic { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.5); }
+        .mood-content { background: rgba(56, 189, 248, 0.2); color: var(--accent-cyan); border: 1px solid rgba(56, 189, 248, 0.5); }
+        .mood-discontent { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.5); }
+        .mood-unrest { background: rgba(249, 115, 22, 0.2); color: #f97316; border: 1px solid rgba(249, 115, 22, 0.5); }
+        .mood-mutiny { background: rgba(239, 68, 68, 0.25); color: var(--danger-red); border: 1px solid rgba(239, 68, 68, 0.6); animation: pulse-red 1.2s infinite; }
+
+        @keyframes pulse-red {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         /* Wasteland Expeditions View */
         .scavenge-grid {
             display: grid;
@@ -2040,19 +2105,113 @@
                 </div>
             </div>
 
-            <!-- POLICIES VIEW -->
+            <!-- POLICIES & HEALTH DIRECTIVES VIEW -->
             <div id="view-policies" class="tab-content" style="display:none;">
                 <div class="panel-title">
-                    <span>Overseer Protocols & Rationing Directives</span>
-                    <span style="color: var(--text-dim); font-size:10px;">Directives take effect on next cycle</span>
+                    <span>Overseer Protocols, Health & Morale Directives</span>
+                    <span style="color: var(--text-dim); font-size:10px;">Directives take effect on next cycle &bull; Emergency actions execute immediately</span>
                 </div>
 
+                <!-- Top Status Overview Cards -->
+                <div class="health-grid">
+                    <!-- Health & Radiation Card -->
+                    <div class="health-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <span style="font-size:11px; font-weight:bold; color:var(--text-bright);">SHELTER HEALTH & RADIATION</span>
+                            <span id="lbl-rad-alert-badge" class="badge-hazard badge-hazard-calm" style="font-size:9px;">CLEAN</span>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-dim); margin-bottom:6px;">
+                            Average Dweller Health: <strong id="lbl-avg-health-val" style="color:var(--accent-green);">97%</strong> &bull; Irradiated Dwellers: <strong id="lbl-irrad-count-val" style="color:var(--accent-amber);">0</strong>
+                        </div>
+                        <div class="rad-meter-bar">
+                            <div id="avg-rad-fill" class="rad-meter-fill rad-clean" style="width: 5%;"></div>
+                        </div>
+                        <div style="font-size:9px; color:var(--text-dim); margin-bottom:6px;" id="lbl-rad-desc">
+                            Background radiation nominal. Deep water aquifer uncontaminated.
+                        </div>
+                        <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                            <button class="btn-upgrade" onclick="massRadAway()" id="btn-mass-radaway" style="font-size:9px; padding:3px 6px;">
+                                MASS RAD-AWAY (-30 RADS ALL // 2 MEDS, 10 WTR)
+                            </button>
+                            <button class="btn-upgrade" onclick="massDecon()" id="btn-mass-decon" style="font-size:9px; padding:3px 6px;">
+                                DECON FLUSH (-20 RADS ALL // 15 WTR, 15 SCRAP)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Water Purity & Filtration Card -->
+                    <div class="health-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <span style="font-size:11px; font-weight:bold; color:var(--text-bright);">AQUIFER WATER PURITY</span>
+                            <span id="lbl-water-purity-badge" style="font-size:9px; font-weight:bold; color:var(--accent-green);">95% PURE</span>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-dim); margin-bottom:6px;">
+                            Aquifer Reservoir Purity: <strong id="lbl-water-purity-val" style="color:var(--text-bright);">95%</strong> &bull; Isotope Contamination: <span id="lbl-water-contam-val" style="color:var(--text-dim);">Trace (5%)</span>
+                        </div>
+                        <div class="rad-meter-bar">
+                            <div id="water-purity-fill" class="rad-meter-fill rad-clean" style="width: 95%;"></div>
+                        </div>
+                        <div style="font-size:9px; color:var(--text-dim); margin-bottom:6px;" id="lbl-water-hazard-note">
+                            Purifier filtration active. Water supplies safe for daily consumption.
+                        </div>
+                        <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                            <button class="btn-upgrade" onclick="flushWaterFilters()" id="btn-flush-filters" style="font-size:9px; padding:3px 6px;">
+                                CARBON FILTER FLUSH (+30% PURITY // 10 SCRAP)
+                            </button>
+                            <button class="btn-upgrade" onclick="sterilizeWater()" id="btn-sterilize-water" style="font-size:9px; padding:3px 6px;">
+                                STERILIZE RESERVOIR (100% PURITY // 1 MED)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Morale & Civil Order Card -->
+                    <div class="health-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <span style="font-size:11px; font-weight:bold; color:var(--text-bright);">MORALE & CIVIL ORDER</span>
+                            <span id="lbl-morale-status-badge" class="badge-mood mood-content">CONTENT</span>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-dim); margin-bottom:6px;">
+                            Shelter Morale: <strong id="lbl-dir-morale-val" style="color:var(--accent-amber);">85%</strong> &bull; Unrest Risk: <strong id="lbl-unrest-risk-text" style="color:var(--accent-green);">STABLE (0%)</strong>
+                        </div>
+                        <div class="rad-meter-bar">
+                            <div id="morale-order-fill" class="rad-meter-fill" style="width: 85%; background:var(--accent-amber);"></div>
+                        </div>
+                        <div style="font-size:9px; color:var(--text-dim); margin-bottom:6px;" id="lbl-morale-modifiers">
+                            Modifiers: Standard Rations &bull; Crisp Water &bull; Zero Strikes
+                        </div>
+                        <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                            <button class="btn-upgrade" onclick="holdCommunalFeast()" id="btn-communal-feast" style="font-size:9px; padding:3px 6px;">
+                                COMMUNAL FEAST (+15% MORALE // 15 FOOD)
+                            </button>
+                            <button class="btn-upgrade" onclick="distributeLuxuries()" id="btn-dist-luxuries" style="font-size:9px; padding:3px 6px;">
+                                BROADCAST MUSIC (+12% MORALE // 20 SCRAP)
+                            </button>
+                            <button class="btn-upgrade" onclick="overseerAddress()" id="btn-overseer-address" style="font-size:9px; padding:3px 6px;">
+                                OVERSEER ADDRESS (+6% MORALE)
+                            </button>
+                            <button class="btn-upgrade" onclick="toggleMartialLaw()" id="btn-martial-law" style="font-size:9px; padding:3px 6px; color:var(--danger-red); border-color:var(--panel-border);">
+                                DECLARE MARTIAL LAW
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Protocols Grid -->
                 <div class="policy-group">
-                    <div class="policy-title">Food Rations Protocol</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div class="policy-title">Food Rations Protocol</div>
+                        <button class="btn-upgrade" onclick="fortifyRations()" id="btn-fortify-rations" style="font-size:9px; padding:2px 6px; margin-bottom:4px;">
+                            FORTIFY RATIONS (+15% EFF &bull; 3 CYCLES // 1 MED)
+                        </button>
+                    </div>
                     <div class="policy-options" id="policy-food-group">
+                        <div class="policy-opt" onclick="setPolicy('food', 'feast')">
+                            <div class="policy-name">Feast Allocation</div>
+                            <div class="policy-desc">1.5 Food/citizen. +6% morale/cyc, +5 HP/cyc natural healing.</div>
+                        </div>
                         <div class="policy-opt active" onclick="setPolicy('food', 'normal')">
                             <div class="policy-name">Standard Rations</div>
-                            <div class="policy-desc">1 Food/citizen. Normal morale, zero malnutrition.</div>
+                            <div class="policy-desc">1.0 Food/citizen. Normal morale, zero malnutrition.</div>
                         </div>
                         <div class="policy-opt" onclick="setPolicy('food', 'half')">
                             <div class="policy-name">Half Rations</div>
@@ -2060,25 +2219,25 @@
                         </div>
                         <div class="policy-opt" onclick="setPolicy('food', 'starve')">
                             <div class="policy-name">Strict Emergency</div>
-                            <div class="policy-desc">0.25 Food/citizen. -12% morale, risk of sickness.</div>
+                            <div class="policy-desc">0.25 Food/citizen. -12% morale, starvation & sickness risk.</div>
                         </div>
                     </div>
                 </div>
 
                 <div class="policy-group">
-                    <div class="policy-title">Water Conservation Protocol</div>
+                    <div class="policy-title">Water Conservation & Purity Protocol</div>
                     <div class="policy-options" id="policy-water-group">
                         <div class="policy-opt active" onclick="setPolicy('water', 'normal')">
                             <div class="policy-name">Full Allocation</div>
-                            <div class="policy-desc">1 Water/citizen. Crisp & filtered, +2% morale.</div>
+                            <div class="policy-desc">1.0 Water/citizen. Crisp & filtered, +2% morale, zero rads.</div>
                         </div>
                         <div class="policy-opt" onclick="setPolicy('water', 'half')">
                             <div class="policy-name">Strict Rationing</div>
                             <div class="policy-desc">0.5 Water/citizen. Conserves water, -3% morale.</div>
                         </div>
                         <div class="policy-opt" onclick="setPolicy('water', 'minimal')">
-                            <div class="policy-name">Moisture Recovery Only</div>
-                            <div class="policy-desc">0.25 Water/citizen. Heavy thirst, -10% morale.</div>
+                            <div class="policy-name">Recycled Silt Recovery</div>
+                            <div class="policy-desc">0.25 Water/citizen. Heavy thirst, -10% morale, +8 Rads/cycle.</div>
                         </div>
                     </div>
                 </div>
@@ -2537,8 +2696,14 @@
             lastRaidReport: null,
             exteriorRads: 4.2,
             meds: 5,
+            waterPurity: 95,
+            unrestLevel: 0,
+            martialLaw: false,
+            fortifiedRationsDays: 0,
+            communalFeastDays: 0,
+            addressCooldown: 0,
             policies: {
-                food: 'normal',   // normal, half, starve
+                food: 'normal',   // feast, normal, half, starve
                 water: 'normal',  // normal, half, minimal
                 power: 'balanced' // balanced, lifesupport, production
             },
@@ -2643,11 +2808,11 @@
                 }
             ],
             survivors: [
-                { id: 's1', name: 'Laura Martinez', role: 'Chief Overseer', health: 100, hunger: 0, thirst: 0, morale: 90, job: 'cmd', str: 4, agi: 5, int: 8 },
-                { id: 's2', name: 'Marcus Vance', role: 'Senior Engineer', health: 95, hunger: 0, thirst: 0, morale: 85, job: 'gen', str: 6, agi: 4, int: 7 },
-                { id: 's3', name: 'Elena Rostova', role: 'Hydrologist', health: 100, hunger: 0, thirst: 0, morale: 80, job: 'water', str: 5, agi: 5, int: 6 },
-                { id: 's4', name: 'Caleb Stone', role: 'Agronomist', health: 90, hunger: 0, thirst: 0, morale: 85, job: 'farm', str: 5, agi: 6, int: 6 },
-                { id: 's5', name: 'Dr. Arthur Ross', role: 'Vault Physician', health: 100, hunger: 0, thirst: 0, morale: 88, job: 'infirmary', str: 3, agi: 4, int: 9 }
+                { id: 's1', name: 'Laura Martinez', role: 'Chief Overseer', health: 100, hunger: 0, thirst: 0, morale: 90, rads: 0, job: 'cmd', str: 4, agi: 5, int: 8 },
+                { id: 's2', name: 'Marcus Vance', role: 'Senior Engineer', health: 95, hunger: 0, thirst: 0, morale: 85, rads: 0, job: 'gen', str: 6, agi: 4, int: 7 },
+                { id: 's3', name: 'Elena Rostova', role: 'Hydrologist', health: 100, hunger: 0, thirst: 0, morale: 80, rads: 0, job: 'water', str: 5, agi: 5, int: 6 },
+                { id: 's4', name: 'Caleb Stone', role: 'Agronomist', health: 90, hunger: 0, thirst: 0, morale: 85, rads: 0, job: 'farm', str: 5, agi: 6, int: 6 },
+                { id: 's5', name: 'Dr. Arthur Ross', role: 'Vault Physician', health: 100, hunger: 0, thirst: 0, morale: 88, rads: 0, job: 'infirmary', str: 3, agi: 4, int: 9 }
             ],
             survivorSubTab: 'roster',
             candidates: [
@@ -3248,6 +3413,17 @@
                         if (!state.caravan) {
                             state.caravan = JSON.parse(JSON.stringify(defaultState.caravan));
                         }
+                        if (state.waterPurity === undefined) state.waterPurity = 95;
+                        if (state.unrestLevel === undefined) state.unrestLevel = 0;
+                        if (state.martialLaw === undefined) state.martialLaw = false;
+                        if (state.fortifiedRationsDays === undefined) state.fortifiedRationsDays = 0;
+                        if (state.communalFeastDays === undefined) state.communalFeastDays = 0;
+                        if (state.addressCooldown === undefined) state.addressCooldown = 0;
+                        if (state.survivors) {
+                            state.survivors.forEach(s => {
+                                if (s.rads === undefined) s.rads = 0;
+                            });
+                        }
                     }
                 }
             } catch (e) {}
@@ -3274,6 +3450,18 @@
             if (survivor.morale < 40) eff -= 0.25;
             else if (survivor.morale >= 80) eff += 0.15;
 
+            // Radiation sickness penalty
+            const rads = survivor.rads || 0;
+            if (rads >= 75) eff -= 0.60;
+            else if (rads >= 50) eff -= 0.35;
+            else if (rads >= 25) eff -= 0.15;
+
+            // Vitamin fortification bonus
+            if (state.fortifiedRationsDays > 0) eff += 0.15;
+
+            // Civil unrest worker slowdown (unless Martial Law declared)
+            if (state.morale < 40 && !state.martialLaw) eff -= 0.25;
+
             // Attribute matching
             let statBonus = 0;
             if (facility.id === 'farm' || facility.id === 'farm_aero') {
@@ -3295,7 +3483,7 @@
             }
 
             eff += statBonus;
-            return Math.max(0.2, eff);
+            return Math.max(0.15, eff);
         }
 
         // Calculation Helpers
@@ -3338,12 +3526,13 @@
 
             // Consumption rates based on policy
             let foodPerPerson = 1;
-            if (state.policies.food === 'half') foodPerPerson = 0.5;
-            if (state.policies.food === 'starve') foodPerPerson = 0.25;
+            if (state.policies.food === 'feast') foodPerPerson = 1.5;
+            else if (state.policies.food === 'half') foodPerPerson = 0.5;
+            else if (state.policies.food === 'starve') foodPerPerson = 0.25;
 
             let waterPerPerson = 1;
             if (state.policies.water === 'half') waterPerPerson = 0.5;
-            if (state.policies.water === 'minimal') waterPerPerson = 0.25;
+            else if (state.policies.water === 'minimal') waterPerPerson = 0.25;
 
             const totalFoodNeed = state.population * foodPerPerson;
             const totalWaterNeed = state.population * waterPerPerson;
@@ -4462,6 +4651,7 @@
             renderResearchTree();
             renderHazardsView();
             renderCaravanView();
+            renderPoliciesView();
             saveState();
         }
 
@@ -4942,6 +5132,28 @@
                 if (surv.health < 40) healthClass = 'crit';
                 else if (surv.health < 75) healthClass = 'warn';
 
+                // Radiation condition
+                const rads = surv.rads || 0;
+                let radClass = 'rad-clean';
+                let radBadge = '<span style="font-size:8px; color:var(--accent-green); font-weight:bold;">CLEAN</span>';
+                if (rads >= 75) {
+                    radClass = 'rad-crit';
+                    radBadge = '<span style="font-size:8px; color:var(--danger-red); font-weight:bold;">ACUTE RADS</span>';
+                } else if (rads >= 50) {
+                    radClass = 'rad-mod';
+                    radBadge = '<span style="font-size:8px; color:#f97316; font-weight:bold;">RAD SICK</span>';
+                } else if (rads >= 25) {
+                    radClass = 'rad-mild';
+                    radBadge = '<span style="font-size:8px; color:var(--accent-amber); font-weight:bold;">IRRADIATED</span>';
+                }
+
+                // Morale mood
+                let moodBadge = '<span class="badge-mood mood-content">CONTENT</span>';
+                if (surv.morale >= 85) moodBadge = '<span class="badge-mood mood-ecstatic">ECSTATIC</span>';
+                else if (surv.morale < 45 && surv.morale >= 25) moodBadge = '<span class="badge-mood mood-unrest">UNREST</span>';
+                else if (surv.morale < 25) moodBadge = '<span class="badge-mood mood-mutiny">MUTINOUS</span>';
+                else if (surv.morale < 65) moodBadge = '<span class="badge-mood mood-discontent">DISCONTENT</span>';
+
                 // Current Facility & Efficiency
                 let currentFac = state.facilities.find(f => f.id === surv.job);
                 let effBadge = '';
@@ -4963,13 +5175,14 @@
 
                 row.innerHTML = `
                     <div class="survivor-identity">
-                        <div style="display:flex; align-items:center;">
+                        <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
                             <span class="survivor-name">${surv.name}</span>
                             ${effBadge}
+                            ${moodBadge}
                         </div>
                         <span class="survivor-role">${surv.role} &bull; <strong style="color:var(--text-bright);">STR:${surv.str} AGI:${surv.agi} INT:${surv.int}</strong></span>
                     </div>
-                    <div class="survivor-meters">
+                    <div class="survivor-meters" style="min-width:180px;">
                         <div class="meter-group">
                             <div class="meter-label"><span>HEALTH</span><span>${surv.health}%</span></div>
                             <div class="meter-bar"><div class="meter-fill ${healthClass}" style="width: ${surv.health}%"></div></div>
@@ -4978,12 +5191,20 @@
                             <div class="meter-label"><span>MORALE</span><span>${surv.morale}%</span></div>
                             <div class="meter-bar"><div class="meter-fill" style="width: ${surv.morale}%; background: var(--accent-amber);"></div></div>
                         </div>
+                        <div class="meter-group">
+                            <div class="meter-label"><span>RADIATION</span><span>${radBadge} ${rads} Rads</span></div>
+                            <div class="rad-meter-bar"><div class="rad-meter-fill ${radClass}" style="width: ${rads}%"></div></div>
+                        </div>
                     </div>
                     <div class="survivor-assign" style="display:flex; flex-direction:column; gap:3px;">
                         <select class="select-assign" onchange="assignSurvivorJob('${surv.id}', this.value)">
                             ${optionsHtml}
                         </select>
-                        ${surv.health < 100 ? `<button class="btn-upgrade" onclick="treatSurvivor('${surv.id}')" ${(state.meds||0) <= 0 ? 'disabled' : ''} style="font-size:9px; padding:2px 4px; color:${(state.meds||0) > 0 ? 'var(--accent-green)' : 'var(--text-dim)'}; border-color:${(state.meds||0) > 0 ? 'var(--border-corner)' : 'var(--panel-border)'};">TREAT (-1 MED)</button>` : ''}
+                        <div style="display:flex; gap:2px;">
+                            ${surv.health < 100 ? `<button class="btn-upgrade" onclick="treatSurvivor('${surv.id}')" ${(state.meds||0) <= 0 ? 'disabled' : ''} style="flex:1; font-size:8px; padding:2px 3px; color:${(state.meds||0) > 0 ? 'var(--accent-green)' : 'var(--text-dim)'}; border-color:${(state.meds||0) > 0 ? 'var(--border-corner)' : 'var(--panel-border)'};">HEAL (-1 MED)</button>` : ''}
+                            ${rads > 0 ? `<button class="btn-upgrade" onclick="administerRadAway('${surv.id}')" ${(state.meds||0) <= 0 ? 'disabled' : ''} style="flex:1; font-size:8px; padding:2px 3px; color:${(state.meds||0) > 0 ? 'var(--accent-amber)' : 'var(--text-dim)'}; border-color:${(state.meds||0) > 0 ? 'var(--border-corner)' : 'var(--panel-border)'};">RAD-AWAY (-1 MED)</button>` : ''}
+                            ${rads > 10 ? `<button class="btn-upgrade" onclick="deconShower('${surv.id}')" ${state.water < 5 || state.scrap < 5 ? 'disabled' : ''} style="flex:1; font-size:8px; padding:2px 3px; color:var(--accent-cyan); border-color:var(--panel-border);">DECON (-5 WTR)</button>` : ''}
+                        </div>
                     </div>
                 `;
 
@@ -5006,6 +5227,42 @@
             surv.morale = Math.min(100, surv.morale + 8);
             logEvent(`MEDICAL: Stimpack administered to ${surv.name}. Health restored to ${surv.health}%.`, 'cycle');
             playSound('cycle');
+            updateAll();
+        }
+
+        function administerRadAway(survId) {
+            if ((state.meds || 0) <= 0) {
+                logEvent('No pharmaceuticals available in shelter reserves to synthesize Rad-Away!', 'warn');
+                playSound('alert');
+                return;
+            }
+            const surv = state.survivors.find(s => s.id === survId);
+            if (!surv) return;
+            state.meds--;
+            surv.rads = Math.max(0, (surv.rads || 0) - 45);
+            surv.health = Math.min(100, surv.health + 10);
+            surv.morale = Math.min(100, surv.morale + 6);
+            logEvent(`RAD-AWAY: Anti-rad chelating agent administered to ${surv.name}. Radiation reduced to ${surv.rads} Rads.`, 'cycle');
+            playSound('cycle');
+            updateAll();
+        }
+
+        function deconShower(survId) {
+            const waterCost = 5;
+            const scrapCost = 5;
+            if (state.water < waterCost || state.scrap < scrapCost) {
+                logEvent(`Insufficient resources for Decon Shower! Need ${waterCost} Water and ${scrapCost} Scrap.`, 'warn');
+                playSound('alert');
+                return;
+            }
+            const surv = state.survivors.find(s => s.id === survId);
+            if (!surv) return;
+            state.water -= waterCost;
+            state.scrap -= scrapCost;
+            surv.rads = Math.max(0, (surv.rads || 0) - 25);
+            surv.morale = Math.min(100, surv.morale + 3);
+            logEvent(`DECONTAMINATION: ${surv.name} cycled through high-pressure isotope decon shower. Rads reduced to ${surv.rads}.`, 'info');
+            playSound('pump');
             updateAll();
         }
 
@@ -5388,18 +5645,314 @@
             openScoutModal(expId);
         }
 
-        // Policies
+        // Policies & Directives
         function setPolicy(type, value) {
             state.policies[type] = value;
             const container = document.getElementById(`policy-${type}-group`);
             if (container) {
                 const options = container.querySelectorAll('.policy-opt');
                 options.forEach(opt => opt.classList.remove('active'));
-                event.currentTarget.classList.add('active');
+                if (event && event.currentTarget) event.currentTarget.classList.add('active');
             }
             logEvent(`Overseer updated ${type.toUpperCase()} protocol to [${value.toUpperCase()}].`, 'info');
             playSound('click');
             updateAll();
+        }
+
+        function massRadAway() {
+            const medsCost = 2;
+            const waterCost = 10;
+            if ((state.meds || 0) < medsCost || state.water < waterCost) {
+                logEvent(`Insufficient resources for Mass Rad-Away Cask! Need ${medsCost} Meds and ${waterCost} Water.`, 'warn');
+                playSound('alert');
+                return;
+            }
+            state.meds -= medsCost;
+            state.water -= waterCost;
+            let treated = 0;
+            state.survivors.forEach(s => {
+                if ((s.rads || 0) > 0) {
+                    s.rads = Math.max(0, s.rads - 30);
+                    s.health = Math.min(100, s.health + 10);
+                    s.morale = Math.min(100, s.morale + 4);
+                    treated++;
+                }
+            });
+            logEvent(`MASS TREATMENT: Rad-Away casks distributed to ventilation scrubbers! ${treated} irradiated dweller(s) treated (-30 Rads).`, 'cycle');
+            playSound('cycle');
+            updateAll();
+        }
+
+        function massDecon() {
+            const waterCost = 15;
+            const scrapCost = 15;
+            if (state.water < waterCost || state.scrap < scrapCost) {
+                logEvent(`Insufficient resources for Decon Flush! Need ${waterCost} Water and ${scrapCost} Scrap.`, 'warn');
+                playSound('alert');
+                return;
+            }
+            state.water -= waterCost;
+            state.scrap -= scrapCost;
+            state.survivors.forEach(s => {
+                s.rads = Math.max(0, (s.rads || 0) - 20);
+                s.morale = Math.min(100, s.morale + 3);
+            });
+            logEvent(`DECONTAMINATION FLUSH: High-pressure saline de-ionizing wash cycled through all airlocks and residential bays.`, 'info');
+            playSound('pump');
+            updateAll();
+        }
+
+        function flushWaterFilters() {
+            const scrapCost = 10;
+            if (state.scrap < scrapCost) {
+                logEvent(`Insufficient Scrap for Carbon Filter Flush! Need ${scrapCost} Scrap.`, 'warn');
+                playSound('alert');
+                return;
+            }
+            state.scrap -= scrapCost;
+            state.waterPurity = Math.min(100, (state.waterPurity || 95) + 30);
+            logEvent(`FILTRATION FLUSH: Replaced activated charcoal & resin filters. Aquifer reservoir purity boosted to ${state.waterPurity.toFixed(0)}%.`, 'cycle');
+            playSound('pump');
+            updateAll();
+        }
+
+        function sterilizeWater() {
+            const medsCost = 1;
+            if ((state.meds || 0) < medsCost) {
+                logEvent(`Insufficient Medical Supplies to sterilize aquifer! Need ${medsCost} Med.`, 'warn');
+                playSound('alert');
+                return;
+            }
+            state.meds -= medsCost;
+            state.waterPurity = 100;
+            logEvent(`STERILIZATION: Medical-grade iodine & isotopic binders dosed into water tanks. Purity restored to 100% (Sterile).`, 'cycle');
+            playSound('cycle');
+            updateAll();
+        }
+
+        function fortifyRations() {
+            const medsCost = 1;
+            if ((state.meds || 0) < medsCost) {
+                logEvent(`Insufficient Medical Supplies to fortify rations! Need ${medsCost} Med.`, 'warn');
+                playSound('alert');
+                return;
+            }
+            state.meds -= medsCost;
+            state.fortifiedRationsDays = 3;
+            logEvent(`NUTRITIONAL DIRECTIVE: Enriched vitamins and metabolic stimulants blended into rations (+15% Worker Efficiency for 3 cycles).`, 'cycle');
+            playSound('cycle');
+            updateAll();
+        }
+
+        function holdCommunalFeast() {
+            const foodCost = 15;
+            if (state.food < foodCost) {
+                logEvent(`Insufficient Food Rations to hold feast! Need ${foodCost} Food.`, 'warn');
+                playSound('alert');
+                return;
+            }
+            state.food -= foodCost;
+            state.communalFeastDays = 3;
+            state.morale = Math.min(100, state.morale + 15);
+            state.survivors.forEach(s => {
+                s.morale = Math.min(100, s.morale + 15);
+                s.hunger = 0;
+            });
+            logEvent(`COMMUNAL FEAST: Overseer hosted a vault feast! Citizens celebrated with music and warm food (+15% Morale, Unrest suppressed).`, 'cycle');
+            playSound('cycle');
+            updateAll();
+        }
+
+        function distributeLuxuries() {
+            const scrapCost = 20;
+            if (state.scrap < scrapCost) {
+                logEvent(`Insufficient Scrap to distribute luxuries! Need ${scrapCost} Scrap.`, 'warn');
+                playSound('alert');
+                return;
+            }
+            state.scrap -= scrapCost;
+            state.morale = Math.min(100, state.morale + 12);
+            state.survivors.forEach(s => {
+                s.morale = Math.min(100, s.morale + 12);
+            });
+            logEvent(`LUXURY BROADCAST: Distributed comfort goods and broadcast pre-war radio orchestra (+12% Morale).`, 'trade');
+            playSound('trade');
+            updateAll();
+        }
+
+        function overseerAddress() {
+            if ((state.addressCooldown || 0) > 0) {
+                logEvent(`Overseer Address is on cooldown (${state.addressCooldown} cycles remaining).`, 'warn');
+                playSound('alert');
+                return;
+            }
+            state.addressCooldown = 3;
+            state.morale = Math.min(100, state.morale + 6);
+            state.survivors.forEach(s => {
+                s.morale = Math.min(100, s.morale + 6);
+            });
+            logEvent(`OVERSEER ADDRESS: Broadcasted an inspiring survival speech over the vault PA system (+6% Morale).`, 'info');
+            playSound('click');
+            updateAll();
+        }
+
+        function toggleMartialLaw() {
+            state.martialLaw = !state.martialLaw;
+            if (state.martialLaw) {
+                if (state.morale > 50) state.morale = 50;
+                logEvent(`SECURITY DIRECTIVE: MARTIAL LAW DECLARED. Armed security patrols enforced curfew. Worker strikes and sabotage halted, but citizen morale is capped at 50%.`, 'crit');
+                playSound('alert');
+            } else {
+                logEvent(`SECURITY DIRECTIVE: Martial Law lifted. Normal vault civil liberties restored.`, 'info');
+                playSound('click');
+            }
+            updateAll();
+        }
+
+        function renderPoliciesView() {
+            // Update Active buttons in policy groups
+            ['food', 'water', 'power'].forEach(t => {
+                const group = document.getElementById(`policy-${t}-group`);
+                if (group) {
+                    const opts = group.querySelectorAll('.policy-opt');
+                    const val = state.policies[t];
+                    opts.forEach(opt => {
+                        const clickAttr = opt.getAttribute('onclick') || '';
+                        if (clickAttr.includes(`'${val}'`)) opt.classList.add('active');
+                        else opt.classList.remove('active');
+                    });
+                }
+            });
+
+            // Shelter Health & Rads
+            const totalSurvs = state.survivors.length || 1;
+            let sumH = 0;
+            let sumRads = 0;
+            let irradCount = 0;
+            let acuteCount = 0;
+            state.survivors.forEach(s => {
+                sumH += s.health;
+                const r = s.rads || 0;
+                sumRads += r;
+                if (r >= 25) irradCount++;
+                if (r >= 75) acuteCount++;
+            });
+            const avgHealth = Math.round(sumH / totalSurvs);
+            const avgRads = Math.round(sumRads / totalSurvs);
+
+            const avgHVal = document.getElementById('lbl-avg-health-val');
+            if (avgHVal) avgHVal.textContent = `${avgHealth}%`;
+            const irradVal = document.getElementById('lbl-irrad-count-val');
+            if (irradVal) irradVal.textContent = `${irradCount} (${acuteCount} Critical)`;
+
+            const radBadge = document.getElementById('lbl-rad-alert-badge');
+            if (radBadge) {
+                if (acuteCount > 0) {
+                    radBadge.textContent = 'ACUTE HAZARD';
+                    radBadge.className = 'badge-hazard badge-hazard-rad';
+                } else if (irradCount > 0) {
+                    radBadge.textContent = 'ELEVATED';
+                    radBadge.className = 'badge-hazard badge-hazard-acid';
+                } else {
+                    radBadge.textContent = 'CLEAN';
+                    radBadge.className = 'badge-hazard badge-hazard-calm';
+                }
+            }
+
+            const radFill = document.getElementById('avg-rad-fill');
+            if (radFill) {
+                radFill.style.width = `${Math.min(100, Math.max(5, avgRads))}%`;
+                radFill.className = `rad-meter-fill ${avgRads >= 75 ? 'rad-crit' : (avgRads >= 50 ? 'rad-mod' : (avgRads >= 25 ? 'rad-mild' : 'rad-clean'))}`;
+            }
+
+            const radDesc = document.getElementById('lbl-rad-desc');
+            if (radDesc) {
+                radDesc.textContent = avgRads > 50 ? 'WARNING: High radiation poisoning among dwellers! Administer Rad-Away immediately.' : (avgRads > 20 ? 'Mild radiation detected. Decontamination recommended.' : 'Background radiation nominal. Aquifer uncontaminated.');
+            }
+
+            // Water Purity Card
+            const purity = state.waterPurity !== undefined ? state.waterPurity : 95;
+            const wPurVal = document.getElementById('lbl-water-purity-val');
+            if (wPurVal) wPurVal.textContent = `${purity.toFixed(0)}%`;
+            const wContamVal = document.getElementById('lbl-water-contam-val');
+            if (wContamVal) wContamVal.textContent = purity >= 85 ? `Trace (${(100 - purity).toFixed(0)}%)` : (purity >= 60 ? `Elevated Silt (${(100 - purity).toFixed(0)}%)` : `TOXIC FALLOUT (${(100 - purity).toFixed(0)}%)`);
+
+            const wPurBadge = document.getElementById('lbl-water-purity-badge');
+            if (wPurBadge) {
+                wPurBadge.textContent = purity >= 90 ? 'STERILE PURE' : (purity >= 70 ? 'FILTERED' : 'CONTAMINATED');
+                wPurBadge.style.color = purity >= 80 ? 'var(--accent-green)' : (purity >= 60 ? 'var(--accent-amber)' : 'var(--danger-red)');
+            }
+
+            const wPurFill = document.getElementById('water-purity-fill');
+            if (wPurFill) {
+                wPurFill.style.width = `${purity}%`;
+                wPurFill.className = `rad-meter-fill ${purity >= 75 ? 'rad-clean' : (purity >= 50 ? 'rad-mild' : 'rad-crit')}`;
+            }
+
+            // Morale & Civil Order Card
+            const dirMoraleVal = document.getElementById('lbl-dir-morale-val');
+            if (dirMoraleVal) dirMoraleVal.textContent = `${Math.round(state.morale)}%`;
+
+            const mBadge = document.getElementById('lbl-morale-status-badge');
+            if (mBadge) {
+                if (state.martialLaw) {
+                    mBadge.textContent = 'MARTIAL LAW';
+                    mBadge.className = 'badge-mood mood-mutiny';
+                } else if (state.morale >= 85) {
+                    mBadge.textContent = 'ECSTATIC';
+                    mBadge.className = 'badge-mood mood-ecstatic';
+                } else if (state.morale >= 65) {
+                    mBadge.textContent = 'CONTENT';
+                    mBadge.className = 'badge-mood mood-content';
+                } else if (state.morale >= 45) {
+                    mBadge.textContent = 'DISCONTENT';
+                    mBadge.className = 'badge-mood mood-discontent';
+                } else if (state.morale >= 25) {
+                    mBadge.textContent = 'CIVIL UNREST';
+                    mBadge.className = 'badge-mood mood-unrest';
+                } else {
+                    mBadge.textContent = 'MUTINY / RIOT';
+                    mBadge.className = 'badge-mood mood-mutiny';
+                }
+            }
+
+            const unrestRisk = document.getElementById('lbl-unrest-risk-text');
+            if (unrestRisk) {
+                if (state.martialLaw) {
+                    unrestRisk.textContent = 'SUPPRESSED (CURFEW)';
+                    unrestRisk.style.color = 'var(--accent-cyan)';
+                } else if (state.morale < 25) {
+                    unrestRisk.textContent = 'CRITICAL (MUTINY IMMINENT)';
+                    unrestRisk.style.color = 'var(--danger-red)';
+                } else if (state.morale < 45) {
+                    unrestRisk.textContent = 'ELEVATED (STRIKE RISK)';
+                    unrestRisk.style.color = '#f97316';
+                } else if (state.morale < 65) {
+                    unrestRisk.textContent = 'MILD DISCONTENT';
+                    unrestRisk.style.color = 'var(--accent-amber)';
+                } else {
+                    unrestRisk.textContent = 'STABLE (0% RISK)';
+                    unrestRisk.style.color = 'var(--accent-green)';
+                }
+            }
+
+            const mFill = document.getElementById('morale-order-fill');
+            if (mFill) {
+                mFill.style.width = `${Math.min(100, Math.max(5, state.morale))}%`;
+                mFill.style.background = state.morale >= 70 ? 'var(--accent-green)' : (state.morale >= 45 ? 'var(--accent-amber)' : 'var(--danger-red)');
+            }
+
+            const mBtn = document.getElementById('btn-martial-law');
+            if (mBtn) {
+                mBtn.textContent = state.martialLaw ? 'LIFT MARTIAL LAW' : 'DECLARE MARTIAL LAW';
+                mBtn.style.background = state.martialLaw ? 'var(--danger-red)' : 'var(--btn-bg)';
+                mBtn.style.color = state.martialLaw ? '#fff' : 'var(--danger-red)';
+            }
+
+            const addrBtn = document.getElementById('btn-overseer-address');
+            if (addrBtn) {
+                addrBtn.textContent = (state.addressCooldown || 0) > 0 ? `ADDRESS COOLDOWN (${state.addressCooldown}d)` : 'OVERSEER ADDRESS (+6% MORALE)';
+            }
         }
 
         // Tab Switching
@@ -5457,17 +6010,27 @@
 
             const totals = getTotals();
 
-            // 1. Resource changes
+            // 1. Water Purity & Filtration Simulation
+            if (state.waterPurity === undefined) state.waterPurity = 95;
+            const waterPurifier = state.facilities.find(f => f.id === 'water' || f.id === 'water_deep');
+            const hasPurifierStaff = waterPurifier && waterPurifier.assigned > 0;
+            if (hasPurifierStaff) {
+                state.waterPurity = Math.min(100, state.waterPurity + 15);
+            } else {
+                state.waterPurity = Math.max(20, state.waterPurity - 5);
+            }
+
+            if (state.policies.water === 'minimal') {
+                state.waterPurity = Math.max(10, state.waterPurity - 10);
+            }
+
+            // 2. Resource changes
             state.food = Math.max(0, state.food + totals.foodProd - totals.foodNeed);
             state.water = Math.max(0, state.water + totals.waterProd - totals.waterNeed);
             state.scrap = Math.max(0, state.scrap + totals.scrapProd);
 
-            // 2. Starvation & Thirst effects
-            let starvationEvents = 0;
-            let thirstEvents = 0;
-
+            // 3. Starvation & Thirst effects
             if (state.food <= 0) {
-                starvationEvents++;
                 state.morale = Math.max(10, state.morale - 8);
                 state.survivors.forEach(s => {
                     s.health = Math.max(10, s.health - 12);
@@ -5478,7 +6041,6 @@
             }
 
             if (state.water <= 0) {
-                thirstEvents++;
                 state.morale = Math.max(10, state.morale - 12);
                 state.survivors.forEach(s => {
                     s.health = Math.max(5, s.health - 18);
@@ -5488,17 +6050,82 @@
                 playSound('alert');
             }
 
-            // 3. Health & Morale recovery if fed
-            if (state.food > 0 && state.water > 0) {
+            // 4. Food & Water Policy Daily Effects
+            if (state.policies.food === 'feast' && state.food > 0) {
+                state.morale = Math.min(100, state.morale + 6);
                 state.survivors.forEach(s => {
-                    if (s.health < 100) s.health = Math.min(100, s.health + 5);
-                    s.hunger = Math.max(0, s.hunger - 15);
-                    s.thirst = Math.max(0, s.thirst - 20);
+                    s.health = Math.min(100, s.health + 5);
+                    s.morale = Math.min(100, s.morale + 6);
                 });
-                state.morale = Math.min(100, state.morale + 1);
+            } else if (state.policies.food === 'half') {
+                state.morale = Math.max(10, state.morale - 4);
+            } else if (state.policies.food === 'starve') {
+                state.morale = Math.max(10, state.morale - 12);
+                state.survivors.forEach(s => {
+                    s.health = Math.max(10, s.health - 8);
+                    s.hunger = Math.min(100, s.hunger + 20);
+                });
             }
 
-            // 4. Progress Expeditions
+            if (state.policies.water === 'normal' && state.water > 0 && state.waterPurity >= 80) {
+                state.morale = Math.min(100, state.morale + 2);
+            } else if (state.policies.water === 'half') {
+                state.morale = Math.max(10, state.morale - 3);
+            } else if (state.policies.water === 'minimal') {
+                state.morale = Math.max(10, state.morale - 10);
+                state.survivors.forEach(s => {
+                    s.rads = Math.min(100, (s.rads || 0) + 8);
+                });
+                logEvent(`WATER RECYCLING: Recycled silt consumption contaminated dwellers with +8 Rads!`, 'warn');
+            }
+
+            // Low Water Purity radiation exposure
+            if (state.waterPurity < 70 && state.water > 0) {
+                const radIngest = Math.round((70 - state.waterPurity) * 0.25);
+                state.survivors.forEach(s => {
+                    s.rads = Math.min(100, (s.rads || 0) + radIngest);
+                });
+                logEvent(`WATER CONTAMINATION: Silt in unpurified water caused +${radIngest} Rads poisoning in drinkers.`, 'warn');
+            }
+
+            // 5. Radiation Sickness & Natural Convalescence
+            let sickCount = 0;
+            state.survivors.forEach(s => {
+                const rads = s.rads || 0;
+                if (rads >= 75) {
+                    s.health = Math.max(5, s.health - 7);
+                    s.morale = Math.max(10, s.morale - 8);
+                    sickCount++;
+                } else if (rads >= 50) {
+                    s.health = Math.max(10, s.health - 3);
+                    s.morale = Math.max(15, s.morale - 4);
+                    sickCount++;
+                } else if (rads >= 25) {
+                    s.health = Math.max(15, s.health - 1);
+                    s.morale = Math.max(20, s.morale - 2);
+                }
+
+                // Natural fed healing
+                if (state.food > 0 && state.water > 0 && rads < 50) {
+                    if (s.health < 100) s.health = Math.min(100, s.health + 4);
+                    s.hunger = Math.max(0, s.hunger - 15);
+                    s.thirst = Math.max(0, s.thirst - 20);
+                }
+            });
+
+            if (sickCount > 0) {
+                logEvent(`RAD SICKNESS: ${sickCount} dweller(s) suffering severe radiation poisoning symptoms!`, 'warn');
+            }
+
+            // 6. Timers & Directives Countdown
+            if (state.fortifiedRationsDays > 0) {
+                state.fortifiedRationsDays--;
+                if (state.fortifiedRationsDays === 0) logEvent(`NUTRITIONAL: Vitamin fortification in rations expired.`, 'info');
+            }
+            if (state.communalFeastDays > 0) state.communalFeastDays--;
+            if (state.addressCooldown > 0) state.addressCooldown--;
+
+            // 7. Progress Expeditions
             state.expeditions.forEach(exp => {
                 if (exp.assignedScout) {
                     exp.daysRemaining--;
@@ -5520,11 +6147,12 @@
                         state.scrap += scrapFound;
                         state.meds = (state.meds || 0) + medsFound;
 
-                        // Hazard damage & risk calculation
+                        // Hazard damage & rads
                         let baseDmg = 5;
-                        if (exp.riskLevel === 2) baseDmg = 12 + Math.floor(Math.random() * 15);
-                        else if (exp.riskLevel === 3) baseDmg = 20 + Math.floor(Math.random() * 20);
-                        else if (exp.riskLevel === 4) baseDmg = 30 + Math.floor(Math.random() * 25);
+                        let baseRads = 5;
+                        if (exp.riskLevel === 2) { baseDmg = 12 + Math.floor(Math.random() * 15); baseRads = 12; }
+                        else if (exp.riskLevel === 3) { baseDmg = 20 + Math.floor(Math.random() * 20); baseRads = 22; }
+                        else if (exp.riskLevel === 4) { baseDmg = 30 + Math.floor(Math.random() * 25); baseRads = 35; }
 
                         let dmg = Math.max(0, baseDmg - str * 2 - Math.floor(agi * 1.5));
                         let stimUsed = false;
@@ -5535,6 +6163,7 @@
 
                         if (scout) {
                             scout.health = Math.max(15, scout.health - dmg);
+                            scout.rads = Math.min(100, (scout.rads || 0) + baseRads);
                             scout.job = 'unassigned';
                             scout.morale = Math.min(100, Math.max(25, scout.morale + (dmg > 25 ? -10 : 10)));
                         }
@@ -5557,29 +6186,30 @@
                         exp.assignedScout = null;
                         exp.hasStimpack = false;
 
-                        const dmgMsg = dmg > 0 ? ` [Sustained -${dmg} HP trauma${stimUsed ? ', stabilized by Stimpack' : ''}]` : ' [No injuries sustained]';
+                        const dmgMsg = dmg > 0 ? ` [Sustained -${dmg} HP trauma & +${baseRads} Rads${stimUsed ? ', stabilized by Stimpack' : ''}]` : ' [No injuries sustained]';
                         logEvent(`EXPEDITION RETURN: ${scoutName} returned from ${exp.name}! Salvaged: +${foodFound} Food, +${scrapFound} Scrap, +${medsFound} Meds.${dmgMsg}${bpMsg}`, bpMsg ? 'cycle' : 'scout');
                         playSound(bpMsg ? 'cycle' : 'scout');
                     }
                 }
             });
 
-            // 4b. Medical Infirmary & Auto-surgery triage
+            // 8. Medical Infirmary & Auto-surgery triage (Heal & Decon)
             const infirmaryFac = state.facilities.find(f => f.id === 'infirmary');
             const hasDoctor = infirmaryFac && infirmaryFac.assigned > 0;
             const hasSurgWing = state.facilities.some(f => f.id === 'bp_medsurge');
             if (hasDoctor || hasSurgWing) {
-                const wounded = state.survivors.filter(s => s.health < 90);
+                const wounded = state.survivors.filter(s => s.health < 90 || (s.rads || 0) > 20);
                 if (wounded.length > 0 && ((state.meds || 0) > 0 || hasSurgWing)) {
                     if (!hasSurgWing && state.meds > 0) state.meds--;
                     wounded.forEach(w => {
                         w.health = Math.min(100, w.health + (hasSurgWing ? 25 : 15));
+                        w.rads = Math.max(0, (w.rads || 0) - (hasSurgWing ? 20 : 10));
                     });
-                    logEvent(`MED-LAB: Medical triage administered to ${wounded.length} injured dweller(s).`, 'info');
+                    logEvent(`MED-LAB: Triage & radiation decontamination administered to ${wounded.length} dweller(s).`, 'info');
                 }
             }
 
-            // 4c. Raider Incursions & Radar Progression
+            // 9. Raider Incursions & Radar Progression
             if (state.raidThreatDays === undefined) state.raidThreatDays = 3;
             state.raidThreatDays--;
             if (state.raidThreatDays <= 0) {
@@ -5590,16 +6220,48 @@
                 playSound('alert');
             }
 
-            // 5. Environmental Weather Disasters & Hazard Simulation (Phase 10)
+            // 10. Environmental Weather Disasters & Hazard Simulation
             processWeatherDay();
 
-            // 5b. Random Wasteland Event
+            // 11. Morale & Civil Unrest / Mutiny Simulation
+            if (state.martialLaw) {
+                if (state.morale > 50) state.morale = 50;
+                logEvent(`MARTIAL LAW: Armed security patrols maintain mandatory vault curfew. Civil unrest suppressed.`, 'info');
+            } else {
+                if (state.morale < 25) {
+                    // Critical Mutiny / Riot risk
+                    const riotRoll = Math.random();
+                    if (riotRoll < 0.65) {
+                        const foodLoss = Math.min(state.food, 10 + Math.floor(Math.random() * 10));
+                        const scrapLoss = Math.min(state.scrap, 10 + Math.floor(Math.random() * 15));
+                        state.food -= foodLoss;
+                        state.scrap -= scrapLoss;
+                        state.survivors.forEach(s => {
+                            if (Math.random() < 0.4) s.health = Math.max(10, s.health - 15);
+                        });
+                        logEvent(`💥 VAULT MUTINY & RIOT! Desperate dwellers rioted in corridors! Looted -${foodLoss} Food, -${scrapLoss} Scrap, and injured citizens!`, 'crit');
+                        playSound('alert');
+                    }
+                } else if (state.morale < 45) {
+                    // Civil Unrest: Worker strike / Sabotage
+                    const strikeRoll = Math.random();
+                    if (strikeRoll < 0.45) {
+                        const sabScrap = Math.min(state.scrap, 8 + Math.floor(Math.random() * 8));
+                        state.scrap -= sabScrap;
+                        state.barricadeHp = Math.max(0, state.barricadeHp - 15);
+                        logEvent(`⚠️ CIVIL UNREST: Unhappy citizens staged a strike and sabotaged perimeter wiring (-${sabScrap} Scrap, -15 Barricade HP)!`, 'warn');
+                        playSound('alert');
+                    }
+                }
+            }
+
+            // 12. Random Wasteland Event
             triggerDailyEvent();
 
-            // 5c. Wasteland Caravan Trading Schedule (Phase 11)
+            // 13. Caravan Trading Schedule
             processCaravanDay();
 
-            // 6. Record Summary for report
+            // 14. Record Summary for report
             state.lastSummary = {
                 day: state.day,
                 foodDelta: totals.foodProd - totals.foodNeed,
