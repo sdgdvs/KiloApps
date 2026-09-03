@@ -22,7 +22,8 @@
             --btn-bg: #0c2438;
             --btn-hover: #163b5c;
             --btn-active: #0284c7;
-            --crt-scanline: rgba(0, 210, 255, 0.04);
+            --crt-scanline: rgba(0, 210, 255, 0.05);
+            --crt-tint: rgba(0, 180, 255, 0.03);
             --font-mono: 'Consolas', 'Courier New', Courier, monospace;
         }
 
@@ -43,7 +44,8 @@
             --btn-bg: #0d2e20;
             --btn-hover: #164d36;
             --btn-active: #059669;
-            --crt-scanline: rgba(16, 185, 129, 0.04);
+            --crt-scanline: rgba(16, 185, 129, 0.05);
+            --crt-tint: rgba(16, 185, 129, 0.03);
             --font-mono: 'Consolas', 'Courier New', Courier, monospace;
         }
 
@@ -64,7 +66,30 @@
             --btn-bg: #301d0a;
             --btn-hover: #4d2f10;
             --btn-active: #b45309;
-            --crt-scanline: rgba(245, 158, 11, 0.04);
+            --crt-scanline: rgba(245, 158, 11, 0.05);
+            --crt-tint: rgba(245, 158, 11, 0.03);
+            --font-mono: 'Consolas', 'Courier New', Courier, monospace;
+        }
+
+        body.theme-monochrome {
+            --bg-deep: #050505;
+            --bg-panel: #111417;
+            --bg-panel-header: #1a2026;
+            --border-panel: #334155;
+            --border-glow: #e2e8f0;
+            --text-primary: #cbd5e1;
+            --text-bright: #ffffff;
+            --text-dim: #64748b;
+            --accent-sonar: #f8fafc;
+            --accent-emerald: #94a3b8;
+            --accent-amber: #e2e8f0;
+            --accent-red: #f87171;
+            --gauge-bg: #090b0e;
+            --btn-bg: #19212c;
+            --btn-hover: #2b384a;
+            --btn-active: #64748b;
+            --crt-scanline: rgba(240, 246, 252, 0.04);
+            --crt-tint: rgba(255, 255, 255, 0.02);
             --font-mono: 'Consolas', 'Courier New', Courier, monospace;
         }
 
@@ -91,10 +116,25 @@
             display: block;
             position: absolute;
             top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, var(--crt-scanline), var(--crt-scanline), var(--crt-scanline));
-            background-size: 100% 2px, 3px 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), linear-gradient(90deg, var(--crt-scanline), var(--crt-scanline), var(--crt-scanline)), var(--crt-tint);
+            background-size: 100% 2px, 3px 100%, 100% 100%;
             pointer-events: none;
             z-index: 1000;
+            transition: opacity 0.3s ease;
+        }
+
+        body.scanlines-off::before {
+            display: none;
+        }
+
+        body::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.65), inset 0 0 120px rgba(0, 0, 0, 0.4);
+            pointer-events: none;
+            z-index: 999;
         }
 
         header {
@@ -469,8 +509,10 @@
             <select id="themeSelect">
                 <option value="theme-abyss">Abyssal Cyan</option>
                 <option value="theme-emerald">Sonar Emerald</option>
-                <option value="theme-amber">Amber Trench</option>
+                <option value="theme-amber">Amber Depth</option>
+                <option value="theme-monochrome">Monochrome Radar</option>
             </select>
+            <button id="scanlineToggleBtn">📺 SCANLINES: ON</button>
             <button id="soundToggleBtn">🔊 AUDIO: ON</button>
             <button id="emergencyBlowBtn" style="border-color: var(--accent-red); color: var(--accent-red); font-weight: bold;">🚨 BLOW BALLAST</button>
         </div>
@@ -864,6 +906,7 @@
 
             // Interactive Buttons
             const themeSelect = document.getElementById('themeSelect');
+            const scanlineToggleBtn = document.getElementById('scanlineToggleBtn');
             const soundToggleBtn = document.getElementById('soundToggleBtn');
             const emergencyBlowBtn = document.getElementById('emergencyBlowBtn');
             const btnFloodBallast = document.getElementById('btnFloodBallast');
@@ -1029,14 +1072,41 @@
                 logMessage(`EMERGENCY MAIN BALLAST BLOW EXECUTED! Ascending at maximum positive buoyancy!`, 'critical');
             });
 
+            // --- CRT THEME & SCANLINE SYSTEM ---
+            let currentTheme = localStorage.getItem('ksubmarine_theme') || 'theme-abyss';
+            let scanlinesEnabled = localStorage.getItem('ksubmarine_scanlines') !== 'false';
+
+            function applyThemeSettings() {
+                themeSelect.value = currentTheme;
+                document.body.className = `${currentTheme} ${scanlinesEnabled ? '' : 'scanlines-off'}`;
+                scanlineToggleBtn.textContent = scanlinesEnabled ? '📺 SCANLINES: ON' : '📺 SCANLINES: OFF';
+                scanlineToggleBtn.classList.toggle('active-toggle', scanlinesEnabled);
+            }
+
             themeSelect.addEventListener('change', (e) => {
-                document.body.className = e.target.value;
+                currentTheme = e.target.value;
+                localStorage.setItem('ksubmarine_theme', currentTheme);
+                applyThemeSettings();
+                playBeep(420, 'sine', 0.08);
+                const themeName = themeSelect.options[themeSelect.selectedIndex].text;
+                logMessage(`Oceanic CRT Phosphor calibrated: ${themeName}.`, 'info');
+            });
+
+            scanlineToggleBtn.addEventListener('click', () => {
+                scanlinesEnabled = !scanlinesEnabled;
+                localStorage.setItem('ksubmarine_scanlines', scanlinesEnabled);
+                applyThemeSettings();
+                playBeep(scanlinesEnabled ? 520 : 320, 'triangle', 0.08);
+                logMessage(`Deep-water CRT scanline raster ${scanlinesEnabled ? 'ENGAGED' : 'BYPASSED'}.`, 'info');
             });
 
             soundToggleBtn.addEventListener('click', () => {
                 soundEnabled = !soundEnabled;
                 soundToggleBtn.textContent = soundEnabled ? '🔊 AUDIO: ON' : '🔇 AUDIO: OFF';
+                playBeep(400, 'sine', 0.06);
             });
+
+            applyThemeSettings();
 
             // --- SIMULATION PHYSICS ENGINE TICK ---
             let lastTime = performance.now();
@@ -1198,6 +1268,53 @@
             const ctx = canvas.getContext('2d');
             let sweepAngle = 0;
 
+            const THEME_PALETTES = {
+                'theme-abyss': {
+                    radarBg: 'rgba(1, 6, 10, 0.20)',
+                    ring: 'rgba(0, 210, 255, 0.20)',
+                    ringText: 'rgba(0, 210, 255, 0.45)',
+                    sweep: '#00f0ff',
+                    ping: '#00f0ff',
+                    vessel: '#34d399',
+                    contactActive: '#00f0ff',
+                    contactDim: 'rgba(0, 210, 255, 0.30)',
+                    textBright: '#e0f2fe'
+                },
+                'theme-emerald': {
+                    radarBg: 'rgba(1, 10, 6, 0.20)',
+                    ring: 'rgba(16, 185, 129, 0.20)',
+                    ringText: 'rgba(16, 185, 129, 0.45)',
+                    sweep: '#10b981',
+                    ping: '#34d399',
+                    vessel: '#34d399',
+                    contactActive: '#34d399',
+                    contactDim: 'rgba(16, 185, 129, 0.30)',
+                    textBright: '#d1fae5'
+                },
+                'theme-amber': {
+                    radarBg: 'rgba(10, 6, 1, 0.20)',
+                    ring: 'rgba(245, 158, 11, 0.20)',
+                    ringText: 'rgba(245, 158, 11, 0.45)',
+                    sweep: '#fbbf24',
+                    ping: '#f59e0b',
+                    vessel: '#34d399',
+                    contactActive: '#fbbf24',
+                    contactDim: 'rgba(245, 158, 11, 0.30)',
+                    textBright: '#fef3c7'
+                },
+                'theme-monochrome': {
+                    radarBg: 'rgba(5, 5, 5, 0.20)',
+                    ring: 'rgba(226, 232, 240, 0.20)',
+                    ringText: 'rgba(203, 213, 225, 0.45)',
+                    sweep: '#f8fafc',
+                    ping: '#e2e8f0',
+                    vessel: '#94a3b8',
+                    contactActive: '#ffffff',
+                    contactDim: 'rgba(148, 163, 184, 0.30)',
+                    textBright: '#ffffff'
+                }
+            };
+
             function resizeCanvas() {
                 canvas.width = canvas.clientWidth * window.devicePixelRatio;
                 canvas.height = canvas.clientHeight * window.devicePixelRatio;
@@ -1212,13 +1329,14 @@
                 const cy = h / 2;
                 const dpr = window.devicePixelRatio || 1;
                 const maxR = Math.min(cx, cy) - 20 * dpr;
+                const palette = THEME_PALETTES[currentTheme] || THEME_PALETTES['theme-abyss'];
 
-                // Dark background with faint persistence trail
-                ctx.fillStyle = 'rgba(1, 6, 10, 0.18)';
+                // Dark background with persistence trail
+                ctx.fillStyle = palette.radarBg;
                 ctx.fillRect(0, 0, w, h);
 
                 // Range rings
-                ctx.strokeStyle = 'rgba(0, 210, 255, 0.18)';
+                ctx.strokeStyle = palette.ring;
                 ctx.lineWidth = 1 * dpr;
                 for (let r = 1; r <= 4; r++) {
                     ctx.beginPath();
@@ -1226,7 +1344,7 @@
                     ctx.stroke();
 
                     // Range text
-                    ctx.fillStyle = 'rgba(0, 210, 255, 0.35)';
+                    ctx.fillStyle = palette.ringText;
                     ctx.font = `${8 * dpr}px monospace`;
                     ctx.fillText(`${r * 500}m`, cx + (maxR / 4) * r - (18 * dpr), cy - 4);
                 }
@@ -1247,7 +1365,7 @@
                 const sweepY = cy + Math.sin(sweepAngle) * maxR;
 
                 // Gradient fan sweep
-                ctx.strokeStyle = '#00f0ff';
+                ctx.strokeStyle = palette.sweep;
                 ctx.lineWidth = 2 * dpr;
                 ctx.beginPath();
                 ctx.moveTo(cx, cy);
@@ -1258,11 +1376,13 @@
                 if (state.isPinging) {
                     state.pingRadius += 4 * dpr;
                     const alpha = Math.max(0, 1 - state.pingRadius / maxR);
-                    ctx.strokeStyle = `rgba(0, 240, 255, ${alpha})`;
+                    ctx.strokeStyle = palette.ping;
+                    ctx.globalAlpha = alpha;
                     ctx.lineWidth = 3.5 * dpr;
                     ctx.beginPath();
                     ctx.arc(cx, cy, state.pingRadius, 0, Math.PI * 2);
                     ctx.stroke();
+                    ctx.globalAlpha = 1.0;
 
                     if (state.pingRadius >= maxR) {
                         state.isPinging = false;
@@ -1272,14 +1392,14 @@
                 }
 
                 // Center Submersible Icon (Vessel dot)
-                ctx.fillStyle = '#34d399';
+                ctx.fillStyle = palette.vessel;
                 ctx.beginPath();
                 ctx.arc(cx, cy, 4.5 * dpr, 0, Math.PI * 2);
                 ctx.fill();
 
                 // Heading arrow
                 const headingRad = (state.heading - 90) * (Math.PI / 180);
-                ctx.strokeStyle = '#34d399';
+                ctx.strokeStyle = palette.vessel;
                 ctx.lineWidth = 2 * dpr;
                 ctx.beginPath();
                 ctx.moveTo(cx, cy);
@@ -1295,22 +1415,22 @@
                     const isSwept = angleDiff < 0.2 || (state.isPinging && Math.abs(state.pingRadius - maxR * c.dist) < 25);
 
                     if (isSwept) {
-                        ctx.fillStyle = '#00f0ff';
-                        ctx.shadowColor = '#00f0ff';
+                        ctx.fillStyle = palette.contactActive;
+                        ctx.shadowColor = palette.contactActive;
                         ctx.shadowBlur = 10;
                         ctx.beginPath();
                         ctx.arc(cX, cY, 5 * dpr, 0, Math.PI * 2);
                         ctx.fill();
                         ctx.shadowBlur = 0;
 
-                        ctx.fillStyle = '#e0f2fe';
+                        ctx.fillStyle = palette.textBright;
                         ctx.font = `bold ${9 * dpr}px monospace`;
                         ctx.fillText(c.label, cX + 8 * dpr, cY - 4 * dpr);
                         ctx.font = `${8 * dpr}px monospace`;
-                        ctx.fillStyle = 'var(--text-dim)';
+                        ctx.fillStyle = palette.ringText;
                         ctx.fillText(`${Math.round(c.dist * 2000)}m`, cX + 8 * dpr, cY + 8 * dpr);
                     } else {
-                        ctx.fillStyle = 'rgba(0, 210, 255, 0.25)';
+                        ctx.fillStyle = palette.contactDim;
                         ctx.beginPath();
                         ctx.arc(cX, cY, 3 * dpr, 0, Math.PI * 2);
                         ctx.fill();
