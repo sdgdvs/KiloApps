@@ -646,13 +646,56 @@
     let projectiles = [];
     let floatingTexts = [];
     let particles = [];
+    let shockwaves = [];
+    let ambientWeather = [];
     let traps = [];
     let lavaPools = [];
-    let screenShake = 0;
+    let shakeIntensity = 0;
+    let shakeAngle = 0;
+    let shakeRot = 0;
+    let borderGlint = 0;
+    let globalFrame = 0;
     let blizzTimer = 0;
     let envArt = [];
     let weatherParticles = [];
     let scorchMarks = [];
+
+    function triggerScreenShake(amt) {
+      shakeIntensity = Math.min(32, shakeIntensity + amt);
+    }
+
+    function initBiomeWeather(mapIdx) {
+      ambientWeather = [];
+      const biomeWeatherThemes = [
+        { type: 'leaf', color: '#4ade80', count: 28, spdX: 0.8, spdY: 0.5, rot: true },       // Forest
+        { type: 'sand', color: '#fde047', count: 35, spdX: 2.2, spdY: 0.3, rot: false },      // Desert
+        { type: 'snow', color: '#e0f2fe', count: 38, spdX: 0.4, spdY: 1.4, rot: true },       // Frozen
+        { type: 'ember', color: '#f97316', count: 32, spdX: -0.3, spdY: -1.2, rot: false },   // Volcanic
+        { type: 'spore', color: '#a855f7', count: 25, spdX: 0.2, spdY: -0.4, rot: true },     // Swamp
+        { type: 'crystal', color: '#c084fc', count: 30, spdX: 0.3, spdY: 0.3, rot: true },    // Crystal
+        { type: 'wisp', color: '#94a3b8', count: 22, spdX: -0.4, spdY: -0.6, rot: true },     // Haunted
+        { type: 'cloud', color: '#ffffff', count: 20, spdX: 1.2, spdY: 0.1, rot: false },     // Sky
+        { type: 'cinder', color: '#ef4444', count: 30, spdX: 0.6, spdY: -1.0, rot: false },   // Dragon's Peak
+        { type: 'void', color: '#818cf8', count: 35, spdX: 0.1, spdY: -0.3, rot: true },      // Void Abyss
+        { type: 'spark', color: '#38bdf8', count: 28, spdX: 1.0, spdY: 1.8, rot: false },     // Thunder Peak
+        { type: 'soul', color: '#d8b4fe', count: 26, spdX: -0.2, spdY: -0.7, rot: true }      // Eldritch Necropolis
+      ];
+      const theme = biomeWeatherThemes[mapIdx % biomeWeatherThemes.length];
+      for (let i = 0; i < theme.count; i++) {
+        ambientWeather.push({
+          x: Math.random() * 800,
+          y: Math.random() * 560,
+          vx: theme.spdX * (0.6 + Math.random() * 0.8),
+          vy: theme.spdY * (0.6 + Math.random() * 0.8),
+          size: 1.5 + Math.random() * 3.5,
+          color: theme.color,
+          rot: Math.random() * Math.PI * 2,
+          rotSpd: theme.rot ? (Math.random() - 0.5) * 0.08 : 0,
+          alpha: 0.3 + Math.random() * 0.5,
+          type: theme.type
+        });
+      }
+    }
 
     function loadMap(idx) {
       currentMapIndex = idx;
@@ -661,7 +704,7 @@
       slots = map.slots.map(s => ({x: s.x, y: s.y, occupied: false, tower: null}));
       
       envArt = [];
-      weatherParticles = [];
+      initBiomeWeather(idx);
       for (let i = 0; i < rawWaypoints.length - 1; i++) {
          let p1 = rawWaypoints[i];
          let p2 = rawWaypoints[i+1];
@@ -1252,28 +1295,142 @@
     }
 
     function spawnAdvancedParticle(x, y, vx, vy, color, life, type, size) {
-      particles.push({x, y, vx, vy, color, life, initialLife: life, type, size});
+      particles.push({x, y, vx, vy, color, life, initialLife: life, type, size, drag: 0.96, gravity: 0.05, rot: 0, rotSpd: 0, growth: 0});
     }
 
     function spawnParticleEffect(x, y, color) {
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 8; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const speed = 1 + Math.random() * 3;
-        spawnAdvancedParticle(x, y, Math.cos(angle) * speed, Math.sin(angle) * speed, color, 15 + Math.random() * 10, 0, 2 + Math.random() * 2);
+        const speed = 1.5 + Math.random() * 3.5;
+        particles.push({
+          x, y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          drag: 0.94,
+          gravity: 0.04,
+          color: color,
+          life: 18 + Math.random() * 12,
+          initialLife: 30,
+          type: 1, // Needle spark
+          size: 2.5 + Math.random() * 1.5,
+          rot: 0, rotSpd: 0, growth: 0
+        });
       }
     }
     
-    function spawnExplosion(x, y, color) {
-        screenShake = 15;
-        spawnAdvancedParticle(x, y, 0, 0, color, 20, 3, 5);
-        spawnParticleEffect(x, y, color);
-        for(let i=0; i<15; i++){
-            spawnAdvancedParticle(x, y, (Math.random()-0.5)*15, (Math.random()-0.5)*15, '#fbbf24', 20+Math.random()*15, 1, 2);
-        }
-        for(let i=0; i<8; i++){
-            let gray = 100 + Math.random()*50;
-            spawnAdvancedParticle(x, y, (Math.random()-0.5)*3, (Math.random()-0.5)*3, `rgb(${gray},${gray},${gray})`, 30+Math.random()*20, 2, 4+Math.random()*3);
-        }
+    function spawnExplosion(x, y, color, intensity = 1.0) {
+      triggerScreenShake(14 * intensity);
+      
+      // Dual-tier concentric shockwaves
+      shockwaves.push({
+        x, y,
+        r: 6,
+        maxR: 75 * intensity,
+        color: color,
+        alpha: 0.9,
+        width: 3.5,
+        life: 22,
+        maxLife: 22
+      });
+      shockwaves.push({
+        x, y,
+        r: 3,
+        maxR: 115 * intensity,
+        color: '#ffffff',
+        alpha: 0.65,
+        width: 1.5,
+        life: 30,
+        maxLife: 30
+      });
+
+      // Layer 1: Incandescent Core Needle Sparks (High speed, drag deceleration, glowing trails)
+      const sparkCount = Math.floor(18 * intensity);
+      for (let i = 0; i < sparkCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const spd = 4.5 + Math.random() * 7.5 * intensity;
+        const sparkColor = Math.random() > 0.4 ? '#fbbf24' : (Math.random() > 0.5 ? '#ffffff' : color);
+        particles.push({
+          x, y,
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd,
+          drag: 0.92,
+          gravity: 0.08,
+          color: sparkColor,
+          life: 20 + Math.random() * 16,
+          initialLife: 36,
+          type: 1, // Needle Spark
+          size: 2.4 + Math.random() * 1.8,
+          rot: 0, rotSpd: 0, growth: -0.05
+        });
+      }
+
+      // Layer 2: Expanding Buoyant Plasma / Smoke Puffs (Negative gravity, expanding radius, opacity fade)
+      const smokeCount = Math.floor(12 * intensity);
+      for (let i = 0; i < smokeCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const spd = 0.8 + Math.random() * 2.2;
+        const grayVal = Math.floor(60 + Math.random() * 90);
+        const smokeCol = Math.random() > 0.6 ? color : `rgb(${grayVal},${grayVal},${grayVal})`;
+        particles.push({
+          x: x + (Math.random() - 0.5) * 12,
+          y: y + (Math.random() - 0.5) * 12,
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd - 0.6,
+          drag: 0.95,
+          gravity: -0.05,
+          color: smokeCol,
+          life: 28 + Math.random() * 22,
+          initialLife: 50,
+          type: 2, // Smoke puff
+          size: 6 + Math.random() * 6,
+          growth: 0.35,
+          rot: 0, rotSpd: 0
+        });
+      }
+
+      // Layer 3: Heavy Kinematic Stone & Armor Shards (Heavy gravity, tumbling rotation, kinetic scatter)
+      const shardCount = Math.floor(10 * intensity);
+      for (let i = 0; i < shardCount; i++) {
+        const angle = -Math.PI * 0.85 + Math.random() * Math.PI * 0.7;
+        const spd = 3.5 + Math.random() * 6.5;
+        particles.push({
+          x, y,
+          vx: Math.cos(angle) * spd + (Math.random() - 0.5) * 2.5,
+          vy: Math.sin(angle) * spd,
+          drag: 0.97,
+          gravity: 0.32,
+          rot: Math.random() * Math.PI * 2,
+          rotSpd: (Math.random() - 0.5) * 0.4,
+          color: Math.random() > 0.5 ? '#64748b' : '#92400e',
+          life: 32 + Math.random() * 24,
+          initialLife: 56,
+          type: 3, // Tumbling Shard
+          size: 4.5 + Math.random() * 4,
+          growth: 0
+        });
+      }
+
+      // Layer 4: Radiant Golden Celebration Energy Stars
+      const starCount = Math.floor(8 * intensity);
+      for (let i = 0; i < starCount; i++) {
+        const angle = (i / starCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+        const spd = 2.5 + Math.random() * 4.5;
+        particles.push({
+          x, y,
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd,
+          drag: 0.93,
+          gravity: 0.02,
+          color: '#ffd700',
+          life: 24 + Math.random() * 16,
+          initialLife: 40,
+          type: 4, // Star
+          size: 3.5 + Math.random() * 2.5,
+          rot: Math.random() * Math.PI,
+          rotSpd: 0.15,
+          growth: -0.05
+        });
+      }
     }
 
     function gameLoop() {
@@ -1825,13 +1982,16 @@
       // Clean up dead enemies
       for (let j = enemies.length - 1; j >= 0; j--) {
         if (enemies[j].hp <= 0) {
-          let reward = 15;
+          let isBoss = (enemies[j].type === 'Ogre' || enemies[j].type === 'Wyvern' || enemies[j].type === 'Golem');
+          let reward = isBoss ? 100 : 15;
           if (enemies[j].type === 'Ogre' || enemies[j].type === 'Wyvern' || enemies[j].type === 'Golem') {
-            reward = 100;
             if (gameMode === 'BossBlitz') {
                bossesKilled++;
                if (bossesKilled > hsBoss) { hsBoss = bossesKilled; localStorage.setItem('kf_hsBoss', hsBoss); }
             }
+            spawnExplosion(enemies[j].x, enemies[j].y, "#fbbf24", 1.8);
+          } else {
+            spawnParticleEffect(enemies[j].x, enemies[j].y, enemies[j].color);
           }
           if (mutators.bloodlust) reward = Math.floor(reward * 1.5);
           gold += reward;
@@ -1840,15 +2000,51 @@
         }
       }
 
-      if (screenShake > 0) screenShake--;
+      // Screen Shake Decay
+      if (shakeIntensity > 0.05) {
+        shakeAngle += 1.8;
+        shakeRot = Math.sin(shakeAngle * 2.3) * shakeIntensity * 0.0018;
+        shakeIntensity *= 0.88;
+      } else {
+        shakeIntensity = 0;
+        shakeRot = 0;
+      }
 
+      // Update Shockwaves
+      for (let i = shockwaves.length - 1; i >= 0; i--) {
+        const sw = shockwaves[i];
+        sw.r += (sw.maxR - sw.r) * 0.22 + 1.2;
+        sw.life--;
+        sw.alpha = (sw.life / sw.maxLife);
+        if (sw.life <= 0) shockwaves.splice(i, 1);
+      }
+
+      // Update Particles
       for (let i = particles.length - 1; i >= 0; i--) {
         const part = particles[i];
         part.x += part.vx;
         part.y += part.vy;
+        part.vx *= (part.drag || 0.96);
+        part.vy *= (part.drag || 0.96);
+        part.vy += (part.gravity || 0);
+        if (part.rotSpd) part.rot = (part.rot || 0) + part.rotSpd;
+        if (part.growth) part.size = Math.max(0.5, part.size + part.growth);
         part.life--;
         if (part.life <= 0) particles.splice(i, 1);
       }
+
+      // Update Ambient Weather
+      globalFrame++;
+      borderGlint = (globalFrame * 3.5) % 2720;
+      ambientWeather.forEach(w => {
+        w.x += w.vx;
+        w.y += w.vy;
+        if (w.rotSpd) w.rot += w.rotSpd;
+        if (w.x < -20) w.x = 820;
+        if (w.x > 820) w.x = -20;
+        if (w.y < -20) w.y = 580;
+        if (w.y > 580) w.y = -20;
+      });
 
       for (let i = floatingTexts.length - 1; i >= 0; i--) {
         const ft = floatingTexts[i];
@@ -1866,6 +2062,7 @@
         gold += waveBonus;
         const rect = canvas.getBoundingClientRect();
         spawnFloatingText(rect.width / 2, rect.height / 2, `WAVE ${wave} CLEAR! +${waveBonus}g`, "#10b981");
+        spawnExplosion(rect.width / 2, rect.height / 2, "#10b981", 1.4);
         
         if (gameMode === 'Endless') {
            if (wave > hsEndless) { hsEndless = wave; localStorage.setItem('kf_hsEndless', hsEndless); }
@@ -1877,193 +2074,562 @@
       }
     }
 
+    function drawFiligreeCorner(cx, cy, size, rot) {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(rot);
+      ctx.strokeStyle = '#fbbf24';
+      ctx.fillStyle = '#fbbf24';
+      ctx.lineWidth = 2.5;
+
+      // Outer L-bracket
+      ctx.beginPath();
+      ctx.moveTo(0, size);
+      ctx.lineTo(0, 0);
+      ctx.lineTo(size, 0);
+      ctx.stroke();
+
+      // Inner decorative tier
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.6)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(5, size - 8);
+      ctx.lineTo(5, 5);
+      ctx.lineTo(size - 8, 5);
+      ctx.stroke();
+
+      // Rivet / Diode Dot
+      ctx.beginPath();
+      ctx.arc(8, 8, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Crenellated Notch
+      ctx.fillStyle = 'rgba(251, 191, 36, 0.8)';
+      ctx.fillRect(-1, -1, 4, 4);
+
+      ctx.restore();
+    }
+
     function render() {
       const rect = canvas.getBoundingClientRect();
       const w = rect.width;
       const h = rect.height;
       const waypoints = getScaledWaypoints();
       const scaledSlots = getScaledSlots();
-
       const map = campaignMaps[currentMapIndex];
 
       ctx.save();
-      if (screenShake > 0) {
-        ctx.translate((Math.random() - 0.5) * 8, (Math.random() - 0.5) * 8);
+      
+      // Continuous Procedural Screen Shake
+      if (shakeIntensity > 0) {
+        const sx = Math.cos(shakeAngle) * shakeIntensity;
+        const sy = Math.sin(shakeAngle * 1.3) * shakeIntensity;
+        ctx.translate(w / 2 + sx, h / 2 + sy);
+        ctx.rotate(shakeRot);
+        ctx.translate(-w / 2, -h / 2);
       }
 
+      // Base Background with subtle radial depth
       ctx.fillStyle = map.bg;
       ctx.fillRect(0, 0, w, h);
+      
+      const grad = ctx.createRadialGradient(w/2, h/2, 50, w/2, h/2, Math.hypot(w, h)/2);
+      grad.addColorStop(0, 'rgba(255,255,255,0.02)');
+      grad.addColorStop(1, 'rgba(0,0,0,0.4)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
 
-      // Environmental Art
+      // Ambient Biome Weather Particles
+      ambientWeather.forEach(p => {
+        const px = p.x * (w / 800);
+        const py = p.y * (h / 560);
+        const sz = p.size * (w / 800);
+        ctx.save();
+        ctx.translate(px, py);
+        if (p.rot) ctx.rotate(p.rot);
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle = p.color;
+        if (p.type === 'leaf') {
+          ctx.beginPath();
+          ctx.ellipse(0, 0, sz * 1.8, sz * 0.9, 0, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (p.type === 'snow' || p.type === 'crystal') {
+          ctx.beginPath();
+          ctx.arc(0, 0, sz, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        } else if (p.type === 'ember' || p.type === 'cinder') {
+          ctx.beginPath();
+          ctx.arc(0, 0, sz * 0.8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#fef08a';
+          ctx.fillRect(-sz*0.3, -sz*0.3, sz*0.6, sz*0.6);
+        } else {
+          ctx.beginPath();
+          ctx.arc(0, 0, sz, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      });
+
+      // Environmental Art (Rocks, Grass tufts, Props)
       envArt.forEach(art => {
          const sx = art.x * (w / 800);
          const sy = art.y * (h / 560);
          const sz = art.size * (w / 800);
-         ctx.fillStyle = art.type === 'rock' ? '#475569' : '#166534';
-         ctx.beginPath(); ctx.arc(sx, sy, sz/2, 0, Math.PI*2); ctx.fill();
+         ctx.save();
+         if (art.type === 'rock') {
+            ctx.fillStyle = '#334155';
+            ctx.beginPath(); ctx.arc(sx, sy, sz/2, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#475569';
+            ctx.beginPath(); ctx.arc(sx - sz*0.15, sy - sz*0.15, sz*0.35, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 1; ctx.stroke();
+         } else {
+            ctx.fillStyle = '#15803d';
+            ctx.beginPath();
+            ctx.moveTo(sx - sz*0.5, sy + sz*0.3);
+            ctx.lineTo(sx, sy - sz*0.6);
+            ctx.lineTo(sx + sz*0.5, sy + sz*0.3);
+            ctx.fill();
+         }
+         ctx.restore();
       });
 
       // Obstacles
-      ctx.font = '20px Segoe UI';
+      ctx.font = '22px Segoe UI';
       ctx.textAlign = 'center';
       map.obs.forEach(o => {
-         ctx.fillText(o.i, o.x * (w / 800), o.y * (h / 560));
+         const ox = o.x * (w / 800);
+         const oy = o.y * (h / 560);
+         ctx.fillStyle = 'rgba(0,0,0,0.35)';
+         ctx.beginPath(); ctx.ellipse(ox, oy + 8, 14, 6, 0, 0, Math.PI*2); ctx.fill();
+         ctx.fillText(o.i, ox, oy);
+      });
+
+      // Scorch Marks
+      scorchMarks.forEach(sm => {
+        ctx.fillStyle = 'rgba(15, 10, 10, 0.45)';
+        ctx.beginPath(); ctx.arc(sm.x, sm.y, sm.radius, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
       });
 
       // Lava Pools
       lavaPools.forEach(lp => {
-        ctx.fillStyle = 'rgba(234, 88, 12, 0.5)';
+        ctx.save();
+        ctx.fillStyle = 'rgba(234, 88, 12, 0.55)';
         ctx.beginPath(); ctx.arc(lp.x, lp.y, lp.radius, 0, Math.PI*2); ctx.fill();
-        ctx.strokeStyle = '#f97316'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.strokeStyle = '#f97316'; ctx.lineWidth = 2.5; ctx.stroke();
+        
+        // Inner magma core
+        ctx.fillStyle = 'rgba(254, 240, 138, 0.4)';
+        ctx.beginPath(); ctx.arc(lp.x, lp.y, lp.radius * 0.55, 0, Math.PI*2); ctx.fill();
+        
+        // Bubbles
+        const bubX = lp.x + Math.sin(globalFrame * 0.1 + lp.x) * (lp.radius * 0.4);
+        const bubY = lp.y + Math.cos(globalFrame * 0.1 + lp.y) * (lp.radius * 0.4);
+        ctx.fillStyle = '#ffedd5';
+        ctx.beginPath(); ctx.arc(bubX, bubY, 3, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
       });
 
       // Traps
       traps.forEach(trp => {
+         ctx.save();
          ctx.beginPath();
          ctx.arc(trp.x, trp.y, trp.radius, 0, Math.PI*2);
          if(trp.type === 'Spike') {
-            ctx.fillStyle = 'rgba(100, 100, 100, 0.5)'; ctx.fill();
-            ctx.fillText('🪤', trp.x, trp.y+6);
+            ctx.fillStyle = 'rgba(100, 116, 139, 0.45)'; ctx.fill();
+            ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5; ctx.stroke();
+            ctx.font = '16px Segoe UI'; ctx.fillText('🪤', trp.x, trp.y+6);
          } else if(trp.type === 'Oil') {
-            ctx.fillStyle = 'rgba(20, 20, 20, 0.7)'; ctx.fill();
-            ctx.fillText('🛢️', trp.x, trp.y+6);
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.75)'; ctx.fill();
+            ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.font = '16px Segoe UI'; ctx.fillText('🛢️', trp.x, trp.y+6);
          } else if(trp.type === 'Barricade') {
-            ctx.fillStyle = 'rgba(139, 69, 19, 0.8)'; ctx.fill();
-            ctx.fillText('🚧', trp.x, trp.y+6);
+            ctx.fillStyle = 'rgba(120, 53, 15, 0.75)'; ctx.fill();
+            ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 1.5; ctx.stroke();
+            ctx.font = '16px Segoe UI'; ctx.fillText('🚧', trp.x, trp.y+6);
          } else if(trp.type === 'Dynamite') {
-            ctx.fillStyle = 'rgba(220, 38, 38, 0.7)'; ctx.fill();
-            ctx.fillText('🧨', trp.x, trp.y+6);
+            ctx.fillStyle = 'rgba(220, 38, 38, 0.65)'; ctx.fill();
+            ctx.strokeStyle = '#fca5a5'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.font = '16px Segoe UI'; ctx.fillText('🧨', trp.x, trp.y+6);
          }
+         ctx.restore();
       });
       
-      // Path
+      // Textured Path
+      ctx.save();
       ctx.beginPath();
       ctx.moveTo(waypoints[0].x, waypoints[0].y);
       for (let i = 1; i < waypoints.length; i++) ctx.lineTo(waypoints[i].x, waypoints[i].y);
       ctx.strokeStyle = map.path;
-      ctx.lineWidth = 42;
+      ctx.lineWidth = 44;
       ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
-      ctx.strokeStyle = '#475569'; ctx.lineWidth = 2; ctx.stroke();
 
-      // Scorch Marks
-      scorchMarks.forEach(sm => {
-        ctx.fillStyle = 'rgba(20, 10, 10, 0.5)';
-        ctx.beginPath(); ctx.arc(sm.x, sm.y, sm.radius, 0, Math.PI*2); ctx.fill();
-      });
+      // Path stone borders
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 42; ctx.stroke();
+      ctx.strokeStyle = map.path; ctx.lineWidth = 38; ctx.stroke();
+      ctx.strokeStyle = '#475569'; ctx.lineWidth = 2.5; ctx.stroke();
+      ctx.restore();
 
-      // Spawn Gate & Castle
+      // Spawn Gate
       const gateP = waypoints[0];
-      ctx.fillStyle = '#991b1b'; ctx.fillRect(gateP.x - 20, gateP.y - 20, 40, 40);
-      ctx.fillStyle = '#ffffff'; ctx.font = '700 10px Segoe UI'; ctx.fillText('GATE', gateP.x, gateP.y + 4);
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.fillRect(gateP.x - 22, gateP.y - 22, 44, 44);
+      ctx.fillStyle = '#7f1d1d'; ctx.fillRect(gateP.x - 20, gateP.y - 20, 40, 40);
+      ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2; ctx.strokeRect(gateP.x - 20, gateP.y - 20, 40, 40);
+      
+      // Iron Portcullis Grille
+      ctx.strokeStyle = '#450a0a'; ctx.lineWidth = 2;
+      for (let gx = -12; gx <= 12; gx += 8) {
+        ctx.beginPath(); ctx.moveTo(gateP.x + gx, gateP.y - 18); ctx.lineTo(gateP.x + gx, gateP.y + 18); ctx.stroke();
+      }
+      ctx.fillStyle = '#ffffff'; ctx.font = '800 10px Segoe UI'; ctx.textAlign = 'center';
+      ctx.fillText('PORTAL', gateP.x, gateP.y + 4);
+      ctx.restore();
 
+      // Castle Keep with Battlements and Fluttering Banners
       const castleP = waypoints[waypoints.length - 1];
-      ctx.fillStyle = '#475569'; ctx.fillRect(castleP.x - 25, castleP.y - 25, 50, 50);
-      ctx.fillStyle = '#ffd700'; ctx.fillText('CASTLE', castleP.x, castleP.y + 4);
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      ctx.fillRect(castleP.x - 28, castleP.y - 28, 58, 58);
+      
+      // Stone Keep Base
+      ctx.fillStyle = '#334155'; ctx.fillRect(castleP.x - 26, castleP.y - 26, 52, 52);
+      ctx.strokeStyle = '#64748b'; ctx.lineWidth = 2; ctx.strokeRect(castleP.x - 26, castleP.y - 26, 52, 52);
+      
+      // Battlements
+      ctx.fillStyle = '#475569';
+      for (let bx = -26; bx < 26; bx += 13) {
+        ctx.fillRect(castleP.x + bx, castleP.y - 30, 8, 6);
+      }
+      
+      // Specular Sheen across castle roof
+      const sheenPos = (globalFrame * 2) % 120 - 40;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(castleP.x - 24, castleP.y - 24, 48, 48);
+      ctx.clip();
+      ctx.fillStyle = 'rgba(255,255,255,0.12)';
+      ctx.beginPath();
+      ctx.moveTo(castleP.x - 30 + sheenPos, castleP.y - 30);
+      ctx.lineTo(castleP.x - 10 + sheenPos, castleP.y - 30);
+      ctx.lineTo(castleP.x - 30 + sheenPos, castleP.y + 30);
+      ctx.fill();
+      ctx.restore();
+
+      // Royal Banner Fluttering
+      const bannerWave = Math.sin(globalFrame * 0.15) * 4;
+      ctx.fillStyle = '#fbbf24';
+      ctx.beginPath();
+      ctx.moveTo(castleP.x + 14, castleP.y - 32);
+      ctx.lineTo(castleP.x + 28 + bannerWave, castleP.y - 27);
+      ctx.lineTo(castleP.x + 14, castleP.y - 22);
+      ctx.fill();
+      ctx.strokeStyle = '#d97706'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(castleP.x + 14, castleP.y - 36); ctx.lineTo(castleP.x + 14, castleP.y - 20); ctx.stroke();
+
+      ctx.fillStyle = '#ffd700'; ctx.font = '800 10px Segoe UI'; ctx.textAlign = 'center';
+      ctx.fillText('FORTRESS', castleP.x, castleP.y + 4);
+      ctx.restore();
 
       // Selected Range Circle
       if (selectedSlotIndex !== -1) {
         const slot = scaledSlots[selectedSlotIndex];
+        ctx.save();
         ctx.beginPath();
         ctx.arc(slot.sx, slot.sy, 130, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(251, 191, 36, 0.08)'; ctx.fill();
-        ctx.strokeStyle = 'rgba(251, 191, 36, 0.8)'; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.85)'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]); ctx.stroke();
+        ctx.restore();
       }
 
       // Solar Beams
       scaledSlots.forEach((slot, index) => {
         const rawSlot = slots[index];
         if (rawSlot.occupied && rawSlot.tower && rawSlot.tower.type === 'SolarBeam' && rawSlot.tower.beamTarget) {
+          ctx.save();
           ctx.beginPath();
           ctx.moveTo(slot.sx, slot.sy);
           ctx.lineTo(rawSlot.tower.beamTarget.x, rawSlot.tower.beamTarget.y);
-          ctx.strokeStyle = '#fef08a';
+          ctx.strokeStyle = 'rgba(254, 240, 138, 0.5)';
+          ctx.lineWidth = 8;
+          ctx.stroke();
+          ctx.strokeStyle = '#ffffff';
           ctx.lineWidth = 3;
           ctx.stroke();
+          ctx.restore();
         }
       });
 
       // Slots & Towers
       scaledSlots.forEach((slot, index) => {
         const rawSlot = slots[index];
+        ctx.save();
+        
+        // Base Pedestal
         ctx.fillStyle = (selectedSlotIndex === index) ? '#334155' : '#1e293b';
         ctx.strokeStyle = (selectedSlotIndex === index) ? '#ffd700' : '#475569';
         ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(slot.sx, slot.sy, 20, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(slot.sx, slot.sy, 21, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+        // Inner step
+        ctx.fillStyle = (selectedSlotIndex === index) ? '#475569' : '#0f172a';
+        ctx.beginPath(); ctx.arc(slot.sx, slot.sy, 16, 0, Math.PI * 2); ctx.fill();
 
         if (rawSlot.occupied && rawSlot.tower) {
           const type = rawSlot.tower.type;
           let icon = '🏹';
-          if (type === 'Mage') icon = '🔮';
-          else if (type === 'Cannon') icon = '💣';
-          else if (type === 'Frost') icon = '❄️';
-          else if (type === 'Tesla') icon = '⚡';
-          else if (type === 'Ballista') icon = '🎯';
-          else if (type === 'Poison') icon = '🧪';
-          else if (type === 'Inferno') icon = '🌋';
-          else if (type === 'Superconductor') icon = '🌩️';
-          else if (type === 'Venomspite') icon = '☣️';
-          else if (type === 'SolarBeam') icon = '☀️';
+          let glowCol = '#fbbf24';
+          if (type === 'Mage') { icon = '🔮'; glowCol = '#d8b4fe'; }
+          else if (type === 'Cannon') { icon = '💣'; glowCol = '#94a3b8'; }
+          else if (type === 'Frost') { icon = '❄️'; glowCol = '#38bdf8'; }
+          else if (type === 'Tesla') { icon = '⚡'; glowCol = '#60a5fa'; }
+          else if (type === 'Ballista') { icon = '🎯'; glowCol = '#f59e0b'; }
+          else if (type === 'Poison') { icon = '🧪'; glowCol = '#22c55e'; }
+          else if (type === 'Inferno') { icon = '🌋'; glowCol = '#f97316'; }
+          else if (type === 'Superconductor') { icon = '🌩️'; glowCol = '#0ea5e9'; }
+          else if (type === 'Venomspite') { icon = '☣️'; glowCol = '#10b981'; }
+          else if (type === 'SolarBeam') { icon = '☀️'; glowCol = '#fef08a'; }
 
-          ctx.font = '16px Segoe UI';
+          // Pulsing aura ring for Fusion Tier 4
+          if (rawSlot.tower.level === 4) {
+            ctx.beginPath();
+            ctx.arc(slot.sx, slot.sy, 22 + Math.sin(globalFrame * 0.15) * 3, 0, Math.PI * 2);
+            ctx.strokeStyle = glowCol;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          }
+
+          ctx.font = '16px Segoe UI'; ctx.textAlign = 'center';
           ctx.fillText(icon, slot.sx, slot.sy + 5);
-          ctx.fillStyle = (rawSlot.tower.level === 4) ? '#fef08a' : '#fbbf24'; ctx.font = '700 9px Segoe UI';
-          ctx.fillText(rawSlot.tower.level === 4 ? 'FUS' : ('L' + rawSlot.tower.level), slot.sx + 12, slot.sy + 12);
+
+          // Level badge
+          ctx.fillStyle = (rawSlot.tower.level === 4) ? '#fef08a' : '#fbbf24';
+          ctx.font = '800 9px Segoe UI';
+          ctx.fillText(rawSlot.tower.level === 4 ? 'FUS' : ('L' + rawSlot.tower.level), slot.sx + 12, slot.sy + 13);
         } else {
-          ctx.fillStyle = '#94a3b8'; ctx.font = '700 14px Segoe UI';
+          ctx.fillStyle = '#94a3b8'; ctx.font = '700 14px Segoe UI'; ctx.textAlign = 'center';
           ctx.fillText('+', slot.sx, slot.sy + 5);
         }
+        ctx.restore();
       });
 
-      // Militia
+      // Militia Squad
       militia.forEach(m => {
-        ctx.fillStyle = '#3b82f6';
-        ctx.fillRect(m.x - 8, m.y - 8, 16, 16);
-        ctx.fillStyle = '#22c55e';
-        ctx.fillRect(m.x - 8, m.y - 12, 16 * (m.hp / m.maxHp), 3);
+        ctx.save();
+        const mBob = Math.sin(globalFrame * 0.2 + m.x) * 1.5;
+        ctx.fillStyle = '#2563eb';
+        ctx.fillRect(m.x - 8, m.y - 8 + mBob, 16, 16);
+        ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 1;
+        ctx.strokeRect(m.x - 8, m.y - 8 + mBob, 16, 16);
+        
+        // Spear
+        ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(m.x + 6, m.y - 12 + mBob); ctx.lineTo(m.x + 6, m.y + 10 + mBob); ctx.stroke();
+
+        // HP bar
+        ctx.fillStyle = '#000'; ctx.fillRect(m.x - 8, m.y - 14 + mBob, 16, 3);
+        ctx.fillStyle = '#22c55e'; ctx.fillRect(m.x - 8, m.y - 14 + mBob, 16 * Math.max(0, m.hp / m.maxHp), 3);
+        ctx.restore();
       });
 
       // Enemies
       enemies.forEach(e => {
-        ctx.fillStyle = e.color;
-        ctx.beginPath(); ctx.arc(e.x, e.y, e.radius, 0, Math.PI*2); ctx.fill();
-        ctx.font = '14px Segoe UI'; ctx.fillText(e.icon, e.x, e.y + 5);
+        ctx.save();
+        const walkBob = Math.sin(globalFrame * 0.25 + e.id * 10) * 2;
+        const isBoss = (e.type === 'Ogre' || e.type === 'Wyvern' || e.type === 'Golem');
 
-        // HP bar
-        const barW = (e.type === 'Ogre' || e.type === 'Wyvern' || e.type === 'Golem') ? 30 : 18;
-        ctx.fillStyle = '#000'; ctx.fillRect(e.x - barW/2, e.y - e.radius - 6, barW, 3);
-        ctx.fillStyle = '#22c55e'; ctx.fillRect(e.x - barW/2, e.y - e.radius - 6, barW * Math.max(0, e.hp / e.maxHp), 3);
+        // Boss Glow Aura
+        if (isBoss) {
+          ctx.beginPath();
+          ctx.arc(e.x, e.y + walkBob, e.radius + 4 + Math.sin(globalFrame * 0.15) * 2, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(239, 68, 68, 0.25)'; ctx.fill();
+          ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 1.5; ctx.stroke();
+        }
+
+        // Base circular shadow & body
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.beginPath(); ctx.ellipse(e.x, e.y + e.radius + 2, e.radius, e.radius * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+
+        ctx.fillStyle = e.color;
+        ctx.beginPath(); ctx.arc(e.x, e.y + walkBob, e.radius, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 1.5; ctx.stroke();
+
+        // Icon representation
+        ctx.font = (isBoss ? '20px' : '15px') + ' Segoe UI';
+        ctx.textAlign = 'center';
+        ctx.fillText(e.icon, e.x, e.y + walkBob + (isBoss ? 7 : 5));
+
+        // HP Bar
+        const barW = isBoss ? 34 : 20;
+        ctx.fillStyle = '#000000'; ctx.fillRect(e.x - barW/2, e.y + walkBob - e.radius - 7, barW, 4);
+        ctx.fillStyle = isBoss ? '#ef4444' : '#22c55e';
+        ctx.fillRect(e.x - barW/2, e.y + walkBob - e.radius - 7, barW * Math.max(0, e.hp / e.maxHp), 4);
+        ctx.strokeStyle = '#475569'; ctx.lineWidth = 0.8;
+        ctx.strokeRect(e.x - barW/2, e.y + walkBob - e.radius - 7, barW, 4);
+        ctx.restore();
       });
 
-      // Hero
+      // Hero Knight
       if (hero.respawnTimer <= 0) {
+        ctx.save();
+        const heroBob = Math.sin(globalFrame * 0.18) * 1.5;
+        
+        // Shield Wall Celestial Sphere
         if (hero.shieldActive > 0) {
-          ctx.beginPath(); ctx.arc(hero.x, hero.y, 22, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(59, 130, 246, 0.3)'; ctx.fill();
-          ctx.strokeStyle = '#60a5fa'; ctx.lineWidth = 2; ctx.stroke();
+          ctx.beginPath(); ctx.arc(hero.x, hero.y + heroBob, 26, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(59, 130, 246, 0.25)'; ctx.fill();
+          ctx.strokeStyle = '#93c5fd'; ctx.lineWidth = 2.5; ctx.stroke();
         }
-        ctx.fillStyle = '#fbbf24'; ctx.fillRect(hero.x - 10, hero.y - 10, 20, 20);
-        ctx.fillStyle = '#000'; ctx.fillRect(hero.x - 10, hero.y - 15, 20, 3);
-        ctx.fillStyle = '#22c55e'; ctx.fillRect(hero.x - 10, hero.y - 15, 20 * (hero.hp / hero.maxHp), 3);
+
+        // Royal Blue Flowing Cape
+        const capeWave = Math.sin(globalFrame * 0.2) * 5;
+        ctx.fillStyle = '#1e40af';
+        ctx.beginPath();
+        ctx.moveTo(hero.x - 9, hero.y - 5 + heroBob);
+        ctx.lineTo(hero.x - 14 + capeWave, hero.y + 16 + heroBob);
+        ctx.lineTo(hero.x - 4 + capeWave, hero.y + 16 + heroBob);
+        ctx.lineTo(hero.x + 1, hero.y - 5 + heroBob);
+        ctx.fill();
+
+        // Golden Armor Body
+        ctx.fillStyle = '#f59e0b'; ctx.fillRect(hero.x - 11, hero.y - 11 + heroBob, 22, 22);
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.strokeRect(hero.x - 11, hero.y - 11 + heroBob, 22, 22);
+
+        // Visor & Winged Helm Crest
+        ctx.fillStyle = '#3b82f6'; ctx.fillRect(hero.x - 6, hero.y - 6 + heroBob, 12, 4);
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath();
+        ctx.moveTo(hero.x, hero.y - 17 + heroBob);
+        ctx.lineTo(hero.x - 6, hero.y - 11 + heroBob);
+        ctx.lineTo(hero.x + 6, hero.y - 11 + heroBob);
+        ctx.fill();
+
+        // Broadsword with Specular Sheen
+        ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(hero.x + 10, hero.y - 14 + heroBob); ctx.lineTo(hero.x + 18, hero.y + 8 + heroBob); ctx.stroke();
+        ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(hero.x + 13, hero.y + 2 + heroBob); ctx.lineTo(hero.x + 17, hero.y - 1 + heroBob); ctx.stroke();
+
+        // Hero HP bar
+        ctx.fillStyle = '#000000'; ctx.fillRect(hero.x - 12, hero.y - 20 + heroBob, 24, 4);
+        ctx.fillStyle = '#22c55e'; ctx.fillRect(hero.x - 12, hero.y - 20 + heroBob, 24 * (hero.hp / hero.maxHp), 4);
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 0.8; ctx.strokeRect(hero.x - 12, hero.y - 20 + heroBob, 24, 4);
+        ctx.restore();
       }
 
       // Projectiles
       projectiles.forEach(p => {
+        ctx.save();
         ctx.fillStyle = p.type === 'Mage' ? '#d8b4fe' : (p.type === 'Poison' || p.type === 'Venomspite' ? '#22c55e' : (p.type === 'Ballista' ? '#fbbf24' : (p.type === 'Inferno' ? '#f97316' : '#ffffff')));
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.isPiercing ? 6 : 4, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.isPiercing ? 6 : 4.5, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.restore();
       });
 
-      // Particles
+      // Shockwaves (Dual-Tier Concentric Ripple Rings)
+      shockwaves.forEach(sw => {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, sw.alpha);
+        ctx.strokeStyle = sw.color;
+        ctx.lineWidth = sw.width;
+        ctx.beginPath();
+        ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      });
+
+      // Multi-Layered Kinematic Particles
       particles.forEach(pt => {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, pt.life / (pt.initialLife || 30));
         ctx.fillStyle = pt.color;
-        ctx.fillRect(pt.x, pt.y, pt.size || 2, pt.size || 2);
+        
+        if (pt.type === 1) {
+          // Needle Spark with velocity trail
+          ctx.strokeStyle = pt.color;
+          ctx.lineWidth = pt.size;
+          ctx.beginPath();
+          ctx.moveTo(pt.x, pt.y);
+          ctx.lineTo(pt.x - pt.vx * 2.2, pt.y - pt.vy * 2.2);
+          ctx.stroke();
+        } else if (pt.type === 2) {
+          // Buoyant Smoke Cloud
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (pt.type === 3) {
+          // Tumbling Shard
+          ctx.translate(pt.x, pt.y);
+          ctx.rotate(pt.rot || 0);
+          ctx.fillRect(-pt.size/2, -pt.size/2, pt.size, pt.size * 0.7);
+        } else if (pt.type === 4) {
+          // Radiant Star
+          ctx.translate(pt.x, pt.y);
+          ctx.rotate(pt.rot || 0);
+          ctx.fillRect(-pt.size/2, -pt.size*0.2, pt.size, pt.size*0.4);
+          ctx.fillRect(-pt.size*0.2, -pt.size/2, pt.size*0.4, pt.size);
+        } else {
+          ctx.fillRect(pt.x, pt.y, pt.size || 2, pt.size || 2);
+        }
+        ctx.restore();
       });
 
       // Floating Texts
       floatingTexts.forEach(ft => {
+        ctx.save();
         ctx.fillStyle = ft.color;
-        ctx.font = '700 12px Segoe UI';
+        ctx.font = '800 13px Segoe UI';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 4;
         ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.restore();
       });
+
+      // Pulsating Perimeter Inlay Border with Traveling Specular Glint
+      ctx.save();
+      const margin = 6;
+      const pW = w - margin * 2;
+      const pH = h - margin * 2;
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(margin, margin, pW, pH);
+
+      // Corner Filigree L-Brackets
+      const filSize = 24;
+      drawFiligreeCorner(margin, margin, filSize, 0);
+      drawFiligreeCorner(margin + pW, margin, filSize, Math.PI / 2);
+      drawFiligreeCorner(margin + pW, margin + pH, filSize, Math.PI);
+      drawFiligreeCorner(margin, margin + pH, filSize, -Math.PI / 2);
+
+      // Specular Glint along perimeter
+      let glintX = margin, glintY = margin;
+      const perim = 2 * (pW + pH);
+      const curGlint = borderGlint % perim;
+      if (curGlint < pW) {
+        glintX = margin + curGlint; glintY = margin;
+      } else if (curGlint < pW + pH) {
+        glintX = margin + pW; glintY = margin + (curGlint - pW);
+      } else if (curGlint < pW * 2 + pH) {
+        glintX = margin + pW - (curGlint - (pW + pH)); glintY = margin + pH;
+      } else {
+        glintX = margin; glintY = margin + pH - (curGlint - (pW * 2 + pH));
+      }
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(glintX, glintY, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(251, 191, 36, 0.7)';
+      ctx.beginPath();
+      ctx.arc(glintX, glintY, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
 
       ctx.restore();
     }

@@ -13,6 +13,17 @@ float custom_sqrtf(float val) {
     return guess;
 }
 
+float custom_sinf(float x) {
+    while (x > 3.14159265f) x -= 6.2831853f;
+    while (x < -3.14159265f) x += 6.2831853f;
+    float x2 = x * x;
+    return x * (1.0f - x2 * (1.0f / 6.0f - x2 * (1.0f / 120.0f - x2 / 5040.0f)));
+}
+
+float custom_cosf(float x) {
+    return custom_sinf(x + 1.57079632f);
+}
+
 #define WINDOW_WIDTH 1024
 #define WINDOW_HEIGHT 700
 #define TIMER_ID 1
@@ -101,15 +112,35 @@ typedef struct {
     BOOL active;
     float x, y;
     float vx, vy;
+    float drag;
+    float gravity;
+    float rot;
+    float rotSpd;
+    float growth;
     COLORREF color;
     int life;
     int initialLife;
-    int type;
+    int type; // 0=default, 1=needle spark, 2=smoke puff, 3=tumbling shard, 4=celebration star
     float size;
 } Particle;
 static Particle g_particles[MAX_PARTICLES];
 
-static int g_screenShake = 0;
+#define MAX_SHOCKWAVES 32
+typedef struct {
+    BOOL active;
+    float x, y;
+    float r;
+    float maxR;
+    COLORREF color;
+    int life;
+    int maxLife;
+    int width;
+} Shockwave;
+static Shockwave g_shockwaves[MAX_SHOCKWAVES];
+
+static float g_shakeIntensity = 0.0f;
+static float g_shakeAngle = 0.0f;
+static int g_globalFrame = 0;
 
 #define MAX_SCORCH_MARKS 64
 typedef struct {
@@ -137,6 +168,11 @@ void SpawnAdvancedParticle(float x, float y, float vx, float vy, COLORREF color,
             g_particles[p].active = TRUE;
             g_particles[p].x = x; g_particles[p].y = y;
             g_particles[p].vx = vx; g_particles[p].vy = vy;
+            g_particles[p].drag = 0.96f;
+            g_particles[p].gravity = 0.05f;
+            g_particles[p].rot = 0.0f;
+            g_particles[p].rotSpd = 0.0f;
+            g_particles[p].growth = 0.0f;
             g_particles[p].color = color;
             g_particles[p].life = life;
             g_particles[p].initialLife = life;
@@ -149,20 +185,152 @@ void SpawnAdvancedParticle(float x, float y, float vx, float vy, COLORREF color,
 
 void SpawnParticleBurst(float x, float y, COLORREF color, int count) {
     for (int i = 0; i < count; i++) {
-        SpawnAdvancedParticle(x, y, ((rand() % 100) - 50) / 15.0f, ((rand() % 100) - 50) / 15.0f, color, 10 + (rand() % 15), 0, 2.0f);
+        float angle = (float)(rand() % 628) / 100.0f;
+        float spd = 1.5f + (rand() % 35) / 10.0f;
+        for (int p = 0; p < MAX_PARTICLES; p++) {
+            if (!g_particles[p].active) {
+                g_particles[p].active = TRUE;
+                g_particles[p].x = x; g_particles[p].y = y;
+                g_particles[p].vx = custom_cosf(angle) * spd;
+                g_particles[p].vy = custom_sinf(angle) * spd;
+                g_particles[p].drag = 0.94f;
+                g_particles[p].gravity = 0.04f;
+                g_particles[p].rot = 0.0f; g_particles[p].rotSpd = 0.0f; g_particles[p].growth = 0.0f;
+                g_particles[p].color = color;
+                g_particles[p].life = 15 + (rand() % 12);
+                g_particles[p].initialLife = g_particles[p].life;
+                g_particles[p].type = 1;
+                g_particles[p].size = 2.5f;
+                break;
+            }
+        }
     }
 }
 
 void SpawnExplosion(float x, float y, COLORREF color) {
-    g_screenShake = 15;
-    SpawnAdvancedParticle(x, y, 0, 0, color, 20, 3, 5.0f);
-    SpawnParticleBurst(x, y, color, 12);
-    for (int i = 0; i < 15; i++) {
-        SpawnAdvancedParticle(x, y, ((rand() % 100) - 50) / 5.0f, ((rand() % 100) - 50) / 5.0f, RGB(255, 200, 50), 20 + rand()%15, 1, 2.0f);
+    g_shakeIntensity = min(32.0f, g_shakeIntensity + 14.0f);
+    
+    // Dual-tier concentric shockwaves
+    for (int i = 0; i < MAX_SHOCKWAVES; i++) {
+        if (!g_shockwaves[i].active) {
+            g_shockwaves[i].active = TRUE;
+            g_shockwaves[i].x = x; g_shockwaves[i].y = y;
+            g_shockwaves[i].r = 6.0f; g_shockwaves[i].maxR = 75.0f;
+            g_shockwaves[i].color = color;
+            g_shockwaves[i].life = 20; g_shockwaves[i].maxLife = 20;
+            g_shockwaves[i].width = 3;
+            break;
+        }
     }
+    for (int i = 0; i < MAX_SHOCKWAVES; i++) {
+        if (!g_shockwaves[i].active) {
+            g_shockwaves[i].active = TRUE;
+            g_shockwaves[i].x = x; g_shockwaves[i].y = y;
+            g_shockwaves[i].r = 3.0f; g_shockwaves[i].maxR = 110.0f;
+            g_shockwaves[i].color = RGB(255, 255, 255);
+            g_shockwaves[i].life = 28; g_shockwaves[i].maxLife = 28;
+            g_shockwaves[i].width = 1;
+            break;
+        }
+    }
+
+    // Layer 1: Incandescent Core Needle Sparks
+    for (int i = 0; i < 18; i++) {
+        float angle = (float)(rand() % 628) / 100.0f;
+        float spd = 4.0f + (rand() % 60) / 10.0f;
+        COLORREF spkCol = (rand() % 10 < 4) ? TEXT_GOLD : ((rand() % 10 < 5) ? RGB(255,255,255) : color);
+        for (int p = 0; p < MAX_PARTICLES; p++) {
+            if (!g_particles[p].active) {
+                g_particles[p].active = TRUE;
+                g_particles[p].x = x; g_particles[p].y = y;
+                g_particles[p].vx = custom_cosf(angle) * spd;
+                g_particles[p].vy = custom_sinf(angle) * spd;
+                g_particles[p].drag = 0.92f;
+                g_particles[p].gravity = 0.08f;
+                g_particles[p].color = spkCol;
+                g_particles[p].life = 20 + rand() % 15;
+                g_particles[p].initialLife = g_particles[p].life;
+                g_particles[p].type = 1;
+                g_particles[p].size = 2.5f;
+                g_particles[p].rot = 0; g_particles[p].rotSpd = 0; g_particles[p].growth = 0;
+                break;
+            }
+        }
+    }
+
+    // Layer 2: Expanding Buoyant Smoke Puffs
+    for (int i = 0; i < 12; i++) {
+        float angle = (float)(rand() % 628) / 100.0f;
+        float spd = 0.8f + (rand() % 20) / 10.0f;
+        int gray = 70 + rand() % 70;
+        COLORREF smkCol = (rand() % 10 < 4) ? color : RGB(gray, gray, gray);
+        for (int p = 0; p < MAX_PARTICLES; p++) {
+            if (!g_particles[p].active) {
+                g_particles[p].active = TRUE;
+                g_particles[p].x = x + (rand() % 10) - 5; g_particles[p].y = y + (rand() % 10) - 5;
+                g_particles[p].vx = custom_cosf(angle) * spd;
+                g_particles[p].vy = custom_sinf(angle) * spd - 0.5f;
+                g_particles[p].drag = 0.95f;
+                g_particles[p].gravity = -0.04f;
+                g_particles[p].color = smkCol;
+                g_particles[p].life = 28 + rand() % 18;
+                g_particles[p].initialLife = g_particles[p].life;
+                g_particles[p].type = 2;
+                g_particles[p].size = 6.0f;
+                g_particles[p].growth = 0.3f;
+                g_particles[p].rot = 0; g_particles[p].rotSpd = 0;
+                break;
+            }
+        }
+    }
+
+    // Layer 3: Heavy Kinematic Shards
+    for (int i = 0; i < 10; i++) {
+        float angle = -2.5f + (float)(rand() % 200) / 100.0f;
+        float spd = 3.0f + (rand() % 50) / 10.0f;
+        COLORREF shdCol = (rand() % 2 == 0) ? RGB(100, 116, 139) : RGB(146, 64, 14);
+        for (int p = 0; p < MAX_PARTICLES; p++) {
+            if (!g_particles[p].active) {
+                g_particles[p].active = TRUE;
+                g_particles[p].x = x; g_particles[p].y = y;
+                g_particles[p].vx = custom_cosf(angle) * spd + (rand()%20 - 10)/10.0f;
+                g_particles[p].vy = custom_sinf(angle) * spd;
+                g_particles[p].drag = 0.97f;
+                g_particles[p].gravity = 0.3f;
+                g_particles[p].color = shdCol;
+                g_particles[p].life = 30 + rand() % 20;
+                g_particles[p].initialLife = g_particles[p].life;
+                g_particles[p].type = 3;
+                g_particles[p].size = 4.0f + rand() % 4;
+                g_particles[p].rot = (float)(rand() % 628) / 100.0f;
+                g_particles[p].rotSpd = (float)(rand() % 40 - 20) / 100.0f;
+                g_particles[p].growth = 0;
+                break;
+            }
+        }
+    }
+
+    // Layer 4: Radiant Celebration Stars
     for (int i = 0; i < 8; i++) {
-        COLORREF smokeCol = RGB(100 + rand()%50, 100 + rand()%50, 100 + rand()%50);
-        SpawnAdvancedParticle(x, y, ((rand() % 100) - 50) / 20.0f, ((rand() % 100) - 50) / 20.0f, smokeCol, 30 + rand()%20, 2, 4.0f + (rand()%3));
+        float angle = ((float)i / 8.0f) * 6.283f;
+        float spd = 2.5f + (rand() % 30) / 10.0f;
+        for (int p = 0; p < MAX_PARTICLES; p++) {
+            if (!g_particles[p].active) {
+                g_particles[p].active = TRUE;
+                g_particles[p].x = x; g_particles[p].y = y;
+                g_particles[p].vx = custom_cosf(angle) * spd;
+                g_particles[p].vy = custom_sinf(angle) * spd;
+                g_particles[p].drag = 0.94f;
+                g_particles[p].gravity = 0.02f;
+                g_particles[p].color = TEXT_GOLD;
+                g_particles[p].life = 22 + rand() % 14;
+                g_particles[p].initialLife = g_particles[p].life;
+                g_particles[p].type = 4;
+                g_particles[p].size = 3.5f;
+                g_particles[p].rot = 0; g_particles[p].rotSpd = 0.15f; g_particles[p].growth = 0;
+                break;
+            }
+        }
     }
 }
 
@@ -328,8 +496,82 @@ typedef struct {
     BOOL active;
     float x, y;
     float vx, vy;
+    COLORREF color;
+    float size;
+    int type;
 } WeatherParticle;
 static WeatherParticle g_weatherParticles[200];
+
+void InitBiomeWeather(int mapIdx) {
+    COLORREF biomeCols[] = {
+        RGB(74, 222, 128),  // Forest
+        RGB(253, 224, 71),  // Desert
+        RGB(224, 242, 254), // Frozen
+        RGB(249, 115, 22),  // Volcanic
+        RGB(168, 85, 247),  // Swamp
+        RGB(192, 132, 252), // Crystal
+        RGB(148, 163, 184), // Haunted
+        RGB(255, 255, 255), // Sky
+        RGB(239, 68, 68),   // Dragon
+        RGB(129, 140, 248), // Void
+        RGB(56, 189, 248),  // Thunder
+        RGB(216, 180, 254)  // Eldritch
+    };
+    COLORREF col = biomeCols[mapIdx % 12];
+    for (int p = 0; p < 80; p++) {
+        g_weatherParticles[p].active = TRUE;
+        g_weatherParticles[p].x = (float)(rand() % 800);
+        g_weatherParticles[p].y = (float)(rand() % 560);
+        g_weatherParticles[p].vx = 0.5f + (rand() % 15) / 10.0f;
+        g_weatherParticles[p].vy = (mapIdx == 3 || mapIdx == 8) ? -(0.8f + (rand() % 15) / 10.0f) : (0.6f + (rand() % 15) / 10.0f);
+        g_weatherParticles[p].color = col;
+        g_weatherParticles[p].size = 2.0f + (rand() % 3);
+        g_weatherParticles[p].type = mapIdx % 12;
+    }
+    for (int p = 80; p < 200; p++) {
+        g_weatherParticles[p].active = FALSE;
+    }
+}
+
+void DrawFiligreeLBracket(HDC hdc, int cx, int cy, int size, int orientation) {
+    HPEN goldPen = CreatePen(PS_SOLID, 2, TEXT_GOLD);
+    HPEN oldP = (HPEN)SelectObject(hdc, goldPen);
+    
+    int dx1 = 0, dy1 = 0, dx2 = 0, dy2 = 0;
+    if (orientation == 0) { // Top-Left
+        dx1 = size; dy1 = 0; dx2 = 0; dy2 = size;
+    } else if (orientation == 1) { // Top-Right
+        dx1 = -size; dy1 = 0; dx2 = 0; dy2 = size;
+    } else if (orientation == 2) { // Bottom-Right
+        dx1 = -size; dy1 = 0; dx2 = 0; dy2 = -size;
+    } else { // Bottom-Left
+        dx1 = size; dy1 = 0; dx2 = 0; dy2 = -size;
+    }
+    
+    // Outer bracket
+    MoveToEx(hdc, cx + dx1, cy, NULL);
+    LineTo(hdc, cx, cy);
+    LineTo(hdc, cx, cy + dy2);
+    
+    // Inner tier line
+    int inOffset = (orientation == 0 || orientation == 3) ? 4 : -4;
+    int inOffsetY = (orientation == 0 || orientation == 1) ? 4 : -4;
+    MoveToEx(hdc, cx + dx1/2 + inOffset, cy + inOffsetY, NULL);
+    LineTo(hdc, cx + inOffset, cy + inOffsetY);
+    LineTo(hdc, cx + inOffset, cy + dy2/2 + inOffsetY);
+    
+    // Diode / Rivet dot
+    HBRUSH goldBrush = CreateSolidBrush(TEXT_GOLD);
+    HBRUSH oldB = (HBRUSH)SelectObject(hdc, goldBrush);
+    int rX = cx + inOffset * 2;
+    int rY = cy + inOffsetY * 2;
+    Ellipse(hdc, rX - 2, rY - 2, rX + 3, rY + 3);
+    
+    SelectObject(hdc, oldB);
+    SelectObject(hdc, oldP);
+    DeleteObject(goldBrush);
+    DeleteObject(goldPen);
+}
 
 void AddFloatingText(float x, float y, const char* txt, COLORREF color) {
     for (int i = 0; i < MAX_FLOATING_TEXTS; i++) {
@@ -495,7 +737,7 @@ void LoadCurrentMap(int bfX, int bfY, int bfW) {
             }
         }
     }
-    for (int i = 0; i < 200; i++) g_weatherParticles[i].active = FALSE;
+    InitBiomeWeather(g_currentMap);
 }
 
 void LoadGame() {
@@ -552,7 +794,7 @@ void InitGameState() {
     g_spawnTimer = 0;
     g_bossesKilled = 0;
     g_blizzTimer = 0;
-    g_screenShake = 0;
+    g_shakeIntensity = 0.0f;
     g_trebuchetCd = 0;
     g_castleBallistaCd = 0;
     g_meteorTimer = 0;
@@ -609,7 +851,7 @@ void SummonMilitia() {
 void TriggerTrebuchetStrike(float targetX, float targetY) {
     if (g_trebuchetCd > 0) return;
     g_trebuchetCd = g_maxTrebuchetCd;
-    g_screenShake = 22;
+    g_shakeIntensity = 24.0f;
     Beep(120, 150); Beep(80, 150);
 
     SpawnExplosion(targetX, targetY, RGB(251, 191, 36));
@@ -1038,8 +1280,8 @@ void UpdateGameLogic() {
                 if (g_hero.shieldActive > 0) dmgToBase = 0;
                 g_baseHp -= dmgToBase;
                 if (dmgToBase > 0) {
-                    if (g_enemies[i].type == ENEMY_OGRE || g_enemies[i].type == ENEMY_WYVERN || g_enemies[i].type == ENEMY_GOLEM) g_screenShake = 15;
-                    else g_screenShake = 5;
+                    if (g_enemies[i].type == ENEMY_OGRE || g_enemies[i].type == ENEMY_WYVERN || g_enemies[i].type == ENEMY_GOLEM) g_shakeIntensity = 18.0f;
+                    else g_shakeIntensity = 8.0f;
                     Beep(100, 100); Beep(80, 100); Beep(180, 60);
                     char dmgBuf[16]; wsprintfA(dmgBuf, "-%d HP", dmgToBase);
                     AddFloatingText(g_enemies[i].x - 15, g_enemies[i].y - 20, dmgBuf, RGB(239, 68, 68));
@@ -1319,27 +1561,32 @@ void UpdateGameLogic() {
         if (!g_particles[p].active) continue;
         g_particles[p].x += g_particles[p].vx;
         g_particles[p].y += g_particles[p].vy;
+        g_particles[p].vx *= g_particles[p].drag;
+        g_particles[p].vy *= g_particles[p].drag;
+        g_particles[p].vy += g_particles[p].gravity;
+        g_particles[p].rot += g_particles[p].rotSpd;
+        g_particles[p].size += g_particles[p].growth;
+        if (g_particles[p].size < 0.5f) g_particles[p].size = 0.5f;
         g_particles[p].life--;
         if (g_particles[p].life <= 0) g_particles[p].active = FALSE;
     }
 
-    if (rand() % 100 < 20) {
-        for (int p = 0; p < 200; p++) {
-            if (!g_weatherParticles[p].active) {
-                g_weatherParticles[p].active = TRUE;
-                g_weatherParticles[p].x = (float)(rand() % WINDOW_WIDTH);
-                g_weatherParticles[p].y = 0.0f;
-                g_weatherParticles[p].vx = -0.5f + (rand() % 10) / 10.0f;
-                g_weatherParticles[p].vy = 2.0f + (rand() % 20) / 10.0f;
-                break;
-            }
-        }
+    for (int i = 0; i < MAX_SHOCKWAVES; i++) {
+        if (!g_shockwaves[i].active) continue;
+        g_shockwaves[i].r += (g_shockwaves[i].maxR - g_shockwaves[i].r) * 0.22f + 1.2f;
+        g_shockwaves[i].life--;
+        if (g_shockwaves[i].life <= 0) g_shockwaves[i].active = FALSE;
     }
-    for (int p = 0; p < 200; p++) {
+
+    g_globalFrame++;
+    for (int p = 0; p < 80; p++) {
         if (g_weatherParticles[p].active) {
             g_weatherParticles[p].x += g_weatherParticles[p].vx;
             g_weatherParticles[p].y += g_weatherParticles[p].vy;
-            if (g_weatherParticles[p].y > WINDOW_HEIGHT - 10) g_weatherParticles[p].active = FALSE;
+            if (g_weatherParticles[p].x < 0) g_weatherParticles[p].x = 800;
+            if (g_weatherParticles[p].x > 800) g_weatherParticles[p].x = 0;
+            if (g_weatherParticles[p].y < 0) g_weatherParticles[p].y = 560;
+            if (g_weatherParticles[p].y > 560) g_weatherParticles[p].y = 0;
         }
     }
 
@@ -1350,7 +1597,12 @@ void UpdateGameLogic() {
         if (g_floatingTexts[f].life <= 0) g_floatingTexts[f].active = FALSE;
     }
 
-    if (g_screenShake > 0) g_screenShake--;
+    if (g_shakeIntensity > 0.05f) {
+        g_shakeAngle += 1.8f;
+        g_shakeIntensity *= 0.88f;
+    } else {
+        g_shakeIntensity = 0.0f;
+    }
 
     if (g_waveActive && g_spawnQueueHead == g_spawnQueueCount && activeEnemyCount == 0) {
         g_waveActive = FALSE;
@@ -1362,6 +1614,7 @@ void UpdateGameLogic() {
         char buf[32];
         wsprintfA(buf, "WAVE CLEAR! +%dg", bonus);
         AddFloatingText((float)(WINDOW_WIDTH / 2 - 50), (float)(WINDOW_HEIGHT / 2), buf, RGB(16, 185, 129));
+        SpawnExplosion((float)(WINDOW_WIDTH / 2 - 50), (float)(WINDOW_HEIGHT / 2), RGB(16, 185, 129));
 
         if (g_gameMode == 1) {
             if (g_wave > g_hsEndless) { g_hsEndless = g_wave; SaveGame(); }
@@ -1419,7 +1672,7 @@ void Render(HDC hdc, HWND hwnd) {
 
     SelectObject(memDC, hFontSub);
     SetTextColor(memDC, TEXT_MUTED);
-    TextOutA(memDC, 150, 26, "Loop 2: Fusions & Siege", 23);
+    TextOutA(memDC, 150, 26, "Loop 6: Citadel Graphics & FX", 29);
 
     SelectObject(memDC, hFontStat);
     char buf[64];
@@ -1451,13 +1704,32 @@ void Render(HDC hdc, HWND hwnd) {
 
     int bfX = 10, bfY = 70, bfW = w - 220, bfH = h - 80;
     
-    if (g_screenShake > 0) {
-        bfX += (rand() % 11) - 5;
-        bfY += (rand() % 11) - 5;
+    // Continuous Physics-Decay Screen Shake
+    if (g_shakeIntensity > 0.0f) {
+        bfX += (int)(custom_cosf(g_shakeAngle) * g_shakeIntensity);
+        bfY += (int)(custom_sinf(g_shakeAngle * 1.3f) * g_shakeIntensity);
     }
     
     DrawRoundedRect(memDC, bfX, bfY, bfX + bfW, bfY + bfH, g_maps[g_currentMap].bg, BORDER_COLOR, 8);
 
+    // Ambient Weather Particles
+    for (int p = 0; p < 80; p++) {
+        if (g_weatherParticles[p].active) {
+            int wx = bfX + (int)g_weatherParticles[p].x;
+            int wy = bfY + (int)g_weatherParticles[p].y;
+            int wsz = (int)g_weatherParticles[p].size;
+            if (wx >= bfX && wx <= bfX + bfW && wy >= bfY && wy <= bfY + bfH) {
+                HBRUSH wB = CreateSolidBrush(g_weatherParticles[p].color);
+                HPEN wP = CreatePen(PS_NULL, 0, 0);
+                HBRUSH oB = (HBRUSH)SelectObject(memDC, wB); HPEN oP = (HPEN)SelectObject(memDC, wP);
+                Ellipse(memDC, wx - wsz, wy - wsz, wx + wsz, wy + wsz);
+                SelectObject(memDC, oB); SelectObject(memDC, oP);
+                DeleteObject(wB); DeleteObject(wP);
+            }
+        }
+    }
+
+    // Environmental Art (Rocks, Trees, Props)
     for (int i = 0; i < g_envArtCount; i++) {
         int ex = (int)g_envArt[i].x;
         int ey = (int)g_envArt[i].y;
@@ -1494,7 +1766,7 @@ void Render(HDC hdc, HWND hwnd) {
         pts[i].y = g_waypoints[i].y;
     }
 
-    HPEN pathPen = CreatePen(PS_SOLID, 42, g_maps[g_currentMap].path);
+    HPEN pathPen = CreatePen(PS_SOLID, 44, g_maps[g_currentMap].path);
     HPEN oldPen = (HPEN)SelectObject(memDC, pathPen);
     Polyline(memDC, pts, MAX_WAYPOINTS);
 
@@ -1514,8 +1786,13 @@ void Render(HDC hdc, HWND hwnd) {
             HPEN lpP = CreatePen(PS_SOLID, 2, RGB(251, 146, 60));
             HBRUSH ob = (HBRUSH)SelectObject(memDC, lpB); HPEN op = (HPEN)SelectObject(memDC, lpP);
             Ellipse(memDC, (int)(lx - lr), (int)(ly - lr), (int)(lx + lr), (int)(ly + lr));
+            
+            // Inner Core
+            HBRUSH icB = CreateSolidBrush(RGB(254, 240, 138));
+            SelectObject(memDC, icB);
+            Ellipse(memDC, (int)(lx - lr*0.5f), (int)(ly - lr*0.5f), (int)(lx + lr*0.5f), (int)(ly + lr*0.5f));
             SelectObject(memDC, ob); SelectObject(memDC, op);
-            DeleteObject(lpB); DeleteObject(lpP);
+            DeleteObject(icB); DeleteObject(lpB); DeleteObject(lpP);
         }
     }
 
@@ -1549,11 +1826,17 @@ void Render(HDC hdc, HWND hwnd) {
         DeleteObject(glowPen);
     }
 
+    // Portal Spawn Gate
     DrawRoundedRect(memDC, g_waypoints[0].x - 22, g_waypoints[0].y - 22, g_waypoints[0].x + 22, g_waypoints[0].y + 22, RGB(180, 40, 40), RGB(239, 68, 68), 6);
     SetTextColor(memDC, TEXT_WHITE);
     TextOutA(memDC, g_waypoints[0].x - 14, g_waypoints[0].y - 6, "GATE", 4);
 
+    // Fortress Castle Keep with battlements and banner
     DrawRoundedRect(memDC, g_waypoints[5].x - 30, g_waypoints[5].y - 30, g_waypoints[5].x + 35, g_waypoints[5].y + 35, CASTLE_COLOR, TEXT_GOLD, 8);
+    // Battlements
+    for (int bx = -28; bx < 30; bx += 14) {
+        DrawRoundedRect(memDC, g_waypoints[5].x + bx, g_waypoints[5].y - 34, g_waypoints[5].x + bx + 8, g_waypoints[5].y - 28, RGB(100, 116, 139), TEXT_GOLD, 1);
+    }
     SetTextColor(memDC, TEXT_GOLD);
     TextOutA(memDC, g_waypoints[5].x - 24, g_waypoints[5].y - 8, "CASTLE", 6);
 
@@ -1656,12 +1939,13 @@ void Render(HDC hdc, HWND hwnd) {
         if (!g_militia[m].active) continue;
         int mx = (int)g_militia[m].x;
         int my = (int)g_militia[m].y;
-        DrawRoundedRect(memDC, mx - 8, my - 8, mx + 8, my + 8, RGB(59, 130, 246), TEXT_GOLD, 3);
+        int mBob = (int)(custom_sinf(g_globalFrame * 0.2f + m) * 1.5f);
+        DrawRoundedRect(memDC, mx - 8, my - 8 + mBob, mx + 8, my + 8 + mBob, RGB(59, 130, 246), TEXT_GOLD, 3);
         
         float mRatio = g_militia[m].hp / g_militia[m].maxHp;
-        DrawRoundedRect(memDC, mx - 10, my - 14, mx + 10, my - 11, RGB(20,20,20), RGB(0,0,0), 0);
+        DrawRoundedRect(memDC, mx - 10, my - 14 + mBob, mx + 10, my - 11 + mBob, RGB(20,20,20), RGB(0,0,0), 0);
         HBRUSH mHpB = CreateSolidBrush(RGB(34, 197, 94));
-        RECT mHpR = { mx - 10, my - 14, mx - 10 + (int)(20 * mRatio), my - 11 };
+        RECT mHpR = { mx - 10, my - 14 + mBob, mx - 10 + (int)(20 * mRatio), my - 11 + mBob };
         FillRect(memDC, &mHpR, mHpB); DeleteObject(mHpB);
     }
 
@@ -1672,6 +1956,7 @@ void Render(HDC hdc, HWND hwnd) {
         int ey = (int)g_enemies[e].y;
         int r = g_enemies[e].radius;
         int t = g_enemies[e].type;
+        int walkBob = (int)(custom_sinf(g_globalFrame * 0.25f + e) * 2.0f);
 
         HBRUSH eB = NULL; HPEN eP = CreatePen(PS_SOLID, 1, RGB(15, 23, 42));
         if (t == ENEMY_GOBLIN) eB = CreateSolidBrush(RGB(22, 163, 74));
@@ -1684,29 +1969,42 @@ void Render(HDC hdc, HWND hwnd) {
         else if (t == ENEMY_WYVERN) eB = CreateSolidBrush(RGB(185, 28, 28));
         else if (t == ENEMY_GOLEM) eB = CreateSolidBrush(RGB(51, 65, 85));
 
+        // Boss aura
+        if (t == ENEMY_OGRE || t == ENEMY_WYVERN || t == ENEMY_GOLEM) {
+            HPEN bossPen = CreatePen(PS_SOLID, 2, RGB(239, 68, 68));
+            HBRUSH oB = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
+            HPEN oP = (HPEN)SelectObject(memDC, bossPen);
+            Ellipse(memDC, ex - r - 4, ey + walkBob - r - 4, ex + r + 4, ey + walkBob + r + 4);
+            SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(bossPen);
+        }
+
         HBRUSH oldB = (HBRUSH)SelectObject(memDC, eB);
         HPEN oldP = (HPEN)SelectObject(memDC, eP);
-        Ellipse(memDC, ex - r, ey - r, ex + r, ey + r);
+        Ellipse(memDC, ex - r, ey + walkBob - r, ex + r, ey + walkBob + r);
         SelectObject(memDC, oldB); SelectObject(memDC, oldP);
         DeleteObject(eB); DeleteObject(eP);
 
         int barW = (t == ENEMY_OGRE || t == ENEMY_WYVERN || t == ENEMY_GOLEM) ? 36 : 22;
         float hpRatio = (float)g_enemies[e].hp / (float)g_enemies[e].maxHp;
-        DrawRoundedRect(memDC, ex - barW/2, ey - r - 8, ex + barW/2, ey - r - 4, RGB(20,20,20), RGB(0,0,0), 0);
+        DrawRoundedRect(memDC, ex - barW/2, ey + walkBob - r - 8, ex + barW/2, ey + walkBob - r - 4, RGB(20,20,20), RGB(0,0,0), 0);
         HBRUSH hpB = CreateSolidBrush(RGB(239, 68, 68));
-        RECT hpR = { ex - barW/2, ey - r - 8, ex - barW/2 + (int)(barW * hpRatio), ey - r - 4 };
+        RECT hpR = { ex - barW/2, ey + walkBob - r - 8, ex - barW/2 + (int)(barW * hpRatio), ey + walkBob - r - 4 };
         FillRect(memDC, &hpR, hpB); DeleteObject(hpB);
     }
 
     if (g_hero.respawnTimer <= 0) {
+        int heroBob = (int)(custom_sinf(g_globalFrame * 0.18f) * 1.5f);
         if (g_hero.shieldActive > 0) {
             HPEN shP = CreatePen(PS_SOLID, 2, RGB(96, 165, 250));
             HBRUSH oB = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
             HPEN oP = (HPEN)SelectObject(memDC, shP);
-            Ellipse(memDC, (int)g_hero.x - 22, (int)g_hero.y - 22, (int)g_hero.x + 22, (int)g_hero.y + 22);
+            Ellipse(memDC, (int)g_hero.x - 24, (int)g_hero.y + heroBob - 24, (int)g_hero.x + 24, (int)g_hero.y + heroBob + 24);
             SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(shP);
         }
-        DrawRoundedRect(memDC, (int)g_hero.x - 12, (int)g_hero.y - 12, (int)g_hero.x + 12, (int)g_hero.y + 12, TEXT_GOLD, RGB(255,255,255), 4);
+        // Cape
+        DrawRoundedRect(memDC, (int)g_hero.x - 14, (int)g_hero.y + heroBob - 4, (int)g_hero.x - 8, (int)g_hero.y + heroBob + 16, RGB(30, 64, 175), RGB(59, 130, 246), 2);
+        // Armor Body
+        DrawRoundedRect(memDC, (int)g_hero.x - 12, (int)g_hero.y + heroBob - 12, (int)g_hero.x + 12, (int)g_hero.y + heroBob + 12, TEXT_GOLD, RGB(255,255,255), 4);
     }
 
     for (int i = 0; i < g_slotCount; i++) {
@@ -1746,6 +2044,81 @@ void Render(HDC hdc, HWND hwnd) {
         SelectObject(memDC, oB); SelectObject(memDC, oP);
         DeleteObject(prjB); DeleteObject(prjP);
     }
+
+    // Shockwaves
+    for (int i = 0; i < MAX_SHOCKWAVES; i++) {
+        if (!g_shockwaves[i].active) continue;
+        int sx = (int)g_shockwaves[i].x;
+        int sy = (int)g_shockwaves[i].y;
+        int sr = (int)g_shockwaves[i].r;
+        HPEN swPen = CreatePen(PS_SOLID, g_shockwaves[i].width, g_shockwaves[i].color);
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
+        HPEN oP = (HPEN)SelectObject(memDC, swPen);
+        Ellipse(memDC, sx - sr, sy - sr, sx + sr, sy + sr);
+        SelectObject(memDC, oB); SelectObject(memDC, oP);
+        DeleteObject(swPen);
+    }
+
+    // Kinematic Multi-Layered Particles
+    for (int p = 0; p < MAX_PARTICLES; p++) {
+        if (!g_particles[p].active) continue;
+        int px = (int)g_particles[p].x;
+        int py = (int)g_particles[p].y;
+        int sz = (int)g_particles[p].size;
+        if (sz < 1) sz = 1;
+
+        if (g_particles[p].type == 1) { // Needle Spark
+            HPEN spkPen = CreatePen(PS_SOLID, sz, g_particles[p].color);
+            HPEN oP = (HPEN)SelectObject(memDC, spkPen);
+            MoveToEx(memDC, px, py, NULL);
+            LineTo(memDC, px - (int)(g_particles[p].vx * 2.0f), py - (int)(g_particles[p].vy * 2.0f));
+            SelectObject(memDC, oP); DeleteObject(spkPen);
+        } else if (g_particles[p].type == 2) { // Smoke
+            HBRUSH smkB = CreateSolidBrush(g_particles[p].color);
+            HPEN smkP = CreatePen(PS_NULL, 0, 0);
+            HBRUSH oB = (HBRUSH)SelectObject(memDC, smkB); HPEN oP = (HPEN)SelectObject(memDC, smkP);
+            Ellipse(memDC, px - sz, py - sz, px + sz, py + sz);
+            SelectObject(memDC, oB); SelectObject(memDC, oP);
+            DeleteObject(smkB); DeleteObject(smkP);
+        } else if (g_particles[p].type == 3) { // Shard
+            HBRUSH shdB = CreateSolidBrush(g_particles[p].color);
+            HPEN shdP = CreatePen(PS_SOLID, 1, RGB(0,0,0));
+            HBRUSH oB = (HBRUSH)SelectObject(memDC, shdB); HPEN oP = (HPEN)SelectObject(memDC, shdP);
+            Rectangle(memDC, px - sz/2, py - sz/2, px + sz/2, py + sz/2);
+            SelectObject(memDC, oB); SelectObject(memDC, oP);
+            DeleteObject(shdB); DeleteObject(shdP);
+        } else { // Star / Default
+            HBRUSH stB = CreateSolidBrush(g_particles[p].color);
+            HPEN stP = CreatePen(PS_NULL, 0, 0);
+            HBRUSH oB = (HBRUSH)SelectObject(memDC, stB); HPEN oP = (HPEN)SelectObject(memDC, stP);
+            Rectangle(memDC, px - sz, py - sz/3, px + sz, py + sz/3);
+            Rectangle(memDC, px - sz/3, py - sz, px + sz/3, py + sz);
+            SelectObject(memDC, oB); SelectObject(memDC, oP);
+            DeleteObject(stB); DeleteObject(stP);
+        }
+    }
+
+    // Corner Filigree L-Brackets on Battlefield
+    DrawFiligreeLBracket(memDC, bfX + 4, bfY + 4, 18, 0);
+    DrawFiligreeLBracket(memDC, bfX + bfW - 4, bfY + 4, 18, 1);
+    DrawFiligreeLBracket(memDC, bfX + bfW - 4, bfY + bfH - 4, 18, 2);
+    DrawFiligreeLBracket(memDC, bfX + 4, bfY + bfH - 4, 18, 3);
+
+    // Traveling Specular Glint along battlefield perimeter
+    int glintPerim = 2 * (bfW + bfH);
+    int glintPos = (g_globalFrame * 4) % glintPerim;
+    int gx = bfX, gy = bfY;
+    if (glintPos < bfW) { gx = bfX + glintPos; gy = bfY; }
+    else if (glintPos < bfW + bfH) { gx = bfX + bfW; gy = bfY + (glintPos - bfW); }
+    else if (glintPos < bfW * 2 + bfH) { gx = bfX + bfW - (glintPos - (bfW + bfH)); gy = bfY + bfH; }
+    else { gx = bfX; gy = bfY + bfH - (glintPos - (bfW * 2 + bfH)); }
+    
+    HBRUSH glintB = CreateSolidBrush(RGB(255, 255, 255));
+    HPEN glintP = CreatePen(PS_SOLID, 1, TEXT_GOLD);
+    HBRUSH ogB = (HBRUSH)SelectObject(memDC, glintB); HPEN ogP = (HPEN)SelectObject(memDC, glintP);
+    Ellipse(memDC, gx - 3, gy - 3, gx + 4, gy + 4);
+    SelectObject(memDC, ogB); SelectObject(memDC, ogP);
+    DeleteObject(glintB); DeleteObject(glintP);
 
     for (int i = 0; i < MAX_FLOATING_TEXTS; i++) {
         if (g_floatingTexts[i].active) {
