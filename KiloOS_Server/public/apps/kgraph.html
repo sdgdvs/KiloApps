@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KGraph - Advanced Function Plotter & Calculus Suite</title>
+<title>KGraph - Advanced Function, Polar & Parametric Graphing Suite</title>
 <style>
   * {
     box-sizing: border-box;
@@ -14,6 +14,9 @@
     background: #0f111a;
     color: #e2e8f0;
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
     height: 100vh;
     display: flex;
     flex-direction: column;
@@ -114,6 +117,7 @@
   /* Sidebar Panels */
   .sidebar {
     width: 380px;
+    flex-shrink: 0;
     background: rgba(19, 23, 36, 0.95);
     border-right: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
@@ -122,6 +126,39 @@
     transition: width 0.3s ease;
   }
   
+  /* Mode Selector Switcher Bar */
+  .mode-bar {
+    display: flex;
+    padding: 8px 12px;
+    gap: 6px;
+    background: rgba(15, 17, 26, 0.95);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .mode-btn {
+    flex: 1;
+    padding: 7px 4px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+  }
+  .mode-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #f1f5f9;
+  }
+  .mode-btn.active {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(79, 70, 229, 0.3));
+    border-color: #38bdf8;
+    color: #38bdf8;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+  }
+
   .tab-nav {
     display: flex;
     background: rgba(15, 17, 26, 0.8);
@@ -217,6 +254,10 @@
   .input-row {
     display: flex;
     gap: 6px;
+    margin-bottom: 4px;
+  }
+  .input-row:last-child {
+    margin-bottom: 0;
   }
   .func-input {
     flex: 1;
@@ -277,6 +318,10 @@
     font-size: 12px;
     outline: none;
   }
+  .field-select option {
+    background: #0f172a;
+    color: #fff;
+  }
   
   .calc-result-box {
     background: rgba(15, 23, 42, 0.9);
@@ -311,10 +356,19 @@
   }
   
   /* Preset Items */
+  .preset-cat-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #38bdf8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 10px 0 6px 0;
+  }
   .preset-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
+    margin-bottom: 12px;
   }
   .preset-card {
     background: rgba(30, 41, 59, 0.5);
@@ -420,25 +474,146 @@
     background: rgba(255, 255, 255, 0.2);
   }
   
-  /* Error Toast */
-  .toast-err {
+  /* Toast Message */
+  .toast-msg {
     position: absolute;
     bottom: 16px;
     left: 16px;
-    background: rgba(239, 68, 68, 0.9);
-    color: #fff;
-    padding: 8px 14px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    background: rgba(19, 23, 36, 0.95);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    color: #f1f5f9;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 12px rgba(56, 189, 248, 0.15);
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform: translateY(8px);
     pointer-events: none;
-    z-index: 6;
+    z-index: 20;
+    white-space: pre-line;
+    line-height: 1.5;
+    backdrop-filter: blur(8px);
   }
-  .toast-err.visible {
+  .toast-msg.visible {
     opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Help Modal Dialog */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .modal-dialog {
+    background: #131724;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 12px;
+    width: 680px;
+    max-width: 92vw;
+    max-height: 85vh;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(56, 189, 248, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: scale(0.96);
+    transition: transform 0.25s ease;
+  }
+  .modal-overlay.active .modal-dialog {
+    transform: scale(1);
+  }
+  .modal-header {
+    background: rgba(30, 41, 59, 0.7);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 22px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color 0.2s;
+  }
+  .modal-close:hover {
+    color: #f43f5e;
+  }
+  .modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #cbd5e1;
+  }
+  .shortcut-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 18px 0;
+  }
+  .shortcut-table th {
+    text-align: left;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.04);
+    color: #38bdf8;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .shortcut-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .kbd-key {
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: #38bdf8;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 11px;
+    display: inline-block;
+  }
+  .help-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 14px 0 6px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 </style>
 </head>
@@ -458,7 +633,8 @@
         📂 Load Config
         <input type="file" id="jsonInput" accept=".json" style="display:none" onchange="importJSON(event)">
       </label>
-      <button class="btn btn-primary" onclick="replotAll()">▶ Plot</button>
+      <button class="btn" onclick="openHelpModal()">❓ Help (F1)</button>
+      <button class="btn btn-primary" onclick="replotAll()">▶ Plot [Enter]</button>
     </div>
   </div>
 
@@ -467,16 +643,30 @@
     
     <!-- Sidebar Navigation -->
     <div class="sidebar">
+      
+      <!-- Plot Mode Selector Bar -->
+      <div class="mode-bar">
+        <div class="mode-btn active" id="modeBtn_cartesian" onclick="setPlotMode('cartesian')">[C] y(x) Cartesian</div>
+        <div class="mode-btn" id="modeBtn_polar" onclick="setPlotMode('polar')">[P] r(θ) Polar</div>
+        <div class="mode-btn" id="modeBtn_parametric" onclick="setPlotMode('parametric')">[M] (x,y)(t) Parametric</div>
+      </div>
+
       <div class="tab-nav">
-        <div class="tab-btn active" onclick="switchTab('tabFuncs')">Functions</div>
-        <div class="tab-btn" onclick="switchTab('tabCalc')">Calculus</div>
-        <div class="tab-btn" onclick="switchTab('tabRoots')">Analysis</div>
-        <div class="tab-btn" onclick="switchTab('tabPresets')">Presets</div>
+        <div class="tab-btn active" onclick="switchTab('tabFuncs')">[1] Functions</div>
+        <div class="tab-btn" onclick="switchTab('tabCalc')">[2] Calculus</div>
+        <div class="tab-btn" onclick="switchTab('tabRoots')">[3] Analysis</div>
+        <div class="tab-btn" onclick="switchTab('tabPresets')">[4] Presets</div>
       </div>
       
       <!-- Functions Tab -->
       <div class="tab-content active" id="tabFuncs">
-        <div class="section-title">Functions (y1 - y5)</div>
+        <div class="section-title" id="funcsSectionTitle">Functions (y1 - y5)</div>
+        
+        <!-- Mode Options Bar -->
+        <div class="control-group" id="modeSettingsContainer">
+          <!-- Dynamic settings per mode -->
+        </div>
+
         <div id="funcList"></div>
       </div>
       
@@ -555,8 +745,8 @@
       
       <!-- Presets Tab -->
       <div class="tab-content" id="tabPresets">
-        <div class="section-title">Function Presets</div>
-        <div class="preset-grid" id="presetGrid"></div>
+        <div class="section-title">Preset Library</div>
+        <div id="presetGrid"></div>
       </div>
       
     </div>
@@ -567,7 +757,7 @@
       
       <!-- Floating Readout -->
       <div class="cursor-readout" id="cursorReadout">
-        <div class="readout-line">
+        <div class="readout-line" id="readoutHeaderLine">
           <span>x:</span> <span class="readout-val" id="readoutX">0.000</span>
         </div>
         <div id="readoutYList"></div>
@@ -580,26 +770,102 @@
         <button class="tool-btn" onclick="resetView()" title="Reset View">⟲</button>
       </div>
       
-      <!-- Error Toast -->
-      <div class="toast-err" id="toastErr"></div>
+      <!-- Toast -->
+      <div class="toast-msg" id="toastMsg"></div>
     </div>
     
   </div>
 
+  <!-- Help Modal Dialog -->
+  <div class="modal-overlay" id="helpModal" onclick="if(event.target===this)closeHelpModal()">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>📈</span>
+          <span>KGraph Studio — Help & Reference Guide</span>
+        </div>
+        <button class="modal-close" onclick="closeHelpModal()" title="Close (Esc)">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="help-section-title">⌨️ Keyboard Shortcuts</div>
+        <table class="shortcut-table">
+          <thead>
+            <tr><th>Shortcut</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="kbd-key">F1</span> / <span class="kbd-key">H</span></td><td>Toggle this Help & Reference guide</td></tr>
+            <tr><td><span class="kbd-key">Enter</span> (in input)</td><td>Immediately plot / re-evaluate expressions</td></tr>
+            <tr><td><span class="kbd-key">1</span> / <span class="kbd-key">2</span> / <span class="kbd-key">3</span> / <span class="kbd-key">4</span></td><td>Switch tabs: Functions, Calculus, Analysis, Presets</td></tr>
+            <tr><td><span class="kbd-key">C</span> / <span class="kbd-key">P</span> / <span class="kbd-key">M</span></td><td>Switch plot modes: [C]artesian, [P]olar, Para[M]etric</td></tr>
+            <tr><td><span class="kbd-key">+</span> / <span class="kbd-key">-</span></td><td>Zoom viewport in / out</td></tr>
+            <tr><td><span class="kbd-key">0</span> / <span class="kbd-key">R</span></td><td>Reset viewport to default [-10, 10] range</td></tr>
+            <tr><td><span class="kbd-key">Esc</span></td><td>Close any active modal dialog</td></tr>
+          </tbody>
+        </table>
+
+        <div class="help-section-title">🖱️ Canvas & Mouse Navigation</div>
+        <table class="shortcut-table">
+          <tbody>
+            <tr><td><strong>Left Click & Drag</strong></td><td>Pan and move the graph viewport dynamically</td></tr>
+            <tr><td><strong>Mouse Scroll Wheel</strong></td><td>Smoothly zoom in / out at current center</td></tr>
+            <tr><td><strong>Cursor Hover</strong></td><td>Crosshair coordinate readout + real-time numerical derivative $f'(x)$</td></tr>
+            <tr><td><strong>Click Root / Intersection</strong></td><td>Auto-centers viewport on that computed solution point</td></tr>
+          </tbody>
+        </table>
+
+        <div class="help-section-title">📐 Supported Math & Functions</div>
+        <p style="margin-bottom:8px;">Standard arithmetic (<span class="kbd-key">+</span>, <span class="kbd-key">-</span>, <span class="kbd-key">*</span>, <span class="kbd-key">/</span>, <span class="kbd-key">^</span>) with implicit multiplication (e.g. <code>3x</code>, <code>2(x+1)</code>, <code>sin(x)cos(x)</code>):</p>
+        <p style="font-family:monospace; background:rgba(0,0,0,0.3); padding:8px; border-radius:6px; font-size:12px; line-height:1.8;">
+          • Trigonometric: sin(x), cos(x), tan(x), asin(x), acos(x), atan(x)<br>
+          • Exponential & Log: exp(x), log(x), ln(x), sqrt(x), abs(x)<br>
+          • Utility: floor(x), ceil(x), round(x), min(a,b), max(a,b)<br>
+          • Constants: PI (3.14159...), E (2.71828...)<br>
+          • Variables: x (Cartesian), θ or th or t (Polar/Parametric)
+        </p>
+
+        <div class="help-section-title">🔬 Calculus & Root Finding Features</div>
+        <p>• <strong>Calculus Tab:</strong> Computes instantaneous numerical derivative $f'(x_0)$ and definite integral $\int_a^b f(x)dx$ using composite Simpson's rule with shaded graph visualization.<br>
+        • <strong>Analysis Tab:</strong> Performs bisection root finding and finds intersection points between curves in the current view.</p>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // Configuration & Data State
+    // --- Data State & Configuration ---
     const FUNC_COLORS = ['#38bdf8', '#34d399', '#f43f5e', '#a855f7', '#fbbf24'];
-    const FUNC_NAMES = ['y1', 'y2', 'y3', 'y4', 'y5'];
     
-    let functions = [
+    let currentMode = 'cartesian'; // 'cartesian' | 'polar' | 'parametric'
+    let showPolarGrid = true;
+    
+    // Cartesian Functions (y1..y5)
+    let cartesianFuncs = [
       { expr: 'sin(x)', enabled: true, showDeriv: false },
       { expr: 'cos(x)', enabled: true, showDeriv: false },
       { expr: 'x^2 / 4 - 2', enabled: false, showDeriv: false },
       { expr: 'exp(-x^2)', enabled: false, showDeriv: false },
       { expr: 'x^3 - 3*x', enabled: false, showDeriv: false }
     ];
+    
+    // Polar Functions r(θ)
+    let polarFuncs = [
+      { expr: '3 * cos(4 * t)', enabled: true },
+      { expr: '2 * (1 - cos(t))', enabled: true },
+      { expr: 't / 2', enabled: false }
+    ];
+    let polarMinTh = 0;
+    let polarMaxTh = 4 * Math.PI;
 
-    let compiledFuncs = [];
+    // Parametric Pairs (x(t), y(t))
+    let parametricCurves = [
+      { exprX: '4 * cos(3 * t)', exprY: '4 * sin(2 * t)', enabled: true },
+      { exprX: 'sin(t)*(exp(cos(t))-2*cos(4*t))', exprY: 'cos(t)*(exp(cos(t))-2*cos(4*t))', enabled: false }
+    ];
+    let paramMinT = 0;
+    let paramMaxT = 2 * Math.PI;
+
+    let compiledCartesian = [];
+    let compiledPolar = [];
+    let compiledParametric = [];
     
     // Viewport Virtual Box
     let view_cx = 0;
@@ -614,6 +880,7 @@
     let isDragging = false;
     let lastMouse = { x: 0, y: 0 };
     let currentHoverX = 0;
+    let currentHoverY = 0;
     
     // DOM Elements
     const canvas = document.getElementById('graphCanvas');
@@ -626,6 +893,11 @@
       
       // Exponent substitution
       expr = expr.replace(/\^/g, '**');
+      
+      // Substitute angle / parameter variables 'theta', 'th', 't' with 'x' for unified evaluation
+      expr = expr.replace(/\btheta\b/gi, 'x');
+      expr = expr.replace(/\bth\b/gi, 'x');
+      expr = expr.replace(/\bt\b/gi, 'x');
       
       // Replace Math functions
       const funcs = ['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sqrt', 'abs', 'log', 'exp', 'floor', 'ceil', 'round', 'sign', 'min', 'max'];
@@ -685,71 +957,258 @@
       return (h / 3) * sum;
     }
     
-    // --- UI Builders ---
-    function buildFuncCards() {
-      const container = document.getElementById('funcList');
-      container.innerHTML = '';
+    // --- Mode Switcher ---
+    function setPlotMode(mode) {
+      currentMode = mode;
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('modeBtn_' + mode).classList.add('active');
       
-      functions.forEach((f, idx) => {
-        const card = document.createElement('div');
-        card.className = 'func-card';
-        card.innerHTML = `
-          <div class="func-header">
-            <div class="func-title">
-              <span class="color-badge" style="background:${FUNC_COLORS[idx]}"></span>
-              <span>${FUNC_NAMES[idx]}(x) =</span>
+      buildModeControls();
+      replotAll();
+      showToast(`Switched to ${mode.toUpperCase()} plotting mode.`);
+    }
+
+    // --- Modal Handlers ---
+    function openHelpModal() {
+      document.getElementById('helpModal').classList.add('active');
+    }
+    function closeHelpModal() {
+      document.getElementById('helpModal').classList.remove('active');
+    }
+
+    // --- UI Builders ---
+    function buildModeControls() {
+      const container = document.getElementById('funcList');
+      const title = document.getElementById('funcsSectionTitle');
+      const settings = document.getElementById('modeSettingsContainer');
+      container.innerHTML = '';
+      settings.innerHTML = '';
+      
+      if (currentMode === 'cartesian') {
+        title.innerText = 'Cartesian Functions y(x)';
+        settings.style.display = 'none';
+        
+        cartesianFuncs.forEach((f, idx) => {
+          const card = document.createElement('div');
+          card.className = 'func-card';
+          card.innerHTML = `
+            <div class="func-header">
+              <div class="func-title">
+                <span class="color-badge" style="background:${FUNC_COLORS[idx]}"></span>
+                <span>y${idx+1}(x) =</span>
+              </div>
+              <div class="func-controls">
+                <label class="checkbox-label">
+                  <input type="checkbox" ${f.enabled ? 'checked' : ''} onchange="toggleCartFunc(${idx}, this.checked)">
+                  Show
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" ${f.showDeriv ? 'checked' : ''} onchange="toggleCartDeriv(${idx}, this.checked)">
+                  f'
+                </label>
+              </div>
             </div>
-            <div class="func-controls">
-              <label class="checkbox-label">
-                <input type="checkbox" ${f.enabled ? 'checked' : ''} onchange="toggleFunc(${idx}, this.checked)">
-                Visible
-              </label>
-              <label class="checkbox-label">
-                <input type="checkbox" ${f.showDeriv ? 'checked' : ''} onchange="toggleDeriv(${idx}, this.checked)">
-                f'
-              </label>
+            <div class="input-row">
+              <input type="text" class="func-input" value="${f.expr}" id="cartInput_${idx}" placeholder="e.g. sin(x)" oninput="updateCartExpr(${idx}, this.value)" onkeydown="if(event.key==='Enter'){replotAll(); showToast('Graph plotted!');}">
+            </div>
+          `;
+          container.appendChild(card);
+        });
+
+      } else if (currentMode === 'polar') {
+        title.innerText = 'Polar Curves r(θ)';
+        settings.style.display = 'block';
+        settings.innerHTML = `
+          <div class="field-row">
+            <span class="field-label">θ Range (rad)</span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <input type="number" step="1" class="field-input" style="width:55px;" id="polarMinInput" value="0" oninput="updatePolarRange()">
+              <span>to</span>
+              <input type="number" step="1" class="field-input" style="width:55px;" id="polarMaxInput" value="12.57" oninput="updatePolarRange()">
             </div>
           </div>
-          <div class="input-row">
-            <input type="text" class="func-input" value="${f.expr}" id="funcInput_${idx}" placeholder="e.g. sin(x)" oninput="updateFuncExpr(${idx}, this.value)">
+          <div class="field-row">
+            <label class="checkbox-label" style="font-size:12px; color:#cbd5e1;">
+              <input type="checkbox" ${showPolarGrid ? 'checked' : ''} onchange="showPolarGrid=this.checked; drawGraph();">
+              Polar Radial Grid & Rings
+            </label>
           </div>
         `;
-        container.appendChild(card);
-      });
+        
+        polarFuncs.forEach((f, idx) => {
+          const card = document.createElement('div');
+          card.className = 'func-card';
+          card.innerHTML = `
+            <div class="func-header">
+              <div class="func-title">
+                <span class="color-badge" style="background:${FUNC_COLORS[idx]}"></span>
+                <span>r${idx+1}(θ) =</span>
+              </div>
+              <div class="func-controls">
+                <label class="checkbox-label">
+                  <input type="checkbox" ${f.enabled ? 'checked' : ''} onchange="togglePolarFunc(${idx}, this.checked)">
+                  Show
+                </label>
+              </div>
+            </div>
+            <div class="input-row">
+              <input type="text" class="func-input" value="${f.expr}" id="polarInput_${idx}" placeholder="e.g. 3*cos(4*θ)" oninput="updatePolarExpr(${idx}, this.value)" onkeydown="if(event.key==='Enter'){replotAll(); showToast('Graph plotted!');}">
+            </div>
+          `;
+          container.appendChild(card);
+        });
+
+      } else if (currentMode === 'parametric') {
+        title.innerText = 'Parametric Curves (x(t), y(t))';
+        settings.style.display = 'block';
+        settings.innerHTML = `
+          <div class="field-row">
+            <span class="field-label">t Range</span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <input type="number" step="1" class="field-input" style="width:55px;" id="paramMinInput" value="0" oninput="updateParamRange()">
+              <span>to</span>
+              <input type="number" step="1" class="field-input" style="width:55px;" id="paramMaxInput" value="6.28" oninput="updateParamRange()">
+            </div>
+          </div>
+        `;
+
+        parametricCurves.forEach((c, idx) => {
+          const card = document.createElement('div');
+          card.className = 'func-card';
+          card.innerHTML = `
+            <div class="func-header">
+              <div class="func-title">
+                <span class="color-badge" style="background:${FUNC_COLORS[idx]}"></span>
+                <span>Curve ${idx+1} (x, y)</span>
+              </div>
+              <div class="func-controls">
+                <label class="checkbox-label">
+                  <input type="checkbox" ${c.enabled ? 'checked' : ''} onchange="toggleParamCurve(${idx}, this.checked)">
+                  Show
+                </label>
+              </div>
+            </div>
+            <div class="input-row">
+              <span style="font-size:12px; width:35px; color:#94a3b8; align-self:center;">x(t)=</span>
+              <input type="text" class="func-input" value="${c.exprX}" id="paramInputX_${idx}" oninput="updateParamExpr(${idx}, 'X', this.value)" onkeydown="if(event.key==='Enter'){replotAll(); showToast('Graph plotted!');}">
+            </div>
+            <div class="input-row" style="margin-top:6px;">
+              <span style="font-size:12px; width:35px; color:#94a3b8; align-self:center;">y(t)=</span>
+              <input type="text" class="func-input" value="${c.exprY}" id="paramInputY_${idx}" oninput="updateParamExpr(${idx}, 'Y', this.value)" onkeydown="if(event.key==='Enter'){replotAll(); showToast('Graph plotted!');}">
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      }
     }
-    
-    const PRESETS = [
-      { name: 'Sine Wave', expr: 'sin(x)' },
-      { name: 'Cosine Wave', expr: 'cos(x)' },
-      { name: 'Cubic Polynomial', expr: 'x^3 - 3*x' },
-      { name: 'Gaussian Curve', expr: 'exp(-x^2)' },
-      { name: 'Damped Oscillation', expr: 'exp(-abs(x)/3) * cos(3*x)' },
-      { name: 'Rational Function', expr: '1 / (1 + x^2)' },
-      { name: 'Sigmoid', expr: '1 / (1 + exp(-x))' },
-      { name: 'Heart Upper', expr: 'sqrt(1 - (abs(x)-1)^2)' },
-      { name: 'Sinc Function', expr: 'sin(x) / x' },
-      { name: 'Parabola', expr: 'x^2 / 4 - 2' }
-    ];
+
+    const ALL_PRESETS = {
+      cartesian: [
+        { name: 'Sine Wave', expr: 'sin(x)' },
+        { name: 'Cosine Wave', expr: 'cos(x)' },
+        { name: 'Cubic Polynomial', expr: 'x^3 - 3*x' },
+        { name: 'Gaussian Curve', expr: 'exp(-x^2)' },
+        { name: 'Damped Oscillation', expr: 'exp(-abs(x)/3) * cos(3*x)' },
+        { name: 'Rational Function', expr: '1 / (1 + x^2)' },
+        { name: 'Sigmoid', expr: '1 / (1 + exp(-x))' },
+        { name: 'Parabola', expr: 'x^2 / 4 - 2' }
+      ],
+      polar: [
+        { name: 'Quad Rose', expr: '3 * cos(4 * t)', type: 'polar' },
+        { name: 'Penta Rose', expr: '4 * sin(5 * t)', type: 'polar' },
+        { name: 'Cardioid', expr: '2 * (1 - cos(t))', type: 'polar' },
+        { name: 'Archimedes Spiral', expr: 't / 2', type: 'polar' },
+        { name: 'Lemniscate', expr: 'sqrt(abs(9 * cos(2 * t)))', type: 'polar' },
+        { name: 'Limaçon', expr: '2 + 3 * cos(t)', type: 'polar' }
+      ],
+      parametric: [
+        { name: 'Lissajous 3:2', exprX: '4 * cos(3 * t)', exprY: '4 * sin(2 * t)', type: 'parametric' },
+        { name: 'Butterfly Curve', exprX: 'sin(t)*(exp(cos(t))-2*cos(4*t))', exprY: 'cos(t)*(exp(cos(t))-2*cos(4*t))', type: 'parametric' },
+        { name: 'Astroid', exprX: '4 * cos(t)^3', exprY: '4 * sin(t)^3', type: 'parametric' },
+        { name: 'Heart Curve', exprX: '16 * sin(t)^3', exprY: '13*cos(t) - 5*cos(2*t) - 2*cos(3*t) - cos(4*t)', type: 'parametric' }
+      ]
+    };
     
     function buildPresets() {
       const grid = document.getElementById('presetGrid');
       grid.innerHTML = '';
-      PRESETS.forEach(p => {
+
+      // Cartesian Section
+      const cHeader = document.createElement('div');
+      cHeader.className = 'preset-cat-title';
+      cHeader.innerText = 'Cartesian Presets y(x)';
+      grid.appendChild(cHeader);
+
+      const cGrid = document.createElement('div');
+      cGrid.className = 'preset-grid';
+      ALL_PRESETS.cartesian.forEach(p => {
         const card = document.createElement('div');
         card.className = 'preset-card';
-        card.innerHTML = `
-          <div class="preset-name">${p.name}</div>
-          <div class="preset-expr">${p.expr}</div>
-        `;
-        card.onclick = () => loadPreset(p.expr);
-        grid.appendChild(card);
+        card.innerHTML = `<div class="preset-name">${p.name}</div><div class="preset-expr">${p.expr}</div>`;
+        card.onclick = () => loadCartesianPreset(p.expr);
+        cGrid.appendChild(card);
       });
+      grid.appendChild(cGrid);
+
+      // Polar Section
+      const pHeader = document.createElement('div');
+      pHeader.className = 'preset-cat-title';
+      pHeader.innerText = 'Polar Presets r(θ)';
+      grid.appendChild(pHeader);
+
+      const pGrid = document.createElement('div');
+      pGrid.className = 'preset-grid';
+      ALL_PRESETS.polar.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'preset-card';
+        card.innerHTML = `<div class="preset-name">${p.name}</div><div class="preset-expr">${p.expr}</div>`;
+        card.onclick = () => loadPolarPreset(p.expr);
+        pGrid.appendChild(card);
+      });
+      grid.appendChild(pGrid);
+
+      // Parametric Section
+      const parHeader = document.createElement('div');
+      parHeader.className = 'preset-cat-title';
+      parHeader.innerText = 'Parametric Presets (x(t), y(t))';
+      grid.appendChild(parHeader);
+
+      const parGrid = document.createElement('div');
+      parGrid.className = 'preset-grid';
+      ALL_PRESETS.parametric.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'preset-card';
+        card.innerHTML = `<div class="preset-name">${p.name}</div><div class="preset-expr">x=${p.exprX}</div>`;
+        card.onclick = () => loadParametricPreset(p.exprX, p.exprY);
+        parGrid.appendChild(card);
+      });
+      grid.appendChild(parGrid);
     }
     
-    function loadPreset(expr) {
-      functions[0].expr = expr;
-      functions[0].enabled = true;
-      document.getElementById('funcInput_0').value = expr;
+    function loadCartesianPreset(expr) {
+      setPlotMode('cartesian');
+      cartesianFuncs[0].expr = expr;
+      cartesianFuncs[0].enabled = true;
+      buildModeControls();
+      replotAll();
+      switchTab('tabFuncs');
+    }
+
+    function loadPolarPreset(expr) {
+      setPlotMode('polar');
+      polarFuncs[0].expr = expr;
+      polarFuncs[0].enabled = true;
+      buildModeControls();
+      replotAll();
+      switchTab('tabFuncs');
+    }
+
+    function loadParametricPreset(exprX, exprY) {
+      setPlotMode('parametric');
+      parametricCurves[0].exprX = exprX;
+      parametricCurves[0].exprY = exprY;
+      parametricCurves[0].enabled = true;
+      buildModeControls();
       replotAll();
       switchTab('tabFuncs');
     }
@@ -764,24 +1223,40 @@
       
       if (tabId === 'tabCalc') updateCalcResults();
     }
+
+    // --- State Updaters ---
+    function toggleCartFunc(idx, enabled) { cartesianFuncs[idx].enabled = enabled; replotAll(); }
+    function toggleCartDeriv(idx, show) { cartesianFuncs[idx].showDeriv = show; replotAll(); }
+    function updateCartExpr(idx, expr) { cartesianFuncs[idx].expr = expr; replotAll(); }
     
-    function toggleFunc(idx, enabled) {
-      functions[idx].enabled = enabled;
+    function togglePolarFunc(idx, enabled) { polarFuncs[idx].enabled = enabled; replotAll(); }
+    function updatePolarExpr(idx, expr) { polarFuncs[idx].expr = expr; replotAll(); }
+    function updatePolarRange() {
+      polarMinTh = parseFloat(document.getElementById('polarMinInput').value) || 0;
+      polarMaxTh = parseFloat(document.getElementById('polarMaxInput').value) || (4 * Math.PI);
       replotAll();
     }
-    
-    function toggleDeriv(idx, show) {
-      functions[idx].showDeriv = show;
+
+    function toggleParamCurve(idx, enabled) { parametricCurves[idx].enabled = enabled; replotAll(); }
+    function updateParamExpr(idx, axis, expr) {
+      if (axis === 'X') parametricCurves[idx].exprX = expr;
+      else parametricCurves[idx].exprY = expr;
       replotAll();
     }
-    
-    function updateFuncExpr(idx, expr) {
-      functions[idx].expr = expr;
+    function updateParamRange() {
+      paramMinT = parseFloat(document.getElementById('paramMinInput').value) || 0;
+      paramMaxT = parseFloat(document.getElementById('paramMaxInput').value) || (2 * Math.PI);
       replotAll();
     }
-    
+
     function replotAll() {
-      compiledFuncs = functions.map(f => compileMathExpr(f.expr));
+      compiledCartesian = cartesianFuncs.map(f => compileMathExpr(f.expr));
+      compiledPolar = polarFuncs.map(f => compileMathExpr(f.expr));
+      compiledParametric = parametricCurves.map(c => ({
+        fnX: compileMathExpr(c.exprX),
+        fnY: compileMathExpr(c.exprY)
+      }));
+
       drawGraph();
       if (document.getElementById('tabCalc').classList.contains('active')) {
         updateCalcResults();
@@ -791,11 +1266,11 @@
     // --- Calculus Updates ---
     function updateCalcResults() {
       const idx = parseInt(document.getElementById('calcTargetFunc').value);
-      const fn = compiledFuncs[idx];
+      const fn = compiledCartesian[idx];
       const x0 = parseFloat(document.getElementById('calcX0').value) || 0;
       
       const derivBox = document.getElementById('derivativeResult');
-      if (fn && functions[idx].enabled) {
+      if (fn && cartesianFuncs[idx].enabled) {
         const df = evalDeriv(fn, x0);
         derivBox.innerHTML = `<strong>y${idx+1}'(${x0})</strong> = ${isNaN(df) ? 'Undefined' : df.toFixed(6)}`;
       } else {
@@ -806,7 +1281,7 @@
       const b = parseFloat(document.getElementById('intB').value) || 0;
       const intBox = document.getElementById('integralResult');
       
-      if (fn && functions[idx].enabled && a < b) {
+      if (fn && cartesianFuncs[idx].enabled && a < b) {
         const area = evalIntegral(fn, a, b);
         intBox.innerHTML = `<strong>∫ [${a}, ${b}] y${idx+1}(x) dx</strong> = ${isNaN(area) ? 'Undefined' : area.toFixed(6)}`;
       } else {
@@ -819,11 +1294,11 @@
     // --- Root & Intersection Finders ---
     function findRoots() {
       const idx = parseInt(document.getElementById('rootTargetFunc').value);
-      const fn = compiledFuncs[idx];
+      const fn = compiledCartesian[idx];
       const container = document.getElementById('rootsTableContainer');
       computedRoots = [];
       
-      if (!fn || !functions[idx].enabled) {
+      if (!fn || !cartesianFuncs[idx].enabled) {
         container.innerHTML = `<div style="color:#ef4444; font-size:12px; margin-top:8px;">Selected function is empty or disabled.</div>`;
         drawGraph();
         return;
@@ -843,7 +1318,6 @@
         if (isNaN(y1) || isNaN(y2)) continue;
         
         if (y1 * y2 <= 0) {
-          // Bisection
           let low = x1, high = x2;
           for (let iter = 0; iter < 20; iter++) {
             const mid = (low + high) / 2;
@@ -878,8 +1352,8 @@
       computedIntersections = [];
       
       const active = [];
-      compiledFuncs.forEach((fn, i) => {
-        if (fn && functions[i].enabled) active.push(i);
+      compiledCartesian.forEach((fn, i) => {
+        if (fn && cartesianFuncs[i].enabled) active.push(i);
       });
       
       if (active.length < 2) {
@@ -896,7 +1370,7 @@
       for (let a = 0; a < active.length; a++) {
         for (let b = a + 1; b < active.length; b++) {
           const i1 = active[a], i2 = active[b];
-          const fn1 = compiledFuncs[i1], fn2 = compiledFuncs[i2];
+          const fn1 = compiledCartesian[i1], fn2 = compiledCartesian[i2];
           
           const g = (x) => fn1(x) - fn2(x);
           
@@ -972,6 +1446,11 @@
     function toWorldX(px, width) {
       return view_cx - view_scale + (px / width) * (2 * view_scale);
     }
+    
+    function toWorldY(py, height) {
+      const view_height = 2 * view_scale * (height / (canvas.parentElement.clientWidth || 1));
+      return view_cy - view_height / 2 + ((height - py) / height) * view_height;
+    }
 
     function drawGraph() {
       const width = canvas.parentElement.clientWidth;
@@ -985,43 +1464,67 @@
       const maxX = view_cx + view_scale;
       const minY = view_cy - view_height / 2;
       const maxY = view_cy + view_height / 2;
-      
-      // Grid Step calculation
-      let rawStep = view_scale / 5;
-      let magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
-      let residual = rawStep / magnitude;
-      let gridStep = magnitude;
-      if (residual > 5) gridStep = 5 * magnitude;
-      else if (residual > 2) gridStep = 2 * magnitude;
-      
-      // Draw Grid Lines
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
-      ctx.lineWidth = 1;
-      
-      const firstGridX = Math.floor(minX / gridStep) * gridStep;
-      for (let gx = firstGridX; gx <= maxX; gx += gridStep) {
-        const px = toScreenX(gx, width);
-        ctx.beginPath();
-        ctx.moveTo(px, 0);
-        ctx.lineTo(px, height);
-        ctx.stroke();
-      }
-      
-      const firstGridY = Math.floor(minY / gridStep) * gridStep;
-      for (let gy = firstGridY; gy <= maxY; gy += gridStep) {
-        const py = toScreenY(gy, height);
-        ctx.beginPath();
-        ctx.moveTo(0, py);
-        ctx.lineTo(width, py);
-        ctx.stroke();
-      }
-      
-      // Draw Axes
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-      ctx.lineWidth = 2;
-      
+
       const axisX = toScreenX(0, width);
       const axisY = toScreenY(0, height);
+      
+      if (currentMode === 'polar' && showPolarGrid) {
+        // --- Render Polar Grid Overlay ---
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.12)';
+        ctx.lineWidth = 1;
+        
+        // Concentric Rings
+        for (let r = 1; r <= 25; r++) {
+          const rPx = (r / (2 * view_scale)) * width;
+          ctx.beginPath();
+          ctx.arc(axisX, axisY, rPx, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        
+        // Radial Spokes
+        for (let a = 0; a < 12; a++) {
+          const th = a * (Math.PI / 6);
+          const endX = axisX + Math.cos(th) * width * 1.5;
+          const endY = axisY - Math.sin(th) * height * 1.5;
+          ctx.beginPath();
+          ctx.moveTo(axisX, axisY);
+          ctx.lineTo(endX, endY);
+          ctx.stroke();
+        }
+      } else {
+        // --- Render Cartesian Grid ---
+        let rawStep = view_scale / 5;
+        let magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+        let residual = rawStep / magnitude;
+        let gridStep = magnitude;
+        if (residual > 5) gridStep = 5 * magnitude;
+        else if (residual > 2) gridStep = 2 * magnitude;
+        
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+        ctx.lineWidth = 1;
+        
+        const firstGridX = Math.floor(minX / gridStep) * gridStep;
+        for (let gx = firstGridX; gx <= maxX; gx += gridStep) {
+          const px = toScreenX(gx, width);
+          ctx.beginPath();
+          ctx.moveTo(px, 0);
+          ctx.lineTo(px, height);
+          ctx.stroke();
+        }
+        
+        const firstGridY = Math.floor(minY / gridStep) * gridStep;
+        for (let gy = firstGridY; gy <= maxY; gy += gridStep) {
+          const py = toScreenY(gy, height);
+          ctx.beginPath();
+          ctx.moveTo(0, py);
+          ctx.lineTo(width, py);
+          ctx.stroke();
+        }
+      }
+      
+      // Draw Main Axes
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.lineWidth = 2;
       
       if (axisX >= 0 && axisX <= width) {
         ctx.beginPath();
@@ -1037,144 +1540,230 @@
       }
       
       // Axis Ticks & Labels
-      ctx.fillStyle = '#64748b';
-      ctx.font = '11px monospace';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'top';
-      
-      for (let gx = firstGridX; gx <= maxX; gx += gridStep) {
-        if (Math.abs(gx) < 1e-6) continue;
-        const px = toScreenX(gx, width);
-        const py = Math.max(10, Math.min(height - 20, axisY + 4));
-        ctx.fillText(Number(gx.toFixed(4)).toString(), px, py);
-      }
-      
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
-      for (let gy = firstGridY; gy <= maxY; gy += gridStep) {
-        if (Math.abs(gy) < 1e-6) continue;
-        const py = toScreenY(gy, height);
-        const px = Math.max(35, Math.min(width - 5, axisX - 6));
-        ctx.fillText(Number(gy.toFixed(4)).toString(), px, py);
+      if (currentMode !== 'polar') {
+        let rawStep = view_scale / 5;
+        let magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+        let residual = rawStep / magnitude;
+        let gridStep = (residual > 5) ? 5 * magnitude : (residual > 2 ? 2 * magnitude : magnitude);
+        const firstGridX = Math.floor(minX / gridStep) * gridStep;
+        const firstGridY = Math.floor(minY / gridStep) * gridStep;
+
+        ctx.fillStyle = '#64748b';
+        ctx.font = '11px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        
+        for (let gx = firstGridX; gx <= maxX; gx += gridStep) {
+          if (Math.abs(gx) < 1e-6) continue;
+          const px = Math.round(toScreenX(gx, width));
+          const py = Math.round(Math.max(10, Math.min(height - 20, axisY + 4)));
+          ctx.fillText(Number(gx.toFixed(4)).toString(), px, py);
+        }
+        
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        for (let gy = firstGridY; gy <= maxY; gy += gridStep) {
+          if (Math.abs(gy) < 1e-6) continue;
+          const py = Math.round(toScreenY(gy, height));
+          const px = Math.round(Math.max(35, Math.min(width - 5, axisX - 6)));
+          ctx.fillText(Number(gy.toFixed(4)).toString(), px, py);
+        }
       }
 
-      // Shaded Definite Integral Region
-      const isShade = document.getElementById('shadeIntegral').checked;
-      const targetIdx = parseInt(document.getElementById('calcTargetFunc').value);
-      const targetFn = compiledFuncs[targetIdx];
-      const intA = parseFloat(document.getElementById('intA').value) || 0;
-      const intB = parseFloat(document.getElementById('intB').value) || 0;
-      
-      if (isShade && targetFn && functions[targetIdx].enabled && intA < intB) {
-        ctx.fillStyle = 'rgba(56, 189, 248, 0.18)';
-        ctx.beginPath();
-        const startPx = Math.max(0, toScreenX(intA, width));
-        const endPx = Math.min(width, toScreenX(intB, width));
-        const baselinePy = toScreenY(0, height);
+      // --- Render Curves according to Plot Mode ---
+      if (currentMode === 'cartesian') {
         
-        ctx.moveTo(startPx, baselinePy);
-        for (let px = startPx; px <= endPx; px += 2) {
-          const x = toWorldX(px, width);
-          const y = targetFn(x);
-          if (!isNaN(y)) {
-            const py = toScreenY(y, height);
-            ctx.lineTo(px, py);
-          }
-        }
-        ctx.lineTo(endPx, baselinePy);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      // Draw Function Curves
-      functions.forEach((f, idx) => {
-        if (!f.enabled) return;
-        const fn = compiledFuncs[idx];
-        if (!fn) return;
+        // Shaded Definite Integral Region
+        const isShade = document.getElementById('shadeIntegral').checked;
+        const targetIdx = parseInt(document.getElementById('calcTargetFunc').value);
+        const targetFn = compiledCartesian[targetIdx];
+        const intA = parseFloat(document.getElementById('intA').value) || 0;
+        const intB = parseFloat(document.getElementById('intB').value) || 0;
         
-        // Primary Function Curve
-        ctx.strokeStyle = FUNC_COLORS[idx];
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        let first = true;
-        
-        for (let px = 0; px <= width; px += 2) {
-          const x = toWorldX(px, width);
-          const y = fn(x);
-          if (isNaN(y) || !isFinite(y)) {
-            first = true;
-            continue;
-          }
-          const py = toScreenY(y, height);
-          if (first) {
-            ctx.moveTo(px, py);
-            first = false;
-          } else {
-            ctx.lineTo(px, py);
-          }
-        }
-        ctx.stroke();
-        
-        // Derivative Curve (Dashed line)
-        if (f.showDeriv) {
-          ctx.strokeStyle = FUNC_COLORS[idx];
-          ctx.setLineDash([4, 4]);
-          ctx.lineWidth = 1.5;
+        if (isShade && targetFn && cartesianFuncs[targetIdx].enabled && intA < intB) {
+          ctx.fillStyle = 'rgba(56, 189, 248, 0.18)';
           ctx.beginPath();
-          let dFirst = true;
+          const startPx = Math.max(0, toScreenX(intA, width));
+          const endPx = Math.min(width, toScreenX(intB, width));
+          const baselinePy = toScreenY(0, height);
           
-          for (let px = 0; px <= width; px += 3) {
+          ctx.moveTo(startPx, baselinePy);
+          for (let px = startPx; px <= endPx; px += 2) {
             const x = toWorldX(px, width);
-            const dy = evalDeriv(fn, x);
-            if (isNaN(dy) || !isFinite(dy)) {
-              dFirst = true;
+            const y = targetFn(x);
+            if (!isNaN(y)) {
+              const py = toScreenY(y, height);
+              ctx.lineTo(px, py);
+            }
+          }
+          ctx.lineTo(endPx, baselinePy);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Draw Function Curves
+        cartesianFuncs.forEach((f, idx) => {
+          if (!f.enabled) return;
+          const fn = compiledCartesian[idx];
+          if (!fn) return;
+          
+          ctx.strokeStyle = FUNC_COLORS[idx];
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          let first = true;
+          
+          for (let px = 0; px <= width; px += 2) {
+            const x = toWorldX(px, width);
+            const y = fn(x);
+            if (isNaN(y) || !isFinite(y)) {
+              first = true;
               continue;
             }
-            const py = toScreenY(dy, height);
-            if (dFirst) {
+            const py = toScreenY(y, height);
+            if (first) {
               ctx.moveTo(px, py);
-              dFirst = false;
+              first = false;
             } else {
               ctx.lineTo(px, py);
             }
           }
           ctx.stroke();
-          ctx.setLineDash([]); // Reset dash
-        }
-      });
-      
-      // Draw Roots Markers (Green Dots)
-      computedRoots.forEach(r => {
-        const px = toScreenX(r.x, width);
-        const py = toScreenY(r.y, height);
-        ctx.fillStyle = '#10b981';
-        ctx.beginPath();
-        ctx.arc(px, py, 6, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-      });
-      
-      // Draw Intersections Markers (Yellow Diamonds)
-      computedIntersections.forEach(pt => {
-        const px = toScreenX(pt.x, width);
-        const py = toScreenY(pt.y, height);
-        ctx.fillStyle = '#fbbf24';
-        ctx.beginPath();
-        ctx.moveTo(px, py - 7);
-        ctx.lineTo(px + 7, py);
-        ctx.lineTo(px, py + 7);
-        ctx.lineTo(px - 7, py);
-        ctx.closePath();
-        ctx.fill();
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-      });
+          
+          // Derivative Curve (Dashed line)
+          if (f.showDeriv) {
+            ctx.strokeStyle = FUNC_COLORS[idx];
+            ctx.setLineDash([4, 4]);
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            let dFirst = true;
+            
+            for (let px = 0; px <= width; px += 3) {
+              const x = toWorldX(px, width);
+              const dy = evalDeriv(fn, x);
+              if (isNaN(dy) || !isFinite(dy)) {
+                dFirst = true;
+                continue;
+              }
+              const py = toScreenY(dy, height);
+              if (dFirst) {
+                ctx.moveTo(px, py);
+                dFirst = false;
+              } else {
+                ctx.lineTo(px, py);
+              }
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
+        });
+
+        // Roots Markers
+        computedRoots.forEach(r => {
+          const px = toScreenX(r.x, width);
+          const py = toScreenY(r.y, height);
+          ctx.fillStyle = '#10b981';
+          ctx.beginPath();
+          ctx.arc(px, py, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        });
+        
+        // Intersections Markers
+        computedIntersections.forEach(pt => {
+          const px = toScreenX(pt.x, width);
+          const py = toScreenY(pt.y, height);
+          ctx.fillStyle = '#fbbf24';
+          ctx.beginPath();
+          ctx.moveTo(px, py - 7);
+          ctx.lineTo(px + 7, py);
+          ctx.lineTo(px, py + 7);
+          ctx.lineTo(px - 7, py);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        });
+
+      } else if (currentMode === 'polar') {
+        
+        // Render Polar Curves r(θ)
+        polarFuncs.forEach((f, idx) => {
+          if (!f.enabled) return;
+          const fn = compiledPolar[idx];
+          if (!fn) return;
+
+          ctx.strokeStyle = FUNC_COLORS[idx];
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          let first = true;
+          const steps = 600;
+          const dTh = (polarMaxTh - polarMinTh) / steps;
+
+          for (let i = 0; i <= steps; i++) {
+            const th = polarMinTh + i * dTh;
+            const r = fn(th);
+            if (isNaN(r) || !isFinite(r)) {
+              first = true;
+              continue;
+            }
+            const x = r * Math.cos(th);
+            const y = r * Math.sin(th);
+            const px = toScreenX(x, width);
+            const py = toScreenY(y, height);
+
+            if (first) {
+              ctx.moveTo(px, py);
+              first = false;
+            } else {
+              ctx.lineTo(px, py);
+            }
+          }
+          ctx.stroke();
+        });
+
+      } else if (currentMode === 'parametric') {
+        
+        // Render Parametric Curves (x(t), y(t))
+        parametricCurves.forEach((c, idx) => {
+          if (!c.enabled) return;
+          const p = compiledParametric[idx];
+          if (!p || !p.fnX || !p.fnY) return;
+
+          ctx.strokeStyle = FUNC_COLORS[idx];
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          let first = true;
+          const steps = 600;
+          const dt = (paramMaxT - paramMinT) / steps;
+
+          for (let i = 0; i <= steps; i++) {
+            const t = paramMinT + i * dt;
+            const x = p.fnX(t);
+            const y = p.fnY(t);
+            if (isNaN(x) || isNaN(y) || !isFinite(x) || !isFinite(y)) {
+              first = true;
+              continue;
+            }
+            const px = toScreenX(x, width);
+            const py = toScreenY(y, height);
+
+            if (first) {
+              ctx.moveTo(px, py);
+              first = false;
+            } else {
+              ctx.lineTo(px, py);
+            }
+          }
+          ctx.stroke();
+        });
+      }
       
       // Hover Tracing Crosshair & Readout
       const hoverPx = toScreenX(currentHoverX, width);
+      const hoverPy = toScreenY(currentHoverY, height);
       if (hoverPx >= 0 && hoverPx <= width) {
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
         ctx.setLineDash([3, 3]);
@@ -1182,30 +1771,61 @@
         ctx.beginPath();
         ctx.moveTo(hoverPx, 0);
         ctx.lineTo(hoverPx, height);
+        ctx.moveTo(0, hoverPy);
+        ctx.lineTo(width, hoverPy);
         ctx.stroke();
         ctx.setLineDash([]);
       }
       
-      updateReadout(currentHoverX);
+      updateReadout();
     }
     
-    function updateReadout(x) {
-      document.getElementById('readoutX').innerText = x.toFixed(4);
+    function updateReadout() {
       const container = document.getElementById('readoutYList');
-      let html = '';
+      const headerLine = document.getElementById('readoutHeaderLine');
       
-      compiledFuncs.forEach((fn, idx) => {
-        if (!functions[idx].enabled || !fn) return;
-        const y = fn(x);
-        const dy = evalDeriv(fn, x);
-        html += `
-          <div class="readout-line" style="color:${FUNC_COLORS[idx]}">
-            <span>${FUNC_NAMES[idx]}:</span>
-            <span class="readout-val">${isNaN(y) ? 'N/A' : y.toFixed(4)} ${functions[idx].showDeriv ? '(f\'=' + (isNaN(dy)?'N/A':dy.toFixed(3)) + ')' : ''}</span>
-          </div>
-        `;
-      });
-      container.innerHTML = html;
+      if (currentMode === 'cartesian') {
+        document.getElementById('readoutX').innerText = currentHoverX.toFixed(4);
+        headerLine.innerHTML = `<span>x:</span> <span class="readout-val">${currentHoverX.toFixed(4)}</span>`;
+        
+        let html = '';
+        compiledCartesian.forEach((fn, idx) => {
+          if (!cartesianFuncs[idx].enabled || !fn) return;
+          const y = fn(currentHoverX);
+          const dy = evalDeriv(fn, currentHoverX);
+          html += `
+            <div class="readout-line" style="color:${FUNC_COLORS[idx]}">
+              <span>y${idx+1}:</span>
+              <span class="readout-val">${isNaN(y) ? 'N/A' : y.toFixed(4)} ${cartesianFuncs[idx].showDeriv ? '(f\'=' + (isNaN(dy)?'N/A':dy.toFixed(3)) + ')' : ''}</span>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+
+      } else if (currentMode === 'polar') {
+        const rVal = Math.sqrt(currentHoverX * currentHoverX + currentHoverY * currentHoverY);
+        let thVal = Math.atan2(currentHoverY, currentHoverX);
+        if (thVal < 0) thVal += 2 * Math.PI;
+        
+        headerLine.innerHTML = `<span>r:</span> <span class="readout-val">${rVal.toFixed(3)}</span> | <span>θ:</span> <span class="readout-val">${thVal.toFixed(3)} rad (${(thVal*180/Math.PI).toFixed(1)}°)</span>`;
+        
+        let html = '';
+        compiledPolar.forEach((fn, idx) => {
+          if (!polarFuncs[idx].enabled || !fn) return;
+          const rCurve = fn(thVal);
+          html += `
+            <div class="readout-line" style="color:${FUNC_COLORS[idx]}">
+              <span>r${idx+1}(θ):</span>
+              <span class="readout-val">${isNaN(rCurve) ? 'N/A' : rCurve.toFixed(4)}</span>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+
+      } else if (currentMode === 'parametric') {
+        headerLine.innerHTML = `<span>Cursor (x, y):</span> <span class="readout-val">(${currentHoverX.toFixed(3)}, ${currentHoverY.toFixed(3)})</span>`;
+        container.innerHTML = '';
+      }
     }
     
     // --- Mouse & Pan / Zoom Interaction ---
@@ -1221,7 +1841,9 @@
     canvas.addEventListener('mousemove', (e) => {
       const rect = canvas.getBoundingClientRect();
       const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
       currentHoverX = toWorldX(px, rect.width);
+      currentHoverY = toWorldY(py, rect.height);
       
       if (isDragging) {
         const dx = e.clientX - lastMouse.x;
@@ -1249,40 +1871,42 @@
     function zoomIn() {
       view_scale *= 0.75;
       drawGraph();
+      showToast('Zoom In (+)');
     }
     function zoomOut() {
       view_scale *= 1.3333;
       drawGraph();
+      showToast('Zoom Out (-)');
     }
     function resetView() {
       view_cx = 0;
       view_cy = 0;
       view_scale = 10;
       drawGraph();
+      showToast('Viewport reset to [-10, 10]');
     }
 
     // --- Export & Import ---
     function exportPNG() {
       const link = document.createElement('a');
-      link.download = 'KGraph_snapshot.png';
+      link.download = `KGraph_${currentMode}_snapshot.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
+      showToast('📷 PNG snapshot exported!');
     }
     
     function exportCSV() {
-      const width = canvas.parentElement.clientWidth || 500;
       const minX = view_cx - view_scale;
       const maxX = view_cx + view_scale;
       const steps = 200;
       const dx = (maxX - minX) / steps;
       
-      let csv = 'x,' + FUNC_NAMES.join(',') + '\n';
-      
+      let csv = 'x,y1,y2,y3,y4,y5\n';
       for (let i = 0; i <= steps; i++) {
         const x = minX + i * dx;
         let row = [x.toFixed(5)];
-        compiledFuncs.forEach((fn, idx) => {
-          if (fn && functions[idx].enabled) {
+        compiledCartesian.forEach((fn, idx) => {
+          if (fn && cartesianFuncs[idx].enabled) {
             const y = fn(x);
             row.push(isNaN(y) ? '' : y.toFixed(5));
           } else {
@@ -1296,14 +1920,18 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'KGraph_data.csv';
+      a.download = `KGraph_${currentMode}_data.csv`;
       a.click();
       URL.revokeObjectURL(url);
+      showToast('📊 CSV data points exported!');
     }
     
     function exportJSON() {
       const config = {
-        functions: functions,
+        mode: currentMode,
+        cartesianFuncs: cartesianFuncs,
+        polarFuncs: polarFuncs,
+        parametricCurves: parametricCurves,
         view_cx: view_cx,
         view_cy: view_cy,
         view_scale: view_scale
@@ -1316,6 +1944,7 @@
       a.download = 'KGraph_config.json';
       a.click();
       URL.revokeObjectURL(url);
+      showToast('💾 Graph configuration saved to JSON!');
     }
     
     function importJSON(event) {
@@ -1325,35 +1954,85 @@
       reader.onload = function(e) {
         try {
           const config = JSON.parse(e.target.result);
-          if (config.functions && Array.isArray(config.functions)) {
-            functions = config.functions;
-            if (config.view_cx !== undefined) view_cx = config.view_cx;
-            if (config.view_cy !== undefined) view_cy = config.view_cy;
-            if (config.view_scale !== undefined) view_scale = config.view_scale;
-            buildFuncCards();
-            replotAll();
-          }
+          if (config.cartesianFuncs) cartesianFuncs = config.cartesianFuncs;
+          if (config.polarFuncs) polarFuncs = config.polarFuncs;
+          if (config.parametricCurves) parametricCurves = config.parametricCurves;
+          if (config.mode) currentMode = config.mode;
+          if (config.view_cx !== undefined) view_cx = config.view_cx;
+          if (config.view_cy !== undefined) view_cy = config.view_cy;
+          if (config.view_scale !== undefined) view_scale = config.view_scale;
+          
+          setPlotMode(currentMode);
+          showToast('📂 Configuration imported successfully!');
         } catch(err) {
-          showToast('Invalid JSON file format');
+          showToast('⚠️ Invalid JSON file format');
         }
       };
       reader.readAsText(file);
     }
     
-    function showToast(msg) {
-      const t = document.getElementById('toastErr');
+    let toastTimeout;
+    function showToast(msg, duration = 4000) {
+      const t = document.getElementById('toastMsg');
       t.innerText = msg;
       t.classList.add('visible');
-      setTimeout(() => t.classList.remove('visible'), 3000);
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => t.classList.remove('visible'), duration);
     }
     
-    // Window Resize Event
+    // Window Resize Event & High-DPI Observer
     window.addEventListener('resize', resizeCanvas);
+    if (window.ResizeObserver && canvas.parentElement) {
+      const ro = new ResizeObserver(() => resizeCanvas());
+      ro.observe(canvas.parentElement);
+    }
 
     // Initialization
-    buildFuncCards();
+    window.resizeTo(1024, 768);
+    buildModeControls();
     buildPresets();
     setTimeout(resizeCanvas, 100);
+    setTimeout(() => showToast("Welcome to KGraph Studio!\nPress F1 or H for Help & Shortcuts.\n[C]artesian, [P]olar, Para[M]etric", 5000), 500);
+
+    // Global Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeHelpModal();
+        return;
+      }
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+      
+      if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
+        if (e.key === 'F1') e.preventDefault();
+        const modal = document.getElementById('helpModal');
+        if (modal.classList.contains('active')) closeHelpModal();
+        else openHelpModal();
+      } else if (e.key === '1') {
+        switchTab('tabFuncs');
+        showToast('Tab: [1] Functions');
+      } else if (e.key === '2') {
+        switchTab('tabCalc');
+        showToast('Tab: [2] Calculus');
+      } else if (e.key === '3') {
+        switchTab('tabRoots');
+        showToast('Tab: [3] Analysis');
+      } else if (e.key === '4') {
+        switchTab('tabPresets');
+        showToast('Tab: [4] Presets');
+      } else if (e.key.toLowerCase() === 'c') {
+        setPlotMode('cartesian');
+      } else if (e.key.toLowerCase() === 'p') {
+        setPlotMode('polar');
+      } else if (e.key.toLowerCase() === 'm') {
+        setPlotMode('parametric');
+      } else if (e.key === '+' || e.key === '=') {
+        zoomIn();
+      } else if (e.key === '-' || e.key === '_') {
+        zoomOut();
+      } else if (e.key === '0' || e.key.toLowerCase() === 'r') {
+        resetView();
+      }
+    });
   </script>
 </body>
 </html>

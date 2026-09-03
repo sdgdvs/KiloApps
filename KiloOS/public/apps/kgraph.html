@@ -479,23 +479,141 @@
     position: absolute;
     bottom: 16px;
     left: 16px;
-    background: rgba(30, 41, 59, 0.95);
+    background: rgba(19, 23, 36, 0.95);
     border: 1px solid rgba(56, 189, 248, 0.4);
     color: #f1f5f9;
     padding: 12px 18px;
     border-radius: 8px;
     font-size: 13px;
     font-weight: 500;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 12px rgba(56, 189, 248, 0.15);
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform: translateY(8px);
     pointer-events: none;
-    z-index: 6;
+    z-index: 20;
     white-space: pre-line;
     line-height: 1.5;
+    backdrop-filter: blur(8px);
   }
   .toast-msg.visible {
     opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Help Modal Dialog */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .modal-dialog {
+    background: #131724;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 12px;
+    width: 680px;
+    max-width: 92vw;
+    max-height: 85vh;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(56, 189, 248, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: scale(0.96);
+    transition: transform 0.25s ease;
+  }
+  .modal-overlay.active .modal-dialog {
+    transform: scale(1);
+  }
+  .modal-header {
+    background: rgba(30, 41, 59, 0.7);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 22px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color 0.2s;
+  }
+  .modal-close:hover {
+    color: #f43f5e;
+  }
+  .modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #cbd5e1;
+  }
+  .shortcut-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 18px 0;
+  }
+  .shortcut-table th {
+    text-align: left;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.04);
+    color: #38bdf8;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .shortcut-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .kbd-key {
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: #38bdf8;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 11px;
+    display: inline-block;
+  }
+  .help-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 14px 0 6px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 </style>
 </head>
@@ -515,8 +633,8 @@
         📂 Load Config
         <input type="file" id="jsonInput" accept=".json" style="display:none" onchange="importJSON(event)">
       </label>
-      <button class="btn" onclick="showToast('KGraph Controls:\\n• Mode Buttons: Cartesian / Polar / Parametric\\n• Scroll to Zoom\\n• Click & Drag to Pan\\n• Hover to trace coordinates\\n• Use tabs for Calculus & Analysis', 6000)">❓ Help (F1)</button>
-      <button class="btn btn-primary" onclick="replotAll()">▶ Plot</button>
+      <button class="btn" onclick="openHelpModal()">❓ Help (F1)</button>
+      <button class="btn btn-primary" onclick="replotAll()">▶ Plot [Enter]</button>
     </div>
   </div>
 
@@ -528,16 +646,16 @@
       
       <!-- Plot Mode Selector Bar -->
       <div class="mode-bar">
-        <div class="mode-btn active" id="modeBtn_cartesian" onclick="setPlotMode('cartesian')">y(x) Cartesian</div>
-        <div class="mode-btn" id="modeBtn_polar" onclick="setPlotMode('polar')">r(θ) Polar</div>
-        <div class="mode-btn" id="modeBtn_parametric" onclick="setPlotMode('parametric')">(x,y)(t) Parametric</div>
+        <div class="mode-btn active" id="modeBtn_cartesian" onclick="setPlotMode('cartesian')">[C] y(x) Cartesian</div>
+        <div class="mode-btn" id="modeBtn_polar" onclick="setPlotMode('polar')">[P] r(θ) Polar</div>
+        <div class="mode-btn" id="modeBtn_parametric" onclick="setPlotMode('parametric')">[M] (x,y)(t) Parametric</div>
       </div>
 
       <div class="tab-nav">
-        <div class="tab-btn active" onclick="switchTab('tabFuncs')">Functions</div>
-        <div class="tab-btn" onclick="switchTab('tabCalc')">Calculus</div>
-        <div class="tab-btn" onclick="switchTab('tabRoots')">Analysis</div>
-        <div class="tab-btn" onclick="switchTab('tabPresets')">Presets</div>
+        <div class="tab-btn active" onclick="switchTab('tabFuncs')">[1] Functions</div>
+        <div class="tab-btn" onclick="switchTab('tabCalc')">[2] Calculus</div>
+        <div class="tab-btn" onclick="switchTab('tabRoots')">[3] Analysis</div>
+        <div class="tab-btn" onclick="switchTab('tabPresets')">[4] Presets</div>
       </div>
       
       <!-- Functions Tab -->
@@ -656,6 +774,60 @@
       <div class="toast-msg" id="toastMsg"></div>
     </div>
     
+  </div>
+
+  <!-- Help Modal Dialog -->
+  <div class="modal-overlay" id="helpModal" onclick="if(event.target===this)closeHelpModal()">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>📈</span>
+          <span>KGraph Studio — Help & Reference Guide</span>
+        </div>
+        <button class="modal-close" onclick="closeHelpModal()" title="Close (Esc)">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="help-section-title">⌨️ Keyboard Shortcuts</div>
+        <table class="shortcut-table">
+          <thead>
+            <tr><th>Shortcut</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="kbd-key">F1</span> / <span class="kbd-key">H</span></td><td>Toggle this Help & Reference guide</td></tr>
+            <tr><td><span class="kbd-key">Enter</span> (in input)</td><td>Immediately plot / re-evaluate expressions</td></tr>
+            <tr><td><span class="kbd-key">1</span> / <span class="kbd-key">2</span> / <span class="kbd-key">3</span> / <span class="kbd-key">4</span></td><td>Switch tabs: Functions, Calculus, Analysis, Presets</td></tr>
+            <tr><td><span class="kbd-key">C</span> / <span class="kbd-key">P</span> / <span class="kbd-key">M</span></td><td>Switch plot modes: [C]artesian, [P]olar, Para[M]etric</td></tr>
+            <tr><td><span class="kbd-key">+</span> / <span class="kbd-key">-</span></td><td>Zoom viewport in / out</td></tr>
+            <tr><td><span class="kbd-key">0</span> / <span class="kbd-key">R</span></td><td>Reset viewport to default [-10, 10] range</td></tr>
+            <tr><td><span class="kbd-key">Esc</span></td><td>Close any active modal dialog</td></tr>
+          </tbody>
+        </table>
+
+        <div class="help-section-title">🖱️ Canvas & Mouse Navigation</div>
+        <table class="shortcut-table">
+          <tbody>
+            <tr><td><strong>Left Click & Drag</strong></td><td>Pan and move the graph viewport dynamically</td></tr>
+            <tr><td><strong>Mouse Scroll Wheel</strong></td><td>Smoothly zoom in / out at current center</td></tr>
+            <tr><td><strong>Cursor Hover</strong></td><td>Crosshair coordinate readout + real-time numerical derivative $f'(x)$</td></tr>
+            <tr><td><strong>Click Root / Intersection</strong></td><td>Auto-centers viewport on that computed solution point</td></tr>
+          </tbody>
+        </table>
+
+        <div class="help-section-title">📐 Supported Math & Functions</div>
+        <p style="margin-bottom:8px;">Standard arithmetic (<span class="kbd-key">+</span>, <span class="kbd-key">-</span>, <span class="kbd-key">*</span>, <span class="kbd-key">/</span>, <span class="kbd-key">^</span>) with implicit multiplication (e.g. <code>3x</code>, <code>2(x+1)</code>, <code>sin(x)cos(x)</code>):</p>
+        <p style="font-family:monospace; background:rgba(0,0,0,0.3); padding:8px; border-radius:6px; font-size:12px; line-height:1.8;">
+          • Trigonometric: sin(x), cos(x), tan(x), asin(x), acos(x), atan(x)<br>
+          • Exponential & Log: exp(x), log(x), ln(x), sqrt(x), abs(x)<br>
+          • Utility: floor(x), ceil(x), round(x), min(a,b), max(a,b)<br>
+          • Constants: PI (3.14159...), E (2.71828...)<br>
+          • Variables: x (Cartesian), θ or th or t (Polar/Parametric)
+        </p>
+
+        <div class="help-section-title">🔬 Calculus & Root Finding Features</div>
+        <p>• <strong>Calculus Tab:</strong> Computes instantaneous numerical derivative $f'(x_0)$ and definite integral $\int_a^b f(x)dx$ using composite Simpson's rule with shaded graph visualization.<br>
+        • <strong>Analysis Tab:</strong> Performs bisection root finding and finds intersection points between curves in the current view.</p>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -793,6 +965,15 @@
       
       buildModeControls();
       replotAll();
+      showToast(`Switched to ${mode.toUpperCase()} plotting mode.`);
+    }
+
+    // --- Modal Handlers ---
+    function openHelpModal() {
+      document.getElementById('helpModal').classList.add('active');
+    }
+    function closeHelpModal() {
+      document.getElementById('helpModal').classList.remove('active');
     }
 
     // --- UI Builders ---
@@ -828,7 +1009,7 @@
               </div>
             </div>
             <div class="input-row">
-              <input type="text" class="func-input" value="${f.expr}" id="cartInput_${idx}" placeholder="e.g. sin(x)" oninput="updateCartExpr(${idx}, this.value)">
+              <input type="text" class="func-input" value="${f.expr}" id="cartInput_${idx}" placeholder="e.g. sin(x)" oninput="updateCartExpr(${idx}, this.value)" onkeydown="if(event.key==='Enter'){replotAll(); showToast('Graph plotted!');}">
             </div>
           `;
           container.appendChild(card);
@@ -871,7 +1052,7 @@
               </div>
             </div>
             <div class="input-row">
-              <input type="text" class="func-input" value="${f.expr}" id="polarInput_${idx}" placeholder="e.g. 3*cos(4*θ)" oninput="updatePolarExpr(${idx}, this.value)">
+              <input type="text" class="func-input" value="${f.expr}" id="polarInput_${idx}" placeholder="e.g. 3*cos(4*θ)" oninput="updatePolarExpr(${idx}, this.value)" onkeydown="if(event.key==='Enter'){replotAll(); showToast('Graph plotted!');}">
             </div>
           `;
           container.appendChild(card);
@@ -909,11 +1090,11 @@
             </div>
             <div class="input-row">
               <span style="font-size:12px; width:35px; color:#94a3b8; align-self:center;">x(t)=</span>
-              <input type="text" class="func-input" value="${c.exprX}" id="paramInputX_${idx}" oninput="updateParamExpr(${idx}, 'X', this.value)">
+              <input type="text" class="func-input" value="${c.exprX}" id="paramInputX_${idx}" oninput="updateParamExpr(${idx}, 'X', this.value)" onkeydown="if(event.key==='Enter'){replotAll(); showToast('Graph plotted!');}">
             </div>
             <div class="input-row" style="margin-top:6px;">
               <span style="font-size:12px; width:35px; color:#94a3b8; align-self:center;">y(t)=</span>
-              <input type="text" class="func-input" value="${c.exprY}" id="paramInputY_${idx}" oninput="updateParamExpr(${idx}, 'Y', this.value)">
+              <input type="text" class="func-input" value="${c.exprY}" id="paramInputY_${idx}" oninput="updateParamExpr(${idx}, 'Y', this.value)" onkeydown="if(event.key==='Enter'){replotAll(); showToast('Graph plotted!');}">
             </div>
           `;
           container.appendChild(card);
@@ -1690,16 +1871,19 @@
     function zoomIn() {
       view_scale *= 0.75;
       drawGraph();
+      showToast('Zoom In (+)');
     }
     function zoomOut() {
       view_scale *= 1.3333;
       drawGraph();
+      showToast('Zoom Out (-)');
     }
     function resetView() {
       view_cx = 0;
       view_cy = 0;
       view_scale = 10;
       drawGraph();
+      showToast('Viewport reset to [-10, 10]');
     }
 
     // --- Export & Import ---
@@ -1708,6 +1892,7 @@
       link.download = `KGraph_${currentMode}_snapshot.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
+      showToast('📷 PNG snapshot exported!');
     }
     
     function exportCSV() {
@@ -1738,6 +1923,7 @@
       a.download = `KGraph_${currentMode}_data.csv`;
       a.click();
       URL.revokeObjectURL(url);
+      showToast('📊 CSV data points exported!');
     }
     
     function exportJSON() {
@@ -1758,6 +1944,7 @@
       a.download = 'KGraph_config.json';
       a.click();
       URL.revokeObjectURL(url);
+      showToast('💾 Graph configuration saved to JSON!');
     }
     
     function importJSON(event) {
@@ -1776,8 +1963,9 @@
           if (config.view_scale !== undefined) view_scale = config.view_scale;
           
           setPlotMode(currentMode);
+          showToast('📂 Configuration imported successfully!');
         } catch(err) {
-          showToast('Invalid JSON file format');
+          showToast('⚠️ Invalid JSON file format');
         }
       };
       reader.readAsText(file);
@@ -1792,22 +1980,57 @@
       toastTimeout = setTimeout(() => t.classList.remove('visible'), duration);
     }
     
-    // Window Resize Event
+    // Window Resize Event & High-DPI Observer
     window.addEventListener('resize', resizeCanvas);
+    if (window.ResizeObserver && canvas.parentElement) {
+      const ro = new ResizeObserver(() => resizeCanvas());
+      ro.observe(canvas.parentElement);
+    }
 
     // Initialization
     window.resizeTo(1024, 768);
     buildModeControls();
     buildPresets();
     setTimeout(resizeCanvas, 100);
-    setTimeout(() => showToast("Welcome to KGraph Studio!\nPlot Cartesian, Polar r(θ), and Parametric (x,y)(t) curves.\nPress H or F1 for Help.", 5000), 500);
+    setTimeout(() => showToast("Welcome to KGraph Studio!\nPress F1 or H for Help & Shortcuts.\n[C]artesian, [P]olar, Para[M]etric", 5000), 500);
 
-    // Keyboard Shortcuts
+    // Global Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeHelpModal();
+        return;
+      }
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+      
       if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
         if (e.key === 'F1') e.preventDefault();
-        showToast("KGraph Controls:\n• Mode Buttons: Cartesian / Polar / Parametric\n• Scroll to Zoom\n• Click & Drag to Pan\n• Hover to trace coordinates\n• Use tabs for Calculus & Analysis", 6000);
+        const modal = document.getElementById('helpModal');
+        if (modal.classList.contains('active')) closeHelpModal();
+        else openHelpModal();
+      } else if (e.key === '1') {
+        switchTab('tabFuncs');
+        showToast('Tab: [1] Functions');
+      } else if (e.key === '2') {
+        switchTab('tabCalc');
+        showToast('Tab: [2] Calculus');
+      } else if (e.key === '3') {
+        switchTab('tabRoots');
+        showToast('Tab: [3] Analysis');
+      } else if (e.key === '4') {
+        switchTab('tabPresets');
+        showToast('Tab: [4] Presets');
+      } else if (e.key.toLowerCase() === 'c') {
+        setPlotMode('cartesian');
+      } else if (e.key.toLowerCase() === 'p') {
+        setPlotMode('polar');
+      } else if (e.key.toLowerCase() === 'm') {
+        setPlotMode('parametric');
+      } else if (e.key === '+' || e.key === '=') {
+        zoomIn();
+      } else if (e.key === '-' || e.key === '_') {
+        zoomOut();
+      } else if (e.key === '0' || e.key.toLowerCase() === 'r') {
+        resetView();
       }
     });
   </script>

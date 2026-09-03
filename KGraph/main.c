@@ -181,37 +181,70 @@ static HWND hChecks[MAX_FUNCS];
 static HWND hLabels[MAX_FUNCS];
 static HWND hPlotBtn, hZoomIn, hZoomOut, hResetBtn, hRootsBtn, hPresetBtn, hHelpBtn, hModeBtn, hStatus;
 static HFONT hFontSmall, hFontBold;
+static HBRUSH hTopBgBrush = NULL;
+static HBRUSH hEditBgBrush = NULL;
+static WNDPROC g_oldEditProc = NULL;
 static int g_dpi = 96;
 static int g_canvasTop = 135;
 
+static LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_KEYDOWN && wParam == VK_RETURN) {
+        HWND hParent = GetParent(hwnd);
+        if (hParent) {
+            SendMessageA(hParent, WM_COMMAND, 1001, 0);
+        }
+        return 0;
+    }
+    return CallWindowProcA(g_oldEditProc, hwnd, msg, wParam, lParam);
+}
+
+static void ShowHelpDialog(HWND hwnd) {
+    MessageBoxA(hwnd,
+        "KGraph Studio - Hotkeys & Usage Guide:\n\n"
+        "[Modes & Navigation]\n"
+        "• Mode [M] / Click button : Switch between Cartesian y(x), Polar r(th), and Parametric (x,y)(t)\n"
+        "• Mouse Wheel : Zoom in / Zoom out smoothly\n"
+        "• Left Click & Drag : Pan viewport across canvas\n"
+        "• Hover Mouse : Instant coordinates and derivative tracer\n"
+        "• + / - Keys : Zoom in / out\n"
+        "• Reset [R] : Restore default viewport ([-10, 10])\n\n"
+        "[Inputs & Controls]\n"
+        "• Enter in input : Instantly re-plot graph\n"
+        "• Presets [P] : Cycle popular curves & formulas\n"
+        "• Roots : Find and highlight numerical roots in view\n"
+        "• Supported math : sin, cos, tan, sqrt, abs, exp, log, ln, pi, e, ^, +, -, *, /\n"
+        "• F1 or H : Open this Help guide",
+        "KGraph Studio Help", MB_OK | MB_ICONINFORMATION);
+}
+
 static void UpdateModeUI(void) {
     if (g_mode == MODE_CARTESIAN) {
-        SetWindowTextA(hModeBtn, "Mode: Cartesian [y(x)]");
+        SetWindowTextA(hModeBtn, "Mode: Cartesian [M]");
         SetWindowTextA(hLabels[0], "y1 =");
         SetWindowTextA(hLabels[1], "y2 =");
         SetWindowTextA(hLabels[2], "y3 =");
         SetWindowTextA(hInputs[0], "sin(x)");
         SetWindowTextA(hInputs[1], "cos(x)");
         SetWindowTextA(hInputs[2], "x^2/4 - 2");
-        SetWindowTextA(hStatus, "Cartesian Mode y(x). Hover mouse to trace values. Press 'H' or F1 for help.");
+        SetWindowTextA(hStatus, "Cartesian Mode y(x). Scroll wheel to zoom. Hover to trace values. Press F1 for Help.");
     } else if (g_mode == MODE_POLAR) {
-        SetWindowTextA(hModeBtn, "Mode: Polar [r(th)]");
+        SetWindowTextA(hModeBtn, "Mode: Polar [M]");
         SetWindowTextA(hLabels[0], "r1 =");
         SetWindowTextA(hLabels[1], "r2 =");
         SetWindowTextA(hLabels[2], "r3 =");
         SetWindowTextA(hInputs[0], "3*cos(4*t)");
         SetWindowTextA(hInputs[1], "2*(1 - cos(t))");
         SetWindowTextA(hInputs[2], "t / 2");
-        SetWindowTextA(hStatus, "Polar Mode r(th). Rose curve & cardioid with concentric polar grid.");
+        SetWindowTextA(hStatus, "Polar Mode r(th). Rose curves & spirals with concentric polar grid. Press F1 for Help.");
     } else if (g_mode == MODE_PARAMETRIC) {
-        SetWindowTextA(hModeBtn, "Mode: Parametric [(x,y)(t)]");
+        SetWindowTextA(hModeBtn, "Mode: Parametric [M]");
         SetWindowTextA(hLabels[0], "x1 =");
         SetWindowTextA(hLabels[1], "y1 =");
         SetWindowTextA(hLabels[2], "x2 =");
         SetWindowTextA(hInputs[0], "4*cos(3*t)");
         SetWindowTextA(hInputs[1], "4*sin(2*t)");
         SetWindowTextA(hInputs[2], "3*cos(t)");
-        SetWindowTextA(hStatus, "Parametric Mode (x(t), y(t)). Curve 1: Lissajous 3:2, Curve 2: Circle.");
+        SetWindowTextA(hStatus, "Parametric Mode (x(t), y(t)). Lissajous curves & complex trajectories. Press F1 for Help.");
     }
     for (int i = 0; i < MAX_FUNCS; i++) {
         GetWindowTextA(hInputs[i], funcs[i].expr, 127);
@@ -272,6 +305,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hFontSmall = CreateFontA(fontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             hFontBold = CreateFontA(fontSize, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
 
+            hTopBgBrush = CreateSolidBrush(RGB(23, 27, 44));
+            hEditBgBrush = CreateSolidBrush(RGB(15, 23, 42));
+
             int topY = MulDiv(8, g_dpi, 96);
             for (int i = 0; i < MAX_FUNCS; i++) {
                 char label[16];
@@ -285,20 +321,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SendMessageA(hInputs[i], WM_SETFONT, (WPARAM)hFontSmall, TRUE);
                 SendMessageA(hChecks[i], WM_SETFONT, (WPARAM)hFontSmall, TRUE);
 
+                if (!g_oldEditProc) {
+                    g_oldEditProc = (WNDPROC)GetWindowLongPtrA(hInputs[i], GWLP_WNDPROC);
+                }
+                SetWindowLongPtrA(hInputs[i], GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
+
                 topY += MulDiv(30, g_dpi, 96);
             }
 
-            hModeBtn  = CreateWindowA("BUTTON", "Mode: Cartesian [y(x)]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(340, g_dpi, 96), MulDiv(8, g_dpi, 96), MulDiv(160, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1008, NULL, NULL);
-            hPlotBtn  = CreateWindowA("BUTTON", "Plot", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(510, g_dpi, 96), MulDiv(8, g_dpi, 96), MulDiv(70, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1001, NULL, NULL);
-            hZoomIn   = CreateWindowA("BUTTON", "+", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(590, g_dpi, 96), MulDiv(8, g_dpi, 96), MulDiv(35, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1002, NULL, NULL);
-            hZoomOut  = CreateWindowA("BUTTON", "-", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(630, g_dpi, 96), MulDiv(8, g_dpi, 96), MulDiv(35, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1003, NULL, NULL);
-            hResetBtn = CreateWindowA("BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(675, g_dpi, 96), MulDiv(8, g_dpi, 96), MulDiv(65, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1004, NULL, NULL);
+            hModeBtn  = CreateWindowA("BUTTON", "Mode: Cartesian [M]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(340, g_dpi, 96), MulDiv(8, g_dpi, 96), MulDiv(160, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1008, NULL, NULL);
+            hPlotBtn  = CreateWindowA("BUTTON", "Plot [Enter]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(510, g_dpi, 96), MulDiv(8, g_dpi, 96), MulDiv(80, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1001, NULL, NULL);
+            hZoomIn   = CreateWindowA("BUTTON", "+", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(600, g_dpi, 96), MulDiv(8, g_dpi, 96), MulDiv(35, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1002, NULL, NULL);
+            hZoomOut  = CreateWindowA("BUTTON", "-", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(640, g_dpi, 96), MulDiv(8, g_dpi, 96), MulDiv(35, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1003, NULL, NULL);
+            hResetBtn = CreateWindowA("BUTTON", "Reset [R]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(685, g_dpi, 96), MulDiv(8, g_dpi, 96), MulDiv(70, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1004, NULL, NULL);
             
             hRootsBtn = CreateWindowA("BUTTON", "Roots", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(340, g_dpi, 96), MulDiv(45, g_dpi, 96), MulDiv(75, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1005, NULL, NULL);
-            hPresetBtn= CreateWindowA("BUTTON", "Presets", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(425, g_dpi, 96), MulDiv(45, g_dpi, 96), MulDiv(75, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1006, NULL, NULL);
-            hHelpBtn  = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(510, g_dpi, 96), MulDiv(45, g_dpi, 96), MulDiv(70, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1007, NULL, NULL);
+            hPresetBtn= CreateWindowA("BUTTON", "Presets [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(425, g_dpi, 96), MulDiv(45, g_dpi, 96), MulDiv(80, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1006, NULL, NULL);
+            hHelpBtn  = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(515, g_dpi, 96), MulDiv(45, g_dpi, 96), MulDiv(75, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1007, NULL, NULL);
 
-            hStatus = CreateWindowA("STATIC", "Ready. Hover mouse to trace values. Press 'H' or F1 for help.", WS_CHILD | WS_VISIBLE | SS_LEFT, MulDiv(10, g_dpi, 96), topY + MulDiv(2, g_dpi, 96), MulDiv(800, g_dpi, 96), MulDiv(20, g_dpi, 96), hwnd, NULL, NULL, NULL);
+            hStatus = CreateWindowA("STATIC", "Ready. Scroll to zoom, drag to pan. Press F1 or H for help.", WS_CHILD | WS_VISIBLE | SS_LEFT, MulDiv(10, g_dpi, 96), topY + MulDiv(2, g_dpi, 96), MulDiv(800, g_dpi, 96), MulDiv(20, g_dpi, 96), hwnd, NULL, NULL, NULL);
             SendMessageA(hStatus, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
 
             SendMessageA(hModeBtn, WM_SETFONT, (WPARAM)hFontBold, TRUE);
@@ -312,6 +353,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
 
+        case WM_ERASEBKGND:
+            return 1;
+
+        case WM_CTLCOLORSTATIC: {
+            HDC hdcStatic = (HDC)wParam;
+            SetTextColor(hdcStatic, RGB(226, 232, 240));
+            SetBkColor(hdcStatic, RGB(23, 27, 44));
+            return (INT_PTR)hTopBgBrush;
+        }
+
+        case WM_CTLCOLOREDIT: {
+            HDC hdcEdit = (HDC)wParam;
+            SetTextColor(hdcEdit, RGB(248, 250, 252));
+            SetBkColor(hdcEdit, RGB(15, 23, 42));
+            return (INT_PTR)hEditBgBrush;
+        }
+
         case WM_COMMAND: {
             int id = LOWORD(wParam);
             if (id == 1001) { // Plot
@@ -319,16 +377,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     GetWindowTextA(hInputs[i], funcs[i].expr, 127);
                     funcs[i].enabled = (SendMessageA(hChecks[i], BM_GETCHECK, 0, 0) == BST_CHECKED);
                 }
-                InvalidateRect(hwnd, NULL, TRUE);
+                InvalidateRect(hwnd, NULL, FALSE);
             } else if (id == 1002) { // Zoom In
                 view_scale *= 0.75;
-                InvalidateRect(hwnd, NULL, TRUE);
+                InvalidateRect(hwnd, NULL, FALSE);
             } else if (id == 1003) { // Zoom Out
                 view_scale *= 1.3333;
-                InvalidateRect(hwnd, NULL, TRUE);
+                InvalidateRect(hwnd, NULL, FALSE);
             } else if (id == 1004) { // Reset
                 view_cx = 0.0; view_cy = 0.0; view_scale = 10.0;
-                InvalidateRect(hwnd, NULL, TRUE);
+                InvalidateRect(hwnd, NULL, FALSE);
             } else if (id == 1005) { // Find Roots
                 if (g_mode == MODE_CARTESIAN) {
                     FindRootsInView();
@@ -338,48 +396,80 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else {
                     SetWindowTextA(hStatus, "Root finder active in Cartesian mode.");
                 }
-                InvalidateRect(hwnd, NULL, TRUE);
+                InvalidateRect(hwnd, NULL, FALSE);
             } else if (id == 1006) { // Presets
                 if (g_mode == MODE_CARTESIAN) {
-                    SetWindowTextA(hInputs[0], "exp(-x^2)");
-                    SetWindowTextA(hInputs[1], "sin(3*x)");
-                    SetWindowTextA(hInputs[2], "x^3 - 3*x");
+                    static int cartPresetIdx = 0;
+                    const char* p1[3] = {"exp(-x^2)", "sin(x)*cos(2*x)", "1/(1+x^2)"};
+                    const char* p2[3] = {"sin(3*x)", "x^2/4 - 2", "cos(x)"};
+                    const char* p3[3] = {"x^3 - 3*x", "exp(-abs(x)/3)", "sin(x)"};
+                    SetWindowTextA(hInputs[0], p1[cartPresetIdx]);
+                    SetWindowTextA(hInputs[1], p2[cartPresetIdx]);
+                    SetWindowTextA(hInputs[2], p3[cartPresetIdx]);
+                    cartPresetIdx = (cartPresetIdx + 1) % 3;
                 } else if (g_mode == MODE_POLAR) {
-                    SetWindowTextA(hInputs[0], "4*sin(5*t)");
-                    SetWindowTextA(hInputs[1], "3*(1 - sin(t))");
-                    SetWindowTextA(hInputs[2], "sqrt(abs(9*cos(2*t)))");
+                    static int polarPresetIdx = 0;
+                    const char* p1[3] = {"4*sin(5*t)", "3*cos(4*t)", "2*(1-cos(t))"};
+                    const char* p2[3] = {"3*(1 - sin(t))", "t/2", "3+2*cos(t)"};
+                    const char* p3[3] = {"sqrt(abs(9*cos(2*t)))", "sin(3*t)", "cos(2*t)"};
+                    SetWindowTextA(hInputs[0], p1[polarPresetIdx]);
+                    SetWindowTextA(hInputs[1], p2[polarPresetIdx]);
+                    SetWindowTextA(hInputs[2], p3[polarPresetIdx]);
+                    polarPresetIdx = (polarPresetIdx + 1) % 3;
                 } else if (g_mode == MODE_PARAMETRIC) {
-                    SetWindowTextA(hInputs[0], "sin(t)*(exp(cos(t))-2*cos(4*t))");
-                    SetWindowTextA(hInputs[1], "cos(t)*(exp(cos(t))-2*cos(4*t))");
-                    SetWindowTextA(hInputs[2], "4*cos(t)^3");
+                    static int paramPresetIdx = 0;
+                    const char* p1[3] = {"sin(t)*(exp(cos(t))-2*cos(4*t))", "4*cos(3*t)", "4*cos(t)^3"};
+                    const char* p2[3] = {"cos(t)*(exp(cos(t))-2*cos(4*t))", "4*sin(2*t)", "4*sin(t)^3"};
+                    const char* p3[3] = {"4*cos(t)^3", "3*cos(t)", "sin(2*t)"};
+                    SetWindowTextA(hInputs[0], p1[paramPresetIdx]);
+                    SetWindowTextA(hInputs[1], p2[paramPresetIdx]);
+                    SetWindowTextA(hInputs[2], p3[paramPresetIdx]);
+                    paramPresetIdx = (paramPresetIdx + 1) % 3;
                 }
                 SendMessageA(hChecks[0], BM_SETCHECK, BST_CHECKED, 0);
                 SendMessageA(hChecks[1], BM_SETCHECK, BST_CHECKED, 0);
                 SendMessageA(hChecks[2], BM_SETCHECK, BST_CHECKED, 0);
                 SendMessageA(hwnd, WM_COMMAND, 1001, 0);
             } else if (id == 1007) { // Help
-                SendMessageA(hwnd, WM_KEYDOWN, 'H', 0);
+                ShowHelpDialog(hwnd);
             } else if (id == 1008) { // Mode Toggle
                 g_mode = (PlotMode)((g_mode + 1) % 3);
                 UpdateModeUI();
-                InvalidateRect(hwnd, NULL, TRUE);
+                InvalidateRect(hwnd, NULL, FALSE);
             } else if (id >= 1100 && id < 1100 + MAX_FUNCS) {
                 int idx = id - 1100;
                 funcs[idx].enabled = (SendMessageA(hChecks[idx], BM_GETCHECK, 0, 0) == BST_CHECKED);
-                InvalidateRect(hwnd, NULL, TRUE);
+                InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
         }
 
+        case WM_MOUSEWHEEL: {
+            short zDelta = (short)HIWORD(wParam);
+            if (zDelta > 0) {
+                view_scale *= 0.85;
+            } else {
+                view_scale *= 1.18;
+            }
+            InvalidateRect(hwnd, NULL, FALSE);
+            return 0;
+        }
+
         case WM_KEYDOWN: {
             if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
-                MessageBoxA(hwnd, "KGraph Studio Help:\n\n"
-                                  "- Click 'Mode' to switch between Cartesian y(x), Polar r(th), and Parametric (x(t), y(t)).\n"
-                                  "- Type mathematical expressions in input fields.\n"
-                                  "- Support functions: sin, cos, tan, sqrt, abs, exp, log, ln, pi, e.\n"
-                                  "- Click and drag graph canvas to pan view.\n"
-                                  "- Use + / - buttons to zoom in and out.\n"
-                                  "- Toggle 'Show' checkbox to show/hide curves.", "KGraph Help", MB_OK | MB_ICONINFORMATION);
+                ShowHelpDialog(hwnd);
+            } else if (wParam == 'M' || wParam == 'm') {
+                SendMessageA(hwnd, WM_COMMAND, 1008, 0);
+            } else if (wParam == 'R' || wParam == 'r') {
+                SendMessageA(hwnd, WM_COMMAND, 1004, 0);
+            } else if (wParam == 'P' || wParam == 'p') {
+                SendMessageA(hwnd, WM_COMMAND, 1006, 0);
+            } else if (wParam == VK_ADD || wParam == VK_OEM_PLUS) {
+                SendMessageA(hwnd, WM_COMMAND, 1002, 0);
+            } else if (wParam == VK_SUBTRACT || wParam == VK_OEM_MINUS) {
+                SendMessageA(hwnd, WM_COMMAND, 1003, 0);
+            } else if (wParam == VK_RETURN) {
+                SendMessageA(hwnd, WM_COMMAND, 1001, 0);
             }
             break;
         }
@@ -423,7 +513,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (funcs[i].enabled) {
                             double yVal = evaluate(funcs[i].expr, worldX);
                             double dyVal = eval_derivative(funcs[i].expr, worldX);
-                            offset += sprintf(statusText + offset, "y%d=%.3f (y%d'=%.2f)  ", i + 1, yVal, i + 1, dyVal);
+                            offset += sprintf(statusText + offset, "y%d=%.3f (f'=%.2f)  ", i + 1, yVal, dyVal);
                         }
                     }
                     SetWindowTextA(hStatus, statusText);
@@ -458,9 +548,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             RECT rect;
             GetClientRect(hwnd, &rect);
             int canvasTop = g_canvasTop;
+            RECT topRect = {rect.left, 0, rect.right, canvasTop};
             RECT canvasRect = {rect.left, canvasTop, rect.right, rect.bottom};
 
-            // Double Buffering
+            // Paint top toolbar background
+            FillRect(hdc, &topRect, hTopBgBrush);
+
+            // Double Buffering for canvas
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP memBM = CreateCompatibleBitmap(hdc, rect.right, rect.bottom);
             HBITMAP oldBM = (HBITMAP)SelectObject(memDC, memBM);
@@ -648,6 +742,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_DESTROY:
             if (hFontSmall) DeleteObject(hFontSmall);
             if (hFontBold) DeleteObject(hFontBold);
+            if (hTopBgBrush) DeleteObject(hTopBgBrush);
+            if (hEditBgBrush) DeleteObject(hEditBgBrush);
             PostQuitMessage(0);
             return 0;
     }
@@ -670,7 +766,7 @@ void __stdcall MainEntry(void) {
     
     RECT winRect = {0, 0, MulDiv(1024, initial_dpi, 96), MulDiv(768, initial_dpi, 96)};
     AdjustWindowRect(&winRect, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, FALSE);
-    HWND hwnd = CreateWindowExA(0, "KGraphClass", "KGraph Studio", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, winRect.right - winRect.left, winRect.bottom - winRect.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KGraphClass", "KGraph Studio - [Press F1 or H for Help]", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, winRect.right - winRect.left, winRect.bottom - winRect.top, NULL, NULL, wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
@@ -682,3 +778,4 @@ void __stdcall MainEntry(void) {
     }
     ExitProcess(0);
 }
+
