@@ -14,6 +14,7 @@ void* __cdecl memset(void* p, int c, size_t sz) {
 #define ID_BTN_MT_TAB      1002
 #define ID_BTN_POMO_TAB    1003
 #define ID_BTN_INT_TAB     1004
+#define ID_BTN_HELP        1005
 
 #define ID_BTN_START       1010
 #define ID_BTN_LAP         1011
@@ -133,7 +134,7 @@ static int g_dpiScale = 100;
 #define S(x) ((x) * g_dpiScale / 100)
 
 HWND hMainWnd = NULL;
-HWND hTabSW, hTabTM, hTabMT, hTabPOMO, hTabINT;
+HWND hTabSW, hTabTM, hTabMT, hTabPOMO, hTabINT, hBtnHelp;
 HWND hDisplay, hTmInput, hStaticStats, hStaticIntStats, hStaticIntLabels;
 HWND hBtnStart, hBtnLap, hBtnReset, hBtnExportCsv, hBtnExportTxt;
 HWND hListLaps;
@@ -467,11 +468,30 @@ static void ExportLapsToFile(const char* ext) {
     }
 }
 
+static void ShowHelpDialog(HWND hwnd) {
+    const char* helpText = 
+        "KTimer - High-Precision Multi-Mode Timer & Stopwatch\n\n"
+        "KEYBOARD SHORTCUTS:\n"
+        "  [Space]     - Start / Pause active timer\n"
+        "  [1] - [5]   - Switch Mode Tabs (1:SW, 2:Timer, 3:Multi, 4:Pomo, 5:HIIT)\n"
+        "  [L]         - Record Lap split (Stopwatch mode)\n"
+        "  [R]         - Reset active mode timer\n"
+        "  [Enter]     - Start Countdown / Add Multi-Timer\n"
+        "  [F1] or [H] - Open this Help dialog\n\n"
+        "MODES & FEATURES:\n"
+        "  1. Stopwatch : Precision split tracking with CSV/TXT export\n"
+        "  2. Timer     : Countdown with 1m-60m quick presets\n"
+        "  3. Multi     : Run multiple concurrent labeled timers\n"
+        "  4. Pomodoro  : 25m work / 5m short break / 15m long break\n"
+        "  5. HIIT      : Interval circuit with Tabata, HIIT, Boxing presets\n";
+    MessageBoxA(hwnd, helpText, "KTimer - Help & User Guide", MB_OK | MB_ICONINFORMATION);
+}
+
 static void SwitchMode(AppMode newMode) {
     g_mode = newMode;
 
     // Reset button states
-    SetWindowTextA(hTabSW, g_mode == MODE_STOPWATCH ? "[ Stopwatch ]" : "Stopwatch");
+    SetWindowTextA(hTabSW, g_mode == MODE_STOPWATCH ? "[ SW ]" : "SW");
     SetWindowTextA(hTabTM, g_mode == MODE_TIMER ? "[ Timer ]" : "Timer");
     SetWindowTextA(hTabMT, g_mode == MODE_MULTI ? "[ Multi ]" : "Multi");
     SetWindowTextA(hTabPOMO, g_mode == MODE_POMODORO ? "[ Pomo ]" : "Pomo");
@@ -600,11 +620,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hFontSmall = CreateFontA(-S(12), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
 
             // Top Bar Tabs
-            hTabSW = CreateWindowA("BUTTON", "Stopwatch", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(10), S(10), S(80), S(30), hwnd, (HMENU)ID_BTN_SW_TAB, NULL, NULL);
-            hTabTM = CreateWindowA("BUTTON", "Timer", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(94), S(10), S(80), S(30), hwnd, (HMENU)ID_BTN_TM_TAB, NULL, NULL);
-            hTabMT = CreateWindowA("BUTTON", "Multi", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(178), S(10), S(80), S(30), hwnd, (HMENU)ID_BTN_MT_TAB, NULL, NULL);
-            hTabPOMO = CreateWindowA("BUTTON", "Pomo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(262), S(10), S(80), S(30), hwnd, (HMENU)ID_BTN_POMO_TAB, NULL, NULL);
-            hTabINT = CreateWindowA("BUTTON", "HIIT", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(346), S(10), S(84), S(30), hwnd, (HMENU)ID_BTN_INT_TAB, NULL, NULL);
+            hTabSW = CreateWindowA("BUTTON", "SW", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(10), S(10), S(66), S(30), hwnd, (HMENU)ID_BTN_SW_TAB, NULL, NULL);
+            hTabTM = CreateWindowA("BUTTON", "Timer", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(78), S(10), S(66), S(30), hwnd, (HMENU)ID_BTN_TM_TAB, NULL, NULL);
+            hTabMT = CreateWindowA("BUTTON", "Multi", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(146), S(10), S(66), S(30), hwnd, (HMENU)ID_BTN_MT_TAB, NULL, NULL);
+            hTabPOMO = CreateWindowA("BUTTON", "Pomo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(214), S(10), S(68), S(30), hwnd, (HMENU)ID_BTN_POMO_TAB, NULL, NULL);
+            hTabINT = CreateWindowA("BUTTON", "HIIT", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(284), S(10), S(66), S(30), hwnd, (HMENU)ID_BTN_INT_TAB, NULL, NULL);
+            hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(352), S(10), S(78), S(30), hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
 
             // Display & Input Controls
             hDisplay = CreateWindowExA(0, "STATIC", "00:00:00.000", WS_CHILD | WS_VISIBLE | SS_CENTER, S(10), S(50), S(420), S(40), hwnd, NULL, NULL, NULL);
@@ -665,6 +686,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hTabMT, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
             SendMessageA(hTabPOMO, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
             SendMessageA(hTabINT, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
+            SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
             SendMessageA(hDisplay, WM_SETFONT, (WPARAM)hFontDisplay, TRUE);
             SendMessageA(hTmInput, WM_SETFONT, (WPARAM)hFontDisplay, TRUE);
             SendMessageA(hBtnStart, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
@@ -711,6 +733,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id == ID_BTN_MT_TAB) SwitchMode(MODE_MULTI);
             else if (id == ID_BTN_POMO_TAB) SwitchMode(MODE_POMODORO);
             else if (id == ID_BTN_INT_TAB) SwitchMode(MODE_INTERVAL);
+            else if (id == ID_BTN_HELP) ShowHelpDialog(hwnd);
 
             // Stopwatch Handlers
             else if (id == ID_BTN_START && g_mode == MODE_STOPWATCH) {
@@ -1031,36 +1054,75 @@ void __stdcall MainEntry() {
     RECT rc = {0, 0, S(460), S(580)};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
     
-    HWND hwnd = CreateWindowExA(0, "KTimerClass", "KTimer", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KTimerClass", "KTimer - [F1 for Help]", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
-        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1)) {
+        if (msg.message == WM_KEYDOWN) {
             HWND hFocus = GetFocus();
             char className[32] = {0};
             GetClassNameA(hFocus, className, sizeof(className));
-            if (lstrcmpiA(className, "EDIT") != 0) {
-                MessageBoxA(hwnd, "KTimer Help:\n\n- Space: Start / Pause active timer\n- Stopwatch: Track laps\n- Timer: Count down\n- Multi: Multiple timers\n- Pomodoro: Work/Break cycles\n- HIIT: Interval Work/Rest cycles.", "Help", MB_OK | MB_ICONINFORMATION);
+            int isEdit = (lstrcmpiA(className, "EDIT") == 0);
+
+            if (msg.wParam == VK_F1 || (!isEdit && (msg.wParam == 'H' || msg.wParam == 'h'))) {
+                ShowHelpDialog(hwnd);
                 continue;
             }
-        }
-        if (msg.message == WM_KEYDOWN && msg.wParam == VK_SPACE) {
-            HWND hFocus = GetFocus();
-            char className[32] = {0};
-            GetClassNameA(hFocus, className, sizeof(className));
-            if (lstrcmpiA(className, "EDIT") != 0 && lstrcmpiA(className, "BUTTON") != 0) {
-                if (g_mode == MODE_STOPWATCH || g_mode == MODE_TIMER) {
+
+            if (isEdit && msg.wParam == VK_RETURN) {
+                if (hFocus == hTmInput) {
                     SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_START, 0), (LPARAM)hBtnStart);
                     continue;
-                } else if (g_mode == MODE_POMODORO) {
-                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_POMO_START, 0), (LPARAM)hBtnPomoStart);
+                } else if (hFocus == hEditMtName || hFocus == hEditMtTime) {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_MT_ADD, 0), (LPARAM)hBtnMtAdd);
                     continue;
-                } else if (g_mode == MODE_INTERVAL) {
-                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_INT_START, 0), (LPARAM)hBtnIntStart);
+                }
+            }
+
+            if (!isEdit) {
+                if (msg.wParam >= '1' && msg.wParam <= '5') {
+                    if (msg.wParam == '1') SwitchMode(MODE_STOPWATCH);
+                    else if (msg.wParam == '2') SwitchMode(MODE_TIMER);
+                    else if (msg.wParam == '3') SwitchMode(MODE_MULTI);
+                    else if (msg.wParam == '4') SwitchMode(MODE_POMODORO);
+                    else if (msg.wParam == '5') SwitchMode(MODE_INTERVAL);
                     continue;
+                }
+
+                if (msg.wParam == 'L' || msg.wParam == 'l') {
+                    if (g_mode == MODE_STOPWATCH) {
+                        SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_LAP, 0), (LPARAM)hBtnLap);
+                        continue;
+                    }
+                }
+
+                if (msg.wParam == 'R' || msg.wParam == 'r') {
+                    if (g_mode == MODE_STOPWATCH || g_mode == MODE_TIMER) {
+                        SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_RESET, 0), (LPARAM)hBtnReset);
+                    } else if (g_mode == MODE_POMODORO) {
+                        SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_POMO_RESET, 0), (LPARAM)hBtnPomoReset);
+                    } else if (g_mode == MODE_INTERVAL) {
+                        SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_INT_RESET, 0), (LPARAM)hBtnIntReset);
+                    }
+                    continue;
+                }
+
+                if (msg.wParam == VK_SPACE) {
+                    if (lstrcmpiA(className, "BUTTON") != 0) {
+                        if (g_mode == MODE_STOPWATCH || g_mode == MODE_TIMER) {
+                            SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_START, 0), (LPARAM)hBtnStart);
+                            continue;
+                        } else if (g_mode == MODE_POMODORO) {
+                            SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_POMO_START, 0), (LPARAM)hBtnPomoStart);
+                            continue;
+                        } else if (g_mode == MODE_INTERVAL) {
+                            SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_INT_START, 0), (LPARAM)hBtnIntStart);
+                            continue;
+                        }
+                    }
                 }
             }
         }
