@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KTodo
+**Target App:** KConverter
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KTodo
 - KConverter
 - KGraph
 - KTimer
@@ -105,6 +104,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTask
 - KRogue
 - KSys
+- KTodo
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
 - KTask: Usability and UI issues fixed (added dedicated Help modal dialog with full shortcut and feature reference, added Help [F1] header button, interactive task card selection, Delete key task termination, 1-3 tab switching shortcuts, and backdrop click modal dismissal in web; fixed critical bug where typing 'H' in filter edit triggered help messagebox, added Enter to filter/focus list, Enter/I to inspect, updated toolbar labels with explicit shortcut hints, added comprehensive ShowHelpDialog, eliminated GDI font leak, and improved button layout in native C).
@@ -155,7 +155,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KBase: Usability and UI issues fixed (auto-opening size adjusted, DPI awareness and crisp text enabled, visible help controls and F1/H shortcuts added).
 - KTimer: Usability and UI issues fixed (added WS_CLIPCHILDREN to native, mapped F1 for help across both platforms, explicitly stated F1 support in UI labels, verified 460x580 bounds and crisp text).
 - KConverter: Usability and UI issues fixed (mapped F1 for help on web, added WS_CLIPCHILDREN to native, explicitly stated F1 support in web title hint, verified native text and window logic).
-- KTodo: Usability and UI issues fixed (fixed native bug where typing 'H' in EDIT controls incorrectly triggered help, verified 800x600 bounds and existing web hotkey logic).
+- KTodo: Usability and UI issues fixed (replaced blocking browser alerts with modern dark Help modal dialog and non-blocking toast notifications with startup welcome toast, added 1/2 view switching shortcuts, Escape and backdrop-click modal dismissal, and explicit F1/H header button in web; added WS_CLIPCHILDREN to eliminate native flicker, added ShowHelpDialog with comprehensive shortcut and feature guide, updated status bar and action buttons with explicit F1/H and shortcut hints, and implemented dynamic responsive button layout in native C).
 - KSys: Usability and UI issues fixed (mapped F1 for help natively and on web, explicitly stated F1 support in UI labels/buttons, verified 1024x768 bounds, compiled successfully).
 - KTask: Usability and UI issues fixed (mapped F1 for help across native subclasses and web, explicitly stated F1 support in UI labels and window title, verified bounds and crisp fonts).
 - KPaint: Usability and UI issues fixed (updated App.jsx and native bounds to 1100x750 for proper canvas fit, enforced AdjustWindowRect, verified crisp text and existing help visibility).

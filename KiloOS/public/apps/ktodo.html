@@ -776,8 +776,8 @@
       <h1>KTodo</h1>
     </div>
     <div class="header-actions">
-      <button class="btn" onclick="alert('KTodo Help:\n- Use the top bar to switch between List and Kanban views.\n- Click Category tabs to filter by project.\n- Click Import/Export to save or parse Markdown task lists.\n- Press \'h\' or F1 for help.')" title="Help">
-        ❓ Help
+      <button class="btn" onclick="openHelpModal()" title="Help [F1 or H]">
+        ❓ Help [F1]
       </button>
       <button class="btn" onclick="toggleStats()" title="Toggle Productivity Statistics">
         📊 <span id="statsToggleLabel">Stats</span>
@@ -898,7 +898,7 @@
   </main>
 
   <!-- Import / Export Modal -->
-  <div class="modal-overlay" id="ioModal">
+  <div class="modal-overlay" id="ioModal" onclick="if(event.target===this) closeIOModal()">
     <div class="modal-box">
       <div class="modal-header">
         <h3>Import / Export Task Data</h3>
@@ -935,6 +935,39 @@
         </div>
 
         <button class="btn" style="width: 100%; justify-content: center; margin-top: 4px;" onclick="loadSampleTasks()">✨ Load Demo Tasks</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Modal Dialog -->
+  <div class="modal-overlay" id="helpModal" onclick="if(event.target===this) closeHelpModal()">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>❓ KTodo Help &amp; User Guide</h3>
+        <button class="action-icon-btn" onclick="closeHelpModal()">✕</button>
+      </div>
+      <div class="modal-body" style="font-size: 13px; line-height: 1.6; color: var(--text-secondary);">
+        <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px;">
+          <h4 style="color: var(--text-primary); margin-bottom: 6px; font-size: 13px;">⌨️ Keyboard Shortcuts</h4>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 4px;">
+            <li><strong style="color: var(--accent-blue);">Enter</strong> (in Task field): Add task immediately</li>
+            <li><strong style="color: var(--accent-blue);">1 / 2</strong>: Switch between List and Kanban views</li>
+            <li><strong style="color: var(--accent-blue);">F1 or H</strong>: Open this Help guide</li>
+            <li><strong style="color: var(--accent-blue);">Escape</strong>: Close any active dialog / modal</li>
+          </ul>
+        </div>
+
+        <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px;">
+          <h4 style="color: var(--text-primary); margin-bottom: 6px; font-size: 13px;">🚀 Task Management &amp; Features</h4>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 4px;">
+            <li>• <strong>Views:</strong> Toggle between detailed List view and Kanban board (To Do, In Progress, Done).</li>
+            <li>• <strong>Categories &amp; Tags:</strong> Group tasks by project (Work, Personal, Project, Health, Shopping).</li>
+            <li>• <strong>Priorities:</strong> High, Medium, and Low with color-coded badges.</li>
+            <li>• <strong>Checklists:</strong> Click <span style="color: var(--text-primary);">📋</span> on any task card to expand and add subtasks.</li>
+            <li>• <strong>Markdown &amp; Backups:</strong> Click <em>💾 Import / Export</em> to backup JSON/CSV or sync GFM Markdown task lists.</li>
+          </ul>
+        </div>
+        <button class="btn btn-primary" style="justify-content: center; margin-top: 4px;" onclick="closeHelpModal()">Got it</button>
       </div>
     </div>
   </div>
@@ -993,11 +1026,13 @@
       renderAppView();
     }
 
+    let toastTimer = null;
     function showToast(msg) {
       const toast = document.getElementById('toast');
       toast.textContent = msg;
       toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2500);
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
     function escapeHtml(unsafe) {
@@ -1394,6 +1429,8 @@
     // Modal & Data Export / Import Logic
     function openIOModal() { document.getElementById('ioModal').classList.add('active'); }
     function closeIOModal() { document.getElementById('ioModal').classList.remove('active'); }
+    function openHelpModal() { document.getElementById('helpModal').classList.add('active'); }
+    function closeHelpModal() { document.getElementById('helpModal').classList.remove('active'); }
 
     function generateMarkdownText() {
       let md = "# 📝 KTodo Task List\n\n";
@@ -1591,7 +1628,7 @@
         closeIOModal();
         showToast(`Parsed & imported ${imported.length} tasks from Markdown!`);
       } else {
-        alert('No valid Markdown task list lines found (`- [ ] task name`).');
+        showToast('⚠️ No valid Markdown task list lines found (`- [ ] task name`).');
       }
     }
 
@@ -1611,7 +1648,7 @@
               showToast(`Imported ${tasks.length} tasks from Markdown file!`);
               closeIOModal();
             } else {
-              alert('Could not find standard Markdown tasks (`- [ ] text`) in file.');
+              showToast('⚠️ Could not find standard Markdown tasks (`- [ ] text`) in file.');
             }
           } else if (file.name.endsWith('.json')) {
             const imported = JSON.parse(content);
@@ -1621,7 +1658,7 @@
               showToast(`Successfully imported ${tasks.length} tasks!`);
               closeIOModal();
             } else {
-              alert('Invalid JSON format. Array of tasks expected.');
+              showToast('⚠️ Invalid JSON format. Array of tasks expected.');
             }
           } else if (file.name.endsWith('.csv')) {
             const lines = content.split(/\r?\n/).filter(l => l.trim().length > 0);
@@ -1648,7 +1685,7 @@
             }
           }
         } catch (err) {
-          alert('Error parsing file: ' + err.message);
+          showToast('⚠️ Error parsing file: ' + err.message);
         }
       };
       reader.readAsText(file);
@@ -1703,15 +1740,28 @@
     renderAppView();
     
     document.addEventListener('keydown', (e) => {
+      const isInput = ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName);
       if (e.key === 'Escape') {
         closeIOModal();
+        closeHelpModal();
       }
-      if ((e.key.toLowerCase() === 'h' || e.key === 'F1') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT' && e.target.tagName !== 'TEXTAREA') {
-        if (e.key === 'F1') e.preventDefault();
-        alert("KTodo Help:\n- Use the top bar to switch between List and Kanban views.\n- Click Category tabs to filter by project.\n- Click Import/Export to save or parse Markdown task lists.\n- Press 'h' or F1 for help.");
+      if (!isInput) {
+        if (e.key === 'F1' || e.key.toLowerCase() === 'h') {
+          if (e.key === 'F1') e.preventDefault();
+          const help = document.getElementById('helpModal');
+          if (help && help.classList.contains('active')) {
+            closeHelpModal();
+          } else {
+            openHelpModal();
+          }
+        } else if (e.key === '1') {
+          setViewMode('list');
+        } else if (e.key === '2') {
+          setViewMode('kanban');
+        }
       }
     });
-    setTimeout(() => showToast("Welcome to KTodo! Press 'h' or F1 for help."), 500);
+    setTimeout(() => showToast("✨ Welcome to KTodo! Press [F1] or [H] for quick help."), 500);
   </script>
 </body>
 </html>
