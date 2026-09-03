@@ -37,6 +37,18 @@ static COLORREF g_textColor = RGB(30, 30, 30);
 
 static char g_lastSearchQuery[128] = {0};
 
+void UpdateWindowTitle(HWND hwnd) {
+    if (!hwnd) return;
+    char szTitle[256];
+    if (g_NumTabs > 0 && g_ActiveTab >= 0 && g_ActiveTab < g_NumTabs) {
+        wsprintfA(szTitle, "KRead Native - [%s] (%d/%d) - Press F1 or H for Help", 
+            g_Tabs[g_ActiveTab].szTitle, g_ActiveTab + 1, g_NumTabs);
+    } else {
+        lstrcpyA(szTitle, "KRead Native E-Reader - Press F1 or H for Help");
+    }
+    SetWindowTextA(hwnd, szTitle);
+}
+
 void UpdateFont(HWND hwnd) {
     if (hFont) DeleteObject(hFont);
     HDC hdc = GetDC(hwnd);
@@ -102,6 +114,7 @@ void LoadTabState(int index) {
     if (g_hTabCtrl) {
         TabCtrl_SetCurSel(g_hTabCtrl, index);
     }
+    UpdateWindowTitle(g_hMainWnd);
 }
 
 void SwitchToTab(HWND hwnd, int newIndex) {
@@ -168,6 +181,7 @@ void CloseCurrentTab(HWND hwnd) {
         TabCtrl_SetItem(g_hTabCtrl, 0, &tie);
         
         SetWindowTextA(hEdit, "");
+        UpdateWindowTitle(hwnd);
         return;
     }
 
@@ -238,6 +252,7 @@ void OpenFileAndLoad(HWND hwnd, BOOL inNewTab) {
                             tie.mask = TCIF_TEXT;
                             tie.pszText = g_Tabs[g_ActiveTab].szTitle;
                             TabCtrl_SetItem(g_hTabCtrl, g_ActiveTab, &tie);
+                            UpdateWindowTitle(hwnd);
                         }
                     }
                     VirtualFree(pszFileText, 0, MEM_RELEASE);
@@ -331,6 +346,31 @@ void PerformSearch(HWND hwnd) {
     VirtualFree(text, 0, MEM_RELEASE);
 }
 
+void ShowHelpDialog(HWND hwnd) {
+    const char* szHelp = 
+        "KRead Native E-Reader - User & Keyboard Guide\n"
+        "===============================================\n\n"
+        "KEYBOARD SHORTCUTS:\n"
+        "  F1 or H               : Show this Help Guide\n"
+        "  Ctrl + O              : Open File in Active Tab\n"
+        "  Ctrl + Shift + O      : Open File in New Tab\n"
+        "  Ctrl + T              : Open New Reading Tab\n"
+        "  Ctrl + W              : Close Current Tab\n"
+        "  Ctrl + Tab            : Switch to Next Tab\n"
+        "  Ctrl + Shift + Tab    : Switch to Previous Tab\n"
+        "  Ctrl + 1 .. 9         : Jump Directly to Tab 1-9\n"
+        "  Ctrl + F              : Find / Search Text in Active Tab\n"
+        "  Ctrl + B              : Save Bookmark at Current Position\n"
+        "  Ctrl + S              : Reading Statistics Engine & WPM\n"
+        "  Ctrl + '+' / '-'      : Increase / Decrease Font Size\n\n"
+        "FEATURES:\n"
+        "  * Multi-Tab Sessions (up to 12 concurrent docs)\n"
+        "  * Per-tab Independent Cursor & Bookmarks\n"
+        "  * Reading Speed & Time Remaining Estimator\n"
+        "  * High-DPI Crisp Font Scaling & Themes (Light/Dark/Sepia/Contrast)";
+    MessageBoxA(hwnd, szHelp, "KRead Help (F1 / H)", MB_OK | MB_ICONINFORMATION);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
@@ -339,8 +379,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             // File Menu
             HMENU hSubFile = CreatePopupMenu();
-            AppendMenuA(hSubFile, MF_STRING, 1001, "Open File...");
-            AppendMenuA(hSubFile, MF_STRING, 1009, "Open File in New Tab...\tCtrl+O");
+            AppendMenuA(hSubFile, MF_STRING, 1001, "Open File...\tCtrl+O");
+            AppendMenuA(hSubFile, MF_STRING, 1009, "Open File in New Tab...\tCtrl+Shift+O");
             AppendMenuA(hSubFile, MF_STRING, 1007, "Export Statistics...");
             AppendMenuA(hSubFile, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hSubFile, MF_STRING, 1002, "Exit");
@@ -357,30 +397,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // View Menu
             HMENU hSubView = CreatePopupMenu();
-            AppendMenuA(hSubView, MF_STRING, 1003, "Reading Statistics Engine");
-            AppendMenuA(hSubView, MF_STRING, 1004, "Find Text...");
+            AppendMenuA(hSubView, MF_STRING, 1003, "Reading Statistics Engine\tCtrl+S");
+            AppendMenuA(hSubView, MF_STRING, 1004, "Find Text...\tCtrl+F");
             AppendMenuA(hSubView, MF_SEPARATOR, 0, NULL);
-            AppendMenuA(hSubView, MF_STRING, 1008, "Help\tF1 / H");
+            AppendMenuA(hSubView, MF_STRING, 1008, "Help Guide\tF1 / H");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubView, "View");
 
             // Bookmarks Menu
             HMENU hSubBM = CreatePopupMenu();
-            AppendMenuA(hSubBM, MF_STRING, 1005, "Add Bookmark at Position");
+            AppendMenuA(hSubBM, MF_STRING, 1005, "Add Bookmark at Position\tCtrl+B");
             AppendMenuA(hSubBM, MF_STRING, 1006, "Jump to Saved Bookmark");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubBM, "Bookmarks");
 
             // Theme Menu
             HMENU hSubTheme = CreatePopupMenu();
-            AppendMenuA(hSubTheme, MF_STRING, 1010, "Light Theme");
-            AppendMenuA(hSubTheme, MF_STRING, 1011, "Dark Theme");
-            AppendMenuA(hSubTheme, MF_STRING, 1012, "Sepia Theme");
-            AppendMenuA(hSubTheme, MF_STRING, 1013, "High-Contrast Theme");
+            AppendMenuA(hSubTheme, MF_STRING, 1010, "☀️ Light Theme");
+            AppendMenuA(hSubTheme, MF_STRING, 1011, "🌙 Dark Theme");
+            AppendMenuA(hSubTheme, MF_STRING, 1012, "📜 Sepia Theme");
+            AppendMenuA(hSubTheme, MF_STRING, 1013, "⚡ High-Contrast Theme");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubTheme, "Themes");
 
             // Font Menu
             HMENU hSubFont = CreatePopupMenu();
-            AppendMenuA(hSubFont, MF_STRING, 1020, "Font Size +");
-            AppendMenuA(hSubFont, MF_STRING, 1021, "Font Size -");
+            AppendMenuA(hSubFont, MF_STRING, 1020, "Font Size + (Ctrl++)");
+            AppendMenuA(hSubFont, MF_STRING, 1021, "Font Size - (Ctrl+-)");
             AppendMenuA(hSubFont, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hSubFont, MF_STRING, 1022, "Georgia (Serif)");
             AppendMenuA(hSubFont, MF_STRING, 1023, "Segoe UI (Sans-Serif)");
@@ -389,15 +429,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             SetMenu(hwnd, hMenu);
 
+            HDC hdc = GetDC(hwnd);
+            int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+            ReleaseDC(hwnd, hdc);
+            int tabHeight = MulDiv(28, dpi, 96);
+
             // Tab Control
             g_hTabCtrl = CreateWindowExA(0, WC_TABCONTROLA, "", 
                 WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | TCS_TABS | TCS_FOCUSNEVER, 
-                0, 0, 800, 28, hwnd, (HMENU)2001, GetModuleHandleA(NULL), NULL);
+                0, 0, 850, tabHeight, hwnd, (HMENU)2001, GetModuleHandleA(NULL), NULL);
 
             // Edit Control
             hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", 
                 WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_NOHIDESEL | ES_WANTRETURN | ES_READONLY, 
-                0, 28, 800, 500, hwnd, NULL, NULL, NULL);
+                0, tabHeight, 850, 550, hwnd, NULL, NULL, NULL);
 
             SendMessageA(hEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(16, 16));
 
@@ -405,18 +450,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTheme(hwnd, RGB(250, 250, 250), RGB(30, 30, 30));
 
             // Create Initial Tab
-            AddNewTab(hwnd, "Welcome", "Welcome to KRead Native E-Reader.\r\n\r\nFeatures:\r\n- Multi-Tab Reading Sessions (Ctrl+T for New Tab, Ctrl+W to Close)\r\n- File -> Open to load documents into tabs\r\n- Bookmarks & Reading Statistics Engine\r\n- Themes and Font Customization\r\n\r\nPress F1 or 'H' for Help.");
+            AddNewTab(hwnd, "Welcome", 
+                "====================================================\r\n"
+                "  WELCOME TO KREAD NATIVE E-READER & DOCUMENT ENGINE\r\n"
+                "====================================================\r\n\r\n"
+                "Quick Start Guide:\r\n"
+                "  * Press F1 or 'H' anytime for the comprehensive Help Guide.\r\n"
+                "  * Press Ctrl+O to open a text document into the current tab.\r\n"
+                "  * Press Ctrl+T to open a new tab session.\r\n"
+                "  * Press Ctrl+1 through Ctrl+9 to quickly switch tabs.\r\n"
+                "  * Press Ctrl+B to save your reading bookmark.\r\n"
+                "  * Press Ctrl+S to view real-time reading stats and estimated time.\r\n"
+                "  * Use Themes & Font menus to customize your reading environment.\r\n\r\n"
+                "Happy Reading!");
             break;
         }
         case WM_SIZE: {
             int w = LOWORD(lParam);
             int h = HIWORD(lParam);
-            int tabHeight = 28;
+            HDC hdc = GetDC(hwnd);
+            int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+            ReleaseDC(hwnd, hdc);
+            int tabHeight = MulDiv(28, dpi, 96);
+
             if (g_hTabCtrl) {
                 MoveWindow(g_hTabCtrl, 0, 0, w, tabHeight, TRUE);
             }
             if (hEdit) {
-                MoveWindow(hEdit, 0, tabHeight, w, h - tabHeight, TRUE);
+                MoveWindow(hEdit, 0, tabHeight, w, max(0, h - tabHeight), TRUE);
             }
             break;
         }
@@ -464,7 +525,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                         int estMins = (words + 199) / 200; // 200 WPM
                         char msg[512];
-                        wsprintfA(msg, "--- KREAD STATISTICS ENGINE ---\n\nActive Tab:\t\t%s (%d of %d)\nTotal Characters:\t%d\nTotal Words:\t\t%d\nTotal Lines:\t\t%d\nEst. Reading Speed:\t200 WPM\nEst. Time Remaining:\t%d minutes", 
+                        wsprintfA(msg, "--- KREAD READING STATISTICS ENGINE ---\n\nActive Tab:\t\t%s (%d of %d)\nTotal Characters:\t%d\nTotal Words:\t\t%d\nTotal Lines:\t\t%d\nEst. Reading Speed:\t200 WPM\nEst. Time Remaining:\t%d minutes", 
                             g_Tabs[g_ActiveTab].szTitle, g_ActiveTab + 1, g_NumTabs, chars, words, lines, estMins);
                         
                         if (id == 1007) {
@@ -486,7 +547,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Help
             if (id == 1008) {
-                MessageBoxA(hwnd, "KRead Help:\n\n- Tabs -> New Tab (Ctrl+T): Open a new document tab\n- Tabs -> Close Tab (Ctrl+W): Close the current tab\n- File -> Open / Open in New Tab: Load text documents\n- View -> Statistics: Check reading progress & WPM\n- Bookmarks: Save & jump to position per tab\n- Themes/Fonts: Customize appearance", "KRead Help", MB_OK | MB_ICONINFORMATION);
+                ShowHelpDialog(hwnd);
             }
 
             // Bookmarks
@@ -556,7 +617,7 @@ void __stdcall MainEntry() {
     RegisterClassA(&wc);
     RECT rc = { 0, 0, 850, 620 };
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, TRUE);
-    HWND hwnd = CreateWindowExA(0, "KReadClass", "KRead Native E-Reader - Multi-Tab Edition (F1 for Help)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KReadClass", "KRead Native E-Reader - Press F1 or H for Help", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
@@ -576,7 +637,38 @@ void __stdcall MainEntry() {
                 continue;
             }
             if (ctrl && (msg.wParam == 'O' || msg.wParam == 'o')) {
-                SendMessageA(hwnd, WM_COMMAND, 1009, 0);
+                if (shift) {
+                    SendMessageA(hwnd, WM_COMMAND, 1009, 0);
+                } else {
+                    SendMessageA(hwnd, WM_COMMAND, 1001, 0);
+                }
+                continue;
+            }
+            if (ctrl && (msg.wParam == 'F' || msg.wParam == 'f')) {
+                SendMessageA(hwnd, WM_COMMAND, 1004, 0);
+                continue;
+            }
+            if (ctrl && (msg.wParam == 'B' || msg.wParam == 'b')) {
+                SendMessageA(hwnd, WM_COMMAND, 1005, 0);
+                continue;
+            }
+            if (ctrl && (msg.wParam == 'S' || msg.wParam == 's')) {
+                SendMessageA(hwnd, WM_COMMAND, 1003, 0);
+                continue;
+            }
+            if (ctrl && (msg.wParam == VK_OEM_PLUS || msg.wParam == VK_ADD || msg.wParam == '=')) {
+                SendMessageA(hwnd, WM_COMMAND, 1020, 0);
+                continue;
+            }
+            if (ctrl && (msg.wParam == VK_OEM_MINUS || msg.wParam == VK_SUBTRACT)) {
+                SendMessageA(hwnd, WM_COMMAND, 1021, 0);
+                continue;
+            }
+            if (ctrl && msg.wParam >= '1' && msg.wParam <= '9') {
+                int targetTab = (int)(msg.wParam - '1');
+                if (targetTab < g_NumTabs) {
+                    SwitchToTab(hwnd, targetTab);
+                }
                 continue;
             }
             if (ctrl && msg.wParam == VK_TAB) {
@@ -587,11 +679,9 @@ void __stdcall MainEntry() {
                 }
                 continue;
             }
-            if (msg.wParam == VK_F1 || msg.wParam == 'H') {
-                if (!ctrl && !shift) {
-                    SendMessageA(hwnd, WM_COMMAND, 1008, 0);
-                    continue;
-                }
+            if (msg.wParam == VK_F1 || (!ctrl && !shift && (msg.wParam == 'H' || msg.wParam == 'h'))) {
+                SendMessageA(hwnd, WM_COMMAND, 1008, 0);
+                continue;
             }
         }
         TranslateMessage(&msg);

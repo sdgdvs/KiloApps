@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KRead
+**Target App:** KJournal
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KRead
 - KJournal
 - KBase
 - KPad
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KGraph
 - KTimer
 - KContacts
+- KRead
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KRead: Usability and UI issues fixed (replaced blocking browser alerts/prompts/confirms with custom modal dialogs for Tab Renaming, Annotation Notes, and Clear Confirmation, added non-blocking toast notifications with startup welcome prompt, sample document quick-loaders on empty state, Markdown export format alongside JSON/TXT, and keyboard shortcuts F1/H, Esc, Ctrl+T, Ctrl+W, Ctrl+O, Ctrl+F, Ctrl+B, Ctrl+S, Ctrl+1-9, +/- in web; updated native C with dynamic high-DPI tab bar height calculation, full message loop hotkeys F1/H/Ctrl+T/Ctrl+W/Ctrl+O/Ctrl+F/Ctrl+B/Ctrl+S/Ctrl+1-9/Ctrl++/Ctrl+-, comprehensive ShowHelpDialog guide, dynamic window title status, and synchronized 850x620 bounds in App.jsx).
 - KContacts: Usability and UI issues fixed (replaced blocking browser alerts/prompts/confirms with sleek cyber modals for Export format selection, Delete confirmation, and Help guide, added non-blocking toast notifications with startup welcome prompt, search clear button, dynamic category count badges, Enter-to-save on inputs, and keyboard shortcuts F1/H, Esc, Ctrl+S, Ctrl+N, 1-7 category switching, and list navigation in web; updated native C with explicit button shortcut badges [+ New [N], Help [F1], Save Details [Ctrl+S]], full message loop hotkeys F1/H/Ctrl+S/Ctrl+N/1-7/Del/Esc/Ctrl+M/Ctrl+E/Ctrl+I, ShowHelpDialog user guide, and window title hint).
 - KTimer: Usability and UI issues fixed (replaced blocking alert popups with cybernetic Help modal dialog and non-blocking toast notifications with startup welcome toast, added 1-5 tab switching hotkeys, Space Start/Pause, L lap split, R reset, and Enter-to-start/add on input fields in web; added Help [F1] tab button, ShowHelpDialog user guide, [1-5] tab switching, Space/L/R hotkeys, Enter-to-start in duration edit controls, and window title hint in native C).
 - KGraph: Usability and UI issues fixed (integrated cybernetic Help modal dialog with shortcuts and mathematical formula syntax reference, non-blocking toast notifications with startup welcome toast and export/zoom feedback, Enter key instant evaluation on inputs, ResizeObserver for high-DPI scaling, 1-4 tab and C/P/M mode switching shortcuts in web; implemented mouse wheel zooming, Enter key evaluation via edit subclassing, custom dark theme styling eliminating gray control flash, WS_CLIPCHILDREN flicker reduction, ShowHelpDialog, and keyboard hotkeys M/P/R/Enter/F1 in native C).
