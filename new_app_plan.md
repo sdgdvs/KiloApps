@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KSubmarine (Deep-sea underwater exploration & abyssal survival RPG)
-**Phase:** 11 (next to do)
+**Phase:** 12 (next to do)
 **Status:** Deep Expansion
 
 - [x] Phase 1: Scaffold KSubmarine directory (`KSubmarine/`), create web HTML skeleton (`KiloOS/public/apps/ksubmarine.html`), register in App.jsx.
@@ -67,7 +67,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 8: Resource salvage & dredging claw system (harvest manganese nodules, rare sea minerals, lost sunken wrecks, black smoker crystals).
 - [x] Phase 9: Hull breach & emergency flood management (repair bulkhead leaks, manage bilge pumps, equalize internal air pressure).
 - [x] Phase 10: Research lab & deep-sea biology discovery (catalog alien abyssal species, research pressure-resistant polymers, bioluminescent enzymes).
-- [ ] Phase 11: Surface support ship & underwater trading outposts (dock with deep research stations, trade minerals for torpedoes and batteries).
+- [x] Phase 11: Surface support ship & underwater trading outposts (dock with deep research stations, trade minerals for torpedoes and batteries).
 - [ ] Phase 12: Torpedo defense & undersea combat (defend against hostile leviathans and robotic dredging drones with acoustic decoys and torpedoes).
 - [ ] Phase 13: Sound Effects — Sonar pings, deep-sea whale song, ballast blow hisses, hull pressure groans, torpedo launches (Web Audio / Win32 Beep).
 - [ ] Phase 14: Comprehensive Help & Captain's Submersible Manual — Dive mechanics, navigation charts, fauna codex, and survival tactics.

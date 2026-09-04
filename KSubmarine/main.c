@@ -77,6 +77,29 @@
 #define ID_BTN_RES_BIOLUM       164
 #define ID_BTN_RES_BIOFUEL      165
 #define ID_BTN_RES_REGEN        166
+#define ID_BTN_VIEW_OUTPOSTS    167
+#define ID_BTN_DOCK_OUTPOST     168
+#define ID_BTN_UNDOCK_OUTPOST   169
+#define ID_BTN_USE_BATTERY      170
+#define ID_BTN_USE_REPAIR_KIT   171
+#define ID_BTN_TRADE_SELL_ALL   172
+#define ID_BTN_TRADE_RECHARGE   173
+#define ID_BTN_TRADE_AIR        174
+#define ID_BTN_TRADE_REPAIR     175
+#define ID_BTN_BUY_TORPEDO      176
+#define ID_BTN_BUY_EMP_TORPEDO  177
+#define ID_BTN_BUY_PLASMA_TORPEDO 178
+#define ID_BTN_BUY_BATTERY_PACK 179
+#define ID_BTN_BUY_REPAIR_KIT   180
+#define ID_BTN_BARTER_TORPEDO   181
+#define ID_BTN_BARTER_EMP       182
+#define ID_BTN_BARTER_PLASMA    183
+#define ID_BTN_BARTER_BATTERY   184
+#define ID_BTN_BARTER_REPAIR    185
+#define ID_BTN_SELECT_OUTPOST_0 186
+#define ID_BTN_SELECT_OUTPOST_1 187
+#define ID_BTN_SELECT_OUTPOST_2 188
+#define ID_BTN_SELECT_OUTPOST_3 189
 
 typedef enum {
     THEME_ABYSS = 0,
@@ -414,6 +437,27 @@ static FaunaAnomaly g_fauna[FAUNA_COUNT] = {
     { "f12", "Challenger Deep Subduction Rift", 3, 3, 10850.0f, 10.2f, 11.0f, 0.0f, 0.0f, "The deepest subduction rupture on Earth, echoing with gravitational distortion.", "150 LUX (GRAVITATIONAL)", "8 HZ INFRASOUND", "Primordial Abyssal Abyss", 400, 0 }
 };
 
+
+// --- PHASE 11: OUTPOSTS & RESEARCH STATIONS ---
+typedef struct {
+    char id[8];
+    char name[48];
+    char subtitle[48];
+    int sectorIdx;
+    float depth;
+    float x, y;
+    char desc[128];
+} OutpostInfo;
+
+#define OUTPOST_COUNT 4
+
+static const OutpostInfo g_outposts[OUTPOST_COUNT] = {
+    { "o01", "Surface Support Tender ORCA-V", "Fleet Logistics & Drydock Flagship", 0, 0.0f, 0.0f, 0.0f, "Surface mother vessel providing air refills, generator charging & acoustic torpedoes." },
+    { "o02", "Bathyal Outpost NEPTUNE-PRIME", "Mesopelagic Slope Research Station", 1, 580.0f, 3.2f, -2.8f, "Deep research station anchored to continental slope. Supplies EMP shock torpedoes." },
+    { "o03", "Thermal Research Dome VULCAN-7", "Geothermal Smoker Station", 2, 2550.0f, -4.8f, -6.2f, "Pressurized geodesic dome powered by hydrothermal vents. Fabricates thermal plasma torpedoes." },
+    { "o04", "Hadal Deep Lab TETHYS-IX", "Ultra-Deep Mariana Chasm Outpost", 3, 8400.0f, 7.8f, 8.2f, "Sub-crustal hadal research outpost trading extreme-depth plasma ordnance & quantum battery packs." }
+};
+
 // --- RESOURCE SALVAGE & DREDGING (PHASE 8) ---
 typedef struct {
     const char* key;
@@ -556,6 +600,15 @@ typedef struct {
     int isDredging;
     float dredgeProgress;
 
+    // Phase 11: Ordnance, Equipment & Outposts
+    int torpedoes;
+    int empTorpedoes;
+    int plasmaTorpedoes;
+    int batteryPacks;
+    int repairKits;
+    int isDocked;
+    int dockedStationIdx;
+    int selectedOutpostIdx;
     // Phase 10: Deep-Sea Biology & Research Lab
     int bioPlankton;
     int bioCephalopod;
@@ -632,6 +685,9 @@ void PlayClawServo(void);
 void PlayMineralChime(void);
 void PlayLabCentrifuge(void);
 void PlayResearchBreakthrough(void);
+void PlayDockingClamps(void);
+void PlayTradeChime(void);
+void DrawOutpostTradeView(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* th);
 void AddLog(const char* text, COLORREF color);
 void InitSubmarineState(void);
 void UpdateSimulation(float dt);
@@ -756,6 +812,35 @@ DWORD WINAPI ResearchBreakthroughThreadProc(LPVOID lpParam) {
     Sleep(15);
     Beep(1046, 160);
     return 0;
+}
+
+
+DWORD WINAPI DockingClampSoundThreadProc(LPVOID lpParam) {
+    Beep(140, 150);
+    Sleep(20);
+    Beep(90, 180);
+    Sleep(20);
+    Beep(45, 250);
+    return 0;
+}
+
+void PlayDockingClamps(void) {
+    if (!g_sub.soundEnabled) return;
+    CreateThread(NULL, 0, DockingClampSoundThreadProc, NULL, 0, NULL);
+}
+
+DWORD WINAPI TradeChimeSoundThreadProc(LPVOID lpParam) {
+    Beep(587, 80);
+    Sleep(15);
+    Beep(880, 100);
+    Sleep(15);
+    Beep(1174, 150);
+    return 0;
+}
+
+void PlayTradeChime(void) {
+    if (!g_sub.soundEnabled) return;
+    CreateThread(NULL, 0, TradeChimeSoundThreadProc, NULL, 0, NULL);
 }
 
 void PlayResearchBreakthrough(void) {
@@ -1613,6 +1698,25 @@ void DrawNavMapChart(HDC hdc, int cx, int cy, int mapW, int mapH, const Submarin
         }
     }
 
+    
+    // Outposts on Nav Map
+    for (int i = 0; i < OUTPOST_COUNT; i++) {
+        const OutpostInfo* out = &g_outposts[i];
+        int ox = cx + (int)((out->x - g_sub.posX) * scale);
+        int oy = cy + (int)((out->y - g_sub.posY) * scale);
+        if (ox >= rcMap.left + 5 && ox <= rcMap.right - 5 && oy >= rcMap.top + 5 && oy <= rcMap.bottom - 5) {
+            int isDocked = (g_sub.isDocked && g_sub.dockedStationIdx == i);
+            HBRUSH hBrOut = CreateSolidBrush(isDocked ? th->accentEmerald : th->accentSonar);
+            SelectObject(hdc, hBrOut);
+            RECT rcO = { ox - 5, oy - 5, ox + 5, oy + 5 };
+            FillRect(hdc, &rcO, hBrOut);
+            DeleteObject(hBrOut);
+
+            SetTextColor(hdc, isDocked ? th->accentEmerald : th->textBright);
+            TextOutA(hdc, ox + 7, oy - 6, out->name, (int)strlen(out->name));
+        }
+    }
+
     // Salvage Nodes on Nav Map
     for (int i = 0; i < SALVAGE_NODE_COUNT; i++) {
         const SalvageNode* sn = &g_salvageNodes[i];
@@ -2353,6 +2457,199 @@ void DrawResearchLabView(HDC hdc, int x, int y, int w, int h, const SubmarineThe
     }
 }
 
+
+void DrawOutpostTradeView(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* th) {
+    RECT rcBg = { x, y, x + w, y + h };
+    HBRUSH hBr = CreateSolidBrush(th->bgDeep);
+    FillRect(hdc, &rcBg, hBr);
+    DeleteObject(hBr);
+
+    char hdrBuf[128];
+    if (g_sub.isDocked) {
+        snprintf(hdrBuf, sizeof(hdrBuf), "⚓ DOCKED AT: %s  |  CREDITS: %d PTS",
+                 g_outposts[g_sub.dockedStationIdx].name, g_sub.surveyPoints);
+    } else {
+        snprintf(hdrBuf, sizeof(hdrBuf), "OUTPOST COMMISSARY: CRUISING AT SEA  |  RESEARCH CREDITS: %d PTS",
+                 g_sub.surveyPoints);
+    }
+
+    SelectObject(hdc, g_hFontBold);
+    SetTextColor(hdc, g_sub.isDocked ? th->accentEmerald : th->accentSonar);
+    TextOutA(hdc, x + 8, y + 6, hdrBuf, (int)strlen(hdrBuf));
+
+    // Emergency consumable quick buttons in header
+    char batBuf[32];
+    snprintf(batBuf, sizeof(batBuf), "⚡ USE BATTERY (x%d)", g_sub.batteryPacks);
+    DrawCustomButton(hdc, ID_BTN_USE_BATTERY, x + w - 270, y + 4, 130, 20, batBuf, 0, g_sub.batteryPacks > 0 ? th->accentSonar : th->textDim, th);
+
+    char repBuf[32];
+    snprintf(repBuf, sizeof(repBuf), "🛠️ USE PATCH (x%d)", g_sub.repairKits);
+    DrawCustomButton(hdc, ID_BTN_USE_REPAIR_KIT, x + w - 134, y + 4, 126, 20, repBuf, 0, g_sub.repairKits > 0 ? th->accentEmerald : th->textDim, th);
+
+    // Ordnance Magazine status row
+    int ordY = y + 28;
+    int ordW = (w - 20) / 5;
+    const char* ordNames[5] = { "Acoustic Torp", "EMP Torpedo", "Plasma Torp", "Battery Packs", "Nanopatch Kits" };
+    int ordCounts[5] = { g_sub.torpedoes, g_sub.empTorpedoes, g_sub.plasmaTorpedoes, g_sub.batteryPacks, g_sub.repairKits };
+    int ordMax[5] = { 12, 6, 4, 8, 6 };
+
+    for (int i = 0; i < 5; i++) {
+        int ox = x + 6 + i * (ordW + 2);
+        RECT rcOrd = { ox, ordY, ox + ordW, ordY + 22 };
+        HBRUSH hBrP = CreateSolidBrush(th->bgPanel);
+        HBRUSH hBrB = CreateSolidBrush(th->borderPanel);
+        FillRect(hdc, &rcOrd, hBrP);
+        FrameRect(hdc, &rcOrd, hBrB);
+        DeleteObject(hBrP);
+        DeleteObject(hBrB);
+
+        SelectObject(hdc, g_hFontSmall);
+        SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, ox + 4, ordY + 4, ordNames[i], (int)strlen(ordNames[i]));
+
+        char cBuf[32];
+        snprintf(cBuf, sizeof(cBuf), "%d/%d", ordCounts[i], ordMax[i]);
+        SetTextColor(hdc, ordCounts[i] > 0 ? th->accentSonar : th->textDim);
+        SIZE sz;
+        GetTextExtentPoint32A(hdc, cBuf, (int)strlen(cBuf), &sz);
+        TextOutA(hdc, ox + ordW - sz.cx - 4, ordY + 4, cBuf, (int)strlen(cBuf));
+    }
+
+    // Top section: 4 Outpost Cards
+    int cardsY = ordY + 26;
+    int cardH = 92;
+    int cardW = (w - 20) / 4;
+
+    for (int i = 0; i < OUTPOST_COUNT; i++) {
+        const OutpostInfo* out = &g_outposts[i];
+        int cx = x + 6 + i * (cardW + 2);
+
+        float dx = out->x - g_sub.posX;
+        float dy = out->y - g_sub.posY;
+        float distM = sqrtf(dx * dx + dy * dy) * 1000.0f;
+        float depthDiff = fabsf(g_sub.depth - out->depth);
+        int inRange = (distM <= 300.0f && depthDiff <= (i == 0 ? 25.0f : (i == 3 ? 70.0f : 50.0f)));
+        int isDockedHere = (g_sub.isDocked && g_sub.dockedStationIdx == i);
+        int isSelected = (g_sub.selectedOutpostIdx == i);
+
+        RECT rcCard = { cx, cardsY, cx + cardW, cardsY + cardH };
+        HBRUSH hBrP = CreateSolidBrush(isDockedHere ? RGB(6, 30, 20) : th->bgPanel);
+        HBRUSH hBrB = CreateSolidBrush(isDockedHere ? th->accentEmerald : (inRange ? th->accentSonar : th->borderPanel));
+        FillRect(hdc, &rcCard, hBrP);
+        FrameRect(hdc, &rcCard, hBrB);
+        DeleteObject(hBrP);
+        DeleteObject(hBrB);
+
+        SelectObject(hdc, g_hFontBold);
+        SetTextColor(hdc, isDockedHere ? th->accentEmerald : th->textBright);
+        TextOutA(hdc, cx + 4, cardsY + 4, out->name, (int)strlen(out->name));
+
+        SelectObject(hdc, g_hFontSmall);
+        SetTextColor(hdc, th->textDim);
+        char sBuf[64];
+        snprintf(sBuf, sizeof(sBuf), "%.0fm | %s", out->depth, g_sectors[out->sectorIdx].name);
+        TextOutA(hdc, cx + 4, cardsY + 18, sBuf, (int)strlen(sBuf));
+
+        snprintf(sBuf, sizeof(sBuf), "Dist: %.0fm (ΔZ: %.0fm)", distM, depthDiff);
+        SetTextColor(hdc, inRange ? th->accentSonar : th->textDim);
+        TextOutA(hdc, cx + 4, cardsY + 32, sBuf, (int)strlen(sBuf));
+
+        SetTextColor(hdc, isDockedHere ? th->accentEmerald : (inRange ? th->accentEmerald : th->accentAmber));
+        const char* statusStr = isDockedHere ? "⚓ DOCKED" : (inRange ? "🟢 IN DOCKING RANGE" : "OUT OF RANGE");
+        TextOutA(hdc, cx + 4, cardsY + 46, statusStr, (int)strlen(statusStr));
+
+        // Action Buttons: Lock Nav & Dock
+        int btnW = (cardW - 12) / 2;
+        DrawCustomButton(hdc, ID_BTN_SELECT_OUTPOST_0 + i, cx + 4, cardsY + cardH - 24, btnW, 20, isSelected ? "TARGETED" : "NAV LOCK", isSelected, th->accentSonar, th);
+        if (isDockedHere) {
+            DrawCustomButton(hdc, ID_BTN_UNDOCK_OUTPOST, cx + 6 + btnW, cardsY + cardH - 24, btnW, 20, "UNDOCK", 1, th->accentAmber, th);
+        } else {
+            DrawCustomButton(hdc, ID_BTN_DOCK_OUTPOST, cx + 6 + btnW, cardsY + cardH - 24, btnW, 20, "DOCK", 0, inRange ? th->accentEmerald : th->textDim, th);
+        }
+    }
+
+    // Bottom section: Station Utilities & Ordnance Commissary
+    int btmY = cardsY + cardH + 6;
+    int btmH = h - (btmY - y) - 6;
+    int halfW = (w - 18) / 2;
+
+    const OutpostInfo* actStation = g_sub.isDocked ? &g_outposts[g_sub.dockedStationIdx] : &g_outposts[g_sub.selectedOutpostIdx];
+
+    // Left Box: Station Drydock & Utilities
+    RECT rcUtil = { x + 6, btmY, x + 6 + halfW, btmY + btmH };
+    HBRUSH hBrP = CreateSolidBrush(th->bgPanel);
+    HBRUSH hBrB = CreateSolidBrush(th->borderPanel);
+    FillRect(hdc, &rcUtil, hBrP);
+    FrameRect(hdc, &rcUtil, hBrB);
+
+    SelectObject(hdc, g_hFontBold);
+    SetTextColor(hdc, th->textBright);
+    TextOutA(hdc, x + 12, btmY + 6, "⚓ DRYDOCK & STATION UTILITIES", 29);
+
+    SelectObject(hdc, g_hFontSmall);
+    SetTextColor(hdc, th->textDim);
+    TextOutA(hdc, x + 12, btmY + 22, actStation->desc, (int)strlen(actStation->desc));
+
+    int uBtnY = btmY + 40;
+    int uBtnW = halfW - 16;
+
+    DrawCustomButton(hdc, ID_BTN_TRADE_RECHARGE, x + 12, uBtnY, uBtnW, 20, "⚡ FULL BATTERY & O2 RECHARGE (FREE/25 PTS)", 0, g_sub.isDocked ? th->accentEmerald : th->textDim, th);
+    uBtnY += 24;
+
+    DrawCustomButton(hdc, ID_BTN_TRADE_AIR, x + 12, uBtnY, uBtnW, 20, "💨 RECHARGE COMPRESSED AIR TANK (FREE/20 PTS)", 0, g_sub.isDocked ? th->accentSonar : th->textDim, th);
+    uBtnY += 24;
+
+    DrawCustomButton(hdc, ID_BTN_TRADE_REPAIR, x + 12, uBtnY, uBtnW, 20, "🛠️ OVERHAUL HULL & PATCH LEAKS (40-100 PTS)", 0, g_sub.isDocked ? th->accentAmber : th->textDim, th);
+    uBtnY += 26;
+
+    char sellBuf[64];
+    snprintf(sellBuf, sizeof(sellBuf), "💎 SELL CARGO MINERALS (+%d PTS)", g_sub.cargoTotalValue);
+    DrawCustomButton(hdc, ID_BTN_TRADE_SELL_ALL, x + 12, uBtnY, uBtnW, 20, sellBuf, 0, g_sub.cargoTotalValue > 0 ? th->accentEmerald : th->textDim, th);
+
+    // Right Box: Ordnance & Commissary Trade
+    int rx = x + 12 + halfW;
+    RECT rcComm = { rx, btmY, rx + halfW, btmY + btmH };
+    FillRect(hdc, &rcComm, hBrP);
+    FrameRect(hdc, &rcComm, hBrB);
+    DeleteObject(hBrP);
+    DeleteObject(hBrB);
+
+    SelectObject(hdc, g_hFontBold);
+    SetTextColor(hdc, th->textBright);
+    TextOutA(hdc, rx + 8, btmY + 6, "🚀 ORDNANCE & AMMUNITION COMMISSARY", 35);
+
+    SelectObject(hdc, g_hFontSmall);
+    SetTextColor(hdc, th->textDim);
+    TextOutA(hdc, rx + 8, btmY + 22, "Purchase torpedoes & batteries with credits or barter minerals:", 62);
+
+    int tBtnY = btmY + 38;
+    int tBtnW = (halfW - 20) / 2;
+
+    // Torpedo 1: Acoustic
+    DrawCustomButton(hdc, ID_BTN_BUY_TORPEDO, rx + 8, tBtnY, tBtnW, 18, "🚀 ACOUSTIC (60 PTS)", 0, g_sub.isDocked && g_sub.torpedoes < 12 && g_sub.surveyPoints >= 60 ? th->accentSonar : th->textDim, th);
+    DrawCustomButton(hdc, ID_BTN_BARTER_TORPEDO, rx + 12 + tBtnW, tBtnY, tBtnW, 18, "BARTER: 1x MANGANESE", 0, g_sub.isDocked && g_sub.torpedoes < 12 && g_sub.cargoManganese >= 1 ? th->accentAmber : th->textDim, th);
+    tBtnY += 21;
+
+    // Torpedo 2: EMP
+    DrawCustomButton(hdc, ID_BTN_BUY_EMP_TORPEDO, rx + 8, tBtnY, tBtnW, 18, "⚡ EMP SHOCK (90 PTS)", 0, g_sub.isDocked && g_sub.empTorpedoes < 6 && g_sub.surveyPoints >= 90 ? th->accentSonar : th->textDim, th);
+    DrawCustomButton(hdc, ID_BTN_BARTER_EMP, rx + 12 + tBtnW, tBtnY, tBtnW, 18, "BARTER: 1x TITANIUM", 0, g_sub.isDocked && g_sub.empTorpedoes < 6 && g_sub.cargoTitaniumScrap >= 1 ? th->accentAmber : th->textDim, th);
+    tBtnY += 21;
+
+    // Torpedo 3: Plasma
+    DrawCustomButton(hdc, ID_BTN_BUY_PLASMA_TORPEDO, rx + 8, tBtnY, tBtnW, 18, "🔥 PLASMA TORP (150 PTS)", 0, g_sub.isDocked && g_sub.plasmaTorpedoes < 4 && g_sub.surveyPoints >= 150 ? th->accentSonar : th->textDim, th);
+    DrawCustomButton(hdc, ID_BTN_BARTER_PLASMA, rx + 12 + tBtnW, tBtnY, tBtnW, 18, "BARTER: 1x SMOKER/HADAL", 0, g_sub.isDocked && g_sub.plasmaTorpedoes < 4 && (g_sub.cargoSmokerCrystals >= 1 || g_sub.cargoHadalPrisms >= 1) ? th->accentAmber : th->textDim, th);
+    tBtnY += 21;
+
+    // Batteries
+    DrawCustomButton(hdc, ID_BTN_BUY_BATTERY_PACK, rx + 8, tBtnY, tBtnW, 18, "🔋 BATTERY CELL (40 PTS)", 0, g_sub.isDocked && g_sub.batteryPacks < 8 && g_sub.surveyPoints >= 40 ? th->accentSonar : th->textDim, th);
+    DrawCustomButton(hdc, ID_BTN_BARTER_BATTERY, rx + 12 + tBtnW, tBtnY, tBtnW, 18, "BARTER: 1x MANGANESE", 0, g_sub.isDocked && g_sub.batteryPacks < 8 && g_sub.cargoManganese >= 1 ? th->accentAmber : th->textDim, th);
+    tBtnY += 21;
+
+    // Nanopatch Kits
+    DrawCustomButton(hdc, ID_BTN_BUY_REPAIR_KIT, rx + 8, tBtnY, tBtnW, 18, "🧰 NANOPATCH KIT (50 PTS)", 0, g_sub.isDocked && g_sub.repairKits < 6 && g_sub.surveyPoints >= 50 ? th->accentEmerald : th->textDim, th);
+    DrawCustomButton(hdc, ID_BTN_BARTER_REPAIR, rx + 12 + tBtnW, tBtnY, tBtnW, 18, "BARTER: 1x TITANIUM", 0, g_sub.isDocked && g_sub.repairKits < 6 && g_sub.cargoTitaniumScrap >= 1 ? th->accentAmber : th->textDim, th);
+}
+
 void DrawUI(HDC hdc, RECT* rcClient) {
     int clientW = rcClient->right - rcClient->left;
     int clientH = rcClient->bottom - rcClient->top;
@@ -2725,6 +3022,8 @@ void DrawUI(HDC hdc, RECT* rcClient) {
         DrawDamageControlView(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
     } else if (g_sub.viewMode == 6) {
         DrawResearchLabView(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
+    } else if (g_sub.viewMode == 7) {
+        DrawOutpostTradeView(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
     }
 
     SelectObject(hdc, g_hFontSmall);
@@ -2926,6 +3225,72 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
         int offY = sonarContentY + 4 + 4;
         if (my >= offY && my <= offY + 20 && mx >= offX && mx <= offX + 160) {
             return ID_BTN_OFFLOAD_CARGO;
+        }
+    }
+
+        // Outposts & Commissary View (viewMode 7)
+    if (g_sub.viewMode == 7) {
+        int sonarContentY = panelY + 52;
+        int sonarContentH = (panelH * 60) / 100 - 58;
+        int ebX = centerX + 6;
+        int ebY = sonarContentY + 4;
+        int ebW = centerW - 12;
+
+        // Header buttons: Use Battery & Use Repair Kit
+        if (my >= ebY + 4 && my <= ebY + 24) {
+            if (mx >= ebX + ebW - 270 && mx <= ebX + ebW - 140) return ID_BTN_USE_BATTERY;
+            if (mx >= ebX + ebW - 134 && mx <= ebX + ebW - 8) return ID_BTN_USE_REPAIR_KIT;
+        }
+
+        int ordY = ebY + 28;
+        int cardsY = ordY + 26;
+        int cardH = 92;
+        int cardW = (ebW - 8) / 4;
+
+        // 4 Outpost cards
+        if (my >= cardsY + cardH - 24 && my <= cardsY + cardH - 4) {
+            for (int i = 0; i < OUTPOST_COUNT; i++) {
+                int cx = ebX + i * (cardW + 2);
+                int btnW = (cardW - 12) / 2;
+                if (mx >= cx + 4 && mx <= cx + 4 + btnW) return ID_BTN_SELECT_OUTPOST_0 + i;
+                if (mx >= cx + 6 + btnW && mx <= cx + 6 + btnW * 2) {
+                    return (g_sub.isDocked && g_sub.dockedStationIdx == i) ? ID_BTN_UNDOCK_OUTPOST : ID_BTN_DOCK_OUTPOST;
+                }
+            }
+        }
+
+        // Bottom utilities & commissary
+        int btmY = cardsY + cardH + 6;
+        int halfW = (ebW - 6) / 2;
+
+        // Left panel (Utilities)
+        if (mx >= ebX + 6 && mx <= ebX + 6 + halfW) {
+            int uBtnY = btmY + 40;
+            if (my >= uBtnY && my <= uBtnY + 20) return ID_BTN_TRADE_RECHARGE;
+            uBtnY += 24;
+            if (my >= uBtnY && my <= uBtnY + 20) return ID_BTN_TRADE_AIR;
+            uBtnY += 24;
+            if (my >= uBtnY && my <= uBtnY + 20) return ID_BTN_TRADE_REPAIR;
+            uBtnY += 26;
+            if (my >= uBtnY && my <= uBtnY + 20) return ID_BTN_TRADE_SELL_ALL;
+        }
+
+        // Right panel (Commissary)
+        int rx = ebX + 12 + halfW;
+        if (mx >= rx && mx <= rx + halfW) {
+            int tBtnY = btmY + 38;
+            int tBtnW = (halfW - 20) / 2;
+            for (int i = 0; i < 5; i++) {
+                if (my >= tBtnY && my <= tBtnY + 18) {
+                    if (mx >= rx + 8 && mx <= rx + 8 + tBtnW) {
+                        return (i == 0 ? ID_BTN_BUY_TORPEDO : (i == 1 ? ID_BTN_BUY_EMP_TORPEDO : (i == 2 ? ID_BTN_BUY_PLASMA_TORPEDO : (i == 3 ? ID_BTN_BUY_BATTERY_PACK : ID_BTN_BUY_REPAIR_KIT))));
+                    }
+                    if (mx >= rx + 12 + tBtnW && mx <= rx + 12 + tBtnW * 2) {
+                        return (i == 0 ? ID_BTN_BARTER_TORPEDO : (i == 1 ? ID_BTN_BARTER_EMP : (i == 2 ? ID_BTN_BARTER_PLASMA : (i == 3 ? ID_BTN_BARTER_BATTERY : ID_BTN_BARTER_REPAIR))));
+                    }
+                }
+                tBtnY += 21;
+            }
         }
     }
 
@@ -3215,6 +3580,242 @@ void HandleCommand(int cmdId) {
             }
             break;
         }
+
+                        case ID_BTN_VIEW_OUTPOSTS:
+            g_sub.viewMode = 7;
+            PlaySoundAsync(580, 80);
+            break;
+
+        case ID_BTN_SELECT_OUTPOST_0:
+        case ID_BTN_SELECT_OUTPOST_1:
+        case ID_BTN_SELECT_OUTPOST_2:
+        case ID_BTN_SELECT_OUTPOST_3: {
+            int selIdx = cmdId - ID_BTN_SELECT_OUTPOST_0;
+            g_sub.selectedOutpostIdx = selIdx;
+            PlaySoundAsync(620, 80);
+            char sMsg[128];
+            snprintf(sMsg, sizeof(sMsg), "🧭 Station Nav Lock set: [%s] (Depth: %.0fm)", g_outposts[selIdx].name, g_outposts[selIdx].depth);
+            AddLog(sMsg, th->accentSonar);
+            break;
+        }
+
+        case ID_BTN_DOCK_OUTPOST: {
+            int selIdx = g_sub.selectedOutpostIdx;
+            const OutpostInfo* out = &g_outposts[selIdx];
+            float dx = out->x - g_sub.posX;
+            float dy = out->y - g_sub.posY;
+            float distM = sqrtf(dx * dx + dy * dy) * 1000.0f;
+            float depthDiff = fabsf(g_sub.depth - out->depth);
+            int inRange = (distM <= 300.0f && depthDiff <= (selIdx == 0 ? 25.0f : (selIdx == 3 ? 70.0f : 50.0f)));
+
+            if (inRange) {
+                g_sub.isDocked = 1;
+                g_sub.dockedStationIdx = selIdx;
+                g_sub.speed = 0.0f;
+                g_sub.targetSpeed = 0.0f;
+                g_sub.throttleMode = 1; // STOP
+                PlayDockingClamps();
+                PlayTradeChime();
+                char dMsg[128];
+                snprintf(dMsg, sizeof(dMsg), "⚓ DOCKING CLAMPS LOCKED: Moored at [%s]! Utilities & trading online.", out->name);
+                AddLog(dMsg, th->accentEmerald);
+            } else {
+                PlaySoundAsync(220, 150);
+                AddLog("DOCKING REJECTED: Approach station within 300m range and depth level!", th->accentAmber);
+            }
+            break;
+        }
+
+        case ID_BTN_UNDOCK_OUTPOST:
+            if (g_sub.isDocked) {
+                g_sub.isDocked = 0;
+                PlayDockingClamps();
+                AddLog("⚓ DOCKING CLAMPS RELEASED: Disembarked from station. Resuming cruise.", th->textDim);
+            }
+            break;
+
+        case ID_BTN_USE_BATTERY:
+            if (g_sub.batteryPacks > 0 && g_sub.battery < 98.0f) {
+                g_sub.batteryPacks--;
+                g_sub.battery = min(100.0f, g_sub.battery + 40.0f);
+                PlaySoundAsync(880, 200);
+                AddLog("⚡ EMERGENCY POWER: 1x Reserve Battery Pack discharged (+40% charge).", th->accentEmerald);
+            } else if (g_sub.batteryPacks == 0) {
+                PlaySoundAsync(220, 150);
+                AddLog("No reserve battery packs in magazine!", th->accentAmber);
+            }
+            break;
+
+        case ID_BTN_USE_REPAIR_KIT:
+            if (g_sub.repairKits > 0) {
+                g_sub.repairKits--;
+                g_sub.hull = min(100.0f, g_sub.hull + 30.0f);
+                for (int i = 0; i < COMPARTMENT_COUNT; i++) {
+                    g_sub.compartments[i].integrity = min(100.0f, g_sub.compartments[i].integrity + 35.0f);
+                    if (g_sub.compartments[i].breachTier > 0) g_sub.compartments[i].breachTier--;
+                }
+                PlayMineralChime();
+                AddLog("🛠️ NANOPATCH APPLIED: Structural repair resin healed bulkheads (+30% Hull / Leaks reduced).", th->accentEmerald);
+            } else {
+                PlaySoundAsync(220, 150);
+                AddLog("No structural repair kits in magazine!", th->accentAmber);
+            }
+            break;
+
+        case ID_BTN_TRADE_SELL_ALL:
+            if (g_sub.cargoTotalValue > 0) {
+                int offVal = g_sub.cargoTotalValue;
+                g_sub.surveyPoints += offVal;
+                g_sub.cargoManganese = 0;
+                g_sub.cargoSunkenGold = 0;
+                g_sub.cargoTitaniumScrap = 0;
+                g_sub.cargoSmokerCrystals = 0;
+                g_sub.cargoHadalPrisms = 0;
+                RecalculateCargo();
+                PlayTradeChime();
+                char trMsg[128];
+                snprintf(trMsg, sizeof(trMsg), "💎 MINERAL TRADE COMPLETE: Sold all cargo to station for +%d Research Credits!", offVal);
+                AddLog(trMsg, th->accentEmerald);
+            }
+            break;
+
+        case ID_BTN_TRADE_RECHARGE:
+            if (g_sub.isDocked) {
+                g_sub.battery = 100.0f;
+                g_sub.o2 = 100.0f;
+                g_sub.co2 = 0.04f;
+                g_sub.scrubberStatus = 100.0f;
+                PlayTradeChime();
+                AddLog("⚡ STATION UTILITY: Main battery bank & life support scrubbers restored to 100%!", th->accentEmerald);
+            }
+            break;
+
+        case ID_BTN_TRADE_AIR:
+            if (g_sub.isDocked) {
+                g_sub.airReservoir = g_sub.maxAirReservoir;
+                PlaySoundAsync(1200, 150);
+                AddLog("💨 STATION UTILITY: High-pressure air reservoir fully recharged to max!", th->accentEmerald);
+            }
+            break;
+
+        case ID_BTN_TRADE_REPAIR:
+            if (g_sub.isDocked && g_sub.surveyPoints >= 40) {
+                g_sub.surveyPoints -= 40;
+                g_sub.hull = 100.0f;
+                for (int i = 0; i < COMPARTMENT_COUNT; i++) {
+                    g_sub.compartments[i].integrity = 100.0f;
+                    g_sub.compartments[i].water = 0.0f;
+                    g_sub.compartments[i].breachTier = 0;
+                    g_sub.compartments[i].leakRate = 0.0f;
+                }
+                g_sub.bilgeWater = 0.0f;
+                PlayMineralChime();
+                AddLog("🛠️ DRYDOCK OVERHAUL: Submersible hull restored to 100% and all compartment breaches repaired (-40 PTS)!", th->accentEmerald);
+            }
+            break;
+
+        case ID_BTN_BUY_TORPEDO:
+            if (g_sub.isDocked && g_sub.torpedoes < 12 && g_sub.surveyPoints >= 60) {
+                g_sub.surveyPoints -= 60;
+                g_sub.torpedoes = min(12, g_sub.torpedoes + 2);
+                PlayTradeChime();
+                AddLog("🛒 PURCHASE: Acquired 2x Acoustic Torpedoes (-60 PTS)!", th->accentEmerald);
+            }
+            break;
+
+        case ID_BTN_BARTER_TORPEDO:
+            if (g_sub.isDocked && g_sub.torpedoes < 12 && g_sub.cargoManganese >= 1) {
+                g_sub.cargoManganese -= 1;
+                g_sub.torpedoes = min(12, g_sub.torpedoes + 2);
+                RecalculateCargo();
+                PlayTradeChime();
+                AddLog("🛒 BARTER: Exchanged 1x Manganese for 2x Acoustic Torpedoes!", th->accentEmerald);
+            }
+            break;
+
+        case ID_BTN_BUY_EMP_TORPEDO:
+            if (g_sub.isDocked && g_sub.empTorpedoes < 6 && g_sub.surveyPoints >= 90) {
+                g_sub.surveyPoints -= 90;
+                g_sub.empTorpedoes = min(6, g_sub.empTorpedoes + 1);
+                PlayTradeChime();
+                AddLog("🛒 PURCHASE: Acquired 1x EMP Shock Torpedo (-90 PTS)!", th->accentEmerald);
+            }
+            break;
+
+        case ID_BTN_BARTER_EMP:
+            if (g_sub.isDocked && g_sub.empTorpedoes < 6 && g_sub.cargoTitaniumScrap >= 1) {
+                g_sub.cargoTitaniumScrap -= 1;
+                g_sub.empTorpedoes = min(6, g_sub.empTorpedoes + 1);
+                RecalculateCargo();
+                PlayTradeChime();
+                AddLog("🛒 BARTER: Exchanged 1x Titanium Scrap for 1x EMP Shock Torpedo!", th->accentEmerald);
+            }
+            break;
+
+        case ID_BTN_BUY_PLASMA_TORPEDO:
+            if (g_sub.isDocked && g_sub.plasmaTorpedoes < 4 && g_sub.surveyPoints >= 150) {
+                g_sub.surveyPoints -= 150;
+                g_sub.plasmaTorpedoes = min(4, g_sub.plasmaTorpedoes + 1);
+                PlayTradeChime();
+                AddLog("🛒 PURCHASE: Acquired 1x Thermal Plasma Torpedo (-150 PTS)!", th->accentEmerald);
+            }
+            break;
+
+        case ID_BTN_BARTER_PLASMA:
+            if (g_sub.isDocked && g_sub.plasmaTorpedoes < 4) {
+                if (g_sub.cargoSmokerCrystals >= 1) {
+                    g_sub.cargoSmokerCrystals -= 1;
+                    g_sub.plasmaTorpedoes = min(4, g_sub.plasmaTorpedoes + 1);
+                    RecalculateCargo();
+                    PlayTradeChime();
+                    AddLog("🛒 BARTER: Exchanged 1x Smoker Crystal for 1x Thermal Plasma Torpedo!", th->accentEmerald);
+                } else if (g_sub.cargoHadalPrisms >= 1) {
+                    g_sub.cargoHadalPrisms -= 1;
+                    g_sub.plasmaTorpedoes = min(4, g_sub.plasmaTorpedoes + 1);
+                    RecalculateCargo();
+                    PlayTradeChime();
+                    AddLog("🛒 BARTER: Exchanged 1x Hadal Prism for 1x Thermal Plasma Torpedo!", th->accentEmerald);
+                }
+            }
+            break;
+
+        case ID_BTN_BUY_BATTERY_PACK:
+            if (g_sub.isDocked && g_sub.batteryPacks < 8 && g_sub.surveyPoints >= 40) {
+                g_sub.surveyPoints -= 40;
+                g_sub.batteryPacks = min(8, g_sub.batteryPacks + 1);
+                PlayTradeChime();
+                AddLog("🛒 PURCHASE: Acquired 1x Reserve Battery Pack (-40 PTS)!", th->accentEmerald);
+            }
+            break;
+
+        case ID_BTN_BARTER_BATTERY:
+            if (g_sub.isDocked && g_sub.batteryPacks < 8 && g_sub.cargoManganese >= 1) {
+                g_sub.cargoManganese -= 1;
+                g_sub.batteryPacks = min(8, g_sub.batteryPacks + 1);
+                RecalculateCargo();
+                PlayTradeChime();
+                AddLog("🛒 BARTER: Exchanged 1x Manganese for 1x Reserve Battery Pack!", th->accentEmerald);
+            }
+            break;
+
+        case ID_BTN_BUY_REPAIR_KIT:
+            if (g_sub.isDocked && g_sub.repairKits < 6 && g_sub.surveyPoints >= 50) {
+                g_sub.surveyPoints -= 50;
+                g_sub.repairKits = min(6, g_sub.repairKits + 1);
+                PlayTradeChime();
+                AddLog("🛒 PURCHASE: Acquired 1x Nanopatch Repair Kit (-50 PTS)!", th->accentEmerald);
+            }
+            break;
+
+        case ID_BTN_BARTER_REPAIR:
+            if (g_sub.isDocked && g_sub.repairKits < 6 && g_sub.cargoTitaniumScrap >= 1) {
+                g_sub.cargoTitaniumScrap -= 1;
+                g_sub.repairKits = min(6, g_sub.repairKits + 1);
+                RecalculateCargo();
+                PlayTradeChime();
+                AddLog("🛒 BARTER: Exchanged 1x Titanium Scrap for 1x Nanopatch Repair Kit!", th->accentEmerald);
+            }
+            break;
 
         case ID_BTN_RES_REGEN: {
             if (g_sub.resRegen < 4) {
