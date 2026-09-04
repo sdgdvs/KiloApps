@@ -193,6 +193,29 @@ void CalculateStats() {
     }
 }
 
+void ShowHelpDialog(HWND hwnd) {
+    MessageBox(hwnd,
+        "KChart Studio - Advanced Data Visualization & Regression Suite\n\n"
+        "KEYBOARD SHORTCUTS & CONTROLS:\n"
+        "  [F1] or [H]   : Open this Help & Feature Guide\n"
+        "  [1] - [6]     : Direct Mode (1:Bar, 2:Line, 3:Area, 4:Pie, 5:Donut, 6:Radar)\n"
+        "  [M]           : Cycle Chart Modes sequentially\n"
+        "  [T]           : Cycle Trendline Overlays (Off, Linear Fit, MovAvg, Mean)\n"
+        "  [C]           : Cycle Color Themes (Cyber Teal, Neon Sunset, Emerald, etc.)\n"
+        "  [R]           : Generate Randomized Dataset with animation\n"
+        "  [S]           : Sort Dataset Ascending\n\n"
+        "STATISTICAL ANALYSIS & REGRESSION:\n"
+        "  - Ordinary Least Squares (OLS) Linear Fit y = mx + b with live R2 fit\n"
+        "  - 3-point rolling Moving Average\n"
+        "  - Arithmetic Mean baseline\n"
+        "  - Real-time Total, Mean, Median, StdDev, Min / Max metrics\n\n"
+        "MOUSE CONTROLS:\n"
+        "  - Hover over chart bars, line vertices, slices, or radar nodes for interactive tooltips\n"
+        "  - Click toolbar buttons at bottom to switch views & controls",
+        "KChart Studio Guide",
+        MB_OK | MB_ICONINFORMATION);
+}
+
 void LayoutButtons(HWND hwnd) {
     RECT rc;
     GetClientRect(hwnd, &rc);
@@ -200,10 +223,10 @@ void LayoutButtons(HWND hwnd) {
     int clientH = rc.bottom - rc.top;
 
     if (hBtnRandomize && hBtnToggle && hBtnTheme && hBtnTrend && hBtnSort && hBtnHelp) {
-        int btnW = SCALE(80);
-        int btnH = SCALE(26);
-        int gap = SCALE(6);
-        int btnY = clientH - SCALE(38);
+        int btnW = SCALE(95);
+        int btnH = SCALE(28);
+        int gap = SCALE(8);
+        int btnY = clientH - SCALE(40);
         if (btnY < 10) btnY = 10;
         int totalW = 6 * btnW + 5 * gap;
         int startX = (clientW - totalW) / 2;
@@ -222,24 +245,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
             randSeed = GetTickCount();
-            hBtnRandomize = CreateWindowEx(0, "BUTTON", "Randomize",
+            hBtnRandomize = CreateWindowEx(0, "BUTTON", "Randomize [R]",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-                0, 0, 80, 26, hwnd, (HMENU)1, NULL, NULL);
-            hBtnToggle = CreateWindowEx(0, "BUTTON", "Mode",
+                0, 0, 95, 28, hwnd, (HMENU)1, NULL, NULL);
+            hBtnToggle = CreateWindowEx(0, "BUTTON", "Mode [M]",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-                0, 0, 80, 26, hwnd, (HMENU)2, NULL, NULL);
-            hBtnTheme = CreateWindowEx(0, "BUTTON", "Theme",
+                0, 0, 95, 28, hwnd, (HMENU)2, NULL, NULL);
+            hBtnTheme = CreateWindowEx(0, "BUTTON", "Theme [C]",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-                0, 0, 80, 26, hwnd, (HMENU)3, NULL, NULL);
-            hBtnTrend = CreateWindowEx(0, "BUTTON", "Trend",
+                0, 0, 95, 28, hwnd, (HMENU)3, NULL, NULL);
+            hBtnTrend = CreateWindowEx(0, "BUTTON", "Trend [T]",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-                0, 0, 80, 26, hwnd, (HMENU)6, NULL, NULL);
-            hBtnSort = CreateWindowEx(0, "BUTTON", "Sort",
+                0, 0, 95, 28, hwnd, (HMENU)6, NULL, NULL);
+            hBtnSort = CreateWindowEx(0, "BUTTON", "Sort [S]",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-                0, 0, 80, 26, hwnd, (HMENU)4, NULL, NULL);
-            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help",
+                0, 0, 95, 28, hwnd, (HMENU)4, NULL, NULL);
+            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help [F1]",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-                0, 0, 80, 26, hwnd, (HMENU)5, NULL, NULL);
+                0, 0, 95, 28, hwnd, (HMENU)5, NULL, NULL);
             
             int fontHeight = -MulDiv(12, dpi, 72);
             hBtnFont = CreateFontA(fontHeight, 0, 0, 0, FW_SEMIBOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
@@ -368,7 +391,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_KEYDOWN: {
             if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
-                MessageBox(hwnd, "KChart Studio Help:\n\n- Mode button ('M'): switch chart views (Bar, Line, Area, Pie, Donut, Radar)\n- Theme button ('C'): switch color themes\n- Trend button ('T'): cycle Trendline & Regression overlays (Off, Linear Fit, Mov Avg, Mean Line)\n- Sort button ('S'): sort values\n- Randomize ('R'): generate new dataset\n- Hotkeys: 'H'/F1 Help, 'M' Mode, 'C' Theme, 'T' Trend, 'S' Sort, 'R' Randomize", "Help", MB_OK | MB_ICONINFORMATION);
+                ShowHelpDialog(hwnd);
+            } else if (wParam >= '1' && wParam <= '6') {
+                chartMode = (int)(wParam - '1');
+                InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 'T' || wParam == 't') {
                 trendMode = (trendMode + 1) % 4;
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -417,7 +443,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_COMMAND: {
-            SetFocus(hwnd); // Ensure the main window keeps focus for keyboard shortcuts like 'H' / 'T'
+            SetFocus(hwnd); // Ensure the main window keeps focus for keyboard shortcuts
             int cmdId = LOWORD(wParam);
             if (cmdId == 1) { // Randomize
                 for (int i = 0; i < NUM_ITEMS; i++) {
@@ -445,7 +471,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 CalculateStats();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (cmdId == 5) { // Help
-                MessageBox(hwnd, "KChart Studio Help:\n\n- Mode button ('M'): switch chart views (Bar, Line, Area, Pie, Donut, Radar)\n- Theme button ('C'): switch color themes\n- Trend button ('T'): cycle Trendline & Regression overlays (Off, Linear Fit, Mov Avg, Mean Line)\n- Sort button ('S'): sort values\n- Randomize ('R'): generate new dataset\n- Hotkeys: 'H'/F1 Help, 'M' Mode, 'C' Theme, 'T' Trend, 'S' Sort, 'R' Randomize", "Help", MB_OK | MB_ICONINFORMATION);
+                ShowHelpDialog(hwnd);
             }
             break;
         }
@@ -945,7 +971,7 @@ void MainEntry() {
     RECT rect = { 0, 0, SCALE(1024), SCALE(768) };
     AdjustWindowRect(&rect, style, FALSE);
 
-    HWND hwnd = CreateWindowEx(0, "KChartApp", "KChart Studio", style,
+    HWND hwnd = CreateWindowEx(0, "KChartApp", "KChart Studio - Data Visualization (Press F1 or 'H' for Help)", style,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
@@ -953,6 +979,37 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
+        if (msg.message == WM_KEYDOWN) {
+            WPARAM k = msg.wParam;
+            if (k == VK_F1 || k == 'H' || k == 'h') {
+                ShowHelpDialog(hwnd);
+                continue;
+            } else if (k >= '1' && k <= '6') {
+                chartMode = (int)(k - '1');
+                InvalidateRect(hwnd, NULL, TRUE);
+                continue;
+            } else if (k == 'M' || k == 'm') {
+                chartMode = (chartMode + 1) % 6;
+                InvalidateRect(hwnd, NULL, TRUE);
+                continue;
+            } else if (k == 'T' || k == 't') {
+                trendMode = (trendMode + 1) % 4;
+                InvalidateRect(hwnd, NULL, TRUE);
+                continue;
+            } else if (k == 'C' || k == 'c') {
+                currentTheme = (currentTheme + 1) % NUM_THEMES;
+                InvalidateRect(hwnd, NULL, TRUE);
+                continue;
+            } else if (k == 'R' || k == 'r') {
+                for (int i = 0; i < NUM_ITEMS; i++) {
+                    target[i] = 10 + (MyRand() % 90);
+                }
+                continue;
+            } else if (k == 'S' || k == 's') {
+                SendMessage(hwnd, WM_COMMAND, 4, 0);
+                continue;
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }

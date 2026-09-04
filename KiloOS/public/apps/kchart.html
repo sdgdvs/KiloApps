@@ -355,6 +355,190 @@
   ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.25);
   }
+  .kbd-badge {
+    display: inline-block;
+    padding: 1px 5px;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: #93c5fd;
+    margin-right: 4px;
+    line-height: 1.2;
+    vertical-align: middle;
+  }
+  .btn-group button.active .kbd-badge {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #ffffff;
+  }
+
+  /* Toast Notification System */
+  #toastContainer {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 9999;
+    pointer-events: none;
+  }
+
+  .toast {
+    background: rgba(15, 23, 42, 0.94);
+    color: #f8fafc;
+    border: 1px solid rgba(59, 130, 246, 0.45);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), 0 0 15px rgba(59, 130, 246, 0.2);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 240px;
+    max-width: 380px;
+    pointer-events: auto;
+    animation: toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transition: all 0.25s ease;
+  }
+
+  .toast.toast-success { border-color: rgba(34, 197, 94, 0.55); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.7), 0 0 15px rgba(34, 197, 94, 0.2); }
+  .toast.toast-warning { border-color: rgba(245, 158, 11, 0.55); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.7), 0 0 15px rgba(245, 158, 11, 0.2); }
+  .toast.toast-error { border-color: rgba(239, 68, 68, 0.55); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.7), 0 0 15px rgba(239, 68, 68, 0.2); }
+  .toast.toast-out { opacity: 0; transform: translateY(10px) scale(0.95); }
+
+  @keyframes toastSlideIn {
+    from { opacity: 0; transform: translateY(15px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Cybernetic Help Modal */
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.22s ease;
+  }
+
+  .modal-backdrop.open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .modal-dialog {
+    background: #0f172a;
+    border: 1px solid rgba(59, 130, 246, 0.35);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 680px;
+    max-height: 85vh;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 30px rgba(59, 130, 246, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateY(20px) scale(0.97);
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .modal-backdrop.open .modal-dialog {
+    transform: translateY(0) scale(1);
+  }
+
+  .modal-header {
+    padding: 16px 22px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(30, 41, 59, 0.5);
+  }
+
+  .modal-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    line-height: 1;
+  }
+
+  .modal-close:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .modal-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #cbd5e1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .help-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #60a5fa;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .shortcut-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 4px;
+    background: rgba(0,0,0,0.25);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .shortcut-table td {
+    padding: 6px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 12px;
+  }
+
+  .shortcut-table td:first-child {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    color: #93c5fd;
+    width: 130px;
+    font-weight: 600;
+  }
 </style>
 </head>
 <body>
@@ -383,7 +567,7 @@
       <option value="slate">Dark Slate</option>
     </select>
 
-    <button id="btnHelp" aria-label="Help">❔ Help</button>
+    <button id="btnHelp" aria-label="Help"><span class="kbd-badge">F1</span> Help</button>
     <button id="btnExportSvg" title="Export Scalable Vector Graphic">📐 SVG</button>
     <button id="btnExportPng">📷 PNG</button>
     <button id="btnExportCsv">📄 CSV</button>
@@ -397,23 +581,23 @@
   <!-- Left Side: Main Chart & Controls -->
   <div class="panel-card">
     <div class="panel-title">
-      <span>Visualization Canvas <span style="font-size: 12px; color: var(--accent); font-weight: 600; margin-left: 10px; background: rgba(59,130,246,0.1); padding: 2px 6px; border-radius: 4px;">[Press 'H' for Help | 'T' for Trend]</span></span>
+      <span>Visualization Canvas <span style="font-size: 12px; color: var(--accent); font-weight: 600; margin-left: 10px; background: rgba(59,130,246,0.1); padding: 2px 6px; border-radius: 4px;">[Press 'H' or F1 for Help | 'T' for Trend]</span></span>
       <div class="toolbar">
         <div class="btn-group" id="chartTypeGroup">
-          <button data-type="bar" class="active">Bar</button>
-          <button data-type="line">Line</button>
-          <button data-type="area">Area</button>
-          <button data-type="pie">Pie</button>
-          <button data-type="donut">Doughnut</button>
-          <button data-type="radar">Radar</button>
+          <button data-type="bar" class="active"><span class="kbd-badge">1</span>Bar</button>
+          <button data-type="line"><span class="kbd-badge">2</span>Line</button>
+          <button data-type="area"><span class="kbd-badge">3</span>Area</button>
+          <button data-type="pie"><span class="kbd-badge">4</span>Pie</button>
+          <button data-type="donut"><span class="kbd-badge">5</span>Donut</button>
+          <button data-type="radar"><span class="kbd-badge">6</span>Radar</button>
         </div>
-        <div class="btn-group" id="trendGroup" title="Trendline & Regression Analysis Overlay">
+        <div class="btn-group" id="trendGroup" title="Trendline & Regression Analysis Overlay (Press 'T' to cycle)">
           <button data-trend="none" class="active">Trend: Off</button>
           <button data-trend="linear">Linear Fit</button>
           <button data-trend="movavg">Mov Avg</button>
           <button data-trend="mean">Mean</button>
         </div>
-        <button id="btnRandomize">🎲 Randomize</button>
+        <button id="btnRandomize"><span class="kbd-badge">R</span>🎲 Randomize</button>
       </div>
     </div>
 
@@ -471,6 +655,67 @@
     </div>
   </div>
 </div>
+
+<!-- Help Modal -->
+<div class="modal-backdrop" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <div class="modal-title" id="helpModalTitle">
+        <span>📊</span>
+        <span>KChart Studio — User Guide &amp; Controls</span>
+      </div>
+      <button class="modal-close" id="btnCloseHelp" aria-label="Close Help">✕</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <div class="help-section-title">📊 1. Visualization Modes</div>
+        <p>Switch between 6 distinct visualization rendering engines: <strong>Bar Chart</strong> [1], <strong>Line Graph</strong> [2], <strong>Area Gradient</strong> [3], <strong>Pie Chart</strong> [4], <strong>Doughnut Chart</strong> [5], and multi-axial <strong>Radar / Spider Chart</strong> [6]. Hover over any bar, point, slice, or vertex to inspect precise values in the interactive HUD tooltip.</p>
+      </div>
+
+      <div>
+        <div class="help-section-title">📈 2. Trendlines &amp; Regression Analysis</div>
+        <p>Overlay mathematical and statistical regressions onto cartesian charts (Press 'T' to cycle):
+        <ul style="padding-left: 20px; margin-top: 4px;">
+          <li><strong>Linear Fit:</strong> Ordinary Least Squares ($y = mx + b$) regression with live slope and $R^2$ goodness-of-fit.</li>
+          <li><strong>Moving Average:</strong> 3-point rolling window smoothed trend curve.</li>
+          <li><strong>Mean Line:</strong> Arithmetic dataset mean baseline reference.</li>
+        </ul>
+        </p>
+      </div>
+
+      <div>
+        <div class="help-section-title">🧮 3. Statistical Analysis Suite</div>
+        <p>Real-time metrics compute automatically: <strong>Count</strong>, <strong>Total Sum</strong>, <strong>Mean</strong>, <strong>Median</strong>, <strong>Standard Deviation</strong>, <strong>Min / Max Extrema</strong>, <strong>Slope ($m$)</strong>, and <strong>$R^2$ Fit</strong>.</p>
+      </div>
+
+      <div>
+        <div class="help-section-title">📁 4. Import, Export &amp; Customization</div>
+        <p>Easily drag and drop CSV or JSON datasets directly onto the workspace. Export high-resolution vector SVG (scalable for publication), raster PNG, clean CSV tables, or JSON structures with one click.</p>
+      </div>
+
+      <div>
+        <div class="help-section-title">⌨️ 5. Keyboard Shortcuts</div>
+        <table class="shortcut-table">
+          <tbody>
+            <tr><td>F1 / H</td><td>Open / Close this Help Guide</td></tr>
+            <tr><td>1 – 6</td><td>Select Chart Mode (Bar, Line, Area, Pie, Donut, Radar)</td></tr>
+            <tr><td>M</td><td>Cycle through Chart Modes sequentially</td></tr>
+            <tr><td>T</td><td>Cycle Trendline overlays (Off, Linear Fit, MovAvg, Mean)</td></tr>
+            <tr><td>C</td><td>Cycle Color Themes (Cyber Teal, Neon Sunset, Emerald, etc.)</td></tr>
+            <tr><td>R</td><td>Generate Random Dataset with smooth animation</td></tr>
+            <tr><td>S</td><td>Sort data points in Ascending order</td></tr>
+            <tr><td>D / Shift+S</td><td>Sort data points in Descending order</td></tr>
+            <tr><td>Ctrl + S</td><td>Quick Export High-Resolution SVG Vector</td></tr>
+            <tr><td>Escape</td><td>Close Help Dialog / Unfocus inputs</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notifications -->
+<div id="toastContainer" aria-live="polite"></div>
 
 <script>
   window.resizeTo(1024, 768);
@@ -650,7 +895,7 @@
         <td><span class="color-dot" style="background: ${getColor(index)}"></span></td>
         <td><input type="text" value="${escapeHtml(item.label)}" data-index="${index}" class="lbl-input"></td>
         <td><input type="number" value="${item.value}" data-index="${index}" class="val-input" step="any"></td>
-        <td><button class="btn-sm btn-danger del-btn" data-index="${index}">✕</button></td>
+        <td><button class="btn-sm btn-danger del-btn" data-index="${index}" title="Delete Point">✕</button></td>
       `;
       tableBody.appendChild(tr);
     });
@@ -662,6 +907,14 @@
         data[idx].label = e.target.value;
         renderChart();
       };
+      input.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const idx = parseInt(input.dataset.index);
+          const valIn = tableBody.querySelector(`.val-input[data-index="${idx}"]`);
+          if (valIn) { valIn.focus(); valIn.select(); }
+        }
+      };
     });
     tableBody.querySelectorAll('.val-input').forEach(input => {
       input.oninput = (e) => {
@@ -670,12 +923,29 @@
         computeStats();
         renderChart();
       };
+      input.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const idx = parseInt(input.dataset.index);
+          if (idx === data.length - 1) {
+            document.getElementById('btnAddRow').click();
+            setTimeout(() => {
+              const nextLbl = tableBody.querySelector(`.lbl-input[data-index="${data.length - 1}"]`);
+              if (nextLbl) { nextLbl.focus(); nextLbl.select(); }
+            }, 50);
+          } else {
+            const nextLbl = tableBody.querySelector(`.lbl-input[data-index="${idx + 1}"]`);
+            if (nextLbl) { nextLbl.focus(); nextLbl.select(); }
+          }
+        }
+      };
     });
     tableBody.querySelectorAll('.del-btn').forEach(btn => {
       btn.onclick = (e) => {
         const idx = parseInt(e.target.dataset.index);
         data.splice(idx, 1);
         updateAll();
+        showToast('Deleted data point', 'info', '✕');
       };
     });
   }
@@ -1267,6 +1537,49 @@
     }
   };
 
+  // Toast Notification Manager
+  function showToast(msg, type = 'info', icon = '') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    let defaultIcon = 'ℹ️';
+    if (type === 'success') defaultIcon = '✅';
+    if (type === 'warning') defaultIcon = '⚠️';
+    if (type === 'error') defaultIcon = '❌';
+    toast.innerHTML = `<span style="font-size:16px;">${icon || defaultIcon}</span><span>${escapeHtml(msg)}</span>`;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.classList.add('toast-out');
+      setTimeout(() => toast.remove(), 250);
+    }, 3200);
+  }
+
+  // Cybernetic Help Modal Controller
+  const helpModal = document.getElementById('helpModal');
+  const btnCloseHelp = document.getElementById('btnCloseHelp');
+
+  function openHelpModal() {
+    if (helpModal) helpModal.classList.add('open');
+  }
+
+  function closeHelpModal() {
+    if (helpModal) helpModal.classList.remove('open');
+  }
+
+  function toggleHelpModal() {
+    if (helpModal && helpModal.classList.contains('open')) closeHelpModal();
+    else openHelpModal();
+  }
+
+  if (btnCloseHelp) btnCloseHelp.onclick = closeHelpModal;
+  if (helpModal) {
+    helpModal.onclick = (e) => {
+      if (e.target === helpModal) closeHelpModal();
+    };
+  }
+
   // State update wrapper
   function updateAll() {
     renderTable();
@@ -1274,32 +1587,53 @@
     renderChart();
   }
 
+  function setChartType(type, silent = false) {
+    chartType = type;
+    document.querySelectorAll('#chartTypeGroup button').forEach(b => {
+      if (b.dataset.type === chartType) b.classList.add('active');
+      else b.classList.remove('active');
+    });
+    renderChart();
+    if (!silent) {
+      const typeTitles = { bar: 'Bar Chart', line: 'Line Graph', area: 'Area Gradient', pie: 'Pie Chart', donut: 'Doughnut Chart', radar: 'Radar / Spider Chart' };
+      showToast(`Chart View: ${typeTitles[type] || type}`, 'info', '📊');
+    }
+  }
+
+  function setTrendMode(mode, silent = false) {
+    trendMode = mode;
+    document.querySelectorAll('#trendGroup button').forEach(b => {
+      if (b.dataset.trend === trendMode) b.classList.add('active');
+      else b.classList.remove('active');
+    });
+    renderChart();
+    if (!silent) {
+      const trendTitles = { none: 'Trend: Off', linear: 'Linear Fit (OLS Regression)', movavg: '3-Point Moving Average', mean: 'Arithmetic Mean Reference' };
+      showToast(`Trend Overlay: ${trendTitles[mode] || mode}`, 'info', '📈');
+    }
+  }
+
   // Button Listeners
-  document.getElementById('btnHelp').onclick = () => {
-    alert("KChart Studio Help:\n\n- Select Chart Type from toolbar (Bar, Line, Area, Pie, Donut, Radar).\n- Use Trendline & Regression overlay buttons (Off, Linear Fit y=mx+b, Moving Avg, Mean).\n- Statistical Suite displays Count, Mean, Median, StdDev, Slope, and R² Fit.\n- Export options: SVG Vector (.svg), PNG Image (.png), CSV (.csv), JSON (.json).\n- Use the table editor to modify data points or drag & drop CSV/JSON files.\n- Hotkeys: 'H' for Help, 'T' to cycle Trendline overlays.");
-  };
+  document.getElementById('btnHelp').onclick = toggleHelpModal;
 
   document.getElementById('chartTypeGroup').onclick = (e) => {
-    if (e.target.tagName === 'BUTTON') {
-      document.querySelectorAll('#chartTypeGroup button').forEach(b => b.classList.remove('active'));
-      e.target.classList.add('active');
-      chartType = e.target.dataset.type;
-      renderChart();
+    const btn = e.target.closest('button');
+    if (btn && btn.dataset.type) {
+      setChartType(btn.dataset.type);
     }
   };
 
   document.getElementById('trendGroup').onclick = (e) => {
-    if (e.target.tagName === 'BUTTON') {
-      document.querySelectorAll('#trendGroup button').forEach(b => b.classList.remove('active'));
-      e.target.classList.add('active');
-      trendMode = e.target.dataset.trend;
-      renderChart();
+    const btn = e.target.closest('button');
+    if (btn && btn.dataset.trend) {
+      setTrendMode(btn.dataset.trend);
     }
   };
 
   document.getElementById('themeSelect').onchange = (e) => {
     currentTheme = e.target.value;
     updateAll();
+    showToast(`Color Theme: ${document.getElementById('themeSelect').selectedOptions[0].text}`, 'info', '🎨');
   };
 
   document.getElementById('presetSelect').onchange = (e) => {
@@ -1307,6 +1641,7 @@
     if (val && PRESETS[val]) {
       data = JSON.parse(JSON.stringify(PRESETS[val]));
       updateAll();
+      showToast(`Loaded Preset: ${document.getElementById('presetSelect').selectedOptions[0].text}`, 'success', '📊');
     }
   };
 
@@ -1324,30 +1659,35 @@
       item.value = Math.floor(10 + Math.random() * 90);
     });
     updateAll();
+    showToast(`Randomized dataset (${data.length} points)`, 'info', '🎲');
   };
 
   document.getElementById('btnAddRow').onclick = () => {
     if (data.length >= 100) {
-      alert("Maximum limit of 100 data points reached.");
+      showToast("Maximum limit of 100 data points reached.", "warning", "⚠️");
       return;
     }
     data.push({ label: `Item ${data.length + 1}`, value: Math.floor(10 + Math.random() * 50) });
     updateAll();
+    showToast(`Added data point #${data.length}`, 'success', '➕');
   };
 
   document.getElementById('btnSortAsc').onclick = () => {
     data.sort((a, b) => (Number(a.value) || 0) - (Number(b.value) || 0));
     updateAll();
+    showToast('Sorted points in ascending order', 'info', '▲');
   };
 
   document.getElementById('btnSortDesc').onclick = () => {
     data.sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0));
     updateAll();
+    showToast('Sorted points in descending order', 'info', '▼');
   };
 
   document.getElementById('btnClear').onclick = () => {
     data = [];
     updateAll();
+    showToast('Cleared all data points', 'info', '🗑️');
   };
 
   // Export handlers
@@ -1358,7 +1698,7 @@
   function exportSvg() {
     const n = data.length;
     if (n === 0) {
-      alert("No data available to export SVG.");
+      showToast("No data available to export SVG.", "warning", "⚠️");
       return;
     }
     const width = 800;
@@ -1528,17 +1868,27 @@
     link.download = 'kchart_vector.svg';
     link.href = URL.createObjectURL(blob);
     link.click();
+    showToast('Exported SVG Vector (kchart_vector.svg)', 'success', '📐');
     setTimeout(() => URL.revokeObjectURL(link.href), 1500);
   }
 
   document.getElementById('btnExportPng').onclick = () => {
+    if (data.length === 0) {
+      showToast("No data to export PNG.", "warning", "⚠️");
+      return;
+    }
     const link = document.createElement('a');
     link.download = 'KChart_export.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
+    showToast('Exported PNG Image (KChart_export.png)', 'success', '📷');
   };
 
   document.getElementById('btnExportCsv').onclick = () => {
+    if (data.length === 0) {
+      showToast("No data to export CSV.", "warning", "⚠️");
+      return;
+    }
     let csv = "Label,Value\n";
     data.forEach(d => {
       csv += `"${d.label.replace(/"/g, '""')}",${d.value}\n`;
@@ -1548,16 +1898,22 @@
     link.download = 'kchart_data.csv';
     link.href = URL.createObjectURL(blob);
     link.click();
+    showToast('Exported CSV Dataset (kchart_data.csv)', 'success', '📄');
     setTimeout(() => URL.revokeObjectURL(link.href), 1500);
   };
 
   document.getElementById('btnExportJson').onclick = () => {
+    if (data.length === 0) {
+      showToast("No data to export JSON.", "warning", "⚠️");
+      return;
+    }
     const jsonStr = JSON.stringify(data, null, 2);
     const blob = new Blob([jsonStr], { type: 'application/json' });
     const link = document.createElement('a');
     link.download = 'kchart_data.json';
     link.href = URL.createObjectURL(blob);
     link.click();
+    showToast('Exported JSON Structure (kchart_data.json)', 'success', '📦');
     setTimeout(() => URL.revokeObjectURL(link.href), 1500);
   };
 
@@ -1623,9 +1979,10 @@
               value: Number(item.value || item.val || 0)
             }));
             updateAll();
+            showToast(`Imported ${data.length} data points from JSON`, 'success', '📥');
           }
         } catch (err) {
-          alert("Invalid JSON format.");
+          showToast("Invalid JSON file format.", "error", "❌");
         }
       } else {
         // Parse CSV
@@ -1643,6 +2000,9 @@
         if (newData.length > 0) {
           data = newData.slice(0, 100);
           updateAll();
+          showToast(`Imported ${data.length} data points from CSV`, 'success', '📥');
+        } else {
+          showToast("No valid rows found in CSV file.", "warning", "⚠️");
         }
       }
     };
@@ -1655,47 +2015,73 @@
   // Shortcuts
   window.addEventListener('keydown', (e) => {
     const tag = e.target.tagName;
-    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') {
+      if (e.key === 'Escape') {
+        if (document.activeElement) document.activeElement.blur();
+      }
+      return;
+    }
 
     if (e.key === 'F1' || e.key === 'h' || e.key === 'H') {
-      if (e.key === 'F1') e.preventDefault();
-      alert("KChart Studio Help:\n\n- Select Chart Type from toolbar (Bar, Line, Area, Pie, Donut, Radar).\n- Use Trendline & Regression overlay buttons (Off, Linear Fit y=mx+b, Moving Avg, Mean).\n- Statistical Suite displays Count, Mean, Median, StdDev, Slope, and R² Fit.\n- Export options: SVG Vector (.svg), PNG Image (.png), CSV (.csv), JSON (.json).\n- Use the table editor to modify data points or drag & drop CSV/JSON files.\n- Hotkeys:\n  • 'H'/F1: Help\n  • 'M': Cycle Chart Type\n  • 'C': Cycle Theme\n  • 'T': Cycle Trendline overlays\n  • 'R': Randomize\n  • 'S': Sort ascending\n  • 'Escape': Unfocus active element");
+      e.preventDefault();
+      toggleHelpModal();
+    } else if (e.key === '1') {
+      setChartType('bar');
+    } else if (e.key === '2') {
+      setChartType('line');
+    } else if (e.key === '3') {
+      setChartType('area');
+    } else if (e.key === '4') {
+      setChartType('pie');
+    } else if (e.key === '5') {
+      setChartType('donut');
+    } else if (e.key === '6') {
+      setChartType('radar');
     } else if (e.key === 't' || e.key === 'T') {
       const modes = ['none', 'linear', 'movavg', 'mean'];
       const nextIdx = (modes.indexOf(trendMode) + 1) % modes.length;
-      trendMode = modes[nextIdx];
-      document.querySelectorAll('#trendGroup button').forEach(b => {
-        if (b.dataset.trend === trendMode) b.classList.add('active');
-        else b.classList.remove('active');
-      });
-      renderChart();
+      setTrendMode(modes[nextIdx]);
     } else if (e.key === 'm' || e.key === 'M') {
       const types = ['bar', 'line', 'area', 'pie', 'donut', 'radar'];
       const nextIdx = (types.indexOf(chartType) + 1) % types.length;
-      chartType = types[nextIdx];
-      document.querySelectorAll('#chartTypeGroup button').forEach(b => {
-        if (b.dataset.type === chartType) b.classList.add('active');
-        else b.classList.remove('active');
-      });
-      renderChart();
+      setChartType(types[nextIdx]);
     } else if (e.key === 'c' || e.key === 'C') {
       const themeKeys = Object.keys(THEMES);
       const nextIdx = (themeKeys.indexOf(currentTheme) + 1) % themeKeys.length;
       currentTheme = themeKeys[nextIdx];
       document.getElementById('themeSelect').value = currentTheme;
       updateAll();
+      showToast(`Color Theme: ${document.getElementById('themeSelect').selectedOptions[0].text}`, 'info', '🎨');
     } else if (e.key === 'r' || e.key === 'R') {
       document.getElementById('btnRandomize').click();
     } else if (e.key === 's' || e.key === 'S') {
-      document.getElementById('btnSortAsc').click();
+      if (e.shiftKey) {
+        document.getElementById('btnSortDesc').click();
+      } else if (e.ctrlKey) {
+        e.preventDefault();
+        exportSvg();
+      } else {
+        document.getElementById('btnSortAsc').click();
+      }
+    } else if (e.key === 'd' || e.key === 'D') {
+      document.getElementById('btnSortDesc').click();
     } else if (e.key === 'Escape') {
-      if (document.activeElement) document.activeElement.blur();
+      if (helpModal && helpModal.classList.contains('open')) {
+        closeHelpModal();
+      } else if (document.activeElement) {
+        document.activeElement.blur();
+      }
     }
   });
   
   // Init
   resizeCanvas();
   updateAll();
+
+  // Startup welcome toast
+  setTimeout(() => {
+    showToast("Welcome to KChart Studio! Press F1 or 'H' for Help guide.", "info", "📊");
+  }, 350);
 </script>
 </body>
 </html>

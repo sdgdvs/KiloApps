@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KChart
+**Target App:** KChat
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KChart
 - KChat
 - KChess
 - KDragon
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KCalc
 - KHex
 - KCalendar
+- KChart
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KChart: Usability and UI issues fixed (replaced blocking browser alerts with custom cybernetic Help modal dialog and non-blocking toast notification system with startup welcome toast, added [1-6] direct mode switching hotkeys with visible numeric badges, Enter key table editing navigation, Escape and backdrop-click modal dismissal, and toast feedback for presets, themes, exports, and imports in web; updated native C with ShowHelpDialog comprehensive guide, button shortcut badges [R, M, C, T, S, F1], [1-6] mode switching hotkeys, global message loop hotkey interception, and window title hint).
 - KCalendar: Usability and UI issues fixed (replaced blocking browser alerts and confirms with custom cybernetic Help modal dialog, dedicated non-blocking Delete confirmation modal, and toast notification system with startup welcome toast, added [1-4] view tab switching hotkeys with visible numeric key badges, [N] new event, [T] today, [S] stats, and [F1]/[H] shortcuts with backdrop-click modal dismissal in web; added ShowHelpDialog comprehensive shortcut and feature guide, updated button labels with shortcut badges [T, S, F1, Enter, Del], message loop hotkey interception for F1/H/T/S, and window title hint in native C).
 - KHex: Usability and UI issues fixed (replaced blocking browser alerts with custom cybernetic Help modal dialog and non-blocking toast notification system with startup welcome toast, added [1-7] tab switching hotkeys with visible numeric badges, [E] endian toggle hotkey, Escape and backdrop-click modal dismissal, and toast feedback for export copying, sample data loading, pattern search, and byte operations in web; added ShowHelpDialog comprehensive user guide, global message loop accelerator interception for F1/Ctrl+E/Ctrl+1-7 hotkeys across all child controls, updated button shortcut badges, bottom shortcut status hint, and window title hint in native C).
 - KCalc: Usability and UI issues fixed (replaced blocking browser alerts with custom cybernetic Help modal dialog and dedicated Memory Registers modal, added non-blocking toast notification system with startup welcome toast and export/calculation feedback, synchronized auto-opening dimensions to 780x640 in App.jsx, added [1-5]/D/M/F1 shortcuts with visible tab badges and backdrop-click modal dismissal in web; fixed critical bug in native C where typing in edit controls intercepted input and hijacked display buffer, added explicit Help [F1] toolbar button, [1-5] mode switching hotkeys, ShowHelpDialog user guide, and window title hint).
