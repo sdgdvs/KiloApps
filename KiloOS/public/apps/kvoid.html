@@ -480,170 +480,611 @@
 
         function die(msg) {
             if (!isDead) {
-                spawnParticles(player.x * TILE_SIZE + TILE_SIZE/2, player.y * TILE_SIZE + TILE_SIZE/2, '#f00', 50);
+                let px = player.x * TILE_SIZE + TILE_SIZE/2;
+                let py = player.y * TILE_SIZE + TILE_SIZE/2;
+                spawnParticles(px, py, '#f00', 60);
+                addShockwave(px, py, '#ff0033', 100);
+                triggerScreenShake(6);
             }
             isDead = true;
             document.getElementById('message').innerText = msg;
             document.getElementById('message').style.color = '#f00';
         }
 
-        function drawMap() {
+        // Visual FX: Screen shake and shockwaves
+        let screenShake = 0;
+        let shockwaves = [];
+
+        function triggerScreenShake(amount) {
+            screenShake = Math.max(screenShake, amount);
+        }
+
+        function addShockwave(x, y, color = '#0ff', maxR = 60) {
+            shockwaves.push({ x, y, r: 2, maxR, color, alpha: 1.0 });
+        }
+
+        function updateShockwaves() {
+            for (let i = shockwaves.length - 1; i >= 0; i--) {
+                let sw = shockwaves[i];
+                sw.r += 3.5;
+                sw.alpha = Math.max(0, 1.0 - (sw.r / sw.maxR));
+                if (sw.r >= sw.maxR || sw.alpha <= 0) {
+                    shockwaves.splice(i, 1);
+                }
+            }
+        }
+
+        function drawShockwaves() {
+            for (let sw of shockwaves) {
+                ctx.save();
+                ctx.strokeStyle = sw.color;
+                ctx.lineWidth = 3 * sw.alpha;
+                ctx.globalAlpha = sw.alpha;
+                ctx.beginPath();
+                ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        function drawMap(time = performance.now()) {
             for (let y = 0; y < ROWS; y++) {
                 for (let x = 0; x < COLS; x++) {
-                    if (map[y][x] === 1) {
-                        ctx.fillStyle = '#0a0';
-                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                        ctx.fillStyle = '#030';
-                        ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
-                    } else if (map[y][x] === 2) {
-                        ctx.fillStyle = '#aa0';
-                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                        ctx.fillStyle = '#550';
-                        ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
-                    } else if (map[y][x] >= 3 && map[y][x] <= 5) {
-                        let c1 = map[y][x] === 3 ? '#c00' : map[y][x] === 4 ? '#0c0' : '#00c';
-                        let c2 = map[y][x] === 3 ? '#600' : map[y][x] === 4 ? '#060' : '#006';
-                        ctx.fillStyle = c1;
-                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                        ctx.fillStyle = c2;
-                        ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
-                    } else if (map[y][x] >= 6 && map[y][x] <= 8) {
-                        ctx.fillStyle = '#050505';
-                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                        let kc = map[y][x] === 6 ? '#f00' : map[y][x] === 7 ? '#0f0' : '#55f';
+                    let tile = map[y][x];
+                    let px = x * TILE_SIZE;
+                    let py = y * TILE_SIZE;
+
+                    // Base Floor
+                    ctx.fillStyle = '#060a0e';
+                    ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+                    // Floor grid & rivets
+                    ctx.strokeStyle = '#0e161f';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(px + 0.5, py + 0.5, TILE_SIZE - 1, TILE_SIZE - 1);
+                    ctx.fillStyle = '#142230';
+                    ctx.fillRect(px + 1, py + 1, 1, 1);
+                    ctx.fillRect(px + TILE_SIZE - 2, py + 1, 1, 1);
+                    ctx.fillRect(px + 1, py + TILE_SIZE - 2, 1, 1);
+                    ctx.fillRect(px + TILE_SIZE - 2, py + TILE_SIZE - 2, 1, 1);
+
+                    if (tile === 1) {
+                        // Bulkhead Wall
+                        ctx.fillStyle = '#0f171e';
+                        ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+
+                        // 3D Bevel Plate
+                        let wallGrad = ctx.createLinearGradient(px, py, px + TILE_SIZE, py + TILE_SIZE);
+                        wallGrad.addColorStop(0, '#1c2d3d');
+                        wallGrad.addColorStop(0.5, '#121d28');
+                        wallGrad.addColorStop(1, '#091017');
+                        ctx.fillStyle = wallGrad;
+                        ctx.fillRect(px + 2, py + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+
+                        // Metallic highlight & shadow bevels
+                        ctx.fillStyle = '#2d4760';
+                        ctx.fillRect(px + 2, py + 2, TILE_SIZE - 4, 1);
+                        ctx.fillRect(px + 2, py + 2, 1, TILE_SIZE - 4);
+                        ctx.fillStyle = '#05080c';
+                        ctx.fillRect(px + 2, py + TILE_SIZE - 3, TILE_SIZE - 4, 1);
+                        ctx.fillRect(px + TILE_SIZE - 3, py + 2, 1, TILE_SIZE - 4);
+
+                        // Circuit conduit pulse
+                        let conduitPulse = (Math.sin(time * 0.003 + x * 0.5 + y * 0.5) + 1) * 0.5;
+                        ctx.fillStyle = `rgba(0, 255, 120, ${0.15 + conduitPulse * 0.25})`;
+                        ctx.fillRect(px + 7, py + 7, 2, 2);
+                    } else if (tile === 2) {
+                        // Standard Hydraulic Blast Door
+                        ctx.fillStyle = '#22281a';
+                        ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+                        // Warning hazard notches
+                        ctx.fillStyle = '#d4a017';
+                        ctx.fillRect(px + 1, py + 1, 3, 2);
+                        ctx.fillRect(px + TILE_SIZE - 4, py + 1, 3, 2);
+                        ctx.fillRect(px + 1, py + TILE_SIZE - 3, 3, 2);
+                        ctx.fillRect(px + TILE_SIZE - 4, py + TILE_SIZE - 3, 3, 2);
+                        // Sliding door panels
+                        ctx.fillStyle = '#444c38';
+                        ctx.fillRect(px + 3, py + 2, 4, TILE_SIZE - 4);
+                        ctx.fillRect(px + 9, py + 2, 4, TILE_SIZE - 4);
+                        // Center yellow status lock diode
+                        let doorGlow = (Math.sin(time * 0.006) + 1) * 0.5;
+                        ctx.fillStyle = `rgb(255, ${Math.floor(200 + doorGlow * 55)}, 0)`;
+                        ctx.fillRect(px + 7, py + 6, 2, 4);
+                    } else if (tile >= 3 && tile <= 5) {
+                        // Color Keycard Locked Blast Doors (3=Red, 4=Green, 5=Blue)
+                        let isRed = tile === 3, isGreen = tile === 4;
+                        let mainColor = isRed ? '#e61919' : isGreen ? '#00e64d' : '#2b7fff';
+                        let darkBg = isRed ? '#2b0909' : isGreen ? '#07240f' : '#08172e';
+                        let glowAlpha = 0.5 + 0.5 * Math.sin(time * 0.008 + tile);
+
+                        ctx.fillStyle = darkBg;
+                        ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+
+                        // Outer reinforced frame
+                        ctx.strokeStyle = mainColor;
+                        ctx.lineWidth = 1.5;
+                        ctx.strokeRect(px + 1.5, py + 1.5, TILE_SIZE - 3, TILE_SIZE - 3);
+
+                        // Armored security panel
+                        ctx.fillStyle = isRed ? '#551515' : isGreen ? '#12451e' : '#143058';
+                        ctx.fillRect(px + 3, py + 3, TILE_SIZE - 6, TILE_SIZE - 6);
+
+                        // Keycard Reader Slot & glowing LED
+                        ctx.fillStyle = '#111';
+                        ctx.fillRect(px + 5, py + 5, 6, 6);
+                        ctx.fillStyle = mainColor;
+                        ctx.globalAlpha = glowAlpha;
+                        ctx.fillRect(px + 6, py + 6, 4, 4);
+                        ctx.globalAlpha = 1.0;
+                    } else if (tile >= 6 && tile <= 8) {
+                        // High-Tech Security Keycards (6=Red, 7=Green, 8=Blue)
+                        let isRed = tile === 6, isGreen = tile === 7;
+                        let kc = isRed ? '#ff3333' : isGreen ? '#33ff55' : '#3399ff';
+                        let bob = Math.sin(time * 0.006 + x + y) * 1.5;
+
+                        // Soft aura
+                        ctx.save();
+                        ctx.shadowBlur = 8;
+                        ctx.shadowColor = kc;
+                        // Keycard body
+                        ctx.fillStyle = '#1a1f26';
+                        ctx.fillRect(px + 3, py + 4 + bob, 10, 8);
+                        // Color security band
                         ctx.fillStyle = kc;
-                        ctx.fillRect(x * TILE_SIZE + 3, y * TILE_SIZE + 4, 10, 8);
+                        ctx.fillRect(px + 3, py + 7 + bob, 10, 3);
+                        // Gold chip & micro-traces
+                        ctx.fillStyle = '#ffd700';
+                        ctx.fillRect(px + 5, py + 5 + bob, 3, 2);
                         ctx.fillStyle = '#fff';
-                        ctx.fillRect(x * TILE_SIZE + 4, y * TILE_SIZE + 5, 3, 2);
-                    } else if (map[y][x] === 9 || map[y][x] === 10) {
-                        ctx.fillStyle = '#050505';
-                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                        ctx.fillStyle = map[y][x] === 9 ? '#fff' : '#555';
-                        ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 2, 12, 12);
-                        ctx.fillStyle = map[y][x] === 9 ? '#0f0' : '#222';
-                        ctx.fillRect(x * TILE_SIZE + 4, y * TILE_SIZE + 4, 8, 6);
-                        ctx.fillStyle = map[y][x] === 9 ? '#ccc' : '#444';
-                        ctx.fillRect(x * TILE_SIZE + 5, y * TILE_SIZE + 10, 6, 4);
-                    } else if (map[y][x] === 11) {
-                        // Locker
-                        ctx.fillStyle = '#050505';
-                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                        ctx.fillStyle = '#666';
-                        ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 1, 12, 14);
-                        ctx.fillStyle = '#333';
-                        ctx.fillRect(x * TILE_SIZE + 4, y * TILE_SIZE + 3, 3, 10);
-                        ctx.fillRect(x * TILE_SIZE + 9, y * TILE_SIZE + 3, 3, 10);
-                    } else if (map[y][x] === 12) {
-                        // EMP
-                        ctx.fillStyle = '#050505';
-                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                        ctx.fillStyle = '#0ff';
-                        ctx.fillRect(x * TILE_SIZE + 5, y * TILE_SIZE + 6, 6, 4);
-                        ctx.fillStyle = '#fff';
-                        ctx.fillRect(x * TILE_SIZE + 7, y * TILE_SIZE + 6, 2, 4);
-                    } else if (map[y][x] === 13) {
-                        // Elevator
-                        ctx.fillStyle = '#555';
-                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                        ctx.fillStyle = '#ff0';
-                        ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
-                        ctx.fillStyle = '#000';
-                        ctx.fillRect(x * TILE_SIZE + 6, y * TILE_SIZE + 6, TILE_SIZE - 12, TILE_SIZE - 12);
-                    } else if (map[y][x] === 14) {
-                        // Escape Pod
-                        ctx.fillStyle = '#555';
-                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                        ctx.fillStyle = '#0ff';
-                        ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
-                        ctx.fillStyle = '#fff';
-                        ctx.fillRect(x * TILE_SIZE + 6, y * TILE_SIZE + 6, TILE_SIZE - 12, TILE_SIZE - 12);
-                    } else if (map[y][x] === 15) {
-                        // Self Destruct Terminal
-                        ctx.fillStyle = '#050505';
-                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                        ctx.fillStyle = '#f55';
-                        ctx.fillRect(x * TILE_SIZE + 4, y * TILE_SIZE + 4, 8, 8);
-                        ctx.fillStyle = '#f00';
-                        ctx.fillRect(x * TILE_SIZE + 5, y * TILE_SIZE + 5, 6, 6);
-                    } else {
-                        ctx.fillStyle = '#050505';
-                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        ctx.fillRect(px + 9, py + 5 + bob, 2, 1);
+                        ctx.restore();
+                    } else if (tile === 9 || tile === 10) {
+                        // High-Tech Mainframe Terminal (9=Active, 10=Offline/Accessed)
+                        let active = (tile === 9);
+                        // Desk Base
+                        ctx.fillStyle = '#151c24';
+                        ctx.fillRect(px + 2, py + 10, 12, 4);
+                        ctx.fillStyle = '#253240';
+                        ctx.fillRect(px + 3, py + 11, 10, 2); // Keyboard
+
+                        // Monitor Chassis
+                        ctx.fillStyle = active ? '#1a2838' : '#14181f';
+                        ctx.fillRect(px + 2, py + 2, 12, 8);
+                        ctx.strokeStyle = active ? '#00ff88' : '#445566';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(px + 2.5, py + 2.5, 11, 7);
+
+                        // Screen display
+                        if (active) {
+                            ctx.fillStyle = '#002b15';
+                            ctx.fillRect(px + 4, py + 4, 8, 4);
+                            // Animated scanlines & radar/text blip
+                            let scan = Math.floor((time * 0.01) % 4);
+                            ctx.fillStyle = '#00ff66';
+                            ctx.fillRect(px + 4, py + 4 + scan, 8, 1);
+                            ctx.fillRect(px + 5, py + 5, 2, 2);
+                            // Power LED
+                            ctx.fillStyle = '#00ffaa';
+                            ctx.fillRect(px + 11, py + 8, 2, 1);
+                        } else {
+                            ctx.fillStyle = '#070a0e';
+                            ctx.fillRect(px + 4, py + 4, 8, 4);
+                            // Inactive static noise
+                            ctx.fillStyle = '#223344';
+                            ctx.fillRect(px + 5, py + 5, 6, 2);
+                        }
+                    } else if (tile === 11) {
+                        // Crew Survival Locker (Hideout)
+                        ctx.fillStyle = '#1c242c';
+                        ctx.fillRect(px + 2, py + 1, 12, 14);
+
+                        // Double locker doors
+                        let lockerGrad = ctx.createLinearGradient(px, py, px + TILE_SIZE, py);
+                        lockerGrad.addColorStop(0, '#2d3a47');
+                        lockerGrad.addColorStop(0.5, '#3b4b5c');
+                        lockerGrad.addColorStop(1, '#1b232c');
+                        ctx.fillStyle = lockerGrad;
+                        ctx.fillRect(px + 3, py + 2, 5, 12);
+                        ctx.fillRect(px + 9, py + 2, 5, 12);
+
+                        // Door Seams & Louvers
+                        ctx.fillStyle = '#0b0f14';
+                        ctx.fillRect(px + 4, py + 4, 3, 1);
+                        ctx.fillRect(px + 4, py + 6, 3, 1);
+                        ctx.fillRect(px + 4, py + 8, 3, 1);
+                        ctx.fillRect(px + 10, py + 4, 3, 1);
+                        ctx.fillRect(px + 10, py + 6, 3, 1);
+                        ctx.fillRect(px + 10, py + 8, 3, 1);
+
+                        // Electronic lockpad & bio-seal warning
+                        ctx.fillStyle = '#f5c518';
+                        ctx.fillRect(px + 7, py + 10, 3, 2);
+                        ctx.fillStyle = '#00ff66';
+                        ctx.fillRect(px + 7, py + 7, 1, 1);
+                    } else if (tile === 12) {
+                        // EMP Canister (Pulse Weapon)
+                        let bob = Math.sin(time * 0.007 + x) * 1.5;
+                        ctx.save();
+                        ctx.shadowBlur = 10;
+                        ctx.shadowColor = '#00ffff';
+
+                        // Canister casing
+                        ctx.fillStyle = '#2b3847';
+                        ctx.fillRect(px + 4, py + 4 + bob, 8, 8);
+                        // Core glowing plasma tube
+                        let tubeGrad = ctx.createLinearGradient(px + 5, py, px + 11, py);
+                        tubeGrad.addColorStop(0, '#00bfff');
+                        tubeGrad.addColorStop(0.5, '#ffffff');
+                        tubeGrad.addColorStop(1, '#00ffff');
+                        ctx.fillStyle = tubeGrad;
+                        ctx.fillRect(px + 5, py + 6 + bob, 6, 4);
+
+                        // Electromagnetic ring coils
+                        ctx.fillStyle = '#00ffff';
+                        ctx.fillRect(px + 6, py + 5 + bob, 4, 1);
+                        ctx.fillRect(px + 6, py + 10 + bob, 4, 1);
+                        ctx.restore();
+                    } else if (tile === 13) {
+                        // Industrial Cargo Lift / Elevator
+                        // Hazard perimeter border
+                        ctx.fillStyle = '#111';
+                        ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+                        ctx.fillStyle = '#ffd700';
+                        for (let i = 0; i < 4; i++) {
+                            ctx.fillRect(px + i * 4, py, 2, 2);
+                            ctx.fillRect(px + i * 4, py + TILE_SIZE - 2, 2, 2);
+                        }
+
+                        // Lift Platform
+                        ctx.fillStyle = '#2b333d';
+                        ctx.fillRect(px + 2, py + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                        // Hydraulic Grate
+                        ctx.fillStyle = '#181e24';
+                        ctx.fillRect(px + 4, py + 4, TILE_SIZE - 8, TILE_SIZE - 8);
+
+                        // Animated guide chevron arrows
+                        let arrowPhase = (time * 0.005) % 3;
+                        ctx.fillStyle = '#00ff88';
+                        ctx.beginPath();
+                        ctx.moveTo(px + 8, py + 5 + (arrowPhase * 2));
+                        ctx.lineTo(px + 12, py + 8 + (arrowPhase * 2));
+                        ctx.lineTo(px + 4, py + 8 + (arrowPhase * 2));
+                        ctx.closePath();
+                        ctx.fill();
+                    } else if (tile === 14) {
+                        // High-Tech Escape Pod Airlock
+                        ctx.fillStyle = '#182430';
+                        ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+
+                        // Circular hatch ring
+                        ctx.strokeStyle = '#00e5ff';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.arc(px + 8, py + 8, 6, 0, Math.PI * 2);
+                        ctx.stroke();
+
+                        // Viewport & Strobe Beacon
+                        let beacon = (Math.sin(time * 0.008) + 1) * 0.5;
+                        ctx.fillStyle = `rgba(0, 229, 255, ${0.4 + beacon * 0.6})`;
+                        ctx.beginPath();
+                        ctx.arc(px + 8, py + 8, 3, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Locking wheel spokes
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(px + 8, py + 3); ctx.lineTo(px + 8, py + 13);
+                        ctx.moveTo(px + 3, py + 8); ctx.lineTo(px + 13, py + 8);
+                        ctx.stroke();
+                    } else if (tile === 15) {
+                        // Self Destruct Terminal Console
+                        ctx.fillStyle = '#260808';
+                        ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+
+                        // Beveled console
+                        ctx.fillStyle = '#4a1212';
+                        ctx.fillRect(px + 2, py + 2, 12, 12);
+
+                        // Crimson Reactor Button & Warning Klaxon
+                        let klaxon = (Math.sin(time * 0.012) + 1) * 0.5;
+                        ctx.save();
+                        ctx.shadowBlur = 12;
+                        ctx.shadowColor = '#ff0000';
+                        ctx.fillStyle = `rgb(255, ${Math.floor(klaxon * 80)}, 0)`;
+                        ctx.beginPath();
+                        ctx.arc(px + 8, py + 8, 4, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Skull / Danger mark
+                        ctx.fillStyle = '#111';
+                        ctx.fillRect(px + 7, py + 6, 2, 2);
+                        ctx.fillRect(px + 7, py + 9, 2, 1);
+                        ctx.restore();
                     }
                 }
             }
         }
 
+        function drawFlashlight(px, py, dir) {
+            ctx.save();
+            let grad;
+            let radius = 64;
+            if (dir === 0) { // Up
+                grad = ctx.createRadialGradient(px, py, 2, px, py - 40, radius);
+                ctx.beginPath();
+                ctx.moveTo(px, py);
+                ctx.arc(px, py, radius, -Math.PI * 0.8, -Math.PI * 0.2);
+                ctx.closePath();
+            } else if (dir === 1) { // Down
+                grad = ctx.createRadialGradient(px, py, 2, px, py + 40, radius);
+                ctx.beginPath();
+                ctx.moveTo(px, py);
+                ctx.arc(px, py, radius, Math.PI * 0.2, Math.PI * 0.8);
+                ctx.closePath();
+            } else if (dir === 2) { // Left
+                grad = ctx.createRadialGradient(px, py, 2, px - 40, py, radius);
+                ctx.beginPath();
+                ctx.moveTo(px, py);
+                ctx.arc(px, py, radius, Math.PI * 0.7, Math.PI * 1.3);
+                ctx.closePath();
+            } else { // Right
+                grad = ctx.createRadialGradient(px, py, 2, px + 40, py, radius);
+                ctx.beginPath();
+                ctx.moveTo(px, py);
+                ctx.arc(px, py, radius, -Math.PI * 0.3, Math.PI * 0.3);
+                ctx.closePath();
+            }
+            grad.addColorStop(0, 'rgba(0, 255, 180, 0.15)');
+            grad.addColorStop(0.5, 'rgba(0, 255, 120, 0.06)');
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = grad;
+            ctx.fill();
+            ctx.restore();
+        }
+
         function drawPlayer(time = performance.now()) {
             let px = player.x * TILE_SIZE + TILE_SIZE / 2;
             let py = player.y * TILE_SIZE + TILE_SIZE / 2;
-            let anim = Math.floor(time / 200) % 2;
-            ctx.fillStyle = '#0f0';
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = '#0f0';
-            ctx.beginPath();
-            if (playerDir === 0) {
-                ctx.moveTo(px, py - 6);
-                ctx.lineTo(px + 5, py + 5 - anim);
-                ctx.lineTo(px, py + 2 + anim);
-                ctx.lineTo(px - 5, py + 5 - anim);
-            } else if (playerDir === 1) {
-                ctx.moveTo(px, py + 6);
-                ctx.lineTo(px + 5, py - 5 + anim);
-                ctx.lineTo(px, py - 2 - anim);
-                ctx.lineTo(px - 5, py - 5 + anim);
-            } else if (playerDir === 2) {
-                ctx.moveTo(px - 6, py);
-                ctx.lineTo(px + 5 - anim, py - 5);
-                ctx.lineTo(px + 2 + anim, py);
-                ctx.lineTo(px + 5 - anim, py + 5);
-            } else {
-                ctx.moveTo(px + 6, py);
-                ctx.lineTo(px - 5 + anim, py - 5);
-                ctx.lineTo(px - 2 - anim, py);
-                ctx.lineTo(px - 5 + anim, py + 5);
+            let bob = Math.sin(time * 0.008) * 1.0;
+            let step = Math.sin(time * 0.015) * 1.5;
+
+            // Flashlight illumination cone
+            drawFlashlight(px, py, playerDir);
+
+            ctx.save();
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = '#00ff88';
+
+            if (playerDir === 0) { // UP (Back View)
+                // Suit Torso
+                ctx.fillStyle = '#d0dbe5';
+                ctx.fillRect(px - 5, py - 3 + bob, 10, 8);
+                // Shoulder guards
+                ctx.fillStyle = '#8ca3b8';
+                ctx.fillRect(px - 6, py - 4 + bob, 3, 4);
+                ctx.fillRect(px + 3, py - 4 + bob, 3, 4);
+                // Oxygen / Life Support Backpack
+                ctx.fillStyle = '#1c2833';
+                ctx.fillRect(px - 4, py - 2 + bob, 8, 7);
+                // Battery & Oxygen Gauge LEDs on Backpack
+                ctx.fillStyle = (oxygen <= 20) ? '#ff3333' : '#00ff66';
+                ctx.fillRect(px - 3, py + bob, 2, 4);
+                ctx.fillStyle = (battery <= 20) ? '#ff3333' : '#00ffff';
+                ctx.fillRect(px + 1, py + bob, 2, 4);
+                // Helmet Back
+                ctx.fillStyle = '#eaf2f8';
+                ctx.beginPath();
+                ctx.arc(px, py - 4 + bob, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+                // Helmet Comm Antenna
+                ctx.strokeStyle = '#00ff88';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(px + 3, py - 5 + bob);
+                ctx.lineTo(px + 5, py - 8 + bob);
+                ctx.stroke();
+                // Boots
+                ctx.fillStyle = '#485a6a';
+                ctx.fillRect(px - 4, py + 5 + step, 3, 3);
+                ctx.fillRect(px + 1, py + 5 - step, 3, 3);
+
+            } else if (playerDir === 1) { // DOWN (Front View)
+                // Suit Torso
+                ctx.fillStyle = '#d0dbe5';
+                ctx.fillRect(px - 5, py - 2 + bob, 10, 8);
+                // Shoulder guards
+                ctx.fillStyle = '#8ca3b8';
+                ctx.fillRect(px - 6, py - 3 + bob, 3, 4);
+                ctx.fillRect(px + 3, py - 3 + bob, 3, 4);
+                // Chest Console Rig
+                ctx.fillStyle = '#1c2833';
+                ctx.fillRect(px - 3, py + bob, 6, 4);
+                ctx.fillStyle = '#00ff66';
+                ctx.fillRect(px - 2, py + 1 + bob, 2, 2);
+                ctx.fillStyle = '#00ffff';
+                ctx.fillRect(px + 1, py + 1 + bob, 1, 1);
+                // Helmet Visor Dome (Reflective Gold/Cyan Curved Glass)
+                ctx.fillStyle = '#eaf2f8';
+                ctx.beginPath();
+                ctx.arc(px, py - 4 + bob, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+                let visorGrad = ctx.createLinearGradient(px - 3, py - 6 + bob, px + 3, py - 2 + bob);
+                visorGrad.addColorStop(0, '#00ffff');
+                visorGrad.addColorStop(0.5, '#0088cc');
+                visorGrad.addColorStop(1, '#002244');
+                ctx.fillStyle = visorGrad;
+                ctx.beginPath();
+                ctx.arc(px, py - 4 + bob, 3.5, 0.1 * Math.PI, 0.9 * Math.PI, false);
+                ctx.fill();
+                // Visor Specular Glint
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(px - 2, py - 5 + bob, 2, 1);
+                // Boots
+                ctx.fillStyle = '#485a6a';
+                ctx.fillRect(px - 4, py + 6 + step, 3, 3);
+                ctx.fillRect(px + 1, py + 6 - step, 3, 3);
+
+            } else if (playerDir === 2) { // LEFT (Side View)
+                // Suit Body
+                ctx.fillStyle = '#d0dbe5';
+                ctx.fillRect(px - 4, py - 2 + bob, 8, 8);
+                // Backpack on right (back)
+                ctx.fillStyle = '#1c2833';
+                ctx.fillRect(px + 2, py - 1 + bob, 3, 6);
+                ctx.fillStyle = '#00ff66';
+                ctx.fillRect(px + 3, py + bob, 1, 3);
+                // Helmet & Visor facing left
+                ctx.fillStyle = '#eaf2f8';
+                ctx.beginPath();
+                ctx.arc(px - 1, py - 4 + bob, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#00ffff';
+                ctx.fillRect(px - 5, py - 5 + bob, 3, 3);
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(px - 4, py - 5 + bob, 1, 1);
+                // Boots
+                ctx.fillStyle = '#485a6a';
+                ctx.fillRect(px - 4 + step, py + 6, 3, 3);
+                ctx.fillRect(px + step, py + 6, 3, 3);
+
+            } else { // RIGHT (Side View)
+                // Suit Body
+                ctx.fillStyle = '#d0dbe5';
+                ctx.fillRect(px - 4, py - 2 + bob, 8, 8);
+                // Backpack on left (back)
+                ctx.fillStyle = '#1c2833';
+                ctx.fillRect(px - 5, py - 1 + bob, 3, 6);
+                ctx.fillStyle = '#00ff66';
+                ctx.fillRect(px - 4, py + bob, 1, 3);
+                // Helmet & Visor facing right
+                ctx.fillStyle = '#eaf2f8';
+                ctx.beginPath();
+                ctx.arc(px + 1, py - 4 + bob, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#00ffff';
+                ctx.fillRect(px + 2, py - 5 + bob, 3, 3);
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(px + 3, py - 5 + bob, 1, 1);
+                // Boots
+                ctx.fillStyle = '#485a6a';
+                ctx.fillRect(px - 3 + step, py + 6, 3, 3);
+                ctx.fillRect(px + 1 - step, py + 6, 3, 3);
             }
-            ctx.closePath();
-            ctx.fill();
-            ctx.shadowBlur = 0;
+
+            ctx.restore();
         }
 
         function drawAliens(time = performance.now()) {
-            let alienAnim = Math.floor(time / 150) % 2;
             for (let a of aliens) {
-                if (a.state === 'stunned') {
-                    ctx.fillStyle = '#55f';
-                    ctx.shadowColor = '#55f';
-                } else {
-                    ctx.fillStyle = '#f0f';
-                    ctx.shadowColor = '#f0f';
-                }
-                ctx.shadowBlur = 10;
                 let ax = a.x * TILE_SIZE + TILE_SIZE / 2;
                 let ay = a.y * TILE_SIZE + TILE_SIZE / 2;
-                let aa = (a.state === 'stunned') ? 0 : alienAnim;
+                let isStunned = (a.state === 'stunned');
+                let isChasing = (a.state === 'chase');
+                let legWave = Math.sin(time * 0.015 + a.x * 2) * 2;
+
+                ctx.save();
+                if (isStunned) {
+                    ctx.shadowBlur = 12;
+                    ctx.shadowColor = '#00ffff';
+                } else if (isChasing) {
+                    ctx.shadowBlur = 16;
+                    ctx.shadowColor = '#ff0055';
+                } else {
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = '#ff00ff';
+                }
+
+                // 6 Undulating Tendril / Arachnid Shadow Legs
+                ctx.strokeStyle = isStunned ? '#3388ff' : isChasing ? '#ff1144' : '#aa00aa';
+                ctx.lineWidth = 1.5;
+                let legPairs = [
+                    [-6, -4, -10 + legWave, -8],
+                    [-7, 0, -11 - legWave, 0],
+                    [-6, 4, -10 + legWave, 8],
+                    [6, -4, 10 - legWave, -8],
+                    [7, 0, 11 + legWave, 0],
+                    [6, 4, 10 - legWave, 8]
+                ];
+                for (let lp of lpPairs = legPairs) {
+                    ctx.beginPath();
+                    ctx.moveTo(ax + lp[0], ay + lp[1]);
+                    ctx.lineTo(ax + lp[2], ay + lp[3]);
+                    ctx.stroke();
+                }
+
+                // Biomechanical Chitinous Carapace Shell
+                ctx.fillStyle = isStunned ? '#101c3d' : isChasing ? '#3b0814' : '#22082b';
                 ctx.beginPath();
-                ctx.moveTo(ax, ay - 6 - aa);
-                ctx.lineTo(ax + 3 + aa, ay - 2);
-                ctx.lineTo(ax + 7, ay);
-                ctx.lineTo(ax + 3 + aa, ay + 2);
-                ctx.lineTo(ax + 4, ay + 6 + aa);
-                ctx.lineTo(ax, ay + 3);
-                ctx.lineTo(ax - 4, ay + 6 + aa);
-                ctx.lineTo(ax - 3 - aa, ay + 2);
-                ctx.lineTo(ax - 7, ay);
-                ctx.lineTo(ax - 3 - aa, ay - 2);
-                ctx.closePath();
+                ctx.ellipse(ax, ay, 6, 7, 0, 0, Math.PI * 2);
                 ctx.fill();
+
+                // Chitin Plate Segments
+                ctx.fillStyle = isStunned ? '#1f3d7a' : isChasing ? '#661426' : '#4d145c';
+                ctx.beginPath();
+                ctx.ellipse(ax, ay - 2, 4, 3, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.ellipse(ax, ay + 2, 4, 3, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Central Optic Core Eye
+                let eyePulse = (Math.sin(time * 0.01 + a.x) + 1) * 0.5;
+                if (isStunned) {
+                    // Electric Blue Stun Matrix
+                    ctx.fillStyle = '#00ffff';
+                    ctx.beginPath();
+                    ctx.arc(ax, ay, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.strokeRect(ax - 2, ay - 2, 4, 4);
+                } else if (isChasing) {
+                    // Aggressive Flashing Crimson Hunter Eye with Slit Pupil
+                    ctx.fillStyle = `rgb(255, ${Math.floor(eyePulse * 80)}, 0)`;
+                    ctx.beginPath();
+                    ctx.arc(ax, ay, 3.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#000000';
+                    ctx.fillRect(ax - 0.5, ay - 3, 1, 6); // Slit pupil
+                    // Jagged Mandibles snapping
+                    ctx.strokeStyle = '#ff3366';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(ax - 3, ay + 5); ctx.lineTo(ax, ay + 8 + legWave);
+                    ctx.moveTo(ax + 3, ay + 5); ctx.lineTo(ax, ay + 8 + legWave);
+                    ctx.stroke();
+                } else {
+                    // Eerie Violet Patrol Eye
+                    ctx.fillStyle = `rgb(${Math.floor(200 + eyePulse * 55)}, 0, 255)`;
+                    ctx.beginPath();
+                    ctx.arc(ax, ay, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(ax - 1, ay - 1, 2, 2);
+                }
+
+                ctx.restore();
             }
-            ctx.shadowBlur = 0;
         }
 
         function draw(time = performance.now()) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawMap();
+            ctx.save();
+            // Apply Screen Shake
+            if (screenShake > 0) {
+                let sx = (Math.random() - 0.5) * screenShake * 4;
+                let sy = (Math.random() - 0.5) * screenShake * 4;
+                ctx.translate(sx, sy);
+                screenShake = Math.max(0, screenShake - 0.05);
+            }
+
+            ctx.clearRect(-10, -10, canvas.width + 20, canvas.height + 20);
+            drawMap(time);
+            drawShockwaves();
             drawAliens(time);
             if (!isDead) drawPlayer(time);
             drawParticles();
+            ctx.restore();
+
             if (wonGame) {
                 ctx.fillStyle = 'rgba(0,0,0,0.8)';
                 ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -883,7 +1324,11 @@
                     if (emps > 0) {
                         emps--;
                         showMessage("EMP DEPLOYED. ALIENS STUNNED.", "#0ff");
-                        spawnParticles(player.x * TILE_SIZE + TILE_SIZE/2, player.y * TILE_SIZE + TILE_SIZE/2, '#0ff', 30);
+                        let pCentX = player.x * TILE_SIZE + TILE_SIZE/2;
+                        let pCentY = player.y * TILE_SIZE + TILE_SIZE/2;
+                        spawnParticles(pCentX, pCentY, '#0ff', 40);
+                        addShockwave(pCentX, pCentY, '#00ffff', 140);
+                        triggerScreenShake(4);
                         for (let a of aliens) {
                             if (Math.abs(a.x - player.x) + Math.abs(a.y - player.y) <= 8) {
                                 a.state = 'stunned';
@@ -899,6 +1344,7 @@
         let renderLoopId;
         function renderLoop(time) {
             updateParticles();
+            updateShockwaves();
             draw(time);
             renderLoopId = requestAnimationFrame(renderLoop);
         }
