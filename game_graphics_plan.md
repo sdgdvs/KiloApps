@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KMine
 - KMandel
 - KVoid
 - KStarship
@@ -149,8 +148,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSolitaire
 - KHex
 - KStellar
+- KMine
 
 ## Completed Work Log
+
+- **KMine (Loop 3):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on mine explosions, chording actions, flag placements, and stage win celebrations (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas kmine.html, and double-buffered viewport rendering with trigonometric FastSin/FastCos physics decay in Native C Win32 GDI KMine/main.c), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant smoke & plasma puffs with negative gravity and radius growth, heavy kinematic metallic mine casing & stone debris shards with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars upon victory), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion halo radiating upon mine detonations and victory bursts, enhanced 3D procedural sprite assets (3D beveled explosive mine spheres with 8-directional radial spikes, red detonator tips, blinking LED core beacons, and specular highlight arcs; detailed animated flags with brass flagpoles, weighted pedestal bases, golden finial orbs, and waving crimson pennants with gold trim and continuous sine-wave cloth ripple animations), beveled 3D tiles with traveling specular glints across diagonals, styled embossed number typography, ornate cybernetic HUD corner filigree L-brackets with tech notches and gold rivet accents at all table corners, a pulsating energy perimeter inlay border, and atmospheric floating cyber dust motes drifting across the board in both Web Canvas (kmine.html) and Native C Win32 GDI (KMine/main.c).
 
 - **KStellar (Loop 1):** Replaced placeholder shapes and plain text combat with custom graphical sprites, animations, and visual effects in both Web Canvas (kstellar.html) and Native Win32 GDI (KStellar/main.c). Implemented custom starfield rendering with twinkling stars, constellation hyperlane connecting lines, animated player starship sprites with oscillating thruster plasma flames and radar sweep rings over current docked system, economy-specific star corona discs, and animated hyperspace trajectory course vectors. Replaced text-based combat with a dedicated Tactical Combat Arena featuring custom player battlecruiser sprite (with glowing canopy, engine plumes, and pulsating cyan shield aura), crimson pirate corsair sprite (with jagged prow armor, red optic scanner, and thruster exhaust), animated laser and disruptor projectile bolts, EMP shockwaves, 4-layer particle burst engine (needle sparks, plasma puffs, and wreckage debris), dynamic health meters, and procedural screen-shake decay on laser impacts. Added custom SVG planetary headers and commodity trading icons in the station view.
 
