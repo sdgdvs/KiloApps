@@ -11,11 +11,12 @@
         body {
             margin: 0;
             padding: 10px;
-            background-color: #050505;
+            background-color: #030803;
             background-image: 
+                radial-gradient(circle at 50% 30%, rgba(0, 40, 0, 0.4) 0%, transparent 70%),
                 linear-gradient(rgba(0, 255, 0, 0.08) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0, 255, 0, 0.08) 1px, transparent 1px);
-            background-size: 20px 20px;
+            background-size: 100% 100%, 20px 20px, 20px 20px;
             color: #0f0;
             font-family: 'Courier New', Courier, monospace;
             text-rendering: optimizeLegibility;
@@ -25,25 +26,82 @@
             align-items: center;
             min-height: 100vh;
             user-select: none;
+            overflow-x: hidden;
         }
         #game-container {
             width: 100%;
-            max-width: 620px;
-            min-height: 480px;
-            border: 2px solid #0f0;
-            border-radius: 4px;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3), inset 0 0 15px rgba(0, 255, 0, 0.15);
+            max-width: 650px;
+            min-height: 520px;
+            border: 2px solid #00ff66;
+            border-radius: 6px;
+            box-shadow: 0 0 20px rgba(0, 255, 100, 0.35), inset 0 0 20px rgba(0, 255, 100, 0.12);
             padding: 16px;
             position: relative;
-            background-color: rgba(0, 10, 0, 0.92);
+            background: linear-gradient(180deg, rgba(0, 15, 5, 0.96) 0%, rgba(2, 8, 3, 0.98) 100%);
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+            transform-origin: center center;
         }
+
+        /* Cybernetic corner filigree & traveling glint */
+        .hud-corner {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            pointer-events: none;
+            z-index: 50;
+        }
+        .hud-corner-tl { top: 3px; left: 3px; border-top: 2px solid #00ffaa; border-left: 2px solid #00ffaa; }
+        .hud-corner-tr { top: 3px; right: 3px; border-top: 2px solid #00ffaa; border-right: 2px solid #00ffaa; }
+        .hud-corner-bl { bottom: 3px; left: 3px; border-bottom: 2px solid #00ffaa; border-left: 2px solid #00ffaa; }
+        .hud-corner-br { bottom: 3px; right: 3px; border-bottom: 2px solid #00ffaa; border-right: 2px solid #00ffaa; }
+        .hud-corner::after {
+            content: '';
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #00ffea;
+            border-radius: 50%;
+            box-shadow: 0 0 4px #00ffea;
+        }
+        .hud-corner-tl::after { top: 1px; left: 1px; }
+        .hud-corner-tr::after { top: 1px; right: 1px; }
+        .hud-corner-bl::after { bottom: 1px; left: 1px; }
+        .hud-corner-br::after { bottom: 1px; right: 1px; }
+
+        .glint-border {
+            position: absolute;
+            inset: 0;
+            border-radius: 6px;
+            pointer-events: none;
+            z-index: 40;
+            overflow: hidden;
+        }
+        .glint-light {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, rgba(0, 255, 200, 0.8) 0%, rgba(0, 255, 100, 0) 70%);
+            border-radius: 50%;
+            filter: blur(2px);
+            opacity: 0.6;
+            animation: borderGlint 8s linear infinite;
+        }
+        @keyframes borderGlint {
+            0% { top: -40px; left: -40px; }
+            25% { top: -40px; left: calc(100% - 40px); }
+            50% { top: calc(100% - 40px); left: calc(100% - 40px); }
+            75% { top: calc(100% - 40px); left: -40px; }
+            100% { top: -40px; left: -40px; }
+        }
+
         .screen {
             display: none;
             height: 100%;
             flex-direction: column;
             flex: 1;
+            z-index: 10;
         }
         .screen.active {
             display: flex;
@@ -52,96 +110,189 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #0f0;
+            border-bottom: 1px solid rgba(0, 255, 100, 0.5);
             padding-bottom: 6px;
             margin-bottom: 8px;
+            position: relative;
+        }
+        .header-bar::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 60px;
+            height: 2px;
+            background: #00ffff;
+            box-shadow: 0 0 8px #00ffff;
         }
         h1, h2 {
             margin: 0;
             text-transform: uppercase;
             letter-spacing: 2px;
-            font-size: 18px;
-            color: #0f0;
+            font-size: 17px;
+            color: #00ff88;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
         .btn-help-top {
-            background: rgba(0, 30, 0, 0.6);
-            border: 1px solid #0f0;
-            color: #0f0;
+            background: rgba(0, 35, 15, 0.8);
+            border: 1px solid #00ff88;
+            color: #00ffaa;
             font-family: inherit;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             padding: 3px 8px;
             cursor: pointer;
-            border-radius: 2px;
+            border-radius: 3px;
             transition: all 0.2s;
         }
         .btn-help-top:hover {
-            background: #0f0;
+            background: #00ff88;
             color: #000;
-            box-shadow: 0 0 10px #0f0;
+            box-shadow: 0 0 10px #00ff88;
         }
         .quick-hint {
             text-align: center;
             font-size: 11px;
-            color: #8fa;
+            color: #8cfaab;
             margin-bottom: 8px;
             letter-spacing: 0.5px;
         }
+
+        /* Garage Hangar Diagnostics Bay */
+        .hangar-bay {
+            display: flex;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 35, 15, 0.7) 0%, rgba(0, 10, 5, 0.9) 100%);
+            border: 1px solid #00aa55;
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 8px;
+            gap: 12px;
+            position: relative;
+            box-shadow: inset 0 0 15px rgba(0, 255, 100, 0.15);
+        }
+        .hangar-viewport {
+            width: 140px;
+            height: 125px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 20, 10, 0.8);
+            border: 1px solid #008844;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        .hangar-grid-bg {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(0, 255, 100, 0.12) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 100, 0.12) 1px, transparent 1px);
+            background-size: 12px 12px;
+            pointer-events: none;
+        }
+        .hangar-scanline {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgba(0, 255, 255, 0.6);
+            box-shadow: 0 0 6px rgba(0, 255, 255, 0.8);
+            animation: hangarScan 3s linear infinite;
+        }
+        @keyframes hangarScan {
+            0% { top: 0%; opacity: 0.8; }
+            50% { top: 100%; opacity: 0.8; }
+            51% { top: 100%; opacity: 0; }
+            52% { top: 0%; opacity: 0; }
+            53% { top: 0%; opacity: 0.8; }
+            100% { top: 100%; opacity: 0.8; }
+        }
+        .hangar-info-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 11px;
+        }
+        .hangar-badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 4px;
+        }
+        .hangar-badge {
+            background: rgba(0, 40, 20, 0.7);
+            border: 1px solid #00cc66;
+            padding: 2px 6px;
+            border-radius: 2px;
+            font-size: 10px;
+            color: #7affb8;
+            white-space: nowrap;
+        }
+        .hangar-badge.special {
+            border-color: #00ddff;
+            color: #88ffff;
+        }
+
         .stats {
             display: flex;
             justify-content: space-around;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             gap: 6px;
         }
         .stat-box {
-            border: 1px solid #0a0;
-            padding: 6px 4px;
+            border: 1px solid #00aa55;
+            padding: 5px 4px;
             text-align: center;
             flex: 1;
-            background-color: rgba(0, 40, 0, 0.4);
-            border-radius: 2px;
+            background-color: rgba(0, 30, 15, 0.5);
+            border-radius: 3px;
         }
         .stat-label {
-            font-size: 11px;
-            color: #8c8;
+            font-size: 10px;
+            color: #78c990;
         }
         .stat-val {
             font-size: 13px;
             font-weight: bold;
-            color: #0f0;
+            color: #00ff88;
         }
         .equip-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 6px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         .equip-card {
             text-align: center;
-            background: rgba(0, 25, 0, 0.5);
-            border: 1px solid #060;
-            padding: 6px 4px;
+            background: rgba(0, 25, 10, 0.6);
+            border: 1px solid #007733;
+            padding: 5px 4px;
             border-radius: 3px;
         }
         .equip-label {
-            font-size: 10px;
-            color: #7b7;
-            margin-bottom: 4px;
+            font-size: 9px;
+            color: #6ebb82;
+            margin-bottom: 3px;
             text-transform: uppercase;
         }
         .btn {
-            background-color: #000;
-            color: #0f0;
-            border: 1px solid #0f0;
-            padding: 7px 12px;
+            background-color: #031408;
+            color: #00ff88;
+            border: 1px solid #00cc66;
+            padding: 6px 10px;
             cursor: pointer;
             text-transform: uppercase;
             font-family: 'Courier New', Courier, monospace;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: bold;
-            margin: 3px;
-            border-radius: 2px;
-            box-shadow: 0 0 4px rgba(0, 255, 0, 0.4);
+            margin: 2px;
+            border-radius: 3px;
+            box-shadow: 0 0 5px rgba(0, 255, 100, 0.3);
             transition: all 0.15s ease-in-out;
             display: inline-flex;
             align-items: center;
@@ -149,29 +300,29 @@
             gap: 5px;
         }
         .btn:hover {
-            background-color: #0f0;
+            background-color: #00ff88;
             color: #000;
-            box-shadow: 0 0 12px #0f0;
+            box-shadow: 0 0 12px #00ff88;
         }
         .btn:active {
             transform: scale(0.97);
         }
         .btn .key-badge {
-            background: rgba(0, 255, 0, 0.25);
-            color: #0f0;
+            background: rgba(0, 255, 100, 0.2);
+            color: #00ffaa;
             padding: 1px 4px;
             border-radius: 2px;
-            font-size: 10px;
-            border: 1px solid #0a0;
+            font-size: 9px;
+            border: 1px solid #00aa55;
         }
         .btn:hover .key-badge {
             background: #000;
-            color: #0f0;
+            color: #00ff88;
             border-color: #000;
         }
         .btn-equip {
             width: 100%;
-            font-size: 11px;
+            font-size: 10px;
             padding: 4px 2px;
             margin: 0;
             white-space: nowrap;
@@ -187,117 +338,144 @@
         }
         #garage-info {
             text-align: center;
-            font-size: 12px;
-            min-height: 28px;
-            line-height: 14px;
-            color: #cfc;
-            margin: 6px 0;
+            font-size: 11px;
+            min-height: 26px;
+            line-height: 13px;
+            color: #bbf8cd;
+            margin: 4px 0;
             padding: 4px;
-            background: rgba(0, 30, 0, 0.3);
-            border: 1px dashed #050;
-            border-radius: 2px;
+            background: rgba(0, 30, 15, 0.4);
+            border: 1px dashed #008844;
+            border-radius: 3px;
         }
         #log {
             flex: 1;
-            min-height: 90px;
-            max-height: 120px;
-            border: 1px solid #050;
+            min-height: 85px;
+            max-height: 110px;
+            border: 1px solid #007733;
             padding: 6px 8px;
             overflow-y: auto;
             margin-bottom: 8px;
-            background-color: rgba(0, 15, 0, 0.9);
-            color: #0f0;
+            background-color: rgba(0, 15, 8, 0.95);
+            color: #00ff88;
             font-size: 11px;
-            line-height: 15px;
-            border-radius: 2px;
+            line-height: 14px;
+            border-radius: 3px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Battle Arena Display */
+        .battle-arena {
+            position: relative;
+            margin-bottom: 8px;
         }
         .mech-display {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
             gap: 8px;
+            position: relative;
+            z-index: 1;
         }
         .mech-side {
-            width: 48%;
-            border: 1px solid #060;
+            width: 49%;
+            border: 1px solid #008844;
             padding: 6px;
-            background-color: rgba(0, 15, 0, 0.7);
-            border-radius: 3px;
+            background: radial-gradient(circle at 50% 30%, rgba(0, 30, 15, 0.85) 0%, rgba(0, 12, 6, 0.95) 100%);
+            border-radius: 4px;
+            position: relative;
+            box-shadow: 0 0 10px rgba(0, 255, 100, 0.15);
         }
         .mech-side.enemy {
-            border-color: #600;
-            background-color: rgba(20, 0, 0, 0.7);
+            border-color: #aa2222;
+            background: radial-gradient(circle at 50% 30%, rgba(40, 10, 10, 0.85) 0%, rgba(15, 4, 4, 0.95) 100%);
+            box-shadow: 0 0 10px rgba(255, 50, 50, 0.15);
         }
         .mech-name {
             font-weight: bold;
-            font-size: 13px;
+            font-size: 12px;
             text-align: center;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
             letter-spacing: 1px;
         }
         .bar-container {
             width: 100%;
-            background-color: #020;
-            height: 8px;
-            margin-top: 3px;
-            margin-bottom: 4px;
-            border: 1px solid #040;
-            border-radius: 1px;
+            background-color: #001a08;
+            height: 7px;
+            margin-top: 2px;
+            margin-bottom: 3px;
+            border: 1px solid #005522;
+            border-radius: 2px;
             overflow: hidden;
+        }
+        .enemy .bar-container {
+            background-color: #200000;
+            border-color: #551111;
         }
         .bar {
             height: 100%;
-            background-color: #0f0;
-            box-shadow: 0 0 4px #0f0;
+            background: linear-gradient(90deg, #00aa44, #00ff88);
+            box-shadow: 0 0 6px #00ff88;
             transition: width 0.25s ease;
         }
         .enemy-bar { 
-            background-color: #f22; 
-            box-shadow: 0 0 4px #f22;
+            background: linear-gradient(90deg, #cc1111, #ff4444);
+            box-shadow: 0 0 6px #ff4444;
         }
         .heat-bar {
-            background-color: #f80;
-            box-shadow: 0 0 4px #f80;
+            background: linear-gradient(90deg, #cc6600, #ff9900);
+            box-shadow: 0 0 6px #ff9900;
         }
         .wireframe {
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 85px;
+            height: 95px;
             margin: 2px 0;
+            position: relative;
         }
-        .enemy-wireframe svg {
-            filter: drop-shadow(0 0 3px rgba(255, 0, 0, 0.6));
+
+        /* FX Canvas overlay */
+        #combat-fx-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 20;
         }
+
         @keyframes idle-bob {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-3px); }
         }
         @keyframes anim-attack {
             0%, 100% { transform: translateX(0); }
-            50% { transform: translateX(18px); }
+            50% { transform: translateX(20px); }
         }
         @keyframes anim-attack-enemy {
             0%, 100% { transform: translateX(0); }
-            50% { transform: translateX(-18px); }
+            50% { transform: translateX(-20px); }
         }
         @keyframes anim-damage {
             0%, 100% { transform: translateX(0) translateY(0); filter: drop-shadow(0 0 0 #f00); }
-            25% { transform: translateX(-5px) translateY(3px); filter: drop-shadow(0 0 8px #f00); }
-            50% { transform: translateX(5px) translateY(-3px); filter: drop-shadow(0 0 12px #f00); }
-            75% { transform: translateX(-3px) translateY(2px); filter: drop-shadow(0 0 8px #f00); }
+            20% { transform: translateX(-6px) translateY(3px); filter: drop-shadow(0 0 10px #f00); }
+            40% { transform: translateX(6px) translateY(-3px); filter: drop-shadow(0 0 15px #f00); }
+            60% { transform: translateX(-4px) translateY(2px); filter: drop-shadow(0 0 10px #f00); }
+            80% { transform: translateX(3px) translateY(-1px); filter: drop-shadow(0 0 5px #f00); }
         }
         .mech-sprite {
-            animation: idle-bob 2s infinite ease-in-out;
+            animation: idle-bob 2.2s infinite ease-in-out;
+            transition: filter 0.2s;
         }
         .mech-sprite.attacking {
-            animation: anim-attack 0.2s ease-out;
+            animation: anim-attack 0.22s ease-out;
         }
         .mech-sprite.enemy-attacking {
-            animation: anim-attack-enemy 0.2s ease-out;
+            animation: anim-attack-enemy 0.22s ease-out;
         }
         .mech-sprite.damaged {
-            animation: anim-damage 0.4s;
+            animation: anim-damage 0.45s;
         }
 
         /* Toast Notifications */
@@ -310,17 +488,17 @@
             flex-direction: column;
             gap: 6px;
             pointer-events: none;
-            max-width: 320px;
+            max-width: 300px;
         }
         .toast {
-            background: rgba(0, 20, 0, 0.95);
-            border: 1px solid #0f0;
-            color: #0f0;
-            padding: 8px 12px;
+            background: rgba(0, 20, 10, 0.95);
+            border: 1px solid #00ff88;
+            color: #00ffaa;
+            padding: 6px 10px;
             font-size: 11px;
             line-height: 14px;
             border-radius: 3px;
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            box-shadow: 0 0 10px rgba(0, 255, 100, 0.5);
             animation: toastIn 0.25s ease-out, toastOut 0.25s ease-in 2.75s forwards;
             pointer-events: auto;
         }
@@ -343,30 +521,37 @@
             to { opacity: 0; transform: translateY(-10px); }
         }
 
-        /* Help screen tables */
+        /* Help screen */
         .shortcut-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 8px 0;
-            font-size: 12px;
+            margin: 6px 0;
+            font-size: 11px;
         }
         .shortcut-table th, .shortcut-table td {
-            border: 1px solid #050;
+            border: 1px solid #006633;
             padding: 4px 6px;
             text-align: left;
         }
         .shortcut-table th {
-            background: rgba(0, 50, 0, 0.5);
-            color: #0f0;
+            background: rgba(0, 50, 25, 0.6);
+            color: #00ff88;
         }
         .shortcut-key {
-            color: #ff0;
+            color: #ffff44;
             font-weight: bold;
         }
     </style>
 </head>
 <body>
     <div id="game-container">
+        <!-- Sci-Fi Corner Filigree -->
+        <div class="hud-corner hud-corner-tl"></div>
+        <div class="hud-corner hud-corner-tr"></div>
+        <div class="hud-corner hud-corner-bl"></div>
+        <div class="hud-corner hud-corner-br"></div>
+        <div class="glint-border"><div class="glint-light"></div></div>
+
         <!-- Toast Notification Container -->
         <div id="toast-container"></div>
 
@@ -381,9 +566,33 @@
                 [D/Enter] Deploy | [R] Repair | [U] Salvage | [S] Sell | [1-4] Gear | [F1] Manual
             </div>
 
-            <div style="text-align: center; margin-bottom: 8px; font-weight: bold; font-size: 13px;">
-                BATTLE: <span id="garage-battle-count" style="color:#ff0;">1</span> | CREDITS: <span id="garage-credits" style="color:#0ff;">100</span> CR | SALVAGE: <span id="garage-salvage" style="color:#ff8;">0</span><br>
-                PILOT LVL: <span id="garage-level" style="color:#ff0;">1</span> | XP: <span id="garage-xp">0</span>/<span id="garage-next-xp">100</span>
+            <div style="text-align: center; margin-bottom: 6px; font-weight: bold; font-size: 12px;">
+                BATTLE: <span id="garage-battle-count" style="color:#ffff44;">1</span> | CREDITS: <span id="garage-credits" style="color:#00ffff;">100</span> CR | SALVAGE: <span id="garage-salvage" style="color:#aaffaa;">0</span><br>
+                PILOT LVL: <span id="garage-level" style="color:#ffff44;">1</span> | XP: <span id="garage-xp">0</span>/<span id="garage-next-xp">100</span>
+            </div>
+
+            <!-- Hangar Bay Diagnostics -->
+            <div class="hangar-bay">
+                <div class="hangar-viewport">
+                    <div class="hangar-grid-bg"></div>
+                    <div class="hangar-scanline"></div>
+                    <div id="hangar-mech-svg-wrap"></div>
+                </div>
+                <div class="hangar-info-col">
+                    <div style="font-weight:bold; color:#00ffaa; font-size:12px; margin-bottom:2px;">CHASSIS DIAGNOSTICS</div>
+                    <div class="hangar-badge-row">
+                        <span class="hangar-badge" id="hangar-wpn-badge">WPN: Basic Laser</span>
+                        <span class="hangar-badge" id="hangar-arm-badge">ARM: Standard</span>
+                    </div>
+                    <div class="hangar-badge-row">
+                        <span class="hangar-badge" id="hangar-sink-badge">COOL: 20/t</span>
+                        <span class="hangar-badge special" id="hangar-spec-badge">SYS: None</span>
+                    </div>
+                    <div style="font-size:10px; color:#88d9a0; line-height:12px; margin-top:2px;">
+                        Visor: <span style="color:#00ffff;">ONLINE</span> | Heat Coils: <span style="color:#ffaa00;">NOMINAL</span><br>
+                        Thrusters: <span id="hangar-jet-status" style="color:#77ff88;">READY</span>
+                    </div>
+                </div>
             </div>
 
             <div class="stats">
@@ -393,7 +602,7 @@
                 </div>
                 <div class="stat-box">
                     <div class="stat-label">MAX HEAT</div>
-                    <div class="stat-val" id="garage-heat" style="color:#f90;">0/100</div>
+                    <div class="stat-val" id="garage-heat" style="color:#ff9900;">0/100</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-label">FIREPOWER (ATK)</div>
@@ -428,7 +637,7 @@
 
             <div class="actions">
                 <button class="btn" onclick="repairMech()" id="btn-repair"><span class="key-badge">R</span> Repair</button>
-                <button class="btn" onclick="startBattle()" id="btn-deploy" style="background:#030; border-color:#0f0;"><span class="key-badge">D</span> Deploy to Battle</button>
+                <button class="btn" onclick="startBattle()" id="btn-deploy" style="background:#003311; border-color:#00ff88;"><span class="key-badge">D</span> Deploy to Battle</button>
                 <button class="btn" onclick="useSalvage()" id="btn-usesal"><span class="key-badge">U</span> Use Salvage (+50 HP)</button>
                 <button class="btn" onclick="sellSalvage()" id="btn-sellsal"><span class="key-badge">S</span> Sell Salvage (+50 CR)</button>
                 <button class="btn" onclick="showScreen('help')" id="btn-manual"><span class="key-badge">F1</span> Manual</button>
@@ -442,51 +651,29 @@
                 <button class="btn-help-top" onclick="showScreen('help')">[F1] Manual</button>
             </div>
 
-            <div class="mech-display">
-                <div class="mech-side">
-                    <div class="mech-name" style="color:#0f0;">Player Mech (You)</div>
-                    <div class="wireframe">
-                        <svg id="player-mech-svg" class="mech-sprite" width="90" height="85" viewBox="0 0 100 100">
-                            <g stroke="#0f0" stroke-width="2" fill="none">
-                                <rect x="40" y="10" width="20" height="15" />
-                                <line x1="45" y1="15" x2="55" y2="15" stroke-width="3" />
-                                <polygon points="30,25 70,25 60,60 40,60" fill="rgba(0,50,0,0.5)" />
-                                <rect x="40" y="30" width="20" height="20" />
-                                <path d="M30,30 L10,50 L10,70" />
-                                <circle cx="10" cy="70" r="4" fill="#0f0" />
-                                <path d="M70,30 L90,50 L90,70" />
-                                <rect x="85" y="70" width="10" height="15" fill="#0f0" />
-                                <path d="M40,60 L30,90 L20,90" />
-                                <path d="M60,60 L70,90 L80,90" />
-                            </g>
-                        </svg>
+            <div class="battle-arena" id="battle-arena">
+                <canvas id="combat-fx-canvas" width="618" height="150"></canvas>
+                <div class="mech-display">
+                    <div class="mech-side">
+                        <div class="mech-name" style="color:#00ff88;">Player Mech (You)</div>
+                        <div class="wireframe">
+                            <div id="player-mech-container" class="mech-sprite"></div>
+                        </div>
+                        <div style="font-size:10px;">HP: <span id="battle-player-hp" style="font-weight:bold;">100</span></div>
+                        <div class="bar-container"><div id="player-hp-bar" class="bar"></div></div>
+                        <div style="font-size:10px;">HEAT: <span id="battle-player-heat" style="font-weight:bold; color:#ff9900;">0</span></div>
+                        <div class="bar-container"><div id="player-heat-bar" class="bar heat-bar"></div></div>
                     </div>
-                    <div style="font-size:11px;">HP: <span id="battle-player-hp" style="font-weight:bold;">100</span></div>
-                    <div class="bar-container"><div id="player-hp-bar" class="bar"></div></div>
-                    <div style="font-size:11px;">HEAT: <span id="battle-player-heat" style="font-weight:bold; color:#f90;">0</span></div>
-                    <div class="bar-container"><div id="player-heat-bar" class="bar heat-bar"></div></div>
-                </div>
-                <div class="mech-side enemy">
-                    <div class="mech-name" style="color:#f33;">Enemy Mech</div>
-                    <div class="wireframe enemy-wireframe">
-                        <svg id="enemy-mech-svg" class="mech-sprite" width="90" height="85" viewBox="0 0 100 100">
-                            <g stroke="#f33" stroke-width="2" fill="none">
-                                <circle cx="50" cy="15" r="8" />
-                                <circle cx="47" cy="15" r="2" fill="#f33" />
-                                <circle cx="53" cy="15" r="2" fill="#f33" />
-                                <polygon points="25,25 75,25 65,55 35,55" fill="rgba(50,0,0,0.5)" />
-                                <line x1="25" y1="40" x2="75" y2="40" />
-                                <path d="M25,30 L5,45 L15,65" />
-                                <path d="M75,30 L95,45 L85,65" />
-                                <path d="M35,55 L25,85 L15,85" />
-                                <path d="M65,55 L75,85 L85,85" />
-                            </g>
-                        </svg>
+                    <div class="mech-side enemy">
+                        <div class="mech-name" style="color:#ff4444;" id="enemy-title-name">Enemy Mech</div>
+                        <div class="wireframe enemy-wireframe">
+                            <div id="enemy-mech-container" class="mech-sprite"></div>
+                        </div>
+                        <div style="font-size:10px; color:#ffcccc;">HP: <span id="battle-enemy-hp" style="font-weight:bold;">100</span></div>
+                        <div class="bar-container"><div id="enemy-hp-bar" class="bar enemy-bar"></div></div>
+                        <div style="font-size:10px; color:#ffcccc;">HEAT: <span id="battle-enemy-heat" style="font-weight:bold; color:#ff9900;">0</span></div>
+                        <div class="bar-container"><div id="enemy-heat-bar" class="bar heat-bar"></div></div>
                     </div>
-                    <div style="font-size:11px; color:#fcc;">HP: <span id="battle-enemy-hp" style="font-weight:bold;">100</span></div>
-                    <div class="bar-container"><div id="enemy-hp-bar" class="bar enemy-bar"></div></div>
-                    <div style="font-size:11px; color:#fcc;">HEAT: <span id="battle-enemy-heat" style="font-weight:bold; color:#f90;">0</span></div>
-                    <div class="bar-container"><div id="enemy-heat-bar" class="bar heat-bar"></div></div>
                 </div>
             </div>
 
@@ -498,8 +685,9 @@
                 <button class="btn" onclick="actionDefend()"><span class="key-badge">D</span> Defend</button>
                 <button class="btn" onclick="showScreen('help')"><span class="key-badge">F1</span> Help</button>
             </div>
+
             <div class="actions" id="post-battle-actions" style="display: none;">
-                <button class="btn" onclick="returnToGarage()" style="background:#030; border-color:#0f0;"><span class="key-badge">R / Space</span> Return to Garage</button>
+                <button class="btn" onclick="returnToGarage()" style="background:#003311; border-color:#00ff88;"><span class="key-badge">R / Space</span> Return to Garage</button>
             </div>
         </div>
 
@@ -510,7 +698,7 @@
                 <button class="btn-help-top" onclick="returnFromHelp()">[Esc] Back</button>
             </div>
             
-            <div id="help-content" style="flex: 1; overflow-y: auto; padding: 10px; font-size: 12px; line-height: 16px; background-color: rgba(0, 20, 0, 0.85); border: 1px solid #040; margin-bottom: 8px;">
+            <div id="help-content" style="flex: 1; overflow-y: auto; padding: 10px; font-size: 11px; line-height: 15px; background-color: rgba(0, 20, 10, 0.9); border: 1px solid #006633; margin-bottom: 8px;">
                 <p><strong>MISSION OVERVIEW:</strong><br>
                 Pilot your customized combat mech through tactical skirmishes. Destroy enemy war machines, harvest salvage, earn credits, and upgrade weapons and plating in your garage.</p>
 
@@ -579,6 +767,14 @@
                     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
                     osc.start();
                     osc.stop(audioCtx.currentTime + 0.1);
+                } else if (type === 'cannon') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.35);
+                    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.35);
                 } else if (type === 'alarm') {
                     osc.type = 'square';
                     osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
@@ -680,6 +876,494 @@
             {name: 'Legs', chance: 0.5, mult: 1.2}
         ];
 
+        /* ==================== PROCEDURAL SPRITE RENDERERS ==================== */
+        function getPlayerMechSVG(size = 90) {
+            const isHeavy = equipArm === 1;
+            const isLight = equipArm === 2;
+            const hasShield = equipSpec === 2;
+            const hasJets = equipSpec === 1;
+            const heatRatio = playerStats.heat / playerStats.maxHeat;
+
+            const primaryColor = isHeavy ? "#00ff88" : (isLight ? "#33ffaa" : "#00ff66");
+            const armorFill = isHeavy ? "#0d3318" : (isLight ? "#0a2614" : "#114020");
+            const visorColor = heatRatio > 0.8 ? "#ff3300" : (heatRatio > 0.5 ? "#ffaa00" : "#00ffff");
+
+            let wpnSvg = '';
+            if (equipWpn === 0) { // Basic Laser
+                wpnSvg = `
+                    <g transform="translate(76, 46)">
+                        <rect x="0" y="0" width="12" height="5" fill="#1b4d2b" stroke="${primaryColor}" stroke-width="1"/>
+                        <rect x="12" y="1" width="8" height="3" fill="#00ffff" stroke="#00e5ff" stroke-width="0.8"/>
+                        <line x1="20" y1="2.5" x2="24" y2="2.5" stroke="#00ffff" stroke-width="1.5"/>
+                        <circle cx="8" cy="2.5" r="1.5" fill="#00ffff"/>
+                    </g>`;
+            } else if (equipWpn === 1) { // Heavy Cannon
+                wpnSvg = `
+                    <g transform="translate(74, 43)">
+                        <rect x="0" y="0" width="14" height="8" fill="#14331c" stroke="${primaryColor}" stroke-width="1.2"/>
+                        <rect x="14" y="2" width="14" height="4" fill="#33553a" stroke="${primaryColor}" stroke-width="1"/>
+                        <rect x="25" y="0.5" width="4" height="7" fill="#00ff66"/>
+                        <circle cx="6" cy="4" r="2.5" fill="#ffaa00"/>
+                    </g>`;
+            } else { // Twin Blasters
+                wpnSvg = `
+                    <g transform="translate(75, 43)">
+                        <rect x="0" y="0" width="10" height="9" fill="#1b4d2b" stroke="${primaryColor}" stroke-width="1"/>
+                        <rect x="10" y="0.5" width="11" height="2.5" fill="#ff9900" stroke="#ffaa00" stroke-width="0.8"/>
+                        <rect x="10" y="6" width="11" height="2.5" fill="#ff9900" stroke="#ffaa00" stroke-width="0.8"/>
+                        <circle cx="5" cy="4.5" r="1.5" fill="#ffaa00"/>
+                    </g>`;
+            }
+
+            let jetSvg = '';
+            if (hasJets) {
+                jetSvg = `
+                    <g>
+                        <!-- Jump Jet Thrusters -->
+                        <path d="M24,25 L18,18 L24,14 Z" fill="#008855" stroke="#00ffaa" stroke-width="1"/>
+                        <path d="M76,25 L82,18 L76,14 Z" fill="#008855" stroke="#00ffaa" stroke-width="1"/>
+                        <polygon points="17,17 12,14 16,19" fill="#00ffff" opacity="0.85"/>
+                        <polygon points="83,17 88,14 84,19" fill="#00ffff" opacity="0.85"/>
+                    </g>`;
+            }
+
+            let shieldSvg = '';
+            if (hasShield) {
+                shieldSvg = `
+                    <polygon points="50,4 88,22 88,72 50,96 12,72 12,22" 
+                             fill="rgba(0, 255, 255, 0.08)" stroke="#00ffff" stroke-width="1.2" stroke-dasharray="4,2" opacity="0.85">
+                        <animate attributeName="opacity" values="0.6;0.95;0.6" dur="2s" repeatCount="indefinite"/>
+                    </polygon>`;
+            }
+
+            let headWidth = isHeavy ? 24 : (isLight ? 16 : 20);
+            let torsoPoints = isHeavy ? "24,28 76,28 68,66 32,66" : (isLight ? "34,28 66,28 58,62 42,62" : "28,28 72,28 64,64 36,64");
+
+            return `
+            <svg class="mech-svg-elem" width="${size}" height="${size * 0.95}" viewBox="0 0 100 100">
+                <defs>
+                    <linearGradient id="pTorsoGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#1f592f"/>
+                        <stop offset="100%" stop-color="#0a2612"/>
+                    </linearGradient>
+                </defs>
+                ${shieldSvg}
+                ${jetSvg}
+                <g stroke="${primaryColor}" stroke-width="1.5" fill="${armorFill}">
+                    <!-- Legs & Greaves -->
+                    <path d="M38,64 L30,84 L18,88 L26,94 L42,94 L42,86 L40,64" fill="${armorFill}" stroke-width="1.5"/>
+                    <path d="M62,64 L70,84 L82,88 L74,94 L58,94 L58,86 L60,64" fill="${armorFill}" stroke-width="1.5"/>
+                    <!-- Knee caps -->
+                    <rect x="28" y="74" width="12" height="6" fill="#00aa44" stroke="${primaryColor}" stroke-width="1"/>
+                    <rect x="60" y="74" width="12" height="6" fill="#00aa44" stroke="${primaryColor}" stroke-width="1"/>
+
+                    <!-- Left Arm (Shield/Sub) -->
+                    <path d="M28,34 L12,48 L14,70 L22,66 L20,48 L32,38" fill="${armorFill}" stroke-width="1.5"/>
+                    <rect x="8" y="55" width="8" height="14" fill="#00aa44" stroke="${primaryColor}" stroke-width="1"/>
+
+                    <!-- Main Torso Chassis -->
+                    <polygon points="${torsoPoints}" fill="url(#pTorsoGrad)" stroke="${primaryColor}" stroke-width="1.8"/>
+                    <rect x="42" y="36" width="16" height="18" fill="#002b11" stroke="${primaryColor}" stroke-width="1"/>
+                    <!-- Core Power Reactor -->
+                    <circle cx="50" cy="45" r="4.5" fill="${visorColor}" stroke="#ffffff" stroke-width="0.8"/>
+
+                    <!-- Head & Cockpit -->
+                    <rect x="${50 - headWidth/2}" y="12" width="${headWidth}" height="16" fill="${armorFill}" stroke="${primaryColor}" stroke-width="1.5" rx="2"/>
+                    <polygon points="${50 - headWidth/2 + 3},18 ${50 + headWidth/2 - 3},18 ${50 + headWidth/2 - 5},24 ${50 - headWidth/2 + 5},24" fill="${visorColor}" stroke="#ffffff" stroke-width="0.6"/>
+                    <line x1="50" y1="12" x2="50" y2="7" stroke="${primaryColor}" stroke-width="1.2"/>
+                    <circle cx="50" cy="6" r="1.5" fill="${visorColor}"/>
+
+                    <!-- Shoulder Pauldrons -->
+                    <polygon points="22,28 34,26 30,40 18,36" fill="#00aa44" stroke="${primaryColor}" stroke-width="1.2"/>
+                    <polygon points="78,28 66,26 70,40 82,36" fill="#00aa44" stroke="${primaryColor}" stroke-width="1.2"/>
+
+                    <!-- Right Weapon Arm -->
+                    <path d="M72,34 L82,46 L82,62 L74,60 L76,46 L68,38" fill="${armorFill}" stroke-width="1.5"/>
+                </g>
+                ${wpnSvg}
+            </svg>`;
+        }
+
+        function getEnemyMechSVG(size = 90) {
+            let enemyType = 0; // 0=Scout, 1=Brawler, 2=Siege Titan
+            if (battleCount >= 5) enemyType = 2;
+            else if (battleCount >= 3) enemyType = 1;
+
+            const primaryRed = "#ff3333";
+            const darkRed = "#4a0808";
+            const enemyEye = "#ffff00";
+
+            if (enemyType === 0) { // Scout Raider (Battle 1-2)
+                return `
+                <svg class="mech-svg-elem" width="${size}" height="${size * 0.95}" viewBox="0 0 100 100">
+                    <g stroke="${primaryRed}" stroke-width="1.5" fill="${darkRed}">
+                        <!-- Digitigrade Raptor Legs -->
+                        <path d="M38,62 L22,76 L34,92 L20,94" stroke-width="1.5" fill="none"/>
+                        <path d="M62,62 L78,76 L66,92 L80,94" stroke-width="1.5" fill="none"/>
+                        <!-- Torso -->
+                        <polygon points="30,28 70,28 60,62 40,62" stroke-width="1.8"/>
+                        <!-- Aerodynamic Fin Ears -->
+                        <polygon points="34,14 22,6 32,20" fill="#aa1111"/>
+                        <polygon points="66,14 78,6 68,20" fill="#aa1111"/>
+                        <!-- Head -->
+                        <circle cx="50" cy="20" r="10" stroke-width="1.5"/>
+                        <path d="M43,20 L57,20" stroke="${enemyEye}" stroke-width="2.5"/>
+                        <!-- Needle Cannons -->
+                        <line x1="24" y1="36" x2="8" y2="56" stroke-width="2"/>
+                        <line x1="8" y1="56" x2="4" y2="70" stroke="${primaryRed}" stroke-width="2.5"/>
+                        <line x1="76" y1="36" x2="92" y2="56" stroke-width="2"/>
+                        <line x1="92" y1="56" x2="96" y2="70" stroke="${primaryRed}" stroke-width="2.5"/>
+                        <!-- Core -->
+                        <circle cx="50" cy="44" r="3.5" fill="${enemyEye}"/>
+                    </g>
+                </svg>`;
+            } else if (enemyType === 1) { // Assault Goliath (Battle 3-4)
+                return `
+                <svg class="mech-svg-elem" width="${size}" height="${size * 0.95}" viewBox="0 0 100 100">
+                    <g stroke="${primaryRed}" stroke-width="1.6" fill="${darkRed}">
+                        <!-- Heavy Legs -->
+                        <path d="M36,64 L26,84 L14,94 L38,94 L40,64" stroke-width="1.5"/>
+                        <path d="M64,64 L74,84 L86,94 L62,94 L60,64" stroke-width="1.5"/>
+                        <!-- Torso Plating -->
+                        <polygon points="22,26 78,26 68,66 32,66" stroke-width="2"/>
+                        <!-- Shoulder Missile Pod -->
+                        <rect x="14" y="16" width="16" height="12" fill="#220000" stroke="${primaryRed}" stroke-width="1.2"/>
+                        <circle cx="18" cy="20" r="1.5" fill="#ffaa00"/>
+                        <circle cx="26" cy="20" r="1.5" fill="#ffaa00"/>
+                        <circle cx="18" cy="25" r="1.5" fill="#ffaa00"/>
+                        <circle cx="26" cy="25" r="1.5" fill="#ffaa00"/>
+                        <!-- Head -->
+                        <rect x="40" y="12" width="20" height="14" stroke-width="1.5" rx="2"/>
+                        <polygon points="43,17 57,17 55,22 45,22" fill="${enemyEye}"/>
+                        <!-- Heavy Cannon Arm -->
+                        <rect x="76" y="32" width="10" height="26" fill="#330000"/>
+                        <rect x="78" y="58" width="6" height="16" fill="#ff2222"/>
+                        <!-- Spiked Fist Left Arm -->
+                        <rect x="14" y="34" width="8" height="24"/>
+                        <circle cx="18" cy="62" r="5" fill="#ff2222"/>
+                    </g>
+                </svg>`;
+            } else { // Siege Titan Dreadnought (Battle 5+)
+                return `
+                <svg class="mech-svg-elem" width="${size}" height="${size * 0.95}" viewBox="0 0 100 100">
+                    <g stroke="${primaryRed}" stroke-width="1.8" fill="${darkRed}">
+                        <!-- Quad Legs Base -->
+                        <path d="M30,64 L12,84 L8,94 L26,94 L36,66"/>
+                        <path d="M70,64 L88,84 L92,94 L74,94 L64,66"/>
+                        <!-- Massive Fortress Torso -->
+                        <polygon points="16,24 84,24 74,68 26,68" fill="#380505" stroke-width="2.2"/>
+                        <!-- Exhaust Smoke Stacks -->
+                        <rect x="22" y="8" width="6" height="16" fill="#220000"/>
+                        <rect x="72" y="8" width="6" height="16" fill="#220000"/>
+                        <!-- Horned Armor Crest -->
+                        <polygon points="34,22 28,6 40,16" fill="#ff2222"/>
+                        <polygon points="66,22 72,6 60,16" fill="#ff2222"/>
+                        <!-- Ocular Core Cyclops Eye -->
+                        <circle cx="50" cy="18" r="8" fill="#110000" stroke="${primaryRed}" stroke-width="1.5"/>
+                        <circle cx="50" cy="18" r="3.5" fill="#ffff00">
+                            <animate attributeName="r" values="3;4.5;3" dur="1.2s" repeatCount="indefinite"/>
+                        </circle>
+                        <!-- Quad Cannons -->
+                        <rect x="8" y="32" width="10" height="30" fill="#220000"/>
+                        <rect x="6" y="62" width="6" height="14" fill="#ff3333"/>
+                        <rect x="82" y="32" width="10" height="30" fill="#220000"/>
+                        <rect x="88" y="62" width="6" height="14" fill="#ff3333"/>
+                        <!-- Central Shield Matrix -->
+                        <rect x="42" y="36" width="16" height="20" fill="#220000" stroke="#ff8800" stroke-width="1.2"/>
+                        <line x1="45" y1="46" x2="55" y2="46" stroke="#ff3333" stroke-width="2"/>
+                    </g>
+                </svg>`;
+            }
+        }
+
+        function updateMechVisuals() {
+            const hangarWrap = document.getElementById('hangar-mech-svg-wrap');
+            if (hangarWrap) hangarWrap.innerHTML = getPlayerMechSVG(120);
+
+            const playerContainer = document.getElementById('player-mech-container');
+            if (playerContainer) playerContainer.innerHTML = getPlayerMechSVG(90);
+
+            const enemyContainer = document.getElementById('enemy-mech-container');
+            if (enemyContainer) enemyContainer.innerHTML = getEnemyMechSVG(90);
+
+            // Update Hangar badges
+            const wpnBadge = document.getElementById('hangar-wpn-badge');
+            if (wpnBadge) wpnBadge.innerText = `WPN: ${weapons[equipWpn].name}`;
+            const armBadge = document.getElementById('hangar-arm-badge');
+            if (armBadge) armBadge.innerText = `ARM: ${armors[equipArm].name}`;
+            const sinkBadge = document.getElementById('hangar-sink-badge');
+            if (sinkBadge) sinkBadge.innerText = `COOL: ${heatSinks[equipSink].cooling}/t`;
+            const specBadge = document.getElementById('hangar-spec-badge');
+            if (specBadge) specBadge.innerText = `SYS: ${specials[equipSpec].name}`;
+
+            const jetStatus = document.getElementById('hangar-jet-status');
+            if (jetStatus) {
+                if (equipSpec === 1) jetStatus.innerText = "+20% EVASION";
+                else if (equipSpec === 2) jetStatus.innerText = "SHIELD 5 DMG";
+                else jetStatus.innerText = "STANDBY";
+            }
+
+            const enemyTitle = document.getElementById('enemy-title-name');
+            if (enemyTitle) {
+                if (battleCount >= 5) enemyTitle.innerText = "Siege Dreadnought";
+                else if (battleCount >= 3) enemyTitle.innerText = "Assault Goliath";
+                else enemyTitle.innerText = "Scout Raider";
+            }
+        }
+
+        /* ==================== COMBAT FX & PARTICLE ENGINE ==================== */
+        const fxCanvas = document.getElementById('combat-fx-canvas');
+        const fxCtx = fxCanvas ? fxCanvas.getContext('2d') : null;
+
+        let particles = [];
+        let shockwaves = [];
+        let projectiles = [];
+        let screenShake = 0;
+        let shakeAngle = 0;
+
+        function addShockwave(x, y, maxR, color, speed = 4) {
+            shockwaves.push({ x, y, r: 4, maxR, color, speed, alpha: 1.0 });
+        }
+
+        function triggerShake(amt = 12) {
+            screenShake = amt;
+        }
+
+        function spawnExplosion(x, y, count = 25, isEnemy = true) {
+            triggerShake(14);
+            const coreColor = isEnemy ? '#ffff55' : '#55ffff';
+            const smokeColor = isEnemy ? '#ff3300' : '#00ff88';
+
+            // Shockwave rings
+            addShockwave(x, y, 60, isEnemy ? '#ff5533' : '#00ffff', 5);
+            addShockwave(x, y, 90, '#ffffff', 8);
+
+            // Layer 1: Incandescent needle sparks
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const spd = 2 + Math.random() * 6;
+                particles.push({
+                    x, y,
+                    vx: Math.cos(angle) * spd,
+                    vy: Math.sin(angle) * spd,
+                    life: 1.0,
+                    decay: 0.02 + Math.random() * 0.03,
+                    r: 1.5 + Math.random() * 2,
+                    color: coreColor,
+                    type: 'spark'
+                });
+            }
+
+            // Layer 2: Expanding smoke / plasma puffs
+            for (let i = 0; i < Math.floor(count * 0.6); i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const spd = 0.5 + Math.random() * 2.5;
+                particles.push({
+                    x, y,
+                    vx: Math.cos(angle) * spd,
+                    vy: Math.sin(angle) * spd - 0.5,
+                    life: 1.0,
+                    decay: 0.015 + Math.random() * 0.02,
+                    r: 4 + Math.random() * 6,
+                    maxR: 12 + Math.random() * 10,
+                    color: smokeColor,
+                    type: 'smoke'
+                });
+            }
+
+            // Layer 3: Heavy metallic armor shards & debris
+            for (let i = 0; i < Math.floor(count * 0.4); i++) {
+                const angle = -Math.PI * 0.2 - Math.random() * Math.PI * 0.6;
+                const spd = 3 + Math.random() * 5;
+                particles.push({
+                    x, y,
+                    vx: Math.cos(angle) * spd,
+                    vy: Math.sin(angle) * spd,
+                    grav: 0.2,
+                    rot: Math.random() * Math.PI * 2,
+                    vrot: (Math.random() - 0.5) * 0.3,
+                    life: 1.0,
+                    decay: 0.012 + Math.random() * 0.015,
+                    w: 4 + Math.random() * 4,
+                    h: 2 + Math.random() * 3,
+                    color: '#889988',
+                    type: 'debris'
+                });
+            }
+        }
+
+        function spawnVictoryStars(x, y) {
+            for (let i = 0; i < 40; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const spd = 2 + Math.random() * 7;
+                particles.push({
+                    x, y,
+                    vx: Math.cos(angle) * spd,
+                    vy: Math.sin(angle) * spd,
+                    life: 1.0,
+                    decay: 0.01 + Math.random() * 0.02,
+                    r: 2 + Math.random() * 3,
+                    color: '#ffff00',
+                    type: 'star'
+                });
+            }
+        }
+
+        function fireProjectile(fromPlayer = true, weaponType = 0) {
+            const startX = fromPlayer ? 140 : 478;
+            const startY = 70;
+            const targetX = fromPlayer ? 478 : 140;
+            const targetY = 70;
+
+            projectiles.push({
+                x: startX,
+                y: startY,
+                startX, startY,
+                targetX, targetY,
+                progress: 0,
+                speed: fromPlayer ? 0.08 : 0.07,
+                fromPlayer,
+                weaponType
+            });
+        }
+
+        // 60 FPS animation loop for canvas FX & Screen Shake
+        function updateCombatFX() {
+            if (!fxCtx || !fxCanvas) return;
+            fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+
+            // Update & Render Projectiles
+            for (let i = projectiles.length - 1; i >= 0; i--) {
+                const p = projectiles[i];
+                p.progress += p.speed;
+                p.x = p.startX + (p.targetX - p.startX) * p.progress;
+                p.y = p.startY + (p.targetY - p.startY) * p.progress;
+
+                fxCtx.save();
+                if (p.fromPlayer) {
+                    if (p.weaponType === 0) { // Basic Laser: Cyan focus beam
+                        fxCtx.strokeStyle = '#00ffff';
+                        fxCtx.lineWidth = 3.5;
+                        fxCtx.shadowColor = '#00ffff';
+                        fxCtx.shadowBlur = 10;
+                        fxCtx.beginPath();
+                        fxCtx.moveTo(p.startX + (p.targetX - p.startX) * Math.max(0, p.progress - 0.25), p.y);
+                        fxCtx.lineTo(p.x, p.y);
+                        fxCtx.stroke();
+                    } else if (p.weaponType === 1) { // Heavy Cannon: Kinetic explosive slug
+                        fxCtx.fillStyle = '#ffaa00';
+                        fxCtx.shadowColor = '#ff6600';
+                        fxCtx.shadowBlur = 12;
+                        fxCtx.beginPath();
+                        fxCtx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+                        fxCtx.fill();
+                    } else { // Twin Blasters: Dual energy bolts
+                        fxCtx.fillStyle = '#ff9900';
+                        fxCtx.shadowColor = '#ffaa00';
+                        fxCtx.shadowBlur = 8;
+                        fxCtx.fillRect(p.x - 8, p.y - 4, 12, 3);
+                        fxCtx.fillRect(p.x - 8, p.y + 2, 12, 3);
+                    }
+                } else { // Enemy Disruptor: Red laser
+                    fxCtx.strokeStyle = '#ff3333';
+                    fxCtx.lineWidth = 3.5;
+                    fxCtx.shadowColor = '#ff0000';
+                    fxCtx.shadowBlur = 10;
+                    fxCtx.beginPath();
+                    fxCtx.moveTo(p.startX + (p.targetX - p.startX) * Math.max(0, p.progress - 0.25), p.y);
+                    fxCtx.lineTo(p.x, p.y);
+                    fxCtx.stroke();
+                }
+                fxCtx.restore();
+
+                if (p.progress >= 1.0) {
+                    spawnExplosion(p.targetX, p.targetY, 20, p.fromPlayer);
+                    projectiles.splice(i, 1);
+                }
+            }
+
+            // Update & Render Shockwaves
+            for (let i = shockwaves.length - 1; i >= 0; i--) {
+                const sw = shockwaves[i];
+                sw.r += sw.speed;
+                sw.alpha = Math.max(0, 1.0 - (sw.r / sw.maxR));
+
+                fxCtx.save();
+                fxCtx.strokeStyle = sw.color;
+                fxCtx.lineWidth = 2 * sw.alpha;
+                fxCtx.globalAlpha = sw.alpha;
+                fxCtx.shadowColor = sw.color;
+                fxCtx.shadowBlur = 6;
+                fxCtx.beginPath();
+                fxCtx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
+                fxCtx.stroke();
+                fxCtx.restore();
+
+                if (sw.r >= sw.maxR) {
+                    shockwaves.splice(i, 1);
+                }
+            }
+
+            // Update & Render Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const pt = particles[i];
+                pt.x += pt.vx;
+                pt.y += pt.vy;
+                if (pt.grav) pt.vy += pt.grav;
+                if (pt.rot !== undefined) pt.rot += pt.vrot;
+                pt.life -= pt.decay;
+
+                if (pt.life <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+
+                fxCtx.save();
+                fxCtx.globalAlpha = Math.max(0, pt.life);
+                fxCtx.fillStyle = pt.color;
+                fxCtx.shadowColor = pt.color;
+                fxCtx.shadowBlur = 4;
+
+                if (pt.type === 'spark') {
+                    fxCtx.beginPath();
+                    fxCtx.arc(pt.x, pt.y, pt.r, 0, Math.PI * 2);
+                    fxCtx.fill();
+                } else if (pt.type === 'smoke') {
+                    const curR = pt.r + (pt.maxR - pt.r) * (1.0 - pt.life);
+                    fxCtx.beginPath();
+                    fxCtx.arc(pt.x, pt.y, curR, 0, Math.PI * 2);
+                    fxCtx.fill();
+                } else if (pt.type === 'debris') {
+                    fxCtx.translate(pt.x, pt.y);
+                    fxCtx.rotate(pt.rot);
+                    fxCtx.fillRect(-pt.w/2, -pt.h/2, pt.w, pt.h);
+                } else if (pt.type === 'star') {
+                    fxCtx.beginPath();
+                    fxCtx.arc(pt.x, pt.y, pt.r, 0, Math.PI * 2);
+                    fxCtx.fill();
+                }
+                fxCtx.restore();
+            }
+
+            // Screen Shake physics decay
+            const container = document.getElementById('game-container');
+            if (screenShake > 0.05 && container) {
+                shakeAngle += 0.8;
+                const ox = Math.cos(shakeAngle) * screenShake;
+                const oy = Math.sin(shakeAngle * 1.3) * screenShake;
+                const rot = (Math.sin(shakeAngle * 0.7) * screenShake * 0.08);
+                container.style.transform = `translate(${ox.toFixed(1)}px, ${oy.toFixed(1)}px) rotate(${rot.toFixed(2)}deg)`;
+                screenShake *= 0.88;
+            } else if (container && container.style.transform !== '') {
+                container.style.transform = '';
+                screenShake = 0;
+            }
+
+            requestAnimationFrame(updateCombatFX);
+        }
+        requestAnimationFrame(updateCombatFX);
+
+        /* ==================== GAME LOGIC & CONTROLS ==================== */
         function toggleTarget() {
             currentTargetLimb = (currentTargetLimb + 1) % limbs.length;
             const tgtName = limbs[currentTargetLimb].name;
@@ -699,6 +1383,7 @@
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             const target = document.getElementById('screen-' + id);
             if (target) target.classList.add('active');
+            updateMechVisuals();
         }
 
         function returnFromHelp() {
@@ -709,7 +1394,7 @@
             const el = document.getElementById(id);
             if (!el) return;
             el.classList.remove(animClass);
-            void el.offsetWidth; // trigger reflow
+            void el.offsetWidth;
             el.classList.add(animClass);
             setTimeout(() => {
                 el.classList.remove(animClass);
@@ -732,6 +1417,8 @@
             document.getElementById('btn-arm').innerText = armors[equipArm].name;
             document.getElementById('btn-sink').innerText = heatSinks[equipSink].name;
             document.getElementById('btn-spec').innerText = specials[equipSpec].name;
+
+            updateMechVisuals();
         }
 
         function cycleWpn() {
@@ -834,6 +1521,7 @@
             document.getElementById('enemy-hp-bar').style.width = `${Math.max(0, (enemyStats.hp / enemyStats.maxHp) * 100)}%`;
             document.getElementById('player-heat-bar').style.width = `${Math.min(100, (playerStats.heat / playerStats.maxHeat) * 100)}%`;
             document.getElementById('enemy-heat-bar').style.width = `${Math.min(100, (enemyStats.heat / enemyStats.maxHeat) * 100)}%`;
+            updateMechVisuals();
         }
 
         function logMsg(msg) {
@@ -881,6 +1569,7 @@
             document.getElementById('post-battle-actions').style.display = 'flex';
             if (victory) {
                 playSound('victory');
+                spawnVictoryStars(478, 70);
                 let reward = 50 + (battleCount * 10);
                 let parts = Math.floor(Math.random() * 3) + 1;
                 credits += reward;
@@ -900,6 +1589,7 @@
                 battleCount++;
             } else {
                 playSound('defeat');
+                spawnExplosion(140, 70, 35, false);
                 logMsg("CRITICAL DAMAGE. MECH DESTROYED. CAMPAIGN FAILED.");
                 showToast(`💥 MECH DESTROYED! Campaign reset.`, 4000, 'danger');
                 battleCount = 1;
@@ -921,6 +1611,8 @@
             if (playerStats.heat > playerStats.maxHeat) {
                 playerStats.hp -= 15;
                 playSound('alarm');
+                triggerShake(16);
+                spawnExplosion(140, 70, 15, false);
                 logMsg("WARNING: CORE OVERHEAT! Took 15 system dmg.");
                 showToast(`⚠️ OVERHEAT DAMAGE (-15 HP)! Defend to cool down.`, 2500, 'danger');
                 if (playerStats.hp <= 0) {
@@ -935,33 +1627,45 @@
             let hitChance = targetLimb.chance + ((playerLevel - 1) * 0.05);
             if (hitChance > 1.0) hitChance = 1.0;
 
+            if (equipWpn === 1) playSound('cannon');
+            else playSound('laser');
+
+            fireProjectile(true, equipWpn);
+
             if (Math.random() > hitChance) {
-                triggerAnim('player-mech-svg', 'attacking', 200);
-                playSound('miss');
-                logMsg(`Targeting ${targetLimb.name}... Shot Missed!`);
+                triggerAnim('player-mech-container', 'attacking', 200);
+                setTimeout(() => {
+                    playSound('miss');
+                    logMsg(`Targeting ${targetLimb.name}... Shot Missed!`);
+                }, 120);
             } else {
-                triggerAnim('player-mech-svg', 'attacking', 200);
-                setTimeout(() => triggerAnim('enemy-mech-svg', 'damaged', 400), 100);
-                playSound('laser');
-                setTimeout(() => playSound('impact'), 100);
-                let dmg = Math.max(1, playerStats.atk - (enemyIsDefending ? enemyStats.def * 2 : enemyStats.def) + Math.floor(Math.random() * 5));
-                dmg = Math.floor(dmg * targetLimb.mult);
-                enemyStats.hp -= dmg;
-                logMsg(`Direct hit on ${targetLimb.name}! Dealt ${dmg} damage.`);
+                triggerAnim('player-mech-container', 'attacking', 200);
+                setTimeout(() => {
+                    triggerAnim('enemy-mech-container', 'damaged', 450);
+                    playSound('impact');
+                    let dmg = Math.max(1, playerStats.atk - (enemyIsDefending ? enemyStats.def * 2 : enemyStats.def) + Math.floor(Math.random() * 5));
+                    dmg = Math.floor(dmg * targetLimb.mult);
+                    enemyStats.hp -= dmg;
+                    logMsg(`Direct hit on ${targetLimb.name}! Dealt ${dmg} damage.`);
+                    updateBattle();
+
+                    if (enemyStats.hp <= 0) {
+                        enemyStats.hp = 0;
+                        updateBattle();
+                        endBattle(true);
+                    }
+                }, 120);
             }
             updateBattle();
 
-            if (enemyStats.hp <= 0) {
-                enemyStats.hp = 0;
-                updateBattle();
-                endBattle(true);
-                return;
-            }
-
-            enemyTurn();
-            if (document.getElementById('battle-actions').style.display !== 'none') {
-                applyCooling();
-                updateBattle();
+            if (enemyStats.hp > 0) {
+                setTimeout(() => {
+                    enemyTurn();
+                    if (document.getElementById('battle-actions').style.display !== 'none') {
+                        applyCooling();
+                        updateBattle();
+                    }
+                }, 350);
             }
         }
 
@@ -969,6 +1673,7 @@
             if (document.getElementById('battle-actions').style.display === 'none') return;
             isDefending = true;
             logMsg("Bracing for impact (Shields raised, Heat venting).");
+            addShockwave(140, 70, 50, '#00ffff', 4);
             enemyTurn();
             isDefending = false;
             if (document.getElementById('battle-actions').style.display !== 'none') {
@@ -981,6 +1686,7 @@
             if (enemyStats.heat + 30 > enemyStats.maxHeat) {
                 enemyIsDefending = true;
                 logMsg("Enemy vents reactor heat! (Defending)");
+                addShockwave(478, 70, 50, '#ffaa00', 4);
                 return;
             }
 
@@ -1000,39 +1706,49 @@
             let targetLimb = limbs[targetIdx];
             
             let effectiveChance = targetLimb.chance - specials[equipSpec].evadeBonus - ((playerLevel - 1) * 0.05);
-            if (Math.random() > effectiveChance) {
-                triggerAnim('enemy-mech-svg', 'enemy-attacking', 200);
-                playSound('miss');
-                if (specials[equipSpec].evadeBonus > 0 || playerLevel > 1) {
-                    logMsg(`Enemy targeted ${targetLimb.name}... Evaded cleanly!`);
-                } else {
-                    logMsg(`Enemy targeted ${targetLimb.name}... Enemy missed!`);
-                }
-            } else {
-                triggerAnim('enemy-mech-svg', 'enemy-attacking', 200);
-                setTimeout(() => triggerAnim('player-mech-svg', 'damaged', 400), 100);
-                playSound('enemyLaser');
-                setTimeout(() => playSound('impact'), 100);
-                let dmg = Math.max(1, enemyStats.atk - (isDefending ? playerStats.def * 2 : playerStats.def) + Math.floor(Math.random() * 4));
-                dmg = Math.floor(dmg * targetLimb.mult);
-                
-                if (specials[equipSpec].shieldDmgReduction > 0) {
-                    let absorbed = Math.min(dmg, specials[equipSpec].shieldDmgReduction);
-                    dmg -= absorbed;
-                    if (absorbed > 0) logMsg(`Energy Shield absorbed ${absorbed} damage!`);
-                }
+            playSound('enemyLaser');
+            fireProjectile(false, 0);
 
-                playerStats.hp -= dmg;
-                playerLimbDamage[targetIdx] += dmg;
-                logMsg(`Enemy strikes ${targetLimb.name}! Took ${dmg} damage.`);
+            if (Math.random() > effectiveChance) {
+                triggerAnim('enemy-mech-container', 'enemy-attacking', 200);
+                setTimeout(() => {
+                    playSound('miss');
+                    if (specials[equipSpec].evadeBonus > 0 || playerLevel > 1) {
+                        logMsg(`Enemy targeted ${targetLimb.name}... Evaded cleanly!`);
+                    } else {
+                        logMsg(`Enemy targeted ${targetLimb.name}... Enemy missed!`);
+                    }
+                }, 140);
+            } else {
+                triggerAnim('enemy-mech-container', 'enemy-attacking', 200);
+                setTimeout(() => {
+                    triggerAnim('player-mech-container', 'damaged', 450);
+                    playSound('impact');
+                    let dmg = Math.max(1, enemyStats.atk - (isDefending ? playerStats.def * 2 : playerStats.def) + Math.floor(Math.random() * 4));
+                    dmg = Math.floor(dmg * targetLimb.mult);
+                    
+                    if (specials[equipSpec].shieldDmgReduction > 0) {
+                        let absorbed = Math.min(dmg, specials[equipSpec].shieldDmgReduction);
+                        dmg -= absorbed;
+                        if (absorbed > 0) {
+                            logMsg(`Energy Shield absorbed ${absorbed} damage!`);
+                            addShockwave(140, 70, 45, '#00ffff', 4);
+                        }
+                    }
+
+                    playerStats.hp -= dmg;
+                    playerLimbDamage[targetIdx] += dmg;
+                    logMsg(`Enemy strikes ${targetLimb.name}! Took ${dmg} damage.`);
+                    updateBattle();
+
+                    if (playerStats.hp <= 0) {
+                        playerStats.hp = 0;
+                        updateBattle();
+                        endBattle(false);
+                    }
+                }, 140);
             }
             updateBattle();
-
-            if (playerStats.hp <= 0) {
-                playerStats.hp = 0;
-                updateBattle();
-                endBattle(false);
-            }
         }
 
         updateGarage();
@@ -1122,6 +1838,9 @@
                 }
             }
         });
+    </script>
+</body>
+</html>    });
     </script>
 </body>
 </html>

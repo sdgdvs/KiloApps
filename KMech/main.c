@@ -10,6 +10,16 @@ static unsigned int g_seed = 0;
 void my_srand(unsigned int seed) { g_seed = seed; }
 int my_rand() { g_seed = g_seed * 214013 + 2531011; return (g_seed >> 16) & 0x7FFF; }
 
+static float FastSin(float x) {
+    while (x > 3.14159f) x -= 6.28318f;
+    while (x < -3.14159f) x += 6.28318f;
+    float x2 = x * x;
+    return x * (1.0f - x2 * (0.16666667f - x2 * 0.00833333f));
+}
+static float FastCos(float x) {
+    return FastSin(x + 1.5707963f);
+}
+
 int gameState = STATE_GARAGE;
 bool playerVictory = false;
 
@@ -95,6 +105,151 @@ int animEnemyOffset = 0;
 int animPlayerDmg = 0;
 int animEnemyDmg = 0;
 
+// Screen shake & visual FX variables
+float g_screenShake = 0.0f;
+float g_shakePhase = 0.0f;
+
+// 4-Layer Particle Structure
+typedef struct {
+    float x, y;
+    float vx, vy;
+    float grav;
+    float life;
+    float decay;
+    int size;
+    COLORREF color;
+    int type; // 0=Spark, 1=Smoke/Plasma, 2=Debris, 3=Star
+} GdiParticle;
+
+#define MAX_PARTICLES 120
+GdiParticle g_particles[MAX_PARTICLES];
+int g_particleCount = 0;
+
+// Shockwaves
+typedef struct {
+    float x, y;
+    float r, maxR;
+    float speed;
+    float alpha;
+    COLORREF color;
+    bool active;
+} GdiShockwave;
+
+#define MAX_SHOCKWAVES 8
+GdiShockwave g_shockwaves[MAX_SHOCKWAVES];
+
+// Projectile
+typedef struct {
+    float x, y;
+    float startX, startY;
+    float targetX, targetY;
+    float progress;
+    float speed;
+    int weaponType;
+    bool fromPlayer;
+    bool active;
+} GdiProjectile;
+
+#define MAX_PROJECTILES 6
+GdiProjectile g_projectiles[MAX_PROJECTILES];
+
+void AddShockwave(float x, float y, float maxR, COLORREF color, float speed) {
+    for (int i = 0; i < MAX_SHOCKWAVES; i++) {
+        if (!g_shockwaves[i].active) {
+            g_shockwaves[i].x = x;
+            g_shockwaves[i].y = y;
+            g_shockwaves[i].r = 4.0f;
+            g_shockwaves[i].maxR = maxR;
+            g_shockwaves[i].speed = speed;
+            g_shockwaves[i].alpha = 1.0f;
+            g_shockwaves[i].color = color;
+            g_shockwaves[i].active = true;
+            break;
+        }
+    }
+}
+
+void TriggerScreenShake(float amt) {
+    g_screenShake = amt;
+}
+
+void SpawnExplosion(float x, float y, int count, bool isEnemy) {
+    TriggerScreenShake(10.0f);
+    COLORREF coreColor = isEnemy ? RGB(255, 255, 80) : RGB(80, 255, 255);
+    COLORREF smokeColor = isEnemy ? RGB(255, 60, 20) : RGB(0, 255, 120);
+
+    AddShockwave(x, y, 50.0f, isEnemy ? RGB(255, 80, 40) : RGB(0, 255, 255), 4.0f);
+    AddShockwave(x, y, 75.0f, RGB(255, 255, 255), 6.0f);
+
+    for (int i = 0; i < count && g_particleCount < MAX_PARTICLES; i++) {
+        float angle = ((float)(my_rand() % 360)) * (3.14159f / 180.0f);
+        float spd = 2.0f + (float)(my_rand() % 50) / 10.0f;
+        int ptype = i % 3; // 0=Spark, 1=Smoke, 2=Debris
+
+        g_particles[g_particleCount].x = x;
+        g_particles[g_particleCount].y = y;
+        g_particles[g_particleCount].vx = FastCos(angle) * spd;
+        g_particles[g_particleCount].vy = FastSin(angle) * spd;
+        g_particles[g_particleCount].life = 1.0f;
+        g_particles[g_particleCount].type = ptype;
+
+        if (ptype == 0) { // Spark
+            g_particles[g_particleCount].decay = 0.03f + (float)(my_rand() % 30) / 1000.0f;
+            g_particles[g_particleCount].grav = 0.0f;
+            g_particles[g_particleCount].size = 2 + (my_rand() % 3);
+            g_particles[g_particleCount].color = coreColor;
+        } else if (ptype == 1) { // Smoke
+            g_particles[g_particleCount].decay = 0.02f + (float)(my_rand() % 20) / 1000.0f;
+            g_particles[g_particleCount].grav = -0.1f;
+            g_particles[g_particleCount].size = 5 + (my_rand() % 5);
+            g_particles[g_particleCount].color = smokeColor;
+        } else { // Debris
+            g_particles[g_particleCount].decay = 0.015f + (float)(my_rand() % 15) / 1000.0f;
+            g_particles[g_particleCount].grav = 0.25f;
+            g_particles[g_particleCount].size = 3 + (my_rand() % 4);
+            g_particles[g_particleCount].color = RGB(120, 140, 120);
+        }
+        g_particleCount++;
+    }
+}
+
+void SpawnVictoryStars(float x, float y) {
+    for (int i = 0; i < 30 && g_particleCount < MAX_PARTICLES; i++) {
+        float angle = ((float)(my_rand() % 360)) * (3.14159f / 180.0f);
+        float spd = 2.0f + (float)(my_rand() % 60) / 10.0f;
+        g_particles[g_particleCount].x = x;
+        g_particles[g_particleCount].y = y;
+        g_particles[g_particleCount].vx = FastCos(angle) * spd;
+        g_particles[g_particleCount].vy = FastSin(angle) * spd;
+        g_particles[g_particleCount].grav = 0.05f;
+        g_particles[g_particleCount].life = 1.0f;
+        g_particles[g_particleCount].decay = 0.012f + (float)(my_rand() % 15) / 1000.0f;
+        g_particles[g_particleCount].size = 3 + (my_rand() % 3);
+        g_particles[g_particleCount].color = (i % 2 == 0) ? RGB(255, 255, 0) : RGB(0, 255, 255);
+        g_particles[g_particleCount].type = 3;
+        g_particleCount++;
+    }
+}
+
+void FireProjectile(bool fromPlayer, int weaponType) {
+    for (int i = 0; i < MAX_PROJECTILES; i++) {
+        if (!g_projectiles[i].active) {
+            g_projectiles[i].startX = fromPlayer ? 150.0f : 440.0f;
+            g_projectiles[i].startY = 145.0f;
+            g_projectiles[i].targetX = fromPlayer ? 440.0f : 150.0f;
+            g_projectiles[i].targetY = 145.0f;
+            g_projectiles[i].x = g_projectiles[i].startX;
+            g_projectiles[i].y = g_projectiles[i].startY;
+            g_projectiles[i].progress = 0.0f;
+            g_projectiles[i].speed = fromPlayer ? 0.12f : 0.10f;
+            g_projectiles[i].weaponType = weaponType;
+            g_projectiles[i].fromPlayer = fromPlayer;
+            g_projectiles[i].active = true;
+            break;
+        }
+    }
+}
+
 int pingpong(int t, int max) {
     int cycle = t % (max * 2);
     if (cycle > max) return (max * 2) - cycle;
@@ -130,6 +285,7 @@ void EnemyTurn() {
     if (enemyStats.heat + 30 > enemyStats.maxHeat) {
         enemyIsDefending = true;
         addLog("Enemy vents heat! (Defending)");
+        AddShockwave(440.0f, 145.0f, 40.0f, RGB(255, 160, 0), 3.0f);
         return;
     }
 
@@ -149,6 +305,7 @@ void EnemyTurn() {
     }
 
     int hitRoll = my_rand() % 100;
+    FireProjectile(false, 0);
     
     float effectiveChance = limbHitChance[target] - specials[equipSpec].evadeBonus - ((playerLevel - 1) * 0.05f);
     if (hitRoll > (int)(effectiveChance * 100.0f)) {
@@ -173,23 +330,26 @@ void EnemyTurn() {
                 char abuf[128];
                 wsprintfA(abuf, "Shield absorbed %d damage!", absorbed);
                 addLog(abuf);
+                AddShockwave(150.0f, 145.0f, 35.0f, RGB(0, 255, 255), 4.0f);
             }
         }
 
         playerStats.hp -= dmg;
         playerLimbDamage[target] += dmg;
         animPlayerDmg = 10;
+        SpawnExplosion(150.0f, 145.0f, 18, false);
         
         char buf[128];
         wsprintfA(buf, "Enemy hits %s! Took %d dmg.", limbNames[target], dmg);
         addLog(buf);
-        Beep(900, 50); Beep(700, 50); Beep(500, 100); // Enemy laser
-        Beep(150, 100); Beep(100, 150); // Impact
+        Beep(900, 50); Beep(700, 50); Beep(500, 100);
+        Beep(150, 100); Beep(100, 150);
     }
 
     if (playerStats.hp <= 0) {
         playerStats.hp = 0;
         addLog("CRITICAL DAMAGE. MECH DESTROYED. CAMPAIGN FAILED.");
+        SpawnExplosion(150.0f, 145.0f, 35, false);
         Beep(300, 300); Beep(200, 300); Beep(100, 500);
         battleCount = 1;
         credits = 100;
@@ -213,6 +373,7 @@ void ActionAttack() {
     if (playerStats.heat > playerStats.maxHeat) {
         playerStats.hp -= 15;
         addLog("WARNING: OVERHEAT! Took 15 system dmg.");
+        SpawnExplosion(150.0f, 145.0f, 16, false);
         Beep(2000, 100); Beep(2000, 100); Beep(2000, 300);
         if (playerStats.hp <= 0) {
             playerStats.hp = 0;
@@ -232,6 +393,7 @@ void ActionAttack() {
     animPlayerOffset = 8;
     int target = currentTargetLimb;
     int hitRoll = my_rand() % 100;
+    FireProjectile(true, equipWpn);
     
     float hitChance = limbHitChance[target] + ((playerLevel - 1) * 0.05f);
     if (hitChance > 1.0f) hitChance = 1.0f;
@@ -248,16 +410,18 @@ void ActionAttack() {
         dmg = (int)(dmg * limbDmgMult[target]);
         enemyStats.hp -= dmg;
         animEnemyDmg = 10;
+        SpawnExplosion(440.0f, 145.0f, 20, true);
 
         char buf[128];
         wsprintfA(buf, "You hit %s! Dealt %d dmg.", limbNames[target], dmg);
         addLog(buf);
-        Beep(1000, 50); Beep(800, 50); Beep(600, 100); // Player laser
-        Beep(150, 100); Beep(100, 150); // Impact
+        Beep(1000, 50); Beep(800, 50); Beep(600, 100);
+        Beep(150, 100); Beep(100, 150);
     }
 
     if (enemyStats.hp <= 0) {
         enemyStats.hp = 0;
+        SpawnVictoryStars(440.0f, 145.0f);
         int reward = 50 + (battleCount * 10);
         int parts = (my_rand() % 3) + 1;
         credits += reward;
@@ -295,6 +459,7 @@ void ActionAttack() {
 void ActionDefend() {
     isDefending = true;
     addLog("You brace for impact (Defending).");
+    AddShockwave(150.0f, 145.0f, 40.0f, RGB(0, 255, 255), 3.0f);
     EnemyTurn();
     isDefending = false;
     if (gameState == STATE_BATTLE) {
@@ -330,38 +495,38 @@ void ReturnToGarage() {
 }
 
 // Button areas
-RECT rectRepair  = {  80, 260, 280, 300 };
-RECT rectDeploy  = { 320, 260, 520, 300 };
-RECT rectUseSal  = {  80, 310, 280, 350 };
-RECT rectSellSal = { 320, 310, 520, 350 };
+RECT rectRepair  = {  40, 290, 260, 325 };
+RECT rectDeploy  = { 300, 290, 520, 325 };
+RECT rectUseSal  = {  40, 335, 260, 370 };
+RECT rectSellSal = { 300, 335, 520, 370 };
 
-RECT rectTarget = { 50, 400, 190, 440 };
-RECT rectAttack = { 210, 400, 350, 440 };
-RECT rectDefend = { 370, 400, 510, 440 };
-RECT rectReturn = { 200, 400, 400, 440 };
+RECT rectTarget = { 40, 410, 180, 445 };
+RECT rectAttack = { 200, 410, 340, 445 };
+RECT rectDefend = { 360, 410, 500, 445 };
+RECT rectReturn = { 180, 410, 400, 445 };
 
-RECT rectHelp = { 200, 360, 400, 400 };
-RECT rectReturnHelp = { 200, 430, 400, 470 };
+RECT rectHelp = { 180, 380, 380, 415 };
+RECT rectReturnHelp = { 180, 430, 400, 465 };
 
-RECT rectWpn = { 20, 200, 150, 240 };
-RECT rectArm = { 160, 200, 290, 240 };
-RECT rectSink = { 300, 200, 430, 240 };
-RECT rectSpec = { 440, 200, 570, 240 };
+RECT rectWpn = { 20, 230, 140, 265 };
+RECT rectArm = { 150, 230, 270, 265 };
+RECT rectSink = { 280, 230, 400, 265 };
+RECT rectSpec = { 410, 230, 530, 265 };
 
 bool PtInRectLocal(const RECT* r, int x, int y) {
     return (x >= r->left && x <= r->right && y >= r->top && y <= r->bottom);
 }
 
 void DrawButton(HDC hdc, const RECT* r, const char* text) {
-    HBRUSH bgBrush = CreateSolidBrush(RGB(0, 0, 0));
-    HPEN borderPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 0));
+    HBRUSH bgBrush = CreateSolidBrush(RGB(5, 25, 10));
+    HPEN borderPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 100));
     HGDIOBJ oldBrush = SelectObject(hdc, bgBrush);
     HGDIOBJ oldPen = SelectObject(hdc, borderPen);
     
-    Rectangle(hdc, r->left, r->top, r->right, r->bottom);
+    RoundRect(hdc, r->left, r->top, r->right, r->bottom, 4, 4);
     
     SetBkMode(hdc, TRANSPARENT);
-    SetTextColor(hdc, RGB(0, 255, 0));
+    SetTextColor(hdc, RGB(0, 255, 130));
     DrawTextA(hdc, text, -1, (RECT*)r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     
     SelectObject(hdc, oldBrush);
@@ -370,10 +535,346 @@ void DrawButton(HDC hdc, const RECT* r, const char* text) {
     DeleteObject(borderPen);
 }
 
+/* ==================== PROCEDURAL GDI MECH RENDERERS ==================== */
+void DrawPlayerMechGDI(HDC hdc, int cx, int cy, float scale, bool isDead) {
+    if (isDead) {
+        // Render smoking wrecked chassis
+        HPEN wreckPen = CreatePen(PS_SOLID, 2, RGB(80, 100, 80));
+        HBRUSH wreckBrush = CreateSolidBrush(RGB(20, 30, 20));
+        HGDIOBJ oldP = SelectObject(hdc, wreckPen);
+        HGDIOBJ oldB = SelectObject(hdc, wreckBrush);
+        Rectangle(hdc, cx - 20, cy - 10, cx + 20, cy + 20);
+        SelectObject(hdc, oldP);
+        SelectObject(hdc, oldB);
+        DeleteObject(wreckPen);
+        DeleteObject(wreckBrush);
+        return;
+    }
+
+    bool isHeavy = (equipArm == 1);
+    bool isLight = (equipArm == 2);
+    bool hasJets = (equipSpec == 1);
+    bool hasShield = (equipSpec == 2);
+
+    COLORREF primaryGreen = isHeavy ? RGB(0, 255, 120) : (isLight ? RGB(80, 255, 180) : RGB(0, 255, 80));
+    COLORREF armorFill = isHeavy ? RGB(10, 45, 20) : (isLight ? RGB(8, 35, 15) : RGB(15, 55, 25));
+    COLORREF visorColor = (playerStats.heat > 75) ? RGB(255, 50, 0) : ((playerStats.heat > 40) ? RGB(255, 180, 0) : RGB(0, 255, 255));
+
+    HPEN pPen = CreatePen(PS_SOLID, (int)(2 * scale), primaryGreen);
+    HBRUSH pBrush = CreateSolidBrush(armorFill);
+    HBRUSH pPauldronBrush = CreateSolidBrush(RGB(0, 140, 60));
+    HGDIOBJ oldPen = SelectObject(hdc, pPen);
+    HGDIOBJ oldBrush = SelectObject(hdc, pBrush);
+
+    // Jump Jet Thrusters
+    if (hasJets) {
+        HPEN jetPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 200));
+        HBRUSH jetBrush = CreateSolidBrush(RGB(0, 100, 60));
+        HGDIOBJ oP = SelectObject(hdc, jetPen);
+        HGDIOBJ oB = SelectObject(hdc, jetBrush);
+        Rectangle(hdc, cx - (int)(26 * scale), cy - (int)(32 * scale), cx - (int)(18 * scale), cy - (int)(18 * scale));
+        Rectangle(hdc, cx + (int)(18 * scale), cy - (int)(32 * scale), cx + (int)(26 * scale), cy - (int)(18 * scale));
+        // Exhaust flame
+        HPEN flamePen = CreatePen(PS_SOLID, 1, RGB(0, 255, 255));
+        HBRUSH flameBrush = CreateSolidBrush(RGB(0, 220, 255));
+        SelectObject(hdc, flamePen);
+        SelectObject(hdc, flameBrush);
+        POINT f1[3] = { {cx - (int)(24 * scale), cy - (int)(32 * scale)}, {cx - (int)(20 * scale), cy - (int)(32 * scale)}, {cx - (int)(22 * scale), cy - (int)(40 * scale)} };
+        Polygon(hdc, f1, 3);
+        POINT f2[3] = { {cx + (int)(20 * scale), cy - (int)(32 * scale)}, {cx + (int)(24 * scale), cy - (int)(32 * scale)}, {cx + (int)(22 * scale), cy - (int)(40 * scale)} };
+        Polygon(hdc, f2, 3);
+        SelectObject(hdc, oP);
+        SelectObject(hdc, oB);
+        DeleteObject(jetPen);
+        DeleteObject(jetBrush);
+        DeleteObject(flamePen);
+        DeleteObject(flameBrush);
+    }
+
+    // Energy Shield Barrier
+    if (hasShield) {
+        HPEN shldPen = CreatePen(PS_DOT, 1, RGB(0, 255, 255));
+        HGDIOBJ oP = SelectObject(hdc, shldPen);
+        HGDIOBJ oB = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        POINT hex[6] = {
+            {cx, cy - (int)(46 * scale)},
+            {cx + (int)(38 * scale), cy - (int)(22 * scale)},
+            {cx + (int)(38 * scale), cy + (int)(26 * scale)},
+            {cx, cy + (int)(48 * scale)},
+            {cx - (int)(38 * scale), cy + (int)(26 * scale)},
+            {cx - (int)(38 * scale), cy - (int)(22 * scale)}
+        };
+        Polygon(hdc, hex, 6);
+        SelectObject(hdc, oP);
+        SelectObject(hdc, oB);
+        DeleteObject(shldPen);
+    }
+
+    // Legs & Greaves
+    SelectObject(hdc, pPen);
+    SelectObject(hdc, pBrush);
+    POINT legL[4] = {
+        {cx - (int)(12 * scale), cy + (int)(15 * scale)},
+        {cx - (int)(20 * scale), cy + (int)(35 * scale)},
+        {cx - (int)(6 * scale), cy + (int)(44 * scale)},
+        {cx - (int)(6 * scale), cy + (int)(15 * scale)}
+    };
+    Polygon(hdc, legL, 4);
+
+    POINT legR[4] = {
+        {cx + (int)(6 * scale), cy + (int)(15 * scale)},
+        {cx + (int)(6 * scale), cy + (int)(44 * scale)},
+        {cx + (int)(20 * scale), cy + (int)(35 * scale)},
+        {cx + (int)(12 * scale), cy + (int)(15 * scale)}
+    };
+    Polygon(hdc, legR, 4);
+
+    // Knee armor plates
+    SelectObject(hdc, pPauldronBrush);
+    Rectangle(hdc, cx - (int)(18 * scale), cy + (int)(24 * scale), cx - (int)(8 * scale), cy + (int)(32 * scale));
+    Rectangle(hdc, cx + (int)(8 * scale), cy + (int)(24 * scale), cx + (int)(18 * scale), cy + (int)(32 * scale));
+
+    // Left Arm (Sub / Shield arm)
+    SelectObject(hdc, pBrush);
+    POINT armL[4] = {
+        {cx - (int)(20 * scale), cy - (int)(10 * scale)},
+        {cx - (int)(32 * scale), cy + (int)(5 * scale)},
+        {cx - (int)(26 * scale), cy + (int)(24 * scale)},
+        {cx - (int)(18 * scale), cy + (int)(6 * scale)}
+    };
+    Polygon(hdc, armL, 4);
+
+    // Torso Chassis
+    int torsoW = isHeavy ? (int)(26 * scale) : (isLight ? (int)(18 * scale) : (int)(22 * scale));
+    POINT torsoP[4] = {
+        {cx - torsoW, cy - (int)(18 * scale)},
+        {cx + torsoW, cy - (int)(18 * scale)},
+        {cx + (int)(14 * scale), cy + (int)(18 * scale)},
+        {cx - (int)(14 * scale), cy + (int)(18 * scale)}
+    };
+    Polygon(hdc, torsoP, 4);
+
+    // Center Core Reactor
+    HBRUSH coreBrush = CreateSolidBrush(visorColor);
+    HGDIOBJ oCore = SelectObject(hdc, coreBrush);
+    Ellipse(hdc, cx - (int)(5 * scale), cy - (int)(4 * scale), cx + (int)(5 * scale), cy + (int)(6 * scale));
+    SelectObject(hdc, oCore);
+    DeleteObject(coreBrush);
+
+    // Head & Cockpit
+    int headW = isHeavy ? (int)(14 * scale) : (isLight ? (int)(9 * scale) : (int)(11 * scale));
+    Rectangle(hdc, cx - headW, cy - (int)(34 * scale), cx + headW, cy - (int)(18 * scale));
+    
+    // Visor bar
+    HPEN visorPen = CreatePen(PS_SOLID, 2, visorColor);
+    HGDIOBJ oV = SelectObject(hdc, visorPen);
+    MoveToEx(hdc, cx - headW + (int)(3 * scale), cy - (int)(26 * scale), NULL);
+    LineTo(hdc, cx + headW - (int)(3 * scale), cy - (int)(26 * scale));
+    SelectObject(hdc, oV);
+    DeleteObject(visorPen);
+
+    // Shoulder Pauldrons
+    SelectObject(hdc, pPauldronBrush);
+    POINT pL[3] = { {cx - torsoW - (int)(6 * scale), cy - (int)(16 * scale)}, {cx - (int)(10 * scale), cy - (int)(22 * scale)}, {cx - (int)(14 * scale), cy - (int)(6 * scale)} };
+    Polygon(hdc, pL, 3);
+    POINT pR[3] = { {cx + torsoW + (int)(6 * scale), cy - (int)(16 * scale)}, {cx + (int)(10 * scale), cy - (int)(22 * scale)}, {cx + (int)(14 * scale), cy - (int)(6 * scale)} };
+    Polygon(hdc, pR, 3);
+
+    // Right Weapon Arm
+    SelectObject(hdc, pBrush);
+    POINT armR[4] = {
+        {cx + (int)(20 * scale), cy - (int)(10 * scale)},
+        {cx + (int)(30 * scale), cy + (int)(4 * scale)},
+        {cx + (int)(30 * scale), cy + (int)(22 * scale)},
+        {cx + (int)(18 * scale), cy + (int)(6 * scale)}
+    };
+    Polygon(hdc, armR, 4);
+
+    // Weapon Hardpoint Model
+    if (equipWpn == 0) { // Basic Laser: Cyan Emitter
+        HPEN wpnPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
+        HGDIOBJ oWP = SelectObject(hdc, wpnPen);
+        MoveToEx(hdc, cx + (int)(26 * scale), cy + (int)(10 * scale), NULL);
+        LineTo(hdc, cx + (int)(42 * scale), cy + (int)(10 * scale));
+        Ellipse(hdc, cx + (int)(40 * scale), cy + (int)(8 * scale), cx + (int)(44 * scale), cy + (int)(12 * scale));
+        SelectObject(hdc, oWP);
+        DeleteObject(wpnPen);
+    } else if (equipWpn == 1) { // Heavy Cannon: Large dark barrel
+        HBRUSH cBrush = CreateSolidBrush(RGB(70, 90, 70));
+        HGDIOBJ oB = SelectObject(hdc, cBrush);
+        Rectangle(hdc, cx + (int)(26 * scale), cy + (int)(6 * scale), cx + (int)(46 * scale), cy + (int)(14 * scale));
+        Rectangle(hdc, cx + (int)(42 * scale), cy + (int)(4 * scale), cx + (int)(47 * scale), cy + (int)(16 * scale));
+        SelectObject(hdc, oB);
+        DeleteObject(cBrush);
+    } else { // Twin Blasters: Dual Orange Barrels
+        HPEN wpnPen = CreatePen(PS_SOLID, 2, RGB(255, 160, 0));
+        HGDIOBJ oWP = SelectObject(hdc, wpnPen);
+        MoveToEx(hdc, cx + (int)(26 * scale), cy + (int)(6 * scale), NULL);
+        LineTo(hdc, cx + (int)(40 * scale), cy + (int)(6 * scale));
+        MoveToEx(hdc, cx + (int)(26 * scale), cy + (int)(14 * scale), NULL);
+        LineTo(hdc, cx + (int)(40 * scale), cy + (int)(14 * scale));
+        SelectObject(hdc, oWP);
+        DeleteObject(wpnPen);
+    }
+
+    SelectObject(hdc, oldPen);
+    SelectObject(hdc, oldBrush);
+    DeleteObject(pPen);
+    DeleteObject(pBrush);
+    DeleteObject(pPauldronBrush);
+}
+
+void DrawEnemyMechGDI(HDC hdc, int cx, int cy, float scale, int battleNum, bool isDead) {
+    if (isDead) {
+        HPEN wreckPen = CreatePen(PS_SOLID, 2, RGB(100, 40, 40));
+        HBRUSH wreckBrush = CreateSolidBrush(RGB(30, 10, 10));
+        HGDIOBJ oldP = SelectObject(hdc, wreckPen);
+        HGDIOBJ oldB = SelectObject(hdc, wreckBrush);
+        Rectangle(hdc, cx - 20, cy - 10, cx + 20, cy + 20);
+        SelectObject(hdc, oldP);
+        SelectObject(hdc, oldB);
+        DeleteObject(wreckPen);
+        DeleteObject(wreckBrush);
+        return;
+    }
+
+    int enemyType = (battleNum >= 5) ? 2 : ((battleNum >= 3) ? 1 : 0);
+    COLORREF enemyRed = RGB(255, 50, 50);
+    COLORREF enemyDark = RGB(55, 10, 10);
+    COLORREF enemyEye = RGB(255, 255, 0);
+
+    HPEN ePen = CreatePen(PS_SOLID, (int)(2 * scale), enemyRed);
+    HBRUSH eBrush = CreateSolidBrush(enemyDark);
+    HGDIOBJ oldPen = SelectObject(hdc, ePen);
+    HGDIOBJ oldBrush = SelectObject(hdc, eBrush);
+
+    if (enemyType == 0) { // Scout Raider (Battle 1-2)
+        // Digitigrade Legs
+        MoveToEx(hdc, cx - (int)(12 * scale), cy + (int)(15 * scale), NULL);
+        LineTo(hdc, cx - (int)(24 * scale), cy + (int)(28 * scale));
+        LineTo(hdc, cx - (int)(16 * scale), cy + (int)(44 * scale));
+        LineTo(hdc, cx - (int)(26 * scale), cy + (int)(46 * scale));
+
+        MoveToEx(hdc, cx + (int)(12 * scale), cy + (int)(15 * scale), NULL);
+        LineTo(hdc, cx + (int)(24 * scale), cy + (int)(28 * scale));
+        LineTo(hdc, cx + (int)(16 * scale), cy + (int)(44 * scale));
+        LineTo(hdc, cx + (int)(26 * scale), cy + (int)(46 * scale));
+
+        // Torso
+        POINT torsoE[4] = {
+            {cx - (int)(18 * scale), cy - (int)(18 * scale)},
+            {cx + (int)(18 * scale), cy - (int)(18 * scale)},
+            {cx + (int)(12 * scale), cy + (int)(16 * scale)},
+            {cx - (int)(12 * scale), cy + (int)(16 * scale)}
+        };
+        Polygon(hdc, torsoE, 4);
+
+        // Head
+        Ellipse(hdc, cx - (int)(10 * scale), cy - (int)(32 * scale), cx + (int)(10 * scale), cy - (int)(14 * scale));
+        HPEN eyePen = CreatePen(PS_SOLID, 2, enemyEye);
+        HGDIOBJ oE = SelectObject(hdc, eyePen);
+        MoveToEx(hdc, cx - (int)(6 * scale), cy - (int)(24 * scale), NULL);
+        LineTo(hdc, cx + (int)(6 * scale), cy - (int)(24 * scale));
+        SelectObject(hdc, oE);
+        DeleteObject(eyePen);
+
+        // Needle Gun Arms
+        MoveToEx(hdc, cx - (int)(18 * scale), cy - (int)(6 * scale), NULL);
+        LineTo(hdc, cx - (int)(34 * scale), cy + (int)(16 * scale));
+        MoveToEx(hdc, cx + (int)(18 * scale), cy - (int)(6 * scale), NULL);
+        LineTo(hdc, cx + (int)(34 * scale), cy + (int)(16 * scale));
+
+    } else if (enemyType == 1) { // Assault Goliath (Battle 3-4)
+        // Heavy Torso
+        POINT torsoE[4] = {
+            {cx - (int)(26 * scale), cy - (int)(20 * scale)},
+            {cx + (int)(26 * scale), cy - (int)(20 * scale)},
+            {cx + (int)(16 * scale), cy + (int)(18 * scale)},
+            {cx - (int)(16 * scale), cy + (int)(18 * scale)}
+        };
+        Polygon(hdc, torsoE, 4);
+
+        // Heavy Legs
+        Rectangle(hdc, cx - (int)(22 * scale), cy + (int)(16 * scale), cx - (int)(8 * scale), cy + (int)(44 * scale));
+        Rectangle(hdc, cx + (int)(8 * scale), cy + (int)(16 * scale), cx + (int)(22 * scale), cy + (int)(44 * scale));
+
+        // Head & Visor
+        Rectangle(hdc, cx - (int)(12 * scale), cy - (int)(34 * scale), cx + (int)(12 * scale), cy - (int)(18 * scale));
+        HPEN eyePen = CreatePen(PS_SOLID, 2, enemyEye);
+        HGDIOBJ oE = SelectObject(hdc, eyePen);
+        MoveToEx(hdc, cx - (int)(8 * scale), cy - (int)(26 * scale), NULL);
+        LineTo(hdc, cx + (int)(8 * scale), cy - (int)(26 * scale));
+        SelectObject(hdc, oE);
+        DeleteObject(eyePen);
+
+        // Shoulder Missile Pod
+        Rectangle(hdc, cx - (int)(32 * scale), cy - (int)(30 * scale), cx - (int)(18 * scale), cy - (int)(14 * scale));
+
+        // Heavy Cannon Left Arm
+        Rectangle(hdc, cx - (int)(38 * scale), cy - (int)(4 * scale), cx - (int)(26 * scale), cy + (int)(26 * scale));
+
+    } else { // Siege Titan Dreadnought (Battle 5+)
+        // Fortress Torso
+        POINT torsoE[4] = {
+            {cx - (int)(32 * scale), cy - (int)(22 * scale)},
+            {cx + (int)(32 * scale), cy - (int)(22 * scale)},
+            {cx + (int)(20 * scale), cy + (int)(20 * scale)},
+            {cx - (int)(20 * scale), cy + (int)(20 * scale)}
+        };
+        Polygon(hdc, torsoE, 4);
+
+        // Exhaust smoke stacks
+        Rectangle(hdc, cx - (int)(26 * scale), cy - (int)(36 * scale), cx - (int)(20 * scale), cy - (int)(20 * scale));
+        Rectangle(hdc, cx + (int)(20 * scale), cy - (int)(36 * scale), cx + (int)(26 * scale), cy - (int)(20 * scale));
+
+        // Quad Legs
+        Rectangle(hdc, cx - (int)(30 * scale), cy + (int)(18 * scale), cx - (int)(16 * scale), cy + (int)(46 * scale));
+        Rectangle(hdc, cx + (int)(16 * scale), cy + (int)(18 * scale), cx + (int)(30 * scale), cy + (int)(46 * scale));
+
+        // Central Cyclops Eye
+        HBRUSH eyeBrush = CreateSolidBrush(enemyEye);
+        HGDIOBJ oEye = SelectObject(hdc, eyeBrush);
+        Ellipse(hdc, cx - (int)(8 * scale), cy - (int)(14 * scale), cx + (int)(8 * scale), cy + (int)(2 * scale));
+        SelectObject(hdc, oEye);
+        DeleteObject(eyeBrush);
+
+        // Quad Turrets
+        Rectangle(hdc, cx - (int)(42 * scale), cy - (int)(6 * scale), cx - (int)(30 * scale), cy + (int)(26 * scale));
+        Rectangle(hdc, cx + (int)(30 * scale), cy - (int)(6 * scale), cx + (int)(42 * scale), cy + (int)(26 * scale));
+    }
+
+    SelectObject(hdc, oldPen);
+    SelectObject(hdc, oldBrush);
+    DeleteObject(ePen);
+    DeleteObject(eBrush);
+}
+
+void DrawSciFiHUDCornerFiligree(HDC hdc, int x, int y, int size, int cornerType) {
+    HPEN fPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 170));
+    HGDIOBJ oldP = SelectObject(hdc, fPen);
+    
+    if (cornerType == 0) { // Top-Left
+        MoveToEx(hdc, x, y + size, NULL); LineTo(hdc, x, y); LineTo(hdc, x + size, y);
+        SetPixel(hdc, x + 2, y + 2, RGB(0, 255, 255));
+    } else if (cornerType == 1) { // Top-Right
+        MoveToEx(hdc, x, y + size, NULL); LineTo(hdc, x, y); LineTo(hdc, x - size, y);
+        SetPixel(hdc, x - 2, y + 2, RGB(0, 255, 255));
+    } else if (cornerType == 2) { // Bottom-Left
+        MoveToEx(hdc, x, y - size, NULL); LineTo(hdc, x, y); LineTo(hdc, x + size, y);
+        SetPixel(hdc, x + 2, y - 2, RGB(0, 255, 255));
+    } else { // Bottom-Right
+        MoveToEx(hdc, x, y - size, NULL); LineTo(hdc, x, y); LineTo(hdc, x - size, y);
+        SetPixel(hdc, x - 2, y - 2, RGB(0, 255, 255));
+    }
+
+    SelectObject(hdc, oldP);
+    DeleteObject(fPen);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE: {
-            SetTimer(hwnd, 1, 50, NULL);
+            SetTimer(hwnd, 1, 33, NULL); // 30 FPS update loop
             break;
         }
         case WM_TIMER: {
@@ -382,7 +883,57 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (animEnemyOffset > 0) { animEnemyOffset--; needsRedraw = true; }
             if (animPlayerDmg > 0) { animPlayerDmg--; needsRedraw = true; }
             if (animEnemyDmg > 0) { animEnemyDmg--; needsRedraw = true; }
-            if (gameState == STATE_BATTLE || gameState == STATE_POST_BATTLE) needsRedraw = true;
+
+            // Update particles
+            for (int i = 0; i < g_particleCount; ) {
+                g_particles[i].x += g_particles[i].vx;
+                g_particles[i].y += g_particles[i].vy;
+                g_particles[i].vy += g_particles[i].grav;
+                g_particles[i].life -= g_particles[i].decay;
+                if (g_particles[i].life <= 0.0f) {
+                    g_particles[i] = g_particles[g_particleCount - 1];
+                    g_particleCount--;
+                } else {
+                    i++;
+                }
+                needsRedraw = true;
+            }
+
+            // Update shockwaves
+            for (int i = 0; i < MAX_SHOCKWAVES; i++) {
+                if (g_shockwaves[i].active) {
+                    g_shockwaves[i].r += g_shockwaves[i].speed;
+                    g_shockwaves[i].alpha = 1.0f - (g_shockwaves[i].r / g_shockwaves[i].maxR);
+                    if (g_shockwaves[i].r >= g_shockwaves[i].maxR) {
+                        g_shockwaves[i].active = false;
+                    }
+                    needsRedraw = true;
+                }
+            }
+
+            // Update projectiles
+            for (int i = 0; i < MAX_PROJECTILES; i++) {
+                if (g_projectiles[i].active) {
+                    g_projectiles[i].progress += g_projectiles[i].speed;
+                    g_projectiles[i].x = g_projectiles[i].startX + (g_projectiles[i].targetX - g_projectiles[i].startX) * g_projectiles[i].progress;
+                    g_projectiles[i].y = g_projectiles[i].startY + (g_projectiles[i].targetY - g_projectiles[i].startY) * g_projectiles[i].progress;
+                    if (g_projectiles[i].progress >= 1.0f) {
+                        g_projectiles[i].active = false;
+                    }
+                    needsRedraw = true;
+                }
+            }
+
+            // Update screen shake
+            if (g_screenShake > 0.05f) {
+                g_shakePhase += 0.8f;
+                g_screenShake *= 0.88f;
+                needsRedraw = true;
+            } else {
+                g_screenShake = 0.0f;
+            }
+
+            if (gameState == STATE_BATTLE || gameState == STATE_POST_BATTLE || gameState == STATE_GARAGE) needsRedraw = true;
             if (needsRedraw) InvalidateRect(hwnd, NULL, FALSE);
             break;
         }
@@ -491,13 +1042,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBITMAP memBitmap = CreateCompatibleBitmap(hdc, clientRect.right, clientRect.bottom);
             SelectObject(memDC, memBitmap);
             
-            // Draw background
-            HBRUSH bgBrush = CreateSolidBrush(RGB(5, 5, 5));
+            // Background
+            HBRUSH bgBrush = CreateSolidBrush(RGB(3, 10, 4));
             FillRect(memDC, &clientRect, bgBrush);
             DeleteObject(bgBrush);
             
-            // Draw grid
-            HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(0, 40, 0));
+            // Grid lines
+            HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(0, 35, 15));
             HGDIOBJ oldPen = SelectObject(memDC, gridPen);
             for (int i = 0; i < clientRect.right; i += 20) {
                 MoveToEx(memDC, i, 0, NULL);
@@ -510,53 +1061,80 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, oldPen);
             DeleteObject(gridPen);
             
+            // Filigree corners
+            DrawSciFiHUDCornerFiligree(memDC, 6, 6, 12, 0);
+            DrawSciFiHUDCornerFiligree(memDC, clientRect.right - 6, 6, 12, 1);
+            DrawSciFiHUDCornerFiligree(memDC, 6, clientRect.bottom - 6, 12, 2);
+            DrawSciFiHUDCornerFiligree(memDC, clientRect.right - 6, clientRect.bottom - 6, 12, 3);
+
             int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
             int fontHeight = -MulDiv(12, dpi, 72);
             HFONT hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_DONTCARE, "Consolas");
             SelectObject(memDC, hFont);
-            SetTextColor(memDC, RGB(0, 255, 0));
+            SetTextColor(memDC, RGB(0, 255, 120));
             SetBkMode(memDC, TRANSPARENT);
             
             if (gameState == STATE_GARAGE) {
-                RECT titleRect = {0, 15, 600, 45};
-                DrawTextA(memDC, "⚡ KMECH - GARAGE", -1, &titleRect, DT_CENTER | DT_SINGLELINE);
+                RECT titleRect = {0, 10, 600, 35};
+                DrawTextA(memDC, "⚡ KMECH - HANGAR & GARAGE", -1, &titleRect, DT_CENTER | DT_SINGLELINE);
                 
                 char camBuf[128];
                 wsprintfA(camBuf, "BATTLE %d | CR: %d CR | SALVAGE: %d", battleCount, credits, salvage);
-                RECT camRect = {0, 45, 600, 65};
-                DrawTextA(memDC, camBuf, -1, &camRect, DT_CENTER | DT_SINGLELINE);
+                RECT camRect = {20, 38, 320, 58};
+                DrawTextA(memDC, camBuf, -1, &camRect, DT_LEFT | DT_SINGLELINE);
 
                 char lvlBuf[128];
                 wsprintfA(lvlBuf, "PILOT LVL: %d | XP: %d/%d", playerLevel, playerXp, playerLevel * 100);
-                RECT lvlRect = {0, 65, 600, 85};
-                DrawTextA(memDC, lvlBuf, -1, &lvlRect, DT_CENTER | DT_SINGLELINE);
+                RECT lvlRect = {20, 58, 320, 78};
+                DrawTextA(memDC, lvlBuf, -1, &lvlRect, DT_LEFT | DT_SINGLELINE);
 
                 char buf[128];
                 wsprintfA(buf, "HP: %d/%d  HEAT: %d/%d  ATK: %d  DEF: %d", playerStats.hp, playerStats.maxHp, playerStats.heat, playerStats.maxHeat, playerStats.atk, playerStats.def);
-                RECT statsRect = {0, 90, 600, 115};
-                DrawTextA(memDC, buf, -1, &statsRect, DT_CENTER | DT_SINGLELINE);
+                RECT statsRect = {20, 80, 340, 105};
+                DrawTextA(memDC, buf, -1, &statsRect, DT_LEFT | DT_SINGLELINE);
                 
-                RECT instRect = {0, 115, 600, 135};
+                RECT instRect = {20, 105, 340, 125};
                 SetTextColor(memDC, RGB(140, 255, 170));
-                DrawTextA(memDC, "[D/Enter] Deploy | [R] Repair | [U] Salvage | [S] Sell | [1-4] Gear | [F1] Manual", -1, &instRect, DT_CENTER | DT_SINGLELINE);
-                SetTextColor(memDC, RGB(0, 255, 0));
+                DrawTextA(memDC, "[D] Deploy | [R] Repair | [U/S] Salvage", -1, &instRect, DT_LEFT | DT_SINGLELINE);
+                SetTextColor(memDC, RGB(0, 255, 120));
 
-                RECT msgRect = {0, 140, 600, 175};
-                DrawTextA(memDC, garageInfo, -1, &msgRect, DT_CENTER | DT_SINGLELINE);
+                RECT msgRect = {20, 130, 340, 165};
+                DrawTextA(memDC, garageInfo, -1, &msgRect, DT_LEFT | DT_WORDBREAK);
+
+                // Garage Hangar Bay Blueprint Box
+                RECT hangarRect = { 360, 38, 560, 168 };
+                HBRUSH hangarBrush = CreateSolidBrush(RGB(5, 20, 10));
+                HPEN hangarPen = CreatePen(PS_SOLID, 1, RGB(0, 180, 80));
+                HGDIOBJ oB = SelectObject(memDC, hangarBrush);
+                HGDIOBJ oP = SelectObject(memDC, hangarPen);
+                RoundRect(memDC, hangarRect.left, hangarRect.top, hangarRect.right, hangarRect.bottom, 6, 6);
+                SelectObject(memDC, oB);
+                SelectObject(memDC, oP);
+                DeleteObject(hangarBrush);
+                DeleteObject(hangarPen);
+
+                // Draw tactical Mech in hangar viewport
+                DrawPlayerMechGDI(memDC, 460, 108, 0.95f, false);
                 
-                RECT lw = {20, 175, 150, 195};
+                // Blueprint text
+                RECT bpText = { 365, 42, 555, 60 };
+                SetTextColor(memDC, RGB(0, 255, 255));
+                DrawTextA(memDC, "[ HANGAR DIAGNOSTICS ]", -1, &bpText, DT_CENTER | DT_SINGLELINE);
+                SetTextColor(memDC, RGB(0, 255, 120));
+                
+                RECT lw = {20, 205, 140, 225};
                 DrawTextA(memDC, "[1] WEAPON", -1, &lw, DT_CENTER | DT_SINGLELINE);
                 DrawButton(memDC, &rectWpn, weapons[equipWpn].name);
 
-                RECT la = {160, 175, 290, 195};
+                RECT la = {150, 205, 270, 225};
                 DrawTextA(memDC, "[2] ARMOR", -1, &la, DT_CENTER | DT_SINGLELINE);
                 DrawButton(memDC, &rectArm, armors[equipArm].name);
 
-                RECT ls = {300, 175, 430, 195};
+                RECT ls = {280, 205, 400, 225};
                 DrawTextA(memDC, "[3] HEAT SINK", -1, &ls, DT_CENTER | DT_SINGLELINE);
                 DrawButton(memDC, &rectSink, sinks[equipSink].name);
 
-                RECT lsp = {440, 175, 570, 195};
+                RECT lsp = {410, 205, 530, 225};
                 DrawTextA(memDC, "[4] SPECIAL", -1, &lsp, DT_CENTER | DT_SINGLELINE);
                 DrawButton(memDC, &rectSpec, specials[equipSpec].name);
 
@@ -566,38 +1144,46 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawButton(memDC, &rectSellSal, "Sell Salvage [S] (+50 CR)");
                 DrawButton(memDC, &rectHelp, "Pilot's Manual [F1]");
             } else if (gameState == STATE_BATTLE || gameState == STATE_POST_BATTLE) {
-                RECT titleRect = {0, 15, 600, 45};
-                DrawTextA(memDC, "⚔️ COMBAT ZONE", -1, &titleRect, DT_CENTER | DT_SINGLELINE);
+                // Apply Screen Shake offset
+                int shakeX = 0, shakeY = 0;
+                if (g_screenShake > 0.05f) {
+                    shakeX = (int)(FastCos(g_shakePhase) * g_screenShake);
+                    shakeY = (int)(FastSin(g_shakePhase * 1.3f) * g_screenShake);
+                }
+                SetViewportOrgEx(memDC, shakeX, shakeY, NULL);
+
+                RECT titleRect = {0, 10, 600, 35};
+                DrawTextA(memDC, "⚔️ COMBAT ZONE - ENGAGED", -1, &titleRect, DT_CENTER | DT_SINGLELINE);
                 
                 // Player Mech Stats
                 char bufP[64];
                 wsprintfA(bufP, "Player Mech HP: %d | HEAT: %d", playerStats.hp, playerStats.heat);
-                TextOutA(memDC, 30, 55, bufP, lstrlenA(bufP));
+                TextOutA(memDC, 30, 42, bufP, lstrlenA(bufP));
                 
-                HBRUSH hpBg = CreateSolidBrush(RGB(0, 50, 0));
-                HBRUSH hpP = CreateSolidBrush(RGB(0, 255, 0));
-                RECT pBarBg = {30, 80, 230, 90};
+                HBRUSH hpBg = CreateSolidBrush(RGB(0, 40, 0));
+                HBRUSH hpP = CreateSolidBrush(RGB(0, 255, 80));
+                RECT pBarBg = {30, 62, 230, 70};
                 FillRect(memDC, &pBarBg, hpBg);
                 int pWidth = (playerStats.hp * 200) / playerStats.maxHp;
                 if (pWidth > 0) {
-                    RECT pBar = {30, 80, 30 + pWidth, 90};
+                    RECT pBar = {30, 62, 30 + pWidth, 70};
                     FillRect(memDC, &pBar, hpP);
                 }
 
-                HBRUSH heatBg = CreateSolidBrush(RGB(50, 0, 0));
-                HBRUSH heatP = CreateSolidBrush(RGB(255, 165, 0));
-                RECT pHeatBg = {30, 93, 230, 98};
+                HBRUSH heatBg = CreateSolidBrush(RGB(40, 10, 0));
+                HBRUSH heatP = CreateSolidBrush(RGB(255, 160, 0));
+                RECT pHeatBg = {30, 73, 230, 78};
                 FillRect(memDC, &pHeatBg, heatBg);
                 int pHeatW = (playerStats.heat * 200) / playerStats.maxHeat;
                 if (pHeatW > 200) pHeatW = 200;
                 if (pHeatW > 0) {
-                    RECT pHeatBar = {30, 93, 30 + pHeatW, 98};
+                    RECT pHeatBar = {30, 73, 30 + pHeatW, 78};
                     FillRect(memDC, &pHeatBar, heatP);
                 }
                 
                 int tick = GetTickCount();
                 bool playerDead = (playerStats.hp <= 0);
-                int playerBob = playerDead ? 10 : (pingpong(tick / 150, 6) - 3);
+                int playerBob = playerDead ? 8 : (pingpong(tick / 150, 6) - 3);
                 int pOffX = 0, pOffY = playerBob;
                 if (!playerDead && animPlayerOffset > 0) {
                     pOffX += (animPlayerOffset > 4) ? (8 - animPlayerOffset) * 4 : animPlayerOffset * 4;
@@ -605,84 +1191,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (!playerDead && animPlayerDmg > 0) {
                     pOffX += (my_rand() % 7) - 3; pOffY += (my_rand() % 7) - 3;
                 }
-                SetViewportOrgEx(memDC, pOffX, pOffY, NULL);
 
-                HPEN pPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 0));
-                HBRUSH pBrush = CreateSolidBrush(RGB(0, 50, 0));
-                HGDIOBJ pOldPen = SelectObject(memDC, pPen);
-                HGDIOBJ pOldBrush = SelectObject(memDC, pBrush);
-                Rectangle(memDC, 100, 105, 120, 120);
-                MoveToEx(memDC, 105, 110, NULL); LineTo(memDC, 115, 110);
-                POINT torsoP[4] = { {90, 120}, {130, 120}, {120, 155}, {100, 155} };
-                Polygon(memDC, torsoP, 4);
-                Rectangle(memDC, 100, 125, 120, 145);
-                MoveToEx(memDC, 90, 125, NULL); LineTo(memDC, 70, 145); LineTo(memDC, 70, 165);
-                Ellipse(memDC, 66, 165, 74, 173);
-                MoveToEx(memDC, 130, 125, NULL); LineTo(memDC, 150, 145); LineTo(memDC, 150, 165);
-                Rectangle(memDC, 145, 165, 155, 180);
-                MoveToEx(memDC, 100, 155, NULL); LineTo(memDC, 90, 185); LineTo(memDC, 80, 185);
-                MoveToEx(memDC, 120, 155, NULL); LineTo(memDC, 130, 185); LineTo(memDC, 140, 185);
-                SelectObject(memDC, pOldPen);
-                SelectObject(memDC, pOldBrush);
-                DeleteObject(pPen);
-                DeleteObject(pBrush);
-
-                if (animPlayerDmg > 0) {
-                    HPEN dmgPen = CreatePen(PS_SOLID, 2, RGB(255, 100, 0));
-                    HGDIOBJ old = SelectObject(memDC, dmgPen);
-                    for (int i=0; i<5; i++) {
-                        int px = 110 + (my_rand() % 60) - 30;
-                        int py = 135 + (my_rand() % 60) - 30;
-                        int pr = 3 + (my_rand() % 7);
-                        Ellipse(memDC, px-pr, py-pr, px+pr, py+pr);
-                    }
-                    SelectObject(memDC, old);
-                    DeleteObject(dmgPen);
-                }
-                if (playerDead) {
-                    HPEN firePen = CreatePen(PS_SOLID, 1, RGB(255, 100, 0));
-                    HBRUSH fireBrush = CreateSolidBrush(RGB(255, 50, 0));
-                    HGDIOBJ oldP = SelectObject(memDC, firePen);
-                    HGDIOBJ oldB = SelectObject(memDC, fireBrush);
-                    for (int i=0; i<10; i++) {
-                        int px = 110 + (my_rand() % 50) - 25;
-                        int py = 145 + (my_rand() % 40) - 20;
-                        int pr = 4 + (my_rand() % 8);
-                        Ellipse(memDC, px-pr, py-pr, px+pr, py+pr);
-                    }
-                    SelectObject(memDC, oldP);
-                    SelectObject(memDC, oldB);
-                    DeleteObject(fireBrush);
-                    DeleteObject(firePen);
-                }
-                SetViewportOrgEx(memDC, 0, 0, NULL);
+                DrawPlayerMechGDI(memDC, 130 + pOffX, 135 + pOffY, 1.0f, playerDead);
                 
                 // Enemy Mech Stats
                 char bufE[64];
                 wsprintfA(bufE, "Enemy Mech HP: %d | HEAT: %d", enemyStats.hp, enemyStats.heat);
-                SetTextColor(memDC, RGB(255, 0, 0));
-                TextOutA(memDC, 350, 55, bufE, lstrlenA(bufE));
+                SetTextColor(memDC, RGB(255, 80, 80));
+                TextOutA(memDC, 350, 42, bufE, lstrlenA(bufE));
                 
-                HBRUSH hpE = CreateSolidBrush(RGB(255, 0, 0));
-                RECT eBarBg = {350, 80, 550, 90};
+                HBRUSH hpE = CreateSolidBrush(RGB(255, 50, 50));
+                RECT eBarBg = {350, 62, 550, 70};
                 FillRect(memDC, &eBarBg, hpBg);
                 int eWidth = (enemyStats.hp * 200) / enemyStats.maxHp;
                 if (eWidth > 0) {
-                    RECT eBar = {350, 80, 350 + eWidth, 90};
+                    RECT eBar = {350, 62, 350 + eWidth, 70};
                     FillRect(memDC, &eBar, hpE);
                 }
 
-                RECT eHeatBg = {350, 93, 550, 98};
+                RECT eHeatBg = {350, 73, 550, 78};
                 FillRect(memDC, &eHeatBg, heatBg);
                 int eHeatW = (enemyStats.heat * 200) / enemyStats.maxHeat;
                 if (eHeatW > 200) eHeatW = 200;
                 if (eHeatW > 0) {
-                    RECT eHeatBar = {350, 93, 350 + eHeatW, 98};
+                    RECT eHeatBar = {350, 73, 350 + eHeatW, 78};
                     FillRect(memDC, &eHeatBar, heatP);
                 }
                 
                 bool enemyDead = (enemyStats.hp <= 0);
-                int enemyBob = enemyDead ? 10 : (pingpong((tick + 300) / 150, 6) - 3);
+                int enemyBob = enemyDead ? 8 : (pingpong((tick + 300) / 150, 6) - 3);
                 int eOffX = 0, eOffY = enemyBob;
                 if (!enemyDead && animEnemyOffset > 0) {
                     eOffX -= (animEnemyOffset > 4) ? (8 - animEnemyOffset) * 4 : animEnemyOffset * 4;
@@ -690,60 +1227,58 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (!enemyDead && animEnemyDmg > 0) {
                     eOffX += (my_rand() % 7) - 3; eOffY += (my_rand() % 7) - 3;
                 }
-                SetViewportOrgEx(memDC, eOffX, eOffY, NULL);
 
-                HPEN ePen = CreatePen(PS_SOLID, 2, RGB(255, 0, 0));
-                HBRUSH eBrush = CreateSolidBrush(RGB(50, 0, 0));
-                HBRUSH eRedBrush = CreateSolidBrush(RGB(255, 0, 0));
-                HGDIOBJ eOldPen = SelectObject(memDC, ePen);
-                HGDIOBJ eOldBrush = SelectObject(memDC, eBrush);
-                Ellipse(memDC, 410, 105, 430, 125);
-                SelectObject(memDC, eRedBrush);
-                Ellipse(memDC, 414, 111, 418, 115);
-                Ellipse(memDC, 422, 111, 426, 115);
-                SelectObject(memDC, eBrush);
-                POINT torsoE[4] = { {390, 125}, {450, 125}, {440, 155}, {400, 155} };
-                Polygon(memDC, torsoE, 4);
-                MoveToEx(memDC, 390, 130, NULL); LineTo(memDC, 370, 145); LineTo(memDC, 380, 165);
-                MoveToEx(memDC, 450, 130, NULL); LineTo(memDC, 470, 145); LineTo(memDC, 460, 165);
-                MoveToEx(memDC, 400, 155, NULL); LineTo(memDC, 390, 185); LineTo(memDC, 380, 185);
-                MoveToEx(memDC, 440, 155, NULL); LineTo(memDC, 450, 185); LineTo(memDC, 460, 185);
-                SelectObject(memDC, eOldPen);
-                SelectObject(memDC, eOldBrush);
-                DeleteObject(ePen);
-                DeleteObject(eBrush);
-                DeleteObject(eRedBrush);
+                DrawEnemyMechGDI(memDC, 450 + eOffX, 135 + eOffY, 1.0f, battleCount, enemyDead);
+                SetTextColor(memDC, RGB(0, 255, 120)); // Restore color
+                
+                // Draw active projectiles
+                for (int i = 0; i < MAX_PROJECTILES; i++) {
+                    if (g_projectiles[i].active) {
+                        HPEN projPen;
+                        if (g_projectiles[i].fromPlayer) {
+                            if (g_projectiles[i].weaponType == 0) projPen = CreatePen(PS_SOLID, 3, RGB(0, 255, 255));
+                            else if (g_projectiles[i].weaponType == 1) projPen = CreatePen(PS_SOLID, 4, RGB(255, 180, 0));
+                            else projPen = CreatePen(PS_SOLID, 2, RGB(255, 140, 0));
+                        } else {
+                            projPen = CreatePen(PS_SOLID, 3, RGB(255, 50, 50));
+                        }
+                        HGDIOBJ oldProjP = SelectObject(memDC, projPen);
+                        MoveToEx(memDC, (int)g_projectiles[i].x - 12, (int)g_projectiles[i].y, NULL);
+                        LineTo(memDC, (int)g_projectiles[i].x + 12, (int)g_projectiles[i].y);
+                        SelectObject(memDC, oldProjP);
+                        DeleteObject(projPen);
+                    }
+                }
 
-                if (animEnemyDmg > 0) {
-                    HPEN dmgPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 0));
-                    HGDIOBJ old = SelectObject(memDC, dmgPen);
-                    for (int i=0; i<5; i++) {
-                        int ex = 420 + (my_rand() % 60) - 30;
-                        int ey = 135 + (my_rand() % 60) - 30;
-                        int er = 3 + (my_rand() % 7);
-                        Ellipse(memDC, ex-er, ey-er, ex+er, ey+er);
+                // Draw shockwaves
+                for (int i = 0; i < MAX_SHOCKWAVES; i++) {
+                    if (g_shockwaves[i].active) {
+                        HPEN swPen = CreatePen(PS_SOLID, 2, g_shockwaves[i].color);
+                        HGDIOBJ oSWP = SelectObject(memDC, swPen);
+                        HGDIOBJ oSWB = SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                        int r = (int)g_shockwaves[i].r;
+                        Ellipse(memDC, (int)g_shockwaves[i].x - r, (int)g_shockwaves[i].y - r, (int)g_shockwaves[i].x + r, (int)g_shockwaves[i].y + r);
+                        SelectObject(memDC, oSWP);
+                        SelectObject(memDC, oSWB);
+                        DeleteObject(swPen);
                     }
-                    SelectObject(memDC, old);
-                    DeleteObject(dmgPen);
                 }
-                if (enemyDead) {
-                    HPEN firePen = CreatePen(PS_SOLID, 1, RGB(255, 100, 0));
-                    HBRUSH fireBrush = CreateSolidBrush(RGB(255, 50, 0));
-                    HGDIOBJ oldP = SelectObject(memDC, firePen);
-                    HGDIOBJ oldB = SelectObject(memDC, fireBrush);
-                    for (int i=0; i<10; i++) {
-                        int ex = 420 + (my_rand() % 50) - 25;
-                        int ey = 145 + (my_rand() % 40) - 20;
-                        int er = 4 + (my_rand() % 8);
-                        Ellipse(memDC, ex-er, ey-er, ex+er, ey+er);
-                    }
-                    SelectObject(memDC, oldP);
-                    SelectObject(memDC, oldB);
-                    DeleteObject(fireBrush);
-                    DeleteObject(firePen);
+
+                // Draw particles
+                for (int i = 0; i < g_particleCount; i++) {
+                    HPEN ptPen = CreatePen(PS_SOLID, 1, g_particles[i].color);
+                    HBRUSH ptBrush = CreateSolidBrush(g_particles[i].color);
+                    HGDIOBJ oPtP = SelectObject(memDC, ptPen);
+                    HGDIOBJ oPtB = SelectObject(memDC, ptBrush);
+                    int pr = g_particles[i].size;
+                    Ellipse(memDC, (int)g_particles[i].x - pr, (int)g_particles[i].y - pr, (int)g_particles[i].x + pr, (int)g_particles[i].y + pr);
+                    SelectObject(memDC, oPtP);
+                    SelectObject(memDC, oPtB);
+                    DeleteObject(ptPen);
+                    DeleteObject(ptBrush);
                 }
+
                 SetViewportOrgEx(memDC, 0, 0, NULL);
-                SetTextColor(memDC, RGB(0, 255, 0)); // Restore color
                 
                 DeleteObject(hpBg);
                 DeleteObject(hpP);
@@ -752,15 +1287,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteObject(heatP);
                 
                 // Draw Logs
-                RECT logBg = {30, 205, 550, 385};
-                HBRUSH logBrush = CreateSolidBrush(RGB(0, 20, 0));
+                RECT logBg = {30, 205, 550, 395};
+                HBRUSH logBrush = CreateSolidBrush(RGB(0, 18, 8));
                 FillRect(memDC, &logBg, logBrush);
                 DeleteObject(logBrush);
                 
                 for (int i = 0; i < logCount; i++) {
                     char logOut[130];
                     wsprintfA(logOut, "> %s", battleLogs[i]);
-                    TextOutA(memDC, 40, 210 + (i * 16), logOut, lstrlenA(logOut));
+                    TextOutA(memDC, 40, 210 + (i * 18), logOut, lstrlenA(logOut));
                 }
                 
                 if (gameState == STATE_BATTLE) {
