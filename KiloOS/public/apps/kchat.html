@@ -289,6 +289,19 @@
             align-items: center;
         }
 
+        .key-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 4px;
+            padding: 0 4px;
+            font-size: 10px;
+            font-weight: 700;
+            margin-right: 4px;
+            color: #93c5fd;
+            line-height: 1.4;
+        }
+
         /* Modal Overlay */
         .modal-overlay {
             position: fixed;
@@ -296,8 +309,9 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(4px);
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             display: none;
             justify-content: center;
             align-items: center;
@@ -306,12 +320,14 @@
         .modal-overlay.active { display: flex; }
         .modal-box {
             background: #111827;
-            border: 1px solid var(--border);
+            border: 1px solid var(--border-highlight);
             border-radius: var(--radius-lg);
-            width: 440px;
-            max-width: 90%;
-            padding: 18px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            width: 500px;
+            max-width: 92%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 18px 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -325,6 +341,60 @@
             color: #60a5fa;
             border-bottom: 1px solid var(--border);
             padding-bottom: 8px;
+        }
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 13px;
+        }
+        .modal-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .modal-field label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .modal-field input[type="text"] {
+            width: 100%;
+        }
+        .help-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 10px 12px;
+            margin-bottom: 6px;
+        }
+        .help-section-title {
+            font-weight: 600;
+            color: #93c5fd;
+            font-size: 13px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .help-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .help-table td {
+            padding: 4px 6px;
+            vertical-align: top;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .help-table td:first-child {
+            font-family: monospace;
+            color: #c084fc;
+            white-space: nowrap;
+            width: 35%;
+        }
+        .help-table td:last-child {
+            color: var(--text-main);
         }
         .stats-grid {
             display: grid;
@@ -572,17 +642,17 @@
         <!-- Channel Pills Row & Search / Export Bar -->
         <div class="row-between" style="border-top: 1px solid var(--border); padding-top: 8px;">
             <div class="channel-bar" id="channelBar">
-                <div class="channel-pill active" onclick="window.switchRoom('#general')">#general</div>
-                <div class="channel-pill" onclick="window.switchRoom('#dev')">#dev</div>
-                <div class="channel-pill" onclick="window.switchRoom('#random')">#random</div>
-                <div class="channel-pill" onclick="window.switchRoom('#ai-lounge')">#ai-lounge</div>
-                <button class="btn-secondary" style="padding: 2px 8px; font-size: 11px;" onclick="window.promptNewRoom()">+ Room</button>
+                <div class="channel-pill active" onclick="window.switchRoom('#general')"><span class="key-badge">1</span> #general</div>
+                <div class="channel-pill" onclick="window.switchRoom('#dev')"><span class="key-badge">2</span> #dev</div>
+                <div class="channel-pill" onclick="window.switchRoom('#random')"><span class="key-badge">3</span> #random</div>
+                <div class="channel-pill" onclick="window.switchRoom('#ai-lounge')"><span class="key-badge">4</span> #ai-lounge</div>
+                <button class="btn-secondary" style="padding: 2px 8px; font-size: 11px;" onclick="window.openRoomModal()" title="Create/Join a channel">+ Room</button>
             </div>
 
             <div class="row">
-                <button class="btn-secondary" onclick="window.promptNewPoll()" title="Create an interactive poll">📊 Poll</button>
-                <button class="btn-secondary" onclick="window.openStatsModal()" title="View Chat Analytics">📈 Stats</button>
-                <input type="text" id="searchInput" placeholder="🔍 Search messages..." oninput="window.renderMessages()" style="width: 140px;" aria-label="Search messages">
+                <button class="btn-secondary" onclick="window.openPollModal()" title="Create an interactive poll [P]">📊 Poll <span class="key-badge">P</span></button>
+                <button class="btn-secondary" onclick="window.openStatsModal()" title="View Chat Analytics [S]">📈 Stats <span class="key-badge">S</span></button>
+                <input type="text" id="searchInput" placeholder="🔍 Search (Ctrl+F)..." oninput="window.renderMessages()" style="width: 145px;" aria-label="Search messages">
                 <button id="btnFilterPinned" class="btn-secondary" onclick="window.toggleFilterPinned()" aria-label="Toggle pinned filter">📌 Pinned</button>
                 <span style="opacity: 0.3;">|</span>
                 <button class="btn-secondary" onclick="window.exportJSON()" title="Export JSON history">📥 JSON</button>
@@ -590,7 +660,7 @@
                 <button class="btn-secondary" onclick="document.getElementById('importFileInput').click()" title="Import history">📤 Import</button>
                 <input type="file" id="importFileInput" style="display:none;" accept=".json,.txt" onchange="window.importFile(event)">
                 <button id="btnClear" class="btn-secondary" onclick="window.clearLog()" aria-label="Clear chat log">Clear</button>
-                <button id="btnHelp" class="btn-secondary" onclick="window.showHelp()" aria-label="Help">Help</button>
+                <button id="btnHelp" class="btn-secondary" onclick="window.showHelp()" aria-label="Help">Help <span class="key-badge">F1</span></button>
             </div>
         </div>
 
@@ -598,7 +668,7 @@
         <div class="topic-row" id="topicBanner">
             <span class="topic-title">💬 Topic:</span>
             <span class="topic-text" id="topicText">General discussions & community hub</span>
-            <button class="action-icon-btn" onclick="window.promptNewTopic()" title="Edit channel topic" style="font-size: 11px;">✏️ Edit</button>
+            <button class="action-icon-btn" onclick="window.openTopicModal()" title="Edit channel topic" style="font-size: 11px;">✏️ Edit</button>
         </div>
     </div>
 
@@ -618,6 +688,139 @@
     <div class="input-bar" role="region" aria-label="Message composition">
         <input type="text" id="input" onkeypress="if(event.key==='Enter') window.send()" aria-label="Chat message input" placeholder="Type a message or /poll, /topic, /roll, /vote, /stats, /join #room...">
         <button id="btnSend" class="btn-active" onclick="window.send()" aria-label="Send message">Send</button>
+    </div>
+
+    <!-- Help Modal Overlay -->
+    <div class="modal-overlay" id="helpModal" onclick="if(event.target===this) window.closeHelpModal()">
+        <div class="modal-box" style="width: 560px;">
+            <div class="modal-header">
+                <span>💬 KChat Pro User Guide & Reference</span>
+                <button class="action-icon-btn" onclick="window.closeHelpModal()" style="font-size: 14px;">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="help-section">
+                    <div class="help-section-title">⌨️ Keyboard Shortcuts</div>
+                    <table class="help-table">
+                        <tr><td>[F1] or [H]</td><td>Open / Close this comprehensive Help Guide</td></tr>
+                        <tr><td>[1] - [4]</td><td>Quick switch channel (#general, #dev, #random, #ai-lounge)</td></tr>
+                        <tr><td>[P]</td><td>Open Create Interactive Poll modal</td></tr>
+                        <tr><td>[S]</td><td>Open Chat Room Analytics & Insights modal</td></tr>
+                        <tr><td>[Ctrl + F]</td><td>Focus Search filter box instantly</td></tr>
+                        <tr><td>[Esc]</td><td>Close active modal dialog / Clear search filter</td></tr>
+                        <tr><td>[Enter]</td><td>Send message / Confirm modal action</td></tr>
+                    </table>
+                </div>
+
+                <div class="help-section">
+                    <div class="help-section-title">⚡ Slash Commands</div>
+                    <table class="help-table">
+                        <tr><td>/poll &lt;Q&gt;? &lt;A&gt;|&lt;B&gt;</td><td>Create an interactive multi-choice poll</td></tr>
+                        <tr><td>/vote &lt;1-4&gt;</td><td>Cast your vote on the active room poll</td></tr>
+                        <tr><td>/topic &lt;text&gt;</td><td>Set or update the current channel topic</td></tr>
+                        <tr><td>/nick &lt;name&gt;</td><td>Change your display username</td></tr>
+                        <tr><td>/join &lt;#room&gt;</td><td>Switch to or create a custom chat room</td></tr>
+                        <tr><td>/roll [d20]</td><td>Roll a dice (e.g., /roll d6, /roll d100)</td></tr>
+                        <tr><td>/stats</td><td>Display channel & message analytics</td></tr>
+                        <tr><td>/ai &lt;prompt&gt;</td><td>Direct query to the active AI Persona</td></tr>
+                        <tr><td>/me &lt;action&gt;</td><td>Send a 3rd-person action notice</td></tr>
+                        <tr><td>/shrug</td><td>Post ASCII shrug ¯\_(ツ)_/¯</td></tr>
+                        <tr><td>/tableflip</td><td>Post ASCII tableflip (╯°□°)╯︵ ┻━┻</td></tr>
+                        <tr><td>/clear</td><td>Clear channel message display</td></tr>
+                        <tr><td>/unpin</td><td>Unpin active room banner</td></tr>
+                    </table>
+                </div>
+
+                <div class="help-section">
+                    <div class="help-section-title">🤖 AI Personas & Global Network</div>
+                    <div style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+                        Choose between <strong>Assistant</strong>, <strong>Cyberpunk AI</strong>, <strong>CodeBot</strong>, <strong>Sarcastic Hacker</strong>, or <strong>Cerberus Security</strong> using the top AI selector. Join the <strong>Firebase Global Room</strong> for cross-browser realtime multi-user chat, or connect to custom TCP/WS chat nodes.
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: right; border-top: 1px solid var(--border); padding-top: 10px;">
+                <button class="btn-secondary" onclick="window.closeHelpModal()">Close [Esc]</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Poll Modal Overlay -->
+    <div class="modal-overlay" id="pollModal" onclick="if(event.target===this) window.closePollModal()">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span>📊 Create Interactive Poll</span>
+                <button class="action-icon-btn" onclick="window.closePollModal()" style="font-size: 14px;">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-field">
+                    <label for="pollQuestionInput">Poll Question:</label>
+                    <input type="text" id="pollQuestionInput" placeholder="e.g. Which feature should we build next?">
+                </div>
+                <div class="modal-field">
+                    <label for="pollOpt1Input">Option 1:</label>
+                    <input type="text" id="pollOpt1Input" placeholder="e.g. Dark Cyber Theme">
+                </div>
+                <div class="modal-field">
+                    <label for="pollOpt2Input">Option 2:</label>
+                    <input type="text" id="pollOpt2Input" placeholder="e.g. Rich Audio Visualizer">
+                </div>
+                <div class="modal-field">
+                    <label for="pollOpt3Input">Option 3 (Optional):</label>
+                    <input type="text" id="pollOpt3Input" placeholder="e.g. Cloud Sync Tools">
+                </div>
+                <div class="modal-field">
+                    <label for="pollOpt4Input">Option 4 (Optional):</label>
+                    <input type="text" id="pollOpt4Input" placeholder="e.g. Game Integrations">
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--border); padding-top: 10px;">
+                <button class="btn-secondary" onclick="window.closePollModal()">Cancel</button>
+                <button class="btn-purple" onclick="window.submitNewPoll()">Create Poll</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Room Modal Overlay -->
+    <div class="modal-overlay" id="roomModal" onclick="if(event.target===this) window.closeRoomModal()">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span>➕ Create or Join Channel</span>
+                <button class="action-icon-btn" onclick="window.closeRoomModal()" style="font-size: 14px;">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-field">
+                    <label for="roomNameInput">Channel Name:</label>
+                    <input type="text" id="roomNameInput" placeholder="e.g. #gaming, #science, #lobby">
+                </div>
+                <div class="modal-field">
+                    <label for="roomTopicInput">Channel Topic (Optional):</label>
+                    <input type="text" id="roomTopicInput" placeholder="e.g. Discuss gaming, tactics, and high scores">
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--border); padding-top: 10px;">
+                <button class="btn-secondary" onclick="window.closeRoomModal()">Cancel</button>
+                <button class="btn-green" onclick="window.submitNewRoom()">Join Channel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Topic Modal Overlay -->
+    <div class="modal-overlay" id="topicModal" onclick="if(event.target===this) window.closeTopicModal()">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span>✏️ Edit Channel Topic</span>
+                <button class="action-icon-btn" onclick="window.closeTopicModal()" style="font-size: 14px;">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-field">
+                    <label id="topicModalLabel" for="channelTopicEditInput">Topic for #general:</label>
+                    <input type="text" id="channelTopicEditInput" placeholder="Enter channel topic...">
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--border); padding-top: 10px;">
+                <button class="btn-secondary" onclick="window.closeTopicModal()">Cancel</button>
+                <button class="btn-active" onclick="window.submitNewTopic()">Save Topic</button>
+            </div>
+        </div>
     </div>
 
     <!-- Stats Modal Overlay -->
@@ -812,16 +1015,120 @@
             if (topicTextEl) topicTextEl.textContent = currentTopic;
         }
 
-        window.promptNewTopic = function() {
-            const current = roomTopics[currentRoom] || "";
-            const newTopic = prompt(`Enter new topic for ${currentRoom}:`, current);
-            if (newTopic !== null) {
-                const trimmed = newTopic.trim();
-                roomTopics[currentRoom] = trimmed || "General discussion";
-                updateTopicUI();
-                addMessage("System", `Channel topic changed to: "${roomTopics[currentRoom]}"`, currentRoom);
-                showToast("Channel topic updated!");
+        const helpModalEl = document.getElementById('helpModal');
+        const pollModalEl = document.getElementById('pollModal');
+        const roomModalEl = document.getElementById('roomModal');
+        const topicModalEl = document.getElementById('topicModal');
+
+        window.openHelpModal = function() {
+            if (helpModalEl) helpModalEl.classList.add('active');
+        };
+        window.closeHelpModal = function() {
+            if (helpModalEl) helpModalEl.classList.remove('active');
+        };
+
+        window.openPollModal = function() {
+            document.getElementById('pollQuestionInput').value = '';
+            document.getElementById('pollOpt1Input').value = '';
+            document.getElementById('pollOpt2Input').value = '';
+            document.getElementById('pollOpt3Input').value = '';
+            document.getElementById('pollOpt4Input').value = '';
+            if (pollModalEl) {
+                pollModalEl.classList.add('active');
+                setTimeout(() => document.getElementById('pollQuestionInput').focus(), 50);
             }
+        };
+        window.closePollModal = function() {
+            if (pollModalEl) pollModalEl.classList.remove('active');
+        };
+        window.submitNewPoll = function() {
+            const q = document.getElementById('pollQuestionInput').value.trim();
+            const o1 = document.getElementById('pollOpt1Input').value.trim();
+            const o2 = document.getElementById('pollOpt2Input').value.trim();
+            const o3 = document.getElementById('pollOpt3Input').value.trim();
+            const o4 = document.getElementById('pollOpt4Input').value.trim();
+
+            if (!q) {
+                showToast("Please enter a question for the poll.");
+                return;
+            }
+            const opts = [o1, o2, o3, o4].filter(o => o.length > 0);
+            if (opts.length < 2) {
+                showToast("Please provide at least 2 options for the poll.");
+                return;
+            }
+
+            window.closePollModal();
+            window.createPoll(currentUsername, q, opts, currentRoom);
+        };
+
+        window.openRoomModal = function() {
+            document.getElementById('roomNameInput').value = '';
+            document.getElementById('roomTopicInput').value = '';
+            if (roomModalEl) {
+                roomModalEl.classList.add('active');
+                setTimeout(() => document.getElementById('roomNameInput').focus(), 50);
+            }
+        };
+        window.closeRoomModal = function() {
+            if (roomModalEl) roomModalEl.classList.remove('active');
+        };
+        window.submitNewRoom = function() {
+            const rawName = document.getElementById('roomNameInput').value.trim();
+            const topic = document.getElementById('roomTopicInput').value.trim();
+            if (!rawName) {
+                showToast("Please enter a channel name.");
+                return;
+            }
+            let formatted = rawName.startsWith('#') ? rawName : '#' + rawName;
+            if (!rooms.includes(formatted)) {
+                rooms.push(formatted);
+                roomTopics[formatted] = topic || ("Channel for " + formatted);
+                const channelBar = document.getElementById('channelBar');
+                const newPill = document.createElement('div');
+                newPill.className = 'channel-pill';
+                newPill.textContent = formatted;
+                newPill.onclick = () => window.switchRoom(formatted);
+                channelBar.insertBefore(newPill, channelBar.lastElementChild);
+                showToast(`Created channel ${formatted}`);
+            }
+            safeSaveState();
+            window.closeRoomModal();
+            window.switchRoom(formatted);
+        };
+
+        window.openTopicModal = function() {
+            const current = roomTopics[currentRoom] || "";
+            document.getElementById('topicModalLabel').textContent = `Topic for ${currentRoom}:`;
+            document.getElementById('channelTopicEditInput').value = current;
+            if (topicModalEl) {
+                topicModalEl.classList.add('active');
+                setTimeout(() => document.getElementById('channelTopicEditInput').focus(), 50);
+            }
+        };
+        window.closeTopicModal = function() {
+            if (topicModalEl) topicModalEl.classList.remove('active');
+        };
+        window.submitNewTopic = function() {
+            const newTopic = document.getElementById('channelTopicEditInput').value.trim();
+            roomTopics[currentRoom] = newTopic || "General discussion";
+            updateTopicUI();
+            addMessage("System", `Channel topic changed to: "${roomTopics[currentRoom]}"`, currentRoom);
+            safeSaveState();
+            window.closeTopicModal();
+            showToast("Channel topic updated!");
+        };
+
+        window.promptNewTopic = function() {
+            window.openTopicModal();
+        };
+
+        window.promptNewPoll = function() {
+            window.openPollModal();
+        };
+
+        window.promptNewRoom = function() {
+            window.openRoomModal();
         };
 
         // Persona Responses Generator
@@ -1053,22 +1360,6 @@
             showToast("Created new interactive poll!");
         };
 
-        window.promptNewPoll = function() {
-            const q = prompt("Enter Poll Question (e.g. Which feature should we build next?):");
-            if (!q || !q.trim()) return;
-
-            const optStr = prompt("Enter Poll Options separated by commas (e.g. Dark Mode, Export Tools, Mini Games):", "Option A, Option B, Option C");
-            if (!optStr) return;
-
-            const opts = optStr.split(',').map(s => s.trim()).filter(s => s.length > 0);
-            if (opts.length < 2) {
-                alert("Please provide at least 2 options for the poll.");
-                return;
-            }
-
-            window.createPoll(currentUsername, q.trim(), opts.slice(0, 5), currentRoom);
-        };
-
         window.votePoll = function(msgId, optionIndex) {
             const m = messages.find(item => item.id === msgId && item.isPoll);
             if (m && m.pollOptions && m.pollOptions[optionIndex]) {
@@ -1093,32 +1384,11 @@
         window.switchRoom = function(roomName) {
             currentRoom = roomName;
             document.querySelectorAll('.channel-pill').forEach(pill => {
-                if (pill.textContent === roomName) pill.classList.add('active');
+                if (pill.textContent.includes(roomName)) pill.classList.add('active');
                 else pill.classList.remove('active');
             });
             safeSaveState();
             window.renderMessages();
-        };
-
-        window.promptNewRoom = function() {
-            const name = prompt("Enter new room name (e.g. #gaming):");
-            if (name) {
-                let formatted = name.trim();
-                if (!formatted.startsWith('#')) formatted = '#' + formatted;
-                if (!rooms.includes(formatted)) {
-                    rooms.push(formatted);
-                    if (!roomTopics[formatted]) roomTopics[formatted] = "Channel for " + formatted;
-                    const channelBar = document.getElementById('channelBar');
-                    const newPill = document.createElement('div');
-                    newPill.className = 'channel-pill';
-                    newPill.textContent = formatted;
-                    newPill.onclick = () => window.switchRoom(formatted);
-                    channelBar.insertBefore(newPill, channelBar.lastElementChild);
-                    showToast(`Created channel ${formatted}`);
-                }
-                safeSaveState();
-                window.switchRoom(formatted);
-            }
         };
 
         window.changePersona = function() {
@@ -1209,21 +1479,52 @@
         };
 
         window.showHelp = function() {
-            showToast("Commands: /poll <q>? <o1>|<o2>, /vote <num>, /topic <text>, /nick <name>, /roll [d20], /stats, /me <action>, /shrug, /ai <prompt>, /clear, /unpin");
+            if (helpModalEl && helpModalEl.classList.contains('active')) {
+                window.closeHelpModal();
+            } else {
+                window.openHelpModal();
+            }
         };
 
         document.addEventListener('keydown', function(e) {
+            const isTyping = document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'SELECT');
+
             if (e.key === 'Escape') {
-                if (statsModalEl.classList.contains('active')) {
+                if (helpModalEl && helpModalEl.classList.contains('active')) {
+                    window.closeHelpModal();
+                } else if (pollModalEl && pollModalEl.classList.contains('active')) {
+                    window.closePollModal();
+                } else if (roomModalEl && roomModalEl.classList.contains('active')) {
+                    window.closeRoomModal();
+                } else if (topicModalEl && topicModalEl.classList.contains('active')) {
+                    window.closeTopicModal();
+                } else if (statsModalEl && statsModalEl.classList.contains('active')) {
                     window.closeStatsModal();
-                } else if (searchInput === document.activeElement) {
+                } else if (searchInput === document.activeElement || searchInput.value) {
                     searchInput.value = '';
                     window.renderMessages();
                     searchInput.blur();
                 }
-            } else if (e.key === 'F1' || ((e.key === 'h' || e.key === 'H') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA')) {
+            } else if (e.key === 'F1') {
                 e.preventDefault();
                 window.showHelp();
+            } else if ((e.key === 'h' || e.key === 'H') && !isTyping) {
+                e.preventDefault();
+                window.showHelp();
+            } else if ((e.key === 'p' || e.key === 'P') && !isTyping && !e.ctrlKey && !e.altKey) {
+                e.preventDefault();
+                window.openPollModal();
+            } else if ((e.key === 's' || e.key === 'S') && !isTyping && !e.ctrlKey && !e.altKey) {
+                e.preventDefault();
+                window.openStatsModal();
+            } else if (e.ctrlKey && (e.key === 'f' || e.key === 'F')) {
+                e.preventDefault();
+                if (searchInput) searchInput.focus();
+            } else if (!isTyping && !e.ctrlKey && !e.altKey) {
+                if (e.key === '1') { window.switchRoom('#general'); }
+                else if (e.key === '2') { window.switchRoom('#dev'); }
+                else if (e.key === '3') { window.switchRoom('#random'); }
+                else if (e.key === '4') { window.switchRoom('#ai-lounge'); }
             }
         });
 
@@ -1297,10 +1598,10 @@
                             showToast("Successfully imported JSON chat history!");
                             window.renderMessages();
                         } else {
-                            alert("Invalid JSON format for KChat history.");
+                            showToast("Error: Invalid JSON format for KChat history.");
                         }
                     } catch(err) {
-                        alert("Error parsing JSON file: " + err.message);
+                        showToast("Error parsing JSON file: " + err.message);
                     }
                 } else {
                     addMessage("System", `--- Imported History from ${file.name} ---`, currentRoom);
@@ -1604,6 +1905,9 @@
 
         // Initial setup
         window.renderMessages();
+        setTimeout(() => {
+            showToast("💬 Welcome to KChat Pro! Press [F1] or [H] for Help & Shortcuts.");
+        }, 350);
     </script>
 </body>
 </html>
