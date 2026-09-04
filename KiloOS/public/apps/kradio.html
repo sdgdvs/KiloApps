@@ -1,179 +1,1147 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>KRadio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KRadio - Retro Stream Player</title>
     <style>
-        body {
+        :root {
+            --bg-base: #0a0f1d;
+            --bg-card: #131d31;
+            --bg-card-hover: #1c2a45;
+            --bg-input: #0b1220;
+            --border-color: #1e293b;
+            --border-focus: #38bdf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.35);
+            --accent-hover: #0ea5e9;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
             margin: 0;
-            padding: 20px;
-            background: #0f172a; /* slate-900 */
-            color: #f8fafc; /* slate-50 */
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background: var(--bg-base);
+            color: var(--text-main);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            box-sizing: border-box;
+            padding: 16px;
+            overflow-x: hidden;
         }
-        .container {
-            background: #1e293b; /* slate-800 */
-            padding: 24px;
+
+        .radio-app {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
             border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(56, 189, 248, 0.1);
             width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-        h1 {
-            margin: 0 0 16px 0;
-            font-size: 24px;
-            color: #38bdf8; /* sky-400 */
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 16px;
-            background: #0f172a;
-            border: 1px solid #334155;
-            color: white;
-            border-radius: 6px;
-            box-sizing: border-box;
-        }
-        .controls {
+            max-width: 460px;
+            padding: 20px;
             display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 20px;
+            flex-direction: column;
+            gap: 14px;
+            position: relative;
         }
-        button {
-            padding: 10px 20px;
-            background: #0ea5e9; /* sky-500 */
-            color: white;
+
+        /* Header */
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .title-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .title-icon {
+            font-size: 20px;
+        }
+
+        .app-title {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: var(--accent);
+            text-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 3px 8px;
+            border-radius: 20px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            transition: all 0.3s ease;
+        }
+
+        .status-dot.playing {
+            background: var(--success);
+            box-shadow: 0 0 8px var(--success);
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        .status-dot.buffering {
+            background: var(--warning);
+            box-shadow: 0 0 8px var(--warning);
+            animation: pulse-dot 0.8s infinite;
+        }
+
+        .status-dot.error {
+            background: var(--danger);
+            box-shadow: 0 0 8px var(--danger);
+        }
+
+        @keyframes pulse-dot {
+            0% { transform: scale(0.9); opacity: 0.8; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.8; }
+        }
+
+        .btn-help {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn-help:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        .key-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            padding: 1px 4px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-family: monospace;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        /* Visualizer Display */
+        .visualizer-card {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .now-playing-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+
+        .station-name {
+            font-weight: 600;
+            color: #e2e8f0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 280px;
+        }
+
+        .stream-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .visualizer-bars {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            height: 28px;
+            gap: 3px;
+            padding-top: 4px;
+        }
+
+        .vbar {
+            flex: 1;
+            background: #1e293b;
+            border-radius: 2px 2px 0 0;
+            height: 4px;
+            transition: height 0.15s ease, background-color 0.2s;
+        }
+
+        .vbar.active {
+            background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+            box-shadow: 0 0 6px var(--accent-glow);
+        }
+
+        /* Station Presets */
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .presets-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .preset-btn {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            border-radius: 6px;
+            padding: 6px 8px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s;
+            overflow: hidden;
+        }
+
+        .preset-btn:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(56, 189, 248, 0.4);
+            color: var(--text-main);
+        }
+
+        .preset-btn.active {
+            background: rgba(14, 165, 233, 0.15);
+            border-color: var(--accent);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .preset-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-right: 4px;
+        }
+
+        /* URL Input */
+        .url-input-group {
+            display: flex;
+            gap: 6px;
+        }
+
+        .url-input {
+            flex: 1;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: inherit;
+            outline: none;
+            user-select: text;
+            transition: border-color 0.2s;
+        }
+
+        .url-input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 1px var(--border-focus);
+        }
+
+        .btn-tune {
+            background: var(--bg-card-hover);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 6px;
+            padding: 0 12px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-tune:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #0b1220;
+        }
+
+        /* Player Main Controls */
+        .main-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding-top: 4px;
+        }
+
+        .playback-btns {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-play {
+            background: var(--accent);
+            color: #0b1220;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px var(--accent-glow);
+        }
+
+        .btn-play:hover {
+            background: #7dd3fc;
+            transform: translateY(-1px);
+        }
+
+        .btn-stop {
+            background: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-stop:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        /* Volume Controls */
+        .volume-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            max-width: 170px;
+            justify-content: flex-end;
+        }
+
+        .btn-mute {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+
+        .btn-mute:hover {
+            color: var(--accent);
+        }
+
+        .volume-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: #1e293b;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            box-shadow: 0 0 6px var(--accent-glow);
+            transition: transform 0.1s;
+        }
+
+        .volume-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .volume-percent {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: monospace;
+            min-width: 28px;
+            text-align: right;
+        }
+
+        /* Footer Hint */
+        .footer-hint {
+            font-size: 11px;
+            color: #64748b;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 14px;
+            right: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            max-width: 320px;
+            pointer-events: auto;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast-info { border-color: rgba(56, 189, 248, 0.4); }
+        .toast-success { border-color: rgba(16, 185, 129, 0.4); }
+        .toast-warning { border-color: rgba(245, 158, 11, 0.4); }
+        .toast-error { border-color: rgba(239, 68, 68, 0.4); }
+
+        /* Modal Dialog */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.25s ease;
+            padding: 16px;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 20px 30px rgba(0, 0, 0, 0.6);
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            transform: scale(0.95);
+            transition: transform 0.25s ease;
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+            padding: 4px;
+        }
+
+        .btn-modal-close:hover {
+            color: var(--text-main);
+        }
+
+        .modal-content {
+            font-size: 13px;
+            color: #cbd5e1;
+            line-height: 1.5;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .shortcuts-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .shortcuts-table td {
+            padding: 6px 4px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .shortcuts-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .shortcuts-table td:first-child {
+            width: 130px;
+            font-family: monospace;
+            color: var(--accent);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #0b1220;
             border: none;
             border-radius: 6px;
-            cursor: pointer;
+            padding: 8px 16px;
+            font-size: 12px;
             font-weight: 600;
+            cursor: pointer;
             transition: background 0.2s;
         }
-        button:hover {
-            background: #0284c7; /* sky-600 */
-        }
-        button:disabled {
-            background: #475569;
-            cursor: not-allowed;
-        }
-        #status {
-            font-size: 14px;
-            color: #94a3b8; /* slate-400 */
-            margin-top: 10px;
-        }
-        #help-text {
-            font-size: 12px;
-            color: #64748b;
-            margin-top: 15px;
-        }
-        /* Custom Audio Player */
-        audio {
-            width: 100%;
-            margin-top: 10px;
-            border-radius: 6px;
-        }
-        audio::-webkit-media-controls-panel {
-            background-color: #334155;
-        }
-        audio::-webkit-media-controls-play-button,
-        audio::-webkit-media-controls-mute-button {
-            background-color: #94a3b8;
-            border-radius: 50%;
-        }
-        audio::-webkit-media-controls-current-time-display,
-        audio::-webkit-media-controls-time-remaining-display {
-            color: #f8fafc;
+
+        .btn-primary:hover {
+            background: #7dd3fc;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>KRadio</h1>
-        <input type="text" id="stationUrl" value="https://radio.erb.pw/public/subspace" placeholder="Enter stream URL">
-        <div class="controls">
-            <button id="playBtn">Play</button>
-            <button id="stopBtn">Stop</button>
+    <div class="radio-app">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="title-group">
+                <span class="title-icon">📻</span>
+                <span class="app-title">KRadio</span>
+            </div>
+            <div class="header-actions">
+                <div class="badge-status">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Ready</span>
+                </div>
+                <button class="btn-help" id="btnHelp" title="Help & Shortcuts">
+                    Help <span class="key-badge">F1</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Visualizer & Now Playing -->
+        <div class="visualizer-card">
+            <div class="now-playing-row">
+                <div class="station-name" id="displayStation">Subspace Synthwave</div>
+                <div class="stream-meta" id="displayBitrate">Live Stream</div>
+            </div>
+            <div class="visualizer-bars" id="visualizerBars">
+                <!-- Visualizer bars generated by JS -->
+            </div>
         </div>
-        <audio id="audioPlayer" controls volume="0.5"></audio>
-        <div id="status">Ready. Click Play to tune in.</div>
-        <div id="help-text">Press F1 or H for Help</div>
+
+        <!-- Station Presets -->
+        <div>
+            <div class="section-label">
+                <span>Station Presets</span>
+                <span>Keys [1-6]</span>
+            </div>
+            <div class="presets-grid" id="presetsGrid">
+                <!-- Preset buttons generated by JS -->
+            </div>
+        </div>
+
+        <!-- Custom URL Input -->
+        <div class="url-input-group">
+            <input type="text" class="url-input" id="stationUrl" 
+                   value="https://radio.erb.pw/public/subspace" 
+                   placeholder="Enter direct MP3 / AAC stream URL..." 
+                   spellcheck="false" autocomplete="off">
+            <button class="btn-tune" id="btnTune" title="Tune to entered URL">
+                Tune <span class="key-badge">↵</span>
+            </button>
+        </div>
+
+        <!-- Main Controls & Volume -->
+        <div class="main-controls">
+            <div class="playback-btns">
+                <button class="btn-play" id="btnPlay">
+                    <span id="playIcon">▶</span>
+                    <span id="playLabel">Play</span>
+                    <span class="key-badge">Space</span>
+                </button>
+                <button class="btn-stop" id="btnStop" title="Stop Stream">
+                    <span>⏹</span>
+                    <span>Stop</span>
+                    <span class="key-badge">S</span>
+                </button>
+            </div>
+
+            <div class="volume-group">
+                <button class="btn-mute" id="btnMute" title="Toggle Mute [M]">🔊</button>
+                <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="80" title="Volume Slider [↑/↓]">
+                <span class="volume-percent" id="volumePercent">80%</span>
+            </div>
+        </div>
+
+        <!-- Footer Hint -->
+        <footer class="footer-hint">
+            <span>[Space] Play/Pause</span>
+            <span>[1-6] Presets</span>
+            <span>[M] Mute</span>
+            <span>[F1] Help</span>
+        </footer>
+    </div>
+
+    <!-- Hidden Audio Element -->
+    <audio id="audioElement" preload="none"></audio>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Help & Controls Modal -->
+    <div class="modal-overlay" id="helpModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>📻</span> KRadio Player Guide
+                </div>
+                <button class="btn-modal-close" id="btnCloseModal" title="Close [Esc]">×</button>
+            </div>
+            <div class="modal-content">
+                <p>KRadio streams retro, ambient, electronic, and internet radio stations in real time directly inside KiloOS.</p>
+                
+                <table class="shortcuts-table">
+                    <tr>
+                        <td>Space / P</td>
+                        <td>Toggle Play / Pause</td>
+                    </tr>
+                    <tr>
+                        <td>S</td>
+                        <td>Stop audio stream</td>
+                    </tr>
+                    <tr>
+                        <td>1 – 6</td>
+                        <td>Select Station Preset</td>
+                    </tr>
+                    <tr>
+                        <td>M</td>
+                        <td>Mute / Unmute audio</td>
+                    </tr>
+                    <tr>
+                        <td>↑ / ↓</td>
+                        <td>Increase / Decrease volume</td>
+                    </tr>
+                    <tr>
+                        <td>Enter</td>
+                        <td>Tune to custom URL in text box</td>
+                    </tr>
+                    <tr>
+                        <td>F1 / ? / H</td>
+                        <td>Toggle this Help guide</td>
+                    </tr>
+                    <tr>
+                        <td>Esc</td>
+                        <td>Dismiss Help modal</td>
+                    </tr>
+                </table>
+                <p style="font-size: 11px; color: var(--text-muted);">
+                    Tip: Direct HTTPS MP3 and AAC stream links are fully supported.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="btnGotIt">Got It</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        const audioPlayer = document.getElementById('audioPlayer');
+        // Station Presets
+        const PRESETS = [
+            { id: 1, name: 'Subspace', genre: 'Synthwave', url: 'https://radio.erb.pw/public/subspace' },
+            { id: 2, name: 'Groove Salad', genre: 'Chillout', url: 'https://ice2.somafm.com/groovesalad-128-mp3' },
+            { id: 3, name: 'Nightwave', genre: 'Vaporwave', url: 'https://radio.plaza.one/mp3' },
+            { id: 4, name: 'DEF CON', genre: 'Cyber Ambient', url: 'https://ice2.somafm.com/defcon-128-mp3' },
+            { id: 5, name: 'Secret Agent', genre: 'Spy / Retro', url: 'https://ice1.somafm.com/secretagent-128-mp3' },
+            { id: 6, name: 'Space Station', genre: 'Spacemusic', url: 'https://ice1.somafm.com/spacestation-128-mp3' }
+        ];
+
+        // Elements
+        const audio = document.getElementById('audioElement');
         const stationUrl = document.getElementById('stationUrl');
-        const playBtn = document.getElementById('playBtn');
-        const stopBtn = document.getElementById('stopBtn');
-        const status = document.getElementById('status');
+        const btnPlay = document.getElementById('btnPlay');
+        const playIcon = document.getElementById('playIcon');
+        const playLabel = document.getElementById('playLabel');
+        const btnStop = document.getElementById('btnStop');
+        const btnTune = document.getElementById('btnTune');
+        const btnHelp = document.getElementById('btnHelp');
+        const btnMute = document.getElementById('btnMute');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumePercent = document.getElementById('volumePercent');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const displayStation = document.getElementById('displayStation');
+        const displayBitrate = document.getElementById('displayBitrate');
+        const visualizerBars = document.getElementById('visualizerBars');
+        const presetsGrid = document.getElementById('presetsGrid');
+        const toastContainer = document.getElementById('toastContainer');
+        const helpModal = document.getElementById('helpModal');
+        const btnCloseModal = document.getElementById('btnCloseModal');
+        const btnGotIt = document.getElementById('btnGotIt');
 
+        let activePresetIndex = 0;
         let isPlaying = false;
+        let isMuted = false;
+        let lastVolume = 0.8;
+        let visualizerTimer = null;
 
-        // Auto-play attempt on load
-        window.onload = () => {
-            loadStream();
-            // Browsers usually block autoplay unless user has interacted, 
-            // but we try anyway, and if it fails, they can click Play.
-            playStream();
-        };
-
-        function loadStream() {
-            audioPlayer.src = stationUrl.value;
-            audioPlayer.load();
+        // Initialize Visualizer Bars
+        const NUM_BARS = 24;
+        const bars = [];
+        for (let i = 0; i < NUM_BARS; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'vbar';
+            visualizerBars.appendChild(bar);
+            bars.push(bar);
         }
 
-        function playStream() {
-            if (audioPlayer.src !== stationUrl.value) {
-                loadStream();
+        // Initialize Presets UI
+        function renderPresets() {
+            presetsGrid.innerHTML = '';
+            PRESETS.forEach((preset, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'preset-btn' + (index === activePresetIndex ? ' active' : '');
+                btn.title = `${preset.name} (${preset.genre}) - Press [${preset.id}]`;
+                btn.innerHTML = `
+                    <span class="preset-name">${preset.name}</span>
+                    <span class="key-badge">${preset.id}</span>
+                `;
+                btn.onclick = () => selectPreset(index, true);
+                presetsGrid.appendChild(btn);
+            });
+        }
+
+        // Toast notification system
+        function showToast(message, type = 'info', duration = 3200) {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            const icons = {
+                info: 'ℹ️',
+                success: '📻',
+                warning: '⚠️',
+                error: '❌'
+            };
+            
+            toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${message}</span>`;
+            toastContainer.appendChild(toast);
+
+            // Animate in
+            requestAnimationFrame(() => {
+                toast.classList.add('show');
+            });
+
+            // Auto remove
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }, duration);
+        }
+
+        // Visualizer animation
+        function startVisualizer() {
+            if (visualizerTimer) clearInterval(visualizerTimer);
+            bars.forEach(b => b.classList.add('active'));
+            
+            visualizerTimer = setInterval(() => {
+                if (!isPlaying) {
+                    stopVisualizer();
+                    return;
+                }
+                bars.forEach((bar) => {
+                    // Generate random rhythmic height
+                    const h = Math.floor(Math.random() * 22) + 4;
+                    bar.style.height = `${h}px`;
+                });
+            }, 120);
+        }
+
+        function stopVisualizer() {
+            if (visualizerTimer) {
+                clearInterval(visualizerTimer);
+                visualizerTimer = null;
             }
-            const playPromise = audioPlayer.play();
+            bars.forEach((bar) => {
+                bar.classList.remove('active');
+                bar.style.height = '4px';
+            });
+        }
+
+        // Status update
+        function setStatus(text, state = 'ready') {
+            statusText.textContent = text;
+            statusDot.className = 'status-dot ' + state;
+        }
+
+        // Select Preset
+        function selectPreset(index, autoPlay = false) {
+            if (index < 0 || index >= PRESETS.length) return;
+            activePresetIndex = index;
+            const preset = PRESETS[index];
+            stationUrl.value = preset.url;
+            displayStation.textContent = `${preset.name} (${preset.genre})`;
+            displayBitrate.textContent = 'Live Preset';
+            
+            renderPresets();
+            showToast(`Selected Station: ${preset.name}`, 'info', 2000);
+
+            if (autoPlay) {
+                playStream();
+            }
+        }
+
+        // Play Stream
+        function playStream() {
+            const url = stationUrl.value.trim();
+            if (!url) {
+                showToast('Please enter a valid stream URL', 'warning');
+                return;
+            }
+
+            setStatus('Connecting...', 'buffering');
+            
+            if (audio.src !== url) {
+                audio.src = url;
+                audio.load();
+            }
+
+            audio.volume = isMuted ? 0 : (volumeSlider.value / 100);
+
+            const playPromise = audio.play();
             if (playPromise !== undefined) {
                 playPromise.then(() => {
-                    status.textContent = 'Playing: ' + stationUrl.value;
                     isPlaying = true;
-                }).catch(error => {
-                    status.textContent = 'Autoplay blocked or error. Click Play.';
-                    console.log('Playback error:', error);
+                    playIcon.textContent = '⏸';
+                    playLabel.textContent = 'Pause';
+                    setStatus('Live', 'playing');
+                    startVisualizer();
+                    showToast(`Tuned in: ${displayStation.textContent}`, 'success');
+                }).catch(err => {
+                    isPlaying = false;
+                    playIcon.textContent = '▶';
+                    playLabel.textContent = 'Play';
+                    setStatus('Error', 'error');
+                    stopVisualizer();
+                    showToast('Playback blocked or stream offline. Click Play.', 'warning');
+                    console.warn('Audio playback error:', err);
                 });
             }
         }
 
-        function stopStream() {
-            audioPlayer.pause();
-            audioPlayer.src = ''; // Clear source to actually stop downloading the stream
-            status.textContent = 'Stopped.';
-            isPlaying = false;
+        // Pause/Toggle
+        function togglePlay() {
+            if (isPlaying) {
+                audio.pause();
+                isPlaying = false;
+                playIcon.textContent = '▶';
+                playLabel.textContent = 'Play';
+                setStatus('Paused', 'ready');
+                stopVisualizer();
+                showToast('Playback paused', 'info', 1500);
+            } else {
+                playStream();
+            }
         }
 
-        playBtn.addEventListener('click', playStream);
-        stopBtn.addEventListener('click', stopStream);
+        // Stop Stream
+        function stopStream() {
+            audio.pause();
+            audio.src = '';
+            isPlaying = false;
+            playIcon.textContent = '▶';
+            playLabel.textContent = 'Play';
+            setStatus('Stopped', 'ready');
+            stopVisualizer();
+            showToast('Stream stopped', 'info', 1500);
+        }
 
-        // Update status on events
-        audioPlayer.addEventListener('playing', () => {
-            status.textContent = 'Playing stream...';
-        });
-        
-        audioPlayer.addEventListener('waiting', () => {
-            status.textContent = 'Buffering...';
-        });
-
-        audioPlayer.addEventListener('error', (e) => {
-            status.textContent = 'Error loading stream.';
-        });
-
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'F1' || e.key === 'h' || e.key === 'H') {
-                e.preventDefault();
-                alert('KRadio Help\n\nEnter a stream URL and click Play.\nClick Stop to stop playback.\nPress F1 or H to show this help.');
+        // Volume Handlers
+        function updateVolume(val) {
+            val = Math.max(0, Math.min(100, val));
+            volumeSlider.value = val;
+            volumePercent.textContent = `${val}%`;
+            
+            if (val === 0) {
+                isMuted = true;
+                btnMute.textContent = '🔇';
+                audio.volume = 0;
+            } else {
+                isMuted = false;
+                audio.volume = val / 100;
+                btnMute.textContent = val < 40 ? '🔉' : '🔊';
             }
+        }
+
+        function toggleMute() {
+            if (isMuted) {
+                isMuted = false;
+                updateVolume(lastVolume > 0 ? lastVolume : 80);
+                showToast(`Volume unmuted (${volumeSlider.value}%)`, 'info', 1500);
+            } else {
+                lastVolume = parseInt(volumeSlider.value, 10);
+                isMuted = true;
+                btnMute.textContent = '🔇';
+                audio.volume = 0;
+                volumePercent.textContent = '0%';
+                showToast('Audio muted', 'info', 1500);
+            }
+        }
+
+        // Modal Controls
+        function openHelp() {
+            helpModal.classList.add('active');
+        }
+
+        function closeHelp() {
+            helpModal.classList.remove('active');
+        }
+
+        // Event Listeners
+        btnPlay.addEventListener('click', togglePlay);
+        btnStop.addEventListener('click', stopStream);
+        btnTune.addEventListener('click', () => {
+            // Find if custom url matches a preset
+            const url = stationUrl.value.trim();
+            const matchedIndex = PRESETS.findIndex(p => p.url === url);
+            if (matchedIndex !== -1) {
+                selectPreset(matchedIndex, true);
+            } else {
+                activePresetIndex = -1;
+                renderPresets();
+                displayStation.textContent = 'Custom Stream';
+                displayBitrate.textContent = 'Direct URL';
+                playStream();
+            }
+        });
+
+        volumeSlider.addEventListener('input', (e) => {
+            updateVolume(parseInt(e.target.value, 10));
+        });
+
+        btnMute.addEventListener('click', toggleMute);
+        btnHelp.addEventListener('click', openHelp);
+        btnCloseModal.addEventListener('click', closeHelp);
+        btnGotIt.addEventListener('click', closeHelp);
+        
+        helpModal.addEventListener('click', (e) => {
+            if (e.target === helpModal) closeHelp();
+        });
+
+        // Audio element native events
+        audio.addEventListener('playing', () => {
+            isPlaying = true;
+            playIcon.textContent = '⏸';
+            playLabel.textContent = 'Pause';
+            setStatus('Live', 'playing');
+            startVisualizer();
+        });
+
+        audio.addEventListener('waiting', () => {
+            setStatus('Buffering...', 'buffering');
+        });
+
+        audio.addEventListener('error', () => {
+            if (audio.src && audio.src !== window.location.href) {
+                isPlaying = false;
+                playIcon.textContent = '▶';
+                playLabel.textContent = 'Play';
+                setStatus('Stream Offline', 'error');
+                stopVisualizer();
+                showToast('Unable to connect to stream server', 'error');
+            }
+        });
+
+        // Keyboard Shortcuts
+        window.addEventListener('keydown', (e) => {
+            const isInputFocused = document.activeElement === stationUrl;
+
+            // Global modal handling
+            if (e.key === 'F1' || e.key === '?' || (e.key === 'h' || e.key === 'H') && !isInputFocused) {
+                e.preventDefault();
+                if (helpModal.classList.contains('active')) {
+                    closeHelp();
+                } else {
+                    openHelp();
+                }
+                return;
+            }
+
+            if (e.key === 'Escape') {
+                if (helpModal.classList.contains('active')) {
+                    closeHelp();
+                } else if (isInputFocused) {
+                    stationUrl.blur();
+                }
+                return;
+            }
+
+            if (isInputFocused) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    btnTune.click();
+                    stationUrl.blur();
+                }
+                return;
+            }
+
+            // Non-input hotkeys
+            if (e.key === ' ' || e.key === 'p' || e.key === 'P') {
+                e.preventDefault();
+                togglePlay();
+            } else if (e.key === 's' || e.key === 'S') {
+                e.preventDefault();
+                stopStream();
+            } else if (e.key === 'm' || e.key === 'M') {
+                e.preventDefault();
+                toggleMute();
+            } else if (e.key >= '1' && e.key <= '6') {
+                const presetNum = parseInt(e.key, 10);
+                selectPreset(presetNum - 1, true);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                updateVolume(parseInt(volumeSlider.value, 10) + 5);
+                showToast(`Volume: ${volumeSlider.value}%`, 'info', 1000);
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                updateVolume(parseInt(volumeSlider.value, 10) - 5);
+                showToast(`Volume: ${volumeSlider.value}%`, 'info', 1000);
+            }
+        });
+
+        // Initialization
+        window.addEventListener('DOMContentLoaded', () => {
+            renderPresets();
+            updateVolume(80);
+            
+            // Startup welcome toast
+            showToast('📻 Welcome to KRadio! Select a preset [1-6] or enter a URL. Press [F1] for help.', 'info', 5000);
+
+            // Attempt auto play
+            playStream();
         });
     </script>
 </body>
