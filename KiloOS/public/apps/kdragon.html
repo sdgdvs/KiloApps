@@ -4,35 +4,245 @@
     <meta charset="UTF-8">
     <title>KDragon</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Uncial+Antiqua&display=swap');
-        body { margin: 0; padding: 20px; font-family: 'Uncial Antiqua', serif; background-color: #dcb881; color: #3b240b; user-select: none; text-rendering: optimizeLegibility; }
-        h1 { color: #2a1704; text-align: center; text-shadow: 1px 1px #e6cca0; }
-        .container { max-width: 600px; margin: 0 auto; text-align: center; background: #ebd0a5; padding: 20px; border: 4px solid #5a3814; border-radius: 5px; box-shadow: inset 0 0 20px rgba(0,0,0,0.2), 0 5px 15px rgba(0,0,0,0.5); }
-        .stats { display: flex; justify-content: space-around; margin-top: 20px; padding: 10px; background: rgba(90, 56, 20, 0.2); border: 2px solid #5a3814; border-radius: 3px; flex-wrap: wrap; gap: 5px; }
-        .stat { font-size: 18px; font-weight: bold; }
-        .controls { margin-top: 20px; display: flex; justify-content: center; gap: 10px; }
-        button { padding: 10px 20px; font-size: 18px; cursor: pointer; background: #8b5a2b; color: #f5deb3; border: 2px solid #3b240b; border-radius: 3px; font-family: 'Uncial Antiqua', serif; text-shadow: 1px 1px #000; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); }
-        button:hover { background: #a06b38; }
-        button:disabled { background: #5a4b3c; color: #888; cursor: not-allowed; }
-        .entity-display { margin: 30px 0; min-height: 128px; display: flex; justify-content: center; align-items: center; }
-        .message-log { margin-top: 20px; height: 100px; overflow-y: auto; background: rgba(255,255,255,0.3); padding: 10px; text-align: left; font-family: 'Courier New', monospace; border: 2px inset #5a3814; color: #2a1704; font-weight: bold; }
-        .message { margin: 5px 0; }
-        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); }
-        .modal-content { background-color: #ebd0a5; margin: 5% auto; padding: 20px; border: 4px solid #5a3814; width: 80%; max-width: 600px; border-radius: 5px; text-align: left; max-height: 80vh; overflow-y: auto; box-shadow: inset 0 0 20px rgba(0,0,0,0.2), 0 5px 15px rgba(0,0,0,0.5); }
+        @import url('https://fonts.googleapis.com/css2?family=Uncial+Antiqua&family=Cinzel:wght@600;900&display=swap');
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 20px; font-family: 'Uncial Antiqua', serif; background-color: #241408; color: #3b240b; user-select: none; text-rendering: optimizeLegibility; overflow-x: hidden; position: relative; min-height: 100vh; }
+        
+        #vfx-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        h1 {
+            color: #f7e0b5;
+            text-align: center;
+            font-family: 'Cinzel', serif;
+            font-weight: 900;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(255, 170, 0, 0.6), 2px 2px 4px #000;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+
+        .container {
+            max-width: 620px;
+            margin: 0 auto;
+            text-align: center;
+            background: linear-gradient(135deg, #e8cc9e 0%, #d8b880 50%, #c9a66b 100%);
+            padding: 24px;
+            border: 4px solid #5a3814;
+            border-radius: 8px;
+            box-shadow: inset 0 0 30px rgba(70,35,10,0.35), 0 10px 30px rgba(0,0,0,0.7), 0 0 15px rgba(212,175,55,0.3);
+            position: relative;
+            z-index: 5;
+            transition: transform 0.05s ease-out;
+        }
+
+        /* Ornate corner filigree styling */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 4px; left: 4px; right: 4px; bottom: 4px;
+            border: 1px solid rgba(139, 90, 43, 0.5);
+            pointer-events: none;
+            border-radius: 4px;
+        }
+
+        .corner-filigree {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            pointer-events: none;
+        }
+        .corner-tl { top: 6px; left: 6px; border-top: 3px solid #d4af37; border-left: 3px solid #d4af37; }
+        .corner-tr { top: 6px; right: 6px; border-top: 3px solid #d4af37; border-right: 3px solid #d4af37; }
+        .corner-bl { bottom: 6px; left: 6px; border-bottom: 3px solid #d4af37; border-left: 3px solid #d4af37; }
+        .corner-br { bottom: 6px; right: 6px; border-bottom: 3px solid #d4af37; border-right: 3px solid #d4af37; }
+
+        .corner-filigree::after {
+            content: '';
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: #d4af37;
+            border-radius: 50%;
+            box-shadow: 0 0 4px #ffd700;
+        }
+        .corner-tl::after { top: 2px; left: 2px; }
+        .corner-tr::after { top: 2px; right: 2px; }
+        .corner-bl::after { bottom: 2px; left: 2px; }
+        .corner-br::after { bottom: 2px; right: 2px; }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(60, 35, 12, 0.25);
+            border: 2px solid #5a3814;
+            border-radius: 6px;
+            flex-wrap: wrap;
+            gap: 8px;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.3);
+        }
+        .stat {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2a1404;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+            padding: 2px 6px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            border: 1px solid rgba(90,56,20,0.2);
+        }
+        .stat span {
+            color: #7a2205;
+            font-weight: 900;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 18px;
+            font-size: 16px;
+            cursor: pointer;
+            background: linear-gradient(180deg, #9e6932 0%, #75441b 100%);
+            color: #fdf1d6;
+            border: 2px solid #3b240b;
+            border-radius: 5px;
+            font-family: 'Uncial Antiqua', serif;
+            text-shadow: 1px 1px 2px #000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.3);
+            transition: all 0.15s ease;
+        }
+        button:hover {
+            background: linear-gradient(180deg, #b87c3e 0%, #8c5222 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.4);
+        }
+        button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 3px rgba(0,0,0,0.4);
+        }
+        button:disabled {
+            background: #5a4b3c;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .entity-display {
+            margin: 25px 0;
+            min-height: 140px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle, rgba(255,248,220,0.6) 0%, rgba(210,180,140,0.2) 60%, transparent 85%);
+            border-radius: 50%;
+            padding: 10px;
+        }
+
+        .shop-card {
+            background: rgba(90, 56, 20, 0.15);
+            border: 2px solid #5a3814;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            transition: transform 0.2s, background 0.2s;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+        }
+        .shop-card:hover {
+            background: rgba(90, 56, 20, 0.25);
+            transform: translateY(-3px);
+            border-color: #d4af37;
+        }
+
+        .message-log {
+            margin-top: 20px;
+            height: 110px;
+            overflow-y: auto;
+            background: rgba(255, 250, 240, 0.6);
+            padding: 10px 14px;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+            border: 2px inset #5a3814;
+            border-radius: 4px;
+            color: #2a1704;
+            font-weight: bold;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .message { margin: 4px 0; font-size: 14px; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.75);
+            backdrop-filter: blur(3px);
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #ebd0a5 0%, #d8b880 100%);
+            margin: 5% auto;
+            padding: 24px;
+            border: 4px solid #5a3814;
+            width: 85%;
+            max-width: 600px;
+            border-radius: 8px;
+            text-align: left;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.25), 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(212,175,55,0.4);
+            position: relative;
+        }
         .close-btn { color: #5a3814; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
         .close-btn:hover { color: #8b5a2b; }
-        @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-        @keyframes attack-move { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(20px); } }
-        @keyframes attack-move-enemy { 0%, 100% { transform: scaleX(-1) translateX(0); } 50% { transform: scaleX(-1) translateX(-20px); } }
-        .bobbing { animation: bob 1.5s infinite ease-in-out; }
-        .shaking { animation: shake 0.2s 2; }
-        .attacking { animation: attack-move 0.3s; }
-        .attacking-enemy { animation: attack-move-enemy 0.3s; }
+
+        @keyframes bob {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px) rotate(-2deg); }
+            75% { transform: translateX(6px) rotate(2deg); }
+        }
+        @keyframes attack-move {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(25px) scale(1.05); }
+        }
+        @keyframes attack-move-enemy {
+            0%, 100% { transform: scaleX(-1) translateX(0); }
+            50% { transform: scaleX(-1) translateX(-25px) scale(1.05); }
+        }
+        .bobbing { animation: bob 1.8s infinite ease-in-out; }
+        .shaking { animation: shake 0.25s 2; }
+        .attacking { animation: attack-move 0.3s ease-in-out; }
+        .attacking-enemy { animation: attack-move-enemy 0.3s ease-in-out; }
     </style>
 </head>
 <body>
-    <div class="container">
+    <canvas id="vfx-canvas"></canvas>
+    <div class="container" id="main-container">
+        <div class="corner-filigree corner-tl"></div>
+        <div class="corner-filigree corner-tr"></div>
+        <div class="corner-filigree corner-bl"></div>
+        <div class="corner-filigree corner-br"></div>
         <h1>KDragon</h1>
         <div id="game-screen" style="display: none;">
             <div class="stats">
@@ -85,26 +295,98 @@
                 <button id="btn-shop">Shop (🛒)</button>
                 <button id="btn-help">Help (❓)</button>
             </div>
-            <div class="controls" id="shop-controls" style="display: none; flex-wrap: wrap; justify-content: center; gap: 10px;">
-                <div style="text-align:center;">
-                    <svg width="40" height="40" viewBox="0 0 40 40"><rect x="10" y="15" width="20" height="10" fill="gray"/><ellipse cx="20" cy="20" rx="8" ry="12" fill="red"/></svg><br>
+            <div class="controls" id="shop-controls" style="display: none; flex-wrap: wrap; justify-content: center; gap: 14px;">
+                <div class="shop-card">
+                    <svg width="48" height="48" viewBox="0 0 48 48">
+                        <defs>
+                            <radialGradient id="meatGrad" cx="40%" cy="40%" r="60%">
+                                <stop offset="0%" stop-color="#ff6b6b"/>
+                                <stop offset="70%" stop-color="#c92a2a"/>
+                                <stop offset="100%" stop-color="#861717"/>
+                            </radialGradient>
+                            <linearGradient id="boneGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#ffffff"/>
+                                <stop offset="100%" stop-color="#e9ecef"/>
+                            </linearGradient>
+                        </defs>
+                        <!-- Bone Ends -->
+                        <circle cx="12" cy="14" r="5" fill="url(#boneGrad)" stroke="#adb5bd" stroke-width="1"/>
+                        <circle cx="12" cy="22" r="5" fill="url(#boneGrad)" stroke="#adb5bd" stroke-width="1"/>
+                        <rect x="12" y="15" width="14" height="6" fill="url(#boneGrad)"/>
+                        <!-- Roast Meat -->
+                        <ellipse cx="29" cy="24" rx="15" ry="12" fill="url(#meatGrad)" stroke="#5c1212" stroke-width="1.5" transform="rotate(-15 29 24)"/>
+                        <ellipse cx="34" cy="21" rx="4" ry="7" fill="#ff8787" opacity="0.6" transform="rotate(-15 34 21)"/>
+                        <!-- Bone Core -->
+                        <circle cx="28" cy="24" r="3.5" fill="#f8f9fa" stroke="#ced4da" stroke-width="1"/>
+                    </svg><br>
                     <button id="btn-shop-food">Meat (20g)</button>
                 </div>
-                <div style="text-align:center;">
-                    <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="12" fill="blue"/><circle cx="20" cy="20" r="6" fill="yellow"/></svg><br>
+                <div class="shop-card">
+                    <svg width="48" height="48" viewBox="0 0 48 48">
+                        <defs>
+                            <radialGradient id="orbGrad" cx="35%" cy="35%" r="65%">
+                                <stop offset="0%" stop-color="#ffe066"/>
+                                <stop offset="50%" stop-color="#f59f00"/>
+                                <stop offset="90%" stop-color="#d9480f"/>
+                                <stop offset="100%" stop-color="#7f1d1d"/>
+                            </radialGradient>
+                        </defs>
+                        <!-- Magic Glowing Toy Orb -->
+                        <circle cx="24" cy="24" r="16" fill="url(#orbGrad)" stroke="#ffd43b" stroke-width="2"/>
+                        <!-- Energy Ring -->
+                        <ellipse cx="24" cy="24" rx="19" ry="6" fill="none" stroke="#66d9e8" stroke-width="2" stroke-dasharray="4 2" transform="rotate(-25 24 24)"/>
+                        <!-- Core Star -->
+                        <circle cx="19" cy="19" r="4" fill="#ffffff" opacity="0.8"/>
+                    </svg><br>
                     <button id="btn-shop-toy">Toy (30g)</button>
                 </div>
-                <div style="text-align:center;">
-                    <svg width="40" height="40" viewBox="0 0 40 40"><rect x="10" y="10" width="20" height="20" fill="none" stroke="gray" stroke-width="6"/></svg><br>
+                <div class="shop-card">
+                    <svg width="48" height="48" viewBox="0 0 48 48">
+                        <defs>
+                            <linearGradient id="bracerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#ffd700"/>
+                                <stop offset="50%" stop-color="#d4af37"/>
+                                <stop offset="100%" stop-color="#aa7c11"/>
+                            </linearGradient>
+                            <linearGradient id="gemGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stop-color="#ff6b6b"/>
+                                <stop offset="100%" stop-color="#c92a2a"/>
+                            </linearGradient>
+                        </defs>
+                        <!-- Steel Bracer Base -->
+                        <path d="M12 12 L36 12 L32 36 L16 36 Z" fill="#495057" stroke="#212529" stroke-width="2"/>
+                        <!-- Gold Plate Trim -->
+                        <path d="M14 14 L34 14 L31 34 L17 34 Z" fill="url(#bracerGrad)" stroke="#5c4308" stroke-width="1.5"/>
+                        <!-- Rivets -->
+                        <circle cx="16" cy="17" r="1.5" fill="#f8f9fa"/>
+                        <circle cx="32" cy="17" r="1.5" fill="#f8f9fa"/>
+                        <circle cx="18" cy="31" r="1.5" fill="#f8f9fa"/>
+                        <circle cx="30" cy="31" r="1.5" fill="#f8f9fa"/>
+                        <!-- Ruby Inset Gem -->
+                        <polygon points="24,18 29,24 24,30 19,24" fill="url(#gemGrad)" stroke="#ffe3e3" stroke-width="1"/>
+                    </svg><br>
                     <button id="btn-shop-str">Bracer (50g)</button>
                 </div>
-                <div style="text-align:center;">
-                    <svg width="40" height="40" viewBox="0 0 40 40"><path d="M15,10 L25,10 L25,25 L30,25 L30,30 L15,30 Z" fill="brown"/></svg><br>
+                <div class="shop-card">
+                    <svg width="48" height="48" viewBox="0 0 48 48">
+                        <defs>
+                            <linearGradient id="bootGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#40c057"/>
+                                <stop offset="70%" stop-color="#2b8a3e"/>
+                                <stop offset="100%" stop-color="#23662d"/>
+                            </linearGradient>
+                        </defs>
+                        <!-- Swift Winged Boots -->
+                        <path d="M14 8 L24 8 L24 28 L36 30 L36 38 L12 38 L12 14 Z" fill="url(#bootGrad)" stroke="#13411b" stroke-width="2"/>
+                        <path d="M12 34 L36 34 L36 38 L12 38 Z" fill="#212529"/>
+                        <!-- Wing Accent -->
+                        <path d="M10 16 Q2 20 6 26 Q12 24 14 20 Z" fill="#ffd43b" stroke="#aa7c11" stroke-width="1"/>
+                        <path d="M10 20 Q4 24 8 30 Q14 27 15 23 Z" fill="#ffe066" stroke="#aa7c11" stroke-width="1"/>
+                    </svg><br>
                     <button id="btn-shop-spd">Boots (50g)</button>
                 </div>
-                <div style="text-align:center;">
-                    <svg width="40" height="40" viewBox="0 0 40 40"></svg><br>
-                    <button id="btn-shop-back">Back</button>
+                <div class="shop-card" style="display:flex; align-items:center; justify-content:center;">
+                    <button id="btn-shop-back" style="margin-top: 15px;">Back</button>
                 </div>
             </div>
             <div class="controls" id="train-controls" style="display: none;">
@@ -210,6 +492,257 @@
     </div>
 
     <script>
+        // === 60 FPS PARTICLES, SHOCKWAVES & ATMOSPHERIC EFFECTS ===
+        const canvas = document.getElementById('vfx-canvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        const VFX = {
+            particles: [],
+            shockwaves: [],
+            motes: [],
+            shakeIntensity: 0,
+            shakeAngle: 0,
+            glintProgress: 0,
+
+            init() {
+                // Initialize drifting atmospheric magic motes
+                for (let i = 0; i < 35; i++) {
+                    this.motes.push({
+                        x: Math.random() * width,
+                        y: Math.random() * height,
+                        vx: (Math.random() - 0.5) * 0.4,
+                        vy: -0.2 - Math.random() * 0.4,
+                        size: 1 + Math.random() * 2.5,
+                        alpha: 0.2 + Math.random() * 0.6,
+                        color: ['#ffd700', '#ff922b', '#74c0fc', '#69db7c', '#e599f7'][Math.floor(Math.random() * 5)],
+                        phase: Math.random() * Math.PI * 2
+                    });
+                }
+                this.loop();
+            },
+
+            addShake(amount) {
+                this.shakeIntensity = Math.min(25, this.shakeIntensity + amount);
+            },
+
+            addShockwave(x, y, color = '#ffd700', maxRadius = 90) {
+                this.shockwaves.push({
+                    x, y, color,
+                    radius: 4,
+                    maxRadius,
+                    speed: 4.5,
+                    life: 1.0
+                });
+            },
+
+            spawnBurst(x, y, color, count = 20, isStar = false) {
+                for (let i = 0; i < count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 1.5 + Math.random() * 6.5;
+                    const type = isStar ? 3 : (Math.random() < 0.4 ? 0 : (Math.random() < 0.7 ? 1 : 2));
+                    this.particles.push({
+                        x, y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed - (type === 1 ? 1.5 : 0),
+                        size: (type === 0) ? 2 + Math.random() * 2 : (type === 1 ? 5 + Math.random() * 7 : (type === 3 ? 4 + Math.random() * 3 : 3 + Math.random() * 3)),
+                        color,
+                        type, // 0=spark, 1=smoke/puff, 2=debris shard, 3=star
+                        rot: Math.random() * Math.PI * 2,
+                        vrot: (Math.random() - 0.5) * 0.3,
+                        life: 1.0,
+                        decay: 0.015 + Math.random() * 0.025
+                    });
+                }
+            },
+
+            loop() {
+                requestAnimationFrame(() => this.loop());
+                ctx.clearRect(0, 0, width, height);
+
+                // 1. Screen Shake logic
+                const container = document.getElementById('main-container');
+                if (this.shakeIntensity > 0.1) {
+                    const ox = (Math.random() - 0.5) * this.shakeIntensity;
+                    const oy = (Math.random() - 0.5) * this.shakeIntensity;
+                    const rot = (Math.random() - 0.5) * (this.shakeIntensity * 0.15);
+                    if (container) container.style.transform = `translate(${ox}px, ${oy}px) rotate(${rot}deg)`;
+                    this.shakeIntensity *= 0.88;
+                } else {
+                    if (container) container.style.transform = 'none';
+                    this.shakeIntensity = 0;
+                }
+
+                // 2. Render & update atmospheric motes
+                for (let m of this.motes) {
+                    m.x += m.vx + Math.sin(m.phase) * 0.3;
+                    m.y += m.vy;
+                    m.phase += 0.03;
+                    if (m.y < -10) { m.y = height + 10; m.x = Math.random() * width; }
+                    if (m.x < -10) m.x = width + 10;
+                    if (m.x > width + 10) m.x = -10;
+
+                    ctx.save();
+                    ctx.globalAlpha = m.alpha * (0.6 + Math.sin(m.phase) * 0.4);
+                    ctx.fillStyle = m.color;
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = m.color;
+                    ctx.beginPath();
+                    ctx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                // 3. Render Shockwaves
+                for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+                    const sw = this.shockwaves[i];
+                    sw.radius += sw.speed;
+                    sw.life = 1.0 - (sw.radius / sw.maxRadius);
+                    if (sw.life <= 0) {
+                        this.shockwaves.splice(i, 1);
+                        continue;
+                    }
+
+                    // Inner compression wave
+                    ctx.save();
+                    ctx.strokeStyle = sw.color;
+                    ctx.globalAlpha = sw.life * 0.8;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Outer chromatic dispersion ripple
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.globalAlpha = sw.life * 0.4;
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.arc(sw.x, sw.y, Math.max(1, sw.radius - 4), 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // 4. Render Particles
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.rot += p.vrot;
+                    p.life -= p.decay;
+
+                    if (p.type === 1) {
+                        // Smoke / Breath: expands and drifts upward
+                        p.size += 0.2;
+                        p.vy *= 0.95;
+                        p.vx *= 0.95;
+                    } else if (p.type === 2) {
+                        // Debris / Scale shards: gravity & tumbling
+                        p.vy += 0.25;
+                        p.vx *= 0.98;
+                    } else if (p.type === 0) {
+                        // Core sparks: drag
+                        p.vx *= 0.92;
+                        p.vy *= 0.92;
+                    } else if (p.type === 3) {
+                        // Stars
+                        p.vx *= 0.94;
+                        p.vy *= 0.94;
+                    }
+
+                    if (p.life <= 0) {
+                        this.particles.splice(i, 1);
+                        continue;
+                    }
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot);
+                    ctx.globalAlpha = Math.max(0, p.life);
+
+                    if (p.type === 0) {
+                        // Spark needle
+                        ctx.fillStyle = p.color;
+                        ctx.shadowBlur = 6;
+                        ctx.shadowColor = p.color;
+                        ctx.fillRect(-p.size, -p.size * 0.5, p.size * 2, p.size);
+                    } else if (p.type === 1) {
+                        // Soft smoke / breath puff
+                        ctx.fillStyle = p.color;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else if (p.type === 2) {
+                        // Faceted debris / scale shard
+                        ctx.fillStyle = p.color;
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(-p.size, -p.size);
+                        ctx.lineTo(p.size, -p.size * 0.3);
+                        ctx.lineTo(p.size * 0.5, p.size);
+                        ctx.lineTo(-p.size * 0.7, p.size * 0.8);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.stroke();
+                    } else if (p.type === 3) {
+                        // 4-point golden star
+                        ctx.fillStyle = '#ffd700';
+                        ctx.shadowBlur = 10;
+                        ctx.shadowColor = '#fff';
+                        ctx.beginPath();
+                        for (let s = 0; s < 4; s++) {
+                            ctx.rotate(Math.PI / 2);
+                            ctx.lineTo(p.size * 1.5, 0);
+                            ctx.lineTo(p.size * 0.3, p.size * 0.3);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                }
+
+                // 5. Specular Glint traversing the outer container
+                if (container) {
+                    const rect = container.getBoundingClientRect();
+                    this.glintProgress = (this.glintProgress + 0.008) % 1.0;
+                    const perimeter = (rect.width + rect.height) * 2;
+                    let dist = this.glintProgress * perimeter;
+                    let gx = rect.left, gy = rect.top;
+
+                    if (dist < rect.width) {
+                        gx = rect.left + dist;
+                        gy = rect.top;
+                    } else if (dist < rect.width + rect.height) {
+                        gx = rect.right;
+                        gy = rect.top + (dist - rect.width);
+                    } else if (dist < rect.width * 2 + rect.height) {
+                        gx = rect.right - (dist - (rect.width + rect.height));
+                        gy = rect.bottom;
+                    } else {
+                        gx = rect.left;
+                        gy = rect.bottom - (dist - (rect.width * 2 + rect.height));
+                    }
+
+                    ctx.save();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.shadowBlur = 12;
+                    ctx.shadowColor = '#ffd700';
+                    ctx.globalAlpha = 0.85;
+                    ctx.beginPath();
+                    ctx.arc(gx, gy, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+        };
+        VFX.init();
+
         const Game = {
             state: 'egg',
             element: 'None',
@@ -226,7 +759,19 @@
             battleState: null,
             eventTimeout: null,
             
-            spawnParticles(color, count, target='player') {
+            spawnParticles(color, count, target='player', isStar=false) {
+                const el = target === 'player' ? document.getElementById('player-svg') : document.getElementById('enemy-svg');
+                let cx = width / 2;
+                let cy = height / 2 - 50;
+                if (el) {
+                    const rect = el.getBoundingClientRect();
+                    cx = rect.left + rect.width / 2;
+                    cy = rect.top + rect.height / 2;
+                }
+                VFX.spawnBurst(cx, cy, color, count, isStar);
+                VFX.addShockwave(cx, cy, color, 80);
+                VFX.addShake(4);
+            },
                 const el = target === 'player' ? document.getElementById('player-svg') : document.getElementById('enemy-svg');
                 if (!el) return;
                 const rect = el.getBoundingClientRect();
