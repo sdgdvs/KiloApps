@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KChess
+**Target App:** KDragon
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KChess
 - KDragon
 - KMech
 - KAudio
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KCalendar
 - KChart
 - KChat
+- KChess
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KChess: Usability and UI issues fixed (integrated cyber-themed Help & Controls modal dialog with keyboard shortcuts table and game modes guide, added interactive top Help header button, added non-blocking toast notification system with startup welcome prompt, replaced blocking browser alerts with sleek toast feedback for FEN/PGN import/export and save/load state, and wired F1/? to Help and H to Hint in web; added ShowHelpDialog comprehensive shortcut and feature guide, updated bottom action buttons with explicit shortcut badges [Help [F1], Undo [U], Redo [Y], Save [F5], Load [F9], FEN/PGN [E]], wired F1/? to Help and H to Hint, updated window title with help hint in native C).
 - KChat: Usability and UI issues fixed (replaced blocking browser prompts and alerts with custom cybernetic Help modal dialog, Create Poll modal, Create Channel modal, and Edit Topic modal, added non-blocking toast notification system with startup welcome toast, added [1-4] channel switching hotkeys with visible numeric key badges, [P] poll, [S] stats, and [Ctrl+F] search shortcuts with backdrop-click and Escape modal dismissal in web; updated native C with ShowHelpDialog comprehensive guide, button shortcut badges [Connect [C], + Poll [P], Vote [V], Stats [S], Help [F1], Pin [P], React [R], Send [Enter], Ask AI [Ctrl+A], Save TXT [Ctrl+S]], SearchSubclassProc for Esc clear, message loop hotkeys for F1/Ctrl+1-4/Ctrl+A/Ctrl+P/Ctrl+S/Ctrl+J, and window title hint).
 - KChart: Usability and UI issues fixed (replaced blocking browser alerts with custom cybernetic Help modal dialog and non-blocking toast notification system with startup welcome toast, added [1-6] direct mode switching hotkeys with visible numeric badges, Enter key table editing navigation, Escape and backdrop-click modal dismissal, and toast feedback for presets, themes, exports, and imports in web; updated native C with ShowHelpDialog comprehensive guide, button shortcut badges [R, M, C, T, S, F1], [1-6] mode switching hotkeys, global message loop hotkey interception, and window title hint).
 - KCalendar: Usability and UI issues fixed (replaced blocking browser alerts and confirms with custom cybernetic Help modal dialog, dedicated non-blocking Delete confirmation modal, and toast notification system with startup welcome toast, added [1-4] view tab switching hotkeys with visible numeric key badges, [N] new event, [T] today, [S] stats, and [F1]/[H] shortcuts with backdrop-click modal dismissal in web; added ShowHelpDialog comprehensive shortcut and feature guide, updated button labels with shortcut badges [T, S, F1, Enter, Del], message loop hotkey interception for F1/H/T/S, and window title hint in native C).

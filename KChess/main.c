@@ -1876,6 +1876,40 @@ static void ImportFromClipboard(HWND hwnd) {
     InvalidateRect(hwnd, NULL, FALSE);
 }
 
+static void ShowHelpDialog(HWND hwnd) {
+    const char* helpText =
+        "========================================\n"
+        "  KCHESS - AI & UTILITY CHESS ENGINE\n"
+        "========================================\n\n"
+        "KEYBOARD SHORTCUTS & CONTROLS:\n"
+        "  [F1] / [?]     : Show this User Guide & Help Dialog\n"
+        "  [H]            : Calculate & Display Best AI Move Hint\n"
+        "  [F]            : Activate Time Freeze Skill (Skip AI turn / +15s Blitz)\n"
+        "  [U] / [Y]      : Undo / Redo Move (interactive move stack)\n"
+        "  [S] / [F5]     : Quick Save Game State to Disk (kchess_save.dat)\n"
+        "  [L] / [F9]     : Quick Load Game State from Disk\n"
+        "  [M]            : Switch Game Mode (Campaign / Free / Puzzle / Blitz)\n"
+        "  [P]            : Cycle AI Personality (Easy, Medium, Hard, Master)\n"
+        "  [E]            : Copy FEN Position to Clipboard\n"
+        "  [G]            : Copy PGN Move History to Clipboard\n"
+        "  [I]            : Import FEN / PGN from Clipboard\n"
+        "  [R]            : Restart Game / Advance to Next Campaign Stage\n"
+        "  [Arrows]       : Navigate board cursor\n"
+        "  [Space/Enter]  : Select piece / Execute move\n"
+        "  [Escape]       : Deselect piece\n\n"
+        "GAME MODES:\n"
+        "  * Campaign    : 20 progressive historical & tactical endgame scenarios\n"
+        "  * Free Play   : Standard chess board vs AI or 2-player pass-and-play\n"
+        "  * Puzzle Mode : Tactical checkmate and endgame challenge puzzles\n"
+        "  * Blitz Timer : 3-minute fast-paced speed chess clock\n\n"
+        "FEATURES:\n"
+        "  * Real-time ECO Opening Book detector & Encyclopedia\n"
+        "  * Material Score live advantage calculator\n"
+        "  * Kinematic shockwaves, piece animations & particle physics\n";
+
+    MessageBoxA(hwnd, helpText, "KChess - User Guide & Controls", MB_OK | MB_ICONINFORMATION);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE:
@@ -2399,13 +2433,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Skill & Utility Buttons Row at bottom
             struct Button { int x, y, w, h; char* text; } btns[7] = {
-                { 30, 740, 85, 36, "Help (H)" },
-                { 123, 740, 80, 36, "Undo (U)" },
-                { 211, 740, 80, 36, "Redo (Y)" },
-                { 299, 740, 85, 36, "Save (F5)" },
-                { 392, 740, 85, 36, "Load (F9)" },
+                { 30, 740, 85, 36, "Help [F1]" },
+                { 123, 740, 80, 36, "Undo [U]" },
+                { 211, 740, 80, 36, "Redo [Y]" },
+                { 299, 740, 85, 36, "Save [F5]" },
+                { 392, 740, 85, 36, "Load [F9]" },
                 { 485, 740, 115, 36, diffNames[aiPersonality - 1] },
-                { 608, 740, 122, 36, "FEN / PGN" }
+                { 608, 740, 122, 36, "FEN/PGN [E]" }
             };
 
             for (int i = 0; i < 7; i++) {
@@ -2442,7 +2476,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 char turnBuf[128];
                 char* lastSAN = (g_historyIndex > 0 && g_historyStack[g_historyIndex].san[0] != '\0') ? g_historyStack[g_historyIndex].san : "";
                 if (lastSAN[0] == '\0') {
-                    wsprintfA(turnBuf, "%s %s | Press F1 or H for Help", whiteTurn ? "White's Turn" : "Black's Turn", blackFrozen ? "(Black Frozen!)" : "");
+                    wsprintfA(turnBuf, "%s %s | Press F1 for Help, H for Hint", whiteTurn ? "White's Turn" : "Black's Turn", blackFrozen ? "(Black Frozen!)" : "");
                 } else {
                     wsprintfA(turnBuf, "%s %s | Last: %s", whiteTurn ? "White's Turn" : "Black's Turn", blackFrozen ? "(Black Frozen!)" : "", lastSAN);
                 }
@@ -2474,6 +2508,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 HandleSquareClick(hwnd, kbX, kbY);
                 break;
             }
+            if (wParam == VK_F1 || wParam == VK_OEM_2) { // F1 or '?' -> Comprehensive Help Dialog
+                ShowHelpDialog(hwnd);
+                break;
+            }
             if (wParam == 'R') {
                 if (gameOver && gameMode == 0 && winner == 1) {
                     if (currentStage < 20) currentStage++;
@@ -2489,14 +2527,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (wParam == 'P') {
                 aiPersonality = (aiPersonality % 4) + 1;
                 InvalidateRect(hwnd, NULL, FALSE);
-            } else if (wParam == 'H' || wParam == VK_F1) { // OPTIMAL AI HELP SKILL
+            } else if (wParam == 'H') { // OPTIMAL AI MOVE HINT
                 if (!gameOver) {
                     GetOptimalHintMove(&hintSx, &hintSy, &hintTx, &hintTy);
                     if (hintSx != -1) {
                         hintActive = 1;
                         char sanBuf[16];
                         GetSAN(hintSx, hintSy, hintTx, hintTy, board[hintSy][hintSx], board[hintTy][hintTx] != 0, sanBuf);
-                        wsprintfA(hintText, "Help (Best Move): %s", sanBuf);
+                        wsprintfA(hintText, "Hint (Best Move): %s", sanBuf);
                         MessageBeep(MB_OK);
                         InvalidateRect(hwnd, NULL, FALSE);
                     }
@@ -2639,7 +2677,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Check skill & action buttons (Y: 740..776)
             if (my >= 740 && my <= 776) {
-                if (mx >= 30 && mx <= 115) { SendMessage(hwnd, WM_KEYDOWN, 'H', 0); return 0; }
+                if (mx >= 30 && mx <= 115) { ShowHelpDialog(hwnd); return 0; }
                 if (mx >= 123 && mx <= 203) { SendMessage(hwnd, WM_KEYDOWN, 'U', 0); return 0; }
                 if (mx >= 211 && mx <= 291) { SendMessage(hwnd, WM_KEYDOWN, 'Y', 0); return 0; }
                 if (mx >= 299 && mx <= 384) { SendMessage(hwnd, WM_KEYDOWN, VK_F5, 0); return 0; }
@@ -2687,7 +2725,7 @@ void MainEntry(void) {
     DWORD style = (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN;
     RECT winRc = {0, 0, (int)(W * g_dpiScale), (int)(H * g_dpiScale)};
     AdjustWindowRect(&winRc, style, FALSE);
-    HWND hwnd = CreateWindowEx(0, "KChessApp", "KChess - AI & Utility Chess Engine", style,
+    HWND hwnd = CreateWindowEx(0, "KChessApp", "KChess - AI & Utility Chess Engine [Press F1 for Help]", style,
         CW_USEDEFAULT, CW_USEDEFAULT, winRc.right - winRc.left, winRc.bottom - winRc.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
