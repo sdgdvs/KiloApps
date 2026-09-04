@@ -6,13 +6,13 @@
     <title>KStarDredge - Asteroid Mining & Orbital Salvage Barge</title>
     <style>
         :root {
-            --bg-space: #050811;
-            --bg-panel: #0a1120;
-            --bg-panel-header: #0f1c34;
-            --border-panel: #1b355d;
-            --border-glow: #00d2ff;
+            --bg-space: #030712;
+            --bg-panel: #0b1329;
+            --bg-panel-header: #0f1c3f;
+            --border-panel: #1e3a8a;
+            --border-glow: #38bdf8;
             --text-primary: #38bdf8;
-            --text-bright: #e0f2fe;
+            --text-bright: #f0f9ff;
             --text-dim: #0284c7;
             --text-amber: #fbbf24;
             --accent-cyan: #00f0ff;
@@ -20,9 +20,9 @@
             --accent-amber: #f59e0b;
             --accent-red: #ef4444;
             --accent-purple: #c084fc;
-            --gauge-bg: #030a14;
-            --btn-bg: #0e223d;
-            --btn-hover: #193a66;
+            --gauge-bg: #020617;
+            --btn-bg: #0f2744;
+            --btn-hover: #1e40af;
             --btn-active: #0284c7;
             --font-mono: 'Consolas', 'Courier New', Courier, monospace;
         }
@@ -51,12 +51,12 @@
             display: block;
             position: absolute;
             top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), 
                         linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
             z-index: 100;
             background-size: 100% 3px, 6px 100%;
             pointer-events: none;
-            opacity: 0.6;
+            opacity: 0.55;
         }
 
         header {
@@ -82,12 +82,12 @@
 
         .header-stats {
             display: flex;
-            gap: 16px;
+            gap: 12px;
             font-size: 12px;
         }
 
         .stat-badge {
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.5);
             border: 1px solid var(--border-panel);
             padding: 3px 8px;
             border-radius: 3px;
@@ -100,8 +100,8 @@
 
         .main-container {
             display: grid;
-            grid-template-columns: 240px 1fr 260px;
-            grid-template-rows: 1fr 170px;
+            grid-template-columns: 240px 1fr 270px;
+            grid-template-rows: 1fr 180px;
             flex: 1;
             gap: 6px;
             padding: 6px;
@@ -137,8 +137,8 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            font-size: 12px;
+            gap: 9px;
+            font-size: 11px;
         }
 
         /* Viewport Canvas */
@@ -147,7 +147,7 @@
             grid-row: 1;
             display: flex;
             flex-direction: column;
-            background: #02040a;
+            background: #01040a;
             position: relative;
         }
 
@@ -171,16 +171,54 @@
             text-shadow: 0 0 5px rgba(0, 240, 255, 0.7);
         }
 
+        .radar-widget-wrap {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 130px;
+            height: 130px;
+            background: rgba(3, 7, 18, 0.85);
+            border: 1px solid var(--border-panel);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        #radarCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
         .target-reticle-info {
             position: absolute;
             bottom: 10px;
             right: 10px;
-            background: rgba(10, 17, 32, 0.85);
+            background: rgba(11, 19, 41, 0.85);
             border: 1px solid var(--border-glow);
             padding: 6px 10px;
             font-size: 11px;
             border-radius: 3px;
             pointer-events: none;
+            min-width: 200px;
+            backdrop-filter: blur(2px);
+        }
+
+        .target-bar-wrap {
+            height: 6px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--border-panel);
+            border-radius: 2px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+
+        .target-bar-fill {
+            height: 100%;
+            background: var(--accent-cyan);
+            width: 100%;
+            transition: width 0.1s ease;
         }
 
         /* Left Systems Console */
@@ -192,18 +230,18 @@
         .meter-group {
             display: flex;
             flex-direction: column;
-            gap: 3px;
+            gap: 2px;
         }
 
         .meter-label {
             display: flex;
             justify-content: space-between;
-            font-size: 11px;
+            font-size: 10px;
             color: var(--text-primary);
         }
 
         .meter-bar-wrap {
-            height: 10px;
+            height: 9px;
             background: var(--gauge-bg);
             border: 1px solid var(--border-panel);
             border-radius: 2px;
@@ -215,12 +253,29 @@
             height: 100%;
             width: 50%;
             background: var(--accent-cyan);
-            transition: width 0.2s ease;
+            transition: width 0.15s ease;
         }
 
         .meter-bar-fill.warning { background: var(--accent-amber); }
         .meter-bar-fill.danger { background: var(--accent-red); }
         .meter-bar-fill.success { background: var(--accent-emerald); }
+
+        .system-status-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-panel);
+            border-radius: 3px;
+            padding: 6px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+        }
 
         /* Right Cargo Hold Console */
         .cargo-panel {
@@ -229,9 +284,9 @@
         }
 
         .cargo-item {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.35);
             border: 1px solid var(--border-panel);
-            padding: 6px 8px;
+            padding: 5px 8px;
             border-radius: 3px;
             display: flex;
             justify-content: space-between;
@@ -241,10 +296,30 @@
         .cargo-name {
             font-weight: bold;
             color: var(--text-bright);
+            font-size: 11px;
         }
 
         .cargo-qty {
             color: var(--accent-cyan);
+            font-weight: bold;
+            font-size: 11px;
+        }
+
+        .cargo-value {
+            font-size: 9px;
+            color: var(--text-dim);
+            text-align: right;
+        }
+
+        .cargo-summary {
+            background: rgba(15, 28, 63, 0.7);
+            border: 1px solid var(--border-panel);
+            border-radius: 3px;
+            padding: 8px;
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
 
         /* Bottom Controls & Flight Panel */
@@ -252,7 +327,7 @@
             grid-column: 1 / span 2;
             grid-row: 2;
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 320px 1fr;
             gap: 6px;
             padding: 0;
             background: transparent;
@@ -262,8 +337,9 @@
         .action-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 6px;
-            padding: 8px;
+            gap: 5px;
+            padding: 6px;
+            flex: 1;
         }
 
         .btn {
@@ -271,16 +347,16 @@
             color: var(--text-bright);
             border: 1px solid var(--border-panel);
             border-radius: 3px;
-            padding: 8px 6px;
+            padding: 6px 4px;
             font-family: var(--font-mono);
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
             cursor: pointer;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 3px;
             transition: all 0.15s ease;
         }
 
@@ -294,10 +370,24 @@
             background: var(--btn-active);
         }
 
-        .btn-active-state {
+        .btn.active-laser {
+            border-color: #ff3366;
+            background: #4a0d24;
+            color: #ff99bb;
+            box-shadow: 0 0 10px rgba(255, 51, 102, 0.6);
+        }
+
+        .btn.active-tractor {
             border-color: var(--accent-cyan);
-            background: var(--btn-hover);
+            background: #06405b;
             color: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+        }
+
+        .btn.active-dampener {
+            border-color: var(--accent-emerald);
+            background: #063d2e;
+            color: #6ee7b7;
         }
 
         .terminal-panel {
@@ -307,13 +397,13 @@
 
         .log-box {
             flex: 1;
-            background: #02050b;
-            padding: 8px;
-            font-size: 11px;
+            background: #02050e;
+            padding: 6px 8px;
+            font-size: 10px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 3px;
             border: 1px solid var(--border-panel);
             border-radius: 3px;
             color: #94a3b8;
@@ -321,36 +411,43 @@
 
         .log-entry.system { color: var(--text-primary); }
         .log-entry.warning { color: var(--accent-amber); }
-        .log-entry.critical { color: var(--accent-red); }
+        .log-entry.critical { color: var(--accent-red); font-weight: bold; }
         .log-entry.success { color: var(--accent-emerald); }
         .log-entry.mining { color: var(--accent-cyan); }
+        .log-entry.cargo { color: #c084fc; }
+
+        .key-hint {
+            font-size: 8px;
+            color: #93c5fd;
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
     <header>
         <div class="brand">
             <span>☄️ KStarDredge</span>
-            <span style="font-size: 10px; color: var(--text-dim);">[Mk-IV Heavy Mining Barge]</span>
+            <span style="font-size: 10px; color: var(--text-dim);">[Mk-IV Heavy Asteroid Mining Barge]</span>
         </div>
         <div class="header-stats">
             <div class="stat-badge">SECTOR: <span id="hdrSector">Belt Alpha-09</span></div>
             <div class="stat-badge">CREDITS: <span id="hdrCredits">2,500</span> CR</div>
-            <div class="stat-badge">CARGO: <span id="hdrCargo">0</span> / <span id="hdrCargoMax">200</span> T</div>
+            <div class="stat-badge">HOLD: <span id="hdrCargo">0</span> / <span id="hdrCargoMax">200</span> T</div>
             <div class="stat-badge">HULL: <span id="hdrHull">100%</span></div>
         </div>
     </header>
 
     <div class="main-container">
-        <!-- Left: Ship Systems -->
+        <!-- Left: Ship Systems & Telemetry -->
         <div class="panel systems-panel">
             <div class="panel-header">
                 <span>BARGE TELEMETRY</span>
-                <span style="color: var(--accent-emerald);">ONLINE</span>
+                <span id="telemetryStatus" style="color: var(--accent-emerald);">ONLINE</span>
             </div>
             <div class="panel-content">
                 <div class="meter-group">
-                    <div class="meter-label"><span>REACTOR OUTPUT</span><span id="txtReactor">84%</span></div>
-                    <div class="meter-bar-wrap"><div class="meter-bar-fill" id="barReactor" style="width: 84%;"></div></div>
+                    <div class="meter-label"><span>REACTOR OUTPUT</span><span id="txtReactor">88 MW</span></div>
+                    <div class="meter-bar-wrap"><div class="meter-bar-fill" id="barReactor" style="width: 88%;"></div></div>
                 </div>
                 <div class="meter-group">
                     <div class="meter-label"><span>SHIELD INTEGRITY</span><span id="txtShield">100%</span></div>
@@ -361,32 +458,52 @@
                     <div class="meter-bar-wrap"><div class="meter-bar-fill" id="barHull" style="width: 100%;"></div></div>
                 </div>
                 <div class="meter-group">
-                    <div class="meter-label"><span>LASER CORE HEAT</span><span id="txtHeat">12%</span></div>
-                    <div class="meter-bar-wrap"><div class="meter-bar-fill" id="barHeat" style="width: 12%;"></div></div>
+                    <div class="meter-label"><span>LASER CORE HEAT</span><span id="txtHeat">0%</span></div>
+                    <div class="meter-bar-wrap"><div class="meter-bar-fill" id="barHeat" style="width: 0%;"></div></div>
                 </div>
                 <div class="meter-group">
-                    <div class="meter-label"><span>FUEL RESERVES</span><span id="txtFuel">95%</span></div>
-                    <div class="meter-bar-wrap"><div class="meter-bar-fill" id="barFuel" style="width: 95%;"></div></div>
+                    <div class="meter-label"><span>FUEL RESERVES</span><span id="txtFuel">100%</span></div>
+                    <div class="meter-bar-wrap"><div class="meter-bar-fill" id="barFuel" style="width: 100%;"></div></div>
                 </div>
                 <div class="meter-group">
-                    <div class="meter-label"><span>O2 / LIFE SUPPORT</span><span id="txtO2">99%</span></div>
-                    <div class="meter-bar-wrap"><div class="meter-bar-fill success" id="barO2" style="width: 99%;"></div></div>
+                    <div class="meter-label"><span>O2 / LIFE SUPPORT</span><span id="txtO2">100%</span></div>
+                    <div class="meter-bar-wrap"><div class="meter-bar-fill success" id="barO2" style="width: 100%;"></div></div>
+                </div>
+
+                <div class="system-status-box">
+                    <div class="status-row"><span>THRUST DAMPENERS:</span><span id="txtDampener" style="color: var(--accent-emerald);">ACTIVE</span></div>
+                    <div class="status-row"><span>MINING LASER:</span><span id="txtLaserState" style="color: var(--text-dim);">STANDBY</span></div>
+                    <div class="status-row"><span>TRACTOR BEAM:</span><span id="txtTractorState" style="color: var(--text-dim);">STANDBY</span></div>
+                    <div class="status-row"><span>POWER GRID DRAIN:</span><span id="txtPowerDrain">12.4 MW</span></div>
                 </div>
             </div>
         </div>
 
-        <!-- Center: Cockpit Viewport & Radar -->
+        <!-- Center: Cockpit Viewport & Radar Scope -->
         <div class="panel viewport-panel">
             <canvas id="viewportCanvas"></canvas>
             <div class="hud-overlay">
-                <div>RADAR SCAN: ACTIVE</div>
+                <div>RADAR SCANNER: ACTIVE (360°)</div>
                 <div>DRIFT VELOCITY: <span id="hudVelocity">0.00 km/s</span></div>
-                <div>GRID COORD: <span id="hudCoords">X: 142.8 | Y: -84.2</span></div>
+                <div>SECTOR POS: <span id="hudCoords">X: 0.0 | Y: 0.0</span></div>
+                <div>ORE TARGETS IN RANGE: <span id="hudTargetCount">0</span></div>
             </div>
+
+            <!-- Radar Mini-Scope -->
+            <div class="radar-widget-wrap">
+                <canvas id="radarCanvas" width="130" height="130"></canvas>
+            </div>
+
+            <!-- Target Reticle Overlay -->
             <div class="target-reticle-info" id="targetInfo">
-                <div>TARGET: <span style="color: var(--accent-cyan);" id="targetName">Asteroid AST-448</span></div>
-                <div>DISTANCE: <span id="targetDist">320 m</span></div>
-                <div>ORE DENSITY: <span id="targetOre">Ferrum (74%), Platinum (12%)</span></div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--accent-cyan); font-weight: bold;" id="targetName">Asteroid AST-101</span>
+                    <span id="targetDist" style="color: var(--text-dim);">145 m</span>
+                </div>
+                <div style="font-size: 10px; margin-top: 2px;">ORE: <span id="targetOre" style="color: var(--text-bright);">Ferrum (80%)</span></div>
+                <div class="target-bar-wrap">
+                    <div class="target-bar-fill" id="targetHpBar"></div>
+                </div>
             </div>
         </div>
 
@@ -398,65 +515,205 @@
             </div>
             <div class="panel-content">
                 <div class="cargo-item">
-                    <div><div class="cargo-name">Ferrum Ore</div><small style="color: var(--text-dim);">Common Metal</small></div>
-                    <div class="cargo-qty" id="qtyFerrum">0 T</div>
+                    <div>
+                        <div class="cargo-name">🔩 Ferrum Ore</div>
+                        <small style="color: var(--text-dim);">Common Metal (15 CR/T)</small>
+                    </div>
+                    <div>
+                        <div class="cargo-qty" id="qtyFerrum">0 T</div>
+                        <div class="cargo-value" id="valFerrum">0 CR</div>
+                    </div>
                 </div>
                 <div class="cargo-item">
-                    <div><div class="cargo-name">Silicates</div><small style="color: var(--text-dim);">Industrial Flux</small></div>
-                    <div class="cargo-qty" id="qtySilicates">0 T</div>
+                    <div>
+                        <div class="cargo-name">💎 Silicates</div>
+                        <small style="color: var(--text-dim);">Industrial Flux (25 CR/T)</small>
+                    </div>
+                    <div>
+                        <div class="cargo-qty" id="qtySilicates">0 T</div>
+                        <div class="cargo-value" id="valSilicates">0 CR</div>
+                    </div>
                 </div>
                 <div class="cargo-item">
-                    <div><div class="cargo-name">Platinum Vein</div><small style="color: var(--text-dim);">Precious Mineral</small></div>
-                    <div class="cargo-qty" id="qtyPlatinum">0 T</div>
+                    <div>
+                        <div class="cargo-name">🪙 Platinum Vein</div>
+                        <small style="color: var(--text-dim);">Precious Metal (75 CR/T)</small>
+                    </div>
+                    <div>
+                        <div class="cargo-qty" id="qtyPlatinum">0 T</div>
+                        <div class="cargo-value" id="valPlatinum">0 CR</div>
+                    </div>
                 </div>
                 <div class="cargo-item">
-                    <div><div class="cargo-name">Void Quartz</div><small style="color: var(--text-dim);">Resonant Crystal</small></div>
-                    <div class="cargo-qty" id="qtyQuartz">0 T</div>
+                    <div>
+                        <div class="cargo-name">🔮 Void Quartz</div>
+                        <small style="color: var(--text-dim);">Resonant Crystal (140 CR/T)</small>
+                    </div>
+                    <div>
+                        <div class="cargo-qty" id="qtyQuartz">0 T</div>
+                        <div class="cargo-value" id="valQuartz">0 CR</div>
+                    </div>
                 </div>
                 <div class="cargo-item">
-                    <div><div class="cargo-name">Dark Geode</div><small style="color: var(--text-dim);">Exotic Core</small></div>
-                    <div class="cargo-qty" id="qtyDarkMatter">0 T</div>
+                    <div>
+                        <div class="cargo-name">🌌 Dark Geode</div>
+                        <small style="color: var(--text-dim);">Exotic Matter (300 CR/T)</small>
+                    </div>
+                    <div>
+                        <div class="cargo-qty" id="qtyDarkMatter">0 T</div>
+                        <div class="cargo-value" id="valDarkMatter">0 CR</div>
+                    </div>
                 </div>
                 <div class="cargo-item">
-                    <div><div class="cargo-name">Derelict Scrap</div><small style="color: var(--text-dim);">Salvage Components</small></div>
-                    <div class="cargo-qty" id="qtyScrap">0 T</div>
+                    <div>
+                        <div class="cargo-name">⚙️ Derelict Scrap</div>
+                        <small style="color: var(--text-dim);">Salvage Components (50 CR/T)</small>
+                    </div>
+                    <div>
+                        <div class="cargo-qty" id="qtyScrap">0 T</div>
+                        <div class="cargo-value" id="valScrap">0 CR</div>
+                    </div>
+                </div>
+
+                <div class="cargo-summary">
+                    <div style="display: flex; justify-content: space-between; font-weight: bold; color: var(--text-bright);">
+                        <span>ESTIMATED VALUE:</span>
+                        <span id="cargoTotalVal" style="color: var(--accent-amber);">0 CR</span>
+                    </div>
+                    <div style="display: flex; gap: 4px; margin-top: 4px;">
+                        <button class="btn" id="btnJettison" style="flex: 1; padding: 4px;"><span>🗑️ JETTISON</span></button>
+                        <button class="btn" id="btnSellAll" style="flex: 1; padding: 4px; background: #1e3a8a;"><span>💰 LIQUIDATE</span></button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Bottom: Operations & Terminal -->
+        <!-- Bottom: Cockpit Controls & Flight Terminal -->
         <div class="controls-panel">
             <div class="panel">
                 <div class="panel-header">
-                    <span>DREDGE CONTROLS</span>
-                    <span style="font-size: 10px; color: var(--text-dim);">KEYS: WASD / SPACE / T / S</span>
+                    <span>COCKPIT CONSOLE</span>
+                    <span style="font-size: 9px; color: var(--text-dim);">CONTROLS: WASD / SPACE / T / Z</span>
                 </div>
                 <div class="action-grid">
-                    <button class="btn" id="btnLaser"><span>⚡ MINING LASER</span><small>[SPACE]</small></button>
-                    <button class="btn" id="btnTractor"><span>🧲 TRACTOR BEAM</span><small>[T]</small></button>
-                    <button class="btn" id="btnScan"><span>📡 DEEP SCAN</span><small>[S]</small></button>
-                    <button class="btn" id="btnDock"><span>🛰️ DOCK STATION</span><small>[D]</small></button>
-                    <button class="btn" id="btnRefine"><span>🔥 REFINERY LAB</span><small>[R]</small></button>
-                    <button class="btn" id="btnHelp"><span>📖 DREDGE MANUAL</span><small>[H]</small></button>
+                    <button class="btn" id="btnLaser">
+                        <span>⚡ MINING LASER</span>
+                        <span class="key-hint">[SPACE] HOLD/TOGGLE</span>
+                    </button>
+                    <button class="btn" id="btnTractor">
+                        <span>🧲 TRACTOR BEAM</span>
+                        <span class="key-hint">[T] ATTRACT ORE</span>
+                    </button>
+                    <button class="btn active-dampener" id="btnDampener">
+                        <span>🛑 INERTIA DAMPENER</span>
+                        <span class="key-hint">[Z] BRAKE DRIFT</span>
+                    </button>
+                    <button class="btn" id="btnScan">
+                        <span>📡 SECTOR SCAN</span>
+                        <span class="key-hint">[S] LOCATE ORE</span>
+                    </button>
+                    <button class="btn" id="btnAudioToggle">
+                        <span>🔊 AUDIO SYNTH</span>
+                        <span class="key-hint">[M] TOGGLE SFX</span>
+                    </button>
+                    <button class="btn" id="btnHelp">
+                        <span>📖 PILOT MANUAL</span>
+                        <span class="key-hint">[H] HOW TO FLY</span>
+                    </button>
                 </div>
             </div>
 
             <div class="panel terminal-panel">
                 <div class="panel-header">
-                    <span>FLIGHT & COMM TERMINAL</span>
-                    <span style="font-size: 10px; color: var(--text-dim);">LOG BUFFER</span>
+                    <span>FLIGHT & DREDGE TERMINAL</span>
+                    <span style="font-size: 9px; color: var(--text-dim);">BUFFER: REAL-TIME</span>
                 </div>
                 <div class="log-box" id="logBox">
-                    <div class="log-entry system">[00:00:01] KStarDredge Mk-IV onboard computer initialized.</div>
-                    <div class="log-entry system">[00:00:02] Asteroid Belt Alpha-09 gravitational lock established.</div>
-                    <div class="log-entry mining">[00:00:03] Mining laser optics calibrated. Ready for dredging operations.</div>
+                    <div class="log-entry system">[SYSTEM] KStarDredge Mk-IV cockpit operational. Core reactor online.</div>
+                    <div class="log-entry mining">[MINING] High-frequency mining laser ready. Aim at asteroids and hold [SPACE].</div>
+                    <div class="log-entry cargo">[TRACTOR] Tractor emitter active. Hold [T] to gather extracted mineral chunks.</div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Core State
+        // --- Web Audio Synthesis Engine ---
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+                this.laserOsc = null;
+                this.laserGain = null;
+                this.thrusterOsc = null;
+                this.thrusterGain = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        this.ctx = new AudioContext();
+                    }
+                }
+            }
+
+            playBeep(freq, type = 'sine', duration = 0.08, gainVal = 0.1) {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {}
+            }
+
+            playCollect() {
+                this.playBeep(587.33, 'sine', 0.06, 0.12);
+                setTimeout(() => this.playBeep(880, 'sine', 0.1, 0.15), 60);
+            }
+
+            playFracture() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(140, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.18);
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.18);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.18);
+                } catch (e) {}
+            }
+
+            playOverheat() {
+                this.playBeep(320, 'square', 0.15, 0.15);
+                setTimeout(() => this.playBeep(240, 'square', 0.2, 0.15), 160);
+            }
+        }
+
+        const audio = new SoundEngine();
+
+        // --- Core Simulation State ---
+        const ORE_TYPES = {
+            'Ferrum': { name: 'Ferrum Ore', color: '#94a3b8', value: 15, key: 'ferrum' },
+            'Silicates': { name: 'Silicates', color: '#60a5fa', value: 25, key: 'silicates' },
+            'Platinum': { name: 'Platinum Vein', color: '#e2e8f0', value: 75, key: 'platinum' },
+            'Void Quartz': { name: 'Void Quartz', color: '#c084fc', value: 140, key: 'quartz' },
+            'Dark Geode': { name: 'Dark Geode', color: '#f43f5e', value: 300, key: 'darkMatter' },
+            'Derelict Scrap': { name: 'Derelict Scrap', color: '#fbbf24', value: 50, key: 'scrap' }
+        };
+
         const state = {
             credits: 2500,
             sector: "Belt Alpha-09",
@@ -464,12 +721,16 @@
             maxHull: 100,
             shield: 100,
             maxShield: 100,
-            fuel: 95,
-            heat: 12,
-            reactor: 84,
-            o2: 99,
+            fuel: 100,
+            maxFuel: 100,
+            heat: 0,
+            maxHeat: 100,
+            reactor: 88,
+            o2: 100,
             cargo: 0,
             maxCargo: 200,
+            dampeners: true,
+            laserOverheated: false,
             cargoHold: {
                 ferrum: 0,
                 silicates: 0,
@@ -484,17 +745,29 @@
                 vx: 0,
                 vy: 0,
                 angle: -Math.PI / 2,
+                rotSpeed: 0,
                 miningActive: false,
-                tractorActive: false
+                tractorActive: false,
+                thrusting: false,
+                reversing: false,
+                strafeLeft: false,
+                strafeRight: false
             },
+            keys: {},
             asteroids: [],
-            debris: [],
-            stars: []
+            oreChunks: [],
+            particles: [],
+            floatingTexts: [],
+            stars: [],
+            selectedTarget: null,
+            radarAngle: 0
         };
 
         // DOM elements
         const canvas = document.getElementById('viewportCanvas');
         const ctx = canvas.getContext('2d');
+        const radarCanvas = document.getElementById('radarCanvas');
+        const radarCtx = radarCanvas.getContext('2d');
         const logBox = document.getElementById('logBox');
 
         function addLog(msg, type = 'system') {
@@ -504,37 +777,106 @@
             entry.textContent = `[${time}] ${msg}`;
             logBox.appendChild(entry);
             logBox.scrollTop = logBox.scrollHeight;
+            while (logBox.children.length > 40) {
+                logBox.removeChild(logBox.firstChild);
+            }
+        }
+
+        function addFloatingText(text, x, y, color = '#38bdf8') {
+            state.floatingTexts.push({
+                text,
+                x,
+                y,
+                color,
+                life: 1.0,
+                vy: -0.6
+            });
         }
 
         // Initialize Procedural Starfield & Asteroid Field
         function initField() {
-            // Stars
             state.stars = [];
-            for (let i = 0; i < 150; i++) {
+            for (let i = 0; i < 200; i++) {
                 state.stars.push({
-                    x: (Math.random() - 0.5) * 2000,
-                    y: (Math.random() - 0.5) * 2000,
-                    size: Math.random() * 1.5 + 0.5,
-                    brightness: Math.random() * 0.8 + 0.2
+                    x: (Math.random() - 0.5) * 4000,
+                    y: (Math.random() - 0.5) * 4000,
+                    size: Math.random() * 1.6 + 0.5,
+                    brightness: Math.random() * 0.7 + 0.3
                 });
             }
 
-            // Asteroids
             state.asteroids = [];
-            for (let i = 0; i < 12; i++) {
+            const oreKeys = ['Ferrum', 'Ferrum', 'Silicates', 'Silicates', 'Platinum', 'Void Quartz', 'Dark Geode', 'Derelict Scrap'];
+            for (let i = 0; i < 20; i++) {
+                spawnAsteroid(oreKeys[Math.floor(Math.random() * oreKeys.length)]);
+            }
+        }
+
+        function spawnAsteroid(specificOre = null) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 220 + Math.random() * 900;
+            const oreKeys = ['Ferrum', 'Silicates', 'Platinum', 'Void Quartz', 'Dark Geode', 'Derelict Scrap'];
+            const oreType = specificOre || oreKeys[Math.floor(Math.random() * oreKeys.length)];
+            const radius = 18 + Math.random() * 26;
+            const maxHp = Math.round(radius * 3.5);
+
+            // Generate polygon shape offsets
+            const numVerts = 8 + Math.floor(Math.random() * 4);
+            const verts = [];
+            for (let v = 0; v < numVerts; v++) {
+                const a = (v / numVerts) * Math.PI * 2;
+                const r = radius * (0.75 + Math.random() * 0.35);
+                verts.push({ a, r });
+            }
+
+            const ast = {
+                id: 'AST-' + (100 + state.asteroids.length + Math.floor(Math.random() * 800)),
+                x: state.ship.x + Math.cos(angle) * dist,
+                y: state.ship.y + Math.sin(angle) * dist,
+                vx: (Math.random() - 0.5) * 0.2,
+                vy: (Math.random() - 0.5) * 0.2,
+                radius: radius,
+                verts: verts,
+                oreType: oreType,
+                richness: Math.floor(40 + Math.random() * 60),
+                hp: maxHp,
+                maxHp: maxHp,
+                rot: Math.random() * Math.PI * 2,
+                rotSpeed: (Math.random() - 0.5) * 0.015
+            };
+            state.asteroids.push(ast);
+            return ast;
+        }
+
+        function spawnOreChunk(x, y, oreType, amount = 1) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 0.5 + Math.random() * 1.5;
+            state.oreChunks.push({
+                x: x,
+                y: y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                oreType: oreType,
+                amount: amount,
+                life: 60, // seconds
+                rot: Math.random() * Math.PI * 2,
+                rotSpeed: (Math.random() - 0.5) * 0.08
+            });
+        }
+
+        function createSparks(x, y, color = '#00f0ff', count = 5) {
+            for (let i = 0; i < count; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const dist = 120 + Math.random() * 400;
-                state.asteroids.push({
-                    id: 'AST-' + (100 + i),
-                    x: Math.cos(angle) * dist,
-                    y: Math.sin(angle) * dist,
-                    radius: 18 + Math.random() * 22,
-                    oreType: ['Ferrum', 'Silicates', 'Platinum', 'Void Quartz'][Math.floor(Math.random() * 4)],
-                    richness: Math.floor(40 + Math.random() * 60),
-                    hp: 100,
-                    maxHp: 100,
-                    rot: Math.random() * Math.PI * 2,
-                    rotSpeed: (Math.random() - 0.5) * 0.02
+                const speed = 0.8 + Math.random() * 2.2;
+                state.particles.push({
+                    x,
+                    y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    color: color,
+                    life: 1.0,
+                    decay: 0.03 + Math.random() * 0.04,
+                    size: 1.5 + Math.random() * 2
                 });
             }
         }
@@ -546,16 +888,467 @@
         }
         window.addEventListener('resize', resizeCanvas);
 
-        // Render Loop
+        // --- Keyboard & Input Listeners ---
+        window.addEventListener('keydown', (e) => {
+            audio.init();
+            state.keys[e.code] = true;
+            if (e.code === 'Space') {
+                e.preventDefault();
+                state.ship.miningActive = true;
+            }
+            if (e.code === 'KeyT') {
+                state.ship.tractorActive = !state.ship.tractorActive;
+                document.getElementById('btnTractor').classList.toggle('active-tractor', state.ship.tractorActive);
+                addLog(state.ship.tractorActive ? "Tractor emitter magnetized." : "Tractor beam offline.", "system");
+            }
+            if (e.code === 'KeyZ') {
+                state.dampeners = !state.dampeners;
+                document.getElementById('btnDampener').classList.toggle('active-dampener', state.dampeners);
+                document.getElementById('txtDampener').textContent = state.dampeners ? "ACTIVE" : "OFFLINE";
+                document.getElementById('txtDampener').style.color = state.dampeners ? "var(--accent-emerald)" : "var(--accent-amber)";
+                addLog(`Inertia dampeners ${state.dampeners ? 'engaged' : 'disengaged'}.`, 'system');
+            }
+            if (e.code === 'KeyM') {
+                audio.enabled = !audio.enabled;
+                addLog(`Audio synthesizer ${audio.enabled ? 'enabled' : 'muted'}.`, 'system');
+            }
+            if (e.code === 'KeyH') {
+                showHelpModal();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            state.keys[e.code] = false;
+            if (e.code === 'Space') {
+                state.ship.miningActive = false;
+            }
+        });
+
+        // Mouse click on viewport to target asteroid
+        canvas.addEventListener('click', (e) => {
+            audio.init();
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left - canvas.width / 2 + state.ship.x;
+            const clickY = e.clientY - rect.top - canvas.height / 2 + state.ship.y;
+
+            let closest = null;
+            let minDist = 100;
+            for (const ast of state.asteroids) {
+                const d = Math.hypot(ast.x - clickX, ast.y - clickY);
+                if (d < ast.radius + 20 && d < minDist) {
+                    closest = ast;
+                    minDist = d;
+                }
+            }
+            if (closest) {
+                state.selectedTarget = closest;
+                audio.playBeep(640, 'sine', 0.05, 0.08);
+                addLog(`Target locked: ${closest.id} [${closest.oreType}]`, 'system');
+            }
+        });
+
+        // UI Button Event Handlers
+        document.getElementById('btnLaser').addEventListener('click', () => {
+            audio.init();
+            state.ship.miningActive = !state.ship.miningActive;
+            addLog(state.ship.miningActive ? "Mining laser firing." : "Mining laser paused.", "mining");
+        });
+
+        document.getElementById('btnTractor').addEventListener('click', () => {
+            audio.init();
+            state.ship.tractorActive = !state.ship.tractorActive;
+            document.getElementById('btnTractor').classList.toggle('active-tractor', state.ship.tractorActive);
+            addLog(state.ship.tractorActive ? "Tractor beam engaged." : "Tractor beam standby.", "system");
+        });
+
+        document.getElementById('btnDampener').addEventListener('click', () => {
+            state.dampeners = !state.dampeners;
+            document.getElementById('btnDampener').classList.toggle('active-dampener', state.dampeners);
+            document.getElementById('txtDampener').textContent = state.dampeners ? "ACTIVE" : "OFFLINE";
+            document.getElementById('txtDampener').style.color = state.dampeners ? "var(--accent-emerald)" : "var(--accent-amber)";
+            addLog(`Inertial dampeners ${state.dampeners ? 'active' : 'disabled'}.`, 'system');
+        });
+
+        document.getElementById('btnScan').addEventListener('click', () => {
+            audio.init();
+            audio.playBeep(720, 'triangle', 0.12, 0.15);
+            const found = state.asteroids.length;
+            addLog(`Deep sweep complete: ${found} mineral asteroids registered in local sector.`, 'system');
+        });
+
+        document.getElementById('btnAudioToggle').addEventListener('click', () => {
+            audio.init();
+            audio.enabled = !audio.enabled;
+            addLog(`Audio synthesizer ${audio.enabled ? 'unmuted' : 'muted'}.`, 'system');
+        });
+
+        document.getElementById('btnHelp').addEventListener('click', () => {
+            showHelpModal();
+        });
+
+        document.getElementById('btnJettison').addEventListener('click', () => {
+            if (state.cargo === 0) {
+                addLog("Cargo hold is already empty.", "warning");
+                return;
+            }
+            for (const k in state.cargoHold) state.cargoHold[k] = 0;
+            state.cargo = 0;
+            updateCargoUI();
+            addLog("Cargo hold purged into void space.", "critical");
+        });
+
+        document.getElementById('btnSellAll').addEventListener('click', () => {
+            const totalVal = calculateCargoValue();
+            if (totalVal <= 0) {
+                addLog("No minerals in hold to liquidate.", "warning");
+                return;
+            }
+            state.credits += totalVal;
+            addFloatingText(`+${totalVal} CR`, state.ship.x, state.ship.y - 30, '#f59e0b');
+            audio.playCollect();
+            for (const k in state.cargoHold) state.cargoHold[k] = 0;
+            state.cargo = 0;
+            updateCargoUI();
+            document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+            addLog(`Transferred minerals to orbital station comm-link for ${totalVal.toLocaleString()} CR.`, 'success');
+        });
+
+        function calculateCargoValue() {
+            let total = 0;
+            for (const key in ORE_TYPES) {
+                const info = ORE_TYPES[key];
+                const qty = state.cargoHold[info.key] || 0;
+                total += qty * info.value;
+            }
+            return total;
+        }
+
+        function updateCargoUI() {
+            let totalTonnage = 0;
+            for (const key in ORE_TYPES) {
+                const info = ORE_TYPES[key];
+                const qty = state.cargoHold[info.key] || 0;
+                totalTonnage += qty;
+                const qtyElem = document.getElementById(`qty${info.key.charAt(0).toUpperCase() + info.key.slice(1)}`);
+                const valElem = document.getElementById(`val${info.key.charAt(0).toUpperCase() + info.key.slice(1)}`);
+                if (qtyElem) qtyElem.textContent = `${qty} T`;
+                if (valElem) valElem.textContent = `${(qty * info.value).toLocaleString()} CR`;
+            }
+            state.cargo = totalTonnage;
+            document.getElementById('hdrCargo').textContent = state.cargo;
+            document.getElementById('cargoCapDisplay').textContent = `${state.cargo} / ${state.maxCargo} T`;
+            document.getElementById('cargoTotalVal').textContent = `${calculateCargoValue().toLocaleString()} CR`;
+        }
+
+        function showHelpModal() {
+            addLog("=== DREDGER FLIGHT MANUAL ===", "system");
+            addLog("• W / UP ARROW: Forward Fusion Thrusters", "system");
+            addLog("• S / DOWN ARROW: Retro Braking Thrusters", "system");
+            addLog("• A / D / LEFT / RIGHT: Pivot Mining Barge Heading", "system");
+            addLog("• SPACEBAR: Fire Heavy Mining Laser at Asteroids", "system");
+            addLog("• T: Toggle Tractor Beam to collect floating ore chunks", "system");
+            addLog("• Z: Toggle Inertial Dampeners", "system");
+            addLog("• CLICK: Target asteroid with telemetry computer", "system");
+        }
+
+        // --- Main Simulation Update Step ---
+        function update(dt) {
+            // Steering & Rotation
+            const rotAccel = 0.045;
+            if (state.keys['KeyA'] || state.keys['ArrowLeft']) {
+                state.ship.angle -= rotAccel;
+            }
+            if (state.keys['KeyD'] || state.keys['ArrowRight']) {
+                state.ship.angle += rotAccel;
+            }
+
+            // Main & Retro Thrusters
+            const thrustPower = 0.12;
+            state.ship.thrusting = (state.keys['KeyW'] || state.keys['ArrowUp']);
+            state.ship.reversing = (state.keys['KeyS'] || state.keys['ArrowDown']);
+
+            if (state.ship.thrusting) {
+                if (state.fuel > 0) {
+                    state.ship.vx += Math.cos(state.ship.angle) * thrustPower;
+                    state.ship.vy += Math.sin(state.ship.angle) * thrustPower;
+                    state.fuel = Math.max(0, state.fuel - 0.04);
+                    // Exhaust particles
+                    const exAngle = state.ship.angle + Math.PI + (Math.random() - 0.5) * 0.4;
+                    state.particles.push({
+                        x: state.ship.x - Math.cos(state.ship.angle) * 18,
+                        y: state.ship.y - Math.sin(state.ship.angle) * 18,
+                        vx: Math.cos(exAngle) * (2 + Math.random() * 2),
+                        vy: Math.sin(exAngle) * (2 + Math.random() * 2),
+                        color: Math.random() > 0.3 ? '#00f0ff' : '#38bdf8',
+                        life: 0.8,
+                        decay: 0.05,
+                        size: 2.5
+                    });
+                }
+            }
+
+            if (state.ship.reversing) {
+                if (state.fuel > 0) {
+                    state.ship.vx -= Math.cos(state.ship.angle) * (thrustPower * 0.5);
+                    state.ship.vy -= Math.sin(state.ship.angle) * (thrustPower * 0.5);
+                    state.fuel = Math.max(0, state.fuel - 0.02);
+                }
+            }
+
+            // Inertia Dampeners
+            if (state.dampeners && !state.ship.thrusting && !state.ship.reversing) {
+                state.ship.vx *= 0.96;
+                state.ship.vy *= 0.96;
+            }
+
+            // Cap maximum speed
+            const speed = Math.hypot(state.ship.vx, state.ship.vy);
+            const maxSpeed = 6.0;
+            if (speed > maxSpeed) {
+                state.ship.vx = (state.ship.vx / speed) * maxSpeed;
+                state.ship.vy = (state.ship.vy / speed) * maxSpeed;
+            }
+
+            state.ship.x += state.ship.vx;
+            state.ship.y += state.ship.vy;
+
+            // Passive Reactor & Heat Dissipation
+            if (state.ship.miningActive && !state.laserOverheated) {
+                state.heat += 0.45;
+                if (state.heat >= state.maxHeat) {
+                    state.laserOverheated = true;
+                    state.heat = 100;
+                    audio.playOverheat();
+                    addLog("⚠️ CRITICAL: Laser optics overheated! Emergency cooldown triggered.", "critical");
+                }
+            } else {
+                state.heat = Math.max(0, state.heat - 0.25);
+                if (state.laserOverheated && state.heat < 25) {
+                    state.laserOverheated = false;
+                    addLog("Laser cooling cycle complete. Optics online.", "success");
+                }
+            }
+
+            // Mining Laser Raycasting & Impact
+            let powerDraw = 12.0;
+            if (state.ship.miningActive && !state.laserOverheated) {
+                powerDraw += 28.0;
+                const laserRange = 240;
+                const lx = state.ship.x + Math.cos(state.ship.angle) * 20;
+                const ly = state.ship.y + Math.sin(state.ship.angle) * 20;
+                const dirX = Math.cos(state.ship.angle);
+                const dirY = Math.sin(state.ship.angle);
+
+                // Check collision with asteroids along laser beam
+                for (let i = state.asteroids.length - 1; i >= 0; i--) {
+                    const ast = state.asteroids[i];
+                    const toAstX = ast.x - lx;
+                    const toAstY = ast.y - ly;
+                    const proj = toAstX * dirX + toAstY * dirY;
+
+                    if (proj > 0 && proj < laserRange) {
+                        const perpX = toAstX - dirX * proj;
+                        const perpY = toAstY - dirY * proj;
+                        const distToBeam = Math.hypot(perpX, perpY);
+
+                        if (distToBeam < ast.radius) {
+                            // Laser hit asteroid!
+                            const impactX = lx + dirX * proj;
+                            const impactY = ly + dirY * proj;
+                            createSparks(impactX, impactY, '#00f0ff', 2);
+                            ast.hp -= 0.5;
+
+                            if (Math.random() < 0.12) {
+                                audio.playFracture();
+                                const oreInfo = ORE_TYPES[ast.oreType];
+                                spawnOreChunk(impactX, impactY, ast.oreType, 1);
+                                addFloatingText(`+1 ${ast.oreType}`, impactX, impactY - 10, oreInfo ? oreInfo.color : '#38bdf8');
+                            }
+
+                            // Asteroid shattered completely
+                            if (ast.hp <= 0) {
+                                audio.playFracture();
+                                addLog(`Asteroid ${ast.id} fractured into rich mineral fragments!`, 'mining');
+                                createSparks(ast.x, ast.y, '#f59e0b', 20);
+                                for (let c = 0; c < 4 + Math.floor(Math.random() * 3); c++) {
+                                    spawnOreChunk(ast.x + (Math.random() - 0.5) * 20, ast.y + (Math.random() - 0.5) * 20, ast.oreType, 1);
+                                }
+                                state.asteroids.splice(i, 1);
+                                if (state.selectedTarget === ast) state.selectedTarget = null;
+                                // Spawn replacement asteroid in distant sector
+                                setTimeout(() => spawnAsteroid(), 3000);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Tractor Beam Logic
+            if (state.ship.tractorActive) {
+                powerDraw += 14.0;
+                const tractorRange = 320;
+                for (let i = state.oreChunks.length - 1; i >= 0; i--) {
+                    const chunk = state.oreChunks[i];
+                    const dx = state.ship.x - chunk.x;
+                    const dy = state.ship.y - chunk.y;
+                    const dist = Math.hypot(dx, dy);
+
+                    if (dist < tractorRange) {
+                        // Pull chunk towards ship
+                        const pullForce = 2.2 / Math.max(1, dist * 0.05);
+                        chunk.vx += (dx / dist) * pullForce;
+                        chunk.vy += (dy / dist) * pullForce;
+                        chunk.vx *= 0.94;
+                        chunk.vy *= 0.94;
+                    }
+                }
+            }
+
+            // Update Ore Chunks & Cargo Scoop Collision
+            const scoopRadius = 24;
+            for (let i = state.oreChunks.length - 1; i >= 0; i--) {
+                const chunk = state.oreChunks[i];
+                chunk.x += chunk.vx;
+                chunk.y += chunk.vy;
+                chunk.rot += chunk.rotSpeed;
+                chunk.life -= dt;
+
+                const distToShip = Math.hypot(state.ship.x - chunk.x, state.ship.y - chunk.y);
+                if (distToShip < scoopRadius) {
+                    // Scoop into cargo hold!
+                    if (state.cargo < state.maxCargo) {
+                        const oreInfo = ORE_TYPES[chunk.oreType];
+                        if (oreInfo) {
+                            state.cargoHold[oreInfo.key] = (state.cargoHold[oreInfo.key] || 0) + chunk.amount;
+                            audio.playCollect();
+                            addFloatingText(`+${chunk.amount}T ${chunk.oreType}`, state.ship.x, state.ship.y - 20, oreInfo.color);
+                            addLog(`Scooped ${chunk.amount}T of ${chunk.oreType} into ore hold.`, 'cargo');
+                            updateCargoUI();
+                        }
+                    } else {
+                        addLog("⚠️ Cargo hold FULL! Cannot scoop ore.", "warning");
+                    }
+                    state.oreChunks.splice(i, 1);
+                    continue;
+                }
+
+                if (chunk.life <= 0) {
+                    state.oreChunks.splice(i, 1);
+                }
+            }
+
+            // Ship Asteroid Collisions
+            for (const ast of state.asteroids) {
+                ast.x += ast.vx;
+                ast.y += ast.vy;
+                ast.rot += ast.rotSpeed;
+
+                const dist = Math.hypot(state.ship.x - ast.x, state.ship.y - ast.y);
+                const minDist = ast.radius + 14;
+                if (dist < minDist) {
+                    // Bounce off
+                    const angle = Math.atan2(state.ship.y - ast.y, state.ship.x - ast.x);
+                    state.ship.vx += Math.cos(angle) * 1.5;
+                    state.ship.vy += Math.sin(angle) * 1.5;
+                    // Kinetic impact on shield / hull
+                    if (state.shield > 0) {
+                        state.shield = Math.max(0, state.shield - 8);
+                    } else {
+                        state.hull = Math.max(0, state.hull - 5);
+                    }
+                    createSparks(state.ship.x, state.ship.y, '#ef4444', 8);
+                    audio.playFracture();
+                    addLog(`COLLISION WARNING with ${ast.id}! Shield absorbed impact.`, 'warning');
+                }
+            }
+
+            // Shield regeneration
+            if (state.shield < state.maxShield) {
+                state.shield = Math.min(state.maxShield, state.shield + 0.05);
+            }
+
+            // Auto-Target Closest Asteroid if none selected
+            if (!state.selectedTarget || !state.asteroids.includes(state.selectedTarget)) {
+                let closest = null;
+                let minDist = 600;
+                for (const ast of state.asteroids) {
+                    const d = Math.hypot(ast.x - state.ship.x, ast.y - state.ship.y);
+                    if (d < minDist) {
+                        closest = ast;
+                        minDist = d;
+                    }
+                }
+                state.selectedTarget = closest;
+            }
+
+            // Update Particles & Floating Text
+            for (let i = state.particles.length - 1; i >= 0; i--) {
+                const p = state.particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= p.decay;
+                if (p.life <= 0) state.particles.splice(i, 1);
+            }
+
+            for (let i = state.floatingTexts.length - 1; i >= 0; i--) {
+                const ft = state.floatingTexts[i];
+                ft.y += ft.vy;
+                ft.life -= 0.02;
+                if (ft.life <= 0) state.floatingTexts.splice(i, 1);
+            }
+
+            // Update UI Gauges
+            document.getElementById('barHeat').style.width = `${state.heat}%`;
+            document.getElementById('txtHeat').textContent = `${Math.round(state.heat)}%`;
+            document.getElementById('barHeat').className = `meter-bar-fill ${state.heat > 80 ? 'danger' : (state.heat > 50 ? 'warning' : '')}`;
+
+            document.getElementById('barShield').style.width = `${state.shield}%`;
+            document.getElementById('txtShield').textContent = `${Math.round(state.shield)}%`;
+
+            document.getElementById('barHull').style.width = `${state.hull}%`;
+            document.getElementById('txtHull').textContent = `${Math.round(state.hull)}%`;
+
+            document.getElementById('barFuel').style.width = `${state.fuel}%`;
+            document.getElementById('txtFuel').textContent = `${Math.round(state.fuel)}%`;
+
+            document.getElementById('txtPowerDrain').textContent = `${powerDraw.toFixed(1)} MW`;
+            document.getElementById('txtLaserState').textContent = state.laserOverheated ? "OVERHEATED" : (state.ship.miningActive ? "FIRING" : "STANDBY");
+            document.getElementById('txtLaserState').style.color = state.laserOverheated ? "var(--accent-red)" : (state.ship.miningActive ? "var(--accent-cyan)" : "var(--text-dim)");
+
+            document.getElementById('txtTractorState').textContent = state.ship.tractorActive ? "ENGAGED" : "STANDBY";
+            document.getElementById('txtTractorState').style.color = state.ship.tractorActive ? "var(--accent-cyan)" : "var(--text-dim)";
+
+            // Update HUD Readouts
+            document.getElementById('hudVelocity').textContent = `${speed.toFixed(2)} km/s`;
+            document.getElementById('hudCoords').textContent = `X: ${(state.ship.x * 0.1).toFixed(1)} | Y: ${(state.ship.y * 0.1).toFixed(1)}`;
+            document.getElementById('hudTargetCount').textContent = state.asteroids.length;
+
+            if (state.selectedTarget) {
+                document.getElementById('targetInfo').style.display = 'block';
+                document.getElementById('targetName').textContent = state.selectedTarget.id;
+                const d = Math.round(Math.hypot(state.selectedTarget.x - state.ship.x, state.selectedTarget.y - state.ship.y));
+                document.getElementById('targetDist').textContent = `${d} m`;
+                document.getElementById('targetOre').textContent = `${state.selectedTarget.oreType} (${state.selectedTarget.richness}%)`;
+                const hpPct = Math.max(0, Math.min(100, (state.selectedTarget.hp / state.selectedTarget.maxHp) * 100));
+                document.getElementById('targetHpBar').style.width = `${hpPct}%`;
+            } else {
+                document.getElementById('targetInfo').style.display = 'none';
+            }
+
+            document.getElementById('btnLaser').classList.toggle('active-laser', state.ship.miningActive && !state.laserOverheated);
+        }
+
+        // --- Render Viewport Canvas ---
         function render() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
 
-            // Draw Stars
+            // Background Deep Space Stars
             ctx.save();
-            ctx.translate(cx - state.ship.x * 0.2, cy - state.ship.y * 0.2);
+            ctx.translate(cx - state.ship.x * 0.15, cy - state.ship.y * 0.15);
             for (const s of state.stars) {
                 ctx.fillStyle = `rgba(224, 242, 254, ${s.brightness})`;
                 ctx.beginPath();
@@ -564,35 +1357,92 @@
             }
             ctx.restore();
 
-            // Draw Asteroids
+            // World Space Coordinate Frame
             ctx.save();
             ctx.translate(cx - state.ship.x, cy - state.ship.y);
+
+            // Tractor Beam Flux Waves
+            if (state.ship.tractorActive) {
+                const tractorRange = 320;
+                ctx.save();
+                ctx.translate(state.ship.x, state.ship.y);
+                ctx.rotate(state.ship.angle);
+                ctx.strokeStyle = 'rgba(0, 240, 255, 0.25)';
+                ctx.fillStyle = 'rgba(0, 240, 255, 0.04)';
+                ctx.lineWidth = 1.5;
+
+                ctx.beginPath();
+                ctx.moveTo(15, 0);
+                ctx.arc(0, 0, tractorRange, -Math.PI / 4, Math.PI / 4);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Concentric ripples
+                const timePulse = (Date.now() * 0.003) % 1;
+                for (let r = 0; r < 3; r++) {
+                    const arcRadius = 40 + ((timePulse + r / 3) % 1) * (tractorRange - 40);
+                    ctx.beginPath();
+                    ctx.arc(0, 0, arcRadius, -Math.PI / 4, Math.PI / 4);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
+
+            // Mining Laser Beam
+            if (state.ship.miningActive && !state.laserOverheated) {
+                const laserRange = 240;
+                const lx = state.ship.x + Math.cos(state.ship.angle) * 20;
+                const ly = state.ship.y + Math.sin(state.ship.angle) * 20;
+                const endX = lx + Math.cos(state.ship.angle) * laserRange;
+                const endY = ly + Math.sin(state.ship.angle) * laserRange;
+
+                // Main Core Beam
+                ctx.save();
+                ctx.strokeStyle = '#00f0ff';
+                ctx.lineWidth = 3 + Math.sin(Date.now() * 0.05) * 1.5;
+                ctx.shadowColor = '#00f0ff';
+                ctx.shadowBlur = 12;
+                ctx.beginPath();
+                ctx.moveTo(lx, ly);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+
+                // Inner hot white core
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(lx, ly);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // Render Asteroids
             for (const ast of state.asteroids) {
-                ast.rot += ast.rotSpeed;
                 ctx.save();
                 ctx.translate(ast.x, ast.y);
                 ctx.rotate(ast.rot);
 
                 // Asteroid Body
-                ctx.strokeStyle = '#38bdf8';
-                ctx.fillStyle = '#0f172a';
-                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = (ast === state.selectedTarget) ? '#00f0ff' : '#38bdf8';
+                ctx.fillStyle = '#0a152d';
+                ctx.lineWidth = (ast === state.selectedTarget) ? 2 : 1.2;
                 ctx.beginPath();
-                const points = 7;
-                for (let p = 0; p < points; p++) {
-                    const a = (p / points) * Math.PI * 2;
-                    const r = ast.radius * (0.8 + 0.2 * Math.sin(p * 2));
-                    const px = Math.cos(a) * r;
-                    const py = Math.sin(a) * r;
-                    if (p === 0) ctx.moveTo(px, py);
+                for (let i = 0; i < ast.verts.length; i++) {
+                    const v = ast.verts[i];
+                    const px = Math.cos(v.a) * v.r;
+                    const py = Math.sin(v.a) * v.r;
+                    if (i === 0) ctx.moveTo(px, py);
                     else ctx.lineTo(px, py);
                 }
                 ctx.closePath();
                 ctx.fill();
                 ctx.stroke();
 
-                // Ore core glow
-                ctx.fillStyle = ast.oreType === 'Platinum' ? '#c084fc' : (ast.oreType === 'Void Quartz' ? '#00f0ff' : '#f59e0b');
+                // Ore Mineral Glow Node
+                const oreInfo = ORE_TYPES[ast.oreType];
+                ctx.fillStyle = oreInfo ? oreInfo.color : '#38bdf8';
                 ctx.beginPath();
                 ctx.arc(0, 0, 4, 0, Math.PI * 2);
                 ctx.fill();
@@ -602,79 +1452,192 @@
                 // Asteroid Label
                 ctx.fillStyle = '#94a3b8';
                 ctx.font = '10px monospace';
-                ctx.fillText(`${ast.id} [${ast.oreType}]`, ast.x - 25, ast.y - ast.radius - 6);
+                ctx.textAlign = 'center';
+                ctx.fillText(`${ast.id} [${ast.oreType}]`, ast.x, ast.y - ast.radius - 8);
+
+                // Target Lock Box
+                if (ast === state.selectedTarget) {
+                    ctx.strokeStyle = 'rgba(0, 240, 255, 0.7)';
+                    ctx.lineWidth = 1;
+                    const bSize = ast.radius + 10;
+                    ctx.strokeRect(ast.x - bSize, ast.y - bSize, bSize * 2, bSize * 2);
+                }
             }
 
-            // Draw Ship (Center)
+            // Render Floating Ore Chunks
+            for (const chunk of state.oreChunks) {
+                ctx.save();
+                ctx.translate(chunk.x, chunk.y);
+                ctx.rotate(chunk.rot);
+                const oreInfo = ORE_TYPES[chunk.oreType];
+                ctx.fillStyle = oreInfo ? oreInfo.color : '#38bdf8';
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(0, -5);
+                ctx.lineTo(5, 0);
+                ctx.lineTo(0, 5);
+                ctx.lineTo(-5, 0);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // Render Sparks & Engine Particles
+            for (const p of state.particles) {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1.0;
+
+            // Render Floating Text
+            ctx.font = 'bold 11px monospace';
+            ctx.textAlign = 'center';
+            for (const ft of state.floatingTexts) {
+                ctx.fillStyle = ft.color;
+                ctx.globalAlpha = ft.life;
+                ctx.fillText(ft.text, ft.x, ft.y);
+            }
+            ctx.globalAlpha = 1.0;
+
             ctx.restore();
+
+            // Render Dredge Ship (Cockpit Center)
             ctx.save();
             ctx.translate(cx, cy);
             ctx.rotate(state.ship.angle);
 
-            // Mining Beam if active
-            if (state.ship.miningActive) {
-                ctx.strokeStyle = '#00f0ff';
-                ctx.lineWidth = 3;
-                ctx.shadowColor = '#00f0ff';
-                ctx.shadowBlur = 10;
+            // Shield Bubble
+            if (state.shield > 0) {
+                ctx.strokeStyle = `rgba(56, 189, 248, ${(state.shield / 100) * 0.4})`;
+                ctx.lineWidth = 1.5;
                 ctx.beginPath();
-                ctx.moveTo(18, 0);
-                ctx.lineTo(120, 0);
+                ctx.arc(0, 0, 28, 0, Math.PI * 2);
                 ctx.stroke();
-                ctx.shadowBlur = 0;
             }
 
-            // Ship Hull (Barge)
-            ctx.fillStyle = '#1e293b';
+            // Ship Hull (Industrial Heavy Mining Barge)
+            ctx.fillStyle = '#111e38';
             ctx.strokeStyle = '#00f0ff';
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.moveTo(18, 0);
-            ctx.lineTo(-12, -14);
-            ctx.lineTo(-18, -8);
-            ctx.lineTo(-18, 8);
-            ctx.lineTo(-12, 14);
+            ctx.moveTo(22, 0);          // Nose mining ram
+            ctx.lineTo(-8, -16);        // Port wing
+            ctx.lineTo(-20, -12);       // Port thruster
+            ctx.lineTo(-16, 0);         // Center rear cargo intake
+            ctx.lineTo(-20, 12);        // Starboard thruster
+            ctx.lineTo(-8, 16);         // Starboard wing
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
 
-            // Cockpit Glow
+            // Cockpit Bridge Glass
             ctx.fillStyle = '#38bdf8';
             ctx.beginPath();
             ctx.arc(4, 0, 4, 0, Math.PI * 2);
             ctx.fill();
 
+            // Tractor Beam Emitter Node
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillRect(16, -2, 6, 4);
+
             ctx.restore();
 
-            requestAnimationFrame(render);
+            // --- Render Radar Mini-Scope ---
+            renderRadar();
         }
 
-        // Setup Controls
-        document.getElementById('btnLaser').addEventListener('click', () => {
-            state.ship.miningActive = !state.ship.miningActive;
-            document.getElementById('btnLaser').classList.toggle('btn-active-state', state.ship.miningActive);
-            addLog(state.ship.miningActive ? "Mining laser ignited." : "Mining laser disengaged.", "mining");
-        });
+        // Render Circular Mini-Radar
+        function renderRadar() {
+            radarCtx.clearRect(0, 0, radarCanvas.width, radarCanvas.height);
+            const rcx = radarCanvas.width / 2;
+            const rcy = radarCanvas.height / 2;
+            const rRadius = rcx - 2;
 
-        document.getElementById('btnTractor').addEventListener('click', () => {
-            state.ship.tractorActive = !state.ship.tractorActive;
-            document.getElementById('btnTractor').classList.toggle('btn-active-state', state.ship.tractorActive);
-            addLog(state.ship.tractorActive ? "Tractor beam emitter activated." : "Tractor beam offline.", "system");
-        });
+            // Background & Grid
+            radarCtx.fillStyle = '#030816';
+            radarCtx.beginPath();
+            radarCtx.arc(rcx, rcy, rRadius, 0, Math.PI * 2);
+            radarCtx.fill();
 
-        document.getElementById('btnScan').addEventListener('click', () => {
-            addLog("Deep sector scan completed. 12 mineral-bearing asteroids detected.", "system");
-        });
+            radarCtx.strokeStyle = '#1e3a8a';
+            radarCtx.lineWidth = 1;
+            radarCtx.beginPath();
+            radarCtx.arc(rcx, rcy, rRadius * 0.33, 0, Math.PI * 2);
+            radarCtx.arc(rcx, rcy, rRadius * 0.66, 0, Math.PI * 2);
+            radarCtx.arc(rcx, rcy, rRadius * 0.98, 0, Math.PI * 2);
+            radarCtx.moveTo(rcx, 2); radarCtx.lineTo(rcx, radarCanvas.height - 2);
+            radarCtx.moveTo(2, rcy); radarCtx.lineTo(radarCanvas.width - 2, rcy);
+            radarCtx.stroke();
 
-        document.getElementById('btnHelp').addEventListener('click', () => {
-            addLog("DREDGE MANUAL: Use WASD to maneuver barge, SPACE to fire mining laser, T for tractor beam.", "system");
-        });
+            // Radar Sweep Line
+            state.radarAngle = (state.radarAngle + 0.04) % (Math.PI * 2);
+            radarCtx.strokeStyle = 'rgba(0, 240, 255, 0.6)';
+            radarCtx.beginPath();
+            radarCtx.moveTo(rcx, rcy);
+            radarCtx.lineTo(rcx + Math.cos(state.radarAngle) * rRadius, rcy + Math.sin(state.radarAngle) * rRadius);
+            radarCtx.stroke();
 
-        // Initialize
+            // Asteroid Blips on Radar
+            const radarScale = 0.07;
+            for (const ast of state.asteroids) {
+                const dx = (ast.x - state.ship.x) * radarScale;
+                const dy = (ast.y - state.ship.y) * radarScale;
+                const dist = Math.hypot(dx, dy);
+
+                if (dist < rRadius - 4) {
+                    radarCtx.fillStyle = (ast === state.selectedTarget) ? '#00f0ff' : '#f59e0b';
+                    radarCtx.beginPath();
+                    radarCtx.arc(rcx + dx, rcy + dy, (ast === state.selectedTarget) ? 3 : 2, 0, Math.PI * 2);
+                    radarCtx.fill();
+                }
+            }
+
+            // Ore Chunks Blips
+            for (const chunk of state.oreChunks) {
+                const dx = (chunk.x - state.ship.x) * radarScale;
+                const dy = (chunk.y - state.ship.y) * radarScale;
+                const dist = Math.hypot(dx, dy);
+                if (dist < rRadius - 4) {
+                    radarCtx.fillStyle = '#10b981';
+                    radarCtx.fillRect(rcx + dx - 1, rcy + dy - 1, 2, 2);
+                }
+            }
+
+            // Center Ship Blip & Heading
+            radarCtx.fillStyle = '#38bdf8';
+            radarCtx.beginPath();
+            radarCtx.arc(rcx, rcy, 2.5, 0, Math.PI * 2);
+            radarCtx.fill();
+
+            radarCtx.strokeStyle = '#38bdf8';
+            radarCtx.beginPath();
+            radarCtx.moveTo(rcx, rcy);
+            radarCtx.lineTo(rcx + Math.cos(state.ship.angle) * 9, rcy + Math.sin(state.ship.angle) * 9);
+            radarCtx.stroke();
+        }
+
+        // --- Main Animation Loop ---
+        let lastTime = performance.now();
+        function gameLoop(now) {
+            const dt = (now - lastTime) / 1000;
+            lastTime = now;
+
+            update(dt);
+            render();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Initialize and Start
         initField();
         resizeCanvas();
-        requestAnimationFrame(render);
-        addLog("KStarDredge system ready.", "success");
+        updateCargoUI();
+        requestAnimationFrame(gameLoop);
     </script>
 </body>
 </html>
