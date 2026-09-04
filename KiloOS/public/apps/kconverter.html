@@ -1003,10 +1003,35 @@
       { token: 'torr', cat: 'pressure', key: 'mmhg', dim: 'Pressure [M · L⁻¹ · T⁻²]' }
     ];
 
+    function safeGetStorage(key, fallback) {
+      try {
+        const v = localStorage.getItem(key);
+        return v ? JSON.parse(v) : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function safeSetStorage(key, val) {
+      try {
+        localStorage.setItem(key, JSON.stringify(val));
+      } catch (e) {
+        console.warn('localStorage write failed:', e);
+      }
+    }
+
+    function safeRemoveStorage(key) {
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {
+        console.warn('localStorage remove failed:', e);
+      }
+    }
+
     let currentCategory = 'length';
-    let favorites = JSON.parse(localStorage.getItem('kconv_favs') || '[]');
-    let customUnits = JSON.parse(localStorage.getItem('kconv_custom_units') || '[]');
-    let historyLog = JSON.parse(localStorage.getItem('kconv_history') || '[]');
+    let favorites = safeGetStorage('kconv_favs', []);
+    let customUnits = safeGetStorage('kconv_custom_units', []);
+    let historyLog = safeGetStorage('kconv_history', []);
 
     function escapeHTML(str) {
       if (str === null || str === undefined) return '';
@@ -1111,7 +1136,31 @@
 
     function copyToClipboard(text) {
       if (!text) return;
-      navigator.clipboard.writeText(text).then(() => showToast('📋 Copied to clipboard!', 'success'));
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text)
+          .then(() => showToast('📋 Copied to clipboard!', 'success'))
+          .catch(() => fallbackCopy(text));
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (ok) showToast('📋 Copied to clipboard!', 'success');
+        else showToast('⚠️ Unable to copy', 'warning');
+      } catch (err) {
+        showToast('⚠️ Unable to copy', 'warning');
+      }
     }
 
     function setInputValue(v) {
@@ -1149,19 +1198,34 @@
 
       for (const [key, name] of Object.entries(categories)) {
         const catBtn = document.createElement('div');
-        catBtn.className = `cat-tab ${key === currentCategory ? 'active' : ''}`;
+        const isActive = (key === currentCategory);
+        catBtn.className = `cat-tab ${isActive ? 'active' : ''}`;
         catBtn.innerText = name;
+        catBtn.setAttribute('role', 'tab');
+        catBtn.setAttribute('tabindex', '0');
+        catBtn.setAttribute('aria-selected', isActive ? 'true' : 'false');
         catBtn.onclick = () => selectCategory(key);
+        catBtn.onkeydown = (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            selectCategory(key);
+          }
+        };
         container.appendChild(catBtn);
 
-        customCatSel.innerHTML += `<option value="${key}">${escapeHTML(name)}</option>`;
+        // Custom multiplier factor cannot model affine temperature scales (C/F/K)
+        if (key !== 'temp') {
+          customCatSel.innerHTML += `<option value="${key}">${escapeHTML(name)}</option>`;
+        }
       }
     }
 
     function selectCategory(catKey) {
       currentCategory = catKey;
       document.querySelectorAll('.cat-tab').forEach(t => {
-        t.classList.toggle('active', t.innerText === categories[catKey]);
+        const active = (t.innerText === categories[catKey]);
+        t.classList.toggle('active', active);
+        t.setAttribute('aria-selected', active ? 'true' : 'false');
       });
       populateDropdowns();
       convert();
@@ -1205,18 +1269,18 @@
       const notat = document.getElementById('notationSel').value;
 
       if (notat === 'sci') {
-        return num.toExponential(prec === 'auto' ? 4 : parseInt(prec));
+        return num.toExponential(prec === 'auto' ? 4 : parseInt(prec, 10));
       }
 
       if (prec === 'auto') {
-        if (num !== 0 && Math.abs(num) < 1e-5) {
+        if (num !== 0 && (Math.abs(num) < 1e-5 || Math.abs(num) >= 1e12)) {
           return num.toExponential(4);
         }
         let str = num.toFixed(6);
         return str.replace(/\.?0+$/, '');
       }
 
-      return num.toFixed(parseInt(prec));
+      return num.toFixed(parseInt(prec, 10));
     }
 
     function convert() {
@@ -1235,6 +1299,7 @@
 
       let result = 0;
       let isBelowAbsZero = false;
+      let isNegativePressure = false;
 
       if (currentCategory === 'temp') {
         let celsius = 0;
@@ -1253,6 +1318,9 @@
         if (toFactor <= 0) return; // Zero division protection
         const baseVal = val * fromFactor;
         result = baseVal / toFactor;
+        if (currentCategory === 'pressure' && val < 0) {
+          isNegativePressure = true;
+        }
       }
 
       const formattedResult = formatNumber(result);
@@ -1263,6 +1331,7 @@
       const toName = modeUnits[toKey].name;
       let formulaStr = `${val} ${fromName} = ${formattedResult} ${toName}`;
       if (isBelowAbsZero) formulaStr += ' ⚠️ (Below Abs Zero)';
+      else if (isNegativePressure) formulaStr += ' ⚠️ (Negative Pressure)';
       document.getElementById('formulaText').innerText = formulaStr;
 
       // Log conversion to history
@@ -1320,11 +1389,29 @@
 
         const formatted = formatNumber(res);
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><strong>${escapeHTML(u.name)}</strong></td>
-          <td style="color: var(--accent-blue); font-weight:600;">${escapeHTML(formatted)}</td>
-          <td style="text-align: center;"><button class="btn-sm" onclick="copyToClipboard('${escapeHTML(formatted)}')">📋 Copy</button></td>
-        `;
+
+        const tdName = document.createElement('td');
+        const strong = document.createElement('strong');
+        strong.textContent = u.name;
+        tdName.appendChild(strong);
+
+        const tdVal = document.createElement('td');
+        tdVal.style.color = 'var(--accent-blue)';
+        tdVal.style.fontWeight = '600';
+        tdVal.textContent = formatted;
+
+        const tdAct = document.createElement('td');
+        tdAct.style.textAlign = 'center';
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'btn-sm';
+        copyBtn.textContent = '📋 Copy';
+        copyBtn.title = `Copy ${u.name} value`;
+        copyBtn.onclick = () => copyToClipboard(formatted);
+        tdAct.appendChild(copyBtn);
+
+        tr.appendChild(tdName);
+        tr.appendChild(tdVal);
+        tr.appendChild(tdAct);
         tbody.appendChild(tr);
       }
     }
@@ -1333,7 +1420,15 @@
     function matchExpressAlias(tok) {
       if (!tok) return null;
       const clean = tok.toLowerCase().trim().replace(/[\s\t]+/g, '');
-      return expressAliasTable.find(a => a.token === clean) || null;
+      const found = expressAliasTable.find(a => a.token === clean);
+      if (found) return found;
+      for (const u of customUnits) {
+        const uClean = u.name.toLowerCase().replace(/[\s\t]+/g, '');
+        if (uClean === clean) {
+          return { token: clean, cat: u.category, key: `custom_${u.id}`, dim: `${categories[u.category] || u.category} [Custom]` };
+        }
+      }
+      return null;
     }
 
     function setExpressPreset(exprStr) {
@@ -1341,6 +1436,21 @@
       if (inp) {
         inp.value = exprStr;
         parseExpressInput();
+      }
+    }
+
+    function swapExpressUnits() {
+      const valStr = document.getElementById('expressInput').value.trim();
+      const numMatch = valStr.match(/^([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)\s*(.*)$/);
+      if (!numMatch) return;
+      const parts = numMatch[2].trim().split(/\s*(?:to|->|=|in)\s*/i);
+      if (parts.length >= 2) {
+        const card = document.getElementById('expressResultCard');
+        const resElem = card ? card.querySelector('[data-res-val]') : null;
+        const newVal = resElem ? resElem.getAttribute('data-res-val') : numMatch[1];
+        document.getElementById('expressInput').value = `${newVal} ${parts[1]} to ${parts[0]}`;
+        parseExpressInput();
+        showToast('⇄ Expression swapped!');
       }
     }
 
@@ -1397,11 +1507,16 @@
       if (!uFrom || !uTo) return;
 
       let result = 0;
+      let isBelowAbsZero = false;
+      let isNegativePressure = false;
+
       if (catKey === 'temp') {
         let celsius = 0;
         if (fromAlias.key === 'c') celsius = numVal;
         else if (fromAlias.key === 'f') celsius = (numVal - 32) * 5/9;
         else if (fromAlias.key === 'k') celsius = numVal - 273.15;
+
+        if (celsius < -273.15) isBelowAbsZero = true;
 
         if (toAlias.key === 'c') result = celsius;
         else if (toAlias.key === 'f') result = (celsius * 9/5) + 32;
@@ -1409,21 +1524,30 @@
       } else {
         const fromFactor = uFrom.factor || 1;
         const toFactor = uTo.factor || 1;
+        if (toFactor <= 0) return;
         result = (numVal * fromFactor) / toFactor;
+        if (catKey === 'pressure' && numVal < 0) {
+          isNegativePressure = true;
+        }
       }
 
       const formatted = formatNumber(result);
+      const eqFormula = `${numVal} ${uFrom.name} = ${formatted} ${uTo.name}`;
 
       card.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
           <div>
             <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Evaluated Result</div>
             <div style="font-size: 26px; font-weight: 800; color: var(--accent-blue); line-height: 1.2;">
-              ${escapeHTML(formatted)} <span style="font-size: 16px; font-weight: 600; color: var(--text-primary);">${escapeHTML(uTo.name)}</span>
+              <span data-res-val="${escapeHTML(formatted)}">${escapeHTML(formatted)}</span> <span style="font-size: 16px; font-weight: 600; color: var(--text-primary);">${escapeHTML(uTo.name)}</span>
             </div>
           </div>
-          <div style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); padding: 6px 12px; border-radius: 20px; font-size: 12px; color: var(--accent-blue); font-weight: 600;">
-            ${escapeHTML(fromAlias.dim)}
+          <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+            ${isBelowAbsZero ? '<span style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">⚠️ Below Abs Zero</span>' : ''}
+            ${isNegativePressure ? '<span style="background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.4); color: #fde68a; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">⚠️ Negative Pressure</span>' : ''}
+            <div style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); padding: 6px 12px; border-radius: 20px; font-size: 12px; color: var(--accent-blue); font-weight: 600;">
+              ${escapeHTML(fromAlias.dim)}
+            </div>
           </div>
         </div>
 
@@ -1442,11 +1566,19 @@
           </div>
         </div>
 
-        <div style="font-size: 12px; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--panel-border);">
-          <span><strong>Formula:</strong> ${numVal} ${escapeHTML(uFrom.name)} = ${escapeHTML(formatted)} ${escapeHTML(uTo.name)}</span>
-          <button class="btn-sm" onclick="copyToClipboard('${numVal} ${escapeHTML(uFrom.name)} = ${escapeHTML(formatted)} ${escapeHTML(uTo.name)}')">📋 Copy Eq</button>
+        <div style="font-size: 12px; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--panel-border); flex-wrap: wrap; gap: 6px;">
+          <span><strong>Formula:</strong> ${escapeHTML(eqFormula)}</span>
+          <div style="display: flex; gap: 6px;">
+            <button class="btn-sm" id="btnExpressSwap" title="Swap From and To Units">⇄ Swap</button>
+            <button class="btn-sm" id="btnExpressCopyEq">📋 Copy Eq</button>
+          </div>
         </div>
       `;
+
+      const swapBtn = card.querySelector('#btnExpressSwap');
+      if (swapBtn) swapBtn.onclick = swapExpressUnits;
+      const copyBtn = card.querySelector('#btnExpressCopyEq');
+      if (copyBtn) copyBtn.onclick = () => copyToClipboard(eqFormula);
 
       logHistory(catKey, numVal, uFrom.name, formatted, uTo.name);
     }
@@ -1463,13 +1595,13 @@
         categoryName: categories[currentCategory],
         fromKey,
         toKey,
-        fromName: modeUnits[fromKey].name,
-        toName: modeUnits[toKey].name
+        fromName: modeUnits[fromKey] ? modeUnits[fromKey].name : fromKey,
+        toName: modeUnits[toKey] ? modeUnits[toKey].name : toKey
       };
 
       if (!favorites.some(f => f.category === fav.category && f.fromKey === fav.fromKey && f.toKey === fav.toKey)) {
         favorites.push(fav);
-        localStorage.setItem('kconv_favs', JSON.stringify(favorites));
+        safeSetStorage('kconv_favs', favorites);
         showToast('⭐ Pinned to Favorites!', 'success');
         renderFavorites();
       } else {
@@ -1489,27 +1621,45 @@
       favorites.forEach(fav => {
         const card = document.createElement('div');
         card.className = 'fav-card';
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('role', 'button');
+        card.setAttribute('aria-label', `Favorite: ${fav.fromName} to ${fav.toName}`);
         card.innerHTML = `
           <div class="fav-header">
             <span>${escapeHTML(fav.categoryName)}</span>
-            <button class="btn-sm btn-danger" style="padding:2px 6px;" onclick="event.stopPropagation(); removeFavorite(${fav.id})">✕</button>
+            <button class="btn-sm btn-danger" style="padding:2px 6px;" title="Remove favorite" aria-label="Remove favorite" onclick="event.stopPropagation(); removeFavorite(${fav.id})">✕</button>
           </div>
           <div class="fav-pair">${escapeHTML(fav.fromName)} ➔ ${escapeHTML(fav.toName)}</div>
         `;
         card.onclick = () => loadFavorite(fav);
+        card.onkeydown = (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            loadFavorite(fav);
+          }
+        };
         container.appendChild(card);
       });
     }
 
     function removeFavorite(id) {
       favorites = favorites.filter(f => f.id !== id);
-      localStorage.setItem('kconv_favs', JSON.stringify(favorites));
+      safeSetStorage('kconv_favs', favorites);
       renderFavorites();
       showToast('Favorite removed');
     }
 
     function loadFavorite(fav) {
+      if (!categories[fav.category]) {
+        showToast('⚠️ Favorite category not available', 'warning');
+        return;
+      }
       selectCategory(fav.category);
+      const modeUnits = getAllUnitsForCategory(fav.category);
+      if (!modeUnits[fav.fromKey] || !modeUnits[fav.toKey]) {
+        showToast('⚠️ One of the units in this favorite no longer exists', 'warning');
+        return;
+      }
       document.getElementById('unitFrom').value = fav.fromKey;
       document.getElementById('unitTo').value = fav.toKey;
       switchView('single');
@@ -1536,7 +1686,7 @@
       };
 
       customUnits.push(newUnit);
-      localStorage.setItem('kconv_custom_units', JSON.stringify(customUnits));
+      safeSetStorage('kconv_custom_units', customUnits);
 
       document.getElementById('customUnitName').value = '';
       document.getElementById('customFactor').value = '';
@@ -1571,7 +1721,7 @@
 
     function deleteCustomUnit(id) {
       customUnits = customUnits.filter(u => u.id !== id);
-      localStorage.setItem('kconv_custom_units', JSON.stringify(customUnits));
+      safeSetStorage('kconv_custom_units', customUnits);
       renderCustomUnitsTable();
       populateDropdowns();
       convert();
@@ -1594,7 +1744,7 @@
 
       historyLog.unshift(item);
       if (historyLog.length > 50) historyLog.pop();
-      localStorage.setItem('kconv_history', JSON.stringify(historyLog));
+      safeSetStorage('kconv_history', historyLog);
     }
 
     function renderHistory() {
@@ -1625,7 +1775,7 @@
 
     function clearHistory() {
       historyLog = [];
-      localStorage.removeItem('kconv_history');
+      safeRemoveStorage('kconv_history');
       renderHistory();
       showToast('🗑️ History cleared');
     }
