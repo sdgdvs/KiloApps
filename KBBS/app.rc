@@ -58,22 +58,25 @@ BEGIN
     PUSHBUTTON      "Cancel", 2, 90, 115, 50, 14
 END
 
-4000 DIALOGEX 0, 0, 220, 180
+4000 DIALOGEX 0, 0, 260, 220
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Help / Quick Reference"
+CAPTION "KBBS - Help & Quick Reference Guide"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT           "KBBS Terminal Help:", -1, 10, 10, 200, 8
-    LTEXT           "- Dialing Directory: Save & quick-connect to BBSs", -1, 10, 25, 200, 8
-    LTEXT           "- XMODEM / ZMODEM: Click DL/UL to transfer files", -1, 10, 40, 200, 8
-    LTEXT           "- ANSI Music: Plays BBS tones automatically", -1, 10, 55, 200, 8
-    LTEXT           "- Macros: Alt+Key sequence bindings (use \\r)", -1, 10, 70, 200, 8
-    LTEXT           "- Display Settings: Font size & blink rate", -1, 10, 85, 200, 8
-    LTEXT           "- Scrollback: Shift+PgUp / Shift+PgDn or Wheel", -1, 10, 100, 200, 8
-    LTEXT           "- Selection: Drag to select, copies to clipboard", -1, 10, 115, 200, 8
-    LTEXT           "- Session Capture: Cap button logs to text file", -1, 10, 130, 200, 8
-    LTEXT           "- EchoNet / Msgs: Browse conferences & stream", -1, 10, 145, 200, 8
-    DEFPUSHBUTTON   "OK", 1, 85, 160, 50, 14
+    LTEXT           "KBBS Terminal Keyboard & Feature Shortcuts:", -1, 10, 8, 240, 8
+    LTEXT           "[Enter]       : Connect to BBS address / Submit edit", -1, 10, 22, 240, 8
+    LTEXT           "[D]           : Dialing Directory (Save, ping & dial nodes)", -1, 10, 36, 240, 8
+    LTEXT           "[M]           : Custom Script Macro Auto-Login Engine", -1, 10, 50, 240, 8
+    LTEXT           "[G]           : Door Games Mini-Suite (LORD & TradeWars)", -1, 10, 64, 240, 8
+    LTEXT           "[A]           : ANSI Art & Color Viewer with Baud Playback", -1, 10, 78, 240, 8
+    LTEXT           "[E]           : BBS Message Base & FidoNet EchoMail Reader", -1, 10, 92, 240, 8
+    LTEXT           "[S]           : Display & Palette Settings (Blink, Fonts)", -1, 10, 106, 240, 8
+    LTEXT           "[C]           : Toggle Session Log Capture (.txt / .ans)", -1, 10, 120, 240, 8
+    LTEXT           "[F1] or [H]   : Show this Help & Shortcuts Reference", -1, 10, 134, 240, 8
+    LTEXT           "DL / UL       : XMODEM & ZMODEM file transfer protocols", -1, 10, 148, 240, 8
+    LTEXT           "Shift+PgUp/Dn : Scroll terminal scrollback buffer", -1, 10, 162, 240, 8
+    LTEXT           "Mouse Drag    : Select & copy CP437 text to clipboard", -1, 10, 176, 240, 8
+    DEFPUSHBUTTON   "Got It", 1, 105, 196, 50, 14
 END
 
 5000 DIALOGEX 0, 0, 360, 230

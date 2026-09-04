@@ -108,33 +108,56 @@
 
         /* Art Canvas Preview */
         #artPreviewCanvas { background: #000; image-rendering: pixelated; border: 1px solid #27272a; border-radius: 6px; }
+
+        /* Toast Notifications */
+        #toastContainer {
+            position: fixed; bottom: 28px; right: 20px; z-index: 9999;
+            display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+        }
+        .kbbs-toast {
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            border-left: 4px solid #38bdf8;
+            color: #f1f5f9; padding: 10px 16px; border-radius: 8px;
+            font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.2);
+            opacity: 0; transform: translateY(12px) scale(0.96);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: auto; max-width: 380px; line-height: 1.4;
+        }
+        .kbbs-toast.visible { opacity: 1; transform: translateY(0) scale(1); }
+        .kbbs-toast.success { border-color: rgba(16, 185, 129, 0.4); border-left-color: #10b981; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.6), 0 0 15px rgba(16, 185, 129, 0.2); }
+        .kbbs-toast.warning { border-color: rgba(245, 158, 11, 0.4); border-left-color: #f59e0b; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.6), 0 0 15px rgba(245, 158, 11, 0.2); }
+        .kbbs-toast.error { border-color: rgba(239, 68, 68, 0.4); border-left-color: #ef4444; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.6), 0 0 15px rgba(239, 68, 68, 0.2); }
     </style>
 </head>
 <body>
+    <div id="toastContainer"></div>
     <div class="conn-bar">
         <span>Host:</span>
-        <input type="text" id="host" placeholder="Address..." value="">
+        <input type="text" id="host" placeholder="Address..." value="" onkeydown="if(event.key==='Enter') toggleConnect()">
         <span>Port:</span>
-        <input type="text" id="port" value="23">
+        <input type="text" id="port" value="23" onkeydown="if(event.key==='Enter') toggleConnect()">
         <label style="color: #d4d4d8; display: flex; align-items: center; gap: 4px; font-size: 11px; text-transform: uppercase; font-weight: 600; cursor: pointer; user-select: none; margin: 0 2px;">
             <input type="checkbox" id="localEcho"> Echo
         </label>
         <label style="color: #d4d4d8; display: flex; align-items: center; gap: 4px; font-size: 11px; text-transform: uppercase; font-weight: 600; cursor: pointer; user-select: none; margin: 0 2px;">
             <input type="checkbox" id="crtToggle" checked onchange="toggleCRT()"> CRT
         </label>
-        <button id="btnConn" onclick="initAudio(); toggleConnect()">Connect</button>
-        <button id="btnDir" onclick="showDialingDir()">Directory</button>
-        <button id="btnMacros" onclick="showMacros()">Macros</button>
-        <button id="btnDoorGames" onclick="showDoorGames()" style="background: linear-gradient(180deg, #ec4899 0%, #be185d 100%); border-color: #9d174d;">Door Games</button>
-        <button id="btnAnsiArt" onclick="showAnsiArtViewer()" style="background: linear-gradient(180deg, #6366f1 0%, #4338ca 100%); border-color: #3730a3;">ANSI Art</button>
-        <button id="btnMsgBase" onclick="showMsgBase()" style="background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); border-color: #b45309;">EchoNet (Msgs)</button>
+        <button id="btnConn" onclick="initAudio(); toggleConnect()">Connect [Enter]</button>
+        <button id="btnDir" onclick="showDialingDir()">Directory [D]</button>
+        <button id="btnMacros" onclick="showMacros()">Macros [M]</button>
+        <button id="btnDoorGames" onclick="showDoorGames()" style="background: linear-gradient(180deg, #ec4899 0%, #be185d 100%); border-color: #9d174d;">Door Games [G]</button>
+        <button id="btnAnsiArt" onclick="showAnsiArtViewer()" style="background: linear-gradient(180deg, #6366f1 0%, #4338ca 100%); border-color: #3730a3;">ANSI Art [A]</button>
+        <button id="btnMsgBase" onclick="showMsgBase()" style="background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); border-color: #b45309;">EchoNet [E]</button>
         <button id="btnXmDl" onclick="startTransfer(1)" title="XMODEM Download" style="background: linear-gradient(180deg, #10b981 0%, #059669 100%); border-color: #047857; margin-left:4px;">DL (XM)</button>
         <button id="btnXmUl" onclick="startTransfer(2)" title="XMODEM Upload" style="background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); border-color: #b45309;">UL (XM)</button>
         <button id="btnZmDl" onclick="startTransfer(3)" title="ZMODEM Download" style="background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%); border-color: #0369a1;">DL (ZM)</button>
         <button id="btnZmUl" onclick="startTransfer(4)" title="ZMODEM Upload" style="background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%); border-color: #5b21b6;">UL (ZM)</button>
-        <button id="btnSettings" onclick="showSettings()">Settings</button>
-        <button id="btnCapture" onclick="showCaptureManager()" style="background: linear-gradient(180deg, #52525b 0%, #3f3f46 100%); border-color: #27272a;">Capture: OFF</button>
-        <button id="btnHelp" onclick="showHelp()" style="background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%); border-color: #5b21b6;">Help (F1)</button>
+        <button id="btnSettings" onclick="showSettings()">Settings [S]</button>
+        <button id="btnCapture" onclick="showCaptureManager()" style="background: linear-gradient(180deg, #52525b 0%, #3f3f46 100%); border-color: #27272a;">Capture: OFF [C]</button>
+        <button id="btnHelp" onclick="showHelp()" style="background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%); border-color: #5b21b6;">Help [F1]</button>
         <input type="file" id="fileUpload" style="display:none" onchange="handleFileUpload(event)">
         <input type="file" id="ansFileUpload" accept=".ans,.txt,.ice" style="display:none" onchange="loadAnsFile(event)">
         <input type="file" id="dirImportUpload" accept=".json" style="display:none" onchange="importDirectoryJSON(event)">
@@ -549,16 +572,59 @@ SEND:"secret\r"'></textarea>
         document.querySelector('.term-wrap').style.setProperty('--crt-display', crt ? 'block' : 'none');
         document.getElementById('terminal').style.filter = crt ? 'contrast(1.1) brightness(1.2) drop-shadow(0 0 1px rgba(255,255,255,0.3))' : 'none';
     }
-    document.addEventListener("DOMContentLoaded", () => { toggleCRT(); loadSettings(); loadDirectory(); loadMacros(); loadMsgBase(); });
-    document.addEventListener("keydown", (e) => {
-        if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-            if (e.key === 'F1') e.preventDefault();
-            if (!ws || e.key === 'F1') showHelp();
-        }
+
+    function showToast(message, type = 'info', duration = 3800) {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = `kbbs-toast ${type}`;
+        
+        let icon = 'ℹ️';
+        if (type === 'success') icon = '✅';
+        else if (type === 'warning') icon = '⚠️';
+        else if (type === 'error') icon = '❌';
+
+        toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+        container.appendChild(toast);
+
+        // Trigger reflow for transition
+        requestAnimationFrame(() => {
+            toast.classList.add('visible');
+        });
+
+        setTimeout(() => {
+            toast.classList.remove('visible');
+            setTimeout(() => {
+                if (toast.parentNode) toast.parentNode.removeChild(toast);
+            }, 300);
+        }, duration);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        toggleCRT();
+        loadSettings();
+        loadDirectory();
+        loadMacros();
+        loadMsgBase();
+
+        // Backdrop click to dismiss modals
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                    if (typeof canvas !== 'undefined') canvas.focus();
+                }
+            });
+        });
+
+        // Welcome toast
+        setTimeout(() => {
+            showToast("Welcome to KBBS Terminal! Press F1 or 'H' for Help, or click Directory [D] to dial a BBS.", "info", 5000);
+        }, 300);
     });
 
     function showHelp() { document.getElementById('helpModal').style.display = 'flex'; }
-    function closeHelp() { document.getElementById('helpModal').style.display = 'none'; }
+    function closeHelp() { document.getElementById('helpModal').style.display = 'none'; if (typeof canvas !== 'undefined') canvas.focus(); }
 
     // ─── Screen Configuration ───
     let COLS = 80, ROWS = 25, CELL_W = 8, CELL_H = 16;
@@ -878,7 +944,10 @@ SEND:"secret\r"'></textarea>
     function saveEntry() {
         let name = document.getElementById('dirName').value.trim();
         let host = document.getElementById('dirHost').value.trim();
-        if (!name || !host) return;
+        if (!name || !host) {
+            showToast("Please enter both a name and host address.", "warning");
+            return;
+        }
         let entry = {
             name, host,
             port: document.getElementById('dirPort').value.trim() || '23',
@@ -889,12 +958,14 @@ SEND:"secret\r"'></textarea>
         if (selectedDirIndex >= 0) dirEntries[selectedDirIndex] = entry;
         else { dirEntries.push(entry); selectedDirIndex = dirEntries.length - 1; }
         saveDirectory(); renderDirList();
+        showToast(`Saved "${name}" to dialing directory!`, "success");
     }
 
     function deleteEntry() {
         if (selectedDirIndex >= 0) {
-            dirEntries.splice(selectedDirIndex, 1);
+            let removed = dirEntries.splice(selectedDirIndex, 1);
             selectedDirIndex = -1; saveDirectory(); renderDirList();
+            showToast(`Deleted "${removed[0]?.name || 'entry'}" from directory.`, "info");
         }
     }
 
@@ -905,24 +976,32 @@ SEND:"secret\r"'></textarea>
             document.getElementById('port').value = e.port;
             document.getElementById('dirAutoLogin').value = e.autoLogin || '';
             closeDialingDir(); toggleConnect(true);
+            showToast(`Dialing ${e.name} (${e.host}:${e.port})...`, "info");
         }
     }
 
     function exportDirectoryJSON() {
         let blob = new Blob([JSON.stringify(dirEntries, null, 2)], {type:'application/json'});
         let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'kbbs_directory.json'; a.click();
+        showToast("Dialing directory exported to JSON!", "success");
     }
     function importDirectoryJSON(e) {
         let file = e.target.files[0]; if (!file) return;
         let reader = new FileReader();
         reader.onload = (evt) => {
-            try { dirEntries = JSON.parse(evt.target.result); saveDirectory(); renderDirList(); alert("Directory imported!"); }
-            catch(err){ alert("Invalid JSON file"); }
+            try {
+                dirEntries = JSON.parse(evt.target.result);
+                saveDirectory(); renderDirList();
+                showToast(`Directory imported (${dirEntries.length} BBS entries)!`, "success");
+            } catch(err) {
+                showToast("Invalid JSON directory file.", "error");
+            }
         };
         reader.readAsText(file);
     }
     function pingCurrentNode() {
         document.getElementById('nodeStatusText').textContent = "Node Status: Ping 24ms (Online)";
+        showToast("Node ping: 24ms response (Online)", "success");
     }
 
     // ─── 2. Session Log Capture & Export (ANSI/TXT) ───
@@ -935,12 +1014,15 @@ SEND:"secret\r"'></textarea>
         document.getElementById('captureModal').style.display = 'flex';
         updateCaptureUI();
     }
-    function closeCaptureManager() { document.getElementById('captureModal').style.display = 'none'; }
+    function closeCaptureManager() { document.getElementById('captureModal').style.display = 'none'; if (typeof canvas !== 'undefined') canvas.focus(); }
 
     function toggleCaptureState() {
         window.captureActive = !window.captureActive;
         if (window.captureActive) {
             window.captureBuffer = ''; window.captureByteCount = 0;
+            showToast(`Session log capture STARTED (${window.captureMode.toUpperCase()})`, "success");
+        } else {
+            showToast(`Session log capture STOPPED. Recorded ${(window.captureByteCount/1024).toFixed(1)} KB.`, "info");
         }
         updateCaptureUI(); updateBytes();
     }
@@ -954,13 +1036,13 @@ SEND:"secret\r"'></textarea>
             indicator.textContent = "RECORDING (" + window.captureMode.toUpperCase() + ")";
             indicator.style.color = "#10b981";
             btn.textContent = "Stop Recording";
-            mainBtn.textContent = `Cap: ON (${window.captureMode.toUpperCase()})`;
+            mainBtn.textContent = `Cap: ON (${window.captureMode.toUpperCase()}) [C]`;
             mainBtn.style.background = "linear-gradient(180deg, #ef4444 0%, #dc2626 100%)";
         } else {
             indicator.textContent = "INACTIVE";
             indicator.style.color = "#ef4444";
             btn.textContent = "Start Recording";
-            mainBtn.textContent = "Capture: OFF";
+            mainBtn.textContent = "Capture: OFF [C]";
             mainBtn.style.background = "linear-gradient(180deg, #52525b 0%, #3f3f46 100%)";
         }
         document.getElementById('capLogPreview').value = window.captureBuffer || "(No captured data in buffer)";
@@ -984,34 +1066,43 @@ SEND:"secret\r"'></textarea>
     }
 
     function downloadCaptureFile() {
-        if (!window.captureBuffer) return;
+        if (!window.captureBuffer) {
+            showToast("No captured log data to download.", "warning");
+            return;
+        }
         let ext = (window.captureMode === 'ans') ? 'ans' : 'txt';
         let blob = new Blob([window.captureBuffer], {type: 'text/plain'});
         let a = document.createElement('a'); a.href = URL.createObjectURL(blob);
         a.download = `kbbs_session_log.${ext}`; a.click();
+        showToast(`Downloaded kbbs_session_log.${ext}`, "success");
     }
 
     function copyCaptureToClipboard() {
+        if (!window.captureBuffer) {
+            showToast("No captured log data to copy.", "warning");
+            return;
+        }
         navigator.clipboard.writeText(window.captureBuffer);
-        alert("Session log copied to clipboard!");
+        showToast("Session log copied to clipboard!", "success");
     }
     function clearCaptureBuffer() {
         window.captureBuffer = ''; window.captureByteCount = 0; updateCaptureUI(); updateBytes();
+        showToast("Capture buffer cleared.", "info");
     }
 
     // ─── File Transfer Handlers ───
     function startTransfer(type) {
         if (!ws || ws.readyState !== 1) {
-            alert("Please connect to a BBS before starting file transfer.");
+            showToast("Please connect to a BBS before starting file transfer.", "warning");
             return;
         }
         if (type === 1) { // XMODEM DL
-            alert("XMODEM Download initiated. Waiting for remote host data stream...");
+            showToast("XMODEM Download initiated. Waiting for remote host data stream...", "info");
             ws.send(String.fromCharCode(0x15)); // NAK
         } else if (type === 2) { // XMODEM UL
             document.getElementById('fileUpload').click();
         } else if (type === 3) { // ZMODEM DL
-            alert("ZMODEM Download initiated.");
+            showToast("ZMODEM Download initiated.", "info");
             processData("\x1B[1;36m[ZMODEM Download Initialized]\r\n");
         } else if (type === 4) { // ZMODEM UL
             document.getElementById('fileUpload').click();
@@ -1027,9 +1118,9 @@ SEND:"secret\r"'></textarea>
                 ws.send(e.target.result);
                 bytesTx += (e.target.result.byteLength || e.target.result.length || 0);
                 updateBytes();
-                alert(`File "${file.name}" sent (${file.size} bytes)!`);
+                showToast(`File "${file.name}" sent (${file.size} bytes)!`, "success");
             } else {
-                alert("Cannot upload: Not connected to BBS.");
+                showToast("Cannot upload: Not connected to BBS.", "error");
             }
         };
         reader.readAsArrayBuffer(file);
@@ -1071,35 +1162,31 @@ SEND:"secret\r"'></textarea>
             let m = dynMacros[idx];
             document.getElementById('macroKey').value = m.key;
             document.getElementById('macroTitle').value = m.title || '';
-            document.getElementById('macroString').value = m.str;
-        }
-    }
-
-    function newMacro() {
-        selectedMacroIndex = -1; renderMacroList();
-        document.getElementById('macroKey').value = 'M';
-        document.getElementById('macroTitle').value = 'New Script';
-        document.getElementById('macroString').value = 'WAIT:"login:"\nSEND:"user\\r"';
-    }
-
-    function saveMacro() {
+              function saveMacro() {
         let key = document.getElementById('macroKey').value.toUpperCase().trim();
-        if (!key) return;
+        if (!key) {
+            showToast("Please enter an Alt hotkey letter.", "warning");
+            return;
+        }
         let entry = { key, title: document.getElementById('macroTitle').value, str: document.getElementById('macroString').value };
         if (selectedMacroIndex >= 0) dynMacros[selectedMacroIndex] = entry;
         else { dynMacros.push(entry); selectedMacroIndex = dynMacros.length - 1; }
         saveMacros(); renderMacroList();
+        showToast(`Script macro Alt+${key} saved!`, "success");
     }
 
     function deleteMacro() {
         if (selectedMacroIndex >= 0) {
-            dynMacros.splice(selectedMacroIndex, 1); selectedMacroIndex = -1; saveMacros(); renderMacroList();
+            let removed = dynMacros.splice(selectedMacroIndex, 1);
+            selectedMacroIndex = -1; saveMacros(); renderMacroList();
+            showToast(`Deleted script macro Alt+${removed[0]?.key || ''}.`, "info");
         }
     }
 
     function runSelectedScriptMacro() {
         if (selectedMacroIndex >= 0 && selectedMacroIndex < dynMacros.length) {
             runScriptMacro(dynMacros[selectedMacroIndex].str); closeMacros();
+            showToast(`Executing macro Alt+${dynMacros[selectedMacroIndex].key}...`, "info");
         }
     }
 
@@ -1127,6 +1214,7 @@ SEND:"secret\r"'></textarea>
 
     function stopScriptMacro() {
         activeScript = null; document.getElementById('scriptBanner').style.display = 'none';
+        showToast("Script macro stopped.", "info");
     }
 
     function executeScriptStep() {
@@ -1135,7 +1223,7 @@ SEND:"secret\r"'></textarea>
         document.getElementById('scriptBannerText').textContent = `Script: Step ${activeScript.stepIdx+1}/${activeScript.steps.length} [${step.type}]`;
 
         if (step.type === 'SEND') {
-            if (ws && ws.readyState === 1) ws.send(step.val.replace(/\r/g,''));
+            if (ws && ws.readyState === 1) ws.send(step.val.replace(/\r/g,''));
             activeScript.stepIdx++; setTimeout(executeScriptStep, 200);
         } else if (step.type === 'DELAY') {
             setTimeout(() => { activeScript.stepIdx++; executeScriptStep(); }, step.val);
@@ -1162,7 +1250,7 @@ SEND:"secret\r"'></textarea>
         document.getElementById('doorGamesModal').style.display = 'flex';
         switchDoorTab('lord');
     }
-    function closeDoorGames() { document.getElementById('doorGamesModal').style.display = 'none'; canvas.focus(); }
+    function closeDoorGames() { document.getElementById('doorGamesModal').style.display = 'none'; if (typeof canvas !== 'undefined') canvas.focus(); }
 
     function switchDoorTab(game) {
         currentDoorGame = game;
@@ -1229,18 +1317,33 @@ SEND:"secret\r"'></textarea>
     function lordAction(act) {
         let log = document.getElementById('lordLog');
         if (act === 'forest') {
-            if (lordPlayer.fights <= 0) { log.innerHTML += "<br>You have no forest fights left today!"; return; }
+            if (lordPlayer.fights <= 0) {
+                log.innerHTML += "<br>You have no forest fights left today!";
+                showToast("No forest fights remaining today!", "warning");
+                return;
+            }
             lordPlayer.fights--;
             let gain = Math.floor(Math.random()*40)+20;
             lordPlayer.gold += gain;
             log.innerHTML += `<br>🌲 You defeated a Forest Goblin! +${gain} Gold!`;
+            showToast(`Defeated Forest Goblin! +${gain} Gold`, "success");
         } else if (act === 'inn') {
             lordPlayer.hp = lordPlayer.maxHp; log.innerHTML += "<br>🍺 You rest at the Inn. HP fully restored!";
+            showToast("Rested at the Inn. HP fully restored!", "success");
         } else if (act === 'bank') {
-            lordPlayer.bank += lordPlayer.gold; lordPlayer.gold = 0; log.innerHTML += "<br>🏦 Deposited all gold into the bank!";
+            lordPlayer.bank += lordPlayer.gold;
+            let dep = lordPlayer.gold;
+            lordPlayer.gold = 0; log.innerHTML += "<br>🏦 Deposited all gold into the bank!";
+            showToast(`Deposited ${dep} gold into the Royal Bank.`, "info");
         } else if (act === 'armory') {
-            if (lordPlayer.gold >= 50) { lordPlayer.gold -= 50; lordPlayer.weapon = "Iron Blade"; log.innerHTML += "<br>⚔️ Upgraded weapon to Iron Blade!"; }
-            else log.innerHTML += "<br>Not enough gold!";
+            if (lordPlayer.gold >= 50) {
+                lordPlayer.gold -= 50; lordPlayer.weapon = "Iron Blade";
+                log.innerHTML += "<br>⚔️ Upgraded weapon to Iron Blade!";
+                showToast("Upgraded weapon to Iron Blade!", "success");
+            } else {
+                log.innerHTML += "<br>Not enough gold!";
+                showToast("Not enough gold (need 50 gold)!", "warning");
+            }
         }
         if (log) log.scrollTop = log.scrollHeight;
         renderDoorContent();
@@ -1250,10 +1353,13 @@ SEND:"secret\r"'></textarea>
         let log = document.getElementById('twLog');
         if (act === 'warp') {
             twPlayer.sector = Math.floor(Math.random()*10)+1; log.innerHTML += `<br>🌌 Warped to Sector ${twPlayer.sector}!`;
+            showToast(`Warped to Sector ${twPlayer.sector}`, "info");
         } else if (act === 'port') {
             twPlayer.credits += 200; log.innerHTML += "<br>🛰️ Traded Organics at Space Port! +$200 Credits!";
+            showToast("Traded commodities at Space Port! +$200 Credits", "success");
         } else if (act === 'pirate') {
             twPlayer.credits += 400; log.innerHTML += "<br>🏴‍☠️ Destroyed Pirate Raider! +$400 Bounty!";
+            showToast("Destroyed Pirate Raider! +$400 Bounty", "success");
         }
         if (log) log.scrollTop = log.scrollHeight;
         renderDoorContent();
@@ -1265,6 +1371,7 @@ SEND:"secret\r"'></textarea>
             "\x1B[1;31m=== LEGEND OF THE RED DRAGON ===\r\n\x1B[1;36mForest Hunt: Slayed Dark Goblin! +30 Gold!\r\n" :
             "\x1B[1;34m=== TRADEWARS 2015 ===\r\n\x1B[1;33mStarship Warped to Sector 5!\r\n";
         processData(ansiStream);
+        showToast("Streamed Door Game state to terminal screen!", "success");
     }
 
     // ─── 5. ANSI Color & Art Viewer Mode ───
@@ -1275,7 +1382,7 @@ SEND:"secret\r"'></textarea>
         document.getElementById('ansiArtModal').style.display = 'flex';
         loadArtPreset();
     }
-    function closeAnsiArtViewer() { document.getElementById('ansiArtModal').style.display = 'none'; canvas.focus(); }
+    function closeAnsiArtViewer() { document.getElementById('ansiArtModal').style.display = 'none'; if (typeof canvas !== 'undefined') canvas.focus(); }
 
     function loadArtPreset() {
         let type = document.getElementById('artPresetSelect').value;
@@ -1300,14 +1407,20 @@ SEND:"secret\r"'></textarea>
         reader.onload = (evt) => {
             artCtx.fillStyle = '#000'; artCtx.fillRect(0,0,artCanvas.width,artCanvas.height);
             artCtx.fillStyle = '#10b981'; artCtx.fillText("Loaded: " + file.name, 20, 20);
+            showToast(`Loaded ${file.name} into Art Viewer!`, "success");
         }; reader.readAsText(file);
     }
     function updateArtBaud() {}
     function changeArtPalette() { loadArtPreset(); }
-    function playArtAnimation() { loadArtPreset(); }
-    function renderArtToTerminal() { closeAnsiArtViewer(); processData("\x1B[1;35m[ANSI Art Rendered to Terminal Screen]\r\n"); }
+    function playArtAnimation() { loadArtPreset(); showToast("ANSI animation replayed!", "info"); }
+    function renderArtToTerminal() {
+        closeAnsiArtViewer();
+        processData("\x1B[1;35m[ANSI Art Rendered to Terminal Screen]\r\n");
+        showToast("Rendered ANSI Art to main terminal screen!", "success");
+    }
     function downloadArtPNG() {
         let a = document.createElement('a'); a.download = 'ansi_art.png'; a.href = artCanvas.toDataURL(); a.click();
+        showToast("Exported ANSI art as PNG image!", "success");
     }
 
     // ─── 6. BBS Message Base & FidoNet EchoMail Reader Suite ───
@@ -1408,7 +1521,7 @@ SEND:"secret\r"'></textarea>
 
     function closeMsgBase() {
         document.getElementById('msgBaseModal').style.display = 'none';
-        canvas.focus();
+        if (typeof canvas !== 'undefined') canvas.focus();
     }
 
     function changeMsgArea() {
@@ -1536,6 +1649,7 @@ SEND:"secret\r"'></textarea>
 
     function closeComposeModal() {
         document.getElementById('composeMsgModal').style.display = 'none';
+        if (typeof canvas !== 'undefined') canvas.focus();
     }
 
     function saveComposedMessage() {
@@ -1544,7 +1658,7 @@ SEND:"secret\r"'></textarea>
         let subj = document.getElementById('compSubject').value.trim() || 'No Subject';
         let body = document.getElementById('compBody').value.trim();
         if (!body) {
-            alert('Please enter a message body.');
+            showToast("Please enter a message body.", "warning");
             return;
         }
 
@@ -1571,6 +1685,7 @@ SEND:"secret\r"'></textarea>
         closeComposeModal();
         renderMsgList();
         selectMsg(selectedMsgId);
+        showToast(`Message #${newMsg.id} posted to EchoNet!`, "success");
     }
 
     function exportCurrentMsgFile() {
@@ -1582,6 +1697,7 @@ SEND:"secret\r"'></textarea>
         a.href = URL.createObjectURL(blob);
         a.download = `msg_${msg.id}.msg`;
         a.click();
+        showToast(`Exported msg_${msg.id}.msg`, "success");
     }
 
     function exportMsgBaseJSON() {
@@ -1590,6 +1706,7 @@ SEND:"secret\r"'></textarea>
         a.href = URL.createObjectURL(blob);
         a.download = 'kbbs_message_base.json';
         a.click();
+        showToast("Exported message base to JSON!", "success");
     }
 
     function importMsgBaseJSON(event) {
@@ -1605,10 +1722,10 @@ SEND:"secret\r"'></textarea>
                     if (bbsMessages[0]) selectedMsgId = bbsMessages[0].id;
                     renderMsgList();
                     selectMsg(selectedMsgId);
-                    alert(`Imported ${parsed.length} messages successfully!`);
+                    showToast(`Imported ${parsed.length} messages successfully!`, "success");
                 }
             } catch(err) {
-                alert('Invalid JSON message file.');
+                showToast("Invalid JSON message base file.", "error");
             }
         };
         reader.readAsText(file);
@@ -1642,6 +1759,7 @@ SEND:"secret\r"'></textarea>
         text += `\x1B[1;36m╚══════════════════════════════════════════════════════════════════════════════╝\x1B[0m\r\n`;
 
         processData(text);
+        showToast(`Msg #${msg.id} streamed to terminal screen!`, "success");
     }
 
     // ─── Sound Effects ───
@@ -1671,6 +1789,7 @@ SEND:"secret\r"'></textarea>
         kbbsSettings.localEcho = document.getElementById('setLocalEcho').checked;
         localStorage.setItem('kbbs_display_settings', JSON.stringify(kbbsSettings));
         resizeCanvas(); closeSettings();
+        showToast("Display settings saved!", "success");
     }
     function showSettings() {
         document.getElementById('setFontSize').value = kbbsSettings.fontSize;
@@ -1678,8 +1797,12 @@ SEND:"secret\r"'></textarea>
         document.getElementById('setLocalEcho').checked = kbbsSettings.localEcho;
         document.getElementById('settingsModal').style.display = 'flex';
     }
-    function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; canvas.focus(); }
-    function resetPalette() { COLORS = [...DEFAULT_COLORS]; render(); }
+    function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; if (typeof canvas !== 'undefined') canvas.focus(); }
+    function resetPalette() {
+        COLORS = [...DEFAULT_COLORS];
+        render();
+        showToast("Palette reset to default DOS VGA colors.", "info");
+    }
 
     function closeAnyOpenModal() {
         let modals = ['dialingDir', 'doorGamesModal', 'ansiArtModal', 'msgBaseModal', 'composeMsgModal', 'captureModal', 'macrosDir', 'settingsModal', 'helpModal'];
@@ -1691,7 +1814,7 @@ SEND:"secret\r"'></textarea>
                 closedAny = true;
             }
         }
-        if (closedAny) canvas.focus();
+        if (closedAny && typeof canvas !== 'undefined') canvas.focus();
         return closedAny;
     }
 
@@ -1722,6 +1845,41 @@ SEND:"secret\r"'></textarea>
         if (!ws || ws.readyState !== 1) {
             if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
                 showHelp();
+                e.preventDefault();
+                return;
+            }
+            if (e.key === 'd' || e.key === 'D') {
+                showDialingDir();
+                e.preventDefault();
+                return;
+            }
+            if (e.key === 'm' || e.key === 'M') {
+                showMacros();
+                e.preventDefault();
+                return;
+            }
+            if (e.key === 'g' || e.key === 'G') {
+                showDoorGames();
+                e.preventDefault();
+                return;
+            }
+            if (e.key === 'a' || e.key === 'A') {
+                showAnsiArtViewer();
+                e.preventDefault();
+                return;
+            }
+            if (e.key === 'e' || e.key === 'E') {
+                showMsgBase();
+                e.preventDefault();
+                return;
+            }
+            if (e.key === 's' || e.key === 'S') {
+                showSettings();
+                e.preventDefault();
+                return;
+            }
+            if (e.key === 'c' || e.key === 'C') {
+                toggleCaptureState();
                 e.preventDefault();
                 return;
             }

@@ -2030,6 +2030,15 @@ void RunAnsiArtStream(void) {
     StreamAnsiString("╚══════════════════════════════════════════════════════════════════════════════╝\x1B[0m\r\n");
 }
 
+static WNDPROC g_OldEditProc = NULL;
+LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_KEYDOWN && wParam == VK_RETURN) {
+        SendMessageA(GetParent(hwnd), WM_COMMAND, 100, 0); // Connect
+        return 0;
+    }
+    return CallWindowProcA(g_OldEditProc, hwnd, msg, wParam, lParam);
+}
+
 LRESULT CALLBACK WndProc
 (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
@@ -2044,73 +2053,78 @@ LRESULT CALLBACK WndProc
             HDC hdc = GetDC(hwnd);
             int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
             ReleaseDC(hwnd, hdc);
-            int fontHeight = -MulDiv(12, dpi, 72);
+            int fontHeight = -MulDiv(11, dpi, 72);
             int termFontHeight = -MulDiv(kbbsSettings.fontSize, dpi, 72);
 
             hUIFont = CreateFontA(fontHeight, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
                 ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
-                DEFAULT_PITCH | FF_SWISS, "Tahoma");
+                DEFAULT_PITCH | FF_SWISS, "Segoe UI");
 
             hTermFont = CreateFontA(termFontHeight, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
                 DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
                 FIXED_PITCH | FF_MODERN, "Consolas");
 
-            /* Top bar controls */
-            CreateWindowA("STATIC", "Host:", WS_CHILD | WS_VISIBLE, dpiScale(5), dpiScale(7), dpiScale(30), dpiScale(20), hwnd, 0, 0, 0);
+            /* Top bar controls - Row 1 (y = 4) */
+            CreateWindowA("STATIC", "Host:", WS_CHILD | WS_VISIBLE, dpiScale(5), dpiScale(7), dpiScale(32), dpiScale(20), hwnd, 0, 0, 0);
             hHost = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-                dpiScale(38), dpiScale(4), dpiScale(200), dpiScale(22), hwnd, 0, 0, 0);
+                dpiScale(38), dpiScale(4), dpiScale(160), dpiScale(22), hwnd, 0, 0, 0);
 
-            CreateWindowA("STATIC", "Port:", WS_CHILD | WS_VISIBLE, dpiScale(245), dpiScale(7), dpiScale(28), dpiScale(20), hwnd, 0, 0, 0);
+            CreateWindowA("STATIC", "Port:", WS_CHILD | WS_VISIBLE, dpiScale(204), dpiScale(7), dpiScale(28), dpiScale(20), hwnd, 0, 0, 0);
             hPort = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "23", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-                dpiScale(276), dpiScale(4), dpiScale(60), dpiScale(22), hwnd, 0, 0, 0);
+                dpiScale(234), dpiScale(4), dpiScale(45), dpiScale(22), hwnd, 0, 0, 0);
 
             hBtn = CreateWindowA("BUTTON", "Connect", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(342), dpiScale(4), dpiScale(70), dpiScale(22), hwnd, (HMENU)100, 0, 0);
+                dpiScale(284), dpiScale(4), dpiScale(70), dpiScale(22), hwnd, (HMENU)100, 0, 0);
 
-            hCombo = CreateWindowA("BUTTON", "Directory", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(416), dpiScale(4), dpiScale(70), dpiScale(22), hwnd, (HMENU)101, 0, 0);
+            hCombo = CreateWindowA("BUTTON", "Dir [D]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(358), dpiScale(4), dpiScale(60), dpiScale(22), hwnd, (HMENU)101, 0, 0);
 
-            hBtnMacros = CreateWindowA("BUTTON", "Macros", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(490), dpiScale(4), dpiScale(60), dpiScale(22), hwnd, (HMENU)109, 0, 0);
+            hBtnMacros = CreateWindowA("BUTTON", "Macros [M]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(422), dpiScale(4), dpiScale(76), dpiScale(22), hwnd, (HMENU)109, 0, 0);
 
-            hBtnDoor = CreateWindowA("BUTTON", "Door", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(554), dpiScale(4), dpiScale(50), dpiScale(22), hwnd, (HMENU)113, 0, 0);
+            hBtnDoor = CreateWindowA("BUTTON", "Door [G]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(502), dpiScale(4), dpiScale(64), dpiScale(22), hwnd, (HMENU)113, 0, 0);
 
-            hBtnArt = CreateWindowA("BUTTON", "Art", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(608), dpiScale(4), dpiScale(40), dpiScale(22), hwnd, (HMENU)114, 0, 0);
+            hBtnArt = CreateWindowA("BUTTON", "Art [A]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(570), dpiScale(4), dpiScale(56), dpiScale(22), hwnd, (HMENU)114, 0, 0);
 
-            hBtnMsg = CreateWindowA("BUTTON", "Msgs", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(652), dpiScale(4), dpiScale(48), dpiScale(22), hwnd, (HMENU)115, 0, 0);
+            hBtnMsg = CreateWindowA("BUTTON", "Msgs [E]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(630), dpiScale(4), dpiScale(65), dpiScale(22), hwnd, (HMENU)115, 0, 0);
 
             /* Second Row (y = 30) */
             hBtnXmDl = CreateWindowA("BUTTON", "DL (XM)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(5), dpiScale(30), dpiScale(60), dpiScale(22), hwnd, (HMENU)103, 0, 0);
+                dpiScale(5), dpiScale(30), dpiScale(62), dpiScale(22), hwnd, (HMENU)103, 0, 0);
 
             hBtnXmUl = CreateWindowA("BUTTON", "UL (XM)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(70), dpiScale(30), dpiScale(60), dpiScale(22), hwnd, (HMENU)104, 0, 0);
+                dpiScale(71), dpiScale(30), dpiScale(62), dpiScale(22), hwnd, (HMENU)104, 0, 0);
                 
             hBtnZmDl = CreateWindowA("BUTTON", "DL (ZM)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(135), dpiScale(30), dpiScale(60), dpiScale(22), hwnd, (HMENU)105, 0, 0);
+                dpiScale(137), dpiScale(30), dpiScale(62), dpiScale(22), hwnd, (HMENU)105, 0, 0);
 
             hBtnZmUl = CreateWindowA("BUTTON", "UL (ZM)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(200), dpiScale(30), dpiScale(60), dpiScale(22), hwnd, (HMENU)106, 0, 0);
+                dpiScale(203), dpiScale(30), dpiScale(62), dpiScale(22), hwnd, (HMENU)106, 0, 0);
 
             hEcho = CreateWindowA("BUTTON", "Echo", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
-                dpiScale(265), dpiScale(30), dpiScale(52), dpiScale(22), hwnd, (HMENU)102, 0, 0);
+                dpiScale(270), dpiScale(30), dpiScale(52), dpiScale(22), hwnd, (HMENU)102, 0, 0);
 
-            hBtnSettings = CreateWindowA("BUTTON", "Set", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(322), dpiScale(30), dpiScale(40), dpiScale(22), hwnd, (HMENU)110, 0, 0);
+            hBtnSettings = CreateWindowA("BUTTON", "Set [S]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(326), dpiScale(30), dpiScale(56), dpiScale(22), hwnd, (HMENU)110, 0, 0);
 
-            hBtnCapture = CreateWindowA("BUTTON", "Cap: OFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(367), dpiScale(30), dpiScale(75), dpiScale(22), hwnd, (HMENU)111, 0, 0);
+            hBtnCapture = CreateWindowA("BUTTON", "Cap: OFF [C]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(386), dpiScale(30), dpiScale(92), dpiScale(22), hwnd, (HMENU)111, 0, 0);
 
-            hBtnHelp = CreateWindowA("BUTTON", "Help", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(447), dpiScale(30), dpiScale(50), dpiScale(22), hwnd, (HMENU)112, 0, 0);
+            hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(482), dpiScale(30), dpiScale(74), dpiScale(22), hwnd, (HMENU)112, 0, 0);
 
             SendMessageA(hEcho, BM_SETCHECK, kbbsSettings.localEcho ? BST_CHECKED : BST_UNCHECKED, 0);
 
+            /* Subclass host and port edit controls for Enter key connect */
+            g_OldEditProc = (WNDPROC)GetWindowLongPtrA(hHost, GWLP_WNDPROC);
+            SetWindowLongPtrA(hHost, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
+            SetWindowLongPtrA(hPort, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
+
             /* Status bar */
-            hStatus = CreateWindowA("STATIC", "Ready - Enter address or Select BBS (Press H for Help) | RX: 0 B | TX: 0 B", WS_CHILD | WS_VISIBLE | SS_LEFT,
+            hStatus = CreateWindowA("STATIC", "Ready - Enter address or Select BBS (Press F1 or 'H' for Help) | RX: 0 B | TX: 0 B", WS_CHILD | WS_VISIBLE | SS_LEFT,
                 dpiScale(5), dpiScale(60 + TERM_ROWS * kbbsSettings.fontSize + 4), dpiScale(660), dpiScale(18), hwnd, 0, 0, 0);
 
             /* Set fonts */
@@ -2945,7 +2959,7 @@ void __stdcall MainEntry() {
 
     LoadMacros();
 
-    hMain = CreateWindowExA(0, "KBBSClass", "KBBS - Press H for Help",
+    hMain = CreateWindowExA(0, "KBBSClass", "KBBS - Retro BBS Terminal & Utility Suite [Press F1 or 'H' for Help]",
         WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, winW, winH,
         NULL, NULL, wc.hInstance, NULL);
@@ -2957,6 +2971,45 @@ void __stdcall MainEntry() {
     UpdateWindow(hMain);
 
     while (GetMessageA(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN) {
+            HWND focusHwnd = GetFocus();
+            if (focusHwnd != hHost && focusHwnd != hPort) {
+                if (msg.wParam == VK_F1 || (sock == INVALID_SOCKET && (msg.wParam == 'H' || msg.wParam == 'h'))) {
+                    SendMessageA(hMain, WM_COMMAND, 112, 0); // Help
+                    continue;
+                }
+                if (sock == INVALID_SOCKET) {
+                    if (msg.wParam == 'D' || msg.wParam == 'd') {
+                        SendMessageA(hMain, WM_COMMAND, 101, 0); // Directory
+                        continue;
+                    }
+                    if (msg.wParam == 'M' || msg.wParam == 'm') {
+                        SendMessageA(hMain, WM_COMMAND, 109, 0); // Macros
+                        continue;
+                    }
+                    if (msg.wParam == 'G' || msg.wParam == 'g') {
+                        SendMessageA(hMain, WM_COMMAND, 113, 0); // Door Games
+                        continue;
+                    }
+                    if (msg.wParam == 'A' || msg.wParam == 'a') {
+                        SendMessageA(hMain, WM_COMMAND, 114, 0); // ANSI Art
+                        continue;
+                    }
+                    if (msg.wParam == 'E' || msg.wParam == 'e') {
+                        SendMessageA(hMain, WM_COMMAND, 115, 0); // EchoNet Msgs
+                        continue;
+                    }
+                    if (msg.wParam == 'S' || msg.wParam == 's') {
+                        SendMessageA(hMain, WM_COMMAND, 110, 0); // Settings
+                        continue;
+                    }
+                    if (msg.wParam == 'C' || msg.wParam == 'c') {
+                        SendMessageA(hMain, WM_COMMAND, 111, 0); // Capture
+                        continue;
+                    }
+                }
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }
