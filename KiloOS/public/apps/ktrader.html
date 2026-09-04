@@ -360,95 +360,695 @@
       el.scrollTop = el.scrollHeight;
     }
 
+    // --- LOOP 2 GRAPHICS ENGINE ---
+    let animFrameId = null;
+    let animTime = 0;
+    let shakeAmount = 0;
+    let shakeAngle = 0;
+    let jumpProgress = 0; // 0 to 1
+    let jumpActive = false;
+    let shieldImpactPlayer = 0;
+    let shieldImpactEnemy = 0;
+
+    const stars = [];
+    for (let i = 0; i < 60; i++) {
+      stars.push({
+        x: Math.random() * 600,
+        y: Math.random() * 150,
+        speed: 0.2 + Math.random() * 0.8,
+        size: Math.random() < 0.2 ? 2 : 1,
+        twinkle: Math.random() * Math.PI * 2,
+        twinkleSpeed: 0.03 + Math.random() * 0.05
+      });
+    }
+
+    const particles = [];
+    const laserBolts = [];
+
+    function triggerScreenShake(amt) {
+      shakeAmount = Math.max(shakeAmount, amt);
+    }
+
+    function spawnParticleBurst(x, y, type, count = 15) {
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = (Math.random() * 3 + 1) * (type === 'explosion' ? 1.5 : 1.0);
+        let color = '#0ff';
+        let layer = 'spark';
+        let size = Math.random() * 3 + 1.5;
+        let life = 20 + Math.floor(Math.random() * 25);
+
+        if (type === 'explosion') {
+          const r = Math.random();
+          if (r < 0.35) {
+            color = Math.random() < 0.5 ? '#fff' : '#ffea00';
+            layer = 'spark';
+            size = 2 + Math.random() * 2;
+          } else if (r < 0.7) {
+            color = Math.random() < 0.5 ? '#ff4400' : '#883300';
+            layer = 'smoke';
+            size = 4 + Math.random() * 5;
+            life = 35 + Math.floor(Math.random() * 20);
+          } else {
+            color = Math.random() < 0.5 ? '#888888' : '#ff2200';
+            layer = 'debris';
+            size = 2.5 + Math.random() * 2.5;
+            life = 30 + Math.floor(Math.random() * 20);
+          }
+        } else if (type === 'laserHitPlayer') {
+          color = Math.random() < 0.5 ? '#00ffff' : '#88ffff';
+          layer = 'spark';
+        } else if (type === 'laserHitEnemy') {
+          color = Math.random() < 0.5 ? '#ff3300' : '#ffff00';
+          layer = 'spark';
+        } else if (type === 'celebration') {
+          color = Math.random() < 0.5 ? '#ffd700' : '#ff00ff';
+          layer = 'star';
+          size = 3 + Math.random() * 3;
+          life = 40 + Math.floor(Math.random() * 25);
+        } else if (type === 'asteroid') {
+          color = Math.random() < 0.5 ? '#aa7744' : '#665544';
+          layer = 'debris';
+          size = 3 + Math.random() * 3;
+          life = 30 + Math.floor(Math.random() * 15);
+        }
+
+        particles.push({
+          x, y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          color,
+          layer,
+          size,
+          maxLife: life,
+          life,
+          rot: Math.random() * Math.PI * 2,
+          vrot: (Math.random() - 0.5) * 0.2
+        });
+      }
+    }
+
+    function spawnLaserBolt(fromPlayer) {
+      if (fromPlayer) {
+        laserBolts.push({
+          x: 135,
+          y: 75 + Math.sin(animTime * 0.003) * 4,
+          tx: 470,
+          ty: 75 + Math.cos(animTime * 0.004) * 4,
+          progress: 0,
+          speed: 0.08,
+          color: '#00ffff',
+          glow: '#00aaff',
+          fromPlayer: true
+        });
+      } else {
+        laserBolts.push({
+          x: 465,
+          y: 75 + Math.cos(animTime * 0.004) * 4,
+          tx: 100,
+          ty: 75 + Math.sin(animTime * 0.003) * 4,
+          progress: 0,
+          speed: 0.08,
+          color: '#ff2200',
+          glow: '#ff8800',
+          fromPlayer: false
+        });
+      }
+    }
+
+    function triggerJumpFX() {
+      jumpActive = true;
+      jumpProgress = 0;
+      triggerScreenShake(8);
+      spawnParticleBurst(100, 75, 'celebration', 12);
+    }
+
+    function renderLoop(timestamp) {
+      animTime = timestamp || 0;
+      drawGraphics();
+      animFrameId = requestAnimationFrame(renderLoop);
+    }
+
     function drawGraphics() {
       const canvas = document.getElementById('gfx-canvas');
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Draw Player Ship (Left side)
+      const W = canvas.width;
+      const H = canvas.height;
+
+      // Update screen shake
+      let offX = 0, offY = 0;
+      if (shakeAmount > 0.1) {
+        shakeAngle += 0.8;
+        offX = Math.cos(shakeAngle) * shakeAmount;
+        offY = Math.sin(shakeAngle * 1.3) * shakeAmount;
+        shakeAmount *= 0.88;
+      } else {
+        shakeAmount = 0;
+      }
+
       ctx.save();
-      ctx.translate(100, 75);
-      // Ship body
-      ctx.fillStyle = '#0af';
-      ctx.beginPath();
-      ctx.moveTo(30, 0);
-      ctx.lineTo(-20, 20);
-      ctx.lineTo(-10, 0);
-      ctx.lineTo(-20, -20);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      
-      // Engine glow
-      ctx.fillStyle = '#f80';
-      ctx.beginPath();
-      ctx.moveTo(-10, 0);
-      ctx.lineTo(-30, 5);
-      ctx.lineTo(-40, 0);
-      ctx.lineTo(-30, -5);
-      ctx.closePath();
-      ctx.fill();
+      ctx.clearRect(0, 0, W, H);
+      ctx.translate(offX, offY);
+
+      // Deep space backdrop gradient
+      const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+      bgGrad.addColorStop(0, '#020712');
+      bgGrad.addColorStop(0.5, '#050f24');
+      bgGrad.addColorStop(1, '#020712');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Hyperspace warp / jump transition animation
+      if (jumpActive) {
+        jumpProgress += 0.025;
+        if (jumpProgress >= 1.0) {
+          jumpActive = false;
+          jumpProgress = 0;
+        }
+      }
+
+      // Starfield rendering
+      for (const s of stars) {
+        s.twinkle += s.twinkleSpeed;
+        const bright = 0.5 + Math.sin(s.twinkle) * 0.4;
+        
+        if (jumpActive) {
+          // Warp streak lines
+          const streakLen = Math.sin(jumpProgress * Math.PI) * 45 * s.speed;
+          ctx.strokeStyle = `rgba(180, 230, 255, ${bright * 0.8})`;
+          ctx.lineWidth = s.size;
+          ctx.beginPath();
+          ctx.moveTo(s.x, s.y);
+          ctx.lineTo(s.x - streakLen, s.y);
+          ctx.stroke();
+        } else {
+          // Normal drifting star
+          s.x -= s.speed * 0.5;
+          if (s.x < 0) s.x = W;
+          ctx.fillStyle = `rgba(220, 240, 255, ${bright})`;
+          ctx.fillRect(s.x, s.y, s.size, s.size);
+        }
+      }
+
+      // Atmospheric space dust motes
+      if (!jumpActive) {
+        for (let i = 0; i < 6; i++) {
+          const dx = (animTime * 0.02 * (i + 1) * 0.3 + i * 110) % W;
+          const dy = 20 + (i * 24) + Math.sin(animTime * 0.001 + i) * 8;
+          ctx.fillStyle = `rgba(0, 255, 255, ${0.15 + Math.sin(animTime * 0.002 + i) * 0.1})`;
+          ctx.fillRect(dx, dy, 1.5, 1.5);
+        }
+      }
+
+      // Jump flash effect
+      if (jumpActive) {
+        const flashAlpha = Math.sin(jumpProgress * Math.PI) * 0.45;
+        ctx.fillStyle = `rgba(0, 200, 255, ${flashAlpha})`;
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      // Update and Draw Laser Projectiles
+      for (let i = laserBolts.length - 1; i >= 0; i--) {
+        const bolt = laserBolts[i];
+        bolt.progress += bolt.speed;
+        const curX = bolt.x + (bolt.tx - bolt.x) * bolt.progress;
+        const curY = bolt.y + (bolt.ty - bolt.y) * bolt.progress;
+
+        ctx.save();
+        ctx.strokeStyle = bolt.color;
+        ctx.lineWidth = 3;
+        ctx.shadowColor = bolt.glow;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        const tailLen = 22;
+        const dir = bolt.fromPlayer ? -1 : 1;
+        ctx.moveTo(curX, curY);
+        ctx.lineTo(curX + dir * tailLen, curY);
+        ctx.stroke();
+
+        // Bright white core
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.restore();
+
+        if (bolt.progress >= 1.0) {
+          if (bolt.fromPlayer) {
+            shieldImpactEnemy = 15;
+            spawnParticleBurst(bolt.tx, bolt.ty, 'laserHitEnemy', 10);
+            triggerScreenShake(3);
+          } else {
+            shieldImpactPlayer = 15;
+            spawnParticleBurst(bolt.tx, bolt.ty, 'laserHitPlayer', 10);
+            triggerScreenShake(4);
+          }
+          laserBolts.splice(i, 1);
+        }
+      }
+
+      // Draw Player Ship (Left side: ~100, 75)
+      const pBobY = Math.sin(animTime * 0.003) * 3.5;
+      const pTilt = Math.sin(animTime * 0.002) * 0.03;
+      ctx.save();
+      ctx.translate(100, 75 + pBobY);
+      ctx.rotate(pTilt);
+
+      if (state.hasDreadnought) {
+        // --- DREADNOUGHT FLAGSHIP TITAN SPRITE ---
+        // Rear Thrusters (Dual heavy violet flames)
+        const dFlameLen = 25 + Math.sin(animTime * 0.03) * 6;
+        const thGrad = ctx.createLinearGradient(-35, 0, -35 - dFlameLen, 0);
+        thGrad.addColorStop(0, '#ffffff');
+        thGrad.addColorStop(0.3, '#d000ff');
+        thGrad.addColorStop(0.8, '#7000aa');
+        thGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = thGrad;
+        ctx.beginPath();
+        ctx.moveTo(-32, -12);
+        ctx.lineTo(-35 - dFlameLen, -12);
+        ctx.lineTo(-32, -6);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(-32, 6);
+        ctx.lineTo(-35 - dFlameLen, 6);
+        ctx.lineTo(-32, 12);
+        ctx.closePath();
+        ctx.fill();
+
+        // Main Heavy Armor Hull (Dark Obsidian with Magenta Trims)
+        ctx.fillStyle = '#1c152a';
+        ctx.beginPath();
+        ctx.moveTo(45, 0);       // Nose prow
+        ctx.lineTo(25, -18);     // Upper forward wing
+        ctx.lineTo(-10, -25);    // Upper main nacelle
+        ctx.lineTo(-35, -18);    // Upper rear armor
+        ctx.lineTo(-30, 0);      // Engine block
+        ctx.lineTo(-35, 18);     // Lower rear armor
+        ctx.lineTo(-10, 25);     // Lower main nacelle
+        ctx.lineTo(25, 18);      // Lower forward wing
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#c044fe';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Inner Hull Armor Plates
+        ctx.fillStyle = '#2d1f42';
+        ctx.beginPath();
+        ctx.moveTo(30, 0);
+        ctx.lineTo(10, -10);
+        ctx.lineTo(-20, -10);
+        ctx.lineTo(-20, 10);
+        ctx.lineTo(10, 10);
+        ctx.closePath();
+        ctx.fill();
+
+        // Dual Forward Heavy Railguns
+        ctx.fillStyle = '#100b1a';
+        ctx.strokeStyle = '#00ffff';
+        ctx.lineWidth = 1;
+        ctx.fillRect(15, -15, 25, 4);
+        ctx.strokeRect(15, -15, 25, 4);
+        ctx.fillRect(15, 11, 25, 4);
+        ctx.strokeRect(15, 11, 25, 4);
+
+        // Pulsating Antimatter Core
+        const corePulse = 0.5 + Math.sin(animTime * 0.008) * 0.5;
+        ctx.fillStyle = `rgba(255, 0, 255, ${0.4 + corePulse * 0.5})`;
+        ctx.shadowColor = '#f0f';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(0, 0, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Command Bridge Viewport
+        ctx.fillStyle = '#00ffff';
+        ctx.fillRect(5, -3, 8, 6);
+
+        // Specular Sheen Stripe
+        const sheenPos = (animTime * 0.04) % 80 - 40;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(sheenPos - 10, -15);
+        ctx.lineTo(sheenPos + 10, 15);
+        ctx.stroke();
+      } else {
+        // --- STANDARD PLAYER SCOUT / CRUISER SPRITE ---
+        // Animated Engine Thrust Flame
+        const flameLen = 18 + Math.sin(animTime * 0.025) * 5;
+        const flameGrad = ctx.createLinearGradient(-12, 0, -12 - flameLen, 0);
+        flameGrad.addColorStop(0, '#ffffff');
+        flameGrad.addColorStop(0.3, '#00ffff');
+        flameGrad.addColorStop(0.7, '#ff6600');
+        flameGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = flameGrad;
+        ctx.beginPath();
+        ctx.moveTo(-12, -6);
+        ctx.lineTo(-12 - flameLen, 0);
+        ctx.lineTo(-12, 6);
+        ctx.closePath();
+        ctx.fill();
+
+        // Sleek Hull Body (Azure Cyan Gradient)
+        const hullGrad = ctx.createLinearGradient(-25, 0, 35, 0);
+        hullGrad.addColorStop(0, '#004488');
+        hullGrad.addColorStop(0.6, '#00aaff');
+        hullGrad.addColorStop(1, '#00eeff');
+        ctx.fillStyle = hullGrad;
+        ctx.beginPath();
+        ctx.moveTo(35, 0);        // Forward beak
+        ctx.lineTo(-18, 18);     // Bottom wing tip
+        ctx.lineTo(-10, 6);      // Bottom engine intake
+        ctx.lineTo(-24, 0);      // Rear centerline
+        ctx.lineTo(-10, -6);     // Top engine intake
+        ctx.lineTo(-18, -18);    // Top wing tip
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Cockpit Canopy Dome
+        const canopyGrad = ctx.createLinearGradient(0, -4, 15, 4);
+        canopyGrad.addColorStop(0, '#ffffff');
+        canopyGrad.addColorStop(0.4, '#00ffff');
+        canopyGrad.addColorStop(1, '#003366');
+        ctx.fillStyle = canopyGrad;
+        ctx.beginPath();
+        ctx.ellipse(5, 0, 10, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#00ffff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Weapon Cannons based on weapon level
+        ctx.fillStyle = '#222';
+        ctx.strokeStyle = '#0ff';
+        ctx.lineWidth = 1;
+        if (state.weaponLevel >= 1) {
+          // Wingtip mounted laser blasters
+          ctx.fillRect(-8, -19, 14, 2);
+          ctx.strokeRect(-8, -19, 14, 2);
+          ctx.fillRect(-8, 17, 14, 2);
+          ctx.strokeRect(-8, 17, 14, 2);
+        }
+        if (state.weaponLevel >= 2) {
+          // Nose plasma barrel
+          ctx.fillRect(25, -2, 12, 4);
+          ctx.strokeRect(25, -2, 12, 4);
+        }
+
+        // Hull Specular Sweep
+        const sheenX = ((animTime * 0.03) % 60) - 25;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(sheenX - 6, -10);
+        ctx.lineTo(sheenX + 6, 10);
+        ctx.stroke();
+      }
+
+      // Player Shield Bubble (during combat or hit)
+      if (state.inCombat && state.playerShields > 0) {
+        const sAlpha = (shieldImpactPlayer > 0 ? 0.6 : 0.15) + Math.sin(animTime * 0.005) * 0.05;
+        ctx.strokeStyle = `rgba(0, 255, 255, ${sAlpha})`;
+        ctx.fillStyle = `rgba(0, 200, 255, ${sAlpha * 0.3})`;
+        ctx.lineWidth = shieldImpactPlayer > 0 ? 2.5 : 1;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 46, 32, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fill();
+
+        // Shield Hex Grid Accents on hit
+        if (shieldImpactPlayer > 0) {
+          ctx.strokeStyle = `rgba(255, 255, 255, ${shieldImpactPlayer / 15})`;
+          ctx.beginPath();
+          ctx.arc(0, 0, 42, -0.6, 0.6);
+          ctx.stroke();
+          shieldImpactPlayer--;
+        }
+      }
       ctx.restore();
 
+      // Draw Right Side (Combat Pirate OR Peaceful Planet)
       if (state.inCombat) {
-        // Draw Pirate Ship (Right side)
+        // --- PIRATE RAIDER VESSEL ---
+        const eBobY = Math.cos(animTime * 0.004) * 4;
+        const eTilt = Math.sin(animTime * 0.003) * -0.04;
         ctx.save();
-        ctx.translate(500, 75);
-        ctx.fillStyle = '#f00';
+        ctx.translate(500, 75 + eBobY);
+        ctx.rotate(eTilt);
+
+        // Pirate Engine Flame (Rightward thrust)
+        const pFlameLen = 16 + Math.sin(animTime * 0.03) * 5;
+        const pFlameGrad = ctx.createLinearGradient(15, 0, 15 + pFlameLen, 0);
+        pFlameGrad.addColorStop(0, '#ffffff');
+        pFlameGrad.addColorStop(0.3, '#ffff00');
+        pFlameGrad.addColorStop(0.7, '#ff2200');
+        pFlameGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = pFlameGrad;
         ctx.beginPath();
-        ctx.moveTo(-30, 0);
-        ctx.lineTo(20, 25);
-        ctx.lineTo(10, 0);
-        ctx.lineTo(20, -25);
+        ctx.moveTo(15, -6);
+        ctx.lineTo(15 + pFlameLen, 0);
+        ctx.lineTo(15, 6);
         ctx.closePath();
         ctx.fill();
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
+
+        // Jagged Crimson Pirate Hull
+        const pHullGrad = ctx.createLinearGradient(30, 0, -35, 0);
+        pHullGrad.addColorStop(0, '#550000');
+        pHullGrad.addColorStop(0.5, '#cc1100');
+        pHullGrad.addColorStop(1, '#ff3300');
+        ctx.fillStyle = pHullGrad;
+        ctx.beginPath();
+        ctx.moveTo(-35, 0);       // Piercing Ram Beak
+        ctx.lineTo(18, -24);     // Upper jagged fin
+        ctx.lineTo(10, -8);      // Upper armor notch
+        ctx.lineTo(24, 0);       // Engine core
+        ctx.lineTo(10, 8);       // Lower armor notch
+        ctx.lineTo(18, 24);      // Lower jagged fin
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
         ctx.stroke();
-        
-        // Pirate Engine
-        ctx.fillStyle = '#ff0';
+
+        // Menacing Optic Visor
+        const visorGlow = 0.6 + Math.sin(animTime * 0.01) * 0.4;
+        ctx.fillStyle = `rgba(255, 255, 0, ${visorGlow})`;
         ctx.beginPath();
-        ctx.moveTo(10, 0);
-        ctx.lineTo(35, 8);
-        ctx.lineTo(45, 0);
-        ctx.lineTo(35, -8);
-        ctx.closePath();
+        ctx.ellipse(-8, 0, 8, 3, 0, 0, Math.PI * 2);
         ctx.fill();
+
+        // Disruptor Cannons
+        ctx.fillStyle = '#220000';
+        ctx.fillRect(-22, -16, 12, 3);
+        ctx.fillRect(-22, 13, 12, 3);
+
+        // Pirate Shield Bubble
+        if (state.enemyShields > 0) {
+          const eShieldAlpha = (shieldImpactEnemy > 0 ? 0.6 : 0.12) + Math.sin(animTime * 0.006) * 0.05;
+          ctx.strokeStyle = `rgba(255, 50, 50, ${eShieldAlpha})`;
+          ctx.fillStyle = `rgba(255, 0, 0, ${eShieldAlpha * 0.2})`;
+          ctx.lineWidth = shieldImpactEnemy > 0 ? 2.5 : 1;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, 46, 32, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.fill();
+
+          if (shieldImpactEnemy > 0) {
+            ctx.strokeStyle = `rgba(255, 200, 200, ${shieldImpactEnemy / 15})`;
+            ctx.beginPath();
+            ctx.arc(0, 0, 42, Math.PI - 0.6, Math.PI + 0.6);
+            ctx.stroke();
+            shieldImpactEnemy--;
+          }
+        }
         ctx.restore();
       } else {
-        // Draw Planet (Right side)
-        const p = planets[state.location];
+        // --- RICH DETAILED CELESTIAL PLANET ---
+        const p = planets[state.location] || { ecoType: 'Balanced', techLevel: 3 };
         ctx.save();
         ctx.translate(500, 75);
-        
-        let pColor = '#555';
-        if (p.ecoType === "Agri") pColor = '#2a2';
-        if (p.ecoType === "Mining") pColor = '#842';
-        if (p.ecoType === "Tech") pColor = '#0aa';
-        if (p.ecoType === "Industrial") pColor = '#888';
-        if (p.ecoType === "Balanced") pColor = '#258';
-        
-        // Planet body
-        ctx.fillStyle = pColor;
+
+        let cCore = '#2266aa', cAtm = '#00aaff', cDetail = '#338844';
+        if (p.ecoType === "Agri") {
+          cCore = '#1b5e20'; cAtm = '#66bb6a'; cDetail = '#ffd54f';
+        } else if (p.ecoType === "Mining") {
+          cCore = '#bf360c'; cAtm = '#ff7043'; cDetail = '#3e2723';
+        } else if (p.ecoType === "Tech") {
+          cCore = '#006064'; cAtm = '#00e5ff'; cDetail = '#18ffff';
+        } else if (p.ecoType === "Industrial") {
+          cCore = '#37474f'; cAtm = '#ffb300'; cDetail = '#ff5722';
+        } else if (p.ecoType === "Balanced") {
+          cCore = '#0d47a1'; cAtm = '#4fc3f7'; cDetail = '#2e7d32';
+        }
+
+        // Outer Atmosphere Glow
+        const atmGrad = ctx.createRadialGradient(0, 0, 36, 0, 0, 50);
+        atmGrad.addColorStop(0, cAtm);
+        atmGrad.addColorStop(0.5, `rgba(0, 200, 255, 0.25)`);
+        atmGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = atmGrad;
         ctx.beginPath();
-        ctx.arc(0, 0, 40, 0, Math.PI * 2);
+        ctx.arc(0, 0, 50, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        // Craters
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.beginPath(); ctx.arc(-10, -10, 8, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(15, 5, 12, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(-5, 20, 6, 0, Math.PI*2); ctx.fill();
-        
+
+        // Planetary Body with 3D Sphere Shading
+        const sphereGrad = ctx.createRadialGradient(-12, -12, 5, 0, 0, 40);
+        sphereGrad.addColorStop(0, cAtm);
+        sphereGrad.addColorStop(0.5, cCore);
+        sphereGrad.addColorStop(1, '#020510');
+        ctx.fillStyle = sphereGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, 38, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Continents / Surface Craters / City Grids
+        ctx.fillStyle = cDetail;
+        ctx.globalAlpha = 0.45;
+        if (p.ecoType === "Agri" || p.ecoType === "Balanced") {
+          // Continents
+          ctx.beginPath();
+          ctx.ellipse(-10, -10, 14, 8, 0.4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.ellipse(8, 12, 16, 10, -0.3, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (p.ecoType === "Mining" || p.ecoType === "Industrial") {
+          // Fissures & craters
+          ctx.beginPath(); ctx.arc(-14, -8, 7, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(12, 10, 11, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(-6, 18, 5, 0, Math.PI * 2); ctx.fill();
+        } else if (p.ecoType === "Tech") {
+          // Glowing city light grid bands
+          for (let row = -20; row <= 20; row += 10) {
+            ctx.fillRect(-25, row, 50, 2);
+          }
+        }
+        ctx.globalAlpha = 1.0;
+
+        // Planetary Rings (Mining & Tech systems)
+        if (p.ecoType === "Mining" || p.ecoType === "Tech") {
+          ctx.save();
+          ctx.rotate(0.35);
+          ctx.strokeStyle = p.ecoType === "Mining" ? 'rgba(255, 170, 100, 0.5)' : 'rgba(0, 255, 255, 0.5)';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, 60, 14, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // Orbiting Satellite / Beacon (Tech level indicator)
+        const orbAngle = animTime * 0.0015;
+        const satX = Math.cos(orbAngle) * 52;
+        const satY = Math.sin(orbAngle) * 22;
+        ctx.fillStyle = '#00ffff';
+        ctx.fillRect(satX - 2, satY - 2, 4, 4);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 0.8;
+        ctx.strokeRect(satX - 2, satY - 2, 4, 4);
+
         ctx.restore();
       }
+
+      // Update and Render 4-Layer Kinematic Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const pt = particles[i];
+        pt.x += pt.vx;
+        pt.y += pt.vy;
+        pt.rot += pt.vrot;
+        pt.life--;
+
+        // Drag physics & gravity
+        if (pt.layer === 'spark') {
+          pt.vx *= 0.94;
+          pt.vy *= 0.94;
+        } else if (pt.layer === 'smoke') {
+          pt.vy -= 0.04; // buoyant negative gravity
+          pt.size += 0.08;
+          pt.vx *= 0.96;
+        } else if (pt.layer === 'debris') {
+          pt.vy += 0.06; // gravity
+          pt.vx *= 0.98;
+        }
+
+        const alpha = Math.max(0, pt.life / pt.maxLife);
+        ctx.save();
+        ctx.translate(pt.x, pt.y);
+        ctx.rotate(pt.rot);
+        ctx.globalAlpha = alpha;
+
+        if (pt.layer === 'spark') {
+          ctx.strokeStyle = pt.color;
+          ctx.lineWidth = pt.size;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(-pt.vx * 2, -pt.vy * 2);
+          ctx.stroke();
+        } else if (pt.layer === 'smoke') {
+          ctx.fillStyle = pt.color;
+          ctx.beginPath();
+          ctx.arc(0, 0, pt.size, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (pt.layer === 'debris') {
+          ctx.fillStyle = pt.color;
+          ctx.fillRect(-pt.size / 2, -pt.size / 2, pt.size, pt.size);
+        } else if (pt.layer === 'star') {
+          ctx.fillStyle = pt.color;
+          ctx.beginPath();
+          ctx.moveTo(0, -pt.size * 1.5);
+          ctx.lineTo(pt.size * 0.5, -pt.size * 0.5);
+          ctx.lineTo(pt.size * 1.5, 0);
+          ctx.lineTo(pt.size * 0.5, pt.size * 0.5);
+          ctx.lineTo(0, pt.size * 1.5);
+          ctx.lineTo(-pt.size * 0.5, pt.size * 0.5);
+          ctx.lineTo(-pt.size * 1.5, 0);
+          ctx.lineTo(-pt.size * 0.5, -pt.size * 0.5);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+
+        if (pt.life <= 0) {
+          particles.splice(i, 1);
+        }
+      }
+
+      // High-Tech Cybernetic HUD Corner Filigree Brackets
+      ctx.strokeStyle = '#00ffff';
+      ctx.lineWidth = 2;
+      const bSize = 12;
+      // Top-Left
+      ctx.beginPath(); ctx.moveTo(6, 6 + bSize); ctx.lineTo(6, 6); ctx.lineTo(6 + bSize, 6); ctx.stroke();
+      // Top-Right
+      ctx.beginPath(); ctx.moveTo(W - 6 - bSize, 6); ctx.lineTo(W - 6, 6); ctx.lineTo(W - 6, 6 + bSize); ctx.stroke();
+      // Bottom-Left
+      ctx.beginPath(); ctx.moveTo(6, H - 6 - bSize); ctx.lineTo(6, H - 6); ctx.lineTo(6 + bSize, H - 6); ctx.stroke();
+      // Bottom-Right
+      ctx.beginPath(); ctx.moveTo(W - 6 - bSize, H - 6); ctx.lineTo(W - 6, H - 6); ctx.lineTo(W - 6, H - 6 - bSize); ctx.stroke();
+
+      // Traveling specular glint traversing the outer frame
+      const glintPos = (animTime * 0.08) % ((W + H) * 2);
+      let gx = 0, gy = 0;
+      if (glintPos < W) { gx = glintPos; gy = 0; }
+      else if (glintPos < W + H) { gx = W; gy = glintPos - W; }
+      else if (glintPos < W * 2 + H) { gx = W - (glintPos - W - H); gy = H; }
+      else { gx = 0; gy = H - (glintPos - W * 2 - H); }
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.shadowColor = '#00ffff';
+      ctx.shadowBlur = 8;
+      ctx.fillRect(gx - 2, gy - 2, 4, 4);
+      ctx.shadowBlur = 0;
+
+      ctx.restore();
     }
 
     function updateUI() {
@@ -647,6 +1247,8 @@
     function buyUpgrade(type, cost) {
       if (state.credits >= cost) {
         state.credits -= cost;
+        spawnParticleBurst(100, 75, 'celebration', 16);
+        triggerScreenShake(3);
         if (type === 'cargo') {
           state.cargoLevel++;
           state.maxCargo += 20;
@@ -660,6 +1262,8 @@
           log(`Weapons upgraded to level ${state.weaponLevel}!`);
         } else if (type === 'dreadnought') {
           state.hasDreadnought = true;
+          spawnParticleBurst(100, 75, 'celebration', 40);
+          triggerScreenShake(12);
           log(`🏆 YOU WIN! You purchased the legendary Dreadnought! The galaxy is yours! 🏆`, true);
           document.getElementById('ui-log').style.borderColor = '#f0f';
         }
@@ -673,6 +1277,7 @@
         playSound('jump');
         state.fuel -= actualCost;
         state.location = target;
+        triggerJumpFX();
         log(`Hyperspace jump complete. Arrived at ${target}. Used ${actualCost} fuel.`);
         
         let navyIntercept = false;
@@ -702,12 +1307,15 @@
             setTimeout(() => playSound('alert'), 500);
             const fuelLoss = Math.floor(Math.random() * 11) + 5;
             state.fuel = Math.max(0, state.fuel - fuelLoss);
+            spawnParticleBurst(300, 75, 'asteroid', 20);
+            triggerScreenShake(7);
             log(`WARNING: Asteroid field encountered! Evasive maneuvers cost ${fuelLoss} fuel.`, true);
           } else if (enc < 0.66) {
             setTimeout(() => playSound('chime'), 500);
             const creditsGained = Math.floor(Math.random() * 101) + 50;
             state.credits += creditsGained;
             state.repTraders += 5;
+            spawnParticleBurst(300, 75, 'celebration', 15);
             log(`Distress signal! Helped a stranded ship. +${creditsGained} cr, Traders Rep +5.`);
           } else {
             setTimeout(() => startCombat(), 500);
@@ -722,6 +1330,7 @@
             setTimeout(() => playSound('chime'), 500);
             log(`Mission Complete: ${state.activeMission.desc}! Earned ${state.activeMission.reward} cr.`);
             state.credits += state.activeMission.reward;
+            spawnParticleBurst(500, 75, 'celebration', 25);
             if (state.activeMission.type === 'smuggling') state.repPirates += 5;
             else state.repTraders += 5;
             state.activeMission = null;
@@ -740,17 +1349,21 @@
       state.playerShields = 50 + state.cargoLevel * 10;
       state.enemyMaxShields = 20 + Math.floor(Math.random() * 40);
       state.enemyShields = state.enemyMaxShields;
+      triggerScreenShake(5);
       log("🚨 RED ALERT: PIRATE VESSEL INTERCEPTED YOU! 🚨", true);
     }
 
     function combatFire() {
       playSound('laser');
+      spawnLaserBolt(true);
       const dmg = 10 + state.weaponLevel * 15 + Math.floor(Math.random() * 10);
       state.enemyShields -= dmg;
       log(`You fired! Pirate shields took ${dmg} damage.`);
       
       if (state.enemyShields <= 0) {
         log("Pirate ship destroyed!");
+        spawnParticleBurst(500, 75, 'explosion', 35);
+        triggerScreenShake(10);
         const bounty = 50 + Math.floor(Math.random() * 100);
         state.credits += bounty;
         state.repNavy += 5;
@@ -760,6 +1373,7 @@
         if (state.bountyTarget) {
             state.credits += state.activeMission.reward;
             state.repNavy += 5;
+            spawnParticleBurst(500, 75, 'celebration', 25);
             log(`Bounty Complete! Earned ${state.activeMission.reward} cr bonus.`);
             state.activeMission = null;
             state.bountyTarget = false;
@@ -775,9 +1389,11 @@
     function combatFlee() {
       if (Math.random() < 0.5) {
         log("Successfully fled from the pirates!");
+        triggerJumpFX();
         state.inCombat = false;
       } else {
         log("Failed to escape!", true);
+        triggerScreenShake(4);
         enemyTurn();
       }
       updateUI();
@@ -788,19 +1404,25 @@
         state.credits -= 100;
         state.repPirates += 5;
         state.inCombat = false;
+        spawnParticleBurst(300, 75, 'celebration', 10);
         log("Paid 100 cr toll to pirates. Pirates Rep +5.");
         updateUI();
       }
     }
 
     function enemyTurn() {
-      setTimeout(() => playSound('laser'), 300);
+      setTimeout(() => {
+        playSound('laser');
+        spawnLaserBolt(false);
+      }, 300);
       const dmg = 5 + Math.floor(Math.random() * 15);
       state.playerShields -= dmg;
       log(`Pirates fired! Your shields took ${dmg} damage.`, true);
       
       if (state.playerShields <= 0) {
         log("Your shields failed!", true);
+        spawnParticleBurst(100, 75, 'explosion', 30);
+        triggerScreenShake(9);
         const creditsLost = Math.min(state.credits, Math.floor(state.credits * 0.2) + 50);
         state.credits -= creditsLost;
         log(`Pirates looted ${creditsLost} credits and left you drifting.`, true);
@@ -812,6 +1434,7 @@
     generatePrices();
     generateMissions();
     updateUI();
+    requestAnimationFrame(renderLoop);
   </script>
 </body>
 </html>
