@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KMandel
 - KVoid
 - KStarship
 - KConnect4
@@ -149,8 +148,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KHex
 - KStellar
 - KMine
+- KMandel
 
 ## Completed Work Log
+
+- **KMandel (Loop 3):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on zoom operations, pan movements, formula changes, landmark jumps, theme switches, Julia point picks, and 4K PNG exports (continuous 60 FPS requestAnimationFrame offscreen canvas compositing with mathematical translation/rotation in Web Canvas kmandel.html, and double-buffered viewport rendering with trigonometric FastSin/FastCos physics decay in Native C Win32 GDI KMandel/main.c), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant plasma puffs with negative gravity and radius growth, heavy kinematic mathematical crystal / fractal debris shards with tumbling rotation, gravity, drag, and bounce physics, and radiant golden celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion halo radiating upon clicks, zooms, and landmark transitions, ornate cybernetic / mathematical HUD corner filigree L-brackets with tech notches and gold rivet accents at all 4 viewport corners, a pulsating energy perimeter inlay border with an animated traveling specular glint traversing the outer viewport and control panel frames, sculpted interactive element highlights with diagonal specular sheen sweeps traversing inspector buttons, HUD badge, and value displays, and atmospheric floating quantum dust motes drifting across the viewport in both Web Canvas (kmandel.html) and Native C Win32 GDI (KMandel/main.c).
 
 - **KMine (Loop 3):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on mine explosions, chording actions, flag placements, and stage win celebrations (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas kmine.html, and double-buffered viewport rendering with trigonometric FastSin/FastCos physics decay in Native C Win32 GDI KMine/main.c), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant smoke & plasma puffs with negative gravity and radius growth, heavy kinematic metallic mine casing & stone debris shards with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars upon victory), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion halo radiating upon mine detonations and victory bursts, enhanced 3D procedural sprite assets (3D beveled explosive mine spheres with 8-directional radial spikes, red detonator tips, blinking LED core beacons, and specular highlight arcs; detailed animated flags with brass flagpoles, weighted pedestal bases, golden finial orbs, and waving crimson pennants with gold trim and continuous sine-wave cloth ripple animations), beveled 3D tiles with traveling specular glints across diagonals, styled embossed number typography, ornate cybernetic HUD corner filigree L-brackets with tech notches and gold rivet accents at all table corners, a pulsating energy perimeter inlay border, and atmospheric floating cyber dust motes drifting across the board in both Web Canvas (kmine.html) and Native C Win32 GDI (KMine/main.c).
 
