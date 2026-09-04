@@ -1172,10 +1172,151 @@
             flex-shrink: 0;
         }
 
-        #hydrophoneScopeCanvas {
+        /* Phase 14: Comprehensive Captain's Submersible Manual & Survival Codex */
+        .manual-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .manual-nav-tabs {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            flex-shrink: 0;
+            border-bottom: 1px solid var(--border-panel);
+        }
+
+        .manual-nav-btn {
+            background: var(--btn-bg);
+            border: 1px solid var(--border-panel);
+            color: var(--text-dim);
+            padding: 4px 8px;
+            font-size: 9px;
+            border-radius: 3px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .manual-nav-btn:hover {
+            color: var(--text-bright);
+            border-color: var(--border-glow);
+            background: var(--btn-hover);
+        }
+
+        .manual-nav-btn.active {
+            background: var(--btn-hover);
+            border-color: var(--accent-sonar);
+            color: var(--text-bright);
+            font-weight: bold;
+            box-shadow: 0 0 6px rgba(0, 210, 255, 0.3);
+        }
+
+        .manual-content-body {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 4px;
+        }
+
+        .manual-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .manual-card-hdr {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-panel);
+            padding-bottom: 4px;
+        }
+
+        .manual-card-title {
+            font-weight: bold;
+            font-size: 11px;
+            color: var(--text-bright);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .manual-badge {
+            font-size: 8.5px;
+            padding: 2px 6px;
+            border-radius: 2px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .manual-text {
+            font-size: 9.5px;
+            color: var(--text-primary);
+            line-height: 1.45;
+        }
+
+        .manual-table {
             width: 100%;
-            height: 100%;
-            display: block;
+            border-collapse: collapse;
+            font-size: 9px;
+            margin-top: 4px;
+        }
+
+        .manual-table th, .manual-table td {
+            border: 1px solid rgba(19, 60, 90, 0.6);
+            padding: 4px 6px;
+            text-align: left;
+        }
+
+        .manual-table th {
+            background: rgba(13, 34, 53, 0.8);
+            color: var(--text-bright);
+            font-weight: bold;
+        }
+
+        .manual-table tr:nth-child(even) {
+            background: rgba(3, 16, 28, 0.4);
+        }
+
+        .manual-tip-box {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 3px solid var(--accent-emerald);
+            padding: 6px 8px;
+            font-size: 9px;
+            color: var(--text-bright);
+            border-radius: 0 3px 3px 0;
+            line-height: 1.4;
+        }
+
+        .manual-warn-box {
+            background: rgba(239, 68, 68, 0.12);
+            border-left: 3px solid var(--accent-red);
+            padding: 6px 8px;
+            font-size: 9px;
+            color: #fca5a5;
+            border-radius: 0 3px 3px 0;
+            line-height: 1.4;
+        }
+
+        .manual-shortcut-badge {
+            background: rgba(0, 210, 255, 0.15);
+            border: 1px solid var(--accent-sonar);
+            color: var(--accent-sonar);
+            padding: 1px 5px;
+            border-radius: 2px;
+            font-weight: bold;
+            font-family: var(--font-mono);
         }
     
     </style>
@@ -1197,6 +1338,7 @@
             </select>
             <button id="scanlineToggleBtn">📺 SCANLINES: ON</button>
             <button id="soundToggleBtn">🔊 AUDIO: ON</button>
+            <button id="headerHelpBtn" style="border-color: var(--accent-sonar); color: var(--accent-sonar); font-weight: bold;">📖 MANUAL [H]</button>
             <button id="emergencyBlowBtn" style="border-color: var(--accent-red); color: var(--accent-red); font-weight: bold;">🚨 BLOW BALLAST</button>
         </div>
     </header>
@@ -1342,6 +1484,7 @@
                     <button id="viewOutpostsBtn">🏪 OUTPOSTS & TRADE</button>
                     <button id="viewCombatBtn">⚔️ COMBAT & DEFENSE</button>
                     <button id="viewAudioBtn">🎧 SOUND MATRIX</button>
+                    <button id="viewManualBtn">📖 CAPTAIN'S MANUAL</button>
                 </div>
                 <div style="font-size: 10px; color: var(--text-dim); display: flex; gap: 12px; align-items: center;">
                     <span>SECTOR: <b id="currentSectorName" style="color: var(--accent-sonar);">CONTINENTAL SHELF</b></span>
@@ -1786,6 +1929,39 @@
                     <!-- 12 Sound Effect Testing Cards -->
                     <div class="audio-matrix-grid" id="audioMatrixGrid">
                         <!-- Populated dynamically via JS -->
+                    </div>
+                </div>
+
+                <!-- CAPTAIN'S SUBMERSIBLE MANUAL & SURVIVAL CODEX OVERLAY (PHASE 14) -->
+                <div class="overlay-view" id="manualView">
+                    <div class="overlay-header-row">
+                        <div>
+                            <span style="font-weight: bold; color: var(--text-bright); font-size: 11px;">📖 CAPTAIN'S SUBMERSIBLE OPERATING MANUAL & SURVIVAL CODEX</span>
+                            <span style="font-size: 10px; color: var(--accent-emerald); margin-left: 8px;">DSV ABYSS VOYAGER // NAVAL ARCHITECTURE & SURVIVAL STANDARD 2026</span>
+                        </div>
+                        <div style="display: flex; gap: 6px; align-items: center;">
+                            <input type="text" id="manualSearchInput" placeholder="🔍 Search manual..." style="padding: 2px 6px; font-size: 9.5px; background: var(--gauge-bg); border: 1px solid var(--border-panel); color: var(--text-bright); border-radius: 2px; width: 140px;">
+                            <button id="manualPrintHelpBtn" style="font-size: 9px; border-color: var(--accent-sonar); color: var(--accent-sonar);">📜 EXPAND ALL</button>
+                        </div>
+                    </div>
+
+                    <div class="manual-container">
+                        <!-- Chapter Nav Tabs -->
+                        <div class="manual-nav-tabs" id="manualNavTabs">
+                            <button class="manual-nav-btn active" data-tab="dive">🌊 1. DIVE & BALLAST</button>
+                            <button class="manual-nav-btn" data-tab="nav">🗺️ 2. TRENCH CHARTS</button>
+                            <button class="manual-nav-btn" data-tab="fauna">🧬 3. FAUNA & SALVAGE</button>
+                            <button class="manual-nav-btn" data-tab="damage">🚨 4. DAMAGE CONTROL</button>
+                            <button class="manual-nav-btn" data-tab="combat">⚔️ 5. COMBAT DEFENSE</button>
+                            <button class="manual-nav-btn" data-tab="lab">🔬 6. BIOLOGY LAB</button>
+                            <button class="manual-nav-btn" data-tab="trade">🏪 7. OUTPOSTS & TRADE</button>
+                            <button class="manual-nav-btn" data-tab="shortcuts">🎮 8. SHORTCUTS & SOPS</button>
+                        </div>
+
+                        <!-- Manual Body Content -->
+                        <div class="manual-content-body" id="manualContentBody">
+                            <!-- Populated dynamically via JS -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -3284,6 +3460,15 @@
             const viewOutpostsBtn = document.getElementById('viewOutpostsBtn');
             const viewCombatBtn = document.getElementById('viewCombatBtn');
             const viewAudioBtn = document.getElementById('viewAudioBtn');
+            const viewManualBtn = document.getElementById('viewManualBtn');
+            const manualView = document.getElementById('manualView');
+            const manualSearchInput = document.getElementById('manualSearchInput');
+            const manualPrintHelpBtn = document.getElementById('manualPrintHelpBtn');
+            const manualNavTabs = document.getElementById('manualNavTabs');
+            const manualContentBody = document.getElementById('manualContentBody');
+            const headerHelpBtn = document.getElementById('headerHelpBtn');
+            let activeManualTab = 'dive';
+            let manualExpandedAll = false;
 
             // Phase 13 Audio Matrix DOM Elements
             const audioView = document.getElementById('audioView');
@@ -3624,10 +3809,354 @@
                 }
             };
 
+            // --- PHASE 14: CAPTAIN'S SUBMERSIBLE OPERATING MANUAL DATA & RENDERER ---
+            const MANUAL_SECTIONS = [
+                {
+                    id: 'dive',
+                    tab: 'dive',
+                    title: '🌊 CHAPTER 1: DIVE MECHANICS & BUOYANCY TELEMETRY',
+                    badge: 'CORE PHYSICS',
+                    badgeCls: 'tube-badge-ready',
+                    summary: 'Hydrostatic buoyancy principles, ballast flooding, high-pressure air blowing, trim hydroplanes, and extreme depth crush limits.',
+                    content: `
+                        <div class="manual-text">
+                            The <b>DSV Abyss Voyager</b> operates on hydrostatic displacement and variable ballast physics. Mastering vertical descent rates, pitch attitude, and compressed air reserves is essential for surviving hadal exploration.
+                        </div>
+
+                        <div class="manual-card-hdr" style="margin-top: 6px;">
+                            <span class="manual-card-title">⚖️ Buoyancy & Vertical Velocity Equilibrium</span>
+                        </div>
+                        <div class="manual-text">
+                            • <b>Neutral Ballast Point:</b> Exactly <b>45% Ballast Flood</b> represents neutral equilibrium in standard seawater.<br>
+                            • <b>Positive Buoyancy (&lt; 45%):</b> Vessel rises toward surface. Ascent velocity is proportional to air displacement.<br>
+                            • <b>Negative Buoyancy (&gt; 45%):</b> Kingston valves flood ballast tanks with seawater, producing gravitational descent up to -12.0 m/s.<br>
+                            • <b>Hydroplane Pitch Angle:</b> Adjusting pitch between -15° (bow down) and +15° (stern down) converts forward propulsion surge speed into vertical diving velocity:
+                            <div style="background: rgba(2, 11, 18, 0.6); padding: 4px 8px; border: 1px solid var(--border-panel); margin: 4px 0; border-radius: 2px;">
+                                <code>Target Vertical Rate = (45 - Ballast%) * 0.4 + (Pitch / 15.0) * (|Speed| * 0.3)</code>
+                            </div>
+                        </div>
+
+                        <table class="manual-table">
+                            <thead>
+                                <tr><th>Hull Upgrade Tier</th><th>Crush Depth</th><th>Max Integrity</th><th>Operational Depth Zone</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>MK I Standard Carbon</td><td>4,500 m</td><td>100.0%</td><td>Epipelagic & Mesopelagic (0-1000m)</td></tr>
+                                <tr><td>MK II Titanium Carbide</td><td>6,800 m</td><td>125.0%</td><td>Bathypelagic Plumes (1000-4000m)</td></tr>
+                                <tr><td>MK III Graphene Mesh</td><td>9,200 m</td><td>150.0%</td><td>Abyssopelagic Faults (4000-6000m)</td></tr>
+                                <tr><td>MK IV Hadal Matrix</td><td>12,000 m</td><td>200.0%</td><td>Mariana Challenger Deep (6000-11000m)</td></tr>
+                            </tbody>
+                        </table>
+
+                        <div class="manual-tip-box" style="margin-top: 6px;">
+                            <b>💡 DIVE PROTOCOL TIP:</b> When diving below 4,000m, always monitor the <b>CRUSH WARNING</b>. Hydrostatic pressure increases at <b>~1 atm per 10 meters of depth</b> (11,000m = 1,095 atm). Exceeding your hull's rated crush depth inflicts progressive structural deformation and causes spontaneous bulkhead fractures!
+                        </div>
+
+                        <div class="manual-warn-box" style="margin-top: 6px;">
+                            <b>🚨 EMERGENCY BLOW PROCEDURE:</b> Pressing the red <b>EMERGENCY BLOW BALLAST</b> button expels 50 BAR of compressed air to instantaneously empty all ballast tanks to 0% and pitches the bow +10° upward, initiating immediate rocket ascent to the surface.
+                        </div>
+                    `
+                },
+                {
+                    id: 'nav',
+                    tab: 'nav',
+                    title: '🗺️ CHAPTER 2: TRENCH TOPOGRAPHY & NAVIGATION CHARTS',
+                    badge: 'OCEANOGRAPHY',
+                    badgeCls: 'tube-badge-ready',
+                    summary: 'Bathymetric sector zones, seabed elevation profiles, acoustic navigation waypoints, autopilot navigation, and discovery scoring.',
+                    content: `
+                        <div class="manual-text">
+                            The expedition encompasses 4 vertical oceanographic zones spanning from the sunlit continental shelf to the ultimate depths of the Mariana Trench.
+                        </div>
+
+                        <table class="manual-table">
+                            <thead>
+                                <tr><th>Sector Name</th><th>Depth Range</th><th>Water Temp</th><th>Seabed Features & Outposts</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>1. Continental Shelf</td><td>0 - 200 m</td><td>21.4 °C</td><td>Emerald Kelp Shelf, Coral Siphon Reef, Surface Ship ORCA-V</td></tr>
+                                <tr><td>2. Twilight Drop-Off</td><td>200 - 1,000 m</td><td>11.2 °C</td><td>Basalt Canyon Fault, Derelict Sub, Outpost Neptune-Prime</td></tr>
+                                <tr><td>3. Hydrothermal Vents</td><td>1,000 - 4,000 m</td><td>4.0 °C (350°C vents)</td><td>Prometheus Smoker, Sulfur Caldera, Outpost Vulcan-7</td></tr>
+                                <tr><td>4. Hadal Trench Chasm</td><td>4,000 - 11,000 m</td><td>1.8 °C</td><td>Challenger Arch, Siren Deep Abyss, Lab Tethys-IX</td></tr>
+                            </tbody>
+                        </table>
+
+                        <div class="manual-card-hdr" style="margin-top: 6px;">
+                            <span class="manual-card-title">🧭 Navigation Waypoints & Autopilot</span>
+                        </div>
+                        <div class="manual-text">
+                            • <b>Waypoint Cycling:</b> Click <b>CYCLE NAV WAYPOINT</b> to sequence through 8 oceanographic waypoints across all 4 sectors.<br>
+                            • <b>Autopilot Heading Assist:</b> Enabling <b>AUTOPILOT</b> engages dynamic rudder feedback to maintain course directly toward the active waypoint target coordinates.<br>
+                            • <b>Sector Survey Scan:</b> Clicking <b>SURVEY REGION</b> scans the local sensor cone (boosted by Searchlight upgrades) to discover and log uncataloged landmarks, rewarding high Research Credit yields!
+                        </div>
+                    `
+                },
+                {
+                    id: 'fauna',
+                    tab: 'fauna',
+                    title: '🧬 CHAPTER 3: ABYSSAL FAUNA CODEX & SEABED SALVAGE',
+                    badge: 'BIO-SURVEY',
+                    badgeCls: 'tube-badge-ready',
+                    summary: '12 deep-sea organism classes, photophore luminescence, bio-acoustic hydrophone scanning, and hydraulic claw dredging.',
+                    content: `
+                        <div class="manual-text">
+                            Deep ocean ecosystems host alien extremophiles, predatory cephalopods, and primordial leviathans that communicate using infrasonic acoustic pulses.
+                        </div>
+
+                        <table class="manual-table">
+                            <thead>
+                                <tr><th>Species / Anomaly</th><th>Class</th><th>Depth</th><th>Luminescence / Freq</th><th>Survey Value</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Megamouth Filter Shark</td><td>Fauna</td><td>120 m</td><td>120 Lux (Cyan) / 180 Hz</td><td>+60 PTS</td></tr>
+                                <tr><td>Bioluminescent Kelp Flora</td><td>Flora</td><td>85 m</td><td>340 Lux (Emerald) / 0 Hz</td><td>+50 PTS</td></tr>
+                                <tr><td>Pygmy Cuttlefish Pod</td><td>Squid</td><td>165 m</td><td>210 Lux (Amber) / 420 Hz</td><td>+70 PTS</td></tr>
+                                <tr><td>Crown Medusa Swarm</td><td>Fauna</td><td>620 m</td><td>480 Lux (Violet) / 95 Hz</td><td>+90 PTS</td></tr>
+                                <tr><td>Bioluminescent Glass Squid</td><td>Squid</td><td>480 m</td><td>380 Lux (Azure) / 640 Hz</td><td>+100 PTS</td></tr>
+                                <tr><td>Basalt Canyon Rift Fault</td><td>Trench</td><td>840 m</td><td>40 Lux (Infrared) / 24 Hz</td><td>+120 PTS</td></tr>
+                                <tr><td>Giant Riftia Tube Worms</td><td>Flora</td><td>2,350 m</td><td>180 Lux (Ruby) / 60 Hz</td><td>+140 PTS</td></tr>
+                                <tr><td>Colossal Architeuthis Squid</td><td>Squid</td><td>1,750 m</td><td>550 Lux (Deep Cyan) / 120 Hz</td><td>+180 PTS</td></tr>
+                                <tr><td>Phantom Gulper Eel</td><td>Fauna</td><td>3,100 m</td><td>290 Lux (Magenta) / 310 Hz</td><td>+160 PTS</td></tr>
+                                <tr><td>Abyssal Siren Leviathan</td><td>Leviathan</td><td>7,600 m</td><td>920 Lux (Gold) / 18 Hz Infrasound</td><td>+300 PTS</td></tr>
+                                <tr><td>Bioluminescent Ghost Flora</td><td>Flora</td><td>9,200 m</td><td>420 Lux (Pale Cyan) / 0 Hz</td><td>+220 PTS</td></tr>
+                                <tr><td>Challenger Deep Subduction Rift</td><td>Trench</td><td>10,850 m</td><td>150 Lux / 8 Hz Infrasound</td><td>+400 PTS</td></tr>
+                            </tbody>
+                        </table>
+
+                        <div class="manual-card-hdr" style="margin-top: 6px;">
+                            <span class="manual-card-title">🗜️ Seabed Dredging & Mineral Salvage</span>
+                        </div>
+                        <div class="manual-text">
+                            • Deploy hydraulic claw via <b>🗜️ DREDGING CLAW</b>.<br>
+                            • Reduce forward throttle below <b>3.0 knots</b> to protect hydraulic linkages.<br>
+                            • Target locked salvage nodes or dive within <b>35m of seabed</b> and click <b>DREDGE SEABED</b>.<br>
+                            • Harvest Manganese Nodules, Spanish Galleon Bullion, Titanium Wrecks, Smoker Chalcopyrite, and Hadal Geodes. Transship minerals at surface or trade at outposts!
+                        </div>
+                    `
+                },
+                {
+                    id: 'damage',
+                    tab: 'damage',
+                    title: '🚨 CHAPTER 4: BULKHEAD DAMAGE CONTROL & FLOOD MANAGEMENT',
+                    badge: 'SURVIVAL SOP',
+                    badgeCls: 'tube-badge-empty',
+                    summary: 'Watertight bulkhead compartments, breach severity tiers, high-pressure air damming, bilge suction routing, and underwater arc welding.',
+                    content: `
+                        <div class="manual-text">
+                            Hull breaches from violent ramming attacks, crush overpressure, or grounding on submerged rock shelves will rapidly flood internal compartments. Flooded compartments increase vessel displacement weight and cause unstoppable descent!
+                        </div>
+
+                        <div class="manual-card-hdr" style="margin-top: 6px;">
+                            <span class="manual-card-title">🛡️ The 4 Watertight Bulkhead Bays</span>
+                        </div>
+                        <div class="manual-text">
+                            • <b>BOW (Bow Torpedo & Sonar Bay):</b> Houses torpedo tubes and forward active sonar transducer array.<br>
+                            • <b>CMD (Command & Life Support Deck):</b> Houses captain's helm, navigation console, and O2 scrubbers.<br>
+                            • <b>ENG (Reactor & Bilge Pump Bay):</b> Houses main battery bank, auxiliary turbines, and primary bilge manifold.<br>
+                            • <b>AFT (Aft Propulsion & Trim Bay):</b> Houses propeller shaft drive, steering rudder linkages, and aft ballast tanks.
+                        </div>
+
+                        <table class="manual-table">
+                            <thead>
+                                <tr><th>Breach Tier</th><th>Water Ingress</th><th>Color Indicator</th><th>Damage Control Countermeasure</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>0. INTACT</td><td>0.0 GPM</td><td>Emerald</td><td>Nominal operating state.</td></tr>
+                                <tr><td>1. HAIRLINE WEEP</td><td>15 - 35 GPM</td><td>Amber</td><td>Auto-managed by bilge pumps or quick plasma weld.</td></tr>
+                                <tr><td>2. SEAM RUPTURE</td><td>45 - 85 GPM</td><td>Orange</td><td>Engage High-Pressure Air Dam (-60% leak) and weld.</td></tr>
+                                <tr><td>3. TORRENTIAL FRACTURE</td><td>100 - 180 GPM</td><td>Flashing Red</td><td>Seal Watertight Hatch, Route Bilge Priority, Deploy Welders!</td></tr>
+                            </tbody>
+                        </table>
+
+                        <div class="manual-tip-box" style="margin-top: 6px;">
+                            <b>🛠️ FLOOD RECOVERY PROTOCOL:</b><br>
+                            1. <b>Isolate Compartment:</b> Click <b>🔒 SEAL</b> to lock watertight bulkhead doors and contain seawater spread.<br>
+                            2. <b>Charge Air Dam:</b> Click <b>💨 DAM: ON</b> to inject HP compressed air into the compartment overhead, depressing seawater level by 60%.<br>
+                            3. <b>Route Bilge Suction:</b> Click <b>🎯 ROUTE</b> to concentrate all bilge pumping horsepower on the flooded bay.<br>
+                            4. <b>Deploy Plasma Welder:</b> Click <b>🛠️ WELD</b> to seal structural fissures and restore bulkhead integrity to 100%!
+                        </div>
+                    `
+                },
+                {
+                    id: 'combat',
+                    tab: 'combat',
+                    title: '⚔️ CHAPTER 5: UNDERSEA COMBAT & DEFENSE WEAPONS',
+                    badge: 'TACTICAL ORDNANCE',
+                    badgeCls: 'tube-badge-reloading',
+                    summary: 'Torpedo tube firing, ordnance warhead types, acoustic countermeasures, hull EMP shockwave pulse, and silent running stealth.',
+                    content: `
+                        <div class="manual-text">
+                            The ocean depths are patrolled by rogue dredging drones and massive territorial apex leviathans. The 4-tube pneumatic launch system fires 3 distinct torpedo varieties.
+                        </div>
+
+                        <table class="manual-table">
+                            <thead>
+                                <tr><th>Torpedo / Weapon</th><th>Damage</th><th>Velocity</th><th>Reload Time</th><th>Special Tactical Effect</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>🚀 Acoustic Homing Torpedo</td><td>85 DMG</td><td>0.38 km/s</td><td>5.0 s</td><td>High-velocity seeker homing on engine noise.</td></tr>
+                                <tr><td>⚡ EMP Shock Torpedo</td><td>45 DMG</td><td>0.42 km/s</td><td>6.0 s</td><td>Disables drones & stuns leviathans for 8.0 seconds!</td></tr>
+                                <tr><td>🔥 Thermal Plasma Torpedo</td><td>190 DMG</td><td>0.52 km/s</td><td>8.0 s</td><td>Supercavitating warhead melting heavy armor & bone.</td></tr>
+                                <tr><td>🚨 Cavitation Decoy</td><td>-</td><td>Drifting</td><td>Instant</td><td>Emits 180dB noise distracting all hostiles for 14s.</td></tr>
+                                <tr><td>⚡ Hull EMP Shockwave</td><td>60 DMG</td><td>360° Pulse</td><td>10.0 s Cooldown</td><td>Consumes 15% battery to stun all hostiles within 220m.</td></tr>
+                            </tbody>
+                        </table>
+
+                        <div class="manual-tip-box" style="margin-top: 6px;">
+                            <b>🤫 SILENT RUNNING TACTICS:</b> Press <b>[C]</b> to toggle Silent Running. Cavitation dampeners reduce acoustic signature by <b>75%</b>, allowing the bathyscaphe to slip past hostile patrol drones and stalking apex sharks undetected!
+                        </div>
+                    `
+                },
+                {
+                    id: 'lab',
+                    tab: 'lab',
+                    title: '🔬 CHAPTER 6: MARINE BIOLOGY LAB & SYNTHESIS RESEARCH',
+                    badge: 'BIOTECH',
+                    badgeCls: 'tube-badge-ready',
+                    summary: 'Cultivating extremophile bio-specimens, piezophilic nano-polymers, luciferin photophore enzymes, and living cellular regenerators.',
+                    content: `
+                        <div class="manual-text">
+                            Extremophile bacteria, cephalopod DNA, and hadal piezophiles collected during bio-scans can be incubated and synthesized into permanent vessel enhancements.
+                        </div>
+
+                        <div class="manual-card-hdr" style="margin-top: 6px;">
+                            <span class="manual-card-title">🧪 4 Major Research Trees</span>
+                        </div>
+                        <div class="manual-text">
+                            • <b>1. Pressure-Resistant Polymers:</b> Piezophile-infused resins boosting max hull integrity (+50%) and reducing crush damage by up to 50%.<br>
+                            • <b>2. Bioluminescent Enzymes (Luciferin-X):</b> High-lumens photophore gel expanding active sonar range (+1,000m) and doubling scan reward yields.<br>
+                            • <b>3. Chemosynthetic Bio-Fuel Cells:</b> Sulfur-oxidizing bacterial fuel cells reducing engine power drain by 40% and passively recharging battery near hydrothermal vents.<br>
+                            • <b>4. Piezophilic Cellular Regenerator:</b> Living extremophile biome that autonomously heals hairline bulkhead leaks and regenerates +2.0% integrity every 8s below 2000m!
+                        </div>
+                    `
+                },
+                {
+                    id: 'trade',
+                    tab: 'trade',
+                    title: '🏪 CHAPTER 7: LOGISTICS OUTPOSTS & UNDERSEA COMMISSARY',
+                    badge: 'COMMERCE',
+                    badgeCls: 'tube-badge-ready',
+                    summary: 'Deep research station docking protocols, emergency battery pack deployment, drydock repairs, and mineral barter trades.',
+                    content: `
+                        <div class="manual-text">
+                            4 pressurized installations provide logistical staging, utility recharges, and barter trading across all depth sectors.
+                        </div>
+
+                        <table class="manual-table">
+                            <thead>
+                                <tr><th>Station Name</th><th>Sector</th><th>Depth</th><th>Key Stock / Services</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Surface Tender ORCA-V</td><td>Continental Shelf</td><td>0 m</td><td>Free Air & Battery recharge, Acoustic Torpedoes, O2 canisters</td></tr>
+                                <tr><td>Outpost NEPTUNE-PRIME</td><td>Twilight Drop-Off</td><td>580 m</td><td>EMP Shock Torpedoes, Reserve Battery Packs, Structural Patches</td></tr>
+                                <tr><td>Dome VULCAN-7</td><td>Hydrothermal Vents</td><td>2,550 m</td><td>Thermal Plasma Torpedoes, Heavy Repair Kits, Magma recharging</td></tr>
+                                <tr><td>Deep Lab TETHYS-IX</td><td>Mariana Hadal Trench</td><td>8,400 m</td><td>Hadal Fullerene Patches, Hadronic EMP Ordnance, Quantum Batteries</td></tr>
+                            </tbody>
+                        </table>
+
+                        <div class="manual-tip-box" style="margin-top: 6px;">
+                            <b>⚓ DOCKING PROCEDURE:</b> Steer within <b>250 meters</b> and align depth within <b>±50m</b> of the station icon, then click <b>⚓ DOCK AT STATION</b> to engage magnetic mooring clamps!
+                        </div>
+                    `
+                },
+                {
+                    id: 'shortcuts',
+                    tab: 'shortcuts',
+                    title: '🎮 CHAPTER 8: KEYBOARD SHORTCUTS & CAPTAIN\'S SOPS',
+                    badge: 'HOTKEYS & SOPS',
+                    badgeCls: 'tube-badge-ready',
+                    summary: 'Complete command keyboard bindings, emergency response SOPs, and expedition directives.',
+                    content: `
+                        <table class="manual-table">
+                            <thead>
+                                <tr><th>Key / Binding</th><th>Subsystem Action</th><th>Tactical Purpose</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><span class="manual-shortcut-badge">1</span></td><td>Fire Torpedo Tube #1</td><td>Instant launch acoustic/EMP/plasma torpedo</td></tr>
+                                <tr><td><span class="manual-shortcut-badge">2</span></td><td>Fire Torpedo Tube #2</td><td>Instant launch tube #2 ordnance</td></tr>
+                                <tr><td><span class="manual-shortcut-badge">3</span></td><td>Fire Torpedo Tube #3</td><td>Instant launch tube #3 ordnance</td></tr>
+                                <tr><td><span class="manual-shortcut-badge">4</span></td><td>Fire Torpedo Tube #4</td><td>Instant launch tube #4 ordnance</td></tr>
+                                <tr><td><span class="manual-shortcut-badge">X</span></td><td>EMP Shockwave Discharge</td><td>360° electrical pulse stunning all hostiles in 220m</td></tr>
+                                <tr><td><span class="manual-shortcut-badge">C</span></td><td>Toggle Silent Running</td><td>Dampens acoustic noise -75% for stealth cruising</td></tr>
+                                <tr><td><span class="manual-shortcut-badge">Tab</span></td><td>Cycle Target Lock</td><td>Cycles locked contact between threats, fauna & salvage</td></tr>
+                                <tr><td><span class="manual-shortcut-badge">H / ?</span></td><td>Toggle Captain's Manual</td><td>Opens / closes this comprehensive manual</td></tr>
+                            </tbody>
+                        </table>
+
+                        <div class="manual-card-hdr" style="margin-top: 6px;">
+                            <span class="manual-card-title">📜 Expedition Directives & Victory Conditions</span>
+                        </div>
+                        <div class="manual-text">
+                            1. <b>Deep Survey:</b> Catalog all 12 abyssal fauna & hydrothermal anomalies in the Codex.<br>
+                            2. <b>Mineral Dredging:</b> Harvest all 8/8 salvage sites and transship valuable minerals.<br>
+                            3. <b>Extreme Submergence:</b> Submerge past 10,000 meters into the Mariana Challenger Deep.<br>
+                            4. <b>Apex Leviathans:</b> Defend against rogue mining drones and legendary Hadal Serpents!
+                        </div>
+                    `
+                }
+            ];
+
+            function renderManualUI() {
+                manualContentBody.innerHTML = '';
+                const filterText = (manualSearchInput.value || '').trim().toLowerCase();
+
+                const filtered = MANUAL_SECTIONS.filter(sec => {
+                    if (filterText) {
+                        return sec.title.toLowerCase().includes(filterText) ||
+                               sec.summary.toLowerCase().includes(filterText) ||
+                               sec.content.toLowerCase().includes(filterText);
+                    }
+                    return manualExpandedAll || sec.tab === activeManualTab;
+                });
+
+                if (filtered.length === 0) {
+                    manualContentBody.innerHTML = `<div style="text-align: center; color: var(--text-dim); padding: 20px; font-size: 11px;">No manual chapters match "${filterText}". Try searching for 'ballast', 'torpedo', 'crush', 'dredge', or 'fauna'.</div>`;
+                    return;
+                }
+
+                filtered.forEach(sec => {
+                    const card = document.createElement('div');
+                    card.className = 'manual-card';
+                    card.innerHTML = `
+                        <div class="manual-card-hdr">
+                            <span class="manual-card-title">${sec.title}</span>
+                            <span class="manual-badge ${sec.badgeCls}">${sec.badge}</span>
+                        </div>
+                        <div style="font-size: 9px; color: var(--text-dim); font-style: italic;">${sec.summary}</div>
+                        ${sec.content}
+                    `;
+                    manualContentBody.appendChild(card);
+                });
+            }
+
+            manualNavTabs.addEventListener('click', (e) => {
+                const btn = e.target.closest('.manual-nav-btn');
+                if (btn && btn.dataset.tab) {
+                    activeManualTab = btn.dataset.tab;
+                    manualExpandedAll = false;
+                    manualSearchInput.value = '';
+                    manualNavTabs.querySelectorAll('.manual-nav-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    playBeep(520, 'sine', 0.08);
+                    renderManualUI();
+                }
+            });
+
+            manualSearchInput.addEventListener('input', () => {
+                renderManualUI();
+            });
+
+            manualPrintHelpBtn.addEventListener('click', () => {
+                manualExpandedAll = !manualExpandedAll;
+                manualPrintHelpBtn.textContent = manualExpandedAll ? '📑 SHOW ACTIVE TAB ONLY' : '📜 EXPAND ALL';
+                playBeep(450, 'triangle', 0.08);
+                renderManualUI();
+            });
+
             // --- VIEW MODE TOGGLES ---
             function setViewMode(mode) {
                 state.viewMode = mode;
-                [viewSonarBtn, viewNavMapBtn, viewCodexBtn, viewCargoBtn, viewLabBtn, viewOutpostsBtn, viewEngineeringBtn, viewDamageBtn, viewCombatBtn, viewAudioBtn].forEach(b => b && b.classList.remove('active-toggle'));
+                [viewSonarBtn, viewNavMapBtn, viewCodexBtn, viewCargoBtn, viewLabBtn, viewOutpostsBtn, viewEngineeringBtn, viewDamageBtn, viewCombatBtn, viewAudioBtn, viewManualBtn].forEach(b => b && b.classList.remove('active-toggle'));
                 engineeringView.classList.remove('active');
                 codexView.classList.remove('active');
                 cargoView.classList.remove('active');
@@ -3636,6 +4165,7 @@
                 outpostsView.classList.remove('active');
                 combatView.classList.remove('active');
                 audioView.classList.remove('active');
+                manualView.classList.remove('active');
                 document.getElementById('sonarOverlay').style.display = 'none';
                 sonarTargetHud.style.display = 'none';
 
@@ -3698,6 +4228,12 @@
                     sonarModeTag.textContent = 'MODE: ACOUSTIC HYDROPHONE & SOUND MATRIX';
                     renderAudioUI();
                     playBeep(720, 'triangle', 0.1);
+                } else if (mode === 'manual') {
+                    viewManualBtn.classList.add('active-toggle');
+                    manualView.classList.add('active');
+                    sonarModeTag.textContent = 'MODE: CAPTAIN OPERATING MANUAL & SURVIVAL CODEX';
+                    renderManualUI();
+                    playBeep(600, 'triangle', 0.08);
                 }
             }
 
@@ -3711,6 +4247,8 @@
             viewOutpostsBtn.addEventListener('click', () => setViewMode('outposts'));
             viewCombatBtn.addEventListener('click', () => setViewMode('combat'));
             viewAudioBtn.addEventListener('click', () => setViewMode('audio'));
+            viewManualBtn.addEventListener('click', () => setViewMode('manual'));
+            headerHelpBtn.addEventListener('click', () => setViewMode(state.viewMode === 'manual' ? 'sonar' : 'manual'));
 
             btnToggleAmbientOcean.addEventListener('click', toggleAmbientOceanHum);
             audioVolSlider.addEventListener('input', (e) => {
@@ -5313,6 +5851,8 @@
                     state.selectedThreatIdx = (state.selectedThreatIdx + 1) % THREATS.length;
                     playBeep(650, 'sine', 0.06);
                     renderCombatUI();
+                } else if (e.key === 'h' || e.key === 'H' || e.key === '?') {
+                    setViewMode(state.viewMode === 'manual' ? 'sonar' : 'manual');
                 }
             });
 

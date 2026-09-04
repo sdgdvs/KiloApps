@@ -53,28 +53,28 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KSubmarine (Deep-sea underwater exploration & abyssal survival RPG)
-**Phase:** 14 (next to do)
-**Status:** Deep Expansion
+**App:** KStarDredge (Deep space asteroid mining, derelict salvage & orbital refining RPG)
+**Phase:** 1 (next to do)
+**Status:** Creation
 
-- [x] Phase 1: Scaffold KSubmarine directory (`KSubmarine/`), create web HTML skeleton (`KiloOS/public/apps/ksubmarine.html`), register in App.jsx.
-- [x] Phase 2: Core bathyscaphe dashboard (depth gauge, hull pressure integrity, oxygen scrubber, battery bank, sonar ping, ballast dive engine).
-- [x] Phase 3: Native C version (`KSubmarine/main.c`, `build.bat`) using Win32 API with functional parity.
-- [x] Phase 4: Submersible oceanic CRT themes & deep-water scanlines (abyssal cyan, emerald sonar, amber depth, monochrome radar).
-- [x] Phase 5: Deep ocean navigation & trench exploration (steer through continental shelf, hydrothermal vents, abyssal trenches).
-- [x] Phase 6: Submarine module upgrades & engineering (titanium hull plating, high-output ballast pumps, nuclear battery, high-lux searchlights).
-- [x] Phase 7: Sonar scanning & abyssal fauna encounters (detect bioluminescent leviathans, giant squids, deep sea trenches, hydrothermal flora).
-- [x] Phase 8: Resource salvage & dredging claw system (harvest manganese nodules, rare sea minerals, lost sunken wrecks, black smoker crystals).
-- [x] Phase 9: Hull breach & emergency flood management (repair bulkhead leaks, manage bilge pumps, equalize internal air pressure).
-- [x] Phase 10: Research lab & deep-sea biology discovery (catalog alien abyssal species, research pressure-resistant polymers, bioluminescent enzymes).
-- [x] Phase 11: Surface support ship & underwater trading outposts (dock with deep research stations, trade minerals for torpedoes and batteries).
-- [x] Phase 12: Torpedo defense & undersea combat (defend against hostile leviathans and robotic dredging drones with acoustic decoys and torpedoes).
-- [x] Phase 13: Sound Effects — Sonar pings, deep-sea whale song, ballast blow hisses, hull pressure groans, torpedo launches (Web Audio / Win32 Beep).
-- [ ] Phase 14: Comprehensive Help & Captain's Submersible Manual — Dive mechanics, navigation charts, fauna codex, and survival tactics.
+- [ ] Phase 1: Scaffold KStarDredge directory (`KStarDredge/`), create web HTML skeleton (`KiloOS/public/apps/kstardredge.html`), register in App.jsx.
+- [ ] Phase 2: Core mining barge cockpit (thrusters, mining laser, tractor beam, ore hold, reactor core, asteroid radar).
+- [ ] Phase 3: Native C version (`KStarDredge/main.c`, `build.bat`) using Win32 API with functional parity.
+- [ ] Phase 4: Retro-futuristic CRT amber/green vector themes and cockpit scanline shaders.
+- [ ] Phase 5: Asteroid belt navigation & procedural star sector charts (Belt Alpha, Kuiper Ring, Derelict Graveyard, Plasma Nebula).
+- [ ] Phase 6: Mining barge modular upgrades (heavy plasma drills, titan cargo bay, fusion thrusters, particle shields).
+- [ ] Phase 7: Deep scan & asteroid mineral prospecting (spectrometer analysis for ferrum, platinum, void quartz, dark matter geodes).
+- [ ] Phase 8: Derelict spaceship exploration & EVA salvage ops (breach airlocks, recover black boxes, harvest reactor cores).
+- [ ] Phase 9: Hull integrity, radiation exposure & life support crisis management (seal hull breaches, vent plasma leaks, manage O2 scrubbers).
+- [ ] Phase 10: Orbital refinery & metallurgical smelting lab (refine raw ores into hyper-alloys, synthesize warp fuel).
+- [ ] Phase 11: Orbital spaceports & black market trade stations (dock with stations, barter materials, accept dredging contracts).
+- [ ] Phase 12: Void pirate defense & weapon systems (railguns, EMP flak cannons, point-defense lasers against raiders).
+- [ ] Phase 13: Sound Effects — Mining laser hums, rock fracture crunches, thruster burns, collision alarms, railgun discharges (Web Audio / Win32 Beep).
+- [ ] Phase 14: Comprehensive Help & Dredger Captain's Manual — Asteroid charts, ore codex, refinery recipes, and survival tactics.
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
-2. Implement the feature in BOTH `KiloOS/public/apps/ksubmarine.html` AND `KSubmarine/main.c`.
+2. Implement the feature in BOTH `KiloOS/public/apps/kstardredge.html` AND `KStarDredge/main.c`.
 3. Mark the phase as `[x]` in this plan file.
 4. Update the **Phase** number to the next unchecked phase.
 5. Commit and push both the code changes and this plan file update.
@@ -136,6 +136,7 @@ When starting a new app, you MUST write concrete phase descriptions for Phases 5
 Use the game/utility feature priority lists above for inspiration, but write specific descriptions tailored to the app.
 
 ## Completed Apps
+- KSubmarine (Phase 14 completed: Added Comprehensive Help & Captain's Submersible Manual to both versions)
 - KSanctuary (Phase 14 completed: Added Comprehensive Help & Overseer's Survival Manual & Facility Codex to both versions)
 - KStellar (Phase 14 completed: Added Comprehensive Help & Star Captain's Manual to both versions)
 - KColosseum (Phase 14 completed: Added Comprehensive Help & Lanista's Guide to both versions)

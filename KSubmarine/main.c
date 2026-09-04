@@ -141,6 +141,14 @@
 #define ID_BTN_TEST_WELDING        228
 #define ID_BTN_TEST_ALARM          229
 #define ID_BTN_TEST_CENTRIFUGE     230
+#define ID_BTN_VIEW_MANUAL         231
+#define ID_BTN_MANUAL_TAB_0        232
+#define ID_BTN_MANUAL_TAB_1        233
+#define ID_BTN_MANUAL_TAB_2        234
+#define ID_BTN_MANUAL_TAB_3        235
+#define ID_BTN_MANUAL_TAB_4        236
+#define ID_BTN_MANUAL_PREV         237
+#define ID_BTN_MANUAL_NEXT         238
 
 typedef enum {
     THEME_ABYSS = 0,
@@ -809,6 +817,9 @@ typedef struct {
     // Log
     LogEntry logs[MAX_LOGS];
     int logCount;
+
+    // Phase 14: Captain's Submersible Manual
+    int manualTab;
 } SubmarineState;
 
 static SubmarineState g_sub;
@@ -836,6 +847,7 @@ void PlayPlasmaLaunchSound(void);
 void DrawOutpostTradeView(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* th);
 void DrawCombatView(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* th);
 void DrawAudioView(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* th);
+void DrawManualView(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* th);
 void FireTorpedoTube(int tubeIdx);
 void CycleTubeOrdnance(int tubeIdx);
 void LaunchAcousticDecoy(void);
@@ -1356,6 +1368,7 @@ void InitSubmarineState(void) {
 
     g_sub.currentTheme = THEME_ABYSS;
     g_sub.scanlinesEnabled = 1;
+    g_sub.manualTab = 0;
 
     g_sub.logCount = 0;
     AddLog("DSV Abyss Voyager Bathyscaphe computer online. Systems nominal.", g_themes[THEME_ABYSS].textPrimary);
@@ -1363,6 +1376,7 @@ void InitSubmarineState(void) {
     AddLog("Hydraulic dredging claw & mineral cargo bay calibrated.", g_themes[THEME_ABYSS].accentAmber);
     AddLog("Bulkhead damage control & flood isolation manifolds ready.", g_themes[THEME_ABYSS].accentSonar);
     AddLog("Torpedo fire-control, acoustic decoys & threat matrix active.", g_themes[THEME_ABYSS].accentAmber);
+    AddLog("Captain's Submersible Operating Manual [H] loaded in firmware.", g_themes[THEME_ABYSS].accentEmerald);
 }
 
 const char* GetZoneName(float depth) {
@@ -3661,6 +3675,368 @@ void DrawAudioView(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* th
     }
 }
 
+// --- DRAW CAPTAIN'S SUBMERSIBLE MANUAL VIEW (PHASE 14) ---
+void DrawManualView(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* th) {
+    RECT rcBg = { x, y, x + w, y + h };
+    HBRUSH hBr = CreateSolidBrush(th->bgDeep);
+    FillRect(hdc, &rcBg, hBr);
+    DeleteObject(hBr);
+
+    SelectObject(hdc, g_hFontBold);
+    SetTextColor(hdc, th->accentEmerald);
+    TextOutA(hdc, x + 8, y + 6, "CAPTAIN'S SUBMERSIBLE OPERATING MANUAL & ABYSSAL SURVIVAL CODEX", 63);
+
+    // Tab buttons in subheader
+    const char* tabNames[5] = {
+        "1. DIVE & BALLAST",
+        "2. CHARTS & NAV",
+        "3. FAUNA & SALVAGE",
+        "4. DAMAGE & COMBAT",
+        "5. BIOLOGY & KEYS"
+    };
+
+    int tabW = (w - 180) / 5;
+    for (int i = 0; i < 5; i++) {
+        DrawCustomButton(hdc, ID_BTN_MANUAL_TAB_0 + i, x + 6 + i * (tabW + 2), y + 26, tabW, 20,
+                         tabNames[i], g_sub.manualTab == i,
+                         g_sub.manualTab == i ? th->accentEmerald : th->accentSonar, th);
+    }
+    DrawCustomButton(hdc, ID_BTN_MANUAL_PREV, x + w - 162, y + 26, 76, 20, "< PREV", 0, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_MANUAL_NEXT, x + w - 82, y + 26, 76, 20, "NEXT >", 0, th->accentSonar, th);
+
+    int cY = y + 50;
+    int cH = h - 56;
+    int margin = 6;
+
+    if (g_sub.manualTab == 0) {
+        // --- CHAPTER 1: DIVE & BALLAST SOP ---
+        int cardW = (w - margin * 3) / 2;
+        int cardH = (cH - margin * 3) / 2;
+
+        // Card 1: Ballast Dynamics
+        RECT rc1 = { x + margin, cY + margin, x + margin + cardW, cY + margin + cardH };
+        HBRUSH hBrP = CreateSolidBrush(th->bgPanel);
+        HBRUSH hBrB = CreateSolidBrush(th->accentSonar);
+        FillRect(hdc, &rc1, hBrP); FrameRect(hdc, &rc1, hBrB);
+        SelectObject(hdc, g_hFontBold); SetTextColor(hdc, th->accentSonar);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 6, "BALLAST DYNAMICS & BUOYANCY EQUILIBRIUM", 39);
+        SelectObject(hdc, g_hFontSmall); SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 22, "- 0% Ballast: Positive buoyancy. Rapid ascent to surface (0m).", 62);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 36, "- Surface Docking: Automatic solar/diesel air recharge + battery grid.", 70);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 50, "- 45% Ballast: Neutral buoyancy equilibrium. Depth holds steady.", 64);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 64, "- 100% Ballast: Heavy dive configuration. Fast negative vertical rate.", 70);
+        SetTextColor(hdc, th->accentEmerald);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 80, "SOP: Maintain 45% ballast when hovering over seabed salvage zones.", 66);
+        DeleteObject(hBrP); DeleteObject(hBrB);
+
+        // Card 2: Pitch Trim Hydrodynamics
+        RECT rc2 = { x + margin * 2 + cardW, cY + margin, x + margin * 2 + cardW * 2, cY + margin + cardH };
+        hBrP = CreateSolidBrush(th->bgPanel); hBrB = CreateSolidBrush(th->borderPanel);
+        FillRect(hdc, &rc2, hBrP); FrameRect(hdc, &rc2, hBrB);
+        SelectObject(hdc, g_hFontBold); SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 6, "HYDRODYNAMIC PITCH TRIM MECHANICS", 33);
+        SelectObject(hdc, g_hFontSmall); SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 22, "- Pitch Trim Range: -15 deg (Bow Down) to +15 deg (Stern Down).", 63);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 36, "- Hydrodynamic Force: Forward speed converts into rapid dive/climb.", 67);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 50, "- Flank Speed + Bow Trim: Fastest possible descent into deep trenches.", 71);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 64, "- Stern Trim: Rapid emergency climb to escape hostile leviathans.", 65);
+        SetTextColor(hdc, th->accentAmber);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 80, "CAUTION: Steep pitch increases risk of keel seabed collisions!", 62);
+        DeleteObject(hBrP); DeleteObject(hBrB);
+
+        // Card 3: Compressed Air Reservoir & Emergency Blow
+        RECT rc3 = { x + margin, cY + margin * 2 + cardH, x + margin + cardW, cY + margin * 2 + cardH * 2 };
+        hBrP = CreateSolidBrush(th->bgPanel); hBrB = CreateSolidBrush(th->accentEmerald);
+        FillRect(hdc, &rc3, hBrP); FrameRect(hdc, &rc3, hBrB);
+        SelectObject(hdc, g_hFontBold); SetTextColor(hdc, th->accentEmerald);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 6, "HP COMPRESSED AIR & EMERGENCY ASCENT", 36);
+        SelectObject(hdc, g_hFontSmall); SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 22, "- HP Air Reservoir: 300 BAR bank powering pneumatic ballast valves.", 67);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 36, "- Air Damming: Flooded bays consume 12 BAR air to suppress leaks by 60%.", 72);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 50, "- EMERGENCY BLOW: Expels 50 BAR instantly into main ballast tanks.", 66);
+        SetTextColor(hdc, th->accentRed);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 66, "EMERGENCY: Triggers +10 deg pitch up and full positive ascent.", 62);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 80, "Recharge air bank by surfacing (0m) or docking at Outpost Drydocks.", 67);
+        DeleteObject(hBrP); DeleteObject(hBrB);
+
+        // Card 4: Life Support & Atmosphere Management
+        RECT rc4 = { x + margin * 2 + cardW, cY + margin * 2 + cardH, x + margin * 2 + cardW * 2, cY + margin * 2 + cardH * 2 };
+        hBrP = CreateSolidBrush(th->bgPanel); hBrB = CreateSolidBrush(th->borderPanel);
+        FillRect(hdc, &rc4, hBrP); FrameRect(hdc, &rc4, hBrB);
+        SelectObject(hdc, g_hFontBold); SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 6, "LIFE SUPPORT & ATMOSPHERE CONTROL", 33);
+        SelectObject(hdc, g_hFontSmall); SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 22, "- O2 Concentration: Nominal 100%. Alarm triggers below 40%.", 60);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 36, "- CO2 Scrubbers: Auto-mode removes toxic CO2 (<2.0%) via electrical load.", 73);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 50, "- Emergency O2 Canisters: Instant +25% O2 boost & -0.5% CO2 purge.", 66);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 64, "- Cabin Pressure Bleed: Equalize compartment overpressure safely.", 65);
+        SetTextColor(hdc, th->accentEmerald);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 80, "Keep scrubber set to AUTO to avoid carbon dioxide intoxication.", 63);
+        DeleteObject(hBrP); DeleteObject(hBrB);
+
+    } else if (g_sub.manualTab == 1) {
+        // --- CHAPTER 2: CHARTS & NAVIGATION ---
+        int cardW = (w - margin * 3) / 2;
+        int cardH = (cH - margin * 3) / 2;
+
+        // Card 1: Oceanic Depth Zones
+        RECT rc1 = { x + margin, cY + margin, x + margin + cardW, cY + margin + cardH };
+        HBRUSH hBrP = CreateSolidBrush(th->bgPanel); HBRUSH hBrB = CreateSolidBrush(th->accentSonar);
+        FillRect(hdc, &rc1, hBrP); FrameRect(hdc, &rc1, hBrB);
+        SelectObject(hdc, g_hFontBold); SetTextColor(hdc, th->accentSonar);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 6, "BATHYMETRIC SECTORS & DEPTH ZONES", 33);
+        SelectObject(hdc, g_hFontSmall); SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 22, "1. Continental Shelf (0-200m): Sunlit zone, Spanish galleon wrecks.", 67);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 36, "2. Twilight Drop-Off (200-1000m): Mesopelagic, giant siphonophores.", 67);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 50, "3. Hydrothermal Vents (1000-4000m): 350 deg C chimneys, mineral crystals.", 74);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 64, "4. Mariana Hadal Chasm (4000-11000m): 800+ atm crush void, leviathans.", 71);
+        SetTextColor(hdc, th->accentAmber);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 80, "Crush Depth Warning: Upgraded titanium hull required below 4500m!", 65);
+        DeleteObject(hBrP); DeleteObject(hBrB);
+
+        // Card 2: Deep-Sea Outposts & Docking
+        RECT rc2 = { x + margin * 2 + cardW, cY + margin, x + margin * 2 + cardW * 2, cY + margin + cardH };
+        hBrP = CreateSolidBrush(th->bgPanel); hBrB = CreateSolidBrush(th->accentEmerald);
+        FillRect(hdc, &rc2, hBrP); FrameRect(hdc, &rc2, hBrB);
+        SelectObject(hdc, g_hFontBold); SetTextColor(hdc, th->accentEmerald);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 6, "DEEP-SEA OUTPOSTS & BARTER COMMISSARY", 37);
+        SelectObject(hdc, g_hFontSmall); SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 22, "- Poseidon Station (180m), Twilight Deep (850m), Vent Terminal (2800m).", 71);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 36, "- Hadal Watch Outpost (8200m): Deepest research haven in the abyss.", 67);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 50, "- Docking Protocol: Approach within 300m range and matching depth.", 66);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 64, "- Station Services: Free battery/O2 charge, drydock overhaul, ammo trade.", 73);
+        SetTextColor(hdc, th->accentEmerald);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 80, "Barter mined manganese, titanium & crystals for torpedoes & patches!", 69);
+        DeleteObject(hBrP); DeleteObject(hBrB);
+
+        // Card 3: Waypoint Autopilot System
+        RECT rc3 = { x + margin, cY + margin * 2 + cardH, x + margin + cardW, cY + margin * 2 + cardH * 2 };
+        hBrP = CreateSolidBrush(th->bgPanel); hBrB = CreateSolidBrush(th->borderPanel);
+        FillRect(hdc, &rc3, hBrP); FrameRect(hdc, &rc3, hBrB);
+        SelectObject(hdc, g_hFontBold); SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 6, "WAYPOINT PLOTTING & AUTOPILOT SOP", 33);
+        SelectObject(hdc, g_hFontSmall); SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 22, "- 8 Pre-charted waypoints spanning all 4 abyssal exploration sectors.", 69);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 36, "- Autopilot: Computes bearing delta, steers rudder and throttles engine.", 72);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 50, "- Target Waypoint HUD shows range, target depth and course deviation.", 69);
+        SetTextColor(hdc, th->accentSonar);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 66, "Toggle AUTOPILOT with 1 click; disengages automatically upon arrival.", 69);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 80, "Press [SURVEY REGION] at waypoints to map bathymetric contours.", 63);
+        DeleteObject(hBrP); DeleteObject(hBrB);
+
+        // Card 4: Active Sonar & Hydrophones
+        RECT rc4 = { x + margin * 2 + cardW, cY + margin * 2 + cardH, x + margin * 2 + cardW * 2, cY + margin * 2 + cardH * 2 };
+        hBrP = CreateSolidBrush(th->bgPanel); hBrB = CreateSolidBrush(th->borderPanel);
+        FillRect(hdc, &rc4, hBrP); FrameRect(hdc, &rc4, hBrB);
+        SelectObject(hdc, g_hFontBold); SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 6, "ACOUSTIC SONAR & HYDROPHONE ARRAY", 33);
+        SelectObject(hdc, g_hFontSmall); SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 22, "- Sweep Radar: 360-degree rotating hydrophone beam detects bio-targets.", 71);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 36, "- Omnidirectional Ping [SPACE]: Emits 2500m pulse lighting up contacts.", 71);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 50, "- Contact Signatures: Green (Flora), Pink (Squid), Red (Leviathan).", 67);
+        SetTextColor(hdc, th->accentAmber);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 66, "Gold Diamonds: Unharvested deep-sea salvage and mineral chimneys.", 65);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 80, "Sonar Audio Matrix provides real-time acoustic oscilloscope analysis.", 69);
+        DeleteObject(hBrP); DeleteObject(hBrB);
+
+    } else if (g_sub.manualTab == 2) {
+        // --- CHAPTER 3: FAUNA CODEX & SALVAGE DREDGING ---
+        int cardW = (w - margin * 3) / 2;
+        int cardH = (cH - margin * 3) / 2;
+
+        // Card 1: 12 Abyss Organisms
+        RECT rc1 = { x + margin, cY + margin, x + margin + cardW, cY + margin + cardH };
+        HBRUSH hBrP = CreateSolidBrush(th->bgPanel); HBRUSH hBrB = CreateSolidBrush(th->accentEmerald);
+        FillRect(hdc, &rc1, hBrP); FrameRect(hdc, &rc1, hBrB);
+        SelectObject(hdc, g_hFontBold); SetTextColor(hdc, th->accentEmerald);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 6, "ABYSSAL FAUNA CODEX & BIO-SCANNING", 34);
+        SelectObject(hdc, g_hFontSmall); SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 22, "- 12 Unique species: Bioluminescent Jelly, Vampire Squid, Ghost Shark.", 70);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 36, "- Giant Isopod, Anglerfish, Hadal Snailfish, Abyssal Leviathan Wyrm.", 68);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 50, "- Scanning: Select contact in Sonar HUD and trigger BIO-SCAN.", 61);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 64, "- DNA Yields: Plankton, Cephalopod DNA, Enzymes, and Hadal Biomass.", 67);
+        SetTextColor(hdc, th->accentEmerald);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 80, "Leviathan scans grant massive +350 PTS bounty and rare bio-samples!", 68);
+        DeleteObject(hBrP); DeleteObject(hBrB);
+
+        // Card 2: Hydraulic Dredging Claw
+        RECT rc2 = { x + margin * 2 + cardW, cY + margin, x + margin * 2 + cardW * 2, cY + margin + cardH };
+        hBrP = CreateSolidBrush(th->bgPanel); hBrB = CreateSolidBrush(th->accentAmber);
+        FillRect(hdc, &rc2, hBrP); FrameRect(hdc, &rc2, hBrB);
+        SelectObject(hdc, g_hFontBold); SetTextColor(hdc, th->accentAmber);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 6, "HYDRAULIC DREDGING CLAW & SALVAGE", 33);
+        SelectObject(hdc, g_hFontSmall); SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 22, "- Dredging Claw: Deploy claw when within 220m of seabed salvage sites.", 71);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 36, "- 8 Fixed Wreck / Mineral Sites: Sunken galleons, derelict subs, smokers.", 73);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 50, "- General Dredging: Dredge anywhere on seabed to harvest manganese.", 67);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 64, "- Payloads: Manganese (20p), Gold (70p), Titanium (55p), Prisms (160p).", 71);
+        SetTextColor(hdc, th->accentEmerald);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 80, "High-tensile titanium scrap enables instant bulkhead welding repairs!", 69);
+        DeleteObject(hBrP); DeleteObject(hBrB);
+
+        // Card 3: Cargo Hold & Weight Dynamics
+        RECT rc3 = { x + margin, cY + margin * 2 + cardH, x + margin + cardW, cY + margin * 2 + cardH * 2 };
+        hBrP = CreateSolidBrush(th->bgPanel); hBrB = CreateSolidBrush(th->borderPanel);
+        FillRect(hdc, &rc3, hBrP); FrameRect(hdc, &rc3, hBrB);
+        SelectObject(hdc, g_hFontBold); SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 6, "CARGO HOLD LOGISTICS & TRANSSHIPMENT", 36);
+        SelectObject(hdc, g_hFontSmall); SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 22, "- Cargo Hold Capacity: 500 KG maximum payload.", 47);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 36, "- Payload Penalty: Heavy mineral cargo pulls vessel downward.", 61);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 50, "- Transshipment: Sell entire hold at deep outposts for instant credits.", 71);
+        SetTextColor(hdc, th->accentAmber);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 66, "Save titanium scrap and hadal prisms to barter for high-tier ordnance.", 71);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 80, "Offload cargo button located in top header of CARGO view.", 57);
+        DeleteObject(hBrP); DeleteObject(hBrB);
+
+        // Card 4: Research Laboratory Biotechnology
+        RECT rc4 = { x + margin * 2 + cardW, cY + margin * 2 + cardH, x + margin * 2 + cardW * 2, cY + margin * 2 + cardH * 2 };
+        hBrP = CreateSolidBrush(th->bgPanel); hBrB = CreateSolidBrush(th->borderPanel);
+        FillRect(hdc, &rc4, hBrP); FrameRect(hdc, &rc4, hBrB);
+        SelectObject(hdc, g_hFontBold); SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 6, "DEEP-SEA BIOLOGY RESEARCH TREE", 30);
+        SelectObject(hdc, g_hFontSmall); SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 22, "1. Living Polymers: Synthesize squid collagen to extend crush depth.", 68);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 36, "2. Biolum Amplifiers: Luciferin enzymes boost optical range & survey pts.", 74);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 50, "3. Biofuel Synthesis: Smoker thermophiles cut vessel power drain 40%.", 69);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 64, "4. Cellular Regeneration: Living biome automatically heals hull below 2000m.", 76);
+        SetTextColor(hdc, th->accentEmerald);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 80, "Incubate biomass samples in LAB view for bonus culture yields.", 62);
+        DeleteObject(hBrP); DeleteObject(hBrB);
+
+    } else if (g_sub.manualTab == 3) {
+        // --- CHAPTER 4: BULKHEAD DAMAGE CONTROL & COMBAT ---
+        int cardW = (w - margin * 3) / 2;
+        int cardH = (cH - margin * 3) / 2;
+
+        // Card 1: 4 Compartment Bulkheads
+        RECT rc1 = { x + margin, cY + margin, x + margin + cardW, cY + margin + cardH };
+        HBRUSH hBrP = CreateSolidBrush(th->bgPanel); HBRUSH hBrB = CreateSolidBrush(th->accentRed);
+        FillRect(hdc, &rc1, hBrP); FrameRect(hdc, &rc1, hBrB);
+        SelectObject(hdc, g_hFontBold); SetTextColor(hdc, th->accentRed);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 6, "WATERTIGHT BULKHEADS & DAMAGE CONTROL", 37);
+        SelectObject(hdc, g_hFontSmall); SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 22, "- 4 Watertight Bays: BOW (Sonar), CMD (Sphere), ENG (Reactor), AFT.", 67);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 36, "- Breach Tiers: Hairline Weep (4 GPM), Seam (18 GPM), Torrential (55 GPM).", 74);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 50, "- Watertight Doors: Seal adjacent bays to stop progressive flooding.", 68);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 64, "- HP Air Damming: Inject 12 BAR air to repressurize and slow leak by 60%.", 73);
+        SetTextColor(hdc, th->accentEmerald);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 80, "Arc-weld structural patches with titanium scrap for 2x repair speed!", 69);
+        DeleteObject(hBrP); DeleteObject(hBrB);
+
+        // Card 2: Bilge Pumping Systems
+        RECT rc2 = { x + margin * 2 + cardW, cY + margin, x + margin * 2 + cardW * 2, cY + margin + cardH };
+        hBrP = CreateSolidBrush(th->bgPanel); hBrB = CreateSolidBrush(th->accentAmber);
+        FillRect(hdc, &rc2, hBrP); FrameRect(hdc, &rc2, hBrB);
+        SelectObject(hdc, g_hFontBold); SetTextColor(hdc, th->accentAmber);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 6, "BILGE PUMP ROUTING & CABIN EQUALIZATION", 39);
+        SelectObject(hdc, g_hFontSmall); SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 22, "- 7 Pump Modes: Standby, Auto-Balance, Bow, Cmd, Eng, Aft, Overdrive.", 69);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 36, "- Dedicated Routing: Direct all pump power to highest-flooded chamber.", 71);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 50, "- Overdrive Mode: 2.5x drainage capacity at increased battery draw.", 67);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 64, "- Cabin Pressure: Flooding compresses cabin air up to 2.5 atm.", 62);
+        SetTextColor(hdc, th->accentEmerald);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 80, "Open Bleed Valve to safely vent dangerous overpressure buildup.", 63);
+        DeleteObject(hBrP); DeleteObject(hBrB);
+
+        // Card 3: Torpedo Fire-Control
+        RECT rc3 = { x + margin, cY + margin * 2 + cardH, x + margin + cardW, cY + margin * 2 + cardH * 2 };
+        hBrP = CreateSolidBrush(th->bgPanel); hBrB = CreateSolidBrush(th->accentSonar);
+        FillRect(hdc, &rc3, hBrP); FrameRect(hdc, &rc3, hBrB);
+        SelectObject(hdc, g_hFontBold); SetTextColor(hdc, th->accentSonar);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 6, "PNEUMATIC TORPEDO FIRE-CONTROL", 30);
+        SelectObject(hdc, g_hFontSmall); SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 22, "- 4 Torpedo Tubes: Independent pneumatic launch & reload timing.", 64);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 36, "1. Acoustic Homing (85 DMG): Standard homing torpedo against drones/fauna.", 74);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 50, "2. EMP Shock (45 DMG): Emits 8s electromagnetic disable on targets.", 68);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 64, "3. Thermal Plasma (190 DMG): Devastating supercavitating magma blast.", 69);
+        SetTextColor(hdc, th->accentEmerald);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 80, "Press [1]-[4] to fire tubes instantly; cycle ammo types anytime.", 64);
+        DeleteObject(hBrP); DeleteObject(hBrB);
+
+        // Card 4: Defensive Countermeasures
+        RECT rc4 = { x + margin * 2 + cardW, cY + margin * 2 + cardH, x + margin * 2 + cardW * 2, cY + margin * 2 + cardH * 2 };
+        hBrP = CreateSolidBrush(th->bgPanel); hBrB = CreateSolidBrush(th->borderPanel);
+        FillRect(hdc, &rc4, hBrP); FrameRect(hdc, &rc4, hBrB);
+        SelectObject(hdc, g_hFontBold); SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 6, "DEFENSIVE COUNTERMEASURES & TACTICS", 35);
+        SelectObject(hdc, g_hFontSmall); SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 22, "- Acoustic Decoys: Ejects cavitation bubble drone to lure attackers.", 68);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 36, "- Hull EMP Shockwave [X]: 350m electrical shockwave stunning enemies.", 69);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 50, "- Silent Running [C]: Reduces acoustic signature by 70% to evade.", 65);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 64, "- Nanopatch Kits: Instant +35% hull reinforcement in field emergencies.", 71);
+        SetTextColor(hdc, th->accentEmerald);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 80, "Combine Silent Running + Decoy to break aggressive predator locks!", 66);
+        DeleteObject(hBrP); DeleteObject(hBrB);
+
+    } else if (g_sub.manualTab == 4) {
+        // --- CHAPTER 5: BIOLOGY & KEYBOARD SHORTCUTS ---
+        int cardW = (w - margin * 3) / 2;
+        int cardH = (cH - margin * 3) / 2;
+
+        // Card 1: Official Keyboard Shortcuts Table
+        RECT rc1 = { x + margin, cY + margin, x + margin + cardW, cY + margin + cardH };
+        HBRUSH hBrP = CreateSolidBrush(th->bgPanel); HBRUSH hBrB = CreateSolidBrush(th->accentEmerald);
+        FillRect(hdc, &rc1, hBrP); FrameRect(hdc, &rc1, hBrB);
+        SelectObject(hdc, g_hFontBold); SetTextColor(hdc, th->accentEmerald);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 6, "OFFICIAL COMMAND KEYBINDINGS TABLE", 34);
+        SelectObject(hdc, g_hFontSmall); SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 22, "[1] [2] [3] [4]  : Fire Torpedo Tubes 1, 2, 3, 4", 48);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 36, "[X]              : Trigger Hull EMP Shockwave Discharge", 55);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 50, "[C]              : Toggle Silent Running Mode", 45);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 64, "[TAB]            : Cycle Hostile Targets / Waypoints", 52);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 78, "[H] / [F1]       : Toggle Captain's Submersible Manual", 54);
+        SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, rc1.left + 8, rc1.top + 92, "Mouse clicks on all dashboard gauges & switches also supported.", 63);
+        DeleteObject(hBrP); DeleteObject(hBrB);
+
+        // Card 2: Captain's Abyssal Survival SOP
+        RECT rc2 = { x + margin * 2 + cardW, cY + margin, x + margin * 2 + cardW * 2, cY + margin + cardH };
+        hBrP = CreateSolidBrush(th->bgPanel); hBrB = CreateSolidBrush(th->accentAmber);
+        FillRect(hdc, &rc2, hBrP); FrameRect(hdc, &rc2, hBrB);
+        SelectObject(hdc, g_hFontBold); SetTextColor(hdc, th->accentAmber);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 6, "CAPTAIN'S SURVIVAL RULES OF THUMB", 33);
+        SelectObject(hdc, g_hFontSmall); SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 22, "1. Always monitor battery drain when running bilge pumps & lights.", 66);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 36, "2. Seal bulkhead doors immediately when breach sirens sound.", 60);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 50, "3. Surface at 0m or dock at outposts before air tanks hit 0 BAR.", 64);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 64, "4. Research Living Polymers before diving into Hadal Chasm (>4500m).", 68);
+        SetTextColor(hdc, th->accentEmerald);
+        TextOutA(hdc, rc2.left + 8, rc2.top + 80, "5. Harvest seabed minerals regularly to fund ordnance replenishments.", 69);
+        DeleteObject(hBrP); DeleteObject(hBrB);
+
+        // Card 3: Research Engineering Summary
+        RECT rc3 = { x + margin, cY + margin * 2 + cardH, x + margin + cardW, cY + margin * 2 + cardH * 2 };
+        hBrP = CreateSolidBrush(th->bgPanel); hBrB = CreateSolidBrush(th->borderPanel);
+        FillRect(hdc, &rc3, hBrP); FrameRect(hdc, &rc3, hBrB);
+        SelectObject(hdc, g_hFontBold); SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 6, "VESSEL ENGINEERING UPGRADE TIERS", 32);
+        SelectObject(hdc, g_hFontSmall); SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 22, "- Reinforced Titanium Hull (T1-T4): Increases crush depth to 11000m.", 68);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 36, "- High-Pressure Ballast Blowers: Faster ascent & larger air bank.", 65);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 50, "- Lithium-Polymer Battery Banks: Quadruples vessel endurance.", 61);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 64, "- Ultra-Lux Deep Searchlights: Maximizes bio-optical visibility.", 64);
+        SetTextColor(hdc, th->accentEmerald);
+        TextOutA(hdc, rc3.left + 8, rc3.top + 80, "All upgrades purchased with Research Credits in ENG bay.", 56);
+        DeleteObject(hBrP); DeleteObject(hBrB);
+
+        // Card 4: Sound Signatures & Hydrophone Library
+        RECT rc4 = { x + margin * 2 + cardW, cY + margin * 2 + cardH, x + margin * 2 + cardW * 2, cY + margin * 2 + cardH * 2 };
+        hBrP = CreateSolidBrush(th->bgPanel); hBrB = CreateSolidBrush(th->borderPanel);
+        FillRect(hdc, &rc4, hBrP); FrameRect(hdc, &rc4, hBrB);
+        SelectObject(hdc, g_hFontBold); SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 6, "ACOUSTIC SIGNATURE RECOGNITION", 30);
+        SelectObject(hdc, g_hFontSmall); SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 22, "- Whale Song & Leviathan Harmonics: 65-195 Hz low-frequency rumbles.", 68);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 36, "- Hull Pressure Groans: 40-160 Hz indicating extreme depth strain.", 66);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 50, "- Torpedo & Plasma Ejection: High cavitation wake impulse sounds.", 65);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 64, "- Listen to and test all 12 acoustic signatures in the SOUND view.", 66);
+        SetTextColor(hdc, th->accentSonar);
+        TextOutA(hdc, rc4.left + 8, rc4.top + 80, "Audio engine supports real-time async Windows sound synthesis.", 62);
+        DeleteObject(hBrP); DeleteObject(hBrB);
+    }
+}
+
 void DrawUI(HDC hdc, RECT* rcClient) {
     int clientW = rcClient->right - rcClient->left;
     int clientH = rcClient->bottom - rcClient->top;
@@ -3839,8 +4215,8 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     snprintf(secTag, sizeof(secTag), "SECTOR: %s | SURVEY: %d PTS", g_sectors[g_sub.currentSectorIdx].name, g_sub.surveyPoints);
     DrawPanelBox(hdc, centerX, panelY, centerW, sonarH, "DEEP OCEAN & FAUNA EXPLORATION", secTag, th->accentEmerald, th);
 
-    // View switch buttons inside center panel header (10 views)
-    int btnViewW = (centerW - 132) / 10;
+    // View switch buttons inside center panel header (11 views)
+    int btnViewW = (centerW - 132) / 11;
     DrawCustomButton(hdc, ID_BTN_VIEW_SONAR, centerX + 8, panelY + 28, btnViewW - 2, 20, "SONAR", g_sub.viewMode == 0, th->accentSonar, th);
     DrawCustomButton(hdc, ID_BTN_VIEW_NAVMAP, centerX + 6 + btnViewW, panelY + 28, btnViewW - 2, 20, "TRENCH", g_sub.viewMode == 1, th->accentSonar, th);
     DrawCustomButton(hdc, ID_BTN_VIEW_CODEX, centerX + 4 + btnViewW * 2, panelY + 28, btnViewW - 2, 20, "CODEX", g_sub.viewMode == 2, th->accentSonar, th);
@@ -3851,6 +4227,7 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     DrawCustomButton(hdc, ID_BTN_VIEW_OUTPOSTS, centerX - 6 + btnViewW * 7, panelY + 28, btnViewW - 2, 20, "TRADE", g_sub.viewMode == 7, th->accentEmerald, th);
     DrawCustomButton(hdc, ID_BTN_VIEW_COMBAT, centerX - 8 + btnViewW * 8, panelY + 28, btnViewW - 2, 20, "COMBAT", g_sub.viewMode == 8, th->accentRed, th);
     DrawCustomButton(hdc, ID_BTN_VIEW_AUDIO, centerX - 10 + btnViewW * 9, panelY + 28, btnViewW - 2, 20, "SOUND", g_sub.viewMode == 9, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_VIEW_MANUAL, centerX - 12 + btnViewW * 10, panelY + 28, btnViewW - 2, 20, "MANUAL", g_sub.viewMode == 10, th->accentEmerald, th);
     DrawCustomButton(hdc, ID_BTN_FIELD_DIAG, centerX + centerW - 124, panelY + 28, 116, 20, "+35 PTS DIAG", 0, th->accentAmber, th);
 
     int sonarContentY = panelY + 52;
@@ -4042,6 +4419,8 @@ void DrawUI(HDC hdc, RECT* rcClient) {
         DrawCombatView(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
     } else if (g_sub.viewMode == 9) {
         DrawAudioView(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
+    } else if (g_sub.viewMode == 10) {
+        DrawManualView(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
     }
 
     SelectObject(hdc, g_hFontSmall);
@@ -4211,9 +4590,9 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
         if (mx >= clientW - 142 && mx <= clientW - 12) return ID_BTN_EMERGENCY_BLOW;
     }
 
-    // View toggles in center panel (10 buttons)
+    // View toggles in center panel (11 buttons)
     if (my >= panelY + 28 && my <= panelY + 48) {
-        int btnViewW = (centerW - 132) / 10;
+        int btnViewW = (centerW - 132) / 11;
         if (mx >= centerX + 8 && mx <= centerX + 8 + btnViewW - 2) return ID_BTN_VIEW_SONAR;
         if (mx >= centerX + 6 + btnViewW && mx <= centerX + 6 + btnViewW * 2 - 2) return ID_BTN_VIEW_NAVMAP;
         if (mx >= centerX + 4 + btnViewW * 2 && mx <= centerX + 4 + btnViewW * 3 - 2) return ID_BTN_VIEW_CODEX;
@@ -4224,7 +4603,26 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
         if (mx >= centerX - 6 + btnViewW * 7 && mx <= centerX - 6 + btnViewW * 8 - 2) return ID_BTN_VIEW_OUTPOSTS;
         if (mx >= centerX - 8 + btnViewW * 8 && mx <= centerX - 8 + btnViewW * 9 - 2) return ID_BTN_VIEW_COMBAT;
         if (mx >= centerX - 10 + btnViewW * 9 && mx <= centerX - 10 + btnViewW * 10 - 2) return ID_BTN_VIEW_AUDIO;
+        if (mx >= centerX - 12 + btnViewW * 10 && mx <= centerX - 12 + btnViewW * 11 - 2) return ID_BTN_VIEW_MANUAL;
         if (mx >= centerX + centerW - 124 && mx <= centerX + centerW - 8) return ID_BTN_FIELD_DIAG;
+    }
+
+    // Manual View (viewMode 10)
+    if (g_sub.viewMode == 10) {
+        int sonarContentY = panelY + 52;
+        int manX = centerX + 6;
+        int manY = sonarContentY + 4;
+        int manW = centerW - 12;
+
+        if (my >= manY + 26 && my <= manY + 46) {
+            int tabW = (manW - 180) / 5;
+            for (int i = 0; i < 5; i++) {
+                int tx = manX + 6 + i * (tabW + 2);
+                if (mx >= tx && mx <= tx + tabW) return ID_BTN_MANUAL_TAB_0 + i;
+            }
+            if (mx >= manX + manW - 162 && mx <= manX + manW - 86) return ID_BTN_MANUAL_PREV;
+            if (mx >= manX + manW - 82 && mx <= manX + manW - 6) return ID_BTN_MANUAL_NEXT;
+        }
     }
 
     // Audio Matrix View (viewMode 9) 12 sound buttons
@@ -4696,6 +5094,31 @@ void HandleCommand(int cmdId) {
         case ID_BTN_VIEW_AUDIO:
             g_sub.viewMode = 9;
             PlaySoundAsync(720, 80);
+            break;
+
+        case ID_BTN_VIEW_MANUAL:
+            g_sub.viewMode = 10;
+            PlaySoundAsync(580, 80);
+            AddLog("Captain's Bathyscaphe Submersible Field Manual opened.", th->accentEmerald);
+            break;
+
+        case ID_BTN_MANUAL_TAB_0:
+        case ID_BTN_MANUAL_TAB_1:
+        case ID_BTN_MANUAL_TAB_2:
+        case ID_BTN_MANUAL_TAB_3:
+        case ID_BTN_MANUAL_TAB_4:
+            g_sub.manualTab = cmdId - ID_BTN_MANUAL_TAB_0;
+            PlaySoundAsync(440, 60);
+            break;
+
+        case ID_BTN_MANUAL_PREV:
+            g_sub.manualTab = (g_sub.manualTab + 4) % 5;
+            PlaySoundAsync(420, 60);
+            break;
+
+        case ID_BTN_MANUAL_NEXT:
+            g_sub.manualTab = (g_sub.manualTab + 1) % 5;
+            PlaySoundAsync(460, 60);
             break;
 
         case ID_BTN_TEST_SONAR_PING:
@@ -5663,6 +6086,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
                 InvalidateRect(hWnd, NULL, FALSE);
             } else if (wParam == 'C' || wParam == 'c') {
                 ToggleSilentRunning();
+                InvalidateRect(hWnd, NULL, FALSE);
+            } else if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
+                g_sub.viewMode = (g_sub.viewMode == 10 ? 0 : 10);
+                PlaySoundAsync(580, 80);
+                InvalidateRect(hWnd, NULL, FALSE);
+            } else if (wParam == VK_SPACE) {
+                HandleCommand(ID_BTN_SONAR_PING);
                 InvalidateRect(hWnd, NULL, FALSE);
             } else if (wParam == VK_TAB) {
                 g_sub.selectedThreatIdx = (g_sub.selectedThreatIdx + 1) % THREAT_COUNT;
