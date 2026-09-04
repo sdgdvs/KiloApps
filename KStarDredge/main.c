@@ -14,19 +14,21 @@
 #define ID_BTN_TRACTOR     102
 #define ID_BTN_DAMPENER    103
 #define ID_BTN_SCAN        104
-#define ID_BTN_THEME       105
-#define ID_BTN_SCANLINES   106
-#define ID_BTN_AUDIO       107
-#define ID_BTN_HELP        108
-#define ID_BTN_JETTISON    109
-#define ID_BTN_SELL        110
+#define ID_BTN_NAV         105
+#define ID_BTN_THEME       106
+#define ID_BTN_SCANLINES   107
+#define ID_BTN_AUDIO       108
+#define ID_BTN_HELP        109
+#define ID_BTN_JETTISON    110
+#define ID_BTN_SELL        111
 
-#define SFX_NONE      0
-#define SFX_COLLECT   1
-#define SFX_FRACTURE  2
-#define SFX_OVERHEAT  3
+#define SFX_NONE        0
+#define SFX_COLLECT     1
+#define SFX_FRACTURE    2
+#define SFX_OVERHEAT    3
 #define SFX_LASER_PULSE 4
-#define SFX_BEEP      5
+#define SFX_BEEP        5
+#define SFX_WARP        6
 
 #define MAX_STARS 150
 #define MAX_ASTEROIDS 24
@@ -89,7 +91,7 @@ typedef struct {
 
 typedef struct {
     char text[128];
-    int type; // 0=system, 1=mining, 2=cargo, 3=warning, 4=critical, 5=success
+    int type; // 0=system, 1=mining, 2=cargo, 3=warning, 4=critical, 5=success, 6=warp
 } LogEntry;
 
 // Ore Definitions
@@ -106,6 +108,71 @@ static const OreInfo ORE_DEFS[6] = {
     { "Void Quartz",    RGB(192, 132, 252), 140 },
     { "Dark Geode",     RGB(244, 63, 94),   300 },
     { "Derelict Scrap", RGB(251, 191, 36),  50 }
+};
+
+// Sector Star Chart Definitions
+typedef struct {
+    const char* name;
+    const char* type;
+    const char* hazard;
+    COLORREF hazardColor;
+    int fuelCost;
+    int density;
+    const char* desc;
+    int oreWeights[6]; // Ferrum, Silicates, Platinum, Void Quartz, Dark Geode, Derelict Scrap
+    COLORREF nebulaColor;
+    COLORREF starColor;
+} SectorDef;
+
+static const SectorDef SECTOR_DEFS[4] = {
+    {
+        "Belt Alpha-09",
+        "Dense Metallic Asteroid Belt",
+        "LOW (★☆☆☆)",
+        RGB(16, 185, 129),
+        10,
+        22,
+        "Inner dense asteroid belt rich in industrial ferrum, silicates, and standard veins.",
+        { 50, 30, 12, 8, 0, 0 },
+        RGB(8, 16, 40),
+        RGB(224, 242, 254)
+    },
+    {
+        "Kuiper Ring",
+        "Frozen Outer Asteroid Ring",
+        "MODERATE (★★☆☆)",
+        RGB(245, 158, 11),
+        18,
+        26,
+        "Sub-zero icy peripheral belt containing dense platinum veins and crystallized silicates.",
+        { 15, 30, 45, 10, 0, 0 },
+        RGB(4, 30, 40),
+        RGB(207, 250, 254)
+    },
+    {
+        "Derelict Graveyard",
+        "Warzone Salvage Wreckage",
+        "HIGH (★★★☆)",
+        RGB(219, 39, 119),
+        25,
+        24,
+        "Shattered remnants of orbital fleet skirmishes. High concentration of scrap & quartz.",
+        { 0, 0, 15, 25, 10, 50 },
+        RGB(35, 18, 5),
+        RGB(254, 243, 199)
+    },
+    {
+        "Plasma Nebula",
+        "Ionized Stellar Storm",
+        "EXTREME (★★★★)",
+        RGB(239, 68, 68),
+        35,
+        28,
+        "Energetic stellar nursery saturated with volatile plasma discharges and Dark Matter.",
+        { 0, 0, 15, 35, 40, 10 },
+        RGB(32, 6, 32),
+        RGB(250, 232, 255)
+    }
 };
 
 // CRT Vector Theme Definitions
@@ -220,6 +287,11 @@ static const ThemePalette THEME_PALETTES[4] = {
 // Game State
 typedef struct {
     int credits;
+    int currentSectorIndex;
+    int selectedSectorIndex;
+    int showStarChart;
+    int warpActive;
+    float warpTimer;
     char sector[32];
     float hull, maxHull;
     float shield, maxShield;
@@ -262,7 +334,7 @@ typedef struct {
 
 static GameState g_state;
 static HWND g_hwnd = NULL;
-static HWND g_btnLaser, g_btnTractor, g_btnDampener, g_btnScan, g_btnTheme, g_btnScanlines, g_btnAudio, g_btnHelp, g_btnJettison, g_btnSell;
+static HWND g_btnLaser, g_btnTractor, g_btnDampener, g_btnScan, g_btnNav, g_btnTheme, g_btnScanlines, g_btnAudio, g_btnHelp, g_btnJettison, g_btnSell;
 static HFONT g_fontMono = NULL;
 static HFONT g_fontMonoBold = NULL;
 static HFONT g_fontSmall = NULL;
@@ -290,6 +362,11 @@ DWORD WINAPI SoundThreadProc(LPVOID lpParam) {
                 Beep(700, 50);
             } else if (sfx == SFX_LASER_PULSE) {
                 Beep(480, 30);
+            } else if (sfx == SFX_WARP) {
+                Beep(160, 60);
+                Beep(420, 80);
+                Beep(920, 110);
+                Beep(240, 90);
             }
         }
         Sleep(20);
@@ -309,6 +386,9 @@ void AddFloatingText(const char* text, float x, float y, COLORREF color);
 void AddSparks(float x, float y, COLORREF color, int count);
 void SpawnOreChunk(float x, float y, int oreType, int amount);
 void SpawnAsteroid(int index, int oreType);
+int PickOreForSector(int sectorIdx);
+void InitSectorField(int sectorIdx);
+void EngageWarpJump(int targetSectorIdx);
 void InitGame(void);
 void UpdateGame(float dt);
 void RenderGame(HDC hdc, RECT* clientRect);
@@ -388,6 +468,20 @@ void SpawnOreChunk(float x, float y, int oreType, int amount) {
     }
 }
 
+int PickOreForSector(int sectorIdx) {
+    if (sectorIdx < 0 || sectorIdx >= 4) sectorIdx = 0;
+    const SectorDef* sec = &SECTOR_DEFS[sectorIdx];
+    int total = 0;
+    for (int i = 0; i < 6; i++) total += sec->oreWeights[i];
+    if (total <= 0) return rand() % 6;
+    int r = rand() % total;
+    for (int i = 0; i < 6; i++) {
+        if (r < sec->oreWeights[i]) return i;
+        r -= sec->oreWeights[i];
+    }
+    return 0;
+}
+
 void SpawnAsteroid(int index, int oreType) {
     Asteroid* ast = &g_state.asteroids[index];
     float angle = ((float)rand() / (float)RAND_MAX) * 6.28318f;
@@ -401,7 +495,7 @@ void SpawnAsteroid(int index, int oreType) {
     ast->radius = 18.0f + (((float)rand() / (float)RAND_MAX) * 24.0f);
     ast->maxHp = (float)((int)(ast->radius * 3.5f));
     ast->hp = ast->maxHp;
-    ast->oreType = (oreType >= 0 && oreType < 6) ? oreType : (rand() % 6);
+    ast->oreType = (oreType >= 0 && oreType < 6) ? oreType : PickOreForSector(g_state.currentSectorIndex);
     ast->richness = 40 + (rand() % 60);
     ast->rot = ((float)rand() / (float)RAND_MAX) * 6.28318f;
     ast->rotSpeed = (((float)rand() / (float)RAND_MAX) - 0.5f) * 0.02f;
@@ -411,6 +505,80 @@ void SpawnAsteroid(int index, int oreType) {
     for (int v = 0; v < ast->numVerts; v++) {
         ast->verts[v].a = ((float)v / (float)ast->numVerts) * 6.28318f;
         ast->verts[v].r = ast->radius * (0.75f + (((float)rand() / (float)RAND_MAX) * 0.35f));
+    }
+}
+
+void InitSectorField(int sectorIdx) {
+    if (sectorIdx < 0 || sectorIdx >= 4) sectorIdx = 0;
+    g_state.currentSectorIndex = sectorIdx;
+    g_state.selectedSectorIndex = sectorIdx;
+    strncpy(g_state.sector, SECTOR_DEFS[sectorIdx].name, 31);
+    g_state.sector[31] = '\0';
+    
+    // Seed Stars
+    for (int i = 0; i < MAX_STARS; i++) {
+        g_state.stars[i].x = (((float)rand() / (float)RAND_MAX) - 0.5f) * 4500.0f;
+        g_state.stars[i].y = (((float)rand() / (float)RAND_MAX) - 0.5f) * 4500.0f;
+        g_state.stars[i].size = 1.0f + (((float)rand() / (float)RAND_MAX) * 1.6f);
+        g_state.stars[i].brightness = 0.3f + (((float)rand() / (float)RAND_MAX) * 0.7f);
+    }
+    
+    // Seed Asteroids per density
+    int count = SECTOR_DEFS[sectorIdx].density;
+    if (count > MAX_ASTEROIDS) count = MAX_ASTEROIDS;
+    for (int i = 0; i < MAX_ASTEROIDS; i++) {
+        if (i < count) {
+            SpawnAsteroid(i, PickOreForSector(sectorIdx));
+        } else {
+            g_state.asteroids[i].active = 0;
+        }
+    }
+    
+    for (int i = 0; i < MAX_ORE_CHUNKS; i++) g_state.oreChunks[i].active = 0;
+    g_state.selectedAstIndex = -1;
+}
+
+void EngageWarpJump(int targetSectorIdx) {
+    if (targetSectorIdx < 0 || targetSectorIdx >= 4) return;
+    if (targetSectorIdx == g_state.currentSectorIndex) return;
+    const SectorDef* target = &SECTOR_DEFS[targetSectorIdx];
+    if (g_state.fuel < (float)target->fuelCost) {
+        AddLog("CRITICAL: Insufficient fuel for warp jump!", 4);
+        return;
+    }
+    
+    g_state.fuel -= (float)target->fuelCost;
+    g_state.warpActive = 1;
+    g_state.warpTimer = 1.6f;
+    g_state.showStarChart = 0;
+    TriggerSound(SFX_WARP);
+    
+    char buf[128];
+    sprintf(buf, "Sub-space warp jump initiated to: [%s]", target->name);
+    AddLog(buf, 6);
+    
+    char fTxt[32];
+    sprintf(fTxt, "WARP: %s", target->name);
+    AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 40.0f, RGB(244, 63, 94));
+    
+    // Warp particle burst
+    for (int i = 0; i < 40; i++) {
+        float angle = ((float)rand() / (float)RAND_MAX) * 6.28318f;
+        float speed = 8.0f + (((float)rand() / (float)RAND_MAX) * 12.0f);
+        for (int p = 0; p < MAX_PARTICLES; p++) {
+            if (!g_state.particles[p].active) {
+                g_state.particles[p].x = g_state.shipX;
+                g_state.particles[p].y = g_state.shipY;
+                g_state.particles[p].vx = (float)cos(angle) * speed;
+                g_state.particles[p].vy = (float)sin(angle) * speed;
+                g_state.particles[p].color = (rand() % 2 == 0) ? RGB(244, 63, 94) : RGB(0, 240, 255);
+                g_state.particles[p].life = 1.4f;
+                g_state.particles[p].decay = 0.02f;
+                g_state.particles[p].size = 3.0f;
+                g_state.particles[p].active = 1;
+                break;
+            }
+        }
     }
 }
 
@@ -477,7 +645,6 @@ void CycleScanlines(void) {
 void InitGame(void) {
     memset(&g_state, 0, sizeof(GameState));
     g_state.credits = 2500;
-    strcpy(g_state.sector, "Belt Alpha-09");
     g_state.hull = 100.0f;
     g_state.maxHull = 100.0f;
     g_state.shield = 100.0f;
@@ -496,25 +663,32 @@ void InitGame(void) {
     g_state.shipAngle = -1.57079f; // Facing UP
     g_state.selectedAstIndex = -1;
     
-    // Seed Stars
-    for (int i = 0; i < MAX_STARS; i++) {
-        g_state.stars[i].x = (((float)rand() / (float)RAND_MAX) - 0.5f) * 4000.0f;
-        g_state.stars[i].y = (((float)rand() / (float)RAND_MAX) - 0.5f) * 4000.0f;
-        g_state.stars[i].size = 1.0f + (((float)rand() / (float)RAND_MAX) * 1.5f);
-        g_state.stars[i].brightness = 0.3f + (((float)rand() / (float)RAND_MAX) * 0.7f);
-    }
-    
-    // Seed Asteroids
-    for (int i = 0; i < MAX_ASTEROIDS; i++) {
-        SpawnAsteroid(i, i % 6);
-    }
+    InitSectorField(0);
     
     AddLog("[SYSTEM] KStarDredge Mk-IV cockpit operational. Core reactor online.", 0);
     AddLog("[MINING] High-frequency mining laser ready. Aim at asteroids and hold [SPACE].", 1);
     AddLog("[TRACTOR] Tractor emitter active. Hold [T] to gather extracted mineral chunks.", 2);
+    AddLog("[NAV] Astronavigation computer initialized. Press [N] for Sector Charts.", 0);
 }
 
 void UpdateGame(float dt) {
+    // Warp Sequence Logic
+    if (g_state.warpActive) {
+        g_state.warpTimer -= dt;
+        if (g_state.warpTimer <= 0.4f && g_state.currentSectorIndex != g_state.selectedSectorIndex) {
+            InitSectorField(g_state.selectedSectorIndex);
+            g_state.shipVx = 0.0f;
+            g_state.shipVy = 0.0f;
+        }
+        if (g_state.warpTimer <= 0.0f) {
+            g_state.warpActive = 0;
+            char exBuf[128];
+            sprintf(exBuf, "Exited hyperspace into %s. Asteroid radar recalibrated.", SECTOR_DEFS[g_state.currentSectorIndex].name);
+            AddLog(exBuf, 5);
+            TriggerSound(SFX_COLLECT);
+        }
+    }
+
     // Steering
     float rotAccel = 0.05f;
     if (g_state.turningLeft) g_state.shipAngle -= rotAccel;
@@ -635,7 +809,7 @@ void UpdateGame(float dt) {
                         }
                         ast->active = 0;
                         if (g_state.selectedAstIndex == i) g_state.selectedAstIndex = -1;
-                        SpawnAsteroid(i, rand() % 6);
+                        SpawnAsteroid(i, PickOreForSector(g_state.currentSectorIndex));
                     }
                     break;
                 }
@@ -1000,7 +1174,8 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     
     // 4. Center Viewport (Space & Asteroid Field)
     RECT rcViewport = { viewportX, viewportY, viewportX + viewportW, viewportY + viewportH };
-    HBRUSH hBrSpace = CreateSolidBrush(pal->bgSpace);
+    const SectorDef* curSec = &SECTOR_DEFS[g_state.currentSectorIndex];
+    HBRUSH hBrSpace = CreateSolidBrush(curSec->nebulaColor);
     FillRect(hdc, &rcViewport, hBrSpace);
     DeleteObject(hBrSpace);
     
@@ -1016,12 +1191,30 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         int sx = cx + (int)(g_state.stars[i].x - g_state.shipX * 0.15f);
         int sy = cyCenter + (int)(g_state.stars[i].y - g_state.shipY * 0.15f);
         if (sx >= viewportX && sx < viewportX + viewportW && sy >= viewportY && sy < viewportY + viewportH) {
-            SetPixel(hdc, sx, sy, pal->starCol);
+            SetPixel(hdc, sx, sy, curSec->starColor);
             if (g_state.stars[i].size > 1.2f) {
-                SetPixel(hdc, sx + 1, sy, pal->starCol);
-                SetPixel(hdc, sx, sy + 1, pal->starCol);
+                SetPixel(hdc, sx + 1, sy, curSec->starColor);
+                SetPixel(hdc, sx, sy + 1, curSec->starColor);
             }
         }
+    }
+    
+    // Hyperspace Warp Drive Streak Effect
+    if (g_state.warpActive) {
+        HPEN hPenWarp = CreatePen(PS_SOLID, 2, RGB(244, 63, 94));
+        HGDIOBJ oldWpPen = SelectObject(hdc, hPenWarp);
+        for (int i = 0; i < 32; i++) {
+            float angle = ((float)i / 32.0f) * 6.28318f;
+            float len = 60.0f + (float)(rand() % 140);
+            int x1 = cx + (int)(cos(angle) * 30.0f);
+            int y1 = cyCenter + (int)(sin(angle) * 30.0f);
+            int x2 = cx + (int)(cos(angle) * (30.0f + len));
+            int y2 = cyCenter + (int)(sin(angle) * (30.0f + len));
+            MoveToEx(hdc, x1, y1, NULL);
+            LineTo(hdc, x2, y2);
+        }
+        SelectObject(hdc, oldWpPen);
+        DeleteObject(hPenWarp);
     }
     
     // World Space Relative to Ship
@@ -1367,16 +1560,159 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         else if (g_state.logs[i].type == 3) logCol = RGB(245, 158, 11);
         else if (g_state.logs[i].type == 4) logCol = RGB(239, 68, 68);
         else if (g_state.logs[i].type == 5) logCol = RGB(16, 185, 129);
+        else if (g_state.logs[i].type == 6) logCol = RGB(244, 63, 94);
         
         SetTextColor(hdc, logCol);
         TextOutA(hdc, logBoxX + 6, ly, g_state.logs[i].text, (int)strlen(g_state.logs[i].text));
         ly += 16;
     }
     
+    // Sector Star Chart Navigation Modal
+    if (g_state.showStarChart) {
+        int modalW = 660;
+        int modalH = 420;
+        int mx = (totalW - modalW) / 2;
+        int my = (totalH - modalH) / 2;
+        
+        // Background
+        RECT rcModal = { mx, my, mx + modalW, my + modalH };
+        HBRUSH hBrModal = CreateSolidBrush(pal->bgPanel);
+        FillRect(hdc, &rcModal, hBrModal);
+        DeleteObject(hBrModal);
+        
+        HPEN hPenBorder2 = CreatePen(PS_SOLID, 2, pal->vector);
+        HGDIOBJ oldPen2 = SelectObject(hdc, hPenBorder2);
+        HGDIOBJ oldBrush2 = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Rectangle(hdc, mx, my, mx + modalW, my + modalH);
+        
+        // Header
+        RECT rcHdr = { mx, my, mx + modalW, my + 30 };
+        HBRUSH hBrHdr = CreateSolidBrush(pal->bgHeader);
+        FillRect(hdc, &rcHdr, hBrHdr);
+        DeleteObject(hBrHdr);
+        
+        SelectObject(hdc, g_fontHeader);
+        SetTextColor(hdc, pal->vector);
+        TextOutA(hdc, mx + 14, my + 6, "ASTRONAVIGATION & STAR SECTOR CHARTS", 36);
+        
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, pal->textBright);
+        TextOutA(hdc, mx + modalW - 120, my + 9, "[N / ESC] CLOSE", 15);
+        
+        // Subtitle
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(148, 163, 184));
+        TextOutA(hdc, mx + 14, my + 36, "Select an asteroid sector (Keys 1-4 or Click) to initiate sub-space warp jump:", 77);
+        
+        // 2x2 Sector Cards
+        int cardW = 305;
+        int cardH = 135;
+        int gapX = 14;
+        int gapY = 10;
+        int startX = mx + 14;
+        int startY = my + 54;
+        
+        for (int i = 0; i < 4; i++) {
+            int row = i / 2;
+            int col = i % 2;
+            int scx = startX + col * (cardW + gapX);
+            int scy = startY + row * (cardH + gapY);
+            
+            const SectorDef* sec = &SECTOR_DEFS[i];
+            int isCurrent = (i == g_state.currentSectorIndex);
+            int isSelected = (i == g_state.selectedSectorIndex);
+            
+            RECT rcCard = { scx, scy, scx + cardW, scy + cardH };
+            HBRUSH hBrCard = CreateSolidBrush(isSelected ? RGB(6, 64, 91) : (isCurrent ? RGB(6, 43, 16) : RGB(3, 7, 18)));
+            FillRect(hdc, &rcCard, hBrCard);
+            DeleteObject(hBrCard);
+            
+            HPEN hPenCard = CreatePen(PS_SOLID, isSelected ? 2 : 1, isSelected ? pal->vector : (isCurrent ? RGB(16, 185, 129) : pal->borderPanel));
+            SelectObject(hdc, hPenCard);
+            Rectangle(hdc, scx, scy, scx + cardW, scy + cardH);
+            DeleteObject(hPenCard);
+            
+            // Sector Name & Shortcut
+            char titleBuf[64];
+            sprintf(titleBuf, "[%d] %s", i + 1, sec->name);
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, isSelected ? pal->vector : pal->textBright);
+            TextOutA(hdc, scx + 8, scy + 6, titleBuf, (int)strlen(titleBuf));
+            
+            // Hazard Badge
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, sec->hazardColor);
+            TextOutA(hdc, scx + cardW - 100, scy + 6, sec->hazard, (int)strlen(sec->hazard));
+            
+            if (isCurrent) {
+                SetTextColor(hdc, RGB(110, 231, 183));
+                TextOutA(hdc, scx + 8, scy + 22, "* CURRENT LOCATION", 18);
+            } else {
+                SetTextColor(hdc, pal->textDim);
+                TextOutA(hdc, scx + 8, scy + 22, sec->type, (int)strlen(sec->type));
+            }
+            
+            // Description
+            SetTextColor(hdc, RGB(226, 232, 240));
+            RECT rcDesc = { scx + 8, scy + 38, scx + cardW - 8, scy + 80 };
+            DrawTextA(hdc, sec->desc, -1, &rcDesc, DT_WORDBREAK);
+            
+            // Resources & Specs
+            SetTextColor(hdc, RGB(245, 158, 11));
+            char specBuf[64];
+            sprintf(specBuf, "WARP COST: %d%% FUEL   DENSITY: %d ASTEROIDS", sec->fuelCost, sec->density);
+            TextOutA(hdc, scx + 8, scy + cardH - 20, specBuf, (int)strlen(specBuf));
+        }
+        
+        // Bottom Warp Action Bar
+        int barY = my + modalH - 58;
+        RECT rcBar = { mx + 14, barY, mx + modalW - 14, my + modalH - 12 };
+        HBRUSH hBrBar = CreateSolidBrush(RGB(2, 5, 14));
+        FillRect(hdc, &rcBar, hBrBar);
+        DeleteObject(hBrBar);
+        FrameRect(hdc, &rcBar, (HBRUSH)GetStockObject(WHITE_BRUSH));
+        
+        const SectorDef* selSec = &SECTOR_DEFS[g_state.selectedSectorIndex];
+        int isCur = (g_state.selectedSectorIndex == g_state.currentSectorIndex);
+        
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, pal->vector);
+        char selBuf[64];
+        sprintf(selBuf, "SELECTED: %s", selSec->name);
+        TextOutA(hdc, mx + 24, barY + 8, selBuf, (int)strlen(selBuf));
+        
+        SelectObject(hdc, g_fontSmall);
+        char fReqBuf[64];
+        sprintf(fReqBuf, "WARP FUEL: %d%%  (AVAILABLE: %d%%)", isCur ? 0 : selSec->fuelCost, (int)g_state.fuel);
+        SetTextColor(hdc, (g_state.fuel >= selSec->fuelCost || isCur) ? RGB(16, 185, 129) : RGB(239, 68, 68));
+        TextOutA(hdc, mx + 24, barY + 26, fReqBuf, (int)strlen(fReqBuf));
+        
+        // Jump Button box
+        int jBtnW = 170;
+        int jBtnH = 32;
+        int jBtnX = mx + modalW - 14 - jBtnW - 8;
+        int jBtnY = barY + 7;
+        RECT rcJBtn = { jBtnX, jBtnY, jBtnX + jBtnW, jBtnY + jBtnH };
+        
+        HBRUSH hBrJBtn = CreateSolidBrush(isCur ? RGB(30, 41, 59) : (g_state.fuel >= selSec->fuelCost ? RGB(131, 24, 67) : RGB(50, 15, 20)));
+        FillRect(hdc, &rcJBtn, hBrJBtn);
+        DeleteObject(hBrJBtn);
+        FrameRect(hdc, &rcJBtn, (HBRUSH)GetStockObject(WHITE_BRUSH));
+        
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, isCur ? RGB(148, 163, 184) : RGB(255, 255, 255));
+        const char* jTxt = isCur ? "CURRENT LOCATION" : (g_state.fuel >= selSec->fuelCost ? "ENGAGE WARP [ENTER]" : "LOW FUEL");
+        DrawTextA(hdc, jTxt, -1, &rcJBtn, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        
+        SelectObject(hdc, oldPen2);
+        SelectObject(hdc, oldBrush2);
+        DeleteObject(hPenBorder2);
+    }
+    
     // Help Overlay Modal
     if (g_state.showHelp) {
         int helpW = 560;
-        int helpH = 360;
+        int helpH = 380;
         int hx = (totalW - helpW) / 2;
         int hy = (totalH - helpH) / 2;
         
@@ -1393,23 +1729,24 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         TextOutA(hdc, hx + 12, hy + 6, "KStarDredge - Captain's Flight Manual", 37);
         
         SelectObject(hdc, g_fontMonoBold);
-        int myHelp = hy + 38;
+        int myHelp = hy + 36;
         SetTextColor(hdc, pal->textBright);
         TextOutA(hdc, hx + 16, myHelp, "FLIGHT CONTROLS & DREDGING TACTICS:", 35);
-        myHelp += 22;
+        myHelp += 20;
         
         SelectObject(hdc, g_fontSmall);
         SetTextColor(hdc, RGB(148, 163, 184));
-        TextOutA(hdc, hx + 20, myHelp, "• [W / UP ARROW]: Engage Forward Fusion Thrusters (Consumes Fuel)", 64); myHelp += 18;
-        TextOutA(hdc, hx + 20, myHelp, "• [S / DOWN ARROW]: Engage Retro Braking Thrusters", 50); myHelp += 18;
-        TextOutA(hdc, hx + 20, myHelp, "• [A / D / LEFT / RIGHT]: Pivot Barge Heading", 45); myHelp += 18;
-        TextOutA(hdc, hx + 20, myHelp, "• [SPACEBAR / LASER BTN]: Fire Mining Laser (Watch Laser Heat)", 62); myHelp += 18;
-        TextOutA(hdc, hx + 20, myHelp, "• [T / TRACTOR BTN]: Toggle Tractor Magnet to draw floating mineral chunks", 73); myHelp += 18;
-        TextOutA(hdc, hx + 20, myHelp, "• [Z / DAMPENER BTN]: Toggle Inertial Dampeners for precise stationkeeping", 74); myHelp += 18;
-        TextOutA(hdc, hx + 20, myHelp, "• [V / THEME BTN]: Cycle Retro CRT Vector Theme (Cyan / Amber / Green / Solar)", 77); myHelp += 18;
-        TextOutA(hdc, hx + 20, myHelp, "• [C / SCANLINES BTN]: Toggle CRT Scanlines & Shaders (Off / On / CRT+)", 70); myHelp += 18;
-        TextOutA(hdc, hx + 20, myHelp, "• [CLICK VIEWPORT]: Target & Lock asteroid with telemetry computer", 66); myHelp += 18;
-        TextOutA(hdc, hx + 20, myHelp, "• [LIQUIDATE]: Sell cargo hold to orbital comm-link for Credits", 62); myHelp += 22;
+        TextOutA(hdc, hx + 20, myHelp, "• [W / UP ARROW]: Engage Forward Fusion Thrusters (Consumes Fuel)", 64); myHelp += 17;
+        TextOutA(hdc, hx + 20, myHelp, "• [S / DOWN ARROW]: Engage Retro Braking Thrusters", 50); myHelp += 17;
+        TextOutA(hdc, hx + 20, myHelp, "• [A / D / LEFT / RIGHT]: Pivot Barge Heading", 45); myHelp += 17;
+        TextOutA(hdc, hx + 20, myHelp, "• [SPACEBAR / LASER BTN]: Fire Mining Laser (Watch Laser Heat)", 62); myHelp += 17;
+        TextOutA(hdc, hx + 20, myHelp, "• [T / TRACTOR BTN]: Toggle Tractor Magnet to draw floating mineral chunks", 73); myHelp += 17;
+        TextOutA(hdc, hx + 20, myHelp, "• [Z / DAMPENER BTN]: Toggle Inertial Dampeners for precise stationkeeping", 74); myHelp += 17;
+        TextOutA(hdc, hx + 20, myHelp, "• [N / SECTORS BTN]: Open Star Sector Chart & Engage Sub-space Warp Jumps", 72); myHelp += 17;
+        TextOutA(hdc, hx + 20, myHelp, "• [V / THEME BTN]: Cycle Retro CRT Vector Theme (Cyan / Amber / Green / Solar)", 77); myHelp += 17;
+        TextOutA(hdc, hx + 20, myHelp, "• [C / SCANLINES BTN]: Toggle CRT Scanlines & Shaders (Off / On / CRT+)", 70); myHelp += 17;
+        TextOutA(hdc, hx + 20, myHelp, "• [CLICK VIEWPORT]: Target & Lock asteroid with telemetry computer", 66); myHelp += 17;
+        TextOutA(hdc, hx + 20, myHelp, "• [LIQUIDATE]: Sell cargo hold to orbital comm-link for Credits", 62); myHelp += 20;
         
         SetTextColor(hdc, RGB(245, 158, 11));
         TextOutA(hdc, hx + 20, myHelp, "Press [H] or Click 'MANUAL' to close this screen.", 49);
@@ -1432,18 +1769,19 @@ void RepositionControls(HWND hwnd) {
     int bottomCtrlH = 140;
     int botY = totalH - bottomCtrlH;
     
-    // Cockpit Action Buttons in bottom-left console (4 per row, 2 rows)
+    // Cockpit Action Buttons in bottom-left console (5 per row on top, 4 on bottom)
     int bx = 10;
     int by1 = botY + 28;
     int by2 = botY + 62;
-    int bw = 78;
+    int bw = 64;
     int bh = 28;
-    int gap = 6;
+    int gap = 5;
     
     MoveWindow(g_btnLaser,      bx,                  by1, bw, bh, TRUE);
     MoveWindow(g_btnTractor,    bx + (bw + gap),     by1, bw, bh, TRUE);
     MoveWindow(g_btnDampener,   bx + (bw + gap) * 2, by1, bw, bh, TRUE);
     MoveWindow(g_btnScan,       bx + (bw + gap) * 3, by1, bw, bh, TRUE);
+    MoveWindow(g_btnNav,        bx + (bw + gap) * 4, by1, bw, bh, TRUE);
     
     MoveWindow(g_btnTheme,      bx,                  by2, bw, bh, TRUE);
     MoveWindow(g_btnScanlines,  bx + (bw + gap),     by2, bw, bh, TRUE);
@@ -1475,6 +1813,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_btnTractor   = CreateWindowA("BUTTON", "TRACTOR [T]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRACTOR, NULL, NULL);
             g_btnDampener  = CreateWindowA("BUTTON", "DAMPENER [Z]",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_DAMPENER, NULL, NULL);
             g_btnScan      = CreateWindowA("BUTTON", "SCAN [S]",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN, NULL, NULL);
+            g_btnNav       = CreateWindowA("BUTTON", "SECTORS [N]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_NAV, NULL, NULL);
             g_btnTheme     = CreateWindowA("BUTTON", "CRT CYAN",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_THEME, NULL, NULL);
             g_btnScanlines = CreateWindowA("BUTTON", "SCAN: ON",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCANLINES, NULL, NULL);
             g_btnAudio     = CreateWindowA("BUTTON", "AUDIO [M]",     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_AUDIO, NULL, NULL);
@@ -1514,6 +1853,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case ID_BTN_SCAN:
                     TriggerSound(SFX_BEEP);
                     AddLog("Deep sweep complete: 24 mineral asteroids registered in local sector.", 0);
+                    break;
+                case ID_BTN_NAV:
+                    g_state.showStarChart = !g_state.showStarChart;
+                    TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_THEME:
                     CycleTheme();
@@ -1575,16 +1918,70 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int totalW = rc.right - rc.left;
             int totalH = rc.bottom - rc.top;
             
-            int viewportX = leftPanelW;
-            int viewportW = totalW - leftPanelW - rightPanelW;
-            int viewportY = topHeaderH;
-            int viewportH = totalH - topHeaderH - bottomCtrlH;
-            
             if (g_state.showHelp) {
                 g_state.showHelp = 0;
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }
+            
+            if (g_state.showStarChart) {
+                int modalW = 660;
+                int modalH = 420;
+                int hx = (totalW - modalW) / 2;
+                int hy = (totalH - modalH) / 2;
+                
+                // Check if click close
+                if (mx >= hx + modalW - 130 && mx <= hx + modalW - 10 && my >= hy && my <= hy + 30) {
+                    g_state.showStarChart = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                
+                // Check if click 4 sector cards
+                int cardW = 305;
+                int cardH = 135;
+                int gapX = 14;
+                int gapY = 10;
+                int startX = hx + 14;
+                int startY = hy + 54;
+                for (int i = 0; i < 4; i++) {
+                    int row = i / 2;
+                    int col = i % 2;
+                    int scx = startX + col * (cardW + gapX);
+                    int scy = startY + row * (cardH + gapY);
+                    if (mx >= scx && mx <= scx + cardW && my >= scy && my <= scy + cardH) {
+                        g_state.selectedSectorIndex = i;
+                        TriggerSound(SFX_BEEP);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        return 0;
+                    }
+                }
+                
+                // Check if click jump button
+                int barY = hy + modalH - 58;
+                int jBtnW = 170;
+                int jBtnH = 32;
+                int jBtnX = hx + modalW - 14 - jBtnW - 8;
+                int jBtnY = barY + 7;
+                if (mx >= jBtnX && mx <= jBtnX + jBtnW && my >= jBtnY && my <= jBtnY + jBtnH) {
+                    EngageWarpJump(g_state.selectedSectorIndex);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                
+                // Click outside modal closes it
+                if (mx < hx || mx > hx + modalW || my < hy || my > hy + modalH) {
+                    g_state.showStarChart = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                return 0;
+            }
+            
+            int viewportX = leftPanelW;
+            int viewportW = totalW - leftPanelW - rightPanelW;
+            int viewportY = topHeaderH;
+            int viewportH = totalH - topHeaderH - bottomCtrlH;
             
             // Check click inside viewport for asteroid targeting
             if (mx >= viewportX && mx < viewportX + viewportW && my >= viewportY && my < viewportY + viewportH) {
@@ -1617,6 +2014,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         
         case WM_KEYDOWN: {
+            if (g_state.showStarChart) {
+                if (wParam == '1') { g_state.selectedSectorIndex = 0; TriggerSound(SFX_BEEP); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '2') { g_state.selectedSectorIndex = 1; TriggerSound(SFX_BEEP); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '3') { g_state.selectedSectorIndex = 2; TriggerSound(SFX_BEEP); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '4') { g_state.selectedSectorIndex = 3; TriggerSound(SFX_BEEP); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == VK_RETURN) { EngageWarpJump(g_state.selectedSectorIndex); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == 'N' || wParam == VK_ESCAPE) { g_state.showStarChart = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+            }
+            
             switch (wParam) {
                 case 'W': case VK_UP:    g_state.thrusting = 1; break;
                 case 'S': case VK_DOWN:  g_state.reversing = 1; break;
@@ -1632,6 +2038,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case 'Z':
                     g_state.dampeners = !g_state.dampeners;
                     AddLog(g_state.dampeners ? "Inertia dampeners engaged." : "Inertia dampeners disengaged.", 0);
+                    break;
+                case 'N':
+                    g_state.showStarChart = !g_state.showStarChart;
+                    TriggerSound(SFX_BEEP);
                     break;
                 case 'V':
                     CycleTheme();

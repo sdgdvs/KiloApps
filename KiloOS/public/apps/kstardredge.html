@@ -425,7 +425,7 @@
 
         .action-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: 5px;
             padding: 6px;
             flex: 1;
@@ -479,6 +479,11 @@
             color: #6ee7b7;
         }
 
+        .btn.btn-nav {
+            border-color: var(--accent-purple);
+            color: #e9d5ff;
+        }
+
         .terminal-panel {
             display: flex;
             flex-direction: column;
@@ -504,11 +509,151 @@
         .log-entry.success { color: var(--accent-emerald); }
         .log-entry.mining { color: var(--accent-cyan); }
         .log-entry.cargo { color: #c084fc; }
+        .log-entry.warp { color: #f43f5e; font-weight: bold; }
 
         .key-hint {
             font-size: 8px;
             color: #93c5fd;
             opacity: 0.8;
+        }
+
+        /* Sector Star Chart Modal */
+        .modal-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(1, 4, 10, 0.88);
+            z-index: 90;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--bg-panel);
+            border: 2px solid var(--border-glow);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.3);
+            border-radius: 6px;
+            width: 720px;
+            max-width: 95vw;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: var(--bg-panel-header);
+            border-bottom: 1px solid var(--border-panel);
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-bright);
+            font-weight: bold;
+            font-size: 13px;
+            letter-spacing: 1px;
+        }
+
+        .modal-body {
+            padding: 14px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            font-size: 11px;
+        }
+
+        .sector-chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .sector-card {
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .sector-card:hover {
+            border-color: var(--border-glow);
+            background: rgba(15, 28, 63, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .sector-card.current {
+            border-color: var(--accent-emerald);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .sector-card.selected {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+            background: rgba(6, 64, 91, 0.4);
+        }
+
+        .sector-badge-current {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #064e3b;
+            color: #6ee7b7;
+            font-size: 9px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid #10b981;
+        }
+
+        .hazard-badge {
+            font-size: 9px;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .hazard-low { background: #064e3b; color: #a7f3d0; border: 1px solid #059669; }
+        .hazard-med { background: #78350f; color: #fde68a; border: 1px solid #d97706; }
+        .hazard-high { background: #831843; color: #fbcfe8; border: 1px solid #db2777; }
+        .hazard-extreme { background: #7f1d1d; color: #fecaca; border: 1px solid #dc2626; }
+
+        .sector-ores-bar {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+
+        .ore-tag {
+            font-size: 9px;
+            padding: 2px 5px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-panel);
+            border-radius: 3px;
+            color: var(--text-bright);
+        }
+
+        .warp-summary-box {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
     </style>
 </head>
@@ -701,6 +846,10 @@
                         <span>📡 PROSPECT</span>
                         <span class="key-hint">[S] SCAN</span>
                     </button>
+                    <button class="btn btn-nav" id="btnNav">
+                        <span>🗺️ SECTORS</span>
+                        <span class="key-hint">[N] STAR CHART</span>
+                    </button>
                     <button class="btn" id="btnTheme">
                         <span id="txtBtnTheme">📺 CRT CYAN</span>
                         <span class="key-hint">[V] THEME</span>
@@ -729,6 +878,41 @@
                     <div class="log-entry system">[SYSTEM] KStarDredge Mk-IV cockpit operational. Core reactor online.</div>
                     <div class="log-entry mining">[MINING] High-frequency mining laser ready. Aim at asteroids and hold [SPACE].</div>
                     <div class="log-entry cargo">[TRACTOR] Tractor emitter active. Hold [T] to gather extracted mineral chunks.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Star Sector Navigation & Warp Modal -->
+    <div class="modal-overlay" id="navModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span>🌌 ASTRONAVIGATION & STAR SECTOR CHARTS</span>
+                <button class="btn" id="btnCloseNav" style="padding: 2px 8px; border-color: var(--accent-red); color: var(--accent-red);">✕ CLOSE [N]</button>
+            </div>
+            <div class="modal-body">
+                <div style="color: var(--text-bright); font-size: 11px;">
+                    Select an asteroid sector to initiate sub-space warp jump. Jumps require sufficient fuel reserves.
+                </div>
+
+                <div class="sector-chart-grid" id="sectorGrid">
+                    <!-- Dynamic Sector Cards generated by JS -->
+                </div>
+
+                <div class="warp-summary-box">
+                    <div>
+                        <div style="color: var(--text-dim); font-size: 10px;">TARGET SECTOR:</div>
+                        <div id="warpTargetName" style="color: var(--accent-cyan); font-weight: bold; font-size: 13px;">Belt Alpha-09</div>
+                        <div id="warpTargetDesc" style="color: var(--text-bright); font-size: 10px; max-width: 440px; margin-top: 2px;">
+                            Inner dense asteroid belt rich in industrial ferrum, silicates, and standard ore veins.
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+                        <div style="font-size: 11px;">WARP FUEL: <span id="warpFuelCost" style="color: var(--accent-amber); font-weight: bold;">0%</span> (Available: <span id="warpFuelAvail" style="color: var(--accent-emerald); font-weight: bold;">100%</span>)</div>
+                        <button class="btn" id="btnEngageWarp" style="padding: 8px 18px; background: #831843; border-color: #f43f5e; color: #fff; font-size: 11px;">
+                            <span>🚀 ENGAGE WARP JUMP</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -797,9 +981,103 @@
                 this.playBeep(320, 'square', 0.15, 0.15);
                 setTimeout(() => this.playBeep(240, 'square', 0.2, 0.15), 160);
             }
+
+            playWarp() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(120, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(920, this.ctx.currentTime + 0.35);
+                    osc.frequency.exponentialRampToValueAtTime(90, this.ctx.currentTime + 0.8);
+                    gain.gain.setValueAtTime(0.28, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.8);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.8);
+                } catch (e) {}
+            }
         }
 
         const audio = new SoundEngine();
+
+        // --- Star Sectors & Procedural Chart Data ---
+        const SECTORS = [
+            {
+                id: 'alpha',
+                name: 'Belt Alpha-09',
+                type: 'Dense Metallic Asteroid Belt',
+                hazard: 'LOW (★☆☆☆)',
+                hazardClass: 'hazard-low',
+                fuelCost: 10,
+                density: 22,
+                desc: 'Inner dense asteroid belt rich in industrial ferrum, silicates, and standard ore veins. Stable radiation levels.',
+                ores: [
+                    { type: 'Ferrum', weight: 50 },
+                    { type: 'Silicates', weight: 30 },
+                    { type: 'Platinum', weight: 12 },
+                    { type: 'Void Quartz', weight: 8 }
+                ],
+                nebulaColor: 'rgba(30, 58, 138, 0.12)',
+                starTint: '224, 242, 254'
+            },
+            {
+                id: 'kuiper',
+                name: 'Kuiper Ring',
+                type: 'Frozen Outer Asteroid Ring',
+                hazard: 'MODERATE (★★☆☆)',
+                hazardClass: 'hazard-med',
+                fuelCost: 18,
+                density: 26,
+                desc: 'Sub-zero icy peripheral belt containing dense platinum veins and crystallized silicates. Dense debris fields.',
+                ores: [
+                    { type: 'Platinum', weight: 45 },
+                    { type: 'Silicates', weight: 30 },
+                    { type: 'Ferrum', weight: 15 },
+                    { type: 'Void Quartz', weight: 10 }
+                ],
+                nebulaColor: 'rgba(6, 182, 212, 0.15)',
+                starTint: '207, 250, 254'
+            },
+            {
+                id: 'graveyard',
+                name: 'Derelict Graveyard',
+                type: 'Warzone Salvage Wreckage',
+                hazard: 'HIGH (★★★☆)',
+                hazardClass: 'hazard-high',
+                fuelCost: 25,
+                density: 24,
+                desc: 'Shattered remnants of orbital fleet skirmishes. High concentration of salvageable Derelict Scrap and Void Quartz.',
+                ores: [
+                    { type: 'Derelict Scrap', weight: 50 },
+                    { type: 'Void Quartz', weight: 25 },
+                    { type: 'Platinum', weight: 15 },
+                    { type: 'Dark Geode', weight: 10 }
+                ],
+                nebulaColor: 'rgba(217, 119, 6, 0.14)',
+                starTint: '254, 243, 199'
+            },
+            {
+                id: 'nebula',
+                name: 'Plasma Nebula',
+                type: 'Ionized Stellar Storm Nursery',
+                hazard: 'EXTREME (★★★★)',
+                hazardClass: 'hazard-extreme',
+                fuelCost: 35,
+                density: 28,
+                desc: 'Energetic stellar nursery saturated with volatile plasma discharges. Rich in exotic Dark Matter Geodes & crystals.',
+                ores: [
+                    { type: 'Dark Geode', weight: 40 },
+                    { type: 'Void Quartz', weight: 35 },
+                    { type: 'Platinum', weight: 15 },
+                    { type: 'Derelict Scrap', weight: 10 }
+                ],
+                nebulaColor: 'rgba(192, 38, 211, 0.18)',
+                starTint: '250, 232, 255'
+            }
+        ];
 
         // --- Core Simulation State ---
         const ORE_TYPES = {
@@ -897,7 +1175,10 @@
 
         const state = {
             credits: 2500,
-            sector: "Belt Alpha-09",
+            currentSectorIndex: 0,
+            selectedSectorIndex: 0,
+            warpActive: false,
+            warpTimer: 0,
             hull: 100,
             maxHull: 100,
             shield: 100,
@@ -996,29 +1277,45 @@
         }
 
         // Initialize Procedural Starfield & Asteroid Field
-        function initField() {
+        function initField(sectorIndex = 0) {
+            state.currentSectorIndex = sectorIndex;
+            const sector = SECTORS[sectorIndex];
+            document.getElementById('hdrSector').textContent = sector.name;
+
             state.stars = [];
-            for (let i = 0; i < 200; i++) {
+            for (let i = 0; i < 220; i++) {
                 state.stars.push({
-                    x: (Math.random() - 0.5) * 4000,
-                    y: (Math.random() - 0.5) * 4000,
-                    size: Math.random() * 1.6 + 0.5,
+                    x: (Math.random() - 0.5) * 4500,
+                    y: (Math.random() - 0.5) * 4500,
+                    size: Math.random() * 1.7 + 0.5,
                     brightness: Math.random() * 0.7 + 0.3
                 });
             }
 
             state.asteroids = [];
-            const oreKeys = ['Ferrum', 'Ferrum', 'Silicates', 'Silicates', 'Platinum', 'Void Quartz', 'Dark Geode', 'Derelict Scrap'];
-            for (let i = 0; i < 20; i++) {
-                spawnAsteroid(oreKeys[Math.floor(Math.random() * oreKeys.length)]);
+            state.oreChunks = [];
+            state.selectedTarget = null;
+
+            for (let i = 0; i < sector.density; i++) {
+                spawnAsteroid();
             }
+        }
+
+        function pickOreForCurrentSector() {
+            const sector = SECTORS[state.currentSectorIndex];
+            const totalWeight = sector.ores.reduce((sum, o) => sum + o.weight, 0);
+            let r = Math.random() * totalWeight;
+            for (const o of sector.ores) {
+                if (r < o.weight) return o.type;
+                r -= o.weight;
+            }
+            return sector.ores[0].type;
         }
 
         function spawnAsteroid(specificOre = null) {
             const angle = Math.random() * Math.PI * 2;
-            const dist = 220 + Math.random() * 900;
-            const oreKeys = ['Ferrum', 'Silicates', 'Platinum', 'Void Quartz', 'Dark Geode', 'Derelict Scrap'];
-            const oreType = specificOre || oreKeys[Math.floor(Math.random() * oreKeys.length)];
+            const dist = 220 + Math.random() * 920;
+            const oreType = specificOre || pickOreForCurrentSector();
             const radius = 18 + Math.random() * 26;
             const maxHp = Math.round(radius * 3.5);
 
@@ -1083,6 +1380,127 @@
             }
         }
 
+        // --- Sector Star Chart Navigation Modal ---
+        function renderSectorGrid() {
+            const grid = document.getElementById('sectorGrid');
+            grid.innerHTML = '';
+
+            SECTORS.forEach((sec, idx) => {
+                const isCurrent = (idx === state.currentSectorIndex);
+                const isSelected = (idx === state.selectedSectorIndex);
+
+                const card = document.createElement('div');
+                card.className = `sector-card ${isCurrent ? 'current' : ''} ${isSelected ? 'selected' : ''}`;
+                card.onclick = () => selectSector(idx);
+
+                let oresHtml = sec.ores.map(o => `<span class="ore-tag">${o.type} (${o.weight}%)</span>`).join('');
+
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: bold; color: var(--accent-cyan); font-size: 12px;">${sec.name}</span>
+                        <span class="hazard-badge ${sec.hazardClass}">${sec.hazard}</span>
+                    </div>
+                    ${isCurrent ? '<div class="sector-badge-current">CURRENT SECTOR</div>' : ''}
+                    <div style="color: var(--text-dim); font-size: 10px;">${sec.type}</div>
+                    <div style="color: var(--text-bright); font-size: 10px; line-height: 1.3;">${sec.desc}</div>
+                    <div style="font-size: 9px; color: var(--text-dim); margin-top: 2px;">DOMINANT RESOURCES:</div>
+                    <div class="sector-ores-bar">${oresHtml}</div>
+                    <div style="display: flex; justify-content: space-between; font-size: 10px; margin-top: 4px; color: var(--accent-amber);">
+                        <span>WARP COST: ${sec.fuelCost}% FUEL</span>
+                        <span>DENSITY: ${sec.density} ASTEROIDS</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            updateWarpSummary();
+        }
+
+        function selectSector(idx) {
+            state.selectedSectorIndex = idx;
+            audio.playBeep(680, 'sine', 0.05, 0.1);
+            renderSectorGrid();
+        }
+
+        function updateWarpSummary() {
+            const target = SECTORS[state.selectedSectorIndex];
+            const isCurrent = (state.selectedSectorIndex === state.currentSectorIndex);
+            document.getElementById('warpTargetName').textContent = target.name + (isCurrent ? ' [CURRENT]' : '');
+            document.getElementById('warpTargetDesc').textContent = target.desc;
+            document.getElementById('warpFuelCost').textContent = `${isCurrent ? 0 : target.fuelCost}%`;
+            document.getElementById('warpFuelAvail').textContent = `${Math.round(state.fuel)}%`;
+
+            const btnWarp = document.getElementById('btnEngageWarp');
+            if (isCurrent) {
+                btnWarp.disabled = true;
+                btnWarp.style.opacity = '0.5';
+                btnWarp.innerHTML = '<span>CURRENT LOCATION</span>';
+            } else if (state.fuel < target.fuelCost) {
+                btnWarp.disabled = true;
+                btnWarp.style.opacity = '0.5';
+                btnWarp.innerHTML = '<span>⚠️ INSUFFICIENT FUEL</span>';
+            } else {
+                btnWarp.disabled = false;
+                btnWarp.style.opacity = '1.0';
+                btnWarp.innerHTML = '<span>🚀 ENGAGE WARP JUMP</span>';
+            }
+        }
+
+        function openNavModal() {
+            state.selectedSectorIndex = state.currentSectorIndex;
+            renderSectorGrid();
+            document.getElementById('navModal').classList.add('open');
+            audio.playBeep(600, 'triangle', 0.08, 0.12);
+        }
+
+        function closeNavModal() {
+            document.getElementById('navModal').classList.remove('open');
+        }
+
+        function engageWarpJump() {
+            const targetIdx = state.selectedSectorIndex;
+            if (targetIdx === state.currentSectorIndex) return;
+            const target = SECTORS[targetIdx];
+            if (state.fuel < target.fuelCost) {
+                addLog("⚠️ Insufficient fuel to initiate warp jump!", "critical");
+                return;
+            }
+
+            state.fuel -= target.fuelCost;
+            state.warpActive = true;
+            state.warpTimer = 1.6; // 1.6 seconds warp sequence
+            closeNavModal();
+            audio.playWarp();
+
+            addLog(`Sub-space drive spun up. Warp jump initiated to: [${target.name}]`, 'warp');
+            addFloatingText(`WARP JUMP: ${target.name}`, state.ship.x, state.ship.y - 40, '#f43f5e');
+
+            // Generate warp hyperspace particles
+            for (let i = 0; i < 40; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 8.0 + Math.random() * 12.0;
+                state.particles.push({
+                    x: state.ship.x,
+                    y: state.ship.y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    color: Math.random() > 0.5 ? '#f43f5e' : '#00f0ff',
+                    life: 1.5,
+                    decay: 0.02,
+                    size: 3.0
+                });
+            }
+
+            setTimeout(() => {
+                state.ship.vx = 0;
+                state.ship.vy = 0;
+                initField(targetIdx);
+                state.warpActive = false;
+                addLog(`Exited hyperspace into ${target.name}. Asteroid radar recalibrated.`, 'success');
+                audio.playCollect();
+            }, 1200);
+        }
+
         // Resize Canvas
         function resizeCanvas() {
             canvas.width = canvas.parentElement.clientWidth;
@@ -1109,6 +1527,11 @@
                 document.getElementById('txtDampener').textContent = state.dampeners ? "ACTIVE" : "OFFLINE";
                 document.getElementById('txtDampener').style.color = state.dampeners ? "var(--accent-emerald)" : "var(--accent-amber)";
                 addLog(`Inertia dampeners ${state.dampeners ? 'engaged' : 'disengaged'}.`, 'system');
+            }
+            if (e.code === 'KeyN') {
+                const navModal = document.getElementById('navModal');
+                if (navModal.classList.contains('open')) closeNavModal();
+                else openNavModal();
             }
             if (e.code === 'KeyV') {
                 cycleTheme();
@@ -1182,6 +1605,19 @@
             audio.playBeep(720, 'triangle', 0.12, 0.15);
             const found = state.asteroids.length;
             addLog(`Deep sweep complete: ${found} mineral asteroids registered in local sector.`, 'system');
+        });
+
+        document.getElementById('btnNav').addEventListener('click', () => {
+            audio.init();
+            openNavModal();
+        });
+
+        document.getElementById('btnCloseNav').addEventListener('click', () => {
+            closeNavModal();
+        });
+
+        document.getElementById('btnEngageWarp').addEventListener('click', () => {
+            engageWarpJump();
         });
 
         document.getElementById('btnTheme').addEventListener('click', () => {
@@ -1266,7 +1702,11 @@
             addLog("• SPACEBAR: Fire Heavy Mining Laser at Asteroids", "system");
             addLog("• T: Toggle Tractor Beam to collect floating ore chunks", "system");
             addLog("• Z: Toggle Inertial Dampeners", "system");
+            addLog("• N: Open Star Sector Chart & Engage Warp Jumps", "system");
             addLog("• V: Cycle Retro CRT Vector Theme (Cyan / Amber / Green / Solar)", "system");
+            addLog("• C: Toggle CRT Scanlines & Phosphor Shaders (Normal / CRT+ / Off)", "system");
+            addLog("• CLICK: Target asteroid with telemetry computer", "system");
+        }
             addLog("• C: Toggle CRT Scanlines & Phosphor Shaders (Normal / CRT+ / Off)", "system");
             addLog("• CLICK: Target asteroid with telemetry computer", "system");
         }
@@ -1565,20 +2005,43 @@
 
             const theme = THEMES[state.themeIndex];
             const pal = THEME_PALETTES[theme.id];
+            const sector = SECTORS[state.currentSectorIndex];
 
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
+
+            // Ambient Sector Nebula Backdrop
+            ctx.fillStyle = sector.nebulaColor || 'transparent';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // Background Deep Space Stars
             ctx.save();
             ctx.translate(cx - state.ship.x * 0.15, cy - state.ship.y * 0.15);
             for (const s of state.stars) {
-                ctx.fillStyle = `rgba(${pal.starCol}, ${s.brightness})`;
+                ctx.fillStyle = `rgba(${sector.starTint || pal.starCol}, ${s.brightness})`;
                 ctx.beginPath();
                 ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
                 ctx.fill();
             }
             ctx.restore();
+
+            // Hyperspace Warp Drive Streak Effect
+            if (state.warpActive) {
+                ctx.save();
+                ctx.strokeStyle = '#f43f5e';
+                ctx.lineWidth = 2;
+                ctx.shadowColor = '#f43f5e';
+                ctx.shadowBlur = 15;
+                for (let i = 0; i < 35; i++) {
+                    const angle = (i / 35) * Math.PI * 2;
+                    const len = 60 + Math.random() * 180;
+                    ctx.beginPath();
+                    ctx.moveTo(cx + Math.cos(angle) * 30, cy + Math.sin(angle) * 30);
+                    ctx.lineTo(cx + Math.cos(angle) * (30 + len), cy + Math.sin(angle) * (30 + len));
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
 
             // World Space Coordinate Frame
             ctx.save();
