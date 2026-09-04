@@ -100,6 +100,34 @@
 #define ID_BTN_SELECT_OUTPOST_1 187
 #define ID_BTN_SELECT_OUTPOST_2 188
 #define ID_BTN_SELECT_OUTPOST_3 189
+#define ID_BTN_VIEW_COMBAT      190
+#define ID_BTN_FIRE_TUBE_0      191
+#define ID_BTN_FIRE_TUBE_1      192
+#define ID_BTN_FIRE_TUBE_2      193
+#define ID_BTN_FIRE_TUBE_3      194
+#define ID_BTN_CYCLE_TUBE_0     195
+#define ID_BTN_CYCLE_TUBE_1     196
+#define ID_BTN_CYCLE_TUBE_2     197
+#define ID_BTN_CYCLE_TUBE_3     198
+#define ID_BTN_COMBAT_DECOY     199
+#define ID_BTN_COMBAT_SHOCKWAVE 200
+#define ID_BTN_COMBAT_SILENT    201
+#define ID_BTN_LOCK_THREAT_0    202
+#define ID_BTN_LOCK_THREAT_1    203
+#define ID_BTN_LOCK_THREAT_2    204
+#define ID_BTN_LOCK_THREAT_3    205
+#define ID_BTN_LOCK_THREAT_4    206
+#define ID_BTN_LOCK_THREAT_5    207
+#define ID_BTN_FIRE_THREAT_0    208
+#define ID_BTN_FIRE_THREAT_1    209
+#define ID_BTN_FIRE_THREAT_2    210
+#define ID_BTN_FIRE_THREAT_3    211
+#define ID_BTN_FIRE_THREAT_4    212
+#define ID_BTN_FIRE_THREAT_5    213
+#define ID_BTN_QUICK_FIRE_ACOUSTIC 214
+#define ID_BTN_QUICK_FIRE_EMP      215
+#define ID_BTN_QUICK_FIRE_PLASMA   216
+#define ID_BTN_QUICK_LAUNCH_DECOY  217
 
 typedef enum {
     THEME_ABYSS = 0,
@@ -523,6 +551,7 @@ typedef struct {
 } UnifiedContact;
 
 // Phase 9: Bulkhead Compartments & Damage Control
+#define COMPARTMENT_COUNT 4
 typedef struct {
     char id[8];
     char name[48];
@@ -538,7 +567,91 @@ typedef struct {
     float repairProgress; // 0..100%
 } CompartmentInfo;
 
-#define COMPARTMENT_COUNT 4
+// --- PHASE 12: TORPEDO DEFENSE & UNDERSEA COMBAT STRUCTS ---
+typedef struct {
+    const char* key;
+    const char* name;
+    int damage;
+    float speed;
+    float reloadTime;
+    float stunDuration;
+    float blastRadius;
+    const char* desc;
+} OrdnanceDef;
+
+static const OrdnanceDef g_ordDefs[3] = {
+    { "torpedoes", "Acoustic Homing Torpedo", 85, 0.38f, 5.0f, 0.0f, 35.0f, "High-velocity acoustic seeker homing on cavitation returns." },
+    { "empTorpedoes", "EMP Shock Torpedo", 45, 0.42f, 6.0f, 8.0f, 40.0f, "High-voltage electromagnetic pulse disabling drones & fauna." },
+    { "plasmaTorpedoes", "Thermal Plasma Torpedo", 190, 0.52f, 8.0f, 0.0f, 50.0f, "Supercavitating high-yield plasma warhead melting armor." }
+};
+
+typedef struct {
+    char id[8];
+    char name[32];
+    int type; // 0: drone, 1: leviathan
+    int sectorIdx;
+    float depth;
+    float x, y;
+    float vx, vy;
+    int hp, maxHp;
+    int atkPower;
+    float atkRange;
+    float detectRange;
+    char desc[96];
+    int bountyCredits;
+    int bountyMineral; // 0..4 or -1
+    int bountyQty;
+    int bountyBio; // 0..3 or -1
+    int state; // 0: patrol, 1: stalking, 2: attacking, 3: distracted, 4: stunned
+    float stunTimer;
+    float atkCooldown;
+    int defeated;
+} HostileThreat;
+
+#define THREAT_COUNT 6
+
+static HostileThreat g_threats[THREAT_COUNT] = {
+    { "t01", "Rogue Dredge Drone Alpha", 0, 0, 135.0f, -0.6f, 1.6f, 0.05f, -0.04f, 100, 100, 12, 120.0f, 450.0f, "Automated seabed mineral strip-miner gone rogue.", 120, 2, 2, -1, 0, 0.0f, 0.0f, 0 },
+    { "t02", "Apex Megalodon Relic", 1, 1, 450.0f, 2.5f, -1.8f, -0.06f, 0.05f, 180, 180, 20, 130.0f, 550.0f, "Prehistoric 18m apex predator lurking near basalt canyon cliffs.", 180, -1, 0, 1, 0, 0.0f, 0.0f, 0 },
+    { "t03", "Autonomous Abyssal Raider", 0, 1, 780.0f, 4.0f, -3.2f, 0.07f, 0.03f, 150, 150, 18, 140.0f, 500.0f, "Armed deep-water security sub enforcing forbidden salvage zones.", 160, 2, 2, -1, 0, 0.0f, 0.0f, 0 },
+    { "t04", "Abyssal Phantom Kraken", 1, 2, 2150.0f, -4.2f, -6.5f, -0.05f, -0.06f, 260, 260, 28, 150.0f, 600.0f, "Massive bioluminescent titan with crushing barbed tentacles.", 260, -1, 0, 2, 0, 0.0f, 0.0f, 0 },
+    { "t05", "Heavy Cyber-Sub Hunter-X", 0, 2, 3200.0f, -3.0f, -8.8f, 0.06f, 0.05f, 220, 220, 25, 160.0f, 650.0f, "Heavy armored military drone with high-yield thermal torpedoes.", 240, 3, 2, -1, 0, 0.0f, 0.0f, 0 },
+    { "t06", "Mariana Hadal Void Serpent", 1, 3, 8600.0f, 8.5f, 7.8f, 0.08f, -0.07f, 380, 380, 36, 180.0f, 750.0f, "Legendary hadal titan generating gravitational acoustic shocks.", 450, 4, 2, 3, 0, 0.0f, 0.0f, 0 }
+};
+
+typedef struct {
+    int id; // 1..4
+    int type; // 0: acoustic, 1: emp, 2: plasma
+    int status; // 0: ready, 1: reloading
+    float reloadTime;
+} TorpedoTube;
+
+typedef struct {
+    float x, y, depth;
+    float vx, vy, vz;
+    int type; // 0: acoustic, 1: emp, 2: plasma
+    int damage;
+    int targetIdx;
+    float life;
+    float trailX[12];
+    float trailY[12];
+    int trailCount;
+} ActiveTorpedo;
+
+typedef struct {
+    float x, y, depth;
+    float life;
+    float pulseRadius;
+} ActiveDecoy;
+
+typedef struct {
+    float x, y;
+    float radius;
+    float maxRadius;
+    float life;
+    COLORREF color;
+    char text[32];
+} ExplosionEffect;
 
 typedef struct {
     float depth;            // meters (0 - 11000)
@@ -558,7 +671,7 @@ typedef struct {
     int activeWaypointIdx;
     int autopilot;
     int surveyPoints;
-    int viewMode;           // 0: Sonar, 1: Nav Map, 2: Codex, 3: Cargo, 4: Engineering, 5: Damage Control
+    int viewMode;           // 0: Sonar, 1: Nav Map, 2: Codex, 3: Cargo, 4: Engineering, 5: Damage Control, 6: Lab, 7: Outposts, 8: Combat
     float breadcrumbsX[32];
     float breadcrumbsY[32];
     int breadcrumbCount;
@@ -609,6 +722,19 @@ typedef struct {
     int isDocked;
     int dockedStationIdx;
     int selectedOutpostIdx;
+
+    // Phase 12: Torpedo Defense & Undersea Combat
+    int decoys;
+    float shockwaveCooldown;
+    int silentRunning;
+    int selectedThreatIdx;
+    TorpedoTube tubes[4];
+    ActiveTorpedo activeTorpedoes[8];
+    int activeTorpedoCount;
+    ActiveDecoy activeDecoys[4];
+    int activeDecoyCount;
+    ExplosionEffect explosions[8];
+    int explosionCount;
     // Phase 10: Deep-Sea Biology & Research Lab
     int bioPlankton;
     int bioCephalopod;
@@ -687,7 +813,20 @@ void PlayLabCentrifuge(void);
 void PlayResearchBreakthrough(void);
 void PlayDockingClamps(void);
 void PlayTradeChime(void);
+void PlayTorpedoLaunchSound(void);
+void PlayTorpedoExplosionSound(void);
+void PlayDecoySound(void);
+void PlayShockwaveSound(void);
 void DrawOutpostTradeView(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* th);
+void DrawCombatView(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* th);
+void FireTorpedoTube(int tubeIdx);
+void CycleTubeOrdnance(int tubeIdx);
+void LaunchAcousticDecoy(void);
+void TriggerShockwaveDischarge(void);
+void ToggleSilentRunning(void);
+void LockThreatTarget(int tIdx);
+void DefeatThreat(int tIdx);
+void FireAtThreat(int tIdx);
 void AddLog(const char* text, COLORREF color);
 void InitSubmarineState(void);
 void UpdateSimulation(float dt);
@@ -846,6 +985,62 @@ void PlayTradeChime(void) {
 void PlayResearchBreakthrough(void) {
     if (!g_sub.soundEnabled) return;
     CreateThread(NULL, 0, ResearchBreakthroughThreadProc, NULL, 0, NULL);
+}
+
+DWORD WINAPI TorpedoLaunchSoundThreadProc(LPVOID lpParam) {
+    Beep(360, 60);
+    Sleep(10);
+    Beep(720, 80);
+    Sleep(10);
+    Beep(180, 160);
+    return 0;
+}
+
+void PlayTorpedoLaunchSound(void) {
+    if (!g_sub.soundEnabled) return;
+    CreateThread(NULL, 0, TorpedoLaunchSoundThreadProc, NULL, 0, NULL);
+}
+
+DWORD WINAPI TorpedoExplosionSoundThreadProc(LPVOID lpParam) {
+    Beep(120, 100);
+    Sleep(15);
+    Beep(65, 180);
+    Sleep(15);
+    Beep(37, 240);
+    return 0;
+}
+
+void PlayTorpedoExplosionSound(void) {
+    if (!g_sub.soundEnabled) return;
+    CreateThread(NULL, 0, TorpedoExplosionSoundThreadProc, NULL, 0, NULL);
+}
+
+DWORD WINAPI DecoySoundThreadProc(LPVOID lpParam) {
+    Beep(1400, 60);
+    Sleep(10);
+    Beep(800, 80);
+    Sleep(10);
+    Beep(400, 120);
+    return 0;
+}
+
+void PlayDecoySound(void) {
+    if (!g_sub.soundEnabled) return;
+    CreateThread(NULL, 0, DecoySoundThreadProc, NULL, 0, NULL);
+}
+
+DWORD WINAPI ShockwaveSoundThreadProc(LPVOID lpParam) {
+    Beep(80, 60);
+    Sleep(10);
+    Beep(1400, 120);
+    Sleep(10);
+    Beep(60, 200);
+    return 0;
+}
+
+void PlayShockwaveSound(void) {
+    if (!g_sub.soundEnabled) return;
+    CreateThread(NULL, 0, ShockwaveSoundThreadProc, NULL, 0, NULL);
 }
 
 void AddLog(const char* text, COLORREF color) {
@@ -1056,6 +1251,27 @@ void InitSubmarineState(void) {
     g_sub.bilgePumpMode = 1; // AUTO-BALANCED
     g_sub.emergencySirens = 0;
 
+    // Phase 12: Torpedo Defense & Undersea Combat
+    g_sub.torpedoes = 6;
+    g_sub.empTorpedoes = 2;
+    g_sub.plasmaTorpedoes = 1;
+    g_sub.batteryPacks = 2;
+    g_sub.repairKits = 2;
+    g_sub.decoys = 3;
+    g_sub.shockwaveCooldown = 0.0f;
+    g_sub.silentRunning = 0;
+    g_sub.selectedThreatIdx = 0;
+    g_sub.activeTorpedoCount = 0;
+    g_sub.activeDecoyCount = 0;
+    g_sub.explosionCount = 0;
+
+    for (int i = 0; i < 4; i++) {
+        g_sub.tubes[i].id = i + 1;
+        g_sub.tubes[i].type = (i == 0 ? 0 : (i == 1 ? 0 : (i == 2 ? 1 : 2)));
+        g_sub.tubes[i].status = 0; // ready
+        g_sub.tubes[i].reloadTime = 0.0f;
+    }
+
     g_sub.temp = 21.4f;
 
     g_sub.isPinging = 0;
@@ -1071,6 +1287,7 @@ void InitSubmarineState(void) {
     AddLog("Active sonar & biological hydrophone array online. Listening...", g_themes[THEME_ABYSS].accentEmerald);
     AddLog("Hydraulic dredging claw & mineral cargo bay calibrated.", g_themes[THEME_ABYSS].accentAmber);
     AddLog("Bulkhead damage control & flood isolation manifolds ready.", g_themes[THEME_ABYSS].accentSonar);
+    AddLog("Torpedo fire-control, acoustic decoys & threat matrix active.", g_themes[THEME_ABYSS].accentAmber);
 }
 
 const char* GetZoneName(float depth) {
@@ -1533,6 +1750,428 @@ void UpdateSimulation(float dt) {
             AddLog("Active sonar omnidirectional ping cycle completed.", th->textDim);
         }
     }
+
+    // Phase 12: Undersea Combat, Torpedoes & Threat AI Simulation
+    if (g_sub.shockwaveCooldown > 0.0f) {
+        g_sub.shockwaveCooldown = max(0.0f, g_sub.shockwaveCooldown - dt);
+    }
+
+    // Torpedo tubes reload timers
+    for (int i = 0; i < 4; i++) {
+        if (g_sub.tubes[i].status == 1) {
+            g_sub.tubes[i].reloadTime = max(0.0f, g_sub.tubes[i].reloadTime - dt);
+            if (g_sub.tubes[i].reloadTime <= 0.0f) {
+                g_sub.tubes[i].status = 0; // ready
+                PlaySoundAsync(880, 80);
+            }
+        }
+    }
+
+    // Active Decoys Update
+    for (int i = g_sub.activeDecoyCount - 1; i >= 0; i--) {
+        ActiveDecoy* dec = &g_sub.activeDecoys[i];
+        dec->life -= dt;
+        dec->pulseRadius = fmodf(dec->pulseRadius + dt * 35.0f, 60.0f);
+        if (dec->life <= 0.0f) {
+            for (int k = i; k < g_sub.activeDecoyCount - 1; k++) {
+                g_sub.activeDecoys[k] = g_sub.activeDecoys[k + 1];
+            }
+            g_sub.activeDecoyCount--;
+        }
+    }
+
+    // Active Torpedoes Update
+    for (int i = g_sub.activeTorpedoCount - 1; i >= 0; i--) {
+        ActiveTorpedo* torp = &g_sub.activeTorpedoes[i];
+        torp->life -= dt;
+
+        // Seeker homing towards locked threat
+        if (torp->targetIdx >= 0 && torp->targetIdx < THREAT_COUNT) {
+            HostileThreat* targetThreat = &g_threats[torp->targetIdx];
+            if (!targetThreat->defeated) {
+                float tDx = targetThreat->x - torp->x;
+                float tDy = targetThreat->y - torp->y;
+                float tDist = sqrtf(tDx * tDx + tDy * tDy);
+                if (tDist > 0.001f) {
+                    float desiredAngle = atan2f(tDy, tDx);
+                    float currentAngle = atan2f(torp->vy, torp->vx);
+                    float angleDiff = desiredAngle - currentAngle;
+                    while (angleDiff < -3.14159265f) angleDiff += 6.2831853f;
+                    while (angleDiff > 3.14159265f) angleDiff -= 6.2831853f;
+
+                    float turnSpeed = 3.0f * dt;
+                    float step = (angleDiff > 0 ? 1.0f : -1.0f) * min(fabsf(angleDiff), turnSpeed);
+                    float newAngle = currentAngle + step;
+                    float spd = sqrtf(torp->vx * torp->vx + torp->vy * torp->vy);
+                    torp->vx = cosf(newAngle) * spd;
+                    torp->vy = sinf(newAngle) * spd;
+                }
+                float dZ = targetThreat->depth - torp->depth;
+                torp->vz += (dZ > 0 ? 1.0f : -1.0f) * min(fabsf(dZ), 35.0f * dt);
+            }
+        }
+
+        torp->x += torp->vx * dt;
+        torp->y += torp->vy * dt;
+        torp->depth += torp->vz * dt;
+
+        // Record trail
+        if (torp->trailCount < 12) {
+            torp->trailX[torp->trailCount] = torp->x;
+            torp->trailY[torp->trailCount] = torp->y;
+            torp->trailCount++;
+        } else {
+            for (int k = 0; k < 11; k++) {
+                torp->trailX[k] = torp->trailX[k + 1];
+                torp->trailY[k] = torp->trailY[k + 1];
+            }
+            torp->trailX[11] = torp->x;
+            torp->trailY[11] = torp->y;
+        }
+
+        // Collision check with any threat in sector
+        int hit = 0;
+        for (int j = 0; j < THREAT_COUNT; j++) {
+            HostileThreat* thr = &g_threats[j];
+            if (thr->defeated) continue;
+
+            float dx = (thr->x - torp->x) * 1000.0f;
+            float dy = (thr->y - torp->y) * 1000.0f;
+            float distM = sqrtf(dx * dx + dy * dy);
+            float depthDiff = fabsf(thr->depth - torp->depth);
+
+            if (distM <= 40.0f && depthDiff <= 65.0f) {
+                hit = 1;
+                thr->hp = max(0, thr->hp - torp->damage);
+                if (g_ordDefs[torp->type].stunDuration > 0.0f) {
+                    thr->stunTimer = g_ordDefs[torp->type].stunDuration;
+                }
+
+                if (g_sub.explosionCount < 8) {
+                    ExplosionEffect* exp = &g_sub.explosions[g_sub.explosionCount++];
+                    exp->x = thr->x;
+                    exp->y = thr->y;
+                    exp->radius = 8.0f;
+                    exp->maxRadius = g_ordDefs[torp->type].blastRadius * 1.5f;
+                    exp->life = 0.9f;
+                    exp->color = (torp->type == 0 ? RGB(0, 240, 255) : (torp->type == 1 ? RGB(16, 185, 129) : RGB(239, 68, 68)));
+                    snprintf(exp->text, sizeof(exp->text), "-%d HP", torp->damage);
+                }
+
+                PlayTorpedoExplosionSound();
+                char hMsg[128];
+                snprintf(hMsg, sizeof(hMsg), "💥 DIRECT TORPEDO HIT: [%s] struck [%s] for %d DMG! (%d/%d HP)",
+                         g_ordDefs[torp->type].name, thr->name, torp->damage, thr->hp, thr->maxHp);
+                AddLog(hMsg, th->accentEmerald);
+
+                if (thr->hp <= 0 && !thr->defeated) {
+                    DefeatThreat(j);
+                }
+                break;
+            }
+        }
+
+        if (hit || torp->life <= 0.0f) {
+            for (int k = i; k < g_sub.activeTorpedoCount - 1; k++) {
+                g_sub.activeTorpedoes[k] = g_sub.activeTorpedoes[k + 1];
+            }
+            g_sub.activeTorpedoCount--;
+        }
+    }
+
+    // Hostile Threats AI Simulation
+    float noise = fabsf(g_sub.speed) * 20.0f;
+    if (g_sub.isPinging) noise += 120.0f;
+    if (g_sub.searchlights) noise += 40.0f;
+    if (g_sub.silentRunning) noise *= 0.25f;
+
+    for (int i = 0; i < THREAT_COUNT; i++) {
+        HostileThreat* thr = &g_threats[i];
+        if (thr->defeated) continue;
+
+        if (thr->stunTimer > 0.0f) {
+            thr->state = 4; // stunned
+            thr->stunTimer = max(0.0f, thr->stunTimer - dt);
+            continue;
+        }
+
+        if (thr->atkCooldown > 0.0f) {
+            thr->atkCooldown = max(0.0f, thr->atkCooldown - dt);
+        }
+
+        // Nearest decoy check
+        ActiveDecoy* nearestDec = NULL;
+        float nearestDecDist = 999999.0f;
+        for (int d = 0; d < g_sub.activeDecoyCount; d++) {
+            ActiveDecoy* dec = &g_sub.activeDecoys[d];
+            float ddx = (dec->x - thr->x) * 1000.0f;
+            float ddy = (dec->y - thr->y) * 1000.0f;
+            float ddist = sqrtf(ddx * ddx + ddy * ddy);
+            if (ddist < 550.0f && ddist < nearestDecDist) {
+                nearestDecDist = ddist;
+                nearestDec = dec;
+            }
+        }
+
+        if (nearestDec) {
+            thr->state = 3; // distracted
+            float decDx = nearestDec->x - thr->x;
+            float decDy = nearestDec->y - thr->y;
+            float decDist = sqrtf(decDx * decDx + decDy * decDy);
+            if (decDist > 0.01f) {
+                thr->x += (decDx / decDist) * 0.08f * dt;
+                thr->y += (decDy / decDist) * 0.08f * dt;
+            }
+            continue;
+        }
+
+        // Submarine distance calculation
+        float sDx = (g_sub.posX - thr->x) * 1000.0f;
+        float sDy = (g_sub.posY - thr->y) * 1000.0f;
+        float sDist = sqrtf(sDx * sDx + sDy * sDy);
+        float sDepthDiff = fabsf(g_sub.depth - thr->depth);
+
+        float effectiveDetectRange = thr->detectRange + (noise * 0.5f);
+
+        if (sDist <= effectiveDetectRange && sDepthDiff <= 300.0f) {
+            if (sDist <= thr->atkRange && sDepthDiff <= 80.0f) {
+                thr->state = 2; // attacking
+                if (thr->atkCooldown <= 0.0f) {
+                    thr->atkCooldown = 4.0f;
+                    float dmgMult = max(0.3f, 1.0f - (g_sub.upgradeHull - 1) * 0.18f);
+                    float dmg = thr->atkPower * dmgMult;
+                    g_sub.hull = max(0.0f, g_sub.hull - dmg);
+
+                    int rBay = rand() % COMPARTMENT_COUNT;
+                    g_sub.compartments[rBay].integrity = max(0.0f, g_sub.compartments[rBay].integrity - dmg * 1.5f);
+                    if (g_sub.compartments[rBay].integrity < 60.0f && g_sub.compartments[rBay].breachTier < 3 && (rand() % 100) < 50) {
+                        g_sub.compartments[rBay].breachTier++;
+                        PlayAlarmKlaxon();
+                        char aMsg[128];
+                        snprintf(aMsg, sizeof(aMsg), "🚨 COMBAT BREACH: [%s] pierced [%s] bulkheads! Seawater ingress!", thr->name, g_sub.compartments[rBay].shortCode);
+                        AddLog(aMsg, th->accentRed);
+                    }
+
+                    PlayAlarmKlaxon();
+                    PlaySoundAsync(130, 250);
+                    char atMsg[128];
+                    snprintf(atMsg, sizeof(atMsg), "⚠️ HOSTILE STRIKE: [%s] rammed hull for %.1f DMG! Hull: %.1f%%", thr->name, dmg, g_sub.hull);
+                    AddLog(atMsg, th->accentRed);
+                }
+            } else {
+                thr->state = 1; // stalking
+                float sLen = sqrtf(sDx * sDx + sDy * sDy);
+                if (sLen > 0.01f) {
+                    thr->x += (sDx / sLen) * 0.06f * dt;
+                    thr->y += (sDy / sLen) * 0.06f * dt;
+                }
+            }
+        } else {
+            thr->state = 0; // patrol
+            thr->x += thr->vx * dt * 0.15f;
+            thr->y += thr->vy * dt * 0.15f;
+            if (fabsf(thr->x) > 14.0f) thr->vx *= -1.0f;
+            if (fabsf(thr->y) > 14.0f) thr->vy *= -1.0f;
+        }
+    }
+
+    // Explosions Update
+    for (int i = g_sub.explosionCount - 1; i >= 0; i--) {
+        ExplosionEffect* exp = &g_sub.explosions[i];
+        exp->life -= dt;
+        exp->radius += dt * 50.0f;
+        if (exp->life <= 0.0f) {
+            for (int k = i; k < g_sub.explosionCount - 1; k++) {
+                g_sub.explosions[k] = g_sub.explosions[k + 1];
+            }
+            g_sub.explosionCount--;
+        }
+    }
+}
+
+void FireTorpedoTube(int tubeIdx) {
+    if (tubeIdx < 0 || tubeIdx >= 4) return;
+    TorpedoTube* tube = &g_sub.tubes[tubeIdx];
+    if (tube->status != 0) return;
+
+    const OrdnanceDef* ord = &g_ordDefs[tube->type];
+    int ammo = (tube->type == 0 ? g_sub.torpedoes : (tube->type == 1 ? g_sub.empTorpedoes : g_sub.plasmaTorpedoes));
+    if (ammo <= 0) {
+        PlaySoundAsync(200, 150);
+        char bMsg[128];
+        snprintf(bMsg, sizeof(bMsg), "FIRE ABORTED: Tube #%d out of %s ammo! Restock at outposts.", tube->id, ord->name);
+        AddLog(bMsg, g_themes[g_sub.currentTheme].accentAmber);
+        return;
+    }
+
+    if (tube->type == 0) g_sub.torpedoes--;
+    else if (tube->type == 1) g_sub.empTorpedoes--;
+    else g_sub.plasmaTorpedoes--;
+
+    tube->status = 1; // reloading
+    tube->reloadTime = ord->reloadTime;
+
+    if (g_sub.activeTorpedoCount < 8) {
+        ActiveTorpedo* torp = &g_sub.activeTorpedoes[g_sub.activeTorpedoCount++];
+        torp->x = g_sub.posX;
+        torp->y = g_sub.posY;
+        torp->depth = g_sub.depth;
+        float hRad = (g_sub.heading - 90.0f) * (3.14159265f / 180.0f);
+        torp->vx = cosf(hRad) * ord->speed;
+        torp->vy = sinf(hRad) * ord->speed;
+        torp->vz = (g_sub.pitch / 15.0f) * 15.0f;
+        torp->type = tube->type;
+        torp->damage = ord->damage;
+        torp->targetIdx = g_sub.selectedThreatIdx;
+        torp->life = 6.0f;
+        torp->trailCount = 0;
+    }
+
+    PlayTorpedoLaunchSound();
+    char lMsg[128];
+    snprintf(lMsg, sizeof(lMsg), "🚀 TORPEDO LAUNCH: Tube #%d fired [%s]! Seeker acquiring target...", tube->id, ord->name);
+    AddLog(lMsg, g_themes[g_sub.currentTheme].accentSonar);
+}
+
+void CycleTubeOrdnance(int tubeIdx) {
+    if (tubeIdx < 0 || tubeIdx >= 4) return;
+    g_sub.tubes[tubeIdx].type = (g_sub.tubes[tubeIdx].type + 1) % 3;
+    PlaySoundAsync(520, 60);
+    char cMsg[128];
+    snprintf(cMsg, sizeof(cMsg), "Tube #%d re-armed with [%s].", g_sub.tubes[tubeIdx].id, g_ordDefs[g_sub.tubes[tubeIdx].type].name);
+    AddLog(cMsg, g_themes[g_sub.currentTheme].textPrimary);
+}
+
+void LaunchAcousticDecoy(void) {
+    if (g_sub.decoys <= 0) {
+        PlaySoundAsync(220, 150);
+        AddLog("COUNTERMEASURES EMPTY: No acoustic decoys remaining in launcher!", g_themes[g_sub.currentTheme].accentAmber);
+        return;
+    }
+    g_sub.decoys--;
+    if (g_sub.activeDecoyCount < 4) {
+        ActiveDecoy* dec = &g_sub.activeDecoys[g_sub.activeDecoyCount++];
+        dec->x = g_sub.posX;
+        dec->y = g_sub.posY;
+        dec->depth = g_sub.depth;
+        dec->life = 14.0f;
+        dec->pulseRadius = 0.0f;
+    }
+    PlayDecoySound();
+    char dMsg[128];
+    snprintf(dMsg, sizeof(dMsg), "🚨 ACOUSTIC DECOY DEPLOYED! Emitting 180dB cavitation signature... (%d left)", g_sub.decoys);
+    AddLog(dMsg, g_themes[g_sub.currentTheme].accentEmerald);
+}
+
+void TriggerShockwaveDischarge(void) {
+    if (g_sub.battery < 15.0f) {
+        PlaySoundAsync(220, 150);
+        AddLog("SHOCKWAVE ERROR: Insufficient battery power (<15%)!", g_themes[g_sub.currentTheme].accentAmber);
+        return;
+    }
+    if (g_sub.shockwaveCooldown > 0.0f) {
+        PlaySoundAsync(240, 80);
+        return;
+    }
+
+    g_sub.battery = max(0.0f, g_sub.battery - 15.0f);
+    g_sub.shockwaveCooldown = 10.0f;
+    PlayShockwaveSound();
+
+    if (g_sub.explosionCount < 8) {
+        ExplosionEffect* exp = &g_sub.explosions[g_sub.explosionCount++];
+        exp->x = g_sub.posX;
+        exp->y = g_sub.posY;
+        exp->radius = 10.0f;
+        exp->maxRadius = 180.0f;
+        exp->life = 1.2f;
+        exp->color = RGB(0, 240, 255);
+        strncpy(exp->text, "⚡ EMP SHOCKWAVE", sizeof(exp->text) - 1);
+    }
+
+    int hits = 0;
+    for (int i = 0; i < THREAT_COUNT; i++) {
+        HostileThreat* t = &g_threats[i];
+        if (t->defeated) continue;
+        float dx = (t->x - g_sub.posX) * 1000.0f;
+        float dy = (t->y - g_sub.posY) * 1000.0f;
+        float distM = sqrtf(dx * dx + dy * dy);
+        float depthDiff = fabsf(g_sub.depth - t->depth);
+
+        if (distM <= 220.0f && depthDiff <= 100.0f) {
+            t->hp = max(0, t->hp - 60);
+            t->stunTimer = 6.0f;
+            hits++;
+            if (t->hp <= 0 && !t->defeated) {
+                DefeatThreat(i);
+            }
+        }
+    }
+
+    char sMsg[128];
+    snprintf(sMsg, sizeof(sMsg), "⚡ EMP SHOCKWAVE DISCHARGED: 360-deg pulse emitted! %d hostiles stunned.", hits);
+    AddLog(sMsg, g_themes[g_sub.currentTheme].accentEmerald);
+}
+
+void ToggleSilentRunning(void) {
+    g_sub.silentRunning = !g_sub.silentRunning;
+    PlaySoundAsync(g_sub.silentRunning ? 420 : 320, 80);
+    char sMsg[128];
+    snprintf(sMsg, sizeof(sMsg), "Silent Running %s (Acoustic emissions dampened -75%%).", g_sub.silentRunning ? "ENGAGED" : "DISENGAGED");
+    AddLog(sMsg, g_themes[g_sub.currentTheme].textPrimary);
+}
+
+void LockThreatTarget(int tIdx) {
+    if (tIdx < 0 || tIdx >= THREAT_COUNT) return;
+    g_sub.selectedThreatIdx = tIdx;
+    PlaySoundAsync(750, 60);
+    char tMsg[128];
+    snprintf(tMsg, sizeof(tMsg), "🎯 Combat fire-control locked onto [%s].", g_threats[tIdx].name);
+    AddLog(tMsg, g_themes[g_sub.currentTheme].accentSonar);
+}
+
+void DefeatThreat(int tIdx) {
+    if (tIdx < 0 || tIdx >= THREAT_COUNT) return;
+    HostileThreat* t = &g_threats[tIdx];
+    t->defeated = 1;
+    t->hp = 0;
+    int bonusPts = (int)(t->bountyCredits * g_sub.surveyMultiplier);
+    g_sub.surveyPoints += bonusPts;
+
+    if (t->bountyMineral >= 0) {
+        if (t->bountyMineral == 0) g_sub.cargoManganese += t->bountyQty;
+        else if (t->bountyMineral == 1) g_sub.cargoSunkenGold += t->bountyQty;
+        else if (t->bountyMineral == 2) g_sub.cargoTitaniumScrap += t->bountyQty;
+        else if (t->bountyMineral == 3) g_sub.cargoSmokerCrystals += t->bountyQty;
+        else if (t->bountyMineral == 4) g_sub.cargoHadalPrisms += t->bountyQty;
+        RecalculateCargo();
+    }
+    if (t->bountyBio >= 0) {
+        if (t->bountyBio == 0) g_sub.bioPlankton += 1;
+        else if (t->bountyBio == 1) g_sub.bioCephalopod += 1;
+        else if (t->bountyBio == 2) g_sub.bioEnzymes += 1;
+        else if (t->bountyBio == 3) g_sub.bioHadal += 1;
+    }
+
+    PlayTorpedoExplosionSound();
+    PlayMineralChime();
+    char bMsg[128];
+    snprintf(bMsg, sizeof(bMsg), "🏆 THREAT DESTROYED: [%s] neutralized! Bounty: +%d Credits.", t->name, bonusPts);
+    AddLog(bMsg, g_themes[g_sub.currentTheme].accentEmerald);
+}
+
+void FireAtThreat(int tIdx) {
+    LockThreatTarget(tIdx);
+    for (int i = 0; i < 4; i++) {
+        TorpedoTube* tube = &g_sub.tubes[i];
+        int ammo = (tube->type == 0 ? g_sub.torpedoes : (tube->type == 1 ? g_sub.empTorpedoes : g_sub.plasmaTorpedoes));
+        if (tube->status == 0 && ammo > 0) {
+            FireTorpedoTube(i);
+            return;
+        }
+    }
+    PlaySoundAsync(200, 150);
+    AddLog("ALL TUBES BUSY OR EMPTY: Reload in progress or out of torpedoes.", g_themes[g_sub.currentTheme].accentAmber);
 }
 
 void DrawGaugeBar(HDC hdc, int x, int y, int w, int h, float percent, COLORREF fillClr, const SubmarineTheme* th) {
@@ -2650,6 +3289,185 @@ void DrawOutpostTradeView(HDC hdc, int x, int y, int w, int h, const SubmarineTh
     DrawCustomButton(hdc, ID_BTN_BARTER_REPAIR, rx + 12 + tBtnW, tBtnY, tBtnW, 18, "BARTER: 1x TITANIUM", 0, g_sub.isDocked && g_sub.repairKits < 6 && g_sub.cargoTitaniumScrap >= 1 ? th->accentAmber : th->textDim, th);
 }
 
+// --- DRAW COMBAT & DEFENSE VIEW (PHASE 12) ---
+void DrawCombatView(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* th) {
+    RECT rcBg = { x, y, x + w, y + h };
+    HBRUSH hBr = CreateSolidBrush(th->bgDeep);
+    FillRect(hdc, &rcBg, hBr);
+    DeleteObject(hBr);
+
+    // Threat assessment
+    int activeThreats = 0;
+    int attackingCount = 0;
+    for (int i = 0; i < THREAT_COUNT; i++) {
+        if (!g_threats[i].defeated && g_threats[i].sectorIdx == g_sub.currentSectorIdx) {
+            activeThreats++;
+            if (g_threats[i].state == 2 || g_threats[i].state == 1) attackingCount++;
+        }
+    }
+
+    char hdrBuf[128];
+    if (attackingCount > 0) {
+        snprintf(hdrBuf, sizeof(hdrBuf), "🚨 RED ALERT: %d HOSTILE TARGETS ENGAGING DSV!  |  CREDITS: %d PTS", attackingCount, g_sub.surveyPoints);
+    } else if (activeThreats > 0) {
+        snprintf(hdrBuf, sizeof(hdrBuf), "⚠️ THREAT MATRIX: %d CONTACTS IN SECTOR  |  CREDITS: %d PTS", activeThreats, g_sub.surveyPoints);
+    } else {
+        snprintf(hdrBuf, sizeof(hdrBuf), "THREAT STATUS: SECTOR SECURE (ALL THREATS CLEARED)  |  CREDITS: %d PTS", g_sub.surveyPoints);
+    }
+
+    SelectObject(hdc, g_hFontBold);
+    SetTextColor(hdc, attackingCount > 0 ? th->accentRed : (activeThreats > 0 ? th->accentAmber : th->accentEmerald));
+    TextOutA(hdc, x + 8, y + 6, hdrBuf, (int)strlen(hdrBuf));
+
+    // Top Countermeasures Toolbar in Header
+    char decBuf[32];
+    snprintf(decBuf, sizeof(decBuf), "🚨 DECOY (x%d)", g_sub.decoys);
+    DrawCustomButton(hdc, ID_BTN_COMBAT_DECOY, x + w - 380, y + 4, 115, 20, decBuf, 0, g_sub.decoys > 0 ? th->accentEmerald : th->textDim, th);
+
+    char shkBuf[32];
+    if (g_sub.shockwaveCooldown > 0.0f) snprintf(shkBuf, sizeof(shkBuf), "⚡ SHOCK (%.1fs)", g_sub.shockwaveCooldown);
+    else snprintf(shkBuf, sizeof(shkBuf), "⚡ EMP SHOCK (15%%)");
+    DrawCustomButton(hdc, ID_BTN_COMBAT_SHOCKWAVE, x + w - 260, y + 4, 130, 20, shkBuf, g_sub.shockwaveCooldown > 0.0f, g_sub.battery >= 15.0f && g_sub.shockwaveCooldown <= 0.0f ? th->accentSonar : th->textDim, th);
+
+    DrawCustomButton(hdc, ID_BTN_COMBAT_SILENT, x + w - 124, y + 4, 116, 20, g_sub.silentRunning ? "🤫 SILENT: ON" : "🤫 SILENT: OFF", g_sub.silentRunning, th->accentSonar, th);
+
+    int contentY = y + 26;
+
+    // --- TOP HALF: 4 TORPEDO TUBES ---
+    int tubesH = 78;
+    int margin = 6;
+    int tubeW = (w - margin * 5) / 4;
+
+    for (int i = 0; i < 4; i++) {
+        TorpedoTube* tube = &g_sub.tubes[i];
+        int tx = x + margin + i * (tubeW + margin);
+        int ty = contentY;
+
+        const OrdnanceDef* ord = &g_ordDefs[tube->type];
+        int ammo = (tube->type == 0 ? g_sub.torpedoes : (tube->type == 1 ? g_sub.empTorpedoes : g_sub.plasmaTorpedoes));
+        int isReady = (tube->status == 0);
+
+        RECT rcTube = { tx, ty, tx + tubeW, ty + tubesH };
+        HBRUSH hBrP = CreateSolidBrush(th->bgPanel);
+        COLORREF brClr = isReady ? (ammo > 0 ? th->accentEmerald : th->borderPanel) : th->accentAmber;
+        HBRUSH hBrB = CreateSolidBrush(brClr);
+        FillRect(hdc, &rcTube, hBrP);
+        FrameRect(hdc, &rcTube, hBrB);
+        DeleteObject(hBrP);
+        DeleteObject(hBrB);
+
+        SelectObject(hdc, g_hFontBold);
+        SetTextColor(hdc, th->textBright);
+        char tHdr[32];
+        snprintf(tHdr, sizeof(tHdr), "TUBE #%d", tube->id);
+        TextOutA(hdc, tx + 6, ty + 4, tHdr, (int)strlen(tHdr));
+
+        SetTextColor(hdc, isReady ? (ammo > 0 ? th->accentEmerald : th->textDim) : th->accentAmber);
+        char stBuf[32];
+        if (isReady) snprintf(stBuf, sizeof(stBuf), ammo > 0 ? "READY" : "EMPTY");
+        else snprintf(stBuf, sizeof(stBuf), "RELOAD %.1fs", tube->reloadTime);
+        SIZE stSz;
+        GetTextExtentPoint32A(hdc, stBuf, (int)strlen(stBuf), &stSz);
+        TextOutA(hdc, tx + tubeW - stSz.cx - 6, ty + 4, stBuf, (int)strlen(stBuf));
+
+        SelectObject(hdc, g_hFontSmall);
+        SetTextColor(hdc, tube->type == 0 ? th->accentSonar : (tube->type == 1 ? th->accentEmerald : th->accentRed));
+        char ordBuf[48];
+        snprintf(ordBuf, sizeof(ordBuf), "%s (x%d)", ord->name, ammo);
+        TextOutA(hdc, tx + 6, ty + 18, ordBuf, (int)strlen(ordBuf));
+
+        float reloadPct = isReady ? 100.0f : max(0.0f, (1.0f - (tube->reloadTime / ord->reloadTime)) * 100.0f);
+        DrawGaugeBar(hdc, tx + 6, ty + 32, tubeW - 12, 6, reloadPct, tube->type == 0 ? th->accentSonar : (tube->type == 1 ? th->accentEmerald : th->accentRed), th);
+
+        char statBuf[48];
+        snprintf(statBuf, sizeof(statBuf), "DMG: %d HP | BLAST: %.0fm", ord->damage, ord->blastRadius);
+        SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, tx + 6, ty + 40, statBuf, (int)strlen(statBuf));
+
+        int btnW = (tubeW - 16) / 2;
+        char fireBuf[32];
+        snprintf(fireBuf, sizeof(fireBuf), "🚀 FIRE [%d]", tube->id);
+        DrawCustomButton(hdc, ID_BTN_FIRE_TUBE_0 + i, tx + 6, ty + 54, btnW, 18, fireBuf, 0, isReady && ammo > 0 ? th->accentSonar : th->textDim, th);
+        DrawCustomButton(hdc, ID_BTN_CYCLE_TUBE_0 + i, tx + 10 + btnW, ty + 54, btnW, 18, "CYCLE", 0, th->textPrimary, th);
+    }
+
+    // --- BOTTOM HALF: 6 HOSTILE THREAT CARDS (3 cols x 2 rows) ---
+    int thrY = contentY + tubesH + 6;
+    int thrH = h - (thrY - y) - 6;
+    int cols = 3;
+    int rows = 2;
+    int cardW = (w - margin * (cols + 1)) / cols;
+    int cardH = (thrH - margin * (rows + 1)) / rows;
+
+    for (int i = 0; i < THREAT_COUNT; i++) {
+        HostileThreat* thr = &g_threats[i];
+        int c = i % cols;
+        int r = i / cols;
+        int cx = x + margin + c * (cardW + margin);
+        int cy = thrY + margin + r * (cardH + margin);
+
+        float dx = thr->x - g_sub.posX;
+        float dy = thr->y - g_sub.posY;
+        float distM = sqrtf(dx * dx + dy * dy) * 1000.0f;
+        float depthDiff = fabsf(g_sub.depth - thr->depth);
+        int isLocked = (g_sub.selectedThreatIdx == i);
+        int isSameSector = (thr->sectorIdx == g_sub.currentSectorIdx);
+
+        RECT rcCard = { cx, cy, cx + cardW, cy + cardH };
+        HBRUSH hBrP = CreateSolidBrush(thr->defeated ? RGB(10, 15, 20) : (thr->state == 2 ? RGB(40, 10, 10) : th->bgPanel));
+        COLORREF brdr = thr->defeated ? th->borderPanel : (isLocked ? th->accentSonar : (thr->state == 2 ? th->accentRed : (thr->type == 1 ? RGB(244, 63, 94) : th->accentAmber)));
+        HBRUSH hBrB = CreateSolidBrush(brdr);
+        FillRect(hdc, &rcCard, hBrP);
+        FrameRect(hdc, &rcCard, hBrB);
+        DeleteObject(hBrP);
+        DeleteObject(hBrB);
+
+        SelectObject(hdc, g_hFontBold);
+        SetTextColor(hdc, thr->defeated ? th->textDim : (thr->type == 1 ? th->accentRed : th->accentAmber));
+        char nameBuf[64];
+        snprintf(nameBuf, sizeof(nameBuf), "%s %s", thr->type == 1 ? "🐉" : "🤖", thr->name);
+        TextOutA(hdc, cx + 6, cy + 4, nameBuf, (int)strlen(nameBuf));
+
+        const char* stateLabels[5] = { "PATROL", "STALKING", "ATTACKING", "DISTRACTED", "STUNNED" };
+        const char* stLabel = thr->defeated ? "NEUTRALIZED" : (thr->stunTimer > 0.0f ? "STUNNED" : stateLabels[thr->state]);
+        COLORREF stClr = thr->defeated ? th->textDim : (thr->stunTimer > 0.0f ? th->accentEmerald : (thr->state == 2 ? th->accentRed : (thr->state == 3 ? th->accentAmber : th->accentSonar)));
+        SelectObject(hdc, g_hFontSmall);
+        SetTextColor(hdc, stClr);
+        SIZE sSz;
+        GetTextExtentPoint32A(hdc, stLabel, (int)strlen(stLabel), &sSz);
+        TextOutA(hdc, cx + cardW - sSz.cx - 6, cy + 4, stLabel, (int)strlen(stLabel));
+
+        // Description
+        SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, cx + 6, cy + 18, thr->desc, (int)strlen(thr->desc));
+
+        // HP Bar
+        float hpPct = (float)thr->hp / (float)thr->maxHp * 100.0f;
+        DrawGaugeBar(hdc, cx + 6, cy + 32, cardW - 12, 6, hpPct, hpPct < 30.0f ? th->accentRed : (hpPct < 70.0f ? th->accentAmber : th->accentEmerald), th);
+
+        char hpBuf[48];
+        snprintf(hpBuf, sizeof(hpBuf), "HP: %d/%d (%.0f%%)", thr->hp, thr->maxHp, hpPct);
+        SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, cx + 6, cy + 40, hpBuf, (int)strlen(hpBuf));
+
+        // Telemetry & Sector
+        char telBuf[64];
+        snprintf(telBuf, sizeof(telBuf), "Dist: %.0fm (ΔZ: %.0fm) | %s", distM, depthDiff, isSameSector ? "IN SECTOR" : g_sectors[thr->sectorIdx].name);
+        SetTextColor(hdc, distM < 250.0f && isSameSector ? th->accentRed : th->textDim);
+        TextOutA(hdc, cx + 6, cy + 54, telBuf, (int)strlen(telBuf));
+
+        char atkBuf[48];
+        snprintf(atkBuf, sizeof(atkBuf), "ATK: %d DMG | BOUNTY: +%d PTS", thr->atkPower, thr->bountyCredits);
+        SetTextColor(hdc, th->accentEmerald);
+        TextOutA(hdc, cx + 6, cy + 68, atkBuf, (int)strlen(atkBuf));
+
+        // Action Buttons
+        int aBtnW = (cardW - 16) / 2;
+        DrawCustomButton(hdc, ID_BTN_LOCK_THREAT_0 + i, cx + 6, cy + cardH - 22, aBtnW, 18, isLocked ? "TARGETED" : "LOCK", isLocked, th->accentSonar, th);
+        DrawCustomButton(hdc, ID_BTN_FIRE_THREAT_0 + i, cx + 10 + aBtnW, cy + cardH - 22, aBtnW, 18, "FIRE BEST", 0, !thr->defeated ? th->accentRed : th->textDim, th);
+    }
+}
+
 void DrawUI(HDC hdc, RECT* rcClient) {
     int clientW = rcClient->right - rcClient->left;
     int clientH = rcClient->bottom - rcClient->top;
@@ -2828,8 +3646,8 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     snprintf(secTag, sizeof(secTag), "SECTOR: %s | SURVEY: %d PTS", g_sectors[g_sub.currentSectorIdx].name, g_sub.surveyPoints);
     DrawPanelBox(hdc, centerX, panelY, centerW, sonarH, "DEEP OCEAN & FAUNA EXPLORATION", secTag, th->accentEmerald, th);
 
-    // View switch buttons inside center panel header (7 views)
-    int btnViewW = (centerW - 140) / 7;
+    // View switch buttons inside center panel header (9 views)
+    int btnViewW = (centerW - 132) / 9;
     DrawCustomButton(hdc, ID_BTN_VIEW_SONAR, centerX + 8, panelY + 28, btnViewW - 2, 20, "SONAR", g_sub.viewMode == 0, th->accentSonar, th);
     DrawCustomButton(hdc, ID_BTN_VIEW_NAVMAP, centerX + 6 + btnViewW, panelY + 28, btnViewW - 2, 20, "TRENCH", g_sub.viewMode == 1, th->accentSonar, th);
     DrawCustomButton(hdc, ID_BTN_VIEW_CODEX, centerX + 4 + btnViewW * 2, panelY + 28, btnViewW - 2, 20, "CODEX", g_sub.viewMode == 2, th->accentSonar, th);
@@ -2837,7 +3655,9 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     DrawCustomButton(hdc, ID_BTN_VIEW_LAB, centerX + btnViewW * 4, panelY + 28, btnViewW - 2, 20, "LAB", g_sub.viewMode == 6, th->accentEmerald, th);
     DrawCustomButton(hdc, ID_BTN_VIEW_ENG, centerX - 2 + btnViewW * 5, panelY + 28, btnViewW - 2, 20, "ENG", g_sub.viewMode == 4, th->accentSonar, th);
     DrawCustomButton(hdc, ID_BTN_VIEW_DAMAGE, centerX - 4 + btnViewW * 6, panelY + 28, btnViewW - 2, 20, "DAMAGE", g_sub.viewMode == 5, th->accentRed, th);
-    DrawCustomButton(hdc, ID_BTN_FIELD_DIAG, centerX + centerW - 128, panelY + 28, 120, 20, "+35 PTS DIAG", 0, th->accentAmber, th);
+    DrawCustomButton(hdc, ID_BTN_VIEW_OUTPOSTS, centerX - 6 + btnViewW * 7, panelY + 28, btnViewW - 2, 20, "TRADE", g_sub.viewMode == 7, th->accentEmerald, th);
+    DrawCustomButton(hdc, ID_BTN_VIEW_COMBAT, centerX - 8 + btnViewW * 8, panelY + 28, btnViewW - 2, 20, "COMBAT", g_sub.viewMode == 8, th->accentRed, th);
+    DrawCustomButton(hdc, ID_BTN_FIELD_DIAG, centerX + centerW - 124, panelY + 28, 116, 20, "+35 PTS DIAG", 0, th->accentAmber, th);
 
     int sonarContentY = panelY + 52;
     int sonarContentH = sonarH - 58;
@@ -3024,6 +3844,8 @@ void DrawUI(HDC hdc, RECT* rcClient) {
         DrawResearchLabView(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
     } else if (g_sub.viewMode == 7) {
         DrawOutpostTradeView(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
+    } else if (g_sub.viewMode == 8) {
+        DrawCombatView(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
     }
 
     SelectObject(hdc, g_hFontSmall);
@@ -3193,9 +4015,9 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
         if (mx >= clientW - 142 && mx <= clientW - 12) return ID_BTN_EMERGENCY_BLOW;
     }
 
-    // View toggles in center panel (7 buttons)
+    // View toggles in center panel (9 buttons)
     if (my >= panelY + 28 && my <= panelY + 48) {
-        int btnViewW = (centerW - 140) / 7;
+        int btnViewW = (centerW - 132) / 9;
         if (mx >= centerX + 8 && mx <= centerX + 8 + btnViewW - 2) return ID_BTN_VIEW_SONAR;
         if (mx >= centerX + 6 + btnViewW && mx <= centerX + 6 + btnViewW * 2 - 2) return ID_BTN_VIEW_NAVMAP;
         if (mx >= centerX + 4 + btnViewW * 2 && mx <= centerX + 4 + btnViewW * 3 - 2) return ID_BTN_VIEW_CODEX;
@@ -3203,7 +4025,9 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
         if (mx >= centerX + btnViewW * 4 && mx <= centerX + btnViewW * 5 - 2) return ID_BTN_VIEW_LAB;
         if (mx >= centerX - 2 + btnViewW * 5 && mx <= centerX - 2 + btnViewW * 6 - 2) return ID_BTN_VIEW_ENG;
         if (mx >= centerX - 4 + btnViewW * 6 && mx <= centerX - 4 + btnViewW * 7 - 2) return ID_BTN_VIEW_DAMAGE;
-        if (mx >= centerX + centerW - 128 && mx <= centerX + centerW - 8) return ID_BTN_FIELD_DIAG;
+        if (mx >= centerX - 6 + btnViewW * 7 && mx <= centerX - 6 + btnViewW * 8 - 2) return ID_BTN_VIEW_OUTPOSTS;
+        if (mx >= centerX - 8 + btnViewW * 8 && mx <= centerX - 8 + btnViewW * 9 - 2) return ID_BTN_VIEW_COMBAT;
+        if (mx >= centerX + centerW - 124 && mx <= centerX + centerW - 8) return ID_BTN_FIELD_DIAG;
     }
 
     // HUD buttons in Sonar view
@@ -3384,6 +4208,57 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
         if (my >= r2y + gridH - 24 && my <= r2y + gridH - 6) {
             if (mx >= c1x + 8 && mx <= c1x + gridW - 8) return ID_BTN_RES_BIOFUEL;
             if (mx >= c2x + 8 && mx <= c2x + gridW - 8) return ID_BTN_RES_REGEN;
+        }
+    }
+
+    if (g_sub.viewMode == 8) { // Combat & Defense View
+        int sonarContentY = panelY + 52;
+        int sonarContentH = (panelH * 60) / 100 - 58;
+        int cbX = centerX + 6;
+        int cbY = sonarContentY + 4;
+        int cbW = centerW - 12;
+
+        // Header countermeasures buttons
+        if (my >= cbY + 4 && my <= cbY + 24) {
+            if (mx >= cbX + cbW - 380 && mx <= cbX + cbW - 265) return ID_BTN_COMBAT_DECOY;
+            if (mx >= cbX + cbW - 260 && mx <= cbX + cbW - 130) return ID_BTN_COMBAT_SHOCKWAVE;
+            if (mx >= cbX + cbW - 124 && mx <= cbX + cbW - 8) return ID_BTN_COMBAT_SILENT;
+        }
+
+        int contentY = cbY + 26;
+        int tubesH = 78;
+        int margin = 6;
+        int tubeW = (cbW - margin * 5) / 4;
+
+        // 4 Torpedo Tubes action buttons
+        if (my >= contentY + 54 && my <= contentY + 72) {
+            int btnW = (tubeW - 16) / 2;
+            for (int i = 0; i < 4; i++) {
+                int tx = cbX + margin + i * (tubeW + margin);
+                if (mx >= tx + 6 && mx <= tx + 6 + btnW) return ID_BTN_FIRE_TUBE_0 + i;
+                if (mx >= tx + 10 + btnW && mx <= tx + 10 + btnW * 2) return ID_BTN_CYCLE_TUBE_0 + i;
+            }
+        }
+
+        // 6 Hostile Threat action buttons
+        int thrY = contentY + tubesH + 6;
+        int thrH = sonarContentH - (thrY - cbY) - 6;
+        int cols = 3;
+        int rows = 2;
+        int cardW = (cbW - margin * (cols + 1)) / cols;
+        int cardH = (thrH - margin * (rows + 1)) / rows;
+
+        for (int i = 0; i < THREAT_COUNT; i++) {
+            int c = i % cols;
+            int r = i / cols;
+            int cx = cbX + margin + c * (cardW + margin);
+            int cy = thrY + margin + r * (cardH + margin);
+            int aBtnW = (cardW - 16) / 2;
+
+            if (my >= cy + cardH - 22 && my <= cy + cardH - 4) {
+                if (mx >= cx + 6 && mx <= cx + 6 + aBtnW) return ID_BTN_LOCK_THREAT_0 + i;
+                if (mx >= cx + 10 + aBtnW && mx <= cx + 10 + aBtnW * 2) return ID_BTN_FIRE_THREAT_0 + i;
+            }
         }
     }
 
@@ -3581,10 +4456,138 @@ void HandleCommand(int cmdId) {
             break;
         }
 
-                        case ID_BTN_VIEW_OUTPOSTS:
+        case ID_BTN_VIEW_OUTPOSTS:
             g_sub.viewMode = 7;
             PlaySoundAsync(580, 80);
             break;
+
+        case ID_BTN_VIEW_COMBAT:
+            g_sub.viewMode = 8;
+            PlaySoundAsync(600, 80);
+            break;
+
+        case ID_BTN_FIRE_TUBE_0:
+        case ID_BTN_FIRE_TUBE_1:
+        case ID_BTN_FIRE_TUBE_2:
+        case ID_BTN_FIRE_TUBE_3:
+            FireTorpedoTube(cmdId - ID_BTN_FIRE_TUBE_0);
+            break;
+
+        case ID_BTN_CYCLE_TUBE_0:
+        case ID_BTN_CYCLE_TUBE_1:
+        case ID_BTN_CYCLE_TUBE_2:
+        case ID_BTN_CYCLE_TUBE_3:
+            CycleTubeOrdnance(cmdId - ID_BTN_CYCLE_TUBE_0);
+            break;
+
+        case ID_BTN_COMBAT_DECOY:
+        case ID_BTN_QUICK_LAUNCH_DECOY:
+            LaunchAcousticDecoy();
+            break;
+
+        case ID_BTN_COMBAT_SHOCKWAVE:
+            TriggerShockwaveDischarge();
+            break;
+
+        case ID_BTN_COMBAT_SILENT:
+            ToggleSilentRunning();
+            break;
+
+        case ID_BTN_LOCK_THREAT_0:
+        case ID_BTN_LOCK_THREAT_1:
+        case ID_BTN_LOCK_THREAT_2:
+        case ID_BTN_LOCK_THREAT_3:
+        case ID_BTN_LOCK_THREAT_4:
+        case ID_BTN_LOCK_THREAT_5:
+            LockThreatTarget(cmdId - ID_BTN_LOCK_THREAT_0);
+            break;
+
+        case ID_BTN_FIRE_THREAT_0:
+        case ID_BTN_FIRE_THREAT_1:
+        case ID_BTN_FIRE_THREAT_2:
+        case ID_BTN_FIRE_THREAT_3:
+        case ID_BTN_FIRE_THREAT_4:
+        case ID_BTN_FIRE_THREAT_5:
+            FireAtThreat(cmdId - ID_BTN_FIRE_THREAT_0);
+            break;
+
+        case ID_BTN_QUICK_FIRE_ACOUSTIC: {
+            int fired = 0;
+            for (int i = 0; i < 4; i++) {
+                if (g_sub.tubes[i].type == 0 && g_sub.tubes[i].status == 0 && g_sub.torpedoes > 0) {
+                    FireTorpedoTube(i);
+                    fired = 1;
+                    break;
+                }
+            }
+            if (!fired) {
+                for (int i = 0; i < 4; i++) {
+                    if (g_sub.tubes[i].status == 0 && g_sub.torpedoes > 0) {
+                        g_sub.tubes[i].type = 0;
+                        FireTorpedoTube(i);
+                        fired = 1;
+                        break;
+                    }
+                }
+            }
+            if (!fired) {
+                PlaySoundAsync(200, 150);
+                AddLog("No ready tubes for acoustic torpedo firing!", th->accentAmber);
+            }
+            break;
+        }
+
+        case ID_BTN_QUICK_FIRE_EMP: {
+            int fired = 0;
+            for (int i = 0; i < 4; i++) {
+                if (g_sub.tubes[i].type == 1 && g_sub.tubes[i].status == 0 && g_sub.empTorpedoes > 0) {
+                    FireTorpedoTube(i);
+                    fired = 1;
+                    break;
+                }
+            }
+            if (!fired) {
+                for (int i = 0; i < 4; i++) {
+                    if (g_sub.tubes[i].status == 0 && g_sub.empTorpedoes > 0) {
+                        g_sub.tubes[i].type = 1;
+                        FireTorpedoTube(i);
+                        fired = 1;
+                        break;
+                    }
+                }
+            }
+            if (!fired) {
+                PlaySoundAsync(200, 150);
+                AddLog("No ready tubes for EMP torpedo firing!", th->accentAmber);
+            }
+            break;
+        }
+
+        case ID_BTN_QUICK_FIRE_PLASMA: {
+            int fired = 0;
+            for (int i = 0; i < 4; i++) {
+                if (g_sub.tubes[i].type == 2 && g_sub.tubes[i].status == 0 && g_sub.plasmaTorpedoes > 0) {
+                    FireTorpedoTube(i);
+                    fired = 1;
+                    break;
+                }
+            }
+            if (!fired) {
+                for (int i = 0; i < 4; i++) {
+                    if (g_sub.tubes[i].status == 0 && g_sub.plasmaTorpedoes > 0) {
+                        g_sub.tubes[i].type = 2;
+                        FireTorpedoTube(i);
+                        fired = 1;
+                        break;
+                    }
+                }
+            }
+            if (!fired) {
+                PlaySoundAsync(200, 150);
+                AddLog("No ready tubes for Plasma torpedo firing!", th->accentAmber);
+            }
+            break;
+        }
 
         case ID_BTN_SELECT_OUTPOST_0:
         case ID_BTN_SELECT_OUTPOST_1:
@@ -4357,6 +5360,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
                 InvalidateRect(hWnd, NULL, FALSE);
             }
             return 0;
+
+        case WM_KEYDOWN: {
+            if (wParam >= '1' && wParam <= '4') {
+                FireTorpedoTube((int)(wParam - '1'));
+                InvalidateRect(hWnd, NULL, FALSE);
+            } else if (wParam == 'X' || wParam == 'x') {
+                TriggerShockwaveDischarge();
+                InvalidateRect(hWnd, NULL, FALSE);
+            } else if (wParam == 'C' || wParam == 'c') {
+                ToggleSilentRunning();
+                InvalidateRect(hWnd, NULL, FALSE);
+            } else if (wParam == VK_TAB) {
+                g_sub.selectedThreatIdx = (g_sub.selectedThreatIdx + 1) % THREAT_COUNT;
+                PlaySoundAsync(650, 60);
+                InvalidateRect(hWnd, NULL, FALSE);
+            }
+            return 0;
+        }
 
         case WM_LBUTTONDOWN: {
             int mx = GET_X_LPARAM(lParam);

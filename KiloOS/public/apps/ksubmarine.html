@@ -990,6 +990,94 @@
             justify-content: space-between;
             gap: 6px;
         }
+
+        /* Torpedo Defense & Undersea Combat Station (Phase 12) */
+        .combat-tubes-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .combat-tube-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 5px;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .combat-tube-card.ready {
+            border-color: rgba(0, 240, 255, 0.4);
+            box-shadow: 0 0 8px rgba(0, 240, 255, 0.1);
+        }
+
+        .combat-tube-card.reloading {
+            border-color: var(--accent-amber);
+        }
+
+        .combat-tube-card.empty {
+            opacity: 0.6;
+            border-style: dashed;
+        }
+
+        .tube-status-badge {
+            font-size: 8px;
+            font-weight: bold;
+            padding: 2px 5px;
+            border-radius: 2px;
+            text-transform: uppercase;
+        }
+
+        .tube-badge-ready { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
+        .tube-badge-reloading { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; animation: pulse-badge 0.8s infinite ease-in-out; }
+        .tube-badge-empty { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+
+        .combat-threats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            flex: 1;
+            overflow-y: auto;
+            max-height: 220px;
+        }
+
+        .threat-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 6px;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .threat-card:hover {
+            border-color: var(--border-glow);
+        }
+
+        .threat-card.alert {
+            border-color: var(--accent-red);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+            background: rgba(30, 8, 8, 0.8);
+        }
+
+        .threat-card.locked {
+            border-color: var(--accent-sonar);
+            box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+        }
+
+        .threat-badge-drone { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; font-weight: bold; }
+        .threat-badge-leviathan { background: rgba(239, 68, 68, 0.25); color: #f87171; border: 1px solid #ef4444; font-weight: 900; }
+        .threat-badge-stunned { background: rgba(0, 240, 255, 0.25); color: #00f0ff; border: 1px solid #00f0ff; font-weight: bold; animation: pulse-badge 0.5s infinite ease-in-out; }
+        .threat-badge-distracted { background: rgba(168, 85, 247, 0.25); color: #c084fc; border: 1px solid #a855f7; font-weight: bold; }
     
     </style>
 </head>
@@ -1153,6 +1241,7 @@
                     <button id="viewEngineeringBtn">⚙️ ENGINEERING BAY</button>
                     <button id="viewDamageBtn">🚨 DAMAGE CONTROL</button>
                     <button id="viewOutpostsBtn">🏪 OUTPOSTS & TRADE</button>
+                    <button id="viewCombatBtn">⚔️ COMBAT & DEFENSE</button>
                 </div>
                 <div style="font-size: 10px; color: var(--text-dim); display: flex; gap: 12px; align-items: center;">
                     <span>SECTOR: <b id="currentSectorName" style="color: var(--accent-sonar);">CONTINENTAL SHELF</b></span>
@@ -1392,6 +1481,39 @@
                         <!-- Populated dynamically via JS -->
                     </div>
                 </div>
+
+                <!-- TORPEDO DEFENSE & UNDERSEA COMBAT OVERLAY (PHASE 12) -->
+                <div class="overlay-view" id="combatView">
+                    <div class="overlay-header-row">
+                        <div>
+                            <span style="font-weight: bold; color: var(--text-bright); font-size: 11px;">⚔️ TORPEDO DEFENSE & TACTICAL WEAPONS STATION</span>
+                            <span style="font-size: 10px; color: var(--accent-red); margin-left: 8px;" id="combatThreatAlertHeader">THREAT STATUS: SCANNING WATER COLUMN</span>
+                        </div>
+                        <div style="display: flex; gap: 6px; align-items: center;">
+                            <button id="btnCombatLaunchDecoy" style="font-size: 9px; border-color: var(--accent-amber); color: var(--accent-amber); font-weight: bold;">🚨 DEPLOY DECOY (x<span id="combatDecoyQty">2</span>)</button>
+                            <button id="btnCombatShockwave" style="font-size: 9px; border-color: var(--accent-sonar); color: var(--accent-sonar); font-weight: bold;">⚡ EMP SHOCKWAVE (15% BAT)</button>
+                            <button id="btnCombatSilentRunning" style="font-size: 9px; border-color: var(--accent-emerald); color: var(--accent-emerald);">🤫 SILENT RUN: OFF</button>
+                            <div class="eng-credits-badge" id="combatCreditsDisplay">RESEARCH CREDITS: 150 PTS</div>
+                        </div>
+                    </div>
+
+                    <!-- Torpedo Tubes Status Grid (4 Tubes) -->
+                    <div style="font-size: 10px; font-weight: bold; color: var(--text-bright); margin-top: 2px;">
+                        <span>🚀 PNEUMATIC TORPEDO LAUNCH TUBES</span>
+                    </div>
+                    <div class="combat-tubes-grid" id="combatTubesGrid">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+
+                    <!-- Threat Matrix & Hostile Target Tracker -->
+                    <div style="margin-top: 4px; border-top: 1px solid var(--border-panel); padding-top: 4px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 10px; font-weight: bold; color: var(--text-bright);">🎯 ACTIVE HOSTILE THREAT MATRIX (LEVIATHANS & DREDGING DRONES)</span>
+                        <span style="font-size: 9px; color: var(--text-dim);">Keys: [1..4] Fire Tubes | [X] Shockwave | [C] Silent Running | [TAB] Lock Next Target</span>
+                    </div>
+                    <div class="combat-threats-grid" id="combatThreatsGrid">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </div>
     
                 <!-- DAMAGE CONTROL & FLOOD MANAGEMENT OVERLAY (PHASE 9) -->
                 <div class="overlay-view" id="damageControlView">
@@ -1621,14 +1743,28 @@
                     </div>
                 </div>
 
+                <!-- WEAPONS & TORPEDO DEFENSE (PHASE 12) -->
+                <div class="gauge-group">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 10px; color: var(--text-dim); font-weight: bold;">⚔️ WEAPONS & TORPEDO DEFENSE</span>
+                        <span style="font-size: 9px; color: var(--accent-red);" id="activeThreatsBadge">0 HOSTILES</span>
+                    </div>
+                    <div class="controls-grid">
+                        <button class="btn-large" id="btnQuickFireAcoustic" style="border-color: var(--accent-sonar); color: var(--accent-sonar);">🚀 ACOUSTIC [1]</button>
+                        <button class="btn-large" id="btnQuickFireEmp" style="border-color: var(--accent-emerald); color: var(--accent-emerald);">⚡ EMP [2]</button>
+                        <button class="btn-large" id="btnQuickFirePlasma" style="border-color: var(--accent-red); color: var(--accent-red);">🔥 PLASMA [3]</button>
+                        <button class="btn-large" id="btnQuickLaunchDecoy" style="border-color: var(--accent-amber); color: var(--accent-amber);">🚨 DECOY [4]</button>
+                    </div>
+                </div>
+
                 <!-- QUICK MISSION OBJECTIVE -->
                 <div class="gauge-group">
                     <span style="font-size: 10px; color: var(--text-dim); font-weight: bold;">EXPEDITION DIRECTIVES</span>
                     <div style="background: var(--bg-deep); border: 1px solid var(--border-panel); padding: 6px; border-radius: 3px; font-size: 10px; line-height: 1.4;">
                         <div>• Detect & Scan <b>Abyssal Leviathans</b> & <b>Squids</b></div>
+                        <div>• Neutralize <b>Hostile Dredging Drones</b> & <b>Titans</b></div>
                         <div>• Harvest <b>Manganese Nodules</b> & <b>Sunken Wrecks</b></div>
-                        <div>• Dredge <b>Black Smoker Crystals</b> & <b>Hadal Prisms</b></div>
-                        <div>• Complete <b>12/12 Fauna</b> & <b>8/8 Salvage Sites</b></div>
+                        <div>• Complete <b>12/12 Fauna</b> & <b>6/6 Threats</b></div>
                     </div>
                 </div>
             </div>
@@ -1985,6 +2121,154 @@
                     });
                 } catch(e) {}
             }
+
+            // Phase 12 Torpedo Launch, Undersea Detonation & Combat Sirens
+            function playTorpedoLaunchSound() {
+                if (!soundEnabled) return;
+                try {
+                    initAudio();
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    const now = audioCtx.currentTime;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(360, now);
+                    osc.frequency.exponentialRampToValueAtTime(720, now + 0.12);
+                    osc.frequency.exponentialRampToValueAtTime(180, now + 0.45);
+                    gain.gain.setValueAtTime(0.22, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                } catch(e) {}
+            }
+
+            function playTorpedoExplosionSound() {
+                if (!soundEnabled) return;
+                try {
+                    initAudio();
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    const now = audioCtx.currentTime;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(120, now);
+                    osc.frequency.exponentialRampToValueAtTime(35, now + 0.6);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.7);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.7);
+                } catch(e) {}
+            }
+
+            function playDecoySound() {
+                if (!soundEnabled) return;
+                try {
+                    initAudio();
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    const now = audioCtx.currentTime;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(1400, now);
+                    osc.frequency.exponentialRampToValueAtTime(400, now + 0.3);
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } catch(e) {}
+            }
+
+            function playShockwaveSound() {
+                if (!soundEnabled) return;
+                try {
+                    initAudio();
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    const now = audioCtx.currentTime;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(80, now);
+                    osc.frequency.exponentialRampToValueAtTime(1800, now + 0.15);
+                    osc.frequency.exponentialRampToValueAtTime(60, now + 0.5);
+                    gain.gain.setValueAtTime(0.28, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.55);
+                } catch(e) {}
+            }
+
+            // --- PHASE 12: THREAT MATRIX & ORDNANCE DEFINITIONS ---
+            const ORDNANCE_TYPES = {
+                acoustic: { name: 'Acoustic Homing Torpedo', key: 'torpedoes', damage: 85, speed: 0.38, reloadTime: 5.0, icon: '🚀', color: '#00f0ff', blastRadius: 35, desc: 'High-velocity acoustic seeker homing in on cavitation and active sonar returns.' },
+                emp: { name: 'EMP Shock Torpedo', key: 'empTorpedoes', damage: 45, speed: 0.42, reloadTime: 6.0, stunDuration: 8.0, icon: '⚡', color: '#10b981', blastRadius: 40, desc: 'High-voltage electromagnetic pulse disabling robotic drones and stunning giant fauna.' },
+                plasma: { name: 'Thermal Plasma Torpedo', key: 'plasmaTorpedoes', damage: 190, speed: 0.52, reloadTime: 8.0, icon: '🔥', color: '#ef4444', blastRadius: 50, desc: 'Supercavitating high-yield plasma warhead melting heavy armor and carapaces.' }
+            };
+
+            const THREATS = [
+                // Sector 0: Continental Shelf (0-200m)
+                {
+                    id: 't01', name: 'Rogue Dredge Drone Alpha', type: 'drone', sectorIdx: 0,
+                    depth: 135, x: -0.6, y: 1.6, vx: 0.05, vy: -0.04,
+                    hp: 100, maxHp: 100, atkPower: 12, atkRange: 120, detectRange: 450,
+                    desc: 'Automated seabed mineral strip-miner gone rogue. Fires industrial plasma drills.',
+                    bountyCredits: 120, bountyMineral: 'titaniumScrap', bountyQty: 2, bountyBio: null,
+                    state: 'patrol', stunTimer: 0.0, atkCooldown: 0.0, defeated: false
+                },
+
+                // Sector 1: Twilight Drop-Off (200-1000m)
+                {
+                    id: 't02', name: 'Apex Megalodon Relic', type: 'leviathan', sectorIdx: 1,
+                    depth: 450, x: 2.5, y: -1.8, vx: -0.06, vy: 0.05,
+                    hp: 180, maxHp: 180, atkPower: 20, atkRange: 130, detectRange: 550,
+                    desc: 'Prehistoric 18m apex predator lurking along the basalt canyon cliffs.',
+                    bountyCredits: 180, bountyMineral: null, bountyQty: 0, bountyBio: 'cephalopod',
+                    state: 'patrol', stunTimer: 0.0, atkCooldown: 0.0, defeated: false
+                },
+                {
+                    id: 't03', name: 'Autonomous Abyssal Raider', type: 'drone', sectorIdx: 1,
+                    depth: 780, x: 4.0, y: -3.2, vx: 0.07, vy: 0.03,
+                    hp: 150, maxHp: 150, atkPower: 18, atkRange: 140, detectRange: 500,
+                    desc: 'Armed deep-water security submersible enforcing forbidden salvage zones.',
+                    bountyCredits: 160, bountyMineral: 'titaniumScrap', bountyQty: 2, bountyBio: null,
+                    state: 'patrol', stunTimer: 0.0, atkCooldown: 0.0, defeated: false
+                },
+
+                // Sector 2: Hydrothermal Vents (1000-4000m)
+                {
+                    id: 't04', name: 'Abyssal Phantom Kraken', type: 'leviathan', sectorIdx: 2,
+                    depth: 2150, x: -4.2, y: -6.5, vx: -0.05, vy: -0.06,
+                    hp: 260, maxHp: 260, atkPower: 28, atkRange: 150, detectRange: 600,
+                    desc: 'Massive bioluminescent titan with crushing barbed tentacles and bio-electric pulse.',
+                    bountyCredits: 260, bountyMineral: null, bountyQty: 0, bountyBio: 'enzymes',
+                    state: 'patrol', stunTimer: 0.0, atkCooldown: 0.0, defeated: false
+                },
+                {
+                    id: 't05', name: 'Heavy Cyber-Sub Hunter-X', type: 'drone', sectorIdx: 2,
+                    depth: 3200, x: -3.0, y: -8.8, vx: 0.06, vy: 0.05,
+                    hp: 220, maxHp: 220, atkPower: 25, atkRange: 160, detectRange: 650,
+                    desc: 'Heavy armored military drone equipped with high-yield thermal torpedoes.',
+                    bountyCredits: 240, bountyMineral: 'smokerCrystals', bountyQty: 2, bountyBio: null,
+                    state: 'patrol', stunTimer: 0.0, atkCooldown: 0.0, defeated: false
+                },
+
+                // Sector 3: Mariana Hadal Chasm (4000-11000m)
+                {
+                    id: 't06', name: 'Mariana Hadal Void Serpent', type: 'leviathan', sectorIdx: 3,
+                    depth: 8600, x: 8.5, y: 7.8, vx: 0.08, vy: -0.07,
+                    hp: 380, maxHp: 380, atkPower: 36, atkRange: 180, detectRange: 750,
+                    desc: 'Legendary hadal abyssal serpent generating gravitational acoustic shocks.',
+                    bountyCredits: 450, bountyMineral: 'hadalPrisms', bountyQty: 2, bountyBio: 'hadal',
+                    state: 'patrol', stunTimer: 0.0, atkCooldown: 0.0, defeated: false
+                }
+            ];
 
             // --- PHASE 10: DEEP-SEA BIOLOGY RESEARCH PROJECTS ---
             const RESEARCH_PROJECTS = {
@@ -2525,6 +2809,21 @@
                 isDocked: false,
                 dockedStationIdx: 0,
                 selectedOutpostIdx: 0,
+
+                // Phase 12: Torpedo Defense & Combat Systems
+                decoys: 2,
+                silentRunning: false,
+                shockwaveCooldown: 0.0,
+                selectedThreatIdx: 0,
+                tubes: [
+                    { id: 1, type: 'acoustic', status: 'ready', reloadTime: 0.0 },
+                    { id: 2, type: 'acoustic', status: 'ready', reloadTime: 0.0 },
+                    { id: 3, type: 'emp', status: 'ready', reloadTime: 0.0 },
+                    { id: 4, type: 'plasma', status: 'ready', reloadTime: 0.0 }
+                ],
+                activeTorpedoes: [],
+                activeDecoys: [],
+                explosions: [],
     
                 // Phase 10: Deep-Sea Biology & Research Lab
                 bioSamples: {
@@ -2870,6 +3169,12 @@
                     sonarModeTag.textContent = 'MODE: SURFACE SHIP & OUTPOST COMMISSARY';
                     renderOutpostsUI();
                     playBeep(580, 'triangle', 0.1);
+                } else if (mode === 'combat') {
+                    viewCombatBtn.classList.add('active-toggle');
+                    combatView.classList.add('active');
+                    sonarModeTag.textContent = 'MODE: TORPEDO DEFENSE & TACTICAL WEAPONS';
+                    renderCombatUI();
+                    playBeep(640, 'sawtooth', 0.1);
                 }
             }
 
@@ -2881,6 +3186,7 @@
             viewEngineeringBtn.addEventListener('click', () => setViewMode('engineering'));
             viewDamageBtn.addEventListener('click', () => setViewMode('damage'));
             viewOutpostsBtn.addEventListener('click', () => setViewMode('outposts'));
+            viewCombatBtn.addEventListener('click', () => setViewMode('combat'));
 
             // --- ENGINEERING UPGRADES & RESEARCH ---
             function applyUpgradeStats() {
@@ -4071,6 +4377,411 @@
             btnHudScanTarget.addEventListener('click', handleTargetAction);
             btnScanTarget.addEventListener('click', handleTargetAction);
 
+            // --- TORPEDO DEFENSE & UNDERSEA COMBAT SYSTEM (PHASE 12) ---
+            function renderCombatUI() {
+                combatCreditsDisplay.textContent = `RESEARCH CREDITS: ${state.surveyPoints} PTS`;
+                combatDecoyQty.textContent = state.decoys;
+                btnCombatSilentRunning.textContent = state.silentRunning ? '🤫 SILENT RUN: ACTIVE' : '🤫 SILENT RUN: OFF';
+                btnCombatSilentRunning.classList.toggle('active-toggle', state.silentRunning);
+                btnCombatShockwave.disabled = state.battery < 15 || state.shockwaveCooldown > 0;
+                btnCombatShockwave.textContent = state.shockwaveCooldown > 0 ? `⚡ EMP SHOCKWAVE (${state.shockwaveCooldown.toFixed(1)}s)` : '⚡ EMP SHOCKWAVE (15% BAT)';
+
+                // Count active hostiles in sector
+                const curSecThreats = THREATS.filter(t => t.sectorIdx === state.currentSectorIdx && !t.defeated);
+                const attackingCount = curSecThreats.filter(t => t.state === 'attacking' || t.state === 'stalking').length;
+                if (attackingCount > 0) {
+                    combatThreatAlertHeader.textContent = `🚨 RED ALERT: ${attackingCount} HOSTILE ENTITIES ENGAGING DSV!`;
+                    combatThreatAlertHeader.style.color = 'var(--accent-red)';
+                } else if (curSecThreats.length > 0) {
+                    combatThreatAlertHeader.textContent = `⚠️ HOSTILE TARGETS IN SECTOR: ${curSecThreats.length} DETECTED`;
+                    combatThreatAlertHeader.style.color = 'var(--accent-amber)';
+                } else {
+                    combatThreatAlertHeader.textContent = `THREAT STATUS: SECTOR SECURE (ALL THREATS CLEARED)`;
+                    combatThreatAlertHeader.style.color = 'var(--accent-emerald)';
+                }
+
+                // Render 4 Torpedo Tubes
+                combatTubesGrid.innerHTML = '';
+                state.tubes.forEach((tube, idx) => {
+                    const ord = ORDNANCE_TYPES[tube.type];
+                    const ammoAvailable = state[ord.key] || 0;
+                    const isReady = tube.status === 'ready';
+                    const isReloading = tube.status === 'reloading';
+                    const reloadPct = isReloading ? Math.round((1.0 - (tube.reloadTime / ord.reloadTime)) * 100) : (isReady ? 100 : 0);
+
+                    const tubeCard = document.createElement('div');
+                    tubeCard.className = `combat-tube-card ${isReady ? 'ready' : (isReloading ? 'reloading' : 'empty')}`;
+                    tubeCard.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: bold; font-size: 11px; color: var(--text-bright);">TUBE #${tube.id}</span>
+                            <span class="tube-status-badge ${isReady ? 'tube-badge-ready' : (isReloading ? 'tube-badge-reloading' : 'tube-badge-empty')}">${isReady ? 'READY' : (isReloading ? `RELOAD ${tube.reloadTime.toFixed(1)}s` : 'EMPTY')}</span>
+                        </div>
+                        
+                        <!-- Armed Ordnance -->
+                        <div style="font-size: 10px; color: var(--text-bright); display: flex; align-items: center; justify-content: space-between;">
+                            <span>${ord.icon} <b>${ord.name}</b></span>
+                            <span style="color: var(--accent-sonar); font-weight: bold;">(x${ammoAvailable})</span>
+                        </div>
+
+                        <!-- Cooldown Bar -->
+                        <div class="gauge-bar-track" style="height: 6px; margin: 2px 0;">
+                            <div class="gauge-bar-fill" style="width: ${reloadPct}%; background: ${ord.color};"></div>
+                        </div>
+
+                        <!-- Stats -->
+                        <div style="font-size: 8.5px; color: var(--text-dim); display: flex; justify-content: space-between;">
+                            <span>DMG: <b style="color: var(--text-bright);">${ord.damage} HP</b></span>
+                            <span>BLAST: <b style="color: var(--text-bright);">${ord.blastRadius}m</b></span>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div style="display: flex; gap: 4px; margin-top: 2px;">
+                            <button onclick="window.fireTube(${idx})" style="flex: 2; padding: 4px; font-weight: bold; border-color: ${ord.color}; color: ${ord.color};" ${(!isReady || ammoAvailable <= 0) ? 'disabled' : ''}>
+                                🚀 FIRE [${tube.id}]
+                            </button>
+                            <select onchange="window.rearmTube(${idx}, this.value)" style="flex: 1; padding: 2px; font-size: 8.5px;">
+                                <option value="acoustic" ${tube.type === 'acoustic' ? 'selected' : ''}>Acoustic</option>
+                                <option value="emp" ${tube.type === 'emp' ? 'selected' : ''}>EMP</option>
+                                <option value="plasma" ${tube.type === 'plasma' ? 'selected' : ''}>Plasma</option>
+                            </select>
+                        </div>
+                    `;
+                    combatTubesGrid.appendChild(tubeCard);
+                });
+
+                // Render Threat Matrix
+                combatThreatsGrid.innerHTML = '';
+                THREATS.forEach((threat, idx) => {
+                    const secName = SECTORS[threat.sectorIdx].name;
+                    const dx = threat.x - state.posX;
+                    const dy = threat.y - state.posY;
+                    const distM = Math.round(Math.sqrt(dx * dx + dy * dy) * 1000);
+                    const depthDiff = Math.abs(Math.round(state.depth - threat.depth));
+                    const isLocked = (state.selectedThreatIdx === idx);
+                    const hpPct = Math.max(0, Math.round((threat.hp / threat.maxHp) * 100));
+
+                    let badgeCls = 'threat-badge-drone';
+                    let stateBadge = threat.state.toUpperCase();
+                    if (threat.defeated) {
+                        badgeCls = 'tube-badge-empty';
+                        stateBadge = 'NEUTRALIZED';
+                    } else if (threat.stunTimer > 0) {
+                        badgeCls = 'threat-badge-stunned';
+                        stateBadge = `⚡ STUNNED (${threat.stunTimer.toFixed(1)}s)`;
+                    } else if (threat.state === 'distracted') {
+                        badgeCls = 'threat-badge-distracted';
+                        stateBadge = '🚨 DISTRACTED BY DECOY';
+                    } else if (threat.state === 'attacking') {
+                        badgeCls = 'threat-badge-leviathan';
+                        stateBadge = '🔥 ATTACKING VESSEL';
+                    } else if (threat.type === 'leviathan') {
+                        badgeCls = 'threat-badge-leviathan';
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = `threat-card ${threat.state === 'attacking' ? 'alert' : ''} ${isLocked ? 'locked' : ''}`;
+                    card.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: bold; font-size: 11px; color: ${threat.type === 'leviathan' ? 'var(--accent-red)' : 'var(--accent-amber)'};">
+                                ${threat.type === 'leviathan' ? '🐉' : '🤖'} ${threat.name}
+                            </span>
+                            <span class="tube-status-badge ${badgeCls}">${stateBadge}</span>
+                        </div>
+                        
+                        <div style="font-size: 8.5px; color: var(--text-dim);">${threat.desc}</div>
+
+                        <!-- Health Bar -->
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 8.5px;">
+                                <span>HULL / CARAPACE HP:</span>
+                                <b style="color: ${hpPct < 30 ? 'var(--accent-red)' : (hpPct < 70 ? 'var(--accent-amber)' : 'var(--accent-emerald)')};">${threat.hp} / ${threat.maxHp} HP (${hpPct}%)</b>
+                            </div>
+                            <div class="gauge-bar-track" style="height: 6px;">
+                                <div class="gauge-bar-fill" style="width: ${hpPct}%; background: ${hpPct < 30 ? 'var(--accent-red)' : (hpPct < 70 ? 'var(--accent-amber)' : 'var(--accent-emerald)')};"></div>
+                            </div>
+                        </div>
+
+                        <!-- Distance & Combat Telemetry -->
+                        <div class="eng-stat-row">
+                            <span>SECTOR: <b>${secName} (~${threat.depth}m)</b></span>
+                            <span>DIST: <b style="color: ${distM < 250 ? 'var(--accent-red)' : 'var(--accent-sonar)'};">${distM}m (ΔZ: ${depthDiff}m)</b></span>
+                        </div>
+                        <div class="eng-stat-row">
+                            <span>ATK POWER: <b>${threat.atkPower} DMG</b></span>
+                            <span>BOUNTY: <b style="color: var(--accent-emerald);">+${threat.bountyCredits} PTS</b></span>
+                        </div>
+
+                        <!-- Targeting Button -->
+                        <div style="display: flex; gap: 4px; margin-top: 2px;">
+                            <button onclick="window.lockThreatTarget(${idx})" style="flex: 1; padding: 3px; font-size: 9px; border-color: ${isLocked ? 'var(--accent-sonar)' : 'var(--border-panel)'}; color: ${isLocked ? 'var(--accent-sonar)' : 'var(--text-bright)'}; font-weight: bold;">
+                                ${isLocked ? '🎯 TARGET LOCKED [TAB]' : '🎯 LOCK TARGET'}
+                            </button>
+                            <button onclick="window.fireAtThreat(${idx})" style="flex: 1; padding: 3px; font-size: 9px; border-color: var(--accent-red); color: var(--accent-red); font-weight: bold;" ${threat.defeated ? 'disabled' : ''}>
+                                🚀 FIRE BEST TUBE
+                            </button>
+                        </div>
+                    `;
+                    combatThreatsGrid.appendChild(card);
+                });
+            }
+
+            window.fireTube = function(tubeIdx) {
+                const tube = state.tubes[tubeIdx];
+                if (!tube || tube.status !== 'ready') return;
+                const ord = ORDNANCE_TYPES[tube.type];
+                if ((state[ord.key] || 0) <= 0) {
+                    playBeep(200, 'square', 0.2);
+                    logMessage(`FIRE ABORTED: Tube #${tube.id} out of ${ord.name} ammo! Buy torpedoes at outposts or surface ship.`, 'warning');
+                    return;
+                }
+
+                // Consume ammo & set reload
+                state[ord.key]--;
+                tube.status = 'reloading';
+                tube.reloadTime = ord.reloadTime;
+
+                // Spawn torpedo projectile
+                const headingRad = (state.heading - 90) * (Math.PI / 180);
+                const forwardSpeed = ord.speed;
+                const vx = Math.cos(headingRad) * forwardSpeed;
+                const vy = Math.sin(headingRad) * forwardSpeed;
+
+                state.activeTorpedoes.push({
+                    x: state.posX,
+                    y: state.posY,
+                    depth: state.depth,
+                    vx: vx,
+                    vy: vy,
+                    vz: (state.pitch / 15.0) * 15.0,
+                    type: tube.type,
+                    damage: ord.damage,
+                    targetIdx: state.selectedThreatIdx,
+                    life: 6.0,
+                    trail: []
+                });
+
+                playTorpedoLaunchSound();
+                logMessage(`🚀 TORPEDO LAUNCH: Tube #${tube.id} fired [${ord.name}]! Active seeker homing...`, 'info');
+                renderCombatUI();
+            };
+
+            window.rearmTube = function(tubeIdx, ordType) {
+                const tube = state.tubes[tubeIdx];
+                if (tube) {
+                    tube.type = ordType;
+                    playBeep(520, 'sine', 0.08);
+                    logMessage(`Tube #${tube.id} re-armed with [${ORDNANCE_TYPES[ordType].name}].`, 'info');
+                    renderCombatUI();
+                }
+            };
+
+            window.lockThreatTarget = function(tIdx) {
+                state.selectedThreatIdx = tIdx;
+                playBeep(750, 'triangle', 0.08);
+                const t = THREATS[tIdx];
+                logMessage(`🎯 Combat fire-control computer locked onto [${t.name}].`, 'info');
+                renderCombatUI();
+            };
+
+            window.fireAtThreat = function(tIdx) {
+                window.lockThreatTarget(tIdx);
+                // Find first ready tube
+                const readyIdx = state.tubes.findIndex(t => t.status === 'ready' && (state[ORDNANCE_TYPES[t.type].key] || 0) > 0);
+                if (readyIdx !== -1) {
+                    window.fireTube(readyIdx);
+                } else {
+                    playBeep(200, 'square', 0.2);
+                    logMessage(`ALL TUBES BUSY OR EMPTY: Reload in progress or out of torpedoes.`, 'warning');
+                }
+            };
+
+            function launchAcousticDecoy() {
+                if (state.decoys <= 0) {
+                    playBeep(220, 'square', 0.2);
+                    logMessage(`COUNTERMEASURES EMPTY: No acoustic decoys remaining in launcher!`, 'warning');
+                    return;
+                }
+
+                state.decoys--;
+                state.activeDecoys.push({
+                    x: state.posX,
+                    y: state.posY,
+                    depth: state.depth,
+                    life: 14.0,
+                    pulseRadius: 0.0
+                });
+
+                playDecoySound();
+                logMessage(`🚨 ACOUSTIC DECOY DEPLOYED! Cavitation noisemaker generating 180dB decoy signature... (${state.decoys} left)`, 'discovery');
+                renderCombatUI();
+            }
+
+            function triggerShockwaveDischarge() {
+                if (state.battery < 15) {
+                    playBeep(220, 'square', 0.2);
+                    logMessage(`SHOCKWAVE ERROR: Insufficient battery power (<15%)!`, 'warning');
+                    return;
+                }
+                if (state.shockwaveCooldown > 0) {
+                    playBeep(240, 'triangle', 0.1);
+                    return;
+                }
+
+                state.battery = Math.max(0, state.battery - 15);
+                state.shockwaveCooldown = 10.0;
+                playShockwaveSound();
+
+                // Shockwave visual
+                state.explosions.push({
+                    x: state.posX,
+                    y: state.posY,
+                    radius: 10,
+                    maxRadius: 180,
+                    life: 1.2,
+                    color: '#00f0ff',
+                    text: '⚡ EMP SHOCKWAVE'
+                });
+
+                let hits = 0;
+                THREATS.forEach(t => {
+                    if (t.defeated) return;
+                    const dx = (t.x - state.posX) * 1000;
+                    const dy = (t.y - state.posY) * 1000;
+                    const distM = Math.sqrt(dx * dx + dy * dy);
+                    const depthDiff = Math.abs(state.depth - t.depth);
+
+                    if (distM <= 220 && depthDiff <= 100) {
+                        t.hp = Math.max(0, t.hp - 60);
+                        t.stunTimer = 6.0;
+                        hits++;
+                        state.explosions.push({
+                            x: t.x,
+                            y: t.y,
+                            radius: 5,
+                            maxRadius: 40,
+                            life: 0.8,
+                            color: '#10b981',
+                            text: '-60 HP [STUNNED]'
+                        });
+
+                        if (t.hp <= 0 && !t.defeated) {
+                            defeatThreat(t);
+                        }
+                    }
+                });
+
+                logMessage(`⚡ HULL EMP SHOCKWAVE DISCHARGED: Emitted 360° electrical wave! ${hits} hostiles stunned & damaged.`, 'discovery');
+                renderCombatUI();
+            }
+
+            function toggleSilentRunning() {
+                state.silentRunning = !state.silentRunning;
+                playBeep(state.silentRunning ? 420 : 320, 'sine', 0.1);
+                logMessage(`🤫 Silent Running Mode ${state.silentRunning ? 'ENGAGED. Cavitation dampened & acoustic emission reduced by 75%.' : 'DISENGAGED. Full throttle restored.'}`, 'info');
+                renderCombatUI();
+            }
+
+            function defeatThreat(t) {
+                t.defeated = true;
+                t.hp = 0;
+                const bonusPts = Math.round(t.bountyCredits * state.surveyMultiplier);
+                state.surveyPoints += bonusPts;
+
+                let bountyText = `+${bonusPts} Credits`;
+                if (t.bountyMineral) {
+                    state.cargo[t.bountyMineral] = (state.cargo[t.bountyMineral] || 0) + t.bountyQty;
+                    bountyText += `, +${t.bountyQty}x ${RESOURCE_TYPES[t.bountyMineral].name}`;
+                }
+                if (t.bountyBio) {
+                    state.bioSamples[t.bountyBio] = (state.bioSamples[t.bountyBio] || 0) + 1;
+                    bountyText += `, +1 extremophile bio-sample`;
+                }
+
+                playTorpedoExplosionSound();
+                setTimeout(playMineralChimeSound, 400);
+                logMessage(`🏆 THREAT NEUTRALIZED: [${t.name}] destroyed! Salvaged bounty: ${bountyText}!`, 'discovery');
+
+                recalculateCargo();
+                renderCargoUI();
+                renderLabUI();
+                renderEngineeringUI();
+                renderCombatUI();
+            }
+
+            btnCombatLaunchDecoy.addEventListener('click', launchAcousticDecoy);
+            btnCombatShockwave.addEventListener('click', triggerShockwaveDischarge);
+            btnCombatSilentRunning.addEventListener('click', toggleSilentRunning);
+
+            // Quick combat panel buttons
+            btnQuickFireAcoustic.addEventListener('click', () => {
+                const tIdx = state.tubes.findIndex(t => t.type === 'acoustic' && t.status === 'ready');
+                if (tIdx !== -1) window.fireTube(tIdx);
+                else {
+                    const anyIdx = state.tubes.findIndex(t => t.status === 'ready');
+                    if (anyIdx !== -1) {
+                        state.tubes[anyIdx].type = 'acoustic';
+                        window.fireTube(anyIdx);
+                    } else {
+                        playBeep(200, 'square', 0.2);
+                        logMessage('No ready tubes for acoustic torpedo firing!', 'warning');
+                    }
+                }
+            });
+
+            btnQuickFireEmp.addEventListener('click', () => {
+                const tIdx = state.tubes.findIndex(t => t.type === 'emp' && t.status === 'ready');
+                if (tIdx !== -1) window.fireTube(tIdx);
+                else {
+                    const anyIdx = state.tubes.findIndex(t => t.status === 'ready');
+                    if (anyIdx !== -1) {
+                        state.tubes[anyIdx].type = 'emp';
+                        window.fireTube(anyIdx);
+                    } else {
+                        playBeep(200, 'square', 0.2);
+                        logMessage('No ready tubes for EMP torpedo firing!', 'warning');
+                    }
+                }
+            });
+
+            btnQuickFirePlasma.addEventListener('click', () => {
+                const tIdx = state.tubes.findIndex(t => t.type === 'plasma' && t.status === 'ready');
+                if (tIdx !== -1) window.fireTube(tIdx);
+                else {
+                    const anyIdx = state.tubes.findIndex(t => t.status === 'ready');
+                    if (anyIdx !== -1) {
+                        state.tubes[anyIdx].type = 'plasma';
+                        window.fireTube(anyIdx);
+                    } else {
+                        playBeep(200, 'square', 0.2);
+                        logMessage('No ready tubes for Plasma torpedo firing!', 'warning');
+                    }
+                }
+            });
+
+            btnQuickLaunchDecoy.addEventListener('click', launchAcousticDecoy);
+
+            // Keyboard Shortcuts for Undersea Combat
+            window.addEventListener('keydown', (e) => {
+                if (e.key === '1') {
+                    window.fireTube(0);
+                } else if (e.key === '2') {
+                    window.fireTube(1);
+                } else if (e.key === '3') {
+                    window.fireTube(2);
+                } else if (e.key === '4') {
+                    window.fireTube(3);
+                } else if (e.key === 'x' || e.key === 'X') {
+                    triggerShockwaveDischarge();
+                } else if (e.key === 'c' || e.key === 'C') {
+                    toggleSilentRunning();
+                } else if (e.key === 'Tab') {
+                    e.preventDefault();
+                    state.selectedThreatIdx = (state.selectedThreatIdx + 1) % THREATS.length;
+                    playBeep(650, 'sine', 0.06);
+                    renderCombatUI();
+                }
+            });
+
             // --- WAYPOINTS & AUTOPILOT ---
             function updateWaypointUI() {
                 const wp = WAYPOINTS[state.activeWaypointIdx];
@@ -4616,7 +5327,239 @@
                 }
                 state.temp = ambientTemp + thermalBoost;
 
-                // 9. Update UI Gauges & Target HUD
+                // 9. Undersea Combat, Torpedo Trajectory & Threat AI Simulation (Phase 12)
+                if (state.shockwaveCooldown > 0) {
+                    state.shockwaveCooldown = Math.max(0, state.shockwaveCooldown - dt);
+                }
+
+                // Torpedo Tubes Reload Timer
+                state.tubes.forEach(tube => {
+                    if (tube.status === 'reloading') {
+                        tube.reloadTime = Math.max(0, tube.reloadTime - dt);
+                        if (tube.reloadTime <= 0) {
+                            tube.status = 'ready';
+                            playBeep(880, 'sine', 0.1, 0.08);
+                        }
+                    }
+                });
+
+                // Active Decoys Update
+                for (let i = state.activeDecoys.length - 1; i >= 0; i--) {
+                    const dec = state.activeDecoys[i];
+                    dec.life -= dt;
+                    dec.pulseRadius = ((dec.pulseRadius || 0) + dt * 35.0) % 60.0;
+                    if (dec.life <= 0) {
+                        state.activeDecoys.splice(i, 1);
+                    }
+                }
+
+                // Active Torpedo Projectiles Update
+                for (let i = state.activeTorpedoes.length - 1; i >= 0; i--) {
+                    const torp = state.activeTorpedoes[i];
+                    torp.life -= dt;
+
+                    // Homing guidance towards target if locked
+                    const targetThreat = THREATS[torp.targetIdx];
+                    if (targetThreat && !targetThreat.defeated) {
+                        const tDx = targetThreat.x - torp.x;
+                        const tDy = targetThreat.y - torp.y;
+                        const tDist = Math.sqrt(tDx * tDx + tDy * tDy);
+                        if (tDist > 0.001) {
+                            const desiredAngle = Math.atan2(tDy, tDx);
+                            const currentAngle = Math.atan2(torp.vy, torp.vx);
+                            let angleDiff = desiredAngle - currentAngle;
+                            while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                            while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                            
+                            const turnSpeed = 3.0 * dt;
+                            const newAngle = currentAngle + Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), turnSpeed);
+                            const spd = Math.sqrt(torp.vx * torp.vx + torp.vy * torp.vy);
+                            torp.vx = Math.cos(newAngle) * spd;
+                            torp.vy = Math.sin(newAngle) * spd;
+                        }
+
+                        // Depth homing
+                        const dZ = targetThreat.depth - torp.depth;
+                        torp.vz = (torp.vz || 0) + Math.sign(dZ) * Math.min(Math.abs(dZ), 35.0 * dt);
+                    }
+
+                    torp.x += torp.vx * dt;
+                    torp.y += torp.vy * dt;
+                    torp.depth += (torp.vz || 0) * dt;
+
+                    // Record trail
+                    if (!torp.trail) torp.trail = [];
+                    torp.trail.push({ x: torp.x, y: torp.y });
+                    if (torp.trail.length > 12) torp.trail.shift();
+
+                    // Collision check with any threat
+                    let hit = false;
+                    for (let j = 0; j < THREATS.length; j++) {
+                        const thr = THREATS[j];
+                        if (thr.defeated) continue;
+
+                        const dx = (thr.x - torp.x) * 1000;
+                        const dy = (thr.y - torp.y) * 1000;
+                        const distM = Math.sqrt(dx * dx + dy * dy);
+                        const depthDiff = Math.abs(thr.depth - torp.depth);
+
+                        if (distM <= 40 && depthDiff <= 65) {
+                            hit = true;
+                            thr.hp = Math.max(0, thr.hp - torp.damage);
+                            
+                            const ord = ORDNANCE_TYPES[torp.type];
+                            if (ord.stunDuration) {
+                                thr.stunTimer = ord.stunDuration;
+                            }
+
+                            // Spawn explosion
+                            state.explosions.push({
+                                x: thr.x,
+                                y: thr.y,
+                                radius: 8,
+                                maxRadius: ord.blastRadius * 1.5,
+                                life: 0.9,
+                                color: ord.color,
+                                text: `-${torp.damage} HP${ord.stunDuration ? ' [STUN]' : ''}`
+                            });
+
+                            playTorpedoExplosionSound();
+                            logMessage(`💥 DIRECT TORPEDO IMPACT: [${ord.name}] struck [${thr.name}] for ${torp.damage} damage! (${thr.hp}/${thr.maxHp} HP left)`, 'discovery');
+
+                            if (thr.hp <= 0 && !thr.defeated) {
+                                defeatThreat(thr);
+                            }
+                            break;
+                        }
+                    }
+
+                    if (hit || torp.life <= 0) {
+                        state.activeTorpedoes.splice(i, 1);
+                    }
+                }
+
+                // Hostile Threats AI State Machine
+                let noise = Math.abs(state.speed) * 20.0;
+                if (state.isPinging) noise += 120.0;
+                if (state.searchlights) noise += 40.0;
+                if (state.silentRunning) noise *= 0.25;
+
+                THREATS.forEach((thr, idx) => {
+                    if (thr.defeated) return;
+
+                    if (thr.stunTimer > 0) {
+                        thr.state = 'stunned';
+                        thr.stunTimer = Math.max(0, thr.stunTimer - dt);
+                        return;
+                    }
+
+                    if (thr.atkCooldown > 0) {
+                        thr.atkCooldown = Math.max(0, thr.atkCooldown - dt);
+                    }
+
+                    // Check nearest decoy
+                    let nearestDecoy = null;
+                    let nearestDecoyDist = 999999;
+                    state.activeDecoys.forEach(dec => {
+                        const ddx = (dec.x - thr.x) * 1000;
+                        const ddy = (dec.y - thr.y) * 1000;
+                        const ddist = Math.sqrt(ddx * ddx + ddy * ddy);
+                        if (ddist < 550 && ddist < nearestDecoyDist) {
+                            nearestDecoyDist = ddist;
+                            nearestDecoy = dec;
+                        }
+                    });
+
+                    if (nearestDecoy) {
+                        thr.state = 'distracted';
+                        // Move toward decoy
+                        const decDx = nearestDecoy.x - thr.x;
+                        const decDy = nearestDecoy.y - thr.y;
+                        const decDist = Math.sqrt(decDx * decDx + decDy * decDy);
+                        if (decDist > 0.01) {
+                            thr.x += (decDx / decDist) * 0.08 * dt;
+                            thr.y += (decDy / decDist) * 0.08 * dt;
+                        }
+                        return;
+                    }
+
+                    // Compute distance to submarine
+                    const sDx = (state.posX - thr.x) * 1000;
+                    const sDy = (state.posY - thr.y) * 1000;
+                    const sDist = Math.sqrt(sDx * sDx + sDy * sDy);
+                    const sDepthDiff = Math.abs(state.depth - thr.depth);
+
+                    const effectiveDetectRange = thr.detectRange + (noise * 0.5);
+
+                    if (sDist <= effectiveDetectRange && sDepthDiff <= 300) {
+                        if (sDist <= thr.atkRange && sDepthDiff <= 80) {
+                            thr.state = 'attacking';
+                            // Attack Submarine
+                            if (thr.atkCooldown <= 0) {
+                                thr.atkCooldown = 4.0;
+                                const dmgMult = Math.max(0.3, 1.0 - (state.upgrades.hull - 1) * 0.18);
+                                const actualDmg = thr.atkPower * dmgMult;
+                                state.hull = Math.max(0, state.hull - actualDmg);
+                                
+                                // Random compartment breach on attack
+                                const targetCompIdx = Math.floor(Math.random() * 4);
+                                const targetComp = dc.compartments[targetCompIdx];
+                                targetComp.integrity = Math.max(0, targetComp.integrity - actualDmg * 1.5);
+                                if (targetComp.breachTier < 3 && Math.random() < 0.45) {
+                                    targetComp.breachTier++;
+                                    playAlarmKlaxon();
+                                    logMessage(`🚨 BULKHEAD BREACH: [${targetComp.shortCode}] struck by ${thr.name}! Hull ruptured!`, 'critical');
+                                }
+
+                                playTorpedoExplosionSound();
+                                playAlarmKlaxon();
+                                logMessage(`⚠️ HOSTILE ATTACK: [${thr.name}] rammed bathyscaphe! -${actualDmg.toFixed(1)}% Hull Integrity!`, 'critical');
+
+                                state.explosions.push({
+                                    x: state.posX,
+                                    y: state.posY,
+                                    radius: 10,
+                                    maxRadius: 60,
+                                    life: 0.8,
+                                    color: '#ef4444',
+                                    text: `-${actualDmg.toFixed(0)}% HULL`
+                                });
+                            }
+                        } else {
+                            thr.state = 'stalking';
+                            // Move towards sub
+                            const normDist = Math.sqrt(sDx * sDx + sDy * sDy);
+                            if (normDist > 10) {
+                                thr.x += (sDx / normDist) * 0.05 * dt;
+                                thr.y += (sDy / normDist) * 0.05 * dt;
+                                thr.depth += Math.sign(state.depth - thr.depth) * Math.min(Math.abs(state.depth - thr.depth), 20.0 * dt);
+                            }
+                        }
+                    } else {
+                        thr.state = 'patrol';
+                        // Patrol roam
+                        thr.x += thr.vx * dt;
+                        thr.y += thr.vy * dt;
+                        if (Math.abs(thr.x) > 14) thr.vx *= -1;
+                        if (Math.abs(thr.y) > 14) thr.vy *= -1;
+                    }
+                });
+
+                // Update Explosions
+                for (let i = state.explosions.length - 1; i >= 0; i--) {
+                    const exp = state.explosions[i];
+                    exp.life -= dt;
+                    exp.radius += (exp.maxRadius - exp.radius) * dt * 4.0;
+                    if (exp.life <= 0) {
+                        state.explosions.splice(i, 1);
+                    }
+                }
+
+                if (state.viewMode === 'combat') {
+                    renderCombatUI();
+                }
+
+                // 10. Update UI Gauges & Target HUD
                 renderTelemetryUI();
                 updateTargetHUD();
             }
@@ -4949,6 +5892,126 @@
                         ctx.setLineDash([]);
                     }
                 });
+
+                // --- PHASE 12: DRAW HOSTILE THREATS ON SONAR ---
+                THREATS.forEach((thr, idx) => {
+                    if (thr.defeated) return;
+                    const relX = (thr.x - state.posX) / 2.0;
+                    const relY = (thr.y - state.posY) / 2.0;
+                    const distNorm = Math.sqrt(relX * relX + relY * relY);
+                    if (distNorm > 1.1) return;
+
+                    const tX = cx + relX * maxR;
+                    const tY = cy + relY * maxR;
+                    const isThreatLocked = (idx === state.selectedThreatIdx);
+
+                    // Threat icon (Pulsating Red Crosshair / Diamond)
+                    ctx.strokeStyle = thr.state === 'attacking' ? '#ef4444' : (thr.state === 'stunned' ? '#00f0ff' : '#f59e0b');
+                    ctx.fillStyle = thr.state === 'attacking' ? 'rgba(239, 68, 68, 0.4)' : 'rgba(245, 158, 11, 0.3)';
+                    ctx.lineWidth = 1.5 * dpr;
+
+                    // Diamond
+                    const dSize = (thr.type === 'leviathan' ? 8 : 6) * dpr;
+                    ctx.beginPath();
+                    ctx.moveTo(tX, tY - dSize);
+                    ctx.lineTo(tX + dSize, tY);
+                    ctx.lineTo(tX, tY + dSize);
+                    ctx.lineTo(tX - dSize, tY);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // Threat Label & HP bar
+                    ctx.fillStyle = thr.type === 'leviathan' ? '#f87171' : '#fbbf24';
+                    ctx.font = `bold ${8 * dpr}px monospace`;
+                    ctx.fillText(`${thr.type === 'leviathan' ? '🐉' : '🤖'} ${thr.name} [${thr.hp}HP]`, tX + 9 * dpr, tY - 4 * dpr);
+                    
+                    // State tag
+                    ctx.font = `${7 * dpr}px monospace`;
+                    ctx.fillStyle = thr.state === 'attacking' ? '#f87171' : (thr.state === 'stunned' ? '#00f0ff' : palette.ringText);
+                    ctx.fillText(`${thr.state.toUpperCase()} | ${Math.round(distNorm * 2000)}m`, tX + 9 * dpr, tY + 7 * dpr);
+
+                    // Lock reticle if targeted
+                    if (isThreatLocked) {
+                        ctx.strokeStyle = '#ef4444';
+                        ctx.lineWidth = 2 * dpr;
+                        ctx.beginPath();
+                        ctx.arc(tX, tY, 14 * dpr, 0, Math.PI * 2);
+                        ctx.stroke();
+
+                        ctx.setLineDash([3 * dpr, 3 * dpr]);
+                        ctx.beginPath();
+                        ctx.moveTo(cx, cy);
+                        ctx.lineTo(tX, tY);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                    }
+                });
+
+                // --- DRAW ACTIVE DECOYS ON SONAR ---
+                state.activeDecoys.forEach(dec => {
+                    const relX = (dec.x - state.posX) / 2.0;
+                    const relY = (dec.y - state.posY) / 2.0;
+                    const dX = cx + relX * maxR;
+                    const dY = cy + relY * maxR;
+
+                    ctx.strokeStyle = '#a855f7';
+                    ctx.lineWidth = 1.5 * dpr;
+                    ctx.beginPath();
+                    ctx.arc(dX, dY, (dec.pulseRadius || 10) * dpr * 0.4, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#c084fc';
+                    ctx.font = `bold ${7.5 * dpr}px monospace`;
+                    ctx.fillText(`🚨 DECOY [${Math.round(dec.life)}s]`, dX + 6 * dpr, dY - 4 * dpr);
+                });
+
+                // --- DRAW ACTIVE TORPEDOES ON SONAR ---
+                state.activeTorpedoes.forEach(torp => {
+                    const relX = (torp.x - state.posX) / 2.0;
+                    const relY = (torp.y - state.posY) / 2.0;
+                    const tpX = cx + relX * maxR;
+                    const tpY = cy + relY * maxR;
+                    const ord = ORDNANCE_TYPES[torp.type];
+
+                    // Torpedo projectile
+                    ctx.fillStyle = ord.color;
+                    ctx.shadowColor = ord.color;
+                    ctx.shadowBlur = 8;
+                    ctx.beginPath();
+                    ctx.arc(tpX, tpY, 3.5 * dpr, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+
+                    // Wake line
+                    ctx.strokeStyle = ord.color;
+                    ctx.lineWidth = 1.5 * dpr;
+                    const angle = Math.atan2(torp.vy, torp.vx);
+                    ctx.beginPath();
+                    ctx.moveTo(tpX, tpY);
+                    ctx.lineTo(tpX - Math.cos(angle) * (14 * dpr), tpY - Math.sin(angle) * (14 * dpr));
+                    ctx.stroke();
+                });
+
+                // --- DRAW UNDERWATER EXPLOSIONS & FLOATING TEXT ON SONAR ---
+                state.explosions.forEach(exp => {
+                    const relX = (exp.x - state.posX) / 2.0;
+                    const relY = (exp.y - state.posY) / 2.0;
+                    const epX = cx + relX * maxR;
+                    const epY = cy + relY * maxR;
+
+                    ctx.strokeStyle = exp.color;
+                    ctx.lineWidth = 2 * dpr;
+                    ctx.beginPath();
+                    ctx.arc(epX, epY, (exp.radius || 10) * dpr * 0.5, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    if (exp.text) {
+                        ctx.fillStyle = '#ffffff';
+                        ctx.font = `bold ${9 * dpr}px monospace`;
+                        ctx.fillText(exp.text, epX - 18 * dpr, epY - 12 * dpr);
+                    }
+                });
             }
 
             function drawNavMapChart(w, h, cx, cy, dpr, palette) {
@@ -5020,7 +6083,6 @@
                     ctx.stroke();
                 }
 
-                
                 // Outposts & Surface Tender Icons on Nav Map (Phase 11)
                 OUTPOSTS.forEach((outpost, oIdx) => {
                     const ox = cx + (outpost.x - state.posX) * scale;
@@ -5068,6 +6130,24 @@
                         ctx.fillStyle = sn.harvested ? palette.ringText : palette.textBright;
                         ctx.font = `bold ${7.5 * dpr}px monospace`;
                         ctx.fillText(`💎 ${sn.name}`, sx + 6 * dpr, sy - 3 * dpr);
+                    }
+                });
+
+                // Hostile Threats on Nav Map (Phase 12)
+                THREATS.forEach((thr, idx) => {
+                    if (thr.defeated) return;
+                    const tx = cx + (thr.x - state.posX) * scale;
+                    const ty = cy + (thr.y - state.posY) * scale;
+                    if (tx >= -25 && tx <= w + 25 && ty >= -25 && ty <= h + 25) {
+                        ctx.fillStyle = thr.type === 'leviathan' ? '#f87171' : '#fbbf24';
+                        ctx.beginPath();
+                        const tRad = 5 * dpr;
+                        ctx.moveTo(tx, ty - tRad); ctx.lineTo(tx + tRad, ty); ctx.lineTo(tx, ty + tRad); ctx.lineTo(tx - tRad, ty); ctx.closePath();
+                        ctx.fill();
+
+                        ctx.fillStyle = thr.type === 'leviathan' ? '#f87171' : '#fef3c7';
+                        ctx.font = `bold ${7.5 * dpr}px monospace`;
+                        ctx.fillText(`⚔️ ${thr.name} [${thr.hp}HP]`, tx + 7 * dpr, ty - 2 * dpr);
                     }
                 });
 
