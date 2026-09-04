@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KAudio
+**Target App:** KRadio
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KAudio
 - KRadio
 - KBBS
 - KPong
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KChess
 - KDragon
 - KMech
+- KAudio
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KAudio: Usability and UI issues fixed (integrated non-blocking cybernetic toast notification system with startup welcome prompt, replaced blocking alerts with toast feedback, added visual keyboard shortcut badges to preset and action buttons [[1-8] SFX Presets, [Ctrl+E] Export WAV, [Ctrl+S] Save JSON, [Ctrl+O] Open JSON, [P] Sequencer, [C] Clear, [L] Delay, [O] Drive, [V] Vis, [F1/?] Help], fixed 'H'/'E' keyboard conflicts with piano keys, added backdrop-click and Escape modal dismissal in web; updated native C with non-blocking WAV export, temporary on-screen toast/status banner, global keyboard shortcuts [1-5] presets, [C] clear, [P] sequencer, [E] export, [L] delay, [O] drive, [V] vis, [F1] help, button shortcut badges, and window title hint).
 - KMech: Usability and UI issues fixed (integrated cybernetic non-blocking toast notification system with startup welcome prompt and real-time audio/tactical feedback, added visual keyboard shortcut badges to all action and equipment buttons [[D/Enter] Deploy, [R] Repair, [U] Salvage, [S] Sell, [1-4] Gear, [A/Space] Attack, [D] Defend, [T] Target, [F1] Manual], implemented full global keyboard navigation across garage, combat, and manual screens with Escape return handling, updated App.jsx auto-opening bounds to 640x540; updated native C with complete WM_KEYDOWN keyboard accelerators for all modes, added shortcut badges to buttons and headers, updated Pilot's Manual with full shortcuts reference, updated window title with help hint, and verified high-DPI scaling and flicker-free double buffering).
 - KDragon: Usability and UI issues fixed (fixed broken spawnParticles syntax in web JS, added non-blocking cyber-fantasy toast notification system with startup welcome prompt and real-time action feedback, added visible keyboard shortcut badges to all buttons [Feed [1], Play [2], Sleep [3], Train [4], Hoard [5], Battle [6], Shop [7], Help [F1], Attack [1], Defend [2], Special [3], Flee [4], Back [Esc]], implemented full global keyboard navigation across all menus, minigames, shop, battle, and events with Escape modal dismissal, synchronized App.jsx auto-opening bounds to 660x660 in web; updated native C with ShowHelpDialog comprehensive guide and shortcuts table, updated all button labels with explicit shortcut badges, implemented global message loop accelerator interception for F1/H/1-7/Esc/Space/Enter, and added help hint to window title).
 - KChess: Usability and UI issues fixed (integrated cyber-themed Help & Controls modal dialog with keyboard shortcuts table and game modes guide, added interactive top Help header button, added non-blocking toast notification system with startup welcome prompt, replaced blocking browser alerts with sleek toast feedback for FEN/PGN import/export and save/load state, and wired F1/? to Help and H to Hint in web; added ShowHelpDialog comprehensive shortcut and feature guide, updated bottom action buttons with explicit shortcut badges [Help [F1], Undo [U], Redo [Y], Save [F5], Load [F9], FEN/PGN [E]], wired F1/? to Help and H to Hint, updated window title with help hint in native C).

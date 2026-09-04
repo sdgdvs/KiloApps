@@ -48,7 +48,17 @@ int seqPlaying = 0;
 int currentStep = 0;
 DWORD lastStepTime = 0;
 int lastSeqNote = -1;
-int showHelp = 1;
+int showHelp = 0; // Show welcome banner without blocking full screen
+
+// Status Banner Notification State
+char statusMsg[128] = "Welcome to KAudio Pro! Press [F1] for Help";
+DWORD statusMsgExpire = 0;
+
+void SetStatus(HWND hwnd, const char* msg, DWORD durationMs) {
+    lstrcpynA(statusMsg, msg, sizeof(statusMsg));
+    statusMsgExpire = GetTickCount() + durationMs;
+    if (hwnd) InvalidateRect(hwnd, NULL, FALSE);
+}
 
 // DSP Effects & Visualizer State
 int delayEnabled = 1;
@@ -142,7 +152,7 @@ void PlaySoundFX(int preset) {
 }
 
 // Generate PCM WAV Audio File Export with DSP Delay & Overdrive Processing
-void ExportWavFile() {
+void ExportWavFile(HWND hwnd) {
     DWORD sampleRate = 44100;
     DWORD durationSec = 3;
     DWORD totalSamples = sampleRate * durationSec;
@@ -164,7 +174,10 @@ void ExportWavFile() {
     hdr.subchunk2Size = dataSize;
 
     HANDLE hFile = CreateFileA("kaudio_export.wav", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hFile == INVALID_HANDLE_VALUE) return;
+    if (hFile == INVALID_HANDLE_VALUE) {
+        SetStatus(hwnd, "Error: Failed to create kaudio_export.wav", 3000);
+        return;
+    }
 
     DWORD written = 0;
     WriteFile(hFile, &hdr, sizeof(WavHeader), &written, NULL);
@@ -228,7 +241,7 @@ void ExportWavFile() {
         WriteFile(hFile, sampleBuf, bufIdx * sizeof(short), &written, NULL);
     }
     CloseHandle(hFile);
-    MessageBoxA(NULL, "WAV Export with DSP Effects Saved to kaudio_export.wav!", "KAudio Export", MB_OK | MB_ICONINFORMATION);
+    SetStatus(hwnd, "WAV Export with DSP Effects Saved to kaudio_export.wav! [E]", 3500);
 }
 
 int GetKeyAtPoint(int x, int y) {
@@ -272,6 +285,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             midiOutOpen(&hMidi, (UINT)-1, 0, 0, CALLBACK_NULL);
             if (hMidi) midiOutShortMsg(hMidi, 0x000000C0);
             SetTimer(hwnd, 1, 30, NULL);
+            SetStatus(hwnd, "Welcome to KAudio Pro! Press [F1] for Help & Shortcuts", 4500);
             break;
 
         case WM_KILLFOCUS:
@@ -351,6 +365,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     isPlaying = 0;
                     changed = 1;
                     for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) { PlayNote(i, 0); activeKeys[i] = 0; }
+                    SetStatus(hwnd, "Playback finished", 2000);
                 }
                 if (changed) InvalidateRect(hwnd, NULL, FALSE);
             }
@@ -362,14 +377,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Check Help Dismiss Click
             if (showHelp) {
-                RECT helpRc = {W/2 - 170, H/2 - 130, W/2 + 170, H/2 + 150};
+                RECT helpRc = {W/2 - 200, H/2 - 150, W/2 + 200, H/2 + 160};
                 if (x >= helpRc.left && x <= helpRc.right && y >= helpRc.top && y <= helpRc.bottom) {
                     showHelp = 0;
                     InvalidateRect(hwnd, NULL, FALSE);
                     break;
                 }
             }
-            if (x >= W - 180 && x <= W && y >= 0 && y <= 25) {
+            // Top Help Button [F1] (x: W-130 to W-10, y: 4 to 28)
+            if (x >= W - 130 && x <= W - 10 && y >= 4 && y <= 28) {
                 showHelp = !showHelp;
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
@@ -377,22 +393,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Check Preset & DSP Control Buttons (y: 35-65)
             if (y >= 35 && y <= 65) {
-                if (x >= 10 && x <= 70) PlaySoundFX(1);        // Jump
-                else if (x >= 75 && x <= 135) PlaySoundFX(2);  // Laser
-                else if (x >= 140 && x <= 210) PlaySoundFX(3); // Explosion
-                else if (x >= 215 && x <= 265) PlaySoundFX(4); // Coin
-                else if (x >= 270 && x <= 340) PlaySoundFX(5); // Powerup
-                else if (x >= 350 && x <= 460) ExportWavFile(); // Export WAV
-                else if (x >= 470 && x <= 580) { delayEnabled = !delayEnabled; } // Delay Toggle
-                else if (x >= 590 && x <= 700) { driveEnabled = !driveEnabled; } // Drive Toggle
-                else if (x >= 710 && x <= 860) { visMode = !visMode; }          // Vis Mode Toggle
+                if (x >= 10 && x <= 70) { PlaySoundFX(1); SetStatus(hwnd, "🦘 [1] Jump FX Triggered", 1600); }
+                else if (x >= 75 && x <= 135) { PlaySoundFX(2); SetStatus(hwnd, "🔫 [2] Laser FX Triggered", 1600); }
+                else if (x >= 140 && x <= 210) { PlaySoundFX(3); SetStatus(hwnd, "💥 [3] Explosion FX Triggered", 1600); }
+                else if (x >= 215 && x <= 265) { PlaySoundFX(4); SetStatus(hwnd, "🪙 [4] Coin FX Triggered", 1600); }
+                else if (x >= 270 && x <= 340) { PlaySoundFX(5); SetStatus(hwnd, "⚡ [5] Powerup FX Triggered", 1600); }
+                else if (x >= 350 && x <= 460) { ExportWavFile(hwnd); }
+                else if (x >= 470 && x <= 580) { delayEnabled = !delayEnabled; SetStatus(hwnd, delayEnabled ? "Delay / Echo Enabled [L]" : "Delay / Echo Disabled [L]", 1800); }
+                else if (x >= 590 && x <= 700) { driveEnabled = !driveEnabled; SetStatus(hwnd, driveEnabled ? "Overdrive Enabled [O]" : "Overdrive Disabled [O]", 1800); }
+                else if (x >= 710 && x <= 860) { visMode = !visMode; SetStatus(hwnd, visMode ? "Visualizer: FFT Spectrum [V]" : "Visualizer: Oscilloscope [V]", 1800); }
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
 
-            // Check 16-Step Sequencer Click (y: 175-200)
-            if (y >= 175 && y <= 200 && x >= 120 && x <= 600) {
-                int stepIdx = (x - 120) / 30;
+            // Check Sequencer Clear Button (x: 95-140, y: 175-198)
+            if (y >= 175 && y <= 198 && x >= 95 && x <= 140) {
+                for (int s = 0; s < 16; s++) seqPattern[s] = 0;
+                SetStatus(hwnd, "🗑 Sequencer Pattern Cleared [C]", 2000);
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+
+            // Check 16-Step Sequencer Click (y: 175-200, x: 150 to 598)
+            if (y >= 175 && y <= 200 && x >= 150 && x <= 598) {
+                int stepIdx = (x - 150) / 28;
                 if (stepIdx >= 0 && stepIdx < 16) {
                     seqPattern[stepIdx] = !seqPattern[stepIdx];
                     InvalidateRect(hwnd, NULL, FALSE);
@@ -483,6 +507,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 }
             }
+            // Sound FX Presets 1-5
+            if (wParam >= '1' && wParam <= '5' && !isRepeat) {
+                int p = (int)(wParam - '0');
+                PlaySoundFX(p);
+                const char* pNames[] = {"", "Jump FX", "Laser FX", "Explosion FX", "Coin FX", "Powerup FX"};
+                char pmsg[64];
+                wsprintfA(pmsg, "Preset [%d] %s Triggered", p, pNames[p]);
+                SetStatus(hwnd, pmsg, 1600);
+                break;
+            }
+            // Sequencer Clear
+            if (wParam == 'C' && !isRepeat) {
+                for (int s = 0; s < 16; s++) seqPattern[s] = 0;
+                SetStatus(hwnd, "🗑 Sequencer Pattern Cleared [C]", 2000);
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
             if (wParam == 'P' && !isRepeat) {
                 seqPlaying = !seqPlaying;
                 lastStepTime = GetTickCount();
@@ -490,29 +531,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     PlayNote(lastSeqNote, 0);
                     lastSeqNote = -1;
                 }
+                SetStatus(hwnd, seqPlaying ? "▶ Sequencer Started [P]" : "⏸ Sequencer Paused [P]", 1800);
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
             if (wParam == 'E' && !isRepeat) {
-                ExportWavFile();
+                ExportWavFile(hwnd);
                 break;
             }
             if (wParam == 'V' && !isRepeat) {
                 visMode = !visMode;
+                SetStatus(hwnd, visMode ? "Visualizer: FFT Spectrum [V]" : "Visualizer: Oscilloscope [V]", 1800);
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
             if (wParam == 'L' && !isRepeat) {
                 delayEnabled = !delayEnabled;
+                SetStatus(hwnd, delayEnabled ? "🔄 Delay / Echo Enabled [L]" : "Delay / Echo Disabled [L]", 1800);
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
             if (wParam == 'O' && !isRepeat) {
                 driveEnabled = !driveEnabled;
+                SetStatus(hwnd, driveEnabled ? "🔥 Overdrive Enabled [O]" : "Overdrive Disabled [O]", 1800);
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
-            if ((wParam == 'H' || wParam == VK_F1) && !isRepeat) {
+            if ((wParam == 'H' || wParam == VK_F1 || wParam == VK_OEM_2) && !isRepeat) {
                 showHelp = !showHelp;
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
@@ -526,19 +571,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (isRecording) {
                     numEvents = 0;
                     recordingStartTime = GetTickCount();
+                    SetStatus(hwnd, "🔴 Live Recording Session Started... [Z]", 2000);
+                } else {
+                    char rmsg[64];
+                    wsprintfA(rmsg, "⏺️ Recording Saved (%d events) [Press X to Play]", numEvents);
+                    SetStatus(hwnd, rmsg, 2500);
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
             if (wParam == 'X' && !isRepeat) {
                 if (isRecording) isRecording = 0;
-                if (numEvents == 0) break;
+                if (numEvents == 0) {
+                    SetStatus(hwnd, "No performance recorded yet. Press [Z] to record!", 2500);
+                    break;
+                }
                 isPlaying = !isPlaying;
                 if (isPlaying) {
                     playbackStartTime = GetTickCount();
                     playbackIndex = 0;
+                    SetStatus(hwnd, "▶ Playing recorded performance... [X]", 2000);
                 } else {
                     for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) { PlayNote(i, 0); activeKeys[i] = 0; }
+                    SetStatus(hwnd, "⏹️ Playback stopped", 1600);
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
@@ -546,12 +601,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == VK_UP && !isRepeat) {
                 instrument = (instrument + 1) % 128;
                 if (hMidi) midiOutShortMsg(hMidi, 0x000000C0 | (instrument << 8));
+                char imsg[64];
+                wsprintfA(imsg, "MIDI Instrument #%d", instrument);
+                SetStatus(hwnd, imsg, 1400);
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
             if (wParam == VK_DOWN && !isRepeat) {
                 instrument = (instrument + 127) % 128;
                 if (hMidi) midiOutShortMsg(hMidi, 0x000000C0 | (instrument << 8));
+                char imsg[64];
+                wsprintfA(imsg, "MIDI Instrument #%d", instrument);
+                SetStatus(hwnd, imsg, 1400);
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
@@ -560,6 +621,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) PlayNote(i, 0);
                     octaveShift--;
                     for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) PlayNote(i, 1);
+                    char omsg[64];
+                    wsprintfA(omsg, "Octave Shift: %+d", octaveShift);
+                    SetStatus(hwnd, omsg, 1400);
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
                 break;
@@ -569,6 +633,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) PlayNote(i, 0);
                     octaveShift++;
                     for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) PlayNote(i, 1);
+                    char omsg[64];
+                    wsprintfA(omsg, "Octave Shift: %+d", octaveShift);
+                    SetStatus(hwnd, omsg, 1400);
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
                 break;
@@ -621,8 +688,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                       instrument, octaveShift, delayEnabled ? "ON" : "OFF", driveEnabled ? "ON" : "OFF",
                       visMode ? "FFT Spectrum" : "Oscilloscope", seqPlaying ? "PLAY" : "STOP");
             TextOutA(memDC, 10, 8, title, lstrlenA(title));
+
+            // Top Help Button [F1]
+            HBRUSH helpBtnBrush = CreateSolidBrush(RGB(30, 41, 59));
+            RECT helpBtnRc = {W - 130, 4, W - 10, 28};
+            FillRect(memDC, &helpBtnRc, helpBtnBrush);
+            DeleteObject(helpBtnBrush);
             SetTextColor(memDC, RGB(251, 191, 36));
-            TextOutA(memDC, W - 160, 8, "Press F1 or 'H' for Help", 24);
+            TextOutA(memDC, W - 120, 7, "? Help [F1]", 11);
 
             // Draw Sound FX & DSP Preset Buttons (y: 35-65)
             HBRUSH btnBrush = CreateSolidBrush(RGB(30, 41, 59));
@@ -633,25 +706,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             SetTextColor(memDC, RGB(241, 245, 249));
 
-            RECT r1 = {10, 35, 70, 65}; FillRect(memDC, &r1, btnBrush); TextOutA(memDC, 18, 42, "Jump", 4);
-            RECT r2 = {75, 35, 135, 65}; FillRect(memDC, &r2, btnBrush); TextOutA(memDC, 85, 42, "Laser", 5);
-            RECT r3 = {140, 35, 210, 65}; FillRect(memDC, &r3, btnBrush); TextOutA(memDC, 145, 42, "Explode", 7);
-            RECT r4 = {215, 35, 265, 65}; FillRect(memDC, &r4, btnBrush); TextOutA(memDC, 225, 42, "Coin", 4);
-            RECT r5 = {270, 35, 340, 65}; FillRect(memDC, &r5, btnBrush); TextOutA(memDC, 275, 42, "Powerup", 7);
-            RECT rExp = {350, 35, 460, 65}; FillRect(memDC, &rExp, exportBrush); TextOutA(memDC, 360, 42, "Export WAV (E)", 14);
+            RECT r1 = {10, 35, 70, 65}; FillRect(memDC, &r1, btnBrush); TextOutA(memDC, 14, 42, "[1] Jump", 8);
+            RECT r2 = {75, 35, 135, 65}; FillRect(memDC, &r2, btnBrush); TextOutA(memDC, 79, 42, "[2] Laser", 9);
+            RECT r3 = {140, 35, 210, 65}; FillRect(memDC, &r3, btnBrush); TextOutA(memDC, 144, 42, "[3] Explode", 11);
+            RECT r4 = {215, 35, 265, 65}; FillRect(memDC, &r4, btnBrush); TextOutA(memDC, 219, 42, "[4] Coin", 8);
+            RECT r5 = {270, 35, 340, 65}; FillRect(memDC, &r5, btnBrush); TextOutA(memDC, 274, 42, "[5] Power", 9);
+            RECT rExp = {350, 35, 460, 65}; FillRect(memDC, &rExp, exportBrush); TextOutA(memDC, 356, 42, "💾 Export WAV [E]", 18);
 
             // DSP FX Toggle Buttons
             RECT rDly = {470, 35, 580, 65}; FillRect(memDC, &rDly, dlyBrush);
-            char dlyText[32]; wsprintfA(dlyText, "Delay: %s (L)", delayEnabled ? "ON" : "OFF");
+            char dlyText[32]; wsprintfA(dlyText, "Delay: %s [L]", delayEnabled ? "ON" : "OFF");
             TextOutA(memDC, 478, 42, dlyText, lstrlenA(dlyText));
 
             RECT rDrv = {590, 35, 700, 65}; FillRect(memDC, &rDrv, drvBrush);
-            char drvText[32]; wsprintfA(drvText, "Drive: %s (O)", driveEnabled ? "ON" : "OFF");
+            char drvText[32]; wsprintfA(drvText, "Drive: %s [O]", driveEnabled ? "ON" : "OFF");
             TextOutA(memDC, 598, 42, drvText, lstrlenA(drvText));
 
             RECT rVis = {710, 35, 860, 65}; FillRect(memDC, &rVis, visBrush);
-            char visText[32]; wsprintfA(visText, "Vis: %s (V)", visMode ? "Spectrum" : "Scope");
-            TextOutA(memDC, 720, 42, visText, lstrlenA(visText));
+            char visText[32]; wsprintfA(visText, "Vis: %s [V]", visMode ? "Spectrum" : "Scope");
+            TextOutA(memDC, 718, 42, visText, lstrlenA(visText));
 
             DeleteObject(btnBrush);
             DeleteObject(exportBrush);
@@ -715,13 +788,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Draw 16-Step Pattern Sequencer Row (y: 175-200)
             SetTextColor(memDC, RGB(148, 163, 184));
-            TextOutA(memDC, 10, 180, "Sequencer:", 10);
+            TextOutA(memDC, 10, 180, "Sequencer [P]:", 14);
+
+            HBRUSH clrBrush = CreateSolidBrush(RGB(225, 29, 72));
+            RECT clrRc = {95, 176, 142, 198};
+            FillRect(memDC, &clrRc, clrBrush);
+            DeleteObject(clrBrush);
+            SetTextColor(memDC, RGB(255, 255, 255));
+            TextOutA(memDC, 99, 180, "Clr [C]", 7);
+
             HBRUSH stepOff = CreateSolidBrush(RGB(51, 65, 85));
             HBRUSH stepOn = CreateSolidBrush(RGB(14, 165, 233));
             HBRUSH stepCurr = CreateSolidBrush(RGB(244, 63, 94));
 
             for (int st = 0; st < 16; st++) {
-                RECT stRc = {120 + st * 30, 175, 144 + st * 30, 198};
+                RECT stRc = {150 + st * 28, 175, 174 + st * 28, 198};
                 if (st == currentStep && seqPlaying) {
                     FillRect(memDC, &stRc, stepCurr);
                 } else {
@@ -729,6 +810,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             DeleteObject(stepOff); DeleteObject(stepOn); DeleteObject(stepCurr);
+
+            // Draw Status Banner Notification if active
+            if (GetTickCount() < statusMsgExpire) {
+                HBRUSH statBg = CreateSolidBrush(RGB(30, 41, 59));
+                RECT statRc = {610, 175, W - 10, 198};
+                FillRect(memDC, &statRc, statBg);
+                DeleteObject(statBg);
+                SetTextColor(memDC, RGB(56, 189, 248));
+                TextOutA(memDC, 616, 180, statusMsg, lstrlenA(statusMsg));
+            }
 
             // Draw Piano Keyboard (y: 220 to H-40)
             HBRUSH white = CreateSolidBrush(RGB(226, 232, 240));
@@ -771,7 +862,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             if (showHelp) {
                 HBRUSH helpBg = CreateSolidBrush(RGB(15, 23, 42));
-                RECT helpRc = {W/2 - 170, H/2 - 130, W/2 + 170, H/2 + 150};
+                RECT helpRc = {W/2 - 200, H/2 - 150, W/2 + 200, H/2 + 160};
                 FillRect(memDC, &helpRc, helpBg);
                 DeleteObject(helpBg);
                 
@@ -785,19 +876,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteObject(borderPen);
                 
                 SetTextColor(memDC, RGB(56, 189, 248));
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 15, "KAudio Pro Help & Shortcuts", 27);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 15, "🎹 KAudio Pro Help & Shortcuts Reference", 41);
                 SetTextColor(memDC, RGB(241, 245, 249));
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 45, "A-K: Play Virtual Piano Keys", 28);
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 65, "Arrows Up/Dn: Instrument Select", 31);
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 85, "Arrows L/R: Octave Transpose", 28);
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 105, "Z / X: Live Record / Playback", 29);
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 125, "P: Start/Stop 16-Step Sequencer", 31);
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 145, "L: Toggle Delay / Echo FX", 25);
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 165, "O: Toggle Overdrive / Drive FX", 30);
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 185, "V: Toggle FFT Spectrum / Scope", 30);
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 205, "E: Export DSP-Rendered WAV", 26);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 45, "A-K: Play Chromatic Piano Notes", 31);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 68, "1 - 5: Sound FX Presets (Jump, Laser, Explode, Coin, Power)", 59);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 91, "Arrows Up/Dn: MIDI Instrument Select (0-127)", 44);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 114, "Arrows L/R: Transpose Octave (-4 to +4)", 39);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 137, "Z / X: Live Performance Record / Playback", 41);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 160, "P / C: Start-Stop Sequencer / Clear Grid Pattern", 48);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 183, "L / O: Toggle Stereo Delay / Overdrive Saturation", 49);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 206, "V: Toggle Oscilloscope / FFT Spectrum Analyzer", 46);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 229, "E: Export DSP-Mastered WAV Audio File", 37);
                 SetTextColor(memDC, RGB(244, 63, 94));
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 245, "Press 'H' or F1 to close", 24);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 265, "Press F1, 'H', [Esc], or Click to close guide", 45);
             }
 
             SelectObject(memDC, oldFont);
@@ -839,7 +930,7 @@ void MainEntry() {
     DWORD style = (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN;
     AdjustWindowRect(&rc, style, FALSE);
 
-    HWND hwnd = CreateWindowEx(0, "KAudioApp", "KAudio Pro Workstation", style,
+    HWND hwnd = CreateWindowEx(0, "KAudioApp", "KAudio Pro Workstation - Press [F1] for Help", style,
         CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
