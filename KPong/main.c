@@ -657,6 +657,39 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE:
             ResetBalls();
             SetTimer(hwnd, TIMER_ID, 30, NULL);
+            SetStatusMessage("Welcome to KPONG! Press F1 or 'H' for Help");
+            msg_timer = 120;
+            break;
+        case WM_LBUTTONDOWN:
+            if (show_help_overlay) { show_help_overlay = 0; InvalidateRect(hwnd, NULL, FALSE); break; }
+            if (show_stats_overlay) { show_stats_overlay = 0; InvalidateRect(hwnd, NULL, FALSE); break; }
+            if (is_replaying) { StopReplay(); break; }
+            if (game_over) {
+                p1_score = 0; p2_score = 0; rally = 0;
+                game_over = 0; win_screen = 0;
+                skill_slow_timer = 0; skill_slow_cooldown = 0;
+                skill_mega_timer = 0; skill_mega_cooldown = 0;
+                skill_fireball_ready = 0; skill_fireball_cooldown = 0;
+                boss_shield_hp = 3; boss_shield_timer = 0;
+                obs1_active = 1; obs2_active = 1;
+                ResetBalls();
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+            break;
+        case WM_MOUSEMOVE:
+            if (!is_replaying && !is_paused && !game_over && !show_help_overlay && !show_stats_overlay) {
+                RECT cr;
+                GetClientRect(hwnd, &cr);
+                if (cr.bottom > 0) {
+                    int my = (int)((float)HIWORD(lParam) * H / cr.bottom);
+                    if (p1_freeze_timer == 0) {
+                        p1_y = my - p1_pad_h / 2;
+                        if (p1_y < 0) p1_y = 0;
+                        if (p1_y > H - p1_pad_h) p1_y = H - p1_pad_h;
+                    }
+                }
+            }
             break;
         case WM_KEYDOWN:
             if (is_replaying) {
@@ -669,11 +702,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (wParam == '3') { replay_speed = 2; SetStatusMessage("Replay Speed: 2.0x"); }
                 break;
             }
+            if (wParam == VK_ESCAPE) {
+                if (show_help_overlay) { show_help_overlay = 0; InvalidateRect(hwnd, NULL, FALSE); break; }
+                if (show_stats_overlay) { show_stats_overlay = 0; InvalidateRect(hwnd, NULL, FALSE); break; }
+                is_paused = !is_paused;
+                SetStatusMessage(is_paused ? "Game Paused" : "Game Resumed");
+                break;
+            }
             if (wParam == 'P') { StartReplay(); break; }
-            if (wParam == VK_SPACE) is_paused = !is_paused;
-            if (wParam == 'M') { game_mode = (game_mode + 1) % 5; p1_score = 0; p2_score = 0; rally = 0; ResetBalls(); }
-            if (wParam == 'V') is_pvp = !is_pvp;
-            if (wParam == 'T') theme_index = (theme_index + 1) % 4;
+            if (wParam == VK_SPACE) { is_paused = !is_paused; SetStatusMessage(is_paused ? "Game Paused" : "Game Resumed"); }
+            if (wParam == 'M') {
+                char* mNames[] = {"Classic", "Obstacles", "Frenzy", "Multi-Ball", "Campaign"};
+                game_mode = (game_mode + 1) % 5; p1_score = 0; p2_score = 0; rally = 0; ResetBalls();
+                char mBuf[48]; wsprintfA(mBuf, "Mode: %s", mNames[game_mode]); SetStatusMessage(mBuf);
+            }
+            if (wParam == 'V') { is_pvp = !is_pvp; SetStatusMessage(is_pvp ? "2P Local PvP Mode (P1: W/S, P2: Up/Down)" : "1P vs AI Mode Activated"); }
+            if (wParam == 'T') {
+                theme_index = (theme_index + 1) % 4;
+                char* tNames[] = {"Theme: Cyberpunk", "Theme: Retro CRT", "Theme: Vaporwave", "Theme: Matrix Code"};
+                SetStatusMessage(tNames[theme_index]);
+            }
+            if (wParam == '1') { difficulty = 1; SetStatusMessage("AI Difficulty: Easy"); }
+            if (wParam == '2') { difficulty = 2; SetStatusMessage("AI Difficulty: Normal"); }
+            if (wParam == '3') { difficulty = 3; SetStatusMessage("AI Difficulty: Hard"); }
             if (wParam == 'L') show_stats_overlay = !show_stats_overlay;
             if (wParam == 'H' || wParam == VK_F1) show_help_overlay = !show_help_overlay;
             if (wParam == VK_F5) SaveGameState();
@@ -728,12 +779,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 break;
             }
 
-            if (GetAsyncKeyState('1') & 0x8000) game_mode = 0;
-            if (GetAsyncKeyState('2') & 0x8000) game_mode = 1;
-            if (GetAsyncKeyState('3') & 0x8000) game_mode = 2;
-            if (GetAsyncKeyState('4') & 0x8000) game_mode = 3;
-            if (GetAsyncKeyState('5') & 0x8000) game_mode = 4;
-
             // Skills Activation
             if ((GetAsyncKeyState('F') & 0x8000) && skill_slow_cooldown == 0) {
                 skill_slow_timer = 180; skill_slow_cooldown = 360;
@@ -782,7 +827,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (game_mode == 4 && campaign_level == 20) { p2_pad_h = 75; }
 
             if (p1_buff_timer > 0) p1_pad_h += 30;
-            if (p2_buff_timer > 0) p2_buff_timer += 30;
+            if (p2_buff_timer > 0) p2_pad_h += 30;
             if (p1_debuff_timer > 0) p1_pad_h = 15;
             if (p2_debuff_timer > 0) p2_pad_h = 15;
             if (skill_mega_timer > 0) p1_pad_h = (int)(p1_pad_h * 2.5f);
@@ -1674,22 +1719,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetTextColor(memDC, RGB(255, 255, 255));
                 TextOutA(memDC, W / 2 - 20, 8, scoreStr, lstrlenA(scoreStr));
 
-                char modeHud[80];
+                char modeHud[96];
                 char* mNames[] = {"Classic", "Obstacles", "Frenzy", "Multi-Ball", "Campaign"};
-                wsprintfA(modeHud, "%s | %s | 'H' Help", is_pvp ? "2P PVP" : "1P AI", mNames[game_mode]);
+                char* dNames[] = {"", "Easy", "Normal", "Hard"};
+                if (is_pvp) {
+                    wsprintfA(modeHud, "2P PVP | %s | [F1] Help", mNames[game_mode]);
+                } else {
+                    wsprintfA(modeHud, "1P AI (%s) | %s | [F1] Help", dNames[difficulty], mNames[game_mode]);
+                }
                 SetTextColor(memDC, RGB(255, 215, 0));
-                TextOutA(memDC, W / 2 - 65, 26, modeHud, lstrlenA(modeHud));
+                TextOutA(memDC, W / 2 - 75, 26, modeHud, lstrlenA(modeHud));
 
                 // Skills Footer HUD Bar
-                char skillsStr[128];
+                char skillsStr[160];
                 char sSlow[16], sMega[16], sFire[16];
-                if (skill_slow_timer > 0) wsprintfA(sSlow, "ACTIVE"); else if (skill_slow_cooldown == 0) wsprintfA(sSlow, "READY"); else wsprintfA(sSlow, "%ds", skill_slow_cooldown / 30);
-                if (skill_mega_timer > 0) wsprintfA(sMega, "ACTIVE"); else if (skill_mega_cooldown == 0) wsprintfA(sMega, "READY"); else wsprintfA(sMega, "%ds", skill_mega_cooldown / 30);
-                if (skill_fireball_ready) wsprintfA(sFire, "READY!"); else if (skill_fireball_cooldown == 0) wsprintfA(sFire, "READY"); else wsprintfA(sFire, "%ds", skill_fireball_cooldown / 30);
+                if (skill_slow_timer > 0) wsprintfA(sSlow, "ON"); else if (skill_slow_cooldown == 0) wsprintfA(sSlow, "RDY"); else wsprintfA(sSlow, "%ds", skill_slow_cooldown / 30);
+                if (skill_mega_timer > 0) wsprintfA(sMega, "ON"); else if (skill_mega_cooldown == 0) wsprintfA(sMega, "RDY"); else wsprintfA(sMega, "%ds", skill_mega_cooldown / 30);
+                if (skill_fireball_ready) wsprintfA(sFire, "RDY!"); else if (skill_fireball_cooldown == 0) wsprintfA(sFire, "RDY"); else wsprintfA(sFire, "%ds", skill_fireball_cooldown / 30);
 
-                wsprintfA(skillsStr, "[F]Slow:%s [E]Mega:%s [B]Fire:%s [M]Mode [P]Replay [T]Theme", sSlow, sMega, sFire);
+                wsprintfA(skillsStr, "[F]Slow:%s [E]Mega:%s [B]Fire:%s | [M]Mode [1-3]Diff [V]PvP [T]Theme [P]Replay [F1]Help", sSlow, sMega, sFire);
                 SetTextColor(memDC, GetPrimaryColor());
-                TextOutA(memDC, 8, H - 20, skillsStr, lstrlenA(skillsStr));
+                TextOutA(memDC, 6, H - 20, skillsStr, lstrlenA(skillsStr));
 
                 // Stats / Leaderboard Overlay
                 if (show_stats_overlay) {
@@ -1718,7 +1768,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetTextColor(memDC, RGB(255, 215, 0));
                     TextOutA(memDC, 40, H - 65, "[E] Export kpong_stats.json  |  [I] Import JSON", 47);
                     SetTextColor(memDC, RGB(180, 180, 180));
-                    TextOutA(memDC, 40, H - 45, "Press 'L' to Close Overlay", 26);
+                    TextOutA(memDC, 40, H - 45, "Press 'L' or Esc to Close Overlay", 33);
                 }
 
                 if (show_help_overlay) {
@@ -1732,15 +1782,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     TextOutA(memDC, 40, 35, "=== HOW TO PLAY ===", 19);
 
                     SetTextColor(memDC, RGB(255, 255, 255));
-                    TextOutA(memDC, 40, 58, "P1: W/S (or Up/Down)  |  P2: Up/Down (in PvP)", 45);
+                    TextOutA(memDC, 40, 58, "P1: W/S, Up/Down, or Mouse Drag  |  P2: Up/Down (in PvP)", 56);
                     TextOutA(memDC, 40, 78, "Skills: [F] Slow-Mo, [E] Mega, [B] Fireball", 43);
-                    TextOutA(memDC, 40, 98, "System: [Space] Pause, [M] Mode, [V] PvP, [T] Theme", 51);
+                    TextOutA(memDC, 40, 98, "System: [Space] Pause, [M] Mode, [1-3] Diff, [V] PvP, [T] Theme", 63);
                     TextOutA(memDC, 40, 118, "Replay: [P] Match Replay (Space: Pause, <-/->: Scrub)", 53);
                     TextOutA(memDC, 40, 138, "Stats:  [L] Stats Overlay  [E] Export  [I] Import JSON", 54);
                     TextOutA(memDC, 40, 158, "Save:   [F5] Save Game  |  [F9] Load Game", 41);
                     
                     SetTextColor(memDC, RGB(200, 200, 200));
-                    TextOutA(memDC, 40, H - 45, "Press F1 or 'H' to Close Help", 29);
+                    TextOutA(memDC, 40, H - 45, "Press F1, 'H', Esc, or Click to Close Help", 42);
                 }
 
                 if (is_paused) {

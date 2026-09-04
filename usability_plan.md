@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KPong
+**Target App:** KClock
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KPong
 - KClock
 - KDB
 - KiloOS Web UI
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KAudio
 - KRadio
 - KBBS
+- KPong
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KPong: Usability and UI issues fixed (integrated non-blocking toast notification system with startup welcome prompt, added visual keyboard shortcut badges to all top header and skill buttons [1P/2P [V], Mode [M], Diff [1-3], Theme [T], Replay [P], Stats [L], Save [F5], Load [F9], Help [F1/H], Slow [F], Mega [E], Fire [B], Pause [Space]], added dedicated AI Difficulty cycler [1-3] with dynamic HUD badge updates, added modal backdrop-click and Escape key dismissal across all dialogs, and added canvas pointer/touch dragging controls for Player 1 paddle in web; fixed critical bug in native C where p2_buff_timer was infinitely incremented instead of p2_pad_h, added WM_LBUTTONDOWN and WM_MOUSEMOVE for smooth Player 1 mouse paddle control and overlay dismissal, added Escape key dismissal, added [1-3] AI difficulty hotkeys with on-screen status toasts, removed conflicting timer key polling, updated HUD header/footer status hints, and added startup welcome banner).
 - KBBS: Usability and UI issues fixed (integrated cybernetic non-blocking toast notification system with startup welcome prompt, replaced blocking browser alerts with toast feedback, added visual keyboard shortcut badges to toolbar buttons [Connect [Enter], Directory [D], Macros [M], Door Games [G], ANSI Art [A], EchoNet [E], Settings [S], Capture: OFF [C], Help [F1]], added backdrop-click and Escape modal dismissal across all dialogs, Enter-to-connect on host/port inputs in web; updated native C with EditSubclassProc for Enter-to-connect on host/port edit controls, message loop hotkeys for F1/H/D/M/G/A/E/S/C, updated button shortcut hints, enhanced Help dialog guide, and updated window title with help hint).
 - KRadio: Usability and UI issues fixed (integrated 6 station presets with [1-6] hotkeys, added animated equalizer visualizer, volume slider with mute toggle [M] and [Arrow Up/Down] shortcuts, custom cybernetic Help modal [F1] with backdrop/Esc dismissal, non-blocking toast notification system with startup welcome prompt, synchronized 480x360 window bounds in App.jsx in web; added [1-5] preset buttons, global message loop hotkey interception for presets/Space/P/S/F1, edit control subclassing for Enter-to-tune, ShowHelpDialog guide, and window title hint in native C).
 - KAudio: Usability and UI issues fixed (integrated non-blocking cybernetic toast notification system with startup welcome prompt, replaced blocking alerts with toast feedback, added visual keyboard shortcut badges to preset and action buttons [[1-8] SFX Presets, [Ctrl+E] Export WAV, [Ctrl+S] Save JSON, [Ctrl+O] Open JSON, [P] Sequencer, [C] Clear, [L] Delay, [O] Drive, [V] Vis, [F1/?] Help], fixed 'H'/'E' keyboard conflicts with piano keys, added backdrop-click and Escape modal dismissal in web; updated native C with non-blocking WAV export, temporary on-screen toast/status banner, global keyboard shortcuts [1-5] presets, [C] clear, [P] sequencer, [E] export, [L] delay, [O] drive, [V] vis, [F1] help, button shortcut badges, and window title hint).

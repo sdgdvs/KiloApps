@@ -174,14 +174,15 @@
   <div class="header-bar">
     <div class="game-title">KPONG</div>
     <div class="top-controls">
-      <button class="btn-sm" onclick="togglePvPMode()" id="btn-pvp">👥 1P vs AI</button>
-      <button class="btn-sm" onclick="cycleGameMode()" id="btn-mode">🎮 Mode: Classic</button>
-      <button class="btn-sm" onclick="cycleTheme()" id="btn-theme">🎨 Theme</button>
-      <button class="btn-sm" onclick="toggleReplay()" id="btn-replay">📽️ Replay (P)</button>
-      <button class="btn-sm" onclick="openStatsModal()">🏆 Stats</button>
-      <button class="btn-sm" onclick="saveGameState()">💾 Save</button>
-      <button class="btn-sm" onclick="loadGameState()">📂 Load</button>
-      <button class="btn-sm" onclick="openHelpModal()">❓ Help (F1/H)</button>
+      <button class="btn-sm" onclick="togglePvPMode()" id="btn-pvp" title="Toggle 1P vs AI / 2P Local PvP (V)">👥 1P vs AI [V]</button>
+      <button class="btn-sm" onclick="cycleGameMode()" id="btn-mode" title="Cycle Game Modes (M)">🎮 Mode: Classic [M]</button>
+      <button class="btn-sm" onclick="cycleDifficulty()" id="btn-diff" title="Cycle AI Difficulty (1-3)">⚡ Diff: Normal [1-3]</button>
+      <button class="btn-sm" onclick="cycleTheme()" id="btn-theme" title="Cycle Visual Themes (T)">🎨 Theme [T]</button>
+      <button class="btn-sm" onclick="toggleReplay()" id="btn-replay" title="Toggle Match Replay (P)">📽️ Replay [P]</button>
+      <button class="btn-sm" onclick="openStatsModal()" id="btn-stats" title="View Statistics & Leaderboard (L)">🏆 Stats [L]</button>
+      <button class="btn-sm" onclick="saveGameState()" id="btn-save" title="Save Game State (F5)">💾 Save [F5]</button>
+      <button class="btn-sm" onclick="loadGameState()" id="btn-load" title="Load Game State (F9)">📂 Load [F9]</button>
+      <button class="btn-sm" onclick="openHelpModal()" id="btn-help" title="Help & Instructions (F1 or H)">❓ Help [F1/H]</button>
     </div>
   </div>
 
@@ -216,7 +217,7 @@
     <button class="skill-btn" id="btn-slow" onclick="triggerSkill('slow')">⚡ [F] Slow-Mo</button>
     <button class="skill-btn" id="btn-mega" onclick="triggerSkill('mega')">🛡️ [E] Mega</button>
     <button class="skill-btn" id="btn-fire" onclick="triggerSkill('fire')">🔥 [B] Fireball</button>
-    <button class="btn-sm" style="padding: 6px 12px; height: auto;" onclick="togglePause()" id="btn-pause">⏸️ Pause (Space)</button>
+    <button class="btn-sm" style="padding: 6px 12px; height: auto;" onclick="togglePause()" id="btn-pause">⏸️ Pause [Space]</button>
   </div>
 </div>
 
@@ -226,10 +227,10 @@
     <h2>📖 How to Play & Controls</h2>
     <p style="font-size: 14px; margin-bottom: 12px; color: var(--text-color);">Welcome to KPONG! The ultimate arcade pong experience.</p>
     <table>
-      <tr><th>P1 Controls</th><td>W / S (or Up / Down in 1P mode)</td></tr>
+      <tr><th>P1 Controls</th><td>W / S, Up / Down, or Mouse / Touch Drag</td></tr>
       <tr><th>P2 Controls</th><td>Up / Down (in 2P Local PvP mode)</td></tr>
       <tr><th>Skills</th><td>[F] Slow-Mo | [E] Mega Paddle | [B] Fireball</td></tr>
-      <tr><th>System</th><td>[Space] Pause | [M] Mode | [V] PvP | [T] Theme</td></tr>
+      <tr><th>System</th><td>[Space] Pause | [M] Mode | [1-3] Diff | [V] PvP | [T] Theme</td></tr>
       <tr><th>Replay</th><td>[P] Match Replay | [Space] Pause | [←/→] Scrub | [1/2/3] Speed</td></tr>
       <tr><th>Stats</th><td>[L] Stats Modal | JSON Export & Import</td></tr>
       <tr><th>Save/Load</th><td>[F5] Save Game | [F9] Load Game</td></tr>
@@ -561,16 +562,35 @@
       }
   }
 
+  const DIFF_NAMES = ["", "Easy", "Normal", "Hard"];
+
+  function cycleDifficulty() {
+      difficulty = (difficulty % 3) + 1;
+      const btn = document.getElementById('btn-diff');
+      if (btn) btn.innerText = `⚡ Diff: ${DIFF_NAMES[difficulty]} [1-3]`;
+      updateBadge();
+      showToast(`AI Difficulty: ${DIFF_NAMES[difficulty]}`);
+  }
+
+  function setDifficulty(d) {
+      if (d < 1 || d > 3) return;
+      difficulty = d;
+      const btn = document.getElementById('btn-diff');
+      if (btn) btn.innerText = `⚡ Diff: ${DIFF_NAMES[difficulty]} [1-3]`;
+      updateBadge();
+      showToast(`AI Difficulty: ${DIFF_NAMES[difficulty]}`);
+  }
+
   function togglePvPMode() {
       isPvP = !isPvP;
-      document.getElementById('btn-pvp').innerText = isPvP ? "👥 2P Local PvP" : "👤 1P vs AI";
+      document.getElementById('btn-pvp').innerText = isPvP ? "👥 2P Local PvP [V]" : "👤 1P vs AI [V]";
       updateBadge();
       showToast(isPvP ? "2-Player Local PvP Mode (P1: W/S, P2: Up/Down)" : "1-Player vs AI Mode Activated");
   }
 
   function cycleGameMode() {
       gameMode = (gameMode + 1) % MODE_NAMES.length;
-      document.getElementById('btn-mode').innerText = "🎮 Mode: " + MODE_NAMES[gameMode];
+      document.getElementById('btn-mode').innerText = "🎮 Mode: " + MODE_NAMES[gameMode] + " [M]";
       s1 = 0; s2 = 0; rally = 0; gameOver = false; winScreen = false;
       document.getElementById('s1').innerText = s1;
       document.getElementById('s2').innerText = s2;
@@ -581,7 +601,7 @@
 
   function updateBadge() {
       const modeStr = MODE_NAMES[gameMode].toUpperCase();
-      const pStr = isPvP ? "2P PVP" : "1P VS AI";
+      const pStr = isPvP ? "2P LOCAL PVP" : `1P VS AI (${DIFF_NAMES[difficulty].toUpperCase()})`;
       document.getElementById('hud-mode-badge').innerText = `${pStr} • ${modeStr}`;
   }
 
@@ -594,7 +614,7 @@
 
   function togglePause() {
       isPaused = !isPaused;
-      document.getElementById('btn-pause').innerText = isPaused ? "▶️ Resume (Space)" : "⏸️ Pause (Space)";
+      document.getElementById('btn-pause').innerText = isPaused ? "▶️ Resume [Space]" : "⏸️ Pause [Space]";
       showToast(isPaused ? "Game Paused" : "Game Resumed");
   }
 
@@ -748,6 +768,14 @@
           if (e.key === '3') { setReplaySpeed(2.0); return; }
       }
 
+      if (e.key === 'Escape') {
+          if (document.getElementById('helpModal').classList.contains('active')) { closeHelpModal(); return; }
+          if (document.getElementById('statsModal').classList.contains('active')) { closeStatsModal(); return; }
+          if (isReplaying) { stopReplay(); return; }
+          togglePause();
+          return;
+      }
+
       if (e.key === 'p' || e.key === 'P') {
           if (!document.getElementById('statsModal').classList.contains('active') &&
               !document.getElementById('helpModal').classList.contains('active')) {
@@ -755,6 +783,10 @@
               return;
           }
       }
+
+      if(e.key === '1' && !isReplaying) setDifficulty(1);
+      if(e.key === '2' && !isReplaying) setDifficulty(2);
+      if(e.key === '3' && !isReplaying) setDifficulty(3);
 
       if(e.key === 'f' || e.key === 'F') triggerSkill('slow');
       if(e.key === 'e' || e.key === 'E') triggerSkill('mega');
@@ -781,10 +813,43 @@
   function openHelpModal() { document.getElementById('helpModal').classList.add('active'); }
   function closeHelpModal() { document.getElementById('helpModal').classList.remove('active'); }
 
-  // Auto-open help on first load
+  // Modal Backdrop Click Dismissal
+  document.getElementById('helpModal').addEventListener('click', function(e) {
+      if (e.target === this) closeHelpModal();
+  });
+  document.getElementById('statsModal').addEventListener('click', function(e) {
+      if (e.target === this) closeStatsModal();
+  });
+
+  // Canvas Mouse & Touch Drag Controls for Player 1
+  function handleCanvasPointer(e) {
+      if (isPaused || gameOver || isReplaying) return;
+      const rect = canvas.getBoundingClientRect();
+      const clientY = (e.touches && e.touches.length > 0) ? e.touches[0].clientY : e.clientY;
+      if (clientY === undefined) return;
+      const scaleY = H / rect.height;
+      const canvasY = (clientY - rect.top) * scaleY;
+      if (p1FreezeTimer === 0) {
+          let targetY = canvasY - p1PadH / 2;
+          p1y = Math.max(0, Math.min(H - p1PadH, targetY));
+      }
+  }
+  canvas.addEventListener('mousemove', e => {
+      if (e.buttons === 1 || !isPvP) handleCanvasPointer(e);
+  });
+  canvas.addEventListener('touchmove', e => {
+      handleCanvasPointer(e);
+      e.preventDefault();
+  }, { passive: false });
+
+  // Auto-open help on first load & Startup welcome toast
   if (!localStorage.getItem('kpong_has_played')) {
       openHelpModal();
       localStorage.setItem('kpong_has_played', 'true');
+  } else {
+      setTimeout(() => {
+          showToast("Welcome to KPONG! [Space] Pause | [F1/H] Help | [M] Mode");
+      }, 300);
   }
 
   // Persistence: Save / Load State
@@ -935,10 +1000,6 @@
           }
           return;
       }
-
-      if (keys['1']) difficulty = 1;
-      if (keys['2']) difficulty = 2;
-      if (keys['3']) difficulty = 3;
 
       // Skill Timers
       if (skillSlowTimer > 0) skillSlowTimer--;
