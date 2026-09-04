@@ -493,9 +493,71 @@
     z-index: 10000;
     animation: particleBurst 0.6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
   }
+
+  /* Toast Notification Container */
+  #toastContainer {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+  }
+
+  .khex-toast {
+    pointer-events: auto;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--accent-cyan);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 260px;
+    max-width: 380px;
+    animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .khex-toast.success { border-left-color: var(--accent-emerald); }
+  .khex-toast.warning { border-left-color: var(--accent-amber); }
+  .khex-toast.info { border-left-color: var(--accent-cyan); }
+  .khex-toast.error { border-left-color: #ef4444; }
+
+  .toast-title {
+    font-weight: 700;
+    font-size: 0.88rem;
+    margin-bottom: 2px;
+  }
+
+  .toast-msg {
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+
+  @keyframes toastSlideIn {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes toastFadeOut {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0; transform: translateY(10px) scale(0.95); }
+  }
 </style>
 </head>
 <body>
+
+  <!-- Toast Container -->
+  <div id="toastContainer"></div>
 
   <!-- Header -->
   <div class="header">
@@ -519,20 +581,20 @@
     </div>
     <div class="header-actions">
       <div class="badge" id="endianBadge">LE (Little Endian)</div>
-      <button class="btn btn-sm" id="toggleEndianBtn">Swap Endianness</button>
-      <button class="btn btn-sm btn-cyan" onclick="toggleHelp()">Help [F1/H]</button>
+      <button class="btn btn-sm" id="toggleEndianBtn" title="Toggle Endianness [E]">Swap Endian [E]</button>
+      <button class="btn btn-sm btn-cyan" onclick="toggleHelp()" title="Open Help Dialog [F1]">Help [F1/H]</button>
     </div>
   </div>
 
   <!-- Navigation Tabs -->
   <div class="tab-nav">
-    <button class="tab-btn active" onclick="switchTab('converter')">⚡ Converter & Inspector</button>
-    <button class="tab-btn" onclick="switchTab('editor')">🔍 Hex Viewer & Buffer</button>
-    <button class="tab-btn" onclick="switchTab('entropy')">📊 Entropy & Dissection</button>
-    <button class="tab-btn" onclick="switchTab('search')">🔎 Search & Replace</button>
-    <button class="tab-btn" onclick="switchTab('hashes')">🔐 Checksum & Hashes</button>
-    <button class="tab-btn" onclick="switchTab('operations')">🛠️ Byte Operations</button>
-    <button class="tab-btn" onclick="switchTab('export')">💾 Data Export</button>
+    <button class="tab-btn active" id="tabbtn-converter" onclick="switchTab('converter')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">1</span> ⚡ Converter & Inspector</button>
+    <button class="tab-btn" id="tabbtn-editor" onclick="switchTab('editor')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">2</span> 🔍 Hex Viewer & Buffer</button>
+    <button class="tab-btn" id="tabbtn-entropy" onclick="switchTab('entropy')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">3</span> 📊 Entropy & Dissection</button>
+    <button class="tab-btn" id="tabbtn-search" onclick="switchTab('search')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">4</span> 🔎 Search & Replace</button>
+    <button class="tab-btn" id="tabbtn-hashes" onclick="switchTab('hashes')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">5</span> 🔐 Checksum & Hashes</button>
+    <button class="tab-btn" id="tabbtn-operations" onclick="switchTab('operations')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">6</span> 🛠️ Byte Operations</button>
+    <button class="tab-btn" id="tabbtn-export" onclick="switchTab('export')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">7</span> 💾 Data Export</button>
   </div>
 
   <!-- TAB 1: Base Converter & Data Inspector -->
@@ -800,18 +862,47 @@
     <span style="color: var(--accent-cyan);">Press F1 or 'h' for Help</span>
   </div>
 
-  <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center;">
-    <div class="panel" style="max-width: 500px; position: relative; border: 1px solid var(--accent-cyan);">
-      <h2 style="margin-top:0;">KHex Help</h2>
-      <p>Welcome to KHex Suite!</p>
-      <ul style="line-height: 1.6;">
-        <li><b>Converter & Inspector:</b> Convert numbers across bases and inspect data types.</li>
-        <li><b>Hex Viewer:</b> View binary buffers in hex format.</li>
-        <li><b>Search & Replace:</b> Find patterns in ASCII or Hex.</li>
-        <li><b>Operations:</b> Manipulate bytes (endian swap, invert, etc).</li>
-      </ul>
-      <p style="color: var(--text-secondary); font-size: 0.85rem;">Press F1, 'h', or 'Escape' to close this help.</p>
-      <button class="btn btn-primary" onclick="toggleHelp()">Close</button>
+  <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(6px);" onclick="if(event.target===this) toggleHelp()">
+    <div class="panel" style="max-width: 640px; width: 90%; max-height: 85vh; overflow-y: auto; position: relative; border: 1px solid var(--accent-cyan); box-shadow: 0 0 30px rgba(6, 182, 212, 0.3);">
+      <div class="panel-title" style="margin-bottom: 12px;">
+        <div class="title-left" style="font-size: 1.1rem; color: var(--accent-cyan);">
+          <span>⚡ KHex Utility Suite — Help & Documentation</span>
+        </div>
+        <button class="btn btn-sm" onclick="toggleHelp()" style="padding: 2px 8px;">✕</button>
+      </div>
+      
+      <div style="font-size: 0.85rem; line-height: 1.6; color: var(--text-primary); display:flex; flex-direction:column; gap:12px;">
+        <div>
+          <b>Overview:</b> KHex is a comprehensive binary data inspector, base converter, byte manipulation tool, and Shannon Entropy analyzer.
+        </div>
+        
+        <div style="background: var(--input-bg); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+          <div style="font-weight: 700; color: var(--accent-cyan); margin-bottom: 6px;">⌨️ Keyboard Shortcuts</div>
+          <table style="width: 100%; font-size: 0.8rem; border-collapse: collapse;">
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[F1]</b> or <b>[H]</b></td><td>Open / Close this Help Guide</td></tr>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[Esc]</b></td><td>Dismiss Help Modal / Active Overlays</td></tr>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[E]</b></td><td>Toggle Endianness (Little Endian ⇄ Big Endian)</td></tr>
+            <tr><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[1] - [7]</b></td><td>Quickly switch between Suite Tabs</td></tr>
+          </table>
+        </div>
+
+        <div style="background: var(--input-bg); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+          <div style="font-weight: 700; color: var(--accent-cyan); margin-bottom: 6px;">🛠️ Feature Modules</div>
+          <ul style="margin: 0; padding-left: 20px; font-size: 0.8rem; line-height: 1.5;">
+            <li><b>[1] Converter & Inspector:</b> Real-time synchronization across Hex, Dec, Bin, Oct, ASCII, and IEEE 754 float/double. Includes an interactive 32-bit bitfield manipulator.</li>
+            <li><b>[2] Hex Viewer & Buffer:</b> 16 bytes/row hex viewer with offset mapping, ASCII column, custom file import, and sample data generator.</li>
+            <li><b>[3] Entropy & Dissection:</b> Shannon Entropy randomness meter, bit density ratio, byte frequency distribution histogram, and file magic signature detection.</li>
+            <li><b>[4] Search & Replace:</b> Fast ASCII and Hex byte sequence finder with replace-all capability.</li>
+            <li><b>[5] Checksum & Hashes:</b> Instant 8/16/32-bit sums, XOR8, IEEE CRC32, MD5, and SHA-256 digests.</li>
+            <li><b>[6] Byte Operations:</b> Invert, XOR mask, buffer fill, word endian swaps, and reversal.</li>
+            <li><b>[7] Data Export:</b> Formatted HexDump, C/C++ array, Python bytes, Base64, and RAW file download.</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div style="margin-top: 14px; display: flex; justify-content: flex-end;">
+        <button class="btn btn-primary" onclick="toggleHelp()">Got it [Esc]</button>
+      </div>
     </div>
   </div>
 
@@ -824,6 +915,29 @@
   let activeTab = 'converter';
   let isUpdating = false;
 
+  // Toast Notification Function
+  function showToast(title, message, type = 'info', duration = 4000) {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toastContainer';
+      document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = `khex-toast ${type}`;
+    toast.innerHTML = `
+      <div>
+        <div class="toast-title">${title}</div>
+        <div class="toast-msg">${message}</div>
+      </div>
+    `;
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.style.animation = 'toastFadeOut 0.3s forwards';
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
+  }
+
   // Initialize UI
   document.addEventListener('DOMContentLoaded', () => {
     if (window.parent && window.parent !== window) {
@@ -834,15 +948,38 @@
     renderHexView();
     computeHashes();
     generateExport();
+    showToast('⚡ KHex Suite Ready', 'Press [F1] or click Help for full shortcuts & documentation.', 'info', 5000);
   });
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'F1' || ((e.key === 'h' || e.key === 'H') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA')) {
       toggleHelp();
       e.preventDefault();
+      return;
     }
     if (e.key === 'Escape') {
-      document.getElementById('helpModal').style.display = 'none';
+      let m = document.getElementById('helpModal');
+      if (m && m.style.display !== 'none') {
+        m.style.display = 'none';
+        e.preventDefault();
+      }
+      return;
+    }
+    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+      if (e.key === '1') { switchTab('converter'); e.preventDefault(); }
+      else if (e.key === '2') { switchTab('editor'); e.preventDefault(); }
+      else if (e.key === '3') { switchTab('entropy'); e.preventDefault(); }
+      else if (e.key === '4') { switchTab('search'); e.preventDefault(); }
+      else if (e.key === '5') { switchTab('hashes'); e.preventDefault(); }
+      else if (e.key === '6') { switchTab('operations'); e.preventDefault(); }
+      else if (e.key === '7') { switchTab('export'); e.preventDefault(); }
+      else if (e.key === 'e' || e.key === 'E') {
+        isLittleEndian = !isLittleEndian;
+        document.getElementById('endianBadge').innerText = isLittleEndian ? 'LE (Little Endian)' : 'BE (Big Endian)';
+        updateInspector();
+        showToast('Endianness Switched', `Active: ${isLittleEndian ? 'Little Endian (LE)' : 'Big Endian (BE)'}`, 'info');
+        e.preventDefault();
+      }
     }
   });
 
@@ -856,6 +993,7 @@
     isLittleEndian = !isLittleEndian;
     document.getElementById('endianBadge').innerText = isLittleEndian ? 'LE (Little Endian)' : 'BE (Big Endian)';
     updateInspector();
+    showToast('Endianness Swapped', `Active: ${isLittleEndian ? 'Little Endian (LE)' : 'Big Endian (BE)'}`, 'info');
   });
 
   // Tab Switcher
@@ -864,8 +1002,10 @@
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     
-    event.currentTarget.classList.add('active');
-    document.getElementById('tab-' + tabId).classList.add('active');
+    let btn = document.getElementById('tabbtn-' + tabId);
+    if (btn) btn.classList.add('active');
+    let target = document.getElementById('tab-' + tabId);
+    if (target) target.classList.add('active');
 
     if (tabId === 'editor') renderHexView();
     if (tabId === 'entropy') computeEntropyAndDistribution();
@@ -959,6 +1099,7 @@
 
   function resetConverter() {
     updateFromHex('0');
+    showToast('Converter Reset', 'All base values have been reset to 0.', 'info');
   }
 
   // --- SHANNON ENTROPY & FILE SIGNATURE ENGINE ---
@@ -1248,6 +1389,7 @@
 
   function clearBits() {
     updateFromHex('0');
+    showToast('Bitfield Cleared', 'All 32 bits have been reset to 0.', 'info');
   }
 
   // --- TAB 2: HEX VIEWER & EDITOR LOGIC ---
@@ -1263,6 +1405,7 @@
     textBuf.value = sample;
     binaryBuffer = new TextEncoder().encode(sample);
     renderHexView();
+    showToast('Sample Data Loaded', 'Hex viewer buffer loaded with 98 sample bytes.', 'success');
   }
 
   function handleFileSelect(e) {
@@ -1271,7 +1414,7 @@
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB bounds
     let slice = file;
     if (file.size > MAX_FILE_SIZE) {
-      alert("File is too large. Loading only the first 10MB to prevent memory issues.");
+      showToast('Large File Notice', 'File exceeds 10MB. Loading the first 10MB for fast inspection.', 'warning', 5000);
       slice = file.slice(0, MAX_FILE_SIZE);
     }
     let reader = new FileReader();
@@ -1280,6 +1423,7 @@
       let safeName = file.name.replace(/</g, "&lt;").replace(/>/g, "&gt;");
       textBuf.value = "[Loaded binary file: " + safeName + " (" + binaryBuffer.length + " bytes)]";
       renderHexView();
+      showToast('File Loaded', `Successfully loaded "${file.name}" (${binaryBuffer.length.toLocaleString()} bytes).`, 'success');
     };
     reader.readAsArrayBuffer(slice);
   }
@@ -1390,6 +1534,7 @@
 
     if (!pattern) {
       resultsBox.innerText = 'Please specify a search pattern.';
+      showToast('Search Notice', 'Please specify a search pattern.', 'warning');
       return;
     }
 
@@ -1405,6 +1550,7 @@
 
     if (searchBytes.length === 0) {
       resultsBox.innerText = 'Invalid search pattern.';
+      showToast('Invalid Pattern', 'Could not parse search pattern.', 'error');
       return;
     }
 
@@ -1422,12 +1568,14 @@
 
     if (matches.length === 0) {
       resultsBox.innerText = 'No matches found.';
+      showToast('Search Completed', 'No matches found for the given pattern.', 'info');
     } else {
       let resText = 'Found ' + matches.length + ' match(es):\n';
       matches.forEach((off, idx) => {
         resText += '[' + (idx + 1) + '] Offset: 0x' + off.toString(16).toUpperCase() + ' (' + off + ')\n';
       });
       resultsBox.innerText = resText;
+      showToast('Matches Found', `Located ${matches.length} occurrence(s) in buffer.`, 'success');
       
       // Select & highlight first match
       selectedOffset = matches[0];
@@ -1441,7 +1589,10 @@
     let rPattern = document.getElementById('replacePattern').value;
     let resultsBox = document.getElementById('searchResultsBox');
 
-    if (!sPattern) return;
+    if (!sPattern) {
+      showToast('Replace Notice', 'Please enter a search pattern first.', 'warning');
+      return;
+    }
 
     let sBytes = (mode === 'ascii') ? Array.from(new TextEncoder().encode(sPattern)) :
       sPattern.replace(/[^0-9a-fA-F]/g, '').match(/.{1,2}/g)?.map(b => parseInt(b, 16)) || [];
@@ -1449,7 +1600,10 @@
     let rBytes = (mode === 'ascii') ? Array.from(new TextEncoder().encode(rPattern)) :
       rPattern.replace(/[^0-9a-fA-F]/g, '').match(/.{1,2}/g)?.map(b => parseInt(b, 16)) || [];
 
-    if (!sBytes.length) return;
+    if (!sBytes.length) {
+      showToast('Invalid Pattern', 'Search pattern bytes could not be parsed.', 'error');
+      return;
+    }
 
     let newBuf = [];
     let count = 0;
@@ -1480,6 +1634,7 @@
     binaryBuffer = new Uint8Array(newBuf);
     textBuf.value = new TextDecoder().decode(binaryBuffer);
     resultsBox.innerText = 'Replaced ' + count + ' occurrence(s).';
+    showToast('Replace All Done', `Replaced ${count} occurrence(s) in buffer.`, 'success');
     renderHexView();
   }
 
@@ -1609,6 +1764,7 @@
     binaryBuffer = newBuf;
     textBuf.value = new TextDecoder().decode(binaryBuffer);
     previewBox.innerText = 'Operation "' + type + '" applied successfully to ' + binaryBuffer.length + ' bytes.';
+    showToast('Operation Applied', `Operation "${type}" successfully applied to ${binaryBuffer.length.toLocaleString()} bytes.`, 'success');
     renderHexView();
   }
 
@@ -1671,8 +1827,14 @@
 
   function copyExportText() {
     let text = document.getElementById('exportOutputBox').innerText;
+    if (!text) {
+      showToast('Export Notice', 'No formatted data available to copy.', 'warning');
+      return;
+    }
     navigator.clipboard.writeText(text).then(() => {
-      alert('Export content copied to clipboard!');
+      showToast('Copied to Clipboard!', 'Export formatted data is ready to paste.', 'success');
+    }).catch(() => {
+      showToast('Copy Error', 'Could not access clipboard.', 'error');
     });
   }
 
@@ -1682,6 +1844,7 @@
     a.href = URL.createObjectURL(blob);
     a.download = 'khex_export.bin';
     a.click();
+    showToast('Download Started', `Exporting "khex_export.bin" (${binaryBuffer.length.toLocaleString()} bytes).`, 'success');
   }
   document.addEventListener('click', (e) => {
     if (e.target.closest('.btn') || e.target.closest('.hex-byte') || e.target.closest('.bit-box') || e.target.closest('.tab-btn')) {

@@ -471,6 +471,29 @@ void ExportDissection(unsigned int val) {
     SetWindowTextA(hExportEdit, out);
 }
 
+void ShowHelpDialog(HWND hwnd) {
+    MessageBoxA(hwnd,
+        "=== KHEX UTILITY SUITE — USER GUIDE ===\n\n"
+        "CORE FEATURES:\n"
+        " • Base Converter: Live sync between Hex, Dec, Bin, Oct, and ASCII.\n"
+        " • Multi-Type Inspector: Signed/Unsigned Int8/16/32, Float32, PopCount, Shannon Entropy & File Signature.\n"
+        " • Checksum Suite: Instant Sum8, Sum16, Sum32, XOR8, and IEEE CRC32.\n"
+        " • Byte Operations: Swap16, Swap32, Invert (~), and XOR 0xFF mask.\n"
+        " • Export Suite: C/C++ byte arrays, formatted HexDump, and deep Shannon Entropy reports.\n\n"
+        "KEYBOARD SHORTCUTS:\n"
+        " • [F1]               : Open this Help Dialog\n"
+        " • [Ctrl+E]           : Toggle Endianness (LE / BE)\n"
+        " • [Ctrl+1]           : Endian Swap 16-bit Words\n"
+        " • [Ctrl+2]           : Endian Swap 32-bit Words\n"
+        " • [Ctrl+3]           : Bitwise Invert (~)\n"
+        " • [Ctrl+4]           : XOR 0xFF Mask\n"
+        " • [Ctrl+5]           : Export as C Array\n"
+        " • [Ctrl+6]           : Export as HexDump\n"
+        " • [Ctrl+7]           : Deep Dissection & Entropy Report\n\n"
+        "Tip: Type in any base field to instantly update all representations.",
+        "KHex Help & Shortcuts", MB_OK | MB_ICONINFORMATION);
+}
+
 BOOL CALLBACK SetFontProc(HWND child, LPARAM hFont) {
     SendMessage(child, WM_SETFONT, hFont, TRUE);
     return TRUE;
@@ -488,7 +511,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Section 1: Base Converter
             CreateWindowEx(0, "STATIC", "--- BASE CONVERTER ---", WS_CHILD | WS_VISIBLE, 10, 8, 200, 16, hwnd, NULL, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Help [F1/H]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 740, 8, 80, 24, hwnd, (HMENU)100, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 740, 8, 80, 24, hwnd, (HMENU)100, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Hex:", WS_CHILD | WS_VISIBLE, 10, 28, 35, 20, hwnd, NULL, NULL, NULL);
             hHex = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x00000000", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 50, 28, 160, 22, hwnd, (HMENU)ID_HEX, NULL, NULL);
@@ -507,7 +530,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Section 2: Data Inspector Panel
             CreateWindowEx(0, "STATIC", "--- MULTI-TYPE DATA INSPECTOR & ENTROPY ---", WS_CHILD | WS_VISIBLE, 10, 108, 320, 16, hwnd, NULL, NULL, NULL);
-            hEndianBtn = CreateWindowEx(0, "BUTTON", "Endian: LE", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 340, 104, 100, 22, hwnd, (HMENU)ID_BTN_ENDIAN, NULL, NULL);
+            hEndianBtn = CreateWindowEx(0, "BUTTON", "Endian: LE [^E]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 330, 104, 110, 22, hwnd, (HMENU)ID_BTN_ENDIAN, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Int8:", WS_CHILD | WS_VISIBLE, 10, 130, 40, 20, hwnd, NULL, NULL, NULL);
             hInt8 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_READONLY, 55, 130, 90, 22, hwnd, NULL, NULL, NULL);
@@ -560,17 +583,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Section 4: Operations & Export
             CreateWindowEx(0, "STATIC", "--- BYTE OPERATIONS, EXPORT & DISSECTION ---", WS_CHILD | WS_VISIBLE, 10, 285, 340, 16, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "BUTTON", "Swap16", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 305, 75, 24, hwnd, (HMENU)ID_BTN_SWAP16, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Swap32", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 90, 305, 75, 24, hwnd, (HMENU)ID_BTN_SWAP32, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Invert (~)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 170, 305, 75, 24, hwnd, (HMENU)ID_BTN_INVERT, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "XOR 0xFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 250, 305, 75, 24, hwnd, (HMENU)ID_BTN_XORMASK, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "C Array", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 330, 305, 75, 24, hwnd, (HMENU)ID_BTN_CARRAY, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "HexDump", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 410, 305, 75, 24, hwnd, (HMENU)ID_BTN_DUMP, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Dissect & Entropy", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 490, 305, 130, 24, hwnd, (HMENU)ID_BTN_DISSECT, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Swap16 [^1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 305, 80, 24, hwnd, (HMENU)ID_BTN_SWAP16, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Swap32 [^2]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 95, 305, 80, 24, hwnd, (HMENU)ID_BTN_SWAP32, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Invert [^3]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 180, 305, 75, 24, hwnd, (HMENU)ID_BTN_INVERT, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "XOR FF [^4]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 260, 305, 80, 24, hwnd, (HMENU)ID_BTN_XORMASK, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "C Array [^5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 345, 305, 80, 24, hwnd, (HMENU)ID_BTN_CARRAY, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "HexDump [^6]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 430, 305, 85, 24, hwnd, (HMENU)ID_BTN_DUMP, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Dissect & Entropy [^7]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 520, 305, 140, 24, hwnd, (HMENU)ID_BTN_DISSECT, NULL, NULL);
 
-            hExportEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KHex Suite!\r\nPress F1 or 'h' for Help.\r\n\r\nResult / Export & Deep Dissection preview area...", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | ES_READONLY, 10, 335, 810, 320, hwnd, NULL, NULL, NULL);
+            hExportEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KHex Suite!\r\nPress F1 or click 'Help' for user guide & shortcuts.\r\n\r\nResult / Export & Deep Dissection preview area...", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | ES_READONLY, 10, 335, 810, 320, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "Press F1 or 'h' for Help", WS_CHILD | WS_VISIBLE, 10, 665, 170, 16, hwnd, NULL, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Shortcuts: F1 (Help), Ctrl+E (Endian), Ctrl+1..7 (Operations)", WS_CHILD | WS_VISIBLE, 10, 665, 400, 16, hwnd, NULL, NULL, NULL);
 
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
             UpdateFields(hHex);
@@ -586,7 +609,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (code == BN_CLICKED) {
                 if (id == ID_BTN_ENDIAN) {
                     isLittleEndian = !isLittleEndian;
-                    SetWindowTextA(hEndianBtn, isLittleEndian ? "Endian: LE" : "Endian: BE");
+                    SetWindowTextA(hEndianBtn, isLittleEndian ? "Endian: LE [^E]" : "Endian: BE [^E]");
                     UpdateInspector(GetCurrentVal());
                 } else if (id == ID_BTN_SWAP16) {
                     SetCurrentVal(swap16(GetCurrentVal()));
@@ -603,20 +626,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else if (id == ID_BTN_DISSECT) {
                     ExportDissection(GetCurrentVal());
                 } else if (id == 100) {
-                    MessageBoxA(hwnd, "KHex Utility Suite\n\n- Convert between Hex, Dec, Bin, etc.\n- Swap Endianness\n- Shannon Entropy & Byte Frequency Analysis\n- Magic Byte / File Signature Dissector\n- Generate Checksums & Hashes\n- Export as C Array, HexDump, or Dissection Report\n\nUse the input fields and buttons to operate.", "KHex Help", MB_OK | MB_ICONINFORMATION);
+                    ShowHelpDialog(hwnd);
                 }
             }
             break;
         }
         case WM_KEYDOWN: {
             if (wParam == VK_F1) {
-                MessageBoxA(hwnd, "KHex Utility Suite\n\n- Convert between Hex, Dec, Bin, etc.\n- Swap Endianness\n- Generate Checksums & Hashes\n- Export as C Array or HexDump\n\nUse the input fields and buttons to operate.", "KHex Help", MB_OK | MB_ICONINFORMATION);
+                ShowHelpDialog(hwnd);
             }
             break;
         }
         case WM_CHAR: {
             if (wParam == 'h' || wParam == 'H') {
-                MessageBoxA(hwnd, "KHex Utility Suite\n\n- Convert between Hex, Dec, Bin, etc.\n- Swap Endianness\n- Generate Checksums & Hashes\n- Export as C Array or HexDump\n\nUse the input fields and buttons to operate.", "KHex Help", MB_OK | MB_ICONINFORMATION);
+                ShowHelpDialog(hwnd);
             }
             break;
         }
@@ -711,7 +734,7 @@ void MainEntry() {
     RECT rect = {0, 0, W, H};
     DWORD style = (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN;
     AdjustWindowRect(&rect, style, FALSE);
-    HWND hwnd = CreateWindowEx(0, "KHexApp", "KHex Utility Suite", style,
+    HWND hwnd = CreateWindowEx(0, "KHexApp", "KHex Utility Suite [Press F1 for Help]", style,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
@@ -719,6 +742,39 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
+        if (msg.message == WM_KEYDOWN) {
+            if (msg.wParam == VK_F1) {
+                ShowHelpDialog(hwnd);
+                continue;
+            }
+            if (GetKeyState(VK_CONTROL) & 0x8000) {
+                if (msg.wParam == 'E' || msg.wParam == 'e') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_ENDIAN, BN_CLICKED), 0);
+                    continue;
+                } else if (msg.wParam == '1') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SWAP16, BN_CLICKED), 0);
+                    continue;
+                } else if (msg.wParam == '2') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SWAP32, BN_CLICKED), 0);
+                    continue;
+                } else if (msg.wParam == '3') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_INVERT, BN_CLICKED), 0);
+                    continue;
+                } else if (msg.wParam == '4') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_XORMASK, BN_CLICKED), 0);
+                    continue;
+                } else if (msg.wParam == '5') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_CARRAY, BN_CLICKED), 0);
+                    continue;
+                } else if (msg.wParam == '6') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_DUMP, BN_CLICKED), 0);
+                    continue;
+                } else if (msg.wParam == '7') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_DISSECT, BN_CLICKED), 0);
+                    continue;
+                }
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }

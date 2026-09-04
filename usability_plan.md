@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KHex
+**Target App:** KCalendar
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KHex
 - KCalendar
 - KChart
 - KChat
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KPad
 - KImage
 - KCalc
+- KHex
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KHex: Usability and UI issues fixed (replaced blocking browser alerts with custom cybernetic Help modal dialog and non-blocking toast notification system with startup welcome toast, added [1-7] tab switching hotkeys with visible numeric badges, [E] endian toggle hotkey, Escape and backdrop-click modal dismissal, and toast feedback for export copying, sample data loading, pattern search, and byte operations in web; added ShowHelpDialog comprehensive user guide, global message loop accelerator interception for F1/Ctrl+E/Ctrl+1-7 hotkeys across all child controls, updated button shortcut badges, bottom shortcut status hint, and window title hint in native C).
 - KCalc: Usability and UI issues fixed (replaced blocking browser alerts with custom cybernetic Help modal dialog and dedicated Memory Registers modal, added non-blocking toast notification system with startup welcome toast and export/calculation feedback, synchronized auto-opening dimensions to 780x640 in App.jsx, added [1-5]/D/M/F1 shortcuts with visible tab badges and backdrop-click modal dismissal in web; fixed critical bug in native C where typing in edit controls intercepted input and hijacked display buffer, added explicit Help [F1] toolbar button, [1-5] mode switching hotkeys, ShowHelpDialog user guide, and window title hint).
 - KImage: Usability and UI issues fixed (replaced blocking browser alerts with custom cybernetic Help modal dialog and non-blocking toast notifications with startup welcome toast, added 1-click Load Demo Image button on empty state, added 1-5 tab switching shortcuts with visible numeric badges, Escape and backdrop-click modal/crop dismissal, Ctrl+S export shortcut, +/-/0 zoom shortcuts, and explicit Help [F1] header button in web; updated native C with ShowHelpDialog comprehensive guide, explicit Help [F1] toolbar button, global message loop hotkey interception for F1/H/Ctrl+S/Ctrl+O/Esc, and expanded keyboard filter and navigation shortcuts).
 - KPad: Usability and UI issues fixed (eliminated blocking browser alerts/prompts/confirms with custom cybernetic modal dialogs for unsaved changes and password-protected exports, added non-blocking toast notifications with startup welcome toast, added top navigation Help [F1] button, added tab numbering badges with Ctrl+1-9 hotkeys in web; updated native C with 4-part status bar including [F1] Help indicator, dynamic window title with help hint, WM_GETMINMAXINFO minimum dimensions, ShowHelpDialog user guide, and message loop hotkeys Ctrl+1-9, Ctrl+Tab, Ctrl+A, and F1).
