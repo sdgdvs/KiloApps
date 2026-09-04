@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>KStarship</title>
+<title>KStarship Command</title>
 <style>
   body {
     margin: 0;
     padding: 0;
-    background-color: #05050a;
+    background-color: #030308;
     color: #e0e0ff;
     font-family: 'Courier New', Courier, monospace;
     display: flex;
@@ -15,41 +15,45 @@
     align-items: center;
     height: 100vh;
     overflow: hidden;
+    user-select: none;
   }
   h1 {
     margin: 8px 0;
-    font-size: 22px;
+    font-size: 20px;
     text-transform: uppercase;
     letter-spacing: 2px;
     color: #00ffff;
-    text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+    text-shadow: 0 0 10px #00ffff, 0 0 20px rgba(0, 255, 255, 0.6);
     font-weight: normal;
   }
   #game-container {
     display: flex;
     flex-direction: row;
     gap: 16px;
+    position: relative;
   }
   canvas {
     border: 1px solid #00ffff;
-    background-color: #000;
-    box-shadow: 0 0 15px rgba(0, 255, 255, 0.4), inset 0 0 10px rgba(0, 255, 255, 0.2);
+    background-color: #020206;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.35), inset 0 0 15px rgba(0, 255, 255, 0.15);
+    border-radius: 4px;
   }
   #ui-panel {
     display: flex;
     flex-direction: column;
-    width: 220px;
-    border: 1px solid #00ffff;
+    width: 230px;
+    border: 1px solid #00d4d4;
     padding: 12px;
-    background-color: rgba(5, 5, 20, 0.85);
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+    background-color: rgba(5, 7, 24, 0.92);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.25);
     font-size: 13px;
+    border-radius: 4px;
   }
   .info-box {
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
   .info-box div {
-    margin-bottom: 4px;
+    margin-bottom: 3px;
   }
   .label {
     color: #00ffff;
@@ -58,10 +62,11 @@
     border-bottom: 1px solid #005555;
     margin-bottom: 4px;
     padding-bottom: 2px;
-    text-shadow: 0 0 5px #00ffff;
+    text-shadow: 0 0 6px #00ffff;
+    font-weight: bold;
   }
   .value {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
     color: #ffffff;
     text-shadow: 0 0 5px #ffffff;
@@ -73,19 +78,20 @@
     margin-top: auto;
   }
   button {
-    background: transparent;
+    background: rgba(0, 40, 60, 0.6);
     color: #00ffff;
     border: 1px solid #00ffff;
     box-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
     padding: 8px;
     cursor: pointer;
     font-family: monospace;
-    font-size: 14px;
-    transition: all 0.2s ease-in-out;
+    font-size: 13px;
+    transition: all 0.15s ease-in-out;
+    border-radius: 3px;
   }
   button:hover {
-    background-color: rgba(0, 255, 255, 0.2);
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+    background-color: rgba(0, 255, 255, 0.25);
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
   }
   button:active {
     background-color: #00ffff;
@@ -99,31 +105,33 @@
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    background-color: rgba(5, 5, 20, 0.96);
+    background-color: rgba(6, 8, 26, 0.97);
     border: 2px solid #00ffff;
-    padding: 20px;
-    box-shadow: 0 0 25px rgba(0, 255, 255, 0.6);
+    padding: 18px;
+    box-shadow: 0 0 35px rgba(0, 255, 255, 0.7), inset 0 0 15px rgba(0, 255, 255, 0.2);
     text-align: center;
     display: none;
     z-index: 100;
-    width: 360px;
+    width: 380px;
+    border-radius: 6px;
   }
-  #modal h2 { margin-top: 0; color: #ff8800; font-size: 18px; letter-spacing: 1px; }
-  #modal p { font-size: 13px; margin-bottom: 16px; line-height: 1.4; white-space: pre-line; }
-  #modal-actions { display: flex; flex-direction: column; gap: 8px; }
-  .action-btn { background: #00ffff; color: #000; border: none; padding: 9px; cursor: pointer; font-weight: bold; width: 100%; font-family: 'Courier New', Courier, monospace; font-size: 13px; }
-  .action-btn:hover { background: #ffffff; }
+  #modal h2 { margin-top: 0; color: #ff9900; font-size: 17px; letter-spacing: 1px; text-shadow: 0 0 10px #ff6600; }
+  #modal-preview { width: 100%; height: 110px; margin-bottom: 10px; border-radius: 4px; background: #02040c; border: 1px solid #006666; }
+  #modal p { font-size: 12px; margin-bottom: 14px; line-height: 1.4; white-space: pre-line; color: #d0e8ff; }
+  #modal-actions { display: flex; flex-direction: column; gap: 6px; }
+  .action-btn { background: #00d4d4; color: #020c14; border: none; padding: 8px; cursor: pointer; font-weight: bold; width: 100%; font-family: 'Courier New', Courier, monospace; font-size: 12px; border-radius: 3px; transition: all 0.15s; }
+  .action-btn:hover { background: #ffffff; box-shadow: 0 0 12px #00ffff; }
   .action-btn.super { background: #ffaa00; color: #000; }
-  .action-btn.super:hover { background: #ffee66; }
+  .action-btn.super:hover { background: #ffee66; box-shadow: 0 0 12px #ffaa00; }
 </style>
 </head>
 <body>
-  <h1>KStarship Command — Loop 10</h1>
+  <h1>★ KStarship Command ★</h1>
   <div id="game-container">
     <canvas id="starmap" width="600" height="600"></canvas>
     <div id="ui-panel">
       <div class="info-box">
-        <div class="label">SHIP STATUS</div>
+        <div class="label">SHIP TELEMETRY</div>
         <div>Location: <span id="loc-x" class="value">0</span>, <span id="loc-y" class="value">0</span></div>
       </div>
       <div class="info-box">
@@ -133,16 +141,16 @@
         <div>Crew: <span id="res-crew" class="value">10</span> | Credits: <span id="res-credits" class="value">1000</span></div>
       </div>
       <div class="info-box">
-        <div class="label" style="color:#ffaa00;">SUPERWEAPON</div>
+        <div class="label" style="color:#ffaa00; text-shadow:0 0 6px #ffaa00;">SUPERWEAPON BAY</div>
         <div style="font-size:12px; color:#ffee88;" id="swpn-name">Tachyon Beam</div>
         <div>Charges: <span id="swpn-charges" class="value">3 / 5</span></div>
       </div>
       <div class="info-box">
-        <div class="label">FACTION REPUTATION</div>
+        <div class="label">FACTION STANDING</div>
         <div style="font-size:11px; color:#b0eeff;" id="faction-rep">Fed: 50 | Syn: 30 | Xen: 10</div>
       </div>
       <div class="info-box">
-        <div class="label">CARGO & UPGRADES</div>
+        <div class="label">CARGO & SYSTEMS</div>
         <div>Min: <span id="cargo-minerals" class="value">0</span> | Tech: <span id="cargo-tech" class="value">0</span></div>
         <div style="font-size:11px; display:flex; justify-content:space-between; margin-top:2px;">
           <span>W:<span id="upg-wpn">1</span> S:<span id="upg-shd">1</span></span>
@@ -150,23 +158,24 @@
         </div>
       </div>
       <div class="info-box">
-        <div class="label">SCANNER</div>
+        <div class="label">DEEP SPACE SCANNER</div>
         <div id="scanner-info" style="font-size:11px;">No objects nearby.</div>
       </div>
       <div class="controls">
-        <button id="btn-up">W</button>
-        <button id="btn-left">A</button>
-        <button id="btn-down">S</button>
-        <button id="btn-right">D</button>
+        <button id="btn-up">▲ W</button>
+        <button id="btn-left">◀ A</button>
+        <button id="btn-down">▼ S</button>
+        <button id="btn-right">▶ D</button>
       </div>
       <button id="btn-crew" style="width:100%; margin-top:6px; font-size:12px;">CREW ROSTER (C)</button>
       <button id="btn-help" style="width:100%; margin-top:4px; font-size:12px;">MANUAL (H)</button>
-      <button id="btn-land" style="width:100%; margin-top:4px; font-size:12px; display:none; color: #00ff00; border-color: #00ff00;">LAND ON PLANET (L)</button>
+      <button id="btn-land" style="width:100%; margin-top:4px; font-size:12px; display:none; color: #00ff66; border-color: #00ff66;">LAND ON PLANET (L)</button>
     </div>
   </div>
 
   <div id="modal">
     <h2 id="modal-title">Encounter</h2>
+    <canvas id="modal-preview" width="340" height="110"></canvas>
     <p id="modal-desc">Description</p>
     <div id="modal-actions"></div>
   </div>
@@ -174,6 +183,9 @@
   <script>
     const canvas = document.getElementById('starmap');
     const ctx = canvas.getContext('2d');
+    const previewCanvas = document.getElementById('modal-preview');
+    const pCtx = previewCanvas.getContext('2d');
+
     const locX = document.getElementById('loc-x');
     const locY = document.getElementById('loc-y');
     const resFuel = document.getElementById('res-fuel');
@@ -202,7 +214,7 @@
       osc.type = 'sawtooth';
       osc.frequency.setValueAtTime(800, audioCtx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
-      gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
@@ -216,7 +228,7 @@
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(200, audioCtx.currentTime);
       osc.frequency.linearRampToValueAtTime(1200, audioCtx.currentTime + 0.4);
-      gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
@@ -232,7 +244,7 @@
       osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.2);
       osc.frequency.setValueAtTime(400, audioCtx.currentTime + 0.4);
       osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.6);
-      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
       gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.8);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
@@ -249,7 +261,7 @@
         humGain = audioCtx.createGain();
         humOsc.type = 'sine';
         humOsc.frequency.value = 60;
-        humGain.gain.value = 0.1;
+        humGain.gain.value = 0.08;
         humOsc.connect(humGain);
         humGain.connect(audioCtx.destination);
         humOsc.start();
@@ -264,20 +276,21 @@
 
     // Game state
     const state = {
-      ship: { x: 0, y: 0, targetX: 0, targetY: 0, moving: false },
+      ship: { x: 0, y: 0, angle: 0, targetAngle: 0, moving: false, shieldAlpha: 0 },
       resources: { fuel: 10000, hull: 100, morale: 100, credits: 1000 },
       cargo: { minerals: 0, tech: 0 },
       upgrades: { weapons: 1, shields: 1, engines: 1, cargo: 1 },
       superweapon: { type: 1, name: 'Tachyon Beam', charges: 3, maxCharges: 5 },
       factions: { Federation: 50, Syndicate: 30, Xenon: 10, Independent: 50 },
       crew: [],
-      stars: [], particles: [], asteroids: [], nebulas: [], bgStars: [],
+      stars: [], particles: [], shockwaves: [], asteroids: [], nebulas: [], bgStars: [],
       mapSize: 2000,
       modalOpen: false,
       screenShake: 0,
       whiteout: 0.0,
       currentEncounter: '',
-      bossHp: 0
+      bossHp: 0,
+      superweaponAnim: 0
     };
 
     const firstNames = ["Ryker", "Spok", "Chek", "Scot", "Uhura", "Sulu", "Mac", "Data", "Worf", "Geordi", "Ripley", "Dallas", "Hicks", "Hudson", "Vasquez", "Gordy"];
@@ -316,34 +329,63 @@
     }
 
     function spawnExplosion(x, y, count, color1, color2) {
-      state.screenShake = Math.max(state.screenShake || 0, count / 4);
+      state.screenShake = Math.max(state.screenShake || 0, count / 3.5);
+      state.shockwaves.push({ x: x, y: y, radius: 5, maxRadius: 35 + count * 0.8, life: 1.0, color: color1 });
+      
       for (let i=0; i<count; i++) {
         let angle = Math.random() * Math.PI * 2;
-        let speed = Math.random() * (count > 40 ? 8 : 4);
-        state.particles.push({
-          x: x, y: y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          life: 1.0,
-          decay: 0.01 + Math.random() * 0.04,
-          color: Math.random() > 0.5 ? color1 : color2,
-          size: Math.random() * 3 + 1
-        });
+        let speed = Math.random() * (count > 40 ? 9 : 5);
+        let pType = Math.random();
+        
+        if (pType < 0.3) {
+          state.particles.push({
+            type: 0, x: x, y: y,
+            vx: Math.cos(angle) * speed * 1.5, vy: Math.sin(angle) * speed * 1.5,
+            life: 1.0, decay: 0.02 + Math.random() * 0.03,
+            color: '#ffffff', size: 1.5
+          });
+        } else if (pType < 0.6) {
+          state.particles.push({
+            type: 1, x: x, y: y,
+            vx: Math.cos(angle) * speed * 0.5, vy: Math.sin(angle) * speed * 0.5 - 0.4,
+            life: 1.0, decay: 0.015 + Math.random() * 0.02,
+            color: Math.random() > 0.5 ? color1 : color2, size: 4 + Math.random() * 6
+          });
+        } else if (pType < 0.85) {
+          state.particles.push({
+            type: 2, x: x, y: y,
+            vx: Math.cos(angle) * speed * 0.9, vy: Math.sin(angle) * speed * 0.9,
+            rot: Math.random() * Math.PI * 2, vRot: (Math.random() - 0.5) * 0.4,
+            life: 1.0, decay: 0.02 + Math.random() * 0.025,
+            color: '#88aacc', size: 3 + Math.random() * 3
+          });
+        } else {
+          state.particles.push({
+            type: 3, x: x, y: y,
+            vx: Math.cos(angle) * speed * 0.7, vy: Math.sin(angle) * speed * 0.7,
+            rot: 0, vRot: (Math.random() - 0.5) * 0.3,
+            life: 1.0, decay: 0.02 + Math.random() * 0.02,
+            color: '#ffd700', size: 4
+          });
+        }
       }
     }
 
     function spawnSuperweaponBeam(x, y) {
       state.screenShake = 35;
       state.whiteout = 1.0;
-      for (let i=0; i<60; i++) {
+      state.superweaponAnim = 30;
+      state.shockwaves.push({ x: x, y: y, radius: 10, maxRadius: 120, life: 1.0, color: '#00ffff' });
+      for (let i=0; i<80; i++) {
         state.particles.push({
-          x: x + (Math.random() * 20 - 10),
+          type: 0,
+          x: x + (Math.random() * 30 - 15),
           y: y,
-          vx: (Math.random() - 0.5) * 6,
-          vy: -10 - Math.random() * 6,
+          vx: (Math.random() - 0.5) * 8,
+          vy: -12 - Math.random() * 8,
           life: 1.0,
-          decay: 0.03 + Math.random() * 0.03,
-          color: '#00ffff',
+          decay: 0.02 + Math.random() * 0.03,
+          color: Math.random() > 0.4 ? '#00ffff' : '#ffffff',
           size: 3 + Math.random() * 3
         });
       }
@@ -351,10 +393,10 @@
 
     function generateStars() {
       const starTypes = [
-        { type: 'Red Dwarf', color: '#ffaaaa', minP: 1, maxP: 3, size: 2 },
-        { type: 'Yellow Dwarf', color: '#ffffaa', minP: 2, maxP: 6, size: 3 },
-        { type: 'Blue Giant', color: '#aaddff', minP: 0, maxP: 2, size: 4 },
-        { type: 'White Dwarf', color: '#ffffff', minP: 0, maxP: 1, size: 1 }
+        { type: 'Red Dwarf', color: '#ff6666', corona: 'rgba(255, 60, 60, 0.4)', minP: 1, maxP: 3, size: 3.5 },
+        { type: 'Yellow Dwarf', color: '#ffee66', corona: 'rgba(255, 200, 50, 0.45)', minP: 2, maxP: 6, size: 4.5 },
+        { type: 'Blue Giant', color: '#66d4ff', corona: 'rgba(0, 180, 255, 0.5)', minP: 0, maxP: 2, size: 6.0 },
+        { type: 'White Dwarf', color: '#ffffff', corona: 'rgba(200, 240, 255, 0.5)', minP: 0, maxP: 1, size: 2.5 }
       ];
       const planetTypes = ['Terrestrial', 'Gas Giant', 'Ice World', 'Lava', 'Barren'];
       const encounterPool = ['Pirates', 'Anomaly', 'Trader', 'Station', 'Story', 'None', 'Fleet', 'Diplomacy', 'FactionWar', 'Boarding', 'Superweapon'];
@@ -372,40 +414,509 @@
           y: Math.floor(Math.random() * state.mapSize) - state.mapSize/2,
           size: sType.size,
           color: sType.color,
+          corona: sType.corona,
           name: sType.type,
           planets: planets,
           faction: ['Independent', 'Federation', 'Syndicate', 'Xenon'][Math.floor(Math.random() * 4)],
           encounter: encounterPool[Math.floor(Math.random() * encounterPool.length)],
-          visited: false
+          visited: false,
+          pulsePhase: Math.random() * Math.PI * 2
         });
       }
     }
 
     function generateEnvironment() {
-      for(let i=0; i<500; i++) {
+      for(let i=0; i<600; i++) {
         state.bgStars.push({
-          x: Math.random() * canvas.width * 2 - canvas.width,
-          y: Math.random() * canvas.height * 2 - canvas.height,
-          size: Math.random() * 1.5,
-          color: Math.random() > 0.8 ? '#aaffff' : '#ffffff',
-          alpha: Math.random() * 0.5 + 0.1
+          x: Math.random() * canvas.width * 2.5 - canvas.width * 0.75,
+          y: Math.random() * canvas.height * 2.5 - canvas.height * 0.75,
+          size: Math.random() * 1.8 + 0.6,
+          color: Math.random() > 0.8 ? '#88ffff' : (Math.random() > 0.6 ? '#ffe4aa' : '#ffffff'),
+          alpha: Math.random() * 0.6 + 0.2,
+          twinkleSpeed: 0.002 + Math.random() * 0.004
         });
       }
       for(let i=0; i<150; i++) {
+        let pts = [];
+        let numPts = 5 + Math.floor(Math.random() * 3);
+        let baseR = 3 + Math.random() * 6;
+        for (let p=0; p<numPts; p++) {
+          let a = (p / numPts) * Math.PI * 2;
+          let r = baseR * (0.7 + Math.random() * 0.6);
+          pts.push({ x: Math.cos(a) * r, y: Math.sin(a) * r });
+        }
         state.asteroids.push({
           x: Math.floor(Math.random() * state.mapSize) - state.mapSize/2,
           y: Math.floor(Math.random() * state.mapSize) - state.mapSize/2,
-          size: 1 + Math.random() * 4,
-          rot: Math.random() * Math.PI * 2
+          size: baseR,
+          pts: pts,
+          rot: Math.random() * Math.PI * 2,
+          rotSpeed: (Math.random() - 0.5) * 0.02,
+          oreColor: Math.random() > 0.7 ? '#ffd700' : (Math.random() > 0.5 ? '#00ffff' : null)
         });
       }
-      for(let i=0; i<15; i++) {
+      for(let i=0; i<16; i++) {
         state.nebulas.push({
           x: Math.floor(Math.random() * state.mapSize) - state.mapSize/2,
           y: Math.floor(Math.random() * state.mapSize) - state.mapSize/2,
-          radius: 300 + Math.random() * 400,
-          color: ['rgba(255, 0, 100, 0.05)', 'rgba(0, 100, 255, 0.05)', 'rgba(100, 0, 255, 0.05)'][Math.floor(Math.random()*3)]
+          radius: 350 + Math.random() * 450,
+          color: [
+            'rgba(255, 30, 110, 0.07)',
+            'rgba(0, 140, 255, 0.07)',
+            'rgba(140, 0, 255, 0.07)',
+            'rgba(0, 255, 200, 0.06)'
+          ][Math.floor(Math.random()*4)]
         });
+      }
+    }
+
+    function drawPlayerStarship(c, x, y, angle, moving, upgrades, shieldAlpha) {
+      c.save();
+      c.translate(x, y);
+      c.rotate(angle);
+
+      const wLevel = upgrades.weapons;
+      const sLevel = upgrades.shields;
+      const eLevel = upgrades.engines;
+
+      if (shieldAlpha > 0.05) {
+        c.save();
+        c.strokeStyle = `rgba(0, 240, 255, ${shieldAlpha * 0.7})`;
+        c.fillStyle = `rgba(0, 200, 255, ${shieldAlpha * 0.15})`;
+        c.lineWidth = 1.5;
+        c.beginPath();
+        for (let i = 0; i < 6; i++) {
+          let sa = (i / 6) * Math.PI * 2 + Date.now() * 0.001;
+          let sr = 24 + Math.sin(Date.now() * 0.005 + i) * 2;
+          let px = Math.cos(sa) * sr;
+          let py = Math.sin(sa) * sr;
+          if (i === 0) c.moveTo(px, py);
+          else c.lineTo(px, py);
+        }
+        c.closePath();
+        c.fill();
+        c.stroke();
+        c.restore();
+      }
+
+      c.save();
+      c.shadowColor = 'rgba(0, 255, 255, 0.5)';
+      c.shadowBlur = moving ? 12 : 6;
+
+      if (moving) {
+        c.save();
+        const baseFl = 14 + (Math.sin(Date.now() * 0.03) * 4) + eLevel * 3;
+        const engines = [{ ox: -5, oy: 12 }, { ox: 5, oy: 12 }];
+        
+        engines.forEach(eng => {
+          let fGrad = c.createLinearGradient(eng.ox, eng.oy, eng.ox, eng.oy + baseFl);
+          fGrad.addColorStop(0, '#ffffff');
+          fGrad.addColorStop(0.2, '#00ffff');
+          fGrad.addColorStop(0.6, '#0066ff');
+          fGrad.addColorStop(1, 'rgba(0, 30, 200, 0)');
+          
+          c.fillStyle = fGrad;
+          c.beginPath();
+          c.moveTo(eng.ox - 3, eng.oy);
+          c.lineTo(eng.ox + 3, eng.oy);
+          c.lineTo(eng.ox, eng.oy + baseFl);
+          c.closePath();
+          c.fill();
+
+          c.fillStyle = '#ffffff';
+          c.beginPath();
+          c.moveTo(eng.ox - 1.5, eng.oy);
+          c.lineTo(eng.ox + 1.5, eng.oy);
+          c.lineTo(eng.ox, eng.oy + baseFl * 0.5);
+          c.closePath();
+          c.fill();
+        });
+        c.restore();
+      }
+
+      let wingGrad = c.createLinearGradient(-16, -10, 16, 16);
+      wingGrad.addColorStop(0, '#d8eef8');
+      wingGrad.addColorStop(0.5, '#00a3b8');
+      wingGrad.addColorStop(1, '#003a4d');
+
+      c.fillStyle = wingGrad;
+      c.strokeStyle = '#00ffff';
+      c.lineWidth = 1;
+
+      c.beginPath();
+      c.moveTo(0, -16);
+      c.lineTo(5, -6);
+      c.lineTo(9, 4);
+      c.lineTo(16 + (wLevel > 2 ? 3 : 0), 10);
+      c.lineTo(12, 14);
+      c.lineTo(7, 12);
+      c.lineTo(4, 15);
+      c.lineTo(0, 10);
+      c.lineTo(-4, 15);
+      c.lineTo(-7, 12);
+      c.lineTo(-12, 14);
+      c.lineTo(-16 - (wLevel > 2 ? 3 : 0), 10);
+      c.lineTo(-9, 4);
+      c.lineTo(-5, -6);
+      c.closePath();
+      c.fill();
+      c.stroke();
+
+      c.fillStyle = '#112233';
+      c.strokeStyle = '#ffaa00';
+      if (wLevel >= 2) {
+        c.fillRect(-17, 3, 2.5, 9);
+        c.fillRect(14.5, 3, 2.5, 9);
+        c.fillStyle = '#00ffff';
+        c.fillRect(-17, 1, 2.5, 2);
+        c.fillRect(14.5, 1, 2.5, 2);
+      }
+      if (wLevel >= 4) {
+        c.fillStyle = '#ff6600';
+        c.fillRect(-3, -17, 1.5, 5);
+        c.fillRect(1.5, -17, 1.5, 5);
+      }
+
+      c.strokeStyle = 'rgba(0, 255, 255, 0.6)';
+      c.lineWidth = 0.8;
+      c.beginPath();
+      c.moveTo(0, -14);
+      c.lineTo(0, 8);
+      c.moveTo(-7, 4);
+      c.lineTo(-3, 8);
+      c.moveTo(7, 4);
+      c.lineTo(3, 8);
+      c.stroke();
+
+      let canopyGrad = c.createLinearGradient(-3, -10, 3, -2);
+      canopyGrad.addColorStop(0, '#ffffff');
+      canopyGrad.addColorStop(0.3, '#00ffff');
+      canopyGrad.addColorStop(1, '#004466');
+
+      c.fillStyle = canopyGrad;
+      c.beginPath();
+      c.moveTo(0, -11);
+      c.lineTo(3.5, -3);
+      c.lineTo(0, -1);
+      c.lineTo(-3.5, -3);
+      c.closePath();
+      c.fill();
+
+      c.fillStyle = '#ffffff';
+      c.beginPath();
+      c.arc(-1, -7, 0.8, 0, Math.PI * 2);
+      c.fill();
+
+      let strobe = (Math.floor(Date.now() / 400) % 2 === 0);
+      c.fillStyle = strobe ? '#ff2222' : '#660000';
+      c.fillRect(-15, 9, 2, 2);
+      c.fillStyle = strobe ? '#00ff44' : '#006611';
+      c.fillRect(13, 9, 2, 2);
+      c.fillStyle = strobe ? '#ffaa00' : '#442200';
+      c.fillRect(-1, 9, 2, 2);
+
+      c.restore();
+      c.restore();
+    }
+
+    function drawCyberHUD(c, w, h) {
+      const len = 24;
+      const thick = 2;
+      c.save();
+      c.strokeStyle = '#00ffff';
+      c.lineWidth = thick;
+      c.shadowColor = '#00ffff';
+      c.shadowBlur = 6;
+
+      c.beginPath();
+      c.moveTo(8, 8 + len); c.lineTo(8, 8); c.lineTo(8 + len, 8);
+      c.stroke();
+      c.fillStyle = '#00ffff';
+      c.fillRect(6, 6, 4, 4);
+      c.fillRect(14, 14, 2, 2);
+
+      c.beginPath();
+      c.moveTo(w - 8 - len, 8); c.lineTo(w - 8, 8); c.lineTo(w - 8, 8 + len);
+      c.stroke();
+      c.fillRect(w - 10, 6, 4, 4);
+      c.fillRect(w - 16, 14, 2, 2);
+
+      c.beginPath();
+      c.moveTo(8, h - 8 - len); c.lineTo(8, h - 8); c.lineTo(8 + len, h - 8);
+      c.stroke();
+      c.fillRect(6, h - 10, 4, 4);
+      c.fillRect(14, h - 16, 2, 2);
+
+      c.beginPath();
+      c.moveTo(w - 8 - len, h - 8); c.lineTo(w - 8, h - 8); c.lineTo(w - 8, h - 8 - len);
+      c.stroke();
+      c.fillRect(w - 10, h - 10, 4, 4);
+      c.fillRect(w - 16, h - 16, 2, 2);
+
+      const peri = (w + h) * 2;
+      const glintPos = (Date.now() * 0.15) % peri;
+      let gx = 0, gy = 0;
+      if (glintPos < w) { gx = glintPos; gy = 0; }
+      else if (glintPos < w + h) { gx = w; gy = glintPos - w; }
+      else if (glintPos < w * 2 + h) { gx = w - (glintPos - (w + h)); gy = h; }
+      else { gx = 0; gy = h - (glintPos - (w * 2 + h)); }
+
+      let gRad = c.createRadialGradient(gx, gy, 0, gx, gy, 20);
+      gRad.addColorStop(0, '#ffffff');
+      gRad.addColorStop(0.3, '#00ffff');
+      gRad.addColorStop(1, 'rgba(0, 255, 255, 0)');
+      c.fillStyle = gRad;
+      c.beginPath();
+      c.arc(gx, gy, 20, 0, Math.PI * 2);
+      c.fill();
+
+      c.restore();
+    }
+
+    function renderModalPreview(type) {
+      pCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+      const pw = previewCanvas.width;
+      const ph = previewCanvas.height;
+      const cx = pw / 2;
+      const cy = ph / 2;
+      const time = Date.now();
+
+      pCtx.fillStyle = '#030510';
+      pCtx.fillRect(0, 0, pw, ph);
+
+      pCtx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+      for (let i=0; i<30; i++) {
+        let sx = (Math.sin(i * 99) * 1000 + pw) % pw;
+        let sy = (Math.cos(i * 77) * 1000 + ph) % ph;
+        pCtx.fillRect(sx, sy, 1.5, 1.5);
+      }
+
+      if (type === 'Pirates') {
+        pCtx.save();
+        pCtx.translate(cx, cy + Math.sin(time * 0.003) * 4);
+        
+        pCtx.fillStyle = '#ff3300';
+        pCtx.beginPath();
+        pCtx.moveTo(-6, -14); pCtx.lineTo(6, -14); pCtx.lineTo(0, -22 - (time%100)/10);
+        pCtx.fill();
+
+        pCtx.fillStyle = '#220808';
+        pCtx.strokeStyle = '#ff3333';
+        pCtx.lineWidth = 1.5;
+        pCtx.beginPath();
+        pCtx.moveTo(0, 24);
+        pCtx.lineTo(14, 8);
+        pCtx.lineTo(18, -8);
+        pCtx.lineTo(8, -12);
+        pCtx.lineTo(0, -8);
+        pCtx.lineTo(-8, -12);
+        pCtx.lineTo(-18, -8);
+        pCtx.lineTo(-14, 8);
+        pCtx.closePath();
+        pCtx.fill();
+        pCtx.stroke();
+
+        pCtx.fillStyle = '#ff0000';
+        pCtx.shadowColor = '#ff0000';
+        pCtx.shadowBlur = 8;
+        pCtx.fillRect(-5, 4, 10, 3);
+
+        pCtx.strokeStyle = '#ffaa00';
+        pCtx.lineWidth = 1;
+        pCtx.beginPath();
+        pCtx.arc(0, -2, 3, 0, Math.PI*2);
+        pCtx.moveTo(-4, -2); pCtx.lineTo(4, -2);
+        pCtx.stroke();
+
+        pCtx.restore();
+      } else if (type === 'Fleet') {
+        pCtx.save();
+        pCtx.translate(cx, cy + Math.sin(time * 0.002) * 3);
+
+        let charge = (time % 2000) / 2000;
+        pCtx.strokeStyle = `rgba(255, 60, 60, ${0.4 + charge * 0.6})`;
+        pCtx.lineWidth = 2;
+        pCtx.beginPath();
+        pCtx.arc(0, 18, 12 + charge * 14, 0, Math.PI * 2);
+        pCtx.stroke();
+
+        let dGrad = pCtx.createLinearGradient(-40, -20, 40, 30);
+        dGrad.addColorStop(0, '#2a2a38');
+        dGrad.addColorStop(0.5, '#161622');
+        dGrad.addColorStop(1, '#0c0c14');
+
+        pCtx.fillStyle = dGrad;
+        pCtx.strokeStyle = '#ff4444';
+        pCtx.lineWidth = 2;
+        pCtx.beginPath();
+        pCtx.moveTo(0, 32);
+        pCtx.lineTo(35, 15);
+        pCtx.lineTo(45, -15);
+        pCtx.lineTo(25, -28);
+        pCtx.lineTo(0, -20);
+        pCtx.lineTo(-25, -28);
+        pCtx.lineTo(-45, -15);
+        pCtx.lineTo(-35, 15);
+        pCtx.closePath();
+        pCtx.fill();
+        pCtx.stroke();
+
+        pCtx.fillStyle = '#00ffff';
+        pCtx.shadowColor = '#00ffff';
+        pCtx.shadowBlur = 6;
+        pCtx.fillRect(-8, 6, 3, 20);
+        pCtx.fillRect(5, 6, 3, 20);
+
+        pCtx.fillStyle = '#ff2222';
+        pCtx.fillRect(-10, -8, 20, 4);
+
+        pCtx.restore();
+      } else if (type === 'Station' || type === 'Superweapon') {
+        pCtx.save();
+        pCtx.translate(cx, cy);
+        let rot = time * 0.001;
+
+        pCtx.save();
+        pCtx.rotate(rot);
+        pCtx.strokeStyle = '#00d4d4';
+        pCtx.lineWidth = 3;
+        pCtx.beginPath();
+        pCtx.arc(0, 0, 34, 0, Math.PI * 2);
+        pCtx.stroke();
+
+        pCtx.fillStyle = '#ffffff';
+        for (let i=0; i<6; i++) {
+          let a = (i/6) * Math.PI * 2;
+          pCtx.fillRect(Math.cos(a)*34 - 3, Math.sin(a)*34 - 3, 6, 6);
+        }
+        pCtx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
+        pCtx.lineWidth = 1.5;
+        pCtx.beginPath();
+        pCtx.moveTo(-34, 0); pCtx.lineTo(34, 0);
+        pCtx.moveTo(0, -34); pCtx.lineTo(0, 34);
+        pCtx.stroke();
+        pCtx.restore();
+
+        pCtx.fillStyle = '#004488';
+        pCtx.strokeStyle = '#00ffff';
+        pCtx.lineWidth = 1;
+        pCtx.fillRect(-70, -6, 28, 12);
+        pCtx.strokeRect(-70, -6, 28, 12);
+        pCtx.fillRect(42, -6, 28, 12);
+        pCtx.strokeRect(42, -6, 28, 12);
+
+        pCtx.fillStyle = '#112233';
+        pCtx.strokeStyle = '#ffaa00';
+        pCtx.lineWidth = 2;
+        pCtx.beginPath();
+        pCtx.arc(0, 0, 16, 0, Math.PI*2);
+        pCtx.fill();
+        pCtx.stroke();
+
+        pCtx.fillStyle = (Math.floor(time / 300) % 2 === 0) ? '#00ff66' : '#004411';
+        pCtx.beginPath();
+        pCtx.arc(-8, 0, 2.5, 0, Math.PI*2);
+        pCtx.arc(8, 0, 2.5, 0, Math.PI*2);
+        pCtx.fill();
+
+        pCtx.restore();
+      } else if (type === 'Anomaly') {
+        pCtx.save();
+        pCtx.translate(cx, cy);
+        let rot = time * 0.002;
+
+        for (let r = 40; r > 5; r -= 6) {
+          pCtx.save();
+          pCtx.rotate(rot * (45 - r) * 0.1);
+          let aGrad = pCtx.createRadialGradient(0, 0, 2, 0, 0, r);
+          aGrad.addColorStop(0, '#ffffff');
+          aGrad.addColorStop(0.3, '#ff00aa');
+          aGrad.addColorStop(0.7, '#6600cc');
+          aGrad.addColorStop(1, 'rgba(0,0,0,0)');
+          pCtx.fillStyle = aGrad;
+          pCtx.beginPath();
+          pCtx.ellipse(0, 0, r, r * 0.5, 0, 0, Math.PI * 2);
+          pCtx.fill();
+          pCtx.restore();
+        }
+
+        pCtx.fillStyle = '#000000';
+        pCtx.beginPath();
+        pCtx.arc(0, 0, 8, 0, Math.PI * 2);
+        pCtx.fill();
+        pCtx.strokeStyle = '#00ffff';
+        pCtx.lineWidth = 2;
+        pCtx.stroke();
+
+        pCtx.restore();
+      } else if (type === 'Boarding') {
+        pCtx.save();
+        pCtx.translate(cx, cy);
+
+        let aGrad = pCtx.createLinearGradient(-15, -20, 15, 20);
+        aGrad.addColorStop(0, '#111a14');
+        aGrad.addColorStop(0.5, '#0a2e18');
+        aGrad.addColorStop(1, '#021006');
+
+        pCtx.fillStyle = aGrad;
+        pCtx.strokeStyle = '#00ff66';
+        pCtx.lineWidth = 1.5;
+
+        pCtx.beginPath();
+        pCtx.moveTo(0, -25);
+        pCtx.quadraticCurveTo(22, -15, 14, 10);
+        pCtx.lineTo(8, 22);
+        pCtx.lineTo(-8, 22);
+        pCtx.lineTo(-14, 10);
+        pCtx.quadraticCurveTo(-22, -15, 0, -25);
+        pCtx.closePath();
+        pCtx.fill();
+        pCtx.stroke();
+
+        pCtx.fillStyle = '#66ff00';
+        pCtx.shadowColor = '#66ff00';
+        pCtx.shadowBlur = 8;
+        pCtx.beginPath();
+        pCtx.ellipse(-6, -2, 3, 5, 0.3, 0, Math.PI*2);
+        pCtx.ellipse(6, -2, 3, 5, -0.3, 0, Math.PI*2);
+        pCtx.fill();
+
+        pCtx.strokeStyle = '#88ffaa';
+        pCtx.lineWidth = 2;
+        pCtx.beginPath();
+        pCtx.moveTo(-16, 5); pCtx.lineTo(-30, 15); pCtx.lineTo(-24, 25);
+        pCtx.moveTo(16, 5); pCtx.lineTo(30, 15); pCtx.lineTo(24, 25);
+        pCtx.stroke();
+
+        pCtx.restore();
+      } else {
+        pCtx.save();
+        pCtx.translate(cx, cy);
+        
+        let pGrad = pCtx.createRadialGradient(-10, -10, 4, 0, 0, 30);
+        pGrad.addColorStop(0, '#88e4ff');
+        pGrad.addColorStop(0.5, '#0055aa');
+        pGrad.addColorStop(1, '#001133');
+        
+        pCtx.fillStyle = pGrad;
+        pCtx.beginPath();
+        pCtx.arc(0, 0, 30, 0, Math.PI * 2);
+        pCtx.fill();
+        
+        pCtx.strokeStyle = 'rgba(0, 255, 255, 0.4)';
+        pCtx.lineWidth = 3;
+        pCtx.stroke();
+
+        pCtx.save();
+        pCtx.rotate(0.35);
+        pCtx.strokeStyle = 'rgba(255, 200, 120, 0.5)';
+        pCtx.lineWidth = 2;
+        pCtx.beginPath();
+        pCtx.ellipse(0, 0, 50, 12, 0, 0, Math.PI * 2);
+        pCtx.stroke();
+        pCtx.restore();
+
+        pCtx.restore();
       }
     }
 
@@ -423,14 +934,15 @@
         }
       }
 
-      ctx.fillStyle = '#05050a';
+      ctx.fillStyle = '#030308';
       ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
 
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
       
       let sunGrad = ctx.createRadialGradient(canvas.width*0.8, canvas.height*0.2, 0, canvas.width*0.8, canvas.height*0.2, 500);
-      sunGrad.addColorStop(0, 'rgba(255, 200, 150, 0.15)');
+      sunGrad.addColorStop(0, 'rgba(255, 180, 120, 0.12)');
+      sunGrad.addColorStop(0.5, 'rgba(60, 20, 100, 0.06)');
       sunGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = sunGrad;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -439,7 +951,8 @@
         const screenX = ((s.x - state.ship.x * 0.05) % (canvas.width * 2) + canvas.width * 2) % (canvas.width * 2) - canvas.width * 0.5;
         const screenY = ((s.y - state.ship.y * 0.05) % (canvas.height * 2) + canvas.height * 2) % (canvas.height * 2) - canvas.height * 0.5;
         ctx.fillStyle = s.color;
-        ctx.globalAlpha = s.alpha * (0.5 + 0.5 * Math.sin(Date.now() / 500 + s.x));
+        let tw = Math.sin(Date.now() * s.twinkleSpeed + s.x);
+        ctx.globalAlpha = Math.max(0.1, s.alpha * (0.6 + 0.4 * tw));
         ctx.beginPath();
         ctx.arc(screenX, screenY, s.size, 0, Math.PI*2);
         ctx.fill();
@@ -460,26 +973,43 @@
         }
       });
       
-      ctx.fillStyle = '#555555';
       state.asteroids.forEach(ast => {
         const screenX = centerX + (ast.x - state.ship.x * 0.5);
         const screenY = centerY + (ast.y - state.ship.y * 0.5);
-        if (screenX >= -ast.size && screenX <= canvas.width + ast.size && screenY >= -ast.size && screenY <= canvas.height + ast.size) {
+        ast.rot += ast.rotSpeed;
+
+        if (screenX >= -ast.size * 2 && screenX <= canvas.width + ast.size * 2 && screenY >= -ast.size * 2 && screenY <= canvas.height + ast.size * 2) {
           ctx.save();
           ctx.translate(screenX, screenY);
           ctx.rotate(ast.rot);
+
+          let aGrad = ctx.createLinearGradient(-ast.size, -ast.size, ast.size, ast.size);
+          aGrad.addColorStop(0, '#778899');
+          aGrad.addColorStop(0.6, '#3a4450');
+          aGrad.addColorStop(1, '#1a2228');
+
+          ctx.fillStyle = aGrad;
+          ctx.strokeStyle = '#222d36';
+          ctx.lineWidth = 1;
+
           ctx.beginPath();
-          ctx.moveTo(-ast.size, -ast.size);
-          ctx.lineTo(ast.size, -ast.size*0.5);
-          ctx.lineTo(ast.size*0.8, ast.size);
-          ctx.lineTo(-ast.size*0.5, ast.size*0.8);
+          ast.pts.forEach((pt, idx) => {
+            if (idx === 0) ctx.moveTo(pt.x, pt.y);
+            else ctx.lineTo(pt.x, pt.y);
+          });
           ctx.closePath();
           ctx.fill();
+          ctx.stroke();
+
+          if (ast.oreColor) {
+            ctx.fillStyle = ast.oreColor;
+            ctx.fillRect(-1, -1, 2, 2);
+          }
           ctx.restore();
         }
       });
 
-      ctx.strokeStyle = 'rgba(0, 34, 34, 0.5)';
+      ctx.strokeStyle = 'rgba(0, 44, 44, 0.4)';
       ctx.lineWidth = 1;
       const gridSize = 100;
       const offsetX = -(state.ship.x % gridSize);
@@ -496,124 +1026,148 @@
         const screenX = centerX + (star.x - state.ship.x);
         const screenY = centerY + (star.y - state.ship.y);
         
-        if (screenX >= 0 && screenX <= canvas.width && screenY >= 0 && screenY <= canvas.height) {
-          ctx.fillStyle = star.color;
+        if (screenX >= -50 && screenX <= canvas.width + 50 && screenY >= -50 && screenY <= canvas.height + 50) {
+          let cGrad = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, star.size * 3.5);
+          cGrad.addColorStop(0, star.color);
+          cGrad.addColorStop(0.4, star.corona);
+          cGrad.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = cGrad;
+          ctx.beginPath();
+          ctx.arc(screenX, screenY, star.size * 3.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#ffffff';
           ctx.beginPath();
           ctx.arc(screenX, screenY, star.size, 0, Math.PI * 2);
           ctx.fill();
+
+          if (star.planets.length > 0) {
+            star.planets.forEach((pType, pIdx) => {
+              const orbR = 14 + pIdx * 9;
+              const orbA = (Date.now() * 0.001 * (1.5 / (pIdx + 1))) + (pIdx * 1.5);
+              const px = screenX + Math.cos(orbA) * orbR;
+              const py = screenY + Math.sin(orbA) * orbR;
+
+              ctx.strokeStyle = 'rgba(0, 200, 255, 0.12)';
+              ctx.lineWidth = 0.6;
+              ctx.beginPath();
+              ctx.arc(screenX, screenY, orbR, 0, Math.PI * 2);
+              ctx.stroke();
+
+              let pCol = '#4488ff';
+              if (pType === 'Gas Giant') pCol = '#ffaa44';
+              else if (pType === 'Ice World') pCol = '#aaddff';
+              else if (pType === 'Lava') pCol = '#ff4400';
+              else if (pType === 'Barren') pCol = '#888888';
+
+              ctx.fillStyle = pCol;
+              ctx.beginPath();
+              ctx.arc(px, py, pType === 'Gas Giant' ? 2.5 : 1.8, 0, Math.PI * 2);
+              ctx.fill();
+            });
+          }
         }
       });
 
-      // Ship
+      const pulseTime = Date.now() / 250;
+      ctx.strokeStyle = `rgba(0, 255, 255, ${(Math.sin(pulseTime) + 1) / 4})`;
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(centerX, centerY - 10);
-      ctx.lineTo(centerX + 8, centerY + 8);
-      ctx.lineTo(centerX, centerY + 4);
-      ctx.lineTo(centerX - 8, centerY + 8);
-      ctx.closePath();
-      
-      const shipGrad = ctx.createLinearGradient(centerX - 8, centerY - 10, centerX + 8, centerY + 8);
-      shipGrad.addColorStop(0, '#ffffff');
-      shipGrad.addColorStop(0.3, '#00ffff');
-      shipGrad.addColorStop(1, '#005555');
-      ctx.fillStyle = shipGrad;
-      ctx.fill();
-
-      // Lights
-      if (Math.floor(Date.now() / 500) % 2 === 0) {
-        ctx.fillStyle = '#ff0000';
-        ctx.fillRect(centerX - 5, centerY + 3, 2, 2);
-        ctx.fillStyle = '#00ff00';
-        ctx.fillRect(centerX + 3, centerY + 3, 2, 2);
-      } else {
-        ctx.fillStyle = '#880000';
-        ctx.fillRect(centerX - 5, centerY + 3, 2, 2);
-        ctx.fillStyle = '#008800';
-        ctx.fillRect(centerX + 3, centerY + 3, 2, 2);
-      }
-      
-      // Particles
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      state.particles.forEach(p => {
-        const screenX = centerX + (p.x - state.ship.x);
-        const screenY = centerY + (p.y - state.ship.y);
-        if (screenX >= 0 && screenX <= canvas.width && screenY >= 0 && screenY <= canvas.height) {
-          ctx.beginPath();
-          ctx.moveTo(screenX - p.vx * 2, screenY - p.vy * 2);
-          ctx.lineTo(screenX, screenY);
-          ctx.strokeStyle = p.color;
-          ctx.lineWidth = p.size || 2;
-          ctx.globalAlpha = p.life;
-          ctx.stroke();
-        }
-      });
-      ctx.restore();
-      ctx.globalAlpha = 1.0;
-      
-      const pulseTime = Date.now() / 200;
-      ctx.strokeStyle = `rgba(0, 255, 255, ${(Math.sin(pulseTime) + 1)/4})`;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, 20 + Math.sin(pulseTime)*5, 0, Math.PI*2);
+      ctx.arc(centerX, centerY, 22 + Math.sin(pulseTime)*6, 0, Math.PI*2);
       ctx.stroke();
 
-      if (state.ship.moving) {
+      let diffAngle = state.ship.targetAngle - state.ship.angle;
+      while (diffAngle < -Math.PI) diffAngle += Math.PI * 2;
+      while (diffAngle > Math.PI) diffAngle -= Math.PI * 2;
+      state.ship.angle += diffAngle * 0.2;
+
+      state.ship.shieldAlpha = state.ship.moving ? Math.min(1.0, state.ship.shieldAlpha + 0.1) : Math.max(0.0, state.ship.shieldAlpha - 0.03);
+      drawPlayerStarship(ctx, centerX, centerY, state.ship.angle, state.ship.moving, state.upgrades, state.ship.shieldAlpha);
+
+      if (state.superweaponAnim > 0) {
+        state.superweaponAnim--;
         ctx.save();
-        ctx.shadowColor = '#ff4400';
-        ctx.shadowBlur = 15;
-        ctx.globalCompositeOperation = 'lighter';
-        for (let i = 0; i < 3; i++) {
-          const flameLength = 16 + (Math.floor(Date.now() / 50) % 4) + i * 4;
-          const alpha = 1 - (i * 0.3);
-          ctx.fillStyle = `rgba(255, 136, 0, ${alpha})`;
-          ctx.beginPath();
-          ctx.moveTo(centerX, centerY + 6 + i * 2);
-          ctx.lineTo(centerX + 4 - i, centerY + 10 + i * 2);
-          ctx.lineTo(centerX, centerY + flameLength);
-          ctx.lineTo(centerX - 4 + i, centerY + 10 + i * 2);
-          ctx.closePath();
-          ctx.fill();
-        }
+        ctx.strokeStyle = '#00ffff';
+        ctx.lineWidth = 6 + (state.superweaponAnim % 4);
+        ctx.shadowColor = '#00ffff';
+        ctx.shadowBlur = 20;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(centerX, -50);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(centerX, -50);
+        ctx.stroke();
         ctx.restore();
       }
 
-      if (state.modalOpen && state.currentEncounter === 'Fleet') {
-          const bX = centerX;
-          const bY = centerY - 100;
-          ctx.save();
-          const hY = bY + Math.sin(Date.now() / 500) * 10;
-          const charge = (Date.now() % 2000) / 2000;
-          
-          ctx.fillStyle = '#222222';
-          ctx.strokeStyle = '#ff4444';
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.moveTo(bX, hY - 80); ctx.lineTo(bX + 120, hY + 40);
-          ctx.lineTo(bX + 60, hY + 80); ctx.lineTo(bX - 60, hY + 80);
-          ctx.lineTo(bX - 120, hY + 40); ctx.closePath();
-          ctx.fill(); ctx.stroke();
-          
-          if (state.bossHp > 100) {
-              ctx.fillStyle = '#555555';
-              ctx.beginPath();
-              ctx.moveTo(bX, hY - 60); ctx.lineTo(bX + 80, hY + 20);
-              ctx.lineTo(bX, hY + 60); ctx.lineTo(bX - 80, hY + 20);
-              ctx.fill();
+      ctx.save();
+      state.particles.forEach(p => {
+        const screenX = centerX + (p.x - state.ship.x);
+        const screenY = centerY + (p.y - state.ship.y);
+        if (screenX >= -20 && screenX <= canvas.width + 20 && screenY >= -20 && screenY <= canvas.height + 20) {
+          ctx.globalAlpha = p.life;
+          if (p.type === 0) {
+            ctx.beginPath();
+            ctx.moveTo(screenX - p.vx * 2.5, screenY - p.vy * 2.5);
+            ctx.lineTo(screenX, screenY);
+            ctx.strokeStyle = p.color;
+            ctx.lineWidth = p.size;
+            ctx.stroke();
+          } else if (p.type === 1) {
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, p.size * (1.5 - p.life * 0.5), 0, Math.PI * 2);
+            ctx.fill();
+          } else if (p.type === 2) {
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            ctx.rotate(p.rot);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+            ctx.restore();
+          } else if (p.type === 3) {
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.size/2, -1, p.size, 2);
+            ctx.fillRect(-1, -p.size/2, 2, p.size);
+            ctx.restore();
           }
-          
-          if (state.bossHp > 0) {
-              ctx.fillStyle = `rgba(255, 100, 100, ${charge})`;
-              ctx.beginPath(); ctx.arc(bX, hY + 80, 10 + charge * 30, 0, Math.PI*2); ctx.fill();
-          }
-          ctx.restore();
-      }
+        }
+      });
+      ctx.restore();
+
+      state.shockwaves.forEach(sw => {
+        const screenX = centerX + (sw.x - state.ship.x);
+        const screenY = centerY + (sw.y - state.ship.y);
+        ctx.save();
+        ctx.globalAlpha = sw.life;
+        ctx.strokeStyle = sw.color;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, sw.radius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, sw.radius * 0.9, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      });
 
       if (state.whiteout > 0) {
-          ctx.fillStyle = `rgba(255, 255, 255, ${state.whiteout})`;
-          ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
-          state.whiteout -= 0.02;
+        ctx.fillStyle = `rgba(255, 255, 255, ${state.whiteout})`;
+        ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
+        state.whiteout -= 0.03;
       }
+
+      drawCyberHUD(ctx, canvas.width, canvas.height);
 
       updateUI();
       ctx.restore();
@@ -638,7 +1192,7 @@
       upgCar.innerText = state.upgrades.cargo;
 
       const nearby = state.stars.filter(s => 
-        Math.hypot(s.x - state.ship.x, s.y - state.ship.y) < 50
+        Math.hypot(s.x - state.ship.x, s.y - state.ship.y) < 55
       );
       if (nearby.length > 0) {
         const sys = nearby[0];
@@ -672,6 +1226,7 @@
       
       title.innerText = type.toUpperCase() + " ENCOUNTER";
       actions.innerHTML = '';
+      renderModalPreview(type);
 
       const addBtn = (text, onClick, isSuper = false) => {
         const btn = document.createElement('button');
@@ -696,6 +1251,7 @@
             state.bossHp = enemyHp;
             desc.innerText = msg + `\nEnemy HP: ${enemyHp} | Your Hull: ${state.resources.hull}%`;
             actions.innerHTML = '';
+            renderModalPreview(type);
             if (enemyHp <= 0) {
                 const rewardC = type === 'Fleet' ? 350 : 120;
                 addBtn(`Claim Bounty (${rewardC}C, +10 Rep)`, () => {
@@ -1210,11 +1766,20 @@
         p.x += p.vx;
         p.y += p.vy;
         p.life -= p.decay;
+        if (p.type === 2) p.rot += p.vRot;
         if (p.life <= 0) state.particles.splice(i, 1);
+      }
+
+      for (let i = state.shockwaves.length - 1; i >= 0; i--) {
+        let sw = state.shockwaves[i];
+        sw.radius += (sw.maxRadius - sw.radius) * 0.15;
+        sw.life -= 0.04;
+        if (sw.life <= 0) state.shockwaves.splice(i, 1);
       }
 
       if (state.modalOpen) {
         setHum(false);
+        renderModalPreview(state.currentEncounter);
         draw();
         requestAnimationFrame(update);
         return;
@@ -1233,6 +1798,7 @@
         state.ship.x += dx;
         state.ship.y += dy;
         state.ship.moving = true;
+        state.ship.targetAngle = Math.atan2(dx, -dy);
         setHum(true);
         state.resources.fuel -= 1;
         if (state.resources.fuel < 0) state.resources.fuel = 0;
@@ -1242,15 +1808,19 @@
       }
 
       if (state.ship.moving) {
-        for (let i=0; i<5; i++) {
+        for (let i=0; i<3; i++) {
+          let sparkAngle = state.ship.angle + Math.PI + (Math.random() - 0.5) * 0.4;
+          let spd = 2 + Math.random() * 3;
           state.particles.push({
-            x: state.ship.x + (Math.random() * 6 - 3),
-            y: state.ship.y + 10 + Math.random() * 5,
-            vx: (Math.random() - 0.5) * 1,
-            vy: 2 + Math.random() * 2,
+            type: 0,
+            x: state.ship.x - Math.sin(state.ship.angle) * 12 + (Math.random() * 6 - 3),
+            y: state.ship.y + Math.cos(state.ship.angle) * 12 + (Math.random() * 6 - 3),
+            vx: Math.sin(sparkAngle) * spd,
+            vy: -Math.cos(sparkAngle) * spd,
             life: 1.0,
-            decay: 0.02 + Math.random() * 0.03,
-            color: Math.random() > 0.5 ? '#ff8800' : (Math.random() > 0.5 ? '#ffff00' : '#ff0000')
+            decay: 0.04 + Math.random() * 0.04,
+            color: Math.random() > 0.5 ? '#00ffff' : '#ffffff',
+            size: 1.5
           });
         }
       }
@@ -1301,6 +1871,7 @@
             });
         };
         renderCrew();
+        renderModalPreview('Station');
         modal.style.display = 'block';
         keys.w = keys.a = keys.s = keys.d = false;
     }
@@ -1313,7 +1884,7 @@
         const desc = document.getElementById('modal-desc');
         const actions = document.getElementById('modal-actions');
         
-        title.innerText = "CAPTAIN'S MANUAL (LOOP 10)";
+        title.innerText = "CAPTAIN'S MANUAL";
         desc.innerHTML = `<div style="text-align:left; font-size:11px; line-height:1.4;">
             <b>SUPERWEAPONS:</b> Synthesize Tachyon Beams, Antimatter Torpedoes, & Nova Obliterators at Stations or Forges. Fire in combat for devastating damage!<br>
             <b>FACTION WARS:</b> Intervene in battles between Federation and Syndicate fleets. Choose sides to gain rep and rewards.<br>
@@ -1332,6 +1903,7 @@
         };
         actions.appendChild(btn);
         
+        renderModalPreview('Station');
         modal.style.display = 'block';
         keys.w = keys.a = keys.s = keys.d = false;
     }
@@ -1339,7 +1911,7 @@
     document.getElementById('btn-crew').addEventListener('click', openCrewModal);
     document.getElementById('btn-help').addEventListener('click', openHelpModal);
     document.getElementById('btn-land').addEventListener('click', () => {
-      const nearby = state.stars.filter(s => Math.hypot(s.x - state.ship.x, s.y - state.ship.y) < 50);
+      const nearby = state.stars.filter(s => Math.hypot(s.x - state.ship.x, s.y - state.ship.y) < 55);
       if (nearby.length > 0 && nearby[0].planets.length > 0 && !state.modalOpen) {
           triggerEncounter('Land');
       }
@@ -1351,7 +1923,7 @@
       if (k === 'c') { openCrewModal(); }
       if (k === 'h') { openHelpModal(); }
       if (k === 'l') {
-        const nearby = state.stars.filter(s => Math.hypot(s.x - state.ship.x, s.y - state.ship.y) < 50);
+        const nearby = state.stars.filter(s => Math.hypot(s.x - state.ship.x, s.y - state.ship.y) < 55);
         if (nearby.length > 0 && nearby[0].planets.length > 0 && !state.modalOpen) {
             triggerEncounter('Land');
         }
