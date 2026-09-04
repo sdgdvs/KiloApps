@@ -5,13 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KMech</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
             margin: 0;
-            padding: 0;
+            padding: 10px;
             background-color: #050505;
             background-image: 
-                linear-gradient(rgba(0, 255, 0, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 0, 0.1) 1px, transparent 1px);
+                linear-gradient(rgba(0, 255, 0, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 0, 0.08) 1px, transparent 1px);
             background-size: 20px 20px;
             color: #0f0;
             font-family: 'Courier New', Courier, monospace;
@@ -20,131 +23,251 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
+            user-select: none;
         }
         #game-container {
-            width: 600px;
-            height: 400px;
+            width: 100%;
+            max-width: 620px;
+            min-height: 480px;
             border: 2px solid #0f0;
-            box-shadow: 0 0 10px #0f0, inset 0 0 10px #0f0;
-            padding: 20px;
-            box-sizing: border-box;
+            border-radius: 4px;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3), inset 0 0 15px rgba(0, 255, 0, 0.15);
+            padding: 16px;
             position: relative;
-            background-color: rgba(0, 0, 0, 0.8);
+            background-color: rgba(0, 10, 0, 0.92);
+            display: flex;
+            flex-direction: column;
         }
         .screen {
             display: none;
             height: 100%;
             flex-direction: column;
+            flex: 1;
         }
         .screen.active {
             display: flex;
         }
-        h1, h2 {
-            margin-top: 0;
-            text-align: center;
-            text-transform: uppercase;
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             border-bottom: 1px solid #0f0;
-            padding-bottom: 10px;
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+        }
+        h1, h2 {
+            margin: 0;
+            text-transform: uppercase;
             letter-spacing: 2px;
+            font-size: 18px;
+            color: #0f0;
+        }
+        .btn-help-top {
+            background: rgba(0, 30, 0, 0.6);
+            border: 1px solid #0f0;
+            color: #0f0;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 3px 8px;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: all 0.2s;
+        }
+        .btn-help-top:hover {
+            background: #0f0;
+            color: #000;
+            box-shadow: 0 0 10px #0f0;
+        }
+        .quick-hint {
+            text-align: center;
+            font-size: 11px;
+            color: #8fa;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
         }
         .stats {
             display: flex;
             justify-content: space-around;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
+            gap: 6px;
         }
         .stat-box {
             border: 1px solid #0a0;
-            padding: 10px;
+            padding: 6px 4px;
             text-align: center;
             flex: 1;
-            margin: 0 5px;
-            background-color: rgba(0, 50, 0, 0.3);
+            background-color: rgba(0, 40, 0, 0.4);
+            border-radius: 2px;
+        }
+        .stat-label {
+            font-size: 11px;
+            color: #8c8;
+        }
+        .stat-val {
+            font-size: 13px;
+            font-weight: bold;
+            color: #0f0;
+        }
+        .equip-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .equip-card {
+            text-align: center;
+            background: rgba(0, 25, 0, 0.5);
+            border: 1px solid #060;
+            padding: 6px 4px;
+            border-radius: 3px;
+        }
+        .equip-label {
+            font-size: 10px;
+            color: #7b7;
+            margin-bottom: 4px;
+            text-transform: uppercase;
         }
         .btn {
             background-color: #000;
             color: #0f0;
             border: 1px solid #0f0;
-            padding: 10px 20px;
+            padding: 7px 12px;
             cursor: pointer;
             text-transform: uppercase;
             font-family: 'Courier New', Courier, monospace;
-            font-size: 16px;
+            font-size: 13px;
             font-weight: bold;
-            margin: 5px;
-            box-shadow: 0 0 5px #0f0;
-            transition: all 0.2s;
+            margin: 3px;
+            border-radius: 2px;
+            box-shadow: 0 0 4px rgba(0, 255, 0, 0.4);
+            transition: all 0.15s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
         }
         .btn:hover {
             background-color: #0f0;
             color: #000;
-            box-shadow: 0 0 15px #0f0;
+            box-shadow: 0 0 12px #0f0;
+        }
+        .btn:active {
+            transform: scale(0.97);
+        }
+        .btn .key-badge {
+            background: rgba(0, 255, 0, 0.25);
+            color: #0f0;
+            padding: 1px 4px;
+            border-radius: 2px;
+            font-size: 10px;
+            border: 1px solid #0a0;
+        }
+        .btn:hover .key-badge {
+            background: #000;
+            color: #0f0;
+            border-color: #000;
+        }
+        .btn-equip {
+            width: 100%;
+            font-size: 11px;
+            padding: 4px 2px;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .actions {
             display: flex;
             justify-content: center;
+            flex-wrap: wrap;
             margin-top: auto;
+            gap: 4px;
+        }
+        #garage-info {
+            text-align: center;
+            font-size: 12px;
+            min-height: 28px;
+            line-height: 14px;
+            color: #cfc;
+            margin: 6px 0;
+            padding: 4px;
+            background: rgba(0, 30, 0, 0.3);
+            border: 1px dashed #050;
+            border-radius: 2px;
         }
         #log {
             flex: 1;
-            border: 1px solid #030;
-            padding: 10px;
+            min-height: 90px;
+            max-height: 120px;
+            border: 1px solid #050;
+            padding: 6px 8px;
             overflow-y: auto;
-            margin-bottom: 10px;
-            background-color: rgba(0, 20, 0, 0.8);
-            color: #0a0;
-            text-shadow: none;
+            margin-bottom: 8px;
+            background-color: rgba(0, 15, 0, 0.9);
+            color: #0f0;
+            font-size: 11px;
+            line-height: 15px;
+            border-radius: 2px;
         }
         .mech-display {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            gap: 8px;
         }
         .mech-side {
-            width: 45%;
-            border: 1px dashed #0a0;
-            padding: 10px;
-            background-color: rgba(0, 10, 0, 0.6);
+            width: 48%;
+            border: 1px solid #060;
+            padding: 6px;
+            background-color: rgba(0, 15, 0, 0.7);
+            border-radius: 3px;
+        }
+        .mech-side.enemy {
+            border-color: #600;
+            background-color: rgba(20, 0, 0, 0.7);
         }
         .mech-name {
             font-weight: bold;
+            font-size: 13px;
             text-align: center;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
             letter-spacing: 1px;
         }
         .bar-container {
             width: 100%;
-            background-color: #030;
-            height: 10px;
-            margin-top: 5px;
-            border: 1px solid #050;
+            background-color: #020;
+            height: 8px;
+            margin-top: 3px;
+            margin-bottom: 4px;
+            border: 1px solid #040;
+            border-radius: 1px;
+            overflow: hidden;
         }
         .bar {
             height: 100%;
             background-color: #0f0;
-            box-shadow: 0 0 5px #0f0;
+            box-shadow: 0 0 4px #0f0;
+            transition: width 0.25s ease;
         }
         .enemy-bar { 
-            background-color: #f00; 
-            box-shadow: 0 0 5px #f00;
+            background-color: #f22; 
+            box-shadow: 0 0 4px #f22;
         }
         .heat-bar {
             background-color: #f80;
-            box-shadow: 0 0 5px #f80;
+            box-shadow: 0 0 4px #f80;
         }
         .wireframe {
-            font-family: monospace;
-            white-space: pre;
-            text-align: center;
-            color: #0f0;
-            font-size: 12px;
-            line-height: 12px;
-            margin: 5px 0;
-            text-shadow: 0 0 2px #0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 85px;
+            margin: 2px 0;
         }
-        .enemy-wireframe {
-            color: #f00;
-            text-shadow: 0 0 2px #f00;
+        .enemy-wireframe svg {
+            filter: drop-shadow(0 0 3px rgba(255, 0, 0, 0.6));
         }
         @keyframes idle-bob {
             0%, 100% { transform: translateY(0); }
@@ -152,17 +275,17 @@
         }
         @keyframes anim-attack {
             0%, 100% { transform: translateX(0); }
-            50% { transform: translateX(15px); }
+            50% { transform: translateX(18px); }
         }
         @keyframes anim-attack-enemy {
             0%, 100% { transform: translateX(0); }
-            50% { transform: translateX(-15px); }
+            50% { transform: translateX(-18px); }
         }
         @keyframes anim-damage {
             0%, 100% { transform: translateX(0) translateY(0); filter: drop-shadow(0 0 0 #f00); }
-            25% { transform: translateX(-4px) translateY(2px); filter: drop-shadow(0 0 5px #f00); }
-            50% { transform: translateX(4px) translateY(-2px); filter: drop-shadow(0 0 8px #f00); }
-            75% { transform: translateX(-2px) translateY(2px); filter: drop-shadow(0 0 5px #f00); }
+            25% { transform: translateX(-5px) translateY(3px); filter: drop-shadow(0 0 8px #f00); }
+            50% { transform: translateX(5px) translateY(-3px); filter: drop-shadow(0 0 12px #f00); }
+            75% { transform: translateX(-3px) translateY(2px); filter: drop-shadow(0 0 8px #f00); }
         }
         .mech-sprite {
             animation: idle-bob 2s infinite ease-in-out;
@@ -176,74 +299,154 @@
         .mech-sprite.damaged {
             animation: anim-damage 0.4s;
         }
+
+        /* Toast Notifications */
+        #toast-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            pointer-events: none;
+            max-width: 320px;
+        }
+        .toast {
+            background: rgba(0, 20, 0, 0.95);
+            border: 1px solid #0f0;
+            color: #0f0;
+            padding: 8px 12px;
+            font-size: 11px;
+            line-height: 14px;
+            border-radius: 3px;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            animation: toastIn 0.25s ease-out, toastOut 0.25s ease-in 2.75s forwards;
+            pointer-events: auto;
+        }
+        .toast.warning {
+            border-color: #f90;
+            color: #ffb;
+            box-shadow: 0 0 10px rgba(255, 150, 0, 0.5);
+        }
+        .toast.danger {
+            border-color: #f33;
+            color: #fcc;
+            box-shadow: 0 0 10px rgba(255, 50, 50, 0.5);
+        }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+
+        /* Help screen tables */
+        .shortcut-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0;
+            font-size: 12px;
+        }
+        .shortcut-table th, .shortcut-table td {
+            border: 1px solid #050;
+            padding: 4px 6px;
+            text-align: left;
+        }
+        .shortcut-table th {
+            background: rgba(0, 50, 0, 0.5);
+            color: #0f0;
+        }
+        .shortcut-key {
+            color: #ff0;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <div id="game-container">
+        <!-- Toast Notification Container -->
+        <div id="toast-container"></div>
+
         <!-- Garage Screen -->
         <div id="screen-garage" class="screen active">
-            <h1>KMech - Garage</h1>
-            <div style="text-align: center; margin-bottom: 10px; font-weight: bold; font-size: 14px; color: #aaa;">
-                Press F1 or H for Help
+            <div class="header-bar">
+                <h1>⚡ KMech Garage</h1>
+                <button class="btn-help-top" onclick="showScreen('help')">[F1] Manual</button>
             </div>
-            <div style="text-align: center; margin-bottom: 10px; font-weight: bold; font-size: 14px;">
-                BATTLE: <span id="garage-battle-count">1</span> | CREDITS: <span id="garage-credits">100</span> | SALVAGE: <span id="garage-salvage">0</span><br>
-                PILOT LVL: <span id="garage-level">1</span> | XP: <span id="garage-xp">0</span>/<span id="garage-next-xp">100</span>
+            
+            <div class="quick-hint">
+                [D/Enter] Deploy | [R] Repair | [U] Salvage | [S] Sell | [1-4] Gear | [F1] Manual
             </div>
+
+            <div style="text-align: center; margin-bottom: 8px; font-weight: bold; font-size: 13px;">
+                BATTLE: <span id="garage-battle-count" style="color:#ff0;">1</span> | CREDITS: <span id="garage-credits" style="color:#0ff;">100</span> CR | SALVAGE: <span id="garage-salvage" style="color:#ff8;">0</span><br>
+                PILOT LVL: <span id="garage-level" style="color:#ff0;">1</span> | XP: <span id="garage-xp">0</span>/<span id="garage-next-xp">100</span>
+            </div>
+
             <div class="stats">
                 <div class="stat-box">
-                    <div>HP</div>
-                    <div id="garage-hp">100/100</div>
+                    <div class="stat-label">HULL HP</div>
+                    <div class="stat-val" id="garage-hp">100/100</div>
                 </div>
                 <div class="stat-box">
-                    <div>HEAT</div>
-                    <div id="garage-heat">0/100</div>
+                    <div class="stat-label">MAX HEAT</div>
+                    <div class="stat-val" id="garage-heat" style="color:#f90;">0/100</div>
                 </div>
                 <div class="stat-box">
-                    <div>ATK</div>
-                    <div id="garage-atk">15</div>
+                    <div class="stat-label">FIREPOWER (ATK)</div>
+                    <div class="stat-val" id="garage-atk">15</div>
                 </div>
                 <div class="stat-box">
-                    <div>DEF</div>
-                    <div id="garage-def">5</div>
+                    <div class="stat-label">PLATING (DEF)</div>
+                    <div class="stat-val" id="garage-def">5</div>
                 </div>
             </div>
-            <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
-                <div style="text-align: center;">
-                    <div style="font-size: 12px;">WEAPON</div>
-                    <button class="btn" id="btn-wpn" onclick="cycleWpn()" style="font-size:12px; padding:5px 10px;">Basic Laser</button>
+
+            <div class="equip-grid">
+                <div class="equip-card">
+                    <div class="equip-label">[1] WEAPON</div>
+                    <button class="btn btn-equip" id="btn-wpn" onclick="cycleWpn()">Basic Laser</button>
                 </div>
-                <div style="text-align: center;">
-                    <div style="font-size: 12px;">ARMOR</div>
-                    <button class="btn" id="btn-arm" onclick="cycleArm()" style="font-size:12px; padding:5px 10px;">Standard</button>
+                <div class="equip-card">
+                    <div class="equip-label">[2] ARMOR</div>
+                    <button class="btn btn-equip" id="btn-arm" onclick="cycleArm()">Standard</button>
                 </div>
-                <div style="text-align: center;">
-                    <div style="font-size: 12px;">HEAT SINK</div>
-                    <button class="btn" id="btn-sink" onclick="cycleSink()" style="font-size:12px; padding:5px 10px;">Basic</button>
+                <div class="equip-card">
+                    <div class="equip-label">[3] HEAT SINK</div>
+                    <button class="btn btn-equip" id="btn-sink" onclick="cycleSink()">Basic</button>
                 </div>
-                <div style="text-align: center;">
-                    <div style="font-size: 12px;">SPECIAL</div>
-                    <button class="btn" id="btn-spec" onclick="cycleSpec()" style="font-size:12px; padding:5px 10px;">None</button>
+                <div class="equip-card">
+                    <div class="equip-label">[4] SPECIAL</div>
+                    <button class="btn btn-equip" id="btn-spec" onclick="cycleSpec()">None</button>
                 </div>
             </div>
-            <p id="garage-info" style="text-align: center;">Welcome, Pilot. Your mech is ready for deployment.</p>
-            <div class="actions" style="flex-wrap: wrap;">
-                <button class="btn" onclick="repairMech()" id="btn-repair">Repair (1 CR=1 HP)</button>
-                <button class="btn" onclick="startBattle()">Deploy to Battle</button>
-                <button class="btn" onclick="useSalvage()">Use Salvage (+50 HP)</button>
-                <button class="btn" onclick="sellSalvage()">Sell Salvage (+50 CR)</button>
-                <button class="btn" onclick="showScreen('help')">Pilot's Manual</button>
+
+            <div id="garage-info">Welcome, Pilot. Your mech is fueled and combat ready.</div>
+
+            <div class="actions">
+                <button class="btn" onclick="repairMech()" id="btn-repair"><span class="key-badge">R</span> Repair</button>
+                <button class="btn" onclick="startBattle()" id="btn-deploy" style="background:#030; border-color:#0f0;"><span class="key-badge">D</span> Deploy to Battle</button>
+                <button class="btn" onclick="useSalvage()" id="btn-usesal"><span class="key-badge">U</span> Use Salvage (+50 HP)</button>
+                <button class="btn" onclick="sellSalvage()" id="btn-sellsal"><span class="key-badge">S</span> Sell Salvage (+50 CR)</button>
+                <button class="btn" onclick="showScreen('help')" id="btn-manual"><span class="key-badge">F1</span> Manual</button>
             </div>
         </div>
 
         <!-- Battle Screen -->
         <div id="screen-battle" class="screen">
-            <h2>Combat Zone</h2>
+            <div class="header-bar">
+                <h2>⚔️ Combat Zone</h2>
+                <button class="btn-help-top" onclick="showScreen('help')">[F1] Manual</button>
+            </div>
+
             <div class="mech-display">
                 <div class="mech-side">
-                    <div class="mech-name">Player Mech</div>
+                    <div class="mech-name" style="color:#0f0;">Player Mech (You)</div>
                     <div class="wireframe">
-                        <svg id="player-mech-svg" class="mech-sprite" width="100" height="100" viewBox="0 0 100 100">
+                        <svg id="player-mech-svg" class="mech-sprite" width="90" height="85" viewBox="0 0 100 100">
                             <g stroke="#0f0" stroke-width="2" fill="none">
                                 <rect x="40" y="10" width="20" height="15" />
                                 <line x1="45" y1="15" x2="55" y2="15" stroke-width="3" />
@@ -258,19 +461,19 @@
                             </g>
                         </svg>
                     </div>
-                    <div>HP: <span id="battle-player-hp">100</span></div>
+                    <div style="font-size:11px;">HP: <span id="battle-player-hp" style="font-weight:bold;">100</span></div>
                     <div class="bar-container"><div id="player-hp-bar" class="bar"></div></div>
-                    <div>HEAT: <span id="battle-player-heat">0</span></div>
+                    <div style="font-size:11px;">HEAT: <span id="battle-player-heat" style="font-weight:bold; color:#f90;">0</span></div>
                     <div class="bar-container"><div id="player-heat-bar" class="bar heat-bar"></div></div>
                 </div>
-                <div class="mech-side">
-                    <div class="mech-name">Enemy Mech</div>
+                <div class="mech-side enemy">
+                    <div class="mech-name" style="color:#f33;">Enemy Mech</div>
                     <div class="wireframe enemy-wireframe">
-                        <svg id="enemy-mech-svg" class="mech-sprite" width="100" height="100" viewBox="0 0 100 100">
-                            <g stroke="#f00" stroke-width="2" fill="none">
+                        <svg id="enemy-mech-svg" class="mech-sprite" width="90" height="85" viewBox="0 0 100 100">
+                            <g stroke="#f33" stroke-width="2" fill="none">
                                 <circle cx="50" cy="15" r="8" />
-                                <circle cx="47" cy="15" r="2" fill="#f00" />
-                                <circle cx="53" cy="15" r="2" fill="#f00" />
+                                <circle cx="47" cy="15" r="2" fill="#f33" />
+                                <circle cx="53" cy="15" r="2" fill="#f33" />
                                 <polygon points="25,25 75,25 65,55 35,55" fill="rgba(50,0,0,0.5)" />
                                 <line x1="25" y1="40" x2="75" y2="40" />
                                 <path d="M25,30 L5,45 L15,65" />
@@ -280,46 +483,64 @@
                             </g>
                         </svg>
                     </div>
-                    <div>HP: <span id="battle-enemy-hp">100</span></div>
+                    <div style="font-size:11px; color:#fcc;">HP: <span id="battle-enemy-hp" style="font-weight:bold;">100</span></div>
                     <div class="bar-container"><div id="enemy-hp-bar" class="bar enemy-bar"></div></div>
-                    <div>HEAT: <span id="battle-enemy-heat">0</span></div>
+                    <div style="font-size:11px; color:#fcc;">HEAT: <span id="battle-enemy-heat" style="font-weight:bold; color:#f90;">0</span></div>
                     <div class="bar-container"><div id="enemy-heat-bar" class="bar heat-bar"></div></div>
                 </div>
             </div>
+
             <div id="log"></div>
+
             <div class="actions" id="battle-actions">
-                <button class="btn" id="btn-target" onclick="toggleTarget()">TGT: Torso</button>
-                <button class="btn" onclick="actionAttack()">Attack</button>
-                <button class="btn" onclick="actionDefend()">Defend</button>
+                <button class="btn" id="btn-target" onclick="toggleTarget()"><span class="key-badge">T</span> TGT: Torso</button>
+                <button class="btn" onclick="actionAttack()"><span class="key-badge">A</span> Attack (Space)</button>
+                <button class="btn" onclick="actionDefend()"><span class="key-badge">D</span> Defend</button>
+                <button class="btn" onclick="showScreen('help')"><span class="key-badge">F1</span> Help</button>
             </div>
             <div class="actions" id="post-battle-actions" style="display: none;">
-                <button class="btn" onclick="returnToGarage()">Return to Garage</button>
+                <button class="btn" onclick="returnToGarage()" style="background:#030; border-color:#0f0;"><span class="key-badge">R / Space</span> Return to Garage</button>
             </div>
         </div>
 
         <!-- Help Screen -->
         <div id="screen-help" class="screen">
-            <h2>Pilot's Manual</h2>
-            <div id="help-content" style="flex: 1; overflow-y: auto; padding: 10px; font-size: 14px; background-color: rgba(0, 20, 0, 0.8); border: 1px solid #030; margin-bottom: 10px;">
-                <p><strong>HOW TO PLAY:</strong><br>
-                Survive consecutive battles to earn credits and salvage. Upgrade your mech in the garage between fights. If your mech is destroyed, you lose all progress.</p>
-                <p><strong>COMBAT:</strong><br>
-                - <em>Attack:</em> Generates Heat. Heat exceeding Max Heat damages your system (15 HP) per turn.<br>
-                - <em>Defend:</em> Doubles your DEF and prevents heat generation (cools down instead). Enemy attacks do less damage.<br>
-                - <em>Targeting:</em> Aim for specific limbs. Head has highest damage multiplier (3.0x) but lowest hit chance. Torso has highest hit chance but base damage (1.0x). Limbs affect hit rate and damage multipliers.</p>
-                <p><strong>STATS:</strong><br>
-                - <em>HP:</em> Structural integrity. Reaches 0 = Game Over.<br>
-                - <em>HEAT:</em> Weapon usage generates heat. Cools down each turn. Exceeding max heat causes damage.<br>
-                - <em>ATK / DEF:</em> Damage dealt / reduced.<br>
-                - <em>XP:</em> Earn XP to level up, increasing base accuracy and evasion by 5% per level.</p>
-                <p><strong>PARTS CODEX:</strong><br>
-                - <em>Weapons:</em> Vary in ATK and Heat generated.<br>
-                - <em>Armor:</em> Affects DEF and Max HP.<br>
-                - <em>Heat Sinks:</em> Affects cooling rate and Max Heat.<br>
-                - <em>Specials:</em> Jump Jets (+20% Evasion), Energy Shield (absorbs up to 5 damage per hit).</p>
+            <div class="header-bar">
+                <h2>📖 Pilot's Manual & Controls</h2>
+                <button class="btn-help-top" onclick="returnFromHelp()">[Esc] Back</button>
             </div>
+            
+            <div id="help-content" style="flex: 1; overflow-y: auto; padding: 10px; font-size: 12px; line-height: 16px; background-color: rgba(0, 20, 0, 0.85); border: 1px solid #040; margin-bottom: 8px;">
+                <p><strong>MISSION OVERVIEW:</strong><br>
+                Pilot your customized combat mech through tactical skirmishes. Destroy enemy war machines, harvest salvage, earn credits, and upgrade weapons and plating in your garage.</p>
+
+                <p><strong>KEYBOARD CONTROLS:</strong></p>
+                <table class="shortcut-table">
+                    <tr><th>Action</th><th>Key</th><th>Context</th></tr>
+                    <tr><td>Deploy to Battle</td><td><span class="shortcut-key">D / Enter</span></td><td>Garage</td></tr>
+                    <tr><td>Repair Mech</td><td><span class="shortcut-key">R</span></td><td>Garage</td></tr>
+                    <tr><td>Use / Sell Salvage</td><td><span class="shortcut-key">U / S</span></td><td>Garage</td></tr>
+                    <tr><td>Cycle Weapon / Armor / Sink / Special</td><td><span class="shortcut-key">1 / 2 / 3 / 4</span></td><td>Garage</td></tr>
+                    <tr><td>Attack</td><td><span class="shortcut-key">A / Space / 1</span></td><td>Combat</td></tr>
+                    <tr><td>Defend & Vent Heat</td><td><span class="shortcut-key">D / 2</span></td><td>Combat</td></tr>
+                    <tr><td>Cycle Target Limb</td><td><span class="shortcut-key">T</span></td><td>Combat</td></tr>
+                    <tr><td>Return to Garage</td><td><span class="shortcut-key">R / Space / Enter / Esc</span></td><td>Post-Battle</td></tr>
+                    <tr><td>Open / Close Pilot's Manual</td><td><span class="shortcut-key">F1 / H / Esc</span></td><td>Anywhere</td></tr>
+                </table>
+
+                <p><strong>TACTICAL COMBAT & HEAT:</strong><br>
+                - <em>Attack:</em> Deals weapon damage and raises your mech's heat. Exceeding Max Heat causes severe 15 HP core burnout damage!<br>
+                - <em>Defend:</em> Doubles DEF plating and cools your reactors without generating heat.<br>
+                - <em>Targeting:</em> Head deals 3.0x lethal damage with lower accuracy. Torso offers safe, reliable 1.0x hits. Limbs offer 1.5x damage.</p>
+
+                <p><strong>PARTS & PILOT UPGRADES:</strong><br>
+                - <em>XP & Leveling:</em> Each pilot level gives +5% accuracy and evasion boost.<br>
+                - <em>Jump Jets:</em> +20% evasion bonus.<br>
+                - <em>Energy Shield:</em> Absorbs up to 5 damage per incoming hit.</p>
+            </div>
+            
             <div class="actions">
-                <button class="btn" onclick="showScreen('garage')">Back to Garage</button>
+                <button class="btn" onclick="returnFromHelp()"><span class="key-badge">Esc / Enter</span> Back</button>
             </div>
         </div>
     </div>
@@ -327,73 +548,89 @@
     <script>
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            
-            if (type === 'laser') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.2);
-            } else if (type === 'enemyLaser') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.3);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.3);
-            } else if (type === 'impact') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(100, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 0.1);
-                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.1);
-            } else if (type === 'alarm') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
-                osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.1);
-                osc.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.2);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.3);
-            } else if (type === 'miss') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.1);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.1);
-            } else if (type === 'victory') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-                osc.frequency.setValueAtTime(500, audioCtx.currentTime + 0.1);
-                osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.2);
-                osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.3);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.6);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.6);
-            } else if (type === 'defeat') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-                osc.frequency.setValueAtTime(200, audioCtx.currentTime + 0.3);
-                osc.frequency.setValueAtTime(100, audioCtx.currentTime + 0.6);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.0);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 1.0);
-            }
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                if (type === 'laser') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.2);
+                } else if (type === 'enemyLaser') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                } else if (type === 'impact') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.1);
+                } else if (type === 'alarm') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.1);
+                    osc.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                } else if (type === 'miss') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.1);
+                } else if (type === 'victory') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(500, audioCtx.currentTime + 0.1);
+                    osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.2);
+                    osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.6);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.6);
+                } else if (type === 'defeat') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(200, audioCtx.currentTime + 0.3);
+                    osc.frequency.setValueAtTime(100, audioCtx.currentTime + 0.6);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.0);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 1.0);
+                }
+            } catch(e) {}
+        }
+
+        function showToast(msg, duration = 3000, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerText = msg;
+            container.appendChild(toast);
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, duration);
         }
 
         const weapons = [
@@ -426,6 +663,7 @@
         let battleCount = 1;
         let playerLevel = 1;
         let playerXp = 0;
+        let previousScreen = 'garage';
 
         const playerStats = { maxHp: 100, hp: 100, atk: 15, def: 5, maxHeat: 100, heat: 0 };
         let enemyStats = { maxHp: 80, hp: 80, atk: 12, def: 3, maxHeat: 100, heat: 0 };
@@ -444,12 +682,27 @@
 
         function toggleTarget() {
             currentTargetLimb = (currentTargetLimb + 1) % limbs.length;
-            document.getElementById('btn-target').innerText = "TGT: " + limbs[currentTargetLimb].name;
+            const tgtName = limbs[currentTargetLimb].name;
+            document.getElementById('btn-target').innerHTML = `<span class="key-badge">T</span> TGT: ${tgtName}`;
+            showToast(`Target set to ${tgtName} (${limbs[currentTargetLimb].mult}x Dmg)`, 1800);
+        }
+
+        function getCurrentScreen() {
+            const active = document.querySelector('.screen.active');
+            if (!active) return 'garage';
+            return active.id.replace('screen-', '');
         }
 
         function showScreen(id) {
+            const current = getCurrentScreen();
+            if (current !== 'help') previousScreen = current;
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById('screen-' + id).classList.add('active');
+            const target = document.getElementById('screen-' + id);
+            if (target) target.classList.add('active');
+        }
+
+        function returnFromHelp() {
+            showScreen(previousScreen || 'garage');
         }
 
         function triggerAnim(id, animClass, duration) {
@@ -485,6 +738,7 @@
             equipWpn = (equipWpn + 1) % weapons.length;
             playerStats.atk = weapons[equipWpn].atk;
             playerHeatGen = weapons[equipWpn].heatGen;
+            showToast(`Weapon: ${weapons[equipWpn].name} (ATK ${playerStats.atk}, Heat ${playerHeatGen})`, 2000);
             updateGarage();
         }
         function cycleArm() {
@@ -492,6 +746,7 @@
             playerStats.def = armors[equipArm].def;
             playerStats.maxHp = armors[equipArm].maxHp;
             playerStats.hp = playerStats.maxHp;
+            showToast(`Armor: ${armors[equipArm].name} (DEF ${playerStats.def}, HP ${playerStats.maxHp})`, 2000);
             updateGarage();
         }
         function cycleSink() {
@@ -499,28 +754,36 @@
             playerStats.maxHeat = heatSinks[equipSink].maxHeat;
             playerCooling = heatSinks[equipSink].cooling;
             if (playerStats.heat > playerStats.maxHeat) playerStats.heat = playerStats.maxHeat;
+            showToast(`Heat Sink: ${heatSinks[equipSink].name} (Cooling ${playerCooling}/turn, Max ${playerStats.maxHeat})`, 2000);
             updateGarage();
         }
 
         function cycleSpec() {
             equipSpec = (equipSpec + 1) % specials.length;
+            showToast(`Special: ${specials[equipSpec].name}`, 2000);
             updateGarage();
         }
 
         function repairMech() {
             let missingHp = playerStats.maxHp - playerStats.hp;
             if (missingHp <= 0) {
-                document.getElementById('garage-info').innerText = "Mech is already at maximum structural integrity.";
+                const msg = "Mech hull is already at maximum integrity.";
+                document.getElementById('garage-info').innerText = msg;
+                showToast(msg, 2000);
                 return;
             }
             if (credits < 1) {
-                document.getElementById('garage-info').innerText = "Insufficient credits for repair.";
+                const msg = "Insufficient credits for repair.";
+                document.getElementById('garage-info').innerText = msg;
+                showToast(msg, 2000, 'warning');
                 return;
             }
             let cost = Math.min(missingHp, credits);
             playerStats.hp += cost;
             credits -= cost;
-            document.getElementById('garage-info').innerText = `Repaired ${cost} HP for ${cost} Credits.`;
+            const msg = `Repaired ${cost} HP for ${cost} Credits.`;
+            document.getElementById('garage-info').innerText = msg;
+            showToast(`🔧 ${msg}`, 2500);
             updateGarage();
         }
 
@@ -528,16 +791,22 @@
             if (salvage > 0) {
                 let missingHp = playerStats.maxHp - playerStats.hp;
                 if (missingHp <= 0) {
-                    document.getElementById('garage-info').innerText = "Mech is already at maximum structural integrity.";
+                    const msg = "Mech hull is already at maximum integrity.";
+                    document.getElementById('garage-info').innerText = msg;
+                    showToast(msg, 2000);
                     return;
                 }
                 let heal = Math.min(missingHp, 50);
                 playerStats.hp += heal;
                 salvage--;
-                document.getElementById('garage-info').innerText = `Used 1 Salvage Part to repair ${heal} HP.`;
+                const msg = `Used 1 Salvage Part to repair ${heal} HP.`;
+                document.getElementById('garage-info').innerText = msg;
+                showToast(`⚙️ ${msg}`, 2500);
                 updateGarage();
             } else {
-                document.getElementById('garage-info').innerText = "No salvage parts available.";
+                const msg = "No salvage parts available.";
+                document.getElementById('garage-info').innerText = msg;
+                showToast(msg, 2000, 'warning');
             }
         }
 
@@ -545,10 +814,14 @@
             if (salvage > 0) {
                 salvage--;
                 credits += 50;
-                document.getElementById('garage-info').innerText = "Sold 1 Salvage Part for 50 Credits.";
+                const msg = "Sold 1 Salvage Part for 50 Credits.";
+                document.getElementById('garage-info').innerText = msg;
+                showToast(`💰 ${msg}`, 2500);
                 updateGarage();
             } else {
-                document.getElementById('garage-info').innerText = "No salvage parts available.";
+                const msg = "No salvage parts available.";
+                document.getElementById('garage-info').innerText = msg;
+                showToast(msg, 2000, 'warning');
             }
         }
 
@@ -585,8 +858,9 @@
             document.getElementById('log').innerHTML = '';
             document.getElementById('battle-actions').style.display = 'flex';
             document.getElementById('post-battle-actions').style.display = 'none';
-            logMsg("Enemy mech detected! Engaging...");
+            logMsg(`Battle #${battleCount} Initiated! Hostile mech detected.`);
             playSound('alarm');
+            showToast(`🚨 BATTLE #${battleCount} ENGAGED! Press [A/Space] to attack.`, 3000, 'warning');
             updateBattle();
             showScreen('battle');
         }
@@ -594,9 +868,9 @@
         function returnToGarage() {
             if (playerStats.hp <= 0) {
                 playerStats.hp = playerStats.maxHp;
-                document.getElementById('garage-info').innerText = "Mech rebuilt. Campaign restarted.";
+                document.getElementById('garage-info').innerText = "Mech reconstructed. New campaign initiated.";
             } else {
-                document.getElementById('garage-info').innerText = "Returned to garage. Repairs needed.";
+                document.getElementById('garage-info').innerText = "Mission accomplished. Returned to garage.";
             }
             updateGarage();
             showScreen('garage');
@@ -612,6 +886,7 @@
                 credits += reward;
                 salvage += parts;
                 logMsg(`VICTORY! Earned ${reward} CR and ${parts} Salvage Parts.`);
+                showToast(`🏆 VICTORY! +${reward} CR, +${parts} Salvage Parts!`, 3500);
                 let xpGain = 40 + (battleCount * 20);
                 playerXp += xpGain;
                 logMsg(`Gained ${xpGain} XP.`);
@@ -619,12 +894,14 @@
                     playerXp -= playerLevel * 100;
                     playerLevel++;
                     playSound('victory');
-                    logMsg(`LEVEL UP! Pilot is now Level ${playerLevel}. Accuracy and Evasion increased!`);
+                    logMsg(`LEVEL UP! Pilot promoted to Level ${playerLevel}. Accuracy/Evasion boosted!`);
+                    showToast(`⭐ LEVEL UP! Pilot is now Level ${playerLevel}!`, 4000);
                 }
                 battleCount++;
             } else {
                 playSound('defeat');
                 logMsg("CRITICAL DAMAGE. MECH DESTROYED. CAMPAIGN FAILED.");
+                showToast(`💥 MECH DESTROYED! Campaign reset.`, 4000, 'danger');
                 battleCount = 1;
                 credits = 100;
                 salvage = 0;
@@ -639,11 +916,13 @@
         }
 
         function actionAttack() {
+            if (document.getElementById('battle-actions').style.display === 'none') return;
             playerStats.heat += playerHeatGen;
             if (playerStats.heat > playerStats.maxHeat) {
                 playerStats.hp -= 15;
                 playSound('alarm');
-                logMsg("WARNING: OVERHEAT! Took 15 system dmg.");
+                logMsg("WARNING: CORE OVERHEAT! Took 15 system dmg.");
+                showToast(`⚠️ OVERHEAT DAMAGE (-15 HP)! Defend to cool down.`, 2500, 'danger');
                 if (playerStats.hp <= 0) {
                     playerStats.hp = 0;
                     updateBattle();
@@ -653,14 +932,13 @@
             }
 
             let targetLimb = limbs[currentTargetLimb];
-            
             let hitChance = targetLimb.chance + ((playerLevel - 1) * 0.05);
             if (hitChance > 1.0) hitChance = 1.0;
 
             if (Math.random() > hitChance) {
                 triggerAnim('player-mech-svg', 'attacking', 200);
                 playSound('miss');
-                logMsg(`You target ${targetLimb.name}... Missed!`);
+                logMsg(`Targeting ${targetLimb.name}... Shot Missed!`);
             } else {
                 triggerAnim('player-mech-svg', 'attacking', 200);
                 setTimeout(() => triggerAnim('enemy-mech-svg', 'damaged', 400), 100);
@@ -669,7 +947,7 @@
                 let dmg = Math.max(1, playerStats.atk - (enemyIsDefending ? enemyStats.def * 2 : enemyStats.def) + Math.floor(Math.random() * 5));
                 dmg = Math.floor(dmg * targetLimb.mult);
                 enemyStats.hp -= dmg;
-                logMsg(`You hit ${targetLimb.name}! Dealt ${dmg} damage.`);
+                logMsg(`Direct hit on ${targetLimb.name}! Dealt ${dmg} damage.`);
             }
             updateBattle();
 
@@ -688,8 +966,9 @@
         }
 
         function actionDefend() {
+            if (document.getElementById('battle-actions').style.display === 'none') return;
             isDefending = true;
-            logMsg("You brace for impact (Defending).");
+            logMsg("Bracing for impact (Shields raised, Heat venting).");
             enemyTurn();
             isDefending = false;
             if (document.getElementById('battle-actions').style.display !== 'none') {
@@ -701,7 +980,7 @@
         function enemyTurn() {
             if (enemyStats.heat + 30 > enemyStats.maxHeat) {
                 enemyIsDefending = true;
-                logMsg("Enemy vents heat! (Defending)");
+                logMsg("Enemy vents reactor heat! (Defending)");
                 return;
             }
 
@@ -725,9 +1004,9 @@
                 triggerAnim('enemy-mech-svg', 'enemy-attacking', 200);
                 playSound('miss');
                 if (specials[equipSpec].evadeBonus > 0 || playerLevel > 1) {
-                    logMsg(`Enemy targets ${targetLimb.name}... Evaded!`);
+                    logMsg(`Enemy targeted ${targetLimb.name}... Evaded cleanly!`);
                 } else {
-                    logMsg(`Enemy targets ${targetLimb.name}... Missed!`);
+                    logMsg(`Enemy targeted ${targetLimb.name}... Enemy missed!`);
                 }
             } else {
                 triggerAnim('enemy-mech-svg', 'enemy-attacking', 200);
@@ -740,12 +1019,12 @@
                 if (specials[equipSpec].shieldDmgReduction > 0) {
                     let absorbed = Math.min(dmg, specials[equipSpec].shieldDmgReduction);
                     dmg -= absorbed;
-                    if (absorbed > 0) logMsg(`Shield absorbed ${absorbed} damage!`);
+                    if (absorbed > 0) logMsg(`Energy Shield absorbed ${absorbed} damage!`);
                 }
 
                 playerStats.hp -= dmg;
                 playerLimbDamage[targetIdx] += dmg;
-                logMsg(`Enemy hits ${targetLimb.name}! Took ${dmg} damage.`);
+                logMsg(`Enemy strikes ${targetLimb.name}! Took ${dmg} damage.`);
             }
             updateBattle();
 
@@ -758,10 +1037,89 @@
 
         updateGarage();
 
+        // Welcome prompt on startup
+        setTimeout(() => {
+            showToast("🤖 PILOT ONLINE: Systems nominal. Press [F1] for Pilot's Manual, [D] to deploy.", 4500);
+        }, 300);
+
+        // Comprehensive keyboard navigation
         window.addEventListener('keydown', (e) => {
-            if (e.key === 'F1' || e.key.toLowerCase() === 'h') {
+            const screen = getCurrentScreen();
+            const key = e.key.toLowerCase();
+
+            if (e.key === 'F1' || key === 'h' || key === '?') {
                 e.preventDefault();
-                showScreen('help');
+                if (screen === 'help') {
+                    returnFromHelp();
+                } else {
+                    showScreen('help');
+                }
+                return;
+            }
+
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                if (screen === 'help') {
+                    returnFromHelp();
+                } else if (screen === 'battle' && document.getElementById('post-battle-actions').style.display !== 'none') {
+                    returnToGarage();
+                }
+                return;
+            }
+
+            if (screen === 'help') {
+                if (e.key === 'Enter' || e.key === ' ' || key === 'b') {
+                    e.preventDefault();
+                    returnFromHelp();
+                }
+                return;
+            }
+
+            if (screen === 'garage') {
+                if (key === 'd' || e.key === 'Enter') {
+                    e.preventDefault();
+                    startBattle();
+                } else if (key === 'r') {
+                    e.preventDefault();
+                    repairMech();
+                } else if (key === 'u') {
+                    e.preventDefault();
+                    useSalvage();
+                } else if (key === 's') {
+                    e.preventDefault();
+                    sellSalvage();
+                } else if (key === '1') {
+                    e.preventDefault();
+                    cycleWpn();
+                } else if (key === '2') {
+                    e.preventDefault();
+                    cycleArm();
+                } else if (key === '3') {
+                    e.preventDefault();
+                    cycleSink();
+                } else if (key === '4') {
+                    e.preventDefault();
+                    cycleSpec();
+                }
+            } else if (screen === 'battle') {
+                const isPostBattle = document.getElementById('post-battle-actions').style.display !== 'none';
+                if (isPostBattle) {
+                    if (key === 'r' || e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        returnToGarage();
+                    }
+                } else {
+                    if (key === 'a' || e.key === ' ' || key === '1') {
+                        e.preventDefault();
+                        actionAttack();
+                    } else if (key === 'd' || key === '2') {
+                        e.preventDefault();
+                        actionDefend();
+                    } else if (key === 't') {
+                        e.preventDefault();
+                        toggleTarget();
+                    }
+                }
             }
         });
     </script>

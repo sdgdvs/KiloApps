@@ -518,80 +518,80 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkMode(memDC, TRANSPARENT);
             
             if (gameState == STATE_GARAGE) {
-                RECT titleRect = {0, 20, 600, 60};
-                DrawTextA(memDC, "KMECH - GARAGE", -1, &titleRect, DT_CENTER | DT_SINGLELINE);
+                RECT titleRect = {0, 15, 600, 45};
+                DrawTextA(memDC, "⚡ KMECH - GARAGE", -1, &titleRect, DT_CENTER | DT_SINGLELINE);
                 
                 char camBuf[128];
-                wsprintfA(camBuf, "BATTLE %d | CR: %d | SALVAGE: %d", battleCount, credits, salvage);
-                RECT camRect = {0, 60, 600, 80};
+                wsprintfA(camBuf, "BATTLE %d | CR: %d CR | SALVAGE: %d", battleCount, credits, salvage);
+                RECT camRect = {0, 45, 600, 65};
                 DrawTextA(memDC, camBuf, -1, &camRect, DT_CENTER | DT_SINGLELINE);
 
                 char lvlBuf[128];
                 wsprintfA(lvlBuf, "PILOT LVL: %d | XP: %d/%d", playerLevel, playerXp, playerLevel * 100);
-                RECT lvlRect = {0, 80, 600, 100};
+                RECT lvlRect = {0, 65, 600, 85};
                 DrawTextA(memDC, lvlBuf, -1, &lvlRect, DT_CENTER | DT_SINGLELINE);
 
                 char buf[128];
                 wsprintfA(buf, "HP: %d/%d  HEAT: %d/%d  ATK: %d  DEF: %d", playerStats.hp, playerStats.maxHp, playerStats.heat, playerStats.maxHeat, playerStats.atk, playerStats.def);
-                RECT statsRect = {0, 105, 600, 140};
+                RECT statsRect = {0, 90, 600, 115};
                 DrawTextA(memDC, buf, -1, &statsRect, DT_CENTER | DT_SINGLELINE);
                 
-                RECT instRect = {0, 130, 600, 150};
-                SetTextColor(memDC, RGB(170, 170, 170));
-                DrawTextA(memDC, "Press F1 or H for Help", -1, &instRect, DT_CENTER | DT_SINGLELINE);
+                RECT instRect = {0, 115, 600, 135};
+                SetTextColor(memDC, RGB(140, 255, 170));
+                DrawTextA(memDC, "[D/Enter] Deploy | [R] Repair | [U] Salvage | [S] Sell | [1-4] Gear | [F1] Manual", -1, &instRect, DT_CENTER | DT_SINGLELINE);
                 SetTextColor(memDC, RGB(0, 255, 0));
 
-                RECT msgRect = {0, 150, 600, 190};
+                RECT msgRect = {0, 140, 600, 175};
                 DrawTextA(memDC, garageInfo, -1, &msgRect, DT_CENTER | DT_SINGLELINE);
                 
-                RECT lw = {20, 180, 150, 200};
-                DrawTextA(memDC, "WEAPON", -1, &lw, DT_CENTER | DT_SINGLELINE);
+                RECT lw = {20, 175, 150, 195};
+                DrawTextA(memDC, "[1] WEAPON", -1, &lw, DT_CENTER | DT_SINGLELINE);
                 DrawButton(memDC, &rectWpn, weapons[equipWpn].name);
 
-                RECT la = {160, 180, 290, 200};
-                DrawTextA(memDC, "ARMOR", -1, &la, DT_CENTER | DT_SINGLELINE);
+                RECT la = {160, 175, 290, 195};
+                DrawTextA(memDC, "[2] ARMOR", -1, &la, DT_CENTER | DT_SINGLELINE);
                 DrawButton(memDC, &rectArm, armors[equipArm].name);
 
-                RECT ls = {300, 180, 430, 200};
-                DrawTextA(memDC, "HEAT SINK", -1, &ls, DT_CENTER | DT_SINGLELINE);
+                RECT ls = {300, 175, 430, 195};
+                DrawTextA(memDC, "[3] HEAT SINK", -1, &ls, DT_CENTER | DT_SINGLELINE);
                 DrawButton(memDC, &rectSink, sinks[equipSink].name);
 
-                RECT lsp = {440, 180, 570, 200};
-                DrawTextA(memDC, "SPECIAL", -1, &lsp, DT_CENTER | DT_SINGLELINE);
+                RECT lsp = {440, 175, 570, 195};
+                DrawTextA(memDC, "[4] SPECIAL", -1, &lsp, DT_CENTER | DT_SINGLELINE);
                 DrawButton(memDC, &rectSpec, specials[equipSpec].name);
 
-                DrawButton(memDC, &rectRepair, "Repair (1 CR=1 HP)");
-                DrawButton(memDC, &rectDeploy, "Deploy to Battle");
-                DrawButton(memDC, &rectUseSal, "Use Salvage (+50 HP)");
-                DrawButton(memDC, &rectSellSal, "Sell Salvage (+50 CR)");
-                DrawButton(memDC, &rectHelp, "Pilot's Manual");
+                DrawButton(memDC, &rectRepair, "Repair [R]");
+                DrawButton(memDC, &rectDeploy, "Deploy to Battle [D]");
+                DrawButton(memDC, &rectUseSal, "Use Salvage [U] (+50 HP)");
+                DrawButton(memDC, &rectSellSal, "Sell Salvage [S] (+50 CR)");
+                DrawButton(memDC, &rectHelp, "Pilot's Manual [F1]");
             } else if (gameState == STATE_BATTLE || gameState == STATE_POST_BATTLE) {
-                RECT titleRect = {0, 20, 600, 60};
-                DrawTextA(memDC, "COMBAT ZONE", -1, &titleRect, DT_CENTER | DT_SINGLELINE);
+                RECT titleRect = {0, 15, 600, 45};
+                DrawTextA(memDC, "⚔️ COMBAT ZONE", -1, &titleRect, DT_CENTER | DT_SINGLELINE);
                 
                 // Player Mech Stats
                 char bufP[64];
                 wsprintfA(bufP, "Player Mech HP: %d | HEAT: %d", playerStats.hp, playerStats.heat);
-                TextOutA(memDC, 30, 70, bufP, lstrlenA(bufP));
+                TextOutA(memDC, 30, 55, bufP, lstrlenA(bufP));
                 
                 HBRUSH hpBg = CreateSolidBrush(RGB(0, 50, 0));
                 HBRUSH hpP = CreateSolidBrush(RGB(0, 255, 0));
-                RECT pBarBg = {30, 95, 230, 105};
+                RECT pBarBg = {30, 80, 230, 90};
                 FillRect(memDC, &pBarBg, hpBg);
                 int pWidth = (playerStats.hp * 200) / playerStats.maxHp;
                 if (pWidth > 0) {
-                    RECT pBar = {30, 95, 30 + pWidth, 105};
+                    RECT pBar = {30, 80, 30 + pWidth, 90};
                     FillRect(memDC, &pBar, hpP);
                 }
 
                 HBRUSH heatBg = CreateSolidBrush(RGB(50, 0, 0));
                 HBRUSH heatP = CreateSolidBrush(RGB(255, 165, 0));
-                RECT pHeatBg = {30, 108, 230, 113};
+                RECT pHeatBg = {30, 93, 230, 98};
                 FillRect(memDC, &pHeatBg, heatBg);
                 int pHeatW = (playerStats.heat * 200) / playerStats.maxHeat;
                 if (pHeatW > 200) pHeatW = 200;
                 if (pHeatW > 0) {
-                    RECT pHeatBar = {30, 108, 30 + pHeatW, 113};
+                    RECT pHeatBar = {30, 93, 30 + pHeatW, 98};
                     FillRect(memDC, &pHeatBar, heatP);
                 }
                 
@@ -611,17 +611,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 HBRUSH pBrush = CreateSolidBrush(RGB(0, 50, 0));
                 HGDIOBJ pOldPen = SelectObject(memDC, pPen);
                 HGDIOBJ pOldBrush = SelectObject(memDC, pBrush);
-                Rectangle(memDC, 100, 110, 120, 125);
-                MoveToEx(memDC, 105, 115, NULL); LineTo(memDC, 115, 115);
-                POINT torsoP[4] = { {90, 125}, {130, 125}, {120, 160}, {100, 160} };
+                Rectangle(memDC, 100, 105, 120, 120);
+                MoveToEx(memDC, 105, 110, NULL); LineTo(memDC, 115, 110);
+                POINT torsoP[4] = { {90, 120}, {130, 120}, {120, 155}, {100, 155} };
                 Polygon(memDC, torsoP, 4);
-                Rectangle(memDC, 100, 130, 120, 150);
-                MoveToEx(memDC, 90, 130, NULL); LineTo(memDC, 70, 150); LineTo(memDC, 70, 170);
-                Ellipse(memDC, 66, 170, 74, 178);
-                MoveToEx(memDC, 130, 130, NULL); LineTo(memDC, 150, 150); LineTo(memDC, 150, 170);
-                Rectangle(memDC, 145, 170, 155, 185);
-                MoveToEx(memDC, 100, 160, NULL); LineTo(memDC, 90, 190); LineTo(memDC, 80, 190);
-                MoveToEx(memDC, 120, 160, NULL); LineTo(memDC, 130, 190); LineTo(memDC, 140, 190);
+                Rectangle(memDC, 100, 125, 120, 145);
+                MoveToEx(memDC, 90, 125, NULL); LineTo(memDC, 70, 145); LineTo(memDC, 70, 165);
+                Ellipse(memDC, 66, 165, 74, 173);
+                MoveToEx(memDC, 130, 125, NULL); LineTo(memDC, 150, 145); LineTo(memDC, 150, 165);
+                Rectangle(memDC, 145, 165, 155, 180);
+                MoveToEx(memDC, 100, 155, NULL); LineTo(memDC, 90, 185); LineTo(memDC, 80, 185);
+                MoveToEx(memDC, 120, 155, NULL); LineTo(memDC, 130, 185); LineTo(memDC, 140, 185);
                 SelectObject(memDC, pOldPen);
                 SelectObject(memDC, pOldBrush);
                 DeleteObject(pPen);
@@ -632,7 +632,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     HGDIOBJ old = SelectObject(memDC, dmgPen);
                     for (int i=0; i<5; i++) {
                         int px = 110 + (my_rand() % 60) - 30;
-                        int py = 140 + (my_rand() % 60) - 30;
+                        int py = 135 + (my_rand() % 60) - 30;
                         int pr = 3 + (my_rand() % 7);
                         Ellipse(memDC, px-pr, py-pr, px+pr, py+pr);
                     }
@@ -646,7 +646,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     HGDIOBJ oldB = SelectObject(memDC, fireBrush);
                     for (int i=0; i<10; i++) {
                         int px = 110 + (my_rand() % 50) - 25;
-                        int py = 150 + (my_rand() % 40) - 20;
+                        int py = 145 + (my_rand() % 40) - 20;
                         int pr = 4 + (my_rand() % 8);
                         Ellipse(memDC, px-pr, py-pr, px+pr, py+pr);
                     }
@@ -661,23 +661,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 char bufE[64];
                 wsprintfA(bufE, "Enemy Mech HP: %d | HEAT: %d", enemyStats.hp, enemyStats.heat);
                 SetTextColor(memDC, RGB(255, 0, 0));
-                TextOutA(memDC, 350, 70, bufE, lstrlenA(bufE));
+                TextOutA(memDC, 350, 55, bufE, lstrlenA(bufE));
                 
                 HBRUSH hpE = CreateSolidBrush(RGB(255, 0, 0));
-                RECT eBarBg = {350, 95, 550, 105};
+                RECT eBarBg = {350, 80, 550, 90};
                 FillRect(memDC, &eBarBg, hpBg);
                 int eWidth = (enemyStats.hp * 200) / enemyStats.maxHp;
                 if (eWidth > 0) {
-                    RECT eBar = {350, 95, 350 + eWidth, 105};
+                    RECT eBar = {350, 80, 350 + eWidth, 90};
                     FillRect(memDC, &eBar, hpE);
                 }
 
-                RECT eHeatBg = {350, 108, 550, 113};
+                RECT eHeatBg = {350, 93, 550, 98};
                 FillRect(memDC, &eHeatBg, heatBg);
                 int eHeatW = (enemyStats.heat * 200) / enemyStats.maxHeat;
                 if (eHeatW > 200) eHeatW = 200;
                 if (eHeatW > 0) {
-                    RECT eHeatBar = {350, 108, 350 + eHeatW, 113};
+                    RECT eHeatBar = {350, 93, 350 + eHeatW, 98};
                     FillRect(memDC, &eHeatBar, heatP);
                 }
                 
@@ -697,17 +697,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 HBRUSH eRedBrush = CreateSolidBrush(RGB(255, 0, 0));
                 HGDIOBJ eOldPen = SelectObject(memDC, ePen);
                 HGDIOBJ eOldBrush = SelectObject(memDC, eBrush);
-                Ellipse(memDC, 410, 110, 430, 130);
+                Ellipse(memDC, 410, 105, 430, 125);
                 SelectObject(memDC, eRedBrush);
-                Ellipse(memDC, 414, 116, 418, 120);
-                Ellipse(memDC, 422, 116, 426, 120);
+                Ellipse(memDC, 414, 111, 418, 115);
+                Ellipse(memDC, 422, 111, 426, 115);
                 SelectObject(memDC, eBrush);
-                POINT torsoE[4] = { {390, 130}, {450, 130}, {440, 160}, {400, 160} };
+                POINT torsoE[4] = { {390, 125}, {450, 125}, {440, 155}, {400, 155} };
                 Polygon(memDC, torsoE, 4);
-                MoveToEx(memDC, 390, 135, NULL); LineTo(memDC, 370, 150); LineTo(memDC, 380, 170);
-                MoveToEx(memDC, 450, 135, NULL); LineTo(memDC, 470, 150); LineTo(memDC, 460, 170);
-                MoveToEx(memDC, 400, 160, NULL); LineTo(memDC, 390, 190); LineTo(memDC, 380, 190);
-                MoveToEx(memDC, 440, 160, NULL); LineTo(memDC, 450, 190); LineTo(memDC, 460, 190);
+                MoveToEx(memDC, 390, 130, NULL); LineTo(memDC, 370, 145); LineTo(memDC, 380, 165);
+                MoveToEx(memDC, 450, 130, NULL); LineTo(memDC, 470, 145); LineTo(memDC, 460, 165);
+                MoveToEx(memDC, 400, 155, NULL); LineTo(memDC, 390, 185); LineTo(memDC, 380, 185);
+                MoveToEx(memDC, 440, 155, NULL); LineTo(memDC, 450, 185); LineTo(memDC, 460, 185);
                 SelectObject(memDC, eOldPen);
                 SelectObject(memDC, eOldBrush);
                 DeleteObject(ePen);
@@ -719,7 +719,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     HGDIOBJ old = SelectObject(memDC, dmgPen);
                     for (int i=0; i<5; i++) {
                         int ex = 420 + (my_rand() % 60) - 30;
-                        int ey = 140 + (my_rand() % 60) - 30;
+                        int ey = 135 + (my_rand() % 60) - 30;
                         int er = 3 + (my_rand() % 7);
                         Ellipse(memDC, ex-er, ey-er, ex+er, ey+er);
                     }
@@ -733,7 +733,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     HGDIOBJ oldB = SelectObject(memDC, fireBrush);
                     for (int i=0; i<10; i++) {
                         int ex = 420 + (my_rand() % 50) - 25;
-                        int ey = 150 + (my_rand() % 40) - 20;
+                        int ey = 145 + (my_rand() % 40) - 20;
                         int er = 4 + (my_rand() % 8);
                         Ellipse(memDC, ex-er, ey-er, ex+er, ey+er);
                     }
@@ -752,7 +752,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteObject(heatP);
                 
                 // Draw Logs
-                RECT logBg = {30, 210, 550, 390};
+                RECT logBg = {30, 205, 550, 385};
                 HBRUSH logBrush = CreateSolidBrush(RGB(0, 20, 0));
                 FillRect(memDC, &logBg, logBrush);
                 DeleteObject(logBrush);
@@ -760,40 +760,41 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 for (int i = 0; i < logCount; i++) {
                     char logOut[130];
                     wsprintfA(logOut, "> %s", battleLogs[i]);
-                    TextOutA(memDC, 40, 215 + (i * 16), logOut, lstrlenA(logOut));
+                    TextOutA(memDC, 40, 210 + (i * 16), logOut, lstrlenA(logOut));
                 }
                 
                 if (gameState == STATE_BATTLE) {
                     char targetText[64];
-                    wsprintfA(targetText, "TGT: %s", limbNames[currentTargetLimb]);
+                    wsprintfA(targetText, "TGT: %s [T]", limbNames[currentTargetLimb]);
                     DrawButton(memDC, &rectTarget, targetText);
-                    DrawButton(memDC, &rectAttack, "Attack");
-                    DrawButton(memDC, &rectDefend, "Defend");
+                    DrawButton(memDC, &rectAttack, "Attack [A/Space]");
+                    DrawButton(memDC, &rectDefend, "Defend [D]");
                 } else if (gameState == STATE_POST_BATTLE) {
-                    DrawButton(memDC, &rectReturn, "Return to Garage");
+                    DrawButton(memDC, &rectReturn, "Return to Garage [R/Space]");
                 }
             } else if (gameState == STATE_HELP) {
-                RECT titleRect = {0, 20, 600, 60};
-                DrawTextA(memDC, "PILOT'S MANUAL", -1, &titleRect, DT_CENTER | DT_SINGLELINE);
+                RECT titleRect = {0, 15, 600, 45};
+                DrawTextA(memDC, "📖 PILOT'S MANUAL & CONTROLS", -1, &titleRect, DT_CENTER | DT_SINGLELINE);
 
                 const char* helpText = 
-                    "HOW TO PLAY: Survive battles to earn CR/Salvage.\n"
-                    "Upgrade your mech. If destroyed, you lose progress.\n\n"
-                    "COMBAT:\n"
-                    "- Attack: Generates heat. Overheat damages system (-15 HP).\n"
-                    "- Defend: 2x DEF, 0 heat gen, cools down.\n"
-                    "- Target: Head (3.0x dmg, low hit%), Torso (1.0x, high hit%).\n\n"
-                    "STATS & PROG:\n"
-                    "- XP: Leveling up adds +5% base accuracy & evasion.\n"
-                    "- Salvage: Use for +50 HP or Sell for +50 CR.\n\n"
-                    "PARTS:\n"
-                    "- Jump Jets: +20% Evasion.\n"
-                    "- Energy Shield: Absorbs up to 5 dmg/hit.";
+                    "CONTROLS & SHORTCUTS:\n"
+                    "- Garage: [D/Enter] Deploy | [R] Repair | [U] Use Salvage | [S] Sell Salvage\n"
+                    "- Equipment: [1] Weapon | [2] Armor | [3] Heat Sink | [4] Special\n"
+                    "- Combat: [A/Space/1] Attack | [D/2] Defend | [T] Cycle Target Limb\n"
+                    "- Post-Battle: [R/Space/Enter/Esc] Return to Garage\n"
+                    "- Anywhere: [F1/H/Esc] Open / Close Pilot's Manual\n\n"
+                    "TACTICAL COMBAT & HEAT:\n"
+                    "- Attack: Deals weapon damage and builds heat. Exceeding Max Heat causes -15 HP core burnout!\n"
+                    "- Defend: Doubles DEF plating, 0 heat gen, cools reactors.\n"
+                    "- Targeting: Head (3.0x dmg, low hit%), Torso (1.0x, high hit%), Limbs (1.5x).\n\n"
+                    "PARTS & UPGRADES:\n"
+                    "- Pilot Leveling: Adds +5% base accuracy & evasion per level.\n"
+                    "- Jump Jets: +20% Evasion bonus | Energy Shield: Absorbs 5 dmg/hit.";
                 
-                RECT textRect = {40, 70, 560, 420};
+                RECT textRect = {35, 55, 565, 415};
                 DrawTextA(memDC, helpText, -1, &textRect, DT_LEFT | DT_WORDBREAK);
 
-                DrawButton(memDC, &rectReturnHelp, "Back to Garage");
+                DrawButton(memDC, &rectReturnHelp, "Back to Garage [Esc/Enter]");
             }
             
             // Blit and clean up
@@ -809,6 +810,93 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == VK_F1 || wParam == 'H') {
                 if (gameState != STATE_HELP) {
                     gameState = STATE_HELP;
+                } else {
+                    gameState = STATE_GARAGE;
+                }
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
+            }
+            if (gameState == STATE_HELP) {
+                if (wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE || wParam == VK_BACK) {
+                    gameState = STATE_GARAGE;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (gameState == STATE_GARAGE) {
+                if (wParam == 'D' || wParam == VK_RETURN) {
+                    StartBattle();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (wParam == 'R') {
+                    int missingHp = playerStats.maxHp - playerStats.hp;
+                    if (missingHp <= 0) {
+                        lstrcpyA(garageInfo, "Mech hull is already at max integrity.");
+                    } else if (credits < 1) {
+                        lstrcpyA(garageInfo, "Insufficient credits for repair.");
+                    } else {
+                        int cost = missingHp < credits ? missingHp : credits;
+                        playerStats.hp += cost;
+                        credits -= cost;
+                        wsprintfA(garageInfo, "Repaired %d HP for %d Credits.", cost, cost);
+                    }
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (wParam == 'U') {
+                    if (salvage > 0) {
+                        int missingHp = playerStats.maxHp - playerStats.hp;
+                        if (missingHp <= 0) {
+                            lstrcpyA(garageInfo, "Mech is already at max HP.");
+                        } else {
+                            int heal = missingHp < 50 ? missingHp : 50;
+                            playerStats.hp += heal;
+                            salvage--;
+                            wsprintfA(garageInfo, "Used 1 Salvage Part to repair %d HP.", heal);
+                        }
+                    } else {
+                        lstrcpyA(garageInfo, "No salvage parts available.");
+                    }
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (wParam == 'S') {
+                    if (salvage > 0) {
+                        salvage--;
+                        credits += 50;
+                        lstrcpyA(garageInfo, "Sold 1 Salvage Part for 50 CR.");
+                    } else {
+                        lstrcpyA(garageInfo, "No salvage parts available.");
+                    }
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (wParam == '1') {
+                    equipWpn = (equipWpn + 1) % 3;
+                    playerStats.atk = weapons[equipWpn].atk;
+                    playerHeatGen = weapons[equipWpn].heatGen;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (wParam == '2') {
+                    equipArm = (equipArm + 1) % 3;
+                    playerStats.def = armors[equipArm].def;
+                    playerStats.maxHp = armors[equipArm].maxHp;
+                    playerStats.hp = playerStats.maxHp;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (wParam == '3') {
+                    equipSink = (equipSink + 1) % 3;
+                    playerStats.maxHeat = sinks[equipSink].maxHeat;
+                    playerCooling = sinks[equipSink].cooling;
+                    if (playerStats.heat > playerStats.maxHeat) playerStats.heat = playerStats.maxHeat;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (wParam == '4') {
+                    equipSpec = (equipSpec + 1) % 3;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (gameState == STATE_BATTLE) {
+                if (wParam == 'A' || wParam == VK_SPACE || wParam == '1') {
+                    ActionAttack();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (wParam == 'D' || wParam == '2') {
+                    ActionDefend();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (wParam == 'T') {
+                    currentTargetLimb = (currentTargetLimb + 1) % 5;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (gameState == STATE_POST_BATTLE) {
+                if (wParam == VK_RETURN || wParam == VK_SPACE || wParam == 'R' || wParam == VK_ESCAPE) {
+                    ReturnToGarage();
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
             }
@@ -843,7 +931,7 @@ void MainEntry() {
     int width = rect.right - rect.left;
     int height = rect.bottom - rect.top;
     
-    HWND hwnd = CreateWindowA("KMechWindowClass", "KMech", style,
+    HWND hwnd = CreateWindowA("KMechWindowClass", "KMech - Combat Simulator [F1 for Help]", style,
         CW_USEDEFAULT, CW_USEDEFAULT, width, height,
         NULL, NULL, hInstance, NULL);
 
