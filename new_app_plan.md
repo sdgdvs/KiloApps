@@ -54,10 +54,10 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KStarDredge (Deep space asteroid mining, derelict salvage & orbital refining RPG)
-**Phase:** 1 (next to do)
+**Phase:** 2 (next to do)
 **Status:** Creation
 
-- [ ] Phase 1: Scaffold KStarDredge directory (`KStarDredge/`), create web HTML skeleton (`KiloOS/public/apps/kstardredge.html`), register in App.jsx.
+- [x] Phase 1: Scaffold KStarDredge directory (`KStarDredge/`), create web HTML skeleton (`KiloOS/public/apps/kstardredge.html`), register in App.jsx.
 - [ ] Phase 2: Core mining barge cockpit (thrusters, mining laser, tractor beam, ore hold, reactor core, asteroid radar).
 - [ ] Phase 3: Native C version (`KStarDredge/main.c`, `build.bat`) using Win32 API with functional parity.
 - [ ] Phase 4: Retro-futuristic CRT amber/green vector themes and cockpit scanline shaders.
