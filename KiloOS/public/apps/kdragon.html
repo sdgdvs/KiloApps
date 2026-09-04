@@ -213,6 +213,89 @@
         .close-btn { color: #5a3814; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
         .close-btn:hover { color: #8b5a2b; }
 
+        .btn-badge {
+            display: inline-block;
+            background: rgba(0, 0, 0, 0.45);
+            color: #ffd700;
+            border: 1px solid #d4af37;
+            font-size: 11px;
+            font-family: monospace;
+            padding: 1px 5px;
+            border-radius: 3px;
+            margin-right: 4px;
+            font-weight: bold;
+            vertical-align: middle;
+        }
+
+        #toast-container {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+            max-width: 320px;
+        }
+        .toast {
+            background: linear-gradient(135deg, rgba(42, 23, 4, 0.95), rgba(74, 40, 10, 0.95));
+            border: 2px solid #d4af37;
+            border-radius: 6px;
+            color: #f7e0b5;
+            padding: 10px 14px;
+            font-size: 13px;
+            font-family: 'Cinzel', serif;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6), inset 0 0 8px rgba(212,175,55,0.3);
+            pointer-events: auto;
+            animation: toastIn 0.3s ease-out;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .toast.hide {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        .toast-gold { border-color: #ffd700; color: #fff8db; }
+        .toast-info { border-color: #74c0fc; color: #e7f5ff; }
+        .toast-success { border-color: #69db7c; color: #ebfbee; }
+        .toast-warn { border-color: #ffa94d; color: #fff4e6; }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .guide-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0 15px 0;
+            font-size: 14px;
+            font-family: sans-serif;
+        }
+        .guide-table th, .guide-table td {
+            border: 1px solid #5a3814;
+            padding: 6px 10px;
+            text-align: left;
+        }
+        .guide-table th {
+            background: rgba(90, 56, 20, 0.3);
+            font-family: 'Cinzel', serif;
+            font-weight: 900;
+        }
+        .guide-table td {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .kbd-chip {
+            background: #2a1404;
+            color: #ffd700;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 12px;
+            border: 1px solid #8b5a2b;
+            display: inline-block;
+        }
+
         @keyframes bob {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-8px); }
@@ -286,14 +369,14 @@
   <rect x="5" y="12" width="6" height="1" fill="rgb(180,150,100)" />
 </svg></div>
             <div class="controls" id="controls">
-                <button id="btn-feed">Feed (🍎)</button>
-                <button id="btn-play">Play (🎾)</button>
-                <button id="btn-sleep">Sleep (💤)</button>
-                <button id="btn-train">Train (⚔️)</button>
-                <button id="btn-hoard">Hoard (🗺️)</button>
-                <button id="btn-battle">Battle (⚔️)</button>
-                <button id="btn-shop">Shop (🛒)</button>
-                <button id="btn-help">Help (❓)</button>
+                <button id="btn-feed"><span class="btn-badge">1</span> Feed (🍎)</button>
+                <button id="btn-play"><span class="btn-badge">2</span> Play (🎾)</button>
+                <button id="btn-sleep"><span class="btn-badge">3</span> Sleep (💤)</button>
+                <button id="btn-train"><span class="btn-badge">4</span> Train (⚔️)</button>
+                <button id="btn-hoard"><span class="btn-badge">5</span> Hoard (🗺️)</button>
+                <button id="btn-battle"><span class="btn-badge">6</span> Battle (⚔️)</button>
+                <button id="btn-shop"><span class="btn-badge">7</span> Shop (🛒)</button>
+                <button id="btn-help"><span class="btn-badge">F1</span> Help (❓)</button>
             </div>
             <div class="controls" id="shop-controls" style="display: none; flex-wrap: wrap; justify-content: center; gap: 14px;">
                 <div class="shop-card">
@@ -319,7 +402,7 @@
                         <!-- Bone Core -->
                         <circle cx="28" cy="24" r="3.5" fill="#f8f9fa" stroke="#ced4da" stroke-width="1"/>
                     </svg><br>
-                    <button id="btn-shop-food">Meat (20g)</button>
+                    <button id="btn-shop-food"><span class="btn-badge">1</span> Meat (20g)</button>
                 </div>
                 <div class="shop-card">
                     <svg width="48" height="48" viewBox="0 0 48 48">
@@ -338,7 +421,7 @@
                         <!-- Core Star -->
                         <circle cx="19" cy="19" r="4" fill="#ffffff" opacity="0.8"/>
                     </svg><br>
-                    <button id="btn-shop-toy">Toy (30g)</button>
+                    <button id="btn-shop-toy"><span class="btn-badge">2</span> Toy (30g)</button>
                 </div>
                 <div class="shop-card">
                     <svg width="48" height="48" viewBox="0 0 48 48">
@@ -365,7 +448,7 @@
                         <!-- Ruby Inset Gem -->
                         <polygon points="24,18 29,24 24,30 19,24" fill="url(#gemGrad)" stroke="#ffe3e3" stroke-width="1"/>
                     </svg><br>
-                    <button id="btn-shop-str">Bracer (50g)</button>
+                    <button id="btn-shop-str"><span class="btn-badge">3</span> Bracer (50g)</button>
                 </div>
                 <div class="shop-card">
                     <svg width="48" height="48" viewBox="0 0 48 48">
@@ -383,38 +466,38 @@
                         <path d="M10 16 Q2 20 6 26 Q12 24 14 20 Z" fill="#ffd43b" stroke="#aa7c11" stroke-width="1"/>
                         <path d="M10 20 Q4 24 8 30 Q14 27 15 23 Z" fill="#ffe066" stroke="#aa7c11" stroke-width="1"/>
                     </svg><br>
-                    <button id="btn-shop-spd">Boots (50g)</button>
+                    <button id="btn-shop-spd"><span class="btn-badge">4</span> Boots (50g)</button>
                 </div>
                 <div class="shop-card" style="display:flex; align-items:center; justify-content:center;">
-                    <button id="btn-shop-back" style="margin-top: 15px;">Back</button>
+                    <button id="btn-shop-back" style="margin-top: 15px;"><span class="btn-badge">Esc</span> Back</button>
                 </div>
             </div>
             <div class="controls" id="train-controls" style="display: none;">
-                <button id="btn-train-str">Strength</button>
-                <button id="btn-train-spd">Speed</button>
-                <button id="btn-train-loy">Loyalty</button>
-                <button id="btn-train-back">Back</button>
+                <button id="btn-train-str"><span class="btn-badge">1</span> Strength</button>
+                <button id="btn-train-spd"><span class="btn-badge">2</span> Speed</button>
+                <button id="btn-train-loy"><span class="btn-badge">3</span> Loyalty</button>
+                <button id="btn-train-back"><span class="btn-badge">Esc</span> Back</button>
             </div>
             <div class="controls" id="battle-controls" style="display: none;">
-                <button id="btn-battle-attack">Attack</button>
-                <button id="btn-battle-defend">Defend</button>
-                <button id="btn-battle-special">Special</button>
-                <button id="btn-battle-flee">Flee</button>
+                <button id="btn-battle-attack"><span class="btn-badge">1</span> Attack</button>
+                <button id="btn-battle-defend"><span class="btn-badge">2</span> Defend</button>
+                <button id="btn-battle-special"><span class="btn-badge">3</span> Special</button>
+                <button id="btn-battle-flee"><span class="btn-badge">4</span> Flee</button>
             </div>
             <div class="controls" id="minigame-str" style="display: none; flex-direction: column; align-items: center; gap: 10px;">
                 <div style="font-family: monospace; font-size: 20px; background: rgba(255,255,255,0.3); padding: 5px; border: 2px solid #5a3814; font-weight: bold; color: #2a1704;">Power: <span id="str-power">[                    ]</span></div>
-                <button id="btn-str-hit">Hit!</button>
+                <button id="btn-str-hit"><span class="btn-badge">Space</span> Hit!</button>
             </div>
             <div class="controls" id="minigame-spd" style="display: none; flex-direction: column; align-items: center; gap: 10px;">
                 <div id="spd-status" style="font-size: 24px; font-weight: bold;">Wait for it...</div>
-                <button id="btn-spd-react">React!</button>
+                <button id="btn-spd-react"><span class="btn-badge">Space</span> React!</button>
             </div>
             <div class="controls" id="minigame-loy" style="display: none; flex-direction: column; align-items: center; gap: 10px;">
                 <div style="font-size: 20px; font-weight: bold;">Find the treat!</div>
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn-loy-box" data-box="0">Box 1</button>
-                    <button class="btn-loy-box" data-box="1">Box 2</button>
-                    <button class="btn-loy-box" data-box="2">Box 3</button>
+                    <button class="btn-loy-box" data-box="0"><span class="btn-badge">1</span> Box 1</button>
+                    <button class="btn-loy-box" data-box="1"><span class="btn-badge">2</span> Box 2</button>
+                    <button class="btn-loy-box" data-box="2"><span class="btn-badge">3</span> Box 3</button>
                 </div>
             </div>
             <div class="controls" id="event-controls" style="display: none; flex-wrap: wrap;">
@@ -428,29 +511,45 @@
         <div id="help-modal" class="modal">
             <div class="modal-content">
                 <span class="close-btn" id="close-help">&times;</span>
-                <h2>Dragon Master's Guide</h2>
-                <h3>How to Play</h3>
-                <p>Raise your dragon from an egg. Keep it fed, happy, and well-rested. As it grows, it will evolve into a mighty adult with a specific elemental affinity based on how you raised it.</p>
-                <h3>Stats Explanation</h3>
+                <h2 style="font-family: 'Cinzel', serif; margin-top: 0; color: #2a1404;">Dragon Master's Guide</h2>
+                
+                <h3>Keyboard Controls & Shortcuts</h3>
+                <table class="guide-table">
+                    <tr><th>Action</th><th>Key Shortcut</th><th>Description</th></tr>
+                    <tr><td>Guide / Help</td><td><span class="kbd-chip">F1</span> or <span class="kbd-chip">H</span></td><td>Toggle this Guide dialog</td></tr>
+                    <tr><td>Incubate Egg</td><td><span class="kbd-chip">Space</span> or <span class="kbd-chip">1</span></td><td>Hatch mystical dragon egg</td></tr>
+                    <tr><td>Feed</td><td><span class="kbd-chip">1</span> or <span class="kbd-chip">F</span></td><td>Restore +20 Hunger (-5 Energy)</td></tr>
+                    <tr><td>Play</td><td><span class="kbd-chip">2</span> or <span class="kbd-chip">P</span></td><td>Restore +20 Happiness (-20 Energy)</td></tr>
+                    <tr><td>Sleep / Rest</td><td><span class="kbd-chip">3</span> or <span class="kbd-chip">S</span></td><td>Recover +40 Energy (-10 Hunger)</td></tr>
+                    <tr><td>Training</td><td><span class="kbd-chip">4</span> or <span class="kbd-chip">T</span></td><td>Train Strength, Speed, Loyalty</td></tr>
+                    <tr><td>Expedition (Hoard)</td><td><span class="kbd-chip">5</span> or <span class="kbd-chip">O</span></td><td>Forage for Gold and rare Artifacts</td></tr>
+                    <tr><td>Battle Arena</td><td><span class="kbd-chip">6</span> or <span class="kbd-chip">B</span></td><td>Fight wild enemy dragons for Gold</td></tr>
+                    <tr><td>Shop Bazaar</td><td><span class="kbd-chip">7</span> or <span class="kbd-chip">M</span></td><td>Purchase Food, Toys, Equipment</td></tr>
+                    <tr><td>Submenus & Modals</td><td><span class="kbd-chip">Esc</span></td><td>Close dialog / Return to Main menu</td></tr>
+                </table>
+
+                <h3>Minigames & Sub-Controls</h3>
                 <ul>
-                    <li><b>Hunger/Energy/Happiness:</b> Core needs. Don't let them reach 0!</li>
-                    <li><b>Strength (Str):</b> Increases attack power in battles and minigames.</li>
-                    <li><b>Speed (Spd):</b> Increases hit chance and dodge rate.</li>
-                    <li><b>Loyalty (Loy):</b> Affects special abilities like Healing Stream.</li>
-                    <li><b>Age:</b> At age 10, baby dragons evolve.</li>
+                    <li><b>Strength Power Meter:</b> Press <span class="kbd-chip">Space</span> or <span class="kbd-chip">Enter</span> to strike at peak gauge.</li>
+                    <li><b>Speed Reflex Test:</b> Press <span class="kbd-chip">Space</span> or <span class="kbd-chip">Enter</span> immediately when signaled.</li>
+                    <li><b>Loyalty Cup Guess:</b> Press <span class="kbd-chip">1</span>, <span class="kbd-chip">2</span>, or <span class="kbd-chip">3</span> to choose box.</li>
+                    <li><b>Battle Arena:</b> <span class="kbd-chip">1</span> Attack, <span class="kbd-chip">2</span> Defend, <span class="kbd-chip">3</span> Special, <span class="kbd-chip">4</span> Flee.</li>
+                    <li><b>Shop Items:</b> <span class="kbd-chip">1</span> Meat, <span class="kbd-chip">2</span> Toy, <span class="kbd-chip">3</span> Bracer, <span class="kbd-chip">4</span> Boots.</li>
                 </ul>
-                <h3>Evolution</h3>
+
+                <h3>Stats & Evolution</h3>
                 <ul>
-                    <li>Mostly Fed: Earth Dragon</li>
-                    <li>Mostly Played: Fire Dragon</li>
-                    <li>Mostly Slept: Water Dragon</li>
-                </ul>
-                <h3>Item Codex</h3>
-                <ul>
-                    <li><b>Meat:</b> Restores 50 Hunger, 20 Energy.</li>
-                    <li><b>Toy:</b> Restores 50 Happiness, 10 Energy.</li>
-                    <li><b>Bracer:</b> Permanently grants +5 Strength.</li>
-                    <li><b>Boots:</b> Permanently grants +5 Speed.</li>
+                    <li><b>Hunger / Happiness / Energy:</b> Core needs. Keep them above 0!</li>
+                    <li><b>Strength (Str):</b> Increases battle strike power and minigame rewards.</li>
+                    <li><b>Speed (Spd):</b> Increases hit rate and evasion against enemies.</li>
+                    <li><b>Loyalty (Loy):</b> Amplifies special healing and elemental power.</li>
+                    <li><b>Evolution at Age 10:</b>
+                        <ul>
+                            <li>Mostly Fed &rarr; <b>Earth Dragon</b> (Earthquake slow)</li>
+                            <li>Mostly Played &rarr; <b>Fire Dragon</b> (Devastating Fireball)</li>
+                            <li>Mostly Slept &rarr; <b>Water Dragon</b> (Healing Stream)</li>
+                        </ul>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -487,7 +586,7 @@
 </svg></div>
             <p>A mysterious egg awaits...</p>
             <p style="font-size: 14px; font-style: italic;">Press H or F1 for Help</p>
-            <button id="btn-hatch">Incubate Egg</button>
+            <button id="btn-hatch"><span class="btn-badge">Space</span> Incubate Egg</button>
         </div>
     </div>
 
@@ -759,7 +858,24 @@
             battleState: null,
             eventTimeout: null,
             
-            spawnParticles(color, count, target='player', isStar=false) {
+            showToast(text, type = 'info', duration = 3500) {
+                let tc = document.getElementById('toast-container');
+                if (!tc) {
+                    tc = document.createElement('div');
+                    tc.id = 'toast-container';
+                    document.body.appendChild(tc);
+                }
+                const toast = document.createElement('div');
+                toast.className = `toast toast-${type}`;
+                toast.innerHTML = text;
+                tc.appendChild(toast);
+                setTimeout(() => {
+                    toast.classList.add('hide');
+                    setTimeout(() => toast.remove(), 300);
+                }, duration);
+            },
+
+            spawnParticles(color, count, target = 'player', isStar = false) {
                 const el = target === 'player' ? document.getElementById('player-svg') : document.getElementById('enemy-svg');
                 let cx = width / 2;
                 let cy = height / 2 - 50;
@@ -771,31 +887,6 @@
                 VFX.spawnBurst(cx, cy, color, count, isStar);
                 VFX.addShockwave(cx, cy, color, 80);
                 VFX.addShake(4);
-            },
-                const el = target === 'player' ? document.getElementById('player-svg') : document.getElementById('enemy-svg');
-                if (!el) return;
-                const rect = el.getBoundingClientRect();
-                const cx = rect.left + rect.width / 2;
-                const cy = rect.top + rect.height / 2;
-                for (let i = 0; i < count; i++) {
-                    let p = document.createElement('div');
-                    p.style.position = 'fixed';
-                    p.style.left = cx + 'px';
-                    p.style.top = cy + 'px';
-                    p.style.width = '8px';
-                    p.style.height = '8px';
-                    p.style.backgroundColor = color;
-                    p.style.borderRadius = '50%';
-                    p.style.pointerEvents = 'none';
-                    p.style.zIndex = 1000;
-                    document.body.appendChild(p);
-                    let vx = (Math.random() - 0.5) * 150;
-                    let vy = (Math.random() - 0.5) * 150 - 50;
-                    p.animate([
-                        { transform: `translate(0px, 0px) scale(1)`, opacity: 1 },
-                        { transform: `translate(${vx}px, ${vy}px) scale(0)`, opacity: 0 }
-                    ], { duration: 600 + Math.random() * 400, easing: 'ease-out' }).onfinish = () => p.remove();
-                }
             },
             
             triggerAnim(target, animClass) {
@@ -867,10 +958,94 @@
                         document.getElementById('help-modal').style.display = 'none';
                     }
                 });
+                
+                // Comprehensive global keyboard navigation
                 window.addEventListener('keydown', (e) => {
                     if (e.key === 'F1' || e.key.toLowerCase() === 'h') {
                         e.preventDefault();
-                        document.getElementById('help-modal').style.display = 'block';
+                        const hm = document.getElementById('help-modal');
+                        hm.style.display = hm.style.display === 'block' ? 'none' : 'block';
+                        return;
+                    }
+                    if (e.key === 'Escape') {
+                        const hm = document.getElementById('help-modal');
+                        if (hm.style.display === 'block') {
+                            hm.style.display = 'none';
+                            return;
+                        }
+                        if (this.isBusy) {
+                            if (document.getElementById('shop-controls').style.display === 'flex') {
+                                document.getElementById('btn-shop-back').click();
+                            } else if (document.getElementById('train-controls').style.display === 'flex') {
+                                document.getElementById('btn-train-back').click();
+                            }
+                        }
+                        return;
+                    }
+                    if (this.state === 'egg') {
+                        if (e.key === ' ' || e.key === 'Enter' || e.key === '1') {
+                            e.preventDefault();
+                            this.hatch();
+                        }
+                        return;
+                    }
+                    if (document.getElementById('event-controls').style.display === 'flex') {
+                        if (e.key === '1') { e.preventDefault(); document.getElementById('btn-event-opt1').click(); }
+                        else if (e.key === '2') { e.preventDefault(); document.getElementById('btn-event-opt2').click(); }
+                        return;
+                    }
+                    if (this.battleState && document.getElementById('battle-controls').style.display === 'flex') {
+                        if (e.key === '1' || e.key.toLowerCase() === 'a') { e.preventDefault(); this.battleTurn('attack'); }
+                        else if (e.key === '2' || e.key.toLowerCase() === 'd') { e.preventDefault(); this.battleTurn('defend'); }
+                        else if (e.key === '3' || e.key.toLowerCase() === 's') { 
+                            if (this.element !== 'None') { e.preventDefault(); this.battleTurn('special'); }
+                        }
+                        else if (e.key === '4' || e.key.toLowerCase() === 'f') { e.preventDefault(); this.battleTurn('flee'); }
+                        return;
+                    }
+                    if (document.getElementById('shop-controls').style.display === 'flex') {
+                        if (e.key === '1') { e.preventDefault(); this.buyItem('food'); }
+                        else if (e.key === '2') { e.preventDefault(); this.buyItem('toy'); }
+                        else if (e.key === '3') { e.preventDefault(); this.buyItem('str'); }
+                        else if (e.key === '4') { e.preventDefault(); this.buyItem('spd'); }
+                        else if (e.key === '5' || e.key.toLowerCase() === 'b') { e.preventDefault(); document.getElementById('btn-shop-back').click(); }
+                        return;
+                    }
+                    if (document.getElementById('train-controls').style.display === 'flex') {
+                        if (e.key === '1') { e.preventDefault(); this.startMinigame('str'); }
+                        else if (e.key === '2') { e.preventDefault(); this.startMinigame('spd'); }
+                        else if (e.key === '3') { e.preventDefault(); this.startMinigame('loy'); }
+                        else if (e.key === '4' || e.key.toLowerCase() === 'b') { e.preventDefault(); document.getElementById('btn-train-back').click(); }
+                        return;
+                    }
+                    if (document.getElementById('minigame-str').style.display === 'flex') {
+                        if (e.key === ' ' || e.key === 'Enter' || e.key === '1') {
+                            e.preventDefault();
+                            document.getElementById('btn-str-hit').click();
+                        }
+                        return;
+                    }
+                    if (document.getElementById('minigame-spd').style.display === 'flex') {
+                        if (e.key === ' ' || e.key === 'Enter' || e.key === '1') {
+                            e.preventDefault();
+                            document.getElementById('btn-spd-react').click();
+                        }
+                        return;
+                    }
+                    if (document.getElementById('minigame-loy').style.display === 'flex') {
+                        if (e.key === '1') { e.preventDefault(); document.querySelector('.btn-loy-box[data-box="0"]')?.click(); }
+                        else if (e.key === '2') { e.preventDefault(); document.querySelector('.btn-loy-box[data-box="1"]')?.click(); }
+                        else if (e.key === '3') { e.preventDefault(); document.querySelector('.btn-loy-box[data-box="2"]')?.click(); }
+                        return;
+                    }
+                    if (!this.isBusy) {
+                        if (e.key === '1' || e.key.toLowerCase() === 'f') { e.preventDefault(); this.action('feed'); }
+                        else if (e.key === '2' || e.key.toLowerCase() === 'p') { e.preventDefault(); this.action('play'); }
+                        else if (e.key === '3' || e.key.toLowerCase() === 's') { e.preventDefault(); this.action('sleep'); }
+                        else if (e.key === '4' || e.key.toLowerCase() === 't') { e.preventDefault(); document.getElementById('btn-train').click(); }
+                        else if (e.key === '5' || e.key.toLowerCase() === 'o') { e.preventDefault(); this.action('hoard'); }
+                        else if (e.key === '6' || e.key.toLowerCase() === 'b') { e.preventDefault(); this.startBattle(); }
+                        else if (e.key === '7' || e.key.toLowerCase() === 'm') { e.preventDefault(); document.getElementById('btn-shop').click(); }
                     }
                 });
                 
@@ -892,6 +1067,7 @@
                 document.getElementById('btn-train').addEventListener('click', () => {
                     if (this.stats.energy < 15) {
                         this.log("Dragon is too tired to train.");
+                        this.showToast("Dragon is too tired to train!", "warn");
                         return;
                     }
                     this.isBusy = true;
@@ -906,6 +1082,9 @@
                 document.getElementById('btn-train-str').addEventListener('click', () => this.startMinigame('str'));
                 document.getElementById('btn-train-spd').addEventListener('click', () => this.startMinigame('spd'));
                 document.getElementById('btn-train-loy').addEventListener('click', () => this.startMinigame('loy'));
+
+                // Startup welcome toast
+                this.showToast("🐉 <b>Welcome to KDragon!</b><br>Incubate your egg & press <b>[F1]</b> or <b>[H]</b> anytime for the Guide.", "gold", 6000);
             },
             
             log(msg) {
@@ -1122,6 +1301,7 @@
                 document.getElementById('game-screen').style.display = 'block';
                 this.state = 'dragon';
                 this.log("The egg hatched! A baby dragon emerged.");
+                this.showToast("🥚 <b>Egg Hatched!</b> A baby dragon emerged.", "gold");
                 this.updateUI();
                 this.playSound('roar');
                 this.spawnParticles('#ffffff', 30);
@@ -1133,17 +1313,20 @@
                 if (type === 'feed') {
                     if (this.stats.hunger >= 100) {
                         this.log("Dragon is full and refuses to eat.");
+                        this.showToast("Dragon is already full!", "warn");
                         return;
                     }
                     this.feedCount++;
                     this.stats.hunger = Math.min(100, this.stats.hunger + 20);
                     this.stats.energy = Math.max(0, this.stats.energy - 5);
                     this.log("You fed the dragon. It looks satisfied.");
+                    this.showToast("🍎 Fed dragon! (+20 Hunger, -5 Energy)", "success");
                     this.playSound('munch');
                     this.spawnParticles('#ff4444', 15);
                 } else if (type === 'play') {
                     if (this.stats.energy < 20) {
                         this.log("Dragon is too tired to play.");
+                        this.showToast("Dragon is too tired to play!", "warn");
                         return;
                     }
                     this.playCount++;
@@ -1151,21 +1334,25 @@
                     this.stats.energy = Math.max(0, this.stats.energy - 20);
                     this.stats.hunger = Math.max(0, this.stats.hunger - 10);
                     this.log("You played with the dragon! It's happy.");
+                    this.showToast("🎾 Played with dragon! (+20 Happiness, -20 Energy)", "success");
                     this.spawnParticles('#ffff44', 15);
                 } else if (type === 'sleep') {
                     this.sleepCount++;
                     this.stats.energy = Math.min(100, this.stats.energy + 40);
                     this.stats.hunger = Math.max(0, this.stats.hunger - 10);
                     this.log("Dragon took a nap and regained energy.");
+                    this.showToast("💤 Dragon took a nap! (+40 Energy, -10 Hunger)", "info");
                     this.spawnParticles('#8888ff', 10);
                 } else if (type === 'hoard') {
                     if (this.stats.energy < 30) {
                         this.log("Dragon is too tired for an expedition.");
+                        this.showToast("Dragon is too tired for an expedition!", "warn");
                         return;
                     }
                     this.stats.energy -= 30;
                     this.stats.hunger = Math.max(0, this.stats.hunger - 15);
                     this.log("Dragon departed on an expedition...");
+                    this.showToast("🗺️ Dragon departed on an expedition...", "info");
                     this.isBusy = true;
                     document.getElementById('controls').style.display = 'none';
                     
@@ -1174,11 +1361,13 @@
                         this.stats.gold += foundGold;
                         this.stats.happiness = Math.min(100, this.stats.happiness + 5);
                         this.log(`Dragon returned with ${foundGold} gold!`);
+                        this.showToast(`🗺️ Expedition success! Found +${foundGold} gold.`, "gold");
                         
                         if (Math.random() < 0.3) {
                             const items = ["Shiny Scale", "Gemstone", "Old Bone", "Mystery Eggshell"];
                             const item = items[Math.floor(Math.random() * items.length)];
                             this.log(`Dragon also found a rare item: ${item}!`);
+                            this.showToast(`💎 Rare artifact discovered: ${item}!`, "gold");
                         }
                         
                         this.isBusy = false;
@@ -1216,6 +1405,7 @@
                         let gain = Math.floor(this.minigameValue / 20);
                         this.stats.strength += gain;
                         this.log(`You hit with power ${this.minigameValue}! Strength +${gain}`);
+                        this.showToast(`⚔️ Power Strike: ${this.minigameValue}! Strength +${gain}`, "gold");
                         this.endMinigame('str');
                     };
                 } else if (type === 'spd') {
@@ -1234,12 +1424,14 @@
                         if (this.minigameState === 'waiting') {
                             clearTimeout(this.minigameTimeout);
                             this.log("Too early! You missed.");
+                            this.showToast("Too early! You missed.", "warn");
                             this.endMinigame('spd');
                         } else if (this.minigameState === 'ready') {
                             let time = Date.now() - this.minigameValue;
                             let gain = time < 300 ? 5 : (time < 500 ? 3 : 1);
                             this.stats.speed += gain;
                             this.log(`Reaction time: ${time}ms! Speed +${gain}`);
+                            this.showToast(`⚡ Reaction: ${time}ms! Speed +${gain}`, "gold");
                             this.endMinigame('spd');
                         }
                     };
@@ -1253,9 +1445,11 @@
                             if (picked === correctBox) {
                                 this.stats.loyalty += 5;
                                 this.log("You found the treat! Loyalty +5");
+                                this.showToast("🎉 You found the treat! Loyalty +5", "gold");
                             } else {
                                 this.stats.loyalty += 1;
                                 this.log("Empty box. Loyalty +1");
+                                this.showToast("Empty box. Loyalty +1", "info");
                             }
                             this.endMinigame('loy');
                         };
@@ -1270,27 +1464,43 @@
                         this.stats.hunger = Math.min(100, this.stats.hunger + 50);
                         this.stats.energy = Math.min(100, this.stats.energy + 20);
                         this.log("Bought Premium Meat! Hunger +50, Energy +20.");
+                        this.showToast("🍖 Bought Premium Meat! (+50 Hunger, +20 Energy)", "success");
                         this.playSound('munch');
-                    } else { this.log("Not enough gold."); }
+                    } else { 
+                        this.log("Not enough gold."); 
+                        this.showToast("Not enough gold!", "warn");
+                    }
                 } else if (type === 'toy') {
                     if (this.stats.gold >= 30) {
                         this.stats.gold -= 30;
                         this.stats.happiness = Math.min(100, this.stats.happiness + 50);
                         this.stats.energy = Math.min(100, this.stats.energy + 10);
                         this.log("Bought Mystery Toy! Happiness +50, Energy +10.");
-                    } else { this.log("Not enough gold."); }
+                        this.showToast("🔮 Bought Mystery Toy! (+50 Happiness, +10 Energy)", "success");
+                    } else { 
+                        this.log("Not enough gold."); 
+                        this.showToast("Not enough gold!", "warn");
+                    }
                 } else if (type === 'str') {
                     if (this.stats.gold >= 50) {
                         this.stats.gold -= 50;
                         this.stats.strength += 5;
                         this.log("Bought Power Bracer! Strength +5.");
-                    } else { this.log("Not enough gold."); }
+                        this.showToast("🛡️ Bought Power Bracer! (+5 Strength)", "gold");
+                    } else { 
+                        this.log("Not enough gold."); 
+                        this.showToast("Not enough gold!", "warn");
+                    }
                 } else if (type === 'spd') {
                     if (this.stats.gold >= 50) {
                         this.stats.gold -= 50;
                         this.stats.speed += 5;
                         this.log("Bought Swift Boots! Speed +5.");
-                    } else { this.log("Not enough gold."); }
+                        this.showToast("🥾 Bought Swift Boots! (+5 Speed)", "gold");
+                    } else { 
+                        this.log("Not enough gold."); 
+                        this.showToast("Not enough gold!", "warn");
+                    }
                 }
                 this.updateUI();
             },
@@ -1299,6 +1509,7 @@
                 if (this.state === 'egg') return;
                 if (this.stats.energy < 20) {
                     this.log("Dragon is too tired to battle.");
+                    this.showToast("Dragon is too tired to battle!", "warn");
                     return;
                 }
                 this.stats.energy -= 20;
@@ -1419,8 +1630,10 @@
                     this.stats.gold += goldGain;
                     this.stats.happiness = Math.min(100, this.stats.happiness + 10);
                     this.log(`You won the battle and earned ${goldGain} gold!`);
+                    this.showToast(`⚔️ <b>Victory!</b> Won battle and gained +${goldGain} gold!`, "gold");
                 } else {
                     this.stats.happiness = Math.max(0, this.stats.happiness - 15);
+                    this.showToast("💔 <b>Defeated!</b> Dragon fled to recover.", "warn");
                 }
                 this.battleState = null;
                 this.isBusy = false;
@@ -1441,56 +1654,64 @@
                 const events = [
                     {
                         text: "Your dragon looks sick and feverish.",
-                        opt1: "Give Medicine (20g)",
-                        opt2: "Let it rest",
+                        opt1: "Give Medicine (20g) [1]",
+                        opt2: "Let it rest [2]",
                         act1: () => {
                             if (this.stats.gold >= 20) {
                                 this.stats.gold -= 20;
                                 this.stats.happiness = Math.min(100, this.stats.happiness + 10);
                                 this.log("Medicine worked! Dragon is feeling better.");
+                                this.showToast("💊 Medicine worked! Dragon recovered (+10 Happiness)", "success");
                             } else {
                                 this.stats.happiness = Math.max(0, this.stats.happiness - 20);
                                 this.log("Not enough gold for medicine... Dragon suffered.");
+                                this.showToast("Not enough gold for medicine!", "warn");
                             }
                         },
                         act2: () => {
                             this.stats.happiness = Math.max(0, this.stats.happiness - 10);
                             this.stats.strength = Math.max(0, this.stats.strength - 1);
                             this.log("Dragon rested but lost some strength.");
+                            this.showToast("Dragon rested but lost 1 Strength.", "info");
                         }
                     },
                     {
                         text: "A wild beast is approaching the lair!",
-                        opt1: "Scare it away",
-                        opt2: "Hide",
+                        opt1: "Scare it away [1]",
+                        opt2: "Hide [2]",
                         act1: () => {
                             if (this.stats.strength > 10) {
                                 this.stats.happiness = Math.min(100, this.stats.happiness + 10);
                                 this.log("Your dragon roared and scared it away!");
+                                this.showToast("🦁 Dragon roared and scared the beast away!", "gold");
                                 this.playSound('roar');
                             } else {
                                 this.stats.energy = Math.max(0, this.stats.energy - 20);
                                 this.stats.happiness = Math.max(0, this.stats.happiness - 10);
                                 this.log("The beast attacked! Dragon lost energy.");
+                                this.showToast("Beast attacked! Dragon lost energy.", "warn");
                             }
                         },
                         act2: () => {
                             this.stats.happiness = Math.max(0, this.stats.happiness - 5);
                             this.stats.loyalty = Math.max(0, this.stats.loyalty - 2);
                             this.log("You both hid. The beast left, but your dragon looks disappointed.");
+                            this.showToast("You hid from the beast.", "info");
                         }
                     },
                     {
                         text: "A wandering merchant offers a mystery eggshell.",
-                        opt1: "Buy (10g)",
-                        opt2: "Ignore",
+                        opt1: "Buy (10g) [1]",
+                        opt2: "Ignore [2]",
                         act1: () => {
                             if (this.stats.gold >= 10) {
                                 this.stats.gold -= 10;
                                 this.stats.happiness = Math.min(100, this.stats.happiness + 5);
                                 this.log("You bought the eggshell. It's... shiny.");
+                                this.showToast("✨ Purchased shiny eggshell (+5 Happiness)", "gold");
                             } else {
                                 this.log("Not enough gold.");
+                                this.showToast("Not enough gold!", "warn");
                             }
                         },
                         act2: () => {
@@ -1543,8 +1764,7 @@
                     else if (max === this.playCount) this.element = 'Fire';
                     else this.element = 'Water';
                     this.log(`Your baby dragon evolved into an ADULT ${this.element.toUpperCase()} DRAGON!`);
-                }
-                
+                    this.showToast(`✨ <b>EVOLUTION!</b> Baby dragon evolved into an <b>ADULT ${this.element.toUpperCase()} DRAGON</b>!`, "gold", 7000);
                 this.updateUI();
             }
         };

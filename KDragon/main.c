@@ -455,62 +455,62 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     DEFAULT_PITCH | FF_DONTCARE, "Segoe UI Emoji");
             bgBrush = CreateSolidBrush(RGB(220, 184, 129));
             
-            btn_incubate = CreateWindow("BUTTON", "Incubate Egg", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                                        230, 260, 120, 40, hwnd, (HMENU)BTN_INCUBATE, NULL, NULL);
-            btn_feed = CreateWindow("BUTTON", "Feed", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                    35, 260, 80, 40, hwnd, (HMENU)BTN_FEED, NULL, NULL);
-            btn_play = CreateWindow("BUTTON", "Play", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                    125, 260, 80, 40, hwnd, (HMENU)BTN_PLAY, NULL, NULL);
-            btn_sleep = CreateWindow("BUTTON", "Sleep", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                     215, 260, 80, 40, hwnd, (HMENU)BTN_SLEEP, NULL, NULL);
-            btn_train = CreateWindow("BUTTON", "Train", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                     305, 260, 80, 40, hwnd, (HMENU)BTN_TRAIN, NULL, NULL);
-            btn_hoard = CreateWindow("BUTTON", "Hoard", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                     395, 260, 80, 40, hwnd, (HMENU)BTN_HOARD, NULL, NULL);
-            btn_battle = CreateWindow("BUTTON", "Battle", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                      485, 260, 80, 40, hwnd, (HMENU)BTN_BATTLE, NULL, NULL);
-            btn_shop = CreateWindow("BUTTON", "Shop", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                      485, 215, 80, 40, hwnd, (HMENU)BTN_SHOP, NULL, NULL);
-            btn_help = CreateWindow("BUTTON", "Help", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                      395, 215, 80, 40, hwnd, (HMENU)BTN_HELP, NULL, NULL);
+            btn_incubate = CreateWindow("BUTTON", "Incubate Egg [Space]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                                        210, 260, 160, 40, hwnd, (HMENU)BTN_INCUBATE, NULL, NULL);
+            btn_feed = CreateWindow("BUTTON", "Feed [1]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                    25, 260, 90, 40, hwnd, (HMENU)BTN_FEED, NULL, NULL);
+            btn_play = CreateWindow("BUTTON", "Play [2]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                    120, 260, 90, 40, hwnd, (HMENU)BTN_PLAY, NULL, NULL);
+            btn_sleep = CreateWindow("BUTTON", "Sleep [3]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                     215, 260, 90, 40, hwnd, (HMENU)BTN_SLEEP, NULL, NULL);
+            btn_train = CreateWindow("BUTTON", "Train [4]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                     310, 260, 90, 40, hwnd, (HMENU)BTN_TRAIN, NULL, NULL);
+            btn_hoard = CreateWindow("BUTTON", "Hoard [5]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                     405, 260, 90, 40, hwnd, (HMENU)BTN_HOARD, NULL, NULL);
+            btn_battle = CreateWindow("BUTTON", "Battle [6]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                      500, 260, 90, 40, hwnd, (HMENU)BTN_BATTLE, NULL, NULL);
+            btn_shop = CreateWindow("BUTTON", "Shop [7]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                      500, 215, 90, 40, hwnd, (HMENU)BTN_SHOP, NULL, NULL);
+            btn_help = CreateWindow("BUTTON", "Help [F1]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                      405, 215, 90, 40, hwnd, (HMENU)BTN_HELP, NULL, NULL);
 
-            btn_bat_atk = CreateWindow("BUTTON", "Attack", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                       90, 270, 90, 40, hwnd, (HMENU)BTN_BAT_ATK, NULL, NULL);
-            btn_bat_def = CreateWindow("BUTTON", "Defend", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                       190, 270, 90, 40, hwnd, (HMENU)BTN_BAT_DEF, NULL, NULL);
-            btn_bat_spec = CreateWindow("BUTTON", "Special", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                       290, 270, 90, 40, hwnd, (HMENU)BTN_BAT_SPEC, NULL, NULL);
-            btn_bat_flee = CreateWindow("BUTTON", "Flee", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                        390, 270, 90, 40, hwnd, (HMENU)BTN_BAT_FLEE, NULL, NULL);
+            btn_bat_atk = CreateWindow("BUTTON", "Attack [1]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                       70, 270, 110, 40, hwnd, (HMENU)BTN_BAT_ATK, NULL, NULL);
+            btn_bat_def = CreateWindow("BUTTON", "Defend [2]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                       190, 270, 110, 40, hwnd, (HMENU)BTN_BAT_DEF, NULL, NULL);
+            btn_bat_spec = CreateWindow("BUTTON", "Special [3]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                       310, 270, 110, 40, hwnd, (HMENU)BTN_BAT_SPEC, NULL, NULL);
+            btn_bat_flee = CreateWindow("BUTTON", "Flee [4]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                        430, 270, 110, 40, hwnd, (HMENU)BTN_BAT_FLEE, NULL, NULL);
 
-            btn_shp_food = CreateWindow("BUTTON", "Meat 20g", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 35, 260, 80, 40, hwnd, (HMENU)BTN_SHP_FOOD, NULL, NULL);
-            btn_shp_toy = CreateWindow("BUTTON", "Toy 30g", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 125, 260, 80, 40, hwnd, (HMENU)BTN_SHP_TOY, NULL, NULL);
-            btn_shp_str = CreateWindow("BUTTON", "Str 50g", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 215, 260, 80, 40, hwnd, (HMENU)BTN_SHP_STR, NULL, NULL);
-            btn_shp_spd = CreateWindow("BUTTON", "Spd 50g", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 305, 260, 80, 40, hwnd, (HMENU)BTN_SHP_SPD, NULL, NULL);
-            btn_shp_back = CreateWindow("BUTTON", "Back", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 395, 260, 80, 40, hwnd, (HMENU)BTN_SHP_BACK, NULL, NULL);
+            btn_shp_food = CreateWindow("BUTTON", "Meat 20g [1]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 25, 260, 100, 40, hwnd, (HMENU)BTN_SHP_FOOD, NULL, NULL);
+            btn_shp_toy = CreateWindow("BUTTON", "Toy 30g [2]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 130, 260, 100, 40, hwnd, (HMENU)BTN_SHP_TOY, NULL, NULL);
+            btn_shp_str = CreateWindow("BUTTON", "Str 50g [3]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 235, 260, 100, 40, hwnd, (HMENU)BTN_SHP_STR, NULL, NULL);
+            btn_shp_spd = CreateWindow("BUTTON", "Spd 50g [4]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 340, 260, 100, 40, hwnd, (HMENU)BTN_SHP_SPD, NULL, NULL);
+            btn_shp_back = CreateWindow("BUTTON", "Back [Esc]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 445, 260, 100, 40, hwnd, (HMENU)BTN_SHP_BACK, NULL, NULL);
 
-            btn_evt_opt1 = CreateWindow("BUTTON", "Opt 1", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 150, 270, 130, 40, hwnd, (HMENU)BTN_EVT_OPT1, NULL, NULL);
-            btn_evt_opt2 = CreateWindow("BUTTON", "Opt 2", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 300, 270, 130, 40, hwnd, (HMENU)BTN_EVT_OPT2, NULL, NULL);
+            btn_evt_opt1 = CreateWindow("BUTTON", "Opt 1 [1]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 130, 270, 160, 40, hwnd, (HMENU)BTN_EVT_OPT1, NULL, NULL);
+            btn_evt_opt2 = CreateWindow("BUTTON", "Opt 2 [2]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 310, 270, 160, 40, hwnd, (HMENU)BTN_EVT_OPT2, NULL, NULL);
 
-            btn_tr_str = CreateWindow("BUTTON", "Strength", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                     80, 260, 100, 40, hwnd, (HMENU)BTN_TR_STR, NULL, NULL);
-            btn_tr_spd = CreateWindow("BUTTON", "Speed", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                     190, 260, 100, 40, hwnd, (HMENU)BTN_TR_SPD, NULL, NULL);
-            btn_tr_loy = CreateWindow("BUTTON", "Loyalty", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                     300, 260, 100, 40, hwnd, (HMENU)BTN_TR_LOY, NULL, NULL);
-            btn_tr_back = CreateWindow("BUTTON", "Back", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                     410, 260, 100, 40, hwnd, (HMENU)BTN_TR_BACK, NULL, NULL);
+            btn_tr_str = CreateWindow("BUTTON", "Strength [1]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                     60, 260, 115, 40, hwnd, (HMENU)BTN_TR_STR, NULL, NULL);
+            btn_tr_spd = CreateWindow("BUTTON", "Speed [2]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                     185, 260, 115, 40, hwnd, (HMENU)BTN_TR_SPD, NULL, NULL);
+            btn_tr_loy = CreateWindow("BUTTON", "Loyalty [3]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                     310, 260, 115, 40, hwnd, (HMENU)BTN_TR_LOY, NULL, NULL);
+            btn_tr_back = CreateWindow("BUTTON", "Back [Esc]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                     435, 260, 115, 40, hwnd, (HMENU)BTN_TR_BACK, NULL, NULL);
 
-            btn_str_hit = CreateWindow("BUTTON", "Hit!", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                     250, 270, 100, 40, hwnd, (HMENU)BTN_STR_HIT, NULL, NULL);
-            btn_spd_react = CreateWindow("BUTTON", "React!", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                     250, 270, 100, 40, hwnd, (HMENU)BTN_SPD_REACT, NULL, NULL);
-            btn_loy_1 = CreateWindow("BUTTON", "Box 1", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                     140, 270, 100, 40, hwnd, (HMENU)BTN_LOY_1, NULL, NULL);
-            btn_loy_2 = CreateWindow("BUTTON", "Box 2", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                     250, 270, 100, 40, hwnd, (HMENU)BTN_LOY_2, NULL, NULL);
-            btn_loy_3 = CreateWindow("BUTTON", "Box 3", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                     360, 270, 100, 40, hwnd, (HMENU)BTN_LOY_3, NULL, NULL);
+            btn_str_hit = CreateWindow("BUTTON", "Hit! [Space]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                     230, 270, 140, 40, hwnd, (HMENU)BTN_STR_HIT, NULL, NULL);
+            btn_spd_react = CreateWindow("BUTTON", "React! [Space]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                     230, 270, 140, 40, hwnd, (HMENU)BTN_SPD_REACT, NULL, NULL);
+            btn_loy_1 = CreateWindow("BUTTON", "Box 1 [1]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                     120, 270, 110, 40, hwnd, (HMENU)BTN_LOY_1, NULL, NULL);
+            btn_loy_2 = CreateWindow("BUTTON", "Box 2 [2]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                     245, 270, 110, 40, hwnd, (HMENU)BTN_LOY_2, NULL, NULL);
+            btn_loy_3 = CreateWindow("BUTTON", "Box 3 [3]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                     370, 270, 110, 40, hwnd, (HMENU)BTN_LOY_3, NULL, NULL);
                                      
             SendMessage(btn_incubate, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_feed, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
@@ -1051,26 +1051,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             else if (LOWORD(wParam) == BTN_HELP) {
                 MessageBox(hwnd, 
-                    "Dragon Master's Guide\n\n"
-                    "How to Play:\n"
-                    "Raise your dragon from an egg. Keep it fed, happy, and well-rested.\n"
-                    "As it grows, it will evolve into a mighty adult with a specific\n"
-                    "elemental affinity based on how you raised it.\n\n"
-                    "Stats Explanation:\n"
-                    "- Hunger/Energy/Happiness: Core needs. Don't let them reach 0!\n"
-                    "- Strength (Str): Increases attack power in battles and minigames.\n"
-                    "- Speed (Spd): Increases hit chance and dodge rate.\n"
-                    "- Loyalty (Loy): Affects special abilities like Healing Stream.\n"
-                    "- Age: At age 10, baby dragons evolve.\n\n"
-                    "Evolution:\n"
-                    "- Mostly Fed: Earth Dragon\n"
-                    "- Mostly Played: Fire Dragon\n"
-                    "- Mostly Slept: Water Dragon\n\n"
-                    "Item Codex:\n"
-                    "- Meat: Restores 50 Hunger, 20 Energy.\n"
-                    "- Toy: Restores 50 Happiness, 10 Energy.\n"
-                    "- Bracer: Permanently grants +5 Strength.\n"
-                    "- Boots: Permanently grants +5 Speed.", 
+                    "Dragon Master's Guide & Shortcuts\n\n"
+                    "=== CONTROLS & SHORTCUTS ===\n"
+                    "[F1] or [H]  : Open this Guide\n"
+                    "[Space/Enter]: Incubate Egg / Minigame Actions\n\n"
+                    "Main Actions:\n"
+                    "[1] or [F] : Feed Dragon (+20 Hunger, -5 Energy)\n"
+                    "[2] or [P] : Play with Dragon (+20 Happiness, -20 Energy)\n"
+                    "[3] or [S] : Sleep / Rest (+40 Energy, -10 Hunger)\n"
+                    "[4] or [T] : Training Menu (Strength, Speed, Loyalty)\n"
+                    "[5] or [O] : Hoard / Expedition (Search for Gold & Relics)\n"
+                    "[6] or [B] : Battle Arena (Fight Wild Enemy Dragons)\n"
+                    "[7] or [M] : Shop & Merchant Bazaar\n\n"
+                    "Sub-Menus & Minigames:\n"
+                    "- Training: [1] Str, [2] Spd, [3] Loy, [Esc] Back\n"
+                    "- Power Meter: [Space] or [Enter] to Strike\n"
+                    "- Speed Reflex: [Space] or [Enter] to React on Signal\n"
+                    "- Mystery Box: [1], [2], [3] to Pick Box\n"
+                    "- Battle: [1] Attack, [2] Defend, [3] Special, [4] Flee\n"
+                    "- Shop: [1] Meat, [2] Toy, [3] Bracer, [4] Boots, [Esc] Back\n"
+                    "- Events: [1] Option 1, [2] Option 2\n\n"
+                    "=== STATS & EVOLUTION ===\n"
+                    "- Hunger / Happiness / Energy: Core vitals (Keep above 0!)\n"
+                    "- Strength (Str): Attack damage in battles & training\n"
+                    "- Speed (Spd): Hit chance & dodge rate\n"
+                    "- Loyalty (Loy): Potency of special abilities & treats\n"
+                    "- Age: Baby dragon evolves at Age 10 based on care:\n"
+                    "   * Mostly Fed  -> Earth Dragon (Earthquake)\n"
+                    "   * Mostly Played-> Fire Dragon (Fireball)\n"
+                    "   * Mostly Slept -> Water Dragon (Healing Stream)", 
                     "Dragon Master's Guide", MB_OK | MB_ICONINFORMATION);
             }
             break;
@@ -1103,14 +1112,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         ShowWindow(btn_evt_opt2, SW_SHOW);
                         
                         if (current_event_id == 0) {
-                            SetWindowText(btn_evt_opt1, "Medicine 20g");
-                            SetWindowText(btn_evt_opt2, "Rest");
+                            SetWindowText(btn_evt_opt1, "Medicine 20g [1]");
+                            SetWindowText(btn_evt_opt2, "Rest [2]");
                         } else if (current_event_id == 1) {
-                            SetWindowText(btn_evt_opt1, "Scare Beast");
-                            SetWindowText(btn_evt_opt2, "Hide");
+                            SetWindowText(btn_evt_opt1, "Scare Beast [1]");
+                            SetWindowText(btn_evt_opt2, "Hide [2]");
                         } else if (current_event_id == 2) {
-                            SetWindowText(btn_evt_opt1, "Buy Shell 10g");
-                            SetWindowText(btn_evt_opt2, "Ignore");
+                            SetWindowText(btn_evt_opt1, "Buy Shell 10g [1]");
+                            SetWindowText(btn_evt_opt2, "Ignore [2]");
                         }
                         
                         prev_state = state;
@@ -1553,7 +1562,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     AdjustWindowRect(&rect, style, FALSE);
     
     HWND hwnd = CreateWindowEx(
-        0, CLASS_NAME, "KDragon",
+        0, CLASS_NAME, "KDragon - Dragon Sanctuary [Press F1 or H for Guide]",
         style,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top,
         NULL, NULL, hInstance, NULL
@@ -1567,6 +1576,118 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     
     MSG msg = {0};
     while (GetMessage(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN) {
+            WPARAM wParam = msg.wParam;
+            if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
+                SendMessage(hwnd, WM_COMMAND, BTN_HELP, 0);
+                continue;
+            }
+            if (state == 0) {
+                if (wParam == VK_SPACE || wParam == VK_RETURN || wParam == '1') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_INCUBATE, 0);
+                    continue;
+                }
+            } else if (state == 1 || state == 2) {
+                if (wParam == '1' || wParam == 'F' || wParam == 'f') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_FEED, 0);
+                    continue;
+                } else if (wParam == '2' || wParam == 'P' || wParam == 'p') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_PLAY, 0);
+                    continue;
+                } else if (wParam == '3' || wParam == 'S' || wParam == 's') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_SLEEP, 0);
+                    continue;
+                } else if (wParam == '4' || wParam == 'T' || wParam == 't') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_TRAIN, 0);
+                    continue;
+                } else if (wParam == '5' || wParam == 'O' || wParam == 'o') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_HOARD, 0);
+                    continue;
+                } else if (wParam == '6' || wParam == 'B' || wParam == 'b') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_BATTLE, 0);
+                    continue;
+                } else if (wParam == '7' || wParam == 'M' || wParam == 'm') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_SHOP, 0);
+                    continue;
+                }
+            } else if (state == 3) { // Train menu
+                if (wParam == '1') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_TR_STR, 0);
+                    continue;
+                } else if (wParam == '2') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_TR_SPD, 0);
+                    continue;
+                } else if (wParam == '3') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_TR_LOY, 0);
+                    continue;
+                } else if (wParam == VK_ESCAPE || wParam == '4' || wParam == 'B' || wParam == 'b') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_TR_BACK, 0);
+                    continue;
+                }
+            } else if (state == 4) { // Str minigame
+                if (wParam == VK_SPACE || wParam == VK_RETURN || wParam == '1') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_STR_HIT, 0);
+                    continue;
+                }
+            } else if (state == 5) { // Spd minigame
+                if (wParam == VK_SPACE || wParam == VK_RETURN || wParam == '1') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_SPD_REACT, 0);
+                    continue;
+                }
+            } else if (state == 6) { // Loy minigame
+                if (wParam == '1') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_LOY_1, 0);
+                    continue;
+                } else if (wParam == '2') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_LOY_2, 0);
+                    continue;
+                } else if (wParam == '3') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_LOY_3, 0);
+                    continue;
+                }
+            } else if (state == 8) { // Battle
+                if (wParam == '1' || wParam == 'A' || wParam == 'a') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_BAT_ATK, 0);
+                    continue;
+                } else if (wParam == '2' || wParam == 'D' || wParam == 'd') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_BAT_DEF, 0);
+                    continue;
+                } else if (wParam == '3' || wParam == 'S' || wParam == 's') {
+                    if (element != 0) {
+                        SendMessage(hwnd, WM_COMMAND, BTN_BAT_SPEC, 0);
+                        continue;
+                    }
+                } else if (wParam == '4' || wParam == 'F' || wParam == 'f' || wParam == VK_ESCAPE) {
+                    SendMessage(hwnd, WM_COMMAND, BTN_BAT_FLEE, 0);
+                    continue;
+                }
+            } else if (state == 9) { // Shop
+                if (wParam == '1') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_SHP_FOOD, 0);
+                    continue;
+                } else if (wParam == '2') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_SHP_TOY, 0);
+                    continue;
+                } else if (wParam == '3') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_SHP_STR, 0);
+                    continue;
+                } else if (wParam == '4') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_SHP_SPD, 0);
+                    continue;
+                } else if (wParam == VK_ESCAPE || wParam == '5' || wParam == 'B' || wParam == 'b') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_SHP_BACK, 0);
+                    continue;
+                }
+            } else if (state == 10) { // Event
+                if (wParam == '1') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_EVT_OPT1, 0);
+                    continue;
+                } else if (wParam == '2') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_EVT_OPT2, 0);
+                    continue;
+                }
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
