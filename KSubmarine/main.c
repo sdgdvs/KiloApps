@@ -51,6 +51,26 @@
 #define ID_BTN_TOGGLE_CLAW      138
 #define ID_BTN_DREDGE_SEABED    139
 #define ID_BTN_OFFLOAD_CARGO    140
+#define ID_BTN_VIEW_DAMAGE      141
+#define ID_BTN_PUMP_MODE        142
+#define ID_BTN_BLEED_VALVE      143
+#define ID_BTN_SIM_BREACH       144
+#define ID_BTN_DOOR_BAY_0       145
+#define ID_BTN_DOOR_BAY_1       146
+#define ID_BTN_DOOR_BAY_2       147
+#define ID_BTN_DOOR_BAY_3       148
+#define ID_BTN_AIRDAM_BAY_0     149
+#define ID_BTN_AIRDAM_BAY_1     150
+#define ID_BTN_AIRDAM_BAY_2     151
+#define ID_BTN_AIRDAM_BAY_3     152
+#define ID_BTN_ROUTE_BAY_0      153
+#define ID_BTN_ROUTE_BAY_1      154
+#define ID_BTN_ROUTE_BAY_2      155
+#define ID_BTN_ROUTE_BAY_3      156
+#define ID_BTN_PATCH_BAY_0      157
+#define ID_BTN_PATCH_BAY_1      158
+#define ID_BTN_PATCH_BAY_2      159
+#define ID_BTN_PATCH_BAY_3      160
 
 typedef enum {
     THEME_ABYSS = 0,
@@ -383,6 +403,24 @@ typedef struct {
     char freq[32];
 } UnifiedContact;
 
+// Phase 9: Bulkhead Compartments & Damage Control
+typedef struct {
+    char id[8];
+    char name[48];
+    char shortCode[8];
+    float integrity;      // 0..100%
+    float water;          // 0..250 gal
+    float maxWater;       // 250.0f gal
+    int breachTier;       // 0: INTACT, 1: HAIRLINE WEEP, 2: SEAM RUPTURE, 3: TORRENTIAL FRACTURE
+    float leakRate;       // GPM
+    int doorSealed;       // 0: OPEN, 1: SEALED
+    int airDam;           // 0: OFF, 1: ACTIVE
+    int isRepairing;      // 0: NO, 1: WELDING ACTIVE
+    float repairProgress; // 0..100%
+} CompartmentInfo;
+
+#define COMPARTMENT_COUNT 4
+
 typedef struct {
     float depth;            // meters (0 - 11000)
     float vertRate;         // m/s
@@ -401,7 +439,7 @@ typedef struct {
     int activeWaypointIdx;
     int autopilot;
     int surveyPoints;
-    int viewMode;           // 0: Sonar, 1: Nav Map, 2: Codex, 3: Cargo, 4: Engineering
+    int viewMode;           // 0: Sonar, 1: Nav Map, 2: Codex, 3: Cargo, 4: Engineering, 5: Damage Control
     float breadcrumbsX[32];
     float breadcrumbsY[32];
     int breadcrumbCount;
@@ -442,6 +480,13 @@ typedef struct {
     int clawDeployed;
     int isDredging;
     float dredgeProgress;
+
+    // Phase 9: Damage Control & Bulkhead Compartments
+    CompartmentInfo compartments[COMPARTMENT_COUNT];
+    float cabinPressure;      // atm (1.00 nominal)
+    int bleedValveOpen;       // 0: closed, 1: venting
+    int bilgePumpMode;        // 0: OFF, 1: AUTO, 2: BOW, 3: CMD, 4: ENG, 5: AFT, 6: OVERDRIVE
+    int emergencySirens;
 
     // Vital systems
     float hull;             // 0 - 100%
@@ -562,6 +607,43 @@ DWORD WINAPI MineralChimeSoundThreadProc(LPVOID lpParam) {
 void PlayMineralChime(void) {
     if (!g_sub.soundEnabled) return;
     CreateThread(NULL, 0, MineralChimeSoundThreadProc, NULL, 0, NULL);
+}
+
+DWORD WINAPI WeldingSoundThreadProc(LPVOID lpParam) {
+    for (int i = 0; i < 4; i++) {
+        Beep(520 + (rand() % 300), 30);
+        Sleep(15);
+    }
+    return 0;
+}
+
+void PlayWeldingSound(void) {
+    if (!g_sub.soundEnabled) return;
+    CreateThread(NULL, 0, WeldingSoundThreadProc, NULL, 0, NULL);
+}
+
+DWORD WINAPI AlarmKlaxonThreadProc(LPVOID lpParam) {
+    Beep(440, 140);
+    Sleep(20);
+    Beep(880, 180);
+    return 0;
+}
+
+void PlayAlarmKlaxon(void) {
+    if (!g_sub.soundEnabled) return;
+    CreateThread(NULL, 0, AlarmKlaxonThreadProc, NULL, 0, NULL);
+}
+
+DWORD WINAPI PressureBleedThreadProc(LPVOID lpParam) {
+    Beep(1400, 60);
+    Sleep(10);
+    Beep(1100, 80);
+    return 0;
+}
+
+void PlayPressureBleed(void) {
+    if (!g_sub.soundEnabled) return;
+    CreateThread(NULL, 0, PressureBleedThreadProc, NULL, 0, NULL);
 }
 
 void AddLog(const char* text, COLORREF color) {
@@ -739,6 +821,29 @@ void InitSubmarineState(void) {
     g_sub.bilgePumpActive = 0;
     g_sub.waterIntrusionRate = 0.0f;
 
+    // Phase 9: Initialize 4 compartments
+    const char* cIds[4] = { "bow", "cmd", "eng", "aft" };
+    const char* cNames[4] = { "Forward Sonar Bay", "Command Sphere Deck", "Reactor Bay", "Aft Bilge Manifold" };
+    const char* cCodes[4] = { "BOW", "CMD", "ENG", "AFT" };
+    for (int i = 0; i < COMPARTMENT_COUNT; i++) {
+        strncpy(g_sub.compartments[i].id, cIds[i], sizeof(g_sub.compartments[i].id) - 1);
+        strncpy(g_sub.compartments[i].name, cNames[i], sizeof(g_sub.compartments[i].name) - 1);
+        strncpy(g_sub.compartments[i].shortCode, cCodes[i], sizeof(g_sub.compartments[i].shortCode) - 1);
+        g_sub.compartments[i].integrity = 100.0f;
+        g_sub.compartments[i].water = 0.0f;
+        g_sub.compartments[i].maxWater = 250.0f;
+        g_sub.compartments[i].breachTier = 0;
+        g_sub.compartments[i].leakRate = 0.0f;
+        g_sub.compartments[i].doorSealed = 0;
+        g_sub.compartments[i].airDam = 0;
+        g_sub.compartments[i].isRepairing = 0;
+        g_sub.compartments[i].repairProgress = 0.0f;
+    }
+    g_sub.cabinPressure = 1.00f;
+    g_sub.bleedValveOpen = 0;
+    g_sub.bilgePumpMode = 1; // AUTO-BALANCED
+    g_sub.emergencySirens = 0;
+
     g_sub.temp = 21.4f;
 
     g_sub.isPinging = 0;
@@ -753,6 +858,7 @@ void InitSubmarineState(void) {
     AddLog("DSV Abyss Voyager Bathyscaphe computer online. Systems nominal.", g_themes[THEME_ABYSS].textPrimary);
     AddLog("Active sonar & biological hydrophone array online. Listening...", g_themes[THEME_ABYSS].accentEmerald);
     AddLog("Hydraulic dredging claw & mineral cargo bay calibrated.", g_themes[THEME_ABYSS].accentAmber);
+    AddLog("Bulkhead damage control & flood isolation manifolds ready.", g_themes[THEME_ABYSS].accentSonar);
 }
 
 const char* GetZoneName(float depth) {
@@ -975,7 +1081,7 @@ void UpdateSimulation(float dt) {
         }
     }
 
-    // Dynamic Seabed
+    // Dynamic Seabed Collision
     SectorInfo* curSec = &g_sectors[g_sub.currentSectorIdx];
     float terrainNoise = sinf(g_sub.posX * 1.5f) * cosf(g_sub.posY * 1.5f) * curSec->seabedVariance;
     g_sub.seabedElevation = curSec->baseSeabed + terrainNoise;
@@ -983,8 +1089,15 @@ void UpdateSimulation(float dt) {
     if (g_sub.depth >= g_sub.seabedElevation) {
         g_sub.depth = g_sub.seabedElevation;
         if (g_sub.vertRate > 0.0f) g_sub.vertRate = 0.0f;
-        if (fabsf(g_sub.speed) > 2.0f && (rand() % 100) < 3) {
+        if (fabsf(g_sub.speed) > 2.0f && (rand() % 100) < 4) {
             g_sub.hull = max(0.0f, g_sub.hull - 0.5f * dt);
+            CompartmentInfo* bowBay = &g_sub.compartments[0];
+            bowBay->integrity = max(0.0f, bowBay->integrity - 1.5f * dt);
+            if (bowBay->integrity < 70.0f && bowBay->breachTier == 0 && (rand() % 100) < 15) {
+                bowBay->breachTier = 1;
+                PlayAlarmKlaxon();
+                AddLog("⚠️ HULL SEEPAGE: Bow torpedo bay scraped seabed rock shelf! Hairline leak.", th->accentAmber);
+            }
             PlaySoundAsync(140, 100);
             AddLog("WARNING: Keel scraping seabed rock shelf!", th->accentAmber);
         }
@@ -999,29 +1112,129 @@ void UpdateSimulation(float dt) {
         if (hullDamageReduction < 0.3f) hullDamageReduction = 0.3f;
         float hullDamage = (excess * 0.02f + 0.5f) * dt * hullDamageReduction;
         g_sub.hull = max(0.0f, g_sub.hull - hullDamage);
-        g_sub.waterIntrusionRate = excess * 0.05f * hullDamageReduction;
+
+        // Compartment overcrush damage
+        if ((rand() % 100) < 3) {
+            int rIdx = rand() % COMPARTMENT_COUNT;
+            if (g_sub.compartments[rIdx].breachTier < 3) {
+                g_sub.compartments[rIdx].breachTier++;
+                PlayAlarmKlaxon();
+                char cMsg[128];
+                snprintf(cMsg, sizeof(cMsg), "CRUSH BREACH: [%s] hull seams ruptured under %.1f atm!", g_sub.compartments[rIdx].shortCode, g_sub.pressure);
+                AddLog(cMsg, th->accentRed);
+            }
+        }
+
         if ((rand() % 100) < 3) {
             PlaySoundAsync(150, 200);
             AddLog("CRUSH WARNING: Extreme hydrostatic pressure deforming hull!", th->accentRed);
         }
-    } else {
-        g_sub.waterIntrusionRate = 0.0f;
     }
 
-    if (g_sub.waterIntrusionRate > 0.0f) {
-        g_sub.bilgeWater += g_sub.waterIntrusionRate * dt;
+    // Phase 9: Compartment Flooding, Air Damming, Bilge Pumping & Atmospheric Pressure
+    float totalWater = 0.0f;
+    float totalIngress = 0.0f;
+
+    for (int i = 0; i < COMPARTMENT_COUNT; i++) {
+        CompartmentInfo* c = &g_sub.compartments[i];
+
+        if (c->breachTier > 0) {
+            float baseRate = c->breachTier == 1 ? 4.0f : (c->breachTier == 2 ? 18.0f : 55.0f);
+            float leakRate = baseRate * (1.0f + g_sub.pressure * 0.04f);
+
+            if (c->airDam) {
+                if (g_sub.airReservoir > 5.0f) {
+                    leakRate *= 0.40f; // 60% reduction
+                    g_sub.airReservoir = max(0.0f, g_sub.airReservoir - dt * 0.45f);
+                    g_sub.cabinPressure += dt * 0.008f;
+                } else {
+                    c->airDam = 0;
+                    AddLog("Air dam collapsed: Compressed air bank depleted!", th->accentAmber);
+                }
+            }
+
+            c->leakRate = leakRate;
+            c->water = min(c->maxWater, c->water + c->leakRate * (dt / 60.0f) * 12.0f);
+            c->integrity = max(0.0f, c->integrity - dt * 0.08f * c->breachTier);
+        } else {
+            c->leakRate = 0.0f;
+        }
+
+        // Water spillover if bay is full and adjacent doors unsealed
+        if (c->water >= c->maxWater) {
+            if (i > 0 && !g_sub.compartments[i - 1].doorSealed) {
+                g_sub.compartments[i - 1].water = min(g_sub.compartments[i - 1].maxWater, g_sub.compartments[i - 1].water + 2.5f * dt);
+            }
+            if (i < COMPARTMENT_COUNT - 1 && !g_sub.compartments[i + 1].doorSealed) {
+                g_sub.compartments[i + 1].water = min(g_sub.compartments[i + 1].maxWater, g_sub.compartments[i + 1].water + 2.5f * dt);
+            }
+        }
+
+        // Repair Progress
+        if (c->isRepairing) {
+            float rRate = g_sub.cargoTitaniumScrap > 0 ? 30.0f : 16.0f;
+            c->repairProgress += rRate * dt;
+            if (c->repairProgress >= 100.0f) {
+                c->repairProgress = 0.0f;
+                c->isRepairing = 0;
+                if (c->breachTier > 0) c->breachTier--;
+                c->integrity = min(100.0f, c->integrity + 30.0f);
+                PlayMineralChime();
+                char rMsg[128];
+                snprintf(rMsg, sizeof(rMsg), "✅ BULKHEAD REPAIRED: [%s] structural patch sealed!", c->shortCode);
+                AddLog(rMsg, th->accentEmerald);
+            }
+        }
+
+        totalWater += c->water;
+        totalIngress += c->leakRate;
     }
-    if (g_sub.bilgePumpActive && g_sub.bilgeWater > 0.0f && g_sub.battery > 0.0f) {
-        float pumped = min(g_sub.bilgeWater, (10.0f + (g_sub.upgradeBallast - 1) * 5.0f) * dt);
-        g_sub.bilgeWater -= pumped;
+
+    // Bilge Pumping Simulation
+    g_sub.bilgePumpActive = (g_sub.bilgePumpMode > 0 && g_sub.battery > 0.0f);
+    if (g_sub.bilgePumpActive && totalWater > 0.0f) {
+        float pumpCap = (12.0f + (g_sub.upgradeBallast - 1) * 6.0f) * (g_sub.bilgePumpMode == 6 ? 2.5f : 1.0f) * dt * 0.35f;
+        if (g_sub.bilgePumpMode == 1 || g_sub.bilgePumpMode == 6) {
+            int floodedCount = 0;
+            for (int i = 0; i < COMPARTMENT_COUNT; i++) {
+                if (g_sub.compartments[i].water > 0.0f) floodedCount++;
+            }
+            if (floodedCount > 0) {
+                float share = pumpCap / floodedCount;
+                for (int i = 0; i < COMPARTMENT_COUNT; i++) {
+                    if (g_sub.compartments[i].water > 0.0f) {
+                        g_sub.compartments[i].water = max(0.0f, g_sub.compartments[i].water - share);
+                    }
+                }
+            }
+        } else if (g_sub.bilgePumpMode >= 2 && g_sub.bilgePumpMode <= 5) {
+            int targetIdx = g_sub.bilgePumpMode - 2;
+            g_sub.compartments[targetIdx].water = max(0.0f, g_sub.compartments[targetIdx].water - pumpCap);
+        }
     }
+
+    // Internal Cabin Pressure Dynamics
+    float targetCabinPres = 1.0f + (totalWater / 1000.0f) * 1.6f;
+    g_sub.cabinPressure += (targetCabinPres - g_sub.cabinPressure) * (dt * 0.3f);
+    if (g_sub.bleedValveOpen) {
+        g_sub.cabinPressure = max(1.0f, g_sub.cabinPressure - dt * 0.35f);
+    }
+
+    g_sub.bilgeWater = totalWater;
+    g_sub.waterIntrusionRate = totalIngress;
+
+    float avgInt = 0.0f;
+    for (int i = 0; i < COMPARTMENT_COUNT; i++) avgInt += g_sub.compartments[i].integrity;
+    avgInt /= 4.0f;
+    g_sub.hull = min(g_sub.hull, avgInt);
 
     float baseDrain = 0.3f;
     if (g_sub.searchlights) baseDrain += (0.8f / g_sub.upgradeLights);
     if (g_sub.clawDeployed) baseDrain += 0.4f;
     if (g_sub.throttleMode == 2) baseDrain += 1.2f;
     if (g_sub.throttleMode == 3) baseDrain += 3.5f;
-    if (g_sub.bilgePumpActive) baseDrain += 0.6f;
+    if (g_sub.bilgePumpMode == 6) baseDrain += 2.2f;
+    else if (g_sub.bilgePumpMode > 0) baseDrain += 0.6f;
     if (g_sub.scrubberAuto) baseDrain += 0.4f;
     if (g_sub.autopilot) baseDrain += 0.3f;
     if (g_sub.lowPowerMode) baseDrain *= 0.45f;
@@ -1652,6 +1865,149 @@ void DrawEngineeringBay(HDC hdc, int x, int y, int w, int h, const SubmarineThem
     }
 }
 
+// --- DRAW DAMAGE CONTROL & BULKHEAD FLOOD VIEW (PHASE 9) ---
+void DrawDamageControlView(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* th) {
+    RECT rcBg = { x, y, x + w, y + h };
+    HBRUSH hBr = CreateSolidBrush(th->bgDeep);
+    FillRect(hdc, &rcBg, hBr);
+    DeleteObject(hBr);
+
+    float totalWater = 0.0f;
+    float totalIngress = 0.0f;
+    for (int i = 0; i < COMPARTMENT_COUNT; i++) {
+        totalWater += g_sub.compartments[i].water;
+        totalIngress += g_sub.compartments[i].leakRate;
+    }
+    int floodPct = (int)((totalWater / 1000.0f) * 100.0f);
+
+    char hdrBuf[128];
+    snprintf(hdrBuf, sizeof(hdrBuf), "BILGE: %.1f/1000 GAL (%d%%) | INGRESS: %.1f GPM", totalWater, floodPct, totalIngress);
+    SelectObject(hdc, g_hFontBold);
+    SetTextColor(hdc, totalWater > 200.0f ? th->accentRed : (totalWater > 50.0f ? th->accentAmber : th->accentEmerald));
+    TextOutA(hdc, x + 8, y + 6, hdrBuf, (int)strlen(hdrBuf));
+
+    // Top Action Buttons
+    char bleedBuf[64];
+    snprintf(bleedBuf, sizeof(bleedBuf), "CABIN: %.2f ATM [%s]", g_sub.cabinPressure, g_sub.bleedValveOpen ? "BLEED" : "SEAL");
+    DrawCustomButton(hdc, ID_BTN_BLEED_VALVE, x + w - 380, y + 4, 130, 20, bleedBuf, g_sub.bleedValveOpen, th->accentSonar, th);
+
+    const char* pumpModeLabels[7] = { "OFF", "AUTO", "BOW", "CMD", "ENG", "AFT", "2.5x OVERDRIVE" };
+    char pumpBuf[64];
+    snprintf(pumpBuf, sizeof(pumpBuf), "PUMP: %s", pumpModeLabels[g_sub.bilgePumpMode]);
+    DrawCustomButton(hdc, ID_BTN_PUMP_MODE, x + w - 244, y + 4, 130, 20, pumpBuf, g_sub.bilgePumpMode == 6, g_sub.bilgePumpMode == 6 ? th->accentRed : th->accentEmerald, th);
+
+    DrawCustomButton(hdc, ID_BTN_SIM_BREACH, x + w - 108, y + 4, 100, 20, "TEST DRILL", 0, th->accentAmber, th);
+
+    int contentY = y + 28;
+    int contentH = h - 34;
+
+    // 4 Compartment Bay Panels
+    int margin = 6;
+    int cardW = (w - margin * 5) / 4;
+    int cardH = contentH - 4;
+
+    const char* tierNames[4] = { "INTACT", "HAIRLINE", "RUPTURE", "TORRENTIAL" };
+
+    for (int i = 0; i < COMPARTMENT_COUNT; i++) {
+        CompartmentInfo* comp = &g_sub.compartments[i];
+        int cx = x + margin + i * (cardW + margin);
+        int cy = contentY;
+
+        RECT rcCard = { cx, cy, cx + cardW, cy + cardH };
+        HBRUSH hBrP = CreateSolidBrush(th->bgPanel);
+        COLORREF bClr = comp->breachTier > 0 ? th->accentRed : (comp->water > 0.0f ? th->accentAmber : th->borderPanel);
+        HBRUSH hBrB = CreateSolidBrush(bClr);
+        FillRect(hdc, &rcCard, hBrP);
+        FrameRect(hdc, &rcCard, hBrB);
+        DeleteObject(hBrP);
+        DeleteObject(hBrB);
+
+        // Header: Code & Status
+        SelectObject(hdc, g_hFontBold);
+        SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, cx + 6, cy + 4, comp->shortCode, (int)strlen(comp->shortCode));
+
+        COLORREF tClr = comp->breachTier == 0 ? th->accentEmerald : (comp->breachTier == 1 ? th->accentAmber : th->accentRed);
+        SetTextColor(hdc, tClr);
+        const char* tName = tierNames[comp->breachTier];
+        SIZE tSz;
+        GetTextExtentPoint32A(hdc, tName, (int)strlen(tName), &tSz);
+        TextOutA(hdc, cx + cardW - tSz.cx - 6, cy + 4, tName, (int)strlen(tName));
+
+        // Compartment Full Name
+        SelectObject(hdc, g_hFontSmall);
+        SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, cx + 6, cy + 18, comp->name, (int)strlen(comp->name));
+
+        // Water Chamber Visual Box
+        int chY = cy + 32;
+        int chH = 44;
+        int chW = cardW - 12;
+        RECT rcChamber = { cx + 6, chY, cx + 6 + chW, chY + chH };
+        HBRUSH hBrChBg = CreateSolidBrush(th->gaugeBg);
+        FillRect(hdc, &rcChamber, hBrChBg);
+        FrameRect(hdc, &rcChamber, hBrB);
+        DeleteObject(hBrChBg);
+
+        int fillH = (int)((comp->water / comp->maxWater) * chH);
+        if (fillH > 0) {
+            RECT rcFill = { cx + 7, chY + chH - fillH, cx + 5 + chW, chY + chH - 1 };
+            HBRUSH hBrFill = CreateSolidBrush(RGB(2, 132, 199));
+            FillRect(hdc, &rcFill, hBrFill);
+            DeleteObject(hBrFill);
+        }
+
+        char wTxt[64];
+        snprintf(wTxt, sizeof(wTxt), "%.1f/250 GAL (%d%%)", comp->water, (int)((comp->water / comp->maxWater) * 100.0f));
+        SetTextColor(hdc, RGB(255, 255, 255));
+        SIZE wSz;
+        GetTextExtentPoint32A(hdc, wTxt, (int)strlen(wTxt), &wSz);
+        TextOutA(hdc, cx + 6 + (chW - wSz.cx) / 2, chY + (chH - wSz.cy) / 2, wTxt, (int)strlen(wTxt));
+
+        // Stats rows
+        int sy = chY + chH + 6;
+        char sBuf[64];
+        snprintf(sBuf, sizeof(sBuf), "INTEGRITY: %.1f%%", comp->integrity);
+        SetTextColor(hdc, comp->integrity < 60.0f ? th->accentRed : (comp->integrity < 85.0f ? th->accentAmber : th->accentEmerald));
+        TextOutA(hdc, cx + 6, sy, sBuf, (int)strlen(sBuf));
+        sy += 14;
+
+        snprintf(sBuf, sizeof(sBuf), "INGRESS: %.1f GPM", comp->leakRate);
+        SetTextColor(hdc, comp->leakRate > 0.0f ? th->accentRed : th->textDim);
+        TextOutA(hdc, cx + 6, sy, sBuf, (int)strlen(sBuf));
+        sy += 16;
+
+        // Repair bar
+        if (comp->isRepairing) {
+            DrawGaugeBar(hdc, cx + 6, sy, chW, 6, comp->repairProgress, th->accentAmber, th);
+            sy += 10;
+        } else {
+            sy += 4;
+        }
+
+        // Action Buttons inside Card
+        int btnH = 18;
+        char dBtn[32];
+        snprintf(dBtn, sizeof(dBtn), comp->doorSealed ? "DOOR: SEALED" : "DOOR: OPEN");
+        DrawCustomButton(hdc, ID_BTN_DOOR_BAY_0 + i, cx + 6, sy, chW, btnH, dBtn, comp->doorSealed, comp->doorSealed ? th->accentRed : th->accentEmerald, th);
+        sy += btnH + 3;
+
+        char aBtn[32];
+        snprintf(aBtn, sizeof(aBtn), comp->airDam ? "AIR DAM: ON" : "AIR DAM: OFF");
+        DrawCustomButton(hdc, ID_BTN_AIRDAM_BAY_0 + i, cx + 6, sy, chW, btnH, aBtn, comp->airDam, comp->airDam ? th->accentSonar : th->textDim, th);
+        sy += btnH + 3;
+
+        int isRouted = (g_sub.bilgePumpMode == i + 2);
+        DrawCustomButton(hdc, ID_BTN_ROUTE_BAY_0 + i, cx + 6, sy, chW, btnH, isRouted ? "PUMP PRIORITY" : "ROUTE PUMP", isRouted, isRouted ? th->accentEmerald : th->textPrimary, th);
+        sy += btnH + 3;
+
+        char pBtn[32];
+        if (comp->isRepairing) snprintf(pBtn, sizeof(pBtn), "WELDING %d%%", (int)comp->repairProgress);
+        else snprintf(pBtn, sizeof(pBtn), "WELD PATCH");
+        DrawCustomButton(hdc, ID_BTN_PATCH_BAY_0 + i, cx + 6, sy, chW, btnH, pBtn, comp->isRepairing, th->accentAmber, th);
+    }
+}
+
 void DrawUI(HDC hdc, RECT* rcClient) {
     int clientW = rcClient->right - rcClient->left;
     int clientH = rcClient->bottom - rcClient->top;
@@ -1830,13 +2186,14 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     snprintf(secTag, sizeof(secTag), "SECTOR: %s | SURVEY: %d PTS", g_sectors[g_sub.currentSectorIdx].name, g_sub.surveyPoints);
     DrawPanelBox(hdc, centerX, panelY, centerW, sonarH, "DEEP OCEAN & FAUNA EXPLORATION", secTag, th->accentEmerald, th);
 
-    // View switch buttons inside center panel header (5 views)
-    int btnViewW = (centerW - 140) / 5;
+    // View switch buttons inside center panel header (6 views)
+    int btnViewW = (centerW - 140) / 6;
     DrawCustomButton(hdc, ID_BTN_VIEW_SONAR, centerX + 8, panelY + 28, btnViewW - 2, 20, "SONAR", g_sub.viewMode == 0, th->accentSonar, th);
     DrawCustomButton(hdc, ID_BTN_VIEW_NAVMAP, centerX + 6 + btnViewW, panelY + 28, btnViewW - 2, 20, "TRENCH", g_sub.viewMode == 1, th->accentSonar, th);
     DrawCustomButton(hdc, ID_BTN_VIEW_CODEX, centerX + 4 + btnViewW * 2, panelY + 28, btnViewW - 2, 20, "CODEX", g_sub.viewMode == 2, th->accentSonar, th);
     DrawCustomButton(hdc, ID_BTN_VIEW_CARGO, centerX + 2 + btnViewW * 3, panelY + 28, btnViewW - 2, 20, "CARGO", g_sub.viewMode == 3, th->accentAmber, th);
-    DrawCustomButton(hdc, ID_BTN_VIEW_ENG, centerX + btnViewW * 4, panelY + 28, btnViewW - 2, 20, "ENGINEERING", g_sub.viewMode == 4, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_VIEW_ENG, centerX + btnViewW * 4, panelY + 28, btnViewW - 2, 20, "ENG", g_sub.viewMode == 4, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_VIEW_DAMAGE, centerX - 2 + btnViewW * 5, panelY + 28, btnViewW - 2, 20, "DAMAGE", g_sub.viewMode == 5, th->accentRed, th);
     DrawCustomButton(hdc, ID_BTN_FIELD_DIAG, centerX + centerW - 128, panelY + 28, 120, 20, "+35 PTS DIAG", 0, th->accentAmber, th);
 
     int sonarContentY = panelY + 52;
@@ -2016,8 +2373,10 @@ void DrawUI(HDC hdc, RECT* rcClient) {
         DrawFaunaCodex(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
     } else if (g_sub.viewMode == 3) {
         DrawCargoHoldView(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
-    } else {
+    } else if (g_sub.viewMode == 4) {
         DrawEngineeringBay(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
+    } else if (g_sub.viewMode == 5) {
+        DrawDamageControlView(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
     }
 
     SelectObject(hdc, g_hFontSmall);
@@ -2187,14 +2546,15 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
         if (mx >= clientW - 142 && mx <= clientW - 12) return ID_BTN_EMERGENCY_BLOW;
     }
 
-    // View toggles in center panel (5 buttons)
+    // View toggles in center panel (6 buttons)
     if (my >= panelY + 28 && my <= panelY + 48) {
-        int btnViewW = (centerW - 140) / 5;
+        int btnViewW = (centerW - 140) / 6;
         if (mx >= centerX + 8 && mx <= centerX + 8 + btnViewW - 2) return ID_BTN_VIEW_SONAR;
         if (mx >= centerX + 6 + btnViewW && mx <= centerX + 6 + btnViewW * 2 - 2) return ID_BTN_VIEW_NAVMAP;
         if (mx >= centerX + 4 + btnViewW * 2 && mx <= centerX + 4 + btnViewW * 3 - 2) return ID_BTN_VIEW_CODEX;
         if (mx >= centerX + 2 + btnViewW * 3 && mx <= centerX + 2 + btnViewW * 4 - 2) return ID_BTN_VIEW_CARGO;
         if (mx >= centerX + btnViewW * 4 && mx <= centerX + btnViewW * 5 - 2) return ID_BTN_VIEW_ENG;
+        if (mx >= centerX - 2 + btnViewW * 5 && mx <= centerX - 2 + btnViewW * 6 - 2) return ID_BTN_VIEW_DAMAGE;
         if (mx >= centerX + centerW - 128 && mx <= centerX + centerW - 8) return ID_BTN_FIELD_DIAG;
     }
 
@@ -2243,6 +2603,39 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
         if (my >= r2y + gridH - 26 && my <= r2y + gridH - 6) {
             if (mx >= c1x + 8 && mx <= c1x + gridW - 8) return ID_BTN_UPG_BATTERY;
             if (mx >= c2x + 8 && mx <= c2x + gridW - 8) return ID_BTN_UPG_LIGHTS;
+        }
+    }
+
+    if (g_sub.viewMode == 5) { // Damage Control & Bulkhead Flood View
+        int sonarContentY = panelY + 52;
+        int dcX = centerX + 6;
+        int dcY = sonarContentY + 4;
+        int dcW = centerW - 12;
+
+        // Top action buttons
+        if (my >= dcY + 4 && my <= dcY + 24) {
+            if (mx >= dcX + dcW - 380 && mx <= dcX + dcW - 250) return ID_BTN_BLEED_VALVE;
+            if (mx >= dcX + dcW - 244 && mx <= dcX + dcW - 114) return ID_BTN_PUMP_MODE;
+            if (mx >= dcX + dcW - 108 && mx <= dcX + dcW - 8) return ID_BTN_SIM_BREACH;
+        }
+
+        int contentY = dcY + 28;
+        int marginDc = 6;
+        int cardW = (dcW - marginDc * 5) / 4;
+
+        for (int i = 0; i < COMPARTMENT_COUNT; i++) {
+            int cx = dcX + marginDc + i * (cardW + marginDc);
+            int chY = contentY + 32;
+            int chH = 44;
+            int sy = chY + chH + 6 + 14 + 16 + (g_sub.compartments[i].isRepairing ? 10 : 4);
+            int btnH = 18;
+
+            if (mx >= cx + 6 && mx <= cx + cardW - 6) {
+                if (my >= sy && my <= sy + btnH) return ID_BTN_DOOR_BAY_0 + i;
+                if (my >= sy + btnH + 3 && my <= sy + (btnH + 3) + btnH) return ID_BTN_AIRDAM_BAY_0 + i;
+                if (my >= sy + (btnH + 3) * 2 && my <= sy + (btnH + 3) * 2 + btnH) return ID_BTN_ROUTE_BAY_0 + i;
+                if (my >= sy + (btnH + 3) * 3 && my <= sy + (btnH + 3) * 3 + btnH) return ID_BTN_PATCH_BAY_0 + i;
+            }
         }
     }
 
@@ -2365,6 +2758,113 @@ void HandleCommand(int cmdId) {
             g_sub.viewMode = 4;
             PlaySoundAsync(580, 80);
             break;
+
+        case ID_BTN_VIEW_DAMAGE:
+            g_sub.viewMode = 5;
+            PlaySoundAsync(500, 80);
+            break;
+
+        case ID_BTN_BLEED_VALVE:
+            g_sub.bleedValveOpen = !g_sub.bleedValveOpen;
+            if (g_sub.bleedValveOpen) {
+                PlayPressureBleed();
+                AddLog("Cabin equalization bleed valve OPENED: equalizing overpressure.", th->accentAmber);
+            } else {
+                PlaySoundAsync(350, 80);
+                AddLog("Cabin equalization bleed valve CLOSED.", th->textDim);
+            }
+            break;
+
+        case ID_BTN_PUMP_MODE: {
+            g_sub.bilgePumpMode = (g_sub.bilgePumpMode + 1) % 7;
+            g_sub.bilgePumpActive = (g_sub.bilgePumpMode > 0);
+            PlaySoundAsync(480, 80);
+            const char* modeNames[] = { "STANDBY", "AUTO-BALANCE", "ROUTE BOW", "ROUTE CMD", "ROUTE ENG", "ROUTE AFT", "OVERDRIVE 2.5x" };
+            snprintf(msg, sizeof(msg), "Bilge pumping system switched to: [%s]", modeNames[g_sub.bilgePumpMode]);
+            AddLog(msg, g_sub.bilgePumpMode == 6 ? th->accentAmber : th->accentEmerald);
+            break;
+        }
+
+        case ID_BTN_SIM_BREACH: {
+            int bay = rand() % COMPARTMENT_COUNT;
+            int newTier = (g_sub.compartments[bay].breachTier < 3) ? g_sub.compartments[bay].breachTier + 1 : 3;
+            g_sub.compartments[bay].breachTier = newTier;
+            g_sub.compartments[bay].integrity = max(10.0f, g_sub.compartments[bay].integrity - 30.0f);
+            g_sub.cabinPressure = min(2.5f, g_sub.cabinPressure + 0.15f);
+            PlayAlarmKlaxon();
+            g_sub.viewMode = 5;
+            const char* tNames[] = { "INTACT", "HAIRLINE WEEP", "SEAM RUPTURE", "TORRENTIAL FRACTURE" };
+            snprintf(msg, sizeof(msg), "🚨 HULL BREACH TRIGGERED in [%s]: %s! Integrity %.0f%%",
+                     g_sub.compartments[bay].name, tNames[newTier], g_sub.compartments[bay].integrity);
+            AddLog(msg, th->accentRed);
+            break;
+        }
+
+        case ID_BTN_DOOR_BAY_0:
+        case ID_BTN_DOOR_BAY_1:
+        case ID_BTN_DOOR_BAY_2:
+        case ID_BTN_DOOR_BAY_3: {
+            int idx = cmdId - ID_BTN_DOOR_BAY_0;
+            g_sub.compartments[idx].doorSealed = !g_sub.compartments[idx].doorSealed;
+            PlaySoundAsync(g_sub.compartments[idx].doorSealed ? 300 : 600, 100);
+            snprintf(msg, sizeof(msg), "Bulkhead watertight door [%s]: %s",
+                     g_sub.compartments[idx].name, g_sub.compartments[idx].doorSealed ? "SEALED [ISOLATED]" : "UNSEALED [OPEN]");
+            AddLog(msg, g_sub.compartments[idx].doorSealed ? th->accentAmber : th->textDim);
+            break;
+        }
+
+        case ID_BTN_AIRDAM_BAY_0:
+        case ID_BTN_AIRDAM_BAY_1:
+        case ID_BTN_AIRDAM_BAY_2:
+        case ID_BTN_AIRDAM_BAY_3: {
+            int idx = cmdId - ID_BTN_AIRDAM_BAY_0;
+            g_sub.compartments[idx].airDam = !g_sub.compartments[idx].airDam;
+            if (g_sub.compartments[idx].airDam) {
+                PlayPressureBleed();
+                g_sub.airReservoir = max(0.0f, g_sub.airReservoir - 12.0f);
+            } else {
+                PlaySoundAsync(350, 80);
+            }
+            snprintf(msg, sizeof(msg), "HP Air Damming on [%s]: %s (-60%% leak rate).",
+                     g_sub.compartments[idx].name, g_sub.compartments[idx].airDam ? "CHARGED [ACTIVE]" : "VENTED [OFF]");
+            AddLog(msg, g_sub.compartments[idx].airDam ? th->accentAmber : th->textDim);
+            break;
+        }
+
+        case ID_BTN_ROUTE_BAY_0:
+        case ID_BTN_ROUTE_BAY_1:
+        case ID_BTN_ROUTE_BAY_2:
+        case ID_BTN_ROUTE_BAY_3: {
+            int idx = cmdId - ID_BTN_ROUTE_BAY_0;
+            g_sub.bilgePumpMode = idx + 2; // Route Bow(2), Route Cmd(3), Route Eng(4), Route Aft(5)
+            g_sub.bilgePumpActive = 1;
+            PlaySoundAsync(520, 80);
+            snprintf(msg, sizeof(msg), "Bilge suction routed directly to compartment [%s]!", g_sub.compartments[idx].name);
+            AddLog(msg, th->accentEmerald);
+            break;
+        }
+
+        case ID_BTN_PATCH_BAY_0:
+        case ID_BTN_PATCH_BAY_1:
+        case ID_BTN_PATCH_BAY_2:
+        case ID_BTN_PATCH_BAY_3: {
+            int idx = cmdId - ID_BTN_PATCH_BAY_0;
+            CompartmentInfo* c = &g_sub.compartments[idx];
+            if (c->breachTier > 0 || c->integrity < 100.0f) {
+                if (!c->isRepairing) {
+                    c->isRepairing = 1;
+                    c->repairProgress = 0.0f;
+                    PlayWeldingSound();
+                    snprintf(msg, sizeof(msg), "⚡ Damage control crew deploying underwater plasma welder to [%s]...", c->name);
+                    AddLog(msg, th->accentAmber);
+                }
+            } else {
+                PlaySoundAsync(300, 60);
+                snprintf(msg, sizeof(msg), "Compartment [%s] is intact. No structural repairs required.", c->name);
+                AddLog(msg, th->textDim);
+            }
+            break;
+        }
 
         case ID_BTN_LOCK_TARGET:
         case ID_BTN_HUD_NEXT_TARGET: {
