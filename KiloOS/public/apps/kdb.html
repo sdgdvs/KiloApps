@@ -93,7 +93,7 @@
   }
   .search-box input {
     width: 100%;
-    padding: 7px 11px;
+    padding: 7px 26px 7px 11px;
     border-radius: 6px;
     border: 1px solid var(--border-color);
     background: rgba(0, 0, 0, 0.3);
@@ -105,6 +105,24 @@
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+  }
+  .search-clear-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+    border-radius: 4px;
+    display: none;
+  }
+  .search-clear-btn:hover {
+    color: var(--text-main);
   }
   .pwd-box {
     position: relative;
@@ -405,6 +423,7 @@
     <div class="controls">
       <div class="search-box">
         <input type="text" id="searchInput" aria-label="Search or query employees" placeholder="Search or query (e.g. dept:engineering, id>102)..." maxlength="100" onkeyup="handleSearchKey(event)" oninput="filterTable()">
+        <button id="searchClearBtn" class="search-clear-btn" onclick="clearSearch()" aria-label="Clear search" title="Clear search (Esc)">&times;</button>
       </div>
       <div class="pwd-box">
         <input type="password" id="dbPassword" aria-label="Database Encryption Password" placeholder="Encryption Key..." onchange="loadRecords()" title="Set password to encrypt/decrypt database">
@@ -457,9 +476,9 @@
 </div>
 
 <!-- Edit Modal -->
-<div class="modal-overlay" id="editModal">
+<div class="modal-overlay" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
   <div class="modal">
-    <h3>Edit Employee Record</h3>
+    <h3 id="editModalTitle">Edit Employee Record</h3>
     <input type="hidden" id="editOriginalId">
     <div class="modal-field">
       <label for="editId">ID</label>
@@ -485,9 +504,9 @@
 </div>
 
 <!-- Analytics & Statistics Modal -->
-<div class="modal-overlay" id="statsModal">
+<div class="modal-overlay" id="statsModal" role="dialog" aria-modal="true" aria-labelledby="statsModalTitle">
   <div class="modal modal-wide">
-    <h3>📊 Database Analytics & Metrics</h3>
+    <h3 id="statsModalTitle">📊 Database Analytics & Metrics</h3>
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-value" id="statTotalEmployees">0</div>
@@ -523,13 +542,42 @@
 if (window.resizeTo) window.resizeTo(900, 650);
 
 function showHelp() {
-  alert(`KDB Employee Database - Help\n\n- Search query supports tags (e.g. 'dept:engineering' or 'role:lead')\n- Numeric comparisons: 'id>102' or 'id<105'\n- Click any column header (ID, Name, Dept, Role) to sort Asc/Desc.\n- Analytics & Stats modal provides department headcount breakdown and metrics.\n- Export options: CSV, JSON, and Markdown (.md) Report.\n- Data is auto-saved locally with optional password encryption.\n- Max table capacity: 500 records.`);
+  alert(`KDB Employee Database - Help\n\n- Search query supports tags (e.g. 'dept:engineering' or 'role:lead')\n- Numeric comparisons: 'id>102' or 'id<105'\n- Hotkeys: '/' to focus search, 'Esc' to close dialogs or clear search\n- Click any column header (ID, Name, Dept, Role) to sort Asc/Desc.\n- Analytics & Stats modal provides department headcount breakdown and metrics.\n- Export options: CSV, JSON, and Markdown (.md) Report.\n- Data is auto-saved locally with optional password encryption.\n- Max table capacity: 500 records.`);
 }
 
 window.addEventListener('keydown', function(e) {
-  if ((e.key.toLowerCase() === 'h' || e.key === 'F1') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-    if (e.key === 'F1') e.preventDefault();
-    showHelp();
+  const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
+
+  if (e.key === 'Escape') {
+    const editModal = document.getElementById('editModal');
+    const statsModal = document.getElementById('statsModal');
+    if (editModal && editModal.classList.contains('active')) {
+      closeEditModal();
+      return;
+    }
+    if (statsModal && statsModal.classList.contains('active')) {
+      closeStatsModal();
+      return;
+    }
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput && searchInput.value) {
+      clearSearch();
+      return;
+    }
+  }
+
+  if (!isInput) {
+    if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
+      if (e.key === 'F1') e.preventDefault();
+      showHelp();
+    } else if (e.key === '/') {
+      e.preventDefault();
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) {
+        searchInput.focus();
+        searchInput.select();
+      }
+    }
   }
 });
 
@@ -569,13 +617,35 @@ function getPassword() {
   return document.getElementById('dbPassword').value;
 }
 
+function encodeUtf8(str) {
+  return unescape(encodeURIComponent(str));
+}
+
+function decodeUtf8(str) {
+  try {
+    return decodeURIComponent(escape(str));
+  } catch(e) {
+    return str;
+  }
+}
+
 function cryptData(text, key) {
   if (!key) return text;
+  const utf8 = encodeUtf8(text);
   let out = '';
-  for (let i = 0; i < text.length; i++) {
-    out += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+  for (let i = 0; i < utf8.length; i++) {
+    out += String.fromCharCode(utf8.charCodeAt(i) ^ key.charCodeAt(i % key.length));
   }
   return out;
+}
+
+function decryptData(cipher, key) {
+  if (!key) return cipher;
+  let raw = '';
+  for (let i = 0; i < cipher.length; i++) {
+    raw += String.fromCharCode(cipher.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+  }
+  return decodeUtf8(raw);
 }
 
 function handleSort(col) {
@@ -634,7 +704,7 @@ function loadRecords() {
           return;
         }
         try {
-          const dec = cryptData(atob(data.substring(4)), key);
+          const dec = decryptData(atob(data.substring(4)), key);
           data = dec;
         } catch(e) {
           updateStatus('Failed to decrypt. Wrong key?', true);
@@ -797,6 +867,10 @@ function openEditModal(id) {
   document.getElementById('editDept').value = rec.dept;
   document.getElementById('editRole').value = rec.role;
   document.getElementById('editModal').classList.add('active');
+  setTimeout(() => {
+    const nameInput = document.getElementById('editName');
+    if (nameInput) nameInput.focus();
+  }, 50);
 }
 
 function closeEditModal() {
@@ -833,8 +907,20 @@ function saveEditedRecord() {
   }
 }
 
+function clearSearch() {
+  const input = document.getElementById('searchInput');
+  if (input) input.value = '';
+  const clearBtn = document.getElementById('searchClearBtn');
+  if (clearBtn) clearBtn.style.display = 'none';
+  filterTable();
+  if (input) input.focus();
+}
+
 function filterTable() {
   const rawQuery = document.getElementById('searchInput').value.trim();
+  const clearBtn = document.getElementById('searchClearBtn');
+  if (clearBtn) clearBtn.style.display = rawQuery ? 'block' : 'none';
+
   if (!rawQuery) {
     renderTable(records);
     return;
@@ -877,8 +963,7 @@ function filterTable() {
 
 function handleSearchKey(e) {
   if (e.key === 'Escape') {
-    document.getElementById('searchInput').value = '';
-    filterTable();
+    clearSearch();
   }
 }
 
@@ -936,6 +1021,38 @@ function closeStatsModal() {
   document.getElementById('statsModal').classList.remove('active');
 }
 
+function parseCsvLine(text) {
+  const result = [];
+  let cur = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (i + 1 < text.length && text[i + 1] === '"') {
+          cur += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        cur += c;
+      }
+    } else {
+      if (c === '"') {
+        inQuotes = true;
+      } else if (c === ',') {
+        result.push(cur.trim());
+        cur = '';
+      } else {
+        cur += c;
+      }
+    }
+  }
+  result.push(cur.trim());
+  return result;
+}
+
 function exportCSV() {
   if (records.length === 0) {
     alert('No records available to export.');
@@ -943,7 +1060,7 @@ function exportCSV() {
   }
   let csv = 'ID,Name,Department,Role\n';
   records.forEach(r => {
-    const escapeCsv = val => `"${String(val).replace(/"/g, '""')}"`;
+    const escapeCsv = val => `"${String(val || '').replace(/"/g, '""').replace(/[\r\n]+/g, ' ')}"`;
     csv += `${escapeCsv(r.id)},${escapeCsv(r.name)},${escapeCsv(r.dept)},${escapeCsv(r.role)}\n`;
   });
 
@@ -955,7 +1072,7 @@ function exportCSV() {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
   updateStatus('Exported database CSV file');
 }
 
@@ -987,16 +1104,20 @@ function importCSV(e) {
 
       for (let i = 1; i < lines.length; i++) {
         if (records.length >= MAX_RECORDS) break;
-        const cols = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(',');
+        const cols = parseCsvLine(lines[i]);
         if (cols.length >= 4) {
-          const clean = val => val.replace(/^"|"$/g, '').replace(/""/g, '"').trim();
-          const id = clean(cols[0]);
-          const name = clean(cols[1]);
-          const dept = clean(cols[2]);
-          const role = clean(cols[3]);
+          const id = cols[0];
+          const name = cols[1];
+          const dept = cols[2];
+          const role = cols[3];
 
           if (id && name && !records.some(r => r.id.toLowerCase() === id.toLowerCase())) {
-            records.push({ id: id.slice(0,10), name: name.slice(0,50), dept: dept.slice(0,50), role: role.slice(0,50) });
+            records.push({
+              id: id.slice(0, 10),
+              name: name.slice(0, 50),
+              dept: dept.slice(0, 50),
+              role: role.slice(0, 50)
+            });
             importedCount++;
           } else {
             skippedCount++;
@@ -1036,7 +1157,7 @@ function exportJSON() {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
   updateStatus('Exported database JSON file ' + (key ? '(Encrypted)' : ''));
 }
 
@@ -1065,7 +1186,7 @@ function importJSON(e) {
           return;
         }
         try {
-          data = cryptData(atob(data.substring(4)), key);
+          data = decryptData(atob(data.substring(4)), key);
         } catch (e) {
           alert('Failed to decrypt file. Wrong key?');
           return;
@@ -1164,7 +1285,7 @@ function exportMarkdown() {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
   updateStatus('Exported database Markdown (.md) report');
 }
 
