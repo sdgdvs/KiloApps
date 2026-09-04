@@ -655,6 +655,126 @@
             justify-content: space-between;
             align-items: center;
         }
+
+        /* Modular Upgrades Engineering Bay Modal */
+        .btn.btn-upgrade {
+            border-color: var(--accent-amber);
+            color: #fef08a;
+        }
+
+        .upgrade-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .upgrade-card {
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .upgrade-card:hover {
+            border-color: var(--border-glow);
+            background: rgba(15, 28, 63, 0.6);
+        }
+
+        .upgrade-card.maxed {
+            border-color: var(--accent-emerald);
+            background: rgba(6, 78, 59, 0.25);
+        }
+
+        .upgrade-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .upgrade-card-title {
+            font-weight: bold;
+            font-size: 12px;
+            color: var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .upgrade-tier-pips {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .tier-pip {
+            width: 14px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid var(--border-panel);
+            border-radius: 1px;
+        }
+
+        .tier-pip.filled {
+            background: var(--accent-amber);
+            box-shadow: 0 0 5px var(--accent-amber);
+            border-color: #fef08a;
+        }
+
+        .upgrade-current-name {
+            color: var(--text-bright);
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .upgrade-stat-diff {
+            font-size: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-panel);
+            border-radius: 3px;
+            padding: 6px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            color: #cbd5e1;
+        }
+
+        .stat-highlight {
+            color: var(--accent-emerald);
+            font-weight: bold;
+        }
+
+        .btn-buy-upgrade {
+            padding: 6px 12px;
+            background: #1e3a8a;
+            border: 1px solid var(--border-glow);
+            color: var(--text-bright);
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.15s ease;
+        }
+
+        .btn-buy-upgrade:hover:not(:disabled) {
+            background: var(--btn-hover);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+        }
+
+        .btn-buy-upgrade:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: rgba(0, 0, 0, 0.4);
+            border-color: var(--border-panel);
+        }
     </style>
 </head>
 <body>
@@ -846,6 +966,10 @@
                         <span>📡 PROSPECT</span>
                         <span class="key-hint">[S] SCAN</span>
                     </button>
+                    <button class="btn btn-upgrade" id="btnUpgrades">
+                        <span>🛠️ UPGRADES</span>
+                        <span class="key-hint">[U] MODS</span>
+                    </button>
                     <button class="btn btn-nav" id="btnNav">
                         <span>🗺️ SECTORS</span>
                         <span class="key-hint">[N] STAR CHART</span>
@@ -913,6 +1037,32 @@
                             <span>🚀 ENGAGE WARP JUMP</span>
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modular Upgrades Engineering Bay Modal -->
+    <div class="modal-overlay" id="upgradeModal">
+        <div class="modal-box" style="width: 780px;">
+            <div class="modal-header">
+                <span>🛠️ MODULAR MINING BARGE ENGINEERING BAY</span>
+                <button class="btn" id="btnCloseUpgrades" style="padding: 2px 8px; border-color: var(--accent-red); color: var(--accent-red);">✕ CLOSE [U]</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 8px 12px; border: 1px solid var(--border-panel); border-radius: 4px;">
+                    <div>
+                        <span style="color: var(--text-bright); font-weight: bold;">BARGE RETROFIT DOCK: </span>
+                        <span style="color: var(--accent-cyan);">KStarDredge Mk-IV Heavy Frame</span>
+                    </div>
+                    <div>
+                        <span style="color: var(--text-dim); font-size: 11px;">AVAILABLE CREDITS: </span>
+                        <span id="upgradeModalCredits" style="color: var(--accent-amber); font-weight: bold; font-size: 13px;">2,500 CR</span>
+                    </div>
+                </div>
+
+                <div class="upgrade-grid" id="upgradeGrid">
+                    <!-- Dynamic Upgrade Cards generated by JS -->
                 </div>
             </div>
         </div>
@@ -1173,6 +1323,62 @@
             }
         };
 
+        // --- Modular Upgrades Engineering Definitions ---
+        const UPGRADE_DEFS = {
+            drill: {
+                id: 'drill',
+                name: 'Heavy Plasma Drill',
+                icon: '⚡',
+                desc: 'Laser core focal arrays, diamond-plasma emitters, and harmonic resonance bores.',
+                tiers: [
+                    { level: 1, name: 'Mk-I Pulse Beam', cost: 0, dpsBonus: 1.0, heatRate: 1.0, chunkBonus: 0.12, desc: 'Stock pulse laser emitter. Standard extraction efficiency.' },
+                    { level: 2, name: 'Mk-II Focused Lance', cost: 800, dpsBonus: 1.35, heatRate: 0.85, chunkBonus: 0.16, desc: '+35% Drill DPS, -15% heat buildup rate, +33% ore chunks.' },
+                    { level: 3, name: 'Mk-III Heavy Plasma Drill', cost: 2400, dpsBonus: 1.80, heatRate: 0.70, chunkBonus: 0.22, desc: '+80% Drill DPS, -30% heat buildup rate, +83% ore chunks.' },
+                    { level: 4, name: 'Mk-IV Singularity Bore', cost: 6000, dpsBonus: 2.40, heatRate: 0.55, chunkBonus: 0.30, desc: '+140% Drill DPS, -45% heat buildup rate, +150% ore chunks.' },
+                    { level: 5, name: 'Mk-V Void Annihilator', cost: 14000, dpsBonus: 3.20, heatRate: 0.40, chunkBonus: 0.40, desc: '+220% Drill DPS, -60% heat buildup rate, +233% ore chunks.' }
+                ]
+            },
+            cargo: {
+                id: 'cargo',
+                name: 'Titan Cargo Bay',
+                icon: '📦',
+                desc: 'Modular compressive titanium-reinforced storage vaults for raw ore containment.',
+                tiers: [
+                    { level: 1, name: 'Mk-I Standard Hold', cost: 0, capacity: 200, desc: '200 Tonnage base ore capacity.' },
+                    { level: 2, name: 'Mk-II Reinforced Vault', cost: 650, capacity: 350, desc: '350 Tonnage capacity (+150T expansion).' },
+                    { level: 3, name: 'Mk-III Titan Cargo Bay', cost: 1800, capacity: 550, desc: '550 Tonnage capacity (+350T expansion).' },
+                    { level: 4, name: 'Mk-IV Super-Freighter Hull', cost: 4500, capacity: 850, desc: '850 Tonnage capacity (+650T expansion).' },
+                    { level: 5, name: 'Mk-V Dreadnought Vault', cost: 11000, capacity: 1300, desc: '1,300 Tonnage mega-capacity (+1,100T expansion).' }
+                ]
+            },
+            engine: {
+                id: 'engine',
+                name: 'Fusion Thrusters',
+                icon: '🚀',
+                desc: 'High-impulse magnetic nozzle fusion engines with vectorized maneuvering thrusters.',
+                tiers: [
+                    { level: 1, name: 'Mk-I Chemical Jets', cost: 0, thrust: 0.12, maxSpeed: 6.0, rot: 0.045, fuelBurn: 1.0, desc: 'Stock hydrazine maneuvering thrusters.' },
+                    { level: 2, name: 'Mk-II Ion Pulse Drive', cost: 750, thrust: 0.16, maxSpeed: 7.2, rot: 0.052, fuelBurn: 0.80, desc: '+33% Thrust, +20% Top Speed, -20% fuel burn.' },
+                    { level: 3, name: 'Mk-III Fusion Thrusters', cost: 2200, thrust: 0.21, maxSpeed: 8.5, rot: 0.060, fuelBurn: 0.65, desc: '+75% Thrust, +42% Top Speed, -35% fuel burn.' },
+                    { level: 4, name: 'Mk-IV Antimatter Core Drive', cost: 5500, thrust: 0.27, maxSpeed: 10.0, rot: 0.068, fuelBurn: 0.50, desc: '+125% Thrust, +67% Top Speed, -50% fuel burn.' },
+                    { level: 5, name: 'Mk-V Quantum Gravity Drive', cost: 13000, thrust: 0.35, maxSpeed: 12.0, rot: 0.078, fuelBurn: 0.35, desc: '+190% Thrust, +100% Top Speed, -65% fuel burn.' }
+                ]
+            },
+            shield: {
+                id: 'shield',
+                name: 'Particle Shields',
+                icon: '🛡️',
+                desc: 'Localized deflector energy barriers & layered ablative hull composite plating.',
+                tiers: [
+                    { level: 1, name: 'Mk-I Deflector Mesh', cost: 0, shield: 100, hull: 100, regen: 0.05, desc: '100 Shield / 100 Hull plating.' },
+                    { level: 2, name: 'Mk-II Particle Shield', cost: 700, shield: 150, hull: 125, regen: 0.08, desc: '150 Shield (+50) / 125 Hull (+25), +60% shield regen.' },
+                    { level: 3, name: 'Mk-III Kinetic Barrier', cost: 2000, shield: 220, hull: 160, regen: 0.12, desc: '220 Shield (+120) / 160 Hull (+60), +140% shield regen.' },
+                    { level: 4, name: 'Mk-IV Aegis Energy Matrix', cost: 5000, shield: 300, hull: 200, regen: 0.18, desc: '300 Shield (+200) / 200 Hull (+100), +260% shield regen.' },
+                    { level: 5, name: 'Mk-V Void Phase Barrier', cost: 12000, shield: 420, hull: 260, regen: 0.25, desc: '420 Shield (+320) / 260 Hull (+160), +400% shield regen.' }
+                ]
+            }
+        };
+
         const state = {
             credits: 2500,
             currentSectorIndex: 0,
@@ -1195,6 +1401,12 @@
             laserOverheated: false,
             themeIndex: 0,
             scanlineIndex: 0,
+            upgrades: {
+                drill: 0,
+                cargo: 0,
+                engine: 0,
+                shield: 0
+            },
             cargoHold: {
                 ferrum: 0,
                 silicates: 0,
@@ -1446,6 +1658,124 @@
             }
         }
 
+        // --- Modular Upgrades Engineering Bay Modal ---
+        function openUpgradeModal() {
+            renderUpgradeGrid();
+            document.getElementById('upgradeModalCredits').textContent = `${state.credits.toLocaleString()} CR`;
+            document.getElementById('upgradeModal').classList.add('open');
+            audio.playBeep(640, 'triangle', 0.08, 0.12);
+        }
+
+        function closeUpgradeModal() {
+            document.getElementById('upgradeModal').classList.remove('open');
+        }
+
+        function renderUpgradeGrid() {
+            const grid = document.getElementById('upgradeGrid');
+            grid.innerHTML = '';
+            document.getElementById('upgradeModalCredits').textContent = `${state.credits.toLocaleString()} CR`;
+
+            for (const key in UPGRADE_DEFS) {
+                const mod = UPGRADE_DEFS[key];
+                const currentTierIdx = state.upgrades[key] || 0;
+                const currentTier = mod.tiers[currentTierIdx];
+                const nextTier = mod.tiers[currentTierIdx + 1] || null;
+                const isMax = (currentTierIdx >= mod.tiers.length - 1);
+
+                const card = document.createElement('div');
+                card.className = `upgrade-card ${isMax ? 'maxed' : ''}`;
+
+                let pipsHtml = '';
+                for (let t = 0; t < mod.tiers.length; t++) {
+                    pipsHtml += `<div class="tier-pip ${t <= currentTierIdx ? 'filled' : ''}"></div>`;
+                }
+
+                let statDiffHtml = '';
+                if (key === 'drill') {
+                    statDiffHtml = `
+                        <div>• Current: <span class="stat-highlight">${currentTier.name}</span> (${(currentTier.dpsBonus * 100).toFixed(0)}% DPS)</div>
+                        ${nextTier ? `<div style="color: var(--accent-cyan);">• Next: ${nextTier.name} (${nextTier.desc})</div>` : '<div style="color: var(--accent-emerald);">• MAXIMUM UPGRADE INSTALLED</div>'}
+                    `;
+                } else if (key === 'cargo') {
+                    statDiffHtml = `
+                        <div>• Current Capacity: <span class="stat-highlight">${currentTier.capacity} T</span></div>
+                        ${nextTier ? `<div style="color: var(--accent-cyan);">• Next: ${nextTier.name} (${nextTier.desc})</div>` : '<div style="color: var(--accent-emerald);">• MAXIMUM UPGRADE INSTALLED</div>'}
+                    `;
+                } else if (key === 'engine') {
+                    statDiffHtml = `
+                        <div>• Current: <span class="stat-highlight">${currentTier.name}</span> (Speed: ${currentTier.maxSpeed.toFixed(1)} km/s)</div>
+                        ${nextTier ? `<div style="color: var(--accent-cyan);">• Next: ${nextTier.name} (${nextTier.desc})</div>` : '<div style="color: var(--accent-emerald);">• MAXIMUM UPGRADE INSTALLED</div>'}
+                    `;
+                } else if (key === 'shield') {
+                    statDiffHtml = `
+                        <div>• Current: <span class="stat-highlight">${currentTier.name}</span> (Shield: ${currentTier.shield} / Hull: ${currentTier.hull})</div>
+                        ${nextTier ? `<div style="color: var(--accent-cyan);">• Next: ${nextTier.name} (${nextTier.desc})</div>` : '<div style="color: var(--accent-emerald);">• MAXIMUM UPGRADE INSTALLED</div>'}
+                    `;
+                }
+
+                let btnHtml = '';
+                if (isMax) {
+                    btnHtml = `<button class="btn-buy-upgrade" disabled><span>✓ FULLY RETROFITTED</span><span>TIER MAX</span></button>`;
+                } else {
+                    const canAfford = (state.credits >= nextTier.cost);
+                    btnHtml = `
+                        <button class="btn-buy-upgrade" ${canAfford ? '' : 'disabled'} onclick="buyUpgrade('${key}')">
+                            <span>INSTALL ${nextTier.name}</span>
+                            <span style="color: var(--accent-amber);">${nextTier.cost.toLocaleString()} CR</span>
+                        </button>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="upgrade-card-header">
+                        <div class="upgrade-card-title">
+                            <span>${mod.icon}</span>
+                            <span>${mod.name}</span>
+                        </div>
+                        <div class="upgrade-tier-pips">${pipsHtml}</div>
+                    </div>
+                    <div style="font-size: 10px; color: var(--text-dim);">${mod.desc}</div>
+                    <div class="upgrade-stat-diff">${statDiffHtml}</div>
+                    ${btnHtml}
+                `;
+
+                grid.appendChild(card);
+            }
+        }
+
+        function buyUpgrade(key) {
+            const mod = UPGRADE_DEFS[key];
+            if (!mod) return;
+            const currentTierIdx = state.upgrades[key] || 0;
+            if (currentTierIdx >= mod.tiers.length - 1) return;
+            const nextTier = mod.tiers[currentTierIdx + 1];
+            if (state.credits < nextTier.cost) {
+                addLog(`⚠️ Insufficient credits to install ${nextTier.name}!`, 'warning');
+                return;
+            }
+
+            state.credits -= nextTier.cost;
+            state.upgrades[key] = currentTierIdx + 1;
+            document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+            audio.playCollect();
+
+            // Apply upgraded limits
+            if (key === 'cargo') {
+                state.maxCargo = nextTier.capacity;
+                document.getElementById('hdrCargoMax').textContent = state.maxCargo;
+                updateCargoUI();
+            } else if (key === 'shield') {
+                state.maxShield = nextTier.shield;
+                state.maxHull = nextTier.hull;
+                state.shield = state.maxShield;
+                state.hull = state.maxHull;
+            }
+
+            addLog(`🛠️ Engineering Retrofit: Installed [${nextTier.name}] for ${nextTier.cost.toLocaleString()} CR!`, 'success');
+            addFloatingText(`RETROFIT: ${nextTier.name}`, state.ship.x, state.ship.y - 30, '#10b981');
+            renderUpgradeGrid();
+        }
+
         function openNavModal() {
             state.selectedSectorIndex = state.currentSectorIndex;
             renderSectorGrid();
@@ -1528,6 +1858,11 @@
                 document.getElementById('txtDampener').style.color = state.dampeners ? "var(--accent-emerald)" : "var(--accent-amber)";
                 addLog(`Inertia dampeners ${state.dampeners ? 'engaged' : 'disengaged'}.`, 'system');
             }
+            if (e.code === 'KeyU') {
+                const upgradeModal = document.getElementById('upgradeModal');
+                if (upgradeModal.classList.contains('open')) closeUpgradeModal();
+                else openUpgradeModal();
+            }
             if (e.code === 'KeyN') {
                 const navModal = document.getElementById('navModal');
                 if (navModal.classList.contains('open')) closeNavModal();
@@ -1605,6 +1940,15 @@
             audio.playBeep(720, 'triangle', 0.12, 0.15);
             const found = state.asteroids.length;
             addLog(`Deep sweep complete: ${found} mineral asteroids registered in local sector.`, 'system');
+        });
+
+        document.getElementById('btnUpgrades').addEventListener('click', () => {
+            audio.init();
+            openUpgradeModal();
+        });
+
+        document.getElementById('btnCloseUpgrades').addEventListener('click', () => {
+            closeUpgradeModal();
         });
 
         document.getElementById('btnNav').addEventListener('click', () => {
@@ -1702,19 +2046,21 @@
             addLog("• SPACEBAR: Fire Heavy Mining Laser at Asteroids", "system");
             addLog("• T: Toggle Tractor Beam to collect floating ore chunks", "system");
             addLog("• Z: Toggle Inertial Dampeners", "system");
+            addLog("• U: Open Modular Engineering Bay & Install Upgrades", "system");
             addLog("• N: Open Star Sector Chart & Engage Warp Jumps", "system");
             addLog("• V: Cycle Retro CRT Vector Theme (Cyan / Amber / Green / Solar)", "system");
-            addLog("• C: Toggle CRT Scanlines & Phosphor Shaders (Normal / CRT+ / Off)", "system");
-            addLog("• CLICK: Target asteroid with telemetry computer", "system");
-        }
             addLog("• C: Toggle CRT Scanlines & Phosphor Shaders (Normal / CRT+ / Off)", "system");
             addLog("• CLICK: Target asteroid with telemetry computer", "system");
         }
 
         // --- Main Simulation Update Step ---
         function update(dt) {
+            const engineDef = UPGRADE_DEFS.engine.tiers[state.upgrades.engine];
+            const drillDef = UPGRADE_DEFS.drill.tiers[state.upgrades.drill];
+            const shieldDef = UPGRADE_DEFS.shield.tiers[state.upgrades.shield];
+
             // Steering & Rotation
-            const rotAccel = 0.045;
+            const rotAccel = engineDef.rot;
             if (state.keys['KeyA'] || state.keys['ArrowLeft']) {
                 state.ship.angle -= rotAccel;
             }
@@ -1723,7 +2069,8 @@
             }
 
             // Main & Retro Thrusters
-            const thrustPower = 0.12;
+            const thrustPower = engineDef.thrust;
+            const fuelDrainRate = 0.04 * engineDef.fuelBurn;
             state.ship.thrusting = (state.keys['KeyW'] || state.keys['ArrowUp']);
             state.ship.reversing = (state.keys['KeyS'] || state.keys['ArrowDown']);
 
@@ -1731,7 +2078,7 @@
                 if (state.fuel > 0) {
                     state.ship.vx += Math.cos(state.ship.angle) * thrustPower;
                     state.ship.vy += Math.sin(state.ship.angle) * thrustPower;
-                    state.fuel = Math.max(0, state.fuel - 0.04);
+                    state.fuel = Math.max(0, state.fuel - fuelDrainRate);
                     // Exhaust particles
                     const exAngle = state.ship.angle + Math.PI + (Math.random() - 0.5) * 0.4;
                     state.particles.push({
@@ -1751,7 +2098,7 @@
                 if (state.fuel > 0) {
                     state.ship.vx -= Math.cos(state.ship.angle) * (thrustPower * 0.5);
                     state.ship.vy -= Math.sin(state.ship.angle) * (thrustPower * 0.5);
-                    state.fuel = Math.max(0, state.fuel - 0.02);
+                    state.fuel = Math.max(0, state.fuel - fuelDrainRate * 0.5);
                 }
             }
 
@@ -1763,7 +2110,7 @@
 
             // Cap maximum speed
             const speed = Math.hypot(state.ship.vx, state.ship.vy);
-            const maxSpeed = 6.0;
+            const maxSpeed = engineDef.maxSpeed;
             if (speed > maxSpeed) {
                 state.ship.vx = (state.ship.vx / speed) * maxSpeed;
                 state.ship.vy = (state.ship.vy / speed) * maxSpeed;
@@ -1774,7 +2121,7 @@
 
             // Passive Reactor & Heat Dissipation
             if (state.ship.miningActive && !state.laserOverheated) {
-                state.heat += 0.45;
+                state.heat += 0.45 * drillDef.heatRate;
                 if (state.heat >= state.maxHeat) {
                     state.laserOverheated = true;
                     state.heat = 100;
@@ -1793,7 +2140,7 @@
             let powerDraw = 12.0;
             if (state.ship.miningActive && !state.laserOverheated) {
                 powerDraw += 28.0;
-                const laserRange = 240;
+                const laserRange = 250;
                 const lx = state.ship.x + Math.cos(state.ship.angle) * 20;
                 const ly = state.ship.y + Math.sin(state.ship.angle) * 20;
                 const dirX = Math.cos(state.ship.angle);
@@ -1816,9 +2163,9 @@
                             const impactX = lx + dirX * proj;
                             const impactY = ly + dirY * proj;
                             createSparks(impactX, impactY, '#00f0ff', 2);
-                            ast.hp -= 0.5;
+                            ast.hp -= 0.5 * drillDef.dpsBonus;
 
-                            if (Math.random() < 0.12) {
+                            if (Math.random() < drillDef.chunkBonus) {
                                 audio.playFracture();
                                 const oreInfo = ORE_TYPES[ast.oreType];
                                 spawnOreChunk(impactX, impactY, ast.oreType, 1);
@@ -1925,7 +2272,7 @@
 
             // Shield regeneration
             if (state.shield < state.maxShield) {
-                state.shield = Math.min(state.maxShield, state.shield + 0.05);
+                state.shield = Math.min(state.maxShield, state.shield + shieldDef.regen);
             }
 
             // Auto-Target Closest Asteroid if none selected
@@ -1963,11 +2310,14 @@
             document.getElementById('txtHeat').textContent = `${Math.round(state.heat)}%`;
             document.getElementById('barHeat').className = `meter-bar-fill ${state.heat > 80 ? 'danger' : (state.heat > 50 ? 'warning' : '')}`;
 
-            document.getElementById('barShield').style.width = `${state.shield}%`;
-            document.getElementById('txtShield').textContent = `${Math.round(state.shield)}%`;
+            const shieldPct = Math.max(0, Math.min(100, (state.shield / state.maxShield) * 100));
+            document.getElementById('barShield').style.width = `${shieldPct}%`;
+            document.getElementById('txtShield').textContent = `${Math.round(state.shield)} / ${state.maxShield}`;
 
-            document.getElementById('barHull').style.width = `${state.hull}%`;
-            document.getElementById('txtHull').textContent = `${Math.round(state.hull)}%`;
+            const hullPct = Math.max(0, Math.min(100, (state.hull / state.maxHull) * 100));
+            document.getElementById('barHull').style.width = `${hullPct}%`;
+            document.getElementById('txtHull').textContent = `${Math.round(state.hull)} / ${state.maxHull}`;
+            document.getElementById('hdrHull').textContent = `${Math.round(hullPct)}%`;
 
             document.getElementById('barFuel').style.width = `${state.fuel}%`;
             document.getElementById('txtFuel').textContent = `${Math.round(state.fuel)}%`;

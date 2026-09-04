@@ -21,6 +21,7 @@
 #define ID_BTN_HELP        109
 #define ID_BTN_JETTISON    110
 #define ID_BTN_SELL        111
+#define ID_BTN_UPGRADES    112
 
 #define SFX_NONE        0
 #define SFX_COLLECT     1
@@ -284,12 +285,85 @@ static const ThemePalette THEME_PALETTES[4] = {
     }
 };
 
+// Modular Upgrade Definitions
+typedef struct {
+    int level;
+    const char* name;
+    int cost;
+    float dpsBonus;
+    float heatRate;
+    float chunkBonus;
+    const char* desc;
+} DrillUpgradeDef;
+
+typedef struct {
+    int level;
+    const char* name;
+    int cost;
+    int capacity;
+    const char* desc;
+} CargoUpgradeDef;
+
+typedef struct {
+    int level;
+    const char* name;
+    int cost;
+    float thrust;
+    float maxSpeed;
+    float rot;
+    float fuelBurn;
+    const char* desc;
+} EngineUpgradeDef;
+
+typedef struct {
+    int level;
+    const char* name;
+    int cost;
+    float maxShield;
+    float maxHull;
+    float regen;
+    const char* desc;
+} ShieldUpgradeDef;
+
+static const DrillUpgradeDef DRILL_UPGRADES[5] = {
+    { 1, "Mk-I Pulse Beam",          0,     1.0f,  1.0f,  0.12f, "Stock pulse laser emitter." },
+    { 2, "Mk-II Focused Lance",      800,   1.35f, 0.85f, 0.16f, "+35% DPS, -15% heat, +33% ore." },
+    { 3, "Mk-III Heavy Plasma Drill",2400,  1.80f, 0.70f, 0.22f, "+80% DPS, -30% heat, +83% ore." },
+    { 4, "Mk-IV Singularity Bore",   6000,  2.40f, 0.55f, 0.30f, "+140% DPS, -45% heat, +150% ore." },
+    { 5, "Mk-V Void Annihilator",    14000, 3.20f, 0.40f, 0.40f, "+220% DPS, -60% heat, +233% ore." }
+};
+
+static const CargoUpgradeDef CARGO_UPGRADES[5] = {
+    { 1, "Mk-I Standard Hold",       0,     200,  "200 T base capacity." },
+    { 2, "Mk-II Reinforced Vault",   650,   350,  "350 T capacity (+150T)." },
+    { 3, "Mk-III Titan Cargo Bay",   1800,  550,  "550 T capacity (+350T)." },
+    { 4, "Mk-IV Super-Freighter",    4500,  850,  "850 T capacity (+650T)." },
+    { 5, "Mk-V Dreadnought Vault",   11000, 1300, "1,300 T capacity (+1,100T)." }
+};
+
+static const EngineUpgradeDef ENGINE_UPGRADES[5] = {
+    { 1, "Mk-I Chemical Jets",       0,     0.12f, 6.0f,  0.045f, 1.0f,  "Stock hydrazine thrusters." },
+    { 2, "Mk-II Ion Pulse Drive",    750,   0.16f, 7.2f,  0.052f, 0.80f, "+33% Thrust, +20% Spd, -20% Burn." },
+    { 3, "Mk-III Fusion Thrusters",  2200,  0.21f, 8.5f,  0.060f, 0.65f, "+75% Thrust, +42% Spd, -35% Burn." },
+    { 4, "Mk-IV Antimatter Drive",   5500,  0.27f, 10.0f, 0.068f, 0.50f, "+125% Thrust, +67% Spd, -50% Burn." },
+    { 5, "Mk-V Quantum Gravity Drive",13000,0.35f, 12.0f, 0.078f, 0.35f, "+190% Thrust, +100% Spd, -65% Burn." }
+};
+
+static const ShieldUpgradeDef SHIELD_UPGRADES[5] = {
+    { 1, "Mk-I Deflector Mesh",      0,     100.0f, 100.0f, 0.05f, "100 Shield / 100 Hull plating." },
+    { 2, "Mk-II Particle Shield",    700,   150.0f, 125.0f, 0.08f, "150 Shield / 125 Hull, +60% regen." },
+    { 3, "Mk-III Kinetic Barrier",   2000,  220.0f, 160.0f, 0.12f, "220 Shield / 160 Hull, +140% regen." },
+    { 4, "Mk-IV Aegis Energy Matrix",5000,  300.0f, 200.0f, 0.18f, "300 Shield / 200 Hull, +260% regen." },
+    { 5, "Mk-V Void Phase Barrier",  12000, 420.0f, 260.0f, 0.25f, "420 Shield / 260 Hull, +400% regen." }
+};
+
 // Game State
 typedef struct {
     int credits;
     int currentSectorIndex;
     int selectedSectorIndex;
     int showStarChart;
+    int showUpgrades;
     int warpActive;
     float warpTimer;
     char sector[32];
@@ -306,6 +380,12 @@ typedef struct {
     int laserOverheated;
     int themeIndex;
     int scanlineMode; // 0=Off, 1=Normal, 2=CRT+
+    
+    // Modular Upgrades (Tier 0 to 4)
+    int upgradeDrill;
+    int upgradeCargo;
+    int upgradeEngine;
+    int upgradeShield;
     
     // Ship Navigation
     float shipX, shipY;
@@ -334,7 +414,7 @@ typedef struct {
 
 static GameState g_state;
 static HWND g_hwnd = NULL;
-static HWND g_btnLaser, g_btnTractor, g_btnDampener, g_btnScan, g_btnNav, g_btnTheme, g_btnScanlines, g_btnAudio, g_btnHelp, g_btnJettison, g_btnSell;
+static HWND g_btnLaser, g_btnTractor, g_btnDampener, g_btnScan, g_btnNav, g_btnUpgrades, g_btnTheme, g_btnScanlines, g_btnAudio, g_btnHelp, g_btnJettison, g_btnSell;
 static HFONT g_fontMono = NULL;
 static HFONT g_fontMonoBold = NULL;
 static HFONT g_fontSmall = NULL;
@@ -390,6 +470,7 @@ int PickOreForSector(int sectorIdx);
 void InitSectorField(int sectorIdx);
 void EngageWarpJump(int targetSectorIdx);
 void InitGame(void);
+void BuyUpgrade(int moduleIdx);
 void UpdateGame(float dt);
 void RenderGame(HDC hdc, RECT* clientRect);
 int CalculateCargoValue(void);
@@ -642,6 +723,61 @@ void CycleScanlines(void) {
     }
 }
 
+void BuyUpgrade(int moduleIdx) {
+    char buf[128];
+    char fTxt[32];
+    if (moduleIdx == 0) { // Drill
+        if (g_state.upgradeDrill >= 4) { AddLog("Heavy Plasma Drill is already at maximum tier!", 3); return; }
+        const DrillUpgradeDef* nextTier = &DRILL_UPGRADES[g_state.upgradeDrill + 1];
+        if (g_state.credits < nextTier->cost) { AddLog("Insufficient credits for drill upgrade!", 4); return; }
+        g_state.credits -= nextTier->cost;
+        g_state.upgradeDrill++;
+        sprintf(buf, "Installed [%s] for %d CR! Drill DPS +%.0f%%.", nextTier->name, nextTier->cost, (nextTier->dpsBonus - 1.0f) * 100.0f);
+        AddLog(buf, 5);
+        sprintf(fTxt, "RETROFIT: %s", nextTier->name);
+        AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 30.0f, RGB(16, 185, 129));
+        TriggerSound(SFX_COLLECT);
+    } else if (moduleIdx == 1) { // Cargo
+        if (g_state.upgradeCargo >= 4) { AddLog("Titan Cargo Bay is already at maximum tier!", 3); return; }
+        const CargoUpgradeDef* nextTier = &CARGO_UPGRADES[g_state.upgradeCargo + 1];
+        if (g_state.credits < nextTier->cost) { AddLog("Insufficient credits for cargo bay expansion!", 4); return; }
+        g_state.credits -= nextTier->cost;
+        g_state.upgradeCargo++;
+        g_state.maxCargo = nextTier->capacity;
+        sprintf(buf, "Installed [%s] for %d CR! Max capacity expanded to %d T.", nextTier->name, nextTier->cost, nextTier->capacity);
+        AddLog(buf, 5);
+        sprintf(fTxt, "EXPAND: %d T", nextTier->capacity);
+        AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 30.0f, RGB(16, 185, 129));
+        TriggerSound(SFX_COLLECT);
+    } else if (moduleIdx == 2) { // Engine
+        if (g_state.upgradeEngine >= 4) { AddLog("Fusion Thrusters are already at maximum tier!", 3); return; }
+        const EngineUpgradeDef* nextTier = &ENGINE_UPGRADES[g_state.upgradeEngine + 1];
+        if (g_state.credits < nextTier->cost) { AddLog("Insufficient credits for thruster upgrade!", 4); return; }
+        g_state.credits -= nextTier->cost;
+        g_state.upgradeEngine++;
+        sprintf(buf, "Installed [%s] for %d CR! Top speed increased to %.1f km/s.", nextTier->name, nextTier->cost, nextTier->maxSpeed);
+        AddLog(buf, 5);
+        sprintf(fTxt, "DRIVE: %s", nextTier->name);
+        AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 30.0f, RGB(16, 185, 129));
+        TriggerSound(SFX_COLLECT);
+    } else if (moduleIdx == 3) { // Shield
+        if (g_state.upgradeShield >= 4) { AddLog("Particle Shields are already at maximum tier!", 3); return; }
+        const ShieldUpgradeDef* nextTier = &SHIELD_UPGRADES[g_state.upgradeShield + 1];
+        if (g_state.credits < nextTier->cost) { AddLog("Insufficient credits for particle shield upgrade!", 4); return; }
+        g_state.credits -= nextTier->cost;
+        g_state.upgradeShield++;
+        g_state.maxShield = nextTier->maxShield;
+        g_state.maxHull = nextTier->maxHull;
+        g_state.shield = g_state.maxShield;
+        g_state.hull = g_state.maxHull;
+        sprintf(buf, "Installed [%s] for %d CR! Shield max %d / Hull max %d.", nextTier->name, nextTier->cost, (int)nextTier->maxShield, (int)nextTier->maxHull);
+        AddLog(buf, 5);
+        sprintf(fTxt, "SHIELD: %.0f", nextTier->maxShield);
+        AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 30.0f, RGB(16, 185, 129));
+        TriggerSound(SFX_COLLECT);
+    }
+}
+
 void InitGame(void) {
     memset(&g_state, 0, sizeof(GameState));
     g_state.credits = 2500;
@@ -662,16 +798,26 @@ void InitGame(void) {
     g_state.scanlineMode = 1;
     g_state.shipAngle = -1.57079f; // Facing UP
     g_state.selectedAstIndex = -1;
+    g_state.upgradeDrill = 0;
+    g_state.upgradeCargo = 0;
+    g_state.upgradeEngine = 0;
+    g_state.upgradeShield = 0;
+    g_state.showUpgrades = 0;
     
     InitSectorField(0);
     
     AddLog("[SYSTEM] KStarDredge Mk-IV cockpit operational. Core reactor online.", 0);
     AddLog("[MINING] High-frequency mining laser ready. Aim at asteroids and hold [SPACE].", 1);
     AddLog("[TRACTOR] Tractor emitter active. Hold [T] to gather extracted mineral chunks.", 2);
+    AddLog("[UPGRADES] Modular engineering bay online. Press [U] for Barge Retrofits.", 0);
     AddLog("[NAV] Astronavigation computer initialized. Press [N] for Sector Charts.", 0);
 }
 
 void UpdateGame(float dt) {
+    const EngineUpgradeDef* engDef = &ENGINE_UPGRADES[g_state.upgradeEngine];
+    const DrillUpgradeDef* drillDef = &DRILL_UPGRADES[g_state.upgradeDrill];
+    const ShieldUpgradeDef* shieldDef = &SHIELD_UPGRADES[g_state.upgradeShield];
+
     // Warp Sequence Logic
     if (g_state.warpActive) {
         g_state.warpTimer -= dt;
@@ -690,16 +836,17 @@ void UpdateGame(float dt) {
     }
 
     // Steering
-    float rotAccel = 0.05f;
+    float rotAccel = engDef->rot;
     if (g_state.turningLeft) g_state.shipAngle -= rotAccel;
     if (g_state.turningRight) g_state.shipAngle += rotAccel;
     
     // Propulsion
-    float thrustPower = 0.12f;
+    float thrustPower = engDef->thrust;
+    float fuelDrainRate = 0.03f * engDef->fuelBurn;
     if (g_state.thrusting && g_state.fuel > 0.0f) {
         g_state.shipVx += (float)cos(g_state.shipAngle) * thrustPower;
         g_state.shipVy += (float)sin(g_state.shipAngle) * thrustPower;
-        g_state.fuel = max(0.0f, g_state.fuel - 0.03f);
+        g_state.fuel = max(0.0f, g_state.fuel - fuelDrainRate);
         
         // Thrust sparks
         float exAngle = g_state.shipAngle + 3.14159f + (((float)rand() / (float)RAND_MAX) - 0.5f) * 0.4f;
@@ -725,7 +872,7 @@ void UpdateGame(float dt) {
     if (g_state.reversing && g_state.fuel > 0.0f) {
         g_state.shipVx -= (float)cos(g_state.shipAngle) * (thrustPower * 0.5f);
         g_state.shipVy -= (float)sin(g_state.shipAngle) * (thrustPower * 0.5f);
-        g_state.fuel = max(0.0f, g_state.fuel - 0.015f);
+        g_state.fuel = max(0.0f, g_state.fuel - fuelDrainRate * 0.5f);
     }
     
     // Inertial Dampeners
@@ -736,9 +883,9 @@ void UpdateGame(float dt) {
     
     // Speed Cap
     float speed = (float)sqrt(g_state.shipVx * g_state.shipVx + g_state.shipVy * g_state.shipVy);
-    if (speed > 6.0f) {
-        g_state.shipVx = (g_state.shipVx / speed) * 6.0f;
-        g_state.shipVy = (g_state.shipVy / speed) * 6.0f;
+    if (speed > engDef->maxSpeed) {
+        g_state.shipVx = (g_state.shipVx / speed) * engDef->maxSpeed;
+        g_state.shipVy = (g_state.shipVy / speed) * engDef->maxSpeed;
     }
     
     g_state.shipX += g_state.shipVx;
@@ -746,7 +893,7 @@ void UpdateGame(float dt) {
     
     // Laser Overheat Logic
     if (g_state.miningActive && !g_state.laserOverheated) {
-        g_state.heat += 0.5f;
+        g_state.heat += 0.5f * drillDef->heatRate;
         if (g_state.heat >= g_state.maxHeat) {
             g_state.laserOverheated = 1;
             g_state.heat = 100.0f;
@@ -786,9 +933,10 @@ void UpdateGame(float dt) {
                     float impactX = lx + dirX * proj;
                     float impactY = ly + dirY * proj;
                     AddSparks(impactX, impactY, THEME_PALETTES[g_state.themeIndex].vector, 2);
-                    ast->hp -= 0.6f;
+                    ast->hp -= 0.6f * drillDef->dpsBonus;
                     
-                    if ((rand() % 100) < 14) {
+                    int chunkChance = (int)(drillDef->chunkBonus * 100.0f);
+                    if ((rand() % 100) < chunkChance) {
                         TriggerSound(SFX_FRACTURE);
                         SpawnOreChunk(impactX, impactY, ast->oreType, 1);
                         char buf[32];
@@ -908,7 +1056,7 @@ void UpdateGame(float dt) {
     
     // Shield Regeneration
     if (g_state.shield < g_state.maxShield) {
-        g_state.shield = min(g_state.maxShield, g_state.shield + 0.05f);
+        g_state.shield = min(g_state.maxShield, g_state.shield + shieldDef->regen);
     }
     
     // Update Particles
@@ -1709,10 +1857,199 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         DeleteObject(hPenBorder2);
     }
     
+    // Modular Upgrades Engineering Bay Modal
+    if (g_state.showUpgrades) {
+        int modalW = 680;
+        int modalH = 430;
+        int mx = (totalW - modalW) / 2;
+        int my = (totalH - modalH) / 2;
+        
+        RECT rcModal = { mx, my, mx + modalW, my + modalH };
+        HBRUSH hBrModal = CreateSolidBrush(pal->bgPanel);
+        FillRect(hdc, &rcModal, hBrModal);
+        DeleteObject(hBrModal);
+        
+        HPEN hPenBorder3 = CreatePen(PS_SOLID, 2, RGB(245, 158, 11));
+        HGDIOBJ oldPen3 = SelectObject(hdc, hPenBorder3);
+        HGDIOBJ oldBrush3 = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Rectangle(hdc, mx, my, mx + modalW, my + modalH);
+        
+        // Header
+        RECT rcHdr = { mx, my, mx + modalW, my + 30 };
+        HBRUSH hBrHdr = CreateSolidBrush(pal->bgHeader);
+        FillRect(hdc, &rcHdr, hBrHdr);
+        DeleteObject(hBrHdr);
+        
+        SelectObject(hdc, g_fontHeader);
+        SetTextColor(hdc, RGB(251, 191, 36));
+        TextOutA(hdc, mx + 14, my + 6, "MODULAR BARGE ENGINEERING BAY", 29);
+        
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, pal->textBright);
+        TextOutA(hdc, mx + modalW - 120, my + 9, "[U / ESC] CLOSE", 15);
+        
+        // Status Bar
+        RECT rcStat = { mx + 14, my + 34, mx + modalW - 14, my + 60 };
+        HBRUSH hBrStat = CreateSolidBrush(RGB(3, 7, 18));
+        FillRect(hdc, &rcStat, hBrStat);
+        DeleteObject(hBrStat);
+        FrameRect(hdc, &rcStat, (HBRUSH)GetStockObject(WHITE_BRUSH));
+        
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, pal->vector);
+        TextOutA(hdc, mx + 24, my + 39, "BARGE RETROFIT DOCK: KStarDredge Mk-IV Heavy Frame", 50);
+        
+        char credBuf[64];
+        sprintf(credBuf, "AVAILABLE CREDITS: %d CR", g_state.credits);
+        SetTextColor(hdc, RGB(245, 158, 11));
+        TextOutA(hdc, mx + modalW - 220, my + 39, credBuf, (int)strlen(credBuf));
+        
+        // 2x2 Upgrade Cards
+        int cardW = 318;
+        int cardH = 145;
+        int gapX = 16;
+        int gapY = 10;
+        int startX = mx + 14;
+        int startY = my + 68;
+        
+        for (int m = 0; m < 4; m++) {
+            int row = m / 2;
+            int col = m % 2;
+            int ucx = startX + col * (cardW + gapX);
+            int ucy = startY + row * (cardH + gapY);
+            
+            RECT rcCard = { ucx, ucy, ucx + cardW, ucy + cardH };
+            HBRUSH hBrCard = CreateSolidBrush(RGB(5, 12, 28));
+            FillRect(hdc, &rcCard, hBrCard);
+            DeleteObject(hBrCard);
+            
+            HPEN hPenCard = CreatePen(PS_SOLID, 1, pal->borderPanel);
+            SelectObject(hdc, hPenCard);
+            Rectangle(hdc, ucx, ucy, ucx + cardW, ucy + cardH);
+            DeleteObject(hPenCard);
+            
+            const char* modTitle = "";
+            int curTierIdx = 0;
+            int nextCost = 0;
+            const char* curName = "";
+            char curStatStr[64] = "";
+            char nextStatStr[64] = "";
+            
+            if (m == 0) { // Drill
+                modTitle = "[1] HEAVY PLASMA DRILL";
+                curTierIdx = g_state.upgradeDrill;
+                const DrillUpgradeDef* cur = &DRILL_UPGRADES[curTierIdx];
+                curName = cur->name;
+                sprintf(curStatStr, "DPS: +%.0f%% | Heat: -%.0f%% | Drop: %.0f%%", (cur->dpsBonus - 1.0f) * 100.0f, (1.0f - cur->heatRate) * 100.0f, cur->chunkBonus * 100.0f);
+                if (curTierIdx < 4) {
+                    const DrillUpgradeDef* nxt = &DRILL_UPGRADES[curTierIdx + 1];
+                    nextCost = nxt->cost;
+                    sprintf(nextStatStr, "Next: %s (+%.0f%% DPS)", nxt->name, (nxt->dpsBonus - 1.0f) * 100.0f);
+                }
+            } else if (m == 1) { // Cargo
+                modTitle = "[2] TITAN CARGO BAY";
+                curTierIdx = g_state.upgradeCargo;
+                const CargoUpgradeDef* cur = &CARGO_UPGRADES[curTierIdx];
+                curName = cur->name;
+                sprintf(curStatStr, "Ore Capacity: %d Tonnage", cur->capacity);
+                if (curTierIdx < 4) {
+                    const CargoUpgradeDef* nxt = &CARGO_UPGRADES[curTierIdx + 1];
+                    nextCost = nxt->cost;
+                    sprintf(nextStatStr, "Next: %s (%d T capacity)", nxt->name, nxt->capacity);
+                }
+            } else if (m == 2) { // Engine
+                modTitle = "[3] FUSION THRUSTERS";
+                curTierIdx = g_state.upgradeEngine;
+                const EngineUpgradeDef* cur = &ENGINE_UPGRADES[curTierIdx];
+                curName = cur->name;
+                sprintf(curStatStr, "Speed: %.1f km/s | Thrust: %.2f | Burn: -%.0f%%", cur->maxSpeed, cur->thrust, (1.0f - cur->fuelBurn) * 100.0f);
+                if (curTierIdx < 4) {
+                    const EngineUpgradeDef* nxt = &ENGINE_UPGRADES[curTierIdx + 1];
+                    nextCost = nxt->cost;
+                    sprintf(nextStatStr, "Next: %s (%.1f km/s)", nxt->name, nxt->maxSpeed);
+                }
+            } else if (m == 3) { // Shield
+                modTitle = "[4] PARTICLE SHIELDS";
+                curTierIdx = g_state.upgradeShield;
+                const ShieldUpgradeDef* cur = &SHIELD_UPGRADES[curTierIdx];
+                curName = cur->name;
+                sprintf(curStatStr, "Shield: %.0f | Hull: %.0f | Regen: %.2f/f", cur->maxShield, cur->maxHull, cur->regen);
+                if (curTierIdx < 4) {
+                    const ShieldUpgradeDef* nxt = &SHIELD_UPGRADES[curTierIdx + 1];
+                    nextCost = nxt->cost;
+                    sprintf(nextStatStr, "Next: %s (%.0f Shield / %.0f Hull)", nxt->name, nxt->maxShield, nxt->maxHull);
+                }
+            }
+            
+            // Title
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, pal->vector);
+            TextOutA(hdc, ucx + 8, ucy + 6, modTitle, (int)strlen(modTitle));
+            
+            // 5 Tier Pips
+            for (int p = 0; p < 5; p++) {
+                RECT rcPip = { ucx + cardW - 80 + (p * 14), ucy + 8, ucx + cardW - 80 + (p * 14) + 11, ucy + 16 };
+                HBRUSH hBrPip = CreateSolidBrush(p <= curTierIdx ? RGB(245, 158, 11) : RGB(30, 41, 59));
+                FillRect(hdc, &rcPip, hBrPip);
+                DeleteObject(hBrPip);
+                FrameRect(hdc, &rcPip, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            }
+            
+            // Current Tier Name
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, RGB(255, 255, 255));
+            char curTierLabel[64];
+            sprintf(curTierLabel, "Current: %s", curName);
+            TextOutA(hdc, ucx + 8, ucy + 26, curTierLabel, (int)strlen(curTierLabel));
+            
+            SetTextColor(hdc, RGB(148, 163, 184));
+            TextOutA(hdc, ucx + 8, ucy + 42, curStatStr, (int)strlen(curStatStr));
+            
+            // Next Tier Info or Max Level
+            if (curTierIdx >= 4) {
+                SetTextColor(hdc, RGB(16, 185, 129));
+                TextOutA(hdc, ucx + 8, ucy + 64, "* FULLY RETROFITTED (MAX TIER)", 30);
+                
+                RECT rcBtnMax = { ucx + 8, ucy + cardH - 34, ucx + cardW - 8, ucy + cardH - 8 };
+                HBRUSH hBrMax = CreateSolidBrush(RGB(6, 78, 59));
+                FillRect(hdc, &rcBtnMax, hBrMax);
+                DeleteObject(hBrMax);
+                SelectObject(hdc, g_fontMonoBold);
+                SetTextColor(hdc, RGB(110, 231, 183));
+                DrawTextA(hdc, "TIER MAXIMUM INSTALLED", -1, &rcBtnMax, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            } else {
+                SetTextColor(hdc, RGB(56, 189, 248));
+                TextOutA(hdc, ucx + 8, ucy + 64, nextStatStr, (int)strlen(nextStatStr));
+                
+                int canAfford = (g_state.credits >= nextCost);
+                RECT rcBtnBuy = { ucx + 8, ucy + cardH - 34, ucx + cardW - 8, ucy + cardH - 8 };
+                HBRUSH hBrBuy = CreateSolidBrush(canAfford ? RGB(30, 58, 138) : RGB(30, 41, 59));
+                FillRect(hdc, &rcBtnBuy, hBrBuy);
+                DeleteObject(hBrBuy);
+                FrameRect(hdc, &rcBtnBuy, (HBRUSH)GetStockObject(WHITE_BRUSH));
+                
+                SelectObject(hdc, g_fontMonoBold);
+                SetTextColor(hdc, canAfford ? RGB(255, 255, 255) : RGB(148, 163, 184));
+                char buyBtnTxt[64];
+                sprintf(buyBtnTxt, "INSTALL [%d]  -  %d CR", m + 1, nextCost);
+                DrawTextA(hdc, buyBtnTxt, -1, &rcBtnBuy, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            }
+        }
+        
+        // Footer hint
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(245, 158, 11));
+        TextOutA(hdc, mx + 16, my + modalH - 24, "Press Keys [1-4] or Click Upgrade Buttons to Install Retrofits • [U / ESC] Close", 79);
+        
+        SelectObject(hdc, oldPen3);
+        SelectObject(hdc, oldBrush3);
+        DeleteObject(hPenBorder3);
+    }
+    
     // Help Overlay Modal
     if (g_state.showHelp) {
         int helpW = 560;
-        int helpH = 380;
+        int helpH = 390;
         int hx = (totalW - helpW) / 2;
         int hy = (totalH - helpH) / 2;
         
@@ -1736,17 +2073,18 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         
         SelectObject(hdc, g_fontSmall);
         SetTextColor(hdc, RGB(148, 163, 184));
-        TextOutA(hdc, hx + 20, myHelp, "• [W / UP ARROW]: Engage Forward Fusion Thrusters (Consumes Fuel)", 64); myHelp += 17;
-        TextOutA(hdc, hx + 20, myHelp, "• [S / DOWN ARROW]: Engage Retro Braking Thrusters", 50); myHelp += 17;
-        TextOutA(hdc, hx + 20, myHelp, "• [A / D / LEFT / RIGHT]: Pivot Barge Heading", 45); myHelp += 17;
-        TextOutA(hdc, hx + 20, myHelp, "• [SPACEBAR / LASER BTN]: Fire Mining Laser (Watch Laser Heat)", 62); myHelp += 17;
-        TextOutA(hdc, hx + 20, myHelp, "• [T / TRACTOR BTN]: Toggle Tractor Magnet to draw floating mineral chunks", 73); myHelp += 17;
-        TextOutA(hdc, hx + 20, myHelp, "• [Z / DAMPENER BTN]: Toggle Inertial Dampeners for precise stationkeeping", 74); myHelp += 17;
-        TextOutA(hdc, hx + 20, myHelp, "• [N / SECTORS BTN]: Open Star Sector Chart & Engage Sub-space Warp Jumps", 72); myHelp += 17;
-        TextOutA(hdc, hx + 20, myHelp, "• [V / THEME BTN]: Cycle Retro CRT Vector Theme (Cyan / Amber / Green / Solar)", 77); myHelp += 17;
-        TextOutA(hdc, hx + 20, myHelp, "• [C / SCANLINES BTN]: Toggle CRT Scanlines & Shaders (Off / On / CRT+)", 70); myHelp += 17;
-        TextOutA(hdc, hx + 20, myHelp, "• [CLICK VIEWPORT]: Target & Lock asteroid with telemetry computer", 66); myHelp += 17;
-        TextOutA(hdc, hx + 20, myHelp, "• [LIQUIDATE]: Sell cargo hold to orbital comm-link for Credits", 62); myHelp += 20;
+        TextOutA(hdc, hx + 20, myHelp, "• [W / UP ARROW]: Engage Forward Fusion Thrusters (Consumes Fuel)", 64); myHelp += 16;
+        TextOutA(hdc, hx + 20, myHelp, "• [S / DOWN ARROW]: Engage Retro Braking Thrusters", 50); myHelp += 16;
+        TextOutA(hdc, hx + 20, myHelp, "• [A / D / LEFT / RIGHT]: Pivot Barge Heading", 45); myHelp += 16;
+        TextOutA(hdc, hx + 20, myHelp, "• [SPACEBAR / LASER BTN]: Fire Mining Laser (Watch Laser Heat)", 62); myHelp += 16;
+        TextOutA(hdc, hx + 20, myHelp, "• [T / TRACTOR BTN]: Toggle Tractor Magnet to draw floating mineral chunks", 73); myHelp += 16;
+        TextOutA(hdc, hx + 20, myHelp, "• [Z / DAMPENER BTN]: Toggle Inertial Dampeners for precise stationkeeping", 74); myHelp += 16;
+        TextOutA(hdc, hx + 20, myHelp, "• [U / UPGRADES BTN]: Open Modular Engineering Bay & Install Upgrades", 69); myHelp += 16;
+        TextOutA(hdc, hx + 20, myHelp, "• [N / SECTORS BTN]: Open Star Sector Chart & Engage Sub-space Warp Jumps", 72); myHelp += 16;
+        TextOutA(hdc, hx + 20, myHelp, "• [V / THEME BTN]: Cycle Retro CRT Vector Theme (Cyan / Amber / Green / Solar)", 77); myHelp += 16;
+        TextOutA(hdc, hx + 20, myHelp, "• [C / SCANLINES BTN]: Toggle CRT Scanlines & Shaders (Off / On / CRT+)", 70); myHelp += 16;
+        TextOutA(hdc, hx + 20, myHelp, "• [CLICK VIEWPORT]: Target & Lock asteroid with telemetry computer", 66); myHelp += 16;
+        TextOutA(hdc, hx + 20, myHelp, "• [LIQUIDATE]: Sell cargo hold to orbital comm-link for Credits", 62); myHelp += 18;
         
         SetTextColor(hdc, RGB(245, 158, 11));
         TextOutA(hdc, hx + 20, myHelp, "Press [H] or Click 'MANUAL' to close this screen.", 49);
@@ -1769,7 +2107,7 @@ void RepositionControls(HWND hwnd) {
     int bottomCtrlH = 140;
     int botY = totalH - bottomCtrlH;
     
-    // Cockpit Action Buttons in bottom-left console (5 per row on top, 4 on bottom)
+    // Cockpit Action Buttons in bottom-left console (5 per row on top, 5 on bottom)
     int bx = 10;
     int by1 = botY + 28;
     int by2 = botY + 62;
@@ -1783,10 +2121,11 @@ void RepositionControls(HWND hwnd) {
     MoveWindow(g_btnScan,       bx + (bw + gap) * 3, by1, bw, bh, TRUE);
     MoveWindow(g_btnNav,        bx + (bw + gap) * 4, by1, bw, bh, TRUE);
     
-    MoveWindow(g_btnTheme,      bx,                  by2, bw, bh, TRUE);
-    MoveWindow(g_btnScanlines,  bx + (bw + gap),     by2, bw, bh, TRUE);
-    MoveWindow(g_btnAudio,      bx + (bw + gap) * 2, by2, bw, bh, TRUE);
-    MoveWindow(g_btnHelp,       bx + (bw + gap) * 3, by2, bw, bh, TRUE);
+    MoveWindow(g_btnUpgrades,   bx,                  by2, bw, bh, TRUE);
+    MoveWindow(g_btnTheme,      bx + (bw + gap),     by2, bw, bh, TRUE);
+    MoveWindow(g_btnScanlines,  bx + (bw + gap) * 2, by2, bw, bh, TRUE);
+    MoveWindow(g_btnAudio,      bx + (bw + gap) * 3, by2, bw, bh, TRUE);
+    MoveWindow(g_btnHelp,       bx + (bw + gap) * 4, by2, bw, bh, TRUE);
     
     // Right panel buttons: Jettison & Liquidate
     int rightX = totalW - rightPanelW + 10;
@@ -1814,6 +2153,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_btnDampener  = CreateWindowA("BUTTON", "DAMPENER [Z]",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_DAMPENER, NULL, NULL);
             g_btnScan      = CreateWindowA("BUTTON", "SCAN [S]",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN, NULL, NULL);
             g_btnNav       = CreateWindowA("BUTTON", "SECTORS [N]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_NAV, NULL, NULL);
+            g_btnUpgrades  = CreateWindowA("BUTTON", "UPGRADE [U]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_UPGRADES, NULL, NULL);
             g_btnTheme     = CreateWindowA("BUTTON", "CRT CYAN",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_THEME, NULL, NULL);
             g_btnScanlines = CreateWindowA("BUTTON", "SCAN: ON",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCANLINES, NULL, NULL);
             g_btnAudio     = CreateWindowA("BUTTON", "AUDIO [M]",     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_AUDIO, NULL, NULL);
@@ -1856,6 +2196,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 case ID_BTN_NAV:
                     g_state.showStarChart = !g_state.showStarChart;
+                    if (g_state.showStarChart) g_state.showUpgrades = 0;
+                    TriggerSound(SFX_BEEP);
+                    break;
+                case ID_BTN_UPGRADES:
+                    g_state.showUpgrades = !g_state.showUpgrades;
+                    if (g_state.showUpgrades) g_state.showStarChart = 0;
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_THEME:
@@ -1921,6 +2267,54 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (g_state.showHelp) {
                 g_state.showHelp = 0;
                 InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            
+            if (g_state.showUpgrades) {
+                int modalW = 680;
+                int modalH = 430;
+                int hx = (totalW - modalW) / 2;
+                int hy = (totalH - modalH) / 2;
+                
+                // Close button top-right
+                if (mx >= hx + modalW - 130 && mx <= hx + modalW - 10 && my >= hy && my <= hy + 30) {
+                    g_state.showUpgrades = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                
+                // 4 Upgrade Cards Buy Buttons
+                int cardW = 318;
+                int cardH = 145;
+                int gapX = 16;
+                int gapY = 10;
+                int startX = hx + 14;
+                int startY = hy + 68;
+                
+                for (int m = 0; m < 4; m++) {
+                    int row = m / 2;
+                    int col = m % 2;
+                    int ucx = startX + col * (cardW + gapX);
+                    int ucy = startY + row * (cardH + gapY);
+                    
+                    int btnX1 = ucx + 8;
+                    int btnY1 = ucy + cardH - 34;
+                    int btnX2 = ucx + cardW - 8;
+                    int btnY2 = ucy + cardH - 8;
+                    
+                    if (mx >= btnX1 && mx <= btnX2 && my >= btnY1 && my <= btnY2) {
+                        BuyUpgrade(m);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        return 0;
+                    }
+                }
+                
+                // Click outside modal closes it
+                if (mx < hx || mx > hx + modalW || my < hy || my > hy + modalH) {
+                    g_state.showUpgrades = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
                 return 0;
             }
             
@@ -2014,6 +2408,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         
         case WM_KEYDOWN: {
+            if (g_state.showUpgrades) {
+                if (wParam == '1') { BuyUpgrade(0); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '2') { BuyUpgrade(1); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '3') { BuyUpgrade(2); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '4') { BuyUpgrade(3); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == 'U' || wParam == VK_ESCAPE) { g_state.showUpgrades = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+            }
+            
             if (g_state.showStarChart) {
                 if (wParam == '1') { g_state.selectedSectorIndex = 0; TriggerSound(SFX_BEEP); InvalidateRect(hwnd, NULL, FALSE); return 0; }
                 if (wParam == '2') { g_state.selectedSectorIndex = 1; TriggerSound(SFX_BEEP); InvalidateRect(hwnd, NULL, FALSE); return 0; }
@@ -2039,8 +2441,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     g_state.dampeners = !g_state.dampeners;
                     AddLog(g_state.dampeners ? "Inertia dampeners engaged." : "Inertia dampeners disengaged.", 0);
                     break;
+                case 'U':
+                    g_state.showUpgrades = !g_state.showUpgrades;
+                    if (g_state.showUpgrades) g_state.showStarChart = 0;
+                    TriggerSound(SFX_BEEP);
+                    break;
                 case 'N':
                     g_state.showStarChart = !g_state.showStarChart;
+                    if (g_state.showStarChart) g_state.showUpgrades = 0;
                     TriggerSound(SFX_BEEP);
                     break;
                 case 'V':
