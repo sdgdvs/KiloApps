@@ -668,10 +668,20 @@
     opacity: 1;
     transform: translateX(-50%) translateY(0);
   }
+  #fx-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 920;
+  }
 </style>
 </head>
 <body class="theme-navy">
 
+<canvas id="fx-canvas"></canvas>
 <canvas id="win-canvas"></canvas>
 
 <header>
@@ -1940,81 +1950,514 @@ function autoFinish() {
   }, 100);
 }
 
+// --- Continuous 60 FPS Visual FX & Particles Engine (Loop 8) ---
+let fxCanvas = document.getElementById('fx-canvas');
+let fxCtx = fxCanvas ? fxCanvas.getContext('2d') : null;
+let fxParticles = [];
+let fxShockwaves = [];
+let fxMotes = [];
+let screenShakeAmp = 0;
+
+function initFXSystem() {
+  if (!fxCanvas) fxCanvas = document.getElementById('fx-canvas');
+  if (!fxCanvas) return;
+  fxCtx = fxCanvas.getContext('2d');
+  
+  function resizeFX() {
+    fxCanvas.width = window.innerWidth;
+    fxCanvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resizeFX);
+  resizeFX();
+
+  // Initialize atmospheric velvet dust motes
+  fxMotes = [];
+  for (let i = 0; i < 35; i++) {
+    fxMotes.push({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      radius: Math.random() * 2.5 + 1.0,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: -(Math.random() * 0.35 + 0.15),
+      alpha: Math.random() * 0.6 + 0.2,
+      baseAlpha: Math.random() * 0.5 + 0.2,
+      pulseSpeed: Math.random() * 0.03 + 0.01,
+      phase: Math.random() * Math.PI * 2,
+      color: Math.random() < 0.6 ? '#ffd700' : (Math.random() < 0.5 ? '#67e8f9' : '#ffffff')
+    });
+  }
+
+  requestAnimationFrame(fxLoop);
+}
+
+function triggerScreenShake(amp) {
+  screenShakeAmp = Math.max(screenShakeAmp, amp);
+}
+
+function spawnFXBurst(x, y, theme = 'gold', count = 30, hasShockwave = true) {
+  if (hasShockwave) {
+    fxShockwaves.push({
+      x: x,
+      y: y,
+      radius: 6,
+      maxRadius: 65,
+      speed: 4.5,
+      alpha: 1.0,
+      color: theme === 'cyan' ? '#00e5ff' : (theme === 'red' ? '#ff1744' : '#ffd700')
+    });
+  }
+
+  // 4-Layer Particle Spawning
+  // Layer 1: Incandescent Core Needle Sparks
+  let sparkColors = theme === 'cyan' ? ['#e0f7fa', '#80deea', '#00e5ff'] :
+                    theme === 'red' ? ['#ffebee', '#ef5350', '#d50000'] :
+                    theme === 'rainbow' ? ['#ffd700', '#00e5ff', '#ff007f', '#00e676', '#ffffff'] :
+                    ['#ffffff', '#fff9c4', '#ffd700', '#ffb300'];
+  let sparkCount = Math.floor(count * 0.4);
+  for (let i = 0; i < sparkCount; i++) {
+    let angle = Math.random() * Math.PI * 2;
+    let speed = Math.random() * 9 + 4;
+    fxParticles.push({
+      type: 'needle_spark',
+      x: x,
+      y: y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      length: Math.random() * 8 + 6,
+      life: 1.0,
+      decay: Math.random() * 0.03 + 0.025,
+      color: sparkColors[Math.floor(Math.random() * sparkColors.length)],
+      trail: []
+    });
+  }
+
+  // Layer 2: Expanding Buoyant Smoke / Velvet Puffs
+  let smokeColors = theme === 'cyan' ? ['rgba(0,229,255,', 'rgba(128,222,234,'] :
+                    theme === 'red' ? ['rgba(255,23,68,', 'rgba(239,83,80,'] :
+                    ['rgba(255,215,0,', 'rgba(255,179,0,', 'rgba(255,255,255,'];
+  let smokeCount = Math.floor(count * 0.25);
+  for (let i = 0; i < smokeCount; i++) {
+    let angle = Math.random() * Math.PI * 2;
+    let speed = Math.random() * 3 + 1;
+    fxParticles.push({
+      type: 'smoke_puff',
+      x: x,
+      y: y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 0.5,
+      radius: Math.random() * 5 + 4,
+      maxRadius: Math.random() * 16 + 12,
+      life: 1.0,
+      decay: Math.random() * 0.02 + 0.015,
+      colorPrefix: smokeColors[Math.floor(Math.random() * smokeColors.length)]
+    });
+  }
+
+  // Layer 3: Heavy Kinematic Debris Shards / Playing Card Shards / Chips
+  let debrisColors = ['#ffffff', '#ffd700', '#d32f2f', '#1e293b', '#2563eb'];
+  let debrisCount = Math.floor(count * 0.25);
+  for (let i = 0; i < debrisCount; i++) {
+    let angle = Math.random() * Math.PI * 2;
+    let speed = Math.random() * 8 + 2;
+    fxParticles.push({
+      type: 'debris_shard',
+      x: x,
+      y: y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 3.0,
+      w: Math.random() * 7 + 4,
+      h: Math.random() * 6 + 3,
+      rot: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 0.35,
+      life: 1.0,
+      decay: Math.random() * 0.018 + 0.012,
+      color: debrisColors[Math.floor(Math.random() * debrisColors.length)]
+    });
+  }
+
+  // Layer 4: Radiant Golden Celebration Energy Stars
+  let starCount = Math.floor(count * 0.2) + 2;
+  for (let i = 0; i < starCount; i++) {
+    let angle = Math.random() * Math.PI * 2;
+    let speed = Math.random() * 6 + 2;
+    fxParticles.push({
+      type: 'energy_star',
+      x: x,
+      y: y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      size: Math.random() * 6 + 5,
+      rot: Math.random() * Math.PI,
+      rotSpeed: (Math.random() - 0.5) * 0.2,
+      twinkle: 0,
+      life: 1.0,
+      decay: Math.random() * 0.02 + 0.015,
+      color: '#ffd700'
+    });
+  }
+}
+
 function spawnParticles(pileIdx, type) {
   let slot;
   if (type === 'foundation') slot = document.getElementById(`foundation-${pileIdx}`);
-  if (!slot) return;
-  let rect = slot.getBoundingClientRect();
-  let cx = rect.left + rect.width / 2;
-  let cy = rect.top + rect.height / 2;
+  else if (type === 'tableau') slot = document.getElementById(`tableau-${pileIdx}`);
+  else if (type === 'stock') slot = document.getElementById('stock-slot');
+  else if (type === 'waste') slot = document.getElementById('waste-slot');
   
-  const colors = ['#ffd700', '#ffffff', '#ff9100', '#00e676', '#00e5ff', '#ff00ff'];
+  let cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+  if (slot) {
+    let rect = slot.getBoundingClientRect();
+    cx = rect.left + rect.width / 2;
+    cy = rect.top + rect.height / 2;
+  }
   
-  for (let i = 0; i < 40; i++) {
-    let p = document.createElement('div');
-    p.style.position = 'fixed';
-    p.style.width = '6px';
-    p.style.height = '6px';
-    p.style.borderRadius = '50%';
-    p.style.pointerEvents = 'none';
-    p.style.zIndex = '950';
-    p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-    p.style.boxShadow = `0 0 8px ${p.style.backgroundColor}, 0 0 15px ${p.style.backgroundColor}`;
-    document.body.appendChild(p);
-    
-    let angle = Math.random() * Math.PI * 2;
-    let speed = Math.random() * 12 + 4;
-    let vx = Math.cos(angle) * speed;
-    let vy = Math.sin(angle) * speed;
-    let x = cx;
-    let y = cy;
-    let life = 1.0;
-    
-    function anim() {
-      x += vx;
-      y += vy;
-      vx *= 0.92; // Friction
-      vy += 0.5; // Gravity
-      life -= 0.025;
-      
-      p.style.left = (x - 3) + 'px';
-      p.style.top = (y - 3) + 'px';
-      p.style.opacity = life;
-      p.style.transform = `scale(${life * 1.5})`;
-      
-      if (life > 0) requestAnimationFrame(anim);
-      else p.remove();
+  if (type === 'foundation') {
+    spawnFXBurst(cx, cy, 'gold', 36, true);
+    triggerScreenShake(7);
+  } else if (type === 'tableau') {
+    spawnFXBurst(cx, cy, 'gold', 18, false);
+    triggerScreenShake(3);
+  } else {
+    spawnFXBurst(cx, cy, 'gold', 20, false);
+    triggerScreenShake(4);
+  }
+}
+
+function fxLoop(timestamp) {
+  if (!fxCtx || !fxCanvas) {
+    requestAnimationFrame(fxLoop);
+    return;
+  }
+
+  const w = fxCanvas.width;
+  const h = fxCanvas.height;
+  const time = timestamp * 0.001;
+
+  fxCtx.clearRect(0, 0, w, h);
+
+  // 1. Render Atmospheric Velvet Dust Motes
+  for (let i = 0; i < fxMotes.length; i++) {
+    let m = fxMotes[i];
+    m.x += m.vx + Math.sin(time * 2.0 + m.phase) * 0.25;
+    m.y += m.vy;
+    m.phase += m.pulseSpeed;
+    m.alpha = m.baseAlpha + Math.sin(m.phase) * 0.2;
+
+    if (m.y < -20) {
+      m.y = h + 20;
+      m.x = Math.random() * w;
     }
-    requestAnimationFrame(anim);
+    if (m.x < -20) m.x = w + 20;
+    if (m.x > w + 20) m.x = -20;
+
+    fxCtx.save();
+    fxCtx.globalAlpha = Math.max(0, Math.min(1, m.alpha));
+    fxCtx.fillStyle = m.color;
+    fxCtx.shadowColor = m.color;
+    fxCtx.shadowBlur = 6;
+    fxCtx.beginPath();
+    fxCtx.arc(m.x, m.y, m.radius, 0, Math.PI * 2);
+    fxCtx.fill();
+    fxCtx.restore();
   }
-  
-  triggerScreenShake(8);
+
+  // 2. Render Ornate Luxury HUD Corner Filigree L-Brackets on Board
+  let boardEl = document.getElementById('board');
+  if (boardEl) {
+    let bRect = boardEl.getBoundingClientRect();
+    if (bRect.width > 0 && bRect.height > 0) {
+      drawOrnateHUDCorners(fxCtx, bRect, time);
+      drawPerimeterInlay(fxCtx, bRect, time);
+      drawDiagonalSheenSweeps(fxCtx, bRect, time);
+    }
+  }
+
+  // 3. Render Shockwaves (Dual-Tier Concentric Ripple Rings)
+  for (let i = fxShockwaves.length - 1; i >= 0; i--) {
+    let sw = fxShockwaves[i];
+    sw.radius += sw.speed;
+    sw.alpha = Math.max(0, 1.0 - (sw.radius / sw.maxRadius));
+
+    if (sw.alpha <= 0 || sw.radius >= sw.maxRadius) {
+      fxShockwaves.splice(i, 1);
+      continue;
+    }
+
+    fxCtx.save();
+    // Outer chromatic dispersion halo
+    fxCtx.beginPath();
+    fxCtx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+    fxCtx.strokeStyle = sw.color;
+    fxCtx.globalAlpha = sw.alpha * 0.45;
+    fxCtx.lineWidth = 4;
+    fxCtx.shadowColor = sw.color;
+    fxCtx.shadowBlur = 12;
+    fxCtx.stroke();
+
+    // Inner high-speed compression wave
+    fxCtx.beginPath();
+    fxCtx.arc(sw.x, sw.y, sw.radius * 0.75, 0, Math.PI * 2);
+    fxCtx.strokeStyle = '#ffffff';
+    fxCtx.globalAlpha = sw.alpha * 0.85;
+    fxCtx.lineWidth = 2;
+    fxCtx.stroke();
+    fxCtx.restore();
+  }
+
+  // 4. Render 4-Layer Kinematic Particles
+  for (let i = fxParticles.length - 1; i >= 0; i--) {
+    let p = fxParticles[i];
+    p.life -= p.decay;
+
+    if (p.life <= 0) {
+      fxParticles.splice(i, 1);
+      continue;
+    }
+
+    if (p.type === 'needle_spark') {
+      p.trail.push({ x: p.x, y: p.y });
+      if (p.trail.length > 5) p.trail.shift();
+
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vx *= 0.94; // Drag
+      p.vy += 0.35; // Gravity
+
+      fxCtx.save();
+      fxCtx.globalAlpha = p.life;
+      fxCtx.strokeStyle = p.color;
+      fxCtx.lineWidth = 2;
+      fxCtx.shadowColor = p.color;
+      fxCtx.shadowBlur = 8;
+      fxCtx.beginPath();
+      if (p.trail.length > 1) {
+        fxCtx.moveTo(p.trail[0].x, p.trail[0].y);
+        for (let t = 1; t < p.trail.length; t++) {
+          fxCtx.lineTo(p.trail[t].x, p.trail[t].y);
+        }
+        fxCtx.lineTo(p.x, p.y);
+      } else {
+        fxCtx.moveTo(p.x, p.y);
+        fxCtx.lineTo(p.x - p.vx * 1.5, p.y - p.vy * 1.5);
+      }
+      fxCtx.stroke();
+      fxCtx.restore();
+    } else if (p.type === 'smoke_puff') {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vx *= 0.96;
+      p.vy *= 0.96;
+      let curRadius = p.radius + (1.0 - p.life) * (p.maxRadius - p.radius);
+
+      fxCtx.save();
+      fxCtx.globalAlpha = p.life * 0.6;
+      let grad = fxCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, curRadius);
+      grad.addColorStop(0, p.colorPrefix + '0.8)');
+      grad.addColorStop(0.5, p.colorPrefix + '0.3)');
+      grad.addColorStop(1, p.colorPrefix + '0)');
+      fxCtx.fillStyle = grad;
+      fxCtx.beginPath();
+      fxCtx.arc(p.x, p.y, curRadius, 0, Math.PI * 2);
+      fxCtx.fill();
+      fxCtx.restore();
+    } else if (p.type === 'debris_shard') {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vx *= 0.97;
+      p.vy += 0.65; // Heavy gravity
+      p.rot += p.rotSpeed;
+
+      // Floor bounce physics
+      if (p.y >= h - 20) {
+        p.y = h - 20;
+        p.vy = -p.vy * 0.6;
+        p.rotSpeed *= 0.7;
+      }
+
+      fxCtx.save();
+      fxCtx.globalAlpha = p.life;
+      fxCtx.translate(p.x, p.y);
+      fxCtx.rotate(p.rot);
+      fxCtx.fillStyle = p.color;
+      fxCtx.strokeStyle = 'rgba(255,255,255,0.7)';
+      fxCtx.lineWidth = 1;
+      fxCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      fxCtx.strokeRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      fxCtx.restore();
+    } else if (p.type === 'energy_star') {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vx *= 0.95;
+      p.vy *= 0.95;
+      p.rot += p.rotSpeed;
+      p.twinkle += 0.2;
+      let starScale = (Math.sin(p.twinkle) * 0.3 + 0.9) * p.life;
+
+      fxCtx.save();
+      fxCtx.globalAlpha = p.life;
+      fxCtx.translate(p.x, p.y);
+      fxCtx.rotate(p.rot);
+      fxCtx.scale(starScale, starScale);
+      fxCtx.fillStyle = p.color;
+      fxCtx.shadowColor = '#ffd700';
+      fxCtx.shadowBlur = 10;
+      draw4PointStar(fxCtx, 0, 0, p.size, p.size * 0.35);
+      fxCtx.fill();
+      fxCtx.restore();
+    }
+  }
+
+  // 5. Procedural Screen Shake Decay (Quadratic physics & rotational damping)
+  if (screenShakeAmp > 0.1) {
+    let decay = screenShakeAmp;
+    let dx = (Math.random() * 2 - 1) * decay;
+    let dy = (Math.random() * 2 - 1) * decay;
+    let drot = (Math.random() * 2 - 1) * decay * 0.08;
+    if (boardEl) {
+      boardEl.style.transform = `translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px) rotate(${drot.toFixed(3)}deg)`;
+    }
+    screenShakeAmp *= 0.88; // Quadratic-like rapid decay
+  } else {
+    screenShakeAmp = 0;
+    if (boardEl && boardEl.style.transform !== '') {
+      boardEl.style.transform = '';
+    }
+  }
+
+  requestAnimationFrame(fxLoop);
 }
 
-let shakeFrames = 0;
-let shakeAmp = 0;
-function triggerScreenShake(amp) {
-  shakeAmp = amp;
-  if (shakeFrames === 0) {
-    shakeFrames = 20;
-    doShake();
-  } else {
-    shakeFrames = 20;
+function draw4PointStar(ctx, cx, cy, outerRadius, innerRadius) {
+  ctx.beginPath();
+  for (let i = 0; i < 8; i++) {
+    let r = (i % 2 === 0) ? outerRadius : innerRadius;
+    let angle = (i * Math.PI) / 4;
+    let x = cx + Math.cos(angle) * r;
+    let y = cy + Math.sin(angle) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
   }
+  ctx.closePath();
 }
 
-function doShake() {
-  if (shakeFrames > 0) {
-    let decay = shakeFrames / 20.0;
-    let curAmp = shakeAmp * decay * decay;
-    let dx = (Math.random() * curAmp * 2) - curAmp;
-    let dy = (Math.random() * curAmp * 2) - curAmp;
-    document.body.style.transform = `translate(${dx}px, ${dy}px)`;
-    shakeFrames--;
-    requestAnimationFrame(doShake);
+// Ornate HUD Corner Filigree L-Brackets with Gold Rivet Detailing
+function drawOrnateHUDCorners(ctx, rect, time) {
+  const pad = 6;
+  const arm = 28;
+  const left = rect.left - pad;
+  const top = rect.top - pad;
+  const right = rect.right + pad;
+  const bottom = rect.bottom + pad;
+
+  ctx.save();
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 2.5;
+  ctx.shadowColor = 'rgba(255,215,0,0.5)';
+  ctx.shadowBlur = 6;
+
+  // Top-Left
+  ctx.beginPath();
+  ctx.moveTo(left, top + arm);
+  ctx.lineTo(left, top);
+  ctx.lineTo(left + arm, top);
+  ctx.stroke();
+
+  // Top-Right
+  ctx.beginPath();
+  ctx.moveTo(right - arm, top);
+  ctx.lineTo(right, top);
+  ctx.lineTo(right, top + arm);
+  ctx.stroke();
+
+  // Bottom-Left
+  ctx.beginPath();
+  ctx.moveTo(left, bottom - arm);
+  ctx.lineTo(left, bottom);
+  ctx.lineTo(left + arm, bottom);
+  ctx.stroke();
+
+  // Bottom-Right
+  ctx.beginPath();
+  ctx.moveTo(right - arm, bottom);
+  ctx.lineTo(right, bottom);
+  ctx.lineTo(right, bottom - arm);
+  ctx.stroke();
+
+  // Gold Rivet Stud Accents
+  ctx.fillStyle = '#ffd700';
+  ctx.shadowBlur = 8;
+  const drawRivet = (rx, ry) => {
+    ctx.beginPath();
+    ctx.arc(rx, ry, 3.0, 0, Math.PI * 2);
+    ctx.fill();
+  };
+  drawRivet(left + 6, top + 6);
+  drawRivet(right - 6, top + 6);
+  drawRivet(left + 6, bottom - 6);
+  drawRivet(right - 6, bottom - 6);
+
+  ctx.restore();
+}
+
+// Pulsating Gold Energy Perimeter Inlay Border with Traveling Specular Glint
+function drawPerimeterInlay(ctx, rect, time) {
+  const pad = 3;
+  const x = rect.left - pad;
+  const y = rect.top - pad;
+  const w = rect.width + pad * 2;
+  const h = rect.height + pad * 2;
+
+  const pulse = Math.sin(time * 3.0) * 0.25 + 0.75;
+  ctx.save();
+  ctx.strokeStyle = `rgba(255, 215, 0, ${(0.35 * pulse).toFixed(3)})`;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([8, 8]);
+  ctx.lineDashOffset = -time * 24;
+  ctx.strokeRect(x, y, w, h);
+  ctx.setLineDash([]);
+
+  // Traveling Specular Glint traversing the perimeter
+  const totalPerim = (w + h) * 2;
+  const glintDist = ((time * 180) % totalPerim);
+  let gx = x, gy = y;
+  if (glintDist < w) {
+    gx = x + glintDist; gy = y;
+  } else if (glintDist < w + h) {
+    gx = x + w; gy = y + (glintDist - w);
+  } else if (glintDist < w * 2 + h) {
+    gx = x + w - (glintDist - (w + h)); gy = y + h;
   } else {
-    document.body.style.transform = `translate(0, 0)`;
+    gx = x; gy = y + h - (glintDist - (w * 2 + h));
   }
+
+  let glintGrad = ctx.createRadialGradient(gx, gy, 0, gx, gy, 18);
+  glintGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+  glintGrad.addColorStop(0.3, 'rgba(255, 215, 0, 0.8)');
+  glintGrad.addColorStop(1, 'rgba(255, 215, 0, 0)');
+  ctx.fillStyle = glintGrad;
+  ctx.beginPath();
+  ctx.arc(gx, gy, 18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+// Diagonal Traveling Specular Sheen Sweeps
+function drawDiagonalSheenSweeps(ctx, rect, time) {
+  const sweepPhase = (time * 0.4) % 1.0;
+  const sweepX = rect.left + rect.width * (sweepPhase * 1.6 - 0.3);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(rect.left, rect.top, rect.width, rect.height);
+  ctx.clip();
+
+  let grad = ctx.createLinearGradient(sweepX - 50, rect.top, sweepX + 50, rect.bottom);
+  grad.addColorStop(0, 'rgba(255,255,255,0)');
+  grad.addColorStop(0.5, 'rgba(255,255,255,0.08)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(rect.left, rect.top, rect.width, rect.height);
+  ctx.restore();
 }
 
 // --- Victory Detection & Solitaire Cascade Waterfall ---
@@ -2461,6 +2904,7 @@ function initDustMotes() {
 
 // Start App
 initDustMotes();
+initFXSystem();
 init();
 </script>
 </body>

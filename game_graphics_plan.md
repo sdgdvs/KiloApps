@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KSolitaire
 - KHex
 - KStellar
 - KMine
@@ -149,8 +148,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSimon
 - KTrader
 - KDragon
+- KSolitaire
 
 ## Completed Work Log
+
+- **KSolitaire (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on card placements, stock recycling, auto-finish, skill activations (Magic Wand, X-Ray Vision, Shuffle Stock), and victory bursts (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas ksolitaire.html, and double-buffered viewport rendering with physics decay in Native C Win32 GDI KSolitaire/main.c), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant velvet & smoke puffs with negative gravity and radius growth, heavy kinematic playing card / chip / felt debris shards with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion halo radiating upon card snaps, foundation completes, skill triggers, and stage victories, ornate luxury casino HUD corner filigree L-brackets with tech notches and gold rivet accents at all table corners, a pulsating golden energy perimeter inlay border with an animated traveling specular glint traversing the outer playfield card table frame, sculpted card & tableau highlights with diagonal specular sheen sweeps traversing cards, foundation slots, and active elements, and atmospheric floating casino velvet dust motes drifting across the table in both Web Canvas (ksolitaire.html) and Native C Win32 GDI (KSolitaire/main.c).
 
 - **KDragon (Loop 3):** Implemented rich atmospheric effects, screen shake, multi-layered particle engine, shockwaves, and medieval gold filigree ornamentation in both Web Canvas (kdragon.html) and Native Win32 GDI (KDragon/main.c). Features include continuous 60 FPS requestAnimationFrame rendering in Web Canvas and a 30 FPS double-buffered animation timer (CreateCompatibleDC/BitBlt) in Native C; procedural screen-shake driven by quadratic physics decay and rotational damping on actions, feed/munch events, roar/incubate, shop purchases, and battle strikes; a multi-layered kinematic particle engine with 4 distinct particle layers (incandescent core needle sparks with velocity drag, expanding buoyant smoke/breath puffs with negative gravity, heavy faceted dragon scale / debris shards with tumbling rotation and gravity physics, and golden celebration energy stars); dual-tier concentric shockwave ripple rings (inner high-speed compression wave and outer chromatic dispersion halo) radiating on hatch, battle attacks, and special elemental abilities; ornate medieval gold filigree corner brackets with rivet detailing at all HUD corners; a traveling specular glint traversing the outer playfield parchment frame; atmospheric floating magic elemental motes drifting in the background; and enhanced SVG shop item artwork (roast meat on bone, glowing magical toy orb, studded ruby power bracer, and winged swift boots).
 
