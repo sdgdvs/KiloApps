@@ -36,7 +36,7 @@ static SYSTEMTIME selected_date;
 
 static HWND hMonthCal, hBtnToday, hListEvents, hEditEvent, hBtnAdd, hBtnDel;
 static HWND hComboCategory, hComboRecur, hComboPriority, hComboFilter, hComboPrioFilter, hEditSearch;
-static HWND hBtnExportIcs, hBtnExportCsv, hBtnExportMd, hBtnStats;
+static HWND hBtnExportIcs, hBtnExportCsv, hBtnExportMd, hBtnStats, hBtnHelp;
 static HBRUSH hBgBrush = NULL;
 static HBRUSH hEditBrush = NULL;
 static WNDPROC oldEditProc = NULL;
@@ -299,6 +299,33 @@ static void ExportToMarkdown() {
     MessageBoxA(NULL, "Exported markdown agenda to kcalendar_agenda.md", "Export Markdown", MB_OK | MB_ICONINFORMATION);
 }
 
+static void ShowHelpDialog(HWND hwnd) {
+    MessageBoxA(hwnd,
+        "=== KCalendar User Guide ===\r\n\r\n"
+        "NAVIGATION & DATES:\r\n"
+        "- Month Calendar: Click any date to view and manage its schedule\r\n"
+        "- Go to Today [T]: Jump directly to current date\r\n\r\n"
+        "MANAGING EVENTS:\r\n"
+        "- Add Event [Enter]: Type description, select category/recurrence/priority, and press Add or Enter in the input box\r\n"
+        "- Delete [Del]: Select an event in the list and press Delete key or double-click to remove\r\n\r\n"
+        "FILTERING & SEARCH:\r\n"
+        "- Search: Type keyword to filter events in real-time\r\n"
+        "- Category Filter: Filter by Work, Personal, Health, Important, Other\r\n"
+        "- Priority Filter: Filter by Urgent [!], High [^], Normal [-], Low [v]\r\n\r\n"
+        "ANALYTICS & EXPORT:\r\n"
+        "- Analytics [S]: View breakdown of events by priority, category, and month\r\n"
+        "- Export .ics: Generate standard iCalendar file\r\n"
+        "- Export CSV: Generate spreadsheet data file\r\n"
+        "- Export MD: Generate formatted Markdown agenda report\r\n\r\n"
+        "KEYBOARD SHORTCUTS:\r\n"
+        "- [F1] or [H]: Open this Help Guide\r\n"
+        "- [T]: Jump to Today\r\n"
+        "- [S]: Open Analytics & Statistics\r\n"
+        "- [Enter]: Add event when focused in input box\r\n"
+        "- [Delete] / [Backspace]: Delete selected event in listbox",
+        "KCalendar Help & Shortcut Reference", MB_OK | MB_ICONINFORMATION);
+}
+
 static void ShowStatistics(HWND hwnd) {
     int totalEvents = event_count;
     int thisMonthCount = 0;
@@ -528,7 +555,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Left column buttons
             int btnY = pad + rc.bottom + SCALE(10);
-            hBtnToday = CreateWindowEx(0, "BUTTON", "Go to Today",
+            hBtnToday = CreateWindowEx(0, "BUTTON", "Go to Today [T]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
                 pad, btnY, rc.right, btnH, hwnd, (HMENU)ID_BTN_TODAY, GetModuleHandle(NULL), NULL);
 
@@ -547,12 +574,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
                 pad, btnY, exportW, btnH, hwnd, (HMENU)ID_BTN_EXPORT_MD, GetModuleHandle(NULL), NULL);
 
-            hBtnStats = CreateWindowEx(0, "BUTTON", "Analytics / Stats",
+            hBtnStats = CreateWindowEx(0, "BUTTON", "Analytics [S]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
                 pad + exportW + SCALE(5), btnY, exportW, btnH, hwnd, (HMENU)ID_BTN_STATS, GetModuleHandle(NULL), NULL);
 
             btnY += btnH + spacing;
-            CreateWindowEx(0, "BUTTON", "Help (F1/H)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, pad, btnY, rc.right, btnH, hwnd, (HMENU)ID_BTN_HELP, GetModuleHandle(NULL), NULL);
+            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, pad, btnY, rc.right, btnH, hwnd, (HMENU)ID_BTN_HELP, GetModuleHandle(NULL), NULL);
 
             // Search & Category / Priority Filter bar
             int searchW = rightW - SCALE(235);
@@ -611,11 +638,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             btmY += SCALE(32);
             int btnW = (rightW - SCALE(5)) / 2;
-            hBtnAdd = CreateWindowEx(0, "BUTTON", "Add Event",
+            hBtnAdd = CreateWindowEx(0, "BUTTON", "Add Event [Enter]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
                 listX, btmY, btnW, btnH, hwnd, (HMENU)ID_BTN_ADD, GetModuleHandle(NULL), NULL);
 
-            hBtnDel = CreateWindowEx(0, "BUTTON", "Delete",
+            hBtnDel = CreateWindowEx(0, "BUTTON", "Delete [Del]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
                 listX + btnW + SCALE(5), btmY, btnW, btnH, hwnd, (HMENU)ID_BTN_DEL, GetModuleHandle(NULL), NULL);
 
@@ -656,7 +683,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         for (int day = 1; day <= 31; day++) {
                             for (int e = 0; e < event_count; e++) {
                                 if (IsEventOnDate(&events[e], st.wYear, st.wMonth, day)) {
-                                    state |= (1 << (day - 1));
+                                     state |= (1 << (day - 1));
                                     break;
                                 }
                             }
@@ -691,7 +718,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (LOWORD(wParam) == ID_BTN_STATS) {
                 ShowStatistics(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_HELP) {
-                MessageBoxA(hwnd, "KCalendar Help:\n- Use controls on left to pick date, export ICS/CSV/MD, or view Analytics\n- Search or filter by Category & Priority on top right\n- Double-click or press Delete key on an event to delete\n- Add events with Priority & Recurrence at bottom right\n- Press F1 or H anytime outside edit boxes for this help", "Help", MB_OK | MB_ICONINFORMATION);
+                ShowHelpDialog(hwnd);
             } else if (LOWORD(wParam) == ID_LIST_EVENTS && HIWORD(wParam) == LBN_DBLCLK) {
                 DeleteSelectedEvent();
             }
@@ -742,7 +769,7 @@ void MainEntry() {
     RECT rc = {0, 0, 800, 600};
     AdjustWindowRect(&rc, style, FALSE);
 
-    HWND hwnd = CreateWindowEx(0, "KCalendarApp", "KCalendar (Press H for Help)", style,
+    HWND hwnd = CreateWindowEx(0, "KCalendarApp", "KCalendar (Press [F1] or [H] for Help)", style,
         CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
@@ -750,11 +777,16 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
-        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1)) {
+        if (msg.message == WM_KEYDOWN) {
             char cls[32] = {0};
             GetClassNameA(msg.hwnd, cls, 32);
-            if (lstrcmpiA(cls, "EDIT") != 0) {
-                MessageBoxA(hwnd, "KCalendar Help:\n- Use controls on left to pick date, export ICS/CSV/MD, or view Analytics\n- Search or filter by Category & Priority on top right\n- Double-click or press Delete key on an event to delete\n- Add events at bottom right\n- Press F1 or H anytime outside edit boxes for this help", "Help", MB_OK | MB_ICONINFORMATION);
+            BOOL inEdit = (lstrcmpiA(cls, "EDIT") == 0);
+            if (msg.wParam == VK_F1 || (!inEdit && (msg.wParam == 'H' || msg.wParam == 'h'))) {
+                ShowHelpDialog(hwnd);
+            } else if (!inEdit && (msg.wParam == 'T' || msg.wParam == 't')) {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_TODAY, BN_CLICKED), (LPARAM)hBtnToday);
+            } else if (!inEdit && (msg.wParam == 'S' || msg.wParam == 's')) {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_STATS, BN_CLICKED), (LPARAM)hBtnStats);
             }
         }
         if (!IsDialogMessage(hwnd, &msg)) {

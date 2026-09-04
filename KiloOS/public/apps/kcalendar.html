@@ -102,6 +102,25 @@
     font-size: 12px;
   }
 
+  .key-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 10px;
+    font-family: 'Consolas', monospace;
+    font-weight: 700;
+    line-height: 1.2;
+    vertical-align: middle;
+  }
+
+  .tab-btn.active .key-badge {
+    background: rgba(15, 23, 42, 0.2);
+    border-color: rgba(15, 23, 42, 0.3);
+    color: #0f172a;
+  }
+
   .header-title-container {
     display: flex;
     align-items: center;
@@ -118,17 +137,21 @@
 
   .today-link {
     background: transparent;
-    border: none;
+    border: 1px solid rgba(245, 158, 11, 0.3);
     cursor: pointer;
     color: var(--accent);
     font-size: 12px;
     font-weight: 600;
-    padding: 4px 8px;
+    padding: 4px 10px;
     border-radius: 6px;
-    transition: background 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s ease;
   }
   .today-link:hover, .today-link:focus-visible {
     background: rgba(245, 158, 11, 0.15);
+    border-color: var(--accent);
     outline: none;
   }
 
@@ -150,6 +173,7 @@
     padding: 3px;
     border-radius: 8px;
     border: 1px solid var(--border-color);
+    gap: 2px;
   }
 
   .tab-btn {
@@ -161,6 +185,9 @@
     font-weight: 600;
     border-radius: 6px;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     transition: all 0.15s ease;
   }
 
@@ -228,6 +255,7 @@
   .action-menu {
     display: flex;
     gap: 6px;
+    flex-wrap: wrap;
   }
 
   /* Main Content Views */
@@ -483,6 +511,7 @@
     gap: 12px;
     font-size: 12px;
     color: var(--text-muted);
+    flex-wrap: wrap;
   }
 
   .badge {
@@ -500,12 +529,12 @@
     font-size: 14px;
   }
 
-  /* Modal Dialog */
+  /* Modal Dialogs */
   .modal-overlay {
     display: none;
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.75);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     z-index: 100;
@@ -519,7 +548,7 @@
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 20px;
-    width: 420px;
+    width: 440px;
     max-width: 90vw;
     box-shadow: 0 16px 36px rgba(0,0,0,0.6);
     display: flex;
@@ -546,6 +575,9 @@
     font-size: 17px;
     color: var(--accent);
     font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .close-icon {
@@ -555,8 +587,10 @@
     font-size: 20px;
     cursor: pointer;
     line-height: 1;
+    padding: 4px;
+    border-radius: 4px;
   }
-  .close-icon:hover { color: var(--text-main); }
+  .close-icon:hover { color: var(--text-main); background: rgba(255,255,255,0.1); }
 
   .form-group {
     display: flex;
@@ -591,6 +625,7 @@
   .input-field:focus, .select-field:focus, .textarea-field:focus {
     outline: none;
     border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
   }
 
   .textarea-field {
@@ -603,6 +638,7 @@
     justify-content: space-between;
     align-items: center;
     margin-top: 6px;
+    gap: 8px;
   }
 
   .btn-danger {
@@ -611,6 +647,82 @@
     color: white;
   }
   .btn-danger:hover { background: var(--danger-hover); }
+
+  /* Help Modal Specific Styles */
+  .help-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .help-card {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  .help-card h4 {
+    margin: 0 0 8px 0;
+    font-size: 12px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .shortcut-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 6px;
+    gap: 8px;
+  }
+
+  .shortcut-row:last-child { margin-bottom: 0; }
+  .shortcut-desc { color: var(--text-muted); }
+
+  /* Toast Notification System */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 9999;
+    pointer-events: none;
+  }
+
+  .toast {
+    background: #1e1b4b;
+    border: 1px solid var(--accent);
+    color: #f8fafc;
+    padding: 10px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: toastIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: auto;
+  }
+
+  .toast.toast-success { border-color: #10b981; }
+  .toast.toast-error { border-color: #ef4444; }
+  .toast.toast-info { border-color: var(--accent); }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
   /* Hidden file input for import */
   #importFileInput { display: none; }
@@ -621,21 +733,21 @@
 <!-- Top Navigation Bar -->
 <div class="app-header">
   <div class="nav-group">
-    <button class="btn" id="prevBtn" aria-label="Previous">&lt;</button>
-    <button class="today-link" id="todayBtn">Today</button>
-    <button class="btn" id="nextBtn" aria-label="Next">&gt;</button>
+    <button class="btn" id="prevBtn" title="Previous (Left Arrow)" aria-label="Previous">&lt;</button>
+    <button class="today-link" id="todayBtn" title="Jump to Today [T]">📅 Today <span class="key-badge">T</span></button>
+    <button class="btn" id="nextBtn" title="Next (Right Arrow)" aria-label="Next">&gt;</button>
   </div>
   <div class="header-title-container">
     <h2 class="header-title" id="headerTitle">Calendar</h2>
   </div>
   <div class="action-menu">
-    <button class="btn btn-accent" id="newEventBtn">+ New Event</button>
+    <button class="btn btn-accent" id="newEventBtn" title="Create New Event [N]">+ New <span class="key-badge" style="background:rgba(0,0,0,0.2); border-color:rgba(0,0,0,0.3); color:#0f172a;">N</span></button>
     <button class="btn" id="exportIcsBtn" title="Export iCalendar (.ics)">Export .ics</button>
     <button class="btn" id="exportCsvBtn" title="Export CSV">Export CSV</button>
     <button class="btn" id="exportMdBtn" title="Export Markdown Agenda (.md)">Export .md</button>
-    <button class="btn" id="statsBtn" title="Calendar Analytics & Statistics">📊 Analytics</button>
+    <button class="btn" id="statsBtn" title="Calendar Analytics & Overview [S]">📊 Stats <span class="key-badge">S</span></button>
     <button class="btn" id="importBtn" title="Import .ics, .csv, or .json">Import</button>
-    <button class="btn" id="helpBtn" title="Help (Press H)">Help (H)</button>
+    <button class="btn" id="helpBtn" title="Help Guide [F1/H]">Help <span class="key-badge">F1</span></button>
     <input type="file" id="importFileInput" accept=".ics,.csv,.json" />
   </div>
 </div>
@@ -643,10 +755,10 @@
 <!-- Toolbar Controls -->
 <div class="toolbar">
   <div class="view-tabs" role="tablist">
-    <button class="tab-btn active" data-view="month" role="tab">Month</button>
-    <button class="tab-btn" data-view="week" role="tab">Week</button>
-    <button class="tab-btn" data-view="day" role="tab">Day</button>
-    <button class="tab-btn" data-view="agenda" role="tab">Agenda</button>
+    <button class="tab-btn active" data-view="month" role="tab"><span class="key-badge">1</span> Month</button>
+    <button class="tab-btn" data-view="week" role="tab"><span class="key-badge">2</span> Week</button>
+    <button class="tab-btn" data-view="day" role="tab"><span class="key-badge">3</span> Day</button>
+    <button class="tab-btn" data-view="agenda" role="tab"><span class="key-badge">4</span> Agenda</button>
   </div>
 
   <div class="filter-controls">
@@ -684,7 +796,7 @@
   <div class="modal">
     <div class="modal-header">
       <h3 class="modal-title" id="modalTitle">Event Details</h3>
-      <button class="close-icon" id="closeModalBtn">&times;</button>
+      <button class="close-icon" id="closeModalBtn" aria-label="Close">&times;</button>
     </div>
     
     <div class="form-group">
@@ -755,7 +867,7 @@
   <div class="modal" style="width: 520px; max-width: 95vw;">
     <div class="modal-header">
       <h3 class="modal-title" id="statsModalTitle">📊 Calendar Analytics & Overview</h3>
-      <button class="close-icon" id="closeStatsModalBtn">&times;</button>
+      <button class="close-icon" id="closeStatsModalBtn" aria-label="Close">&times;</button>
     </div>
     <div id="statsModalBody" style="display:flex; flex-direction:column; gap:12px; font-size:13px; max-height:68vh; overflow-y:auto;">
       <!-- Populated dynamically -->
@@ -768,34 +880,127 @@
   </div>
 </div>
 
+<!-- Cybernetic Help Modal -->
+<div class="modal-overlay" id="helpModalOverlay" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
+  <div class="modal" style="width: 560px; max-width: 95vw;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="helpModalTitle">💡 KCalendar User Guide</h3>
+      <button class="close-icon" id="closeHelpModalBtn" aria-label="Close">&times;</button>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:14px; font-size:13px; max-height:68vh; overflow-y:auto; padding-right:4px;">
+      <div class="help-grid">
+        <div class="help-card">
+          <h4>⌨️ View Hotkeys</h4>
+          <div class="shortcut-row">
+            <span class="key-badge">1</span>
+            <span class="shortcut-desc">Month View</span>
+          </div>
+          <div class="shortcut-row">
+            <span class="key-badge">2</span>
+            <span class="shortcut-desc">Week View</span>
+          </div>
+          <div class="shortcut-row">
+            <span class="key-badge">3</span>
+            <span class="shortcut-desc">Day View</span>
+          </div>
+          <div class="shortcut-row">
+            <span class="key-badge">4</span>
+            <span class="shortcut-desc">Agenda View</span>
+          </div>
+        </div>
+        <div class="help-card">
+          <h4>⚡ Action Hotkeys</h4>
+          <div class="shortcut-row">
+            <span class="key-badge">N</span>
+            <span class="shortcut-desc">Create New Event</span>
+          </div>
+          <div class="shortcut-row">
+            <span class="key-badge">T</span>
+            <span class="shortcut-desc">Go to Today</span>
+          </div>
+          <div class="shortcut-row">
+            <span class="key-badge">S</span>
+            <span class="shortcut-desc">Analytics & Stats</span>
+          </div>
+          <div class="shortcut-row">
+            <span class="key-badge">F1 / H</span>
+            <span class="shortcut-desc">Show this Help Guide</span>
+          </div>
+          <div class="shortcut-row">
+            <span class="key-badge">← / →</span>
+            <span class="shortcut-desc">Prev / Next Date</span>
+          </div>
+          <div class="shortcut-row">
+            <span class="key-badge">Esc</span>
+            <span class="shortcut-desc">Close any Open Modal</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="help-card">
+        <h4>📋 Features & Capabilities</h4>
+        <div style="color:var(--text-muted); line-height:1.5; font-size:12px;">
+          • <strong>Interactive Views:</strong> Click any day or time slot to instantly schedule an event.<br/>
+          • <strong>Recurrence:</strong> Support for Daily, Weekly, Monthly, and Yearly recurring schedules.<br/>
+          • <strong>Priorities:</strong> Flag critical events with Urgent (🔴), High (🟠), Normal (🔵), or Low (⚪) priority tags.<br/>
+          • <strong>Import / Export:</strong> Full support for standard iCalendar (<span style="color:var(--accent);">.ics</span>), Spreadsheets (<span style="color:var(--accent);">.csv</span>), Markdown agendas (<span style="color:var(--accent);">.md</span>), and JSON backups.<br/>
+          • <strong>Analytics:</strong> Real-time category breakdown and priority distribution metrics.
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions" style="margin-top:10px;">
+      <button class="btn btn-accent" id="closeHelpBtn" style="margin-left:auto;">Got it!</button>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteModalOverlay" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+  <div class="modal" style="width: 380px; max-width: 90vw;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="deleteModalTitle" style="color:var(--danger);">⚠️ Confirm Delete</h3>
+      <button class="close-icon" id="closeDeleteModalBtn" aria-label="Close">&times;</button>
+    </div>
+    <p style="font-size:13px; color:var(--text-main); margin:6px 0;" id="deleteModalPrompt">Are you sure you want to delete this event?</p>
+    <div class="modal-actions" style="margin-top:12px;">
+      <button class="btn" id="cancelDeleteBtn">Cancel</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn">Delete Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
 <script>
   // Resize window on open if running in a popup
   if (window.resizeTo) {
     window.resizeTo(800, 600);
   }
 
-  // Toast notification for help
-  window.addEventListener('DOMContentLoaded', () => {
+  // Toast Notification System
+  function showToast(message, type = 'info', duration = 3500) {
+    const container = document.getElementById('toastContainer');
     const toast = document.createElement('div');
-    toast.textContent = "Press H for Help";
-    toast.style.position = 'fixed';
-    toast.style.bottom = '20px';
-    toast.style.left = '50%';
-    toast.style.transform = 'translateX(-50%)';
-    toast.style.backgroundColor = 'var(--accent)';
-    toast.style.color = '#0f172a';
-    toast.style.padding = '8px 16px';
-    toast.style.borderRadius = '20px';
-    toast.style.fontWeight = 'bold';
-    toast.style.zIndex = '9999';
-    toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
-    toast.style.transition = 'opacity 0.5s ease';
-    document.body.appendChild(toast);
+    toast.className = `toast toast-${type}`;
     
+    let icon = 'ℹ️';
+    if (type === 'success') icon = '✅';
+    else if (type === 'error') icon = '⚠️';
+    
+    toast.innerHTML = `<span>${icon}</span> <span>${escapeHtml(message)}</span>`;
+    container.appendChild(toast);
+
     setTimeout(() => {
       toast.style.opacity = '0';
-      setTimeout(() => toast.remove(), 500);
-    }, 8000);
+      toast.style.transform = 'translateY(10px)';
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
+  }
+
+  // Welcome startup toast
+  window.addEventListener('DOMContentLoaded', () => {
+    showToast('📅 KCalendar ready — Press [H] or [F1] for Help', 'info', 5000);
   });
 
   // State management
@@ -1343,7 +1548,7 @@
     const title = eventTitleInput.value.trim();
     const date = eventDateInput.value;
     if (!title || !date) {
-      alert('Please provide title and date.');
+      showToast('Please provide an event title and date.', 'error');
       return;
     }
 
@@ -1360,6 +1565,7 @@
           recurring: eventRecurrenceSelect.value,
           description: eventDescInput.value
         };
+        showToast(`Updated event "${title}"`, 'success');
       }
     } else {
       events.push({
@@ -1372,6 +1578,7 @@
         recurring: eventRecurrenceSelect.value,
         description: eventDescInput.value
       });
+      showToast(`Created event "${title}"`, 'success');
     }
 
     saveEvents();
@@ -1379,12 +1586,40 @@
     renderApp();
   }
 
-  function deleteEventFromModal() {
-    if (editingEventId && confirm('Delete this event?')) {
-      events = events.filter(e => e.id !== editingEventId);
+  // Delete modal dialog
+  const deleteModalOverlay = document.getElementById('deleteModalOverlay');
+  let pendingDeleteId = null;
+
+  function promptDeleteEvent(eventId) {
+    pendingDeleteId = eventId;
+    const ev = events.find(e => e.id === eventId);
+    const title = ev ? ev.title : 'this event';
+    document.getElementById('deleteModalPrompt').textContent = `Are you sure you want to delete "${title}"?`;
+    deleteModalOverlay.classList.add('active');
+  }
+
+  function closeDeleteModal() {
+    deleteModalOverlay.classList.remove('active');
+    pendingDeleteId = null;
+  }
+
+  document.getElementById('confirmDeleteBtn').onclick = () => {
+    if (pendingDeleteId) {
+      events = events.filter(e => e.id !== pendingDeleteId);
       saveEvents();
+      closeDeleteModal();
       closeModal();
       renderApp();
+      showToast('Event deleted from calendar', 'info');
+    }
+  };
+
+  document.getElementById('cancelDeleteBtn').onclick = closeDeleteModal;
+  document.getElementById('closeDeleteModalBtn').onclick = closeDeleteModal;
+
+  function deleteEventFromModal() {
+    if (editingEventId) {
+      promptDeleteEvent(editingEventId);
     }
   }
 
@@ -1492,6 +1727,15 @@
     statsModalOverlay.classList.remove('active');
   }
 
+  // --- HELP MODAL ---
+  const helpModalOverlay = document.getElementById('helpModalOverlay');
+  function openHelpModal() {
+    helpModalOverlay.classList.add('active');
+  }
+  function closeHelpModal() {
+    helpModalOverlay.classList.remove('active');
+  }
+
   // --- IMPORT / EXPORT ENGINE ---
   function exportIcs() {
     let icsContent = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//KCalendar//EN\r\nCALSCALE:GREGORIAN\r\n";
@@ -1514,6 +1758,7 @@
     icsContent += "END:VCALENDAR\r\n";
 
     downloadFile(icsContent, 'kcalendar.ics', 'text/calendar;charset=utf-8;');
+    showToast('Exported calendar to kcalendar.ics', 'success');
   }
 
   function exportCsv() {
@@ -1533,6 +1778,7 @@
     });
 
     downloadFile(csv, 'kcalendar_events.csv', 'text/csv;charset=utf-8;');
+    showToast('Exported events to kcalendar_events.csv', 'success');
   }
 
   function exportMarkdownAgenda() {
@@ -1555,11 +1801,13 @@
 
     md += `\n---\n*Report generated by KCalendar*\n`;
     downloadFile(md, 'kcalendar_agenda.md', 'text/markdown;charset=utf-8;');
+    showToast('Exported agenda to kcalendar_agenda.md', 'success');
   }
 
   function exportJsonBackup() {
     const jsonStr = JSON.stringify(events, null, 2);
     downloadFile(jsonStr, 'kcalendar_backup.json', 'application/json;charset=utf-8;');
+    showToast('Exported JSON backup to kcalendar_backup.json', 'success');
   }
 
   function escapeCsv(str) {
@@ -1589,6 +1837,7 @@
     const file = e.target.files[0];
     if (!file) return;
 
+    const initialCount = events.length;
     const reader = new FileReader();
     reader.onload = function(evt) {
       const content = evt.target.result;
@@ -1601,7 +1850,8 @@
       }
       saveEvents();
       renderApp();
-      alert('Import completed successfully!');
+      const importedCount = events.length - initialCount;
+      showToast(`Import completed! Added ${importedCount} event(s).`, 'success');
     };
     reader.readAsText(file);
     e.target.value = '';
@@ -1611,7 +1861,6 @@
     try {
       const data = JSON.parse(content);
       if (Array.isArray(data)) {
-        let count = 0;
         data.forEach(item => {
           if (item && item.title && item.date) {
             events.push({
@@ -1624,12 +1873,11 @@
               recurring: item.recurring || 'none',
               description: item.description || ''
             });
-            count++;
           }
         });
       }
     } catch (err) {
-      alert('Failed to parse JSON backup file: ' + err.message);
+      showToast('Failed to parse JSON backup: ' + err.message, 'error');
     }
   }
 
@@ -1726,48 +1974,40 @@
   }
 
   // --- EVENT LISTENERS & INITIALIZATION ---
-  document.getElementById('prevBtn').onclick = () => {
+  function navigateDate(direction) {
     if (currentView === 'month') {
       const curDay = selectedDate.getDate();
       selectedDate.setDate(1);
-      selectedDate.setMonth(selectedDate.getMonth() - 1);
+      selectedDate.setMonth(selectedDate.getMonth() + direction);
       const maxDays = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).getDate();
       selectedDate.setDate(Math.min(curDay, maxDays));
     } else if (currentView === 'week') {
-      selectedDate.setDate(selectedDate.getDate() - 7);
+      selectedDate.setDate(selectedDate.getDate() + (direction * 7));
     } else if (currentView === 'day') {
-      selectedDate.setDate(selectedDate.getDate() - 1);
+      selectedDate.setDate(selectedDate.getDate() + direction);
     }
     renderApp();
-  };
+  }
 
-  document.getElementById('nextBtn').onclick = () => {
-    if (currentView === 'month') {
-      const curDay = selectedDate.getDate();
-      selectedDate.setDate(1);
-      selectedDate.setMonth(selectedDate.getMonth() + 1);
-      const maxDays = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).getDate();
-      selectedDate.setDate(Math.min(curDay, maxDays));
-    } else if (currentView === 'week') {
-      selectedDate.setDate(selectedDate.getDate() + 7);
-    } else if (currentView === 'day') {
-      selectedDate.setDate(selectedDate.getDate() + 1);
-    }
-    renderApp();
-  };
+  document.getElementById('prevBtn').onclick = () => navigateDate(-1);
+  document.getElementById('nextBtn').onclick = () => navigateDate(1);
 
   document.getElementById('todayBtn').onclick = () => {
     selectedDate = new Date();
     renderApp();
+    showToast('Navigated to Today', 'info', 2000);
   };
 
+  function switchView(viewName) {
+    currentView = viewName;
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.view === viewName);
+    });
+    renderApp();
+  }
+
   document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.onclick = () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentView = btn.dataset.view;
-      renderApp();
-    };
+    btn.onclick = () => switchView(btn.dataset.view);
   });
 
   document.getElementById('searchInput').oninput = (e) => {
@@ -1809,19 +2049,59 @@
   document.getElementById('importBtn').onclick = () => document.getElementById('importFileInput').click();
   document.getElementById('importFileInput').onchange = handleImportFile;
 
-  function showHelp() {
-    alert("KCalendar Help:\n- Switch Views: Month, Week, Day, Agenda\n- Filter events by Category & Priority levels (Urgent, High, Normal, Low)\n- Click a day/slot to create events or click an event to edit/delete\n- Click 📊 Analytics to view statistics & category distributions\n- Export to .ics, CSV, JSON, or formatted Markdown (.md) Agenda\n- Press H anytime outside text boxes for this help");
-  }
-  document.getElementById('helpBtn').onclick = showHelp;
+  document.getElementById('helpBtn').onclick = openHelpModal;
+  document.getElementById('closeHelpModalBtn').onclick = closeHelpModal;
+  document.getElementById('closeHelpBtn').onclick = closeHelpModal;
 
+  // Backdrop click dismissal for all modal overlays
+  [eventModalOverlay, statsModalOverlay, helpModalOverlay, deleteModalOverlay].forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        overlay.classList.remove('active');
+        if (overlay === eventModalOverlay) editingEventId = null;
+        if (overlay === deleteModalOverlay) pendingDeleteId = null;
+      }
+    });
+  });
+
+  // Global Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (eventModalOverlay.classList.contains('active')) closeModal();
       if (statsModalOverlay.classList.contains('active')) closeStatsModal();
+      if (helpModalOverlay.classList.contains('active')) closeHelpModal();
+      if (deleteModalOverlay.classList.contains('active')) closeDeleteModal();
+      return;
     }
-    if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
-      if (e.key === 'F1') e.preventDefault();
-      showHelp();
+
+    const isInputActive = ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName);
+    const anyModalOpen = eventModalOverlay.classList.contains('active') ||
+                         statsModalOverlay.classList.contains('active') ||
+                         helpModalOverlay.classList.contains('active') ||
+                         deleteModalOverlay.classList.contains('active');
+
+    if (e.key === 'F1') {
+      e.preventDefault();
+      if (helpModalOverlay.classList.contains('active')) closeHelpModal();
+      else openHelpModal();
+      return;
+    }
+
+    if (!isInputActive && !anyModalOpen) {
+      if (e.key === '1') { switchView('month'); }
+      else if (e.key === '2') { switchView('week'); }
+      else if (e.key === '3') { switchView('day'); }
+      else if (e.key === '4') { switchView('agenda'); }
+      else if (e.key === 'n' || e.key === 'N') { e.preventDefault(); openModal(); }
+      else if (e.key === 't' || e.key === 'T') {
+        selectedDate = new Date();
+        renderApp();
+        showToast('Navigated to Today', 'info', 2000);
+      }
+      else if (e.key === 's' || e.key === 'S') { openStatsModal(); }
+      else if (e.key === 'h' || e.key === 'H') { openHelpModal(); }
+      else if (e.key === 'ArrowLeft') { navigateDate(-1); }
+      else if (e.key === 'ArrowRight') { navigateDate(1); }
     }
   });
 
