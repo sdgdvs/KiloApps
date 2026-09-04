@@ -14,10 +14,12 @@
 #define ID_BTN_TRACTOR     102
 #define ID_BTN_DAMPENER    103
 #define ID_BTN_SCAN        104
-#define ID_BTN_AUDIO       105
-#define ID_BTN_HELP        106
-#define ID_BTN_JETTISON    107
-#define ID_BTN_SELL        108
+#define ID_BTN_THEME       105
+#define ID_BTN_SCANLINES   106
+#define ID_BTN_AUDIO       107
+#define ID_BTN_HELP        108
+#define ID_BTN_JETTISON    109
+#define ID_BTN_SELL        110
 
 #define SFX_NONE      0
 #define SFX_COLLECT   1
@@ -106,6 +108,115 @@ static const OreInfo ORE_DEFS[6] = {
     { "Derelict Scrap", RGB(251, 191, 36),  50 }
 };
 
+// CRT Vector Theme Definitions
+typedef struct {
+    const char* name;
+    COLORREF bgSpace;
+    COLORREF bgPanel;
+    COLORREF bgHeader;
+    COLORREF borderPanel;
+    COLORREF borderGlow;
+    COLORREF textPrimary;
+    COLORREF textBright;
+    COLORREF textDim;
+    COLORREF vector;
+    COLORREF vectorDim;
+    COLORREF laserGlow;
+    COLORREF laserCore;
+    COLORREF radarBg;
+    COLORREF radarGrid;
+    COLORREF radarSweep;
+    COLORREF radarTarget;
+    COLORREF starCol;
+} ThemePalette;
+
+static const ThemePalette THEME_PALETTES[4] = {
+    // 0: Cyan (Default Mk-IV)
+    {
+        "CRT CYAN",
+        RGB(1, 4, 10),      // bgSpace
+        RGB(11, 19, 41),    // bgPanel
+        RGB(15, 28, 63),    // bgHeader
+        RGB(30, 58, 138),   // borderPanel
+        RGB(56, 189, 248),  // borderGlow
+        RGB(56, 189, 248),  // textPrimary
+        RGB(240, 249, 255), // textBright
+        RGB(2, 132, 199),   // textDim
+        RGB(0, 240, 255),   // vector
+        RGB(56, 189, 248),  // vectorDim
+        RGB(0, 240, 255),   // laserGlow
+        RGB(255, 255, 255), // laserCore
+        RGB(3, 8, 22),      // radarBg
+        RGB(30, 58, 138),   // radarGrid
+        RGB(0, 240, 255),   // radarSweep
+        RGB(0, 240, 255),   // radarTarget
+        RGB(224, 242, 254)  // starCol
+    },
+    // 1: Amber (P3 Phosphor CRT)
+    {
+        "CRT AMBER",
+        RGB(13, 8, 1),      // bgSpace
+        RGB(26, 16, 2),     // bgPanel
+        RGB(38, 23, 3),     // bgHeader
+        RGB(120, 53, 15),   // borderPanel
+        RGB(245, 158, 11),  // borderGlow
+        RGB(251, 191, 36),  // textPrimary
+        RGB(254, 243, 199), // textBright
+        RGB(180, 83, 9),    // textDim
+        RGB(245, 158, 11),  // vector
+        RGB(251, 191, 36),  // vectorDim
+        RGB(245, 158, 11),  // laserGlow
+        RGB(255, 251, 235), // laserCore
+        RGB(21, 12, 2),     // radarBg
+        RGB(120, 53, 15),   // radarGrid
+        RGB(245, 158, 11),  // radarSweep
+        RGB(254, 240, 138), // radarTarget
+        RGB(254, 243, 199)  // starCol
+    },
+    // 2: Green (P1 Phosphor Matrix CRT)
+    {
+        "CRT GREEN",
+        RGB(1, 13, 4),      // bgSpace
+        RGB(3, 28, 9),      // bgPanel
+        RGB(6, 43, 16),     // bgHeader
+        RGB(21, 128, 61),   // borderPanel
+        RGB(34, 197, 94),   // borderGlow
+        RGB(74, 222, 128),  // textPrimary
+        RGB(220, 252, 231), // textBright
+        RGB(22, 163, 74),   // textDim
+        RGB(34, 197, 94),   // vector
+        RGB(74, 222, 128),  // vectorDim
+        RGB(34, 197, 94),   // laserGlow
+        RGB(240, 253, 244), // laserCore
+        RGB(2, 20, 7),      // radarBg
+        RGB(21, 128, 61),   // radarGrid
+        RGB(34, 197, 94),   // radarSweep
+        RGB(134, 239, 172), // radarTarget
+        RGB(220, 252, 231)  // starCol
+    },
+    // 3: Solar Crimson Hazard CRT
+    {
+        "SOLAR CRT",
+        RGB(15, 3, 3),      // bgSpace
+        RGB(32, 6, 6),      // bgPanel
+        RGB(53, 10, 10),    // bgHeader
+        RGB(153, 27, 27),   // borderPanel
+        RGB(239, 68, 68),   // borderGlow
+        RGB(248, 113, 113), // textPrimary
+        RGB(254, 226, 226), // textBright
+        RGB(185, 28, 28),   // textDim
+        RGB(239, 68, 68),   // vector
+        RGB(248, 113, 113), // vectorDim
+        RGB(239, 68, 68),   // laserGlow
+        RGB(254, 242, 242), // laserCore
+        RGB(26, 4, 4),      // radarBg
+        RGB(153, 27, 27),   // radarGrid
+        RGB(239, 68, 68),   // radarSweep
+        RGB(252, 165, 165), // radarTarget
+        RGB(254, 226, 226)  // starCol
+    }
+};
+
 // Game State
 typedef struct {
     int credits;
@@ -121,6 +232,8 @@ typedef struct {
     int maxCargo;
     int dampeners;
     int laserOverheated;
+    int themeIndex;
+    int scanlineMode; // 0=Off, 1=Normal, 2=CRT+
     
     // Ship Navigation
     float shipX, shipY;
@@ -149,7 +262,7 @@ typedef struct {
 
 static GameState g_state;
 static HWND g_hwnd = NULL;
-static HWND g_btnLaser, g_btnTractor, g_btnDampener, g_btnScan, g_btnAudio, g_btnHelp, g_btnJettison, g_btnSell;
+static HWND g_btnLaser, g_btnTractor, g_btnDampener, g_btnScan, g_btnTheme, g_btnScanlines, g_btnAudio, g_btnHelp, g_btnJettison, g_btnSell;
 static HFONT g_fontMono = NULL;
 static HFONT g_fontMonoBold = NULL;
 static HFONT g_fontSmall = NULL;
@@ -315,6 +428,52 @@ void UpdateCargoTotal(void) {
     g_state.totalCargo = sum;
 }
 
+void DrawScanlines(HDC hdc, int x, int y, int w, int h, int mode) {
+    if (mode == 0) return; // Off
+    HPEN hPenScan = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
+    HGDIOBJ oldPen = SelectObject(hdc, hPenScan);
+    int step = (mode == 2) ? 2 : 3;
+    for (int ly = y; ly < y + h; ly += step) {
+        MoveToEx(hdc, x, ly, NULL);
+        LineTo(hdc, x + w, ly);
+    }
+    if (mode == 2) {
+        // CRT curvature / tube vignette lines on corners
+        HPEN hPenVig = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
+        SelectObject(hdc, hPenVig);
+        MoveToEx(hdc, x, y + 25, NULL); LineTo(hdc, x, y); LineTo(hdc, x + 25, y);
+        MoveToEx(hdc, x + w - 25, y, NULL); LineTo(hdc, x + w, y); LineTo(hdc, x + w, y + 25);
+        MoveToEx(hdc, x, y + h - 25, NULL); LineTo(hdc, x, y + h); LineTo(hdc, x + 25, y + h);
+        MoveToEx(hdc, x + w - 25, y + h, NULL); LineTo(hdc, x + w, y + h); LineTo(hdc, x + w, y + h - 25);
+        DeleteObject(hPenVig);
+    }
+    SelectObject(hdc, oldPen);
+    DeleteObject(hPenScan);
+}
+
+void CycleTheme(void) {
+    g_state.themeIndex = (g_state.themeIndex + 1) % 4;
+    TriggerSound(SFX_BEEP);
+    char buf[64];
+    sprintf(buf, "Cockpit HUD theme switched to: [%s]", THEME_PALETTES[g_state.themeIndex].name);
+    AddLog(buf, 0);
+    if (g_btnTheme) {
+        SetWindowTextA(g_btnTheme, THEME_PALETTES[g_state.themeIndex].name);
+    }
+}
+
+void CycleScanlines(void) {
+    g_state.scanlineMode = (g_state.scanlineMode + 1) % 3;
+    TriggerSound(SFX_BEEP);
+    const char* names[3] = { "SCANLINES: OFF", "SCANLINES: ON", "SCANLINES: CRT+" };
+    char buf[64];
+    sprintf(buf, "CRT scanline raster filter: [%s]", names[g_state.scanlineMode]);
+    AddLog(buf, 0);
+    if (g_btnScanlines) {
+        SetWindowTextA(g_btnScanlines, (g_state.scanlineMode == 0) ? "SCAN: OFF" : (g_state.scanlineMode == 1 ? "SCAN: ON" : "SCAN: CRT+"));
+    }
+}
+
 void InitGame(void) {
     memset(&g_state, 0, sizeof(GameState));
     g_state.credits = 2500;
@@ -332,6 +491,8 @@ void InitGame(void) {
     g_state.maxCargo = 200;
     g_state.dampeners = 1;
     g_state.soundEnabled = 1;
+    g_state.themeIndex = 0;
+    g_state.scanlineMode = 1;
     g_state.shipAngle = -1.57079f; // Facing UP
     g_state.selectedAstIndex = -1;
     
@@ -370,13 +531,14 @@ void UpdateGame(float dt) {
         float exAngle = g_state.shipAngle + 3.14159f + (((float)rand() / (float)RAND_MAX) - 0.5f) * 0.4f;
         float exX = g_state.shipX - (float)cos(g_state.shipAngle) * 18.0f;
         float exY = g_state.shipY - (float)sin(g_state.shipAngle) * 18.0f;
+        COLORREF thrusterColor = THEME_PALETTES[g_state.themeIndex].vector;
         for (int i = 0; i < MAX_PARTICLES; i++) {
             if (!g_state.particles[i].active) {
                 g_state.particles[i].x = exX;
                 g_state.particles[i].y = exY;
                 g_state.particles[i].vx = (float)cos(exAngle) * (2.0f + ((float)rand() / (float)RAND_MAX) * 2.0f);
                 g_state.particles[i].vy = (float)sin(exAngle) * (2.0f + ((float)rand() / (float)RAND_MAX) * 2.0f);
-                g_state.particles[i].color = RGB(0, 240, 255);
+                g_state.particles[i].color = thrusterColor;
                 g_state.particles[i].life = 0.8f;
                 g_state.particles[i].decay = 0.06f;
                 g_state.particles[i].size = 2.5f;
@@ -449,7 +611,7 @@ void UpdateGame(float dt) {
                 if (distToBeam < ast->radius) {
                     float impactX = lx + dirX * proj;
                     float impactY = ly + dirY * proj;
-                    AddSparks(impactX, impactY, RGB(0, 240, 255), 2);
+                    AddSparks(impactX, impactY, THEME_PALETTES[g_state.themeIndex].vector, 2);
                     ast->hp -= 0.6f;
                     
                     if ((rand() % 100) < 14) {
@@ -642,6 +804,8 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     int totalH = clientRect->bottom - clientRect->top;
     if (totalW <= 0 || totalH <= 0) return;
     
+    const ThemePalette* pal = &THEME_PALETTES[g_state.themeIndex];
+    
     // Layout geometry
     int topHeaderH = 34;
     int bottomCtrlH = 140;
@@ -657,32 +821,32 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     
     // 1. Top Header Bar
     RECT rcHeader = { 0, 0, totalW, topHeaderH };
-    HBRUSH hBrHeader = CreateSolidBrush(RGB(15, 28, 63));
+    HBRUSH hBrHeader = CreateSolidBrush(pal->bgHeader);
     FillRect(hdc, &rcHeader, hBrHeader);
     DeleteObject(hBrHeader);
     
-    HPEN hPenBorder = CreatePen(PS_SOLID, 1, RGB(30, 58, 138));
+    HPEN hPenBorder = CreatePen(PS_SOLID, 1, pal->borderPanel);
     HGDIOBJ oldPen = SelectObject(hdc, hPenBorder);
     MoveToEx(hdc, 0, topHeaderH - 1, NULL);
     LineTo(hdc, totalW, topHeaderH - 1);
     
     SelectObject(hdc, g_fontHeader);
-    SetTextColor(hdc, RGB(0, 240, 255));
+    SetTextColor(hdc, pal->vector);
     SetBkMode(hdc, TRANSPARENT);
-    TextOutA(hdc, 12, 7, "KStarDredge - Mk-IV Asteroid Mining Barge", 41);
+    TextOutA(hdc, 12, 7, "☄️ KStarDredge - Heavy Mining Barge", 36);
     
     SelectObject(hdc, g_fontMonoBold);
     char statBuf[128];
     UpdateCargoTotal();
     sprintf(statBuf, "SECTOR: %s   CREDITS: %d CR   HOLD: %d/%dT   HULL: %d%%",
             g_state.sector, g_state.credits, g_state.totalCargo, g_state.maxCargo, (int)g_state.hull);
-    SetTextColor(hdc, RGB(240, 249, 255));
-    RECT rcStats = { totalW - 480, 0, totalW - 12, topHeaderH };
+    SetTextColor(hdc, pal->textBright);
+    RECT rcStats = { totalW - 500, 0, totalW - 12, topHeaderH };
     DrawTextA(hdc, statBuf, -1, &rcStats, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
     
     // 2. Left Panel: Ship Systems & Telemetry
     RECT rcLeft = { 0, mainY, leftPanelW, mainY + mainH };
-    HBRUSH hBrPanel = CreateSolidBrush(RGB(11, 19, 41));
+    HBRUSH hBrPanel = CreateSolidBrush(pal->bgPanel);
     FillRect(hdc, &rcLeft, hBrPanel);
     
     MoveToEx(hdc, leftPanelW - 1, mainY, NULL);
@@ -690,10 +854,10 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     
     // Panel Header
     RECT rcLeftHdr = { 0, mainY, leftPanelW, mainY + 22 };
-    HBRUSH hBrSubHdr = CreateSolidBrush(RGB(15, 28, 63));
+    HBRUSH hBrSubHdr = CreateSolidBrush(pal->bgHeader);
     FillRect(hdc, &rcLeftHdr, hBrSubHdr);
     SelectObject(hdc, g_fontMonoBold);
-    SetTextColor(hdc, RGB(56, 189, 248));
+    SetTextColor(hdc, pal->textPrimary);
     TextOutA(hdc, 8, mainY + 4, "BARGE TELEMETRY", 15);
     
     // System Meters
@@ -702,54 +866,54 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     SelectObject(hdc, g_fontSmall);
     
     // Reactor
-    SetTextColor(hdc, RGB(56, 189, 248));
+    SetTextColor(hdc, pal->textPrimary);
     TextOutA(hdc, 10, my, "REACTOR OUTPUT (MW)", 19);
     char valBuf[32];
     sprintf(valBuf, "%d MW", (int)g_state.reactor);
     TextOutA(hdc, leftPanelW - 55, my, valBuf, (int)strlen(valBuf));
-    DrawBar(hdc, 10, my + 14, meterW, 8, g_state.reactor / 100.0f, RGB(0, 240, 255), RGB(2, 6, 23), RGB(30, 58, 138));
+    DrawBar(hdc, 10, my + 14, meterW, 8, g_state.reactor / 100.0f, pal->vector, RGB(2, 6, 23), pal->borderPanel);
     my += 28;
     
     // Shield
-    SetTextColor(hdc, RGB(56, 189, 248));
+    SetTextColor(hdc, pal->textPrimary);
     TextOutA(hdc, 10, my, "SHIELD INTEGRITY", 16);
     sprintf(valBuf, "%d%%", (int)g_state.shield);
     TextOutA(hdc, leftPanelW - 45, my, valBuf, (int)strlen(valBuf));
-    DrawBar(hdc, 10, my + 14, meterW, 8, g_state.shield / 100.0f, RGB(16, 185, 129), RGB(2, 6, 23), RGB(30, 58, 138));
+    DrawBar(hdc, 10, my + 14, meterW, 8, g_state.shield / 100.0f, RGB(16, 185, 129), RGB(2, 6, 23), pal->borderPanel);
     my += 28;
     
     // Hull
-    SetTextColor(hdc, RGB(56, 189, 248));
+    SetTextColor(hdc, pal->textPrimary);
     TextOutA(hdc, 10, my, "HULL PLATING", 12);
     sprintf(valBuf, "%d%%", (int)g_state.hull);
     TextOutA(hdc, leftPanelW - 45, my, valBuf, (int)strlen(valBuf));
-    COLORREF hullCol = (g_state.hull < 30.0f) ? RGB(239, 68, 68) : RGB(56, 189, 248);
-    DrawBar(hdc, 10, my + 14, meterW, 8, g_state.hull / 100.0f, hullCol, RGB(2, 6, 23), RGB(30, 58, 138));
+    COLORREF hullCol = (g_state.hull < 30.0f) ? RGB(239, 68, 68) : pal->vectorDim;
+    DrawBar(hdc, 10, my + 14, meterW, 8, g_state.hull / 100.0f, hullCol, RGB(2, 6, 23), pal->borderPanel);
     my += 28;
     
     // Laser Heat
-    SetTextColor(hdc, RGB(56, 189, 248));
+    SetTextColor(hdc, pal->textPrimary);
     TextOutA(hdc, 10, my, "LASER CORE HEAT", 15);
     sprintf(valBuf, "%d%%", (int)g_state.heat);
     TextOutA(hdc, leftPanelW - 45, my, valBuf, (int)strlen(valBuf));
-    COLORREF heatCol = (g_state.heat > 80.0f) ? RGB(239, 68, 68) : (g_state.heat > 50.0f ? RGB(245, 158, 11) : RGB(0, 240, 255));
-    DrawBar(hdc, 10, my + 14, meterW, 8, g_state.heat / 100.0f, heatCol, RGB(2, 6, 23), RGB(30, 58, 138));
+    COLORREF heatCol = (g_state.heat > 80.0f) ? RGB(239, 68, 68) : (g_state.heat > 50.0f ? RGB(245, 158, 11) : pal->vector);
+    DrawBar(hdc, 10, my + 14, meterW, 8, g_state.heat / 100.0f, heatCol, RGB(2, 6, 23), pal->borderPanel);
     my += 28;
     
     // Fuel
-    SetTextColor(hdc, RGB(56, 189, 248));
+    SetTextColor(hdc, pal->textPrimary);
     TextOutA(hdc, 10, my, "FUEL RESERVES", 13);
     sprintf(valBuf, "%d%%", (int)g_state.fuel);
     TextOutA(hdc, leftPanelW - 45, my, valBuf, (int)strlen(valBuf));
-    DrawBar(hdc, 10, my + 14, meterW, 8, g_state.fuel / 100.0f, RGB(251, 191, 36), RGB(2, 6, 23), RGB(30, 58, 138));
+    DrawBar(hdc, 10, my + 14, meterW, 8, g_state.fuel / 100.0f, RGB(251, 191, 36), RGB(2, 6, 23), pal->borderPanel);
     my += 28;
     
     // O2 / Life Support
-    SetTextColor(hdc, RGB(56, 189, 248));
+    SetTextColor(hdc, pal->textPrimary);
     TextOutA(hdc, 10, my, "O2 / LIFE SUPPORT", 17);
     sprintf(valBuf, "%d%%", (int)g_state.o2);
     TextOutA(hdc, leftPanelW - 45, my, valBuf, (int)strlen(valBuf));
-    DrawBar(hdc, 10, my + 14, meterW, 8, g_state.o2 / 100.0f, RGB(16, 185, 129), RGB(2, 6, 23), RGB(30, 58, 138));
+    DrawBar(hdc, 10, my + 14, meterW, 8, g_state.o2 / 100.0f, RGB(16, 185, 129), RGB(2, 6, 23), pal->borderPanel);
     my += 34;
     
     // System Status Summary Box
@@ -766,12 +930,12 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     
     SetTextColor(hdc, RGB(148, 163, 184));
     TextOutA(hdc, 14, my + 20, "MINING LASER:", 13);
-    SetTextColor(hdc, g_state.laserOverheated ? RGB(239, 68, 68) : (g_state.miningActive ? RGB(0, 240, 255) : RGB(2, 132, 199)));
+    SetTextColor(hdc, g_state.laserOverheated ? RGB(239, 68, 68) : (g_state.miningActive ? pal->vector : pal->textDim));
     TextOutA(hdc, leftPanelW - 85, my + 20, g_state.laserOverheated ? "OVERHEAT" : (g_state.miningActive ? "FIRING" : "STANDBY"), g_state.laserOverheated ? 8 : (g_state.miningActive ? 6 : 7));
     
     SetTextColor(hdc, RGB(148, 163, 184));
     TextOutA(hdc, 14, my + 36, "TRACTOR BEAM:", 13);
-    SetTextColor(hdc, g_state.tractorActive ? RGB(0, 240, 255) : RGB(2, 132, 199));
+    SetTextColor(hdc, g_state.tractorActive ? pal->vector : pal->textDim);
     TextOutA(hdc, leftPanelW - 85, my + 36, g_state.tractorActive ? "ENGAGED" : "STANDBY", g_state.tractorActive ? 7 : 7);
     
     float drain = 12.0f + (g_state.miningActive ? 28.0f : 0.0f) + (g_state.tractorActive ? 14.0f : 0.0f);
@@ -779,7 +943,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     TextOutA(hdc, 14, my + 52, "POWER GRID DRAIN:", 17);
     char drnBuf[32];
     sprintf(drnBuf, "%.1f MW", drain);
-    SetTextColor(hdc, RGB(240, 249, 255));
+    SetTextColor(hdc, pal->textBright);
     TextOutA(hdc, leftPanelW - 65, my + 52, drnBuf, (int)strlen(drnBuf));
     
     // 3. Right Panel: Mineral Cargo Hold
@@ -791,7 +955,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     RECT rcRightHdr = { totalW - rightPanelW, mainY, totalW, mainY + 22 };
     FillRect(hdc, &rcRightHdr, hBrSubHdr);
     SelectObject(hdc, g_fontMonoBold);
-    SetTextColor(hdc, RGB(56, 189, 248));
+    SetTextColor(hdc, pal->textPrimary);
     TextOutA(hdc, totalW - rightPanelW + 8, mainY + 4, "MINERAL ORE HOLD", 16);
     char capBuf[32];
     sprintf(capBuf, "%d/%dT", g_state.totalCargo, g_state.maxCargo);
@@ -816,7 +980,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         
         char holdBuf[32];
         sprintf(holdBuf, "%d T  (%d CR)", g_state.cargoHold[i], g_state.cargoHold[i] * ORE_DEFS[i].value);
-        SetTextColor(hdc, RGB(240, 249, 255));
+        SetTextColor(hdc, pal->textBright);
         RECT rcHold = { totalW - rightPanelW + 100, cy + 8, totalW - 14, cy + 26 };
         DrawTextA(hdc, holdBuf, -1, &rcHold, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
         
@@ -826,7 +990,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     // Cargo Hold Summary
     int estVal = CalculateCargoValue();
     SelectObject(hdc, g_fontMonoBold);
-    SetTextColor(hdc, RGB(240, 249, 255));
+    SetTextColor(hdc, pal->textBright);
     TextOutA(hdc, totalW - rightPanelW + 10, cy + 4, "ESTIMATED VALUE:", 16);
     char estBuf[32];
     sprintf(estBuf, "%d CR", estVal);
@@ -836,7 +1000,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     
     // 4. Center Viewport (Space & Asteroid Field)
     RECT rcViewport = { viewportX, viewportY, viewportX + viewportW, viewportY + viewportH };
-    HBRUSH hBrSpace = CreateSolidBrush(RGB(1, 4, 10));
+    HBRUSH hBrSpace = CreateSolidBrush(pal->bgSpace);
     FillRect(hdc, &rcViewport, hBrSpace);
     DeleteObject(hBrSpace);
     
@@ -852,13 +1016,10 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         int sx = cx + (int)(g_state.stars[i].x - g_state.shipX * 0.15f);
         int sy = cyCenter + (int)(g_state.stars[i].y - g_state.shipY * 0.15f);
         if (sx >= viewportX && sx < viewportX + viewportW && sy >= viewportY && sy < viewportY + viewportH) {
-            COLORREF starCol = RGB((int)(224 * g_state.stars[i].brightness),
-                                   (int)(242 * g_state.stars[i].brightness),
-                                   (int)(254 * g_state.stars[i].brightness));
-            SetPixel(hdc, sx, sy, starCol);
+            SetPixel(hdc, sx, sy, pal->starCol);
             if (g_state.stars[i].size > 1.2f) {
-                SetPixel(hdc, sx + 1, sy, starCol);
-                SetPixel(hdc, sx, sy + 1, starCol);
+                SetPixel(hdc, sx + 1, sy, pal->starCol);
+                SetPixel(hdc, sx, sy + 1, pal->starCol);
             }
         }
     }
@@ -870,7 +1031,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         float angleL = g_state.shipAngle - 0.785f;
         float angleR = g_state.shipAngle + 0.785f;
         
-        HPEN hPenTractor = CreatePen(PS_SOLID, 1, RGB(0, 180, 255));
+        HPEN hPenTractor = CreatePen(PS_SOLID, 1, pal->vector);
         HGDIOBJ oldTrPen = SelectObject(hdc, hPenTractor);
         
         MoveToEx(hdc, cx, cyCenter, NULL);
@@ -890,12 +1051,12 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         int endX = cx + (int)(cos(g_state.shipAngle) * laserRange);
         int endY = cyCenter + (int)(sin(g_state.shipAngle) * laserRange);
         
-        HPEN hPenLaser = CreatePen(PS_SOLID, 3, RGB(0, 240, 255));
+        HPEN hPenLaser = CreatePen(PS_SOLID, 3, pal->laserGlow);
         HGDIOBJ oldLzrPen = SelectObject(hdc, hPenLaser);
         MoveToEx(hdc, lx, ly, NULL);
         LineTo(hdc, endX, endY);
         
-        HPEN hPenLaserCore = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+        HPEN hPenLaserCore = CreatePen(PS_SOLID, 1, pal->laserCore);
         SelectObject(hdc, hPenLaserCore);
         MoveToEx(hdc, lx, ly, NULL);
         LineTo(hdc, endX, endY);
@@ -924,8 +1085,8 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         }
         
         int isTarget = (g_state.selectedAstIndex == i);
-        HPEN hPenAst = CreatePen(PS_SOLID, isTarget ? 2 : 1, isTarget ? RGB(0, 240, 255) : RGB(56, 189, 248));
-        HBRUSH hBrAst = CreateSolidBrush(RGB(10, 21, 45));
+        HPEN hPenAst = CreatePen(PS_SOLID, isTarget ? 2 : 1, isTarget ? pal->vector : pal->vectorDim);
+        HBRUSH hBrAst = CreateSolidBrush(pal->bgPanel);
         HGDIOBJ oldAstPen = SelectObject(hdc, hPenAst);
         HGDIOBJ oldAstBr = SelectObject(hdc, hBrAst);
         
@@ -951,7 +1112,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         DrawTextA(hdc, lbl, -1, &rcLbl, DT_CENTER | DT_SINGLELINE);
         
         if (isTarget) {
-            HPEN hPenTarget = CreatePen(PS_DOT, 1, RGB(0, 240, 255));
+            HPEN hPenTarget = CreatePen(PS_DOT, 1, pal->vector);
             HGDIOBJ oldTPen = SelectObject(hdc, hPenTarget);
             HGDIOBJ oldTBr = SelectObject(hdc, GetStockObject(NULL_BRUSH));
             int bSize = (int)ast->radius + 8;
@@ -978,7 +1139,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
             { ox - 4, oy }
         };
         HBRUSH hBrChunk = CreateSolidBrush(ORE_DEFS[chunk->oreType].color);
-        HPEN hPenChunk = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+        HPEN hPenChunk = CreatePen(PS_SOLID, 1, pal->laserCore);
         HGDIOBJ oldChPen = SelectObject(hdc, hPenChunk);
         HGDIOBJ oldChBr = SelectObject(hdc, hBrChunk);
         
@@ -1016,7 +1177,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     
     // Draw Dredge Ship (Cockpit Center)
     if (g_state.shield > 0.0f) {
-        HPEN hPenShield = CreatePen(PS_SOLID, 1, RGB(56, 189, 248));
+        HPEN hPenShield = CreatePen(PS_SOLID, 1, pal->vectorDim);
         HGDIOBJ oldShPen = SelectObject(hdc, hPenShield);
         HGDIOBJ oldShBr = SelectObject(hdc, GetStockObject(NULL_BRUSH));
         Ellipse(hdc, cx - 28, cyCenter - 28, cx + 28, cyCenter + 28);
@@ -1042,8 +1203,8 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         shipWorld[i].y = cyCenter + (int)(shipLocal[i].x * sinA + shipLocal[i].y * cosA);
     }
     
-    HPEN hPenShip = CreatePen(PS_SOLID, 2, RGB(0, 240, 255));
-    HBRUSH hBrShip = CreateSolidBrush(RGB(17, 30, 56));
+    HPEN hPenShip = CreatePen(PS_SOLID, 2, pal->vector);
+    HBRUSH hBrShip = CreateSolidBrush(pal->bgPanel);
     HGDIOBJ oldSpPen = SelectObject(hdc, hPenShip);
     HGDIOBJ oldSpBr = SelectObject(hdc, hBrShip);
     Polygon(hdc, shipWorld, 6);
@@ -1053,7 +1214,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     DeleteObject(hBrShip);
     
     // Center Cockpit Glass
-    HBRUSH hBrGlass = CreateSolidBrush(RGB(56, 189, 248));
+    HBRUSH hBrGlass = CreateSolidBrush(pal->vectorDim);
     int gx = cx + (int)(4.0f * cosA);
     int gy = cyCenter + (int)(4.0f * sinA);
     RECT rcGlass = { gx - 3, gy - 3, gx + 4, gy + 4 };
@@ -1062,7 +1223,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     
     // HUD Telemetry Overlays
     SelectObject(hdc, g_fontSmall);
-    SetTextColor(hdc, RGB(0, 240, 255));
+    SetTextColor(hdc, pal->vector);
     TextOutA(hdc, viewportX + 10, viewportY + 10, "RADAR SCANNER: ACTIVE (360)", 27);
     float spd = (float)sqrt(g_state.shipVx * g_state.shipVx + g_state.shipVy * g_state.shipVy);
     char hudBuf[64];
@@ -1076,8 +1237,8 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     int rcRadarX = viewportX + viewportW - radarR - 15;
     int rcRadarY = viewportY + radarR + 15;
     
-    HBRUSH hBrRadar = CreateSolidBrush(RGB(3, 8, 22));
-    HPEN hPenRadar = CreatePen(PS_SOLID, 1, RGB(30, 58, 138));
+    HBRUSH hBrRadar = CreateSolidBrush(pal->radarBg);
+    HPEN hPenRadar = CreatePen(PS_SOLID, 1, pal->radarGrid);
     HGDIOBJ oldRdPen = SelectObject(hdc, hPenRadar);
     HGDIOBJ oldRdBr = SelectObject(hdc, hBrRadar);
     Ellipse(hdc, rcRadarX - radarR, rcRadarY - radarR, rcRadarX + radarR, rcRadarY + radarR);
@@ -1087,7 +1248,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     Ellipse(hdc, rcRadarX - radarR / 2, rcRadarY - radarR / 2, rcRadarX + radarR / 2, rcRadarY + radarR / 2);
     
     // Radar Sweep Line
-    HPEN hPenSweep = CreatePen(PS_SOLID, 1, RGB(0, 240, 255));
+    HPEN hPenSweep = CreatePen(PS_SOLID, 1, pal->radarSweep);
     SelectObject(hdc, hPenSweep);
     MoveToEx(hdc, rcRadarX, rcRadarY, NULL);
     LineTo(hdc, rcRadarX + (int)(cos(g_state.radarAngle) * radarR), rcRadarY + (int)(sin(g_state.radarAngle) * radarR));
@@ -1100,15 +1261,15 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         float bdx = (g_state.asteroids[i].x - g_state.shipX) * radarScale;
         float bdy = (g_state.asteroids[i].y - g_state.shipY) * radarScale;
         if (bdx * bdx + bdy * bdy < (radarR - 4) * (radarR - 4)) {
-            COLORREF blipCol = (i == g_state.selectedAstIndex) ? RGB(0, 240, 255) : RGB(245, 158, 11);
+            COLORREF blipCol = (i == g_state.selectedAstIndex) ? pal->radarTarget : RGB(245, 158, 11);
             SetPixel(hdc, rcRadarX + (int)bdx, rcRadarY + (int)bdy, blipCol);
             SetPixel(hdc, rcRadarX + (int)bdx + 1, rcRadarY + (int)bdy, blipCol);
         }
     }
     
     // Center Ship Blip on Radar
-    SetPixel(hdc, rcRadarX, rcRadarY, RGB(56, 189, 248));
-    SetPixel(hdc, rcRadarX + 1, rcRadarY, RGB(56, 189, 248));
+    SetPixel(hdc, rcRadarX, rcRadarY, pal->vector);
+    SetPixel(hdc, rcRadarX + 1, rcRadarY, pal->vector);
     
     SelectObject(hdc, oldRdPen);
     SelectObject(hdc, oldRdBr);
@@ -1124,13 +1285,13 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         int tBoxY = viewportY + viewportH - tBoxH - 15;
         
         RECT rcTBox = { tBoxX, tBoxY, tBoxX + tBoxW, tBoxY + tBoxH };
-        HBRUSH hBrTBox = CreateSolidBrush(RGB(11, 19, 41));
+        HBRUSH hBrTBox = CreateSolidBrush(pal->bgPanel);
         FillRect(hdc, &rcTBox, hBrTBox);
         DeleteObject(hBrTBox);
         FrameRect(hdc, &rcTBox, (HBRUSH)GetStockObject(WHITE_BRUSH));
         
         SelectObject(hdc, g_fontMonoBold);
-        SetTextColor(hdc, RGB(0, 240, 255));
+        SetTextColor(hdc, pal->vector);
         TextOutA(hdc, tBoxX + 6, tBoxY + 4, target->id, (int)strlen(target->id));
         
         float dist = (float)sqrt((target->x - g_state.shipX) * (target->x - g_state.shipX) +
@@ -1144,11 +1305,14 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         
         char oreStr[64];
         sprintf(oreStr, "ORE: %s (%d%%)", ORE_DEFS[target->oreType].name, target->richness);
-        SetTextColor(hdc, RGB(240, 249, 255));
+        SetTextColor(hdc, pal->textBright);
         TextOutA(hdc, tBoxX + 6, tBoxY + 18, oreStr, (int)strlen(oreStr));
         
-        DrawBar(hdc, tBoxX + 6, tBoxY + 34, tBoxW - 12, 6, target->hp / target->maxHp, RGB(0, 240, 255), RGB(2, 6, 23), RGB(30, 58, 138));
+        DrawBar(hdc, tBoxX + 6, tBoxY + 34, tBoxW - 12, 6, target->hp / target->maxHp, pal->vector, RGB(2, 6, 23), pal->borderPanel);
     }
+    
+    // Draw CRT Scanlines over Viewport
+    DrawScanlines(hdc, viewportX, viewportY, viewportW, viewportH, g_state.scanlineMode);
     
     // Restore clipping
     SelectClipRgn(hdc, NULL);
@@ -1157,7 +1321,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     // 5. Bottom Panel: Cockpit Controls & Event Terminal
     int botY = totalH - bottomCtrlH;
     RECT rcBottom = { 0, botY, totalW, totalH };
-    HBRUSH hBrBot = CreateSolidBrush(RGB(11, 19, 41));
+    HBRUSH hBrBot = CreateSolidBrush(pal->bgPanel);
     FillRect(hdc, &rcBottom, hBrBot);
     DeleteObject(hBrBot);
     
@@ -1165,21 +1329,21 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     LineTo(hdc, totalW, botY);
     
     // Control Section Header
-    RECT rcCtrlHdr = { 0, botY, 320, botY + 20 };
+    RECT rcCtrlHdr = { 0, botY, 350, botY + 20 };
     FillRect(hdc, &rcCtrlHdr, hBrSubHdr);
     SelectObject(hdc, g_fontMonoBold);
-    SetTextColor(hdc, RGB(56, 189, 248));
-    TextOutA(hdc, 10, botY + 3, "COCKPIT CONSOLE  [WASD / SPACE / T / Z]", 38);
+    SetTextColor(hdc, pal->textPrimary);
+    TextOutA(hdc, 10, botY + 3, "COCKPIT CONSOLE  [WASD / SPACE / T / Z / V / C]", 46);
     
     // Terminal Section Header
-    RECT rcTermHdr = { 320, botY, totalW, botY + 20 };
+    RECT rcTermHdr = { 350, botY, totalW, botY + 20 };
     FillRect(hdc, &rcTermHdr, hBrSubHdr);
-    MoveToEx(hdc, 320, botY, NULL);
-    LineTo(hdc, 320, totalH);
-    TextOutA(hdc, 330, botY + 3, "FLIGHT & DREDGE TERMINAL", 24);
+    MoveToEx(hdc, 350, botY, NULL);
+    LineTo(hdc, 350, totalH);
+    TextOutA(hdc, 360, botY + 3, "FLIGHT & DREDGE TERMINAL", 24);
     
     // Draw Terminal Event Logs
-    int logBoxX = 330;
+    int logBoxX = 360;
     int logBoxY = botY + 25;
     int logBoxW = totalW - logBoxX - 10;
     int logBoxH = bottomCtrlH - 35;
@@ -1197,8 +1361,8 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     
     for (int i = startIdx; i < g_state.logCount; i++) {
         COLORREF logCol = RGB(148, 163, 184);
-        if (g_state.logs[i].type == 0) logCol = RGB(56, 189, 248);
-        else if (g_state.logs[i].type == 1) logCol = RGB(0, 240, 255);
+        if (g_state.logs[i].type == 0) logCol = pal->textPrimary;
+        else if (g_state.logs[i].type == 1) logCol = pal->vector;
         else if (g_state.logs[i].type == 2) logCol = RGB(192, 132, 252);
         else if (g_state.logs[i].type == 3) logCol = RGB(245, 158, 11);
         else if (g_state.logs[i].type == 4) logCol = RGB(239, 68, 68);
@@ -1211,13 +1375,13 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     
     // Help Overlay Modal
     if (g_state.showHelp) {
-        int helpW = 540;
-        int helpH = 340;
+        int helpW = 560;
+        int helpH = 360;
         int hx = (totalW - helpW) / 2;
         int hy = (totalH - helpH) / 2;
         
         RECT rcHelp = { hx, hy, hx + helpW, hy + helpH };
-        HBRUSH hBrHModal = CreateSolidBrush(RGB(11, 19, 41));
+        HBRUSH hBrHModal = CreateSolidBrush(pal->bgPanel);
         FillRect(hdc, &rcHelp, hBrHModal);
         DeleteObject(hBrHModal);
         FrameRect(hdc, &rcHelp, (HBRUSH)GetStockObject(WHITE_BRUSH));
@@ -1225,28 +1389,30 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         RECT rcHelpHeader = { hx, hy, hx + helpW, hy + 28 };
         FillRect(hdc, &rcHelpHeader, hBrSubHdr);
         SelectObject(hdc, g_fontHeader);
-        SetTextColor(hdc, RGB(0, 240, 255));
+        SetTextColor(hdc, pal->vector);
         TextOutA(hdc, hx + 12, hy + 6, "KStarDredge - Captain's Flight Manual", 37);
         
         SelectObject(hdc, g_fontMonoBold);
-        int myHelp = hy + 40;
-        SetTextColor(hdc, RGB(240, 249, 255));
+        int myHelp = hy + 38;
+        SetTextColor(hdc, pal->textBright);
         TextOutA(hdc, hx + 16, myHelp, "FLIGHT CONTROLS & DREDGING TACTICS:", 35);
-        myHelp += 24;
+        myHelp += 22;
         
         SelectObject(hdc, g_fontSmall);
         SetTextColor(hdc, RGB(148, 163, 184));
         TextOutA(hdc, hx + 20, myHelp, "• [W / UP ARROW]: Engage Forward Fusion Thrusters (Consumes Fuel)", 64); myHelp += 18;
         TextOutA(hdc, hx + 20, myHelp, "• [S / DOWN ARROW]: Engage Retro Braking Thrusters", 50); myHelp += 18;
         TextOutA(hdc, hx + 20, myHelp, "• [A / D / LEFT / RIGHT]: Pivot Barge Heading", 45); myHelp += 18;
-        TextOutA(hdc, hx + 20, myHelp, "• [SPACEBAR / LASER BTN]: Hold/Toggle Mining Laser (Watch Laser Heat)", 69); myHelp += 18;
+        TextOutA(hdc, hx + 20, myHelp, "• [SPACEBAR / LASER BTN]: Fire Mining Laser (Watch Laser Heat)", 62); myHelp += 18;
         TextOutA(hdc, hx + 20, myHelp, "• [T / TRACTOR BTN]: Toggle Tractor Magnet to draw floating mineral chunks", 73); myHelp += 18;
         TextOutA(hdc, hx + 20, myHelp, "• [Z / DAMPENER BTN]: Toggle Inertial Dampeners for precise stationkeeping", 74); myHelp += 18;
+        TextOutA(hdc, hx + 20, myHelp, "• [V / THEME BTN]: Cycle Retro CRT Vector Theme (Cyan / Amber / Green / Solar)", 77); myHelp += 18;
+        TextOutA(hdc, hx + 20, myHelp, "• [C / SCANLINES BTN]: Toggle CRT Scanlines & Shaders (Off / On / CRT+)", 70); myHelp += 18;
         TextOutA(hdc, hx + 20, myHelp, "• [CLICK VIEWPORT]: Target & Lock asteroid with telemetry computer", 66); myHelp += 18;
-        TextOutA(hdc, hx + 20, myHelp, "• [LIQUIDATE]: Sell cargo hold to orbital comm-link for Credits", 62); myHelp += 24;
+        TextOutA(hdc, hx + 20, myHelp, "• [LIQUIDATE]: Sell cargo hold to orbital comm-link for Credits", 62); myHelp += 22;
         
         SetTextColor(hdc, RGB(245, 158, 11));
-        TextOutA(hdc, hx + 20, myHelp, "Press [H] or Click 'Pilot Manual' to close this screen.", 54);
+        TextOutA(hdc, hx + 20, myHelp, "Press [H] or Click 'MANUAL' to close this screen.", 49);
     }
     
     SelectObject(hdc, oldPen);
@@ -1266,19 +1432,23 @@ void RepositionControls(HWND hwnd) {
     int bottomCtrlH = 140;
     int botY = totalH - bottomCtrlH;
     
-    // Cockpit Action Buttons in bottom-left console
-    int bx = 12;
-    int by = botY + 28;
-    int bw = 92;
-    int bh = 30;
+    // Cockpit Action Buttons in bottom-left console (4 per row, 2 rows)
+    int bx = 10;
+    int by1 = botY + 28;
+    int by2 = botY + 62;
+    int bw = 78;
+    int bh = 28;
+    int gap = 6;
     
-    MoveWindow(g_btnLaser,    bx,          by,      bw, bh, TRUE);
-    MoveWindow(g_btnTractor,  bx + bw + 6, by,      bw, bh, TRUE);
-    MoveWindow(g_btnDampener, bx + (bw+6)*2, by,    bw, bh, TRUE);
+    MoveWindow(g_btnLaser,      bx,                  by1, bw, bh, TRUE);
+    MoveWindow(g_btnTractor,    bx + (bw + gap),     by1, bw, bh, TRUE);
+    MoveWindow(g_btnDampener,   bx + (bw + gap) * 2, by1, bw, bh, TRUE);
+    MoveWindow(g_btnScan,       bx + (bw + gap) * 3, by1, bw, bh, TRUE);
     
-    MoveWindow(g_btnScan,     bx,          by + 36, bw, bh, TRUE);
-    MoveWindow(g_btnAudio,    bx + bw + 6, by + 36, bw, bh, TRUE);
-    MoveWindow(g_btnHelp,     bx + (bw+6)*2, by + 36, bw, bh, TRUE);
+    MoveWindow(g_btnTheme,      bx,                  by2, bw, bh, TRUE);
+    MoveWindow(g_btnScanlines,  bx + (bw + gap),     by2, bw, bh, TRUE);
+    MoveWindow(g_btnAudio,      bx + (bw + gap) * 2, by2, bw, bh, TRUE);
+    MoveWindow(g_btnHelp,       bx + (bw + gap) * 3, by2, bw, bh, TRUE);
     
     // Right panel buttons: Jettison & Liquidate
     int rightX = totalW - rightPanelW + 10;
@@ -1301,15 +1471,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             InitGame();
             
             // Create Control Buttons
-            g_btnLaser    = CreateWindowA("BUTTON", "MINING LASER", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_LASER, NULL, NULL);
-            g_btnTractor  = CreateWindowA("BUTTON", "TRACTOR BEAM", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRACTOR, NULL, NULL);
-            g_btnDampener = CreateWindowA("BUTTON", "DAMPENERS",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_DAMPENER, NULL, NULL);
-            g_btnScan     = CreateWindowA("BUTTON", "SECTOR SCAN",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN, NULL, NULL);
-            g_btnAudio    = CreateWindowA("BUTTON", "AUDIO SYNTH",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_AUDIO, NULL, NULL);
-            g_btnHelp     = CreateWindowA("BUTTON", "PILOT MANUAL", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            g_btnLaser     = CreateWindowA("BUTTON", "LASER [SPC]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_LASER, NULL, NULL);
+            g_btnTractor   = CreateWindowA("BUTTON", "TRACTOR [T]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRACTOR, NULL, NULL);
+            g_btnDampener  = CreateWindowA("BUTTON", "DAMPENER [Z]",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_DAMPENER, NULL, NULL);
+            g_btnScan      = CreateWindowA("BUTTON", "SCAN [S]",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN, NULL, NULL);
+            g_btnTheme     = CreateWindowA("BUTTON", "CRT CYAN",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_THEME, NULL, NULL);
+            g_btnScanlines = CreateWindowA("BUTTON", "SCAN: ON",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCANLINES, NULL, NULL);
+            g_btnAudio     = CreateWindowA("BUTTON", "AUDIO [M]",     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_AUDIO, NULL, NULL);
+            g_btnHelp      = CreateWindowA("BUTTON", "MANUAL [H]",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
             
-            g_btnJettison = CreateWindowA("BUTTON", "JETTISON",     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_JETTISON, NULL, NULL);
-            g_btnSell     = CreateWindowA("BUTTON", "LIQUIDATE",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SELL, NULL, NULL);
+            g_btnJettison  = CreateWindowA("BUTTON", "JETTISON",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_JETTISON, NULL, NULL);
+            g_btnSell      = CreateWindowA("BUTTON", "LIQUIDATE",     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SELL, NULL, NULL);
             
             SetTimer(hwnd, TIMER_ID, TIMER_INTERVAL, NULL);
             
@@ -1342,6 +1514,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case ID_BTN_SCAN:
                     TriggerSound(SFX_BEEP);
                     AddLog("Deep sweep complete: 24 mineral asteroids registered in local sector.", 0);
+                    break;
+                case ID_BTN_THEME:
+                    CycleTheme();
+                    break;
+                case ID_BTN_SCANLINES:
+                    CycleScanlines();
                     break;
                 case ID_BTN_AUDIO:
                     g_state.soundEnabled = !g_state.soundEnabled;
@@ -1454,6 +1632,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case 'Z':
                     g_state.dampeners = !g_state.dampeners;
                     AddLog(g_state.dampeners ? "Inertia dampeners engaged." : "Inertia dampeners disengaged.", 0);
+                    break;
+                case 'V':
+                    CycleTheme();
+                    break;
+                case 'C':
+                    CycleScanlines();
                     break;
                 case 'M':
                     g_state.soundEnabled = !g_state.soundEnabled;

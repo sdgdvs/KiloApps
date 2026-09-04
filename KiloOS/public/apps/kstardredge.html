@@ -25,6 +25,76 @@
             --btn-hover: #1e40af;
             --btn-active: #0284c7;
             --font-mono: 'Consolas', 'Courier New', Courier, monospace;
+            --vector-glow: 0 0 8px rgba(0, 240, 255, 0.4);
+        }
+
+        /* Retro-Futuristic CRT Amber Theme (P3 Phosphor) */
+        body[data-theme="amber"] {
+            --bg-space: #0d0801;
+            --bg-panel: #1a1002;
+            --bg-panel-header: #261703;
+            --border-panel: #78350f;
+            --border-glow: #f59e0b;
+            --text-primary: #fbbf24;
+            --text-bright: #fef3c7;
+            --text-dim: #b45309;
+            --text-amber: #fef08a;
+            --accent-cyan: #f59e0b;
+            --accent-emerald: #d97706;
+            --accent-amber: #fef08a;
+            --accent-red: #ef4444;
+            --accent-purple: #fcd34d;
+            --gauge-bg: #0a0501;
+            --btn-bg: #2d1b04;
+            --btn-hover: #78350f;
+            --btn-active: #b45309;
+            --vector-glow: 0 0 10px rgba(245, 158, 11, 0.5);
+        }
+
+        /* Retro-Futuristic CRT Green Theme (P1 Phosphor) */
+        body[data-theme="green"] {
+            --bg-space: #010d04;
+            --bg-panel: #031c09;
+            --bg-panel-header: #062b10;
+            --border-panel: #15803d;
+            --border-glow: #22c55e;
+            --text-primary: #4ade80;
+            --text-bright: #dcfce7;
+            --text-dim: #16a34a;
+            --text-amber: #86efac;
+            --accent-cyan: #22c55e;
+            --accent-emerald: #10b981;
+            --accent-amber: #86efac;
+            --accent-red: #f87171;
+            --accent-purple: #a7f3d0;
+            --gauge-bg: #010803;
+            --btn-bg: #072a11;
+            --btn-hover: #166534;
+            --btn-active: #15803d;
+            --vector-glow: 0 0 10px rgba(34, 197, 94, 0.5);
+        }
+
+        /* Solar Crimson Hazard CRT Theme */
+        body[data-theme="crimson"] {
+            --bg-space: #0f0303;
+            --bg-panel: #200606;
+            --bg-panel-header: #350a0a;
+            --border-panel: #991b1b;
+            --border-glow: #ef4444;
+            --text-primary: #f87171;
+            --text-bright: #fee2e2;
+            --text-dim: #b91c1c;
+            --text-amber: #fca5a5;
+            --accent-cyan: #ef4444;
+            --accent-emerald: #f59e0b;
+            --accent-amber: #fca5a5;
+            --accent-red: #dc2626;
+            --accent-purple: #f87171;
+            --gauge-bg: #0a0202;
+            --btn-bg: #350a0a;
+            --btn-hover: #7f1d1d;
+            --btn-active: #991b1b;
+            --vector-glow: 0 0 10px rgba(239, 68, 68, 0.5);
         }
 
         * {
@@ -45,18 +115,37 @@
             position: relative;
         }
 
-        /* Scanline Overlay */
-        body::before {
+        /* Scanline Overlay & CRT Shaders */
+        body.scanlines-normal::before {
             content: " ";
             display: block;
             position: absolute;
             top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), 
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%), 
                         linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
             z-index: 100;
             background-size: 100% 3px, 6px 100%;
             pointer-events: none;
-            opacity: 0.55;
+            opacity: 0.65;
+        }
+
+        body.scanlines-crt::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: radial-gradient(circle at center, transparent 60%, rgba(0, 0, 0, 0.75) 100%),
+                        linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.55) 50%),
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.03), rgba(0, 0, 255, 0.05));
+            z-index: 100;
+            background-size: 100% 100%, 100% 3px, 4px 100%;
+            pointer-events: none;
+            opacity: 0.85;
+            box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8);
+        }
+
+        body.scanlines-off::before {
+            display: none;
         }
 
         header {
@@ -327,7 +416,7 @@
             grid-column: 1 / span 2;
             grid-row: 2;
             display: grid;
-            grid-template-columns: 320px 1fr;
+            grid-template-columns: 370px 1fr;
             gap: 6px;
             padding: 0;
             background: transparent;
@@ -336,7 +425,7 @@
 
         .action-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 5px;
             padding: 6px;
             flex: 1;
@@ -597,28 +686,36 @@
                 </div>
                 <div class="action-grid">
                     <button class="btn" id="btnLaser">
-                        <span>⚡ MINING LASER</span>
-                        <span class="key-hint">[SPACE] HOLD/TOGGLE</span>
+                        <span>⚡ LASER</span>
+                        <span class="key-hint">[SPACE] FIRE</span>
                     </button>
                     <button class="btn" id="btnTractor">
-                        <span>🧲 TRACTOR BEAM</span>
-                        <span class="key-hint">[T] ATTRACT ORE</span>
+                        <span>🧲 TRACTOR</span>
+                        <span class="key-hint">[T] ATTRACT</span>
                     </button>
                     <button class="btn active-dampener" id="btnDampener">
-                        <span>🛑 INERTIA DAMPENER</span>
-                        <span class="key-hint">[Z] BRAKE DRIFT</span>
+                        <span>🛑 DAMPENERS</span>
+                        <span class="key-hint">[Z] BRAKE</span>
                     </button>
                     <button class="btn" id="btnScan">
-                        <span>📡 SECTOR SCAN</span>
-                        <span class="key-hint">[S] LOCATE ORE</span>
+                        <span>📡 PROSPECT</span>
+                        <span class="key-hint">[S] SCAN</span>
+                    </button>
+                    <button class="btn" id="btnTheme">
+                        <span id="txtBtnTheme">📺 CRT CYAN</span>
+                        <span class="key-hint">[V] THEME</span>
+                    </button>
+                    <button class="btn" id="btnScanlines">
+                        <span id="txtBtnScanlines">⚡ CRT SHADER</span>
+                        <span class="key-hint">[C] SCANLINES</span>
                     </button>
                     <button class="btn" id="btnAudioToggle">
-                        <span>🔊 AUDIO SYNTH</span>
-                        <span class="key-hint">[M] TOGGLE SFX</span>
+                        <span>🔊 AUDIO</span>
+                        <span class="key-hint">[M] SFX</span>
                     </button>
                     <button class="btn" id="btnHelp">
-                        <span>📖 PILOT MANUAL</span>
-                        <span class="key-hint">[H] HOW TO FLY</span>
+                        <span>📖 MANUAL</span>
+                        <span class="key-hint">[H] HELP</span>
                     </button>
                 </div>
             </div>
@@ -714,6 +811,90 @@
             'Derelict Scrap': { name: 'Derelict Scrap', color: '#fbbf24', value: 50, key: 'scrap' }
         };
 
+        const THEMES = [
+            { id: 'cyan', name: 'CRT CYAN', label: '📺 CRT CYAN' },
+            { id: 'amber', name: 'CRT AMBER', label: '📺 CRT AMBER' },
+            { id: 'green', name: 'CRT GREEN', label: '📺 CRT GREEN' },
+            { id: 'crimson', name: 'CRT SOLAR', label: '📺 CRT SOLAR' }
+        ];
+
+        const SCANLINE_MODES = [
+            { id: 'scanlines-normal', name: 'SCANLINES: ON', label: '⚡ SCANLINES: ON' },
+            { id: 'scanlines-crt', name: 'SCANLINES: CRT+', label: '⚡ SCANLINES: CRT+' },
+            { id: 'scanlines-off', name: 'SCANLINES: OFF', label: '⚡ SCANLINES: OFF' }
+        ];
+
+        const THEME_PALETTES = {
+            cyan: {
+                vector: '#00f0ff',
+                vectorDim: '#38bdf8',
+                spaceBg: '#01040a',
+                laserCore: '#ffffff',
+                laserGlow: '#00f0ff',
+                tractorGlow: 'rgba(0, 240, 255, 0.25)',
+                tractorFill: 'rgba(0, 240, 255, 0.04)',
+                shipFill: '#111e38',
+                shipStroke: '#00f0ff',
+                radarBg: '#030816',
+                radarGrid: '#1e3a8a',
+                radarSweep: 'rgba(0, 240, 255, 0.6)',
+                radarTarget: '#00f0ff',
+                radarAst: '#f59e0b',
+                starCol: '224, 242, 254'
+            },
+            amber: {
+                vector: '#f59e0b',
+                vectorDim: '#fbbf24',
+                spaceBg: '#0d0801',
+                laserCore: '#fffbeb',
+                laserGlow: '#f59e0b',
+                tractorGlow: 'rgba(245, 158, 11, 0.3)',
+                tractorFill: 'rgba(245, 158, 11, 0.05)',
+                shipFill: '#261703',
+                shipStroke: '#f59e0b',
+                radarBg: '#150c02',
+                radarGrid: '#78350f',
+                radarSweep: 'rgba(245, 158, 11, 0.7)',
+                radarTarget: '#fef08a',
+                radarAst: '#d97706',
+                starCol: '254, 243, 199'
+            },
+            green: {
+                vector: '#22c55e',
+                vectorDim: '#4ade80',
+                spaceBg: '#010d04',
+                laserCore: '#f0fdf4',
+                laserGlow: '#22c55e',
+                tractorGlow: 'rgba(34, 197, 94, 0.3)',
+                tractorFill: 'rgba(34, 197, 94, 0.05)',
+                shipFill: '#062b10',
+                shipStroke: '#22c55e',
+                radarBg: '#021407',
+                radarGrid: '#15803d',
+                radarSweep: 'rgba(34, 197, 94, 0.7)',
+                radarTarget: '#86efac',
+                radarAst: '#16a34a',
+                starCol: '220, 252, 231'
+            },
+            crimson: {
+                vector: '#ef4444',
+                vectorDim: '#f87171',
+                spaceBg: '#0f0303',
+                laserCore: '#fef2f2',
+                laserGlow: '#ef4444',
+                tractorGlow: 'rgba(239, 68, 68, 0.3)',
+                tractorFill: 'rgba(239, 68, 68, 0.05)',
+                shipFill: '#350a0a',
+                shipStroke: '#ef4444',
+                radarBg: '#1a0404',
+                radarGrid: '#991b1b',
+                radarSweep: 'rgba(239, 68, 68, 0.7)',
+                radarTarget: '#fca5a5',
+                radarAst: '#f59e0b',
+                starCol: '254, 226, 226'
+            }
+        };
+
         const state = {
             credits: 2500,
             sector: "Belt Alpha-09",
@@ -731,6 +912,8 @@
             maxCargo: 200,
             dampeners: true,
             laserOverheated: false,
+            themeIndex: 0,
+            scanlineIndex: 0,
             cargoHold: {
                 ferrum: 0,
                 silicates: 0,
@@ -791,6 +974,25 @@
                 life: 1.0,
                 vy: -0.6
             });
+        }
+
+        function cycleTheme() {
+            state.themeIndex = (state.themeIndex + 1) % THEMES.length;
+            const theme = THEMES[state.themeIndex];
+            document.body.setAttribute('data-theme', theme.id);
+            document.getElementById('txtBtnTheme').textContent = theme.label;
+            audio.playBeep(600, 'sine', 0.08, 0.12);
+            addLog(`Cockpit HUD theme switched to: [${theme.name}]`, 'system');
+        }
+
+        function cycleScanlines() {
+            document.body.classList.remove(SCANLINE_MODES[state.scanlineIndex].id);
+            state.scanlineIndex = (state.scanlineIndex + 1) % SCANLINE_MODES.length;
+            const mode = SCANLINE_MODES[state.scanlineIndex];
+            document.body.classList.add(mode.id);
+            document.getElementById('txtBtnScanlines').textContent = mode.label;
+            audio.playBeep(520, 'square', 0.06, 0.1);
+            addLog(`CRT scanline raster filter: [${mode.name}]`, 'system');
         }
 
         // Initialize Procedural Starfield & Asteroid Field
@@ -908,6 +1110,12 @@
                 document.getElementById('txtDampener').style.color = state.dampeners ? "var(--accent-emerald)" : "var(--accent-amber)";
                 addLog(`Inertia dampeners ${state.dampeners ? 'engaged' : 'disengaged'}.`, 'system');
             }
+            if (e.code === 'KeyV') {
+                cycleTheme();
+            }
+            if (e.code === 'KeyC') {
+                cycleScanlines();
+            }
             if (e.code === 'KeyM') {
                 audio.enabled = !audio.enabled;
                 addLog(`Audio synthesizer ${audio.enabled ? 'enabled' : 'muted'}.`, 'system');
@@ -974,6 +1182,16 @@
             audio.playBeep(720, 'triangle', 0.12, 0.15);
             const found = state.asteroids.length;
             addLog(`Deep sweep complete: ${found} mineral asteroids registered in local sector.`, 'system');
+        });
+
+        document.getElementById('btnTheme').addEventListener('click', () => {
+            audio.init();
+            cycleTheme();
+        });
+
+        document.getElementById('btnScanlines').addEventListener('click', () => {
+            audio.init();
+            cycleScanlines();
         });
 
         document.getElementById('btnAudioToggle').addEventListener('click', () => {
@@ -1048,6 +1266,8 @@
             addLog("• SPACEBAR: Fire Heavy Mining Laser at Asteroids", "system");
             addLog("• T: Toggle Tractor Beam to collect floating ore chunks", "system");
             addLog("• Z: Toggle Inertial Dampeners", "system");
+            addLog("• V: Cycle Retro CRT Vector Theme (Cyan / Amber / Green / Solar)", "system");
+            addLog("• C: Toggle CRT Scanlines & Phosphor Shaders (Normal / CRT+ / Off)", "system");
             addLog("• CLICK: Target asteroid with telemetry computer", "system");
         }
 
@@ -1343,6 +1563,9 @@
         function render() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+            const theme = THEMES[state.themeIndex];
+            const pal = THEME_PALETTES[theme.id];
+
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
 
@@ -1350,7 +1573,7 @@
             ctx.save();
             ctx.translate(cx - state.ship.x * 0.15, cy - state.ship.y * 0.15);
             for (const s of state.stars) {
-                ctx.fillStyle = `rgba(224, 242, 254, ${s.brightness})`;
+                ctx.fillStyle = `rgba(${pal.starCol}, ${s.brightness})`;
                 ctx.beginPath();
                 ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
                 ctx.fill();
@@ -1367,8 +1590,8 @@
                 ctx.save();
                 ctx.translate(state.ship.x, state.ship.y);
                 ctx.rotate(state.ship.angle);
-                ctx.strokeStyle = 'rgba(0, 240, 255, 0.25)';
-                ctx.fillStyle = 'rgba(0, 240, 255, 0.04)';
+                ctx.strokeStyle = pal.tractorGlow;
+                ctx.fillStyle = pal.tractorFill;
                 ctx.lineWidth = 1.5;
 
                 ctx.beginPath();
@@ -1399,17 +1622,17 @@
 
                 // Main Core Beam
                 ctx.save();
-                ctx.strokeStyle = '#00f0ff';
+                ctx.strokeStyle = pal.laserGlow;
                 ctx.lineWidth = 3 + Math.sin(Date.now() * 0.05) * 1.5;
-                ctx.shadowColor = '#00f0ff';
+                ctx.shadowColor = pal.laserGlow;
                 ctx.shadowBlur = 12;
                 ctx.beginPath();
                 ctx.moveTo(lx, ly);
                 ctx.lineTo(endX, endY);
                 ctx.stroke();
 
-                // Inner hot white core
-                ctx.strokeStyle = '#ffffff';
+                // Inner hot white/amber core
+                ctx.strokeStyle = pal.laserCore;
                 ctx.lineWidth = 1;
                 ctx.beginPath();
                 ctx.moveTo(lx, ly);
@@ -1425,8 +1648,8 @@
                 ctx.rotate(ast.rot);
 
                 // Asteroid Body
-                ctx.strokeStyle = (ast === state.selectedTarget) ? '#00f0ff' : '#38bdf8';
-                ctx.fillStyle = '#0a152d';
+                ctx.strokeStyle = (ast === state.selectedTarget) ? pal.vector : pal.vectorDim;
+                ctx.fillStyle = pal.shipFill;
                 ctx.lineWidth = (ast === state.selectedTarget) ? 2 : 1.2;
                 ctx.beginPath();
                 for (let i = 0; i < ast.verts.length; i++) {
@@ -1442,7 +1665,7 @@
 
                 // Ore Mineral Glow Node
                 const oreInfo = ORE_TYPES[ast.oreType];
-                ctx.fillStyle = oreInfo ? oreInfo.color : '#38bdf8';
+                ctx.fillStyle = oreInfo ? oreInfo.color : pal.vectorDim;
                 ctx.beginPath();
                 ctx.arc(0, 0, 4, 0, Math.PI * 2);
                 ctx.fill();
@@ -1457,7 +1680,7 @@
 
                 // Target Lock Box
                 if (ast === state.selectedTarget) {
-                    ctx.strokeStyle = 'rgba(0, 240, 255, 0.7)';
+                    ctx.strokeStyle = pal.vector;
                     ctx.lineWidth = 1;
                     const bSize = ast.radius + 10;
                     ctx.strokeRect(ast.x - bSize, ast.y - bSize, bSize * 2, bSize * 2);
@@ -1470,8 +1693,8 @@
                 ctx.translate(chunk.x, chunk.y);
                 ctx.rotate(chunk.rot);
                 const oreInfo = ORE_TYPES[chunk.oreType];
-                ctx.fillStyle = oreInfo ? oreInfo.color : '#38bdf8';
-                ctx.strokeStyle = '#ffffff';
+                ctx.fillStyle = oreInfo ? oreInfo.color : pal.vectorDim;
+                ctx.strokeStyle = pal.laserCore;
                 ctx.lineWidth = 1;
                 ctx.beginPath();
                 ctx.moveTo(0, -5);
@@ -1513,16 +1736,18 @@
 
             // Shield Bubble
             if (state.shield > 0) {
-                ctx.strokeStyle = `rgba(56, 189, 248, ${(state.shield / 100) * 0.4})`;
+                ctx.strokeStyle = pal.vectorDim;
+                ctx.globalAlpha = (state.shield / 100) * 0.4;
                 ctx.lineWidth = 1.5;
                 ctx.beginPath();
                 ctx.arc(0, 0, 28, 0, Math.PI * 2);
                 ctx.stroke();
+                ctx.globalAlpha = 1.0;
             }
 
             // Ship Hull (Industrial Heavy Mining Barge)
-            ctx.fillStyle = '#111e38';
-            ctx.strokeStyle = '#00f0ff';
+            ctx.fillStyle = pal.shipFill;
+            ctx.strokeStyle = pal.shipStroke;
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(22, 0);          // Nose mining ram
@@ -1536,7 +1761,7 @@
             ctx.stroke();
 
             // Cockpit Bridge Glass
-            ctx.fillStyle = '#38bdf8';
+            ctx.fillStyle = pal.vectorDim;
             ctx.beginPath();
             ctx.arc(4, 0, 4, 0, Math.PI * 2);
             ctx.fill();
@@ -1548,23 +1773,23 @@
             ctx.restore();
 
             // --- Render Radar Mini-Scope ---
-            renderRadar();
+            renderRadar(pal);
         }
 
         // Render Circular Mini-Radar
-        function renderRadar() {
+        function renderRadar(pal) {
             radarCtx.clearRect(0, 0, radarCanvas.width, radarCanvas.height);
             const rcx = radarCanvas.width / 2;
             const rcy = radarCanvas.height / 2;
             const rRadius = rcx - 2;
 
             // Background & Grid
-            radarCtx.fillStyle = '#030816';
+            radarCtx.fillStyle = pal.radarBg;
             radarCtx.beginPath();
             radarCtx.arc(rcx, rcy, rRadius, 0, Math.PI * 2);
             radarCtx.fill();
 
-            radarCtx.strokeStyle = '#1e3a8a';
+            radarCtx.strokeStyle = pal.radarGrid;
             radarCtx.lineWidth = 1;
             radarCtx.beginPath();
             radarCtx.arc(rcx, rcy, rRadius * 0.33, 0, Math.PI * 2);
@@ -1576,7 +1801,7 @@
 
             // Radar Sweep Line
             state.radarAngle = (state.radarAngle + 0.04) % (Math.PI * 2);
-            radarCtx.strokeStyle = 'rgba(0, 240, 255, 0.6)';
+            radarCtx.strokeStyle = pal.radarSweep;
             radarCtx.beginPath();
             radarCtx.moveTo(rcx, rcy);
             radarCtx.lineTo(rcx + Math.cos(state.radarAngle) * rRadius, rcy + Math.sin(state.radarAngle) * rRadius);
@@ -1590,7 +1815,7 @@
                 const dist = Math.hypot(dx, dy);
 
                 if (dist < rRadius - 4) {
-                    radarCtx.fillStyle = (ast === state.selectedTarget) ? '#00f0ff' : '#f59e0b';
+                    radarCtx.fillStyle = (ast === state.selectedTarget) ? pal.radarTarget : pal.radarAst;
                     radarCtx.beginPath();
                     radarCtx.arc(rcx + dx, rcy + dy, (ast === state.selectedTarget) ? 3 : 2, 0, Math.PI * 2);
                     radarCtx.fill();
@@ -1609,12 +1834,12 @@
             }
 
             // Center Ship Blip & Heading
-            radarCtx.fillStyle = '#38bdf8';
+            radarCtx.fillStyle = pal.vector;
             radarCtx.beginPath();
             radarCtx.arc(rcx, rcy, 2.5, 0, Math.PI * 2);
             radarCtx.fill();
 
-            radarCtx.strokeStyle = '#38bdf8';
+            radarCtx.strokeStyle = pal.vector;
             radarCtx.beginPath();
             radarCtx.moveTo(rcx, rcy);
             radarCtx.lineTo(rcx + Math.cos(state.ship.angle) * 9, rcy + Math.sin(state.ship.angle) * 9);

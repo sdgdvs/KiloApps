@@ -54,13 +54,13 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KStarDredge (Deep space asteroid mining, derelict salvage & orbital refining RPG)
-**Phase:** 4 (next to do)
-**Status:** Creation
+**Phase:** 5 (next to do)
+**Status:** Deep Expansion
 
 - [x] Phase 1: Scaffold KStarDredge directory (`KStarDredge/`), create web HTML skeleton (`KiloOS/public/apps/kstardredge.html`), register in App.jsx.
 - [x] Phase 2: Core mining barge cockpit (thrusters, mining laser, tractor beam, ore hold, reactor core, asteroid radar).
 - [x] Phase 3: Native C version (`KStarDredge/main.c`, `build.bat`) using Win32 API with functional parity.
-- [ ] Phase 4: Retro-futuristic CRT amber/green vector themes and cockpit scanline shaders.
+- [x] Phase 4: Retro-futuristic CRT amber/green vector themes and cockpit scanline shaders.
 - [ ] Phase 5: Asteroid belt navigation & procedural star sector charts (Belt Alpha, Kuiper Ring, Derelict Graveyard, Plasma Nebula).
 - [ ] Phase 6: Mining barge modular upgrades (heavy plasma drills, titan cargo bay, fusion thrusters, particle shields).
 - [ ] Phase 7: Deep scan & asteroid mineral prospecting (spectrometer analysis for ferrum, platinum, void quartz, dark matter geodes).
