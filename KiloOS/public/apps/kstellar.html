@@ -59,11 +59,19 @@
             background-color: #020a10;
             overflow: hidden;
         }
+        #map-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
         #map {
             width: 100%;
             height: 100%;
             position: relative;
-            background: radial-gradient(circle, rgba(0,255,204,0.05) 0%, rgba(0,0,0,0.8) 100%);
+            background: transparent;
         }
         #info-panel {
             flex: 1;
@@ -78,29 +86,30 @@
         h2, h3 { margin-top: 0; color: #00ffcc; text-shadow: 0 0 8px #00ffcc; }
         .system {
             position: absolute;
-            width: 14px;
-            height: 14px;
+            width: 16px;
+            height: 16px;
             background-color: #00ff00;
             box-shadow: 0 0 10px #00ff00;
             border-radius: 50%;
             cursor: pointer;
             transform: translate(-50%, -50%);
-            transition: all 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s;
+            z-index: 5;
         }
         .system:hover {
-            box-shadow: 0 0 20px #00ffcc;
-            background-color: #00ffcc;
-            transform: translate(-50%, -50%) scale(1.5);
+            box-shadow: 0 0 25px #00ffcc;
+            transform: translate(-50%, -50%) scale(1.6);
         }
         .system-label {
             position: absolute;
             color: #00ffcc;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
             pointer-events: none;
-            transform: translate(15px, -7px);
+            transform: translate(14px, -7px);
             white-space: nowrap;
             text-shadow: 0 0 5px #000, 0 0 8px #00ffcc;
+            z-index: 6;
         }
         .action-btn {
             background-color: #000;
@@ -128,24 +137,45 @@
             pointer-events: none;
             transform: translate(-50%, -50%);
             box-sizing: border-box;
+            z-index: 4;
         }
         .phenom-blackhole {
             border: 2px dashed #ff00ff;
-            box-shadow: 0 0 10px #ff00ff, inset 0 0 6px #ff00ff;
+            box-shadow: 0 0 12px #ff00ff, inset 0 0 8px #ff00ff;
             animation: phenom-spin 6s linear infinite;
         }
         .phenom-solarflare {
             border: 2px dashed #ffaa00;
-            box-shadow: 0 0 10px #ffaa00, inset 0 0 6px #ffaa00;
+            box-shadow: 0 0 12px #ffaa00, inset 0 0 8px #ffaa00;
             animation: phenom-pulse 2s ease-in-out infinite;
         }
         .phenom-derelict {
             border: 2px dashed #b0d0ff;
-            box-shadow: 0 0 10px #b0d0ff;
+            box-shadow: 0 0 12px #b0d0ff;
             animation: phenom-pulse 3s ease-in-out infinite;
         }
         @keyframes phenom-spin { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
-        @keyframes phenom-pulse { 0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.95); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } }
+        @keyframes phenom-pulse { 0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.95); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.25); } }
+
+        /* Commodity badges */
+        .market-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.6);
+            padding: 6px 10px;
+            border: 1px solid rgba(0,255,204,0.3);
+            border-radius: 4px;
+        }
+        .market-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -169,6 +199,7 @@
         <div id="mission-status" style="color: #ff00ff; font-weight: bold; margin-bottom: 10px; min-height: 1.2em; text-shadow: 0 0 5px #ff00ff;"></div>
         <div id="main-view">
             <div id="map-container">
+                <canvas id="map-canvas"></canvas>
                 <div id="map"></div>
             </div>
             <div id="info-panel">
@@ -178,24 +209,28 @@
                 </div>
             </div>
         </div>
-        <div id="combat-overlay" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.9); z-index:100; flex-direction:column; align-items:center; justify-content:center; padding:20px;">
-            <h2 style="color:red; text-shadow:0 0 10px red;">PIRATE ATTACK</h2>
-            <div style="display:flex; justify-content:space-around; width:100%; margin-bottom:20px;">
-                <div style="text-align:center;">
-                    <h3>YOU</h3>
-                    <p>Hull: <span id="combat-player-hull">100</span></p>
+        <div id="combat-overlay" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(3,8,16,0.95); z-index:100; flex-direction:column; align-items:center; justify-content:center; padding:15px; box-sizing:border-box;">
+            <div style="width:100%; max-width:820px; display:flex; flex-direction:column; align-items:center;">
+                <h2 style="color:#ff3333; margin:0 0 10px 0; text-shadow:0 0 12px #ff0000; letter-spacing:2px; font-size:22px;">★ TACTICAL COMBAT INTERCEPTION ★</h2>
+                
+                <!-- Combat Arena Canvas -->
+                <div style="position:relative; width:100%; height:240px; border:2px solid #ff3333; box-shadow:0 0 20px rgba(255,0,0,0.5); background:#02060c; overflow:hidden; margin-bottom:12px; border-radius:4px;">
+                    <canvas id="combat-canvas" width="800" height="240" style="width:100%; height:100%;"></canvas>
+                    <div style="position:absolute; top:10px; left:15px; background:rgba(0,15,30,0.8); border:1px solid #00ffff; padding:4px 10px; font-size:12px; font-weight:bold; color:#00ffff;">
+                        YOU: <span id="combat-player-hull">100</span>/<span id="combat-player-max-hull">100</span> HULL
+                    </div>
+                    <div style="position:absolute; top:10px; right:15px; background:rgba(30,5,5,0.8); border:1px solid #ff4444; padding:4px 10px; font-size:12px; font-weight:bold; color:#ff4444;">
+                        PIRATE RAIDER: <span id="combat-enemy-hull">50</span>/<span id="combat-enemy-max-hull">50</span> HULL
+                    </div>
                 </div>
-                <div style="text-align:center; color:red;">
-                    <h3>PIRATE</h3>
-                    <p>Hull: <span id="combat-enemy-hull">50</span></p>
+
+                <div id="combat-log" style="width:100%; height:110px; border:1px solid #00ffcc; overflow-y:auto; padding:8px 12px; margin-bottom:12px; font-size:13px; background:rgba(0,20,30,0.85); box-sizing:border-box; line-height:1.4;"></div>
+                <div style="display:flex; gap:12px; width:100%; justify-content:center;">
+                    <button class="action-btn" style="flex:1; margin:0; border-color:#00ffff; color:#00ffff;" onclick="combatAction('attack')">⚔ ATTACK</button>
+                    <button class="action-btn" style="flex:1; margin:0; border-color:#00ff88; color:#00ff88;" onclick="combatAction('evade')">🛡 EVADE</button>
+                    <button class="action-btn" style="flex:1; margin:0; border-color:#ff00ff; color:#ff00ff;" onclick="combatAction('tech')">⚡ USE TECH (EMP)</button>
+                    <button class="action-btn" style="flex:1; margin:0; border-color:#ffaa00; color:#ffaa00;" onclick="combatAction('flee')">🚀 FLEE</button>
                 </div>
-            </div>
-            <div id="combat-log" style="width:80%; height:150px; border:1px solid #00ffcc; overflow-y:auto; padding:10px; margin-bottom:20px; font-size:14px; background:rgba(0,20,30,0.8);"></div>
-            <div style="display:flex; gap:10px;">
-                <button class="action-btn" onclick="combatAction('attack')">Attack</button>
-                <button class="action-btn" onclick="combatAction('evade')">Evade</button>
-                <button class="action-btn" onclick="combatAction('tech')">Use Tech</button>
-                <button class="action-btn" onclick="combatAction('flee')">Flee</button>
             </div>
         </div>
         <div id="manual-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(3,8,16,0.96); z-index:150; flex-direction:column; padding:20px; box-sizing:border-box;">
@@ -508,13 +543,14 @@
             if (!audioCtx) initAudio();
         }, { once: true });
 
+        // --- Galaxy & Economics Setup ---
         let systems = [];
         const economyTypes = [
-            { name: "Agricultural", foodMult: 0.5, minMult: 1.5, techMult: 1.8 },
-            { name: "Mining", foodMult: 1.5, minMult: 0.5, techMult: 1.5 },
-            { name: "Industrial", foodMult: 1.3, minMult: 1.2, techMult: 0.8 },
-            { name: "Tech Hub", foodMult: 1.5, minMult: 1.5, techMult: 0.5 },
-            { name: "Trading Hub", foodMult: 1.0, minMult: 1.0, techMult: 1.0 }
+            { name: "Agricultural", color: "#66ff66", foodMult: 0.5, minMult: 1.5, techMult: 1.8 },
+            { name: "Mining", color: "#ff9933", foodMult: 1.5, minMult: 0.5, techMult: 1.5 },
+            { name: "Industrial", color: "#ffcc00", foodMult: 1.3, minMult: 1.2, techMult: 0.8 },
+            { name: "Tech Hub", color: "#00ffff", foodMult: 1.5, minMult: 1.5, techMult: 0.5 },
+            { name: "Trading Hub", color: "#ff55ff", foodMult: 1.0, minMult: 1.0, techMult: 1.0 }
         ];
         const sysNames = ["Aegis", "Borealis", "Cygnus", "Draco", "Eridanus", "Fenrir", "Goliath", "Helios", "Icarus", "Juno", "Krypton", "Lyra", "Orion", "Pegasus", "Rigel", "Sirius", "Taurus", "Ursa", "Vega", "Wolf"];
         const sectorNames = ["Alpha", "Beta", "Gamma", "Delta", "Omega"];
@@ -543,8 +579,8 @@
                     id: i,
                     name: `${namePrefix} ${nameSuffix}`,
                     sector: sec,
-                    x: Math.floor(Math.random() * 90) + 5,
-                    y: Math.floor(Math.random() * 90) + 5,
+                    x: Math.floor(Math.random() * 88) + 6,
+                    y: Math.floor(Math.random() * 88) + 6,
                     desc: `A ${eco.name} system in the ${sec} sector.`,
                     economy: eco.name,
                     phenomenon: phenom,
@@ -560,8 +596,11 @@
 
         const mapEl = document.getElementById('map');
         const infoEl = document.getElementById('system-info');
+        const mapCanvas = document.getElementById('map-canvas');
+        const mapCtx = mapCanvas.getContext('2d');
 
         let currentSystemId = 1;
+        let selectedSystem = 1;
         let fuel = 100;
         let credits = 1000;
         let cargo = { food: 0, minerals: 0, tech: 0 };
@@ -583,6 +622,48 @@
         let repFed = 10;
         let repTraders = 15;
         let repPirates = -15;
+
+        // --- Visual Engine: Stars, Dust, Projectiles, Particles, Screen Shake ---
+        const backgroundStars = [];
+        for (let s = 0; s < 80; s++) {
+            backgroundStars.push({
+                x: Math.random(),
+                y: Math.random(),
+                size: Math.random() * 1.8 + 0.6,
+                speed: Math.random() * 0.04 + 0.01,
+                alpha: Math.random() * 0.7 + 0.3,
+                twinkle: Math.random() * Math.PI * 2
+            });
+        }
+
+        // Particle System for Combat & Visual FX
+        const particles = [];
+        const projectiles = [];
+        let combatScreenShake = 0;
+        let animFrameTime = 0;
+
+        function addParticleBurst(x, y, color, count, speedMax, type) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const spd = (Math.random() * 0.8 + 0.2) * speedMax;
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * spd,
+                    vy: Math.sin(angle) * spd,
+                    color: color,
+                    size: Math.random() * 3 + 2,
+                    alpha: 1.0,
+                    life: Math.random() * 20 + 20,
+                    maxLife: 40,
+                    type: type || 'spark'
+                });
+            }
+        }
+
+        function triggerScreenShake(amount) {
+            combatScreenShake = Math.max(combatScreenShake, amount);
+        }
 
         function getFactionTier(rep) {
             if (rep >= 50) return "Allied";
@@ -630,8 +711,7 @@
                 currentStationMissions.push({ id: Date.now() + i, type: type, targetId: target.id, targetName: target.name, reward: reward });
             }
         }
-        
-        generateStationMissions(); // Initial missions
+        generateStationMissions();
 
         function getCargoUsed() {
             return cargo.food + cargo.minerals + cargo.tech;
@@ -641,7 +721,7 @@
             document.getElementById('hull').innerText = hull;
             document.getElementById('max-hull').innerText = maxHull;
             document.getElementById('fuel').innerText = fuel;
-            document.getElementById('credits').innerText = credits;
+            document.getElementById('credits').innerText = credits.toLocaleString();
             document.getElementById('cargo-used').innerText = getCargoUsed();
             document.getElementById('cargo-max').innerText = cargoMax;
             
@@ -748,6 +828,7 @@
             playWarp();
             fuel -= fuelCost;
             currentSystemId = sysId;
+            selectedSystem = sysId;
             generateStationMissions();
             updateDashboard();
             
@@ -819,27 +900,39 @@
                 hull = maxHull;
                 credits = Math.max(0, credits - 500);
                 currentSystemId = 1;
+                selectedSystem = 1;
             }
 
             updateDashboard();
             alert(msg);
             renderMap();
-            infoEl.innerHTML = "Select a system on the map for details.";
+            showSystemInfo(systems.find(s => s.id === currentSystemId));
         };
+
+        // --- Combat System with Visual Battle Arena ---
+        let playerShipState = { x: 180, y: 120, targetX: 180, targetY: 120, tilt: 0, shieldGlow: 0, flash: 0 };
+        let enemyShipState = { x: 620, y: 120, targetX: 620, targetY: 120, tilt: 0, flash: 0 };
 
         function startCombat() {
             playEnemyLaser();
             inCombat = true;
             enemyMaxHull = 30 + currentSystemId * 20;
             enemyHull = enemyMaxHull;
+            playerShipState = { x: 180, y: 120, targetX: 180, targetY: 120, tilt: 0, shieldGlow: 0, flash: 0 };
+            enemyShipState = { x: 620, y: 120, targetX: 620, targetY: 120, tilt: 0, flash: 0 };
+            particles.length = 0;
+            projectiles.length = 0;
+            
             document.getElementById('combat-overlay').style.display = 'flex';
-            document.getElementById('combat-log').innerHTML = '<p>Pirate intercepts your ship! Tactical combat initiated.</p>';
+            document.getElementById('combat-log').innerHTML = '<p>★ Pirate Corsair warship intercepts your vessel! Tactical combat initiated.</p>';
             updateCombatUI();
         }
 
         function updateCombatUI() {
             document.getElementById('combat-player-hull').innerText = hull;
+            document.getElementById('combat-player-max-hull').innerText = maxHull;
             document.getElementById('combat-enemy-hull').innerText = enemyHull;
+            document.getElementById('combat-enemy-max-hull').innerText = enemyMaxHull;
             const logEl = document.getElementById('combat-log');
             logEl.scrollTop = logEl.scrollHeight;
         }
@@ -855,82 +948,113 @@
             
             if (action === 'attack') {
                 playLaser();
+                // Spawn laser projectile from player to enemy
+                projectiles.push({
+                    sx: playerShipState.x + 30, sy: playerShipState.y,
+                    tx: enemyShipState.x - 30, ty: enemyShipState.y,
+                    x: playerShipState.x + 30, y: playerShipState.y,
+                    color: '#00ffff', speed: 18, isPlayer: true
+                });
+
                 let baseDmg = 10 + weaponLevel * 10;
                 let fedBonus = repFed >= 15 ? 1.2 : 1.0;
                 let dmg = Math.floor(baseDmg * fedBonus * (0.8 + Math.random() * 0.4));
                 enemyHull -= dmg;
+                enemyShipState.flash = 10;
+                addParticleBurst(enemyShipState.x, enemyShipState.y, '#ff4444', 16, 4, 'shard');
                 let aidText = repFed >= 15 ? " (Federation escort aids attack!)" : "";
-                logCombat(`You attack and deal ${dmg} damage!${aidText}`);
+                logCombat(`You fire pulse blasters and deal ${dmg} damage!${aidText}`);
             } else if (action === 'evade') {
                 playBlip();
                 playerEvading = true;
-                logCombat(`You take evasive maneuvers.`);
+                playerShipState.shieldGlow = 25;
+                playerShipState.y = 80 + Math.random() * 80;
+                logCombat(`You engage high-G evasive thrusters and raise deflector shields.`);
             } else if (action === 'tech') {
                 if (cargo.tech > 0) {
                     cargo.tech--;
                     let heal = 40;
                     hull = Math.min(maxHull, hull + heal);
                     playHeal();
-                    logCombat(`Used 1 Tech cargo to repair ${heal} hull.`);
+                    // EMP shockwave effect
+                    playerShipState.shieldGlow = 35;
+                    addParticleBurst(playerShipState.x, playerShipState.y, '#00ffcc', 24, 6, 'star');
+                    logCombat(`Used 1 Tech cargo to discharge EMP and repair ${heal} hull.`);
                 } else {
                     playBlip();
-                    logCombat(`No Tech cargo available to use!`);
+                    logCombat(`No Tech cargo available in hold!`);
                     return;
                 }
             } else if (action === 'flee') {
-                if (Math.random() < 0.5) {
+                if (Math.random() < 0.5 + (engineLevel * 0.1)) {
                     playWarp();
-                    logCombat(`Successfully escaped!`);
+                    logCombat(`★ Hyperdrive overcharged! Successfully escaped pirate encounter.`);
                     setTimeout(endCombat, 1500);
                     return;
                 } else {
                     playBlip();
-                    logCombat(`Failed to escape!`);
+                    logCombat(`Sub-light burn failed to break pirate weapon lock!`);
                 }
             }
             
             if (enemyHull <= 0) {
                 playExplosion();
+                triggerScreenShake(12);
+                addParticleBurst(enemyShipState.x, enemyShipState.y, '#ff9900', 35, 7, 'spark');
+                addParticleBurst(enemyShipState.x, enemyShipState.y, '#ff3300', 25, 5, 'debris');
+                
                 let bounty = 100 + currentSystemId * 50;
                 credits += bounty;
                 adjustRep(6, 3, -8);
-                let logMsg = `Pirate destroyed! Claimed ₭${bounty} standard bounty.<br>Reputation: +6 Federation, +3 Traders, -8 Pirates.`;
+                let logMsg = `★ PIRATE DESTROYED! Claimed ₭${bounty} standard bounty.<br>Reputation: +6 Federation, +3 Traders, -8 Pirates.`;
                 if (activeMission && activeMission.type === 'bounty' && activeMission.targetId === currentSystemId) {
                     let fedBonus = repFed >= 15 ? Math.round(activeMission.reward * 0.15) : 0;
                     let totalReward = activeMission.reward + fedBonus;
                     credits += totalReward;
                     adjustRep(10, 4, -12);
                     let bonusStr = fedBonus > 0 ? ` (includes ₭${fedBonus} Fed Friendly Bonus)` : "";
-                    logMsg += `<br>Mission Complete! Earned extra ₭${totalReward}${bonusStr}.<br>Bounty Rep: +10 Federation, +4 Traders, -12 Pirates.`;
+                    logMsg += `<br>★ BOUNTY CONTRACT COMPLETE! Earned extra ₭${totalReward}${bonusStr}.<br>Bounty Rep: +10 Federation, +4 Traders, -12 Pirates.`;
                     activeMission = null;
                 }
                 logCombat(logMsg);
-                setTimeout(endCombat, 1500);
+                setTimeout(endCombat, 1800);
                 return;
             }
             
             // Enemy turn
-            let hitChance = playerEvading ? 0.5 : 0.9;
+            let hitChance = playerEvading ? 0.45 : 0.85;
             if (Math.random() < hitChance) {
                 let eDmg = Math.floor((5 + currentSystemId * 5) * (0.8 + Math.random() * 0.4));
                 hull -= eDmg;
+                playerShipState.flash = 12;
+                triggerScreenShake(7);
                 setTimeout(playEnemyLaser, 200);
-                logCombat(`Pirate hits you for ${eDmg} damage!`);
+                projectiles.push({
+                    sx: enemyShipState.x - 30, sy: enemyShipState.y,
+                    tx: playerShipState.x + 30, ty: playerShipState.y,
+                    x: enemyShipState.x - 30, y: enemyShipState.y,
+                    color: '#ff3333', speed: 16, isPlayer: false
+                });
+                addParticleBurst(playerShipState.x, playerShipState.y, '#ff8800', 14, 4, 'spark');
+                logCombat(`Pirate heavy cannon strikes your hull for ${eDmg} damage!`);
             } else {
-                logCombat(`Pirate's attack misses!`);
+                logCombat(`Pirate disruptor salvo missed your vessel!`);
             }
             
             updateCombatUI();
             
             if (hull <= 0) {
                 playExplosion();
-                logCombat(`CRITICAL: Hull integrity lost! Emergency tow to Sol.`);
+                triggerScreenShake(18);
+                addParticleBurst(playerShipState.x, playerShipState.y, '#ff0000', 40, 8, 'debris');
+                logCombat(`★ CRITICAL FAILURE: Hull integrity lost! Emergency distress beacon activated.`);
                 setTimeout(() => {
                     hull = maxHull;
                     credits = Math.max(0, credits - 500);
                     currentSystemId = 1;
+                    selectedSystem = 1;
                     endCombat();
-                }, 2000);
+                }, 2200);
             }
         };
 
@@ -939,8 +1063,8 @@
             document.getElementById('combat-overlay').style.display = 'none';
             updateDashboard();
             renderMap();
-            infoEl.innerHTML = "Select a system on the map for details.";
-        };
+            showSystemInfo(systems.find(s => s.id === currentSystemId));
+        }
 
         window.viewMissions = function() {
             playBlip();
@@ -989,26 +1113,70 @@
             viewMissions();
         };
 
+        // Commodity SVG generator
+        function getCommodityIcon(type) {
+            if (type === 'food') {
+                return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" fill="#1b4d2e" stroke="#00ff66" stroke-width="2"/><path d="M7 8h10M7 12h10M7 16h6" stroke="#00ff66" stroke-width="2" stroke-linecap="round"/></svg>`;
+            } else if (type === 'minerals') {
+                return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><polygon points="12,2 22,8 18,22 6,22 2,8" fill="#4d2f00" stroke="#ffaa00" stroke-width="2"/><polygon points="12,2 18,12 12,22 6,12" fill="#663e00" stroke="#ffaa00" stroke-width="1.5"/></svg>`;
+            } else {
+                return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" fill="#002b4d" stroke="#00ffff" stroke-width="2"/><rect x="8" y="8" width="8" height="8" fill="#00ffff"/><line x1="12" y1="1" x2="12" y2="4" stroke="#00ffff" stroke-width="2"/><line x1="12" y1="20" x2="12" y2="23" stroke="#00ffff" stroke-width="2"/><line x1="1" y1="12" x2="4" y2="12" stroke="#00ffff" stroke-width="2"/><line x1="20" y1="12" x2="23" y2="12" stroke="#00ffff" stroke-width="2"/></svg>`;
+            }
+        }
+
+        // Planet SVG graphic generator for Station/System Header
+        function getPlanetSvg(sys) {
+            let pColor1 = "#228833", pColor2 = "#66ff66", ringSvg = "";
+            if (sys.economy === "Mining") { pColor1 = "#884400"; pColor2 = "#ff9933"; }
+            else if (sys.economy === "Industrial") { pColor1 = "#886600"; pColor2 = "#ffcc00"; }
+            else if (sys.economy === "Tech Hub") { pColor1 = "#004488"; pColor2 = "#00ffff"; ringSvg = `<ellipse cx="32" cy="32" rx="28" ry="8" fill="none" stroke="rgba(0,255,255,0.6)" stroke-width="2" transform="rotate(-20 32 32)"/>`; }
+            else if (sys.economy === "Trading Hub") { pColor1 = "#0066aa"; pColor2 = "#00ffcc"; ringSvg = `<ellipse cx="32" cy="32" rx="30" ry="7" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" transform="rotate(15 32 32)"/>`; }
+
+            return `<svg width="64" height="64" viewBox="0 0 64 64" style="filter:drop-shadow(0 0 10px ${pColor2});">
+                <defs>
+                    <radialGradient id="planetGrad_${sys.id}" cx="35%" cy="35%" r="65%">
+                        <stop offset="0%" stop-color="${pColor2}"/>
+                        <stop offset="60%" stop-color="${pColor1}"/>
+                        <stop offset="100%" stop-color="#020810"/>
+                    </radialGradient>
+                </defs>
+                <circle cx="32" cy="32" r="22" fill="url(#planetGrad_${sys.id})"/>
+                ${ringSvg}
+                <!-- Orbiting Satellite Beacon -->
+                <circle cx="48" cy="18" r="2.5" fill="#ffffff"/>
+                <line x1="48" y1="18" x2="52" y2="14" stroke="#00ffff" stroke-width="1"/>
+            </svg>`;
+        }
+
         function showSystemInfo(sys) {
             playBlip();
+            selectedSystem = sys.id;
             let phenomBadge = "";
             if (sys.phenomenon && sys.phenomenon !== "None") {
                 let pColor = sys.phenomenon === "Black Hole" ? "#ff00ff" : (sys.phenomenon === "Solar Flare" ? "#ffaa00" : "#aaccff");
-                phenomBadge = `<div style="margin: 8px 0; padding: 6px; border: 1px dashed ${pColor}; color: ${pColor}; background: rgba(0,0,0,0.4); font-size: 13px;">
+                phenomBadge = `<div style="margin: 8px 0; padding: 6px; border: 1px dashed ${pColor}; color: ${pColor}; background: rgba(0,0,0,0.5); font-size: 13px;">
                     <strong>[★ PHENOMENON DETECTED]</strong><br>${sys.phenomenon.toUpperCase()}
                 </div>`;
             }
 
-            let html = `
-                <h3>${sys.name.toUpperCase()}</h3>
-                <p>${sys.desc}</p>
+            let headerArt = `
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px; padding:8px; border:1px solid rgba(0,255,204,0.4); background:rgba(0,10,20,0.6);">
+                    ${getPlanetSvg(sys)}
+                    <div>
+                        <h3 style="margin:0; font-size:16px;">${sys.name.toUpperCase()}</h3>
+                        <span style="font-size:12px; color:#88ffff;">${sys.sector} Sector • ${sys.economy}</span>
+                    </div>
+                </div>
+            `;
+
+            let html = headerArt + `
+                <p style="font-size:13px; line-height:1.4; margin:4px 0 8px 0;">${sys.desc}</p>
                 ${phenomBadge}
-                <p><strong>Sector:</strong> ${sys.sector} | <strong>Economy:</strong> ${sys.economy}</p>
-                <p><strong>Coordinates:</strong> X:${sys.x} Y:${sys.y}</p>
+                <p style="font-size:12px; color:#aaa; margin:4px 0;"><strong>Telemetry:</strong> X:${sys.x} Y:${sys.y}</p>
             `;
             
             if (sys.id !== currentSystemId) {
-                html += `<button class="action-btn" onclick="travelTo(${sys.id})">Set Course</button>`;
+                html += `<button class="action-btn" style="width:100%;" onclick="travelTo(${sys.id})">★ SET HYPERSPACE COURSE ★</button>`;
             } else {
                 let phenomAction = "";
                 if (sys.phenomenon && sys.phenomenon !== "None") {
@@ -1020,43 +1188,61 @@
                     `;
                 }
 
-                html += `<p style="color:#00ffff; font-weight:bold; margin-bottom:5px;">Currently Docked - Local Market</p>
-                <div style="display:flex; flex-direction:column; gap:10px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.5); padding:5px;">
-                        <span>Food [Inv: ${cargo.food}] (Buy ₭${getBuyPrice(sys.market.food)} / Sell ₭${getSellPrice(sys.market.food)})</span>
-                        <div>
-                            <button class="action-btn" style="margin:0; padding:5px 10px;" onclick="buy('food')">Buy</button>
-                            <button class="action-btn" style="margin:0; padding:5px 10px;" onclick="sell('food')">Sell</button>
+                html += `<p style="color:#00ffff; font-weight:bold; margin-bottom:5px; margin-top:12px;">Currently Docked - Local Commodity Exchange</p>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <div class="market-item-row">
+                        <div style="display:flex; align-items:center;">
+                            <span class="market-icon">${getCommodityIcon('food')}</span>
+                            <div>
+                                <strong>Food</strong> [Hold: ${cargo.food}]<br>
+                                <span style="font-size:11px; color:#aaa;">Buy: ₭${getBuyPrice(sys.market.food)} | Sell: ₭${getSellPrice(sys.market.food)}</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:4px;">
+                            <button class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="buy('food')">Buy</button>
+                            <button class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="sell('food')">Sell</button>
                         </div>
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.5); padding:5px;">
-                        <span>Minerals [Inv: ${cargo.minerals}] (Buy ₭${getBuyPrice(sys.market.minerals)} / Sell ₭${getSellPrice(sys.market.minerals)})</span>
-                        <div>
-                            <button class="action-btn" style="margin:0; padding:5px 10px;" onclick="buy('minerals')">Buy</button>
-                            <button class="action-btn" style="margin:0; padding:5px 10px;" onclick="sell('minerals')">Sell</button>
+                    <div class="market-item-row">
+                        <div style="display:flex; align-items:center;">
+                            <span class="market-icon">${getCommodityIcon('minerals')}</span>
+                            <div>
+                                <strong>Minerals</strong> [Hold: ${cargo.minerals}]<br>
+                                <span style="font-size:11px; color:#aaa;">Buy: ₭${getBuyPrice(sys.market.minerals)} | Sell: ₭${getSellPrice(sys.market.minerals)}</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:4px;">
+                            <button class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="buy('minerals')">Buy</button>
+                            <button class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="sell('minerals')">Sell</button>
                         </div>
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.5); padding:5px;">
-                        <span>Tech [Inv: ${cargo.tech}] (Buy ₭${getBuyPrice(sys.market.tech)} / Sell ₭${getSellPrice(sys.market.tech)})</span>
-                        <div>
-                            <button class="action-btn" style="margin:0; padding:5px 10px;" onclick="buy('tech')">Buy</button>
-                            <button class="action-btn" style="margin:0; padding:5px 10px;" onclick="sell('tech')">Sell</button>
+                    <div class="market-item-row">
+                        <div style="display:flex; align-items:center;">
+                            <span class="market-icon">${getCommodityIcon('tech')}</span>
+                            <div>
+                                <strong>Tech</strong> [Hold: ${cargo.tech}]<br>
+                                <span style="font-size:11px; color:#aaa;">Buy: ₭${getBuyPrice(sys.market.tech)} | Sell: ₭${getSellPrice(sys.market.tech)}</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:4px;">
+                            <button class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="buy('tech')">Buy</button>
+                            <button class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="sell('tech')">Sell</button>
                         </div>
                     </div>
                 </div>
-                <p style="color:#00ffff; font-weight:bold; margin-bottom:5px; margin-top:15px;">Shipyard (Upgrades)</p>
+                <p style="color:#00ffff; font-weight:bold; margin-bottom:5px; margin-top:15px;">Orbital Shipyard Upgrades</p>
                 <div style="display:flex; flex-direction:column; gap:5px;">
-                    <button class="action-btn" style="margin:0; padding:5px;" onclick="upgrade('engine')">Upg Engine (₭${1000*engineLevel}) [Lvl ${engineLevel}]</button>
-                    <button class="action-btn" style="margin:0; padding:5px;" onclick="upgrade('cargo')">Upg Cargo (₭${1500*cargoLevel}) [Lvl ${cargoLevel}]</button>
-                    <button class="action-btn" style="margin:0; padding:5px;" onclick="upgrade('weapon')">Upg Weapons (₭${2000*weaponLevel}) [Lvl ${weaponLevel}]</button>
-                    <button class="action-btn" style="margin:0; padding:5px;" onclick="upgrade('shield')">Upg Shields (₭${2000*shieldLevel}) [Lvl ${shieldLevel}]</button>
+                    <button class="action-btn" style="margin:0; padding:6px; font-size:11px;" onclick="upgrade('engine')">🚀 Upg Engine (₭${(1000*engineLevel).toLocaleString()}) [Lvl ${engineLevel}]</button>
+                    <button class="action-btn" style="margin:0; padding:6px; font-size:11px;" onclick="upgrade('cargo')">📦 Upg Cargo (₭${(1500*cargoLevel).toLocaleString()}) [Lvl ${cargoLevel} - ${cargoMax}t]</button>
+                    <button class="action-btn" style="margin:0; padding:6px; font-size:11px;" onclick="upgrade('weapon')">⚔ Upg Weapons (₭${(2000*weaponLevel).toLocaleString()}) [Lvl ${weaponLevel}]</button>
+                    <button class="action-btn" style="margin:0; padding:6px; font-size:11px;" onclick="upgrade('shield')">🛡 Upg Shields (₭${(2000*shieldLevel).toLocaleString()}) [Lvl ${shieldLevel} - ${maxHull}HP]</button>
                 </div>
                 ${phenomAction}
                 <p style="color:#ff00ff; font-weight:bold; margin-bottom:5px; margin-top:15px;">Station Services</p>
                 <div style="display:flex; gap:10px;">
-                    <button class="action-btn" style="flex:1; margin:0; padding:10px; border-color:#ff00ff; color:#ff00ff;" onclick="viewMissions()">MISSIONS</button>
-                    <button class="action-btn" style="flex:1; margin:0; padding:10px; border-color:#00ffff; color:#00ffff;" onclick="viewFactions()">FACTIONS</button>
-                    <button class="action-btn" style="flex:1; margin:0; padding:10px; border-color:#ffff00; color:#ffff00;" onclick="openManual()">MANUAL</button>
+                    <button class="action-btn" style="flex:1; margin:0; padding:8px; border-color:#ff00ff; color:#ff00ff;" onclick="viewMissions()">MISSIONS</button>
+                    <button class="action-btn" style="flex:1; margin:0; padding:8px; border-color:#00ffff; color:#00ffff;" onclick="viewFactions()">FACTIONS</button>
+                    <button class="action-btn" style="flex:1; margin:0; padding:8px; border-color:#ffff00; color:#ffff00;" onclick="openManual()">MANUAL</button>
                 </div>`;
             }
             infoEl.innerHTML = html;
@@ -1202,6 +1388,7 @@
                 hull = maxHull;
                 credits = Math.max(0, credits - 500);
                 currentSystemId = 1;
+                selectedSystem = 1;
                 updateDashboard();
                 renderMap();
                 showSystemInfo(systems.find(s => s.id === 1));
@@ -1217,8 +1404,8 @@
                     ring.className = `phenom-ring ${pClass}`;
                     ring.style.left = sys.x + '%';
                     ring.style.top = sys.y + '%';
-                    ring.style.width = '24px';
-                    ring.style.height = '24px';
+                    ring.style.width = '26px';
+                    ring.style.height = '26px';
                     mapEl.appendChild(ring);
                 }
 
@@ -1227,21 +1414,20 @@
                 dot.style.left = sys.x + '%';
                 dot.style.top = sys.y + '%';
                 
-                if (sys.id === currentSystemId) {
-                    dot.style.backgroundColor = '#00ffff';
-                    dot.style.boxShadow = '0 0 15px #00ffff';
-                }
+                let eco = economyTypes.find(e => e.name === sys.economy) || economyTypes[0];
+                dot.style.backgroundColor = sys.id === currentSystemId ? '#00ffff' : eco.color;
+                dot.style.boxShadow = `0 0 10px ${sys.id === currentSystemId ? '#00ffff' : eco.color}`;
                 
                 const label = document.createElement('div');
                 label.className = 'system-label';
                 label.style.left = sys.x + '%';
                 label.style.top = sys.y + '%';
-                let labelText = sys.name + (sys.id === currentSystemId ? " (YOU ARE HERE)" : "");
+                let labelText = sys.name + (sys.id === currentSystemId ? " (YOU)" : "");
                 if (sys.phenomenon && sys.phenomenon !== "None") {
-                    labelText += ` [★ ${sys.phenomenon}]`;
+                    labelText += ` [★]`;
                 }
                 label.innerText = labelText;
-                if (sys.id === currentSystemId) {
+                if (sys.id === currentSystemId || sys.id === selectedSystem) {
                     label.style.color = '#00ffff';
                     label.style.display = 'block';
                 } else {
@@ -1249,15 +1435,330 @@
                 }
 
                 dot.addEventListener('mouseover', () => { label.style.display = 'block'; });
-                dot.addEventListener('mouseout', () => { if (sys.id !== currentSystemId) label.style.display = 'none'; });
-                dot.addEventListener('click', () => showSystemInfo(sys));
+                dot.addEventListener('mouseout', () => { if (sys.id !== currentSystemId && sys.id !== selectedSystem) label.style.display = 'none'; });
+                dot.addEventListener('click', () => {
+                    selectedSystem = sys.id;
+                    showSystemInfo(sys);
+                    renderMap();
+                });
 
                 mapEl.appendChild(dot);
                 mapEl.appendChild(label);
             });
         }
 
-        // --- Star Captain's Manual & Codex (Phase 14) ---
+        // --- Continuous Map & Combat Render Loop ---
+        function renderCanvasLoop(timestamp) {
+            animFrameTime = timestamp * 0.001;
+
+            // 1. Draw Map Background Canvas
+            if (mapCanvas.width !== mapCanvas.clientWidth || mapCanvas.height !== mapCanvas.clientHeight) {
+                mapCanvas.width = mapCanvas.clientWidth;
+                mapCanvas.height = mapCanvas.clientHeight;
+            }
+            const mw = mapCanvas.width;
+            const mh = mapCanvas.height;
+
+            mapCtx.clearRect(0, 0, mw, mh);
+
+            // Draw deep space starfield
+            backgroundStars.forEach(star => {
+                const tw = Math.sin(animFrameTime * 3 + star.twinkle) * 0.3 + 0.7;
+                mapCtx.fillStyle = `rgba(200, 255, 255, ${star.alpha * tw})`;
+                mapCtx.fillRect(star.x * mw, star.y * mh, star.size, star.size);
+            });
+
+            // Draw faint constellation links between nearby star systems
+            mapCtx.strokeStyle = 'rgba(0, 255, 204, 0.08)';
+            mapCtx.lineWidth = 1;
+            for (let i = 0; i < systems.length; i++) {
+                for (let j = i + 1; j < systems.length; j++) {
+                    const dx = systems[i].x - systems[j].x;
+                    const dy = systems[i].y - systems[j].y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < 22) {
+                        mapCtx.beginPath();
+                        mapCtx.moveTo(systems[i].x * mw / 100, systems[i].y * mh / 100);
+                        mapCtx.lineTo(systems[j].x * mw / 100, systems[j].y * mh / 100);
+                        mapCtx.stroke();
+                    }
+                }
+            }
+
+            // Draw Hyperspace Course Line from current to selected
+            if (selectedSystem !== currentSystemId) {
+                const curSys = systems.find(s => s.id === currentSystemId);
+                const selSys = systems.find(s => s.id === selectedSystem);
+                if (curSys && selSys) {
+                    mapCtx.save();
+                    mapCtx.strokeStyle = '#00ffff';
+                    mapCtx.lineWidth = 2;
+                    mapCtx.setLineDash([6, 6]);
+                    mapCtx.lineDashOffset = -animFrameTime * 25;
+                    mapCtx.beginPath();
+                    mapCtx.moveTo(curSys.x * mw / 100, curSys.y * mh / 100);
+                    mapCtx.lineTo(selSys.x * mw / 100, selSys.y * mh / 100);
+                    mapCtx.stroke();
+                    mapCtx.restore();
+                }
+            }
+
+            // Draw Animated Player Ship Sprite on current system
+            const curSys = systems.find(s => s.id === currentSystemId);
+            if (curSys) {
+                const px = curSys.x * mw / 100;
+                const py = curSys.y * mh / 100;
+
+                // Pulsing radar ring
+                const ringRad = 14 + Math.sin(animFrameTime * 4) * 3;
+                mapCtx.save();
+                mapCtx.strokeStyle = 'rgba(0, 255, 255, 0.7)';
+                mapCtx.lineWidth = 1.5;
+                mapCtx.beginPath();
+                mapCtx.arc(px, py, ringRad, 0, Math.PI * 2);
+                mapCtx.stroke();
+
+                // Player ship arrowhead vector sprite
+                mapCtx.translate(px, py - 18);
+                const bob = Math.sin(animFrameTime * 5) * 2;
+                mapCtx.translate(0, bob);
+
+                // Engine flame
+                mapCtx.fillStyle = '#ff8800';
+                mapCtx.beginPath();
+                mapCtx.moveTo(-3, 6);
+                mapCtx.lineTo(0, 12 + Math.random() * 4);
+                mapCtx.lineTo(3, 6);
+                mapCtx.fill();
+
+                // Cyan ship fuselage
+                mapCtx.fillStyle = '#00ffff';
+                mapCtx.beginPath();
+                mapCtx.moveTo(0, -7);
+                mapCtx.lineTo(6, 6);
+                mapCtx.lineTo(0, 3);
+                mapCtx.lineTo(-6, 6);
+                mapCtx.closePath();
+                mapCtx.fill();
+
+                mapCtx.restore();
+            }
+
+            // 2. Draw Tactical Combat Canvas if active
+            const combatCanvas = document.getElementById('combat-canvas');
+            if (inCombat && combatCanvas) {
+                const cCtx = combatCanvas.getContext('2d');
+                const cw = combatCanvas.width;
+                const ch = combatCanvas.height;
+
+                cCtx.save();
+                if (combatScreenShake > 0) {
+                    const sx = (Math.random() - 0.5) * combatScreenShake * 2;
+                    const sy = (Math.random() - 0.5) * combatScreenShake * 2;
+                    cCtx.translate(sx, sy);
+                    combatScreenShake *= 0.85;
+                    if (combatScreenShake < 0.2) combatScreenShake = 0;
+                }
+
+                // Combat Arena Space Background
+                cCtx.fillStyle = '#030814';
+                cCtx.fillRect(0, 0, cw, ch);
+
+                // Tactical Grid
+                cCtx.strokeStyle = 'rgba(0, 255, 204, 0.08)';
+                cCtx.lineWidth = 1;
+                for (let x = 0; x < cw; x += 40) {
+                    cCtx.beginPath(); cCtx.moveTo(x, 0); cCtx.lineTo(x, ch); cCtx.stroke();
+                }
+                for (let y = 0; y < ch; y += 40) {
+                    cCtx.beginPath(); cCtx.moveTo(0, y); cCtx.lineTo(cw, y); cCtx.stroke();
+                }
+
+                // Parallax Space Dust
+                backgroundStars.forEach((star, idx) => {
+                    if (idx < 30) {
+                        const bx = (star.x * cw + animFrameTime * 40 * star.speed) % cw;
+                        cCtx.fillStyle = `rgba(180, 240, 255, ${star.alpha * 0.6})`;
+                        cCtx.fillRect(bx, star.y * ch, star.size + 1, star.size + 1);
+                    }
+                });
+
+                // Update & Draw Projectiles
+                for (let i = projectiles.length - 1; i >= 0; i--) {
+                    const p = projectiles[i];
+                    const dx = p.tx - p.sx;
+                    const dy = p.ty - p.sy;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    const vx = (dx / dist) * p.speed;
+                    const vy = (dy / dist) * p.speed;
+                    p.x += vx;
+                    p.y += vy;
+
+                    cCtx.save();
+                    cCtx.strokeStyle = p.color;
+                    cCtx.lineWidth = 4;
+                    cCtx.shadowColor = p.color;
+                    cCtx.shadowBlur = 10;
+                    cCtx.beginPath();
+                    cCtx.moveTo(p.x - vx * 1.5, p.y - vy * 1.5);
+                    cCtx.lineTo(p.x, p.y);
+                    cCtx.stroke();
+                    cCtx.restore();
+
+                    // Check impact
+                    const curDist = Math.sqrt(Math.pow(p.tx - p.x, 2) + Math.pow(p.ty - p.y, 2));
+                    if (curDist < p.speed) {
+                        addParticleBurst(p.tx, p.ty, p.color, 12, 3.5, 'spark');
+                        projectiles.splice(i, 1);
+                    }
+                }
+
+                // Update & Draw Particles
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const pt = particles[i];
+                    pt.x += pt.vx;
+                    pt.y += pt.vy;
+                    pt.alpha = pt.life / pt.maxLife;
+                    pt.life--;
+
+                    cCtx.fillStyle = pt.color;
+                    cCtx.globalAlpha = Math.max(0, pt.alpha);
+                    if (pt.type === 'debris') {
+                        cCtx.fillRect(pt.x, pt.y, pt.size * 1.5, pt.size * 1.5);
+                    } else if (pt.type === 'star') {
+                        cCtx.beginPath();
+                        cCtx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+                        cCtx.fill();
+                    } else {
+                        cCtx.fillRect(pt.x, pt.y, pt.size, pt.size);
+                    }
+                    cCtx.globalAlpha = 1.0;
+
+                    if (pt.life <= 0) particles.splice(i, 1);
+                }
+
+                // DRAW PLAYER STARSHIP SPRITE
+                const pBob = Math.sin(animFrameTime * 4) * 3;
+                const px = playerShipState.x;
+                const py = playerShipState.y + pBob;
+
+                cCtx.save();
+                cCtx.translate(px, py);
+
+                // Shield bubble
+                if (playerShipState.shieldGlow > 0 || shieldLevel > 1) {
+                    const sgAlpha = Math.min(1.0, (playerShipState.shieldGlow / 30) + 0.15);
+                    cCtx.strokeStyle = `rgba(0, 255, 255, ${sgAlpha})`;
+                    cCtx.lineWidth = 2.5;
+                    cCtx.shadowColor = '#00ffff';
+                    cCtx.shadowBlur = 12;
+                    cCtx.beginPath();
+                    cCtx.ellipse(0, 0, 48, 32, 0, 0, Math.PI * 2);
+                    cCtx.stroke();
+                    if (playerShipState.shieldGlow > 0) playerShipState.shieldGlow--;
+                }
+
+                // Plasma Thruster Flames
+                const flmLen = 14 + Math.random() * 8;
+                cCtx.fillStyle = '#00ffff';
+                cCtx.beginPath();
+                cCtx.moveTo(-28, -6);
+                cCtx.lineTo(-28 - flmLen, -6);
+                cCtx.lineTo(-28, -3);
+                cCtx.fill();
+                cCtx.beginPath();
+                cCtx.moveTo(-28, 6);
+                cCtx.lineTo(-28 - flmLen, 6);
+                cCtx.lineTo(-28, 3);
+                cCtx.fill();
+
+                // Hull Flash on Damage
+                if (playerShipState.flash > 0) {
+                    cCtx.fillStyle = '#ffffff';
+                    playerShipState.flash--;
+                } else {
+                    cCtx.fillStyle = '#00ffcc';
+                }
+
+                // Player Cruiser Hull
+                cCtx.beginPath();
+                cCtx.moveTo(35, 0);       // Nose
+                cCtx.lineTo(10, -16);     // Upper wing
+                cCtx.lineTo(-25, -22);    // Upper tip
+                cCtx.lineTo(-20, -8);     // Engine notch
+                cCtx.lineTo(-28, -8);     // Engine block
+                cCtx.lineTo(-28, 8);      // Engine block
+                cCtx.lineTo(-20, 8);      // Lower notch
+                cCtx.lineTo(-25, 22);     // Lower tip
+                cCtx.lineTo(10, 16);      // Lower wing
+                cCtx.closePath();
+                cCtx.fill();
+
+                // Cockpit Canopy
+                cCtx.fillStyle = '#002244';
+                cCtx.strokeStyle = '#00ffff';
+                cCtx.lineWidth = 1.5;
+                cCtx.beginPath();
+                cCtx.ellipse(5, 0, 12, 5, 0, 0, Math.PI * 2);
+                cCtx.fill();
+                cCtx.stroke();
+
+                cCtx.restore();
+
+                // DRAW PIRATE CORSAIR RAIDER SPRITE
+                const eBob = Math.sin(animFrameTime * 3.5 + 1) * 4;
+                const ex = enemyShipState.x;
+                const ey = enemyShipState.y + eBob;
+
+                cCtx.save();
+                cCtx.translate(ex, ey);
+
+                // Pirate Engine Exhaust
+                const eFlmLen = 12 + Math.random() * 7;
+                cCtx.fillStyle = '#ff2200';
+                cCtx.beginPath();
+                cCtx.moveTo(25, -5);
+                cCtx.lineTo(25 + eFlmLen, 0);
+                cCtx.lineTo(25, 5);
+                cCtx.fill();
+
+                // Hull Flash on Damage
+                if (enemyShipState.flash > 0) {
+                    cCtx.fillStyle = '#ffffff';
+                    enemyShipState.flash--;
+                } else {
+                    cCtx.fillStyle = '#cc2222';
+                }
+
+                // Jagged Pirate Corsair Hull
+                cCtx.beginPath();
+                cCtx.moveTo(-35, 0);      // Front ramming blade
+                cCtx.lineTo(-10, -18);    // Upper fang
+                cCtx.lineTo(15, -25);     // Wing spire
+                cCtx.lineTo(5, -8);       // Wing groove
+                cCtx.lineTo(25, -10);     // Rear fin
+                cCtx.lineTo(20, 0);       // Rear core
+                cCtx.lineTo(25, 10);      // Rear fin
+                cCtx.lineTo(5, 8);        // Wing groove
+                cCtx.lineTo(15, 25);      // Wing spire
+                cCtx.lineTo(-10, 18);     // Lower fang
+                cCtx.closePath();
+                cCtx.fill();
+
+                // Menacing Optic Visor
+                cCtx.fillStyle = '#ff0000';
+                cCtx.shadowColor = '#ff0000';
+                cCtx.shadowBlur = 8;
+                cCtx.fillRect(-15, -3, 10, 6);
+
+                cCtx.restore();
+                cCtx.restore();
+            }
+
+            requestAnimationFrame(renderCanvasLoop);
+        }
+
+        // --- Star Captain's Manual & Codex ---
         let currentManualTab = 0;
         const manualTabs = [
             {
@@ -1267,7 +1768,7 @@
                     <p>The known galaxy encompasses <strong>30 star systems</strong> spanning 5 major sectors (<em>Alpha, Beta, Gamma, Delta, Omega</em>). You begin your voyage at <strong>Sol</strong> in Sector Alpha.</p>
                     <ul style="padding-left:20px;">
                         <li><strong>System Selection:</strong> Click any star dot on the tactical map to scan its planetary telemetry, sector, coordinates, and market prices.</li>
-                        <li><strong>Warp Jump:</strong> Click <em>"SET COURSE"</em> to engage your hyperdrive. Warp travel consumes fuel proportional to distance and inversely proportional to your <strong>Engine Level</strong>.</li>
+                        <li><strong>Warp Jump:</strong> Click <em>"SET HYPERSPACE COURSE"</em> to engage your hyperdrive. Warp travel consumes fuel proportional to distance and inversely proportional to your <strong>Engine Level</strong>.</li>
                         <li><strong>Orbital Docking:</strong> Click your current system (highlighted in cyan) to dock at the local orbital space station, granting access to trading, shipyards, mission boards, and diplomacy.</li>
                     </ul>
                     <h3 style="color:#00ffcc;">SHIP STATUS &amp; EMERGENCY TOW</h3>
@@ -1343,8 +1844,8 @@
                     <h3 style="color:#00ffcc;">TACTICAL COMBAT ACTIONS</h3>
                     <ul style="padding-left:20px;">
                         <li><strong>ATTACK:</strong> Fires high-energy pulse blasters. Base damage is 15-30, augmented by your <strong>Weapon Level</strong> (+10 damage per level) and Galactic Federation standing (+20% bonus if Friendly).</li>
-                        <li><strong>EVADE:</strong> Performs high-G combat thruster evasions. Halves incoming pirate damage for the turn and gives a <strong>35% chance to counter-attack</strong>!</li>
-                        <li><strong>USE TECH (EMP BURST):</strong> Discharges an overloaded electronic counter-measure pulse. Uses 1 ton of Tech cargo (or 5% fuel reserve if no Tech cargo). Inflicts <strong>30-55 direct armor-piercing damage</strong>, completely ignoring pirate shields!</li>
+                        <li><strong>EVADE:</strong> Performs high-G combat thruster evasions. Halves incoming pirate damage for the turn and raises deflector shields!</li>
+                        <li><strong>USE TECH (EMP BURST):</strong> Discharges an overloaded electronic counter-measure pulse. Uses 1 ton of Tech cargo to restore 40 hull and EMP stun!</li>
                         <li><strong>FLEE:</strong> Overcharges sub-light engines for an emergency disengage. Success chance: <code>50% + (Engine Level * 10%)</code>. Higher engine upgrades guarantee reliable escapes!</li>
                     </ul>
                     <h3 style="color:#00ffcc;">COMBAT SURVIVAL TIPS</h3>
@@ -1464,6 +1965,8 @@
 
         renderMap();
         updateDashboard();
+        showSystemInfo(systems.find(s => s.id === 1));
+        requestAnimationFrame(renderCanvasLoop);
     </script>
 </body>
 </html>

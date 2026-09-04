@@ -299,6 +299,224 @@ char combatLog[1024] = "";
 static HFONT hFont = NULL;
 static HBRUSH hBgBrush = NULL;
 
+// --- GRAPHICS & ANIMATION ENGINE ---
+static int animTick = 0;
+
+typedef struct {
+    float x, y;
+    float vx, vy;
+    int life;
+    int maxLife;
+    COLORREF color;
+    int size;
+} GfxParticle;
+
+#define MAX_GFX_PARTICLES 120
+static GfxParticle particles[MAX_GFX_PARTICLES];
+
+typedef struct {
+    float x, y;
+    float vx, vy;
+    COLORREF color;
+    int life;
+} GfxLaser;
+
+#define MAX_GFX_LASERS 8
+static GfxLaser lasers[MAX_GFX_LASERS];
+
+static int combatShakeTimer = 0;
+static int combatEmpTimer = 0;
+
+typedef struct {
+    int x, y;
+    int brightness;
+    int speed;
+} BgStar;
+
+#define NUM_BG_STARS 70
+static BgStar bgStars[NUM_BG_STARS];
+static int bgStarsInited = 0;
+
+void InitBgStars() {
+    if (bgStarsInited) return;
+    for (int i = 0; i < NUM_BG_STARS; i++) {
+        bgStars[i].x = 22 + (rand() % 396);
+        bgStars[i].y = 72 + (rand() % 396);
+        bgStars[i].brightness = (rand() % 3);
+        bgStars[i].speed = 1 + (rand() % 3);
+    }
+    bgStarsInited = 1;
+}
+
+void SpawnExplosion(float cx, float cy, COLORREF col, int count) {
+    for (int i = 0; i < count; i++) {
+        for (int p = 0; p < MAX_GFX_PARTICLES; p++) {
+            if (particles[p].life <= 0) {
+                particles[p].x = cx;
+                particles[p].y = cy;
+                float angle = ((rand() % 360) * 3.14159f) / 180.0f;
+                float spd = 1.0f + (rand() % 40) / 10.0f;
+                particles[p].vx = cosf(angle) * spd;
+                particles[p].vy = sinf(angle) * spd;
+                particles[p].maxLife = 12 + (rand() % 16);
+                particles[p].life = particles[p].maxLife;
+                particles[p].color = (i % 2 == 0) ? col : RGB(255, 255, 200);
+                particles[p].size = 2 + (rand() % 3);
+                break;
+            }
+        }
+    }
+}
+
+void SpawnLaser(float sx, float sy, float tx, float ty, COLORREF col) {
+    for (int i = 0; i < MAX_GFX_LASERS; i++) {
+        if (lasers[i].life <= 0) {
+            lasers[i].x = sx;
+            lasers[i].y = sy;
+            float dx = tx - sx;
+            float dy = ty - sy;
+            float len = sqrtf(dx*dx + dy*dy);
+            if (len < 0.1f) len = 1.0f;
+            lasers[i].vx = (dx / len) * 12.0f;
+            lasers[i].vy = (dy / len) * 12.0f;
+            lasers[i].color = col;
+            lasers[i].life = (int)(len / 12.0f) + 2;
+            break;
+        }
+    }
+}
+
+void UpdateGfx() {
+    animTick++;
+    if (combatShakeTimer > 0) combatShakeTimer--;
+    if (combatEmpTimer > 0) combatEmpTimer--;
+
+    for (int i = 0; i < MAX_GFX_PARTICLES; i++) {
+        if (particles[i].life > 0) {
+            particles[i].x += particles[i].vx;
+            particles[i].y += particles[i].vy;
+            particles[i].vx *= 0.94f;
+            particles[i].vy *= 0.94f;
+            particles[i].life--;
+        }
+    }
+
+    for (int i = 0; i < MAX_GFX_LASERS; i++) {
+        if (lasers[i].life > 0) {
+            lasers[i].x += lasers[i].vx;
+            lasers[i].y += lasers[i].vy;
+            lasers[i].life--;
+        }
+    }
+}
+
+void DrawPlayerShipSprite(HDC hdc, int cx, int cy, int size, int facingRight) {
+    // Custom Player Battlecruiser sprite
+    HBRUSH hBodyBrush = CreateSolidBrush(RGB(20, 80, 120));
+    HPEN hBodyPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 220));
+    HGDIOBJ oldBrush = SelectObject(hdc, hBodyBrush);
+    HGDIOBJ oldPen = SelectObject(hdc, hBodyPen);
+
+    POINT pts[8];
+    if (facingRight) {
+        // Nose right
+        pts[0].x = cx + size;      pts[0].y = cy;
+        pts[1].x = cx + size/3;    pts[1].y = cy - size/3;
+        pts[2].x = cx - size/2;    pts[2].y = cy - size/2;
+        pts[3].x = cx - size;      pts[3].y = cy - size/3;
+        pts[4].x = cx - size*3/4;  pts[4].y = cy;
+        pts[5].x = cx - size;      pts[5].y = cy + size/3;
+        pts[6].x = cx - size/2;    pts[6].y = cy + size/2;
+        pts[7].x = cx + size/3;    pts[7].y = cy + size/3;
+        Polygon(hdc, pts, 8);
+
+        // Cockpit canopy
+        HBRUSH hCanopy = CreateSolidBrush(RGB(180, 255, 255));
+        SelectObject(hdc, hCanopy);
+        Ellipse(hdc, cx + size/6, cy - size/6, cx + size/2, cy + size/6);
+        DeleteObject(hCanopy);
+
+        // Thruster flame (pulsing)
+        int flameLen = (size/2) + ((animTick % 4) * 2);
+        HPEN hFlamePen = CreatePen(PS_SOLID, 2, RGB(0, 220, 255));
+        SelectObject(hdc, hFlamePen);
+        MoveToEx(hdc, cx - size*3/4, cy - size/6, NULL);
+        LineTo(hdc, cx - size*3/4 - flameLen, cy - size/6);
+        MoveToEx(hdc, cx - size*3/4, cy + size/6, NULL);
+        LineTo(hdc, cx - size*3/4 - flameLen, cy + size/6);
+        DeleteObject(hFlamePen);
+    } else {
+        // Facing Up (for Galaxy Map icon)
+        pts[0].x = cx;             pts[0].y = cy - size;
+        pts[1].x = cx + size/3;    pts[1].y = cy - size/3;
+        pts[2].x = cx + size/2;    pts[2].y = cy + size/2;
+        pts[3].x = cx + size/3;    pts[3].y = cy + size;
+        pts[4].x = cx;             pts[4].y = cy + size*3/4;
+        pts[5].x = cx - size/3;    pts[5].y = cy + size;
+        pts[6].x = cx - size/2;    pts[6].y = cy + size/2;
+        pts[7].x = cx - size/3;    pts[7].y = cy - size/3;
+        Polygon(hdc, pts, 8);
+
+        HBRUSH hCanopy = CreateSolidBrush(RGB(180, 255, 255));
+        SelectObject(hdc, hCanopy);
+        Ellipse(hdc, cx - size/6, cy - size/2, cx + size/6, cy - size/6);
+        DeleteObject(hCanopy);
+
+        int flameLen = (size/2) + ((animTick % 4) * 2);
+        HPEN hFlamePen = CreatePen(PS_SOLID, 2, RGB(0, 220, 255));
+        SelectObject(hdc, hFlamePen);
+        MoveToEx(hdc, cx, cy + size*3/4, NULL);
+        LineTo(hdc, cx, cy + size*3/4 + flameLen);
+        DeleteObject(hFlamePen);
+    }
+
+    SelectObject(hdc, oldBrush);
+    SelectObject(hdc, oldPen);
+    DeleteObject(hBodyBrush);
+    DeleteObject(hBodyPen);
+}
+
+void DrawPirateShipSprite(HDC hdc, int cx, int cy, int size) {
+    // Custom Crimson Pirate Corsair sprite
+    HBRUSH hBodyBrush = CreateSolidBrush(RGB(110, 15, 25));
+    HPEN hBodyPen = CreatePen(PS_SOLID, 1, RGB(255, 60, 60));
+    HGDIOBJ oldBrush = SelectObject(hdc, hBodyBrush);
+    HGDIOBJ oldPen = SelectObject(hdc, hBodyPen);
+
+    // Jagged prow facing left
+    POINT pts[8];
+    pts[0].x = cx - size;      pts[0].y = cy;
+    pts[1].x = cx - size/3;    pts[1].y = cy - size/2;
+    pts[2].x = cx + size/3;    pts[2].y = cy - size/3;
+    pts[3].x = cx + size;      pts[3].y = cy - size/2;
+    pts[4].x = cx + size*3/4;  pts[4].y = cy;
+    pts[5].x = cx + size;      pts[5].y = cy + size/2;
+    pts[6].x = cx + size/3;    pts[6].y = cy + size/3;
+    pts[7].x = cx - size/3;    pts[7].y = cy + size/2;
+    Polygon(hdc, pts, 8);
+
+    // Glowing red ocular / sensor pod
+    HBRUSH hEye = CreateSolidBrush(RGB(255, 200, 50));
+    SelectObject(hdc, hEye);
+    Ellipse(hdc, cx - size/2, cy - size/6, cx - size/6, cy + size/6);
+    DeleteObject(hEye);
+
+    // Red thruster exhaust
+    int flameLen = (size/2) + (((animTick + 2) % 4) * 2);
+    HPEN hFlamePen = CreatePen(PS_SOLID, 2, RGB(255, 100, 0));
+    SelectObject(hdc, hFlamePen);
+    MoveToEx(hdc, cx + size*3/4, cy - size/4, NULL);
+    LineTo(hdc, cx + size*3/4 + flameLen, cy - size/4);
+    MoveToEx(hdc, cx + size*3/4, cy + size/4, NULL);
+    LineTo(hdc, cx + size*3/4 + flameLen, cy + size/4);
+    DeleteObject(hFlamePen);
+
+    SelectObject(hdc, oldBrush);
+    SelectObject(hdc, oldPen);
+    DeleteObject(hBodyBrush);
+    DeleteObject(hBodyPen);
+}
+
 void UpdateDashboard() {
     char buf[64];
     sprintf(buf, "HULL: %d/%d", hull, maxHull);
@@ -727,6 +945,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             
             GenerateStationMissions();
             UpdateDashboard();
+            InitBgStars();
+            SetTimer(hwnd, 1, 33, NULL);
+            return 0;
+        }
+        case WM_TIMER: {
+            UpdateGfx();
+            RECT r = {20, 70, 420, 470};
+            InvalidateRect(hwnd, &r, FALSE);
             return 0;
         }
         case WM_CTLCOLORSTATIC: {
@@ -766,83 +992,304 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
-            HBRUSH hMapBg = CreateSolidBrush(RGB(2, 10, 16));
-            SelectObject(hdc, hMapBg);
-            HPEN hBorderPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 204));
-            SelectObject(hdc, hBorderPen);
-            Rectangle(hdc, 20, 70, 420, 470);
-            
-            for(int y = 72; y < 468; y += 4) {
-                HPEN hScanLine = CreatePen(PS_SOLID, 1, RGB(0, 50, 50));
-                SelectObject(hdc, hScanLine);
-                MoveToEx(hdc, 22, y, NULL);
-                LineTo(hdc, 418, y);
-                DeleteObject(hScanLine);
-            }
-            
-            DeleteObject(hMapBg);
-            DeleteObject(hBorderPen);
-            
-            HBRUSH hGreenBrush = CreateSolidBrush(RGB(0, 255, 0));
-            HBRUSH hCyanBrush = CreateSolidBrush(RGB(0, 255, 255));
-            HPEN hBlackHolePen = CreatePen(PS_DOT, 1, RGB(255, 0, 255));
-            HPEN hSolarPen = CreatePen(PS_DOT, 1, RGB(255, 180, 0));
-            HPEN hDerelictPen = CreatePen(PS_DOT, 1, RGB(160, 210, 255));
-            HBRUSH hNullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
-            
-            SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, RGB(0, 255, 204));
-            SelectObject(hdc, hFont);
-            
-            for (int i = 0; i < MAX_SYSTEMS; i++) {
-                int px = 20 + (systems[i].x * 400 / 100);
-                int py = 70 + (systems[i].y * 400 / 100);
+            // Double buffering
+            HDC memDC = CreateCompatibleDC(hdc);
+            HBITMAP memBM = CreateCompatibleBitmap(hdc, 400, 400);
+            HGDIOBJ oldBM = SelectObject(memDC, memBM);
 
-                if (systems[i].phenomenon != 0) {
-                    SelectObject(hdc, hNullBrush);
-                    if (systems[i].phenomenon == 1) SelectObject(hdc, hBlackHolePen);
-                    else if (systems[i].phenomenon == 2) SelectObject(hdc, hSolarPen);
-                    else if (systems[i].phenomenon == 3) SelectObject(hdc, hDerelictPen);
-                    int pr = (i == selectedSystem || i == currentSystemId) ? 12 : 8;
-                    Ellipse(hdc, px - pr, py - pr, px + pr, py + pr);
+            if (inCombat) {
+                // --- TACTICAL COMBAT ARENA ---
+                int shakeX = (combatShakeTimer > 0) ? ((rand() % 7) - 3) : 0;
+                int shakeY = (combatShakeTimer > 0) ? ((rand() % 7) - 3) : 0;
+
+                HBRUSH hArenaBg = CreateSolidBrush(RGB(5, 8, 18));
+                RECT rcArena = {0, 0, 400, 400};
+                FillRect(memDC, &rcArena, hArenaBg);
+                DeleteObject(hArenaBg);
+
+                // Grid lines (combat telemetry grid)
+                HPEN hGridPen = CreatePen(PS_SOLID, 1, RGB(10, 30, 45));
+                HGDIOBJ oldPen = SelectObject(memDC, hGridPen);
+                for (int x = 20; x < 400; x += 40) {
+                    MoveToEx(memDC, x, 0, NULL);
+                    LineTo(memDC, x, 400);
                 }
-                
-                if (i == selectedSystem) {
-                    SelectObject(hdc, hCyanBrush);
-                    SelectObject(hdc, GetStockObject(WHITE_PEN));
-                } else if (i == currentSystemId) {
-                    SelectObject(hdc, hCyanBrush);
-                    SelectObject(hdc, GetStockObject(NULL_PEN));
-                } else {
-                    SelectObject(hdc, hGreenBrush);
-                    SelectObject(hdc, GetStockObject(NULL_PEN));
+                for (int y = 20; y < 400; y += 40) {
+                    MoveToEx(memDC, 0, y, NULL);
+                    LineTo(memDC, 400, y);
                 }
-                
-                int r = (i == selectedSystem || i == currentSystemId) ? 8 : 4;
-                Ellipse(hdc, px - r, py - r, px + r, py + r);
-                
-                if (i == selectedSystem || i == currentSystemId) {
-                    char nameBuf[64];
-                    if (i == currentSystemId) {
-                        sprintf(nameBuf, "%s (HERE)", systems[i].name);
-                        SetTextColor(hdc, RGB(0, 255, 255));
-                    } else {
-                        strcpy(nameBuf, systems[i].name);
-                        SetTextColor(hdc, RGB(0, 255, 204));
+                SelectObject(memDC, oldPen);
+                DeleteObject(hGridPen);
+
+                // Stars in combat background
+                for (int i = 0; i < NUM_BG_STARS; i++) {
+                    int bx = (bgStars[i].x - 22 + (animTick * bgStars[i].speed / 2)) % 396;
+                    int by = (bgStars[i].y - 72);
+                    COLORREF sc = (bgStars[i].brightness == 0) ? RGB(60, 80, 110) : ((bgStars[i].brightness == 1) ? RGB(120, 160, 200) : RGB(200, 230, 255));
+                    SetPixel(memDC, bx, by, sc);
+                }
+
+                // EMP Shockwave effect
+                if (combatEmpTimer > 0) {
+                    int radius = (15 - combatEmpTimer) * 26;
+                    HPEN hEmpPen = CreatePen(PS_SOLID, 3, RGB(0, 240, 255));
+                    HBRUSH hNull = (HBRUSH)GetStockObject(NULL_BRUSH);
+                    SelectObject(memDC, hEmpPen);
+                    SelectObject(memDC, hNull);
+                    Ellipse(memDC, 80 - radius, 200 - radius, 80 + radius, 200 + radius);
+                    DeleteObject(hEmpPen);
+                }
+
+                // Combat Header text
+                SetBkMode(memDC, TRANSPARENT);
+                SelectObject(memDC, hFont);
+                SetTextColor(memDC, RGB(255, 60, 60));
+                TextOut(memDC, 12, 12, "[ TACTICAL COMBAT ENGAGED ]", 27);
+
+                // Draw Player Ship (left side, size 26)
+                int pX = 80 + shakeX;
+                int pY = 200 + shakeY;
+                DrawPlayerShipSprite(memDC, pX, pY, 26, 1);
+
+                // Player Shield Aura (pulsing cyan circle)
+                if (shieldLevel > 0) {
+                    int sAlpha = (animTick % 6);
+                    HPEN hShieldPen = CreatePen(PS_DOT, 1, RGB(0, 200 + sAlpha*8, 255));
+                    HBRUSH hNull = (HBRUSH)GetStockObject(NULL_BRUSH);
+                    SelectObject(memDC, hShieldPen);
+                    SelectObject(memDC, hNull);
+                    Ellipse(memDC, pX - 34, pY - 34, pX + 34, pY + 34);
+                    DeleteObject(hShieldPen);
+                }
+
+                // Player Hull bar above ship
+                HBRUSH hBarBg = CreateSolidBrush(RGB(40, 40, 40));
+                RECT rcPBarBg = {pX - 35, pY - 45, pX + 35, pY - 39};
+                FillRect(memDC, &rcPBarBg, hBarBg);
+                int pHpWidth = (hull > 0 && maxHull > 0) ? (70 * hull / maxHull) : 0;
+                if (pHpWidth > 70) pHpWidth = 70;
+                HBRUSH hPBar = CreateSolidBrush((hull > 30) ? RGB(0, 255, 180) : RGB(255, 80, 80));
+                RECT rcPBar = {pX - 35, pY - 45, pX - 35 + pHpWidth, pY - 39};
+                FillRect(memDC, &rcPBar, hPBar);
+                DeleteObject(hPBar);
+                DeleteObject(hBarBg);
+
+                SetTextColor(memDC, RGB(0, 255, 204));
+                char pLabel[32];
+                sprintf(pLabel, "YOU: %d HP", hull);
+                TextOut(memDC, pX - 35, pY - 60, pLabel, strlen(pLabel));
+
+                // Draw Pirate Ship (right side, size 26)
+                int eX = 310 - shakeX;
+                int eY = 200 - shakeY;
+                DrawPirateShipSprite(memDC, eX, eY, 26);
+
+                // Enemy Hull bar above ship
+                hBarBg = CreateSolidBrush(RGB(40, 40, 40));
+                RECT rcEBarBg = {eX - 35, eY - 45, eX + 35, eY - 39};
+                FillRect(memDC, &rcEBarBg, hBarBg);
+                int eHpWidth = (enemyHull > 0 && enemyMaxHull > 0) ? (70 * enemyHull / enemyMaxHull) : 0;
+                if (eHpWidth > 70) eHpWidth = 70;
+                HBRUSH hEBar = CreateSolidBrush(RGB(255, 60, 60));
+                RECT rcEBar = {eX - 35, eY - 45, eX - 35 + eHpWidth, eY - 39};
+                FillRect(memDC, &rcEBar, hEBar);
+                DeleteObject(hEBar);
+                DeleteObject(hBarBg);
+
+                SetTextColor(memDC, RGB(255, 100, 100));
+                char eLabel[32];
+                sprintf(eLabel, "RAIDER: %d HP", enemyHull);
+                TextOut(memDC, eX - 45, eY - 60, eLabel, strlen(eLabel));
+
+                // Draw active Lasers
+                for (int i = 0; i < MAX_GFX_LASERS; i++) {
+                    if (lasers[i].life > 0) {
+                        int lx = (int)(lasers[i].x - 20);
+                        int ly = (int)(lasers[i].y - 70);
+                        HPEN hLaserPen = CreatePen(PS_SOLID, 3, lasers[i].color);
+                        HGDIOBJ oldP = SelectObject(memDC, hLaserPen);
+                        MoveToEx(memDC, lx, ly, NULL);
+                        LineTo(memDC, lx + (int)(lasers[i].vx * 1.5f), ly + (int)(lasers[i].vy * 1.5f));
+                        SelectObject(memDC, oldP);
+                        DeleteObject(hLaserPen);
                     }
-                    if (systems[i].phenomenon == 1) strcat(nameBuf, " [BH]");
-                    else if (systems[i].phenomenon == 2) strcat(nameBuf, " [FLARE]");
-                    else if (systems[i].phenomenon == 3) strcat(nameBuf, " [HULK]");
-                    TextOut(hdc, px + 12, py - 8, nameBuf, strlen(nameBuf));
                 }
+
+                // Draw active Particles (combat explosions / sparks)
+                for (int i = 0; i < MAX_GFX_PARTICLES; i++) {
+                    if (particles[i].life > 0) {
+                        int px = (int)(particles[i].x - 20);
+                        int py = (int)(particles[i].y - 70);
+                        HBRUSH hPBrush = CreateSolidBrush(particles[i].color);
+                        RECT pr = {px - particles[i].size, py - particles[i].size, px + particles[i].size, py + particles[i].size};
+                        FillRect(memDC, &pr, hPBrush);
+                        DeleteObject(hPBrush);
+                    }
+                }
+
+            } else {
+                // --- GALAXY MAP VIEW ---
+                HBRUSH hMapBg = CreateSolidBrush(RGB(3, 8, 16));
+                RECT rcMap = {0, 0, 400, 400};
+                FillRect(memDC, &rcMap, hMapBg);
+                DeleteObject(hMapBg);
+
+                // Background starfield twinkling
+                for (int i = 0; i < NUM_BG_STARS; i++) {
+                    int bx = bgStars[i].x - 22;
+                    int by = bgStars[i].y - 72;
+                    int twinkle = ((animTick / (4 + bgStars[i].speed)) + i) % 3;
+                    COLORREF sc = (twinkle == 0) ? RGB(40, 60, 90) : ((twinkle == 1) ? RGB(100, 140, 180) : RGB(200, 230, 255));
+                    SetPixel(memDC, bx, by, sc);
+                }
+
+                // Constellation / Hyperlane connecting lines between nearby star systems
+                HPEN hLanePen = CreatePen(PS_SOLID, 1, RGB(12, 35, 48));
+                HGDIOBJ oldPen = SelectObject(memDC, hLanePen);
+                for (int i = 0; i < MAX_SYSTEMS; i++) {
+                    for (int j = i + 1; j < MAX_SYSTEMS; j++) {
+                        int dx = systems[i].x - systems[j].x;
+                        int dy = systems[i].y - systems[j].y;
+                        if (dx*dx + dy*dy < 450) {
+                            MoveToEx(memDC, systems[i].x * 400 / 100, systems[i].y * 400 / 100, NULL);
+                            LineTo(memDC, systems[j].x * 400 / 100, systems[j].y * 400 / 100);
+                        }
+                    }
+                }
+                SelectObject(memDC, oldPen);
+                DeleteObject(hLanePen);
+
+                // Animated trajectory vector line from Current System to Selected System
+                if (selectedSystem >= 0 && selectedSystem != currentSystemId) {
+                    HPEN hCoursePen = CreatePen(PS_DOT, 1, RGB(0, 255, 204));
+                    HGDIOBJ oldCPen = SelectObject(memDC, hCoursePen);
+                    MoveToEx(memDC, systems[currentSystemId].x * 400 / 100, systems[currentSystemId].y * 400 / 100, NULL);
+                    LineTo(memDC, systems[selectedSystem].x * 400 / 100, systems[selectedSystem].y * 400 / 100);
+                    SelectObject(memDC, oldCPen);
+                    DeleteObject(hCoursePen);
+                }
+
+                // CRT scan lines (subtle overlay)
+                for (int y = 0; y < 400; y += 4) {
+                    HPEN hScanLine = CreatePen(PS_SOLID, 1, RGB(0, 20, 25));
+                    SelectObject(memDC, hScanLine);
+                    MoveToEx(memDC, 0, y, NULL);
+                    LineTo(memDC, 400, y);
+                    DeleteObject(hScanLine);
+                }
+
+                SetBkMode(memDC, TRANSPARENT);
+                SetTextColor(memDC, RGB(0, 255, 204));
+                SelectObject(memDC, hFont);
+
+                HPEN hBlackHolePen = CreatePen(PS_DOT, 1, RGB(255, 0, 255));
+                HPEN hSolarPen = CreatePen(PS_DOT, 1, RGB(255, 180, 0));
+                HPEN hDerelictPen = CreatePen(PS_DOT, 1, RGB(160, 210, 255));
+                HBRUSH hNullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+
+                for (int i = 0; i < MAX_SYSTEMS; i++) {
+                    int px = systems[i].x * 400 / 100;
+                    int py = systems[i].y * 400 / 100;
+
+                    // Phenomenon marker rings
+                    if (systems[i].phenomenon != 0) {
+                        SelectObject(memDC, hNullBrush);
+                        if (systems[i].phenomenon == 1) SelectObject(memDC, hBlackHolePen);
+                        else if (systems[i].phenomenon == 2) SelectObject(memDC, hSolarPen);
+                        else if (systems[i].phenomenon == 3) SelectObject(memDC, hDerelictPen);
+                        int pulse = (animTick % 8);
+                        int pr = 10 + pulse;
+                        Ellipse(memDC, px - pr, py - pr, px + pr, py + pr);
+                    }
+
+                    // System Star Disc with corona color by economy type
+                    COLORREF starColor = RGB(0, 255, 128); // Default
+                    if (strcmp(systems[i].economy, "Agricultural") == 0) starColor = RGB(80, 255, 120);
+                    else if (strcmp(systems[i].economy, "Mining") == 0) starColor = RGB(255, 180, 60);
+                    else if (strcmp(systems[i].economy, "Industrial") == 0) starColor = RGB(255, 100, 80);
+                    else if (strcmp(systems[i].economy, "Tech Hub") == 0) starColor = RGB(0, 220, 255);
+                    else if (strcmp(systems[i].economy, "Trading Hub") == 0) starColor = RGB(255, 230, 80);
+
+                    // Outer Corona glow
+                    HBRUSH hCorona = CreateSolidBrush(starColor);
+                    HPEN hCoronaPen = CreatePen(PS_SOLID, 1, starColor);
+                    SelectObject(memDC, hCorona);
+                    SelectObject(memDC, hCoronaPen);
+
+                    int r = (i == selectedSystem || i == currentSystemId) ? 6 : 4;
+                    Ellipse(memDC, px - r, py - r, px + r, py + r);
+
+                    // Inner bright core
+                    HBRUSH hCore = CreateSolidBrush(RGB(255, 255, 255));
+                    SelectObject(memDC, hCore);
+                    Ellipse(memDC, px - 2, py - 2, px + 2, py + 2);
+                    DeleteObject(hCore);
+
+                    DeleteObject(hCorona);
+                    DeleteObject(hCoronaPen);
+
+                    // Selection Reticle
+                    if (i == selectedSystem) {
+                        HPEN hRetPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 255));
+                        SelectObject(memDC, hNullBrush);
+                        SelectObject(memDC, hRetPen);
+                        int retR = 12;
+                        Ellipse(memDC, px - retR, py - retR, px + retR, py + retR);
+                        DeleteObject(hRetPen);
+                    }
+
+                    // Animated Player Ship Icon at Current System
+                    if (i == currentSystemId) {
+                        DrawPlayerShipSprite(memDC, px, py - 14, 10, 0);
+
+                        // Radar sweep ring pulsing outwards
+                        int sweepR = 8 + ((animTick % 12) * 2);
+                        HPEN hSweepPen = CreatePen(PS_DOT, 1, RGB(0, 220, 255));
+                        SelectObject(memDC, hNullBrush);
+                        SelectObject(memDC, hSweepPen);
+                        Ellipse(memDC, px - sweepR, py - sweepR, px + sweepR, py + sweepR);
+                        DeleteObject(hSweepPen);
+                    }
+
+                    // System Labels
+                    if (i == selectedSystem || i == currentSystemId) {
+                        char nameBuf[64];
+                        if (i == currentSystemId) {
+                            sprintf(nameBuf, "%s (HERE)", systems[i].name);
+                            SetTextColor(memDC, RGB(0, 255, 255));
+                        } else {
+                            strcpy(nameBuf, systems[i].name);
+                            SetTextColor(memDC, RGB(0, 255, 204));
+                        }
+                        if (systems[i].phenomenon == 1) strcat(nameBuf, " [BH]");
+                        else if (systems[i].phenomenon == 2) strcat(nameBuf, " [FLARE]");
+                        else if (systems[i].phenomenon == 3) strcat(nameBuf, " [HULK]");
+                        TextOut(memDC, px + 12, py - 8, nameBuf, strlen(nameBuf));
+                    }
+                }
+
+                DeleteObject(hBlackHolePen);
+                DeleteObject(hSolarPen);
+                DeleteObject(hDerelictPen);
             }
-            
-            DeleteObject(hGreenBrush);
-            DeleteObject(hCyanBrush);
-            DeleteObject(hBlackHolePen);
-            DeleteObject(hSolarPen);
-            DeleteObject(hDerelictPen);
-            
+
+            // Blit memory buffer to window viewport (20, 70, 400, 400)
+            BitBlt(hdc, 20, 70, 400, 400, memDC, 0, 0, SRCCOPY);
+
+            // Clean up double buffer
+            SelectObject(memDC, oldBM);
+            DeleteObject(memBM);
+            DeleteDC(memDC);
+
+            // Frame around map/arena viewport
+            HPEN hBorderPen = CreatePen(PS_SOLID, 2, inCombat ? RGB(255, 60, 60) : RGB(0, 255, 204));
+            HGDIOBJ oldBorderPen = SelectObject(hdc, hBorderPen);
+            HGDIOBJ oldBorderBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Rectangle(hdc, 20, 70, 420, 470);
+            SelectObject(hdc, oldBorderBrush);
+            SelectObject(hdc, oldBorderPen);
+            DeleteObject(hBorderPen);
+
             EndPaint(hwnd, &ps);
             return 0;
         }
@@ -1074,14 +1521,17 @@ encounter_processed:
                 
                 if (cmd == ID_BTN_COMBAT_ATTACK) {
                     PlaySfx(SFX_LASER);
+                    SpawnLaser(100.0f, 270.0f, 310.0f, 270.0f, RGB(0, 255, 204));
                     int baseDmg = (10 + weaponLevel * 10) * (80 + rand() % 40) / 100;
                     if (repFed >= 15) baseDmg = baseDmg * 12 / 10;
                     enemyHull -= baseDmg;
+                    SpawnExplosion(310.0f, 270.0f, RGB(255, 120, 50), 16);
                     if (repFed >= 15) sprintf(turnMsg, "You attack for %d damage! (Fed escort assists)\n", baseDmg);
                     else sprintf(turnMsg, "You attack and deal %d damage!\n", baseDmg);
                 } else if (cmd == ID_BTN_COMBAT_EVADE) {
                     PlaySfx(SFX_BLIP);
                     playerEvading = 1;
+                    SpawnExplosion(100.0f, 270.0f, RGB(0, 220, 255), 8);
                     sprintf(turnMsg, "You take evasive maneuvers.\n");
                 } else if (cmd == ID_BTN_COMBAT_USE_TECH) {
                     if (cargoTech > 0) {
@@ -1089,6 +1539,8 @@ encounter_processed:
                         cargoTech--;
                         hull += 40;
                         if (hull > maxHull) hull = maxHull;
+                        combatEmpTimer = 15;
+                        SpawnExplosion(100.0f, 270.0f, RGB(0, 255, 255), 24);
                         sprintf(turnMsg, "Used 1 Tech cargo to repair hull.\n");
                     } else {
                         PlaySfx(SFX_BLIP);
@@ -1097,6 +1549,7 @@ encounter_processed:
                 } else if (cmd == ID_BTN_COMBAT_FLEE) {
                     if (rand() % 100 < 50) {
                         PlaySfx(SFX_WARP);
+                        SpawnExplosion(100.0f, 270.0f, RGB(0, 255, 204), 20);
                         MessageBox(hwnd, "Successfully escaped!", "Flee", MB_OK);
                         EndCombat(hwnd);
                         return 0;
@@ -1108,6 +1561,7 @@ encounter_processed:
                 
                 if (enemyHull <= 0) {
                     PlaySfx(SFX_EXPLOSION);
+                    SpawnExplosion(310.0f, 270.0f, RGB(255, 60, 60), 40);
                     int bounty = 100 + currentSystemId * 50;
                     credits += bounty;
                     AdjustRep(6, 3, -8);
@@ -1131,8 +1585,11 @@ encounter_processed:
                 int hitChance = playerEvading ? 50 : 90;
                 if (rand() % 100 < hitChance) {
                     PlaySfx(SFX_ENEMY_LASER);
+                    SpawnLaser(310.0f, 270.0f, 100.0f, 270.0f, RGB(255, 60, 60));
                     int eDmg = (5 + currentSystemId * 5) * (80 + rand() % 40) / 100;
                     hull -= eDmg;
+                    combatShakeTimer = 6;
+                    SpawnExplosion(100.0f, 270.0f, RGB(255, 100, 50), 16);
                     char hitMsg[64];
                     sprintf(hitMsg, "Pirate hits you for %d damage!\n", eDmg);
                     strcat(turnMsg, hitMsg);

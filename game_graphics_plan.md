@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KStellar
 - KMine
 - KMandel
 - KVoid
@@ -149,8 +148,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KDragon
 - KSolitaire
 - KHex
+- KStellar
 
 ## Completed Work Log
+
+- **KStellar (Loop 1):** Replaced placeholder shapes and plain text combat with custom graphical sprites, animations, and visual effects in both Web Canvas (kstellar.html) and Native Win32 GDI (KStellar/main.c). Implemented custom starfield rendering with twinkling stars, constellation hyperlane connecting lines, animated player starship sprites with oscillating thruster plasma flames and radar sweep rings over current docked system, economy-specific star corona discs, and animated hyperspace trajectory course vectors. Replaced text-based combat with a dedicated Tactical Combat Arena featuring custom player battlecruiser sprite (with glowing canopy, engine plumes, and pulsating cyan shield aura), crimson pirate corsair sprite (with jagged prow armor, red optic scanner, and thruster exhaust), animated laser and disruptor projectile bolts, EMP shockwaves, 4-layer particle burst engine (needle sparks, plasma puffs, and wreckage debris), dynamic health meters, and procedural screen-shake decay on laser impacts. Added custom SVG planetary headers and commodity trading icons in the station view.
 
 - **KHex (Loop 3):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on conversions, bit toggles, byte operations, checksum recalculations, file loads, and export triggers (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas khex.html, and double-buffered viewport rendering with trigonometric physics decay in Native C Win32 GDI KHex/main.c), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant plasma & data puffs with negative gravity and radius growth, heavy kinematic digital / binary shard & tech debris chunks with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion halo radiating upon actions, operations, and converter triggers, ornate cybernetic HUD corner filigree L-brackets with tech notches and gold rivet accents on all panels and header frames, a pulsating energy perimeter inlay border with an animated traveling specular glint traversing the outer panel/banner frames, sculpted interactive element highlights with diagonal specular sheen sweeps traversing inspector items and action buttons, and atmospheric floating cyber dust and binary matrix motes drifting in the background in both Web Canvas (khex.html) and Native C Win32 GDI (KHex/main.c).
 
