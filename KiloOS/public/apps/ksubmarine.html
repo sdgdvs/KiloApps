@@ -1078,6 +1078,105 @@
         .threat-badge-leviathan { background: rgba(239, 68, 68, 0.25); color: #f87171; border: 1px solid #ef4444; font-weight: 900; }
         .threat-badge-stunned { background: rgba(0, 240, 255, 0.25); color: #00f0ff; border: 1px solid #00f0ff; font-weight: bold; animation: pulse-badge 0.5s infinite ease-in-out; }
         .threat-badge-distracted { background: rgba(168, 85, 247, 0.25); color: #c084fc; border: 1px solid #a855f7; font-weight: bold; }
+
+        /* Phase 13 Acoustic Hydrophone & Sound Matrix */
+        .audio-matrix-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 8px;
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .audio-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .audio-card:hover {
+            border-color: var(--border-glow);
+            box-shadow: 0 0 8px rgba(0, 210, 255, 0.2);
+        }
+
+        .audio-card-hdr {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .audio-card-title {
+            font-size: 10px;
+            font-weight: bold;
+            color: var(--text-bright);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .audio-badge {
+            font-size: 8px;
+            font-weight: bold;
+            padding: 2px 5px;
+            border-radius: 2px;
+            text-transform: uppercase;
+        }
+
+        .audio-badge-sonar { background: rgba(0, 240, 255, 0.2); color: #00f0ff; border: 1px solid #00f0ff; }
+        .audio-badge-bio { background: rgba(52, 211, 153, 0.2); color: #34d399; border: 1px solid #10b981; }
+        .audio-badge-mech { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
+        .audio-badge-combat { background: rgba(239, 68, 68, 0.25); color: #f87171; border: 1px solid #ef4444; }
+
+        .audio-card-desc {
+            font-size: 9px;
+            color: var(--text-dim);
+            line-height: 1.3;
+        }
+
+        .audio-play-btn {
+            padding: 5px;
+            font-size: 9.5px;
+            font-weight: bold;
+            text-align: center;
+            background: var(--btn-bg);
+            border: 1px solid var(--accent-sonar);
+            color: var(--accent-sonar);
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.15s ease;
+        }
+
+        .audio-play-btn:hover {
+            background: var(--btn-hover);
+            color: var(--text-bright);
+            box-shadow: 0 0 8px rgba(0, 210, 255, 0.3);
+        }
+
+        .hydrophone-scope-box {
+            height: 60px;
+            background: #01060a;
+            border: 1px solid var(--border-panel);
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        #hydrophoneScopeCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
     
     </style>
 </head>
@@ -1242,6 +1341,7 @@
                     <button id="viewDamageBtn">🚨 DAMAGE CONTROL</button>
                     <button id="viewOutpostsBtn">🏪 OUTPOSTS & TRADE</button>
                     <button id="viewCombatBtn">⚔️ COMBAT & DEFENSE</button>
+                    <button id="viewAudioBtn">🎧 SOUND MATRIX</button>
                 </div>
                 <div style="font-size: 10px; color: var(--text-dim); display: flex; gap: 12px; align-items: center;">
                     <span>SECTOR: <b id="currentSectorName" style="color: var(--accent-sonar);">CONTINENTAL SHELF</b></span>
@@ -1657,6 +1757,37 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- ACOUSTIC HYDROPHONE & SOUND MATRIX OVERLAY (PHASE 13) -->
+                <div class="overlay-view" id="audioView">
+                    <div class="overlay-header-row">
+                        <div>
+                            <span style="font-weight: bold; color: var(--text-bright); font-size: 11px;">🎧 ACOUSTIC HYDROPHONE & SOUND EFFECTS MATRIX</span>
+                            <span style="font-size: 10px; color: var(--text-dim); margin-left: 8px;">Sub-surface acoustic signatures, active sonar pingers & bio-frequencies</span>
+                        </div>
+                        <div style="display: flex; gap: 6px; align-items: center;">
+                            <button id="btnToggleAmbientOcean" style="font-size: 9px; border-color: var(--accent-emerald); color: var(--accent-emerald); font-weight: bold;">🌊 AMBIENT OCEAN HUM: OFF</button>
+                            <label style="font-size: 9px; color: var(--text-dim);">VOL: <b id="audioVolText" style="color: var(--text-bright);">100%</b></label>
+                            <input type="range" id="audioVolSlider" min="0" max="100" value="100" style="width: 70px; height: 12px; cursor: pointer;">
+                        </div>
+                    </div>
+
+                    <!-- Live Hydrophone Oscilloscope / Frequency Spectrum Banner -->
+                    <div class="hydrophone-scope-box">
+                        <canvas id="hydrophoneScopeCanvas"></canvas>
+                        <div style="position: absolute; top: 4px; left: 8px; font-size: 8.5px; color: var(--accent-sonar); pointer-events: none;">
+                            HYDROPHONE PASSIVE ARRAY // SECTOR: <span id="scopeSectorTag" style="color: var(--text-bright); font-weight: bold;">EPIPELAGIC</span> | BANDWIDTH: 4 HZ - 24 KHZ
+                        </div>
+                        <div style="position: absolute; bottom: 4px; right: 8px; font-size: 8.5px; color: var(--text-dim); pointer-events: none;" id="scopeStatusTag">
+                            ACOUSTIC SPECTRUM: NOMINAL PASSIVE LISTENING
+                        </div>
+                    </div>
+
+                    <!-- 12 Sound Effect Testing Cards -->
+                    <div class="audio-matrix-grid" id="audioMatrixGrid">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </div>
             </div>
 
             <!-- LOG & TELEMETRY STREAM -->
@@ -1778,9 +1909,12 @@
 
     <script>
         (function() {
-            // --- WEB AUDIO ENGINE ---
+            // --- WEB AUDIO ENGINE & PHASE 13 SOUND EFFECTS ---
             let audioCtx = null;
             let soundEnabled = true;
+            let masterVolume = 1.0;
+            let ambientOceanActive = false;
+            let ambientOceanNodes = null;
 
             function initAudio() {
                 if (!audioCtx) {
@@ -1797,7 +1931,7 @@
                     const gain = audioCtx.createGain();
                     osc.type = type;
                     osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                    gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(gainVal * masterVolume, audioCtx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
@@ -1806,6 +1940,7 @@
                 } catch(e) {}
             }
 
+            // Phase 13: High-Definition Sonar Ping & Oceanic Reverberation
             function playSonarPingSound() {
                 if (!soundEnabled) return;
                 try {
@@ -1816,13 +1951,13 @@
                     const gain = audioCtx.createGain();
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(1920, now);
-                    osc.frequency.exponentialRampToValueAtTime(540, now + 0.8);
-                    gain.gain.setValueAtTime(0.25, now);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.6);
+                    osc.frequency.exponentialRampToValueAtTime(540, now + 0.85);
+                    gain.gain.setValueAtTime(0.28 * masterVolume, now);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
                     osc.start(now);
-                    osc.stop(now + 1.6);
+                    osc.stop(now + 1.8);
                 } catch(e) {}
             }
 
@@ -1835,76 +1970,187 @@
                         const osc = audioCtx.createOscillator();
                         const gain = audioCtx.createGain();
                         osc.type = 'sine';
-                        osc.frequency.setValueAtTime(800 + Math.random() * 400, audioCtx.currentTime);
-                        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-                        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
+                        osc.frequency.setValueAtTime(820 + Math.random() * 350, audioCtx.currentTime);
+                        gain.gain.setValueAtTime(0.12 * masterVolume, audioCtx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
                         osc.connect(gain);
                         gain.connect(audioCtx.destination);
                         osc.start();
-                        osc.stop(audioCtx.currentTime + 0.3);
+                        osc.stop(audioCtx.currentTime + 0.4);
                     } catch(e) {}
-                }, distNormalized * 600);
+                }, distNormalized * 650);
             }
 
-            function playAirBlowSound() {
-                if (!soundEnabled) return;
-                try {
-                    initAudio();
-                    if (audioCtx.state === 'suspended') audioCtx.resume();
-                    const bufferSize = Math.floor(audioCtx.sampleRate * 0.4);
-                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-                    const output = buffer.getChannelData(0);
-                    for (let i = 0; i < bufferSize; i++) {
-                        output[i] = Math.random() * 2 - 1;
-                    }
-                    const whiteNoise = audioCtx.createBufferSource();
-                    whiteNoise.buffer = buffer;
-                    const filter = audioCtx.createBiquadFilter();
-                    filter.type = 'bandpass';
-                    filter.frequency.value = 600;
-                    const gain = audioCtx.createGain();
-                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
-                    whiteNoise.connect(filter);
-                    filter.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    whiteNoise.start();
-                } catch(e) {}
-            }
-
-            // Phase 7 Leviathan & Biological Vocalization Sound
-            function playLeviathanSong() {
+            // Phase 13: Ballast Blow Pneumatic Hiss & Bubble Turbulence
+            function playBallastBlowHiss() {
                 if (!soundEnabled) return;
                 try {
                     initAudio();
                     if (audioCtx.state === 'suspended') audioCtx.resume();
                     const now = audioCtx.currentTime;
+
+                    // 1. White noise compressed air venting with sweeping bandpass
+                    const bufferSize = Math.floor(audioCtx.sampleRate * 0.7);
+                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    const output = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        output[i] = (Math.random() * 2 - 1) * 0.75;
+                    }
+                    const whiteNoise = audioCtx.createBufferSource();
+                    whiteNoise.buffer = buffer;
+
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(1400, now);
+                    filter.frequency.exponentialRampToValueAtTime(320, now + 0.65);
+                    filter.Q.value = 2.0;
+
+                    const noiseGain = audioCtx.createGain();
+                    noiseGain.gain.setValueAtTime(0.001, now);
+                    noiseGain.gain.linearRampToValueAtTime(0.26 * masterVolume, now + 0.08);
+                    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.68);
+
+                    whiteNoise.connect(filter);
+                    filter.connect(noiseGain);
+                    noiseGain.connect(audioCtx.destination);
+                    whiteNoise.start(now);
+
+                    // 2. Low bubbling rush resonance
+                    const bubbleOsc = audioCtx.createOscillator();
+                    const bubbleGain = audioCtx.createGain();
+                    bubbleOsc.type = 'sawtooth';
+                    bubbleOsc.frequency.setValueAtTime(170, now);
+                    bubbleOsc.frequency.linearRampToValueAtTime(60, now + 0.65);
+
+                    bubbleGain.gain.setValueAtTime(0.18 * masterVolume, now);
+                    bubbleGain.gain.exponentialRampToValueAtTime(0.001, now + 0.68);
+
+                    bubbleOsc.connect(bubbleGain);
+                    bubbleGain.connect(audioCtx.destination);
+                    bubbleOsc.start(now);
+                    bubbleOsc.stop(now + 0.68);
+                } catch(e) {}
+            }
+
+            function playAirBlowSound() {
+                playBallastBlowHiss();
+            }
+
+            // Phase 13: Deep Metallic Hull Pressure Groan & Stress Creak
+            function playHullPressureGroan() {
+                if (!soundEnabled) return;
+                try {
+                    initAudio();
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    const now = audioCtx.currentTime;
+
                     const osc1 = audioCtx.createOscillator();
                     const osc2 = audioCtx.createOscillator();
+                    const lfo = audioCtx.createOscillator();
+                    const lfoGain = audioCtx.createGain();
+                    const filter = audioCtx.createBiquadFilter();
                     const gain = audioCtx.createGain();
 
                     osc1.type = 'sawtooth';
-                    osc1.frequency.setValueAtTime(55, now);
-                    osc1.frequency.exponentialRampToValueAtTime(110, now + 1.2);
-                    osc1.frequency.exponentialRampToValueAtTime(45, now + 2.4);
+                    osc1.frequency.setValueAtTime(52, now);
+                    osc1.frequency.linearRampToValueAtTime(68, now + 0.6);
+                    osc1.frequency.linearRampToValueAtTime(44, now + 1.8);
 
-                    osc2.type = 'sine';
-                    osc2.frequency.setValueAtTime(165, now);
-                    osc2.frequency.exponentialRampToValueAtTime(220, now + 1.0);
-                    osc2.frequency.exponentialRampToValueAtTime(130, now + 2.4);
+                    osc2.type = 'triangle';
+                    osc2.frequency.setValueAtTime(58, now);
+                    osc2.frequency.linearRampToValueAtTime(74, now + 0.8);
+                    osc2.frequency.linearRampToValueAtTime(40, now + 1.8);
 
-                    gain.gain.setValueAtTime(0.18, now);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.5);
+                    // LFO for metallic creak flutter
+                    lfo.frequency.setValueAtTime(9, now);
+                    lfo.frequency.linearRampToValueAtTime(15, now + 0.9);
+                    lfoGain.gain.setValueAtTime(14, now);
+                    lfo.connect(lfoGain);
+                    lfoGain.connect(osc1.frequency);
 
-                    osc1.connect(gain);
-                    osc2.connect(gain);
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(260, now);
+                    filter.frequency.linearRampToValueAtTime(480, now + 0.7);
+                    filter.frequency.linearRampToValueAtTime(160, now + 1.8);
+
+                    gain.gain.setValueAtTime(0.001, now);
+                    gain.gain.linearRampToValueAtTime(0.28 * masterVolume, now + 0.3);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.9);
+
+                    osc1.connect(filter);
+                    osc2.connect(filter);
+                    filter.connect(gain);
                     gain.connect(audioCtx.destination);
 
                     osc1.start(now);
                     osc2.start(now);
-                    osc1.stop(now + 2.5);
-                    osc2.stop(now + 2.5);
+                    lfo.start(now);
+                    osc1.stop(now + 1.9);
+                    osc2.stop(now + 1.9);
+                    lfo.stop(now + 1.9);
                 } catch(e) {}
+            }
+
+            // Phase 13: Deep-Sea Whale Song & Leviathan Harmonics
+            function playWhaleSong() {
+                if (!soundEnabled) return;
+                try {
+                    initAudio();
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    const now = audioCtx.currentTime;
+
+                    const osc1 = audioCtx.createOscillator();
+                    const osc2 = audioCtx.createOscillator();
+                    const vib = audioCtx.createOscillator();
+                    const vibGain = audioCtx.createGain();
+                    const filter = audioCtx.createBiquadFilter();
+                    const gain = audioCtx.createGain();
+
+                    osc1.type = 'sine';
+                    osc1.frequency.setValueAtTime(75, now);
+                    osc1.frequency.exponentialRampToValueAtTime(165, now + 0.9);
+                    osc1.frequency.linearRampToValueAtTime(195, now + 1.5);
+                    osc1.frequency.exponentialRampToValueAtTime(65, now + 2.8);
+
+                    osc2.type = 'triangle';
+                    osc2.frequency.setValueAtTime(150, now);
+                    osc2.frequency.exponentialRampToValueAtTime(330, now + 0.9);
+                    osc2.frequency.linearRampToValueAtTime(390, now + 1.5);
+                    osc2.frequency.exponentialRampToValueAtTime(130, now + 2.8);
+
+                    vib.frequency.setValueAtTime(4.2, now);
+                    vibGain.gain.setValueAtTime(7.0, now);
+                    vib.connect(vibGain);
+                    vibGain.connect(osc1.frequency);
+                    vibGain.connect(osc2.frequency);
+
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(340, now);
+                    filter.frequency.linearRampToValueAtTime(680, now + 1.2);
+                    filter.frequency.linearRampToValueAtTime(220, now + 2.8);
+                    filter.Q.value = 2.8;
+
+                    gain.gain.setValueAtTime(0.001, now);
+                    gain.gain.linearRampToValueAtTime(0.26 * masterVolume, now + 0.4);
+                    gain.gain.setValueAtTime(0.22 * masterVolume, now + 1.8);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.9);
+
+                    osc1.connect(filter);
+                    osc2.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc1.start(now);
+                    osc2.start(now);
+                    vib.start(now);
+                    osc1.stop(now + 2.9);
+                    osc2.stop(now + 2.9);
+                    vib.stop(now + 2.9);
+                } catch(e) {}
+            }
+
+            function playLeviathanSong() {
+                playWhaleSong();
             }
 
             function playBioScanChirp() {
@@ -1919,7 +2165,7 @@
                     osc.frequency.setValueAtTime(1200, now);
                     osc.frequency.exponentialRampToValueAtTime(2400, now + 0.15);
                     osc.frequency.exponentialRampToValueAtTime(800, now + 0.35);
-                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.setValueAtTime(0.16 * masterVolume, now);
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
@@ -1940,7 +2186,7 @@
                     osc.type = 'sawtooth';
                     osc.frequency.setValueAtTime(240, now);
                     osc.frequency.exponentialRampToValueAtTime(80, now + 0.4);
-                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.setValueAtTime(0.18 * masterVolume, now);
                     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
@@ -1960,7 +2206,7 @@
                         const gain = audioCtx.createGain();
                         osc.type = 'sine';
                         osc.frequency.setValueAtTime(freq, now + i * 0.08);
-                        gain.gain.setValueAtTime(0.12, now + i * 0.08);
+                        gain.gain.setValueAtTime(0.14 * masterVolume, now + i * 0.08);
                         gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.08 + 0.3);
                         osc.connect(gain);
                         gain.connect(audioCtx.destination);
@@ -1982,7 +2228,7 @@
                     osc.type = 'sawtooth';
                     osc.frequency.setValueAtTime(400 + Math.random() * 300, now);
                     osc.frequency.linearRampToValueAtTime(800 + Math.random() * 400, now + 0.15);
-                    gain.gain.setValueAtTime(0.14, now);
+                    gain.gain.setValueAtTime(0.16 * masterVolume, now);
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
@@ -2002,7 +2248,7 @@
                     osc.type = 'triangle';
                     osc.frequency.setValueAtTime(440, now);
                     osc.frequency.linearRampToValueAtTime(880, now + 0.25);
-                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.setValueAtTime(0.24 * masterVolume, now);
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
@@ -2027,7 +2273,7 @@
                     filter.type = 'highpass';
                     filter.frequency.value = 1800;
                     const gain = audioCtx.createGain();
-                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.setValueAtTime(0.16 * masterVolume, now);
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
                     whiteNoise.connect(filter);
                     filter.connect(gain);
@@ -2036,7 +2282,6 @@
                 } catch(e) {}
             }
 
-            
             // Phase 11 Docking & Trading Audio
             function playDockingClampSound() {
                 if (!soundEnabled) return;
@@ -2049,7 +2294,7 @@
                     osc.type = 'sawtooth';
                     osc.frequency.setValueAtTime(140, now);
                     osc.frequency.exponentialRampToValueAtTime(45, now + 0.5);
-                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.setValueAtTime(0.25 * masterVolume, now);
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
@@ -2069,7 +2314,7 @@
                         const gain = audioCtx.createGain();
                         osc.type = 'sine';
                         osc.frequency.setValueAtTime(freq, now + i * 0.08);
-                        gain.gain.setValueAtTime(0.15, now + i * 0.08);
+                        gain.gain.setValueAtTime(0.16 * masterVolume, now + i * 0.08);
                         gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.08 + 0.35);
                         osc.connect(gain);
                         gain.connect(audioCtx.destination);
@@ -2092,7 +2337,7 @@
                     osc.frequency.setValueAtTime(320, now);
                     osc.frequency.exponentialRampToValueAtTime(880, now + 0.3);
                     osc.frequency.exponentialRampToValueAtTime(440, now + 0.6);
-                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.setValueAtTime(0.16 * masterVolume, now);
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
@@ -2112,7 +2357,7 @@
                         const gain = audioCtx.createGain();
                         osc.type = 'triangle';
                         osc.frequency.setValueAtTime(freq, now + idx * 0.07);
-                        gain.gain.setValueAtTime(0.14, now + idx * 0.07);
+                        gain.gain.setValueAtTime(0.16 * masterVolume, now + idx * 0.07);
                         gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.07 + 0.35);
                         osc.connect(gain);
                         gain.connect(audioCtx.destination);
@@ -2122,7 +2367,7 @@
                 } catch(e) {}
             }
 
-            // Phase 12 Torpedo Launch, Undersea Detonation & Combat Sirens
+            // Phase 12 & 13: Torpedo Launch, Undersea Detonation & Combat Sirens
             function playTorpedoLaunchSound() {
                 if (!soundEnabled) return;
                 try {
@@ -2135,12 +2380,32 @@
                     osc.frequency.setValueAtTime(360, now);
                     osc.frequency.exponentialRampToValueAtTime(720, now + 0.12);
                     osc.frequency.exponentialRampToValueAtTime(180, now + 0.45);
-                    gain.gain.setValueAtTime(0.22, now);
+                    gain.gain.setValueAtTime(0.24 * masterVolume, now);
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
                     osc.start(now);
                     osc.stop(now + 0.5);
+                } catch(e) {}
+            }
+
+            function playPlasmaLaunchSound() {
+                if (!soundEnabled) return;
+                try {
+                    initAudio();
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    const now = audioCtx.currentTime;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.exponentialRampToValueAtTime(180, now + 0.6);
+                    gain.gain.setValueAtTime(0.28 * masterVolume, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.65);
                 } catch(e) {}
             }
 
@@ -2155,7 +2420,7 @@
                     osc.type = 'sawtooth';
                     osc.frequency.setValueAtTime(120, now);
                     osc.frequency.exponentialRampToValueAtTime(35, now + 0.6);
-                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.setValueAtTime(0.32 * masterVolume, now);
                     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.7);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
@@ -2175,7 +2440,7 @@
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(1400, now);
                     osc.frequency.exponentialRampToValueAtTime(400, now + 0.3);
-                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.setValueAtTime(0.20 * masterVolume, now);
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
@@ -2196,13 +2461,77 @@
                     osc.frequency.setValueAtTime(80, now);
                     osc.frequency.exponentialRampToValueAtTime(1800, now + 0.15);
                     osc.frequency.exponentialRampToValueAtTime(60, now + 0.5);
-                    gain.gain.setValueAtTime(0.28, now);
+                    gain.gain.setValueAtTime(0.30 * masterVolume, now);
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
                     osc.start(now);
                     osc.stop(now + 0.55);
                 } catch(e) {}
+            }
+
+            // Phase 13: Continuous Hydrophone Ambient Ocean Hum
+            function toggleAmbientOceanHum() {
+                if (ambientOceanActive) {
+                    if (ambientOceanNodes) {
+                        try {
+                            ambientOceanNodes.noiseSource.stop();
+                            ambientOceanNodes.droneOsc.stop();
+                        } catch(e) {}
+                        ambientOceanNodes = null;
+                    }
+                    ambientOceanActive = false;
+                    btnToggleAmbientOcean.textContent = '🌊 AMBIENT OCEAN HUM: OFF';
+                    btnToggleAmbientOcean.classList.remove('active-toggle');
+                    logMessage('Hydrophone ambient ocean hum acoustic feed SILENCED.', 'info');
+                } else {
+                    if (!soundEnabled) {
+                        soundEnabled = true;
+                        soundToggleBtn.textContent = '🔊 AUDIO: ON';
+                    }
+                    initAudio();
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    
+                    const now = audioCtx.currentTime;
+                    const bufferSize = audioCtx.sampleRate * 2;
+                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = (Math.random() * 2 - 1) * 0.22;
+                    }
+                    const noiseSource = audioCtx.createBufferSource();
+                    noiseSource.buffer = buffer;
+                    noiseSource.loop = true;
+
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 190;
+
+                    const noiseGain = audioCtx.createGain();
+                    noiseGain.gain.value = 0.09 * masterVolume;
+
+                    noiseSource.connect(filter);
+                    filter.connect(noiseGain);
+                    noiseGain.connect(audioCtx.destination);
+
+                    const droneOsc = audioCtx.createOscillator();
+                    const droneGain = audioCtx.createGain();
+                    droneOsc.type = 'sine';
+                    droneOsc.frequency.value = 38;
+                    droneGain.gain.value = 0.07 * masterVolume;
+
+                    droneOsc.connect(droneGain);
+                    droneGain.connect(audioCtx.destination);
+
+                    noiseSource.start(now);
+                    droneOsc.start(now);
+
+                    ambientOceanNodes = { noiseSource, droneOsc, noiseGain, droneGain };
+                    ambientOceanActive = true;
+                    btnToggleAmbientOcean.textContent = '🌊 AMBIENT OCEAN HUM: ON';
+                    btnToggleAmbientOcean.classList.add('active-toggle');
+                    logMessage('Hydrophone passive listening array ENGAGED: Ambient oceanic deep-water feed active.', 'discovery');
+                }
             }
 
             // --- PHASE 12: THREAT MATRIX & ORDNANCE DEFINITIONS ---
@@ -2952,10 +3281,22 @@
             const viewEngineeringBtn = document.getElementById('viewEngineeringBtn');
             const viewDamageBtn = document.getElementById('viewDamageBtn');
             const viewLabBtn = document.getElementById('viewLabBtn');
+            const viewOutpostsBtn = document.getElementById('viewOutpostsBtn');
+            const viewCombatBtn = document.getElementById('viewCombatBtn');
+            const viewAudioBtn = document.getElementById('viewAudioBtn');
 
+            // Phase 13 Audio Matrix DOM Elements
+            const audioView = document.getElementById('audioView');
+            const btnToggleAmbientOcean = document.getElementById('btnToggleAmbientOcean');
+            const audioVolSlider = document.getElementById('audioVolSlider');
+            const audioVolText = document.getElementById('audioVolText');
+            const hydrophoneScopeCanvas = document.getElementById('hydrophoneScopeCanvas');
+            const scopeSectorTag = document.getElementById('scopeSectorTag');
+            const scopeStatusTag = document.getElementById('scopeStatusTag');
+            const audioMatrixGrid = document.getElementById('audioMatrixGrid');
+            let scopePulseIntensity = 0.0;
             
             // Outpost & Commissary Elements (Phase 11)
-            const viewOutpostsBtn = document.getElementById('viewOutpostsBtn');
             const outpostsView = document.getElementById('outpostsView');
             const dockingStatusHeader = document.getElementById('dockingStatusHeader');
             const btnUseBatteryPack = document.getElementById('btnUseBatteryPack');
@@ -2997,6 +3338,22 @@
             const regenHealingStat = document.getElementById('regenHealingStat');
             const regenAutoPatchStat = document.getElementById('regenAutoPatchStat');
             const btnUpgradeRegen = document.getElementById('btnUpgradeRegen');
+
+            // Combat & Defense Elements (Phase 12)
+            const combatView = document.getElementById('combatView');
+            const combatThreatAlertHeader = document.getElementById('combatThreatAlertHeader');
+            const btnCombatLaunchDecoy = document.getElementById('btnCombatLaunchDecoy');
+            const btnCombatShockwave = document.getElementById('btnCombatShockwave');
+            const btnCombatSilentRunning = document.getElementById('btnCombatSilentRunning');
+            const combatCreditsDisplay = document.getElementById('combatCreditsDisplay');
+            const combatDecoyQty = document.getElementById('combatDecoyQty');
+            const combatTubesGrid = document.getElementById('combatTubesGrid');
+            const combatThreatsGrid = document.getElementById('combatThreatsGrid');
+            const activeThreatsBadge = document.getElementById('activeThreatsBadge');
+            const btnQuickFireAcoustic = document.getElementById('btnQuickFireAcoustic');
+            const btnQuickFireEmp = document.getElementById('btnQuickFireEmp');
+            const btnQuickFirePlasma = document.getElementById('btnQuickFirePlasma');
+            const btnQuickLaunchDecoy = document.getElementById('btnQuickLaunchDecoy');
 
             // Damage Control Elements (Phase 9)
             const damageControlView = document.getElementById('damageControlView');
@@ -3094,6 +3451,7 @@
                     state.currentSectorIdx = sIdx;
                     const s = SECTORS[sIdx];
                     currentSectorName.textContent = s.name;
+                    if (scopeSectorTag) scopeSectorTag.textContent = s.name;
                     logMessage(`TRANSITIONING SECTOR: [${s.name}] - ${s.desc}`, 'discovery');
                     playBeep(650, 'sine', 0.25, 0.15);
                 }
@@ -3109,16 +3467,175 @@
                 terminalLog.scrollTop = terminalLog.scrollHeight;
             }
 
+            // --- PHASE 13 ACOUSTIC MATRIX SOUND LIBRARY ---
+            const SOUND_LIBRARY = [
+                {
+                    id: 'sonar_ping',
+                    name: 'Active Sonar Ping & Echo',
+                    category: 'sonar',
+                    badgeClass: 'audio-badge-sonar',
+                    badgeText: 'ACOUSTIC PING',
+                    freqRange: '1920 Hz -> 540 Hz (FM)',
+                    desc: 'High-frequency omnidirectional acoustic chirp with seabed echo reverberation.',
+                    playFn: () => { playSonarPingSound(); playEchoReturnSound(0.4); }
+                },
+                {
+                    id: 'whale_song',
+                    name: 'Abyssal Whale & Leviathan Song',
+                    category: 'bio',
+                    badgeClass: 'audio-badge-bio',
+                    badgeText: 'CETACEAN BIO',
+                    freqRange: '45 Hz - 380 Hz (Harmonics)',
+                    desc: 'Resonant multi-harmonic vocalization of deep-water baleen whales and hadal titans.',
+                    playFn: () => playWhaleSong()
+                },
+                {
+                    id: 'ballast_blow',
+                    name: 'High-Pressure Ballast Blow Hiss',
+                    category: 'mech',
+                    badgeClass: 'audio-badge-mech',
+                    badgeText: 'PNEUMATIC HISS',
+                    freqRange: '60 Hz - 1800 Hz (White Noise)',
+                    desc: 'Supercritical 300-BAR compressed air blowing Kingston valves to expel seawater.',
+                    playFn: () => playBallastBlowHiss()
+                },
+                {
+                    id: 'hull_groan',
+                    name: 'Hydrostatic Hull Pressure Groan',
+                    category: 'mech',
+                    badgeClass: 'audio-badge-mech',
+                    badgeText: 'STRUCTURAL STRAIN',
+                    freqRange: '40 Hz - 160 Hz (Sub-Bass)',
+                    desc: 'Metallic creak, shear stress resonance, and titanium lattice flex under deep crush pressure.',
+                    playFn: () => playHullPressureGroan()
+                },
+                {
+                    id: 'torpedo_launch',
+                    name: 'Acoustic Torpedo Launch Ejection',
+                    category: 'combat',
+                    badgeClass: 'audio-badge-combat',
+                    badgeText: 'ORDNANCE LAUNCH',
+                    freqRange: '180 Hz - 720 Hz (Cavitation)',
+                    desc: 'Pneumatic launch tube piston impulse and supercavitating propeller wake whoosh.',
+                    playFn: () => playTorpedoLaunchSound()
+                },
+                {
+                    id: 'plasma_launch',
+                    name: 'Thermal Plasma Torpedo Flare',
+                    category: 'combat',
+                    badgeClass: 'audio-badge-combat',
+                    badgeText: 'THERMAL IGNITION',
+                    freqRange: '180 Hz - 600 Hz (Thermal Roar)',
+                    desc: 'High-energy superheated plasma ignition with thermal bubble displacement.',
+                    playFn: () => playPlasmaLaunchSound()
+                },
+                {
+                    id: 'emp_shockwave',
+                    name: 'EMP Shockwave Burst',
+                    category: 'combat',
+                    badgeClass: 'audio-badge-combat',
+                    badgeText: 'ELECTROMAGNETIC',
+                    freqRange: '60 Hz - 1800 Hz (Shock)',
+                    desc: 'High-voltage electromagnetic pulse discharge radiating through conductive seawater.',
+                    playFn: () => playShockwaveSound()
+                },
+                {
+                    id: 'undersea_detonation',
+                    name: 'Hadal Depth Detonation Shockwave',
+                    category: 'combat',
+                    badgeClass: 'audio-badge-combat',
+                    badgeText: 'EXPLOSIVE BLAST',
+                    freqRange: '35 Hz - 120 Hz (Sub-Bass Blast)',
+                    desc: 'Muffled underwater high-yield warhead detonation and cavitation bubble collapse.',
+                    playFn: () => playTorpedoExplosionSound()
+                },
+                {
+                    id: 'decoy_deploy',
+                    name: 'Acoustic Decoy & Bubble Screen',
+                    category: 'combat',
+                    badgeClass: 'audio-badge-combat',
+                    badgeText: 'COUNTERMEASURE',
+                    freqRange: '400 Hz - 1400 Hz (Chitter)',
+                    desc: 'Micro-cavitation bubble generator simulating fake bathyscaphe Doppler echo returns.',
+                    playFn: () => playDecoySound()
+                },
+                {
+                    id: 'weld_arc',
+                    name: 'Damage Control Bulkhead Arc Weld',
+                    category: 'mech',
+                    badgeClass: 'audio-badge-mech',
+                    badgeText: 'PLASMA WELDING',
+                    freqRange: '400 Hz - 1200 Hz (Crackle)',
+                    desc: 'High-temperature plasma welding torch sealing structural bulkhead fractures.',
+                    playFn: () => playWeldingSound()
+                },
+                {
+                    id: 'alarm_klaxon',
+                    name: 'Emergency Flood & Collision Alarm',
+                    category: 'mech',
+                    badgeClass: 'audio-badge-mech',
+                    badgeText: 'SIREN ALERT',
+                    freqRange: '440 Hz / 880 Hz (Dual Tone)',
+                    desc: 'Command sphere master caution klaxon warning of hull rupture or grounding.',
+                    playFn: () => playAlarmKlaxon()
+                },
+                {
+                    id: 'bio_chirp',
+                    name: 'Bio-Scan Sonar & Centrifuge Spin',
+                    category: 'bio',
+                    badgeClass: 'audio-badge-bio',
+                    badgeText: 'LABORATORY BIO',
+                    freqRange: '320 Hz - 2400 Hz (FM Chirp)',
+                    desc: 'High-definition bio-acoustic imaging chirp and research centrifuge spinner.',
+                    playFn: () => { playBioScanChirp(); setTimeout(playLabCentrifugeSound, 250); }
+                }
+            ];
+
+            function renderAudioUI() {
+                if (!audioMatrixGrid) return;
+                audioMatrixGrid.innerHTML = '';
+
+                SOUND_LIBRARY.forEach(snd => {
+                    const card = document.createElement('div');
+                    card.className = 'audio-card';
+                    card.innerHTML = `
+                        <div class="audio-card-hdr">
+                            <span class="audio-card-title">${snd.name}</span>
+                            <span class="audio-badge ${snd.badgeClass}">${snd.badgeText}</span>
+                        </div>
+                        <div class="audio-card-desc">${snd.desc}</div>
+                        <div style="font-size: 8.5px; color: var(--accent-sonar); display: flex; justify-content: space-between;">
+                            <span>FREQ: <b>${snd.freqRange}</b></span>
+                        </div>
+                        <button class="audio-play-btn" onclick="window.testSound('${snd.id}')">
+                            ▶️ EMIT ACOUSTIC SIGNATURE
+                        </button>
+                    `;
+                    audioMatrixGrid.appendChild(card);
+                });
+            }
+
+            window.testSound = function(soundId) {
+                const snd = SOUND_LIBRARY.find(s => s.id === soundId);
+                if (snd) {
+                    snd.playFn();
+                    logMessage(`Acoustic Hydrophone broadcast test: [${snd.name}].`, 'info');
+                    scopePulseIntensity = 1.0;
+                }
+            };
+
             // --- VIEW MODE TOGGLES ---
             function setViewMode(mode) {
                 state.viewMode = mode;
-                [viewSonarBtn, viewNavMapBtn, viewCodexBtn, viewCargoBtn, viewLabBtn, viewOutpostsBtn, viewEngineeringBtn, viewDamageBtn].forEach(b => b && b.classList.remove('active-toggle'));
+                [viewSonarBtn, viewNavMapBtn, viewCodexBtn, viewCargoBtn, viewLabBtn, viewOutpostsBtn, viewEngineeringBtn, viewDamageBtn, viewCombatBtn, viewAudioBtn].forEach(b => b && b.classList.remove('active-toggle'));
                 engineeringView.classList.remove('active');
                 codexView.classList.remove('active');
                 cargoView.classList.remove('active');
                 labView.classList.remove('active');
                 damageControlView.classList.remove('active');
                 outpostsView.classList.remove('active');
+                combatView.classList.remove('active');
+                audioView.classList.remove('active');
                 document.getElementById('sonarOverlay').style.display = 'none';
                 sonarTargetHud.style.display = 'none';
 
@@ -3175,6 +3692,12 @@
                     sonarModeTag.textContent = 'MODE: TORPEDO DEFENSE & TACTICAL WEAPONS';
                     renderCombatUI();
                     playBeep(640, 'sawtooth', 0.1);
+                } else if (mode === 'audio') {
+                    viewAudioBtn.classList.add('active-toggle');
+                    audioView.classList.add('active');
+                    sonarModeTag.textContent = 'MODE: ACOUSTIC HYDROPHONE & SOUND MATRIX';
+                    renderAudioUI();
+                    playBeep(720, 'triangle', 0.1);
                 }
             }
 
@@ -3187,6 +3710,17 @@
             viewDamageBtn.addEventListener('click', () => setViewMode('damage'));
             viewOutpostsBtn.addEventListener('click', () => setViewMode('outposts'));
             viewCombatBtn.addEventListener('click', () => setViewMode('combat'));
+            viewAudioBtn.addEventListener('click', () => setViewMode('audio'));
+
+            btnToggleAmbientOcean.addEventListener('click', toggleAmbientOceanHum);
+            audioVolSlider.addEventListener('input', (e) => {
+                masterVolume = parseInt(e.target.value) / 100.0;
+                audioVolText.textContent = `${Math.round(masterVolume * 100)}%`;
+                if (ambientOceanNodes) {
+                    ambientOceanNodes.noiseGain.gain.value = 0.09 * masterVolume;
+                    ambientOceanNodes.droneGain.gain.value = 0.07 * masterVolume;
+                }
+            });
 
             // --- ENGINEERING UPGRADES & RESEARCH ---
             function applyUpgradeStats() {
@@ -6219,6 +6753,53 @@
                 } else if (state.viewMode === 'navmap') {
                     drawNavMapChart(w, h, cx, cy, dpr, palette);
                 }
+
+                // Hydrophone Oscilloscope rendering when audioView is active
+                if (state.viewMode === 'audio' && hydrophoneScopeCanvas) {
+                    drawHydrophoneOscilloscope();
+                }
+            }
+
+            let scopePhase = 0;
+            function drawHydrophoneOscilloscope() {
+                const sCanvas = hydrophoneScopeCanvas;
+                const sCtx = sCanvas.getContext('2d');
+                const sW = sCanvas.width;
+                const sH = sCanvas.height;
+
+                sCtx.fillStyle = 'rgba(2, 11, 18, 0.4)';
+                sCtx.fillRect(0, 0, sW, sH);
+
+                // Center line grid
+                sCtx.strokeStyle = 'rgba(0, 210, 255, 0.15)';
+                sCtx.lineWidth = 1;
+                sCtx.beginPath();
+                sCtx.moveTo(0, sH / 2);
+                sCtx.lineTo(sW, sH / 2);
+                for (let x = 0; x <= sW; x += 40) {
+                    sCtx.moveTo(x, 0);
+                    sCtx.lineTo(x, sH);
+                }
+                sCtx.stroke();
+
+                scopePhase += 0.08;
+                scopePulseIntensity = Math.max(0, scopePulseIntensity - 0.02);
+
+                const activeAmp = (ambientOceanActive ? 14 : 4) + (scopePulseIntensity * 45);
+                sCtx.strokeStyle = scopePulseIntensity > 0.3 ? '#f59e0b' : (ambientOceanActive ? '#00f0ff' : '#0284c7');
+                sCtx.lineWidth = 2;
+                sCtx.beginPath();
+
+                for (let x = 0; x < sW; x++) {
+                    const normX = x / sW;
+                    const wave1 = Math.sin(normX * 18 + scopePhase) * activeAmp;
+                    const wave2 = Math.sin(normX * 42 - scopePhase * 1.5) * (activeAmp * 0.4);
+                    const noise = (Math.random() - 0.5) * (ambientOceanActive ? 6 : 2);
+                    const y = sH / 2 + wave1 + wave2 + noise;
+                    if (x === 0) sCtx.moveTo(x, y);
+                    else sCtx.lineTo(x, y);
+                }
+                sCtx.stroke();
             }
 
             // Main Animation & Physics Loop

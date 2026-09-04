@@ -128,6 +128,19 @@
 #define ID_BTN_QUICK_FIRE_EMP      215
 #define ID_BTN_QUICK_FIRE_PLASMA   216
 #define ID_BTN_QUICK_LAUNCH_DECOY  217
+#define ID_BTN_VIEW_AUDIO          218
+#define ID_BTN_TEST_SONAR_PING     219
+#define ID_BTN_TEST_WHALE_SONG     220
+#define ID_BTN_TEST_BALLAST_BLOW   221
+#define ID_BTN_TEST_HULL_GROAN     222
+#define ID_BTN_TEST_TORPEDO_LAUNCH 223
+#define ID_BTN_TEST_PLASMA_LAUNCH  224
+#define ID_BTN_TEST_SHOCKWAVE      225
+#define ID_BTN_TEST_EXPLOSION      226
+#define ID_BTN_TEST_DECOY          227
+#define ID_BTN_TEST_WELDING        228
+#define ID_BTN_TEST_ALARM          229
+#define ID_BTN_TEST_CENTRIFUGE     230
 
 typedef enum {
     THEME_ABYSS = 0,
@@ -812,13 +825,17 @@ void PlayMineralChime(void);
 void PlayLabCentrifuge(void);
 void PlayResearchBreakthrough(void);
 void PlayDockingClamps(void);
-void PlayTradeChime(void);
 void PlayTorpedoLaunchSound(void);
 void PlayTorpedoExplosionSound(void);
 void PlayDecoySound(void);
 void PlayShockwaveSound(void);
+void PlayWhaleSong(void);
+void PlayHullPressureGroan(void);
+void PlayBallastBlowHiss(void);
+void PlayPlasmaLaunchSound(void);
 void DrawOutpostTradeView(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* th);
 void DrawCombatView(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* th);
+void DrawAudioView(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* th);
 void FireTorpedoTube(int tubeIdx);
 void CycleTubeOrdnance(int tubeIdx);
 void LaunchAcousticDecoy(void);
@@ -1041,6 +1058,64 @@ DWORD WINAPI ShockwaveSoundThreadProc(LPVOID lpParam) {
 void PlayShockwaveSound(void) {
     if (!g_sub.soundEnabled) return;
     CreateThread(NULL, 0, ShockwaveSoundThreadProc, NULL, 0, NULL);
+}
+
+DWORD WINAPI WhaleSongThreadProc(LPVOID lpParam) {
+    Beep(75, 200);
+    Sleep(20);
+    Beep(165, 250);
+    Sleep(20);
+    Beep(195, 220);
+    Sleep(20);
+    Beep(65, 300);
+    return 0;
+}
+
+void PlayWhaleSong(void) {
+    if (!g_sub.soundEnabled) return;
+    CreateThread(NULL, 0, WhaleSongThreadProc, NULL, 0, NULL);
+}
+
+DWORD WINAPI HullPressureGroanThreadProc(LPVOID lpParam) {
+    Beep(52, 180);
+    Sleep(15);
+    Beep(68, 220);
+    Sleep(15);
+    Beep(44, 280);
+    return 0;
+}
+
+void PlayHullPressureGroan(void) {
+    if (!g_sub.soundEnabled) return;
+    CreateThread(NULL, 0, HullPressureGroanThreadProc, NULL, 0, NULL);
+}
+
+DWORD WINAPI BallastBlowHissThreadProc(LPVOID lpParam) {
+    for (int i = 0; i < 5; i++) {
+        Beep(1400 - i * 220, 40);
+        Sleep(10);
+    }
+    Beep(170, 120);
+    return 0;
+}
+
+void PlayBallastBlowHiss(void) {
+    if (!g_sub.soundEnabled) return;
+    CreateThread(NULL, 0, BallastBlowHissThreadProc, NULL, 0, NULL);
+}
+
+DWORD WINAPI PlasmaLaunchThreadProc(LPVOID lpParam) {
+    Beep(600, 80);
+    Sleep(10);
+    Beep(420, 100);
+    Sleep(10);
+    Beep(180, 160);
+    return 0;
+}
+
+void PlayPlasmaLaunchSound(void) {
+    if (!g_sub.soundEnabled) return;
+    CreateThread(NULL, 0, PlasmaLaunchThreadProc, NULL, 0, NULL);
 }
 
 void AddLog(const char* text, COLORREF color) {
@@ -1574,7 +1649,7 @@ void UpdateSimulation(float dt) {
         }
 
         if ((rand() % 100) < 3) {
-            PlaySoundAsync(150, 200);
+            PlayHullPressureGroan();
             AddLog("CRUSH WARNING: Extreme hydrostatic pressure deforming hull!", th->accentRed);
         }
     }
@@ -2027,7 +2102,8 @@ void FireTorpedoTube(int tubeIdx) {
         torp->trailCount = 0;
     }
 
-    PlayTorpedoLaunchSound();
+    if (tube->type == 2) PlayPlasmaLaunchSound();
+    else PlayTorpedoLaunchSound();
     char lMsg[128];
     snprintf(lMsg, sizeof(lMsg), "🚀 TORPEDO LAUNCH: Tube #%d fired [%s]! Seeker acquiring target...", tube->id, ord->name);
     AddLog(lMsg, g_themes[g_sub.currentTheme].accentSonar);
@@ -3468,6 +3544,123 @@ void DrawCombatView(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* t
     }
 }
 
+// --- PHASE 13: ACOUSTIC HYDROPHONE & SOUND MATRIX VIEW ---
+typedef struct {
+    const char* name;
+    const char* badge;
+    COLORREF badgeClr;
+    const char* freq;
+    const char* desc;
+    int btnId;
+} AudioMatrixCard;
+
+static const AudioMatrixCard g_audioCards[12] = {
+    { "Active Sonar Ping & Echo", "ACOUSTIC PING", RGB(0, 240, 255), "1920 Hz -> 540 Hz (FM)", "High-frequency omnidirectional acoustic chirp with seabed reverberation.", ID_BTN_TEST_SONAR_PING },
+    { "Abyssal Whale & Leviathan Song", "CETACEAN BIO", RGB(52, 211, 153), "45 Hz - 380 Hz (Harmonics)", "Resonant multi-harmonic vocalization of deep baleen whales and titans.", ID_BTN_TEST_WHALE_SONG },
+    { "High-Pressure Ballast Blow", "PNEUMATIC HISS", RGB(245, 158, 11), "60 Hz - 1800 Hz (Noise)", "Supercritical 300-BAR compressed air blowing Kingston flood valves.", ID_BTN_TEST_BALLAST_BLOW },
+    { "Hull Hydrostatic Pressure Groan", "STRUCTURAL STRAIN", RGB(239, 68, 68), "40 Hz - 160 Hz (Sub-Bass)", "Metallic creak, shear stress resonance, and titanium lattice flex.", ID_BTN_TEST_HULL_GROAN },
+    { "Acoustic Torpedo Ejection", "ORDNANCE LAUNCH", RGB(0, 240, 255), "180 Hz - 720 Hz (Cavitation)", "Pneumatic launch tube piston impulse and supercavitating propeller wake.", ID_BTN_TEST_TORPEDO_LAUNCH },
+    { "Thermal Plasma Torpedo Flare", "THERMAL IGNITION", RGB(239, 68, 68), "180 Hz - 600 Hz (Thermal)", "High-energy superheated plasma ignition with bubble displacement.", ID_BTN_TEST_PLASMA_LAUNCH },
+    { "Hull EMP Shockwave Burst", "ELECTROMAGNETIC", RGB(0, 240, 255), "60 Hz - 1800 Hz (Shock)", "High-voltage electromagnetic pulse discharge radiating through water.", ID_BTN_TEST_SHOCKWAVE },
+    { "Undersea Depth Detonation", "EXPLOSIVE BLAST", RGB(239, 68, 68), "35 Hz - 120 Hz (Sub-Bass)", "Muffled underwater high-yield warhead blast and cavitation collapse.", ID_BTN_TEST_EXPLOSION },
+    { "Acoustic Decoy Cavitation", "COUNTERMEASURE", RGB(52, 211, 153), "400 Hz - 1400 Hz (Chitter)", "Micro-cavitation bubble generator simulating fake Doppler echoes.", ID_BTN_TEST_DECOY },
+    { "Bulkhead Arc Weld Torch", "PLASMA WELDING", RGB(245, 158, 11), "400 Hz - 1200 Hz (Crackle)", "High-temperature plasma welding torch sealing bulkhead fractures.", ID_BTN_TEST_WELDING },
+    { "Flood & Collision Klaxon", "SIREN ALERT", RGB(239, 68, 68), "440 Hz / 880 Hz (Dual Tone)", "Command sphere master caution klaxon warning of hull breach/grounding.", ID_BTN_TEST_ALARM },
+    { "Bio-Scan Sonar & Centrifuge", "LABORATORY BIO", RGB(52, 211, 153), "320 Hz - 2400 Hz (FM Chirp)", "High-definition bio-acoustic imaging chirp and research centrifuge.", ID_BTN_TEST_CENTRIFUGE }
+};
+
+void DrawAudioView(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* th) {
+    RECT rcBg = { x, y, x + w, y + h };
+    HBRUSH hBr = CreateSolidBrush(th->bgDeep);
+    FillRect(hdc, &rcBg, hBr);
+    DeleteObject(hBr);
+
+    SelectObject(hdc, g_hFontBold);
+    SetTextColor(hdc, th->accentSonar);
+    TextOutA(hdc, x + 8, y + 6, "ACOUSTIC HYDROPHONE & SOUND MATRIX // PASSIVE LISTENING ARRAY", 61);
+
+    // Oscilloscope Preview Box
+    int scopeH = 34;
+    int scopeY = y + 26;
+    RECT rcScope = { x + 6, scopeY, x + w - 6, scopeY + scopeH };
+    HBRUSH hBrSc = CreateSolidBrush(RGB(2, 11, 18));
+    HBRUSH hBrScB = CreateSolidBrush(th->borderPanel);
+    FillRect(hdc, &rcScope, hBrSc);
+    FrameRect(hdc, &rcScope, hBrScB);
+    DeleteObject(hBrSc);
+    DeleteObject(hBrScB);
+
+    HPEN hPenGrid = CreatePen(PS_DOT, 1, RGB(19, 60, 90));
+    HPEN hPenOld = (HPEN)SelectObject(hdc, hPenGrid);
+    MoveToEx(hdc, x + 6, scopeY + scopeH / 2, NULL);
+    LineTo(hdc, x + w - 6, scopeY + scopeH / 2);
+    DeleteObject(hPenGrid);
+
+    // Oscilloscope live waveform
+    HPEN hPenWave = CreatePen(PS_SOLID, 2, th->accentSonar);
+    SelectObject(hdc, hPenWave);
+    int midY = scopeY + scopeH / 2;
+    static float s_scopePhase = 0.0f;
+    s_scopePhase += 0.15f;
+    for (int px = x + 8; px < x + w - 8; px++) {
+        float normX = (float)(px - (x + 8)) / (float)(w - 16);
+        int wy = midY + (int)(sinf(normX * 22.0f + s_scopePhase) * 10.0f + sinf(normX * 45.0f - s_scopePhase * 1.5f) * 4.0f);
+        if (px == x + 8) MoveToEx(hdc, px, wy, NULL);
+        else LineTo(hdc, px, wy);
+    }
+    SelectObject(hdc, hPenOld);
+    DeleteObject(hPenWave);
+
+    SelectObject(hdc, g_hFontSmall);
+    SetTextColor(hdc, th->accentEmerald);
+    TextOutA(hdc, x + 12, scopeY + 4, "HYDROPHONE OSCILLOSCOPE [REALTIME]", 34);
+
+    // Grid of 12 Sound Cards (3 cols x 4 rows)
+    int cardsY = scopeY + scopeH + 6;
+    int cardsH = h - (cardsY - y) - 4;
+    int cols = 3;
+    int rows = 4;
+    int margin = 6;
+    int cardW = (w - margin * (cols + 1)) / cols;
+    int cardH = (cardsH - margin * (rows + 1)) / rows;
+
+    for (int i = 0; i < 12; i++) {
+        const AudioMatrixCard* c = &g_audioCards[i];
+        int col = i % cols;
+        int row = i / cols;
+        int cx = x + margin + col * (cardW + margin);
+        int cy = cardsY + margin + row * (cardH + margin);
+
+        RECT rcCard = { cx, cy, cx + cardW, cy + cardH };
+        HBRUSH hBrP = CreateSolidBrush(th->bgPanel);
+        HBRUSH hBrB = CreateSolidBrush(th->borderPanel);
+        FillRect(hdc, &rcCard, hBrP);
+        FrameRect(hdc, &rcCard, hBrB);
+        DeleteObject(hBrP);
+        DeleteObject(hBrB);
+
+        SelectObject(hdc, g_hFontBold);
+        SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, cx + 6, cy + 4, c->name, (int)strlen(c->name));
+
+        SelectObject(hdc, g_hFontSmall);
+        SetTextColor(hdc, c->badgeClr);
+        SIZE sz;
+        GetTextExtentPoint32A(hdc, c->badge, (int)strlen(c->badge), &sz);
+        TextOutA(hdc, cx + cardW - sz.cx - 6, cy + 4, c->badge, (int)strlen(c->badge));
+
+        SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, cx + 6, cy + 18, c->desc, (int)strlen(c->desc));
+
+        SetTextColor(hdc, th->accentSonar);
+        char fBuf[48];
+        snprintf(fBuf, sizeof(fBuf), "FREQ: %s", c->freq);
+        TextOutA(hdc, cx + 6, cy + 30, fBuf, (int)strlen(fBuf));
+
+        DrawCustomButton(hdc, c->btnId, cx + 6, cy + cardH - 20, cardW - 12, 17, "▶ EMIT SIGNATURE", 0, th->accentSonar, th);
+    }
+}
+
 void DrawUI(HDC hdc, RECT* rcClient) {
     int clientW = rcClient->right - rcClient->left;
     int clientH = rcClient->bottom - rcClient->top;
@@ -3646,8 +3839,8 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     snprintf(secTag, sizeof(secTag), "SECTOR: %s | SURVEY: %d PTS", g_sectors[g_sub.currentSectorIdx].name, g_sub.surveyPoints);
     DrawPanelBox(hdc, centerX, panelY, centerW, sonarH, "DEEP OCEAN & FAUNA EXPLORATION", secTag, th->accentEmerald, th);
 
-    // View switch buttons inside center panel header (9 views)
-    int btnViewW = (centerW - 132) / 9;
+    // View switch buttons inside center panel header (10 views)
+    int btnViewW = (centerW - 132) / 10;
     DrawCustomButton(hdc, ID_BTN_VIEW_SONAR, centerX + 8, panelY + 28, btnViewW - 2, 20, "SONAR", g_sub.viewMode == 0, th->accentSonar, th);
     DrawCustomButton(hdc, ID_BTN_VIEW_NAVMAP, centerX + 6 + btnViewW, panelY + 28, btnViewW - 2, 20, "TRENCH", g_sub.viewMode == 1, th->accentSonar, th);
     DrawCustomButton(hdc, ID_BTN_VIEW_CODEX, centerX + 4 + btnViewW * 2, panelY + 28, btnViewW - 2, 20, "CODEX", g_sub.viewMode == 2, th->accentSonar, th);
@@ -3657,6 +3850,7 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     DrawCustomButton(hdc, ID_BTN_VIEW_DAMAGE, centerX - 4 + btnViewW * 6, panelY + 28, btnViewW - 2, 20, "DAMAGE", g_sub.viewMode == 5, th->accentRed, th);
     DrawCustomButton(hdc, ID_BTN_VIEW_OUTPOSTS, centerX - 6 + btnViewW * 7, panelY + 28, btnViewW - 2, 20, "TRADE", g_sub.viewMode == 7, th->accentEmerald, th);
     DrawCustomButton(hdc, ID_BTN_VIEW_COMBAT, centerX - 8 + btnViewW * 8, panelY + 28, btnViewW - 2, 20, "COMBAT", g_sub.viewMode == 8, th->accentRed, th);
+    DrawCustomButton(hdc, ID_BTN_VIEW_AUDIO, centerX - 10 + btnViewW * 9, panelY + 28, btnViewW - 2, 20, "SOUND", g_sub.viewMode == 9, th->accentSonar, th);
     DrawCustomButton(hdc, ID_BTN_FIELD_DIAG, centerX + centerW - 124, panelY + 28, 116, 20, "+35 PTS DIAG", 0, th->accentAmber, th);
 
     int sonarContentY = panelY + 52;
@@ -3846,6 +4040,8 @@ void DrawUI(HDC hdc, RECT* rcClient) {
         DrawOutpostTradeView(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
     } else if (g_sub.viewMode == 8) {
         DrawCombatView(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
+    } else if (g_sub.viewMode == 9) {
+        DrawAudioView(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
     }
 
     SelectObject(hdc, g_hFontSmall);
@@ -4015,9 +4211,9 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
         if (mx >= clientW - 142 && mx <= clientW - 12) return ID_BTN_EMERGENCY_BLOW;
     }
 
-    // View toggles in center panel (9 buttons)
+    // View toggles in center panel (10 buttons)
     if (my >= panelY + 28 && my <= panelY + 48) {
-        int btnViewW = (centerW - 132) / 9;
+        int btnViewW = (centerW - 132) / 10;
         if (mx >= centerX + 8 && mx <= centerX + 8 + btnViewW - 2) return ID_BTN_VIEW_SONAR;
         if (mx >= centerX + 6 + btnViewW && mx <= centerX + 6 + btnViewW * 2 - 2) return ID_BTN_VIEW_NAVMAP;
         if (mx >= centerX + 4 + btnViewW * 2 && mx <= centerX + 4 + btnViewW * 3 - 2) return ID_BTN_VIEW_CODEX;
@@ -4027,7 +4223,38 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
         if (mx >= centerX - 4 + btnViewW * 6 && mx <= centerX - 4 + btnViewW * 7 - 2) return ID_BTN_VIEW_DAMAGE;
         if (mx >= centerX - 6 + btnViewW * 7 && mx <= centerX - 6 + btnViewW * 8 - 2) return ID_BTN_VIEW_OUTPOSTS;
         if (mx >= centerX - 8 + btnViewW * 8 && mx <= centerX - 8 + btnViewW * 9 - 2) return ID_BTN_VIEW_COMBAT;
+        if (mx >= centerX - 10 + btnViewW * 9 && mx <= centerX - 10 + btnViewW * 10 - 2) return ID_BTN_VIEW_AUDIO;
         if (mx >= centerX + centerW - 124 && mx <= centerX + centerW - 8) return ID_BTN_FIELD_DIAG;
+    }
+
+    // Audio Matrix View (viewMode 9) 12 sound buttons
+    if (g_sub.viewMode == 9) {
+        int sonarContentY = panelY + 52;
+        int sonarContentH = (panelH * 60) / 100 - 58;
+        int abX = centerX + 6;
+        int abY = sonarContentY + 4;
+        int abW = centerW - 12;
+
+        int scopeH = 34;
+        int scopeY = abY + 26;
+        int cardsY = scopeY + scopeH + 6;
+        int cardsH = sonarContentH - (cardsY - abY) - 4;
+        int cols = 3;
+        int rows = 4;
+        int margin = 6;
+        int cardW = (abW - margin * (cols + 1)) / cols;
+        int cardH = (cardsH - margin * (rows + 1)) / rows;
+
+        for (int i = 0; i < 12; i++) {
+            int col = i % cols;
+            int row = i / cols;
+            int cx = abX + margin + col * (cardW + margin);
+            int cy = cardsY + margin + row * (cardH + margin);
+
+            if (my >= cy + cardH - 20 && my <= cy + cardH - 3 && mx >= cx + 6 && mx <= cx + cardW - 6) {
+                return g_audioCards[i].btnId;
+            }
+        }
     }
 
     // HUD buttons in Sonar view
@@ -4464,6 +4691,71 @@ void HandleCommand(int cmdId) {
         case ID_BTN_VIEW_COMBAT:
             g_sub.viewMode = 8;
             PlaySoundAsync(600, 80);
+            break;
+
+        case ID_BTN_VIEW_AUDIO:
+            g_sub.viewMode = 9;
+            PlaySoundAsync(720, 80);
+            break;
+
+        case ID_BTN_TEST_SONAR_PING:
+            PlaySoundAsync(1920, 250);
+            AddLog("Acoustic hydrophone test: Active Sonar Ping & Echo.", th->accentSonar);
+            break;
+
+        case ID_BTN_TEST_WHALE_SONG:
+            PlayWhaleSong();
+            AddLog("Acoustic hydrophone test: Abyssal Whale & Leviathan Song.", th->accentEmerald);
+            break;
+
+        case ID_BTN_TEST_BALLAST_BLOW:
+            PlayBallastBlowHiss();
+            AddLog("Acoustic hydrophone test: High-Pressure Ballast Blow Hiss.", th->accentAmber);
+            break;
+
+        case ID_BTN_TEST_HULL_GROAN:
+            PlayHullPressureGroan();
+            AddLog("Acoustic hydrophone test: Hydrostatic Hull Pressure Groan.", th->accentRed);
+            break;
+
+        case ID_BTN_TEST_TORPEDO_LAUNCH:
+            PlayTorpedoLaunchSound();
+            AddLog("Acoustic hydrophone test: Torpedo Ejection & Propeller Cavitation.", th->accentSonar);
+            break;
+
+        case ID_BTN_TEST_PLASMA_LAUNCH:
+            PlayPlasmaLaunchSound();
+            AddLog("Acoustic hydrophone test: Thermal Plasma Torpedo Flare.", th->accentRed);
+            break;
+
+        case ID_BTN_TEST_SHOCKWAVE:
+            PlayShockwaveSound();
+            AddLog("Acoustic hydrophone test: Hull EMP Shockwave Burst.", th->accentSonar);
+            break;
+
+        case ID_BTN_TEST_EXPLOSION:
+            PlayTorpedoExplosionSound();
+            AddLog("Acoustic hydrophone test: Undersea Depth Detonation Shockwave.", th->accentRed);
+            break;
+
+        case ID_BTN_TEST_DECOY:
+            PlayDecoySound();
+            AddLog("Acoustic hydrophone test: Acoustic Decoy & Cavitation Screen.", th->accentEmerald);
+            break;
+
+        case ID_BTN_TEST_WELDING:
+            PlayWeldingSound();
+            AddLog("Acoustic hydrophone test: Damage Control Bulkhead Arc Weld.", th->accentAmber);
+            break;
+
+        case ID_BTN_TEST_ALARM:
+            PlayAlarmKlaxon();
+            AddLog("Acoustic hydrophone test: Flood & Collision Siren Alert.", th->accentRed);
+            break;
+
+        case ID_BTN_TEST_CENTRIFUGE:
+            PlayLabCentrifuge();
+            AddLog("Acoustic hydrophone test: Laboratory Centrifuge & Bio-Imaging.", th->accentEmerald);
             break;
 
         case ID_BTN_FIRE_TUBE_0:
@@ -5204,7 +5496,7 @@ void HandleCommand(int cmdId) {
             if (g_sub.airReservoir > 5.0f && g_sub.ballast > 0.0f) {
                 g_sub.ballast = max(0.0f, g_sub.ballast - g_sub.ballastStepRate);
                 g_sub.airReservoir = max(0.0f, g_sub.airReservoir - 8.0f);
-                PlaySoundAsync(600, 180);
+                PlayBallastBlowHiss();
                 snprintf(msg, sizeof(msg), "HP air blown: Ballast %.0f%%, Air Res: %.0f BAR.", g_sub.ballast, g_sub.airReservoir);
                 AddLog(msg, th->accentEmerald);
             } else if (g_sub.airReservoir <= 5.0f) {
@@ -5240,7 +5532,7 @@ void HandleCommand(int cmdId) {
                 for (int i = 0; i < fCount; i++) {
                     FaunaAnomaly* f = &g_fauna[secFauna[i]];
                     if (f->type == 4 && (rand() % 100) < 50) {
-                        PlayLeviathanHarmonic();
+                        PlayWhaleSong();
                     }
                 }
             }
@@ -5307,7 +5599,7 @@ void HandleCommand(int cmdId) {
                 g_sub.o2PurgeCount--;
                 g_sub.o2 = min(100.0f, g_sub.o2 + 25.0f);
                 g_sub.co2 = max(0.04f, g_sub.co2 - 0.5f);
-                PlaySoundAsync(750, 200);
+                PlayBallastBlowHiss();
                 snprintf(msg, sizeof(msg), "Emergency O2 canister purged! O2: %.1f%% (%d left).", g_sub.o2, g_sub.o2PurgeCount);
                 AddLog(msg, th->accentEmerald);
             } else {
@@ -5334,6 +5626,7 @@ void HandleCommand(int cmdId) {
             g_sub.ballast = 0.0f;
             g_sub.pitch = 10.0f;
             g_sub.airReservoir = max(0.0f, g_sub.airReservoir - 50.0f);
+            PlayBallastBlowHiss();
             PlaySoundAsync(700, 300);
             AddLog("EMERGENCY MAIN BALLAST BLOW EXECUTED! Maximum positive ascent!", th->accentRed);
             break;
