@@ -499,10 +499,232 @@ BOOL CALLBACK SetFontProc(HWND child, LPARAM hFont) {
     return TRUE;
 }
 
+// Fast integer trigonometry (0..360 deg -> -1000..1000)
+int isin(int deg) {
+    deg = (deg % 360 + 360) % 360;
+    if (deg > 180) return -isin(deg - 180);
+    int prod = deg * (180 - deg);
+    return (4 * prod * 1000) / (40500 - prod);
+}
+
+int icos(int deg) {
+    return isin(deg + 90);
+}
+
+static unsigned int g_rng = 0x12345678;
+unsigned int k_rand() {
+    g_rng = g_rng * 1664525u + 1013904223u;
+    return g_rng;
+}
+
+// Particle & FX Engine Structures
+typedef struct {
+    int active;
+    int layer; // 1: needle spark, 2: buoyant puff, 3: binary shard, 4: star
+    int x, y;   // fixed point * 10
+    int vx, vy; // fixed point * 10
+    int life;
+    int decay;
+    int size;
+    int rot, vRot;
+    COLORREF color;
+    char text[4];
+} GdiParticle;
+
+#define MAX_PARTICLES 96
+static GdiParticle g_particles[MAX_PARTICLES];
+
+typedef struct {
+    int active;
+    int x, y;
+    int innerRadius, outerRadius;
+    int innerSpeed, outerSpeed;
+    int maxRadius;
+    int life, decay;
+    COLORREF color;
+} GdiShockwave;
+
+#define MAX_SHOCKWAVES 8
+static GdiShockwave g_shockwaves[MAX_SHOCKWAVES];
+
+typedef struct {
+    int x, y;
+    int vx, vy;
+    int phase;
+    char ch;
+    COLORREF color;
+} GdiMote;
+
+#define MAX_MOTES 20
+static GdiMote g_motes[MAX_MOTES];
+static int g_motesInit = 0;
+
+static int g_shake = 0;
+
+void TriggerShake(int amt) {
+    g_shake += amt;
+    if (g_shake > 18) g_shake = 18;
+}
+
+void SpawnParticles(int x, int y, COLORREF colorScheme, int count) {
+    TriggerShake(count / 4 + 2);
+    int i, pIdx = 0;
+    const char* shards[6] = { "0x", "FF", "00", "1", "0", "A5" };
+
+    // Layer 1: Needle sparks
+    for (i = 0; i < count; i++) {
+        for (; pIdx < MAX_PARTICLES; pIdx++) {
+            if (!g_particles[pIdx].active) break;
+        }
+        if (pIdx >= MAX_PARTICLES) break;
+        int deg = (k_rand() % 360);
+        int spd = 30 + (k_rand() % 50);
+        g_particles[pIdx].active = 1;
+        g_particles[pIdx].layer = 1;
+        g_particles[pIdx].x = x * 10;
+        g_particles[pIdx].y = y * 10;
+        g_particles[pIdx].vx = (icos(deg) * spd) / 1000;
+        g_particles[pIdx].vy = (isin(deg) * spd) / 1000;
+        g_particles[pIdx].life = 100;
+        g_particles[pIdx].decay = 4 + (k_rand() % 4);
+        g_particles[pIdx].color = colorScheme;
+        g_particles[pIdx].size = 4 + (k_rand() % 6);
+    }
+
+    // Layer 2: Buoyant puffs
+    for (i = 0; i < count / 2; i++) {
+        for (; pIdx < MAX_PARTICLES; pIdx++) {
+            if (!g_particles[pIdx].active) break;
+        }
+        if (pIdx >= MAX_PARTICLES) break;
+        int deg = (k_rand() % 360);
+        int spd = 10 + (k_rand() % 25);
+        g_particles[pIdx].active = 1;
+        g_particles[pIdx].layer = 2;
+        g_particles[pIdx].x = x * 10;
+        g_particles[pIdx].y = y * 10;
+        g_particles[pIdx].vx = (icos(deg) * spd) / 1000;
+        g_particles[pIdx].vy = (isin(deg) * spd) / 1000 - 8;
+        g_particles[pIdx].life = 100;
+        g_particles[pIdx].decay = 3 + (k_rand() % 3);
+        g_particles[pIdx].color = colorScheme;
+        g_particles[pIdx].size = 6 + (k_rand() % 8);
+    }
+
+    // Layer 3: Binary shards
+    for (i = 0; i < count / 3; i++) {
+        for (; pIdx < MAX_PARTICLES; pIdx++) {
+            if (!g_particles[pIdx].active) break;
+        }
+        if (pIdx >= MAX_PARTICLES) break;
+        int deg = (k_rand() % 360);
+        int spd = 20 + (k_rand() % 40);
+        g_particles[pIdx].active = 1;
+        g_particles[pIdx].layer = 3;
+        g_particles[pIdx].x = x * 10;
+        g_particles[pIdx].y = y * 10;
+        g_particles[pIdx].vx = (icos(deg) * spd) / 1000;
+        g_particles[pIdx].vy = (isin(deg) * spd) / 1000 - 15;
+        g_particles[pIdx].life = 100;
+        g_particles[pIdx].decay = 2 + (k_rand() % 3);
+        g_particles[pIdx].color = RGB(103, 232, 249);
+        const char* txt = shards[k_rand() % 6];
+        g_particles[pIdx].text[0] = txt[0];
+        g_particles[pIdx].text[1] = txt[1];
+        g_particles[pIdx].text[2] = txt[2];
+        g_particles[pIdx].text[3] = 0;
+    }
+
+    // Layer 4: Celebration stars
+    for (i = 0; i < count / 4; i++) {
+        for (; pIdx < MAX_PARTICLES; pIdx++) {
+            if (!g_particles[pIdx].active) break;
+        }
+        if (pIdx >= MAX_PARTICLES) break;
+        int deg = (k_rand() % 360);
+        int spd = 15 + (k_rand() % 35);
+        g_particles[pIdx].active = 1;
+        g_particles[pIdx].layer = 4;
+        g_particles[pIdx].x = x * 10;
+        g_particles[pIdx].y = y * 10;
+        g_particles[pIdx].vx = (icos(deg) * spd) / 1000;
+        g_particles[pIdx].vy = (isin(deg) * spd) / 1000;
+        g_particles[pIdx].life = 100;
+        g_particles[pIdx].decay = 3;
+        g_particles[pIdx].rot = k_rand() % 360;
+        g_particles[pIdx].vRot = 10 + (k_rand() % 15);
+        g_particles[pIdx].color = RGB(254, 240, 138);
+        g_particles[pIdx].size = 5 + (k_rand() % 5);
+    }
+}
+
+void SpawnShockwave(int x, int y, COLORREF color) {
+    int i;
+    for (i = 0; i < MAX_SHOCKWAVES; i++) {
+        if (!g_shockwaves[i].active) {
+            g_shockwaves[i].active = 1;
+            g_shockwaves[i].x = x;
+            g_shockwaves[i].y = y;
+            g_shockwaves[i].innerRadius = 4;
+            g_shockwaves[i].outerRadius = 6;
+            g_shockwaves[i].innerSpeed = 8;
+            g_shockwaves[i].outerSpeed = 5;
+            g_shockwaves[i].maxRadius = 60;
+            g_shockwaves[i].life = 100;
+            g_shockwaves[i].decay = 5;
+            g_shockwaves[i].color = color;
+            break;
+        }
+    }
+}
+
+void DrawCyberHudBracket(HDC hdc, int x, int y, int w, int h, COLORREF color) {
+    HPEN hPen = CreatePen(PS_SOLID, 2, color);
+    HPEN hOld = (HPEN)SelectObject(hdc, hPen);
+    int arm = 8;
+    // Top-Left
+    MoveToEx(hdc, x, y + arm, NULL); LineTo(hdc, x, y); LineTo(hdc, x + arm, y);
+    // Top-Right
+    MoveToEx(hdc, x + w - arm, y, NULL); LineTo(hdc, x + w, y); LineTo(hdc, x + w, y + arm);
+    // Bottom-Left
+    MoveToEx(hdc, x, y + h - arm, NULL); LineTo(hdc, x, y + h); LineTo(hdc, x + arm, y + h);
+    // Bottom-Right
+    MoveToEx(hdc, x + w - arm, y + h, NULL); LineTo(hdc, x + w, y + h); LineTo(hdc, x + w, y + h - arm);
+    
+    // Gold Rivet Accents
+    SetPixel(hdc, x + 2, y + 2, RGB(245, 158, 11));
+    SetPixel(hdc, x + w - 3, y + 2, RGB(245, 158, 11));
+    SetPixel(hdc, x + 2, y + h - 3, RGB(245, 158, 11));
+    SetPixel(hdc, x + w - 3, y + h - 3, RGB(245, 158, 11));
+
+    SelectObject(hdc, hOld);
+    DeleteObject(hPen);
+}
+
+void DrawGdiStar(HDC hdc, int cx, int cy, int size, int rotDeg, COLORREF color) {
+    POINT pts[8];
+    int i;
+    for (i = 0; i < 8; i++) {
+        int r = (i % 2 == 0) ? size : (size / 2);
+        int a = rotDeg + i * 45;
+        pts[i].x = cx + (icos(a) * r) / 1000;
+        pts[i].y = cy + (isin(a) * r) / 1000;
+    }
+    HPEN hPen = CreatePen(PS_SOLID, 1, color);
+    HBRUSH hBrush = CreateSolidBrush(color);
+    HPEN hOldP = (HPEN)SelectObject(hdc, hPen);
+    HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hBrush);
+    Polygon(hdc, pts, 8);
+    SelectObject(hdc, hOldP);
+    SelectObject(hdc, hOldB);
+    DeleteObject(hPen);
+    DeleteObject(hBrush);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            SetTimer(hwnd, 1, 50, NULL);
+            SetTimer(hwnd, 1, 33, NULL); // 30 FPS smooth animation loop
             HDC hdc = GetDC(NULL);
             int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
             ReleaseDC(NULL, hdc);
@@ -595,6 +817,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             CreateWindowEx(0, "STATIC", "Shortcuts: F1 (Help), Ctrl+E (Endian), Ctrl+1..7 (Operations)", WS_CHILD | WS_VISIBLE, 10, 665, 400, 16, hwnd, NULL, NULL, NULL);
 
+            // Initialize Motes
+            if (!g_motesInit) {
+                g_motesInit = 1;
+                int m;
+                const char mChars[6] = { '0', '1', 'x', 'F', 'A', '•' };
+                for (m = 0; m < MAX_MOTES; m++) {
+                    g_motes[m].x = k_rand() % W;
+                    g_motes[m].y = k_rand() % 100;
+                    g_motes[m].vx = (k_rand() % 3) - 1;
+                    g_motes[m].vy = -1 - (k_rand() % 2);
+                    g_motes[m].phase = k_rand() % 360;
+                    g_motes[m].ch = mChars[k_rand() % 6];
+                    g_motes[m].color = (m % 2 == 0) ? RGB(6, 182, 212) : RGB(59, 130, 246);
+                }
+            }
+
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
             UpdateFields(hHex);
             break;
@@ -611,21 +849,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     isLittleEndian = !isLittleEndian;
                     SetWindowTextA(hEndianBtn, isLittleEndian ? "Endian: LE [^E]" : "Endian: BE [^E]");
                     UpdateInspector(GetCurrentVal());
+                    SpawnParticles(380, 115, RGB(6, 182, 212), 24);
+                    SpawnShockwave(380, 115, RGB(6, 182, 212));
                 } else if (id == ID_BTN_SWAP16) {
                     SetCurrentVal(swap16(GetCurrentVal()));
+                    SpawnParticles(50, 315, RGB(139, 92, 246), 24);
+                    SpawnShockwave(50, 315, RGB(139, 92, 246));
                 } else if (id == ID_BTN_SWAP32) {
                     SetCurrentVal(swap32(GetCurrentVal()));
+                    SpawnParticles(135, 315, RGB(139, 92, 246), 24);
+                    SpawnShockwave(135, 315, RGB(139, 92, 246));
                 } else if (id == ID_BTN_INVERT) {
                     SetCurrentVal(~GetCurrentVal());
+                    SpawnParticles(215, 315, RGB(245, 158, 11), 24);
+                    SpawnShockwave(215, 315, RGB(245, 158, 11));
                 } else if (id == ID_BTN_XORMASK) {
                     SetCurrentVal(GetCurrentVal() ^ 0xFFFFFFFF);
+                    SpawnParticles(300, 315, RGB(245, 158, 11), 24);
+                    SpawnShockwave(300, 315, RGB(245, 158, 11));
                 } else if (id == ID_BTN_CARRAY) {
                     ExportCArray(GetCurrentVal());
+                    SpawnParticles(385, 315, RGB(16, 185, 129), 24);
+                    SpawnShockwave(385, 315, RGB(16, 185, 129));
                 } else if (id == ID_BTN_DUMP) {
                     ExportHexDump(GetCurrentVal());
+                    SpawnParticles(470, 315, RGB(59, 130, 246), 24);
+                    SpawnShockwave(470, 315, RGB(59, 130, 246));
                 } else if (id == ID_BTN_DISSECT) {
                     ExportDissection(GetCurrentVal());
+                    SpawnParticles(590, 315, RGB(6, 182, 212), 32);
+                    SpawnShockwave(590, 315, RGB(6, 182, 212));
                 } else if (id == 100) {
+                    SpawnParticles(780, 20, RGB(6, 182, 212), 24);
                     ShowHelpDialog(hwnd);
                 }
             }
@@ -645,7 +900,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_TIMER: {
             if (wParam == 1) {
-                RECT rect = {680, 0, 740, 50};
+                // Update particles
+                int p;
+                for (p = 0; p < MAX_PARTICLES; p++) {
+                    if (g_particles[p].active) {
+                        g_particles[p].x += g_particles[p].vx;
+                        g_particles[p].y += g_particles[p].vy;
+                        if (g_particles[p].layer == 3) {
+                            g_particles[p].vy += 2; // gravity
+                        }
+                        g_particles[p].life -= g_particles[p].decay;
+                        if (g_particles[p].life <= 0) g_particles[p].active = 0;
+                    }
+                }
+                // Update shockwaves
+                int s;
+                for (s = 0; s < MAX_SHOCKWAVES; s++) {
+                    if (g_shockwaves[s].active) {
+                        g_shockwaves[s].innerRadius += g_shockwaves[s].innerSpeed;
+                        g_shockwaves[s].outerRadius += g_shockwaves[s].outerSpeed;
+                        g_shockwaves[s].life -= g_shockwaves[s].decay;
+                        if (g_shockwaves[s].life <= 0 || g_shockwaves[s].innerRadius >= g_shockwaves[s].maxRadius) {
+                            g_shockwaves[s].active = 0;
+                        }
+                    }
+                }
+                // Screen shake decay
+                if (g_shake > 0) g_shake--;
+
+                // Trigger repaint of top banner / particle area
+                RECT rect = {0, 0, W, 100};
                 InvalidateRect(hwnd, &rect, FALSE);
             }
             break;
@@ -666,38 +950,151 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
-            
-            // Draw a custom GDI Hexagon as a logo
+
+            // Double-buffer top banner area
+            int bannerW = W;
+            int bannerH = 100;
+            HDC memDC = CreateCompatibleDC(hdc);
+            HBITMAP memBM = CreateCompatibleBitmap(hdc, bannerW, bannerH);
+            HBITMAP oldBM = (HBITMAP)SelectObject(memDC, memBM);
+
+            // Background Fill
+            HBRUSH bgB = CreateSolidBrush(RGB(15, 23, 42));
+            RECT rcBg = { 0, 0, bannerW, bannerH };
+            FillRect(memDC, &rcBg, bgB);
+            DeleteObject(bgB);
+
+            // Cyber HUD Corner Filigree Brackets on banner frame
+            DrawCyberHudBracket(memDC, 6, 4, 830, 92, RGB(6, 182, 212));
+
+            // Animated Traveling Specular Glint along top border
+            DWORD ticks = GetTickCount();
+            int glintX = (int)((ticks / 10) % (bannerW + 200)) - 100;
+            HPEN hGlintPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+            HPEN oldGP = (HPEN)SelectObject(memDC, hGlintPen);
+            MoveToEx(memDC, glintX - 30, 4, NULL);
+            LineTo(memDC, glintX + 30, 4);
+            SelectObject(memDC, oldGP);
+            DeleteObject(hGlintPen);
+
+            // Ambient Floating Cyber Dust / Matrix Motes
+            int m;
+            SetBkMode(memDC, TRANSPARENT);
+            for (m = 0; m < MAX_MOTES; m++) {
+                g_motes[m].y += g_motes[m].vy;
+                g_motes[m].phase = (g_motes[m].phase + 3) % 360;
+                if (g_motes[m].y < 5) {
+                    g_motes[m].y = bannerH - 10;
+                    g_motes[m].x = k_rand() % bannerW;
+                }
+                int curX = g_motes[m].x + (isin(g_motes[m].phase) * 6) / 1000;
+                SetTextColor(memDC, g_motes[m].color);
+                char str[2] = { g_motes[m].ch, 0 };
+                TextOutA(memDC, curX, g_motes[m].y, str, 1);
+            }
+
+            // Draw Rotating / Pulsing 3D Hexagon Logo with Specular Sheen
+            int phase = (ticks / 40) % 360;
+            int offset = isin(phase) / 100; // -10 to +10
+
             HPEN hPen = CreatePen(PS_SOLID, 2, RGB(6, 182, 212));
             HBRUSH hBrush = CreateSolidBrush(RGB(59, 130, 246));
-            HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
-            HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hBrush);
-            
-            DWORD ticks = GetTickCount();
-            int phase = (ticks / 50) % 20;
-            int offset = phase;
-            if (offset > 10) offset = 20 - offset;
-            offset = (offset / 2) - 2;
-            
-            POINT hexPts[6] = {
-                { 710, 10 - offset },
-                { 725 + offset, 18 - offset/2 },
-                { 725 + offset, 34 + offset/2 },
-                { 710, 42 + offset },
-                { 695 - offset, 34 + offset/2 },
-                { 695 - offset, 18 - offset/2 }
-            };
-            Polygon(hdc, hexPts, 6);
-            
-            SetTextColor(hdc, RGB(255, 255, 255));
-            SetBkMode(hdc, TRANSPARENT);
-            TextOutA(hdc, 703, 18, "0x", 2);
+            HPEN hOldPen = (HPEN)SelectObject(memDC, hPen);
+            HBRUSH hOldBrush = (HBRUSH)SelectObject(memDC, hBrush);
 
-            SelectObject(hdc, hOldPen);
-            SelectObject(hdc, hOldBrush);
+            POINT hexPts[6] = {
+                { 710, 15 - offset },
+                { 728 + offset, 25 - offset / 2 },
+                { 728 + offset, 45 + offset / 2 },
+                { 710, 55 + offset },
+                { 692 - offset, 45 + offset / 2 },
+                { 692 - offset, 25 - offset / 2 }
+            };
+            Polygon(memDC, hexPts, 6);
+
+            // Specular sheen sweep line on hexagon
+            HPEN hSheen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+            SelectObject(memDC, hSheen);
+            MoveToEx(memDC, 698 - offset, 28, NULL);
+            LineTo(memDC, 722 + offset, 38);
+            DeleteObject(hSheen);
+
+            SetTextColor(memDC, RGB(255, 255, 255));
+            TextOutA(memDC, 703, 27, "0x", 2);
+
+            SelectObject(memDC, hOldPen);
+            SelectObject(memDC, hOldBrush);
             DeleteObject(hPen);
             DeleteObject(hBrush);
-            
+
+            // Dual-Tier Concentric Shockwaves
+            int s;
+            for (s = 0; s < MAX_SHOCKWAVES; s++) {
+                if (g_shockwaves[s].active && g_shockwaves[s].y < bannerH + 50) {
+                    HPEN hSw1 = CreatePen(PS_SOLID, 2, g_shockwaves[s].color);
+                    HPEN oldSw = (HPEN)SelectObject(memDC, hSw1);
+                    HBRUSH oldBr = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                    
+                    // Outer halo
+                    int or = g_shockwaves[s].outerRadius;
+                    Ellipse(memDC, g_shockwaves[s].x - or, g_shockwaves[s].y - or, g_shockwaves[s].x + or, g_shockwaves[s].y + or);
+                    
+                    // Inner compression ring
+                    HPEN hSw2 = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+                    SelectObject(memDC, hSw2);
+                    int ir = g_shockwaves[s].innerRadius;
+                    Ellipse(memDC, g_shockwaves[s].x - ir, g_shockwaves[s].y - ir, g_shockwaves[s].x + ir, g_shockwaves[s].y + ir);
+
+                    SelectObject(memDC, oldSw);
+                    SelectObject(memDC, oldBr);
+                    DeleteObject(hSw1);
+                    DeleteObject(hSw2);
+                }
+            }
+
+            // Multi-Layer Active Particles
+            int p;
+            for (p = 0; p < MAX_PARTICLES; p++) {
+                if (g_particles[p].active && g_particles[p].y / 10 < bannerH + 40) {
+                    int px = g_particles[p].x / 10;
+                    int py = g_particles[p].y / 10;
+                    if (g_particles[p].layer == 1) {
+                        // Needle Spark
+                        HPEN hSp = CreatePen(PS_SOLID, 2, g_particles[p].color);
+                        HPEN oldSp = (HPEN)SelectObject(memDC, hSp);
+                        MoveToEx(memDC, px, py, NULL);
+                        LineTo(memDC, px - g_particles[p].vx / 8, py - g_particles[p].vy / 8);
+                        SelectObject(memDC, oldSp);
+                        DeleteObject(hSp);
+                    } else if (g_particles[p].layer == 2) {
+                        // Buoyant Puff
+                        HBRUSH hPf = CreateSolidBrush(g_particles[p].color);
+                        HBRUSH oldPf = (HBRUSH)SelectObject(memDC, hPf);
+                        int sz = g_particles[p].size / 2;
+                        Ellipse(memDC, px - sz, py - sz, px + sz, py + sz);
+                        SelectObject(memDC, oldPf);
+                        DeleteObject(hPf);
+                    } else if (g_particles[p].layer == 3) {
+                        // Binary Shard Text
+                        SetTextColor(memDC, g_particles[p].color);
+                        TextOutA(memDC, px, py, g_particles[p].text, 2);
+                    } else if (g_particles[p].layer == 4) {
+                        // Celebration Star
+                        DrawGdiStar(memDC, px, py, g_particles[p].size, g_particles[p].rot, g_particles[p].color);
+                    }
+                }
+            }
+
+            // Apply Screen Shake Viewport Offset to BitBlt
+            int shakeX = (g_shake > 0) ? (k_rand() % (g_shake * 2 + 1)) - g_shake : 0;
+            int shakeY = (g_shake > 0) ? (k_rand() % (g_shake * 2 + 1)) - g_shake : 0;
+
+            BitBlt(hdc, shakeX, shakeY, bannerW, bannerH, memDC, 0, 0, SRCCOPY);
+
+            SelectObject(memDC, oldBM);
+            DeleteObject(memBM);
+            DeleteDC(memDC);
+
             EndPaint(hwnd, &ps);
             break;
         }

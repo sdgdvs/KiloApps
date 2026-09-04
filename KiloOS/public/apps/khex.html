@@ -552,9 +552,88 @@
     from { opacity: 1; transform: translateY(0) scale(1); }
     to { opacity: 0; transform: translateY(10px) scale(0.95); }
   }
+
+  /* Cybernetic HUD Corner Filigree L-Brackets & Tech Borders */
+  .panel, .header, .hex-container, .inspector-item, .output-box {
+    position: relative;
+  }
+
+  .panel::before, .header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(6, 182, 212, 0.8) 50%, transparent 100%);
+    pointer-events: none;
+  }
+
+  /* Pulsating Energy Perimeter & Traveling Specular Glint */
+  @keyframes glintTravel {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .header, .panel {
+    background-image: linear-gradient(115deg, transparent 0%, rgba(6, 182, 212, 0.04) 45%, rgba(255, 255, 255, 0.12) 50%, rgba(6, 182, 212, 0.04) 55%, transparent 100%);
+    background-size: 250% 100%;
+    animation: glintTravel 8s ease-in-out infinite;
+  }
+
+  /* Sculpted Diagonal Specular Sheen Sweep on Interactive Elements */
+  @keyframes sheenSweep {
+    0% { transform: translateX(-100%) rotate(25deg); }
+    30%, 100% { transform: translateX(200%) rotate(25deg); }
+  }
+
+  .btn, .tab-btn.active, .inspector-item {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn::after, .tab-btn.active::after {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%; width: 200%; height: 200%;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.15) 50%, transparent 100%);
+    transform: translateX(-100%) rotate(25deg);
+    pointer-events: none;
+  }
+
+  .btn:hover::after, .tab-btn.active::after {
+    animation: sheenSweep 2.5s infinite;
+  }
+
+  /* Cyber HUD Corner Notches */
+  .hud-bracket {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    pointer-events: none;
+    border-color: var(--accent-cyan);
+    border-style: solid;
+  }
+  .hud-tl { top: -1px; left: -1px; border-width: 2px 0 0 2px; border-top-left-radius: 4px; }
+  .hud-tr { top: -1px; right: -1px; border-width: 2px 2px 0 0; border-top-right-radius: 4px; }
+  .hud-bl { bottom: -1px; left: -1px; border-width: 0 0 2px 2px; border-bottom-left-radius: 4px; }
+  .hud-br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; border-bottom-right-radius: 4px; }
+
+  /* App Wrapper for Physics Screen Shake */
+  #appWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+    min-height: 100vh;
+    transform-origin: center center;
+    transition: transform 0.05s ease-out;
+  }
 </style>
 </head>
 <body>
+
+  <!-- Fullscreen High-Performance FX Canvas Layer -->
+  <canvas id="fxCanvas" style="position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:9990;"></canvas>
+
+  <div id="appWrapper">
 
   <!-- Toast Container -->
   <div id="toastContainer"></div>
@@ -1842,20 +1921,347 @@
     let blob = new Blob([binaryBuffer], { type: 'application/octet-stream' });
     let a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'khex_export.bin';
-    a.click();
-    showToast('Download Started', `Exporting "khex_export.bin" (${binaryBuffer.length.toLocaleString()} bytes).`, 'success');
+  // ==========================================
+  // HIGH-PERFORMANCE FX & PARTICLE ENGINE
+  // ==========================================
+  const fxCanvas = document.getElementById('fxCanvas');
+  const fxCtx = fxCanvas.getContext('2d');
+  const appWrapper = document.getElementById('appWrapper');
+
+  function resizeFxCanvas() {
+    fxCanvas.width = window.innerWidth;
+    fxCanvas.height = window.innerHeight;
   }
+  window.addEventListener('resize', resizeFxCanvas);
+  resizeFxCanvas();
+
+  // Screen Shake State
+  let shakeTraX = 0;
+  let shakeTraY = 0;
+  let shakeRot = 0;
+  let shakeIntensity = 0;
+
+  function triggerScreenShake(intensity = 6, rotMult = 0.005) {
+    shakeIntensity = Math.min(shakeIntensity + intensity, 25);
+    shakeRot = (Math.random() - 0.5) * rotMult * shakeIntensity;
+  }
+
+  // Particle Pools
+  const particles = [];
+  const shockwaves = [];
+  const ambientMotes = [];
+
+  // Initialize Ambient Cyber Dust Motes
+  const MOTE_COUNT = 45;
+  for (let i = 0; i < MOTE_COUNT; i++) {
+    ambientMotes.push({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: -0.2 - Math.random() * 0.5,
+      size: 1.5 + Math.random() * 2.5,
+      alpha: 0.2 + Math.random() * 0.5,
+      pulseSpeed: 0.02 + Math.random() * 0.03,
+      pulsePhase: Math.random() * Math.PI * 2,
+      char: ['0', '1', 'x', 'F', 'A', '7', 'C', '•'][Math.floor(Math.random() * 8)],
+      color: Math.random() > 0.4 ? 'rgba(6, 182, 212, ' : 'rgba(59, 130, 246, '
+    });
+  }
+
+  // 4-Layer Kinematic Particle Explosion Spawner
+  function spawnParticleExplosion(x, y, colorScheme = 'cyan', count = 28) {
+    triggerScreenShake(Math.min(count * 0.3, 10));
+
+    // Layer 1: Incandescent Core Needle Sparks
+    const sparkCount = Math.floor(count * 0.8);
+    for (let i = 0; i < sparkCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 4 + Math.random() * 9;
+      particles.push({
+        layer: 1,
+        x: x,
+        y: y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        drag: 0.92,
+        length: 8 + Math.random() * 12,
+        color: colorScheme === 'gold' ? '#f59e0b' : colorScheme === 'purple' ? '#a78bfa' : colorScheme === 'emerald' ? '#34d399' : '#38bdf8',
+        life: 1.0,
+        decay: 0.035 + Math.random() * 0.03
+      });
+    }
+
+    // Layer 2: Expanding Buoyant Plasma/Data Puffs
+    const puffCount = Math.floor(count * 0.5);
+    for (let i = 0; i < puffCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 1 + Math.random() * 3.5;
+      particles.push({
+        layer: 2,
+        x: x,
+        y: y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 0.8,
+        radius: 6 + Math.random() * 14,
+        growth: 0.4 + Math.random() * 0.6,
+        color: colorScheme === 'gold' ? '245, 158, 11' : colorScheme === 'purple' ? '139, 92, 246' : colorScheme === 'emerald' ? '16, 185, 129' : '6, 182, 212',
+        life: 1.0,
+        decay: 0.025 + Math.random() * 0.02
+      });
+    }
+
+    // Layer 3: Heavy Kinematic Digital / Binary Shards & Tech Debris
+    const shardCount = Math.floor(count * 0.6);
+    const hexChars = ['0x', 'FF', '00', '1', '0', '7F', 'A5', 'CD', '3C'];
+    for (let i = 0; i < shardCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 3 + Math.random() * 7;
+      particles.push({
+        layer: 3,
+        x: x,
+        y: y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 2,
+        gravity: 0.18,
+        drag: 0.96,
+        rot: Math.random() * Math.PI * 2,
+        vRot: (Math.random() - 0.5) * 0.25,
+        size: 8 + Math.random() * 6,
+        char: hexChars[Math.floor(Math.random() * hexChars.length)],
+        color: colorScheme === 'gold' ? '#fbbf24' : colorScheme === 'purple' ? '#c084fc' : colorScheme === 'emerald' ? '#6ee7b7' : '#67e8f9',
+        life: 1.0,
+        decay: 0.02 + Math.random() * 0.015
+      });
+    }
+
+    // Layer 4: Radiant Golden / Cyan Celebration Energy Stars
+    const starCount = Math.floor(count * 0.35);
+    for (let i = 0; i < starCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 2 + Math.random() * 5;
+      particles.push({
+        layer: 4,
+        x: x,
+        y: y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        points: Math.random() > 0.5 ? 4 : 8,
+        size: 5 + Math.random() * 9,
+        rot: Math.random() * Math.PI,
+        vRot: (Math.random() - 0.5) * 0.15,
+        color: colorScheme === 'purple' ? '#e9d5ff' : colorScheme === 'emerald' ? '#a7f3d0' : '#fef08a',
+        life: 1.0,
+        decay: 0.02 + Math.random() * 0.02
+      });
+    }
+  }
+
+  // Dual-Tier Concentric Shockwave Spawner
+  function spawnShockwave(x, y, colorScheme = 'cyan') {
+    shockwaves.push({
+      x: x,
+      y: y,
+      innerRadius: 4,
+      outerRadius: 6,
+      innerSpeed: 10 + Math.random() * 4,
+      outerSpeed: 6 + Math.random() * 3,
+      maxRadius: 80 + Math.random() * 60,
+      life: 1.0,
+      decay: 0.035,
+      color: colorScheme === 'gold' ? '#f59e0b' : colorScheme === 'purple' ? '#8b5cf6' : colorScheme === 'emerald' ? '#10b981' : '#06b6d4'
+    });
+  }
+
+  // Draw 4/8-point Star Helper
+  function drawStar(ctx, cx, cy, points, outerR, innerR, rot) {
+    ctx.beginPath();
+    for (let i = 0; i < points * 2; i++) {
+      const r = i % 2 === 0 ? outerR : innerR;
+      const a = rot + (i * Math.PI) / points;
+      const x = cx + Math.cos(a) * r;
+      const y = cy + Math.sin(a) * r;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Main 60 FPS RequestAnimationFrame Render Loop
+  function fxLoop() {
+    fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+
+    // 1. Procedural Screen Shake Physics Decay
+    if (shakeIntensity > 0.05) {
+      shakeTraX = (Math.random() - 0.5) * shakeIntensity;
+      shakeTraY = (Math.random() - 0.5) * shakeIntensity;
+      shakeIntensity *= 0.88;
+      shakeRot *= 0.88;
+      if (appWrapper) {
+        appWrapper.style.transform = `translate(${shakeTraX.toFixed(2)}px, ${shakeTraY.toFixed(2)}px) rotate(${shakeRot.toFixed(4)}rad)`;
+      }
+    } else {
+      if (appWrapper && appWrapper.style.transform !== '') {
+        appWrapper.style.transform = '';
+      }
+      shakeIntensity = 0;
+    }
+
+    // 2. Ambient Floating Cyber Dust / Matrix Motes
+    fxCtx.font = '10px monospace';
+    fxCtx.textAlign = 'center';
+    for (let i = 0; i < ambientMotes.length; i++) {
+      const m = ambientMotes[i];
+      m.x += m.vx + Math.sin(m.pulsePhase) * 0.3;
+      m.y += m.vy;
+      m.pulsePhase += m.pulseSpeed;
+
+      if (m.y < -20) {
+        m.y = fxCanvas.height + 20;
+        m.x = Math.random() * fxCanvas.width;
+      }
+      if (m.x < -20) m.x = fxCanvas.width + 20;
+      if (m.x > fxCanvas.width + 20) m.x = -20;
+
+      const alpha = m.alpha * (0.6 + 0.4 * Math.sin(m.pulsePhase));
+      fxCtx.fillStyle = m.color + alpha + ')';
+      if (m.char === '•') {
+        fxCtx.beginPath();
+        fxCtx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
+        fxCtx.fill();
+      } else {
+        fxCtx.fillText(m.char, m.x, m.y);
+      }
+    }
+
+    // 3. Dual-Tier Concentric Shockwaves
+    for (let i = shockwaves.length - 1; i >= 0; i--) {
+      const sw = shockwaves[i];
+      sw.innerRadius += sw.innerSpeed;
+      sw.outerRadius += sw.outerSpeed;
+      sw.life -= sw.decay;
+
+      if (sw.life <= 0 || sw.innerRadius >= sw.maxRadius) {
+        shockwaves.splice(i, 1);
+        continue;
+      }
+
+      // Outer chromatic dispersion halo
+      fxCtx.save();
+      fxCtx.beginPath();
+      fxCtx.arc(sw.x, sw.y, sw.outerRadius, 0, Math.PI * 2);
+      fxCtx.strokeStyle = sw.color;
+      fxCtx.globalAlpha = sw.life * 0.4;
+      fxCtx.lineWidth = 3;
+      fxCtx.stroke();
+
+      // Inner high-speed compression wave
+      fxCtx.beginPath();
+      fxCtx.arc(sw.x, sw.y, sw.innerRadius, 0, Math.PI * 2);
+      fxCtx.strokeStyle = '#ffffff';
+      fxCtx.globalAlpha = sw.life * 0.85;
+      fxCtx.lineWidth = 2;
+      fxCtx.stroke();
+      fxCtx.restore();
+    }
+
+    // 4. Multi-Layer Kinematic Particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.life -= p.decay;
+
+      if (p.life <= 0) {
+        particles.splice(i, 1);
+        continue;
+      }
+
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.drag) {
+        p.vx *= p.drag;
+        p.vy *= p.drag;
+      }
+      if (p.gravity) {
+        p.vy += p.gravity;
+      }
+
+      fxCtx.save();
+
+      if (p.layer === 1) {
+        // Layer 1: Needle Spark
+        fxCtx.globalAlpha = Math.max(0, p.life);
+        fxCtx.strokeStyle = p.color;
+        fxCtx.lineWidth = 2;
+        fxCtx.beginPath();
+        fxCtx.moveTo(p.x, p.y);
+        fxCtx.lineTo(p.x - p.vx * 2, p.y - p.vy * 2);
+        fxCtx.stroke();
+      } else if (p.layer === 2) {
+        // Layer 2: Expanding Plasma Puff
+        p.radius += p.growth;
+        fxCtx.globalAlpha = Math.max(0, p.life * 0.45);
+        const grad = fxCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
+        grad.addColorStop(0, `rgba(${p.color}, 0.8)`);
+        grad.addColorStop(0.6, `rgba(${p.color}, 0.3)`);
+        grad.addColorStop(1, `rgba(${p.color}, 0)`);
+        fxCtx.fillStyle = grad;
+        fxCtx.beginPath();
+        fxCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        fxCtx.fill();
+      } else if (p.layer === 3) {
+        // Layer 3: Tumbling Digital Shard
+        p.rot += p.vRot;
+        fxCtx.globalAlpha = Math.max(0, p.life);
+        fxCtx.translate(p.x, p.y);
+        fxCtx.rotate(p.rot);
+        fxCtx.font = 'bold 11px monospace';
+        fxCtx.fillStyle = p.color;
+        fxCtx.fillText(p.char, 0, 0);
+      } else if (p.layer === 4) {
+        // Layer 4: Celebration Energy Star
+        p.rot += p.vRot;
+        fxCtx.globalAlpha = Math.max(0, p.life);
+        fxCtx.fillStyle = p.color;
+        drawStar(fxCtx, p.x, p.y, p.points, p.size, p.size * 0.4, p.rot);
+      }
+
+      fxCtx.restore();
+    }
+
+    requestAnimationFrame(fxLoop);
+  }
+  requestAnimationFrame(fxLoop);
+
+  // Global Interactive Click Particles & Shockwaves
   document.addEventListener('click', (e) => {
-    if (e.target.closest('.btn') || e.target.closest('.hex-byte') || e.target.closest('.bit-box') || e.target.closest('.tab-btn')) {
-      const p = document.createElement('div');
-      p.className = 'particle';
-      p.style.left = e.clientX + 'px';
-      p.style.top = e.clientY + 'px';
-      document.body.appendChild(p);
-      setTimeout(() => p.remove(), 600);
+    const btn = e.target.closest('.btn') || e.target.closest('.tab-btn');
+    const byteEl = e.target.closest('.hex-byte');
+    const bitEl = e.target.closest('.bit-box');
+
+    if (btn || byteEl || bitEl) {
+      const color = btn ? (btn.classList.contains('btn-purple') ? 'purple' : btn.classList.contains('btn-cyan') ? 'cyan' : 'gold') : 'cyan';
+      spawnParticleExplosion(e.clientX, e.clientY, color, 24);
+      spawnShockwave(e.clientX, e.clientY, color);
     }
   });
+
+  // Attach HUD Corner Filigree Brackets to panels
+  function attachHudBrackets() {
+    document.querySelectorAll('.panel, .header').forEach(el => {
+      if (!el.querySelector('.hud-tl')) {
+        const tl = document.createElement('div'); tl.className = 'hud-bracket hud-tl';
+        const tr = document.createElement('div'); tr.className = 'hud-bracket hud-tr';
+        const bl = document.createElement('div'); bl.className = 'hud-bracket hud-bl';
+        const br = document.createElement('div'); br.className = 'hud-bracket hud-br';
+        el.appendChild(tl);
+        el.appendChild(tr);
+        el.appendChild(bl);
+        el.appendChild(br);
+      }
+    });
+  }
+  attachHudBrackets();
 </script>
+</div> <!-- /#appWrapper -->
 </body>
 </html>

@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KHex
 - KStellar
 - KMine
 - KMandel
@@ -149,8 +148,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KTrader
 - KDragon
 - KSolitaire
+- KHex
 
 ## Completed Work Log
+
+- **KHex (Loop 3):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on conversions, bit toggles, byte operations, checksum recalculations, file loads, and export triggers (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas khex.html, and double-buffered viewport rendering with trigonometric physics decay in Native C Win32 GDI KHex/main.c), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant plasma & data puffs with negative gravity and radius growth, heavy kinematic digital / binary shard & tech debris chunks with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion halo radiating upon actions, operations, and converter triggers, ornate cybernetic HUD corner filigree L-brackets with tech notches and gold rivet accents on all panels and header frames, a pulsating energy perimeter inlay border with an animated traveling specular glint traversing the outer panel/banner frames, sculpted interactive element highlights with diagonal specular sheen sweeps traversing inspector items and action buttons, and atmospheric floating cyber dust and binary matrix motes drifting in the background in both Web Canvas (khex.html) and Native C Win32 GDI (KHex/main.c).
 
 - **KSolitaire (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on card placements, stock recycling, auto-finish, skill activations (Magic Wand, X-Ray Vision, Shuffle Stock), and victory bursts (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas ksolitaire.html, and double-buffered viewport rendering with physics decay in Native C Win32 GDI KSolitaire/main.c), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant velvet & smoke puffs with negative gravity and radius growth, heavy kinematic playing card / chip / felt debris shards with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion halo radiating upon card snaps, foundation completes, skill triggers, and stage victories, ornate luxury casino HUD corner filigree L-brackets with tech notches and gold rivet accents at all table corners, a pulsating golden energy perimeter inlay border with an animated traveling specular glint traversing the outer playfield card table frame, sculpted card & tableau highlights with diagonal specular sheen sweeps traversing cards, foundation slots, and active elements, and atmospheric floating casino velvet dust motes drifting across the table in both Web Canvas (ksolitaire.html) and Native C Win32 GDI (KSolitaire/main.c).
 
