@@ -666,17 +666,17 @@
         <span class="search-clear" id="searchClear" title="Clear search">✕</span>
       </div>
 
-      <div class="category-pills" id="categoryPills">
-        <div class="pill active" data-cat="All" title="Press 1">All <span class="pill-count" id="countAll">0</span></div>
-        <div class="pill" data-cat="Favorites" title="Press 2">★ Favs <span class="pill-count" id="countFav">0</span></div>
-        <div class="pill" data-cat="Work" title="Press 3">Work <span class="pill-count" id="countWork">0</span></div>
-        <div class="pill" data-cat="Personal" title="Press 4">Personal <span class="pill-count" id="countPersonal">0</span></div>
-        <div class="pill" data-cat="Family" title="Press 5">Family <span class="pill-count" id="countFamily">0</span></div>
-        <div class="pill" data-cat="Friends" title="Press 6">Friends <span class="pill-count" id="countFriends">0</span></div>
-        <div class="pill" data-cat="Other" title="Press 7">Other <span class="pill-count" id="countOther">0</span></div>
+      <div class="category-pills" id="categoryPills" role="tablist" aria-label="Filter by category">
+        <div class="pill active" data-cat="All" role="tab" tabindex="0" aria-selected="true" title="Press 1">All <span class="pill-count" id="countAll">0</span></div>
+        <div class="pill" data-cat="Favorites" role="tab" tabindex="0" aria-selected="false" title="Press 2">★ Favs <span class="pill-count" id="countFav">0</span></div>
+        <div class="pill" data-cat="Work" role="tab" tabindex="0" aria-selected="false" title="Press 3">Work <span class="pill-count" id="countWork">0</span></div>
+        <div class="pill" data-cat="Personal" role="tab" tabindex="0" aria-selected="false" title="Press 4">Personal <span class="pill-count" id="countPersonal">0</span></div>
+        <div class="pill" data-cat="Family" role="tab" tabindex="0" aria-selected="false" title="Press 5">Family <span class="pill-count" id="countFamily">0</span></div>
+        <div class="pill" data-cat="Friends" role="tab" tabindex="0" aria-selected="false" title="Press 6">Friends <span class="pill-count" id="countFriends">0</span></div>
+        <div class="pill" data-cat="Other" role="tab" tabindex="0" aria-selected="false" title="Press 7">Other <span class="pill-count" id="countOther">0</span></div>
       </div>
 
-      <div class="tag-pills" id="tagPills" style="display: none;">
+      <div class="tag-pills" id="tagPills" style="display: none;" role="tablist" aria-label="Filter by tag">
         <!-- Dynamic Tag Filter Chips -->
       </div>
     </div>
@@ -701,7 +701,7 @@
         <div class="header-details">
           <div class="header-name">
             <span id="headerName">Contact Name</span>
-            <span id="headerFavStar" style="cursor: pointer;" title="Toggle Favorite">☆</span>
+            <span id="headerFavStar" style="cursor: pointer;" title="Toggle Favorite" role="button" tabindex="0" aria-label="Toggle Favorite">☆</span>
           </div>
           <div class="header-meta">
             <span class="category-badge" id="headerCategoryBadge">Category</span>
@@ -709,10 +709,10 @@
           </div>
           <div class="header-tags-container" id="headerTags"></div>
           <div class="quick-actions">
-            <button class="btn btn-secondary" id="btnQuickCall"><span>📞</span> Call</button>
-            <button class="btn btn-secondary" id="btnQuickEmail"><span>✉️</span> Email</button>
-            <button class="btn btn-secondary" id="btnQuickCopy"><span>📋</span> Copy Info</button>
-            <button class="btn btn-danger" id="btnDelete"><span>🗑️</span> Delete</button>
+            <button class="btn btn-secondary" id="btnQuickCall" aria-label="Call contact"><span>📞</span> Call</button>
+            <button class="btn btn-secondary" id="btnQuickEmail" aria-label="Email contact"><span>✉️</span> Email</button>
+            <button class="btn btn-secondary" id="btnQuickCopy" aria-label="Copy contact information"><span>📋</span> Copy Info</button>
+            <button class="btn btn-danger" id="btnDelete" aria-label="Delete contact"><span>🗑️</span> Delete</button>
           </div>
         </div>
       </div>
@@ -783,9 +783,9 @@
   <input type="file" id="fileInput" accept=".vcf,.csv,.json,.txt">
 
   <!-- Help Modal -->
-  <div id="helpModal" class="modal-backdrop">
+  <div id="helpModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
     <div class="modal-content" style="max-width: 480px;">
-      <div class="modal-title"><span>📇</span> KContacts User Guide &amp; Shortcuts</div>
+      <div class="modal-title" id="helpModalTitle"><span>📇</span> KContacts User Guide &amp; Shortcuts</div>
       <ul class="modal-shortcuts-list">
         <li><kbd>F1</kbd> or <kbd>H</kbd> : Open / close this help guide</li>
         <li><kbd>Esc</kbd> : Close modals or clear current search query</li>
@@ -807,9 +807,9 @@
   </div>
 
   <!-- Export Modal -->
-  <div id="exportModal" class="modal-backdrop">
+  <div id="exportModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
     <div class="modal-content">
-      <div class="modal-title"><span>📤</span> Export Contacts Directory</div>
+      <div class="modal-title" id="exportModalTitle"><span>📤</span> Export Contacts Directory</div>
       <div style="font-size: 12px; color: var(--text-muted);">Choose your desired export format:</div>
       <div class="export-option-grid">
         <div class="export-card" data-fmt="md">
@@ -834,9 +834,9 @@
   </div>
 
   <!-- Delete Confirm Modal -->
-  <div id="deleteModal" class="modal-backdrop">
+  <div id="deleteModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
     <div class="modal-content" style="max-width: 360px;">
-      <div class="modal-title" style="color: var(--accent-red);"><span>🗑️</span> Delete Contact</div>
+      <div class="modal-title" id="deleteModalTitle" style="color: var(--accent-red);"><span>🗑️</span> Delete Contact</div>
       <div id="deleteModalText" style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
         Are you sure you want to delete this contact?
       </div>
@@ -973,6 +973,30 @@
       return [];
     }
 
+    function parseCsvLine(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          if (inQuotes && line[i + 1] === '"') {
+            current += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim());
+      return result;
+    }
+
     // Update Category Pill Badges
     function updateCategoryCounts() {
       const counts = { All: contacts.length, Favorites: 0, Work: 0, Personal: 0, Family: 0, Friends: 0, Other: 0 };
@@ -1094,22 +1118,42 @@
       // All Tags Pill
       const allPill = document.createElement('div');
       allPill.className = `tag-pill ${selectedTag === null ? 'active' : ''}`;
+      allPill.setAttribute('role', 'tab');
+      allPill.setAttribute('tabindex', '0');
+      allPill.setAttribute('aria-selected', selectedTag === null ? 'true' : 'false');
       allPill.textContent = '#all-tags';
-      allPill.onclick = () => {
+      const triggerAll = () => {
         selectedTag = null;
         updateTagPills();
         renderList();
+      };
+      allPill.onclick = triggerAll;
+      allPill.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          triggerAll();
+        }
       };
       tagPills.appendChild(allPill);
 
       uniqueTags.forEach(tag => {
         const pill = document.createElement('div');
         pill.className = `tag-pill ${selectedTag === tag ? 'active' : ''}`;
+        pill.setAttribute('role', 'tab');
+        pill.setAttribute('tabindex', '0');
+        pill.setAttribute('aria-selected', selectedTag === tag ? 'true' : 'false');
         pill.textContent = `#${tag}`;
-        pill.onclick = () => {
+        const triggerTag = () => {
           selectedTag = selectedTag === tag ? null : tag;
           updateTagPills();
           renderList();
+        };
+        pill.onclick = triggerTag;
+        pill.onkeydown = (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            triggerTag();
+          }
         };
         tagPills.appendChild(pill);
       });
@@ -1427,7 +1471,7 @@
     };
 
     // Toggle Favorite from header
-    headerFavStar.onclick = () => {
+    function toggleHeaderFav() {
       if (!selectedId) return;
       const c = contacts.find(item => item.id === selectedId);
       if (c) {
@@ -1436,6 +1480,13 @@
         saveContacts();
         selectContact(selectedId);
         showToast(c.fav ? '★ Added to favorites' : '☆ Removed from favorites');
+      }
+    }
+    headerFavStar.onclick = toggleHeaderFav;
+    headerFavStar.onkeydown = (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleHeaderFav();
       }
     };
 
@@ -1447,6 +1498,7 @@
       }
 
       let mergedCount = 0;
+      let survivingSelectedId = selectedId;
       const map = new Map();
       const uniqueList = [];
 
@@ -1454,6 +1506,9 @@
         const key = (c.name || '').toLowerCase().trim();
         if (key && map.has(key)) {
           const existing = map.get(key);
+          if (c.id === selectedId) {
+            survivingSelectedId = existing.id;
+          }
           if (!existing.phone && c.phone) existing.phone = c.phone;
           if (!existing.email && c.email) existing.email = c.email;
           if (!existing.company && c.company) existing.company = c.company;
@@ -1481,6 +1536,7 @@
 
       if (mergedCount > 0) {
         contacts = uniqueList;
+        selectedId = survivingSelectedId;
         saveContacts();
         updateTagPills();
         renderList();
@@ -1537,8 +1593,11 @@
               if (c.company || c.title) {
                 md += `**Role / Company:** ${c.title || ''}${c.title && c.company ? ' at ' : ''}${c.company || ''}\n\n`;
               }
-              if (c.phone) md += `- 📞 **Phone:** [${c.phone}](tel:${c.phone})\n`;
-              if (c.email) md += `- ✉️ **Email:** [${c.email}](mailto:${c.email})\n`;
+              if (c.phone) {
+                const cleanPhone = c.phone.replace(/[^\d+*#]/g, '');
+                md += `- 📞 **Phone:** [${c.phone}](tel:${cleanPhone})\n`;
+              }
+              if (c.email) md += `- ✉️ **Email:** [${c.email}](mailto:${encodeURIComponent(c.email.trim())})\n`;
               if (c.notes) md += `- 📝 **Notes:** ${c.notes.replace(/\n/g, ' ')}\n`;
               md += `\n`;
             });
@@ -1642,58 +1701,95 @@
             showToast('⚠️ Invalid JSON file.');
           }
         } else if (file.name.endsWith('.vcf') || text.includes('BEGIN:VCARD')) {
-          const cards = text.split(/END:VCARD/i);
+          // Unfold RFC 2426 continuation lines
+          const unfolded = text.replace(/\r?\n[ \t]/g, '');
+          const cards = unfolded.split(/END:VCARD/i);
           cards.forEach(card => {
             if (!card.includes('BEGIN:VCARD')) return;
             if (contacts.length >= MAX_CONTACTS) return;
 
-            const fnMatch = card.match(/(?:FN|N)(?:;[^:]*)?:([^\r\n]*)/i);
+            const fnMatch = card.match(/FN(?:;[^:]*)?:([^\r\n]*)/i);
+            const nMatch = card.match(/^N(?:;[^:]*)?:([^\r\n]*)/mi);
+            let contactName = '';
+            if (fnMatch && fnMatch[1].trim()) {
+              contactName = fnMatch[1].trim();
+            } else if (nMatch && nMatch[1].trim()) {
+              const nParts = nMatch[1].split(';').map(s => s.trim()).filter(Boolean);
+              contactName = nParts.reverse().join(' ');
+            }
+            if (!contactName) return;
+
             const telMatch = card.match(/TEL(?:;[^:]*)?:([^\r\n]*)/i);
             const emailMatch = card.match(/EMAIL(?:;[^:]*)?:([^\r\n]*)/i);
             const catMatch = card.match(/CATEGORIES(?:;[^:]*)?:([^\r\n]*)/i);
             const tagMatch = card.match(/X-TAGS(?:;[^:]*)?:([^\r\n]*)/i);
             const orgMatch = card.match(/ORG(?:;[^:]*)?:([^\r\n]*)/i);
+            const titleMatch = card.match(/TITLE(?:;[^:]*)?:([^\r\n]*)/i);
             const noteMatch = card.match(/NOTE(?:;[^:]*)?:([^\r\n]*)/i);
 
-            if (fnMatch && fnMatch[1].trim()) {
-              const rawCat = catMatch ? catMatch[1].trim() : 'Personal';
-              const tagsFromX = tagMatch ? tagMatch[1].trim() : '';
-              contacts.push({
-                id: 'c_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
-                name: fnMatch[1].trim().substring(0, 100),
-                phone: telMatch ? telMatch[1].trim().substring(0, 50) : '',
-                email: emailMatch ? emailMatch[1].trim().substring(0, 100) : '',
-                category: rawCat.split(',')[0].trim().substring(0, 50) || 'Personal',
-                company: orgMatch ? orgMatch[1].trim().substring(0, 100) : '',
-                title: '',
-                tags: parseTags(tagsFromX || rawCat),
-                notes: noteMatch ? noteMatch[1].replace(/\\n/g, '\n').trim().substring(0, 2000) : '',
-                fav: false
-              });
-              count++;
-            }
+            const rawCat = catMatch ? catMatch[1].trim() : 'Personal';
+            const tagsFromX = tagMatch ? tagMatch[1].trim() : '';
+            contacts.push({
+              id: 'c_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+              name: contactName.substring(0, 100),
+              phone: telMatch ? telMatch[1].trim().substring(0, 50) : '',
+              email: emailMatch ? emailMatch[1].trim().substring(0, 100) : '',
+              category: rawCat.split(',')[0].trim().substring(0, 50) || 'Personal',
+              company: orgMatch ? orgMatch[1].trim().substring(0, 100) : '',
+              title: titleMatch ? titleMatch[1].trim().substring(0, 100) : '',
+              tags: parseTags(tagsFromX || rawCat),
+              notes: noteMatch ? noteMatch[1].replace(/\\n/gi, '\n').replace(/\\,/g, ',').replace(/\\;/g, ';').trim().substring(0, 2000) : '',
+              fav: false
+            });
+            count++;
           });
         } else {
           const lines = text.split(/\r?\n/);
-          for (let i = 1; i < lines.length; i++) {
-            if (contacts.length >= MAX_CONTACTS) break;
-            const line = lines[i].trim();
-            if (!line) continue;
-            const parts = line.split(',').map(s => s.replace(/^"|"$/g, '').trim());
-            if (parts.length >= 1 && parts[0]) {
-              contacts.push({
-                id: 'c_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
-                name: (parts[0] || 'Imported Contact').substring(0, 100),
-                phone: (parts[1] || '').substring(0, 50),
-                email: (parts[2] || '').substring(0, 100),
-                category: (parts[3] || 'Personal').substring(0, 50),
-                company: (parts[4] || '').substring(0, 100),
-                title: (parts[5] || '').substring(0, 100),
-                tags: parts[6] ? parseTags(parts[6]) : [],
-                notes: (parts[8] || '').substring(0, 2000),
-                fav: parts[7] === 'TRUE'
-              });
-              count++;
+          if (lines.length > 0) {
+            const headerCols = parseCsvLine(lines[0]).map(h => h.toLowerCase().replace(/[^a-z]/g, ''));
+            const hasTitle = headerCols.includes('title');
+            const startIndex = (headerCols.includes('name') || headerCols[0] === 'name') ? 1 : 0;
+            for (let i = startIndex; i < lines.length; i++) {
+              if (contacts.length >= MAX_CONTACTS) break;
+              const line = lines[i].trim();
+              if (!line) continue;
+              const parts = parseCsvLine(line);
+              if (parts.length >= 1 && parts[0]) {
+                const cName = parts[0].substring(0, 100);
+                const cPhone = (parts[1] || '').substring(0, 50);
+                const cEmail = (parts[2] || '').substring(0, 100);
+                const cCat = (parts[3] || 'Personal').substring(0, 50);
+                const cComp = (parts[4] || '').substring(0, 100);
+                let cTitle = '';
+                let cTags = [];
+                let cFav = false;
+                let cNotes = '';
+
+                if (hasTitle) {
+                  cTitle = (parts[5] || '').substring(0, 100);
+                  cTags = parts[6] ? parseTags(parts[6]) : [];
+                  cFav = (parts[7] || '').toUpperCase() === 'TRUE' || parts[7] === '1';
+                  cNotes = (parts[8] || '').substring(0, 2000);
+                } else {
+                  cTags = parts[5] ? parseTags(parts[5]) : [];
+                  cFav = (parts[6] || '').toUpperCase() === 'TRUE' || parts[6] === '1';
+                  cNotes = (parts[7] || '').substring(0, 2000);
+                }
+
+                contacts.push({
+                  id: 'c_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+                  name: cName,
+                  phone: cPhone,
+                  email: cEmail,
+                  category: cCat || 'Personal',
+                  company: cComp,
+                  title: cTitle,
+                  tags: cTags,
+                  notes: cNotes,
+                  fav: cFav
+                });
+                count++;
+              }
             }
           }
         }
@@ -1702,6 +1798,10 @@
         updateTagPills();
         renderList();
         showToast(`📥 Successfully imported ${count} contacts!`);
+        fileInput.value = '';
+      };
+      reader.onerror = () => {
+        showToast('⚠️ Error reading file.');
         fileInput.value = '';
       };
       reader.readAsText(file);
@@ -1714,10 +1814,21 @@
       selectCategoryFilter(pill.getAttribute('data-cat'));
     };
 
+    categoryPills.onkeydown = (e) => {
+      const pill = e.target.closest('.pill');
+      if (!pill) return;
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        selectCategoryFilter(pill.getAttribute('data-cat'));
+      }
+    };
+
     function selectCategoryFilter(cat) {
       document.querySelectorAll('.pill').forEach(p => {
-        if (p.getAttribute('data-cat') === cat) p.classList.add('active');
+        const isActive = (p.getAttribute('data-cat') === cat);
+        if (isActive) p.classList.add('active');
         else p.classList.remove('active');
+        p.setAttribute('aria-selected', isActive ? 'true' : 'false');
       });
       currentFilter = cat;
       renderList();

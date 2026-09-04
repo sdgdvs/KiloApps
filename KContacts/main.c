@@ -198,6 +198,62 @@ void extract_field(const char* text, const char* prefix, char* out, int out_len)
     }
 }
 
+void extract_multiline_field(const char* text, const char* prefix, char* out, int out_len) {
+    if (!text || !prefix || !out || out_len <= 0) return;
+    char* p = my_stristr(text, prefix);
+    if (p) {
+        p += my_strlen(prefix);
+        int i = 0;
+        while (*p && i < out_len - 1) {
+            out[i++] = *p++;
+        }
+        while (i > 0 && (out[i - 1] == '\r' || out[i - 1] == '\n' || out[i - 1] == ' ')) {
+            i--;
+        }
+        out[i] = 0;
+    } else {
+        out[0] = 0;
+    }
+}
+
+int parse_csv_field(const char** pp, char* out, int out_len) {
+    if (!pp || !*pp || !out || out_len <= 0) return 0;
+    const char* p = *pp;
+    int i = 0;
+    while (*p == ' ' || *p == '\t') p++;
+    if (*p == '"') {
+        p++;
+        while (*p && i < out_len - 1) {
+            if (*p == '"') {
+                if (*(p + 1) == '"') {
+                    out[i++] = '"';
+                    p += 2;
+                } else {
+                    p++;
+                    break;
+                }
+            } else {
+                out[i++] = *p++;
+            }
+        }
+        while (*p && *p != ',' && *p != '\r' && *p != '\n') p++;
+    } else {
+        while (*p && *p != ',' && *p != '\r' && *p != '\n' && i < out_len - 1) {
+            out[i++] = *p++;
+        }
+    }
+    out[i] = 0;
+    if (*p == ',') {
+        p++;
+        *pp = p;
+        return 1;
+    }
+    if (*p == '\r') p++;
+    if (*p == '\n') p++;
+    *pp = p;
+    return 0;
+}
+
 void extract_vcard_field(const char* card, const char* key, char* out, int out_len) {
     if (!out || out_len <= 0) return;
     out[0] = 0;
@@ -325,9 +381,22 @@ void ExportContacts(HWND hwnd) {
                 }
             } else if (my_stristr(filepath, ".vcf")) {
                 for (int i = 0; i < contact_count; i++) {
+                    char esc_notes[256] = {0};
+                    int ni = 0;
+                    for (int si = 0; contacts[i].notes[si] && ni < (int)sizeof(esc_notes) - 3; si++) {
+                        if (contacts[i].notes[si] == '\r') continue;
+                        if (contacts[i].notes[si] == '\n') {
+                            esc_notes[ni++] = '\\';
+                            esc_notes[ni++] = 'n';
+                        } else {
+                            esc_notes[ni++] = contacts[i].notes[si];
+                        }
+                    }
+                    esc_notes[ni] = 0;
+
                     char buf[1024];
                     wsprintfA(buf, "BEGIN:VCARD\r\nVERSION:3.0\r\nFN:%s\r\nTEL;TYPE=CELL:%s\r\nEMAIL;TYPE=INTERNET:%s\r\nORG:%s\r\nCATEGORIES:%s\r\nX-TAGS:%s\r\nNOTE:%s\r\nEND:VCARD\r\n",
-                        contacts[i].name, contacts[i].phone, contacts[i].email, contacts[i].company, contacts[i].category, contacts[i].tags, contacts[i].notes);
+                        contacts[i].name, contacts[i].phone, contacts[i].email, contacts[i].company, contacts[i].category, contacts[i].tags, esc_notes);
                     WriteFile(hFile, buf, my_strlen(buf), &written, NULL);
                 }
             } else { // Markdown default
@@ -401,6 +470,53 @@ void ImportContacts(HWND hwnd) {
                             }
                             p = obj_end + 1;
                         }
+                    } else if (my_stristr(filepath, ".csv") || (!my_stristr(buf, "BEGIN:VCARD") && my_stristr(buf, ","))) {
+                        const char* p = buf;
+                        int has_title_col = (my_stristr(buf, "Title") != NULL);
+                        if (my_stristr(p, "Name") == p || my_stristr(p, "\"Name\"") == p) {
+                            while (*p && *p != '\n') p++;
+                            if (*p == '\n') p++;
+                        }
+                        while (*p && contact_count < MAX_CONTACTS) {
+                            while (*p == '\r' || *p == '\n') p++;
+                            if (!*p) break;
+
+                            char f_name[64] = {0}, f_phone[64] = {0}, f_email[128] = {0};
+                            char f_cat[32] = {0}, f_comp[64] = {0}, f_extra[64] = {0};
+                            char f_tags[64] = {0}, f_fav[16] = {0}, f_notes[128] = {0};
+
+                            parse_csv_field(&p, f_name, sizeof(f_name));
+                            parse_csv_field(&p, f_phone, sizeof(f_phone));
+                            parse_csv_field(&p, f_email, sizeof(f_email));
+                            parse_csv_field(&p, f_cat, sizeof(f_cat));
+                            parse_csv_field(&p, f_comp, sizeof(f_comp));
+                            if (has_title_col) {
+                                parse_csv_field(&p, f_extra, sizeof(f_extra));
+                                parse_csv_field(&p, f_tags, sizeof(f_tags));
+                                parse_csv_field(&p, f_fav, sizeof(f_fav));
+                                parse_csv_field(&p, f_notes, sizeof(f_notes));
+                            } else {
+                                parse_csv_field(&p, f_tags, sizeof(f_tags));
+                                parse_csv_field(&p, f_fav, sizeof(f_fav));
+                                parse_csv_field(&p, f_notes, sizeof(f_notes));
+                            }
+
+                            if (f_name[0] != 0) {
+                                Contact* c = &contacts[contact_count];
+                                memset(c, 0, sizeof(Contact));
+                                my_strncpy(c->name, f_name, sizeof(c->name));
+                                my_strncpy(c->phone, f_phone, sizeof(c->phone));
+                                my_strncpy(c->email, f_email, sizeof(c->email));
+                                my_strncpy(c->category, f_cat[0] ? f_cat : "Personal", sizeof(c->category));
+                                my_strncpy(c->company, f_comp, sizeof(c->company));
+                                my_strncpy(c->tags, f_tags, sizeof(c->tags));
+                                c->fav = (my_stricmp(f_fav, "TRUE") == 0 || my_stricmp(f_fav, "1") == 0);
+                                my_strncpy(c->notes, f_notes, sizeof(c->notes));
+
+                                contact_count++;
+                                imported++;
+                            }
+                        }
                     } else {
                         char* p = buf;
                         while (p && *p) {
@@ -473,16 +589,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE: {
             LoadDemoData();
 
-            // Fonts
+            S(0);
             int fontHeight = -MulDiv(12, g_dpi, 72);
             hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             hBoldFont = CreateFontA(fontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
 
             // Search bar & Filter
-            hSearch = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, S(10), S(10), S(180), S(24), hwnd, (HMENU)1011, NULL, NULL);
+            hSearch = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL, S(10), S(10), S(180), S(24), hwnd, (HMENU)1011, NULL, NULL);
             SendMessageA(hSearch, EM_SETCUEBANNER, FALSE, (LPARAM)L"Search contacts...");
 
-            hComboCat = CreateWindowExA(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, S(200), S(10), S(140), S(150), hwnd, (HMENU)1012, NULL, NULL);
+            hComboCat = CreateWindowExA(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, S(200), S(10), S(140), S(150), hwnd, (HMENU)1012, NULL, NULL);
             SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"All");
             SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"Favorites");
             SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"Work");
@@ -493,24 +609,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hComboCat, CB_SETCURSEL, 0, 0);
 
             // ListBox
-            hList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY, S(10), S(42), S(330), S(475), hwnd, (HMENU)1001, NULL, NULL);
+            hList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL | LBS_NOTIFY, S(10), S(42), S(330), S(475), hwnd, (HMENU)1001, NULL, NULL);
 
             // Action Buttons Sidebar
-            hBtnNew = CreateWindowExA(0, "BUTTON", "+ New [N]", WS_CHILD | WS_VISIBLE, S(10), S(525), S(65), S(28), hwnd, (HMENU)1002, NULL, NULL);
-            hBtnDel = CreateWindowExA(0, "BUTTON", "Del", WS_CHILD | WS_VISIBLE, S(80), S(525), S(38), S(28), hwnd, (HMENU)1003, NULL, NULL);
-            hBtnMerge = CreateWindowExA(0, "BUTTON", "Merge", WS_CHILD | WS_VISIBLE, S(122), S(525), S(48), S(28), hwnd, (HMENU)1005, NULL, NULL);
-            hBtnImport = CreateWindowExA(0, "BUTTON", "Imp", WS_CHILD | WS_VISIBLE, S(174), S(525), S(42), S(28), hwnd, (HMENU)1007, NULL, NULL);
-            hBtnExport = CreateWindowExA(0, "BUTTON", "Exp", WS_CHILD | WS_VISIBLE, S(220), S(525), S(42), S(28), hwnd, (HMENU)1006, NULL, NULL);
-            hBtnHelp = CreateWindowExA(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE, S(266), S(525), S(74), S(28), hwnd, (HMENU)1013, NULL, NULL);
+            hBtnNew = CreateWindowExA(0, "BUTTON", "+ New [N]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(10), S(525), S(65), S(28), hwnd, (HMENU)1002, NULL, NULL);
+            hBtnDel = CreateWindowExA(0, "BUTTON", "Del", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(80), S(525), S(38), S(28), hwnd, (HMENU)1003, NULL, NULL);
+            hBtnMerge = CreateWindowExA(0, "BUTTON", "Merge", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(122), S(525), S(48), S(28), hwnd, (HMENU)1005, NULL, NULL);
+            hBtnImport = CreateWindowExA(0, "BUTTON", "Imp", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(174), S(525), S(42), S(28), hwnd, (HMENU)1007, NULL, NULL);
+            hBtnExport = CreateWindowExA(0, "BUTTON", "Exp", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(220), S(525), S(42), S(28), hwnd, (HMENU)1006, NULL, NULL);
+            hBtnHelp = CreateWindowExA(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(266), S(525), S(74), S(28), hwnd, (HMENU)1013, NULL, NULL);
 
             // Details / Form View
-            hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | ES_WANTRETURN, S(350), S(10), S(470), S(507), hwnd, NULL, NULL, NULL);
+            hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | ES_WANTRETURN, S(350), S(10), S(470), S(507), hwnd, NULL, NULL, NULL);
             SendMessageA(hEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(S(8), S(8)));
             
-            hChkFav = CreateWindowExA(0, "BUTTON", "Favorite *", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, S(350), S(525), S(90), S(24), hwnd, (HMENU)1010, NULL, NULL);
-            hBtnCall = CreateWindowExA(0, "BUTTON", "Call", WS_CHILD | WS_VISIBLE, S(450), S(525), S(48), S(28), hwnd, (HMENU)1008, NULL, NULL);
-            hBtnEmail = CreateWindowExA(0, "BUTTON", "Email", WS_CHILD | WS_VISIBLE, S(502), S(525), S(52), S(28), hwnd, (HMENU)1009, NULL, NULL);
-            hBtnSave = CreateWindowExA(0, "BUTTON", "Save Details [Ctrl+S]", WS_CHILD | WS_VISIBLE, S(560), S(525), S(260), S(28), hwnd, (HMENU)1004, NULL, NULL);
+            hChkFav = CreateWindowExA(0, "BUTTON", "Favorite *", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, S(350), S(525), S(90), S(24), hwnd, (HMENU)1010, NULL, NULL);
+            hBtnCall = CreateWindowExA(0, "BUTTON", "Call", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(450), S(525), S(48), S(28), hwnd, (HMENU)1008, NULL, NULL);
+            hBtnEmail = CreateWindowExA(0, "BUTTON", "Email", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(502), S(525), S(52), S(28), hwnd, (HMENU)1009, NULL, NULL);
+            hBtnSave = CreateWindowExA(0, "BUTTON", "Save Details [Ctrl+S]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(560), S(525), S(260), S(28), hwnd, (HMENU)1004, NULL, NULL);
 
             // Apply Fonts
             SendMessageA(hSearch, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -578,8 +694,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     memset(&contacts[contact_count - 1], 0, sizeof(Contact));
                     contact_count--;
                     RefreshList();
-                    SetWindowTextA(hEdit, "");
-                    SendMessageA(hChkFav, BM_SETCHECK, BST_UNCHECKED, 0);
+                    if (filtered_count > 0) {
+                        if (list_idx >= filtered_count) list_idx = filtered_count - 1;
+                        SendMessageA(hList, LB_SETCURSEL, list_idx, 0);
+                        SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(1001, LBN_SELCHANGE), (LPARAM)hList);
+                    } else {
+                        SetWindowTextA(hEdit, "");
+                        SendMessageA(hChkFav, BM_SETCHECK, BST_UNCHECKED, 0);
+                    }
                 }
             }
             else if (control_id == 1004) { // Save Details
@@ -597,9 +719,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     extract_field(buf, "Category: ", contacts[real_idx].category, sizeof(contacts[real_idx].category));
                     extract_field(buf, "Company: ", contacts[real_idx].company, sizeof(contacts[real_idx].company));
                     extract_field(buf, "Tags: ", contacts[real_idx].tags, sizeof(contacts[real_idx].tags));
-                    extract_field(buf, "Notes: ", contacts[real_idx].notes, sizeof(contacts[real_idx].notes));
+                    extract_multiline_field(buf, "Notes: ", contacts[real_idx].notes, sizeof(contacts[real_idx].notes));
                     contacts[real_idx].fav = (SendMessageA(hChkFav, BM_GETCHECK, 0, 0) == BST_CHECKED);
                     RefreshList();
+                    SendMessageA(hList, LB_SETCURSEL, list_idx, 0);
                 }
             }
             else if (control_id == 1005) { // Merge Dups
@@ -719,8 +842,10 @@ void __stdcall MainEntry() {
                 continue;
             }
         }
-        TranslateMessage(&msg);
-        DispatchMessageA(&msg);
+        if (!IsDialogMessageA(hwnd, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessageA(&msg);
+        }
     }
     ExitProcess(0);
 }

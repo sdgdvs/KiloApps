@@ -23,6 +23,7 @@ Multiple agents operate on this codebase on overlapping schedules, potentially f
 3. **Own your plan file.** Each agent should only modify its own plan file:
    - `app_work_plan.md` — App Builder agent only.
    - `app_fix_plan.md` — Quality & Build agent only.
+   - `app_test_plan.md` — App Tester agent only.
    - `usability_plan.md` — Usability agent only.
    - `game_content_plan.md` — Game Content agent only.
    - `new_app_plan.md` — App Creator & Deep Expander agent only.
