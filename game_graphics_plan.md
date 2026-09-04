@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KConnect4
 - KHangman
 - KMech
 - KMatch3
@@ -149,8 +148,12 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMandel
 - KVoid
 - KStarship
+- KConnect4
+- KStarDredge
 
 ## Completed Work Log
+
+- **KConnect4 (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on piece drops, bomb explosions, drill activations, magnet pulls, freeze skill casts, and victory bursts (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas kconnect4.html, and double-buffered viewport rendering with physics decay in Native C Win32 GDI KConnect4/main.c), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity drag, expanding buoyant plasma & smoke puffs with negative gravity and radius growth, heavy kinematic debris shards with gravity, drag, floor bounce physics, and tumbling rotation, and radiant golden celebration energy stars upon victory), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer dispersion halo radiating upon drops, explosions, drills, magnet pulls, column freezes, and victory bursts, ornate cybernetic / arcade HUD corner filigree L-brackets with tech notches and brass rivet accents at all four board corners, a pulsating energy perimeter inlay border with an animated traveling specular glint traversing the outer playfield board frame, sculpted glossy 3D discs and board highlights with diagonal specular sheen sweeps, and atmospheric floating cyber dust motes drifting across the board in both Web Canvas (kconnect4.html) and Native C Win32 GDI (KConnect4/main.c).
 
 - **KStarship (Loop 1):** Replaced placeholder flat triangle shapes and plain modal text with custom procedural starship sprites, directional flight rotation, multi-stage plasma thruster plumes, glowing hexagonal shield auras, planetary system orbit animations, tactical encounter sprite artwork, 4-layer particle engine, shockwaves, and cybernetic HUD filigree in both Web Canvas (kstarship.html) and Native Win32 GDI (KStarship/main.c). Implemented procedural Player Flagship sprite with sleek titanium battlecruiser fuselage, reflective cyan cockpit canopy glass glow, wingtip cannon hardpoints that visually upgrade with weapon level, pulsing navigation strobes (red port, green starboard, amber tail), smooth heading angle interpolation when cruising, and multi-stage ion/plasma exhaust plumes with trailing spark motes. Enhanced star systems with radiant spectral coronal halos, pulsing solar disk glows, and orbiting miniature planetary bodies (Terrestrial with cloud swirls, Gas Giant with rings, Ice World, Lava World, and Barren Moon). Implemented custom tactical encounter artwork in the modal viewer for Pirate Raider Corvettes (jagged crimson armor, forward disruptors, evil optic visor), Dreadnought Boss Flagships (charging spinal railguns, armor plating, bridge deck), Orbital Space Stations & Superweapon Forges (rotating habitat rings, blue photovoltaic solar arrays, green docking beacon diodes), Dimensional Rift Anomalies (swirling multi-color accretion vortex and black hole event horizon core), and Alien Boarding Xenomorphs (chitinous carapace and glowing acid optics). Added a 4-layer kinematic particle explosion engine, dual-tier concentric shockwave rings, and cybernetic Sci-Fi HUD corner filigree L-brackets with rivet detailing and traveling specular glint along the outer viewport frame.
 

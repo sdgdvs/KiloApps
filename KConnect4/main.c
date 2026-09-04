@@ -55,6 +55,48 @@ int animBounceCount = 0;
 int animTargetY = 0;
 int animType = 0; // 0=normal, 1=bomb, 2=drill, 3=magnet
 
+// Shockwaves
+typedef struct {
+    float x, y;
+    float r, maxR;
+    float speed;
+    COLORREF color;
+    float life, decay;
+} Shockwave;
+
+#define MAX_SHOCKWAVES 30
+Shockwave g_shockwaves[MAX_SHOCKWAVES];
+int g_shockwaveCount = 0;
+
+void SpawnShockwave(float x, float y, float maxR, COLORREF color) {
+    for (int i = 0; i < MAX_SHOCKWAVES; i++) {
+        if (g_shockwaves[i].life <= 0.0f) {
+            g_shockwaves[i].x = x;
+            g_shockwaves[i].y = y;
+            g_shockwaves[i].r = 2.0f;
+            g_shockwaves[i].maxR = maxR;
+            g_shockwaves[i].speed = maxR / 16.0f;
+            g_shockwaves[i].color = color;
+            g_shockwaves[i].life = 1.0f;
+            g_shockwaves[i].decay = 0.045f;
+            if (i >= g_shockwaveCount) g_shockwaveCount = i + 1;
+            return;
+        }
+    }
+}
+
+void UpdateShockwaves() {
+    for (int i = 0; i < g_shockwaveCount; i++) {
+        if (g_shockwaves[i].life > 0.0f) {
+            g_shockwaves[i].r += g_shockwaves[i].speed;
+            g_shockwaves[i].life -= g_shockwaves[i].decay;
+            if (g_shockwaves[i].r >= g_shockwaves[i].maxR || g_shockwaves[i].life <= 0.0f) {
+                g_shockwaves[i].life = 0.0f;
+            }
+        }
+    }
+}
+
 // Particles
 typedef struct {
     float x, y;
@@ -75,7 +117,9 @@ typedef struct {
     float size;
     float sizeGrow;
     float gravityMult;
-    int type; // 0=normal, 1=debris
+    float drag;
+    bool bounce;
+    int type; // 0=normal/spark, 1=debris, 2=smoke/fire, 3=golden star
     int life;
 } Particle;
 
@@ -92,19 +136,24 @@ void SpawnConfetti() {
         RGB(255, 82, 82), RGB(255, 215, 0), RGB(79, 195, 247),
         RGB(105, 240, 174), RGB(224, 64, 251), RGB(255, 255, 255)
     };
+    SpawnShockwave(290.0f, 250.0f, 150.0f, RGB(255, 215, 0));
+    SpawnShockwave(290.0f, 250.0f, 90.0f, RGB(0, 255, 255));
     g_particleCount = MAX_PARTICLES;
     for (int i = 0; i < MAX_PARTICLES; i++) {
-        g_particles[i].x = (float)(rand() % 450 + 10);
+        bool isStar = (rand() % 100 < 35);
+        g_particles[i].x = (float)(rand() % 500 + 10);
         g_particles[i].y = (float)(-(rand() % 40));
         g_particles[i].vx = ((float)(rand() % 100) - 50.0f) / 15.0f;
         g_particles[i].vy = ((float)(rand() % 100)) / 25.0f + 2.0f;
         g_particles[i].rotation = ((float)(rand() % 360)) * 3.14159f / 180.0f;
-        g_particles[i].vRot = ((float)(rand() % 100) - 50.0f) / 100.0f;
+        g_particles[i].vRot = ((float)(rand() % 100) - 50.0f) / 80.0f;
         g_particles[i].color = palette[rand() % 6];
-        g_particles[i].size = (float)(rand() % 6 + 4);
+        g_particles[i].size = isStar ? (float)(rand() % 6 + 6) : (float)(rand() % 6 + 4);
         g_particles[i].sizeGrow = 0.0f;
-        g_particles[i].gravityMult = 1.0f;
-        g_particles[i].type = 0;
+        g_particles[i].gravityMult = isStar ? 0.7f : 1.0f;
+        g_particles[i].drag = 0.99f;
+        g_particles[i].bounce = false;
+        g_particles[i].type = isStar ? 3 : 0;
         g_particles[i].life = rand() % 60 + 60;
     }
 }
@@ -120,6 +169,8 @@ void SpawnPowerupParticles(int type, int r, int c, HWND hwnd) {
 
     g_particleCount = MAX_PARTICLES;
     if (type == 1) { // Bomb
+        SpawnShockwave(px, py, 120.0f, RGB(255, 68, 0));
+        SpawnShockwave(px, py, 70.0f, RGB(255, 204, 0));
         COLORREF firePal[] = {RGB(255, 68, 0), RGB(255, 136, 0), RGB(255, 204, 0)};
         COLORREF smokePal[] = {RGB(85, 85, 85), RGB(50, 50, 50), RGB(30, 30, 30)};
         COLORREF debrisPal[] = {RGB(90, 58, 34), RGB(62, 39, 35), RGB(45, 26, 17)};
@@ -127,7 +178,7 @@ void SpawnPowerupParticles(int type, int r, int c, HWND hwnd) {
             float angle = ((float)(rand() % 360)) * 3.14159f / 180.0f;
             g_particles[i].x = px; g_particles[i].y = py;
             g_particles[i].rotation = angle;
-            g_particles[i].type = 0;
+            g_particles[i].drag = 0.95f;
             if (i < MAX_PARTICLES * 0.4) {
                 float speed = ((float)(rand() % 100)) / 10.0f + 2.0f;
                 g_particles[i].vx = cosf(angle) * speed;
@@ -137,6 +188,8 @@ void SpawnPowerupParticles(int type, int r, int c, HWND hwnd) {
                 g_particles[i].size = (float)(rand() % 12 + 6);
                 g_particles[i].sizeGrow = -0.1f;
                 g_particles[i].gravityMult = 1.0f;
+                g_particles[i].bounce = false;
+                g_particles[i].type = 2; // fire
                 g_particles[i].life = rand() % 30 + 20;
             } else if (i < MAX_PARTICLES * 0.7) {
                 float speed = ((float)(rand() % 100)) / 15.0f + 1.0f;
@@ -147,6 +200,8 @@ void SpawnPowerupParticles(int type, int r, int c, HWND hwnd) {
                 g_particles[i].size = (float)(rand() % 15 + 10);
                 g_particles[i].sizeGrow = 0.6f;
                 g_particles[i].gravityMult = 0.5f;
+                g_particles[i].bounce = false;
+                g_particles[i].type = 2; // smoke
                 g_particles[i].life = rand() % 40 + 40;
             } else {
                 float speed = ((float)(rand() % 100)) / 5.0f + 5.0f;
@@ -157,12 +212,14 @@ void SpawnPowerupParticles(int type, int r, int c, HWND hwnd) {
                 g_particles[i].size = (float)(rand() % 8 + 4);
                 g_particles[i].sizeGrow = 0.0f;
                 g_particles[i].gravityMult = 1.8f;
-                g_particles[i].type = 1;
+                g_particles[i].bounce = true;
+                g_particles[i].type = 1; // debris
                 g_particles[i].life = rand() % 50 + 30;
             }
         }
     } else if (type == 2) { // Drill
         py += 44.0f;
+        SpawnShockwave(px, py, 90.0f, RGB(0, 255, 255));
         COLORREF pal[] = {RGB(0, 255, 255), RGB(128, 222, 234), RGB(255, 255, 255), RGB(0, 100, 100)};
         for (int i = 0; i < MAX_PARTICLES; i++) {
             g_particles[i].x = px + (float)(rand() % 40 - 20); g_particles[i].y = py + (float)(rand() % 20 - 10);
@@ -174,10 +231,13 @@ void SpawnPowerupParticles(int type, int r, int c, HWND hwnd) {
             g_particles[i].size = (float)(rand() % 8 + 3);
             g_particles[i].sizeGrow = 0.0f;
             g_particles[i].gravityMult = 1.0f;
+            g_particles[i].drag = 0.96f;
+            g_particles[i].bounce = false;
             g_particles[i].type = 0;
             g_particles[i].life = rand() % 35 + 25;
         }
     } else if (type == 3) { // Magnet
+        SpawnShockwave(px, py, 90.0f, RGB(224, 64, 251));
         COLORREF pal[] = {RGB(224, 64, 251), RGB(234, 128, 252), RGB(255, 255, 255), RGB(74, 20, 140)};
         for (int i = 0; i < MAX_PARTICLES; i++) {
             float dist = (float)(rand() % 120 + 30);
@@ -190,6 +250,8 @@ void SpawnPowerupParticles(int type, int r, int c, HWND hwnd) {
             g_particles[i].size = (float)(rand() % 5 + 2);
             g_particles[i].sizeGrow = 0.0f;
             g_particles[i].gravityMult = 0.0f;
+            g_particles[i].drag = 1.0f;
+            g_particles[i].bounce = false;
             g_particles[i].type = 0;
             g_particles[i].life = 25; // Fixed lifetime to fly in
         }
@@ -219,9 +281,21 @@ void UpdateParticles() {
     }
     for (int i = 0; i < g_particleCount; i++) {
         if (g_particles[i].life > 0) {
+            if (g_particles[i].drag > 0.0f && g_particles[i].drag < 1.0f) {
+                g_particles[i].vx *= g_particles[i].drag;
+                g_particles[i].vy *= g_particles[i].drag;
+            }
             g_particles[i].x += g_particles[i].vx;
             g_particles[i].y += g_particles[i].vy;
             g_particles[i].vy += 0.15f * g_particles[i].gravityMult; 
+            
+            // Floor bounce
+            if (g_particles[i].bounce && g_particles[i].y > 500.0f) {
+                g_particles[i].y = 500.0f;
+                g_particles[i].vy = -g_particles[i].vy * 0.45f;
+                g_particles[i].vx *= 0.7f;
+            }
+
             g_particles[i].rotation += g_particles[i].vRot;
             if (g_particles[i].sizeGrow != 0.0f) {
                 g_particles[i].size += g_particles[i].sizeGrow;
@@ -1742,6 +1816,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         g_shakeAmp = animVY;
                         animVY = -animVY * 0.45f;
                         animBounceCount++;
+                        RECT rect; GetClientRect(hwnd, &rect);
+                        int boardW = g_cols * 44 + 10;
+                        int boardLeft = (rect.right - rect.left - boardW) / 2;
+                        SpawnShockwave((float)(boardLeft + 5 + animCol * 44 + 22), (float)(animTargetY + 18), 45.0f, (animPlayer == 1) ? RGB(255, 82, 82) : RGB(255, 215, 0));
                     } else {
                         animY = animTargetY;
                         isAnimating = false;
@@ -1776,6 +1854,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     g_shakeX = 0.0f; g_shakeY = 0.0f; g_shakeAmp = 0.0f;
                 }
                 UpdateParticles();
+                UpdateShockwaves();
                 if (hintTimer > 0) {
                     hintTimer--;
                     if (hintTimer == 0) hintCol = -1;
@@ -1793,26 +1872,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC hdc = BeginPaint(hwnd, &ps);
             RECT rect;
             GetClientRect(hwnd, &rect);
+
+            // Double-buffered rendering to completely eliminate flicker
+            HDC hdcMem = CreateCompatibleDC(hdc);
+            HBITMAP hbmMem = CreateCompatibleBitmap(hdc, rect.right, rect.bottom);
+            HBITMAP hbmOld = (HBITMAP)SelectObject(hdcMem, hbmMem);
             
             HBRUSH bg = CreateSolidBrush(RGB(27, 38, 59));
-            FillRect(hdc, &rect, bg);
+            FillRect(hdcMem, &rect, bg);
             DeleteObject(bg);
             
             HBRUSH dotBrush = CreateSolidBrush(RGB(45, 62, 94));
             HPEN nullPen = GetStockObject(NULL_PEN);
-            SelectObject(hdc, dotBrush);
-            SelectObject(hdc, nullPen);
+            SelectObject(hdcMem, dotBrush);
+            SelectObject(hdcMem, nullPen);
             for (int y = 0; y < rect.bottom; y += 40) {
                 for (int x = 0; x < rect.right; x += 40) {
-                    Ellipse(hdc, x-2, y-2, x+2, y+2);
-                    Ellipse(hdc, x+20-2, y+20-2, x+20+2, y+20+2);
+                    Ellipse(hdcMem, x-2, y-2, x+2, y+2);
+                    Ellipse(hdcMem, x+20-2, y+20-2, x+20+2, y+20+2);
                 }
             }
             DeleteObject(dotBrush);
             
-            SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, RGB(79, 195, 247));
-            if (hMainFont) SelectObject(hdc, hMainFont);
+            SetBkMode(hdcMem, TRANSPARENT);
+            SetTextColor(hdcMem, RGB(79, 195, 247));
+            if (hMainFont) SelectObject(hdcMem, hMainFont);
             
             char statusText[96];
             if (!gameActive) {
@@ -1829,7 +1913,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 wsprintf(replayText, " | Replay: %d/%d (Arrows L/R)", replayIndex, historyCount - 1);
                 lstrcat(statusText, replayText);
             }
-            TextOut(hdc, 20, 15, statusText, lstrlen(statusText));
+            TextOut(hdcMem, 20, 15, statusText, lstrlen(statusText));
             
             // --- Live Positional Evaluation & Advantage Meter ---
             int evalThreats1 = 0, evalThreats2 = 0;
@@ -1851,18 +1935,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             RECT redSide = {evalBarLeft, evalBarTop, splitX, evalBarBot};
             HBRUSH redBr = CreateSolidBrush(RGB(220, 50, 50));
-            FillRect(hdc, &redSide, redBr);
+            FillRect(hdcMem, &redSide, redBr);
             DeleteObject(redBr);
 
             RECT yelSide = {splitX, evalBarTop, evalBarRight, evalBarBot};
             HBRUSH yelBr = CreateSolidBrush(RGB(240, 200, 30));
-            FillRect(hdc, &yelSide, yelBr);
+            FillRect(hdcMem, &yelSide, yelBr);
             DeleteObject(yelBr);
 
             HPEN divPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-            SelectObject(hdc, divPen);
+            SelectObject(hdcMem, divPen);
             int midX = evalBarLeft + evalBarW / 2;
-            MoveToEx(hdc, midX, evalBarTop - 1, NULL); LineTo(hdc, midX, evalBarBot + 1);
+            MoveToEx(hdcMem, midX, evalBarTop - 1, NULL); LineTo(hdcMem, midX, evalBarBot + 1);
             DeleteObject(divPen);
 
             char evalStr[96];
@@ -1870,30 +1954,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (pctRed > 50) wsprintf(evalStr, "Eval: +%d.%d (Red %d%%) [Threats R:%d Y:%d]", abs((int)currentEval), abs((int)(currentEval * 10.0f) % 10), pctRed, evalThreats1, evalThreats2);
             else wsprintf(evalStr, "Eval: -%d.%d (Ylw %d%%) [Threats R:%d Y:%d]", abs((int)currentEval), abs((int)(currentEval * 10.0f) % 10), 100 - pctRed, evalThreats1, evalThreats2);
 
-            SetTextColor(hdc, RGB(180, 220, 255));
-            TextOut(hdc, 275, 15, evalStr, lstrlen(evalStr));
+            SetTextColor(hdcMem, RGB(180, 220, 255));
+            TextOut(hdcMem, 275, 15, evalStr, lstrlen(evalStr));
 
             if (gameMode == 3 && gameActive) {
                 int barWidth = (410 * turnTimeLeftMs) / 7000;
                 RECT timerBg = {20, 34, 430, 40};
                 HBRUSH tBg = CreateSolidBrush(RGB(30, 40, 55));
-                FillRect(hdc, &timerBg, tBg);
+                FillRect(hdcMem, &timerBg, tBg);
                 DeleteObject(tBg);
                 
                 RECT timerFg = {20, 34, 20 + barWidth, 40};
                 HBRUSH tFg = CreateSolidBrush((turnTimeLeftMs < 2000) ? RGB(255, 82, 82) : RGB(76, 175, 80));
-                FillRect(hdc, &timerFg, tFg);
+                FillRect(hdcMem, &timerFg, tFg);
                 DeleteObject(tFg);
             }
             
-            SetTextColor(hdc, RGB(200, 200, 200));
-            TextOut(hdc, 10, 630, "Press 'H' for Help Menu", 23);
+            SetTextColor(hdcMem, RGB(200, 200, 200));
+            TextOut(hdcMem, 10, 630, "Press 'H' for Help Menu", 23);
 
-            SetTextColor(hdc, RGB(170, 170, 170));
+            SetTextColor(hdcMem, RGB(170, 170, 170));
             char statsStr[128];
             wsprintf(statsStr, "Wins: Red %d, Yellow %d | Draws: %d | Streak: %d (Best: %d) | Max Stage: %d/20",
                      stats.redWins, stats.yellowWins, stats.draws, stats.streak, stats.bestStreak, stats.maxCampaignStage);
-            TextOut(hdc, 10, 655, statsStr, lstrlen(statsStr));
+            TextOut(hdcMem, 10, 655, statsStr, lstrlen(statsStr));
             
             // --- Board Layout Calculations ---
             int colWidth = 40;
@@ -1909,47 +1993,126 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int tableTop = boardTop + boardH - 20;
             RECT tableRect = {0, tableTop, rect.right, rect.bottom};
             HBRUSH tableBg = CreateSolidBrush(RGB(139, 69, 19));
-            FillRect(hdc, &tableRect, tableBg);
+            FillRect(hdcMem, &tableRect, tableBg);
             DeleteObject(tableBg);
             
             HPEN tableEdge = CreatePen(PS_SOLID, 4, RGB(160, 82, 45));
-            SelectObject(hdc, tableEdge);
-            MoveToEx(hdc, 0, tableTop, NULL);
-            LineTo(hdc, rect.right, tableTop);
+            SelectObject(hdcMem, tableEdge);
+            MoveToEx(hdcMem, 0, tableTop, NULL);
+            LineTo(hdcMem, rect.right, tableTop);
             DeleteObject(tableEdge);
 
             RECT frameOuter = {boardLeft - 6, boardTop - 6, boardLeft + boardW + 6, boardTop + boardH + 6};
             HBRUSH frameBg = CreateSolidBrush(RGB(19, 45, 105));
-            FillRect(hdc, &frameOuter, frameBg);
+            FillRect(hdcMem, &frameOuter, frameBg);
             DeleteObject(frameBg);
 
             HPEN topLight = CreatePen(PS_SOLID, 2, RGB(60, 115, 220));
             HPEN botDark  = CreatePen(PS_SOLID, 2, RGB(10, 22, 55));
-            SelectObject(hdc, topLight);
-            MoveToEx(hdc, boardLeft - 6, boardTop + boardH + 6, NULL); LineTo(hdc, boardLeft - 6, boardTop - 6); LineTo(hdc, boardLeft + boardW + 6, boardTop - 6);
-            SelectObject(hdc, botDark);
-            MoveToEx(hdc, boardLeft + boardW + 6, boardTop - 6, NULL); LineTo(hdc, boardLeft + boardW + 6, boardTop + boardH + 6); LineTo(hdc, boardLeft - 6, boardTop + boardH + 6);
+            SelectObject(hdcMem, topLight);
+            MoveToEx(hdcMem, boardLeft - 6, boardTop + boardH + 6, NULL); LineTo(hdcMem, boardLeft - 6, boardTop - 6); LineTo(hdcMem, boardLeft + boardW + 6, boardTop - 6);
+            SelectObject(hdcMem, botDark);
+            MoveToEx(hdcMem, boardLeft + boardW + 6, boardTop - 6, NULL); LineTo(hdcMem, boardLeft + boardW + 6, boardTop + boardH + 6); LineTo(hdcMem, boardLeft - 6, boardTop + boardH + 6);
             DeleteObject(topLight); DeleteObject(botDark);
+
+            // --- Pulsating Energy Perimeter Inlay Border ---
+            DWORD nowTicks = GetTickCount();
+            int pPulse = (int)(sinf(nowTicks * 0.003f) * 40.0f);
+            COLORREF inlayCol = RGB(50 + pPulse, 160 + pPulse, 230 + pPulse/2);
+            HPEN inlayPen = CreatePen(PS_SOLID, 1, inlayCol);
+            SelectObject(hdcMem, inlayPen);
+            HBRUSH nullB = GetStockObject(NULL_BRUSH);
+            SelectObject(hdcMem, nullB);
+            Rectangle(hdcMem, boardLeft - 4, boardTop - 4, boardLeft + boardW + 4, boardTop + boardH + 4);
+            DeleteObject(inlayPen);
+
+            // --- Traveling Specular Glint traversing frame perimeter ---
+            int perim = (boardW + 12) * 2 + (boardH + 12) * 2;
+            int gPos = (int)(nowTicks / 8) % perim;
+            int gx = boardLeft - 6, gy = boardTop - 6;
+            if (gPos < (boardW + 12)) {
+                gx = boardLeft - 6 + gPos; gy = boardTop - 6;
+            } else if (gPos < (boardW + 12) + (boardH + 12)) {
+                gx = boardLeft + boardW + 6; gy = boardTop - 6 + (gPos - (boardW + 12));
+            } else if (gPos < (boardW + 12) * 2 + (boardH + 12)) {
+                gx = (boardLeft + boardW + 6) - (gPos - ((boardW + 12) + (boardH + 12))); gy = boardTop + boardH + 6;
+            } else {
+                gx = boardLeft - 6; gy = (boardTop + boardH + 6) - (gPos - ((boardW + 12) * 2 + (boardH + 12)));
+            }
+            HBRUSH glintBrush = CreateSolidBrush(RGB(255, 255, 255));
+            HBRUSH flareBrush = CreateSolidBrush(RGB(0, 229, 255));
+            SelectObject(hdcMem, nullPen);
+            SelectObject(hdcMem, flareBrush);
+            Ellipse(hdcMem, gx - 5, gy - 5, gx + 5, gy + 5);
+            SelectObject(hdcMem, glintBrush);
+            Ellipse(hdcMem, gx - 2, gy - 2, gx + 2, gy + 2);
+            DeleteObject(glintBrush);
+            DeleteObject(flareBrush);
+
+            // --- Ornate Cybernetic / Arcade HUD Corner Filigree L-Brackets with Brass Rivets ---
+            int cSz = 16;
+            HPEN goldPen = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
+            HPEN notchPen = CreatePen(PS_SOLID, 1, RGB(79, 195, 247));
+            HBRUSH rivetBrush = CreateSolidBrush(RGB(184, 134, 11));
+            HBRUSH whiteBrush = CreateSolidBrush(RGB(255, 255, 255));
+            
+            // Top-Left
+            SelectObject(hdcMem, goldPen);
+            MoveToEx(hdcMem, boardLeft - 6, boardTop - 6 + cSz, NULL); LineTo(hdcMem, boardLeft - 6, boardTop - 6); LineTo(hdcMem, boardLeft - 6 + cSz, boardTop - 6);
+            SelectObject(hdcMem, notchPen);
+            MoveToEx(hdcMem, boardLeft - 2, boardTop - 2 + cSz - 4, NULL); LineTo(hdcMem, boardLeft - 2, boardTop - 2); LineTo(hdcMem, boardLeft - 2 + cSz - 4, boardTop - 2);
+            SelectObject(hdcMem, nullPen); SelectObject(hdcMem, rivetBrush);
+            Ellipse(hdcMem, boardLeft - 5, boardTop - 5, boardLeft - 1, boardTop - 1);
+            SelectObject(hdcMem, whiteBrush); SetPixel(hdcMem, boardLeft - 4, boardTop - 4, RGB(255, 255, 255));
+
+            // Top-Right
+            SelectObject(hdcMem, goldPen);
+            MoveToEx(hdcMem, boardLeft + boardW + 6 - cSz, boardTop - 6, NULL); LineTo(hdcMem, boardLeft + boardW + 6, boardTop - 6); LineTo(hdcMem, boardLeft + boardW + 6, boardTop - 6 + cSz);
+            SelectObject(hdcMem, notchPen);
+            MoveToEx(hdcMem, boardLeft + boardW + 2 - cSz + 4, boardTop - 2, NULL); LineTo(hdcMem, boardLeft + boardW + 2, boardTop - 2); LineTo(hdcMem, boardLeft + boardW + 2, boardTop - 2 + cSz - 4);
+            SelectObject(hdcMem, nullPen); SelectObject(hdcMem, rivetBrush);
+            Ellipse(hdcMem, boardLeft + boardW + 1, boardTop - 5, boardLeft + boardW + 5, boardTop - 1);
+            SelectObject(hdcMem, whiteBrush); SetPixel(hdcMem, boardLeft + boardW + 2, boardTop - 4, RGB(255, 255, 255));
+
+            // Bottom-Left
+            SelectObject(hdcMem, goldPen);
+            MoveToEx(hdcMem, boardLeft - 6, boardTop + boardH + 6 - cSz, NULL); LineTo(hdcMem, boardLeft - 6, boardTop + boardH + 6); LineTo(hdcMem, boardLeft - 6 + cSz, boardTop + boardH + 6);
+            SelectObject(hdcMem, notchPen);
+            MoveToEx(hdcMem, boardLeft - 2, boardTop + boardH + 2 - cSz + 4, NULL); LineTo(hdcMem, boardLeft - 2, boardTop + boardH + 2); LineTo(hdcMem, boardLeft - 2 + cSz - 4, boardTop + boardH + 2);
+            SelectObject(hdcMem, nullPen); SelectObject(hdcMem, rivetBrush);
+            Ellipse(hdcMem, boardLeft - 5, boardTop + boardH + 1, boardLeft - 1, boardTop + boardH + 5);
+            SelectObject(hdcMem, whiteBrush); SetPixel(hdcMem, boardLeft - 4, boardTop + boardH + 2, RGB(255, 255, 255));
+
+            // Bottom-Right
+            SelectObject(hdcMem, goldPen);
+            MoveToEx(hdcMem, boardLeft + boardW + 6 - cSz, boardTop + boardH + 6, NULL); LineTo(hdcMem, boardLeft + boardW + 6, boardTop + boardH + 6); LineTo(hdcMem, boardLeft + boardW + 6, boardTop + boardH + 6 - cSz);
+            SelectObject(hdcMem, notchPen);
+            MoveToEx(hdcMem, boardLeft + boardW + 2 - cSz + 4, boardTop + boardH + 2, NULL); LineTo(hdcMem, boardLeft + boardW + 2, boardTop + boardH + 2); LineTo(hdcMem, boardLeft + boardW + 2, boardTop + boardH + 2 - cSz + 4);
+            SelectObject(hdcMem, nullPen); SelectObject(hdcMem, rivetBrush);
+            Ellipse(hdcMem, boardLeft + boardW + 1, boardTop + boardH + 1, boardLeft + boardW + 5, boardTop + boardH + 5);
+            SelectObject(hdcMem, whiteBrush); SetPixel(hdcMem, boardLeft + boardW + 2, boardTop + boardH + 2, RGB(255, 255, 255));
+
+            DeleteObject(goldPen); DeleteObject(notchPen); DeleteObject(rivetBrush); DeleteObject(whiteBrush);
 
             RECT boardRect = {boardLeft, boardTop, boardLeft + boardW, boardTop + boardH};
             HBRUSH boardBg = CreateSolidBrush(RGB(24, 60, 138));
-            FillRect(hdc, &boardRect, boardBg);
+            FillRect(hdcMem, &boardRect, boardBg);
             DeleteObject(boardBg);
 
             HRGN clipRgn = CreateRectRgn(boardLeft, boardTop, boardLeft + boardW, boardTop + boardH);
-            SelectClipRgn(hdc, clipRgn);
+            SelectClipRgn(hdcMem, clipRgn);
             HPEN sheenPen = CreatePen(PS_SOLID, 10, RGB(45, 85, 175));
-            SelectObject(hdc, sheenPen);
+            SelectObject(hdcMem, sheenPen);
             for(int sh=boardLeft-boardH; sh<boardLeft+boardW; sh+=60) {
-                MoveToEx(hdc, sh, boardTop, NULL);
-                LineTo(hdc, sh+boardH, boardTop+boardH);
+                MoveToEx(hdcMem, sh, boardTop, NULL);
+                LineTo(hdcMem, sh+boardH, boardTop+boardH);
             }
             DeleteObject(sheenPen);
-            SelectClipRgn(hdc, NULL);
+            SelectClipRgn(hdcMem, NULL);
             DeleteObject(clipRgn);
             
             HRGN hRgn = CreateRectRgn(boardLeft, boardTop, boardLeft + boardW, boardTop + boardH);
-            SelectClipRgn(hdc, hRgn);
+            SelectClipRgn(hdcMem, hRgn);
 
             int hoverRow = -1;
             if (hoverCol != -1 && !isAnimating && gameActive && !(gameMode > 0 && currentPlayer == 2)) {
@@ -1983,15 +2146,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         else typeToDraw = (currentPlayer == 1) ? 100 : 200;
                     }
                     
-                    DrawDisc3D(hdc, x, y, typeToDraw, isWinCell);
+                    DrawDisc3D(hdcMem, x, y, typeToDraw, isWinCell);
 
                     // Frozen Column Overlay
                     if (frozenTurns > 0 && frozenCol == c) {
                         HBRUSH iceBrush = CreateSolidBrush(RGB(0, 180, 255));
                         HPEN icePen = CreatePen(PS_SOLID, 1, RGB(200, 240, 255));
-                        SelectObject(hdc, icePen);
-                        SelectObject(hdc, iceBrush);
-                        Rectangle(hdc, x - 2, boardTop + 2, x + 38, boardTop + boardH - 2);
+                        SelectObject(hdcMem, icePen);
+                        SelectObject(hdcMem, iceBrush);
+                        Rectangle(hdcMem, x - 2, boardTop + 2, x + 38, boardTop + boardH - 2);
                         DeleteObject(iceBrush); DeleteObject(icePen);
                     }
                 }
@@ -2001,9 +2164,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (hintCol >= 0 && hintCol < g_cols) {
                 int hx = boardLeft + 5 + hintCol * 44;
                 HPEN hintPen = CreatePen(PS_SOLID, 3, RGB(255, 215, 0));
-                HBRUSH nullB = GetStockObject(NULL_BRUSH);
-                SelectObject(hdc, hintPen); SelectObject(hdc, nullB);
-                Rectangle(hdc, hx, boardTop + 2, hx + 36, boardTop + boardH - 2);
+                SelectObject(hdcMem, hintPen); SelectObject(hdcMem, nullB);
+                Rectangle(hdcMem, hx, boardTop + 2, hx + 36, boardTop + boardH - 2);
                 DeleteObject(hintPen);
             }
             
@@ -2011,7 +2173,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (isAnimating) {
                 int x = boardLeft + 5 + animCol * 44;
                 int dropType = (animType == 1) ? 5 : ((animType == 2) ? 6 : ((animType == 3) ? 7 : animPlayer));
-                DrawDisc3D(hdc, x, animY, dropType, false);
+                DrawDisc3D(hdcMem, x, animY, dropType, false);
             }
 
             // Draw Winning 4-in-a-row Neon Beam Line
@@ -2025,48 +2187,68 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int curY2 = y1 + (int)((y2 - y1) * winBeamProgress);
 
                 HPEN auraPen = CreatePen(PS_SOLID, 12, RGB(0, 220, 255));
-                SelectObject(hdc, auraPen);
-                MoveToEx(hdc, x1, y1, NULL); LineTo(hdc, curX2, curY2);
+                SelectObject(hdcMem, auraPen);
+                MoveToEx(hdcMem, x1, y1, NULL); LineTo(hdcMem, curX2, curY2);
                 DeleteObject(auraPen);
 
                 HPEN midPen = CreatePen(PS_SOLID, 6, RGB(160, 245, 255));
-                SelectObject(hdc, midPen);
-                MoveToEx(hdc, x1, y1, NULL); LineTo(hdc, curX2, curY2);
+                SelectObject(hdcMem, midPen);
+                MoveToEx(hdcMem, x1, y1, NULL); LineTo(hdcMem, curX2, curY2);
                 DeleteObject(midPen);
 
                 HPEN corePen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
-                SelectObject(hdc, corePen);
-                MoveToEx(hdc, x1, y1, NULL); LineTo(hdc, curX2, curY2);
+                SelectObject(hdcMem, corePen);
+                MoveToEx(hdcMem, x1, y1, NULL); LineTo(hdcMem, curX2, curY2);
                 DeleteObject(corePen);
             }
             
-            SelectClipRgn(hdc, NULL);
+            SelectClipRgn(hdcMem, NULL);
             DeleteObject(hRgn);
+
+            // --- Dual-Tier Concentric Shockwave Ripple Rings ---
+            for (int i = 0; i < g_shockwaveCount; i++) {
+                if (g_shockwaves[i].life > 0.0f && g_shockwaves[i].r > 0.0f) {
+                    int sx = (int)g_shockwaves[i].x;
+                    int sy = (int)g_shockwaves[i].y;
+                    int sr = (int)g_shockwaves[i].r;
+                    
+                    HPEN swOuter = CreatePen(PS_SOLID, 2, g_shockwaves[i].color);
+                    SelectObject(hdcMem, swOuter); SelectObject(hdcMem, nullB);
+                    Ellipse(hdcMem, sx - sr, sy - sr, sx + sr, sy + sr);
+                    DeleteObject(swOuter);
+
+                    int inR = (int)(sr * 0.65f);
+                    if (inR > 2) {
+                        HPEN swInner = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+                        SelectObject(hdcMem, swInner);
+                        Ellipse(hdcMem, sx - inR, sy - inR, sx + inR, sy + inR);
+                        DeleteObject(swInner);
+                    }
+                }
+            }
 
             // Draw Dust Motes
             if (g_dustInit) {
-                HPEN nullP = GetStockObject(NULL_PEN);
-                SelectObject(hdc, nullP);
+                SelectObject(hdcMem, nullPen);
                 for(int i=0; i<MAX_DUST; i++) {
                     int alpha = (int)((sinf(g_dust[i].phase) + 1.0f) * 100.0f);
                     if (alpha < 0) alpha = 0;
                     if (alpha > 200) alpha = 200;
                     HBRUSH dBrush = CreateSolidBrush(RGB(200 + alpha/5, 200 + alpha/5, 255));
-                    SelectObject(hdc, dBrush);
+                    SelectObject(hdcMem, dBrush);
                     int px = (int)g_dust[i].x;
                     int py = (int)g_dust[i].y;
                     int sz = g_dust[i].size;
-                    Ellipse(hdc, px - sz, py - sz, px + sz, py + sz);
+                    Ellipse(hdcMem, px - sz, py - sz, px + sz, py + sz);
                     DeleteObject(dBrush);
                 }
             }
 
-            // Draw Confetti Particles
+            // Draw 4-Layer Particles
             for (int i = 0; i < g_particleCount; i++) {
                 if (g_particles[i].life > 0 && g_particles[i].size > 0.0f) {
                     HBRUSH pBrush = CreateSolidBrush(g_particles[i].color);
-                    HPEN pPen = GetStockObject(NULL_PEN);
-                    SelectObject(hdc, pBrush); SelectObject(hdc, pPen);
+                    SelectObject(hdcMem, pBrush); SelectObject(hdcMem, nullPen);
                     int px = (int)g_particles[i].x;
                     int py = (int)g_particles[i].y;
                     int sz = (int)g_particles[i].size;
@@ -2077,14 +2259,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         pts[1].x = px + sz/2; pts[1].y = py - (int)(sz*0.3f);
                         pts[2].x = px + (int)(sz*0.4f); pts[2].y = py + sz/2;
                         pts[3].x = px - (int)(sz*0.3f); pts[3].y = py + (int)(sz*0.4f);
-                        Polygon(hdc, pts, 4);
-                    } else {
-                        Rectangle(hdc, px - sz/2, py - sz/2, px + sz/2, py + sz/2);
+                        Polygon(hdcMem, pts, 4);
+                    } else if (g_particles[i].type == 2) { // Smoke / Fire puff
+                        Ellipse(hdcMem, px - sz/2, py - sz/2, px + sz/2, py + sz/2);
+                    } else if (g_particles[i].type == 3) { // 5-pointed celebration star
+                        POINT starPts[10];
+                        float outerR = (float)sz, innerR = (float)sz * 0.42f;
+                        for (int s = 0; s < 10; s++) {
+                            float angle = (s * 36 - 90) * 3.14159f / 180.0f + g_particles[i].rotation;
+                            float r_curr = (s % 2 == 0) ? outerR : innerR;
+                            starPts[s].x = px + (long)(cosf(angle) * r_curr);
+                            starPts[s].y = py + (long)(sinf(angle) * r_curr);
+                        }
+                        Polygon(hdcMem, starPts, 10);
+                    } else { // Sparks / confetti
+                        Rectangle(hdcMem, px - sz/2, py - sz/2, px + sz/2, py + sz/2);
                     }
                     DeleteObject(pBrush);
                 }
             }
             
+            // Blit double buffer to screen
+            BitBlt(hdc, 0, 0, rect.right, rect.bottom, hdcMem, 0, 0, SRCCOPY);
+            SelectObject(hdcMem, hbmOld);
+            DeleteObject(hbmMem);
+            DeleteDC(hdcMem);
+
             EndPaint(hwnd, &ps);
             break;
         }
@@ -2160,6 +2360,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (currentPlayer == 1) p1Freezes--; else p2Freezes--;
                             isFreezeMode = false;
                             PlaySoundEffect(9);
+                            SpawnShockwave((float)(boardLeft + 5 + c * 44 + 22), (float)(50 + g_rows * 22), 85.0f, RGB(0, 229, 255));
+                            g_shakeAmp = 8.0f;
                             UpdatePowerupButtons();
                             InvalidateRect(hwnd, NULL, TRUE);
                         }
