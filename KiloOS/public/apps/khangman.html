@@ -345,8 +345,10 @@
     let audioCtx = null;
     let isMuted = false;
 
-    // Visual FX & Particle System State
+    // Visual FX, Shockwaves, Dust Motes & Particle System State (Loop 8)
     let particles = [];
+    let dustMotes = [];
+    let shockwaves = [];
     let animTime = 0;
     let blinkTimer = 0;
     let isBlinking = false;
@@ -361,265 +363,120 @@
     let ropeAngularAcceleration = 0;
     let windForce = 0;
 
-    function showHelp() {
-        document.getElementById('help-modal').style.display = 'flex';
-    }
-
-    function hideHelp() {
-        document.getElementById('help-modal').style.display = 'none';
-    }
-
-    function initAudio() {
-        if (!audioCtx) {
-            audioCtx = new AudioContext();
+    function initDustMotes() {
+        dustMotes = [];
+        for (let i = 0; i < 28; i++) {
+            dustMotes.push({
+                x: Math.random() * 240,
+                y: Math.random() * 200,
+                vx: (Math.random() - 0.5) * 0.3,
+                vy: (Math.random() - 0.5) * 0.3 - 0.05,
+                size: Math.random() * 1.5 + 0.5,
+                alpha: Math.random() * 0.4 + 0.1,
+                phase: Math.random() * Math.PI * 2
+            });
         }
     }
 
-    function toggleMute() {
-        isMuted = !isMuted;
-        document.getElementById('mute-btn').innerText = isMuted ? '🔇 Muted' : '🔊 Sound';
+    function triggerScreenShake(amp = 14) {
+        screenShake = Math.max(screenShake, amp);
+        shakeAngle = Math.random() * Math.PI * 2;
     }
 
-    function playSound(type) {
-        if (isMuted) return;
-        initAudio();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        
-        const now = audioCtx.currentTime;
-        
-        if (type === 'valid') {
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(600, now);
-            osc.frequency.exponentialRampToValueAtTime(850, now + 0.1);
-            gain.gain.setValueAtTime(0.12, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-            osc.start(now);
-            osc.stop(now + 0.1);
-        } else if (type === 'invalid') {
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(280, now);
-            osc.frequency.exponentialRampToValueAtTime(130, now + 0.2);
-            gain.gain.setValueAtTime(0.12, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-            osc.start(now);
-            osc.stop(now + 0.2);
-        } else if (type === 'win') {
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(440, now);
-            osc.frequency.setValueAtTime(554, now + 0.08);
-            osc.frequency.setValueAtTime(659, now + 0.16);
-            osc.frequency.setValueAtTime(880, now + 0.24);
-            gain.gain.setValueAtTime(0.12, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.45);
-            osc.start(now);
-            osc.stop(now + 0.45);
-        } else if (type === 'lose') {
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(320, now);
-            osc.frequency.exponentialRampToValueAtTime(45, now + 0.6);
-            gain.gain.setValueAtTime(0.15, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.6);
-            osc.start(now);
-            osc.stop(now + 0.6);
-        } else if (type === 'shield') {
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(750, now);
-            osc.frequency.exponentialRampToValueAtTime(1150, now + 0.25);
-            gain.gain.setValueAtTime(0.15, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.25);
-            osc.start(now);
-            osc.stop(now + 0.25);
-        } else if (type === 'bomb') {
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(180, now);
-            osc.frequency.exponentialRampToValueAtTime(50, now + 0.25);
-            gain.gain.setValueAtTime(0.18, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.25);
-            osc.start(now);
-            osc.stop(now + 0.25);
-        } else if (type === 'vowel') {
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(900, now);
-            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
-            gain.gain.setValueAtTime(0.15, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.15);
-            osc.start(now);
-            osc.stop(now + 0.15);
-        } else if (type === 'freeze') {
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(600, now);
-            osc.frequency.exponentialRampToValueAtTime(400, now + 0.2);
-            gain.gain.setValueAtTime(0.15, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.2);
-            osc.start(now);
-            osc.stop(now + 0.2);
-        }
+    function spawnShockwave(x, y, maxR = 60, color = '#ffd700') {
+        shockwaves.push({
+            x, y, r: 2, maxR,
+            speed: maxR / 16,
+            color: color,
+            life: 1.0,
+            decay: 0.045
+        });
     }
 
-    function loadStats() {
-        const saved = localStorage.getItem('khangman_stats');
-        if (saved) {
-            try {
-                stats = JSON.parse(saved);
-                if (stats.blitzBest === undefined) stats.blitzBest = 0;
-            } catch (e) {}
-        }
-        updateStatsDisplay();
-    }
-    
-    function saveStats() {
-        localStorage.setItem('khangman_stats', JSON.stringify(stats));
-        updateStatsDisplay();
-    }
-    
-    function updateStatsDisplay() {
-        document.getElementById('stat-wins').innerText = stats.wins;
-        document.getElementById('stat-losses').innerText = stats.losses;
-        document.getElementById('stat-streak').innerText = stats.streak;
-        document.getElementById('stat-best').innerText = stats.best;
-        document.getElementById('stat-blitz-best').innerText = stats.blitzBest;
-    }
-
-    function resetStats() {
-        if (confirm("Reset all lifetime statistics?")) {
-            stats = { wins: 0, losses: 0, streak: 0, best: 0, blitzBest: 0 };
-            saveStats();
-        }
-    }
-
-    function saveGameState() {
-        if (gameEnded) {
-            alert("Cannot save a finished game.");
-            return;
-        }
-        const state = {
-            word: word,
-            category: document.getElementById('category').value,
-            guessed: Array.from(guessed),
-            errors: errors,
-            gameMode: gameMode,
-            campaignLevel: campaignLevel,
-            maxErrors: maxErrors,
-            vowelReveals: vowelReveals,
-            consonantRadars: consonantRadars,
-            shields: shields,
-            freezes: freezes,
-            bombs: bombs,
-            freezeTimerSeconds: freezeTimerSeconds,
-            blitzTime: blitzTime,
-            blitzWords: blitzWords
-        };
-        localStorage.setItem('khangman_save', JSON.stringify(state));
-        alert("Game saved!");
-    }
-
-    function loadGameState() {
-        const saved = localStorage.getItem('khangman_save');
-        if (saved) {
-            try {
-                const state = JSON.parse(saved);
-                word = state.word;
-                document.getElementById('category').value = state.category;
-                if (state.category === "Custom") {
-                    document.getElementById('custom-container').style.display = 'block';
-                } else {
-                    document.getElementById('custom-container').style.display = 'none';
-                }
-                guessed = new Set(state.guessed);
-                errors = state.errors;
-                gameMode = state.gameMode || 0;
-                campaignLevel = state.campaignLevel || 1;
-                maxErrors = state.maxErrors || 6;
-                vowelReveals = state.vowelReveals !== undefined ? state.vowelReveals : 2;
-                consonantRadars = state.consonantRadars !== undefined ? state.consonantRadars : 2;
-                shields = state.shields !== undefined ? state.shields : 2;
-                freezes = state.freezes !== undefined ? state.freezes : 2;
-                bombs = state.bombs !== undefined ? state.bombs : 2;
-                freezeTimerSeconds = state.freezeTimerSeconds || 0;
-                blitzTime = state.blitzTime || 60;
-                blitzWords = state.blitzWords || 0;
-                gameEnded = false;
-                
-                updateSkillButtons();
-                document.getElementById('message').innerText = "Game loaded. Guess a letter";
-                document.getElementById('message').style.color = "#e0e6ed";
-                document.getElementById('word-display').classList.remove('win-animation');
-                document.getElementById('hangman-canvas').classList.remove('shake-animation');
-                
-                initKeyboard();
-                if (gameMode === 2) startBlitzTimer();
-                updateDisplay();
-            } catch (e) {
-                alert("Failed to load game.");
-            }
-        } else {
-            alert("No saved game found.");
-        }
-    }
-
-    function updateSkillButtons() {
-        document.getElementById('vowel-btn').innerText = `Vowel[V](${vowelReveals})`;
-        document.getElementById('vowel-btn').disabled = vowelReveals <= 0 || gameEnded;
-        
-        document.getElementById('radar-btn').innerText = `Radar[H](${consonantRadars})`;
-        document.getElementById('radar-btn').disabled = consonantRadars <= 0 || gameEnded;
-        
-        document.getElementById('shield-btn').innerText = `Shield[S](${shields})`;
-        document.getElementById('shield-btn').disabled = shields <= 0 || gameEnded;
-        
-        document.getElementById('freeze-btn').innerText = `Freeze[F](${freezes})`;
-        document.getElementById('freeze-btn').disabled = freezes <= 0 || gameEnded;
-        
-        document.getElementById('bomb-btn').innerText = `Bomb[B](${bombs})`;
-        document.getElementById('bomb-btn').disabled = bombs <= 0 || gameEnded;
-    }
-
-    // --- High-Quality 3D Wooden Gallows, Animated Character & FX Canvas ---
+    // --- Loop 8 Multi-Layered Kinematic Particle Engine ---
     function spawnWinParticles() {
-        const colors = ['#ff4081', '#00e676', '#ffeb3b', '#00b0ff', '#e040fb', '#ffffff'];
-        const burstX = 120 + (Math.random() * 60 - 30);
-        const burstY = 80 + (Math.random() * 40 - 20);
-        // Multi-layered Firework Explosion
-        for (let i = 0; i < 80; i++) {
+        const colors = ['#ffd700', '#ffeb3b', '#00e676', '#00b0ff', '#e040fb', '#ffffff'];
+        const burstX = 120 + (Math.random() * 40 - 20);
+        const burstY = 70 + (Math.random() * 30 - 15);
+        triggerScreenShake(14);
+        spawnShockwave(burstX, burstY, 90, '#ffd700');
+        spawnShockwave(burstX, burstY, 55, '#00ffff');
+
+        // Layer 1: Incandescent Core Needle Sparks
+        for (let i = 0; i < 40; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * 8 + 2;
+            const speed = Math.random() * 10 + 3;
             particles.push({
                 x: burstX, y: burstY,
                 vx: Math.cos(angle) * speed,
                 vy: Math.sin(angle) * speed,
                 size: Math.random() * 3 + 1.5,
-                color: colors[Math.floor(Math.random() * colors.length)],
-                type: 'firework',
+                color: '#ffffff',
+                glowColor: colors[Math.floor(Math.random() * colors.length)],
+                type: 'spark',
+                drag: 0.93,
                 life: 0,
-                maxLife: 40 + Math.random() * 30
+                maxLife: 35 + Math.random() * 20
             });
         }
-        // Confetti shower
-        for (let i = 0; i < 40; i++) {
+
+        // Layer 2: Expanding Buoyant Celebration Puffs
+        for (let i = 0; i < 20; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 3 + 1;
+            particles.push({
+                x: burstX, y: burstY,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 0.8,
+                size: Math.random() * 6 + 4,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                type: 'smoke',
+                sizeGrow: 0.25,
+                life: 0,
+                maxLife: 45 + Math.random() * 20
+            });
+        }
+
+        // Layer 3: Radiant Golden Celebration Energy Stars (5-Pointed)
+        for (let i = 0; i < 25; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 6 + 2;
+            particles.push({
+                x: burstX, y: burstY,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                size: Math.random() * 6 + 4,
+                color: '#ffd700',
+                rotation: Math.random() * Math.PI * 2,
+                vRot: (Math.random() - 0.5) * 0.25,
+                type: 'star',
+                life: 0,
+                maxLife: 60 + Math.random() * 30
+            });
+        }
+
+        // Layer 4: Confetti Shower
+        for (let i = 0; i < 35; i++) {
             particles.push({
                 x: Math.random() * 240,
                 y: -10,
-                vx: (Math.random() - 0.5) * 4,
-                vy: Math.random() * 3 + 2,
-                size: Math.random() * 5 + 3,
+                vx: (Math.random() - 0.5) * 3,
+                vy: Math.random() * 2.5 + 1.5,
+                size: Math.random() * 4 + 2.5,
                 color: colors[Math.floor(Math.random() * colors.length)],
                 rotation: Math.random() * Math.PI * 2,
-                vRot: (Math.random() - 0.5) * 0.3,
+                vRot: (Math.random() - 0.5) * 0.2,
                 type: 'confetti',
                 life: 0,
-                maxLife: 120 + Math.random() * 50
+                maxLife: 100 + Math.random() * 40
             });
         }
     }
 
     function spawnLossParticles() {
-        for (let i = 0; i < 40; i++) {
+        triggerScreenShake(16);
+        spawnShockwave(165, 100, 75, '#ff5252');
+        for (let i = 0; i < 35; i++) {
             particles.push({
                 x: Math.random() * 240,
                 y: Math.random() * 200,
@@ -635,16 +492,19 @@
     }
 
     function spawnSparkParticles() {
-        const colors = ['#00ffff', '#ff00ff', '#ffff00', '#00ff00', '#ff8800'];
-        for (let i = 0; i < 30; i++) {
+        const colors = ['#00ffff', '#ffeb3b', '#00e676', '#ffffff'];
+        for (let i = 0; i < 24; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 6 + 2;
             particles.push({
-                x: 120 + (Math.random() * 80 - 40),
-                y: 100 + (Math.random() * 40 - 20),
-                vx: (Math.random() - 0.5) * 8,
-                vy: (Math.random() - 0.5) * 8,
-                size: Math.random() * 3 + 1,
-                color: colors[Math.floor(Math.random() * colors.length)],
-                rotation: 0, vRot: 0,
+                x: 120 + (Math.random() * 60 - 30),
+                y: 90 + (Math.random() * 30 - 15),
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                size: Math.random() * 2.5 + 1,
+                color: '#ffffff',
+                glowColor: colors[Math.floor(Math.random() * colors.length)],
+                drag: 0.94,
                 type: 'spark',
                 life: 0,
                 maxLife: 25 + Math.random() * 15
@@ -653,58 +513,106 @@
     }
 
     function updateAndDrawParticles(ctx) {
-        if (gameEnded && isWin() && Math.random() < 0.3) {
-            const colors = ['#ff4081', '#00e676', '#ffeb3b', '#00b0ff', '#ffd700'];
+        if (dustMotes.length === 0) initDustMotes();
+
+        // 0. Ambient Floating Dust / Chalk Motes
+        dustMotes.forEach(m => {
+            m.x += m.vx; m.y += m.vy;
+            if (m.x < 0) m.x = 240; if (m.x > 240) m.x = 0;
+            if (m.y < 0) m.y = 200; if (m.y > 200) m.y = 0;
+            ctx.save();
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = m.alpha * (0.6 + Math.sin(animTime * 2 + m.phase) * 0.4);
+            ctx.beginPath();
+            ctx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        });
+
+        // Ambient celebration sparkles during win state
+        if (gameEnded && isWin() && Math.random() < 0.35) {
+            const colors = ['#ffd700', '#ffeb3b', '#00e676', '#00b0ff', '#ffffff'];
             particles.push({
                 x: Math.random() * 240,
-                y: 0,
-                vx: (Math.random() - 0.5) * 3,
-                vy: 2 + Math.random() * 3,
+                y: -5,
+                vx: (Math.random() - 0.5) * 2,
+                vy: Math.random() * 2 + 1.5,
                 size: Math.random() * 5 + 3,
                 color: colors[Math.floor(Math.random() * colors.length)],
                 rotation: Math.random() * Math.PI * 2,
-                vRot: (Math.random() - 0.5) * 0.2,
-                type: 'confetti',
+                vRot: (Math.random() - 0.5) * 0.25,
+                type: Math.random() > 0.4 ? 'star' : 'confetti',
                 life: 0,
-                maxLife: 90
-            });
-        } else if (gameEnded && !isWin() && Math.random() < 0.4) {
-            particles.push({
-                x: Math.random() * 240,
-                y: 0,
-                vx: -0.5,
-                vy: 5 + Math.random() * 3,
-                size: Math.random() * 2 + 1,
-                color: 'rgba(120, 190, 255, 0.5)',
-                type: 'rain',
-                life: 0,
-                maxLife: 50
+                maxLife: 80
             });
         }
 
+        // Particle updates
         for (let i = particles.length - 1; i >= 0; i--) {
             let p = particles[i];
             p.life++;
+            if (p.drag) { p.vx *= p.drag; p.vy *= p.drag; }
             p.x += p.vx;
             p.y += p.vy;
+            if (p.sizeGrow) p.size += p.sizeGrow;
             
-            if (p.type === 'firework') {
-                p.vx *= 0.92;
-                p.vy *= 0.92;
+            if (p.type === 'spark') {
                 p.vy += 0.08;
                 ctx.save();
                 ctx.globalAlpha = Math.max(0, 1 - (p.life / p.maxLife));
-                ctx.fillStyle = p.color;
-                ctx.shadowColor = p.color;
+                ctx.fillStyle = p.color || '#ffffff';
+                ctx.shadowColor = p.glowColor || '#00ffff';
                 ctx.shadowBlur = 6;
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.arc(p.x, p.y, Math.max(0.5, p.size), 0, Math.PI * 2);
+                ctx.fill();
+                // Velocity needle streak
+                ctx.strokeStyle = p.glowColor || '#00ffff';
+                ctx.lineWidth = Math.max(0.5, p.size * 0.7);
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.x - p.vx * 2, p.y - p.vy * 2);
+                ctx.stroke();
+                ctx.restore();
+            } else if (p.type === 'smoke') {
+                p.vy -= 0.04; // Negative gravity / buoyant rise
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, (1 - (p.life / p.maxLife)) * 0.6);
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, Math.max(1, p.size), 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            } else if (p.type === 'star') {
+                // Radiant 5-Pointed Golden Celebration Energy Star
+                p.rotation += p.vRot;
+                p.vy += 0.05;
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.globalAlpha = Math.max(0, 1 - (p.life / p.maxLife));
+                ctx.fillStyle = p.color || '#ffd700';
+                ctx.shadowColor = '#ffd700';
+                ctx.shadowBlur = 8;
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rotation);
+                ctx.beginPath();
+                for (let s = 0; s < 5; s++) {
+                    const aOuter = (s * 72 - 90) * Math.PI / 180;
+                    const aInner = (s * 72 + 36 - 90) * Math.PI / 180;
+                    const rOuter = p.size;
+                    const rInner = p.size * 0.42;
+                    if (s === 0) ctx.moveTo(Math.cos(aOuter) * rOuter, Math.sin(aOuter) * rOuter);
+                    else ctx.lineTo(Math.cos(aOuter) * rOuter, Math.sin(aOuter) * rOuter);
+                    ctx.lineTo(Math.cos(aInner) * rInner, Math.sin(aInner) * rInner);
+                }
+                ctx.closePath();
                 ctx.fill();
                 ctx.restore();
             } else if (p.type === 'confetti') {
                 p.rotation += p.vRot;
-                p.vy += 0.08; // gravity
+                p.vy += 0.08;
                 ctx.save();
+                ctx.globalAlpha = Math.max(0, 1 - (p.life / p.maxLife));
                 ctx.translate(p.x, p.y);
                 ctx.rotate(p.rotation);
                 ctx.fillStyle = p.color;
@@ -717,17 +625,6 @@
                 ctx.moveTo(p.x, p.y);
                 ctx.lineTo(p.x + p.vx * 2, p.y + p.size * 4);
                 ctx.stroke();
-            } else if (p.type === 'spark') {
-                p.vy += 0.1;
-                ctx.save();
-                ctx.globalAlpha = Math.max(0, 1 - (p.life / p.maxLife));
-                ctx.shadowColor = p.color;
-                ctx.shadowBlur = 8;
-                ctx.fillStyle = '#ffffff';
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
             } else if (p.type === 'shooting_star') {
                 ctx.strokeStyle = p.color;
                 ctx.lineWidth = p.size;
@@ -737,20 +634,21 @@
                 ctx.stroke();
             } else if (p.type === 'debris') {
                 p.rotation += p.vRot;
-                p.vy += 0.5; // heavy gravity
+                p.vy += 0.45; // heavy gravity
                 p.vx *= 0.96;
-                if (p.y > 190) {
-                    p.y = 190;
-                    p.vy = -p.vy * 0.4;
-                    p.vx *= 0.6;
-                    p.vRot *= 0.6;
+                if (p.y > 185) {
+                    p.y = 185;
+                    p.vy = -p.vy * 0.42;
+                    p.vx *= 0.65;
+                    p.vRot *= 0.65;
                 }
                 ctx.save();
+                ctx.globalAlpha = Math.max(0, 1 - (p.life / p.maxLife));
                 ctx.translate(p.x, p.y);
                 ctx.rotate(p.rotation);
                 ctx.fillStyle = p.color;
                 ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-                if (p.size > 5) {
+                if (p.size > 4) {
                     ctx.fillStyle = 'rgba(0,0,0,0.5)';
                     ctx.fillRect(-p.size / 4, -p.size / 4, p.size / 2, p.size / 2);
                 }
@@ -761,12 +659,41 @@
                 particles.splice(i, 1);
             }
         }
+
+        // Dual-Tier Concentric Shockwaves
+        for (let i = shockwaves.length - 1; i >= 0; i--) {
+            const sw = shockwaves[i];
+            sw.r += sw.speed;
+            sw.life -= sw.decay;
+            if (sw.life <= 0 || sw.r >= sw.maxR) {
+                shockwaves.splice(i, 1);
+                continue;
+            }
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            // Outer dispersion halo
+            ctx.strokeStyle = sw.color;
+            ctx.lineWidth = 2.5 * sw.life;
+            ctx.globalAlpha = sw.life * 0.7;
+            ctx.beginPath();
+            ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
+            ctx.stroke();
+            // Inner compression wave
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5 * sw.life;
+            ctx.globalAlpha = sw.life * 0.9;
+            ctx.beginPath();
+            ctx.arc(sw.x, sw.y, Math.max(1, sw.r * 0.65), 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+        }
     }
 
     function renderHangmanCanvas() {
         const canvas = document.getElementById('hangman-canvas');
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
+        const w = canvas.width, h = canvas.height;
         animTime += 0.03;
         
         // Blink logic
@@ -779,14 +706,17 @@
             }
         }
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, w, h);
 
         ctx.save();
         if (screenShake > 0) {
-            ctx.translate(Math.cos(shakeAngle) * screenShake, Math.sin(shakeAngle * 1.2) * screenShake);
-            screenShake *= 0.85;
-            shakeAngle += 1.5;
-            if (screenShake < 0.5) screenShake = 0;
+            const rot = Math.sin(shakeAngle * 0.8) * screenShake * 0.03 * (Math.PI / 180);
+            ctx.translate(w / 2, h / 2);
+            ctx.rotate(rot);
+            ctx.translate(-w / 2 + Math.cos(shakeAngle) * screenShake, -h / 2 + Math.sin(shakeAngle * 1.2) * screenShake);
+            screenShake *= 0.88;
+            shakeAngle += 1.4;
+            if (screenShake < 0.4) screenShake = 0;
         }
 
         // 1. Spooky Environmental Background
@@ -1257,6 +1187,95 @@
         // 5. Update and Draw Particles
         updateAndDrawParticles(ctx);
 
+        // 6. Diagonal Specular Sheen Sweep
+        ctx.save();
+        const sweepPeriod = 5000;
+        const sweepProgress = (Date.now() % sweepPeriod) / sweepPeriod;
+        const sweepX = -80 + sweepProgress * (w + h + 160);
+        const sweepGrad = ctx.createLinearGradient(sweepX, 0, sweepX + 45, 45);
+        sweepGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+        sweepGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.07)');
+        sweepGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = sweepGrad;
+        ctx.fillRect(0, 0, w, h);
+        ctx.restore();
+
+        // 7. Pulsating Golden / Sky Inlay Perimeter Border
+        const now = Date.now();
+        const pulseAlpha = 0.35 + Math.sin(now * 0.003) * 0.15;
+        ctx.strokeStyle = `rgba(79, 172, 254, ${pulseAlpha})`;
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(4, 4, w - 8, h - 8);
+
+        // 8. Traveling Specular Glint traversing perimeter
+        const perim = (w - 8) * 2 + (h - 8) * 2;
+        const glintPos = (now * 0.12) % perim;
+        let gx = 4, gy = 4;
+        if (glintPos < (w - 8)) {
+            gx = 4 + glintPos; gy = 4;
+        } else if (glintPos < (w - 8) + (h - 8)) {
+            gx = w - 4; gy = 4 + (glintPos - (w - 8));
+        } else if (glintPos < (w - 8) * 2 + (h - 8)) {
+            gx = (w - 4) - (glintPos - ((w - 8) + (h - 8))); gy = h - 4;
+        } else {
+            gx = 4; gy = (h - 4) - (glintPos - ((w - 8) * 2 + (h - 8)));
+        }
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        const glintGrad = ctx.createRadialGradient(gx, gy, 0, gx, gy, 10);
+        glintGrad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+        glintGrad.addColorStop(0.4, 'rgba(79, 172, 254, 0.5)');
+        glintGrad.addColorStop(1, 'rgba(79, 172, 254, 0)');
+        ctx.fillStyle = glintGrad;
+        ctx.beginPath();
+        ctx.arc(gx, gy, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // 9. Ornate Western / Spooky Gallows HUD Corner Filigree L-Brackets with Brass Rivet Studs
+        const cornerSize = 16;
+        const corners = [
+            { x: 3, y: 3, dx: 1, dy: 1 },
+            { x: w - 3, y: 3, dx: -1, dy: 1 },
+            { x: 3, y: h - 3, dx: 1, dy: -1 },
+            { x: w - 3, y: h - 3, dx: -1, dy: -1 }
+        ];
+        corners.forEach(c => {
+            ctx.save();
+            ctx.strokeStyle = '#d4af37';
+            ctx.lineWidth = 2;
+            ctx.shadowColor = '#d4af37';
+            ctx.shadowBlur = 3;
+            ctx.beginPath();
+            ctx.moveTo(c.x + c.dx * cornerSize, c.y);
+            ctx.lineTo(c.x, c.y);
+            ctx.lineTo(c.x, c.y + c.dy * cornerSize);
+            ctx.stroke();
+
+            // Inner rustic notch
+            ctx.strokeStyle = 'rgba(79, 172, 254, 0.7)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(c.x + c.dx * (cornerSize - 4), c.y + c.dy * 3);
+            ctx.lineTo(c.x + c.dx * 3, c.y + c.dy * 3);
+            ctx.lineTo(c.x + c.dx * 3, c.y + c.dy * (cornerSize - 4));
+            ctx.stroke();
+
+            // Brass rivet pin with highlight
+            const rx = c.x + c.dx * 6;
+            const ry = c.y + c.dy * 6;
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#b8860b';
+            ctx.beginPath();
+            ctx.arc(rx, ry, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(rx - 0.5, ry - 0.5, 0.7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        });
+
         ctx.restore();
 
         requestAnimationFrame(renderHangmanCanvas);
@@ -1476,6 +1495,8 @@
             vowelReveals--;
             updateSkillButtons();
             playSound('vowel');
+            triggerScreenShake(8);
+            spawnShockwave(120, 100, 70, '#00e676');
             const targetChar = unGuessedVowels[Math.floor(Math.random() * unGuessedVowels.length)];
             guess(targetChar);
         }
@@ -1488,6 +1509,8 @@
             consonantRadars--;
             updateSkillButtons();
             playSound('valid');
+            triggerScreenShake(8);
+            spawnShockwave(120, 100, 70, '#fb8c00');
             const targetChar = unGuessedConsonants[Math.floor(Math.random() * unGuessedConsonants.length)];
             guess(targetChar);
         }
@@ -1495,6 +1518,8 @@
 
     function useShield() {
         if (shields <= 0 || gameEnded) return;
+        triggerScreenShake(6);
+        spawnShockwave(120, 100, 60, '#8e24aa');
         alert("Strike Shield absorbs 1 wrong guess automatically!");
     }
 
@@ -1504,34 +1529,79 @@
         freezeTimerSeconds = 15;
         updateSkillButtons();
         playSound('freeze');
+        triggerScreenShake(10);
+        spawnShockwave(120, 100, 80, '#03a9f4');
         if (gameMode !== 2 && !blitzTimerId) {
             startBlitzTimer(); // Enable ticker for freeze timer duration
         }
     }
 
     function spawnBombParticles() {
-        const colors = ['#ff6400', '#c83200', '#808080', '#404040', '#ffc800'];
+        const coreColors = ['#ffffff', '#ffeb3b', '#ff9800'];
+        const smokeColors = ['#ff5722', '#d84315', '#424242', '#212121'];
+        const debrisColors = ['#8d6e63', '#5d4037', '#3e2723', '#212121'];
         const burstX = 120;
         const burstY = 100;
-        for (let i = 0; i < 60; i++) {
+
+        triggerScreenShake(26);
+        spawnShockwave(burstX, burstY, 110, '#ff5722');
+        spawnShockwave(burstX, burstY, 65, '#ffeb3b');
+        lightningFlash = 1.0;
+
+        // Layer 1: Incandescent needle core sparks
+        for (let i = 0; i < 25; i++) {
             const angle = Math.random() * Math.PI * 2;
             const speed = Math.random() * 12 + 4;
             particles.push({
-                x: burstX + (Math.random() * 40 - 20),
-                y: burstY + (Math.random() * 40 - 20),
+                x: burstX, y: burstY,
                 vx: Math.cos(angle) * speed,
                 vy: Math.sin(angle) * speed,
+                size: Math.random() * 3 + 1.5,
+                color: '#ffffff',
+                glowColor: coreColors[Math.floor(Math.random() * coreColors.length)],
+                type: 'spark',
+                drag: 0.92,
+                life: 0,
+                maxLife: 35 + Math.random() * 20
+            });
+        }
+
+        // Layer 2: Expanding buoyant smoke/plasma puffs
+        for (let i = 0; i < 20; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 4 + 1;
+            particles.push({
+                x: burstX + (Math.random() * 20 - 10),
+                y: burstY + (Math.random() * 20 - 10),
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 0.7,
+                size: Math.random() * 8 + 5,
+                color: smokeColors[Math.floor(Math.random() * smokeColors.length)],
+                type: 'smoke',
+                sizeGrow: 0.3,
+                life: 0,
+                maxLife: 45 + Math.random() * 25
+            });
+        }
+
+        // Layer 3: Heavy kinematic wooden splinter & rope debris chunks
+        for (let i = 0; i < 25; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 11 + 3;
+            particles.push({
+                x: burstX + (Math.random() * 30 - 15),
+                y: burstY + (Math.random() * 30 - 15),
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 2,
                 size: Math.random() * 6 + 3,
-                color: colors[Math.floor(Math.random() * colors.length)],
+                color: debrisColors[Math.floor(Math.random() * debrisColors.length)],
                 rotation: Math.random() * Math.PI * 2,
                 vRot: (Math.random() - 0.5) * 0.8,
                 type: 'debris',
                 life: 0,
-                maxLife: 50 + Math.random() * 30
+                maxLife: 55 + Math.random() * 30
             });
         }
-        screenShake = 25; // Big shake
-        lightningFlash = 1.0;
     }
 
     function useBomb() {
@@ -1573,10 +1643,13 @@
                 shields--;
                 updateSkillButtons();
                 playSound('shield');
+                triggerScreenShake(8);
+                spawnShockwave(165, 50, 60, '#8e24aa');
             } else {
                 errors++;
-                ropeAngularVelocity += (Math.random() > 0.5 ? 0.25 : -0.25); // Add sudden sway on error
-                screenShake = 15;
+                ropeAngularVelocity += (Math.random() > 0.5 ? 0.3 : -0.3); // Add sudden sway on error
+                triggerScreenShake(15);
+                spawnShockwave(165, 50, 70, '#f44336');
                 lightningFlash = 1.0;
                 if (errors < maxErrors) playSound('invalid');
             }

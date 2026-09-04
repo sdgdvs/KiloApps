@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KHangman
 - KMech
 - KMatch3
 - KFreecell
@@ -150,8 +149,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KStarship
 - KConnect4
 - KStarDredge
+- KHangman
 
 ## Completed Work Log
+
+- **KHangman (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on wrong guesses, lightning strikes, active skills (Vowel Reveal, Consonant Radar, Strike Shield, Freeze Timer, Bomb Nuke), and victory bursts (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas khangman.html, and double-buffered viewport rendering with physics decay in Native C Win32 GDI KHangman/main.c), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity drag, expanding buoyant smoke & plasma puffs with negative gravity and radius growth, heavy kinematic wooden gallows / rope / letter shard debris with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars upon victory), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer dispersion halo radiating upon incorrect strikes, valid guesses, skill activations, bomb detonations, and stage clears, ornate western / spooky gallows HUD corner filigree L-brackets with brass rivet studs and micro-highlights at all four arena corners, a pulsating golden / sky inlay perimeter border with an animated traveling specular glint traversing the outer playfield gallows frame, sculpted 3D gallows highlights with diagonal specular sheen sweeps traversing the beams and sky, and atmospheric floating dust / chalk / tavern motes drifting across the viewport in both Web Canvas (khangman.html) and Native C Win32 GDI (KHangman/main.c).
 
 - **KConnect4 (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on piece drops, bomb explosions, drill activations, magnet pulls, freeze skill casts, and victory bursts (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas kconnect4.html, and double-buffered viewport rendering with physics decay in Native C Win32 GDI KConnect4/main.c), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity drag, expanding buoyant plasma & smoke puffs with negative gravity and radius growth, heavy kinematic debris shards with gravity, drag, floor bounce physics, and tumbling rotation, and radiant golden celebration energy stars upon victory), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer dispersion halo radiating upon drops, explosions, drills, magnet pulls, column freezes, and victory bursts, ornate cybernetic / arcade HUD corner filigree L-brackets with tech notches and brass rivet accents at all four board corners, a pulsating energy perimeter inlay border with an animated traveling specular glint traversing the outer playfield board frame, sculpted glossy 3D discs and board highlights with diagonal specular sheen sweeps, and atmospheric floating cyber dust motes drifting across the board in both Web Canvas (kconnect4.html) and Native C Win32 GDI (KConnect4/main.c).
 
