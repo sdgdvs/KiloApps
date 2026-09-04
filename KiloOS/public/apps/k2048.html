@@ -611,7 +611,7 @@
         </div>
 
         <div class="controls" role="toolbar" aria-label="Game Controls">
-            <button class="btn" onclick="initGame()" aria-label="Start New Game">New Game</button>
+            <button class="btn" onclick="restartOrNextStage()" aria-label="Start New Game">New Game</button>
             <button class="btn" onclick="toggleCampaign()" id="camp-btn" aria-label="Toggle Campaign Mode">Camp: Off</button>
             <button class="btn" onclick="toggleTimeAttack()" id="ta-btn" aria-label="Toggle Time Attack Mode">Time: Off</button>
             <button class="btn" onclick="toggleAutoPlay()" id="ap-btn" aria-label="Toggle Auto-Play">Auto: Off</button>
@@ -714,6 +714,7 @@
             document.body.className = themeName === 'default' ? '' : `theme-${themeName}`;
             safeSetStorage('k2048_theme', themeName);
             themeSelect.value = themeName;
+            updateBoardBackground();
         }
         let savedTheme = safeGetStorage('k2048_theme', 'default');
         setTheme(savedTheme);
@@ -831,6 +832,13 @@
                 startCampaignLevel();
             } else {
                 document.getElementById('stage-banner').style.display = 'none';
+                timeAttackEnabled = false;
+                document.getElementById('ta-btn').textContent = "Time: Off";
+                document.getElementById('timer-display').style.display = 'none';
+                obstaclesEnabled = false;
+                frozenTilesEnabled = false;
+                bombsEnabled = false;
+                movesMax = 0;
                 initGame();
             }
         }
@@ -852,6 +860,8 @@
 
             document.getElementById('ruleset-select').value = ruleset;
             document.getElementById('ta-btn').textContent = timeAttackEnabled ? "Time: On" : "Time: Off";
+            document.getElementById('timer-display').style.display = timeAttackEnabled ? "block" : "none";
+            if (timeAttackEnabled) document.getElementById('timer-display').textContent = timeRemaining + "s";
 
             setGridSize(gridSize);
 
@@ -859,6 +869,7 @@
             banner.style.display = 'flex';
             document.getElementById('stage-title').textContent = stage.desc;
             document.getElementById('stage-moves').textContent = `Moves: ${movesLeft}/${movesMax}`;
+            updateScore();
 
             if (stage.obstacles > 0) {
                 let placed = 0;
@@ -2097,7 +2108,7 @@
             let k = e.key.toLowerCase();
             if (k === 'u') { useUpgradeSkill(); return; }
             if (k === 'r') { useRotateSkill(); return; }
-            if (k === 'h') { useHammerSkill(); return; }
+            if (k === 'h' && !e.shiftKey) { useHammerSkill(); return; }
             if (k === 'z') { useUndoSkill(); return; }
             if (k === 'n') { restartOrNextStage(); return; }
             if (k === 'c') { toggleCampaign(); return; }

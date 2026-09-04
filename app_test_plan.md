@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** K2048
+**Target App:** KAlchemy
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- K2048
 - KAlchemy
 - KAsteroids
 - KAudio
@@ -173,8 +172,15 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KWizard
 - KWords
 - KZip
+- K2048
 
 ## Test Reports
 
-(Reports will be added here as the agent processes each app)
+- **K2048**: ISSUES FOUND ⚠️ (5 issues, 5 fixed inline)
+  - ✅ Core gameplay works (sliding tiles via arrow keys/WASD/swipe, merging, rulesets Classic/Fibonacci/Threes, active skills Upgrade/Rotate/Hammer/Undo, auto-play, 4 grid sizes, audio beeps, animations/particles).
+  - 🔧 FIXED: "New Game" button in Campaign Mode called `initGame()` instead of `restartOrNextStage()`, creating an orphaned campaign state without stage target/obstacles.
+  - 🔧 FIXED: Timed Campaign stages (e.g. Stage 4, 10, 16) activated background timer but left `#timer-display` invisible (`display: none`), concealing the countdown from the player.
+  - 🔧 FIXED: Toggling Campaign Mode off didn't clear stage hazard flags (`timeAttackEnabled`, `obstaclesEnabled`, etc.), causing subsequent free play sessions to retain campaign hazard rules.
+  - 🔧 FIXED: Initial campaign stage start didn't trigger `updateScore()`, showing stale standard game scores until the first move.
+  - 🔧 FIXED: Keyboard shortcut Shift+H (intended for Help) was intercepted by the Hammer shortcut `k === 'h'`, executing a hammer smash instead of opening Help modal.
 
