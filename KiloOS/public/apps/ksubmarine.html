@@ -860,6 +860,56 @@
             color: #ffffff;
             box-shadow: 0 0 6px rgba(0, 240, 255, 0.4);
         }
+
+        /* Research Lab & Deep-Sea Biology Discovery (Phase 10) */
+        .lab-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .lab-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 6px;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .lab-card:hover {
+            border-color: var(--border-glow);
+        }
+
+        .bio-incubator-panel {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            background: rgba(2, 11, 18, 0.6);
+            border: 1px solid var(--border-panel);
+            border-radius: 3px;
+            padding: 6px 8px;
+        }
+
+        .bio-specimen-pill {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 9px;
+            background: var(--bg-panel);
+            border: 1px solid rgba(19, 60, 90, 0.5);
+            border-radius: 3px;
+            padding: 3px 6px;
+        }
+
+        .bio-specimen-pill b {
+            color: var(--accent-emerald);
+        }
     </style>
 </head>
 <body class="theme-abyss">
@@ -1013,11 +1063,12 @@
         <!-- CENTER PANEL: ACTIVE SONAR, TRENCH NAVIGATION, CODEX & ENGINEERING -->
         <section class="center-stage">
             <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between; background: var(--bg-panel-header); border: 1px solid var(--border-panel); padding: 4px 8px; border-radius: 3px; flex-wrap: wrap;">
-                <div style="display: flex; gap: 6px;">
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                     <button id="viewSonarBtn" class="active-toggle">📡 ACTIVE SONAR</button>
                     <button id="viewNavMapBtn">🗺️ TRENCH NAV</button>
                     <button id="viewCodexBtn">🧬 FAUNA CODEX</button>
                     <button id="viewCargoBtn">💎 CARGO & SALVAGE</button>
+                    <button id="viewLabBtn">🔬 RESEARCH LAB</button>
                     <button id="viewEngineeringBtn">⚙️ ENGINEERING BAY</button>
                     <button id="viewDamageBtn">🚨 DAMAGE CONTROL</button>
                 </div>
@@ -1233,6 +1284,123 @@
                     <div style="margin-top: 4px; border-top: 1px solid var(--border-panel); padding-top: 4px; display: flex; justify-content: space-between; font-size: 9px; color: var(--text-dim);">
                         <span>TIP: Seal bulkhead doors to isolate flooded bays. Pressurize air dams to slow seawater ingress.</span>
                         <span id="dmgScrapBonusText" style="color: var(--accent-amber);">TITANIUM SCRAP FOR PATCHES: 0 UNITS (STANDARD WELDING SPEED)</span>
+                    </div>
+                </div>
+
+                <!-- RESEARCH LAB & BIOLOGY DISCOVERY OVERLAY (PHASE 10) -->
+                <div class="overlay-view" id="labView">
+                    <div class="overlay-header-row">
+                        <div>
+                            <span style="font-weight: bold; color: var(--text-bright); font-size: 11px;">🔬 DEEP-SEA BIOLOGY & MOLECULAR RESEARCH LAB</span>
+                            <span style="font-size: 10px; color: var(--text-dim); margin-left: 8px;">Synthesize extremophile bio-samples & discover pressure biomaterials</span>
+                        </div>
+                        <div style="display: flex; gap: 6px; align-items: center;">
+                            <button id="btnIncubateBio" style="font-size: 10px; border-color: var(--accent-emerald); color: var(--accent-emerald); font-weight: bold;">🧬 INCUBATE BIO-SPECIMEN (+20 DNA / 45 PTS)</button>
+                            <div class="eng-credits-badge" id="labCreditsDisplay">RESEARCH CREDITS: 150 PTS</div>
+                        </div>
+                    </div>
+
+                    <!-- Specimen Incubator Reservoir Counters -->
+                    <div class="bio-incubator-panel">
+                        <div class="bio-specimen-pill">
+                            <span>🦠 Planktonic Cultures:</span>
+                            <b id="bioPlanktonCount">2</b>
+                        </div>
+                        <div class="bio-specimen-pill">
+                            <span>🦑 Cephalopod DNA:</span>
+                            <b id="bioCephalopodCount">0</b>
+                        </div>
+                        <div class="bio-specimen-pill">
+                            <span>🧪 Chemosynthetic Enzymes:</span>
+                            <b id="bioEnzymesCount">0</b>
+                        </div>
+                        <div class="bio-specimen-pill">
+                            <span>🐉 Hadal Piezophile Biomass:</span>
+                            <b id="bioHadalCount">0</b>
+                        </div>
+                    </div>
+
+                    <!-- 4 Research Tech Cards Grid -->
+                    <div class="lab-grid" id="labGrid">
+                        <!-- Project 1: Pressure-Resistant Polymers -->
+                        <div class="lab-card">
+                            <div class="eng-card-title-row">
+                                <span class="eng-card-title">🛡️ PRESSURE-RESISTANT POLYMERS</span>
+                                <span class="eng-tier-badge" id="polymerTierBadge">MK I - SYNTHETIC</span>
+                            </div>
+                            <div class="eng-card-desc" id="polymerDesc">
+                                Piezophilic nano-polymers and silica lattice mesh resisting immense oceanic hydrostatic deformation.
+                            </div>
+                            <div class="eng-stat-row">
+                                <span>HULL TOLERANCE:</span>
+                                <b id="polymerToleranceStat">+15% MAX INTEGRITY</b>
+                            </div>
+                            <div class="eng-stat-row">
+                                <span>CRUSH STRESS MITIGATION:</span>
+                                <b id="polymerMitigationStat">-20% PRESSURE WEAR</b>
+                            </div>
+                            <button class="eng-upgrade-btn" id="btnUpgradePolymers">RESEARCH -> MK II (160 PTS + 2 PLANKTON)</button>
+                        </div>
+
+                        <!-- Project 2: Bioluminescent Enzymes -->
+                        <div class="lab-card">
+                            <div class="eng-card-title-row">
+                                <span class="eng-card-title">💡 BIOLUMINESCENT ENZYMES (LUCIFERIN-X)</span>
+                                <span class="eng-tier-badge" id="biolumTierBadge">MK I - EXTRACT</span>
+                            </div>
+                            <div class="eng-card-desc" id="biolumDesc">
+                                High-output luciferase enzymes synthesized from cephalopod photophores illuminating deep abyssal waters.
+                            </div>
+                            <div class="eng-stat-row">
+                                <span>ACTIVE SONAR RANGE:</span>
+                                <b id="biolumSonarStat">+35% DETECTION CONE</b>
+                            </div>
+                            <div class="eng-stat-row">
+                                <span>BIO-SCAN SPEED & YIELD:</span>
+                                <b id="biolumYieldStat">+25% RESEARCH YIELD</b>
+                            </div>
+                            <button class="eng-upgrade-btn" id="btnUpgradeBiolum">RESEARCH -> MK II (150 PTS + 2 CEPHALOPOD DNA)</button>
+                        </div>
+
+                        <!-- Project 3: Chemosynthetic Bio-Fuel Cells -->
+                        <div class="lab-card">
+                            <div class="eng-card-title-row">
+                                <span class="eng-card-title">⚡ CHEMOSYNTHETIC BIO-FUEL CELLS</span>
+                                <span class="eng-tier-badge" id="biofuelTierBadge">MK I - CATALYST</span>
+                            </div>
+                            <div class="eng-card-desc" id="biofuelDesc">
+                                Chemosynthetic sulfur-oxidizing bacterial enzymes converting hydrothermal minerals into secondary electrical power.
+                            </div>
+                            <div class="eng-stat-row">
+                                <span>ENGINE DRAIN REDUCTION:</span>
+                                <b id="biofuelDrainStat">-20% ELECTRICAL LOAD</b>
+                            </div>
+                            <div class="eng-stat-row">
+                                <span>VENT THERMAL CHARGE:</span>
+                                <b id="biofuelChargeStat">+0.15%/s NEAR SPRAY</b>
+                            </div>
+                            <button class="eng-upgrade-btn" id="btnUpgradeBiofuel">RESEARCH -> MK II (180 PTS + 2 ENZYMES)</button>
+                        </div>
+
+                        <!-- Project 4: Piezophilic Cellular Regenerator -->
+                        <div class="lab-card">
+                            <div class="eng-card-title-row">
+                                <span class="eng-card-title">🧬 PIEZOPHILIC CELLULAR REGENERATOR</span>
+                                <span class="eng-tier-badge" id="regenTierBadge">MK I - CULTURING</span>
+                            </div>
+                            <div class="eng-card-desc" id="regenDesc">
+                                Living extremophile biopolymer matrix that autonomously fills microscopic hull fissures and heals bulkhead leaks below 2000m.
+                            </div>
+                            <div class="eng-stat-row">
+                                <span>PASSIVE HULL HEALING:</span>
+                                <b id="regenHealingStat">+1.0% / 10s AT DEPTH</b>
+                            </div>
+                            <div class="eng-stat-row">
+                                <span>AUTO-PATCH SEEPAGE:</span>
+                                <b id="regenAutoPatchStat">SEALS HAIRLINE LEAKS</b>
+                            </div>
+                            <button class="eng-upgrade-btn" id="btnUpgradeRegen">RESEARCH -> MK II (220 PTS + 2 HADAL BIOMASS)</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1600,6 +1768,77 @@
                 } catch(e) {}
             }
 
+            // Phase 10 Deep-Sea Biology & Research Lab Audio
+            function playLabCentrifugeSound() {
+                if (!soundEnabled) return;
+                try {
+                    initAudio();
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    const now = audioCtx.currentTime;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(320, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.3);
+                    osc.frequency.exponentialRampToValueAtTime(440, now + 0.6);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.65);
+                } catch(e) {}
+            }
+
+            function playResearchBreakthroughSound() {
+                if (!soundEnabled) return;
+                try {
+                    initAudio();
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    const now = audioCtx.currentTime;
+                    [523, 659, 784, 1046, 1318].forEach((freq, idx) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+                        gain.gain.setValueAtTime(0.14, now + idx * 0.07);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.07 + 0.35);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now + idx * 0.07);
+                        osc.stop(now + idx * 0.07 + 0.35);
+                    });
+                } catch(e) {}
+            }
+
+            // --- PHASE 10: DEEP-SEA BIOLOGY RESEARCH PROJECTS ---
+            const RESEARCH_PROJECTS = {
+                polymers: [
+                    { tier: 1, name: 'MK I - SYNTHETIC', cost: 0, plankton: 0, bonusHull: 0, crushReduction: 0.0, desc: 'Standard carbon polymer seals and epipelagic gaskets.' },
+                    { tier: 2, name: 'MK II - PIEZOPHILIC MATRIX', cost: 160, plankton: 2, bonusHull: 15, crushReduction: 0.20, desc: 'Piezophile-infused synthetic resin. +15% max hull and -20% crush stress deformation.' },
+                    { tier: 3, name: 'MK III - GRAPHENE ELASTOMER', cost: 320, plankton: 4, bonusHull: 30, crushReduction: 0.35, desc: 'Cross-linked graphene nano-elastomer. +30% max hull and -35% crush stress deformation.' },
+                    { tier: 4, name: 'MK IV - HADAL FULLERENE', cost: 580, plankton: 6, bonusHull: 50, crushReduction: 0.50, desc: 'Ultra-resilient Hadal fullerene shell. +50% max hull and -50% crush stress deformation.' }
+                ],
+                biolum: [
+                    { tier: 1, name: 'MK I - EXTRACT', cost: 0, cephalopod: 0, sonarRangeBonus: 0, surveyBonus: 1.0, desc: 'Basic photophore bio-pigments extracted from cephalopod mantles.' },
+                    { tier: 2, name: 'MK II - LUCIFERIN-B ENZYME', cost: 150, cephalopod: 2, sonarRangeBonus: 300, surveyBonus: 1.25, desc: 'Refined deep-water luciferase enzyme. +300m active sonar range and +25% scan survey yield.' },
+                    { tier: 3, name: 'MK III - PHOTOPHORE GEL', cost: 300, cephalopod: 4, sonarRangeBonus: 600, surveyBonus: 1.5, desc: 'High-lumens resonant photophore gel. +600m active sonar range and +50% scan survey yield.' },
+                    { tier: 4, name: 'MK IV - QUANTUM GLOW', cost: 550, cephalopod: 6, sonarRangeBonus: 1000, surveyBonus: 2.0, desc: 'Quantum-stimulated bio-photonic matrix. +1000m active sonar range and 2.0x scan survey yield.' }
+                ],
+                biofuel: [
+                    { tier: 1, name: 'MK I - CATALYST', cost: 0, enzymes: 0, drainSave: 0.0, ventCharge: 0.0, desc: 'Standard bacterial culture for minor bio-chemical filtering.' },
+                    { tier: 2, name: 'MK II - SULFUR-OXIDIZING CELL', cost: 180, enzymes: 2, drainSave: 0.15, ventCharge: 0.10, desc: 'Chemosynthetic sulfur fuel cells. Reduces electrical drain by 15% and recharges +0.10%/s near vents.' },
+                    { tier: 3, name: 'MK III - HYDROTHERMAL REACTOR', cost: 360, enzymes: 4, drainSave: 0.28, ventCharge: 0.22, desc: 'High-yield enzymatic reactor. Reduces electrical drain by 28% and recharges +0.22%/s near vents.' },
+                    { tier: 4, name: 'MK IV - GEOTHERMAL BIO-SYNTH', cost: 620, enzymes: 6, drainSave: 0.40, ventCharge: 0.40, desc: 'Master bio-synthetic enzyme converter. Reduces electrical drain by 40% and recharges +0.40%/s near vents.' }
+                ],
+                regen: [
+                    { tier: 1, name: 'MK I - CULTURING', cost: 0, hadal: 0, autoHeal: 0.0, autoPatch: false, desc: 'Basic extremophile culture undergoing laboratory synthesis.' },
+                    { tier: 2, name: 'MK II - CELLULAR PATCH', cost: 220, hadal: 2, autoHeal: 0.5, autoPatch: true, desc: 'Self-repairing cellular biopolymer. Autonomously seals hairline weeping leaks below 2000m.' },
+                    { tier: 3, name: 'MK III - AUTONOMIC BIOPOLYMER', cost: 420, hadal: 4, autoHeal: 1.0, autoPatch: true, desc: 'Advanced living membrane. Regenerates +1.0% compartment integrity every 10s and seals ruptures.' },
+                    { tier: 4, name: 'MK IV - LIVING HULL BIOME', cost: 700, hadal: 6, autoHeal: 2.0, autoPatch: true, desc: 'Immortal Hadal piezophile biome. Restores +2.0% integrity per 8s below 2000m and prevents major breaches.' }
+                ]
+            };
+
             // --- BATHYSCAPHE SIMULATION STATE ---
             const RESOURCE_TYPES = {
                 manganese: { key: 'manganese', name: 'Manganese Nodules', unitWeight: 15, unitVal: 20, icon: '🪨', desc: 'Ferromanganese nodules rich in nickel, cobalt & copper' },
@@ -1907,6 +2146,20 @@
                 isDredging: false,
                 dredgeProgress: 0.0,
 
+                // Phase 10: Deep-Sea Biology & Research Lab
+                bioSamples: {
+                    plankton: 2,
+                    cephalopod: 0,
+                    enzymes: 0,
+                    hadal: 0
+                },
+                research: {
+                    polymers: 1,
+                    biolum: 1,
+                    biofuel: 1,
+                    regen: 1
+                },
+
                 // Vital systems
                 hull: 100.0,           // % integrity
                 crushDepth: 4500.0,    // meters before extreme catastrophic crush
@@ -2019,6 +2272,36 @@
             const viewCargoBtn = document.getElementById('viewCargoBtn');
             const viewEngineeringBtn = document.getElementById('viewEngineeringBtn');
             const viewDamageBtn = document.getElementById('viewDamageBtn');
+            const viewLabBtn = document.getElementById('viewLabBtn');
+
+            // Research Lab Elements (Phase 10)
+            const labView = document.getElementById('labView');
+            const labCreditsDisplay = document.getElementById('labCreditsDisplay');
+            const btnIncubateBio = document.getElementById('btnIncubateBio');
+            const bioPlanktonCount = document.getElementById('bioPlanktonCount');
+            const bioCephalopodCount = document.getElementById('bioCephalopodCount');
+            const bioEnzymesCount = document.getElementById('bioEnzymesCount');
+            const bioHadalCount = document.getElementById('bioHadalCount');
+            const polymerTierBadge = document.getElementById('polymerTierBadge');
+            const polymerDesc = document.getElementById('polymerDesc');
+            const polymerToleranceStat = document.getElementById('polymerToleranceStat');
+            const polymerMitigationStat = document.getElementById('polymerMitigationStat');
+            const btnUpgradePolymers = document.getElementById('btnUpgradePolymers');
+            const biolumTierBadge = document.getElementById('biolumTierBadge');
+            const biolumDesc = document.getElementById('biolumDesc');
+            const biolumSonarStat = document.getElementById('biolumSonarStat');
+            const biolumYieldStat = document.getElementById('biolumYieldStat');
+            const btnUpgradeBiolum = document.getElementById('btnUpgradeBiolum');
+            const biofuelTierBadge = document.getElementById('biofuelTierBadge');
+            const biofuelDesc = document.getElementById('biofuelDesc');
+            const biofuelDrainStat = document.getElementById('biofuelDrainStat');
+            const biofuelChargeStat = document.getElementById('biofuelChargeStat');
+            const btnUpgradeBiofuel = document.getElementById('btnUpgradeBiofuel');
+            const regenTierBadge = document.getElementById('regenTierBadge');
+            const regenDesc = document.getElementById('regenDesc');
+            const regenHealingStat = document.getElementById('regenHealingStat');
+            const regenAutoPatchStat = document.getElementById('regenAutoPatchStat');
+            const btnUpgradeRegen = document.getElementById('btnUpgradeRegen');
 
             // Damage Control Elements (Phase 9)
             const damageControlView = document.getElementById('damageControlView');
@@ -2134,10 +2417,11 @@
             // --- VIEW MODE TOGGLES ---
             function setViewMode(mode) {
                 state.viewMode = mode;
-                [viewSonarBtn, viewNavMapBtn, viewCodexBtn, viewCargoBtn, viewEngineeringBtn, viewDamageBtn].forEach(b => b && b.classList.remove('active-toggle'));
+                [viewSonarBtn, viewNavMapBtn, viewCodexBtn, viewCargoBtn, viewLabBtn, viewEngineeringBtn, viewDamageBtn].forEach(b => b && b.classList.remove('active-toggle'));
                 engineeringView.classList.remove('active');
                 codexView.classList.remove('active');
                 cargoView.classList.remove('active');
+                labView.classList.remove('active');
                 damageControlView.classList.remove('active');
                 document.getElementById('sonarOverlay').style.display = 'none';
                 sonarTargetHud.style.display = 'none';
@@ -2165,6 +2449,12 @@
                     sonarModeTag.textContent = 'MODE: CARGO HOLD & RESOURCE SALVAGE';
                     renderCargoUI();
                     playBeep(540, 'triangle', 0.08);
+                } else if (mode === 'lab') {
+                    viewLabBtn.classList.add('active-toggle');
+                    labView.classList.add('active');
+                    sonarModeTag.textContent = 'MODE: DEEP-SEA BIOLOGY RESEARCH LAB';
+                    renderLabUI();
+                    playBeep(680, 'triangle', 0.08);
                 } else if (mode === 'engineering') {
                     viewEngineeringBtn.classList.add('active-toggle');
                     engineeringView.classList.add('active');
@@ -2184,6 +2474,7 @@
             viewNavMapBtn.addEventListener('click', () => setViewMode('navmap'));
             viewCodexBtn.addEventListener('click', () => setViewMode('codex'));
             viewCargoBtn.addEventListener('click', () => setViewMode('cargo'));
+            viewLabBtn.addEventListener('click', () => setViewMode('lab'));
             viewEngineeringBtn.addEventListener('click', () => setViewMode('engineering'));
             viewDamageBtn.addEventListener('click', () => setViewMode('damage'));
 
@@ -2307,6 +2598,136 @@
                 playBeep(640, 'sine', 0.15);
                 logMessage(`Submersible diagnostic telemetry executed. Sensor calibration verified (+35 Research Credits).`, 'info');
             });
+
+            // --- DEEP-SEA BIOLOGY & RESEARCH LAB (PHASE 10) ---
+            function renderLabUI() {
+                labCreditsDisplay.textContent = `RESEARCH CREDITS: ${state.surveyPoints} PTS`;
+                surveyPtsVal.textContent = `${state.surveyPoints} PTS`;
+                codexCreditsDisplay.textContent = `RESEARCH CREDITS: ${state.surveyPoints} PTS`;
+                engCreditsDisplay.textContent = `RESEARCH CREDITS: ${state.surveyPoints} PTS`;
+
+                bioPlanktonCount.textContent = state.bioSamples.plankton;
+                bioCephalopodCount.textContent = state.bioSamples.cephalopod;
+                bioEnzymesCount.textContent = state.bioSamples.enzymes;
+                bioHadalCount.textContent = state.bioSamples.hadal;
+
+                // Project 1: Polymers
+                const pTier = state.research.polymers;
+                const pDef = RESEARCH_PROJECTS.polymers[pTier - 1];
+                polymerTierBadge.textContent = pDef.name;
+                polymerTierBadge.className = `eng-tier-badge ${pTier === 4 ? 'max' : ''}`;
+                polymerDesc.textContent = pDef.desc;
+                polymerToleranceStat.textContent = `+${pDef.bonusHull}% MAX HULL`;
+                polymerMitigationStat.textContent = `-${Math.round(pDef.crushReduction * 100)}% DEFORMATION`;
+                if (pTier < 4) {
+                    const nextP = RESEARCH_PROJECTS.polymers[pTier];
+                    btnUpgradePolymers.textContent = `RESEARCH -> ${nextP.name} (${nextP.cost} PTS + ${nextP.plankton} PLANKTON)`;
+                    const canAfford = (state.surveyPoints >= nextP.cost && state.bioSamples.plankton >= nextP.plankton);
+                    btnUpgradePolymers.disabled = !canAfford;
+                } else {
+                    btnUpgradePolymers.textContent = `MAX TIER REACHED [BREAKTHROUGH]`;
+                    btnUpgradePolymers.disabled = true;
+                }
+
+                // Project 2: Bioluminescent Enzymes
+                const bTier = state.research.biolum;
+                const bDef = RESEARCH_PROJECTS.biolum[bTier - 1];
+                biolumTierBadge.textContent = bDef.name;
+                biolumTierBadge.className = `eng-tier-badge ${bTier === 4 ? 'max' : ''}`;
+                biolumDesc.textContent = bDef.desc;
+                biolumSonarStat.textContent = `+${bDef.sonarRangeBonus}m SONAR RANGE`;
+                biolumYieldStat.textContent = `${bDef.surveyBonus.toFixed(2)}x SCAN YIELD`;
+                if (bTier < 4) {
+                    const nextB = RESEARCH_PROJECTS.biolum[bTier];
+                    btnUpgradeBiolum.textContent = `RESEARCH -> ${nextB.name} (${nextB.cost} PTS + ${nextB.cephalopod} CEPHALOPOD DNA)`;
+                    const canAfford = (state.surveyPoints >= nextB.cost && state.bioSamples.cephalopod >= nextB.cephalopod);
+                    btnUpgradeBiolum.disabled = !canAfford;
+                } else {
+                    btnUpgradeBiolum.textContent = `MAX TIER REACHED [BREAKTHROUGH]`;
+                    btnUpgradeBiolum.disabled = true;
+                }
+
+                // Project 3: Chemosynthetic Bio-Fuel
+                const fTier = state.research.biofuel;
+                const fDef = RESEARCH_PROJECTS.biofuel[fTier - 1];
+                biofuelTierBadge.textContent = fDef.name;
+                biofuelTierBadge.className = `eng-tier-badge ${fTier === 4 ? 'max' : ''}`;
+                biofuelDesc.textContent = fDef.desc;
+                biofuelDrainStat.textContent = `-${Math.round(fDef.drainSave * 100)}% ELECTRICAL LOAD`;
+                biofuelChargeStat.textContent = fDef.ventCharge > 0 ? `+${(fDef.ventCharge * 10).toFixed(1)}%/s AT THERMAL VENTS` : 'OFFLINE';
+                if (fTier < 4) {
+                    const nextF = RESEARCH_PROJECTS.biofuel[fTier];
+                    btnUpgradeBiofuel.textContent = `RESEARCH -> ${nextF.name} (${nextF.cost} PTS + ${nextF.enzymes} ENZYMES)`;
+                    const canAfford = (state.surveyPoints >= nextF.cost && state.bioSamples.enzymes >= nextF.enzymes);
+                    btnUpgradeBiofuel.disabled = !canAfford;
+                } else {
+                    btnUpgradeBiofuel.textContent = `MAX TIER REACHED [BREAKTHROUGH]`;
+                    btnUpgradeBiofuel.disabled = true;
+                }
+
+                // Project 4: Piezophilic Cellular Regenerator
+                const rTier = state.research.regen;
+                const rDef = RESEARCH_PROJECTS.regen[rTier - 1];
+                regenTierBadge.textContent = rDef.name;
+                regenTierBadge.className = `eng-tier-badge ${rTier === 4 ? 'max' : ''}`;
+                regenDesc.textContent = rDef.desc;
+                regenHealingStat.textContent = rDef.autoHeal > 0 ? `+${rDef.autoHeal.toFixed(1)}%/10s HEALING (>2000M)` : 'STANDBY';
+                regenAutoPatchStat.textContent = rDef.autoPatch ? 'ACTIVE (SEALS WEEPING LEAKS)' : 'MANUAL WELDING ONLY';
+                if (rTier < 4) {
+                    const nextR = RESEARCH_PROJECTS.regen[rTier];
+                    btnUpgradeRegen.textContent = `RESEARCH -> ${nextR.name} (${nextR.cost} PTS + ${nextR.hadal} HADAL BIOMASS)`;
+                    const canAfford = (state.surveyPoints >= nextR.cost && state.bioSamples.hadal >= nextR.hadal);
+                    btnUpgradeRegen.disabled = !canAfford;
+                } else {
+                    btnUpgradeRegen.textContent = `MAX TIER REACHED [BREAKTHROUGH]`;
+                    btnUpgradeRegen.disabled = true;
+                }
+            }
+
+            function purchaseResearch(techKey) {
+                const curTier = state.research[techKey];
+                if (curTier < 4) {
+                    const nextDef = RESEARCH_PROJECTS[techKey][curTier];
+                    const reqSamples = (techKey === 'polymers' ? nextDef.plankton :
+                                      (techKey === 'biolum' ? nextDef.cephalopod :
+                                      (techKey === 'biofuel' ? nextDef.enzymes : nextDef.hadal)));
+                    const sampleKey = (techKey === 'polymers' ? 'plankton' :
+                                      (techKey === 'biolum' ? 'cephalopod' :
+                                      (techKey === 'biofuel' ? 'enzymes' : 'hadal')));
+
+                    if (state.surveyPoints >= nextDef.cost && state.bioSamples[sampleKey] >= reqSamples) {
+                        state.surveyPoints -= nextDef.cost;
+                        state.bioSamples[sampleKey] -= reqSamples;
+                        state.research[techKey]++;
+                        renderLabUI();
+                        renderEngineeringUI();
+                        playResearchBreakthroughSound();
+                        logMessage(`🔬 BIOLOGY RESEARCH BREAKTHROUGH: [${nextDef.name}] synthesized! ${nextDef.desc}`, 'discovery');
+                    }
+                }
+            }
+
+            function incubateBioSpecimen() {
+                const cost = 45;
+                if (state.surveyPoints >= cost) {
+                    state.surveyPoints -= cost;
+                    const samples = ['plankton', 'cephalopod', 'enzymes', 'hadal'];
+                    const rSample = samples[Math.floor(Math.random() * samples.length)];
+                    state.bioSamples[rSample] += 2;
+                    playLabCentrifugeSound();
+                    renderLabUI();
+                    logMessage(`🧬 SPECIMEN INCUBATOR: Cultured 2x ${rSample.toUpperCase()} bio-materials in lab centrifuge (-45 Credits).`, 'info');
+                } else {
+                    playBeep(220, 'square', 0.15);
+                    logMessage(`INCUBATOR INSUFFICIENT CREDITS: Need 45 research credits to cultivate bio-specimens.`, 'warning');
+                }
+            }
+
+            btnUpgradePolymers.addEventListener('click', () => purchaseResearch('polymers'));
+            btnUpgradeBiolum.addEventListener('click', () => purchaseResearch('biolum'));
+            btnUpgradeBiofuel.addEventListener('click', () => purchaseResearch('biofuel'));
+            btnUpgradeRegen.addEventListener('click', () => purchaseResearch('regen'));
+            btnIncubateBio.addEventListener('click', incubateBioSpecimen);
 
             // --- FAUNA CODEX SYSTEM (PHASE 7) ---
             function renderCodexUI() {
@@ -2532,17 +2953,21 @@
                             state.cargo[resKey] = (state.cargo[resKey] || 0) + qty;
                             const bonusPts = Math.round(targetNode.val * state.surveyMultiplier);
                             state.surveyPoints += bonusPts;
+                            state.bioSamples.enzymes += 1;
                             recalculateCargo();
+                            renderLabUI();
                             playMineralChimeSound();
-                            logMessage(`💎 SALVAGE RECOVERED: [${targetNode.name}]! Harvested ${qty}x ${RESOURCE_TYPES[resKey].name} (+${bonusPts} Research Credits & +${targetNode.weight} KG payload)`, 'discovery');
+                            logMessage(`💎 SALVAGE RECOVERED: [${targetNode.name}]! Harvested ${qty}x ${RESOURCE_TYPES[resKey].name} (+${bonusPts} Credits, +1 Chemosynthetic Enzyme & +${targetNode.weight} KG payload)`, 'discovery');
                         } else {
-                            // General seabed dredging (harvests 2x Manganese Nodules)
+                            // General seabed dredging (harvests 2x Manganese Nodules + 1 Plankton/Enzyme)
                             state.cargo.manganese += 2;
+                            state.bioSamples.enzymes += 1;
                             const yieldPts = Math.round(30 * state.surveyMultiplier);
                             state.surveyPoints += yieldPts;
                             recalculateCargo();
+                            renderLabUI();
                             playMineralChimeSound();
-                            logMessage(`⛏️ BENTHIC DREDGING COMPLETE: Harvested 2x Manganese Nodules from sediment (+${yieldPts} Credits & +30 KG payload)`, 'discovery');
+                            logMessage(`⛏️ BENTHIC DREDGING COMPLETE: Harvested 2x Manganese Nodules & 1x Chemosynthetic Enzyme (+${yieldPts} Credits & +30 KG payload)`, 'discovery');
                         }
 
                         renderCargoUI();
@@ -2878,16 +3303,35 @@
 
                         if (!target.discovered) {
                             target.discovered = true;
-                            const ptsAwarded = Math.round(target.pts * state.surveyMultiplier);
+                            const biolumMult = RESEARCH_PROJECTS.biolum[state.research.biolum - 1].surveyBonus;
+                            const ptsAwarded = Math.round(target.pts * state.surveyMultiplier * biolumMult);
                             state.surveyPoints += ptsAwarded;
+
+                            // Award specialized Bio-Specimens based on target classification (Phase 10)
+                            let sampleName = '';
+                            if (target.type === 'squid') {
+                                state.bioSamples.cephalopod += 2;
+                                sampleName = '+2 Cephalopod DNA';
+                            } else if (target.type === 'flora' || target.type === 'trench') {
+                                state.bioSamples.enzymes += 2;
+                                sampleName = '+2 Chemosynthetic Enzymes';
+                            } else if (target.type === 'leviathan') {
+                                state.bioSamples.hadal += 3;
+                                sampleName = '+3 Hadal Piezophile Biomass';
+                            } else {
+                                state.bioSamples.plankton += 2;
+                                sampleName = '+2 Planktonic Cultures';
+                            }
+
                             renderEngineeringUI();
+                            renderLabUI();
 
                             if (target.type === 'leviathan') {
                                 playLeviathanSong();
-                                logMessage(`🚨 MAJESTIC LEVIATHAN ENCOUNTER CATALOGED: [${target.name}]! ${target.desc} (+${ptsAwarded} Research Credits)`, 'leviathan');
+                                logMessage(`🚨 MAJESTIC LEVIATHAN ENCOUNTER CATALOGED: [${target.name}]! ${target.desc} (+${ptsAwarded} Research Credits & ${sampleName})`, 'leviathan');
                             } else {
                                 playBeep(1100, 'triangle', 0.4, 0.25);
-                                logMessage(`🧬 BIO-ACOUSTIC SCAN COMPLETE: [${target.name}]! ${target.desc} (+${ptsAwarded} Research Credits)`, 'discovery');
+                                logMessage(`🧬 BIO-ACOUSTIC SCAN COMPLETE: [${target.name}]! ${target.desc} (+${ptsAwarded} Research Credits & ${sampleName})`, 'discovery');
                             }
                         } else {
                             logMessage(`Bio-acoustic telemetry updated: [${target.name}] health & frequency signature verified.`, 'info');
@@ -3258,10 +3702,14 @@
                 state.pressure = 1.0 + (state.depth * 0.0995);
                 state.hullStress = Math.min(100, (state.depth / state.crushDepth) * 100);
 
+                const polyDef = RESEARCH_PROJECTS.polymers[state.research.polymers - 1];
+                const regenDef = RESEARCH_PROJECTS.regen[state.research.regen - 1];
+                const biofuelDef = RESEARCH_PROJECTS.biofuel[state.research.biofuel - 1];
+
                 if (state.depth > state.crushDepth) {
                     const excess = state.depth - state.crushDepth;
-                    const hullDamageReduction = 1.0 - (state.upgrades.hull - 1) * 0.2;
-                    const hullDamage = (excess * 0.02 + 0.5) * dt * Math.max(0.3, hullDamageReduction);
+                    const hullDamageReduction = (1.0 - (state.upgrades.hull - 1) * 0.2) * (1.0 - polyDef.crushReduction);
+                    const hullDamage = (excess * 0.02 + 0.5) * dt * Math.max(0.15, hullDamageReduction);
                     state.hull = Math.max(0, state.hull - hullDamage);
 
                     // Random compartment damage during overcrush
@@ -3287,6 +3735,15 @@
                 let totalIngress = 0;
 
                 dc.compartments.forEach((comp, idx) => {
+                    // Piezophilic cellular regenerator passive healing & auto-patching below 2000m
+                    if (state.depth >= 2000 && regenDef.autoHeal > 0) {
+                        comp.integrity = Math.min(100.0, comp.integrity + (regenDef.autoHeal / 10.0) * dt);
+                        if (regenDef.autoPatch && comp.breachTier === 1 && Math.random() < dt * 0.05) {
+                            comp.breachTier = 0;
+                            logMessage(`🧬 LIVING HULL BIOME: Cellular regenerator autonomously sealed hairline fracture on [${comp.shortCode}]!`, 'discovery');
+                        }
+                    }
+
                     // Calculate leak rate based on breach tier and pressure
                     if (comp.breachTier > 0) {
                         const baseRate = comp.breachTier === 1 ? 4.0 : (comp.breachTier === 2 ? 18.0 : 55.0);
@@ -3379,7 +3836,7 @@
                     renderDamageControlUI();
                 }
 
-                // 6. Electrical Drain & Passive Nuclear Regeneration
+                // 6. Electrical Drain & Passive Nuclear Regeneration & Bio-Fuel Saving
                 let baseDrain = 0.3;
                 if (state.searchlights) baseDrain += (0.8 / state.upgrades.lights);
                 if (state.clawDeployed) baseDrain += 0.4;
@@ -3391,13 +3848,16 @@
                 if (state.autopilot) baseDrain += 0.3;
                 if (state.lowPowerMode) baseDrain *= 0.45;
 
-                baseDrain *= state.powerDrainMult;
+                baseDrain *= state.powerDrainMult * (1.0 - biofuelDef.drainSave);
                 state.powerDrain = baseDrain;
 
                 if (state.depth > 0) {
                     state.battery = Math.max(0, state.battery - (baseDrain * 0.015 * dt));
                     if (state.passiveBatteryRegen > 0) {
                         state.battery = Math.min(100, state.battery + state.passiveBatteryRegen * dt * 2.0);
+                    }
+                    if (biofuelDef.ventCharge > 0 && state.currentSectorIdx === 2) {
+                        state.battery = Math.min(100, state.battery + biofuelDef.ventCharge * dt * 1.5);
                     }
                 }
 

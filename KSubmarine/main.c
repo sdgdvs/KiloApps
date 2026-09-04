@@ -71,6 +71,12 @@
 #define ID_BTN_PATCH_BAY_1      158
 #define ID_BTN_PATCH_BAY_2      159
 #define ID_BTN_PATCH_BAY_3      160
+#define ID_BTN_VIEW_LAB         161
+#define ID_BTN_INCUBATE_BIO     162
+#define ID_BTN_RES_POLYMERS     163
+#define ID_BTN_RES_BIOLUM       164
+#define ID_BTN_RES_BIOFUEL      165
+#define ID_BTN_RES_REGEN        166
 
 typedef enum {
     THEME_ABYSS = 0,
@@ -242,6 +248,75 @@ typedef struct {
     float surveyMult;
     const char* desc;
 } LightsUpgrade;
+
+// --- PHASE 10: DEEP-SEA BIOLOGY RESEARCH STRUCTS ---
+typedef struct {
+    int tier;
+    const char* name;
+    int cost;
+    int reqPlankton;
+    float bonusHull;
+    float crushReduction;
+    const char* desc;
+} PolymerResearch;
+
+typedef struct {
+    int tier;
+    const char* name;
+    int cost;
+    int reqCephalopod;
+    float sonarBonus;
+    float surveyBonus;
+    const char* desc;
+} BiolumResearch;
+
+typedef struct {
+    int tier;
+    const char* name;
+    int cost;
+    int reqEnzymes;
+    float drainSave;
+    float ventCharge;
+    const char* desc;
+} BiofuelResearch;
+
+typedef struct {
+    int tier;
+    const char* name;
+    int cost;
+    int reqHadal;
+    float autoHeal;
+    int autoPatch;
+    const char* desc;
+} RegenResearch;
+
+static const PolymerResearch g_polymerRes[4] = {
+    { 1, "MK I - SYNTHETIC", 0, 0, 0.0f, 0.0f, "Standard carbon polymer seals and epipelagic gaskets." },
+    { 2, "MK II - PIEZOPHILIC MATRIX", 160, 2, 15.0f, 0.20f, "Piezophile-infused resin. +15% hull and -20% crush damage." },
+    { 3, "MK III - GRAPHENE ELASTOMER", 320, 4, 30.0f, 0.35f, "Cross-linked graphene elastomer. +30% hull and -35% crush damage." },
+    { 4, "MK IV - HADAL FULLERENE", 580, 6, 50.0f, 0.50f, "Ultra-resilient Hadal fullerene shell. +50% hull and -50% crush damage." }
+};
+
+static const BiolumResearch g_biolumRes[4] = {
+    { 1, "MK I - EXTRACT", 0, 0, 0.0f, 1.0f, "Basic photophore bio-pigments extracted from cephalopod mantles." },
+    { 2, "MK II - LUCIFERIN-B ENZYME", 150, 2, 300.0f, 1.25f, "Refined deep luciferase enzyme. +300m sonar range & +25% scan yield." },
+    { 3, "MK III - PHOTOPHORE GEL", 300, 4, 600.0f, 1.50f, "High-lumens resonant photophore gel. +600m sonar range & +50% scan yield." },
+    { 4, "MK IV - QUANTUM GLOW", 550, 6, 1000.0f, 2.00f, "Quantum-stimulated photonic matrix. +1000m sonar range & 2.0x scan yield." }
+};
+
+static const BiofuelResearch g_biofuelRes[4] = {
+    { 1, "MK I - CATALYST", 0, 0, 0.0f, 0.0f, "Standard bacterial culture for minor bio-chemical filtering." },
+    { 2, "MK II - SULFUR-OXIDIZING CELL", 180, 2, 0.15f, 0.10f, "Chemosynthetic sulfur fuel cells (-15% electrical drain, +0.10%/s at vents)." },
+    { 3, "MK III - HYDROTHERMAL REACTOR", 360, 4, 0.28f, 0.22f, "High-yield enzymatic reactor (-28% electrical drain, +0.22%/s at vents)." },
+    { 4, "MK IV - GEOTHERMAL BIO-SYNTH", 620, 6, 0.40f, 0.40f, "Master bio-synthetic converter (-40% electrical drain, +0.40%/s at vents)." }
+};
+
+static const RegenResearch g_regenRes[4] = {
+    { 1, "MK I - CULTURING", 0, 0, 0.0f, 0, "Basic extremophile culture undergoing laboratory synthesis." },
+    { 2, "MK II - CELLULAR PATCH", 220, 2, 0.5f, 1, "Self-repairing cellular biopolymer. Seals weeping leaks below 2000m." },
+    { 3, "MK III - AUTONOMIC BIOPOLYMER", 420, 4, 1.0f, 1, "Advanced living membrane. Regenerates +1.0% integrity / 10s below 2000m." },
+    { 4, "MK IV - LIVING HULL BIOME", 700, 6, 2.0f, 1, "Immortal Hadal piezophile biome. Restores +2.0% integrity / 8s below 2000m." }
+};
 
 static const HullUpgrade g_hullUpg[4] = {
     { 1, "MK I - STANDARD", 0, 4500.0f, 100.0f, "Standard epipelagic hull." },
@@ -481,6 +556,16 @@ typedef struct {
     int isDredging;
     float dredgeProgress;
 
+    // Phase 10: Deep-Sea Biology & Research Lab
+    int bioPlankton;
+    int bioCephalopod;
+    int bioEnzymes;
+    int bioHadal;
+    int resPolymers;
+    int resBiolum;
+    int resBiofuel;
+    int resRegen;
+
     // Phase 9: Damage Control & Bulkhead Compartments
     CompartmentInfo compartments[COMPARTMENT_COUNT];
     float cabinPressure;      // atm (1.00 nominal)
@@ -545,6 +630,8 @@ void PlaySoundAsync(DWORD freq, DWORD duration);
 void PlayLeviathanHarmonic(void);
 void PlayClawServo(void);
 void PlayMineralChime(void);
+void PlayLabCentrifuge(void);
+void PlayResearchBreakthrough(void);
 void AddLog(const char* text, COLORREF color);
 void InitSubmarineState(void);
 void UpdateSimulation(float dt);
@@ -644,6 +731,36 @@ DWORD WINAPI PressureBleedThreadProc(LPVOID lpParam) {
 void PlayPressureBleed(void) {
     if (!g_sub.soundEnabled) return;
     CreateThread(NULL, 0, PressureBleedThreadProc, NULL, 0, NULL);
+}
+
+DWORD WINAPI LabCentrifugeThreadProc(LPVOID lpParam) {
+    for (int i = 0; i < 4; i++) {
+        Beep(300 + i * 120, 40);
+        Sleep(10);
+    }
+    Beep(980, 100);
+    return 0;
+}
+
+void PlayLabCentrifuge(void) {
+    if (!g_sub.soundEnabled) return;
+    CreateThread(NULL, 0, LabCentrifugeThreadProc, NULL, 0, NULL);
+}
+
+DWORD WINAPI ResearchBreakthroughThreadProc(LPVOID lpParam) {
+    Beep(523, 80);
+    Sleep(15);
+    Beep(659, 80);
+    Sleep(15);
+    Beep(784, 80);
+    Sleep(15);
+    Beep(1046, 160);
+    return 0;
+}
+
+void PlayResearchBreakthrough(void) {
+    if (!g_sub.soundEnabled) return;
+    CreateThread(NULL, 0, ResearchBreakthroughThreadProc, NULL, 0, NULL);
 }
 
 void AddLog(const char* text, COLORREF color) {
@@ -798,6 +915,16 @@ void InitSubmarineState(void) {
     g_sub.isDredging = 0;
     g_sub.dredgeProgress = 0.0f;
     RecalculateCargo();
+
+    // Phase 10 Deep-Sea Biology & Research Lab
+    g_sub.bioPlankton = 2;
+    g_sub.bioCephalopod = 0;
+    g_sub.bioEnzymes = 0;
+    g_sub.bioHadal = 0;
+    g_sub.resPolymers = 1;
+    g_sub.resBiolum = 1;
+    g_sub.resBiofuel = 1;
+    g_sub.resRegen = 1;
 
     g_sub.hull = 100.0f;
     g_sub.crushDepth = 4500.0f;
@@ -1006,18 +1133,33 @@ void UpdateSimulation(float dt) {
                     FaunaAnomaly* target = &g_fauna[tgt->index];
                     if (!target->discovered) {
                         target->discovered = 1;
-                        int ptsAwarded = (int)(target->pts * g_sub.surveyMultiplier);
+                        float biolumYield = g_biolumRes[g_sub.resBiolum - 1].surveyBonus;
+                        int ptsAwarded = (int)(target->pts * g_sub.surveyMultiplier * biolumYield);
                         g_sub.surveyPoints += ptsAwarded;
+
+                        const char* sName = "+2 Plankton";
+                        if (target->type == 1) {
+                            g_sub.bioCephalopod += 2;
+                            sName = "+2 Cephalopod DNA";
+                        } else if (target->type == 2 || target->type == 3) {
+                            g_sub.bioEnzymes += 2;
+                            sName = "+2 Enzymes";
+                        } else if (target->type == 4) {
+                            g_sub.bioHadal += 3;
+                            sName = "+3 Hadal Biomass";
+                        } else {
+                            g_sub.bioPlankton += 2;
+                        }
 
                         if (target->type == 4) { // Leviathan
                             PlayLeviathanHarmonic();
                             char msg[128];
-                            snprintf(msg, sizeof(msg), "🚨 LEVIATHAN SCANNED: [%s]! %s (+%d PTS)", target->name, target->desc, ptsAwarded);
+                            snprintf(msg, sizeof(msg), "🚨 LEVIATHAN SCANNED: [%s]! %s (+%d PTS & %s)", target->name, target->desc, ptsAwarded, sName);
                             AddLog(msg, RGB(244, 63, 94));
                         } else {
                             PlaySoundAsync(1100, 200);
                             char msg[128];
-                            snprintf(msg, sizeof(msg), "BIO-SCAN COMPLETE: [%s]! %s (+%d PTS)", target->name, target->desc, ptsAwarded);
+                            snprintf(msg, sizeof(msg), "BIO-SCAN COMPLETE: [%s]! %s (+%d PTS & %s)", target->name, target->desc, ptsAwarded, sName);
                             AddLog(msg, th->accentEmerald);
                         }
                     }
@@ -1106,10 +1248,14 @@ void UpdateSimulation(float dt) {
     g_sub.pressure = 1.0f + (g_sub.depth * 0.0995f);
     g_sub.hullStress = min(100.0f, (g_sub.depth / g_sub.crushDepth) * 100.0f);
 
+    const PolymerResearch* polyRes = &g_polymerRes[g_sub.resPolymers - 1];
+    const RegenResearch* regRes = &g_regenRes[g_sub.resRegen - 1];
+    const BiofuelResearch* fuelRes = &g_biofuelRes[g_sub.resBiofuel - 1];
+
     if (g_sub.depth > g_sub.crushDepth) {
         float excess = g_sub.depth - g_sub.crushDepth;
-        float hullDamageReduction = 1.0f - (g_sub.upgradeHull - 1) * 0.2f;
-        if (hullDamageReduction < 0.3f) hullDamageReduction = 0.3f;
+        float hullDamageReduction = (1.0f - (g_sub.upgradeHull - 1) * 0.2f) * (1.0f - polyRes->crushReduction);
+        if (hullDamageReduction < 0.15f) hullDamageReduction = 0.15f;
         float hullDamage = (excess * 0.02f + 0.5f) * dt * hullDamageReduction;
         g_sub.hull = max(0.0f, g_sub.hull - hullDamage);
 
@@ -1137,6 +1283,15 @@ void UpdateSimulation(float dt) {
 
     for (int i = 0; i < COMPARTMENT_COUNT; i++) {
         CompartmentInfo* c = &g_sub.compartments[i];
+
+        // Piezophilic cellular regenerator passive healing & auto-patch below 2000m
+        if (g_sub.depth >= 2000.0f && regRes->autoHeal > 0.0f) {
+            c->integrity = min(100.0f, c->integrity + (regRes->autoHeal / 10.0f) * dt);
+            if (regRes->autoPatch && c->breachTier == 1 && (rand() % 100) < 2) {
+                c->breachTier = 0;
+                AddLog("🧬 LIVING HULL BIOME: Cellular regenerator sealed hairline fracture!", th->accentEmerald);
+            }
+        }
 
         if (c->breachTier > 0) {
             float baseRate = c->breachTier == 1 ? 4.0f : (c->breachTier == 2 ? 18.0f : 55.0f);
@@ -1239,13 +1394,16 @@ void UpdateSimulation(float dt) {
     if (g_sub.autopilot) baseDrain += 0.3f;
     if (g_sub.lowPowerMode) baseDrain *= 0.45f;
 
-    baseDrain *= g_sub.powerDrainMult;
+    baseDrain *= g_sub.powerDrainMult * (1.0f - fuelRes->drainSave);
     g_sub.powerDrain = baseDrain;
 
     if (g_sub.depth > 0.0f) {
         g_sub.battery = max(0.0f, g_sub.battery - (baseDrain * 0.015f * dt));
         if (g_sub.passiveBatteryRegen > 0.0f) {
             g_sub.battery = min(100.0f, g_sub.battery + g_sub.passiveBatteryRegen * dt * 2.0f);
+        }
+        if (fuelRes->ventCharge > 0.0f && g_sub.currentSectorIdx == 2) {
+            g_sub.battery = min(100.0f, g_sub.battery + fuelRes->ventCharge * dt * 1.5f);
         }
     }
 
@@ -2008,6 +2166,193 @@ void DrawDamageControlView(HDC hdc, int x, int y, int w, int h, const SubmarineT
     }
 }
 
+// --- DRAW RESEARCH LAB & DEEP-SEA BIOLOGY VIEW (PHASE 10) ---
+void DrawResearchLabView(HDC hdc, int x, int y, int w, int h, const SubmarineTheme* th) {
+    RECT rcBg = { x, y, x + w, y + h };
+    HBRUSH hBr = CreateSolidBrush(th->bgDeep);
+    FillRect(hdc, &rcBg, hBr);
+    DeleteObject(hBr);
+
+    // Specimen Reservoir Header Bar
+    char bioBuf[160];
+    snprintf(bioBuf, sizeof(bioBuf), "🧬 BIO-SAMPLES: %d Plankton | %d Cephalopod | %d Enzymes | %d Hadal  |  CREDITS: %d PTS",
+             g_sub.bioPlankton, g_sub.bioCephalopod, g_sub.bioEnzymes, g_sub.bioHadal, g_sub.surveyPoints);
+
+    SelectObject(hdc, g_hFontBold);
+    SetTextColor(hdc, th->accentEmerald);
+    TextOutA(hdc, x + 8, y + 6, bioBuf, (int)strlen(bioBuf));
+
+    // Incubate Button in Header
+    int canIncubate = (g_sub.surveyPoints >= 45);
+    DrawCustomButton(hdc, ID_BTN_INCUBATE_BIO, x + w - 190, y + 4, 180, 20, "INCUBATE (+2 BIO / 45 PTS)", 0, canIncubate ? th->accentEmerald : th->textDim, th);
+
+    int contentY = y + 28;
+    int contentH = h - 34;
+
+    int margin = 6;
+    int gridW = (w - margin * 3) / 2;
+    int gridH = (contentH - margin * 3) / 2;
+
+    int c1x = x + margin;
+    int c2x = x + margin * 2 + gridW;
+    int r1y = contentY + margin;
+    int r2y = contentY + margin * 2 + gridH;
+
+    char buf[128];
+
+    // Project 1: Pressure-Resistant Polymers
+    {
+        RECT rcCard = { c1x, r1y, c1x + gridW, r1y + gridH };
+        HBRUSH hBrP = CreateSolidBrush(th->bgPanel);
+        HBRUSH hBrB = CreateSolidBrush(th->borderPanel);
+        FillRect(hdc, &rcCard, hBrP);
+        FrameRect(hdc, &rcCard, hBrB);
+        DeleteObject(hBrP);
+        DeleteObject(hBrB);
+
+        int tier = g_sub.resPolymers;
+        const PolymerResearch* res = &g_polymerRes[tier - 1];
+
+        SelectObject(hdc, g_hFontBold);
+        SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, c1x + 8, r1y + 6, "PRESSURE-RESISTANT POLYMERS", 27);
+
+        SelectObject(hdc, g_hFontSmall);
+        SetTextColor(hdc, tier == 4 ? th->accentEmerald : th->accentSonar);
+        TextOutA(hdc, c1x + 8, r1y + 22, res->name, (int)strlen(res->name));
+
+        SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, c1x + 8, r1y + 36, res->desc, (int)strlen(res->desc));
+
+        snprintf(buf, sizeof(buf), "HULL BONUS: +%.0f%%   CRUSH MITIGATION: -%.0f%%", res->bonusHull, res->crushReduction * 100.0f);
+        SetTextColor(hdc, th->textPrimary);
+        TextOutA(hdc, c1x + 8, r1y + 50, buf, (int)strlen(buf));
+
+        if (tier < 4) {
+            const PolymerResearch* nextRes = &g_polymerRes[tier];
+            snprintf(buf, sizeof(buf), "RESEARCH -> %s (%d PTS + %d PLANKTON)", nextRes->name, nextRes->cost, nextRes->reqPlankton);
+            int canAfford = (g_sub.surveyPoints >= nextRes->cost && g_sub.bioPlankton >= nextRes->reqPlankton);
+            DrawCustomButton(hdc, ID_BTN_RES_POLYMERS, c1x + 8, r1y + gridH - 24, gridW - 16, 18, buf, 0, canAfford ? th->accentEmerald : th->textDim, th);
+        } else {
+            DrawCustomButton(hdc, ID_BTN_RES_POLYMERS, c1x + 8, r1y + gridH - 24, gridW - 16, 18, "MAX TIER [BREAKTHROUGH]", 1, th->accentEmerald, th);
+        }
+    }
+
+    // Project 2: Bioluminescent Enzymes
+    {
+        RECT rcCard = { c2x, r1y, c2x + gridW, r1y + gridH };
+        HBRUSH hBrP = CreateSolidBrush(th->bgPanel);
+        HBRUSH hBrB = CreateSolidBrush(th->borderPanel);
+        FillRect(hdc, &rcCard, hBrP);
+        FrameRect(hdc, &rcCard, hBrB);
+        DeleteObject(hBrP);
+        DeleteObject(hBrB);
+
+        int tier = g_sub.resBiolum;
+        const BiolumResearch* res = &g_biolumRes[tier - 1];
+
+        SelectObject(hdc, g_hFontBold);
+        SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, c2x + 8, r1y + 6, "BIOLUMINESCENT ENZYMES", 22);
+
+        SelectObject(hdc, g_hFontSmall);
+        SetTextColor(hdc, tier == 4 ? th->accentEmerald : th->accentSonar);
+        TextOutA(hdc, c2x + 8, r1y + 22, res->name, (int)strlen(res->name));
+
+        SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, c2x + 8, r1y + 36, res->desc, (int)strlen(res->desc));
+
+        snprintf(buf, sizeof(buf), "SONAR RANGE: +%.0fm   SCAN YIELD: %.2fx", res->sonarBonus, res->surveyBonus);
+        SetTextColor(hdc, th->textPrimary);
+        TextOutA(hdc, c2x + 8, r1y + 50, buf, (int)strlen(buf));
+
+        if (tier < 4) {
+            const BiolumResearch* nextRes = &g_biolumRes[tier];
+            snprintf(buf, sizeof(buf), "RESEARCH -> %s (%d PTS + %d CEPHALOPOD)", nextRes->name, nextRes->cost, nextRes->reqCephalopod);
+            int canAfford = (g_sub.surveyPoints >= nextRes->cost && g_sub.bioCephalopod >= nextRes->reqCephalopod);
+            DrawCustomButton(hdc, ID_BTN_RES_BIOLUM, c2x + 8, r1y + gridH - 24, gridW - 16, 18, buf, 0, canAfford ? th->accentEmerald : th->textDim, th);
+        } else {
+            DrawCustomButton(hdc, ID_BTN_RES_BIOLUM, c2x + 8, r1y + gridH - 24, gridW - 16, 18, "MAX TIER [BREAKTHROUGH]", 1, th->accentEmerald, th);
+        }
+    }
+
+    // Project 3: Chemosynthetic Bio-Fuel Cells
+    {
+        RECT rcCard = { c1x, r2y, c1x + gridW, r2y + gridH };
+        HBRUSH hBrP = CreateSolidBrush(th->bgPanel);
+        HBRUSH hBrB = CreateSolidBrush(th->borderPanel);
+        FillRect(hdc, &rcCard, hBrP);
+        FrameRect(hdc, &rcCard, hBrB);
+        DeleteObject(hBrP);
+        DeleteObject(hBrB);
+
+        int tier = g_sub.resBiofuel;
+        const BiofuelResearch* res = &g_biofuelRes[tier - 1];
+
+        SelectObject(hdc, g_hFontBold);
+        SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, c1x + 8, r2y + 6, "CHEMOSYNTHETIC BIO-FUEL CELLS", 29);
+
+        SelectObject(hdc, g_hFontSmall);
+        SetTextColor(hdc, tier == 4 ? th->accentEmerald : th->accentSonar);
+        TextOutA(hdc, c1x + 8, r2y + 22, res->name, (int)strlen(res->name));
+
+        SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, c1x + 8, r2y + 36, res->desc, (int)strlen(res->desc));
+
+        snprintf(buf, sizeof(buf), "LOAD REDUCTION: -%.0f%%   VENT REGEN: %s", res->drainSave * 100.0f, res->ventCharge > 0.0f ? "+0.2%/s NEAR VENTS" : "OFFLINE");
+        SetTextColor(hdc, th->textPrimary);
+        TextOutA(hdc, c1x + 8, r2y + 50, buf, (int)strlen(buf));
+
+        if (tier < 4) {
+            const BiofuelResearch* nextRes = &g_biofuelRes[tier];
+            snprintf(buf, sizeof(buf), "RESEARCH -> %s (%d PTS + %d ENZYMES)", nextRes->name, nextRes->cost, nextRes->reqEnzymes);
+            int canAfford = (g_sub.surveyPoints >= nextRes->cost && g_sub.bioEnzymes >= nextRes->reqEnzymes);
+            DrawCustomButton(hdc, ID_BTN_RES_BIOFUEL, c1x + 8, r2y + gridH - 24, gridW - 16, 18, buf, 0, canAfford ? th->accentEmerald : th->textDim, th);
+        } else {
+            DrawCustomButton(hdc, ID_BTN_RES_BIOFUEL, c1x + 8, r2y + gridH - 24, gridW - 16, 18, "MAX TIER [BREAKTHROUGH]", 1, th->accentEmerald, th);
+        }
+    }
+
+    // Project 4: Piezophilic Cellular Regenerator
+    {
+        RECT rcCard = { c2x, r2y, c2x + gridW, r2y + gridH };
+        HBRUSH hBrP = CreateSolidBrush(th->bgPanel);
+        HBRUSH hBrB = CreateSolidBrush(th->borderPanel);
+        FillRect(hdc, &rcCard, hBrP);
+        FrameRect(hdc, &rcCard, hBrB);
+        DeleteObject(hBrP);
+        DeleteObject(hBrB);
+
+        int tier = g_sub.resRegen;
+        const RegenResearch* res = &g_regenRes[tier - 1];
+
+        SelectObject(hdc, g_hFontBold);
+        SetTextColor(hdc, th->textBright);
+        TextOutA(hdc, c2x + 8, r2y + 6, "PIEZOPHILIC CELL REGENERATOR", 28);
+
+        SelectObject(hdc, g_hFontSmall);
+        SetTextColor(hdc, tier == 4 ? th->accentEmerald : th->accentSonar);
+        TextOutA(hdc, c2x + 8, r2y + 22, res->name, (int)strlen(res->name));
+
+        SetTextColor(hdc, th->textDim);
+        TextOutA(hdc, c2x + 8, r2y + 36, res->desc, (int)strlen(res->desc));
+
+        snprintf(buf, sizeof(buf), "HEALING: +%.1f%%/10s AT DEPTH   AUTO-PATCH: %s", res->autoHeal, res->autoPatch ? "SEALS WEEPS" : "OFFLINE");
+        SetTextColor(hdc, th->textPrimary);
+        TextOutA(hdc, c2x + 8, r2y + 50, buf, (int)strlen(buf));
+
+        if (tier < 4) {
+            const RegenResearch* nextRes = &g_regenRes[tier];
+            snprintf(buf, sizeof(buf), "RESEARCH -> %s (%d PTS + %d HADAL)", nextRes->name, nextRes->cost, nextRes->reqHadal);
+            int canAfford = (g_sub.surveyPoints >= nextRes->cost && g_sub.bioHadal >= nextRes->reqHadal);
+            DrawCustomButton(hdc, ID_BTN_RES_REGEN, c2x + 8, r2y + gridH - 24, gridW - 16, 18, buf, 0, canAfford ? th->accentEmerald : th->textDim, th);
+        } else {
+            DrawCustomButton(hdc, ID_BTN_RES_REGEN, c2x + 8, r2y + gridH - 24, gridW - 16, 18, "MAX TIER [BREAKTHROUGH]", 1, th->accentEmerald, th);
+        }
+    }
+}
+
 void DrawUI(HDC hdc, RECT* rcClient) {
     int clientW = rcClient->right - rcClient->left;
     int clientH = rcClient->bottom - rcClient->top;
@@ -2186,14 +2531,15 @@ void DrawUI(HDC hdc, RECT* rcClient) {
     snprintf(secTag, sizeof(secTag), "SECTOR: %s | SURVEY: %d PTS", g_sectors[g_sub.currentSectorIdx].name, g_sub.surveyPoints);
     DrawPanelBox(hdc, centerX, panelY, centerW, sonarH, "DEEP OCEAN & FAUNA EXPLORATION", secTag, th->accentEmerald, th);
 
-    // View switch buttons inside center panel header (6 views)
-    int btnViewW = (centerW - 140) / 6;
+    // View switch buttons inside center panel header (7 views)
+    int btnViewW = (centerW - 140) / 7;
     DrawCustomButton(hdc, ID_BTN_VIEW_SONAR, centerX + 8, panelY + 28, btnViewW - 2, 20, "SONAR", g_sub.viewMode == 0, th->accentSonar, th);
     DrawCustomButton(hdc, ID_BTN_VIEW_NAVMAP, centerX + 6 + btnViewW, panelY + 28, btnViewW - 2, 20, "TRENCH", g_sub.viewMode == 1, th->accentSonar, th);
     DrawCustomButton(hdc, ID_BTN_VIEW_CODEX, centerX + 4 + btnViewW * 2, panelY + 28, btnViewW - 2, 20, "CODEX", g_sub.viewMode == 2, th->accentSonar, th);
     DrawCustomButton(hdc, ID_BTN_VIEW_CARGO, centerX + 2 + btnViewW * 3, panelY + 28, btnViewW - 2, 20, "CARGO", g_sub.viewMode == 3, th->accentAmber, th);
-    DrawCustomButton(hdc, ID_BTN_VIEW_ENG, centerX + btnViewW * 4, panelY + 28, btnViewW - 2, 20, "ENG", g_sub.viewMode == 4, th->accentSonar, th);
-    DrawCustomButton(hdc, ID_BTN_VIEW_DAMAGE, centerX - 2 + btnViewW * 5, panelY + 28, btnViewW - 2, 20, "DAMAGE", g_sub.viewMode == 5, th->accentRed, th);
+    DrawCustomButton(hdc, ID_BTN_VIEW_LAB, centerX + btnViewW * 4, panelY + 28, btnViewW - 2, 20, "LAB", g_sub.viewMode == 6, th->accentEmerald, th);
+    DrawCustomButton(hdc, ID_BTN_VIEW_ENG, centerX - 2 + btnViewW * 5, panelY + 28, btnViewW - 2, 20, "ENG", g_sub.viewMode == 4, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_VIEW_DAMAGE, centerX - 4 + btnViewW * 6, panelY + 28, btnViewW - 2, 20, "DAMAGE", g_sub.viewMode == 5, th->accentRed, th);
     DrawCustomButton(hdc, ID_BTN_FIELD_DIAG, centerX + centerW - 128, panelY + 28, 120, 20, "+35 PTS DIAG", 0, th->accentAmber, th);
 
     int sonarContentY = panelY + 52;
@@ -2377,6 +2723,8 @@ void DrawUI(HDC hdc, RECT* rcClient) {
         DrawEngineeringBay(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
     } else if (g_sub.viewMode == 5) {
         DrawDamageControlView(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
+    } else if (g_sub.viewMode == 6) {
+        DrawResearchLabView(hdc, centerX + 6, sonarContentY + 4, centerW - 12, sonarContentH - 8, th);
     }
 
     SelectObject(hdc, g_hFontSmall);
@@ -2546,15 +2894,16 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
         if (mx >= clientW - 142 && mx <= clientW - 12) return ID_BTN_EMERGENCY_BLOW;
     }
 
-    // View toggles in center panel (6 buttons)
+    // View toggles in center panel (7 buttons)
     if (my >= panelY + 28 && my <= panelY + 48) {
-        int btnViewW = (centerW - 140) / 6;
+        int btnViewW = (centerW - 140) / 7;
         if (mx >= centerX + 8 && mx <= centerX + 8 + btnViewW - 2) return ID_BTN_VIEW_SONAR;
         if (mx >= centerX + 6 + btnViewW && mx <= centerX + 6 + btnViewW * 2 - 2) return ID_BTN_VIEW_NAVMAP;
         if (mx >= centerX + 4 + btnViewW * 2 && mx <= centerX + 4 + btnViewW * 3 - 2) return ID_BTN_VIEW_CODEX;
         if (mx >= centerX + 2 + btnViewW * 3 && mx <= centerX + 2 + btnViewW * 4 - 2) return ID_BTN_VIEW_CARGO;
-        if (mx >= centerX + btnViewW * 4 && mx <= centerX + btnViewW * 5 - 2) return ID_BTN_VIEW_ENG;
-        if (mx >= centerX - 2 + btnViewW * 5 && mx <= centerX - 2 + btnViewW * 6 - 2) return ID_BTN_VIEW_DAMAGE;
+        if (mx >= centerX + btnViewW * 4 && mx <= centerX + btnViewW * 5 - 2) return ID_BTN_VIEW_LAB;
+        if (mx >= centerX - 2 + btnViewW * 5 && mx <= centerX - 2 + btnViewW * 6 - 2) return ID_BTN_VIEW_ENG;
+        if (mx >= centerX - 4 + btnViewW * 6 && mx <= centerX - 4 + btnViewW * 7 - 2) return ID_BTN_VIEW_DAMAGE;
         if (mx >= centerX + centerW - 128 && mx <= centerX + centerW - 8) return ID_BTN_FIELD_DIAG;
     }
 
@@ -2636,6 +2985,40 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
                 if (my >= sy + (btnH + 3) * 2 && my <= sy + (btnH + 3) * 2 + btnH) return ID_BTN_ROUTE_BAY_0 + i;
                 if (my >= sy + (btnH + 3) * 3 && my <= sy + (btnH + 3) * 3 + btnH) return ID_BTN_PATCH_BAY_0 + i;
             }
+        }
+    }
+
+    if (g_sub.viewMode == 6) { // Research Lab & Deep-Sea Biology View
+        int sonarH = (panelH * 60) / 100;
+        int sonarContentY = panelY + 52;
+        int sonarContentH = sonarH - 58;
+        int labX = centerX + 6;
+        int labY = sonarContentY + 4;
+        int labW = centerW - 12;
+
+        // Incubate button in header
+        if (my >= labY + 4 && my <= labY + 24 && mx >= labX + labW - 190 && mx <= labX + labW - 10) {
+            return ID_BTN_INCUBATE_BIO;
+        }
+
+        int contentY = labY + 28;
+        int contentH = sonarContentH - 8 - 34;
+
+        int marginLab = 6;
+        int gridW = (labW - marginLab * 3) / 2;
+        int gridH = (contentH - marginLab * 3) / 2;
+        int c1x = labX + marginLab;
+        int c2x = labX + marginLab * 2 + gridW;
+        int r1y = contentY + marginLab;
+        int r2y = contentY + marginLab * 2 + gridH;
+
+        if (my >= r1y + gridH - 24 && my <= r1y + gridH - 6) {
+            if (mx >= c1x + 8 && mx <= c1x + gridW - 8) return ID_BTN_RES_POLYMERS;
+            if (mx >= c2x + 8 && mx <= c2x + gridW - 8) return ID_BTN_RES_BIOLUM;
+        }
+        if (my >= r2y + gridH - 24 && my <= r2y + gridH - 6) {
+            if (mx >= c1x + 8 && mx <= c1x + gridW - 8) return ID_BTN_RES_BIOFUEL;
+            if (mx >= c2x + 8 && mx <= c2x + gridW - 8) return ID_BTN_RES_REGEN;
         }
     }
 
@@ -2754,6 +3137,11 @@ void HandleCommand(int cmdId) {
             PlaySoundAsync(540, 80);
             break;
 
+        case ID_BTN_VIEW_LAB:
+            g_sub.viewMode = 6;
+            PlaySoundAsync(680, 80);
+            break;
+
         case ID_BTN_VIEW_ENG:
             g_sub.viewMode = 4;
             PlaySoundAsync(580, 80);
@@ -2763,6 +3151,85 @@ void HandleCommand(int cmdId) {
             g_sub.viewMode = 5;
             PlaySoundAsync(500, 80);
             break;
+
+        case ID_BTN_INCUBATE_BIO: {
+            if (g_sub.surveyPoints >= 45) {
+                g_sub.surveyPoints -= 45;
+                int r = rand() % 4;
+                const char* sName = "Plankton";
+                if (r == 0) { g_sub.bioPlankton += 2; sName = "Plankton"; }
+                else if (r == 1) { g_sub.bioCephalopod += 2; sName = "Cephalopod DNA"; }
+                else if (r == 2) { g_sub.bioEnzymes += 2; sName = "Chemosynthetic Enzymes"; }
+                else { g_sub.bioHadal += 2; sName = "Hadal Biomass"; }
+                PlayLabCentrifuge();
+                snprintf(msg, sizeof(msg), "🧬 SPECIMEN INCUBATOR: Cultured 2x %s (-45 Credits).", sName);
+                AddLog(msg, th->accentEmerald);
+            } else {
+                PlaySoundAsync(220, 120);
+                AddLog("INCUBATOR ERROR: Need 45 research credits to cultivate bio-specimens.", th->accentAmber);
+            }
+            break;
+        }
+
+        case ID_BTN_RES_POLYMERS: {
+            if (g_sub.resPolymers < 4) {
+                const PolymerResearch* nextP = &g_polymerRes[g_sub.resPolymers];
+                if (g_sub.surveyPoints >= nextP->cost && g_sub.bioPlankton >= nextP->reqPlankton) {
+                    g_sub.surveyPoints -= nextP->cost;
+                    g_sub.bioPlankton -= nextP->reqPlankton;
+                    g_sub.resPolymers++;
+                    PlayResearchBreakthrough();
+                    snprintf(msg, sizeof(msg), "🔬 RESEARCH BREAKTHROUGH: [%s] synthesized! %s", nextP->name, nextP->desc);
+                    AddLog(msg, th->accentEmerald);
+                }
+            }
+            break;
+        }
+
+        case ID_BTN_RES_BIOLUM: {
+            if (g_sub.resBiolum < 4) {
+                const BiolumResearch* nextB = &g_biolumRes[g_sub.resBiolum];
+                if (g_sub.surveyPoints >= nextB->cost && g_sub.bioCephalopod >= nextB->reqCephalopod) {
+                    g_sub.surveyPoints -= nextB->cost;
+                    g_sub.bioCephalopod -= nextB->reqCephalopod;
+                    g_sub.resBiolum++;
+                    PlayResearchBreakthrough();
+                    snprintf(msg, sizeof(msg), "🔬 RESEARCH BREAKTHROUGH: [%s] synthesized! %s", nextB->name, nextB->desc);
+                    AddLog(msg, th->accentEmerald);
+                }
+            }
+            break;
+        }
+
+        case ID_BTN_RES_BIOFUEL: {
+            if (g_sub.resBiofuel < 4) {
+                const BiofuelResearch* nextF = &g_biofuelRes[g_sub.resBiofuel];
+                if (g_sub.surveyPoints >= nextF->cost && g_sub.bioEnzymes >= nextF->reqEnzymes) {
+                    g_sub.surveyPoints -= nextF->cost;
+                    g_sub.bioEnzymes -= nextF->reqEnzymes;
+                    g_sub.resBiofuel++;
+                    PlayResearchBreakthrough();
+                    snprintf(msg, sizeof(msg), "🔬 RESEARCH BREAKTHROUGH: [%s] synthesized! %s", nextF->name, nextF->desc);
+                    AddLog(msg, th->accentEmerald);
+                }
+            }
+            break;
+        }
+
+        case ID_BTN_RES_REGEN: {
+            if (g_sub.resRegen < 4) {
+                const RegenResearch* nextR = &g_regenRes[g_sub.resRegen];
+                if (g_sub.surveyPoints >= nextR->cost && g_sub.bioHadal >= nextR->reqHadal) {
+                    g_sub.surveyPoints -= nextR->cost;
+                    g_sub.bioHadal -= nextR->reqHadal;
+                    g_sub.resRegen++;
+                    PlayResearchBreakthrough();
+                    snprintf(msg, sizeof(msg), "🔬 RESEARCH BREAKTHROUGH: [%s] synthesized! %s", nextR->name, nextR->desc);
+                    AddLog(msg, th->accentEmerald);
+                }
+            }
+            break;
+        }
 
         case ID_BTN_BLEED_VALVE:
             g_sub.bleedValveOpen = !g_sub.bleedValveOpen;
