@@ -599,11 +599,62 @@
     margin-top: 6px;
   }
 
-  .progress-bar-fill {
+    .progress-bar-fill {
     height: 100%;
     background: linear-gradient(90deg, #38bdf8, #818cf8);
     width: 0%;
     transition: width 0.3s ease;
+  }
+
+  .badge-key {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+
+  /* Toast Notification System */
+  #toast-container {
+    position: fixed;
+    bottom: 18px;
+    right: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 2000;
+    pointer-events: none;
+  }
+
+  .toast {
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid var(--primary);
+    color: #ffffff;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: auto;
+    animation: toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    max-width: 340px;
+  }
+
+  .toast.toast-success { border-color: var(--accent-green); }
+  .toast.toast-warn { border-color: var(--accent-yellow); }
+  .toast.toast-info { border-color: var(--primary); }
+
+  @keyframes toastSlideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
   }
 
   /* Modal Overlay */
@@ -634,6 +685,11 @@
     animation: modalPop 0.3s ease-out;
   }
 
+  .help-modal-box {
+    max-width: 560px;
+    text-align: left;
+  }
+
   @keyframes modalPop {
     from { transform: scale(0.8); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
@@ -652,30 +708,51 @@
     margin-bottom: 20px;
     font-weight: 600;
   }
+
+  .help-shortcuts-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 12px;
+  }
+
+  .help-shortcuts-table th {
+    text-align: left;
+    color: var(--primary);
+    border-bottom: 1px solid var(--border-color);
+    padding: 6px 8px;
+  }
+
+  .help-shortcuts-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
 </style>
 </head>
 <body>
 
+  <div id="toast-container"></div>
+
   <!-- Top Header Navigation -->
   <div class="header">
     <div class="tabs" role="tablist" aria-label="Clock Tabs">
-      <button class="tab active" role="tab" id="tab-btn-clock" aria-selected="true" aria-controls="tab-clock" onclick="switchTab('clock')">Clock</button>
-      <button class="tab" role="tab" id="tab-btn-world" aria-selected="false" aria-controls="tab-world" onclick="switchTab('world')">World Clock</button>
-      <button class="tab" role="tab" id="tab-btn-tzcalc" aria-selected="false" aria-controls="tab-tzcalc" onclick="switchTab('tzcalc')">TZ Calculator</button>
-      <button class="tab" role="tab" id="tab-btn-epoch" aria-selected="false" aria-controls="tab-epoch" onclick="switchTab('epoch')">Epoch & Precision</button>
-      <button class="tab" role="tab" id="tab-btn-stopwatch" aria-selected="false" aria-controls="tab-stopwatch" onclick="switchTab('stopwatch')">Stopwatch</button>
-      <button class="tab" role="tab" id="tab-btn-timer" aria-selected="false" aria-controls="tab-timer" onclick="switchTab('timer')">Timer</button>
-      <button class="tab" role="tab" id="tab-btn-alarms" aria-selected="false" aria-controls="tab-alarms" onclick="switchTab('alarms')">Alarms</button>
-      <button class="tab" role="tab" id="tab-btn-settings" aria-selected="false" aria-controls="tab-settings" onclick="switchTab('settings')">Settings</button>
+      <button class="tab active" role="tab" id="tab-btn-clock" aria-selected="true" aria-controls="tab-clock" onclick="switchTab('clock')">Clock <span class="badge-key">1</span></button>
+      <button class="tab" role="tab" id="tab-btn-world" aria-selected="false" aria-controls="tab-world" onclick="switchTab('world')">World <span class="badge-key">2</span></button>
+      <button class="tab" role="tab" id="tab-btn-tzcalc" aria-selected="false" aria-controls="tab-tzcalc" onclick="switchTab('tzcalc')">TZ Calc <span class="badge-key">3</span></button>
+      <button class="tab" role="tab" id="tab-btn-epoch" aria-selected="false" aria-controls="tab-epoch" onclick="switchTab('epoch')">Epoch <span class="badge-key">4</span></button>
+      <button class="tab" role="tab" id="tab-btn-stopwatch" aria-selected="false" aria-controls="tab-stopwatch" onclick="switchTab('stopwatch')">Stopwatch <span class="badge-key">5</span></button>
+      <button class="tab" role="tab" id="tab-btn-timer" aria-selected="false" aria-controls="tab-timer" onclick="switchTab('timer')">Timer <span class="badge-key">6</span></button>
+      <button class="tab" role="tab" id="tab-btn-alarms" aria-selected="false" aria-controls="tab-alarms" onclick="switchTab('alarms')">Alarms <span class="badge-key">7</span></button>
+      <button class="tab" role="tab" id="tab-btn-settings" aria-selected="false" aria-controls="tab-settings" onclick="switchTab('settings')">Settings <span class="badge-key">8</span></button>
     </div>
     <div class="header-actions">
-      <div style="font-size: 11px; color: var(--text-muted); margin-right: 8px;">Press 'h' or 'F1' for help</div>
-      <button class="icon-btn" id="sound-toggle-btn" onclick="toggleSound()" aria-label="Toggle Sound">🔊 Sound On</button>
-      <button class="icon-btn" id="format-toggle-btn" onclick="toggleFormat()" aria-label="Toggle 12/24 Hour Format">24H</button>
+      <button class="icon-btn" id="sound-toggle-btn" onclick="toggleSound()" aria-label="Toggle Sound">🔊 Sound <span class="badge-key">M</span></button>
+      <button class="icon-btn" id="format-toggle-btn" onclick="toggleFormat()" aria-label="Toggle 12/24 Hour Format">24H <span class="badge-key">F</span></button>
+      <button class="icon-btn" id="help-btn" onclick="openHelpModal()" aria-label="Open Help Guide">❓ Help <span class="badge-key">F1</span></button>
     </div>
   </div>
 
-  <!-- Content Area -->
+  <!-- Content Area -->-->
   <div class="content-area">
 
     <!-- Tab 1: Clock -->
@@ -960,7 +1037,7 @@
   </div>
 
   <!-- Notification Modal Overlay -->
-  <div class="modal-overlay" id="alert-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-overlay" id="alert-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" onclick="if(event.target===this)dismissModal()">
     <div class="modal-box">
       <div class="modal-title" id="modal-title">⏰ Alarm</div>
       <div class="modal-desc" id="modal-desc">Time is up!</div>
@@ -968,6 +1045,40 @@
         <button class="btn primary" onclick="dismissModal()">Dismiss</button>
         <button class="btn" id="snooze-btn-5" onclick="snoozeAlarm(5)">Snooze 5m</button>
         <button class="btn" id="snooze-btn-10" onclick="snoozeAlarm(10)">Snooze 10m</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dedicated Help Modal Overlay -->
+  <div class="modal-overlay" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" onclick="if(event.target===this)closeHelpModal()">
+    <div class="modal-box help-modal-box">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+        <div class="modal-title" id="help-title" style="margin-bottom: 0;">⏱️ KClock Quick Guide</div>
+        <button class="icon-btn" onclick="closeHelpModal()" style="padding: 4px 10px;">✕</button>
+      </div>
+      <div style="font-size: 13px; color: var(--text-muted); margin-top: 12px; line-height: 1.5;">
+        KClock provides full precision world time, timezone offset calculations, Unix Epoch converter, stopwatch with fastest/slowest lap detection, countdown timers, and repeating daily alarms.
+      </div>
+      <table class="help-shortcuts-table">
+        <thead>
+          <tr>
+            <th>Shortcut</th>
+            <th>Function</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="badge-key">1</span> - <span class="badge-key">8</span></td><td>Jump directly to tab (Clock, World, TZ Calc, Epoch, Stopwatch, Timer, Alarms, Settings)</td></tr>
+          <tr><td><span class="badge-key">Space</span></td><td>Start / Pause active Stopwatch or Timer</td></tr>
+          <tr><td><span class="badge-key">L</span></td><td>Record Lap split (Stopwatch)</td></tr>
+          <tr><td><span class="badge-key">R</span></td><td>Reset active Stopwatch or Timer</td></tr>
+          <tr><td><span class="badge-key">M</span></td><td>Toggle Audio Chimes and Alarm Sounds</td></tr>
+          <tr><td><span class="badge-key">F</span></td><td>Toggle 12-Hour / 24-Hour Time Format</td></tr>
+          <tr><td><span class="badge-key">H</span> / <span class="badge-key">F1</span></td><td>Open this Help & Keyboard Shortcuts Guide</td></tr>
+          <tr><td><span class="badge-key">Esc</span></td><td>Dismiss active Modal / Alarm / Dialog</td></tr>
+        </tbody>
+      </table>
+      <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
+        <button class="btn primary" onclick="closeHelpModal()">Got it</button>
       </div>
     </div>
   </div>
@@ -1346,8 +1457,32 @@
       if (yearPctEl) yearPctEl.innerText = `${pct}% done`;
     }
 
-    setInterval(updateEpochTicker, 50);
-    updateEpochTicker();
+    setInterval(updateEpochTicker, 50);    function showToast(msg, type = 'info', duration = 3500) {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      let icon = 'ℹ️';
+      if (type === 'success') icon = '✅';
+      else if (type === 'warn') icon = '⚠️';
+      else if (type === 'error') icon = '❌';
+      toast.innerHTML = `<span>${icon}</span><span>${escapeHtml(msg)}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
+
+    function openHelpModal() {
+      document.getElementById('help-modal').classList.add('active');
+    }
+
+    function closeHelpModal() {
+      document.getElementById('help-modal').classList.remove('active');
+    }
 
     function copyLiveEpoch(mode) {
       const now = Date.now();
@@ -1359,7 +1494,10 @@
           btn.innerText = '✅ Copied!';
           setTimeout(() => { btn.innerText = orig; }, 1200);
         }
-      }).catch(() => {});
+        showToast(`Timestamp (${mode === 'sec' ? 'seconds' : 'milliseconds'}) copied to clipboard!`, 'success');
+      }).catch(() => {
+        showToast('Failed to copy to clipboard', 'warn');
+      });
     }
 
     function initEpochDefaults() {
@@ -1382,6 +1520,7 @@
       if (input) {
         input.value = Math.floor(Date.now() / 1000);
         convertEpochToHuman();
+        showToast('Epoch timestamp set to current time', 'info');
       }
     }
 
@@ -1480,12 +1619,14 @@
         swRunning = false;
         document.getElementById('sw-btn').innerText = 'Start';
         document.getElementById('sw-btn').classList.add('primary');
+        showToast('Stopwatch paused', 'info');
       } else {
         swStart = Date.now();
         swRunning = true;
         renderSw();
         document.getElementById('sw-btn').innerText = 'Stop';
         document.getElementById('sw-btn').classList.remove('primary');
+        showToast('Stopwatch started', 'info');
       }
     }
 
@@ -1502,6 +1643,7 @@
         });
 
         renderLaps();
+        showToast(`Lap ${swLaps.length} recorded: +${formatSw(splitTime)}`, 'info');
       }
     }
 
@@ -1563,6 +1705,7 @@
       renderLaps();
       document.getElementById('sw-btn').innerText = 'Start';
       document.getElementById('sw-btn').classList.add('primary');
+      showToast('Stopwatch reset', 'info');
     }
 
     // --- Tab 6: Timer ---
@@ -1586,6 +1729,7 @@
       tmDuration = mins * 60000;
       tmRemaining = tmDuration;
       document.getElementById('timer-display').innerText = formatTm(tmDuration);
+      showToast(`Timer set to ${mins} min`, 'info');
     }
 
     function updateTmDisplay() {
@@ -1597,7 +1741,6 @@
         document.getElementById('timer-display').innerText = "00:00";
         document.getElementById('tm-btn').innerText = 'Start';
         document.getElementById('tm-btn').classList.add('primary');
-        
         playChime([600, 800, 1000], 0.3);
         showModal("⏲️ Timer Finished!", "Your timer countdown has completed.");
       } else {
@@ -1612,6 +1755,7 @@
         tmRunning = false;
         document.getElementById('tm-btn').innerText = 'Resume';
         document.getElementById('tm-btn').classList.add('primary');
+        showToast('Timer paused', 'info');
       } else {
         if (tmRemaining <= 0) {
           let mins = parseInt(document.getElementById('timer-mins').value, 10) || 5;
@@ -1628,6 +1772,7 @@
           tmRunning = true;
           document.getElementById('tm-btn').innerText = 'Pause';
           document.getElementById('tm-btn').classList.remove('primary');
+          showToast('Timer running', 'info');
         }
       }
     }
@@ -1640,6 +1785,7 @@
       document.getElementById('timer-display').innerText = formatTm(mins * 60000);
       document.getElementById('tm-btn').innerText = 'Start';
       document.getElementById('tm-btn').classList.add('primary');
+      showToast('Timer reset', 'info');
     }
 
     // --- Tab 7: Repeating Alarms Manager ---
@@ -1677,13 +1823,16 @@
       const labelVal = document.getElementById('alarm-label').value.trim() || 'Alarm';
       const days = getSelectedDays();
 
-      if (!timeVal) return;
+      if (!timeVal) {
+        showToast('Please specify an alarm time.', 'warn');
+        return;
+      }
       if (days.length === 0) {
-        alert('Please select at least one day for the alarm.');
+        showToast('Please select at least one day for the alarm.', 'warn');
         return;
       }
       if (alarms.length >= 50) {
-        alert('Maximum alarm capacity (50) reached.');
+        showToast('Maximum alarm capacity (50) reached.', 'warn');
         return;
       }
 
@@ -1699,6 +1848,7 @@
       renderAlarms();
       saveState();
       document.getElementById('alarm-label').value = '';
+      showToast(`Alarm set for ${timeVal} (${labelVal})`, 'success');
     }
 
     function toggleAlarm(index) {
@@ -1707,14 +1857,17 @@
         alarms[index].triggered = false;
         renderAlarms();
         saveState();
+        showToast(`Alarm "${alarms[index].label}" ${alarms[index].active ? 'enabled' : 'disabled'}`, 'info');
       }
     }
 
     function deleteAlarm(index) {
       if (alarms[index]) {
+        const deletedLabel = alarms[index].label;
         alarms.splice(index, 1);
         renderAlarms();
         saveState();
+        showToast(`Alarm "${deletedLabel}" removed`, 'info');
       }
     }
 
@@ -1788,6 +1941,7 @@
         });
         renderAlarms();
         saveState();
+        showToast(`Alarm snoozed for ${mins} minutes`, 'info');
       }
     }
 
@@ -1813,6 +1967,7 @@
       a.download = `kclock_config_${new Date().toISOString().slice(0,10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
+      showToast('Configuration exported as JSON', 'success');
     }
 
     function importSettingsJSON(event) {
@@ -1826,13 +1981,13 @@
           if (imported.settings) {
             if (typeof imported.settings.use24Hour === 'boolean') {
               use24Hour = imported.settings.use24Hour;
-              document.getElementById('format-toggle-btn').innerText = use24Hour ? '12H' : '24H';
+              document.getElementById('format-toggle-btn').innerHTML = use24Hour ? '12H <span class="badge-key">F</span>' : '24H <span class="badge-key">F</span>';
               document.getElementById('settings-format-btn').innerText = use24Hour ? '24-Hour' : '12-Hour';
               updateClock();
             }
             if (typeof imported.settings.soundEnabled === 'boolean') {
               soundEnabled = imported.settings.soundEnabled;
-              document.getElementById('sound-toggle-btn').innerText = soundEnabled ? '🔊 Sound On' : '🔇 Muted';
+              document.getElementById('sound-toggle-btn').innerHTML = soundEnabled ? '🔊 Sound <span class="badge-key">M</span>' : '🔇 Muted <span class="badge-key">M</span>';
               document.getElementById('settings-sound-btn').innerText = soundEnabled ? 'Enabled' : 'Muted';
             }
           }
@@ -1852,9 +2007,9 @@
             renderAlarms();
           }
           saveState();
-          alert('Settings & Data successfully imported!');
+          showToast('Settings & data successfully imported!', 'success');
         } catch (err) {
-          alert('Failed to import JSON file. Please verify file format.');
+          showToast('Failed to import JSON file. Please verify file format.', 'error');
         }
       };
       reader.readAsText(file);
@@ -1888,18 +2043,18 @@
     }
 
     // Initial renders & UI sync
-    document.getElementById('format-toggle-btn').innerText = use24Hour ? '12H' : '24H';
+    document.getElementById('format-toggle-btn').innerHTML = use24Hour ? '12H <span class="badge-key">F</span>' : '24H <span class="badge-key">F</span>';
     document.getElementById('settings-format-btn').innerText = use24Hour ? '24-Hour' : '12-Hour';
-    document.getElementById('sound-toggle-btn').innerText = soundEnabled ? '🔊 Sound On' : '🔇 Muted';
+    document.getElementById('sound-toggle-btn').innerHTML = soundEnabled ? '🔊 Sound <span class="badge-key">M</span>' : '🔇 Muted <span class="badge-key">M</span>';
     document.getElementById('settings-sound-btn').innerText = soundEnabled ? 'Enabled' : 'Muted';
     renderAlarms();
 
     // Auto-opening size (for standalone/window mode)
     if (window.resizeTo) {
-      window.resizeTo(340, 580);
+      window.resizeTo(840, 640);
     }
     if (window.parent) {
-      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 340, height: 580 }, '*');
+      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 840, height: 640 }, '*');
     }
 
     // Keyboard listener for help, shortcuts, and Escape
@@ -1907,15 +2062,52 @@
       // Escape closes modal anywhere
       if (e.key === 'Escape') {
         dismissModal();
+        closeHelpModal();
         return;
+      }
+
+      // Input Enter key shortcuts
+      if (e.target.id === 'alarm-label' || e.target.id === 'alarm-time') {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          addAlarm();
+          return;
+        }
+      } else if (e.target.id === 'timer-mins') {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          toggleTimer();
+          return;
+        }
+      } else if (e.target.id === 'conv-epoch-input') {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          convertEpochToHuman();
+          return;
+        }
       }
 
       // Avoid triggering action shortcuts when typing in inputs or selects
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
 
-      if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
+      // Tab shortcuts [1-8]
+      if (e.key >= '1' && e.key <= '8') {
+        const tabIdx = parseInt(e.key, 10) - 1;
+        if (tabIdx < tabOrder.length) {
+          switchTab(tabOrder[tabIdx]);
+          showToast(`Switched to ${tabOrder[tabIdx].toUpperCase()} tab`, 'info', 1500);
+          return;
+        }
+      }
+      if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
         if (e.key === 'F1') e.preventDefault();
-        showModal('KClock Help', 'Use the top tabs to navigate.\nPress "H" or "F1" anytime to view this help message.\nSpace: Start/Stop Stopwatch or Timer.\nL: Lap Stopwatch.\nR: Reset Stopwatch or Timer.\nEsc: Dismiss Alarm Modal.');
+        openHelpModal();
+      } else if (e.key === 'm' || e.key === 'M') {
+        toggleSound();
+        showToast(soundEnabled ? 'Audio Chimes Enabled' : 'Audio Muted', 'info');
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFormat();
+        showToast(`Time format set to ${use24Hour ? '24-Hour' : '12-Hour'}`, 'info');
       } else if (e.code === 'Space') {
         e.preventDefault();
         if (currentTab === 'stopwatch') {
@@ -1945,6 +2137,11 @@
       if (tmInterval) clearInterval(tmInterval);
       if (swRaf) cancelAnimationFrame(swRaf);
     });
+
+    // Startup welcome notification
+    setTimeout(() => {
+      showToast("⏰ Welcome to KClock! Multi-timezone, alarms, stopwatch & epoch tool. Press 'H' or F1 for help.", "info", 5000);
+    }, 250);
   </script>
 </body>
 </html>
