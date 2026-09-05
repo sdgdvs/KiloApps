@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KWords
 - KWizard
 - KMystery
 - KReversi
@@ -150,8 +149,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSudoku
 - KGo
 - KTowers
+- KWords
 
 ## Completed Work Log
+
+- **KWords (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on word solves, secret discoveries, ice shatters, skill triggers (Radar, Pathfinder, Freeze, Hint), and victory bursts (continuous 60 FPS requestAnimationFrame animation loop in Web Canvas `kwords.html`, and double-buffered viewport rendering with physics decay in Native C Win32 GDI `KWords/main.c`), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity drag trails, expanding buoyant smoke & ice/velvet puffs with negative gravity and radius growth, heavy kinematic ivory / wooden Scrabble tile & ice debris shards with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars upon word solves, secret words, and stage victories), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion / golden halo radiating upon word matches, ice shatters, skill casts, and victory bursts, ornate Art Deco golden corner filigree L-brackets with brass rivet studs and micro-accents at all four corners of the game board and words-list panel, a pulsating golden energy perimeter inlay border with an animated traveling specular glint traversing the outer mahogany playfield frame, sculpted 3D beveled Scrabble tiles with diagonal specular sheen sweeps traversing tiles periodically, and atmospheric environmental floating study dust motes drifting across the viewport in both Web Canvas (`kwords.html`) and Native C Win32 GDI (`KWords/main.c`).
 
 - **KTowers (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on block landings, move errors, teleports, and victory scoring (continuous 60 FPS requestAnimationFrame animation loop in Web Canvas `ktowers.html`, and double-buffered viewport rendering with physics decay in Native C Win32 GDI `KTowers/main.c`), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity drag, expanding buoyant smoke & steam puffs with negative gravity and radius growth, heavy kinematic architectural concrete & glass shards with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars upon landings, teleports, auto-solve, and stage victories), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion halo radiating on landing impacts, teleport swap skill, error violations, and victory bursts, ornate Art Deco / cybernetic HUD corner filigree L-brackets with brass rivet studs and micro-accents at all four viewport and launchpad corners, a pulsating energy perimeter inlay border with an animated traveling specular glint traversing the outer playfield skyscraper construction viewport frame, sculpted 3D beveled skyscraper blocks with diagonal specular sheen sweeps traversing glass facades, helipads, solar panels, and foundation plates, and atmospheric environmental floating urban cyber dust motes and rain particles drifting across the city skyline in both Web Canvas (`ktowers.html`) and Native C Win32 GDI (`KTowers/main.c`).
 

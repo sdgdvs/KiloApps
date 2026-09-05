@@ -548,8 +548,12 @@ void DrawConfettiFX(HDC hdc, int width, int height) {
                          (int)(shockwaves[i].x + r), (int)(shockwaves[i].y + r * 0.6f));
             if (r > 15.0f) {
                 float r2 = r * 0.65f;
+                HPEN rPen2 = CreatePen(PS_SOLID, 1, RGB(255, 215, 0));
+                SelectObject(hdc, rPen2);
                 Ellipse(hdc, (int)(shockwaves[i].x - r2), (int)(shockwaves[i].y - r2 * 0.6f),
                              (int)(shockwaves[i].x + r2), (int)(shockwaves[i].y + r2 * 0.6f));
+                SelectObject(hdc, oldRP);
+                DeleteObject(rPen2);
             }
             SelectObject(hdc, oldB);
             SelectObject(hdc, oldRP);
@@ -1672,27 +1676,62 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(woodHilite);
             DeleteObject(woodShadow);
 
-            // Ornate Art Deco golden corner filigree L-brackets & pulsating perimeter shimmer
+            // Ornate Art Deco golden corner filigree L-brackets with brass rivet studs
             HPEN goldPen = CreatePen(PS_SOLID, 2, RGB(245, 158, 11));
+            HBRUSH goldBrush = CreateSolidBrush(RGB(255, 215, 0));
             HGDIOBJ oldGold = SelectObject(hdc, goldPen);
-            // Top-Left L-bracket
-            MoveToEx(hdc, boardLeft, boardTop + 14, NULL); LineTo(hdc, boardLeft, boardTop); LineTo(hdc, boardLeft + 14, boardTop);
-            // Top-Right L-bracket
-            MoveToEx(hdc, boardRight - 14, boardTop, NULL); LineTo(hdc, boardRight, boardTop); LineTo(hdc, boardRight, boardTop + 14);
-            // Bottom-Left L-bracket
-            MoveToEx(hdc, boardLeft, boardBottom - 14, NULL); LineTo(hdc, boardLeft, boardBottom); LineTo(hdc, boardLeft + 14, boardBottom);
-            // Bottom-Right L-bracket
-            MoveToEx(hdc, boardRight - 14, boardBottom, NULL); LineTo(hdc, boardRight, boardBottom); LineTo(hdc, boardRight, boardBottom - 14);
+            HGDIOBJ oldGB = SelectObject(hdc, goldBrush);
+
+            // Top-Left L-bracket & Stud
+            MoveToEx(hdc, boardLeft, boardTop + 16, NULL); LineTo(hdc, boardLeft, boardTop); LineTo(hdc, boardLeft + 16, boardTop);
+            Ellipse(hdc, boardLeft + 2, boardTop + 2, boardLeft + 7, boardTop + 7);
+
+            // Top-Right L-bracket & Stud
+            MoveToEx(hdc, boardRight - 16, boardTop, NULL); LineTo(hdc, boardRight, boardTop); LineTo(hdc, boardRight, boardTop + 16);
+            Ellipse(hdc, boardRight - 7, boardTop + 2, boardRight - 2, boardTop + 7);
+
+            // Bottom-Left L-bracket & Stud
+            MoveToEx(hdc, boardLeft, boardBottom - 16, NULL); LineTo(hdc, boardLeft, boardBottom); LineTo(hdc, boardLeft + 16, boardBottom);
+            Ellipse(hdc, boardLeft + 2, boardBottom - 7, boardLeft + 7, boardBottom - 2);
+
+            // Bottom-Right L-bracket & Stud
+            MoveToEx(hdc, boardRight - 16, boardBottom, NULL); LineTo(hdc, boardRight, boardBottom); LineTo(hdc, boardRight, boardBottom - 16);
+            Ellipse(hdc, boardRight - 7, boardBottom - 7, boardRight - 2, boardBottom - 2);
 
             // Pulsating golden perimeter inlay shimmer
             int shimG = (int)(180 + 60 * sinf(animTick * 0.12f));
             if (shimG > 255) shimG = 255;
             HPEN shimPen = CreatePen(PS_SOLID, 1, RGB(250, shimG, 21));
             SelectObject(hdc, shimPen);
-            MoveToEx(hdc, boardLeft + 16, boardTop + 2, NULL);
-            LineTo(hdc, boardRight - 16, boardTop + 2);
+            MoveToEx(hdc, boardLeft + 16, boardTop + 2, NULL); LineTo(hdc, boardRight - 16, boardTop + 2);
+            MoveToEx(hdc, boardLeft + 16, boardBottom - 2, NULL); LineTo(hdc, boardRight - 16, boardBottom - 2);
             DeleteObject(shimPen);
 
+            // Traveling specular glint traversing the outer mahogany frame perimeter
+            int perimW = boardRight - boardLeft;
+            int perimH = boardBottom - boardTop;
+            int perimTotal = 2 * (perimW + perimH);
+            if (perimTotal > 0) {
+                int glintPos = (animTick * 5) % perimTotal;
+                int gx = boardLeft, gy = boardTop;
+                if (glintPos < perimW) {
+                    gx = boardLeft + glintPos; gy = boardTop;
+                } else if (glintPos < perimW + perimH) {
+                    gx = boardRight; gy = boardTop + (glintPos - perimW);
+                } else if (glintPos < 2 * perimW + perimH) {
+                    gx = boardRight - (glintPos - (perimW + perimH)); gy = boardBottom;
+                } else {
+                    gx = boardLeft; gy = boardBottom - (glintPos - (2 * perimW + perimH));
+                }
+                HPEN glintPen = CreatePen(PS_SOLID, 3, RGB(255, 255, 255));
+                HGDIOBJ oldGP = SelectObject(hdc, glintPen);
+                Ellipse(hdc, gx - 3, gy - 3, gx + 4, gy + 4);
+                SelectObject(hdc, oldGP);
+                DeleteObject(glintPen);
+            }
+
+            SelectObject(hdc, oldGB);
+            DeleteObject(goldBrush);
             SelectObject(hdc, oldGold);
             DeleteObject(goldPen);
 
@@ -1815,6 +1854,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SelectObject(hdc, sheenPen);
                     MoveToEx(hdc, tileRc.left + 2, tileRc.top + 2, NULL);
                     LineTo(hdc, tileRc.left + (tileRc.right - tileRc.left) / 2, tileRc.top + 2);
+
+                    // Periodic diagonal specular sheen sweep highlight across tiles
+                    if (((r + c + (int)(animTick / 3)) % 22) == 0 && !isFogged) {
+                        MoveToEx(hdc, tileRc.left + 2, tileRc.bottom - 4, NULL);
+                        LineTo(hdc, tileRc.right - 4, tileRc.top + 2);
+                    }
                     SelectObject(hdc, oldP2);
                     DeleteObject(sheenPen);
 
@@ -1901,6 +1946,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(hdc, oldPL);
             DeleteObject(outerPenHi);
             DeleteObject(outerPenLo);
+
+            // Words List corner filigree L-brackets with brass rivet studs
+            HPEN pGoldPen = CreatePen(PS_SOLID, 2, RGB(245, 158, 11));
+            HBRUSH pGoldBrush = CreateSolidBrush(RGB(255, 215, 0));
+            HGDIOBJ pOldGold = SelectObject(hdc, pGoldPen);
+            HGDIOBJ pOldGB = SelectObject(hdc, pGoldBrush);
+
+            // Top-Left
+            MoveToEx(hdc, panelL, panelT + 12, NULL); LineTo(hdc, panelL, panelT); LineTo(hdc, panelL + 12, panelT);
+            Ellipse(hdc, panelL + 2, panelT + 2, panelL + 6, panelT + 6);
+            // Top-Right
+            MoveToEx(hdc, panelR - 12, panelT, NULL); LineTo(hdc, panelR, panelT); LineTo(hdc, panelR, panelT + 12);
+            Ellipse(hdc, panelR - 6, panelT + 2, panelR - 2, panelT + 6);
+            // Bottom-Left
+            MoveToEx(hdc, panelL, panelB - 12, NULL); LineTo(hdc, panelL, panelB); LineTo(hdc, panelL + 12, panelB);
+            Ellipse(hdc, panelL + 2, panelB - 6, panelL + 6, panelB - 2);
+            // Bottom-Right
+            MoveToEx(hdc, panelR - 12, panelB, NULL); LineTo(hdc, panelR, panelB); LineTo(hdc, panelR, panelB - 12);
+            Ellipse(hdc, panelR - 6, panelB - 6, panelR - 2, panelB - 2);
+
+            SelectObject(hdc, pOldGB);
+            DeleteObject(pGoldBrush);
+            SelectObject(hdc, pOldGold);
+            DeleteObject(pGoldPen);
             
             SetBkMode(hdc, TRANSPARENT);
 
