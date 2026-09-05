@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KStarDredge (Deep space asteroid mining, derelict salvage & orbital refining RPG)
-**Phase:** 13 (next to do)
+**Phase:** 14 (next to do)
 **Status:** Deep Expansion
 
 - [x] Phase 1: Scaffold KStarDredge directory (`KStarDredge/`), create web HTML skeleton (`KiloOS/public/apps/kstardredge.html`), register in App.jsx.
@@ -69,7 +69,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 10: Orbital refinery & metallurgical smelting lab (refine raw ores into hyper-alloys, synthesize warp fuel).
 - [x] Phase 11: Orbital spaceports & black market trade stations (dock with stations, barter materials, accept dredging contracts).
 - [x] Phase 12: Void pirate defense & weapon systems (railguns, EMP flak cannons, point-defense lasers against raiders).
-- [ ] Phase 13: Sound Effects — Mining laser hums, rock fracture crunches, thruster burns, collision alarms, railgun discharges (Web Audio / Win32 Beep).
+- [x] Phase 13: Sound Effects — Mining laser hums, rock fracture crunches, thruster burns, collision alarms, railgun discharges (Web Audio / Win32 Beep).
 - [ ] Phase 14: Comprehensive Help & Dredger Captain's Manual — Asteroid charts, ore codex, refinery recipes, and survival tactics.
 
 ### How to execute the next phase:

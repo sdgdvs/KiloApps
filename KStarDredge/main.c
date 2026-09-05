@@ -55,6 +55,13 @@
 #define SFX_PDL_FIRE       24
 #define SFX_PIRATE_EXPLODE 25
 #define SFX_TORPEDO_ALERT  26
+#define SFX_THRUSTER_BURN  27
+#define SFX_LASER_HUM      28
+#define SFX_COLLISION_ALARM 29
+#define SFX_ROCK_CRUNCH    30
+#define SFX_SHIELD_DEFLECT 31
+#define SFX_HULL_IMPACT    32
+#define SFX_CHAFF          33
 
 // Phase 10: Orbital Refinery Recipes
 typedef struct {
@@ -789,119 +796,186 @@ static HFONT g_fontMonoBold = NULL;
 static HFONT g_fontSmall = NULL;
 static HFONT g_fontHeader = NULL;
 
-// Audio System
-static volatile int g_currentSfx = SFX_NONE;
+// Audio System (Phase 13 Deep Expansion)
+#define MAX_SFX_QUEUE 64
+static volatile int g_sfxQueue[MAX_SFX_QUEUE];
+static volatile int g_sfxHead = 0;
+static volatile int g_sfxTail = 0;
+static CRITICAL_SECTION g_csSound;
+static volatile int g_soundThreadRunning = 1;
 static HANDLE g_hSoundThread = NULL;
 
-DWORD WINAPI SoundThreadProc(LPVOID lpParam) {
-    while (1) {
-        if (g_currentSfx != SFX_NONE && g_state.soundEnabled) {
-            int sfx = g_currentSfx;
-            g_currentSfx = SFX_NONE;
-            if (sfx == SFX_COLLECT) {
-                Beep(600, 40);
-                Beep(880, 60);
-            } else if (sfx == SFX_FRACTURE) {
-                Beep(180, 80);
-                Beep(110, 100);
-            } else if (sfx == SFX_OVERHEAT) {
-                Beep(320, 100);
-                Beep(240, 120);
-            } else if (sfx == SFX_BEEP) {
-                Beep(700, 50);
-            } else if (sfx == SFX_LASER_PULSE) {
-                Beep(480, 30);
-            } else if (sfx == SFX_WARP) {
-                Beep(160, 60);
-                Beep(420, 80);
-                Beep(920, 110);
-                Beep(240, 90);
-            } else if (sfx == SFX_SCAN_SWEEP) {
-                Beep(450, 50);
-                Beep(750, 70);
-                Beep(1150, 90);
-            } else if (sfx == SFX_RESONANCE) {
-                Beep(440, 60);
-                Beep(660, 60);
-                Beep(880, 120);
-            } else if (sfx == SFX_PLASMA_CUT) {
-                Beep(750, 40);
-                Beep(920, 30);
-            } else if (sfx == SFX_BREACH) {
-                Beep(220, 70);
-                Beep(340, 90);
-                Beep(680, 110);
-            } else if (sfx == SFX_DECRYPT) {
-                Beep(880, 40);
-                Beep(1100, 40);
-                Beep(1320, 60);
-            } else if (sfx == SFX_CORE_HARVEST) {
-                Beep(330, 80);
-                Beep(550, 80);
-                Beep(770, 100);
-                Beep(1100, 140);
-            } else if (sfx == SFX_ALARM) {
-                Beep(600, 100);
-                Beep(350, 120);
-            } else if (sfx == SFX_PLASMA_VENT) {
-                Beep(480, 80);
-                Beep(240, 100);
-                Beep(120, 120);
-            } else if (sfx == SFX_SEAL_WELD) {
-                Beep(350, 60);
-                Beep(700, 80);
-            } else if (sfx == SFX_DECON_FLUSH) {
-                Beep(520, 50);
-                Beep(650, 50);
-                Beep(780, 80);
-            } else if (sfx == SFX_SMELT) {
-                Beep(320, 60);
-                Beep(640, 80);
-                Beep(480, 100);
-            } else if (sfx == SFX_SYNTH) {
-                Beep(440, 40);
-                Beep(554, 40);
-                Beep(659, 40);
-                Beep(880, 80);
-            } else if (sfx == SFX_DOCK) {
-                Beep(440, 70);
-                Beep(660, 80);
-                Beep(880, 140);
-            } else if (sfx == SFX_CONTRACT) {
-                Beep(523, 60);
-                Beep(659, 60);
-                Beep(784, 60);
-                Beep(1046, 120);
-            } else if (sfx == SFX_BARTER) {
-                Beep(880, 50);
-                Beep(1174, 80);
-            } else if (sfx == SFX_RAILGUN) {
-                Beep(120, 80);
-                Beep(880, 40);
-            } else if (sfx == SFX_FLAK_BURST) {
-                Beep(220, 100);
-                Beep(140, 120);
-                Beep(90, 140);
-            } else if (sfx == SFX_PDL_FIRE) {
-                Beep(1400, 30);
-            } else if (sfx == SFX_PIRATE_EXPLODE) {
-                Beep(180, 90);
-                Beep(90, 140);
-                Beep(60, 200);
-            } else if (sfx == SFX_TORPEDO_ALERT) {
-                Beep(900, 50);
-                Beep(600, 50);
-            }
-        }
-        Sleep(20);
+void TriggerSound(int sfx) {
+    if (!g_state.soundEnabled || sfx == SFX_NONE) return;
+    EnterCriticalSection(&g_csSound);
+    int nextHead = (g_sfxHead + 1) % MAX_SFX_QUEUE;
+    if (nextHead != g_sfxTail) {
+        g_sfxQueue[g_sfxHead] = sfx;
+        g_sfxHead = nextHead;
     }
-    return 0;
+    LeaveCriticalSection(&g_csSound);
 }
 
-void TriggerSound(int sfx) {
-    if (g_state.soundEnabled) {
-        g_currentSfx = sfx;
+DWORD WINAPI SoundThreadProc(LPVOID lpParam) {
+    while (g_soundThreadRunning) {
+        int sfx = SFX_NONE;
+        EnterCriticalSection(&g_csSound);
+        if (g_sfxHead != g_sfxTail) {
+            sfx = g_sfxQueue[g_sfxTail];
+            g_sfxTail = (g_sfxTail + 1) % MAX_SFX_QUEUE;
+        }
+        LeaveCriticalSection(&g_csSound);
+
+        if (sfx != SFX_NONE && g_state.soundEnabled) {
+            switch (sfx) {
+                case SFX_COLLECT:
+                    Beep(600, 35);
+                    Beep(880, 50);
+                    break;
+                case SFX_FRACTURE:
+                case SFX_ROCK_CRUNCH:
+                    Beep(180, 60);
+                    Beep(110, 80);
+                    Beep(240, 40);
+                    break;
+                case SFX_OVERHEAT:
+                    Beep(320, 90);
+                    Beep(240, 110);
+                    break;
+                case SFX_BEEP:
+                    Beep(700, 45);
+                    break;
+                case SFX_LASER_PULSE:
+                case SFX_LASER_HUM:
+                    Beep(480, 25);
+                    Beep(380, 25);
+                    break;
+                case SFX_THRUSTER_BURN:
+                    Beep(75, 40);
+                    Beep(60, 40);
+                    break;
+                case SFX_WARP:
+                    Beep(160, 50);
+                    Beep(420, 70);
+                    Beep(920, 90);
+                    Beep(240, 70);
+                    break;
+                case SFX_SCAN_SWEEP:
+                    Beep(450, 45);
+                    Beep(750, 60);
+                    Beep(1150, 80);
+                    break;
+                case SFX_RESONANCE:
+                    Beep(440, 50);
+                    Beep(660, 50);
+                    Beep(880, 100);
+                    break;
+                case SFX_PLASMA_CUT:
+                    Beep(750, 35);
+                    Beep(920, 25);
+                    break;
+                case SFX_BREACH:
+                    Beep(220, 60);
+                    Beep(340, 70);
+                    Beep(680, 90);
+                    break;
+                case SFX_DECRYPT:
+                    Beep(880, 35);
+                    Beep(1100, 35);
+                    Beep(1320, 50);
+                    break;
+                case SFX_CORE_HARVEST:
+                    Beep(330, 60);
+                    Beep(550, 60);
+                    Beep(770, 80);
+                    Beep(1100, 120);
+                    break;
+                case SFX_ALARM:
+                case SFX_COLLISION_ALARM:
+                    Beep(880, 70);
+                    Beep(440, 70);
+                    Beep(880, 70);
+                    break;
+                case SFX_PLASMA_VENT:
+                    Beep(480, 60);
+                    Beep(240, 80);
+                    Beep(120, 90);
+                    break;
+                case SFX_SEAL_WELD:
+                    Beep(350, 50);
+                    Beep(700, 65);
+                    break;
+                case SFX_DECON_FLUSH:
+                    Beep(520, 40);
+                    Beep(650, 40);
+                    Beep(780, 65);
+                    break;
+                case SFX_SMELT:
+                    Beep(320, 50);
+                    Beep(640, 65);
+                    Beep(480, 80);
+                    break;
+                case SFX_SYNTH:
+                    Beep(440, 35);
+                    Beep(554, 35);
+                    Beep(659, 35);
+                    Beep(880, 70);
+                    break;
+                case SFX_DOCK:
+                    Beep(440, 60);
+                    Beep(660, 70);
+                    Beep(880, 120);
+                    break;
+                case SFX_CONTRACT:
+                    Beep(523, 50);
+                    Beep(659, 50);
+                    Beep(784, 50);
+                    Beep(1046, 100);
+                    break;
+                case SFX_BARTER:
+                    Beep(880, 45);
+                    Beep(1174, 70);
+                    break;
+                case SFX_RAILGUN:
+                    Beep(1400, 25);
+                    Beep(80, 70);
+                    Beep(880, 35);
+                    break;
+                case SFX_FLAK_BURST:
+                    Beep(220, 70);
+                    Beep(140, 90);
+                    Beep(70, 110);
+                    break;
+                case SFX_PDL_FIRE:
+                    Beep(1500, 25);
+                    break;
+                case SFX_PIRATE_EXPLODE:
+                    Beep(240, 70);
+                    Beep(120, 110);
+                    Beep(60, 160);
+                    break;
+                case SFX_TORPEDO_ALERT:
+                    Beep(900, 40);
+                    Beep(600, 40);
+                    break;
+                case SFX_SHIELD_DEFLECT:
+                    Beep(750, 35);
+                    Beep(950, 35);
+                    break;
+                case SFX_HULL_IMPACT:
+                    Beep(110, 70);
+                    Beep(70, 90);
+                    break;
+                case SFX_CHAFF:
+                    Beep(1400, 30);
+                    Beep(800, 45);
+                    Beep(400, 45);
+                    break;
+            }
+        }
+        Sleep(15);
     }
+    return 0;
 }
 
 // Forward Declarations
@@ -1412,7 +1486,7 @@ void FirePDL(void) {
 void DeployChaff(void) {
     if (g_state.chaffCooldown > 0.0f) return;
     g_state.chaffCooldown = 8.0f;
-    TriggerSound(SFX_PLASMA_VENT);
+    TriggerSound(SFX_CHAFF);
 
     for (int i = 0; i < 30; i++) {
         float a = ((float)rand() / (float)RAND_MAX) * 6.28318f;
@@ -2453,6 +2527,7 @@ void UpdateGame(float dt) {
         g_state.shipVx += (float)cos(g_state.shipAngle) * thrustPower;
         g_state.shipVy += (float)sin(g_state.shipAngle) * thrustPower;
         g_state.fuel = max(0.0f, g_state.fuel - fuelDrainRate);
+        if (rand() % 30 == 0) TriggerSound(SFX_THRUSTER_BURN);
         
         // Thrust sparks
         float exAngle = g_state.shipAngle + 3.14159f + (((float)rand() / (float)RAND_MAX) - 0.5f) * 0.4f;
@@ -2479,6 +2554,7 @@ void UpdateGame(float dt) {
         g_state.shipVx -= (float)cos(g_state.shipAngle) * (thrustPower * 0.5f);
         g_state.shipVy -= (float)sin(g_state.shipAngle) * (thrustPower * 0.5f);
         g_state.fuel = max(0.0f, g_state.fuel - fuelDrainRate * 0.5f);
+        if (rand() % 35 == 0) TriggerSound(SFX_THRUSTER_BURN);
     }
     
     // Inertial Dampeners
@@ -2500,6 +2576,7 @@ void UpdateGame(float dt) {
     // Laser Overheat Logic
     if (g_state.miningActive && !g_state.laserOverheated) {
         g_state.heat += 0.5f * drillDef->heatRate;
+        if (rand() % 28 == 0) TriggerSound(SFX_LASER_HUM);
         if (g_state.heat > 85.0f && (rand() % 350 == 0) && !g_state.plasmaLeaks) {
             g_state.plasmaLeaks = 1;
             AddLog("WARNING: High thermal load breached plasma manifold conduit!", 4);
@@ -6318,7 +6395,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             SetTimer(hwnd, TIMER_ID, TIMER_INTERVAL, NULL);
             
-            // Audio Thread
+            // Audio Thread (Phase 13)
+            InitializeCriticalSection(&g_csSound);
             g_hSoundThread = CreateThread(NULL, 0, SoundThreadProc, NULL, 0, NULL);
             return 0;
         }
