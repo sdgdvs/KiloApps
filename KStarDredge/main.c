@@ -23,6 +23,7 @@
 #define ID_BTN_SELL        111
 #define ID_BTN_UPGRADES    112
 #define ID_BTN_EVA         113
+#define ID_BTN_CRISIS      114
 
 #define SFX_NONE         0
 #define SFX_COLLECT      1
@@ -37,6 +38,26 @@
 #define SFX_BREACH       10
 #define SFX_DECRYPT      11
 #define SFX_CORE_HARVEST 12
+#define SFX_ALARM        13
+#define SFX_PLASMA_VENT  14
+#define SFX_SEAL_WELD    15
+#define SFX_DECON_FLUSH  16
+
+#define MAX_COMPARTMENTS 5
+typedef struct {
+    const char* id;
+    const char* name;
+    const char* desc;
+    int x, y, w, h;
+} CompartmentDef;
+
+static const CompartmentDef COMPARTMENT_DEFS[MAX_COMPARTMENTS] = {
+    { "bridge", "Bridge & Life Support Hub", "Atmosphere scrubbers & avionics", 190, 60, 75, 30 },
+    { "prow", "Forward Mining Prow", "Laser core focal array & ram", 280, 60, 65, 30 },
+    { "port", "Port Deflector Bulkhead", "Shield generator & thrusters", 120, 25, 85, 25 },
+    { "starboard", "Starboard Ore Vault", "Mineral storage & compression", 120, 100, 85, 25 },
+    { "reactor", "Antimatter Reactor Core", "Fusion core & plasma conduits", 30, 55, 75, 40 }
+};
 
 #define MAX_STARS 150
 #define MAX_ASTEROIDS 24
@@ -472,6 +493,7 @@ typedef struct {
     int showUpgrades;
     int showSpectrometer;
     int showEva;
+    int showCrisis;
     int warpActive;
     float warpTimer;
     char sector[32];
@@ -481,6 +503,14 @@ typedef struct {
     float heat, maxHeat;
     float reactor;
     float o2;
+    float o2Scrubber;
+    float radiation;
+    int hullBreaches[MAX_COMPARTMENTS];
+    int breachCount;
+    int plasmaLeaks;
+    int repairDronesActive;
+    float droneTimer;
+    float alarmTick;
     int cargoHold[6];
     int totalCargo;
     int maxCargo;
@@ -525,7 +555,7 @@ typedef struct {
 
 static GameState g_state;
 static HWND g_hwnd = NULL;
-static HWND g_btnLaser, g_btnTractor, g_btnDampener, g_btnScan, g_btnNav, g_btnEva, g_btnUpgrades, g_btnTheme, g_btnScanlines, g_btnAudio, g_btnHelp, g_btnJettison, g_btnSell;
+static HWND g_btnLaser, g_btnTractor, g_btnDampener, g_btnScan, g_btnNav, g_btnEva, g_btnCrisis, g_btnUpgrades, g_btnTheme, g_btnScanlines, g_btnAudio, g_btnHelp, g_btnJettison, g_btnSell;
 static HFONT g_fontMono = NULL;
 static HFONT g_fontMonoBold = NULL;
 static HFONT g_fontSmall = NULL;
@@ -582,6 +612,20 @@ DWORD WINAPI SoundThreadProc(LPVOID lpParam) {
                 Beep(550, 80);
                 Beep(770, 100);
                 Beep(1100, 140);
+            } else if (sfx == SFX_ALARM) {
+                Beep(600, 100);
+                Beep(350, 120);
+            } else if (sfx == SFX_PLASMA_VENT) {
+                Beep(480, 80);
+                Beep(240, 100);
+                Beep(120, 120);
+            } else if (sfx == SFX_SEAL_WELD) {
+                Beep(350, 60);
+                Beep(700, 80);
+            } else if (sfx == SFX_DECON_FLUSH) {
+                Beep(520, 50);
+                Beep(650, 50);
+                Beep(780, 80);
             }
         }
         Sleep(20);
@@ -1000,6 +1044,108 @@ void ScavengeCargoPods(int index) {
     AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 30.0f, ORE_DEFS[5].color);
 }
 
+// --- Phase 9: Life Support Crisis & Damage Control Actions ---
+void ActionSealBreaches(void) {
+    if (g_state.breachCount == 0) {
+        AddLog("No active hull breaches detected. Hull is currently airtight.", 0);
+        return;
+    }
+    int breachCost = 50 * g_state.breachCount;
+    if (g_state.credits < breachCost && g_state.cargoHold[0] < 5 && g_state.cargoHold[5] < 3) {
+        AddLog("Insufficient credits or materials (5 Ferrum or 3 Scrap) to deploy nanite sealant.", 4);
+        return;
+    }
+    
+    if (g_state.cargoHold[5] >= 3) {
+        g_state.cargoHold[5] -= 3;
+        AddLog("Used 3T Derelict Scrap to weld structural patches.", 0);
+    } else if (g_state.cargoHold[0] >= 5) {
+        g_state.cargoHold[0] -= 5;
+        AddLog("Used 5T Ferrum Ore to synthesize bulkheads.", 0);
+    } else {
+        g_state.credits -= breachCost;
+        char cBuf[64];
+        sprintf(cBuf, "Deducted %d CR for nanite sealant injection.", breachCost);
+        AddLog(cBuf, 0);
+    }
+    
+    UpdateCargoTotal();
+    int count = g_state.breachCount;
+    for (int i = 0; i < MAX_COMPARTMENTS; i++) g_state.hullBreaches[i] = 0;
+    g_state.breachCount = 0;
+    g_state.hull = min(g_state.maxHull, g_state.hull + 15.0f);
+    TriggerSound(SFX_SEAL_WELD);
+    
+    char logB[128];
+    sprintf(logB, "DAMAGE CONTROL: Sealed %d hull breaches! Atmosphere leak stopped. +15%% Hull restored.", count);
+    AddLog(logB, 5);
+    AddFloatingText("BREACHES SEALED", g_state.shipX, g_state.shipY - 35.0f, RGB(16, 185, 129));
+}
+
+void ActionVentPlasma(void) {
+    TriggerSound(SFX_PLASMA_VENT);
+    g_state.plasmaLeaks = 0;
+    g_state.heat = max(0.0f, g_state.heat - 45.0f);
+    g_state.laserOverheated = 0;
+    
+    // Generate venting particle spray
+    for (int i = 0; i < 24; i++) {
+        float angle = g_state.shipAngle + 3.14159f + (((float)rand() / (float)RAND_MAX) - 0.5f) * 1.2f;
+        float spd = 4.0f + (((float)rand() / (float)RAND_MAX) * 6.0f);
+        for (int p = 0; p < MAX_PARTICLES; p++) {
+            if (!g_state.particles[p].active) {
+                g_state.particles[p].x = g_state.shipX - (float)cos(g_state.shipAngle) * 20.0f;
+                g_state.particles[p].y = g_state.shipY - (float)sin(g_state.shipAngle) * 20.0f;
+                g_state.particles[p].vx = (float)cos(angle) * spd;
+                g_state.particles[p].vy = (float)sin(angle) * spd;
+                g_state.particles[p].color = (rand() % 2 == 0) ? RGB(244, 63, 94) : RGB(245, 158, 11);
+                g_state.particles[p].life = 1.0f;
+                g_state.particles[p].decay = 0.05f;
+                g_state.particles[p].size = 3.0f;
+                g_state.particles[p].active = 1;
+                break;
+            }
+        }
+    }
+    
+    AddLog("EMERGENCY VENT: Superheated plasma manifold purged into space! -45% Heat dumped, conduit fires extinguished.", 3);
+    AddFloatingText("PLASMA PURGED (-45% HEAT)", g_state.shipX, g_state.shipY - 35.0f, RGB(245, 158, 11));
+}
+
+void ActionFlushRadiation(void) {
+    if (g_state.radiation <= 0.0f) {
+        AddLog("Radiation dosimeter reading 0 Rads (Clean).", 0);
+        return;
+    }
+    TriggerSound(SFX_DECON_FLUSH);
+    int purged = (int)g_state.radiation;
+    g_state.radiation = 0.0f;
+    char logB[128];
+    sprintf(logB, "DECONTAMINATION: Lead nano-scrubbers flushed %d Rads of stellar radiation from crew quarters!", purged);
+    AddLog(logB, 5);
+    AddFloatingText("RADIATION CLEARED", g_state.shipX, g_state.shipY - 35.0f, RGB(16, 185, 129));
+}
+
+void ActionServiceO2Scrubbers(void) {
+    TriggerSound(SFX_DECON_FLUSH);
+    g_state.o2Scrubber = 100.0f;
+    g_state.o2 = min(100.0f, g_state.o2 + 35.0f);
+    AddLog("LIFE SUPPORT: CO2 filtration scrubbers cleansed & fresh O2 synthesized from silicates. +35% Oxygen restored.", 5);
+    AddFloatingText("+35% O2 RESTORED", g_state.shipX, g_state.shipY - 35.0f, RGB(16, 185, 129));
+}
+
+void ActionDeployRepairDrones(void) {
+    if (g_state.repairDronesActive) {
+        AddLog("Repair drone swarm is already deployed and active.", 3);
+        return;
+    }
+    TriggerSound(SFX_COLLECT);
+    g_state.repairDronesActive = 1;
+    g_state.droneTimer = 10.0f;
+    AddLog("REPAIR SWARM: Autonomous nano-repair drones deployed outside the hull!", 5);
+    AddFloatingText("REPAIR DRONES LAUNCHED", g_state.shipX, g_state.shipY - 35.0f, RGB(56, 189, 248));
+}
+
 void InitSectorField(int sectorIdx) {
     if (sectorIdx < 0 || sectorIdx >= 4) sectorIdx = 0;
     g_state.currentSectorIndex = sectorIdx;
@@ -1217,6 +1363,14 @@ void InitGame(void) {
     g_state.maxHeat = 100.0f;
     g_state.reactor = 88.0f;
     g_state.o2 = 100.0f;
+    g_state.o2Scrubber = 100.0f;
+    g_state.radiation = 0.0f;
+    for (int i = 0; i < MAX_COMPARTMENTS; i++) g_state.hullBreaches[i] = 0;
+    g_state.breachCount = 0;
+    g_state.plasmaLeaks = 0;
+    g_state.repairDronesActive = 0;
+    g_state.droneTimer = 0.0f;
+    g_state.showCrisis = 0;
     g_state.maxCargo = 200;
     g_state.dampeners = 1;
     g_state.soundEnabled = 1;
@@ -1237,6 +1391,7 @@ void InitGame(void) {
     AddLog("[TRACTOR] Tractor emitter active. Hold [T] to gather extracted mineral chunks.", 2);
     AddLog("[UPGRADES] Modular engineering bay online. Press [U] for Barge Retrofits.", 0);
     AddLog("[NAV] Astronavigation computer initialized. Press [N] for Sector Charts.", 0);
+    AddLog("[CRISIS] Damage control station ready. Press [K] for Life Support & Breaches.", 0);
 }
 
 void UpdateGame(float dt) {
@@ -1320,6 +1475,12 @@ void UpdateGame(float dt) {
     // Laser Overheat Logic
     if (g_state.miningActive && !g_state.laserOverheated) {
         g_state.heat += 0.5f * drillDef->heatRate;
+        if (g_state.heat > 85.0f && (rand() % 350 == 0) && !g_state.plasmaLeaks) {
+            g_state.plasmaLeaks = 1;
+            AddLog("WARNING: High thermal load breached plasma manifold conduit!", 4);
+            TriggerSound(SFX_ALARM);
+            AddFloatingText("PLASMA CONDUIT LEAK!", g_state.shipX, g_state.shipY - 35.0f, RGB(244, 63, 94));
+        }
         if (g_state.heat >= g_state.maxHeat) {
             g_state.laserOverheated = 1;
             g_state.heat = 100.0f;
@@ -1332,6 +1493,12 @@ void UpdateGame(float dt) {
             g_state.laserOverheated = 0;
             AddLog("Laser cooling cycle complete. Optics online.", 5);
         }
+    }
+    
+    // Plasma leak ongoing heat & hull burn
+    if (g_state.plasmaLeaks) {
+        g_state.heat = min(100.0f, g_state.heat + 1.8f * dt);
+        g_state.hull = max(0.0f, g_state.hull - 0.35f * dt);
     }
     
     // Mining Laser Beam Impact
@@ -1553,6 +1720,18 @@ void UpdateGame(float dt) {
                 g_state.shield = max(0.0f, g_state.shield - 8.0f);
             } else {
                 g_state.hull = max(0.0f, g_state.hull - 5.0f);
+                if (g_state.breachCount < MAX_COMPARTMENTS && (rand() % 100 < 25)) {
+                    int comp = rand() % MAX_COMPARTMENTS;
+                    if (!g_state.hullBreaches[comp]) {
+                        g_state.hullBreaches[comp] = 1;
+                        g_state.breachCount++;
+                        TriggerSound(SFX_ALARM);
+                        char bLog[64];
+                        sprintf(bLog, "CRITICAL: Asteroid collision breached %s!", COMPARTMENT_DEFS[comp].name);
+                        AddLog(bLog, 4);
+                        AddFloatingText("HULL BREACH!", g_state.shipX, g_state.shipY - 30.0f, RGB(239, 68, 68));
+                    }
+                }
             }
             AddSparks(g_state.shipX, g_state.shipY, RGB(239, 68, 68), 8);
             TriggerSound(SFX_FRACTURE);
@@ -1583,6 +1762,18 @@ void UpdateGame(float dt) {
                 g_state.shield = max(0.0f, g_state.shield - 12.0f);
             } else {
                 g_state.hull = max(0.0f, g_state.hull - 8.0f);
+                if (g_state.breachCount < MAX_COMPARTMENTS && (rand() % 100 < 35)) {
+                    int comp = rand() % MAX_COMPARTMENTS;
+                    if (!g_state.hullBreaches[comp]) {
+                        g_state.hullBreaches[comp] = 1;
+                        g_state.breachCount++;
+                        TriggerSound(SFX_ALARM);
+                        char bLog[64];
+                        sprintf(bLog, "CRITICAL: Derelict impact breached %s!", COMPARTMENT_DEFS[comp].name);
+                        AddLog(bLog, 4);
+                        AddFloatingText("HULL BREACH!", g_state.shipX, g_state.shipY - 30.0f, RGB(239, 68, 68));
+                    }
+                }
             }
             AddSparks(g_state.shipX, g_state.shipY, RGB(239, 68, 68), 10);
             TriggerSound(SFX_FRACTURE);
@@ -1595,6 +1786,54 @@ void UpdateGame(float dt) {
     // Shield Regeneration
     if (g_state.shield < g_state.maxShield) {
         g_state.shield = min(g_state.maxShield, g_state.shield + shieldDef->regen);
+    }
+    
+    // Environmental Radiation Accumulation
+    float radRate = 0.1f;
+    if (g_state.currentSectorIndex == 1) radRate = 0.35f;
+    else if (g_state.currentSectorIndex == 2) radRate = 0.75f;
+    else if (g_state.currentSectorIndex == 3) radRate = 1.4f;
+    for (int i = 0; i < MAX_DERELICTS; i++) {
+        if (!g_state.derelicts[i].active) continue;
+        float ddx = g_state.shipX - g_state.derelicts[i].x;
+        float ddy = g_state.shipY - g_state.derelicts[i].y;
+        float dDist = (float)sqrt(ddx * ddx + ddy * ddy);
+        if (dDist < 200.0f) {
+            radRate += 0.8f * (1.0f - (dDist / 200.0f));
+        }
+    }
+    g_state.radiation = min(1000.0f, g_state.radiation + radRate * dt);
+    if (g_state.radiation >= 500.0f) {
+        g_state.hull = max(0.0f, g_state.hull - 0.25f * dt);
+    }
+    
+    // Life Support & O2 Scrubber Simulation
+    g_state.o2Scrubber = max(0.0f, g_state.o2Scrubber - 0.05f * dt);
+    float breachO2Loss = g_state.breachCount * 0.40f;
+    float scrubberLoss = (g_state.o2Scrubber < 30.0f) ? (0.25f * (1.0f - g_state.o2Scrubber / 30.0f)) : 0.0f;
+    g_state.o2 = max(0.0f, g_state.o2 - (scrubberLoss + breachO2Loss) * dt);
+    if (g_state.o2 <= 0.0f) {
+        g_state.hull = max(0.0f, g_state.hull - 1.5f * dt);
+    }
+    
+    // Autonomous Repair Drones
+    if (g_state.repairDronesActive) {
+        g_state.droneTimer -= dt;
+        g_state.hull = min(g_state.maxHull, g_state.hull + 3.0f * dt);
+        g_state.shield = min(g_state.maxShield, g_state.shield + 5.0f * dt);
+        if (g_state.droneTimer <= 0.0f) {
+            g_state.repairDronesActive = 0;
+            AddLog("Repair drone swarm completed patrol cycle.", 0);
+        }
+    }
+    
+    // Crisis Alarm Periodic Chime
+    if (g_state.breachCount > 0 || g_state.plasmaLeaks || g_state.o2 < 20.0f || g_state.radiation > 600.0f) {
+        g_state.alarmTick += dt;
+        if (g_state.alarmTick >= 5.0f) {
+            g_state.alarmTick = 0.0f;
+            TriggerSound(SFX_ALARM);
+        }
     }
     
     // Update Particles
@@ -1797,38 +2036,65 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     TextOutA(hdc, 10, my, "O2 / LIFE SUPPORT", 17);
     sprintf(valBuf, "%d%%", (int)g_state.o2);
     TextOutA(hdc, leftPanelW - 45, my, valBuf, (int)strlen(valBuf));
-    DrawBar(hdc, 10, my + 14, meterW, 8, g_state.o2 / 100.0f, RGB(16, 185, 129), RGB(2, 6, 23), pal->borderPanel);
-    my += 34;
+    COLORREF o2Col = (g_state.o2 < 25.0f) ? RGB(239, 68, 68) : (g_state.o2 < 50.0f ? RGB(245, 158, 11) : RGB(16, 185, 129));
+    DrawBar(hdc, 10, my + 14, meterW, 8, g_state.o2 / 100.0f, o2Col, RGB(2, 6, 23), pal->borderPanel);
+    my += 26;
+    
+    // Radiation Dosimeter
+    SetTextColor(hdc, pal->textPrimary);
+    TextOutA(hdc, 10, my, "CREW DOSIMETER", 14);
+    sprintf(valBuf, "%d RADS", (int)g_state.radiation);
+    TextOutA(hdc, leftPanelW - 65, my, valBuf, (int)strlen(valBuf));
+    COLORREF radCol = (g_state.radiation > 500.0f) ? RGB(239, 68, 68) : (g_state.radiation > 200.0f ? RGB(245, 158, 11) : RGB(16, 185, 129));
+    DrawBar(hdc, 10, my + 14, meterW, 8, g_state.radiation / 1000.0f, radCol, RGB(2, 6, 23), pal->borderPanel);
+    my += 26;
+    
+    // O2 Scrubber
+    SetTextColor(hdc, pal->textPrimary);
+    TextOutA(hdc, 10, my, "O2 SCRUBBERS", 12);
+    sprintf(valBuf, "%d%%", (int)g_state.o2Scrubber);
+    TextOutA(hdc, leftPanelW - 45, my, valBuf, (int)strlen(valBuf));
+    COLORREF scCol = (g_state.o2Scrubber < 30.0f) ? RGB(239, 68, 68) : RGB(56, 189, 248);
+    DrawBar(hdc, 10, my + 14, meterW, 8, g_state.o2Scrubber / 100.0f, scCol, RGB(2, 6, 23), pal->borderPanel);
+    my += 30;
     
     // System Status Summary Box
-    RECT rcSysBox = { 10, my, leftPanelW - 10, my + 70 };
+    RECT rcSysBox = { 10, my, leftPanelW - 10, my + 86 };
     HBRUSH hBrBox = CreateSolidBrush(RGB(3, 7, 18));
     FillRect(hdc, &rcSysBox, hBrBox);
     DeleteObject(hBrBox);
     FrameRect(hdc, &rcSysBox, (HBRUSH)GetStockObject(WHITE_BRUSH));
     
     SetTextColor(hdc, RGB(148, 163, 184));
-    TextOutA(hdc, 14, my + 4, "THRUST DAMPENERS:", 17);
-    SetTextColor(hdc, g_state.dampeners ? RGB(16, 185, 129) : RGB(245, 158, 11));
-    TextOutA(hdc, leftPanelW - 75, my + 4, g_state.dampeners ? "ACTIVE" : "OFFLINE", g_state.dampeners ? 6 : 7);
+    TextOutA(hdc, 14, my + 4, "HULL BREACHES:", 14);
+    SetTextColor(hdc, g_state.breachCount > 0 ? RGB(239, 68, 68) : RGB(16, 185, 129));
+    char brBuf[32];
+    if (g_state.breachCount > 0) sprintf(brBuf, "%d ACTIVE [!]", g_state.breachCount);
+    else sprintf(brBuf, "AIRTIGHT");
+    TextOutA(hdc, leftPanelW - 85, my + 4, brBuf, (int)strlen(brBuf));
     
     SetTextColor(hdc, RGB(148, 163, 184));
-    TextOutA(hdc, 14, my + 20, "MINING LASER:", 13);
+    TextOutA(hdc, 14, my + 20, "PLASMA CONDUIT:", 15);
+    SetTextColor(hdc, g_state.plasmaLeaks ? RGB(244, 63, 94) : RGB(16, 185, 129));
+    TextOutA(hdc, leftPanelW - 85, my + 20, g_state.plasmaLeaks ? "RUPTURE" : "NOMINAL", g_state.plasmaLeaks ? 7 : 7);
+    
+    SetTextColor(hdc, RGB(148, 163, 184));
+    TextOutA(hdc, 14, my + 36, "MINING LASER:", 13);
     SetTextColor(hdc, g_state.laserOverheated ? RGB(239, 68, 68) : (g_state.miningActive ? pal->vector : pal->textDim));
-    TextOutA(hdc, leftPanelW - 85, my + 20, g_state.laserOverheated ? "OVERHEAT" : (g_state.miningActive ? "FIRING" : "STANDBY"), g_state.laserOverheated ? 8 : (g_state.miningActive ? 6 : 7));
+    TextOutA(hdc, leftPanelW - 85, my + 36, g_state.laserOverheated ? "OVERHEAT" : (g_state.miningActive ? "FIRING" : "STANDBY"), g_state.laserOverheated ? 8 : (g_state.miningActive ? 6 : 7));
     
     SetTextColor(hdc, RGB(148, 163, 184));
-    TextOutA(hdc, 14, my + 36, "TRACTOR BEAM:", 13);
+    TextOutA(hdc, 14, my + 52, "TRACTOR BEAM:", 13);
     SetTextColor(hdc, g_state.tractorActive ? pal->vector : pal->textDim);
-    TextOutA(hdc, leftPanelW - 85, my + 36, g_state.tractorActive ? "ENGAGED" : "STANDBY", g_state.tractorActive ? 7 : 7);
+    TextOutA(hdc, leftPanelW - 85, my + 52, g_state.tractorActive ? "ENGAGED" : "STANDBY", g_state.tractorActive ? 7 : 7);
     
     float drain = 12.0f + (g_state.miningActive ? 28.0f : 0.0f) + (g_state.tractorActive ? 14.0f : 0.0f);
     SetTextColor(hdc, RGB(148, 163, 184));
-    TextOutA(hdc, 14, my + 52, "POWER GRID DRAIN:", 17);
+    TextOutA(hdc, 14, my + 68, "GRID DRAIN:", 11);
     char drnBuf[32];
     sprintf(drnBuf, "%.1f MW", drain);
     SetTextColor(hdc, pal->textBright);
-    TextOutA(hdc, leftPanelW - 65, my + 52, drnBuf, (int)strlen(drnBuf));
+    TextOutA(hdc, leftPanelW - 65, my + 68, drnBuf, (int)strlen(drnBuf));
     
     // 3. Right Panel: Mineral Cargo Hold
     RECT rcRight = { totalW - rightPanelW, mainY, totalW, mainY + mainH };
@@ -3306,6 +3572,281 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         DeleteObject(hPenBorderEva);
     }
     
+    // Crisis Management & Damage Control Modal (Phase 9)
+    if (g_state.showCrisis) {
+        int modalW = 730;
+        int modalH = 470;
+        int mx = (totalW - modalW) / 2;
+        int my = (totalH - modalH) / 2;
+        
+        RECT rcModal = { mx, my, mx + modalW, my + modalH };
+        HBRUSH hBrModal = CreateSolidBrush(pal->bgPanel);
+        FillRect(hdc, &rcModal, hBrModal);
+        DeleteObject(hBrModal);
+        
+        COLORREF alertBorderCol = (g_state.breachCount > 0 || g_state.plasmaLeaks || g_state.radiation > 500.0f) ? RGB(239, 68, 68) : RGB(245, 158, 11);
+        HPEN hPenBorderCrisis = CreatePen(PS_SOLID, 2, alertBorderCol);
+        HGDIOBJ oldPenCrisis = SelectObject(hdc, hPenBorderCrisis);
+        HGDIOBJ oldBrushCrisis = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Rectangle(hdc, mx, my, mx + modalW, my + modalH);
+        
+        // Header
+        RECT rcHdr = { mx, my, mx + modalW, my + 30 };
+        HBRUSH hBrHdr = CreateSolidBrush(pal->bgHeader);
+        FillRect(hdc, &rcHdr, hBrHdr);
+        DeleteObject(hBrHdr);
+        
+        SelectObject(hdc, g_fontHeader);
+        SetTextColor(hdc, alertBorderCol);
+        TextOutA(hdc, mx + 14, my + 6, "HULL INTEGRITY & DAMAGE CONTROL STATION", 39);
+        
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, pal->textBright);
+        TextOutA(hdc, mx + modalW - 120, my + 9, "[K / ESC] CLOSE", 15);
+        
+        // Left Column: Ship Structural Schematic Wireframe Box (310x230)
+        int schX = mx + 16;
+        int schY = my + 40;
+        int schW = 310;
+        int schH = 230;
+        RECT rcSch = { schX, schY, schX + schW, schY + schH };
+        HBRUSH hBrSch = CreateSolidBrush(RGB(2, 6, 18));
+        FillRect(hdc, &rcSch, hBrSch);
+        DeleteObject(hBrSch);
+        FrameRect(hdc, &rcSch, (HBRUSH)GetStockObject(WHITE_BRUSH));
+        
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, pal->vector);
+        TextOutA(hdc, schX + 8, schY + 6, "SHIP TACTICAL WIREFRAME", 23);
+        
+        // Draw 5 compartment boxes
+        struct { int cx, cy, cw, ch; const char* label; } compBoxes[5] = {
+            { schX + 105, schY + 80, 100, 45, "BRIDGE [O2]" },
+            { schX + 105, schY + 30, 100, 40, "MINING PROW" },
+            { schX + 15,  schY + 80, 80,  70, "PORT BULKHEAD" },
+            { schX + 215, schY + 80, 80,  70, "STBD ORE VAULT" },
+            { schX + 105, schY + 135, 100, 50, "REACTOR CORE" }
+        };
+        
+        for (int c = 0; c < 5; c++) {
+            int bx = compBoxes[c].cx;
+            int by = compBoxes[c].cy;
+            int bw = compBoxes[c].cw;
+            int bh = compBoxes[c].ch;
+            int breached = g_state.hullBreaches[c];
+            
+            RECT rcC = { bx, by, bx + bw, by + bh };
+            HBRUSH hBrC = CreateSolidBrush(breached ? RGB(45, 10, 15) : RGB(6, 26, 40));
+            FillRect(hdc, &rcC, hBrC);
+            DeleteObject(hBrC);
+            
+            HPEN hPenC = CreatePen(PS_SOLID, 1, breached ? RGB(239, 68, 68) : (pal->vector));
+            SelectObject(hdc, hPenC);
+            Rectangle(hdc, bx, by, bx + bw, by + bh);
+            DeleteObject(hPenC);
+            
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, breached ? RGB(244, 63, 94) : RGB(224, 242, 254));
+            RECT rcLbl = { bx + 2, by + 4, bx + bw - 2, by + 20 };
+            DrawTextA(hdc, compBoxes[c].label, -1, &rcLbl, DT_CENTER | DT_SINGLELINE);
+            
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, breached ? RGB(239, 68, 68) : RGB(16, 185, 129));
+            RECT rcStat = { bx + 2, by + bh - 18, bx + bw - 2, by + bh - 2 };
+            DrawTextA(hdc, breached ? "BREACHED [!]" : "AIRTIGHT", -1, &rcStat, DT_CENTER | DT_SINGLELINE);
+        }
+        
+        // Compartment summary box below wireframe (310x150)
+        int sumX = schX;
+        int sumY = schY + schH + 10;
+        int sumW = schW;
+        int sumH = 140;
+        RECT rcSum = { sumX, sumY, sumX + sumW, sumY + sumH };
+        HBRUSH hBrSum = CreateSolidBrush(RGB(4, 10, 24));
+        FillRect(hdc, &rcSum, hBrSum);
+        DeleteObject(hBrSum);
+        FrameRect(hdc, &rcSum, (HBRUSH)GetStockObject(WHITE_BRUSH));
+        
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, pal->textBright);
+        TextOutA(hdc, sumX + 8, sumY + 6, "LIFE SUPPORT & RADIATION DOSIMETRY", 34);
+        
+        SelectObject(hdc, g_fontSmall);
+        char l1[64], l2[64], l3[64], l4[64], l5[64];
+        sprintf(l1, "• Breaches Active: %d Compartments (%s)", g_state.breachCount, g_state.breachCount > 0 ? "ATMOSPHERE LEAKING" : "SEALED");
+        sprintf(l2, "• Plasma Manifold: %s", g_state.plasmaLeaks ? "CONDUIT FIRE / RUPTURE [!]" : "NOMINAL PRESSURE");
+        sprintf(l3, "• Radiation Dosage: %d Rads (%s)", (int)g_state.radiation, g_state.radiation > 500.0f ? "LETHAL DOSE" : (g_state.radiation > 200.0f ? "WARNING" : "SAFE"));
+        sprintf(l4, "• O2 Scrubbers: %d%% Efficiency (Drain: %.2f%%/s)", (int)g_state.o2Scrubber, 0.05f + g_state.breachCount * 0.40f);
+        sprintf(l5, "• Repair Drones: %s", g_state.repairDronesActive ? "DEPLOYED (SWARM ACTIVE)" : "DOCKED IN HANGAR");
+        
+        SetTextColor(hdc, g_state.breachCount > 0 ? RGB(239, 68, 68) : RGB(148, 163, 184));
+        TextOutA(hdc, sumX + 8, sumY + 26, l1, (int)strlen(l1));
+        SetTextColor(hdc, g_state.plasmaLeaks ? RGB(244, 63, 94) : RGB(148, 163, 184));
+        TextOutA(hdc, sumX + 8, sumY + 46, l2, (int)strlen(l2));
+        SetTextColor(hdc, g_state.radiation > 500.0f ? RGB(239, 68, 68) : (g_state.radiation > 200.0f ? RGB(245, 158, 11) : RGB(148, 163, 184)));
+        TextOutA(hdc, sumX + 8, sumY + 66, l3, (int)strlen(l3));
+        SetTextColor(hdc, g_state.o2Scrubber < 30.0f ? RGB(239, 68, 68) : RGB(148, 163, 184));
+        TextOutA(hdc, sumX + 8, sumY + 86, l4, (int)strlen(l4));
+        SetTextColor(hdc, g_state.repairDronesActive ? RGB(56, 189, 248) : RGB(148, 163, 184));
+        TextOutA(hdc, sumX + 8, sumY + 106, l5, (int)strlen(l5));
+        
+        // Right Column: 5 Interactive Crisis Actions (370px wide)
+        int actX = mx + 340;
+        int actY = my + 40;
+        int actW = modalW - 356;
+        int cardH = 70;
+        int gapY = 8;
+        
+        // 1. Seal Breaches Card
+        RECT rcA1 = { actX, actY, actX + actW, actY + cardH };
+        HBRUSH hBrA1 = CreateSolidBrush(g_state.breachCount > 0 ? RGB(36, 10, 14) : RGB(5, 12, 28));
+        FillRect(hdc, &rcA1, hBrA1);
+        DeleteObject(hBrA1);
+        HPEN hPenA1 = CreatePen(PS_SOLID, 1, g_state.breachCount > 0 ? RGB(239, 68, 68) : pal->borderPanel);
+        SelectObject(hdc, hPenA1);
+        Rectangle(hdc, actX, actY, actX + actW, actY + cardH);
+        DeleteObject(hPenA1);
+        
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, g_state.breachCount > 0 ? RGB(239, 68, 68) : RGB(255, 255, 255));
+        TextOutA(hdc, actX + 10, actY + 6, "[1] EMERGENCY HULL WELD & SEAL", 30);
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(148, 163, 184));
+        TextOutA(hdc, actX + 10, actY + 22, "Nanite weld sealant (Cost: 3 Scrap / 5 Ferrum / 50 CR per breach). +15% Hull.", 77);
+        
+        RECT rcBtnA1 = { actX + 10, actY + 40, actX + actW - 10, actY + 64 };
+        HBRUSH hBrBtnA1 = CreateSolidBrush(g_state.breachCount > 0 ? RGB(153, 27, 27) : RGB(30, 41, 59));
+        FillRect(hdc, &rcBtnA1, hBrBtnA1);
+        DeleteObject(hBrBtnA1);
+        FrameRect(hdc, &rcBtnA1, (HBRUSH)GetStockObject(WHITE_BRUSH));
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, g_state.breachCount > 0 ? RGB(255, 255, 255) : RGB(148, 163, 184));
+        char b1Txt[64];
+        sprintf(b1Txt, g_state.breachCount > 0 ? "SEAL %d BREACHES [KEY 1]" : "HULL IS CURRENTLY AIRTIGHT", g_state.breachCount);
+        DrawTextA(hdc, b1Txt, -1, &rcBtnA1, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        
+        // 2. Vent Plasma Card
+        int actY2 = actY + cardH + gapY;
+        RECT rcA2 = { actX, actY2, actX + actW, actY2 + cardH };
+        HBRUSH hBrA2 = CreateSolidBrush(g_state.plasmaLeaks ? RGB(36, 16, 8) : RGB(5, 12, 28));
+        FillRect(hdc, &rcA2, hBrA2);
+        DeleteObject(hBrA2);
+        HPEN hPenA2 = CreatePen(PS_SOLID, 1, g_state.plasmaLeaks ? RGB(245, 158, 11) : pal->borderPanel);
+        SelectObject(hdc, hPenA2);
+        Rectangle(hdc, actX, actY2, actX + actW, actY2 + cardH);
+        DeleteObject(hPenA2);
+        
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, g_state.plasmaLeaks ? RGB(245, 158, 11) : RGB(255, 255, 255));
+        TextOutA(hdc, actX + 10, actY2 + 6, "[2] EMERGENCY PLASMA CONDUIT PURGE", 34);
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(148, 163, 184));
+        TextOutA(hdc, actX + 10, actY2 + 22, "Dump superheated plasma into vacuum. Dumps -45% Heat & clears leaks.", 68);
+        
+        RECT rcBtnA2 = { actX + 10, actY2 + 40, actX + actW - 10, actY2 + 64 };
+        HBRUSH hBrBtnA2 = CreateSolidBrush(g_state.plasmaLeaks ? RGB(180, 83, 9) : RGB(30, 58, 138));
+        FillRect(hdc, &rcBtnA2, hBrBtnA2);
+        DeleteObject(hBrBtnA2);
+        FrameRect(hdc, &rcBtnA2, (HBRUSH)GetStockObject(WHITE_BRUSH));
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, RGB(255, 255, 255));
+        DrawTextA(hdc, g_state.plasmaLeaks ? "PURGE PLASMA CONDUIT [KEY 2] (-45% HEAT)" : "VENT PLASMA MANIFOLD [KEY 2] (-45% HEAT)", -1, &rcBtnA2, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        
+        // 3. Flush Radiation Card
+        int actY3 = actY2 + cardH + gapY;
+        RECT rcA3 = { actX, actY3, actX + actW, actY3 + cardH };
+        HBRUSH hBrA3 = CreateSolidBrush(RGB(5, 12, 28));
+        FillRect(hdc, &rcA3, hBrA3);
+        DeleteObject(hBrA3);
+        HPEN hPenA3 = CreatePen(PS_SOLID, 1, pal->borderPanel);
+        SelectObject(hdc, hPenA3);
+        Rectangle(hdc, actX, actY3, actX + actW, actY3 + cardH);
+        DeleteObject(hPenA3);
+        
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, RGB(255, 255, 255));
+        TextOutA(hdc, actX + 10, actY3 + 6, "[3] LEAD NANO-SCRUBBER RADIATION PURGE", 38);
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(148, 163, 184));
+        TextOutA(hdc, actX + 10, actY3 + 22, "Flush ion contaminants from crew quarters. Clears all Rads to 0.", 64);
+        
+        RECT rcBtnA3 = { actX + 10, actY3 + 40, actX + actW - 10, actY3 + 64 };
+        HBRUSH hBrBtnA3 = CreateSolidBrush(g_state.radiation > 0 ? RGB(6, 78, 59) : RGB(30, 41, 59));
+        FillRect(hdc, &rcBtnA3, hBrBtnA3);
+        DeleteObject(hBrBtnA3);
+        FrameRect(hdc, &rcBtnA3, (HBRUSH)GetStockObject(WHITE_BRUSH));
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, g_state.radiation > 0 ? RGB(110, 231, 183) : RGB(148, 163, 184));
+        char b3Txt[64];
+        sprintf(b3Txt, "PURGE DOSIMETER (%d RADS) [KEY 3]", (int)g_state.radiation);
+        DrawTextA(hdc, b3Txt, -1, &rcBtnA3, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        
+        // 4. Service O2 Scrubbers Card
+        int actY4 = actY3 + cardH + gapY;
+        RECT rcA4 = { actX, actY4, actX + actW, actY4 + cardH };
+        HBRUSH hBrA4 = CreateSolidBrush(RGB(5, 12, 28));
+        FillRect(hdc, &rcA4, hBrA4);
+        DeleteObject(hBrA4);
+        HPEN hPenA4 = CreatePen(PS_SOLID, 1, pal->borderPanel);
+        SelectObject(hdc, hPenA4);
+        Rectangle(hdc, actX, actY4, actX + actW, actY4 + cardH);
+        DeleteObject(hPenA4);
+        
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, RGB(255, 255, 255));
+        TextOutA(hdc, actX + 10, actY4 + 6, "[4] O2 SCRUBBER RECALIBRATION & SYNTHESIS", 41);
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(148, 163, 184));
+        TextOutA(hdc, actX + 10, actY4 + 22, "Cleanse CO2 filters & synthesize fresh Oxygen (+35% O2 / 100% Scrubbers).", 73);
+        
+        RECT rcBtnA4 = { actX + 10, actY4 + 40, actX + actW - 10, actY4 + 64 };
+        HBRUSH hBrBtnA4 = CreateSolidBrush(RGB(6, 78, 59));
+        FillRect(hdc, &rcBtnA4, hBrBtnA4);
+        DeleteObject(hBrBtnA4);
+        FrameRect(hdc, &rcBtnA4, (HBRUSH)GetStockObject(WHITE_BRUSH));
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, RGB(110, 231, 183));
+        DrawTextA(hdc, "SERVICE SCRUBBERS & INJECT O2 [KEY 4]", -1, &rcBtnA4, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        
+        // 5. Deploy Repair Drones Card
+        int actY5 = actY4 + cardH + gapY;
+        RECT rcA5 = { actX, actY5, actX + actW, actY5 + cardH };
+        HBRUSH hBrA5 = CreateSolidBrush(RGB(5, 12, 28));
+        FillRect(hdc, &rcA5, hBrA5);
+        DeleteObject(hBrA5);
+        HPEN hPenA5 = CreatePen(PS_SOLID, 1, pal->borderPanel);
+        SelectObject(hdc, hPenA5);
+        Rectangle(hdc, actX, actY5, actX + actW, actY5 + cardH);
+        DeleteObject(hPenA5);
+        
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, RGB(255, 255, 255));
+        TextOutA(hdc, actX + 10, actY5 + 6, "[5] DEPLOY REPAIR DRONE SWARM", 29);
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(148, 163, 184));
+        TextOutA(hdc, actX + 10, actY5 + 22, "Launch autonomous drones: Restores +30% Hull & +50% Shield over 10s.", 68);
+        
+        RECT rcBtnA5 = { actX + 10, actY5 + 40, actX + actW - 10, actY5 + 64 };
+        HBRUSH hBrBtnA5 = CreateSolidBrush(g_state.repairDronesActive ? RGB(30, 41, 59) : RGB(30, 58, 138));
+        FillRect(hdc, &rcBtnA5, hBrBtnA5);
+        DeleteObject(hBrBtnA5);
+        FrameRect(hdc, &rcBtnA5, (HBRUSH)GetStockObject(WHITE_BRUSH));
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, g_state.repairDronesActive ? RGB(148, 163, 184) : RGB(255, 255, 255));
+        char b5Txt[64];
+        sprintf(b5Txt, g_state.repairDronesActive ? "SWARM ACTIVE (%.1fs REMAINING)" : "DEPLOY DRONE SWARM [KEY 5]", g_state.droneTimer);
+        DrawTextA(hdc, b5Txt, -1, &rcBtnA5, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        
+        // Footer instruction
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(245, 158, 11));
+        TextOutA(hdc, mx + 16, my + modalH - 24, "Keys [1] Seal Breaches • [2] Vent Plasma • [3] Flush Rads • [4] O2 Scrubbers • [5] Drones • [K / ESC] Close", 108);
+        
+        SelectObject(hdc, oldPenCrisis);
+        SelectObject(hdc, oldBrushCrisis);
+        DeleteObject(hPenBorderCrisis);
+    }
+    
     // Help Overlay Modal
     if (g_state.showHelp) {
         int helpW = 560;
@@ -3369,13 +3910,13 @@ void RepositionControls(HWND hwnd) {
     int bottomCtrlH = 140;
     int botY = totalH - bottomCtrlH;
     
-    // Cockpit Action Buttons in bottom-left console (6 in row 1, 5 in row 2)
+    // Cockpit Action Buttons in bottom-left console (7 in row 1, 5 in row 2)
     int bx = 8;
     int by1 = botY + 28;
     int by2 = botY + 62;
-    int bw = 52;
+    int bw = 46;
     int bh = 28;
-    int gap = 4;
+    int gap = 3;
     
     MoveWindow(g_btnLaser,      bx,                  by1, bw, bh, TRUE);
     MoveWindow(g_btnTractor,    bx + (bw + gap),     by1, bw, bh, TRUE);
@@ -3383,12 +3924,13 @@ void RepositionControls(HWND hwnd) {
     MoveWindow(g_btnScan,       bx + (bw + gap) * 3, by1, bw, bh, TRUE);
     MoveWindow(g_btnNav,        bx + (bw + gap) * 4, by1, bw, bh, TRUE);
     MoveWindow(g_btnEva,        bx + (bw + gap) * 5, by1, bw, bh, TRUE);
+    MoveWindow(g_btnCrisis,     bx + (bw + gap) * 6, by1, bw, bh, TRUE);
     
-    MoveWindow(g_btnUpgrades,   bx,                  by2, bw, bh, TRUE);
-    MoveWindow(g_btnTheme,      bx + (bw + gap),     by2, bw, bh, TRUE);
-    MoveWindow(g_btnScanlines,  bx + (bw + gap) * 2, by2, bw, bh, TRUE);
-    MoveWindow(g_btnAudio,      bx + (bw + gap) * 3, by2, bw, bh, TRUE);
-    MoveWindow(g_btnHelp,       bx + (bw + gap) * 4, by2, bw, bh, TRUE);
+    MoveWindow(g_btnUpgrades,   bx,                  by2, bw + 6, bh, TRUE);
+    MoveWindow(g_btnTheme,      bx + (bw + 6 + gap), by2, bw + 6, bh, TRUE);
+    MoveWindow(g_btnScanlines,  bx + (bw + 6 + gap) * 2, by2, bw + 6, bh, TRUE);
+    MoveWindow(g_btnAudio,      bx + (bw + 6 + gap) * 3, by2, bw + 6, bh, TRUE);
+    MoveWindow(g_btnHelp,       bx + (bw + 6 + gap) * 4, by2, bw + 6, bh, TRUE);
     
     // Right panel buttons: Jettison & Liquidate
     int rightX = totalW - rightPanelW + 10;
@@ -3417,6 +3959,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_btnScan      = CreateWindowA("BUTTON", "PROSPECT [P]",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN, NULL, NULL);
             g_btnNav       = CreateWindowA("BUTTON", "SECTORS [N]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_NAV, NULL, NULL);
             g_btnEva       = CreateWindowA("BUTTON", "EVA OPS [E]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_EVA, NULL, NULL);
+            g_btnCrisis    = CreateWindowA("BUTTON", "CRISIS [K]",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_CRISIS, NULL, NULL);
             g_btnUpgrades  = CreateWindowA("BUTTON", "UPGRADE [U]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_UPGRADES, NULL, NULL);
             g_btnTheme     = CreateWindowA("BUTTON", "CRT CYAN",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_THEME, NULL, NULL);
             g_btnScanlines = CreateWindowA("BUTTON", "SCAN: ON",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCANLINES, NULL, NULL);
@@ -3456,22 +3999,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 case ID_BTN_SCAN:
                     g_state.showSpectrometer = !g_state.showSpectrometer;
-                    if (g_state.showSpectrometer) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showEva = 0; }
+                    if (g_state.showSpectrometer) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showEva = 0; g_state.showCrisis = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_NAV:
                     g_state.showStarChart = !g_state.showStarChart;
-                    if (g_state.showStarChart) { g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; }
+                    if (g_state.showStarChart) { g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_EVA:
                     g_state.showEva = !g_state.showEva;
-                    if (g_state.showEva) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; }
+                    if (g_state.showEva) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showCrisis = 0; }
+                    TriggerSound(SFX_BEEP);
+                    break;
+                case ID_BTN_CRISIS:
+                    g_state.showCrisis = !g_state.showCrisis;
+                    if (g_state.showCrisis) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_UPGRADES:
                     g_state.showUpgrades = !g_state.showUpgrades;
-                    if (g_state.showUpgrades) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; }
+                    if (g_state.showUpgrades) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_THEME:
@@ -3537,6 +4085,69 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (g_state.showHelp) {
                 g_state.showHelp = 0;
                 InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            
+            if (g_state.showCrisis) {
+                int modalW = 730;
+                int modalH = 470;
+                int hx = (totalW - modalW) / 2;
+                int hy = (totalH - modalH) / 2;
+                
+                // Close button top-right
+                if (mx >= hx + modalW - 130 && mx <= hx + modalW - 10 && my >= hy && my <= hy + 30) {
+                    g_state.showCrisis = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                
+                int actX = hx + 340;
+                int actY = hy + 40;
+                int actW = modalW - 356;
+                int cardH = 70;
+                int gapY = 8;
+                
+                // 1. Seal Breaches Button
+                if (mx >= actX + 10 && mx <= actX + actW - 10 && my >= actY + 40 && my <= actY + 64) {
+                    ActionSealBreaches();
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                // 2. Vent Plasma Button
+                int actY2 = actY + cardH + gapY;
+                if (mx >= actX + 10 && mx <= actX + actW - 10 && my >= actY2 + 40 && my <= actY2 + 64) {
+                    ActionVentPlasma();
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                // 3. Flush Radiation Button
+                int actY3 = actY2 + cardH + gapY;
+                if (mx >= actX + 10 && mx <= actX + actW - 10 && my >= actY3 + 40 && my <= actY3 + 64) {
+                    ActionFlushRadiation();
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                // 4. Service O2 Scrubbers Button
+                int actY4 = actY3 + cardH + gapY;
+                if (mx >= actX + 10 && mx <= actX + actW - 10 && my >= actY4 + 40 && my <= actY4 + 64) {
+                    ActionServiceO2Scrubbers();
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                // 5. Deploy Repair Drones Button
+                int actY5 = actY4 + cardH + gapY;
+                if (mx >= actX + 10 && mx <= actX + actW - 10 && my >= actY5 + 40 && my <= actY5 + 64) {
+                    ActionDeployRepairDrones();
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                
+                // Click outside modal closes it
+                if (mx < hx || mx > hx + modalW || my < hy || my > hy + modalH) {
+                    g_state.showCrisis = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
                 return 0;
             }
             
@@ -3795,6 +4406,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         
         case WM_KEYDOWN: {
+            if (g_state.showCrisis) {
+                if (wParam == '1') { ActionSealBreaches(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '2') { ActionVentPlasma(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '3') { ActionFlushRadiation(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '4') { ActionServiceO2Scrubbers(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '5') { ActionDeployRepairDrones(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == 'K' || wParam == VK_ESCAPE) { g_state.showCrisis = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+            }
+            
             if (g_state.showEva) {
                 if (wParam == '1') { BreachAirlock(g_state.selectedDerelictIndex); InvalidateRect(hwnd, NULL, FALSE); return 0; }
                 if (wParam == '2') { DecryptBlackBox(g_state.selectedDerelictIndex); InvalidateRect(hwnd, NULL, FALSE); return 0; }
@@ -3845,22 +4465,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 case 'P':
                     g_state.showSpectrometer = !g_state.showSpectrometer;
-                    if (g_state.showSpectrometer) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showEva = 0; }
+                    if (g_state.showSpectrometer) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showEva = 0; g_state.showCrisis = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case 'E':
                     g_state.showEva = !g_state.showEva;
-                    if (g_state.showEva) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; }
+                    if (g_state.showEva) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showCrisis = 0; }
+                    TriggerSound(SFX_BEEP);
+                    break;
+                case 'K':
+                    g_state.showCrisis = !g_state.showCrisis;
+                    if (g_state.showCrisis) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case 'U':
                     g_state.showUpgrades = !g_state.showUpgrades;
-                    if (g_state.showUpgrades) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; }
+                    if (g_state.showUpgrades) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case 'N':
                     g_state.showStarChart = !g_state.showStarChart;
-                    if (g_state.showStarChart) { g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; }
+                    if (g_state.showStarChart) { g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case 'V':

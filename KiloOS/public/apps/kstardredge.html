@@ -956,6 +956,122 @@
             font-family: var(--font-mono);
             line-height: 1.3;
         }
+
+        /* Phase 9: Life Support Crisis & Damage Control Modal */
+        .btn.btn-crisis {
+            border-color: #ef4444;
+            color: #fca5a5;
+        }
+
+        .btn.btn-crisis:hover {
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+            border-color: #f87171;
+        }
+
+        .btn.btn-crisis.alarm-pulse {
+            animation: pulse-hazard 1s infinite alternate;
+        }
+
+        @keyframes pulse-hazard {
+            0% { background: #350a0a; border-color: #ef4444; box-shadow: 0 0 4px #ef4444; }
+            100% { background: #7f1d1d; border-color: #fca5a5; box-shadow: 0 0 14px #ef4444; }
+        }
+
+        .crisis-grid {
+            display: grid;
+            grid-template-columns: 1.05fr 1.15fr;
+            gap: 10px;
+        }
+
+        .crisis-schematic-card {
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .crisis-canvas-wrap {
+            height: 170px;
+            background: #020617;
+            border: 1px solid var(--border-panel);
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #crisisCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .compartment-status-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: 110px;
+            overflow-y: auto;
+        }
+
+        .compartment-item {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-panel);
+            border-radius: 3px;
+            padding: 4px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+        }
+
+        .compartment-item.breached {
+            border-color: #ef4444;
+            background: rgba(127, 29, 29, 0.25);
+        }
+
+        .crisis-action-card {
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 7px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .crisis-action-card:hover {
+            border-color: var(--border-glow);
+            background: rgba(15, 28, 63, 0.5);
+        }
+
+        .crisis-action-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .crisis-action-title {
+            font-weight: bold;
+            font-size: 11px;
+            color: var(--text-bright);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .badge-status {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-panel);
+            color: var(--text-bright);
+        }
     </style>
 </head>
 <body>
@@ -1004,9 +1120,19 @@
                     <div class="meter-label"><span>O2 / LIFE SUPPORT</span><span id="txtO2">100%</span></div>
                     <div class="meter-bar-wrap"><div class="meter-bar-fill success" id="barO2" style="width: 100%;"></div></div>
                 </div>
+                <div class="meter-group">
+                    <div class="meter-label"><span>O2 SCRUBBER EFF</span><span id="txtScrubber">100%</span></div>
+                    <div class="meter-bar-wrap"><div class="meter-bar-fill success" id="barScrubber" style="width: 100%;"></div></div>
+                </div>
+                <div class="meter-group">
+                    <div class="meter-label"><span>CREW RADIATION DOSAGE</span><span id="txtRad">0 RADS</span></div>
+                    <div class="meter-bar-wrap"><div class="meter-bar-fill" id="barRad" style="width: 0%; background: #10b981;"></div></div>
+                </div>
 
                 <div class="system-status-box">
                     <div class="status-row"><span>THRUST DAMPENERS:</span><span id="txtDampener" style="color: var(--accent-emerald);">ACTIVE</span></div>
+                    <div class="status-row"><span>HULL BREACHES:</span><span id="txtBreachStatus" style="color: var(--accent-emerald);">NONE (AIRTIGHT)</span></div>
+                    <div class="status-row"><span>PLASMA CONDUIT:</span><span id="txtPlasmaStatus" style="color: var(--accent-emerald);">INTACT</span></div>
                     <div class="status-row"><span>MINING LASER:</span><span id="txtLaserState" style="color: var(--text-dim);">STANDBY</span></div>
                     <div class="status-row"><span>TRACTOR BEAM:</span><span id="txtTractorState" style="color: var(--text-dim);">STANDBY</span></div>
                     <div class="status-row"><span>POWER GRID DRAIN:</span><span id="txtPowerDrain">12.4 MW</span></div>
@@ -1134,7 +1260,7 @@
             <div class="panel">
                 <div class="panel-header">
                     <span>COCKPIT CONSOLE</span>
-                    <span style="font-size: 9px; color: var(--text-dim);">CONTROLS: WASD / SPACE / T / Z / P / U / N / E</span>
+                    <span style="font-size: 9px; color: var(--text-dim);">CONTROLS: WASD / SPACE / T / Z / P / U / N / E / K</span>
                 </div>
                 <div class="action-grid">
                     <button class="btn" id="btnLaser">
@@ -1164,6 +1290,10 @@
                     <button class="btn btn-eva" id="btnEva">
                         <span>🚀 EVA OPS</span>
                         <span class="key-hint">[E] SALVAGE</span>
+                    </button>
+                    <button class="btn btn-crisis" id="btnCrisis">
+                        <span>🚨 CRISIS OPS</span>
+                        <span class="key-hint">[K] DAMAGE CTRL</span>
                     </button>
                     <button class="btn" id="btnTheme">
                         <span id="txtBtnTheme">📺 CRT CYAN</span>
@@ -1442,6 +1572,110 @@
             </div>
         </div>
     </div>
+    <!-- Phase 9: Hull Integrity, Radiation Exposure & Life Support Crisis Management Modal -->
+    <div class="modal-overlay" id="crisisModal">
+        <div class="modal-box" style="width: 860px;">
+            <div class="modal-header">
+                <span style="display: flex; align-items: center; gap: 8px;">
+                    <span class="crisis-beacon">🚨</span>
+                    <span>DAMAGE CONTROL & LIFE SUPPORT CRISIS STATION</span>
+                </span>
+                <button class="btn" id="btnCloseCrisis" style="padding: 2px 8px; border-color: var(--accent-red); color: var(--accent-red);">✕ CLOSE [K]</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 6px 12px; border: 1px solid var(--border-panel); border-radius: 4px;">
+                    <div>
+                        <span style="color: var(--text-dim); font-size: 10px;">BARGE SYSTEMS MONITOR: </span>
+                        <span id="crisisAlertLevel" style="color: var(--accent-emerald); font-weight: bold;">ALL SYSTEMS NOMINAL</span>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <span id="crisisBreachBadge" style="font-size: 10px; padding: 2px 8px; border-radius: 3px; font-weight: bold; background: #064e3b; color: #a7f3d0; border: 1px solid #059669;">BREACHES: 0</span>
+                        <span id="crisisRadBadge" style="font-size: 10px; padding: 2px 8px; border-radius: 3px; font-weight: bold; background: #064e3b; color: #a7f3d0; border: 1px solid #059669;">RADS: 0</span>
+                        <span id="crisisPlasmaBadge" style="font-size: 10px; padding: 2px 8px; border-radius: 3px; font-weight: bold; background: #064e3b; color: #a7f3d0; border: 1px solid #059669;">CONDUITS: INTACT</span>
+                    </div>
+                </div>
+
+                <div class="crisis-grid">
+                    <!-- Left: Ship Internal Compartment Schematic Canvas -->
+                    <div class="crisis-schematic-card">
+                        <div style="display: flex; justify-content: space-between; font-size: 10px;">
+                            <span style="color: var(--text-bright); font-weight: bold;">INTERNAL COMPARTMENT TELEMETRY</span>
+                            <span style="color: var(--accent-cyan);">TACTICAL WIREFRAME</span>
+                        </div>
+                        <div class="crisis-canvas-wrap">
+                            <canvas id="crisisCanvas" width="370" height="170"></canvas>
+                        </div>
+                        <div class="compartment-status-list" id="compartmentList">
+                            <!-- Dynamic compartment list -->
+                        </div>
+                    </div>
+
+                    <!-- Right: Emergency Damage Control Protocols -->
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <!-- 1. Seal Breaches -->
+                        <div class="crisis-action-card">
+                            <div class="crisis-action-header">
+                                <span class="crisis-action-title">🛡️ 1. NANITE HULL SEALANT & BULKHEAD WELD</span>
+                                <span class="badge-status" id="badgeSealCost">5 FERRUM / 50 CR</span>
+                            </div>
+                            <div style="font-size: 9px; color: var(--text-dim);">Inject pressurized nanite compound into micro-meteoroid punctures & hull fractures to restore airtight seal.</div>
+                            <button class="btn" id="btnSealBreaches" style="padding: 5px; background: #1e3a8a; border-color: var(--accent-cyan); color: #fff;">
+                                <span>🛡️ SEAL ALL COMPARTMENT BREACHES [1]</span>
+                            </button>
+                        </div>
+
+                        <!-- 2. Vent Plasma -->
+                        <div class="crisis-action-card">
+                            <div class="crisis-action-header">
+                                <span class="crisis-action-title">💨 2. EMERGENCY PLASMA CONDUIT VENT</span>
+                                <span class="badge-status" id="badgeVentStatus">STANDBY</span>
+                            </div>
+                            <div style="font-size: 9px; color: var(--text-dim);">Rapidly purge superheated ionized plasma from manifold lines to extinguish conduit fires and dump -45% heat into space.</div>
+                            <button class="btn" id="btnVentPlasma" style="padding: 5px; background: #881337; border-color: #f43f5e; color: #fff;">
+                                <span>💨 PURGE & VENT PLASMA MANIFOLD [2]</span>
+                            </button>
+                        </div>
+
+                        <!-- 3. Flush Rad Decon -->
+                        <div class="crisis-action-card">
+                            <div class="crisis-action-header">
+                                <span class="crisis-action-title">🧬 3. LEAD SCRUBBER RAD PURGE</span>
+                                <span class="badge-status" id="badgeRadDose">DOSAGE: 0 RADS</span>
+                            </div>
+                            <div style="font-size: 9px; color: var(--text-dim);">Circulate chelating lead nano-filters through crew quarters to neutralize stellar radiation sickness.</div>
+                            <button class="btn" id="btnFlushRad" style="padding: 5px; background: #78350f; border-color: #f59e0b; color: #fff;">
+                                <span>🧬 FLUSH RADIATION CONTAMINATION [3]</span>
+                            </button>
+                        </div>
+
+                        <!-- 4. O2 Scrubber Service -->
+                        <div class="crisis-action-card">
+                            <div class="crisis-action-header">
+                                <span class="crisis-action-title">🧪 4. O2 SCRUBBER OVERCHARGE & SYNTHESIS</span>
+                                <span class="badge-status" id="badgeO2Status">O2: 100%</span>
+                            </div>
+                            <div style="font-size: 9px; color: var(--text-dim);">Clean CO2 filtration scrubbers and synthesize fresh pressurized oxygen from mineral silicates (+35% O2).</div>
+                            <button class="btn" id="btnServiceO2" style="padding: 5px; background: #064e3b; border-color: #10b981; color: #6ee7b7;">
+                                <span>🧪 OVERCHARGE O2 SCRUBBERS [4] (+35% O2)</span>
+                            </button>
+                        </div>
+
+                        <!-- 5. Deploy Repair Drones -->
+                        <div class="crisis-action-card">
+                            <div class="crisis-action-header">
+                                <span class="crisis-action-title">🤖 5. AUTOMATED REPAIR DRONE SWARM</span>
+                                <span class="badge-status" id="badgeDroneStatus">READY</span>
+                            </div>
+                            <div style="font-size: 9px; color: var(--text-dim);">Launch autonomous drones to repair exterior ablative plating (+30% Hull) and recharge deflector field (+50% Shield).</div>
+                            <button class="btn" id="btnDeployDrones" style="padding: 5px; background: #312e81; border-color: #818cf8; color: #e0e7ff;">
+                                <span>🤖 LAUNCH REPAIR DRONE SWARM [5]</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         // --- Web Audio Synthesis Engine ---
@@ -1603,6 +1837,51 @@
                     osc.start();
                     osc.stop(this.ctx.currentTime + 0.4);
                 } catch (e) {}
+            }
+
+            playAlarm() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(300, this.ctx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.15);
+                } catch (e) {}
+            }
+
+            playPlasmaVent() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(480, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.5);
+                    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.5);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.5);
+                } catch (e) {}
+            }
+
+            playSealWeld() {
+                this.playBeep(350, 'square', 0.08, 0.15);
+                setTimeout(() => this.playBeep(700, 'square', 0.1, 0.18), 70);
+            }
+
+            playDeconFlush() {
+                this.playBeep(520, 'sine', 0.07, 0.12);
+                setTimeout(() => this.playBeep(650, 'sine', 0.07, 0.12), 60);
+                setTimeout(() => this.playBeep(780, 'sine', 0.14, 0.15), 120);
             }
         }
 
@@ -1850,6 +2129,14 @@
             maxHeat: 100,
             reactor: 88,
             o2: 100,
+            o2Scrubber: 100,
+            radiation: 0,
+            maxRadiation: 100,
+            hullBreaches: [],
+            plasmaLeaks: false,
+            repairDronesActive: false,
+            droneTimer: 0,
+            alarmTick: 0,
             cargo: 0,
             maxCargo: 200,
             dampeners: true,
@@ -1908,7 +2195,17 @@
         const spectroCtx = spectroCanvas.getContext('2d');
         const evaCanvas = document.getElementById('evaCanvas');
         const evaCtx = evaCanvas ? evaCanvas.getContext('2d') : null;
+        const crisisCanvas = document.getElementById('crisisCanvas');
+        const crisisCtx = crisisCanvas ? crisisCanvas.getContext('2d') : null;
         const logBox = document.getElementById('logBox');
+
+        const COMPARTMENTS = [
+            { id: 'bridge', name: 'Bridge & Life Support Hub', x: 190, y: 70, w: 75, h: 30, desc: 'Atmosphere scrubbers & primary cockpit avionics' },
+            { id: 'prow', name: 'Forward Mining Prow', x: 280, y: 70, w: 65, h: 30, desc: 'Laser core focal array & heavy ramming bulkheads' },
+            { id: 'port', name: 'Port Deflector Bulkhead', x: 120, y: 35, w: 85, h: 25, desc: 'Shield generator matrix & maneuvering thrusters' },
+            { id: 'starboard', name: 'Starboard Ore Vault', x: 120, y: 110, w: 85, h: 25, desc: 'Mineral ore depository & compression bay' },
+            { id: 'reactor', name: 'Antimatter Reactor Core', x: 30, y: 65, w: 75, h: 40, desc: 'Sub-space fusion core & plasma distribution conduits' }
+        ];
 
         function addLog(msg, type = 'system') {
             const entry = document.createElement('div');
@@ -2712,6 +3009,298 @@
             renderEvaModal();
         }
 
+        // --- Phase 9: Life Support Crisis & Damage Control Modal ---
+        function openCrisisModal() {
+            renderCrisisModal();
+            document.getElementById('crisisModal').classList.add('open');
+            audio.playBeep(550, 'square', 0.08, 0.12);
+        }
+
+        function closeCrisisModal() {
+            document.getElementById('crisisModal').classList.remove('open');
+        }
+
+        function renderCrisisModal() {
+            const breachCount = state.hullBreaches.length;
+            const breachBadge = document.getElementById('crisisBreachBadge');
+            if (breachCount === 0) {
+                breachBadge.textContent = 'BREACHES: 0 (NOMINAL)';
+                breachBadge.style.background = '#064e3b';
+                breachBadge.style.color = '#a7f3d0';
+                breachBadge.style.borderColor = '#059669';
+            } else {
+                breachBadge.textContent = `🚨 BREACHES: ${breachCount}`;
+                breachBadge.style.background = '#7f1d1d';
+                breachBadge.style.color = '#fecaca';
+                breachBadge.style.borderColor = '#dc2626';
+            }
+
+            const radBadge = document.getElementById('crisisRadBadge');
+            const radVal = Math.round(state.radiation);
+            radBadge.textContent = `RADS: ${radVal} / 100`;
+            if (radVal > 60) {
+                radBadge.style.background = '#7f1d1d';
+                radBadge.style.color = '#fecaca';
+                radBadge.style.borderColor = '#dc2626';
+            } else if (radVal > 25) {
+                radBadge.style.background = '#78350f';
+                radBadge.style.color = '#fde68a';
+                radBadge.style.borderColor = '#d97706';
+            } else {
+                radBadge.style.background = '#064e3b';
+                radBadge.style.color = '#a7f3d0';
+                radBadge.style.borderColor = '#059669';
+            }
+
+            const plasmaBadge = document.getElementById('crisisPlasmaBadge');
+            if (state.plasmaLeaks) {
+                plasmaBadge.textContent = '🔥 PLASMA LEAK ACTIVE';
+                plasmaBadge.style.background = '#7f1d1d';
+                plasmaBadge.style.color = '#fecaca';
+                plasmaBadge.style.borderColor = '#dc2626';
+            } else {
+                plasmaBadge.textContent = 'CONDUITS: INTACT';
+                plasmaBadge.style.background = '#064e3b';
+                plasmaBadge.style.color = '#a7f3d0';
+                plasmaBadge.style.borderColor = '#059669';
+            }
+
+            const alertLevel = document.getElementById('crisisAlertLevel');
+            if (breachCount > 0 || state.plasmaLeaks || radVal > 60 || state.o2 < 40) {
+                alertLevel.textContent = 'CRITICAL HAZARD - IMMEDIATE ACTION REQUIRED';
+                alertLevel.style.color = '#ef4444';
+            } else if (radVal > 20 || state.o2Scrubber < 70 || state.hull < 60) {
+                alertLevel.textContent = 'CAUTION - SYSTEM WEAR / RADIATION ELEVATED';
+                alertLevel.style.color = '#f59e0b';
+            } else {
+                alertLevel.textContent = 'ALL BARGE LIFE SUPPORT & HULL SYSTEMS NOMINAL';
+                alertLevel.style.color = '#10b981';
+            }
+
+            // Render compartment list
+            const compList = document.getElementById('compartmentList');
+            if (compList) {
+                compList.innerHTML = '';
+                COMPARTMENTS.forEach(comp => {
+                    const isBreached = state.hullBreaches.includes(comp.id);
+                    const isPlasmaLeak = (comp.id === 'reactor' && state.plasmaLeaks);
+                    const div = document.createElement('div');
+                    div.className = `compartment-item ${(isBreached || isPlasmaLeak) ? 'breached' : ''}`;
+                    
+                    let statusHtml = `<span style="color: #10b981; font-weight: bold;">SEALED (100%)</span>`;
+                    if (isBreached) statusHtml = `<span style="color: #ef4444; font-weight: bold;">⚠️ BREACHED (-0.3% O2/s)</span>`;
+                    else if (isPlasmaLeak) statusHtml = `<span style="color: #f43f5e; font-weight: bold;">🔥 PLASMA FIRE (+Heat)</span>`;
+
+                    div.innerHTML = `
+                        <div>
+                            <strong style="color: var(--text-bright);">${comp.name}</strong>
+                            <div style="font-size: 8px; color: var(--text-dim);">${comp.desc}</div>
+                        </div>
+                        <div>${statusHtml}</div>
+                    `;
+                    compList.appendChild(div);
+                });
+            }
+
+            // Update badge statuses
+            const bVent = document.getElementById('badgeVentStatus');
+            if (bVent) {
+                bVent.textContent = state.plasmaLeaks ? '🔥 ACTIVE LEAK' : 'NOMINAL';
+                bVent.style.color = state.plasmaLeaks ? '#ef4444' : '#10b981';
+            }
+
+            const bRad = document.getElementById('badgeRadDose');
+            if (bRad) {
+                bRad.textContent = `DOSAGE: ${radVal} RADS`;
+                bRad.style.color = radVal > 50 ? '#ef4444' : (radVal > 20 ? '#f59e0b' : '#10b981');
+            }
+
+            const bO2 = document.getElementById('badgeO2Status');
+            if (bO2) {
+                bO2.textContent = `O2: ${Math.round(state.o2)}% (SCRUBBER: ${Math.round(state.o2Scrubber)}%)`;
+                bO2.style.color = state.o2 < 40 ? '#ef4444' : '#10b981';
+            }
+
+            const bDrone = document.getElementById('badgeDroneStatus');
+            if (bDrone) {
+                bDrone.textContent = state.repairDronesActive ? `ACTIVE (${Math.round(state.droneTimer)}s)` : 'STANDBY';
+                bDrone.style.color = state.repairDronesActive ? '#38bdf8' : '#cbd5e1';
+            }
+
+            drawCrisisSchematic();
+        }
+
+        function drawCrisisSchematic() {
+            const crisisCanvas = document.getElementById('crisisCanvas');
+            if (!crisisCanvas) return;
+            const cctx = crisisCanvas.getContext('2d');
+            cctx.clearRect(0, 0, crisisCanvas.width, crisisCanvas.height);
+
+            const w = crisisCanvas.width;
+            const h = crisisCanvas.height;
+
+            // Background Grid
+            cctx.fillStyle = '#020617';
+            cctx.fillRect(0, 0, w, h);
+            cctx.strokeStyle = 'rgba(30, 58, 138, 0.3)';
+            cctx.lineWidth = 1;
+            for (let x = 0; x < w; x += 25) {
+                cctx.beginPath(); cctx.moveTo(x, 0); cctx.lineTo(x, h); cctx.stroke();
+            }
+            for (let y = 0; y < h; y += 25) {
+                cctx.beginPath(); cctx.moveTo(0, y); cctx.lineTo(w, y); cctx.stroke();
+            }
+
+            // Ship Silhouette Outline
+            cctx.save();
+            cctx.strokeStyle = '#1e3a8a';
+            cctx.lineWidth = 1.5;
+            cctx.strokeRect(20, 25, 330, 120);
+            cctx.restore();
+
+            // Draw each compartment
+            COMPARTMENTS.forEach(comp => {
+                const isBreached = state.hullBreaches.includes(comp.id);
+                const isPlasmaLeak = (comp.id === 'reactor' && state.plasmaLeaks);
+
+                cctx.save();
+                if (isBreached) {
+                    cctx.fillStyle = 'rgba(239, 68, 68, 0.25)';
+                    cctx.strokeStyle = '#ef4444';
+                    cctx.lineWidth = 2;
+                } else if (isPlasmaLeak) {
+                    cctx.fillStyle = 'rgba(244, 63, 94, 0.25)';
+                    cctx.strokeStyle = '#f43f5e';
+                    cctx.lineWidth = 2;
+                } else {
+                    cctx.fillStyle = 'rgba(15, 28, 63, 0.6)';
+                    cctx.strokeStyle = '#38bdf8';
+                    cctx.lineWidth = 1;
+                }
+
+                cctx.fillRect(comp.x, comp.y, comp.w, comp.h);
+                cctx.strokeRect(comp.x, comp.y, comp.w, comp.h);
+
+                cctx.fillStyle = (isBreached || isPlasmaLeak) ? '#fecaca' : '#f0f9ff';
+                cctx.font = 'bold 8px monospace';
+                cctx.textAlign = 'center';
+                cctx.fillText(comp.id.toUpperCase(), comp.x + comp.w / 2, comp.y + comp.h / 2 + 3);
+
+                if (isBreached) {
+                    cctx.fillStyle = '#ef4444';
+                    cctx.fillText('BREACH', comp.x + comp.w / 2, comp.y + comp.h / 2 + 11);
+                } else if (isPlasmaLeak) {
+                    cctx.fillStyle = '#f43f5e';
+                    cctx.fillText('LEAK', comp.x + comp.w / 2, comp.y + comp.h / 2 + 11);
+                }
+                cctx.restore();
+            });
+
+            // Draw connection conduits
+            cctx.strokeStyle = state.plasmaLeaks ? '#ef4444' : '#0284c7';
+            cctx.lineWidth = 1.5;
+            cctx.beginPath();
+            cctx.moveTo(105, 85); cctx.lineTo(190, 85);
+            cctx.moveTo(265, 85); cctx.lineTo(280, 85);
+            cctx.moveTo(160, 60); cctx.lineTo(160, 85); cctx.lineTo(160, 110);
+            cctx.stroke();
+        }
+
+        function sealHullBreaches() {
+            if (state.hullBreaches.length === 0) {
+                addLog("No active hull breaches detected. Hull is currently airtight.", "system");
+                return;
+            }
+            const breachCost = 50 * state.hullBreaches.length;
+            if (state.credits < breachCost && (state.cargoHold.ferrum || 0) < 5 && (state.cargoHold.scrap || 0) < 3) {
+                addLog("⚠️ Insufficient credits or scrap/ferrum materials to deploy nanite sealant.", "critical");
+                return;
+            }
+
+            if ((state.cargoHold.scrap || 0) >= 3) {
+                state.cargoHold.scrap -= 3;
+                addLog("Used 3T Derelict Scrap to weld structural patches.", "system");
+            } else if ((state.cargoHold.ferrum || 0) >= 5) {
+                state.cargoHold.ferrum -= 5;
+                addLog("Used 5T Ferrum Ore to synthesize bulkheads.", "system");
+            } else {
+                state.credits -= breachCost;
+                addLog(`Deducted ${breachCost} CR for nanite sealant injection.`, "system");
+                document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+            }
+
+            updateCargoUI();
+            const count = state.hullBreaches.length;
+            state.hullBreaches = [];
+            state.hull = Math.min(state.maxHull, state.hull + 15);
+            audio.playSealWeld();
+            addLog(`🛡️ DAMAGE CONTROL: Sealed ${count} hull breaches! Atmosphere leak stopped. +15% Hull restored.`, 'success');
+            addFloatingText("BREACHES SEALED", state.ship.x, state.ship.y - 35, '#10b981');
+            renderCrisisModal();
+        }
+
+        function ventPlasmaLeaks() {
+            audio.playPlasmaVent();
+            state.plasmaLeaks = false;
+            state.heat = Math.max(0, state.heat - 45);
+            state.laserOverheated = false;
+
+            // Generate venting particle spray from rear manifold
+            for (let i = 0; i < 30; i++) {
+                const angle = state.ship.angle + Math.PI + (Math.random() - 0.5) * 1.2;
+                const spd = 4.0 + Math.random() * 6.0;
+                state.particles.push({
+                    x: state.ship.x - Math.cos(state.ship.angle) * 20,
+                    y: state.ship.y - Math.sin(state.ship.angle) * 20,
+                    vx: Math.cos(angle) * spd,
+                    vy: Math.sin(angle) * spd,
+                    color: Math.random() > 0.5 ? '#f43f5e' : '#f59e0b',
+                    life: 1.2,
+                    decay: 0.04,
+                    size: 3.5
+                });
+            }
+
+            addLog("💨 EMERGENCY VENT: Superheated plasma manifold purged into space! -45% Heat dumped, conduit fires extinguished.", 'warning');
+            addFloatingText("PLASMA PURGED (-45% HEAT)", state.ship.x, state.ship.y - 35, '#f59e0b');
+            renderCrisisModal();
+        }
+
+        function flushRadiationDecon() {
+            if (state.radiation <= 0) {
+                addLog("Radiation dosimeter reading 0 Rads (Clean).", "system");
+                return;
+            }
+            audio.playDeconFlush();
+            const purgedRads = Math.round(state.radiation);
+            state.radiation = 0;
+            addLog(`🧬 DECONTAMINATION: Lead nano-scrubbers flushed ${purgedRads} Rads of stellar radiation from crew quarters!`, 'success');
+            addFloatingText("RADIATION CLEARED", state.ship.x, state.ship.y - 35, '#10b981');
+            renderCrisisModal();
+        }
+
+        function serviceO2Scrubbers() {
+            audio.playDeconFlush();
+            state.o2Scrubber = 100;
+            state.o2 = Math.min(100, state.o2 + 35);
+            addLog("🧪 LIFE SUPPORT: CO2 filtration scrubbers cleansed & fresh O2 synthesized from silicates. +35% Oxygen restored.", 'success');
+            addFloatingText("+35% O2 RESTORED", state.ship.x, state.ship.y - 35, '#10b981');
+            renderCrisisModal();
+        }
+
+        function deployRepairDrones() {
+            if (state.repairDronesActive) {
+                addLog("Repair drone swarm is already deployed and active.", "warning");
+                return;
+            }
+            audio.playCollect();
+            state.repairDronesActive = true;
+            state.droneTimer = 10; // 10 seconds drone repair cycle
+            addLog("🤖 REPAIR SWARM: Autonomous nano-repair drones deployed outside the hull!", 'success');
+            addFloatingText("REPAIR DRONES LAUNCHED", state.ship.x, state.ship.y - 35, '#38bdf8');
+            renderCrisisModal();
+        }
+
         // --- Multi-Spectral Prospector & Spectrometer Modal ---
         function openProspectModal() {
             if (!state.selectedTarget) {
@@ -3065,6 +3654,19 @@
                 if (evaModal.classList.contains('open')) closeEvaModal();
                 else openEvaModal();
             }
+            if (e.code === 'KeyK') {
+                const crisisModal = document.getElementById('crisisModal');
+                if (crisisModal.classList.contains('open')) closeCrisisModal();
+                else openCrisisModal();
+            }
+            if (document.getElementById('crisisModal').classList.contains('open')) {
+                if (e.code === 'Digit1') sealHullBreaches();
+                if (e.code === 'Digit2') ventPlasmaLeaks();
+                if (e.code === 'Digit3') flushRadiationDecon();
+                if (e.code === 'Digit4') serviceO2Scrubbers();
+                if (e.code === 'Digit5') deployRepairDrones();
+                if (e.code === 'Escape') closeCrisisModal();
+            }
             if (document.getElementById('evaModal').classList.contains('open')) {
                 if (e.code === 'Digit1') breachAirlock();
                 if (e.code === 'Digit2') decryptBlackBox();
@@ -3227,6 +3829,35 @@
             scavengeCargoPods();
         });
 
+        document.getElementById('btnCrisis').addEventListener('click', () => {
+            audio.init();
+            openCrisisModal();
+        });
+
+        document.getElementById('btnCloseCrisis').addEventListener('click', () => {
+            closeCrisisModal();
+        });
+
+        document.getElementById('btnSealBreaches').addEventListener('click', () => {
+            sealHullBreaches();
+        });
+
+        document.getElementById('btnVentPlasma').addEventListener('click', () => {
+            ventPlasmaLeaks();
+        });
+
+        document.getElementById('btnFlushRad').addEventListener('click', () => {
+            flushRadiationDecon();
+        });
+
+        document.getElementById('btnServiceO2').addEventListener('click', () => {
+            serviceO2Scrubbers();
+        });
+
+        document.getElementById('btnDeployDrones').addEventListener('click', () => {
+            deployRepairDrones();
+        });
+
         document.getElementById('btnEngageWarp').addEventListener('click', () => {
             engageWarpJump();
         });
@@ -3250,6 +3881,24 @@
         document.getElementById('btnHelp').addEventListener('click', () => {
             showHelpModal();
         });
+
+        function showHelpModal() {
+            addLog("=== DREDGER FLIGHT MANUAL ===", "system");
+            addLog("• W / UP ARROW: Forward Fusion Thrusters", "system");
+            addLog("• S / DOWN ARROW: Retro Braking Thrusters", "system");
+            addLog("• A / D / LEFT / RIGHT: Pivot Mining Barge Heading", "system");
+            addLog("• SPACEBAR: Fire Heavy Mining Laser at Asteroids", "system");
+            addLog("• T: Toggle Tractor Beam to gather floating mineral chunks", "system");
+            addLog("• Z: Toggle Inertial Dampeners", "system");
+            addLog("• P: Multi-Spectral Spectrometer & Mineral Prospector", "system");
+            addLog("• U: Open Modular Engineering Bay & Install Upgrades", "system");
+            addLog("• N: Open Star Sector Chart & Engage Warp Jumps", "system");
+            addLog("• E: EVA Salvage & Airlock Breach on Derelict Spaceships", "system");
+            addLog("• K: Emergency Damage Control & Life Support Crisis Station", "system");
+            addLog("• V: Cycle Retro CRT Vector Theme (Cyan / Amber / Green / Solar)", "system");
+            addLog("• C: Toggle CRT Scanlines & Phosphor Shaders (Normal / CRT+ / Off)", "system");
+            addLog("• CLICK: Target asteroid or derelict spaceship with telemetry", "system");
+        }
 
         document.getElementById('btnJettison').addEventListener('click', () => {
             if (state.cargo === 0) {
@@ -3603,6 +4252,17 @@
                         state.shield = Math.max(0, state.shield - 8);
                     } else {
                         state.hull = Math.max(0, state.hull - 5);
+                        // Chance of localized hull puncture
+                        if (Math.random() < 0.35) {
+                            const unbreached = COMPARTMENTS.filter(c => !state.hullBreaches.includes(c.id));
+                            if (unbreached.length > 0) {
+                                const bComp = unbreached[Math.floor(Math.random() * unbreached.length)];
+                                state.hullBreaches.push(bComp.id);
+                                audio.playAlarm();
+                                addLog(`🚨 HULL BREACH DETECTED in ${bComp.name}! Atmosphere venting into void. Press [K] for Damage Control!`, 'critical');
+                                addFloatingText(`HULL BREACH: ${bComp.id.toUpperCase()}`, state.ship.x, state.ship.y - 35, '#ef4444');
+                            }
+                        }
                     }
                     createSparks(state.ship.x, state.ship.y, '#ef4444', 8);
                     audio.playFracture();
@@ -3610,7 +4270,7 @@
                 }
             }
 
-            // Phase 8: Derelict Spaceship Physics & Collision
+            // Phase 8 & 9: Derelict Spaceship Physics & Radiation Field
             for (const der of state.derelicts) {
                 der.x += der.vx;
                 der.y += der.vy;
@@ -3626,11 +4286,89 @@
                         state.shield = Math.max(0, state.shield - 10);
                     } else {
                         state.hull = Math.max(0, state.hull - 8);
+                        if (Math.random() < 0.4) {
+                            const unbreached = COMPARTMENTS.filter(c => !state.hullBreaches.includes(c.id));
+                            if (unbreached.length > 0) {
+                                const bComp = unbreached[Math.floor(Math.random() * unbreached.length)];
+                                state.hullBreaches.push(bComp.id);
+                                audio.playAlarm();
+                                addLog(`🚨 HULL FRACTURE in ${bComp.name} from wreck impact!`, 'critical');
+                            }
+                        }
                     }
                     createSparks(state.ship.x, state.ship.y, '#ef4444', 10);
                     audio.playFracture();
                     addLog(`COLLISION WARNING with Derelict ${der.name}! Shield absorbed hull strike.`, 'warning');
                 }
+
+                // Proximity radiation dosage
+                if (dist < 260) {
+                    const radFactor = (1 - dist / 260) * (der.radiation * 0.08);
+                    state.radiation = Math.min(100, state.radiation + radFactor * dt);
+                }
+            }
+
+            // Phase 9: Ambient Sector Radiation & Plasma Leak Dynamics
+            const curSec = SECTORS[state.currentSectorIndex];
+            if (curSec.id === 'nebula') {
+                state.radiation = Math.min(100, state.radiation + 0.35 * dt);
+            } else if (curSec.id === 'graveyard') {
+                state.radiation = Math.min(100, state.radiation + 0.15 * dt);
+            } else if (curSec.id === 'kuiper') {
+                state.radiation = Math.min(100, state.radiation + 0.06 * dt);
+            }
+
+            // Laser Heat Plasma Conduit Stress
+            if (state.heat > 85 && !state.plasmaLeaks && Math.random() < 0.08 * dt) {
+                state.plasmaLeaks = true;
+                audio.playAlarm();
+                addLog("⚠️ CRITICAL: Superheated plasma conduit ruptured in Reactor Bay! Purge manifold [K] to avert meltdown.", "critical");
+                addFloatingText("PLASMA CONDUIT RUPTURE", state.ship.x, state.ship.y - 35, '#f43f5e');
+            }
+
+            if (state.plasmaLeaks) {
+                state.heat = Math.min(100, state.heat + 0.35 * dt);
+                if (Math.random() < 0.25) {
+                    createSparks(state.ship.x - Math.cos(state.ship.angle) * 15, state.ship.y - Math.sin(state.ship.angle) * 15, '#f43f5e', 2);
+                }
+            }
+
+            // Life Support & O2 Scrubbers
+            if (state.ship.miningActive) {
+                state.o2Scrubber = Math.max(10, state.o2Scrubber - 0.08 * dt);
+            }
+            if (state.o2Scrubber < 50) {
+                state.o2 = Math.max(0, state.o2 - 0.08 * dt);
+            }
+            if (state.hullBreaches.length > 0) {
+                state.o2 = Math.max(0, state.o2 - (0.25 * state.hullBreaches.length) * dt);
+            }
+            if (state.radiation > 60) {
+                state.o2 = Math.max(0, state.o2 - 0.12 * dt);
+            }
+            if (state.o2 < 15) {
+                state.hull = Math.max(0, state.hull - 0.2 * dt); // Hypoxia hull erosion
+            }
+
+            // Autonomous Repair Drone Swarm
+            if (state.repairDronesActive) {
+                state.droneTimer -= dt;
+                state.hull = Math.min(state.maxHull, state.hull + 3.2 * dt);
+                state.shield = Math.min(state.maxShield, state.shield + 5.5 * dt);
+                if (Math.random() < 0.4) {
+                    createSparks(state.ship.x + (Math.random() - 0.5) * 30, state.ship.y + (Math.random() - 0.5) * 30, '#38bdf8', 2);
+                }
+                if (state.droneTimer <= 0) {
+                    state.repairDronesActive = false;
+                    addLog("Repair drone sweep complete. Swarm returned to cradle bay.", "system");
+                }
+            }
+
+            // Hazard Alarms & Flashing Indicators
+            const hasHazard = (state.hullBreaches.length > 0 || state.plasmaLeaks || state.radiation > 65 || state.o2 < 35);
+            const btnCrisisElem = document.getElementById('btnCrisis');
+            if (btnCrisisElem) {
+                btnCrisisElem.classList.toggle('alarm-pulse', hasHazard);
             }
 
             // Shield regeneration
@@ -3694,6 +4432,35 @@
 
             document.getElementById('barFuel').style.width = `${state.fuel}%`;
             document.getElementById('txtFuel').textContent = `${Math.round(state.fuel)}%`;
+
+            // Phase 9: Telemetry Gauges for O2, Scrubber, Radiation, Breaches
+            document.getElementById('txtO2').textContent = `${Math.round(state.o2)}%`;
+            document.getElementById('barO2').style.width = `${state.o2}%`;
+            document.getElementById('barO2').className = `meter-bar-fill ${state.o2 < 30 ? 'danger' : (state.o2 < 60 ? 'warning' : 'success')}`;
+
+            document.getElementById('txtScrubber').textContent = `${Math.round(state.o2Scrubber)}%`;
+            document.getElementById('barScrubber').style.width = `${state.o2Scrubber}%`;
+            document.getElementById('barScrubber').className = `meter-bar-fill ${state.o2Scrubber < 40 ? 'danger' : (state.o2Scrubber < 70 ? 'warning' : 'success')}`;
+
+            document.getElementById('txtRad').textContent = `${Math.round(state.radiation)} RADS`;
+            document.getElementById('barRad').style.width = `${state.radiation}%`;
+            document.getElementById('barRad').className = `meter-bar-fill ${state.radiation > 60 ? 'danger' : (state.radiation > 25 ? 'warning' : 'success')}`;
+
+            const breachEl = document.getElementById('txtBreachStatus');
+            if (breachEl) {
+                breachEl.textContent = state.hullBreaches.length === 0 ? 'NONE (AIRTIGHT)' : `🚨 ${state.hullBreaches.length} BREACHES`;
+                breachEl.style.color = state.hullBreaches.length === 0 ? 'var(--accent-emerald)' : 'var(--accent-red)';
+            }
+
+            const plasmaEl = document.getElementById('txtPlasmaStatus');
+            if (plasmaEl) {
+                plasmaEl.textContent = state.plasmaLeaks ? '🔥 RUPTURED / BURNING' : 'INTACT';
+                plasmaEl.style.color = state.plasmaLeaks ? 'var(--accent-red)' : 'var(--accent-emerald)';
+            }
+
+            if (document.getElementById('crisisModal').classList.contains('open')) {
+                renderCrisisModal();
+            }
 
             document.getElementById('txtPowerDrain').textContent = `${powerDraw.toFixed(1)} MW`;
             document.getElementById('txtLaserState').textContent = state.laserOverheated ? "OVERHEATED" : (state.ship.miningActive ? "FIRING" : "STANDBY");
