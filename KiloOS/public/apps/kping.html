@@ -1,26 +1,31 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <title>KPing - Network Diagnostics & Path MTU</title>
 <style>
   :root {
     --bg: #0f172a;
-    --panel: rgba(30, 41, 59, 0.7);
-    --border: rgba(255, 255, 255, 0.1);
+    --panel: rgba(30, 41, 59, 0.75);
+    --border: rgba(255, 255, 255, 0.12);
+    --border-subtle: rgba(255, 255, 255, 0.06);
     --text: #e2e8f0;
     --text-muted: #94a3b8;
+    --text-dim: #64748b;
     --accent: #3b82f6;
     --accent-hover: #60a5fa;
     --success: #10b981;
     --danger: #ef4444;
     --warning: #f59e0b;
+    --purple: #8b5cf6;
+    --purple-hover: #a78bfa;
   }
+  * { box-sizing: border-box; }
   body {
-    margin: 0; padding: 20px; font-family: "Inter", "Segoe UI", sans-serif;
+    margin: 0; padding: 16px; font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
     background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
     color: var(--text); display: flex; flex-direction: column;
-    height: 100vh; box-sizing: border-box; overflow: hidden;
+    height: 100vh; overflow: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -31,10 +36,10 @@
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--border);
     border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
   }
   .controls {
-    display: flex; flex-wrap: wrap; gap: 12px; padding: 12px 16px; margin-bottom: 16px; align-items: flex-end;
+    display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 14px; margin-bottom: 12px; align-items: flex-end;
   }
   .input-group {
     display: flex; flex-direction: column; gap: 4px;
@@ -43,7 +48,7 @@
     font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
   }
   input[type="text"], input[type="number"], select {
-    background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border);
     color: var(--text); padding: 7px 10px; border-radius: 6px; outline: none;
     font-family: "Consolas", monospace; font-size: 13px; transition: border-color 0.2s, box-shadow 0.2s;
   }
@@ -59,36 +64,53 @@
   }
   input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
   .btn {
-    padding: 7px 16px; border: none; border-radius: 6px; font-weight: 600; font-size: 13px;
+    padding: 7px 14px; border: none; border-radius: 6px; font-weight: 600; font-size: 12.5px;
     cursor: pointer; transition: all 0.2s ease;
-    display: flex; align-items: center; justify-content: center; min-width: 80px;
+    display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 76px;
+    font-family: inherit; user-select: none;
+  }
+  .kbd-badge {
+    display: inline-block; font-size: 10px; font-family: "Consolas", monospace;
+    background: rgba(0, 0, 0, 0.3); padding: 1px 4px; border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.2); opacity: 0.85; font-weight: normal;
   }
   .btn-primary { background: var(--accent); color: white; }
   .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
   .btn-danger { background: var(--danger); color: white; }
   .btn-danger:hover { background: #f87171; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4); }
-  .btn-secondary { background: #475569; color: white; }
-  .btn-secondary:hover { background: #64748b; transform: translateY(-1px); }
-  .btn-mtu { background: #8b5cf6; color: white; }
-  .btn-mtu:hover { background: #a78bfa; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4); }
+  .btn-secondary { background: #334155; color: white; border: 1px solid var(--border); }
+  .btn-secondary:hover { background: #475569; transform: translateY(-1px); }
+  .btn-mtu { background: var(--purple); color: white; }
+  .btn-mtu:hover { background: var(--purple-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4); }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
   
   .terminal-container {
-    flex: 1; display: flex; flex-direction: column; gap: 15px; overflow: hidden;
+    flex: 1; display: flex; flex-direction: column; gap: 12px; overflow: hidden;
   }
   
   .terminal {
-    flex: 1; display: flex; flex-direction: column; padding: 14px; border-radius: 12px;
-    background: rgba(0, 0, 0, 0.6); border: 1px solid var(--border); overflow: hidden;
+    flex: 1; display: flex; flex-direction: column; padding: 12px 14px; border-radius: 12px;
+    background: rgba(10, 15, 29, 0.85); border: 1px solid var(--border); overflow: hidden;
   }
   .terminal-header {
-    display: flex; align-items: center; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 8px;
   }
-  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; }
   .dot-red { background: #ff5f56; } .dot-yellow { background: #ffbd2e; } .dot-green { background: #27c93f; }
+  
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 12px; background: rgba(255, 255, 255, 0.07);
+    color: var(--text-muted); font-family: "Consolas", monospace; margin-left: 6px;
+  }
+  .status-badge.pinging { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+  .status-badge.tracing { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+  .status-badge.mtu { background: rgba(139, 92, 246, 0.2); color: #c084fc; }
+  .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
   #out {
     flex: 1; background: transparent; border: none; color: #a3be8c;
-    font-family: "Consolas", "Courier New", monospace; font-size: 13.5px;
+    font-family: "Consolas", "Courier New", monospace; font-size: 13px;
     resize: none; outline: none; overflow-y: auto; line-height: 1.5;
   }
   ::-webkit-scrollbar { width: 8px; }
@@ -97,74 +119,132 @@
   ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
   
   .analytics-panel {
-    height: 110px; display: flex; gap: 12px; border-radius: 12px;
-    background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border); padding: 10px; box-sizing: border-box;
+    height: 105px; display: flex; gap: 10px; border-radius: 12px;
+    background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); padding: 8px 12px; box-sizing: border-box;
   }
   .stats-box {
-    display: flex; flex-direction: column; justify-content: center; padding: 8px 12px;
-    background: rgba(255,255,255,0.05); border-radius: 8px; min-width: 110px;
+    display: flex; flex-direction: column; justify-content: center; padding: 6px 12px;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); border-radius: 8px; min-width: 100px;
   }
-  .stats-box span { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
-  .stats-box strong { font-size: 20px; color: var(--text); margin-top: 4px; }
+  .stats-box span { font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .stats-box strong { font-size: 19px; color: var(--text); margin-top: 2px; font-family: "Consolas", monospace; }
   .graph-box {
     flex: 1; position: relative; display: flex; flex-direction: column;
   }
-  canvas { flex: 1; width: 100%; height: 100%; border-radius: 4px; background: rgba(0,0,0,0.2); }
+  canvas { flex: 1; width: 100%; height: 100%; border-radius: 6px; background: rgba(0,0,0,0.25); }
+
+  /* Toast Notification System */
+  .toast-container {
+    position: fixed; top: 16px; right: 16px; z-index: 1000;
+    display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+  }
+  .toast {
+    pointer-events: auto; padding: 10px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 500;
+    display: flex; align-items: center; gap: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    animation: toastIn 0.25s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; transition: all 0.2s ease;
+    border: 1px solid var(--border); backdrop-filter: blur(8px); max-width: 380px;
+  }
+  .toast-info { background: rgba(15, 23, 42, 0.95); border-left: 4px solid var(--accent); color: #e2e8f0; }
+  .toast-success { background: rgba(6, 78, 59, 0.95); border-left: 4px solid var(--success); color: #d1fae5; }
+  .toast-warning { background: rgba(120, 53, 15, 0.95); border-left: 4px solid var(--warning); color: #fef3c7; }
+  .toast-error { background: rgba(127, 29, 29, 0.95); border-left: 4px solid var(--danger); color: #fee2e2; }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(-12px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Modal Dialog */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center; z-index: 999;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+  }
+  .modal-overlay.active { opacity: 1; pointer-events: auto; }
+  .modal-dialog {
+    background: #1e293b; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px;
+    width: 620px; max-width: 90vw; max-height: 85vh; overflow-y: auto; padding: 20px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5); transform: translateY(10px); transition: transform 0.2s ease;
+  }
+  .modal-overlay.active .modal-dialog { transform: translateY(0); }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border);
+    padding-bottom: 12px; margin-bottom: 14px;
+  }
+  .modal-title { font-size: 16px; font-weight: 700; color: #f8fafc; display: flex; align-items: center; gap: 8px; }
+  .modal-close {
+    background: transparent; border: none; color: var(--text-muted); font-size: 20px;
+    cursor: pointer; padding: 2px 6px; border-radius: 4px; line-height: 1;
+  }
+  .modal-close:hover { color: white; background: rgba(255, 255, 255, 0.1); }
+  .shortcut-table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; }
+  .shortcut-table th, .shortcut-table td {
+    padding: 8px 10px; text-align: left; font-size: 12.5px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .shortcut-table th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px; }
+  .shortcut-key {
+    background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 2px 6px; border-radius: 4px; font-family: "Consolas", monospace; font-size: 11.5px; color: #93c5fd;
+  }
+  .info-block {
+    background: rgba(0, 0, 0, 0.3); border-left: 3px solid var(--accent); padding: 10px 12px;
+    border-radius: 4px; margin-bottom: 12px; font-size: 12px; line-height: 1.5; color: #cbd5e1;
+  }
 </style>
 </head>
 <body>
   <div class="glass controls">
     <div class="input-group" style="flex: 1; min-width: 140px;">
       <label for="host">Target Host / IP</label>
-      <input type="text" id="host" value="127.0.0.1" placeholder="e.g. 1.1.1.1 or google.com">
+      <input type="text" id="host" value="127.0.0.1" placeholder="e.g. 1.1.1.1 or google.com" title="Target IP address or domain name (Press Enter to Ping)">
     </div>
-    <div class="input-group" style="width: 140px;">
+    <div class="input-group" style="width: 145px;">
       <label for="presetSelect">Presets</label>
-      <select id="presetSelect">
+      <select id="presetSelect" title="Quickly select preset host [1-6]">
         <option value="">Quick Presets...</option>
-        <option value="127.0.0.1">127.0.0.1 (Localhost)</option>
-        <option value="1.1.1.1">1.1.1.1 (Cloudflare)</option>
-        <option value="8.8.8.8">8.8.8.8 (Google DNS)</option>
-        <option value="9.9.9.9">9.9.9.9 (Quad9 DNS)</option>
-        <option value="208.67.222.222">208.67.222.222 (OpenDNS)</option>
-        <option value="192.168.1.1">192.168.1.1 (Gateway)</option>
+        <option value="127.0.0.1">1. 127.0.0.1 (Localhost)</option>
+        <option value="1.1.1.1">2. 1.1.1.1 (Cloudflare)</option>
+        <option value="8.8.8.8">3. 8.8.8.8 (Google DNS)</option>
+        <option value="9.9.9.9">4. 9.9.9.9 (Quad9 DNS)</option>
+        <option value="208.67.222.222">5. 208.67.222.222 (OpenDNS)</option>
+        <option value="192.168.1.1">6. 192.168.1.1 (Gateway)</option>
       </select>
     </div>
-    <div class="input-group" style="width: 65px;">
+    <div class="input-group" style="width: 60px;">
       <label for="count">Count</label>
-      <input type="number" id="count" value="4" min="1" max="100">
+      <input type="number" id="count" value="4" min="1" max="100" title="Number of echo requests to send">
     </div>
-    <div class="input-group" style="width: 75px;">
+    <div class="input-group" style="width: 70px;">
       <label for="size">Size (B)</label>
-      <input type="number" id="size" value="32" min="1" max="65500">
+      <input type="number" id="size" value="32" min="1" max="65500" title="Payload buffer size in bytes (excludes 28B header)">
     </div>
-    <div class="input-group" style="width: 65px;">
+    <div class="input-group" style="width: 60px;">
       <label for="ttl">TTL</label>
-      <input type="number" id="ttl" value="115" min="1" max="255">
+      <input type="number" id="ttl" value="115" min="1" max="255" title="Time-To-Live hop limit">
     </div>
     <div class="input-group">
-      <label class="checkbox-group" for="continuous" style="padding: 0; margin-top: auto; margin-bottom: 6px;">
+      <label class="checkbox-group" for="continuous" style="padding: 0; margin-top: auto; margin-bottom: 6px;" title="Continuous ping loop until stopped">
         <input type="checkbox" id="continuous">
         <span style="font-size: 11px; color: var(--text-muted)">-t (Cont)</span>
       </label>
     </div>
     <div class="input-group">
-      <label class="checkbox-group" for="hexdump" style="padding: 0; margin-top: auto; margin-bottom: 6px;">
+      <label class="checkbox-group" for="hexdump" style="padding: 0; margin-top: auto; margin-bottom: 6px;" title="Display raw packet payload buffer in hexadecimal">
         <input type="checkbox" id="hexdump">
         <span style="font-size: 11px; color: var(--text-muted)">Hex Dump</span>
       </label>
     </div>
     <div class="input-group">
-      <label class="checkbox-group" for="dfbit" style="padding: 0; margin-top: auto; margin-bottom: 6px;" title="Don't-Fragment bit in IP header">
+      <label class="checkbox-group" for="dfbit" style="padding: 0; margin-top: auto; margin-bottom: 6px;" title="Set Don't-Fragment bit in IP header">
         <input type="checkbox" id="dfbit">
         <span style="font-size: 11px; color: var(--text-muted)">-f (DF Bit)</span>
       </label>
     </div>
-    <button id="btnAction" class="btn btn-primary">Ping</button>
-    <button id="btnMTU" class="btn btn-mtu">MTU Sweep</button>
-    <button id="btnTrace" class="btn btn-primary">Trace</button>
-    <button id="btnExport" class="btn btn-secondary">Export JSON</button>
-    <button id="btnHelp" class="btn btn-secondary">Help</button>
+    <button id="btnAction" class="btn btn-primary" title="Start/Stop Ping [P]">Ping <span class="kbd-badge">P</span></button>
+    <button id="btnTrace" class="btn btn-primary" title="Start/Stop Route Trace [T]">Trace <span class="kbd-badge">T</span></button>
+    <button id="btnMTU" class="btn btn-mtu" title="Path MTU Discovery [M]">MTU <span class="kbd-badge">M</span></button>
+    <button id="btnExport" class="btn btn-secondary" title="Export Log [E]">Export <span class="kbd-badge">E</span></button>
+    <button id="btnClear" class="btn btn-secondary" title="Clear Console [C]">Clear <span class="kbd-badge">C</span></button>
+    <button id="btnHelp" class="btn btn-secondary" title="Help Guide [F1]">Help <span class="kbd-badge">F1</span></button>
   </div>
   
   <div class="terminal-container">
@@ -173,12 +253,13 @@
         <div class="dot dot-red"></div>
         <div class="dot dot-yellow"></div>
         <div class="dot dot-green"></div>
-        <span style="margin-left: 10px; font-size: 12px; color: var(--text-muted); font-family: monospace;">KPing Diagnostics & Path MTU Log</span>
-        <span style="margin-left: auto; font-size: 12px; color: var(--text-muted); font-family: monospace; font-weight: bold;">Press 'H' or F1 for Help</span>
+        <span style="margin-left: 8px; font-size: 12px; color: var(--text-muted); font-family: monospace;">KPing Diagnostics Log</span>
+        <span id="statusBadge" class="status-badge"><span class="pulse-dot"></span><span id="statusText">IDLE</span></span>
+        <span style="margin-left: auto; font-size: 11.5px; color: var(--text-dim); font-family: monospace;">Press <strong style="color:var(--text-muted)">Enter / [P]</strong> to Ping • <strong style="color:var(--text-muted)">[F1]</strong> Help</span>
       </div>
       <textarea id="out" readonly spellcheck="false">Welcome to KPing Network Diagnostics.
-Features: ICMP Ping, Path MTU Discovery (PMTU), Route Tracing, Hex Dump, DF-Flag Toggle, Log Export.
-Press 'H' or F1 for help.
+Features: ICMP Ping [P], Path MTU Discovery (PMTU) [M], Route Tracing [T], Hex Dump, DF-Flag Toggle, Log Export [E].
+Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
 
 </textarea>
     </div>
@@ -197,8 +278,84 @@ Press 'H' or F1 for help.
         <strong id="valMTU">-</strong>
       </div>
       <div class="graph-box">
-        <span style="font-size: 11px; color: var(--text-muted); position: absolute; top: 4px; left: 8px;">Latency & Jitter Analytics (ms)</span>
+        <span style="font-size: 10.5px; color: var(--text-muted); position: absolute; top: 3px; left: 8px; font-family: monospace;">Latency & Jitter (ms)</span>
         <canvas id="graphCanvas"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Help & Shortcuts Modal -->
+  <div id="helpModal" class="modal-overlay">
+    <div class="modal-dialog glass">
+      <div class="modal-header">
+        <div class="modal-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          KPing Reference & Keyboard Shortcuts
+        </div>
+        <button id="modalCloseBtn" class="modal-close" title="Close [Esc]">&times;</button>
+      </div>
+      
+      <div class="info-block">
+        <strong>Path MTU Discovery (PMTU):</strong> Probes destination buffer sizes with the Don't-Fragment (DF) bit set to determine maximum transmission unit without IP fragmentation, calculating recommended TCP MSS (<span class="shortcut-key">MTU - 40B</span>).
+      </div>
+
+      <table class="shortcut-table">
+        <thead>
+          <tr>
+            <th>Shortcut</th>
+            <th>Action</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="shortcut-key">Enter</span> / <span class="shortcut-key">P</span></td>
+            <td><strong>Ping</strong></td>
+            <td>Send ICMP echo requests to measure latency & jitter</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">T</span></td>
+            <td><strong>Trace</strong></td>
+            <td>Trace router hops along the destination path</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">M</span></td>
+            <td><strong>MTU Sweep</strong></td>
+            <td>Perform Path MTU Discovery with DF bit sweep</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">E</span> / <span class="shortcut-key">Ctrl+S</span></td>
+            <td><strong>Export</strong></td>
+            <td>Save session logs & latency telemetry to JSON file</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">C</span></td>
+            <td><strong>Clear</strong></td>
+            <td>Clear terminal output console & telemetry graph</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">1</span> - <span class="shortcut-key">6</span></td>
+            <td><strong>Presets</strong></td>
+            <td>Quickly select Localhost, Cloudflare, Google DNS, etc.</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">Esc</span></td>
+            <td><strong>Cancel / Close</strong></td>
+            <td>Stop active operation, close modal or dismiss notification</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">F1</span> / <span class="shortcut-key">H</span></td>
+            <td><strong>Help</strong></td>
+            <td>Open this interactive diagnostics manual</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
+        <button id="btnModalGotIt" class="btn btn-primary">Got it [Esc]</button>
       </div>
     </div>
   </div>
@@ -220,6 +377,7 @@ Press 'H' or F1 for help.
   const btnMTU = document.getElementById('btnMTU');
   const btnTrace = document.getElementById('btnTrace');
   const btnExport = document.getElementById('btnExport');
+  const btnClear = document.getElementById('btnClear');
   const btnHelp = document.getElementById('btnHelp');
   const out = document.getElementById('out');
   const canvas = document.getElementById('graphCanvas');
@@ -228,6 +386,12 @@ Press 'H' or F1 for help.
   const valJitter = document.getElementById('valJitter');
   const valLoss = document.getElementById('valLoss');
   const valMTU = document.getElementById('valMTU');
+  const statusBadge = document.getElementById('statusBadge');
+  const statusText = document.getElementById('statusText');
+  const toastContainer = document.getElementById('toastContainer');
+  const helpModal = document.getElementById('helpModal');
+  const modalCloseBtn = document.getElementById('modalCloseBtn');
+  const btnModalGotIt = document.getElementById('btnModalGotIt');
   
   let pingInterval = null;
   let isPinging = false;
@@ -239,15 +403,74 @@ Press 'H' or F1 for help.
   let historyData = [];
   let logEntries = [];
 
+  function showToast(message, type = 'info', duration = 4000) {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = message;
+    toast.onclick = () => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(-10px)';
+      setTimeout(() => toast.remove(), 200);
+    };
+    toastContainer.appendChild(toast);
+    setTimeout(() => {
+      if (toast.parentElement) {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-10px)';
+        setTimeout(() => toast.remove(), 200);
+      }
+    }, duration);
+  }
+
+  function setStatus(mode) {
+    statusBadge.className = 'status-badge';
+    if (mode === 'ping') {
+      statusBadge.classList.add('pinging');
+      statusText.textContent = 'PINGING';
+    } else if (mode === 'trace') {
+      statusBadge.classList.add('tracing');
+      statusText.textContent = 'TRACING';
+    } else if (mode === 'mtu') {
+      statusBadge.classList.add('mtu');
+      statusText.textContent = 'PMTU SWEEP';
+    } else {
+      statusText.textContent = 'IDLE';
+    }
+  }
+
+  function openHelpModal() {
+    helpModal.classList.add('active');
+  }
+
+  function closeHelpModal() {
+    helpModal.classList.remove('active');
+  }
+
+  modalCloseBtn.onclick = closeHelpModal;
+  btnModalGotIt.onclick = closeHelpModal;
+  helpModal.onclick = (e) => {
+    if (e.target === helpModal) closeHelpModal();
+  };
+
   presetSelect.addEventListener('change', () => {
     if (presetSelect.value) {
       hostInput.value = presetSelect.value;
+      showToast(`Selected Preset: <strong>${presetSelect.options[presetSelect.selectedIndex].text}</strong>`, 'info', 2500);
     }
   });
+
+  function selectPresetByIndex(idx) {
+    if (idx >= 1 && idx < presetSelect.options.length) {
+      presetSelect.selectedIndex = idx;
+      hostInput.value = presetSelect.value;
+      showToast(`Preset [${idx}]: <strong>${presetSelect.options[idx].text}</strong>`, 'info', 2500);
+    }
+  }
 
   function resizeCanvas() {
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.parentElement.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
     canvas.style.width = `${rect.width}px`;
@@ -274,6 +497,17 @@ Press 'H' or F1 for help.
           logEntries.push({ timestamp: new Date().toISOString(), type, message: text.trim() });
       }
       if (logEntries.length > 1000) logEntries.shift();
+  }
+
+  function clearOutput() {
+      out.value = "";
+      logEntries = [];
+      historyData = [];
+      valJitter.textContent = "0ms";
+      valLoss.textContent = "0%";
+      valMTU.textContent = "-";
+      drawGraph();
+      showToast("Terminal output and telemetry cleared", "info", 2000);
   }
 
   function generateHexDump(size) {
@@ -323,13 +557,15 @@ Press 'H' or F1 for help.
       }
       
       isPinging = true;
-      btnAction.textContent = 'Stop';
+      setStatus('ping');
+      btnAction.innerHTML = 'Stop <span class="kbd-badge">P</span>';
       btnAction.className = 'btn btn-danger';
       btnTrace.disabled = true;
       btnMTU.disabled = true;
       setInputsDisabled(true);
       
       stats = { sent: 0, recv: 0, lost: 0, min: Infinity, max: -Infinity, sum: 0 };
+      showToast(`Pinging <strong>${currentHost}</strong> (${size}B payload)...`, 'info', 2500);
       
       pingInterval = setInterval(() => {
           if (!continuous && stats.sent >= count) {
@@ -429,7 +665,8 @@ Press 'H' or F1 for help.
       if (!isPinging) return;
       clearInterval(pingInterval);
       isPinging = false;
-      btnAction.textContent = 'Ping';
+      setStatus('idle');
+      btnAction.innerHTML = 'Ping <span class="kbd-badge">P</span>';
       btnAction.className = 'btn btn-primary';
       btnTrace.disabled = false;
       btnMTU.disabled = false;
@@ -446,6 +683,7 @@ Press 'H' or F1 for help.
           append(`Approximate round trip times in milli-seconds:\n`, 'summary_times_header');
           append(`    Minimum = ${min}ms, Maximum = ${max}ms, Average = ${avg}ms\n`, 'summary_times', { min, max, avg });
       }
+      showToast(`Ping completed (${lossPercent}% loss)`, lossPercent === 0 ? 'success' : 'warning', 3000);
   }
 
   function startMtuSweep() {
@@ -465,7 +703,8 @@ Press 'H' or F1 for help.
       append(`============================================================\n\n`, 'mtu_header');
 
       isMtuSweeping = true;
-      btnMTU.textContent = 'Stop';
+      setStatus('mtu');
+      btnMTU.innerHTML = 'Stop <span class="kbd-badge">M</span>';
       btnMTU.className = 'btn btn-danger';
       btnAction.disabled = true;
       btnTrace.disabled = true;
@@ -476,6 +715,7 @@ Press 'H' or F1 for help.
       let maxPass = 0;
 
       const maxAllowedPayload = (currentHost === '127.0.0.1' || currentHost === 'localhost') ? 65500 : 1472;
+      showToast(`Starting Path MTU sweep for <strong>${currentHost}</strong>...`, 'info', 2500);
 
       pingInterval = setInterval(() => {
           if (pIndex >= probeSizes.length) {
@@ -503,7 +743,8 @@ Press 'H' or F1 for help.
   function finishMtuSweep(maxPass) {
       clearInterval(pingInterval);
       isMtuSweeping = false;
-      btnMTU.textContent = 'MTU Sweep';
+      setStatus('idle');
+      btnMTU.innerHTML = 'MTU <span class="kbd-badge">M</span>';
       btnMTU.className = 'btn btn-mtu';
       btnAction.disabled = false;
       btnTrace.disabled = false;
@@ -526,18 +767,21 @@ Press 'H' or F1 for help.
       append(`   - Recommended TCP MSS:      ${recommendedMSS} bytes (MTU - 40B TCP/IP headers)\n`, 'mtu_summary');
       append(`   - Classification:           ${classification}\n`, 'mtu_summary');
       append(`------------------------------------------------------------\n\n`, 'mtu_summary', { maxPass, calculatedMTU, recommendedMSS, classification });
+      showToast(`PMTU Sweep Complete: <strong>${calculatedMTU}B MTU</strong> (MSS ${recommendedMSS}B)`, 'success', 3500);
   }
 
   function stopMtuSweep() {
       if (!isMtuSweeping) return;
       clearInterval(pingInterval);
       isMtuSweeping = false;
-      btnMTU.textContent = 'MTU Sweep';
+      setStatus('idle');
+      btnMTU.innerHTML = 'MTU <span class="kbd-badge">M</span>';
       btnMTU.className = 'btn btn-mtu';
       btnAction.disabled = false;
       btnTrace.disabled = false;
       setInputsDisabled(false);
       append(`\n[!] Path MTU Discovery cancelled by user.\n\n`, 'warning');
+      showToast("Path MTU Discovery cancelled", "warning", 2500);
   }
 
   btnAction.onclick = () => {
@@ -567,11 +811,13 @@ Press 'H' or F1 for help.
       append(`Tracing route to ${currentHost} over a maximum of 30 hops:\n\n`, 'trace_header');
       
       isTracing = true;
-      btnTrace.textContent = 'Stop';
+      setStatus('trace');
+      btnTrace.innerHTML = 'Stop <span class="kbd-badge">T</span>';
       btnTrace.className = 'btn btn-danger';
       btnAction.disabled = true;
       btnMTU.disabled = true;
       setInputsDisabled(true);
+      showToast(`Tracing route to <strong>${currentHost}</strong>...`, 'info', 2500);
       
       let hop = 1;
       const maxHops = currentHost === '127.0.0.1' || currentHost === 'localhost' ? 1 : 8 + Math.floor(Math.random() * 5); 
@@ -580,6 +826,7 @@ Press 'H' or F1 for help.
           if (hop > maxHops) {
               append(`\nTrace complete.\n`, 'trace_complete');
               stopTrace();
+              showToast("Route Trace complete", "success", 3000);
               return;
           }
           
@@ -604,14 +851,15 @@ Press 'H' or F1 for help.
       if (!isTracing) return;
       clearInterval(pingInterval);
       isTracing = false;
-      btnTrace.textContent = 'Trace';
+      setStatus('idle');
+      btnTrace.innerHTML = 'Trace <span class="kbd-badge">T</span>';
       btnTrace.className = 'btn btn-primary';
       btnAction.disabled = false;
       btnMTU.disabled = false;
       setInputsDisabled(false);
   }
   
-  btnExport.onclick = () => {
+  function exportLog() {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
           host: hostInput.value.trim(),
           timestamp: new Date().toISOString(),
@@ -624,38 +872,85 @@ Press 'H' or F1 for help.
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
-  };
-
-  const showHelp = () => {
-      append("\n================ KPing Diagnostics Help ================\n");
-      append("Ping:       Send ICMP echo requests to the target host.\n");
-      append("Trace:      Trace router hops to destination (traceroute).\n");
-      append("MTU Sweep:  Perform Path MTU (PMTU) discovery with DF bit.\n");
-      append("Count:      Number of ICMP echo requests to send.\n");
-      append("Size:       Payload buffer size in bytes (excludes 28B header).\n");
-      append("TTL:        Time-To-Live hop limit (default 115).\n");
-      append("Continuous: Loop ping until Stop clicked (-t flag).\n");
-      append("Hex Dump:   Display packet payload buffer in hex format.\n");
-      append("DF Bit:     Set Don't-Fragment bit in IP header (-f flag).\n");
-      append("Presets:    Quickly select standard DNS or gateway targets.\n");
-      append("Export:     Save output console session to JSON file.\n");
-      append("========================================================\n\n", "help");
-  };
-
-  if (btnHelp) {
-      btnHelp.onclick = showHelp;
+      showToast("Log exported as <strong>kping_log.json</strong>", "success", 3000);
   }
 
+  btnExport.onclick = exportLog;
+  btnClear.onclick = clearOutput;
+  btnHelp.onclick = openHelpModal;
+
+  // Enter to ping on input fields
+  [hostInput, countInput, sizeInput, ttlInput].forEach(inp => {
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (!isPinging && !isTracing && !isMtuSweeping) {
+          startPing();
+        }
+      }
+    });
+  });
+
+  // Global Keyboard Shortcuts
   document.addEventListener('keydown', (e) => {
       const active = document.activeElement;
       const isInput = active.tagName === 'INPUT' || (active.tagName === 'TEXTAREA' && active.id !== 'out') || active.tagName === 'SELECT';
-      if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && !isInput) {
-          if (e.key === 'F1') e.preventDefault();
-          showHelp();
+
+      // Save / Export hotkey
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+          e.preventDefault();
+          exportLog();
+          return;
+      }
+
+      // Escape hotkey
+      if (e.key === 'Escape') {
+          if (helpModal.classList.contains('active')) {
+              closeHelpModal();
+              return;
+          }
+          if (isPinging) stopPing();
+          if (isTracing) stopTrace();
+          if (isMtuSweeping) stopMtuSweep();
+          return;
+      }
+
+      // Help hotkey
+      if (e.key === 'F1' || ((e.key === 'h' || e.key === 'H' || e.key === '?') && !isInput)) {
+          e.preventDefault();
+          openHelpModal();
+          return;
+      }
+
+      if (!isInput) {
+          if (e.key === 'p' || e.key === 'P') {
+              e.preventDefault();
+              if (isPinging) stopPing(); else startPing();
+          } else if (e.key === 't' || e.key === 'T') {
+              e.preventDefault();
+              btnTrace.click();
+          } else if (e.key === 'm' || e.key === 'M') {
+              e.preventDefault();
+              if (isMtuSweeping) stopMtuSweep(); else startMtuSweep();
+          } else if (e.key === 'e' || e.key === 'E') {
+              e.preventDefault();
+              exportLog();
+          } else if (e.key === 'c' || e.key === 'C') {
+              e.preventDefault();
+              clearOutput();
+          } else if (e.key >= '1' && e.key <= '6') {
+              e.preventDefault();
+              selectPresetByIndex(parseInt(e.key));
+          }
       }
   });
 
   setTimeout(resizeCanvas, 100);
+
+  // Startup Welcome Toast
+  setTimeout(() => {
+    showToast("⚡ <strong>KPing Network Diagnostics Ready</strong><br>Press <strong>Enter / [P]</strong> to Ping, <strong>[T]</strong> to Trace, <strong>[M]</strong> for PMTU, or <strong>[F1]</strong> for Help.", "info", 5000);
+  }, 400);
 </script>
 </body>
 </html>

@@ -12,6 +12,8 @@ HWND hBtn;
 HWND hBtnTrace;
 HWND hBtnMTU;
 HWND hBtnExport;
+HWND hBtnClear;
+HWND hBtnHelp;
 HWND hOutput;
 HWND hStatic;
 HWND hStaticCount, hInputCount;
@@ -27,6 +29,7 @@ HBRUSH hinputBg;
 HFONT hFont;
 HFONT hFontMono;
 int fontHeight;
+WNDPROC g_OldEditProc = NULL;
 
 // Helper to set crisp fonts
 #ifndef CLEARTYPE_QUALITY
@@ -35,12 +38,12 @@ int fontHeight;
 
 const char* PRESET_NAMES[] = {
     "Quick Presets...",
-    "127.0.0.1 (Localhost)",
-    "1.1.1.1 (Cloudflare)",
-    "8.8.8.8 (Google DNS)",
-    "9.9.9.9 (Quad9 DNS)",
-    "208.67.222.222 (OpenDNS)",
-    "192.168.1.1 (Gateway)"
+    "1. 127.0.0.1 (Localhost)",
+    "2. 1.1.1.1 (Cloudflare)",
+    "3. 8.8.8.8 (Google DNS)",
+    "4. 9.9.9.9 (Quad9 DNS)",
+    "5. 208.67.222.222 (OpenDNS)",
+    "6. 192.168.1.1 (Gateway)"
 };
 
 const char* PRESET_HOSTS[] = {
@@ -62,6 +65,39 @@ void AppendText(const char* text) {
     }
     SendMessageA(hOutput, EM_SETSEL, len, len);
     SendMessageA(hOutput, EM_REPLACESEL, 0, (LPARAM)text);
+}
+
+void ClearOutput() {
+    SetWindowTextA(hOutput, "");
+}
+
+void ShowHelpDialog(HWND hwnd) {
+    const char* helpMsg = 
+        "================ KPing Diagnostics & Hotkeys ================\n\n"
+        "KEYBOARD SHORTCUTS:\n"
+        "  • Enter / P  : Start / Stop ICMP Ping\n"
+        "  • T          : Start / Stop Route Trace (traceroute)\n"
+        "  • M          : Start / Stop Path MTU Discovery Sweep\n"
+        "  • E / Ctrl+S : Export Console Session to Log File\n"
+        "  • C          : Clear Output Console\n"
+        "  • 1 - 6      : Select Preset Host (Localhost, Cloudflare, Google, etc.)\n"
+        "  • Escape     : Cancel running operation / dismiss\n"
+        "  • F1 / H     : Show this Help reference guide\n\n"
+        "DIAGNOSTIC MODES:\n"
+        "  • Ping       : Sends ICMP echo requests to assess latency and loss\n"
+        "  • Trace      : Displays each router hop along the network route\n"
+        "  • MTU Sweep  : Probes buffer boundaries with Don't-Fragment (DF) bit\n"
+        "                 to calculate exact Path MTU and recommended TCP MSS\n\n"
+        "FLAGS & PARAMETERS:\n"
+        "  • Count      : Number of echo requests to send (default: 4)\n"
+        "  • Size (B)   : Payload buffer size in bytes (excludes 28B header)\n"
+        "  • TTL        : Time-To-Live hop limit (default: 115)\n"
+        "  • -t (Cont)  : Continuous ping loop until stopped\n"
+        "  • Hex Dump   : Displays raw payload buffer in hexadecimal\n"
+        "  • -f (DF)    : Sets Don't-Fragment bit in IP header\n\n"
+        "==============================================================";
+
+    MessageBoxA(hwnd, helpMsg, "KPing User Guide & Shortcuts", MB_OK | MB_ICONINFORMATION);
 }
 
 BOOL StrContains(const char* haystack, const char* needle) {
@@ -251,18 +287,18 @@ DWORD WINAPI PingThread(LPVOID param) {
             AppendText("\r\n[!] Path MTU Discovery cancelled by user.\r\n\r\n");
         }
 
-        SetWindowTextA(hBtnMTU, "MTU Sweep");
+        SetWindowTextA(hBtnMTU, "MTU [M]");
         EnableWindow(hBtn, TRUE);
         EnableWindow(hBtnTrace, TRUE);
     } else {
         // Standard Ping or Traceroute
         BOOL traceMode = (mode == 1);
         if (traceMode) {
-            SetWindowTextA(hBtnTrace, "Stop");
+            SetWindowTextA(hBtnTrace, "Stop [T]");
             EnableWindow(hBtn, FALSE);
             EnableWindow(hBtnMTU, FALSE);
         } else {
-            SetWindowTextA(hBtn, "Stop");
+            SetWindowTextA(hBtn, "Stop [P]");
             EnableWindow(hBtnTrace, FALSE);
             EnableWindow(hBtnMTU, FALSE);
         }
@@ -356,8 +392,8 @@ DWORD WINAPI PingThread(LPVOID param) {
             CloseHandle(hRead);
         }
 
-        if (traceMode) SetWindowTextA(hBtnTrace, "Trace");
-        else SetWindowTextA(hBtn, "Ping");
+        if (traceMode) SetWindowTextA(hBtnTrace, "Trace [T]");
+        else SetWindowTextA(hBtn, "Ping [P]");
         EnableWindow(hBtn, TRUE);
         EnableWindow(hBtnTrace, TRUE);
         EnableWindow(hBtnMTU, TRUE);
@@ -367,6 +403,57 @@ DWORD WINAPI PingThread(LPVOID param) {
     hThread = NULL;
     if (hThisThread) CloseHandle(hThisThread);
     return 0;
+}
+
+void TriggerPing() {
+    if (!hThread) {
+        ClearOutput();
+        hThread = CreateThread(NULL, 0, PingThread, (LPVOID)0, 0, NULL);
+    } else {
+        bCancelOperation = TRUE;
+        if (hPingProcess) TerminateProcess(hPingProcess, 0);
+    }
+}
+
+void TriggerTrace() {
+    if (!hThread) {
+        ClearOutput();
+        hThread = CreateThread(NULL, 0, PingThread, (LPVOID)1, 0, NULL);
+    } else {
+        bCancelOperation = TRUE;
+        if (hPingProcess) TerminateProcess(hPingProcess, 0);
+    }
+}
+
+void TriggerMTU() {
+    if (!hThread) {
+        ClearOutput();
+        hThread = CreateThread(NULL, 0, PingThread, (LPVOID)2, 0, NULL);
+    } else {
+        bCancelOperation = TRUE;
+        if (hPingProcess) TerminateProcess(hPingProcess, 0);
+    }
+}
+
+void CancelCurrentOperation() {
+    if (hThread) {
+        bCancelOperation = TRUE;
+        if (hPingProcess) TerminateProcess(hPingProcess, 0);
+        AppendText("\r\n[!] Operation cancelled.\r\n");
+    }
+}
+
+LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_KEYDOWN) {
+        if (wParam == VK_RETURN) {
+            TriggerPing();
+            return 0;
+        } else if (wParam == VK_ESCAPE) {
+            CancelCurrentOperation();
+            return 0;
+        }
+    }
+    return CallWindowProc(g_OldEditProc, hwnd, msg, wParam, lParam);
 }
 
 BOOL CALLBACK SetFontProc(HWND child, LPARAM hFontParam) {
@@ -390,18 +477,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (!hFontMono) hFontMono = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Courier New");
 
             hStatic = CreateWindowEx(0, "STATIC", "Host:", WS_CHILD | WS_VISIBLE, 15, 14, 40, 22, hwnd, NULL, NULL, NULL);
-            hInput = CreateWindowEx(0, "EDIT", "127.0.0.1", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL, 60, 12, 230, 24, hwnd, NULL, NULL, NULL);
-            hComboPreset = CreateWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 298, 12, 160, 180, hwnd, (HMENU)10, NULL, NULL);
+            hInput = CreateWindowEx(0, "EDIT", "127.0.0.1", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL, 60, 12, 180, 24, hwnd, NULL, NULL, NULL);
+            g_OldEditProc = (WNDPROC)SetWindowLongPtr(hInput, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
+
+            hComboPreset = CreateWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 248, 12, 175, 200, hwnd, (HMENU)10, NULL, NULL);
 
             for (int i = 0; i < sizeof(PRESET_NAMES) / sizeof(PRESET_NAMES[0]); i++) {
                 SendMessageA(hComboPreset, CB_ADDSTRING, 0, (LPARAM)PRESET_NAMES[i]);
             }
             SendMessageA(hComboPreset, CB_SETCURSEL, 0, 0);
 
-            hBtnMTU = CreateWindowEx(0, "BUTTON", "MTU Sweep", WS_CHILD | WS_VISIBLE | WS_TABSTOP, W - 325, 12, 85, 24, hwnd, (HMENU)4, NULL, NULL);
-            hBtnExport = CreateWindowEx(0, "BUTTON", "Export", WS_CHILD | WS_VISIBLE | WS_TABSTOP, W - 235, 12, 60, 24, hwnd, (HMENU)3, NULL, NULL);
-            hBtn = CreateWindowEx(0, "BUTTON", "Ping", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_DEFPUSHBUTTON, W - 170, 12, 55, 24, hwnd, (HMENU)1, NULL, NULL);
-            hBtnTrace = CreateWindowEx(0, "BUTTON", "Trace", WS_CHILD | WS_VISIBLE | WS_TABSTOP, W - 110, 12, 55, 24, hwnd, (HMENU)2, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "Ping [P]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_DEFPUSHBUTTON, W - 430, 12, 65, 24, hwnd, (HMENU)1, NULL, NULL);
+            hBtnTrace = CreateWindowEx(0, "BUTTON", "Trace [T]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, W - 360, 12, 68, 24, hwnd, (HMENU)2, NULL, NULL);
+            hBtnMTU = CreateWindowEx(0, "BUTTON", "MTU [M]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, W - 287, 12, 68, 24, hwnd, (HMENU)4, NULL, NULL);
+            hBtnExport = CreateWindowEx(0, "BUTTON", "Export [E]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, W - 214, 12, 72, 24, hwnd, (HMENU)3, NULL, NULL);
+            hBtnClear = CreateWindowEx(0, "BUTTON", "Clear [C]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, W - 137, 12, 65, 24, hwnd, (HMENU)5, NULL, NULL);
+            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, W - 68, 12, 65, 24, hwnd, (HMENU)6, NULL, NULL);
 
             hStaticCount = CreateWindowEx(0, "STATIC", "Count:", WS_CHILD | WS_VISIBLE, 15, 44, 42, 22, hwnd, NULL, NULL, NULL);
             hInputCount = CreateWindowEx(0, "EDIT", "4", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_NUMBER, 60, 42, 40, 22, hwnd, NULL, NULL, NULL);
@@ -416,7 +507,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hCheckHex = CreateWindowEx(0, "BUTTON", "Hex Dump", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 405, 44, 85, 20, hwnd, NULL, NULL, NULL);
             hCheckDF = CreateWindowEx(0, "BUTTON", "DF Bit (-f)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 498, 44, 85, 20, hwnd, NULL, NULL, NULL);
 
-            hOutput = CreateWindowEx(0, "EDIT", "Welcome to KPing Network Diagnostics.\r\nFeatures: ICMP Ping, Path MTU Discovery (PMTU), Route Tracing, Hex Dump, DF-Flag Toggle, Log Export.\r\nPress 'H' or F1 for help.\r\n\r\n",
+            hOutput = CreateWindowEx(0, "EDIT", "Welcome to KPing Network Diagnostics.\r\nFeatures: ICMP Ping [P], Path MTU Discovery (PMTU) [M], Route Tracing [T], Hex Dump, DF-Flag Toggle, Log Export [E].\r\nPress Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.\r\n\r\n",
                 WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY,
                 15, 75, W - 30, H - 90, hwnd, NULL, NULL, NULL);
 
@@ -454,51 +545,43 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetWindowTextA(hInput, PRESET_HOSTS[idx]);
                 }
             } else if (id == 1) { // Ping
-                if (!hThread) {
-                    SetWindowTextA(hOutput, "");
-                    hThread = CreateThread(NULL, 0, PingThread, (LPVOID)0, 0, NULL);
-                } else {
-                    bCancelOperation = TRUE;
-                    if (hPingProcess) TerminateProcess(hPingProcess, 0);
-                }
+                TriggerPing();
             } else if (id == 2) { // Trace
-                if (!hThread) {
-                    SetWindowTextA(hOutput, "");
-                    hThread = CreateThread(NULL, 0, PingThread, (LPVOID)1, 0, NULL);
-                } else {
-                    bCancelOperation = TRUE;
-                    if (hPingProcess) TerminateProcess(hPingProcess, 0);
-                }
+                TriggerTrace();
             } else if (id == 3) { // Export
                 ExportLog(hwnd);
             } else if (id == 4) { // MTU Sweep
-                if (!hThread) {
-                    SetWindowTextA(hOutput, "");
-                    hThread = CreateThread(NULL, 0, PingThread, (LPVOID)2, 0, NULL);
-                } else {
-                    bCancelOperation = TRUE;
-                    if (hPingProcess) TerminateProcess(hPingProcess, 0);
-                }
+                TriggerMTU();
+            } else if (id == 5) { // Clear
+                ClearOutput();
+            } else if (id == 6) { // Help
+                ShowHelpDialog(hwnd);
             }
             break;
         }
         case WM_SIZE: {
             int nw = LOWORD(lParam);
             int nh = HIWORD(lParam);
-            int inputW = nw - 485;
-            if (inputW < 120) inputW = 120;
+            int rightButtonsWidth = 430;
+            int inputW = nw - rightButtonsWidth - 250;
+            if (inputW < 100) inputW = 100;
+
             MoveWindow(hInput, 60, 12, inputW, 24, TRUE);
-            MoveWindow(hComboPreset, 65 + inputW + 5, 12, 140, 180, TRUE);
-            MoveWindow(hBtnMTU, nw - 325, 12, 85, 24, TRUE);
-            MoveWindow(hBtnExport, nw - 235, 12, 60, 24, TRUE);
-            MoveWindow(hBtn, nw - 170, 12, 55, 24, TRUE);
-            MoveWindow(hBtnTrace, nw - 110, 12, 55, 24, TRUE);
+            MoveWindow(hComboPreset, 65 + inputW + 5, 12, 160, 200, TRUE);
+            
+            MoveWindow(hBtn, nw - 430, 12, 65, 24, TRUE);
+            MoveWindow(hBtnTrace, nw - 360, 12, 68, 24, TRUE);
+            MoveWindow(hBtnMTU, nw - 287, 12, 68, 24, TRUE);
+            MoveWindow(hBtnExport, nw - 214, 12, 72, 24, TRUE);
+            MoveWindow(hBtnClear, nw - 137, 12, 65, 24, TRUE);
+            MoveWindow(hBtnHelp, nw - 68, 12, 65, 24, TRUE);
+
             MoveWindow(hOutput, 15, 75, nw - 30, nh - 90, TRUE);
             break;
         }
         case WM_GETMINMAXINFO: {
             MINMAXINFO* mmi = (MINMAXINFO*)lParam;
-            mmi->ptMinTrackSize.x = 650;
+            mmi->ptMinTrackSize.x = 720;
             mmi->ptMinTrackSize.y = 400;
             return 0;
         }
@@ -537,7 +620,7 @@ void MainEntry() {
     RECT r = {0, 0, W, H};
     AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW, FALSE);
 
-    HWND hwnd = CreateWindowEx(0, "KPingApp", "KPing - Network Diagnostics & Path MTU", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+    HWND hwnd = CreateWindowEx(0, "KPingApp", "KPing - Network Diagnostics & Path MTU [Press F1 for Help]", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, hInstance, NULL);
 
     SetClassLongPtr(hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)CreateSolidBrush(RGB(15, 23, 42)));
@@ -547,23 +630,42 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
-        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == VK_F1)) {
+        if (msg.message == WM_KEYDOWN) {
             HWND hFocus = GetFocus();
-            if (hFocus != hInput && hFocus != hInputCount && hFocus != hInputSize && hFocus != hInputTTL && hFocus != hComboPreset) {
-                const char* helpMsg = "\r\n================ KPing Diagnostics Help ================\r\n"
-                                      "Ping:       Send ICMP echo requests to the target host.\r\n"
-                                      "Trace:      Trace router hops to destination (traceroute).\r\n"
-                                      "MTU Sweep:  Perform Path MTU (PMTU) discovery with DF bit.\r\n"
-                                      "Count:      Number of ICMP echo requests to send.\r\n"
-                                      "Size:       Payload buffer size in bytes (excludes 28B header).\r\n"
-                                      "TTL:        Time-To-Live hop limit (default 115).\r\n"
-                                      "Continuous: Loop ping until Stop clicked (-t flag).\r\n"
-                                      "Hex Dump:   Display packet payload buffer in hex format.\r\n"
-                                      "DF Bit:     Set Don't-Fragment bit in IP header (-f flag).\r\n"
-                                      "Presets:    Quickly select standard DNS or gateway targets.\r\n"
-                                      "Export:     Save output console session to log file.\r\n"
-                                      "========================================================\r\n\r\n";
-                AppendText(helpMsg);
+            BOOL isEditing = (hFocus == hInput || hFocus == hInputCount || hFocus == hInputSize || hFocus == hInputTTL || hFocus == hComboPreset);
+
+            if (msg.wParam == VK_F1 || (!isEditing && (msg.wParam == 'H' || msg.wParam == 'h'))) {
+                ShowHelpDialog(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_ESCAPE) {
+                CancelCurrentOperation();
+                continue;
+            }
+            if (!isEditing) {
+                if (msg.wParam == 'P' || msg.wParam == 'p' || msg.wParam == VK_RETURN) {
+                    TriggerPing();
+                    continue;
+                } else if (msg.wParam == 'T' || msg.wParam == 't') {
+                    TriggerTrace();
+                    continue;
+                } else if (msg.wParam == 'M' || msg.wParam == 'm') {
+                    TriggerMTU();
+                    continue;
+                } else if (msg.wParam == 'E' || msg.wParam == 'e' || (GetKeyState(VK_CONTROL) < 0 && (msg.wParam == 'S' || msg.wParam == 's'))) {
+                    ExportLog(hwnd);
+                    continue;
+                } else if (msg.wParam == 'C' || msg.wParam == 'c') {
+                    ClearOutput();
+                    continue;
+                } else if (msg.wParam >= '1' && msg.wParam <= '6') {
+                    int pIdx = (int)(msg.wParam - '0');
+                    if (pIdx > 0 && pIdx < sizeof(PRESET_HOSTS) / sizeof(PRESET_HOSTS[0])) {
+                        SendMessageA(hComboPreset, CB_SETCURSEL, pIdx, 0);
+                        SetWindowTextA(hInput, PRESET_HOSTS[pIdx]);
+                    }
+                    continue;
+                }
             }
         }
         if (!IsDialogMessage(hwnd, &msg)) {
