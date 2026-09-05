@@ -2311,7 +2311,7 @@
       </div>
 
       <div class="grimoire-search">
-        <input type="text" id="search-input" placeholder="Filter discovered elements..." oninput="renderGrimoire()" />
+        <input type="text" id="search-input" placeholder="Filter discovered elements..." oninput="renderGrimoire(); if (activeEquipment === 'codex') renderCodex();" />
       </div>
       <div class="element-grid" id="element-grid">
         <!-- Elements injected by JS -->
@@ -3817,6 +3817,15 @@
         if (brewCont) brewCont.style.display = 'flex';
         actionBtn.innerHTML = "🥣 Brew Buff Elixir";
         renderBrewingUI();
+      } else if (mode === 'codex') {
+        descEl.innerHTML = "<strong>Master Alchemist Codex:</strong> Inspect detailed element recipes, lore, tiers, and craft metrics.";
+        if (transCircle) transCircle.style.display = 'none';
+        if (slotsCont) slotsCont.style.display = 'none';
+        if (mainActBtn) mainActBtn.style.display = 'none';
+        if (crucActions) crucActions.style.display = 'none';
+        if (oracleSec) oracleSec.style.display = 'none';
+        if (codexCont) codexCont.style.display = 'flex';
+        renderCodex();
       } else {
         if (transCircle) transCircle.style.display = 'flex';
         if (slotsCont) slotsCont.style.display = 'flex';
@@ -4169,6 +4178,7 @@
         else tab.classList.remove('active');
       });
       renderGrimoire();
+      if (activeEquipment === 'codex') renderCodex();
     }
 
     function renderGrimoire() {
@@ -4412,6 +4422,7 @@
         if (activeEquipment === 'expeditions') renderExpeditions();
         if (activeEquipment === 'planetary') renderPlanetary();
         if (activeEquipment === 'familiars') renderFamiliars();
+        if (activeEquipment === 'codex') renderCodex();
         addLog("Journal reset. Basic elements restored.", false, false, false);
       }
     }
@@ -5307,7 +5318,7 @@
         clearCrucible();
       } else if (key === 'a') {
         autoFillCrucible();
-      } else if (key >= '0' && key <= '5') {
+      } else if (key >= '0' && key <= '6') {
         setTierFilter(parseInt(key, 10));
       }
     });

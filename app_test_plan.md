@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KAlchemy
+**Target App:** KAsteroids
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KAlchemy
 - KAsteroids
 - KAudio
 - KBBS
@@ -173,8 +172,16 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KWords
 - KZip
 - K2048
+- KAlchemy
 
 ## Test Reports
+
+- **KAlchemy**: ISSUES FOUND ⚠️ (4 issues, 4 fixed inline)
+  - ✅ Core gameplay works (element transmutations, apparatuses Retort/Alembic/Anvil, 3 game modes Classic/Blitz/Puzzle, Quests, Workshop upgrades, Potions brewing & effect tester, Daily trials, Magnum Opus Rebirth & Astral perks, Expeditions, Planetary cores, Familiars sanctuary, audio FX, Grandmaster manual modal).
+  - 🔧 FIXED: "📖 Codex" equipment tab button called `selectEquipment('codex')` which had no branch in `selectEquipment()`, leaving the Codex container hidden and non-functional.
+  - 🔧 FIXED: Selecting tier filter (or clicking tier cards in Codex) only triggered `renderGrimoire()` without updating the active Codex view when Codex was open.
+  - 🔧 FIXED: Typing in the element search filter input didn't update the Codex element list when Codex was active.
+  - 🔧 FIXED: Keyboard shortcut numbers were limited to 0–5, ignoring Tier 6 (Mythic) element filter on key '6'.
 
 - **K2048**: ISSUES FOUND ⚠️ (5 issues, 5 fixed inline)
   - ✅ Core gameplay works (sliding tiles via arrow keys/WASD/swipe, merging, rulesets Classic/Fibonacci/Threes, active skills Upgrade/Rotate/Hammer/Undo, auto-play, 4 grid sizes, audio beeps, animations/particles).
