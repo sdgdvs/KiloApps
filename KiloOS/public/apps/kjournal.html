@@ -560,7 +560,7 @@
         <button class="quick-starter-chip" onclick="applyTemplate('stoic', 'replace')">🏛️ Stoic</button>
         <button class="quick-starter-chip" onclick="openTemplatesModal()">📋 More...</button>
       </div>
-      <textarea id="journalArea" class="journal-editor" placeholder="Write your thoughts, ideas, or reflection for today... Use #hashtags to categorize. (Press 'H' or F1 for Help, Ctrl+S to Save)" oninput="updateEditorStats()"></textarea>
+      <textarea id="journalArea" class="journal-editor" placeholder="Write your thoughts, ideas, or reflection for today... Use #hashtags to categorize. (Press 'H' or F1 for Help, Ctrl+S to Save)" oninput="onEditorInput()"></textarea>
       <div class="editor-footer">
         <div id="editorStats">0 words | 0 chars | ~0 min read</div>
         <div id="goalProgressWrapper" class="goal-wrapper" title="Daily Writing Goal Progress">
@@ -868,6 +868,10 @@
     openModal('confirmModal');
   }
 
+  // Auto-Save & Debounce State
+  let autoSaveTimer = null;
+  let isDirty = false;
+
   // PIN Input State
   let pinBuffer = '';
   let pinMode = 'verify'; // 'verify', 'create_1', 'create_2'
@@ -918,13 +922,17 @@
       const saved = localStorage.getItem('kjournal_data');
       if (saved) {
         let parsed = JSON.parse(saved);
-        // Handle migration from old flat format { "2026-07-24": "text" }
         entries = {};
         for (let k in parsed) {
+          if (!parsed.hasOwnProperty(k)) continue;
           if (typeof parsed[k] === 'string') {
             entries[k] = { text: parsed[k], mood: '😊', updatedAt: Date.now() };
-          } else {
-            entries[k] = parsed[k];
+          } else if (parsed[k] && typeof parsed[k] === 'object') {
+            entries[k] = {
+              text: typeof parsed[k].text === 'string' ? parsed[k].text : '',
+              mood: typeof parsed[k].mood === 'string' ? parsed[k].mood : '😊',
+              updatedAt: Number(parsed[k].updatedAt) || Date.now()
+            };
           }
         }
       }
@@ -979,13 +987,15 @@
     TEMPLATES.forEach(tmpl => {
       const card = document.createElement('div');
       card.className = 'template-card';
+      card.setAttribute('role', 'article');
+      card.setAttribute('aria-label', tmpl.title);
       
       const snippet = tmpl.content.replace(/## /g, '').replace(/### /g, '• ').slice(0, 95) + '...';
 
       card.innerHTML = `
         <div>
           <div class="template-card-header">
-            <span class="template-card-icon">${tmpl.icon}</span>
+            <span class="template-card-icon" aria-hidden="true">${tmpl.icon}</span>
             <span class="template-card-title">${tmpl.title}</span>
           </div>
           <div class="template-card-desc">${tmpl.desc}</div>
@@ -1025,7 +1035,7 @@
         selectMood(tmpl.mood, false);
       }
 
-      updateEditorStats();
+      onEditorInput();
       closeModal('templatesModal');
       showToast(`Template "${tmpl.title}" inserted!`);
       editor.focus();
@@ -1045,13 +1055,15 @@
 
   function updateLockBtnState() {
     const btn = document.getElementById('lockAppBtn');
-    btn.style.display = (settings.pinEnabled && settings.pin) ? 'inline-flex' : 'none';
-    document.getElementById('removePinBtn').style.display = (settings.pinEnabled && settings.pin) ? 'inline-block' : 'none';
+    if (btn) btn.style.display = (settings.pinEnabled && settings.pin) ? 'inline-flex' : 'none';
+    const removeBtn = document.getElementById('removePinBtn');
+    if (removeBtn) removeBtn.style.display = (settings.pinEnabled && settings.pin) ? 'inline-block' : 'none';
   }
 
   // Toast Notification
   function showToast(msg) {
     const t = document.getElementById('toast');
+    if (!t) return;
     t.innerText = msg;
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2200);
@@ -1079,6 +1091,13 @@
     }
   }
 
+  function hidePinOverlay() {
+    const overlay = document.getElementById('pinOverlay');
+    if (overlay) overlay.style.display = 'none';
+    pinBuffer = '';
+    updatePinDots();
+  }
+
   function pressPin(digit) {
     if (pinBuffer.length < 4) {
       pinBuffer += digit;
@@ -1104,6 +1123,7 @@
   function updatePinDots() {
     for (let i = 0; i < 4; i++) {
       const dot = document.getElementById(`dot${i}`);
+      if (!dot) continue;
       if (i < pinBuffer.length) dot.classList.add('filled');
       else dot.classList.remove('filled');
     }
@@ -1112,7 +1132,7 @@
   function handlePinComplete() {
     if (pinMode === 'verify') {
       if (pinBuffer === settings.pin) {
-        document.getElementById('pinOverlay').style.display = 'none';
+        hidePinOverlay();
         showToast('Unlocked successfully');
       } else {
         showToast('Incorrect PIN!');
@@ -1127,7 +1147,7 @@
         settings.pin = pinBuffer;
         settings.pinEnabled = true;
         saveSettingsToStorage();
-        document.getElementById('pinOverlay').style.display = 'none';
+        hidePinOverlay();
         closeModal('settingsModal');
         showToast('PIN Lock Enabled!');
       } else {
@@ -1162,6 +1182,16 @@
   }
 
   // Calendar Navigator Widget
+  function selectDateWithAutoSave(dateStr) {
+    if (selectedDate === dateStr) return;
+    if (isDirty) {
+      saveEntry(false);
+    }
+    selectedDate = dateStr;
+    loadSelectedEntry();
+    renderCalendar();
+  }
+
   function renderCalendar() {
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     document.getElementById('calMonthYear').innerText = `${monthNames[calCurrentMonth]} ${calCurrentYear}`;
@@ -1173,6 +1203,7 @@
     dayHeaders.forEach(dh => {
       const el = document.createElement('div');
       el.className = 'cal-day-head';
+      el.setAttribute('aria-hidden', 'true');
       el.innerText = dh;
       grid.appendChild(el);
     });
@@ -1184,6 +1215,7 @@
     for (let i = 0; i < firstDay; i++) {
       const empty = document.createElement('div');
       empty.className = 'cal-day empty';
+      empty.setAttribute('aria-hidden', 'true');
       grid.appendChild(empty);
     }
 
@@ -1193,16 +1225,22 @@
       const dateStr = formatDateString(calCurrentYear, calCurrentMonth + 1, day);
       const dayEl = document.createElement('div');
       dayEl.className = 'cal-day';
+      dayEl.setAttribute('role', 'button');
+      dayEl.tabIndex = 0;
+
+      const hasEntry = entries[dateStr] && entries[dateStr].text && entries[dateStr].text.trim().length > 0;
       if (dateStr === todayStr) dayEl.classList.add('today');
       if (dateStr === selectedDate) dayEl.classList.add('selected');
-      if (entries[dateStr] && entries[dateStr].text.trim().length > 0) {
-        dayEl.classList.add('has-entry');
-      }
+      if (hasEntry) dayEl.classList.add('has-entry');
+
+      dayEl.setAttribute('aria-label', `${formatReadableDate(dateStr)}${hasEntry ? ', has entry' : ''}`);
       dayEl.innerText = day;
-      dayEl.onclick = () => {
-        selectedDate = dateStr;
-        loadSelectedEntry();
-        renderCalendar();
+      dayEl.onclick = () => selectDateWithAutoSave(dateStr);
+      dayEl.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          selectDateWithAutoSave(dateStr);
+        }
       };
       grid.appendChild(dayEl);
     }
@@ -1230,16 +1268,15 @@
     const d = new Date();
     calCurrentYear = d.getFullYear();
     calCurrentMonth = d.getMonth();
-    selectedDate = formatDateString(calCurrentYear, calCurrentMonth + 1, d.getDate());
-    loadSelectedEntry();
-    renderCalendar();
+    selectDateWithAutoSave(formatDateString(calCurrentYear, calCurrentMonth + 1, d.getDate()));
   }
 
   // Hashtag Extraction & Filtering
   function extractAllHashtags() {
     const tagCounts = {};
     for (let d in entries) {
-      const text = entries[d].text || '';
+      if (!entries.hasOwnProperty(d)) continue;
+      const text = entries[d] ? (entries[d].text || '') : '';
       const tags = text.match(/#[a-zA-Z0-9_\-]+/g) || [];
       tags.forEach(t => {
         const lower = t.toLowerCase();
@@ -1262,13 +1299,24 @@
 
     tags.forEach(tag => {
       const pill = document.createElement('span');
-      pill.className = 'tag-pill' + (selectedTagFilter === tag ? ' active' : '');
+      const isActive = selectedTagFilter === tag;
+      pill.className = 'tag-pill' + (isActive ? ' active' : '');
+      pill.setAttribute('role', 'button');
+      pill.tabIndex = 0;
+      pill.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       pill.innerText = `${tag} (${tagCounts[tag]})`;
-      pill.onclick = () => {
+      const toggleTag = () => {
         if (selectedTagFilter === tag) selectedTagFilter = '';
         else selectedTagFilter = tag;
         renderTagCloud();
         renderEntryList();
+      };
+      pill.onclick = toggleTag;
+      pill.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggleTag();
+        }
       };
       container.appendChild(pill);
     });
@@ -1302,7 +1350,7 @@
 
     dates = dates.filter(date => {
       const entry = entries[date];
-      if (!entry || !entry.text.trim()) return false;
+      if (!entry || typeof entry.text !== 'string' || !entry.text.trim()) return false;
 
       // Hashtag Filter
       if (selectedTagFilter && !entry.text.toLowerCase().includes(selectedTagFilter)) {
@@ -1326,20 +1374,26 @@
       const entry = entries[date];
       const div = document.createElement('div');
       div.className = 'entry-item' + (date === selectedDate ? ' active' : '');
-      div.onclick = () => {
-        selectedDate = date;
-        loadSelectedEntry();
-        renderCalendar();
+      div.setAttribute('role', 'button');
+      div.tabIndex = 0;
+      const cleanMood = (entry.mood || '😊').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      div.setAttribute('aria-label', `Entry for ${formatReadableDate(date)}, Mood: ${cleanMood}`);
+
+      div.onclick = () => selectDateWithAutoSave(date);
+      div.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          selectDateWithAutoSave(date);
+        }
       };
 
       const header = document.createElement('div');
       header.className = 'entry-item-header';
-      const cleanMood = (entry.mood || '😊').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       header.innerHTML = `<span class="entry-item-date">${formatReadableDate(date)}</span><span class="entry-item-mood">${cleanMood}</span>`;
 
       const snippet = document.createElement('div');
       snippet.className = 'entry-item-snippet';
-      snippet.innerText = entry.text;
+      snippet.innerText = entry.text || '';
 
       div.appendChild(header);
       div.appendChild(snippet);
@@ -1356,13 +1410,20 @@
     // Sync Calendar Month View if date changed
     const parts = selectedDate.split('-');
     if (parts.length === 3) {
-      calCurrentYear = parseInt(parts[0]);
-      calCurrentMonth = parseInt(parts[1]) - 1;
+      calCurrentYear = parseInt(parts[0], 10);
+      calCurrentMonth = parseInt(parts[1], 10) - 1;
     }
 
     const entry = entries[selectedDate] || { text: '', mood: '😊' };
-    document.getElementById('journalArea').value = entry.text || '';
+    const area = document.getElementById('journalArea');
+    area.value = entry.text || '';
     selectMood(entry.mood || '😊', false);
+
+    isDirty = false;
+    const saveStatus = document.getElementById('saveStatus');
+    if (saveStatus) {
+      saveStatus.innerText = entry.text ? 'Saved locally' : 'Ready';
+    }
 
     updateEditorStats();
     renderEntryList();
@@ -1374,9 +1435,28 @@
       if (btn.getAttribute('data-mood') === mood) btn.classList.add('selected');
       else btn.classList.remove('selected');
     });
+    if (triggerSave) {
+      onEditorInput();
+    }
   }
 
-  function saveEntry() {
+  function onEditorInput() {
+    isDirty = true;
+    updateEditorStats();
+    const saveStatus = document.getElementById('saveStatus');
+    if (saveStatus) saveStatus.innerText = 'Unsaved changes...';
+
+    if (autoSaveTimer) clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(() => {
+      saveEntry(false);
+    }, 1800);
+  }
+
+  function saveEntry(showFeedback = true) {
+    if (autoSaveTimer) {
+      clearTimeout(autoSaveTimer);
+      autoSaveTimer = null;
+    }
     if (!selectedDate) return;
     const text = document.getElementById('journalArea').value.trim();
 
@@ -1386,10 +1466,18 @@
         mood: selectedMood || '😊',
         updatedAt: Date.now()
       };
-      showToast('Entry saved!');
+      if (showFeedback) showToast('Entry saved!');
     } else {
       delete entries[selectedDate];
-      showToast('Entry cleared');
+      if (showFeedback) showToast('Entry cleared');
+    }
+
+    isDirty = false;
+    const saveStatus = document.getElementById('saveStatus');
+    if (saveStatus) {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      saveStatus.innerText = `Saved locally at ${timeStr}`;
     }
 
     saveEntriesToStorage();
@@ -1409,8 +1497,15 @@
       'Delete Entry',
       `Are you sure you want to delete the journal entry for ${formatReadableDate(selectedDate)}? This cannot be undone.`,
       () => {
+        if (autoSaveTimer) {
+          clearTimeout(autoSaveTimer);
+          autoSaveTimer = null;
+        }
         delete entries[selectedDate];
         document.getElementById('journalArea').value = '';
+        isDirty = false;
+        const saveStatus = document.getElementById('saveStatus');
+        if (saveStatus) saveStatus.innerText = 'Entry deleted';
         saveEntriesToStorage();
         renderCalendar();
         renderTagCloud();
@@ -1432,7 +1527,7 @@
     // Toggle quick starter bar
     const quickBar = document.getElementById('quickStarterBar');
     if (quickBar) {
-      quickBar.style.display = (words === 0 && (!entries[selectedDate] || !entries[selectedDate].text.trim())) ? 'flex' : 'none';
+      quickBar.style.display = (words === 0 && (!entries[selectedDate] || !entries[selectedDate].text || !entries[selectedDate].text.trim())) ? 'flex' : 'none';
     }
 
     const goalWrapper = document.getElementById('goalProgressWrapper');
@@ -1459,7 +1554,7 @@
 
   // Streak & Analytics Calculation
   function calculateAnalytics() {
-    const dates = Object.keys(entries).filter(d => entries[d] && entries[d].text.trim().length > 0).sort();
+    const dates = Object.keys(entries).filter(d => entries[d] && typeof entries[d].text === 'string' && entries[d].text.trim().length > 0).sort();
     const totalEntries = dates.length;
 
     let totalWords = 0;
@@ -1492,18 +1587,18 @@
       const todayStr = formatDateString(new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate());
       const yesterdayDate = new Date();
       yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-      const yesterdayStr = formatDateString(yesterdayDate.getFullYear(), yesterdayDate.getMonth() + 1, yesterdayDate.getDate());
 
       // Check if active today or yesterday
       let checkDate = new Date();
-      if (!entries[todayStr]) {
+      const hasToday = entries[todayStr] && typeof entries[todayStr].text === 'string' && entries[todayStr].text.trim().length > 0;
+      if (!hasToday) {
         checkDate.setDate(checkDate.getDate() - 1);
       }
 
       let tempStreak = 0;
       while (true) {
         const dStr = formatDateString(checkDate.getFullYear(), checkDate.getMonth() + 1, checkDate.getDate());
-        if (entries[dStr] && entries[dStr].text.trim().length > 0) {
+        if (entries[dStr] && typeof entries[dStr].text === 'string' && entries[dStr].text.trim().length > 0) {
           tempStreak++;
           checkDate.setDate(checkDate.getDate() - 1);
         } else {
@@ -1517,12 +1612,12 @@
       let prevTime = null;
       dates.forEach(dStr => {
         const parts = dStr.split('-');
-        const curTime = new Date(parts[0], parts[1] - 1, parts[2]).getTime();
+        const curTime = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)).getTime();
         if (prevTime !== null) {
           const diffDays = Math.round((curTime - prevTime) / (1000 * 3600 * 24));
           if (diffDays === 1) {
             run++;
-          } else {
+          } else if (diffDays > 1) {
             run = 1;
           }
         } else {
@@ -1594,16 +1689,18 @@
   }
 
   function openModal(id) {
-    document.getElementById(id).classList.add('active');
+    const m = document.getElementById(id);
+    if (m) m.classList.add('active');
   }
 
   function closeModal(id) {
-    document.getElementById(id).classList.remove('active');
+    const m = document.getElementById(id);
+    if (m) m.classList.remove('active');
   }
 
   // Import / Export Systems
   function exportData(format) {
-    const dates = Object.keys(entries).sort();
+    const dates = Object.keys(entries).filter(d => entries[d] && typeof entries[d].text === 'string' && entries[d].text.trim()).sort();
     if (dates.length === 0) {
       showToast('No entries to export');
       return;
@@ -1614,7 +1711,9 @@
     let mimeType = 'text/plain';
 
     if (format === 'json') {
-      content = JSON.stringify(entries, null, 2);
+      const exportObj = {};
+      dates.forEach(d => { exportObj[d] = entries[d]; });
+      content = JSON.stringify(exportObj, null, 2);
       filename += '.json';
       mimeType = 'application/json';
     } else if (format === 'md') {
@@ -1640,8 +1739,10 @@
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
     showToast(`Exported as ${format.toUpperCase()}`);
   }
 
@@ -1657,14 +1758,25 @@
     reader.onload = function(e) {
       try {
         const imported = JSON.parse(e.target.result);
+        if (!imported || typeof imported !== 'object' || Array.isArray(imported)) {
+          showToast('Invalid JSON file: Expected an entries object');
+          return;
+        }
         let count = 0;
         for (let d in imported) {
-          if (typeof imported[d] === 'string') {
-            entries[d] = { text: imported[d], mood: '😊', updatedAt: Date.now() };
-          } else {
-            entries[d] = imported[d];
+          if (!imported.hasOwnProperty(d)) continue;
+          const val = imported[d];
+          if (typeof val === 'string') {
+            entries[d] = { text: val, mood: '😊', updatedAt: Date.now() };
+            count++;
+          } else if (val && typeof val === 'object') {
+            entries[d] = {
+              text: typeof val.text === 'string' ? val.text : '',
+              mood: typeof val.mood === 'string' ? val.mood : '😊',
+              updatedAt: Number(val.updatedAt) || Date.now()
+            };
+            count++;
           }
-          count++;
         }
         saveEntriesToStorage();
         renderCalendar();
@@ -1672,6 +1784,7 @@
         renderEntryList();
         loadSelectedEntry();
         closeModal('importExportModal');
+        fileInput.value = '';
         showToast(`Successfully imported ${count} entries!`);
       } catch (err) {
         showToast('Invalid JSON file format');
@@ -1692,7 +1805,8 @@
     if (!dateStr) return '';
     const parts = dateStr.split('-');
     if (parts.length !== 3) return dateStr;
-    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+    const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    if (isNaN(d.getTime())) return dateStr;
     const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
     return d.toLocaleDateString(undefined, options);
   }
@@ -1701,6 +1815,35 @@
   window.onload = init;
 
   window.addEventListener('keydown', (e) => {
+    // PIN Lock keypad capture & shortcut blocking
+    const pinOverlay = document.getElementById('pinOverlay');
+    const isPinLocked = pinOverlay && pinOverlay.style.display !== 'none';
+
+    if (isPinLocked) {
+      if (e.key >= '0' && e.key <= '9') {
+        e.preventDefault();
+        pressPin(e.key);
+        return;
+      }
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+        backspacePin();
+        return;
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (pinMode === 'create_1' || pinMode === 'create_2') {
+          hidePinOverlay();
+        } else {
+          clearPin();
+        }
+        return;
+      }
+      // Block all other shortcut keys while PIN screen is up
+      e.preventDefault();
+      return;
+    }
+
     if (e.key === 'F1') {
       e.preventDefault();
       openModal('helpModal');
@@ -1708,7 +1851,7 @@
     }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
-      saveEntry();
+      saveEntry(true);
       return;
     }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {

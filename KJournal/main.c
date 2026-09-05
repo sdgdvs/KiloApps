@@ -96,6 +96,13 @@ int count_words_in_string(const char *str) {
     return count;
 }
 
+// Convert YYYY-MM-DD to cumulative calendar day number for exact streak calculation
+long date_to_days(int y, int m, int d) {
+    m = (m + 9) % 12;
+    y = y - m / 10;
+    return 365L * y + y / 4 - y / 100 + y / 400 + (m * 306 + 5) / 10 + (d - 1);
+}
+
 void clear_screen() {
 #ifdef _WIN32
     system("cls");
@@ -326,10 +333,11 @@ int load_all_entries(JournalEntry *entries, int max_entries) {
                 while (buf_len + line_len + 1 > buf_cap) {
                     buf_cap = (buf_cap == 0) ? MAX_LINE : buf_cap * 2;
                 }
-                buffer = (char *)realloc(buffer, buf_cap);
+                char *new_buf = (char *)realloc(buffer, buf_cap);
+                if (!new_buf) break;
+                buffer = new_buf;
             }
-            if (buf_len == 0) buffer[0] = '\0';
-            strcat(buffer, line);
+            memcpy(buffer + buf_len, line, line_len + 1);
             buf_len += line_len;
         }
     }
@@ -438,10 +446,12 @@ void write_entry_flow(int preselected_template) {
     fclose(f);
     int read_time = (total_words > 0) ? (total_words / 200 + 1) : 0;
     printf("\nEntry saved successfully! (%d words | ~%d min read)\n", total_words, read_time);
-    if (total_words >= DAILY_WORD_GOAL) {
-        printf("🎉 Daily Writing Goal Achieved! (%d / %d words)\n", total_words, DAILY_WORD_GOAL);
-    } else {
-        printf("📊 Goal Progress: %d / %d words (%d%%)\n", total_words, DAILY_WORD_GOAL, (total_words * 100) / DAILY_WORD_GOAL);
+    if (DAILY_WORD_GOAL > 0) {
+        if (total_words >= DAILY_WORD_GOAL) {
+            printf("🎉 Daily Writing Goal Achieved! (%d / %d words)\n", total_words, DAILY_WORD_GOAL);
+        } else {
+            printf("📊 Goal Progress: %d / %d words (%d%%)\n", total_words, DAILY_WORD_GOAL, (total_words * 100) / DAILY_WORD_GOAL);
+        }
     }
     printf("Press Enter to continue...");
     getchar();
@@ -504,6 +514,12 @@ void view_entries() {
     printf("=========================================\n\n");
 
     JournalEntry *entries = (JournalEntry *)malloc(sizeof(JournalEntry) * MAX_ENTRIES);
+    if (!entries) {
+        printf("Memory allocation failed.\n");
+        printf("Press Enter to continue...");
+        getchar();
+        return;
+    }
     int count = load_all_entries(entries, MAX_ENTRIES);
 
     if (count == 0) {
@@ -548,6 +564,12 @@ void calendar_view() {
     int cur_month = tm.tm_mon + 1;
 
     JournalEntry *entries = (JournalEntry *)malloc(sizeof(JournalEntry) * MAX_ENTRIES);
+    if (!entries) {
+        printf("Memory allocation failed.\n");
+        printf("Press Enter to continue...");
+        getchar();
+        return;
+    }
     int entry_count = load_all_entries(entries, MAX_ENTRIES);
 
     while (1) {
@@ -643,6 +665,12 @@ void calendar_view() {
 // Search & Hashtag Filtering
 void search_and_tags_menu() {
     JournalEntry *entries = (JournalEntry *)malloc(sizeof(JournalEntry) * MAX_ENTRIES);
+    if (!entries) {
+        printf("Memory allocation failed.\n");
+        printf("Press Enter to continue...");
+        getchar();
+        return;
+    }
     int entry_count = load_all_entries(entries, MAX_ENTRIES);
 
     while (1) {
@@ -701,7 +729,7 @@ void search_and_tags_menu() {
                         if (len < 63) tag[len] = ptr[len];
                         len++;
                     }
-                    tag[len] = '\0';
+                    tag[len < 63 ? len : 63] = '\0';
 
                     if (strlen(tag) > 1) {
                         int exists = 0;
@@ -803,6 +831,12 @@ void analytics_view() {
     printf("=========================================\n");
 
     JournalEntry *entries = (JournalEntry *)malloc(sizeof(JournalEntry) * MAX_ENTRIES);
+    if (!entries) {
+        printf("Memory allocation failed.\n");
+        printf("\nPress Enter to return...");
+        getchar();
+        return;
+    }
     int count = load_all_entries(entries, MAX_ENTRIES);
 
     if (count == 0) {
@@ -836,16 +870,77 @@ void analytics_view() {
     int goal_hit_pct = (count > 0) ? (goal_met_count * 100 / count) : 0;
     int total_read_time = (total_words > 0) ? ((total_words / 200) + 1) : 0;
 
-    // Calculate Streaks
+    // Calculate Streaks based on unique consecutive calendar days
     int current_streak = 0;
     int longest_streak = 0;
-    int run = 0;
+
+    long unique_days[MAX_ENTRIES];
+    int unique_day_count = 0;
 
     for (int i = 0; i < count; i++) {
-        run++;
-        if (run > longest_streak) longest_streak = run;
+        if (!entries[i].content || strlen(entries[i].content) == 0) continue;
+        int y = 0, m = 0, d = 0;
+        if (sscanf(entries[i].date_str, "%d-%d-%d", &y, &m, &d) == 3 && y > 1900 && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+            long day_num = date_to_days(y, m, d);
+            int exists = 0;
+            for (int u = 0; u < unique_day_count; u++) {
+                if (unique_days[u] == day_num) { exists = 1; break; }
+            }
+            if (!exists && unique_day_count < MAX_ENTRIES) {
+                unique_days[unique_day_count++] = day_num;
+            }
+        }
     }
-    current_streak = run;
+
+    // Sort unique_days ascending
+    for (int i = 0; i < unique_day_count - 1; i++) {
+        for (int j = i + 1; j < unique_day_count; j++) {
+            if (unique_days[j] < unique_days[i]) {
+                long temp = unique_days[i];
+                unique_days[i] = unique_days[j];
+                unique_days[j] = temp;
+            }
+        }
+    }
+
+    if (unique_day_count > 0) {
+        int run = 1;
+        longest_streak = 1;
+        for (int i = 1; i < unique_day_count; i++) {
+            if (unique_days[i] == unique_days[i - 1] + 1) {
+                run++;
+            } else {
+                run = 1;
+            }
+            if (run > longest_streak) longest_streak = run;
+        }
+
+        time_t t_now = time(NULL);
+        struct tm tm_now = *localtime(&t_now);
+        long today_day = date_to_days(tm_now.tm_year + 1900, tm_now.tm_mon + 1, tm_now.tm_mday);
+        long check_day = today_day;
+
+        int has_today = 0;
+        for (int i = 0; i < unique_day_count; i++) {
+            if (unique_days[i] == today_day) { has_today = 1; break; }
+        }
+        if (!has_today) check_day = today_day - 1;
+
+        int temp_streak = 0;
+        while (1) {
+            int found = 0;
+            for (int i = 0; i < unique_day_count; i++) {
+                if (unique_days[i] == check_day) { found = 1; break; }
+            }
+            if (found) {
+                temp_streak++;
+                check_day--;
+            } else {
+                break;
+            }
+        }
+        current_streak = temp_streak;
+    }
 
     printf("Total Entries written:   %d\n", count);
     printf("Total Words written:     %d\n", total_words);
@@ -933,6 +1028,12 @@ void export_import_menu() {
 
         if (choice[0] == '1') {
             JournalEntry *entries = (JournalEntry *)malloc(sizeof(JournalEntry) * MAX_ENTRIES);
+            if (!entries) {
+                printf("Memory allocation failed.\n");
+                printf("Press Enter to continue...");
+                getchar();
+                continue;
+            }
             int count = load_all_entries(entries, MAX_ENTRIES);
 
             FILE *out = fopen("kjournal_export.md", "w");
@@ -954,6 +1055,12 @@ void export_import_menu() {
             getchar();
         } else if (choice[0] == '2') {
             JournalEntry *entries = (JournalEntry *)malloc(sizeof(JournalEntry) * MAX_ENTRIES);
+            if (!entries) {
+                printf("Memory allocation failed.\n");
+                printf("Press Enter to continue...");
+                getchar();
+                continue;
+            }
             int count = load_all_entries(entries, MAX_ENTRIES);
 
             FILE *out = fopen("kjournal_export.json", "w");
