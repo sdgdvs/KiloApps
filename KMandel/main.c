@@ -659,6 +659,32 @@ void DrawPerimeterGlintGDI(HDC hdc, int w, int h, double prog) {
     DeleteObject(hGlintPen);
 }
 
+void ShowHelpDialog(HWND hwnd) {
+    MessageBox(hwnd, 
+        "KMandel Pro - Ultra Fractal Explorer\n"
+        "====================================\n\n"
+        "NAVIGATION & ZOOM:\n"
+        " • Left Click / Drag: Zoom in & Pan viewport\n"
+        " • Right Click / Scroll Wheel: Zoom out\n"
+        " • [+] / [-] Keys: Zoom in / Zoom out\n"
+        " • Arrow Keys: Pan viewport (Up/Down/Left/Right)\n"
+        " • [R] or [0]: Reset to default coordinates\n\n"
+        "FORMULAS & PRESETS:\n"
+        " • [1] - [5]: Direct Formula Select (Mandel, Ship, Tricorn, Celtic, Buffalo)\n"
+        " • [F]: Cycle all 5 fractal formulas\n"
+        " • [L] or [P]: Cycle Landmark presets (Seahorse, Spiral, Mini Mandel, etc.)\n"
+        " • Shift + Left Click: Sample point as Julia constant\n"
+        " • [J]: Toggle Julia / Mandelbrot mode\n\n"
+        "VISUALIZATION & EXPORT:\n"
+        " • [T]: Cycle 7 color spectrum themes\n"
+        " • [C]: Pick custom gradient palette\n"
+        " • [Z] / [Y]: Undo / Redo view navigation history\n"
+        " • [S]: Export Ultra-HD 4K BMP image\n"
+        " • [F1] / [H]: Open this Help Guide\n"
+        " • [Esc]: Dismiss dialogs",
+        "KMandel Pro - Help & Keyboard Shortcuts", MB_OK | MB_ICONINFORMATION);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
@@ -729,6 +755,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             InvalidateRect(hwnd, NULL, FALSE);
             break;
         }
+        case WM_MOUSEWHEEL: {
+            POINT pt;
+            pt.x = LOWORD(lParam);
+            pt.y = HIWORD(lParam);
+            ScreenToClient(hwnd, &pt);
+            short zDelta = (short)HIWORD(wParam);
+            double factor = (zDelta > 0) ? 0.65 : 1.5;
+            TriggerImpact(pt.x, pt.y, (factor < 1.0) ? 4.0 : 2.5, 12);
+            Zoom(factor, pt.x, pt.y);
+            SaveState();
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        }
         case WM_LBUTTONDOWN: {
             int x = LOWORD(lParam);
             int y = HIWORD(lParam);
@@ -767,7 +806,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_KEYDOWN: {
-            if (wParam == 'F') {
+            if (wParam >= '1' && wParam <= '5') {
+                fractalType = (int)(wParam - '1');
+                isJulia = 0;
+                if (fractalType == 1) { // Burning Ship
+                    minRe = -1.8; maxRe = 1.0; minIm = -1.8; maxIm = 1.0;
+                } else if (fractalType == 2) { // Tricorn
+                    minRe = -2.0; maxRe = 1.0; minIm = -1.5; maxIm = 1.5;
+                } else {
+                    minRe = -2.0; maxRe = 1.0; minIm = -1.2; maxIm = 1.2;
+                }
+                max_iter = 100;
+                TriggerImpact(bmpW / 2, bmpH / 2, 6.0, 25);
+                SaveState();
+                RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'F') {
                 fractalType = (fractalType + 1) % NUM_FRACTAL_TYPES;
                 TriggerImpact(bmpW / 2, bmpH / 2, 6.0, 25);
                 SaveState();
@@ -778,7 +832,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TriggerImpact(bmpW / 2, bmpH / 2, 8.0, 35);
                 ApplyLandmark(currentLandmark);
                 InvalidateRect(hwnd, NULL, FALSE);
-            } else if (wParam == 'R') {
+            } else if (wParam == 'R' || wParam == '0') {
                 if (isJulia) {
                     minRe = -2.0; maxRe = 2.0;
                     minIm = -2.0; maxIm = 2.0;
@@ -788,6 +842,44 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 max_iter = 100;
                 TriggerImpact(bmpW / 2, bmpH / 2, 7.0, 30);
+                SaveState();
+                RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == VK_ADD || wParam == VK_OEM_PLUS || wParam == '=') {
+                TriggerImpact(bmpW / 2, bmpH / 2, 4.5, 20);
+                Zoom(0.5, bmpW / 2, bmpH / 2);
+                SaveState();
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == VK_SUBTRACT || wParam == VK_OEM_MINUS || wParam == '-') {
+                TriggerImpact(bmpW / 2, bmpH / 2, 3.5, 16);
+                Zoom(2.0, bmpW / 2, bmpH / 2);
+                SaveState();
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == VK_UP) {
+                double h = maxIm - minIm;
+                minIm += h * 0.1; maxIm += h * 0.1;
+                TriggerScreenShake(2.0);
+                SaveState();
+                RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == VK_DOWN) {
+                double h = maxIm - minIm;
+                minIm -= h * 0.1; maxIm -= h * 0.1;
+                TriggerScreenShake(2.0);
+                SaveState();
+                RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == VK_LEFT) {
+                double w = maxRe - minRe;
+                minRe -= w * 0.1; maxRe -= w * 0.1;
+                TriggerScreenShake(2.0);
+                SaveState();
+                RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == VK_RIGHT) {
+                double w = maxRe - minRe;
+                minRe -= w * 0.1; maxRe -= w * 0.1;
+                TriggerScreenShake(2.0);
                 SaveState();
                 RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
                 InvalidateRect(hwnd, NULL, FALSE);
@@ -842,20 +934,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TriggerImpact(bmpW / 2, bmpH / 2, 8.0, 40);
                 SaveImage4K(hwnd);
             } else if (wParam == 'H' || wParam == VK_F1) {
-                MessageBox(hwnd, 
-                    "KMandel Pro Fractal Explorer\n\n"
-                    "L / R Click: Zoom In / Out\n"
-                    "F: Switch Formula (Mandelbrot, Burning Ship, Tricorn, Celtic, Buffalo)\n"
-                    "L / P: Landmark / Bookmark Presets\n"
-                    "Shift + Click: Pick Julia Set\n"
-                    "J: Toggle Julia / Mandelbrot Mode\n"
-                    "T: Toggle Color Theme\n"
-                    "C: Customize Dual Palette\n"
-                    "Z / Y: Undo / Redo View History\n"
-                    "S: Export Ultra-HD 4K Image\n"
-                    "R: Reset Viewport Coordinates\n"
-                    "F1 / H: Toggle Help",
-                    "KMandel Help", MB_OK);
+                ShowHelpDialog(hwnd);
             }
             break;
         }
@@ -998,7 +1077,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawPerimeterGlintGDI(hdcMem, bmpW, bmpH, glintProgress);
                 
                 // 7. Draw HUD Badge
-                RECT textBg = { 12, bmpH - 46, 440, bmpH - 12 };
+                RECT textBg = { 12, bmpH - 46, 540, bmpH - 12 };
                 HBRUSH hHudBrush = CreateSolidBrush(RGB(11, 19, 36));
                 HPEN hHudPen = CreatePen(PS_SOLID, 2, RGB(96, 165, 250));
                 HBRUSH hOldBrush = (HBRUSH)SelectObject(hdcMem, hHudBrush);
@@ -1030,9 +1109,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 HFONT hOldFont = (HFONT)SelectObject(hdcMem, hFont);
                 SetTextColor(hdcMem, RGB(248, 250, 252));
                 
-                char hudMsg[128];
+                char hudMsg[160];
                 const char* curF = (fractalType >= 0 && fractalType < NUM_FRACTAL_TYPES) ? fractalNames[fractalType] : "Fractal";
-                wsprintf(hudMsg, "%s%s | [F]ormula [L]andmark [T]heme [F1]Help", curF, isJulia ? " (Julia)" : "");
+                wsprintf(hudMsg, "%s%s | [1-5/F]ormula [L]andmark [T]heme [Arrows]Pan [+/-]Zoom [F1]Help", curF, isJulia ? " (Julia)" : "");
                 
                 int len = 0;
                 while (hudMsg[len]) len++;
@@ -1090,7 +1169,7 @@ void MainEntry() {
     RECT rect = { 0, 0, W, H };
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, FALSE);
 
-    HWND hwnd = CreateWindowEx(0, "KMandelApp", "KMandel - Press F1 or H for Help", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+    HWND hwnd = CreateWindowEx(0, "KMandelApp", "KMandel Pro - [F1] Help | Drag to Pan | Scroll/Click to Zoom", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     SaveState(); // Save initial state

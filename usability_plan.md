@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KMandel
+**Target App:** KPing
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KMandel
 - KPing
 - KConnect4
 - KMaze
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KAlchemy
 - KFont
 - KMail
+- KMandel
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KMandel: Usability and UI issues fixed (integrated cybernetic non-blocking toast notification system with startup welcome prompt, added visual shortcut badges to all action and zoom buttons [+ / - Zoom, Z Undo, Y Redo, J Julia, S 4K Export, R/0 Reset, F1/H Help], added direct formula switching hotkeys [1-5], keyboard zoom [+ / -], reset [0], arrow keys panning, Escape key dismissal for Help modal and toasts, backdrop click dismissal, explicit Help & Controls button in sidebar in web; added WM_MOUSEWHEEL smooth zooming, Arrow keys viewport panning, +/- keyboard zooming, [1-5] direct formula keys, [0/R] reset hotkeys, comprehensive ShowHelpDialog reference guide, updated HUD badge layout and text, updated window title with shortcut hints, and verified high-DPI awareness and double buffering in native C).
 - KMail: Usability and UI issues fixed (integrated cybernetic non-blocking toast notification system with startup welcome prompt, replaced blocking browser alerts/prompts/confirms with custom modal dialogs for Help & Keyboard Shortcuts [F1/H], Tag Selection with 1-click preset chips, and Empty Trash confirmation, added visual shortcut badges to all sidebar folders [1-5], compose button [C], action buttons [★ Star [S], Reply [R], Tag [T], Export EML [E], Export MD [M], Delete [Del]], compose buttons [Save Draft [Ctrl+S], Send [Ctrl+Enter]], added keyboard shortcuts for 1-5, C, N, S, R, T, Del, E, M, Ctrl+S, Ctrl+Enter, Ctrl+F, Ctrl+W, and Esc in web; added crisp ClearType typography with negative font heights, updated all UI buttons with explicit keyboard shortcut badges, added SearchEditSubclass for Escape clear, implemented message loop accelerator interception for F1/H/1-5/C/S/T/M/D/Del/Esc/Ctrl+S/Ctrl+F/Ctrl+W/Ctrl+Tab, added comprehensive ShowHelpDialog guide, synchronized 920x620 bounds in App.jsx and native AdjustWindowRect, and updated window title with shortcut hint in native C).
 - KFont: Usability and UI issues fixed (integrated non-blocking toast notification system with startup welcome prompt, added click-to-dismiss for toasts, added sample presets toolbar with Pangrams/Alphabet/Digits/Clear in Live Sample tab, added visual shortcut key badges to sidebar tabs [1-5], Bold [B], Italic [I], Copy [C], and Help [F1/H], added close button and backdrop dismissal to Help modal, and added responsive window resize redraw in web; added Quick Glyph Presets [A, g, Q, W, 0, €] and Sample Presets [Fox Pangram, Alphabet, Digits, Clear] to native sidebar, synchronized radio button selection in SelectTab across glyph clicks, updated button labels with explicit shortcut badges [1-5, B, I, C, F1], and expanded ShowHelpDialog reference in native C).
 - KAlchemy: Usability and UI issues fixed (integrated non-blocking arcane toast notification system with startup welcome prompt, added click-to-dismiss for toasts, added full keyboard shortcuts for [Space/Enter] main action / workstation activation, [C] clear crucible, [A] auto-fill, [I] research hint, [O] oracle vision, [0-6] tier switching, [F1/H/?] manual, [M] minimize/restore manual, and [Esc] modal dismissal / toast dismissal / search clear, added visual shortcut badges to all action, oracle, and tier buttons, added high-DPI devicePixelRatio canvas scaling for crisp particle and aura rendering in web; updated native C with crisp ClearType typography using negative font heights, updated all button labels with explicit keyboard shortcut badges, implemented global message loop accelerator interception for F1/H/Esc/Space/Enter/C/A/I/O/F/P/N/0-6 across all child controls, updated Help dialog controls reference, and added help hint to window title).
