@@ -22,19 +22,25 @@
 #define ID_BTN_JETTISON    110
 #define ID_BTN_SELL        111
 #define ID_BTN_UPGRADES    112
+#define ID_BTN_EVA         113
 
-#define SFX_NONE        0
-#define SFX_COLLECT     1
-#define SFX_FRACTURE    2
-#define SFX_OVERHEAT    3
-#define SFX_LASER_PULSE 4
-#define SFX_BEEP        5
-#define SFX_WARP        6
-#define SFX_SCAN_SWEEP  7
-#define SFX_RESONANCE   8
+#define SFX_NONE         0
+#define SFX_COLLECT      1
+#define SFX_FRACTURE     2
+#define SFX_OVERHEAT     3
+#define SFX_LASER_PULSE  4
+#define SFX_BEEP         5
+#define SFX_WARP         6
+#define SFX_SCAN_SWEEP   7
+#define SFX_RESONANCE    8
+#define SFX_PLASMA_CUT   9
+#define SFX_BREACH       10
+#define SFX_DECRYPT      11
+#define SFX_CORE_HARVEST 12
 
 #define MAX_STARS 150
 #define MAX_ASTEROIDS 24
+#define MAX_DERELICTS 6
 #define MAX_ORE_CHUNKS 64
 #define MAX_PARTICLES 128
 #define MAX_FLOATING_TEXTS 16
@@ -377,6 +383,86 @@ static const ShieldUpgradeDef SHIELD_UPGRADES[5] = {
     { 5, "Mk-V Void Phase Barrier",  12000, 420.0f, 260.0f, 0.25f, "420 Shield / 260 Hull, +400% regen." }
 };
 
+// Derelict Spaceship Salvage Definitions (Phase 8)
+typedef struct {
+    const char* name;
+    const char* classType;
+    int scrapMin, scrapMax;
+    int dataValue;
+    int coreValue;
+    int podsMin, podsMax;
+    const char* logArchive;
+    COLORREF hullColor;
+} DerelictTemplate;
+
+static const DerelictTemplate DERELICT_TEMPLATES[4] = {
+    {
+        "USN Ghost Frigate \"Hyperion\"",
+        "Combat Frigate Wreck",
+        6, 12,
+        450,
+        1200,
+        3, 6,
+        "LOG ENTRY #402: Emergency bulkheads collapsed during quantum cascade. Sub-light drives seized. Reactor core remains in containment breach status.",
+        RGB(239, 68, 68)
+    },
+    {
+        "Bulk Transport \"Valkyrie-7\"",
+        "Heavy Ore Hauler",
+        10, 18,
+        300,
+        800,
+        5, 9,
+        "LOG ENTRY #891: Navigation gyro failure inside asteroid dense zone. Cargo hold compromised. Emergency beacon active for 41 standard cycles.",
+        RGB(245, 158, 11)
+    },
+    {
+        "Science Cruiser \"Aegis Prime\"",
+        "Deep Void Survey Vessel",
+        4, 8,
+        850,
+        1800,
+        2, 4,
+        "LOG ENTRY #114: Dark matter anomaly breached research lab containment. Antimatter core oscillating at resonant harmonic. Scramble all shuttle bays.",
+        RGB(192, 132, 252)
+    },
+    {
+        "Stealth Corvette \"Void Viper\"",
+        "Covert Operative Vessel",
+        5, 10,
+        600,
+        1500,
+        2, 5,
+        "CLASSIFIED TRANSMISSION: Cloaking field power surge ionized main conduits. Systems offline. Black box contains encrypted telemetry coordinates.",
+        RGB(56, 189, 248)
+    }
+};
+
+typedef struct {
+    char id[16];
+    char name[48];
+    char classType[32];
+    float x, y;
+    float vx, vy;
+    float rot, rotSpeed;
+    float length, width;
+    COLORREF hullColor;
+    
+    // EVA Salvage Operations
+    int airlockBreached; // 0=Sealed (Plasma Cut), 1=Breached
+    int airlockCutProgress; // 0 to 100%
+    int blackBoxDecrypted; // 0=Encrypted, 1=Decrypted
+    int reactorHarvested; // 0=Unstable Core, 1=Safely Contained & Harvested
+    int cargoScavenged; // 0=Unscavenged, 1=Looted
+    int scrapPods;
+    int dataValue;
+    int coreValue;
+    char logArchive[256];
+    
+    float hp, maxHp;
+    int active;
+} Derelict;
+
 // Game State
 typedef struct {
     int credits;
@@ -385,6 +471,7 @@ typedef struct {
     int showStarChart;
     int showUpgrades;
     int showSpectrometer;
+    int showEva;
     int warpActive;
     float warpTimer;
     char sector[32];
@@ -420,12 +507,14 @@ typedef struct {
     int turningRight;
     
     int selectedAstIndex;
+    int selectedDerelictIndex;
     float radarAngle;
     int soundEnabled;
     int showHelp;
     
     Star stars[MAX_STARS];
     Asteroid asteroids[MAX_ASTEROIDS];
+    Derelict derelicts[MAX_DERELICTS];
     OreChunk oreChunks[MAX_ORE_CHUNKS];
     Particle particles[MAX_PARTICLES];
     ScanWave scanWaves[MAX_SCAN_WAVES];
@@ -436,7 +525,7 @@ typedef struct {
 
 static GameState g_state;
 static HWND g_hwnd = NULL;
-static HWND g_btnLaser, g_btnTractor, g_btnDampener, g_btnScan, g_btnNav, g_btnUpgrades, g_btnTheme, g_btnScanlines, g_btnAudio, g_btnHelp, g_btnJettison, g_btnSell;
+static HWND g_btnLaser, g_btnTractor, g_btnDampener, g_btnScan, g_btnNav, g_btnEva, g_btnUpgrades, g_btnTheme, g_btnScanlines, g_btnAudio, g_btnHelp, g_btnJettison, g_btnSell;
 static HFONT g_fontMono = NULL;
 static HFONT g_fontMonoBold = NULL;
 static HFONT g_fontSmall = NULL;
@@ -477,6 +566,22 @@ DWORD WINAPI SoundThreadProc(LPVOID lpParam) {
                 Beep(440, 60);
                 Beep(660, 60);
                 Beep(880, 120);
+            } else if (sfx == SFX_PLASMA_CUT) {
+                Beep(750, 40);
+                Beep(920, 30);
+            } else if (sfx == SFX_BREACH) {
+                Beep(220, 70);
+                Beep(340, 90);
+                Beep(680, 110);
+            } else if (sfx == SFX_DECRYPT) {
+                Beep(880, 40);
+                Beep(1100, 40);
+                Beep(1320, 60);
+            } else if (sfx == SFX_CORE_HARVEST) {
+                Beep(330, 80);
+                Beep(550, 80);
+                Beep(770, 100);
+                Beep(1100, 140);
             }
         }
         Sleep(20);
@@ -497,6 +602,11 @@ void AddSparks(float x, float y, COLORREF color, int count);
 void AddScanWave(float x, float y, float maxR, COLORREF color);
 void SpawnOreChunk(float x, float y, int oreType, int amount);
 void SpawnAsteroid(int index, int oreType);
+void SpawnDerelict(int index, int templateIdx);
+void BreachAirlock(int index);
+void DecryptBlackBox(int index);
+void HarvestReactorCore(int index);
+void ScavengeCargoPods(int index);
 int PickOreForSector(int sectorIdx);
 void InitSectorField(int sectorIdx);
 void EngageWarpJump(int targetSectorIdx);
@@ -741,6 +851,155 @@ void TuneLaserResonance(int index) {
     AddFloatingText("RESONANCE LOCKED (+50%)", g_state.shipX, g_state.shipY - 35.0f, RGB(245, 158, 11));
 }
 
+void SpawnDerelict(int index, int templateIdx) {
+    if (index < 0 || index >= MAX_DERELICTS) return;
+    if (templateIdx < 0 || templateIdx >= 4) templateIdx = rand() % 4;
+    const DerelictTemplate* tmpl = &DERELICT_TEMPLATES[templateIdx];
+    Derelict* d = &g_state.derelicts[index];
+    
+    sprintf(d->id, "DER-%03d", 200 + index * 31 + (rand() % 60));
+    strncpy(d->name, tmpl->name, 47);
+    d->name[47] = '\0';
+    strncpy(d->classType, tmpl->classType, 31);
+    d->classType[31] = '\0';
+    strncpy(d->logArchive, tmpl->logArchive, 255);
+    d->logArchive[255] = '\0';
+    
+    float angle = ((float)rand() / (float)RAND_MAX) * 6.28318f;
+    float dist = 320.0f + (((float)rand() / (float)RAND_MAX) * 750.0f);
+    d->x = g_state.shipX + (float)cos(angle) * dist;
+    d->y = g_state.shipY + (float)sin(angle) * dist;
+    d->vx = (((float)rand() / (float)RAND_MAX) - 0.5f) * 0.15f;
+    d->vy = (((float)rand() / (float)RAND_MAX) - 0.5f) * 0.15f;
+    d->rot = ((float)rand() / (float)RAND_MAX) * 6.28318f;
+    d->rotSpeed = (((float)rand() / (float)RAND_MAX) - 0.5f) * 0.008f;
+    d->length = 50.0f + (((float)rand() / (float)RAND_MAX) * 16.0f);
+    d->width = 24.0f + (((float)rand() / (float)RAND_MAX) * 8.0f);
+    d->hullColor = tmpl->hullColor;
+    
+    d->airlockBreached = 0;
+    d->airlockCutProgress = 0;
+    d->blackBoxDecrypted = 0;
+    d->reactorHarvested = 0;
+    d->cargoScavenged = 0;
+    d->scrapPods = tmpl->podsMin + (rand() % (tmpl->podsMax - tmpl->podsMin + 1));
+    d->dataValue = tmpl->dataValue;
+    d->coreValue = tmpl->coreValue;
+    d->maxHp = 220.0f;
+    d->hp = d->maxHp;
+    d->active = 1;
+}
+
+void BreachAirlock(int index) {
+    if (index < 0 || index >= MAX_DERELICTS || !g_state.derelicts[index].active) return;
+    Derelict* d = &g_state.derelicts[index];
+    if (d->airlockBreached) {
+        AddLog("Airlock is already breached and depressurized!", 3);
+        return;
+    }
+    
+    d->airlockCutProgress += 35;
+    if (d->airlockCutProgress < 100) {
+        TriggerSound(SFX_PLASMA_CUT);
+        char buf[128];
+        sprintf(buf, "Plasma torch cutting through %s reinforced airlock: %d%%...", d->id, d->airlockCutProgress);
+        AddLog(buf, 1);
+        AddFloatingText("PLASMA TORCH CUTTING...", g_state.shipX, g_state.shipY - 25.0f, RGB(245, 158, 11));
+    } else {
+        d->airlockCutProgress = 100;
+        d->airlockBreached = 1;
+        TriggerSound(SFX_BREACH);
+        char buf[128];
+        sprintf(buf, "EVA SUCCESS: Airlock breached on %s! Interior decks accessible.", d->id);
+        AddLog(buf, 5);
+        AddFloatingText("AIRLOCK BREACHED!", g_state.shipX, g_state.shipY - 30.0f, RGB(16, 185, 129));
+        
+        // Yield immediate scrap metal from cut door
+        g_state.cargoHold[5] += 2; // Derelict Scrap
+        UpdateCargoTotal();
+        AddFloatingText("+2T DERELICT SCRAP", g_state.shipX, g_state.shipY - 45.0f, ORE_DEFS[5].color);
+    }
+}
+
+void DecryptBlackBox(int index) {
+    if (index < 0 || index >= MAX_DERELICTS || !g_state.derelicts[index].active) return;
+    Derelict* d = &g_state.derelicts[index];
+    if (!d->airlockBreached) {
+        AddLog("Airlock must be breached first before accessing avionics bridge!", 4);
+        return;
+    }
+    if (d->blackBoxDecrypted) {
+        AddLog("Black box telemetry data has already been extracted from this vessel.", 3);
+        return;
+    }
+    
+    d->blackBoxDecrypted = 1;
+    g_state.credits += d->dataValue;
+    TriggerSound(SFX_DECRYPT);
+    
+    char buf[128];
+    sprintf(buf, "RECOVERED BLACK BOX: Decrypted telemetry archive from %s! Bounty: +%d CR.", d->id, d->dataValue);
+    AddLog(buf, 5);
+    char fTxt[32];
+    sprintf(fTxt, "+%d CR (FLIGHT LOGS)", d->dataValue);
+    AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 30.0f, RGB(56, 189, 248));
+}
+
+void HarvestReactorCore(int index) {
+    if (index < 0 || index >= MAX_DERELICTS || !g_state.derelicts[index].active) return;
+    Derelict* d = &g_state.derelicts[index];
+    if (!d->airlockBreached) {
+        AddLog("Airlock must be breached before engineering containment can be reached!", 4);
+        return;
+    }
+    if (d->reactorHarvested) {
+        AddLog("Reactor containment core has already been safely harvested.", 3);
+        return;
+    }
+    
+    d->reactorHarvested = 1;
+    g_state.credits += d->coreValue;
+    TriggerSound(SFX_CORE_HARVEST);
+    
+    char buf[128];
+    sprintf(buf, "CRITICAL EVA: Safely stabilized & harvested antimatter core from %s! Yield: +%d CR.", d->id, d->coreValue);
+    AddLog(buf, 6);
+    char fTxt[32];
+    sprintf(fTxt, "+%d CR (REACTOR CORE)", d->coreValue);
+    AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 35.0f, RGB(244, 63, 94));
+}
+
+void ScavengeCargoPods(int index) {
+    if (index < 0 || index >= MAX_DERELICTS || !g_state.derelicts[index].active) return;
+    Derelict* d = &g_state.derelicts[index];
+    if (d->cargoScavenged) {
+        AddLog("Cargo holds have already been completely stripped of scrap pods.", 3);
+        return;
+    }
+    
+    UpdateCargoTotal();
+    int spaceLeft = g_state.maxCargo - g_state.totalCargo;
+    if (spaceLeft <= 0) {
+        AddLog("WARNING: Cargo hold FULL! Cannot scavenge scrap pods.", 3);
+        return;
+    }
+    
+    int podsTake = min(d->scrapPods, spaceLeft);
+    if (podsTake <= 0) podsTake = 1;
+    
+    d->cargoScavenged = 1;
+    g_state.cargoHold[5] += podsTake; // Derelict scrap
+    UpdateCargoTotal();
+    TriggerSound(SFX_COLLECT);
+    
+    char buf[128];
+    sprintf(buf, "EVA SCAVENGE: Extracted %dT of high-grade Derelict Scrap pods from %s.", podsTake, d->id);
+    AddLog(buf, 2);
+    char fTxt[32];
+    sprintf(fTxt, "+%dT DERELICT SCRAP", podsTake);
+    AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 30.0f, ORE_DEFS[5].color);
+}
+
 void InitSectorField(int sectorIdx) {
     if (sectorIdx < 0 || sectorIdx >= 4) sectorIdx = 0;
     g_state.currentSectorIndex = sectorIdx;
@@ -767,8 +1026,23 @@ void InitSectorField(int sectorIdx) {
         }
     }
     
+    // Seed Derelicts
+    int derelictCount = 2;
+    if (sectorIdx == 1) derelictCount = 3;
+    else if (sectorIdx == 2) derelictCount = 5; // Derelict Graveyard
+    else if (sectorIdx == 3) derelictCount = 3; // Nebula
+    
+    for (int i = 0; i < MAX_DERELICTS; i++) {
+        if (i < derelictCount) {
+            SpawnDerelict(i, rand() % 4);
+        } else {
+            g_state.derelicts[i].active = 0;
+        }
+    }
+    
     for (int i = 0; i < MAX_ORE_CHUNKS; i++) g_state.oreChunks[i].active = 0;
     g_state.selectedAstIndex = -1;
+    g_state.selectedDerelictIndex = -1;
 }
 
 void EngageWarpJump(int targetSectorIdx) {
@@ -1162,6 +1436,41 @@ void UpdateGame(float dt) {
                 }
             }
         }
+        
+        // Also check raycast against derelict spaceships
+        for (int i = 0; i < MAX_DERELICTS; i++) {
+            Derelict* d = &g_state.derelicts[i];
+            if (!d->active) continue;
+            
+            float toDerX = d->x - lx;
+            float toDerY = d->y - ly;
+            float proj = toDerX * dirX + toDerY * dirY;
+            if (proj > 0.0f && proj < laserRange) {
+                float perpX = toDerX - dirX * proj;
+                float perpY = toDerY - dirY * proj;
+                float distToBeam = (float)sqrt(perpX * perpX + perpY * perpY);
+                if (distToBeam < d->length * 0.5f) {
+                    float impactX = lx + dirX * proj;
+                    float impactY = ly + dirY * proj;
+                    AddSparks(impactX, impactY, RGB(245, 158, 11), 3);
+                    if (!d->airlockBreached && (rand() % 15 == 0)) {
+                        d->airlockCutProgress += 5;
+                        if (d->airlockCutProgress >= 100) {
+                            d->airlockCutProgress = 100;
+                            d->airlockBreached = 1;
+                            TriggerSound(SFX_BREACH);
+                            AddLog("Mining laser breached derelict airlock!", 5);
+                            AddFloatingText("AIRLOCK BREACHED!", impactX, impactY - 20.0f, RGB(16, 185, 129));
+                        }
+                    }
+                    if ((rand() % 100) < 14) {
+                        SpawnOreChunk(impactX, impactY, 5, 1); // Derelict scrap
+                        AddFloatingText("+1T SCRAP", impactX, impactY - 10.0f, ORE_DEFS[5].color);
+                    }
+                    break;
+                }
+            }
+        }
     }
     
     // Tractor Beam Logic
@@ -1253,6 +1562,36 @@ void UpdateGame(float dt) {
         }
     }
     
+    // Derelict Spaceship Physics & Collisions with Ship
+    for (int i = 0; i < MAX_DERELICTS; i++) {
+        Derelict* d = &g_state.derelicts[i];
+        if (!d->active) continue;
+        
+        d->x += d->vx;
+        d->y += d->vy;
+        d->rot += d->rotSpeed;
+        
+        float dist = (float)sqrt((g_state.shipX - d->x) * (g_state.shipX - d->x) +
+                                 (g_state.shipY - d->y) * (g_state.shipY - d->y));
+        float minDist = (d->length * 0.45f) + 14.0f;
+        if (dist < minDist && dist > 0.1f) {
+            float angle = (float)atan2(g_state.shipY - d->y, g_state.shipX - d->x);
+            g_state.shipVx += (float)cos(angle) * 1.8f;
+            g_state.shipVy += (float)sin(angle) * 1.8f;
+            
+            if (g_state.shield > 0.0f) {
+                g_state.shield = max(0.0f, g_state.shield - 12.0f);
+            } else {
+                g_state.hull = max(0.0f, g_state.hull - 8.0f);
+            }
+            AddSparks(g_state.shipX, g_state.shipY, RGB(239, 68, 68), 10);
+            TriggerSound(SFX_FRACTURE);
+            char buf[64];
+            sprintf(buf, "HULL IMPACT with derelict %s! Deflector grid active.", d->id);
+            AddLog(buf, 3);
+        }
+    }
+    
     // Shield Regeneration
     if (g_state.shield < g_state.maxShield) {
         g_state.shield = min(g_state.maxShield, g_state.shield + shieldDef->regen);
@@ -1304,6 +1643,20 @@ void UpdateGame(float dt) {
         }
         g_state.selectedAstIndex = bestIdx;
     }
+    
+    // Derelict Proximity Check
+    float minDerDist = 550.0f;
+    int bestDerIdx = -1;
+    for (int i = 0; i < MAX_DERELICTS; i++) {
+        if (!g_state.derelicts[i].active) continue;
+        float d = (float)sqrt((g_state.derelicts[i].x - g_state.shipX) * (g_state.derelicts[i].x - g_state.shipX) +
+                              (g_state.derelicts[i].y - g_state.shipY) * (g_state.derelicts[i].y - g_state.shipY));
+        if (d < minDerDist) {
+            minDerDist = d;
+            bestDerIdx = i;
+        }
+    }
+    g_state.selectedDerelictIndex = bestDerIdx;
 }
 
 void DrawBar(HDC hdc, int x, int y, int w, int h, float pct, COLORREF fillColor, COLORREF bgColor, COLORREF borderCol) {
@@ -1716,6 +2069,92 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         }
     }
     
+    // Draw Derelict Spaceships
+    for (int i = 0; i < MAX_DERELICTS; i++) {
+        Derelict* d = &g_state.derelicts[i];
+        if (!d->active) continue;
+        
+        int dx = cx + (int)(d->x - g_state.shipX);
+        int dy = cyCenter + (int)(d->y - g_state.shipY);
+        
+        if (dx < viewportX - 120 || dx > viewportX + viewportW + 120 ||
+            dy < viewportY - 120 || dy > viewportY + viewportH + 120) continue;
+            
+        float cosD = (float)cos(d->rot);
+        float sinD = (float)sin(d->rot);
+        
+        POINT ptsDerLocal[8] = {
+            { (int)(d->length * 0.5f), 0 },
+            { (int)(d->length * 0.2f), (int)(d->width * 0.5f) },
+            { (int)(-d->length * 0.3f), (int)(d->width * 0.45f) },
+            { (int)(-d->length * 0.5f), (int)(d->width * 0.3f) },
+            { (int)(-d->length * 0.4f), 0 },
+            { (int)(-d->length * 0.5f), (int)(-d->width * 0.3f) },
+            { (int)(-d->length * 0.3f), (int)(-d->width * 0.45f) },
+            { (int)(d->length * 0.2f), (int)(-d->width * 0.5f) }
+        };
+        
+        POINT ptsDerWorld[8];
+        for (int v = 0; v < 8; v++) {
+            ptsDerWorld[v].x = dx + (int)(ptsDerLocal[v].x * cosD - ptsDerLocal[v].y * sinD);
+            ptsDerWorld[v].y = dy + (int)(ptsDerLocal[v].x * sinD + ptsDerLocal[v].y * cosD);
+        }
+        
+        int isSelectedDer = (g_state.selectedDerelictIndex == i);
+        HPEN hPenDer = CreatePen(PS_SOLID, isSelectedDer ? 2 : 1, isSelectedDer ? RGB(245, 158, 11) : d->hullColor);
+        HBRUSH hBrDer = CreateSolidBrush(RGB(15, 23, 42));
+        HGDIOBJ oldDerPen = SelectObject(hdc, hPenDer);
+        HGDIOBJ oldDerBr = SelectObject(hdc, hBrDer);
+        
+        Polygon(hdc, ptsDerWorld, 8);
+        
+        // Internal structural rib / bulkhead
+        MoveToEx(hdc, ptsDerWorld[1].x, ptsDerWorld[1].y, NULL);
+        LineTo(hdc, ptsDerWorld[7].x, ptsDerWorld[7].y);
+        MoveToEx(hdc, ptsDerWorld[2].x, ptsDerWorld[2].y, NULL);
+        LineTo(hdc, ptsDerWorld[6].x, ptsDerWorld[6].y);
+        
+        // Airlock Door indicator
+        int alX = dx + (int)(4.0f * cosD);
+        int alY = dy + (int)(4.0f * sinD);
+        HBRUSH hBrAl = CreateSolidBrush(d->airlockBreached ? RGB(16, 185, 129) : RGB(239, 68, 68));
+        RECT rcAl = { alX - 3, alY - 3, alX + 4, alY + 4 };
+        FillRect(hdc, &rcAl, hBrAl);
+        DeleteObject(hBrAl);
+        
+        // Blinking Beacon
+        int bcX = dx - (int)(d->length * 0.45f * cosD);
+        int bcY = dy - (int)(d->length * 0.45f * sinD);
+        HBRUSH hBrBc = CreateSolidBrush((rand() % 4 == 0) ? RGB(255, 255, 255) : RGB(239, 68, 68));
+        RECT rcBc = { bcX - 2, bcY - 2, bcX + 3, bcY + 3 };
+        FillRect(hdc, &rcBc, hBrBc);
+        DeleteObject(hBrBc);
+        
+        SelectObject(hdc, oldDerPen);
+        SelectObject(hdc, oldDerBr);
+        DeleteObject(hPenDer);
+        DeleteObject(hBrDer);
+        
+        // Derelict Label
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(251, 191, 36));
+        char derLbl[64];
+        sprintf(derLbl, "✦ %s [%s]", d->id, d->airlockBreached ? "BREACHED" : "SEALED");
+        RECT rcDerLbl = { dx - 90, dy - (int)(d->width * 0.5f) - 16, dx + 90, dy - (int)(d->width * 0.5f) };
+        DrawTextA(hdc, derLbl, -1, &rcDerLbl, DT_CENTER | DT_SINGLELINE);
+        
+        if (isSelectedDer) {
+            HPEN hPenTarget = CreatePen(PS_DOT, 1, RGB(245, 158, 11));
+            HGDIOBJ oldTPen = SelectObject(hdc, hPenTarget);
+            HGDIOBJ oldTBr = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            int bSize = (int)(d->length * 0.5f) + 6;
+            Rectangle(hdc, dx - bSize, dy - bSize, dx + bSize, dy + bSize);
+            SelectObject(hdc, oldTPen);
+            SelectObject(hdc, oldTBr);
+            DeleteObject(hPenTarget);
+        }
+    }
+    
     // Draw Floating Ore Chunks
     for (int i = 0; i < MAX_ORE_CHUNKS; i++) {
         OreChunk* chunk = &g_state.oreChunks[i];
@@ -1860,6 +2299,20 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         }
     }
     
+    // Radar Blips for Derelicts (Crimson Diamond)
+    for (int i = 0; i < MAX_DERELICTS; i++) {
+        if (!g_state.derelicts[i].active) continue;
+        float bdx = (g_state.derelicts[i].x - g_state.shipX) * radarScale;
+        float bdy = (g_state.derelicts[i].y - g_state.shipY) * radarScale;
+        if (bdx * bdx + bdy * bdy < (radarR - 4) * (radarR - 4)) {
+            COLORREF blipCol = (i == g_state.selectedDerelictIndex) ? RGB(245, 158, 11) : RGB(244, 63, 94);
+            SetPixel(hdc, rcRadarX + (int)bdx, rcRadarY + (int)bdy, blipCol);
+            SetPixel(hdc, rcRadarX + (int)bdx + 1, rcRadarY + (int)bdy, blipCol);
+            SetPixel(hdc, rcRadarX + (int)bdx, rcRadarY + (int)bdy + 1, blipCol);
+            SetPixel(hdc, rcRadarX + (int)bdx + 1, rcRadarY + (int)bdy + 1, blipCol);
+        }
+    }
+    
     // Center Ship Blip on Radar
     SetPixel(hdc, rcRadarX, rcRadarY, pal->vector);
     SetPixel(hdc, rcRadarX + 1, rcRadarY, pal->vector);
@@ -1868,6 +2321,31 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     SelectObject(hdc, oldRdBr);
     DeleteObject(hPenRadar);
     DeleteObject(hBrRadar);
+    
+    // Proximity EVA HUD Prompt
+    if (g_state.selectedDerelictIndex >= 0 && g_state.derelicts[g_state.selectedDerelictIndex].active) {
+        Derelict* d = &g_state.derelicts[g_state.selectedDerelictIndex];
+        float dist = (float)sqrt((d->x - g_state.shipX) * (d->x - g_state.shipX) +
+                                 (d->y - g_state.shipY) * (d->y - g_state.shipY));
+        if (dist < 200.0f) {
+            int hudW = 380;
+            int hudH = 30;
+            int hudX = viewportX + (viewportW - hudW) / 2;
+            int hudY = viewportY + viewportH - 45;
+            
+            RECT rcEvaPrompt = { hudX, hudY, hudX + hudW, hudY + hudH };
+            HBRUSH hBrEvaP = CreateSolidBrush(RGB(15, 23, 42));
+            FillRect(hdc, &rcEvaPrompt, hBrEvaP);
+            DeleteObject(hBrEvaP);
+            FrameRect(hdc, &rcEvaPrompt, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, RGB(251, 191, 36));
+            char evaPromptBuf[64];
+            sprintf(evaPromptBuf, "✦ [E] INITIATE EVA SALVAGE ON %s (%dm)", d->id, (int)dist);
+            DrawTextA(hdc, evaPromptBuf, -1, &rcEvaPrompt, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        }
+    }
     
     // Target Lock Reticle Box on Bottom-Right of Viewport
     if (g_state.selectedAstIndex >= 0 && g_state.asteroids[g_state.selectedAstIndex].active) {
@@ -2554,10 +3032,284 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         DeleteObject(hPenBorderSpec);
     }
     
+    // Derelict Spaceship Exploration & EVA Salvage Ops Modal (Phase 8)
+    if (g_state.showEva) {
+        int modalW = 720;
+        int modalH = 470;
+        int mx = (totalW - modalW) / 2;
+        int my = (totalH - modalH) / 2;
+        
+        RECT rcModal = { mx, my, mx + modalW, my + modalH };
+        HBRUSH hBrModal = CreateSolidBrush(pal->bgPanel);
+        FillRect(hdc, &rcModal, hBrModal);
+        DeleteObject(hBrModal);
+        
+        HPEN hPenBorderEva = CreatePen(PS_SOLID, 2, RGB(245, 158, 11));
+        HGDIOBJ oldPenEva = SelectObject(hdc, hPenBorderEva);
+        HGDIOBJ oldBrushEva = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Rectangle(hdc, mx, my, mx + modalW, my + modalH);
+        
+        // Header
+        RECT rcHdr = { mx, my, mx + modalW, my + 30 };
+        HBRUSH hBrHdr = CreateSolidBrush(pal->bgHeader);
+        FillRect(hdc, &rcHdr, hBrHdr);
+        DeleteObject(hBrHdr);
+        
+        SelectObject(hdc, g_fontHeader);
+        SetTextColor(hdc, RGB(251, 191, 36));
+        TextOutA(hdc, mx + 14, my + 6, "DERELICT SHIP EXPLORATION & EVA SALVAGE OPS", 43);
+        
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, pal->textBright);
+        TextOutA(hdc, mx + modalW - 120, my + 9, "[E / ESC] CLOSE", 15);
+        
+        if (g_state.selectedDerelictIndex < 0 || !g_state.derelicts[g_state.selectedDerelictIndex].active) {
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, RGB(239, 68, 68));
+            TextOutA(hdc, mx + 30, my + 70, "NO DERELICT VESSEL IN EVA TELEMETRY RANGE", 41);
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, RGB(148, 163, 184));
+            TextOutA(hdc, mx + 30, my + 95, "Fly near any derelict warship (<200m) and lock target to initiate EVA operations.", 81);
+        } else {
+            Derelict* d = &g_state.derelicts[g_state.selectedDerelictIndex];
+            
+            // Top status line
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, pal->textBright);
+            char infoBuf[128];
+            sprintf(infoBuf, "VESSEL: %s   CLASS: %s   AIRLOCK: %s   STATUS: ABANDONED",
+                    d->id, d->classType, d->airlockBreached ? "BREACHED" : "SEALED");
+            TextOutA(hdc, mx + 16, my + 36, infoBuf, (int)strlen(infoBuf));
+            
+            // Left Column: Wireframe Schematic Scope (310x175) & Archive Box (310x175)
+            int scpX = mx + 16;
+            int scpY = my + 56;
+            int scpW = 310;
+            int scpH = 175;
+            
+            RECT rcScp = { scpX, scpY, scpX + scpW, scpY + scpH };
+            HBRUSH hBrScp = CreateSolidBrush(RGB(2, 6, 18));
+            FillRect(hdc, &rcScp, hBrScp);
+            DeleteObject(hBrScp);
+            FrameRect(hdc, &rcScp, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            
+            // Draw Blueprint Schematic
+            int sCenterCX = scpX + (scpW / 2);
+            int sCenterCY = scpY + (scpH / 2);
+            
+            HPEN hPenScpGrid = CreatePen(PS_DOT, 1, RGB(30, 58, 138));
+            SelectObject(hdc, hPenScpGrid);
+            MoveToEx(hdc, scpX, sCenterCY, NULL); LineTo(hdc, scpX + scpW, sCenterCY);
+            MoveToEx(hdc, sCenterCX, scpY, NULL); LineTo(hdc, sCenterCX, scpY + scpH);
+            DeleteObject(hPenScpGrid);
+            
+            // Wireframe Hull
+            POINT scpPts[8] = {
+                { sCenterCX + 110, sCenterCY },
+                { sCenterCX + 45,  sCenterCY + 35 },
+                { sCenterCX - 65,  sCenterCY + 30 },
+                { sCenterCX - 110, sCenterCY + 20 },
+                { sCenterCX - 85,  sCenterCY },
+                { sCenterCX - 110, sCenterCY - 20 },
+                { sCenterCX - 65,  sCenterCY - 30 },
+                { sCenterCX + 45,  sCenterCY - 35 }
+            };
+            HPEN hPenWire = CreatePen(PS_SOLID, 2, RGB(0, 240, 255));
+            SelectObject(hdc, hPenWire);
+            Polygon(hdc, scpPts, 8);
+            
+            // Interior bulkhead lines
+            MoveToEx(hdc, sCenterCX + 45, sCenterCY - 35, NULL); LineTo(hdc, sCenterCX + 45, sCenterCY + 35);
+            MoveToEx(hdc, sCenterCX - 20, sCenterCY - 25, NULL); LineTo(hdc, sCenterCX - 20, sCenterCY + 25);
+            MoveToEx(hdc, sCenterCX - 65, sCenterCY - 30, NULL); LineTo(hdc, sCenterCX - 65, sCenterCY + 30);
+            DeleteObject(hPenWire);
+            
+            // Core & Bridge markers on blueprint
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, d->reactorHarvested ? RGB(16, 185, 129) : RGB(244, 63, 94));
+            TextOutA(hdc, sCenterCX - 55, sCenterCY - 6, "[REACTOR]", 9);
+            SetTextColor(hdc, d->blackBoxDecrypted ? RGB(16, 185, 129) : RGB(56, 189, 248));
+            TextOutA(hdc, sCenterCX + 10, sCenterCY - 6, "[AVIONICS]", 10);
+            
+            SetTextColor(hdc, RGB(148, 163, 184));
+            TextOutA(hdc, scpX + 8, scpY + 6, "BLUEPRINT: STRUCTURAL WIREFRAME", 31);
+            
+            // Ship Log Archive Box
+            int arcX = scpX;
+            int arcY = scpY + scpH + 8;
+            int arcW = scpW;
+            int arcH = 175;
+            
+            RECT rcArc = { arcX, arcY, arcX + arcW, arcY + arcH };
+            HBRUSH hBrArc = CreateSolidBrush(RGB(5, 12, 28));
+            FillRect(hdc, &rcArc, hBrArc);
+            DeleteObject(hBrArc);
+            FrameRect(hdc, &rcArc, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, RGB(251, 191, 36));
+            TextOutA(hdc, arcX + 8, arcY + 6, "VESSEL IDENTITY & ARCHIVE LOGS", 30);
+            
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, RGB(224, 242, 254));
+            TextOutA(hdc, arcX + 8, arcY + 24, d->name, (int)strlen(d->name));
+            
+            SetTextColor(hdc, RGB(148, 163, 184));
+            RECT rcLogText = { arcX + 8, arcY + 44, arcX + arcW - 8, arcY + arcH - 8 };
+            DrawTextA(hdc, d->logArchive, -1, &rcLogText, DT_WORDBREAK);
+            
+            // Right Column: 4 Interactive Operations Modules (360px wide)
+            int opX = mx + 340;
+            int opY = my + 56;
+            int opW = modalW - 356;
+            int cardH = 84;
+            int gapY = 8;
+            
+            // 1. Airlock Breach Card
+            RECT rcOp1 = { opX, opY, opX + opW, opY + cardH };
+            HBRUSH hBrOp1 = CreateSolidBrush(d->airlockBreached ? RGB(6, 43, 16) : RGB(26, 16, 2));
+            FillRect(hdc, &rcOp1, hBrOp1);
+            DeleteObject(hBrOp1);
+            HPEN hPenOp1 = CreatePen(PS_SOLID, 1, d->airlockBreached ? RGB(16, 185, 129) : RGB(245, 158, 11));
+            SelectObject(hdc, hPenOp1);
+            Rectangle(hdc, opX, opY, opX + opW, opY + cardH);
+            DeleteObject(hPenOp1);
+            
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, RGB(255, 255, 255));
+            TextOutA(hdc, opX + 10, opY + 6, "[1] AIRLOCK BREACH (PLASMA CUTTER)", 34);
+            
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, RGB(148, 163, 184));
+            TextOutA(hdc, opX + 10, opY + 24, "Cut through blast hatch with plasma torch.", 42);
+            
+            DrawBar(hdc, opX + 10, opY + 40, opW - 130, 8, d->airlockCutProgress / 100.0f, RGB(245, 158, 11), RGB(2, 6, 23), pal->borderPanel);
+            
+            char cutPctBuf[32];
+            sprintf(cutPctBuf, "%d%% CUT", d->airlockCutProgress);
+            SetTextColor(hdc, RGB(251, 191, 36));
+            TextOutA(hdc, opX + opW - 110, opY + 38, cutPctBuf, (int)strlen(cutPctBuf));
+            
+            RECT rcBtnCut = { opX + 10, opY + 54, opX + opW - 10, opY + 76 };
+            HBRUSH hBrBtnCut = CreateSolidBrush(d->airlockBreached ? RGB(6, 78, 59) : RGB(120, 53, 15));
+            FillRect(hdc, &rcBtnCut, hBrBtnCut);
+            DeleteObject(hBrBtnCut);
+            FrameRect(hdc, &rcBtnCut, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, d->airlockBreached ? RGB(110, 231, 183) : RGB(255, 255, 255));
+            DrawTextA(hdc, d->airlockBreached ? "✔ AIRLOCK FULLY BREACHED" : "CUT AIRLOCK [KEY 1]", -1, &rcBtnCut, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            
+            // 2. Black Box Decryption Card
+            int opY2 = opY + cardH + gapY;
+            RECT rcOp2 = { opX, opY2, opX + opW, opY2 + cardH };
+            HBRUSH hBrOp2 = CreateSolidBrush(d->blackBoxDecrypted ? RGB(6, 43, 16) : (d->airlockBreached ? RGB(5, 12, 28) : RGB(20, 20, 20)));
+            FillRect(hdc, &rcOp2, hBrOp2);
+            DeleteObject(hBrOp2);
+            HPEN hPenOp2 = CreatePen(PS_SOLID, 1, d->blackBoxDecrypted ? RGB(16, 185, 129) : (d->airlockBreached ? RGB(56, 189, 248) : RGB(60, 60, 60)));
+            SelectObject(hdc, hPenOp2);
+            Rectangle(hdc, opX, opY2, opX + opW, opY2 + cardH);
+            DeleteObject(hPenOp2);
+            
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, d->airlockBreached ? RGB(56, 189, 248) : RGB(100, 116, 139));
+            TextOutA(hdc, opX + 10, opY2 + 6, "[2] BLACK BOX TELEMETRY DECRYPTION", 34);
+            
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, RGB(148, 163, 184));
+            char bbDesc[64];
+            sprintf(bbDesc, "Avionics bridge flight records. Bounty: +%d CR.", d->dataValue);
+            TextOutA(hdc, opX + 10, opY2 + 24, bbDesc, (int)strlen(bbDesc));
+            
+            RECT rcBtnBB = { opX + 10, opY2 + 48, opX + opW - 10, opY2 + 74 };
+            HBRUSH hBrBtnBB = CreateSolidBrush(d->blackBoxDecrypted ? RGB(6, 78, 59) : (d->airlockBreached ? RGB(30, 58, 138) : RGB(30, 41, 59)));
+            FillRect(hdc, &rcBtnBB, hBrBtnBB);
+            DeleteObject(hBrBtnBB);
+            FrameRect(hdc, &rcBtnBB, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, d->blackBoxDecrypted ? RGB(110, 231, 183) : (d->airlockBreached ? RGB(255, 255, 255) : RGB(100, 116, 139)));
+            char bbTxt[64];
+            sprintf(bbTxt, d->blackBoxDecrypted ? "✔ FLIGHT LOGS EXTRACTED (+%d CR)" : (d->airlockBreached ? "DECRYPT BLACK BOX [KEY 2] (+%d CR)" : "LOCKED: REQUIRE BREACHED AIRLOCK"), d->dataValue);
+            DrawTextA(hdc, bbTxt, -1, &rcBtnBB, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            
+            // 3. Antimatter Reactor Harvest Card
+            int opY3 = opY2 + cardH + gapY;
+            RECT rcOp3 = { opX, opY3, opX + opW, opY3 + cardH };
+            HBRUSH hBrOp3 = CreateSolidBrush(d->reactorHarvested ? RGB(6, 43, 16) : (d->airlockBreached ? RGB(30, 6, 12) : RGB(20, 20, 20)));
+            FillRect(hdc, &rcOp3, hBrOp3);
+            DeleteObject(hBrOp3);
+            HPEN hPenOp3 = CreatePen(PS_SOLID, 1, d->reactorHarvested ? RGB(16, 185, 129) : (d->airlockBreached ? RGB(244, 63, 94) : RGB(60, 60, 60)));
+            SelectObject(hdc, hPenOp3);
+            Rectangle(hdc, opX, opY3, opX + opW, opY3 + cardH);
+            DeleteObject(hPenOp3);
+            
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, d->airlockBreached ? RGB(244, 63, 94) : RGB(100, 116, 139));
+            TextOutA(hdc, opX + 10, opY3 + 6, "[3] ANTIMATTER REACTOR CORE HARVEST", 35);
+            
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, RGB(148, 163, 184));
+            char rcDesc[64];
+            sprintf(rcDesc, "Extract antimatter core. Value: +%d CR.", d->coreValue);
+            TextOutA(hdc, opX + 10, opY3 + 24, rcDesc, (int)strlen(rcDesc));
+            
+            RECT rcBtnCore = { opX + 10, opY3 + 48, opX + opW - 10, opY3 + 74 };
+            HBRUSH hBrBtnCore = CreateSolidBrush(d->reactorHarvested ? RGB(6, 78, 59) : (d->airlockBreached ? RGB(131, 24, 67) : RGB(30, 41, 59)));
+            FillRect(hdc, &rcBtnCore, hBrBtnCore);
+            DeleteObject(hBrBtnCore);
+            FrameRect(hdc, &rcBtnCore, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, d->reactorHarvested ? RGB(110, 231, 183) : (d->airlockBreached ? RGB(255, 255, 255) : RGB(100, 116, 139)));
+            char coreTxt[64];
+            sprintf(coreTxt, d->reactorHarvested ? "✔ CORE SAFELY HARVESTED (+%d CR)" : (d->airlockBreached ? "HARVEST REACTOR CORE [KEY 3] (+%d CR)" : "LOCKED: REQUIRE BREACHED AIRLOCK"), d->coreValue);
+            DrawTextA(hdc, coreTxt, -1, &rcBtnCore, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            
+            // 4. Cargo Pod Scavenging Card
+            int opY4 = opY3 + cardH + gapY;
+            RECT rcOp4 = { opX, opY4, opX + opW, opY4 + cardH };
+            HBRUSH hBrOp4 = CreateSolidBrush(d->cargoScavenged ? RGB(6, 43, 16) : RGB(26, 16, 2));
+            FillRect(hdc, &rcOp4, hBrOp4);
+            DeleteObject(hBrOp4);
+            HPEN hPenOp4 = CreatePen(PS_SOLID, 1, d->cargoScavenged ? RGB(16, 185, 129) : RGB(251, 191, 36));
+            SelectObject(hdc, hPenOp4);
+            Rectangle(hdc, opX, opY4, opX + opW, opY4 + cardH);
+            DeleteObject(hPenOp4);
+            
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, RGB(251, 191, 36));
+            TextOutA(hdc, opX + 10, opY4 + 6, "[4] CARGO POD SCAVENGING", 24);
+            
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, RGB(148, 163, 184));
+            char scvDesc[64];
+            sprintf(scvDesc, "Strip intact pods: %d T of Derelict Scrap available.", d->scrapPods);
+            TextOutA(hdc, opX + 10, opY4 + 24, scvDesc, (int)strlen(scvDesc));
+            
+            RECT rcBtnScv = { opX + 10, opY4 + 48, opX + opW - 10, opY4 + 74 };
+            HBRUSH hBrBtnScv = CreateSolidBrush(d->cargoScavenged ? RGB(6, 78, 59) : RGB(120, 53, 15));
+            FillRect(hdc, &rcBtnScv, hBrBtnScv);
+            DeleteObject(hBrBtnScv);
+            FrameRect(hdc, &rcBtnScv, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, d->cargoScavenged ? RGB(110, 231, 183) : RGB(255, 255, 255));
+            char scvTxt[64];
+            sprintf(scvTxt, d->cargoScavenged ? "✔ CARGO FULLY SCAVENGED" : "SCAVENGE SCRAP PODS [KEY 4] (+%dT)", d->scrapPods);
+            DrawTextA(hdc, scvTxt, -1, &rcBtnScv, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        }
+        
+        // Footer instruction
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(245, 158, 11));
+        TextOutA(hdc, mx + 16, my + modalH - 24, "Keys [1] Breach Airlock • [2] Decrypt Black Box • [3] Harvest Core • [4] Scavenge Cargo • [E / ESC] Close", 106);
+        
+        SelectObject(hdc, oldPenEva);
+        SelectObject(hdc, oldBrushEva);
+        DeleteObject(hPenBorderEva);
+    }
+    
     // Help Overlay Modal
     if (g_state.showHelp) {
         int helpW = 560;
-        int helpH = 390;
+        int helpH = 410;
         int hx = (totalW - helpW) / 2;
         int hy = (totalH - helpH) / 2;
         
@@ -2588,11 +3340,12 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         TextOutA(hdc, hx + 20, myHelp, "• [T / TRACTOR BTN]: Toggle Tractor Magnet to draw floating mineral chunks", 73); myHelp += 16;
         TextOutA(hdc, hx + 20, myHelp, "• [Z / DAMPENER BTN]: Toggle Inertial Dampeners for precise stationkeeping", 74); myHelp += 16;
         TextOutA(hdc, hx + 20, myHelp, "• [P / PROSPECT BTN]: Open Multi-Spectral Spectrometer & Tune Resonance", 71); myHelp += 16;
+        TextOutA(hdc, hx + 20, myHelp, "• [E / EVA OPS BTN]: Open EVA Salvage Operations on nearby derelicts", 68); myHelp += 16;
         TextOutA(hdc, hx + 20, myHelp, "• [U / UPGRADES BTN]: Open Modular Engineering Bay & Install Upgrades", 69); myHelp += 16;
         TextOutA(hdc, hx + 20, myHelp, "• [N / SECTORS BTN]: Open Star Sector Chart & Engage Sub-space Warp Jumps", 72); myHelp += 16;
         TextOutA(hdc, hx + 20, myHelp, "• [V / THEME BTN]: Cycle Retro CRT Vector Theme (Cyan / Amber / Green / Solar)", 77); myHelp += 16;
         TextOutA(hdc, hx + 20, myHelp, "• [C / SCANLINES BTN]: Toggle CRT Scanlines & Shaders (Off / On / CRT+)", 70); myHelp += 16;
-        TextOutA(hdc, hx + 20, myHelp, "• [CLICK VIEWPORT]: Target & Lock asteroid with telemetry computer", 66); myHelp += 16;
+        TextOutA(hdc, hx + 20, myHelp, "• [CLICK VIEWPORT]: Target & Lock asteroid or derelict ship", 58); myHelp += 16;
         TextOutA(hdc, hx + 20, myHelp, "• [LIQUIDATE]: Sell cargo hold to orbital comm-link for Credits", 62); myHelp += 18;
         
         SetTextColor(hdc, RGB(245, 158, 11));
@@ -2616,19 +3369,20 @@ void RepositionControls(HWND hwnd) {
     int bottomCtrlH = 140;
     int botY = totalH - bottomCtrlH;
     
-    // Cockpit Action Buttons in bottom-left console (5 per row on top, 5 on bottom)
-    int bx = 10;
+    // Cockpit Action Buttons in bottom-left console (6 in row 1, 5 in row 2)
+    int bx = 8;
     int by1 = botY + 28;
     int by2 = botY + 62;
-    int bw = 64;
+    int bw = 52;
     int bh = 28;
-    int gap = 5;
+    int gap = 4;
     
     MoveWindow(g_btnLaser,      bx,                  by1, bw, bh, TRUE);
     MoveWindow(g_btnTractor,    bx + (bw + gap),     by1, bw, bh, TRUE);
     MoveWindow(g_btnDampener,   bx + (bw + gap) * 2, by1, bw, bh, TRUE);
     MoveWindow(g_btnScan,       bx + (bw + gap) * 3, by1, bw, bh, TRUE);
     MoveWindow(g_btnNav,        bx + (bw + gap) * 4, by1, bw, bh, TRUE);
+    MoveWindow(g_btnEva,        bx + (bw + gap) * 5, by1, bw, bh, TRUE);
     
     MoveWindow(g_btnUpgrades,   bx,                  by2, bw, bh, TRUE);
     MoveWindow(g_btnTheme,      bx + (bw + gap),     by2, bw, bh, TRUE);
@@ -2662,6 +3416,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_btnDampener  = CreateWindowA("BUTTON", "DAMPENER [Z]",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_DAMPENER, NULL, NULL);
             g_btnScan      = CreateWindowA("BUTTON", "PROSPECT [P]",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN, NULL, NULL);
             g_btnNav       = CreateWindowA("BUTTON", "SECTORS [N]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_NAV, NULL, NULL);
+            g_btnEva       = CreateWindowA("BUTTON", "EVA OPS [E]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_EVA, NULL, NULL);
             g_btnUpgrades  = CreateWindowA("BUTTON", "UPGRADE [U]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_UPGRADES, NULL, NULL);
             g_btnTheme     = CreateWindowA("BUTTON", "CRT CYAN",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_THEME, NULL, NULL);
             g_btnScanlines = CreateWindowA("BUTTON", "SCAN: ON",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCANLINES, NULL, NULL);
@@ -2701,17 +3456,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 case ID_BTN_SCAN:
                     g_state.showSpectrometer = !g_state.showSpectrometer;
-                    if (g_state.showSpectrometer) { g_state.showStarChart = 0; g_state.showUpgrades = 0; }
+                    if (g_state.showSpectrometer) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showEva = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_NAV:
                     g_state.showStarChart = !g_state.showStarChart;
-                    if (g_state.showStarChart) { g_state.showUpgrades = 0; g_state.showSpectrometer = 0; }
+                    if (g_state.showStarChart) { g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; }
+                    TriggerSound(SFX_BEEP);
+                    break;
+                case ID_BTN_EVA:
+                    g_state.showEva = !g_state.showEva;
+                    if (g_state.showEva) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_UPGRADES:
                     g_state.showUpgrades = !g_state.showUpgrades;
-                    if (g_state.showUpgrades) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; }
+                    if (g_state.showUpgrades) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_THEME:
@@ -2777,6 +3537,65 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (g_state.showHelp) {
                 g_state.showHelp = 0;
                 InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            
+            if (g_state.showEva) {
+                int modalW = 720;
+                int modalH = 470;
+                int hx = (totalW - modalW) / 2;
+                int hy = (totalH - modalH) / 2;
+                
+                // Close button top-right
+                if (mx >= hx + modalW - 130 && mx <= hx + modalW - 10 && my >= hy && my <= hy + 30) {
+                    g_state.showEva = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                
+                if (g_state.selectedDerelictIndex >= 0 && g_state.derelicts[g_state.selectedDerelictIndex].active) {
+                    int opX = hx + 340;
+                    int opY = hy + 56;
+                    int opW = modalW - 356;
+                    int cardH = 84;
+                    int gapY = 8;
+                    
+                    int opY2 = opY + cardH + gapY;
+                    int opY3 = opY2 + cardH + gapY;
+                    int opY4 = opY3 + cardH + gapY;
+                    
+                    // 1. Airlock Breach
+                    if (mx >= opX + 10 && mx <= opX + opW - 10 && my >= opY + 54 && my <= opY + 76) {
+                        BreachAirlock(g_state.selectedDerelictIndex);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        return 0;
+                    }
+                    // 2. Black Box
+                    if (mx >= opX + 10 && mx <= opX + opW - 10 && my >= opY2 + 48 && my <= opY2 + 74) {
+                        DecryptBlackBox(g_state.selectedDerelictIndex);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        return 0;
+                    }
+                    // 3. Reactor Core
+                    if (mx >= opX + 10 && mx <= opX + opW - 10 && my >= opY3 + 48 && my <= opY3 + 74) {
+                        HarvestReactorCore(g_state.selectedDerelictIndex);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        return 0;
+                    }
+                    // 4. Cargo Scavenge
+                    if (mx >= opX + 10 && mx <= opX + opW - 10 && my >= opY4 + 48 && my <= opY4 + 74) {
+                        ScavengeCargoPods(g_state.selectedDerelictIndex);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        return 0;
+                    }
+                }
+                
+                // Click outside modal closes it
+                if (mx < hx || mx > hx + modalW || my < hy || my > hy + modalH) {
+                    g_state.showEva = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
                 return 0;
             }
             
@@ -2924,12 +3743,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int viewportY = topHeaderH;
             int viewportH = totalH - topHeaderH - bottomCtrlH;
             
-            // Check click inside viewport for asteroid targeting
+            // Check click inside viewport for asteroid or derelict targeting
             if (mx >= viewportX && mx < viewportX + viewportW && my >= viewportY && my < viewportY + viewportH) {
                 int cx = viewportX + (viewportW / 2);
                 int cyCenter = viewportY + (viewportH / 2);
                 float clickWorldX = g_state.shipX + (float)(mx - cx);
                 float clickWorldY = g_state.shipY + (float)(my - cyCenter);
+                
+                // Check derelict click first
+                int bestDer = -1;
+                float minDerDist = 90.0f;
+                for (int i = 0; i < MAX_DERELICTS; i++) {
+                    if (!g_state.derelicts[i].active) continue;
+                    float d = (float)sqrt((g_state.derelicts[i].x - clickWorldX) * (g_state.derelicts[i].x - clickWorldX) +
+                                          (g_state.derelicts[i].y - clickWorldY) * (g_state.derelicts[i].y - clickWorldY));
+                    if (d < g_state.derelicts[i].length * 0.6f + 15.0f && d < minDerDist) {
+                        minDerDist = d;
+                        bestDer = i;
+                    }
+                }
+                if (bestDer >= 0) {
+                    g_state.selectedDerelictIndex = bestDer;
+                    TriggerSound(SFX_BEEP);
+                    char tLog[64];
+                    sprintf(tLog, "Target locked: %s [%s]", g_state.derelicts[bestDer].id, g_state.derelicts[bestDer].name);
+                    AddLog(tLog, 0);
+                    return 0;
+                }
                 
                 int bestIdx = -1;
                 float minDist = 80.0f;
@@ -2955,6 +3795,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         
         case WM_KEYDOWN: {
+            if (g_state.showEva) {
+                if (wParam == '1') { BreachAirlock(g_state.selectedDerelictIndex); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '2') { DecryptBlackBox(g_state.selectedDerelictIndex); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '3') { HarvestReactorCore(g_state.selectedDerelictIndex); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '4') { ScavengeCargoPods(g_state.selectedDerelictIndex); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == 'E' || wParam == VK_ESCAPE) { g_state.showEva = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+            }
+            
             if (g_state.showSpectrometer) {
                 if (wParam == '1') { ScanTargetAsteroid(g_state.selectedAstIndex); InvalidateRect(hwnd, NULL, FALSE); return 0; }
                 if (wParam == '2') { ScanAllWideBand(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
@@ -2997,17 +3845,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 case 'P':
                     g_state.showSpectrometer = !g_state.showSpectrometer;
-                    if (g_state.showSpectrometer) { g_state.showStarChart = 0; g_state.showUpgrades = 0; }
+                    if (g_state.showSpectrometer) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showEva = 0; }
+                    TriggerSound(SFX_BEEP);
+                    break;
+                case 'E':
+                    g_state.showEva = !g_state.showEva;
+                    if (g_state.showEva) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case 'U':
                     g_state.showUpgrades = !g_state.showUpgrades;
-                    if (g_state.showUpgrades) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; }
+                    if (g_state.showUpgrades) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case 'N':
                     g_state.showStarChart = !g_state.showStarChart;
-                    if (g_state.showStarChart) { g_state.showUpgrades = 0; g_state.showSpectrometer = 0; }
+                    if (g_state.showStarChart) { g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case 'V':

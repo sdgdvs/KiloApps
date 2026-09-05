@@ -425,7 +425,7 @@
 
         .action-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(6, 1fr);
             gap: 5px;
             padding: 6px;
             flex: 1;
@@ -854,6 +854,108 @@
             gap: 8px;
             margin-top: 6px;
         }
+
+        /* Phase 8: Derelict Spaceship EVA Salvage Ops Modal */
+        .btn.btn-eva {
+            border-color: #f43f5e;
+            color: #fecdd3;
+        }
+
+        .btn.btn-eva:hover {
+            box-shadow: 0 0 10px rgba(244, 63, 94, 0.5);
+            border-color: #fb7185;
+        }
+
+        .eva-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 10px;
+        }
+
+        .eva-schematic-card {
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .eva-schematic-canvas-wrap {
+            height: 140px;
+            background: #020617;
+            border: 1px solid var(--border-panel);
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #evaCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .eva-op-card {
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .eva-op-card.unlocked {
+            border-color: var(--border-glow);
+            background: rgba(15, 28, 63, 0.5);
+        }
+
+        .eva-op-card.completed {
+            border-color: var(--accent-emerald);
+            background: rgba(6, 78, 59, 0.25);
+        }
+
+        .eva-op-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .eva-op-title {
+            font-weight: bold;
+            font-size: 11px;
+            color: var(--text-bright);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .eva-op-badge {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .badge-sealed { background: #7f1d1d; color: #fecaca; border: 1px solid #dc2626; }
+        .badge-progress { background: #78350f; color: #fde68a; border: 1px solid #d97706; }
+        .badge-done { background: #064e3b; color: #a7f3d0; border: 1px solid #059669; }
+
+        .eva-lore-box {
+            background: #02050e;
+            border: 1px solid var(--border-panel);
+            border-radius: 3px;
+            padding: 6px 8px;
+            font-size: 10px;
+            color: #94a3b8;
+            max-height: 55px;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            line-height: 1.3;
+        }
     </style>
 </head>
 <body>
@@ -1032,7 +1134,7 @@
             <div class="panel">
                 <div class="panel-header">
                     <span>COCKPIT CONSOLE</span>
-                    <span style="font-size: 9px; color: var(--text-dim);">CONTROLS: WASD / SPACE / T / Z / P / U / N</span>
+                    <span style="font-size: 9px; color: var(--text-dim);">CONTROLS: WASD / SPACE / T / Z / P / U / N / E</span>
                 </div>
                 <div class="action-grid">
                     <button class="btn" id="btnLaser">
@@ -1058,6 +1160,10 @@
                     <button class="btn btn-nav" id="btnNav">
                         <span>🗺️ SECTORS</span>
                         <span class="key-hint">[N] STAR CHART</span>
+                    </button>
+                    <button class="btn btn-eva" id="btnEva">
+                        <span>🚀 EVA OPS</span>
+                        <span class="key-hint">[E] SALVAGE</span>
                     </button>
                     <button class="btn" id="btnTheme">
                         <span id="txtBtnTheme">📺 CRT CYAN</span>
@@ -1235,6 +1341,108 @@
         </div>
     </div>
 
+    <!-- Phase 8: Derelict Spaceship EVA Salvage Ops Modal -->
+    <div class="modal-overlay" id="evaModal">
+        <div class="modal-box" style="width: 860px;">
+            <div class="modal-header">
+                <span>🚀 DERELICT SPACESHIP EVA SALVAGE & BOARDING OPERATIONS</span>
+                <button class="btn" id="btnCloseEva" style="padding: 2px 8px; border-color: var(--accent-red); color: var(--accent-red);">✕ CLOSE [E]</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 6px 12px; border: 1px solid var(--border-panel); border-radius: 4px;">
+                    <div>
+                        <span style="color: var(--text-dim); font-size: 10px;">DERELICT TARGET: </span>
+                        <span id="evaTargetTitle" style="color: #f43f5e; font-weight: bold; font-size: 12px;">USN Ghost Frigate "Hyperion" (RANGE: 85m)</span>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <span id="evaClassBadge" style="font-size: 10px; padding: 2px 8px; border-radius: 3px; font-weight: bold; background: #1e1b4b; color: #c7d2fe; border: 1px solid #6366f1;">CLASS: FRIGATE</span>
+                        <span id="evaRadBadge" style="font-size: 10px; padding: 2px 8px; border-radius: 3px; font-weight: bold; background: #7f1d1d; color: #fecaca; border: 1px solid #dc2626;">RAD HAZARD: 38 RADS/S</span>
+                    </div>
+                </div>
+
+                <div class="eva-grid">
+                    <!-- Left: Derelict Schematic View & Distress Beacon -->
+                    <div class="eva-schematic-card">
+                        <div style="display: flex; justify-content: space-between; font-size: 10px;">
+                            <span style="color: var(--text-bright); font-weight: bold;">STRUCTURAL SCAN & HULL PROFILE</span>
+                            <span style="color: #f43f5e;" id="evaBeaconFreq">BEACON: 108.4 MHz</span>
+                        </div>
+                        <div class="eva-schematic-canvas-wrap">
+                            <canvas id="evaCanvas" width="360" height="140"></canvas>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 9px; color: var(--text-dim);">
+                            <span>ATMOSPHERE: VACUUM</span>
+                            <span>HULL INTEGRITY: <span id="evaHullPct" style="color: var(--accent-amber);">32% (BREACHED)</span></span>
+                        </div>
+                        <div class="eva-lore-box" id="evaLoreText">
+                            [DISTRESS TRANSCRIPT] Transponder activated. Reactor containment failing. All hands to evacuation pods...
+                        </div>
+                    </div>
+
+                    <!-- Right: 4 EVA Operations -->
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <!-- 1. Airlock Plasma Cutter -->
+                        <div class="eva-op-card" id="cardAirlock">
+                            <div class="eva-op-header">
+                                <span class="eva-op-title">🔥 1. PLASMA CUTTER AIRLOCK BREACH</span>
+                                <span class="eva-op-badge badge-sealed" id="badgeAirlock">SEALED (0%)</span>
+                            </div>
+                            <div style="font-size: 9px; color: var(--text-dim);">Cut through reinforced blast hatch to access interior ship compartments.</div>
+                            <div class="target-bar-wrap" style="height: 6px; margin: 2px 0;">
+                                <div class="target-bar-fill" id="barAirlock" style="width: 0%; background: #f43f5e;"></div>
+                            </div>
+                            <button class="btn" id="btnCutAirlock" style="padding: 5px; background: #881337; border-color: #f43f5e; color: #fff;">
+                                <span>🔥 BREACH BLAST AIRLOCK [1] (+Scrap)</span>
+                            </button>
+                        </div>
+
+                        <!-- 2. Black Box Flight Data Decryption -->
+                        <div class="eva-op-card" id="cardBlackBox">
+                            <div class="eva-op-header">
+                                <span class="eva-op-title">💾 2. FLIGHT RECORDER BLACK BOX</span>
+                                <span class="eva-op-badge badge-sealed" id="badgeBlackBox">ENCRYPTED</span>
+                            </div>
+                            <div style="font-size: 9px; color: var(--text-dim);">Download encrypted flight logs, navigation telemetry & coordinate logs.</div>
+                            <div class="target-bar-wrap" style="height: 6px; margin: 2px 0;">
+                                <div class="target-bar-fill" id="barBlackBox" style="width: 0%; background: #38bdf8;"></div>
+                            </div>
+                            <button class="btn" id="btnDecryptBlackBox" style="padding: 5px; background: #0c4a6e; border-color: #38bdf8; color: #fff;" disabled>
+                                <span>💾 DECRYPT BLACK BOX [2] (+Credits / Lore)</span>
+                            </button>
+                        </div>
+
+                        <!-- 3. Antimatter Reactor Core Containment Harvest -->
+                        <div class="eva-op-card" id="cardReactor">
+                            <div class="eva-op-header">
+                                <span class="eva-op-title">⚡ 3. ANTIMATTER REACTOR CORE</span>
+                                <span class="eva-op-badge badge-sealed" id="badgeReactor">CONTAINED</span>
+                            </div>
+                            <div style="font-size: 9px; color: var(--text-dim);">Stabilize magnetic clamps to extract intact exotic sub-space power core.</div>
+                            <div class="target-bar-wrap" style="height: 6px; margin: 2px 0;">
+                                <div class="target-bar-fill" id="barReactorOp" style="width: 0%; background: #f59e0b;"></div>
+                            </div>
+                            <button class="btn" id="btnHarvestReactor" style="padding: 5px; background: #78350f; border-color: #f59e0b; color: #fff;" disabled>
+                                <span>⚡ HARVEST REACTOR CORE [3] (+Huge CR / Fuel)</span>
+                            </button>
+                        </div>
+
+                        <!-- 4. Cargo Hold Scavenge -->
+                        <div class="eva-op-card" id="cardCargo">
+                            <div class="eva-op-header">
+                                <span class="eva-op-title">📦 4. CARGO DEPOSITORY SCAVENGE</span>
+                                <span class="eva-op-badge badge-sealed" id="badgeCargoPods">UNLOOTED</span>
+                            </div>
+                            <div style="font-size: 9px; color: var(--text-dim);" id="evaCargoDesc">Loot preserved cargo pods (Void Quartz, Dark Geodes, Platinum alloys).</div>
+                            <button class="btn" id="btnScavengeCargo" style="padding: 5px; background: #1e3a8a; border-color: var(--accent-cyan); color: #fff;" disabled>
+                                <span>📦 SCAVENGE CARGO PODS [4]</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- Web Audio Synthesis Engine ---
         class SoundEngine {
@@ -1338,6 +1546,63 @@
                 this.playBeep(440, 'triangle', 0.08, 0.15);
                 setTimeout(() => this.playBeep(659.25, 'triangle', 0.08, 0.15), 80);
                 setTimeout(() => this.playBeep(880, 'triangle', 0.18, 0.2), 160);
+            }
+
+            playPlasmaCut() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(80, this.ctx.currentTime + 0.12);
+                    gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.12);
+                } catch (e) {}
+            }
+
+            playAirlockBreach() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(320, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(90, this.ctx.currentTime + 0.35);
+                    gain.gain.setValueAtTime(0.22, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.35);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.35);
+                } catch (e) {}
+            }
+
+            playDataDecrypt() {
+                this.playBeep(987.77, 'sine', 0.04, 0.12);
+                setTimeout(() => this.playBeep(1318.51, 'sine', 0.04, 0.12), 45);
+                setTimeout(() => this.playBeep(1760.00, 'sine', 0.08, 0.14), 90);
+            }
+
+            playCoreHarvest() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(160, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(720, this.ctx.currentTime + 0.4);
+                    gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.4);
+                } catch (e) {}
             }
         }
 
@@ -1623,11 +1888,14 @@
             },
             keys: {},
             asteroids: [],
+            derelicts: [],
             oreChunks: [],
             particles: [],
             floatingTexts: [],
             stars: [],
             selectedTarget: null,
+            selectedDerelict: null,
+            evaTarget: null,
             radarAngle: 0
         };
 
@@ -1638,6 +1906,8 @@
         const radarCtx = radarCanvas.getContext('2d');
         const spectroCanvas = document.getElementById('spectroCanvas');
         const spectroCtx = spectroCanvas.getContext('2d');
+        const evaCanvas = document.getElementById('evaCanvas');
+        const evaCtx = evaCanvas ? evaCanvas.getContext('2d') : null;
         const logBox = document.getElementById('logBox');
 
         function addLog(msg, type = 'system') {
@@ -1699,14 +1969,132 @@
             }
 
             state.asteroids = [];
+            state.derelicts = [];
             state.oreChunks = [];
             state.scanWaves = [];
             state.selectedTarget = null;
+            state.selectedDerelict = null;
             state.resonantTargetId = null;
 
             for (let i = 0; i < sector.density; i++) {
                 spawnAsteroid();
             }
+
+            // Phase 8: Spawn sector derelict spaceships
+            const derelictCount = (sector.id === 'graveyard') ? 3 : (sector.id === 'nebula' ? 2 : 1);
+            for (let i = 0; i < derelictCount; i++) {
+                spawnDerelict(i % DERELICT_TEMPLATES.length);
+            }
+        }
+
+        const DERELICT_TEMPLATES = [
+            {
+                name: 'USN Ghost Frigate "Hyperion"',
+                className: 'Strike Frigate',
+                distressFreq: '108.4 MHz',
+                radiation: 38,
+                hullIntegrity: '32% (BREACHED)',
+                log: 'Log #4491: Hyperdrive core cascade failure. Reactor containment failing. All hands to evacuation pods...',
+                blackBoxReward: 1400,
+                reactorType: 'Sub-space Antimatter Core',
+                reactorReward: 2200,
+                fuelReward: 35,
+                scrapYield: 65,
+                rareType: 'Void Quartz',
+                rareQty: 18,
+                shape: 'frigate'
+            },
+            {
+                name: 'Heavy Tanker "Valkyrie-7"',
+                className: 'Bulk Transport',
+                distressFreq: '432.1 MHz',
+                radiation: 24,
+                hullIntegrity: '45% (FRACTURED)',
+                log: 'Captain Log 992-B: Caught in plasma squall off Sector Kuiper. Port thrusters blown. Cargo vaults sealed.',
+                blackBoxReward: 1100,
+                reactorType: 'Supercharged Fusion Cell',
+                reactorReward: 1800,
+                fuelReward: 50,
+                scrapYield: 85,
+                rareType: 'Platinum',
+                rareQty: 25,
+                shape: 'tanker'
+            },
+            {
+                name: 'Research Vessel "Aegis Prime"',
+                className: 'Science Cruiser',
+                distressFreq: '920.6 MHz',
+                radiation: 65,
+                hullIntegrity: '18% (CRITICAL)',
+                log: 'Science Officer Dr. Chen: Dark matter synthesis successful. Gravitational rift expanding uncontrollably. Containment lost!',
+                blackBoxReward: 2400,
+                reactorType: 'Dark Matter Singularity Cell',
+                reactorReward: 3200,
+                fuelReward: 40,
+                scrapYield: 50,
+                rareType: 'Dark Geode',
+                rareQty: 15,
+                shape: 'cruiser'
+            },
+            {
+                name: 'Syndicate Raider "Void Viper"',
+                className: 'Stealth Corvette',
+                distressFreq: '88.9 MHz',
+                radiation: 15,
+                hullIntegrity: '28% (TORPEDO HIT)',
+                log: 'Encrypted Syndicate Comms: Ambushed by station patrol. Black market payload hidden in auxiliary hold 3.',
+                blackBoxReward: 1800,
+                reactorType: 'Tuned Micro-Antimatter Core',
+                reactorReward: 2600,
+                fuelReward: 30,
+                scrapYield: 55,
+                rareType: 'Void Quartz',
+                rareQty: 22,
+                shape: 'corvette'
+            }
+        ];
+
+        function spawnDerelict(templateIdx = null) {
+            const tIdx = (templateIdx !== null) ? templateIdx : Math.floor(Math.random() * DERELICT_TEMPLATES.length);
+            const tmpl = DERELICT_TEMPLATES[tIdx];
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 320 + Math.random() * 820;
+
+            const d = {
+                id: 'DER-' + (100 + state.derelicts.length * 23 + Math.floor(Math.random() * 50)),
+                name: tmpl.name,
+                className: tmpl.className,
+                x: state.ship.x + Math.cos(angle) * dist,
+                y: state.ship.y + Math.sin(angle) * dist,
+                vx: (Math.random() - 0.5) * 0.1,
+                vy: (Math.random() - 0.5) * 0.1,
+                rot: Math.random() * Math.PI * 2,
+                rotSpeed: (Math.random() - 0.5) * 0.008,
+                radius: 38,
+                shape: tmpl.shape,
+                distressFreq: tmpl.distressFreq,
+                radiation: tmpl.radiation,
+                hullIntegrity: tmpl.hullIntegrity,
+                log: tmpl.log,
+                blackBoxReward: tmpl.blackBoxReward,
+                reactorType: tmpl.reactorType,
+                reactorReward: tmpl.reactorReward,
+                fuelReward: tmpl.fuelReward,
+                scrapYield: tmpl.scrapYield,
+                rareType: tmpl.rareType,
+                rareQty: tmpl.rareQty,
+                // EVA Statuses
+                airlockCutPct: 0,
+                airlockBreached: false,
+                blackBoxDecrypted: false,
+                blackBoxDecryptPct: 0,
+                reactorHarvested: false,
+                reactorHarvestPct: 0,
+                cargoScavenged: false,
+                beaconTimer: 0
+            };
+            state.derelicts.push(d);
+            return d;
         }
 
         function pickOreForCurrentSector() {
@@ -2030,6 +2418,298 @@
 
         function closeNavModal() {
             document.getElementById('navModal').classList.remove('open');
+        }
+
+        // --- Phase 8: Derelict Spaceship EVA Salvage Ops Modal ---
+        function openEvaModal() {
+            let closest = null;
+            let minDist = 9999;
+            for (const der of state.derelicts) {
+                const d = Math.hypot(der.x - state.ship.x, der.y - state.ship.y);
+                if (d < minDist) { closest = der; minDist = d; }
+            }
+
+            if (!closest) {
+                addLog("⚠️ No derelict spaceship wrecks detected in this sector.", "warning");
+                return;
+            }
+
+            state.evaTarget = closest;
+            renderEvaModal();
+            document.getElementById('evaModal').classList.add('open');
+            audio.playBeep(650, 'triangle', 0.1, 0.15);
+        }
+
+        function closeEvaModal() {
+            document.getElementById('evaModal').classList.remove('open');
+        }
+
+        function renderEvaModal() {
+            const target = state.evaTarget;
+            if (!target) return;
+
+            const dist = Math.round(Math.hypot(target.x - state.ship.x, target.y - state.ship.y));
+            const inRange = (dist <= 300);
+
+            document.getElementById('evaTargetTitle').textContent = `${target.name} (RANGE: ${dist}m)`;
+            document.getElementById('evaTargetTitle').style.color = inRange ? '#f43f5e' : '#94a3b8';
+            document.getElementById('evaClassBadge').textContent = `CLASS: ${target.className.toUpperCase()}`;
+            document.getElementById('evaRadBadge').textContent = `RAD HAZARD: ${target.radiation} RADS/S`;
+            document.getElementById('evaBeaconFreq').textContent = `BEACON: ${target.distressFreq}`;
+            document.getElementById('evaHullPct').textContent = target.hullIntegrity;
+            document.getElementById('evaLoreText').textContent = target.blackBoxDecrypted ? `[DECRYPTED TELEMETRY]: ${target.log}` : `[TRANSPONDER SIGNAL]: ${target.name} broadcasting emergency beacon on ${target.distressFreq}. Atmosphere decompressed.`;
+
+            // 1. Airlock Card
+            const cardAirlock = document.getElementById('cardAirlock');
+            const badgeAirlock = document.getElementById('badgeAirlock');
+            const barAirlock = document.getElementById('barAirlock');
+            const btnCutAirlock = document.getElementById('btnCutAirlock');
+
+            barAirlock.style.width = `${target.airlockCutPct}%`;
+            if (target.airlockBreached) {
+                cardAirlock.className = 'eva-op-card completed';
+                badgeAirlock.className = 'eva-op-badge badge-done';
+                badgeAirlock.textContent = 'BREACHED (100%)';
+                btnCutAirlock.disabled = true;
+                btnCutAirlock.innerHTML = '<span>✓ AIRLOCK SEAL DESTROYED (+45T Scrap Recovered)</span>';
+            } else if (target.airlockCutPct > 0) {
+                cardAirlock.className = 'eva-op-card unlocked';
+                badgeAirlock.className = 'eva-op-badge badge-progress';
+                badgeAirlock.textContent = `CUTTING (${Math.round(target.airlockCutPct)}%)`;
+                btnCutAirlock.disabled = !inRange;
+                btnCutAirlock.innerHTML = `<span>🔥 CONTINUE CUTTING [1] (${Math.round(target.airlockCutPct)}%)</span>`;
+            } else {
+                cardAirlock.className = 'eva-op-card';
+                badgeAirlock.className = 'eva-op-badge badge-sealed';
+                badgeAirlock.textContent = 'SEALED (0%)';
+                btnCutAirlock.disabled = !inRange;
+                btnCutAirlock.innerHTML = '<span>🔥 BREACH BLAST AIRLOCK [1] (+Scrap)</span>';
+            }
+
+            // 2. Black Box Card
+            const cardBlackBox = document.getElementById('cardBlackBox');
+            const badgeBlackBox = document.getElementById('badgeBlackBox');
+            const barBlackBox = document.getElementById('barBlackBox');
+            const btnDecryptBlackBox = document.getElementById('btnDecryptBlackBox');
+
+            barBlackBox.style.width = `${target.blackBoxDecryptPct}%`;
+            if (target.blackBoxDecrypted) {
+                cardBlackBox.className = 'eva-op-card completed';
+                badgeBlackBox.className = 'eva-op-badge badge-done';
+                badgeBlackBox.textContent = `DECRYPTED (+${target.blackBoxReward} CR)`;
+                btnDecryptBlackBox.disabled = true;
+                btnDecryptBlackBox.innerHTML = `<span>✓ TELEMETRY EXTRACTED (+${target.blackBoxReward} CR)</span>`;
+            } else if (target.airlockBreached) {
+                cardBlackBox.className = 'eva-op-card unlocked';
+                badgeBlackBox.className = 'eva-op-badge badge-progress';
+                badgeBlackBox.textContent = 'READY FOR DOWNLOAD';
+                btnDecryptBlackBox.disabled = !inRange;
+                btnDecryptBlackBox.innerHTML = `<span>💾 DECRYPT BLACK BOX [2] (+${target.blackBoxReward} CR)</span>`;
+            } else {
+                cardBlackBox.className = 'eva-op-card';
+                badgeBlackBox.className = 'eva-op-badge badge-sealed';
+                badgeBlackBox.textContent = 'LOCKED (REQUIRES BREACH)';
+                btnDecryptBlackBox.disabled = true;
+                btnDecryptBlackBox.innerHTML = '<span>🔒 LOCKED (BREACH AIRLOCK FIRST)</span>';
+            }
+
+            // 3. Reactor Core Card
+            const cardReactor = document.getElementById('cardReactor');
+            const badgeReactor = document.getElementById('badgeReactor');
+            const barReactorOp = document.getElementById('barReactorOp');
+            const btnHarvestReactor = document.getElementById('btnHarvestReactor');
+
+            barReactorOp.style.width = `${target.reactorHarvestPct}%`;
+            if (target.reactorHarvested) {
+                cardReactor.className = 'eva-op-card completed';
+                badgeReactor.className = 'eva-op-badge badge-done';
+                badgeReactor.textContent = `HARVESTED (+${target.reactorReward} CR)`;
+                btnHarvestReactor.disabled = true;
+                btnHarvestReactor.innerHTML = `<span>✓ ${target.reactorType} EXTRACTED (+${target.reactorReward} CR, +${target.fuelReward}% FUEL)</span>`;
+            } else if (target.airlockBreached) {
+                cardReactor.className = 'eva-op-card unlocked';
+                badgeReactor.className = 'eva-op-badge badge-progress';
+                badgeReactor.textContent = 'STABLE (100%)';
+                btnHarvestReactor.disabled = !inRange;
+                btnHarvestReactor.innerHTML = `<span>⚡ HARVEST ${target.reactorType.toUpperCase()} [3] (+${target.reactorReward} CR)</span>`;
+            } else {
+                cardReactor.className = 'eva-op-card';
+                badgeReactor.className = 'eva-op-badge badge-sealed';
+                badgeReactor.textContent = 'LOCKED (REQUIRES BREACH)';
+                btnHarvestReactor.disabled = true;
+                btnHarvestReactor.innerHTML = '<span>🔒 LOCKED (BREACH AIRLOCK FIRST)</span>';
+            }
+
+            // 4. Cargo Card
+            const cardCargo = document.getElementById('cardCargo');
+            const badgeCargoPods = document.getElementById('badgeCargoPods');
+            const btnScavengeCargo = document.getElementById('btnScavengeCargo');
+            const evaCargoDesc = document.getElementById('evaCargoDesc');
+
+            evaCargoDesc.textContent = `Cargo Manifest: ${target.scrapYield}T Derelict Scrap + ${target.rareQty}T ${target.rareType}.`;
+            if (target.cargoScavenged) {
+                cardCargo.className = 'eva-op-card completed';
+                badgeCargoPods.className = 'eva-op-badge badge-done';
+                badgeCargoPods.textContent = 'LOOTED';
+                btnScavengeCargo.disabled = true;
+                btnScavengeCargo.innerHTML = '<span>✓ CARGO VAULT DEPLETED</span>';
+            } else if (target.airlockBreached) {
+                cardCargo.className = 'eva-op-card unlocked';
+                badgeCargoPods.className = 'eva-op-badge badge-progress';
+                badgeCargoPods.textContent = 'READY TO TRANSFER';
+                btnScavengeCargo.disabled = !inRange;
+                btnScavengeCargo.innerHTML = `<span>📦 TRANSFER ${target.scrapYield}T SCRAP & ${target.rareQty}T ${target.rareType.toUpperCase()} [4]</span>`;
+            } else {
+                cardCargo.className = 'eva-op-card';
+                badgeCargoPods.className = 'eva-op-badge badge-sealed';
+                badgeCargoPods.textContent = 'LOCKED';
+                btnScavengeCargo.disabled = true;
+                btnScavengeCargo.innerHTML = '<span>🔒 LOCKED (BREACH AIRLOCK FIRST)</span>';
+            }
+
+            drawEvaSchematic(target);
+        }
+
+        function drawEvaSchematic(target) {
+            if (!evaCanvas || !evaCtx) return;
+            evaCtx.clearRect(0, 0, evaCanvas.width, evaCanvas.height);
+            const w = evaCanvas.width;
+            const h = evaCanvas.height;
+
+            // Background Grid
+            evaCtx.fillStyle = '#020617';
+            evaCtx.fillRect(0, 0, w, h);
+            evaCtx.strokeStyle = 'rgba(30, 58, 138, 0.4)';
+            evaCtx.lineWidth = 1;
+            for (let x = 0; x < w; x += 25) {
+                evaCtx.beginPath(); evaCtx.moveTo(x, 0); evaCtx.lineTo(x, h); evaCtx.stroke();
+            }
+            for (let y = 0; y < h; y += 25) {
+                evaCtx.beginPath(); evaCtx.moveTo(0, y); evaCtx.lineTo(w, y); evaCtx.stroke();
+            }
+
+            if (!target) return;
+
+            const cx = w / 2;
+            const cy = h / 2;
+
+            // Draw Ship Blueprint Outline
+            evaCtx.save();
+            evaCtx.translate(cx, cy);
+            evaCtx.strokeStyle = target.airlockBreached ? '#10b981' : '#f43f5e';
+            evaCtx.fillStyle = 'rgba(15, 28, 63, 0.8)';
+            evaCtx.lineWidth = 2;
+
+            evaCtx.beginPath();
+            evaCtx.moveTo(80, 0);
+            evaCtx.lineTo(40, -25);
+            evaCtx.lineTo(-30, -35);
+            evaCtx.lineTo(-70, -20);
+            evaCtx.lineTo(-60, 0);
+            evaCtx.lineTo(-70, 20);
+            evaCtx.lineTo(-30, 35);
+            evaCtx.lineTo(40, 25);
+            evaCtx.closePath();
+            evaCtx.fill();
+            evaCtx.stroke();
+
+            // Fracture damage cracks
+            evaCtx.strokeStyle = '#ef4444';
+            evaCtx.lineWidth = 1.5;
+            evaCtx.beginPath();
+            evaCtx.moveTo(-10, -20); evaCtx.lineTo(15, 5); evaCtx.lineTo(5, 25);
+            evaCtx.stroke();
+
+            // Internal Subsystem Nodes
+            // 1. Airlock
+            evaCtx.fillStyle = target.airlockBreached ? '#10b981' : '#f43f5e';
+            evaCtx.beginPath(); evaCtx.arc(50, 0, 5, 0, Math.PI * 2); evaCtx.fill();
+            evaCtx.fillStyle = '#fff'; evaCtx.font = '8px monospace'; evaCtx.fillText("AIRLOCK", 35, -8);
+
+            // 2. Black Box
+            evaCtx.fillStyle = target.blackBoxDecrypted ? '#10b981' : '#38bdf8';
+            evaCtx.beginPath(); evaCtx.arc(10, -10, 4, 0, Math.PI * 2); evaCtx.fill();
+            evaCtx.fillStyle = '#fff'; evaCtx.fillText("BLACK BOX", -10, -18);
+
+            // 3. Reactor Core
+            evaCtx.fillStyle = target.reactorHarvested ? '#10b981' : '#f59e0b';
+            evaCtx.beginPath(); evaCtx.arc(-40, 0, 8, 0, Math.PI * 2); evaCtx.fill();
+            evaCtx.fillStyle = '#fff'; evaCtx.fillText("REACTOR", -55, -12);
+
+            // 4. Cargo Bays
+            evaCtx.fillStyle = target.cargoScavenged ? '#10b981' : '#c084fc';
+            evaCtx.beginPath(); evaCtx.arc(0, 15, 5, 0, Math.PI * 2); evaCtx.fill();
+            evaCtx.fillStyle = '#fff'; evaCtx.fillText("CARGO", -12, 28);
+
+            evaCtx.restore();
+        }
+
+        function breachAirlock() {
+            const target = state.evaTarget;
+            if (!target || target.airlockBreached) return;
+
+            target.airlockCutPct = Math.min(100, target.airlockCutPct + 34);
+            audio.playPlasmaCut();
+            createSparks(state.ship.x, state.ship.y, '#f43f5e', 8);
+
+            if (target.airlockCutPct >= 100) {
+                target.airlockBreached = true;
+                audio.playAirlockBreach();
+                state.cargoHold.scrap = (state.cargoHold.scrap || 0) + 45;
+                updateCargoUI();
+                addLog(`💥 EVA AIRLOCK BREACH SUCCESS on ${target.name}! +45T Scrap gathered. Interior compartments accessible!`, 'success');
+                addFloatingText("AIRLOCK BREACHED! +45T SCRAP", state.ship.x, state.ship.y - 30, '#10b981');
+            } else {
+                addLog(`🔥 Plasma cutting blast doors on ${target.name}: ${Math.round(target.airlockCutPct)}% cut.`, 'system');
+            }
+            renderEvaModal();
+        }
+
+        function decryptBlackBox() {
+            const target = state.evaTarget;
+            if (!target || !target.airlockBreached || target.blackBoxDecrypted) return;
+
+            target.blackBoxDecryptPct = 100;
+            target.blackBoxDecrypted = true;
+            state.credits += target.blackBoxReward;
+            document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+            audio.playDataDecrypt();
+
+            addLog(`💾 BLACK BOX DECRYPTED from ${target.name}: +${target.blackBoxReward} CR awarded! Flight transcript added to Captain's log.`, 'cargo');
+            addFloatingText(`+${target.blackBoxReward} CR (INTEL)`, state.ship.x, state.ship.y - 30, '#38bdf8');
+            renderEvaModal();
+        }
+
+        function harvestReactorCore() {
+            const target = state.evaTarget;
+            if (!target || !target.airlockBreached || target.reactorHarvested) return;
+
+            target.reactorHarvestPct = 100;
+            target.reactorHarvested = true;
+            state.credits += target.reactorReward;
+            state.fuel = Math.min(state.maxFuel, state.fuel + target.fuelReward);
+            document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+            audio.playCoreHarvest();
+
+            addLog(`⚡ ${target.reactorType} successfully harvested from ${target.name}! +${target.reactorReward} CR and +${target.fuelReward}% Fuel replenished!`, 'success');
+            addFloatingText(`+${target.reactorReward} CR (REACTOR)`, state.ship.x, state.ship.y - 35, '#f59e0b');
+            renderEvaModal();
+        }
+
+        function scavengeCargoPods() {
+            const target = state.evaTarget;
+            if (!target || !target.airlockBreached || target.cargoScavenged) return;
+
+            target.cargoScavenged = true;
+            state.cargoHold.scrap = (state.cargoHold.scrap || 0) + target.scrapYield;
+            const rareKey = ORE_TYPES[target.rareType] ? ORE_TYPES[target.rareType].key : 'quartz';
+            state.cargoHold[rareKey] = (state.cargoHold[rareKey] || 0) + target.rareQty;
+            updateCargoUI();
+            audio.playCollect();
+
+            addLog(`📦 Scavenged ${target.name} cargo bay: +${target.scrapYield}T Scrap and +${target.rareQty}T ${target.rareType}!`, 'cargo');
+            addFloatingText(`+${target.rareQty}T ${target.rareType}`, state.ship.x, state.ship.y - 30, '#c084fc');
+            renderEvaModal();
         }
 
         // --- Multi-Spectral Prospector & Spectrometer Modal ---
@@ -2380,6 +3060,18 @@
                 if (navModal.classList.contains('open')) closeNavModal();
                 else openNavModal();
             }
+            if (e.code === 'KeyE') {
+                const evaModal = document.getElementById('evaModal');
+                if (evaModal.classList.contains('open')) closeEvaModal();
+                else openEvaModal();
+            }
+            if (document.getElementById('evaModal').classList.contains('open')) {
+                if (e.code === 'Digit1') breachAirlock();
+                if (e.code === 'Digit2') decryptBlackBox();
+                if (e.code === 'Digit3') harvestReactorCore();
+                if (e.code === 'Digit4') scavengeCargoPods();
+                if (e.code === 'Escape') closeEvaModal();
+            }
             if (e.code === 'KeyV') {
                 cycleTheme();
             }
@@ -2402,12 +3094,30 @@
             }
         });
 
-        // Mouse click on viewport to target asteroid
+        // Mouse click on viewport to target asteroid or derelict
         canvas.addEventListener('click', (e) => {
             audio.init();
             const rect = canvas.getBoundingClientRect();
             const clickX = e.clientX - rect.left - canvas.width / 2 + state.ship.x;
             const clickY = e.clientY - rect.top - canvas.height / 2 + state.ship.y;
+
+            // Check Derelict clicks first
+            let closestDerelict = null;
+            let minDerDist = 120;
+            for (const der of state.derelicts) {
+                const d = Math.hypot(der.x - clickX, der.y - clickY);
+                if (d < der.radius + 20 && d < minDerDist) {
+                    closestDerelict = der;
+                    minDerDist = d;
+                }
+            }
+            if (closestDerelict) {
+                state.selectedDerelict = closestDerelict;
+                state.evaTarget = closestDerelict;
+                audio.playBeep(720, 'sine', 0.06, 0.1);
+                addLog(`Target locked: ${closestDerelict.name} [${closestDerelict.className}] - Press [E] for EVA Operations!`, 'system');
+                return;
+            }
 
             let closest = null;
             let minDist = 100;
@@ -2490,6 +3200,31 @@
 
         document.getElementById('btnCloseNav').addEventListener('click', () => {
             closeNavModal();
+        });
+
+        document.getElementById('btnEva').addEventListener('click', () => {
+            audio.init();
+            openEvaModal();
+        });
+
+        document.getElementById('btnCloseEva').addEventListener('click', () => {
+            closeEvaModal();
+        });
+
+        document.getElementById('btnCutAirlock').addEventListener('click', () => {
+            breachAirlock();
+        });
+
+        document.getElementById('btnDecryptBlackBox').addEventListener('click', () => {
+            decryptBlackBox();
+        });
+
+        document.getElementById('btnHarvestReactor').addEventListener('click', () => {
+            harvestReactorCore();
+        });
+
+        document.getElementById('btnScavengeCargo').addEventListener('click', () => {
+            scavengeCargoPods();
         });
 
         document.getElementById('btnEngageWarp').addEventListener('click', () => {
@@ -2581,9 +3316,10 @@
             addLog("• P: Multi-Spectral Spectrometer & Mineral Prospector", "system");
             addLog("• U: Open Modular Engineering Bay & Install Upgrades", "system");
             addLog("• N: Open Star Sector Chart & Engage Warp Jumps", "system");
+            addLog("• E: EVA Salvage & Airlock Breach on Derelict Spaceships", "system");
             addLog("• V: Cycle Retro CRT Vector Theme (Cyan / Amber / Green / Solar)", "system");
             addLog("• C: Toggle CRT Scanlines & Phosphor Shaders (Normal / CRT+ / Off)", "system");
-            addLog("• CLICK: Target asteroid with telemetry computer", "system");
+            addLog("• CLICK: Target asteroid or derelict spaceship with telemetry", "system");
         }
 
         // --- Main Simulation Update Step ---
@@ -2755,6 +3491,44 @@
                         }
                     }
                 }
+
+                // Phase 8: Check laser impact against derelict ships
+                for (const der of state.derelicts) {
+                    const toDerX = der.x - lx;
+                    const toDerY = der.y - ly;
+                    const proj = toDerX * dirX + toDerY * dirY;
+
+                    if (proj > 0 && proj < laserRange) {
+                        const perpX = toDerX - dirX * proj;
+                        const perpY = toDerY - dirY * proj;
+                        const distToBeam = Math.hypot(perpX, perpY);
+
+                        if (distToBeam < der.radius) {
+                            const impactX = lx + dirX * proj;
+                            const impactY = ly + dirY * proj;
+                            createSparks(impactX, impactY, '#f43f5e', 3);
+
+                            if (Math.random() < 0.12) {
+                                audio.playFracture();
+                                spawnOreChunk(impactX, impactY, 'Derelict Scrap', 1);
+                                addFloatingText('+1 Derelict Scrap', impactX, impactY - 10, '#fbbf24');
+                            }
+
+                            if (!der.airlockBreached && Math.random() < 0.2) {
+                                der.airlockCutPct = Math.min(100, der.airlockCutPct + 4);
+                                if (der.airlockCutPct >= 100) {
+                                    der.airlockBreached = true;
+                                    audio.playAirlockBreach();
+                                    state.cargoHold.scrap = (state.cargoHold.scrap || 0) + 45;
+                                    updateCargoUI();
+                                    addLog(`💥 LASER BREACH: Airlock destroyed on ${der.name}! +45T Scrap recovered.`, 'success');
+                                    addFloatingText('AIRLOCK BREACHED! +45T SCRAP', der.x, der.y - 30, '#10b981');
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
             }
 
             // Tractor Beam Logic
@@ -2836,6 +3610,29 @@
                 }
             }
 
+            // Phase 8: Derelict Spaceship Physics & Collision
+            for (const der of state.derelicts) {
+                der.x += der.vx;
+                der.y += der.vy;
+                der.rot += der.rotSpeed;
+
+                const dist = Math.hypot(state.ship.x - der.x, state.ship.y - der.y);
+                const minDist = der.radius + 16;
+                if (dist < minDist) {
+                    const angle = Math.atan2(state.ship.y - der.y, state.ship.x - der.x);
+                    state.ship.vx += Math.cos(angle) * 1.8;
+                    state.ship.vy += Math.sin(angle) * 1.8;
+                    if (state.shield > 0) {
+                        state.shield = Math.max(0, state.shield - 10);
+                    } else {
+                        state.hull = Math.max(0, state.hull - 8);
+                    }
+                    createSparks(state.ship.x, state.ship.y, '#ef4444', 10);
+                    audio.playFracture();
+                    addLog(`COLLISION WARNING with Derelict ${der.name}! Shield absorbed hull strike.`, 'warning');
+                }
+            }
+
             // Shield regeneration
             if (state.shield < state.maxShield) {
                 state.shield = Math.min(state.maxShield, state.shield + shieldDef.regen);
@@ -2910,10 +3707,32 @@
             document.getElementById('hudCoords').textContent = `X: ${(state.ship.x * 0.1).toFixed(1)} | Y: ${(state.ship.y * 0.1).toFixed(1)}`;
             document.getElementById('hudTargetCount').textContent = state.asteroids.length;
 
-            if (state.selectedTarget) {
+            // Check closest derelict for proximity HUD prompt
+            let nearDer = null;
+            let minDerDist = 300;
+            for (const der of state.derelicts) {
+                const d = Math.hypot(der.x - state.ship.x, der.y - state.ship.y);
+                if (d < minDerDist) { nearDer = der; minDerDist = d; }
+            }
+
+            if (nearDer) {
+                const d = Math.round(minDerDist);
+                document.getElementById('targetInfo').style.display = 'block';
+                document.getElementById('targetName').textContent = `🚀 ${nearDer.name}`;
+                document.getElementById('targetName').style.color = '#f43f5e';
+                document.getElementById('targetDist').textContent = `${d} m`;
+                document.getElementById('targetOre').textContent = `${nearDer.className} (RAD: ${nearDer.radiation} RADS/S)`;
+                const scanBadge = document.getElementById('targetScanBadge');
+                scanBadge.textContent = nearDer.airlockBreached ? '✓ BREACHED [E]' : '🔥 EVA READY [E]';
+                scanBadge.style.color = nearDer.airlockBreached ? 'var(--accent-emerald)' : '#f43f5e';
+                document.getElementById('targetMiniSpectro').style.display = 'none';
+                document.getElementById('targetHpBar').style.width = nearDer.airlockBreached ? '100%' : `${nearDer.airlockCutPct}%`;
+                document.getElementById('targetHpBar').style.background = '#f43f5e';
+            } else if (state.selectedTarget) {
                 const target = state.selectedTarget;
                 document.getElementById('targetInfo').style.display = 'block';
                 document.getElementById('targetName').textContent = target.id;
+                document.getElementById('targetName').style.color = 'var(--accent-cyan)';
                 const d = Math.round(Math.hypot(target.x - state.ship.x, target.y - state.ship.y));
                 document.getElementById('targetDist').textContent = `${d} m`;
                 document.getElementById('targetOre').textContent = `${target.oreType} (${target.richness}%)`;
@@ -2935,6 +3754,7 @@
 
                 const hpPct = Math.max(0, Math.min(100, (target.hp / target.maxHp) * 100));
                 document.getElementById('targetHpBar').style.width = `${hpPct}%`;
+                document.getElementById('targetHpBar').style.background = 'var(--accent-cyan)';
             } else {
                 document.getElementById('targetInfo').style.display = 'none';
             }
@@ -3117,6 +3937,82 @@
                 }
             }
 
+            // Phase 8: Render Derelict Spaceships
+            for (const der of state.derelicts) {
+                ctx.save();
+                ctx.translate(der.x, der.y);
+                ctx.rotate(der.rot);
+
+                // Derelict Hull Geometry
+                ctx.strokeStyle = der.airlockBreached ? '#10b981' : '#f43f5e';
+                ctx.fillStyle = '#0f172a';
+                ctx.lineWidth = (der === state.selectedDerelict) ? 2.5 : 1.5;
+
+                ctx.beginPath();
+                ctx.moveTo(35, 0);
+                ctx.lineTo(15, -18);
+                ctx.lineTo(-15, -24);
+                ctx.lineTo(-35, -12);
+                ctx.lineTo(-28, 0);
+                ctx.lineTo(-35, 12);
+                ctx.lineTo(-15, 24);
+                ctx.lineTo(15, 18);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Fracture cracks
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.moveTo(-5, -15); ctx.lineTo(8, 2); ctx.lineTo(-2, 16);
+                ctx.stroke();
+
+                // Flashing Emergency Beacon
+                const flash = Math.sin(Date.now() * 0.008) > 0;
+                if (flash) {
+                    ctx.fillStyle = '#f43f5e';
+                    ctx.shadowColor = '#f43f5e';
+                    ctx.shadowBlur = 10;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Internal Reactor Glow
+                if (!der.reactorHarvested) {
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.beginPath();
+                    ctx.arc(-18, 0, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.restore();
+
+                // Derelict HUD Label
+                ctx.fillStyle = '#fecdd3';
+                ctx.font = 'bold 10px monospace';
+                ctx.textAlign = 'center';
+                const statusTag = der.airlockBreached ? ' [BREACHED]' : ' [SEALED]';
+                ctx.fillText(`🚀 ${der.name}${statusTag}`, der.x, der.y - der.radius - 8);
+
+                // Proximity prompt if ship is close
+                const distToShip = Math.hypot(state.ship.x - der.x, state.ship.y - der.y);
+                if (distToShip < 280) {
+                    ctx.fillStyle = '#fb7185';
+                    ctx.font = '9px monospace';
+                    ctx.fillText('[E] EVA SALVAGE READY', der.x, der.y + der.radius + 14);
+                }
+
+                // Target Lock Box
+                if (der === state.selectedDerelict) {
+                    ctx.strokeStyle = '#f43f5e';
+                    ctx.lineWidth = 1.5;
+                    const bSize = der.radius + 12;
+                    ctx.strokeRect(der.x - bSize, der.y - bSize, bSize * 2, bSize * 2);
+                }
+            }
+
             // Render Floating Ore Chunks
             for (const chunk of state.oreChunks) {
                 ctx.save();
@@ -3249,6 +4145,21 @@
                     radarCtx.beginPath();
                     radarCtx.arc(rcx + dx, rcy + dy, (ast === state.selectedTarget) ? 3 : 2, 0, Math.PI * 2);
                     radarCtx.fill();
+                }
+            }
+
+            // Phase 8: Derelict Spaceship Blips on Radar
+            for (const der of state.derelicts) {
+                const dx = (der.x - state.ship.x) * radarScale;
+                const dy = (der.y - state.ship.y) * radarScale;
+                const dist = Math.hypot(dx, dy);
+
+                if (dist < rRadius - 4) {
+                    radarCtx.fillStyle = (der === state.selectedDerelict) ? '#f43f5e' : '#f43f5e';
+                    radarCtx.fillRect(rcx + dx - 2, rcy + dy - 2, 5, 5);
+                    radarCtx.strokeStyle = '#fecdd3';
+                    radarCtx.lineWidth = 1;
+                    radarCtx.strokeRect(rcx + dx - 3, rcy + dy - 3, 7, 7);
                 }
             }
 
