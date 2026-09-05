@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KFreecell
 - KSudoku
 - KGo
 - KTowers
@@ -150,8 +149,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KHangman
 - KMech
 - KMatch3
+- KFreecell
 
 ## Completed Work Log
+
+- **KFreecell (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on card moves, card snaps, auto-solve cascades, freeze thaws, wand powerups, extra cells, and victory cascades (continuous 60 FPS requestAnimationFrame animation loop in Web Canvas `kfreecell.html`, and double-buffered viewport rendering with physics decay in Native C Win32 GDI `KFreecell/main.c`), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity drag, expanding buoyant smoke & velvet puffs with negative gravity and radius growth, heavy kinematic playing card / chip / felt debris shards with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars upon thaw, wand, solve, and victory fireworks), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion halo radiating upon card snaps, powerups, and victory bursts, ornate luxury casino green felt HUD corner filigree L-brackets with gold rivet studs at all four board corners, a pulsating golden energy perimeter inlay border with an animated traveling specular glint traversing the outer playfield card table frame, sculpted card & tableau highlights with diagonal specular sheen sweeps traversing cards and foundation slots, and atmospheric floating casino velvet dust motes drifting across the table in both Web Canvas (`kfreecell.html`) and Native C Win32 GDI (`KFreecell/main.c`).
 
 - **KMatch3 (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on gem matches, combo cascades, lasers, bombs, color nukes, hammer smashes, boss barrier shields, and stage clears (continuous requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas kmatch3.html, and double-buffered viewport rendering with trigonometric physics decay in Native C Win32 GDI KMatch3/main.c), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity drag, expanding buoyant smoke & plasma puffs with negative gravity and radius growth, heavy kinematic crystal / stone / gem debris shards with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars upon combo streaks and stage clears), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion halo radiating upon matches, bombs, lasers, and stage victories, ornate golden arcane / jewel HUD corner filigree L-brackets with rivet studs at all four board corners, a pulsating energy perimeter inlay border with an animated traveling specular glint traversing the outer playfield frame, sculpted gem highlights with diagonal specular sheen sweeps, and atmospheric floating magical crystal dust motes in both Web Canvas (kmatch3.html) and Native C Win32 GDI (KMatch3/main.c).
 
