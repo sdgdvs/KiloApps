@@ -425,7 +425,7 @@
 
         .action-grid {
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
+            grid-template-columns: repeat(7, 1fr);
             gap: 5px;
             padding: 6px;
             flex: 1;
@@ -1151,6 +1151,163 @@
             align-items: center;
             font-size: 10px;
         }
+
+        /* Phase 11: Orbital Spaceports & Black Market Trade Stations Modal */
+        .btn.btn-station {
+            border-color: #38bdf8;
+            color: #e0f2fe;
+        }
+
+        .btn.btn-station:hover {
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+            border-color: #00f0ff;
+        }
+
+        .station-banner-box {
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .tariff-badge-bar {
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px dashed var(--accent-amber);
+            border-radius: 3px;
+            padding: 4px 8px;
+            font-size: 10px;
+            color: #fef08a;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .station-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.25fr;
+            gap: 10px;
+        }
+
+        .station-panel-card {
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .station-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 11px;
+            color: var(--text-bright);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 4px;
+        }
+
+        .services-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .service-row {
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 3px;
+            padding: 5px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-srv {
+            padding: 4px 8px;
+            min-width: 80px;
+            background: #0f2744;
+            border-color: #38bdf8;
+            color: #e0f2fe;
+            font-size: 9px;
+        }
+
+        .btn-srv:hover {
+            background: #1e40af;
+        }
+
+        .barter-supplies-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+
+        .btn-barter {
+            padding: 5px 6px;
+            background: #111e38;
+            border-color: var(--border-panel);
+            color: #f0f9ff;
+            font-size: 10px;
+        }
+
+        .btn-barter:hover {
+            border-color: var(--accent-cyan);
+            background: #1e3a8a;
+        }
+
+        .contracts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 290px;
+            overflow-y: auto;
+        }
+
+        .contract-card {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 7px 9px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .contract-card.completed {
+            border-color: #10b981;
+            background: rgba(6, 78, 59, 0.25);
+        }
+
+        .contract-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .contract-progress-bar {
+            height: 6px;
+            background: #020617;
+            border: 1px solid var(--border-panel);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .contract-progress-fill {
+            height: 100%;
+            background: #38bdf8;
+            transition: width 0.3s ease;
+        }
+
+        .contract-progress-fill.ready {
+            background: #10b981;
+        }
     </style>
 </head>
 <body>
@@ -1339,7 +1496,7 @@
             <div class="panel">
                 <div class="panel-header">
                     <span>COCKPIT CONSOLE</span>
-                    <span style="font-size: 9px; color: var(--text-dim);">CONTROLS: WASD / SPACE / T / Z / P / U / N / E / K / R</span>
+                    <span style="font-size: 9px; color: var(--text-dim);">CONTROLS: WASD / SPACE / T / Z / P / U / N / D / E / K / R</span>
                 </div>
                 <div class="action-grid">
                     <button class="btn" id="btnLaser">
@@ -1365,6 +1522,10 @@
                     <button class="btn btn-nav" id="btnNav">
                         <span>🗺️ SECTORS</span>
                         <span class="key-hint">[N] STAR CHART</span>
+                    </button>
+                    <button class="btn btn-station" id="btnStation">
+                        <span>🛰️ SPACEPORT</span>
+                        <span class="key-hint">[D] DOCK / TRADE</span>
                     </button>
                     <button class="btn btn-eva" id="btnEva">
                         <span>🚀 EVA OPS</span>
@@ -1812,6 +1973,112 @@
         </div>
     </div>
 
+    <!-- Phase 11: Orbital Spaceports & Black Market Trade Stations Modal -->
+    <div class="modal-overlay" id="stationModal">
+        <div class="modal-box" style="width: 920px;">
+            <div class="modal-header">
+                <span style="display: flex; align-items: center; gap: 8px;">
+                    <span>🛰️</span>
+                    <span id="stationModalTitle">ORBITAL SPACEPORT & BLACK MARKET TRADE TERMINAL</span>
+                </span>
+                <button class="btn" id="btnCloseStation" style="padding: 2px 8px; border-color: var(--accent-red); color: var(--accent-red);">✕ CLOSE [D]</button>
+            </div>
+            <div class="modal-body">
+                <!-- Station Faction Header Banner -->
+                <div class="station-banner-box">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span id="stnBannerName" style="color: var(--accent-cyan); font-weight: bold; font-size: 14px;">Vanguard-Prime Orbital Foundry</span>
+                                <span class="badge-status" id="stnDockStatus" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7;">DOCKED [ORBIT SECURED]</span>
+                            </div>
+                            <div style="font-size: 10px; color: var(--text-dim); margin-top: 2px;" id="stnFactionInfo">Faction: Sol Mining Consortium • Heavy Industrial Trade Port</div>
+                            <div style="font-size: 10px; color: var(--text-bright); margin-top: 2px; max-width: 580px;" id="stnDescInfo">Massive rotating ring citadel. Primary export terminal for refined metals.</div>
+                        </div>
+                        <div style="text-align: right; display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
+                            <div style="font-size: 11px; color: var(--accent-amber);">BARGE CREDITS: <span id="stnPlayerCredits" style="font-weight: bold; color: #fff;">2,500</span> CR</div>
+                            <div style="font-size: 10px; color: var(--accent-emerald);">FACTION STANDING: <span id="stnFactionStanding" style="font-weight: bold;">Honored (+25 Rep)</span></div>
+                            <button class="btn" id="btnToggleDock" style="padding: 3px 10px; font-size: 9px; border-color: #38bdf8; color: #38bdf8;">⚓ UNDOCK [U]</button>
+                        </div>
+                    </div>
+                    <div class="tariff-badge-bar" id="stnTariffBanner">
+                        ⭐ STATION TARIFF SPECIALS: +30% Ferrum Ore, +40% Hyper-Ferrum Ingots, -25% Fuel Service
+                    </div>
+                </div>
+
+                <div class="station-grid">
+                    <!-- Left: Station Services & Commodity Barter -->
+                    <div class="station-left-col">
+                        <!-- Quick Services Card -->
+                        <div class="station-panel-card">
+                            <div class="station-card-header">
+                                <span>🛠️ DOCKING SERVICING BAYS</span>
+                                <span style="font-size: 9px; color: var(--text-dim);">INSTANT MAINTENANCE</span>
+                            </div>
+                            <div class="services-list">
+                                <div class="service-row">
+                                    <div>
+                                        <div style="font-weight: bold; color: var(--text-bright);">🔧 Hull Plating Overhaul</div>
+                                        <div style="font-size: 9px; color: var(--text-dim);">Restore hull plating to 100% integrity</div>
+                                    </div>
+                                    <button class="btn btn-srv" id="btnSrvHull"><span>REPAIR [1]</span><small id="srvHullCost">0 CR</small></button>
+                                </div>
+                                <div class="service-row">
+                                    <div>
+                                        <div style="font-weight: bold; color: var(--text-bright);">⚡ Deflector Shield Tune-up</div>
+                                        <div style="font-size: 9px; color: var(--text-dim);">Calibrate particle matrix to 100%</div>
+                                    </div>
+                                    <button class="btn btn-srv" id="btnSrvShield"><span>CHARGE [2]</span><small id="srvShieldCost">0 CR</small></button>
+                                </div>
+                                <div class="service-row">
+                                    <div>
+                                        <div style="font-weight: bold; color: var(--text-bright);">⛽ Sub-Space Warp Refuel</div>
+                                        <div style="font-size: 9px; color: var(--text-dim);">Top off fuel cells to 100% capacity</div>
+                                    </div>
+                                    <button class="btn btn-srv" id="btnSrvFuel"><span>REFUEL [3]</span><small id="srvFuelCost">0 CR</small></button>
+                                </div>
+                                <div class="service-row">
+                                    <div>
+                                        <div style="font-weight: bold; color: var(--text-bright);">🧪 Decontamination & O2 Flush</div>
+                                        <div style="font-size: 9px; color: var(--text-dim);">Purge rads (0 Rads) & refill O2 (100%)</div>
+                                    </div>
+                                    <button class="btn btn-srv" id="btnSrvDecon"><span>FLUSH [4]</span><small id="srvDeconCost">100 CR</small></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Black Market Barter & Supply Exchange -->
+                        <div class="station-panel-card" style="margin-top: 8px;">
+                            <div class="station-card-header">
+                                <span>⚖️ COMMODITY BARTER & BLACK MARKET</span>
+                                <button class="btn" id="btnStnSellAll" style="padding: 2px 8px; background: #78350f; border-color: #f59e0b; color: #fef08a; font-size: 9px;">💰 LIQUIDATE ALL WITH TARIFF [S]</button>
+                            </div>
+                            <div class="barter-supplies-grid">
+                                <button class="btn btn-barter" id="btnBuyWarpCell"><span>⚡ Warp Cell</span><small>800 CR</small></button>
+                                <button class="btn btn-barter" id="btnBuyNanite"><span>🛡️ Nanite Paste</span><small>600 CR</small></button>
+                                <button class="btn btn-barter" id="btnBuyO2"><span>🧪 O2 Canister</span><small>250 CR</small></button>
+                                <button class="btn btn-barter" id="btnBuyScrap"><span>⚙️ 20T Scrap</span><small>900 CR</small></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Dredging Contracts Board -->
+                    <div class="station-right-col">
+                        <div class="station-panel-card" style="height: 100%;">
+                            <div class="station-card-header">
+                                <span>📋 DREDGING CONTRACTS BOARD</span>
+                                <span id="stnContractsDoneCount" style="color: var(--accent-amber); font-size: 9px;">COMPLETED: 0</span>
+                            </div>
+                            <div class="contracts-list" id="stnContractsList">
+                                <!-- Dynamic Contract Cards -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- Web Audio Synthesis Engine ---
         class SoundEngine {
@@ -2042,6 +2309,24 @@
                 setTimeout(() => this.playBeep(554.37, 'sine', 0.08, 0.15), 60);
                 setTimeout(() => this.playBeep(659.25, 'sine', 0.08, 0.15), 120);
                 setTimeout(() => this.playBeep(880, 'sine', 0.15, 0.2), 180);
+            }
+
+            playDock() {
+                this.playBeep(440, 'triangle', 0.1, 0.15);
+                setTimeout(() => this.playBeep(659.25, 'triangle', 0.12, 0.18), 100);
+                setTimeout(() => this.playBeep(880, 'triangle', 0.2, 0.2), 200);
+            }
+
+            playContract() {
+                this.playBeep(523.25, 'sine', 0.08, 0.15);
+                setTimeout(() => this.playBeep(659.25, 'sine', 0.08, 0.15), 70);
+                setTimeout(() => this.playBeep(783.99, 'sine', 0.08, 0.15), 140);
+                setTimeout(() => this.playBeep(1046.50, 'sine', 0.18, 0.2), 210);
+            }
+
+            playBarter() {
+                this.playBeep(880, 'square', 0.05, 0.12);
+                setTimeout(() => this.playBeep(1174.66, 'square', 0.1, 0.15), 60);
             }
         }
 
@@ -2361,6 +2646,86 @@
             }
         ];
 
+        // Phase 11: Orbital Spaceports & Black Market Stations Definitions
+        const STATION_DEFS = [
+            {
+                sectorId: 'alpha',
+                name: 'Vanguard-Prime Orbital Foundry',
+                type: 'Consortium Heavy Industrial Starport',
+                faction: 'Sol Mining Consortium',
+                desc: 'Massive rotating ring citadel. Primary export terminal for refined metals and heavy alloy foundries.',
+                repKey: 'consortium',
+                tariffText: '⭐ TARIFF BONUS: +30% Ferrum Ore, +40% Hyper-Ferrum Ingots, -25% Refuel Cost',
+                tariffs: { ferrum: 1.30, hyperFerrum: 1.40, silicates: 1.15, platinum: 1.0, quartz: 1.0, darkMatter: 1.0, scrap: 1.0, superconductor: 1.0, warpCells: 1.0, darkMatrix: 1.0, nanitePaste: 1.0, o2Canister: 1.0 },
+                fuelCost: 3,
+                hullCost: 10,
+                shieldCost: 8,
+                deconCost: 80,
+                contracts: [
+                    { id: 'c_alpha_1', title: 'Foundry Ferrum Bulk Quota', reqItem: 'ferrum', reqQty: 30, reqType: 'ore', reqName: '30T Ferrum Ore', rewardCredits: 1800, rewardRep: 15, desc: 'Supply 30T raw Ferrum Ore for orbital blast furnace stamping.' },
+                    { id: 'c_alpha_2', title: 'Silicate Smelting Flux Batch', reqItem: 'silicates', reqQty: 20, reqType: 'ore', reqName: '20T Silicates', rewardCredits: 1400, rewardRep: 12, desc: 'Deliver 20T flux silicates to optimize smelting slag.' },
+                    { id: 'c_alpha_3', title: 'Titanium-Steel Superstructure Order', reqItem: 'hyperFerrum', reqQty: 2, reqType: 'refined', reqName: '2x Hyper-Ferrum Ingots', rewardCredits: 2200, rewardRep: 25, desc: 'Supply 2 Hyper-Ferrum Ingots for shipyard superstructure expansion.' }
+                ]
+            },
+            {
+                sectorId: 'kuiper',
+                name: 'Cryo-Reach Free Waystation',
+                type: 'Deep-Ice Prospector Trading Post',
+                faction: 'Rim Free Traders Guild',
+                desc: 'Deep space outpost anchored inside a hollow nickel-iron asteroid. Premier market for superconductor metals and rare geodes.',
+                repKey: 'freeTraders',
+                tariffText: '⭐ TARIFF BONUS: +35% Platinum Veins, +45% Superconductors, +20% Silicates',
+                tariffs: { platinum: 1.35, superconductor: 1.45, silicates: 1.20, ferrum: 1.0, quartz: 1.10, darkMatter: 1.0, scrap: 1.0, hyperFerrum: 1.0, warpCells: 1.0, darkMatrix: 1.0, nanitePaste: 1.0, o2Canister: 1.0 },
+                fuelCost: 4,
+                hullCost: 15,
+                shieldCost: 10,
+                deconCost: 100,
+                contracts: [
+                    { id: 'c_kuiper_1', title: 'Cryo-Platinum Strategic Reserve', reqItem: 'platinum', reqQty: 20, reqType: 'ore', reqName: '20T Platinum Vein', rewardCredits: 3200, rewardRep: 20, desc: 'Deliver 20T raw Platinum for quantum processor arrays.' },
+                    { id: 'c_kuiper_2', title: 'Zero-Resistance Superconductor Run', reqItem: 'superconductor', reqQty: 2, reqType: 'refined', reqName: '2x Superconductor Cores', rewardCredits: 4500, rewardRep: 30, desc: 'Supply 2 Platinum Superconductor Cores for sub-light drive upgrades.' },
+                    { id: 'c_kuiper_3', title: 'Sub-Zero Thermal Insulators', reqItem: 'silicates', reqQty: 25, reqType: 'ore', reqName: '25T Silicates', rewardCredits: 1700, rewardRep: 15, desc: 'Supply 25T pure Silicates for cryo-fuel storage tanks.' }
+                ]
+            },
+            {
+                sectorId: 'graveyard',
+                name: 'Shadow-Haven Pirate Freeport',
+                type: 'Black Market Outlaw Citadel',
+                faction: 'Void Corsairs Syndicate',
+                desc: 'Unregulated outlaw stronghold forged from welded dreadnought wreckage. Lucrative market for military scrap & illicit salvage.',
+                repKey: 'corsairs',
+                tariffText: '⭐ TARIFF BONUS: +50% Derelict Scrap, +40% Nanite Paste, +30% Void Quartz',
+                tariffs: { scrap: 1.50, nanitePaste: 1.40, quartz: 1.30, ferrum: 1.0, silicates: 1.0, platinum: 1.15, darkMatter: 1.20, hyperFerrum: 1.0, superconductor: 1.0, warpCells: 1.0, darkMatrix: 1.0, o2Canister: 1.0 },
+                fuelCost: 5,
+                hullCost: 20,
+                shieldCost: 12,
+                deconCost: 120,
+                contracts: [
+                    { id: 'c_grave_1', title: 'Corsair Fleet Armor Stripping', reqItem: 'scrap', reqQty: 35, reqType: 'ore', reqName: '35T Derelict Scrap', rewardCredits: 3800, rewardRep: 25, desc: 'Deliver 35T Derelict Scrap for armor-plating pirate gunships.' },
+                    { id: 'c_grave_2', title: 'Covert Nanite Weld Delivery', reqItem: 'nanitePaste', reqQty: 2, reqType: 'refined', reqName: '2x Nanite Repair Paste', rewardCredits: 3200, rewardRep: 30, desc: 'Supply 2 Nanite Bulkhead Pastes for emergency raider repairs.' },
+                    { id: 'c_grave_3', title: 'Resonance Quartz Contraband', reqItem: 'quartz', reqQty: 15, reqType: 'ore', reqName: '15T Void Quartz', rewardCredits: 4200, rewardRep: 35, desc: 'Provide 15T Void Quartz for cloaking emitter frequency tuning.' }
+                ]
+            },
+            {
+                sectorId: 'nebula',
+                name: 'Omega-7 Black Lab Citadel',
+                type: 'Classified Sub-Space Research Complex',
+                faction: 'Void Arcane Research Division',
+                desc: 'Heavy cloaked science fortress hovering in ionized storm clouds. Studies dark matter singularities & high-warp phenomena.',
+                repKey: 'arcane',
+                tariffText: '⭐ TARIFF BONUS: +60% Dark Geodes, +50% Dark Matter Matrix, +40% Warp Cells',
+                tariffs: { darkMatter: 1.60, darkMatrix: 1.50, warpCells: 1.40, quartz: 1.25, ferrum: 1.0, silicates: 1.0, platinum: 1.20, scrap: 1.10, hyperFerrum: 1.0, superconductor: 1.30, nanitePaste: 1.0, o2Canister: 1.0 },
+                fuelCost: 6,
+                hullCost: 25,
+                shieldCost: 15,
+                deconCost: 150,
+                contracts: [
+                    { id: 'c_neb_1', title: 'Singularity Dark Matter Requisition', reqItem: 'darkMatter', reqQty: 12, reqType: 'ore', reqName: '12T Dark Geode', rewardCredits: 6800, rewardRep: 40, desc: 'Extract 12T volatile Dark Geodes from ionized storm cells.' },
+                    { id: 'c_neb_2', title: 'Exotic Dark Matrix Commission', reqItem: 'darkMatrix', reqQty: 2, reqType: 'refined', reqName: '2x Dark Matter Matrix', rewardCredits: 11500, rewardRep: 50, desc: 'Smelt and deliver 2 Dark Matter Matrices for the prototype warp gateway.' },
+                    { id: 'c_neb_3', title: 'High-Warp Plasma Cache', reqItem: 'warpCells', reqQty: 2, reqType: 'refined', reqName: '2x Warp Fuel Cells', rewardCredits: 4200, rewardRep: 35, desc: 'Supply 2 Sub-Space Warp Fuel Cells for deep anomaly probes.' }
+                ]
+            }
+        ];
+
         const state = {
             credits: 2500,
             currentSectorIndex: 0,
@@ -2394,6 +2759,23 @@
             resonantTargetId: null,
             scanWaves: [],
             catalyticBoost: true,
+            station: {
+                x: 260,
+                y: -210,
+                radius: 65,
+                angle: 0,
+                rotSpeed: 0.003,
+                docked: false,
+                beaconTimer: 0
+            },
+            factionRep: {
+                consortium: 15,
+                freeTraders: 12,
+                corsairs: 8,
+                arcane: 10
+            },
+            completedContracts: {},
+            totalContractsDone: 0,
             refined: {
                 hyperFerrum: 0,
                 superconductor: 0,
@@ -2541,6 +2923,17 @@
             for (let i = 0; i < derelictCount; i++) {
                 spawnDerelict(i % DERELICT_TEMPLATES.length);
             }
+
+            // Phase 11: Spawn Sector Orbital Station
+            state.station = {
+                x: 240 + (Math.random() - 0.5) * 60,
+                y: -210 + (Math.random() - 0.5) * 60,
+                radius: 65,
+                angle: Math.random() * Math.PI * 2,
+                rotSpeed: 0.003,
+                docked: false,
+                beaconTimer: 0
+            };
         }
 
         const DERELICT_TEMPLATES = [
@@ -3851,6 +4244,344 @@
             rc.strokeRect(18, 10, w - 36, h - 18);
         }
 
+        // --- Phase 11: Orbital Spaceports & Black Market Trade Stations ---
+        function openStationModal() {
+            if (state.station) {
+                const dist = Math.hypot(state.station.x - state.ship.x, state.station.y - state.ship.y);
+                if (dist < 320) {
+                    state.station.docked = true;
+                    state.ship.vx = 0;
+                    state.ship.vy = 0;
+                }
+            }
+            renderStationModal();
+            document.getElementById('stationModal').classList.add('open');
+            audio.playDock();
+        }
+
+        function closeStationModal() {
+            document.getElementById('stationModal').classList.remove('open');
+        }
+
+        function toggleDocking() {
+            if (!state.station) return;
+            if (state.station.docked) {
+                state.station.docked = false;
+                audio.playBeep(440, 'sine', 0.1, 0.15);
+                addLog("⚓ DOCKING RELEASE: Clamps disengaged. Free orbital drift restored.", "system");
+            } else {
+                const dist = Math.hypot(state.station.x - state.ship.x, state.station.y - state.ship.y);
+                if (dist < 320) {
+                    state.station.docked = true;
+                    state.ship.vx = 0;
+                    state.ship.vy = 0;
+                    audio.playDock();
+                    addLog(`🛰️ DOCKING SECURED: Magnetic clamps locked onto ${STATION_DEFS[state.currentSectorIndex].name}!`, "success");
+                } else {
+                    addLog(`⚠️ DOCKING OUT OF RANGE (${Math.round(dist)}m). Approach within 300m of the station to dock.`, "warning");
+                }
+            }
+            renderStationModal();
+        }
+
+        function serviceRepairHull() {
+            const stDef = STATION_DEFS[state.currentSectorIndex];
+            const missingHull = state.maxHull - state.hull;
+            if (missingHull <= 0.1 && state.hullBreaches.length === 0) {
+                addLog("Hull plating is already at 100% structural integrity.", "system");
+                return;
+            }
+            const cost = Math.max(20, Math.ceil(missingHull / 10) * stDef.hullCost + state.hullBreaches.length * 35);
+            if (state.credits < cost) {
+                addLog(`⚠️ Insufficient credits for hull overhaul. Required: ${cost} CR.`, "warning");
+                return;
+            }
+            state.credits -= cost;
+            state.hull = state.maxHull;
+            state.hullBreaches = [];
+            audio.playSealWeld();
+            addLog(`🔧 SHIPYARD SERVICE: Complete hull overhaul executed. Hull restored to 100% (-${cost} CR).`, "success");
+            addFloatingText(`- ${cost} CR (HULL REPAIR)`, state.ship.x, state.ship.y - 35, '#10b981');
+            document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+            renderStationModal();
+        }
+
+        function serviceRechargeShield() {
+            const stDef = STATION_DEFS[state.currentSectorIndex];
+            const missingShield = state.maxShield - state.shield;
+            if (missingShield <= 0.1) {
+                addLog("Deflector shields are already charged to 100%.", "system");
+                return;
+            }
+            const cost = Math.max(15, Math.ceil(missingShield / 10) * stDef.shieldCost);
+            if (state.credits < cost) {
+                addLog(`⚠️ Insufficient credits for shield calibration. Required: ${cost} CR.`, "warning");
+                return;
+            }
+            state.credits -= cost;
+            state.shield = state.maxShield;
+            audio.playSynth();
+            addLog(`⚡ SHIELD CALIBRATION: Deflector frequency tuned & capacitors charged to 100% (-${cost} CR).`, "success");
+            addFloatingText(`- ${cost} CR (SHIELD FULL)`, state.ship.x, state.ship.y - 35, '#38bdf8');
+            document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+            renderStationModal();
+        }
+
+        function serviceRefuel() {
+            const stDef = STATION_DEFS[state.currentSectorIndex];
+            const missingFuel = state.maxFuel - state.fuel;
+            if (missingFuel <= 0.1) {
+                addLog("Fuel reserves are already full (100%).", "system");
+                return;
+            }
+            const cost = Math.max(10, Math.ceil(missingFuel / 10) * stDef.fuelCost);
+            if (state.credits < cost) {
+                addLog(`⚠️ Insufficient credits for refueling. Required: ${cost} CR.`, "warning");
+                return;
+            }
+            state.credits -= cost;
+            state.fuel = state.maxFuel;
+            audio.playCollect();
+            addLog(`⛽ REFUEL DEPOT: Sub-space fuel tanks topped off to 100% (-${cost} CR).`, "success");
+            addFloatingText(`- ${cost} CR (REFUELED)`, state.ship.x, state.ship.y - 35, '#f59e0b');
+            document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+            renderStationModal();
+        }
+
+        function serviceDecontaminate() {
+            const stDef = STATION_DEFS[state.currentSectorIndex];
+            if (state.radiation <= 0 && state.o2 >= 99 && state.o2Scrubber >= 99) {
+                addLog("Crew radiation is 0 Rads and life support is fully nominal.", "system");
+                return;
+            }
+            const cost = stDef.deconCost;
+            if (state.credits < cost) {
+                addLog(`⚠️ Insufficient credits for medical decon. Required: ${cost} CR.`, "warning");
+                return;
+            }
+            state.credits -= cost;
+            state.radiation = 0;
+            state.o2 = 100;
+            state.o2Scrubber = 100;
+            audio.playDeconFlush();
+            addLog(`🧪 DECON & O2 FLUSH: Quarters decontaminated (0 Rads) & medical O2 tank refreshed (-${cost} CR).`, "success");
+            addFloatingText(`- ${cost} CR (DECON & O2)`, state.ship.x, state.ship.y - 35, '#10b981');
+            document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+            renderStationModal();
+        }
+
+        function barterSellAllWithTariff() {
+            const stDef = STATION_DEFS[state.currentSectorIndex];
+            let totalCR = 0;
+            let totalUnits = 0;
+
+            // Sell raw ores
+            for (const [key, ore] of Object.entries(ORE_TYPES)) {
+                const qty = state.cargoHold[ore.key] || 0;
+                if (qty > 0) {
+                    const mult = stDef.tariffs[ore.key] || 1.0;
+                    const val = Math.round(qty * ore.value * mult);
+                    totalCR += val;
+                    totalUnits += qty;
+                    state.cargoHold[ore.key] = 0;
+                }
+            }
+
+            // Sell refined goods
+            REFINERY_RECIPES.forEach(r => {
+                const qty = state.refined[r.outputItem] || 0;
+                if (qty > 0) {
+                    const mult = stDef.tariffs[r.outputItem] || 1.0;
+                    const val = Math.round(qty * r.value * mult);
+                    totalCR += val;
+                    totalUnits += qty;
+                    state.refined[r.outputItem] = 0;
+                }
+            });
+
+            if (totalCR === 0) {
+                addLog("No cargo or refined items available to barter at this spaceport.", "warning");
+                return;
+            }
+
+            state.credits += totalCR;
+            document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+            audio.playBarter();
+            addLog(`💰 SPACEPORT BARTER: Liquidated ${totalUnits}T cargo & refined goods with station tariffs for +${totalCR.toLocaleString()} CR!`, "success");
+            addFloatingText(`+${totalCR.toLocaleString()} CR`, state.ship.x, state.ship.y - 40, '#fbbf24');
+            updateCargoUI();
+            renderStationModal();
+        }
+
+        function barterBuySupply(itemType) {
+            const prices = {
+                warpCell: { name: 'Sub-Space Warp Cell', cost: 800, action: () => { state.refined.warpCells = (state.refined.warpCells || 0) + 1; } },
+                nanite: { name: 'Nanite Repair Paste', cost: 600, action: () => { state.refined.nanitePaste = (state.refined.nanitePaste || 0) + 1; } },
+                o2: { name: 'Pressurized O2 Canister', cost: 250, action: () => { state.refined.o2Canister = (state.refined.o2Canister || 0) + 1; } },
+                scrap: { name: '20T Derelict Scrap', cost: 900, action: () => { state.cargoHold.scrap = (state.cargoHold.scrap || 0) + 20; } }
+            };
+
+            const item = prices[itemType];
+            if (!item) return;
+
+            if (state.credits < item.cost) {
+                addLog(`⚠️ Insufficient credits to purchase [${item.name}]. Required: ${item.cost} CR.`, "warning");
+                return;
+            }
+
+            state.credits -= item.cost;
+            item.action();
+            document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+            audio.playCollect();
+            addLog(`🛒 BLACK MARKET PURCHASE: Acquired [${item.name}] for ${item.cost} CR.`, "success");
+            addFloatingText(`+1 ${item.name}`, state.ship.x, state.ship.y - 35, '#38bdf8');
+            updateCargoUI();
+            renderStationModal();
+        }
+
+        function claimContract(contractId) {
+            const stDef = STATION_DEFS[state.currentSectorIndex];
+            const contract = stDef.contracts.find(c => c.id === contractId);
+            if (!contract) return;
+
+            if (state.completedContracts[contractId]) {
+                addLog(`Contract [${contract.title}] has already been fulfilled.`, "system");
+                return;
+            }
+
+            // Check if player has required items
+            let currentAmt = 0;
+            if (contract.reqType === 'ore') {
+                currentAmt = state.cargoHold[contract.reqItem] || 0;
+            } else if (contract.reqType === 'refined') {
+                currentAmt = state.refined[contract.reqItem] || 0;
+            }
+
+            if (currentAmt < contract.reqQty) {
+                addLog(`⚠️ Incomplete contract manifest for [${contract.title}]. Progress: ${currentAmt} / ${contract.reqQty} needed.`, "warning");
+                return;
+            }
+
+            // Deduct required items
+            if (contract.reqType === 'ore') {
+                state.cargoHold[contract.reqItem] -= contract.reqQty;
+            } else if (contract.reqType === 'refined') {
+                state.refined[contract.reqItem] -= contract.reqQty;
+            }
+
+            // Award reward
+            state.credits += contract.rewardCredits;
+            state.factionRep[stDef.repKey] = (state.factionRep[stDef.repKey] || 0) + contract.rewardRep;
+            state.completedContracts[contractId] = true;
+            state.totalContractsDone = (state.totalContractsDone || 0) + 1;
+
+            document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+            audio.playContract();
+            addLog(`📜 CONTRACT FULFILLED: [${contract.title}] delivered! Awarded +${contract.rewardCredits.toLocaleString()} CR & +${contract.rewardRep} ${stDef.faction} Rep!`, "success");
+            addFloatingText(`+${contract.rewardCredits.toLocaleString()} CR (CONTRACT)`, state.ship.x, state.ship.y - 45, '#10b981');
+
+            updateCargoUI();
+            renderStationModal();
+        }
+
+        function renderStationModal() {
+            const stDef = STATION_DEFS[state.currentSectorIndex];
+            const st = state.station || { docked: false };
+
+            // Update Banner
+            document.getElementById('stnBannerName').textContent = stDef.name;
+            document.getElementById('stnFactionInfo').textContent = `Faction: ${stDef.faction} • ${stDef.type}`;
+            document.getElementById('stnDescInfo').textContent = stDef.desc;
+            document.getElementById('stnTariffBanner').textContent = stDef.tariffText;
+            document.getElementById('stnPlayerCredits').textContent = state.credits.toLocaleString();
+            
+            const rep = state.factionRep[stDef.repKey] || 0;
+            document.getElementById('stnFactionStanding').textContent = `${stDef.faction}: ${rep} Rep`;
+
+            const dockStatus = document.getElementById('stnDockStatus');
+            const btnDock = document.getElementById('btnToggleDock');
+            if (st.docked) {
+                dockStatus.textContent = 'DOCKED [ORBIT SECURED]';
+                dockStatus.style.background = 'rgba(16, 185, 129, 0.2)';
+                dockStatus.style.borderColor = '#10b981';
+                dockStatus.style.color = '#6ee7b7';
+                btnDock.textContent = '⚓ UNDOCK [U]';
+                btnDock.style.borderColor = '#ef4444';
+                btnDock.style.color = '#fca5a5';
+            } else {
+                dockStatus.textContent = 'REMOTE COMM LINK [UNDOCKED]';
+                dockStatus.style.background = 'rgba(56, 189, 248, 0.15)';
+                dockStatus.style.borderColor = '#38bdf8';
+                dockStatus.style.color = '#7dd3fc';
+                btnDock.textContent = '⚓ DOCK [U]';
+                btnDock.style.borderColor = '#10b981';
+                btnDock.style.color = '#6ee7b7';
+            }
+
+            // Update Services Costs
+            const missingHull = state.maxHull - state.hull;
+            const hullCost = (missingHull <= 0.1 && state.hullBreaches.length === 0) ? 0 : Math.max(20, Math.ceil(missingHull / 10) * stDef.hullCost + state.hullBreaches.length * 35);
+            document.getElementById('srvHullCost').textContent = hullCost > 0 ? `${hullCost} CR` : 'READY (100%)';
+
+            const missingShield = state.maxShield - state.shield;
+            const shieldCost = (missingShield <= 0.1) ? 0 : Math.max(15, Math.ceil(missingShield / 10) * stDef.shieldCost);
+            document.getElementById('srvShieldCost').textContent = shieldCost > 0 ? `${shieldCost} CR` : 'READY (100%)';
+
+            const missingFuel = state.maxFuel - state.fuel;
+            const fuelCost = (missingFuel <= 0.1) ? 0 : Math.max(10, Math.ceil(missingFuel / 10) * stDef.fuelCost);
+            document.getElementById('srvFuelCost').textContent = fuelCost > 0 ? `${fuelCost} CR` : 'READY (100%)';
+
+            const deconCost = (state.radiation <= 0 && state.o2 >= 99 && state.o2Scrubber >= 99) ? 0 : stDef.deconCost;
+            document.getElementById('srvDeconCost').textContent = deconCost > 0 ? `${deconCost} CR` : 'NOMINAL';
+
+            // Update Contracts Count & List
+            document.getElementById('stnContractsDoneCount').textContent = `TOTAL COMPLETED: ${state.totalContractsDone || 0}`;
+
+            const contractsList = document.getElementById('stnContractsList');
+            if (contractsList) {
+                contractsList.innerHTML = '';
+                stDef.contracts.forEach((c, idx) => {
+                    const isDone = !!state.completedContracts[c.id];
+                    let currentAmt = 0;
+                    if (c.reqType === 'ore') {
+                        currentAmt = state.cargoHold[c.reqItem] || 0;
+                    } else if (c.reqType === 'refined') {
+                        currentAmt = state.refined[c.reqItem] || 0;
+                    }
+
+                    const pct = Math.min(100, Math.round((currentAmt / c.reqQty) * 100));
+                    const isReady = currentAmt >= c.reqQty && !isDone;
+
+                    const card = document.createElement('div');
+                    card.className = `contract-card ${isDone ? 'completed' : ''}`;
+                    card.innerHTML = `
+                        <div class="contract-card-header">
+                            <div>
+                                <span style="font-weight: bold; color: ${isDone ? '#6ee7b7' : 'var(--text-bright)'}; font-size: 11px;">[${idx + 5}] ${c.title}</span>
+                                <div style="font-size: 9px; color: var(--text-dim);">${c.desc}</div>
+                            </div>
+                            <span class="badge-status" style="background: ${isDone ? 'rgba(16,185,129,0.2)' : (isReady ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.06)')}; color: ${isDone ? '#6ee7b7' : (isReady ? '#fef08a' : 'var(--text-bright)')};">
+                                ${isDone ? '✓ FULFILLED' : (isReady ? '⭐ READY TO DELIVER' : `${currentAmt}/${c.reqQty}`)}
+                            </span>
+                        </div>
+                        <div class="contract-progress-bar">
+                            <div class="contract-progress-fill ${isReady || isDone ? 'ready' : ''}" style="width: ${isDone ? 100 : pct}%;"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10px; margin-top: 2px;">
+                            <span>REQ: <strong style="color: var(--accent-cyan);">${c.reqName}</strong></span>
+                            <span>REWARD: <strong style="color: var(--accent-amber);">${c.rewardCredits.toLocaleString()} CR</strong> +${c.rewardRep} Rep</span>
+                            ${!isDone ? `
+                                <button class="btn" onclick="claimContract('${c.id}')" style="padding: 2px 8px; font-size: 9px; background: ${isReady ? '#065f46' : '#1e293b'}; border-color: ${isReady ? '#10b981' : '#475569'}; color: #fff;" ${!isReady ? 'disabled' : ''}>
+                                    <span>${isReady ? `DELIVER [${idx + 5}]` : 'INCOMPLETE'}</span>
+                                </button>
+                            ` : `<span style="color: #6ee7b7; font-size: 9px; font-weight: bold;">CLAIMED</span>`}
+                        </div>
+                    `;
+                    contractsList.appendChild(card);
+                });
+            }
+        }
+
         // --- Multi-Spectral Prospector & Spectrometer Modal ---
         function openProspectModal() {
             if (!state.selectedTarget) {
@@ -4214,6 +4945,23 @@
                 if (refineryModal.classList.contains('open')) closeRefineryModal();
                 else openRefineryModal();
             }
+            if (e.code === 'KeyD') {
+                const stationModal = document.getElementById('stationModal');
+                if (stationModal.classList.contains('open')) closeStationModal();
+                else openStationModal();
+            }
+            if (document.getElementById('stationModal').classList.contains('open')) {
+                if (e.code === 'Digit1') serviceRepairHull();
+                if (e.code === 'Digit2') serviceRechargeShield();
+                if (e.code === 'Digit3') serviceRefuel();
+                if (e.code === 'Digit4') serviceDecontaminate();
+                if (e.code === 'Digit5') { const stDef = STATION_DEFS[state.currentSectorIndex]; if (stDef.contracts[0]) claimContract(stDef.contracts[0].id); }
+                if (e.code === 'Digit6') { const stDef = STATION_DEFS[state.currentSectorIndex]; if (stDef.contracts[1]) claimContract(stDef.contracts[1].id); }
+                if (e.code === 'Digit7') { const stDef = STATION_DEFS[state.currentSectorIndex]; if (stDef.contracts[2]) claimContract(stDef.contracts[2].id); }
+                if (e.code === 'KeyS') barterSellAllWithTariff();
+                if (e.code === 'KeyU') toggleDocking();
+                if (e.code === 'Escape') closeStationModal();
+            }
             if (document.getElementById('refineryModal').classList.contains('open')) {
                 if (e.code === 'Digit1') smeltRecipe(REFINERY_RECIPES[0].id, 1);
                 if (e.code === 'Digit2') smeltRecipe(REFINERY_RECIPES[1].id, 1);
@@ -4425,6 +5173,57 @@
             deployRepairDrones();
         });
 
+        document.getElementById('btnStation').addEventListener('click', () => {
+            audio.init();
+            const modal = document.getElementById('stationModal');
+            if (modal.classList.contains('open')) closeStationModal();
+            else openStationModal();
+        });
+
+        document.getElementById('btnCloseStation').addEventListener('click', () => {
+            closeStationModal();
+        });
+
+        document.getElementById('btnToggleDock').addEventListener('click', () => {
+            toggleDocking();
+        });
+
+        document.getElementById('btnSrvHull').addEventListener('click', () => {
+            serviceRepairHull();
+        });
+
+        document.getElementById('btnSrvShield').addEventListener('click', () => {
+            serviceRechargeShield();
+        });
+
+        document.getElementById('btnSrvFuel').addEventListener('click', () => {
+            serviceRefuel();
+        });
+
+        document.getElementById('btnSrvDecon').addEventListener('click', () => {
+            serviceDecontaminate();
+        });
+
+        document.getElementById('btnStnSellAll').addEventListener('click', () => {
+            barterSellAllWithTariff();
+        });
+
+        document.getElementById('btnBuyWarpCell').addEventListener('click', () => {
+            barterBuySupply('warpCell');
+        });
+
+        document.getElementById('btnBuyNanite').addEventListener('click', () => {
+            barterBuySupply('nanite');
+        });
+
+        document.getElementById('btnBuyO2').addEventListener('click', () => {
+            barterBuySupply('o2');
+        });
+
+        document.getElementById('btnBuyScrap').addEventListener('click', () => {
+            barterBuySupply('scrap');
+        });
+
         document.getElementById('btnRefinery').addEventListener('click', () => {
             audio.init();
             const modal = document.getElementById('refineryModal');
@@ -4483,8 +5282,10 @@
             addLog("• P: Multi-Spectral Spectrometer & Mineral Prospector", "system");
             addLog("• U: Open Modular Engineering Bay & Install Upgrades", "system");
             addLog("• N: Open Star Sector Chart & Engage Warp Jumps", "system");
+            addLog("• D: Orbital Spaceports & Black Market Stations (Dock, Barter & Contracts)", "system");
             addLog("• E: EVA Salvage & Airlock Breach on Derelict Spaceships", "system");
             addLog("• K: Emergency Damage Control & Life Support Crisis Station", "system");
+            addLog("• R: Orbital Refinery & Metallurgical Smelting Lab", "system");
             addLog("• V: Cycle Retro CRT Vector Theme (Cyan / Amber / Green / Solar)", "system");
             addLog("• C: Toggle CRT Scanlines & Phosphor Shaders (Normal / CRT+ / Off)", "system");
             addLog("• CLICK: Target asteroid or derelict spaceship with telemetry", "system");
@@ -4961,6 +5762,20 @@
                 btnCrisisElem.classList.toggle('alarm-pulse', hasHazard);
             }
 
+            // Phase 11: Orbital Station Simulation & Docking Physics
+            if (state.station) {
+                state.station.angle += state.station.rotSpeed;
+                state.station.beaconTimer = (state.station.beaconTimer + dt) % 2.0;
+
+                if (state.station.docked) {
+                    state.ship.vx *= 0.85;
+                    state.ship.vy *= 0.85;
+                    if (state.shield < state.maxShield) {
+                        state.shield = Math.min(state.maxShield, state.shield + 0.1 * dt);
+                    }
+                }
+            }
+
             // Shield regeneration
             if (state.shield < state.maxShield) {
                 state.shield = Math.min(state.maxShield, state.shield + shieldDef.regen);
@@ -5374,6 +6189,96 @@
                 }
             }
 
+            // Phase 11: Render Sector Orbital Station & Spaceport
+            if (state.station) {
+                const st = state.station;
+                const stDef = STATION_DEFS[state.currentSectorIndex];
+                ctx.save();
+                ctx.translate(st.x, st.y);
+                ctx.rotate(st.angle);
+
+                // Outer Rotating Ring
+                ctx.strokeStyle = st.docked ? '#10b981' : '#38bdf8';
+                ctx.fillStyle = 'rgba(11, 19, 41, 0.7)';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.arc(0, 0, st.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // Inner Ring
+                ctx.beginPath();
+                ctx.arc(0, 0, st.radius - 14, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Solar Arrays (4 arms extending outward)
+                ctx.fillStyle = '#0284c7';
+                ctx.strokeStyle = '#00f0ff';
+                ctx.lineWidth = 1.2;
+                for (let a = 0; a < 4; a++) {
+                    const armAng = (a * Math.PI) / 2;
+                    ctx.save();
+                    ctx.rotate(armAng);
+                    ctx.fillRect(st.radius + 2, -7, 28, 14);
+                    ctx.strokeRect(st.radius + 2, -7, 28, 14);
+                    ctx.restore();
+                }
+
+                // Docking Clamps & Spokes (6 spokes)
+                ctx.strokeStyle = '#64748b';
+                ctx.lineWidth = 1.5;
+                for (let s = 0; s < 6; s++) {
+                    const spkAng = (s * Math.PI) / 3;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(Math.cos(spkAng) * (st.radius - 2), Math.sin(spkAng) * (st.radius - 2));
+                    ctx.stroke();
+                }
+
+                // Central Command Citadel Hub
+                ctx.fillStyle = st.docked ? '#064e3b' : '#0f172a';
+                ctx.strokeStyle = st.docked ? '#34d399' : '#f59e0b';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(0, 0, 18, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // Docking Beacon Lights (flashing)
+                const bFlash = Math.sin(Date.now() * 0.006) > 0;
+                ctx.fillStyle = bFlash ? (st.docked ? '#10b981' : '#f59e0b') : '#ef4444';
+                for (let b = 0; b < 4; b++) {
+                    const bAng = (b * Math.PI) / 2 + Math.PI / 4;
+                    ctx.beginPath();
+                    ctx.arc(Math.cos(bAng) * (st.radius - 7), Math.sin(bAng) * (st.radius - 7), 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.restore();
+
+                // Station Label & Faction Tag
+                ctx.fillStyle = '#f0f9ff';
+                ctx.font = 'bold 11px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText(`🛰️ ${stDef.name}`, st.x, st.y - st.radius - 12);
+                ctx.font = '9px monospace';
+                ctx.fillStyle = '#38bdf8';
+                ctx.fillText(`[${stDef.faction}] • ${stDef.type}`, st.x, st.y - st.radius - 1);
+
+                // Docking Tether Guide Lines when nearby (< 320)
+                const distToShip = Math.hypot(st.x - state.ship.x, st.y - state.ship.y);
+                if (distToShip < 320) {
+                    ctx.strokeStyle = st.docked ? 'rgba(16, 185, 129, 0.6)' : 'rgba(56, 189, 248, 0.35)';
+                    ctx.setLineDash([4, 4]);
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(state.ship.x, state.ship.y);
+                    ctx.lineTo(st.x, st.y);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            }
+
             // Render Floating Ore Chunks
             for (const chunk of state.oreChunks) {
                 ctx.save();
@@ -5415,6 +6320,32 @@
             ctx.globalAlpha = 1.0;
 
             ctx.restore();
+
+            // Docking Proximity Alert & Prompt HUD
+            if (state.station) {
+                const distToSt = Math.hypot(state.station.x - state.ship.x, state.station.y - state.ship.y);
+                if (distToSt < 280) {
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(15, 28, 63, 0.9)';
+                    ctx.strokeStyle = state.station.docked ? '#10b981' : '#38bdf8';
+                    ctx.lineWidth = 1.5;
+                    const pW = 380, pH = 26;
+                    const pX = cx - pW / 2, pY = canvas.height - 42;
+                    ctx.fillRect(pX, pY, pW, pH);
+                    ctx.strokeRect(pX, pY, pW, pH);
+
+                    ctx.fillStyle = '#fef08a';
+                    ctx.font = 'bold 10px monospace';
+                    ctx.textAlign = 'center';
+                    const stDef = STATION_DEFS[state.currentSectorIndex];
+                    if (state.station.docked) {
+                        ctx.fillText(`🛰️ DOCKED AT ${stDef.name.toUpperCase()} • PRESS [D] FOR SPACEPORT`, cx, pY + 17);
+                    } else {
+                        ctx.fillText(`🛰️ IN DOCKING RANGE (${Math.round(distToSt)}m) • PRESS [D] TO DOCK & TRADE`, cx, pY + 17);
+                    }
+                    ctx.restore();
+                }
+            }
 
             // Render Dredge Ship (Cockpit Center)
             ctx.save();
@@ -5521,6 +6452,20 @@
                     radarCtx.strokeStyle = '#fecdd3';
                     radarCtx.lineWidth = 1;
                     radarCtx.strokeRect(rcx + dx - 3, rcy + dy - 3, 7, 7);
+                }
+            }
+
+            // Phase 11: Sector Orbital Station Blip on Radar
+            if (state.station) {
+                const sx = (state.station.x - state.ship.x) * radarScale;
+                const sy = (state.station.y - state.ship.y) * radarScale;
+                const sDist = Math.hypot(sx, sy);
+                if (sDist < rRadius - 4) {
+                    radarCtx.fillStyle = state.station.docked ? '#10b981' : '#38bdf8';
+                    radarCtx.fillRect(rcx + sx - 3, rcy + sy - 3, 6, 6);
+                    radarCtx.strokeStyle = '#f59e0b';
+                    radarCtx.lineWidth = 1;
+                    radarCtx.strokeRect(rcx + sx - 4, rcy + sy - 4, 8, 8);
                 }
             }
 

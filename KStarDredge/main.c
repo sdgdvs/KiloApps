@@ -25,6 +25,7 @@
 #define ID_BTN_EVA         113
 #define ID_BTN_CRISIS      114
 #define ID_BTN_REFINERY    115
+#define ID_BTN_STATION     116
 
 #define SFX_NONE         0
 #define SFX_COLLECT      1
@@ -45,6 +46,9 @@
 #define SFX_DECON_FLUSH  16
 #define SFX_SMELT        17
 #define SFX_SYNTH        18
+#define SFX_DOCK         19
+#define SFX_CONTRACT     20
+#define SFX_BARTER       21
 
 // Phase 10: Orbital Refinery Recipes
 typedef struct {
@@ -67,6 +71,102 @@ static const RefineryRecipeDef REFINERY_RECIPES[6] = {
     { "darkMatrix", "Dark Matter Matrix Ingot", "Compress volatile Dark Matter Geodes in a magnetic platinum matrix.", { 0, 0, 6, 0, 4, 0 }, "4 Dark Geodes + 6 Platinum", "Dark Matter Matrix", 2800, RGB(244, 63, 94), 0, "" },
     { "nanitePaste", "Nanite Bulkhead Hull Paste", "Refine derelict scrap alloy and iron into self-replicating nanite weld paste (+40% Hull).", { 6, 0, 0, 0, 0, 8 }, "8 Scrap + 6 Ferrum", "Nanite Repair Paste", 650, RGB(16, 185, 129), 1, "APPLY (+40% HULL)" },
     { "o2Canister", "Pressurized O2 Canister", "Thermal decompose raw silicates to extract medical-grade pressurized oxygen (+45% O2).", { 0, 8, 0, 0, 0, 0 }, "8 Silicates", "O2 Canister", 300, RGB(96, 165, 250), 1, "DISPENSE (+45% O2)" }
+};
+
+// Phase 11: Orbital Spaceports & Black Market Trade Stations
+typedef struct {
+    const char* id;
+    const char* title;
+    const char* desc;
+    int reqItemIdx;
+    int reqQty;
+    int reqRefined; // 0=ore, 1=refined
+    const char* reqLabel;
+    int rewardCredits;
+    int rewardRep;
+} ContractDef;
+
+typedef struct {
+    const char* sectorId;
+    const char* name;
+    const char* type;
+    const char* faction;
+    const char* desc;
+    int repIndex;
+    const char* tariffText;
+    float multipliers[12];
+    int fuelCostPerPct;
+    int repairCostPerPct;
+    int shieldCost;
+    int deconCost;
+    ContractDef contracts[3];
+} StationDef;
+
+static const StationDef STATION_DEFS[4] = {
+    {
+        "alpha",
+        "Vanguard-Prime Orbital Foundry",
+        "Consortium Heavy Industrial Starport",
+        "Sol Mining Consortium",
+        "Massive rotating ring citadel. Primary export terminal for refined metals and heavy alloy foundries.",
+        0,
+        "TARIFF: +30% Ferrum, +40% Hyper-Ferrum, -25% Fuel Cost",
+        { 1.30f, 1.15f, 1.0f, 1.0f, 1.0f, 1.0f, 1.40f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f },
+        3, 10, 8, 80,
+        {
+            { "c_alpha_1", "Foundry Ferrum Bulk Quota", "Supply 30T raw Ferrum Ore for orbital blast furnaces.", 0, 30, 0, "30T Ferrum Ore", 1800, 15 },
+            { "c_alpha_2", "Silicate Smelting Flux Batch", "Deliver 20T flux silicates to optimize smelting slag.", 1, 20, 0, "20T Silicates", 1400, 12 },
+            { "c_alpha_3", "Titanium-Steel Superstructure Order", "Supply 2 Hyper-Ferrum Ingots for shipyard expansion.", 0, 2, 1, "2x Hyper-Ferrum Ingots", 2200, 25 }
+        }
+    },
+    {
+        "kuiper",
+        "Cryo-Reach Free Waystation",
+        "Deep-Ice Prospector Trading Post",
+        "Rim Free Traders Guild",
+        "Deep space outpost anchored inside a hollow nickel-iron asteroid. Premier market for superconductor metals.",
+        1,
+        "TARIFF: +35% Platinum Veins, +45% Superconductors, +20% Silicates",
+        { 1.0f, 1.20f, 1.35f, 1.10f, 1.0f, 1.0f, 1.0f, 1.45f, 1.0f, 1.0f, 1.0f, 1.0f },
+        4, 15, 10, 100,
+        {
+            { "c_kuiper_1", "Cryo-Platinum Strategic Reserve", "Deliver 20T raw Platinum for quantum processor arrays.", 2, 20, 0, "20T Platinum Vein", 3200, 20 },
+            { "c_kuiper_2", "Zero-Resistance Superconductor Run", "Supply 2 Platinum Superconductor Cores for drive arrays.", 1, 2, 1, "2x Superconductor Cores", 4500, 30 },
+            { "c_kuiper_3", "Sub-Zero Thermal Insulators", "Supply 25T pure Silicates for cryo-fuel storage tanks.", 1, 25, 0, "25T Silicates", 1700, 15 }
+        }
+    },
+    {
+        "graveyard",
+        "Shadow-Haven Pirate Freeport",
+        "Black Market Outlaw Citadel",
+        "Void Corsairs Syndicate",
+        "Unregulated outlaw stronghold forged from welded dreadnought wreckage. Lucrative market for military scrap.",
+        2,
+        "TARIFF: +50% Derelict Scrap, +40% Nanite Paste, +30% Void Quartz",
+        { 1.0f, 1.0f, 1.15f, 1.30f, 1.20f, 1.50f, 1.0f, 1.0f, 1.0f, 1.0f, 1.40f, 1.0f },
+        5, 20, 12, 120,
+        {
+            { "c_grave_1", "Corsair Fleet Armor Stripping", "Deliver 35T Derelict Scrap for pirate gunship plating.", 5, 35, 0, "35T Derelict Scrap", 3800, 25 },
+            { "c_grave_2", "Covert Nanite Weld Delivery", "Supply 2 Nanite Bulkhead Pastes for emergency raider repairs.", 4, 2, 1, "2x Nanite Repair Paste", 3200, 30 },
+            { "c_grave_3", "Resonance Quartz Contraband", "Provide 15T Void Quartz for cloaking emitter frequency tuning.", 3, 15, 0, "15T Void Quartz", 4200, 35 }
+        }
+    },
+    {
+        "nebula",
+        "Omega-7 Black Lab Citadel",
+        "Classified Sub-Space Research Complex",
+        "Void Arcane Research Division",
+        "Heavy cloaked science fortress hovering in ionized storm clouds. Studies dark matter singularities.",
+        3,
+        "TARIFF: +60% Dark Geodes, +50% Dark Matter Matrix, +40% Warp Cells",
+        { 1.0f, 1.0f, 1.20f, 1.25f, 1.60f, 1.10f, 1.0f, 1.30f, 1.40f, 1.50f, 1.0f, 1.0f },
+        6, 25, 15, 150,
+        {
+            { "c_neb_1", "Singularity Dark Matter Requisition", "Extract 12T volatile Dark Geodes from ionized storm cells.", 4, 12, 0, "12T Dark Geode", 6800, 40 },
+            { "c_neb_2", "Exotic Dark Matrix Commission", "Smelt and deliver 2 Dark Matter Matrices for the prototype gateway.", 3, 2, 1, "2x Dark Matter Matrix", 11500, 50 },
+            { "c_neb_3", "High-Warp Plasma Cache", "Supply 2 Sub-Space Warp Fuel Cells for deep anomaly probes.", 2, 2, 1, "2x Warp Fuel Cells", 4200, 35 }
+        }
+    }
 };
 
 #define MAX_COMPARTMENTS 5
@@ -521,9 +621,22 @@ typedef struct {
     int showEva;
     int showCrisis;
     int showRefinery;
+    int showStation;
     int catalyticBoost;
     int refined[6]; // hyperFerrum, superconductor, warpCells, darkMatrix, nanitePaste, o2Canister
     float crucibleAnimTime;
+    
+    // Orbital Station & Spaceport State
+    float stationX, stationY;
+    float stationRadius;
+    float stationAngle;
+    float stationRotSpeed;
+    int stationDocked;
+    float stationBeaconTimer;
+    int factionRep[4]; // 0=consortium, 1=freeTraders, 2=corsairs, 3=arcane
+    int contractDone[4][3];
+    int totalContractsDone;
+
     int warpActive;
     float warpTimer;
     char sector[32];
@@ -585,7 +698,7 @@ typedef struct {
 
 static GameState g_state;
 static HWND g_hwnd = NULL;
-static HWND g_btnLaser, g_btnTractor, g_btnDampener, g_btnScan, g_btnNav, g_btnEva, g_btnCrisis, g_btnRefinery, g_btnUpgrades, g_btnTheme, g_btnScanlines, g_btnAudio, g_btnHelp, g_btnJettison, g_btnSell;
+static HWND g_btnLaser, g_btnTractor, g_btnDampener, g_btnScan, g_btnNav, g_btnStation, g_btnEva, g_btnCrisis, g_btnRefinery, g_btnUpgrades, g_btnTheme, g_btnScanlines, g_btnAudio, g_btnHelp, g_btnJettison, g_btnSell;
 static HFONT g_fontMono = NULL;
 static HFONT g_fontMonoBold = NULL;
 static HFONT g_fontSmall = NULL;
@@ -665,6 +778,18 @@ DWORD WINAPI SoundThreadProc(LPVOID lpParam) {
                 Beep(554, 40);
                 Beep(659, 40);
                 Beep(880, 80);
+            } else if (sfx == SFX_DOCK) {
+                Beep(440, 70);
+                Beep(660, 80);
+                Beep(880, 140);
+            } else if (sfx == SFX_CONTRACT) {
+                Beep(523, 60);
+                Beep(659, 60);
+                Beep(784, 60);
+                Beep(1046, 120);
+            } else if (sfx == SFX_BARTER) {
+                Beep(880, 50);
+                Beep(1174, 80);
             }
         }
         Sleep(20);
@@ -1329,12 +1454,258 @@ void ToggleCatalyticBoost(void) {
     AddLog(logB, 0);
 }
 
+void ToggleDocking(void) {
+    if (g_state.currentSectorIndex < 0 || g_state.currentSectorIndex >= 4) return;
+    const StationDef* st = &STATION_DEFS[g_state.currentSectorIndex];
+    float dist = (float)sqrt((g_state.shipX - g_state.stationX) * (g_state.shipX - g_state.stationX) +
+                             (g_state.shipY - g_state.stationY) * (g_state.shipY - g_state.stationY));
+    
+    if (g_state.stationDocked) {
+        g_state.stationDocked = 0;
+        // Eject slightly away
+        float ang = (float)atan2(g_state.shipY - g_state.stationY, g_state.shipX - g_state.stationX);
+        g_state.shipVx = (float)cos(ang) * 1.5f;
+        g_state.shipVy = (float)sin(ang) * 1.5f;
+        TriggerSound(SFX_BEEP);
+        char logB[128];
+        sprintf(logB, "UNDOCKED from %s. Magnetic clamp disengaged.", st->name);
+        AddLog(logB, 0);
+        AddFloatingText("UNDOCKED", g_state.shipX, g_state.shipY - 35.0f, RGB(251, 191, 36));
+    } else {
+        if (dist > 300.0f) {
+            AddLog("Cannot dock: Vessel is out of spaceport magnetic tractor mooring range (>300m).", 3);
+            return;
+        }
+        g_state.stationDocked = 1;
+        g_state.shipVx = 0.0f;
+        g_state.shipVy = 0.0f;
+        TriggerSound(SFX_DOCK);
+        char logB[128];
+        sprintf(logB, "DOCKED with %s. Mooring clamps locked.", st->name);
+        AddLog(logB, 5);
+        AddFloatingText("DOCKED WITH STATION", g_state.shipX, g_state.shipY - 35.0f, RGB(56, 189, 248));
+    }
+}
+
+void ServiceRepairHull(void) {
+    const StationDef* st = &STATION_DEFS[g_state.currentSectorIndex];
+    float missing = g_state.maxHull - g_state.hull;
+    if (missing <= 0.0f) {
+        AddLog("Station Drydock: Vessel armor plating and structural integrity are at 100%.", 3);
+        return;
+    }
+    int totalCost = (int)ceil(missing * (float)st->repairCostPerPct);
+    if (g_state.credits < totalCost) {
+        AddLog("Station Drydock: Insufficient credits for full shipyard drydock armor restoration.", 4);
+        return;
+    }
+    g_state.credits -= totalCost;
+    g_state.hull = g_state.maxHull;
+    for (int i = 0; i < MAX_COMPARTMENTS; i++) g_state.hullBreaches[i] = 0;
+    g_state.breachCount = 0;
+    TriggerSound(SFX_SEAL_WELD);
+    char logB[128];
+    sprintf(logB, "DRYDOCK: Shipyard repaired hull armor & sealed all breaches for %d CR.", totalCost);
+    AddLog(logB, 5);
+    char fTxt[32];
+    sprintf(fTxt, "HULL RESTORED (-%d CR)", totalCost);
+    AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 35.0f, RGB(16, 185, 129));
+}
+
+void ServiceRechargeShield(void) {
+    const StationDef* st = &STATION_DEFS[g_state.currentSectorIndex];
+    if (g_state.shield >= g_state.maxShield) {
+        AddLog("Station Power Grid: Deflector grid capacitor banks are fully charged.", 3);
+        return;
+    }
+    if (g_state.credits < st->shieldCost) {
+        AddLog("Station Power Grid: Insufficient credits for deflector grid supercharge.", 4);
+        return;
+    }
+    g_state.credits -= st->shieldCost;
+    g_state.shield = g_state.maxShield;
+    TriggerSound(SFX_SYNTH);
+    char logB[128];
+    sprintf(logB, "GRID: Station capacitor conduit supercharged deflector shields for %d CR.", st->shieldCost);
+    AddLog(logB, 5);
+    char fTxt[32];
+    sprintf(fTxt, "SHIELDS FULL (-%d CR)", st->shieldCost);
+    AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 35.0f, RGB(56, 189, 248));
+}
+
+void ServiceRefuel(void) {
+    const StationDef* st = &STATION_DEFS[g_state.currentSectorIndex];
+    float missing = g_state.maxFuel - g_state.fuel;
+    if (missing <= 0.0f) {
+        AddLog("Station Bunkers: Hydrazine fuel reaction propellant tanks are 100% full.", 3);
+        return;
+    }
+    int totalCost = (int)ceil(missing * (float)st->fuelCostPerPct);
+    if (g_state.credits < totalCost) {
+        AddLog("Station Bunkers: Insufficient credits to replenish propellant tanks.", 4);
+        return;
+    }
+    g_state.credits -= totalCost;
+    g_state.fuel = g_state.maxFuel;
+    TriggerSound(SFX_DECON_FLUSH);
+    char logB[128];
+    sprintf(logB, "BUNKERS: Piped %.0fL high-grade hydrazine propellant into main tanks for %d CR.", missing, totalCost);
+    AddLog(logB, 5);
+    char fTxt[32];
+    sprintf(fTxt, "TANKS TOPPED (-%d CR)", totalCost);
+    AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 35.0f, RGB(251, 191, 36));
+}
+
+void ServiceDecon(void) {
+    const StationDef* st = &STATION_DEFS[g_state.currentSectorIndex];
+    if (g_state.radiation <= 0.0f && g_state.o2 >= 100.0f && g_state.o2Scrubber >= 100.0f) {
+        AddLog("Station Bio-Bay: Bio-hazard scrubbers indicate 0 rads and 100% atmospheric purity.", 3);
+        return;
+    }
+    if (g_state.credits < st->deconCost) {
+        AddLog("Station Bio-Bay: Insufficient credits for radiological decontamination.", 4);
+        return;
+    }
+    g_state.credits -= st->deconCost;
+    g_state.radiation = 0.0f;
+    g_state.o2 = 100.0f;
+    g_state.o2Scrubber = 100.0f;
+    g_state.plasmaLeaks = 0;
+    TriggerSound(SFX_DECON_FLUSH);
+    char logB[128];
+    sprintf(logB, "BIO-BAY: Pressurized decontamination cycle flushed all radiation and restored atmosphere for %d CR.", st->deconCost);
+    AddLog(logB, 5);
+    char fTxt[32];
+    sprintf(fTxt, "DECON COMPLETE (-%d CR)", st->deconCost);
+    AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 35.0f, RGB(16, 185, 129));
+}
+
+void BarterSellAllWithTariff(void) {
+    const StationDef* st = &STATION_DEFS[g_state.currentSectorIndex];
+    int totalCR = 0;
+    int itemsCount = 0;
+    for (int i = 0; i < 6; i++) {
+        int count = g_state.cargoHold[i];
+        if (count > 0) {
+            float mult = st->multipliers[i];
+            int unitPrice = (int)round((float)ORE_DEFS[i].value * mult);
+            totalCR += count * unitPrice;
+            itemsCount += count;
+            g_state.cargoHold[i] = 0;
+        }
+    }
+    // Also sell refined goods if any
+    for (int i = 0; i < 6; i++) {
+        int count = g_state.refined[i];
+        if (count > 0) {
+            float mult = st->multipliers[6 + i];
+            int unitPrice = (int)round((float)REFINERY_RECIPES[i].value * mult);
+            totalCR += count * unitPrice;
+            itemsCount += count;
+            g_state.refined[i] = 0;
+        }
+    }
+    UpdateCargoTotal();
+    if (totalCR == 0) {
+        AddLog("Trade Terminal: No raw minerals or refined cargo pods in hold to barter.", 3);
+        return;
+    }
+    g_state.credits += totalCR;
+    g_state.factionRep[g_state.currentSectorIndex] += min(15, itemsCount / 4 + 1);
+    TriggerSound(SFX_BARTER);
+    char logB[128];
+    sprintf(logB, "BLACK MARKET: Bartered %d cargo crates with %s tariffs for +%d CR!", itemsCount, st->name, totalCR);
+    AddLog(logB, 5);
+    char fTxt[32];
+    sprintf(fTxt, "+%d CR (TARIFF BOOST)", totalCR);
+    AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 40.0f, RGB(251, 191, 36));
+}
+
+void BarterBuySupply(int supplyType) {
+    if (supplyType == 0) { // 2x Warp Cells for 1400 CR
+        if (g_state.credits < 1400) { AddLog("Black Market: Insufficient credits for Warp Fuel Cells.", 4); return; }
+        g_state.credits -= 1400;
+        g_state.refined[2] += 2;
+        TriggerSound(SFX_COLLECT);
+        AddLog("COMMERCE: Acquired 2x Sub-Space Warp Fuel Cells from station black market for 1,400 CR.", 5);
+        AddFloatingText("+2 WARP CELLS", g_state.shipX, g_state.shipY - 35.0f, RGB(244, 63, 94));
+    } else if (supplyType == 1) { // 2x Nanite Paste for 1200 CR
+        if (g_state.credits < 1200) { AddLog("Black Market: Insufficient credits for Nanite Bulkhead Paste.", 4); return; }
+        g_state.credits -= 1200;
+        g_state.refined[4] += 2;
+        TriggerSound(SFX_COLLECT);
+        AddLog("COMMERCE: Acquired 2x Nanite Bulkhead Pastes from station black market for 1,200 CR.", 5);
+        AddFloatingText("+2 NANITE PASTE", g_state.shipX, g_state.shipY - 35.0f, RGB(16, 185, 129));
+    } else if (supplyType == 2) { // 2x O2 Canisters for 400 CR
+        if (g_state.credits < 400) { AddLog("Black Market: Insufficient credits for Medical O2 Canisters.", 4); return; }
+        g_state.credits -= 400;
+        g_state.refined[5] += 2;
+        TriggerSound(SFX_COLLECT);
+        AddLog("COMMERCE: Acquired 2x Medical O2 Canisters from station black market for 400 CR.", 5);
+        AddFloatingText("+2 O2 CANISTERS", g_state.shipX, g_state.shipY - 35.0f, RGB(96, 165, 250));
+    }
+}
+
+void ClaimContract(int contractIdx) {
+    if (contractIdx < 0 || contractIdx >= 3) return;
+    int sec = g_state.currentSectorIndex;
+    if (g_state.contractDone[sec][contractIdx]) {
+        AddLog("Contracts Guild: This dredging requisition has already been fulfilled.", 3);
+        return;
+    }
+    const StationDef* st = &STATION_DEFS[sec];
+    const ContractDef* c = &st->contracts[contractIdx];
+    
+    if (c->reqRefined) {
+        int have = g_state.refined[c->reqItemIdx];
+        if (have < c->reqQty) {
+            char logB[128];
+            sprintf(logB, "Contract requirement incomplete: Need %d units of %s (Hold has %d).", c->reqQty, c->reqLabel, have);
+            AddLog(logB, 3);
+            return;
+        }
+        g_state.refined[c->reqItemIdx] -= c->reqQty;
+    } else {
+        int have = g_state.cargoHold[c->reqItemIdx];
+        if (have < c->reqQty) {
+            char logB[128];
+            sprintf(logB, "Contract requirement incomplete: Need %dT of %s (Hold has %dT).", c->reqQty, c->reqLabel, have);
+            AddLog(logB, 3);
+            return;
+        }
+        g_state.cargoHold[c->reqItemIdx] -= c->reqQty;
+        UpdateCargoTotal();
+    }
+    
+    g_state.contractDone[sec][contractIdx] = 1;
+    g_state.totalContractsDone++;
+    g_state.credits += c->rewardCredits;
+    g_state.factionRep[sec] += c->rewardRep;
+    
+    TriggerSound(SFX_CONTRACT);
+    char logB[128];
+    sprintf(logB, "CONTRACT COMPLETED: [%s] fulfilled! +%d CR | +%d %s Standing!", c->title, c->rewardCredits, c->rewardRep, st->faction);
+    AddLog(logB, 5);
+    char fTxt[48];
+    sprintf(fTxt, "CONTRACT FULFILLED! +%d CR", c->rewardCredits);
+    AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 40.0f, RGB(251, 191, 36));
+}
+
 void InitSectorField(int sectorIdx) {
     if (sectorIdx < 0 || sectorIdx >= 4) sectorIdx = 0;
     g_state.currentSectorIndex = sectorIdx;
     g_state.selectedSectorIndex = sectorIdx;
     strncpy(g_state.sector, SECTOR_DEFS[sectorIdx].name, 31);
     g_state.sector[31] = '\0';
+    
+    // Position Station for this sector
+    g_state.stationX = (sectorIdx % 2 == 0) ? 350.0f : -350.0f;
+    g_state.stationY = (sectorIdx < 2) ? -300.0f : 300.0f;
+    g_state.stationRadius = 65.0f;
+    g_state.stationAngle = 0.0f;
+    g_state.stationRotSpeed = 0.008f + ((float)sectorIdx * 0.003f);
+    g_state.stationDocked = 0;
+    g_state.stationBeaconTimer = 0.0f;
     
     // Seed Stars
     for (int i = 0; i < MAX_STARS; i++) {
@@ -2055,6 +2426,25 @@ void UpdateGame(float dt) {
     g_state.radarAngle += 0.05f;
     if (g_state.radarAngle > 6.28318f) g_state.radarAngle -= 6.28318f;
     
+    // Station Rotation & Docking Dynamics
+    g_state.stationAngle += g_state.stationRotSpeed;
+    if (g_state.stationAngle > 6.28318f) g_state.stationAngle -= 6.28318f;
+    g_state.stationBeaconTimer += dt * 3.0f;
+    
+    if (g_state.stationDocked) {
+        // Tether ship to station mooring point
+        float targetX = g_state.stationX + (float)cos(g_state.stationAngle) * 80.0f;
+        float targetY = g_state.stationY + (float)sin(g_state.stationAngle) * 80.0f;
+        g_state.shipX += (targetX - g_state.shipX) * 0.12f;
+        g_state.shipY += (targetY - g_state.shipY) * 0.12f;
+        g_state.shipVx = 0.0f;
+        g_state.shipVy = 0.0f;
+        
+        // Passive trickle repair and shield charge when docked
+        g_state.shield = min(g_state.maxShield, g_state.shield + 2.0f * dt);
+        g_state.heat = max(0.0f, g_state.heat - 5.0f * dt);
+    }
+    
     // Auto Target Closest Asteroid
     if (g_state.selectedAstIndex < 0 || !g_state.asteroids[g_state.selectedAstIndex].active) {
         float minDist = 600.0f;
@@ -2438,6 +2828,89 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         DeleteObject(hPenWave);
     }
     
+    // Draw Orbital Spaceport & Trade Station
+    {
+        int stX = cx + (int)(g_state.stationX - g_state.shipX);
+        int stY = cyCenter + (int)(g_state.stationY - g_state.shipY);
+        int stR = (int)g_state.stationRadius;
+        
+        if (stX >= viewportX - 150 && stX <= viewportX + viewportW + 150 &&
+            stY >= viewportY - 150 && stY <= viewportY + viewportH + 150) {
+            
+            // Outer rotating ring (Dotted / segmented)
+            HPEN hPenStRing = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
+            HBRUSH hBrStHub = CreateSolidBrush(RGB(10, 20, 45));
+            HGDIOBJ oldStP = SelectObject(hdc, hPenStRing);
+            HGDIOBJ oldStB = SelectObject(hdc, hBrStHub);
+            
+            // Station central hub
+            Ellipse(hdc, stX - 26, stY - 26, stX + 26, stY + 26);
+            
+            // Outer Torus Ring
+            SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Ellipse(hdc, stX - stR, stY - stR, stX + stR, stY + stR);
+            Ellipse(hdc, stX - stR + 12, stY - stR + 12, stX + stR - 12, stY + stR - 12);
+            
+            // 4 Rotating Radial Spokes
+            HPEN hPenSpoke = CreatePen(PS_SOLID, 1, RGB(14, 165, 233));
+            SelectObject(hdc, hPenSpoke);
+            for (int sp = 0; sp < 4; sp++) {
+                float a = g_state.stationAngle + ((float)sp * 1.57079f);
+                int sx1 = stX + (int)(cos(a) * 26.0f);
+                int sy1 = stY + (int)(sin(a) * 26.0f);
+                int sx2 = stX + (int)(cos(a) * stR);
+                int sy2 = stY + (int)(sin(a) * stR);
+                MoveToEx(hdc, sx1, sy1, NULL);
+                LineTo(hdc, sx2, sy2);
+            }
+            DeleteObject(hPenSpoke);
+            
+            // Mooring Dock Bay Indicator
+            float dockA = g_state.stationAngle;
+            int dkX = stX + (int)(cos(dockA) * (stR - 6));
+            int dkY = stY + (int)(sin(dockA) * (stR - 6));
+            HBRUSH hBrDockBeacon = CreateSolidBrush(g_state.stationDocked ? RGB(16, 185, 129) : RGB(251, 191, 36));
+            RECT rcDkBc = { dkX - 4, dkY - 4, dkX + 5, dkY + 5 };
+            FillRect(hdc, &rcDkBc, hBrDockBeacon);
+            DeleteObject(hBrDockBeacon);
+            
+            // Docking Mooring Tether
+            if (g_state.stationDocked) {
+                HPEN hPenTether = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
+                SelectObject(hdc, hPenTether);
+                MoveToEx(hdc, cx, cyCenter, NULL);
+                LineTo(hdc, dkX, dkY);
+                DeleteObject(hPenTether);
+            }
+            
+            // Pulsing Navigation Beacons (4 cardinal lights on outer ring)
+            int beaconOn = ((int)g_state.stationBeaconTimer % 2 == 0);
+            HBRUSH hBrBeacon = CreateSolidBrush(beaconOn ? RGB(239, 68, 68) : RGB(30, 58, 138));
+            for (int b = 0; b < 4; b++) {
+                float ba = g_state.stationAngle + ((float)b * 1.57079f) + 0.78539f;
+                int bx = stX + (int)(cos(ba) * stR);
+                int by = stY + (int)(sin(ba) * stR);
+                RECT rcBc = { bx - 3, by - 3, bx + 4, by + 4 };
+                FillRect(hdc, &rcBc, hBrBeacon);
+            }
+            DeleteObject(hBrBeacon);
+            
+            SelectObject(hdc, oldStP);
+            SelectObject(hdc, oldStB);
+            DeleteObject(hPenStRing);
+            DeleteObject(hBrStHub);
+            
+            // Station Name Tag
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, RGB(56, 189, 248));
+            const StationDef* curStDef = &STATION_DEFS[g_state.currentSectorIndex];
+            char stLbl[80];
+            sprintf(stLbl, "✦ %s [%s]", curStDef->name, g_state.stationDocked ? "DOCKED" : "ORBITAL PORT");
+            RECT rcStLbl = { stX - 140, stY - stR - 18, stX + 140, stY - stR };
+            DrawTextA(hdc, stLbl, -1, &rcStLbl, DT_CENTER | DT_SINGLELINE);
+        }
+    }
+    
     // Draw Asteroids
     for (int i = 0; i < MAX_ASTEROIDS; i++) {
         Asteroid* ast = &g_state.asteroids[i];
@@ -2767,6 +3240,22 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         }
     }
     
+    // Radar Blip for Orbital Spaceport (Cyan Star Hex)
+    {
+        float bdx = (g_state.stationX - g_state.shipX) * radarScale;
+        float bdy = (g_state.stationY - g_state.shipY) * radarScale;
+        if (bdx * bdx + bdy * bdy < (radarR - 4) * (radarR - 4)) {
+            COLORREF stBlip = RGB(56, 189, 248);
+            int sx = rcRadarX + (int)bdx;
+            int sy = rcRadarY + (int)bdy;
+            SetPixel(hdc, sx, sy, stBlip);
+            SetPixel(hdc, sx - 1, sy, stBlip);
+            SetPixel(hdc, sx + 1, sy, stBlip);
+            SetPixel(hdc, sx, sy - 1, stBlip);
+            SetPixel(hdc, sx, sy + 1, stBlip);
+        }
+    }
+    
     // Center Ship Blip on Radar
     SetPixel(hdc, rcRadarX, rcRadarY, pal->vector);
     SetPixel(hdc, rcRadarX + 1, rcRadarY, pal->vector);
@@ -2775,6 +3264,35 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     SelectObject(hdc, oldRdBr);
     DeleteObject(hPenRadar);
     DeleteObject(hBrRadar);
+    
+    // Proximity Spaceport Docking HUD Prompt
+    {
+        float stDist = (float)sqrt((g_state.stationX - g_state.shipX) * (g_state.stationX - g_state.shipX) +
+                                   (g_state.stationY - g_state.shipY) * (g_state.stationY - g_state.shipY));
+        if (stDist < 280.0f || g_state.stationDocked) {
+            int hudW = 420;
+            int hudH = 30;
+            int hudX = viewportX + (viewportW - hudW) / 2;
+            int hudY = viewportY + viewportH - 78;
+            
+            RECT rcStPrompt = { hudX, hudY, hudX + hudW, hudY + hudH };
+            HBRUSH hBrStP = CreateSolidBrush(g_state.stationDocked ? RGB(10, 35, 60) : RGB(15, 23, 42));
+            FillRect(hdc, &rcStPrompt, hBrStP);
+            DeleteObject(hBrStP);
+            FrameRect(hdc, &rcStPrompt, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, g_state.stationDocked ? RGB(110, 231, 183) : RGB(56, 189, 248));
+            char stPromptBuf[80];
+            const StationDef* curStDef = &STATION_DEFS[g_state.currentSectorIndex];
+            if (g_state.stationDocked) {
+                sprintf(stPromptBuf, "⚓ DOCKED AT %s • PRESS [D] FOR STATION TERMINAL", curStDef->name);
+            } else {
+                sprintf(stPromptBuf, "⚓ [D] DOCK WITH %s (%dm)", curStDef->name, (int)stDist);
+            }
+            DrawTextA(hdc, stPromptBuf, -1, &rcStPrompt, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        }
+    }
     
     // Proximity EVA HUD Prompt
     if (g_state.selectedDerelictIndex >= 0 && g_state.derelicts[g_state.selectedDerelictIndex].active) {
@@ -4280,6 +4798,251 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         DeleteObject(hPenBorderRef);
     }
     
+    // Phase 11: Orbital Spaceport & Black Market Trade Station Modal
+    if (g_state.showStation) {
+        int modalW = 760;
+        int modalH = 480;
+        int mx = (totalW - modalW) / 2;
+        int my = (totalH - modalH) / 2;
+        
+        const StationDef* curSt = &STATION_DEFS[g_state.currentSectorIndex];
+        
+        RECT rcModal = { mx, my, mx + modalW, my + modalH };
+        HBRUSH hBrModal = CreateSolidBrush(pal->bgPanel);
+        HPEN hPenBorderSt = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
+        HGDIOBJ oldPenSt = SelectObject(hdc, hPenBorderSt);
+        HGDIOBJ oldBrushSt = SelectObject(hdc, hBrModal);
+        
+        Rectangle(hdc, mx, my, mx + modalW, my + modalH);
+        DeleteObject(hBrModal);
+        
+        // Header Banner
+        RECT rcHdr = { mx, my, mx + modalW, my + 32 };
+        HBRUSH hBrHdr = CreateSolidBrush(pal->bgHeader);
+        FillRect(hdc, &rcHdr, hBrHdr);
+        DeleteObject(hBrHdr);
+        
+        SelectObject(hdc, g_fontHeader);
+        SetTextColor(hdc, RGB(56, 189, 248));
+        TextOutA(hdc, mx + 14, my + 6, curSt->name, (int)strlen(curSt->name));
+        
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, pal->textBright);
+        TextOutA(hdc, mx + modalW - 120, my + 10, "[D / ESC] CLOSE", 15);
+        
+        // Faction & Tariff Sub-header Banner
+        int barY = my + 36;
+        RECT rcStat = { mx + 14, barY, mx + modalW - 14, barY + 32 };
+        HBRUSH hBrStat = CreateSolidBrush(RGB(3, 7, 18));
+        FillRect(hdc, &rcStat, hBrStat);
+        DeleteObject(hBrStat);
+        FrameRect(hdc, &rcStat, (HBRUSH)GetStockObject(WHITE_BRUSH));
+        
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(251, 191, 36));
+        char repStr[96];
+        sprintf(repStr, "FACTION: %s  |  STANDING: %d REP  |  STATUS: %s", curSt->faction, g_state.factionRep[g_state.currentSectorIndex], g_state.stationDocked ? "DOCKED" : "ORBITING (REMOTE)");
+        TextOutA(hdc, mx + 20, barY + 4, repStr, (int)strlen(repStr));
+        
+        SetTextColor(hdc, RGB(56, 189, 248));
+        TextOutA(hdc, mx + 20, barY + 17, curSt->tariffText, (int)strlen(curSt->tariffText));
+        
+        // Left Column: Quick Services & Black Market Barter (320px wide)
+        int leftX = mx + 14;
+        int leftY = barY + 38;
+        int leftW = 340;
+        
+        // Station Services Box
+        int srvH = 195;
+        RECT rcSrv = { leftX, leftY, leftX + leftW, leftY + srvH };
+        HBRUSH hBrSrv = CreateSolidBrush(RGB(2, 6, 18));
+        FillRect(hdc, &rcSrv, hBrSrv);
+        DeleteObject(hBrSrv);
+        HPEN hPenSrv = CreatePen(PS_SOLID, 1, RGB(30, 58, 138));
+        SelectObject(hdc, hPenSrv);
+        Rectangle(hdc, leftX, leftY, leftX + leftW, leftY + srvH);
+        DeleteObject(hPenSrv);
+        
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, RGB(56, 189, 248));
+        TextOutA(hdc, leftX + 8, leftY + 6, "STATION DRYDOCK & MAINTENANCE", 29);
+        
+        // 4 Service Buttons (Repair, Shield, Refuel, Decon)
+        int srvBtnH = 34;
+        int srvGap = 6;
+        for (int s = 0; s < 4; s++) {
+            int sy = leftY + 28 + s * (srvBtnH + srvGap);
+            RECT rcSBtn = { leftX + 8, sy, leftX + leftW - 8, sy + srvBtnH };
+            HBRUSH hBrSBtn = CreateSolidBrush(RGB(15, 23, 42));
+            FillRect(hdc, &rcSBtn, hBrSBtn);
+            DeleteObject(hBrSBtn);
+            FrameRect(hdc, &rcSBtn, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, RGB(255, 255, 255));
+            char sTitle[64];
+            char sCost[32];
+            if (s == 0) {
+                float missH = g_state.maxHull - g_state.hull;
+                int cst = (int)ceil(missH * (float)curSt->repairCostPerPct);
+                sprintf(sTitle, "[1] REPAIR HULL ARMOR");
+                sprintf(sCost, "%d CR", cst);
+            } else if (s == 1) {
+                sprintf(sTitle, "[2] CHARGE SHIELD CAPACITOR");
+                sprintf(sCost, "%d CR", curSt->shieldCost);
+            } else if (s == 2) {
+                float missF = g_state.maxFuel - g_state.fuel;
+                int cst = (int)ceil(missF * (float)curSt->fuelCostPerPct);
+                sprintf(sTitle, "[3] REFUEL PROPELLANT");
+                sprintf(sCost, "%d CR", cst);
+            } else {
+                sprintf(sTitle, "[4] DECONTAMINATE & O2 BIO-BAY");
+                sprintf(sCost, "%d CR", curSt->deconCost);
+            }
+            TextOutA(hdc, leftX + 12, sy + 4, sTitle, (int)strlen(sTitle));
+            
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, RGB(251, 191, 36));
+            RECT rcCost = { leftX + leftW - 85, sy + 4, leftX + leftW - 12, sy + 18 };
+            DrawTextA(hdc, sCost, -1, &rcCost, DT_RIGHT | DT_SINGLELINE);
+            
+            SetTextColor(hdc, RGB(148, 163, 184));
+            const char* sSub[4] = {
+                "Weld nanite plating & seal breaches",
+                "Supercharge deflector capacitor bank",
+                "Pump pressurized hydrazine fuel",
+                "Flush rads & replenish pure oxygen"
+            };
+            TextOutA(hdc, leftX + 12, sy + 18, sSub[s], (int)strlen(sSub[s]));
+        }
+        
+        // Black Market Barter Box (Below Services)
+        int barY2 = leftY + srvH + 8;
+        int barH2 = modalH - (barY2 - my) - 30;
+        RECT rcBarter = { leftX, barY2, leftX + leftW, barY2 + barH2 };
+        HBRUSH hBrBarter = CreateSolidBrush(RGB(2, 6, 18));
+        FillRect(hdc, &rcBarter, hBrBarter);
+        DeleteObject(hBrBarter);
+        HPEN hPenBrt = CreatePen(PS_SOLID, 1, RGB(120, 53, 15));
+        SelectObject(hdc, hPenBrt);
+        Rectangle(hdc, leftX, barY2, leftX + leftW, barY2 + barH2);
+        DeleteObject(hPenBrt);
+        
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, RGB(245, 158, 11));
+        TextOutA(hdc, leftX + 8, barY2 + 6, "BLACK MARKET COMMODITY EXCHANGE", 31);
+        
+        // Sell All with Tariff button
+        RECT rcSellTariff = { leftX + 8, barY2 + 24, leftX + leftW - 8, barY2 + 50 };
+        HBRUSH hBrStBtn = CreateSolidBrush(RGB(120, 53, 15));
+        FillRect(hdc, &rcSellTariff, hBrStBtn);
+        DeleteObject(hBrStBtn);
+        FrameRect(hdc, &rcSellTariff, (HBRUSH)GetStockObject(WHITE_BRUSH));
+        
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, RGB(254, 240, 138));
+        DrawTextA(hdc, "💰 SELL ALL CARGO (WITH TARIFFS) [S]", -1, &rcSellTariff, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        
+        // 3 Black Market Quick Purchase Supply Buttons
+        int supY = barY2 + 54;
+        int supW = (leftW - 20) / 3;
+        const char* supNames[3] = { "2x WARP", "2x NANITE", "2x O2" };
+        const char* supCosts[3] = { "1.4k CR", "1.2k CR", "400 CR" };
+        for (int p = 0; p < 3; p++) {
+            int px = leftX + 8 + p * (supW + 2);
+            RECT rcSup = { px, supY, px + supW, supY + 28 };
+            HBRUSH hBrSup = CreateSolidBrush(RGB(15, 23, 42));
+            FillRect(hdc, &rcSup, hBrSup);
+            DeleteObject(hBrSup);
+            FrameRect(hdc, &rcSup, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, RGB(56, 189, 248));
+            TextOutA(hdc, px + 4, supY + 3, supNames[p], (int)strlen(supNames[p]));
+            SetTextColor(hdc, RGB(251, 191, 36));
+            TextOutA(hdc, px + 4, supY + 15, supCosts[p], (int)strlen(supCosts[p]));
+        }
+        
+        // Right Column: 3 Dredging Contracts (380px wide)
+        int rcX = leftX + leftW + 12;
+        int rcY = leftY;
+        int rcW = modalW - (rcX - mx) - 14;
+        
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, RGB(56, 189, 248));
+        TextOutA(hdc, rcX + 4, rcY - 14, "SECTOR DREDGING CONTRACTS GUILD", 31);
+        
+        int cCardH = 110;
+        int cGapY = 8;
+        for (int c = 0; c < 3; c++) {
+            const ContractDef* cd = &curSt->contracts[c];
+            int cyCard = rcY + c * (cCardH + cGapY);
+            int isDone = g_state.contractDone[g_state.currentSectorIndex][c];
+            
+            int have = cd->reqRefined ? g_state.refined[cd->reqItemIdx] : g_state.cargoHold[cd->reqItemIdx];
+            int canClaim = (!isDone && have >= cd->reqQty);
+            
+            RECT rcCCard = { rcX, cyCard, rcX + rcW, cyCard + cCardH };
+            HBRUSH hBrCCard = CreateSolidBrush(isDone ? RGB(6, 30, 20) : (canClaim ? RGB(10, 25, 50) : RGB(5, 12, 28)));
+            FillRect(hdc, &rcCCard, hBrCCard);
+            DeleteObject(hBrCCard);
+            HPEN hPenCCard = CreatePen(PS_SOLID, 1, isDone ? RGB(16, 185, 129) : (canClaim ? RGB(56, 189, 248) : RGB(40, 45, 60)));
+            SelectObject(hdc, hPenCCard);
+            Rectangle(hdc, rcX, cyCard, rcX + rcW, cyCard + cCardH);
+            DeleteObject(hPenCCard);
+            
+            // Contract Title & Key
+            char cTitle[64];
+            sprintf(cTitle, "[%d] %s", c + 5, cd->title);
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, isDone ? RGB(16, 185, 129) : (canClaim ? RGB(56, 189, 248) : RGB(255, 255, 255)));
+            TextOutA(hdc, rcX + 8, cyCard + 6, cTitle, (int)strlen(cTitle));
+            
+            // Reward tag
+            char rewStr[64];
+            sprintf(rewStr, "+%d CR | +%d REP", cd->rewardCredits, cd->rewardRep);
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, RGB(251, 191, 36));
+            RECT rcRew = { rcX + rcW - 130, cyCard + 6, rcX + rcW - 8, cyCard + 20 };
+            DrawTextA(hdc, rewStr, -1, &rcRew, DT_RIGHT | DT_SINGLELINE);
+            
+            // Description
+            SetTextColor(hdc, RGB(148, 163, 184));
+            RECT rcDesc = { rcX + 8, cyCard + 24, rcX + rcW - 8, cyCard + 54 };
+            DrawTextA(hdc, cd->desc, -1, &rcDesc, DT_WORDBREAK);
+            
+            // Requirements & Status
+            char reqStr[96];
+            sprintf(reqStr, "Requisition: %s (%d / %d in hold)", cd->reqLabel, have, cd->reqQty);
+            SetTextColor(hdc, isDone ? RGB(16, 185, 129) : (have >= cd->reqQty ? RGB(56, 189, 248) : RGB(239, 68, 68)));
+            TextOutA(hdc, rcX + 8, cyCard + 58, reqStr, (int)strlen(reqStr));
+            
+            // Claim button
+            RECT rcClaim = { rcX + 8, cyCard + 78, rcX + rcW - 8, cyCard + 102 };
+            HBRUSH hBrClaim = CreateSolidBrush(isDone ? RGB(6, 78, 59) : (canClaim ? RGB(30, 58, 138) : RGB(20, 25, 35)));
+            FillRect(hdc, &rcClaim, hBrClaim);
+            DeleteObject(hBrClaim);
+            FrameRect(hdc, &rcClaim, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, isDone ? RGB(110, 231, 183) : (canClaim ? RGB(240, 249, 255) : RGB(100, 116, 139)));
+            char claimTxt[64];
+            if (isDone) sprintf(claimTxt, "✓ CONTRACT FULFILLED");
+            else if (canClaim) sprintf(claimTxt, "CLAIM CONTRACT REWARD [%d] (+%d CR)", c + 5, cd->rewardCredits);
+            else sprintf(claimTxt, "INCOMPLETE: %d / %d DELIVERED", have, cd->reqQty);
+            DrawTextA(hdc, claimTxt, -1, &rcClaim, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        }
+        
+        // Footer instruction
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(245, 158, 11));
+        TextOutA(hdc, mx + 16, my + modalH - 24, "Keys [1-4] Services • [5-7] Claim Contracts • [S] Sell All Tariffs • [U] Undock • [D / ESC] Close", 99);
+        
+        SelectObject(hdc, oldPenSt);
+        SelectObject(hdc, oldBrushSt);
+        DeleteObject(hPenBorderSt);
+    }
+    
     // Help Overlay Modal
     if (g_state.showHelp) {
         int helpW = 560;
@@ -4345,11 +5108,11 @@ void RepositionControls(HWND hwnd) {
     int bottomCtrlH = 140;
     int botY = totalH - bottomCtrlH;
     
-    // Cockpit Action Buttons in bottom-left console (7 in row 1, 6 in row 2)
+    // Cockpit Action Buttons in bottom-left console (8 in row 1, 6 in row 2)
     int bx = 8;
     int by1 = botY + 28;
     int by2 = botY + 62;
-    int bw = 46;
+    int bw = 40;
     int bh = 28;
     int gap = 3;
     
@@ -4358,8 +5121,9 @@ void RepositionControls(HWND hwnd) {
     MoveWindow(g_btnDampener,   bx + (bw + gap) * 2, by1, bw, bh, TRUE);
     MoveWindow(g_btnScan,       bx + (bw + gap) * 3, by1, bw, bh, TRUE);
     MoveWindow(g_btnNav,        bx + (bw + gap) * 4, by1, bw, bh, TRUE);
-    MoveWindow(g_btnEva,        bx + (bw + gap) * 5, by1, bw, bh, TRUE);
-    MoveWindow(g_btnCrisis,     bx + (bw + gap) * 6, by1, bw, bh, TRUE);
+    MoveWindow(g_btnStation,    bx + (bw + gap) * 5, by1, bw, bh, TRUE);
+    MoveWindow(g_btnEva,        bx + (bw + gap) * 6, by1, bw, bh, TRUE);
+    MoveWindow(g_btnCrisis,     bx + (bw + gap) * 7, by1, bw, bh, TRUE);
     
     int bw2 = 48;
     MoveWindow(g_btnUpgrades,   bx,                   by2, bw2, bh, TRUE);
@@ -4395,6 +5159,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_btnDampener  = CreateWindowA("BUTTON", "DAMPENER [Z]",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_DAMPENER, NULL, NULL);
             g_btnScan      = CreateWindowA("BUTTON", "PROSPECT [P]",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN, NULL, NULL);
             g_btnNav       = CreateWindowA("BUTTON", "SECTORS [N]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_NAV, NULL, NULL);
+            g_btnStation   = CreateWindowA("BUTTON", "STATION [D]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_STATION, NULL, NULL);
             g_btnEva       = CreateWindowA("BUTTON", "EVA OPS [E]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_EVA, NULL, NULL);
             g_btnCrisis    = CreateWindowA("BUTTON", "CRISIS [K]",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_CRISIS, NULL, NULL);
             g_btnUpgrades  = CreateWindowA("BUTTON", "UPGRADE [U]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_UPGRADES, NULL, NULL);
@@ -4437,32 +5202,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 case ID_BTN_SCAN:
                     g_state.showSpectrometer = !g_state.showSpectrometer;
-                    if (g_state.showSpectrometer) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showEva = 0; g_state.showCrisis = 0; }
+                    if (g_state.showSpectrometer) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; g_state.showStation = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_NAV:
                     g_state.showStarChart = !g_state.showStarChart;
-                    if (g_state.showStarChart) { g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; }
+                    if (g_state.showStarChart) { g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; g_state.showStation = 0; }
+                    TriggerSound(SFX_BEEP);
+                    break;
+                case ID_BTN_STATION:
+                    g_state.showStation = !g_state.showStation;
+                    if (g_state.showStation) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_EVA:
                     g_state.showEva = !g_state.showEva;
-                    if (g_state.showEva) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showCrisis = 0; }
+                    if (g_state.showEva) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; g_state.showStation = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_CRISIS:
                     g_state.showCrisis = !g_state.showCrisis;
-                    if (g_state.showCrisis) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; }
+                    if (g_state.showCrisis) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showRefinery = 0; g_state.showStation = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_UPGRADES:
                     g_state.showUpgrades = !g_state.showUpgrades;
-                    if (g_state.showUpgrades) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; }
+                    if (g_state.showUpgrades) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; g_state.showStation = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_REFINERY:
                     g_state.showRefinery = !g_state.showRefinery;
-                    if (g_state.showRefinery) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showUpgrades = 0; }
+                    if (g_state.showRefinery) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showUpgrades = 0; g_state.showStation = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_THEME:
@@ -4528,6 +5298,84 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (g_state.showHelp) {
                 g_state.showHelp = 0;
                 InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            
+            if (g_state.showStation) {
+                int modalW = 760;
+                int modalH = 480;
+                int hx = (totalW - modalW) / 2;
+                int hy = (totalH - modalH) / 2;
+                
+                // Close button top-right
+                if (mx >= hx + modalW - 130 && mx <= hx + modalW - 10 && my >= hy && my <= hy + 32) {
+                    g_state.showStation = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                
+                int barY = hy + 36;
+                int leftX = hx + 14;
+                int leftY = barY + 38;
+                int leftW = 340;
+                int srvH = 195;
+                
+                // 4 Maintenance Service Buttons
+                int srvBtnH = 34;
+                int srvGap = 6;
+                for (int s = 0; s < 4; s++) {
+                    int sy = leftY + 28 + s * (srvBtnH + srvGap);
+                    if (mx >= leftX + 8 && mx <= leftX + leftW - 8 && my >= sy && my <= sy + srvBtnH) {
+                        if (s == 0) ServiceRepairHull();
+                        else if (s == 1) ServiceRechargeShield();
+                        else if (s == 2) ServiceRefuel();
+                        else if (s == 3) ServiceDecon();
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        return 0;
+                    }
+                }
+                
+                // Black Market Barter Box
+                int barY2 = leftY + srvH + 8;
+                // Sell All with Tariffs
+                if (mx >= leftX + 8 && mx <= leftX + leftW - 8 && my >= barY2 + 24 && my <= barY2 + 50) {
+                    BarterSellAllWithTariff();
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                // 3 Supply Purchase Buttons
+                int supY = barY2 + 54;
+                int supW = (leftW - 20) / 3;
+                for (int p = 0; p < 3; p++) {
+                    int px = leftX + 8 + p * (supW + 2);
+                    if (mx >= px && mx <= px + supW && my >= supY && my <= supY + 28) {
+                        BarterBuySupply(p);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        return 0;
+                    }
+                }
+                
+                // Right Column: 3 Dredging Contracts
+                int rcX = leftX + leftW + 12;
+                int rcY = leftY;
+                int rcW = modalW - (rcX - hx) - 14;
+                int cCardH = 110;
+                int cGapY = 8;
+                for (int c = 0; c < 3; c++) {
+                    int cyCard = rcY + c * (cCardH + cGapY);
+                    if (mx >= rcX + 8 && mx <= rcX + rcW - 8 && my >= cyCard + 78 && my <= cyCard + 102) {
+                        ClaimContract(c);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        return 0;
+                    }
+                }
+                
+                // Click outside modal closes it
+                if (mx < hx || mx > hx + modalW || my < hy || my > hy + modalH) {
+                    g_state.showStation = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
                 return 0;
             }
             
@@ -4948,10 +5796,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     AddLog(tLog, 0);
                 }
             }
-            return 0;
         }
         
         case WM_KEYDOWN: {
+            if (g_state.showStation) {
+                if (wParam == '1') { ServiceRepairHull(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '2') { ServiceRechargeShield(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '3') { ServiceRefuel(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '4') { ServiceDecon(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '5') { ClaimContract(0); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '6') { ClaimContract(1); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '7') { ClaimContract(2); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == 'S') { BarterSellAllWithTariff(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == 'U') { ToggleDocking(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == 'D' || wParam == VK_ESCAPE) { g_state.showStation = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+            }
+            
             if (g_state.showRefinery) {
                 if (wParam >= '1' && wParam <= '6') { SmeltRecipe((int)(wParam - '1'), 1); InvalidateRect(hwnd, NULL, FALSE); return 0; }
                 if (wParam == 'B') { ToggleCatalyticBoost(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
@@ -5005,7 +5865,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case 'W': case VK_UP:    g_state.thrusting = 1; break;
                 case 'S': case VK_DOWN:  g_state.reversing = 1; break;
                 case 'A': case VK_LEFT:  g_state.turningLeft = 1; break;
-                case 'D': case VK_RIGHT: g_state.turningRight = 1; break;
+                case VK_RIGHT:           g_state.turningRight = 1; break;
+                case 'D': {
+                    float stDist = (float)sqrt((g_state.stationX - g_state.shipX) * (g_state.stationX - g_state.shipX) +
+                                               (g_state.stationY - g_state.shipY) * (g_state.stationY - g_state.shipY));
+                    if (stDist < 280.0f && !g_state.stationDocked) {
+                        ToggleDocking();
+                        g_state.showStation = 1;
+                        g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0;
+                    } else if (g_state.stationDocked) {
+                        g_state.showStation = !g_state.showStation;
+                        if (g_state.showStation) {
+                            g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0;
+                        }
+                    } else {
+                        // Regular turn right if not in proximity
+                        g_state.turningRight = 1;
+                    }
+                    break;
+                }
                 case VK_SPACE:
                     g_state.miningActive = 1;
                     break;
