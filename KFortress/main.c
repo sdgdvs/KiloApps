@@ -438,6 +438,16 @@ int g_techFortTraps = 0;
 BOOL g_showAcademy = FALSE;
 BOOL g_showHelp = FALSE;
 
+static char g_toastText[128] = "Press [F1] or [H] for Guide | [Space] Wave | [1-5] Skills | [A] Academy | [M] Mutators | [Esc] Close";
+static int g_toastTimer = 220;
+static COLORREF g_toastColor = RGB(251, 191, 36);
+
+void ShowNativeToast(const char* txt, COLORREF col, int durationFrames) {
+    lstrcpynA(g_toastText, txt, sizeof(g_toastText));
+    g_toastColor = col;
+    g_toastTimer = durationFrames;
+}
+
 typedef struct {
     float x, y;
     float targetX, targetY;
@@ -1597,6 +1607,8 @@ void UpdateGameLogic() {
         if (g_floatingTexts[f].life <= 0) g_floatingTexts[f].active = FALSE;
     }
 
+    if (g_toastTimer > 0) g_toastTimer--;
+
     if (g_shakeIntensity > 0.05f) {
         g_shakeAngle += 1.8f;
         g_shakeIntensity *= 0.88f;
@@ -1611,10 +1623,14 @@ void UpdateGameLogic() {
         if (g_mutators & MUTATOR_TITAN) bonus *= 2;
         g_gold += bonus;
 
-        char buf[32];
+        char buf[64];
         wsprintfA(buf, "WAVE CLEAR! +%dg", bonus);
         AddFloatingText((float)(WINDOW_WIDTH / 2 - 50), (float)(WINDOW_HEIGHT / 2), buf, RGB(16, 185, 129));
         SpawnExplosion((float)(WINDOW_WIDTH / 2 - 50), (float)(WINDOW_HEIGHT / 2), RGB(16, 185, 129));
+
+        char tBuf[128];
+        wsprintfA(tBuf, "Wave %d Cleared! +%dg bounty awarded! Press [Space] for next wave.", g_wave, bonus);
+        ShowNativeToast(tBuf, RGB(16, 185, 129), 120);
 
         if (g_gameMode == 1) {
             if (g_wave > g_hsEndless) { g_hsEndless = g_wave; SaveGame(); }
@@ -1689,14 +1705,14 @@ void Render(HDC hdc, HWND hwnd) {
     TextOutA(memDC, w - 140, 24, buf, (int)lstrlenA(buf));
 
     if (g_mutators != 0) {
-        DrawRoundedRect(memDC, w - 500, 20, w - 400, 45, RGB(168, 85, 247), BORDER_COLOR, 4);
+        DrawRoundedRect(memDC, w - 520, 20, w - 410, 45, RGB(168, 85, 247), BORDER_COLOR, 4);
         SetTextColor(memDC, TEXT_WHITE);
-        TextOutA(memDC, w - 490, 23, "MUTATORS ON", 11);
+        TextOutA(memDC, w - 510, 23, "MUTATORS ON", 11);
     }
 
-    DrawRoundedRect(memDC, w - 80, 20, w - 20, 45, RGB(59, 130, 246), BORDER_COLOR, 4);
+    DrawRoundedRect(memDC, w - 95, 20, w - 15, 45, RGB(59, 130, 246), BORDER_COLOR, 4);
     SetTextColor(memDC, TEXT_WHITE);
-    TextOutA(memDC, w - 70, 23, "HELP", 4);
+    TextOutA(memDC, w - 90, 23, "GUIDE [F1]", 10);
 
     DeleteObject(hFontTitle);
     DeleteObject(hFontSub);
@@ -1711,6 +1727,18 @@ void Render(HDC hdc, HWND hwnd) {
     }
     
     DrawRoundedRect(memDC, bfX, bfY, bfX + bfW, bfY + bfH, g_maps[g_currentMap].bg, BORDER_COLOR, 8);
+
+    // Floating Usability Toast Banner
+    if (g_toastTimer > 0) {
+        int tLen = lstrlenA(g_toastText);
+        int tW = tLen * 7 + 24;
+        if (tW < 240) tW = 240;
+        int tX = bfX + (bfW - tW) / 2;
+        int tY = bfY + 8;
+        DrawRoundedRect(memDC, tX, tY, tX + tW, tY + 26, RGB(15, 23, 42), g_toastColor, 5);
+        SetTextColor(memDC, g_toastColor);
+        TextOutA(memDC, tX + 12, tY + 5, g_toastText, tLen);
+    }
 
     // Ambient Weather Particles
     for (int p = 0; p < 80; p++) {
@@ -2148,7 +2176,7 @@ void Render(HDC hdc, HWND hwnd) {
     SetTextColor(memDC, g_gameMode == 0 ? RGB(0,0,0) : TEXT_WHITE); TextOutA(memDC, sbX + 10, sbY + 6, "Camp", 4);
     SetTextColor(memDC, g_gameMode == 1 ? RGB(0,0,0) : TEXT_WHITE); TextOutA(memDC, sbX + 55, sbY + 6, "Endl", 4);
     SetTextColor(memDC, g_gameMode == 2 ? RGB(0,0,0) : TEXT_WHITE); TextOutA(memDC, sbX + 102, sbY + 6, "Boss", 4);
-    SetTextColor(memDC, TEXT_WHITE); TextOutA(memDC, sbX + 145, sbY + 6, "MUTS", 4);
+    SetTextColor(memDC, TEXT_WHITE); TextOutA(memDC, sbX + 142, sbY + 6, "Muts[M]", 7);
 
     sbY += 28;
 
@@ -2179,23 +2207,25 @@ void Render(HDC hdc, HWND hwnd) {
     DrawRoundedRect(memDC, sbX + 126, sbY, sbX + 185, sbY + 22, RGB(37,99,235), BORDER_COLOR, 3);
     SetTextColor(memDC, TEXT_WHITE);
     TextOutA(memDC, sbX+8, sbY+4, "Siege(5)", 8);
-    TextOutA(memDC, sbX+66, sbY+4, "Fire(100)", 9);
-    TextOutA(memDC, sbX+130, sbY+4, "Bliz(80)", 8);
+    TextOutA(memDC, sbX+66, sbY+4, "Fire(F)", 7);
+    TextOutA(memDC, sbX+130, sbY+4, "Bliz(B)", 7);
 
     sbY += 26;
 
     COLORREF btnBg = g_waveActive ? RGB(60, 70, 85) : RGB(16, 185, 129);
-    DrawRoundedRect(memDC, sbX + 10, sbY, sbX + sbW - 10, sbY + 28, btnBg, BORDER_COLOR, 5);
+    DrawRoundedRect(memDC, sbX + 5, sbY, sbX + sbW - 5, sbY + 28, btnBg, BORDER_COLOR, 5);
     SetTextColor(memDC, TEXT_WHITE);
-    char buf2[32]; wsprintfA(buf2, g_waveActive ? "IN PROGRESS" : "START WAVE %d", g_wave);
-    TextOutA(memDC, sbX + 35, sbY + 6, buf2, (int)lstrlenA(buf2));
+    char buf2[32];
+    if (g_waveActive) wsprintfA(buf2, "IN PROGRESS");
+    else wsprintfA(buf2, "WAVE %d [Space]", g_wave);
+    TextOutA(memDC, sbX + (g_waveActive ? 45 : 20), sbY + 6, buf2, (int)lstrlenA(buf2));
 
     sbY += 32;
 
-    DrawRoundedRect(memDC, sbX + 10, sbY, sbX + sbW/2 - 5, sbY + 22, RGB(79, 70, 229), BORDER_COLOR, 4);
-    DrawRoundedRect(memDC, sbX + sbW/2 + 5, sbY, sbX + sbW - 10, sbY + 22, RGB(225, 29, 72), BORDER_COLOR, 4);
-    TextOutA(memDC, sbX + 22, sbY + 3, "ACADEMY", 7);
-    TextOutA(memDC, sbX + sbW/2 + 20, sbY + 3, "RESET", 5);
+    DrawRoundedRect(memDC, sbX + 5, sbY, sbX + sbW/2 - 3, sbY + 22, RGB(79, 70, 229), BORDER_COLOR, 4);
+    DrawRoundedRect(memDC, sbX + sbW/2 + 3, sbY, sbX + sbW - 5, sbY + 22, RGB(225, 29, 72), BORDER_COLOR, 4);
+    TextOutA(memDC, sbX + 10, sbY + 3, "ACADEMY [A]", 11);
+    TextOutA(memDC, sbX + sbW/2 + 10, sbY + 3, "RESET [R]", 9);
 
     sbY += 26;
 
@@ -2285,12 +2315,12 @@ void Render(HDC hdc, HWND hwnd) {
     }
 
     if (g_showHelp) {
-        int hW = 680, hH = 520;
+        int hW = 680, hH = 550;
         int hX = (w - hW) / 2, hY = (h - hH) / 2;
         DrawRoundedRect(memDC, hX, hY, hX + hW, hY + hH, CARD_BG, TEXT_GOLD, 12);
         
         SetTextColor(memDC, TEXT_GOLD);
-        TextOutA(memDC, hX + 200, hY + 15, "COMMANDER'S FIELD GUIDE - LOOP 2", 32);
+        TextOutA(memDC, hX + 180, hY + 15, "COMMANDER'S FIELD GUIDE & SHORTCUTS", 35);
         
         int cy = hY + 45;
         SetTextColor(memDC, RGB(34, 197, 94)); TextOutA(memDC, hX + 20, cy, "ELEMENTAL TOWER FUSIONS (MAX LEVEL 3 -> FUSION)", 47); cy += 18;
@@ -2300,14 +2330,17 @@ void Render(HDC hdc, HWND hwnd) {
         TextOutA(memDC, hX + 20, cy, "- Venomspite Piercer: Heavy plague javelins piercing entire enemy lines with acid DoT.", 86); cy += 16;
         TextOutA(memDC, hX + 20, cy, "- Solar Prism Beam: Continuous focused photon laser ramping damage vs bosses.", 77); cy += 22;
         
-        SetTextColor(memDC, RGB(34, 197, 94)); TextOutA(memDC, hX + 20, cy, "SIEGE DEFENSES & TREBUCHET (KEY 5)", 34); cy += 18;
+        SetTextColor(memDC, RGB(34, 197, 94)); TextOutA(memDC, hX + 20, cy, "SIEGE DEFENSES & SPELLS", 23); cy += 18;
         SetTextColor(memDC, TEXT_WHITE);
         TextOutA(memDC, hX + 20, cy, "- Castle Trebuchet (5): Calls down massive siege boulders at target location.", 77); cy += 16;
+        TextOutA(memDC, hX + 20, cy, "- Firestorm Spell (F / 100g) & Blizzard Freeze Spell (B / 80g).", 63); cy += 16;
         TextOutA(memDC, hX + 20, cy, "- Automated Castle Wall Ballistas: Researched in Academy for auto gate defense.", 78); cy += 22;
         
-        SetTextColor(memDC, RGB(34, 197, 94)); TextOutA(memDC, hX + 20, cy, "CHALLENGE MUTATORS (BUTTON M)", 29); cy += 18;
+        SetTextColor(memDC, RGB(34, 197, 94)); TextOutA(memDC, hX + 20, cy, "KEYBOARD SHORTCUTS & CONTROLS", 29); cy += 18;
         SetTextColor(memDC, TEXT_WHITE);
-        TextOutA(memDC, hX + 20, cy, "- Toggle Bloodlust, Titan Brood, Arcane Eclipse, Meteor Rain, & Phase Shift!", 77); cy += 25;
+        TextOutA(memDC, hX + 20, cy, "- [Space]: Start Wave | [Esc]: Close Modals | [F1] / [H]: Field Guide | [R]: Reset Battle", 88); cy += 16;
+        TextOutA(memDC, hX + 20, cy, "- [1-4]: Hero Skills (Heal, Shield Wall, Meteor Strike, Militia Reinforcements)", 79); cy += 16;
+        TextOutA(memDC, hX + 20, cy, "- [5]: Siege Trebuchet | [F]: Firestorm | [B]: Blizzard | [A]: Academy | [M]: Mutators", 86); cy += 25;
         
         DrawRoundedRect(memDC, hX + 260, hY + hH - 45, hX + 420, hY + hH - 15, RGB(16, 185, 129), BORDER_COLOR, 6);
         SetTextColor(memDC, RGB(0,0,0));
@@ -2333,13 +2366,105 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         break;
 
     case WM_KEYDOWN: {
+        if (wParam == VK_ESCAPE) {
+            if (g_showHelp || g_showMutators || g_showAcademy) {
+                g_showHelp = FALSE;
+                g_showMutators = FALSE;
+                g_showAcademy = FALSE;
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+        }
         if (wParam == 'h' || wParam == 'H' || wParam == VK_F1) {
             g_showHelp = !g_showHelp;
             InvalidateRect(hwnd, NULL, FALSE);
+            break;
         }
         if (wParam == 'm' || wParam == 'M') {
             g_showMutators = !g_showMutators;
             InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        }
+        if (wParam == 'a' || wParam == 'A') {
+            g_showAcademy = !g_showAcademy;
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        }
+        if (wParam == 'r' || wParam == 'R') {
+            InitGameState();
+            Beep(300, 60);
+            ShowNativeToast("Battlefield Reset", TEXT_GOLD, 90);
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        }
+        if (wParam == 'f' || wParam == 'F') {
+            if (g_gold >= 100) {
+                g_gold -= 100;
+                AddFloatingText(400, 300, "FIRESTORM!", TEXT_RED);
+                Beep(100, 300);
+                for (int e = 0; e < MAX_ENEMIES; e++) {
+                    if (g_enemies[e].active) {
+                        g_enemies[e].hp -= 150;
+                        if (g_enemies[e].hp <= 0) {
+                            g_enemies[e].active = FALSE;
+                            g_gold += 15;
+                        }
+                    }
+                }
+                ShowNativeToast("Firestorm Cast! (-100g)", TEXT_RED, 90);
+            } else {
+                ShowNativeToast("Need 100g for Firestorm!", RGB(239, 68, 68), 90);
+                Beep(200, 80);
+            }
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        }
+        if (wParam == 'b' || wParam == 'B') {
+            if (g_gold >= 80) {
+                g_gold -= 80;
+                g_blizzTimer = 300;
+                AddFloatingText(400, 300, "BLIZZARD!", RGB(59, 130, 246));
+                Beep(600, 300);
+                ShowNativeToast("Blizzard Active! (-80g)", RGB(59, 130, 246), 90);
+            } else {
+                ShowNativeToast("Need 80g for Blizzard!", RGB(239, 68, 68), 90);
+                Beep(200, 80);
+            }
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        }
+        if (wParam == VK_SPACE) {
+            if (!g_waveActive && !g_gameOver) {
+                g_waveActive = TRUE;
+                if (g_gameMode == 2) {
+                    g_spawnQueueCount = g_wave * 2;
+                    if (g_spawnQueueCount > MAX_SPAWN_QUEUE) g_spawnQueueCount = MAX_SPAWN_QUEUE;
+                    g_spawnQueueHead = 0;
+                    for (int i = 0; i < g_spawnQueueCount; i++) g_spawnQueue[i] = (i % 2 == 0) ? ENEMY_OGRE : ENEMY_WYVERN;
+                } else {
+                    g_spawnQueueCount = 6 + g_wave * 3;
+                    if (g_spawnQueueCount > MAX_SPAWN_QUEUE) g_spawnQueueCount = MAX_SPAWN_QUEUE;
+                    g_spawnQueueHead = 0;
+                    for (int i = 0; i < g_spawnQueueCount; i++) {
+                        if (g_wave % 5 == 0 && i == 0) g_spawnQueue[i] = ENEMY_OGRE;
+                        else if (g_wave >= 6 && i == 1 && g_wave % 3 == 0) g_spawnQueue[i] = ENEMY_WYVERN;
+                        else if (g_wave >= 8 && i == 2 && g_wave % 4 == 0) g_spawnQueue[i] = ENEMY_GOLEM;
+                        else {
+                            int r = rand() % 100;
+                            if (g_wave >= 5 && r < 15) g_spawnQueue[i] = ENEMY_NECROMANCER;
+                            else if (g_wave >= 4 && r < 35) g_spawnQueue[i] = ENEMY_GARGOYLE;
+                            else if (g_wave >= 3 && r < 55) g_spawnQueue[i] = ENEMY_ORC;
+                            else if (g_wave >= 2 && r < 75) g_spawnQueue[i] = ENEMY_HOUND;
+                            else g_spawnQueue[i] = ENEMY_GOBLIN;
+                        }
+                    }
+                }
+                g_spawnTimer = 0;
+                Beep(600, 40);
+                ShowNativeToast("Wave Started!", RGB(16, 185, 129), 90);
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            break;
         }
         if (wParam == '1' && g_hero.healCd <= 0 && g_hero.respawnTimer <= 0) {
             g_hero.healCd = g_hero.maxHealCd;
@@ -2390,9 +2515,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         int h = clientRect.bottom;
         
         if (g_showHelp) {
-            int hW = 680, hH = 520;
+            int hW = 680, hH = 550;
             int hX = (w - hW) / 2, hY = (h - hH) / 2;
             if (x >= hX + 260 && x <= hX + 420 && y >= hY + hH - 45 && y <= hY + hH - 15) {
+                g_showHelp = FALSE;
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (x < hX || x > hX + hW || y < hY || y > hY + hH) {
                 g_showHelp = FALSE;
                 InvalidateRect(hwnd, NULL, FALSE);
             }
@@ -2402,6 +2530,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         if (g_showMutators) {
             int mx = w/2 - 220, my = h/2 - 160;
             if (x >= mx + 340 && x <= mx + 410 && y >= my + 285 && y <= my + 312) {
+                g_showMutators = FALSE;
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (x < mx || x > mx + 440 || y < my || y > my + 320) {
                 g_showMutators = FALSE;
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
@@ -2426,6 +2559,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }
+            if (x < mx || x > mx + 480 || y < my || y > my + 440) {
+                g_showAcademy = FALSE;
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
             int tBaseCosts[] = {100, 150, 200, 250, 200, 300, 350, 180};
             int* tLevels[] = {&g_techStartingGold, &g_techWallHp, &g_techHeroCd, &g_techTowerDmg, &g_techMilitia, &g_techSiegeEng, &g_techFusion, &g_techFortTraps};
             for (int i=0; i<8; i++) {
@@ -2446,7 +2584,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return 0;
         }
 
-        if (x >= w - 80 && x <= w - 20 && y >= 20 && y <= 45) {
+        if (x >= w - 95 && x <= w - 15 && y >= 20 && y <= 45) {
             g_showHelp = TRUE;
             InvalidateRect(hwnd, NULL, FALSE);
             return 0;
@@ -2747,7 +2885,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     AdjustWindowRect(&wr, (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN, FALSE);
 
     HWND hwnd = CreateWindowExA(
-        0, CLASS_NAME, "KFortress - Fantasy Tower Defense & Siege Defense",
+        0, CLASS_NAME, "KFortress - Fantasy Tower Defense & Siege Defense [F1/H: Guide | Space: Wave | 1-5: Skills]",
         (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top,
         NULL, NULL, hInstance, NULL

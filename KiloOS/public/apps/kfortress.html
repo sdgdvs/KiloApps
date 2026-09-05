@@ -263,19 +263,61 @@
       z-index: 100;
       justify-content: center;
       align-items: center;
+      backdrop-filter: blur(2px);
+    }
+
+    .toast-container {
+      position: absolute;
+      top: 55px;
+      right: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--gold-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text-white);
+      font-size: 11px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.7), 0 0 10px var(--gold-glow);
+      pointer-events: auto;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: slideInToast 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      max-width: 380px;
+      line-height: 1.4;
+    }
+
+    .toast-success { border-color: var(--green-color); box-shadow: 0 4px 20px rgba(0,0,0,0.7), 0 0 10px rgba(16, 185, 129, 0.5); }
+    .toast-warning { border-color: var(--gold-color); box-shadow: 0 4px 20px rgba(0,0,0,0.7), 0 0 10px var(--gold-glow); }
+    .toast-danger { border-color: var(--red-color); box-shadow: 0 4px 20px rgba(0,0,0,0.7), 0 0 10px var(--red-glow); }
+    .toast-info { border-color: var(--blue-color); box-shadow: 0 4px 20px rgba(0,0,0,0.7), 0 0 10px rgba(59, 130, 246, 0.5); }
+
+    @keyframes slideInToast {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
     }
   </style>
 </head>
 <body>
+  <div class="toast-container" id="toastContainer"></div>
 
   <header>
     <div class="title-group">
       <h1>KFORTRESS</h1>
       <span>Loop 2: Fusions & Siege</span>
-      <button class="btn" id="helpBtn" style="padding:3px 8px; font-size:11px; margin-left:8px; background:var(--blue-color); color:#fff; border:none; letter-spacing:0.5px;">GUIDE [H]</button>
+      <button class="btn" id="helpBtn" style="padding:3px 8px; font-size:11px; margin-left:8px; background:var(--blue-color); color:#fff; border:none; letter-spacing:0.5px;">GUIDE [F1/H]</button>
     </div>
     <div class="hud-stats">
-      <div class="stat-badge stat-mut" id="hudMutatorBtn">⚡ Mutators: <span id="hudMutCount">0</span></div>
+      <div class="stat-badge stat-mut" id="hudMutatorBtn">⚡ Mutators [M]: <span id="hudMutCount">0</span></div>
       <div class="stat-badge stat-gold">🪙 Gold: <span id="goldVal">100</span></div>
       <div class="stat-badge stat-hp">❤️ Base HP: <span id="hpVal">20/20</span></div>
       <div class="stat-badge stat-wave">⚔️ Wave: <span id="waveVal">1</span></div>
@@ -284,33 +326,49 @@
 
   <!-- ACADEMY MODAL -->
   <div id="academyModal" class="modal-overlay">
-    <div style="background:var(--card-bg); border:1px solid var(--gold-color); padding:18px; border-radius:12px; width:520px; box-shadow: 0 0 25px rgba(0,0,0,0.85);">
-      <h2 style="color:var(--gold-color); text-align:center; margin-bottom:12px; font-weight:900;">RESEARCH ACADEMY</h2>
+    <div style="background:var(--card-bg); border:1px solid var(--gold-color); padding:18px; border-radius:12px; width:520px; box-shadow: 0 0 25px rgba(0,0,0,0.85);" onclick="event.stopPropagation();">
+      <h2 style="color:var(--gold-color); text-align:center; margin-bottom:12px; font-weight:900;">RESEARCH ACADEMY [A]</h2>
       <div style="display:flex; flex-direction:column; gap:8px; max-height:60vh; overflow-y:auto;" id="techList"></div>
       <div style="display:flex; justify-content:space-between; margin-top:14px; align-items:center;">
         <div class="stat-badge stat-gold">🪙 <span id="academyGoldDisplay">0</span></div>
-        <button class="btn btn-danger" id="closeAcademyBtn">CLOSE</button>
+        <button class="btn btn-danger" id="closeAcademyBtn">CLOSE [Esc]</button>
       </div>
     </div>
   </div>
 
   <!-- MUTATORS MODAL -->
   <div id="mutatorsModal" class="modal-overlay">
-    <div style="background:var(--card-bg); border:1px solid var(--purple-color); padding:18px; border-radius:12px; width:500px; box-shadow: 0 0 25px rgba(168,85,247,0.4);">
-      <h2 style="color:var(--purple-color); text-align:center; margin-bottom:12px; font-weight:900; letter-spacing:1px;">CHALLENGE MUTATORS</h2>
+    <div style="background:var(--card-bg); border:1px solid var(--purple-color); padding:18px; border-radius:12px; width:500px; box-shadow: 0 0 25px rgba(168,85,247,0.4);" onclick="event.stopPropagation();">
+      <h2 style="color:var(--purple-color); text-align:center; margin-bottom:12px; font-weight:900; letter-spacing:1px;">CHALLENGE MUTATORS [M]</h2>
       <div style="display:flex; flex-direction:column; gap:8px;" id="mutatorList"></div>
       <div style="display:flex; justify-content:flex-end; margin-top:14px;">
-        <button class="btn btn-primary" id="closeMutatorsBtn" style="background:var(--purple-color); color:#fff; border-color:#9333ea;">DONE</button>
+        <button class="btn btn-primary" id="closeMutatorsBtn" style="background:var(--purple-color); color:#fff; border-color:#9333ea;">DONE [Esc]</button>
       </div>
     </div>
   </div>
 
   <!-- HELP MODAL -->
   <div id="helpModal" class="modal-overlay" style="z-index:200;">
-    <div style="background:var(--card-bg); border:1px solid var(--gold-color); padding:20px; border-radius:12px; width:680px; max-height:85vh; overflow-y:auto; box-shadow: 0 0 30px rgba(0,0,0,0.9); font-size:13px; color:var(--text-white);">
-      <h2 style="color:var(--gold-color); text-align:center; margin-bottom:12px; font-weight:900; font-size:20px; letter-spacing:1px;">COMMANDER'S FIELD GUIDE - LOOP 2</h2>
+    <div style="background:var(--card-bg); border:1px solid var(--gold-color); padding:20px; border-radius:12px; width:680px; max-height:85vh; overflow-y:auto; box-shadow: 0 0 30px rgba(0,0,0,0.9); font-size:13px; color:var(--text-white);" onclick="event.stopPropagation();">
+      <h2 style="color:var(--gold-color); text-align:center; margin-bottom:12px; font-weight:900; font-size:20px; letter-spacing:1px;">COMMANDER'S FIELD GUIDE & SHORTCUTS</h2>
+
+      <h3 style="color:var(--gold-color); margin-top:10px; border-bottom:1px solid var(--border-color); padding-bottom:4px;">⌨️ KEYBOARD SHORTCUTS</h3>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px; font-size:12px; background:rgba(0,0,0,0.3); padding:10px; border-radius:6px; border:1px solid var(--border-color);">
+        <div><b style="color:var(--gold-color);">[Space]</b> Start Next Wave</div>
+        <div><b style="color:var(--gold-color);">[1]</b> Hero Skill: Heal (+50 Hero HP, +5 Base)</div>
+        <div><b style="color:var(--gold-color);">[2]</b> Hero Skill: Shield Wall (Block Dmg)</div>
+        <div><b style="color:var(--gold-color);">[3]</b> Hero Skill: Meteor Strike (100 AoE)</div>
+        <div><b style="color:var(--gold-color);">[4]</b> Hero Skill: Militia Reinforcements</div>
+        <div><b style="color:var(--gold-color);">[5]</b> Siege Trebuchet Bombardment</div>
+        <div><b style="color:var(--gold-color);">[F]</b> Cast Firestorm (100g)</div>
+        <div><b style="color:var(--gold-color);">[B]</b> Cast Blizzard (80g)</div>
+        <div><b style="color:var(--gold-color);">[A]</b> Toggle Research Academy</div>
+        <div><b style="color:var(--gold-color);">[M]</b> Toggle Challenge Mutators</div>
+        <div><b style="color:var(--gold-color);">[H] / [F1]</b> Toggle Field Guide</div>
+        <div><b style="color:var(--gold-color);">[Esc]</b> Close Open Dialogs</div>
+      </div>
       
-      <h3 style="color:var(--green-color); margin-top:10px; border-bottom:1px solid var(--border-color); padding-bottom:4px;">🌟 ELEMENTAL TOWER FUSIONS (MAX LEVEL 3 -> FUSION)</h3>
+      <h3 style="color:var(--green-color); margin-top:12px; border-bottom:1px solid var(--border-color); padding-bottom:4px;">🌟 ELEMENTAL TOWER FUSIONS (MAX LEVEL 3 -> FUSION)</h3>
       <p style="margin-top:4px; line-height:1.5;">When any tower reaches Level 3, click it again to fuse into a Mythic Elemental Fusion Tower for 220g:</p>
       <ul style="margin-top:6px; line-height:1.6; padding-left:20px;">
         <li><b>🌋 Inferno Mortar (Mage / Cannon):</b> Blazing magma mortars that ignite lingering lava puddles melting all enemy ranks.</li>
@@ -325,7 +383,7 @@
         <li><b>Castle Auto-Ballistas:</b> Research "Siege Weaponry" in the Academy to mount automated defense ballistas on the fortress.</li>
       </ul>
       
-      <h3 style="color:var(--green-color); margin-top:12px; border-bottom:1px solid var(--border-color); padding-bottom:4px;">⚡ CHALLENGE MUTATORS (M)</h3>
+      <h3 style="color:var(--green-color); margin-top:12px; border-bottom:1px solid var(--border-color); padding-bottom:4px;">⚡ CHALLENGE MUTATORS [M]</h3>
       <ul style="margin-top:6px; line-height:1.6; padding-left:20px;">
         <li><b>Bloodlust:</b> +40% enemy speed, +50% gold reward.</li>
         <li><b>Titan Brood:</b> +100% enemy HP, 2x boss spawns, +100% score bonus.</li>
@@ -335,7 +393,7 @@
       </ul>
       
       <div style="display:flex; justify-content:center; margin-top:18px;">
-        <button class="btn btn-primary" id="closeHelpBtn" style="width:180px; padding:8px;">UNDERSTOOD</button>
+        <button class="btn btn-primary" id="closeHelpBtn" style="width:180px; padding:8px;">UNDERSTOOD [Esc]</button>
       </div>
     </div>
   </div>
@@ -430,9 +488,9 @@
           </div>
         </div>
         <div style="display:flex; gap:4px; margin-top:2px;">
-          <button class="btn" id="btnTrebuchet" style="flex:1; padding:5px 2px; font-size:9px; background:#d97706; color:#fff; border-color:#b45309;">Siege (5)</button>
-          <button class="btn" id="btnFirestorm" style="flex:1; padding:5px 2px; font-size:9px; background:#dc2626; color:#fff; border-color:#b91c1c;">Fire (100g)</button>
-          <button class="btn" id="btnBlizzard" style="flex:1; padding:5px 2px; font-size:9px; background:#0284c7; color:#fff; border-color:#0369a1;">Bliz (80g)</button>
+          <button class="btn" id="btnTrebuchet" style="flex:1; padding:5px 2px; font-size:9px; background:#d97706; color:#fff; border-color:#b45309;" title="Hotkey: 5">Siege [5]</button>
+          <button class="btn" id="btnFirestorm" style="flex:1; padding:5px 2px; font-size:9px; background:#dc2626; color:#fff; border-color:#b91c1c;" title="Hotkey: F">Fire [F] (100g)</button>
+          <button class="btn" id="btnBlizzard" style="flex:1; padding:5px 2px; font-size:9px; background:#0284c7; color:#fff; border-color:#0369a1;" title="Hotkey: B">Bliz [B] (80g)</button>
         </div>
       </div>
 
@@ -441,7 +499,7 @@
         <button class="btn" id="modeCampaignBtn" style="flex:1; padding:4px; font-size:10px; background:var(--gold-color); color:#000;">Camp</button>
         <button class="btn" id="modeEndlessBtn" style="flex:1; padding:4px; font-size:10px;">Endl</button>
         <button class="btn" id="modeBossBtn" style="flex:1; padding:4px; font-size:10px;">Boss</button>
-        <button class="btn" id="btnMutatorsModal" style="flex:1; padding:4px; font-size:10px; background:var(--purple-color); color:#fff; border-color:#9333ea;">Muts</button>
+        <button class="btn" id="btnMutatorsModal" style="flex:1; padding:4px; font-size:10px; background:var(--purple-color); color:#fff; border-color:#9333ea;" title="Hotkey: M">Muts [M]</button>
       </div>
       <div style="font-size:10px; color:var(--text-muted); text-align:center;">
         Best Endl: <span id="hsEndless" style="color:var(--gold-color)">0</span> | Boss: <span id="hsBoss" style="color:var(--gold-color)">0</span>
@@ -453,10 +511,10 @@
         <button class="btn" id="nextMapBtn" style="flex:1; padding:4px; font-size:11px;">▶</button>
       </div>
 
-      <button class="btn btn-primary" id="waveBtn">START WAVE 1</button>
+      <button class="btn btn-primary" id="waveBtn">START WAVE 1 [Space]</button>
       <div style="display:flex; gap:4px;">
-        <button class="btn" id="academyBtn" style="flex:1; background:#4f46e5; border-color:#4338ca; color:#fff; font-size:11px;">ACADEMY</button>
-        <button class="btn btn-danger" id="resetBtn" style="flex:1; font-size:11px;">RESET</button>
+        <button class="btn" id="academyBtn" style="flex:1; background:#4f46e5; border-color:#4338ca; color:#fff; font-size:11px;" title="Hotkey: A">ACADEMY [A]</button>
+        <button class="btn btn-danger" id="resetBtn" style="flex:1; font-size:11px;" title="Hotkey: R">RESET [R]</button>
       </div>
 
       <h2>HERO & SKILLS [1-5]</h2>
@@ -464,10 +522,10 @@
         HP: <span id="heroHpVal" style="color:var(--green-color);">100/100</span> | <span id="heroStatusVal">Ready</span>
       </div>
       <div style="display:flex; gap:3px;">
-        <button class="btn" id="btnHeal" style="flex:1; padding:5px 2px; font-size:9px; background:#fbbf24; color:#000; border-color:#d97706;">Heal (1)</button>
-        <button class="btn" id="btnShield" style="flex:1; padding:5px 2px; font-size:9px; background:#3b82f6; color:#fff; border-color:#2563eb;">Shld (2)</button>
-        <button class="btn" id="btnMeteor" style="flex:1; padding:5px 2px; font-size:9px; background:#ef4444; color:#fff; border-color:#dc2626;">Mtr (3)</button>
-        <button class="btn" id="btnReinforce" style="flex:1; padding:5px 2px; font-size:9px; background:#10b981; color:#000; border-color:#059669;">Milt (4)</button>
+        <button class="btn" id="btnHeal" style="flex:1; padding:5px 2px; font-size:9px; background:#fbbf24; color:#000; border-color:#d97706;" title="Hotkey: 1">Heal [1]</button>
+        <button class="btn" id="btnShield" style="flex:1; padding:5px 2px; font-size:9px; background:#3b82f6; color:#fff; border-color:#2563eb;" title="Hotkey: 2">Shld [2]</button>
+        <button class="btn" id="btnMeteor" style="flex:1; padding:5px 2px; font-size:9px; background:#ef4444; color:#fff; border-color:#dc2626;" title="Hotkey: 3">Mtr [3]</button>
+        <button class="btn" id="btnReinforce" style="flex:1; padding:5px 2px; font-size:9px; background:#10b981; color:#000; border-color:#059669;" title="Hotkey: 4">Milt [4]</button>
       </div>
     </div>
   </div>
@@ -486,6 +544,27 @@
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + duration);
       } catch(e){}
+    }
+
+    function showToast(title, message, type='info', duration=4500) {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `<span style="font-size:15px;">${type === 'success' ? '✨' : type === 'warning' ? '⚡' : type === 'danger' ? '🛡️' : '⚔️'}</span><div><b>${title}</b>${message ? `<div style="color:var(--text-muted); font-size:10px; margin-top:2px;">${message}</div>` : ''}</div>`;
+      toast.onclick = () => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(40px)';
+        setTimeout(() => toast.remove(), 300);
+      };
+      container.appendChild(toast);
+      setTimeout(() => {
+        if (toast.parentElement) {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateX(40px)';
+          setTimeout(() => toast.remove(), 300);
+        }
+      }, duration);
     }
 
     // Tech Variables
@@ -861,10 +940,12 @@
         t.setLvl(lvl + 1);
         playBeep(600, 0.1, 'square', 0.15);
         playBeep(900, 0.15, 'triangle', 0.15);
+        showToast("Research Upgraded", `${t.name} reached Level ${lvl + 1}/5!`, "success", 3000);
         updateAcademyUI();
         updateHUD();
       } else {
         playBeep(200, 0.15, 'sawtooth', 0.2);
+        showToast("Insufficient Gold", `Need ${cost}g for ${t.name}.`, "danger", 2500);
       }
     };
 
@@ -890,10 +971,12 @@
           </div>
           <button class="btn" style="padding:4px 10px; font-size:11px; background:${active ? 'var(--purple-color)' : 'var(--card-hover)'}; color:#fff;">${active ? 'ON' : 'OFF'}</button>
         `;
-        div.onclick = () => {
+        div.onclick = (e) => {
+          e.stopPropagation();
           mutators[m.id] = !mutators[m.id];
           localStorage.setItem('kf_mut_' + m.id, mutators[m.id]);
           playBeep(500, 0.08, 'triangle', 0.15);
+          showToast(m.name, mutators[m.id] ? "Mutator Enabled" : "Mutator Disabled", "warning", 2500);
           updateMutatorUI();
           updateHUD();
         };
@@ -909,7 +992,11 @@
       document.getElementById('mutatorsModal').style.display = 'flex';
       updateMutatorUI();
     });
-    document.getElementById('closeMutatorsBtn').addEventListener('click', () => {
+    document.getElementById('closeMutatorsBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('mutatorsModal').style.display = 'none';
+    });
+    document.getElementById('mutatorsModal').addEventListener('click', () => {
       document.getElementById('mutatorsModal').style.display = 'none';
     });
 
@@ -917,13 +1004,22 @@
       document.getElementById('academyModal').style.display = 'flex';
       updateAcademyUI();
     });
-    document.getElementById('closeAcademyBtn').addEventListener('click', () => {
+    document.getElementById('closeAcademyBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
       document.getElementById('academyModal').style.display = 'none';
     });
+    document.getElementById('academyModal').addEventListener('click', () => {
+      document.getElementById('academyModal').style.display = 'none';
+    });
+
     document.getElementById('helpBtn').addEventListener('click', () => {
       document.getElementById('helpModal').style.display = 'flex';
     });
-    document.getElementById('closeHelpBtn').addEventListener('click', () => {
+    document.getElementById('closeHelpBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('helpModal').style.display = 'none';
+    });
+    document.getElementById('helpModal').addEventListener('click', () => {
       document.getElementById('helpModal').style.display = 'none';
     });
 
@@ -1013,11 +1109,38 @@
     document.getElementById('btnTrebuchet').addEventListener('click', () => castTrebuchet(hero.targetX, hero.targetY));
     
     window.addEventListener('keydown', (e) => {
+      // Escape dismisses all open modals
+      if (e.key === 'Escape') {
+        document.getElementById('academyModal').style.display = 'none';
+        document.getElementById('mutatorsModal').style.display = 'none';
+        document.getElementById('helpModal').style.display = 'none';
+        return;
+      }
+      // Space to start wave
+      if (e.code === 'Space') {
+        e.preventDefault();
+        const waveBtn = document.getElementById('waveBtn');
+        if (!waveInProgress && !gameOver) {
+          waveBtn.click();
+        }
+        return;
+      }
       if (e.key === '1') castHeal();
       if (e.key === '2') castShield();
       if (e.key === '3') castMeteor();
       if (e.key === '4') castReinforce();
       if (e.key === '5') castTrebuchet(hero.targetX, hero.targetY);
+      if (e.key.toLowerCase() === 'f') {
+        document.getElementById('btnFirestorm').click();
+      }
+      if (e.key.toLowerCase() === 'b') {
+        document.getElementById('btnBlizzard').click();
+      }
+      if (e.key.toLowerCase() === 'a') {
+        const modal = document.getElementById('academyModal');
+        modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
+        if (modal.style.display === 'flex') updateAcademyUI();
+      }
       if (e.key.toLowerCase() === 'm') {
         const modal = document.getElementById('mutatorsModal');
         modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
@@ -1027,6 +1150,9 @@
         if(e.key === 'F1') e.preventDefault();
         const modal = document.getElementById('helpModal');
         modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
+      }
+      if (e.key.toLowerCase() === 'r' && !waveInProgress) {
+        document.getElementById('resetBtn').click();
       }
     });
 
@@ -1117,29 +1243,34 @@
                   t.range = 160;
                   t.maxCooldown = 70;
                   spawnFloatingText(slot.sx, slot.sy - 20, "INFERNO FUSION!", "#f97316");
+                  showToast("Elemental Fusion Activated!", "Inferno Mortar deployed with lingering magma!", "warning", 3500);
                 } else if (t.type === 'Tesla' || t.type === 'Frost') {
                   t.type = 'Superconductor';
                   t.damage = Math.floor(65 * fusBonus);
                   t.range = 160;
                   t.maxCooldown = 40;
                   spawnFloatingText(slot.sx, slot.sy - 20, "SUPERCONDUCTOR!", "#0ea5e9");
+                  showToast("Elemental Fusion Activated!", "Superconductor Tesla Frost Storm active!", "info", 3500);
                 } else if (t.type === 'Poison' || t.type === 'Ballista') {
                   t.type = 'Venomspite';
                   t.damage = Math.floor(110 * fusBonus);
                   t.range = 210;
                   t.maxCooldown = 55;
                   spawnFloatingText(slot.sx, slot.sy - 20, "VENOMSPITE FUSION!", "#22c55e");
+                  showToast("Elemental Fusion Activated!", "Venomspite Piercer heavy plague ballista active!", "success", 3500);
                 } else {
                   t.type = 'SolarBeam';
                   t.damage = Math.floor(16 * fusBonus);
                   t.range = 180;
                   t.maxCooldown = 8;
                   spawnFloatingText(slot.sx, slot.sy - 20, "SOLAR BEAM FUSION!", "#fef08a");
+                  showToast("Elemental Fusion Activated!", "Solar Prism Beam laser focus active!", "warning", 3500);
                 }
                 playBeep(1000, 0.2, 'square', 0.25);
               } else {
                 playBeep(200, 0.15, 'sawtooth', 0.2);
                 spawnFloatingText(slot.sx, slot.sy - 20, "FUSE: NEED " + fusCost + "g!", "#ef4444");
+                showToast("Insufficient Gold", `Need ${fusCost}g for Mythic Fusion Upgrade!`, "danger", 2500);
               }
             } else {
               spawnFloatingText(slot.sx, slot.sy - 20, "FUSION MASTERED!", "#fbbf24");
@@ -1165,6 +1296,7 @@
           } else {
             playBeep(200, 0.15, 'sawtooth', 0.2);
             spawnFloatingText(clickX, clickY - 20, "NEED " + def.cost + "g!", "#ef4444");
+            showToast("Insufficient Gold", `Need ${def.cost}g to place ${selectedTowerType}.`, "danger", 2500);
           }
         } else {
           hero.targetX = clickX;
@@ -1183,7 +1315,10 @@
         const rect = canvas.getBoundingClientRect();
         spawnFloatingText(rect.width/2, rect.height/2, "FIRESTORM!", "#ef4444");
         enemies.forEach(e => { e.hp -= 150; spawnParticleEffect(e.x, e.y, "#ef4444"); });
+        showToast("Firestorm Unleashed!", "150 Fire damage incinerates all active foes!", "danger", 3000);
         updateHUD();
+      } else {
+        showToast("Insufficient Gold", "Need 100g to cast Firestorm.", "danger", 2500);
       }
     });
     document.getElementById('btnBlizzard').addEventListener('click', () => {
@@ -1193,7 +1328,10 @@
         playBeep(600, 0.5, 'sine', 0.3);
         const rect = canvas.getBoundingClientRect();
         spawnFloatingText(rect.width/2, rect.height/2, "BLIZZARD!", "#3b82f6");
+        showToast("Blizzard Active!", "Bitter frost severely slows all enemy movement!", "info", 3000);
         updateHUD();
+      } else {
+        showToast("Insufficient Gold", "Need 80g to cast Blizzard.", "danger", 2500);
       }
     });
 
@@ -1228,6 +1366,7 @@
       
       spawnTimer = 0;
       playBeep(440, 0.1, 'triangle', 0.15);
+      showToast(`Wave ${wave} Engaged!`, "Defend the citadel against incoming invaders!", "danger", 2500);
       updateHUD();
     });
 
@@ -1269,6 +1408,7 @@
       blizzTimer = 0;
       scorchMarks = [];
       playBeep(300, 0.1, 'sawtooth', 0.2);
+      showToast("Citadel Reset", "All towers and traps cleared. Ready for Wave 1!", "info", 2500);
       updateHUD();
     }
 
@@ -2063,6 +2203,7 @@
         const rect = canvas.getBoundingClientRect();
         spawnFloatingText(rect.width / 2, rect.height / 2, `WAVE ${wave} CLEAR! +${waveBonus}g`, "#10b981");
         spawnExplosion(rect.width / 2, rect.height / 2, "#10b981", 1.4);
+        showToast(`Wave ${wave} Cleared!`, `+${waveBonus}g bounty awarded! Upgrade defenses or press [Space] for next wave.`, "success", 4000);
         
         if (gameMode === 'Endless') {
            if (wave > hsEndless) { hsEndless = wave; localStorage.setItem('kf_hsEndless', hsEndless); }
@@ -2635,6 +2776,9 @@
     }
 
     gameLoop();
+    setTimeout(() => {
+      showToast("Welcome to KFortress!", "Press [H] or [F1] for Guide & Shortcuts | Keys [1-5] Skills & Siege | [Space] Wave | [A] Academy | [M] Mutators | [Esc] Close.", "warning", 6500);
+    }, 400);
   </script>
 </body>
 </html>
