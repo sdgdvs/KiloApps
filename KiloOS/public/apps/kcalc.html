@@ -864,7 +864,7 @@
       <!-- Formula Expression Direct Bar -->
       <div class="formula-bar">
         <span class="formula-label">fx</span>
-        <input type="text" id="formulaInput" class="formula-input" placeholder="Type formula e.g. sin(30) + sqrt(144)..." onkeydown="handleFormulaKey(event)">
+        <input type="text" id="formulaInput" class="formula-input" placeholder="Type formula e.g. sin(30) + sqrt(144)..." oninput="expr = this.value" onkeydown="handleFormulaKey(event)">
         <button class="action-btn" onclick="evalFormulaInput()">Eval</button>
       </div>
 
@@ -947,10 +947,10 @@
       <div id="view-financial" class="view-panel">
         <div class="financial-container">
           <div class="fin-tool-nav">
-            <button class="fin-tab active" onclick="switchFinTool('pmt')">Loan Payment (PMT)</button>
-            <button class="fin-tab" onclick="switchFinTool('fv')">Future Value (FV)</button>
-            <button class="fin-tab" onclick="switchFinTool('margin')">Profit Margin</button>
-            <button class="fin-tab" onclick="switchFinTool('cagr')">CAGR</button>
+            <button id="tab-fin-pmt" class="fin-tab active" onclick="switchFinTool('pmt')">Loan Payment (PMT)</button>
+            <button id="tab-fin-fv" class="fin-tab" onclick="switchFinTool('fv')">Future Value (FV)</button>
+            <button id="tab-fin-margin" class="fin-tab" onclick="switchFinTool('margin')">Profit Margin</button>
+            <button id="tab-fin-cagr" class="fin-tab" onclick="switchFinTool('cagr')">CAGR</button>
           </div>
 
           <!-- Tool 1: PMT -->
@@ -1047,6 +1047,7 @@
               <div style="text-align:right;">
                 <div style="font-size:12px; color:var(--text-muted);" id="margin-pct">Margin: 0%</div>
                 <div style="font-size:12px; color:var(--text-muted);" id="markup-pct">Markup: 0%</div>
+                <button class="mini-btn" style="margin-top:4px;" onclick="sendToCalc(document.getElementById('margin-profit').dataset.rawVal)">Use Result</button>
               </div>
             </div>
           </div>
@@ -1095,7 +1096,7 @@
               <h3 style="margin:0;">Descriptive Statistics (1-Var)</h3>
               <div style="display:flex; gap:6px;">
                 <button class="mini-btn" onclick="loadSample1VarData()">Load Example Data</button>
-                <button class="mini-btn" onclick="document.getElementById('stat-1var-input').value='';">Clear</button>
+                <button class="mini-btn" onclick="clear1VarData()">Clear</button>
               </div>
             </div>
             <div class="form-group">
@@ -1158,7 +1159,7 @@
               <h3 style="margin:0;">Linear Regression Analysis (y = mx + b)</h3>
               <div style="display:flex; gap:6px;">
                 <button class="mini-btn" onclick="loadSample2VarData()">Load Example Points</button>
-                <button class="mini-btn" onclick="document.getElementById('stat-2var-input').value='';">Clear</button>
+                <button class="mini-btn" onclick="clear2VarData()">Clear</button>
               </div>
             </div>
             <div class="form-group">
@@ -1193,7 +1194,7 @@
               <div class="stat-tile" style="grid-column: span 2;">
                 <div class="stat-label">Estimate y given x:</div>
                 <div style="display:flex; gap:8px; align-items:center; margin-top:4px; flex-wrap:wrap;">
-                  <input type="number" id="reg-pred-x" value="6" style="width:80px; padding:6px 10px; font-size:13px;" oninput="predictRegressionY()">
+                  <input type="number" id="reg-pred-x" value="6" style="width:80px; padding:6px 10px; font-size:13px; background:rgba(0,0,0,0.4); border:1px solid var(--border-color); border-radius:6px; color:#fff; outline:none;" oninput="predictRegressionY()">
                   <span style="font-size:13px; color:var(--text-muted);">→ ŷ =</span>
                   <span id="reg-pred-y" class="stat-val" style="color:#818cf8;">14.1600</span>
                   <button class="mini-btn" onclick="sendToCalc(document.getElementById('reg-pred-y').textContent)">Use ŷ</button>
@@ -1256,7 +1257,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr><td><span class="kbd-key">1</span> - <span class="kbd-key">5</span></td><td>Switch Calculator Modes (Scientific, Fin, Stats, Const, History)</td></tr>
+          <tr><td><span class="kbd-key">Alt</span>+<span class="kbd-key">1</span> - <span class="kbd-key">5</span></td><td>Switch Calculator Modes (or <span class="kbd-key">1</span>-<span class="kbd-key">5</span> outside Scientific)</td></tr>
           <tr><td><span class="kbd-key">0</span> - <span class="kbd-key">9</span>, <span class="kbd-key">.</span></td><td>Enter numbers and decimals</td></tr>
           <tr><td><span class="kbd-key">+</span>, <span class="kbd-key">-</span>, <span class="kbd-key">*</span>, <span class="kbd-key">/</span>, <span class="kbd-key">%</span>, <span class="kbd-key">^</span></td><td>Standard and power arithmetic operators</td></tr>
           <tr><td><span class="kbd-key">(</span> , <span class="kbd-key">)</span></td><td>Parentheses for order of operations</td></tr>
@@ -1364,6 +1365,10 @@
     populateConstants();
     render();
     loadHistoryFromStorage();
+    calcPMT();
+    calcFV();
+    calcMargin();
+    calcCAGR();
     showToast("Welcome to KCalc Pro • Press 'H' or F1 for Help", 'info', 4500);
   });
 
@@ -1465,7 +1470,10 @@
     return Number.isInteger(val) ? String(val) : Number(val.toPrecision(8)).toString();
   }
 
+  let activeViewName = 'scientific';
+
   function switchView(viewName) {
+    activeViewName = viewName;
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
 
@@ -1474,6 +1482,8 @@
 
     const panel = document.getElementById('view-' + viewName);
     if (panel) panel.classList.add('active');
+
+    if (viewName === 'history') renderHistory();
   }
 
   function toggleDegRad() {
@@ -1502,7 +1512,7 @@
   function backspace() {
     if (expr === 'Error' || expr.startsWith('ERR')) { expr = ''; render(); return; }
     
-    const keywords = ['sin(', 'cos(', 'tan(', 'asin(', 'acos(', 'atan(', 'ln(', 'log(', 'log2(', 'sqrt(', 'cbrt(', 'fact(', 'abs(', 'floor(', 'ceil(', '10^(', 'e^(', 'Ans'];
+    const keywords = ['sin(', 'cos(', 'tan(', 'asin(', 'acos(', 'atan(', 'ln(', 'log(', 'log2(', 'sqrt(', 'cbrt(', 'fact(', 'abs(', 'floor(', 'ceil(', '10^(', 'e^(', '^2', '^3', 'rnd', 'Ans'];
     let removed = false;
     for (let k of keywords) {
       if (expr.endsWith(k)) {
@@ -1629,8 +1639,14 @@
     // Support postfix factorial e.g. 5! -> fact(5)
     sanitized = sanitized.replace(/(\d+(?:\.\d+)?|\([^\)]+\))!/g, 'fact($1)');
 
-    // Support percentage e.g. 50% -> (50/100)
-    sanitized = sanitized.replace(/(\d+(?:\.\d+)?|\([^\)]+\))%/g, '($1/100)');
+    // Support modulo keyword e.g. 10 mod 3 -> 10%3
+    sanitized = sanitized.replace(/\bmod\b/gi, '%');
+
+    // Support percentage e.g. 50% -> (50/100) only when not used as binary modulo operator
+    sanitized = sanitized.replace(/(\d+(?:\.\d+)?|\([^\)]+\))%(?=[^0-9a-zA-Z(]|$)/g, '($1/100)');
+
+    // Support standalone rnd token e.g. rnd -> rnd() or 5*rnd -> 5*rnd()
+    sanitized = sanitized.replace(/\brnd\b(?!\()/g, 'rnd()');
 
     // DEG/RAD handling for trig functions
     const degMultiplier = isDeg ? (Math.PI / 180) : 1;
@@ -1642,11 +1658,25 @@
       E: Math.E,
       pi: Math.PI,
       PI: Math.PI,
+      c: 299792458,
+      h: 6.62607015e-34,
+      G: 6.67430e-11,
+      g: 9.80665,
       Ans: lastAns,
       ans: lastAns,
-      sin: (x) => Math.sin(x * degMultiplier),
-      cos: (x) => Math.cos(x * degMultiplier),
-      tan: (x) => Math.tan(x * degMultiplier),
+      sin: (x) => {
+        if (isDeg && (x % 180 === 0)) return 0;
+        return Math.sin(x * degMultiplier);
+      },
+      cos: (x) => {
+        if (isDeg && (Math.abs(x % 180) === 90)) return 0;
+        return Math.cos(x * degMultiplier);
+      },
+      tan: (x) => {
+        if (isDeg && (Math.abs(x % 180) === 90)) return Infinity;
+        if (isDeg && (x % 180 === 0)) return 0;
+        return Math.tan(x * degMultiplier);
+      },
       asin: (x) => Math.asin(x) * radMultiplier,
       acos: (x) => Math.acos(x) * radMultiplier,
       atan: (x) => Math.atan(x) * radMultiplier,
@@ -1666,8 +1696,9 @@
     // Replace caret with power operator
     sanitized = sanitized.replace(/\^/g, '**');
 
-    // Auto-insert implicit multiplication: e.g. 5( -> 5*( or 5sin -> 5*sin or 5pi -> 5*pi
+    // Auto-insert implicit multiplication: e.g. 5( -> 5*( or 5sin -> 5*sin or 5pi -> 5*pi or (2)3 -> (2)*3
     sanitized = sanitized.replace(/([0-9\)])(?=[a-zA-Z\(])/g, '$1*');
+    sanitized = sanitized.replace(/(\))(?=[0-9])/g, '$1*');
 
     // Auto balance parentheses
     let openParen = (sanitized.match(/\(/g) || []).length;
@@ -1714,9 +1745,8 @@
 
   function handleFormulaKey(e) {
     if (e.key === 'Enter') {
+      e.preventDefault();
       evalFormulaInput();
-    } else {
-      expr = e.target.value;
     }
   }
 
@@ -1727,13 +1757,12 @@
 
   // Financial Calculators Logic
   function switchFinTool(toolId) {
-    document.querySelectorAll('.fin-tab').forEach(t => t.classList.remove('active'));
-    event.target.classList.add('active');
-    
-    document.getElementById('fin-pmt').style.display = toolId === 'pmt' ? 'flex' : 'none';
-    document.getElementById('fin-fv').style.display = toolId === 'fv' ? 'flex' : 'none';
-    document.getElementById('fin-margin').style.display = toolId === 'margin' ? 'flex' : 'none';
-    document.getElementById('fin-cagr').style.display = toolId === 'cagr' ? 'flex' : 'none';
+    ['pmt', 'fv', 'margin', 'cagr'].forEach(t => {
+      const tab = document.getElementById('tab-fin-' + t);
+      if (tab) tab.classList.toggle('active', t === toolId);
+      const card = document.getElementById('fin-' + t);
+      if (card) card.style.display = (t === toolId) ? 'flex' : 'none';
+    });
   }
 
   function calcPMT() {
@@ -1829,6 +1858,33 @@
     document.getElementById('stat-2var-input').value = '1, 2.5\n2, 4.8\n3, 7.1\n4, 9.4\n5, 11.9';
     calc2VarRegression();
     showToast('Example 2-Var dataset loaded', 'info');
+  }
+
+  function clear1VarData() {
+    document.getElementById('stat-1var-input').value = '';
+    document.getElementById('stat-n').textContent = '0';
+    document.getElementById('stat-sum').textContent = '-';
+    document.getElementById('stat-mean').textContent = '-';
+    document.getElementById('stat-median').textContent = '-';
+    document.getElementById('stat-mode').textContent = '-';
+    document.getElementById('stat-minmax').textContent = '-';
+    document.getElementById('stat-sdev').textContent = '-';
+    document.getElementById('stat-pdev').textContent = '-';
+    document.getElementById('stat-svar').textContent = '-';
+    document.getElementById('stat-stderr').textContent = '-';
+    showToast('1-Var dataset cleared', 'info');
+  }
+
+  function clear2VarData() {
+    document.getElementById('stat-2var-input').value = '';
+    document.getElementById('reg-equation').textContent = '-';
+    document.getElementById('reg-slope').textContent = '-';
+    document.getElementById('reg-intercept').textContent = '-';
+    document.getElementById('reg-r').textContent = '-';
+    document.getElementById('reg-r2').textContent = '-';
+    document.getElementById('reg-pred-y').textContent = '-';
+    currentRegModel = { m: 0, b: 0 };
+    showToast('2-Var dataset cleared', 'info');
   }
 
   function parseNumbersList(text) {
@@ -1981,7 +2037,7 @@
   }
 
   function sendToCalc(val) {
-    if (val) {
+    if (val !== undefined && val !== null && val !== '') {
       switchView('scientific');
       expr = String(val).trim();
       render();
@@ -2099,7 +2155,10 @@
     try {
       const saved = localStorage.getItem('kcalc_history');
       if (saved) historyTape = JSON.parse(saved);
-    } catch {}
+      if (!Array.isArray(historyTape)) historyTape = [];
+    } catch {
+      historyTape = [];
+    }
     renderHistory();
   }
 
@@ -2168,14 +2227,14 @@
       return;
     }
 
-    // Numbers 1-5 for mode switching when in default state or combined with Alt/Ctrl
-    if (e.altKey || e.ctrlKey) {
-      if (e.key === '1') { e.preventDefault(); switchView('scientific'); }
-      else if (e.key === '2') { e.preventDefault(); switchView('financial'); }
-      else if (e.key === '3') { e.preventDefault(); switchView('statistics'); }
-      else if (e.key === '4') { e.preventDefault(); switchView('constants'); }
-      else if (e.key === '5') { e.preventDefault(); switchView('history'); }
-      return;
+    // Numbers 1-5 for mode switching: with Alt/Ctrl anywhere, or plain 1-5 when outside Scientific mode
+    const isModeSwitch = e.altKey || e.ctrlKey || activeViewName !== 'scientific';
+    if (isModeSwitch) {
+      if (e.key === '1') { e.preventDefault(); switchView('scientific'); return; }
+      else if (e.key === '2') { e.preventDefault(); switchView('financial'); return; }
+      else if (e.key === '3') { e.preventDefault(); switchView('statistics'); return; }
+      else if (e.key === '4') { e.preventDefault(); switchView('constants'); return; }
+      else if (e.key === '5') { e.preventDefault(); switchView('history'); return; }
     }
 
     // Scientific keypad shortcuts

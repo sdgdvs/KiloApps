@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KCalc
+**Target App:** KCalendar
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KCalc
 - KCalendar
 - KChart
 - KChat
@@ -173,8 +172,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KBase
 - KBreakout
 - KBudget
+- KCalc
 
 ## Test Reports
+
+- **KCalc**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
+  - ✅ Core functionality works (scientific calculator with direct formula bar and 49-key keypad, degree/radian mode switching, multi-register memory M/M1/M2/M3 management modal, financial tools suite Loan PMT / Compound FV / Profit Margin / CAGR with result forwarding into calculator, descriptive 1-variable statistics suite with 10 computed metrics, 2-variable linear regression model with correlation/determination and interactive y-prediction, scientific constants library, calculation tape history with live search and CSV/TXT export, help & keyboard shortcuts modal).
+  - 🔧 FIXED: Random number generator button `rnd` appended `rnd` which evaluated to the raw function `() => Math.random()` in `evalExpression()`, failing `isNaN()` check and permanently displaying `Error` on `=`. Updated evaluator to rewrite standalone `rnd` token to `rnd()` and added `rnd`, `^2`, and `^3` to backspace keyword tokens.
+  - 🔧 FIXED: Modulo operator (`%` / `mod` button) was broken because percentage replacement `(\d+)%` unconditionally replaced `%` with `(val/100)`, turning binary expressions like `10%3` into `(10/100)3` which crashed with a JS SyntaxError. Updated regex to only match percentage `%` when not followed by another operand/variable, and mapped `mod` keyword to `%`.
+  - 🔧 FIXED: `switchFinTool(toolId)` called `event.target.classList.add('active')` without receiving `event`, throwing `ReferenceError: event is not defined` in standards-compliant browsers and breaking tab switching. Assigned explicit element IDs (`tab-fin-*`) and decoupled tab activation from global event state.
+  - 🔧 FIXED: Typing in the formula input bar desynchronized `expr` because `handleFormulaKey` assigned `expr = e.target.value` on `keydown` before the browser committed the typed character. Added `oninput="expr = this.value"` and streamlined `handleFormulaKey` for Enter execution.
+  - 🔧 FIXED: "Clear" buttons in the 1-Variable Statistics and 2-Variable Regression tools emptied input textareas but left all 10 summary metric tiles and regression model tiles displaying stale results. Implemented `clear1VarData()` and `clear2VarData()` to reset input and metrics displays.
+  - 🔧 FIXED: Initial financial tool cards displayed `$0.00` with uninitialized `dataset.rawVal` until manually clicking Calculate, causing "Use Result" to do nothing, and Profit Margin tool lacked a "Use Result" button present in PMT/FV/CAGR. Invoked all financial calculations on `DOMContentLoaded` and added "Use Result" to Profit Margin.
+  - 🔧 FIXED: User Guide modal promised shortcuts `1`–`5` for calculator mode switching, but pressing `1`–`5` entered digits into the calculator keypad. Configured `1`–`5` to switch modes whenever outside Scientific mode (and with Alt/Ctrl anywhere), and clarified shortcut documentation.
 
 - **KBudget**: ISSUES FOUND ⚠️ (6 issues, 6 fixed inline)
   - ✅ Core functionality works (income/expense transaction ledger, summary balance/income/expense cards, interactive pie chart for category breakdown, multi-field search and 4-way sorting, 20-item pagination controls, Add/Edit transaction modal, Settings modal with custom currency symbol persistence, CSV import and export, print stylesheet layout, keyboard shortcuts Ctrl+N/F/S/O/Escape).
