@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KBase
+**Target App:** KBreakout
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KBase
 - KBreakout
 - KBudget
 - KCalc
@@ -173,8 +172,18 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KAsteroids
 - KAudio
 - KBBS
+- KBase
 
 ## Test Reports
+
+- **KBase**: ISSUES FOUND ⚠️ (6 issues, 6 fixed inline)
+  - ✅ Core functionality works (simultaneous 64-bit live multi-base converter for Bin/Oct/Dec/Hex/Custom 2..36/ASCII, text string encoding suite Base64/URL/Hex/SHA-256 with clipboard copy, 64-bit interactive toggle board with shifts, rotations ROL/ROR, reversal, byte swap endianness, 64-bit bitwise logical matrix calculator AND/OR/XOR/NOT/SHL/SHR/SAR/ROL/ROR, IEEE-754 32-bit single and 64-bit double precision floating point breakdown strips and formulas, variable-length integer suite LEB128/SLEB128/Protobuf ZigZag encoder and decoder with binary layout breakdown, multi-width 8/16/32/64-bit two's complement and sign-magnitude inspector, structured bitfield slicer with bit mask and metrics Popcount/CLZ/CTZ/Parity/Pow2, activity history logging with CSV and JSON export, help and shortcuts modal).
+  - 🔧 FIXED: User guide explicitly promised Enter keyboard shortcut to execute/recalculate active conversions or bitwise operations, but Enter was unhandled in keydown listener. Added Enter key handler dispatching to active input/tab calculation.
+  - 🔧 FIXED: Bitwise operator suite inputs (`op-a`, `op-b`) did not live-update the matrix display on input and none of the 9 operator buttons indicated active operator state. Added live input listeners, `currentBitwiseOp` tracking, and dynamic active button highlight.
+  - 🔧 FIXED: Activity log was spammed on every keystroke in IEEE-754 float input and Varint integer input, and unconditionally recorded 3 entries on initial page load. Added `recordHistory` flag so live typing and page load do not pollute the history log while button clicks and Enter key triggers record operations cleanly.
+  - 🔧 FIXED: Varint hex decoder failed when receiving continuous hex byte sequences (e.g. `E58E26`) because `parseHexBytes` assumed space separators and parsed continuous hex as a single integer > 255. Updated parser to split continuous hex strings into 2-character byte pairs.
+  - 🔧 FIXED: "Clear All" button in multi-base converter cleared all base text inputs but left `bitboardVal` with stale bits, causing the 64-bit board to desync from inputs. Wired up `bitboardVal = 0n` and `renderBitboard()`.
+  - 🔧 FIXED: IEEE-754 single-precision formula generated invalid expressions for special values (Zero, Subnormals, ±Infinity, NaN). Added dedicated formula branches for zero, subnormals, infinity, and NaN. Also added cursor pointer styling and fallback copy handling to `str-output`.
 
 - **KBBS**: ISSUES FOUND ⚠️ (6 issues, 6 fixed inline)
   - ✅ Core functionality works (virtual ANSI terminal emulator with canvas rendering, CRT scanline effects, multi-node dialing directory with JSON import/export, interactive door games Legend of the Red Dragon & TradeWars 2015 streaming to terminal, EchoNet FidoNet EchoMail reader with message posting, reply quoting, and .MSG export, binary file transfers XMODEM/ZMODEM, session log capture/export as ANSI/TXT, keyboard shortcuts).

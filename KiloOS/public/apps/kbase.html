@@ -677,8 +677,8 @@
       </div>
 
       <div class="input-group">
-        <label>Result Buffer</label>
-        <textarea id="str-output" readonly placeholder="Output string will appear here..."></textarea>
+        <label>Result Buffer (Click to Copy)</label>
+        <textarea id="str-output" readonly style="cursor: pointer;" title="Click to copy to clipboard" placeholder="Output string will appear here..."></textarea>
       </div>
     </div>
   </div>
@@ -1245,6 +1245,8 @@
 
   document.getElementById('btn-clear-bases').onclick = () => {
     updateBasesFromValue(null, null);
+    bitboardVal = 0n;
+    renderBitboard();
   };
 
   // String Encoding Handlers
@@ -1312,8 +1314,19 @@
 
   strOutput.onclick = () => {
     if (strOutput.value && !strOutput.value.startsWith("Error")) {
-      navigator.clipboard.writeText(strOutput.value);
-      showToast('Copied output to clipboard!');
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(strOutput.value).then(() => {
+          showToast('Copied output to clipboard!');
+        }).catch(() => {
+          strOutput.select();
+          document.execCommand('copy');
+          showToast('Copied output to clipboard!');
+        });
+      } else {
+        strOutput.select();
+        document.execCommand('copy');
+        showToast('Copied output to clipboard!');
+      }
     }
   };
 
@@ -1440,7 +1453,23 @@
     return html;
   }
 
-  function executeBitwiseOp(op) {
+  let currentBitwiseOp = 'AND';
+
+  function updateActiveOpButton(activeOp) {
+    document.querySelectorAll('[data-op]').forEach(btn => {
+      if (btn.dataset.op === activeOp) {
+        btn.classList.add('btn-accent');
+      } else {
+        btn.classList.remove('btn-accent');
+      }
+    });
+  }
+
+  function executeBitwiseOp(op, recordHistory = false) {
+    if (op) currentBitwiseOp = op;
+    else op = currentBitwiseOp;
+    updateActiveOpButton(op);
+
     const valA = parseOpVal(opAInput.value) & 0xFFFFFFFFFFFFFFFFn;
     const valB = parseOpVal(opBInput.value) & 0xFFFFFFFFFFFFFFFFn;
     let res = 0n;
@@ -1479,19 +1508,24 @@
     document.getElementById('mat-res-val').textContent = '0x' + res.toString(16).padStart(16, '0').toUpperCase();
     document.getElementById('mat-res-bin').innerHTML = formatBitStream(res);
 
-    addHistory(`Bitwise ${op}`, `A=0x${valA.toString(16)}, B=0x${valB.toString(16)}`, `0x${res.toString(16).toUpperCase()}`);
+    if (recordHistory) {
+      addHistory(`Bitwise ${op}`, `A=0x${valA.toString(16)}, B=0x${valB.toString(16)}`, `0x${res.toString(16).toUpperCase()}`);
+    }
   }
 
   document.querySelectorAll('[data-op]').forEach(btn => {
-    btn.onclick = () => executeBitwiseOp(btn.dataset.op);
+    btn.onclick = () => executeBitwiseOp(btn.dataset.op, true);
   });
+
+  opAInput.addEventListener('input', () => executeBitwiseOp(currentBitwiseOp, false));
+  opBInput.addEventListener('input', () => executeBitwiseOp(currentBitwiseOp, false));
 
   // ==========================================
   // TAB 3: IEEE-754 FLOATING POINT INSPECTOR
   // ==========================================
   const fpInput = document.getElementById('fp-input');
 
-  function inspectIEEE754() {
+  function inspectIEEE754(recordHistory = false) {
     const rawVal = fpInput.value.trim();
     let num = parseFloat(rawVal);
     if (isNaN(num) && rawVal.toLowerCase() !== 'nan') num = 0;
@@ -1523,8 +1557,17 @@
     document.getElementById('fp32-mant-val').textContent = mantFrac32.toFixed(7) + ` (0x${mant32.toString(16)})`;
     document.getElementById('fp32-reconstructed').textContent = view32.getFloat32(0, false);
     
-    const signMult = sign32 === 1 ? '-1' : '1';
-    document.getElementById('fp32-formula').textContent = `(-1)^${sign32} × 2^(${unbiased32}) × (1 + ${mantFrac32.toFixed(6)})`;
+    if (exp32 === 0 && mant32 === 0) {
+      document.getElementById('fp32-formula').textContent = `(-1)^${sign32} × 0 = ${sign32 === 1 ? '-0' : '+0'}`;
+    } else if (exp32 === 0) {
+      document.getElementById('fp32-formula').textContent = `(-1)^${sign32} × 2^(-126) × (0 + ${mantFrac32.toFixed(6)}) [subnormal]`;
+    } else if (exp32 === 255 && mant32 === 0) {
+      document.getElementById('fp32-formula').textContent = `${sign32 === 1 ? '-Infinity' : '+Infinity'}`;
+    } else if (exp32 === 255) {
+      document.getElementById('fp32-formula').textContent = `NaN (Not a Number)`;
+    } else {
+      document.getElementById('fp32-formula').textContent = `(-1)^${sign32} × 2^(${unbiased32}) × (1 + ${mantFrac32.toFixed(6)})`;
+    }
 
     // 64-Bit Double Breakdown
     const buf64 = new ArrayBuffer(8);
@@ -1545,7 +1588,7 @@
     const exp64 = (high64 >>> 20) & 0x7FF;
     const unbiased64 = exp64 === 0 ? -1022 : exp64 - 1023;
 
-    document.getElementById('fp64-sign-val').textContent = `${sign64}`;
+    document.getElementById('fp64-sign-val').textContent = `${sign64} (${sign64 === 1 ? '- negative' : '+ positive'})`;
     document.getElementById('fp64-exp-val').textContent = `${exp64} (0b${exp64.toString(2).padStart(11, '0')})`;
     document.getElementById('fp64-exp-unbiased').textContent = unbiased64;
 
@@ -1554,7 +1597,9 @@
     document.getElementById('fp64-mant-val').textContent = mantFrac64.toFixed(12);
     document.getElementById('fp64-reconstructed').textContent = view64.getFloat64(0, false);
 
-    addHistory('IEEE-754 Inspect', rawVal, `Float32: 0x${bits32.toString(16).toUpperCase()}`);
+    if (recordHistory) {
+      addHistory('IEEE-754 Inspect', rawVal, `Float32: 0x${bits32.toString(16).toUpperCase()}`);
+    }
   }
 
   // ==========================================
@@ -1608,7 +1653,8 @@
   function parseHexBytes(str) {
     const clean = str.replace(/0x/gi, '').replace(/[\s,;-]+/g, ' ').trim();
     if (!clean) return [];
-    return clean.split(' ').map(s => parseInt(s, 16)).filter(n => !isNaN(n));
+    const parts = clean.includes(' ') ? clean.split(' ') : (clean.match(/.{1,2}/g) || []);
+    return parts.map(s => parseInt(s, 16)).filter(n => !isNaN(n));
   }
 
   function decodeULEB128Bytes(bytes) {
@@ -1665,7 +1711,7 @@
     }).join('');
   }
 
-  function runVarintEncode() {
+  function runVarintEncode(recordHistory = false) {
     const raw = varintValInput.value.trim();
     let val = parseOpVal(raw);
     if (raw.startsWith('-')) {
@@ -1697,10 +1743,12 @@
 
     updateMultiWidthInspector(val);
     updateBitfieldSlicer(val);
-    addHistory('Varint Encode', raw, `ULEB: ${ulebHex} | SLEB: ${slebHex}`);
+    if (recordHistory) {
+      addHistory('Varint Encode', raw, `ULEB: ${ulebHex} | SLEB: ${slebHex}`);
+    }
   }
 
-  function runVarintDecode() {
+  function runVarintDecode(recordHistory = true) {
     const hexStr = varintHexInput.value.trim();
     const bytes = parseHexBytes(hexStr);
     if (bytes.length === 0) return;
@@ -1716,7 +1764,9 @@
     renderVarintBreakdown(bytes);
     updateMultiWidthInspector(ulebDec);
     updateBitfieldSlicer(ulebDec);
-    addHistory('Varint Decode', hexStr, `Unsigned: ${ulebDec}, Signed: ${slebDec}`);
+    if (recordHistory) {
+      addHistory('Varint Decode', hexStr, `Unsigned: ${ulebDec}, Signed: ${slebDec}`);
+    }
   }
 
   function updateMultiWidthInspector(bigVal) {
@@ -1818,9 +1868,16 @@
     document.getElementById('res-metric-pow2').textContent = isPow2;
   }
 
-  document.getElementById('btn-varint-encode').onclick = runVarintEncode;
-  document.getElementById('btn-varint-decode').onclick = runVarintDecode;
-  varintValInput.addEventListener('input', runVarintEncode);
+  document.getElementById('btn-varint-encode').onclick = () => runVarintEncode(true);
+  document.getElementById('btn-varint-decode').onclick = () => runVarintDecode(true);
+  varintValInput.addEventListener('input', () => runVarintEncode(false));
+  varintHexInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      runVarintDecode(true);
+      showToast('Varint decoded');
+    }
+  });
   sliceHighRange.addEventListener('input', () => {
     const val = parseOpVal(varintValInput.value);
     updateBitfieldSlicer(val);
@@ -1878,15 +1935,15 @@
     }
     initBitboardGrid();
     renderBitboard();
-    executeBitwiseOp('AND');
-    inspectIEEE754();
-    runVarintEncode();
+    executeBitwiseOp('AND', false);
+    inspectIEEE754(false);
+    runVarintEncode(false);
 
-    fpInput.addEventListener('input', inspectIEEE754);
+    fpInput.addEventListener('input', () => inspectIEEE754(false));
     document.querySelectorAll('.fp-preset').forEach(btn => {
       btn.onclick = () => {
         fpInput.value = btn.dataset.val;
-        inspectIEEE754();
+        inspectIEEE754(true);
       };
     });
 
@@ -1905,6 +1962,42 @@
     }
 
     const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT';
+
+    // Enter key handler promised in user guide
+    if (e.key === 'Enter') {
+      const activeEl = document.activeElement;
+      if (activeEl === opAInput || activeEl === opBInput) {
+        e.preventDefault();
+        executeBitwiseOp(currentBitwiseOp, true);
+        showToast(`Calculated: ${currentBitwiseOp}`);
+        return;
+      }
+      if (activeEl === fpInput) {
+        e.preventDefault();
+        inspectIEEE754(true);
+        showToast('IEEE-754 inspected');
+        return;
+      }
+      if (activeEl === varintValInput) {
+        e.preventDefault();
+        runVarintEncode(true);
+        showToast('Varint encoded');
+        return;
+      }
+      if (activeEl === varintHexInput) {
+        e.preventDefault();
+        runVarintDecode(true);
+        showToast('Varint decoded');
+        return;
+      }
+      const activeTab = document.querySelector('.tab-content.active');
+      if (activeTab && activeTab.id === 'tab-bitboard' && !isInput) {
+        e.preventDefault();
+        executeBitwiseOp(currentBitwiseOp, true);
+        showToast(`Calculated: ${currentBitwiseOp}`);
+        return;
+      }
+    }
 
     // F1 works everywhere
     if (e.key === 'F1') {
