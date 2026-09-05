@@ -1457,13 +1457,176 @@
       frameCount++;
   }
 
+  function drawFruitSprite(ctx, cx, cy, stage) {
+      if (relicStone) {
+          // Mythic Philosopher's Relic Stone: Multifaceted prismatic diamond
+          let p = Math.sin(frameCount * 0.2) * 2;
+          ctx.save();
+          ctx.translate(cx, cy);
+          // Rotating specular flare
+          ctx.strokeStyle = 'rgba(255, 215, 0, 0.7)'; ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(-10, 0); ctx.lineTo(10, 0);
+          ctx.moveTo(0, -10); ctx.lineTo(0, 10);
+          ctx.stroke();
+          // Faceted gem body
+          ctx.fillStyle = '#ffd700';
+          ctx.beginPath();
+          ctx.moveTo(0, -8 - p); ctx.lineTo(7 + p, -2); ctx.lineTo(4 + p, 8); ctx.lineTo(-4 - p, 8); ctx.lineTo(-7 - p, -2);
+          ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = '#fff9c4'; ctx.lineWidth = 1; ctx.stroke();
+          // Inner facets
+          ctx.fillStyle = '#fff59d';
+          ctx.beginPath(); ctx.moveTo(0, -8 - p); ctx.lineTo(3, 0); ctx.lineTo(0, 8); ctx.lineTo(-3, 0); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath(); ctx.arc(-2, -3, 1.8, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+          return;
+      }
+
+      let fruitType = ((stage - 1) % 5);
+      if (fruitType === 0) {
+          // Classic Twin Cherries
+          // Stems
+          ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(cx - 3, cy + 2); ctx.quadraticCurveTo(cx - 1, cy - 6, cx + 2, cy - 7);
+          ctx.moveTo(cx + 4, cy + 3); ctx.quadraticCurveTo(cx + 3, cy - 4, cx + 2, cy - 7);
+          ctx.stroke();
+          // Green Leaf
+          ctx.fillStyle = '#4caf50';
+          ctx.beginPath();
+          ctx.ellipse(cx + 4, cy - 7, 3, 1.5, Math.PI / 4, 0, Math.PI * 2);
+          ctx.fill();
+          // Left Cherry
+          let g1 = ctx.createRadialGradient(cx - 4, cy + 1, 1, cx - 3, cy + 3, 5);
+          g1.addColorStop(0, '#ff5252'); g1.addColorStop(0.7, '#d50000'); g1.addColorStop(1, '#880e4f');
+          ctx.fillStyle = g1;
+          ctx.beginPath(); ctx.arc(cx - 4, cy + 3, 4, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath(); ctx.arc(cx - 5, cy + 1.5, 1.2, 0, Math.PI * 2); ctx.fill();
+          // Right Cherry
+          let g2 = ctx.createRadialGradient(cx + 3, cy + 2, 1, cx + 4, cy + 4, 5);
+          g2.addColorStop(0, '#ff5252'); g2.addColorStop(0.7, '#d50000'); g2.addColorStop(1, '#880e4f');
+          ctx.fillStyle = g2;
+          ctx.beginPath(); ctx.arc(cx + 4, cy + 4, 4, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath(); ctx.arc(cx + 3, cy + 2.5, 1.2, 0, Math.PI * 2); ctx.fill();
+      } else if (fruitType === 1) {
+          // Ruby Strawberry
+          // Green Calyx
+          ctx.fillStyle = '#4caf50';
+          ctx.beginPath();
+          ctx.moveTo(cx, cy - 6); ctx.lineTo(cx - 5, cy - 4); ctx.lineTo(cx - 2, cy - 2);
+          ctx.lineTo(cx + 2, cy - 2); ctx.lineTo(cx + 5, cy - 4); ctx.closePath(); ctx.fill();
+          // Body
+          let g = ctx.createRadialGradient(cx - 2, cy - 1, 1, cx, cy + 2, 7);
+          g.addColorStop(0, '#ff5252'); g.addColorStop(0.8, '#c62828'); g.addColorStop(1, '#880e4f');
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.moveTo(cx - 5, cy - 2);
+          ctx.quadraticCurveTo(cx - 6, cy + 3, cx, cy + 7);
+          ctx.quadraticCurveTo(cx + 6, cy + 3, cx + 5, cy - 2);
+          ctx.closePath(); ctx.fill();
+          // Seeds
+          ctx.fillStyle = '#ffeb3b';
+          ctx.fillRect(cx - 2, cy, 1, 1); ctx.fillRect(cx + 2, cy, 1, 1);
+          ctx.fillRect(cx, cy + 3, 1, 1); ctx.fillRect(cx - 3, cy + 3, 1, 1);
+          ctx.fillRect(cx + 3, cy + 3, 1, 1); ctx.fillRect(cx, cy - 1, 1, 1);
+          // Highlight
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+          ctx.beginPath(); ctx.arc(cx - 2, cy - 1, 1.3, 0, Math.PI * 2); ctx.fill();
+      } else if (fruitType === 2) {
+          // Navel Orange
+          let g = ctx.createRadialGradient(cx - 2, cy - 2, 1, cx, cy, 7);
+          g.addColorStop(0, '#ffb74d'); g.addColorStop(0.8, '#f57c00'); g.addColorStop(1, '#e65100');
+          ctx.fillStyle = g;
+          ctx.beginPath(); ctx.arc(cx, cy + 1, 6, 0, Math.PI * 2); ctx.fill();
+          // Leaf & Stem
+          ctx.strokeStyle = '#5d4037'; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(cx, cy - 5); ctx.lineTo(cx, cy - 7); ctx.stroke();
+          ctx.fillStyle = '#4caf50';
+          ctx.beginPath(); ctx.ellipse(cx + 3, cy - 6, 3, 1.5, -Math.PI / 6, 0, Math.PI * 2); ctx.fill();
+          // Gloss
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+          ctx.beginPath(); ctx.arc(cx - 2, cy - 1, 1.5, 0, Math.PI * 2); ctx.fill();
+      } else if (fruitType === 3) {
+          // Golden Apple
+          let g = ctx.createRadialGradient(cx - 2, cy - 2, 1, cx, cy, 7);
+          g.addColorStop(0, '#fff59d'); g.addColorStop(0.7, '#fbc02d'); g.addColorStop(1, '#f57f17');
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(cx - 2.5, cy + 1, 4.5, 0, Math.PI * 2);
+          ctx.arc(cx + 2.5, cy + 1, 4.5, 0, Math.PI * 2);
+          ctx.fill();
+          // Stem & Leaf
+          ctx.strokeStyle = '#5d4037'; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(cx, cy - 4); ctx.quadraticCurveTo(cx + 2, cy - 6, cx + 1, cy - 8); ctx.stroke();
+          ctx.fillStyle = '#66bb6a';
+          ctx.beginPath(); ctx.ellipse(cx + 3, cy - 7, 2.5, 1.2, Math.PI / 4, 0, Math.PI * 2); ctx.fill();
+          // Gloss
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+          ctx.beginPath(); ctx.arc(cx - 2, cy - 1, 1.5, 0, Math.PI * 2); ctx.fill();
+      } else {
+          // Galaxian Flagship / Bell
+          ctx.fillStyle = '#00e5ff';
+          ctx.beginPath();
+          ctx.moveTo(cx, cy - 7); ctx.lineTo(cx + 6, cy + 6); ctx.lineTo(cx + 2, cy + 4);
+          ctx.lineTo(cx, cy + 7); ctx.lineTo(cx - 2, cy + 4); ctx.lineTo(cx - 6, cy + 6);
+          ctx.closePath(); ctx.fill();
+          ctx.fillStyle = '#ffeb3b';
+          ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#ff1744';
+          ctx.fillRect(cx - 1, cy - 3, 2, 3);
+      }
+  }
+
   function drawWallTile(ctx, r, c) {
       let x = c * TS, y = r * TS;
-      ctx.fillStyle = '#080e1e';
+      let stageTheme = Math.floor((level - 1) / 3) % 6;
+      let themePalettes = [
+          { base: '#060d1e', border: '#1e88e5', glow: '#64b5f6', node: '#00e5ff' }, // Cyber Blue
+          { base: '#04140b', border: '#00c853', glow: '#69f0ae', node: '#00e676' }, // Emerald Matrix
+          { base: '#12061a', border: '#8e24aa', glow: '#ba68c8', node: '#e040fb' }, // Neon Amethyst
+          { base: '#1a0808', border: '#d50000', glow: '#ff5252', node: '#ff1744' }, // Magma Ruby
+          { base: '#1a1104', border: '#f57c00', glow: '#ffb74d', node: '#ffd700' }, // Solar Amber
+          { base: '#04151a', border: '#0097a7', glow: '#4dd0e1', node: '#00e5ff' }  // Quantum Cyan
+      ];
+      let p = themePalettes[stageTheme];
+      if (victoryTimer > 0) {
+          let flashCols = ['#ffffff', '#00e5ff', '#ffd700', '#ff4081'];
+          let fc = flashCols[victoryTimer % 4];
+          p = { base: '#081428', border: fc, glow: '#ffffff', node: fc };
+      }
+
+      // Base Tile
+      ctx.fillStyle = p.base;
       ctx.fillRect(x, y, TS, TS);
-      ctx.strokeStyle = '#1e88e5';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x + 2, y + 2, TS - 4, TS - 4);
+
+      // Outer Circuit Bevel
+      ctx.strokeStyle = p.border;
+      ctx.lineWidth = 1.8;
+      ctx.strokeRect(x + 1.5, y + 1.5, TS - 3, TS - 3);
+
+      // Inner Glowing Power Conduit
+      let conduitPulse = 0.4 + 0.3 * Math.sin(frameCount * 0.2 + r * 0.5 + c * 0.5);
+      ctx.strokeStyle = p.glow;
+      ctx.globalAlpha = conduitPulse;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x + 3.5, y + 3.5, TS - 7, TS - 7);
+      ctx.globalAlpha = 1.0;
+
+      // Wall Corner Micro-Node Rivets
+      let nU = r > 0 && map[r-1][c] === 1;
+      let nD = r < ROWS-1 && map[r+1][c] === 1;
+      let nL = c > 0 && map[r][c-1] === 1;
+      let nR = c < COLS-1 && map[r][c+1] === 1;
+
+      ctx.fillStyle = p.node;
+      if (!nU && !nL) ctx.fillRect(x + 2, y + 2, 2, 2);
+      if (!nU && !nR) ctx.fillRect(x + TS - 4, y + 2, 2, 2);
+      if (!nD && !nL) ctx.fillRect(x + 2, y + TS - 4, 2, 2);
+      if (!nD && !nR) ctx.fillRect(x + TS - 4, y + TS - 4, 2, 2);
   }
 
   function draw() {
@@ -1535,116 +1698,339 @@
       ctx.arc(295, 295, 2, 0, Math.PI * 2);
       ctx.fill();
 
+      // Maze Render
       for (let r = 0; r < ROWS; r++) {
           for (let c = 0; c < COLS; c++) {
-              if (map[r][c] === 1) drawWallTile(ctx, r, c);
-              else if (map[r][c] === 2) {
-                  let cx = c * TS + TS/2, cy = r * TS + TS/2;
-                  ctx.fillStyle = relicOrb ? '#ba68c8' : (petType === 3 ? '#ffd700' : '#d8863b');
+              let cx = c * TS + TS/2, cy = r * TS + TS/2;
+              let tile = map[r][c];
+
+              if (tile === 1) {
+                  // Ghost Door in center
+                  if (r === 6 && c === 7) {
+                      let doorPulse = Math.sin(frameCount * 0.3) * 2;
+                      ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 2.5;
+                      ctx.beginPath(); ctx.moveTo(c * TS, cy + doorPulse); ctx.lineTo(c * TS + TS, cy - doorPulse); ctx.stroke();
+                      continue;
+                  }
+                  drawWallTile(ctx, r, c);
+              } else if (tile === 2) {
+                  // 3D Procedural Dot Pellet with Spherical Shading
+                  let baseCol = relicOrb ? '#ba68c8' : (petType === 3 ? '#ffd700' : '#d8863b');
+                  let coreCol = relicOrb ? '#f3e5f5' : (petType === 3 ? '#fff9c4' : '#ffe082');
+                  let radG = ctx.createRadialGradient(cx - 1, cy - 1, 0.5, cx, cy, 3.5);
+                  radG.addColorStop(0, '#ffffff'); radG.addColorStop(0.3, coreCol); radG.addColorStop(1, baseCol);
+                  ctx.fillStyle = radG;
                   ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2); ctx.fill();
-              } else if (map[r][c] === 3) {
-                  let cx = c * TS + TS/2, cy = r * TS + TS/2;
-                  let p = Math.sin(frameCount * 0.3) * 2;
-                  ctx.fillStyle = '#ffb852';
+              } else if (tile === 3) {
+                  // Multi-Tier Pulsing Power Energizer Orb
+                  let p = Math.sin(frameCount * 0.25) * 2.5;
+                  let haloPulse = (frameCount % 12);
+                  // Outer Expanding Halo Ring
+                  ctx.strokeStyle = 'rgba(255, 215, 0, ' + (1.0 - haloPulse / 12) + ')';
+                  ctx.lineWidth = 1.2;
+                  ctx.beginPath(); ctx.arc(cx, cy, 6 + haloPulse, 0, Math.PI * 2); ctx.stroke();
+                  // 3D Radial Core
+                  let g = ctx.createRadialGradient(cx - 2, cy - 2, 1, cx, cy, 7 + p);
+                  g.addColorStop(0, '#ffffff'); g.addColorStop(0.4, '#fff176'); g.addColorStop(0.8, '#ffb300'); g.addColorStop(1, '#ff6f00');
+                  ctx.fillStyle = g;
                   ctx.beginPath(); ctx.arc(cx, cy, 6 + p, 0, Math.PI * 2); ctx.fill();
-              } else if (map[r][c] === 4) {
+                  // Diamond Core Sparkle
+                  ctx.fillStyle = '#ffffff';
+                  ctx.beginPath();
+                  ctx.moveTo(cx, cy - 3); ctx.lineTo(cx + 3, cy); ctx.lineTo(cx, cy + 3); ctx.lineTo(cx - 3, cy);
+                  ctx.closePath(); ctx.fill();
+              } else if (tile === 4) {
+                  // Speed Pellet: Cyan Glowing Lightning Bolt Micro-Icon
+                  ctx.fillStyle = 'rgba(0, 229, 255, 0.25)';
+                  ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI * 2); ctx.fill();
                   ctx.fillStyle = '#00e5ff';
-                  ctx.fillRect(c * TS + 6, r * TS + 6, 8, 8);
-              } else if (map[r][c] === 5) {
-                  ctx.fillStyle = '#80deea';
-                  ctx.fillRect(c * TS + 5, r * TS + 5, 10, 10);
-              } else if (map[r][c] === 6) {
-                  ctx.fillStyle = '#ff4500';
-                  ctx.fillRect(c * TS + 5, r * TS + 5, 10, 10);
-              } else if (map[r][c] === 8) {
-                  ctx.fillStyle = '#c832ff';
-                  ctx.beginPath(); ctx.arc(c * TS + TS/2, r * TS + TS/2, 6, 0, Math.PI * 2); ctx.fill();
-              } else if (map[r][c] === 9) { // Void Rift
-                  let cx = c * TS + TS/2, cy = r * TS + TS/2;
-                  let p = Math.sin(frameCount * 0.4) * 3;
-                  ctx.strokeStyle = '#ba68c8'; ctx.lineWidth = 2;
-                  ctx.beginPath(); ctx.arc(cx, cy, 7 + p, 0, Math.PI * 2); ctx.stroke();
-                  ctx.fillStyle = '#4a148c'; ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill();
-              } else if (map[r][c] === 10) { // Phase Gateway
-                  let cx = c * TS + TS/2, cy = r * TS + TS/2;
+                  ctx.beginPath();
+                  ctx.moveTo(cx + 1, cy - 6); ctx.lineTo(cx - 4, cy); ctx.lineTo(cx, cy);
+                  ctx.lineTo(cx - 1, cy + 6); ctx.lineTo(cx + 4, cy); ctx.lineTo(cx, cy);
+                  ctx.closePath(); ctx.fill();
+                  ctx.fillStyle = '#ffffff'; ctx.fillRect(cx - 1, cy - 1, 2, 2);
+              } else if (tile === 5) {
+                  // Freeze Pellet: Ice Snowflake Star Micro-Icon
+                  ctx.fillStyle = 'rgba(128, 222, 234, 0.25)';
+                  ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI * 2); ctx.fill();
+                  ctx.strokeStyle = '#80deea'; ctx.lineWidth = 1.5;
+                  ctx.beginPath();
+                  ctx.moveTo(cx - 5, cy); ctx.lineTo(cx + 5, cy);
+                  ctx.moveTo(cx, cy - 5); ctx.lineTo(cx, cy + 5);
+                  ctx.moveTo(cx - 3.5, cy - 3.5); ctx.lineTo(cx + 3.5, cy + 3.5);
+                  ctx.moveTo(cx - 3.5, cy + 3.5); ctx.lineTo(cx + 3.5, cy - 3.5);
+                  ctx.stroke();
+                  ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(cx, cy, 1.8, 0, Math.PI * 2); ctx.fill();
+              } else if (tile === 6) {
+                  // Hazard Trap: Radioactive Skull / Pulsing Flame Chevron
+                  let p = (frameCount % 6 < 3) ? 1 : 0;
+                  ctx.fillStyle = '#ff3d00';
+                  ctx.beginPath();
+                  ctx.moveTo(cx, cy - 6 - p); ctx.lineTo(cx + 6 + p, cy + 5); ctx.lineTo(cx - 6 - p, cy + 5);
+                  ctx.closePath(); ctx.fill();
+                  ctx.fillStyle = '#ffffff';
+                  ctx.fillRect(cx - 1, cy - 2, 2, 3);
+                  ctx.fillRect(cx - 1, cy + 2, 2, 1.5);
+              } else if (tile === 8) {
+                  // Bonus Warp Portal: Swirling Violet Core
+                  let p = Math.sin(frameCount * 0.4) * 2;
+                  ctx.strokeStyle = '#d500f9'; ctx.lineWidth = 1.5;
+                  ctx.beginPath(); ctx.arc(cx, cy, 6 + p, 0, Math.PI * 2); ctx.stroke();
+                  ctx.fillStyle = '#aa00ff'; ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill();
+                  ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(cx, cy, 1.5, 0, Math.PI * 2); ctx.fill();
+              } else if (tile === 9) {
+                  // Void Rift / Dimension Portal: Accretion Disk Vortex
+                  let p = Math.sin(frameCount * 0.35) * 3;
+                  // Accretion Halo
+                  ctx.strokeStyle = '#ce93d8'; ctx.lineWidth = 1.5;
+                  ctx.beginPath(); ctx.arc(cx, cy, 8 + p, 0, Math.PI * 2); ctx.stroke();
+                  // Inner Dark Event Horizon
+                  let radV = ctx.createRadialGradient(cx, cy, 1, cx, cy, 5);
+                  radV.addColorStop(0, '#000000'); radV.addColorStop(0.7, '#4a148c'); radV.addColorStop(1, '#7b1fa2');
+                  ctx.fillStyle = radV;
+                  ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.fill();
+                  // Orbiting photon spark
+                  let angP = frameCount * 0.2;
+                  ctx.fillStyle = '#e1bee7';
+                  ctx.beginPath(); ctx.arc(cx + Math.cos(angP) * 6, cy + Math.sin(angP) * 6, 1.2, 0, Math.PI * 2); ctx.fill();
+              } else if (tile === 10) {
+                  // Phase Gateway: Oscillating Cyber Forcefield
                   let open = (frameCount % 40 < 20);
-                  ctx.strokeStyle = open ? '#00e676' : '#ff1744'; ctx.lineWidth = 2;
-                  ctx.beginPath(); ctx.moveTo(cx - 6, cy); ctx.lineTo(cx + 6, cy); ctx.stroke();
+                  ctx.strokeStyle = open ? '#00e676' : '#ff1744'; ctx.lineWidth = 2.5;
+                  ctx.beginPath(); ctx.moveTo(cx - 7, cy); ctx.lineTo(cx + 7, cy); ctx.stroke();
+                  ctx.fillStyle = open ? '#b9f6ca' : '#ff8a80';
+                  ctx.beginPath(); ctx.arc(cx - 7, cy, 2, 0, Math.PI * 2); ctx.arc(cx + 7, cy, 2, 0, Math.PI * 2); ctx.fill();
               }
           }
       }
 
+      // Sludge Traps
       for (let s of sludgeTraps) {
+          ctx.fillStyle = 'rgba(0, 230, 118, 0.4)';
+          ctx.beginPath(); ctx.arc(s.x * TS + TS/2, s.y * TS + TS/2, 7, 0, Math.PI * 2); ctx.fill();
           ctx.fillStyle = '#00e676';
-          ctx.fillRect(s.x * TS + 5, s.y * TS + 5, 10, 10);
+          ctx.fillRect(s.x * TS + 6, s.y * TS + 6, 8, 8);
       }
 
+      // Bonus Fruit Sprite
       if (fruitActive) {
-          ctx.fillStyle = relicStone ? '#ffd700' : '#d50000';
-          ctx.beginPath(); ctx.arc(7 * TS + TS/2, 12 * TS + TS/2, 6, 0, Math.PI * 2); ctx.fill();
+          drawFruitSprite(ctx, 7 * TS + TS/2, 12 * TS + TS/2, level);
       }
 
-      // Draw Companion Pet
+      // Draw Companion Pet (With dynamic wings, expressive eyes, and floating bob)
       if (petActive) {
           let petCx = petX * TS + TS/2;
           let petCy = petY * TS + TS/2 + Math.sin(petFloatAngle) * 3;
           let petCol = (petType === 0) ? '#ff5252' : ((petType === 1) ? '#00e5ff' : ((petType === 2) ? '#f06292' : '#ffd700'));
-          ctx.strokeStyle = petCol; ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.arc(petCx, petCy, 9, 0, Math.PI * 2); ctx.stroke();
-          ctx.fillStyle = petCol; ctx.beginPath(); ctx.arc(petCx, petCy, 5, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#fff';
-          ctx.beginPath(); ctx.arc(petCx - 2, petCy - 1, 1.5, 0, Math.PI * 2); ctx.fill();
-          ctx.beginPath(); ctx.arc(petCx + 2, petCy - 1, 1.5, 0, Math.PI * 2); ctx.fill();
+          let wingFlap = Math.sin(frameCount * 0.4) * 3;
+
+          // Mini Pet Wings
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+          ctx.beginPath();
+          ctx.ellipse(petCx - 6, petCy - wingFlap, 3.5, 2, -Math.PI / 4, 0, Math.PI * 2);
+          ctx.ellipse(petCx + 6, petCy - wingFlap, 3.5, 2, Math.PI / 4, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Pet Outer Aura
+          ctx.strokeStyle = petCol; ctx.lineWidth = 1.2;
+          ctx.beginPath(); ctx.arc(petCx, petCy, 8, 0, Math.PI * 2); ctx.stroke();
+
+          // 3D Pet Sphere Body
+          let pg = ctx.createRadialGradient(petCx - 2, petCy - 2, 1, petCx, petCy, 5);
+          pg.addColorStop(0, '#ffffff'); pg.addColorStop(0.5, petCol); pg.addColorStop(1, '#0d47a1');
+          ctx.fillStyle = pg;
+          ctx.beginPath(); ctx.arc(petCx, petCy, 5, 0, Math.PI * 2); ctx.fill();
+
+          // Mini Expressive Eyes with Blinking
+          let isBlink = (frameCount % 60 < 4);
+          if (isBlink) {
+              ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(petCx - 3, petCy - 1); ctx.lineTo(petCx - 1, petCy - 1);
+              ctx.moveTo(petCx + 1, petCy - 1); ctx.lineTo(petCx + 3, petCy - 1);
+              ctx.stroke();
+          } else {
+              ctx.fillStyle = '#ffffff';
+              ctx.beginPath();
+              ctx.arc(petCx - 2, petCy - 1, 1.4, 0, Math.PI * 2);
+              ctx.arc(petCx + 2, petCy - 1, 1.4, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = '#030611';
+              ctx.beginPath();
+              ctx.arc(petCx - 2, petCy - 1, 0.7, 0, Math.PI * 2);
+              ctx.arc(petCx + 2, petCy - 1, 0.7, 0, Math.PI * 2);
+              ctx.fill();
+          }
       }
 
-      // Draw Pac-Man
+      // Draw Pac-Man (Loop 9: 3D Spherical Bevel, Chomp Mouth with Glowing Rim, Specular Arc)
       let cx = px * TS + TS/2, cy = py * TS + TS/2;
-      let pacColor = shieldActive ? ((shieldHits >= 2) ? '#00ffff' : '#00e5ff') : ((speedSkillTimer > 0) ? '#ff9800' : '#ffeb3b');
-      ctx.fillStyle = pacColor;
-      ctx.beginPath();
-      let mouth = [0.4, 0.2, 0.05, 0.2][frameCount % 4] * Math.PI;
+      let radius = TS/2 - 1;
       let baseAngle = (pdx === 1) ? 0 : ((pdx === -1) ? Math.PI : ((pdy === 1) ? Math.PI/2 : (pdy === -1 ? Math.PI*1.5 : 0)));
-      ctx.arc(cx, cy, TS/2 - 1, baseAngle + mouth, baseAngle + Math.PI * 2 - mouth);
+      let mouth = (deathTimer > 0) ? (Math.PI * (40 - deathTimer) / 40.0) : ([0.42, 0.26, 0.05, 0.26][frameCount % 4] * Math.PI);
+
+      // Outer Ambient Glow Aura
+      if (shieldActive || speedSkillTimer > 0) {
+          ctx.strokeStyle = shieldActive ? 'rgba(0, 229, 255, 0.8)' : 'rgba(255, 152, 0, 0.8)';
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(cx, cy, radius + 3, 0, Math.PI * 2); ctx.stroke();
+      }
+
+      // 3D Pac-Man Body Gradient
+      let pacGrad = ctx.createRadialGradient(cx - 3, cy - 3, 2, cx, cy, radius);
+      if (shieldActive) {
+          pacGrad.addColorStop(0, '#e0f7fa'); pacGrad.addColorStop(0.6, '#00e5ff'); pacGrad.addColorStop(1, '#00838f');
+      } else if (speedSkillTimer > 0) {
+          pacGrad.addColorStop(0, '#fff3e0'); pacGrad.addColorStop(0.6, '#ff9800'); pacGrad.addColorStop(1, '#e65100');
+      } else {
+          pacGrad.addColorStop(0, '#fffde7'); pacGrad.addColorStop(0.6, '#ffeb3b'); pacGrad.addColorStop(1, '#f57f17');
+      }
+      ctx.fillStyle = pacGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, baseAngle + mouth, baseAngle + Math.PI * 2 - mouth);
       ctx.lineTo(cx, cy);
       ctx.fill();
 
-      // Glossy Specular Sheen Highlight on Pac-Man
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+      // Energetic Mouth Rim Line
+      ctx.strokeStyle = shieldActive ? '#80deea' : '#ffe082';
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.arc(cx - 3, cy - 3, 2.2, 0, Math.PI * 2);
+      ctx.arc(cx, cy, radius, baseAngle + mouth, baseAngle + Math.PI * 2 - mouth);
+      ctx.lineTo(cx, cy);
+      ctx.stroke();
+
+      // Glossy Specular Sheen Arc on Upper Forehead
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.beginPath();
+      ctx.ellipse(cx - 3, cy - 4, 3, 1.8, -Math.PI / 4, 0, Math.PI * 2);
       ctx.fill();
 
-      // Draw Ghosts
+      // Draw Ghosts (Loop 9: 3D Glossy Dome, Sinusoidal Oscillating 3-Lobed Skirt, Tracking Eyes, Scared Mode, Boss Crown)
       for (let i = 0; i < numGhosts; i++) {
           let g = ghosts[i];
           if (g.isPhantom && g.phantomTimer <= 0) continue;
           let gcx = g.x * TS + TS/2, gcy = g.y * TS + TS/2;
+          let gw = TS - 4;
           let isScared = frightTimer > 0;
-          let c = isScared ? ((frightTimer < 15 && Math.floor(frightTimer / 2) % 2 === 0) ? '#ffffff' : '#1e88e5') : g.c;
-          ctx.fillStyle = c;
-          ctx.beginPath();
-          ctx.arc(gcx, gcy - 2, TS/2 - 2, Math.PI, 0, false);
-          ctx.lineTo(gcx + TS/2 - 2, gcy + TS/2 - 2);
-          ctx.lineTo(gcx - TS/2 + 2, gcy + TS/2 - 2);
-          ctx.fill();
+          let isFlashing = isScared && frightTimer < 15 && Math.floor(frightTimer / 2) % 2 === 0;
 
-          // Shiny 3D Dome Highlight on Ghost Head
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
-          ctx.beginPath();
-          ctx.arc(gcx - 2, gcy - 6, 2, 0, Math.PI * 2);
-          ctx.fill();
-
-          if (!isScared) {
-              ctx.fillStyle = '#fff';
+          // If Ghost is Eaten (Dead Eyes returning to pen)
+          if (g.isDead) {
+              let eyeDx = (g.dirX || 0) * 2;
+              let eyeDy = (g.dirY || 0) * 2;
+              // White Sclera
+              ctx.fillStyle = '#ffffff';
               ctx.beginPath();
-              ctx.arc(gcx - 3, gcy - 2, 2.5, 0, Math.PI * 2);
-              ctx.arc(gcx + 3, gcy - 2, 2.5, 0, Math.PI * 2);
+              ctx.arc(gcx - 3.5, gcy - 2, 3, 0, Math.PI * 2);
+              ctx.arc(gcx + 3.5, gcy - 2, 3, 0, Math.PI * 2);
               ctx.fill();
+              // Blue Pupils
               ctx.fillStyle = '#0d47a1';
               ctx.beginPath();
-              ctx.arc(gcx - 3 + (g.dirX||0)*1.5, gcy - 2 + (g.dirY||0)*1.5, 1.2, 0, Math.PI * 2);
-              ctx.arc(gcx + 3 + (g.dirX||0)*1.5, gcy - 2 + (g.dirY||0)*1.5, 1.2, 0, Math.PI * 2);
+              ctx.arc(gcx - 3.5 + eyeDx, gcy - 2 + eyeDy, 1.5, 0, Math.PI * 2);
+              ctx.arc(gcx + 3.5 + eyeDx, gcy - 2 + eyeDy, 1.5, 0, Math.PI * 2);
               ctx.fill();
+              continue;
+          }
+
+          // Body Colors
+          let baseColor = isScared ? (isFlashing ? '#ffffff' : '#1e88e5') : g.c;
+          let headGrad = ctx.createRadialGradient(gcx - 2, gcy - 4, 1, gcx, gcy, 8);
+          if (isScared) {
+              if (isFlashing) {
+                  headGrad.addColorStop(0, '#ffffff'); headGrad.addColorStop(1, '#e0e0e0');
+              } else {
+                  headGrad.addColorStop(0, '#90caf9'); headGrad.addColorStop(0.7, '#1e88e5'); headGrad.addColorStop(1, '#0d47a1');
+              }
+          } else {
+              headGrad.addColorStop(0, '#ffffff'); headGrad.addColorStop(0.4, baseColor); headGrad.addColorStop(1, '#0a0e1a');
+          }
+
+          // Wavy Sinusoidal 3-Lobed Skirt Hem
+          let w1 = Math.sin(frameCount * 0.4) * 1.8;
+          let w2 = Math.sin(frameCount * 0.4 + 2.0) * 1.8;
+          let w3 = Math.sin(frameCount * 0.4 + 4.0) * 1.8;
+
+          ctx.fillStyle = headGrad;
+          ctx.beginPath();
+          // Dome Head
+          ctx.arc(gcx, gcy - 2, gw/2, Math.PI, 0, false);
+          // Right Side Down
+          ctx.lineTo(gcx + gw/2, gcy + gw/2 - 1 + w3);
+          // Right Skirt Lobe
+          ctx.quadraticCurveTo(gcx + gw/3, gcy + gw/2 + 2 + w3, gcx + gw/6, gcy + gw/2 - 1 + w2);
+          // Middle Skirt Lobe
+          ctx.quadraticCurveTo(gcx, gcy + gw/2 + 2 + w2, gcx - gw/6, gcy + gw/2 - 1 + w1);
+          // Left Skirt Lobe
+          ctx.quadraticCurveTo(gcx - gw/3, gcy + gw/2 + 2 + w1, gcx - gw/2, gcy + gw/2 - 1 + w1);
+          ctx.closePath();
+          ctx.fill();
+
+          // 3D Specular Highlight on Head Dome
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+          ctx.beginPath();
+          ctx.ellipse(gcx - 2.5, gcy - 5.5, 2.5, 1.4, -Math.PI / 6, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Stage 20 Boss King Ghost: Golden Crown
+          if (g.type === 5) {
+              ctx.fillStyle = '#ffd700';
+              ctx.beginPath();
+              ctx.moveTo(gcx - 6, gcy - 8); ctx.lineTo(gcx - 4, gcy - 12); ctx.lineTo(gcx - 1, gcy - 9);
+              ctx.lineTo(gcx + 2, gcy - 13); ctx.lineTo(gcx + 5, gcy - 9); ctx.lineTo(gcx + 7, gcy - 12);
+              ctx.lineTo(gcx + 6, gcy - 8);
+              ctx.closePath(); ctx.fill();
+              ctx.strokeStyle = '#fff59d'; ctx.lineWidth = 1; ctx.stroke();
+              // Crown Ruby
+              ctx.fillStyle = '#ff1744';
+              ctx.fillRect(gcx, gcy - 10, 2, 2);
+          }
+
+          // Eyes & Face
+          if (!isScared) {
+              // Expressive Big Cartoon Eyes
+              let edx = (g.dirX || 0) * 1.5;
+              let edy = (g.dirY || 0) * 1.5;
+
+              // White Cornea
+              ctx.fillStyle = '#ffffff';
+              ctx.beginPath();
+              ctx.ellipse(gcx - 3.5, gcy - 2, 3, 3.8, 0, 0, Math.PI * 2);
+              ctx.ellipse(gcx + 3.5, gcy - 2, 3, 3.8, 0, 0, Math.PI * 2);
+              ctx.fill();
+
+              // Dark Tracking Pupils
+              ctx.fillStyle = '#0d47a1';
+              ctx.beginPath();
+              ctx.arc(gcx - 3.5 + edx, gcy - 2 + edy, 1.6, 0, Math.PI * 2);
+              ctx.arc(gcx + 3.5 + edx, gcy - 2 + edy, 1.6, 0, Math.PI * 2);
+              ctx.fill();
+
+              // Catchlight specular glint
+              ctx.fillStyle = '#ffffff';
+              ctx.beginPath();
+              ctx.arc(gcx - 4 + edx, gcy - 3 + edy, 0.7, 0, Math.PI * 2);
+              ctx.arc(gcx + 3 + edx, gcy - 3 + edy, 0.7, 0, Math.PI * 2);
+              ctx.fill();
+          } else {
+              // Scared Expression: Panicked Yellow Eyes + Zigzag Wavy Fear Mouth
+              ctx.fillStyle = isFlashing ? '#ff1744' : '#ffeb3b';
+              ctx.beginPath();
+              ctx.arc(gcx - 3, gcy - 2, 1.8, 0, Math.PI * 2);
+              ctx.arc(gcx + 3, gcy - 2, 1.8, 0, Math.PI * 2);
+              ctx.fill();
+
+              // Zigzag squiggly fear mouth
+              ctx.strokeStyle = isFlashing ? '#ff1744' : '#ffeb3b';
+              ctx.lineWidth = 1.2;
+              ctx.beginPath();
+              ctx.moveTo(gcx - 4.5, gcy + 3);
+              ctx.lineTo(gcx - 2.5, gcy + 1.5);
+              ctx.lineTo(gcx - 0.5, gcy + 3);
+              ctx.lineTo(gcx + 1.5, gcy + 1.5);
+              ctx.lineTo(gcx + 3.5, gcy + 3);
+              ctx.lineTo(gcx + 4.5, gcy + 1.5);
+              ctx.stroke();
           }
       }
 
