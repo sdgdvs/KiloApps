@@ -824,7 +824,37 @@
 
   btnVisMode.onclick = () => {
     visMode = (visMode === 'scope' ? 'spectrum' : 'scope');
-    btnVisMode.textContent = (visMode === 'scope' ? 'Mode: Scope' : 'Mode: Spectrum');
+    btnVisMode.textContent = (visMode === 'scope' ? 'Mode: Scope (V)' : 'Mode: Spectrum (V)');
+  };
+
+  octaveBadge.style.cursor = 'pointer';
+  octaveBadge.title = 'Click to shift octave (or use ← / → keys)';
+  octaveBadge.onclick = () => {
+    octaveShift = (octaveShift >= 4) ? -4 : octaveShift + 1;
+    octaveBadge.textContent = 'Octave: ' + (octaveShift > 0 ? '+' : '') + octaveShift;
+    showToast(`Octave shifted: ${octaveShift > 0 ? '+' : ''}${octaveShift}`, 'info', 1400);
+  };
+
+  recStatus.style.cursor = 'pointer';
+  recStatus.title = 'Click to toggle Record / Playback (Z / X)';
+  recStatus.onclick = () => {
+    if (isRecording) {
+      isRecording = false;
+      recStatus.textContent = 'Z: Rec, X: Play';
+      showToast(`⏺️ Recording saved (${recordedEvents.length} events) [Press X to Play]`, 'success', 2500);
+    } else if (isPlaying) {
+      stopPlayback();
+      showToast('⏹️ Playback stopped', 'info', 1800);
+    } else if (recordedEvents.length > 0) {
+      startPlayback();
+      showToast('▶ Playing recorded performance...', 'info', 2000);
+    } else {
+      recordedEvents = [];
+      recordingStartTime = Date.now();
+      isRecording = true;
+      recStatus.textContent = '🔴 [RECORDING]';
+      showToast('🔴 Recording session started...', 'warning', 2000);
+    }
   };
 
   // Initialize Web Audio Context with Full DSP Pipeline
@@ -914,6 +944,18 @@
     el.addEventListener('touchstart', startTrigger, { passive: false });
     el.addEventListener('touchend', stopTrigger, { passive: false });
     el.addEventListener('touchcancel', stopTrigger, { passive: false });
+    el.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) {
+        e.preventDefault();
+        playNote(i);
+      }
+    });
+    el.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        stopNote(i);
+      }
+    });
 
     keysContainer.appendChild(el);
     keyEls.push(el);
@@ -950,7 +992,7 @@
     osc.start();
 
     let oscEntry = { osc, gain: voiceGain };
-    if (!freqOverride) activeOscs[i] = oscEntry;
+    activeOscs[i] = oscEntry;
 
     if (keyEls[i] && !freqOverride) keyEls[i].classList.add('active');
 
@@ -971,8 +1013,9 @@
         try {
           let now = ctx.currentTime;
           let r = parseFloat(envR.value);
+          let curVal = Math.max(0.0001, voiceGain.gain.value);
           voiceGain.gain.cancelScheduledValues(now);
-          voiceGain.gain.setValueAtTime(voiceGain.gain.value, now);
+          voiceGain.gain.setValueAtTime(curVal, now);
           voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + r);
           osc.stop(now + r + 0.05);
           setTimeout(() => {
@@ -998,10 +1041,10 @@
     random: '🎲 Random FX [8]'
   };
 
-  function triggerPreset(type) {
+  function triggerPreset(type, showNotification = true) {
     initAudio();
     let now = ctx.currentTime;
-    if (presetNames[type]) {
+    if (showNotification && presetNames[type]) {
       showToast(`${presetNames[type]} triggered`, 'info', 1600);
     }
 
@@ -1360,6 +1403,9 @@
     isPlaying = false;
     playbackTimeouts.forEach(clearTimeout);
     playbackTimeouts = [];
+    for (let i = 0; i < binds.length; i++) {
+      stopNote(i, true);
+    }
     recStatus.textContent = 'Z: Rec, X: Play';
   }
 
@@ -1435,11 +1481,13 @@
 
         if (track.grid[currentStep]) {
           if (track.sfx) {
-            triggerPreset(track.sfx);
+            triggerPreset(track.sfx, false);
           } else if (track.notes) {
             let noteIdx = (currentStep % track.notes.length);
-            playNote(0, true, freqs[0] * Math.pow(2, track.notes[noteIdx] / 12));
-            setTimeout(() => stopNote(0, true), intervalMs * 0.8);
+            let voiceKey = 'seq_' + trIdx;
+            if (activeOscs[voiceKey]) stopNote(voiceKey, true);
+            playNote(voiceKey, true, freqs[0] * Math.pow(2, track.notes[noteIdx] / 12));
+            setTimeout(() => stopNote(voiceKey, true), intervalMs * 0.8);
           }
         }
       });
@@ -1458,13 +1506,17 @@
     } else {
       btnSeqPlay.textContent = '▶ Play Sequencer [P]';
       clearInterval(seqInterval);
+      seqTracks.forEach((_, trIdx) => stopNote('seq_' + trIdx, true));
       document.querySelectorAll('.step-btn.current').forEach(el => el.classList.remove('current'));
       showToast('⏸ Sequencer paused [P]', 'info', 1800);
     }
   };
 
   document.getElementById('btnSeqClear').onclick = () => {
-    seqTracks.forEach(tr => tr.grid.fill(false));
+    seqTracks.forEach((tr, trIdx) => {
+      tr.grid.fill(false);
+      stopNote('seq_' + trIdx, true);
+    });
     buildSequencerGrid();
     showToast('🗑 16-step sequencer pattern cleared [C]', 'info', 2000);
   };
@@ -1559,6 +1611,11 @@
   // WAV Audio Export via OfflineAudioContext with DSP Processing
   document.getElementById('btnExportWav').onclick = async () => {
     initAudio();
+    const hasActiveSteps = seqTracks.some(t => t.grid.some(Boolean));
+    if (!hasActiveSteps) {
+      showToast('⚠️ Sequencer grid has no active steps! Enable steps or load a project first.', 'warning', 3500);
+      return;
+    }
     showToast('⏳ Rendering 4-second DSP master WAV...', 'info', 2000);
     const duration = 4.0; // 4 seconds export
     const sampleRate = 44100;

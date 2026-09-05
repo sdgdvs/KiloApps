@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KAudio
+**Target App:** KBBS
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KAudio
 - KBBS
 - KBase
 - KBreakout
@@ -173,8 +172,18 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - K2048
 - KAlchemy
 - KAsteroids
+- KAudio
 
 ## Test Reports
+
+- **KAudio**: ISSUES FOUND ⚠️ (6 issues, 6 fixed inline)
+  - ✅ Core functionality works (virtual piano keyboard, ADSR envelope, biquad filter, overdrive/distortion, stereo delay/echo, 16-step 4-track sequencer, 8-bit sound FX generator presets, dual-mode visualizer oscilloscope/FFT spectrum, JSON import/export, WAV offline master export, performance recording/playback).
+  - 🔧 FIXED: Sequencer notes called `playNote(0, true, ...)` with `freqOverride`, which bypassed storing the voice in `activeOscs`. As a result, `stopNote(0, true)` could not find the voice, causing sequencer oscillators to never stop and continuously leak voices into the Web Audio context. Assigned unique `seq_${trIdx}` voice keys so notes cleanly trigger ADSR release and terminate.
+  - 🔧 FIXED: Automated sequencer playback triggered `triggerPreset()` with preset sound effects, spamming dozens of toast notifications per second. Added optional `showNotification = false` parameter when presets are executed via the sequencer.
+  - 🔧 FIXED: Stopping recorded performance playback (`stopPlayback()`) cancelled pending `stopNote` timeouts without silencing currently active voices, leaving notes permanently ringing. Added voice cleanup loop on playback stop.
+  - 🔧 FIXED: "Z: Rec, X: Play" status indicator and "Octave: 0" badge were non-interactive text elements, preventing mouse and touch users from recording/playing performances or shifting octaves. Added interactive click handlers with visual pointer styling and tooltips.
+  - 🔧 FIXED: Virtual piano keys were not playable via keyboard navigation (Tab focus + Enter/Space) despite having `tabIndex="0"` and `role="button"`. Added `keydown`/`keyup` event handlers for Enter and Space.
+  - 🔧 FIXED: Exporting WAV with an empty sequencer grid silently generated and downloaded 4 seconds of pure silence. Added active step validation with a user guidance toast before triggering offline rendering.
 
 - **KAsteroids**: ISSUES FOUND ⚠️ (4 issues, 4 fixed inline)
   - ✅ Core gameplay works (ship rotation, thrust physics, lasers/spread/overdrive, UFO aliens, boss encounters, 8 active skills, asteroids fracturing, audio synthesizers, 4 game modes Classic/Time Attack/Hardcore/Campaign, local storage stats/highscores).
