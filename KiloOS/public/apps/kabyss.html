@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -48,7 +48,7 @@
         header {
             background-color: var(--bg-panel-dark);
             border-bottom: 1px solid var(--border-dungeon);
-            padding: 8px 14px;
+            padding: 6px 14px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -63,10 +63,13 @@
 
         .title {
             font-weight: bold;
-            font-size: 16px;
+            font-size: 15px;
             color: var(--text-bright);
             letter-spacing: 1px;
             text-shadow: 0 0 8px rgba(129, 140, 248, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .subtitle {
@@ -76,7 +79,7 @@
 
         .stats-bar {
             display: flex;
-            gap: 16px;
+            gap: 12px;
             align-items: center;
         }
 
@@ -118,9 +121,10 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: #04060a;
+            background: #030508;
             position: relative;
             border-right: 1px solid var(--border-dungeon);
+            overflow: hidden;
         }
 
         .canvas-wrapper {
@@ -130,24 +134,28 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            background: #020305;
         }
 
         canvas#dungeonCanvas {
-            background: #020305;
-            box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.9);
+            background: #010204;
+            box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.95);
             border: 1px solid #111827;
+            display: block;
+            cursor: crosshair;
         }
 
         .overlay-hud {
             position: absolute;
             top: 12px;
             left: 12px;
-            background: rgba(13, 18, 29, 0.85);
+            background: rgba(9, 12, 20, 0.88);
             border: 1px solid var(--border-dungeon);
             border-radius: 4px;
             padding: 8px 12px;
             backdrop-filter: blur(4px);
             pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         }
 
         .overlay-hud .zone-title {
@@ -159,6 +167,20 @@
         .overlay-hud .zone-sub {
             color: var(--text-dim);
             font-size: 11px;
+            margin-top: 2px;
+        }
+
+        .overlay-tileinfo {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background: rgba(9, 12, 20, 0.85);
+            border: 1px solid var(--border-dungeon);
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 11px;
+            color: var(--text-dim);
+            pointer-events: none;
         }
 
         /* Viewport Bottom Controls */
@@ -203,6 +225,7 @@
             background: #1e1b4b;
             border-color: #4338ca;
             color: #c7d2fe;
+            font-weight: bold;
         }
 
         button.btn-primary:hover {
@@ -211,9 +234,14 @@
             color: #fff;
         }
 
+        button.btn-action {
+            background: #162032;
+            border-color: #27364f;
+        }
+
         /* Right Side Panels */
         .sidebar {
-            width: 320px;
+            width: 330px;
             background: var(--bg-panel);
             display: flex;
             flex-direction: column;
@@ -250,10 +278,10 @@
         .tab-content {
             flex: 1;
             overflow-y: auto;
-            padding: 12px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
 
         .panel-section {
@@ -271,14 +299,90 @@
             margin-bottom: 8px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             padding-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+
+        .stat-row .stat-name {
+            color: var(--text-dim);
+        }
+
+        .bar-container {
+            width: 100%;
+            height: 6px;
+            background: #0a0e17;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 2px;
+            margin-bottom: 8px;
+            border: 1px solid #1e293b;
+        }
+
+        .bar-fill {
+            height: 100%;
+            transition: width 0.2s ease;
+        }
+
+        .bar-hp { background: linear-gradient(90deg, #b91c1c, #ef4444); }
+        .bar-sanity { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+        .bar-exp { background: linear-gradient(90deg, #7c3aed, #a855f7); }
+
+        /* Equipment / Item Slots */
+        .grid-slots {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .slot {
+            aspect-ratio: 1;
+            background: #090d16;
+            border: 1px dashed var(--border-dungeon);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: center;
+            padding: 2px;
+        }
+
+        .slot:hover {
+            border-color: var(--accent-cyan);
+            color: var(--text-bright);
+            background: #0f172a;
+        }
+
+        .slot.occupied {
+            border-style: solid;
+            border-color: #334155;
+            background: #111827;
+            color: var(--text-primary);
+        }
+
+        .slot-icon {
+            font-size: 16px;
+            margin-bottom: 2px;
         }
 
         /* Message Log */
         .log-section {
-            height: 180px;
+            height: 170px;
             background: var(--bg-panel-dark);
             border-top: 1px solid var(--border-dungeon);
-            padding: 8px 12px;
+            padding: 8px 10px;
             display: flex;
             flex-direction: column;
         }
@@ -303,46 +407,82 @@
 
         .log-msg {
             color: var(--text-dim);
-            line-height: 1.3;
+            line-height: 1.35;
         }
 
-        .log-msg.important { color: var(--accent-amber); }
+        .log-msg.important { color: var(--accent-amber); font-weight: bold; }
         .log-msg.combat { color: var(--accent-crimson); }
         .log-msg.magic { color: var(--accent-cyan); }
         .log-msg.relic { color: var(--accent-purple); }
+        .log-msg.heal { color: var(--accent-emerald); }
 
-        /* Equipment / Item Slots */
-        .grid-slots {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
-        }
-
-        .slot {
-            aspect-ratio: 1;
-            background: #0a0e17;
-            border: 1px dashed var(--border-dungeon);
-            border-radius: 4px;
-            display: flex;
-            flex-direction: column;
+        /* Modal Delver Tome */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
             align-items: center;
             justify-content: center;
-            font-size: 10px;
+            z-index: 100;
+            backdrop-filter: blur(2px);
+        }
+
+        .modal-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-glow);
+            border-radius: 6px;
+            width: 520px;
+            max-width: 90vw;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.2);
+        }
+
+        .modal-header {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border-dungeon);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-panel-dark);
+        }
+
+        .modal-title {
+            color: var(--accent-cyan);
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
             color: var(--text-dim);
+            font-size: 16px;
             cursor: pointer;
-            transition: all 0.15s ease;
+            padding: 2px 6px;
         }
 
-        .slot:hover {
-            border-color: var(--accent-cyan);
-            color: var(--text-bright);
-        }
-
-        .slot.occupied {
-            border-style: solid;
-            border-color: #334155;
-            background: #111827;
+        .modal-body {
+            padding: 16px;
+            overflow-y: auto;
             color: var(--text-primary);
+            line-height: 1.6;
+            font-size: 12px;
+        }
+
+        .modal-body h4 {
+            color: var(--text-rune);
+            margin: 10px 0 4px;
+        }
+
+        .modal-body ul {
+            margin-left: 20px;
+            margin-bottom: 8px;
         }
 
         /* Footer Status */
@@ -360,8 +500,8 @@
 <body>
     <header>
         <div class="brand">
-            <div class="title">⚔️ KABYSS</div>
-            <div class="subtitle">Abyssal Crypt Crawler v0.1</div>
+            <div class="title"><span>⚔️</span> KABYSS</div>
+            <div class="subtitle">Abyssal Crypt Crawler v0.2</div>
         </div>
         <div class="stats-bar">
             <div class="stat-badge">
@@ -386,19 +526,22 @@
     <div class="workspace">
         <div class="viewport-container">
             <div class="canvas-wrapper">
-                <canvas id="dungeonCanvas" width="640" height="480"></canvas>
+                <canvas id="dungeonCanvas" width="704" height="480"></canvas>
                 <div class="overlay-hud">
-                    <div class="zone-title" id="hudZoneName">Forgotten Crypts - Entryway</div>
-                    <div class="zone-sub" id="hudZoneSub">Turn: 1 | Light: 100% | Danger: Low</div>
+                    <div class="zone-title" id="hudZoneName">Forgotten Crypts - B1</div>
+                    <div class="zone-sub" id="hudZoneSub">Turn: 1 | Light: 100% | Torch: Burning</div>
                 </div>
+                <div class="overlay-tileinfo" id="hudTileInfo">Position: (10, 8) | Floor</div>
             </div>
             <div class="viewport-toolbar">
                 <div class="btn-group">
                     <button id="btnNewRun" class="btn-primary">⚡ New Descent</button>
-                    <button id="btnRest">⏳ Rest (Turn)</button>
-                    <button id="btnSearch">🔍 Search Area</button>
+                    <button id="btnRest" class="btn-action">⏳ Rest [Space]</button>
+                    <button id="btnSearch" class="btn-action">🔍 Search [S]</button>
+                    <button id="btnStairs" class="btn-action" title="Descend stairs">🪜 Descend [E]</button>
                 </div>
                 <div class="btn-group">
+                    <button id="btnToggleFOV" class="btn-action" title="Toggle full map vision (Debug)">👁️ FOV: On</button>
                     <button id="btnHelp">📖 Delver's Tome</button>
                 </div>
             </div>
@@ -413,32 +556,119 @@
 
             <div class="tab-content" id="tabDelver">
                 <div class="panel-section">
-                    <div class="section-header">Delver Attributes</div>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                        <span>Class:</span>
-                        <strong style="color:var(--accent-purple)">Rune Knight</strong>
+                    <div class="section-header">
+                        <span>Delver Attributes</span>
+                        <span style="color:var(--accent-purple); font-size:10px;">Lvl <span id="delverLevel">1</span></span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                        <span>Might:</span>
-                        <strong>14 (+2)</strong>
+                    
+                    <div class="stat-row">
+                        <span class="stat-name">Health</span>
+                        <span id="delverHpTxt">100 / 100</span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                        <span>Warding:</span>
-                        <strong>12 (+1)</strong>
+                    <div class="bar-container">
+                        <div class="bar-fill bar-hp" id="barHp" style="width: 100%;"></div>
                     </div>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                        <span>Arcana:</span>
-                        <strong>16 (+3)</strong>
+
+                    <div class="stat-row">
+                        <span class="stat-name">Sanity (Willpower)</span>
+                        <span id="delverSanityTxt">100 / 100</span>
+                    </div>
+                    <div class="bar-container">
+                        <div class="bar-fill bar-sanity" id="barSanity" style="width: 100%;"></div>
+                    </div>
+
+                    <div class="stat-row">
+                        <span class="stat-name">Experience</span>
+                        <span id="delverExpTxt">0 / 100</span>
+                    </div>
+                    <div class="bar-container">
+                        <div class="bar-fill bar-exp" id="barExp" style="width: 0%;"></div>
+                    </div>
+
+                    <div style="margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 6px;">
+                        <div class="stat-row">
+                            <span class="stat-name">Class</span>
+                            <strong style="color:var(--accent-purple)">Rune Knight</strong>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Might (Atk)</span>
+                            <strong id="statMight">14 (+2)</strong>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Warding (Def)</span>
+                            <strong id="statWarding">12 (+1)</strong>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Arcana (Magic)</span>
+                            <strong id="statArcana">16 (+3)</strong>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-name">Light Radius</span>
+                            <strong style="color:var(--text-gold)" id="statLightRad">7 Tiles</strong>
+                        </div>
                     </div>
                 </div>
 
                 <div class="panel-section">
-                    <div class="section-header">Equipped Gear</div>
+                    <div class="section-header">Equipped Relics & Gear</div>
                     <div class="grid-slots">
-                        <div class="slot occupied" title="Runic Longsword">🗡️<br>Blade</div>
-                        <div class="slot occupied" title="Abyssal Mail">🛡️<br>Armor</div>
-                        <div class="slot" title="Empty Trinket Slot">💍<br>Ring</div>
-                        <div class="slot" title="Empty Amulet Slot">📿<br>Amulet</div>
+                        <div class="slot occupied" title="Runic Longsword (+4 DMG)">
+                            <div class="slot-icon">🗡️</div>
+                            <div>Blade</div>
+                        </div>
+                        <div class="slot occupied" title="Abyssal Mail (+3 DEF)">
+                            <div class="slot-icon">🛡️</div>
+                            <div>Armor</div>
+                        </div>
+                        <div class="slot occupied" title="Torch of Eld (+7 FOV)">
+                            <div class="slot-icon">🔥</div>
+                            <div>Torch</div>
+                        </div>
+                        <div class="slot" title="Empty Amulet Slot">
+                            <div class="slot-icon">📿</div>
+                            <div>Amulet</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tabInventory" style="display:none;">
+                <div class="panel-section">
+                    <div class="section-header">Delver's Pack (3/12)</div>
+                    <div class="grid-slots">
+                        <div class="slot occupied" title="Healing Salve (+35 HP)">
+                            <div class="slot-icon">🧪</div>
+                            <div>Salve</div>
+                        </div>
+                        <div class="slot occupied" title="Sanity Incense (+25 Sanity)">
+                            <div class="slot-icon">🕯️</div>
+                            <div>Incense</div>
+                        </div>
+                        <div class="slot occupied" title="Runic Key">
+                            <div class="slot-icon">🗝️</div>
+                            <div>Key</div>
+                        </div>
+                        <div class="slot"><div class="slot-icon">·</div><div>Empty</div></div>
+                        <div class="slot"><div class="slot-icon">·</div><div>Empty</div></div>
+                        <div class="slot"><div class="slot-icon">·</div><div>Empty</div></div>
+                        <div class="slot"><div class="slot-icon">·</div><div>Empty</div></div>
+                        <div class="slot"><div class="slot-icon">·</div><div>Empty</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tabRunes" style="display:none;">
+                <div class="panel-section">
+                    <div class="section-header">Inscribed Ancient Runes</div>
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        <div style="padding:6px; background:#090d16; border:1px solid #1e293b; border-radius:3px;">
+                            <div style="color:var(--accent-cyan); font-weight:bold;">⚡ Rune of Flare</div>
+                            <div style="font-size:11px; color:var(--text-dim);">Illuminates wide area for 20 turns and scorches shadows.</div>
+                        </div>
+                        <div style="padding:6px; background:#090d16; border:1px solid #1e293b; border-radius:3px;">
+                            <div style="color:var(--accent-purple); font-weight:bold;">🌀 Rune of Aegis</div>
+                            <div style="font-size:11px; color:var(--text-dim);">Absorbs next 30 subterranean damage.</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -457,74 +687,810 @@
         </div>
     </div>
 
+    <div class="modal-backdrop" id="modalHelp">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">📖 Delver's Tome & Survival Manual</div>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h4>Navigation & Controls</h4>
+                <ul>
+                    <li><strong>WASD / Arrow Keys / Numpad / Vi (hjklyubn):</strong> Move Delver across the grid.</li>
+                    <li><strong>Spacebar:</strong> Rest 1 turn to steady yourself (recuperates 1 HP/Sanity).</li>
+                    <li><strong>E / Enter:</strong> Interact with doors, stairs, chests, or altars.</li>
+                    <li><strong>S:</strong> Search adjacent tiles for hidden passages and traps.</li>
+                    <li><strong>Mouse Click:</strong> Click on visible floor tiles to move or inspect obstacles.</li>
+                </ul>
+                <h4>Field of View & Darkness</h4>
+                <p>The Abyss is shrouded in primordial darkness. Your torch projects a field of light that illuminates corridors and chambers. Unexplored tiles remain pitch black; previously seen tiles remain remembered in faint gray memory.</p>
+                <h4>Subterranean Hazards</h4>
+                <p>Wandering deep crypts drains sanity. Keep your torch lit and avoid staying motionless in cursed chambers.</p>
+            </div>
+        </div>
+    </div>
+
     <footer>
-        <div>WASD/Arrows: Navigate • Space: Rest • E: Interact • R: Cast Rune</div>
-        <div>KAbyss Engine ready. Phase 1 scaffold initialized.</div>
+        <div>WASD/Arrows: Navigate • Space: Rest • E: Interact • S: Search • Click: Move</div>
+        <div id="footerStatus">KAbyss Engine v0.2 • Turn Engine active</div>
     </footer>
 
     <script>
-        // KAbyss Web Engine Skeleton
+        // --- KAbyss Core Dungeon Crawl Engine ---
+        const TILE = {
+            VOID: 0,
+            WALL: 1,
+            FLOOR: 2,
+            DOOR_CLOSED: 3,
+            DOOR_OPEN: 4,
+            STAIRS_DOWN: 5,
+            STAIRS_UP: 6,
+            PILLAR: 7,
+            TORCH: 8,
+            CHEST: 9,
+            RUBBLE: 10
+        };
+
+        const MAP_WIDTH = 48;
+        const MAP_HEIGHT = 36;
+        const TILE_SIZE = 32;
+
         const canvas = document.getElementById('dungeonCanvas');
         const ctx = canvas.getContext('2d');
 
-        function renderInitialScaffold() {
-            ctx.fillStyle = '#020305';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // State variables
+        let dungeon = [];
+        let explored = [];
+        let visible = [];
+        let lightMap = [];
+        let torches = [];
+        let chests = [];
 
-            // Draw grid backdrop preview
-            ctx.strokeStyle = '#0e1726';
-            ctx.lineWidth = 1;
-            const tileSize = 32;
-            for (let x = 0; x < canvas.width; x += tileSize) {
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, canvas.height);
-                ctx.stroke();
+        let fovEnabled = true;
+        let turn = 1;
+        let depthLevel = 1;
+
+        const player = {
+            x: 10,
+            y: 10,
+            hp: 100,
+            maxHp: 100,
+            sanity: 100,
+            maxSanity: 100,
+            essence: 0,
+            level: 1,
+            exp: 0,
+            maxExp: 100,
+            might: 14,
+            warding: 12,
+            arcana: 16,
+            lightRadius: 7,
+            facing: 'down'
+        };
+
+        // Camera viewport
+        const camera = {
+            x: 0,
+            y: 0,
+            width: canvas.width,
+            height: canvas.height
+        };
+
+        // --- Dungeon Generation ---
+        function generateDungeon(level) {
+            depthLevel = level;
+            dungeon = [];
+            explored = [];
+            visible = [];
+            lightMap = [];
+            torches = [];
+            chests = [];
+
+            for (let y = 0; y < MAP_HEIGHT; y++) {
+                dungeon[y] = [];
+                explored[y] = [];
+                visible[y] = [];
+                lightMap[y] = [];
+                for (let x = 0; x < MAP_WIDTH; x++) {
+                    dungeon[y][x] = TILE.WALL;
+                    explored[y][x] = false;
+                    visible[y][x] = false;
+                    lightMap[y][x] = 0;
+                }
             }
-            for (let y = 0; y < canvas.height; y += tileSize) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(canvas.width, y);
-                ctx.stroke();
+
+            // Generate interconnected rooms with BSP/Random Walk
+            const rooms = [];
+            const numRooms = 8 + Math.floor(Math.random() * 4);
+
+            for (let r = 0; r < numRooms * 3 && rooms.length < numRooms; r++) {
+                const rw = 5 + Math.floor(Math.random() * 6);
+                const rh = 4 + Math.floor(Math.random() * 5);
+                const rx = 2 + Math.floor(Math.random() * (MAP_WIDTH - rw - 4));
+                const ry = 2 + Math.floor(Math.random() * (MAP_HEIGHT - rh - 4));
+
+                let overlap = false;
+                for (const room of rooms) {
+                    if (rx <= room.x + room.w + 1 && rx + rw + 1 >= room.x &&
+                        ry <= room.y + room.h + 1 && ry + rh + 1 >= room.y) {
+                        overlap = true;
+                        break;
+                    }
+                }
+
+                if (!overlap) {
+                    rooms.push({ x: rx, y: ry, w: rw, h: rh });
+                    // Carve room
+                    for (let y = ry; y < ry + rh; y++) {
+                        for (let x = rx; x < rx + rw; x++) {
+                            dungeon[y][x] = TILE.FLOOR;
+                        }
+                    }
+
+                    // Occasional pillars in larger rooms
+                    if (rw >= 7 && rh >= 6) {
+                        dungeon[ry + 2][rx + 2] = TILE.PILLAR;
+                        dungeon[ry + 2][rx + rw - 3] = TILE.PILLAR;
+                        dungeon[ry + rh - 3][rx + 2] = TILE.PILLAR;
+                        dungeon[ry + rh - 3][rx + rw - 3] = TILE.PILLAR;
+                    }
+
+                    // Wall torch in room
+                    torches.push({ x: rx + Math.floor(rw / 2), y: ry, intensity: 4 });
+                }
             }
 
-            // Draw placeholder dungeon room preview
-            ctx.fillStyle = '#0f172a';
-            ctx.fillRect(tileSize * 4, tileSize * 3, tileSize * 12, tileSize * 8);
-            ctx.strokeStyle = '#334155';
-            ctx.strokeRect(tileSize * 4, tileSize * 3, tileSize * 12, tileSize * 8);
+            // Connect rooms with corridors
+            for (let i = 0; i < rooms.length - 1; i++) {
+                const r1 = rooms[i];
+                const r2 = rooms[i + 1];
+                let cx1 = Math.floor(r1.x + r1.w / 2);
+                let cy1 = Math.floor(r1.y + r1.h / 2);
+                const cx2 = Math.floor(r2.x + r2.w / 2);
+                const cy2 = Math.floor(r2.y + r2.h / 2);
 
-            // Draw player placeholder
-            ctx.fillStyle = '#38bdf8';
-            ctx.beginPath();
-            ctx.arc(tileSize * 10, tileSize * 7, 10, 0, Math.PI * 2);
-            ctx.fill();
+                // Horizontal then vertical corridor
+                while (cx1 !== cx2) {
+                    dungeon[cy1][cx1] = TILE.FLOOR;
+                    cx1 += (cx2 > cx1) ? 1 : -1;
+                }
+                while (cy1 !== cy2) {
+                    dungeon[cy1][cx1] = TILE.FLOOR;
+                    cy1 += (cy2 > cy1) ? 1 : -1;
+                }
+            }
 
-            // Delver glow
-            const radGrad = ctx.createRadialGradient(tileSize * 10, tileSize * 7, 5, tileSize * 10, tileSize * 7, 60);
-            radGrad.addColorStop(0, 'rgba(56, 189, 248, 0.4)');
-            radGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
-            ctx.fillStyle = radGrad;
-            ctx.beginPath();
-            ctx.arc(tileSize * 10, tileSize * 7, 60, 0, Math.PI * 2);
-            ctx.fill();
+            // Place doors at room entryways
+            for (const room of rooms) {
+                for (let x = room.x; x < room.x + room.w; x++) {
+                    if (dungeon[room.y - 1][x] === TILE.FLOOR && dungeon[room.y][x] === TILE.FLOOR) {
+                        if (Math.random() < 0.6) dungeon[room.y][x] = TILE.DOOR_CLOSED;
+                    }
+                    if (dungeon[room.y + room.h][x] === TILE.FLOOR && dungeon[room.y + room.h - 1][x] === TILE.FLOOR) {
+                        if (Math.random() < 0.6) dungeon[room.y + room.h - 1][x] = TILE.DOOR_CLOSED;
+                    }
+                }
+            }
 
-            ctx.fillStyle = '#f8fafc';
-            ctx.font = '12px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText('@ (Hero)', tileSize * 10, tileSize * 7 - 14);
+            // Spawn Delver in first room
+            const startRoom = rooms[0];
+            player.x = Math.floor(startRoom.x + startRoom.w / 2);
+            player.y = Math.floor(startRoom.y + startRoom.h / 2);
+            dungeon[player.y][player.x] = TILE.STAIRS_UP;
+
+            // Spawn Stairs Down in last room
+            const endRoom = rooms[rooms.length - 1];
+            const exitX = Math.floor(endRoom.x + endRoom.w / 2);
+            const exitY = Math.floor(endRoom.y + endRoom.h / 2);
+            dungeon[exitY][exitX] = TILE.STAIRS_DOWN;
+
+            // Place some chests & rubble
+            for (let i = 1; i < rooms.length - 1; i++) {
+                const r = rooms[i];
+                if (Math.random() < 0.7) {
+                    const chestX = r.x + 1 + Math.floor(Math.random() * (r.w - 2));
+                    const chestY = r.y + 1 + Math.floor(Math.random() * (r.h - 2));
+                    if (dungeon[chestY][chestX] === TILE.FLOOR) {
+                        dungeon[chestY][chestX] = TILE.CHEST;
+                        chests.push({ x: chestX, y: chestY, opened: false, essence: 25 + Math.floor(Math.random() * 40) });
+                    }
+                }
+                if (Math.random() < 0.5) {
+                    const rubX = r.x + 1 + Math.floor(Math.random() * (r.w - 2));
+                    const rubY = r.y + 1 + Math.floor(Math.random() * (r.h - 2));
+                    if (dungeon[rubY][rubX] === TILE.FLOOR) {
+                        dungeon[rubY][rubX] = TILE.RUBBLE;
+                    }
+                }
+            }
+
+            computeFOV();
+            updateHUD();
+            logMessage(`Entered Catacombs Depth B${level}. Shrouded in forgotten silence.`, 'important');
         }
 
-        window.addEventListener('load', () => {
-            renderInitialScaffold();
+        // --- Field Of View (Raycasting) ---
+        function computeFOV() {
+            // Reset visible & lightMap
+            for (let y = 0; y < MAP_HEIGHT; y++) {
+                for (let x = 0; x < MAP_WIDTH; x++) {
+                    visible[y][x] = false;
+                    lightMap[y][x] = 0;
+                }
+            }
+
+            if (!fovEnabled) {
+                for (let y = 0; y < MAP_HEIGHT; y++) {
+                    for (let x = 0; x < MAP_WIDTH; x++) {
+                        visible[y][x] = true;
+                        explored[y][x] = true;
+                        lightMap[y][x] = 1.0;
+                    }
+                }
+                return;
+            }
+
+            const numRays = 360;
+            const radius = player.lightRadius;
+
+            // Player vision rays
+            for (let i = 0; i < numRays; i++) {
+                const angle = (i * Math.PI) / 180;
+                const cos = Math.cos(angle);
+                const sin = Math.sin(angle);
+
+                let cx = player.x + 0.5;
+                let cy = player.y + 0.5;
+
+                for (let d = 0; d <= radius; d += 0.4) {
+                    const tx = Math.floor(cx);
+                    const ty = Math.floor(cy);
+
+                    if (tx < 0 || tx >= MAP_WIDTH || ty < 0 || ty >= MAP_HEIGHT) break;
+
+                    const dist = Math.hypot(tx - player.x, ty - player.y);
+                    if (dist <= radius) {
+                        visible[ty][tx] = true;
+                        explored[ty][tx] = true;
+                        const falloff = Math.max(0, 1 - (dist / radius) * 0.75);
+                        lightMap[ty][tx] = Math.max(lightMap[ty][tx], falloff);
+                    }
+
+                    // Block light
+                    const tile = dungeon[ty][tx];
+                    if (tile === TILE.WALL || tile === TILE.DOOR_CLOSED || tile === TILE.PILLAR) {
+                        break;
+                    }
+
+                    cx += cos * 0.4;
+                    cy += sin * 0.4;
+                }
+            }
+
+            // Ambient torches
+            for (const torch of torches) {
+                if (explored[torch.y][torch.x]) {
+                    const tRad = torch.intensity || 4;
+                    for (let dy = -tRad; dy <= tRad; dy++) {
+                        for (let dx = -tRad; dx <= tRad; dx++) {
+                            const nx = torch.x + dx;
+                            const ny = torch.y + dy;
+                            if (nx >= 0 && nx < MAP_WIDTH && ny >= 0 && ny < MAP_HEIGHT) {
+                                const dist = Math.hypot(dx, dy);
+                                if (dist <= tRad) {
+                                    const intensity = (1 - dist / tRad) * 0.6;
+                                    lightMap[ny][nx] = Math.min(1.0, lightMap[ny][nx] + intensity);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // --- Camera Updates ---
+        function updateCamera() {
+            const targetX = player.x * TILE_SIZE + TILE_SIZE / 2 - canvas.width / 2;
+            const targetY = player.y * TILE_SIZE + TILE_SIZE / 2 - canvas.height / 2;
+
+            const maxX = MAP_WIDTH * TILE_SIZE - canvas.width;
+            const maxY = MAP_HEIGHT * TILE_SIZE - canvas.height;
+
+            camera.x = Math.max(0, Math.min(maxX, targetX));
+            camera.y = Math.max(0, Math.min(maxY, targetY));
+        }
+
+        // --- Rendering ---
+        function render() {
+            updateCamera();
+
+            ctx.fillStyle = '#010204';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const startCol = Math.floor(camera.x / TILE_SIZE);
+            const endCol = Math.min(MAP_WIDTH - 1, startCol + Math.ceil(canvas.width / TILE_SIZE) + 1);
+            const startRow = Math.floor(camera.y / TILE_SIZE);
+            const endRow = Math.min(MAP_HEIGHT - 1, startRow + Math.ceil(canvas.height / TILE_SIZE) + 1);
+
+            const flicker = Math.sin(Date.now() / 180) * 0.04;
+
+            for (let y = startRow; y <= endRow; y++) {
+                for (let x = startCol; x <= endCol; x++) {
+                    const screenX = Math.floor(x * TILE_SIZE - camera.x);
+                    const screenY = Math.floor(y * TILE_SIZE - camera.y);
+
+                    const isExplored = explored[y][x];
+                    const isVisible = visible[y][x];
+                    const light = isVisible ? Math.min(1.0, lightMap[y][x] + flicker) : 0;
+
+                    if (!isExplored) {
+                        ctx.fillStyle = '#010204';
+                        ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                        continue;
+                    }
+
+                    const tile = dungeon[y][x];
+
+                    // Base tile color
+                    if (tile === TILE.WALL) {
+                        ctx.fillStyle = isVisible ? `rgba(30, 41, 59, ${0.4 + light * 0.6})` : '#0d131f';
+                        ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                        ctx.strokeStyle = isVisible ? `rgba(51, 65, 85, ${light})` : '#162032';
+                        ctx.strokeRect(screenX + 1, screenY + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+                        
+                        // Brick detailing
+                        if (isVisible) {
+                            ctx.fillStyle = `rgba(15, 23, 42, ${light * 0.7})`;
+                            ctx.fillRect(screenX + 4, screenY + 8, TILE_SIZE - 8, 2);
+                            ctx.fillRect(screenX + 4, screenY + 18, TILE_SIZE - 8, 2);
+                        }
+                    } else if (tile === TILE.FLOOR || tile === TILE.RUBBLE) {
+                        ctx.fillStyle = isVisible ? `rgba(15, 23, 42, ${0.3 + light * 0.7})` : '#070a12';
+                        ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                        
+                        // Cobblestone dot
+                        ctx.fillStyle = isVisible ? `rgba(30, 41, 59, ${light * 0.6})` : '#0b101b';
+                        ctx.fillRect(screenX + 14, screenY + 14, 4, 4);
+
+                        if (tile === TILE.RUBBLE) {
+                            ctx.fillStyle = isVisible ? '#94a3b8' : '#334155';
+                            ctx.font = '14px monospace';
+                            ctx.textAlign = 'center';
+                            ctx.fillText('∴', screenX + 16, screenY + 20);
+                        }
+                    } else if (tile === TILE.PILLAR) {
+                        ctx.fillStyle = isVisible ? '#0f172a' : '#070a12';
+                        ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                        ctx.fillStyle = isVisible ? `rgba(99, 102, 241, ${0.4 + light * 0.6})` : '#1e1b4b';
+                        ctx.beginPath();
+                        ctx.arc(screenX + 16, screenY + 16, 10, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.strokeStyle = isVisible ? '#818cf8' : '#312e81';
+                        ctx.stroke();
+                    } else if (tile === TILE.DOOR_CLOSED) {
+                        ctx.fillStyle = isVisible ? '#78350f' : '#291b0b';
+                        ctx.fillRect(screenX + 4, screenY + 2, TILE_SIZE - 8, TILE_SIZE - 4);
+                        ctx.fillStyle = isVisible ? '#fbbf24' : '#78350f';
+                        ctx.fillRect(screenX + 14, screenY + 14, 4, 4);
+                    } else if (tile === TILE.DOOR_OPEN) {
+                        ctx.fillStyle = isVisible ? '#1e293b' : '#0a0f1d';
+                        ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                        ctx.strokeStyle = isVisible ? '#78350f' : '#291b0b';
+                        ctx.strokeRect(screenX + 2, screenY + 2, 4, TILE_SIZE - 4);
+                    } else if (tile === TILE.STAIRS_DOWN) {
+                        ctx.fillStyle = isVisible ? '#1e1b4b' : '#090c14';
+                        ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                        ctx.fillStyle = isVisible ? '#a855f7' : '#4c1d95';
+                        ctx.font = '16px monospace';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('▼', screenX + 16, screenY + 22);
+                    } else if (tile === TILE.STAIRS_UP) {
+                        ctx.fillStyle = isVisible ? '#1e1b4b' : '#090c14';
+                        ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                        ctx.fillStyle = isVisible ? '#38bdf8' : '#0369a1';
+                        ctx.font = '16px monospace';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('▲', screenX + 16, screenY + 22);
+                    } else if (tile === TILE.CHEST) {
+                        ctx.fillStyle = isVisible ? '#1e293b' : '#070a12';
+                        ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                        ctx.fillStyle = isVisible ? '#fbbf24' : '#78350f';
+                        ctx.font = '15px monospace';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('📦', screenX + 16, screenY + 22);
+                    }
+
+                    // Memory fog overlay for explored but not currently visible tiles
+                    if (isExplored && !isVisible) {
+                        ctx.fillStyle = 'rgba(2, 4, 8, 0.78)';
+                        ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                    }
+                }
+            }
+
+            // Draw Torches
+            for (const torch of torches) {
+                if (visible[torch.y][torch.x]) {
+                    const sx = Math.floor(torch.x * TILE_SIZE - camera.x);
+                    const sy = Math.floor(torch.y * TILE_SIZE - camera.y);
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.font = '14px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('🔥', sx + 16, sy + 20);
+                }
+            }
+
+            // Draw Delver (Player)
+            const playerSX = Math.floor(player.x * TILE_SIZE - camera.x);
+            const playerSY = Math.floor(player.y * TILE_SIZE - camera.y);
+
+            // Delver Torchlight Radial Glow
+            const radGrad = ctx.createRadialGradient(
+                playerSX + 16, playerSY + 16, 4,
+                playerSX + 16, playerSY + 16, player.lightRadius * TILE_SIZE * 0.9
+            );
+            radGrad.addColorStop(0, 'rgba(56, 189, 248, 0.25)');
+            radGrad.addColorStop(0.5, 'rgba(56, 189, 248, 0.08)');
+            radGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = radGrad;
+            ctx.beginPath();
+            ctx.arc(playerSX + 16, playerSY + 16, player.lightRadius * TILE_SIZE * 0.9, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Delver Body Avatar
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath();
+            ctx.arc(playerSX + 16, playerSY + 16, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#f8fafc';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Facing indicator
+            ctx.fillStyle = '#f8fafc';
+            let eyeX = playerSX + 16;
+            let eyeY = playerSY + 16;
+            if (player.facing === 'up') eyeY -= 5;
+            if (player.facing === 'down') eyeY += 5;
+            if (player.facing === 'left') eyeX -= 5;
+            if (player.facing === 'right') eyeX += 5;
+            ctx.beginPath();
+            ctx.arc(eyeX, eyeY, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Delver Rune Knight Symbol
+            ctx.fillStyle = '#0f172a';
+            ctx.font = 'bold 11px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('@', playerSX + 16, playerSY + 20);
+
+            requestAnimationFrame(render);
+        }
+
+        // --- Turn & Action Handling ---
+        function advanceTurn() {
+            turn++;
+            document.getElementById('turnCounter').innerText = `Turn: ${turn}`;
+            document.getElementById('hudZoneSub').innerText = `Turn: ${turn} | Light: 100% | Torch: Burning`;
+
+            // Occasional sanity drop in deep dark
+            if (turn % 40 === 0 && player.sanity > 10) {
+                player.sanity -= 2;
+                logMessage('The ancient subterranean echoes fray your willpower (-2 Sanity).', 'important');
+            }
+
+            computeFOV();
+            updateHUD();
+        }
+
+        function movePlayer(dx, dy) {
+            const nx = player.x + dx;
+            const ny = player.y + dy;
+
+            if (dx > 0) player.facing = 'right';
+            if (dx < 0) player.facing = 'left';
+            if (dy > 0) player.facing = 'down';
+            if (dy < 0) player.facing = 'up';
+
+            if (nx < 0 || nx >= MAP_WIDTH || ny < 0 || ny >= MAP_HEIGHT) return;
+
+            const targetTile = dungeon[ny][nx];
+
+            // Collision checks
+            if (targetTile === TILE.WALL || targetTile === TILE.PILLAR) {
+                logMessage('Stone wall blocks your path.');
+                return;
+            }
+
+            if (targetTile === TILE.DOOR_CLOSED) {
+                dungeon[ny][nx] = TILE.DOOR_OPEN;
+                logMessage('You push open the heavy subterranean door.', 'magic');
+                advanceTurn();
+                return;
+            }
+
+            if (targetTile === TILE.CHEST) {
+                const chest = chests.find(c => c.x === nx && c.y === ny);
+                if (chest && !chest.opened) {
+                    chest.opened = true;
+                    dungeon[ny][nx] = TILE.FLOOR;
+                    player.essence += chest.essence;
+                    player.exp += 20;
+                    logMessage(`Opened Relic Chest! Acquired +${chest.essence} Essence & +20 EXP!`, 'relic');
+                    checkLevelUp();
+                    advanceTurn();
+                    return;
+                }
+            }
+
+            // Normal movement
+            player.x = nx;
+            player.y = ny;
+
+            if (targetTile === TILE.STAIRS_DOWN) {
+                logMessage('You stand before the spiraling descent deeper into the Abyss. Press [E] to Descend.', 'important');
+            } else if (targetTile === TILE.STAIRS_UP) {
+                logMessage('The sealed stone portal back to the surface remains shut.');
+            }
+
+            advanceTurn();
+        }
+
+        function restTurn() {
+            let healed = false;
+            if (player.hp < player.maxHp) {
+                player.hp = Math.min(player.maxHp, player.hp + 2);
+                healed = true;
+            }
+            if (player.sanity < player.maxSanity) {
+                player.sanity = Math.min(player.maxSanity, player.sanity + 1);
+            }
+            logMessage('You steady your breath and rest for a turn (+2 HP, +1 Sanity).', 'heal');
+            advanceTurn();
+        }
+
+        function searchArea() {
+            logMessage('You carefully search the surrounding stonework for runes, glyphs, and traps...', 'magic');
+            let found = false;
+            for (let dy = -2; dy <= 2; dy++) {
+                for (let dx = -2; dx <= 2; dx++) {
+                    const nx = player.x + dx;
+                    const ny = player.y + dy;
+                    if (nx >= 0 && nx < MAP_WIDTH && ny >= 0 && ny < MAP_HEIGHT) {
+                        if (dungeon[ny][nx] === TILE.CHEST) {
+                            logMessage(`Detected ancient Relic Coffer nearby at (${nx}, ${ny})!`, 'relic');
+                            found = true;
+                        }
+                    }
+                }
+            }
+            if (!found) {
+                logMessage('No hidden traps or occult glyphs detected in immediate vicinity.');
+            }
+            advanceTurn();
+        }
+
+        function interactStairs() {
+            const current = dungeon[player.y][player.x];
+            if (current === TILE.STAIRS_DOWN) {
+                depthLevel++;
+                turn = 1;
+                logMessage(`You descend into Depth B${depthLevel}... The atmosphere grows heavier.`, 'important');
+                generateDungeon(depthLevel);
+            } else if (current === TILE.DOOR_CLOSED) {
+                dungeon[player.y][player.x] = TILE.DOOR_OPEN;
+                advanceTurn();
+            } else {
+                logMessage('Nothing to interact with here.');
+            }
+        }
+
+        function checkLevelUp() {
+            if (player.exp >= player.maxExp) {
+                player.exp -= player.maxExp;
+                player.level++;
+                player.maxExp = Math.floor(player.maxExp * 1.5);
+                player.maxHp += 15;
+                player.hp = player.maxHp;
+                player.might += 2;
+                player.warding += 1;
+                player.arcana += 2;
+                logMessage(`✦ LEVEL UP! Delver is now Level ${player.level}! (+15 Max HP, +2 Might, +2 Arcana)`, 'relic');
+            }
+        }
+
+        function logMessage(text, type = '') {
+            const container = document.getElementById('logContainer');
+            const div = document.createElement('div');
+            div.className = `log-msg ${type}`;
+            div.innerText = `[T${turn}] ${text}`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function updateHUD() {
+            document.getElementById('statDepth').innerText = `B${depthLevel}: Catacombs`;
+            document.getElementById('hudZoneName').innerText = `Forgotten Crypts - B${depthLevel}`;
+            document.getElementById('statHp').innerText = `${player.hp} / ${player.maxHp}`;
+            document.getElementById('statSanity').innerText = `${player.sanity} / ${player.maxSanity}`;
+            document.getElementById('statGold').innerText = `${player.essence} ✦`;
+
+            document.getElementById('delverLevel').innerText = player.level;
+            document.getElementById('delverHpTxt').innerText = `${player.hp} / ${player.maxHp}`;
+            document.getElementById('barHp').style.width = `${(player.hp / player.maxHp) * 100}%`;
+
+            document.getElementById('delverSanityTxt').innerText = `${player.sanity} / ${player.maxSanity}`;
+            document.getElementById('barSanity').style.width = `${(player.sanity / player.maxSanity) * 100}%`;
+
+            document.getElementById('delverExpTxt').innerText = `${player.exp} / ${player.maxExp}`;
+            document.getElementById('barExp').style.width = `${(player.exp / player.maxExp) * 100}%`;
+
+            document.getElementById('statMight').innerText = `${player.might} (+${Math.floor((player.might-10)/2)})`;
+            document.getElementById('statWarding').innerText = `${player.warding} (+${Math.floor((player.warding-10)/2)})`;
+            document.getElementById('statArcana').innerText = `${player.arcana} (+${Math.floor((player.arcana-10)/2)})`;
+            document.getElementById('statLightRad').innerText = `${player.lightRadius} Tiles`;
+
+            const tileNames = {
+                [TILE.VOID]: 'Void',
+                [TILE.WALL]: 'Ancient Stone Wall',
+                [TILE.FLOOR]: 'Flagstone Floor',
+                [TILE.DOOR_CLOSED]: 'Ironbound Door (Closed)',
+                [TILE.DOOR_OPEN]: 'Archway (Open)',
+                [TILE.STAIRS_DOWN]: 'Spiraling Stairs Down',
+                [TILE.STAIRS_UP]: 'Sealed Surface Stairs',
+                [TILE.PILLAR]: 'Runic Column',
+                [TILE.TORCH]: 'Wall Torch Sconce',
+                [TILE.CHEST]: 'Relic Coffer',
+                [TILE.RUBBLE]: 'Ancient Rubble'
+            };
+            const curTile = dungeon[player.y] ? dungeon[player.y][player.x] : TILE.FLOOR;
+            document.getElementById('hudTileInfo').innerText = `Position: (${player.x}, ${player.y}) | ${tileNames[curTile] || 'Floor'}`;
+        }
+
+        // --- Input Event Handlers ---
+        window.addEventListener('keydown', (e) => {
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+                e.preventDefault();
+            }
+
+            switch (e.key) {
+                // Movement
+                case 'ArrowUp':
+                case 'w':
+                case 'W':
+                case 'k':
+                case '8':
+                    movePlayer(0, -1);
+                    break;
+                case 'ArrowDown':
+                case 's':
+                case 'S':
+                    movePlayer(0, 1);
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                case 'A':
+                case 'h':
+                case '4':
+                    movePlayer(-1, 0);
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                case 'D':
+                case 'l':
+                case '6':
+                    movePlayer(1, 0);
+                    break;
+                // Diagonals (Numpad / Vi)
+                case 'y':
+                case '7':
+                    movePlayer(-1, -1);
+                    break;
+                case 'u':
+                case '9':
+                    movePlayer(1, -1);
+                    break;
+                case 'b':
+                case '1':
+                    movePlayer(-1, 1);
+                    break;
+                case 'n':
+                case '3':
+                    movePlayer(1, 1);
+                    break;
+                // Rest
+                case ' ':
+                case '5':
+                case '.':
+                    restTurn();
+                    break;
+                // Interact / Descend
+                case 'e':
+                case 'E':
+                case 'Enter':
+                    interactStairs();
+                    break;
+            }
         });
 
-        // Tab switching
+        // Mouse click navigation & inspection
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left + camera.x;
+            const clickY = e.clientY - rect.top + camera.y;
+
+            const tileX = Math.floor(clickX / TILE_SIZE);
+            const tileY = Math.floor(clickY / TILE_SIZE);
+
+            if (tileX >= 0 && tileX < MAP_WIDTH && tileY >= 0 && tileY < MAP_HEIGHT) {
+                const dx = tileX - player.x;
+                const dy = tileY - player.y;
+
+                // Move 1 step towards target if adjacent
+                if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1 && (dx !== 0 || dy !== 0)) {
+                    movePlayer(dx, dy);
+                } else if (explored[tileY][tileX]) {
+                    logMessage(`Surveying tile at (${tileX}, ${tileY})...`);
+                }
+            }
+        });
+
+        // Button Listeners
+        document.getElementById('btnNewRun').addEventListener('click', () => {
+            depthLevel = 1;
+            turn = 1;
+            player.hp = player.maxHp;
+            player.sanity = player.maxSanity;
+            generateDungeon(1);
+        });
+
+        document.getElementById('btnRest').addEventListener('click', () => {
+            restTurn();
+        });
+
+        document.getElementById('btnSearch').addEventListener('click', () => {
+            searchArea();
+        });
+
+        document.getElementById('btnStairs').addEventListener('click', () => {
+            interactStairs();
+        });
+
+        document.getElementById('btnToggleFOV').addEventListener('click', () => {
+            fovEnabled = !fovEnabled;
+            document.getElementById('btnToggleFOV').innerText = fovEnabled ? '👁️ FOV: On' : '👁️ FOV: Off';
+            computeFOV();
+        });
+
+        // Tab Switching
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
+
+                const tab = btn.getAttribute('data-tab');
+                document.getElementById('tabDelver').style.display = tab === 'hero' ? 'flex' : 'none';
+                document.getElementById('tabInventory').style.display = tab === 'inventory' ? 'flex' : 'none';
+                document.getElementById('tabRunes').style.display = tab === 'runes' ? 'flex' : 'none';
             });
+        });
+
+        // Help Modal
+        const modal = document.getElementById('modalHelp');
+        document.getElementById('btnHelp').addEventListener('click', () => {
+            modal.style.display = 'flex';
+        });
+        document.getElementById('modalClose').addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.style.display = 'none';
+        });
+
+        // Initialization
+        window.addEventListener('load', () => {
+            generateDungeon(1);
+            render();
         });
     </script>
 </body>
