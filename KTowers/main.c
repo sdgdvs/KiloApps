@@ -169,8 +169,15 @@ void TriggerScreenShake(float intensity, int duration) {
     }
 }
 
-typedef struct { float x, y, vx, vy; int life; } DustParticle;
-#define MAX_DUST 100
+typedef struct {
+    float x, y;
+    float vx, vy;
+    int life;
+    int maxLife;
+    int size;
+    COLORREF color;
+} DustParticle;
+#define MAX_DUST 80
 DustParticle dusts[MAX_DUST];
 
 // Controls
@@ -473,7 +480,35 @@ void SpawnFireworks() {
     SpawnExplosionLayers((float)cx, (float)cy, c, 8);
 }
 
-void UpdateParticles(int groundY) {
+void UpdateParticles(int groundY, int width, int height) {
+    // Ambient floating cyber dust
+    if (rand() % 3 == 0) {
+        for (int d = 0; d < MAX_DUST; d++) {
+            if (dusts[d].life <= 0) {
+                dusts[d].x = (float)(rand() % (width > 50 ? width : 860));
+                dusts[d].y = (float)(groundY > 50 ? groundY - 10 : 500);
+                dusts[d].vx = ((float)(rand() % 100) - 50.0f) / 140.0f;
+                dusts[d].vy = -0.35f - ((float)(rand() % 100) / 130.0f);
+                dusts[d].life = 60 + rand() % 80;
+                dusts[d].maxLife = dusts[d].life;
+                dusts[d].size = 1 + (rand() % 3);
+                int cPick = rand() % 4;
+                if (cPick == 0) dusts[d].color = RGB(56, 189, 248);
+                else if (cPick == 1) dusts[d].color = RGB(250, 204, 21);
+                else if (cPick == 2) dusts[d].color = RGB(255, 255, 255);
+                else dusts[d].color = RGB(148, 163, 184);
+                break;
+            }
+        }
+    }
+    for (int d = 0; d < MAX_DUST; d++) {
+        if (dusts[d].life > 0) {
+            dusts[d].x += dusts[d].vx + sinf(animTick * 0.05f + d) * 0.2f;
+            dusts[d].y += dusts[d].vy;
+            dusts[d].life--;
+        }
+    }
+
     int active = 0;
     for (int i = 0; i < particleCount; i++) {
         if (particles[i].life > 0) {
@@ -1057,7 +1092,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (wParam == 3) { // 30fps Animation Tick
                 animTick++;
-                UpdateParticles(650 - 65);
+                RECT rc;
+                GetClientRect(hwnd, &rc);
+                int w = rc.right - rc.left;
+                int h = rc.bottom - rc.top;
+                UpdateParticles(h - 65, w, h);
                 InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
@@ -1553,18 +1592,110 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             if (won && rand() % 25 == 0) SpawnFireworks();
 
-            // Draw Dust Particles
+            // Draw Ambient Floating Cyber Dust Particles
             for (int d = 0; d < MAX_DUST; d++) {
                 if (dusts[d].life > 0) {
-                    dusts[d].x += dusts[d].vx;
-                    dusts[d].y += dusts[d].vy;
-                    dusts[d].life--;
-                    HBRUSH dBrush = CreateSolidBrush(RGB(148, 163, 184));
-                    RECT dRect = { (int)dusts[d].x - 2, (int)dusts[d].y - 2, (int)dusts[d].x + 3, (int)dusts[d].y + 3 };
+                    HBRUSH dBrush = CreateSolidBrush(dusts[d].color);
+                    int ds = dusts[d].size;
+                    RECT dRect = { (int)dusts[d].x - ds, (int)dusts[d].y - ds, (int)dusts[d].x + ds + 1, (int)dusts[d].y + ds + 1 };
                     FillRect(memDC, &dRect, dBrush);
                     DeleteObject(dBrush);
                 }
             }
+
+            // Outer Pulsating Perimeter Inlay Border
+            int pad = 8;
+            int bW = width - pad * 2;
+            int bH = height - pad * 2;
+            BOOL pulseBright = ((animTick / 10) % 2 == 0);
+            HPEN outPen = CreatePen(PS_SOLID, 1, pulseBright ? RGB(56, 189, 248) : RGB(30, 60, 90));
+            HGDIOBJ oldOutPen = SelectObject(memDC, outPen);
+            SelectObject(memDC, GetStockObject(NULL_BRUSH));
+            Rectangle(memDC, pad, pad, pad + bW, pad + bH);
+            SelectObject(memDC, oldOutPen);
+            DeleteObject(outPen);
+
+            HPEN inPen = CreatePen(PS_SOLID, 1, RGB(245, 158, 11));
+            HGDIOBJ oldInPen = SelectObject(memDC, inPen);
+            Rectangle(memDC, pad + 3, pad + 3, pad + bW - 3, pad + bH - 3);
+            SelectObject(memDC, oldInPen);
+            DeleteObject(inPen);
+
+            // Animated Traveling Specular Glint along Perimeter
+            int perimLen = 2 * (bW + bH);
+            if (perimLen > 0) {
+                int gDist = (animTick * 5) % perimLen;
+                int gx = pad, gy = pad;
+                if (gDist < bW) {
+                    gx = pad + gDist;
+                    gy = pad;
+                } else if (gDist < bW + bH) {
+                    gx = pad + bW;
+                    gy = pad + (gDist - bW);
+                } else if (gDist < 2 * bW + bH) {
+                    gx = pad + bW - (gDist - (bW + bH));
+                    gy = pad + bH;
+                } else {
+                    gx = pad;
+                    gy = pad + bH - (gDist - (2 * bW + bH));
+                }
+
+                HBRUSH gBrush = CreateSolidBrush(RGB(255, 255, 255));
+                HGDIOBJ oldGB = SelectObject(memDC, gBrush);
+                HPEN nullP = CreatePen(PS_NULL, 0, 0);
+                HGDIOBJ oldGP = SelectObject(memDC, nullP);
+                Ellipse(memDC, gx - 4, gy - 4, gx + 5, gy + 5);
+                HBRUSH gHalo = CreateSolidBrush(RGB(56, 189, 248));
+                SelectObject(memDC, gHalo);
+                Ellipse(memDC, gx - 8, gy - 8, gx + 9, gy + 9);
+                SelectObject(memDC, oldGP);
+                SelectObject(memDC, oldGB);
+                DeleteObject(nullP);
+                DeleteObject(gHalo);
+                DeleteObject(gBrush);
+            }
+
+            // Ornate HUD Corner Filigree L-Brackets with Brass Rivet Studs
+            int armLen = 28;
+            HPEN goldFiltPen = CreatePen(PS_SOLID, 2, RGB(245, 158, 11)); // Art Deco Gold
+            HPEN cyanFiltPen = CreatePen(PS_SOLID, 1, RGB(56, 189, 248)); // Cyan Accent
+            HGDIOBJ oldFP = SelectObject(memDC, goldFiltPen);
+
+            // Top-Left
+            MoveToEx(memDC, pad, pad + armLen, NULL); LineTo(memDC, pad, pad); LineTo(memDC, pad + armLen, pad);
+            // Top-Right
+            MoveToEx(memDC, width - pad - armLen, pad, NULL); LineTo(memDC, width - pad, pad); LineTo(memDC, width - pad, pad + armLen);
+            // Bottom-Left
+            MoveToEx(memDC, pad, height - pad - armLen, NULL); LineTo(memDC, pad, height - pad); LineTo(memDC, pad + armLen, height - pad);
+            // Bottom-Right
+            MoveToEx(memDC, width - pad - armLen, height - pad, NULL); LineTo(memDC, width - pad, height - pad); LineTo(memDC, width - pad, height - pad - armLen);
+
+            // Inner cyan accents
+            SelectObject(memDC, cyanFiltPen);
+            MoveToEx(memDC, pad + 4, pad + armLen - 6, NULL); LineTo(memDC, pad + 4, pad + 4); LineTo(memDC, pad + armLen - 6, pad + 4);
+            MoveToEx(memDC, width - pad - armLen + 6, pad + 4, NULL); LineTo(memDC, width - pad - 4, pad + 4); LineTo(memDC, width - pad - 4, pad + armLen - 6);
+            MoveToEx(memDC, pad + 4, height - pad - armLen + 6, NULL); LineTo(memDC, pad + 4, height - pad - 4); LineTo(memDC, pad + armLen - 6, height - pad - 4);
+            MoveToEx(memDC, width - pad - armLen + 6, height - pad - 4, NULL); LineTo(memDC, width - pad - 4, height - pad - 4); LineTo(memDC, width - pad - 4, height - pad - armLen + 6);
+
+            SelectObject(memDC, oldFP);
+            DeleteObject(goldFiltPen);
+            DeleteObject(cyanFiltPen);
+
+            // Brass Rivet Studs
+            HBRUSH rivetBrush = CreateSolidBrush(RGB(254, 240, 138));
+            HGDIOBJ oldRB = SelectObject(memDC, rivetBrush);
+            HPEN nullRPen = CreatePen(PS_NULL, 0, 0);
+            HGDIOBJ oldRP = SelectObject(memDC, nullRPen);
+
+            Ellipse(memDC, pad + 4, pad + 4, pad + 9, pad + 9);
+            Ellipse(memDC, width - pad - 9, pad + 4, width - pad - 4, pad + 9);
+            Ellipse(memDC, pad + 4, height - pad - 9, pad + 9, height - pad - 4);
+            Ellipse(memDC, width - pad - 9, height - pad - 9, width - pad - 4, height - pad - 4);
+
+            SelectObject(memDC, oldRP);
+            SelectObject(memDC, oldRB);
+            DeleteObject(nullRPen);
+            DeleteObject(rivetBrush);
 
             // Copy double buffer to screen with quadratic physics screen shake
             int shakeOffsetX = 0, shakeOffsetY = 0;

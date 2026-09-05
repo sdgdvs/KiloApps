@@ -1286,6 +1286,22 @@
         const canvas = document.getElementById('ktowersCanvas');
         const ctx = canvas.getContext('2d');
 
+        // Atmospheric Floating Cyber Dust Particles
+        const AMBIENT_DUST_COUNT = 45;
+        let ambientDust = [];
+        for (let i = 0; i < AMBIENT_DUST_COUNT; i++) {
+            ambientDust.push({
+                x: Math.random() * 860,
+                y: Math.random() * 380,
+                vx: (Math.random() - 0.5) * 0.4,
+                vy: -0.2 - Math.random() * 0.5, // gentle upward drift
+                size: 1 + Math.random() * 2.5,
+                alpha: 0.2 + Math.random() * 0.6,
+                color: Math.random() < 0.4 ? '#38bdf8' : (Math.random() < 0.7 ? '#facc15' : '#e2e8f0'),
+                pulseSpeed: 0.03 + Math.random() * 0.04
+            });
+        }
+
         let rainParticles = [];
         for(let i=0; i<80; i++) {
             rainParticles.push({
@@ -1929,8 +1945,33 @@
             }
 
             // ----------------------------------------------------
-            // 5. Environmental Rain Particles
+            // 5. Environmental Ambient Cyber Dust & Rain Particles
             // ----------------------------------------------------
+            // Ambient Floating Cyber Dust
+            for (let i = 0; i < ambientDust.length; i++) {
+                let d = ambientDust[i];
+                d.x += d.vx + Math.sin(globalAnimTime * 0.05 + i) * 0.2;
+                d.y += d.vy;
+                if (d.y < 0) {
+                    d.y = h;
+                    d.x = Math.random() * w;
+                }
+                if (d.x < 0) d.x = w;
+                if (d.x > w) d.x = 0;
+
+                const pulseAlpha = d.alpha * (0.6 + 0.4 * Math.sin(globalAnimTime * d.pulseSpeed + i));
+                ctx.save();
+                ctx.fillStyle = d.color;
+                ctx.globalAlpha = pulseAlpha;
+                ctx.shadowColor = d.color;
+                ctx.shadowBlur = 4;
+                ctx.beginPath();
+                ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            // Rain Particles
             ctx.strokeStyle = 'rgba(100, 150, 255, 0.4)';
             ctx.lineWidth = 1.5;
             ctx.beginPath();
@@ -1951,6 +1992,97 @@
             // 6. Multi-Layer Particle Engine & Concentric Shockwaves
             // ----------------------------------------------------
             updateAndDrawParticles(ctx, groundY);
+
+            // ----------------------------------------------------
+            // 7. Ornate HUD Corner Filigree L-Brackets & Perimeter Glint
+            // ----------------------------------------------------
+            const pad = 8;
+            const bW = w - pad * 2;
+            const bH = h - pad * 2;
+
+            // Outer Pulsating Perimeter Inlay Border
+            const borderPulse = 0.5 + 0.5 * Math.sin(globalAnimTime * 0.06);
+            ctx.save();
+            ctx.strokeStyle = `rgba(56, 189, 248, ${0.3 + 0.3 * borderPulse})`;
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(pad, pad, bW, bH);
+
+            ctx.strokeStyle = `rgba(245, 158, 11, ${0.4 + 0.3 * borderPulse})`;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(pad + 3, pad + 3, bW - 6, bH - 6);
+
+            // Traveling Specular Glint along Perimeter
+            const perimeterLen = 2 * (bW + bH);
+            const glintDist = (globalAnimTime * 4.5) % perimeterLen;
+            let gx = pad, gy = pad;
+            if (glintDist < bW) {
+                gx = pad + glintDist;
+                gy = pad;
+            } else if (glintDist < bW + bH) {
+                gx = pad + bW;
+                gy = pad + (glintDist - bW);
+            } else if (glintDist < 2 * bW + bH) {
+                gx = pad + bW - (glintDist - (bW + bH));
+                gy = pad + bH;
+            } else {
+                gx = pad;
+                gy = pad + bH - (glintDist - (2 * bW + bH));
+            }
+
+            const glintGrad = ctx.createRadialGradient(gx, gy, 0, gx, gy, 28);
+            glintGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+            glintGrad.addColorStop(0.3, 'rgba(56, 189, 248, 0.8)');
+            glintGrad.addColorStop(0.7, 'rgba(245, 158, 11, 0.4)');
+            glintGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+            ctx.fillStyle = glintGrad;
+            ctx.beginPath();
+            ctx.arc(gx, gy, 28, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Corner Filigree L-Brackets with Brass Rivet Studs
+            const armLen = 28;
+            const fPad = 8;
+            const corners = [
+                { x: fPad, y: fPad, dx: 1, dy: 1 },
+                { x: w - fPad, y: fPad, dx: -1, dy: 1 },
+                { x: fPad, y: h - fPad, dx: 1, dy: -1 },
+                { x: w - fPad, y: h - fPad, dx: -1, dy: -1 }
+            ];
+
+            corners.forEach(c => {
+                ctx.strokeStyle = '#f59e0b'; // Art Deco Gold
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(c.x, c.y + c.dy * armLen);
+                ctx.lineTo(c.x, c.y);
+                ctx.lineTo(c.x + c.dx * armLen, c.y);
+                ctx.stroke();
+
+                // Inner Accent Notch
+                ctx.strokeStyle = '#38bdf8'; // Cyan Tech
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(c.x + c.dx * 4, c.y + c.dy * (armLen - 6));
+                ctx.lineTo(c.x + c.dx * 4, c.y + c.dy * 4);
+                ctx.lineTo(c.x + c.dx * (armLen - 6), c.y + c.dy * 4);
+                ctx.stroke();
+
+                // Brass Rivet Studs
+                ctx.fillStyle = '#fef08a';
+                ctx.shadowColor = '#f59e0b';
+                ctx.shadowBlur = 4;
+                ctx.beginPath();
+                ctx.arc(c.x + c.dx * 6, c.y + c.dy * 6, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                ctx.fillStyle = '#38bdf8';
+                ctx.beginPath();
+                ctx.arc(c.x + c.dx * 18, c.y + c.dy * 4, 1.5, 0, Math.PI * 2);
+                ctx.arc(c.x + c.dx * 4, c.y + c.dy * 18, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.restore();
 
             ctx.restore();
 

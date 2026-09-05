@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KTowers
 - KWords
 - KWizard
 - KMystery
@@ -150,8 +149,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KFreecell
 - KSudoku
 - KGo
+- KTowers
 
 ## Completed Work Log
+
+- **KTowers (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on block landings, move errors, teleports, and victory scoring (continuous 60 FPS requestAnimationFrame animation loop in Web Canvas `ktowers.html`, and double-buffered viewport rendering with physics decay in Native C Win32 GDI `KTowers/main.c`), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity drag, expanding buoyant smoke & steam puffs with negative gravity and radius growth, heavy kinematic architectural concrete & glass shards with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars upon landings, teleports, auto-solve, and stage victories), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion halo radiating on landing impacts, teleport swap skill, error violations, and victory bursts, ornate Art Deco / cybernetic HUD corner filigree L-brackets with brass rivet studs and micro-accents at all four viewport and launchpad corners, a pulsating energy perimeter inlay border with an animated traveling specular glint traversing the outer playfield skyscraper construction viewport frame, sculpted 3D beveled skyscraper blocks with diagonal specular sheen sweeps traversing glass facades, helipads, solar panels, and foundation plates, and atmospheric environmental floating urban cyber dust motes and rain particles drifting across the city skyline in both Web Canvas (`ktowers.html`) and Native C Win32 GDI (`KTowers/main.c`).
 
 - **KGo (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on stone placements, stone captures, move errors/violations (suicide & superko), passes, resignations, hints, territory estimator & liberty analyzer toggles, and victory scoring clears (continuous 60 FPS requestAnimationFrame animation loop in Web Canvas `kgo.html`, and double-buffered viewport rendering with physics decay in Native C Win32 GDI `KGo/main.c`), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity drag, expanding buoyant smoke & spirit puffs with negative gravity and radius growth, heavy kinematic slate stone / clam shell debris shards with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars upon captures, hints, tsumego solves, and victory scoring bursts), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion / gold halo radiating upon stone drops, captures, and victory bursts, ornate Japanese / Zen lacquer & gold leaf HUD corner filigree L-brackets with brass rivet studs and micro-accents at all four board corners, a pulsating golden energy perimeter inlay border with an animated traveling specular glint traversing the outer playfield Kaya wood frame, sculpted 3D beveled stones with diagonal specular sheen sweeps traversing stones and HUD headers, and atmospheric environmental floating Zen sakura petals and golden dust motes drifting across the board in both Web Canvas (`kgo.html`) and Native C Win32 GDI (`KGo/main.c`).
 
