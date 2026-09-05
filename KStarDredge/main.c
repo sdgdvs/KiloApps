@@ -30,6 +30,8 @@
 #define SFX_LASER_PULSE 4
 #define SFX_BEEP        5
 #define SFX_WARP        6
+#define SFX_SCAN_SWEEP  7
+#define SFX_RESONANCE   8
 
 #define MAX_STARS 150
 #define MAX_ASTEROIDS 24
@@ -37,6 +39,7 @@
 #define MAX_PARTICLES 128
 #define MAX_FLOATING_TEXTS 16
 #define MAX_LOG_ENTRIES 30
+#define MAX_SCAN_WAVES 8
 
 typedef struct {
     float x, y;
@@ -60,6 +63,15 @@ typedef struct {
     float hp, maxHp;
     float rot, rotSpeed;
     int active;
+    
+    // Phase 7: Spectrometer Prospecting Data
+    int comp[6]; // Ferrum %, Silicates %, Platinum %, Void Quartz %, Dark Geode %, Derelict Scrap %
+    int geodeType; // 0=None, 1=Void Quartz Geode, 2=Dark Matter Geode, 3=Platinum Pocket
+    int purity; // 1 to 5 stars
+    int volatility; // %
+    float freqMhz;
+    int scanned; // 0=unscanned, 1=scanned
+    int resonantLock; // 0 or 1
 } Asteroid;
 
 typedef struct {
@@ -80,6 +92,14 @@ typedef struct {
     float size;
     int active;
 } Particle;
+
+typedef struct {
+    float x, y;
+    float r, maxR;
+    COLORREF color;
+    float life;
+    int active;
+} ScanWave;
 
 typedef struct {
     char text[32];
@@ -364,6 +384,7 @@ typedef struct {
     int selectedSectorIndex;
     int showStarChart;
     int showUpgrades;
+    int showSpectrometer;
     int warpActive;
     float warpTimer;
     char sector[32];
@@ -407,6 +428,7 @@ typedef struct {
     Asteroid asteroids[MAX_ASTEROIDS];
     OreChunk oreChunks[MAX_ORE_CHUNKS];
     Particle particles[MAX_PARTICLES];
+    ScanWave scanWaves[MAX_SCAN_WAVES];
     FloatingText texts[MAX_FLOATING_TEXTS];
     LogEntry logs[MAX_LOG_ENTRIES];
     int logCount;
@@ -447,6 +469,14 @@ DWORD WINAPI SoundThreadProc(LPVOID lpParam) {
                 Beep(420, 80);
                 Beep(920, 110);
                 Beep(240, 90);
+            } else if (sfx == SFX_SCAN_SWEEP) {
+                Beep(450, 50);
+                Beep(750, 70);
+                Beep(1150, 90);
+            } else if (sfx == SFX_RESONANCE) {
+                Beep(440, 60);
+                Beep(660, 60);
+                Beep(880, 120);
             }
         }
         Sleep(20);
@@ -464,11 +494,15 @@ void TriggerSound(int sfx) {
 void AddLog(const char* text, int type);
 void AddFloatingText(const char* text, float x, float y, COLORREF color);
 void AddSparks(float x, float y, COLORREF color, int count);
+void AddScanWave(float x, float y, float maxR, COLORREF color);
 void SpawnOreChunk(float x, float y, int oreType, int amount);
 void SpawnAsteroid(int index, int oreType);
 int PickOreForSector(int sectorIdx);
 void InitSectorField(int sectorIdx);
 void EngageWarpJump(int targetSectorIdx);
+void ScanTargetAsteroid(int index);
+void ScanAllWideBand(void);
+void TuneLaserResonance(int index);
 void InitGame(void);
 void BuyUpgrade(int moduleIdx);
 void UpdateGame(float dt);
@@ -529,6 +563,21 @@ void AddSparks(float x, float y, COLORREF color, int count) {
     }
 }
 
+void AddScanWave(float x, float y, float maxR, COLORREF color) {
+    for (int i = 0; i < MAX_SCAN_WAVES; i++) {
+        if (!g_state.scanWaves[i].active) {
+            g_state.scanWaves[i].x = x;
+            g_state.scanWaves[i].y = y;
+            g_state.scanWaves[i].r = 10.0f;
+            g_state.scanWaves[i].maxR = maxR;
+            g_state.scanWaves[i].color = color;
+            g_state.scanWaves[i].life = 1.0f;
+            g_state.scanWaves[i].active = 1;
+            break;
+        }
+    }
+}
+
 void SpawnOreChunk(float x, float y, int oreType, int amount) {
     for (int i = 0; i < MAX_ORE_CHUNKS; i++) {
         if (!g_state.oreChunks[i].active) {
@@ -582,11 +631,114 @@ void SpawnAsteroid(int index, int oreType) {
     ast->rotSpeed = (((float)rand() / (float)RAND_MAX) - 0.5f) * 0.02f;
     ast->active = 1;
     
+    // Multi-spectral mineral assay composition
+    for (int i = 0; i < 6; i++) ast->comp[i] = 0;
+    ast->comp[ast->oreType] = 55 + (rand() % 30);
+    int remPct = 100 - ast->comp[ast->oreType];
+    
+    for (int i = 0; i < 6; i++) {
+        if (i == ast->oreType) continue;
+        int take = rand() % (remPct + 1);
+        if (take > remPct / 2) take = remPct / 2;
+        ast->comp[i] = take;
+        remPct -= take;
+    }
+    ast->comp[ast->oreType] += remPct; // distribute remainder
+    
+    // Geode Core Anomaly Generation
+    ast->geodeType = 0;
+    ast->purity = 1 + (rand() % 5);
+    ast->volatility = 5 + (rand() % 35);
+    ast->freqMhz = 120.0f + (((float)rand() / (float)RAND_MAX) * 760.0f);
+    ast->scanned = 0;
+    ast->resonantLock = 0;
+    
+    int roll = rand() % 100;
+    if (g_state.currentSectorIndex == 3 || roll < 22) { // Dark Geode
+        ast->geodeType = 2; // Dark Matter Geode
+        if (ast->comp[4] < 25) ast->comp[4] = 25;
+    } else if (g_state.currentSectorIndex == 2 || roll < 45) { // Graveyard or Quartz
+        ast->geodeType = 1; // Resonant Quartz Geode
+        if (ast->comp[3] < 30) ast->comp[3] = 30;
+    } else if (roll < 65) {
+        ast->geodeType = 3; // Platinum Pocket
+        if (ast->comp[2] < 35) ast->comp[2] = 35;
+    }
+    
     ast->numVerts = 8 + (rand() % 4);
     for (int v = 0; v < ast->numVerts; v++) {
         ast->verts[v].a = ((float)v / (float)ast->numVerts) * 6.28318f;
         ast->verts[v].r = ast->radius * (0.75f + (((float)rand() / (float)RAND_MAX) * 0.35f));
     }
+}
+
+void ScanTargetAsteroid(int index) {
+    if (index < 0 || index >= MAX_ASTEROIDS || !g_state.asteroids[index].active) {
+        AddLog("No asteroid locked in target reticle to prospect.", 3);
+        return;
+    }
+    Asteroid* ast = &g_state.asteroids[index];
+    ast->scanned = 1;
+    TriggerSound(SFX_SCAN_SWEEP);
+    
+    float dist = (float)sqrt((ast->x - g_state.shipX) * (ast->x - g_state.shipX) +
+                             (ast->y - g_state.shipY) * (ast->y - g_state.shipY));
+    AddScanWave(g_state.shipX, g_state.shipY, dist + 60.0f, RGB(0, 240, 255));
+    
+    char buf[128];
+    sprintf(buf, "Multi-spectral assay complete: %s [%s %d%%, Volatility: %d%%]",
+            ast->id, ORE_DEFS[ast->oreType].name, ast->comp[ast->oreType], ast->volatility);
+    AddLog(buf, 5);
+    
+    if (ast->geodeType == 2) {
+        AddLog("GEODE ANOMALY: Dark Matter Geode core detected!", 2);
+        AddFloatingText("GEODE: Dark Matter", ast->x, ast->y - 30.0f, RGB(244, 63, 94));
+    } else if (ast->geodeType == 1) {
+        AddLog("GEODE ANOMALY: Resonant Void Quartz crystal detected!", 2);
+        AddFloatingText("GEODE: Void Quartz", ast->x, ast->y - 30.0f, RGB(192, 132, 252));
+    } else {
+        char fTxt[32];
+        sprintf(fTxt, "ANALYZED: %s", ast->id);
+        AddFloatingText(fTxt, ast->x, ast->y - 25.0f, RGB(56, 189, 248));
+    }
+}
+
+void ScanAllWideBand(void) {
+    TriggerSound(SFX_SCAN_SWEEP);
+    AddScanWave(g_state.shipX, g_state.shipY, 950.0f, RGB(16, 185, 129));
+    
+    int totalScanned = 0;
+    int geodesFound = 0;
+    for (int i = 0; i < MAX_ASTEROIDS; i++) {
+        if (g_state.asteroids[i].active) {
+            g_state.asteroids[i].scanned = 1;
+            totalScanned++;
+            if (g_state.asteroids[i].geodeType > 0) geodesFound++;
+        }
+    }
+    
+    char buf[128];
+    sprintf(buf, "Wide-Band Sweep Complete: %d asteroids mapped with spectrometer! (%d geodes found)", totalScanned, geodesFound);
+    AddLog(buf, 5);
+    AddFloatingText("WIDE-BAND SWEEP COMPLETE", g_state.shipX, g_state.shipY - 40.0f, RGB(16, 185, 129));
+}
+
+void TuneLaserResonance(int index) {
+    if (index < 0 || index >= MAX_ASTEROIDS || !g_state.asteroids[index].active) {
+        AddLog("Select an analyzed asteroid to tune laser harmonics.", 3);
+        return;
+    }
+    Asteroid* ast = &g_state.asteroids[index];
+    if (!ast->scanned) {
+        ScanTargetAsteroid(index);
+    }
+    ast->resonantLock = 1;
+    TriggerSound(SFX_RESONANCE);
+    
+    char buf[128];
+    sprintf(buf, "Laser optics tuned to %.1f MHz! +50%% Mining Yield active on %s!", ast->freqMhz, ast->id);
+    AddLog(buf, 1);
+    AddFloatingText("RESONANCE LOCKED (+50%)", g_state.shipX, g_state.shipY - 35.0f, RGB(245, 158, 11));
 }
 
 void InitSectorField(int sectorIdx) {
@@ -933,28 +1085,75 @@ void UpdateGame(float dt) {
                     float impactX = lx + dirX * proj;
                     float impactY = ly + dirY * proj;
                     AddSparks(impactX, impactY, THEME_PALETTES[g_state.themeIndex].vector, 2);
-                    ast->hp -= 0.6f * drillDef->dpsBonus;
                     
-                    int chunkChance = (int)(drillDef->chunkBonus * 100.0f);
+                    float dpsMultiplier = ast->resonantLock ? 1.5f : 1.0f;
+                    ast->hp -= 0.6f * drillDef->dpsBonus * dpsMultiplier;
+                    
+                    int chunkChance = (int)(drillDef->chunkBonus * (ast->resonantLock ? 1.5f : 1.0f) * 100.0f);
                     if ((rand() % 100) < chunkChance) {
                         TriggerSound(SFX_FRACTURE);
-                        SpawnOreChunk(impactX, impactY, ast->oreType, 1);
+                        // Pick ore chunk based on ast->comp
+                        int roll = rand() % 100;
+                        int dropOre = ast->oreType;
+                        int cumulative = 0;
+                        for (int o = 0; o < 6; o++) {
+                            cumulative += ast->comp[o];
+                            if (roll < cumulative) { dropOre = o; break; }
+                        }
+                        SpawnOreChunk(impactX, impactY, dropOre, 1);
                         char buf[32];
-                        sprintf(buf, "+1 %s", ORE_DEFS[ast->oreType].name);
-                        AddFloatingText(buf, impactX, impactY - 10.0f, ORE_DEFS[ast->oreType].color);
+                        sprintf(buf, "+1 %s%s", ORE_DEFS[dropOre].name, ast->resonantLock ? " (RESONANT)" : "");
+                        AddFloatingText(buf, impactX, impactY - 10.0f, ORE_DEFS[dropOre].color);
                     }
                     
                     if (ast->hp <= 0.0f) {
                         TriggerSound(SFX_FRACTURE);
-                        char buf[64];
+                        char buf[128];
                         sprintf(buf, "Asteroid %s shattered into rich mineral fragments!", ast->id);
                         AddLog(buf, 1);
-                        AddSparks(ast->x, ast->y, RGB(245, 158, 11), 16);
-                        for (int c = 0; c < 4 + (rand() % 3); c++) {
-                            SpawnOreChunk(ast->x + (((float)rand() / (float)RAND_MAX) - 0.5f) * 20.0f,
-                                          ast->y + (((float)rand() / (float)RAND_MAX) - 0.5f) * 20.0f,
-                                          ast->oreType, 1);
+                        AddSparks(ast->x, ast->y, RGB(245, 158, 11), 18);
+                        
+                        // Base chunks from composition
+                        for (int c = 0; c < 5 + (rand() % 3); c++) {
+                            int roll = rand() % 100;
+                            int dropOre = ast->oreType;
+                            int cumulative = 0;
+                            for (int o = 0; o < 6; o++) {
+                                cumulative += ast->comp[o];
+                                if (roll < cumulative) { dropOre = o; break; }
+                            }
+                            SpawnOreChunk(ast->x + (((float)rand() / (float)RAND_MAX) - 0.5f) * 25.0f,
+                                          ast->y + (((float)rand() / (float)RAND_MAX) - 0.5f) * 25.0f,
+                                          dropOre, 1);
                         }
+                        
+                        // Guaranteed Geode Drops
+                        if (ast->geodeType == 2) { // Dark Matter
+                            for (int g = 0; g < 3; g++) {
+                                SpawnOreChunk(ast->x + (((float)rand() / (float)RAND_MAX) - 0.5f) * 20.0f,
+                                              ast->y + (((float)rand() / (float)RAND_MAX) - 0.5f) * 20.0f,
+                                              4, 1);
+                            }
+                            AddLog("CRITICAL: Dark Matter Geode core ruptured! High-value dark matter clusters released!", 6);
+                            AddFloatingText("DARK MATTER GEODE HARVESTED!", ast->x, ast->y - 25.0f, RGB(244, 63, 94));
+                        } else if (ast->geodeType == 1) { // Void Quartz
+                            for (int g = 0; g < 3; g++) {
+                                SpawnOreChunk(ast->x + (((float)rand() / (float)RAND_MAX) - 0.5f) * 20.0f,
+                                              ast->y + (((float)rand() / (float)RAND_MAX) - 0.5f) * 20.0f,
+                                              3, 1);
+                            }
+                            AddLog("GEODE HARVEST: Resonant Void Quartz crystal structure shattered into pure crystals!", 2);
+                            AddFloatingText("VOID QUARTZ GEODE HARVESTED!", ast->x, ast->y - 25.0f, RGB(192, 132, 252));
+                        } else if (ast->geodeType == 3) { // Platinum
+                            for (int g = 0; g < 3; g++) {
+                                SpawnOreChunk(ast->x + (((float)rand() / (float)RAND_MAX) - 0.5f) * 20.0f,
+                                              ast->y + (((float)rand() / (float)RAND_MAX) - 0.5f) * 20.0f,
+                                              2, 1);
+                            }
+                            AddLog("GEODE HARVEST: Concentrated Platinum Pocket liberated!", 5);
+                            AddFloatingText("PLATINUM POCKET HARVESTED!", ast->x, ast->y - 25.0f, RGB(224, 242, 254));
+                        }
+                        
                         ast->active = 0;
                         if (g_state.selectedAstIndex == i) g_state.selectedAstIndex = -1;
                         SpawnAsteroid(i, PickOreForSector(g_state.currentSectorIndex));
@@ -1066,6 +1265,16 @@ void UpdateGame(float dt) {
         g_state.particles[i].y += g_state.particles[i].vy;
         g_state.particles[i].life -= g_state.particles[i].decay;
         if (g_state.particles[i].life <= 0.0f) g_state.particles[i].active = 0;
+    }
+    
+    // Update Scan Waves
+    for (int i = 0; i < MAX_SCAN_WAVES; i++) {
+        if (!g_state.scanWaves[i].active) continue;
+        g_state.scanWaves[i].r += dt * 450.0f;
+        g_state.scanWaves[i].life -= dt * 1.2f;
+        if (g_state.scanWaves[i].life <= 0.0f || g_state.scanWaves[i].r >= g_state.scanWaves[i].maxR) {
+            g_state.scanWaves[i].active = 0;
+        }
     }
     
     // Update Floating Text
@@ -1407,6 +1616,21 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         DeleteObject(hPenLaserCore);
     }
     
+    // Draw Scan Waves
+    for (int i = 0; i < MAX_SCAN_WAVES; i++) {
+        if (!g_state.scanWaves[i].active) continue;
+        int wx = cx + (int)(g_state.scanWaves[i].x - g_state.shipX);
+        int wy = cyCenter + (int)(g_state.scanWaves[i].y - g_state.shipY);
+        int rad = (int)g_state.scanWaves[i].r;
+        HPEN hPenWave = CreatePen(PS_SOLID, 2, g_state.scanWaves[i].color);
+        HGDIOBJ oldWvPen = SelectObject(hdc, hPenWave);
+        HGDIOBJ oldWvBr = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Ellipse(hdc, wx - rad, wy - rad, wx + rad, wy + rad);
+        SelectObject(hdc, oldWvPen);
+        SelectObject(hdc, oldWvBr);
+        DeleteObject(hPenWave);
+    }
+    
     // Draw Asteroids
     for (int i = 0; i < MAX_ASTEROIDS; i++) {
         Asteroid* ast = &g_state.asteroids[i];
@@ -1444,6 +1668,17 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         DeleteObject(hPenAst);
         DeleteObject(hBrAst);
         
+        // Scanned Asteroid Halo
+        if (ast->scanned) {
+            HPEN hPenScHalo = CreatePen(PS_DOT, 1, RGB(56, 189, 248));
+            HGDIOBJ oldScPen = SelectObject(hdc, hPenScHalo);
+            HGDIOBJ oldScBr = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Ellipse(hdc, ax - (int)ast->radius - 4, ay - (int)ast->radius - 4, ax + (int)ast->radius + 4, ay + (int)ast->radius + 4);
+            SelectObject(hdc, oldScPen);
+            SelectObject(hdc, oldScBr);
+            DeleteObject(hPenScHalo);
+        }
+        
         // Asteroid Label
         SelectObject(hdc, g_fontSmall);
         SetTextColor(hdc, RGB(148, 163, 184));
@@ -1451,6 +1686,23 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         sprintf(lbl, "%s [%s]", ast->id, ORE_DEFS[ast->oreType].name);
         RECT rcLbl = { ax - 60, ay - (int)ast->radius - 14, ax + 60, ay - (int)ast->radius };
         DrawTextA(hdc, lbl, -1, &rcLbl, DT_CENTER | DT_SINGLELINE);
+        
+        if (ast->scanned) {
+            if (ast->geodeType == 2) {
+                SetTextColor(hdc, RGB(244, 63, 94));
+                TextOutA(hdc, ax - 45, ay + (int)ast->radius + 2, "[DARK GEODE]", 12);
+            } else if (ast->geodeType == 1) {
+                SetTextColor(hdc, RGB(192, 132, 252));
+                TextOutA(hdc, ax - 48, ay + (int)ast->radius + 2, "[QUARTZ GEODE]", 14);
+            } else if (ast->geodeType == 3) {
+                SetTextColor(hdc, RGB(224, 242, 254));
+                TextOutA(hdc, ax - 40, ay + (int)ast->radius + 2, "[PT POCKET]", 11);
+            }
+            if (ast->resonantLock) {
+                SetTextColor(hdc, RGB(245, 158, 11));
+                TextOutA(hdc, ax - 50, ay + (int)ast->radius + 14, "[RESONANT +50%]", 15);
+            }
+        }
         
         if (isTarget) {
             HPEN hPenTarget = CreatePen(PS_DOT, 1, pal->vector);
@@ -1620,8 +1872,8 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     // Target Lock Reticle Box on Bottom-Right of Viewport
     if (g_state.selectedAstIndex >= 0 && g_state.asteroids[g_state.selectedAstIndex].active) {
         Asteroid* target = &g_state.asteroids[g_state.selectedAstIndex];
-        int tBoxW = 200;
-        int tBoxH = 48;
+        int tBoxW = 220;
+        int tBoxH = target->scanned ? 78 : 54;
         int tBoxX = viewportX + viewportW - tBoxW - 15;
         int tBoxY = viewportY + viewportH - tBoxH - 15;
         
@@ -1641,15 +1893,30 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         sprintf(distBuf, "%d m", (int)dist);
         SelectObject(hdc, g_fontSmall);
         SetTextColor(hdc, RGB(148, 163, 184));
-        RECT rcDist = { tBoxX + 100, tBoxY + 4, tBoxX + tBoxW - 6, tBoxY + 20 };
+        RECT rcDist = { tBoxX + 110, tBoxY + 4, tBoxX + tBoxW - 6, tBoxY + 20 };
         DrawTextA(hdc, distBuf, -1, &rcDist, DT_RIGHT | DT_SINGLELINE);
         
         char oreStr[64];
-        sprintf(oreStr, "ORE: %s (%d%%)", ORE_DEFS[target->oreType].name, target->richness);
+        sprintf(oreStr, "PRIMARY: %s (%d%%)", ORE_DEFS[target->oreType].name, target->richness);
         SetTextColor(hdc, pal->textBright);
         TextOutA(hdc, tBoxX + 6, tBoxY + 18, oreStr, (int)strlen(oreStr));
         
         DrawBar(hdc, tBoxX + 6, tBoxY + 34, tBoxW - 12, 6, target->hp / target->maxHp, pal->vector, RGB(2, 6, 23), pal->borderPanel);
+        
+        if (target->scanned) {
+            char spcStr[64];
+            sprintf(spcStr, "Fe:%d%% Si:%d%% Pt:%d%% Vq:%d%% Dm:%d%%", target->comp[0], target->comp[1], target->comp[2], target->comp[3], target->comp[4]);
+            SetTextColor(hdc, RGB(56, 189, 248));
+            TextOutA(hdc, tBoxX + 6, tBoxY + 44, spcStr, (int)strlen(spcStr));
+            
+            char fqStr[64];
+            sprintf(fqStr, "FREQ: %.1f MHz  [P] SPECTRO%s", target->freqMhz, target->resonantLock ? " (LOCKED)" : "");
+            SetTextColor(hdc, target->resonantLock ? RGB(245, 158, 11) : RGB(110, 231, 183));
+            TextOutA(hdc, tBoxX + 6, tBoxY + 58, fqStr, (int)strlen(fqStr));
+        } else {
+            SetTextColor(hdc, RGB(245, 158, 11));
+            TextOutA(hdc, tBoxX + 6, tBoxY + 42, "[P] PROSPECT TO ASSAY MINERALS", 30);
+        }
     }
     
     // Draw CRT Scanlines over Viewport
@@ -2046,6 +2313,247 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         DeleteObject(hPenBorder3);
     }
     
+    // Prospector Multi-Spectral Emission Spectrometer Modal
+    if (g_state.showSpectrometer) {
+        int modalW = 700;
+        int modalH = 460;
+        int mx = (totalW - modalW) / 2;
+        int my = (totalH - modalH) / 2;
+        
+        RECT rcModal = { mx, my, mx + modalW, my + modalH };
+        HBRUSH hBrModal = CreateSolidBrush(pal->bgPanel);
+        FillRect(hdc, &rcModal, hBrModal);
+        DeleteObject(hBrModal);
+        
+        HPEN hPenBorderSpec = CreatePen(PS_SOLID, 2, pal->vector);
+        HGDIOBJ oldPenSpec = SelectObject(hdc, hPenBorderSpec);
+        HGDIOBJ oldBrushSpec = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Rectangle(hdc, mx, my, mx + modalW, my + modalH);
+        
+        // Header
+        RECT rcHdr = { mx, my, mx + modalW, my + 30 };
+        HBRUSH hBrHdr = CreateSolidBrush(pal->bgHeader);
+        FillRect(hdc, &rcHdr, hBrHdr);
+        DeleteObject(hBrHdr);
+        
+        SelectObject(hdc, g_fontHeader);
+        SetTextColor(hdc, pal->vector);
+        TextOutA(hdc, mx + 14, my + 6, "PROSPECTOR MULTI-SPECTRAL EMISSION SPECTROMETER", 47);
+        
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, pal->textBright);
+        TextOutA(hdc, mx + modalW - 120, my + 9, "[P / ESC] CLOSE", 15);
+        
+        if (g_state.selectedAstIndex < 0 || !g_state.asteroids[g_state.selectedAstIndex].active) {
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, RGB(239, 68, 68));
+            TextOutA(hdc, mx + 30, my + 70, "NO ASTEROID TARGET LOCKED IN RETICLE", 36);
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, RGB(148, 163, 184));
+            TextOutA(hdc, mx + 30, my + 95, "Click any asteroid in the viewport to lock reticle or trigger a Wide-Band Sweep.", 80);
+        } else {
+            Asteroid* target = &g_state.asteroids[g_state.selectedAstIndex];
+            
+            // Top status line
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, pal->textBright);
+            char infoBuf[128];
+            sprintf(infoBuf, "TARGET: %s   CLASS: %s   STATUS: %s   PURITY: LV.%d   VOLATILITY: %d%%",
+                    target->id, ORE_DEFS[target->oreType].name, target->scanned ? "ANALYZED" : "UNPROSPECTED", target->purity, target->volatility);
+            TextOutA(hdc, mx + 16, my + 36, infoBuf, (int)strlen(infoBuf));
+            
+            // Left: Spectral Emission Waveform Scope (320x205)
+            int scopeX = mx + 16;
+            int scopeY = my + 56;
+            int scopeW = 320;
+            int scopeH = 205;
+            RECT rcScope = { scopeX, scopeY, scopeX + scopeW, scopeY + scopeH };
+            HBRUSH hBrScope = CreateSolidBrush(RGB(2, 6, 18));
+            FillRect(hdc, &rcScope, hBrScope);
+            DeleteObject(hBrScope);
+            FrameRect(hdc, &rcScope, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            
+            // Scope Grid & Axis
+            HPEN hPenGrid = CreatePen(PS_DOT, 1, RGB(30, 58, 138));
+            SelectObject(hdc, hPenGrid);
+            for (int gy = 1; gy < 5; gy++) {
+                int yline = scopeY + (gy * scopeH / 5);
+                MoveToEx(hdc, scopeX, yline, NULL);
+                LineTo(hdc, scopeX + scopeW, yline);
+            }
+            for (int gx = 1; gx < 6; gx++) {
+                int xline = scopeX + (gx * scopeW / 6);
+                MoveToEx(hdc, xline, scopeY, NULL);
+                LineTo(hdc, xline, scopeY + scopeH);
+            }
+            DeleteObject(hPenGrid);
+            
+            // Scope Waveform
+            HPEN hPenWave = CreatePen(PS_SOLID, 2, target->scanned ? (target->resonantLock ? RGB(245, 158, 11) : pal->vector) : RGB(100, 116, 139));
+            SelectObject(hdc, hPenWave);
+            int prevWX = scopeX;
+            int prevWY = scopeY + scopeH / 2;
+            MoveToEx(hdc, prevWX, prevWY, NULL);
+            for (int x = 0; x < scopeW; x += 3) {
+                float normX = (float)x / (float)scopeW;
+                float wave = 0.0f;
+                if (target->scanned) {
+                    for (int e = 0; e < 6; e++) {
+                        float center = ((float)e + 0.5f) / 6.0f;
+                        float dist = (float)fabs(normX - center);
+                        float height = (float)target->comp[e] / 100.0f;
+                        wave += (float)exp(-dist * dist * 90.0f) * height;
+                    }
+                    wave += (float)sin(normX * 30.0f + (float)(target->freqMhz * 0.05f)) * 0.08f;
+                } else {
+                    wave = (float)sin(normX * 15.0f) * 0.2f + (((float)rand() / (float)RAND_MAX) - 0.5f) * 0.1f;
+                }
+                int wy = scopeY + scopeH - 15 - (int)(wave * (scopeH - 30));
+                if (wy < scopeY + 10) wy = scopeY + 10;
+                if (wy > scopeY + scopeH - 10) wy = scopeY + scopeH - 10;
+                LineTo(hdc, scopeX + x, wy);
+            }
+            DeleteObject(hPenWave);
+            
+            // Scope Labels
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, RGB(148, 163, 184));
+            TextOutA(hdc, scopeX + 6, scopeY + 6, "EMISSION SPECTRUM (100 - 900 MHz)", 33);
+            char fqLabel[64];
+            sprintf(fqLabel, "RESONANCE: %.1f MHz", target->freqMhz);
+            SetTextColor(hdc, target->resonantLock ? RGB(245, 158, 11) : pal->textPrimary);
+            TextOutA(hdc, scopeX + scopeW - 140, scopeY + 6, fqLabel, (int)strlen(fqLabel));
+            
+            // Right: Mineral Assay Composition Table (334x205)
+            int tblX = mx + 350;
+            int tblY = my + 56;
+            int tblW = 334;
+            int tblH = 205;
+            RECT rcTbl = { tblX, tblY, tblX + tblW, tblY + tblH };
+            HBRUSH hBrTbl = CreateSolidBrush(RGB(5, 12, 28));
+            FillRect(hdc, &rcTbl, hBrTbl);
+            DeleteObject(hBrTbl);
+            FrameRect(hdc, &rcTbl, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, pal->textBright);
+            TextOutA(hdc, tblX + 8, tblY + 6, "MINERAL ASSAY BREAKDOWN", 23);
+            
+            int estValue = 0;
+            for (int o = 0; o < 6; o++) {
+                int rowY = tblY + 26 + (o * 23);
+                int pct = target->scanned ? target->comp[o] : 0;
+                int oreYield = (int)((target->radius * 0.8f) * (pct / 100.0f));
+                if (target->scanned && pct > 0 && oreYield == 0) oreYield = 1;
+                int oreVal = oreYield * ORE_DEFS[o].value;
+                estValue += oreVal;
+                
+                SelectObject(hdc, g_fontSmall);
+                SetTextColor(hdc, ORE_DEFS[o].color);
+                TextOutA(hdc, tblX + 8, rowY, ORE_DEFS[o].name, (int)strlen(ORE_DEFS[o].name));
+                
+                // Mini Bar
+                DrawBar(hdc, tblX + 110, rowY + 2, 110, 8, pct / 100.0f, ORE_DEFS[o].color, RGB(2, 6, 23), pal->borderPanel);
+                
+                char pctBuf[32];
+                if (target->scanned) {
+                    sprintf(pctBuf, "%d%% (~%dT)", pct, oreYield);
+                } else {
+                    sprintf(pctBuf, "???");
+                }
+                SetTextColor(hdc, RGB(255, 255, 255));
+                TextOutA(hdc, tblX + 230, rowY, pctBuf, (int)strlen(pctBuf));
+            }
+            
+            // Valuation summary row
+            int valY = tblY + tblH - 20;
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, RGB(245, 158, 11));
+            char valBuf[64];
+            if (target->scanned) {
+                sprintf(valBuf, "ESTIMATED VEIN VALUE: ~%d CR", estValue);
+            } else {
+                sprintf(valBuf, "ESTIMATED VALUE: UNPROSPECTED");
+            }
+            TextOutA(hdc, tblX + 8, valY, valBuf, (int)strlen(valBuf));
+            
+            // Geode Core Readout Box
+            int gBoxX = mx + 16;
+            int gBoxY = my + 270;
+            int gBoxW = modalW - 32;
+            int gBoxH = 86;
+            RECT rcGBox = { gBoxX, gBoxY, gBoxX + gBoxW, gBoxY + gBoxH };
+            HBRUSH hBrGBox = CreateSolidBrush(RGB(3, 8, 22));
+            FillRect(hdc, &rcGBox, hBrGBox);
+            DeleteObject(hBrGBox);
+            FrameRect(hdc, &rcGBox, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, pal->vector);
+            TextOutA(hdc, gBoxX + 10, gBoxY + 8, "ANOMALY & GEODE CORE DETECTOR:", 30);
+            
+            SelectObject(hdc, g_fontSmall);
+            if (!target->scanned) {
+                SetTextColor(hdc, RGB(148, 163, 184));
+                TextOutA(hdc, gBoxX + 10, gBoxY + 30, "Awaiting spectrometer assay. Press [1] or Click 'PROSPECT TARGET' to detect internal crystallizations.", 104);
+                TextOutA(hdc, gBoxX + 10, gBoxY + 48, "Geode cores contain rare unrefined Dark Matter, Resonant Void Quartz, and dense Platinum pockets.", 96);
+            } else if (target->geodeType == 2) {
+                SetTextColor(hdc, RGB(244, 63, 94));
+                TextOutA(hdc, gBoxX + 10, gBoxY + 30, "✦ DARK MATTER GEODE CORE DETECTED: Dense gravitational anomaly localized at core coordinates.", 93);
+                SetTextColor(hdc, RGB(254, 205, 211));
+                TextOutA(hdc, gBoxX + 10, gBoxY + 48, "Shattering this asteroid is guaranteed to extract pure Dark Matter clusters (+1,200 CR / T).", 92);
+            } else if (target->geodeType == 1) {
+                SetTextColor(hdc, RGB(192, 132, 252));
+                TextOutA(hdc, gBoxX + 10, gBoxY + 30, "✦ RESONANT VOID QUARTZ CRYSTAL: High-frequency piezo-electric crystal cavity discovered.", 89);
+                SetTextColor(hdc, RGB(243, 232, 255));
+                TextOutA(hdc, gBoxX + 10, gBoxY + 48, "Tune laser harmonics to lock resonance and yield pristine Void Quartz crystals (+350 CR / T).", 93);
+            } else if (target->geodeType == 3) {
+                SetTextColor(hdc, RGB(224, 242, 254));
+                TextOutA(hdc, gBoxX + 10, gBoxY + 30, "✦ DENSE PLATINUM POCKET: Sub-surface heavy precious metallic deposit identified.", 81);
+                SetTextColor(hdc, RGB(207, 250, 254));
+                TextOutA(hdc, gBoxX + 10, gBoxY + 48, "Refining yield bonus active on fracturing (+120 CR / T).", 56);
+            } else {
+                SetTextColor(hdc, RGB(16, 185, 129));
+                TextOutA(hdc, gBoxX + 10, gBoxY + 30, "✔ STANDARD ORE MATRIX: Homogeneous mineral distribution. No volatile anomaly detected.", 86);
+                SetTextColor(hdc, RGB(148, 163, 184));
+                TextOutA(hdc, gBoxX + 10, gBoxY + 48, "Optimal candidate for sustained high-temperature plasma drill extraction.", 73);
+            }
+        }
+        
+        // Bottom 3 Action Buttons: [1] Prospect Target, [2] Wide Sweep, [3] Tune Resonance
+        int actY = my + modalH - 74;
+        int btnW = (modalW - 48) / 3;
+        int btnH = 40;
+        
+        for (int b = 0; b < 3; b++) {
+            int bx = mx + 16 + b * (btnW + 8);
+            RECT rcBtn = { bx, actY, bx + btnW, actY + btnH };
+            
+            COLORREF bBg = RGB(30, 58, 138);
+            if (b == 1) bBg = RGB(6, 78, 59);
+            if (b == 2) bBg = RGB(120, 53, 15);
+            
+            HBRUSH hBrBtn = CreateSolidBrush(bBg);
+            FillRect(hdc, &rcBtn, hBrBtn);
+            DeleteObject(hBrBtn);
+            FrameRect(hdc, &rcBtn, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, RGB(255, 255, 255));
+            const char* bTitle = (b == 0) ? "[1] PROSPECT TARGET" : (b == 1 ? "[2] WIDE-BAND SWEEP" : "[3] TUNE RESONANCE");
+            DrawTextA(hdc, bTitle, -1, &rcBtn, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        }
+        
+        // Footer instruction
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(245, 158, 11));
+        TextOutA(hdc, mx + 16, my + modalH - 24, "Keys [1] Prospect Target • [2] Wide Sweep • [3] Laser Resonance • [P / ESC] Close", 80);
+        
+        SelectObject(hdc, oldPenSpec);
+        SelectObject(hdc, oldBrushSpec);
+        DeleteObject(hPenBorderSpec);
+    }
+    
     // Help Overlay Modal
     if (g_state.showHelp) {
         int helpW = 560;
@@ -2079,6 +2587,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         TextOutA(hdc, hx + 20, myHelp, "• [SPACEBAR / LASER BTN]: Fire Mining Laser (Watch Laser Heat)", 62); myHelp += 16;
         TextOutA(hdc, hx + 20, myHelp, "• [T / TRACTOR BTN]: Toggle Tractor Magnet to draw floating mineral chunks", 73); myHelp += 16;
         TextOutA(hdc, hx + 20, myHelp, "• [Z / DAMPENER BTN]: Toggle Inertial Dampeners for precise stationkeeping", 74); myHelp += 16;
+        TextOutA(hdc, hx + 20, myHelp, "• [P / PROSPECT BTN]: Open Multi-Spectral Spectrometer & Tune Resonance", 71); myHelp += 16;
         TextOutA(hdc, hx + 20, myHelp, "• [U / UPGRADES BTN]: Open Modular Engineering Bay & Install Upgrades", 69); myHelp += 16;
         TextOutA(hdc, hx + 20, myHelp, "• [N / SECTORS BTN]: Open Star Sector Chart & Engage Sub-space Warp Jumps", 72); myHelp += 16;
         TextOutA(hdc, hx + 20, myHelp, "• [V / THEME BTN]: Cycle Retro CRT Vector Theme (Cyan / Amber / Green / Solar)", 77); myHelp += 16;
@@ -2151,7 +2660,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_btnLaser     = CreateWindowA("BUTTON", "LASER [SPC]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_LASER, NULL, NULL);
             g_btnTractor   = CreateWindowA("BUTTON", "TRACTOR [T]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TRACTOR, NULL, NULL);
             g_btnDampener  = CreateWindowA("BUTTON", "DAMPENER [Z]",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_DAMPENER, NULL, NULL);
-            g_btnScan      = CreateWindowA("BUTTON", "SCAN [S]",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN, NULL, NULL);
+            g_btnScan      = CreateWindowA("BUTTON", "PROSPECT [P]",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCAN, NULL, NULL);
             g_btnNav       = CreateWindowA("BUTTON", "SECTORS [N]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_NAV, NULL, NULL);
             g_btnUpgrades  = CreateWindowA("BUTTON", "UPGRADE [U]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_UPGRADES, NULL, NULL);
             g_btnTheme     = CreateWindowA("BUTTON", "CRT CYAN",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_THEME, NULL, NULL);
@@ -2191,17 +2700,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     AddLog(g_state.dampeners ? "Inertia dampeners engaged." : "Inertia dampeners disengaged.", 0);
                     break;
                 case ID_BTN_SCAN:
+                    g_state.showSpectrometer = !g_state.showSpectrometer;
+                    if (g_state.showSpectrometer) { g_state.showStarChart = 0; g_state.showUpgrades = 0; }
                     TriggerSound(SFX_BEEP);
-                    AddLog("Deep sweep complete: 24 mineral asteroids registered in local sector.", 0);
                     break;
                 case ID_BTN_NAV:
                     g_state.showStarChart = !g_state.showStarChart;
-                    if (g_state.showStarChart) g_state.showUpgrades = 0;
+                    if (g_state.showStarChart) { g_state.showUpgrades = 0; g_state.showSpectrometer = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_UPGRADES:
                     g_state.showUpgrades = !g_state.showUpgrades;
-                    if (g_state.showUpgrades) g_state.showStarChart = 0;
+                    if (g_state.showUpgrades) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_THEME:
@@ -2267,6 +2777,43 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (g_state.showHelp) {
                 g_state.showHelp = 0;
                 InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            
+            if (g_state.showSpectrometer) {
+                int modalW = 700;
+                int modalH = 460;
+                int hx = (totalW - modalW) / 2;
+                int hy = (totalH - modalH) / 2;
+                
+                // Close button top-right
+                if (mx >= hx + modalW - 130 && mx <= hx + modalW - 10 && my >= hy && my <= hy + 30) {
+                    g_state.showSpectrometer = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                
+                // 3 Action Buttons at bottom
+                int actY = hy + modalH - 74;
+                int btnW = (modalW - 48) / 3;
+                int btnH = 40;
+                for (int b = 0; b < 3; b++) {
+                    int bx = hx + 16 + b * (btnW + 8);
+                    if (mx >= bx && mx <= bx + btnW && my >= actY && my <= actY + btnH) {
+                        if (b == 0) ScanTargetAsteroid(g_state.selectedAstIndex);
+                        else if (b == 1) ScanAllWideBand();
+                        else if (b == 2) TuneLaserResonance(g_state.selectedAstIndex);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        return 0;
+                    }
+                }
+                
+                // Click outside modal closes it
+                if (mx < hx || mx > hx + modalW || my < hy || my > hy + modalH) {
+                    g_state.showSpectrometer = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
                 return 0;
             }
             
@@ -2408,6 +2955,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         
         case WM_KEYDOWN: {
+            if (g_state.showSpectrometer) {
+                if (wParam == '1') { ScanTargetAsteroid(g_state.selectedAstIndex); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '2') { ScanAllWideBand(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '3') { TuneLaserResonance(g_state.selectedAstIndex); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == 'P' || wParam == VK_ESCAPE) { g_state.showSpectrometer = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+            }
+            
             if (g_state.showUpgrades) {
                 if (wParam == '1') { BuyUpgrade(0); InvalidateRect(hwnd, NULL, FALSE); return 0; }
                 if (wParam == '2') { BuyUpgrade(1); InvalidateRect(hwnd, NULL, FALSE); return 0; }
@@ -2441,14 +2995,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     g_state.dampeners = !g_state.dampeners;
                     AddLog(g_state.dampeners ? "Inertia dampeners engaged." : "Inertia dampeners disengaged.", 0);
                     break;
+                case 'P':
+                    g_state.showSpectrometer = !g_state.showSpectrometer;
+                    if (g_state.showSpectrometer) { g_state.showStarChart = 0; g_state.showUpgrades = 0; }
+                    TriggerSound(SFX_BEEP);
+                    break;
                 case 'U':
                     g_state.showUpgrades = !g_state.showUpgrades;
-                    if (g_state.showUpgrades) g_state.showStarChart = 0;
+                    if (g_state.showUpgrades) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case 'N':
                     g_state.showStarChart = !g_state.showStarChart;
-                    if (g_state.showStarChart) g_state.showUpgrades = 0;
+                    if (g_state.showStarChart) { g_state.showUpgrades = 0; g_state.showSpectrometer = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case 'V':

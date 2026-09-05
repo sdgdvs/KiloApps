@@ -775,6 +775,85 @@
             background: rgba(0, 0, 0, 0.4);
             border-color: var(--border-panel);
         }
+
+        /* Multi-Spectral Prospector & Spectrometer Modal */
+        .btn.btn-prospect {
+            border-color: #38bdf8;
+            color: #bae6fd;
+        }
+
+        .spectro-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.25fr;
+            gap: 10px;
+        }
+
+        .spectro-chart-card {
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .spectro-wave-wrap {
+            height: 130px;
+            background: #020617;
+            border: 1px solid var(--border-panel);
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #spectroCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .mineral-breakdown-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+        }
+
+        .mineral-breakdown-table th, .mineral-breakdown-table td {
+            padding: 3px 6px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .mineral-breakdown-table th {
+            color: var(--text-dim);
+            font-weight: bold;
+        }
+
+        .spectro-geode-badge {
+            background: rgba(192, 38, 211, 0.2);
+            border: 1px solid #c084fc;
+            color: #f5d0fe;
+            padding: 5px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: bold;
+        }
+
+        .spectro-geode-badge.dark-matter {
+            background: rgba(244, 63, 94, 0.2);
+            border-color: #f43f5e;
+            color: #fecdd3;
+        }
+
+        .spectro-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+        }
     </style>
 </head>
 <body>
@@ -850,11 +929,17 @@
 
             <!-- Target Reticle Overlay -->
             <div class="target-reticle-info" id="targetInfo">
-                <div style="display: flex; justify-content: space-between;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span style="color: var(--accent-cyan); font-weight: bold;" id="targetName">Asteroid AST-101</span>
                     <span id="targetDist" style="color: var(--text-dim);">145 m</span>
                 </div>
-                <div style="font-size: 10px; margin-top: 2px;">ORE: <span id="targetOre" style="color: var(--text-bright);">Ferrum (80%)</span></div>
+                <div style="display: flex; justify-content: space-between; font-size: 10px; margin-top: 2px;">
+                    <span>ORE: <span id="targetOre" style="color: var(--text-bright);">Ferrum (80%)</span></span>
+                    <span id="targetScanBadge" style="color: var(--accent-amber); font-weight: bold;">UNPROSPECTED</span>
+                </div>
+                <div id="targetMiniSpectro" style="font-size: 9px; color: var(--accent-cyan); margin-top: 1px; display: none;">
+                    Fe: <span id="tgtPctFe">0%</span> | Pt: <span id="tgtPctPt">0%</span> | Vq: <span id="tgtPctVq">0%</span> | Dm: <span id="tgtPctDm">0%</span>
+                </div>
                 <div class="target-bar-wrap">
                     <div class="target-bar-fill" id="targetHpBar"></div>
                 </div>
@@ -947,7 +1032,7 @@
             <div class="panel">
                 <div class="panel-header">
                     <span>COCKPIT CONSOLE</span>
-                    <span style="font-size: 9px; color: var(--text-dim);">CONTROLS: WASD / SPACE / T / Z</span>
+                    <span style="font-size: 9px; color: var(--text-dim);">CONTROLS: WASD / SPACE / T / Z / P / U / N</span>
                 </div>
                 <div class="action-grid">
                     <button class="btn" id="btnLaser">
@@ -962,9 +1047,9 @@
                         <span>🛑 DAMPENERS</span>
                         <span class="key-hint">[Z] BRAKE</span>
                     </button>
-                    <button class="btn" id="btnScan">
+                    <button class="btn btn-prospect" id="btnScan">
                         <span>📡 PROSPECT</span>
-                        <span class="key-hint">[S] SCAN</span>
+                        <span class="key-hint">[P] SPECTRO</span>
                     </button>
                     <button class="btn btn-upgrade" id="btnUpgrades">
                         <span>🛠️ UPGRADES</span>
@@ -1068,6 +1153,88 @@
         </div>
     </div>
 
+    <!-- Multi-Spectral Asteroid Spectrometer & Prospecting Modal -->
+    <div class="modal-overlay" id="prospectModal">
+        <div class="modal-box" style="width: 820px;">
+            <div class="modal-header">
+                <span>📡 MULTI-SPECTRAL ASTEROID SPECTROMETER & MINERAL PROSPECTOR</span>
+                <button class="btn" id="btnCloseProspect" style="padding: 2px 8px; border-color: var(--accent-red); color: var(--accent-red);">✕ CLOSE [P]</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 6px 12px; border: 1px solid var(--border-panel); border-radius: 4px;">
+                    <div>
+                        <span style="color: var(--text-dim); font-size: 10px;">SPECTROMETER TARGET: </span>
+                        <span id="prospectTargetTitle" style="color: var(--accent-cyan); font-weight: bold;">AST-101 (DISTANCE: 145m)</span>
+                    </div>
+                    <div>
+                        <span id="prospectStatusPill" style="font-size: 10px; padding: 2px 8px; border-radius: 3px; font-weight: bold; background: #064e3b; color: #6ee7b7; border: 1px solid #10b981;">ANALYZED (100%)</span>
+                    </div>
+                </div>
+
+                <div class="spectro-grid">
+                    <!-- Left: Real-time Spectral Waveform Canvas -->
+                    <div class="spectro-chart-card">
+                        <div style="display: flex; justify-content: space-between; font-size: 10px;">
+                            <span style="color: var(--text-bright); font-weight: bold;">EMISSION / ABSORPTION SPECTRUM</span>
+                            <span style="color: var(--text-dim);" id="prospectHarmonicFreq">FREQ: 432.8 MHz</span>
+                        </div>
+                        <div class="spectro-wave-wrap">
+                            <canvas id="spectroCanvas" width="340" height="130"></canvas>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 9px; color: var(--text-dim);">
+                            <span>100nm (UV)</span>
+                            <span>400nm (BLUE)</span>
+                            <span>550nm (GREEN)</span>
+                            <span>700nm (RED)</span>
+                            <span>1000nm (IR)</span>
+                        </div>
+                        <div id="prospectGeodeBox" class="spectro-geode-badge">
+                            <span>🔮</span>
+                            <span id="prospectGeodeText">Dark Matter Geode Core Detected (Purity: ★★★★☆)</span>
+                        </div>
+                    </div>
+
+                    <!-- Right: Assay Table & Mineral Breakdown -->
+                    <div class="spectro-chart-card">
+                        <div style="display: flex; justify-content: space-between; font-size: 10px;">
+                            <span style="color: var(--text-bright); font-weight: bold;">MINERAL ASSAY BREAKDOWN</span>
+                            <span id="prospectEstVal" style="color: var(--accent-amber); font-weight: bold;">EST. VAL: 1,450 CR</span>
+                        </div>
+                        <table class="mineral-breakdown-table">
+                            <thead>
+                                <tr>
+                                    <th>ELEMENT</th>
+                                    <th>PURITY %</th>
+                                    <th>EST. TONNAGE</th>
+                                    <th>MARKET (CR)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="spectroTableBody">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                        <div style="display: flex; justify-content: space-between; font-size: 10px; background: rgba(0,0,0,0.4); padding: 5px 8px; border-radius: 3px; border: 1px solid var(--border-panel);">
+                            <span>CORE VOLATILITY: <strong id="prospectVolatility" style="color: var(--accent-amber);">14% (Stable)</strong></span>
+                            <span>RESONANCE BONUS: <strong id="prospectResonance" style="color: var(--accent-emerald);">+50% YIELD</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="spectro-actions">
+                    <button class="btn" id="btnScanTarget" style="flex: 1; padding: 7px 4px; background: #0c4a6e; border-color: var(--accent-cyan);">
+                        <span>🎯 PROSPECT TARGET [SPACE]</span>
+                    </button>
+                    <button class="btn" id="btnWideBandScan" style="flex: 1; padding: 7px 4px; background: #1e3a8a; border-color: #38bdf8;">
+                        <span>📡 WIDE-BAND SWEEP (ALL)</span>
+                    </button>
+                    <button class="btn" id="btnTuneResonance" style="flex: 1.2; padding: 7px 4px; background: #064e3b; border-color: #10b981; color: #6ee7b7;">
+                        <span>⚡ TUNE LASER RESONANCE (+50%)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- Web Audio Synthesis Engine ---
         class SoundEngine {
@@ -1148,6 +1315,29 @@
                     osc.start();
                     osc.stop(this.ctx.currentTime + 0.8);
                 } catch (e) {}
+            }
+
+            playScanSweep() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(350, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1250, this.ctx.currentTime + 0.28);
+                    gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.28);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.28);
+                } catch (e) {}
+            }
+
+            playResonanceLock() {
+                this.playBeep(440, 'triangle', 0.08, 0.15);
+                setTimeout(() => this.playBeep(659.25, 'triangle', 0.08, 0.15), 80);
+                setTimeout(() => this.playBeep(880, 'triangle', 0.18, 0.2), 160);
             }
         }
 
@@ -1401,6 +1591,8 @@
             laserOverheated: false,
             themeIndex: 0,
             scanlineIndex: 0,
+            resonantTargetId: null,
+            scanWaves: [],
             upgrades: {
                 drill: 0,
                 cargo: 0,
@@ -1444,6 +1636,8 @@
         const ctx = canvas.getContext('2d');
         const radarCanvas = document.getElementById('radarCanvas');
         const radarCtx = radarCanvas.getContext('2d');
+        const spectroCanvas = document.getElementById('spectroCanvas');
+        const spectroCtx = spectroCanvas.getContext('2d');
         const logBox = document.getElementById('logBox');
 
         function addLog(msg, type = 'system') {
@@ -1506,7 +1700,9 @@
 
             state.asteroids = [];
             state.oreChunks = [];
+            state.scanWaves = [];
             state.selectedTarget = null;
+            state.resonantTargetId = null;
 
             for (let i = 0; i < sector.density; i++) {
                 spawnAsteroid();
@@ -1540,6 +1736,46 @@
                 verts.push({ a, r });
             }
 
+            // Multi-spectral mineral assay composition percentages
+            const sector = SECTORS[state.currentSectorIndex];
+            const comp = {
+                'Ferrum': 0,
+                'Silicates': 0,
+                'Platinum': 0,
+                'Void Quartz': 0,
+                'Dark Geode': 0,
+                'Derelict Scrap': 0
+            };
+
+            // Distribute percentages based on primary ore and sector weights
+            comp[oreType] = 55 + Math.floor(Math.random() * 30);
+            let remPct = 100 - comp[oreType];
+            const otherOres = Object.keys(comp).filter(k => k !== oreType);
+            for (let i = 0; i < otherOres.length; i++) {
+                if (i === otherOres.length - 1) {
+                    comp[otherOres[i]] = remPct;
+                } else {
+                    const chunk = Math.min(remPct, Math.floor(Math.random() * (remPct * 0.6)));
+                    comp[otherOres[i]] = chunk;
+                    remPct -= chunk;
+                }
+            }
+
+            // Geode Core Anomaly Generation
+            let geodeType = 'None';
+            let geodePurity = 1 + Math.floor(Math.random() * 5);
+            const geodeRoll = Math.random();
+            if (sector.id === 'nebula' || geodeRoll < 0.22) {
+                geodeType = 'Dark Matter Geode';
+                comp['Dark Geode'] = Math.max(comp['Dark Geode'], 25);
+            } else if (sector.id === 'graveyard' || geodeRoll < 0.45) {
+                geodeType = 'Resonant Void Quartz Geode';
+                comp['Void Quartz'] = Math.max(comp['Void Quartz'], 30);
+            } else if (geodeRoll < 0.65) {
+                geodeType = 'High-Purity Platinum Pocket';
+                comp['Platinum'] = Math.max(comp['Platinum'], 35);
+            }
+
             const ast = {
                 id: 'AST-' + (100 + state.asteroids.length + Math.floor(Math.random() * 800)),
                 x: state.ship.x + Math.cos(angle) * dist,
@@ -1553,7 +1789,16 @@
                 hp: maxHp,
                 maxHp: maxHp,
                 rot: Math.random() * Math.PI * 2,
-                rotSpeed: (Math.random() - 0.5) * 0.015
+                rotSpeed: (Math.random() - 0.5) * 0.015,
+                // Phase 7: Spectrometer Prospecting Data
+                comp: comp,
+                geodeType: geodeType,
+                purity: geodePurity,
+                volatility: 5 + Math.floor(Math.random() * 35),
+                freqMhz: (120 + Math.random() * 780).toFixed(1),
+                scanned: false,
+                scanProgress: 0,
+                resonantLock: false
             };
             state.asteroids.push(ast);
             return ast;
@@ -1787,6 +2032,268 @@
             document.getElementById('navModal').classList.remove('open');
         }
 
+        // --- Multi-Spectral Prospector & Spectrometer Modal ---
+        function openProspectModal() {
+            if (!state.selectedTarget) {
+                // Pick closest asteroid
+                let closest = null;
+                let minDist = 1000;
+                for (const ast of state.asteroids) {
+                    const d = Math.hypot(ast.x - state.ship.x, ast.y - state.ship.y);
+                    if (d < minDist) { closest = ast; minDist = d; }
+                }
+                state.selectedTarget = closest;
+            }
+            renderSpectrometerModal();
+            document.getElementById('prospectModal').classList.add('open');
+            audio.playBeep(700, 'sine', 0.08, 0.15);
+        }
+
+        function closeProspectModal() {
+            document.getElementById('prospectModal').classList.remove('open');
+        }
+
+        function renderSpectrometerModal() {
+            const target = state.selectedTarget;
+            const titleElem = document.getElementById('prospectTargetTitle');
+            const statusPill = document.getElementById('prospectStatusPill');
+            const tableBody = document.getElementById('spectroTableBody');
+            const geodeBox = document.getElementById('prospectGeodeBox');
+            const geodeText = document.getElementById('prospectGeodeText');
+            const freqElem = document.getElementById('prospectHarmonicFreq');
+            const estValElem = document.getElementById('prospectEstVal');
+            const volElem = document.getElementById('prospectVolatility');
+            const resElem = document.getElementById('prospectResonance');
+
+            if (!target) {
+                titleElem.textContent = "NO TARGET SELECTED - CLICK ASTEROID TO LOCK";
+                statusPill.textContent = "STANDBY";
+                statusPill.style.background = "#1e293b";
+                statusPill.style.color = "#94a3b8";
+                tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--text-dim);">No target asteroid locked.</td></tr>';
+                drawSpectrometerGraph(null);
+                return;
+            }
+
+            const dist = Math.round(Math.hypot(target.x - state.ship.x, target.y - state.ship.y));
+            titleElem.textContent = `${target.id} (RANGE: ${dist}m, MASS: ${Math.round(target.radius * 4.2)}T)`;
+            freqElem.textContent = `FREQ: ${target.freqMhz} MHz`;
+            volElem.textContent = `${target.volatility}% (${target.volatility > 25 ? 'Volatile Gas Pockets' : 'Stable Bedrock'})`;
+            resElem.textContent = target.resonantLock ? "LOCKED (+50% YIELD ACTIVE)" : (target.scanned ? "ANALYZED (+25% BONUS)" : "INACTIVE");
+            resElem.style.color = target.resonantLock ? "var(--accent-cyan)" : (target.scanned ? "var(--accent-emerald)" : "var(--text-dim)");
+
+            if (target.scanned) {
+                statusPill.textContent = target.resonantLock ? "RESONANCE TUNED (100%)" : "ASSAY COMPLETE (100%)";
+                statusPill.style.background = "#064e3b";
+                statusPill.style.color = "#6ee7b7";
+                statusPill.style.borderColor = "#10b981";
+            } else {
+                statusPill.textContent = "UNPROSPECTED";
+                statusPill.style.background = "#78350f";
+                statusPill.style.color = "#fde68a";
+                statusPill.style.borderColor = "#d97706";
+            }
+
+            // Geode Box
+            if (target.scanned && target.geodeType !== 'None') {
+                geodeBox.style.display = 'flex';
+                geodeBox.className = `spectro-geode-badge ${target.geodeType.includes('Dark') ? 'dark-matter' : ''}`;
+                const stars = '★'.repeat(target.purity) + '☆'.repeat(5 - target.purity);
+                geodeText.textContent = `${target.geodeType} Detected! Purity: [${stars}]`;
+            } else if (target.scanned) {
+                geodeBox.style.display = 'flex';
+                geodeBox.className = 'spectro-geode-badge';
+                geodeText.textContent = 'Standard Homogeneous Mineral Core. No rare geodes.';
+            } else {
+                geodeBox.style.display = 'none';
+            }
+
+            // Calculate total asteroid assay value
+            let totalEstVal = 0;
+            const totalMass = Math.round(target.radius * 4.2);
+            tableBody.innerHTML = '';
+
+            for (const oreName in target.comp) {
+                const pct = target.comp[oreName] || 0;
+                const info = ORE_TYPES[oreName] || { value: 10, color: '#94a3b8' };
+                const oreTons = Math.round((pct / 100) * totalMass);
+                const marketVal = oreTons * info.value;
+                totalEstVal += marketVal;
+
+                const tr = document.createElement('tr');
+                if (!target.scanned) {
+                    tr.innerHTML = `
+                        <td style="color: ${info.color}; font-weight: bold;">${oreName}</td>
+                        <td style="color: var(--text-dim);">??? %</td>
+                        <td style="color: var(--text-dim);">~${Math.round(totalMass * 0.2)} T</td>
+                        <td style="color: var(--text-dim);">??? CR</td>
+                    `;
+                } else {
+                    tr.innerHTML = `
+                        <td style="color: ${info.color}; font-weight: bold;">${oreName}</td>
+                        <td style="color: var(--text-bright); font-weight: bold;">${pct}%</td>
+                        <td style="color: var(--accent-cyan);">${oreTons} T</td>
+                        <td style="color: var(--accent-amber); font-weight: bold;">${marketVal.toLocaleString()} CR</td>
+                    `;
+                }
+                tableBody.appendChild(tr);
+            }
+
+            estValElem.textContent = target.scanned ? `EST. VAL: ${totalEstVal.toLocaleString()} CR` : 'EST. VAL: ~1,200 CR';
+            drawSpectrometerGraph(target);
+        }
+
+        function drawSpectrometerGraph(target) {
+            spectroCtx.clearRect(0, 0, spectroCanvas.width, spectroCanvas.height);
+            const w = spectroCanvas.width;
+            const h = spectroCanvas.height;
+
+            // Background Grid
+            spectroCtx.fillStyle = '#020617';
+            spectroCtx.fillRect(0, 0, w, h);
+            spectroCtx.strokeStyle = 'rgba(30, 58, 138, 0.4)';
+            spectroCtx.lineWidth = 1;
+
+            for (let x = 0; x < w; x += 30) {
+                spectroCtx.beginPath();
+                spectroCtx.moveTo(x, 0); spectroCtx.lineTo(x, h);
+                spectroCtx.stroke();
+            }
+            for (let y = 0; y < h; y += 25) {
+                spectroCtx.beginPath();
+                spectroCtx.moveTo(0, y); spectroCtx.lineTo(w, y);
+                spectroCtx.stroke();
+            }
+
+            if (!target) return;
+
+            // Emission / Absorption Spectrum Baseline Waveform
+            spectroCtx.save();
+            const time = Date.now() * 0.003;
+            spectroCtx.beginPath();
+            spectroCtx.strokeStyle = target.scanned ? '#38bdf8' : 'rgba(148, 163, 184, 0.4)';
+            spectroCtx.lineWidth = 1.5;
+
+            for (let x = 0; x < w; x++) {
+                let yVal = h * 0.75 + Math.sin(x * 0.04 + time) * 4 + (Math.random() - 0.5) * 3;
+
+                // Peaks for each element if scanned
+                if (target.scanned) {
+                    const fePeak = Math.exp(-Math.pow((x - 45) / 12, 2)) * (target.comp['Ferrum'] * 0.65);
+                    const siPeak = Math.exp(-Math.pow((x - 110) / 14, 2)) * (target.comp['Silicates'] * 0.65);
+                    const ptPeak = Math.exp(-Math.pow((x - 180) / 10, 2)) * (target.comp['Platinum'] * 0.85);
+                    const vqPeak = Math.exp(-Math.pow((x - 245) / 15, 2)) * (target.comp['Void Quartz'] * 0.95);
+                    const dmPeak = Math.exp(-Math.pow((x - 300) / 8, 2)) * (target.comp['Dark Geode'] * 1.2);
+                    yVal -= (fePeak + siPeak + ptPeak + vqPeak + dmPeak);
+                }
+
+                if (x === 0) spectroCtx.moveTo(x, yVal);
+                else spectroCtx.lineTo(x, yVal);
+            }
+            spectroCtx.stroke();
+
+            // Render Spectral Emission Lines
+            if (target.scanned) {
+                const peaks = [
+                    { x: 45, label: 'Fe (56Fe)', color: '#94a3b8', pct: target.comp['Ferrum'] },
+                    { x: 110, label: 'Si (28Si)', color: '#60a5fa', pct: target.comp['Silicates'] },
+                    { x: 180, label: 'Pt (195Pt)', color: '#e2e8f0', pct: target.comp['Platinum'] },
+                    { x: 245, label: 'Vq (Resonant)', color: '#c084fc', pct: target.comp['Void Quartz'] },
+                    { x: 300, label: 'Dm (Dark Matter)', color: '#f43f5e', pct: target.comp['Dark Geode'] }
+                ];
+
+                peaks.forEach(p => {
+                    if (p.pct > 5) {
+                        spectroCtx.strokeStyle = p.color;
+                        spectroCtx.lineWidth = 2;
+                        spectroCtx.beginPath();
+                        spectroCtx.moveTo(p.x, 10);
+                        spectroCtx.lineTo(p.x, h - 5);
+                        spectroCtx.stroke();
+
+                        spectroCtx.fillStyle = p.color;
+                        spectroCtx.font = '9px monospace';
+                        spectroCtx.fillText(p.label, p.x - 18, 20);
+                    }
+                });
+            }
+            spectroCtx.restore();
+        }
+
+        function scanTargetAsteroid(target = null) {
+            const ast = target || state.selectedTarget;
+            if (!ast) {
+                addLog("⚠️ No asteroid locked in target reticle.", "warning");
+                return;
+            }
+
+            audio.playScanSweep();
+            ast.scanned = true;
+            ast.scanProgress = 100;
+
+            // Emit expanding multi-spectral scan wave
+            state.scanWaves.push({
+                x: state.ship.x,
+                y: state.ship.y,
+                r: 10,
+                maxR: Math.hypot(ast.x - state.ship.x, ast.y - state.ship.y) + 60,
+                color: '#00f0ff',
+                life: 1.0
+            });
+
+            addLog(`📡 Multi-spectral assay complete for ${ast.id}! Dominant: [${ast.oreType} ${ast.comp[ast.oreType]}%]`, 'success');
+            if (ast.geodeType !== 'None') {
+                addLog(`🔮 GEODE ANOMALY: ${ast.id} contains ${ast.geodeType}!`, 'cargo');
+                addFloatingText(`GEODE: ${ast.geodeType}`, ast.x, ast.y - 30, '#c084fc');
+            } else {
+                addFloatingText(`ANALYZED: ${ast.id}`, ast.x, ast.y - 25, '#38bdf8');
+            }
+
+            renderSpectrometerModal();
+        }
+
+        function scanAllWideBand() {
+            audio.playScanSweep();
+            state.scanWaves.push({
+                x: state.ship.x,
+                y: state.ship.y,
+                r: 10,
+                maxR: 950,
+                color: '#10b981',
+                life: 1.2
+            });
+
+            let geodeFoundCount = 0;
+            state.asteroids.forEach(ast => {
+                ast.scanned = true;
+                ast.scanProgress = 100;
+                if (ast.geodeType !== 'None') geodeFoundCount++;
+            });
+
+            addLog(`📡 Wide-Band Sweep Complete: ${state.asteroids.length} asteroids mapped with spectrometer! (${geodeFoundCount} rare geodes identified)`, 'success');
+            addFloatingText("WIDE-BAND SWEEP COMPLETE", state.ship.x, state.ship.y - 45, '#10b981');
+            renderSpectrometerModal();
+        }
+
+        function tuneLaserResonance() {
+            const target = state.selectedTarget;
+            if (!target) {
+                addLog("⚠️ Select an analyzed asteroid to tune laser harmonics.", "warning");
+                return;
+            }
+            if (!target.scanned) {
+                scanTargetAsteroid(target);
+            }
+
+            target.resonantLock = true;
+            state.resonantTargetId = target.id;
+            audio.playResonanceLock();
+
+            addLog(`⚡ Laser optical harmonics tuned to ${target.freqMhz} MHz! +50% Mining Yield & Guaranteed Geode extraction activated on ${target.id}!`, 'mining');
+            addFloatingText("RESONANCE LOCKED (+50%)", state.ship.x, state.ship.y - 35, '#f59e0b');
+            renderSpectrometerModal();
+        }
+
         function engageWarpJump() {
             const targetIdx = state.selectedSectorIndex;
             if (targetIdx === state.currentSectorIndex) return;
@@ -1858,6 +2365,11 @@
                 document.getElementById('txtDampener').style.color = state.dampeners ? "var(--accent-emerald)" : "var(--accent-amber)";
                 addLog(`Inertia dampeners ${state.dampeners ? 'engaged' : 'disengaged'}.`, 'system');
             }
+            if (e.code === 'KeyP') {
+                const prospectModal = document.getElementById('prospectModal');
+                if (prospectModal.classList.contains('open')) closeProspectModal();
+                else openProspectModal();
+            }
             if (e.code === 'KeyU') {
                 const upgradeModal = document.getElementById('upgradeModal');
                 if (upgradeModal.classList.contains('open')) closeUpgradeModal();
@@ -1910,6 +2422,9 @@
                 state.selectedTarget = closest;
                 audio.playBeep(640, 'sine', 0.05, 0.08);
                 addLog(`Target locked: ${closest.id} [${closest.oreType}]`, 'system');
+                if (document.getElementById('prospectModal').classList.contains('open')) {
+                    renderSpectrometerModal();
+                }
             }
         });
 
@@ -1937,9 +2452,26 @@
 
         document.getElementById('btnScan').addEventListener('click', () => {
             audio.init();
-            audio.playBeep(720, 'triangle', 0.12, 0.15);
-            const found = state.asteroids.length;
-            addLog(`Deep sweep complete: ${found} mineral asteroids registered in local sector.`, 'system');
+            openProspectModal();
+        });
+
+        document.getElementById('btnCloseProspect').addEventListener('click', () => {
+            closeProspectModal();
+        });
+
+        document.getElementById('btnScanTarget').addEventListener('click', () => {
+            audio.init();
+            scanTargetAsteroid();
+        });
+
+        document.getElementById('btnWideBandScan').addEventListener('click', () => {
+            audio.init();
+            scanAllWideBand();
+        });
+
+        document.getElementById('btnTuneResonance').addEventListener('click', () => {
+            audio.init();
+            tuneLaserResonance();
         });
 
         document.getElementById('btnUpgrades').addEventListener('click', () => {
@@ -2046,6 +2578,7 @@
             addLog("• SPACEBAR: Fire Heavy Mining Laser at Asteroids", "system");
             addLog("• T: Toggle Tractor Beam to collect floating ore chunks", "system");
             addLog("• Z: Toggle Inertial Dampeners", "system");
+            addLog("• P: Multi-Spectral Spectrometer & Mineral Prospector", "system");
             addLog("• U: Open Modular Engineering Bay & Install Upgrades", "system");
             addLog("• N: Open Star Sector Chart & Engage Warp Jumps", "system");
             addLog("• V: Cycle Retro CRT Vector Theme (Cyan / Amber / Green / Solar)", "system");
@@ -2163,13 +2696,25 @@
                             const impactX = lx + dirX * proj;
                             const impactY = ly + dirY * proj;
                             createSparks(impactX, impactY, '#00f0ff', 2);
-                            ast.hp -= 0.5 * drillDef.dpsBonus;
+                            
+                            const dpsMult = ast.resonantLock ? (drillDef.dpsBonus * 1.5) : drillDef.dpsBonus;
+                            ast.hp -= 0.5 * dpsMult;
 
-                            if (Math.random() < drillDef.chunkBonus) {
+                            const chunkChance = ast.resonantLock ? (drillDef.chunkBonus * 1.5) : (ast.scanned ? drillDef.chunkBonus * 1.25 : drillDef.chunkBonus);
+                            if (Math.random() < chunkChance) {
                                 audio.playFracture();
-                                const oreInfo = ORE_TYPES[ast.oreType];
-                                spawnOreChunk(impactX, impactY, ast.oreType, 1);
-                                addFloatingText(`+1 ${ast.oreType}`, impactX, impactY - 10, oreInfo ? oreInfo.color : '#38bdf8');
+                                
+                                // Pick extracted chunk based on composition percentages
+                                let droppedOre = ast.oreType;
+                                let r = Math.random() * 100;
+                                for (const oName in ast.comp) {
+                                    if (r < ast.comp[oName]) { droppedOre = oName; break; }
+                                    r -= ast.comp[oName];
+                                }
+
+                                const oreInfo = ORE_TYPES[droppedOre] || ORE_TYPES[ast.oreType];
+                                spawnOreChunk(impactX, impactY, droppedOre, 1);
+                                addFloatingText(`+1 ${droppedOre}`, impactX, impactY - 10, oreInfo ? oreInfo.color : '#38bdf8');
                             }
 
                             // Asteroid shattered completely
@@ -2177,12 +2722,33 @@
                                 audio.playFracture();
                                 addLog(`Asteroid ${ast.id} fractured into rich mineral fragments!`, 'mining');
                                 createSparks(ast.x, ast.y, '#f59e0b', 20);
-                                for (let c = 0; c < 4 + Math.floor(Math.random() * 3); c++) {
-                                    spawnOreChunk(ast.x + (Math.random() - 0.5) * 20, ast.y + (Math.random() - 0.5) * 20, ast.oreType, 1);
+                                
+                                const baseChunks = 4 + Math.floor(Math.random() * 3);
+                                for (let c = 0; c < baseChunks; c++) {
+                                    let droppedOre = ast.oreType;
+                                    let r = Math.random() * 100;
+                                    for (const oName in ast.comp) {
+                                        if (r < ast.comp[oName]) { droppedOre = oName; break; }
+                                        r -= ast.comp[oName];
+                                    }
+                                    spawnOreChunk(ast.x + (Math.random() - 0.5) * 20, ast.y + (Math.random() - 0.5) * 20, droppedOre, 1);
                                 }
+
+                                // If rare geode detected, drop bonus geode chunks!
+                                if (ast.geodeType === 'Dark Matter Geode' || (ast.resonantLock && ast.comp['Dark Geode'] > 0)) {
+                                    spawnOreChunk(ast.x, ast.y, 'Dark Geode', 2);
+                                    addFloatingText(`🌌 DARK MATTER GEODE EXTRACTED!`, ast.x, ast.y - 30, '#f43f5e');
+                                    addLog(`🌌 Rare Dark Matter Geode core harvested from ${ast.id}!`, 'cargo');
+                                    audio.playCollect();
+                                } else if (ast.geodeType.includes('Quartz')) {
+                                    spawnOreChunk(ast.x, ast.y, 'Void Quartz', 2);
+                                    addFloatingText(`🔮 VOID QUARTZ GEODE EXTRACTED!`, ast.x, ast.y - 30, '#c084fc');
+                                    addLog(`🔮 Resonant Void Quartz crystal geode recovered from ${ast.id}!`, 'cargo');
+                                    audio.playCollect();
+                                }
+
                                 state.asteroids.splice(i, 1);
                                 if (state.selectedTarget === ast) state.selectedTarget = null;
-                                // Spawn replacement asteroid in distant sector
                                 setTimeout(() => spawnAsteroid(), 3000);
                             }
                             break;
@@ -2275,6 +2841,16 @@
                 state.shield = Math.min(state.maxShield, state.shield + shieldDef.regen);
             }
 
+            // Update Multi-Spectral Scan Waves
+            for (let i = state.scanWaves.length - 1; i >= 0; i--) {
+                const sw = state.scanWaves[i];
+                sw.r += 12;
+                sw.life -= 0.025;
+                if (sw.r >= sw.maxR || sw.life <= 0) {
+                    state.scanWaves.splice(i, 1);
+                }
+            }
+
             // Auto-Target Closest Asteroid if none selected
             if (!state.selectedTarget || !state.asteroids.includes(state.selectedTarget)) {
                 let closest = null;
@@ -2335,12 +2911,29 @@
             document.getElementById('hudTargetCount').textContent = state.asteroids.length;
 
             if (state.selectedTarget) {
+                const target = state.selectedTarget;
                 document.getElementById('targetInfo').style.display = 'block';
-                document.getElementById('targetName').textContent = state.selectedTarget.id;
-                const d = Math.round(Math.hypot(state.selectedTarget.x - state.ship.x, state.selectedTarget.y - state.ship.y));
+                document.getElementById('targetName').textContent = target.id;
+                const d = Math.round(Math.hypot(target.x - state.ship.x, target.y - state.ship.y));
                 document.getElementById('targetDist').textContent = `${d} m`;
-                document.getElementById('targetOre').textContent = `${state.selectedTarget.oreType} (${state.selectedTarget.richness}%)`;
-                const hpPct = Math.max(0, Math.min(100, (state.selectedTarget.hp / state.selectedTarget.maxHp) * 100));
+                document.getElementById('targetOre').textContent = `${target.oreType} (${target.richness}%)`;
+                
+                const scanBadge = document.getElementById('targetScanBadge');
+                if (target.scanned) {
+                    scanBadge.textContent = target.resonantLock ? "⚡ RESONANT" : "✓ PROSPECTED";
+                    scanBadge.style.color = target.resonantLock ? "var(--accent-cyan)" : "var(--accent-emerald)";
+                    document.getElementById('targetMiniSpectro').style.display = 'block';
+                    document.getElementById('tgtPctFe').textContent = `${target.comp['Ferrum']}%`;
+                    document.getElementById('tgtPctPt').textContent = `${target.comp['Platinum']}%`;
+                    document.getElementById('tgtPctVq').textContent = `${target.comp['Void Quartz']}%`;
+                    document.getElementById('tgtPctDm').textContent = `${target.comp['Dark Geode']}%`;
+                } else {
+                    scanBadge.textContent = "UNPROSPECTED";
+                    scanBadge.style.color = "var(--accent-amber)";
+                    document.getElementById('targetMiniSpectro').style.display = 'none';
+                }
+
+                const hpPct = Math.max(0, Math.min(100, (target.hp / target.maxHp) * 100));
                 document.getElementById('targetHpBar').style.width = `${hpPct}%`;
             } else {
                 document.getElementById('targetInfo').style.display = 'none';
@@ -2396,6 +2989,18 @@
             // World Space Coordinate Frame
             ctx.save();
             ctx.translate(cx - state.ship.x, cy - state.ship.y);
+
+            // Multi-Spectral Scan Waves Radiating Outward
+            for (const sw of state.scanWaves) {
+                ctx.save();
+                ctx.strokeStyle = sw.color;
+                ctx.globalAlpha = sw.life * 0.6;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
 
             // Tractor Beam Flux Waves
             if (state.ship.tractorActive) {
@@ -2461,7 +3066,7 @@
                 ctx.rotate(ast.rot);
 
                 // Asteroid Body
-                ctx.strokeStyle = (ast === state.selectedTarget) ? pal.vector : pal.vectorDim;
+                ctx.strokeStyle = (ast === state.selectedTarget) ? pal.vector : (ast.scanned ? '#38bdf8' : pal.vectorDim);
                 ctx.fillStyle = pal.shipFill;
                 ctx.lineWidth = (ast === state.selectedTarget) ? 2 : 1.2;
                 ctx.beginPath();
@@ -2483,18 +3088,30 @@
                 ctx.arc(0, 0, 4, 0, Math.PI * 2);
                 ctx.fill();
 
+                // Geode Anomaly Halo for prospected asteroids
+                if (ast.scanned && ast.geodeType !== 'None') {
+                    ctx.strokeStyle = ast.geodeType.includes('Dark') ? '#f43f5e' : '#c084fc';
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([4, 4]);
+                    ctx.beginPath();
+                    ctx.arc(0, 0, ast.radius + 6, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+
                 ctx.restore();
 
                 // Asteroid Label
-                ctx.fillStyle = '#94a3b8';
+                ctx.fillStyle = ast.scanned ? '#e0f2fe' : '#94a3b8';
                 ctx.font = '10px monospace';
                 ctx.textAlign = 'center';
-                ctx.fillText(`${ast.id} [${ast.oreType}]`, ast.x, ast.y - ast.radius - 8);
+                const geodeTag = (ast.scanned && ast.geodeType !== 'None') ? (ast.geodeType.includes('Dark') ? ' [🌌GEODE]' : ' [🔮GEODE]') : '';
+                ctx.fillText(`${ast.id} [${ast.oreType}]${geodeTag}`, ast.x, ast.y - ast.radius - 8);
 
                 // Target Lock Box
                 if (ast === state.selectedTarget) {
-                    ctx.strokeStyle = pal.vector;
-                    ctx.lineWidth = 1;
+                    ctx.strokeStyle = ast.resonantLock ? '#00f0ff' : pal.vector;
+                    ctx.lineWidth = ast.resonantLock ? 2 : 1;
                     const bSize = ast.radius + 10;
                     ctx.strokeRect(ast.x - bSize, ast.y - bSize, bSize * 2, bSize * 2);
                 }

@@ -54,7 +54,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KStarDredge (Deep space asteroid mining, derelict salvage & orbital refining RPG)
-**Phase:** 7 (next to do)
+**Phase:** 8 (next to do)
 **Status:** Deep Expansion
 
 - [x] Phase 1: Scaffold KStarDredge directory (`KStarDredge/`), create web HTML skeleton (`KiloOS/public/apps/kstardredge.html`), register in App.jsx.
@@ -63,7 +63,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 4: Retro-futuristic CRT amber/green vector themes and cockpit scanline shaders.
 - [x] Phase 5: Asteroid belt navigation & procedural star sector charts (Belt Alpha, Kuiper Ring, Derelict Graveyard, Plasma Nebula).
 - [x] Phase 6: Mining barge modular upgrades (heavy plasma drills, titan cargo bay, fusion thrusters, particle shields).
-- [ ] Phase 7: Deep scan & asteroid mineral prospecting (spectrometer analysis for ferrum, platinum, void quartz, dark matter geodes).
+- [x] Phase 7: Deep scan & asteroid mineral prospecting (spectrometer analysis for ferrum, platinum, void quartz, dark matter geodes).
 - [ ] Phase 8: Derelict spaceship exploration & EVA salvage ops (breach airlocks, recover black boxes, harvest reactor cores).
 - [ ] Phase 9: Hull integrity, radiation exposure & life support crisis management (seal hull breaches, vent plasma leaks, manage O2 scrubbers).
 - [ ] Phase 10: Orbital refinery & metallurgical smelting lab (refine raw ores into hyper-alloys, synthesize warp fuel).
