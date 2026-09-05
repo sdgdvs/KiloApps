@@ -106,6 +106,17 @@
         }
         h2 { margin: 0 0 10px 0; font-size: 32px; color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
         p { margin: 6px 0; font-size: 15px; color: #a1a1aa; }
+        .menu-btn {
+            display: block;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: background 0.15s, transform 0.1s;
+        }
+        .menu-btn:hover {
+            background: rgba(56, 189, 248, 0.2);
+            transform: scale(1.02);
+        }
     </style>
 </head>
 <body>
@@ -113,14 +124,14 @@
         <div id="ui">
             <div class="score">Score: <span id="scoreVal">0</span> | High: <span id="highScoreVal">0</span> | <span id="waveLabel">Wave: </span><span id="waveVal">1</span> | Mode: <span id="modeVal">None</span> | <span id="warpVal" style="color:#facc15;">Warp Cores: 0/3</span></div>
             <div class="skills-bar">
-                <button id="btnEmp" class="skill-btn" onclick="triggerEmp()">[E] EMP</button>
-                <button id="btnLaser" class="skill-btn" onclick="triggerLaser()">[L] Laser</button>
-                <button id="btnMissile" class="skill-btn" onclick="triggerMissile()">[M] Missile</button>
-                <button id="btnWarp" class="skill-btn" onclick="triggerHyperdrive()">[H] Warp</button>
-                <button id="btnShield" class="skill-btn" onclick="triggerShield()">[S] Shield</button>
-                <button id="btnDrone" class="skill-btn" onclick="triggerDrones()">[D] Drone</button>
-                <button id="btnPlatform" class="skill-btn" onclick="triggerPlatform()">[O] Platform</button>
-                <button id="btnEmpMine" class="skill-btn" onclick="triggerEmpMine()">[X] Mine</button>
+                <button id="btnEmp" class="skill-btn" onclick="triggerEmp(); this.blur();">[E] EMP</button>
+                <button id="btnLaser" class="skill-btn" onclick="triggerLaser(); this.blur();">[L] Laser</button>
+                <button id="btnMissile" class="skill-btn" onclick="triggerMissile(); this.blur();">[M] Missile</button>
+                <button id="btnWarp" class="skill-btn" onclick="triggerHyperdrive(); this.blur();">[H] Warp</button>
+                <button id="btnShield" class="skill-btn" onclick="triggerShield(); this.blur();">[S] Shield</button>
+                <button id="btnDrone" class="skill-btn" onclick="triggerDrones(); this.blur();">[D] Drone</button>
+                <button id="btnPlatform" class="skill-btn" onclick="triggerPlatform(); this.blur();">[O] Platform</button>
+                <button id="btnEmpMine" class="skill-btn" onclick="triggerEmpMine(); this.blur();">[X] Mine</button>
             </div>
         </div>
         <div id="stormBanner">SECTOR SPACE STORM</div>
@@ -130,19 +141,19 @@
             <h2 id="gameOverTitle">K-ASTEROIDS</h2>
             <div id="menuContent">
                 <p>Select Mode to Play:</p>
-                <p style="margin-top: 10px; color: #38bdf8;">[1] Classic - Infinite Waves</p>
-                <p style="color: #38bdf8;">[2] Time Attack - 2 Min Limit</p>
-                <p style="color: #38bdf8;">[3] Hardcore - Fast & Deadly</p>
-                <p style="color: #facc15;">[4] Sector Campaign (20 Sectors)</p>
-                <p style="margin-top: 15px; color: #a3e635;">[S] View Statistics</p>
-                <p style="margin-top: 5px; color: #6ee7b7;">[H] How to Play</p>
+                <p class="menu-btn" onclick="initGame(0); this.blur();" style="margin-top: 10px; color: #38bdf8;">[1] Classic - Infinite Waves</p>
+                <p class="menu-btn" onclick="initGame(1); this.blur();" style="color: #38bdf8;">[2] Time Attack - 2 Min Limit</p>
+                <p class="menu-btn" onclick="initGame(2); this.blur();" style="color: #38bdf8;">[3] Hardcore - Fast & Deadly</p>
+                <p class="menu-btn" onclick="initGame(3); this.blur();" style="color: #facc15;">[4] Sector Campaign (20 Sectors)</p>
+                <p class="menu-btn" onclick="showStats(); this.blur();" style="margin-top: 15px; color: #a3e635;">[S] View Statistics</p>
+                <p class="menu-btn" onclick="showHelp(); this.blur();" style="margin-top: 5px; color: #6ee7b7;">[H] How to Play</p>
             </div>
             <div id="helpContent" style="display: none;">
                 <h3 style="color: #38bdf8; margin-top: 0; margin-bottom: 12px; font-size: 22px;">How to Play</h3>
                 <p>Arrows: Rotate & Thrust | Space: Shoot</p>
                 <p style="color: #facc15; font-size: 13px;">Active Skills: [E]mp, [L]aser, [M]issile, [H]yper, [S]hield, [D]rone, [O]rbit, [X]Mine</p>
-                <p style="margin-top: 8px; font-size: 13px; color: #e4e4e7;">Pickups: [S]hield, [P]spread, [E]mp, [L]aser, [D]rone, [W]arp</p>
-                <p style="margin-top: 15px; color: #facc15;">[B] Back to Menu</p>
+                <p style="margin-top: 8px; font-size: 13px; color: #e4e4e7;">Pickups: [S]hield, [P]spread, [E]mp, [L]aser, [D]drone, [W]arp</p>
+                <p class="menu-btn" onclick="showMenu(); this.blur();" style="margin-top: 15px; color: #facc15;">[B] Back to Menu</p>
             </div>
             <div id="statsContent" style="display: none;">
                 <h3 style="color: #38bdf8; margin-top: 0; margin-bottom: 12px; font-size: 22px;">Statistics</h3>
@@ -150,7 +161,7 @@
                 <p id="statAsteroids">Asteroids Destroyed: 0</p>
                 <p id="statAccuracy">Best Accuracy: 0%</p>
                 <p id="statWins">Campaign Wins: 0</p>
-                <p style="margin-top: 15px; color: #facc15;">[B] Back to Menu</p>
+                <p class="menu-btn" onclick="showMenu(); this.blur();" style="margin-top: 15px; color: #facc15;">[B] Back to Menu</p>
             </div>
         </div>
         <canvas id="gameCanvas" width="800" height="600"></canvas>
@@ -2383,6 +2394,28 @@
             createExplosion(ship.x, ship.y, '#38bdf8', 25, 40);
         }
 
+        function showStats() {
+            document.getElementById('menuContent').style.display = 'none';
+            document.getElementById('helpContent').style.display = 'none';
+            document.getElementById('statsContent').style.display = 'block';
+            document.getElementById('statGames').innerText = 'Games Played: ' + stats.gamesPlayed;
+            document.getElementById('statAsteroids').innerText = 'Asteroids Destroyed: ' + stats.asteroidsDestroyed;
+            document.getElementById('statAccuracy').innerText = 'Best Accuracy: ' + (stats.bestAccuracy || 0) + '%';
+            document.getElementById('statWins').innerText = 'Campaign Wins: ' + (stats.campaignWins || 0);
+        }
+
+        function showHelp() {
+            document.getElementById('menuContent').style.display = 'none';
+            document.getElementById('statsContent').style.display = 'none';
+            document.getElementById('helpContent').style.display = 'block';
+        }
+
+        function showMenu() {
+            document.getElementById('statsContent').style.display = 'none';
+            document.getElementById('helpContent').style.display = 'none';
+            document.getElementById('menuContent').style.display = 'block';
+        }
+
         function killShip() {
             if (shieldTimer > 0 || ship.invincibleTimer > 0 || overdriveTimer > 0) return;
 
@@ -2391,6 +2424,7 @@
             gameOver = true;
             campaignVictory = false;
             document.getElementById('gameOverTitle').innerText = (gameMode === 1 && timeLeft <= 0) ? "TIME UP!" : "GAME OVER";
+            showMenu();
             gameOverDiv.style.display = 'block';
             playSound('explosion');
             createExplosion(ship.x, ship.y, '#ef4444', 50, 70);
@@ -2409,6 +2443,7 @@
         }
 
         function initGame(mode) {
+            showMenu();
             gameMode = mode;
             score = 0;
             wave = 1;
@@ -2691,29 +2726,13 @@
             }
 
             if (gameOver) {
-                if (keys['Digit1']) initGame(0);
-                if (keys['Digit2']) initGame(1);
-                if (keys['Digit3']) initGame(2);
-                if (keys['Digit4']) initGame(3);
-                if (keys['KeyS'] || keys['KeyK']) {
-                    document.getElementById('menuContent').style.display = 'none';
-                    document.getElementById('helpContent').style.display = 'none';
-                    document.getElementById('statsContent').style.display = 'block';
-                    document.getElementById('statGames').innerText = 'Games Played: ' + stats.gamesPlayed;
-                    document.getElementById('statAsteroids').innerText = 'Asteroids Destroyed: ' + stats.asteroidsDestroyed;
-                    document.getElementById('statAccuracy').innerText = 'Best Accuracy: ' + (stats.bestAccuracy || 0) + '%';
-                    document.getElementById('statWins').innerText = 'Campaign Wins: ' + (stats.campaignWins || 0);
-                }
-                if (keys['KeyH']) {
-                    document.getElementById('menuContent').style.display = 'none';
-                    document.getElementById('statsContent').style.display = 'none';
-                    document.getElementById('helpContent').style.display = 'block';
-                }
-                if (keys['KeyB']) {
-                    document.getElementById('statsContent').style.display = 'none';
-                    document.getElementById('helpContent').style.display = 'none';
-                    document.getElementById('menuContent').style.display = 'block';
-                }
+                if (keys['Digit1'] || keys['Numpad1']) initGame(0);
+                if (keys['Digit2'] || keys['Numpad2']) initGame(1);
+                if (keys['Digit3'] || keys['Numpad3']) initGame(2);
+                if (keys['Digit4'] || keys['Numpad4']) initGame(3);
+                if (keys['KeyS'] || keys['KeyK']) showStats();
+                if (keys['KeyH']) showHelp();
+                if (keys['KeyB']) showMenu();
                 return;
             }
 
@@ -2912,6 +2931,7 @@
                         campaignVictory = true;
                         gameOver = true;
                         document.getElementById('gameOverTitle').innerText = "CAMPAIGN VICTORY!";
+                        showMenu();
                         gameOverDiv.style.display = 'block';
                         stats.campaignWins = (stats.campaignWins || 0) + 1;
                         saveStats();

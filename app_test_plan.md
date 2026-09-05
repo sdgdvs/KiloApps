@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KAsteroids
+**Target App:** KAudio
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KAsteroids
 - KAudio
 - KBBS
 - KBase
@@ -173,8 +172,16 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KZip
 - K2048
 - KAlchemy
+- KAsteroids
 
 ## Test Reports
+
+- **KAsteroids**: ISSUES FOUND ⚠️ (4 issues, 4 fixed inline)
+  - ✅ Core gameplay works (ship rotation, thrust physics, lasers/spread/overdrive, UFO aliens, boss encounters, 8 active skills, asteroids fracturing, audio synthesizers, 4 game modes Classic/Time Attack/Hardcore/Campaign, local storage stats/highscores).
+  - 🔧 FIXED: Menu items ([1] Classic, [2] Time Attack, [3] Hardcore, [4] Campaign, [S] Statistics, [H] How to Play, [B] Back to Menu) were unclickable `<p>` elements with no mouse click handlers or hover styles. Added `.menu-btn` styling and interactive click handlers.
+  - 🔧 FIXED: Numpad keys (1–4) did not trigger game start in mode select menu because only `Digit1`–`Digit4` were handled. Added `Numpad1`–`Numpad4` mappings.
+  - 🔧 FIXED: Starting a game from Statistics or How to Play sub-panels left `menuContent` hidden (`display: none`), causing subsequent game over screens to remain stuck showing the help/stats panel instead of the mode select menu. Added `showMenu()` reset in `initGame()`, `killShip()`, and campaign victory.
+  - 🔧 FIXED: Mouse-clicking top active skill buttons (`btnEmp`, `btnLaser`, etc.) retained DOM focus on the button, causing subsequent `Space` (shoot) presses to re-trigger the skill button instead of firing cannons. Added `this.blur()` on click.
 
 - **KAlchemy**: ISSUES FOUND ⚠️ (4 issues, 4 fixed inline)
   - ✅ Core gameplay works (element transmutations, apparatuses Retort/Alembic/Anvil, 3 game modes Classic/Blitz/Puzzle, Quests, Workshop upgrades, Potions brewing & effect tester, Daily trials, Magnum Opus Rebirth & Astral perks, Expeditions, Planetary cores, Familiars sanctuary, audio FX, Grandmaster manual modal).
