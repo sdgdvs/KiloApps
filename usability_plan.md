@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KMine
+**Target App:** KPac
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KMine
 - KPac
 - KQuest
 - KNote
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KConnect4
 - KMaze
 - KScript
+- KMine
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KMine: Usability and UI issues fixed (integrated non-blocking cyber toast notification system with startup welcome prompt, replaced blocking alerts with custom Help & Shortcuts modal dialog [F1/?/Esc], added visual shortcut badges to toolbar buttons [Restart [F2], Hint [H], Save [F5], Load [F9], Exp [E], Imp [I], Replay [P], Help [F1]], added direct difficulty switching hotkeys [1-3], F1 help, Esc dismissal, and synchronized 1020x720 bounds in App.jsx for seamless Expert mode rendering; updated native C with ShowHelpDialog comprehensive guide and shortcuts reference, added menu shortcut accelerators, implemented keyboard shortcuts for F1/H/1-3/F2/F5/F9/E/I/P/Esc, updated window title with F1 help and difficulty hints, and verified clean compilation for both web and native builds).
 - KScript: Usability and UI issues fixed (integrated non-blocking cyber toast notification system with startup welcome prompt, replaced blocking alerts with custom Help & Shortcuts modal dialog [F1/Alt+H/Esc], added 1-click Preset Script chips [Basic Math, Variables, Accumulator, Algebra, Modulo], added Tab key indentation support [2 spaces] in editor, added visible keyboard shortcut badges to toolbar buttons [Rec [Alt+M], Play [Alt+P], Step [F10], Run [F5], Load [Ctrl+O], Save [Ctrl+S], Clear [Ctrl+K], Help [F1], Rep [Enter]], and added full hotkey suite; updated native C with single-line comment support [//], edit control subclassing for Enter-to-replace in find/replace boxes, accelerator interception for F5/F10/Ctrl+S/Ctrl+O/Alt+M/Alt+P/F1, comprehensive ShowHelpDialog reference guide, updated button labels with shortcut badges, and verified clean compilation for both web and native builds).
 - KMaze: Usability and UI issues fixed (integrated non-blocking cyber toast notification system with startup guide banner and sound unlocking, added interactive Help & Codex modal dialog [F1/H/Esc] detailing movement, active relics, item recharges, labyrinth codex, and stealth mechanics, added dynamic HUD button active countdowns and status indicators, made container layout fully responsive across all window sizes without scrollbars or clipping, added native WASD + Arrow navigation and B key support for speed shoes in both web and native C, added dedicated Win32 ShowHelpDialog guide and descriptive window title in native C, and verified clean compilation for both web and native builds).
 - KConnect4: Usability and UI issues fixed (integrated non-blocking cybernetic toast notification system with startup welcome prompt, replaced blocking browser alerts with sleek toast feedback for save, load, export, import, copy, and notation errors, added interactive column number badges above the board with hover drop previews and 1-7 click drops, added modal backdrop-click and Escape key dismissal for Help and Notation modals, added visual shortcut key badges to all action and skill buttons [Mode [V], Hint [T], Freeze [F], Undo [U], Bomb [B], Drill [D], Mag [M], Reset [R], Mute [P], Help [F1], Save [F5], Load [F9], Exp JSON [E], Imp JSON [I], Notation [N]], implemented full keyboard hotkeys suite for 1-7, B, D, M, F, T, U, R, V, P, F5, F9, E, I, N, Esc, Space, and Arrow keys in web; updated native C with ShowHelpDialog comprehensive keyboard shortcuts reference, added column number indicators above the board, added visual shortcut badges to all UI buttons, implemented message loop accelerator interception for full keyboard control without child control swallowing, updated window title with shortcut hint, and verified clean compilation and high-DPI scaling).

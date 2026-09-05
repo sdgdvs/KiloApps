@@ -387,15 +387,15 @@ void UpdateTitle(HWND hwnd) {
 
     if (gameOver == 2) {
         char buf[128];
-        wsprintfA(buf, "KMine - YOU WIN! 🏆 Time: %ds (Best: %ss) | H/F1 for Help", timeElapsed, bestStr);
+        wsprintfA(buf, "KMine - YOU WIN! 🏆 Time: %ds (Best: %ss) | F1: Help", timeElapsed, bestStr);
         SetWindowTextA(hwnd, buf);
     } else if (gameOver == 1) {
         char buf[128];
-        wsprintfA(buf, "KMine - GAME OVER 💥 Time: %ds (Best: %ss) | H/F1 for Help", timeElapsed, bestStr);
+        wsprintfA(buf, "KMine - GAME OVER 💥 Time: %ds (Best: %ss) | F1: Help", timeElapsed, bestStr);
         SetWindowTextA(hwnd, buf);
     } else {
         char buf[128];
-        wsprintfA(buf, "KMine - Mines: %d | Time: %ds | Best: %ss | H/F1 for Help", totalMines - flagsPlaced, timeElapsed, bestStr);
+        wsprintfA(buf, "KMine - Mines: %d | Time: %ds | Best: %ss | F1: Help [1-3: Diff]", totalMines - flagsPlaced, timeElapsed, bestStr);
         SetWindowTextA(hwnd, buf);
     }
 }
@@ -408,8 +408,38 @@ void UpdateTitle(HWND hwnd) {
 #define IDM_EXPORT_STATS 1005
 #define IDM_IMPORT_STATS 1006
 #define IDM_WATCH_REPLAY 1007
+#define IDM_HELP 1008
 
 HMENU hMenu, hSubMenu;
+
+void ShowHelpDialog(HWND hwnd) {
+    const char* helpText = 
+        "KMine - Minesweeper for KiloOS\n"
+        "=========================================\n\n"
+        "OBJECTIVE:\n"
+        "Uncover all safe cells without detonating any hidden mines.\n"
+        "Numbered cells indicate how many mines are adjacent.\n\n"
+        "MOUSE CONTROLS:\n"
+        "  * Left-Click: Reveal cell (first click is always safe)\n"
+        "  * Right-Click: Place / remove flag\n"
+        "  * Left-Click on Revealed Number: Chord (auto-reveals adjacent cells if flags match number)\n\n"
+        "KEYBOARD SHORTCUTS:\n"
+        "  * F1 / ?           : Show this Help & Rules Guide\n"
+        "  * H                : Safe Move Hint (reveals a safe cell)\n"
+        "  * F2               : Restart / New Game\n"
+        "  * 1                : Beginner Mode (10x10, 15 mines)\n"
+        "  * 2                : Intermediate Mode (16x16, 40 mines)\n"
+        "  * 3                : Expert Mode (30x16, 99 mines)\n"
+        "  * F5               : Quick Save game state\n"
+        "  * F9               : Quick Load game state\n"
+        "  * Ctrl+E           : Export High Scores (JSON)\n"
+        "  * Ctrl+I           : Import High Scores (JSON)\n"
+        "  * P / Space        : Watch Replay (when available)\n"
+        "  * Esc              : Cancel Replay\n\n"
+        "CHORDING TIP:\n"
+        "When all adjacent mines of a numbered cell are flagged, left-click that number to instantly clear the remaining neighbors!";
+    MessageBoxA(hwnd, helpText, "KMine - Rules & Shortcuts", MB_OK | MB_ICONINFORMATION);
+}
 
 void GenerateMines(int safeX, int safeY) {
     for (int y = 0; y < rows; y++) {
@@ -815,15 +845,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hSubMenu = CreatePopupMenu();
             AppendMenuA(hSubMenu, MF_STRING, IDM_RESTART, "New Game\tF2");
             AppendMenuA(hSubMenu, MF_SEPARATOR, 0, NULL);
-            AppendMenuA(hSubMenu, MF_STRING, IDM_BEGINNER, "Beginner");
-            AppendMenuA(hSubMenu, MF_STRING, IDM_INTERMEDIATE, "Intermediate");
-            AppendMenuA(hSubMenu, MF_STRING, IDM_EXPERT, "Expert");
+            AppendMenuA(hSubMenu, MF_STRING, IDM_BEGINNER, "Beginner (10x10)\t1");
+            AppendMenuA(hSubMenu, MF_STRING, IDM_INTERMEDIATE, "Intermediate (16x16)\t2");
+            AppendMenuA(hSubMenu, MF_STRING, IDM_EXPERT, "Expert (30x16)\t3");
             AppendMenuA(hSubMenu, MF_SEPARATOR, 0, NULL);
-            AppendMenuA(hSubMenu, MF_STRING, IDM_HINT, "Help/Hint\tH/F1");
+            AppendMenuA(hSubMenu, MF_STRING, IDM_HINT, "Safe Move Hint\tH");
+            AppendMenuA(hSubMenu, MF_STRING, IDM_HELP, "Help & Shortcuts...\tF1");
             AppendMenuA(hSubMenu, MF_SEPARATOR, 0, NULL);
-            AppendMenuA(hSubMenu, MF_STRING, IDM_EXPORT_STATS, "Export Stats");
-            AppendMenuA(hSubMenu, MF_STRING, IDM_IMPORT_STATS, "Import Stats");
-            AppendMenuA(hSubMenu, MF_STRING, IDM_WATCH_REPLAY, "Watch Replay");
+            AppendMenuA(hSubMenu, MF_STRING, IDM_EXPORT_STATS, "Export Stats...\tCtrl+E");
+            AppendMenuA(hSubMenu, MF_STRING, IDM_IMPORT_STATS, "Import Stats...\tCtrl+I");
+            AppendMenuA(hSubMenu, MF_STRING, IDM_WATCH_REPLAY, "Watch Replay\tP");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, "Game");
             SetMenu(hwnd, hMenu);
             SetDifficulty(hwnd, 1);
@@ -841,6 +872,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetDifficulty(hwnd, 2);
             } else if (LOWORD(wParam) == IDM_HINT) {
                 GiveHint(hwnd);
+            } else if (LOWORD(wParam) == IDM_HELP) {
+                ShowHelpDialog(hwnd);
             } else if (LOWORD(wParam) == IDM_EXPORT_STATS) {
                 DoExportStats(hwnd);
             } else if (LOWORD(wParam) == IDM_IMPORT_STATS) {
@@ -850,15 +883,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         case WM_KEYDOWN:
-            if (wParam == 'H' || wParam == VK_F1) {
+            if (wParam == 'H' || wParam == 'h') {
                 GiveHint(hwnd);
+            } else if (wParam == VK_F1 || wParam == 0xBF) {
+                ShowHelpDialog(hwnd);
             } else if (wParam == VK_F2) {
                 InitGame(hwnd, 0);
                 InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == '1' || wParam == VK_NUMPAD1) {
+                SetDifficulty(hwnd, 0);
+            } else if (wParam == '2' || wParam == VK_NUMPAD2) {
+                SetDifficulty(hwnd, 1);
+            } else if (wParam == '3' || wParam == VK_NUMPAD3) {
+                SetDifficulty(hwnd, 2);
             } else if (wParam == VK_F5) {
                 QuickSave(hwnd);
             } else if (wParam == VK_F9) {
                 QuickLoad(hwnd);
+            } else if (wParam == 'E' || wParam == 'e') {
+                DoExportStats(hwnd);
+            } else if (wParam == 'I' || wParam == 'i') {
+                DoImportStats(hwnd);
+            } else if (wParam == 'P' || wParam == 'p' || (wParam == VK_SPACE && gameOver != 0)) {
+                StartReplay(hwnd);
+            } else if (wParam == VK_ESCAPE) {
+                if (isReplaying) {
+                    isReplaying = 0;
+                    KillTimer(hwnd, 2);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
             }
             break;
         case WM_TIMER:
