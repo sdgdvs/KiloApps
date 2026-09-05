@@ -1097,7 +1097,13 @@
 
   function parseDateStr(str) {
     if (!str) return new Date();
+    if (str.includes('/')) {
+      const p = str.split('/');
+      if (p[0].length === 4) str = `${p[0]}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`;
+      else if (p[2] && p[2].length === 4) str = `${p[2]}-${p[0].padStart(2, '0')}-${p[1].padStart(2, '0')}`;
+    }
     const parts = str.split('-');
+    if (parts.length < 3) return new Date();
     return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
   }
 
@@ -1177,7 +1183,7 @@
     } else if (currentView === 'day') {
       titleElem.textContent = selectedDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
     } else if (currentView === 'agenda') {
-      titleElem.textContent = 'Agenda & Analytics';
+      titleElem.textContent = `Agenda (${events.length} events)`;
     }
   }
 
@@ -1353,16 +1359,18 @@
           card.style.cursor = 'pointer';
           const prioObj = PRIORITY_MAP[ev.priority || 'normal'] || PRIORITY_MAP.normal;
           card.innerHTML = `<span>${prioObj.icon} <strong>${escapeHtml(ev.time || 'All day')}</strong> ${escapeHtml(ev.title)}</span>`;
-          card.onclick = () => openModal(ev.id);
+          card.onclick = (e) => {
+            e.stopPropagation();
+            openModal(ev.id);
+          };
           eventsContainer.appendChild(card);
         });
       }
 
+      col.style.cursor = 'pointer';
       col.appendChild(eventsContainer);
-      col.onclick = (e) => {
-        if (e.target === col || e.target === eventsContainer) {
-          openModal(null, dateStr);
-        }
+      col.onclick = () => {
+        openModal(null, dateStr);
       };
       weekGrid.appendChild(col);
     }
@@ -1411,15 +1419,17 @@
         card.style.cursor = 'pointer';
         const prioObj = PRIORITY_MAP[ev.priority || 'normal'] || PRIORITY_MAP.normal;
         card.innerHTML = `<strong>${prioObj.icon} ${escapeHtml(ev.time || 'All day')}</strong> - ${escapeHtml(ev.title)} <span style="opacity:0.8; font-size:11px;">(${escapeHtml(ev.category)} • ${escapeHtml(prioObj.label)})</span>`;
-        card.onclick = () => openModal(ev.id);
+        card.onclick = (e) => {
+          e.stopPropagation();
+          openModal(ev.id);
+        };
         eventsDiv.appendChild(card);
       });
 
+      row.style.cursor = 'pointer';
       row.appendChild(eventsDiv);
-      row.onclick = (e) => {
-        if (e.target === row || e.target === eventsDiv) {
-          openModal(null, dateStr, hourStr);
-        }
+      row.onclick = () => {
+        openModal(null, dateStr, hourStr);
       };
       timeline.appendChild(row);
     }
@@ -1486,8 +1496,13 @@
         const editBtn = document.createElement('button');
         editBtn.className = 'btn btn-sm';
         editBtn.textContent = 'Edit';
-        editBtn.onclick = () => openModal(ev.id);
+        editBtn.onclick = (e) => {
+          e.stopPropagation();
+          openModal(ev.id);
+        };
 
+        card.style.cursor = 'pointer';
+        card.onclick = () => openModal(ev.id);
         card.appendChild(details);
         card.appendChild(editBtn);
         agendaView.appendChild(card);
@@ -1739,15 +1754,21 @@
   // --- IMPORT / EXPORT ENGINE ---
   function exportIcs() {
     let icsContent = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//KCalendar//EN\r\nCALSCALE:GREGORIAN\r\n";
+    const nowIso = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     events.forEach(ev => {
-      const dtStart = ev.date.replace(/-/g, '') + (ev.time ? 'T' + ev.time.replace(':', '') + '00' : '');
       const prioNum = (ev.priority === 'urgent') ? 1 : (ev.priority === 'high') ? 3 : (ev.priority === 'low') ? 9 : 5;
       icsContent += "BEGIN:VEVENT\r\n";
       icsContent += `UID:${ev.id}@kcalendar\r\n`;
-      icsContent += `DTSTART:${dtStart}\r\n`;
+      icsContent += `DTSTAMP:${nowIso}\r\n`;
+      if (ev.time) {
+        const dtStart = ev.date.replace(/-/g, '') + 'T' + ev.time.replace(':', '') + '00';
+        icsContent += `DTSTART:${dtStart}\r\n`;
+      } else {
+        icsContent += `DTSTART;VALUE=DATE:${ev.date.replace(/-/g, '')}\r\n`;
+      }
       icsContent += `SUMMARY:${cleanIcsText(ev.title)}\r\n`;
       if (ev.description) icsContent += `DESCRIPTION:${cleanIcsText(ev.description)}\r\n`;
-      icsContent += `CATEGORIES:${ev.category}\r\n`;
+      icsContent += `CATEGORIES:${ev.category || 'Work'}\r\n`;
       icsContent += `PRIORITY:${prioNum}\r\n`;
       if (ev.recurring && ev.recurring !== 'none') {
         let rrule = ev.recurring.toUpperCase();
@@ -1766,7 +1787,7 @@
     events.forEach(ev => {
       const row = [
         ev.id,
-        escapeCsv(ev.title),
+        escapeCsv(ev.title || ''),
         ev.date,
         ev.time || '',
         ev.category,
@@ -1795,7 +1816,7 @@
       const prioObj = PRIORITY_MAP[ev.priority || 'normal'] || PRIORITY_MAP.normal;
       const prioBadge = `${prioObj.icon} ${prioObj.label}`;
       const desc = (ev.description || '').replace(/\n/g, ' ').replace(/\|/g, '\\|');
-      const title = ev.title.replace(/\|/g, '\\|');
+      const title = (ev.title || 'Untitled').replace(/\|/g, '\\|');
       md += `| - [ ] | ${ev.date} | ${ev.time || 'All day'} | ${prioBadge} | ${ev.category} | ${ev.recurring || 'none'} | **${title}** | ${desc} |\n`;
     });
 
@@ -1811,14 +1832,16 @@
   }
 
   function escapeCsv(str) {
-    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    str = String(str || '');
+    if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
       return '"' + str.replace(/"/g, '""') + '"';
     }
     return str;
   }
 
   function cleanIcsText(str) {
-    return str.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+    str = String(str || '');
+    return str.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
   }
 
   function downloadFile(content, fileName, mimeType) {
@@ -1841,11 +1864,12 @@
     const reader = new FileReader();
     reader.onload = function(evt) {
       const content = evt.target.result;
-      if (file.name.endsWith('.ics')) {
+      const lowerName = file.name.toLowerCase();
+      if (lowerName.endsWith('.ics')) {
         parseAndImportIcs(content);
-      } else if (file.name.endsWith('.csv')) {
+      } else if (lowerName.endsWith('.csv')) {
         parseAndImportCsv(content);
-      } else if (file.name.endsWith('.json')) {
+      } else if (lowerName.endsWith('.json')) {
         parseAndImportJson(content);
       }
       saveEvents();
@@ -1897,28 +1921,37 @@
         }
         inEvent = false;
       } else if (inEvent) {
-        if (line.startsWith('SUMMARY:')) {
-          curEvent.title = line.substring(8);
-        } else if (line.startsWith('DTSTART:')) {
-          const val = line.substring(8);
+        if (line.startsWith('SUMMARY:') || line.startsWith('SUMMARY;')) {
+          const colonIdx = line.indexOf(':');
+          curEvent.title = line.substring(colonIdx + 1).replace(/\\([;,nN\\])/g, (m, c) => c === 'n' || c === 'N' ? '\n' : c);
+        } else if (line.startsWith('DTSTART:') || line.startsWith('DTSTART;')) {
+          const colonIdx = line.indexOf(':');
+          const val = line.substring(colonIdx + 1);
           if (val.length >= 8) {
             curEvent.date = `${val.substring(0,4)}-${val.substring(4,6)}-${val.substring(6,8)}`;
-            if (val.includes('T') && val.length >= 13) {
-              curEvent.time = `${val.substring(9,11)}:${val.substring(11,13)}`;
+            const tIdx = val.indexOf('T');
+            if (tIdx !== -1 && val.length >= tIdx + 5) {
+              curEvent.time = `${val.substring(tIdx + 1, tIdx + 3)}:${val.substring(tIdx + 3, tIdx + 5)}`;
             }
           }
-        } else if (line.startsWith('CATEGORIES:')) {
-          curEvent.category = line.substring(11).split(',')[0] || 'Work';
-        } else if (line.startsWith('PRIORITY:')) {
-          const p = parseInt(line.substring(9), 10);
+        } else if (line.startsWith('CATEGORIES:') || line.startsWith('CATEGORIES;')) {
+          const colonIdx = line.indexOf(':');
+          curEvent.category = line.substring(colonIdx + 1).split(',')[0].trim() || 'Work';
+        } else if (line.startsWith('PRIORITY:') || line.startsWith('PRIORITY;')) {
+          const colonIdx = line.indexOf(':');
+          const p = parseInt(line.substring(colonIdx + 1), 10);
           if (p === 1 || p === 2) curEvent.priority = 'urgent';
           else if (p === 3 || p === 4) curEvent.priority = 'high';
           else if (p === 9) curEvent.priority = 'low';
           else curEvent.priority = 'normal';
-        } else if (line.startsWith('DESCRIPTION:')) {
-          curEvent.description = line.substring(12);
-        } else if (line.startsWith('RRULE:FREQ=')) {
-          curEvent.recurring = line.substring(11).toLowerCase();
+        } else if (line.startsWith('DESCRIPTION:') || line.startsWith('DESCRIPTION;')) {
+          const colonIdx = line.indexOf(':');
+          curEvent.description = line.substring(colonIdx + 1).replace(/\\([;,nN\\])/g, (m, c) => c === 'n' || c === 'N' ? '\n' : c);
+        } else if (line.startsWith('RRULE:')) {
+          const freqMatch = line.match(/FREQ=([A-Za-z]+)/);
+          if (freqMatch) {
+            curEvent.recurring = freqMatch[1].toLowerCase();
+          }
         }
       }
     });
@@ -1950,20 +1983,41 @@
 
   function parseAndImportCsv(content) {
     const lines = content.split(/\r?\n/);
+    if (lines.length < 2) return;
+    const headerRow = parseCsvRow(lines[0].toLowerCase());
+    let titleIdx = headerRow.indexOf('title');
+    let dateIdx = headerRow.indexOf('date');
+    let timeIdx = headerRow.indexOf('time');
+    let catIdx = headerRow.indexOf('category');
+    let prioIdx = headerRow.indexOf('priority');
+    let recIdx = headerRow.indexOf('recurrence');
+    let descIdx = headerRow.indexOf('description');
+
+    if (titleIdx === -1) {
+      const hasId = headerRow[0] === 'id';
+      titleIdx = hasId ? 1 : 0;
+      dateIdx = hasId ? 2 : 1;
+      timeIdx = hasId ? 3 : 2;
+      catIdx = hasId ? 4 : 3;
+      prioIdx = hasId ? 5 : 4;
+      recIdx = hasId ? 6 : 5;
+      descIdx = hasId ? 7 : 6;
+    }
+
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
       const parts = parseCsvRow(line);
-      if (parts.length >= 3) {
+      if (parts.length >= 2) {
         events.push({
           id: generateId(),
-          title: parts[1] ? parts[1].replace(/^"|"$/g, '') : 'Imported Event',
-          date: parts[2] || formatDateStr(new Date()),
-          time: parts[3] || '',
-          category: parts[4] || 'Work',
-          priority: parts[5] || 'normal',
-          recurring: parts[6] || 'none',
-          description: parts[7] ? parts[7].replace(/^"|"$/g, '') : ''
+          title: (parts[titleIdx] || 'Imported Event').replace(/^"|"$/g, ''),
+          date: parts[dateIdx] || formatDateStr(new Date()),
+          time: parts[timeIdx] || '',
+          category: parts[catIdx] || 'Work',
+          priority: parts[prioIdx] || 'normal',
+          recurring: parts[recIdx] || 'none',
+          description: (parts[descIdx] || '').replace(/^"|"$/g, '')
         });
       }
     }
@@ -1985,6 +2039,8 @@
       selectedDate.setDate(selectedDate.getDate() + (direction * 7));
     } else if (currentView === 'day') {
       selectedDate.setDate(selectedDate.getDate() + direction);
+    } else if (currentView === 'agenda') {
+      selectedDate.setMonth(selectedDate.getMonth() + direction);
     }
     renderApp();
   }
@@ -2031,6 +2087,15 @@
   document.getElementById('saveEventBtn').onclick = saveEventFromModal;
   document.getElementById('deleteEventBtn').onclick = deleteEventFromModal;
 
+  [eventTitleInput, eventDateInput, eventTimeInput].forEach(inp => {
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveEventFromModal();
+      }
+    });
+  });
+
   document.getElementById('exportIcsBtn').onclick = exportIcs;
   document.getElementById('exportCsvBtn').onclick = exportCsv;
   document.getElementById('exportMdBtn').onclick = exportMarkdownAgenda;
@@ -2067,10 +2132,13 @@
   // Global Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+      if (deleteModalOverlay.classList.contains('active')) {
+        closeDeleteModal();
+        return;
+      }
       if (eventModalOverlay.classList.contains('active')) closeModal();
       if (statsModalOverlay.classList.contains('active')) closeStatsModal();
       if (helpModalOverlay.classList.contains('active')) closeHelpModal();
-      if (deleteModalOverlay.classList.contains('active')) closeDeleteModal();
       return;
     }
 

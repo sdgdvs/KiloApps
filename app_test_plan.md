@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KCalendar
+**Target App:** KChart
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KCalendar
 - KChart
 - KChat
 - KChess
@@ -173,8 +172,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KBreakout
 - KBudget
 - KCalc
+- KCalendar
 
 ## Test Reports
+
+- **KCalendar**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
+  - ✅ Core functionality works (interactive Month/Week/Day/Agenda views, custom category & priority color coding, daily/weekly/monthly/yearly recurrence engine, live keyword search and multi-criteria filters, event creation/editing modal, delete confirmation modal, calendar analytics overview modal, iCalendar .ics export/import, CSV export/import, Markdown agenda report generation, JSON backup export/import, keyboard shortcuts).
+  - 🔧 FIXED: Week View event card clicks did not stop propagation, and day column clicks restricted `e.target` strictly to the outer container. Consequently, clicking the column header, the date label, or the "No events" placeholder failed to open the event creation modal. Stopped propagation on event cards and enabled column-wide clicking to create events.
+  - 🔧 FIXED: Day View event card clicks did not stop propagation, and hour row clicks restricted `e.target` to row or events container. As a result, clicking the hour label (e.g. "09:00") failed to open the event creation modal. Stopped propagation on event cards and enabled row-wide clicking to schedule events directly at that hour slot.
+  - 🔧 FIXED: Agenda View event cards were non-interactive and only responded when clicking the tiny "Edit" button. Added pointer cursor and click handler to the entire card so clicking an agenda entry immediately opens the edit modal.
+  - 🔧 FIXED: Event Modal form inputs (title, date, time) lacked Enter key handlers, ignoring Enter key presses when typing. Added Enter key submission listeners across all inputs.
+  - 🔧 FIXED: Pressing Escape while the Delete Confirmation dialog was open simultaneously closed both the confirmation modal and the underlying event edit modal. Configured Escape to dismiss only the delete confirmation overlay when active.
+  - 🔧 FIXED: iCalendar (.ics) import failed to recognize standard formats with parameters/timezones (e.g. `DTSTART;VALUE=DATE:` or `DTSTART;TZID=...`), dropped escaped characters (`\,`, `\;`, `\n`, `\\`), and broke recurring events when RRULE included parameters (e.g. `RRULE:FREQ=WEEKLY;BYDAY=MO`). Added regex-based frequency extraction, unescaping, and parameter-agnostic DTSTART/field parsing, and added DTSTAMP and VALUE=DATE formatting to .ics exports.
+  - 🔧 FIXED: CSV import hardcoded column indices assuming column 0 was an ID, which inverted titles and dates on standard CSV imports lacking an ID column. Implemented dynamic header column matching for robust imports, made string escapers null-safe, and enabled case-insensitive file extension detection for imports (.ICS/.CSV/.JSON).
 
 - **KCalc**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
   - ✅ Core functionality works (scientific calculator with direct formula bar and 49-key keypad, degree/radian mode switching, multi-register memory M/M1/M2/M3 management modal, financial tools suite Loan PMT / Compound FV / Profit Margin / CAGR with result forwarding into calculator, descriptive 1-variable statistics suite with 10 computed metrics, 2-variable linear regression model with correlation/determination and interactive y-prediction, scientific constants library, calculation tape history with live search and CSV/TXT export, help & keyboard shortcuts modal).
