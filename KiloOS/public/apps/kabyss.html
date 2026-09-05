@@ -137,10 +137,40 @@
             background: #020305;
         }
 
+        /* CRT Scanline & Subterranean Vignette Shader Overlay */
+        .crt-scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            background: 
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.28) 50%),
+                radial-gradient(ellipse at center, transparent 55%, rgba(1, 2, 4, 0.85) 100%);
+            background-size: 100% 3px, 100% 100%;
+            transition: opacity 0.2s ease;
+        }
+
+        .crt-scanlines.disabled {
+            opacity: 0;
+        }
+
+        .crt-flicker {
+            animation: crtFlicker 0.15s infinite;
+        }
+
+        @keyframes crtFlicker {
+            0% { opacity: 0.97; }
+            50% { opacity: 1.0; }
+            100% { opacity: 0.96; }
+        }
+
         canvas#dungeonCanvas {
             background: #010204;
-            box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.95);
-            border: 1px solid #111827;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.95), inset 0 0 50px rgba(0,0,0,0.8);
+            border: 1px solid #1a2234;
             display: block;
             cursor: crosshair;
         }
@@ -149,19 +179,22 @@
             position: absolute;
             top: 12px;
             left: 12px;
-            background: rgba(9, 12, 20, 0.88);
+            background: rgba(9, 12, 20, 0.92);
             border: 1px solid var(--border-dungeon);
+            border-left: 3px solid var(--accent-cyan);
             border-radius: 4px;
             padding: 8px 12px;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(6px);
             pointer-events: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+            z-index: 6;
         }
 
         .overlay-hud .zone-title {
             color: var(--text-rune);
             font-weight: bold;
             font-size: 13px;
+            text-shadow: 0 0 6px rgba(129, 140, 248, 0.4);
         }
 
         .overlay-hud .zone-sub {
@@ -174,13 +207,14 @@
             position: absolute;
             bottom: 12px;
             left: 12px;
-            background: rgba(9, 12, 20, 0.85);
+            background: rgba(9, 12, 20, 0.88);
             border: 1px solid var(--border-dungeon);
             border-radius: 4px;
             padding: 4px 10px;
             font-size: 11px;
             color: var(--text-dim);
             pointer-events: none;
+            z-index: 6;
         }
 
         /* Viewport Bottom Controls */
@@ -192,6 +226,7 @@
             align-items: center;
             justify-content: space-between;
             gap: 8px;
+            z-index: 6;
         }
 
         .btn-group {
@@ -527,6 +562,7 @@
         <div class="viewport-container">
             <div class="canvas-wrapper">
                 <canvas id="dungeonCanvas" width="704" height="480"></canvas>
+                <div class="crt-scanlines crt-flicker" id="crtOverlay"></div>
                 <div class="overlay-hud">
                     <div class="zone-title" id="hudZoneName">Forgotten Crypts - B1</div>
                     <div class="zone-sub" id="hudZoneSub">Turn: 1 | Light: 100% | Torch: Burning</div>
@@ -541,6 +577,7 @@
                     <button id="btnStairs" class="btn-action" title="Descend stairs">🪜 Descend [E]</button>
                 </div>
                 <div class="btn-group">
+                    <button id="btnToggleCRT" class="btn-action" title="Toggle CRT scanlines & phosphors">📺 CRT: On</button>
                     <button id="btnToggleFOV" class="btn-action" title="Toggle full map vision (Debug)">👁️ FOV: On</button>
                     <button id="btnHelp">📖 Delver's Tome</button>
                 </div>
@@ -745,8 +782,10 @@
         let lightMap = [];
         let torches = [];
         let chests = [];
+        let torchParticles = [];
 
         let fovEnabled = true;
+        let crtEnabled = true;
         let turn = 1;
         let depthLevel = 1;
 
@@ -767,6 +806,21 @@
             lightRadius: 7,
             facing: 'down'
         };
+
+        // Particle generator for atmospheric subterranean embers
+        function spawnEmber(x, y, isTorch = false) {
+            if (torchParticles.length > 60) return;
+            torchParticles.push({
+                x: x + (Math.random() - 0.5) * 16,
+                y: y + (Math.random() - 0.5) * 12,
+                vx: (Math.random() - 0.5) * 0.4,
+                vy: -(0.3 + Math.random() * 0.6),
+                life: 1.0,
+                decay: 0.015 + Math.random() * 0.02,
+                size: 1.2 + Math.random() * 2.0,
+                color: isTorch ? (Math.random() > 0.4 ? '#f59e0b' : '#ef4444') : (Math.random() > 0.5 ? '#38bdf8' : '#818cf8')
+            });
+        }
 
         // Camera viewport
         const camera = {
@@ -1108,15 +1162,36 @@
                 }
             }
 
-            // Draw Torches
+            // Draw Ambient Wall Torches with dynamic flame pulse and radial glow
             for (const torch of torches) {
                 if (visible[torch.y][torch.x]) {
                     const sx = Math.floor(torch.x * TILE_SIZE - camera.x);
                     const sy = Math.floor(torch.y * TILE_SIZE - camera.y);
+                    
+                    // Torch sconce illumination glow shader
+                    const torchFlicker = Math.sin(Date.now() / 140 + torch.x * 5) * 4;
+                    const torchGlow = ctx.createRadialGradient(
+                        sx + 16, sy + 16, 2,
+                        sx + 16, sy + 16, 50 + torchFlicker
+                    );
+                    torchGlow.addColorStop(0, 'rgba(251, 191, 36, 0.45)');
+                    torchGlow.addColorStop(0.3, 'rgba(245, 158, 11, 0.22)');
+                    torchGlow.addColorStop(0.7, 'rgba(239, 68, 68, 0.08)');
+                    torchGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                    ctx.fillStyle = torchGlow;
+                    ctx.beginPath();
+                    ctx.arc(sx + 16, sy + 16, 50 + torchFlicker, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Flame Icon & Ember Emission
                     ctx.fillStyle = '#f59e0b';
                     ctx.font = '14px monospace';
                     ctx.textAlign = 'center';
                     ctx.fillText('🔥', sx + 16, sy + 20);
+
+                    if (Math.random() < 0.15) {
+                        spawnEmber(sx + 16, sy + 16, true);
+                    }
                 }
             }
 
@@ -1124,18 +1199,49 @@
             const playerSX = Math.floor(player.x * TILE_SIZE - camera.x);
             const playerSY = Math.floor(player.y * TILE_SIZE - camera.y);
 
-            // Delver Torchlight Radial Glow
+            // Delver Torchlight Radial Illumination Shader (Multi-stop gradient with flicker)
+            const playerTorchFlicker = Math.sin(Date.now() / 110) * 6 + Math.cos(Date.now() / 70) * 4;
+            const torchRadius = Math.max(20, player.lightRadius * TILE_SIZE * 0.95 + playerTorchFlicker);
+            
             const radGrad = ctx.createRadialGradient(
-                playerSX + 16, playerSY + 16, 4,
-                playerSX + 16, playerSY + 16, player.lightRadius * TILE_SIZE * 0.9
+                playerSX + 16, playerSY + 16, 6,
+                playerSX + 16, playerSY + 16, torchRadius
             );
-            radGrad.addColorStop(0, 'rgba(56, 189, 248, 0.25)');
-            radGrad.addColorStop(0.5, 'rgba(56, 189, 248, 0.08)');
-            radGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            radGrad.addColorStop(0, 'rgba(251, 191, 36, 0.40)');    // Warm golden core
+            radGrad.addColorStop(0.25, 'rgba(245, 158, 11, 0.22)'); // Amber flame halo
+            radGrad.addColorStop(0.65, 'rgba(56, 189, 248, 0.10)');  // Ethereal eldritch fringe
+            radGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');            // Abyss dark fade
+            
             ctx.fillStyle = radGrad;
             ctx.beginPath();
-            ctx.arc(playerSX + 16, playerSY + 16, player.lightRadius * TILE_SIZE * 0.9, 0, Math.PI * 2);
+            ctx.arc(playerSX + 16, playerSY + 16, torchRadius, 0, Math.PI * 2);
             ctx.fill();
+
+            // Spawn player torch embers
+            if (Math.random() < 0.2) {
+                spawnEmber(playerSX + 16, playerSY + 16, true);
+            }
+
+            // Draw & Update Embers Particles
+            for (let i = torchParticles.length - 1; i >= 0; i--) {
+                const p = torchParticles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= p.decay;
+
+                if (p.life <= 0) {
+                    torchParticles.splice(i, 1);
+                    continue;
+                }
+
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, p.life * 0.85);
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
 
             // Delver Body Avatar
             ctx.fillStyle = '#38bdf8';
@@ -1163,6 +1269,16 @@
             ctx.font = 'bold 11px monospace';
             ctx.textAlign = 'center';
             ctx.fillText('@', playerSX + 16, playerSY + 20);
+
+            // Subterranean Vignette Shader (Edge darkening)
+            const vigGrad = ctx.createRadialGradient(
+                canvas.width / 2, canvas.height / 2, canvas.width * 0.35,
+                canvas.width / 2, canvas.height / 2, canvas.width * 0.65
+            );
+            vigGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+            vigGrad.addColorStop(1, 'rgba(2, 4, 8, 0.7)');
+            ctx.fillStyle = vigGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             requestAnimationFrame(render);
         }
@@ -1404,6 +1520,11 @@
                 case '.':
                     restTurn();
                     break;
+                // CRT Toggle
+                case 'c':
+                case 'C':
+                    toggleCRT();
+                    break;
                 // Interact / Descend
                 case 'e':
                 case 'E':
@@ -1412,6 +1533,18 @@
                     break;
             }
         });
+
+        function toggleCRT() {
+            crtEnabled = !crtEnabled;
+            const overlay = document.getElementById('crtOverlay');
+            if (overlay) {
+                if (crtEnabled) overlay.classList.remove('disabled');
+                else overlay.classList.add('disabled');
+            }
+            const btn = document.getElementById('btnToggleCRT');
+            if (btn) btn.innerText = crtEnabled ? '📺 CRT: On' : '📺 CRT: Off';
+            logMessage(crtEnabled ? 'CRT Phosphor & Scanlines ENABLED.' : 'CRT Scanlines DISABLED.', 'magic');
+        }
 
         // Mouse click navigation & inspection
         canvas.addEventListener('click', (e) => {
@@ -1436,6 +1569,10 @@
         });
 
         // Button Listeners
+        document.getElementById('btnToggleCRT').addEventListener('click', () => {
+            toggleCRT();
+        });
+
         document.getElementById('btnNewRun').addEventListener('click', () => {
             depthLevel = 1;
             turn = 1;

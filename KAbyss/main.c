@@ -85,6 +85,18 @@ typedef struct {
     int facing; // 0=Up, 1=Right, 2=Down, 3=Left
 } Delver;
 
+typedef struct {
+    float x, y;
+    float vx, vy;
+    float life;
+    float decay;
+    COLORREF color;
+} Ember;
+
+#define MAX_EMBERS 64
+static Ember g_embers[MAX_EMBERS];
+static int g_numEmbers = 0;
+
 // Global Game State
 static int g_dungeon[MAP_HEIGHT][MAP_WIDTH];
 static BOOL g_explored[MAP_HEIGHT][MAP_WIDTH];
@@ -104,6 +116,7 @@ static Delver g_player;
 static int g_depthLevel = 1;
 static int g_turn = 1;
 static BOOL g_fovEnabled = TRUE;
+static BOOL g_crtEnabled = TRUE;
 static int g_activeTab = 0; // 0=Hero, 1=Inventory, 2=Runes
 static BOOL g_showHelpModal = FALSE;
 static float g_animFlicker = 0.0f;
@@ -122,6 +135,8 @@ void RestTurn(void);
 void SearchArea(void);
 void InteractTile(void);
 void CheckLevelUp(void);
+void SpawnEmber(float x, float y, BOOL isTorch);
+void UpdateEmbers(void);
 
 // Custom pseudo random helper
 static unsigned int g_randSeed = 123456789;
@@ -244,11 +259,38 @@ void ComputeFOV(void) {
     }
 }
 
+void SpawnEmber(float x, float y, BOOL isTorch) {
+    if (g_numEmbers >= MAX_EMBERS) return;
+    g_embers[g_numEmbers].x = x + (float)(RandInt(0, 16) - 8);
+    g_embers[g_numEmbers].y = y + (float)(RandInt(0, 12) - 6);
+    g_embers[g_numEmbers].vx = ((float)RandInt(0, 100) - 50.0f) * 0.008f;
+    g_embers[g_numEmbers].vy = -((float)RandInt(30, 80) * 0.015f);
+    g_embers[g_numEmbers].life = 1.0f;
+    g_embers[g_numEmbers].decay = 0.02f + ((float)RandInt(0, 50) * 0.0004f);
+    g_embers[g_numEmbers].color = isTorch ? (RandInt(0, 10) > 4 ? COLOR_ACCENT_AMBER : COLOR_ACCENT_RED) : (RandInt(0, 10) > 5 ? COLOR_BORDER_GLOW : COLOR_TEXT_RUNE);
+    g_numEmbers++;
+}
+
+void UpdateEmbers(void) {
+    for (int i = 0; i < g_numEmbers; ) {
+        g_embers[i].x += g_embers[i].vx;
+        g_embers[i].y += g_embers[i].vy;
+        g_embers[i].life -= g_embers[i].decay;
+        if (g_embers[i].life <= 0.0f) {
+            g_embers[i] = g_embers[g_numEmbers - 1];
+            g_numEmbers--;
+        } else {
+            i++;
+        }
+    }
+}
+
 void InitGame(int depth) {
     g_depthLevel = depth;
     g_turn = 1;
     g_numTorches = 0;
     g_numChests = 0;
+    g_numEmbers = 0;
 
     for (int y = 0; y < MAP_HEIGHT; y++) {
         for (int x = 0; x < MAP_WIDTH; x++) {
@@ -714,41 +756,122 @@ void RenderGame(HDC hdc, HWND hwnd) {
         }
     }
 
-    // Draw Torches
+    // Draw Ambient Sconce Torches with warm halo and ember emission
     for (int t = 0; t < g_numTorches; t++) {
         int tx = g_torches[t].x;
         int ty = g_torches[t].y;
         if (g_visible[ty][tx]) {
             int scrX = vpX + (tx * TILE_SIZE - g_camX);
             int scrY = vpY + (ty * TILE_SIZE - g_camY);
+
+            // Sconce Warm Halo Glow
+            int tFlicker = (int)(sinf((float)g_frameCount * 0.2f + (float)tx) * 3.0f);
+            HBRUSH sconceHalo = CreateSolidBrush(RGB(55, 32, 10));
+            HBRUSH oldSc = (HBRUSH)SelectObject(memDC, sconceHalo);
+            HPEN sconcePen = CreatePen(PS_SOLID, 1, RGB(180, 83, 9));
+            HPEN oldScPen = (HPEN)SelectObject(memDC, sconcePen);
+            Ellipse(memDC, scrX - 8 - tFlicker, scrY - 8 - tFlicker, scrX + TILE_SIZE + 8 + tFlicker, scrY + TILE_SIZE + 8 + tFlicker);
+            SelectObject(memDC, oldScPen);
+            DeleteObject(sconcePen);
+            SelectObject(memDC, oldSc);
+            DeleteObject(sconceHalo);
+
             SelectObject(memDC, fontBold);
             SetTextColor(memDC, COLOR_ACCENT_AMBER);
             TextOutA(memDC, scrX + 10, scrY + 7, "*", 1);
+
+            if (RandInt(0, 10) < 2) {
+                SpawnEmber((float)(scrX + 16), (float)(scrY + 12), TRUE);
+            }
         }
     }
 
-    // Draw Player / Delver
+    // Draw Player / Delver with Torchlight Illumination Shader
     int plScrX = vpX + (g_player.x * TILE_SIZE - g_camX);
     int plScrY = vpY + (g_player.y * TILE_SIZE - g_camY);
 
-    if (plScrX >= vpX - TILE_SIZE && plScrX < vpX + VIEWPORT_W &&
-        plScrY >= vpY - TILE_SIZE && plScrY < vpY + VIEWPORT_H) {
+    if (plScrX >= vpX - TILE_SIZE * 3 && plScrX < vpX + VIEWPORT_W + TILE_SIZE * 3 &&
+        plScrY >= vpY - TILE_SIZE * 3 && plScrY < vpY + VIEWPORT_H + TILE_SIZE * 3) {
         
-        // Halo
-        HBRUSH haloBr = CreateSolidBrush(RGB(15, 45, 65));
-        HBRUSH oldH = (HBRUSH)SelectObject(memDC, haloBr);
-        HPEN glowPen = CreatePen(PS_SOLID, 1, RGB(56, 189, 248));
-        HPEN oldGl = (HPEN)SelectObject(memDC, glowPen);
-        Ellipse(memDC, plScrX + 2, plScrY + 2, plScrX + TILE_SIZE - 2, plScrY + TILE_SIZE - 2);
-        SelectObject(memDC, oldGl);
-        DeleteObject(glowPen);
-        SelectObject(memDC, oldH);
-        DeleteObject(haloBr);
+        int pFlicker = (int)(sinf((float)g_frameCount * 0.18f) * 4.0f);
+        int glowRad = g_player.light_radius * TILE_SIZE / 2 + pFlicker;
+
+        // Outer Ethereal Fringe Halo
+        HBRUSH outerHalo = CreateSolidBrush(RGB(12, 28, 45));
+        HBRUSH oldOH = (HBRUSH)SelectObject(memDC, outerHalo);
+        HPEN outerPen = CreatePen(PS_SOLID, 1, RGB(30, 58, 85));
+        HPEN oldOP = (HPEN)SelectObject(memDC, outerPen);
+        Ellipse(memDC, plScrX + 16 - glowRad, plScrY + 16 - glowRad, plScrX + 16 + glowRad, plScrY + 16 + glowRad);
+        SelectObject(memDC, oldOP);
+        DeleteObject(outerPen);
+        SelectObject(memDC, oldOH);
+        DeleteObject(outerHalo);
+
+        // Inner Warm Golden Torch Core Halo
+        int innerRad = glowRad / 2 + 6;
+        HBRUSH innerHalo = CreateSolidBrush(RGB(45, 30, 12));
+        HBRUSH oldIH = (HBRUSH)SelectObject(memDC, innerHalo);
+        HPEN innerPen = CreatePen(PS_SOLID, 1, RGB(180, 83, 9));
+        HPEN oldIP = (HPEN)SelectObject(memDC, innerPen);
+        Ellipse(memDC, plScrX + 16 - innerRad, plScrY + 16 - innerRad, plScrX + 16 + innerRad, plScrY + 16 + innerRad);
+        SelectObject(memDC, oldIP);
+        DeleteObject(innerPen);
+        SelectObject(memDC, oldIH);
+        DeleteObject(innerHalo);
+
+        // Delver Body Avatar
+        HBRUSH bodyBr = CreateSolidBrush(RGB(8, 47, 73));
+        HBRUSH oldB = (HBRUSH)SelectObject(memDC, bodyBr);
+        HPEN bodyPen = CreatePen(PS_SOLID, 2, COLOR_BORDER_GLOW);
+        HPEN oldBP = (HPEN)SelectObject(memDC, bodyPen);
+        Ellipse(memDC, plScrX + 5, plScrY + 5, plScrX + TILE_SIZE - 5, plScrY + TILE_SIZE - 5);
+        SelectObject(memDC, oldBP);
+        DeleteObject(bodyPen);
+        SelectObject(memDC, oldB);
+        DeleteObject(bodyBr);
 
         // Player Symbol
         SelectObject(memDC, fontBold);
         SetTextColor(memDC, COLOR_TEXT_BRIGHT);
         TextOutA(memDC, plScrX + 11, plScrY + 7, "@", 1);
+
+        // Facing pointer
+        int fx = plScrX + 16;
+        int fy = plScrY + 16;
+        if (g_player.facing == 0) fy -= 10;
+        else if (g_player.facing == 2) fy += 10;
+        else if (g_player.facing == 3) fx -= 10;
+        else if (g_player.facing == 1) fx += 10;
+        SetPixel(memDC, fx, fy, RGB(255, 255, 255));
+        SetPixel(memDC, fx + 1, fy, RGB(255, 255, 255));
+        SetPixel(memDC, fx, fy + 1, RGB(255, 255, 255));
+
+        if (RandInt(0, 10) < 3) {
+            SpawnEmber((float)(plScrX + 16), (float)(plScrY + 14), TRUE);
+        }
+    }
+
+    // Draw Subterranean Embers Particles
+    for (int i = 0; i < g_numEmbers; i++) {
+        int ex = (int)g_embers[i].x;
+        int ey = (int)g_embers[i].y;
+        if (ex >= vpX && ex < vpX + VIEWPORT_W && ey >= vpY && ey < vpY + VIEWPORT_H) {
+            SetPixel(memDC, ex, ey, g_embers[i].color);
+            SetPixel(memDC, ex + 1, ey, g_embers[i].color);
+            SetPixel(memDC, ex, ey + 1, g_embers[i].color);
+        }
+    }
+
+    // CRT Scanlines Shader Pass (Subtle horizontal scan line rasterization)
+    if (g_crtEnabled) {
+        HPEN crtPen = CreatePen(PS_SOLID, 1, RGB(2, 4, 7));
+        HPEN oldCP = (HPEN)SelectObject(memDC, crtPen);
+        for (int y = vpY; y < vpY + VIEWPORT_H; y += 3) {
+            MoveToEx(memDC, vpX, y, NULL);
+            LineTo(memDC, vpX + VIEWPORT_W, y);
+        }
+        SelectObject(memDC, oldCP);
+        DeleteObject(crtPen);
     }
 
     // Viewport Border
@@ -783,12 +906,13 @@ void RenderGame(HDC hdc, HWND hwnd) {
 
     SelectObject(memDC, fontSmall);
     SetTextColor(memDC, COLOR_TEXT_BRIGHT);
-    TextOutA(memDC, vpX + 8, 584, "[N] New Descent", 15);
-    TextOutA(memDC, vpX + 140, 584, "[Space] Rest", 12);
-    TextOutA(memDC, vpX + 255, 584, "[R/X] Search", 12);
-    TextOutA(memDC, vpX + 360, 584, "[E] Descend", 11);
-    TextOutA(memDC, vpX + 475, 584, "[F] Toggle FOV", 14);
-    TextOutA(memDC, vpX + 600, 584, "[H] Tome", 8);
+    TextOutA(memDC, vpX + 6, 584, "[N] Descent", 11);
+    TextOutA(memDC, vpX + 112, 584, "[Space] Rest", 12);
+    TextOutA(memDC, vpX + 218, 584, "[R/X] Search", 12);
+    TextOutA(memDC, vpX + 320, 584, "[E] Descend", 11);
+    TextOutA(memDC, vpX + 418, 584, g_crtEnabled ? "[C] CRT: ON" : "[C] CRT: OFF", g_crtEnabled ? 11 : 12);
+    TextOutA(memDC, vpX + 526, 584, g_fovEnabled ? "[F] FOV: ON" : "[F] FOV: OFF", g_fovEnabled ? 11 : 12);
+    TextOutA(memDC, vpX + 636, 584, "[H] Tome", 8);
 
     // 4. RIGHT SIDEBAR (728..1036, 46..608)
     int sbX = 728;
@@ -1029,14 +1153,15 @@ void RenderGame(HDC hdc, HWND hwnd) {
 
         SelectObject(memDC, fontSmall);
         SetTextColor(memDC, COLOR_TEXT_PRIMARY);
-        int my = modalRect.top + 50;
-        TextOutA(memDC, modalRect.left + 20, my, "- WASD / Arrow Keys / Numpad / Vi (HJKL): Navigate grid", 56); my += 22;
-        TextOutA(memDC, modalRect.left + 20, my, "- Space: Rest 1 turn (Recuperates +2 HP, +1 Sanity)", 51); my += 22;
-        TextOutA(memDC, modalRect.left + 20, my, "- R/X: Search surrounding area for secret coffers & traps", 57); my += 22;
-        TextOutA(memDC, modalRect.left + 20, my, "- E / Enter: Interact / Descend into deeper abyss depths", 56); my += 22;
-        TextOutA(memDC, modalRect.left + 20, my, "- 1, 2, 3: Switch Sidebar Tabs (Delver / Relics / Runes)", 56); my += 22;
-        TextOutA(memDC, modalRect.left + 20, my, "- F: Toggle Field of View (FOV)", 31); my += 22;
-        TextOutA(memDC, modalRect.left + 20, my, "- N: Start New Descent", 22); my += 26;
+        int my = modalRect.top + 46;
+        TextOutA(memDC, modalRect.left + 20, my, "- WASD / Arrow Keys / Numpad / Vi: Navigate grid", 48); my += 20;
+        TextOutA(memDC, modalRect.left + 20, my, "- Space: Rest 1 turn (Recuperates +2 HP, +1 Sanity)", 51); my += 20;
+        TextOutA(memDC, modalRect.left + 20, my, "- R/X: Search surrounding area for secret coffers & traps", 57); my += 20;
+        TextOutA(memDC, modalRect.left + 20, my, "- E / Enter: Interact / Descend into deeper abyss depths", 56); my += 20;
+        TextOutA(memDC, modalRect.left + 20, my, "- 1, 2, 3: Switch Sidebar Tabs (Delver / Relics / Runes)", 56); my += 20;
+        TextOutA(memDC, modalRect.left + 20, my, "- C: Toggle CRT Scanlines & Atmospheric Phosphor Grid", 53); my += 20;
+        TextOutA(memDC, modalRect.left + 20, my, "- F: Toggle Field of View (FOV Omnivision)", 42); my += 20;
+        TextOutA(memDC, modalRect.left + 20, my, "- N: Start New Descent", 22); my += 24;
 
         SetTextColor(memDC, COLOR_TEXT_GOLD);
         TextOutA(memDC, modalRect.left + 20, my, "Press [H], [F1], or [ESC] to close manual.", 42);
@@ -1049,8 +1174,8 @@ void RenderGame(HDC hdc, HWND hwnd) {
 
     SelectObject(memDC, fontSmall);
     SetTextColor(memDC, COLOR_TEXT_DIM);
-    TextOutA(memDC, 14, height - 18, "WASD/Arrows: Move | Space: Rest | E: Interact | R/X: Search | 1-3: Tabs | H: Manual", 83);
-    TextOutA(memDC, width - 240, height - 18, "KAbyss Native Engine v0.3", 25);
+    TextOutA(memDC, 14, height - 18, "WASD/Arrows: Move | Space: Rest | E: Interact | R/X: Search | C: CRT | F: FOV | H: Manual", 89);
+    TextOutA(memDC, width - 240, height - 18, "KAbyss Native Engine v0.4", 25);
 
     // Cleanup GDI objects
     SelectObject(memDC, oldFont);
@@ -1095,6 +1220,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         if (wParam == TIMER_ID) {
             g_frameCount++;
             g_animFlicker = sinf((float)g_frameCount * 0.15f) * 0.05f;
+            UpdateEmbers();
             InvalidateRect(hwnd, NULL, FALSE);
         }
         break;
@@ -1178,6 +1304,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MovePlayer(1, 1);
             break;
 
+        // CRT Toggle
+        case 'C':
+            g_crtEnabled = !g_crtEnabled;
+            AddLog(g_crtEnabled ? "CRT Phosphors & Scanlines: ENABLED." : "CRT Scanlines: DISABLED.", COLOR_ACCENT_CYAN);
+            break;
+
         // Rest
         case VK_SPACE:
         case VK_NUMPAD5:
@@ -1259,21 +1391,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         // Check toolbar buttons
         int vpX = 12;
         if (mouseY >= 574 && mouseY <= 608 && mouseX >= vpX && mouseX <= vpX + VIEWPORT_W) {
-            if (mouseX < vpX + 130) {
+            if (mouseX < vpX + 105) {
                 // New Descent
                 g_player.hp = g_player.max_hp;
                 g_player.sanity = g_player.max_sanity;
                 InitGame(1);
-            } else if (mouseX < vpX + 245) {
+            } else if (mouseX < vpX + 210) {
                 // Rest
                 RestTurn();
-            } else if (mouseX < vpX + 350) {
+            } else if (mouseX < vpX + 315) {
                 // Search
                 SearchArea();
-            } else if (mouseX < vpX + 465) {
+            } else if (mouseX < vpX + 410) {
                 // Descend
                 InteractTile();
-            } else if (mouseX < vpX + 590) {
+            } else if (mouseX < vpX + 520) {
+                // Toggle CRT
+                g_crtEnabled = !g_crtEnabled;
+                AddLog(g_crtEnabled ? "CRT Phosphors & Scanlines: ENABLED." : "CRT Scanlines: DISABLED.", COLOR_ACCENT_CYAN);
+            } else if (mouseX < vpX + 630) {
                 // Toggle FOV
                 g_fovEnabled = !g_fovEnabled;
                 ComputeFOV();
