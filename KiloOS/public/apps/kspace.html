@@ -2047,39 +2047,50 @@ window.addEventListener('load', () => {
     }
   }
 
-  // --- DRAWING FUNCTIONS ---
+  // --- DRAWING FUNCTIONS (Loop 9 High-Polish Procedural Graphics) ---
   function drawDroneWings(frame) {
     for (let d = 0; d < drones.length; d++) {
       let dr = drones[d];
       ctx.save();
       ctx.translate(dr.x, dr.y);
 
-      // Thruster flame
+      // Multi-stage drone thruster exhaust
       let flame = 3 + (frame % 3) * 2;
       ctx.fillStyle = (frame % 2 === 0) ? '#00e5ff' : '#ffea00';
       ctx.beginPath(); ctx.moveTo(3, 10); ctx.lineTo(5, 10 + flame); ctx.lineTo(7, 10); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.moveTo(4, 10); ctx.lineTo(5, 10 + flame * 0.5); ctx.lineTo(6, 10); ctx.closePath(); ctx.fill();
 
-      // Drone Body
+      // Drone Chassis Outer Wings
+      ctx.fillStyle = '#0277bd';
+      ctx.beginPath(); ctx.moveTo(5, 0); ctx.lineTo(11, 7); ctx.lineTo(9, 11); ctx.lineTo(1, 11); ctx.lineTo(-1, 7); ctx.closePath(); ctx.fill();
+
+      // Drone Core Armor
       ctx.fillStyle = '#00b0ff';
-      ctx.beginPath(); ctx.moveTo(5, 0); ctx.lineTo(10, 8); ctx.lineTo(8, 10); ctx.lineTo(2, 10); ctx.lineTo(0, 8); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(5, 1); ctx.lineTo(9, 7); ctx.lineTo(8, 10); ctx.lineTo(2, 10); ctx.lineTo(1, 7); ctx.closePath(); ctx.fill();
 
       // Specular sheen sweep on drone wing
       let dSheen = ((frame * 1.5 + d * 10) % 20) - 5;
       ctx.save();
-      ctx.beginPath(); ctx.moveTo(5, 0); ctx.lineTo(10, 8); ctx.lineTo(8, 10); ctx.lineTo(2, 10); ctx.lineTo(0, 8); ctx.closePath();
+      ctx.beginPath(); ctx.moveTo(5, 0); ctx.lineTo(11, 7); ctx.lineTo(9, 11); ctx.lineTo(1, 11); ctx.lineTo(-1, 7); ctx.closePath();
       ctx.clip();
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
-      ctx.fillRect(0, dSheen, 12, 3);
+      let dGrad = ctx.createLinearGradient(0, dSheen, 10, dSheen + 4);
+      dGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+      dGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.75)');
+      dGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.fillStyle = dGrad;
+      ctx.fillRect(-2, 0, 14, 12);
       ctx.restore();
 
-      // Cockpit
-      ctx.fillStyle = '#ffea00';
+      // Point-Defense Plasma Cockpit / Focus Lens
+      ctx.fillStyle = (frame % 4 < 2) ? '#ffea00' : '#ffffff';
       ctx.beginPath(); ctx.arc(5, 5, 2.5, 0, Math.PI * 2); ctx.fill();
 
-      // Point Defense aura ring
-      ctx.strokeStyle = (frame % 4 < 2) ? '#00e5ff' : '#ffffff';
+      // Point Defense rotating aura ring
+      ctx.strokeStyle = (frame % 4 < 2) ? 'rgba(0, 229, 255, 0.85)' : 'rgba(255, 255, 255, 0.85)';
       ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.arc(5, 5, 8, 0, Math.PI * 2); ctx.stroke();
+      let rotD = (frame * 0.1 + d * Math.PI) % (Math.PI * 2);
+      ctx.beginPath(); ctx.arc(5, 5, 8, rotD, rotD + Math.PI * 1.4); ctx.stroke();
       ctx.restore();
     }
   }
@@ -2089,7 +2100,7 @@ window.addEventListener('load', () => {
     ctx.save();
     ctx.strokeStyle = (frame % 2 === 0) ? '#00e5ff' : '#ffffff';
     ctx.lineWidth = 2;
-    ctx.shadowBlur = 10; ctx.shadowColor = '#00e5ff';
+    ctx.shadowBlur = 12; ctx.shadowColor = '#00e5ff';
 
     for (let i = 0; i < 16; i++) {
       let angle = i * (Math.PI * 2 / 16);
@@ -2107,9 +2118,16 @@ window.addEventListener('load', () => {
     ctx.save();
     ctx.translate(x, y);
 
-    // Multi-Stage Animated Thruster Flames
+    // Multi-Stage Animated Thruster Flames (Tri-Nozzle Engine Array)
     let flameH = 6 + Math.sin(frame * 0.4) * 3;
     if (overchargeTimer > 0) flameH += 4;
+    
+    // Outboard secondary nozzle flames
+    ctx.fillStyle = (frame % 2 === 0) ? '#ff9100' : '#ff3d00';
+    ctx.beginPath(); ctx.moveTo(2, 17); ctx.lineTo(3, 17 + flameH * 0.7); ctx.lineTo(5, 17); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(15, 17); ctx.lineTo(17, 17 + flameH * 0.7); ctx.lineTo(18, 17); ctx.closePath(); ctx.fill();
+
+    // Central primary heavy nozzle flame
     ctx.fillStyle = (frame % 2 === 0) ? (overchargeTimer > 0 ? '#ffea00' : '#ff3d00') : '#ff9100';
     ctx.beginPath(); ctx.moveTo(4, 20); ctx.lineTo(10, 20 + flameH + 3); ctx.lineTo(16, 20); ctx.closePath(); ctx.fill();
     ctx.fillStyle = overchargeTimer > 0 ? '#00e5ff' : '#ffea00';
@@ -2118,24 +2136,43 @@ window.addEventListener('load', () => {
     ctx.beginPath(); ctx.moveTo(8, 20); ctx.lineTo(10, 20 + flameH * 0.6); ctx.lineTo(12, 20); ctx.closePath(); ctx.fill();
 
     // Trailing ion plume motes behind main thrusters
-    for (let m = 0; m < 3; m++) {
-      let my = 21 + ((frame * 2 + m * 6) % 16);
+    for (let m = 0; m < 4; m++) {
+      let my = 21 + ((frame * 2 + m * 5) % 18);
       let mx = 10 + Math.sin(frame * 0.6 + m * 1.5) * 2.5;
-      let mAlpha = Math.max(0, 1.0 - (my - 21) / 16);
+      let mAlpha = Math.max(0, 1.0 - (my - 21) / 18);
       ctx.fillStyle = (frame % 2 === 0) ? `rgba(0, 229, 255, ${mAlpha})` : `rgba(255, 234, 0, ${mAlpha})`;
       ctx.fillRect(mx - 1, my, 2, 2);
     }
 
-    // Wingtip Thrusters
+    // Wingtip Thruster Emitters & Laser Focus Caps
     ctx.fillStyle = overchargeTimer > 0 ? '#ffea00' : '#00e5ff';
-    ctx.fillRect(0, 16, 2, 4 + (frame % 2) * 2);
-    ctx.fillRect(18, 16, 2, 4 + (frame % 2) * 2);
+    ctx.fillRect(0, 14, 2, 6 + (frame % 2) * 2);
+    ctx.fillRect(18, 14, 2, 6 + (frame % 2) * 2);
+    // Wingtip capacitor glow dots
+    ctx.fillStyle = (frame % 4 < 2) ? '#ffffff' : '#00e5ff';
+    ctx.fillRect(0, 13, 2, 2);
+    ctx.fillRect(18, 13, 2, 2);
 
-    // Ship Hull
+    // Ship Hull - Base Underplate
+    ctx.fillStyle = overchargeTimer > 0 ? '#b28900' : '#01579b';
+    ctx.beginPath();
+    ctx.moveTo(10, -1); ctx.lineTo(21, 16); ctx.lineTo(16, 21); ctx.lineTo(10, 16); ctx.lineTo(4, 21); ctx.lineTo(-1, 16);
+    ctx.closePath(); ctx.fill();
+
+    // Ship Hull - Main Titanium Armor Plate
     ctx.fillStyle = overchargeTimer > 0 ? '#ffd700' : '#00b0ff';
     ctx.beginPath();
     ctx.moveTo(10, 0); ctx.lineTo(20, 16); ctx.lineTo(15, 20); ctx.lineTo(10, 15); ctx.lineTo(5, 20); ctx.lineTo(0, 16);
     ctx.closePath(); ctx.fill();
+
+    // Armor Facet Inset Lines
+    ctx.strokeStyle = overchargeTimer > 0 ? '#fff59d' : '#80d8ff';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(10, 1); ctx.lineTo(10, 14);
+    ctx.moveTo(10, 8); ctx.lineTo(16, 17);
+    ctx.moveTo(10, 8); ctx.lineTo(4, 17);
+    ctx.stroke();
 
     // Specular Sheen Sweep Highlight Across Hull Facets
     let sheenY = ((frame * 1.6) % 36) - 8;
@@ -2149,12 +2186,14 @@ window.addEventListener('load', () => {
     sheenGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.7)');
     sheenGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
     ctx.fillStyle = sheenGrad;
-    ctx.fillRect(0, 0, 20, 24);
+    ctx.fillRect(-2, 0, 24, 24);
     ctx.restore();
 
-    // Cockpit Canopy
-    ctx.fillStyle = overchargeTimer > 0 ? '#00e5ff' : '#ffffff';
+    // Cockpit Canopy Glass Glow & Reflection
+    ctx.fillStyle = overchargeTimer > 0 ? '#00e5ff' : '#00e5ff';
     ctx.beginPath(); ctx.ellipse(10, 7, 3, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.ellipse(9.2, 6, 1.2, 2.5, -0.2, 0, Math.PI * 2); ctx.fill();
 
     // Overcharge Field / Hyper Shield Barrier / Shield
     if (overchargeTimer > 0) {
@@ -2163,6 +2202,12 @@ window.addEventListener('load', () => {
       ctx.lineWidth = 2.5;
       ctx.shadowBlur = 12; ctx.shadowColor = '#ffea00';
       ctx.beginPath(); ctx.arc(10, 10, r, 0, Math.PI * 2); ctx.stroke();
+      // Orbiting plasma arcs
+      for (let a = 0; a < 3; a++) {
+        let ang = frame * 0.15 + a * (Math.PI * 2 / 3);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(10 + Math.cos(ang) * (r + 1) - 1.5, 10 + Math.sin(ang) * (r + 1) - 1.5, 3, 3);
+      }
     } else if (hyperShieldTimer > 0) {
       let rPulse = 20 + Math.sin(frame * 0.3) * 2;
       ctx.strokeStyle = '#ffea00';
@@ -2182,12 +2227,73 @@ window.addEventListener('load', () => {
     // Laser Beam Ray
     if (laserTimer > 0 && gameState === STATE_PLAYING) {
       ctx.save();
+      // Outer beam halo
+      ctx.strokeStyle = 'rgba(0, 229, 255, 0.45)';
+      ctx.lineWidth = 10 + Math.sin(frame * 0.5) * 4;
+      ctx.shadowBlur = 16; ctx.shadowColor = '#00e5ff';
+      ctx.beginPath(); ctx.moveTo(x + 10, y); ctx.lineTo(x + 10, 0); ctx.stroke();
+      // Core beam
       ctx.strokeStyle = '#00e5ff';
-      ctx.lineWidth = 5 + Math.sin(frame * 0.5) * 3;
-      ctx.shadowBlur = 14; ctx.shadowColor = '#00e5ff';
+      ctx.lineWidth = 4 + Math.sin(frame * 0.3) * 2;
+      ctx.beginPath(); ctx.moveTo(x + 10, y); ctx.lineTo(x + 10, 0); ctx.stroke();
+      // White hot filament ray
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(x + 10, y); ctx.lineTo(x + 10, 0); ctx.stroke();
       ctx.restore();
     }
+  }
+
+  function drawPlayerBullet(b, frame) {
+    ctx.save();
+    if (overchargeTimer > 0) {
+      // Thermonuclear golden plasma bolt
+      ctx.fillStyle = '#ffea00';
+      ctx.shadowBlur = 8; ctx.shadowColor = '#ffea00';
+      ctx.beginPath();
+      ctx.moveTo(b.x + 2, b.y - 2);
+      ctx.lineTo(b.x + 4.5, b.y + 4);
+      ctx.lineTo(b.x + 3.5, b.y + 11);
+      ctx.lineTo(b.x + 0.5, b.y + 11);
+      ctx.lineTo(b.x - 0.5, b.y + 4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(b.x + 1, b.y + 1, 2, 6);
+    } else {
+      // Coherent cyan plasma bolt
+      ctx.fillStyle = '#00e5ff';
+      ctx.shadowBlur = 6; ctx.shadowColor = '#00e5ff';
+      ctx.beginPath();
+      ctx.moveTo(b.x + 2, b.y - 1);
+      ctx.lineTo(b.x + 4, b.y + 4);
+      ctx.lineTo(b.x + 3, b.y + 10);
+      ctx.lineTo(b.x + 1, b.y + 10);
+      ctx.lineTo(b.x, b.y + 4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(b.x + 1, b.y + 1, 2, 5);
+    }
+    ctx.restore();
+  }
+
+  function drawEnemyBullet(eb, frame) {
+    ctx.save();
+    // Crimson plasma needle
+    ctx.fillStyle = '#ff1744';
+    ctx.shadowBlur = 5; ctx.shadowColor = '#ff1744';
+    ctx.beginPath();
+    ctx.moveTo(eb.x + 2, eb.y + 11);
+    ctx.lineTo(eb.x + 4, eb.y + 4);
+    ctx.lineTo(eb.x + 3, eb.y);
+    ctx.lineTo(eb.x + 1, eb.y);
+    ctx.lineTo(eb.x, eb.y + 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#ffea00';
+    ctx.fillRect(eb.x + 1, eb.y + 2, 2, 4);
+    ctx.restore();
   }
 
   function drawEnemyShip(e, frame) {
@@ -2208,24 +2314,47 @@ window.addEventListener('load', () => {
     }
 
     if (e.type === 0) { // Red Interceptor
+      ctx.fillStyle = '#b71c1c';
+      ctx.beginPath(); ctx.moveTo(0, 2); ctx.lineTo(10, 19); ctx.lineTo(20, 2); ctx.lineTo(13, 6); ctx.lineTo(10, 0); ctx.lineTo(7, 6); ctx.closePath(); ctx.fill();
       ctx.fillStyle = '#ff1744';
-      ctx.beginPath(); ctx.moveTo(0, 2); ctx.lineTo(10, 18); ctx.lineTo(20, 2); ctx.lineTo(13, 6); ctx.lineTo(10, 0); ctx.lineTo(7, 6); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(2, 3); ctx.lineTo(10, 17); ctx.lineTo(18, 3); ctx.lineTo(12, 6); ctx.lineTo(10, 1); ctx.lineTo(8, 6); ctx.closePath(); ctx.fill();
+      // Cockpit visor
+      ctx.fillStyle = '#ffea00'; ctx.fillRect(8.5, 7, 3, 4);
     } else if (e.type === 1) { // Orange Chaser
+      ctx.fillStyle = '#e65100';
+      ctx.beginPath(); ctx.moveTo(10, 21); ctx.lineTo(21, 3); ctx.lineTo(10, -1); ctx.lineTo(-1, 3); ctx.closePath(); ctx.fill();
       ctx.fillStyle = '#ff9100';
-      ctx.beginPath(); ctx.moveTo(10, 20); ctx.lineTo(20, 4); ctx.lineTo(10, 0); ctx.lineTo(0, 4); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(10, 19); ctx.lineTo(19, 4); ctx.lineTo(10, 1); ctx.lineTo(1, 4); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(9, 6, 2, 4);
     } else if (e.type === 2) { // Purple Saucer
-      ctx.fillStyle = '#d500f9';
-      ctx.beginPath(); ctx.ellipse(10, 12, 10, 6, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#00e5ff'; ctx.beginPath(); ctx.arc(10, 12, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#7b1fa2'; ctx.beginPath(); ctx.ellipse(10, 12, 11, 7, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#d500f9'; ctx.beginPath(); ctx.ellipse(10, 12, 9, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#00e5ff'; ctx.beginPath(); ctx.arc(10, 12, 3.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(9.5, 11.5, 1.2, 0, Math.PI * 2); ctx.fill();
     } else if (e.type === 3) { // Heavy Armored
-      ctx.fillStyle = '#78909c'; ctx.fillRect(2, 2, 16, 16);
+      ctx.fillStyle = '#455a64'; ctx.fillRect(1, 1, 18, 18);
+      ctx.fillStyle = '#78909c'; ctx.fillRect(3, 3, 14, 14);
       ctx.fillStyle = '#ff1744'; ctx.fillRect(8, 6, 4, 8);
+      ctx.fillStyle = '#ffea00'; ctx.fillRect(9, 8, 2, 4);
     } else if (e.type === 4) { // Zigzag
+      ctx.fillStyle = '#0097a7';
+      ctx.beginPath(); ctx.moveTo(10, 19); ctx.lineTo(21, -1); ctx.lineTo(10, 5); ctx.lineTo(-1, -1); ctx.closePath(); ctx.fill();
       ctx.fillStyle = '#00e5ff';
-      ctx.beginPath(); ctx.moveTo(10, 18); ctx.lineTo(20, 0); ctx.lineTo(10, 6); ctx.lineTo(0, 0); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(10, 17); ctx.lineTo(19, 1); ctx.lineTo(10, 6); ctx.lineTo(1, 1); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(9, 7, 2, 4);
     } else if (e.type === 5 || e.type === 9) { // Asteroids
-      ctx.fillStyle = '#8d6e63';
+      ctx.fillStyle = '#5d4037';
       let r = (e.type === 9) ? 15 : 9;
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) {
+        let a = i * Math.PI * 2 / 8;
+        let pR = (r + 1) * (0.8 + ((Math.floor(e.x + i * 77) % 100) / 250));
+        if (i === 0) ctx.moveTo(r + Math.cos(a)*pR, r + Math.sin(a)*pR);
+        else ctx.lineTo(r + Math.cos(a)*pR, r + Math.sin(a)*pR);
+      }
+      ctx.closePath(); ctx.fill();
+      // Asteroid Body
+      ctx.fillStyle = '#8d6e63';
       ctx.beginPath();
       for (let i = 0; i < 8; i++) {
         let a = i * Math.PI * 2 / 8;
@@ -2234,30 +2363,55 @@ window.addEventListener('load', () => {
         else ctx.lineTo(r + Math.cos(a)*pR, r + Math.sin(a)*pR);
       }
       ctx.closePath(); ctx.fill();
+      // 3D Craters
+      ctx.fillStyle = '#3e2723';
+      ctx.beginPath(); ctx.arc(r - r*0.3, r - r*0.2, r*0.25, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(r + r*0.3, r + r*0.2, r*0.2, 0, Math.PI * 2); ctx.fill();
     } else if (e.type === 6) { // Frigate
+      ctx.fillStyle = '#8e0000';
+      ctx.beginPath(); ctx.moveTo(18, 35); ctx.lineTo(35, 7); ctx.lineTo(18, 11); ctx.lineTo(1, 7); ctx.closePath(); ctx.fill();
       ctx.fillStyle = '#c62828';
-      ctx.beginPath(); ctx.moveTo(18, 34); ctx.lineTo(34, 8); ctx.lineTo(18, 12); ctx.lineTo(2, 8); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(18, 33); ctx.lineTo(33, 9); ctx.lineTo(18, 13); ctx.lineTo(3, 9); ctx.closePath(); ctx.fill();
+      // Command bridge
+      ctx.fillStyle = '#ffea00'; ctx.fillRect(16, 14, 4, 8);
     } else if (e.type === 7) { // Kamikaze Spike
+      ctx.fillStyle = '#f57f17';
+      ctx.beginPath(); ctx.moveTo(10, 23); ctx.lineTo(21, -1); ctx.lineTo(10, 3); ctx.lineTo(-1, -1); ctx.closePath(); ctx.fill();
       ctx.fillStyle = '#ffeb3b';
-      ctx.beginPath(); ctx.moveTo(10, 22); ctx.lineTo(20, 0); ctx.lineTo(10, 4); ctx.lineTo(0, 0); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(10, 21); ctx.lineTo(19, 1); ctx.lineTo(10, 5); ctx.lineTo(1, 1); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#ff1744'; ctx.fillRect(9, 7, 2, 5);
     } else if (e.type === 8) { // Stealth Fighter
+      ctx.fillStyle = '#4a148c';
+      ctx.beginPath(); ctx.moveTo(10, 19); ctx.lineTo(21, 1); ctx.lineTo(10, 7); ctx.lineTo(-1, 1); ctx.closePath(); ctx.fill();
       ctx.fillStyle = '#673ab7';
-      ctx.beginPath(); ctx.moveTo(10, 18); ctx.lineTo(20, 2); ctx.lineTo(10, 8); ctx.lineTo(0, 2); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(10, 17); ctx.lineTo(19, 3); ctx.lineTo(10, 9); ctx.lineTo(1, 3); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#00e5ff'; ctx.fillRect(9, 8, 2, 3);
     } else if (e.type === 10) { // Elite Valkyrie
+      ctx.fillStyle = '#b71c1c';
+      ctx.beginPath(); ctx.moveTo(10, 23); ctx.lineTo(21, 1); ctx.lineTo(14, 7); ctx.lineTo(10, -1); ctx.lineTo(6, 7); ctx.lineTo(-1, 1); ctx.closePath(); ctx.fill();
       ctx.fillStyle = '#ff2828';
-      ctx.beginPath(); ctx.moveTo(10, 22); ctx.lineTo(20, 2); ctx.lineTo(14, 8); ctx.lineTo(10, 0); ctx.lineTo(6, 8); ctx.lineTo(0, 2); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(10, 21); ctx.lineTo(19, 3); ctx.lineTo(14, 9); ctx.lineTo(10, 1); ctx.lineTo(6, 9); ctx.lineTo(1, 3); ctx.closePath(); ctx.fill();
       ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = '#ffd700'; ctx.beginPath(); ctx.arc(10, 11, 2.5, 0, Math.PI * 2); ctx.fill();
     } else if (e.type === 11) { // Elite Void Phantom
+      ctx.fillStyle = '#4a148c';
+      ctx.beginPath(); ctx.moveTo(18, 33); ctx.lineTo(35, 11); ctx.lineTo(29, 1); ctx.lineTo(18, 7); ctx.lineTo(7, 1); ctx.lineTo(1, 11); ctx.closePath(); ctx.fill();
       ctx.fillStyle = '#aa00ff';
-      ctx.beginPath(); ctx.moveTo(18, 32); ctx.lineTo(34, 12); ctx.lineTo(28, 2); ctx.lineTo(18, 8); ctx.lineTo(8, 2); ctx.lineTo(2, 12); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(18, 31); ctx.lineTo(33, 13); ctx.lineTo(27, 3); ctx.lineTo(18, 9); ctx.lineTo(9, 3); ctx.lineTo(3, 13); ctx.closePath(); ctx.fill();
       ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = '#00e5ff'; ctx.beginPath(); ctx.arc(18, 16, 3, 0, Math.PI * 2); ctx.fill();
     } else if (e.type === 12) { // Elite Command Cruiser
+      ctx.fillStyle = '#c6a700';
+      ctx.beginPath(); ctx.moveTo(18, 35); ctx.lineTo(37, 17); ctx.lineTo(33, 1); ctx.lineTo(23, 5); ctx.lineTo(18, -1); ctx.lineTo(13, 5); ctx.lineTo(3, 1); ctx.lineTo(-1, 17); ctx.closePath(); ctx.fill();
       ctx.fillStyle = '#ffd700';
-      ctx.beginPath(); ctx.moveTo(18, 34); ctx.lineTo(36, 18); ctx.lineTo(32, 2); ctx.lineTo(22, 6); ctx.lineTo(18, 0); ctx.lineTo(14, 6); ctx.lineTo(4, 2); ctx.lineTo(0, 18); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(18, 33); ctx.lineTo(35, 19); ctx.lineTo(31, 3); ctx.lineTo(21, 7); ctx.lineTo(18, 1); ctx.lineTo(15, 7); ctx.lineTo(5, 3); ctx.lineTo(1, 19); ctx.closePath(); ctx.fill();
       ctx.fillStyle = '#ffea00'; ctx.beginPath(); ctx.arc(18, 17, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(17, 16, 1.8, 0, Math.PI * 2); ctx.fill();
     } else if (e.type === 13) { // Siege Drop Pod
-      ctx.fillStyle = '#646478'; ctx.fillRect(4, 4, 16, 16);
+      ctx.fillStyle = '#37474f'; ctx.fillRect(3, 3, 18, 18);
+      ctx.fillStyle = '#646478'; ctx.fillRect(5, 5, 14, 14);
       ctx.fillStyle = '#ff3d00'; ctx.fillRect(8, 6, 8, 4);
+      ctx.fillStyle = '#ffea00'; ctx.fillRect(9, 13, 6, 2);
     }
 
     ctx.restore();
@@ -2271,22 +2425,39 @@ window.addEventListener('load', () => {
     let isCritical = (b.hp < b.maxHp * 0.25);
 
     if (b.isDreadnought) {
-      // Dreadnought Flagship
-      ctx.fillStyle = isEnraged ? '#a01428' : '#3c465a';
+      // Dreadnought Flagship Base Hull
+      ctx.fillStyle = isEnraged ? '#7a0e1e' : '#263238';
       ctx.beginPath();
-      ctx.moveTo(60, 62); ctx.lineTo(100, 45); ctx.lineTo(120, 25); ctx.lineTo(115, 5); ctx.lineTo(85, 2);
-      ctx.lineTo(60, 10); ctx.lineTo(35, 2); ctx.lineTo(5, 5); ctx.lineTo(0, 25); ctx.lineTo(20, 45);
+      ctx.moveTo(60, 63); ctx.lineTo(101, 46); ctx.lineTo(121, 26); ctx.lineTo(116, 4); ctx.lineTo(86, 1);
+      ctx.lineTo(60, 9); ctx.lineTo(34, 1); ctx.lineTo(4, 4); ctx.lineTo(-1, 26); ctx.lineTo(19, 46);
       ctx.closePath(); ctx.fill();
 
-      // Armor Plates
-      ctx.fillStyle = isCritical ? '#5a1414' : '#647387';
+      // Armor Plates & Bevels
+      ctx.fillStyle = isEnraged ? '#a01428' : '#37474f';
+      ctx.beginPath();
+      ctx.moveTo(60, 61); ctx.lineTo(99, 44); ctx.lineTo(119, 24); ctx.lineTo(114, 6); ctx.lineTo(84, 3);
+      ctx.lineTo(60, 11); ctx.lineTo(36, 3); ctx.lineTo(6, 6); ctx.lineTo(1, 24); ctx.lineTo(21, 44);
+      ctx.closePath(); ctx.fill();
+
+      // Armor Overlay Plates
+      ctx.fillStyle = isCritical ? '#5a1414' : '#546e7a';
       ctx.beginPath(); ctx.moveTo(15, 12); ctx.lineTo(45, 12); ctx.lineTo(40, 38); ctx.lineTo(10, 30); ctx.closePath(); ctx.fill();
       ctx.beginPath(); ctx.moveTo(75, 12); ctx.lineTo(105, 12); ctx.lineTo(110, 30); ctx.lineTo(80, 38); ctx.closePath(); ctx.fill();
+
+      // Power Conduit Lines Linking Generators to Central Gun
+      ctx.strokeStyle = (b.genL > 0 || b.genR > 0) ? ((frame % 4 < 2) ? '#00e5ff' : '#80d8ff') : '#37474f';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(28, 28); ctx.lineTo(52, 45);
+      ctx.moveTo(92, 28); ctx.lineTo(68, 45);
+      ctx.stroke();
 
       // Left Shield Generator
       if (b.genL > 0) {
         ctx.fillStyle = '#00e5ff';
         ctx.beginPath(); ctx.arc(28, 28, 10, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(26, 26, 3, 0, Math.PI * 2); ctx.fill();
         ctx.strokeStyle = (frame % 4 < 2) ? '#00e5ff' : '#80d8ff';
         ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(28, 28, 18, 0, Math.PI * 2); ctx.stroke();
@@ -2298,6 +2469,8 @@ window.addEventListener('load', () => {
       if (b.genR > 0) {
         ctx.fillStyle = '#00e5ff';
         ctx.beginPath(); ctx.arc(92, 28, 10, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(90, 26, 3, 0, Math.PI * 2); ctx.fill();
         ctx.strokeStyle = (frame % 4 < 2) ? '#00e5ff' : '#80d8ff';
         ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(92, 28, 18, 0, Math.PI * 2); ctx.stroke();
@@ -2305,9 +2478,21 @@ window.addEventListener('load', () => {
         ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(92, 28, 10, 0, Math.PI * 2); ctx.fill();
       }
 
-      // Central Mega-Ion Cannon
+      // Central Mega-Ion Cannon Chamber
       ctx.fillStyle = b.ionCharge >= 70 ? '#ffea00' : '#00e5ff';
       ctx.fillRect(52, 35, 16, 23);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(56, 38, 8, 17);
+
+      // Charging Lightning Arcs before Firing
+      if (b.ionCharge >= 50 && b.ionBeamTimer <= 0 && frame % 2 === 0) {
+        ctx.strokeStyle = '#00e5ff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(60, 45);
+        ctx.lineTo(60 + (rnd() % 24) - 12, 58 + (rnd() % 16));
+        ctx.stroke();
+      }
 
       // Telegraph laser line
       if (b.ionCharge >= 70 && b.ionBeamTimer <= 0) {
@@ -2318,6 +2503,8 @@ window.addEventListener('load', () => {
 
       // Active Mega-Ion Beam
       if (b.ionBeamTimer > 0) {
+        ctx.fillStyle = 'rgba(0, 229, 255, 0.4)';
+        ctx.fillRect(40, 58, 40, H);
         ctx.fillStyle = (frame % 2 === 0) ? '#00e5ff' : '#00b0ff';
         ctx.fillRect(48, 58, 24, H);
         ctx.fillStyle = '#ffffff';
@@ -2341,12 +2528,18 @@ window.addEventListener('load', () => {
         ctx.beginPath();
         ctx.moveTo(45, 58); ctx.lineTo(85, 35); ctx.lineTo(90, 10); ctx.lineTo(65, 2); ctx.lineTo(45, 12); ctx.lineTo(25, 2); ctx.lineTo(0, 10); ctx.lineTo(5, 35);
         ctx.closePath(); ctx.fill();
+        ctx.fillStyle = isEnraged ? '#e53935' : '#ad1457';
+        ctx.beginPath();
+        ctx.moveTo(45, 54); ctx.lineTo(80, 33); ctx.lineTo(84, 12); ctx.lineTo(63, 5); ctx.lineTo(45, 14); ctx.lineTo(27, 5); ctx.lineTo(6, 12); ctx.lineTo(10, 33);
+        ctx.closePath(); ctx.fill();
       }
 
       // Core Eye
       let coreCol = isEnraged ? ((frame % 4 < 2) ? '#ffea00' : '#ff1744') : ((frame % 8 < 4) ? '#00e5ff' : '#ff1744');
       ctx.fillStyle = coreCol;
       ctx.beginPath(); ctx.arc(45, 30, 12, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(43, 28, 4, 0, Math.PI * 2); ctx.fill();
 
       // Turrets
       let tOffsetsX = [5, 25, 65, 85];
@@ -2357,7 +2550,7 @@ window.addEventListener('load', () => {
         }
       }
 
-      // Deflector Shield
+      // Deflector Shield Dome
       if (isMothershipShieldActive()) {
         ctx.strokeStyle = '#00e5ff';
         ctx.lineWidth = 3;
@@ -2366,12 +2559,18 @@ window.addEventListener('load', () => {
         ctx.shadowBlur = 0;
       }
     } else {
-      ctx.fillStyle = isEnraged ? '#d500f9' : '#b71c1c';
+      ctx.fillStyle = isEnraged ? '#4a148c' : '#b71c1c';
       ctx.beginPath();
       ctx.moveTo(30, 48); ctx.lineTo(58, 12); ctx.lineTo(45, 2); ctx.lineTo(30, 14); ctx.lineTo(15, 2); ctx.lineTo(2, 12);
       ctx.closePath(); ctx.fill();
+      ctx.fillStyle = isEnraged ? '#d500f9' : '#e53935';
+      ctx.beginPath();
+      ctx.moveTo(30, 44); ctx.lineTo(54, 14); ctx.lineTo(43, 5); ctx.lineTo(30, 15); ctx.lineTo(17, 5); ctx.lineTo(6, 14);
+      ctx.closePath(); ctx.fill();
       ctx.fillStyle = isEnraged ? '#ffea00' : '#ff1744';
       ctx.beginPath(); ctx.arc(30, 24, 10, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(28, 22, 3, 0, Math.PI * 2); ctx.fill();
     }
 
     ctx.restore();
@@ -2506,20 +2705,14 @@ window.addEventListener('load', () => {
       drawPlayerShip(p.x, p.y, p.shield, frameCount);
       drawHyperJumpEffect(frameCount);
 
-      // Player Bullets
+      // Player Bullets (Loop 9 Procedural Projectiles)
       for (let b of bullets) {
-        ctx.save();
-        ctx.fillStyle = (overchargeTimer > 0) ? '#ffea00' : '#00e5ff';
-        ctx.fillRect(b.x, b.y, 4, 10);
-        ctx.restore();
+        drawPlayerBullet(b, frameCount);
       }
 
-      // Enemy Bullets
+      // Enemy Bullets (Loop 9 Procedural Needles)
       for (let eb of eBullets) {
-        ctx.save();
-        ctx.fillStyle = '#ff1744';
-        ctx.fillRect(eb.x, eb.y, 4, 10);
-        ctx.restore();
+        drawEnemyBullet(eb, frameCount);
       }
 
       for (let e of enemies) drawEnemyShip(e, frameCount);

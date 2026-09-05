@@ -2031,17 +2031,80 @@ void Update() {
     frameCount++;
 }
 
-// GDI Rendering Helpers (Loop 2 & 10 Visual Upgrades)
+// GDI Rendering Helpers (Loop 9 High-Polish Procedural Graphics)
+void DrawPlayerBulletGDI(HDC hdc, float fx, float fy, float ftype, int frame) {
+    int x = (int)fx, y = (int)fy;
+    HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
+    HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
+
+    if (overchargeTimer > 0) {
+        // Thermonuclear golden plasma bolt
+        HBRUSH ob = CreateSolidBrush(RGB(255, 234, 0));
+        HBRUSH oldB = (HBRUSH)SelectObject(hdc, ob);
+        POINT pts[5] = { {x + 2, y - 2}, {x + 5, y + 4}, {x + 4, y + 11}, {x, y + 11}, {x - 1, y + 4} };
+        Polygon(hdc, pts, 5);
+        SelectObject(hdc, oldB); DeleteObject(ob);
+
+        HBRUSH wb = CreateSolidBrush(RGB(255, 255, 255));
+        RECT r = {x + 1, y + 1, x + 3, y + 7};
+        FillRect(hdc, &r, wb);
+        DeleteObject(wb);
+    } else {
+        // Coherent cyan plasma bolt
+        HBRUSH cb = CreateSolidBrush(RGB(0, 229, 255));
+        HBRUSH oldB = (HBRUSH)SelectObject(hdc, cb);
+        POINT pts[5] = { {x + 2, y - 1}, {x + 4, y + 4}, {x + 3, y + 10}, {x + 1, y + 10}, {x, y + 4} };
+        Polygon(hdc, pts, 5);
+        SelectObject(hdc, oldB); DeleteObject(cb);
+
+        HBRUSH wb = CreateSolidBrush(RGB(255, 255, 255));
+        RECT r = {x + 1, y + 1, x + 3, y + 6};
+        FillRect(hdc, &r, wb);
+        DeleteObject(wb);
+    }
+    SelectObject(hdc, oldPen);
+}
+
+void DrawEnemyBulletGDI(HDC hdc, float fx, float fy, int frame) {
+    int x = (int)fx, y = (int)fy;
+    HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
+    HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
+
+    // Crimson plasma needle
+    HBRUSH rb = CreateSolidBrush(RGB(255, 23, 68));
+    HBRUSH oldB = (HBRUSH)SelectObject(hdc, rb);
+    POINT pts[5] = { {x + 2, y + 11}, {x + 4, y + 4}, {x + 3, y}, {x + 1, y}, {x, y + 4} };
+    Polygon(hdc, pts, 5);
+    SelectObject(hdc, oldB); DeleteObject(rb);
+
+    HBRUSH yb = CreateSolidBrush(RGB(255, 234, 0));
+    RECT r = {x + 1, y + 2, x + 3, y + 6};
+    FillRect(hdc, &r, yb);
+    DeleteObject(yb);
+
+    SelectObject(hdc, oldPen);
+}
+
 void DrawPlayerShipGDI(HDC hdc, int x, int y, int shield, int frame) {
     HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
     HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
 
-    // Multi-Stage Animated Thruster Flames
+    // Multi-Stage Animated Thruster Flames (Tri-Nozzle Engine Array)
     int flameH = 5 + (frame % 3) * 3;
     if (overchargeTimer > 0) flameH += 4;
-    // Outer flame plume
+
+    // Outboard secondary nozzle flames
+    HBRUSH sfbr = CreateSolidBrush((frame % 2 == 0) ? RGB(255, 145, 0) : RGB(255, 60, 0));
+    HBRUSH oldBr = (HBRUSH)SelectObject(hdc, sfbr);
+    POINT lSec[3] = { {x + 2, y + 17}, {x + 3, y + 17 + flameH * 2 / 3}, {x + 5, y + 17} };
+    Polygon(hdc, lSec, 3);
+    POINT rSec[3] = { {x + 15, y + 17}, {x + 17, y + 17 + flameH * 2 / 3}, {x + 18, y + 17} };
+    Polygon(hdc, rSec, 3);
+    SelectObject(hdc, oldBr); DeleteObject(sfbr);
+
+    // Outer primary flame plume
     HBRUSH ofbr = CreateSolidBrush((frame % 2 == 0) ? (overchargeTimer > 0 ? RGB(255, 234, 0) : RGB(255, 60, 0)) : RGB(255, 145, 0));
-    HBRUSH oldBr = (HBRUSH)SelectObject(hdc, ofbr);
+    oldBr = (HBRUSH)SelectObject(hdc, ofbr);
     POINT outerPts[3] = { {x + 4, y + 20}, {x + 10, y + 23 + flameH}, {x + 16, y + 20} };
     Polygon(hdc, outerPts, 3);
     SelectObject(hdc, oldBr); DeleteObject(ofbr);
@@ -2060,19 +2123,34 @@ void DrawPlayerShipGDI(HDC hdc, int x, int y, int shield, int frame) {
     Polygon(hdc, whitePts, 3);
     SelectObject(hdc, oldBr); DeleteObject(wfbr);
 
-    // Wingtip thrusters
+    // Wingtip Thruster Emitters & Laser Focus Caps
     HBRUSH wtfbr = CreateSolidBrush(overchargeTimer > 0 ? RGB(255, 234, 0) : RGB(0, 229, 255));
     SelectObject(hdc, wtfbr);
-    RECT lwt = {x, y + 16, x + 2, y + 20}; FillRect(hdc, &lwt, wtfbr);
-    RECT rwt = {x + 18, y + 16, x + 20, y + 20}; FillRect(hdc, &rwt, wtfbr);
+    RECT lwt = {x, y + 14, x + 2, y + 20}; FillRect(hdc, &lwt, wtfbr);
+    RECT rwt = {x + 18, y + 14, x + 20, y + 20}; FillRect(hdc, &rwt, wtfbr);
     SelectObject(hdc, oldBr); DeleteObject(wtfbr);
 
-    // Ship Hull
+    // Ship Base Underplate
+    HBRUSH ub = CreateSolidBrush(overchargeTimer > 0 ? RGB(178, 137, 0) : RGB(1, 87, 155));
+    SelectObject(hdc, ub);
+    POINT uPts[6] = { {x + 10, y - 1}, {x + 21, y + 16}, {x + 16, y + 21}, {x + 10, y + 16}, {x + 4, y + 21}, {x - 1, y + 16} };
+    Polygon(hdc, uPts, 6);
+    SelectObject(hdc, oldBr); DeleteObject(ub);
+
+    // Ship Hull - Titanium Upper Armor
     HBRUSH wbr = CreateSolidBrush(overchargeTimer > 0 ? RGB(255, 215, 0) : RGB(0, 176, 255));
     SelectObject(hdc, wbr);
     POINT wingPts[6] = { {x + 10, y}, {x + 20, y + 16}, {x + 15, y + 20}, {x + 10, y + 15}, {x + 5, y + 20}, {x + 0, y + 16} };
     Polygon(hdc, wingPts, 6);
     SelectObject(hdc, oldBr); DeleteObject(wbr);
+
+    // Hull Inset Lines
+    HPEN inPen = CreatePen(PS_SOLID, 1, overchargeTimer > 0 ? RGB(255, 245, 157) : RGB(128, 216, 255));
+    HPEN oldP1 = (HPEN)SelectObject(hdc, inPen);
+    MoveToEx(hdc, x + 10, y + 1, NULL); LineTo(hdc, x + 10, y + 14);
+    MoveToEx(hdc, x + 10, y + 8, NULL); LineTo(hdc, x + 16, y + 17);
+    MoveToEx(hdc, x + 10, y + 8, NULL); LineTo(hdc, x + 4, y + 17);
+    SelectObject(hdc, oldP1); DeleteObject(inPen);
 
     // Specular sheen sweep highlight across hull
     int sheenY = ((frame * 2) % 22);
@@ -2083,8 +2161,8 @@ void DrawPlayerShipGDI(HDC hdc, int x, int y, int shield, int frame) {
     SelectObject(hdc, oPen2); DeleteObject(sheenPen);
 
     // Trailing engine ion exhaust motes
-    for (int m = 0; m < 3; m++) {
-        int my = y + 21 + ((frame * 2 + m * 6) % 15);
+    for (int m = 0; m < 4; m++) {
+        int my = y + 21 + ((frame * 2 + m * 5) % 18);
         int mx = x + 10 + (FastSin(frame * 2 + m * 4) * 3) / 127;
         HBRUSH mbr = CreateSolidBrush((m % 2 == 0) ? RGB(0, 229, 255) : RGB(255, 234, 0));
         RECT mr = {mx - 1, my, mx + 1, my + 2};
@@ -2092,11 +2170,15 @@ void DrawPlayerShipGDI(HDC hdc, int x, int y, int shield, int frame) {
         DeleteObject(mbr);
     }
 
-    // Cockpit
-    HBRUSH cbr = CreateSolidBrush(overchargeTimer > 0 ? RGB(0, 229, 255) : RGB(255, 255, 255));
+    // Cockpit Glass Canopy
+    HBRUSH cbr = CreateSolidBrush(overchargeTimer > 0 ? RGB(0, 229, 255) : RGB(0, 229, 255));
     SelectObject(hdc, cbr);
     Ellipse(hdc, x + 7, y + 4, x + 13, y + 12);
     SelectObject(hdc, oldBr); DeleteObject(cbr);
+    HBRUSH glBr = CreateSolidBrush(RGB(255, 255, 255));
+    SelectObject(hdc, glBr);
+    Ellipse(hdc, x + 8, y + 5, x + 10, y + 8);
+    SelectObject(hdc, oldBr); DeleteObject(glBr);
 
     // Overcharge Hyper-Corona Field
     if (overchargeTimer > 0) {
@@ -2127,11 +2209,21 @@ void DrawPlayerShipGDI(HDC hdc, int x, int y, int shield, int frame) {
     }
 
     if (laserTimer > 0) {
-        HPEN lpen = CreatePen(PS_SOLID, 5, RGB(0, 229, 255));
-        SelectObject(hdc, lpen);
-        MoveToEx(hdc, x + 10, y, NULL);
-        LineTo(hdc, x + 10, 0);
-        SelectObject(hdc, oldPen); DeleteObject(lpen);
+        // Multi-layer laser ray
+        HPEN lpen1 = CreatePen(PS_SOLID, 9, RGB(0, 100, 200));
+        SelectObject(hdc, lpen1);
+        MoveToEx(hdc, x + 10, y, NULL); LineTo(hdc, x + 10, 0);
+        SelectObject(hdc, oldPen); DeleteObject(lpen1);
+
+        HPEN lpen2 = CreatePen(PS_SOLID, 5, RGB(0, 229, 255));
+        SelectObject(hdc, lpen2);
+        MoveToEx(hdc, x + 10, y, NULL); LineTo(hdc, x + 10, 0);
+        SelectObject(hdc, oldPen); DeleteObject(lpen2);
+
+        HPEN lpen3 = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+        SelectObject(hdc, lpen3);
+        MoveToEx(hdc, x + 10, y, NULL); LineTo(hdc, x + 10, 0);
+        SelectObject(hdc, oldPen); DeleteObject(lpen3);
     }
 
     SelectObject(hdc, oldPen);
@@ -2176,25 +2268,43 @@ void DrawEnemyShipGDI(HDC hdc, float fx, float fy, float ftype, int cloaked, int
     if (type == 0 || type == 7) {
         POINT pts[6] = { {x, y + 2}, {x + 10, y + 18}, {x + 20, y + 2}, {x + 13, y + 6}, {x + 10, y}, {x + 7, y + 6} };
         Polygon(hdc, pts, 6);
+        HBRUSH eyeB = CreateSolidBrush(RGB(255, 234, 0));
+        RECT eyeR = {x + 8, y + 7, x + 12, y + 11}; FillRect(hdc, &eyeR, eyeB); DeleteObject(eyeB);
     } else if (type == 1) {
         POINT pts[4] = { {x + 10, y + 20}, {x + 20, y + 4}, {x + 10, y}, {x, y + 4} };
         Polygon(hdc, pts, 4);
+        HBRUSH coreB = CreateSolidBrush(RGB(255, 255, 255));
+        RECT cR = {x + 9, y + 6, x + 11, y + 10}; FillRect(hdc, &cR, coreB); DeleteObject(coreB);
     } else if (type == 2) {
         Ellipse(hdc, x, y + 6, x + 20, y + 18);
+        HBRUSH voidB = CreateSolidBrush(RGB(0, 229, 255));
+        SelectObject(hdc, voidB);
+        Ellipse(hdc, x + 7, y + 9, x + 13, y + 15);
+        SelectObject(hdc, oldBr); DeleteObject(voidB);
     } else if (type == 3) {
         RECT rc = {x + 2, y + 2, x + 18, y + 18};
         FillRect(hdc, &rc, br);
+        HBRUSH visB = CreateSolidBrush(RGB(255, 234, 0));
+        RECT vr = {x + 7, y + 6, x + 13, y + 12}; FillRect(hdc, &vr, visB); DeleteObject(visB);
     } else if (type == 4 || type == 8) {
         POINT pts[4] = { {x + 10, y + 18}, {x + 20, y}, {x + 10, y + 6}, {x, y} };
         Polygon(hdc, pts, 4);
+        HBRUSH visB = CreateSolidBrush(RGB(255, 255, 255));
+        RECT vr = {x + 9, y + 7, x + 11, y + 11}; FillRect(hdc, &vr, visB); DeleteObject(visB);
     } else if (type == 5 || type == 9) {
         int sz = (type == 9) ? 30 : 18;
         POINT pts[8] = { {x + sz/2, y}, {x + sz, y + sz/4}, {x + sz*7/8, y + sz}, {x + sz/2, y + sz*7/8},
                          {x + sz/8, y + sz}, {x, y + sz*3/4}, {x + sz/4, y + sz/4}, {x + sz/4, y} };
         Polygon(hdc, pts, 8);
+        HBRUSH crB = CreateSolidBrush(RGB(62, 39, 35));
+        SelectObject(hdc, crB);
+        Ellipse(hdc, x + sz/4, y + sz/4, x + sz/2, y + sz/2);
+        SelectObject(hdc, oldBr); DeleteObject(crB);
     } else if (type == 6) {
         POINT pts[4] = { {x + 18, y + 34}, {x + 34, y + 8}, {x + 18, y + 12}, {x + 2, y + 8} };
         Polygon(hdc, pts, 4);
+        HBRUSH brgB = CreateSolidBrush(RGB(255, 234, 0));
+        RECT brgR = {x + 16, y + 14, x + 20, y + 22}; FillRect(hdc, &brgR, brgB); DeleteObject(brgB);
     } else if (type == 10) { // Elite Valkyrie
         POINT pts[6] = { {x + 10, y + 22}, {x + 20, y + 2}, {x + 14, y + 8}, {x + 10, y}, {x + 6, y + 8}, {x, y + 2} };
         Polygon(hdc, pts, 6);
@@ -2204,6 +2314,10 @@ void DrawEnemyShipGDI(HDC hdc, float fx, float fy, float ftype, int cloaked, int
         SelectObject(hdc, nullB);
         Ellipse(hdc, x - 2, y - 2, x + 22, y + 24);
         SelectObject(hdc, oldBr); DeleteObject(glow);
+        HBRUSH cB = CreateSolidBrush(RGB(255, 234, 0));
+        SelectObject(hdc, cB);
+        Ellipse(hdc, x + 8, y + 9, x + 12, y + 13);
+        SelectObject(hdc, oldBr); DeleteObject(cB);
     } else if (type == 11) { // Elite Void Phantom
         POINT pts[8] = { {x + 18, y + 32}, {x + 34, y + 12}, {x + 28, y + 2}, {x + 18, y + 8}, {x + 8, y + 2}, {x + 2, y + 12}, {x + 10, y + 22}, {x + 18, y + 32} };
         Polygon(hdc, pts, 8);
@@ -2213,6 +2327,10 @@ void DrawEnemyShipGDI(HDC hdc, float fx, float fy, float ftype, int cloaked, int
         SelectObject(hdc, nullB);
         Ellipse(hdc, x, y, x + 36, y + 34);
         SelectObject(hdc, oldBr); DeleteObject(glow);
+        HBRUSH cB = CreateSolidBrush(RGB(0, 229, 255));
+        SelectObject(hdc, cB);
+        Ellipse(hdc, x + 15, y + 14, x + 21, y + 20);
+        SelectObject(hdc, oldBr); DeleteObject(cB);
     } else if (type == 12) { // Elite Command Cruiser
         POINT pts[8] = { {x + 18, y + 34}, {x + 36, y + 18}, {x + 32, y + 2}, {x + 22, y + 6}, {x + 18, y}, {x + 14, y + 6}, {x + 4, y + 2}, {x, y + 18} };
         Polygon(hdc, pts, 8);
@@ -2220,6 +2338,10 @@ void DrawEnemyShipGDI(HDC hdc, float fx, float fy, float ftype, int cloaked, int
         SelectObject(hdc, coreB);
         Ellipse(hdc, x + 13, y + 12, x + 23, y + 22);
         SelectObject(hdc, oldBr); DeleteObject(coreB);
+        HBRUSH wB = CreateSolidBrush(RGB(255, 255, 255));
+        SelectObject(hdc, wB);
+        Ellipse(hdc, x + 16, y + 15, x + 20, y + 19);
+        SelectObject(hdc, oldBr); DeleteObject(wB);
     } else if (type == 13) { // Siege Drop Pod
         POINT pts[8] = { {x + 6, y}, {x + 14, y}, {x + 20, y + 6}, {x + 20, y + 16}, {x + 14, y + 22}, {x + 6, y + 22}, {x, y + 16}, {x, y + 6} };
         Polygon(hdc, pts, 8);
@@ -2391,18 +2513,18 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
     int isCritical = (bossHp < bossMaxHp / 4);
 
     if (bossIsDreadnought) {
-        // Massive Dreadnought Warship (120 wide, 65 tall)
-        HBRUSH hullBr = CreateSolidBrush(isEnraged ? RGB(160, 20, 40) : RGB(60, 70, 90));
+        // Massive Dreadnought Warship Base Hull (120 wide, 65 tall)
+        HBRUSH hullBr = CreateSolidBrush(isEnraged ? RGB(120, 15, 30) : RGB(38, 50, 56));
         HBRUSH oldBr = (HBRUSH)SelectObject(hdc, hullBr);
         POINT dpts[10] = {
-            {x + 60, y + 62}, {x + 100, y + 45}, {x + 120, y + 25}, {x + 115, y + 5}, {x + 85, y + 2},
-            {x + 60, y + 10}, {x + 35, y + 2}, {x + 5, y + 5}, {x + 0, y + 25}, {x + 20, y + 45}
+            {x + 60, y + 63}, {x + 101, y + 46}, {x + 121, y + 26}, {x + 116, y + 4}, {x + 86, y + 1},
+            {x + 60, y + 9}, {x + 34, y + 1}, {x + 4, y + 4}, {x - 1, y + 26}, {x + 19, y + 46}
         };
         Polygon(hdc, dpts, 10);
         SelectObject(hdc, oldBr); DeleteObject(hullBr);
 
-        // Armor Plates & Girders
-        HBRUSH armorBr = CreateSolidBrush(isCritical ? RGB(90, 20, 20) : RGB(100, 115, 135));
+        // Armor Plates & Bevels
+        HBRUSH armorBr = CreateSolidBrush(isCritical ? RGB(90, 20, 20) : RGB(55, 71, 79));
         oldBr = (HBRUSH)SelectObject(hdc, armorBr);
         POINT lPlate[4] = { {x + 15, y + 12}, {x + 45, y + 12}, {x + 40, y + 38}, {x + 10, y + 30} };
         Polygon(hdc, lPlate, 4);
@@ -2410,12 +2532,23 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
         Polygon(hdc, rPlate, 4);
         SelectObject(hdc, oldBr); DeleteObject(armorBr);
 
+        // Power Conduit Lines Linking Generators to Central Gun
+        HPEN condPen = CreatePen(PS_SOLID, 2, (dreadGenL > 0 || dreadGenR > 0) ? ((frame % 4 < 2) ? RGB(0, 229, 255) : RGB(128, 216, 255)) : RGB(55, 71, 79));
+        HPEN oldP1 = (HPEN)SelectObject(hdc, condPen);
+        MoveToEx(hdc, x + 28, y + 28, NULL); LineTo(hdc, x + 52, y + 45);
+        MoveToEx(hdc, x + 92, y + 28, NULL); LineTo(hdc, x + 68, y + 45);
+        SelectObject(hdc, oldP1); DeleteObject(condPen);
+
         // Left Shield Generator Subsystem
         if (dreadGenL > 0) {
             HBRUSH genBr = CreateSolidBrush(RGB(0, 229, 255));
             oldBr = (HBRUSH)SelectObject(hdc, genBr);
             Ellipse(hdc, x + 18, y + 18, x + 38, y + 38);
-            SelectObject(hdc, oldBr); DeleteObject(genBr);
+            HBRUSH wBr = CreateSolidBrush(RGB(255, 255, 255));
+            SelectObject(hdc, wBr);
+            Ellipse(hdc, x + 23, y + 23, x + 29, y + 29);
+            SelectObject(hdc, oldBr); DeleteObject(wBr); DeleteObject(genBr);
+
             HPEN sPen = CreatePen(PS_SOLID, 2, (frame % 4 < 2) ? RGB(0, 229, 255) : RGB(128, 216, 255));
             SelectObject(hdc, sPen);
             SelectObject(hdc, GetStockObject(NULL_BRUSH));
@@ -2433,7 +2566,11 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
             HBRUSH genBr = CreateSolidBrush(RGB(0, 229, 255));
             oldBr = (HBRUSH)SelectObject(hdc, genBr);
             Ellipse(hdc, x + 82, y + 18, x + 102, y + 38);
-            SelectObject(hdc, oldBr); DeleteObject(genBr);
+            HBRUSH wBr = CreateSolidBrush(RGB(255, 255, 255));
+            SelectObject(hdc, wBr);
+            Ellipse(hdc, x + 87, y + 23, x + 93, y + 29);
+            SelectObject(hdc, oldBr); DeleteObject(wBr); DeleteObject(genBr);
+
             HPEN sPen = CreatePen(PS_SOLID, 2, (frame % 4 < 2) ? RGB(0, 229, 255) : RGB(128, 216, 255));
             SelectObject(hdc, sPen);
             SelectObject(hdc, GetStockObject(NULL_BRUSH));
@@ -2446,12 +2583,24 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
             SelectObject(hdc, oldBr); DeleteObject(charredBr);
         }
 
-        // Central Mega-Ion Cannon
+        // Central Mega-Ion Cannon Chamber
         HBRUSH ionBr = CreateSolidBrush(dreadIonCharge >= 70 ? RGB(255, 234, 0) : RGB(0, 229, 255));
         oldBr = (HBRUSH)SelectObject(hdc, ionBr);
         RECT ionRc = {x + 52, y + 35, x + 68, y + 58};
         FillRect(hdc, &ionRc, ionBr);
-        SelectObject(hdc, oldBr); DeleteObject(ionBr);
+        HBRUSH coreB = CreateSolidBrush(RGB(255, 255, 255));
+        RECT cRc = {x + 56, y + 38, x + 64, y + 55};
+        FillRect(hdc, &cRc, coreB);
+        SelectObject(hdc, oldBr); DeleteObject(coreB); DeleteObject(ionBr);
+
+        // Charging Lightning Arcs
+        if (dreadIonCharge >= 50 && dreadIonBeamTimer <= 0 && frame % 2 == 0) {
+            HPEN arcPen = CreatePen(PS_SOLID, 1, RGB(0, 229, 255));
+            SelectObject(hdc, arcPen);
+            MoveToEx(hdc, x + 60, y + 45, NULL);
+            LineTo(hdc, x + 60 + (rnd() % 24) - 12, y + 58 + (rnd() % 16));
+            SelectObject(hdc, oldPen); DeleteObject(arcPen);
+        }
 
         // Telegraph targeting guide laser
         if (dreadIonCharge >= 70 && dreadIonBeamTimer <= 0) {
@@ -2469,10 +2618,10 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
             FillRect(hdc, &bRc, beamBr);
             DeleteObject(beamBr);
 
-            HBRUSH coreBr = CreateSolidBrush(RGB(255, 255, 255));
-            RECT cRc = {x + 55, y + 58, x + 65, H};
-            FillRect(hdc, &cRc, coreBr);
-            DeleteObject(coreBr);
+            HBRUSH coreWh = CreateSolidBrush(RGB(255, 255, 255));
+            RECT cRcWh = {x + 55, y + 58, x + 65, H};
+            FillRect(hdc, &cRcWh, coreWh);
+            DeleteObject(coreWh);
         }
 
         // Flak Turrets on Wings
@@ -2530,7 +2679,10 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
         HBRUSH cbr = CreateSolidBrush(coreCol);
         HBRUSH oldBr = (HBRUSH)SelectObject(hdc, cbr);
         Ellipse(hdc, x + 35, y + 20, x + 55, y + 40);
-        SelectObject(hdc, oldBr); DeleteObject(cbr);
+        HBRUSH wBr = CreateSolidBrush(RGB(255, 255, 255));
+        SelectObject(hdc, wBr);
+        Ellipse(hdc, x + 42, y + 26, x + 48, y + 32);
+        SelectObject(hdc, oldBr); DeleteObject(wBr); DeleteObject(cbr);
 
         float tOffsetsX[] = {5, 25, 65, 85};
         for (int i = 0; i < 4; i++) {
@@ -2598,8 +2750,10 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
         HBRUSH cbr = CreateSolidBrush(coreCol);
         HBRUSH oldBr = (HBRUSH)SelectObject(hdc, cbr);
         Ellipse(hdc, x + 20, y + 14, x + 40, y + 34);
-
-        SelectObject(hdc, oldBr); DeleteObject(cbr);
+        HBRUSH wBr = CreateSolidBrush(RGB(255, 255, 255));
+        SelectObject(hdc, wBr);
+        Ellipse(hdc, x + 27, y + 20, x + 33, y + 26);
+        SelectObject(hdc, oldBr); DeleteObject(wBr); DeleteObject(cbr);
     }
     SelectObject(hdc, oldPen);
 }
@@ -3087,30 +3241,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DrawPlayerShipGDI(memDC, (int)p.x, (int)p.y, shieldActive, frameCount);
                     DrawHyperJumpEffectGDI(memDC, frameCount);
 
-                    HBRUSH bbr = CreateSolidBrush(overchargeTimer > 0 ? RGB(255, 234, 0) : RGB(0, 229, 255));
                     for (int i = 0; i < MAX_BULLETS; i++) {
                         if (b[i].active) {
-                            if (b[i].type == 2.0f) {
-                                HBRUSH mbr = CreateSolidBrush(RGB(255, 60, 0));
-                                RECT br = {(int)b[i].x, (int)b[i].y, (int)b[i].x + 5, (int)b[i].y + 7};
-                                FillRect(memDC, &br, mbr);
-                                DeleteObject(mbr);
-                            } else {
-                                RECT br = {(int)b[i].x, (int)b[i].y, (int)b[i].x + 4, (int)b[i].y + 10};
-                                FillRect(memDC, &br, bbr);
-                            }
+                            DrawPlayerBulletGDI(memDC, b[i].x, b[i].y, b[i].type, frameCount);
                         }
                     }
-                    DeleteObject(bbr);
 
-                    HBRUSH ebbr = CreateSolidBrush(RGB(255, 23, 68));
                     for (int i = 0; i < MAX_EBULLETS; i++) {
                         if (eb[i].active) {
-                            RECT br = {(int)eb[i].x, (int)eb[i].y, (int)eb[i].x + 4, (int)eb[i].y + 10};
-                            FillRect(memDC, &br, ebbr);
+                            DrawEnemyBulletGDI(memDC, eb[i].x, eb[i].y, frameCount);
                         }
                     }
-                    DeleteObject(ebbr);
 
                     for (int i = 0; i < MAX_ENEMIES; i++) {
                         if (e[i].active) DrawEnemyShipGDI(memDC, e[i].x, e[i].y, e[i].type, e[i].cloaked, e[i].hp, e[i].maxHp, frameCount);
