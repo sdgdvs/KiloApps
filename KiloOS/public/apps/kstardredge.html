@@ -1072,6 +1072,85 @@
             border: 1px solid var(--border-panel);
             color: var(--text-bright);
         }
+
+        /* Phase 10: Orbital Refinery & Metallurgical Smelting Lab Modal */
+        .btn.btn-refinery {
+            border-color: #f59e0b;
+            color: #fef08a;
+        }
+
+        .btn.btn-refinery:hover {
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+            border-color: #fbbf24;
+        }
+
+        .refinery-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.35fr;
+            gap: 10px;
+        }
+
+        .refinery-vault-card {
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .recipe-card {
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .recipe-card:hover {
+            border-color: var(--border-glow);
+            background: rgba(15, 28, 63, 0.5);
+        }
+
+        .recipe-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .recipe-title {
+            font-weight: bold;
+            font-size: 11px;
+            color: var(--text-bright);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .recipe-cost-badge {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-panel);
+            color: var(--accent-amber);
+        }
+
+        .refined-item-row {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-panel);
+            border-radius: 3px;
+            padding: 4px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+        }
     </style>
 </head>
 <body>
@@ -1260,7 +1339,7 @@
             <div class="panel">
                 <div class="panel-header">
                     <span>COCKPIT CONSOLE</span>
-                    <span style="font-size: 9px; color: var(--text-dim);">CONTROLS: WASD / SPACE / T / Z / P / U / N / E / K</span>
+                    <span style="font-size: 9px; color: var(--text-dim);">CONTROLS: WASD / SPACE / T / Z / P / U / N / E / K / R</span>
                 </div>
                 <div class="action-grid">
                     <button class="btn" id="btnLaser">
@@ -1294,6 +1373,10 @@
                     <button class="btn btn-crisis" id="btnCrisis">
                         <span>🚨 CRISIS OPS</span>
                         <span class="key-hint">[K] DAMAGE CTRL</span>
+                    </button>
+                    <button class="btn btn-refinery" id="btnRefinery">
+                        <span>🏭 REFINERY</span>
+                        <span class="key-hint">[R] SMELTING</span>
                     </button>
                     <button class="btn" id="btnTheme">
                         <span id="txtBtnTheme">📺 CRT CYAN</span>
@@ -1677,6 +1760,58 @@
         </div>
     </div>
 
+    <!-- Phase 10: Orbital Refinery & Metallurgical Smelting Lab Modal -->
+    <div class="modal-overlay" id="refineryModal">
+        <div class="modal-box" style="width: 890px;">
+            <div class="modal-header">
+                <span style="display: flex; align-items: center; gap: 8px;">
+                    <span>🏭</span>
+                    <span>ORBITAL METALLURGICAL REFINERY & SYNTHETIC FUEL LAB</span>
+                </span>
+                <button class="btn" id="btnCloseRefinery" style="padding: 2px 8px; border-color: var(--accent-red); color: var(--accent-red);">✕ CLOSE [R]</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 6px 12px; border: 1px solid var(--border-panel); border-radius: 4px;">
+                    <div>
+                        <span style="color: var(--text-dim); font-size: 10px;">REFINERY CRUCIBLE STATUS: </span>
+                        <span id="refineryStatusText" style="color: var(--accent-amber); font-weight: bold;">CATALYTIC FURNACE READY (1,850°C)</span>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="btn" id="btnToggleCatalyst" style="padding: 3px 8px; border-color: #10b981; color: #6ee7b7; font-size: 10px;">⚡ CATALYTIC BOOST [B]: ON (+25% YIELD)</button>
+                        <button class="btn" id="btnRefineAll" style="padding: 3px 10px; background: #1e3a8a; border-color: var(--accent-cyan); color: #fff; font-size: 10px;">🔥 REFINE ALL ORES [A]</button>
+                    </div>
+                </div>
+
+                <div class="refinery-grid">
+                    <!-- Left: Crucible Animated Furnace & Refined Products Vault -->
+                    <div class="refinery-vault-card">
+                        <div style="display: flex; justify-content: space-between; font-size: 10px;">
+                            <span style="color: var(--text-bright); font-weight: bold;">PLASMA INDUCTION CRUCIBLE</span>
+                            <span style="color: var(--accent-amber);" id="furnaceTemp">TEMP: 1,850 °C</span>
+                        </div>
+                        <div style="height: 110px; background: #020617; border: 1px solid var(--border-panel); border-radius: 3px; position: relative; overflow: hidden;">
+                            <canvas id="refineryCanvas" width="340" height="110" style="width: 100%; height: 100%; display: block;"></canvas>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
+                            <span style="color: var(--text-bright); font-weight: bold; font-size: 10px;">REFINED PRODUCTS VAULT</span>
+                            <button class="btn" id="btnSellAllRefined" style="padding: 3px 8px; background: #78350f; border-color: #f59e0b; color: #fef08a; font-size: 9px;">💰 SELL ALL REFINED [S]</button>
+                        </div>
+
+                        <div class="refined-vault-list" id="refinedVaultList" style="display: flex; flex-direction: column; gap: 4px; max-height: 165px; overflow-y: auto;">
+                            <!-- Dynamic Refined Product Inventory -->
+                        </div>
+                    </div>
+
+                    <!-- Right: 6 Smelting Recipes -->
+                    <div class="refinery-recipes-list" id="refineryRecipesList" style="display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow-y: auto;">
+                        <!-- Dynamic Recipe Cards -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- Web Audio Synthesis Engine ---
         class SoundEngine {
@@ -1882,6 +2017,31 @@
                 this.playBeep(520, 'sine', 0.07, 0.12);
                 setTimeout(() => this.playBeep(650, 'sine', 0.07, 0.12), 60);
                 setTimeout(() => this.playBeep(780, 'sine', 0.14, 0.15), 120);
+            }
+
+            playSmelt() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(320, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(640, this.ctx.currentTime + 0.15);
+                    osc.frequency.exponentialRampToValueAtTime(480, this.ctx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.3);
+                } catch (e) {}
+            }
+
+            playSynth() {
+                this.playBeep(440, 'sine', 0.08, 0.15);
+                setTimeout(() => this.playBeep(554.37, 'sine', 0.08, 0.15), 60);
+                setTimeout(() => this.playBeep(659.25, 'sine', 0.08, 0.15), 120);
+                setTimeout(() => this.playBeep(880, 'sine', 0.15, 0.2), 180);
             }
         }
 
@@ -2113,6 +2273,94 @@
             }
         };
 
+        // Phase 10: Orbital Refinery & Smelting Recipes
+        const REFINERY_RECIPES = [
+            {
+                id: 'hyperFerrum',
+                name: 'Hyper-Ferrum Ingot (Fe-Ti)',
+                icon: '🔩',
+                desc: 'Smelt common Ferrum Ore with Silicates flux into high-strength titanium-steel alloy.',
+                inputs: { ferrum: 10, silicates: 5 },
+                inputStr: '10 Ferrum + 5 Silicates',
+                outputItem: 'hyperFerrum',
+                outputName: 'Hyper-Ferrum Ingot',
+                value: 350,
+                color: '#94a3b8',
+                usable: false
+            },
+            {
+                id: 'superconductor',
+                name: 'Platinum Superconductor Core',
+                icon: '🪙',
+                desc: 'Infuse refined Platinum into resonant Void Quartz lattice for zero-resistance quantum conductors.',
+                inputs: { platinum: 8, quartz: 4 },
+                inputStr: '8 Platinum + 4 Void Quartz',
+                outputItem: 'superconductor',
+                outputName: 'Superconductor Core',
+                value: 1200,
+                color: '#e2e8f0',
+                usable: false
+            },
+            {
+                id: 'warpCells',
+                name: 'Sub-Space Warp Fuel Cell',
+                icon: '⚡',
+                desc: 'Synthesize crystalline void quartz and catalytic silicates into pressurized warp plasma (+50% Fuel).',
+                inputs: { quartz: 6, silicates: 10, ferrum: 5 },
+                inputStr: '6 Quartz + 10 Silicates + 5 Ferrum',
+                outputItem: 'warpCells',
+                outputName: 'Warp Fuel Cell',
+                value: 900,
+                color: '#f59e0b',
+                usable: true,
+                useLabel: '⚡ USE (+50% FUEL)',
+                useAction: 'fuel'
+            },
+            {
+                id: 'darkMatrix',
+                name: 'Dark Matter Matrix Ingot',
+                icon: '🌌',
+                desc: 'Compress volatile Dark Matter Geodes in a magnetic platinum matrix for high-tier exotic metallurgy.',
+                inputs: { darkMatter: 4, platinum: 6 },
+                inputStr: '4 Dark Geodes + 6 Platinum',
+                outputItem: 'darkMatrix',
+                outputName: 'Dark Matter Matrix',
+                value: 2800,
+                color: '#f43f5e',
+                usable: false
+            },
+            {
+                id: 'nanitePaste',
+                name: 'Nanite Bulkhead Hull Paste',
+                icon: '🛡️',
+                desc: 'Refine derelict scrap alloy and iron into self-replicating nanite weld paste (+40% Hull).',
+                inputs: { scrap: 8, ferrum: 6 },
+                inputStr: '8 Derelict Scrap + 6 Ferrum',
+                outputItem: 'nanitePaste',
+                outputName: 'Nanite Repair Paste',
+                value: 650,
+                color: '#10b981',
+                usable: true,
+                useLabel: '🛡️ APPLY (+40% HULL)',
+                useAction: 'hull'
+            },
+            {
+                id: 'o2Canister',
+                name: 'Pressurized O2 Canister',
+                icon: '🧪',
+                desc: 'Thermal decompose raw silicates to extract pure medical-grade pressurized oxygen (+45% O2).',
+                inputs: { silicates: 8 },
+                inputStr: '8 Silicates',
+                outputItem: 'o2Canister',
+                outputName: 'O2 Canister',
+                value: 300,
+                color: '#60a5fa',
+                usable: true,
+                useLabel: '🧪 DISPENSE (+45% O2)',
+                useAction: 'o2'
+            }
+        ];
+
         const state = {
             credits: 2500,
             currentSectorIndex: 0,
@@ -2145,6 +2393,15 @@
             scanlineIndex: 0,
             resonantTargetId: null,
             scanWaves: [],
+            catalyticBoost: true,
+            refined: {
+                hyperFerrum: 0,
+                superconductor: 0,
+                warpCells: 0,
+                darkMatrix: 0,
+                nanitePaste: 0,
+                o2Canister: 0
+            },
             upgrades: {
                 drill: 0,
                 cargo: 0,
@@ -2197,6 +2454,8 @@
         const evaCtx = evaCanvas ? evaCanvas.getContext('2d') : null;
         const crisisCanvas = document.getElementById('crisisCanvas');
         const crisisCtx = crisisCanvas ? crisisCanvas.getContext('2d') : null;
+        const refineryCanvas = document.getElementById('refineryCanvas');
+        const refineryCtx = refineryCanvas ? refineryCanvas.getContext('2d') : null;
         const logBox = document.getElementById('logBox');
 
         const COMPARTMENTS = [
@@ -3301,6 +3560,297 @@
             renderCrisisModal();
         }
 
+        // --- Phase 10: Orbital Metallurgical Refinery & Fuel Smelting Lab ---
+        function openRefineryModal() {
+            renderRefineryModal();
+            document.getElementById('refineryModal').classList.add('open');
+            audio.playBeep(640, 'triangle', 0.08, 0.15);
+        }
+
+        function closeRefineryModal() {
+            document.getElementById('refineryModal').classList.remove('open');
+        }
+
+        function toggleCatalyticBoost() {
+            state.catalyticBoost = !state.catalyticBoost;
+            audio.playBeep(state.catalyticBoost ? 880 : 440, 'sine', 0.08, 0.15);
+            const btn = document.getElementById('btnToggleCatalyst');
+            if (btn) {
+                btn.textContent = state.catalyticBoost ? '⚡ CATALYTIC BOOST [B]: ON (+25% YIELD)' : '⚡ CATALYTIC BOOST [B]: OFF (STANDARD)';
+                btn.style.borderColor = state.catalyticBoost ? '#10b981' : 'var(--border-panel)';
+                btn.style.color = state.catalyticBoost ? '#6ee7b7' : 'var(--text-dim)';
+            }
+            addLog(`Refinery catalytic reaction accelerator ${state.catalyticBoost ? 'engaged (+25% bonus yield chance)' : 'disengaged'}.`, 'system');
+            renderRefineryModal();
+        }
+
+        function smeltRecipe(recipeId, times = 1) {
+            const recipe = REFINERY_RECIPES.find(r => r.id === recipeId);
+            if (!recipe) return;
+
+            // Check how many times we can craft
+            let maxCraft = 999;
+            for (const [oreKey, amt] of Object.entries(recipe.inputs)) {
+                const available = state.cargoHold[oreKey] || 0;
+                const possible = Math.floor(available / amt);
+                if (possible < maxCraft) maxCraft = possible;
+            }
+
+            if (maxCraft <= 0) {
+                addLog(`⚠️ Insufficient mineral ores to smelt [${recipe.name}]. Required: ${recipe.inputStr}.`, 'warning');
+                return;
+            }
+
+            const craftCount = Math.min(times, maxCraft);
+            for (const [oreKey, amt] of Object.entries(recipe.inputs)) {
+                state.cargoHold[oreKey] -= amt * craftCount;
+            }
+
+            let bonusCount = 0;
+            if (state.catalyticBoost) {
+                for (let i = 0; i < craftCount; i++) {
+                    if (Math.random() < 0.25) bonusCount++;
+                }
+                state.heat = Math.min(100, state.heat + 3.5 * craftCount);
+            }
+
+            const totalOutput = craftCount + bonusCount;
+            state.refined[recipe.outputItem] = (state.refined[recipe.outputItem] || 0) + totalOutput;
+
+            if (recipe.id === 'warpCells' || recipe.id === 'nanitePaste') {
+                audio.playSynth();
+            } else {
+                audio.playSmelt();
+            }
+
+            const bonusMsg = bonusCount > 0 ? ` (+${bonusCount} Catalyst Bonus!)` : '';
+            addLog(`🏭 SMELTED: Refined ${totalOutput}x [${recipe.outputName}]${bonusMsg} from ${craftCount} batch(es)!`, 'success');
+            addFloatingText(`+${totalOutput} ${recipe.outputName}`, state.ship.x, state.ship.y - 35, recipe.color);
+
+            updateCargoUI();
+            renderRefineryModal();
+        }
+
+        function useRefinedItem(itemType) {
+            if (!state.refined[itemType] || state.refined[itemType] <= 0) return;
+
+            if (itemType === 'warpCells') {
+                state.refined.warpCells--;
+                state.fuel = Math.min(100, state.fuel + 50);
+                audio.playCollect();
+                addLog(`⚡ WARP SYNTHESIS: Injected sub-space warp fuel cell. Fuel reserves recharged to ${Math.round(state.fuel)}%!`, 'success');
+                addFloatingText("+50% WARP FUEL", state.ship.x, state.ship.y - 35, '#f59e0b');
+            } else if (itemType === 'nanitePaste') {
+                state.refined.nanitePaste--;
+                state.hull = Math.min(state.maxHull, state.hull + 40);
+                if (state.hullBreaches.length > 0) {
+                    const sealedComp = state.hullBreaches.pop();
+                    addLog(`🛡️ NANITE REPAIR: Sealed hull puncture in ${sealedComp.toUpperCase()}!`, 'success');
+                }
+                audio.playSealWeld();
+                addLog(`🛡️ NANITE WELD: Applied bulkhead repair paste. Hull integrity restored to ${Math.round(state.hull)}/${state.maxHull}!`, 'success');
+                addFloatingText("+40% HULL REPAIRED", state.ship.x, state.ship.y - 35, '#10b981');
+            } else if (itemType === 'o2Canister') {
+                state.refined.o2Canister--;
+                state.o2 = Math.min(100, state.o2 + 45);
+                state.o2Scrubber = Math.min(100, state.o2Scrubber + 30);
+                audio.playDeconFlush();
+                addLog(`🧪 LIFE SUPPORT: Dispensed medical O2 canister. Atmosphere replenished to ${Math.round(state.o2)}%!`, 'success');
+                addFloatingText("+45% O2 RESTORED", state.ship.x, state.ship.y - 35, '#60a5fa');
+            }
+
+            renderRefineryModal();
+        }
+
+        function sellAllRefined() {
+            let totalCR = 0;
+            let totalItems = 0;
+            REFINERY_RECIPES.forEach(r => {
+                const qty = state.refined[r.outputItem] || 0;
+                if (qty > 0) {
+                    totalCR += qty * r.value;
+                    totalItems += qty;
+                    state.refined[r.outputItem] = 0;
+                }
+            });
+
+            if (totalCR === 0) {
+                addLog("No refined goods currently in storage vault to liquidate.", "warning");
+                return;
+            }
+
+            state.credits += totalCR;
+            document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+            audio.playCollect();
+            addLog(`💰 COMMERCE: Liquidated ${totalItems} refined hyper-alloys & synthetic goods for +${totalCR.toLocaleString()} CR!`, 'success');
+            addFloatingText(`+${totalCR.toLocaleString()} CR`, state.ship.x, state.ship.y - 40, '#fbbf24');
+            renderRefineryModal();
+        }
+
+        function refineAllOres() {
+            let craftedTotal = 0;
+            REFINERY_RECIPES.forEach(r => {
+                let maxCraft = 999;
+                for (const [oreKey, amt] of Object.entries(r.inputs)) {
+                    const available = state.cargoHold[oreKey] || 0;
+                    const possible = Math.floor(available / amt);
+                    if (possible < maxCraft) maxCraft = possible;
+                }
+                if (maxCraft > 0) {
+                    smeltRecipe(r.id, maxCraft);
+                    craftedTotal += maxCraft;
+                }
+            });
+
+            if (craftedTotal === 0) {
+                addLog("⚠️ Insufficient raw mineral ores in cargo hold for automated smelting batch.", "warning");
+            }
+        }
+
+        function renderRefineryModal() {
+            // Render 6 recipe cards
+            const recipeList = document.getElementById('refineryRecipesList');
+            if (recipeList) {
+                recipeList.innerHTML = '';
+                REFINERY_RECIPES.forEach((r, idx) => {
+                    let maxCraft = 999;
+                    for (const [oreKey, amt] of Object.entries(r.inputs)) {
+                        const available = state.cargoHold[oreKey] || 0;
+                        const possible = Math.floor(available / amt);
+                        if (possible < maxCraft) maxCraft = possible;
+                    }
+                    const canCraft = maxCraft > 0;
+
+                    const card = document.createElement('div');
+                    card.className = 'recipe-card';
+                    card.innerHTML = `
+                        <div class="recipe-header">
+                            <span class="recipe-title">
+                                <span style="color: ${r.color};">${r.icon} [${idx + 1}] ${r.name}</span>
+                            </span>
+                            <span class="recipe-cost-badge">VALUE: ${r.value} CR/unit</span>
+                        </div>
+                        <div style="font-size: 9px; color: var(--text-dim);">${r.desc}</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10px; background: rgba(0,0,0,0.35); padding: 4px 8px; border-radius: 3px; border: 1px solid var(--border-panel);">
+                            <span>REQ: <strong style="color: var(--text-bright);">${r.inputStr}</strong></span>
+                            <span>CAN SMELT: <strong style="color: ${canCraft ? 'var(--accent-emerald)' : 'var(--accent-red)'};">${maxCraft} Units</strong></span>
+                        </div>
+                        <div style="display: flex; gap: 6px; margin-top: 2px;">
+                            <button class="btn" onclick="smeltRecipe('${r.id}', 1)" style="flex: 1; padding: 4px; background: #0f2744; border-color: ${canCraft ? 'var(--accent-cyan)' : 'var(--border-panel)'};" ${!canCraft ? 'disabled' : ''}>
+                                <span>⚡ SMELT 1x [${idx + 1}]</span>
+                            </button>
+                            <button class="btn" onclick="smeltRecipe('${r.id}', ${maxCraft})" style="flex: 1; padding: 4px; background: #1e3a8a; border-color: ${canCraft ? 'var(--accent-emerald)' : 'var(--border-panel)'};" ${!canCraft ? 'disabled' : ''}>
+                                <span>🔥 SMELT MAX (${maxCraft}x)</span>
+                            </button>
+                        </div>
+                    `;
+                    recipeList.appendChild(card);
+                });
+            }
+
+            // Render Refined Inventory Vault
+            const vaultList = document.getElementById('refinedVaultList');
+            if (vaultList) {
+                vaultList.innerHTML = '';
+                let totalVaultVal = 0;
+                let hasItems = false;
+                REFINERY_RECIPES.forEach(r => {
+                    const count = state.refined[r.outputItem] || 0;
+                    if (count > 0) hasItems = true;
+                    const val = count * r.value;
+                    totalVaultVal += val;
+
+                    const row = document.createElement('div');
+                    row.className = 'refined-item-row';
+                    
+                    let actionBtnHtml = `<span style="color: var(--accent-amber); font-weight: bold;">${val.toLocaleString()} CR</span>`;
+                    if (r.usable && count > 0) {
+                        actionBtnHtml = `
+                            <div style="display: flex; gap: 4px; align-items: center;">
+                                <span style="color: var(--accent-amber); font-weight: bold; font-size: 9px;">${val} CR</span>
+                                <button class="btn" onclick="useRefinedItem('${r.outputItem}')" style="padding: 2px 6px; font-size: 8px; background: #064e3b; border-color: #10b981; color: #6ee7b7;">${r.useLabel}</button>
+                            </div>
+                        `;
+                    }
+
+                    row.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span style="font-size: 12px;">${r.icon}</span>
+                            <div>
+                                <strong style="color: ${r.color};">${r.outputName}</strong>
+                                <span style="color: var(--text-dim); font-size: 9px;"> (Stock: ${count})</span>
+                            </div>
+                        </div>
+                        <div>${actionBtnHtml}</div>
+                    `;
+                    vaultList.appendChild(row);
+                });
+
+                if (!hasItems) {
+                    vaultList.innerHTML = `<div style="text-align: center; color: var(--text-dim); font-size: 10px; padding: 12px;">Refinery storage vault empty. Smelt ores above to produce hyper-alloys.</div>`;
+                }
+            }
+
+            drawRefineryCrucible();
+        }
+
+        function drawRefineryCrucible() {
+            const refineryCanvas = document.getElementById('refineryCanvas');
+            if (!refineryCanvas) return;
+            const rc = refineryCanvas.getContext('2d');
+            const w = refineryCanvas.width;
+            const h = refineryCanvas.height;
+
+            rc.clearRect(0, 0, w, h);
+
+            // Crucible Background grid
+            rc.fillStyle = '#030816';
+            rc.fillRect(0, 0, w, h);
+
+            // Thermal heating coils
+            const time = Date.now() * 0.004;
+            rc.strokeStyle = state.catalyticBoost ? '#f59e0b' : '#38bdf8';
+            rc.lineWidth = 1.5;
+
+            for (let y = 15; y < h - 15; y += 18) {
+                rc.beginPath();
+                for (let x = 10; x < w - 10; x += 6) {
+                    const waveY = y + Math.sin(x * 0.08 + time) * 3;
+                    if (x === 10) rc.moveTo(x, waveY);
+                    else rc.lineTo(x, waveY);
+                }
+                rc.stroke();
+            }
+
+            // Molten alloy pool at bottom of crucible
+            const moltenGrad = rc.createLinearGradient(0, h - 35, 0, h);
+            moltenGrad.addColorStop(0, state.catalyticBoost ? 'rgba(245, 158, 11, 0.8)' : 'rgba(56, 189, 248, 0.6)');
+            moltenGrad.addColorStop(1, 'rgba(239, 68, 68, 0.9)');
+            rc.fillStyle = moltenGrad;
+            rc.beginPath();
+            rc.moveTo(20, h - 5);
+            rc.lineTo(35, h - 30);
+            rc.quadraticCurveTo(w / 2, h - 40 + Math.sin(time * 2) * 4, w - 35, h - 30);
+            rc.lineTo(w - 20, h - 5);
+            rc.closePath();
+            rc.fill();
+
+            // Induction arc particles
+            rc.fillStyle = '#fef08a';
+            for (let i = 0; i < 8; i++) {
+                const px = 50 + ((time * 30 + i * 38) % (w - 100));
+                const py = h - 25 - Math.sin(time + i) * 12;
+                rc.beginPath();
+                rc.arc(px, py, 1.8, 0, Math.PI * 2);
+                rc.fill();
+            }
+
+            // Crucible Wireframe Container
+            rc.strokeStyle = '#60a5fa';
+            rc.lineWidth = 2;
+            rc.strokeRect(18, 10, w - 36, h - 18);
+        }
+
         // --- Multi-Spectral Prospector & Spectrometer Modal ---
         function openProspectModal() {
             if (!state.selectedTarget) {
@@ -3659,6 +4209,23 @@
                 if (crisisModal.classList.contains('open')) closeCrisisModal();
                 else openCrisisModal();
             }
+            if (e.code === 'KeyR') {
+                const refineryModal = document.getElementById('refineryModal');
+                if (refineryModal.classList.contains('open')) closeRefineryModal();
+                else openRefineryModal();
+            }
+            if (document.getElementById('refineryModal').classList.contains('open')) {
+                if (e.code === 'Digit1') smeltRecipe(REFINERY_RECIPES[0].id, 1);
+                if (e.code === 'Digit2') smeltRecipe(REFINERY_RECIPES[1].id, 1);
+                if (e.code === 'Digit3') smeltRecipe(REFINERY_RECIPES[2].id, 1);
+                if (e.code === 'Digit4') smeltRecipe(REFINERY_RECIPES[3].id, 1);
+                if (e.code === 'Digit5') smeltRecipe(REFINERY_RECIPES[4].id, 1);
+                if (e.code === 'Digit6') smeltRecipe(REFINERY_RECIPES[5].id, 1);
+                if (e.code === 'KeyB') toggleCatalyticBoost();
+                if (e.code === 'KeyA') refineAllOres();
+                if (e.code === 'KeyS') sellAllRefined();
+                if (e.code === 'Escape') closeRefineryModal();
+            }
             if (document.getElementById('crisisModal').classList.contains('open')) {
                 if (e.code === 'Digit1') sealHullBreaches();
                 if (e.code === 'Digit2') ventPlasmaLeaks();
@@ -3856,6 +4423,29 @@
 
         document.getElementById('btnDeployDrones').addEventListener('click', () => {
             deployRepairDrones();
+        });
+
+        document.getElementById('btnRefinery').addEventListener('click', () => {
+            audio.init();
+            const modal = document.getElementById('refineryModal');
+            if (modal.classList.contains('open')) closeRefineryModal();
+            else openRefineryModal();
+        });
+
+        document.getElementById('btnCloseRefinery').addEventListener('click', () => {
+            closeRefineryModal();
+        });
+
+        document.getElementById('btnToggleCatalyst').addEventListener('click', () => {
+            toggleCatalyticBoost();
+        });
+
+        document.getElementById('btnRefineAll').addEventListener('click', () => {
+            refineAllOres();
+        });
+
+        document.getElementById('btnSellAllRefined').addEventListener('click', () => {
+            sellAllRefined();
         });
 
         document.getElementById('btnEngageWarp').addEventListener('click', () => {
@@ -4460,6 +5050,10 @@
 
             if (document.getElementById('crisisModal').classList.contains('open')) {
                 renderCrisisModal();
+            }
+
+            if (document.getElementById('refineryModal').classList.contains('open')) {
+                renderRefineryModal();
             }
 
             document.getElementById('txtPowerDrain').textContent = `${powerDraw.toFixed(1)} MW`;

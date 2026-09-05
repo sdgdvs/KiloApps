@@ -24,6 +24,7 @@
 #define ID_BTN_UPGRADES    112
 #define ID_BTN_EVA         113
 #define ID_BTN_CRISIS      114
+#define ID_BTN_REFINERY    115
 
 #define SFX_NONE         0
 #define SFX_COLLECT      1
@@ -42,6 +43,31 @@
 #define SFX_PLASMA_VENT  14
 #define SFX_SEAL_WELD    15
 #define SFX_DECON_FLUSH  16
+#define SFX_SMELT        17
+#define SFX_SYNTH        18
+
+// Phase 10: Orbital Refinery Recipes
+typedef struct {
+    const char* id;
+    const char* name;
+    const char* desc;
+    int inputs[6]; // Ferrum, Silicates, Platinum, Void Quartz, Dark Geode, Derelict Scrap
+    const char* inputStr;
+    const char* outputName;
+    int value;
+    COLORREF color;
+    int usable; // 0 or 1
+    const char* useLabel;
+} RefineryRecipeDef;
+
+static const RefineryRecipeDef REFINERY_RECIPES[6] = {
+    { "hyperFerrum", "Hyper-Ferrum Ingot (Fe-Ti)", "Smelt common Ferrum Ore with Silicates flux into high-strength alloy.", { 10, 5, 0, 0, 0, 0 }, "10 Ferrum + 5 Silicates", "Hyper-Ferrum Ingot", 350, RGB(148, 163, 184), 0, "" },
+    { "superconductor", "Platinum Superconductor Core", "Infuse Platinum into resonant Void Quartz lattice for quantum conductors.", { 0, 0, 8, 4, 0, 0 }, "8 Platinum + 4 Void Quartz", "Superconductor Core", 1200, RGB(226, 232, 240), 0, "" },
+    { "warpCells", "Sub-Space Warp Fuel Cell", "Synthesize crystalline void quartz into pressurized warp plasma (+50% Fuel).", { 5, 10, 0, 6, 0, 0 }, "6 Quartz + 10 Silicates + 5 Ferrum", "Warp Fuel Cell", 900, RGB(245, 158, 11), 1, "USE (+50% FUEL)" },
+    { "darkMatrix", "Dark Matter Matrix Ingot", "Compress volatile Dark Matter Geodes in a magnetic platinum matrix.", { 0, 0, 6, 0, 4, 0 }, "4 Dark Geodes + 6 Platinum", "Dark Matter Matrix", 2800, RGB(244, 63, 94), 0, "" },
+    { "nanitePaste", "Nanite Bulkhead Hull Paste", "Refine derelict scrap alloy and iron into self-replicating nanite weld paste (+40% Hull).", { 6, 0, 0, 0, 0, 8 }, "8 Scrap + 6 Ferrum", "Nanite Repair Paste", 650, RGB(16, 185, 129), 1, "APPLY (+40% HULL)" },
+    { "o2Canister", "Pressurized O2 Canister", "Thermal decompose raw silicates to extract medical-grade pressurized oxygen (+45% O2).", { 0, 8, 0, 0, 0, 0 }, "8 Silicates", "O2 Canister", 300, RGB(96, 165, 250), 1, "DISPENSE (+45% O2)" }
+};
 
 #define MAX_COMPARTMENTS 5
 typedef struct {
@@ -494,6 +520,10 @@ typedef struct {
     int showSpectrometer;
     int showEva;
     int showCrisis;
+    int showRefinery;
+    int catalyticBoost;
+    int refined[6]; // hyperFerrum, superconductor, warpCells, darkMatrix, nanitePaste, o2Canister
+    float crucibleAnimTime;
     int warpActive;
     float warpTimer;
     char sector[32];
@@ -555,7 +585,7 @@ typedef struct {
 
 static GameState g_state;
 static HWND g_hwnd = NULL;
-static HWND g_btnLaser, g_btnTractor, g_btnDampener, g_btnScan, g_btnNav, g_btnEva, g_btnCrisis, g_btnUpgrades, g_btnTheme, g_btnScanlines, g_btnAudio, g_btnHelp, g_btnJettison, g_btnSell;
+static HWND g_btnLaser, g_btnTractor, g_btnDampener, g_btnScan, g_btnNav, g_btnEva, g_btnCrisis, g_btnRefinery, g_btnUpgrades, g_btnTheme, g_btnScanlines, g_btnAudio, g_btnHelp, g_btnJettison, g_btnSell;
 static HFONT g_fontMono = NULL;
 static HFONT g_fontMonoBold = NULL;
 static HFONT g_fontSmall = NULL;
@@ -626,6 +656,15 @@ DWORD WINAPI SoundThreadProc(LPVOID lpParam) {
                 Beep(520, 50);
                 Beep(650, 50);
                 Beep(780, 80);
+            } else if (sfx == SFX_SMELT) {
+                Beep(320, 60);
+                Beep(640, 80);
+                Beep(480, 100);
+            } else if (sfx == SFX_SYNTH) {
+                Beep(440, 40);
+                Beep(554, 40);
+                Beep(659, 40);
+                Beep(880, 80);
             }
         }
         Sleep(20);
@@ -1146,6 +1185,150 @@ void ActionDeployRepairDrones(void) {
     AddFloatingText("REPAIR DRONES LAUNCHED", g_state.shipX, g_state.shipY - 35.0f, RGB(56, 189, 248));
 }
 
+// Phase 10: Refinery Smelting & Fuel Lab Functions
+void SmeltRecipe(int recipeIdx, int times) {
+    if (recipeIdx < 0 || recipeIdx >= 6) return;
+    const RefineryRecipeDef* r = &REFINERY_RECIPES[recipeIdx];
+    
+    int maxCraft = 999;
+    for (int i = 0; i < 6; i++) {
+        if (r->inputs[i] > 0) {
+            int possible = g_state.cargoHold[i] / r->inputs[i];
+            if (possible < maxCraft) maxCraft = possible;
+        }
+    }
+    
+    if (maxCraft <= 0) {
+        char buf[128];
+        sprintf(buf, "Insufficient minerals for [%s]. Req: %s", r->name, r->inputStr);
+        AddLog(buf, 3);
+        return;
+    }
+    
+    int craftCount = min(times, maxCraft);
+    for (int i = 0; i < 6; i++) {
+        g_state.cargoHold[i] -= r->inputs[i] * craftCount;
+    }
+    UpdateCargoTotal();
+    
+    int bonusCount = 0;
+    if (g_state.catalyticBoost) {
+        for (int i = 0; i < craftCount; i++) {
+            if ((rand() % 100) < 25) bonusCount++;
+        }
+        g_state.heat = min(100.0f, g_state.heat + 3.5f * craftCount);
+    }
+    
+    int totalOutput = craftCount + bonusCount;
+    g_state.refined[recipeIdx] += totalOutput;
+    
+    if (recipeIdx == 2 || recipeIdx == 4) TriggerSound(SFX_SYNTH);
+    else TriggerSound(SFX_SMELT);
+    
+    char logB[128];
+    if (bonusCount > 0) {
+        sprintf(logB, "SMELTED: Refined %dx [%s] (+%d Catalyst Bonus!) from %d batch(es)!", totalOutput, r->outputName, bonusCount, craftCount);
+    } else {
+        sprintf(logB, "SMELTED: Refined %dx [%s] from %d batch(es)!", totalOutput, r->outputName, craftCount);
+    }
+    AddLog(logB, 5);
+    
+    char fTxt[32];
+    sprintf(fTxt, "+%d %s", totalOutput, r->outputName);
+    AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 35.0f, r->color);
+}
+
+void UseRefinedItem(int itemIdx) {
+    if (itemIdx < 0 || itemIdx >= 6) return;
+    if (g_state.refined[itemIdx] <= 0) return;
+    
+    if (itemIdx == 2) { // Warp Fuel Cell
+        g_state.refined[itemIdx]--;
+        g_state.fuel = min(100.0f, g_state.fuel + 50.0f);
+        TriggerSound(SFX_COLLECT);
+        char logB[128];
+        sprintf(logB, "WARP SYNTHESIS: Injected sub-space warp fuel cell. Fuel reserves: %d%%!", (int)g_state.fuel);
+        AddLog(logB, 5);
+        AddFloatingText("+50% WARP FUEL", g_state.shipX, g_state.shipY - 35.0f, RGB(245, 158, 11));
+    } else if (itemIdx == 4) { // Nanite Paste
+        g_state.refined[itemIdx]--;
+        g_state.hull = min(g_state.maxHull, g_state.hull + 40.0f);
+        for (int i = 0; i < MAX_COMPARTMENTS; i++) {
+            if (g_state.hullBreaches[i]) {
+                g_state.hullBreaches[i] = 0;
+                break;
+            }
+        }
+        TriggerSound(SFX_SEAL_WELD);
+        char logB[128];
+        sprintf(logB, "NANITE WELD: Applied bulkhead repair paste. Hull integrity: %d/%d!", (int)g_state.hull, (int)g_state.maxHull);
+        AddLog(logB, 5);
+        AddFloatingText("+40% HULL REPAIRED", g_state.shipX, g_state.shipY - 35.0f, RGB(16, 185, 129));
+    } else if (itemIdx == 5) { // O2 Canister
+        g_state.refined[itemIdx]--;
+        g_state.o2 = min(100.0f, g_state.o2 + 45.0f);
+        g_state.o2Scrubber = min(100.0f, g_state.o2Scrubber + 30.0f);
+        TriggerSound(SFX_DECON_FLUSH);
+        char logB[128];
+        sprintf(logB, "LIFE SUPPORT: Dispensed medical O2 canister. Atmosphere replenished: %d%%!", (int)g_state.o2);
+        AddLog(logB, 5);
+        AddFloatingText("+45% O2 RESTORED", g_state.shipX, g_state.shipY - 35.0f, RGB(96, 165, 250));
+    }
+}
+
+void SellAllRefined(void) {
+    int totalCR = 0;
+    int totalItems = 0;
+    for (int i = 0; i < 6; i++) {
+        int count = g_state.refined[i];
+        if (count > 0) {
+            totalCR += count * REFINERY_RECIPES[i].value;
+            totalItems += count;
+            g_state.refined[i] = 0;
+        }
+    }
+    if (totalCR == 0) {
+        AddLog("No refined goods currently in storage vault to liquidate.", 3);
+        return;
+    }
+    g_state.credits += totalCR;
+    TriggerSound(SFX_COLLECT);
+    char logB[128];
+    sprintf(logB, "COMMERCE: Liquidated %d refined hyper-alloys & synthetic goods for +%d CR!", totalItems, totalCR);
+    AddLog(logB, 5);
+    char fTxt[32];
+    sprintf(fTxt, "+%d CR", totalCR);
+    AddFloatingText(fTxt, g_state.shipX, g_state.shipY - 40.0f, RGB(251, 191, 36));
+}
+
+void RefineAllOres(void) {
+    int craftedTotal = 0;
+    for (int r = 0; r < 6; r++) {
+        int maxCraft = 999;
+        for (int i = 0; i < 6; i++) {
+            if (REFINERY_RECIPES[r].inputs[i] > 0) {
+                int possible = g_state.cargoHold[i] / REFINERY_RECIPES[r].inputs[i];
+                if (possible < maxCraft) maxCraft = possible;
+            }
+        }
+        if (maxCraft > 0) {
+            SmeltRecipe(r, maxCraft);
+            craftedTotal += maxCraft;
+        }
+    }
+    if (craftedTotal == 0) {
+        AddLog("Insufficient raw mineral ores in cargo hold for automated smelting batch.", 3);
+    }
+}
+
+void ToggleCatalyticBoost(void) {
+    g_state.catalyticBoost = !g_state.catalyticBoost;
+    TriggerSound(SFX_BEEP);
+    char logB[128];
+    sprintf(logB, "Refinery catalytic reaction accelerator %s.", g_state.catalyticBoost ? "ENGAGED (+25% bonus yield chance)" : "DISENGAGED");
+    AddLog(logB, 0);
+}
+
 void InitSectorField(int sectorIdx) {
     if (sectorIdx < 0 || sectorIdx >= 4) sectorIdx = 0;
     g_state.currentSectorIndex = sectorIdx;
@@ -1383,6 +1566,10 @@ void InitGame(void) {
     g_state.upgradeEngine = 0;
     g_state.upgradeShield = 0;
     g_state.showUpgrades = 0;
+    g_state.showRefinery = 0;
+    g_state.catalyticBoost = 1;
+    memset(g_state.refined, 0, sizeof(g_state.refined));
+    g_state.crucibleAnimTime = 0.0f;
     
     InitSectorField(0);
     
@@ -1390,6 +1577,7 @@ void InitGame(void) {
     AddLog("[MINING] High-frequency mining laser ready. Aim at asteroids and hold [SPACE].", 1);
     AddLog("[TRACTOR] Tractor emitter active. Hold [T] to gather extracted mineral chunks.", 2);
     AddLog("[UPGRADES] Modular engineering bay online. Press [U] for Barge Retrofits.", 0);
+    AddLog("[REFINERY] Metallurgical refinery & fuel lab online. Press [R] for Smelting.", 0);
     AddLog("[NAV] Astronavigation computer initialized. Press [N] for Sector Charts.", 0);
     AddLog("[CRISIS] Damage control station ready. Press [K] for Life Support & Breaches.", 0);
 }
@@ -3847,6 +4035,251 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         DeleteObject(hPenBorderCrisis);
     }
     
+    // Phase 10: Orbital Refinery & Metallurgical Smelting Lab Modal
+    if (g_state.showRefinery) {
+        int modalW = 760;
+        int modalH = 490;
+        int mx = (totalW - modalW) / 2;
+        int my = (totalH - modalH) / 2;
+        
+        RECT rcModal = { mx, my, mx + modalW, my + modalH };
+        HBRUSH hBrModal = CreateSolidBrush(pal->bgPanel);
+        FillRect(hdc, &rcModal, hBrModal);
+        DeleteObject(hBrModal);
+        
+        HPEN hPenBorderRef = CreatePen(PS_SOLID, 2, RGB(245, 158, 11));
+        HGDIOBJ oldPenRef = SelectObject(hdc, hPenBorderRef);
+        HGDIOBJ oldBrushRef = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Rectangle(hdc, mx, my, mx + modalW, my + modalH);
+        
+        // Header
+        RECT rcHdr = { mx, my, mx + modalW, my + 30 };
+        HBRUSH hBrHdr = CreateSolidBrush(pal->bgHeader);
+        FillRect(hdc, &rcHdr, hBrHdr);
+        DeleteObject(hBrHdr);
+        
+        SelectObject(hdc, g_fontHeader);
+        SetTextColor(hdc, RGB(251, 191, 36));
+        TextOutA(hdc, mx + 14, my + 6, "ORBITAL METALLURGICAL REFINERY & FUEL LAB", 42);
+        
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, pal->textBright);
+        TextOutA(hdc, mx + modalW - 120, my + 9, "[R / ESC] CLOSE", 15);
+        
+        // Top Status Bar (Controls: Catalytic Boost, Refine All, Sell All)
+        int barY = my + 34;
+        RECT rcStat = { mx + 14, barY, mx + modalW - 14, barY + 30 };
+        HBRUSH hBrStat = CreateSolidBrush(RGB(3, 7, 18));
+        FillRect(hdc, &rcStat, hBrStat);
+        DeleteObject(hBrStat);
+        FrameRect(hdc, &rcStat, (HBRUSH)GetStockObject(WHITE_BRUSH));
+        
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(245, 158, 11));
+        TextOutA(hdc, mx + 20, barY + 8, "CRUCIBLE: 1,850°C", 17);
+        
+        // Catalytic Boost button
+        int bBtnX = mx + 150;
+        int bBtnW = 195;
+        RECT rcBoost = { bBtnX, barY + 4, bBtnX + bBtnW, barY + 26 };
+        HBRUSH hBrBoost = CreateSolidBrush(g_state.catalyticBoost ? RGB(6, 78, 59) : RGB(20, 20, 30));
+        FillRect(hdc, &rcBoost, hBrBoost);
+        DeleteObject(hBrBoost);
+        FrameRect(hdc, &rcBoost, (HBRUSH)GetStockObject(WHITE_BRUSH));
+        SetTextColor(hdc, g_state.catalyticBoost ? RGB(110, 231, 183) : RGB(148, 163, 184));
+        DrawTextA(hdc, g_state.catalyticBoost ? "⚡ BOOST [B]: ON (+25% YIELD)" : "⚡ BOOST [B]: OFF", -1, &rcBoost, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        
+        // Refine All button
+        int rBtnX = bBtnX + bBtnW + 8;
+        int rBtnW = 180;
+        RECT rcRefAll = { rBtnX, barY + 4, rBtnX + rBtnW, barY + 26 };
+        HBRUSH hBrRefAll = CreateSolidBrush(RGB(30, 58, 138));
+        FillRect(hdc, &rcRefAll, hBrRefAll);
+        DeleteObject(hBrRefAll);
+        FrameRect(hdc, &rcRefAll, (HBRUSH)GetStockObject(WHITE_BRUSH));
+        SetTextColor(hdc, RGB(240, 249, 255));
+        DrawTextA(hdc, "🔥 REFINE ALL ORES [A]", -1, &rcRefAll, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        
+        // Sell All button
+        int sBtnX = rBtnX + rBtnW + 8;
+        int sBtnW = modalW - (sBtnX - mx) - 20;
+        RECT rcSellAll = { sBtnX, barY + 4, sBtnX + sBtnW, barY + 26 };
+        HBRUSH hBrSellAll = CreateSolidBrush(RGB(120, 53, 15));
+        FillRect(hdc, &rcSellAll, hBrSellAll);
+        DeleteObject(hBrSellAll);
+        FrameRect(hdc, &rcSellAll, (HBRUSH)GetStockObject(WHITE_BRUSH));
+        SetTextColor(hdc, RGB(254, 240, 138));
+        DrawTextA(hdc, "💰 SELL ALL [S]", -1, &rcSellAll, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        
+        // Left Column: Crucible Animation (290x120) & Refined Vault (290x230)
+        int leftX = mx + 14;
+        int leftY = barY + 36;
+        int leftW = 290;
+        
+        // Crucible Frame
+        int crucH = 120;
+        RECT rcCruc = { leftX, leftY, leftX + leftW, leftY + crucH };
+        HBRUSH hBrCruc = CreateSolidBrush(RGB(2, 6, 18));
+        FillRect(hdc, &rcCruc, hBrCruc);
+        DeleteObject(hBrCruc);
+        HPEN hPenCruc = CreatePen(PS_SOLID, 1, RGB(56, 189, 248));
+        SelectObject(hdc, hPenCruc);
+        Rectangle(hdc, leftX, leftY, leftX + leftW, leftY + crucH);
+        DeleteObject(hPenCruc);
+        
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, RGB(251, 191, 36));
+        TextOutA(hdc, leftX + 8, leftY + 6, "PLASMA INDUCTION CRUCIBLE", 25);
+        
+        // Coils
+        HPEN hPenCoil = CreatePen(PS_SOLID, 1, g_state.catalyticBoost ? RGB(245, 158, 11) : RGB(56, 189, 248));
+        SelectObject(hdc, hPenCoil);
+        for (int cy = leftY + 28; cy < leftY + crucH - 25; cy += 14) {
+            MoveToEx(hdc, leftX + 15, cy, NULL);
+            for (int cx = leftX + 15; cx < leftX + leftW - 15; cx += 5) {
+                int wy = cy + (int)(sin((cx * 0.08f) + g_state.crucibleAnimTime * 3.0f) * 3.0f);
+                LineTo(hdc, cx, wy);
+            }
+        }
+        DeleteObject(hPenCoil);
+        
+        // Molten pool
+        RECT rcPool = { leftX + 25, leftY + crucH - 22, leftX + leftW - 25, leftY + crucH - 6 };
+        HBRUSH hBrPool = CreateSolidBrush(g_state.catalyticBoost ? RGB(239, 68, 68) : RGB(245, 158, 11));
+        FillRect(hdc, &rcPool, hBrPool);
+        DeleteObject(hBrPool);
+        
+        // Refined Inventory Vault
+        int vaultY = leftY + crucH + 10;
+        int vaultH = modalH - (vaultY - my) - 30;
+        RECT rcVault = { leftX, vaultY, leftX + leftW, vaultY + vaultH };
+        HBRUSH hBrVault = CreateSolidBrush(RGB(4, 10, 24));
+        FillRect(hdc, &rcVault, hBrVault);
+        DeleteObject(hBrVault);
+        FrameRect(hdc, &rcVault, (HBRUSH)GetStockObject(WHITE_BRUSH));
+        
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, pal->textBright);
+        TextOutA(hdc, leftX + 8, vaultY + 6, "REFINED PRODUCTS STORAGE VAULT", 30);
+        
+        SelectObject(hdc, g_fontSmall);
+        int vy = vaultY + 26;
+        int totalRefinedVal = 0;
+        for (int i = 0; i < 6; i++) {
+            const RefineryRecipeDef* r = &REFINERY_RECIPES[i];
+            int count = g_state.refined[i];
+            int val = count * r->value;
+            totalRefinedVal += val;
+            
+            char itemStr[64];
+            sprintf(itemStr, "%s: %d (Val: %d CR)", r->outputName, count, val);
+            SetTextColor(hdc, count > 0 ? r->color : RGB(100, 116, 139));
+            TextOutA(hdc, leftX + 10, vy, itemStr, (int)strlen(itemStr));
+            
+            if (r->usable && count > 0) {
+                RECT rcUse = { leftX + leftW - 65, vy - 1, leftX + leftW - 8, vy + 15 };
+                HBRUSH hBrUse = CreateSolidBrush(RGB(6, 78, 59));
+                FillRect(hdc, &rcUse, hBrUse);
+                DeleteObject(hBrUse);
+                FrameRect(hdc, &rcUse, (HBRUSH)GetStockObject(WHITE_BRUSH));
+                SetTextColor(hdc, RGB(110, 231, 183));
+                DrawTextA(hdc, "USE", -1, &rcUse, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            }
+            vy += 22;
+        }
+        
+        char vTotalStr[64];
+        sprintf(vTotalStr, "TOTAL VAULT VALUE: %d CR", totalRefinedVal);
+        SetTextColor(hdc, RGB(251, 191, 36));
+        TextOutA(hdc, leftX + 10, vaultY + vaultH - 20, vTotalStr, (int)strlen(vTotalStr));
+        
+        // Right Column: 6 Smelting Recipe Cards
+        int rcX = leftX + leftW + 12;
+        int rcY = leftY;
+        int rcW = modalW - (rcX - mx) - 14;
+        int rCardH = 60;
+        int rGapY = 5;
+        
+        for (int i = 0; i < 6; i++) {
+            const RefineryRecipeDef* r = &REFINERY_RECIPES[i];
+            int cyCard = rcY + i * (rCardH + rGapY);
+            
+            int maxCraft = 999;
+            for (int k = 0; k < 6; k++) {
+                if (r->inputs[k] > 0) {
+                    int possible = g_state.cargoHold[k] / r->inputs[k];
+                    if (possible < maxCraft) maxCraft = possible;
+                }
+            }
+            int canCraft = (maxCraft > 0);
+            
+            RECT rcCard = { rcX, cyCard, rcX + rcW, cyCard + rCardH };
+            HBRUSH hBrCard = CreateSolidBrush(RGB(5, 12, 28));
+            FillRect(hdc, &rcCard, hBrCard);
+            DeleteObject(hBrCard);
+            HPEN hPenCard = CreatePen(PS_SOLID, 1, canCraft ? pal->borderPanel : RGB(40, 45, 60));
+            SelectObject(hdc, hPenCard);
+            Rectangle(hdc, rcX, cyCard, rcX + rcW, cyCard + rCardH);
+            DeleteObject(hPenCard);
+            
+            // Recipe Title & Key
+            char rTitle[64];
+            sprintf(rTitle, "[%d] %s", i + 1, r->name);
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, canCraft ? r->color : RGB(148, 163, 184));
+            TextOutA(hdc, rcX + 8, cyCard + 4, rTitle, (int)strlen(rTitle));
+            
+            // Value tag
+            char vTag[32];
+            sprintf(vTag, "%d CR", r->value);
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, RGB(251, 191, 36));
+            TextOutA(hdc, rcX + rcW - 65, cyCard + 4, vTag, (int)strlen(vTag));
+            
+            // Requirements & Can Smelt
+            char reqStr[96];
+            sprintf(reqStr, "Req: %s  | Can Smelt: %d Units", r->inputStr, maxCraft);
+            SetTextColor(hdc, canCraft ? RGB(16, 185, 129) : RGB(239, 68, 68));
+            TextOutA(hdc, rcX + 8, cyCard + 20, reqStr, (int)strlen(reqStr));
+            
+            // Smelt 1x and Smelt Max buttons
+            int b1X = rcX + 8;
+            int b1Y = cyCard + 36;
+            int b1W = 120;
+            int b1H = 20;
+            RECT rcB1 = { b1X, b1Y, b1X + b1W, b1Y + b1H };
+            HBRUSH hBrB1 = CreateSolidBrush(canCraft ? RGB(15, 39, 68) : RGB(20, 25, 35));
+            FillRect(hdc, &rcB1, hBrB1);
+            DeleteObject(hBrB1);
+            FrameRect(hdc, &rcB1, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            SetTextColor(hdc, canCraft ? RGB(56, 189, 248) : RGB(100, 116, 139));
+            char b1Label[32];
+            sprintf(b1Label, "SMELT 1x [%d]", i + 1);
+            DrawTextA(hdc, b1Label, -1, &rcB1, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            
+            int bMaxX = b1X + b1W + 8;
+            int bMaxW = 130;
+            RECT rcBMax = { bMaxX, b1Y, bMaxX + bMaxW, b1Y + b1H };
+            HBRUSH hBrBMax = CreateSolidBrush(canCraft ? RGB(30, 58, 138) : RGB(20, 25, 35));
+            FillRect(hdc, &rcBMax, hBrBMax);
+            DeleteObject(hBrBMax);
+            FrameRect(hdc, &rcBMax, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            SetTextColor(hdc, canCraft ? RGB(110, 231, 183) : RGB(100, 116, 139));
+            char bMaxLabel[32];
+            sprintf(bMaxLabel, "SMELT MAX (%dx)", maxCraft);
+            DrawTextA(hdc, bMaxLabel, -1, &rcBMax, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        }
+        
+        // Footer instruction
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(245, 158, 11));
+        TextOutA(hdc, mx + 16, my + modalH - 24, "Keys [1-6] Smelt 1x • [B] Toggle Boost • [A] Refine All • [S] Sell All • [R / ESC] Close", 88);
+        
+        SelectObject(hdc, oldPenRef);
+        SelectObject(hdc, oldBrushRef);
+        DeleteObject(hPenBorderRef);
+    }
+    
     // Help Overlay Modal
     if (g_state.showHelp) {
         int helpW = 560;
@@ -3882,6 +4315,8 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         TextOutA(hdc, hx + 20, myHelp, "• [Z / DAMPENER BTN]: Toggle Inertial Dampeners for precise stationkeeping", 74); myHelp += 16;
         TextOutA(hdc, hx + 20, myHelp, "• [P / PROSPECT BTN]: Open Multi-Spectral Spectrometer & Tune Resonance", 71); myHelp += 16;
         TextOutA(hdc, hx + 20, myHelp, "• [E / EVA OPS BTN]: Open EVA Salvage Operations on nearby derelicts", 68); myHelp += 16;
+        TextOutA(hdc, hx + 20, myHelp, "• [K / CRISIS BTN]: Access Damage Control & Emergency Bulkheads", 63); myHelp += 16;
+        TextOutA(hdc, hx + 20, myHelp, "• [R / SMELT BTN]: Open Orbital Metallurgical Refinery & Smelting Lab", 69); myHelp += 16;
         TextOutA(hdc, hx + 20, myHelp, "• [U / UPGRADES BTN]: Open Modular Engineering Bay & Install Upgrades", 69); myHelp += 16;
         TextOutA(hdc, hx + 20, myHelp, "• [N / SECTORS BTN]: Open Star Sector Chart & Engage Sub-space Warp Jumps", 72); myHelp += 16;
         TextOutA(hdc, hx + 20, myHelp, "• [V / THEME BTN]: Cycle Retro CRT Vector Theme (Cyan / Amber / Green / Solar)", 77); myHelp += 16;
@@ -3910,7 +4345,7 @@ void RepositionControls(HWND hwnd) {
     int bottomCtrlH = 140;
     int botY = totalH - bottomCtrlH;
     
-    // Cockpit Action Buttons in bottom-left console (7 in row 1, 5 in row 2)
+    // Cockpit Action Buttons in bottom-left console (7 in row 1, 6 in row 2)
     int bx = 8;
     int by1 = botY + 28;
     int by2 = botY + 62;
@@ -3926,11 +4361,13 @@ void RepositionControls(HWND hwnd) {
     MoveWindow(g_btnEva,        bx + (bw + gap) * 5, by1, bw, bh, TRUE);
     MoveWindow(g_btnCrisis,     bx + (bw + gap) * 6, by1, bw, bh, TRUE);
     
-    MoveWindow(g_btnUpgrades,   bx,                  by2, bw + 6, bh, TRUE);
-    MoveWindow(g_btnTheme,      bx + (bw + 6 + gap), by2, bw + 6, bh, TRUE);
-    MoveWindow(g_btnScanlines,  bx + (bw + 6 + gap) * 2, by2, bw + 6, bh, TRUE);
-    MoveWindow(g_btnAudio,      bx + (bw + 6 + gap) * 3, by2, bw + 6, bh, TRUE);
-    MoveWindow(g_btnHelp,       bx + (bw + 6 + gap) * 4, by2, bw + 6, bh, TRUE);
+    int bw2 = 48;
+    MoveWindow(g_btnUpgrades,   bx,                   by2, bw2, bh, TRUE);
+    MoveWindow(g_btnRefinery,   bx + (bw2 + gap),     by2, bw2 + 6, bh, TRUE);
+    MoveWindow(g_btnTheme,      bx + (bw2 + gap) * 2 + 6, by2, bw2 + 6, bh, TRUE);
+    MoveWindow(g_btnScanlines,  bx + (bw2 + gap) * 3 + 12, by2, bw2 + 6, bh, TRUE);
+    MoveWindow(g_btnAudio,      bx + (bw2 + gap) * 4 + 18, by2, bw2 + 4, bh, TRUE);
+    MoveWindow(g_btnHelp,       bx + (bw2 + gap) * 5 + 22, by2, bw2 + 4, bh, TRUE);
     
     // Right panel buttons: Jettison & Liquidate
     int rightX = totalW - rightPanelW + 10;
@@ -3961,6 +4398,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_btnEva       = CreateWindowA("BUTTON", "EVA OPS [E]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_EVA, NULL, NULL);
             g_btnCrisis    = CreateWindowA("BUTTON", "CRISIS [K]",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_CRISIS, NULL, NULL);
             g_btnUpgrades  = CreateWindowA("BUTTON", "UPGRADE [U]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_UPGRADES, NULL, NULL);
+            g_btnRefinery  = CreateWindowA("BUTTON", "SMELT [R]",     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_REFINERY, NULL, NULL);
             g_btnTheme     = CreateWindowA("BUTTON", "CRT CYAN",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_THEME, NULL, NULL);
             g_btnScanlines = CreateWindowA("BUTTON", "SCAN: ON",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCANLINES, NULL, NULL);
             g_btnAudio     = CreateWindowA("BUTTON", "AUDIO [M]",     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_AUDIO, NULL, NULL);
@@ -4019,7 +4457,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 case ID_BTN_UPGRADES:
                     g_state.showUpgrades = !g_state.showUpgrades;
-                    if (g_state.showUpgrades) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; }
+                    if (g_state.showUpgrades) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; }
+                    TriggerSound(SFX_BEEP);
+                    break;
+                case ID_BTN_REFINERY:
+                    g_state.showRefinery = !g_state.showRefinery;
+                    if (g_state.showRefinery) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showUpgrades = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_THEME:
@@ -4085,6 +4528,109 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (g_state.showHelp) {
                 g_state.showHelp = 0;
                 InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            
+            if (g_state.showRefinery) {
+                int modalW = 740;
+                int modalH = 475;
+                int hx = (totalW - modalW) / 2;
+                int hy = (totalH - modalH) / 2;
+                
+                // Close button top-right
+                if (mx >= hx + modalW - 130 && mx <= hx + modalW - 10 && my >= hy && my <= hy + 30) {
+                    g_state.showRefinery = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                
+                // Status bar buttons
+                int barY = hy + 34;
+                int bBtnX = hx + 150;
+                int bBtnW = 195;
+                if (mx >= bBtnX && mx <= bBtnX + bBtnW && my >= barY + 4 && my <= barY + 26) {
+                    ToggleCatalyticBoost();
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                
+                int rBtnX = bBtnX + bBtnW + 8;
+                int rBtnW = 180;
+                if (mx >= rBtnX && mx <= rBtnX + rBtnW && my >= barY + 4 && my <= barY + 26) {
+                    RefineAllOres();
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                
+                int sBtnX = rBtnX + rBtnW + 8;
+                int sBtnW = modalW - (sBtnX - hx) - 20;
+                if (mx >= sBtnX && mx <= sBtnX + sBtnW && my >= barY + 4 && my <= barY + 26) {
+                    SellAllRefined();
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                
+                // Left Column: Refined vault usable items
+                int leftX = hx + 14;
+                int leftY = barY + 36;
+                int leftW = 290;
+                int crucH = 120;
+                int vaultY = leftY + crucH + 10;
+                int vy = vaultY + 26;
+                for (int i = 0; i < 6; i++) {
+                    const RefineryRecipeDef* r = &REFINERY_RECIPES[i];
+                    if (r->usable && g_state.refined[i] > 0) {
+                        int useX1 = leftX + leftW - 65;
+                        int useY1 = vy - 1;
+                        int useX2 = leftX + leftW - 8;
+                        int useY2 = vy + 15;
+                        if (mx >= useX1 && mx <= useX2 && my >= useY1 && my <= useY2) {
+                            UseRefinedItem(i);
+                            InvalidateRect(hwnd, NULL, FALSE);
+                            return 0;
+                        }
+                    }
+                    vy += 22;
+                }
+                
+                // Right Column: 6 Smelting Recipe Cards
+                int rcX = leftX + leftW + 12;
+                int rcY = leftY;
+                int rcW = modalW - (rcX - hx) - 14;
+                int rCardH = 60;
+                int rGapY = 5;
+                
+                for (int i = 0; i < 6; i++) {
+                    int cyCard = rcY + i * (rCardH + rGapY);
+                    int b1X = rcX + 8;
+                    int b1Y = cyCard + 36;
+                    int b1W = 120;
+                    int b1H = 20;
+                    
+                    int bMaxX = b1X + b1W + 8;
+                    int bMaxW = 130;
+                    
+                    // Click Smelt 1x
+                    if (mx >= b1X && mx <= b1X + b1W && my >= b1Y && my <= b1Y + b1H) {
+                        SmeltRecipe(i, 1);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        return 0;
+                    }
+                    
+                    // Click Smelt Max
+                    if (mx >= bMaxX && mx <= bMaxX + bMaxW && my >= b1Y && my <= b1Y + b1H) {
+                        SmeltRecipe(i, 9999);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        return 0;
+                    }
+                }
+                
+                // Click outside modal closes it
+                if (mx < hx || mx > hx + modalW || my < hy || my > hy + modalH) {
+                    g_state.showRefinery = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
                 return 0;
             }
             
@@ -4406,6 +4952,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         
         case WM_KEYDOWN: {
+            if (g_state.showRefinery) {
+                if (wParam >= '1' && wParam <= '6') { SmeltRecipe((int)(wParam - '1'), 1); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == 'B') { ToggleCatalyticBoost(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == 'A') { RefineAllOres(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == 'S') { SellAllRefined(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == 'R' || wParam == VK_ESCAPE) { g_state.showRefinery = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+            }
+            
             if (g_state.showCrisis) {
                 if (wParam == '1') { ActionSealBreaches(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
                 if (wParam == '2') { ActionVentPlasma(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
@@ -4465,27 +5019,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 case 'P':
                     g_state.showSpectrometer = !g_state.showSpectrometer;
-                    if (g_state.showSpectrometer) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showEva = 0; g_state.showCrisis = 0; }
+                    if (g_state.showSpectrometer) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case 'E':
                     g_state.showEva = !g_state.showEva;
-                    if (g_state.showEva) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showCrisis = 0; }
+                    if (g_state.showEva) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case 'K':
                     g_state.showCrisis = !g_state.showCrisis;
-                    if (g_state.showCrisis) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; }
+                    if (g_state.showCrisis) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showRefinery = 0; }
+                    TriggerSound(SFX_BEEP);
+                    break;
+                case 'R':
+                    g_state.showRefinery = !g_state.showRefinery;
+                    if (g_state.showRefinery) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case 'U':
                     g_state.showUpgrades = !g_state.showUpgrades;
-                    if (g_state.showUpgrades) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; }
+                    if (g_state.showUpgrades) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case 'N':
                     g_state.showStarChart = !g_state.showStarChart;
-                    if (g_state.showStarChart) { g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; }
+                    if (g_state.showStarChart) { g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case 'V':
