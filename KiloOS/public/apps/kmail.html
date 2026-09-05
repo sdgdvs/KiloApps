@@ -639,41 +639,41 @@
 </head>
 <body>
 
-<div class="sidebar">
-  <button class="compose-btn" onclick="newComposeTab()">
+<div class="sidebar" role="navigation" aria-label="Mailbox folders">
+  <button class="compose-btn" onclick="newComposeTab()" aria-label="Compose new email (C)">
     <span>+ New Message</span>
     <kbd>C</kbd>
   </button>
   
-  <div class="folder active" onclick="switchFolder('inbox')" id="f-inbox">
+  <div class="folder active" onclick="switchFolder('inbox')" id="f-inbox" role="button" tabindex="0" aria-label="Inbox folder (1)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchFolder('inbox');}">
     <div class="folder-title">
       <span>📥 Inbox</span>
       <kbd>1</kbd>
     </div>
     <span class="folder-badge" id="b-inbox">0</span>
   </div>
-  <div class="folder" onclick="switchFolder('starred')" id="f-starred">
+  <div class="folder" onclick="switchFolder('starred')" id="f-starred" role="button" tabindex="0" aria-label="Starred folder (2)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchFolder('starred');}">
     <div class="folder-title">
       <span>⭐ Starred</span>
       <kbd>2</kbd>
     </div>
     <span class="folder-badge" id="b-starred">0</span>
   </div>
-  <div class="folder" onclick="switchFolder('sent')" id="f-sent">
+  <div class="folder" onclick="switchFolder('sent')" id="f-sent" role="button" tabindex="0" aria-label="Sent folder (3)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchFolder('sent');}">
     <div class="folder-title">
       <span>📤 Sent</span>
       <kbd>3</kbd>
     </div>
     <span class="folder-badge" id="b-sent">0</span>
   </div>
-  <div class="folder" onclick="switchFolder('drafts')" id="f-drafts">
+  <div class="folder" onclick="switchFolder('drafts')" id="f-drafts" role="button" tabindex="0" aria-label="Drafts folder (4)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchFolder('drafts');}">
     <div class="folder-title">
       <span>📝 Drafts</span>
       <kbd>4</kbd>
     </div>
     <span class="folder-badge" id="b-drafts">0</span>
   </div>
-  <div class="folder" onclick="switchFolder('trash')" id="f-trash">
+  <div class="folder" onclick="switchFolder('trash')" id="f-trash" role="button" tabindex="0" aria-label="Trash folder (5)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchFolder('trash');}">
     <div class="folder-title">
       <span>🗑️ Trash</span>
       <kbd>5</kbd>
@@ -682,8 +682,8 @@
   </div>
   
   <div class="search-container">
-    <input type="text" id="search-box" placeholder="Search emails... (Ctrl+F)" onkeyup="handleSearch()">
-    <select id="tag-filter" onchange="handleSearch()">
+    <input type="text" id="search-box" placeholder="Search emails... (Ctrl+F)" aria-label="Search emails" onkeyup="handleSearch()">
+    <select id="tag-filter" aria-label="Filter emails by tag" onchange="handleSearch()">
       <option value="">All Tags</option>
       <option value="Urgent">Urgent</option>
       <option value="Work">Work</option>
@@ -693,20 +693,20 @@
   </div>
   
   <div class="sidebar-bottom">
-    <button class="side-action-btn" onclick="showHelpModal()">
+    <button class="side-action-btn" onclick="showHelpModal()" aria-label="Help and Keyboard Shortcuts">
       <span>❓ Help & Keys</span>
       <kbd>F1</kbd>
     </button>
-    <button class="side-action-btn" onclick="document.getElementById('import-file').click()">
+    <button class="side-action-btn" onclick="document.getElementById('import-file').click()" aria-label="Import JSON Mailbox">
       <span>📥 Import JSON</span>
       <kbd>I</kbd>
     </button>
-    <input type="file" id="import-file" style="display:none" onchange="importJson(event)" accept=".json">
-    <button class="side-action-btn" onclick="exportJson()">
+    <input type="file" id="import-file" style="display:none" onchange="importJson(event)" accept=".json" aria-label="Upload mailbox JSON file">
+    <button class="side-action-btn" onclick="exportJson()" aria-label="Export JSON Mailbox">
       <span>📤 Export JSON</span>
       <kbd>O</kbd>
     </button>
-    <button class="side-action-btn" style="color:#f87171;" onclick="confirmEmptyTrash()">
+    <button class="side-action-btn" style="color:#f87171;" onclick="confirmEmptyTrash()" aria-label="Empty Trash Folder">
       <span>🗑️ Empty Trash</span>
     </button>
   </div>
@@ -733,11 +733,11 @@
 <div id="toast-container"></div>
 
 <!-- Help Modal Dialog -->
-<div class="modal-backdrop" id="help-modal" onclick="onModalBackdropClick(event, 'help-modal')">
+<div class="modal-backdrop" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-modal-title" onclick="onModalBackdropClick(event, 'help-modal')">
   <div class="modal-window">
     <div class="modal-header">
-      <h3><span>📬</span> KMail Help & Keyboard Shortcuts</h3>
-      <button class="modal-close-btn" onclick="closeModal('help-modal')">✕</button>
+      <h3 id="help-modal-title"><span>📬</span> KMail Help & Keyboard Shortcuts</h3>
+      <button class="modal-close-btn" onclick="closeModal('help-modal')" aria-label="Close help modal">✕</button>
     </div>
     <div class="modal-content">
       <p style="margin-top:0; color:#94a3b8; font-size:13px;">
@@ -768,11 +768,11 @@
 </div>
 
 <!-- Add Tag Modal Dialog -->
-<div class="modal-backdrop" id="tag-modal" onclick="onModalBackdropClick(event, 'tag-modal')">
+<div class="modal-backdrop" id="tag-modal" role="dialog" aria-modal="true" aria-labelledby="tag-modal-title" onclick="onModalBackdropClick(event, 'tag-modal')">
   <div class="modal-window" style="width: 420px;">
     <div class="modal-header">
-      <h3><span>🏷️</span> Add Tag to Email</h3>
-      <button class="modal-close-btn" onclick="closeModal('tag-modal')">✕</button>
+      <h3 id="tag-modal-title"><span>🏷️</span> Add Tag to Email</h3>
+      <button class="modal-close-btn" onclick="closeModal('tag-modal')" aria-label="Close tag modal">✕</button>
     </div>
     <div class="modal-content">
       <div style="margin-bottom:12px;">
@@ -787,7 +787,7 @@
         </div>
       </div>
       <div>
-        <label style="font-size:12px; color:var(--text-sec); display:block; margin-bottom:6px;">Custom Tag Name:</label>
+        <label for="custom-tag-input" style="font-size:12px; color:var(--text-sec); display:block; margin-bottom:6px;">Custom Tag Name:</label>
         <input type="text" id="custom-tag-input" placeholder="e.g. Project-Alpha" style="width:100%; background:rgba(0,0,0,0.3); border:1px solid var(--border); color:white; padding:8px 10px; border-radius:6px; font-size:13px; outline:none;" onkeydown="if(event.key==='Enter') applyCustomTag()">
       </div>
     </div>
@@ -799,11 +799,11 @@
 </div>
 
 <!-- Confirm Empty Trash Modal -->
-<div class="modal-backdrop" id="trash-modal" onclick="onModalBackdropClick(event, 'trash-modal')">
+<div class="modal-backdrop" id="trash-modal" role="dialog" aria-modal="true" aria-labelledby="trash-modal-title" onclick="onModalBackdropClick(event, 'trash-modal')">
   <div class="modal-window" style="width: 400px;">
     <div class="modal-header">
-      <h3><span>🗑️</span> Empty Trash Confirmation</h3>
-      <button class="modal-close-btn" onclick="closeModal('trash-modal')">✕</button>
+      <h3 id="trash-modal-title"><span>🗑️</span> Empty Trash Confirmation</h3>
+      <button class="modal-close-btn" onclick="closeModal('trash-modal')" aria-label="Close empty trash modal">✕</button>
     </div>
     <div class="modal-content">
       <p style="margin:0; color:#e2e8f0;">Are you sure you want to permanently delete all messages in the Trash folder?</p>
@@ -882,6 +882,7 @@
       if (!em.tags) em.tags = [];
       if (!em.tags.includes(tagName)) {
         em.tags.push(tagName);
+        safeSaveEmails();
         showToast(`Added tag "${tagName}"`, 'success');
       }
       renderList();
@@ -902,6 +903,7 @@
   }
   function doEmptyTrash() {
     emails = emails.filter(e => e.folder !== 'trash');
+    safeSaveEmails();
     if (currentFolder === 'trash') renderList();
     closeModal('trash-modal');
     showToast("Trash folder permanently emptied.", "success");
@@ -951,17 +953,52 @@
     }[tag]));
   }
 
+  const STORAGE_KEY = 'kmail_emails_v1';
+
   let emails = [
     { id: 1, folder: 'inbox', subject: "Welcome to KiloOS Email Suite", sender: "sysadmin@kilo.os", body: "Hello User,\n\nWelcome to KiloOS Mail. Features include Starred priority marking, Drafts auto-saving, Multi-tab email browsing, EML/Markdown single email export, AES password encryption, and JSON backup.\n\n- SysAdmin", unread: true, tags: ["Work"], encrypted: false, starred: true },
     { id: 2, folder: 'inbox', subject: "Meeting at 3PM with Team", sender: "boss@kilo.os", body: "Don't forget our meeting at 3PM today in Conference Room B. We will review the latest sprint releases.", unread: false, tags: ["Urgent", "Work"], encrypted: false, starred: true },
-    { id: 3, folder: 'inbox', subject: "Top Secret Info", sender: "agent@kilo.os", body: '{"iv":[1,2,3,4,5,6,7,8,9,10,11,12],"cipher":[...]}', unread: true, tags: ["Personal"], encrypted: true, starred: false },
+    { id: 3, folder: 'inbox', subject: "Top Secret Info", sender: "agent@kilo.os", body: '{"iv":[1,2,3,4,5,6,7,8,9,10,11,12],"cipher":[146,7,100,49,108,195,166,117,136,192,135,247,28,36,70,100,178,101,93,98,94,9,232,3,191,125,52,134,43,18,97,172,213,82,218,197,243,158,39,68,153,108,112,123,100,149,64,56,123,236,93,164,161,253,22,90,125,70,153,189,199,13,210,169,139,240,57,201,250,213,63,51,85,60,114,238,241,116,116,160,89,125,111,87,186,223,35,96,219,242,148]}', unread: true, tags: ["Personal"], encrypted: true, starred: false },
     { id: 4, folder: 'inbox', subject: "Newsletter #42 - Desktop Innovations", sender: "news@kilo.os", body: "Weekly digest on minimalist operating system architecture and high efficiency UI design...", unread: false, tags: ["News"], encrypted: false, starred: false },
     { id: 5, folder: 'sent', subject: "Re: Meeting at 3PM with Team", sender: "boss@kilo.os", body: "I'll be there on time with the slides ready.", unread: false, tags: [], encrypted: false, starred: false },
     { id: 6, folder: 'drafts', subject: "Draft: Q4 Architecture Roadmap", sender: "architecture@kilo.os", body: "Q4 Key Milestones:\n1. Expand KiloApps ecosystem\n2. Optimize native binary footprints under 999KB\n3. Parity enhancements across Web & Native", unread: false, tags: ["Work"], encrypted: false, starred: false }
   ];
+
+  function safeSaveEmails() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(emails));
+    } catch (e) {
+      console.warn("Storage quota exceeded", e);
+    }
+  }
+
+  function safeLoadEmails() {
+    try {
+      const data = localStorage.getItem(STORAGE_KEY);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          emails = parsed.map((m, idx) => ({
+            id: typeof m.id === 'number' ? m.id : idx + 1,
+            folder: ['inbox', 'starred', 'sent', 'drafts', 'trash'].includes(m.folder) ? m.folder : 'inbox',
+            subject: typeof m.subject === 'string' ? m.subject : '(No Subject)',
+            sender: typeof m.sender === 'string' ? m.sender : 'unknown@kilo.os',
+            body: typeof m.body === 'string' ? m.body : '',
+            unread: !!m.unread,
+            tags: Array.isArray(m.tags) ? m.tags.filter(t => typeof t === 'string') : [],
+            encrypted: !!m.encrypted,
+            starred: !!m.starred
+          }));
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to load saved emails", e);
+    }
+  }
+  safeLoadEmails();
   
   let currentFolder = 'inbox';
-  let nextId = 7;
+  let nextId = emails.reduce((max, m) => Math.max(max, m.id), 0) + 1;
   let tabs = [];
   let activeTabId = null;
 
@@ -985,13 +1022,16 @@
     updateFolderBadges();
     const list = document.getElementById('list');
     list.innerHTML = '';
-    const sq = document.getElementById('search-box').value.toLowerCase();
+    const sq = (document.getElementById('search-box').value || '').toLowerCase().trim();
     const tagF = document.getElementById('tag-filter').value;
     
     const filtered = emails.filter(e => {
       const matchesFolder = (currentFolder === 'starred') ? (e.starred && e.folder !== 'trash') : (e.folder === currentFolder);
-      const matchesSearch = (e.subject.toLowerCase().includes(sq) || e.sender.toLowerCase().includes(sq) || (e.body && typeof e.body === 'string' && e.body.toLowerCase().includes(sq)));
-      const matchesTag = (tagF === "" || (e.tags && e.tags.includes(tagF)));
+      const subStr = (e.subject || '').toLowerCase();
+      const sndStr = (e.sender || '').toLowerCase();
+      const bodyStr = (typeof e.body === 'string' ? e.body : '').toLowerCase();
+      const matchesSearch = !sq || (subStr.includes(sq) || sndStr.includes(sq) || bodyStr.includes(sq));
+      const matchesTag = (tagF === "" || (Array.isArray(e.tags) && e.tags.includes(tagF)));
       return matchesFolder && matchesSearch && matchesTag;
     });
     
@@ -1007,8 +1047,11 @@
       let d = document.createElement('div');
       let isSelected = activeTabId && tabs.find(t => t.id === activeTabId && ((t.type === 'read' && t.emailId === em.id) || (t.type === 'compose' && t.draftId === em.id)));
       d.className = `item ${em.unread ? 'unread' : ''} ${isSelected ? 'selected' : ''}`;
+      d.setAttribute('role', 'button');
+      d.setAttribute('tabindex', '0');
+      d.setAttribute('aria-label', `${em.starred ? 'Starred ' : ''}${em.unread ? 'Unread ' : ''}${em.subject || 'Email'} from ${em.sender}`);
       
-      let starHtml = `<button class="star-btn ${em.starred ? 'star-active' : 'star-inactive'}" onclick="toggleStar(${em.id}, event)" title="${em.starred ? 'Unstar' : 'Star'}">${em.starred ? '★' : '☆'}</button>`;
+      let starHtml = `<button class="star-btn ${em.starred ? 'star-active' : 'star-inactive'}" onclick="toggleStar(${em.id}, event)" title="${em.starred ? 'Unstar' : 'Star'}" aria-label="${em.starred ? 'Unstar' : 'Star'}">${em.starred ? '★' : '☆'}</button>`;
       
       let tagsHtml = '';
       if (em.tags && em.tags.length > 0) {
@@ -1024,28 +1067,52 @@
         ${tagsHtml}
       `;
       d.innerHTML = html;
-      d.onclick = (e) => {
-        if (e.target.closest('.star-btn')) return;
+      const handleSelect = () => {
         if (em.folder === 'drafts') {
           openDraftInCompose(em.id);
         } else {
           openEmailTab(em.id);
         }
       };
+      d.onclick = (e) => {
+        if (e.target.closest('.star-btn')) return;
+        handleSelect();
+      };
+      d.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleSelect();
+        }
+      };
       list.appendChild(d);
     });
   }
 
-  function renderTabs() {
+  function renderTabsHeader() {
     const tb = document.getElementById('tabs');
     tb.innerHTML = '';
+    tb.setAttribute('role', 'tablist');
+    tb.setAttribute('aria-label', 'Email tabs');
     tabs.forEach(t => {
       let d = document.createElement('div');
       d.className = `tab ${t.id === activeTabId ? 'active' : ''}`;
-      d.innerHTML = `<span>${escapeHTML(t.title)}</span><span class="tab-close" onclick="closeTab('${t.id}', event)">✕</span>`;
+      d.setAttribute('role', 'tab');
+      d.setAttribute('tabindex', '0');
+      d.setAttribute('aria-selected', t.id === activeTabId ? 'true' : 'false');
+      d.innerHTML = `<span>${escapeHTML(t.title)}</span><span class="tab-close" onclick="closeTab('${t.id}', event)" aria-label="Close tab ${escapeHTML(t.title)}">✕</span>`;
       d.onclick = () => switchTab(t.id);
+      d.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          switchTab(t.id);
+        }
+      };
       tb.appendChild(d);
     });
+  }
+
+  function renderTabs() {
+    renderTabsHeader();
     renderPane();
     renderList();
   }
@@ -1053,7 +1120,10 @@
   function openEmailTab(id) {
     let em = emails.find(e => e.id === id);
     if(!em) return;
-    if(em.unread) { em.unread = false; }
+    if(em.unread) {
+      em.unread = false;
+      safeSaveEmails();
+    }
     
     let existingTab = tabs.find(t => t.type === 'read' && t.emailId === id);
     if(existingTab) {
@@ -1138,6 +1208,7 @@
     let em = emails.find(e => e.id === eid);
     if (em) {
       em.starred = !em.starred;
+      safeSaveEmails();
       renderList();
       if (activeTabId) {
         let t = tabs.find(tab => tab.id === activeTabId);
@@ -1203,7 +1274,7 @@
         <div class="compose-body">
           <input type="text" id="c-to-${tab.id}" placeholder="To: recipient@kilo.os" value="${escapeHTML(tab.data.to)}" oninput="updateTabData('${tab.id}', 'to', this.value)">
           <input type="text" id="c-sub-${tab.id}" placeholder="Subject: Important discussion" value="${escapeHTML(tab.data.sub)}" oninput="updateTabData('${tab.id}', 'sub', this.value)">
-          <textarea id="c-body-${tab.id}" placeholder="Write your message here...">${escapeHTML(tab.data.body)}</textarea>
+          <textarea id="c-body-${tab.id}" placeholder="Write your message here..." oninput="updateTabData('${tab.id}', 'body', this.value)">${escapeHTML(tab.data.body)}</textarea>
           <div class="compose-actions">
             <div>
               <label style="font-size:13px; display:flex; align-items:center; gap:6px; cursor:pointer; user-select:none;">
@@ -1223,10 +1294,6 @@
           </div>
         </div>
       `;
-      setTimeout(() => {
-        const ta = document.getElementById(`c-body-${tab.id}`);
-        if(ta) ta.oninput = (e) => updateTabData(tab.id, 'body', e.target.value);
-      }, 0);
     }
   }
 
@@ -1236,8 +1303,7 @@
       t.data[field] = val;
       if(field === 'sub') {
         t.title = val || 'New Message';
-        const tabEl = document.querySelector(`.tab.active span`);
-        if (tabEl) tabEl.textContent = t.title;
+        renderTabsHeader();
       }
     }
   }
@@ -1275,6 +1341,7 @@
         starred: false
       });
     }
+    safeSaveEmails();
     renderList();
     showToast("Draft saved to Drafts folder.", "success");
   }
@@ -1318,6 +1385,7 @@
         starred: false
       });
     }
+    safeSaveEmails();
     closeTab(tid);
     if(currentFolder === 'sent' || currentFolder === 'drafts') renderList();
     showToast("Message sent successfully!", "success");
@@ -1354,8 +1422,9 @@
       em.folder = 'trash';
       showToast("Message moved to Trash.", "info");
     }
-    let t = tabs.find(t => t.type === 'read' && t.emailId === eid);
+    let t = tabs.find(t => (t.type === 'read' && t.emailId === eid) || (t.type === 'compose' && t.draftId === eid));
     if(t) closeTab(t.id);
+    safeSaveEmails();
     renderList();
   }
 
@@ -1368,7 +1437,7 @@
     a.href = URL.createObjectURL(blob);
     a.download = `email_${em.id}.eml`;
     a.click();
-    URL.revokeObjectURL(a.href);
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     showToast(`Exported email_${em.id}.eml`, "success");
   }
 
@@ -1381,14 +1450,17 @@
     a.href = URL.createObjectURL(blob);
     a.download = `email_${em.id}.md`;
     a.click();
-    URL.revokeObjectURL(a.href);
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     showToast(`Exported email_${em.id}.md`, "success");
   }
 
   window.exportJson = function() {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(emails, null, 2));
+    const blob = new Blob([JSON.stringify(emails, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
-    a.href = dataStr; a.download = "kmail_backup.json"; a.click();
+    a.href = URL.createObjectURL(blob);
+    a.download = "kmail_backup.json";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     showToast("Exported mailbox backup JSON.", "success");
   }
 
@@ -1401,10 +1473,23 @@
       try {
         const imported = JSON.parse(e.target.result);
         if(Array.isArray(imported)) {
-          emails = imported.slice(0, 1000);
-          nextId = Math.max(...emails.map(m=>m.id), 0) + 1;
+          emails = imported.slice(0, 1000).map((m, idx) => ({
+            id: typeof m.id === 'number' ? m.id : idx + 1,
+            folder: ['inbox', 'starred', 'sent', 'drafts', 'trash'].includes(m.folder) ? m.folder : 'inbox',
+            subject: typeof m.subject === 'string' ? m.subject : '(No Subject)',
+            sender: typeof m.sender === 'string' ? m.sender : 'unknown@kilo.os',
+            body: typeof m.body === 'string' ? m.body : '',
+            unread: !!m.unread,
+            tags: Array.isArray(m.tags) ? m.tags.filter(t => typeof t === 'string') : [],
+            encrypted: !!m.encrypted,
+            starred: !!m.starred
+          }));
+          nextId = emails.reduce((max, m) => Math.max(max, m.id), 0) + 1;
+          safeSaveEmails();
           renderList();
           showToast(`Mailbox imported (${emails.length} emails).`, "success");
+        } else {
+          showToast("Invalid mailbox JSON format (must be array).", "error");
         }
       } catch(err) { showToast("Invalid JSON mailbox file.", "error"); }
     };
