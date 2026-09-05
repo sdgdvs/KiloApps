@@ -666,14 +666,14 @@
   </div>
 
   <!-- Navigation Tabs -->
-  <div class="tab-nav">
-    <button class="tab-btn active" id="tabbtn-converter" onclick="switchTab('converter')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">1</span> ⚡ Converter & Inspector</button>
-    <button class="tab-btn" id="tabbtn-editor" onclick="switchTab('editor')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">2</span> 🔍 Hex Viewer & Buffer</button>
-    <button class="tab-btn" id="tabbtn-entropy" onclick="switchTab('entropy')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">3</span> 📊 Entropy & Dissection</button>
-    <button class="tab-btn" id="tabbtn-search" onclick="switchTab('search')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">4</span> 🔎 Search & Replace</button>
-    <button class="tab-btn" id="tabbtn-hashes" onclick="switchTab('hashes')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">5</span> 🔐 Checksum & Hashes</button>
-    <button class="tab-btn" id="tabbtn-operations" onclick="switchTab('operations')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">6</span> 🛠️ Byte Operations</button>
-    <button class="tab-btn" id="tabbtn-export" onclick="switchTab('export')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">7</span> 💾 Data Export</button>
+  <div class="tab-nav" role="tablist" aria-label="KHex Suite Tabs">
+    <button class="tab-btn active" id="tabbtn-converter" role="tab" aria-selected="true" aria-controls="tab-converter" onclick="switchTab('converter')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">1</span> ⚡ Converter & Inspector</button>
+    <button class="tab-btn" id="tabbtn-editor" role="tab" aria-selected="false" aria-controls="tab-editor" onclick="switchTab('editor')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">2</span> 🔍 Hex Viewer & Buffer</button>
+    <button class="tab-btn" id="tabbtn-entropy" role="tab" aria-selected="false" aria-controls="tab-entropy" onclick="switchTab('entropy')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">3</span> 📊 Entropy & Dissection</button>
+    <button class="tab-btn" id="tabbtn-search" role="tab" aria-selected="false" aria-controls="tab-search" onclick="switchTab('search')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">4</span> 🔎 Search & Replace</button>
+    <button class="tab-btn" id="tabbtn-hashes" role="tab" aria-selected="false" aria-controls="tab-hashes" onclick="switchTab('hashes')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">5</span> 🔐 Checksum & Hashes</button>
+    <button class="tab-btn" id="tabbtn-operations" role="tab" aria-selected="false" aria-controls="tab-operations" onclick="switchTab('operations')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">6</span> 🛠️ Byte Operations</button>
+    <button class="tab-btn" id="tabbtn-export" role="tab" aria-selected="false" aria-controls="tab-export" onclick="switchTab('export')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">7</span> 💾 Data Export</button>
   </div>
 
   <!-- TAB 1: Base Converter & Data Inspector -->
@@ -941,10 +941,10 @@
     <span style="color: var(--accent-cyan);">Press F1 or 'h' for Help</span>
   </div>
 
-  <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(6px);" onclick="if(event.target===this) toggleHelp()">
+  <div id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(6px);" onclick="if(event.target===this) toggleHelp()">
     <div class="panel" style="max-width: 640px; width: 90%; max-height: 85vh; overflow-y: auto; position: relative; border: 1px solid var(--accent-cyan); box-shadow: 0 0 30px rgba(6, 182, 212, 0.3);">
       <div class="panel-title" style="margin-bottom: 12px;">
-        <div class="title-left" style="font-size: 1.1rem; color: var(--accent-cyan);">
+        <div class="title-left" id="helpModalTitle" style="font-size: 1.1rem; color: var(--accent-cyan);">
           <span>⚡ KHex Utility Suite — Help & Documentation</span>
         </div>
         <button class="btn btn-sm" onclick="toggleHelp()" style="padding: 2px 8px;">✕</button>
@@ -1022,11 +1022,34 @@
     if (window.parent && window.parent !== window) {
       window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 860, height: 780 }, '*');
     }
+    try {
+      const savedEndian = localStorage.getItem('khex_endian');
+      if (savedEndian !== null) {
+        isLittleEndian = (savedEndian === 'true');
+        const badge = document.getElementById('endianBadge');
+        if (badge) badge.innerText = isLittleEndian ? 'LE (Little Endian)' : 'BE (Big Endian)';
+      }
+      const savedText = localStorage.getItem('khex_text_buf');
+      if (savedText && savedText.length > 0 && savedText.length < 32768) {
+        initialText = savedText;
+        binaryBuffer = new TextEncoder().encode(initialText);
+        const tb = document.getElementById('rawTextBuffer');
+        if (tb) tb.value = initialText;
+      }
+      const savedTab = localStorage.getItem('khex_active_tab');
+      if (savedTab && document.getElementById('tab-' + savedTab)) {
+        activeTab = savedTab;
+      }
+    } catch (e) {}
+
     initBitGrid();
     updateFromHex(document.getElementById('hexInput').value);
     renderHexView();
     computeHashes();
     generateExport();
+    if (activeTab !== 'converter') {
+      switchTab(activeTab);
+    }
     showToast('⚡ KHex Suite Ready', 'Press [F1] or click Help for full shortcuts & documentation.', 'info', 5000);
   });
 
@@ -1054,6 +1077,7 @@
       else if (e.key === '7') { switchTab('export'); e.preventDefault(); }
       else if (e.key === 'e' || e.key === 'E') {
         isLittleEndian = !isLittleEndian;
+        try { localStorage.setItem('khex_endian', isLittleEndian.toString()); } catch (err) {}
         document.getElementById('endianBadge').innerText = isLittleEndian ? 'LE (Little Endian)' : 'BE (Big Endian)';
         updateInspector();
         showToast('Endianness Switched', `Active: ${isLittleEndian ? 'Little Endian (LE)' : 'Big Endian (BE)'}`, 'info');
@@ -1064,12 +1088,13 @@
 
   function toggleHelp() {
     let m = document.getElementById('helpModal');
-    m.style.display = m.style.display === 'none' ? 'flex' : 'none';
+    if (m) m.style.display = m.style.display === 'none' ? 'flex' : 'none';
   }
 
   // Endianness Toggle
   document.getElementById('toggleEndianBtn').addEventListener('click', () => {
     isLittleEndian = !isLittleEndian;
+    try { localStorage.setItem('khex_endian', isLittleEndian.toString()); } catch (err) {}
     document.getElementById('endianBadge').innerText = isLittleEndian ? 'LE (Little Endian)' : 'BE (Big Endian)';
     updateInspector();
     showToast('Endianness Swapped', `Active: ${isLittleEndian ? 'Little Endian (LE)' : 'Big Endian (BE)'}`, 'info');
@@ -1078,11 +1103,18 @@
   // Tab Switcher
   function switchTab(tabId) {
     activeTab = tabId;
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    try { localStorage.setItem('khex_active_tab', tabId); } catch (err) {}
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.remove('active');
+      btn.setAttribute('aria-selected', 'false');
+    });
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     
     let btn = document.getElementById('tabbtn-' + tabId);
-    if (btn) btn.classList.add('active');
+    if (btn) {
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+    }
     let target = document.getElementById('tab-' + tabId);
     if (target) target.classList.add('active');
 
@@ -1432,7 +1464,16 @@
       const box = document.createElement('div');
       box.className = 'bit-box';
       box.id = 'bit-' + i;
+      box.tabIndex = 0;
+      box.setAttribute('role', 'button');
+      box.setAttribute('aria-label', 'Bit ' + i);
       box.onclick = () => toggleBit(i);
+      box.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          toggleBit(i);
+          e.preventDefault();
+        }
+      };
 
       const num = document.createElement('div');
       num.className = 'bit-num';
@@ -1476,6 +1517,11 @@
   textBuf.addEventListener('input', () => {
     let encoder = new TextEncoder();
     binaryBuffer = encoder.encode(textBuf.value);
+    try {
+      if (textBuf.value.length < 32768) {
+        localStorage.setItem('khex_text_buf', textBuf.value);
+      }
+    } catch (e) {}
     renderHexView();
   });
 
@@ -1483,6 +1529,7 @@
     let sample = "KHex - High-Performance Binary Inspector & Hex Manipulator. 0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     textBuf.value = sample;
     binaryBuffer = new TextEncoder().encode(sample);
+    try { localStorage.setItem('khex_text_buf', sample); } catch (e) {}
     renderHexView();
     showToast('Sample Data Loaded', 'Hex viewer buffer loaded with 98 sample bytes.', 'success');
   }
@@ -1509,6 +1556,7 @@
 
   function renderHexView(highlightRange = null) {
     const container = document.getElementById('hexViewContainer');
+    const prevScroll = container ? container.scrollTop : 0;
     container.innerHTML = '';
     document.getElementById('bufferSizeLabel').innerText = 'Buffer Size: ' + binaryBuffer.length + ' Bytes';
     document.getElementById('statusLength').innerText = 'Total Length: ' + binaryBuffer.length + ' Bytes';
@@ -1585,6 +1633,9 @@
 
       container.appendChild(rowEl);
     }
+    if (prevScroll > 0) {
+      container.scrollTop = prevScroll;
+    }
   }
 
   function selectByte(idx) {
@@ -1622,6 +1673,7 @@
       searchBytes = Array.from(new TextEncoder().encode(pattern));
     } else {
       let clean = pattern.replace(/[^0-9a-fA-F]/g, '');
+      if (clean.length % 2 !== 0) clean = '0' + clean;
       for (let i = 0; i < clean.length; i += 2) {
         searchBytes.push(parseInt(clean.substr(i, 2), 16) || 0);
       }
@@ -1673,11 +1725,15 @@
       return;
     }
 
+    let sClean = sPattern.replace(/[^0-9a-fA-F]/g, '');
+    if (sClean.length % 2 !== 0) sClean = '0' + sClean;
     let sBytes = (mode === 'ascii') ? Array.from(new TextEncoder().encode(sPattern)) :
-      sPattern.replace(/[^0-9a-fA-F]/g, '').match(/.{1,2}/g)?.map(b => parseInt(b, 16)) || [];
+      sClean.match(/.{1,2}/g)?.map(b => parseInt(b, 16)) || [];
 
+    let rClean = rPattern.replace(/[^0-9a-fA-F]/g, '');
+    if (rClean.length % 2 !== 0) rClean = '0' + rClean;
     let rBytes = (mode === 'ascii') ? Array.from(new TextEncoder().encode(rPattern)) :
-      rPattern.replace(/[^0-9a-fA-F]/g, '').match(/.{1,2}/g)?.map(b => parseInt(b, 16)) || [];
+      rClean.match(/.{1,2}/g)?.map(b => parseInt(b, 16)) || [];
 
     if (!sBytes.length) {
       showToast('Invalid Pattern', 'Search pattern bytes could not be parsed.', 'error');
@@ -1794,7 +1850,66 @@
     return state.map(v => (v >>> 0).toString(16).padStart(8, '0').match(/../g).reverse().join('')).join('');
   }
 
-  // SHA-256 via SubtleCrypto (or fallback)
+  // Pure JS SHA-256 Fallback
+  function pureJsSHA256(bytes) {
+    function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }
+    const words = [];
+    const bitLength = bytes.length * 8;
+    const hash = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+    const k = [
+      0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+      0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+      0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+      0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+      0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+      0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+      0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+      0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+    ];
+    let i, j;
+    for (i = 0; i < bytes.length; i++) {
+      const idx = (i >> 2);
+      words[idx] = (words[idx] || 0) | (bytes[i] << ((3 - (i % 4)) * 8));
+    }
+    words[bitLength >> 5] = (words[bitLength >> 5] || 0) | (0x80 << (24 - (bitLength % 32)));
+    words[(((bitLength + 64) >> 9) << 4) + 15] = bitLength;
+
+    const w = new Array(64);
+    for (i = 0; i < words.length; i += 16) {
+      for (j = 0; j < 16; j++) w[j] = words[i + j] || 0;
+      for (j = 16; j < 64; j++) {
+        const s0 = rightRotate(w[j - 15], 7) ^ rightRotate(w[j - 15], 18) ^ (w[j - 15] >>> 3);
+        const s1 = rightRotate(w[j - 2], 17) ^ rightRotate(w[j - 2], 19) ^ (w[j - 2] >>> 10);
+        w[j] = (w[j - 16] + s0 + w[j - 7] + s1) >>> 0;
+      }
+      let a = hash[0], b = hash[1], c = hash[2], d = hash[3], e = hash[4], f = hash[5], g = hash[6], h = hash[7];
+      for (j = 0; j < 64; j++) {
+        const S1 = rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25);
+        const ch = (e & f) ^ ((~e) & g);
+        const temp1 = (h + S1 + ch + k[j] + w[j]) >>> 0;
+        const S0 = rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22);
+        const maj = (a & b) ^ (a & c) ^ (b & c);
+        const temp2 = (S0 + maj) >>> 0;
+        h = g; g = f; f = e; e = (d + temp1) >>> 0;
+        d = c; c = b; b = a; a = (temp1 + temp2) >>> 0;
+      }
+      hash[0] = (hash[0] + a) >>> 0;
+      hash[1] = (hash[1] + b) >>> 0;
+      hash[2] = (hash[2] + c) >>> 0;
+      hash[3] = (hash[3] + d) >>> 0;
+      hash[4] = (hash[4] + e) >>> 0;
+      hash[5] = (hash[5] + f) >>> 0;
+      hash[6] = (hash[6] + g) >>> 0;
+      hash[7] = (hash[7] + h) >>> 0;
+    }
+    let res = '';
+    for (i = 0; i < 8; i++) {
+      res += (hash[i] >>> 0).toString(16).padStart(8, '0');
+    }
+    return res;
+  }
+
+  // SHA-256 via SubtleCrypto with pure JS fallback
   async function calcSHA256(buf) {
     if (window.crypto && crypto.subtle) {
       try {
@@ -1803,7 +1918,7 @@
         return hashArr.map(b => b.toString(16).padStart(2, '0')).join('');
       } catch(e) {}
     }
-    return "SHA256 computation supported";
+    return pureJsSHA256(buf);
   }
 
   // --- TAB 5: BYTE OPERATIONS LOGIC ---
@@ -1892,9 +2007,17 @@
       }
       out += '"';
     } else if (preset === 'base64') {
-      let str = '';
-      for (let i = 0; i < binaryBuffer.length; i++) str += String.fromCharCode(binaryBuffer[i]);
-      out = btoa(str);
+      try {
+        let binary = '';
+        const chunkSize = 8192;
+        for (let i = 0; i < binaryBuffer.length; i += chunkSize) {
+          const chunk = binaryBuffer.subarray(i, i + chunkSize);
+          binary += String.fromCharCode.apply(null, chunk);
+        }
+        out = btoa(binary);
+      } catch (err) {
+        out = 'Base64 conversion failed: ' + err.message;
+      }
     } else if (preset === 'hexstr') {
       for (let i = 0; i < binaryBuffer.length; i++) {
         out += binaryBuffer[i].toString(16).padStart(2, '0').toUpperCase();
@@ -1910,17 +2033,44 @@
       showToast('Export Notice', 'No formatted data available to copy.', 'warning');
       return;
     }
-    navigator.clipboard.writeText(text).then(() => {
-      showToast('Copied to Clipboard!', 'Export formatted data is ready to paste.', 'success');
-    }).catch(() => {
-      showToast('Copy Error', 'Could not access clipboard.', 'error');
-    });
+    function fallbackCopy(str) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = str;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        showToast('Copied to Clipboard!', 'Export formatted data is ready to paste.', 'success');
+      } catch (err) {
+        showToast('Copy Error', 'Could not access clipboard.', 'error');
+      }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Copied to Clipboard!', 'Export formatted data is ready to paste.', 'success');
+      }).catch(() => fallbackCopy(text));
+    } else {
+      fallbackCopy(text);
+    }
   }
 
   function downloadRawFile() {
     let blob = new Blob([binaryBuffer], { type: 'application/octet-stream' });
     let a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
+    a.download = 'khex_export.bin';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      a.remove();
+      URL.revokeObjectURL(a.href);
+    }, 1000);
+    showToast('Download Started', 'Binary buffer downloaded as khex_export.bin', 'success');
+  }
+
   // ==========================================
   // HIGH-PERFORMANCE FX & PARTICLE ENGINE
   // ==========================================

@@ -137,7 +137,7 @@ void fmtOct(unsigned int v, char* s) {
 void fmtAscii(unsigned int v, char* s) {
     int i, j = 0;
     int started = 0;
-    if (v == 0) { s[0] = '0'; s[1] = 0; return; }
+    if (v == 0) { s[0] = '.'; s[1] = 0; return; }
     for (i = 3; i >= 0; i--) {
         unsigned char c = (v >> (i * 8)) & 0xFF;
         if (c != 0) started = 1;
@@ -147,7 +147,7 @@ void fmtAscii(unsigned int v, char* s) {
         }
     }
     s[j] = 0;
-    if (j == 0) { s[0] = '0'; s[1] = 0; }
+    if (j == 0) { s[0] = '.'; s[1] = 0; }
 }
 
 // Byte Endian Swap Functions
@@ -207,13 +207,14 @@ void calcEntropy4(unsigned int val, char* outBuf, char* classBuf) {
     b[2] = (val >> 8) & 0xFF;
     b[3] = val & 0xFF;
 
+    unsigned char uVal[4];
     int counts[4] = {0, 0, 0, 0};
     int uniqueCount = 0;
     int i, j;
     for (i = 0; i < 4; i++) {
         int found = -1;
         for (j = 0; j < uniqueCount; j++) {
-            if (b[i] == b[j]) {
+            if (b[i] == uVal[j]) {
                 found = j;
                 break;
             }
@@ -221,7 +222,7 @@ void calcEntropy4(unsigned int val, char* outBuf, char* classBuf) {
         if (found >= 0) {
             counts[found]++;
         } else {
-            b[uniqueCount] = b[i];
+            uVal[uniqueCount] = b[i];
             counts[uniqueCount] = 1;
             uniqueCount++;
         }
@@ -406,7 +407,7 @@ void ExportHexDump(unsigned int val) {
 }
 
 void ExportDissection(unsigned int val) {
-    char out[1536];
+    char out[4096];
     unsigned int swapVal = swap32(val);
     unsigned int inspectVal = isLittleEndian ? val : swapVal;
     
@@ -733,26 +734,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Section 1: Base Converter
             CreateWindowEx(0, "STATIC", "--- BASE CONVERTER ---", WS_CHILD | WS_VISIBLE, 10, 8, 200, 16, hwnd, NULL, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 740, 8, 80, 24, hwnd, (HMENU)100, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 740, 8, 80, 24, hwnd, (HMENU)100, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Hex:", WS_CHILD | WS_VISIBLE, 10, 28, 35, 20, hwnd, NULL, NULL, NULL);
-            hHex = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x00000000", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 50, 28, 160, 22, hwnd, (HMENU)ID_HEX, NULL, NULL);
+            hHex = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x00000000", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 50, 28, 160, 22, hwnd, (HMENU)ID_HEX, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Dec:", WS_CHILD | WS_VISIBLE, 10, 53, 35, 20, hwnd, NULL, NULL, NULL);
-            hDec = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 50, 53, 160, 22, hwnd, (HMENU)ID_DEC, NULL, NULL);
+            hDec = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 50, 53, 160, 22, hwnd, (HMENU)ID_DEC, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Bin:", WS_CHILD | WS_VISIBLE, 10, 78, 35, 20, hwnd, NULL, NULL, NULL);
-            hBin = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "00000000000000000000000000000000", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 50, 78, 260, 22, hwnd, (HMENU)ID_BIN, NULL, NULL);
+            hBin = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "00000000000000000000000000000000", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 50, 78, 260, 22, hwnd, (HMENU)ID_BIN, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Oct:", WS_CHILD | WS_VISIBLE, 320, 28, 35, 20, hwnd, NULL, NULL, NULL);
-            hOct = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 360, 28, 180, 22, hwnd, (HMENU)ID_OCT, NULL, NULL);
+            hOct = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 360, 28, 180, 22, hwnd, (HMENU)ID_OCT, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Asc:", WS_CHILD | WS_VISIBLE, 320, 53, 35, 20, hwnd, NULL, NULL, NULL);
-            hAscii = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 360, 53, 180, 22, hwnd, (HMENU)ID_ASC, NULL, NULL);
+            hAscii = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", ".", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 360, 53, 180, 22, hwnd, (HMENU)ID_ASC, NULL, NULL);
 
             // Section 2: Data Inspector Panel
             CreateWindowEx(0, "STATIC", "--- MULTI-TYPE DATA INSPECTOR & ENTROPY ---", WS_CHILD | WS_VISIBLE, 10, 108, 320, 16, hwnd, NULL, NULL, NULL);
-            hEndianBtn = CreateWindowEx(0, "BUTTON", "Endian: LE [^E]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 330, 104, 110, 22, hwnd, (HMENU)ID_BTN_ENDIAN, NULL, NULL);
+            hEndianBtn = CreateWindowEx(0, "BUTTON", "Endian: LE [^E]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 330, 104, 110, 22, hwnd, (HMENU)ID_BTN_ENDIAN, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Int8:", WS_CHILD | WS_VISIBLE, 10, 130, 40, 20, hwnd, NULL, NULL, NULL);
             hInt8 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_READONLY, 55, 130, 90, 22, hwnd, NULL, NULL, NULL);
@@ -805,15 +806,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Section 4: Operations & Export
             CreateWindowEx(0, "STATIC", "--- BYTE OPERATIONS, EXPORT & DISSECTION ---", WS_CHILD | WS_VISIBLE, 10, 285, 340, 16, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "BUTTON", "Swap16 [^1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 305, 80, 24, hwnd, (HMENU)ID_BTN_SWAP16, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Swap32 [^2]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 95, 305, 80, 24, hwnd, (HMENU)ID_BTN_SWAP32, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Invert [^3]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 180, 305, 75, 24, hwnd, (HMENU)ID_BTN_INVERT, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "XOR FF [^4]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 260, 305, 80, 24, hwnd, (HMENU)ID_BTN_XORMASK, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "C Array [^5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 345, 305, 80, 24, hwnd, (HMENU)ID_BTN_CARRAY, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "HexDump [^6]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 430, 305, 85, 24, hwnd, (HMENU)ID_BTN_DUMP, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Dissect & Entropy [^7]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 520, 305, 140, 24, hwnd, (HMENU)ID_BTN_DISSECT, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Swap16 [^1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 305, 80, 24, hwnd, (HMENU)ID_BTN_SWAP16, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Swap32 [^2]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 95, 305, 80, 24, hwnd, (HMENU)ID_BTN_SWAP32, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Invert [^3]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 180, 305, 75, 24, hwnd, (HMENU)ID_BTN_INVERT, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "XOR FF [^4]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 260, 305, 80, 24, hwnd, (HMENU)ID_BTN_XORMASK, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "C Array [^5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 345, 305, 80, 24, hwnd, (HMENU)ID_BTN_CARRAY, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "HexDump [^6]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 430, 305, 85, 24, hwnd, (HMENU)ID_BTN_DUMP, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Dissect & Entropy [^7]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 520, 305, 140, 24, hwnd, (HMENU)ID_BTN_DISSECT, NULL, NULL);
 
-            hExportEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KHex Suite!\r\nPress F1 or click 'Help' for user guide & shortcuts.\r\n\r\nResult / Export & Deep Dissection preview area...", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | ES_READONLY, 10, 335, 810, 320, hwnd, NULL, NULL, NULL);
+            hExportEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KHex Suite!\r\nPress F1 or click 'Help' for user guide & shortcuts.\r\n\r\nResult / Export & Deep Dissection preview area...", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | ES_READONLY | WS_TABSTOP, 10, 335, 810, 320, hwnd, NULL, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Shortcuts: F1 (Help), Ctrl+E (Endian), Ctrl+1..7 (Operations)", WS_CHILD | WS_VISIBLE, 10, 665, 400, 16, hwnd, NULL, NULL, NULL);
 
@@ -936,8 +937,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_CTLCOLORSTATIC: {
             HDC hdc = (HDC)wParam;
-            SetTextColor(hdc, RGB(148, 163, 184));
-            SetBkColor(hdc, RGB(15, 23, 42));
+            HWND hCtl = (HWND)lParam;
+            if (hCtl == hExportEdit) {
+                SetTextColor(hdc, RGB(226, 232, 240));
+                SetBkColor(hdc, RGB(15, 23, 42));
+            } else if (hCtl == hEntropy || hCtl == hSig || hCtl == hCRC32) {
+                SetTextColor(hdc, RGB(6, 182, 212));
+                SetBkColor(hdc, RGB(15, 23, 42));
+            } else {
+                SetTextColor(hdc, RGB(148, 163, 184));
+                SetBkColor(hdc, RGB(15, 23, 42));
+            }
             return (LRESULT)hBrushBg;
         }
         case WM_CTLCOLOREDIT: {
@@ -1014,9 +1024,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Specular sheen sweep line on hexagon
             HPEN hSheen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-            SelectObject(memDC, hSheen);
+            HPEN oldSheen = (HPEN)SelectObject(memDC, hSheen);
             MoveToEx(memDC, 698 - offset, 28, NULL);
             LineTo(memDC, 722 + offset, 38);
+            SelectObject(memDC, oldSheen);
             DeleteObject(hSheen);
 
             SetTextColor(memDC, RGB(255, 255, 255));
@@ -1172,8 +1183,10 @@ void MainEntry() {
                 }
             }
         }
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        if (!IsDialogMessage(hwnd, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
     ExitProcess(0);
 }
