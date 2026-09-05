@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KBudget
+**Target App:** KCalc
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KBudget
 - KCalc
 - KCalendar
 - KChart
@@ -173,8 +172,18 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KBBS
 - KBase
 - KBreakout
+- KBudget
 
 ## Test Reports
+
+- **KBudget**: ISSUES FOUND ⚠️ (6 issues, 6 fixed inline)
+  - ✅ Core functionality works (income/expense transaction ledger, summary balance/income/expense cards, interactive pie chart for category breakdown, multi-field search and 4-way sorting, 20-item pagination controls, Add/Edit transaction modal, Settings modal with custom currency symbol persistence, CSV import and export, print stylesheet layout, keyboard shortcuts Ctrl+N/F/S/O/Escape).
+  - 🔧 FIXED: Date display shifted backwards by 1 day in western timezones (e.g. Sep 5 showed as Sep 4) due to ISO 8601 UTC midnight parsing in `new Date(dateString).toLocaleDateString()`, and `dateInput.valueAsDate = new Date()` assigned UTC dates. Updated `formatDate()` to parse local date components and set local calendar values.
+  - 🔧 FIXED: `exportCSV()` used `data:text/csv;charset=utf-8,` with `encodeURI()`, which failed to escape `#` characters in descriptions (e.g. "Invoice #42"), causing browsers to treat `#` as a URL fragment identifier and corrupt/truncate the downloaded CSV. Switched to `Blob` and `URL.createObjectURL()`.
+  - 🔧 FIXED: `importCSV()` split rows only on `\n`, retaining carriage returns (`\r`) on Windows and Excel CSV exports, and lacked positive amount checks. Updated parser to split on `\r?\n`, validate `amount > 0`, and accept flexible income labels.
+  - 🔧 FIXED: Negative balances formatted as `$-X.XX` instead of `-$X.XX` because `formatCurrency()` prepended the currency symbol directly to negative numbers. Updated formatter to place negative signs before currency symbols.
+  - 🔧 FIXED: Strict equality checks (`x.id === id`, `t.id !== id`) caused Edit and Delete operations to fail if transaction IDs were numeric in localStorage. Converted comparisons to string representations and sanitized IDs in event attributes.
+  - 🔧 FIXED: Editing transactions with custom or imported categories not in the hardcoded default arrays wiped the category and reset it to "Food". Updated `openModal()` to dynamically append missing categories to the select dropdown, and added HTML escaping to transaction list rendering.
 
 - **KBreakout**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
   - ✅ Core gameplay works (Classic/Hard/Multi-Ball Chaos campaigns, 40 stages, 6 active cyber skills Laser/Split/Fire/Barrier/Gravity/Satellite, Cyber-Forge Lab with 7 crafting recipes, dynamic brick types Quantum Resonance/Prism Reflector/Explosive/Hazard/Steel, boss fortress encounters, particle explosion physics, high scores and material persistence).

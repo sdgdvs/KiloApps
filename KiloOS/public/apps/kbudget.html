@@ -451,10 +451,16 @@
 
         // Init
         function init() {
-            // Set default date to today
-            dateInput.valueAsDate = new Date();
+            // Set default date to today in local timezone
+            dateInput.value = new Date().toLocaleDateString('en-CA');
             updateCategories();
+            amountLabel.textContent = `Amount (${currencySymbol})`;
             render();
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
 
         // Functions
@@ -462,12 +468,19 @@
             modal.classList.add('active');
             amountLabel.textContent = `Amount (${currencySymbol})`;
             if (id) {
+                id = decodeURIComponent(id);
                 editingTransactionId = id;
-                const t = transactions.find(x => x.id === id);
+                const t = transactions.find(x => String(x.id) === String(id));
                 if (t) {
                     typeSelect.value = t.type;
                     updateCategories();
                     document.getElementById('amount').value = t.amount;
+                    if (t.category && !Array.from(categorySelect.options).some(o => o.value === t.category)) {
+                        const opt = document.createElement('option');
+                        opt.value = t.category;
+                        opt.textContent = t.category;
+                        categorySelect.appendChild(opt);
+                    }
                     categorySelect.value = t.category;
                     document.getElementById('date').value = t.date;
                     document.getElementById('description').value = t.description;
@@ -475,7 +488,9 @@
                 }
             } else {
                 editingTransactionId = null;
-                dateInput.valueAsDate = new Date();
+                form.reset();
+                updateCategories();
+                dateInput.value = new Date().toLocaleDateString('en-CA');
                 document.querySelector('#modal h2').textContent = 'Add Transaction';
             }
         }
@@ -532,7 +547,7 @@
             };
 
             if (editingTransactionId) {
-                const index = transactions.findIndex(t => t.id === editingTransactionId);
+                const index = transactions.findIndex(t => String(t.id) === String(editingTransactionId));
                 if (index !== -1) {
                     transactions[index] = transaction;
                 }
@@ -550,29 +565,31 @@
         }
 
         function deleteTransaction(id) {
-            transactions = transactions.filter(t => t.id !== id);
+            id = decodeURIComponent(id);
+            transactions = transactions.filter(t => String(t.id) !== String(id));
             saveTransactions();
             render();
         }
 
         function exportCSV() {
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "is_income,amount,category,date,description\n";
+            let csvContent = "is_income,amount,category,date,description\n";
             transactions.forEach(t => {
                 let is_income = t.type === 'income' ? 1 : 0;
                 let cat = (t.category || '').replace(/,/g, ' ');
                 let date = (t.date || '').replace(/,/g, ' ');
-                let desc = (t.description || '').replace(/,/g, ' ');
+                let desc = (t.description || '').replace(/,/g, ' ').replace(/[\r\n]+/g, ' ');
                 let row = `${is_income},${t.amount},${cat},${date},${desc}`;
                 csvContent += row + "\n";
             });
-            const encodedUri = encodeURI(csvContent);
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
+            link.setAttribute("href", url);
             link.setAttribute("download", "kbudget_export.csv");
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         }
 
         function importCSV() {
@@ -585,20 +602,22 @@
                 const reader = new FileReader();
                 reader.onload = event => {
                     const text = event.target.result;
-                    const lines = text.split('\n');
+                    const lines = text.split(/\r?\n/);
                     let imported = 0;
                     if (lines.length > 1) {
                         for (let i = 1; i < lines.length; i++) {
-                            if (!lines[i].trim()) continue;
-                            const parts = lines[i].split(',');
+                            const line = lines[i].trim();
+                            if (!line) continue;
+                            const parts = line.split(',');
                             if (parts.length >= 4) {
-                                const is_income = parseInt(parts[0], 10);
+                                const firstCol = parts[0].trim().toLowerCase();
+                                const is_income = firstCol === '1' || firstCol === 'income' || firstCol === 'true';
                                 const amount = parseFloat(parts[1]);
-                                const category = parts[2].trim();
+                                const category = parts[2].trim() || 'Other';
                                 const date = parts[3].trim();
                                 const description = parts.slice(4).join(',').trim();
                                 
-                                if (!isNaN(amount)) {
+                                if (!isNaN(amount) && amount > 0) {
                                     transactions.push({
                                         id: Date.now().toString() + Math.random().toString(),
                                         type: is_income ? 'income' : 'expense',
@@ -627,12 +646,18 @@
         }
 
         function formatCurrency(amount) {
-            return currencySymbol + amount.toFixed(2);
+            const isNeg = amount < 0;
+            return (isNeg ? '-' : '') + currencySymbol + Math.abs(amount).toFixed(2);
         }
 
         function formatDate(dateString) {
-            const options = { month: 'short', day: 'numeric', year: 'numeric' };
-            return new Date(dateString).toLocaleDateString(undefined, options);
+            if (!dateString) return '';
+            const parts = dateString.split('-');
+            if (parts.length === 3) {
+                const d = new Date(parts[0], parts[1] - 1, parts[2]);
+                return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+            }
+            return new Date(dateString).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
         }
 
         function render() {
@@ -720,16 +745,16 @@
                     el.className = 'transaction-item';
                     el.innerHTML = `
                         <div class="transaction-info">
-                            <span class="transaction-desc">${t.description}</span>
+                            <span class="transaction-desc">${escapeHtml(t.description)}</span>
                             <div class="transaction-meta">
-                                <span class="transaction-category">${t.category}</span>
+                                <span class="transaction-category">${escapeHtml(t.category)}</span>
                                 <span>${formatDate(t.date)}</span>
                             </div>
                         </div>
                         <div class="transaction-right">
                             <span class="transaction-amount ${amountClass}">${sign}${formatCurrency(t.amount)}</span>
-                            <button class="edit-btn" onclick="openModal('${t.id}')" title="Edit">✎</button>
-                            <button class="delete-btn" onclick="deleteTransaction('${t.id}')" title="Delete">✕</button>
+                            <button class="edit-btn" onclick="openModal('${encodeURIComponent(t.id)}')" title="Edit">✎</button>
+                            <button class="delete-btn" onclick="deleteTransaction('${encodeURIComponent(t.id)}')" title="Delete">✕</button>
                         </div>
                     `;
                     transactionList.appendChild(el);
