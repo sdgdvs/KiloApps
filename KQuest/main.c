@@ -2354,6 +2354,15 @@ void CastLightningStorm() {
     char msg[128];
     wsprintfA(msg, "⚡ LIGHTNING STORM! Heavy thunder strikes %s for %d magic damage!", currentEnemy.name, dmg);
     LogMessage(msg);
+
+    TriggerGdiSpellFX(2);
+    char ftxt[16];
+    wsprintfA(ftxt, "-%d", dmg);
+    AddGdiFloatText(ftxt, 560, 45, RGB(137, 220, 235), 1);
+    AddGdiParticles(560, 65, RGB(137, 220, 235), 30, 1);
+    AddGdiShockwave(560, 80, RGB(137, 220, 235), 75);
+    TriggerGdiScreenShake(12);
+
     currentEnemy.hp -= dmg;
     if ((xrand() % 100) < 45) {
         player.lightningDazeTurns = 1;
@@ -2386,6 +2395,12 @@ void CastHolyShield() {
     player.hp += 25;
     if (player.hp > player.maxHp) player.hp = player.maxHp;
     LogMessage("🛡️ HOLY SHIELD ACTIVATED! Granted 100% invulnerability barrier for 2 turns and +25 HP recovery!");
+
+    AddGdiFloatText("+25 HP", 140, 45, RGB(166, 227, 161), 1);
+    AddGdiParticles(140, 70, RGB(166, 227, 161), 25, 1);
+    AddGdiShockwave(140, 85, RGB(166, 227, 161), 65);
+    TriggerGdiScreenShake(6);
+
     UpdateUI();
     EnemyTurn();
 }
@@ -2401,6 +2416,12 @@ void CastBerserkMight() {
     SfxSpellCast();
     player.berserkTurns = 3;
     LogMessage("🔥 BERSERK MIGHT ACTIVATED! Attack damage doubled (+100%) for 3 turns!");
+
+    AddGdiFloatText("🔥 BERSERK!", 140, 45, RGB(243, 139, 168), 1);
+    AddGdiParticles(140, 70, RGB(243, 139, 168), 30, 1);
+    AddGdiShockwave(140, 85, RGB(243, 139, 168), 75);
+    TriggerGdiScreenShake(8);
+
     UpdateUI();
     EnemyTurn();
 }
@@ -2415,6 +2436,12 @@ void UsePhoenixElixir() {
     player.mp = player.maxMp;
     SfxLevelUp();
     LogMessage("🔥 DRANK PHOENIX ELIXIR! Restored 100% Max HP and 100% Max MP!");
+
+    AddGdiFloatText("FULL RESTORE!", 140, 45, RGB(249, 226, 175), 1);
+    AddGdiParticles(140, 70, RGB(249, 226, 175), 35, 1);
+    AddGdiShockwave(140, 85, RGB(249, 226, 175), 80);
+    TriggerGdiScreenShake(10);
+
     UpdateUI();
     if (gameState == STATE_COMBAT) EnemyTurn();
 }
@@ -3843,7 +3870,8 @@ void HandleButton6() {
                 int offMult = 100 + (player.offensePoints * 8);
                 int totalStr = player.str + player.weaponBonusStr;
                 int dmg = (int)(totalStr * 3 * offMult / 100);
-                if (currentEnemy.hp < (currentEnemy.maxHp * 40 / 100)) {
+                BOOL isCrit = (currentEnemy.hp < (currentEnemy.maxHp * 40 / 100));
+                if (isCrit) {
                     dmg *= 2;
                     char emsg[128];
                     wsprintfA(emsg, "💀 EXECUTE CRITICAL! Target HP < 40%! Dealt %d fatal physical damage to %s!", dmg, currentEnemy.name);
@@ -3853,6 +3881,13 @@ void HandleButton6() {
                     wsprintfA(emsg, "⚔️ Executed heavy strike dealing %d physical damage to %s!", dmg, currentEnemy.name);
                     LogMessage(emsg);
                 }
+                char ftxt[16];
+                wsprintfA(ftxt, "-%d", dmg);
+                AddGdiFloatText(ftxt, 560, 45, RGB(243, 139, 168), 1);
+                AddGdiParticles(560, 65, RGB(243, 139, 168), isCrit ? 35 : 20, 1);
+                AddGdiShockwave(560, 80, RGB(243, 139, 168), isCrit ? 85 : 60);
+                TriggerGdiScreenShake(isCrit ? 15 : 8);
+
                 currentEnemy.hp -= dmg;
                 if (currentEnemy.hp <= 0) {
                     currentEnemy.hp = 0;
@@ -3878,6 +3913,12 @@ void HandleButton6() {
                 player.hp += 20;
                 if (player.hp > player.maxHp) player.hp = player.maxHp;
                 LogMessage("🛡️ Activated IRON WILL! Restored +20 HP and granted 50% damage reduction for 2 turns!");
+                
+                AddGdiFloatText("🛡️ IRON WILL!", 140, 45, RGB(137, 180, 250), 1);
+                AddGdiParticles(140, 70, RGB(137, 180, 250), 25, 1);
+                AddGdiShockwave(140, 85, RGB(137, 180, 250), 70);
+                TriggerGdiScreenShake(8);
+
                 UpdateUI();
                 EnemyTurn();
             } else {
@@ -3890,6 +3931,12 @@ void HandleButton6() {
             player.manaSurgeActive = 1;
             SfxSpellCast();
             LogMessage("⚡ Activated MANA SURGE! Recovered +35 MP! Next spell power boosted by +50%!");
+            
+            AddGdiFloatText("⚡ MANA SURGE!", 140, 45, RGB(203, 166, 247), 1);
+            AddGdiParticles(140, 70, RGB(203, 166, 247), 25, 1);
+            AddGdiShockwave(140, 85, RGB(203, 166, 247), 70);
+            TriggerGdiScreenShake(7);
+
             UpdateUI();
             SetupButtons();
         } else {

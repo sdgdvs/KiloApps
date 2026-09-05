@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KQuest
 - KSpace
 - KPac
 - KSanctuary
@@ -150,8 +149,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KWizard
 - KMystery
 - KReversi
+- KQuest
 
 ## Completed Work Log
+
+- **KQuest (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on melee attacks, critical strikes, spell impacts (Fireball, Lightning Storm, Berserk Might, Holy Shield, Execute, Iron Will, Mana Surge), taking heavy damage, boss defeats, and victory celebrations (continuous 60 FPS requestAnimationFrame mathematical translation/rotation with rotational damping in Web Canvas `kquest.html`, and double-buffered viewport rendering with physics decay in Native C Win32 GDI `KQuest/main.c`), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity trails and drag deceleration, expanding buoyant smoke & elemental/plasma puffs with negative gravity and radius growth, heavy kinematic dungeon stone & armor/weapon debris shards with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars upon criticals, level ups, and victory bursts), dual-tier concentric ground shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion halo radiating across the battlefield upon impacts and spell casts, ornate Medieval RPG golden corner filigree L-brackets with rivet detailing at all four combat arena corners, a pulsating golden energy perimeter inlay border with an animated traveling specular glint traversing the outer combat arena frame, sculpted player hero & monster highlights with diagonal specular sheen sweeps traversing weapons, shields, robes, and armor plates, and biome-specific ambient atmospheric floating mystic dust motes drifting across the arena in both Web Canvas (`kquest.html`) and Native C Win32 GDI (`KQuest/main.c`).
 
 - **KReversi (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on disc placements, double-flip bonuses, bomb explosions, freeze powerups, and victory celebrations (continuous 60 FPS requestAnimationFrame animation loop in Web Canvas `kreversi.html`, and double-buffered viewport rendering with physics decay in Native C Win32 GDI `KReversi/main.c`), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity drag trails, expanding buoyant smoke / plasma puffs with negative gravity and radius growth, heavy kinematic slate stone / lacquer / marble debris shards with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars upon flips, bombs, and stage victories), dual-tier concentric placement shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion / gold halo radiating across the board upon disc drops, ornate Art Deco golden corner filigree L-brackets with brass rivet studs and micro-accents at all four corners of the mahogany board frame, a pulsating golden energy perimeter inlay border with an animated traveling specular glint traversing the outer playfield rectangle, sculpted 3D beveled discs with diagonal specular sheen sweeps traversing discs and mahogany wood grain, and atmospheric environmental floating Zen emerald / velvet dust motes drifting across the viewport in both Web Canvas (`kreversi.html`) and Native C Win32 GDI (`KReversi/main.c`).
 
