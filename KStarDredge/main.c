@@ -699,6 +699,7 @@ typedef struct {
     int showRefinery;
     int showStation;
     int showHelp;
+    int helpTab; // 0=Flight & Controls, 1=Sector Charts, 2=Mineral Codex, 3=Refinery Recipes, 4=Crisis & Defense
     int catalyticBoost;
     int refined[6]; // hyperFerrum, superconductor, warpCells, darkMatrix, nanitePaste, o2Canister
     float crucibleAnimTime;
@@ -6262,52 +6263,393 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         DeleteObject(hPenBorderDef);
     }
 
-    // Help Overlay Modal
+    // Phase 14: Comprehensive Help & Dredger Captain's Manual Modal (5 Detailed Tabs)
     if (g_state.showHelp) {
-        int helpW = 560;
-        int helpH = 410;
+        int helpW = 780;
+        int helpH = 500;
         int hx = (totalW - helpW) / 2;
         int hy = (totalH - helpH) / 2;
-        
+
         RECT rcHelp = { hx, hy, hx + helpW, hy + helpH };
         HBRUSH hBrHModal = CreateSolidBrush(pal->bgPanel);
         FillRect(hdc, &rcHelp, hBrHModal);
         DeleteObject(hBrHModal);
+
+        HPEN hPenHBorder = CreatePen(PS_SOLID, 2, pal->borderGlow);
+        HGDIOBJ oldPenH = SelectObject(hdc, hPenHBorder);
         FrameRect(hdc, &rcHelp, (HBRUSH)GetStockObject(WHITE_BRUSH));
-        
-        RECT rcHelpHeader = { hx, hy, hx + helpW, hy + 28 };
+
+        // Top Header Bar
+        RECT rcHelpHeader = { hx, hy, hx + helpW, hy + 30 };
         FillRect(hdc, &rcHelpHeader, hBrSubHdr);
         SelectObject(hdc, g_fontHeader);
         SetTextColor(hdc, pal->vector);
-        TextOutA(hdc, hx + 12, hy + 6, "KStarDredge - Captain's Flight Manual", 37);
-        
-        SelectObject(hdc, g_fontMonoBold);
-        int myHelp = hy + 36;
-        SetTextColor(hdc, pal->textBright);
-        TextOutA(hdc, hx + 16, myHelp, "FLIGHT CONTROLS & DREDGING TACTICS:", 35);
-        myHelp += 20;
-        
+        TextOutA(hdc, hx + 12, hy + 6, "KStarDredge - Dredger Captain's Manual & Codex", 46);
+
+        // Close button at top right
+        RECT rcCloseBtn = { hx + helpW - 120, hy + 4, hx + helpW - 10, hy + 26 };
+        HBRUSH hBrClose = CreateSolidBrush(RGB(127, 29, 29));
+        FillRect(hdc, &rcCloseBtn, hBrClose);
+        DeleteObject(hBrClose);
         SelectObject(hdc, g_fontSmall);
-        SetTextColor(hdc, RGB(148, 163, 184));
-        TextOutA(hdc, hx + 20, myHelp, "• [W / UP ARROW]: Engage Forward Fusion Thrusters (Consumes Fuel)", 64); myHelp += 16;
-        TextOutA(hdc, hx + 20, myHelp, "• [S / DOWN ARROW]: Engage Retro Braking Thrusters", 50); myHelp += 16;
-        TextOutA(hdc, hx + 20, myHelp, "• [A / D / LEFT / RIGHT]: Pivot Barge Heading", 45); myHelp += 16;
-        TextOutA(hdc, hx + 20, myHelp, "• [SPACEBAR / LASER BTN]: Fire Mining Laser (Watch Laser Heat)", 62); myHelp += 16;
-        TextOutA(hdc, hx + 20, myHelp, "• [T / TRACTOR BTN]: Toggle Tractor Magnet to draw floating mineral chunks", 73); myHelp += 16;
-        TextOutA(hdc, hx + 20, myHelp, "• [Z / DAMPENER BTN]: Toggle Inertial Dampeners for precise stationkeeping", 74); myHelp += 16;
-        TextOutA(hdc, hx + 20, myHelp, "• [P / PROSPECT BTN]: Open Multi-Spectral Spectrometer & Tune Resonance", 71); myHelp += 16;
-        TextOutA(hdc, hx + 20, myHelp, "• [E / EVA OPS BTN]: Open EVA Salvage Operations on nearby derelicts", 68); myHelp += 16;
-        TextOutA(hdc, hx + 20, myHelp, "• [K / CRISIS BTN]: Access Damage Control & Emergency Bulkheads", 63); myHelp += 16;
-        TextOutA(hdc, hx + 20, myHelp, "• [R / SMELT BTN]: Open Orbital Metallurgical Refinery & Smelting Lab", 69); myHelp += 16;
-        TextOutA(hdc, hx + 20, myHelp, "• [U / UPGRADES BTN]: Open Modular Engineering Bay & Install Upgrades", 69); myHelp += 16;
-        TextOutA(hdc, hx + 20, myHelp, "• [N / SECTORS BTN]: Open Star Sector Chart & Engage Sub-space Warp Jumps", 72); myHelp += 16;
-        TextOutA(hdc, hx + 20, myHelp, "• [V / THEME BTN]: Cycle Retro CRT Vector Theme (Cyan / Amber / Green / Solar)", 77); myHelp += 16;
-        TextOutA(hdc, hx + 20, myHelp, "• [C / SCANLINES BTN]: Toggle CRT Scanlines & Shaders (Off / On / CRT+)", 70); myHelp += 16;
-        TextOutA(hdc, hx + 20, myHelp, "• [CLICK VIEWPORT]: Target & Lock asteroid or derelict ship", 58); myHelp += 16;
-        TextOutA(hdc, hx + 20, myHelp, "• [LIQUIDATE]: Sell cargo hold to orbital comm-link for Credits", 62); myHelp += 18;
-        
+        SetTextColor(hdc, RGB(254, 202, 202));
+        DrawTextA(hdc, "[X] CLOSE [ESC]", -1, &rcCloseBtn, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+        // 5 Navigation Tabs Bar (at hy + 32 to hy + 56)
+        const char* tabNames[5] = {
+            "[1] FLIGHT & CONTROLS",
+            "[2] SECTOR CHARTS",
+            "[3] MINERAL CODEX",
+            "[4] REFINERY LAB",
+            "[5] CRISIS & DEFENSE"
+        };
+        int tabW = (helpW - 24) / 5;
+        int tabY = hy + 32;
+
+        for (int t = 0; t < 5; t++) {
+            RECT rcTab = { hx + 12 + t * tabW, tabY, hx + 12 + (t + 1) * tabW - 4, tabY + 24 };
+            int isActive = (g_state.helpTab == t);
+            HBRUSH hBrTab = CreateSolidBrush(isActive ? RGB(15, 28, 63) : RGB(10, 16, 30));
+            FillRect(hdc, &rcTab, hBrTab);
+            DeleteObject(hBrTab);
+
+            HPEN hPenTab = CreatePen(PS_SOLID, 1, isActive ? pal->borderGlow : pal->borderPanel);
+            HGDIOBJ oldPenTab = SelectObject(hdc, hPenTab);
+            MoveToEx(hdc, rcTab.left, rcTab.bottom, NULL);
+            LineTo(hdc, rcTab.left, rcTab.top);
+            LineTo(hdc, rcTab.right, rcTab.top);
+            LineTo(hdc, rcTab.right, rcTab.bottom);
+            SelectObject(hdc, oldPenTab);
+            DeleteObject(hPenTab);
+
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, isActive ? pal->vector : RGB(100, 116, 139));
+            DrawTextA(hdc, tabNames[t], -1, &rcTab, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        }
+
+        int cY = hy + 62;
+        SelectObject(hdc, g_fontSmall);
+
+        // --- TAB 0: FLIGHT CONTROLS & DREDGING TACTICS ---
+        if (g_state.helpTab == 0) {
+            // Left Column: Keybinds Table
+            int col1X = hx + 14;
+            int col1W = 360;
+            int col2X = col1X + col1W + 12;
+            int col2W = helpW - (col2X - hx) - 14;
+
+            RECT rcCol1 = { col1X, cY, col1X + col1W, cY + 400 };
+            HBRUSH hBrC1 = CreateSolidBrush(RGB(5, 10, 22));
+            FillRect(hdc, &rcCol1, hBrC1);
+            DeleteObject(hBrC1);
+            FrameRect(hdc, &rcCol1, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, pal->textBright);
+            TextOutA(hdc, col1X + 10, cY + 8, "COCKPIT KEYBOARD CONTROLS:", 26);
+
+            SelectObject(hdc, g_fontSmall);
+            int ky = cY + 30;
+            const char* binds[14] = {
+                "• [W / UP ARROW]    Forward Fusion Thrusters",
+                "• [S / DOWN ARROW]  Retro Braking Thrusters",
+                "• [A / D / ARROWS]  Pivot Mining Barge Heading",
+                "• [SPACEBAR]        Fire Heavy Mining Laser",
+                "• [1, 2, 3, 4]      Select Active Weapon System",
+                "• [F]               Fire Kinetic Railgun Cannon",
+                "• [G]               Launch EMP Flak Cannon",
+                "• [C]               Deploy Emergency Chaff Cloud",
+                "• [T]               Tractor Beam Vacuum Magnet",
+                "• [Z]               Inertia Dampeners Drift Brake",
+                "• [P]               Multi-Spectral Spectrometer",
+                "• [U]               Engineering Bay & Upgrades",
+                "• [N]               Star Sector Charts & Warp",
+                "• [D] / [E] / [K]   Spaceport / EVA / Crisis Ops"
+            };
+            for (int i = 0; i < 14; i++) {
+                SetTextColor(hdc, (i == 3 || i == 4 || i == 5) ? RGB(244, 63, 94) : RGB(148, 163, 184));
+                TextOutA(hdc, col1X + 10, ky, binds[i], (int)strlen(binds[i]));
+                ky += 18;
+            }
+
+            // Right Column: Telemetry & Operations
+            RECT rcCol2 = { col2X, cY, col2X + col2W, cY + 400 };
+            HBRUSH hBrC2 = CreateSolidBrush(RGB(5, 10, 22));
+            FillRect(hdc, &rcCol2, hBrC2);
+            DeleteObject(hBrC2);
+            FrameRect(hdc, &rcCol2, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, pal->textBright);
+            TextOutA(hdc, col2X + 10, cY + 8, "SUB-SYSTEMS & TELEMETRY GUIDE:", 30);
+
+            SelectObject(hdc, g_fontSmall);
+            int sy = cY + 30;
+            SetTextColor(hdc, RGB(56, 189, 248));
+            TextOutA(hdc, col2X + 10, sy, "1. Laser Optics & Heat Dissipation:", 35); sy += 15;
+            SetTextColor(hdc, RGB(148, 163, 184));
+            TextOutA(hdc, col2X + 14, sy, "Continuous firing heats optics. At 100% heat,", 45); sy += 14;
+            TextOutA(hdc, col2X + 14, sy, "emergency cooldown shuts down laser until <25%.", 47); sy += 18;
+
+            SetTextColor(hdc, RGB(16, 185, 129));
+            TextOutA(hdc, col2X + 10, sy, "2. Tractor Emitter & Ore Scooping:", 34); sy += 15;
+            SetTextColor(hdc, RGB(148, 163, 184));
+            TextOutA(hdc, col2X + 14, sy, "Draws floating ore nuggets and scrap into hold.", 47); sy += 14;
+            TextOutA(hdc, col2X + 14, sy, "Keep tractor active [T] while mining fields.", 44); sy += 18;
+
+            SetTextColor(hdc, RGB(245, 158, 11));
+            TextOutA(hdc, col2X + 10, sy, "3. Inertia Dampeners & Drift Brake:", 35); sy += 15;
+            SetTextColor(hdc, RGB(148, 163, 184));
+            TextOutA(hdc, col2X + 14, sy, "Arrests barge drift when maneuvering near wrecks.", 49); sy += 14;
+            TextOutA(hdc, col2X + 14, sy, "Toggle with [Z] for precision docking.", 38); sy += 18;
+
+            SetTextColor(hdc, RGB(192, 132, 252));
+            TextOutA(hdc, col2X + 10, sy, "4. Radar Mini-Scope Blip Identifiers:", 37); sy += 15;
+            SetTextColor(hdc, RGB(148, 163, 184));
+            TextOutA(hdc, col2X + 14, sy, "Cyan=Asteroids, Red Diamond=Hostile Raiders,", 44); sy += 14;
+            TextOutA(hdc, col2X + 14, sy, "Flashing Dot=Torpedo, Red Box=Derelict Hulk.", 44); sy += 14;
+            TextOutA(hdc, col2X + 14, sy, "Green Box=Sector Orbital Spaceport.", 35);
+        }
+        // --- TAB 1: SECTOR & ASTEROID CHARTS ---
+        else if (g_state.helpTab == 1) {
+            int cardW = (helpW - 36) / 2;
+            int cardH = 150;
+
+            for (int s = 0; s < 4; s++) {
+                int cxCard = hx + 14 + (s % 2) * (cardW + 8);
+                int cyCard = cY + (s / 2) * (cardH + 8);
+                RECT rcCard = { cxCard, cyCard, cxCard + cardW, cyCard + cardH };
+
+                HBRUSH hBrSec = CreateSolidBrush(RGB(5, 10, 22));
+                FillRect(hdc, &rcCard, hBrSec);
+                DeleteObject(hBrSec);
+                FrameRect(hdc, &rcCard, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+                SelectObject(hdc, g_fontMonoBold);
+                SetTextColor(hdc, (s == 0) ? RGB(56, 189, 248) : ((s == 1) ? RGB(167, 139, 250) : ((s == 2) ? RGB(244, 63, 94) : RGB(239, 68, 68))));
+                char hTxt[64];
+                sprintf(hTxt, "SECTOR %d: %s", s + 1, SECTOR_DEFS[s].name);
+                TextOutA(hdc, cxCard + 10, cyCard + 8, hTxt, (int)strlen(hTxt));
+
+                SelectObject(hdc, g_fontSmall);
+                int py = cyCard + 28;
+                SetTextColor(hdc, RGB(251, 191, 36));
+                const char* threatLabels[4] = { "Threat: 10% (Low)  •  Radiation: 0.00 Rad/s", "Threat: 25% (Mod)  •  Radiation: 0.06 Rad/s", "Threat: 60% (High) •  Radiation: 0.15 Rad/s", "Threat: 85% (Extr) •  Radiation: 0.35 Rad/s" };
+                TextOutA(hdc, cxCard + 10, py, threatLabels[s], (int)strlen(threatLabels[s])); py += 16;
+
+                SetTextColor(hdc, RGB(148, 163, 184));
+                const char* secDescs[4][3] = {
+                    { "Dense asteroid field rich in Ferrum and Silicates.", "Home to Sol Mining Consortium Vanguard Foundry.", "Safe dredging zone for novice captains." },
+                    { "Outer deep-freeze ring with rich Platinum veins.", "Trade depot for Free Miner Haven spaceport.", "Sub-zero temperatures and moderate pirate skiffs." },
+                    { "Graveyard of ruined battlecruisers and wreckage.", "Rich in Derelict Scrap, Cores, and Black Boxes.", "Governed by ruthless Black Sun Syndicate." },
+                    { "Ionizing nebula rich in Dark Matter Geodes.", "Extreme hazard zone with dreadnought raiders.", "Protected by heavily armed Void Vanguard Bastion." }
+                };
+                TextOutA(hdc, cxCard + 10, py, secDescs[s][0], (int)strlen(secDescs[s][0])); py += 14;
+                TextOutA(hdc, cxCard + 10, py, secDescs[s][1], (int)strlen(secDescs[s][1])); py += 14;
+                TextOutA(hdc, cxCard + 10, py, secDescs[s][2], (int)strlen(secDescs[s][2])); py += 16;
+
+                SetTextColor(hdc, RGB(110, 231, 183));
+                char wTxt[64];
+                sprintf(wTxt, "Warp Fuel Jump Cost: %d%% Fuel", SECTOR_DEFS[s].fuelCost);
+                TextOutA(hdc, cxCard + 10, py, wTxt, (int)strlen(wTxt));
+            }
+
+            // Spectrometer Bottom Note
+            int noteY = cY + cardH * 2 + 20;
+            RECT rcNote = { hx + 14, noteY, hx + helpW - 14, noteY + 60 };
+            HBRUSH hBrNote = CreateSolidBrush(RGB(15, 28, 63));
+            FillRect(hdc, &rcNote, hBrNote);
+            DeleteObject(hBrNote);
+            FrameRect(hdc, &rcNote, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, pal->vector);
+            TextOutA(hdc, hx + 22, noteY + 6, "PROSPECTING TIP: SPECTROMETRY & HARMONIC RESONANCE", 50);
+
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, RGB(226, 232, 240));
+            TextOutA(hdc, hx + 22, noteY + 24, "Target any asteroid and press [P] to analyze elemental emission wavelengths. Clicking 'TUNE RESONANCE'", 102);
+            TextOutA(hdc, hx + 22, noteY + 40, "synchronizes laser optics to unlock +50% Mining DPS, +50% Chunk Rate, and reveals hidden Dark Geodes!", 103);
+        }
+        // --- TAB 2: MINERAL & ORE CODEX ---
+        else if (g_state.helpTab == 2) {
+            int cardW = (helpW - 36) / 3;
+            int cardH = 175;
+
+            const char* oTitles[6] = {
+                "Ferrum Ore (Fe-56)",
+                "Dense Silicates (SiO2)",
+                "Platinum Vein (Pt-78)",
+                "Void Quartz (SiO4-Q)",
+                "Dark Geode (DM-Omega)",
+                "Derelict Scrap (Ti-Cr)"
+            };
+            const char* oValues[6] = { "15 CR / T", "25 CR / T", "75 CR / T", "140 CR / T", "300 CR / T", "50 CR / T" };
+            const char* oDescs[6][5] = {
+                { "Abundant structural heavy metal.", "Found in inner belt sectors.", "Smelts into Hyper-Ferrum Ingots.", "Used to craft Railgun Slugs.", "Base market: 15 CR/T." },
+                { "High-purity quartz and flux sands.", "Essential metallurgical catalyst.", "Synthesized into EMP capacitors.", "Decomposed into fresh O2 canisters.", "Base market: 25 CR/T." },
+                { "Precious conductive noble metal.", "High corrosion & heat resistance.", "Infused into quantum superconductors.", "Used to forge Dark Matter matrices.", "Base market: 75 CR/T." },
+                { "Resonant piezoelectric crystal.", "Harvested in deep void rings.", "Catalyzes sub-space warp plasma.", "Used in precision laser optic lenses.", "Base market: 140 CR/T." },
+                { "Ultra-rare gravitational anomaly.", "Harvested from nebula cores.", "Used in Dark Matter matrix ingots.", "Extreme commercial value across Sol.", "Base market: 300 CR/T." },
+                { "Titanium warship armor fragments.", "Salvaged from derelict hulls.", "Refined with iron into nanite paste.", "Instantly repairs hull breaches.", "Base market: 50 CR/T." }
+            };
+
+            for (int i = 0; i < 6; i++) {
+                int cxCard = hx + 14 + (i % 3) * (cardW + 6);
+                int cyCard = cY + (i / 3) * (cardH + 10);
+                RECT rcCard = { cxCard, cyCard, cxCard + cardW, cyCard + cardH };
+
+                HBRUSH hBrOre = CreateSolidBrush(RGB(5, 10, 22));
+                FillRect(hdc, &rcCard, hBrOre);
+                DeleteObject(hBrOre);
+                FrameRect(hdc, &rcCard, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+                SelectObject(hdc, g_fontMonoBold);
+                SetTextColor(hdc, ORE_DEFS[i].color);
+                TextOutA(hdc, cxCard + 8, cyCard + 8, oTitles[i], (int)strlen(oTitles[i]));
+
+                SelectObject(hdc, g_fontSmall);
+                SetTextColor(hdc, RGB(251, 191, 36));
+                TextOutA(hdc, cxCard + 8, cyCard + 26, oValues[i], (int)strlen(oValues[i]));
+
+                SetTextColor(hdc, RGB(148, 163, 184));
+                int ly = cyCard + 46;
+                for (int d = 0; d < 5; d++) {
+                    TextOutA(hdc, cxCard + 8, ly, oDescs[i][d], (int)strlen(oDescs[i][d]));
+                    ly += 16;
+                }
+            }
+        }
+        // --- TAB 3: REFINERY LAB RECIPES ---
+        else if (g_state.helpTab == 3) {
+            int cardW = (helpW - 36) / 2;
+            int cardH = 115;
+
+            for (int i = 0; i < 6; i++) {
+                const RefineryRecipeDef* r = &REFINERY_RECIPES[i];
+                int cxCard = hx + 14 + (i % 2) * (cardW + 8);
+                int cyCard = cY + (i / 2) * (cardH + 8);
+                RECT rcCard = { cxCard, cyCard, cxCard + cardW, cyCard + cardH };
+
+                HBRUSH hBrRec = CreateSolidBrush(RGB(5, 10, 22));
+                FillRect(hdc, &rcCard, hBrRec);
+                DeleteObject(hBrRec);
+                FrameRect(hdc, &rcCard, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+                SelectObject(hdc, g_fontMonoBold);
+                SetTextColor(hdc, r->color);
+                char rHead[64];
+                sprintf(rHead, "%d. %s", i + 1, r->name);
+                TextOutA(hdc, cxCard + 10, cyCard + 8, rHead, (int)strlen(rHead));
+
+                SelectObject(hdc, g_fontSmall);
+                SetTextColor(hdc, RGB(251, 191, 36));
+                char rCost[64];
+                sprintf(rCost, "Cost: %s  |  Val: %d CR", r->inputStr, r->value);
+                TextOutA(hdc, cxCard + 10, cyCard + 28, rCost, (int)strlen(rCost));
+
+                SetTextColor(hdc, RGB(148, 163, 184));
+                RECT rcDesc = { cxCard + 10, cyCard + 48, cxCard + cardW - 10, cyCard + cardH - 24 };
+                DrawTextA(hdc, r->desc, -1, &rcDesc, DT_WORDBREAK);
+
+                if (r->usable) {
+                    SetTextColor(hdc, RGB(16, 185, 129));
+                    TextOutA(hdc, cxCard + 10, cyCard + cardH - 18, r->useLabel, (int)strlen(r->useLabel));
+                }
+            }
+
+            // Refinery Bottom Note
+            int noteY = cY + cardH * 3 + 12;
+            RECT rcNote = { hx + 14, noteY, hx + helpW - 14, noteY + 45 };
+            HBRUSH hBrNote = CreateSolidBrush(RGB(15, 28, 63));
+            FillRect(hdc, &rcNote, hBrNote);
+            DeleteObject(hBrNote);
+            FrameRect(hdc, &rcNote, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, pal->vector);
+            TextOutA(hdc, hx + 22, noteY + 6, "SMELTING CATALYTIC BOOST [B]:", 29);
+
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, RGB(226, 232, 240));
+            TextOutA(hdc, hx + 22, noteY + 24, "Toggle Catalytic Boost [B] in the Refinery [R] for +25% bonus alloy yield on all smelted batches!", 97);
+        }
+        // --- TAB 4: CRISIS & DEFENSE TACTICS ---
+        else if (g_state.helpTab == 4) {
+            int col1X = hx + 14;
+            int col1W = 360;
+            int col2X = col1X + col1W + 12;
+            int col2W = helpW - (col2X - hx) - 14;
+
+            // Left: Life Support Crisis
+            RECT rcCol1 = { col1X, cY, col1X + col1W, cY + 400 };
+            HBRUSH hBrC1 = CreateSolidBrush(RGB(5, 10, 22));
+            FillRect(hdc, &rcCol1, hBrC1);
+            DeleteObject(hBrC1);
+            FrameRect(hdc, &rcCol1, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, RGB(244, 63, 94));
+            TextOutA(hdc, col1X + 10, cY + 8, "DAMAGE CONTROL & CRISIS OPS [K]:", 32);
+
+            SelectObject(hdc, g_fontSmall);
+            int cy1 = cY + 30;
+            SetTextColor(hdc, RGB(239, 68, 68));
+            TextOutA(hdc, col1X + 10, cy1, "1. Hull Breaches & Decompression:", 33); cy1 += 15;
+            SetTextColor(hdc, RGB(148, 163, 184));
+            TextOutA(hdc, col1X + 14, cy1, "Kinetic impacts breach compartments (Bridge, Hold,", 50); cy1 += 14;
+            TextOutA(hdc, col1X + 14, cy1, "Reactor, Life Support). Deploy nanite sealant [1].", 50); cy1 += 18;
+
+            SetTextColor(hdc, RGB(245, 158, 11));
+            TextOutA(hdc, col1X + 10, cy1, "2. Superheated Plasma Conduit Leaks:", 36); cy1 += 15;
+            SetTextColor(hdc, RGB(148, 163, 184));
+            TextOutA(hdc, col1X + 14, cy1, "Laser overheating ruptures plasma manifolds.", 44); cy1 += 14;
+            TextOutA(hdc, col1X + 14, cy1, "Vent superheated plasma [2] to avert meltdown.", 46); cy1 += 18;
+
+            SetTextColor(hdc, RGB(16, 185, 129));
+            TextOutA(hdc, col1X + 10, cy1, "3. CO2 Scrubbers & Radiation Flush:", 35); cy1 += 15;
+            SetTextColor(hdc, RGB(148, 163, 184));
+            TextOutA(hdc, col1X + 14, cy1, "Dust degrades filtration. Overcharge scrubbers [4]", 50); cy1 += 14;
+            TextOutA(hdc, col1X + 14, cy1, "and flush radiation decon [3] to safeguard crew.", 48);
+
+            // Right: Void Pirate Defense
+            RECT rcCol2 = { col2X, cY, col2X + col2W, cY + 400 };
+            HBRUSH hBrC2 = CreateSolidBrush(RGB(5, 10, 22));
+            FillRect(hdc, &rcCol2, hBrC2);
+            DeleteObject(hBrC2);
+            FrameRect(hdc, &rcCol2, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, RGB(239, 68, 68));
+            TextOutA(hdc, col2X + 10, cY + 8, "VOID PIRATE INTEL & ARMORY [X]:", 31);
+
+            SelectObject(hdc, g_fontSmall);
+            int cy2 = cY + 30;
+            SetTextColor(hdc, RGB(248, 113, 113));
+            TextOutA(hdc, col2X + 10, cy2, "• Corsair Skiff (90 HP / 450 CR):", 33); cy2 += 15;
+            SetTextColor(hdc, RGB(148, 163, 184));
+            TextOutA(hdc, col2X + 14, cy2, "Agile raider with twin blasters. Easy Railgun kill.", 51); cy2 += 18;
+
+            SetTextColor(hdc, RGB(251, 191, 36));
+            TextOutA(hdc, col2X + 10, cy2, "• Marauder Gunship (220 HP / 1,100 CR):", 39); cy2 += 15;
+            SetTextColor(hdc, RGB(148, 163, 184));
+            TextOutA(hdc, col2X + 14, cy2, "Armored gunship firing lethal Homing Torpedoes.", 47); cy2 += 14;
+            TextOutA(hdc, col2X + 14, cy2, "Deploy Chaff [C] or PDL Turret [4] to intercept!", 48); cy2 += 18;
+
+            SetTextColor(hdc, RGB(244, 63, 94));
+            TextOutA(hdc, col2X + 10, cy2, "• Void Dread Raider (450 HP / 2,800 CR):", 40); cy2 += 15;
+            SetTextColor(hdc, RGB(148, 163, 184));
+            TextOutA(hdc, col2X + 14, cy2, "Heavy dreadnought. Fire EMP Flak [G] to strip", 46); cy2 += 14;
+            TextOutA(hdc, col2X + 14, cy2, "shields & stun for 4s, then finish with Railgun [F]!", 52);
+        }
+
+        // Footer Instruction
+        SelectObject(hdc, g_fontSmall);
         SetTextColor(hdc, RGB(245, 158, 11));
-        TextOutA(hdc, hx + 20, myHelp, "Press [H] or Click 'MANUAL' to close this screen.", 49);
+        TextOutA(hdc, hx + 16, hy + helpH - 22, "Tabs [1-5] • [H / ESC] Close Manual • Click Viewport or Buttons to operate barge", 80);
+
+        SelectObject(hdc, oldPenH);
+        DeleteObject(hPenHBorder);
     }
     
     SelectObject(hdc, oldPen);
@@ -6523,8 +6865,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int totalH = rc.bottom - rc.top;
             
             if (g_state.showHelp) {
-                g_state.showHelp = 0;
-                InvalidateRect(hwnd, NULL, FALSE);
+                int helpW = 780;
+                int helpH = 500;
+                int hx = (totalW - helpW) / 2;
+                int hy = (totalH - helpH) / 2;
+
+                // Close button top-right
+                if (mx >= hx + helpW - 130 && mx <= hx + helpW - 10 && my >= hy && my <= hy + 30) {
+                    g_state.showHelp = 0;
+                    TriggerSound(SFX_BEEP);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+
+                // Tab buttons at hy + 32 to hy + 56
+                int tabY = hy + 32;
+                int tabW = (helpW - 24) / 5;
+                for (int t = 0; t < 5; t++) {
+                    int tx = hx + 12 + t * tabW;
+                    if (mx >= tx && mx <= tx + tabW - 4 && my >= tabY && my <= tabY + 24) {
+                        g_state.helpTab = t;
+                        TriggerSound(SFX_BEEP);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        return 0;
+                    }
+                }
+
+                // Click outside modal closes it
+                if (mx < hx || mx > hx + helpW || my < hy || my > hy + helpH) {
+                    g_state.showHelp = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
                 return 0;
             }
 
@@ -7159,6 +7531,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (wParam == '4') { g_state.selectedSectorIndex = 3; TriggerSound(SFX_BEEP); InvalidateRect(hwnd, NULL, FALSE); return 0; }
                 if (wParam == VK_RETURN) { EngageWarpJump(g_state.selectedSectorIndex); InvalidateRect(hwnd, NULL, FALSE); return 0; }
                 if (wParam == 'N' || wParam == VK_ESCAPE) { g_state.showStarChart = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+            }
+
+            if (g_state.showHelp) {
+                if (wParam >= '1' && wParam <= '5') {
+                    g_state.helpTab = (int)(wParam - '1');
+                    TriggerSound(SFX_BEEP);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                if (wParam == VK_ESCAPE || wParam == 'H') {
+                    g_state.showHelp = 0;
+                    TriggerSound(SFX_BEEP);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
             }
             
             switch (wParam) {

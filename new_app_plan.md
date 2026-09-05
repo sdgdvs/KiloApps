@@ -53,28 +53,28 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KStarDredge (Deep space asteroid mining, derelict salvage & orbital refining RPG)
-**Phase:** 14 (next to do)
-**Status:** Deep Expansion
+**App:** KAbyss (Abyssal dungeon crawler with magical relics, ancient runes, and procedural crypts)
+**Phase:** 1 (next to do)
+**Status:** App Creation
 
-- [x] Phase 1: Scaffold KStarDredge directory (`KStarDredge/`), create web HTML skeleton (`KiloOS/public/apps/kstardredge.html`), register in App.jsx.
-- [x] Phase 2: Core mining barge cockpit (thrusters, mining laser, tractor beam, ore hold, reactor core, asteroid radar).
-- [x] Phase 3: Native C version (`KStarDredge/main.c`, `build.bat`) using Win32 API with functional parity.
-- [x] Phase 4: Retro-futuristic CRT amber/green vector themes and cockpit scanline shaders.
-- [x] Phase 5: Asteroid belt navigation & procedural star sector charts (Belt Alpha, Kuiper Ring, Derelict Graveyard, Plasma Nebula).
-- [x] Phase 6: Mining barge modular upgrades (heavy plasma drills, titan cargo bay, fusion thrusters, particle shields).
-- [x] Phase 7: Deep scan & asteroid mineral prospecting (spectrometer analysis for ferrum, platinum, void quartz, dark matter geodes).
-- [x] Phase 8: Derelict spaceship exploration & EVA salvage ops (breach airlocks, recover black boxes, harvest reactor cores).
-- [x] Phase 9: Hull integrity, radiation exposure & life support crisis management (seal hull breaches, vent plasma leaks, manage O2 scrubbers).
-- [x] Phase 10: Orbital refinery & metallurgical smelting lab (refine raw ores into hyper-alloys, synthesize warp fuel).
-- [x] Phase 11: Orbital spaceports & black market trade stations (dock with stations, barter materials, accept dredging contracts).
-- [x] Phase 12: Void pirate defense & weapon systems (railguns, EMP flak cannons, point-defense lasers against raiders).
-- [x] Phase 13: Sound Effects — Mining laser hums, rock fracture crunches, thruster burns, collision alarms, railgun discharges (Web Audio / Win32 Beep).
-- [ ] Phase 14: Comprehensive Help & Dredger Captain's Manual — Asteroid charts, ore codex, refinery recipes, and survival tactics.
+- [ ] Phase 1: Scaffold KAbyss directory (`KAbyss/`), create web HTML skeleton (`KiloOS/public/apps/kabyss.html`), register in App.jsx.
+- [ ] Phase 2: Core dungeon crawl engine (tile map grid, hero character, FOV lighting, movement, turn system).
+- [ ] Phase 3: Native C version (`KAbyss/main.c`, `build.bat`) using Win32 API with functional parity.
+- [ ] Phase 4: Dark atmospheric subterranean theme, CRT scanlines and dungeon torchlight illumination shaders.
+- [ ] Phase 5: Procedural dungeon depth generation (Catacombs, Sunken Grotto, Forgotten Crypt, Void Abyss).
+- [ ] Phase 6: Relic & Ancient Rune magic system (enchanted staves, rune socketing, elemental spellcasting).
+- [ ] Phase 7: Monster bestiary & tactical turn-based AI (crypt skeletons, void wraiths, abyssal leviathans).
+- [ ] Phase 8: Inventory management, equipment slots, potion brewing, and ancient alchemy cauldrons.
+- [ ] Phase 9: Sanity, hunger & subterranean curse hazards (torches extinguishing, cursed effigies, eldritch whispers).
+- [ ] Phase 10: Ancient runic shrines & relic enchanting altars (imbue weapons with frost/fire/void enchantments).
+- [ ] Phase 11: Subterranean merchants & wandering black market hermits (trade gold for relics).
+- [ ] Phase 12: Boss encounters & abyssal lords (The Crypt Keeper, Abyssal Wyrm, Void Monarch).
+- [ ] Phase 13: Procedural dungeon audio & atmospheric soundscapes (torch crackle, monster growls, spell casting).
+- [ ] Phase 14: Comprehensive Help & Delver's Tome (Dungeon bestiary, spell grimoire, runic index, survival tactics).
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
-2. Implement the feature in BOTH `KiloOS/public/apps/kstardredge.html` AND `KStarDredge/main.c`.
+2. Implement the feature in BOTH `KiloOS/public/apps/kabyss.html` AND `KAbyss/main.c`.
 3. Mark the phase as `[x]` in this plan file.
 4. Update the **Phase** number to the next unchecked phase.
 5. Commit and push both the code changes and this plan file update.
@@ -136,6 +136,7 @@ When starting a new app, you MUST write concrete phase descriptions for Phases 5
 Use the game/utility feature priority lists above for inspiration, but write specific descriptions tailored to the app.
 
 ## Completed Apps
+- KStarDredge (Phase 14 completed: Added Comprehensive Help & Dredger Captain's Manual & Codex to both versions)
 - KSubmarine (Phase 14 completed: Added Comprehensive Help & Captain's Submersible Manual to both versions)
 - KSanctuary (Phase 14 completed: Added Comprehensive Help & Overseer's Survival Manual & Facility Codex to both versions)
 - KStellar (Phase 14 completed: Added Comprehensive Help & Star Captain's Manual to both versions)
@@ -175,8 +176,8 @@ Use the game/utility feature priority lists above for inspiration, but write spe
 ## Possible Future Apps (pick from here or invent your own)
 
 ### 🎮 GAMES — DEEP FANTASY & SCI-FI (PRIORITY)
-- **KStarDredge** — Deep space asteroid mining and salvage RPG with derelict vessels, pirate raiders, and orbital refining stations.
 - **KAbyss** — Abyssal dungeon crawler with magical relics, ancient runes, and procedural crypts.
+- **KCosmic** — Cosmic colony fleet logistics and interstellar planetary terraforming simulation.
 
 ### 🛠️ Utilities (lower priority — create 1 for every 2-3 games)
 - **KPomodoro** — Focus timer with work/break cycles, session history, daily stats.
