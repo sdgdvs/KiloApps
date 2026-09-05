@@ -490,11 +490,93 @@
     font-size: 0.82em;
     border: 1px solid #1f3666;
   }
+
+  /* Toast Notification System */
+  #toastContainer {
+    position: fixed;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+    max-width: 90%;
+    width: max-content;
+  }
+  .toast {
+    background: rgba(15, 30, 60, 0.95);
+    border: 1px solid #3c6edb;
+    color: #ffffff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.7), 0 0 12px rgba(60, 110, 219, 0.4);
+    font-size: 0.88em;
+    font-weight: 500;
+    pointer-events: auto;
+    cursor: pointer;
+    animation: toastIn 0.25s ease-out;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    backdrop-filter: blur(4px);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .toast.success { border-color: #00e676; box-shadow: 0 8px 24px rgba(0,0,0,0.7), 0 0 12px rgba(0,230,118,0.4); }
+  .toast.warning { border-color: #ffd700; box-shadow: 0 8px 24px rgba(0,0,0,0.7), 0 0 12px rgba(255,215,0,0.4); }
+  .toast.info { border-color: #00e5ff; box-shadow: 0 8px 24px rgba(0,0,0,0.7), 0 0 12px rgba(0,229,255,0.4); }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(12px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(5, 12, 28, 0.7);
+    backdrop-filter: blur(2px);
+    z-index: 95;
+  }
+
+  /* Column Number Badges */
+  .col-numbers {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    width: 100%;
+    margin-bottom: 4px;
+    z-index: 2;
+  }
+  .col-number-badge {
+    width: 44px;
+    text-align: center;
+    font-size: 0.78em;
+    font-weight: bold;
+    color: #90caf9;
+    background: rgba(18, 45, 97, 0.7);
+    border: 1px solid #2a5298;
+    border-radius: 4px;
+    padding: 2px 0;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+  .col-number-badge:hover, .col-number-badge.hover {
+    background: #1976d2;
+    color: #ffffff;
+    border-color: #4fc3f7;
+    box-shadow: 0 0 8px #00e5ff;
+    transform: translateY(-2px);
+  }
 </style>
 </head>
 <body data-width="580" data-height="780">
+  <div id="modalBackdrop" class="modal-backdrop" onclick="closeAllModals()"></div>
+  <div id="toastContainer"></div>
   <h1>KConnect4</h1>
-  <div style="font-size: 1em; color: #ffeb3b; margin-bottom: 6px; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.8);">Press H for Help (or click Help button)</div>
+  <div style="font-size: 0.95em; color: #ffeb3b; margin-bottom: 6px; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.8); text-align: center;">Press [F1/H] for Help &bull; Keys [1-7] to Drop &bull; [B/D/M/F] Skills</div>
   <div id="status">Player 1's turn (Red)</div>
   <div id="evalBarWrapper">
     <div class="eval-header">
@@ -508,32 +590,33 @@
     </div>
   </div>
   <div id="timerContainer"><div id="timerBar"></div></div>
+  <div id="colNumbers" class="col-numbers"></div>
   <div id="boardWrapper">
     <div id="tableSurface"></div>
     <div id="board"></div>
     <canvas id="fxCanvas"></canvas>
   </div>
   <div class="controls-row">
-    <button id="modeBtn" onclick="toggleMode()">Mode: vs AI</button>
+    <button id="modeBtn" onclick="toggleMode()">Mode: vs AI [V]</button>
     <select id="diffSelect" onchange="changeDifficulty()"></select>
-    <button id="hintBtn" onclick="triggerHint()">Hint (T)</button>
-    <button id="freezeBtn" onclick="toggleFreezeSkill()">Freeze (1)</button>
-    <button onclick="undoMove()">Undo (U)</button>
+    <button id="hintBtn" onclick="triggerHint()">Hint [T]</button>
+    <button id="freezeBtn" onclick="toggleFreezeSkill()">Freeze [F]</button>
+    <button onclick="undoMove()">Undo [U]</button>
   </div>
   <div class="controls-row">
-    <button id="bombBtn" onclick="togglePowerup(1)">Bomb (2)</button>
-    <button id="drillBtn" onclick="togglePowerup(2)">Drill (2)</button>
-    <button id="magnetBtn" onclick="togglePowerup(3)">Mag (2)</button>
-    <button onclick="initGame()">Reset</button>
-    <button id="muteBtn" onclick="toggleMute()">Mute</button>
-    <button onclick="toggleHelp()">Help</button>
+    <button id="bombBtn" onclick="togglePowerup(1)">Bomb [B] (2)</button>
+    <button id="drillBtn" onclick="togglePowerup(2)">Drill [D] (2)</button>
+    <button id="magnetBtn" onclick="togglePowerup(3)">Mag [M] (2)</button>
+    <button onclick="initGame()">Reset [R]</button>
+    <button id="muteBtn" onclick="toggleMute()">Mute [P]</button>
+    <button onclick="toggleHelp()">Help [F1]</button>
   </div>
   <div class="controls-row">
-    <button onclick="saveGame()">Save (F5)</button>
-    <button onclick="loadGame()">Load (F9)</button>
-    <button onclick="exportJSON()">Export JSON</button>
-    <button onclick="document.getElementById('importFile').click()">Import JSON</button>
-    <button id="notationBtn" onclick="toggleNotationModal()">Notation (N)</button>
+    <button onclick="saveGame()">Save [F5]</button>
+    <button onclick="loadGame()">Load [F9]</button>
+    <button onclick="exportJSON()">Exp JSON [E]</button>
+    <button onclick="document.getElementById('importFile').click()">Imp JSON [I]</button>
+    <button id="notationBtn" onclick="toggleNotationModal()">Notation [N]</button>
     <input type="file" id="importFile" style="display:none" accept=".json" onchange="importJSON(event)">
   </div>
   <div class="controls-row" id="replayControls" style="display:none;">
@@ -647,14 +730,82 @@
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let isMuted = false;
 
+    /* Toast Notification System */
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = msg;
+      toast.onclick = () => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px) scale(0.95)';
+        setTimeout(() => toast.remove(), 200);
+      };
+      container.appendChild(toast);
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(10px) scale(0.95)';
+          setTimeout(() => toast.remove(), 200);
+        }
+      }, 4000);
+    }
+
+    function closeAllModals() {
+      const help = document.getElementById('helpModal');
+      const notation = document.getElementById('notationModal');
+      const backdrop = document.getElementById('modalBackdrop');
+      if (help) help.style.display = 'none';
+      if (notation) notation.style.display = 'none';
+      if (backdrop) backdrop.style.display = 'none';
+    }
+
     function toggleHelp() {
       const modal = document.getElementById('helpModal');
-      modal.style.display = modal.style.display === 'none' || modal.style.display === '' ? 'block' : 'none';
+      const backdrop = document.getElementById('modalBackdrop');
+      const isOpen = modal && modal.style.display === 'block';
+      closeAllModals();
+      if (!isOpen && modal) {
+        modal.style.display = 'block';
+        if (backdrop) backdrop.style.display = 'block';
+      }
     }
 
     function toggleMute() {
       isMuted = !isMuted;
-      document.getElementById('muteBtn').textContent = isMuted ? 'Unmute' : 'Mute';
+      document.getElementById('muteBtn').textContent = isMuted ? 'Unmute [P]' : 'Mute [P]';
+      showToast(isMuted ? 'Audio muted [P]' : 'Audio enabled [P]', 'info');
+    }
+
+    function updateColNumbers() {
+      const container = document.getElementById('colNumbers');
+      if (!container) return;
+      container.innerHTML = '';
+      for (let c = 0; c < COLS; c++) {
+        const badge = document.createElement('div');
+        badge.className = 'col-number-badge';
+        badge.textContent = `${c + 1}`;
+        badge.title = `Drop disc in Column ${c + 1} (Key ${c + 1})`;
+        badge.onclick = () => {
+          if (gameActive && !(gameMode > 0 && currentPlayer === 2)) {
+            dropPiece(c);
+          }
+        };
+        badge.onmouseenter = () => {
+          if (gameActive && !(gameMode > 0 && currentPlayer === 2)) {
+            hoverCol = c;
+            renderBoard();
+          }
+        };
+        badge.onmouseleave = () => {
+          if (hoverCol === c) {
+            hoverCol = -1;
+            renderBoard();
+          }
+        };
+        container.appendChild(badge);
+      }
     }
 
     function playSound(type) {
@@ -734,10 +885,10 @@
 
     function toggleMode() {
       gameMode = (gameMode + 1) % 4;
-      if (gameMode === 0) document.getElementById('modeBtn').textContent = 'Mode: 2P';
-      else if (gameMode === 1) document.getElementById('modeBtn').textContent = 'Mode: vs AI';
-      else if (gameMode === 2) document.getElementById('modeBtn').textContent = 'Mode: Campaign';
-      else document.getElementById('modeBtn').textContent = 'Mode: Speed';
+      if (gameMode === 0) { document.getElementById('modeBtn').textContent = 'Mode: 2P [V]'; showToast('Switched to 2 Player Mode', 'info'); }
+      else if (gameMode === 1) { document.getElementById('modeBtn').textContent = 'Mode: vs AI [V]'; showToast('Switched to vs AI Mode', 'info'); }
+      else if (gameMode === 2) { document.getElementById('modeBtn').textContent = 'Mode: Campaign [V]'; showToast('Switched to Campaign Mode', 'info'); }
+      else { document.getElementById('modeBtn').textContent = 'Mode: Speed [V]'; showToast('Switched to Speed Mode (7s timer)', 'warning'); }
       
       updateDiffSelect();
       initGame();
@@ -765,11 +916,13 @@
     function changeDifficulty() {
       if (gameMode === 1 || gameMode === 3) {
         aiPersonality = parseInt(document.getElementById('diffSelect').value);
+        showToast(`AI Personality set to ${['Rookie', 'Aggressive', 'Trapper', 'Grandmaster'][aiPersonality]}`, 'info');
       } else if (gameMode === 2) {
         let val = parseInt(document.getElementById('diffSelect').value) + 1;
         if (val <= stats.maxCampaignStage) {
           campaignStage = val;
           initGame();
+          showToast(`Loaded Campaign Stage ${campaignStage}`, 'info');
         } else {
           document.getElementById('diffSelect').value = campaignStage - 1;
         }
@@ -786,6 +939,12 @@
         selectedPowerup = (selectedPowerup === type) ? 0 : type;
         updatePowerupBtns();
         renderBoard();
+        if (selectedPowerup === 1) showToast('💣 Bomb Disc armed [B] — Click column to explode 3x3!', 'warning');
+        else if (selectedPowerup === 2) showToast('🔩 Drill Disc armed [D] — Click column to crush through!', 'info');
+        else if (selectedPowerup === 3) showToast('🧲 Magnet Disc armed [M] — Click column to pull friendly discs!', 'info');
+        else showToast('Powerup disarmed', 'info');
+      } else {
+        showToast('No more powerups of this type left!', 'warning');
       }
     }
     
@@ -797,6 +956,10 @@
         isFreezeMode = !isFreezeMode;
         updatePowerupBtns();
         renderBoard();
+        if (isFreezeMode) showToast('❄️ Freeze Skill armed [F] — Click opponent column to lock for 2 turns!', 'info');
+        else showToast('Freeze skill disarmed', 'info');
+      } else {
+        showToast('No Freeze charges remaining!', 'warning');
       }
     }
 
@@ -804,6 +967,7 @@
       if (gameActive && !(gameMode > 0 && currentPlayer === 2)) {
         hintCol = getBestMoveAI(currentPlayer);
         renderBoard();
+        showToast(`💡 AI Hint: Column ${hintCol + 1} is recommended [T]`, 'info');
       }
     }
 
@@ -819,15 +983,22 @@
       const magnetBtn = document.getElementById('magnetBtn');
       const freezeBtn = document.getElementById('freezeBtn');
 
-      bombBtn.textContent = (selectedPowerup === 1) ? '[Bomb]' : `Bomb (${bCount})`;
-      drillBtn.textContent = (selectedPowerup === 2) ? '[Drill]' : `Drill (${dCount})`;
-      magnetBtn.textContent = (selectedPowerup === 3) ? '[Mag]' : `Mag (${mCount})`;
-      freezeBtn.textContent = isFreezeMode ? '[Freeze]' : `Freeze (${fCount})`;
-
-      bombBtn.classList.toggle('active', selectedPowerup === 1);
-      drillBtn.classList.toggle('active', selectedPowerup === 2);
-      magnetBtn.classList.toggle('active', selectedPowerup === 3);
-      freezeBtn.classList.toggle('active', isFreezeMode);
+      if (bombBtn) {
+        bombBtn.textContent = (selectedPowerup === 1) ? '[Bomb [B]]' : `Bomb [B] (${bCount})`;
+        bombBtn.classList.toggle('active', selectedPowerup === 1);
+      }
+      if (drillBtn) {
+        drillBtn.textContent = (selectedPowerup === 2) ? '[Drill [D]]' : `Drill [D] (${dCount})`;
+        drillBtn.classList.toggle('active', selectedPowerup === 2);
+      }
+      if (magnetBtn) {
+        magnetBtn.textContent = (selectedPowerup === 3) ? '[Mag [M]]' : `Mag [M] (${mCount})`;
+        magnetBtn.classList.toggle('active', selectedPowerup === 3);
+      }
+      if (freezeBtn) {
+        freezeBtn.textContent = isFreezeMode ? '[Freeze [F]]' : `Freeze [F] (${fCount})`;
+        freezeBtn.classList.toggle('active', isFreezeMode);
+      }
     }
     
     let ROWS = 6;
@@ -1007,11 +1178,11 @@
       const input = document.getElementById(fieldId);
       if (input) {
         navigator.clipboard.writeText(input.value).then(() => {
-          alert('Copied to clipboard!');
+          showToast('✓ Copied to clipboard!', 'success');
         }).catch(() => {
           input.select();
           document.execCommand('copy');
-          alert('Copied to clipboard!');
+          showToast('✓ Copied to clipboard!', 'success');
         });
       }
     }
@@ -1050,8 +1221,9 @@
         }
         renderBoard();
         updateStatus();
+        updateColNumbers();
         toggleNotationModal();
-        alert('C4N Custom Position Loaded Successfully!');
+        showToast('✓ C4N Custom Position Loaded Successfully!', 'success');
         return;
       }
       
@@ -1098,12 +1270,13 @@
           gameActive = true;
           renderBoard();
           updateStatus();
+          updateColNumbers();
           toggleNotationModal();
-          alert('FEN Position Loaded Successfully!');
+          showToast('✓ FEN Position Loaded Successfully!', 'success');
           return;
         }
       }
-      alert('Invalid notation format. Please enter a C4N column string (e.g. 444321) or standard FEN.');
+      showToast('Invalid notation format. Please enter a C4N column string (e.g. 444321) or standard FEN.', 'warning');
     }
 
     function downloadC4NFile() {
@@ -1215,6 +1388,7 @@
       a.href = URL.createObjectURL(blob);
       a.download = 'kconnect4_data.json';
       a.click();
+      showToast('✓ Exported match data to JSON [E]', 'success');
     }
     function importJSON(e) {
       let file = e.target.files[0];
@@ -1244,11 +1418,12 @@
               gameActive = false;
               document.getElementById('replayControls').style.display = 'flex';
               renderBoard();
+              updateColNumbers();
               updateReplayStatus();
               statusEl.textContent = "Imported Replay Loaded";
           }
-          alert('Data imported successfully!');
-        } catch(err) { alert('Invalid JSON file'); }
+          showToast('✓ Match data imported successfully [I]!', 'success');
+        } catch(err) { showToast('Invalid JSON match file.', 'warning'); }
         document.getElementById('importFile').value = '';
       };
       reader.readAsText(file);
@@ -1360,6 +1535,7 @@
       }
       
       renderBoard();
+      updateColNumbers();
       updateStatus();
       startSpeedTimer();
       resizeFxCanvas();
@@ -1688,7 +1864,7 @@
         frozenCol, frozenTurns, frozenPlayer
       };
       localStorage.setItem('kconnect4_save', JSON.stringify(state));
-      alert('Game Saved!');
+      showToast('✓ Game state saved to slot [F5]!', 'success');
     }
 
     function loadGame() {
@@ -1723,23 +1899,27 @@
         }
 
         updateDiffSelect(); updatePowerupBtns(); selectedPowerup = 0; isFreezeMode = false;
-        if (gameMode === 0) document.getElementById('modeBtn').textContent = 'Mode: 2P';
-        else if (gameMode === 1) document.getElementById('modeBtn').textContent = 'Mode: vs AI';
-        else if (gameMode === 2) document.getElementById('modeBtn').textContent = 'Mode: Campaign';
-        else document.getElementById('modeBtn').textContent = 'Mode: Speed';
+        if (gameMode === 0) document.getElementById('modeBtn').textContent = 'Mode: 2P [V]';
+        else if (gameMode === 1) document.getElementById('modeBtn').textContent = 'Mode: vs AI [V]';
+        else if (gameMode === 2) document.getElementById('modeBtn').textContent = 'Mode: Campaign [V]';
+        else document.getElementById('modeBtn').textContent = 'Mode: Speed [V]';
         
         if (aiTimeout) { clearTimeout(aiTimeout); aiTimeout = null; }
         renderBoard();
+        updateColNumbers();
         updateStatus();
         startSpeedTimer();
-        alert('Game Loaded!');
+        showToast('✓ Saved game state loaded [F9]!', 'success');
       } else {
-        alert('No saved game found.');
+        showToast('No saved game found.', 'warning');
       }
     }
 
     function undoMove() {
-      if (moveHistory.length === 0) return;
+      if (moveHistory.length === 0) {
+        showToast('No moves to undo.', 'warning');
+        return;
+      }
       document.getElementById('replayControls').style.display = 'none';
       if (aiTimeout) {
         clearTimeout(aiTimeout);
@@ -1789,6 +1969,8 @@
       updateStatus();
       updatePowerupBtns();
       renderBoard();
+      updateColNumbers();
+      showToast('Move undone [U]', 'info');
     }
 
     function checkWin(r, c) {
@@ -2552,9 +2734,118 @@
     if (window.resizeTo) window.resizeTo(600, 850);
     
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'F1' || e.key.toLowerCase() === 'h') {
+      // Don't intercept if typing in an input, textarea, or select
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        if (e.key === 'Escape') {
+          e.target.blur();
+          closeAllModals();
+        }
+        return;
+      }
+
+      const key = e.key;
+      const keyLower = key.toLowerCase();
+
+      if (key === 'F1' || keyLower === 'h' || key === '?') {
         e.preventDefault();
         toggleHelp();
+      } else if (keyLower === 'n') {
+        e.preventDefault();
+        toggleNotationModal();
+      } else if (key === 'Escape') {
+        e.preventDefault();
+        closeAllModals();
+        if (selectedPowerup !== 0 || isFreezeMode) {
+          selectedPowerup = 0;
+          isFreezeMode = false;
+          updatePowerupBtns();
+          renderBoard();
+          showToast('Selection cancelled', 'info');
+        }
+      } else if (keyLower === 'v') {
+        e.preventDefault();
+        toggleMode();
+      } else if (keyLower === 't') {
+        e.preventDefault();
+        triggerHint();
+      } else if (keyLower === 'u') {
+        e.preventDefault();
+        undoMove();
+      } else if (keyLower === 'f') {
+        e.preventDefault();
+        toggleFreezeSkill();
+      } else if (keyLower === 'b') {
+        e.preventDefault();
+        togglePowerup(1);
+      } else if (keyLower === 'd') {
+        e.preventDefault();
+        togglePowerup(2);
+      } else if (keyLower === 'm') {
+        e.preventDefault();
+        togglePowerup(3);
+      } else if (keyLower === 'r') {
+        e.preventDefault();
+        initGame();
+        showToast('Game Reset [R]', 'info');
+      } else if (keyLower === 'p') {
+        e.preventDefault();
+        toggleMute();
+      } else if (key === 'F5' || (e.ctrlKey && keyLower === 's')) {
+        e.preventDefault();
+        saveGame();
+      } else if (key === 'F9' || (e.ctrlKey && keyLower === 'o')) {
+        e.preventDefault();
+        loadGame();
+      } else if (keyLower === 'e') {
+        e.preventDefault();
+        exportJSON();
+      } else if (keyLower === 'i') {
+        e.preventDefault();
+        document.getElementById('importFile').click();
+      } else if (/^[1-9]$/.test(key)) {
+        let col = parseInt(key) - 1;
+        if (col >= 0 && col < COLS) {
+          e.preventDefault();
+          if (gameActive && !(gameMode > 0 && currentPlayer === 2)) {
+            dropPiece(col);
+          }
+        }
+      } else if (e.code && e.code.startsWith('Numpad') && /^Numpad[1-9]$/.test(e.code)) {
+        let col = parseInt(e.code.replace('Numpad', '')) - 1;
+        if (col >= 0 && col < COLS) {
+          e.preventDefault();
+          if (gameActive && !(gameMode > 0 && currentPlayer === 2)) {
+            dropPiece(col);
+          }
+        }
+      } else if (key === ' ' || key === 'Spacebar') {
+        e.preventDefault();
+        if (!gameActive) {
+          initGame();
+          showToast('New Game Started [Space]', 'info');
+        } else if (document.getElementById('replayControls').style.display !== 'none') {
+          toggleAutoReplay();
+        }
+      } else if (key === 'ArrowLeft') {
+        if (!gameActive && replayHistory.length > 0) {
+          e.preventDefault();
+          replayStep(-1);
+        }
+      } else if (key === 'ArrowRight') {
+        if (!gameActive && replayHistory.length > 0) {
+          e.preventDefault();
+          replayStep(1);
+        }
+      } else if (key === 'Home') {
+        if (!gameActive && replayHistory.length > 0) {
+          e.preventDefault();
+          replayJump(0);
+        }
+      } else if (key === 'End') {
+        if (!gameActive && replayHistory.length > 0) {
+          e.preventDefault();
+          replayJump(-1);
+        }
       }
     });
     
@@ -2563,6 +2854,10 @@
     initGame();
     resizeFxCanvas();
     requestAnimationFrame(renderFx);
+
+    setTimeout(() => {
+      showToast('Welcome to KConnect4! [F1/H] Help &bull; Keys [1-7] Drop &bull; [B/D/M/F] Skills', 'info');
+    }, 400);
   </script>
 </body>
 </html>

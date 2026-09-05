@@ -714,10 +714,10 @@ void LoadGame(HWND hwnd) {
             memcpy(moveHistory, state.moveHistory, sizeof(moveHistory));
             historyCount = state.historyCount;
             
-            if (gameMode == 0) SetWindowText(hModeBtn, "Mode: 2P");
-            else if (gameMode == 1) SetWindowText(hModeBtn, "Mode: vs AI");
-            else if (gameMode == 2) SetWindowText(hModeBtn, "Mode: Campaign");
-            else SetWindowText(hModeBtn, "Mode: Speed");
+            if (gameMode == 0) SetWindowText(hModeBtn, "Mode: 2P [V]");
+            else if (gameMode == 1) SetWindowText(hModeBtn, "Mode: vs AI [V]");
+            else if (gameMode == 2) SetWindowText(hModeBtn, "Mode: Campaign [V]");
+            else SetWindowText(hModeBtn, "Mode: Speed [V]");
             
             UpdateDiffSelectUI();
             
@@ -827,10 +827,10 @@ void UpdatePowerupButtons() {
     int fCount = (currentPlayer == 1) ? p1Freezes : p2Freezes;
     if (gameMode > 0 && currentPlayer == 2) { bCount = 0; dCount = 0; mCount = 0; fCount = 0; }
 
-    wsprintf(bBuf, (selectedPowerup == 1) ? "[Bomb]" : "Bomb (%d)", bCount);
-    wsprintf(dBuf, (selectedPowerup == 2) ? "[Drill]" : "Drill (%d)", dCount);
-    wsprintf(mBuf, (selectedPowerup == 3) ? "[Mag]" : "Mag (%d)", mCount);
-    wsprintf(fBuf, isFreezeMode ? "[Freeze]" : "Freeze (%d)", fCount);
+    wsprintf(bBuf, (selectedPowerup == 1) ? "[Bomb [B]]" : "Bomb [B] (%d)", bCount);
+    wsprintf(dBuf, (selectedPowerup == 2) ? "[Drill [D]]" : "Drill [D] (%d)", dCount);
+    wsprintf(mBuf, (selectedPowerup == 3) ? "[Mag [M]]" : "Mag [M] (%d)", mCount);
+    wsprintf(fBuf, isFreezeMode ? "[Freeze [F]]" : "Freeze [F] (%d)", fCount);
 
     SetWindowText(hBombBtn, bBuf);
     SetWindowText(hDrillBtn, dBuf);
@@ -1561,6 +1561,36 @@ void FinishTurnEffects(HWND hwnd) {
     }
 }
 
+void ShowHelpDialog(HWND hwnd) {
+    MessageBox(hwnd,
+        "KConnect4 - Tactical Connect-4 Championship\n\n"
+        "KEYBOARD SHORTCUTS:\n"
+        "  [1 - 7 / Num 1-7]  Drop Disc into Column\n"
+        "  [B]                Toggle Bomb Disc (3x3 area blast)\n"
+        "  [D]                Toggle Drill Disc (crushes cell underneath)\n"
+        "  [M]                Toggle Magnet Disc (pulls adjacent discs)\n"
+        "  [F]                Toggle Column Freeze Skill (2 turns)\n"
+        "  [T]                AI Optimal Hint\n"
+        "  [U]                Undo Move Pair\n"
+        "  [R]                Reset / New Game\n"
+        "  [V]                Cycle Game Mode (2P / vs AI / Campaign / Speed)\n"
+        "  [P]                Toggle Sound Mute\n"
+        "  [F5 / Ctrl+S]      Quicksave Game\n"
+        "  [F9 / Ctrl+O]      Quickload Game\n"
+        "  [E]                Export Match Data (JSON)\n"
+        "  [I]                Import Match Data (JSON)\n"
+        "  [N]                C4N Match Notation & Analysis\n"
+        "  [F1 / H / ?]       Help & Shortcuts Guide\n"
+        "  [Esc]              Cancel Powerup / Freeze Mode\n"
+        "  [Space]            Start New Game / Replay Controls\n"
+        "  [Left / Right]     Step Replay Backward / Forward\n"
+        "  [Home / End]       Jump Replay to Start / End\n\n"
+        "CAMPAIGN MODE:\n"
+        "  20 Stages with expanding dynamic grids (7x6 to 10x8)\n"
+        "  and 4 AI engines (Rookie, Aggressive, Trapper, Grandmaster Minimax).",
+        "KConnect4 - Help & Keyboard Shortcuts", MB_OK | MB_ICONINFORMATION);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE:
@@ -1571,27 +1601,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             ReleaseDC(hwnd, hdc);
             int fontHeight = -MulDiv(12, dpi, 72);
             hMainFont = CreateFont(fontHeight, 0, 0, 0, FW_MEDIUM, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            
             // Row 1 buttons
-            hModeBtn = CreateWindow("BUTTON", "Mode: vs AI", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 520, 95, 28, hwnd, (HMENU)1, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hModeBtn = CreateWindow("BUTTON", "Mode [V]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 520, 95, 28, hwnd, (HMENU)1, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hDiffSelect = CreateWindow("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 110, 522, 105, 200, hwnd, (HMENU)4, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hHintBtn = CreateWindow("BUTTON", "Hint (T)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 220, 520, 75, 28, hwnd, (HMENU)11, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hFreezeBtn = CreateWindow("BUTTON", "Freeze (1)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 300, 520, 80, 28, hwnd, (HMENU)12, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hUndoBtn = CreateWindow("BUTTON", "Undo (U)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 385, 520, 75, 28, hwnd, (HMENU)3, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hHintBtn = CreateWindow("BUTTON", "Hint [T]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 220, 520, 75, 28, hwnd, (HMENU)11, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hFreezeBtn = CreateWindow("BUTTON", "Freeze [F]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 300, 520, 80, 28, hwnd, (HMENU)12, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hUndoBtn = CreateWindow("BUTTON", "Undo [U]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 385, 520, 75, 28, hwnd, (HMENU)3, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
             // Row 2 buttons
-            hBombBtn = CreateWindow("BUTTON", "Bomb (2)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 555, 80, 28, hwnd, (HMENU)9, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hDrillBtn = CreateWindow("BUTTON", "Drill (2)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 95, 555, 80, 28, hwnd, (HMENU)10, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hMagnetBtn = CreateWindow("BUTTON", "Mag (2)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 180, 555, 80, 28, hwnd, (HMENU)13, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hResetBtn = CreateWindow("BUTTON", "Reset", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 265, 555, 65, 28, hwnd, (HMENU)2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hMuteBtn = CreateWindow("BUTTON", "Mute", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 335, 555, 60, 28, hwnd, (HMENU)5, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hHelpBtn = CreateWindow("BUTTON", "Help", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 400, 555, 60, 28, hwnd, (HMENU)8, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hBombBtn = CreateWindow("BUTTON", "Bomb [B]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 555, 80, 28, hwnd, (HMENU)9, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hDrillBtn = CreateWindow("BUTTON", "Drill [D]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 95, 555, 80, 28, hwnd, (HMENU)10, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hMagnetBtn = CreateWindow("BUTTON", "Mag [M]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 180, 555, 80, 28, hwnd, (HMENU)13, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hResetBtn = CreateWindow("BUTTON", "Reset [R]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 265, 555, 70, 28, hwnd, (HMENU)2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hMuteBtn = CreateWindow("BUTTON", "Mute [P]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 340, 555, 65, 28, hwnd, (HMENU)5, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hHelpBtn = CreateWindow("BUTTON", "Help [F1]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 410, 555, 65, 28, hwnd, (HMENU)8, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
             // Row 3 buttons
-            hSaveBtn = CreateWindow("BUTTON", "Save (F5)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 590, 75, 28, hwnd, (HMENU)6, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hLoadBtn = CreateWindow("BUTTON", "Load (F9)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 90, 590, 75, 28, hwnd, (HMENU)7, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            HWND hExportBtn = CreateWindow("BUTTON", "Export JSON", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 170, 590, 90, 28, hwnd, (HMENU)14, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            HWND hImportBtn = CreateWindow("BUTTON", "Import JSON", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 265, 590, 90, 28, hwnd, (HMENU)15, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            HWND hNotationBtn = CreateWindow("BUTTON", "Notation (N)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 360, 590, 95, 28, hwnd, (HMENU)16, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hSaveBtn = CreateWindow("BUTTON", "Save [F5]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 590, 75, 28, hwnd, (HMENU)6, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hLoadBtn = CreateWindow("BUTTON", "Load [F9]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 90, 590, 75, 28, hwnd, (HMENU)7, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            HWND hExportBtn = CreateWindow("BUTTON", "Exp JSON [E]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 170, 590, 95, 28, hwnd, (HMENU)14, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            HWND hImportBtn = CreateWindow("BUTTON", "Imp JSON [I]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 270, 590, 95, 28, hwnd, (HMENU)15, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            HWND hNotationBtn = CreateWindow("BUTTON", "Notation [N]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 370, 590, 95, 28, hwnd, (HMENU)16, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             
             SendMessage(hModeBtn, WM_SETFONT, (WPARAM)hMainFont, TRUE);
             SendMessage(hDiffSelect, WM_SETFONT, (WPARAM)hMainFont, TRUE);
@@ -1619,13 +1650,76 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (isAnimating) break;
             int key = (int)wParam;
             if (key == VK_F1 || key == 'H' || key == 'h') { // F1 or H Help
-                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(8, 0), 0);
-            } else if (key == VK_F5) { // F5 Quicksave
+                ShowHelpDialog(hwnd);
+            } else if (key == VK_F5 || ((GetKeyState(VK_CONTROL) & 0x8000) && (key == 'S' || key == 's'))) { // F5 Quicksave
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(6, 0), 0);
-            } else if (key == VK_F9) { // F9 Quickload
+            } else if (key == VK_F9 || ((GetKeyState(VK_CONTROL) & 0x8000) && (key == 'O' || key == 'o'))) { // F9 Quickload
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(7, 0), 0);
             } else if (key == 'N' || key == 'n') { // C4N Notation & Match Analysis
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(16, 0), 0);
+            } else if (key == 'V' || key == 'v') { // Mode toggle
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(1, 0), 0);
+            } else if (key == 'T' || key == 't') { // AI Hint skill
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(11, 0), 0);
+            } else if (key == 'U' || key == 'u') { // Undo move
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(3, 0), 0);
+            } else if (key == 'F' || key == 'f') { // Column Freeze skill
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(12, 0), 0);
+            } else if (key == 'B' || key == 'b') { // Bomb Disc
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(9, 0), 0);
+            } else if (key == 'D' || key == 'd') { // Drill Disc
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(10, 0), 0);
+            } else if (key == 'M' || key == 'm') { // Magnet Disc
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(13, 0), 0);
+            } else if (key == 'R' || key == 'r') { // Reset
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(2, 0), 0);
+            } else if (key == 'P' || key == 'p') { // Mute toggle
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(5, 0), 0);
+            } else if (key == 'E' || key == 'e') { // Export JSON
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(14, 0), 0);
+            } else if (key == 'I' || key == 'i') { // Import JSON
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(15, 0), 0);
+            } else if (key == VK_ESCAPE) {
+                if (selectedPowerup != 0 || isFreezeMode) {
+                    selectedPowerup = 0;
+                    isFreezeMode = false;
+                    UpdatePowerupButtons();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (key == VK_SPACE) {
+                if (!gameActive) {
+                    ResetGame();
+                    if (gameMode == 3 && gameActive) SetTimer(hwnd, 3, 100, NULL);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if ((key >= '1' && key <= '9') || (key >= VK_NUMPAD1 && key <= VK_NUMPAD9)) {
+                int colIdx = (key >= '1' && key <= '9') ? (key - '1') : (key - VK_NUMPAD1);
+                if (colIdx >= 0 && colIdx < g_cols && gameActive && !(gameMode > 0 && currentPlayer == 2)) {
+                    if (isFreezeMode) {
+                        int fCount = (currentPlayer == 1) ? p1Freezes : p2Freezes;
+                        if (fCount > 0) {
+                            frozenCol = colIdx;
+                            frozenTurns = 2;
+                            frozenPlayer = currentPlayer;
+                            if (currentPlayer == 1) p1Freezes--; else p2Freezes--;
+                            isFreezeMode = false;
+                            PlaySoundEffect(9);
+                            RECT rect; GetClientRect(hwnd, &rect);
+                            int boardW = g_cols * 44 + 10;
+                            int boardLeft = (rect.right - rect.left - boardW) / 2;
+                            SpawnShockwave((float)(boardLeft + 5 + colIdx * 44 + 22), (float)(50 + g_rows * 22), 85.0f, RGB(0, 229, 255));
+                            g_shakeAmp = 8.0f;
+                            UpdatePowerupButtons();
+                            InvalidateRect(hwnd, NULL, TRUE);
+                        }
+                    } else if (frozenTurns > 0 && frozenCol == colIdx) {
+                        PlaySoundEffect(4); // Frozen column
+                    } else if (board[0][colIdx] == 0) {
+                        ExecuteDrop(hwnd, colIdx, currentPlayer, selectedPowerup);
+                    } else {
+                        PlaySoundEffect(4);
+                    }
+                }
             } else if (key == VK_HOME && !gameActive && historyCount > 0) { // Replay Start
                 replayIndex = 0;
                 memcpy(board, moveHistory[0].board, sizeof(board));
@@ -1634,34 +1728,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 replayIndex = historyCount - 1;
                 memcpy(board, moveHistory[replayIndex].board, sizeof(board));
                 InvalidateRect(hwnd, NULL, TRUE);
-            } else if (key == VK_LEFT && !gameActive) { // Replay Prev
+            } else if (key == VK_LEFT && !gameActive && historyCount > 0) { // Replay Prev
                 if (replayIndex > 0) {
                     replayIndex--;
                     memcpy(board, moveHistory[replayIndex].board, sizeof(board));
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
-            } else if (key == VK_RIGHT && !gameActive) { // Replay Next
+            } else if (key == VK_RIGHT && !gameActive && historyCount > 0) { // Replay Next
                 if (replayIndex < historyCount - 1) {
                     replayIndex++;
                     memcpy(board, moveHistory[replayIndex].board, sizeof(board));
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
-            } else if (key == 'T' || key == 't') { // AI Hint skill
-                if (gameActive && !(gameMode > 0 && currentPlayer == 2)) {
-                    hintCol = GetBestMoveAI(currentPlayer);
-                    hintTimer = 150; // show for 150 frames (~3 sec)
-                    InvalidateRect(hwnd, NULL, TRUE);
-                }
-            } else if (key == 'U' || key == 'u') { // Undo move
-                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(3, 0), 0);
-            } else if (key == 'F' || key == 'f') { // Column Freeze skill
-                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(12, 0), 0);
-            } else if (key == 'B' || key == 'b' || key == '1') { // Bomb Disc
-                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(9, 0), 0);
-            } else if (key == 'D' || key == 'd' || key == '2') { // Drill Disc
-                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(10, 0), 0);
-            } else if (key == 'M' || key == 'm' || key == '3') { // Magnet Disc
-                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(13, 0), 0);
             }
             break;
         }
@@ -1669,10 +1747,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_COMMAND:
             if (LOWORD(wParam) == 1) { // Mode
                 gameMode = (gameMode + 1) % 4;
-                if (gameMode == 0) SetWindowText(hModeBtn, "Mode: 2P");
-                else if (gameMode == 1) SetWindowText(hModeBtn, "Mode: vs AI");
-                else if (gameMode == 2) SetWindowText(hModeBtn, "Mode: Campaign");
-                else SetWindowText(hModeBtn, "Mode: Speed");
+                if (gameMode == 0) SetWindowText(hModeBtn, "Mode: 2P [V]");
+                else if (gameMode == 1) SetWindowText(hModeBtn, "Mode: vs AI [V]");
+                else if (gameMode == 2) SetWindowText(hModeBtn, "Mode: Campaign [V]");
+                else SetWindowText(hModeBtn, "Mode: Speed [V]");
                 
                 UpdateDiffSelectUI();
                 ResetGame();
@@ -1741,24 +1819,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (LOWORD(wParam) == 5) {
                 isMuted = !isMuted;
-                SetWindowText(hMuteBtn, isMuted ? "Unmute" : "Mute");
+                SetWindowText(hMuteBtn, isMuted ? "Unmute [P]" : "Mute [P]");
             } else if (LOWORD(wParam) == 6) {
                 SaveGame();
             } else if (LOWORD(wParam) == 7) {
                 LoadGame(hwnd);
             } else if (LOWORD(wParam) == 8) {
-                MessageBox(hwnd, "KConnect4 - Loop 7 Campaign Expansion\n\n"
-                    "Campaign Mode: 20 Stages featuring dynamic board dimensions (7x6, 8x7, 9x8, 10x8) and 4 AI Personalities (Rookie, Aggressive, Trapper, Grandmaster Minimax Alpha-Beta)!\n\n"
-                    "Special Disc Types:\n"
-                    "- Bomb Disc (1/B): Explodes 3x3 surrounding cells.\n"
-                    "- Drill/Anvil Disc (2/D): Crushes cell directly underneath.\n"
-                    "- Magnet Disc (3/M): Pulls friendly discs from adjacent columns.\n\n"
-                    "Active Skills:\n"
-                    "- AI Hint (T): Highlights optimal column.\n"
-                    "- Undo Move (U): Reverts last turn pair.\n"
-                    "- Column Freeze (F): Locks 1 opponent column for 2 turns.\n"
-                    "- Replay Viewer (Left/Right Arrows): Step through match after game ends.", 
-                    "Help & Information", MB_OK | MB_ICONINFORMATION);
+                ShowHelpDialog(hwnd);
             } else if (LOWORD(wParam) == 14) { // Export JSON
                 ExportJSON();
             } else if (LOWORD(wParam) == 15) { // Import JSON
@@ -1970,8 +2037,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteObject(tFg);
             }
             
-            SetTextColor(hdcMem, RGB(200, 200, 200));
-            TextOut(hdcMem, 10, 630, "Press 'H' for Help Menu", 23);
+            SetTextColor(hdcMem, RGB(255, 235, 59));
+            TextOut(hdcMem, 10, 630, "Press [F1/H] for Help | Keys 1-7 to Drop | B,D,M,F Skills", 56);
 
             SetTextColor(hdcMem, RGB(170, 170, 170));
             char statsStr[128];
@@ -1986,6 +2053,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int boardH = g_rows * 44 + 10;
             int boardLeft = (rect.right - rect.left - boardW) / 2;
             int boardTop = 50;
+
+            // Draw column numbers above board
+            SetTextColor(hdcMem, RGB(144, 202, 249));
+            for (int cn = 0; cn < g_cols; cn++) {
+                char cnStr[4];
+                wsprintf(cnStr, "%d", cn + 1);
+                TextOut(hdcMem, boardLeft + 5 + cn * 44 + 16, boardTop - 18, cnStr, lstrlen(cnStr));
+            }
 
             boardLeft += (int)g_shakeX;
             boardTop += (int)g_shakeY;
@@ -2415,7 +2490,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     RECT winRect = { 0, 0, 580, 780 };
     AdjustWindowRect(&winRect, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, FALSE);
     hwnd = CreateWindowEx(
-        0, g_szClassName, "KConnect4 - Loop 7 Campaign Expansion (Press H for Help)",
+        0, g_szClassName, "KConnect4 - Tactical Connect-4 [Press F1/H for Help]",
         WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, winRect.right - winRect.left, winRect.bottom - winRect.top,
         NULL, NULL, hInstance, NULL);
@@ -2429,6 +2504,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     UpdateWindow(hwnd);
 
     while(GetMessage(&Msg, NULL, 0, 0) > 0) {
+        if (Msg.message == WM_KEYDOWN) {
+            SendMessage(hwnd, WM_KEYDOWN, Msg.wParam, Msg.lParam);
+        }
         TranslateMessage(&Msg);
         DispatchMessage(&Msg);
     }
