@@ -14,18 +14,24 @@
         --text: #f8fafc;
         --text-muted: #94a3b8;
         --error: #f43f5e;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --cyan: #38bdf8;
+    }
+
+    * {
+        box-sizing: border-box;
     }
 
     body {
         margin: 0;
-        padding: 20px;
+        padding: 16px;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         background: var(--bg-gradient);
         color: var(--text);
         display: flex;
         flex-direction: column;
         height: 100vh;
-        box-sizing: border-box;
         overflow: hidden;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
@@ -36,13 +42,14 @@
         display: flex;
         flex-direction: column;
         height: 100%;
-        gap: 15px;
+        gap: 12px;
         background: var(--glass-bg);
         border: 1px solid var(--glass-border);
-        border-radius: 16px;
+        border-radius: 14px;
         backdrop-filter: blur(12px);
-        padding: 20px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        padding: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+        min-height: 0;
     }
 
     .header {
@@ -53,18 +60,124 @@
         gap: 10px;
     }
 
+    .title-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
     h1 {
         margin: 0;
-        font-size: 1.5rem;
-        font-weight: 600;
+        font-size: 1.4rem;
+        font-weight: 700;
         background: linear-gradient(to right, #c4b5fd, #8b5cf6);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .status-badge {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        padding: 3px 8px;
+        border-radius: 6px;
+        background: rgba(139, 92, 246, 0.2);
+        border: 1px solid rgba(139, 92, 246, 0.4);
+        color: #c4b5fd;
+    }
+
+    .status-badge.recording {
+        background: rgba(244, 63, 94, 0.2);
+        border-color: rgba(244, 63, 94, 0.5);
+        color: #fda4af;
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+
+    .toolbar {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    button {
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 7px;
+        font-family: inherit;
+        font-weight: 600;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        box-shadow: 0 2px 8px rgba(139, 92, 246, 0.25);
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        user-select: none;
+    }
+
+    button:hover {
+        background: var(--accent-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+    }
+
+    button:active {
+        transform: translateY(0);
+    }
+
+    .btn-key {
+        font-size: 10px;
+        opacity: 0.8;
+        background: rgba(0, 0, 0, 0.25);
+        padding: 1px 4px;
+        border-radius: 3px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .presets-bar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--text-muted);
+        flex-wrap: wrap;
+        padding-bottom: 2px;
+    }
+
+    .preset-chip {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--glass-border);
+        color: #cbd5e1;
+        padding: 3px 9px;
+        border-radius: 5px;
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .preset-chip:hover {
+        background: rgba(139, 92, 246, 0.25);
+        border-color: rgba(139, 92, 246, 0.5);
+        color: #fff;
+        transform: translateY(-1px);
     }
 
     .panels {
         display: flex;
-        gap: 15px;
+        gap: 12px;
         flex: 1;
         min-height: 0;
     }
@@ -73,17 +186,18 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 12px;
+        background: rgba(15, 23, 42, 0.6);
+        border-radius: 10px;
         border: 1px solid var(--glass-border);
         overflow: hidden;
+        min-width: 0;
     }
-    
+
     .panel-header {
-        padding: 10px 15px;
-        background: rgba(255, 255, 255, 0.02);
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.03);
         border-bottom: 1px solid var(--glass-border);
-        font-size: 0.85rem;
+        font-size: 0.75rem;
         color: var(--text-muted);
         text-transform: uppercase;
         letter-spacing: 1px;
@@ -92,71 +206,203 @@
         align-items: center;
     }
 
+    .find-replace {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+    }
+
+    .find-replace input {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid var(--glass-border);
+        color: white;
+        padding: 3px 6px;
+        border-radius: 4px;
+        font-size: 11px;
+        width: 85px;
+        outline: none;
+        font-family: inherit;
+    }
+
+    .find-replace input:focus {
+        border-color: var(--accent);
+        background: rgba(255, 255, 255, 0.12);
+    }
+
     textarea {
         flex: 1;
         background: transparent;
         border: none;
-        padding: 15px;
+        padding: 12px;
         color: #e2e8f0;
         font-family: "Consolas", "Monaco", "Courier New", monospace;
-        font-size: 15px;
+        font-size: 14px;
+        line-height: 1.5;
         text-rendering: optimizeLegibility;
         -webkit-font-smoothing: antialiased;
         resize: none;
         outline: none;
+        tab-size: 2;
     }
 
     textarea::placeholder {
-        color: rgba(148, 163, 184, 0.5);
+        color: rgba(148, 163, 184, 0.4);
     }
 
     .output {
         flex: 1;
-        padding: 15px;
+        padding: 12px;
         font-family: "Consolas", "Monaco", "Courier New", monospace;
-        font-size: 15px;
+        font-size: 14px;
+        line-height: 1.5;
         text-rendering: optimizeLegibility;
         -webkit-font-smoothing: antialiased;
         overflow-y: auto;
         white-space: pre-wrap;
         color: #a78bfa;
     }
-    
+
     .output.error {
         color: var(--error);
     }
 
-    button {
-        background: var(--accent);
-        color: white;
-        border: none;
-        padding: 8px 15px;
-        border-radius: 8px;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        font-weight: 600;
-        font-size: 13px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    /* Modal Overlay */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.65);
+        backdrop-filter: blur(4px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
     }
 
-    button:hover {
-        background: var(--accent-hover);
-        transform: translateY(-2px);
+    .modal-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
     }
-    
-    button:active {
-        transform: translateY(0);
+
+    .modal {
+        background: #1e1b4b;
+        border: 1px solid rgba(139, 92, 246, 0.4);
+        border-radius: 12px;
+        padding: 24px;
+        max-width: 620px;
+        width: 90%;
+        max-height: 85vh;
+        overflow-y: auto;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+        position: relative;
+        transform: scale(0.95);
+        transition: transform 0.2s ease;
     }
-    
-    .find-replace input {
-        background: rgba(255,255,255,0.1);
-        border: 1px solid var(--glass-border);
-        color: white;
-        padding: 4px 8px;
+
+    .modal-overlay.active .modal {
+        transform: scale(1);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 10px;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.3rem;
+        color: #c4b5fd;
+    }
+
+    .modal-close {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 20px;
+        cursor: pointer;
+        padding: 2px 8px;
+        box-shadow: none;
+    }
+
+    .modal-close:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        transform: none;
+    }
+
+    .shortcuts-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        font-size: 13px;
+    }
+
+    .shortcuts-table th, .shortcuts-table td {
+        padding: 7px 10px;
+        text-align: left;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .shortcuts-table th {
+        color: #a78bfa;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .kbd {
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 4px;
+        padding: 2px 6px;
+        font-size: 11px;
+        font-family: monospace;
+        color: #38bdf8;
+    }
+
+    /* Toast Container */
+    .toast-container {
+        position: fixed;
+        bottom: 18px;
+        right: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        z-index: 2000;
+        pointer-events: none;
+    }
+
+    .toast {
+        background: #1e1b4b;
+        border: 1px solid var(--accent);
+        color: #f8fafc;
+        padding: 10px 16px;
+        border-radius: 8px;
         font-size: 12px;
-        width: 80px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: slideIn 0.25s ease forwards;
+        pointer-events: auto;
+        cursor: pointer;
+        max-width: 340px;
+    }
+
+    .toast.success { border-color: var(--success); }
+    .toast.error { border-color: var(--error); }
+    .toast.warning { border-color: var(--warning); }
+    .toast.info { border-color: var(--cyan); }
+
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
     }
 
     @media (max-width: 768px) {
@@ -166,14 +412,14 @@
         }
         .container {
             height: auto;
-            min-height: calc(100vh - 40px);
+            min-height: calc(100vh - 32px);
         }
         .panels {
             flex-direction: column;
             overflow: visible;
         }
         .panel {
-            min-height: 300px;
+            min-height: 250px;
             flex: none !important;
         }
     }
@@ -183,52 +429,132 @@
 
 <div class="container">
     <div class="header">
-        <div style="display: flex; align-items: baseline; gap: 10px;">
+        <div class="title-group">
             <h1>KScript</h1>
-            <span style="font-size: 13px; color: var(--text-muted);">Press F1 or Alt+H for Help</span>
+            <span id="statusBadge" class="status-badge">READY</span>
         </div>
-        <div style="display: flex; gap: 8px; align-items: center;">
-            <button id="btnRec" style="background:#f43f5e">⏺ Rec Macro</button>
-            <button id="btnPlay" style="background:#10b981">▶ Play</button>
-            <button id="btnStep" style="background:#f59e0b">⏭ Step</button>
-            <button id="btnRun">Run All</button>
-            <button id="btnLoad">Load</button>
-            <button id="btnSave">Save</button>
-            <button id="btnHelp" style="background:#3b82f6">? Help</button>
+        <div class="toolbar">
+            <button id="btnRec" style="background:#f43f5e" title="Record Keystrokes (Alt+M)">
+                <span>⏺ Rec</span> <span class="btn-key">Alt+M</span>
+            </button>
+            <button id="btnPlay" style="background:#10b981" title="Play Macro (Alt+P)">
+                <span>▶ Play</span> <span class="btn-key">Alt+P</span>
+            </button>
+            <button id="btnStep" style="background:#f59e0b" title="Step line-by-line (F10)">
+                <span>⏭ Step</span> <span class="btn-key">F10</span>
+            </button>
+            <button id="btnRun" title="Execute Script (F5 / Ctrl+Enter)">
+                <span>⚡ Run</span> <span class="btn-key">F5</span>
+            </button>
+            <button id="btnLoad" style="background:#475569" title="Load Script File (Ctrl+O)">
+                <span>📂 Load</span> <span class="btn-key">Ctrl+O</span>
+            </button>
+            <button id="btnSave" style="background:#475569" title="Save Script File (Ctrl+S)">
+                <span>💾 Save</span> <span class="btn-key">Ctrl+S</span>
+            </button>
+            <button id="btnClear" style="background:#64748b" title="Clear Output (Ctrl+K)">
+                <span>🧹 Clear</span> <span class="btn-key">Ctrl+K</span>
+            </button>
+            <button id="btnHelp" style="background:#3b82f6" title="Help & Reference (F1)">
+                <span>❓ Help</span> <span class="btn-key">F1</span>
+            </button>
         </div>
+    </div>
+
+    <!-- Presets bar -->
+    <div class="presets-bar">
+        <span>Presets:</span>
+        <button class="preset-chip" onclick="loadPreset('basic')">📐 Basic Math</button>
+        <button class="preset-chip" onclick="loadPreset('vars')">🔄 Variables</button>
+        <button class="preset-chip" onclick="loadPreset('accum')">📈 Accumulator</button>
+        <button class="preset-chip" onclick="loadPreset('algebra')">🧪 Algebra Formula</button>
+        <button class="preset-chip" onclick="loadPreset('modulo')">⚙️ Modulo Clock</button>
     </div>
     
     <div class="panels">
+        <!-- Input Panel -->
         <div class="panel" style="flex: 1.2;">
             <div class="panel-header">
-                <span>Input</span>
-                <div class="find-replace" style="display:flex; gap:5px;">
-                    <input id="regexFind" placeholder="/pattern/" title="Regex Find">
-                    <input id="regexRep" placeholder="replace" title="Replace With">
-                    <button id="btnRep" style="padding:4px 8px; font-size:11px;">Rep All</button>
+                <span>Script Editor</span>
+                <div class="find-replace">
+                    <input id="regexFind" placeholder="/find/" title="Regex Find Pattern">
+                    <input id="regexRep" placeholder="replace" title="Replace String">
+                    <button id="btnRep" style="padding:3px 8px; font-size:11px;" title="Replace All Matches">Rep All</button>
                 </div>
             </div>
-            <textarea id="exprInput" spellcheck="false" placeholder="Enter script here...
-Variables: a = 10
-Math: a * 2 + 5
-print a % 3"></textarea>
+            <textarea id="exprInput" spellcheck="false" placeholder="// Write script here...
+a = 10
+b = 20
+print a * b + 5"></textarea>
         </div>
+
+        <!-- Output Panel -->
         <div class="panel">
-            <div class="panel-header">Output</div>
+            <div class="panel-header">
+                <span>Output Console</span>
+            </div>
             <div id="outputArea" class="output"></div>
         </div>
-        <div class="panel" style="flex: 0.8;">
-            <div class="panel-header">Memory Inspector</div>
-            <div id="memoryArea" class="output" style="color:#38bdf8;"></div>
+
+        <!-- Memory Inspector Panel -->
+        <div class="panel" style="flex: 0.85;">
+            <div class="panel-header">
+                <span>Memory Inspector</span>
+            </div>
+            <div id="memoryArea" class="output" style="color:var(--cyan);"></div>
         </div>
     </div>
 </div>
+
+<!-- Help Modal -->
+<div id="helpModal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>⚡ KScript Guide & Shortcuts</h2>
+            <button id="modalClose" class="modal-close" title="Close [Esc]">&times;</button>
+        </div>
+        <div style="font-size: 13px; line-height: 1.6; color: #e2e8f0;">
+            <p><strong>KScript</strong> is a lightweight, high-performance scripting language and expression evaluator.</p>
+            
+            <h3 style="color:#c4b5fd; margin: 14px 0 6px 0; font-size: 14px;">Syntax & Features</h3>
+            <ul style="margin: 0; padding-left: 20px;">
+                <li><strong>Variables:</strong> Single-letter variables <code>a</code> through <code>z</code> (e.g. <code>x = 42</code>).</li>
+                <li><strong>Math Operators:</strong> Addition <code>+</code>, Subtraction <code>-</code>, Multiplication <code>*</code>, Division <code>/</code>, Modulo <code>%</code>, and Parentheses <code>()</code>.</li>
+                <li><strong>Output:</strong> Use <code>print &lt;expr&gt;</code> to output calculated values to the console.</li>
+                <li><strong>Comments:</strong> Lines starting with <code>//</code> are ignored.</li>
+            </ul>
+
+            <h3 style="color:#c4b5fd; margin: 14px 0 6px 0; font-size: 14px;">Keyboard Shortcuts</h3>
+            <table class="shortcuts-table">
+                <thead>
+                    <tr><th>Action</th><th>Shortcut</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Run All Script</td><td><span class="kbd">F5</span> or <span class="kbd">Ctrl+Enter</span></td></tr>
+                    <tr><td>Step Line-by-Line</td><td><span class="kbd">F10</span> or <span class="kbd">Alt+S</span></td></tr>
+                    <tr><td>Save Script File</td><td><span class="kbd">Ctrl+S</span></td></tr>
+                    <tr><td>Load Script File</td><td><span class="kbd">Ctrl+O</span></td></tr>
+                    <tr><td>Toggle Macro Record</td><td><span class="kbd">Alt+M</span></td></tr>
+                    <tr><td>Play Recorded Macro</td><td><span class="kbd">Alt+P</span></td></tr>
+                    <tr><td>Clear Console & State</td><td><span class="kbd">Ctrl+K</span></td></tr>
+                    <tr><td>Help / Manual</td><td><span class="kbd">F1</span> or <span class="kbd">Alt+H</span></td></tr>
+                    <tr><td>Dismiss Help / Modal</td><td><span class="kbd">Esc</span></td></tr>
+                    <tr><td>Editor Indent</td><td><span class="kbd">Tab</span> (2 spaces)</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container"></div>
 
 <script>
     const exprInput = document.getElementById('exprInput');
     const btnRun = document.getElementById('btnRun');
     const btnLoad = document.getElementById('btnLoad');
     const btnSave = document.getElementById('btnSave');
+    const btnClear = document.getElementById('btnClear');
     const btnStep = document.getElementById('btnStep');
     const btnRec = document.getElementById('btnRec');
     const btnPlay = document.getElementById('btnPlay');
@@ -236,17 +562,153 @@ print a % 3"></textarea>
     const btnHelp = document.getElementById('btnHelp');
     const outputArea = document.getElementById('outputArea');
     const memoryArea = document.getElementById('memoryArea');
+    const statusBadge = document.getElementById('statusBadge');
+    const helpModal = document.getElementById('helpModal');
+    const modalClose = document.getElementById('modalClose');
+    const toastContainer = document.getElementById('toastContainer');
 
-    exprInput.value = "// Welcome to KScript!\n// Press F1, Alt+H, or click Help for instructions\na = 10\nb = 20\nprint a * b + 5\nprint a % 3";
+    // Default script template
+    exprInput.value = "// Welcome to KScript!\n// Press F1 for Help & Shortcuts\na = 10\nb = 20\nprint a * b + 5\nprint a % 3";
 
-    document.addEventListener('keydown', (e) => {
-        if ((e.altKey && (e.key === 'h' || e.key === 'H')) || e.key === 'F1') {
-            btnHelp.click();
+    // Presets definitions
+    const PRESETS = {
+        basic: "// Basic Math Calculations\na = 15\nb = 4\nprint a + b\nprint a - b\nprint a * b\nprint a / b\nprint a % b",
+        vars: "// Variables & Swapping\na = 100\nb = 200\nt = a\na = b\nb = t\nprint a\nprint b",
+        accum: "// Accumulator Sum & Average\ns = 0\ns = s + 10\ns = s + 25\ns = s + 45\nprint s\navg = s / 3\nprint avg",
+        algebra: "// Algebraic Expression\nx = 12\ny = 5\nz = (x * x + y * y) / (x - y)\nprint z\nrem = (x * 3) % y\nprint rem",
+        modulo: "// Clock Arithmetic (Modulo 12)\nh = 9\nh = (h + 5) % 12\nprint h\nh = (h + 10) % 12\nprint h"
+    };
+
+    function loadPreset(name) {
+        if (PRESETS[name]) {
+            exprInput.value = PRESETS[name];
+            showToast("Loaded preset: " + name, "info");
+            btnRun.click();
+        }
+    }
+
+    // Toast Notifications
+    function showToast(message, type = 'info', duration = 3200) {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        let icon = 'ℹ️';
+        if (type === 'success') icon = '✅';
+        else if (type === 'error') icon = '⚠️';
+        else if (type === 'warning') icon = '⚡';
+        
+        toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+        toast.onclick = () => toast.remove();
+        toastContainer.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                toast.style.transition = 'all 0.25s ease';
+                setTimeout(() => toast.remove(), 250);
+            }
+        }, duration);
+    }
+
+    // Help Modal Controls
+    function openHelp() {
+        helpModal.classList.add('active');
+    }
+
+    function closeHelp() {
+        helpModal.classList.remove('active');
+    }
+
+    btnHelp.onclick = openHelp;
+    modalClose.onclick = closeHelp;
+    helpModal.onclick = (e) => {
+        if (e.target === helpModal) closeHelp();
+    };
+
+    // Tab key indentation support in textarea
+    exprInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') {
             e.preventDefault();
+            const start = exprInput.selectionStart;
+            const end = exprInput.selectionEnd;
+            exprInput.value = exprInput.value.substring(0, start) + "  " + exprInput.value.substring(end);
+            exprInput.selectionStart = exprInput.selectionEnd = start + 2;
         }
     });
 
-    // Generator-based Parser for Step-Through Debugging
+    // Global Hotkeys
+    document.addEventListener('keydown', (e) => {
+        // Escape closes modals and toasts
+        if (e.key === 'Escape') {
+            if (helpModal.classList.contains('active')) {
+                closeHelp();
+                e.preventDefault();
+            } else {
+                toastContainer.innerHTML = '';
+            }
+            return;
+        }
+
+        // F1 or Alt+H for Help
+        if (e.key === 'F1' || (e.altKey && (e.key === 'h' || e.key === 'H'))) {
+            e.preventDefault();
+            if (helpModal.classList.contains('active')) closeHelp();
+            else openHelp();
+            return;
+        }
+
+        // F5 or Ctrl+Enter for Run
+        if (e.key === 'F5' || (e.ctrlKey && e.key === 'Enter')) {
+            e.preventDefault();
+            btnRun.click();
+            return;
+        }
+
+        // F10 or Alt+S for Step
+        if (e.key === 'F10' || (e.altKey && (e.key === 's' || e.key === 'S'))) {
+            e.preventDefault();
+            btnStep.click();
+            return;
+        }
+
+        // Ctrl+S for Save
+        if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+            e.preventDefault();
+            btnSave.click();
+            return;
+        }
+
+        // Ctrl+O for Load
+        if (e.ctrlKey && (e.key === 'o' || e.key === 'O')) {
+            e.preventDefault();
+            btnLoad.click();
+            return;
+        }
+
+        // Ctrl+K for Clear
+        if (e.ctrlKey && (e.key === 'k' || e.key === 'K')) {
+            e.preventDefault();
+            btnClear.click();
+            return;
+        }
+
+        // Alt+M for Rec Macro
+        if (e.altKey && (e.key === 'm' || e.key === 'M')) {
+            e.preventDefault();
+            btnRec.click();
+            return;
+        }
+
+        // Alt+P for Play Macro
+        if (e.altKey && (e.key === 'p' || e.key === 'P')) {
+            e.preventDefault();
+            btnPlay.click();
+            return;
+        }
+    });
+
+    // Generator-based Parser for Execution and Step-Through Debugging
     function* runParserGen(str) {
         let vars = new Array(26).fill(0);
         let outStr = "";
@@ -256,7 +718,16 @@ print a % 3"></textarea>
         const peek = () => idx < str.length ? str[idx] : '\0';
         const advance = () => { if (idx < str.length) idx++; };
         const skipSpace = () => { 
-            while ([' ', '\t', '\r', '\n', ';'].includes(peek())) advance(); 
+            while (true) {
+                if ([' ', '\t', '\r', '\n', ';'].includes(peek())) {
+                    advance();
+                } else if (peek() === '/' && idx + 1 < str.length && str[idx+1] === '/') {
+                    // Line comment support
+                    while (idx < str.length && peek() !== '\n' && peek() !== '\r') advance();
+                } else {
+                    break;
+                }
+            }
         };
         
         const parseFactor = () => {
@@ -265,18 +736,22 @@ print a % 3"></textarea>
             let val = 0;
             let c = peek();
             if (c === '(') {
-                advance(); val = parseExpr(); skipSpace();
+                advance(); 
+                val = parseExpr(); 
+                skipSpace();
                 if (peek() === ')') advance();
             } else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
                 let vIdx = c.toUpperCase().charCodeAt(0) - 65;
-                advance(); val = vars[vIdx];
+                advance(); 
+                val = vars[vIdx];
             } else {
                 let start = idx;
                 while (peek() >= '0' && peek() <= '9') advance();
                 if (idx > start) val = parseInt(str.substring(start, idx), 10);
-                else if (idx < str.length) advance();
+                else if (idx < str.length && peek() !== ';' && peek() !== '\n') advance();
             }
-            skipSpace(); return val;
+            skipSpace(); 
+            return val;
         };
         
         const parseTerm = () => {
@@ -286,8 +761,8 @@ print a % 3"></textarea>
                 let op = peek(); advance();
                 let nextVal = parseFactor();
                 if (op === '*') val *= nextVal;
-                else if (op === '/') { if (nextVal !== 0) val = Math.trunc(val / nextVal); }
-                else if (op === '%') { if (nextVal !== 0) val = val % nextVal; }
+                else if (op === '/') { if (nextVal !== 0) val = Math.trunc(val / nextVal); else throw new Error("Division by zero"); }
+                else if (op === '%') { if (nextVal !== 0) val = val % nextVal; else throw new Error("Modulo by zero"); }
             }
             return val;
         };
@@ -358,10 +833,15 @@ print a % 3"></textarea>
         if (!state) return;
         outputArea.textContent = state.outStr;
         let mem = `AST Nodes: ${state.nodeCount}\n\n`;
-        for(let i=0; i<26; i++){
+        let activeCount = 0;
+        for (let i = 0; i < 26; i++) {
             if (state.vars[i] !== 0) {
-                mem += `${String.fromCharCode(65+i)} = ${state.vars[i]}\n`;
+                mem += `${String.fromCharCode(65 + i)} = ${state.vars[i]}\n`;
+                activeCount++;
             }
+        }
+        if (activeCount === 0) {
+            mem += "(no non-zero variables)";
         }
         memoryArea.textContent = mem;
     }
@@ -372,20 +852,30 @@ print a % 3"></textarea>
         if (!debugGen) {
             outputArea.classList.remove('error');
             debugGen = runParserGen(exprInput.value);
+            statusBadge.textContent = "STEPPING";
+            statusBadge.className = "status-badge";
         }
         try {
             let res = debugGen.next();
             if (res.value) updateUI(res.value);
-            if (res.done) debugGen = null;
+            if (res.done) {
+                debugGen = null;
+                statusBadge.textContent = "DONE";
+                showToast("Execution finished.", "success");
+            }
         } catch(err) {
             outputArea.classList.add('error');
             outputArea.textContent = `Parse Error:\n${err.message}`;
             debugGen = null;
+            statusBadge.textContent = "ERROR";
+            showToast("Script Error: " + err.message, "error");
         }
     };
 
     btnRun.onclick = () => {
         outputArea.classList.remove('error');
+        statusBadge.textContent = "RUNNING";
+        statusBadge.className = "status-badge";
         let gen = runParserGen(exprInput.value);
         let lastState = null;
         try {
@@ -395,11 +885,25 @@ print a % 3"></textarea>
                 if (res.done) break;
             }
             updateUI(lastState);
+            statusBadge.textContent = "READY";
+            showToast("Script executed successfully.", "success", 2000);
         } catch(err) {
             outputArea.classList.add('error');
             outputArea.textContent = `Parse Error:\n${err.message}`;
+            statusBadge.textContent = "ERROR";
+            showToast("Script Error: " + err.message, "error");
         }
         debugGen = null;
+    };
+
+    btnClear.onclick = () => {
+        outputArea.textContent = "";
+        outputArea.classList.remove('error');
+        memoryArea.textContent = "AST Nodes: 0\n\n(clean state)";
+        debugGen = null;
+        statusBadge.textContent = "READY";
+        statusBadge.className = "status-badge";
+        showToast("Console cleared.", "info", 1500);
     };
 
     // Regex Replace
@@ -407,16 +911,21 @@ print a % 3"></textarea>
         try {
             let pat = document.getElementById('regexFind').value;
             let rep = document.getElementById('regexRep').value;
-            if (!pat) return;
+            if (!pat) {
+                showToast("Please enter a search pattern.", "warning");
+                return;
+            }
             let regex = new RegExp(pat, 'g');
+            const before = exprInput.value;
             exprInput.value = exprInput.value.replace(regex, rep);
+            if (before !== exprInput.value) {
+                showToast("Replacements applied successfully.", "success");
+            } else {
+                showToast("Pattern not found in editor.", "info");
+            }
         } catch(e) {
-            alert("Regex Error: " + e.message);
+            showToast("Regex Error: " + e.message, "error");
         }
-    };
-
-    btnHelp.onclick = () => {
-        alert("Welcome to KScript!\n\nWrite equations, assign variables (a-z), and use 'print' to output values.\n\nExample:\na = 10\nprint a * 2\n\nControls:\n- Rec Macro: Record keystrokes\n- Play Macro: Replay them\n- Step: Run line-by-line\n- Run All: Run everything\n- Find/Replace: Supports standard regex");
     };
 
     // Macro Engine
@@ -433,14 +942,30 @@ print a % 3"></textarea>
 
     btnRec.onclick = () => {
         isRecording = !isRecording;
-        btnRec.style.opacity = isRecording ? '0.5' : '1';
-        btnRec.textContent = isRecording ? '⏹ Stop' : '⏺ Rec Macro';
-        if(isRecording) macroKeys = [];
+        if (isRecording) {
+            btnRec.innerHTML = '<span>⏹ Stop</span> <span class="btn-key">Alt+M</span>';
+            btnRec.style.opacity = '0.7';
+            statusBadge.textContent = "RECORDING MACRO";
+            statusBadge.className = "status-badge recording";
+            macroKeys = [];
+            showToast("Macro recording started. Type in editor.", "warning");
+        } else {
+            btnRec.innerHTML = '<span>⏺ Rec</span> <span class="btn-key">Alt+M</span>';
+            btnRec.style.opacity = '1';
+            statusBadge.textContent = "READY";
+            statusBadge.className = "status-badge";
+            showToast(`Macro saved (${macroKeys.length} keys).`, "success");
+        }
     };
 
     btnPlay.onclick = async () => {
         if (isRecording) btnRec.click();
+        if (macroKeys.length === 0) {
+            showToast("No macro recorded yet. Click 'Rec' to record keystrokes.", "warning");
+            return;
+        }
         exprInput.focus();
+        showToast("Replaying macro...", "info", 1500);
         for (let key of macroKeys) {
             if (key === 'Enter') {
                 exprInput.value += '\n';
@@ -449,8 +974,9 @@ print a % 3"></textarea>
             } else {
                 exprInput.value += key;
             }
-            await new Promise(r => setTimeout(r, 30));
+            await new Promise(r => setTimeout(r, 25));
         }
+        showToast("Macro replay finished.", "success", 2000);
     };
 
     btnLoad.onclick = () => {
@@ -461,7 +987,11 @@ print a % 3"></textarea>
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = e => { exprInput.value = e.target.result; };
+            reader.onload = e => { 
+                exprInput.value = e.target.result;
+                showToast(`Loaded "${file.name}"`, "success");
+                btnRun.click();
+            };
             reader.readAsText(file);
         };
         input.click();
@@ -475,7 +1005,16 @@ print a % 3"></textarea>
         a.download = 'script.ksc';
         a.click();
         URL.revokeObjectURL(url);
+        showToast("Saved as script.ksc", "success");
     };
+
+    // Startup welcome toast
+    window.addEventListener('load', () => {
+        btnRun.click();
+        setTimeout(() => {
+            showToast("⚡ Welcome to KScript! Press F1 for Help & Shortcuts.", "info", 4500);
+        }, 300);
+    });
 </script>
 </body>
 </html>
