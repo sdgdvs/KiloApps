@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KBBS
+**Target App:** KBase
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KBBS
 - KBase
 - KBreakout
 - KBudget
@@ -173,8 +172,18 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KAlchemy
 - KAsteroids
 - KAudio
+- KBBS
 
 ## Test Reports
+
+- **KBBS**: ISSUES FOUND ⚠️ (6 issues, 6 fixed inline)
+  - ✅ Core functionality works (virtual ANSI terminal emulator with canvas rendering, CRT scanline effects, multi-node dialing directory with JSON import/export, interactive door games Legend of the Red Dragon & TradeWars 2015 streaming to terminal, EchoNet FidoNet EchoMail reader with message posting, reply quoting, and .MSG export, binary file transfers XMODEM/ZMODEM, session log capture/export as ANSI/TXT, keyboard shortcuts).
+  - 🔧 FIXED: Unescaped single quote (`'''`) and backslash (`'\'`) in the `CP437` character mapping array triggered a fatal `SyntaxError: Unexpected string`, crashing the entire script before execution in browsers. Properly escaped characters to `'\''` and `'\\'`.
+  - 🔧 FIXED: `selectMacro()` had an unclosed `if` block, nesting `saveMacro()` inside it and failing to populate `macroString` into the textarea when selecting a macro. Terminated the block correctly and restored script string binding.
+  - 🔧 FIXED: "New" button in the Macro editor referenced `onclick="newMacro()"` which was undefined, throwing a ReferenceError. Implemented `newMacro()` to clear inputs and initialize a script template.
+  - 🔧 FIXED: Display Settings modal had an empty `<div id="paletteContainer">` with no interactive color inputs, and `setBlinkRate` was neither loaded nor saved. Added `renderPaletteEditor()` with 16 color inputs, persisted custom palettes to `kbbsSettings.palette`, and wired up `setBlinkRate`.
+  - 🔧 FIXED: Terminal scrollbar container had `onscroll="handleScroll(event)"` but `handleScroll` was never defined. Added `handleScroll(event)` handler calculating proportional `scrollOffset` and re-rendering the terminal canvas.
+  - 🔧 FIXED: ANSI Art Viewer presets "sunset" and "acid" fell back to a generic label without artwork, `artPaletteSelect` did not tint presets, and `updateArtBaud` was an empty no-op. Added retro artwork presets with palette theming (Amber, Green, Cyber) and status toast notifications.
 
 - **KAudio**: ISSUES FOUND ⚠️ (6 issues, 6 fixed inline)
   - ✅ Core functionality works (virtual piano keyboard, ADSR envelope, biquad filter, overdrive/distortion, stereo delay/echo, 16-step 4-track sequencer, 8-bit sound FX generator presets, dual-mode visualizer oscilloscope/FFT spectrum, JSON import/export, WAV offline master export, performance recording/playback).

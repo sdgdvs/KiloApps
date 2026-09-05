@@ -551,10 +551,10 @@ SEND:"secret\r"'></textarea>
     const CP437 = [
         ' ','☺','☻','♥','♦','♣','♠','•','◘','○','◙','♂','♀','♪','♫','☼',
         '►','◄','↕','‼','¶','§','▬','↨','↑','↓','→','←','∟','↔','▲','▼',
-        ' ','!','"','#','$','%','&',''','(',')','*','+',',','-','.','/',
+        ' ','!','"','#','$','%','&','\'','(',')','*','+',',','-','.','/',
         '0','1','2','3','4','5','6','7','8','9',':',';','<','=','>','?',
         '@','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O',
-        'P','Q','R','S','T','U','V','W','X','Y','Z','[','\',']','^','_',
+        'P','Q','R','S','T','U','V','W','X','Y','Z','[','\\',']','^','_',
         '`','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o',
         'p','q','r','s','t','u','v','w','x','y','z','{','|','}','~','⌂',
         'Ç','ü','é','â','ä','à','å','ç','ê','ë','è','ï','î','ì','Ä','Å',
@@ -1160,9 +1160,20 @@ SEND:"secret\r"'></textarea>
         selectedMacroIndex = idx; renderMacroList();
         if (idx >= 0 && idx < dynMacros.length) {
             let m = dynMacros[idx];
-            document.getElementById('macroKey').value = m.key;
+            document.getElementById('macroKey').value = m.key || '';
             document.getElementById('macroTitle').value = m.title || '';
-              function saveMacro() {
+            document.getElementById('macroString').value = m.str || '';
+        }
+    }
+
+    function newMacro() {
+        selectedMacroIndex = -1; renderMacroList();
+        document.getElementById('macroKey').value = '';
+        document.getElementById('macroTitle').value = 'New Script';
+        document.getElementById('macroString').value = 'WAIT:"login:"\nSEND:"guest\\r"';
+    }
+
+    function saveMacro() {
         let key = document.getElementById('macroKey').value.toUpperCase().trim();
         if (!key) {
             showToast("Please enter an Alt hotkey letter.", "warning");
@@ -1386,18 +1397,31 @@ SEND:"secret\r"'></textarea>
 
     function loadArtPreset() {
         let type = document.getElementById('artPresetSelect').value;
+        let pal = document.getElementById('artPaletteSelect').value;
         artCtx.fillStyle = '#000'; artCtx.fillRect(0,0,artCanvas.width,artCanvas.height);
         artCtx.font = '16px Consolas, monospace'; artCtx.textBaseline = 'top';
 
+        let c1 = '#0ea5e9', c2 = '#ec4899';
+        if (pal === 'amber') { c1 = '#ffb000'; c2 = '#f59e0b'; }
+        else if (pal === 'green') { c1 = '#10b981'; c2 = '#34d399'; }
+        else if (pal === 'cyber') { c1 = '#38bdf8'; c2 = '#f43f5e'; }
+
         if (type === 'cyber') {
-            artCtx.fillStyle = '#0ea5e9'; artCtx.fillText(" ╔══════════════════════════════════════════════╗", 20, 20);
-            artCtx.fillStyle = '#ec4899'; artCtx.fillText(" ║   K I L O  O S  -  C Y B E R  P U N K   B B S ║", 20, 40);
-            artCtx.fillStyle = '#0ea5e9'; artCtx.fillText(" ╚══════════════════════════════════════════════╝", 20, 60);
+            artCtx.fillStyle = c1; artCtx.fillText(" ╔══════════════════════════════════════════════╗", 20, 20);
+            artCtx.fillStyle = c2; artCtx.fillText(" ║   K I L O  O S  -  C Y B E R  P U N K   B B S ║", 20, 40);
+            artCtx.fillStyle = c1; artCtx.fillText(" ╚══════════════════════════════════════════════╝", 20, 60);
         } else if (type === 'dragon') {
-            artCtx.fillStyle = '#ef4444'; artCtx.fillText("   (===>  RED DRAGON ANSI ART  <===)", 20, 20);
-            artCtx.fillStyle = '#f59e0b'; artCtx.fillText("         /\\_/\\  ( S L A Y E R )", 20, 40);
+            artCtx.fillStyle = (pal === 'dos') ? '#ef4444' : c1; artCtx.fillText("   (===>  RED DRAGON ANSI ART  <===)", 20, 20);
+            artCtx.fillStyle = (pal === 'dos') ? '#f59e0b' : c2; artCtx.fillText("         /\\_/\\  ( S L A Y E R )", 20, 40);
+        } else if (type === 'sunset') {
+            artCtx.fillStyle = (pal === 'dos') ? '#f43f5e' : c2; artCtx.fillText("   ~-._.-~-._.-~ RETROWAVE 1984 ~-._.-~-._.-~", 20, 20);
+            artCtx.fillStyle = (pal === 'dos') ? '#8b5cf6' : c1; artCtx.fillText("   [═══ SYNTH SKYLINE & TAPE DECKS ═══]", 20, 40);
+        } else if (type === 'acid') {
+            artCtx.fillStyle = (pal === 'dos') ? '#10b981' : c1; artCtx.fillText("   ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄", 20, 20);
+            artCtx.fillStyle = (pal === 'dos') ? '#0ea5e9' : c2; artCtx.fillText("   █  A C i D   P R O D U C T i O N S   █", 20, 40);
+            artCtx.fillStyle = (pal === 'dos') ? '#10b981' : c1; artCtx.fillText("   ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀", 20, 60);
         } else {
-            artCtx.fillStyle = '#8b5cf6'; artCtx.fillText(" [ RETROWAVE SYNTH BBS SYSTEM v2.0 ]", 20, 20);
+            artCtx.fillStyle = c1; artCtx.fillText(" [ RETROWAVE SYNTH BBS SYSTEM v2.0 ]", 20, 20);
         }
     }
 
@@ -1410,7 +1434,10 @@ SEND:"secret\r"'></textarea>
             showToast(`Loaded ${file.name} into Art Viewer!`, "success");
         }; reader.readAsText(file);
     }
-    function updateArtBaud() {}
+    function updateArtBaud() {
+        let baud = document.getElementById('artBaudSelect').value;
+        showToast(`Art baud rate set to ${baud === '0' ? 'Instant' : baud + ' bps'}`, "info");
+    }
     function changeArtPalette() { loadArtPreset(); }
     function playArtAnimation() { loadArtPreset(); showToast("ANSI animation replayed!", "info"); }
     function renderArtToTerminal() {
@@ -1785,23 +1812,57 @@ SEND:"secret\r"'></textarea>
     }
     function saveSettings() {
         kbbsSettings.fontSize = parseInt(document.getElementById('setFontSize').value) || 16;
+        kbbsSettings.blinkRateMs = parseInt(document.getElementById('setBlinkRate').value) || 500;
         kbbsSettings.baudRate = parseInt(document.getElementById('setBaudRate').value) || 0;
         kbbsSettings.localEcho = document.getElementById('setLocalEcho').checked;
+        kbbsSettings.palette = [...COLORS];
         localStorage.setItem('kbbs_display_settings', JSON.stringify(kbbsSettings));
         resizeCanvas(); closeSettings();
         showToast("Display settings saved!", "success");
     }
     function showSettings() {
         document.getElementById('setFontSize').value = kbbsSettings.fontSize;
+        document.getElementById('setBlinkRate').value = kbbsSettings.blinkRateMs || 500;
         document.getElementById('setBaudRate').value = kbbsSettings.baudRate;
         document.getElementById('setLocalEcho').checked = kbbsSettings.localEcho;
+        renderPaletteEditor();
         document.getElementById('settingsModal').style.display = 'flex';
+    }
+    function renderPaletteEditor() {
+        const cont = document.getElementById('paletteContainer');
+        if (!cont) return;
+        cont.innerHTML = '';
+        COLORS.forEach((col, idx) => {
+            let inp = document.createElement('input');
+            inp.type = 'color';
+            inp.value = col;
+            inp.style.width = '32px';
+            inp.style.height = '24px';
+            inp.style.border = '1px solid #27272a';
+            inp.style.borderRadius = '4px';
+            inp.style.cursor = 'pointer';
+            inp.title = `Color ${idx}`;
+            inp.onchange = (e) => { COLORS[idx] = e.target.value; render(); };
+            cont.appendChild(inp);
+        });
     }
     function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; if (typeof canvas !== 'undefined') canvas.focus(); }
     function resetPalette() {
         COLORS = [...DEFAULT_COLORS];
+        kbbsSettings.palette = [...DEFAULT_COLORS];
+        localStorage.setItem('kbbs_display_settings', JSON.stringify(kbbsSettings));
         render();
+        renderPaletteEditor();
         showToast("Palette reset to default DOS VGA colors.", "info");
+    }
+
+    function handleScroll(event) {
+        let maxScroll = Math.max(0, screen.length - ROWS);
+        if (maxScroll > 0) {
+            let pct = event.target.scrollTop / (event.target.scrollHeight - event.target.clientHeight);
+            scrollOffset = Math.round(pct * maxScroll);
+            render();
+        }
     }
 
     function closeAnyOpenModal() {
