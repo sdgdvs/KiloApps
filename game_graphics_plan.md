@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KReversi
 - KQuest
 - KSpace
 - KPac
@@ -150,8 +149,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KWords
 - KWizard
 - KMystery
+- KReversi
 
 ## Completed Work Log
+
+- **KReversi (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on disc placements, double-flip bonuses, bomb explosions, freeze powerups, and victory celebrations (continuous 60 FPS requestAnimationFrame animation loop in Web Canvas `kreversi.html`, and double-buffered viewport rendering with physics decay in Native C Win32 GDI `KReversi/main.c`), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity drag trails, expanding buoyant smoke / plasma puffs with negative gravity and radius growth, heavy kinematic slate stone / lacquer / marble debris shards with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars upon flips, bombs, and stage victories), dual-tier concentric placement shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion / gold halo radiating across the board upon disc drops, ornate Art Deco golden corner filigree L-brackets with brass rivet studs and micro-accents at all four corners of the mahogany board frame, a pulsating golden energy perimeter inlay border with an animated traveling specular glint traversing the outer playfield rectangle, sculpted 3D beveled discs with diagonal specular sheen sweeps traversing discs and mahogany wood grain, and atmospheric environmental floating Zen emerald / velvet dust motes drifting across the viewport in both Web Canvas (`kreversi.html`) and Native C Win32 GDI (`KReversi/main.c`).
 
 - **KMystery (Loop 1):** Replaced flat placeholder text and basic UI with rich atmospheric procedural visual systems in both Web Canvas (`kmystery.html`) and Native Win32 GDI (`KMystery/main.c`). Implemented dynamic 60 FPS requestAnimationFrame canvas viewport and double-buffered Win32 GDI viewport featuring rich noir backdrops (Detective's Office with venetian blinds and glowing amber banker's lamp, The Manor with stormy gothic spires and yellow police cordon tape, The Docks with misty waters and glowing gaslights, The Casino with marquee lights and green felt roulette wheel, Train Station concourse clock and steam locomotive), procedural suspect bust mugshots with distinct noir styling and mood indicators (Mr. Black in fedora with glowing cigarette, Miss Scarlet with crimson cloche hat and cigarette holder, Colonel Mustard with military uniform and handlebar mustache, Mrs. White with mourning veil and pearl necklace, Professor Plum in tweed suit and spectacles; dynamic sweat beads, anger marks, and caught liar badges), interactive Forensic Lab CRT oscilloscope waveform mini-game display with dual sine waves (target golden wave vs adjustable cyan tuning wave) and spectral frequency bars, a 4-layer kinematic particle engine (core needle sparks, buoyant smoke motes, gravity crystal/glass shards, celebration deduction stars), dual-tier shockwave ripple rings, quadratic physics-decay screen shake, and atmospheric noir rain streaks and drifting fog particles.
 

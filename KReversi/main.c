@@ -232,6 +232,69 @@ typedef struct {
     int type; // 0: Spark Needle, 1: Smoke Puff, 2: Heavy Shard, 3: Celebration Star, 4: Shockwave Ring
 } GdiParticle;
 
+typedef struct {
+    float x, y;
+    float vx, vy;
+    float phase;
+    float pulseSpeed;
+    int size;
+    COLORREF color;
+} GdiAmbientMote;
+
+#define MAX_AMBIENT_MOTES 32
+static GdiAmbientMote g_ambientMotes[MAX_AMBIENT_MOTES];
+static int g_ambientMotesInitialized = 0;
+
+void InitAmbientMotesGDI(int width, int height) {
+    for (int i = 0; i < MAX_AMBIENT_MOTES; i++) {
+        g_ambientMotes[i].x = (float)(rand() % (width > 0 ? width : 480));
+        g_ambientMotes[i].y = (float)(rand() % (height > 0 ? height : 560));
+        g_ambientMotes[i].vx = -0.3f + ((float)rand() / (float)RAND_MAX) * 0.6f;
+        g_ambientMotes[i].vy = -0.1f - ((float)rand() / (float)RAND_MAX) * 0.4f;
+        g_ambientMotes[i].phase = ((float)rand() / (float)RAND_MAX) * 6.28f;
+        g_ambientMotes[i].pulseSpeed = 0.03f + ((float)rand() / (float)RAND_MAX) * 0.04f;
+        g_ambientMotes[i].size = 1 + rand() % 3;
+        g_ambientMotes[i].color = (i % 3 == 0) ? RGB(255, 215, 0) : ((i % 3 == 1) ? RGB(60, 180, 80) : RGB(0, 245, 212));
+    }
+    g_ambientMotesInitialized = 1;
+}
+
+void UpdateAndDrawAmbientMotesGDI(HDC hdc, int width, int height) {
+    if (!g_ambientMotesInitialized) InitAmbientMotesGDI(width, height);
+    for (int i = 0; i < MAX_AMBIENT_MOTES; i++) {
+        GdiAmbientMote* m = &g_ambientMotes[i];
+        m->x += m->vx;
+        m->y += m->vy;
+        m->phase += m->pulseSpeed;
+        if (m->x < 0) m->x = (float)width;
+        if (m->x > width) m->x = 0;
+        if (m->y < 0) m->y = (float)height;
+        if (m->y > height) m->y = (float)height;
+
+        int px = (int)m->x;
+        int py = (int)m->y;
+        float pulse = 0.5f + 0.5f * sinf(m->phase);
+        int r = (int)(GetRValue(m->color) * pulse);
+        int g = (int)(GetGValue(m->color) * pulse);
+        int b = (int)(GetBValue(m->color) * pulse);
+        COLORREF c = RGB(r, g, b);
+
+        if (m->size == 1) {
+            SetPixel(hdc, px, py, c);
+        } else {
+            HBRUSH brush = CreateSolidBrush(c);
+            HPEN pen = CreatePen(PS_SOLID, 1, c);
+            HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
+            HPEN oldPen = (HPEN)SelectObject(hdc, pen);
+            Ellipse(hdc, px - m->size, py - m->size, px + m->size, py + m->size);
+            SelectObject(hdc, oldBrush);
+            SelectObject(hdc, oldPen);
+            DeleteObject(brush);
+            DeleteObject(pen);
+        }
+    }
+}
+
 #define MAX_GDI_PARTICLES 300
 static GdiParticle g_particles[MAX_GDI_PARTICLES];
 static int g_numParticles = 0;
@@ -282,11 +345,11 @@ void SpawnMultiLayerExplosionGDI(HWND hwnd, float x, float y, int typeStyle, flo
     }
 
     // Layer 1: Incandescent core sparks with needle velocity trails
-    int sparkCount = (int)(14.0f * intensity);
+    int sparkCount = (int)(18.0f * intensity);
     for (int i = 0; i < sparkCount; i++) {
         if (g_numParticles >= MAX_GDI_PARTICLES) break;
         float angle = ((float)rand() / (float)RAND_MAX) * 6.28318f;
-        float speed = (2.2f + ((float)rand() / (float)RAND_MAX) * 4.8f) * intensity;
+        float speed = (2.2f + ((float)rand() / (float)RAND_MAX) * 5.0f) * intensity;
         g_particles[g_numParticles].x = x;
         g_particles[g_numParticles].y = y;
         g_particles[g_numParticles].vx = cosf(angle) * speed;
@@ -302,7 +365,7 @@ void SpawnMultiLayerExplosionGDI(HWND hwnd, float x, float y, int typeStyle, flo
     }
 
     // Layer 2: Expanding buoyant smoke puffs
-    int smokeCount = (int)(6.0f * intensity);
+    int smokeCount = (int)(7.0f * intensity);
     for (int i = 0; i < smokeCount; i++) {
         if (g_numParticles >= MAX_GDI_PARTICLES) break;
         float angle = ((float)rand() / (float)RAND_MAX) * 6.28318f;
@@ -326,7 +389,7 @@ void SpawnMultiLayerExplosionGDI(HWND hwnd, float x, float y, int typeStyle, flo
     for (int i = 0; i < shardCount; i++) {
         if (g_numParticles >= MAX_GDI_PARTICLES) break;
         float angle = ((float)rand() / (float)RAND_MAX) * 6.28318f;
-        float speed = (1.5f + ((float)rand() / (float)RAND_MAX) * 3.5f) * intensity;
+        float speed = (1.5f + ((float)rand() / (float)RAND_MAX) * 3.8f) * intensity;
         g_particles[g_numParticles].x = x;
         g_particles[g_numParticles].y = y;
         g_particles[g_numParticles].vx = cosf(angle) * speed;
@@ -342,7 +405,7 @@ void SpawnMultiLayerExplosionGDI(HWND hwnd, float x, float y, int typeStyle, flo
     }
 
     // Layer 4: Radiant celebration stars
-    int starCount = (int)(5.0f * intensity);
+    int starCount = (int)(6.0f * intensity);
     for (int i = 0; i < starCount; i++) {
         if (g_numParticles >= MAX_GDI_PARTICLES) break;
         float angle = ((float)rand() / (float)RAND_MAX) * 6.28318f;
@@ -361,7 +424,8 @@ void SpawnMultiLayerExplosionGDI(HWND hwnd, float x, float y, int typeStyle, flo
         g_numParticles++;
     }
 
-    // Concentric shockwave ring
+    // Dual-Tier Concentric Shockwaves
+    // Inner high-speed compression wave
     if (g_numParticles < MAX_GDI_PARTICLES) {
         g_particles[g_numParticles].x = x;
         g_particles[g_numParticles].y = y;
@@ -369,10 +433,25 @@ void SpawnMultiLayerExplosionGDI(HWND hwnd, float x, float y, int typeStyle, flo
         g_particles[g_numParticles].vy = 0;
         g_particles[g_numParticles].rot = 0;
         g_particles[g_numParticles].vrot = 0;
-        g_particles[g_numParticles].life = 14;
-        g_particles[g_numParticles].maxLife = 14;
+        g_particles[g_numParticles].life = 10;
+        g_particles[g_numParticles].maxLife = 10;
+        g_particles[g_numParticles].color = RGB(255, 255, 255);
+        g_particles[g_numParticles].size = (int)(32.0f * intensity);
+        g_particles[g_numParticles].type = 4;
+        g_numParticles++;
+    }
+    // Outer chromatic dispersion halo
+    if (g_numParticles < MAX_GDI_PARTICLES) {
+        g_particles[g_numParticles].x = x;
+        g_particles[g_numParticles].y = y;
+        g_particles[g_numParticles].vx = 0;
+        g_particles[g_numParticles].vy = 0;
+        g_particles[g_numParticles].rot = 0;
+        g_particles[g_numParticles].vrot = 0;
+        g_particles[g_numParticles].life = 16;
+        g_particles[g_numParticles].maxLife = 16;
         g_particles[g_numParticles].color = sparkCols[0];
-        g_particles[g_numParticles].size = (int)(22.0f * intensity);
+        g_particles[g_numParticles].size = (int)(24.0f * intensity);
         g_particles[g_numParticles].type = 4;
         g_numParticles++;
     }
@@ -861,6 +940,52 @@ void DrawMahoganyFrame(HDC hdc, int boardX, int boardY, int boardW, int boardH) 
         SelectObject(hdc, hlBrush);
         Ellipse(hdc, sx - 2, sy - 2, sx, sy);
         DeleteObject(hlBrush);
+    }
+
+    // Animated traveling specular glint along Mahogany frame perimeter
+    int pW = (frameRect.right - 5) - (frameRect.left + 5);
+    int pH = (frameRect.bottom - 5) - (frameRect.top + 5);
+    if (pW > 0 && pH > 0) {
+        int perimeter = 2 * (pW + pH);
+        int glintDist = (globalFrameCounter * 3) % perimeter;
+        
+        for (int t = 0; t < 5; t++) {
+            int trailDist = (glintDist - t * 8 + perimeter) % perimeter;
+            int gx, gy;
+            if (trailDist < pW) {
+                gx = frameRect.left + 5 + trailDist;
+                gy = frameRect.top + 5;
+            } else if (trailDist < pW + pH) {
+                gx = frameRect.right - 5;
+                gy = frameRect.top + 5 + (trailDist - pW);
+            } else if (trailDist < 2 * pW + pH) {
+                gx = frameRect.right - 5 - (trailDist - (pW + pH));
+                gy = frameRect.bottom - 5;
+            } else {
+                gx = frameRect.left + 5;
+                gy = frameRect.bottom - 5 - (trailDist - (2 * pW + pH));
+            }
+
+            int gRad = (t == 0) ? 3 : (t < 3 ? 2 : 1);
+            COLORREF gCol = (t == 0) ? RGB(255, 255, 255) : (t == 1 ? RGB(255, 240, 180) : RGB(218, 165, 32));
+            HBRUSH gBrush = CreateSolidBrush(gCol);
+            HPEN gPen = CreatePen(PS_SOLID, 1, gCol);
+            SelectObject(hdc, gBrush);
+            SelectObject(hdc, gPen);
+            Ellipse(hdc, gx - gRad, gy - gRad, gx + gRad, gy + gRad);
+            DeleteObject(gBrush);
+            DeleteObject(gPen);
+        }
+    }
+
+    // Sculpted diagonal specular sheen sweep across the board
+    int sheenPos = (globalFrameCounter * 3) % (pW + pH + 200) - 100;
+    for (int y = frameRect.top + 6; y < frameRect.bottom - 6; y += 4) {
+        int sx = frameRect.left + 6 + (sheenPos - (y - frameRect.top));
+        if (sx >= frameRect.left + 6 && sx < frameRect.right - 6) {
+            SetPixel(hdc, sx, y, RGB(255, 255, 220));
+            SetPixel(hdc, sx + 1, y, RGB(255, 255, 255));
+        }
     }
 }
 
@@ -1737,8 +1862,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (wParam == 5) {
                 globalFrameCounter++;
-                RECT scoreRect = { 0, 20, 480, 50 };
-                InvalidateRect(hwnd, &scoreRect, FALSE);
+                if (g_screenShake > 0.05f) {
+                    g_screenShake *= 0.86f;
+                    if (g_screenShake <= 0.05f) g_screenShake = 0.0f;
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
         }
@@ -1760,6 +1888,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBRUSH bgBrush = CreateSolidBrush(theme->bg);
             FillRect(hdc, &clientRect, bgBrush);
             DeleteObject(bgBrush);
+
+            UpdateAndDrawAmbientMotesGDI(hdc, cWidth, cHeight);
 
             SetBkMode(hdc, OPAQUE);
             SetBkColor(hdc, theme->bg);
