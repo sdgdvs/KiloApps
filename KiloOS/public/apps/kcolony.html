@@ -29,53 +29,81 @@
         .projectile { position: absolute; pointer-events: none; background: #fff; box-shadow: 0 0 5px #fff; z-index: 10; transform: translate(-50%, -50%); }
         .flicker { animation: powerFlicker 0.4s infinite; }
         @keyframes powerFlicker { 0%, 100% { filter: brightness(1) hue-rotate(0deg); } 50% { filter: brightness(0.4) hue-rotate(-30deg); box-shadow: inset 0 0 10px #f00; } }
+
+        /* Cyber Toast System */
+        #toast-container { position: fixed; bottom: 15px; right: 15px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; max-width: 320px; }
+        .toast { padding: 10px 14px; background: rgba(8, 16, 28, 0.95); border: 1px solid #00ffff; border-radius: 4px; color: #00ffff; font-size: 11px; box-shadow: 0 0 15px rgba(0,255,255,0.4); pointer-events: auto; cursor: pointer; animation: toastIn 0.25s cubic-bezier(0.1, 0.9, 0.2, 1); transition: opacity 0.3s, transform 0.3s; line-height: 1.4; }
+        .toast.success { border-color: #00ff66; color: #aaffbb; box-shadow: 0 0 15px rgba(0,255,102,0.4); }
+        .toast.warning { border-color: #ffaa00; color: #ffdd88; box-shadow: 0 0 15px rgba(255,170,0,0.4); }
+        .toast.danger { border-color: #ff3333; color: #ff9999; box-shadow: 0 0 15px rgba(255,51,51,0.4); }
+        .toast.discovery { border-color: #aa00ff; color: #ee99ff; box-shadow: 0 0 15px rgba(170,0,255,0.4); }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(12px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
     </style>
 </head>
 <body>
+    <div id="toast-container"></div>
     <div id="start-screen" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(5,10,15,0.96); z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#00ffff;">
         <h1 style="text-shadow: 0 0 12px #00ffff; margin-bottom: 4px;">KCOLONY: PLANETARY EXPEDITIONS</h1>
-        <p style="text-align: center; color: #00ffff; text-shadow: 0 0 5px #00ffff; margin-top: 0; margin-bottom: 15px; font-size: 13px;">Select Planetary Biome or Scenario Mode  |  Press [H] or [F1] for Help</p>
-        <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(0)">1. Mars Prime<br><small>Standard Balanced Expedition & Dust Storms</small></button>
-        <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(1)">2. Cryo Tundra (Gliese 667)<br><small>Extreme Cold & Blizzards (-50% Solar, +50% Geothermal)</small></button>
-        <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(2)">3. Volcanic Inferno (Kepler 10b)<br><small>Heatwaves & Flares (+50% Mine Mat, Fast Breakdowns)</small></button>
-        <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(3)">4. Acid Swamp (Proxima b)<br><small>Corrosive Acid Rain & 2x Alien Swarms (+50% Hydro/Bio Food)</small></button>
-        <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(4)">5. Sandbox Colony<br><small>Unlimited Resources & All Tech Unlocked</small></button>
-        <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(5)">6. 100-Day Survival Challenge<br><small>Survive 100 Full Days</small></button>
-        <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(6)">7. Resource Rush Challenge<br><small>Gather 1000 Mat & 100 AdvM by Day 50</small></button>
-        <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="toggleHelp()">8. [H] or [F1] Help & Tech Spec Sheet<br><small>Full Rules, Structures & Tech Guide</small></button>
+        <p style="text-align: center; color: #00ffff; text-shadow: 0 0 5px #00ffff; margin-top: 0; margin-bottom: 15px; font-size: 13px;">Select Planetary Biome [1-7] or Press [H] / [F1] for Help</p>
+        <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(0)">[1] Mars Prime<br><small>Standard Balanced Expedition & Dust Storms</small></button>
+        <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(1)">[2] Cryo Tundra (Gliese 667)<br><small>Extreme Cold & Blizzards (-50% Solar, +50% Geothermal)</small></button>
+        <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(2)">[3] Volcanic Inferno (Kepler 10b)<br><small>Heatwaves & Flares (+50% Mine Mat, Fast Breakdowns)</small></button>
+        <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(3)">[4] Acid Swamp (Proxima b)<br><small>Corrosive Acid Rain & 2x Alien Swarms (+50% Hydro/Bio Food)</small></button>
+        <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(4)">[5] Sandbox Colony<br><small>Unlimited Resources & All Tech Unlocked</small></button>
+        <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(5)">[6] 100-Day Survival Challenge<br><small>Survive 100 Full Days</small></button>
+        <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="startGame(6)">[7] Resource Rush Challenge<br><small>Gather 1000 Mat & 100 AdvM by Day 50</small></button>
+        <button class="btn" style="margin:4px; padding:10px; width:460px; text-align:center; font-size:13px;" onclick="toggleHelp()">[8 / H / F1] Administrator's Manual & Tech Spec Sheet<br><small>Full Rules, Shortcuts, Structures & Tech Guide</small></button>
     </div>
 
     <div id="help-modal" style="display:none; position:fixed; top:4%; left:8%; width:84%; height:92%; background:rgba(10,20,30,0.98); z-index:200; border:2px solid #00ffff; border-radius:5px; padding:20px; overflow-y:auto; box-shadow:0 0 25px #00ffff; color:#00ffff;">
         <h2 style="text-shadow: 0 0 10px #00ffff; text-align:center; margin-top:0;">KColony Administrator's Manual & Expanded Spec Sheet</h2>
-        <div style="position:absolute; top:15px; right:15px;"><button class="btn" onclick="toggleHelp()" style="padding:6px 12px; font-size:12px;">CLOSE</button></div>
+        <div style="position:absolute; top:15px; right:15px;"><button class="btn" onclick="toggleHelp()" style="padding:6px 12px; font-size:12px;">CLOSE [ESC]</button></div>
+        
+        <h3>Keyboard Controls & Hotkeys</h3>
+        <table style="width:100%; font-size:11px; border-collapse:collapse; margin-bottom:15px; color:#00ffff;">
+            <tr style="border-bottom:1px solid #00aaaa;"><th style="text-align:left; padding:4px;">Key</th><th style="text-align:left; padding:4px;">Action / Structure</th><th style="text-align:left; padding:4px;">Key</th><th style="text-align:left; padding:4px;">Action / Structure</th></tr>
+            <tr><td style="padding:2px;"><b style="color:#fff;">1 - 7</b></td><td>Start Scenario Mode (Menu)</td><td style="padding:2px;"><b style="color:#fff;">0 / I / Esc</b></td><td>Inspect Mode / Deselect</td></tr>
+            <tr><td style="padding:2px;"><b style="color:#fff;">- / R</b></td><td>Repair Damaged Structure</td><td style="padding:2px;"><b style="color:#fff;">1</b></td><td>[1] Solar Panel</td></tr>
+            <tr><td style="padding:2px;"><b style="color:#fff;">2</b></td><td>[2] Farm</td><td style="padding:2px;"><b style="color:#fff;">3</b></td><td>[3] Mine</td></tr>
+            <tr><td style="padding:2px;"><b style="color:#fff;">4</b></td><td>[4] Habitat</td><td style="padding:2px;"><b style="color:#fff;">5</b></td><td>[5] Battery</td></tr>
+            <tr><td style="padding:2px;"><b style="color:#fff;">6</b></td><td>[6] Laboratory</td><td style="padding:2px;"><b style="color:#fff;">7</b></td><td>[7] Nuclear Reactor (Unl)</td></tr>
+            <tr><td style="padding:2px;"><b style="color:#fff;">8</b></td><td>[8] Hydroponics (Unl)</td><td style="padding:2px;"><b style="color:#fff;">9</b></td><td>[9] Laser Defense (Unl)</td></tr>
+            <tr><td style="padding:2px;"><b style="color:#fff;">W</b></td><td>[10/W] Wall Fortification</td><td style="padding:2px;"><b style="color:#fff;">T</b></td><td>[11/T] Turret Defense</td></tr>
+            <tr><td style="padding:2px;"><b style="color:#fff;">C</b></td><td>[12/C] Factory (AdvM)</td><td style="padding:2px;"><b style="color:#fff;">G</b></td><td>[13/G] Geothermal Generator</td></tr>
+            <tr><td style="padding:2px;"><b style="color:#fff;">V</b></td><td>[14/V] Bio-Dome Terraformer</td><td style="padding:2px;"><b style="color:#fff;">E</b></td><td>[15/E] Shield Pylon Barrier</td></tr>
+            <tr><td style="padding:2px;"><b style="color:#fff;">U</b></td><td>[16/U] Drone Hub (Nanites)</td><td style="padding:2px;"><b style="color:#fff;">P</b></td><td>[17/P] Trade Port Hub</td></tr>
+            <tr><td style="padding:2px;"><b style="color:#fff;">K</b></td><td>[18/K] Cavern Drill Magma Tap</td><td style="padding:2px;"><b style="color:#fff;">O</b></td><td>[19/O] Orbital Defense Beacon</td></tr>
+            <tr><td style="padding:2px;"><b style="color:#fff;">Space</b></td><td>Trigger Tactical Orbital Strike</td><td style="padding:2px;"><b style="color:#fff;">H / F1 / ?</b></td><td>Toggle Admin Manual / Help</td></tr>
+        </table>
+
         <h3>Resource Systems</h3>
         <p><b>Food:</b> Colonist nourishment. <b>Power:</b> Energy network. <b>Mat:</b> Basic structural alloy. <b>AdvM:</b> High-tech alloy. <b>Science:</b> Research breakthroughs. <b>Happiness:</b> Productivity multiplier (up to 120%).</p>
         
         <h3>Core Structures</h3>
         <ul style="line-height:1.5; font-size:12px;">
-            <li><b>Solar Panel (S):</b> Generates 4 Power in daylight. (+50% with Solar IV).</li>
-            <li><b>Farm (F):</b> +5 Food per tick. Costs 5 Power.</li>
-            <li><b>Mine (M):</b> +3 Mat per tick. Costs 10 Power.</li>
-            <li><b>Habitat (H):</b> +5 Max Population. Costs 5 Power.</li>
-            <li><b>Battery (B):</b> +50 Max Stored Power for night/storms.</li>
-            <li><b>Laboratory (L):</b> +2 Science per tick. Costs 5 Power.</li>
-            <li><b>Nuclear Reactor (N):</b> +20 Power 24/7 constantly.</li>
-            <li><b>Hydroponics (Y):</b> +15 Food per tick. Costs 10 Power.</li>
-            <li><b>Laser Defense (D):</b> Range 5. Costs 20 Power. Auto-targets aliens.</li>
-            <li><b>Wall (W):</b> Fortification. (With Xeno-Armor, reflects 2 damage to attackers).</li>
-            <li><b>Turret (T):</b> Range 3. Costs 5 Power. Auto-targets aliens.</li>
-            <li><b>Factory (C):</b> Converts 2 Mat into 1 AdvM per tick. Costs 10 Power.</li>
+            <li><b>Solar Panel (1 / S):</b> Generates 4 Power in daylight. (+50% with Solar IV).</li>
+            <li><b>Farm (2 / F):</b> +5 Food per tick. Costs 5 Power.</li>
+            <li><b>Mine (3 / M):</b> +3 Mat per tick. Costs 10 Power.</li>
+            <li><b>Habitat (4 / H):</b> +5 Max Population. Costs 5 Power.</li>
+            <li><b>Battery (5 / B):</b> +50 Max Stored Power for night/storms.</li>
+            <li><b>Laboratory (6 / L):</b> +2 Science per tick. Costs 5 Power.</li>
+            <li><b>Nuclear Reactor (7 / N):</b> +20 Power 24/7 constantly.</li>
+            <li><b>Hydroponics (8 / Y):</b> +15 Food per tick. Costs 10 Power.</li>
+            <li><b>Laser Defense (9 / D):</b> Range 5. Costs 20 Power. Auto-targets aliens.</li>
+            <li><b>Wall (10 / W):</b> Fortification. (With Xeno-Armor, reflects 2 damage to attackers).</li>
+            <li><b>Turret (11 / T):</b> Range 3. Costs 5 Power. Auto-targets aliens.</li>
+            <li><b>Factory (12 / C):</b> Converts 2 Mat into 1 AdvM per tick. Costs 10 Power.</li>
         </ul>
 
         <h3>Advanced & Expansion Structures (Loop 2 & 3)</h3>
         <ul style="line-height:1.5; font-size:12px;">
-            <li><b>Geothermal Generator (G):</b> +35 Power constantly (immune to dust storms/blizzards; +50 Power on Cryo world). Cost: 35 Mat, 15 AdvM.</li>
-            <li><b>Bio-Dome / Terraformer (V):</b> +25 Food, +8 Pop cap, +2 Happiness per tick up to 120%. Cost: 40 Mat, 20 AdvM, 20 Power.</li>
-            <li><b>Shield Pylon (E):</b> 3x3 Energy Barrier protecting structures from meteors, blizzards, acid rain, and repels alien invasions. Cost: 50 Mat, 25 AdvM, 30 Power.</li>
-            <li><b>Drone Hub (U):</b> Automated nanite repair drones fix broken structures on the grid (5 Mat) and boost nearby production. Cost: 60 Mat, 30 AdvM, 25 Power.</li>
-            <li><b>Trade Port (P):</b> +10 Happiness, +3 Mat & +1 AdvM tariffs. Interstellar freighters arrive every 4 days! Cost: 70 Mat, 35 AdvM, 30 Power.</li>
-            <li><b>Cavern Drill (K):</b> +40 Power deep magma tap, +5 Mat & +2 AdvM 24/7. 100% immune to surface disasters! Cost: 80 Mat, 40 AdvM, 40 Power.</li>
-            <li><b>Orbital Beacon (O):</b> 100% planetary defense umbrella against meteors and unlocks tactical ORBITAL BOMBARDMENT! Cost: 100 Mat, 50 AdvM, 50 Power.</li>
+            <li><b>Geothermal Generator (13 / G):</b> +35 Power constantly (immune to dust storms/blizzards; +50 Power on Cryo world). Cost: 35 Mat, 15 AdvM.</li>
+            <li><b>Bio-Dome / Terraformer (14 / V):</b> +25 Food, +8 Pop cap, +2 Happiness per tick up to 120%. Cost: 40 Mat, 20 AdvM, 20 Power.</li>
+            <li><b>Shield Pylon (15 / E):</b> 3x3 Energy Barrier protecting structures from meteors, blizzards, acid rain, and repels alien invasions. Cost: 50 Mat, 25 AdvM, 30 Power.</li>
+            <li><b>Drone Hub (16 / U):</b> Automated nanite repair drones fix broken structures on the grid (5 Mat) and boost nearby production. Cost: 60 Mat, 30 AdvM, 25 Power.</li>
+            <li><b>Trade Port (17 / P):</b> +10 Happiness, +3 Mat & +1 AdvM tariffs. Interstellar freighters arrive every 4 days! Cost: 70 Mat, 35 AdvM, 30 Power.</li>
+            <li><b>Cavern Drill (18 / K):</b> +40 Power deep magma tap, +5 Mat & +2 AdvM 24/7. 100% immune to surface disasters! Cost: 80 Mat, 40 AdvM, 40 Power.</li>
+            <li><b>Orbital Beacon (19 / O):</b> 100% planetary defense umbrella against meteors and unlocks tactical ORBITAL BOMBARDMENT! Cost: 100 Mat, 50 AdvM, 50 Power.</li>
         </ul>
 
         <h3>Expeditions & Operations</h3>
@@ -85,7 +113,7 @@
             - <b>Hive Incursion (4 Pop, 60 Mat, 50 Pwr):</b> Strike alien brood nest; unlocks <i>Subterranean Geode</i> or <i>Ionized Aurora</i>!<br>
             - <b>Freighter Trade:</b> Exchange surplus Food or Mat for AdvM, Science, and emergency power.<br>
             - <b>Cavern Dive:</b> Excavate deep subterranean crystal vaults for massive rare alloy caches.<br>
-            - <b>Orbital Strike:</b> Calls down kinetic bombardment from orbit to vaporize all aliens instantly!
+            - <b>Orbital Strike [Space]:</b> Calls down kinetic bombardment from orbit to vaporize all aliens instantly!
         </p>
     </div>
 
@@ -119,8 +147,8 @@
         <div id="panel">
             <div class="panel-col">
                 <h3>Structures</h3>
-                <button class="btn active" id="btn-none" onclick="selectType(0)">None (Inspect)</button>
-                <button class="btn" id="btn-repair" onclick="selectType(-1)">[-1] Repair<br><small>Cost: 5 Mat</small></button>
+                <button class="btn active" id="btn-none" onclick="selectType(0)">[0/Esc] Inspect</button>
+                <button class="btn" id="btn-repair" onclick="selectType(-1)">[-/R] Repair<br><small>Cost: 5 Mat</small></button>
                 <button class="btn" id="btn-solar" onclick="selectType(1)">[1] Solar Panel<br><small>Cost: 10 Mat</small></button>
                 <button class="btn" id="btn-farm" onclick="selectType(2)">[2] Farm<br><small>Cost: 10 Mat, 5 Pwr</small></button>
                 <button class="btn" id="btn-mine" onclick="selectType(3)">[3] Mine<br><small>Cost: 10 Pwr</small></button>
@@ -128,18 +156,18 @@
                 <button class="btn" id="btn-battery" onclick="selectType(5)">[5] Battery<br><small>Cost: 20 Mat</small></button>
                 <button class="btn" id="btn-lab" onclick="selectType(6)">[6] Laboratory<br><small>Cost: 20 Mat, 5 Pwr</small></button>
                 <button class="btn" id="btn-hydro" onclick="selectType(8)" style="display:none">[8] Hydroponics<br><small>Cost: 20 Mat, 10 Pwr</small></button>
-                <button class="btn" id="btn-factory" onclick="selectType(12)" style="display:none">[12] Factory<br><small>Cost: 30 Mat, 10 Pwr</small></button>
+                <button class="btn" id="btn-factory" onclick="selectType(12)" style="display:none">[12/C] Factory<br><small>Cost: 30 Mat, 10 Pwr</small></button>
                 <button class="btn" id="btn-nuke" onclick="selectType(7)" style="display:none">[7] Nuclear Reactor<br><small>Cost: 20 Mat, 10 AdvM</small></button>
                 <button class="btn" id="btn-laser" onclick="selectType(9)" style="display:none">[9] Laser Defense<br><small>Cost: 10 Mat, 10 AdvM, 20 Pwr</small></button>
-                <button class="btn" id="btn-wall" onclick="selectType(10)">[10] Wall<br><small>Cost: 5 Mat</small></button>
-                <button class="btn" id="btn-turret" onclick="selectType(11)">[11] Turret<br><small>Cost: 15 Mat, 5 Pwr</small></button>
-                <button class="btn" id="btn-geo" onclick="selectType(13)" style="display:none">[13] Geothermal<br><small>Cost: 35 Mat, 15 AdvM</small></button>
-                <button class="btn" id="btn-bio" onclick="selectType(14)" style="display:none">[14] Bio-Dome<br><small>Cost: 40 Mat, 20 AdvM, 20 Pwr</small></button>
-                <button class="btn" id="btn-shield" onclick="selectType(15)" style="display:none">[15] Shield Pylon<br><small>Cost: 50 Mat, 25 AdvM, 30 Pwr</small></button>
-                <button class="btn" id="btn-drone" onclick="selectType(16)" style="display:none">[16] Drone Hub<br><small>Cost: 60 Mat, 30 AdvM, 25 Pwr</small></button>
-                <button class="btn" id="btn-trade" onclick="selectType(17)" style="display:none">[17] Trade Port<br><small>Cost: 70 Mat, 35 AdvM, 30 Pwr</small></button>
-                <button class="btn" id="btn-cavern" onclick="selectType(18)" style="display:none">[18] Cavern Drill<br><small>Cost: 80 Mat, 40 AdvM, 40 Pwr</small></button>
-                <button class="btn" id="btn-orbital" onclick="selectType(19)" style="display:none">[19] Orbital Beacon<br><small>Cost: 100 Mat, 50 AdvM, 50 Pwr</small></button>
+                <button class="btn" id="btn-wall" onclick="selectType(10)">[10/W] Wall<br><small>Cost: 5 Mat</small></button>
+                <button class="btn" id="btn-turret" onclick="selectType(11)">[11/T] Turret<br><small>Cost: 15 Mat, 5 Pwr</small></button>
+                <button class="btn" id="btn-geo" onclick="selectType(13)" style="display:none">[13/G] Geothermal<br><small>Cost: 35 Mat, 15 AdvM</small></button>
+                <button class="btn" id="btn-bio" onclick="selectType(14)" style="display:none">[14/V] Bio-Dome<br><small>Cost: 40 Mat, 20 AdvM, 20 Pwr</small></button>
+                <button class="btn" id="btn-shield" onclick="selectType(15)" style="display:none">[15/E] Shield Pylon<br><small>Cost: 50 Mat, 25 AdvM, 30 Pwr</small></button>
+                <button class="btn" id="btn-drone" onclick="selectType(16)" style="display:none">[16/U] Drone Hub<br><small>Cost: 60 Mat, 30 AdvM, 25 Pwr</small></button>
+                <button class="btn" id="btn-trade" onclick="selectType(17)" style="display:none">[17/P] Trade Port<br><small>Cost: 70 Mat, 35 AdvM, 30 Pwr</small></button>
+                <button class="btn" id="btn-cavern" onclick="selectType(18)" style="display:none">[18/K] Cavern Drill<br><small>Cost: 80 Mat, 40 AdvM, 40 Pwr</small></button>
+                <button class="btn" id="btn-orbital" onclick="selectType(19)" style="display:none">[19/O] Orbital Beacon<br><small>Cost: 100 Mat, 50 AdvM, 50 Pwr</small></button>
             </div>
 
             <div class="panel-col">
@@ -164,9 +192,9 @@
                 <button class="btn expedition" onclick="launchExpedition(3)">Exped: Hive Incursion<br><small>Req: 4 Pop | 60 Mat, 50 Pwr</small></button>
                 <button class="btn expedition" onclick="tradeFreighter()">Freighter Trade<br><small>Trade Food/Mat for AdvM/Sci</small></button>
                 <button class="btn expedition" onclick="cavernDive()">Cavern Dive<br><small>Req: 2 Pop | 40 Mat, 40 Pwr</small></button>
-                <button class="btn expedition" onclick="orbitalStrike()">Orbital Strike<br><small>Req: Beacon | 40 Pwr</small></button>
+                <button class="btn expedition" onclick="orbitalStrike()">[Space] Orbital Strike<br><small>Req: Beacon | 40 Pwr</small></button>
                 
-                <button class="btn" style="margin-top:6px;" onclick="toggleHelp()">[H] / [F1] Manual</button>
+                <button class="btn" style="margin-top:6px;" onclick="toggleHelp()">[H] / [F1] Manual & Guide</button>
             </div>
         </div>
     </div>
@@ -228,15 +256,88 @@
             if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
+        function showToast(title, message, type = 'info', duration = 4500) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<div style="font-weight:bold; font-size:11px; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.5px;">${title}</div><div>${message.replace(/\n/g, '<br>')}</div>`;
+            toast.onclick = () => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px) scale(0.9)';
+                setTimeout(() => toast.remove(), 300);
+            };
+            container.appendChild(toast);
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(10px) scale(0.9)';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, duration);
+        }
+
         function toggleHelp() {
             const h = document.getElementById('help-modal');
             h.style.display = h.style.display === 'none' ? 'block' : 'none';
         }
 
+        document.getElementById('help-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'help-modal') toggleHelp();
+        });
+
         window.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
-                if (e.key === 'F1') e.preventDefault();
+            const key = e.key.toLowerCase();
+            if (e.key === 'F1' || key === 'h' || key === '?') {
+                e.preventDefault();
                 toggleHelp();
+                return;
+            }
+            const helpModal = document.getElementById('help-modal');
+            if (e.key === 'Escape') {
+                if (helpModal && helpModal.style.display !== 'none') {
+                    helpModal.style.display = 'none';
+                    return;
+                }
+                if (gameState === 1) {
+                    selectType(0);
+                }
+                return;
+            }
+            if (gameState === 0) {
+                if (e.key >= '1' && e.key <= '7') {
+                    startGame(parseInt(e.key) - 1);
+                } else if (e.key === '8') {
+                    toggleHelp();
+                }
+                return;
+            }
+            if (gameState === 1) {
+                if (e.key === '0' || key === 'i') selectType(0);
+                else if (e.key === '-' || key === 'r') selectType(-1);
+                else if (e.key === '1') selectType(1);
+                else if (e.key === '2') selectType(2);
+                else if (e.key === '3') selectType(3);
+                else if (e.key === '4') selectType(4);
+                else if (e.key === '5') selectType(5);
+                else if (e.key === '6') selectType(6);
+                else if (e.key === '7' && unlockedNuke) selectType(7);
+                else if (e.key === '8' && unlockedHydro) selectType(8);
+                else if (e.key === '9' && unlockedLaser) selectType(9);
+                else if (key === 'w') selectType(10);
+                else if (key === 't') selectType(11);
+                else if (key === 'c' && unlockedFactory) selectType(12);
+                else if (key === 'g' && unlockedGeo) selectType(13);
+                else if (key === 'v' && unlockedBio) selectType(14);
+                else if (key === 'e' && unlockedShield) selectType(15);
+                else if (key === 'u' && unlockedDrone) selectType(16);
+                else if (key === 'p' && unlockedTrade) selectType(17);
+                else if (key === 'k' && unlockedCavern) selectType(18);
+                else if (key === 'o' && unlockedOrbital) selectType(19);
+                else if (e.key === ' ') {
+                    e.preventDefault();
+                    orbitalStrike();
+                }
             }
         });
 
@@ -359,57 +460,65 @@
                 sci -= 50; unlockedHydro = true; playUnlock();
                 document.getElementById('btn-res-hydro').style.display = 'none';
                 document.getElementById('btn-hydro').style.display = 'block';
+                showToast("Tech Breakthrough", "Hydroponics Unlocked!\nHigh-yield indoor cultivation online.", "success");
             } else if (r === 4 && sci >= 75 && !unlockedFactory) {
                 sci -= 75; unlockedFactory = true; playUnlock();
                 document.getElementById('btn-res-factory').style.display = 'none';
                 document.getElementById('btn-factory').style.display = 'block';
+                showToast("Tech Breakthrough", "Advanced Alloy Factory Unlocked!\nConverts basic Mat into high-tech AdvM.", "success");
             } else if (r === 2 && sci >= 100 && !unlockedNuke) {
                 sci -= 100; unlockedNuke = true; playUnlock();
                 document.getElementById('btn-res-nuke').style.display = 'none';
                 document.getElementById('btn-nuke').style.display = 'block';
+                showToast("Tech Breakthrough", "Nuclear Reactor Unlocked!\nProvides 20 continuous energy output.", "success");
             } else if (r === 5 && sci >= 120 && !unlockedSolar4) {
                 sci -= 120; unlockedSolar4 = true; playUnlock();
                 document.getElementById('btn-res-solar4').style.display = 'none';
-                alert("Tech Breakthrough: Solar Grid IV!\nSolar panels now generate +50% power output.");
+                showToast("Tech Breakthrough", "Solar Grid IV!\nSolar panels now generate +50% power output.", "success");
             } else if (r === 3 && sci >= 150 && !unlockedLaser) {
                 sci -= 150; unlockedLaser = true; playUnlock();
                 document.getElementById('btn-res-laser').style.display = 'none';
                 document.getElementById('btn-laser').style.display = 'block';
+                showToast("Tech Breakthrough", "Laser Defense Matrix Unlocked!\nLong-range anti-alien beam projector.", "success");
             } else if (r === 6 && sci >= 180 && !unlockedXenoArmor) {
                 sci -= 180; unlockedXenoArmor = true; playUnlock();
                 document.getElementById('btn-res-xeno').style.display = 'none';
-                alert("Tech Breakthrough: Xeno-Armor!\nWalls now deal 2 counter-damage to attackers and turrets/lasers deal +1 damage.");
+                showToast("Tech Breakthrough", "Xeno-Armor!\nWalls deal 2 counter-damage to attackers and turrets/lasers deal +1 damage.", "success");
             } else if (r === 7 && sci >= 200 && !unlockedGeo) {
                 sci -= 200; unlockedGeo = true; playUnlock();
                 document.getElementById('btn-res-geo').style.display = 'none';
                 document.getElementById('btn-geo').style.display = 'block';
+                showToast("Tech Breakthrough", "Geothermal Generator Unlocked!\nContinuous high-power output immune to surface weather.", "success");
             } else if (r === 8 && sci >= 250 && !unlockedBio) {
                 sci -= 250; unlockedBio = true; playUnlock();
                 document.getElementById('btn-res-bio').style.display = 'none';
                 document.getElementById('btn-bio').style.display = 'block';
+                showToast("Tech Breakthrough", "Bio-Dome Terraformer Unlocked!\nBoosts Food, Population capacity, and Colonist Happiness.", "success");
             } else if (r === 9 && sci >= 300 && !unlockedShield) {
                 sci -= 300; unlockedShield = true; playUnlock();
                 document.getElementById('btn-res-shield').style.display = 'none';
                 document.getElementById('btn-shield').style.display = 'block';
+                showToast("Tech Breakthrough", "Shield Pylon Unlocked!\n3x3 Energy Barrier protecting structures from disasters & aliens.", "success");
             } else if (r === 11 && sci >= 350 && !unlockedTrade) {
                 sci -= 350; unlockedTrade = true; playUnlock();
                 document.getElementById('btn-res-trade').style.display = 'none';
                 document.getElementById('btn-trade').style.display = 'block';
-                alert("Tech Breakthrough: Trade Port!\nInterstellar freighters will now dock and commercial tariffs generate steady revenue.");
+                showToast("Tech Breakthrough", "Trade Port!\nInterstellar freighters will now dock and commercial tariffs generate steady revenue.", "success");
             } else if (r === 10 && sci >= 400 && !unlockedDrone) {
                 sci -= 400; unlockedDrone = true; playUnlock();
                 document.getElementById('btn-res-drone').style.display = 'none';
                 document.getElementById('btn-drone').style.display = 'block';
+                showToast("Tech Breakthrough", "Drone Hub Unlocked!\nAutomated nanite drones repair broken structures automatically.", "success");
             } else if (r === 12 && sci >= 450 && !unlockedCavern) {
                 sci -= 450; unlockedCavern = true; playUnlock();
                 document.getElementById('btn-res-cavern').style.display = 'none';
                 document.getElementById('btn-cavern').style.display = 'block';
-                alert("Tech Breakthrough: Cavern Excavator!\nCavern Drills tap deep magma power and pristine geodes immune to surface disasters.");
+                showToast("Tech Breakthrough", "Cavern Excavator!\nCavern Drills tap deep magma power and pristine geodes immune to surface disasters.", "success");
             } else if (r === 13 && sci >= 500 && !unlockedOrbital) {
                 sci -= 500; unlockedOrbital = true; playUnlock();
                 document.getElementById('btn-res-orbital').style.display = 'none';
                 document.getElementById('btn-orbital').style.display = 'block';
-                alert("Tech Breakthrough: Orbital Uplink!\nPlanetary defense shield intercepts meteors and allows calling tactical Orbital Bombardments.");
+                showToast("Tech Breakthrough", "Orbital Uplink!\nPlanetary defense shield intercepts meteors and allows calling tactical Orbital Bombardments [Space].", "success");
             }
             updateUI();
         }
@@ -421,32 +530,32 @@
                     let r = Math.random();
                     if (r < 0.5) {
                         mat += 50; food += 50;
-                        alert("Scout Recon Report:\nDiscovered surface mineral veins!\n(+50 Mat, +50 Food)");
+                        showToast("Scout Recon Report", "Discovered surface mineral veins!\n(+50 Mat, +50 Food)", "success");
                     } else if (r < 0.8) {
                         sci += 60;
-                        alert("Scout Recon Report:\nMapped planetary anomaly sites!\n(+60 Science)");
+                        showToast("Scout Recon Report", "Mapped planetary anomaly sites!\n(+60 Science)", "discovery");
                     } else {
-                        alert("Scout Recon Report:\nReturned safely with environmental scans.");
+                        showToast("Scout Recon Report", "Returned safely with environmental scans.", "info");
                     }
-                } else alert("Need 1 Pop, 15 Mat, 15 Power for Scout Recon.");
+                } else showToast("Expedition Warning", "Need 1 Pop, 15 Mat, 15 Power for Scout Recon.", "warning");
             } else if (tier === 2) { // Ruins Excavation
                 if (pop >= 2 && mat >= 30 && power >= 30) {
                     mat -= 30; power -= 30;
                     let r = Math.random();
                     if (r < 0.3) {
                         advm += 25; sci += 120;
-                        alert("Ruins Excavation Report:\nRecovered intact alien artifacts!\n(+25 AdvM, +120 Science)");
+                        showToast("Ruins Excavation Report", "Recovered intact alien artifacts!\n(+25 AdvM, +120 Science)", "success");
                     } else if (r < 0.6) {
                         activeAnomaly = 1;
-                        alert("ANOMALY DISCOVERED!\nActivated ancient Crystal Monolith!\n(+50% Science production across colony)");
+                        showToast("Anomaly Discovered!", "Activated ancient Crystal Monolith!\n(+50% Science production across colony)", "discovery");
                     } else if (r < 0.85) {
                         mat += 120;
-                        alert("Ruins Excavation Report:\nSalvaged dense composite armor plates!\n(+120 Mat)");
+                        showToast("Ruins Excavation Report", "Salvaged dense composite armor plates!\n(+120 Mat)", "success");
                     } else {
                         pop -= 1; happiness = Math.max(0, happiness - 15);
-                        alert("Ruins Hazard Alert:\nTremor triggered cave collapse!\n(-1 Pop, -15% Happiness)");
+                        showToast("Ruins Hazard Alert", "Tremor triggered cave collapse!\n(-1 Pop, -15% Happiness)", "danger");
                     }
-                } else alert("Need 2 Pop, 30 Mat, 30 Power for Ruins Excavation.");
+                } else showToast("Expedition Warning", "Need 2 Pop, 30 Mat, 30 Power for Ruins Excavation.", "warning");
             } else if (tier === 3) { // Hive Incursion
                 if (pop >= 4 && mat >= 60 && power >= 50) {
                     mat -= 60; power -= 50;
@@ -454,16 +563,16 @@
                     if (r < 0.4) {
                         advm += 50; sci += 250;
                         activeAnomaly = 3;
-                        alert("MAJOR INVASION VICTORY!\nHive cleared! Uncovered Subterranean Geode!\n(+50 AdvM, +250 Sci, Mines now yield AdvM)");
+                        showToast("Major Invasion Victory!", "Hive cleared! Uncovered Subterranean Geode!\n(+50 AdvM, +250 Sci, Mines now yield AdvM)", "discovery");
                     } else if (r < 0.75) {
                         activeAnomaly = 4;
                         power = maxPower += 50;
-                        alert("ALIEN CORE CAPTURED!\nIonized Aurora mutator active!\n(+50 Max Power permanently)");
+                        showToast("Alien Core Captured!", "Ionized Aurora mutator active!\n(+50 Max Power permanently)", "discovery");
                     } else {
                         pop -= 2; happiness = Math.max(0, happiness - 30);
-                        alert("Heavy Casualties:\nAlien Brood Mother ambushed squad!\n(-2 Pop, -30% Happiness)");
+                        showToast("Heavy Casualties", "Alien Brood Mother ambushed squad!\n(-2 Pop, -30% Happiness)", "danger");
                     }
-                } else alert("Need 4 Pop, 60 Mat, 50 Power for Hive Incursion.");
+                } else showToast("Expedition Warning", "Need 4 Pop, 60 Mat, 50 Power for Hive Incursion.", "warning");
             }
             updateUI();
         }
@@ -474,14 +583,14 @@
                 playTone(587, 'sine', 0.1, 0.1);
                 setTimeout(() => playTone(880, 'sine', 0.15, 0.1), 100);
                 setTimeout(() => playTone(1174, 'sine', 0.2, 0.1), 250);
-                alert("Interstellar Trade Contract Executed!\nExported: 50 Food, 30 Mat.\nImported: +25 AdvM, +100 Science!");
+                showToast("Trade Contract Executed", "Exported: 50 Food, 30 Mat.\nImported: +25 AdvM, +100 Science!", "success");
             } else if (mat >= 60) {
                 mat -= 60; food += 80; power = Math.min(maxPower, power + 40);
                 playTone(587, 'sine', 0.1, 0.1);
                 setTimeout(() => playTone(880, 'sine', 0.15, 0.1), 100);
-                alert("Emergency Supplies Imported!\nExported: 60 Mat.\nImported: +80 Food, +40 Power!");
+                showToast("Emergency Supplies Imported", "Exported: 60 Mat.\nImported: +80 Food, +40 Power!", "success");
             } else {
-                alert("Need 50 Food + 30 Mat (or 60 Mat) for Freighter Trade.");
+                showToast("Trade Warning", "Need 50 Food + 30 Mat (or 60 Mat) for Freighter Trade.", "warning");
             }
             updateUI();
         }
@@ -493,16 +602,16 @@
                 let r = Math.random();
                 if (r < 0.45) {
                     advm += 45; sci += 180;
-                    alert("Cavern Expedition Report:\nUnsealed deep subterranean crystal geode chamber!\n(+45 AdvM, +180 Science)");
+                    showToast("Cavern Expedition Report", "Unsealed deep subterranean crystal geode chamber!\n(+45 AdvM, +180 Science)", "success");
                 } else if (r < 0.8) {
                     activeAnomaly = 3; mat += 100;
-                    alert("SUBTERRANEAN DISCOVERY!\nTapped active magma vent! Subterranean Geode mutator online!\n(+100 Mat, Mines yield AdvM)");
+                    showToast("Subterranean Discovery!", "Tapped active magma vent! Subterranean Geode mutator online!\n(+100 Mat, Mines yield AdvM)", "discovery");
                 } else {
                     pop -= 1; happiness = Math.max(0, happiness - 10);
-                    alert("Cavern Hazard Alert:\nSeismic tremor collapsed deep exploratory shaft!\n(-1 Pop, -10% Happiness)");
+                    showToast("Cavern Hazard Alert", "Seismic tremor collapsed deep exploratory shaft!\n(-1 Pop, -10% Happiness)", "danger");
                 }
             } else {
-                alert("Need 2 Pop, 40 Mat, 40 Power for Cavern Dive.");
+                showToast("Expedition Warning", "Need 2 Pop, 40 Mat, 40 Power for Cavern Dive.", "warning");
             }
             updateUI();
         }
@@ -511,9 +620,9 @@
             let orbFound = grid.some(g => g === 19);
             if (power >= 40) {
                 if (!orbFound) {
-                    alert("Requires an operational Orbital Beacon on the grid to uplink targeting coordinates!");
+                    showToast("Orbital Strike Offline", "Requires an operational Orbital Beacon on the grid to uplink targeting coordinates!", "warning");
                 } else if (aliens.length === 0) {
-                    alert("Orbital telemetry scans report no hostiles on the grid.");
+                    showToast("No Targets", "Orbital telemetry scans report no hostiles on the grid.", "info");
                 } else {
                     power -= 40;
                     playTone(1000, 'sawtooth', 0.2, 0.15);
@@ -527,10 +636,10 @@
                     msgTicks = 6;
                     document.getElementById('msg').innerText = msgText;
                     renderAll();
-                    alert("ORBITAL STRIKE CONFIRMED!\nKinetic orbital barrage obliterated all surface hostiles!");
+                    showToast("Orbital Strike Confirmed", "Kinetic orbital barrage obliterated all surface hostiles!", "success");
                 }
             } else {
-                alert("Need at least 40 Power to charge Orbital Beacon capacitors.");
+                showToast("Low Power", "Need at least 40 Power to charge Orbital Beacon capacitors.", "warning");
             }
             updateUI();
         }
@@ -1426,17 +1535,17 @@
                 updateUI();
                 
                 if (gameMode === 5 && day >= 100) {
-                    alert("100 Days Survived on the Alien Frontier! You Win!");
+                    showToast("Scenario Complete", "100 Days Survived on the Alien Frontier! You Win!", "success", 8000);
                     gameState = 0;
                     document.getElementById('start-screen').style.display = 'flex';
                 }
                 if (gameMode === 6) {
                     if (mat >= 1000 && advm >= 100) {
-                        alert("Quota fulfilled on Day " + day + "! Colony Secured!");
+                        showToast("Resource Rush Complete", "Quota fulfilled on Day " + day + "! Colony Secured!", "success", 8000);
                         gameState = 0;
                         document.getElementById('start-screen').style.display = 'flex';
                     } else if (day > 50) {
-                        alert("Day 50 reached without meeting quota! Mission Failed.");
+                        showToast("Mission Failed", "Day 50 reached without meeting quota! Mission Failed.", "danger", 8000);
                         gameState = 0;
                         document.getElementById('start-screen').style.display = 'flex';
                     }
@@ -1445,6 +1554,7 @@
         }
 
         init();
+        showToast("Colony Command Online", "Welcome to KColony! Select a Biome [1-7] or press [H]/[F1] for Admin Manual & Keyboard Shortcuts.", "info", 6000);
     </script>
 </body>
 </html>

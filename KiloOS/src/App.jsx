@@ -90,7 +90,7 @@ const APPS = [
   { id: 'kstarship', title: 'KStarship', url: '/apps/kstarship.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kstarship.ico', w: 800, h: 600, folder: 'Games' },
   { id: 'kalchemy', title: 'KAlchemy', url: '/apps/kalchemy.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kalchemy.ico', w: 1040, h: 720, folder: 'Games' },
   { id: 'kfortress', title: 'KFortress', url: '/apps/kfortress.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kfortress.ico', w: 1024, h: 740, folder: 'Games' },
-  { id: 'kcolony', title: 'KColony', url: '/apps/kcolony.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcolony.ico', w: 850, h: 650, folder: 'Games' },
+  { id: 'kcolony', title: 'KColony', url: '/apps/kcolony.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcolony.ico', w: 870, h: 660, folder: 'Games' },
   { id: 'kfarm', title: 'KFarm', url: '/apps/kfarm.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kfarm.ico', w: 620, h: 760, folder: 'Games' },
   { id: 'kwizard', title: 'KWizard', url: '/apps/kwizard.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kwizard.ico', w: 800, h: 600, folder: 'Games' },
   { id: 'kvoid', title: 'KVoid', url: '/apps/kvoid.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kvoid.ico', w: 800, h: 600, folder: 'Games' },

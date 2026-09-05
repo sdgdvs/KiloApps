@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KColony
+**Target App:** KAlchemy
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KColony
 - KAlchemy
 - KFont
 - KMail
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KDB
 - KiloOS Web UI
 - KFortress
+- KColony
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KColony: Usability and UI issues fixed (integrated non-blocking cybernetic toast notification system with startup welcome prompt, replaced all blocking browser alerts with categorized toast notifications for tech breakthroughs, expeditions, trade, cavern discoveries, and scenario results, added complete keyboard shortcuts [1-7] for menu biomes, [0/Esc] inspect, [-/R] repair, [1-6] core buildings, [7-9/W/T/C/G/V/E/U/P/K/O] advanced buildings, [Space] orbital strike, [H/F1/?] manual, added backdrop-click and Escape modal dismissal, updated UI button shortcut badges and Administrator's Manual in web; updated native C with [1-7] menu hotkeys, WM_KEYDOWN accelerators for all building types, repair, inspect, orbital strike [Space], [F1/H] manual, updated button labels with shortcut badges, comprehensive DrawHelp guide with hotkeys table, synchronized window bounds to 870x660 in App.jsx, and updated window title with help hint).
 - KFortress: Usability and UI issues fixed (integrated non-blocking fantasy toast notification system with startup welcome prompt, added full keyboard shortcuts for [Space] wave, [1-5] skills & siege trebuchet, [F] firestorm, [B] blizzard, [A] academy, [M] mutators, [H]/[F1] guide, [R] reset, [Esc] modal dismissal, added backdrop-click modal dismissal, updated UI button shortcut badges and field guide shortcuts reference in web; added native floating toast banner, updated button labels with shortcut badges, implemented WM_KEYDOWN shortcuts for Space/A/M/H/F1/F/B/R/1-5/Esc, added backdrop-click dialog dismissal, updated window title with hotkey hints in native C).
 - KiloOS Web UI: Usability and UI issues fixed (integrated non-blocking startup welcome toast notification with F1/H guidance, added Enter-to-launch top search result in Start Menu with Escape clear/close handler, added global keyboard shortcuts for Win/Ctrl+Esc to toggle Start Menu, F1/H for Help, and Escape to dismiss all open modals, menus, and flyouts, added click-to-dismiss for toast notifications, added modal backdrop-click and title bar close buttons, redesigned Help modal with structured shortcuts grid and keyboard key badges, added interactive color presets and accent switcher in Display Settings, and bumped OS version to 0.3.111).
 - KDB: Usability and UI issues fixed (integrated cybernetic non-blocking toast notification system with startup welcome prompt, replaced blocking browser alerts/prompts/confirms with custom modal dialogs for Help & Keyboard Shortcuts [F1/H], Database Reset confirmation, and Record Deletion confirmation, added visual shortcut badges to toolbar buttons [Stats [A], Exp CSV [E], Imp CSV [I], Exp JSON [J], Imp JSON [O], Exp MD [M], Reset [R], Help [F1]], added keyboard accelerators for F1/H, Ctrl+F, Ctrl+N, A, E, I, J, O, M, R, Esc, and Enter-to-submit on add and edit forms, and synchronized 900x650 bounds across web and native; added comprehensive ShowHelpDialog reference, SearchSubclassProc for Esc clear and Enter focus, updated toolbar and action button labels with explicit shortcut hints, implemented message loop accelerator interception for F1/H/Ctrl+F/Ctrl+N/A/E/I/J/O/M/L/Del/Enter, and updated window title with help hint in native C).

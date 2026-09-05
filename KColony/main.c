@@ -364,17 +364,17 @@ void DrawMenu(HDC hdc, HFONT hFont, RECT rc) {
     SelectObject(hdc, hFont);
     
     DrawText(hdc, "KCOLONY: PLANETARY EXPEDITIONS & TECH TREE", -1, &(RECT){0, 40, rc.right, 75}, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-    DrawText(hdc, "Select Planet Biome or Scenario Mode  |  Press 'H' or 'F1' for Manual", -1, &(RECT){0, 75, rc.right, 100}, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    DrawText(hdc, "Select Planet Biome [1-7]  |  Press [H] or [F1] for Administrator's Manual", -1, &(RECT){0, 75, rc.right, 100}, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     
     const char* titles[] = { 
-        "1. MARS PRIME (STANDARD EXPEDITION)", 
-        "2. CRYO TUNDRA (GLIESE 667 - BLIZZARDS)", 
-        "3. VOLCANIC INFERNO (KEPLER 10B - HEATWAVES)", 
-        "4. ACID SWAMP (PROXIMA B - ALIEN SWARMS)",
-        "5. SANDBOX COLONY (UNLIMITED TECH & MATS)", 
-        "6. 100-DAY SURVIVAL CHALLENGE", 
-        "7. RESOURCE RUSH (1000M, 100A BY D50)", 
-        "8. [H] OR [F1] HELP & TECH SPEC SHEET" 
+        "[1] MARS PRIME (STANDARD EXPEDITION)", 
+        "[2] CRYO TUNDRA (GLIESE 667 - BLIZZARDS)", 
+        "[3] VOLCANIC INFERNO (KEPLER 10B - HEATWAVES)", 
+        "[4] ACID SWAMP (PROXIMA B - ALIEN SWARMS)", 
+        "[5] SANDBOX COLONY (UNLIMITED TECH & MATS)", 
+        "[6] 100-DAY SURVIVAL CHALLENGE", 
+        "[7] RESOURCE RUSH (1000M, 100A BY D50)", 
+        "[8 / H / F1] HELP & TECH SPEC SHEET" 
     };
     for (int i=0; i<8; i++) {
         RECT bRc = {rc.right/2 - 240, 110 + i*55, rc.right/2 + 240, 150 + i*55};
@@ -394,32 +394,30 @@ void DrawHelp(HDC hdc, HFONT hFont, RECT rc) {
     SetTextColor(hdc, RGB(0, 255, 255));
     SelectObject(hdc, hFont);
     
-    RECT textRc = {25, 15, rc.right - 25, rc.bottom - 55};
+    RECT textRc = {25, 12, rc.right - 25, rc.bottom - 50};
     const char* helpText = 
         "KCOLONY ADMINISTRATOR'S MANUAL & EXPANDED SPEC SHEET\n\n"
+        "KEYBOARD SHORTCUTS:\n"
+        "[1-7] Select Mode (Menu) | [0/Esc] Inspect | [-/R] Repair | [1-6] Core (Solar/Farm/Mine/Hab/Bat/Lab)\n"
+        "[7] Nuke | [8] Hydro | [9] Laser | [W] Wall | [T] Turret | [C] Factory | [G] Geo | [V] Bio-Dome\n"
+        "[E] Shield | [U] Drone Hub | [P] Trade Port | [K] Cavern Drill | [O] Orbital Beacon | [Space] Orbital Strike\n"
+        "[H/F1/?] Toggle Manual | [Esc/Space/Enter] Close Help & Return\n\n"
         "RESOURCES: Food (Colony upkeep) | Power (System operations) | Mat (Basic building)\n"
         "AdvM (Advanced alloy) | Science (Research unlocks) | Happiness (Efficiency factor)\n\n"
         "CORE STRUCTURES:\n"
-        "Solar (S): +4 Pwr (Day) | Farm (F): +5 Food, -5 Pwr | Mine (M): +3 Mat, -10 Pwr\n"
-        "Hab (H): +5 Max Pop, -5 Pwr | Battery (B): +50 Max Pwr | Lab (L): +2 Sci, -5 Pwr\n"
-        "Nuke (N): +20 Pwr constant | Hydro (Y): +15 Food, -10 Pwr | Factory (C): 2 Mat -> 1 AdvM\n"
-        "Wall (W): Deflects aliens | Turret (T): Range 3, -5 Pwr | Laser (D): Range 5, -20 Pwr\n\n"
-        "ADVANCED & EXPANSION STRUCTURES (LOOP 2 & 3):\n"
-        "Geothermal (G): +35 Pwr 24/7 immune to storms (+50 Pwr on Cryo). Cost: 35M, 15A.\n"
-        "Bio-Dome (V): +25 Food, +8 Pop cap, +2 Happiness/tick up to 120%. Cost: 40M, 20A, 20P.\n"
-        "Shield Pylon (E): 3x3 Energy Barrier protecting from meteors & attacks! Cost: 50M, 25A, 30P.\n"
-        "Drone Hub (U): Auto-repairs broken grid structures (5M) & buffs mines. Cost: 60M, 30A, 25P.\n"
-        "Trade Port (P): +10 Hap, +3 Mat, +1 AdvM tariffs. Freighters arrive every 4 days! Cost: 70M, 35A, 30P.\n"
-        "Cavern Drill (K): +40 Pwr magma tap, +5 Mat, +2 AdvM 24/7. Immune to weather! Cost: 80M, 40A, 40P.\n"
-        "Orbital Beacon (O): 100% planetary defense umbrella vs meteors & unlocks ORBITAL STRIKE! Cost: 100M, 50A, 50P.\n\n"
-        "EXPEDITIONS & OPERATIONS:\n"
-        "- Scout Recon (1P, 15M, 15Pwr) | Ruins Excavation (2P, 30M, 30Pwr) | Hive Incursion (4P, 60M, 50Pwr)\n"
-        "- Freighter Trade (Exchange Food/Mat for AdvM/Sci/Power) | Cavern Dive (Harvest pristine geodes)\n"
-        "- Orbital Strike (Call devastating kinetic bombardment to obliterate all aliens on map!)\n";
+        "Solar [1]: +4 Pwr (Day) | Farm [2]: +5 Food, -5 Pwr | Mine [3]: +3 Mat, -10 Pwr\n"
+        "Hab [4]: +5 Max Pop, -5 Pwr | Battery [5]: +50 Max Pwr | Lab [6]: +2 Sci, -5 Pwr\n"
+        "Nuke [7]: +20 Pwr constant | Hydro [8]: +15 Food, -10 Pwr | Laser [9]: Range 5, -20 Pwr\n"
+        "Wall [W]: Deflects aliens | Turret [T]: Range 3, -5 Pwr | Factory [C]: 2 Mat -> 1 AdvM\n\n"
+        "ADVANCED STRUCTURES:\n"
+        "Geothermal [G]: +35 Pwr 24/7 immune to storms | Bio-Dome [V]: +25 Food, +8 Pop, +Happiness\n"
+        "Shield Pylon [E]: 3x3 Barrier vs meteors/aliens | Drone Hub [U]: Auto-repairs broken structures\n"
+        "Trade Port [P]: Tariff revenue & freighters | Cavern Drill [K]: Deep magma power & geodes\n"
+        "Orbital Beacon [O]: Meteor defense & unlocks tactical ORBITAL STRIKE [Space]!\n";
         
     DrawText(hdc, helpText, -1, &textRc, DT_LEFT | DT_TOP);
     
-    RECT btnRc = {rc.right / 2 - 60, rc.bottom - 45, rc.right / 2 + 60, rc.bottom - 15};
+    RECT btnRc = {rc.right / 2 - 80, rc.bottom - 42, rc.right / 2 + 80, rc.bottom - 12};
     HBRUSH br = CreateSolidBrush(RGB(17,17,34));
     FillRect(hdc, &btnRc, br);
     DeleteObject(br);
@@ -427,7 +425,7 @@ void DrawHelp(HDC hdc, HFONT hFont, RECT rc) {
     HPEN oldP = SelectObject(hdc, pen);
     MoveToEx(hdc, btnRc.left, btnRc.top, NULL); LineTo(hdc, btnRc.right, btnRc.top); LineTo(hdc, btnRc.right, btnRc.bottom); LineTo(hdc, btnRc.left, btnRc.bottom); LineTo(hdc, btnRc.left, btnRc.top);
     SelectObject(hdc, oldP); DeleteObject(pen);
-    DrawText(hdc, "BACK TO GAME", -1, &btnRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    DrawText(hdc, "CLOSE GUIDE [ESC]", -1, &btnRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 }
 
 void StartGame(HWND hwnd, int mode) {
@@ -1024,10 +1022,10 @@ void DrawUI(HDC hdc, HFONT hFont) {
 
     int sidebarX = OFFSET_X + GRID_W * CELL_SIZE + 15;
     const char* labels[] = { 
-        "[-1] REPAIR", "[0] INSPECT", "[1] SOLAR", "[2] FARM", "[3] MINE", "[4] HAB", 
-        "[5] BATT", "[6] LAB", "[7] NUKE", "[8] HYDRO", "[9] LASER", "[10] WALL", 
-        "[11] TURRET", "[12] FACTORY", "[13] GEOTHERMAL", "[14] BIODOME", "[15] SHIELD", "[16] DRONE HUB",
-        "[17] TRADE PORT", "[18] CAVERN DRILL", "[19] ORBITAL BEACON"
+        "[-/R] REPAIR", "[0/ESC] NONE", "[1] SOLAR (10M)", "[2] FARM (10M,5P)", "[3] MINE (10P)", "[4] HAB (15M,5P)", 
+        "[5] BATT (20M)", "[6] LAB (20M,5P)", "[7] NUKE (20M,10A)", "[8] HYDRO (20M,10P)", "[9] LASER (10M,10A)", "[10/W] WALL (5M)", 
+        "[11/T] TURRET (15M,5P)", "[12/C] FACT (30M,10P)", "[13/G] GEO (35M,15A)", "[14/V] BIODOME (40M,20A)", "[15/E] SHIELD (50M,25A)", "[16/U] DRONE (60M,30A)",
+        "[17/P] TRADE (70M,35A)", "[18/K] CAVERN (80M,40A)", "[19/O] BEACON (100M,50A)"
     };
     
     btnCount = 0;
@@ -1165,7 +1163,7 @@ void DrawUI(HDC hdc, HFONT hFont) {
 
     buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
     buttons[btnCount].id = 206;
-    strcpy(buttons[btnCount].label, "ORBITAL STRIKE (40 PWR)");
+    strcpy(buttons[btnCount].label, "[SPACE] ORBITAL STRIKE");
     btnCount++; btnY2 += 24;
 
     btnY2 += 4;
@@ -1217,7 +1215,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SetTimer(hwnd, 2, 50, NULL);
             break;
         }
-        case WM_KEYDOWN:
+        case WM_KEYDOWN: {
             if (wParam == 'H' || wParam == VK_F1) {
                 if (gameState == 2) {
                     gameState = prevState;
@@ -1226,8 +1224,84 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     gameState = 2;
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (gameState == 0) { // Menu
+                if (wParam >= '1' && wParam <= '7') {
+                    StartGame(hwnd, (int)(wParam - '1'));
+                    return 0;
+                } else if (wParam == '8') {
+                    prevState = 0;
+                    gameState = 2;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+            } else if (gameState == 2) { // Help
+                if (wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE) {
+                    gameState = prevState;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+            } else if (gameState == 1) { // Playing
+                if (wParam == VK_ESCAPE || wParam == '0' || wParam == 'I') {
+                    selectedType = 0;
+                } else if (wParam == 'R' || wParam == VK_OEM_MINUS || wParam == VK_SUBTRACT) {
+                    selectedType = -1;
+                } else if (wParam == '1') {
+                    selectedType = 1;
+                } else if (wParam == '2') {
+                    selectedType = 2;
+                } else if (wParam == '3') {
+                    selectedType = 3;
+                } else if (wParam == '4') {
+                    selectedType = 4;
+                } else if (wParam == '5') {
+                    selectedType = 5;
+                } else if (wParam == '6') {
+                    selectedType = 6;
+                } else if (wParam == '7' && unlockedNuke) {
+                    selectedType = 7;
+                } else if (wParam == '8' && unlockedHydro) {
+                    selectedType = 8;
+                } else if (wParam == '9' && unlockedLaser) {
+                    selectedType = 9;
+                } else if (wParam == 'W') {
+                    selectedType = 10;
+                } else if (wParam == 'T') {
+                    selectedType = 11;
+                } else if (wParam == 'C' && unlockedFactory) {
+                    selectedType = 12;
+                } else if (wParam == 'G' && unlockedGeo) {
+                    selectedType = 13;
+                } else if (wParam == 'V' && unlockedBio) {
+                    selectedType = 14;
+                } else if (wParam == 'E' && unlockedShield) {
+                    selectedType = 15;
+                } else if (wParam == 'U' && unlockedDrone) {
+                    selectedType = 16;
+                } else if (wParam == 'P' && unlockedTrade) {
+                    selectedType = 17;
+                } else if (wParam == 'K' && unlockedCavern) {
+                    selectedType = 18;
+                } else if (wParam == 'O' && unlockedOrbital) {
+                    selectedType = 19;
+                } else if (wParam == VK_SPACE) {
+                    int orbFound = 0;
+                    for (int gi = 0; gi < GRID_W * GRID_H; gi++) if (grid[gi] == 19) orbFound++;
+                    if (power >= 40 && orbFound > 0 && alienCount > 0) {
+                        power -= 40; PlayGameSound(7); shakeTicks = 30;
+                        for (int ai = 0; ai < alienCount; ai++) {
+                            SpawnExplosion(OFFSET_X + aliens[ai].x * CELL_SIZE + CELL_SIZE/2, OFFSET_Y + aliens[ai].y * CELL_SIZE + CELL_SIZE/2);
+                        }
+                        alienCount = 0;
+                        strcpy(msgText, "TACTICAL ORBITAL BOMBARDMENT CONFIRMED!");
+                        msgTicks = 6;
+                    }
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
             }
             return 0;
+        }
         case WM_TIMER: {
             if (wParam == 2) {
                 animFrame++;
@@ -1947,7 +2021,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     RECT rcW = {0, 0, 870, 660};
     AdjustWindowRect(&rcW, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN, FALSE);
     HWND hwnd = CreateWindowEx(
-        0, CLASS_NAME, "KColony - Planetary Tech Expansion", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN,
+        0, CLASS_NAME, "KColony - Planetary Tech Expansion [F1: Help]", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, rcW.right - rcW.left, rcW.bottom - rcW.top,
         NULL, NULL, hInstance, NULL
     );
