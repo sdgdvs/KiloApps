@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KMystery
 - KReversi
 - KQuest
 - KSpace
@@ -150,8 +149,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KTowers
 - KWords
 - KWizard
+- KMystery
 
 ## Completed Work Log
+
+- **KMystery (Loop 1):** Replaced flat placeholder text and basic UI with rich atmospheric procedural visual systems in both Web Canvas (`kmystery.html`) and Native Win32 GDI (`KMystery/main.c`). Implemented dynamic 60 FPS requestAnimationFrame canvas viewport and double-buffered Win32 GDI viewport featuring rich noir backdrops (Detective's Office with venetian blinds and glowing amber banker's lamp, The Manor with stormy gothic spires and yellow police cordon tape, The Docks with misty waters and glowing gaslights, The Casino with marquee lights and green felt roulette wheel, Train Station concourse clock and steam locomotive), procedural suspect bust mugshots with distinct noir styling and mood indicators (Mr. Black in fedora with glowing cigarette, Miss Scarlet with crimson cloche hat and cigarette holder, Colonel Mustard with military uniform and handlebar mustache, Mrs. White with mourning veil and pearl necklace, Professor Plum in tweed suit and spectacles; dynamic sweat beads, anger marks, and caught liar badges), interactive Forensic Lab CRT oscilloscope waveform mini-game display with dual sine waves (target golden wave vs adjustable cyan tuning wave) and spectral frequency bars, a 4-layer kinematic particle engine (core needle sparks, buoyant smoke motes, gravity crystal/glass shards, celebration deduction stars), dual-tier shockwave ripple rings, quadratic physics-decay screen shake, and atmospheric noir rain streaks and drifting fog particles.
 
 - **KWizard (Loop 1):** Replaced placeholder flat rectangles and text-only arena with rich procedural Wizard avatars, spell school card art, animated casting projectiles, a 4-layer kinematic particle engine, dual-tier shockwave ripple rings, procedural screen shake with quadratic decay, and ornate Arcane / Grimoire HUD filigree in both Web Canvas (`kwizard.html`) and Native Win32 GDI (`KWizard/main.c`). Implemented custom procedural Player Archmage sprite (with draped cowl/robes, pointed wizard hat with star brooch, glowing blue eyes, floating idle bobbing animation, and wooden mystic staff topped with pulsating crystal mana orb emitting orbiting rings and sparks) and 10 distinct Opponent Mage sprites tailored to campaign progression (Novice/Master Pyromancers with burning robes and flame staves, Apprentice/Master Cryomancers with ice crowns and frost staves, Arcane Scholars/Archons with violet robes and swirling glyphs, Forest Druid with antlered crown and living vine staff, Venomancer with dripping venom serpent staff, High Priest with solar vestments, and Grand Magus with solar halo and floating mana shards). Enhanced all cards with school-specific gradient backgrounds, mana cost gem badges, and custom procedural spell icons (Fire burning orbs/meteors, Ice frost crystals/lances, Arcane missiles/shields/timewarps, Nature/Holy healing sprouts/chalices, Poison dripping venom flasks). Added an animated Arcane Duel Arena featuring a central rotating Runic Transmutation Circle, parabolic spell projectile travel animations launching between wizards, bouncing floating damage/heal/status text indicators (`-8 FIRE!`, `+4 HEAL`, `FROZEN!`, `SHIELDED!`), 4-layer particle explosion engine (needle sparks, buoyant magic smoke puffs, kinematic crystal shards with gravity, celebration golden stars on victory), dual-tier concentric shockwave rings, screen shake, ornate gold corner filigree L-brackets, and a traveling specular glint along the arena perimeter frame.
 

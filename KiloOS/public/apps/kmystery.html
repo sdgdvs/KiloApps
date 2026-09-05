@@ -5,30 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KMystery</title>
     <style>
+        * { box-sizing: border-box; }
         body {
             margin: 0;
             padding: 0;
-            background-color: #0a0a0a;
-            color: #d3d3d3;
+            background-color: #070709;
+            color: #d8d8d8;
             font-family: 'Courier New', Courier, monospace;
             display: flex;
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
-            box-shadow: inset 0 0 100px #000;
+            user-select: none;
         }
         #header {
-            background-color: #050505;
-            padding: 10px 20px;
-            border-bottom: 2px double #444;
-            text-align: center;
+            background: linear-gradient(180deg, #18181c 0%, #0c0c0e 100%);
+            padding: 8px 20px;
+            border-bottom: 2px solid #3a3222;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 10;
         }
         h1 {
             margin: 0;
-            font-size: 28px;
-            letter-spacing: 5px;
-            color: #fff;
-            text-shadow: 2px 2px 5px #000;
+            font-size: 24px;
+            letter-spacing: 6px;
+            color: #d4af37;
+            text-shadow: 0 0 10px rgba(212,175,55,0.4), 2px 2px 4px #000;
             text-transform: uppercase;
         }
         .hidden {
@@ -39,117 +45,233 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
+            background: radial-gradient(circle at center, #1a1815 0%, #050507 100%);
+            position: relative;
         }
         .container {
             text-align: center;
-            border: 1px solid #333;
-            padding: 40px;
-            background-color: rgba(0,0,0,0.8);
-            box-shadow: 0 0 20px #000;
+            border: 2px solid #5a4828;
+            padding: 30px 40px;
+            background-color: rgba(12, 12, 14, 0.95);
+            box-shadow: 0 0 30px rgba(0,0,0,0.9), inset 0 0 20px rgba(90,72,40,0.2);
+            border-radius: 4px;
+            max-width: 520px;
+            width: 90%;
         }
         #game-screen {
             flex: 1;
             display: flex;
-            padding: 20px;
-            gap: 20px;
+            padding: 12px;
+            gap: 12px;
             box-sizing: border-box;
-            background: radial-gradient(circle at center, #151515 0%, #000 100%);
+            background: radial-gradient(circle at center, #141318 0%, #060608 100%);
+            overflow: hidden;
         }
         .panel {
-            background-color: rgba(10, 10, 10, 0.9);
-            border: 1px solid #333;
-            padding: 20px;
-            border-radius: 2px;
-            flex: 1;
+            background-color: rgba(14, 14, 18, 0.94);
+            border: 1px solid #3d3525;
+            padding: 14px;
+            border-radius: 4px;
             display: flex;
             flex-direction: column;
             overflow-y: auto;
-            box-shadow: inset 0 0 20px #000, 0 0 10px #000;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 4px 12px rgba(0,0,0,0.6);
+            position: relative;
+        }
+        #main-panel {
+            flex: 1.4;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        #notebook-panel {
+            flex: 0.9;
+            min-width: 260px;
+        }
+        #viewport-container {
+            width: 100%;
+            height: 200px;
+            min-height: 200px;
+            background: #000;
+            border: 2px solid #5a4828;
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.8);
+        }
+        #scene-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
         }
         h2, h3 {
             margin-top: 0;
-            color: #e0e0e0;
+            margin-bottom: 8px;
+            color: #d4af37;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
+            font-size: 15px;
         }
         h2 {
-            border-bottom: 2px double #444;
-            padding-bottom: 5px;
+            border-bottom: 1px solid #4a3e26;
+            padding-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         ul {
             list-style-type: square;
-            padding: 0 0 0 20px;
-            margin: 0 0 15px 0;
+            padding: 0 0 0 18px;
+            margin: 0 0 10px 0;
+            font-size: 13px;
         }
         li {
-            padding: 5px 0;
-            border-bottom: 1px dashed #222;
+            padding: 4px 0;
+            border-bottom: 1px dashed #242220;
+            line-height: 1.3;
+            color: #c0bab0;
+        }
+        li b {
+            color: #d4af37;
         }
         button {
-            background-color: #0f0f0f;
-            color: #d3d3d3;
-            border: 1px solid #444;
-            padding: 10px 20px;
-            font-size: 16px;
+            background: linear-gradient(180deg, #22201c 0%, #141310 100%);
+            color: #dfd8c8;
+            border: 1px solid #5a4828;
+            padding: 8px 14px;
+            font-size: 13px;
             cursor: pointer;
             font-family: inherit;
             text-transform: uppercase;
             letter-spacing: 1px;
-            transition: all 0.2s;
-            margin: 5px 0;
-            box-shadow: 2px 2px 5px #000;
+            transition: all 0.15s ease;
+            margin: 3px 0;
+            border-radius: 3px;
+            box-shadow: 1px 2px 4px rgba(0,0,0,0.7);
         }
         button:hover:not(:disabled) {
-            background-color: #2a2a2a;
-            border-color: #666;
+            background: linear-gradient(180deg, #38342a 0%, #201e17 100%);
+            border-color: #d4af37;
             color: #fff;
+            box-shadow: 0 0 8px rgba(212,175,55,0.4);
         }
         button:disabled {
             color: #555;
             cursor: not-allowed;
-            background-color: #050505;
+            background: #0d0d0d;
             border-color: #222;
             box-shadow: none;
         }
+        .btn-danger {
+            background: linear-gradient(180deg, #441818 0%, #220b0b 100%);
+            border-color: #882b2b;
+            color: #ffb0b0;
+        }
+        .btn-danger:hover:not(:disabled) {
+            background: linear-gradient(180deg, #662222 0%, #331111 100%);
+            border-color: #ff4444;
+            color: #fff;
+            box-shadow: 0 0 8px rgba(255,68,68,0.5);
+        }
+        .btn-gold {
+            background: linear-gradient(180deg, #4a3e18 0%, #2a220b 100%);
+            border-color: #d4af37;
+            color: #ffe899;
+        }
+        .btn-gold:hover:not(:disabled) {
+            background: linear-gradient(180deg, #665522 0%, #3a3010 100%);
+            border-color: #fff;
+            box-shadow: 0 0 10px rgba(212,175,55,0.6);
+        }
         #travel-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 6px;
         }
         #location-description {
-            margin-bottom: 15px;
+            margin-bottom: 8px;
+            font-size: 13px;
             line-height: 1.4;
+            color: #b8b0a2;
+            background: rgba(0,0,0,0.4);
+            padding: 8px 10px;
+            border-left: 3px solid #5a4828;
+            border-radius: 2px;
         }
         #action-area {
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px dashed #444;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed #3a3222;
         }
-        #interrogation-area, #lab-area {
-            margin-bottom: 20px;
+        #action-area button {
+            flex: 1 1 calc(50% - 8px);
+            min-width: 120px;
+        }
+        #interrogation-area, #lab-area, #accusation-area {
+            background: rgba(8, 8, 10, 0.7);
+            border: 1px solid #4a3e26;
+            padding: 10px;
+            border-radius: 3px;
+            margin-top: 4px;
         }
         .dialogue-options {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            margin-top: 15px;
+            gap: 6px;
+            margin-top: 8px;
         }
         #dialogue-text {
             font-style: italic;
-            color: #ffeb3b;
-            margin-top: 10px;
+            color: #f7e089;
+            margin: 6px 0;
+            padding: 8px;
+            background: rgba(0,0,0,0.6);
+            border-left: 3px solid #d4af37;
+            border-radius: 2px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        .time-badge {
+            color: #ff6b6b;
+            font-weight: bold;
+            font-size: 14px;
+            text-shadow: 0 0 5px rgba(255,107,107,0.4);
+        }
+        #help-modal {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.88);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #d0c8b8;
+        }
+        .scanner-hud {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #091209;
+            border: 1px solid #1a521a;
+            color: #44ff44;
+            padding: 8px 12px;
+            font-size: 13px;
+            margin-bottom: 8px;
+            border-radius: 2px;
+            text-shadow: 0 0 6px #00ff00;
         }
     </style>
 </head>
 <body>
     <div id="header">
         <h1>KMystery</h1>
-        <button onclick="showHelp()" style="position: absolute; right: 20px; top: 10px;">Help</button>
+        <button onclick="showHelp()" class="btn-gold">Manual</button>
     </div>
     
-    <div id="help-modal" class="hidden" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; display:flex; justify-content:center; align-items:center; flex-direction:column; color:#ccc;">
-        <div style="background:#111; border:2px solid #555; padding:30px; max-width:600px; max-height:80vh; overflow-y:auto; box-shadow: 0 0 20px #000; text-align:left;">
+    <div id="help-modal" class="hidden">
+        <div style="background:#111114; border:2px solid #d4af37; padding:25px; max-width:580px; max-height:85vh; overflow-y:auto; box-shadow: 0 0 30px #000; border-radius:4px;">
             <h2>Detective's Manual</h2>
             <h3>How to Play</h3>
             <p>1. Move between locations and <b>Search for Clues</b> (Costs 2h).</p>
@@ -161,87 +283,100 @@
             <p>- Presenting the killer's specific item will catch them in a lie immediately!</p>
             <p>- Cross-reference alibis! If someone's alibi contradicts another's, they might be lying.</p>
             <h3>Evidence Guide</h3>
-            <p>- In the lab, you must calibrate the scanner to exactly match the Target.</p>
-            <p>- Use the +11, +7, and -3 adjustments strategically.</p>
-            <div style="text-align:center;">
-                <button onclick="hideHelp()" style="margin-top:20px;">Close Manual</button>
+            <p>- In the lab, calibrate the scanner waveform to match the target frequency.</p>
+            <p>- Use the +11, +7, and -3 frequency shifts strategically.</p>
+            <div style="text-align:center; margin-top:20px;">
+                <button onclick="hideHelp()" class="btn-gold">Close Manual</button>
             </div>
         </div>
     </div>
     
     <div id="start-screen">
         <div class="container">
-            <p>Detective, a murder has occurred.</p>
-            <div style="margin: 15px 0;">
-                <label for="difficulty">Difficulty:</label>
-                <select id="difficulty" style="background:#222; color:#fff; border:1px solid #444; padding:5px;">
+            <h2 style="font-size: 18px; margin-bottom: 12px;">Homicide Investigation</h2>
+            <p style="color: #b0a898; font-size: 14px; line-height: 1.4;">A body was discovered at the Manor. You have limited time before the trail goes cold.</p>
+            <div style="margin: 18px 0;">
+                <label for="difficulty" style="color: #d4af37; margin-right: 8px;">Case Difficulty:</label>
+                <select id="difficulty" style="background:#18181c; color:#dfd8c8; border:1px solid #5a4828; padding:6px 10px; font-family:inherit; border-radius:3px;">
                     <option value="Easy">Easy (3 suspects, 16h)</option>
                     <option value="Medium">Medium (4 suspects, 12h)</option>
                     <option value="Hard">Hard (5 suspects, 8h)</option>
                 </select>
             </div>
-            <button onclick="startGame()">Start Investigation</button>
-            <div id="stats-area" style="margin-top: 30px; font-size: 14px; color: #aaa; text-align: left; background: rgba(0,0,0,0.5); padding: 10px; border: 1px dashed #444;">
-                <h3 style="margin-top: 0;">Detective Record</h3>
-                <p>Rank: <strong id="rank-display" style="color: #fff;">Rookie</strong> (Cases Solved: <span id="cases-solved">0</span>)</p>
-                <p>Fastest Solve: <span id="fastest-solve" style="color: #fff;">N/A</span> hours</p>
-                <p>Zero-Penalty Solves: <span id="perfect-solves" style="color: #fff;">0</span></p>
+            <button onclick="startGame()" class="btn-gold" style="font-size: 15px; padding: 10px 24px; font-weight: bold;">Begin Investigation</button>
+            <div id="stats-area" style="margin-top: 20px; font-size: 13px; color: #9c9586; text-align: left; background: rgba(0,0,0,0.6); padding: 12px; border: 1px dashed #4a3e26; border-radius: 3px;">
+                <h3 style="margin-top: 0; color: #d4af37; font-size: 13px;">Detective Record</h3>
+                <p style="margin: 4px 0;">Rank: <strong id="rank-display" style="color: #fff;">Rookie</strong> (Cases: <span id="cases-solved">0</span>)</p>
+                <p style="margin: 4px 0;">Fastest Solve: <span id="fastest-solve" style="color: #fff;">N/A</span> hours</p>
+                <p style="margin: 4px 0;">Zero-Penalty Solves: <span id="perfect-solves" style="color: #fff;">0</span></p>
             </div>
         </div>
     </div>
     
     <div id="game-screen" class="hidden">
         <div class="panel" id="main-panel">
-            <h2>Location: <span id="current-location">Office</span> <span style="float:right; color:#ff5555;">Time Left: <span id="time-left">12</span>h</span></h2>
+            <h2>
+                <span>Location: <span id="current-location">Office</span></span>
+                <span class="time-badge">Time Left: <span id="time-left">12</span>h</span>
+            </h2>
+            
+            <div id="viewport-container">
+                <canvas id="scene-canvas" width="640" height="240"></canvas>
+            </div>
+            
             <div id="location-description">
                 You are in your office. The phone just rang about a murder.
             </div>
+            
             <div id="action-area">
                 <button id="search-btn" onclick="searchLocation()">Search for Clues</button>
                 <button id="lab-btn" onclick="openLab()">Evidence Lab</button>
                 <button id="interrogate-btn" onclick="startInterrogation()" class="hidden">Interrogate</button>
-                <button id="accuse-btn" onclick="startAccusation()" style="margin-top:10px; background-color: #311;">Accuse Someone</button>
+                <button id="accuse-btn" onclick="startAccusation()" class="btn-danger">Accuse Someone</button>
             </div>
             
             <div id="interrogation-area" class="hidden"></div>
             
             <div id="lab-area" class="hidden">
-                <h3>Evidence Lab</h3>
+                <h3>Forensic Evidence Lab</h3>
                 <div id="lab-list"></div>
                 <div id="scanner-game" class="hidden">
-                    <p>Calibrate Scanner to reveal clue.</p>
-                    <p>Target: <span id="scanner-target">73</span> | Current: <span id="scanner-current">0</span> | Moves left: <span id="scanner-moves">10</span></p>
-                    <button onclick="adjScanner(11)">+11</button>
-                    <button onclick="adjScanner(7)">+7</button>
-                    <button onclick="adjScanner(-3)">-3</button>
+                    <div class="scanner-hud">
+                        <span>TARGET FREQ: <b id="scanner-target">73</b> Hz</span>
+                        <span>TUNED: <b id="scanner-current">0</b> Hz</span>
+                        <span>STABILITY: <b id="scanner-moves">10</b></span>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="adjScanner(11)" style="flex:1;">+11 kHz</button>
+                        <button onclick="adjScanner(7)" style="flex:1;">+7 kHz</button>
+                        <button onclick="adjScanner(-3)" style="flex:1;">-3 kHz</button>
+                    </div>
                 </div>
-                <button onclick="closeLab()" style="margin-top:20px;">Leave Lab</button>
+                <button onclick="closeLab()" style="margin-top:10px;">Leave Lab</button>
             </div>
             
             <div id="accusation-area" class="hidden">
-                <h3>Final Accusation</h3>
-                <p>Present your findings. If you are wrong, the killer escapes!</p>
-                <div style="margin: 15px 0; display: flex; flex-direction: column; gap: 10px;">
-                    <div>Suspect: <select id="accuse-suspect" style="background:#222; color:#fff; border:1px solid #444; padding:5px;"></select></div>
-                    <div>Motive: <select id="accuse-motive" style="background:#222; color:#fff; border:1px solid #444; padding:5px;"></select></div>
-                    <div>Weapon: <select id="accuse-weapon" style="background:#222; color:#fff; border:1px solid #444; padding:5px;"></select></div>
+                <h3>Grand Jury Accusation</h3>
+                <p style="color: #ff9999; font-size: 13px;">Present your findings. If you are wrong, you will be dismissed and the killer escapes!</p>
+                <div style="margin: 10px 0; display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
+                    <div>Suspect: <select id="accuse-suspect" style="background:#1c1b20; color:#dfd8c8; border:1px solid #5a4828; padding:5px; width:180px;"></select></div>
+                    <div>Motive: <select id="accuse-motive" style="background:#1c1b20; color:#dfd8c8; border:1px solid #5a4828; padding:5px; width:180px;"></select></div>
+                    <div>Weapon: <select id="accuse-weapon" style="background:#1c1b20; color:#dfd8c8; border:1px solid #5a4828; padding:5px; width:180px;"></select></div>
                 </div>
                 <div class="dialogue-options">
-                    <button onclick="submitAccusation()" style="background-color: #422;">Submit Accusation</button>
+                    <button onclick="submitAccusation()" class="btn-danger" style="font-weight:bold;">Deliver Indictment</button>
                     <button onclick="cancelAccusation()">Cancel</button>
                 </div>
             </div>
             
             <div id="travel-container">
-                <h3>Travel</h3>
-                <div id="travel-buttons">
-                    <!-- Travel buttons generated here -->
-                </div>
+                <h3 style="font-size: 13px; margin-bottom: 6px;">Travel to Crime Scene & Locations</h3>
+                <div id="travel-buttons"></div>
             </div>
         </div>
         
         <div class="panel" id="notebook-panel">
-            <h2>Notebook</h2>
+            <h2>Case File</h2>
             <h3>Suspects</h3>
             <ul id="suspect-list">
                 <li>No suspects yet.</li>
@@ -250,7 +385,7 @@
             <ul id="unanalyzed-list">
                 <li>No evidence found.</li>
             </ul>
-            <h3>Usable Clues</h3>
+            <h3>Verified Clues</h3>
             <ul id="clue-list">
                 <li>No usable clues.</li>
             </ul>
@@ -263,11 +398,9 @@
 
         function showHelp() {
             document.getElementById('help-modal').classList.remove('hidden');
-            document.getElementById('help-modal').style.display = 'flex'; // override hidden if needed
         }
         function hideHelp() {
             document.getElementById('help-modal').classList.add('hidden');
-            document.getElementById('help-modal').style.display = '';
         }
 
         function playTypewriter() {
@@ -277,7 +410,7 @@
             osc.type = 'square';
             osc.frequency.setValueAtTime(150 + Math.random() * 100, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.05);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
@@ -287,19 +420,21 @@
 
         function playDramaticChord() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            const freqs = [220, 261.63, 329.63]; // A minor
+            const freqs = [220, 261.63, 329.63, 440];
             freqs.forEach(f => {
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.type = 'sawtooth';
                 osc.frequency.value = f;
-                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2.0);
+                gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.005, audioCtx.currentTime + 2.0);
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
                 osc.start();
                 osc.stop(audioCtx.currentTime + 2.0);
             });
+            triggerScreenShake(12);
+            spawnShockwave(canvas.width / 2, canvas.height / 2, '#d4af37');
         }
 
         function startRain() {
@@ -318,7 +453,7 @@
             filter.type = 'lowpass';
             filter.frequency.value = 400;
             const gain = audioCtx.createGain();
-            gain.gain.value = 0.05;
+            gain.gain.value = 0.04;
             noise.connect(filter);
             filter.connect(gain);
             gain.connect(audioCtx.destination);
@@ -345,7 +480,11 @@
             patience: {},
             initialTime: 12,
             failedCalibrations: 0,
-            angrySuspects: 0
+            angrySuspects: 0,
+            currentInterrogation: null,
+            interrogationMood: 'normal',
+            inLab: false,
+            analyzingIdx: -1
         };
 
         const allLocations = [
@@ -357,7 +496,6 @@
         ];
 
         const allSuspects = ['Mr. Black', 'Miss Scarlet', 'Colonel Mustard', 'Mrs. White', 'Professor Plum'];
-
         const motives = ['Revenge', 'Greed', 'Jealousy'];
         const weapons = ['Revolver', 'Poison', 'Lead Pipe'];
         
@@ -407,14 +545,12 @@
             ];
             while (clues.length < numItems) clues.push('');
             
-            // Shuffle clues
             for (let i = clues.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [clues[i], clues[j]] = [clues[j], clues[i]];
             }
             
             const shuffledSuspects = [...state.suspects].sort(() => Math.random() - 0.5);
-            
             const locKeys = Object.keys(state.locations);
             for(let i = 0; i < numItems; i++) {
                 state.locations[locKeys[i]].clue = clues[i];
@@ -423,7 +559,6 @@
             state.foundClues = [];
             state.unanalyzedClues = [];
             
-            // Generate Alibis and reset patience
             const innocent = state.suspects.filter(s => s !== killer);
             state.alibis = {};
             state.patience = {};
@@ -432,8 +567,10 @@
                 state.alibis[innocent[i]] = `"I was with ${innocent[(i + 1) % innocent.length]} the whole time."`;
             }
             state.alibis[killer] = `"I was with ${innocent[0]}."`;
-            
             state.suspects.forEach(s => state.patience[s] = 3);
+            state.currentInterrogation = null;
+            state.interrogationMood = 'normal';
+            state.inLab = false;
         }
 
         function startGame() {
@@ -443,14 +580,11 @@
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('game-screen').classList.remove('hidden');
             
-            
             state.initialTime = state.timeLeft;
             state.failedCalibrations = 0;
             state.angrySuspects = 0;
             
             document.getElementById('time-left').textContent = state.timeLeft;
-            
-            // Add suspects to notebook
             state.knownSuspects = [...state.suspects];
             
             updateNotebook();
@@ -473,7 +607,6 @@
             document.getElementById('fastest-solve').textContent = fastestSolve === 999 ? 'N/A' : fastestSolve;
             document.getElementById('perfect-solves').textContent = perfectSolves;
         }
-
         updateStatsUI();
 
         function updateLocation() {
@@ -506,6 +639,8 @@
             if (state.timeLeft < 0) state.timeLeft = 0;
             document.getElementById('time-left').textContent = state.timeLeft;
             if (state.timeLeft <= 0) {
+                triggerScreenShake(20);
+                playDramaticChord();
                 alert("Time's up! The killer has escaped. GAME OVER. (Refresh to restart)");
                 document.getElementById('action-area').classList.add('hidden');
                 document.getElementById('travel-container').classList.add('hidden');
@@ -526,6 +661,7 @@
                     loc.clueFound = true;
                     state.unanalyzedClues.push({ locName: state.currentLocation, realClue: loc.clue });
                     playDramaticChord();
+                    spawnParticleBurst(canvas.width/2, canvas.height/2, 35, '#d4af37');
                     alert("You found a mysterious object! Take it to the Evidence Lab to analyze.");
                 } else {
                     alert("You didn't find anything useful here.");
@@ -539,6 +675,10 @@
             if (state.locations[locationName]) {
                 if (advanceTime(1)) return;
                 state.currentLocation = locationName;
+                state.currentInterrogation = null;
+                state.interrogationMood = 'normal';
+                state.inLab = false;
+                triggerScreenShake(4);
                 updateLocation();
             }
         }
@@ -549,7 +689,7 @@
             for (const loc in state.locations) {
                 if (loc !== state.currentLocation) {
                     const btn = document.createElement('button');
-                    btn.textContent = `Travel to ${loc}`;
+                    btn.textContent = `Travel: ${loc}`;
                     btn.onclick = () => travel(loc);
                     container.appendChild(btn);
                 }
@@ -563,6 +703,9 @@
             
             const loc = state.locations[state.currentLocation];
             const suspect = loc.suspect;
+            state.currentInterrogation = suspect;
+            state.interrogationMood = 'normal';
+            state.inLab = false;
             
             const intArea = document.getElementById('interrogation-area');
             intArea.innerHTML = `<h3>Interrogating ${suspect}</h3>
@@ -578,9 +721,11 @@
         function askAlibi() {
             const suspect = state.locations[state.currentLocation].suspect;
             if (state.patience[suspect] <= 0) {
+                state.interrogationMood = 'angry';
                 document.getElementById('dialogue-text').textContent = '"I told you, I want my lawyer! No more questions!"';
                 return;
             }
+            state.interrogationMood = 'normal';
             document.getElementById('dialogue-text').textContent = state.alibis[suspect];
         }
         
@@ -605,37 +750,43 @@
             const suspect = state.locations[state.currentLocation].suspect;
             
             if (state.patience[suspect] <= 0) {
+                state.interrogationMood = 'angry';
                 document.getElementById('dialogue-text').textContent = '"I told you, I want my lawyer! No more questions!"';
                 return;
             }
             
             let response = '';
-            
-            // Extract the actual clue text
             const parts = clueStr.split('] ');
             const actualClue = parts.length > 1 ? parts[1] : clueStr;
-            
             let intimidated = false;
             
             if (actualClue === killerClueMap[suspect]) {
                 playDramaticChord();
+                state.interrogationMood = 'caught';
+                triggerScreenShake(16);
+                spawnParticleBurst(canvas.width / 2, canvas.height / 2, 40, '#ff4444');
                 response = '"Wait, where did you find that?! I... I lost it weeks ago! You can\'t prove anything!" (Caught in a lie!)';
             } else if (Object.values(killerClueMap).includes(actualClue)) {
                 response = '"That doesn\'t belong to me."';
                 intimidated = true;
+                state.interrogationMood = 'angry';
             } else if (Object.values(motiveClueMap).includes(actualClue)) {
                 if (suspect === state.solution.killer) {
                     response = '"That proves nothing! Anyone could have that motive!" (They look nervous)';
+                    state.interrogationMood = 'nervous';
                 } else {
                     response = '"Shocking, but not my problem."';
                     intimidated = true;
+                    state.interrogationMood = 'angry';
                 }
             } else if (Object.values(weaponClueMap).includes(actualClue)) {
                 if (suspect === state.solution.killer) {
                     response = '"I\'ve never seen that weapon in my life!" (They are sweating)';
+                    state.interrogationMood = 'nervous';
                 } else {
                     response = '"A gruesome weapon, but I didn\'t use it."';
                     intimidated = true;
+                    state.interrogationMood = 'angry';
                 }
             }
             
@@ -644,6 +795,7 @@
                 if (state.patience[suspect] <= 0) {
                     response += ' "That\'s it! You\'re just guessing. I want my lawyer!" (They refuse to talk anymore)';
                     state.angrySuspects++;
+                    state.interrogationMood = 'angry';
                 } else {
                     response += ` (They look annoyed. Patience: ${state.patience[suspect]}/3)`;
                 }
@@ -660,6 +812,8 @@
         }
         
         function endInterrogation() {
+            state.currentInterrogation = null;
+            state.interrogationMood = 'normal';
             document.getElementById('interrogation-area').classList.add('hidden');
             document.getElementById('action-area').classList.remove('hidden');
             document.getElementById('travel-container').classList.remove('hidden');
@@ -667,6 +821,8 @@
         }
 
         function openLab() {
+            state.inLab = true;
+            state.currentInterrogation = null;
             document.getElementById('action-area').classList.add('hidden');
             document.getElementById('travel-container').classList.add('hidden');
             document.getElementById('interrogation-area').classList.add('hidden');
@@ -677,15 +833,16 @@
         function renderLabList() {
             const listDiv = document.getElementById('lab-list');
             document.getElementById('scanner-game').classList.add('hidden');
+            state.analyzingIdx = -1;
             
             if (state.unanalyzedClues.length === 0) {
-                listDiv.innerHTML = '<p>No unanalyzed evidence.</p>';
+                listDiv.innerHTML = '<p style="color:#888; font-style:italic;">No unanalyzed evidence in custody.</p>';
                 return;
             }
             
-            let html = '<p>Select evidence to analyze:</p><div class="dialogue-options">';
+            let html = '<p style="font-size:13px; margin:4px 0;">Select evidence for spectral waveform analysis:</p><div class="dialogue-options">';
             state.unanalyzedClues.forEach((c, idx) => {
-                html += `<button onclick="startAnalysis(${idx})">Object from ${c.locName}</button>`;
+                html += `<button onclick="startAnalysis(${idx})">Analyze: Object from ${c.locName}</button>`;
             });
             html += '</div>';
             listDiv.innerHTML = html;
@@ -694,6 +851,7 @@
         let analysisState = null;
         function startAnalysis(idx) {
             if (advanceTime(1)) return;
+            state.analyzingIdx = idx;
             analysisState = {
                 idx: idx,
                 target: Math.floor(Math.random() * 30) + 50,
@@ -714,16 +872,20 @@
         function adjScanner(val) {
             analysisState.current += val;
             analysisState.moves--;
+            triggerScreenShake(3);
             
             if (analysisState.current === analysisState.target) {
                 const item = state.unanalyzedClues[analysisState.idx];
                 state.unanalyzedClues.splice(analysisState.idx, 1);
                 state.foundClues.push(`[${item.locName}] ${item.realClue}`);
-                alert(`Analysis complete! Revealed: ${item.realClue}`);
+                playDramaticChord();
+                spawnParticleBurst(canvas.width / 2, canvas.height / 2, 45, '#44ff44');
+                alert(`Spectral Analysis complete! Revealed:\n${item.realClue}`);
                 updateNotebook();
                 renderLabList();
             } else if (analysisState.moves <= 0) {
-                alert("Calibration failed. Try again.");
+                triggerScreenShake(8);
+                alert("Calibration failed: Sensor overloaded. Try again.");
                 state.failedCalibrations++;
                 renderLabList();
             } else {
@@ -732,6 +894,8 @@
         }
 
         function closeLab() {
+            state.inLab = false;
+            state.analyzingIdx = -1;
             document.getElementById('lab-area').classList.add('hidden');
             document.getElementById('action-area').classList.remove('hidden');
             document.getElementById('travel-container').classList.remove('hidden');
@@ -741,14 +905,14 @@
         function updateNotebook() {
             const suspectList = document.getElementById('suspect-list');
             if (state.knownSuspects.length > 0) {
-                suspectList.innerHTML = state.knownSuspects.map(s => `<li>${s}</li>`).join('');
+                suspectList.innerHTML = state.knownSuspects.map(s => `<li><b>${s}</b></li>`).join('');
             } else {
                 suspectList.innerHTML = '<li>No suspects yet.</li>';
             }
 
             const unanalyzedList = document.getElementById('unanalyzed-list');
             if (state.unanalyzedClues.length > 0) {
-                unanalyzedList.innerHTML = state.unanalyzedClues.map(c => `<li>Object from ${c.locName}</li>`).join('');
+                unanalyzedList.innerHTML = state.unanalyzedClues.map(c => `<li>Object from <b>${c.locName}</b></li>`).join('');
             } else {
                 unanalyzedList.innerHTML = '<li>No evidence found.</li>';
             }
@@ -762,6 +926,8 @@
         }
 
         function startAccusation() {
+            state.inLab = false;
+            state.currentInterrogation = null;
             document.getElementById('action-area').classList.add('hidden');
             document.getElementById('travel-container').classList.add('hidden');
             document.getElementById('interrogation-area').classList.add('hidden');
@@ -804,16 +970,17 @@
                 localStorage.setItem('perfectSolves', perfectSolves);
                 
                 updateStatsUI();
-                
-                let msg = `You did it, Detective! ${suspect} is the killer! They confessed everything.\n\nTime taken: ${hoursTaken}h\n`;
-                if (penaltyFree) msg += "Perfect Investigation! (No failed labs, no angry suspects)\n";
-                msg += "GAME OVER - YOU WIN! (Refresh to restart)";
-                
                 playDramaticChord();
+                spawnParticleBurst(canvas.width / 2, canvas.height / 2, 100, '#d4af37');
+                
+                let msg = `Case Closed, Detective! ${suspect} broke down and signed a full confession.\n\nMotive: ${motive}\nWeapon: ${weapon}\nTime Taken: ${hoursTaken}h\n`;
+                if (penaltyFree) msg += "★ PERFECT INVESTIGATION! ★ (No failed labs, no angered suspects)\n";
+                msg += "\nGAME OVER - YOU WIN! (Refresh to play again)";
                 alert(msg);
             } else {
                 playDramaticChord();
-                alert(`You were wrong! The real killer was ${state.solution.killer} (Motive: ${state.solution.motive}, Weapon: ${state.solution.weapon}). The commissioner is furious. You're fired. GAME OVER.`);
+                triggerScreenShake(25);
+                alert(`Catastrophic failure! You indicted ${suspect}, but the real culprit was ${state.solution.killer} (Motive: ${state.solution.motive}, Weapon: ${state.solution.weapon}). The Commissioner has revoked your badge.\nGAME OVER.`);
             }
             
             document.getElementById('accusation-area').classList.add('hidden');
@@ -822,6 +989,776 @@
             document.getElementById('interrogation-area').classList.add('hidden');
             document.getElementById('lab-area').classList.add('hidden');
         }
+
+        // ==========================================
+        // GRAPHICS & CANVAS PROCEDURAL RENDERING
+        // ==========================================
+        const canvas = document.getElementById('scene-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let animFrame = 0;
+        let shakeTime = 0;
+        let shakeIntensity = 0;
+
+        // Particle system
+        const particles = [];
+        const shockwaves = [];
+        const rainDrops = [];
+        const fogMotes = [];
+
+        // Initialize rain & fog
+        for (let i = 0; i < 45; i++) {
+            rainDrops.push({
+                x: Math.random() * 640,
+                y: Math.random() * 240,
+                len: 10 + Math.random() * 15,
+                speed: 12 + Math.random() * 8
+            });
+        }
+        for (let i = 0; i < 25; i++) {
+            fogMotes.push({
+                x: Math.random() * 640,
+                y: Math.random() * 240,
+                r: 15 + Math.random() * 25,
+                speed: 0.2 + Math.random() * 0.4,
+                alpha: 0.05 + Math.random() * 0.1
+            });
+        }
+
+        function triggerScreenShake(intensity) {
+            shakeIntensity = intensity;
+            shakeTime = 1.0;
+        }
+
+        function spawnShockwave(x, y, color) {
+            shockwaves.push({ x, y, r: 5, maxR: 120, life: 1.0, color: color || '#d4af37' });
+        }
+
+        function spawnParticleBurst(x, y, count, color) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1 + Math.random() * 6;
+                const layer = Math.random() < 0.3 ? 'spark' : (Math.random() < 0.6 ? 'smoke' : 'shard');
+                particles.push({
+                    x: x + (Math.random() - 0.5) * 10,
+                    y: y + (Math.random() - 0.5) * 10,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - (layer === 'smoke' ? 1.0 : 0),
+                    r: layer === 'smoke' ? 4 + Math.random() * 6 : (layer === 'shard' ? 3 + Math.random() * 3 : 1.5),
+                    life: 1.0,
+                    decay: 0.015 + Math.random() * 0.02,
+                    layer: layer,
+                    color: color || (layer === 'spark' ? '#fff' : (layer === 'shard' ? '#d4af37' : '#888')),
+                    rot: Math.random() * Math.PI * 2,
+                    vRot: (Math.random() - 0.5) * 0.2
+                });
+            }
+        }
+
+        function drawNoirLocationScene(locName, w, h) {
+            ctx.save();
+            if (locName === 'Office') {
+                const bgGrad = ctx.createLinearGradient(0, 0, w, h);
+                bgGrad.addColorStop(0, '#100e0a');
+                bgGrad.addColorStop(1, '#050403');
+                ctx.fillStyle = bgGrad;
+                ctx.fillRect(0, 0, w, h);
+
+                ctx.fillStyle = '#1c1812';
+                ctx.fillRect(w * 0.15, 20, w * 0.7, h * 0.7);
+                ctx.fillStyle = '#090a10';
+                ctx.fillRect(w * 0.17, 25, w * 0.66, h * 0.62);
+
+                ctx.fillStyle = 'rgba(212, 175, 55, 0.08)';
+                for (let y = 30; y < h * 0.8; y += 12) {
+                    ctx.beginPath();
+                    ctx.moveTo(w * 0.1, y + 20);
+                    ctx.lineTo(w * 0.9, y - 10);
+                    ctx.lineTo(w * 0.9, y - 4);
+                    ctx.lineTo(w * 0.1, y + 26);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                ctx.fillStyle = '#12100d';
+                ctx.fillRect(0, h * 0.72, w, h * 0.28);
+                ctx.fillStyle = '#262018';
+                ctx.fillRect(0, h * 0.72, w, 4);
+
+                const lampX = w * 0.25;
+                const lampY = h * 0.72;
+                ctx.fillStyle = '#3a3020';
+                ctx.fillRect(lampX - 4, lampY - 30, 8, 30);
+                ctx.beginPath();
+                ctx.ellipse(lampX, lampY - 32, 18, 8, 0, 0, Math.PI * 2);
+                ctx.fillStyle = '#1a5e2a';
+                ctx.fill();
+                ctx.strokeStyle = '#2e8b40';
+                ctx.stroke();
+
+                const lampGlow = ctx.createRadialGradient(lampX, lampY - 28, 5, lampX, lampY, 70);
+                lampGlow.addColorStop(0, 'rgba(100, 255, 140, 0.25)');
+                lampGlow.addColorStop(0.5, 'rgba(212, 175, 55, 0.12)');
+                lampGlow.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = lampGlow;
+                ctx.beginPath();
+                ctx.moveTo(lampX - 5, lampY - 28);
+                ctx.lineTo(lampX - 60, h);
+                ctx.lineTo(lampX + 60, h);
+                ctx.lineTo(lampX + 5, lampY - 28);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = '#1e1c18';
+                ctx.fillRect(w * 0.65, h * 0.66, 45, 18);
+                ctx.fillStyle = '#0a0a0a';
+                ctx.fillRect(w * 0.68, h * 0.62, 35, 6);
+                ctx.fillStyle = '#222';
+                ctx.fillRect(w * 0.82, h * 0.68, 12, 14);
+            } else if (locName === 'The Manor') {
+                const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
+                skyGrad.addColorStop(0, '#090a12');
+                skyGrad.addColorStop(1, '#18151f');
+                ctx.fillStyle = skyGrad;
+                ctx.fillRect(0, 0, w, h);
+
+                ctx.fillStyle = '#121118';
+                ctx.beginPath();
+                ctx.arc(w * 0.2, 40, 50, 0, Math.PI * 2);
+                ctx.arc(w * 0.5, 30, 70, 0, Math.PI * 2);
+                ctx.arc(w * 0.8, 45, 60, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#08070b';
+                ctx.beginPath();
+                ctx.moveTo(w * 0.15, h);
+                ctx.lineTo(w * 0.15, h * 0.45);
+                ctx.lineTo(w * 0.3, h * 0.25);
+                ctx.lineTo(w * 0.45, h * 0.45);
+                ctx.lineTo(w * 0.5, h * 0.18);
+                ctx.lineTo(w * 0.55, h * 0.45);
+                ctx.lineTo(w * 0.7, h * 0.28);
+                ctx.lineTo(w * 0.85, h * 0.45);
+                ctx.lineTo(w * 0.85, h);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = '#f3cf58';
+                ctx.fillRect(w * 0.48, h * 0.4, 14, 20);
+                ctx.fillRect(w * 0.25, h * 0.55, 12, 16);
+                ctx.fillRect(w * 0.72, h * 0.55, 12, 16);
+
+                ctx.fillStyle = '#040406';
+                ctx.fillRect(0, h * 0.82, w, h * 0.18);
+
+                ctx.save();
+                ctx.translate(0, h * 0.78);
+                ctx.rotate(-0.04);
+                ctx.fillStyle = '#e6c820';
+                ctx.fillRect(0, 0, w * 1.1, 10);
+                ctx.fillStyle = '#111';
+                ctx.font = 'bold 8px Courier New';
+                for (let tx = 10; tx < w * 1.1; tx += 80) {
+                    ctx.fillText('POLICE LINE DO NOT CROSS', tx, 8);
+                }
+                ctx.restore();
+            } else if (locName === 'The Docks') {
+                const seaGrad = ctx.createLinearGradient(0, 0, 0, h);
+                seaGrad.addColorStop(0, '#060a10');
+                seaGrad.addColorStop(0.6, '#09111c');
+                seaGrad.addColorStop(1, '#020508');
+                ctx.fillStyle = seaGrad;
+                ctx.fillRect(0, 0, w, h);
+
+                ctx.fillStyle = '#05090f';
+                ctx.fillRect(w * 0.45, h * 0.38, 120, 25);
+                ctx.fillRect(w * 0.52, h * 0.22, 20, 18);
+                ctx.fillRect(w * 0.58, h * 0.15, 4, 25);
+
+                ctx.fillStyle = '#0d0c0a';
+                ctx.fillRect(0, h * 0.65, w * 0.45, h * 0.35);
+                ctx.fillStyle = '#1a1814';
+                for (let px = 10; px < w * 0.45; px += 25) {
+                    ctx.fillRect(px, h * 0.65, 2, h * 0.35);
+                }
+
+                const lampX = w * 0.32;
+                const lampY = h * 0.65;
+                ctx.fillStyle = '#222';
+                ctx.fillRect(lampX - 3, lampY - 90, 6, 90);
+                ctx.beginPath();
+                ctx.arc(lampX, lampY - 95, 12, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffaa33';
+                ctx.fill();
+
+                const glow = ctx.createRadialGradient(lampX, lampY - 95, 5, lampX, lampY - 95, 80);
+                glow.addColorStop(0, 'rgba(255, 180, 60, 0.4)');
+                glow.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = glow;
+                ctx.beginPath();
+                ctx.arc(lampX, lampY - 95, 80, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.strokeStyle = 'rgba(255, 180, 60, 0.15)';
+                ctx.lineWidth = 2;
+                for (let r = 0; r < 5; r++) {
+                    const ry = h * 0.75 + r * 8;
+                    ctx.beginPath();
+                    ctx.moveTo(lampX - 40 - r * 10, ry);
+                    ctx.lineTo(lampX + 40 + r * 10, ry);
+                    ctx.stroke();
+                }
+            } else if (locName === 'The Casino') {
+                const bgGrad = ctx.createLinearGradient(0, 0, w, h);
+                bgGrad.addColorStop(0, '#120808');
+                bgGrad.addColorStop(1, '#080305');
+                ctx.fillStyle = bgGrad;
+                ctx.fillRect(0, 0, w, h);
+
+                ctx.strokeStyle = 'rgba(212, 175, 55, 0.12)';
+                ctx.lineWidth = 2;
+                for (let a = 0; a < Math.PI; a += Math.PI / 10) {
+                    ctx.beginPath();
+                    ctx.moveTo(w / 2, h * 0.7);
+                    ctx.lineTo(w / 2 + Math.cos(a) * 300, h * 0.7 - Math.sin(a) * 200);
+                    ctx.stroke();
+                }
+
+                ctx.strokeStyle = '#d4af37';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(w * 0.25, 15, w * 0.5, 45);
+                ctx.fillStyle = '#ff3366';
+                ctx.font = 'bold 16px Courier New';
+                ctx.textAlign = 'center';
+                ctx.shadowColor = '#ff0055';
+                ctx.shadowBlur = 10;
+                ctx.fillText('★ GOLDEN PALACE ★', w / 2, 44);
+                ctx.shadowBlur = 0;
+
+                ctx.fillStyle = '#0f381e';
+                ctx.beginPath();
+                ctx.ellipse(w / 2, h * 0.85, w * 0.45, 45, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#d4af37';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                ctx.fillStyle = '#4a2505';
+                ctx.beginPath();
+                ctx.ellipse(w / 2, h * 0.85, 35, 15, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#d4af37';
+                ctx.beginPath();
+                ctx.arc(w / 2, h * 0.85, 5, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (locName === 'Train Station') {
+                const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+                bgGrad.addColorStop(0, '#0a0d14');
+                bgGrad.addColorStop(1, '#040508');
+                ctx.fillStyle = bgGrad;
+                ctx.fillRect(0, 0, w, h);
+
+                ctx.strokeStyle = '#222830';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(w / 2, h * 0.7, w * 0.42, Math.PI, Math.PI * 2);
+                ctx.stroke();
+
+                const clockX = w / 2;
+                const clockY = 50;
+                ctx.fillStyle = '#f0ebd8';
+                ctx.beginPath();
+                ctx.arc(clockX, clockY, 22, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#3d3525';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                ctx.strokeStyle = '#111';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(clockX, clockY);
+                ctx.lineTo(clockX, clockY - 14);
+                ctx.moveTo(clockX, clockY);
+                ctx.lineTo(clockX + 9, clockY + 4);
+                ctx.stroke();
+
+                ctx.fillStyle = '#08080a';
+                ctx.fillRect(w * 0.15, h * 0.48, 140, 50);
+                ctx.fillRect(w * 0.28, h * 0.35, 35, 20);
+                ctx.fillRect(w * 0.15, h * 0.38, 40, 30);
+
+                ctx.fillStyle = 'rgba(200, 200, 210, 0.12)';
+                const steamOffset = (animFrame * 0.5) % 80;
+                ctx.beginPath();
+                ctx.arc(w * 0.3 + steamOffset * 0.5, h * 0.3 - steamOffset * 0.4, 20 + steamOffset * 0.3, 0, Math.PI * 2);
+                ctx.arc(w * 0.34 + steamOffset * 0.8, h * 0.22 - steamOffset * 0.5, 25 + steamOffset * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.strokeStyle = '#444';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, h * 0.9);
+                ctx.lineTo(w, h * 0.9);
+                ctx.moveTo(0, h * 0.95);
+                ctx.lineTo(w, h * 0.95);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        function drawSuspectPortrait(suspectName, mood, x, y, size) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            ctx.fillStyle = '#1c1b18';
+            ctx.fillRect(0, 0, size, size * 1.25);
+            ctx.strokeStyle = '#5a4828';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(0, 0, size, size * 1.25);
+
+            const px = 8, py = 8, pw = size - 16, ph = size - 16;
+            ctx.fillStyle = '#09080b';
+            ctx.fillRect(px, py, pw, ph);
+
+            const cx = size / 2;
+            const cy = size * 0.52;
+
+            if (suspectName === 'Mr. Black') {
+                ctx.fillStyle = '#141416';
+                ctx.beginPath();
+                ctx.ellipse(cx, cy + 32, 38, 22, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#9e8571';
+                ctx.beginPath();
+                ctx.arc(cx, cy + 5, 18, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#0a0a0c';
+                ctx.beginPath();
+                ctx.ellipse(cx, cy - 8, 36, 8, -0.05, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillRect(cx - 20, cy - 32, 40, 25);
+                ctx.fillStyle = '#3a2020';
+                ctx.fillRect(cx - 20, cy - 14, 40, 5);
+
+                ctx.fillStyle = 'rgba(0,0,0,0.85)';
+                ctx.fillRect(cx - 18, cy - 6, 36, 12);
+
+                ctx.fillStyle = mood === 'caught' ? '#ff3333' : '#f0ebd8';
+                ctx.fillRect(cx - 10, cy - 2, 4, 3);
+                ctx.fillRect(cx + 6, cy - 2, 4, 3);
+
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(cx + 4, cy + 14, 10, 2);
+                ctx.fillStyle = '#ff4400';
+                ctx.fillRect(cx + 14, cy + 14, 2, 2);
+            } else if (suspectName === 'Miss Scarlet') {
+                ctx.fillStyle = '#550e18';
+                ctx.beginPath();
+                ctx.ellipse(cx, cy + 32, 36, 20, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#d4ad9b';
+                ctx.beginPath();
+                ctx.arc(cx, cy + 5, 17, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#801322';
+                ctx.beginPath();
+                ctx.arc(cx, cy - 6, 22, Math.PI, Math.PI * 2);
+                ctx.fill();
+                ctx.fillRect(cx - 24, cy - 8, 48, 8);
+                ctx.fillStyle = '#111';
+                ctx.beginPath();
+                ctx.arc(cx + 14, cy - 6, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#222';
+                ctx.fillRect(cx - 11, cy + 2, 6, 2);
+                ctx.fillRect(cx + 5, cy + 2, 6, 2);
+                ctx.fillStyle = '#bb1122';
+                ctx.fillRect(cx - 4, cy + 13, 8, 3);
+
+                ctx.fillStyle = '#f0ebd8';
+                ctx.fillRect(cx + 5, cy + 12, 25, 2);
+            } else if (suspectName === 'Colonel Mustard') {
+                ctx.fillStyle = '#4a4220';
+                ctx.beginPath();
+                ctx.ellipse(cx, cy + 32, 38, 22, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#d4af37';
+                ctx.fillRect(cx - 36, cy + 18, 12, 6);
+                ctx.fillRect(cx + 24, cy + 18, 12, 6);
+
+                ctx.fillStyle = '#c79d80';
+                ctx.beginPath();
+                ctx.arc(cx, cy + 5, 18, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#3a3418';
+                ctx.fillRect(cx - 22, cy - 26, 44, 20);
+                ctx.fillStyle = '#111';
+                ctx.beginPath();
+                ctx.ellipse(cx, cy - 7, 26, 6, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#d4af37';
+                ctx.fillRect(cx - 4, cy - 20, 8, 8);
+
+                ctx.fillStyle = '#111';
+                ctx.fillRect(cx - 10, cy + 1, 4, 3);
+                ctx.fillRect(cx + 6, cy + 1, 4, 3);
+                ctx.fillStyle = '#f0ebd8';
+                ctx.beginPath();
+                ctx.arc(cx - 7, cy + 11, 8, 0, Math.PI);
+                ctx.arc(cx + 7, cy + 11, 8, 0, Math.PI);
+                ctx.fill();
+            } else if (suspectName === 'Mrs. White') {
+                ctx.fillStyle = '#1a181c';
+                ctx.beginPath();
+                ctx.ellipse(cx, cy + 32, 36, 20, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#e8e4db';
+                for (let px = -12; px <= 12; px += 6) {
+                    ctx.beginPath();
+                    ctx.arc(cx + px, cy + 24, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.fillStyle = '#d2baa8';
+                ctx.beginPath();
+                ctx.arc(cx, cy + 4, 17, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = 'rgba(20, 18, 22, 0.75)';
+                ctx.fillRect(cx - 22, cy - 22, 44, 30);
+                ctx.fillStyle = '#2d2830';
+                ctx.fillRect(cx - 20, cy - 25, 40, 8);
+
+                ctx.fillStyle = '#1a181c';
+                ctx.fillRect(cx - 10, cy + 2, 5, 2);
+                ctx.fillRect(cx + 5, cy + 2, 5, 2);
+            } else if (suspectName === 'Professor Plum') {
+                ctx.fillStyle = '#2b1b36';
+                ctx.beginPath();
+                ctx.ellipse(cx, cy + 32, 36, 20, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#8b2e3e';
+                ctx.beginPath();
+                ctx.moveTo(cx - 8, cy + 20);
+                ctx.lineTo(cx + 8, cy + 26);
+                ctx.lineTo(cx + 8, cy + 20);
+                ctx.lineTo(cx - 8, cy + 26);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = '#c9a890';
+                ctx.beginPath();
+                ctx.arc(cx, cy + 5, 18, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#4a382e';
+                ctx.beginPath();
+                ctx.arc(cx, cy - 4, 20, Math.PI * 0.8, Math.PI * 2.2);
+                ctx.fill();
+
+                ctx.strokeStyle = '#d4af37';
+                ctx.lineWidth = 2;
+                ctx.fillStyle = 'rgba(220, 240, 255, 0.3)';
+                ctx.beginPath();
+                ctx.arc(cx - 8, cy + 3, 7, 0, Math.PI * 2);
+                ctx.arc(cx + 8, cy + 3, 7, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(cx - 1, cy + 3);
+                ctx.lineTo(cx + 1, cy + 3);
+                ctx.stroke();
+            }
+
+            if (mood === 'nervous') {
+                ctx.fillStyle = '#55ccff';
+                ctx.beginPath();
+                ctx.arc(cx + 16, cy - 2, 3, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (mood === 'angry') {
+                ctx.strokeStyle = '#ff3333';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(cx - 14, cy - 14);
+                ctx.lineTo(cx - 8, cy - 8);
+                ctx.moveTo(cx - 8, cy - 14);
+                ctx.lineTo(cx - 14, cy - 8);
+                ctx.stroke();
+            } else if (mood === 'caught') {
+                ctx.fillStyle = '#ff2222';
+                ctx.font = 'bold 16px Courier New';
+                ctx.textAlign = 'center';
+                ctx.fillText('LIAR!', cx, cy - 24);
+            }
+
+            ctx.fillStyle = '#d4af37';
+            ctx.font = 'bold 10px Courier New';
+            ctx.textAlign = 'center';
+            ctx.fillText(suspectName, size / 2, size * 1.15);
+
+            ctx.restore();
+        }
+
+        function drawEvidenceLabScreen(w, h) {
+            ctx.save();
+            ctx.fillStyle = '#061006';
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.strokeStyle = 'rgba(20, 80, 20, 0.4)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < w; x += 20) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, h);
+                ctx.stroke();
+            }
+            for (let y = 0; y < h; y += 20) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(w, y);
+                ctx.stroke();
+            }
+
+            ctx.strokeStyle = '#228822';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h);
+            ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2);
+            ctx.stroke();
+
+            if (analysisState) {
+                ctx.strokeStyle = '#e6c820';
+                ctx.lineWidth = 2;
+                ctx.shadowColor = '#e6c820';
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                const tFreq = (analysisState.target * 0.05);
+                for (let x = 0; x < w; x += 2) {
+                    const y = (h / 2) + Math.sin(x * 0.04 * tFreq + animFrame * 0.08) * 35;
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                ctx.strokeStyle = analysisState.current === analysisState.target ? '#44ff44' : '#00ddff';
+                ctx.shadowColor = ctx.strokeStyle;
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                const cFreq = (analysisState.current * 0.05);
+                for (let x = 0; x < w; x += 2) {
+                    const y = (h / 2) + Math.sin(x * 0.04 * cFreq + animFrame * 0.08) * (analysisState.current === 0 ? 4 : 35);
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+
+                ctx.fillStyle = '#44ff44';
+                ctx.font = '11px Courier New';
+                ctx.textAlign = 'left';
+                ctx.fillText(`SPECTRAL CALIBRATION: ${analysisState.current} / ${analysisState.target} Hz`, 15, 20);
+            } else {
+                const scanY = (animFrame * 3) % h;
+                ctx.fillStyle = 'rgba(50, 255, 50, 0.15)';
+                ctx.fillRect(0, scanY, w, 4);
+
+                ctx.fillStyle = '#44ff44';
+                ctx.font = '12px Courier New';
+                ctx.textAlign = 'center';
+                ctx.fillText('FORENSIC LAB - SELECT EVIDENCE TO COMMENCE SPECTRAL ANALYSIS', w / 2, h / 2);
+            }
+
+            ctx.restore();
+        }
+
+        function drawArtDecoFiligree(w, h) {
+            ctx.save();
+            ctx.strokeStyle = '#d4af37';
+            ctx.fillStyle = '#d4af37';
+            ctx.lineWidth = 1.5;
+
+            const bSize = 14;
+            ctx.beginPath();
+            ctx.moveTo(4, 4 + bSize); ctx.lineTo(4, 4); ctx.lineTo(4 + bSize, 4);
+            ctx.moveTo(8, 8 + bSize * 0.6); ctx.lineTo(8, 8); ctx.lineTo(8 + bSize * 0.6, 8);
+            ctx.stroke();
+            ctx.fillRect(3, 3, 3, 3);
+
+            ctx.beginPath();
+            ctx.moveTo(w - 4, 4 + bSize); ctx.lineTo(w - 4, 4); ctx.lineTo(w - 4 - bSize, 4);
+            ctx.moveTo(w - 8, 8 + bSize * 0.6); ctx.lineTo(w - 8, 8); ctx.lineTo(w - 8 - bSize * 0.6, 8);
+            ctx.stroke();
+            ctx.fillRect(w - 6, 3, 3, 3);
+
+            ctx.beginPath();
+            ctx.moveTo(4, h - 4 - bSize); ctx.lineTo(4, h - 4); ctx.lineTo(4 + bSize, h - 4);
+            ctx.moveTo(8, h - 8 - bSize * 0.6); ctx.lineTo(8, h - 8); ctx.lineTo(8 + bSize * 0.6, h - 8);
+            ctx.stroke();
+            ctx.fillRect(3, h - 6, 3, 3);
+
+            ctx.beginPath();
+            ctx.moveTo(w - 4, h - 4 - bSize); ctx.lineTo(w - 4, h - 4); ctx.lineTo(w - 4 - bSize, h - 4);
+            ctx.moveTo(w - 8, h - 8 - bSize * 0.6); ctx.lineTo(w - 8, h - 8); ctx.lineTo(w - 8 - bSize * 0.6, h - 8);
+            ctx.stroke();
+            ctx.fillRect(w - 6, h - 6, 3, 3);
+
+            const glintPerim = (animFrame * 4) % (w * 2 + h * 2);
+            let gx = 0, gy = 0;
+            if (glintPerim < w) { gx = glintPerim; gy = 2; }
+            else if (glintPerim < w + h) { gx = w - 2; gy = glintPerim - w; }
+            else if (glintPerim < w * 2 + h) { gx = w - (glintPerim - (w + h)); gy = h - 2; }
+            else { gx = 2; gy = h - (glintPerim - (w * 2 + h)); }
+
+            const glintGrad = ctx.createRadialGradient(gx, gy, 1, gx, gy, 12);
+            glintGrad.addColorStop(0, '#ffffff');
+            glintGrad.addColorStop(0.5, 'rgba(212, 175, 55, 0.5)');
+            glintGrad.addColorStop(1, 'rgba(212, 175, 55, 0)');
+            ctx.fillStyle = glintGrad;
+            ctx.beginPath();
+            ctx.arc(gx, gy, 12, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function renderLoop() {
+            animFrame++;
+            const w = canvas.width;
+            const h = canvas.height;
+
+            ctx.save();
+            if (shakeTime > 0) {
+                shakeTime -= 0.04;
+                const sx = (Math.random() - 0.5) * shakeIntensity * shakeTime;
+                const sy = (Math.random() - 0.5) * shakeIntensity * shakeTime;
+                ctx.translate(sx, sy);
+            }
+
+            ctx.clearRect(0, 0, w, h);
+
+            if (state.inLab) {
+                drawEvidenceLabScreen(w, h);
+            } else {
+                drawNoirLocationScene(state.currentLocation, w, h);
+
+                if (state.currentInterrogation) {
+                    drawSuspectPortrait(state.currentInterrogation, state.interrogationMood, w - 160, 25, 130);
+                }
+            }
+
+            ctx.strokeStyle = 'rgba(200, 220, 255, 0.22)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < rainDrops.length; i++) {
+                const r = rainDrops[i];
+                r.y += r.speed;
+                r.x -= 1.5;
+                if (r.y > h) { r.y = -15; r.x = Math.random() * w; }
+                if (r.x < 0) { r.x = w + 10; }
+                ctx.beginPath();
+                ctx.moveTo(r.x, r.y);
+                ctx.lineTo(r.x - 2, r.y + r.len);
+                ctx.stroke();
+            }
+
+            for (let i = 0; i < fogMotes.length; i++) {
+                const f = fogMotes[i];
+                f.x += f.speed;
+                if (f.x > w + f.r) f.x = -f.r;
+                const fogGrad = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r);
+                fogGrad.addColorStop(0, `rgba(180, 190, 210, ${f.alpha})`);
+                fogGrad.addColorStop(1, 'rgba(180, 190, 210, 0)');
+                ctx.fillStyle = fogGrad;
+                ctx.beginPath();
+                ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            for (let i = shockwaves.length - 1; i >= 0; i--) {
+                const sw = shockwaves[i];
+                sw.r += 4;
+                sw.life -= 0.03;
+                if (sw.life <= 0 || sw.r >= sw.maxR) {
+                    shockwaves.splice(i, 1);
+                    continue;
+                }
+                ctx.save();
+                ctx.strokeStyle = sw.color;
+                ctx.globalAlpha = sw.life;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(sw.x, sw.y, sw.r * 0.7, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.rot += p.vRot;
+                p.life -= p.decay;
+                if (p.layer === 'shard') {
+                    p.vy += 0.15;
+                }
+
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+
+                ctx.save();
+                ctx.globalAlpha = p.life;
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rot);
+
+                if (p.layer === 'spark') {
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.r, -p.r * 2, p.r * 2, p.r * 4);
+                } else if (p.layer === 'smoke') {
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, p.r * (1 + (1 - p.life)), 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (p.layer === 'shard') {
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.moveTo(-p.r, -p.r);
+                    ctx.lineTo(p.r, -p.r * 0.5);
+                    ctx.lineTo(p.r * 0.5, p.r);
+                    ctx.lineTo(-p.r * 0.8, p.r * 0.6);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            const vig = ctx.createRadialGradient(w / 2, h / 2, h * 0.4, w / 2, h / 2, w * 0.6);
+            vig.addColorStop(0, 'rgba(0,0,0,0)');
+            vig.addColorStop(1, 'rgba(0,0,0,0.65)');
+            ctx.fillStyle = vig;
+            ctx.fillRect(0, 0, w, h);
+
+            drawArtDecoFiligree(w, h);
+
+            ctx.restore();
+            requestAnimationFrame(renderLoop);
+        }
+
+        requestAnimationFrame(renderLoop);
     </script>
 </body>
 </html>
+
