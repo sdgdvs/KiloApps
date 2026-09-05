@@ -657,19 +657,67 @@ void ShowStats(HWND hwnd) {
     MessageBoxA(hwnd, msg, "KDB Analytics & Statistics", MB_OK | MB_ICONINFORMATION);
 }
 
+void ShowHelpDialog(HWND hwnd) {
+    const char* helpText = 
+        "=== KDB Employee Database & Analytics ===\r\n\r\n"
+        "[Keyboard Shortcuts & Accelerators]\r\n"
+        "  • F1 / H        : Show this Help & Shortcuts guide\r\n"
+        "  • / or Ctrl+F   : Jump to & Focus Search / Query field\r\n"
+        "  • Ctrl+N        : Jump to Add Employee fields\r\n"
+        "  • A / Alt+A     : Department Analytics & Metrics\r\n"
+        "  • E / Alt+E     : Export Database as CSV file\r\n"
+        "  • I / Alt+I     : Import records from CSV file\r\n"
+        "  • J / Alt+J     : Export Database as JSON file\r\n"
+        "  • O / Alt+O     : Import records from JSON file\r\n"
+        "  • M / Alt+M     : Export Markdown (.md) Directory Report\r\n"
+        "  • L / Alt+L     : Reload database from storage\r\n"
+        "  • Esc           : Clear search query\r\n"
+        "  • Enter         : Submit in Add fields, focus table in search\r\n"
+        "  • Del           : Delete selected employee record\r\n\r\n"
+        "[Query & Search Syntax]\r\n"
+        "  • dept:eng      : Filter by department substring\r\n"
+        "  • role:lead     : Filter by role substring\r\n"
+        "  • name:alice    : Filter by employee name\r\n"
+        "  • id>102        : Employee ID greater than 102\r\n"
+        "  • id<105        : Employee ID less than 105\r\n"
+        "  • Multi-term    : Supports space-separated query terms\r\n\r\n"
+        "[Features & Controls]\r\n"
+        "  • Double-click any record to populate fields for editing\r\n"
+        "  • Click any column header to sort Ascending / Descending\r\n"
+        "  • Enter a Key in the Crypto box to auto-encrypt your database.";
+    MessageBoxA(hwnd, helpText, "KDB Help & Reference Guide", MB_OK | MB_ICONINFORMATION);
+}
+
+WNDPROC g_pfnOrigSearchProc = NULL;
+LRESULT CALLBACK SearchSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_KEYDOWN) {
+        if (wParam == VK_ESCAPE) {
+            SetWindowTextA(hwnd, "");
+            PopulateListView("");
+            return 0;
+        } else if (wParam == VK_RETURN) {
+            SetFocus(hListView);
+            return 0;
+        }
+    }
+    return CallWindowProc(g_pfnOrigSearchProc, hwnd, msg, wParam, lParam);
+}
+
 void InitListView(HWND hwnd) {
     hPwd = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_PASSWORD | WS_TABSTOP, 10, 10, 85, 25, hwnd, (HMENU)IDC_PWD, GetModuleHandle(NULL), NULL);
-    hReload = CreateWindowEx(0, "BUTTON", "Load", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 100, 10, 45, 25, hwnd, (HMENU)IDC_RELOAD_BTN, GetModuleHandle(NULL), NULL);
-    hSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 150, 10, 150, 25, hwnd, (HMENU)IDC_SEARCH, GetModuleHandle(NULL), NULL);
+    hReload = CreateWindowEx(0, "BUTTON", "Load [L]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 100, 10, 60, 25, hwnd, (HMENU)IDC_RELOAD_BTN, GetModuleHandle(NULL), NULL);
+    hSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 165, 10, 140, 25, hwnd, (HMENU)IDC_SEARCH, GetModuleHandle(NULL), NULL);
     
-    hStatsBtn = CreateWindowEx(0, "BUTTON", "Stats", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 305, 10, 55, 25, hwnd, (HMENU)IDC_STATS_BTN, GetModuleHandle(NULL), NULL);
-    hExpCSV = CreateWindowEx(0, "BUTTON", "Exp CSV", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 365, 10, 68, 25, hwnd, (HMENU)IDC_EXPORT_CSV, GetModuleHandle(NULL), NULL);
-    hImpCSV = CreateWindowEx(0, "BUTTON", "Imp CSV", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 438, 10, 68, 25, hwnd, (HMENU)IDC_IMPORT_CSV, GetModuleHandle(NULL), NULL);
-    hExpJSON = CreateWindowEx(0, "BUTTON", "Exp JSON", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 511, 10, 72, 25, hwnd, (HMENU)IDC_EXPORT_JSON, GetModuleHandle(NULL), NULL);
-    hImpJSON = CreateWindowEx(0, "BUTTON", "Imp JSON", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 588, 10, 72, 25, hwnd, (HMENU)IDC_IMPORT_JSON, GetModuleHandle(NULL), NULL);
-    hExpMD = CreateWindowEx(0, "BUTTON", "Exp MD", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 665, 10, 65, 25, hwnd, (HMENU)IDC_EXPORT_MD, GetModuleHandle(NULL), NULL);
-    hHelpBtn = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 735, 10, 75, 25, hwnd, (HMENU)IDC_HELP_BTN, GetModuleHandle(NULL), NULL);
+    hStatsBtn = CreateWindowEx(0, "BUTTON", "Stats [A]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 310, 10, 62, 25, hwnd, (HMENU)IDC_STATS_BTN, GetModuleHandle(NULL), NULL);
+    hExpCSV = CreateWindowEx(0, "BUTTON", "CSV [E]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 375, 10, 62, 25, hwnd, (HMENU)IDC_EXPORT_CSV, GetModuleHandle(NULL), NULL);
+    hImpCSV = CreateWindowEx(0, "BUTTON", "Imp [I]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 440, 10, 60, 25, hwnd, (HMENU)IDC_IMPORT_CSV, GetModuleHandle(NULL), NULL);
+    hExpJSON = CreateWindowEx(0, "BUTTON", "JSON [J]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 503, 10, 66, 25, hwnd, (HMENU)IDC_EXPORT_JSON, GetModuleHandle(NULL), NULL);
+    hImpJSON = CreateWindowEx(0, "BUTTON", "Imp [O]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 572, 10, 64, 25, hwnd, (HMENU)IDC_IMPORT_JSON, GetModuleHandle(NULL), NULL);
+    hExpMD = CreateWindowEx(0, "BUTTON", "MD [M]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 639, 10, 58, 25, hwnd, (HMENU)IDC_EXPORT_MD, GetModuleHandle(NULL), NULL);
+    hHelpBtn = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 700, 10, 70, 25, hwnd, (HMENU)IDC_HELP_BTN, GetModuleHandle(NULL), NULL);
     
+    g_pfnOrigSearchProc = (WNDPROC)SetWindowLongPtrA(hSearch, GWLP_WNDPROC, (LONG_PTR)SearchSubclassProc);
+
     LoadDataFromFile();
 
     hListView = CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTVIEW, "",
@@ -680,8 +728,8 @@ void InitListView(HWND hwnd) {
     hAddName = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 0, 0, 0, 0, hwnd, (HMENU)IDC_ADD_NAME, GetModuleHandle(NULL), NULL);
     hAddDept = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 0, 0, 0, 0, hwnd, (HMENU)IDC_ADD_DEPT, GetModuleHandle(NULL), NULL);
     hAddRole = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 0, 0, 0, 0, hwnd, (HMENU)IDC_ADD_ROLE, GetModuleHandle(NULL), NULL);
-    hAddBtn = CreateWindowEx(0, "BUTTON", "Add", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0, 0, 0, hwnd, (HMENU)IDC_ADD_BTN, GetModuleHandle(NULL), NULL);
-    hDelBtn = CreateWindowEx(0, "BUTTON", "Del", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0, 0, 0, hwnd, (HMENU)IDC_DEL_BTN, GetModuleHandle(NULL), NULL);
+    hAddBtn = CreateWindowEx(0, "BUTTON", "Add [Enter]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0, 0, 0, hwnd, (HMENU)IDC_ADD_BTN, GetModuleHandle(NULL), NULL);
+    hDelBtn = CreateWindowEx(0, "BUTTON", "Del [Del]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0, 0, 0, hwnd, (HMENU)IDC_DEL_BTN, GetModuleHandle(NULL), NULL);
         
     SendMessage(hListView, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
     
@@ -815,7 +863,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (LOWORD(wParam) == IDC_EXPORT_MD) {
                 ExportMarkdown(hwnd);
             } else if (LOWORD(wParam) == IDC_HELP_BTN) {
-                MessageBoxA(hwnd, "KDB Help\r\n\r\n- Search supports tags (e.g. 'dept:engineering' or 'role:lead')\r\n- Conditions: 'id>102' or 'id<105'\r\n- Double-click employee to populate fields for editing\r\n- Press Del key on employee to delete\r\n- Press Enter in Add fields to quickly add\r\n- Click Column Headers to sort (Ascending / Descending)\r\n- Stats button displays department breakdown\r\n- Export as CSV, JSON, or Markdown (.md)\r\n- Data is auto-saved locally.", "KDB Help", MB_OK | MB_ICONINFORMATION);
+                ShowHelpDialog(hwnd);
             } else if (LOWORD(wParam) == IDC_ADD_BTN) {
                 if (data_count >= MAX_RECORDS) {
                     MessageBoxA(hwnd, "Database capacity limit reached (200 records).", "Database Full", MB_OK | MB_ICONWARNING);
@@ -905,26 +953,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (nw < 100 || nh < 100) break;
 
             MoveWindow(hPwd, 10, 10, 85, 25, TRUE);
-            MoveWindow(hReload, 98, 10, 42, 25, TRUE);
+            MoveWindow(hReload, 98, 10, 60, 25, TRUE);
             
-            int btnSpace = 550;
-            int sh = nw - 145 - btnSpace - 20;
+            int btnSpace = 485;
+            int sh = nw - 165 - btnSpace - 20;
             if (sh < 80) sh = 80;
-            MoveWindow(hSearch, 145, 10, sh, 25, TRUE);
+            MoveWindow(hSearch, 163, 10, sh, 25, TRUE);
             
-            int rx = 145 + sh + 8;
-            MoveWindow(hStatsBtn, rx, 10, 52, 25, TRUE);
-            MoveWindow(hExpCSV, rx + 56, 10, 68, 25, TRUE);
-            MoveWindow(hImpCSV, rx + 128, 10, 68, 25, TRUE);
-            MoveWindow(hExpJSON, rx + 200, 10, 72, 25, TRUE);
-            MoveWindow(hImpJSON, rx + 276, 10, 72, 25, TRUE);
-            MoveWindow(hExpMD, rx + 352, 10, 65, 25, TRUE);
-            MoveWindow(hHelpBtn, rx + 421, 10, 72, 25, TRUE);
+            int rx = 163 + sh + 6;
+            MoveWindow(hStatsBtn, rx, 10, 62, 25, TRUE);
+            MoveWindow(hExpCSV, rx + 65, 10, 62, 25, TRUE);
+            MoveWindow(hImpCSV, rx + 130, 10, 60, 25, TRUE);
+            MoveWindow(hExpJSON, rx + 193, 10, 66, 25, TRUE);
+            MoveWindow(hImpJSON, rx + 262, 10, 64, 25, TRUE);
+            MoveWindow(hExpMD, rx + 329, 10, 58, 25, TRUE);
+            MoveWindow(hHelpBtn, rx + 390, 10, 70, 25, TRUE);
 
             MoveWindow(hListView, 10, 45, nw - 20, nh - 90, TRUE);
             
             int by = nh - 35;
-            int avail = nw - 140;
+            int avail = nw - 170;
             int ew = avail / 4;
             if (ew < 40) ew = 40;
 
@@ -932,8 +980,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hAddName, 10 + ew + 5, by, ew, 25, TRUE);
             MoveWindow(hAddDept, 10 + ew*2 + 10, by, ew, 25, TRUE);
             MoveWindow(hAddRole, 10 + ew*3 + 15, by, ew, 25, TRUE);
-            MoveWindow(hAddBtn, 10 + ew*4 + 20, by, 50, 25, TRUE);
-            MoveWindow(hDelBtn, 10 + ew*4 + 75, by, 50, 25, TRUE);
+            MoveWindow(hAddBtn, 10 + ew*4 + 20, by, 75, 25, TRUE);
+            MoveWindow(hDelBtn, 10 + ew*4 + 98, by, 65, 25, TRUE);
 
             AutoScaleListViewColumns(nw - 20);
             break;
@@ -979,7 +1027,7 @@ void MainEntry() {
     RECT rect = {0, 0, W, H};
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
 
-    HWND hwnd = CreateWindowEx(0, "KDBApp", "KDB - Employee Database & Analytics (Press F1 or H for Help)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+    HWND hwnd = CreateWindowEx(0, "KDBApp", "KDB - Employee Database & Analytics [F1: Help | /: Search | Del: Delete]", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
@@ -988,6 +1036,25 @@ void MainEntry() {
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
         if (msg.message == WM_KEYDOWN) {
+            int isCtrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+            char cls[64] = {0};
+            GetClassNameA(msg.hwnd, cls, sizeof(cls));
+            int isEdit = (lstrcmpiA(cls, "EDIT") == 0);
+
+            if (msg.wParam == VK_F1) {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_HELP_BTN, BN_CLICKED), (LPARAM)hHelpBtn);
+                continue;
+            }
+            if (isCtrl && (msg.wParam == 'F' || msg.wParam == 'f')) {
+                SetFocus(hSearch);
+                SendMessage(hSearch, EM_SETSEL, 0, -1);
+                continue;
+            }
+            if (isCtrl && (msg.wParam == 'N' || msg.wParam == 'n')) {
+                SetFocus(hAddId);
+                SendMessage(hAddId, EM_SETSEL, 0, -1);
+                continue;
+            }
             if (msg.wParam == VK_RETURN) {
                 if (msg.hwnd == hAddId || msg.hwnd == hAddName || msg.hwnd == hAddDept || msg.hwnd == hAddRole) {
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_ADD_BTN, BN_CLICKED), (LPARAM)hAddBtn);
@@ -998,11 +1065,36 @@ void MainEntry() {
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_DEL_BTN, BN_CLICKED), (LPARAM)hDelBtn);
                     continue;
                 }
-            } else if (msg.wParam == 'H' || msg.wParam == VK_F1) {
-                char cls[64] = {0};
-                GetClassNameA(msg.hwnd, cls, sizeof(cls));
-                if (lstrcmpiA(cls, "EDIT") != 0) {
+            }
+
+            if (!isEdit && !isCtrl) {
+                if (msg.wParam == 'H' || msg.wParam == 'h') {
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_HELP_BTN, BN_CLICKED), (LPARAM)hHelpBtn);
+                    continue;
+                } else if (msg.wParam == VK_OEM_2) { // '/' key
+                    SetFocus(hSearch);
+                    SendMessage(hSearch, EM_SETSEL, 0, -1);
+                    continue;
+                } else if (msg.wParam == 'A' || msg.wParam == 'a') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_STATS_BTN, BN_CLICKED), (LPARAM)hStatsBtn);
+                    continue;
+                } else if (msg.wParam == 'E' || msg.wParam == 'e') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_EXPORT_CSV, BN_CLICKED), (LPARAM)hExpCSV);
+                    continue;
+                } else if (msg.wParam == 'I' || msg.wParam == 'i') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_IMPORT_CSV, BN_CLICKED), (LPARAM)hImpCSV);
+                    continue;
+                } else if (msg.wParam == 'J' || msg.wParam == 'j') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_EXPORT_JSON, BN_CLICKED), (LPARAM)hExpJSON);
+                    continue;
+                } else if (msg.wParam == 'O' || msg.wParam == 'o') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_IMPORT_JSON, BN_CLICKED), (LPARAM)hImpJSON);
+                    continue;
+                } else if (msg.wParam == 'M' || msg.wParam == 'm') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_EXPORT_MD, BN_CLICKED), (LPARAM)hExpMD);
+                    continue;
+                } else if (msg.wParam == 'L' || msg.wParam == 'l') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_RELOAD_BTN, BN_CLICKED), (LPARAM)hReload);
                     continue;
                 }
             }

@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KDB - Employee Database</title>
+<title>KDB - Employee Database & Analytics</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg-color: #0f141c;
-    --card-bg: rgba(22, 28, 38, 0.75);
+    --card-bg: rgba(22, 28, 38, 0.85);
     --primary: #38bdf8;
     --primary-hover: #0284c7;
     --border-color: rgba(255, 255, 255, 0.12);
@@ -17,23 +17,26 @@
     --danger: #ef4444;
     --danger-hover: #dc2626;
     --success: #10b981;
+    --warning: #f59e0b;
     --accent: #a855f7;
     --accent-hover: #9333ea;
   }
   * { box-sizing: border-box; }
   body { 
     margin: 0; 
-    font-family: "Inter", sans-serif; 
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     background-color: var(--bg-color); 
-    background-image: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08), transparent 70%);
-    padding: 16px; 
+    background-image: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.12), transparent 70%);
+    padding: 12px; 
     height: 100vh; 
     color: var(--text-main);
     display: flex; 
     flex-direction: column;
+    overflow: hidden;
+    user-select: none;
   }
   .container {
     background: var(--card-bg);
@@ -41,46 +44,50 @@
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--border-color);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
     overflow: hidden;
     display: flex;
     flex-direction: column;
     flex-grow: 1;
+    min-height: 0;
   }
   .header {
-    padding: 14px 18px;
+    padding: 10px 14px;
     border-bottom: 1px solid var(--border-color);
-    background: rgba(0,0,0,0.25);
+    background: rgba(0, 0, 0, 0.35);
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
   }
   .header-title {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
   }
   .header h1 { 
     margin: 0; 
-    font-size: 19px; 
+    font-size: 16px; 
     font-weight: 700; 
     color: var(--primary); 
     letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
   .badge {
     background: rgba(56, 189, 248, 0.15);
     color: var(--primary);
     border: 1px solid rgba(56, 189, 248, 0.3);
-    padding: 2px 8px;
+    padding: 2px 7px;
     border-radius: 12px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
   }
   .controls {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
     flex-grow: 1;
     flex-wrap: wrap;
@@ -88,33 +95,34 @@
   }
   .search-box {
     flex-grow: 1;
-    min-width: 170px;
+    min-width: 150px;
+    max-width: 240px;
     position: relative;
   }
   .search-box input {
     width: 100%;
-    padding: 7px 26px 7px 11px;
+    padding: 6px 26px 6px 10px;
     border-radius: 6px;
     border: 1px solid var(--border-color);
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.4);
     color: var(--text-main);
     font-family: inherit;
-    font-size: 13px;
+    font-size: 12px;
   }
   .search-box input:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
   }
   .search-clear-btn {
     position: absolute;
-    right: 8px;
+    right: 6px;
     top: 50%;
     transform: translateY(-50%);
     background: transparent;
     border: none;
     color: var(--text-muted);
-    font-size: 16px;
+    font-size: 15px;
     cursor: pointer;
     padding: 0 4px;
     line-height: 1;
@@ -126,71 +134,118 @@
   }
   .pwd-box {
     position: relative;
-    width: 125px;
+    width: 100px;
   }
   .pwd-box input {
     width: 100%;
-    padding: 7px 11px;
+    padding: 6px 8px;
     border-radius: 6px;
     border: 1px solid var(--border-color);
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.4);
     color: var(--text-main);
     font-family: inherit;
-    font-size: 13px;
+    font-size: 12px;
   }
   .pwd-box input:focus {
     outline: none;
-    border-color: var(--danger);
-    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+    border-color: var(--warning);
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+  }
+  .kbd-badge {
+    display: inline-block;
+    padding: 1px 4px;
+    font-size: 10px;
+    font-family: monospace;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+    margin-left: 3px;
+    opacity: 0.85;
   }
   .btn-secondary {
     background: rgba(255, 255, 255, 0.08);
     color: var(--text-main);
     border: 1px solid var(--border-color);
-    padding: 7px 11px;
+    padding: 6px 9px;
     border-radius: 6px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 500;
     cursor: pointer;
     white-space: nowrap;
-    transition: all 0.2s;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
   }
   .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.3);
   }
   .btn-accent {
-    background: rgba(168, 85, 247, 0.18);
+    background: rgba(168, 85, 247, 0.2);
     color: #d8b4fe;
-    border: 1px solid rgba(168, 85, 247, 0.35);
-    padding: 7px 11px;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 6px 9px;
     border-radius: 6px;
-    font-size: 12px;
-    font-weight: 500;
+    font-size: 11px;
+    font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
-    transition: all 0.2s;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
   }
   .btn-accent:hover {
-    background: rgba(168, 85, 247, 0.3);
-    border-color: rgba(168, 85, 247, 0.5);
+    background: rgba(168, 85, 247, 0.35);
+    border-color: rgba(168, 85, 247, 0.6);
   }
+  .btn-primary {
+    padding: 7px 14px;
+    border-radius: 6px;
+    border: none;
+    background: var(--primary);
+    color: #0f141c;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+  }
+  .btn-primary:hover { background: var(--primary-hover); }
+  .btn-danger {
+    padding: 7px 14px;
+    border-radius: 6px;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.25);
+    color: #fca5a5;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+  }
+  .btn-danger:hover {
+    background: var(--danger);
+    color: white;
+  }
+
   .table-container {
     overflow-y: auto;
     flex-grow: 1;
+    min-height: 0;
   }
   table { 
     width: 100%; 
     border-collapse: collapse; 
-    font-size: 14px; 
+    font-size: 13px; 
   }
   th, td { 
-    padding: 11px 16px; 
+    padding: 9px 14px; 
     text-align: left; 
     border-bottom: 1px solid var(--border-color); 
   }
   th { 
-    background-color: rgba(15, 20, 28, 0.92); 
+    background-color: rgba(15, 20, 28, 0.95); 
     color: var(--text-muted); 
     font-weight: 600;
     text-transform: uppercase;
@@ -206,7 +261,7 @@
   }
   th:hover {
     color: var(--primary);
-    background-color: rgba(20, 28, 40, 0.95);
+    background-color: rgba(24, 33, 47, 0.98);
   }
   .sort-indicator {
     display: inline-block;
@@ -215,12 +270,12 @@
     color: var(--primary);
   }
   tr { transition: background-color 0.15s ease; }
-  tr:hover { background-color: rgba(255, 255, 255, 0.04); }
+  tr:hover { background-color: rgba(255, 255, 255, 0.05); }
   td { color: #e5e7eb; }
   .tag {
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.1);
-    padding: 3px 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 2px 7px;
     border-radius: 4px;
     font-size: 11px;
     color: #cbd5e1;
@@ -233,7 +288,7 @@
   }
   .btn-action {
     border-radius: 4px;
-    padding: 4px 8px;
+    padding: 3px 8px;
     cursor: pointer;
     font-size: 11px;
     font-weight: 500;
@@ -241,58 +296,46 @@
     transition: all 0.15s ease;
   }
   .edit-btn {
-    background: rgba(56, 189, 248, 0.12);
+    background: rgba(56, 189, 248, 0.15);
     color: #7dd3fc;
-    border-color: rgba(56, 189, 248, 0.25);
+    border-color: rgba(56, 189, 248, 0.3);
   }
-  .edit-btn:hover { background: rgba(56, 189, 248, 0.25); }
+  .edit-btn:hover { background: rgba(56, 189, 248, 0.3); }
   .del-btn {
-    background: rgba(239, 68, 68, 0.12);
+    background: rgba(239, 68, 68, 0.15);
     color: #fca5a5;
-    border-color: rgba(239, 68, 68, 0.25);
+    border-color: rgba(239, 68, 68, 0.3);
   }
-  .del-btn:hover { background: rgba(239, 68, 68, 0.25); }
+  .del-btn:hover { background: rgba(239, 68, 68, 0.3); }
   
   .add-form {
     display: grid;
-    grid-template-columns: 80px 1fr 1fr 1fr auto;
-    gap: 10px;
-    padding: 12px 18px;
-    background: rgba(0,0,0,0.3);
+    grid-template-columns: 90px 1.2fr 1fr 1fr auto;
+    gap: 8px;
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.4);
     border-top: 1px solid var(--border-color);
     align-items: center;
   }
   .add-form input {
-    padding: 8px 12px;
+    padding: 7px 10px;
     border-radius: 6px;
     border: 1px solid var(--border-color);
-    background: rgba(255,255,255,0.05);
+    background: rgba(255, 255, 255, 0.06);
     color: var(--text-main);
     font-family: inherit;
-    font-size: 13px;
+    font-size: 12px;
   }
   .add-form input:focus {
     outline: none;
     border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
   }
-  .btn-primary {
-    padding: 8px 16px;
-    border-radius: 6px;
-    border: none;
-    background: var(--primary);
-    color: #0f141c;
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-    font-family: inherit;
-    transition: background 0.2s;
-  }
-  .btn-primary:hover { background: var(--primary-hover); }
 
   .status-bar {
-    padding: 8px 18px;
-    background: rgba(0,0,0,0.4);
-    border-top: 1px solid rgba(255,255,255,0.05);
+    padding: 6px 14px;
+    background: rgba(0, 0, 0, 0.5);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
     font-size: 11px;
     color: var(--text-muted);
     display: flex;
@@ -305,16 +348,17 @@
     gap: 6px;
   }
   .status-dot {
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background: var(--success);
+    box-shadow: 0 0 6px var(--success);
   }
   .query-hint {
     font-size: 11px;
     color: var(--text-muted);
-    padding: 5px 18px;
-    background: rgba(0,0,0,0.15);
+    padding: 4px 14px;
+    background: rgba(0, 0, 0, 0.2);
     border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
@@ -322,59 +366,76 @@
     flex-wrap: wrap;
     gap: 6px;
   }
+  .query-hint code {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1px 4px;
+    border-radius: 3px;
+    color: #7dd3fc;
+  }
   
   /* Modals */
   .modal-overlay {
     display: none;
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.65);
-    backdrop-filter: blur(5px);
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(6px);
     z-index: 100;
     align-items: center;
     justify-content: center;
   }
   .modal-overlay.active { display: flex; }
   .modal {
-    background: #1a202c;
+    background: #18202c;
     border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 22px;
-    width: 380px;
-    max-width: 90%;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    border-radius: 12px;
+    padding: 20px;
+    width: 420px;
+    max-width: 92%;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.7);
+    animation: modalPop 0.15s ease-out;
+  }
+  @keyframes modalPop {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
   }
   .modal-wide {
-    width: 520px;
+    width: 580px;
     max-height: 85vh;
     overflow-y: auto;
   }
-  .modal h3 { margin-top: 0; margin-bottom: 14px; color: var(--primary); font-size: 16px; font-weight: 700; }
+  .modal h3 { margin-top: 0; margin-bottom: 14px; color: var(--primary); font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
   .modal-field { margin-bottom: 12px; }
-  .modal-field label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .modal-field label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; font-weight: 500; }
   .modal-field input {
     width: 100%;
     padding: 8px 10px;
     border-radius: 6px;
     border: 1px solid var(--border-color);
-    background: rgba(0,0,0,0.3);
+    background: rgba(0, 0, 0, 0.4);
     color: var(--text-main);
     font-family: inherit;
+    font-size: 13px;
+  }
+  .modal-field input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
   }
   .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
 
   /* Analytics Cards */
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
     margin-bottom: 16px;
   }
   .stat-card {
-    background: rgba(0, 0, 0, 0.25);
+    background: rgba(0, 0, 0, 0.35);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    padding: 12px;
+    padding: 10px;
     text-align: center;
   }
   .stat-value {
@@ -384,19 +445,19 @@
     margin-bottom: 2px;
   }
   .stat-label {
-    font-size: 11px;
+    font-size: 10px;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
   .dept-bar-container {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
   .dept-bar-header {
     display: flex;
     justify-content: space-between;
     font-size: 12px;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
     color: var(--text-main);
   }
   .dept-progress-bg {
@@ -407,42 +468,113 @@
   }
   .dept-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #38bdf8, #818cf8);
+    background: linear-gradient(90deg, #38bdf8, #a855f7);
     border-radius: 4px;
     transition: width 0.3s ease;
+  }
+
+  /* Help Guide Styling */
+  .help-section {
+    margin-bottom: 14px;
+  }
+  .help-section h4 {
+    margin: 0 0 6px 0;
+    font-size: 13px;
+    color: #7dd3fc;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .help-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+  .help-table td {
+    padding: 4px 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .help-table td:first-child {
+    width: 140px;
+    color: var(--primary);
+    font-family: monospace;
+    font-weight: 600;
+  }
+
+  /* Toast Notification Container */
+  #toastContainer {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .toast {
+    background: rgba(18, 24, 36, 0.95);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--primary);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: auto;
+    backdrop-filter: blur(8px);
+    animation: toastSlideIn 0.2s ease-out forwards;
+    max-width: 340px;
+  }
+  .toast.toast-success { border-left-color: var(--success); }
+  .toast.toast-danger { border-left-color: var(--danger); }
+  .toast.toast-warning { border-left-color: var(--warning); }
+  @keyframes toastSlideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes toastFadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-10px); }
   }
 </style>
 </head>
 <body>
+
+<div id="toastContainer"></div>
+
 <div class="container">
   <div class="header">
     <div class="header-title">
-      <h1>KDB Employee Database</h1>
+      <h1>🗄️ KDB Employees</h1>
       <span class="badge" id="recordBadge">0 records</span>
     </div>
     <div class="controls">
       <div class="search-box">
-        <input type="text" id="searchInput" aria-label="Search or query employees" placeholder="Search or query (e.g. dept:engineering, id>102)..." maxlength="100" onkeyup="handleSearchKey(event)" oninput="filterTable()">
+        <input type="text" id="searchInput" aria-label="Search or query employees" placeholder="Search / query (e.g. dept:eng)..." maxlength="100" onkeyup="handleSearchKey(event)" oninput="filterTable()">
         <button id="searchClearBtn" class="search-clear-btn" onclick="clearSearch()" aria-label="Clear search" title="Clear search (Esc)">&times;</button>
       </div>
       <div class="pwd-box">
-        <input type="password" id="dbPassword" aria-label="Database Encryption Password" placeholder="Encryption Key..." onchange="loadRecords()" title="Set password to encrypt/decrypt database">
+        <input type="password" id="dbPassword" aria-label="Database Encryption Password" placeholder="Crypto Key" onchange="loadRecords()" title="Set password to encrypt/decrypt database">
       </div>
-      <button class="btn-accent" onclick="openStatsModal()" title="View Department Analytics & Database Metrics">Analytics / Stats</button>
-      <button class="btn-secondary" onclick="exportCSV()" title="Export database as CSV">Export CSV</button>
-      <button class="btn-secondary" onclick="triggerImportCSV()" title="Import CSV file">Import CSV</button>
+      <button class="btn-accent" onclick="openStatsModal()" title="View Department Analytics & Database Metrics (A)">Stats <span class="kbd-badge">A</span></button>
+      <button class="btn-secondary" onclick="exportCSV()" title="Export database as CSV (E)">Exp CSV <span class="kbd-badge">E</span></button>
+      <button class="btn-secondary" onclick="triggerImportCSV()" title="Import CSV file (I)">Imp CSV <span class="kbd-badge">I</span></button>
       <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="importCSV(event)">
-      <button class="btn-secondary" onclick="exportJSON()" title="Export database as JSON">Export JSON</button>
-      <button class="btn-secondary" onclick="triggerImportJSON()" title="Import JSON file">Import JSON</button>
+      <button class="btn-secondary" onclick="exportJSON()" title="Export database as JSON (J)">Exp JSON <span class="kbd-badge">J</span></button>
+      <button class="btn-secondary" onclick="triggerImportJSON()" title="Import JSON file (O)">Imp JSON <span class="kbd-badge">O</span></button>
       <input type="file" id="jsonFileInput" accept=".json" style="display:none;" onchange="importJSON(event)">
-      <button class="btn-secondary" onclick="exportMarkdown()" title="Export database summary & directory as Markdown (.md)">Export MD</button>
-      <button class="btn-secondary" onclick="resetToDefaults()" title="Reset database to default sample data">Reset</button>
-      <button class="btn-secondary" onclick="showHelp()" title="Show Help">Help [F1/H]</button>
+      <button class="btn-secondary" onclick="exportMarkdown()" title="Export database summary & directory as Markdown (M)">Exp MD <span class="kbd-badge">M</span></button>
+      <button class="btn-secondary" onclick="openResetModal()" title="Reset database to default records (R)">Reset <span class="kbd-badge">R</span></button>
+      <button class="btn-secondary" onclick="openHelpModal()" title="Show Help & Shortcuts (F1/H)">Help <span class="kbd-badge">F1</span></button>
     </div>
   </div>
   <div class="query-hint">
-    <span>Syntax: <code>dept:engineering</code>, <code>role:lead</code>, <code>id>102</code>, <code>name:alice</code>. Click column headers to sort (▲/▼).</span>
-    <span>Encryption key auto-saves encrypted payload. <strong>(F1/H for Help)</strong></span>
+    <span>Query Syntax: <code>dept:engineering</code>, <code>role:lead</code>, <code>id>102</code>, <code>name:alice</code>. Click headers to sort.</span>
+    <span>Auto-saves locally. <strong>Press [F1] or [H] for Help</strong></span>
   </div>
   <div class="table-container">
     <table id="empTable">
@@ -476,25 +608,25 @@
 </div>
 
 <!-- Edit Modal -->
-<div class="modal-overlay" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+<div class="modal-overlay" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle" onclick="if(event.target===this) closeEditModal()">
   <div class="modal">
-    <h3 id="editModalTitle">Edit Employee Record</h3>
+    <h3 id="editModalTitle">✏️ Edit Employee Record</h3>
     <input type="hidden" id="editOriginalId">
     <div class="modal-field">
-      <label for="editId">ID</label>
-      <input type="text" id="editId" maxlength="10">
+      <label for="editId">Employee ID</label>
+      <input type="text" id="editId" maxlength="10" onkeydown="if(event.key==='Enter') saveEditedRecord()">
     </div>
     <div class="modal-field">
-      <label for="editName">Name</label>
-      <input type="text" id="editName" maxlength="50">
+      <label for="editName">Full Name</label>
+      <input type="text" id="editName" maxlength="50" onkeydown="if(event.key==='Enter') saveEditedRecord()">
     </div>
     <div class="modal-field">
       <label for="editDept">Department</label>
-      <input type="text" id="editDept" maxlength="50">
+      <input type="text" id="editDept" maxlength="50" onkeydown="if(event.key==='Enter') saveEditedRecord()">
     </div>
     <div class="modal-field">
-      <label for="editRole">Role</label>
-      <input type="text" id="editRole" maxlength="50">
+      <label for="editRole">Job Role</label>
+      <input type="text" id="editRole" maxlength="50" onkeydown="if(event.key==='Enter') saveEditedRecord()">
     </div>
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeEditModal()">Cancel</button>
@@ -504,13 +636,13 @@
 </div>
 
 <!-- Analytics & Statistics Modal -->
-<div class="modal-overlay" id="statsModal" role="dialog" aria-modal="true" aria-labelledby="statsModalTitle">
+<div class="modal-overlay" id="statsModal" role="dialog" aria-modal="true" aria-labelledby="statsModalTitle" onclick="if(event.target===this) closeStatsModal()">
   <div class="modal modal-wide">
     <h3 id="statsModalTitle">📊 Database Analytics & Metrics</h3>
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-value" id="statTotalEmployees">0</div>
-        <div class="stat-label">Total Employees</div>
+        <div class="stat-label">Employees</div>
       </div>
       <div class="stat-card">
         <div class="stat-value" id="statTotalDepts">0</div>
@@ -518,7 +650,7 @@
       </div>
       <div class="stat-card">
         <div class="stat-value" id="statTotalRoles">0</div>
-        <div class="stat-label">Unique Roles</div>
+        <div class="stat-label">Roles</div>
       </div>
       <div class="stat-card">
         <div class="stat-value" id="statNextId">--</div>
@@ -532,17 +664,134 @@
     </div>
 
     <div class="modal-actions">
-      <button class="btn-accent" onclick="exportMarkdown(); closeStatsModal();">Export Markdown Report</button>
+      <button class="btn-accent" onclick="exportMarkdown(); closeStatsModal();">Export MD Report</button>
       <button class="btn-secondary" onclick="closeStatsModal()">Close</button>
     </div>
   </div>
 </div>
 
-<script>
-if (window.resizeTo) window.resizeTo(900, 650);
+<!-- Help & Keyboard Shortcuts Modal -->
+<div class="modal-overlay" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle" onclick="if(event.target===this) closeHelpModal()">
+  <div class="modal modal-wide">
+    <h3 id="helpModalTitle">💡 KDB Help & Shortcuts</h3>
+    
+    <div class="help-section">
+      <h4>Keyboard Accelerators</h4>
+      <table class="help-table">
+        <tr><td>[F1] or [H]</td><td>Open this Help & Shortcuts guide</td></tr>
+        <tr><td>[/] or [Ctrl+F]</td><td>Focus Search & Query field</td></tr>
+        <tr><td>[Ctrl+N]</td><td>Jump to Add Record input</td></tr>
+        <tr><td>[A]</td><td>Open Analytics & Department Metrics</td></tr>
+        <tr><td>[E]</td><td>Export Database as CSV</td></tr>
+        <tr><td>[I]</td><td>Import CSV file</td></tr>
+        <tr><td>[J]</td><td>Export Database as JSON</td></tr>
+        <tr><td>[O]</td><td>Import JSON file</td></tr>
+        <tr><td>[M]</td><td>Export Markdown Directory Report</td></tr>
+        <tr><td>[R]</td><td>Reset database to defaults</td></tr>
+        <tr><td>[Esc]</td><td>Close modals or clear active search</td></tr>
+        <tr><td>[Enter]</td><td>Submit Add Form / Save in Edit dialog</td></tr>
+      </table>
+    </div>
 
-function showHelp() {
-  alert(`KDB Employee Database - Help\n\n- Search query supports tags (e.g. 'dept:engineering' or 'role:lead')\n- Numeric comparisons: 'id>102' or 'id<105'\n- Hotkeys: '/' to focus search, 'Esc' to close dialogs or clear search\n- Click any column header (ID, Name, Dept, Role) to sort Asc/Desc.\n- Analytics & Stats modal provides department headcount breakdown and metrics.\n- Export options: CSV, JSON, and Markdown (.md) Report.\n- Data is auto-saved locally with optional password encryption.\n- Max table capacity: 500 records.`);
+    <div class="help-section">
+      <h4>Query & Filter Syntax</h4>
+      <table class="help-table">
+        <tr><td><code>dept:eng</code></td><td>Filter by department substring</td></tr>
+        <tr><td><code>role:lead</code></td><td>Filter by role substring</td></tr>
+        <tr><td><code>name:alice</code></td><td>Filter by employee name</td></tr>
+        <tr><td><code>id>102</code></td><td>Find employee IDs strictly greater than 102</td></tr>
+        <tr><td><code>id<105</code></td><td>Find employee IDs strictly less than 105</td></tr>
+        <tr><td><code>term1 term2</code></td><td>Multi-term search across all fields</td></tr>
+      </table>
+    </div>
+
+    <div class="help-section">
+      <h4>Features & Security</h4>
+      <div style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+        • <strong>Column Sorting:</strong> Click any header (ID, Name, Dept, Role) to toggle ascending/descending order.<br>
+        • <strong>Encryption:</strong> Type an Encryption Key in the password box to encrypt LocalStorage and JSON exports with XOR-based cipher.<br>
+        • <strong>Capacity:</strong> Max storage capacity is 500 records.
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="closeHelpModal()">Got It</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reset Confirm Modal -->
+<div class="modal-overlay" id="resetModal" role="dialog" aria-modal="true" aria-labelledby="resetModalTitle" onclick="if(event.target===this) closeResetModal()">
+  <div class="modal">
+    <h3 id="resetModalTitle" style="color: var(--warning);">⚠️ Reset Database</h3>
+    <p style="font-size: 13px; color: #e5e7eb; line-height: 1.5;">Are you sure you want to reset all employee data to the default sample records? Any unsaved additions or edits will be replaced.</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeResetModal()">Cancel</button>
+      <button class="btn-danger" onclick="confirmReset()">Reset Database</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle" onclick="if(event.target===this) closeDeleteModal()">
+  <div class="modal">
+    <h3 id="deleteModalTitle" style="color: var(--danger);">🗑️ Delete Employee Record</h3>
+    <p id="deleteModalMessage" style="font-size: 13px; color: #e5e7eb; line-height: 1.5;">Are you sure you want to delete this employee record?</p>
+    <input type="hidden" id="deleteTargetId">
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn-danger" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Toast Notification Helper
+function showToast(message, type = 'info', duration = 3000) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  
+  let icon = 'ℹ️';
+  if (type === 'success') icon = '✅';
+  else if (type === 'danger') icon = '⚠️';
+  else if (type === 'warning') icon = '⚡';
+
+  toast.innerHTML = `<span>${icon}</span><span style="flex-grow:1;">${escapeHtml(message)}</span>`;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.animation = 'toastFadeOut 0.25s ease-out forwards';
+    setTimeout(() => toast.remove(), 250);
+  }, duration);
+}
+
+function openHelpModal() {
+  document.getElementById('helpModal').classList.add('active');
+}
+function closeHelpModal() {
+  document.getElementById('helpModal').classList.remove('active');
+}
+
+function openResetModal() {
+  document.getElementById('resetModal').classList.add('active');
+}
+function closeResetModal() {
+  document.getElementById('resetModal').classList.remove('active');
+}
+
+function promptDelete(id, name) {
+  document.getElementById('deleteTargetId').value = id;
+  document.getElementById('deleteModalMessage').textContent = `Are you sure you want to delete record ${id} (${name})?`;
+  document.getElementById('deleteModal').classList.add('active');
+}
+function closeDeleteModal() {
+  document.getElementById('deleteModal').classList.remove('active');
+}
+function confirmDelete() {
+  const id = document.getElementById('deleteTargetId').value;
+  closeDeleteModal();
+  if (id) deleteRecord(id);
 }
 
 window.addEventListener('keydown', function(e) {
@@ -551,32 +800,75 @@ window.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
     const editModal = document.getElementById('editModal');
     const statsModal = document.getElementById('statsModal');
-    if (editModal && editModal.classList.contains('active')) {
-      closeEditModal();
-      return;
-    }
-    if (statsModal && statsModal.classList.contains('active')) {
-      closeStatsModal();
-      return;
-    }
+    const helpModal = document.getElementById('helpModal');
+    const resetModal = document.getElementById('resetModal');
+    const deleteModal = document.getElementById('deleteModal');
+
+    if (helpModal && helpModal.classList.contains('active')) { closeHelpModal(); return; }
+    if (resetModal && resetModal.classList.contains('active')) { closeResetModal(); return; }
+    if (deleteModal && deleteModal.classList.contains('active')) { closeDeleteModal(); return; }
+    if (editModal && editModal.classList.contains('active')) { closeEditModal(); return; }
+    if (statsModal && statsModal.classList.contains('active')) { closeStatsModal(); return; }
+
     const searchInput = document.getElementById('searchInput');
-    if (searchInput && searchInput.value) {
+    if (searchInput && (searchInput.value || document.activeElement === searchInput)) {
       clearSearch();
+      searchInput.blur();
       return;
     }
   }
 
-  if (!isInput) {
-    if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
-      if (e.key === 'F1') e.preventDefault();
-      showHelp();
-    } else if (e.key === '/') {
+  if (e.key === 'F1') {
+    e.preventDefault();
+    openHelpModal();
+    return;
+  }
+
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+    e.preventDefault();
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+      searchInput.focus();
+      searchInput.select();
+    }
+    return;
+  }
+
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
+    e.preventDefault();
+    const addId = document.getElementById('addId');
+    if (addId) {
+      addId.focus();
+      addId.select();
+    }
+    return;
+  }
+
+  if (!isInput && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    const k = e.key.toLowerCase();
+    if (k === 'h') {
+      openHelpModal();
+    } else if (k === '/') {
       e.preventDefault();
       const searchInput = document.getElementById('searchInput');
       if (searchInput) {
         searchInput.focus();
         searchInput.select();
       }
+    } else if (k === 'a') {
+      openStatsModal();
+    } else if (k === 'e') {
+      exportCSV();
+    } else if (k === 'i') {
+      triggerImportCSV();
+    } else if (k === 'j') {
+      exportJSON();
+    } else if (k === 'o') {
+      triggerImportJSON();
+    } else if (k === 'm') {
+      exportMarkdown();
+    } else if (k === 'r') {
+      openResetModal();
     }
   }
 });
@@ -611,6 +903,7 @@ function updateStatus(msg, isError = false) {
   const statusDot = document.getElementById('statusDot');
   statusText.textContent = msg;
   statusDot.style.background = isError ? 'var(--danger)' : 'var(--success)';
+  statusDot.style.boxShadow = isError ? '0 0 6px var(--danger)' : '0 0 6px var(--success)';
 }
 
 function getPassword() {
@@ -699,6 +992,7 @@ function loadRecords() {
         const key = getPassword();
         if (!key) {
           updateStatus('Database is encrypted. Please enter key.', true);
+          showToast('Database is encrypted. Enter key in the password box.', 'warning');
           records = [];
           renderTable();
           return;
@@ -708,6 +1002,7 @@ function loadRecords() {
           data = dec;
         } catch(e) {
           updateStatus('Failed to decrypt. Wrong key?', true);
+          showToast('Failed to decrypt database. Wrong key?', 'danger');
           return;
         }
       }
@@ -727,6 +1022,7 @@ function loadRecords() {
     console.warn('Load error (wrong key or corrupted):', e);
     records = [];
     updateStatus('Error loading data. Wrong key?', true);
+    showToast('Error loading data. Verify encryption key.', 'danger');
   }
   filterTable();
 }
@@ -743,6 +1039,7 @@ function saveRecords() {
   } catch (e) {
     console.error('LocalStorage save failed:', e);
     updateStatus('Storage quota exceeded! Cannot persist.', true);
+    showToast('Storage quota exceeded! Changes not saved.', 'danger');
   }
 }
 
@@ -757,7 +1054,7 @@ function renderTable(filteredRecords = null) {
 
   if (displayList.length === 0) {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td colspan="5" style="text-align:center; padding: 24px; color: var(--text-muted);">No matching employee records found.</td>`;
+    tr.innerHTML = `<td colspan="5" style="text-align:center; padding: 28px; color: var(--text-muted); font-size: 13px;">No matching employee records found.</td>`;
     tbody.appendChild(tr);
     return;
   }
@@ -766,6 +1063,8 @@ function renderTable(filteredRecords = null) {
     const tr = document.createElement('tr');
     
     const tdId = document.createElement('td');
+    tdId.style.fontWeight = '600';
+    tdId.style.color = 'var(--primary)';
     tdId.textContent = rec.id;
 
     const tdName = document.createElement('td');
@@ -793,7 +1092,7 @@ function renderTable(filteredRecords = null) {
     delBtn.className = 'btn-action del-btn';
     delBtn.textContent = 'Del';
     delBtn.setAttribute('aria-label', `Delete record ${rec.id}`);
-    delBtn.onclick = () => deleteRecord(rec.id);
+    delBtn.onclick = () => promptDelete(rec.id, rec.name);
 
     tdActions.appendChild(editBtn);
     tdActions.appendChild(delBtn);
@@ -810,7 +1109,7 @@ function renderTable(filteredRecords = null) {
 
 function addRecord() {
   if (records.length >= MAX_RECORDS) {
-    alert(`Maximum table capacity reached (${MAX_RECORDS} records).`);
+    showToast(`Maximum table capacity reached (${MAX_RECORDS} records).`, 'danger');
     return;
   }
 
@@ -826,12 +1125,13 @@ function addRecord() {
 
   if (!id || !name || !dept || !role) {
     updateStatus('All fields are required to add an employee.', true);
+    showToast('Please fill in all fields (ID, Name, Dept, Role).', 'warning');
     return;
   }
 
   if (records.some(r => r.id.toLowerCase() === id.toLowerCase())) {
     updateStatus(`Duplicate ID '${id}' is not allowed.`, true);
-    alert(`An employee with ID '${id}' already exists.`);
+    showToast(`Employee with ID '${id}' already exists.`, 'danger');
     return;
   }
 
@@ -845,6 +1145,7 @@ function addRecord() {
 
   filterTable();
   updateStatus(`Added employee ${name} (${id})`);
+  showToast(`Added employee ${name} (ID: ${id})`, 'success');
 }
 
 function deleteRecord(id) {
@@ -854,6 +1155,7 @@ function deleteRecord(id) {
     saveRecords();
     filterTable();
     updateStatus(`Deleted record ${deleted.id} (${deleted.name})`);
+    showToast(`Deleted employee ${deleted.name} (${deleted.id})`, 'info');
   }
 }
 
@@ -885,12 +1187,12 @@ function saveEditedRecord() {
   const newRole = document.getElementById('editRole').value.trim();
 
   if (!newId || !newName || !newDept || !newRole) {
-    alert('All fields are required.');
+    showToast('All fields are required.', 'warning');
     return;
   }
 
   if (newId.toLowerCase() !== origId.toLowerCase() && records.some(r => r.id.toLowerCase() === newId.toLowerCase())) {
-    alert(`An employee with ID '${newId}' already exists.`);
+    showToast(`Employee with ID '${newId}' already exists.`, 'danger');
     return;
   }
 
@@ -904,6 +1206,7 @@ function saveEditedRecord() {
     filterTable();
     closeEditModal();
     updateStatus(`Updated record ${newId}`);
+    showToast(`Updated record ${newName} (${newId})`, 'success');
   }
 }
 
@@ -1055,7 +1358,7 @@ function parseCsvLine(text) {
 
 function exportCSV() {
   if (records.length === 0) {
-    alert('No records available to export.');
+    showToast('No records available to export.', 'warning');
     return;
   }
   let csv = 'ID,Name,Department,Role\n';
@@ -1074,6 +1377,7 @@ function exportCSV() {
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1500);
   updateStatus('Exported database CSV file');
+  showToast('Exported database CSV file', 'success');
 }
 
 function triggerImportCSV() {
@@ -1085,7 +1389,7 @@ function importCSV(e) {
   if (!file) return;
 
   if (file.size > 500000) {
-    alert('File size too large. Max allowed CSV size is 500KB.');
+    showToast('File size too large. Max allowed CSV size is 500KB.', 'danger');
     return;
   }
 
@@ -1095,7 +1399,7 @@ function importCSV(e) {
       const text = evt.target.result;
       const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
       if (lines.length <= 1) {
-        alert('CSV file is empty or missing headers.');
+        showToast('CSV file is empty or missing headers.', 'warning');
         return;
       }
 
@@ -1128,9 +1432,10 @@ function importCSV(e) {
       saveRecords();
       filterTable();
       updateStatus(`Imported ${importedCount} records (${skippedCount} skipped/duplicates)`);
+      showToast(`Imported ${importedCount} records (${skippedCount} duplicates skipped)`, 'success');
     } catch (err) {
       console.error(err);
-      alert('Failed to parse CSV file format.');
+      showToast('Failed to parse CSV file format.', 'danger');
     }
   };
   reader.readAsText(file);
@@ -1139,7 +1444,7 @@ function importCSV(e) {
 
 function exportJSON() {
   if (records.length === 0) {
-    alert('No records available to export.');
+    showToast('No records available to export.', 'warning');
     return;
   }
   
@@ -1159,6 +1464,7 @@ function exportJSON() {
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1500);
   updateStatus('Exported database JSON file ' + (key ? '(Encrypted)' : ''));
+  showToast('Exported database JSON file ' + (key ? '(Encrypted)' : ''), 'success');
 }
 
 function triggerImportJSON() {
@@ -1170,7 +1476,7 @@ function importJSON(e) {
   if (!file) return;
 
   if (file.size > 500000) {
-    alert('File size too large. Max allowed JSON size is 500KB.');
+    showToast('File size too large. Max allowed JSON size is 500KB.', 'danger');
     return;
   }
 
@@ -1182,20 +1488,20 @@ function importJSON(e) {
       if (data.startsWith('ENC:')) {
         const key = getPassword();
         if (!key) {
-          alert('File is encrypted. Please enter the encryption key in the password box first.');
+          showToast('File is encrypted. Please enter the encryption key first.', 'warning');
           return;
         }
         try {
           data = decryptData(atob(data.substring(4)), key);
         } catch (e) {
-          alert('Failed to decrypt file. Wrong key?');
+          showToast('Failed to decrypt file. Wrong encryption key?', 'danger');
           return;
         }
       }
 
       const parsed = JSON.parse(data);
       if (!Array.isArray(parsed)) {
-        alert('Invalid JSON format. Expected an array of records.');
+        showToast('Invalid JSON format. Expected an array of objects.', 'danger');
         return;
       }
 
@@ -1220,9 +1526,10 @@ function importJSON(e) {
       saveRecords();
       filterTable();
       updateStatus(`Imported ${importedCount} JSON records (${skippedCount} skipped/duplicates)`);
+      showToast(`Imported ${importedCount} records (${skippedCount} duplicates skipped)`, 'success');
     } catch (err) {
       console.error(err);
-      alert('Failed to parse JSON file format. Make sure it is a valid array of objects.');
+      showToast('Failed to parse JSON file format.', 'danger');
     }
   };
   reader.readAsText(file);
@@ -1231,7 +1538,7 @@ function importJSON(e) {
 
 function exportMarkdown() {
   if (records.length === 0) {
-    alert('No records available to export.');
+    showToast('No records available to export.', 'warning');
     return;
   }
 
@@ -1287,28 +1594,36 @@ function exportMarkdown() {
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1500);
   updateStatus('Exported database Markdown (.md) report');
+  showToast('Exported Markdown directory report', 'success');
 }
 
-function resetToDefaults() {
-  if (confirm('Are you sure you want to reset all employee data to default records?')) {
-    records = [...DEFAULT_RECORDS];
-    sortCol = null;
-    sortAsc = true;
-    updateSortIndicators();
-    saveRecords();
-    document.getElementById('searchInput').value = '';
-    filterTable();
-    updateStatus('Database reset to defaults');
-  }
+function confirmReset() {
+  records = [...DEFAULT_RECORDS];
+  sortCol = null;
+  sortAsc = true;
+  updateSortIndicators();
+  saveRecords();
+  document.getElementById('searchInput').value = '';
+  filterTable();
+  closeResetModal();
+  updateStatus('Database reset to defaults');
+  showToast('Database reset to default sample records', 'info');
 }
 
 // Initial load
 loadRecords();
 
+// Welcome toast prompt
+setTimeout(() => {
+  showToast('👋 Welcome to KDB! Press [F1] or [H] for Help & Shortcuts, [/] to search.', 'info', 5000);
+}, 300);
+
 if (window.parent !== window) {
-  window.parent.postMessage({ type: 'OS_RESIZE_WINDOW', width: 800, height: 600 }, '*');
+  window.parent.postMessage({ type: 'OS_RESIZE_WINDOW', width: 900, height: 650 }, '*');
 }
-window.resizeTo(800, 600);
+if (window.resizeTo) {
+  window.resizeTo(900, 650);
+}
 </script>
 </body>
 </html>
