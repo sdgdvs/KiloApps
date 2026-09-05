@@ -1,216 +1,903 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KFont</title>
-    <style>
-        :root {
-            --bg-base: #121212;
-            --bg-glass: rgba(30, 30, 30, 0.7);
-            --border-glass: rgba(255, 255, 255, 0.1);
-            --text-main: #e0e0e0;
-            --text-muted: #9e9e9e;
-            --accent: #bb86fc;
-            --accent-hover: #9c27b0;
-            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+<title>KFont</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f5f5f5; display: flex; flex-direction: column; height: 100vh; overflow: hidden; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  .header { background: #2b2b2b; color: white; padding: 10px 20px; display: flex; gap: 20px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10; flex-wrap: wrap; }
+  .header select, .header input[type="text"] { padding: 6px; font-family: inherit; border-radius: 4px; border: 1px solid #555; background: #444; color: white; outline: none; }
+  .header select:focus { border-color: #0078d7; }
+  .main { display: flex; flex: 1; overflow: hidden; }
+  .sidebar { width: 220px; flex-shrink: 0; background: #fff; border-right: 1px solid #ccc; display: flex; flex-direction: column; }
+  .tab-btn { padding: 15px 20px; text-align: left; background: none; border: none; border-bottom: 1px solid #eee; cursor: pointer; font-size: 14px; outline: none; color: #333; transition: all 0.2s; }
+  .tab-btn:hover { background: #f0f0f0; }
+  .tab-btn.active { background: #e6f2ff; font-weight: bold; border-left: 4px solid #0078d7; color: #0078d7; }
+  .content { flex: 1; padding: 30px; overflow-y: auto; background: #fff; }
+  
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadeIn 0.3s; }
+  
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+  
+  h2 { margin-top: 0; color: #111; font-weight: 400; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+  h3 { margin-top: 25px; color: #333; font-weight: 500; font-size: 16px; }
+  p { color: #666; font-size: 14px; }
+  
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; margin-top: 20px; }
+  .metric-card { background: #fafafa; padding: 15px; border: 1px solid #eaeaea; border-radius: 6px; transition: 0.2s; }
+  .metric-card:hover { border-color: #0078d7; box-shadow: 0 2px 8px rgba(0,120,215,0.1); }
+  .metric-title { font-size: 11px; color: #888; margin-bottom: 8px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+  .metric-value { font-size: 20px; color: #222; font-family: "Consolas", monospace; word-break: break-all; }
+  
+  .glyph-controls { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
+  .glyph-controls select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; outline: none; }
+  .glyph-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; }
+  .glyph-cell { border: 1px solid #eee; border-radius: 4px; display: flex; flex-direction: column; align-items: center; padding: 12px 5px; cursor: pointer; transition: 0.15s; position: relative; }
+  .glyph-cell:hover { background: #f0f8ff; border-color: #0078d7; transform: scale(1.05); }
+  .glyph-char { font-size: 28px; margin-bottom: 8px; line-height: 1; color: #111; }
+  .glyph-hex { font-size: 11px; color: #888; font-family: "Consolas", monospace; }
+  
+  .kerning-pair { display: inline-block; border: 1px solid #ddd; border-radius: 6px; margin: 0 15px 15px 0; padding: 20px; text-align: center; background: #fafafa; }
+  .kerning-text { font-size: 64px; border-bottom: 1px solid #eee; margin-bottom: 12px; padding: 0 10px 10px 10px; color: #222; }
+  .kerning-info { font-size: 12px; color: #666; font-weight: 600; }
+  .no-kern { font-feature-settings: "kern" 0; font-kerning: none; }
+  .yes-kern { font-feature-settings: "kern" 1; font-kerning: normal; }
+  
+  .sample-box { border: 1px solid #ccc; border-radius: 6px; padding: 25px; min-height: 200px; word-wrap: break-word; outline: none; margin-top: 15px; }
+  .sample-box:focus { border-color: #0078d7; box-shadow: 0 0 0 2px rgba(0,120,215,0.2); }
+  
+  #canvasMetrics { display: none; }
+  .checkbox-label { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 14px; }
+  
+  .anatomy-controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; background: #f9f9f9; padding: 12px 16px; border-radius: 6px; border: 1px solid #eee; }
+  .anatomy-input { width: 80px; padding: 8px; font-size: 18px; text-align: center; font-weight: bold; border: 1px solid #ccc; border-radius: 4px; outline: none; font-family: "Segoe UI", sans-serif; }
+  .anatomy-input:focus { border-color: #0078d7; }
+  .chip-btn { padding: 5px 10px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer; font-size: 14px; font-family: inherit; transition: 0.15s; }
+  .chip-btn:hover { background: #0078d7; color: white; border-color: #0078d7; }
+  .action-btn { padding: 8px 14px; background: #0078d7; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; }
+  .action-btn:hover { background: #0063b1; }
+  
+  .anatomy-canvas-container { position: relative; width: 100%; max-width: 800px; margin-bottom: 25px; }
+  #anatomyCanvas { border: 1px solid #ddd; border-radius: 6px; background: #fafafa; width: 100%; height: 320px; box-shadow: inset 0 0 8px rgba(0,0,0,0.03); }
+  
+  .guideline-legend { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; color: #555; }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
 
-        body {
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #1e1e1e 0%, #121212 100%);
-            color: var(--text-main);
-            font-family: var(--font-family);
-            display: flex;
-            height: 100vh;
-            box-sizing: border-box;
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-        }
-
-        .container {
-            display: flex;
-            width: 100%;
-            height: 100%;
-            gap: 20px;
-        }
-
-        .sidebar {
-            flex: 1;
-            max-width: 200px;
-            background: var(--bg-glass);
-            border: 1px solid var(--border-glass);
-            border-radius: 12px;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-
-        h2 {
-            margin: 0 0 10px 5px;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-muted);
-        }
-
-        .font-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            overflow-y: auto;
-            flex: 1;
-        }
-
-        /* Custom Scrollbar */
-        .font-list::-webkit-scrollbar {
-            width: 6px;
-        }
-        .font-list::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.1);
-        }
-        .font-list::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.2);
-            border-radius: 3px;
-        }
-
-        .font-item {
-            padding: 8px 12px;
-            margin-bottom: 4px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-size: 14px;
-        }
-
-        .font-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .font-item.active {
-            background: var(--accent);
-            color: #fff;
-            box-shadow: 0 2px 8px rgba(187, 134, 252, 0.4);
-        }
-
-        .main-content {
-            flex: 2;
-            background: var(--bg-glass);
-            border: 1px solid var(--border-glass);
-            border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .sample-text {
-            font-size: 24px;
-            line-height: 1.5;
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            max-width: 90%;
-            word-wrap: break-word;
-        }
-
-        .sample-text.animate {
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        @keyframes popIn {
-            0% { opacity: 0; transform: scale(0.95); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-
-        .font-info {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            font-size: 12px;
-            color: var(--text-muted);
-            background: rgba(0, 0, 0, 0.5);
-            padding: 4px 10px;
-            border-radius: 12px;
-            border: 1px solid var(--border-glass);
-        }
-
-    </style>
+  #helpOverlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
+  #helpOverlay.visible { display: flex; animation: fadeIn 0.2s; }
+  .help-modal { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-width: 480px; font-family: "Segoe UI", sans-serif; }
+  .help-modal h2 { margin-top: 0; border-bottom: none; color: #0078d7; }
+  .help-modal ul { margin-bottom: 20px; line-height: 1.6; }
+</style>
 </head>
 <body>
-
-    <div class="container">
-        <div class="sidebar">
-            <h2>System Fonts</h2>
-            <ul class="font-list" id="fontList">
-                <!-- Populated by JS -->
-            </ul>
-        </div>
-        <div class="main-content">
-            <div class="sample-text" id="sampleText">
-                The quick brown fox jumps over the lazy dog.<br><br>
-                0123456789<br><br>
-                Aa Bb Cc Dd Ee Ff
-            </div>
-            <div class="font-info" id="fontInfo">Segoe UI</div>
-        </div>
+  <div class="header">
+    <div style="font-weight:600;font-size:18px;letter-spacing:1px;color:#4af; display: flex; align-items: center; gap: 10px;">KFont Inspect <span style="font-size:12px;color:#aaa;font-weight:normal;">(Press H for Help)</span></div>
+    <select id="fontList">
+      <option value="Arial" selected>Arial</option>
+      <option value="Calibri">Calibri</option>
+      <option value="Comic Sans MS">Comic Sans MS</option>
+      <option value="Consolas">Consolas</option>
+      <option value="Courier New">Courier New</option>
+      <option value="Georgia">Georgia</option>
+      <option value="Impact">Impact</option>
+      <option value="Lucida Console">Lucida Console</option>
+      <option value="Segoe UI">Segoe UI</option>
+      <option value="Tahoma">Tahoma</option>
+      <option value="Times New Roman">Times New Roman</option>
+      <option value="Trebuchet MS">Trebuchet MS</option>
+      <option value="Verdana">Verdana</option>
+    </select>
+    <select id="sizeList">
+      <option value="12px">12px</option>
+      <option value="16px">16px</option>
+      <option value="24px">24px</option>
+      <option value="32px">32px</option>
+      <option value="48px" selected>48px</option>
+      <option value="64px">64px</option>
+      <option value="96px">96px</option>
+    </select>
+    <label class="checkbox-label"><input type="checkbox" id="boldCheck"> Bold</label>
+    <label class="checkbox-label"><input type="checkbox" id="italicCheck"> Italic</label>
+    <button id="helpBtn" style="margin-left:auto; padding: 6px 12px; border-radius:4px; border:none; background:#0078d7; color:white; cursor:pointer; font-family:inherit; font-size:14px; outline:none;">Help (H)</button>
+  </div>
+  
+  <div class="main">
+    <div class="sidebar" role="tablist" aria-label="Font Inspector Tabs">
+      <button class="tab-btn active" id="tab-metrics" role="tab" aria-selected="true" aria-controls="panel-metrics" data-target="panel-metrics">Metrics &amp; OS/2</button>
+      <button class="tab-btn" id="tab-glyphs" role="tab" aria-selected="false" aria-controls="panel-glyphs" data-target="panel-glyphs">Unicode Ranges</button>
+      <button class="tab-btn" id="tab-diagnostics" role="tab" aria-selected="false" aria-controls="panel-diagnostics" data-target="panel-diagnostics">Kerning &amp; Hinting</button>
+      <button class="tab-btn" id="tab-anatomy" role="tab" aria-selected="false" aria-controls="panel-anatomy" data-target="panel-anatomy">Glyph Anatomy</button>
+      <button class="tab-btn" id="tab-sample" role="tab" aria-selected="false" aria-controls="panel-sample" data-target="panel-sample">Live Sample</button>
     </div>
+    
+    <div class="content">
+      <!-- Metrics -->
+      <div id="panel-metrics" class="panel active" role="tabpanel" aria-labelledby="tab-metrics">
+        <h2>Font Metadata &amp; Metrics Inspector</h2>
+        <p>Advanced typographical measurements extracted via Canvas Rendering Context actual bounds and extrapolated OS/2 table metrics.</p>
+        <div class="metric-grid" id="metricsGrid"></div>
+      </div>
+      
+      <!-- Glyphs -->
+      <div id="panel-glyphs" class="panel" role="tabpanel" aria-labelledby="tab-glyphs">
+        <h2>Unicode Range &amp; Glyph Viewer</h2>
+        <div class="glyph-controls">
+          <label for="unicodeRange" style="font-weight:500; font-size:14px; color:#444;">Select Unicode Block:</label>
+          <select id="unicodeRange">
+            <option value="32,127">Basic Latin (U+0020 - U+007F)</option>
+            <option value="160,255">Latin-1 Supplement (U+00A0 - U+00FF)</option>
+            <option value="256,383">Latin Extended-A (U+0100 - U+017F)</option>
+            <option value="384,591">Latin Extended-B (U+0180 - U+024F)</option>
+            <option value="880,1023">Greek and Coptic (U+0370 - U+03FF)</option>
+            <option value="1024,1279">Cyrillic (U+0400 - U+04FF)</option>
+            <option value="8192,8303">General Punctuation (U+2000 - U+206F)</option>
+            <option value="8352,8399">Currency Symbols (U+20A0 - U+20CF)</option>
+            <option value="8448,8527">Letterlike Symbols (U+2100 - U+214F)</option>
+            <option value="9472,9599">Box Drawing (U+2500 - U+257F)</option>
+            <option value="9600,9631">Block Elements (U+2580 - U+259F)</option>
+            <option value="9632,9727">Geometric Shapes (U+25A0 - U+25FF)</option>
+          </select>
+          <span style="font-size:12px; color:#777; margin-left:auto;">(Click any glyph to inspect in Anatomy tab)</span>
+        </div>
+        <div class="glyph-grid" id="glyphGrid"></div>
+      </div>
+      
+      <!-- Diagnostics -->
+      <div id="panel-diagnostics" class="panel" role="tabpanel" aria-labelledby="tab-diagnostics">
+        <h2>Glyph Kerning &amp; Hinting Diagnostics</h2>
+        <h3>Visual Kerning Analysis</h3>
+        <p>Comparison of specific kerning pairs with OpenType kerning features explicitly enabled vs disabled.</p>
+        <div id="kerningPairs"></div>
+        
+        <h3>Rasterization &amp; Grid Fitting (Hinting)</h3>
+        <p>Rendering at specific pixel sizes to expose pixel-snapping and hinting instructions across scale.</p>
+        <canvas id="hintingCanvas" width="800" height="200" style="border:1px solid #ddd; border-radius:4px; background:#fafafa; max-width:100%;"></canvas>
+      </div>
 
-    <script>
-        const fonts = [
-            "Arial", "Arial Black", "Comic Sans MS", "Courier New", 
-            "Georgia", "Impact", "Lucida Console", "Lucida Sans Unicode", 
-            "Palatino Linotype", "Segoe UI", "Tahoma", "Times New Roman", 
-            "Trebuchet MS", "Verdana", "Consolas", "Symbol", "Webdings", 
-            "Wingdings"
-        ];
+      <!-- Glyph Anatomy & Vector Metrics -->
+      <div id="panel-anatomy" class="panel" role="tabpanel" aria-labelledby="tab-anatomy">
+        <h2>Glyph Anatomy &amp; Vector Metrics Dissector</h2>
+        <p>Interactive character inspection with baseline, cap-height, x-height, ascent/descent guides, side bearings (LSB/RSB), and multi-encoding codec breakdown.</p>
+        
+        <div class="anatomy-controls">
+          <label for="anatomyInput" style="font-weight:600; font-size:14px;">Character / Hex:</label>
+          <input type="text" id="anatomyInput" class="anatomy-input" value="A" maxlength="10" title="Type character or hex (e.g. A, U+0041, 0x41)">
+          <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+            <span style="font-size:12px; color:#777;">Quick Presets:</span>
+            <button class="chip-btn" data-char="A">A</button>
+            <button class="chip-btn" data-char="g">g</button>
+            <button class="chip-btn" data-char="Q">Q</button>
+            <button class="chip-btn" data-char="&amp;">&amp;</button>
+            <button class="chip-btn" data-char="f">f</button>
+            <button class="chip-btn" data-char="W">W</button>
+            <button class="chip-btn" data-char="0">0</button>
+            <button class="chip-btn" data-char="€">€</button>
+            <button class="chip-btn" data-char="Ω">Ω</button>
+            <button class="chip-btn" data-char="Ж">Ж</button>
+            <button class="chip-btn" data-char="★">★</button>
+            <button class="chip-btn" data-char="漢">漢</button>
+          </div>
+          <button id="copyAnatomyReportBtn" class="action-btn" style="margin-left:auto;">Copy JSON Report (C)</button>
+        </div>
 
-        const fontListEl = document.getElementById('fontList');
-        const sampleTextEl = document.getElementById('sampleText');
-        const fontInfoEl = document.getElementById('fontInfo');
+        <div class="anatomy-canvas-container">
+          <canvas id="anatomyCanvas" width="800" height="320"></canvas>
+          <div class="guideline-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#dc3232;"></div> Baseline (Y:0)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#2878f0;"></div> Cap Height</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#00a0a0;"></div> x-Height</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#28a028;"></div> Ascent</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#b428b4;"></div> Descent</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#e68c00;"></div> Bearings (LSB / RSB)</div>
+          </div>
+        </div>
 
-        function init() {
-            fonts.sort().forEach((font, index) => {
-                const li = document.createElement('li');
-                li.className = 'font-item';
-                li.textContent = font;
-                li.style.fontFamily = font;
-                
-                if (font === 'Segoe UI' || (index === 0 && !fonts.includes('Segoe UI'))) {
-                    li.classList.add('active');
-                    selectFont(font);
-                }
+        <h3>ABC Spacing &amp; Bounding Box Diagnostics</h3>
+        <div class="metric-grid" id="anatomySpacingGrid"></div>
 
-                li.addEventListener('click', () => {
-                    document.querySelectorAll('.font-item').forEach(el => el.classList.remove('active'));
-                    li.classList.add('active');
-                    selectFont(font);
-                });
+        <h3>Multi-Encoding &amp; Codec Dissector</h3>
+        <div class="metric-grid" id="anatomyCodecGrid"></div>
+      </div>
+      
+      <!-- Sample -->
+      <div id="panel-sample" class="panel" role="tabpanel" aria-labelledby="tab-sample">
+        <h2>Live Free Sample</h2>
+        <p>Type in the box below to test the font in real-time.</p>
+        <div id="sampleOutput" class="sample-box" contenteditable="true" aria-label="Live editable font sample">The quick brown fox jumps over the lazy dog.
 
-                fontListEl.appendChild(li);
-            });
+0123456789
+
+Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</div>
+      </div>
+    </div>
+  </div>
+  
+  <canvas id="canvasMetrics"></canvas>
+
+  <div id="toastNotification" style="display:none; position:fixed; bottom:20px; right:20px; background:#333; color:white; padding:10px 18px; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:13px; z-index:2000;"></div>
+
+  <div id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="help-modal">
+      <h2 id="helpTitle">KFont Help &amp; Keyboard Shortcuts</h2>
+      <p>Explore typographical metrics, Unicode tables, rasterization hinting, and vector anatomy.</p>
+      <ul>
+        <li><strong>Metrics &amp; OS/2</strong>: Inspect font measurements and actual bounding box limits.</li>
+        <li><strong>Unicode Ranges</strong>: View glyphs organized by Unicode blocks (click any glyph to inspect).</li>
+        <li><strong>Diagnostics</strong>: Check visual kerning pairs and hinting across sizes.</li>
+        <li><strong>Glyph Anatomy</strong>: Vector metrics, ABC spacing, bearings, and multi-encoding dissector.</li>
+        <li><strong>Live Sample</strong>: Test custom editable sample text in real-time.</li>
+      </ul>
+      <p><strong>Keyboard Shortcuts:</strong></p>
+      <ul style="font-size:13px; color:#444;">
+        <li><kbd style="background:#eee; padding:2px 6px; border-radius:3px;">1</kbd>–<kbd style="background:#eee; padding:2px 6px; border-radius:3px;">5</kbd> : Switch inspector tabs</li>
+        <li><kbd style="background:#eee; padding:2px 6px; border-radius:3px;">B</kbd> : Toggle Bold</li>
+        <li><kbd style="background:#eee; padding:2px 6px; border-radius:3px;">I</kbd> : Toggle Italic</li>
+        <li><kbd style="background:#eee; padding:2px 6px; border-radius:3px;">C</kbd> : Copy Anatomy JSON report (in Anatomy tab)</li>
+        <li><kbd style="background:#eee; padding:2px 6px; border-radius:3px;">H</kbd> / <kbd style="background:#eee; padding:2px 6px; border-radius:3px;">F1</kbd> : Toggle this Help dialog</li>
+        <li><kbd style="background:#eee; padding:2px 6px; border-radius:3px;">Esc</kbd> : Dismiss Help dialog</li>
+      </ul>
+      <p style="font-size: 12px; color: #777; margin-top:15px;">Press <strong>Esc</strong> or click outside to dismiss.</p>
+    </div>
+  </div>
+  
+  <script>
+    // Set appropriate auto-opening size if opened as a standalone window
+    if (window.top === window.self) {
+        window.resizeTo(950, 700);
+    } else {
+        window.parent.postMessage({ type: 'resize', width: 950, height: 700 }, '*');
+    }
+
+    const fontList = document.getElementById('fontList');
+    const sizeList = document.getElementById('sizeList');
+    const boldCheck = document.getElementById('boldCheck');
+    const italicCheck = document.getElementById('italicCheck');
+    const unicodeRange = document.getElementById('unicodeRange');
+    const anatomyInput = document.getElementById('anatomyInput');
+    const sampleOutput = document.getElementById('sampleOutput');
+    const helpOverlay = document.getElementById('helpOverlay');
+    const toastNotification = document.getElementById('toastNotification');
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function escapeAttr(str) {
+      return escapeHtml(str);
+    }
+
+    function showToast(msg) {
+      if (!toastNotification) return;
+      toastNotification.textContent = msg;
+      toastNotification.style.display = 'block';
+      clearTimeout(toastNotification._timer);
+      toastNotification._timer = setTimeout(() => {
+        toastNotification.style.display = 'none';
+      }, 2200);
+    }
+
+    function safeGetStorage(key, fallback) {
+      try {
+        const val = localStorage.getItem(key);
+        return val !== null ? val : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function safeSetStorage(key, val) {
+      try {
+        localStorage.setItem(key, val);
+      } catch (e) {}
+    }
+    
+    function getFontString(familyOverride, sizeOverride) {
+      const family = familyOverride || `"${fontList.value}"`;
+      const size = sizeOverride || sizeList.value;
+      const weight = boldCheck.checked ? 'bold' : 'normal';
+      const style = italicCheck.checked ? 'italic' : 'normal';
+      return `${style} ${weight} ${size} ${family}, sans-serif`;
+    }
+    
+    function updateMetrics() {
+      const canvas = document.getElementById('canvasMetrics');
+      const ctx = canvas.getContext('2d');
+      ctx.font = getFontString();
+      
+      const metrics = ctx.measureText("Hxyg\u00C5\u00D4\u0178\u00E7");
+      
+      const asc = metrics.fontBoundingBoxAscent || 0;
+      const desc = metrics.fontBoundingBoxDescent || 0;
+      const aAsc = metrics.actualBoundingBoxAscent || 0;
+      const aDesc = metrics.actualBoundingBoxDescent || 0;
+      
+      const emHeight = asc + desc;
+      const lineGap = emHeight * 0.12; 
+      
+      const fields = [
+        { name: "Font BBox Ascent", val: asc },
+        { name: "Font BBox Descent", val: desc },
+        { name: "Actual BBox Ascent", val: aAsc },
+        { name: "Actual BBox Descent", val: aDesc },
+        { name: "Computed Em Height", val: emHeight },
+        { name: "Max Adv Width", val: metrics.width },
+        { name: "sTypoAscender (Approx)", val: asc * 0.85 },
+        { name: "sTypoDescender (Approx)", val: -desc * 0.85 },
+        { name: "sTypoLineGap (Approx)", val: lineGap },
+        { name: "usWinAscent (Approx)", val: asc },
+        { name: "usWinDescent (Approx)", val: desc },
+        { name: "xHeight (Approx)", val: asc * 0.52 }
+      ];
+      
+      document.getElementById('metricsGrid').innerHTML = fields.map(f => `
+        <div class="metric-card">
+          <div class="metric-title">${escapeHtml(f.name)}</div>
+          <div class="metric-value">${typeof f.val === 'number' ? f.val.toFixed(2) : escapeHtml(f.val)} px</div>
+        </div>
+      `).join('');
+    }
+    
+    function updateGlyphs() {
+      const [start, end] = unicodeRange.value.split(',').map(Number);
+      const grid = document.getElementById('glyphGrid');
+      let html = '';
+      const safeFont = fontList.value.replace(/["\\]/g, '');
+      const isB = boldCheck.checked ? 'bold' : 'normal';
+      const isI = italicCheck.checked ? 'italic' : 'normal';
+
+      for(let i=start; i<=end; i++) {
+        const hex = i.toString(16).toUpperCase().padStart(4, '0');
+        let char = '';
+        try {
+          char = String.fromCodePoint(i);
+        } catch (e) {
+          continue;
         }
+        const safeChar = escapeHtml(char);
+        html += `
+          <div class="glyph-cell" data-codepoint="${i}" tabindex="0" role="button" title="Click to inspect ${escapeAttr(char)} (U+${hex})" aria-label="Glyph U+${hex}">
+            <div class="glyph-char" style="font-family: '${safeFont}'; font-weight: ${isB}; font-style: ${isI};">${safeChar}</div>
+            <div class="glyph-hex">U+${hex}</div>
+          </div>
+        `;
+      }
+      grid.innerHTML = html;
 
-        function selectFont(fontName) {
-            // Re-trigger animation
-            sampleTextEl.classList.remove('animate');
-            void sampleTextEl.offsetWidth; // trigger reflow
-            
-            sampleTextEl.style.fontFamily = fontName;
-            fontInfoEl.textContent = fontName;
-            
-            sampleTextEl.classList.add('animate');
+      function activateCell(cell) {
+        const cp = parseInt(cell.getAttribute('data-codepoint'), 10);
+        if (!isNaN(cp)) {
+          anatomyInput.value = String.fromCodePoint(cp);
+          safeSetStorage('kfont_anatomy_char', anatomyInput.value);
+          switchToTab('panel-anatomy');
+          updateAnatomy();
         }
+      }
 
-        init();
-    </script>
+      // Add click & keyboard listeners to inspect in Anatomy tab
+      grid.querySelectorAll('.glyph-cell').forEach(cell => {
+        cell.onclick = () => activateCell(cell);
+        cell.onkeydown = (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            activateCell(cell);
+          }
+        };
+      });
+    }
+    
+    function updateDiagnostics() {
+      const pairs = ["AV", "To", "Tr", "WA", "Ye", "Va", "fj"];
+      const fontFam = `'${fontList.value.replace(/["\\]/g, '')}'`;
+      const weight = boldCheck.checked ? 'bold' : 'normal';
+      const style = italicCheck.checked ? 'italic' : 'normal';
+      let html = '';
+      pairs.forEach(p => {
+        html += `
+          <div class="kerning-pair">
+            <div class="kerning-text no-kern" style="font-family: ${fontFam}; font-weight: ${weight}; font-style: ${style};">${escapeHtml(p)}</div>
+            <div class="kerning-info">Kerning: OFF</div>
+          </div>
+          <div class="kerning-pair">
+            <div class="kerning-text yes-kern" style="font-family: ${fontFam}; font-weight: ${weight}; font-style: ${style};">${escapeHtml(p)}</div>
+            <div class="kerning-info">Kerning: ON</div>
+          </div>
+        `;
+      });
+      document.getElementById('kerningPairs').innerHTML = html;
+      
+      const canvas = document.getElementById('hintingCanvas');
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      
+      // Crisp text rendering
+      if (canvas.width !== 800 * dpr) {
+        canvas.width = 800 * dpr;
+        canvas.height = 200 * dpr;
+        canvas.style.width = '800px';
+        canvas.style.height = '200px';
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      
+      ctx.clearRect(0, 0, 800, 200);
+      
+      ctx.fillStyle = '#333';
+      const text = "Rasterization & Grid Fitting Test: The quick brown fox jumps over the lazy dog";
+      
+      let y = 30;
+      [10, 12, 16, 20, 24, 32].forEach(sz => {
+        ctx.font = getFontString(null, sz + "px");
+        ctx.fillText(`${sz}px: ${text}`, 20, y);
+        y += sz + 15;
+      });
+    }
+
+    function getCharInfo(char) {
+      if (!char || typeof char !== 'string') return null;
+      char = char.trim();
+      if (!char) return null;
+      let codePoint = char.codePointAt(0);
+
+      // Check hex notation or entity: U+XXXX, 0xXXXX, &#DDDD;, &#xXXXX;, or pure 2-6 hex digits
+      const decMatch = char.match(/^&#([0-9]+);?$/);
+      const hexEntMatch = char.match(/^&#x([0-9A-Fa-f]+);?$/i);
+      const hexPrefixMatch = char.match(/^(?:U\+|0x)([0-9A-Fa-f]{1,6})$/i);
+      const pureHexMatch = (/^[0-9A-Fa-f]{2,6}$/.test(char) && char.length > 1) ? char.match(/^([0-9A-Fa-f]+)$/) : null;
+
+      if (decMatch) {
+        const p = parseInt(decMatch[1], 10);
+        if (!isNaN(p) && p >= 0 && p <= 0x10FFFF) codePoint = p;
+      } else if (hexEntMatch) {
+        const p = parseInt(hexEntMatch[1], 16);
+        if (!isNaN(p) && p >= 0 && p <= 0x10FFFF) codePoint = p;
+      } else if (hexPrefixMatch) {
+        const p = parseInt(hexPrefixMatch[1], 16);
+        if (!isNaN(p) && p >= 0 && p <= 0x10FFFF) codePoint = p;
+      } else if (pureHexMatch) {
+        const p = parseInt(pureHexMatch[1], 16);
+        if (!isNaN(p) && p >= 0 && p <= 0x10FFFF) codePoint = p;
+      }
+      
+      try {
+        char = String.fromCodePoint(codePoint);
+      } catch (e) {
+        codePoint = 0x41;
+        char = 'A';
+      }
+      
+      const hex = codePoint.toString(16).toUpperCase().padStart(4, '0');
+      
+      // UTF-8 bytes
+      const encoder = new TextEncoder();
+      const utf8Arr = Array.from(encoder.encode(char));
+      const utf8Hex = utf8Arr.map(b => '0x' + b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+
+      // UTF-16 code units (safely handling surrogate pairs)
+      const utf16Arr = [];
+      for (let i = 0; i < char.length; i++) {
+        utf16Arr.push('0x' + char.charCodeAt(i).toString(16).toUpperCase().padStart(4, '0'));
+      }
+      const utf16Hex = utf16Arr.join(' ');
+
+      // HTML Entity
+      const entityMap = {
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;',
+        '©': '&copy;', '®': '&reg;', '€': '&euro;', '£': '&pound;', '¥': '&yen;',
+        '°': '&deg;', '•': '&bull;', '™': '&trade;', '§': '&sect;', '¶': '&para;'
+      };
+      const namedEntity = entityMap[char] || '-';
+      const decEntity = `&#${codePoint};`;
+      const hexEntity = `&#x${hex};`;
+
+      // C & JS Escapes
+      const cEscape = codePoint <= 0xFFFF ? `\\u${hex}` : `\\U${codePoint.toString(16).toUpperCase().padStart(8, '0')}`;
+      const jsEscape = `\\u{${hex}}`;
+      const uriEncoded = encodeURIComponent(char);
+
+      // General Category
+      let category = "General Character";
+      if (codePoint >= 0x41 && codePoint <= 0x5A) category = "Uppercase Latin Letter";
+      else if (codePoint >= 0x61 && codePoint <= 0x7A) category = "Lowercase Latin Letter";
+      else if (codePoint >= 0x30 && codePoint <= 0x39) category = "Decimal Digit";
+      else if (codePoint >= 0x20 && codePoint <= 0x7E) category = "ASCII Punctuation / Symbol";
+      else if (codePoint >= 0x00A0 && codePoint <= 0x00FF) category = "Latin-1 Supplement";
+      else if (codePoint >= 0x0100 && codePoint <= 0x024F) category = "Latin Extended";
+      else if (codePoint >= 0x0370 && codePoint <= 0x03FF) category = "Greek & Coptic";
+      else if (codePoint >= 0x0400 && codePoint <= 0x04FF) category = "Cyrillic Script";
+      else if (codePoint >= 0x20A0 && codePoint <= 0x20CF) category = "Currency Symbol";
+      else if (codePoint >= 0x4E00 && codePoint <= 0x9FFF) category = "CJK Unified Ideograph";
+      else if (codePoint >= 0x2500 && codePoint <= 0x257F) category = "Box Drawing Symbol";
+      else if (codePoint >= 0x2580 && codePoint <= 0x259F) category = "Block Elements";
+      else if (codePoint >= 0x25A0 && codePoint <= 0x25FF) category = "Geometric Shapes";
+
+      return {
+        char,
+        codePoint,
+        hex: `U+${hex}`,
+        utf8Hex,
+        utf16Hex,
+        namedEntity,
+        decEntity,
+        hexEntity,
+        cEscape,
+        jsEscape,
+        uriEncoded,
+        category
+      };
+    }
+
+    function updateAnatomy() {
+      const raw = anatomyInput.value.trim() || 'A';
+      const info = getCharInfo(raw);
+      if (!info) return;
+
+      const canvas = document.getElementById('anatomyCanvas');
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.parentElement.clientWidth || 800;
+      const h = 320;
+
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      const fontSize = 160;
+      const safeFont = fontList.value.replace(/["\\]/g, '');
+      const fontStr = `${italicCheck.checked?'italic':'normal'} ${boldCheck.checked?'bold':'normal'} ${fontSize}px "${safeFont}", sans-serif`;
+      ctx.font = fontStr;
+
+      const metrics = ctx.measureText(info.char);
+      const fontAsc = metrics.fontBoundingBoxAscent || fontSize * 0.8;
+      const fontDesc = metrics.fontBoundingBoxDescent || fontSize * 0.2;
+      const actAsc = metrics.actualBoundingBoxAscent || fontSize * 0.7;
+      const actDesc = metrics.actualBoundingBoxDescent || 0;
+      const actLeft = metrics.actualBoundingBoxLeft || 0;
+      const actRight = metrics.actualBoundingBoxRight || metrics.width;
+      const advWidth = metrics.width;
+
+      const baselineY = 220;
+      const originX = Math.max(80, Math.floor(w / 2 - advWidth / 2));
+
+      // Guidelines
+      const capH = fontAsc * 0.72;
+      const xH = fontAsc * 0.50;
+
+      // Draw Grid Lines
+      function drawLine(y, color, dash, label) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = dash ? 1.5 : 2;
+        ctx.setLineDash(dash ? [5, 4] : []);
+        ctx.beginPath();
+        ctx.moveTo(20, y);
+        ctx.lineTo(w - 20, y);
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+        ctx.fillStyle = color;
+        ctx.font = '11px "Segoe UI", sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(label, w - 25, y - 4);
+      }
+
+      // Ascent line
+      drawLine(baselineY - fontAsc, '#28a028', true, `Ascent (-${fontAsc.toFixed(1)}px)`);
+      // Cap Height
+      drawLine(baselineY - capH, '#2878f0', true, `Cap Height (-${capH.toFixed(1)}px)`);
+      // X-Height
+      drawLine(baselineY - xH, '#00a0a0', true, `x-Height (-${xH.toFixed(1)}px)`);
+      // Baseline
+      drawLine(baselineY, '#dc3232', false, `Baseline (Y:0)`);
+      // Descent
+      drawLine(baselineY + fontDesc, '#b428b4', true, `Descent (+${fontDesc.toFixed(1)}px)`);
+
+      // Side Bearings & Bounding vertical lines
+      const lsbX = originX - actLeft;
+      const rsbX = originX + actRight;
+      const advX = originX + advWidth;
+
+      function drawVertLine(x, color, label, topOffset) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(x, baselineY - fontAsc - 10);
+        ctx.lineTo(x, baselineY + fontDesc + 10);
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+        ctx.fillStyle = color;
+        ctx.font = '11px "Segoe UI", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(label, x, baselineY + fontDesc + (topOffset || 22));
+      }
+
+      drawVertLine(originX, '#888', 'Origin (0)', 22);
+      drawVertLine(lsbX, '#e68c00', 'LSB', 34);
+      drawVertLine(rsbX, '#e68c00', 'RSB', 34);
+      drawVertLine(advX, '#0078d7', 'Advance', 22);
+
+      // Black box bounding rectangle
+      ctx.strokeStyle = 'rgba(0, 120, 215, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([]);
+      ctx.strokeRect(lsbX, baselineY - actAsc, rsbX - lsbX, actAsc + actDesc);
+
+      // Render Glyph
+      ctx.font = fontStr;
+      ctx.fillStyle = '#1a1a1a';
+      ctx.textAlign = 'left';
+      ctx.fillText(info.char, originX, baselineY);
+
+      // Update Spacing Diagnostics Cards
+      const blackBoxW = (actRight + actLeft);
+      const lsbVal = -actLeft;
+      const rsbVal = advWidth - actRight;
+
+      const spacingFields = [
+        { name: "Left Side Bearing (LSB)", val: `${lsbVal.toFixed(2)} px` },
+        { name: "Black Box Width", val: `${blackBoxW.toFixed(2)} px` },
+        { name: "Right Side Bearing (RSB)", val: `${rsbVal.toFixed(2)} px` },
+        { name: "Total Advance Width", val: `${advWidth.toFixed(2)} px` },
+        { name: "Actual BBox Height", val: `${(actAsc + actDesc).toFixed(2)} px` },
+        { name: "Font Em Height", val: `${(fontAsc + fontDesc).toFixed(2)} px` }
+      ];
+
+      document.getElementById('anatomySpacingGrid').innerHTML = spacingFields.map(f => `
+        <div class="metric-card">
+          <div class="metric-title">${escapeHtml(f.name)}</div>
+          <div class="metric-value">${escapeHtml(f.val)}</div>
+        </div>
+      `).join('');
+
+      // Update Multi-Encoding Codec Cards (Properly escaped so entities aren't decoded by innerHTML)
+      const entitiesDisplay = `${escapeHtml(info.hexEntity)} | ${escapeHtml(info.decEntity)}` + (info.namedEntity !== '-' ? ` | ${escapeHtml(info.namedEntity)}` : '');
+      const codecFields = [
+        { name: "Unicode Code Point", val: `${escapeHtml(info.hex)} (Dec: ${info.codePoint})` },
+        { name: "UTF-8 Bytes (Hex)", val: escapeHtml(info.utf8Hex) },
+        { name: "UTF-16 Code Units", val: escapeHtml(info.utf16Hex) },
+        { name: "HTML Entities", val: entitiesDisplay },
+        { name: "C/C++ / Java Literal", val: escapeHtml(info.cEscape) },
+        { name: "JS Unicode Escape", val: escapeHtml(info.jsEscape) },
+        { name: "URI Percent Encoded", val: escapeHtml(info.uriEncoded) },
+        { name: "Unicode Script / Block", val: escapeHtml(info.category) }
+      ];
+
+      document.getElementById('anatomyCodecGrid').innerHTML = codecFields.map(f => `
+        <div class="metric-card">
+          <div class="metric-title">${escapeHtml(f.name)}</div>
+          <div class="metric-value" style="font-size:16px;">${f.val}</div>
+        </div>
+      `).join('');
+    }
+    
+    function updateSample() {
+      sampleOutput.style.font = getFontString();
+    }
+    
+    function updateAll() {
+      updateMetrics();
+      updateGlyphs();
+      updateDiagnostics();
+      updateAnatomy();
+      updateSample();
+    }
+    
+    function switchToTab(targetId) {
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        const isActive = b.dataset.target === targetId;
+        b.classList.toggle('active', isActive);
+        b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+      document.querySelectorAll('.panel').forEach(p => {
+        p.classList.toggle('active', p.id === targetId);
+      });
+      safeSetStorage('kfont_tab', targetId);
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.onclick = () => {
+        switchToTab(btn.dataset.target);
+        if (btn.dataset.target === 'panel-anatomy') {
+          updateAnatomy();
+        }
+      };
+    });
+    
+    fontList.onchange = () => {
+      safeSetStorage('kfont_font', fontList.value);
+      updateAll();
+    };
+    sizeList.onchange = () => {
+      safeSetStorage('kfont_size', sizeList.value);
+      updateAll();
+    };
+    boldCheck.onchange = () => {
+      safeSetStorage('kfont_bold', boldCheck.checked ? '1' : '0');
+      updateAll();
+    };
+    italicCheck.onchange = () => {
+      safeSetStorage('kfont_italic', italicCheck.checked ? '1' : '0');
+      updateAll();
+    };
+    unicodeRange.onchange = () => {
+      safeSetStorage('kfont_range', unicodeRange.value);
+      updateGlyphs();
+    };
+    anatomyInput.oninput = () => {
+      safeSetStorage('kfont_anatomy_char', anatomyInput.value);
+      updateAnatomy();
+    };
+    sampleOutput.oninput = () => {
+      safeSetStorage('kfont_sample', sampleOutput.innerText);
+    };
+
+    document.querySelectorAll('.chip-btn').forEach(btn => {
+      btn.onclick = () => {
+        anatomyInput.value = btn.getAttribute('data-char');
+        safeSetStorage('kfont_anatomy_char', anatomyInput.value);
+        updateAnatomy();
+      };
+    });
+
+    function copyAnatomyReport() {
+      const info = getCharInfo(anatomyInput.value.trim() || 'A');
+      if (!info) return;
+      const report = {
+        fontFamily: fontList.value,
+        character: info.char,
+        codePoint: info.codePoint,
+        hex: info.hex,
+        utf8Bytes: info.utf8Hex,
+        utf16: info.utf16Hex,
+        cEscape: info.cEscape,
+        jsEscape: info.jsEscape,
+        htmlEntities: `${info.hexEntity} | ${info.decEntity}` + (info.namedEntity !== '-' ? ` | ${info.namedEntity}` : ''),
+        category: info.category,
+        timestamp: new Date().toISOString()
+      };
+      const text = JSON.stringify(report, null, 2);
+
+      function showCopied() {
+        showToast("Copied JSON Report to clipboard!");
+        const btn = document.getElementById('copyAnatomyReportBtn');
+        if (btn) {
+          const orig = btn.innerText;
+          btn.innerText = 'Copied!';
+          setTimeout(() => { btn.innerText = orig; }, 2000);
+        }
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text)
+          .then(showCopied)
+          .catch(() => fallbackCopy(text, showCopied));
+      } else {
+        fallbackCopy(text, showCopied);
+      }
+    }
+
+    function fallbackCopy(text, onSuccess) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        const success = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (success && onSuccess) onSuccess();
+        else showToast("Copied JSON Report to clipboard!");
+      } catch (e) {
+        showToast("Clipboard copy failed. Please select text manually.");
+      }
+    }
+
+    document.getElementById('copyAnatomyReportBtn').onclick = copyAnatomyReport;
+
+    // Load saved preferences
+    const savedFont = safeGetStorage('kfont_font', null);
+    if (savedFont && Array.from(fontList.options).some(o => o.value === savedFont)) {
+      fontList.value = savedFont;
+    }
+    const savedSize = safeGetStorage('kfont_size', null);
+    if (savedSize && Array.from(sizeList.options).some(o => o.value === savedSize)) {
+      sizeList.value = savedSize;
+    }
+    const savedBold = safeGetStorage('kfont_bold', null);
+    if (savedBold !== null) boldCheck.checked = savedBold === '1';
+
+    const savedItalic = safeGetStorage('kfont_italic', null);
+    if (savedItalic !== null) italicCheck.checked = savedItalic === '1';
+
+    const savedRange = safeGetStorage('kfont_range', null);
+    if (savedRange && Array.from(unicodeRange.options).some(o => o.value === savedRange)) {
+      unicodeRange.value = savedRange;
+    }
+    const savedAnatomy = safeGetStorage('kfont_anatomy_char', null);
+    if (savedAnatomy) anatomyInput.value = savedAnatomy;
+
+    const savedSample = safeGetStorage('kfont_sample', null);
+    if (savedSample) sampleOutput.innerText = savedSample;
+
+    const savedTab = safeGetStorage('kfont_tab', 'panel-metrics');
+    if (document.getElementById(savedTab)) {
+      switchToTab(savedTab);
+    }
+    
+    // Initial render
+    updateAll();
+
+    // Help overlay logic
+    document.getElementById('helpBtn').addEventListener('click', () => {
+      helpOverlay.classList.add('visible');
+    });
+
+    document.addEventListener('keydown', (e) => {
+      const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable;
+
+      // Dismiss help on Escape
+      if (e.key === 'Escape') {
+        if (helpOverlay.classList.contains('visible')) {
+          helpOverlay.classList.remove('visible');
+          return;
+        }
+      }
+
+      if (e.key === 'F1') {
+        e.preventDefault();
+        helpOverlay.classList.toggle('visible');
+        return;
+      }
+
+      if (!isInput) {
+        if (e.key.toLowerCase() === 'h') {
+          helpOverlay.classList.toggle('visible');
+        } else if (e.key === '1') {
+          switchToTab('panel-metrics');
+        } else if (e.key === '2') {
+          switchToTab('panel-glyphs');
+        } else if (e.key === '3') {
+          switchToTab('panel-diagnostics');
+        } else if (e.key === '4') {
+          switchToTab('panel-anatomy');
+          updateAnatomy();
+        } else if (e.key === '5') {
+          switchToTab('panel-sample');
+          sampleOutput.focus();
+        } else if (e.key.toLowerCase() === 'b') {
+          boldCheck.checked = !boldCheck.checked;
+          safeSetStorage('kfont_bold', boldCheck.checked ? '1' : '0');
+          updateAll();
+        } else if (e.key.toLowerCase() === 'i') {
+          italicCheck.checked = !italicCheck.checked;
+          safeSetStorage('kfont_italic', italicCheck.checked ? '1' : '0');
+          updateAll();
+        } else if (e.key.toLowerCase() === 'c') {
+          const activePanel = document.querySelector('.panel.active');
+          if (activePanel && activePanel.id === 'panel-anatomy') {
+            copyAnatomyReport();
+          }
+        }
+      }
+    });
+
+    helpOverlay.addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('visible');
+    });
+  </script>
 </body>
 </html>
+

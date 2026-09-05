@@ -105,27 +105,27 @@
   </div>
   
   <div class="main">
-    <div class="sidebar">
-      <button class="tab-btn active" data-target="panel-metrics">Metrics & OS/2</button>
-      <button class="tab-btn" data-target="panel-glyphs">Unicode Ranges</button>
-      <button class="tab-btn" data-target="panel-diagnostics">Kerning & Hinting</button>
-      <button class="tab-btn" data-target="panel-anatomy">Glyph Anatomy</button>
-      <button class="tab-btn" data-target="panel-sample">Live Sample</button>
+    <div class="sidebar" role="tablist" aria-label="Font Inspector Tabs">
+      <button class="tab-btn active" id="tab-metrics" role="tab" aria-selected="true" aria-controls="panel-metrics" data-target="panel-metrics">Metrics &amp; OS/2</button>
+      <button class="tab-btn" id="tab-glyphs" role="tab" aria-selected="false" aria-controls="panel-glyphs" data-target="panel-glyphs">Unicode Ranges</button>
+      <button class="tab-btn" id="tab-diagnostics" role="tab" aria-selected="false" aria-controls="panel-diagnostics" data-target="panel-diagnostics">Kerning &amp; Hinting</button>
+      <button class="tab-btn" id="tab-anatomy" role="tab" aria-selected="false" aria-controls="panel-anatomy" data-target="panel-anatomy">Glyph Anatomy</button>
+      <button class="tab-btn" id="tab-sample" role="tab" aria-selected="false" aria-controls="panel-sample" data-target="panel-sample">Live Sample</button>
     </div>
     
     <div class="content">
       <!-- Metrics -->
-      <div id="panel-metrics" class="panel active">
-        <h2>Font Metadata & Metrics Inspector</h2>
+      <div id="panel-metrics" class="panel active" role="tabpanel" aria-labelledby="tab-metrics">
+        <h2>Font Metadata &amp; Metrics Inspector</h2>
         <p>Advanced typographical measurements extracted via Canvas Rendering Context actual bounds and extrapolated OS/2 table metrics.</p>
         <div class="metric-grid" id="metricsGrid"></div>
       </div>
       
       <!-- Glyphs -->
-      <div id="panel-glyphs" class="panel">
-        <h2>Unicode Range & Glyph Viewer</h2>
+      <div id="panel-glyphs" class="panel" role="tabpanel" aria-labelledby="tab-glyphs">
+        <h2>Unicode Range &amp; Glyph Viewer</h2>
         <div class="glyph-controls">
-          <label style="font-weight:500; font-size:14px; color:#444;">Select Unicode Block:</label>
+          <label for="unicodeRange" style="font-weight:500; font-size:14px; color:#444;">Select Unicode Block:</label>
           <select id="unicodeRange">
             <option value="32,127">Basic Latin (U+0020 - U+007F)</option>
             <option value="160,255">Latin-1 Supplement (U+00A0 - U+00FF)</option>
@@ -146,31 +146,31 @@
       </div>
       
       <!-- Diagnostics -->
-      <div id="panel-diagnostics" class="panel">
-        <h2>Glyph Kerning & Hinting Diagnostics</h2>
+      <div id="panel-diagnostics" class="panel" role="tabpanel" aria-labelledby="tab-diagnostics">
+        <h2>Glyph Kerning &amp; Hinting Diagnostics</h2>
         <h3>Visual Kerning Analysis</h3>
         <p>Comparison of specific kerning pairs with OpenType kerning features explicitly enabled vs disabled.</p>
         <div id="kerningPairs"></div>
         
-        <h3>Rasterization & Grid Fitting (Hinting)</h3>
+        <h3>Rasterization &amp; Grid Fitting (Hinting)</h3>
         <p>Rendering at specific pixel sizes to expose pixel-snapping and hinting instructions across scale.</p>
         <canvas id="hintingCanvas" width="800" height="200" style="border:1px solid #ddd; border-radius:4px; background:#fafafa; max-width:100%;"></canvas>
       </div>
 
       <!-- Glyph Anatomy & Vector Metrics -->
-      <div id="panel-anatomy" class="panel">
-        <h2>Glyph Anatomy & Vector Metrics Dissector</h2>
+      <div id="panel-anatomy" class="panel" role="tabpanel" aria-labelledby="tab-anatomy">
+        <h2>Glyph Anatomy &amp; Vector Metrics Dissector</h2>
         <p>Interactive character inspection with baseline, cap-height, x-height, ascent/descent guides, side bearings (LSB/RSB), and multi-encoding codec breakdown.</p>
         
         <div class="anatomy-controls">
-          <label style="font-weight:600; font-size:14px;">Character / Hex:</label>
-          <input type="text" id="anatomyInput" class="anatomy-input" value="A" maxlength="8">
+          <label for="anatomyInput" style="font-weight:600; font-size:14px;">Character / Hex:</label>
+          <input type="text" id="anatomyInput" class="anatomy-input" value="A" maxlength="10" title="Type character or hex (e.g. A, U+0041, 0x41)">
           <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
             <span style="font-size:12px; color:#777;">Quick Presets:</span>
             <button class="chip-btn" data-char="A">A</button>
             <button class="chip-btn" data-char="g">g</button>
             <button class="chip-btn" data-char="Q">Q</button>
-            <button class="chip-btn" data-char="&">&amp;</button>
+            <button class="chip-btn" data-char="&amp;">&amp;</button>
             <button class="chip-btn" data-char="f">f</button>
             <button class="chip-btn" data-char="W">W</button>
             <button class="chip-btn" data-char="0">0</button>
@@ -180,7 +180,7 @@
             <button class="chip-btn" data-char="★">★</button>
             <button class="chip-btn" data-char="漢">漢</button>
           </div>
-          <button id="copyAnatomyReportBtn" class="action-btn" style="margin-left:auto;">Copy JSON Report</button>
+          <button id="copyAnatomyReportBtn" class="action-btn" style="margin-left:auto;">Copy JSON Report (C)</button>
         </div>
 
         <div class="anatomy-canvas-container">
@@ -195,18 +195,18 @@
           </div>
         </div>
 
-        <h3>ABC Spacing & Bounding Box Diagnostics</h3>
+        <h3>ABC Spacing &amp; Bounding Box Diagnostics</h3>
         <div class="metric-grid" id="anatomySpacingGrid"></div>
 
-        <h3>Multi-Encoding & Codec Dissector</h3>
+        <h3>Multi-Encoding &amp; Codec Dissector</h3>
         <div class="metric-grid" id="anatomyCodecGrid"></div>
       </div>
       
       <!-- Sample -->
-      <div id="panel-sample" class="panel">
+      <div id="panel-sample" class="panel" role="tabpanel" aria-labelledby="tab-sample">
         <h2>Live Free Sample</h2>
         <p>Type in the box below to test the font in real-time.</p>
-        <div id="sampleOutput" class="sample-box" contenteditable="true">The quick brown fox jumps over the lazy dog.
+        <div id="sampleOutput" class="sample-box" contenteditable="true" aria-label="Live editable font sample">The quick brown fox jumps over the lazy dog.
 
 0123456789
 
@@ -217,18 +217,29 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
   
   <canvas id="canvasMetrics"></canvas>
 
-  <div id="helpOverlay">
+  <div id="toastNotification" style="display:none; position:fixed; bottom:20px; right:20px; background:#333; color:white; padding:10px 18px; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:13px; z-index:2000;"></div>
+
+  <div id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
     <div class="help-modal">
-      <h2>KFont Help</h2>
-      <p>Welcome to KFont inspector. Use the controls to explore system fonts.</p>
+      <h2 id="helpTitle">KFont Help &amp; Keyboard Shortcuts</h2>
+      <p>Explore typographical metrics, Unicode tables, rasterization hinting, and vector anatomy.</p>
       <ul>
-        <li><strong>Metrics & OS/2</strong>: Inspect font measurements and bounds.</li>
-        <li><strong>Unicode Ranges</strong>: View glyphs organized by unicode block (click any glyph to inspect).</li>
-        <li><strong>Diagnostics</strong>: Check visual kerning and hinting at various sizes.</li>
-        <li><strong>Glyph Anatomy</strong>: Interactive vector metrics, ABC spacing, bearings & multi-encoding dissector.</li>
-        <li><strong>Live Sample</strong>: Test how the font looks with custom text.</li>
+        <li><strong>Metrics &amp; OS/2</strong>: Inspect font measurements and actual bounding box limits.</li>
+        <li><strong>Unicode Ranges</strong>: View glyphs organized by Unicode blocks (click any glyph to inspect).</li>
+        <li><strong>Diagnostics</strong>: Check visual kerning pairs and hinting across sizes.</li>
+        <li><strong>Glyph Anatomy</strong>: Vector metrics, ABC spacing, bearings, and multi-encoding dissector.</li>
+        <li><strong>Live Sample</strong>: Test custom editable sample text in real-time.</li>
       </ul>
-      <p style="font-size: 12px; color: #777;">Press <strong>H</strong>, click the Help button, or click outside this box to dismiss.</p>
+      <p><strong>Keyboard Shortcuts:</strong></p>
+      <ul style="font-size:13px; color:#444;">
+        <li><kbd style="background:#eee; padding:2px 6px; border-radius:3px;">1</kbd>–<kbd style="background:#eee; padding:2px 6px; border-radius:3px;">5</kbd> : Switch inspector tabs</li>
+        <li><kbd style="background:#eee; padding:2px 6px; border-radius:3px;">B</kbd> : Toggle Bold</li>
+        <li><kbd style="background:#eee; padding:2px 6px; border-radius:3px;">I</kbd> : Toggle Italic</li>
+        <li><kbd style="background:#eee; padding:2px 6px; border-radius:3px;">C</kbd> : Copy Anatomy JSON report (in Anatomy tab)</li>
+        <li><kbd style="background:#eee; padding:2px 6px; border-radius:3px;">H</kbd> / <kbd style="background:#eee; padding:2px 6px; border-radius:3px;">F1</kbd> : Toggle this Help dialog</li>
+        <li><kbd style="background:#eee; padding:2px 6px; border-radius:3px;">Esc</kbd> : Dismiss Help dialog</li>
+      </ul>
+      <p style="font-size: 12px; color: #777; margin-top:15px;">Press <strong>Esc</strong> or click outside to dismiss.</p>
     </div>
   </div>
   
@@ -246,6 +257,48 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
     const italicCheck = document.getElementById('italicCheck');
     const unicodeRange = document.getElementById('unicodeRange');
     const anatomyInput = document.getElementById('anatomyInput');
+    const sampleOutput = document.getElementById('sampleOutput');
+    const helpOverlay = document.getElementById('helpOverlay');
+    const toastNotification = document.getElementById('toastNotification');
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function escapeAttr(str) {
+      return escapeHtml(str);
+    }
+
+    function showToast(msg) {
+      if (!toastNotification) return;
+      toastNotification.textContent = msg;
+      toastNotification.style.display = 'block';
+      clearTimeout(toastNotification._timer);
+      toastNotification._timer = setTimeout(() => {
+        toastNotification.style.display = 'none';
+      }, 2200);
+    }
+
+    function safeGetStorage(key, fallback) {
+      try {
+        const val = localStorage.getItem(key);
+        return val !== null ? val : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function safeSetStorage(key, val) {
+      try {
+        localStorage.setItem(key, val);
+      } catch (e) {}
+    }
     
     function getFontString(familyOverride, sizeOverride) {
       const family = familyOverride || `"${fontList.value}"`;
@@ -287,8 +340,8 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       
       document.getElementById('metricsGrid').innerHTML = fields.map(f => `
         <div class="metric-card">
-          <div class="metric-title">${f.name}</div>
-          <div class="metric-value">${typeof f.val === 'number' ? f.val.toFixed(2) : f.val} px</div>
+          <div class="metric-title">${escapeHtml(f.name)}</div>
+          <div class="metric-value">${typeof f.val === 'number' ? f.val.toFixed(2) : escapeHtml(f.val)} px</div>
         </div>
       `).join('');
     }
@@ -297,26 +350,45 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       const [start, end] = unicodeRange.value.split(',').map(Number);
       const grid = document.getElementById('glyphGrid');
       let html = '';
+      const safeFont = fontList.value.replace(/["\\]/g, '');
+      const isB = boldCheck.checked ? 'bold' : 'normal';
+      const isI = italicCheck.checked ? 'italic' : 'normal';
+
       for(let i=start; i<=end; i++) {
         const hex = i.toString(16).toUpperCase().padStart(4, '0');
-        const char = String.fromCodePoint(i);
+        let char = '';
+        try {
+          char = String.fromCodePoint(i);
+        } catch (e) {
+          continue;
+        }
+        const safeChar = escapeHtml(char);
         html += `
-          <div class="glyph-cell" data-char="${char}" title="Click to inspect ${char} (U+${hex})">
-            <div class="glyph-char" style="font-family: '${fontList.value}'; font-weight: ${boldCheck.checked?'bold':'normal'}; font-style: ${italicCheck.checked?'italic':'normal'};">${char}</div>
+          <div class="glyph-cell" data-codepoint="${i}" tabindex="0" role="button" title="Click to inspect ${escapeAttr(char)} (U+${hex})" aria-label="Glyph U+${hex}">
+            <div class="glyph-char" style="font-family: '${safeFont}'; font-weight: ${isB}; font-style: ${isI};">${safeChar}</div>
             <div class="glyph-hex">U+${hex}</div>
           </div>
         `;
       }
       grid.innerHTML = html;
 
-      // Add click listeners to inspect in Anatomy tab
+      function activateCell(cell) {
+        const cp = parseInt(cell.getAttribute('data-codepoint'), 10);
+        if (!isNaN(cp)) {
+          anatomyInput.value = String.fromCodePoint(cp);
+          safeSetStorage('kfont_anatomy_char', anatomyInput.value);
+          switchToTab('panel-anatomy');
+          updateAnatomy();
+        }
+      }
+
+      // Add click & keyboard listeners to inspect in Anatomy tab
       grid.querySelectorAll('.glyph-cell').forEach(cell => {
-        cell.onclick = () => {
-          const ch = cell.getAttribute('data-char');
-          if (ch) {
-            anatomyInput.value = ch;
-            switchToTab('panel-anatomy');
-            updateAnatomy();
+        cell.onclick = () => activateCell(cell);
+        cell.onkeydown = (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            activateCell(cell);
           }
         };
       });
@@ -324,18 +396,18 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
     
     function updateDiagnostics() {
       const pairs = ["AV", "To", "Tr", "WA", "Ye", "Va", "fj"];
-      const fontFam = `'${fontList.value}'`;
+      const fontFam = `'${fontList.value.replace(/["\\]/g, '')}'`;
       const weight = boldCheck.checked ? 'bold' : 'normal';
       const style = italicCheck.checked ? 'italic' : 'normal';
       let html = '';
       pairs.forEach(p => {
         html += `
           <div class="kerning-pair">
-            <div class="kerning-text no-kern" style="font-family: ${fontFam}; font-weight: ${weight}; font-style: ${style};">${p}</div>
+            <div class="kerning-text no-kern" style="font-family: ${fontFam}; font-weight: ${weight}; font-style: ${style};">${escapeHtml(p)}</div>
             <div class="kerning-info">Kerning: OFF</div>
           </div>
           <div class="kerning-pair">
-            <div class="kerning-text yes-kern" style="font-family: ${fontFam}; font-weight: ${weight}; font-style: ${style};">${p}</div>
+            <div class="kerning-text yes-kern" style="font-family: ${fontFam}; font-weight: ${weight}; font-style: ${style};">${escapeHtml(p)}</div>
             <div class="kerning-info">Kerning: ON</div>
           </div>
         `;
@@ -369,15 +441,36 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
     }
 
     function getCharInfo(char) {
+      if (!char || typeof char !== 'string') return null;
+      char = char.trim();
       if (!char) return null;
       let codePoint = char.codePointAt(0);
-      if (char.startsWith('U+') || char.startsWith('0x') || (/^[0-9A-Fa-f]{2,6}$/.test(char) && char.length > 1)) {
-        const hex = char.replace(/^(U\+|0x)/i, '');
-        const parsed = parseInt(hex, 16);
-        if (!isNaN(parsed) && parsed >= 0 && parsed <= 0x10FFFF) {
-          codePoint = parsed;
-          char = String.fromCodePoint(codePoint);
-        }
+
+      // Check hex notation or entity: U+XXXX, 0xXXXX, &#DDDD;, &#xXXXX;, or pure 2-6 hex digits
+      const decMatch = char.match(/^&#([0-9]+);?$/);
+      const hexEntMatch = char.match(/^&#x([0-9A-Fa-f]+);?$/i);
+      const hexPrefixMatch = char.match(/^(?:U\+|0x)([0-9A-Fa-f]{1,6})$/i);
+      const pureHexMatch = (/^[0-9A-Fa-f]{2,6}$/.test(char) && char.length > 1) ? char.match(/^([0-9A-Fa-f]+)$/) : null;
+
+      if (decMatch) {
+        const p = parseInt(decMatch[1], 10);
+        if (!isNaN(p) && p >= 0 && p <= 0x10FFFF) codePoint = p;
+      } else if (hexEntMatch) {
+        const p = parseInt(hexEntMatch[1], 16);
+        if (!isNaN(p) && p >= 0 && p <= 0x10FFFF) codePoint = p;
+      } else if (hexPrefixMatch) {
+        const p = parseInt(hexPrefixMatch[1], 16);
+        if (!isNaN(p) && p >= 0 && p <= 0x10FFFF) codePoint = p;
+      } else if (pureHexMatch) {
+        const p = parseInt(pureHexMatch[1], 16);
+        if (!isNaN(p) && p >= 0 && p <= 0x10FFFF) codePoint = p;
+      }
+      
+      try {
+        char = String.fromCodePoint(codePoint);
+      } catch (e) {
+        codePoint = 0x41;
+        char = 'A';
       }
       
       const hex = codePoint.toString(16).toUpperCase().padStart(4, '0');
@@ -387,8 +480,12 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       const utf8Arr = Array.from(encoder.encode(char));
       const utf8Hex = utf8Arr.map(b => '0x' + b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
 
-      // UTF-16
-      const utf16Hex = Array.from(char).map(c => '0x' + c.charCodeAt(0).toString(16).toUpperCase().padStart(4, '0')).join(' ');
+      // UTF-16 code units (safely handling surrogate pairs)
+      const utf16Arr = [];
+      for (let i = 0; i < char.length; i++) {
+        utf16Arr.push('0x' + char.charCodeAt(i).toString(16).toUpperCase().padStart(4, '0'));
+      }
+      const utf16Hex = utf16Arr.join(' ');
 
       // HTML Entity
       const entityMap = {
@@ -412,11 +509,14 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       else if (codePoint >= 0x30 && codePoint <= 0x39) category = "Decimal Digit";
       else if (codePoint >= 0x20 && codePoint <= 0x7E) category = "ASCII Punctuation / Symbol";
       else if (codePoint >= 0x00A0 && codePoint <= 0x00FF) category = "Latin-1 Supplement";
+      else if (codePoint >= 0x0100 && codePoint <= 0x024F) category = "Latin Extended";
       else if (codePoint >= 0x0370 && codePoint <= 0x03FF) category = "Greek & Coptic";
       else if (codePoint >= 0x0400 && codePoint <= 0x04FF) category = "Cyrillic Script";
       else if (codePoint >= 0x20A0 && codePoint <= 0x20CF) category = "Currency Symbol";
       else if (codePoint >= 0x4E00 && codePoint <= 0x9FFF) category = "CJK Unified Ideograph";
       else if (codePoint >= 0x2500 && codePoint <= 0x257F) category = "Box Drawing Symbol";
+      else if (codePoint >= 0x2580 && codePoint <= 0x259F) category = "Block Elements";
+      else if (codePoint >= 0x25A0 && codePoint <= 0x25FF) category = "Geometric Shapes";
 
       return {
         char,
@@ -454,7 +554,8 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       ctx.clearRect(0, 0, w, h);
 
       const fontSize = 160;
-      const fontStr = `${italicCheck.checked?'italic':'normal'} ${boldCheck.checked?'bold':'normal'} ${fontSize}px "${fontList.value}", sans-serif`;
+      const safeFont = fontList.value.replace(/["\\]/g, '');
+      const fontStr = `${italicCheck.checked?'italic':'normal'} ${boldCheck.checked?'bold':'normal'} ${fontSize}px "${safeFont}", sans-serif`;
       ctx.font = fontStr;
 
       const metrics = ctx.measureText(info.char);
@@ -555,34 +656,34 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
 
       document.getElementById('anatomySpacingGrid').innerHTML = spacingFields.map(f => `
         <div class="metric-card">
-          <div class="metric-title">${f.name}</div>
-          <div class="metric-value">${f.val}</div>
+          <div class="metric-title">${escapeHtml(f.name)}</div>
+          <div class="metric-value">${escapeHtml(f.val)}</div>
         </div>
       `).join('');
 
-      // Update Multi-Encoding Codec Cards
+      // Update Multi-Encoding Codec Cards (Properly escaped so entities aren't decoded by innerHTML)
+      const entitiesDisplay = `${escapeHtml(info.hexEntity)} | ${escapeHtml(info.decEntity)}` + (info.namedEntity !== '-' ? ` | ${escapeHtml(info.namedEntity)}` : '');
       const codecFields = [
-        { name: "Unicode Code Point", val: `${info.hex} (Dec: ${info.codePoint})` },
-        { name: "UTF-8 Bytes (Hex)", val: info.utf8Hex },
-        { name: "UTF-16 Code Units", val: info.utf16Hex },
-        { name: "HTML Entities", val: `${info.hexEntity} | ${info.decEntity}` + (info.namedEntity !== '-' ? ` | ${info.namedEntity}` : '') },
-        { name: "C/C++ / Java Literal", val: info.cEscape },
-        { name: "JS Unicode Escape", val: info.jsEscape },
-        { name: "URI Percent Encoded", val: info.uriEncoded },
-        { name: "Unicode Script / Block", val: info.category }
+        { name: "Unicode Code Point", val: `${escapeHtml(info.hex)} (Dec: ${info.codePoint})` },
+        { name: "UTF-8 Bytes (Hex)", val: escapeHtml(info.utf8Hex) },
+        { name: "UTF-16 Code Units", val: escapeHtml(info.utf16Hex) },
+        { name: "HTML Entities", val: entitiesDisplay },
+        { name: "C/C++ / Java Literal", val: escapeHtml(info.cEscape) },
+        { name: "JS Unicode Escape", val: escapeHtml(info.jsEscape) },
+        { name: "URI Percent Encoded", val: escapeHtml(info.uriEncoded) },
+        { name: "Unicode Script / Block", val: escapeHtml(info.category) }
       ];
 
       document.getElementById('anatomyCodecGrid').innerHTML = codecFields.map(f => `
         <div class="metric-card">
-          <div class="metric-title">${f.name}</div>
+          <div class="metric-title">${escapeHtml(f.name)}</div>
           <div class="metric-value" style="font-size:16px;">${f.val}</div>
         </div>
       `).join('');
     }
     
     function updateSample() {
-      const el = document.getElementById('sampleOutput');
-      el.style.font = getFontString();
+      sampleOutput.style.font = getFontString();
     }
     
     function updateAll() {
@@ -595,11 +696,14 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
     
     function switchToTab(targetId) {
       document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.toggle('active', b.dataset.target === targetId);
+        const isActive = b.dataset.target === targetId;
+        b.classList.toggle('active', isActive);
+        b.setAttribute('aria-selected', isActive ? 'true' : 'false');
       });
       document.querySelectorAll('.panel').forEach(p => {
         p.classList.toggle('active', p.id === targetId);
       });
+      safeSetStorage('kfont_tab', targetId);
     }
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -611,21 +715,43 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       };
     });
     
-    fontList.onchange = updateAll;
-    sizeList.onchange = updateAll;
-    boldCheck.onchange = updateAll;
-    italicCheck.onchange = updateAll;
-    unicodeRange.onchange = updateGlyphs;
-    anatomyInput.oninput = updateAnatomy;
+    fontList.onchange = () => {
+      safeSetStorage('kfont_font', fontList.value);
+      updateAll();
+    };
+    sizeList.onchange = () => {
+      safeSetStorage('kfont_size', sizeList.value);
+      updateAll();
+    };
+    boldCheck.onchange = () => {
+      safeSetStorage('kfont_bold', boldCheck.checked ? '1' : '0');
+      updateAll();
+    };
+    italicCheck.onchange = () => {
+      safeSetStorage('kfont_italic', italicCheck.checked ? '1' : '0');
+      updateAll();
+    };
+    unicodeRange.onchange = () => {
+      safeSetStorage('kfont_range', unicodeRange.value);
+      updateGlyphs();
+    };
+    anatomyInput.oninput = () => {
+      safeSetStorage('kfont_anatomy_char', anatomyInput.value);
+      updateAnatomy();
+    };
+    sampleOutput.oninput = () => {
+      safeSetStorage('kfont_sample', sampleOutput.innerText);
+    };
 
     document.querySelectorAll('.chip-btn').forEach(btn => {
       btn.onclick = () => {
         anatomyInput.value = btn.getAttribute('data-char');
+        safeSetStorage('kfont_anatomy_char', anatomyInput.value);
         updateAnatomy();
       };
     });
 
-    document.getElementById('copyAnatomyReportBtn').onclick = () => {
+    function copyAnatomyReport() {
       const info = getCharInfo(anatomyInput.value.trim() || 'A');
       if (!info) return;
       const report = {
@@ -636,32 +762,139 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         utf8Bytes: info.utf8Hex,
         utf16: info.utf16Hex,
         cEscape: info.cEscape,
+        jsEscape: info.jsEscape,
+        htmlEntities: `${info.hexEntity} | ${info.decEntity}` + (info.namedEntity !== '-' ? ` | ${info.namedEntity}` : ''),
         category: info.category,
         timestamp: new Date().toISOString()
       };
-      navigator.clipboard.writeText(JSON.stringify(report, null, 2)).then(() => {
+      const text = JSON.stringify(report, null, 2);
+
+      function showCopied() {
+        showToast("Copied JSON Report to clipboard!");
         const btn = document.getElementById('copyAnatomyReportBtn');
-        const orig = btn.innerText;
-        btn.innerText = 'Copied JSON!';
-        setTimeout(() => { btn.innerText = orig; }, 2000);
-      });
-    };
+        if (btn) {
+          const orig = btn.innerText;
+          btn.innerText = 'Copied!';
+          setTimeout(() => { btn.innerText = orig; }, 2000);
+        }
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text)
+          .then(showCopied)
+          .catch(() => fallbackCopy(text, showCopied));
+      } else {
+        fallbackCopy(text, showCopied);
+      }
+    }
+
+    function fallbackCopy(text, onSuccess) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        const success = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (success && onSuccess) onSuccess();
+        else showToast("Copied JSON Report to clipboard!");
+      } catch (e) {
+        showToast("Clipboard copy failed. Please select text manually.");
+      }
+    }
+
+    document.getElementById('copyAnatomyReportBtn').onclick = copyAnatomyReport;
+
+    // Load saved preferences
+    const savedFont = safeGetStorage('kfont_font', null);
+    if (savedFont && Array.from(fontList.options).some(o => o.value === savedFont)) {
+      fontList.value = savedFont;
+    }
+    const savedSize = safeGetStorage('kfont_size', null);
+    if (savedSize && Array.from(sizeList.options).some(o => o.value === savedSize)) {
+      sizeList.value = savedSize;
+    }
+    const savedBold = safeGetStorage('kfont_bold', null);
+    if (savedBold !== null) boldCheck.checked = savedBold === '1';
+
+    const savedItalic = safeGetStorage('kfont_italic', null);
+    if (savedItalic !== null) italicCheck.checked = savedItalic === '1';
+
+    const savedRange = safeGetStorage('kfont_range', null);
+    if (savedRange && Array.from(unicodeRange.options).some(o => o.value === savedRange)) {
+      unicodeRange.value = savedRange;
+    }
+    const savedAnatomy = safeGetStorage('kfont_anatomy_char', null);
+    if (savedAnatomy) anatomyInput.value = savedAnatomy;
+
+    const savedSample = safeGetStorage('kfont_sample', null);
+    if (savedSample) sampleOutput.innerText = savedSample;
+
+    const savedTab = safeGetStorage('kfont_tab', 'panel-metrics');
+    if (document.getElementById(savedTab)) {
+      switchToTab(savedTab);
+    }
     
-    // Initial call
+    // Initial render
     updateAll();
 
     // Help overlay logic
     document.getElementById('helpBtn').addEventListener('click', () => {
-      document.getElementById('helpOverlay').classList.add('visible');
+      helpOverlay.classList.add('visible');
     });
 
     document.addEventListener('keydown', (e) => {
-      if ((e.key.toLowerCase() === 'h' || e.key === 'F1') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && !e.target.isContentEditable) {
-        if (e.key === 'F1') e.preventDefault();
-        document.getElementById('helpOverlay').classList.toggle('visible');
+      const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable;
+
+      // Dismiss help on Escape
+      if (e.key === 'Escape') {
+        if (helpOverlay.classList.contains('visible')) {
+          helpOverlay.classList.remove('visible');
+          return;
+        }
+      }
+
+      if (e.key === 'F1') {
+        e.preventDefault();
+        helpOverlay.classList.toggle('visible');
+        return;
+      }
+
+      if (!isInput) {
+        if (e.key.toLowerCase() === 'h') {
+          helpOverlay.classList.toggle('visible');
+        } else if (e.key === '1') {
+          switchToTab('panel-metrics');
+        } else if (e.key === '2') {
+          switchToTab('panel-glyphs');
+        } else if (e.key === '3') {
+          switchToTab('panel-diagnostics');
+        } else if (e.key === '4') {
+          switchToTab('panel-anatomy');
+          updateAnatomy();
+        } else if (e.key === '5') {
+          switchToTab('panel-sample');
+          sampleOutput.focus();
+        } else if (e.key.toLowerCase() === 'b') {
+          boldCheck.checked = !boldCheck.checked;
+          safeSetStorage('kfont_bold', boldCheck.checked ? '1' : '0');
+          updateAll();
+        } else if (e.key.toLowerCase() === 'i') {
+          italicCheck.checked = !italicCheck.checked;
+          safeSetStorage('kfont_italic', italicCheck.checked ? '1' : '0');
+          updateAll();
+        } else if (e.key.toLowerCase() === 'c') {
+          const activePanel = document.querySelector('.panel.active');
+          if (activePanel && activePanel.id === 'panel-anatomy') {
+            copyAnatomyReport();
+          }
+        }
       }
     });
-    document.getElementById('helpOverlay').addEventListener('click', function(e) {
+
+    helpOverlay.addEventListener('click', function(e) {
       if (e.target === this) this.classList.remove('visible');
     });
   </script>

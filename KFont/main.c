@@ -7,7 +7,7 @@
 
 HWND hList, hSizeList;
 HWND hCustomText, hBold, hItalic, hAnatomyChar;
-HWND hTabMetrics, hTabGlyphs, hTabDiag, hTabAnatomy, hTabSample, hHelpBtn;
+HWND hTabMetrics, hTabGlyphs, hTabDiag, hTabAnatomy, hTabSample, hHelpBtn, hCopyBtn;
 HWND hPanel, hRangeList;
 
 HFONT hCurrentFont = NULL;
@@ -23,6 +23,18 @@ HFONT hFont = NULL;
 HBRUSH hBrush = NULL;
 HBRUSH hBgBrush = NULL;
 HBRUSH hPanelBrush = NULL;
+
+static unsigned int ParseHexW(const WCHAR* s) {
+    unsigned int val = 0;
+    while (*s) {
+        WCHAR c = *s++;
+        if (c >= L'0' && c <= L'9') val = (val << 4) | (c - L'0');
+        else if (c >= L'a' && c <= L'f') val = (val << 4) | (c - L'a' + 10);
+        else if (c >= L'A' && c <= L'F') val = (val << 4) | (c - L'A' + 10);
+        else break;
+    }
+    return val;
+}
 
 const char* GetHtmlEntity(WCHAR ch) {
     switch(ch) {
@@ -64,7 +76,7 @@ void GetUtf8String(WCHAR ch, char* out, int maxLen) {
 LRESULT CALLBACK PanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_COMMAND:
-            if (LOWORD(wParam) == 14 && HIWORD(wParam) == CBN_SELCHANGE) {
+            if (LOWORD(wParam) == 20 && HIWORD(wParam) == CBN_SELCHANGE) {
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             break;
@@ -91,9 +103,9 @@ LRESULT CALLBACK PanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int cellH = sz.cy + 20;
                         if (mx >= x && mx <= x + cellW && my >= y && my <= y + cellH) {
                             anatomyChar = (WCHAR)i;
-                            char str[4] = {0};
-                            WideCharToMultiByte(CP_ACP, 0, &anatomyChar, 1, str, sizeof(str), NULL, NULL);
-                            SetWindowTextA(hAnatomyChar, str);
+                            WCHAR wBuf[16];
+                            wsprintfW(wBuf, L"U+%04X", (UINT)i);
+                            SetWindowTextW(hAnatomyChar, wBuf);
                             currentTab = 3;
                             SendMessage(hTabAnatomy, BM_SETCHECK, BST_CHECKED, 0);
                             SendMessage(hTabGlyphs, BM_SETCHECK, BST_UNCHECKED, 0);
@@ -112,7 +124,14 @@ LRESULT CALLBACK PanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_PAINT: {
             PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hwnd, &ps);
+            HDC hdcScreen = BeginPaint(hwnd, &ps);
+            RECT rcClient;
+            GetClientRect(hwnd, &rcClient);
+            HDC hdc = CreateCompatibleDC(hdcScreen);
+            HBITMAP hBmp = CreateCompatibleBitmap(hdcScreen, rcClient.right, rcClient.bottom);
+            HBITMAP hOldBmp = (HBITMAP)SelectObject(hdc, hBmp);
+
+            FillRect(hdc, &rcClient, hPanelBrush);
             SetBkMode(hdc, TRANSPARENT);
             SetTextColor(hdc, RGB(0,0,0));
             
@@ -201,12 +220,13 @@ LRESULT CALLBACK PanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int sizes[] = {10, 12, 16, 20, 24, 32};
                 for(int i=0; i<6; i++) {
                     HFONT hSz = CreateFontA(-sizes[i], 0, 0, 0, isBold?FW_BOLD:FW_NORMAL, isItalic, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, currentFontName);
-                    SelectObject(hdc, hSz);
+                    HFONT hPrev = SelectObject(hdc, hSz);
                     wsprintfA(buf, "%dpx: The quick brown fox", sizes[i]);
                     TextOutA(hdc, 10, y, buf, lstrlenA(buf));
                     SIZE sz;
                     GetTextExtentPoint32A(hdc, buf, lstrlenA(buf), &sz);
                     y += sz.cy + 5;
+                    SelectObject(hdc, hPrev);
                     DeleteObject(hSz);
                 }
                 
@@ -376,6 +396,10 @@ LRESULT CALLBACK PanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SelectObject(hdc, hOld);
             }
             
+            BitBlt(hdcScreen, 0, 0, rcClient.right, rcClient.bottom, hdc, 0, 0, SRCCOPY);
+            SelectObject(hdc, hOldBmp);
+            DeleteObject(hBmp);
+            DeleteDC(hdc);
             EndPaint(hwnd, &ps);
             break;
         }
@@ -397,6 +421,119 @@ BOOL CALLBACK SetFontProc(HWND child, LPARAM font) {
     return TRUE;
 }
 
+void CopyAnatomyToClipboard(HWND hwnd) {
+    HDC hdc = GetDC(hwnd);
+    int bigSize = 160;
+    HFONT hBigFont = CreateFontA(-bigSize, 0, 0, 0, isBold ? FW_BOLD : FW_NORMAL, isItalic, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, currentFontName);
+    HFONT hOld = SelectObject(hdc, hBigFont);
+    
+    TEXTMETRICW tmBig;
+    GetTextMetricsW(hdc, &tmBig);
+    ABC abc = {0};
+    GetCharABCWidthsW(hdc, (UINT)anatomyChar, (UINT)anatomyChar, &abc);
+    GLYPHMETRICS gm = {0};
+    MAT2 mat2 = {{0,1}, {0,0}, {0,0}, {0,1}};
+    GetGlyphOutlineW(hdc, (UINT)anatomyChar, GGO_METRICS, &gm, 0, NULL, &mat2);
+    
+    SelectObject(hdc, hOld);
+    DeleteObject(hBigFont);
+    ReleaseDC(hwnd, hdc);
+    
+    char utf8Buf[64];
+    GetUtf8String(anatomyChar, utf8Buf, sizeof(utf8Buf));
+    
+    char report[1024];
+    wsprintfA(report,
+        "=== KFont Glyph Anatomy Report ===\r\n"
+        "Font: %s (%d px%s%s)\r\n"
+        "Glyph: U+%04X (Dec: %u)\r\n"
+        "UTF-8 Bytes: %s\r\n"
+        "UTF-16 Code Unit: 0x%04X\r\n"
+        "HTML Entities: &#%u; (%s)\r\n"
+        "C/C++ Literal: \\u%04X\r\n\r\n"
+        "[ ABC Spacing & Bearings ]\r\n"
+        "Left Side Bearing (LSB): %d px\r\n"
+        "Black Box (Body): %u px (W: %u x H: %u)\r\n"
+        "Right Side Bearing (RSB): %d px\r\n"
+        "Total Advance Width: %d px\r\n"
+        "Em Ascent: %d px, Descent: %d px\r\n",
+        currentFontName, currentSize, isBold ? ", Bold" : "", isItalic ? ", Italic" : "",
+        (unsigned int)anatomyChar, (unsigned int)anatomyChar,
+        utf8Buf, (unsigned int)anatomyChar, (unsigned int)anatomyChar, GetHtmlEntity(anatomyChar),
+        (unsigned int)anatomyChar,
+        abc.abcA, abc.abcB, gm.gmBlackBoxX, gm.gmBlackBoxY, abc.abcC,
+        abc.abcA + (int)abc.abcB + abc.abcC,
+        tmBig.tmAscent, tmBig.tmDescent);
+
+    if (OpenClipboard(hwnd)) {
+        EmptyClipboard();
+        int len = lstrlenA(report) + 1;
+        HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len);
+        if (hMem) {
+            char* pMem = (char*)GlobalLock(hMem);
+            if (pMem) {
+                lstrcpyA(pMem, report);
+                GlobalUnlock(hMem);
+                SetClipboardData(CF_TEXT, hMem);
+            }
+        }
+        CloseClipboard();
+        MessageBoxA(hwnd, "Anatomy report copied to clipboard!", "KFont", MB_OK | MB_ICONINFORMATION);
+    }
+}
+
+void SelectTab(HWND hwnd, int tabIdx) {
+    if (tabIdx < 0 || tabIdx > 4) return;
+    currentTab = tabIdx;
+    HWND tabs[] = {hTabMetrics, hTabGlyphs, hTabDiag, hTabAnatomy, hTabSample};
+    for (int i = 0; i < 5; i++) {
+        SendMessage(tabs[i], BM_SETCHECK, (i == currentTab) ? BST_CHECKED : BST_UNCHECKED, 0);
+    }
+    ShowWindow(hRangeList, currentTab == 1 ? SW_SHOW : SW_HIDE);
+    InvalidateRect(hPanel, NULL, TRUE);
+}
+
+void UpdateFont(HWND hwnd) {
+    isBold = SendMessage(hBold, BM_GETCHECK, 0, 0) == BST_CHECKED;
+    isItalic = SendMessage(hItalic, BM_GETCHECK, 0, 0) == BST_CHECKED;
+
+    int sel = SendMessage(hList, LB_GETCURSEL, 0, 0);
+    if (sel != LB_ERR) {
+        SendMessage(hList, LB_GETTEXT, sel, (LPARAM)currentFontName);
+        
+        int sizeSel = SendMessage(hSizeList, CB_GETCURSEL, 0, 0);
+        if (sizeSel != CB_ERR) {
+            char sizeStr[16];
+            SendMessage(hSizeList, CB_GETLBTEXT, sizeSel, (LPARAM)sizeStr);
+            currentSize = 0;
+            for (int i = 0; sizeStr[i]; i++) currentSize = currentSize * 10 + (sizeStr[i] - '0');
+        }
+        
+        HFONT hOldFont = hCurrentFont;
+        hCurrentFont = CreateFontA(-currentSize, 0, 0, 0, isBold ? FW_BOLD : FW_NORMAL, isItalic, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, currentFontName);
+        if (hOldFont) DeleteObject(hOldFont);
+        InvalidateRect(hPanel, NULL, TRUE);
+    }
+}
+
+void ShowHelpDialog(HWND hwnd) {
+    MessageBox(hwnd,
+        "KFont - Font Metrics & Anatomy Inspector\n\n"
+        "Tabs:\n"
+        "1. Metrics & OS/2: Inspect font bounds and text metrics\n"
+        "2. Unicode Ranges: Browse glyphs by block (click to inspect in Anatomy)\n"
+        "3. Diagnostics: View visual kerning pairs and hinting across sizes\n"
+        "4. Anatomy: Vector metrics, ABC spacing, bearings, and codecs\n"
+        "5. Live Sample: Test font with custom editable text\n\n"
+        "Shortcuts:\n"
+        "[1-5] : Switch Tabs\n"
+        "[B]   : Toggle Bold\n"
+        "[I]   : Toggle Italic\n"
+        "[C]   : Copy Anatomy Report to Clipboard\n"
+        "[H/F1]: Show this Help dialog",
+        "KFont Help", MB_OK | MB_ICONINFORMATION);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
@@ -407,10 +544,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             CreateWindowEx(0, "STATIC", "System Fonts:", WS_CHILD | WS_VISIBLE, 10, 10, 150, 20, hwnd, NULL, NULL, NULL);
-            hList = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_SORT, 10, 30, 150, 140, hwnd, (HMENU)1, NULL, NULL);
+            hList = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_SORT | WS_TABSTOP, 10, 30, 150, 140, hwnd, (HMENU)1, NULL, NULL);
             
             CreateWindowEx(0, "STATIC", "Size:", WS_CHILD | WS_VISIBLE, 10, 175, 150, 20, hwnd, NULL, NULL, NULL);
-            hSizeList = CreateWindowEx(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, 10, 195, 150, 200, hwnd, (HMENU)2, NULL, NULL);
+            hSizeList = CreateWindowEx(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP, 10, 195, 150, 200, hwnd, (HMENU)2, NULL, NULL);
             const char* sizes[] = {"12", "16", "24", "32", "48", "64"};
             for (int i = 0; i < 6; i++) {
                 SendMessage(hSizeList, CB_ADDSTRING, 0, (LPARAM)sizes[i]);
@@ -418,20 +555,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hSizeList, CB_SETCURSEL, 2, 0);
             
             CreateWindowEx(0, "STATIC", "Inspect Glyph / Char:", WS_CHILD | WS_VISIBLE, 10, 225, 150, 20, hwnd, NULL, NULL, NULL);
-            hAnatomyChar = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "A", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 10, 245, 150, 24, hwnd, (HMENU)6, NULL, NULL);
+            hAnatomyChar = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "A", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 10, 245, 150, 24, hwnd, (HMENU)6, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Custom Text:", WS_CHILD | WS_VISIBLE, 10, 275, 150, 20, hwnd, NULL, NULL, NULL);
-            hCustomText = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "The quick brown fox jumps over the lazy dog.\r\n\r\n0123456789\r\n\r\nAa Bb Cc Dd Ee Ff", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL, 10, 295, 150, 90, hwnd, (HMENU)3, NULL, NULL);
+            hCustomText = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "The quick brown fox jumps over the lazy dog.\r\n\r\n0123456789\r\n\r\nAa Bb Cc Dd Ee Ff", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | WS_TABSTOP, 10, 295, 150, 90, hwnd, (HMENU)3, NULL, NULL);
 
-            hBold = CreateWindowEx(0, "BUTTON", "Bold", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 10, 395, 70, 20, hwnd, (HMENU)4, NULL, NULL);
-            hItalic = CreateWindowEx(0, "BUTTON", "Italic", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 80, 395, 70, 20, hwnd, (HMENU)5, NULL, NULL);
+            hBold = CreateWindowEx(0, "BUTTON", "Bold", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP, 10, 395, 70, 20, hwnd, (HMENU)4, NULL, NULL);
+            hItalic = CreateWindowEx(0, "BUTTON", "Italic", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP, 80, 395, 70, 20, hwnd, (HMENU)5, NULL, NULL);
             
-            hTabMetrics = CreateWindowEx(0, "BUTTON", "Metrics", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_GROUP, 170, 10, 75, 20, hwnd, (HMENU)10, NULL, NULL);
-            hTabGlyphs = CreateWindowEx(0, "BUTTON", "Glyphs", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 250, 10, 75, 20, hwnd, (HMENU)11, NULL, NULL);
-            hTabDiag = CreateWindowEx(0, "BUTTON", "Diagnostics", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 330, 10, 95, 20, hwnd, (HMENU)12, NULL, NULL);
-            hTabAnatomy = CreateWindowEx(0, "BUTTON", "Anatomy", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 430, 10, 85, 20, hwnd, (HMENU)13, NULL, NULL);
-            hTabSample = CreateWindowEx(0, "BUTTON", "Sample", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, 520, 10, 80, 20, hwnd, (HMENU)14, NULL, NULL);
-            hHelpBtn = CreateWindowEx(0, "BUTTON", "Help (H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 610, 10, 80, 20, hwnd, (HMENU)15, NULL, NULL);
+            hTabMetrics = CreateWindowEx(0, "BUTTON", "Metrics", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 170, 10, 75, 20, hwnd, (HMENU)10, NULL, NULL);
+            hTabGlyphs = CreateWindowEx(0, "BUTTON", "Glyphs", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 250, 10, 75, 20, hwnd, (HMENU)11, NULL, NULL);
+            hTabDiag = CreateWindowEx(0, "BUTTON", "Diagnostics", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 330, 10, 95, 20, hwnd, (HMENU)12, NULL, NULL);
+            hTabAnatomy = CreateWindowEx(0, "BUTTON", "Anatomy", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 430, 10, 85, 20, hwnd, (HMENU)13, NULL, NULL);
+            hTabSample = CreateWindowEx(0, "BUTTON", "Sample", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 520, 10, 80, 20, hwnd, (HMENU)14, NULL, NULL);
+            hCopyBtn = CreateWindowEx(0, "BUTTON", "Copy (C)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 610, 10, 80, 20, hwnd, (HMENU)16, NULL, NULL);
+            hHelpBtn = CreateWindowEx(0, "BUTTON", "Help (H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 700, 10, 80, 20, hwnd, (HMENU)15, NULL, NULL);
             
             SendMessage(hTabMetrics, BM_SETCHECK, BST_CHECKED, 0);
 
@@ -445,7 +583,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             hPanel = CreateWindowEx(WS_EX_CLIENTEDGE, "KFontPanel", "", WS_CHILD | WS_VISIBLE, 170, 40, W - 190, H - 50, hwnd, NULL, NULL, NULL);
             
-            hRangeList = CreateWindowEx(0, "COMBOBOX", "", WS_CHILD | CBS_DROPDOWNLIST | WS_VSCROLL, 10, 10, 250, 200, hPanel, (HMENU)14, NULL, NULL);
+            hRangeList = CreateWindowEx(0, "COMBOBOX", "", WS_CHILD | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP, 10, 10, 250, 200, hPanel, (HMENU)20, NULL, NULL);
             const char* blocks[] = {
                 "Basic Latin (0020-007F)",
                 "Latin-1 Supp (00A0-00FF)",
@@ -474,20 +612,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_COMMAND: {
             if (LOWORD(wParam) == 15 && HIWORD(wParam) == BN_CLICKED) {
-                MessageBox(hwnd, "Metrics & OS/2: Inspect font measurements and bounds.\nUnicode Ranges: View glyphs organized by unicode block (click any glyph to inspect).\nDiagnostics: Check visual kerning and hinting at various sizes.\nAnatomy: Interactive glyph vector metrics, ABC spacing, bearings & multi-encoding dissector.\nSample: Test how the font looks with custom text.", "KFont Help", MB_OK | MB_ICONINFORMATION);
+                ShowHelpDialog(hwnd);
+            }
+            else if (LOWORD(wParam) == 16 && HIWORD(wParam) == BN_CLICKED) {
+                CopyAnatomyToClipboard(hwnd);
             }
             else if (LOWORD(wParam) >= 10 && LOWORD(wParam) <= 14 && HIWORD(wParam) == BN_CLICKED) {
-                currentTab = LOWORD(wParam) - 10;
-                ShowWindow(hRangeList, currentTab == 1 ? SW_SHOW : SW_HIDE);
-                InvalidateRect(hPanel, NULL, TRUE);
+                SelectTab(hwnd, LOWORD(wParam) - 10);
             }
             else if (LOWORD(wParam) == 6 && HIWORD(wParam) == EN_CHANGE) {
-                char text[16] = {0};
-                GetWindowTextA(hAnatomyChar, text, sizeof(text));
-                if (text[0]) {
-                    WCHAR wText[4] = {0};
-                    MultiByteToWideChar(CP_ACP, 0, text, -1, wText, 4);
-                    anatomyChar = wText[0];
+                WCHAR wText[32] = {0};
+                GetWindowTextW(hAnatomyChar, wText, 32);
+                if (wText[0]) {
+                    if ((wText[0] == L'U' || wText[0] == L'u') && wText[1] == L'+') {
+                        anatomyChar = (WCHAR)ParseHexW(wText + 2);
+                    } else if (wText[0] == L'0' && (wText[1] == L'x' || wText[1] == L'X')) {
+                        anatomyChar = (WCHAR)ParseHexW(wText + 2);
+                    } else if (lstrlenW(wText) == 4 && ParseHexW(wText) != 0) {
+                        anatomyChar = (WCHAR)ParseHexW(wText);
+                    } else {
+                        anatomyChar = wText[0];
+                    }
                     if (currentTab == 3) InvalidateRect(hPanel, NULL, TRUE);
                 }
             }
@@ -503,26 +648,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 }
                 
-                isBold = SendMessage(hBold, BM_GETCHECK, 0, 0) == BST_CHECKED;
-                isItalic = SendMessage(hItalic, BM_GETCHECK, 0, 0) == BST_CHECKED;
-                
-                int sel = SendMessage(hList, LB_GETCURSEL, 0, 0);
-                if (sel != LB_ERR) {
-                    SendMessage(hList, LB_GETTEXT, sel, (LPARAM)currentFontName);
-                    
-                    int sizeSel = SendMessage(hSizeList, CB_GETCURSEL, 0, 0);
-                    if (sizeSel != CB_ERR) {
-                        char sizeStr[16];
-                        SendMessage(hSizeList, CB_GETLBTEXT, sizeSel, (LPARAM)sizeStr);
-                        currentSize = 0;
-                        for (int i = 0; sizeStr[i]; i++) currentSize = currentSize * 10 + (sizeStr[i] - '0');
-                    }
-                    
-                    HFONT hOldFont = hCurrentFont;
-                    hCurrentFont = CreateFontA(-currentSize, 0, 0, 0, isBold ? FW_BOLD : FW_NORMAL, isItalic, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, currentFontName);
-                    if (hOldFont) DeleteObject(hOldFont);
-                    InvalidateRect(hPanel, NULL, TRUE);
-                }
+                UpdateFont(hwnd);
             }
             break;
         }
@@ -587,14 +713,38 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
-        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1)) {
-            if (GetFocus() != hCustomText && GetFocus() != hAnatomyChar) {
-                MessageBox(hwnd, "Metrics & OS/2: Inspect font measurements and bounds.\nUnicode Ranges: View glyphs organized by unicode block (click any glyph to inspect).\nDiagnostics: Check visual kerning and hinting at various sizes.\nAnatomy: Interactive glyph vector metrics, ABC spacing, bearings & multi-encoding dissector.\nSample: Test how the font looks with custom text.", "KFont Help", MB_OK | MB_ICONINFORMATION);
-                continue;
+        if (msg.message == WM_KEYDOWN) {
+            HWND hFocus = GetFocus();
+            BOOL inEdit = (hFocus == hCustomText || hFocus == hAnatomyChar);
+            if (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1) {
+                if (!inEdit) {
+                    ShowHelpDialog(hwnd);
+                    continue;
+                }
+            } else if (!inEdit) {
+                if (msg.wParam >= '1' && msg.wParam <= '5') {
+                    SelectTab(hwnd, (int)(msg.wParam - '1'));
+                    continue;
+                } else if (msg.wParam == 'B' || msg.wParam == 'b') {
+                    isBold = !isBold;
+                    SendMessage(hBold, BM_SETCHECK, isBold ? BST_CHECKED : BST_UNCHECKED, 0);
+                    UpdateFont(hwnd);
+                    continue;
+                } else if (msg.wParam == 'I' || msg.wParam == 'i') {
+                    isItalic = !isItalic;
+                    SendMessage(hItalic, BM_SETCHECK, isItalic ? BST_CHECKED : BST_UNCHECKED, 0);
+                    UpdateFont(hwnd);
+                    continue;
+                } else if (msg.wParam == 'C' || msg.wParam == 'c') {
+                    CopyAnatomyToClipboard(hwnd);
+                    continue;
+                }
             }
         }
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        if (!IsDialogMessage(hwnd, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
     ExitProcess(0);
 }
