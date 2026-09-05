@@ -1,6 +1,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <commdlg.h>
+#include <shellapi.h>
 
 #define WINDOW_WIDTH 1000
 #define WINDOW_HEIGHT 700
@@ -103,6 +104,7 @@ long _ftol2(float f) { return (long)f; }
 
 // Helper function to create top-down 32-bit DIB Section
 HBITMAP Create32BitDIB(int w, int h, RGBQUAD** ppBits) {
+    if (w <= 0 || h <= 0 || w > 8192 || h > 8192) return NULL;
     BITMAPINFO bmi = {0};
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi.bmiHeader.biWidth = w;
@@ -119,8 +121,14 @@ HBITMAP Create32BitDIB(int w, int h, RGBQUAD** ppBits) {
 
 // Clone DIB Section
 void CopyBitmapToWork(HBITMAP hSrc, int w, int h) {
+    if (!hSrc || w <= 0 || h <= 0) return;
+    RGBQUAD* pNewBits = NULL;
+    HBITMAP hNew = Create32BitDIB(w, h, &pNewBits);
+    if (!hNew || !pNewBits) return;
+
     if (g_hBmpWork) DeleteObject(g_hBmpWork);
-    g_hBmpWork = Create32BitDIB(w, h, &g_pBitsWork);
+    g_hBmpWork = hNew;
+    g_pBitsWork = pNewBits;
     g_bmpW = w;
     g_bmpH = h;
 
@@ -215,6 +223,9 @@ void ScanDirectoryForPlaylist(const char* szFile) {
                 }
             } while (FindNextFileA(hFind, &fd));
             FindClose(hFind);
+        }
+        if (g_fileCount > 0 && g_fileIndex < 0) {
+            g_fileIndex = 0;
         }
     }
 }
@@ -335,19 +346,27 @@ void FilterBrightness(int delta) {
 }
 
 void FilterBlur() {
-    if (!g_pBitsWork || g_bmpW < 3 || g_bmpH < 3) return;
+    if (!g_pBitsWork || g_bmpW < 1 || g_bmpH < 1) return;
     if ((long long)g_bmpW * g_bmpH * sizeof(RGBQUAD) > 256 * 1024 * 1024) return;
-    SIZE_T bufSize = g_bmpW * g_bmpH * sizeof(RGBQUAD);
+    SIZE_T bufSize = (SIZE_T)g_bmpW * g_bmpH * sizeof(RGBQUAD);
     RGBQUAD* temp = (RGBQUAD*)HeapAlloc(GetProcessHeap(), 0, bufSize);
     if (!temp) return;
     memcpy(temp, g_pBitsWork, bufSize);
 
-    for (int y = 1; y < g_bmpH - 1; y++) {
-        for (int x = 1; x < g_bmpW - 1; x++) {
+    for (int y = 0; y < g_bmpH; y++) {
+        for (int x = 0; x < g_bmpW; x++) {
             int r = 0, g = 0, b = 0;
             for (int dy = -1; dy <= 1; dy++) {
+                int sy = y + dy;
+                if (sy < 0) sy = 0;
+                else if (sy >= g_bmpH) sy = g_bmpH - 1;
+
                 for (int dx = -1; dx <= 1; dx++) {
-                    RGBQUAD p = temp[(y + dy) * g_bmpW + (x + dx)];
+                    int sx = x + dx;
+                    if (sx < 0) sx = 0;
+                    else if (sx >= g_bmpW) sx = g_bmpW - 1;
+
+                    RGBQUAD p = temp[sy * g_bmpW + sx];
                     r += p.rgbRed; g += p.rgbGreen; b += p.rgbBlue;
                 }
             }
@@ -441,11 +460,12 @@ void FilterSobel() {
 
 // Transformations
 void RotateImage90(int cw) {
-    if (!g_pBitsWork) return;
+    if (!g_pBitsWork || g_bmpW <= 0 || g_bmpH <= 0) return;
     int nw = g_bmpH;
     int nh = g_bmpW;
     RGBQUAD* pNewBits = NULL;
     HBITMAP hNewBmp = Create32BitDIB(nw, nh, &pNewBits);
+    if (!hNewBmp || !pNewBits) return;
 
     for (int y = 0; y < g_bmpH; y++) {
         for (int x = 0; x < g_bmpW; x++) {
@@ -463,7 +483,7 @@ void RotateImage90(int cw) {
 }
 
 void FlipImage(int horiz) {
-    if (!g_pBitsWork) return;
+    if (!g_pBitsWork || g_bmpW <= 0 || g_bmpH <= 0) return;
     if (horiz) {
         for (int y = 0; y < g_bmpH; y++) {
             for (int x = 0; x < g_bmpW / 2; x++) {
@@ -484,7 +504,7 @@ void FlipImage(int horiz) {
 }
 
 void ResizeImageScale(float factor) {
-    if (!g_pBitsWork || factor <= 0.0f) return;
+    if (!g_pBitsWork || factor <= 0.0f || g_bmpW <= 0 || g_bmpH <= 0) return;
     int nw = (int)(g_bmpW * factor);
     int nh = (int)(g_bmpH * factor);
     if (nw < 1) nw = 1;
@@ -493,6 +513,7 @@ void ResizeImageScale(float factor) {
 
     RGBQUAD* pNewBits = NULL;
     HBITMAP hNewBmp = Create32BitDIB(nw, nh, &pNewBits);
+    if (!hNewBmp || !pNewBits) return;
 
     for (int y = 0; y < nh; y++) {
         int sy = y * g_bmpH / nh;
@@ -510,7 +531,7 @@ void ResizeImageScale(float factor) {
 }
 
 void CropImageToRect(RECT rc) {
-    if (!g_pBitsWork) return;
+    if (!g_pBitsWork || g_bmpW <= 0 || g_bmpH <= 0) return;
     int x1 = rc.left < rc.right ? rc.left : rc.right;
     int y1 = rc.top < rc.bottom ? rc.top : rc.bottom;
     int x2 = rc.left > rc.right ? rc.left : rc.right;
@@ -523,10 +544,11 @@ void CropImageToRect(RECT rc) {
 
     int nw = x2 - x1 + 1;
     int nh = y2 - y1 + 1;
-    if (nw <= 0 || nh <= 0) return;
+    if (nw < 4 || nh < 4) return;
 
     RGBQUAD* pNewBits = NULL;
     HBITMAP hNewBmp = Create32BitDIB(nw, nh, &pNewBits);
+    if (!hNewBmp || !pNewBits) return;
 
     for (int y = 0; y < nh; y++) {
         for (int x = 0; x < nw; x++) {
@@ -615,29 +637,34 @@ void DrawRGBHistogram(HDC hdc, RECT rc) {
 void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd,
         "KImage Pro - High-Fidelity Image Studio\n\n"
-        "KEYBOARD SHORTCUTS:\n"
+        "KEYBOARD & MOUSE SHORTCUTS:\n"
         "• O / Ctrl+O : Open BMP Image / Scan Directory\n"
         "• Ctrl+S : Save / Export Current Image\n"
         "• H / F1 : Open this Help Guide\n"
         "• Space : Play / Pause Slideshow\n"
         "• Left / Right Arrow : Previous / Next Image\n"
         "• + / - : Zoom In / Out\n"
+        "• Mouse Wheel : Zoom In / Out\n"
         "• 0 / Home : Reset Zoom (1:1)\n"
+        "• [ / ] : Rotate ↺ -90° / ↻ +90°\n"
+        "• C : Toggle Interactive Crop Tool\n"
+        "• D : Toggle Annotation Brush Tool\n"
         "• S : Sharpen Convolution Filter\n"
         "• E : Edge Detection Filter\n"
         "• G : Grayscale Filter\n"
         "• P : Sepia Filter\n"
         "• I : Invert Colors\n"
-        "• B : 3x3 Box Blur\n"
+        "• B : 3x3 Box Blur Filter\n"
         "• R : Reset to Original Base Image\n"
-        "• Esc : Cancel Crop / Deselect Tools\n\n"
+        "• Esc : Cancel Crop / Deselect Active Tools\n"
+        "• Drag & Drop : Drop any BMP file directly onto window\n\n"
         "TOOLBAR CONTROLS:\n"
         "• Open / Save: Load or export 32-bit BMP files\n"
         "• Rotate & Flip: ↺ -90°, ↻ +90°, Horizontal & Vertical Flip\n"
         "• Color FX: Grayscale, Sepia, Invert, Blur, Brightness (+/-)\n"
         "• Spatial Kernels: Sharpen, Edge Detect, Emboss, Sobel\n"
-        "• Interactive Crop: Drag bounding box to crop canvas\n"
-        "• Annotation Draw: Freehand blue brush tool\n"
+        "• Interactive Crop: Drag bounding box on canvas to crop\n"
+        "• Annotation Draw: Freehand drawing tool with blue ink\n"
         "• Slideshow: Auto-cycles all BMPs in directory (2.5s interval)\n"
         "• Sidebar: Live RGB Color Histogram & Image Metadata\n",
         "KImage Pro User Guide", MB_OK | MB_ICONINFORMATION);
@@ -647,6 +674,7 @@ void ShowHelpDialog(HWND hwnd) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
+            DragAcceptFiles(hwnd, TRUE);
             HDC hdc = GetDC(hwnd);
             int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
             ReleaseDC(hwnd, hdc);
@@ -655,82 +683,82 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             int x = 4, y = 6, btnH = 28;
 
-            HWND hBtn = CreateWindowEx(0, "BUTTON", "Open", WS_CHILD | WS_VISIBLE, x, y, 46, btnH, hwnd, (HMENU)ID_BTN_OPEN, NULL, NULL);
+            HWND hBtn = CreateWindowEx(0, "BUTTON", "Open", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 46, btnH, hwnd, (HMENU)ID_BTN_OPEN, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 49;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE, x, y, 46, btnH, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 46, btnH, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 49;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE, x, y, 62, btnH, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 62, btnH, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 65;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "-", WS_CHILD | WS_VISIBLE, x, y, 24, btnH, hwnd, (HMENU)ID_BTN_ZOOM_OUT, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "-", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 24, btnH, hwnd, (HMENU)ID_BTN_ZOOM_OUT, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 27;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "+", WS_CHILD | WS_VISIBLE, x, y, 24, btnH, hwnd, (HMENU)ID_BTN_ZOOM_IN, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "+", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 24, btnH, hwnd, (HMENU)ID_BTN_ZOOM_IN, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 27;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "1:1", WS_CHILD | WS_VISIBLE, x, y, 30, btnH, hwnd, (HMENU)ID_BTN_ZOOM_RESET, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "1:1", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 30, btnH, hwnd, (HMENU)ID_BTN_ZOOM_RESET, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 33;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "↺", WS_CHILD | WS_VISIBLE, x, y, 26, btnH, hwnd, (HMENU)ID_BTN_ROT_CCW, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "↺", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 26, btnH, hwnd, (HMENU)ID_BTN_ROT_CCW, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 29;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "↻", WS_CHILD | WS_VISIBLE, x, y, 26, btnH, hwnd, (HMENU)ID_BTN_ROT_CW, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "↻", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 26, btnH, hwnd, (HMENU)ID_BTN_ROT_CW, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 29;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "FlpH", WS_CHILD | WS_VISIBLE, x, y, 38, btnH, hwnd, (HMENU)ID_BTN_FLIP_H, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "FlpH", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 38, btnH, hwnd, (HMENU)ID_BTN_FLIP_H, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 41;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "FlpV", WS_CHILD | WS_VISIBLE, x, y, 38, btnH, hwnd, (HMENU)ID_BTN_FLIP_V, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "FlpV", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 38, btnH, hwnd, (HMENU)ID_BTN_FLIP_V, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 41;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Gray", WS_CHILD | WS_VISIBLE, x, y, 38, btnH, hwnd, (HMENU)ID_BTN_GRAYSCALE, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "Gray", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 38, btnH, hwnd, (HMENU)ID_BTN_GRAYSCALE, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 41;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Sepia", WS_CHILD | WS_VISIBLE, x, y, 42, btnH, hwnd, (HMENU)ID_BTN_SEPIA, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "Sepia", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 42, btnH, hwnd, (HMENU)ID_BTN_SEPIA, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 45;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Inv", WS_CHILD | WS_VISIBLE, x, y, 34, btnH, hwnd, (HMENU)ID_BTN_INVERT, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "Inv", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 34, btnH, hwnd, (HMENU)ID_BTN_INVERT, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 37;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Blur", WS_CHILD | WS_VISIBLE, x, y, 36, btnH, hwnd, (HMENU)ID_BTN_BLUR, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "Blur", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 36, btnH, hwnd, (HMENU)ID_BTN_BLUR, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 39;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Sharp", WS_CHILD | WS_VISIBLE, x, y, 42, btnH, hwnd, (HMENU)ID_BTN_SHARPEN, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "Sharp", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 42, btnH, hwnd, (HMENU)ID_BTN_SHARPEN, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 45;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Edge", WS_CHILD | WS_VISIBLE, x, y, 38, btnH, hwnd, (HMENU)ID_BTN_EDGE, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "Edge", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 38, btnH, hwnd, (HMENU)ID_BTN_EDGE, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 41;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Emboss", WS_CHILD | WS_VISIBLE, x, y, 50, btnH, hwnd, (HMENU)ID_BTN_EMBOSS, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "Emboss", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 50, btnH, hwnd, (HMENU)ID_BTN_EMBOSS, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 53;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Sobel", WS_CHILD | WS_VISIBLE, x, y, 42, btnH, hwnd, (HMENU)ID_BTN_SOBEL, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "Sobel", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 42, btnH, hwnd, (HMENU)ID_BTN_SOBEL, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 45;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Br+", WS_CHILD | WS_VISIBLE, x, y, 30, btnH, hwnd, (HMENU)ID_BTN_BRIGHT_UP, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "Br+", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 30, btnH, hwnd, (HMENU)ID_BTN_BRIGHT_UP, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 33;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Br-", WS_CHILD | WS_VISIBLE, x, y, 30, btnH, hwnd, (HMENU)ID_BTN_BRIGHT_DOWN, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "Br-", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 30, btnH, hwnd, (HMENU)ID_BTN_BRIGHT_DOWN, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 33;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE, x, y, 44, btnH, hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 44, btnH, hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 47;
 
-            g_hBtnCrop = CreateWindowEx(0, "BUTTON", "Crop", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_PUSHLIKE, x, y, 40, btnH, hwnd, (HMENU)ID_BTN_CROP, NULL, NULL);
+            g_hBtnCrop = CreateWindowEx(0, "BUTTON", "Crop", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX | BS_PUSHLIKE, x, y, 40, btnH, hwnd, (HMENU)ID_BTN_CROP, NULL, NULL);
             SendMessage(g_hBtnCrop, WM_SETFONT, (WPARAM)hFont, TRUE); x += 43;
 
-            g_hBtnDraw = CreateWindowEx(0, "BUTTON", "Draw", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_PUSHLIKE, x, y, 40, btnH, hwnd, (HMENU)ID_BTN_DRAW, NULL, NULL);
+            g_hBtnDraw = CreateWindowEx(0, "BUTTON", "Draw", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX | BS_PUSHLIKE, x, y, 40, btnH, hwnd, (HMENU)ID_BTN_DRAW, NULL, NULL);
             SendMessage(g_hBtnDraw, WM_SETFONT, (WPARAM)hFont, TRUE); x += 43;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "◀", WS_CHILD | WS_VISIBLE, x, y, 26, btnH, hwnd, (HMENU)ID_BTN_PREV, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "◀", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 26, btnH, hwnd, (HMENU)ID_BTN_PREV, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x += 29;
 
-            g_hBtnPlay = CreateWindowEx(0, "BUTTON", "▶ Play", WS_CHILD | WS_VISIBLE, x, y, 54, btnH, hwnd, (HMENU)ID_BTN_PLAY, NULL, NULL);
+            g_hBtnPlay = CreateWindowEx(0, "BUTTON", "▶ Play", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 54, btnH, hwnd, (HMENU)ID_BTN_PLAY, NULL, NULL);
             SendMessage(g_hBtnPlay, WM_SETFONT, (WPARAM)hFont, TRUE); x += 57;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "▶", WS_CHILD | WS_VISIBLE, x, y, 26, btnH, hwnd, (HMENU)ID_BTN_NEXT, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "▶", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 26, btnH, hwnd, (HMENU)ID_BTN_NEXT, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             g_hPenDraw = CreatePen(PS_SOLID, 3, RGB(59, 130, 246));
@@ -870,24 +898,57 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
+        case WM_DROPFILES: {
+            HDROP hDrop = (HDROP)wParam;
+            char szDroppedFile[MAX_PATH];
+            if (DragQueryFileA(hDrop, 0, szDroppedFile, sizeof(szDroppedFile))) {
+                LoadBitmapFile(hwnd, szDroppedFile);
+                ScanDirectoryForPlaylist(szDroppedFile);
+            }
+            DragFinish(hDrop);
+            break;
+        }
+        case WM_MOUSEWHEEL: {
+            if (!g_hBmpWork) break;
+            short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+            if (delta > 0) {
+                g_zoom = (g_zoom * 1.15f > 10.0f) ? 10.0f : (g_zoom * 1.15f);
+            } else if (delta < 0) {
+                g_zoom = (g_zoom / 1.15f < 0.1f) ? 0.1f : (g_zoom / 1.15f);
+            }
+            InvalidateRect(hwnd, NULL, TRUE);
+            break;
+        }
         case WM_KEYDOWN: {
-            if (wParam == 'O') {
+            if (wParam == 'O' || wParam == 'o') {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_OPEN, 0);
-            } else if (wParam == 'S') {
+            } else if (wParam == 'S' || wParam == 's') {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_SHARPEN, 0);
-            } else if (wParam == 'E') {
+            } else if (wParam == 'E' || wParam == 'e') {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_EDGE, 0);
-            } else if (wParam == 'G') {
+            } else if (wParam == 'G' || wParam == 'g') {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_GRAYSCALE, 0);
-            } else if (wParam == 'P') {
+            } else if (wParam == 'P' || wParam == 'p') {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_SEPIA, 0);
-            } else if (wParam == 'I') {
+            } else if (wParam == 'I' || wParam == 'i') {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_INVERT, 0);
-            } else if (wParam == 'B') {
+            } else if (wParam == 'B' || wParam == 'b') {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_BLUR, 0);
-            } else if (wParam == 'R') {
+            } else if (wParam == 'C' || wParam == 'c') {
+                g_cropMode = !g_cropMode;
+                if (g_cropMode) { g_drawMode = 0; if (g_hBtnDraw) SendMessage(g_hBtnDraw, BM_SETCHECK, BST_UNCHECKED, 0); }
+                if (g_hBtnCrop) SendMessage(g_hBtnCrop, BM_SETCHECK, g_cropMode ? BST_CHECKED : BST_UNCHECKED, 0);
+            } else if (wParam == 'D' || wParam == 'd') {
+                g_drawMode = !g_drawMode;
+                if (g_drawMode) { g_cropMode = 0; if (g_hBtnCrop) SendMessage(g_hBtnCrop, BM_SETCHECK, BST_UNCHECKED, 0); }
+                if (g_hBtnDraw) SendMessage(g_hBtnDraw, BM_SETCHECK, g_drawMode ? BST_CHECKED : BST_UNCHECKED, 0);
+            } else if (wParam == VK_OEM_4) { // '['
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_ROT_CCW, 0);
+            } else if (wParam == VK_OEM_6) { // ']'
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_ROT_CW, 0);
+            } else if (wParam == 'R' || wParam == 'r') {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_RESET, 0);
-            } else if (wParam == 'H' || wParam == VK_F1) {
+            } else if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
                 ShowHelpDialog(hwnd);
             } else if (wParam == VK_SPACE) {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_PLAY, 0);
@@ -920,6 +981,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             int ix = (mx - ox) * g_bmpW / (drawW > 0 ? drawW : 1);
             int iy = (my - oy) * g_bmpH / (drawH > 0 ? drawH : 1);
+            if (ix < 0) ix = 0;
+            if (iy < 0) iy = 0;
+            if (ix >= g_bmpW) ix = g_bmpW - 1;
+            if (iy >= g_bmpH) iy = g_bmpH - 1;
 
             if (g_drawMode) {
                 g_isDrawing = 1;
@@ -952,6 +1017,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             int ix = (mx - ox) * g_bmpW / (drawW > 0 ? drawW : 1);
             int iy = (my - oy) * g_bmpH / (drawH > 0 ? drawH : 1);
+            if (ix < 0) ix = 0;
+            if (iy < 0) iy = 0;
+            if (ix >= g_bmpW) ix = g_bmpW - 1;
+            if (iy >= g_bmpH) iy = g_bmpH - 1;
 
             if (g_isDrawing && g_pBitsWork) {
                 HDC hdcMem = CreateCompatibleDC(NULL);
@@ -979,7 +1048,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (g_isCropping) {
                 g_isCropping = 0;
                 ReleaseCapture();
-                CropImageToRect(g_cropRect);
+                int cw = g_cropRect.right - g_cropRect.left;
+                int ch = g_cropRect.bottom - g_cropRect.top;
+                if (cw < 0) cw = -cw;
+                if (ch < 0) ch = -ch;
+                if (cw >= 5 && ch >= 5) {
+                    CropImageToRect(g_cropRect);
+                }
                 g_cropMode = 0;
                 SendMessage(g_hBtnCrop, BM_SETCHECK, BST_UNCHECKED, 0);
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -991,13 +1066,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC hdc = BeginPaint(hwnd, &ps);
             RECT rcClient;
             GetClientRect(hwnd, &rcClient);
+            int winW = rcClient.right - rcClient.left;
+            int winH = rcClient.bottom - rcClient.top;
 
-            int canvasW = rcClient.right - rcClient.left - SIDEBAR_WIDTH;
-            int canvasH = rcClient.bottom - rcClient.top - TOOLBAR_HEIGHT;
+            if (winW <= 0 || winH <= 0) {
+                EndPaint(hwnd, &ps);
+                break;
+            }
+
+            // Create double-buffer
+            HDC hdcMemAll = CreateCompatibleDC(hdc);
+            HBITMAP hBmpMemAll = CreateCompatibleBitmap(hdc, winW, winH);
+            HGDIOBJ oldBmpAll = SelectObject(hdcMemAll, hBmpMemAll);
+
+            // Fill canvas background
+            HBRUSH hBgBrush = CreateSolidBrush(RGB(30, 41, 59));
+            FillRect(hdcMemAll, &rcClient, hBgBrush);
+            DeleteObject(hBgBrush);
+
+            int canvasW = winW - SIDEBAR_WIDTH;
+            int canvasH = winH - TOOLBAR_HEIGHT;
 
             // Draw Image Area
             if (g_hBmpWork) {
-                HDC hdcMem = CreateCompatibleDC(hdc);
+                HDC hdcMem = CreateCompatibleDC(hdcMemAll);
                 HGDIOBJ oldBmp = SelectObject(hdcMem, g_hBmpWork);
 
                 int drawW = (int)(g_bmpW * g_zoom);
@@ -1005,61 +1097,61 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int ox = (canvasW - drawW) / 2;
                 int oy = TOOLBAR_HEIGHT + (canvasH - drawH) / 2;
 
-                SetStretchBltMode(hdc, HALFTONE);
-                StretchBlt(hdc, ox, oy, drawW, drawH, hdcMem, 0, 0, g_bmpW, g_bmpH, SRCCOPY);
+                SetStretchBltMode(hdcMemAll, HALFTONE);
+                StretchBlt(hdcMemAll, ox, oy, drawW, drawH, hdcMem, 0, 0, g_bmpW, g_bmpH, SRCCOPY);
 
                 // Draw Crop Overlay Selection Rectangle
                 if (g_isCropping) {
                     HPEN hPenCrop = CreatePen(PS_DASH, 1, RGB(59, 130, 246));
-                    HGDIOBJ oldPen = SelectObject(hdc, hPenCrop);
-                    HGDIOBJ oldBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                    HGDIOBJ oldPen = SelectObject(hdcMemAll, hPenCrop);
+                    HGDIOBJ oldBrush = SelectObject(hdcMemAll, GetStockObject(NULL_BRUSH));
 
                     int rx1 = ox + g_cropRect.left * drawW / g_bmpW;
                     int ry1 = oy + g_cropRect.top * drawH / g_bmpH;
                     int rx2 = ox + g_cropRect.right * drawW / g_bmpW;
                     int ry2 = oy + g_cropRect.bottom * drawH / g_bmpH;
 
-                    Rectangle(hdc, rx1, ry1, rx2, ry2);
+                    Rectangle(hdcMemAll, rx1, ry1, rx2, ry2);
 
-                    SelectObject(hdc, oldBrush);
-                    SelectObject(hdc, oldPen);
+                    SelectObject(hdcMemAll, oldBrush);
+                    SelectObject(hdcMemAll, oldPen);
                     DeleteObject(hPenCrop);
                 }
 
                 SelectObject(hdcMem, oldBmp);
                 DeleteDC(hdcMem);
             } else {
-                SetBkMode(hdc, TRANSPARENT);
-                SetTextColor(hdc, RGB(148, 163, 184));
+                SetBkMode(hdcMemAll, TRANSPARENT);
+                SetTextColor(hdcMemAll, RGB(148, 163, 184));
                 HFONT hFontBig = CreateFontA(-24, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
-                HGDIOBJ oldFont2 = SelectObject(hdc, hFontBig);
+                HGDIOBJ oldFont2 = SelectObject(hdcMemAll, hFontBig);
                 RECT rcMsg;
                 rcMsg.left = 0; rcMsg.top = TOOLBAR_HEIGHT + canvasH/2 - 40;
                 rcMsg.right = canvasW; rcMsg.bottom = rcMsg.top + 80;
-                DrawTextA(hdc, "No Image Loaded\nPress 'O' to Open, or 'H'/'F1' for Help", -1, &rcMsg, DT_CENTER | DT_TOP);
-                SelectObject(hdc, oldFont2);
+                DrawTextA(hdcMemAll, "No Image Loaded\nPress 'O' to Open, or 'H'/'F1' for Help\n(Drag and Drop BMP supported)", -1, &rcMsg, DT_CENTER | DT_TOP);
+                SelectObject(hdcMemAll, oldFont2);
                 DeleteObject(hFontBig);
             }
 
             // Draw Sidebar (Inspector Panel)
             RECT rcSide;
-            rcSide.left = rcClient.right - SIDEBAR_WIDTH;
+            rcSide.left = winW - SIDEBAR_WIDTH;
             rcSide.top = TOOLBAR_HEIGHT;
-            rcSide.right = rcClient.right;
-            rcSide.bottom = rcClient.bottom;
+            rcSide.right = winW;
+            rcSide.bottom = winH;
 
             HBRUSH hSideBg = CreateSolidBrush(RGB(15, 23, 42));
-            FillRect(hdc, &rcSide, hSideBg);
+            FillRect(hdcMemAll, &rcSide, hSideBg);
             DeleteObject(hSideBg);
 
             // Draw Sidebar Header & Metadata Text
-            SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, RGB(248, 250, 252));
+            SetBkMode(hdcMemAll, TRANSPARENT);
+            SetTextColor(hdcMemAll, RGB(248, 250, 252));
             
             HFONT hFont = (HFONT)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-            HGDIOBJ oldFont = SelectObject(hdc, hFont);
+            HGDIOBJ oldFont = SelectObject(hdcMemAll, hFont);
 
-            TextOutA(hdc, rcSide.left + 10, rcSide.top + 10, "RGB Histogram", 13);
+            TextOutA(hdcMemAll, rcSide.left + 10, rcSide.top + 10, "RGB Histogram", 13);
 
             // Draw RGB Histogram Box (Height 100px)
             RECT rcHist;
@@ -1067,49 +1159,54 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             rcHist.top = rcSide.top + 30;
             rcHist.right = rcSide.right - 10;
             rcHist.bottom = rcSide.top + 130;
-            DrawRGBHistogram(hdc, rcHist);
+            DrawRGBHistogram(hdcMemAll, rcHist);
 
             // Image Metadata Text
             int ty = rcHist.bottom + 20;
-            SetTextColor(hdc, RGB(148, 163, 184));
-            TextOutA(hdc, rcSide.left + 10, ty, "Image Metadata:", 15); ty += 20;
+            SetTextColor(hdcMemAll, RGB(148, 163, 184));
+            TextOutA(hdcMemAll, rcSide.left + 10, ty, "Image Metadata:", 15); ty += 20;
 
             char buf[128];
             wsprintfA(buf, "Size: %d x %d px", g_bmpW, g_bmpH);
-            SetTextColor(hdc, RGB(248, 250, 252));
-            TextOutA(hdc, rcSide.left + 10, ty, buf, lstrlenA(buf)); ty += 18;
+            SetTextColor(hdcMemAll, RGB(248, 250, 252));
+            TextOutA(hdcMemAll, rcSide.left + 10, ty, buf, lstrlenA(buf)); ty += 18;
 
             wsprintfA(buf, "Zoom: %d%%", (int)(g_zoom * 100));
-            TextOutA(hdc, rcSide.left + 10, ty, buf, lstrlenA(buf)); ty += 18;
+            TextOutA(hdcMemAll, rcSide.left + 10, ty, buf, lstrlenA(buf)); ty += 18;
 
             wsprintfA(buf, "Depth: 32-bit BGRA");
-            TextOutA(hdc, rcSide.left + 10, ty, buf, lstrlenA(buf)); ty += 22;
+            TextOutA(hdcMemAll, rcSide.left + 10, ty, buf, lstrlenA(buf)); ty += 22;
 
             if (g_fileCount > 0) {
-                SetTextColor(hdc, RGB(148, 163, 184));
-                TextOutA(hdc, rcSide.left + 10, ty, "Slideshow Playlist:", 19); ty += 20;
+                SetTextColor(hdcMemAll, RGB(148, 163, 184));
+                TextOutA(hdcMemAll, rcSide.left + 10, ty, "Slideshow Playlist:", 19); ty += 20;
                 wsprintfA(buf, "Image %d of %d", g_fileIndex + 1, g_fileCount);
-                SetTextColor(hdc, RGB(96, 165, 250));
-                TextOutA(hdc, rcSide.left + 10, ty, buf, lstrlenA(buf));
+                SetTextColor(hdcMemAll, RGB(96, 165, 250));
+                TextOutA(hdcMemAll, rcSide.left + 10, ty, buf, lstrlenA(buf));
             }
 
-            SelectObject(hdc, oldFont);
+            SelectObject(hdcMemAll, oldFont);
+
+            // Blit entire backbuffer to screen
+            BitBlt(hdc, 0, 0, winW, winH, hdcMemAll, 0, 0, SRCCOPY);
+
+            SelectObject(hdcMemAll, oldBmpAll);
+            DeleteObject(hBmpMemAll);
+            DeleteDC(hdcMemAll);
+
             EndPaint(hwnd, &ps);
             break;
         }
-        case WM_ERASEBKGND: {
-            HDC hdc = (HDC)wParam;
-            RECT rc;
-            GetClientRect(hwnd, &rc);
-            HBRUSH brush = CreateSolidBrush(RGB(30, 41, 59));
-            FillRect(hdc, &rc, brush);
-            DeleteObject(brush);
+        case WM_ERASEBKGND:
             return 1;
-        }
         case WM_DESTROY: {
-            if (g_hBmpWork) DeleteObject(g_hBmpWork);
-            if (g_hBmpOrig) DeleteObject(g_hBmpOrig);
-            if (g_hPenDraw) DeleteObject(g_hPenDraw);
+            if (g_slideshowPlaying) {
+                KillTimer(hwnd, TIMER_SLIDESHOW);
+                g_slideshowPlaying = 0;
+            }
+            if (g_hBmpWork) { DeleteObject(g_hBmpWork); g_hBmpWork = NULL; }
+            if (g_hBmpOrig) { DeleteObject(g_hBmpOrig); g_hBmpOrig = NULL; }
+            if (g_hPenDraw) { DeleteObject(g_hPenDraw); g_hPenDraw = NULL; }
             HFONT hFont = (HFONT)GetWindowLongPtr(hwnd, GWLP_USERDATA);
             if (hFont) DeleteObject(hFont);
             PostQuitMessage(0);
@@ -1168,8 +1265,10 @@ void MainEntry() {
                 }
             }
         }
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        if (!IsDialogMessage(hwnd, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
     ExitProcess(0);
 }
