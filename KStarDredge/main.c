@@ -26,29 +26,35 @@
 #define ID_BTN_CRISIS      114
 #define ID_BTN_REFINERY    115
 #define ID_BTN_STATION     116
+#define ID_BTN_DEFENSE     117
 
-#define SFX_NONE         0
-#define SFX_COLLECT      1
-#define SFX_FRACTURE     2
-#define SFX_OVERHEAT     3
-#define SFX_LASER_PULSE  4
-#define SFX_BEEP         5
-#define SFX_WARP         6
-#define SFX_SCAN_SWEEP   7
-#define SFX_RESONANCE    8
-#define SFX_PLASMA_CUT   9
-#define SFX_BREACH       10
-#define SFX_DECRYPT      11
-#define SFX_CORE_HARVEST 12
-#define SFX_ALARM        13
-#define SFX_PLASMA_VENT  14
-#define SFX_SEAL_WELD    15
-#define SFX_DECON_FLUSH  16
-#define SFX_SMELT        17
-#define SFX_SYNTH        18
-#define SFX_DOCK         19
-#define SFX_CONTRACT     20
-#define SFX_BARTER       21
+#define SFX_NONE           0
+#define SFX_COLLECT        1
+#define SFX_FRACTURE       2
+#define SFX_OVERHEAT       3
+#define SFX_LASER_PULSE    4
+#define SFX_BEEP           5
+#define SFX_WARP           6
+#define SFX_SCAN_SWEEP     7
+#define SFX_RESONANCE      8
+#define SFX_PLASMA_CUT     9
+#define SFX_BREACH         10
+#define SFX_DECRYPT        11
+#define SFX_CORE_HARVEST   12
+#define SFX_ALARM          13
+#define SFX_PLASMA_VENT    14
+#define SFX_SEAL_WELD      15
+#define SFX_DECON_FLUSH    16
+#define SFX_SMELT          17
+#define SFX_SYNTH          18
+#define SFX_DOCK           19
+#define SFX_CONTRACT       20
+#define SFX_BARTER         21
+#define SFX_RAILGUN        22
+#define SFX_FLAK_BURST     23
+#define SFX_PDL_FIRE       24
+#define SFX_PIRATE_EXPLODE 25
+#define SFX_TORPEDO_ALERT  26
 
 // Phase 10: Orbital Refinery Recipes
 typedef struct {
@@ -188,6 +194,11 @@ static const CompartmentDef COMPARTMENT_DEFS[MAX_COMPARTMENTS] = {
 #define MAX_STARS 150
 #define MAX_ASTEROIDS 24
 #define MAX_DERELICTS 6
+#define MAX_RAIDERS 8
+#define MAX_PROJECTILES 32
+#define MAX_ENEMY_PROJECTILES 32
+#define MAX_SHOCKWAVES 8
+#define MAX_PIRATE_WRECKS 8
 #define MAX_ORE_CHUNKS 64
 #define MAX_PARTICLES 128
 #define MAX_FLOATING_TEXTS 16
@@ -262,6 +273,64 @@ typedef struct {
     float life;
     int active;
 } FloatingText;
+
+// Phase 12: Raider & Weapon System Structs
+typedef struct {
+    int type; // 0=railgun, 1=flakShell, 2=pdlBeam
+    float x, y;
+    float vx, vy;
+    float x2, y2;
+    float life;
+    float damage;
+    COLORREF color;
+    int active;
+} Projectile;
+
+typedef struct {
+    int type; // 0=blaster, 1=torpedo
+    float x, y;
+    float vx, vy;
+    int homing;
+    float hp;
+    float life;
+    float damage;
+    COLORREF color;
+    int active;
+} EnemyProjectile;
+
+typedef struct {
+    float x, y;
+    float r, maxR;
+    COLORREF color;
+    float life;
+    int active;
+} Shockwave;
+
+typedef struct {
+    float x, y;
+    float angle;
+    int type;
+    float life;
+    int active;
+} PirateWreck;
+
+typedef struct {
+    char id[16];
+    char name[32];
+    int type; // 0=corsair, 1=gunship, 2=dread
+    float x, y;
+    float vx, vy;
+    float angle;
+    float hp, maxHp;
+    float shield, maxShield;
+    float speed;
+    int bounty;
+    float radius;
+    float stunTimer;
+    float shootTimer;
+    COLORREF color;
+    int active;
+} Raider;
 
 typedef struct {
     char text[128];
@@ -622,6 +691,7 @@ typedef struct {
     int showCrisis;
     int showRefinery;
     int showStation;
+    int showHelp;
     int catalyticBoost;
     int refined[6]; // hyperFerrum, superconductor, warpCells, darkMatrix, nanitePaste, o2Canister
     float crucibleAnimTime;
@@ -683,11 +753,26 @@ typedef struct {
     int selectedDerelictIndex;
     float radarAngle;
     int soundEnabled;
-    int showHelp;
-    
+    int showDefense;
+    int selectedWeapon; // 0=Laser, 1=Railgun, 2=EMP Flak, 3=PDL
+    int railgunSlugs;
+    int empCharges;
+    int autoPDL;
+    float railgunCooldown;
+    float flakCooldown;
+    float pdlCooldown;
+    float chaffCooldown;
+    int piratesDefeated;
+    int bountiesClaimed;
+
     Star stars[MAX_STARS];
     Asteroid asteroids[MAX_ASTEROIDS];
     Derelict derelicts[MAX_DERELICTS];
+    Raider raiders[MAX_RAIDERS];
+    Projectile projectiles[MAX_PROJECTILES];
+    EnemyProjectile enemyProjectiles[MAX_ENEMY_PROJECTILES];
+    Shockwave shockwaves[MAX_SHOCKWAVES];
+    PirateWreck pirateWrecks[MAX_PIRATE_WRECKS];
     OreChunk oreChunks[MAX_ORE_CHUNKS];
     Particle particles[MAX_PARTICLES];
     ScanWave scanWaves[MAX_SCAN_WAVES];
@@ -698,7 +783,7 @@ typedef struct {
 
 static GameState g_state;
 static HWND g_hwnd = NULL;
-static HWND g_btnLaser, g_btnTractor, g_btnDampener, g_btnScan, g_btnNav, g_btnStation, g_btnEva, g_btnCrisis, g_btnRefinery, g_btnUpgrades, g_btnTheme, g_btnScanlines, g_btnAudio, g_btnHelp, g_btnJettison, g_btnSell;
+static HWND g_btnLaser, g_btnTractor, g_btnDampener, g_btnScan, g_btnNav, g_btnStation, g_btnEva, g_btnCrisis, g_btnDefense, g_btnRefinery, g_btnUpgrades, g_btnTheme, g_btnScanlines, g_btnAudio, g_btnHelp, g_btnJettison, g_btnSell;
 static HFONT g_fontMono = NULL;
 static HFONT g_fontMonoBold = NULL;
 static HFONT g_fontSmall = NULL;
@@ -790,6 +875,22 @@ DWORD WINAPI SoundThreadProc(LPVOID lpParam) {
             } else if (sfx == SFX_BARTER) {
                 Beep(880, 50);
                 Beep(1174, 80);
+            } else if (sfx == SFX_RAILGUN) {
+                Beep(120, 80);
+                Beep(880, 40);
+            } else if (sfx == SFX_FLAK_BURST) {
+                Beep(220, 100);
+                Beep(140, 120);
+                Beep(90, 140);
+            } else if (sfx == SFX_PDL_FIRE) {
+                Beep(1400, 30);
+            } else if (sfx == SFX_PIRATE_EXPLODE) {
+                Beep(180, 90);
+                Beep(90, 140);
+                Beep(60, 200);
+            } else if (sfx == SFX_TORPEDO_ALERT) {
+                Beep(900, 50);
+                Beep(600, 50);
             }
         }
         Sleep(20);
@@ -811,6 +912,16 @@ void AddScanWave(float x, float y, float maxR, COLORREF color);
 void SpawnOreChunk(float x, float y, int oreType, int amount);
 void SpawnAsteroid(int index, int oreType);
 void SpawnDerelict(int index, int templateIdx);
+void SpawnRaider(int index, int type);
+void FireRailgun(void);
+void FireEMPFlak(void);
+void TriggerEMPShockwave(float x, float y);
+void FirePDL(void);
+void DeployChaff(void);
+void CraftRailgunSlugs(void);
+void RechargeEMPCapacitor(void);
+void OverchargeShield(void);
+void DeployCombatDrones(void);
 void BreachAirlock(int index);
 void DecryptBlackBox(int index);
 void HarvestReactorCore(int index);
@@ -1059,41 +1170,369 @@ void TuneLaserResonance(int index) {
     AddFloatingText("RESONANCE LOCKED (+50%)", g_state.shipX, g_state.shipY - 35.0f, RGB(245, 158, 11));
 }
 
+void SpawnRaider(int index, int type) {
+    if (index < 0 || index >= MAX_RAIDERS) return;
+    Raider* r = &g_state.raiders[index];
+    r->type = type;
+    r->active = 1;
+    r->stunTimer = 0.0f;
+    r->shootTimer = 1.0f + (((float)rand() / (float)RAND_MAX) * 2.0f);
+
+    float angle = ((float)rand() / (float)RAND_MAX) * 6.28318f;
+    float dist = 420.0f + (((float)rand() / (float)RAND_MAX) * 380.0f);
+    r->x = g_state.shipX + (float)cos(angle) * dist;
+    r->y = g_state.shipY + (float)sin(angle) * dist;
+    r->vx = 0.0f;
+    r->vy = 0.0f;
+    r->angle = (float)atan2(g_state.shipY - r->y, g_state.shipX - r->x);
+
+    if (type == 0) { // Corsair Skiff
+        sprintf(r->id, "RAID-%03d", 100 + index * 13 + (rand() % 50));
+        strncpy(r->name, "Corsair Skiff", 31);
+        r->maxHp = 60.0f;
+        r->hp = 60.0f;
+        r->maxShield = 40.0f;
+        r->shield = 40.0f;
+        r->speed = 6.2f;
+        r->bounty = 250;
+        r->radius = 16.0f;
+        r->color = RGB(239, 68, 68);
+    } else if (type == 1) { // Marauder Gunship
+        sprintf(r->id, "GUN-%03d", 200 + index * 17 + (rand() % 50));
+        strncpy(r->name, "Marauder Gunship", 31);
+        r->maxHp = 140.0f;
+        r->hp = 140.0f;
+        r->maxShield = 90.0f;
+        r->shield = 90.0f;
+        r->speed = 4.2f;
+        r->bounty = 600;
+        r->radius = 22.0f;
+        r->color = RGB(245, 158, 11);
+    } else { // Void Dread Raider
+        sprintf(r->id, "DREAD-%03d", 300 + index * 19 + (rand() % 50));
+        strncpy(r->name, "Void Dread Raider", 31);
+        r->maxHp = 320.0f;
+        r->hp = 320.0f;
+        r->maxShield = 220.0f;
+        r->shield = 220.0f;
+        r->speed = 2.8f;
+        r->bounty = 1500;
+        r->radius = 32.0f;
+        r->color = RGB(244, 63, 94);
+    }
+}
+
+void FireRailgun(void) {
+    if (g_state.railgunCooldown > 0.0f) return;
+    if (g_state.railgunSlugs <= 0) {
+        AddLog("WARNING: Kinetic Railgun dry! Smelt slugs from Ferrum in Armory [X].", 3);
+        TriggerSound(SFX_BEEP);
+        return;
+    }
+
+    g_state.railgunSlugs--;
+    g_state.railgunCooldown = 0.9f;
+    float slugSpeed = 16.0f;
+    float lx = g_state.shipX + (float)cos(g_state.shipAngle) * 22.0f;
+    float ly = g_state.shipY + (float)sin(g_state.shipAngle) * 22.0f;
+
+    for (int i = 0; i < MAX_PROJECTILES; i++) {
+        if (!g_state.projectiles[i].active) {
+            g_state.projectiles[i].type = 0; // railgun
+            g_state.projectiles[i].x = lx;
+            g_state.projectiles[i].y = ly;
+            g_state.projectiles[i].vx = (float)cos(g_state.shipAngle) * slugSpeed;
+            g_state.projectiles[i].vy = (float)sin(g_state.shipAngle) * slugSpeed;
+            g_state.projectiles[i].life = 1.2f;
+            g_state.projectiles[i].damage = 85.0f;
+            g_state.projectiles[i].color = RGB(56, 189, 248);
+            g_state.projectiles[i].active = 1;
+            break;
+        }
+    }
+
+    TriggerSound(SFX_RAILGUN);
+    AddSparks(lx, ly, RGB(0, 240, 255), 8);
+    AddLog("KINETIC RAILGUN FIRED: Hypervelocity slug discharged.", 4);
+}
+
+void FireEMPFlak(void) {
+    if (g_state.flakCooldown > 0.0f) return;
+    if (g_state.empCharges <= 0) {
+        AddLog("WARNING: EMP Flak capacitors depleted! Recharge from Silicates in Armory [X].", 3);
+        TriggerSound(SFX_BEEP);
+        return;
+    }
+
+    g_state.empCharges--;
+    g_state.flakCooldown = 2.5f;
+    float shellSpeed = 7.5f;
+    float lx = g_state.shipX + (float)cos(g_state.shipAngle) * 22.0f;
+    float ly = g_state.shipY + (float)sin(g_state.shipAngle) * 22.0f;
+
+    for (int i = 0; i < MAX_PROJECTILES; i++) {
+        if (!g_state.projectiles[i].active) {
+            g_state.projectiles[i].type = 1; // flakShell
+            g_state.projectiles[i].x = lx;
+            g_state.projectiles[i].y = ly;
+            g_state.projectiles[i].vx = (float)cos(g_state.shipAngle) * shellSpeed;
+            g_state.projectiles[i].vy = (float)sin(g_state.shipAngle) * shellSpeed;
+            g_state.projectiles[i].life = 0.45f;
+            g_state.projectiles[i].color = RGB(192, 132, 252);
+            g_state.projectiles[i].active = 1;
+            break;
+        }
+    }
+
+    TriggerSound(SFX_FLAK_BURST);
+    AddLog("EMP FLAK SHELL LAUNCHED: Proximity detonator armed.", 3);
+}
+
+void TriggerEMPShockwave(float x, float y) {
+    TriggerSound(SFX_FLAK_BURST);
+    for (int i = 0; i < MAX_SHOCKWAVES; i++) {
+        if (!g_state.shockwaves[i].active) {
+            g_state.shockwaves[i].x = x;
+            g_state.shockwaves[i].y = y;
+            g_state.shockwaves[i].r = 10.0f;
+            g_state.shockwaves[i].maxR = 240.0f;
+            g_state.shockwaves[i].life = 1.0f;
+            g_state.shockwaves[i].color = RGB(192, 132, 252);
+            g_state.shockwaves[i].active = 1;
+            break;
+        }
+    }
+    AddSparks(x, y, RGB(192, 132, 252), 20);
+
+    // Destroy all enemy torpedoes in blast radius
+    for (int i = 0; i < MAX_ENEMY_PROJECTILES; i++) {
+        if (!g_state.enemyProjectiles[i].active) continue;
+        float d = (float)sqrt((g_state.enemyProjectiles[i].x - x) * (g_state.enemyProjectiles[i].x - x) +
+                              (g_state.enemyProjectiles[i].y - y) * (g_state.enemyProjectiles[i].y - y));
+        if (d < 240.0f) {
+            AddSparks(g_state.enemyProjectiles[i].x, g_state.enemyProjectiles[i].y, RGB(245, 158, 11), 12);
+            g_state.enemyProjectiles[i].active = 0;
+            AddFloatingText("TORPEDO NEUTRALIZED!", g_state.enemyProjectiles[i].x, g_state.enemyProjectiles[i].y - 15.0f, RGB(192, 132, 252));
+        }
+    }
+
+    // Damage and stun raiders in blast radius
+    for (int i = 0; i < MAX_RAIDERS; i++) {
+        Raider* r = &g_state.raiders[i];
+        if (!r->active) continue;
+        float d = (float)sqrt((r->x - x) * (r->x - x) + (r->y - y) * (r->y - y));
+        if (d < 240.0f) {
+            r->shield = max(0.0f, r->shield - 140.0f);
+            r->stunTimer = 4.0f;
+            AddSparks(r->x, r->y, RGB(192, 132, 252), 15);
+            AddFloatingText("EMP STUNNED (4s)!", r->x, r->y - 25.0f, RGB(192, 132, 252));
+            char bLog[64];
+            sprintf(bLog, "EMP BLAST: Systems offline on %s!", r->name);
+            AddLog(bLog, 5);
+        }
+    }
+}
+
+void FirePDL(void) {
+    if (g_state.pdlCooldown > 0.0f) return;
+    g_state.pdlCooldown = 0.22f;
+
+    // Target closest hostile torpedo or raider
+    float minTorpDist = 280.0f;
+    int targetTorpIdx = -1;
+    for (int i = 0; i < MAX_ENEMY_PROJECTILES; i++) {
+        if (!g_state.enemyProjectiles[i].active || g_state.enemyProjectiles[i].type != 1) continue;
+        float d = (float)sqrt((g_state.enemyProjectiles[i].x - g_state.shipX) * (g_state.enemyProjectiles[i].x - g_state.shipX) +
+                              (g_state.enemyProjectiles[i].y - g_state.shipY) * (g_state.enemyProjectiles[i].y - g_state.shipY));
+        if (d < minTorpDist) { minTorpDist = d; targetTorpIdx = i; }
+    }
+
+    float tgtX = 0, tgtY = 0;
+    int hitType = 0; // 1=torpedo, 2=raider
+
+    if (targetTorpIdx >= 0) {
+        tgtX = g_state.enemyProjectiles[targetTorpIdx].x;
+        tgtY = g_state.enemyProjectiles[targetTorpIdx].y;
+        hitType = 1;
+    } else {
+        float minRaiderDist = 260.0f;
+        int targetRIdx = -1;
+        for (int i = 0; i < MAX_RAIDERS; i++) {
+            if (!g_state.raiders[i].active) continue;
+            float d = (float)sqrt((g_state.raiders[i].x - g_state.shipX) * (g_state.raiders[i].x - g_state.shipX) +
+                                  (g_state.raiders[i].y - g_state.shipY) * (g_state.raiders[i].y - g_state.shipY));
+            if (d < minRaiderDist) { minRaiderDist = d; targetRIdx = i; }
+        }
+        if (targetRIdx >= 0) {
+            tgtX = g_state.raiders[targetRIdx].x;
+            tgtY = g_state.raiders[targetRIdx].y;
+            hitType = 2;
+        }
+    }
+
+    if (hitType > 0) {
+        TriggerSound(SFX_PDL_FIRE);
+        AddSparks(tgtX, tgtY, RGB(16, 185, 129), 4);
+
+        for (int i = 0; i < MAX_PROJECTILES; i++) {
+            if (!g_state.projectiles[i].active) {
+                g_state.projectiles[i].type = 2; // pdlBeam
+                g_state.projectiles[i].x = g_state.shipX;
+                g_state.projectiles[i].y = g_state.shipY;
+                g_state.projectiles[i].x2 = tgtX;
+                g_state.projectiles[i].y2 = tgtY;
+                g_state.projectiles[i].life = 0.12f;
+                g_state.projectiles[i].color = RGB(16, 185, 129);
+                g_state.projectiles[i].active = 1;
+                break;
+            }
+        }
+
+        if (hitType == 1 && targetTorpIdx >= 0) {
+            g_state.enemyProjectiles[targetTorpIdx].hp -= 20.0f;
+            if (g_state.enemyProjectiles[targetTorpIdx].hp <= 0.0f) {
+                AddSparks(tgtX, tgtY, RGB(245, 158, 11), 14);
+                g_state.enemyProjectiles[targetTorpIdx].active = 0;
+                AddFloatingText("TORPEDO INTERCEPTED!", tgtX, tgtY - 15.0f, RGB(16, 185, 129));
+                AddLog("PDL INTERCEPTION: Incoming raider torpedo destroyed.", 5);
+            }
+        } else if (hitType == 2) {
+            for (int i = 0; i < MAX_RAIDERS; i++) {
+                if (g_state.raiders[i].active && fabs(g_state.raiders[i].x - tgtX) < 1.0f && fabs(g_state.raiders[i].y - tgtY) < 1.0f) {
+                    if (g_state.raiders[i].shield > 0.0f) g_state.raiders[i].shield = max(0.0f, g_state.raiders[i].shield - 15.0f);
+                    else g_state.raiders[i].hp = max(0.0f, g_state.raiders[i].hp - 15.0f);
+                    AddFloatingText("-15", tgtX, tgtY - 15.0f, RGB(16, 185, 129));
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void DeployChaff(void) {
+    if (g_state.chaffCooldown > 0.0f) return;
+    g_state.chaffCooldown = 8.0f;
+    TriggerSound(SFX_PLASMA_VENT);
+
+    for (int i = 0; i < 30; i++) {
+        float a = ((float)rand() / (float)RAND_MAX) * 6.28318f;
+        float s = 1.5f + (((float)rand() / (float)RAND_MAX) * 3.5f);
+        for (int p = 0; p < MAX_PARTICLES; p++) {
+            if (!g_state.particles[p].active) {
+                g_state.particles[p].x = g_state.shipX;
+                g_state.particles[p].y = g_state.shipY;
+                g_state.particles[p].vx = (float)cos(a) * s;
+                g_state.particles[p].vy = (float)sin(a) * s;
+                g_state.particles[p].color = RGB(254, 240, 138);
+                g_state.particles[p].life = 1.5f;
+                g_state.particles[p].decay = 0.02f;
+                g_state.particles[p].size = 2.5f;
+                g_state.particles[p].active = 1;
+                break;
+            }
+        }
+    }
+
+    for (int i = 0; i < MAX_ENEMY_PROJECTILES; i++) {
+        if (g_state.enemyProjectiles[i].active && g_state.enemyProjectiles[i].type == 1) {
+            g_state.enemyProjectiles[i].homing = 0;
+            g_state.enemyProjectiles[i].vx += (((float)rand() / (float)RAND_MAX) - 0.5f) * 4.0f;
+            g_state.enemyProjectiles[i].vy += (((float)rand() / (float)RAND_MAX) - 0.5f) * 4.0f;
+        }
+    }
+
+    AddFloatingText("CHAFF DEPLOYED - LOCKS SCRAMBLED!", g_state.shipX, g_state.shipY - 30.0f, RGB(254, 240, 138));
+    AddLog("EMERGENCY CHAFF CLOUD: All incoming torpedo tracking scrambled.", 5);
+}
+
+void CraftRailgunSlugs(void) {
+    if (g_state.cargoHold[0] < 5) {
+        AddLog("WARNING: Insufficient Ferrum Ore! Need 5T Ferrum to smelt 5 slugs.", 3);
+        return;
+    }
+    g_state.cargoHold[0] -= 5;
+    g_state.railgunSlugs += 5;
+    UpdateCargoTotal();
+    TriggerSound(SFX_SYNTH);
+    AddLog("Manufactured +5 Heavy Railgun Tungsten-Ferrum Slugs.", 5);
+    AddFloatingText("+5 SLUGS", g_state.shipX, g_state.shipY - 30.0f, RGB(56, 189, 248));
+}
+
+void RechargeEMPCapacitor(void) {
+    if (g_state.cargoHold[1] < 4) {
+        AddLog("WARNING: Insufficient Silicates! Need 4T Silicates to charge 2 EMP capacitors.", 3);
+        return;
+    }
+    g_state.cargoHold[1] -= 4;
+    g_state.empCharges += 2;
+    UpdateCargoTotal();
+    TriggerSound(SFX_SYNTH);
+    AddLog("Synthesized +2 EMP Flak Pulse Capacitors.", 5);
+    AddFloatingText("+2 EMP CHARGES", g_state.shipX, g_state.shipY - 30.0f, RGB(192, 132, 252));
+}
+
+void OverchargeShield(void) {
+    if (g_state.credits < 200) {
+        AddLog("WARNING: Insufficient Credits! Need 200 CR to overcharge shields.", 3);
+        return;
+    }
+    g_state.credits -= 200;
+    g_state.shield = g_state.maxShield * 1.3f;
+    TriggerSound(SFX_SYNTH);
+    AddFloatingText("SHIELD OVERCHARGED (130%)!", g_state.shipX, g_state.shipY - 25.0f, RGB(16, 185, 129));
+    AddLog("Deflector matrix overcharged to 130% capacity.", 5);
+}
+
+void DeployCombatDrones(void) {
+    if (g_state.credits < 350) {
+        AddLog("WARNING: Insufficient Credits! Need 350 CR to deploy combat drones.", 3);
+        return;
+    }
+    g_state.credits -= 350;
+    g_state.repairDronesActive = 1;
+    g_state.droneTimer = 18.0f;
+    TriggerSound(SFX_SYNTH);
+    AddFloatingText("COMBAT REPAIR DRONES ACTIVE!", g_state.shipX, g_state.shipY - 25.0f, RGB(56, 189, 248));
+    AddLog("Deployed Autonomous Combat & Hull Drone Swarm (18s active).", 5);
+}
+
 void SpawnDerelict(int index, int templateIdx) {
     if (index < 0 || index >= MAX_DERELICTS) return;
-    if (templateIdx < 0 || templateIdx >= 4) templateIdx = rand() % 4;
-    const DerelictTemplate* tmpl = &DERELICT_TEMPLATES[templateIdx];
-    Derelict* d = &g_state.derelicts[index];
+    if (templateIdx < 0 || templateIdx >= 4) templateIdx = 0;
     
-    sprintf(d->id, "DER-%03d", 200 + index * 31 + (rand() % 60));
-    strncpy(d->name, tmpl->name, 47);
+    Derelict* d = &g_state.derelicts[index];
+    const DerelictTemplate* t = &DERELICT_TEMPLATES[templateIdx];
+    
+    sprintf(d->id, "DER-%03d", 100 + index * 23 + (rand() % 70));
+    strncpy(d->name, t->name, 47);
     d->name[47] = '\0';
-    strncpy(d->classType, tmpl->classType, 31);
+    strncpy(d->classType, t->classType, 31);
     d->classType[31] = '\0';
-    strncpy(d->logArchive, tmpl->logArchive, 255);
-    d->logArchive[255] = '\0';
     
     float angle = ((float)rand() / (float)RAND_MAX) * 6.28318f;
-    float dist = 320.0f + (((float)rand() / (float)RAND_MAX) * 750.0f);
+    float dist = 380.0f + (((float)rand() / (float)RAND_MAX) * 720.0f);
     d->x = g_state.shipX + (float)cos(angle) * dist;
     d->y = g_state.shipY + (float)sin(angle) * dist;
     d->vx = (((float)rand() / (float)RAND_MAX) - 0.5f) * 0.15f;
     d->vy = (((float)rand() / (float)RAND_MAX) - 0.5f) * 0.15f;
     d->rot = ((float)rand() / (float)RAND_MAX) * 6.28318f;
     d->rotSpeed = (((float)rand() / (float)RAND_MAX) - 0.5f) * 0.008f;
-    d->length = 50.0f + (((float)rand() / (float)RAND_MAX) * 16.0f);
-    d->width = 24.0f + (((float)rand() / (float)RAND_MAX) * 8.0f);
-    d->hullColor = tmpl->hullColor;
+    d->length = 50.0f + (((float)rand() / (float)RAND_MAX) * 20.0f);
+    d->width = 24.0f + (((float)rand() / (float)RAND_MAX) * 10.0f);
+    d->hullColor = t->hullColor;
     
     d->airlockBreached = 0;
     d->airlockCutProgress = 0;
     d->blackBoxDecrypted = 0;
     d->reactorHarvested = 0;
     d->cargoScavenged = 0;
-    d->scrapPods = tmpl->podsMin + (rand() % (tmpl->podsMax - tmpl->podsMin + 1));
-    d->dataValue = tmpl->dataValue;
-    d->coreValue = tmpl->coreValue;
-    d->maxHp = 220.0f;
+    d->scrapPods = t->podsMin + (rand() % (t->podsMax - t->podsMin + 1));
+    d->dataValue = t->dataValue;
+    d->coreValue = t->coreValue;
+    strncpy(d->logArchive, t->logArchive, 255);
+    d->logArchive[255] = '\0';
+    
+    d->maxHp = 200.0f;
     d->hp = d->maxHp;
     d->active = 1;
 }
@@ -1740,6 +2179,21 @@ void InitSectorField(int sectorIdx) {
         }
     }
     
+    // Seed Raiders per sector threat level
+    int raiderCount = (sectorIdx == 0) ? 1 : ((sectorIdx == 1) ? 2 : ((sectorIdx == 2) ? 3 : 4));
+    for (int i = 0; i < MAX_RAIDERS; i++) {
+        if (i < raiderCount) {
+            int rType = (sectorIdx == 0) ? 0 : ((sectorIdx == 1) ? (i % 2) : ((sectorIdx == 2) ? (1 + (i % 2)) : (i % 3)));
+            SpawnRaider(i, rType);
+        } else {
+            g_state.raiders[i].active = 0;
+        }
+    }
+
+    for (int i = 0; i < MAX_PROJECTILES; i++) g_state.projectiles[i].active = 0;
+    for (int i = 0; i < MAX_ENEMY_PROJECTILES; i++) g_state.enemyProjectiles[i].active = 0;
+    for (int i = 0; i < MAX_SHOCKWAVES; i++) g_state.shockwaves[i].active = 0;
+    for (int i = 0; i < MAX_PIRATE_WRECKS; i++) g_state.pirateWrecks[i].active = 0;
     for (int i = 0; i < MAX_ORE_CHUNKS; i++) g_state.oreChunks[i].active = 0;
     g_state.selectedAstIndex = -1;
     g_state.selectedDerelictIndex = -1;
@@ -1925,6 +2379,17 @@ void InitGame(void) {
     g_state.repairDronesActive = 0;
     g_state.droneTimer = 0.0f;
     g_state.showCrisis = 0;
+    g_state.showDefense = 0;
+    g_state.selectedWeapon = 0;
+    g_state.railgunSlugs = 15;
+    g_state.empCharges = 6;
+    g_state.autoPDL = 1;
+    g_state.railgunCooldown = 0.0f;
+    g_state.flakCooldown = 0.0f;
+    g_state.pdlCooldown = 0.0f;
+    g_state.chaffCooldown = 0.0f;
+    g_state.piratesDefeated = 0;
+    g_state.bountiesClaimed = 0;
     g_state.maxCargo = 200;
     g_state.dampeners = 1;
     g_state.soundEnabled = 1;
@@ -1945,6 +2410,7 @@ void InitGame(void) {
     InitSectorField(0);
     
     AddLog("[SYSTEM] KStarDredge Mk-IV cockpit operational. Core reactor online.", 0);
+    AddLog("[DEFENSE] Armory online: Railguns, EMP Flak, Auto-PDL active [X].", 0);
     AddLog("[MINING] High-frequency mining laser ready. Aim at asteroids and hold [SPACE].", 1);
     AddLog("[TRACTOR] Tractor emitter active. Hold [T] to gather extracted mineral chunks.", 2);
     AddLog("[UPGRADES] Modular engineering bay online. Press [U] for Barge Retrofits.", 0);
@@ -2422,9 +2888,315 @@ void UpdateGame(float dt) {
         if (g_state.texts[i].life <= 0.0f) g_state.texts[i].active = 0;
     }
     
-    // Radar Sweep
-    g_state.radarAngle += 0.05f;
-    if (g_state.radarAngle > 6.28318f) g_state.radarAngle -= 6.28318f;
+    // --- Phase 12: Defense & Combat Systems Update ---
+    if (g_state.railgunCooldown > 0.0f) g_state.railgunCooldown = max(0.0f, g_state.railgunCooldown - dt);
+    if (g_state.flakCooldown > 0.0f) g_state.flakCooldown = max(0.0f, g_state.flakCooldown - dt);
+    if (g_state.pdlCooldown > 0.0f) g_state.pdlCooldown = max(0.0f, g_state.pdlCooldown - dt);
+    if (g_state.chaffCooldown > 0.0f) g_state.chaffCooldown = max(0.0f, g_state.chaffCooldown - dt);
+
+    // Auto-PDL routine
+    if (g_state.autoPDL && g_state.pdlCooldown <= 0.0f) {
+        int foundThreat = 0;
+        for (int i = 0; i < MAX_ENEMY_PROJECTILES; i++) {
+            if (!g_state.enemyProjectiles[i].active || g_state.enemyProjectiles[i].type != 1) continue;
+            float d = (float)sqrt((g_state.enemyProjectiles[i].x - g_state.shipX) * (g_state.enemyProjectiles[i].x - g_state.shipX) +
+                                  (g_state.enemyProjectiles[i].y - g_state.shipY) * (g_state.enemyProjectiles[i].y - g_state.shipY));
+            if (d < 280.0f) { foundThreat = 1; break; }
+        }
+        if (!foundThreat) {
+            for (int i = 0; i < MAX_RAIDERS; i++) {
+                if (!g_state.raiders[i].active) continue;
+                float d = (float)sqrt((g_state.raiders[i].x - g_state.shipX) * (g_state.raiders[i].x - g_state.shipX) +
+                                      (g_state.raiders[i].y - g_state.shipY) * (g_state.raiders[i].y - g_state.shipY));
+                if (d < 240.0f) { foundThreat = 1; break; }
+            }
+        }
+        if (foundThreat) FirePDL();
+    }
+
+    // Update Player Projectiles
+    for (int i = 0; i < MAX_PROJECTILES; i++) {
+        Projectile* p = &g_state.projectiles[i];
+        if (!p->active) continue;
+        p->life -= dt;
+        if (p->life <= 0.0f) {
+            if (p->type == 1) TriggerEMPShockwave(p->x, p->y); // Flak detonation
+            p->active = 0;
+            continue;
+        }
+
+        if (p->type == 0 || p->type == 1) { // Railgun slug or flak shell
+            p->x += p->vx;
+            p->y += p->vy;
+
+            // Check collision with raiders
+            for (int r = 0; r < MAX_RAIDERS; r++) {
+                Raider* rd = &g_state.raiders[r];
+                if (!rd->active) continue;
+                float d = (float)sqrt((rd->x - p->x) * (rd->x - p->x) + (rd->y - p->y) * (rd->y - p->y));
+                if (d < rd->radius + 6.0f) {
+                    if (p->type == 0) { // Railgun slug impact
+                        float dmg = p->damage;
+                        if (rd->shield > 0.0f) {
+                            float shAbs = min(rd->shield, dmg);
+                            rd->shield -= shAbs;
+                            dmg -= shAbs;
+                        }
+                        if (dmg > 0.0f) rd->hp = max(0.0f, rd->hp - dmg);
+                        AddSparks(p->x, p->y, RGB(0, 240, 255), 14);
+                        char dTxt[32];
+                        sprintf(dTxt, "-%.0f HP", p->damage);
+                        AddFloatingText(dTxt, rd->x, rd->y - 20.0f, RGB(56, 189, 248));
+                        p->active = 0;
+                    } else if (p->type == 1) { // Flak impact
+                        TriggerEMPShockwave(p->x, p->y);
+                        p->active = 0;
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    // Update Enemy Projectiles (Blasters & Torpedoes)
+    for (int i = 0; i < MAX_ENEMY_PROJECTILES; i++) {
+        EnemyProjectile* ep = &g_state.enemyProjectiles[i];
+        if (!ep->active) continue;
+        ep->life -= dt;
+        if (ep->life <= 0.0f) { ep->active = 0; continue; }
+
+        if (ep->type == 1 && ep->homing) { // Homing Torpedo tracking ship
+            float targetAngle = (float)atan2(g_state.shipY - ep->y, g_state.shipX - ep->x);
+            float curAngle = (float)atan2(ep->vy, ep->vx);
+            float diff = targetAngle - curAngle;
+            while (diff > 3.14159f) diff -= 6.28318f;
+            while (diff < -3.14159f) diff += 6.28318f;
+            float newAngle = curAngle + diff * 0.08f;
+            float spd = 3.6f;
+            ep->vx = (float)cos(newAngle) * spd;
+            ep->vy = (float)sin(newAngle) * spd;
+
+            if (rand() % 4 == 0) {
+                for (int pt = 0; pt < MAX_PARTICLES; pt++) {
+                    if (!g_state.particles[pt].active) {
+                        g_state.particles[pt].x = ep->x;
+                        g_state.particles[pt].y = ep->y;
+                        g_state.particles[pt].vx = -ep->vx * 0.3f;
+                        g_state.particles[pt].vy = -ep->vy * 0.3f;
+                        g_state.particles[pt].color = RGB(245, 158, 11);
+                        g_state.particles[pt].life = 0.5f;
+                        g_state.particles[pt].decay = 0.05f;
+                        g_state.particles[pt].size = 2.0f;
+                        g_state.particles[pt].active = 1;
+                        break;
+                    }
+                }
+            }
+        }
+
+        ep->x += ep->vx;
+        ep->y += ep->vy;
+
+        // Collision with player ship
+        float distToShip = (float)sqrt((g_state.shipX - ep->x) * (g_state.shipX - ep->x) +
+                                      (g_state.shipY - ep->y) * (g_state.shipY - ep->y));
+        if (distToShip < 22.0f) {
+            float dmg = ep->damage;
+            if (g_state.shield > 0.0f) {
+                float shAbs = min(g_state.shield, dmg);
+                g_state.shield -= shAbs;
+                dmg -= shAbs;
+            }
+            if (dmg > 0.0f) {
+                g_state.hull = max(0.0f, g_state.hull - dmg);
+                if (ep->type == 1 && g_state.breachCount < MAX_COMPARTMENTS && (rand() % 100 < 40)) {
+                    int comp = rand() % MAX_COMPARTMENTS;
+                    if (!g_state.hullBreaches[comp]) {
+                        g_state.hullBreaches[comp] = 1;
+                        g_state.breachCount++;
+                        TriggerSound(SFX_ALARM);
+                        char bLog[64];
+                        sprintf(bLog, "CRITICAL: Torpedo impact breached %s!", COMPARTMENT_DEFS[comp].name);
+                        AddLog(bLog, 4);
+                        AddFloatingText("HULL BREACH!", g_state.shipX, g_state.shipY - 30.0f, RGB(239, 68, 68));
+                    }
+                }
+            }
+            TriggerSound(SFX_FRACTURE);
+            AddSparks(ep->x, ep->y, RGB(239, 68, 68), 16);
+            char hTxt[32];
+            sprintf(hTxt, "-%.0f HP", ep->damage);
+            AddFloatingText(hTxt, g_state.shipX, g_state.shipY - 25.0f, RGB(239, 68, 68));
+            ep->active = 0;
+        }
+    }
+
+    // Update Shockwaves
+    for (int i = 0; i < MAX_SHOCKWAVES; i++) {
+        Shockwave* sw = &g_state.shockwaves[i];
+        if (!sw->active) continue;
+        sw->r += dt * 380.0f;
+        sw->life -= dt * 1.5f;
+        if (sw->life <= 0.0f || sw->r >= sw->maxR) sw->active = 0;
+    }
+
+    // Update Pirate Wrecks
+    for (int i = 0; i < MAX_PIRATE_WRECKS; i++) {
+        PirateWreck* pw = &g_state.pirateWrecks[i];
+        if (!pw->active) continue;
+        pw->life -= dt;
+        if (pw->life <= 0.0f) { pw->active = 0; continue; }
+
+        float d = (float)sqrt((pw->x - g_state.shipX) * (pw->x - g_state.shipX) + (pw->y - g_state.shipY) * (pw->y - g_state.shipY));
+        if (d < 45.0f) {
+            int scrapGet = 3 + (rand() % 4);
+            g_state.cargoHold[5] += scrapGet;
+            UpdateCargoTotal();
+            TriggerSound(SFX_COLLECT);
+            char bLg[64];
+            sprintf(bLg, "SALVAGE: Stripped %dT scrap from destroyed pirate wreck.", scrapGet);
+            AddLog(bLg, 5);
+            char fT[32];
+            sprintf(fT, "+%dT SCRAP", scrapGet);
+            AddFloatingText(fT, g_state.shipX, g_state.shipY - 30.0f, RGB(251, 191, 36));
+            pw->active = 0;
+        }
+    }
+
+    // Update Raider AI
+    for (int i = 0; i < MAX_RAIDERS; i++) {
+        Raider* r = &g_state.raiders[i];
+        if (!r->active) continue;
+
+        if (r->stunTimer > 0.0f) {
+            r->stunTimer -= dt;
+            continue;
+        }
+
+        // Raider AI Movement: Circle and strafe towards player
+        float dx = g_state.shipX - r->x;
+        float dy = g_state.shipY - r->y;
+        float dist = (float)sqrt(dx * dx + dy * dy);
+        r->angle = (float)atan2(dy, dx);
+
+        float desiredDist = (r->type == 0) ? 140.0f : ((r->type == 1) ? 220.0f : 300.0f);
+        float moveDirX = dx / max(1.0f, dist);
+        float moveDirY = dy / max(1.0f, dist);
+
+        if (dist > desiredDist + 30.0f) {
+            r->vx += moveDirX * r->speed * 0.04f;
+            r->vy += moveDirY * r->speed * 0.04f;
+        } else if (dist < desiredDist - 30.0f) {
+            r->vx -= moveDirX * r->speed * 0.04f;
+            r->vy -= moveDirY * r->speed * 0.04f;
+        }
+
+        // Lateral strafe
+        float strafeX = -moveDirY;
+        float strafeY = moveDirX;
+        r->vx += strafeX * r->speed * 0.02f;
+        r->vy += strafeY * r->speed * 0.02f;
+
+        r->vx *= 0.94f;
+        r->vy *= 0.94f;
+        r->x += r->vx;
+        r->y += r->vy;
+
+        // Raider Shooting
+        r->shootTimer -= dt;
+        if (r->shootTimer <= 0.0f && dist < 420.0f) {
+            if (r->type == 0) { // Corsair: dual rapid blaster
+                r->shootTimer = 1.8f + (((float)rand() / (float)RAND_MAX) * 1.0f);
+                for (int ep = 0; ep < MAX_ENEMY_PROJECTILES; ep++) {
+                    if (!g_state.enemyProjectiles[ep].active) {
+                        g_state.enemyProjectiles[ep].type = 0;
+                        g_state.enemyProjectiles[ep].x = r->x;
+                        g_state.enemyProjectiles[ep].y = r->y;
+                        g_state.enemyProjectiles[ep].vx = (float)cos(r->angle) * 7.5f;
+                        g_state.enemyProjectiles[ep].vy = (float)sin(r->angle) * 7.5f;
+                        g_state.enemyProjectiles[ep].damage = 14.0f;
+                        g_state.enemyProjectiles[ep].life = 1.4f;
+                        g_state.enemyProjectiles[ep].color = RGB(239, 68, 68);
+                        g_state.enemyProjectiles[ep].active = 1;
+                        break;
+                    }
+                }
+            } else if (r->type == 1) { // Gunship: Heavy Blaster + Homing Torpedo
+                r->shootTimer = 2.4f + (((float)rand() / (float)RAND_MAX) * 1.5f);
+                int launchTorpedo = (rand() % 100 < 50);
+                for (int ep = 0; ep < MAX_ENEMY_PROJECTILES; ep++) {
+                    if (!g_state.enemyProjectiles[ep].active) {
+                        g_state.enemyProjectiles[ep].type = launchTorpedo ? 1 : 0;
+                        g_state.enemyProjectiles[ep].x = r->x;
+                        g_state.enemyProjectiles[ep].y = r->y;
+                        g_state.enemyProjectiles[ep].vx = (float)cos(r->angle) * (launchTorpedo ? 3.5f : 6.8f);
+                        g_state.enemyProjectiles[ep].vy = (float)sin(r->angle) * (launchTorpedo ? 3.5f : 6.8f);
+                        g_state.enemyProjectiles[ep].homing = launchTorpedo;
+                        g_state.enemyProjectiles[ep].hp = 30.0f;
+                        g_state.enemyProjectiles[ep].damage = launchTorpedo ? 40.0f : 22.0f;
+                        g_state.enemyProjectiles[ep].life = launchTorpedo ? 4.5f : 1.5f;
+                        g_state.enemyProjectiles[ep].color = launchTorpedo ? RGB(245, 158, 11) : RGB(239, 68, 68);
+                        g_state.enemyProjectiles[ep].active = 1;
+                        if (launchTorpedo) {
+                            TriggerSound(SFX_TORPEDO_ALERT);
+                            AddLog("TORPEDO ALERT: Raider gunship launched homing torpedo! Deploy Chaff or use PDL.", 4);
+                        }
+                        break;
+                    }
+                }
+            } else { // Dread Raider: Heavy Barrage
+                r->shootTimer = 2.0f + (((float)rand() / (float)RAND_MAX) * 1.2f);
+                for (int ep = 0; ep < MAX_ENEMY_PROJECTILES; ep++) {
+                    if (!g_state.enemyProjectiles[ep].active) {
+                        g_state.enemyProjectiles[ep].type = 1; // Homing Torpedo
+                        g_state.enemyProjectiles[ep].x = r->x;
+                        g_state.enemyProjectiles[ep].y = r->y;
+                        g_state.enemyProjectiles[ep].vx = (float)cos(r->angle) * 3.2f;
+                        g_state.enemyProjectiles[ep].vy = (float)sin(r->angle) * 3.2f;
+                        g_state.enemyProjectiles[ep].homing = 1;
+                        g_state.enemyProjectiles[ep].hp = 45.0f;
+                        g_state.enemyProjectiles[ep].damage = 55.0f;
+                        g_state.enemyProjectiles[ep].life = 5.0f;
+                        g_state.enemyProjectiles[ep].color = RGB(244, 63, 94);
+                        g_state.enemyProjectiles[ep].active = 1;
+                        TriggerSound(SFX_TORPEDO_ALERT);
+                        AddLog("DREAD TORPEDO DETECTED: Heavy homing warhead locked onto our reactor.", 4);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Raider Destruction Check
+        if (r->hp <= 0.0f) {
+            r->active = 0;
+            g_state.piratesDefeated++;
+            g_state.bountiesClaimed += r->bounty;
+            g_state.credits += r->bounty;
+            TriggerSound(SFX_PIRATE_EXPLODE);
+            AddSparks(r->x, r->y, RGB(245, 158, 11), 35);
+
+            // Leave salvageable pirate wreck
+            for (int pw = 0; pw < MAX_PIRATE_WRECKS; pw++) {
+                if (!g_state.pirateWrecks[pw].active) {
+                    g_state.pirateWrecks[pw].x = r->x;
+                    g_state.pirateWrecks[pw].y = r->y;
+                    g_state.pirateWrecks[pw].angle = r->angle;
+                    g_state.pirateWrecks[pw].type = r->type;
+                    g_state.pirateWrecks[pw].life = 45.0f;
+                    g_state.pirateWrecks[pw].active = 1;
+                    break;
+                }
+            }
+
+            char bLog[128];
+            sprintf(bLog, "THREAT ELIMINATED: %s destroyed! Bounty Claimed: +%d CR.", r->name, r->bounty);
+            AddLog(bLog, 5);
+            char bTxt[48];
+            sprintf(bTxt, "DESTROYED! +%d CR", r->bounty);
+            AddFloatingText(bTxt, r->x, r->y - 25.0f, RGB(16, 185, 129));
+        }
+    }
     
     // Station Rotation & Docking Dynamics
     g_state.stationAngle += g_state.stationRotSpeed;
@@ -3110,6 +3882,168 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         DeleteObject(hBrChunk);
     }
     
+    // --- Phase 12: Draw Pirate Raider Ships ---
+    for (int i = 0; i < MAX_RAIDERS; i++) {
+        Raider* r = &g_state.raiders[i];
+        if (!r->active) continue;
+
+        int rx = cx + (int)(r->x - g_state.shipX);
+        int ry = cyCenter + (int)(r->y - g_state.shipY);
+        if (rx < viewportX - 80 || rx > viewportX + viewportW + 80 ||
+            ry < viewportY - 80 || ry > viewportY + viewportH + 80) continue;
+
+        float cosR = (float)cos(r->angle);
+        float sinR = (float)sin(r->angle);
+
+        // Raider Shield Bubble
+        if (r->shield > 0.0f) {
+            HPEN hPenRSh = CreatePen(PS_SOLID, 1, RGB(56, 189, 248));
+            HGDIOBJ oldRShP = SelectObject(hdc, hPenRSh);
+            HGDIOBJ oldRShB = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            int shRad = (int)r->radius + 4;
+            Ellipse(hdc, rx - shRad, ry - shRad, rx + shRad, ry + shRad);
+            SelectObject(hdc, oldRShP);
+            SelectObject(hdc, oldRShB);
+            DeleteObject(hPenRSh);
+        }
+
+        // Raider Hull Geometry
+        POINT ptsRLocal[5] = {
+            { (int)(r->radius), 0 },
+            { (int)(-r->radius * 0.8f), (int)(r->radius * 0.7f) },
+            { (int)(-r->radius * 0.4f), 0 },
+            { (int)(-r->radius * 0.8f), (int)(-r->radius * 0.7f) },
+            { (int)(r->radius), 0 }
+        };
+        POINT ptsRWorld[5];
+        for (int v = 0; v < 5; v++) {
+            ptsRWorld[v].x = rx + (int)(ptsRLocal[v].x * cosR - ptsRLocal[v].y * sinR);
+            ptsRWorld[v].y = ry + (int)(ptsRLocal[v].x * sinR + ptsRLocal[v].y * cosR);
+        }
+
+        HPEN hPenRHull = CreatePen(PS_SOLID, 2, r->stunTimer > 0.0f ? RGB(192, 132, 252) : r->color);
+        HBRUSH hBrRHull = CreateSolidBrush(RGB(20, 5, 10));
+        HGDIOBJ oldRP = SelectObject(hdc, hPenRHull);
+        HGDIOBJ oldRB = SelectObject(hdc, hBrRHull);
+        Polygon(hdc, ptsRWorld, 5);
+        SelectObject(hdc, oldRP);
+        SelectObject(hdc, oldRB);
+        DeleteObject(hPenRHull);
+        DeleteObject(hBrRHull);
+
+        // Raider Name & Health Bar
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, r->color);
+        char rLbl[64];
+        sprintf(rLbl, "%s [HP: %d/%d]", r->id, (int)r->hp, (int)r->maxHp);
+        RECT rcRLbl = { rx - 70, ry - (int)r->radius - 16, rx + 70, ry - (int)r->radius };
+        DrawTextA(hdc, rLbl, -1, &rcRLbl, DT_CENTER | DT_SINGLELINE);
+
+        int hbW = (int)(r->radius * 1.8f);
+        int hbH = 4;
+        DrawBar(hdc, rx - hbW / 2, ry + (int)r->radius + 4, hbW, hbH, r->hp / r->maxHp, r->color, RGB(2, 6, 23), RGB(60, 20, 20));
+    }
+
+    // --- Phase 12: Draw Pirate Wrecks ---
+    for (int i = 0; i < MAX_PIRATE_WRECKS; i++) {
+        PirateWreck* pw = &g_state.pirateWrecks[i];
+        if (!pw->active) continue;
+        int wx = cx + (int)(pw->x - g_state.shipX);
+        int wy = cyCenter + (int)(pw->y - g_state.shipY);
+        if (wx < viewportX || wx > viewportX + viewportW || wy < viewportY || wy > viewportY + viewportH) continue;
+
+        HPEN hPenWreck = CreatePen(PS_DOT, 1, RGB(251, 191, 36));
+        HGDIOBJ oldWP = SelectObject(hdc, hPenWreck);
+        HGDIOBJ oldWB = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Rectangle(hdc, wx - 10, wy - 10, wx + 10, wy + 10);
+        MoveToEx(hdc, wx - 10, wy - 10, NULL); LineTo(hdc, wx + 10, wy + 10);
+        MoveToEx(hdc, wx + 10, wy - 10, NULL); LineTo(hdc, wx - 10, wy + 10);
+        SelectObject(hdc, oldWP);
+        SelectObject(hdc, oldWB);
+        DeleteObject(hPenWreck);
+
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(251, 191, 36));
+        RECT rcWkLbl = { wx - 50, wy - 20, wx + 50, wy - 6 };
+        DrawTextA(hdc, "☠ WRECKAGE", -1, &rcWkLbl, DT_CENTER | DT_SINGLELINE);
+    }
+
+    // --- Phase 12: Draw Shockwaves ---
+    for (int i = 0; i < MAX_SHOCKWAVES; i++) {
+        Shockwave* sw = &g_state.shockwaves[i];
+        if (!sw->active) continue;
+        int sx = cx + (int)(sw->x - g_state.shipX);
+        int sy = cyCenter + (int)(sw->y - g_state.shipY);
+        int rad = (int)sw->r;
+        HPEN hPenSw = CreatePen(PS_SOLID, 2, sw->color);
+        HGDIOBJ oldSwP = SelectObject(hdc, hPenSw);
+        HGDIOBJ oldSwB = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Ellipse(hdc, sx - rad, sy - rad, sx + rad, sy + rad);
+        SelectObject(hdc, oldSwP);
+        SelectObject(hdc, oldSwB);
+        DeleteObject(hPenSw);
+    }
+
+    // --- Phase 12: Draw Player Projectiles (Railgun slugs, Flak shells, PDL beams) ---
+    for (int i = 0; i < MAX_PROJECTILES; i++) {
+        Projectile* p = &g_state.projectiles[i];
+        if (!p->active) continue;
+        if (p->type == 0) { // Railgun slug
+            int px = cx + (int)(p->x - g_state.shipX);
+            int py = cyCenter + (int)(p->y - g_state.shipY);
+            HPEN hPenSlug = CreatePen(PS_SOLID, 2, p->color);
+            HGDIOBJ oldSlgP = SelectObject(hdc, hPenSlug);
+            MoveToEx(hdc, px - (int)(p->vx * 1.5f), py - (int)(p->vy * 1.5f), NULL);
+            LineTo(hdc, px, py);
+            SelectObject(hdc, oldSlgP);
+            DeleteObject(hPenSlug);
+        } else if (p->type == 1) { // Flak shell
+            int px = cx + (int)(p->x - g_state.shipX);
+            int py = cyCenter + (int)(p->y - g_state.shipY);
+            HBRUSH hBrFlak = CreateSolidBrush(p->color);
+            RECT rcFlk = { px - 3, py - 3, px + 4, py + 4 };
+            FillRect(hdc, &rcFlk, hBrFlak);
+            DeleteObject(hBrFlak);
+        } else if (p->type == 2) { // PDL beam
+            int x1 = cx + (int)(p->x - g_state.shipX);
+            int y1 = cyCenter + (int)(p->y - g_state.shipY);
+            int x2 = cx + (int)(p->x2 - g_state.shipX);
+            int y2 = cyCenter + (int)(p->y2 - g_state.shipY);
+            HPEN hPenBeam = CreatePen(PS_SOLID, 2, p->color);
+            HGDIOBJ oldBmP = SelectObject(hdc, hPenBeam);
+            MoveToEx(hdc, x1, y1, NULL);
+            LineTo(hdc, x2, y2);
+            SelectObject(hdc, oldBmP);
+            DeleteObject(hPenBeam);
+        }
+    }
+
+    // --- Phase 12: Draw Enemy Projectiles (Hostile Blasters & Homing Torpedoes) ---
+    for (int i = 0; i < MAX_ENEMY_PROJECTILES; i++) {
+        EnemyProjectile* ep = &g_state.enemyProjectiles[i];
+        if (!ep->active) continue;
+        int epx = cx + (int)(ep->x - g_state.shipX);
+        int epy = cyCenter + (int)(ep->y - g_state.shipY);
+        if (ep->type == 0) { // Raider blaster
+            HPEN hPenBlst = CreatePen(PS_SOLID, 2, ep->color);
+            HGDIOBJ oldBstP = SelectObject(hdc, hPenBlst);
+            MoveToEx(hdc, epx - (int)(ep->vx * 1.2f), epy - (int)(ep->vy * 1.2f), NULL);
+            LineTo(hdc, epx, epy);
+            SelectObject(hdc, oldBstP);
+            DeleteObject(hPenBlst);
+        } else if (ep->type == 1) { // Homing Torpedo
+            HBRUSH hBrTorp = CreateSolidBrush(ep->color);
+            HPEN hPenTorp = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+            HGDIOBJ oldTrpP = SelectObject(hdc, hPenTorp);
+            HGDIOBJ oldTrpB = SelectObject(hdc, hBrTorp);
+            Ellipse(hdc, epx - 5, epy - 5, epx + 5, epy + 5);
+            SelectObject(hdc, oldTrpP);
+            SelectObject(hdc, oldTrpB);
+            DeleteObject(hPenTorp);
+            DeleteObject(hBrTorp);
+        }
+    }
+
     // Draw Particles
     for (int i = 0; i < MAX_PARTICLES; i++) {
         if (!g_state.particles[i].active) continue;
@@ -3253,6 +4187,34 @@ void RenderGame(HDC hdc, RECT* clientRect) {
             SetPixel(hdc, sx + 1, sy, stBlip);
             SetPixel(hdc, sx, sy - 1, stBlip);
             SetPixel(hdc, sx, sy + 1, stBlip);
+        }
+    }
+
+    // --- Phase 12: Radar Blips for Raiders & Hostile Torpedoes ---
+    for (int i = 0; i < MAX_RAIDERS; i++) {
+        if (!g_state.raiders[i].active) continue;
+        float bdx = (g_state.raiders[i].x - g_state.shipX) * radarScale;
+        float bdy = (g_state.raiders[i].y - g_state.shipY) * radarScale;
+        if (bdx * bdx + bdy * bdy < (radarR - 4) * (radarR - 4)) {
+            COLORREF rCol = g_state.raiders[i].color;
+            int rx = rcRadarX + (int)bdx;
+            int ry = rcRadarY + (int)bdy;
+            SetPixel(hdc, rx, ry - 1, rCol);
+            SetPixel(hdc, rx - 1, ry, rCol);
+            SetPixel(hdc, rx, ry, rCol);
+            SetPixel(hdc, rx + 1, ry, rCol);
+            SetPixel(hdc, rx, ry + 1, rCol);
+        }
+    }
+    for (int i = 0; i < MAX_ENEMY_PROJECTILES; i++) {
+        if (!g_state.enemyProjectiles[i].active || g_state.enemyProjectiles[i].type != 1) continue;
+        float bdx = (g_state.enemyProjectiles[i].x - g_state.shipX) * radarScale;
+        float bdy = (g_state.enemyProjectiles[i].y - g_state.shipY) * radarScale;
+        if (bdx * bdx + bdy * bdy < (radarR - 4) * (radarR - 4)) {
+            int tx = rcRadarX + (int)bdx;
+            int ty = rcRadarY + (int)bdy;
+            SetPixel(hdc, tx, ty, RGB(254, 240, 138));
+            SetPixel(hdc, tx + 1, ty, RGB(254, 240, 138));
         }
     }
     
@@ -5043,6 +6005,186 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         DeleteObject(hPenBorderSt);
     }
     
+    // Phase 12: Void Pirate Defense & Weapon Systems Armory Modal
+    if (g_state.showDefense) {
+        int modalW = 760;
+        int modalH = 490;
+        int mx = (totalW - modalW) / 2;
+        int my = (totalH - modalH) / 2;
+
+        RECT rcModal = { mx, my, mx + modalW, my + modalH };
+        HBRUSH hBrModal = CreateSolidBrush(pal->bgPanel);
+        HPEN hPenBorderDef = CreatePen(PS_SOLID, 2, RGB(239, 68, 68));
+        HGDIOBJ oldPenDef = SelectObject(hdc, hPenBorderDef);
+        HGDIOBJ oldBrushDef = SelectObject(hdc, hBrModal);
+        Rectangle(hdc, mx, my, mx + modalW, my + modalH);
+        DeleteObject(hBrModal);
+
+        // Header Banner
+        RECT rcHdr = { mx, my, mx + modalW, my + 32 };
+        HBRUSH hBrHdr = CreateSolidBrush(pal->bgHeader);
+        FillRect(hdc, &rcHdr, hBrHdr);
+        DeleteObject(hBrHdr);
+
+        SelectObject(hdc, g_fontHeader);
+        SetTextColor(hdc, RGB(239, 68, 68));
+        TextOutA(hdc, mx + 14, my + 6, "BARGE DEFENSE MATRIX & ARMORY SYSTEMS", 37);
+
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, pal->textBright);
+        TextOutA(hdc, mx + modalW - 120, my + 10, "[X / ESC] CLOSE", 15);
+
+        // Subheader Threat Assessment
+        int barY = my + 36;
+        RECT rcStat = { mx + 14, barY, mx + modalW - 14, barY + 30 };
+        HBRUSH hBrStat = CreateSolidBrush(RGB(3, 7, 18));
+        FillRect(hdc, &rcStat, hBrStat);
+        DeleteObject(hBrStat);
+        FrameRect(hdc, &rcStat, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+        int activeRaiders = 0;
+        for (int i = 0; i < MAX_RAIDERS; i++) if (g_state.raiders[i].active) activeRaiders++;
+
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, activeRaiders > 0 ? RGB(239, 68, 68) : RGB(16, 185, 129));
+        char threatBuf[128];
+        sprintf(threatBuf, "SECTOR THREAT: %s  |  HOSTILES: %d DETECTED  |  PIRATES DEFEATED: %d  |  BOUNTIES: %d CR",
+                activeRaiders > 0 ? "HOSTILE RAIDERS IN SCANNER RANGE" : "SECTOR CLEAR",
+                activeRaiders, g_state.piratesDefeated, g_state.bountiesClaimed);
+        TextOutA(hdc, mx + 20, barY + 8, threatBuf, (int)strlen(threatBuf));
+
+        // Left Column: 4 Weapon Loadout Cards (350px wide)
+        int leftX = mx + 14;
+        int leftY = barY + 36;
+        int leftW = 350;
+        int wCardH = 88;
+        int wGapY = 6;
+
+        struct {
+            const char* name;
+            const char* desc;
+            const char* ammo;
+            COLORREF color;
+        } wDefs[4] = {
+            { "[1] Heavy Mining Laser", "Continuous thermal beam. High sustained DPS against unshielded asteroids & hulls.", "Ammo: Unlimited (Generates Heat)", RGB(0, 240, 255) },
+            { "[2] Kinetic Railgun Cannon", "Hypervelocity tungsten-ferrum slug. Devastating kinetic armor-piercing damage.", "Ammo: 15 / 15 Slugs", RGB(56, 189, 248) },
+            { "[3] EMP Flak Cannon", "Proximity flak detonation. Emits expanding EMP shockwave that stuns raiders & clears torpedoes.", "Ammo: 6 / 6 Charges", RGB(192, 132, 252) },
+            { "[4] Point-Defense Laser", "Automated tracking pulse turret. Instantly intercepts incoming torpedoes and raiders.", "Ammo: Unlimited (Auto-Tracking)", RGB(16, 185, 129) }
+        };
+
+        for (int w = 0; w < 4; w++) {
+            int wy = leftY + w * (wCardH + wGapY);
+            int isSelected = (g_state.selectedWeapon == w);
+
+            RECT rcWCard = { leftX, wy, leftX + leftW, wy + wCardH };
+            HBRUSH hBrWCard = CreateSolidBrush(isSelected ? RGB(10, 30, 55) : RGB(2, 6, 18));
+            FillRect(hdc, &rcWCard, hBrWCard);
+            DeleteObject(hBrWCard);
+
+            HPEN hPenWCard = CreatePen(PS_SOLID, isSelected ? 2 : 1, isSelected ? RGB(56, 189, 248) : RGB(30, 45, 70));
+            SelectObject(hdc, hPenWCard);
+            Rectangle(hdc, leftX, wy, leftX + leftW, wy + wCardH);
+            DeleteObject(hPenWCard);
+
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, wDefs[w].color);
+            TextOutA(hdc, leftX + 8, wy + 6, wDefs[w].name, (int)strlen(wDefs[w].name));
+
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, RGB(148, 163, 184));
+            RECT rcWDesc = { leftX + 8, wy + 24, leftX + leftW - 8, wy + 54 };
+            DrawTextA(hdc, wDefs[w].desc, -1, &rcWDesc, DT_WORDBREAK);
+
+            // Ammo & Status
+            char ammoStr[64];
+            if (w == 0) sprintf(ammoStr, "Status: %s (Heat: %d%%)", g_state.miningActive ? "FIRING" : "STANDBY", (int)g_state.heat);
+            else if (w == 1) sprintf(ammoStr, "Ammo: %d Slugs (Hold [F] to Fire)", g_state.railgunSlugs);
+            else if (w == 2) sprintf(ammoStr, "Capacitors: %d Charges (Hold [G] to Detonate)", g_state.empCharges);
+            else sprintf(ammoStr, "Auto-PDL: %s (Intercept Range: 280m)", g_state.autoPDL ? "ONLINE" : "STANDBY");
+
+            SetTextColor(hdc, isSelected ? RGB(251, 191, 36) : RGB(148, 163, 184));
+            TextOutA(hdc, leftX + 8, wy + 68, ammoStr, (int)strlen(ammoStr));
+
+            if (isSelected) {
+                SetTextColor(hdc, RGB(16, 185, 129));
+                TextOutA(hdc, leftX + leftW - 65, wy + 6, "ARMED", 5);
+            }
+        }
+
+        // Right Column: Munitions Workshop & Tactical Defenses (370px wide)
+        int rcX = leftX + leftW + 12;
+        int rcY = leftY;
+        int rcW = modalW - (rcX - mx) - 14;
+
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, RGB(56, 189, 248));
+        TextOutA(hdc, rcX + 4, rcY - 14, "MUNITIONS WORKSHOP & TACTICAL ACTIONS", 37);
+
+        int aCardH = 58;
+        int aGapY = 6;
+
+        struct {
+            const char* title;
+            const char* cost;
+            const char* desc;
+            int canDo;
+        } actDefs[6] = {
+            { "1. Smelt Railgun Slugs (+5 Slugs)", "5 Ferrum", "Cast high-density tungsten-ferrum kinetic slugs", g_state.cargoHold[0] >= 5 },
+            { "2. Recharge EMP Capacitors (+2 Charges)", "4 Silicates", "Refill high-voltage electromagnetic discharge capacitor bank", g_state.cargoHold[1] >= 4 },
+            { "3. Overcharge Deflector Shields (+130%)", "200 CR", "Route aux power into shield emitters for 130% overcharge", g_state.credits >= 200 },
+            { "4. Emergency Combat Drones (18s)", "350 CR", "Launch autonomous drone swarm for combat & continuous hull repairs", g_state.credits >= 350 },
+            { "5. Toggle Auto-Point Defense Turret", g_state.autoPDL ? "ACTIVE" : "OFFLINE", "Automatically shoot down incoming enemy homing torpedoes", 1 },
+            { "6. Deploy Emergency Chaff Cloud", "Cooldown: 8s", "Release dense metallic chaff cloud to break all torpedo tracking locks", g_state.chaffCooldown <= 0.0f }
+        };
+
+        for (int a = 0; a < 6; a++) {
+            int ay = rcY + a * (aCardH + aGapY);
+            RECT rcACard = { rcX, ay, rcX + rcW, ay + aCardH };
+            HBRUSH hBrACard = CreateSolidBrush(actDefs[a].canDo ? RGB(5, 12, 28) : RGB(15, 15, 20));
+            FillRect(hdc, &rcACard, hBrACard);
+            DeleteObject(hBrACard);
+
+            HPEN hPenACard = CreatePen(PS_SOLID, 1, actDefs[a].canDo ? RGB(56, 189, 248) : RGB(40, 45, 60));
+            SelectObject(hdc, hPenACard);
+            Rectangle(hdc, rcX, ay, rcX + rcW, ay + aCardH);
+            DeleteObject(hPenACard);
+
+            SelectObject(hdc, g_fontMonoBold);
+            SetTextColor(hdc, actDefs[a].canDo ? RGB(255, 255, 255) : RGB(120, 120, 120));
+            TextOutA(hdc, rcX + 8, ay + 6, actDefs[a].title, (int)strlen(actDefs[a].title));
+
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, RGB(251, 191, 36));
+            RECT rcCost = { rcX + rcW - 100, ay + 6, rcX + rcW - 8, ay + 20 };
+            DrawTextA(hdc, actDefs[a].cost, -1, &rcCost, DT_RIGHT | DT_SINGLELINE);
+
+            SetTextColor(hdc, RGB(148, 163, 184));
+            RECT rcADesc = { rcX + 8, ay + 24, rcX + rcW - 8, ay + 42 };
+            DrawTextA(hdc, actDefs[a].desc, -1, &rcADesc, DT_WORDBREAK);
+
+            // Action Execute Button
+            RECT rcBtnAct = { rcX + 8, ay + 40, rcX + rcW - 8, ay + 54 };
+            HBRUSH hBrBtnAct = CreateSolidBrush(actDefs[a].canDo ? RGB(30, 58, 138) : RGB(25, 30, 40));
+            FillRect(hdc, &rcBtnAct, hBrBtnAct);
+            DeleteObject(hBrBtnAct);
+            FrameRect(hdc, &rcBtnAct, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+            SelectObject(hdc, g_fontSmall);
+            SetTextColor(hdc, actDefs[a].canDo ? RGB(110, 231, 183) : RGB(100, 116, 139));
+            const char* bLabels[6] = { "CRAFT +5 SLUGS", "RECHARGE +2 EMP", "OVERCHARGE (200 CR)", "DEPLOY COMBAT DRONES (350 CR)", "TOGGLE AUTO-PDL", "DEPLOY CHAFF [KEY C]" };
+            DrawTextA(hdc, bLabels[a], -1, &rcBtnAct, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        }
+
+        // Footer instruction
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(245, 158, 11));
+        TextOutA(hdc, mx + 16, my + modalH - 22, "Weapons [1-4] • [F] Railgun • [G] EMP Flak • [X / ESC] Close Armory", 67);
+
+        SelectObject(hdc, oldPenDef);
+        SelectObject(hdc, oldBrushDef);
+        DeleteObject(hPenBorderDef);
+    }
+
     // Help Overlay Modal
     if (g_state.showHelp) {
         int helpW = 560;
@@ -5108,7 +6250,7 @@ void RepositionControls(HWND hwnd) {
     int bottomCtrlH = 140;
     int botY = totalH - bottomCtrlH;
     
-    // Cockpit Action Buttons in bottom-left console (8 in row 1, 6 in row 2)
+    // Cockpit Action Buttons in bottom-left console (8 in row 1, 7 in row 2)
     int bx = 8;
     int by1 = botY + 28;
     int by2 = botY + 62;
@@ -5125,13 +6267,14 @@ void RepositionControls(HWND hwnd) {
     MoveWindow(g_btnEva,        bx + (bw + gap) * 6, by1, bw, bh, TRUE);
     MoveWindow(g_btnCrisis,     bx + (bw + gap) * 7, by1, bw, bh, TRUE);
     
-    int bw2 = 48;
-    MoveWindow(g_btnUpgrades,   bx,                   by2, bw2, bh, TRUE);
-    MoveWindow(g_btnRefinery,   bx + (bw2 + gap),     by2, bw2 + 6, bh, TRUE);
-    MoveWindow(g_btnTheme,      bx + (bw2 + gap) * 2 + 6, by2, bw2 + 6, bh, TRUE);
-    MoveWindow(g_btnScanlines,  bx + (bw2 + gap) * 3 + 12, by2, bw2 + 6, bh, TRUE);
-    MoveWindow(g_btnAudio,      bx + (bw2 + gap) * 4 + 18, by2, bw2 + 4, bh, TRUE);
-    MoveWindow(g_btnHelp,       bx + (bw2 + gap) * 5 + 22, by2, bw2 + 4, bh, TRUE);
+    int bw2 = 42;
+    MoveWindow(g_btnDefense,    bx,                   by2, bw2 + 2, bh, TRUE);
+    MoveWindow(g_btnUpgrades,   bx + (bw2 + gap),     by2, bw2 + 2, bh, TRUE);
+    MoveWindow(g_btnRefinery,   bx + (bw2 + gap) * 2, by2, bw2 + 2, bh, TRUE);
+    MoveWindow(g_btnTheme,      bx + (bw2 + gap) * 3 + 2, by2, bw2 + 6, bh, TRUE);
+    MoveWindow(g_btnScanlines,  bx + (bw2 + gap) * 4 + 8, by2, bw2 + 6, bh, TRUE);
+    MoveWindow(g_btnAudio,      bx + (bw2 + gap) * 5 + 14, by2, bw2 + 2, bh, TRUE);
+    MoveWindow(g_btnHelp,       bx + (bw2 + gap) * 6 + 16, by2, bw2 + 2, bh, TRUE);
     
     // Right panel buttons: Jettison & Liquidate
     int rightX = totalW - rightPanelW + 10;
@@ -5162,6 +6305,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_btnStation   = CreateWindowA("BUTTON", "STATION [D]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_STATION, NULL, NULL);
             g_btnEva       = CreateWindowA("BUTTON", "EVA OPS [E]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_EVA, NULL, NULL);
             g_btnCrisis    = CreateWindowA("BUTTON", "CRISIS [K]",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_CRISIS, NULL, NULL);
+            g_btnDefense   = CreateWindowA("BUTTON", "ARMORY [X]",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_DEFENSE, NULL, NULL);
             g_btnUpgrades  = CreateWindowA("BUTTON", "UPGRADE [U]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_UPGRADES, NULL, NULL);
             g_btnRefinery  = CreateWindowA("BUTTON", "SMELT [R]",     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_REFINERY, NULL, NULL);
             g_btnTheme     = CreateWindowA("BUTTON", "CRT CYAN",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_THEME, NULL, NULL);
@@ -5202,37 +6346,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 case ID_BTN_SCAN:
                     g_state.showSpectrometer = !g_state.showSpectrometer;
-                    if (g_state.showSpectrometer) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; g_state.showStation = 0; }
+                    if (g_state.showSpectrometer) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; g_state.showStation = 0; g_state.showDefense = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_NAV:
                     g_state.showStarChart = !g_state.showStarChart;
-                    if (g_state.showStarChart) { g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; g_state.showStation = 0; }
+                    if (g_state.showStarChart) { g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; g_state.showStation = 0; g_state.showDefense = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_STATION:
                     g_state.showStation = !g_state.showStation;
-                    if (g_state.showStation) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; }
+                    if (g_state.showStation) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; g_state.showDefense = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_EVA:
                     g_state.showEva = !g_state.showEva;
-                    if (g_state.showEva) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; g_state.showStation = 0; }
+                    if (g_state.showEva) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; g_state.showStation = 0; g_state.showDefense = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_CRISIS:
                     g_state.showCrisis = !g_state.showCrisis;
-                    if (g_state.showCrisis) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showRefinery = 0; g_state.showStation = 0; }
+                    if (g_state.showCrisis) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showRefinery = 0; g_state.showStation = 0; g_state.showDefense = 0; }
+                    TriggerSound(SFX_BEEP);
+                    break;
+                case ID_BTN_DEFENSE:
+                    g_state.showDefense = !g_state.showDefense;
+                    if (g_state.showDefense) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; g_state.showStation = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_UPGRADES:
                     g_state.showUpgrades = !g_state.showUpgrades;
-                    if (g_state.showUpgrades) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; g_state.showStation = 0; }
+                    if (g_state.showUpgrades) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; g_state.showStation = 0; g_state.showDefense = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_REFINERY:
                     g_state.showRefinery = !g_state.showRefinery;
-                    if (g_state.showRefinery) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showUpgrades = 0; g_state.showStation = 0; }
+                    if (g_state.showRefinery) { g_state.showStarChart = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showUpgrades = 0; g_state.showStation = 0; g_state.showDefense = 0; }
                     TriggerSound(SFX_BEEP);
                     break;
                 case ID_BTN_THEME:
@@ -5298,6 +6447,68 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (g_state.showHelp) {
                 g_state.showHelp = 0;
                 InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+
+            if (g_state.showDefense) {
+                int modalW = 760;
+                int modalH = 490;
+                int hx = (totalW - modalW) / 2;
+                int hy = (totalH - modalH) / 2;
+
+                // Close button top-right
+                if (mx >= hx + modalW - 130 && mx <= hx + modalW - 10 && my >= hy && my <= hy + 32) {
+                    g_state.showDefense = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+
+                // Left Column: 4 weapon selection cards
+                int barY = hy + 36;
+                int leftX = hx + 14;
+                int leftY = barY + 36;
+                int leftW = 350;
+                int wCardH = 88;
+                int wGapY = 6;
+                for (int w = 0; w < 4; w++) {
+                    int wy = leftY + w * (wCardH + wGapY);
+                    if (mx >= leftX && mx <= leftX + leftW && my >= wy && my <= wy + wCardH) {
+                        g_state.selectedWeapon = w;
+                        TriggerSound(SFX_BEEP);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        return 0;
+                    }
+                }
+
+                // Right Column: 6 Munitions Workshop Action buttons
+                int rcX = leftX + leftW + 12;
+                int rcY = leftY;
+                int rcW = modalW - (rcX - hx) - 14;
+                int aCardH = 58;
+                int aGapY = 6;
+                for (int a = 0; a < 6; a++) {
+                    int ay = rcY + a * (aCardH + aGapY);
+                    if (mx >= rcX + 8 && mx <= rcX + rcW - 8 && my >= ay + 38 && my <= ay + 56) {
+                        if (a == 0) CraftRailgunSlugs();
+                        else if (a == 1) RechargeEMPCapacitor();
+                        else if (a == 2) OverchargeShield();
+                        else if (a == 3) DeployCombatDrones();
+                        else if (a == 4) {
+                            g_state.autoPDL = !g_state.autoPDL;
+                            TriggerSound(SFX_BEEP);
+                            AddLog(g_state.autoPDL ? "Automated Point-Defense Laser turret armed." : "Point-Defense Laser turret set to standby.", 0);
+                        } else if (a == 5) DeployChaff();
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        return 0;
+                    }
+                }
+
+                // Click outside modal closes it
+                if (mx < hx || mx > hx + modalW || my < hy || my > hy + modalH) {
+                    g_state.showDefense = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
                 return 0;
             }
             
@@ -5799,6 +7010,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         
         case WM_KEYDOWN: {
+            if (g_state.showDefense) {
+                if (wParam == '1') { g_state.selectedWeapon = 0; TriggerSound(SFX_BEEP); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '2') { g_state.selectedWeapon = 1; TriggerSound(SFX_BEEP); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '3') { g_state.selectedWeapon = 2; TriggerSound(SFX_BEEP); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == '4') { g_state.selectedWeapon = 3; TriggerSound(SFX_BEEP); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == 'F') { FireRailgun(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == 'G') { FireEMPFlak(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == 'C') { DeployChaff(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (wParam == 'X' || wParam == VK_ESCAPE) { g_state.showDefense = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+            }
+
             if (g_state.showStation) {
                 if (wParam == '1') { ServiceRepairHull(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
                 if (wParam == '2') { ServiceRechargeShield(); InvalidateRect(hwnd, NULL, FALSE); return 0; }
@@ -5886,6 +7108,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 case VK_SPACE:
                     g_state.miningActive = 1;
+                    break;
+                case '1':
+                    g_state.selectedWeapon = 0;
+                    AddLog("Selected Weapon: Heavy Mining Thermal Beam [1].", 1);
+                    TriggerSound(SFX_BEEP);
+                    break;
+                case '2':
+                    g_state.selectedWeapon = 1;
+                    AddLog("Selected Weapon: Kinetic Railgun Cannon [2] (Press [F] to fire).", 4);
+                    TriggerSound(SFX_BEEP);
+                    break;
+                case '3':
+                    g_state.selectedWeapon = 2;
+                    AddLog("Selected Weapon: EMP Flak Cannon [3] (Press [G] to fire).", 3);
+                    TriggerSound(SFX_BEEP);
+                    break;
+                case '4':
+                    g_state.selectedWeapon = 3;
+                    AddLog("Selected Weapon: Automated Point-Defense Turret [4].", 5);
+                    TriggerSound(SFX_BEEP);
+                    break;
+                case 'F':
+                    FireRailgun();
+                    break;
+                case 'G':
+                    FireEMPFlak();
+                    break;
+                case 'X':
+                    g_state.showDefense = !g_state.showDefense;
+                    if (g_state.showDefense) { g_state.showStarChart = 0; g_state.showUpgrades = 0; g_state.showSpectrometer = 0; g_state.showEva = 0; g_state.showCrisis = 0; g_state.showRefinery = 0; g_state.showStation = 0; }
+                    TriggerSound(SFX_BEEP);
                     break;
                 case 'T':
                     g_state.tractorActive = !g_state.tractorActive;

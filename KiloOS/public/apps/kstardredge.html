@@ -1297,16 +1297,115 @@
             border: 1px solid var(--border-panel);
             border-radius: 2px;
             overflow: hidden;
+        /* Phase 12: Void Pirate Defense & Weapon Systems Modal */
+        .btn.btn-defense {
+            border-color: #ef4444;
+            color: #fee2e2;
+            background: #2b0c0c;
         }
 
-        .contract-progress-fill {
+        .btn.btn-defense:hover {
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+            border-color: #f87171;
+            background: #450a0a;
+        }
+
+        .btn.btn-defense.active-weapon {
+            border-color: #fca5a5;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.7);
+        }
+
+        .defense-grid {
+            display: grid;
+            grid-template-columns: 1.25fr 1fr;
+            gap: 10px;
+        }
+
+        .defense-panel-card {
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .defense-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 11px;
+            color: var(--text-bright);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 4px;
+        }
+
+        .weapon-card {
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 7px 9px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .weapon-card.active-selected {
+            border-color: #ef4444;
+            background: rgba(69, 10, 10, 0.35);
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+        }
+
+        .weapon-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .weapon-title {
+            font-weight: bold;
+            font-size: 11px;
+            color: var(--text-bright);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .weapon-stats-row {
+            display: flex;
+            gap: 8px;
+            font-size: 9px;
+            color: #94a3b8;
+        }
+
+        .weapon-stats-row span {
+            color: #f87171;
+            font-weight: bold;
+        }
+
+        .threat-level-bar {
+            height: 10px;
+            background: #020617;
+            border: 1px solid var(--border-panel);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .threat-level-fill {
             height: 100%;
-            background: #38bdf8;
+            background: linear-gradient(90deg, #10b981, #f59e0b, #ef4444);
             transition: width 0.3s ease;
         }
 
-        .contract-progress-fill.ready {
-            background: #10b981;
+        .armory-btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
         }
     </style>
 </head>
@@ -1538,6 +1637,10 @@
                     <button class="btn btn-refinery" id="btnRefinery">
                         <span>🏭 REFINERY</span>
                         <span class="key-hint">[R] SMELTING</span>
+                    </button>
+                    <button class="btn btn-defense" id="btnDefense">
+                        <span>⚔️ DEFENSE</span>
+                        <span class="key-hint">[X] WEAPONS</span>
                     </button>
                     <button class="btn" id="btnTheme">
                         <span id="txtBtnTheme">📺 CRT CYAN</span>
@@ -2079,6 +2182,159 @@
         </div>
     </div>
 
+    <!-- Phase 12: Void Pirate Defense & Weapon Systems Modal -->
+    <div class="modal-overlay" id="defenseModal">
+        <div class="modal-box" style="width: 900px;">
+            <div class="modal-header" style="border-bottom-color: #ef4444;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 15px;">⚔️</span>
+                    <span style="color: #fca5a5; letter-spacing: 1px;">VOID PIRATE DEFENSE & WEAPONS SYSTEMS</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <span id="txtDefenseActiveMode" style="font-size: 10px; color: var(--accent-amber); font-weight: bold;">WEAPON: [1] MINING LASER</span>
+                    <button class="btn btn-close-modal" id="btnCloseDefense">✕ CLOSE [ESC]</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <!-- Top Status Bar -->
+                <div style="background: rgba(0, 0, 0, 0.5); border: 1px solid var(--border-panel); border-radius: 4px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; gap: 14px; font-size: 11px;">
+                        <div>SECTOR THREAT: <span id="defSectorThreat" style="font-weight: bold; color: #10b981;">LOW (10%)</span></div>
+                        <div>HOSTILE CONTACTS: <span id="defHostileCount" style="font-weight: bold; color: #ef4444;">0 IN RANGE</span></div>
+                        <div>BOUNTIES CLAIMED: <span id="defBountiesTotal" style="font-weight: bold; color: var(--accent-amber);">0 CR</span></div>
+                    </div>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="btn" id="btnToggleAutoPDL" style="padding: 3px 10px; font-size: 9px; border-color: #10b981; color: #a7f3d0;">🎯 AUTO-PDL: ENGAGED [P]</button>
+                        <button class="btn" id="btnDeployChaff" style="padding: 3px 10px; font-size: 9px; border-color: #f59e0b; color: #fef08a;">✨ CHAFF / DECOY FLARE [C]</button>
+                    </div>
+                </div>
+
+                <div class="defense-grid" style="margin-top: 8px;">
+                    <!-- Left: Weapon Systems Pods -->
+                    <div style="display: flex; flex-direction: column; gap: 7px;">
+                        <!-- Weapon 1: Mining Laser -->
+                        <div class="weapon-card" id="wCard0" onclick="selectWeapon(0)">
+                            <div class="weapon-card-header">
+                                <span class="weapon-title">⚡ Mining Extraction Laser (Primary)</span>
+                                <span class="badge-status" id="wBadge0" style="color: #38bdf8;">EQUIPPED [1]</span>
+                            </div>
+                            <div style="font-size: 10px; color: #cbd5e1;">Continuous high-frequency beam for asteroid fracturing and light hull cutting.</div>
+                            <div class="weapon-stats-row">
+                                <div>DPS: <span>35</span></div>
+                                <div>RANGE: <span>240m</span></div>
+                                <div>ENERGY: <span>12 MW/s</span></div>
+                                <div>AMMO: <span>UNLIMITED</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Weapon 2: Kinetic Railgun Battery -->
+                        <div class="weapon-card" id="wCard1" onclick="selectWeapon(1)">
+                            <div class="weapon-card-header">
+                                <span class="weapon-title">💥 Heavy Kinetic Railgun Battery</span>
+                                <span class="badge-status" id="wBadge1" style="color: #fca5a5;">SELECT [2]</span>
+                            </div>
+                            <div style="font-size: 10px; color: #cbd5e1;">Fires hypervelocity tungsten-uranium slugs that punch through heavy pirate armor plating.</div>
+                            <div class="weapon-stats-row">
+                                <div>DAMAGE: <span>85 KINETIC</span></div>
+                                <div>RANGE: <span>480m</span></div>
+                                <div>COOLDOWN: <span>0.9s</span></div>
+                                <div>SLUGS: <span id="txtRailgunSlugs">15</span></div>
+                            </div>
+                            <div style="display: flex; justify-content: flex-end; margin-top: 2px;">
+                                <button class="btn" onclick="event.stopPropagation(); fireRailgun();" style="padding: 2px 8px; font-size: 9px; border-color: #ef4444; color: #fee2e2;">🔥 FIRE RAILGUN [F]</button>
+                            </div>
+                        </div>
+
+                        <!-- Weapon 3: EMP Flak Cannon -->
+                        <div class="weapon-card" id="wCard2" onclick="selectWeapon(2)">
+                            <div class="weapon-card-header">
+                                <span class="weapon-title">⚡ EMP Flak Burst Cannon</span>
+                                <span class="badge-status" id="wBadge2" style="color: #c084fc;">SELECT [3]</span>
+                            </div>
+                            <div style="font-size: 10px; color: #cbd5e1;">Detonates expanding electromagnetic shockwave (240m radius). Strips shields, stuns raiders for 4s, and destroys incoming torpedoes!</div>
+                            <div class="weapon-stats-row">
+                                <div>SHIELD DMG: <span>140 EMP</span></div>
+                                <div>BLAST: <span>240m AREA</span></div>
+                                <div>STUN: <span>4.0s</span></div>
+                                <div>CHARGES: <span id="txtEmpCharges">5</span></div>
+                            </div>
+                            <div style="display: flex; justify-content: flex-end; margin-top: 2px;">
+                                <button class="btn" onclick="event.stopPropagation(); fireEMPFlak();" style="padding: 2px 8px; font-size: 9px; border-color: #c084fc; color: #f3e8ff;">⚡ DETONATE EMP FLAK [G]</button>
+                            </div>
+                        </div>
+
+                        <!-- Weapon 4: Point-Defense Laser -->
+                        <div class="weapon-card" id="wCard3" onclick="selectWeapon(3)">
+                            <div class="weapon-card-header">
+                                <span class="weapon-title">🎯 Point-Defense Laser (PDL) Turret</span>
+                                <span class="badge-status" id="wBadge3" style="color: #10b981;">SELECT [4]</span>
+                            </div>
+                            <div style="font-size: 10px; color: #cbd5e1;">Rapid-pulse automated interceptor. Automatically shoots down incoming pirate homing torpedoes and shreds light skirmishers.</div>
+                            <div class="weapon-stats-row">
+                                <div>DAMAGE: <span>15/BURST</span></div>
+                                <div>RANGE: <span>260m</span></div>
+                                <div>TRACKING: <span>360° AUTO</span></div>
+                                <div>STATUS: <span id="txtPdlMode">AUTO-ENGAGED</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Armory, Munitions & Telemetry -->
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Munitions Workshop -->
+                        <div class="defense-panel-card">
+                            <div class="defense-card-header">
+                                <span>🛠️ MUNITIONS & ARMORY WORKSHOP</span>
+                                <span style="font-size: 9px; color: var(--text-dim);">INSTANT FIELD CRAFTING</span>
+                            </div>
+                            <div class="armory-btn-grid" style="margin-top: 4px;">
+                                <button class="btn" id="btnCraftSlugs" style="padding: 5px; font-size: 10px; border-color: #94a3b8;">
+                                    <span>🔩 +5 Railgun Slugs</span>
+                                    <small style="color: var(--text-dim);">Cost: 5 Ferrum</small>
+                                </button>
+                                <button class="btn" id="btnRechargeEMP" style="padding: 5px; font-size: 10px; border-color: #c084fc;">
+                                    <span>⚡ +2 EMP Capacitors</span>
+                                    <small style="color: var(--text-dim);">Cost: 4 Silicates</small>
+                                </button>
+                                <button class="btn" id="btnShieldBoost" style="padding: 5px; font-size: 10px; border-color: #10b981;">
+                                    <span>🛡️ Overcharge Shield</span>
+                                    <small style="color: var(--text-dim);">Cost: 200 CR</small>
+                                </button>
+                                <button class="btn" id="btnEmergencyDrones" style="padding: 5px; font-size: 10px; border-color: #38bdf8;">
+                                    <span>🤖 Combat Drones</span>
+                                    <small style="color: var(--text-dim);">Cost: 350 CR</small>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Threat Analysis & Raider Intel -->
+                        <div class="defense-panel-card">
+                            <div class="defense-card-header">
+                                <span>📡 VOID PIRATE THREAT INTEL</span>
+                                <span id="defThreatBadge" style="color: #10b981; font-size: 9px;">MONITORING</span>
+                            </div>
+                            <div style="font-size: 10px; color: #94a3b8; display: flex; flex-direction: column; gap: 4px;">
+                                <div>• <strong style="color: #f87171;">Corsair Skiff:</strong> Agile scout with dual plasma blasters (90 HP / 450 CR bounty).</div>
+                                <div>• <strong style="color: #f59e0b;">Marauder Gunship:</strong> Armored gunship with Homing Torpedoes (220 HP / 1,100 CR bounty).</div>
+                                <div>• <strong style="color: #ef4444;">Void Dread Raider:</strong> Heavy dreadnought with Torpedo barrages (450 HP / 2,800 CR bounty).</div>
+                            </div>
+                            <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-panel); border-radius: 3px; padding: 5px 8px; font-size: 10px; margin-top: 4px;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>TOTAL PIRATES DESTROYED:</span>
+                                    <span id="txtPiratesKilledCount" style="color: #ef4444; font-weight: bold;">0</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-top: 2px;">
+                                    <span>PIRATE BOUNTY PAYOUTS:</span>
+                                    <span id="txtPirateBountiesVal" style="color: var(--accent-amber); font-weight: bold;">0 CR</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- Web Audio Synthesis Engine ---
         class SoundEngine {
@@ -2327,6 +2583,84 @@
             playBarter() {
                 this.playBeep(880, 'square', 0.05, 0.12);
                 setTimeout(() => this.playBeep(1174.66, 'square', 0.1, 0.15), 60);
+            }
+
+            playRailgunFire() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.25);
+                    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.25);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.25);
+                } catch (e) {}
+            }
+
+            playFlakDetonation() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(120, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.4);
+                    gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.4);
+                } catch (e) {}
+            }
+
+            playPDLLaser() {
+                this.playBeep(1200, 'sine', 0.03, 0.08);
+                setTimeout(() => this.playBeep(1600, 'sine', 0.03, 0.08), 35);
+            }
+
+            playPirateExplode() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(280, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(25, this.ctx.currentTime + 0.6);
+                    gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.6);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.6);
+                } catch (e) {}
+            }
+
+            playTorpedoAlert() {
+                this.playBeep(880, 'square', 0.06, 0.12);
+                setTimeout(() => this.playBeep(660, 'square', 0.06, 0.12), 70);
+            }
+
+            playChaffDeploy() {
+                if (!this.enabled || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(1400, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.3);
+                } catch (e) {}
             }
         }
 
@@ -2812,6 +3146,23 @@
                 strafeLeft: false,
                 strafeRight: false
             },
+            weapons: {
+                selected: 0, // 0=Mining Laser, 1=Railgun, 2=EMP Flak, 3=PDL
+                railgunSlugs: 15,
+                empCharges: 5,
+                autoPDL: true,
+                railgunCooldown: 0,
+                flakCooldown: 0,
+                pdlCooldown: 0,
+                chaffCooldown: 0
+            },
+            piratesDefeated: 0,
+            bountiesClaimed: 0,
+            raiders: [],
+            projectiles: [],
+            enemyProjectiles: [],
+            shockwaves: [],
+            pirateWrecks: [],
             keys: {},
             asteroids: [],
             derelicts: [],
@@ -2821,6 +3172,7 @@
             stars: [],
             selectedTarget: null,
             selectedDerelict: null,
+            selectedRaider: null,
             evaTarget: null,
             radarAngle: 0
         };
@@ -2908,10 +3260,16 @@
 
             state.asteroids = [];
             state.derelicts = [];
+            state.raiders = [];
+            state.projectiles = [];
+            state.enemyProjectiles = [];
+            state.shockwaves = [];
+            state.pirateWrecks = [];
             state.oreChunks = [];
             state.scanWaves = [];
             state.selectedTarget = null;
             state.selectedDerelict = null;
+            state.selectedRaider = null;
             state.resonantTargetId = null;
 
             for (let i = 0; i < sector.density; i++) {
@@ -2922,6 +3280,16 @@
             const derelictCount = (sector.id === 'graveyard') ? 3 : (sector.id === 'nebula' ? 2 : 1);
             for (let i = 0; i < derelictCount; i++) {
                 spawnDerelict(i % DERELICT_TEMPLATES.length);
+            }
+
+            // Phase 12: Spawn Sector Void Pirate Raiders based on Threat
+            const raiderCount = (sector.id === 'alpha') ? 1 : ((sector.id === 'kuiper') ? 2 : ((sector.id === 'graveyard') ? 3 : 4));
+            for (let i = 0; i < raiderCount; i++) {
+                let rType = 0; // Skiff
+                if (sector.id === 'kuiper' && i >= 1) rType = 1; // Marauder
+                if (sector.id === 'graveyard') rType = (i % 2 === 0) ? 0 : 1;
+                if (sector.id === 'nebula') rType = (i === 0) ? 2 : ((i % 2 === 0) ? 1 : 0);
+                spawnRaider(rType);
             }
 
             // Phase 11: Spawn Sector Orbital Station
@@ -3044,6 +3412,88 @@
             };
             state.derelicts.push(d);
             return d;
+        }
+
+        // Phase 12: Void Pirate Raiders & Weapon Systems
+        const RAIDER_TEMPLATES = [
+            {
+                type: 'skiff',
+                name: 'Void Corsair Skiff',
+                className: 'Fast Light Raider',
+                hp: 90,
+                shield: 50,
+                speed: 2.2,
+                bounty: 450,
+                fireInterval: 1.8,
+                hasTorpedoes: false,
+                scrapMin: 15, scrapMax: 25,
+                color: '#f87171'
+            },
+            {
+                type: 'gunship',
+                name: 'Marauder Gunship',
+                className: 'Armored Raider Gunship',
+                hp: 220,
+                shield: 120,
+                speed: 1.5,
+                bounty: 1100,
+                fireInterval: 2.2,
+                hasTorpedoes: true,
+                torpedoInterval: 7.0,
+                scrapMin: 35, scrapMax: 55,
+                color: '#f59e0b'
+            },
+            {
+                type: 'dread',
+                name: 'Void Dread Raider',
+                className: 'Heavy Outlaw Dreadnought',
+                hp: 450,
+                shield: 240,
+                speed: 1.0,
+                bounty: 2800,
+                fireInterval: 1.6,
+                hasTorpedoes: true,
+                torpedoInterval: 5.5,
+                scrapMin: 65, scrapMax: 95,
+                color: '#ef4444'
+            }
+        ];
+
+        function spawnRaider(templateIdx = 0) {
+            const tmpl = RAIDER_TEMPLATES[templateIdx] || RAIDER_TEMPLATES[0];
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 550 + Math.random() * 450;
+
+            const raider = {
+                id: 'RAID-' + (100 + state.raiders.length * 17 + Math.floor(Math.random() * 80)),
+                name: tmpl.name,
+                type: tmpl.type,
+                className: tmpl.className,
+                x: state.ship.x + Math.cos(angle) * dist,
+                y: state.ship.y + Math.sin(angle) * dist,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                angle: Math.random() * Math.PI * 2,
+                rotSpeed: 0,
+                hp: tmpl.hp,
+                maxHp: tmpl.hp,
+                shield: tmpl.shield,
+                maxShield: tmpl.shield,
+                speed: tmpl.speed,
+                bounty: tmpl.bounty,
+                fireInterval: tmpl.fireInterval,
+                fireTimer: Math.random() * tmpl.fireInterval,
+                hasTorpedoes: tmpl.hasTorpedoes,
+                torpedoInterval: tmpl.torpedoInterval || 8.0,
+                torpedoTimer: 4.0 + Math.random() * 4.0,
+                stunTimer: 0,
+                radius: (tmpl.type === 'dread') ? 34 : ((tmpl.type === 'gunship') ? 25 : 18),
+                color: tmpl.color,
+                scrapMin: tmpl.scrapMin,
+                scrapMax: tmpl.scrapMax
+            };
+            state.raiders.push(raider);
+            return raider;
         }
 
         function pickOreForCurrentSector() {
@@ -4989,11 +5439,50 @@
                 if (e.code === 'Digit4') scavengeCargoPods();
                 if (e.code === 'Escape') closeEvaModal();
             }
+            if (e.code === 'KeyX') {
+                const defModal = document.getElementById('defenseModal');
+                if (defModal.classList.contains('open')) closeDefenseModal();
+                else openDefenseModal();
+            }
+            if (e.code === 'Digit1' && !document.getElementById('stationModal').classList.contains('open') && !document.getElementById('refineryModal').classList.contains('open') && !document.getElementById('crisisModal').classList.contains('open') && !document.getElementById('evaModal').classList.contains('open')) {
+                selectWeapon(0);
+            }
+            if (e.code === 'Digit2' && !document.getElementById('stationModal').classList.contains('open') && !document.getElementById('refineryModal').classList.contains('open') && !document.getElementById('crisisModal').classList.contains('open') && !document.getElementById('evaModal').classList.contains('open')) {
+                selectWeapon(1);
+            }
+            if (e.code === 'Digit3' && !document.getElementById('stationModal').classList.contains('open') && !document.getElementById('refineryModal').classList.contains('open') && !document.getElementById('crisisModal').classList.contains('open') && !document.getElementById('evaModal').classList.contains('open')) {
+                selectWeapon(2);
+            }
+            if (e.code === 'Digit4' && !document.getElementById('stationModal').classList.contains('open') && !document.getElementById('refineryModal').classList.contains('open') && !document.getElementById('crisisModal').classList.contains('open') && !document.getElementById('evaModal').classList.contains('open')) {
+                selectWeapon(3);
+            }
+            if (e.code === 'KeyF') {
+                fireRailgun();
+            }
+            if (e.code === 'KeyG') {
+                fireEMPFlak();
+            }
+            if (document.getElementById('defenseModal').classList.contains('open')) {
+                if (e.code === 'Digit1') selectWeapon(0);
+                if (e.code === 'Digit2') selectWeapon(1);
+                if (e.code === 'Digit3') selectWeapon(2);
+                if (e.code === 'Digit4') selectWeapon(3);
+                if (e.code === 'KeyS') craftRailgunSlugs();
+                if (e.code === 'KeyE') rechargeEMPCapacitor();
+                if (e.code === 'KeyB') overchargeShield();
+                if (e.code === 'KeyR') deployCombatDrones();
+                if (e.code === 'KeyP') { state.weapons.autoPDL = !state.weapons.autoPDL; updateDefenseModalUI(); }
+                if (e.code === 'Escape') closeDefenseModal();
+            }
             if (e.code === 'KeyV') {
                 cycleTheme();
             }
             if (e.code === 'KeyC') {
-                cycleScanlines();
+                if (state.enemyProjectiles.some(ep => ep.type === 'torpedo')) {
+                    deployChaff();
+                } else {
+                    cycleScanlines();
+                }
             }
             if (e.code === 'KeyM') {
                 audio.enabled = !audio.enabled;
@@ -5267,6 +5756,42 @@
             addLog(`Audio synthesizer ${audio.enabled ? 'unmuted' : 'muted'}.`, 'system');
         });
 
+        document.getElementById('btnDefense').addEventListener('click', () => {
+            audio.init();
+            const modal = document.getElementById('defenseModal');
+            if (modal.classList.contains('open')) closeDefenseModal();
+            else openDefenseModal();
+        });
+
+        document.getElementById('btnCloseDefense').addEventListener('click', () => {
+            closeDefenseModal();
+        });
+
+        document.getElementById('btnCraftSlugs').addEventListener('click', () => {
+            craftRailgunSlugs();
+        });
+
+        document.getElementById('btnRechargeEMP').addEventListener('click', () => {
+            rechargeEMPCapacitor();
+        });
+
+        document.getElementById('btnShieldBoost').addEventListener('click', () => {
+            overchargeShield();
+        });
+
+        document.getElementById('btnEmergencyDrones').addEventListener('click', () => {
+            deployCombatDrones();
+        });
+
+        document.getElementById('btnToggleAutoPDL').addEventListener('click', () => {
+            state.weapons.autoPDL = !state.weapons.autoPDL;
+            updateDefenseModalUI();
+        });
+
+        document.getElementById('btnDeployChaff').addEventListener('click', () => {
+            deployChaff();
+        });
+
         document.getElementById('btnHelp').addEventListener('click', () => {
             showHelpModal();
         });
@@ -5345,21 +5870,328 @@
             document.getElementById('cargoTotalVal').textContent = `${calculateCargoValue().toLocaleString()} CR`;
         }
 
+        // --- Phase 12: Void Pirate Defense & Weapon Systems Logic ---
+        function selectWeapon(wIdx) {
+            state.weapons.selected = wIdx;
+            const names = ['MINING LASER', 'KINETIC RAILGUN', 'EMP FLAK CANNON', 'POINT-DEFENSE LASER'];
+            for (let i = 0; i < 4; i++) {
+                const card = document.getElementById(`wCard${i}`);
+                const badge = document.getElementById(`wBadge${i}`);
+                if (card) card.classList.toggle('active-selected', i === wIdx);
+                if (badge) {
+                    badge.textContent = (i === wIdx) ? `EQUIPPED [${i + 1}]` : `SELECT [${i + 1}]`;
+                    badge.style.color = (i === wIdx) ? '#10b981' : 'var(--text-bright)';
+                }
+            }
+            const activeEl = document.getElementById('txtDefenseActiveMode');
+            if (activeEl) activeEl.textContent = `WEAPON: [${wIdx + 1}] ${names[wIdx]}`;
+            audio.playBeep(640, 'triangle', 0.06, 0.1);
+            addLog(`Tactical Weapon Matrix switched to: [${names[wIdx]}]`, 'system');
+        }
+
+        function fireRailgun() {
+            if (state.weapons.railgunCooldown > 0) return;
+            if (state.weapons.railgunSlugs <= 0) {
+                addLog("⚠️ Kinetic Railgun dry! Smelt slugs from Ferrum in Munitions Workshop [X].", "warning");
+                audio.playBeep(240, 'square', 0.1, 0.1);
+                return;
+            }
+
+            state.weapons.railgunSlugs--;
+            state.weapons.railgunCooldown = 0.9;
+            const slugSpeed = 16.0;
+            const lx = state.ship.x + Math.cos(state.ship.angle) * 22;
+            const ly = state.ship.y + Math.sin(state.ship.angle) * 22;
+
+            state.projectiles.push({
+                type: 'railgun',
+                x: lx,
+                y: ly,
+                vx: Math.cos(state.ship.angle) * slugSpeed,
+                vy: Math.sin(state.ship.angle) * slugSpeed,
+                life: 1.2,
+                damage: 85,
+                color: '#38bdf8'
+            });
+
+            audio.playRailgunFire();
+            createSparks(lx, ly, '#00f0ff', 8);
+            addLog("💥 KINETIC RAILGUN FIRED: Hypervelocity slug discharged.", "critical");
+            updateDefenseModalUI();
+        }
+
+        function fireEMPFlak() {
+            if (state.weapons.flakCooldown > 0) return;
+            if (state.weapons.empCharges <= 0) {
+                addLog("⚠️ EMP Flak capacitors depleted! Recharge from Silicates in Armory [X].", "warning");
+                audio.playBeep(240, 'square', 0.1, 0.1);
+                return;
+            }
+
+            state.weapons.empCharges--;
+            state.weapons.flakCooldown = 2.5;
+            const shellSpeed = 7.5;
+            const lx = state.ship.x + Math.cos(state.ship.angle) * 22;
+            const ly = state.ship.y + Math.sin(state.ship.angle) * 22;
+
+            state.projectiles.push({
+                type: 'flakShell',
+                x: lx,
+                y: ly,
+                vx: Math.cos(state.ship.angle) * shellSpeed,
+                vy: Math.sin(state.ship.angle) * shellSpeed,
+                timer: 0.45,
+                color: '#c084fc'
+            });
+
+            audio.playBeep(480, 'sawtooth', 0.1, 0.2);
+            addLog("⚡ EMP FLAK SHELL LAUNCHED: Proximity detonator armed.", "warning");
+            updateDefenseModalUI();
+        }
+
+        function triggerEMPShockwave(x, y) {
+            audio.playFlakDetonation();
+            state.shockwaves.push({
+                x: x,
+                y: y,
+                r: 10,
+                maxR: 240,
+                life: 1.0,
+                color: '#c084fc'
+            });
+            createSparks(x, y, '#c084fc', 24);
+
+            // Destroy all enemy torpedoes in blast radius
+            for (let i = state.enemyProjectiles.length - 1; i >= 0; i--) {
+                const ep = state.enemyProjectiles[i];
+                const d = Math.hypot(ep.x - x, ep.y - y);
+                if (d < 240) {
+                    createSparks(ep.x, ep.y, '#f59e0b', 12);
+                    state.enemyProjectiles.splice(i, 1);
+                    addFloatingText("TORPEDO NEUTRALIZED!", ep.x, ep.y - 15, '#c084fc');
+                }
+            }
+
+            // Damage and stun raiders in blast radius
+            for (const r of state.raiders) {
+                const d = Math.hypot(r.x - x, r.y - y);
+                if (d < 240) {
+                    r.shield = Math.max(0, r.shield - 140);
+                    r.stunTimer = 4.0;
+                    createSparks(r.x, r.y, '#c084fc', 15);
+                    addFloatingText("EMP STUNNED (4s)!", r.x, r.y - 25, '#c084fc');
+                    addLog(`⚡ EMP BLAST OVERLOAD: Systems offline on ${r.name}!`, 'success');
+                }
+            }
+        }
+
+        function firePDL(target = null) {
+            if (state.weapons.pdlCooldown > 0) return;
+            state.weapons.pdlCooldown = 0.22;
+
+            let tgt = target;
+            if (!tgt) {
+                let minTorpDist = 280;
+                for (const ep of state.enemyProjectiles) {
+                    if (ep.type === 'torpedo') {
+                        const d = Math.hypot(ep.x - state.ship.x, ep.y - state.ship.y);
+                        if (d < minTorpDist) { minTorpDist = d; tgt = ep; }
+                    }
+                }
+                if (!tgt) {
+                    let minRaiderDist = 260;
+                    for (const r of state.raiders) {
+                        const d = Math.hypot(r.x - state.ship.x, r.y - state.ship.y);
+                        if (d < minRaiderDist) { minRaiderDist = d; tgt = r; }
+                    }
+                }
+            }
+
+            if (tgt) {
+                audio.playPDLLaser();
+                const sx = state.ship.x;
+                const sy = state.ship.y;
+                createSparks(tgt.x, tgt.y, '#10b981', 4);
+
+                state.projectiles.push({
+                    type: 'pdlBeam',
+                    x1: sx, y1: sy,
+                    x2: tgt.x, y2: tgt.y,
+                    life: 0.12,
+                    color: '#10b981'
+                });
+
+                if (tgt.type === 'torpedo') {
+                    tgt.hp = (tgt.hp || 20) - 20;
+                    if (tgt.hp <= 0) {
+                        createSparks(tgt.x, tgt.y, '#f59e0b', 14);
+                        const idx = state.enemyProjectiles.indexOf(tgt);
+                        if (idx >= 0) state.enemyProjectiles.splice(idx, 1);
+                        addFloatingText("TORPEDO INTERCEPTED!", tgt.x, tgt.y - 15, '#10b981');
+                        addLog("🎯 PDL INTERCEPTION: Incoming raider torpedo destroyed.", "success");
+                    }
+                } else if (tgt.hp !== undefined) {
+                    if (tgt.shield > 0) tgt.shield = Math.max(0, tgt.shield - 15);
+                    else tgt.hp = Math.max(0, tgt.hp - 15);
+                    addFloatingText("-15", tgt.x, tgt.y - 15, '#10b981');
+                }
+            }
+        }
+
+        function deployChaff() {
+            if (state.weapons.chaffCooldown > 0) return;
+            state.weapons.chaffCooldown = 8.0;
+            audio.playChaffDeploy();
+
+            for (let i = 0; i < 30; i++) {
+                const a = Math.random() * Math.PI * 2;
+                const s = 1.5 + Math.random() * 3.5;
+                state.particles.push({
+                    x: state.ship.x,
+                    y: state.ship.y,
+                    vx: Math.cos(a) * s,
+                    vy: Math.sin(a) * s,
+                    color: '#fef08a',
+                    life: 1.5,
+                    decay: 0.02,
+                    size: 2.5
+                });
+            }
+
+            for (const ep of state.enemyProjectiles) {
+                if (ep.type === 'torpedo') {
+                    ep.homing = false;
+                    ep.vx += (Math.random() - 0.5) * 4;
+                    ep.vy += (Math.random() - 0.5) * 4;
+                }
+            }
+
+            addFloatingText("✨ CHAFF DEPLOYED - LOCKS SCRAMBLED!", state.ship.x, state.ship.y - 30, '#fef08a');
+            addLog("✨ EMERGENCY CHAFF CLOUD DEPLOYED: All incoming torpedo tracking scrambled.", "success");
+        }
+
+        function craftRailgunSlugs() {
+            if ((state.cargoHold.ferrum || 0) < 5) {
+                addLog("⚠️ Insufficient Ferrum Ore! Need 5T Ferrum to smelt 5 slugs.", "warning");
+                return;
+            }
+            state.cargoHold.ferrum -= 5;
+            state.weapons.railgunSlugs += 5;
+            audio.playSynth();
+            updateCargoUI();
+            updateDefenseModalUI();
+            addLog("🔩 Manufactured +5 Heavy Railgun Tungsten-Ferrum Slugs.", "success");
+        }
+
+        function rechargeEMPCapacitor() {
+            if ((state.cargoHold.silicates || 0) < 4) {
+                addLog("⚠️ Insufficient Silicates! Need 4T Silicates to charge 2 EMP capacitors.", "warning");
+                return;
+            }
+            state.cargoHold.silicates -= 4;
+            state.weapons.empCharges += 2;
+            audio.playSynth();
+            updateCargoUI();
+            updateDefenseModalUI();
+            addLog("⚡ Synthesized +2 EMP Flak Pulse Capacitors.", "success");
+        }
+
+        function overchargeShield() {
+            if (state.credits < 200) {
+                addLog("⚠️ Insufficient Credits! Need 200 CR to overcharge shields.", "warning");
+                return;
+            }
+            state.credits -= 200;
+            state.shield = state.maxShield * 1.3;
+            document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+            audio.playSynth();
+            addFloatingText("SHIELD OVERCHARGED (130%)!", state.ship.x, state.ship.y - 25, '#10b981');
+            addLog("🛡️ Deflector matrix overcharged to 130% capacity.", "success");
+        }
+
+        function deployCombatDrones() {
+            if (state.credits < 350) {
+                addLog("⚠️ Insufficient Credits! Need 350 CR to deploy combat drones.", "warning");
+                return;
+            }
+            state.credits -= 350;
+            state.repairDronesActive = true;
+            state.droneTimer = 18.0;
+            document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+            audio.playSynth();
+            addFloatingText("COMBAT REPAIR DRONES ACTIVE!", state.ship.x, state.ship.y - 25, '#38bdf8');
+            addLog("🤖 Deployed Autonomous Combat & Hull Drone Swarm (18s active).", "success");
+        }
+
+        function openDefenseModal() {
+            updateDefenseModalUI();
+            document.getElementById('defenseModal').classList.add('open');
+            audio.playBeep(750, 'triangle', 0.08, 0.15);
+        }
+
+        function closeDefenseModal() {
+            document.getElementById('defenseModal').classList.remove('open');
+        }
+
+        function updateDefenseModalUI() {
+            const rEl = document.getElementById('txtRailgunSlugs');
+            if (rEl) rEl.textContent = state.weapons.railgunSlugs;
+            const eEl = document.getElementById('txtEmpCharges');
+            if (eEl) eEl.textContent = state.weapons.empCharges;
+            const pCountEl = document.getElementById('txtPiratesKilledCount');
+            if (pCountEl) pCountEl.textContent = state.piratesDefeated;
+            const pValEl = document.getElementById('txtPirateBountiesVal');
+            if (pValEl) pValEl.textContent = `${state.bountiesClaimed.toLocaleString()} CR`;
+            const defBountiesEl = document.getElementById('defBountiesTotal');
+            if (defBountiesEl) defBountiesEl.textContent = `${state.bountiesClaimed.toLocaleString()} CR`;
+
+            const sec = SECTORS[state.currentSectorIndex];
+            const threatTxt = (sec.id === 'alpha') ? 'LOW (10%)' : ((sec.id === 'kuiper') ? 'MODERATE (25%)' : ((sec.id === 'graveyard') ? 'HIGH (60%)' : 'EXTREME (85%)'));
+            const threatCol = (sec.id === 'alpha') ? '#10b981' : ((sec.id === 'kuiper') ? '#f59e0b' : ((sec.id === 'graveyard') ? '#f43f5e' : '#ef4444'));
+            const defSecEl = document.getElementById('defSectorThreat');
+            if (defSecEl) {
+                defSecEl.textContent = threatTxt;
+                defSecEl.style.color = threatCol;
+            }
+
+            const defCountEl = document.getElementById('defHostileCount');
+            if (defCountEl) {
+                defCountEl.textContent = `${state.raiders.length} IN SECTOR`;
+            }
+
+            const autoBtn = document.getElementById('btnToggleAutoPDL');
+            if (autoBtn) {
+                autoBtn.textContent = state.weapons.autoPDL ? '🎯 AUTO-PDL: ENGAGED [P]' : '🎯 AUTO-PDL: MANUAL ONLY';
+                autoBtn.style.borderColor = state.weapons.autoPDL ? '#10b981' : '#f59e0b';
+                autoBtn.style.color = state.weapons.autoPDL ? '#a7f3d0' : '#fef08a';
+            }
+            const txtPdl = document.getElementById('txtPdlMode');
+            if (txtPdl) {
+                txtPdl.textContent = state.weapons.autoPDL ? 'AUTO-ENGAGED' : 'MANUAL';
+                txtPdl.style.color = state.weapons.autoPDL ? '#10b981' : '#f59e0b';
+            }
+        }
+
         function showHelpModal() {
-            addLog("=== DREDGER FLIGHT MANUAL ===", "system");
+            addLog("=== DREDGER FLIGHT & DEFENSE MANUAL ===", "system");
             addLog("• W / UP ARROW: Forward Fusion Thrusters", "system");
             addLog("• S / DOWN ARROW: Retro Braking Thrusters", "system");
             addLog("• A / D / LEFT / RIGHT: Pivot Mining Barge Heading", "system");
             addLog("• SPACEBAR: Fire Heavy Mining Laser at Asteroids", "system");
-            addLog("• T: Toggle Tractor Beam to collect floating ore chunks", "system");
+            addLog("• 1, 2, 3, 4: Select Active Weapon (Laser / Railgun / EMP Flak / PDL)", "system");
+            addLog("• F: Fire Kinetic Railgun Battery (Armor-Piercing Slugs)", "system");
+            addLog("• G: Detonate EMP Flak Cannon (Area Shield Drain & Torpedo Intercept)", "system");
+            addLog("• X: Open Void Pirate Defense & Tactical Armory Modal", "system");
+            addLog("• T: Toggle Tractor Beam to gather ore chunks & pirate salvage", "system");
             addLog("• Z: Toggle Inertial Dampeners", "system");
             addLog("• P: Multi-Spectral Spectrometer & Mineral Prospector", "system");
             addLog("• U: Open Modular Engineering Bay & Install Upgrades", "system");
             addLog("• N: Open Star Sector Chart & Engage Warp Jumps", "system");
+            addLog("• D: Orbital Spaceports & Black Market Stations (Dock & Barter)", "system");
             addLog("• E: EVA Salvage & Airlock Breach on Derelict Spaceships", "system");
-            addLog("• V: Cycle Retro CRT Vector Theme (Cyan / Amber / Green / Solar)", "system");
-            addLog("• C: Toggle CRT Scanlines & Phosphor Shaders (Normal / CRT+ / Off)", "system");
-            addLog("• CLICK: Target asteroid or derelict spaceship with telemetry", "system");
+            addLog("• K: Emergency Damage Control & Life Support Crisis Station", "system");
+            addLog("• R: Orbital Refinery & Metallurgical Smelting Lab", "system");
+            addLog("• V / C: Theme & CRT Scanline Filter Settings", "system");
         }
 
         // --- Main Simulation Update Step ---
@@ -5367,6 +6199,37 @@
             const engineDef = UPGRADE_DEFS.engine.tiers[state.upgrades.engine];
             const drillDef = UPGRADE_DEFS.drill.tiers[state.upgrades.drill];
             const shieldDef = UPGRADE_DEFS.shield.tiers[state.upgrades.shield];
+
+            // Weapon Cooldown Timers
+            state.weapons.railgunCooldown = Math.max(0, state.weapons.railgunCooldown - dt);
+            state.weapons.flakCooldown = Math.max(0, state.weapons.flakCooldown - dt);
+            state.weapons.pdlCooldown = Math.max(0, state.weapons.pdlCooldown - dt);
+            state.weapons.chaffCooldown = Math.max(0, state.weapons.chaffCooldown - dt);
+
+            // Auto-PDL Turret logic
+            if (state.weapons.autoPDL && state.weapons.pdlCooldown <= 0) {
+                // Check if any incoming torpedo within 280
+                let nearTorp = null;
+                let minTorpD = 280;
+                for (const ep of state.enemyProjectiles) {
+                    if (ep.type === 'torpedo') {
+                        const d = Math.hypot(ep.x - state.ship.x, ep.y - state.ship.y);
+                        if (d < minTorpD) { minTorpD = d; nearTorp = ep; }
+                    }
+                }
+                if (nearTorp) {
+                    firePDL(nearTorp);
+                } else {
+                    // Check if any hostile raider within 220
+                    let nearR = null;
+                    let minRD = 220;
+                    for (const r of state.raiders) {
+                        const d = Math.hypot(r.x - state.ship.x, r.y - state.ship.y);
+                        if (d < minRD) { minRD = d; nearR = r; }
+                    }
+                    if (nearR) firePDL(nearR);
+                }
+            }
 
             // Steering & Rotation
             const rotAccel = engineDef.rot;
@@ -5388,7 +6251,6 @@
                     state.ship.vx += Math.cos(state.ship.angle) * thrustPower;
                     state.ship.vy += Math.sin(state.ship.angle) * thrustPower;
                     state.fuel = Math.max(0, state.fuel - fuelDrainRate);
-                    // Exhaust particles
                     const exAngle = state.ship.angle + Math.PI + (Math.random() - 0.5) * 0.4;
                     state.particles.push({
                         x: state.ship.x - Math.cos(state.ship.angle) * 18,
@@ -5417,7 +6279,6 @@
                 state.ship.vy *= 0.96;
             }
 
-            // Cap maximum speed
             const speed = Math.hypot(state.ship.vx, state.ship.vy);
             const maxSpeed = engineDef.maxSpeed;
             if (speed > maxSpeed) {
@@ -5455,7 +6316,7 @@
                 const dirX = Math.cos(state.ship.angle);
                 const dirY = Math.sin(state.ship.angle);
 
-                // Check collision with asteroids along laser beam
+                // Check laser impact against asteroids
                 for (let i = state.asteroids.length - 1; i >= 0; i--) {
                     const ast = state.asteroids[i];
                     const toAstX = ast.x - lx;
@@ -5468,7 +6329,6 @@
                         const distToBeam = Math.hypot(perpX, perpY);
 
                         if (distToBeam < ast.radius) {
-                            // Laser hit asteroid!
                             const impactX = lx + dirX * proj;
                             const impactY = ly + dirY * proj;
                             createSparks(impactX, impactY, '#00f0ff', 2);
@@ -5479,21 +6339,17 @@
                             const chunkChance = ast.resonantLock ? (drillDef.chunkBonus * 1.5) : (ast.scanned ? drillDef.chunkBonus * 1.25 : drillDef.chunkBonus);
                             if (Math.random() < chunkChance) {
                                 audio.playFracture();
-                                
-                                // Pick extracted chunk based on composition percentages
                                 let droppedOre = ast.oreType;
                                 let r = Math.random() * 100;
                                 for (const oName in ast.comp) {
                                     if (r < ast.comp[oName]) { droppedOre = oName; break; }
                                     r -= ast.comp[oName];
                                 }
-
                                 const oreInfo = ORE_TYPES[droppedOre] || ORE_TYPES[ast.oreType];
                                 spawnOreChunk(impactX, impactY, droppedOre, 1);
                                 addFloatingText(`+1 ${droppedOre}`, impactX, impactY - 10, oreInfo ? oreInfo.color : '#38bdf8');
                             }
 
-                            // Asteroid shattered completely
                             if (ast.hp <= 0) {
                                 audio.playFracture();
                                 addLog(`Asteroid ${ast.id} fractured into rich mineral fragments!`, 'mining');
@@ -5510,7 +6366,6 @@
                                     spawnOreChunk(ast.x + (Math.random() - 0.5) * 20, ast.y + (Math.random() - 0.5) * 20, droppedOre, 1);
                                 }
 
-                                // If rare geode detected, drop bonus geode chunks!
                                 if (ast.geodeType === 'Dark Matter Geode' || (ast.resonantLock && ast.comp['Dark Geode'] > 0)) {
                                     spawnOreChunk(ast.x, ast.y, 'Dark Geode', 2);
                                     addFloatingText(`🌌 DARK MATTER GEODE EXTRACTED!`, ast.x, ast.y - 30, '#f43f5e');
@@ -5532,7 +6387,7 @@
                     }
                 }
 
-                // Phase 8: Check laser impact against derelict ships
+                // Check laser impact against derelict ships
                 for (const der of state.derelicts) {
                     const toDerX = der.x - lx;
                     const toDerY = der.y - ly;
@@ -5565,6 +6420,24 @@
                                     addFloatingText('AIRLOCK BREACHED! +45T SCRAP', der.x, der.y - 30, '#10b981');
                                 }
                             }
+                            break;
+                        }
+                    }
+                }
+
+                // Check laser impact against Pirate Raiders
+                for (const r of state.raiders) {
+                    const toRX = r.x - lx;
+                    const toRY = r.y - ly;
+                    const proj = toRX * dirX + toRY * dirY;
+
+                    if (proj > 0 && proj < laserRange) {
+                        const perpX = toRX - dirX * proj;
+                        const perpY = toRY - dirY * proj;
+                        if (Math.hypot(perpX, perpY) < r.radius) {
+                            createSparks(lx + dirX * proj, ly + dirY * proj, '#ef4444', 3);
+                            if (r.shield > 0) r.shield = Math.max(0, r.shield - 0.8 * drillDef.dpsBonus);
+                            else r.hp = Math.max(0, r.hp - 0.6 * drillDef.dpsBonus);
                             break;
                         }
                     }
@@ -5760,6 +6633,233 @@
             const btnCrisisElem = document.getElementById('btnCrisis');
             if (btnCrisisElem) {
                 btnCrisisElem.classList.toggle('alarm-pulse', hasHazard);
+            }
+
+            // Phase 12: Pirate Raiders AI & Hostile Engagements Simulation
+            for (let i = state.raiders.length - 1; i >= 0; i--) {
+                const r = state.raiders[i];
+                r.stunTimer = Math.max(0, r.stunTimer - dt);
+                r.shootTimer = Math.max(0, r.shootTimer - dt);
+
+                if (r.stunTimer > 0) {
+                    // Raider systems locked up by EMP shockwave
+                    r.vx *= 0.94;
+                    r.vy *= 0.94;
+                    r.x += r.vx;
+                    r.y += r.vy;
+                    if (Math.random() < 0.25) createSparks(r.x, r.y, '#c084fc', 2);
+                } else {
+                    // Combat Raider AI: Target the Dredger
+                    const toShipX = state.ship.x - r.x;
+                    const toShipY = state.ship.y - r.y;
+                    const distToShip = Math.hypot(toShipX, toShipY);
+                    const targetAngle = Math.atan2(toShipY, toShipX);
+
+                    // Angle interpolation
+                    let diff = targetAngle - r.angle;
+                    while (diff < -Math.PI) diff += Math.PI * 2;
+                    while (diff > Math.PI) diff -= Math.PI * 2;
+                    r.angle += Math.sign(diff) * Math.min(Math.abs(diff), 2.5 * dt);
+
+                    // Raider Strafe / Advance Tactics
+                    if (distToShip > 220) {
+                        r.vx += Math.cos(r.angle) * (r.speed * 0.45 * dt);
+                        r.vy += Math.sin(r.angle) * (r.speed * 0.45 * dt);
+                    } else if (distToShip < 140) {
+                        r.vx -= Math.cos(r.angle) * (r.speed * 0.35 * dt);
+                        r.vy -= Math.sin(r.angle) * (r.speed * 0.35 * dt);
+                    } else {
+                        // Flanking strafe
+                        r.vx += -Math.sin(r.angle) * (r.speed * 0.3 * dt);
+                        r.vy += Math.cos(r.angle) * (r.speed * 0.3 * dt);
+                    }
+
+                    r.vx *= 0.96;
+                    r.vy *= 0.96;
+                    r.x += r.vx;
+                    r.y += r.vy;
+
+                    // Firing behavior
+                    if (r.shootTimer <= 0 && distToShip < 480) {
+                        r.shootTimer = (r.type === 'dread') ? 1.6 : ((r.type === 'gunship') ? 2.2 : 3.0);
+                        const muzzleX = r.x + Math.cos(r.angle) * (r.radius + 6);
+                        const muzzleY = r.y + Math.sin(r.angle) * (r.radius + 6);
+
+                        if (r.type === 'gunship' || (r.type === 'dread' && Math.random() < 0.5)) {
+                            // Launch Homing Torpedo
+                            state.enemyProjectiles.push({
+                                type: 'torpedo',
+                                x: muzzleX,
+                                y: muzzleY,
+                                vx: Math.cos(r.angle) * 3.8,
+                                vy: Math.sin(r.angle) * 3.8,
+                                homing: true,
+                                hp: 20,
+                                life: 6.5,
+                                damage: 32,
+                                color: '#f59e0b'
+                            });
+                            audio.playTorpedoAlert();
+                            addLog(`🚨 WARNING: Raider ${r.name} fired a heavy homing torpedo! Deploy Chaff [C] or use PDL!`, 'warning');
+                        } else {
+                            // Red Plasma Blaster Bolt
+                            state.enemyProjectiles.push({
+                                type: 'blaster',
+                                x: muzzleX,
+                                y: muzzleY,
+                                vx: Math.cos(r.angle) * 8.5,
+                                vy: Math.sin(r.angle) * 8.5,
+                                life: 1.8,
+                                damage: 16,
+                                color: '#ef4444'
+                            });
+                            audio.playBeep(320, 'sawtooth', 0.08, 0.12);
+                        }
+                    }
+                }
+
+                // Check raider destruction
+                if (r.hp <= 0) {
+                    audio.playPirateExplode();
+                    createSparks(r.x, r.y, '#f59e0b', 30);
+                    state.piratesDefeated++;
+                    state.bountiesClaimed += r.bounty;
+                    state.credits += r.bounty;
+                    document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+                    addFloatingText(`PIRATE DESTROYED! +${r.bounty} CR`, r.x, r.y - 30, '#10b981');
+                    addLog(`☠️ RAIDER ELIMINATED: ${r.name} annihilated. Bounty claimed: +${r.bounty} CR!`, 'success');
+
+                    // Spawn pirate salvage wreckage and scrap
+                    spawnOreChunk(r.x, r.y, 'Derelict Scrap', 3);
+                    spawnOreChunk(r.x + 10, r.y - 10, 'Derelict Scrap', 3);
+                    if (Math.random() < 0.6) spawnOreChunk(r.x - 10, r.y + 10, 'Platinum', 2);
+
+                    state.pirateWrecks.push({
+                        x: r.x,
+                        y: r.y,
+                        angle: r.angle,
+                        type: r.type,
+                        life: 35.0
+                    });
+
+                    state.raiders.splice(i, 1);
+                    updateDefenseModalUI();
+                }
+            }
+
+            // Update Friendly Player Projectiles
+            for (let i = state.projectiles.length - 1; i >= 0; i--) {
+                const proj = state.projectiles[i];
+                if (proj.type === 'railgun') {
+                    proj.x += proj.vx;
+                    proj.y += proj.vy;
+                    proj.life -= dt;
+                    // Check collision with raiders
+                    for (const r of state.raiders) {
+                        const d = Math.hypot(proj.x - r.x, proj.y - r.y);
+                        if (d < r.radius + 6) {
+                            createSparks(proj.x, proj.y, '#38bdf8', 15);
+                            audio.playFracture();
+                            if (r.shield > 0) {
+                                r.shield = Math.max(0, r.shield - proj.damage * 0.6);
+                                r.hp = Math.max(0, r.hp - proj.damage * 0.4);
+                            } else {
+                                r.hp = Math.max(0, r.hp - proj.damage);
+                            }
+                            addFloatingText(`-${proj.damage} DMG`, r.x, r.y - 20, '#38bdf8');
+                            proj.life = 0;
+                            break;
+                        }
+                    }
+                    if (proj.life <= 0) state.projectiles.splice(i, 1);
+                } else if (proj.type === 'flakShell') {
+                    proj.x += proj.vx;
+                    proj.y += proj.vy;
+                    proj.timer -= dt;
+                    if (proj.timer <= 0) {
+                        triggerEMPShockwave(proj.x, proj.y);
+                        state.projectiles.splice(i, 1);
+                    }
+                } else if (proj.type === 'pdlBeam') {
+                    proj.life -= dt;
+                    if (proj.life <= 0) state.projectiles.splice(i, 1);
+                }
+            }
+
+            // Update Enemy Projectiles (Blasters & Homing Torpedoes)
+            for (let i = state.enemyProjectiles.length - 1; i >= 0; i--) {
+                const ep = state.enemyProjectiles[i];
+                ep.life -= dt;
+
+                if (ep.type === 'torpedo') {
+                    if (ep.homing) {
+                        const toShipX = state.ship.x - ep.x;
+                        const toShipY = state.ship.y - ep.y;
+                        const tAng = Math.atan2(toShipY, toShipX);
+                        const curAng = Math.atan2(ep.vy, ep.vx);
+                        let diff = tAng - curAng;
+                        while (diff < -Math.PI) diff += Math.PI * 2;
+                        while (diff > Math.PI) diff -= Math.PI * 2;
+                        const newAng = curAng + Math.sign(diff) * Math.min(Math.abs(diff), 2.2 * dt);
+                        const spd = 4.8;
+                        ep.vx = Math.cos(newAng) * spd;
+                        ep.vy = Math.sin(newAng) * spd;
+                    }
+                    ep.x += ep.vx;
+                    ep.y += ep.vy;
+
+                    // Particle exhaust
+                    if (Math.random() < 0.6) {
+                        state.particles.push({
+                            x: ep.x,
+                            y: ep.y,
+                            vx: -ep.vx * 0.2 + (Math.random() - 0.5),
+                            vy: -ep.vy * 0.2 + (Math.random() - 0.5),
+                            color: '#f59e0b',
+                            life: 0.4,
+                            decay: 0.1,
+                            size: 2
+                        });
+                    }
+                } else {
+                    ep.x += ep.vx;
+                    ep.y += ep.vy;
+                }
+
+                // Check collision with player dredger
+                const distToShip = Math.hypot(ep.x - state.ship.x, ep.y - state.ship.y);
+                if (distToShip < 24) {
+                    createSparks(ep.x, ep.y, '#ef4444', 12);
+                    audio.playFracture();
+                    if (state.shield > 0) {
+                        state.shield = Math.max(0, state.shield - ep.damage);
+                    } else {
+                        state.hull = Math.max(0, state.hull - ep.damage * 0.7);
+                    }
+                    addFloatingText(`-${ep.damage} DMG`, state.ship.x, state.ship.y - 20, '#ef4444');
+                    addLog(`🚨 HULL HIT: Absorbed ${ep.damage} damage from hostile ${ep.type.toUpperCase()}!`, 'critical');
+                    state.enemyProjectiles.splice(i, 1);
+                    continue;
+                }
+
+                if (ep.life <= 0) state.enemyProjectiles.splice(i, 1);
+            }
+
+            // Update EMP Shockwaves
+            for (let i = state.shockwaves.length - 1; i >= 0; i--) {
+                const sw = state.shockwaves[i];
+                sw.r += 18;
+                sw.life -= 0.05;
+                if (sw.r >= sw.maxR || sw.life <= 0) {
+                    state.shockwaves.splice(i, 1);
+                }
+            }
+
+            // Update Pirate Wrecks
+            for (let i = state.pirateWrecks.length - 1; i >= 0; i--) {
+                const pw = state.pirateWrecks[i];
+                pw.life -= dt;
+                if (pw.life <= 0) state.pirateWrecks.splice(i, 1);
             }
 
             // Phase 11: Orbital Station Simulation & Docking Physics
@@ -6279,6 +7379,176 @@
                 }
             }
 
+            // Phase 12: Render Pirate Raiders & Hostile Warships
+            for (const r of state.raiders) {
+                ctx.save();
+                ctx.translate(r.x, r.y);
+                ctx.rotate(r.angle);
+
+                // Shield bubble
+                if (r.shield > 0) {
+                    ctx.strokeStyle = (r.type === 'dread') ? '#f43f5e' : ((r.type === 'gunship') ? '#f59e0b' : '#ef4444');
+                    ctx.globalAlpha = Math.min(0.5, (r.shield / r.maxShield) * 0.5);
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, r.radius + 6, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.globalAlpha = 1.0;
+                }
+
+                // Raider Hull Geometry
+                ctx.fillStyle = '#1e1b4b';
+                ctx.strokeStyle = r.color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                if (r.type === 'corsair') {
+                    // Fast triangular dagger
+                    ctx.moveTo(r.radius + 6, 0);
+                    ctx.lineTo(-r.radius, -r.radius * 0.8);
+                    ctx.lineTo(-r.radius * 0.4, 0);
+                    ctx.lineTo(-r.radius, r.radius * 0.8);
+                } else if (r.type === 'gunship') {
+                    // Heavy twin-nacelle marauder
+                    ctx.moveTo(r.radius + 8, 0);
+                    ctx.lineTo(r.radius * 0.2, -r.radius * 0.6);
+                    ctx.lineTo(-r.radius, -r.radius);
+                    ctx.lineTo(-r.radius * 0.5, 0);
+                    ctx.lineTo(-r.radius, r.radius);
+                    ctx.lineTo(r.radius * 0.2, r.radius * 0.6);
+                } else {
+                    // Massive spiked dreadnought
+                    ctx.moveTo(r.radius + 12, 0);
+                    ctx.lineTo(r.radius * 0.4, -r.radius * 0.8);
+                    ctx.lineTo(-r.radius * 0.2, -r.radius * 1.1);
+                    ctx.lineTo(-r.radius, -r.radius * 0.7);
+                    ctx.lineTo(-r.radius * 0.6, 0);
+                    ctx.lineTo(-r.radius, r.radius * 0.7);
+                    ctx.lineTo(-r.radius * 0.2, r.radius * 1.1);
+                    ctx.lineTo(r.radius * 0.4, r.radius * 0.8);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Raider Core cockpit
+                ctx.fillStyle = r.stunTimer > 0 ? '#c084fc' : '#ef4444';
+                ctx.beginPath();
+                ctx.arc(2, 0, 3.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+
+                // Hostile Raider HUD Label & Health Bar
+                ctx.font = 'bold 10px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#f87171';
+                ctx.fillText(`☠️ ${r.name}`, r.x, r.y - r.radius - 12);
+
+                const barW = r.radius * 2.2;
+                const barH = 3.5;
+                const barX = r.x - barW / 2;
+                const barY = r.y - r.radius - 8;
+                ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                ctx.fillRect(barX, barY, barW, barH);
+                ctx.fillStyle = '#ef4444';
+                const hpRatio = Math.max(0, Math.min(1, r.hp / r.maxHp));
+                ctx.fillRect(barX, barY, barW * hpRatio, barH);
+                ctx.strokeStyle = '#f87171';
+                ctx.lineWidth = 0.8;
+                ctx.strokeRect(barX, barY, barW, barH);
+            }
+
+            // Render Friendly Projectiles (Railgun Slugs, Flak Shells, PDL Beams)
+            for (const proj of state.projectiles) {
+                if (proj.type === 'railgun') {
+                    ctx.save();
+                    ctx.strokeStyle = proj.color;
+                    ctx.lineWidth = 3;
+                    ctx.shadowColor = '#00f0ff';
+                    ctx.shadowBlur = 10;
+                    ctx.beginPath();
+                    ctx.moveTo(proj.x, proj.y);
+                    ctx.lineTo(proj.x - proj.vx * 1.5, proj.y - proj.vy * 1.5);
+                    ctx.stroke();
+                    ctx.restore();
+                } else if (proj.type === 'flakShell') {
+                    ctx.save();
+                    ctx.fillStyle = proj.color;
+                    ctx.beginPath();
+                    ctx.arc(proj.x, proj.y, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                } else if (proj.type === 'pdlBeam') {
+                    ctx.save();
+                    ctx.strokeStyle = proj.color;
+                    ctx.lineWidth = 2;
+                    ctx.shadowColor = '#10b981';
+                    ctx.shadowBlur = 8;
+                    ctx.beginPath();
+                    ctx.moveTo(proj.x1, proj.y1);
+                    ctx.lineTo(proj.x2, proj.y2);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+
+            // Render Hostile Projectiles (Enemy Blaster Plasma & Homing Torpedoes)
+            for (const ep of state.enemyProjectiles) {
+                ctx.save();
+                if (ep.type === 'torpedo') {
+                    ctx.fillStyle = ep.color;
+                    ctx.strokeStyle = '#ef4444';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.arc(ep.x, ep.y, 4.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    // Lock-on ring
+                    ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+                    ctx.beginPath();
+                    ctx.arc(ep.x, ep.y, 10, 0, Math.PI * 2);
+                    ctx.stroke();
+                } else {
+                    ctx.fillStyle = ep.color;
+                    ctx.shadowColor = '#ef4444';
+                    ctx.shadowBlur = 6;
+                    ctx.beginPath();
+                    ctx.arc(ep.x, ep.y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            // Render EMP Shockwave Blast Rings
+            for (const sw of state.shockwaves) {
+                ctx.save();
+                ctx.strokeStyle = sw.color;
+                ctx.lineWidth = 3;
+                ctx.globalAlpha = sw.life * 0.8;
+                ctx.shadowColor = '#c084fc';
+                ctx.shadowBlur = 16;
+                ctx.beginPath();
+                ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // Render Pirate Wreckage Hulks
+            for (const pw of state.pirateWrecks) {
+                ctx.save();
+                ctx.translate(pw.x, pw.y);
+                ctx.rotate(pw.angle);
+                ctx.strokeStyle = '#64748b';
+                ctx.fillStyle = '#0f172a';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(12, 0); ctx.lineTo(-8, -8); ctx.lineTo(-4, 0); ctx.lineTo(-8, 8);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+            }
+
             // Render Floating Ore Chunks
             for (const chunk of state.oreChunks) {
                 ctx.save();
@@ -6466,6 +7736,38 @@
                     radarCtx.strokeStyle = '#f59e0b';
                     radarCtx.lineWidth = 1;
                     radarCtx.strokeRect(rcx + sx - 4, rcy + sy - 4, 8, 8);
+                }
+            }
+
+            // Phase 12: Hostile Pirate Raider Blips on Radar (Red Diamonds)
+            for (const r of state.raiders) {
+                const rx = (r.x - state.ship.x) * radarScale;
+                const ry = (r.y - state.ship.y) * radarScale;
+                const dist = Math.hypot(rx, ry);
+                if (dist < rRadius - 4) {
+                    radarCtx.fillStyle = '#ef4444';
+                    radarCtx.beginPath();
+                    radarCtx.moveTo(rcx + rx, rcy + ry - 4);
+                    radarCtx.lineTo(rcx + rx + 4, rcy + ry);
+                    radarCtx.lineTo(rcx + rx, rcy + ry + 4);
+                    radarCtx.lineTo(rcx + rx - 4, rcy + ry);
+                    radarCtx.closePath();
+                    radarCtx.fill();
+                }
+            }
+
+            // Phase 12: Incoming Hostile Torpedo Blips (Flashing Yellow Dots)
+            for (const ep of state.enemyProjectiles) {
+                if (ep.type === 'torpedo') {
+                    const tx = (ep.x - state.ship.x) * radarScale;
+                    const ty = (ep.y - state.ship.y) * radarScale;
+                    const dist = Math.hypot(tx, ty);
+                    if (dist < rRadius - 4) {
+                        radarCtx.fillStyle = '#f59e0b';
+                        radarCtx.beginPath();
+                        radarCtx.arc(rcx + tx, rcy + ty, 2, 0, Math.PI * 2);
+                        radarCtx.fill();
+                    }
                 }
             }
 
