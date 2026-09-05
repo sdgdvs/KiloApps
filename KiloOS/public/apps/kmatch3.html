@@ -24,12 +24,44 @@
     position: absolute; width: 100%; height: 100%; top: 0; left: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: #fff; text-shadow: 0 0 4px #000;
   }
 
+  #boardWrapper {
+    position: relative; width: 400px; height: 400px; margin: 0 auto;
+  }
   #board {
     width: 400px; height: 400px;
     background: radial-gradient(circle at center, #231b2e 0%, #0c0813 100%);
     border: 10px ridge #ffd700; border-radius: 12px;
     box-shadow: 0 0 40px rgba(0,0,0,0.9), inset 0 0 30px rgba(0,0,0,0.95), 0 0 30px rgba(255,215,0,0.4), inset 0 0 25px rgba(255,215,0,0.3);
     position: relative; touch-action: none; user-select: none; overflow: hidden;
+  }
+
+  .corner-bracket {
+    position: absolute; width: 22px; height: 22px; pointer-events: none; z-index: 110;
+  }
+  .corner-bracket.top-left { top: -6px; left: -6px; border-top: 3px solid #ffd700; border-left: 3px solid #ffd700; border-top-left-radius: 6px; box-shadow: -2px -2px 8px rgba(255,215,0,0.6); }
+  .corner-bracket.top-right { top: -6px; right: -6px; border-top: 3px solid #ffd700; border-right: 3px solid #ffd700; border-top-right-radius: 6px; box-shadow: 2px -2px 8px rgba(255,215,0,0.6); }
+  .corner-bracket.bottom-left { bottom: -6px; left: -6px; border-bottom: 3px solid #ffd700; border-left: 3px solid #ffd700; border-bottom-left-radius: 6px; box-shadow: -2px 2px 8px rgba(255,215,0,0.6); }
+  .corner-bracket.bottom-right { bottom: -6px; right: -6px; border-bottom: 3px solid #ffd700; border-right: 3px solid #ffd700; border-bottom-right-radius: 6px; box-shadow: 2px 2px 8px rgba(255,215,0,0.6); }
+  .corner-bracket::after {
+    content: ''; position: absolute; width: 4px; height: 4px; background: #ffffff; border-radius: 50%; box-shadow: 0 0 5px #ffd700;
+  }
+  .corner-bracket.top-left::after { top: 2px; left: 2px; }
+  .corner-bracket.top-right::after { top: 2px; right: 2px; }
+  .corner-bracket.bottom-left::after { bottom: 2px; left: 2px; }
+  .corner-bracket.bottom-right::after { bottom: 2px; right: 2px; }
+
+  .glint-border {
+    position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;
+    border: 2px solid transparent; border-radius: 14px; pointer-events: none; z-index: 105;
+    background: linear-gradient(90deg, rgba(255,215,0,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,215,0,0) 100%) border-box;
+    mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: glintRotate 4s linear infinite;
+  }
+  @keyframes glintRotate {
+    0% { transform: rotate(0deg); opacity: 0.3; filter: drop-shadow(0 0 4px #ffd700); }
+    50% { opacity: 0.85; filter: drop-shadow(0 0 10px #ffd700); }
+    100% { transform: rotate(360deg); opacity: 0.3; filter: drop-shadow(0 0 4px #ffd700); }
   }
 
   .cell {
@@ -114,14 +146,6 @@
     0% { opacity: 1; transform: scaleY(2); }
     100% { opacity: 0; transform: scaleY(0.1); }
   }
-  @keyframes boardShake {
-    0% { transform: translate(0, 0) rotate(0deg); }
-    20% { transform: translate(-4px, 3px) rotate(-1deg); }
-    40% { transform: translate(4px, -3px) rotate(1deg); }
-    60% { transform: translate(-4px, -3px) rotate(0deg); }
-    80% { transform: translate(4px, 3px) rotate(-1deg); }
-    100% { transform: translate(0, 0) rotate(0deg); }
-  }
   .ruins-bg {
     position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -2;
     background: 
@@ -160,6 +184,13 @@
     transform-origin: 24px 24px;
     animation: pulseBomb 1s ease-in-out infinite;
   }
+  @keyframes sheenSweep {
+    0% { transform: translateX(-100%) rotate(25deg); }
+    100% { transform: translateX(200%) rotate(25deg); }
+  }
+  .sheen-band {
+    animation: sheenSweep 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
 </style>
 </head>
 <body>
@@ -173,6 +204,13 @@
         <feComposite in="specOut" in2="SourceAlpha" operator="in" result="specOut"/>
         <feComposite in="SourceGraphic" in2="specOut" operator="arithmetic" k1="0" k2="1" k3="1" k4="0"/>
       </filter>
+      <linearGradient id="sheenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0"/>
+        <stop offset="45%" stop-color="#ffffff" stop-opacity="0"/>
+        <stop offset="50%" stop-color="#ffffff" stop-opacity="0.8"/>
+        <stop offset="55%" stop-color="#ffffff" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+      </linearGradient>
     </defs>
   </svg>
   <div class="ruins-bg"></div>
@@ -203,7 +241,14 @@
     <button class="powerup-btn" onclick="useShuffle()" id="btnShuffle">[S] Shuffle</button>
     <button class="powerup-btn" onclick="useColorNuke()" id="btnNuke">[L] Color Nuke</button>
   </div>
-  <div id="board"></div>
+  <div id="boardWrapper">
+    <div class="corner-bracket top-left"></div>
+    <div class="corner-bracket top-right"></div>
+    <div class="corner-bracket bottom-left"></div>
+    <div class="corner-bracket bottom-right"></div>
+    <div class="glint-border"></div>
+    <div id="board"></div>
+  </div>
 
   <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; justify-content:center; align-items:center;">
     <div style="background:#2d2d2d; border:2px solid #555; border-radius:8px; padding:18px; width:370px; max-height:85vh; overflow-y:auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
@@ -367,103 +412,247 @@
       beam.style.height = '400px';
       beam.style.width = '10px';
       boardEl.appendChild(beam);
-      setTimeout(() => beam.remove(), 350);
+    const fxCanvas = document.createElement('canvas');
+    fxCanvas.id = 'fxCanvas';
+    fxCanvas.width = 400;
+    fxCanvas.height = 400;
+    fxCanvas.style.position = 'absolute';
+    fxCanvas.style.top = '0';
+    fxCanvas.style.left = '0';
+    fxCanvas.style.pointerEvents = 'none';
+    fxCanvas.style.zIndex = '100';
+    const fxCtx = fxCanvas.getContext('2d');
+
+    let particles = [];
+    let shockwaves = [];
+    let shakeIntensity = 0;
+    let shakeAngle = 0;
+
+    function triggerShake(amt) {
+      shakeIntensity = Math.min(shakeIntensity + amt, 40);
+      shakeAngle = (Math.random() - 0.5) * 0.12 * shakeIntensity;
     }
 
-    function createParticles(x, y, color) {
-      for (let i = 0; i < 30; i++) {
-        let p = document.createElement('div');
-        p.className = 'particle';
-        
-        let type = 0; // 0=core, 1=debris, 2=smoke
-        if (i < 10) type = 1;
-        else if (i < 20) type = 0;
-        else type = 2;
+    function createShockwave(cx, cy, color='#ffd700', maxR=70) {
+      shockwaves.push({
+        x: cx, y: cy, radius: 2, maxRadius: maxR * 0.85,
+        speed: 5.5, color: '#ffffff', width: 3.5, alpha: 1.0
+      });
+      shockwaves.push({
+        x: cx, y: cy, radius: 4, maxRadius: maxR * 1.25,
+        speed: 3.8, color: color, width: 6.0, alpha: 0.8
+      });
+    }
 
-        let size = type === 2 ? Math.floor(Math.random() * 10) + 10 : (type === 1 ? Math.floor(Math.random() * 6) + 4 : Math.floor(Math.random() * 4) + 2);
-        let pColor = type === 0 ? '#ffffff' : (type === 2 ? 'rgba(150,150,150,0.6)' : color);
-        
-        p.style.width = size + 'px';
-        p.style.height = size + 'px';
-        p.style.backgroundColor = type === 2 ? 'transparent' : pColor;
-        
-        if (type === 2) {
-            p.style.background = `radial-gradient(circle, ${pColor} 0%, transparent 70%)`;
-            p.style.borderRadius = '50%';
-        } else {
-            p.style.boxShadow = `0 0 ${size}px ${pColor}`;
-            p.style.clipPath = type === 0 ? 'circle(50% at 50% 50%)' : 'polygon(50% 0%, 100% 25%, 80% 100%, 20% 100%, 0% 25%)';
-        }
-
-        p.style.left = x + 'px';
-        p.style.top = y + 'px';
-        boardEl.appendChild(p);
-        
+    function createParticles(x, y, color, combo = 1) {
+      // Layer 0: Core Incandescent Needle Sparks
+      let sparkCount = 12 + Math.min(combo * 2, 10);
+      for (let i = 0; i < sparkCount; i++) {
         let angle = Math.random() * Math.PI * 2;
-        let speed = type === 1 ? (Math.random() * 8 + 4) : (type === 0 ? Math.random() * 5 + 2 : Math.random() * 2 + 0.5);
-        
+        let speed = Math.random() * 8 + 4;
         particles.push({
-          el: p, x: x, y: y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed - (type === 2 ? 1.0 : 0),
-          rot: Math.random() * 360,
-          vrot: (Math.random() - 0.5) * 40,
-          life: 1.0,
-          decay: type === 1 ? (Math.random() * 0.05 + 0.02) : (type === 0 ? Math.random() * 0.08 + 0.04 : Math.random() * 0.03 + 0.01),
-          type: type,
-          size: size
+          layer: 0, x, y,
+          vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+          rot: angle, vrot: 0,
+          size: Math.random() * 3 + 2,
+          life: 1.0, decay: Math.random() * 0.05 + 0.03,
+          color: (Math.random() < 0.3) ? '#ffffff' : (Math.random() < 0.6 ? '#ffd700' : color)
         });
       }
-    }
 
-    let currentShake = 0;
-    
-    function updateParticles() {
-      if (currentShake > 0) {
-        let sx = (Math.random() - 0.5) * currentShake;
-        let sy = (Math.random() - 0.5) * currentShake;
-        boardEl.style.transform = `translate(${sx}px, ${sy}px)`;
-        currentShake *= 0.9;
-        if (currentShake < 0.5) {
-            currentShake = 0;
-            boardEl.style.transform = `translate(0px, 0px)`;
-        }
+      // Layer 1: Expanding Buoyant Smoke / Plasma Puffs
+      let smokeCount = 8;
+      for (let i = 0; i < smokeCount; i++) {
+        let angle = Math.random() * Math.PI * 2;
+        let speed = Math.random() * 2.5 + 0.5;
+        particles.push({
+          layer: 1, x, y,
+          vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 0.8,
+          rot: Math.random() * 360, vrot: (Math.random() - 0.5) * 2,
+          size: Math.random() * 6 + 6, maxSize: Math.random() * 18 + 14,
+          life: 1.0, decay: Math.random() * 0.025 + 0.015,
+          color: color
+        });
       }
 
+      // Layer 2: Heavy Kinematic Faceted Crystal Debris with Bounce Physics
+      let debrisCount = 14 + Math.min(combo * 3, 12);
+      for (let i = 0; i < debrisCount; i++) {
+        let angle = Math.random() * Math.PI * 2;
+        let speed = Math.random() * 7 + 3;
+        particles.push({
+          layer: 2, x, y,
+          vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 2.0,
+          rot: Math.random() * 360, vrot: (Math.random() - 0.5) * 25,
+          size: Math.random() * 5 + 4,
+          life: 1.0, decay: Math.random() * 0.02 + 0.01,
+          color: color
+        });
+      }
+
+      // Layer 3: Radiant Golden Celebration Energy Stars
+      if (combo >= 2 || color === '#ffffff' || color === '#ffd700') {
+        let starCount = 8 + combo * 2;
+        for (let i = 0; i < starCount; i++) {
+          let angle = Math.random() * Math.PI * 2;
+          let speed = Math.random() * 5 + 2;
+          particles.push({
+            layer: 3, x, y,
+            vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+            rot: Math.random() * 360, vrot: (Math.random() - 0.5) * 10,
+            size: Math.random() * 6 + 5,
+            life: 1.0, decay: Math.random() * 0.02 + 0.012,
+            color: '#ffd700'
+          });
+        }
+      }
+    }
+
+    function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+      let rot = Math.PI / 2 * 3;
+      let x = cx, y = cy;
+      let step = Math.PI / spikes;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - outerRadius);
+      for (let i = 0; i < spikes; i++) {
+        x = cx + Math.cos(rot) * outerRadius;
+        y = cy + Math.sin(rot) * outerRadius;
+        ctx.lineTo(x, y);
+        rot += step;
+        x = cx + Math.cos(rot) * innerRadius;
+        y = cy + Math.sin(rot) * innerRadius;
+        ctx.lineTo(x, y);
+        rot += step;
+      }
+      ctx.lineTo(cx, cy - outerRadius);
+      ctx.closePath();
+    }
+
+    function updateAndRenderFX() {
+      if (shakeIntensity > 0.05) {
+        let sx = (Math.random() - 0.5) * 2 * shakeIntensity;
+        let sy = (Math.random() - 0.5) * 2 * shakeIntensity;
+        let srot = (Math.random() - 0.5) * 2 * shakeAngle;
+        boardEl.style.transform = `translate(${sx}px, ${sy}px) rotate(${srot}deg)`;
+        shakeIntensity *= 0.88;
+        shakeAngle *= 0.88;
+      } else if (shakeIntensity !== 0) {
+        shakeIntensity = 0;
+        boardEl.style.transform = 'translate(0px, 0px) rotate(0deg)';
+      }
+
+      fxCtx.clearRect(0, 0, 400, 400);
+
+      // Render Dual-Tier Shockwaves
+      for (let i = shockwaves.length - 1; i >= 0; i--) {
+        let sw = shockwaves[i];
+        sw.radius += sw.speed;
+        let prog = sw.radius / sw.maxRadius;
+        if (prog >= 1.0) {
+          shockwaves.splice(i, 1);
+          continue;
+        }
+        let alpha = (1.0 - prog) * sw.alpha;
+        fxCtx.save();
+        fxCtx.beginPath();
+        fxCtx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+        fxCtx.strokeStyle = sw.color;
+        fxCtx.lineWidth = sw.width * (1.0 - prog * 0.5);
+        fxCtx.globalAlpha = alpha;
+        fxCtx.shadowColor = sw.color;
+        fxCtx.shadowBlur = 10;
+        fxCtx.stroke();
+        fxCtx.restore();
+      }
+
+      // Render 4-Layer Particles
       for (let i = particles.length - 1; i >= 0; i--) {
         let p = particles[i];
         p.x += p.vx;
         p.y += p.vy;
-        if (p.type === 1) {
-            p.vy += 0.4;
-        } else if (p.type === 2) {
-            p.size += 0.3;
-            p.vx *= 0.95;
-            p.vy *= 0.95;
-        } else {
-            p.vy += 0.1;
-        }
-        
         p.rot += p.vrot;
         p.life -= p.decay;
+
         if (p.life <= 0) {
-          if (p.el.parentNode) p.el.parentNode.removeChild(p.el);
           particles.splice(i, 1);
-        } else {
-          p.el.style.left = p.x + 'px';
-          p.el.style.top = p.y + 'px';
-          p.el.style.opacity = p.life;
-          if (p.type === 2) {
-              p.el.style.width = p.size + 'px';
-              p.el.style.height = p.size + 'px';
-          } else {
-              p.el.style.transform = `rotate(${p.rot}deg)`;
+          continue;
+        }
+
+        let alpha = Math.max(0, p.life);
+
+        if (p.layer === 0) { // Incandescent Core Needle Sparks
+          p.vx *= 0.93;
+          p.vy *= 0.93;
+          fxCtx.save();
+          fxCtx.globalAlpha = alpha;
+          fxCtx.translate(p.x, p.y);
+          fxCtx.rotate(p.rot);
+          fxCtx.fillStyle = p.color;
+          fxCtx.shadowColor = '#ffffff';
+          fxCtx.shadowBlur = 8;
+          fxCtx.fillRect(-p.size * 2, -p.size * 0.5, p.size * 4, p.size);
+          fxCtx.restore();
+        } else if (p.layer === 1) { // Expanding Buoyant Smoke / Plasma
+          p.vx *= 0.95;
+          p.vy -= 0.05;
+          p.size = Math.min(p.maxSize, p.size + 0.4);
+          fxCtx.save();
+          fxCtx.globalAlpha = alpha * 0.4;
+          let grad = fxCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+          grad.addColorStop(0, p.color);
+          grad.addColorStop(1, 'transparent');
+          fxCtx.fillStyle = grad;
+          fxCtx.beginPath();
+          fxCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          fxCtx.fill();
+          fxCtx.restore();
+        } else if (p.layer === 2) { // Heavy Kinematic Crystal Shards with Bounce
+          p.vy += 0.38;
+          p.vx *= 0.98;
+          if (p.y >= 390) {
+            p.y = 390;
+            p.vy = -p.vy * 0.5;
+            p.vx *= 0.75;
           }
+          fxCtx.save();
+          fxCtx.globalAlpha = alpha;
+          fxCtx.translate(p.x, p.y);
+          fxCtx.rotate(p.rot * Math.PI / 180);
+          fxCtx.fillStyle = p.color;
+          fxCtx.strokeStyle = '#ffffff';
+          fxCtx.lineWidth = 1;
+          fxCtx.shadowColor = p.color;
+          fxCtx.shadowBlur = 4;
+          fxCtx.beginPath();
+          fxCtx.moveTo(0, -p.size);
+          fxCtx.lineTo(p.size * 0.8, p.size * 0.6);
+          fxCtx.lineTo(-p.size * 0.8, p.size * 0.6);
+          fxCtx.closePath();
+          fxCtx.fill();
+          fxCtx.stroke();
+          fxCtx.restore();
+        } else if (p.layer === 3) { // Radiant Golden Celebration Stars
+          p.vx *= 0.96;
+          p.vy *= 0.96;
+          fxCtx.save();
+          fxCtx.globalAlpha = alpha;
+          fxCtx.translate(p.x, p.y);
+          fxCtx.rotate(p.rot * Math.PI / 180);
+          fxCtx.fillStyle = '#ffd700';
+          fxCtx.strokeStyle = '#ffffff';
+          fxCtx.lineWidth = 1;
+          fxCtx.shadowColor = '#ffd700';
+          fxCtx.shadowBlur = 12;
+          drawStar(fxCtx, 0, 0, 4, p.size, p.size * 0.4);
+          fxCtx.fill();
+          fxCtx.stroke();
+          fxCtx.restore();
         }
       }
-      requestAnimationFrame(updateParticles);
+
+      requestAnimationFrame(updateAndRenderFX);
     }
-    requestAnimationFrame(updateParticles);
+    requestAnimationFrame(updateAndRenderFX);
 
     function getColorIndex(colorStr) {
       if (typeof colorStr === 'number') return colorStr;
@@ -657,6 +846,7 @@
 
     function initStage(stageIdx) {
       boardEl.innerHTML = '';
+      boardEl.appendChild(fxCanvas);
       grid = [];
 
       if (gameMode === 0) {
@@ -775,12 +965,16 @@
         if (grid[r][c] && grid[r][c].stoneHits === 0) {
           grid[r][c].barrier = true;
           grid[r][c].el.innerHTML = getGemSVG(getColorIndex(grid[r][c].color), grid[r][c].type, 0, grid[r][c].ice, true);
-          createParticles(c * cellSize + cellSize/2, r * cellSize + cellSize/2, '#ffd700');
+          let cx = c * cellSize + cellSize/2;
+          let cy = r * cellSize + cellSize/2;
+          createParticles(cx, cy, '#ffd700', 2);
+          createShockwave(cx, cy, '#ffd700', 50);
           count++;
         }
       }
       if (count > 0) {
         playBadSwapSound();
+        triggerShake(10);
         createScorePopup(150, 180, 'BOSS SHIELD BARRIER!', '#ff3333');
       }
     }
@@ -897,6 +1091,7 @@
           movesEl.textContent = moves;
 
           boardEl.innerHTML = '';
+          boardEl.appendChild(fxCanvas);
           grid = [];
           for (let r = 0; r < ROWS; r++) {
             let row = [];
@@ -1242,17 +1437,32 @@
                 grid[m.r][m.c].el.innerHTML = getGemSVG(getColorIndex(grid[m.r][m.c].color), grid[m.r][m.c].type, 0, grid[m.r][m.c].ice, false);
             }
 
-            if (grid[m.r][m.c].type === 1) fireLaserRow(m.r);
-            if (grid[m.r][m.c].type === 2) fireLaserCol(m.c);
-            if (grid[m.r][m.c].type === 4) createScorePopup(m.c * cellSize + 10, m.r * cellSize + 10, 'BOOM!', '#ff3333');
-            
-            if (grid[m.r][m.c].type > 0) currentShake += 20 + comboMultiplier * 5;
-            else currentShake += 5 + comboMultiplier * 2;
-            if (currentShake > 50) currentShake = 50;
-
+            let cx = m.c * cellSize + cellSize/2;
+            let cy = m.r * cellSize + cellSize/2;
             let color = grid[m.r][m.c].color || '#ffffff';
             if (grid[m.r][m.c].type === 3) color = '#ffffff';
-            createParticles(m.c * cellSize + cellSize/2, m.r * cellSize + cellSize/2, color);
+
+            if (grid[m.r][m.c].type === 1) {
+              fireLaserRow(m.r);
+              createShockwave(cx, cy, '#ffaa00', 85);
+              triggerShake(12 + comboMultiplier * 3);
+            } else if (grid[m.r][m.c].type === 2) {
+              fireLaserCol(m.c);
+              createShockwave(cx, cy, '#00e5ff', 85);
+              triggerShake(12 + comboMultiplier * 3);
+            } else if (grid[m.r][m.c].type === 4) {
+              createScorePopup(m.c * cellSize + 10, m.r * cellSize + 10, 'BOOM!', '#ff3333');
+              createShockwave(cx, cy, '#ff2244', 100);
+              triggerShake(18 + comboMultiplier * 4);
+            } else if (grid[m.r][m.c].type === 3) {
+              createShockwave(cx, cy, '#ffffff', 110);
+              triggerShake(15 + comboMultiplier * 3);
+            } else {
+              createShockwave(cx, cy, color, 45 + comboMultiplier * 5);
+              triggerShake(4 + comboMultiplier * 2);
+            }
+
+            createParticles(cx, cy, color, comboMultiplier);
             createScorePopup(m.c * cellSize + 10, m.r * cellSize + 10, `+${10 * comboMultiplier}`);
             
             setTimeout(() => {
@@ -1267,7 +1477,11 @@
         stoneArr.forEach(m => {
           if (grid[m.r][m.c] && grid[m.r][m.c].stoneHits > 0) {
             grid[m.r][m.c].stoneHits--;
-            createParticles(m.c * cellSize + cellSize/2, m.r * cellSize + cellSize/2, '#999999');
+            let cx = m.c * cellSize + cellSize/2;
+            let cy = m.r * cellSize + cellSize/2;
+            createParticles(cx, cy, '#999999', comboMultiplier);
+            createShockwave(cx, cy, '#888888', 45);
+            triggerShake(6);
             if (grid[m.r][m.c].stoneHits > 0) {
               grid[m.r][m.c].el.innerHTML = getGemSVG(0, 0, grid[m.r][m.c].stoneHits, false, false);
             } else {
@@ -1410,6 +1624,13 @@
 
       if (cleared) {
         playPowerupSound();
+        triggerShake(25);
+        for (let k = 0; k < 6; k++) {
+          let rx = 100 + Math.random() * 200;
+          let ry = 100 + Math.random() * 200;
+          createShockwave(rx, ry, '#ffd700', 100);
+          createParticles(rx, ry, '#ffd700', 4);
+        }
         if (gameMode === 0) {
           if (level < 20) {
             alert("Stage Cleared! Advancing to next stage.");
