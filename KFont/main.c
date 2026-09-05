@@ -24,6 +24,11 @@ HBRUSH hBrush = NULL;
 HBRUSH hBgBrush = NULL;
 HBRUSH hPanelBrush = NULL;
 
+void SelectTab(HWND hwnd, int tabIdx);
+void ShowHelpDialog(HWND hwnd);
+void UpdateFont(HWND hwnd);
+void CopyAnatomyToClipboard(HWND hwnd);
+
 static unsigned int ParseHexW(const WCHAR* s) {
     unsigned int val = 0;
     while (*s) {
@@ -106,11 +111,7 @@ LRESULT CALLBACK PanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             WCHAR wBuf[16];
                             wsprintfW(wBuf, L"U+%04X", (UINT)i);
                             SetWindowTextW(hAnatomyChar, wBuf);
-                            currentTab = 3;
-                            SendMessage(hTabAnatomy, BM_SETCHECK, BST_CHECKED, 0);
-                            SendMessage(hTabGlyphs, BM_SETCHECK, BST_UNCHECKED, 0);
-                            ShowWindow(hRangeList, SW_HIDE);
-                            InvalidateRect(hwnd, NULL, TRUE);
+                            SelectTab(GetParent(hwnd), 3);
                             break;
                         }
                         x += cellW;
@@ -517,21 +518,24 @@ void UpdateFont(HWND hwnd) {
 }
 
 void ShowHelpDialog(HWND hwnd) {
-    MessageBox(hwnd,
-        "KFont - Font Metrics & Anatomy Inspector\n\n"
+    MessageBoxA(hwnd,
+        "=== KFont - Font Metrics & Anatomy Inspector ===\n\n"
         "Tabs:\n"
-        "1. Metrics & OS/2: Inspect font bounds and text metrics\n"
-        "2. Unicode Ranges: Browse glyphs by block (click to inspect in Anatomy)\n"
-        "3. Diagnostics: View visual kerning pairs and hinting across sizes\n"
-        "4. Anatomy: Vector metrics, ABC spacing, bearings, and codecs\n"
-        "5. Live Sample: Test font with custom editable text\n\n"
-        "Shortcuts:\n"
-        "[1-5] : Switch Tabs\n"
-        "[B]   : Toggle Bold\n"
-        "[I]   : Toggle Italic\n"
-        "[C]   : Copy Anatomy Report to Clipboard\n"
-        "[H/F1]: Show this Help dialog",
-        "KFont Help", MB_OK | MB_ICONINFORMATION);
+        "  [1] Metrics & OS/2: Inspect font measurements and actual bounds\n"
+        "  [2] Glyphs: Browse Unicode blocks (click glyph to inspect in Anatomy)\n"
+        "  [3] Diagnostics: Visual kerning pairs and hinting across scale\n"
+        "  [4] Anatomy: Vector guidelines, ABC spacing, bearings & codec\n"
+        "  [5] Sample: Test custom editable sample text in real-time\n\n"
+        "Keyboard Shortcuts:\n"
+        "  [1-5]  : Switch inspector tabs\n"
+        "  [B]    : Toggle Bold\n"
+        "  [I]    : Toggle Italic\n"
+        "  [C]    : Copy Anatomy JSON report to clipboard\n"
+        "  [F1/H] : Show this Help dialog\n\n"
+        "Sidebar Presets:\n"
+        "  - Click any Quick Glyph Preset to inspect its vector metrics\n"
+        "  - Click any Sample Preset to load standard pangrams or symbols",
+        "KFont Help & Shortcuts", MB_OK | MB_ICONINFORMATION);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -543,33 +547,47 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int fontHeight = -MulDiv(12, dpi, 72);
             hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
-            CreateWindowEx(0, "STATIC", "System Fonts:", WS_CHILD | WS_VISIBLE, 10, 10, 150, 20, hwnd, NULL, NULL, NULL);
-            hList = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_SORT | WS_TABSTOP, 10, 30, 150, 140, hwnd, (HMENU)1, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "System Fonts:", WS_CHILD | WS_VISIBLE, 10, 10, 150, 18, hwnd, NULL, NULL, NULL);
+            hList = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_SORT | WS_TABSTOP, 10, 28, 150, 130, hwnd, (HMENU)1, NULL, NULL);
             
-            CreateWindowEx(0, "STATIC", "Size:", WS_CHILD | WS_VISIBLE, 10, 175, 150, 20, hwnd, NULL, NULL, NULL);
-            hSizeList = CreateWindowEx(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP, 10, 195, 150, 200, hwnd, (HMENU)2, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Size:", WS_CHILD | WS_VISIBLE, 10, 162, 150, 18, hwnd, NULL, NULL, NULL);
+            hSizeList = CreateWindowEx(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP, 10, 180, 150, 200, hwnd, (HMENU)2, NULL, NULL);
             const char* sizes[] = {"12", "16", "24", "32", "48", "64"};
             for (int i = 0; i < 6; i++) {
                 SendMessage(hSizeList, CB_ADDSTRING, 0, (LPARAM)sizes[i]);
             }
             SendMessage(hSizeList, CB_SETCURSEL, 2, 0);
             
-            CreateWindowEx(0, "STATIC", "Inspect Glyph / Char:", WS_CHILD | WS_VISIBLE, 10, 225, 150, 20, hwnd, NULL, NULL, NULL);
-            hAnatomyChar = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "A", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 10, 245, 150, 24, hwnd, (HMENU)6, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Inspect Glyph:", WS_CHILD | WS_VISIBLE, 10, 208, 150, 18, hwnd, NULL, NULL, NULL);
+            hAnatomyChar = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "A", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 10, 226, 150, 24, hwnd, (HMENU)6, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "Custom Text:", WS_CHILD | WS_VISIBLE, 10, 275, 150, 20, hwnd, NULL, NULL, NULL);
-            hCustomText = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "The quick brown fox jumps over the lazy dog.\r\n\r\n0123456789\r\n\r\nAa Bb Cc Dd Ee Ff", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | WS_TABSTOP, 10, 295, 150, 90, hwnd, (HMENU)3, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Custom Text:", WS_CHILD | WS_VISIBLE, 10, 254, 150, 18, hwnd, NULL, NULL, NULL);
+            hCustomText = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "The quick brown fox jumps over the lazy dog.\r\n\r\n0123456789\r\n\r\nAa Bb Cc Dd Ee Ff", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | WS_TABSTOP, 10, 272, 150, 75, hwnd, (HMENU)3, NULL, NULL);
 
-            hBold = CreateWindowEx(0, "BUTTON", "Bold", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP, 10, 395, 70, 20, hwnd, (HMENU)4, NULL, NULL);
-            hItalic = CreateWindowEx(0, "BUTTON", "Italic", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP, 80, 395, 70, 20, hwnd, (HMENU)5, NULL, NULL);
+            hBold = CreateWindowEx(0, "BUTTON", "Bold [B]", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP, 10, 355, 72, 20, hwnd, (HMENU)4, NULL, NULL);
+            hItalic = CreateWindowEx(0, "BUTTON", "Italic [I]", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP, 85, 355, 75, 20, hwnd, (HMENU)5, NULL, NULL);
             
-            hTabMetrics = CreateWindowEx(0, "BUTTON", "Metrics", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 170, 10, 75, 20, hwnd, (HMENU)10, NULL, NULL);
-            hTabGlyphs = CreateWindowEx(0, "BUTTON", "Glyphs", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 250, 10, 75, 20, hwnd, (HMENU)11, NULL, NULL);
-            hTabDiag = CreateWindowEx(0, "BUTTON", "Diagnostics", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 330, 10, 95, 20, hwnd, (HMENU)12, NULL, NULL);
-            hTabAnatomy = CreateWindowEx(0, "BUTTON", "Anatomy", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 430, 10, 85, 20, hwnd, (HMENU)13, NULL, NULL);
-            hTabSample = CreateWindowEx(0, "BUTTON", "Sample", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 520, 10, 80, 20, hwnd, (HMENU)14, NULL, NULL);
-            hCopyBtn = CreateWindowEx(0, "BUTTON", "Copy (C)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 610, 10, 80, 20, hwnd, (HMENU)16, NULL, NULL);
-            hHelpBtn = CreateWindowEx(0, "BUTTON", "Help (H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 700, 10, 80, 20, hwnd, (HMENU)15, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Quick Glyphs:", WS_CHILD | WS_VISIBLE, 10, 382, 150, 18, hwnd, NULL, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "A", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 400, 46, 22, hwnd, (HMENU)101, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "g", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 61, 400, 46, 22, hwnd, (HMENU)102, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Q", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 112, 400, 46, 22, hwnd, (HMENU)103, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "W", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 426, 46, 22, hwnd, (HMENU)104, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "0", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 61, 426, 46, 22, hwnd, (HMENU)105, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "\x80", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 112, 426, 46, 22, hwnd, (HMENU)106, NULL, NULL);
+
+            CreateWindowEx(0, "STATIC", "Sample Presets:", WS_CHILD | WS_VISIBLE, 10, 456, 150, 18, hwnd, NULL, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Fox Pangram", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 474, 148, 22, hwnd, (HMENU)110, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Alphabet Aa-Zz", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 500, 148, 22, hwnd, (HMENU)111, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Digits & Symbols", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 526, 148, 22, hwnd, (HMENU)112, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Clear Text", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 552, 148, 22, hwnd, (HMENU)113, NULL, NULL);
+
+            hTabMetrics = CreateWindowEx(0, "BUTTON", "Metrics [1]", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 170, 10, 85, 20, hwnd, (HMENU)10, NULL, NULL);
+            hTabGlyphs = CreateWindowEx(0, "BUTTON", "Glyphs [2]", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 260, 10, 85, 20, hwnd, (HMENU)11, NULL, NULL);
+            hTabDiag = CreateWindowEx(0, "BUTTON", "Diagnostics [3]", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 350, 10, 105, 20, hwnd, (HMENU)12, NULL, NULL);
+            hTabAnatomy = CreateWindowEx(0, "BUTTON", "Anatomy [4]", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 460, 10, 95, 20, hwnd, (HMENU)13, NULL, NULL);
+            hTabSample = CreateWindowEx(0, "BUTTON", "Sample [5]", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 560, 10, 85, 20, hwnd, (HMENU)14, NULL, NULL);
+            hCopyBtn = CreateWindowEx(0, "BUTTON", "Copy [C]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 655, 10, 80, 20, hwnd, (HMENU)16, NULL, NULL);
+            hHelpBtn = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 745, 10, 80, 20, hwnd, (HMENU)15, NULL, NULL);
             
             SendMessage(hTabMetrics, BM_SETCHECK, BST_CHECKED, 0);
 
@@ -620,6 +638,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (LOWORD(wParam) >= 10 && LOWORD(wParam) <= 14 && HIWORD(wParam) == BN_CLICKED) {
                 SelectTab(hwnd, LOWORD(wParam) - 10);
             }
+            else if (LOWORD(wParam) >= 101 && LOWORD(wParam) <= 106 && HIWORD(wParam) == BN_CLICKED) {
+                WCHAR chars[] = { L'A', L'g', L'Q', L'W', L'0', (WCHAR)0x20AC };
+                anatomyChar = chars[LOWORD(wParam) - 101];
+                WCHAR wBuf[16];
+                wsprintfW(wBuf, L"U+%04X", (UINT)anatomyChar);
+                SetWindowTextW(hAnatomyChar, wBuf);
+                SelectTab(hwnd, 3);
+            }
+            else if (LOWORD(wParam) >= 110 && LOWORD(wParam) <= 113 && HIWORD(wParam) == BN_CLICKED) {
+                int id = LOWORD(wParam);
+                if (id == 110) {
+                    lstrcpyA(currentCustomText, "The quick brown fox jumps over the lazy dog.\r\n\r\nPACK MY BOX WITH FIVE DOZEN LIQUOR JUGS.");
+                } else if (id == 111) {
+                    lstrcpyA(currentCustomText, "ABCDEFGHIJKLMNOPQRSTUVWXYZ\r\nabcdefghijklmnopqrstuvwxyz\r\n0123456789");
+                } else if (id == 112) {
+                    lstrcpyA(currentCustomText, "0123456789 + - * / = % < > [ ] { } ( ) @ # $ \x80 \xA3 \xA5 ^ & _ ~ ` \" ' : ; , . ?");
+                } else if (id == 113) {
+                    currentCustomText[0] = '\0';
+                }
+                SetWindowTextA(hCustomText, currentCustomText);
+                SelectTab(hwnd, 4);
+            }
             else if (LOWORD(wParam) == 6 && HIWORD(wParam) == EN_CHANGE) {
                 WCHAR wText[32] = {0};
                 GetWindowTextW(hAnatomyChar, wText, 32);
@@ -665,9 +705,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             HDC hdcStatic = (HDC)wParam;
             SetTextColor(hdcStatic, RGB(224, 224, 224));
-            SetBkColor(hdcStatic, RGB(30, 30, 30));
-            if (!hBrush) hBrush = CreateSolidBrush(RGB(30, 30, 30));
-            return (LRESULT)hBrush;
+            SetBkColor(hdcStatic, RGB(18, 18, 18));
+            return (LRESULT)hBgBrush;
         }
         case WM_DESTROY:
             if (hCurrentFont) DeleteObject(hCurrentFont);

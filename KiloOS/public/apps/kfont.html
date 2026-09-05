@@ -5,15 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f5f5f5; display: flex; flex-direction: column; height: 100vh; overflow: hidden; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-  .header { background: #2b2b2b; color: white; padding: 10px 20px; display: flex; gap: 20px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10; flex-wrap: wrap; }
-  .header select, .header input[type="text"] { padding: 6px; font-family: inherit; border-radius: 4px; border: 1px solid #555; background: #444; color: white; outline: none; }
+  .header { background: #2b2b2b; color: white; padding: 10px 20px; display: flex; gap: 16px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10; flex-wrap: wrap; }
+  .header select, .header input[type="text"] { padding: 6px 10px; font-family: inherit; border-radius: 4px; border: 1px solid #555; background: #444; color: white; outline: none; font-size: 13px; }
   .header select:focus { border-color: #0078d7; }
   .main { display: flex; flex: 1; overflow: hidden; }
-  .sidebar { width: 220px; flex-shrink: 0; background: #fff; border-right: 1px solid #ccc; display: flex; flex-direction: column; }
-  .tab-btn { padding: 15px 20px; text-align: left; background: none; border: none; border-bottom: 1px solid #eee; cursor: pointer; font-size: 14px; outline: none; color: #333; transition: all 0.2s; }
+  .sidebar { width: 230px; flex-shrink: 0; background: #fff; border-right: 1px solid #ccc; display: flex; flex-direction: column; }
+  .tab-btn { padding: 14px 18px; text-align: left; background: none; border: none; border-bottom: 1px solid #eee; cursor: pointer; font-size: 14px; outline: none; color: #333; transition: all 0.2s; display: flex; align-items: center; justify-content: space-between; }
   .tab-btn:hover { background: #f0f0f0; }
   .tab-btn.active { background: #e6f2ff; font-weight: bold; border-left: 4px solid #0078d7; color: #0078d7; }
-  .content { flex: 1; padding: 30px; overflow-y: auto; background: #fff; }
+  .tab-badge { font-size: 11px; background: rgba(0,0,0,0.06); padding: 1px 6px; border-radius: 3px; font-family: "Consolas", monospace; font-weight: normal; color: #666; }
+  .tab-btn.active .tab-badge { background: #0078d7; color: white; }
+  .content { flex: 1; padding: 25px 30px; overflow-y: auto; background: #fff; }
   
   .panel { display: none; }
   .panel.active { display: block; animation: fadeIn 0.3s; }
@@ -30,7 +32,7 @@
   .metric-title { font-size: 11px; color: #888; margin-bottom: 8px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
   .metric-value { font-size: 20px; color: #222; font-family: "Consolas", monospace; word-break: break-all; }
   
-  .glyph-controls { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
+  .glyph-controls { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   .glyph-controls select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; outline: none; }
   .glyph-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; }
   .glyph-cell { border: 1px solid #eee; border-radius: 4px; display: flex; flex-direction: column; align-items: center; padding: 12px 5px; cursor: pointer; transition: 0.15s; position: relative; }
@@ -44,18 +46,20 @@
   .no-kern { font-feature-settings: "kern" 0; font-kerning: none; }
   .yes-kern { font-feature-settings: "kern" 1; font-kerning: normal; }
   
-  .sample-box { border: 1px solid #ccc; border-radius: 6px; padding: 25px; min-height: 200px; word-wrap: break-word; outline: none; margin-top: 15px; }
-  .sample-box:focus { border-color: #0078d7; box-shadow: 0 0 0 2px rgba(0,120,215,0.2); }
+  .sample-box { border: 1px solid #ccc; border-radius: 6px; padding: 25px; min-height: 200px; word-wrap: break-word; outline: none; margin-top: 15px; line-height: 1.5; background: #fafafa; }
+  .sample-box:focus { border-color: #0078d7; box-shadow: 0 0 0 2px rgba(0,120,215,0.2); background: white; }
+  .sample-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; align-items: center; }
   
   #canvasMetrics { display: none; }
-  .checkbox-label { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 14px; }
+  .checkbox-label { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 14px; user-select: none; }
+  .kbd-hint { font-size: 10px; background: rgba(255,255,255,0.2); padding: 1px 4px; border-radius: 3px; font-family: "Consolas", monospace; }
   
   .anatomy-controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; background: #f9f9f9; padding: 12px 16px; border-radius: 6px; border: 1px solid #eee; }
   .anatomy-input { width: 80px; padding: 8px; font-size: 18px; text-align: center; font-weight: bold; border: 1px solid #ccc; border-radius: 4px; outline: none; font-family: "Segoe UI", sans-serif; }
   .anatomy-input:focus { border-color: #0078d7; }
   .chip-btn { padding: 5px 10px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer; font-size: 14px; font-family: inherit; transition: 0.15s; }
   .chip-btn:hover { background: #0078d7; color: white; border-color: #0078d7; }
-  .action-btn { padding: 8px 14px; background: #0078d7; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; }
+  .action-btn { padding: 8px 14px; background: #0078d7; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; transition: background 0.15s; }
   .action-btn:hover { background: #0063b1; }
   
   .anatomy-canvas-container { position: relative; width: 100%; max-width: 800px; margin-bottom: 25px; }
@@ -65,17 +69,21 @@
   .legend-item { display: flex; align-items: center; gap: 5px; }
   .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
 
+  #toastNotification { display: none; position: fixed; bottom: 20px; right: 20px; background: #222; color: #fff; padding: 12px 20px; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.35); font-size: 13px; z-index: 2000; cursor: pointer; border-left: 4px solid #0078d7; }
+
   #helpOverlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
   #helpOverlay.visible { display: flex; animation: fadeIn 0.2s; }
-  .help-modal { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-width: 480px; font-family: "Segoe UI", sans-serif; }
-  .help-modal h2 { margin-top: 0; border-bottom: none; color: #0078d7; }
-  .help-modal ul { margin-bottom: 20px; line-height: 1.6; }
+  .help-modal { background: white; padding: 25px 30px; border-radius: 8px; box-shadow: 0 4px 25px rgba(0,0,0,0.35); max-width: 520px; font-family: "Segoe UI", sans-serif; position: relative; }
+  .help-modal h2 { margin-top: 0; border-bottom: none; color: #0078d7; display: flex; justify-content: space-between; align-items: center; }
+  .help-modal ul { margin-bottom: 16px; line-height: 1.6; }
+  .help-close-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: #888; padding: 0 5px; line-height: 1; }
+  .help-close-btn:hover { color: #111; }
 </style>
 </head>
 <body>
   <div class="header">
-    <div style="font-weight:600;font-size:18px;letter-spacing:1px;color:#4af; display: flex; align-items: center; gap: 10px;">KFont Inspect <span style="font-size:12px;color:#aaa;font-weight:normal;">(Press H for Help)</span></div>
-    <select id="fontList">
+    <div style="font-weight:600;font-size:18px;letter-spacing:1px;color:#4af; display: flex; align-items: center; gap: 8px;">KFont Inspect <span style="font-size:12px;color:#aaa;font-weight:normal;">(Press F1 or H for Help)</span></div>
+    <select id="fontList" title="Select Font Family">
       <option value="Arial" selected>Arial</option>
       <option value="Calibri">Calibri</option>
       <option value="Comic Sans MS">Comic Sans MS</option>
@@ -90,7 +98,7 @@
       <option value="Trebuchet MS">Trebuchet MS</option>
       <option value="Verdana">Verdana</option>
     </select>
-    <select id="sizeList">
+    <select id="sizeList" title="Select Font Size">
       <option value="12px">12px</option>
       <option value="16px">16px</option>
       <option value="24px">24px</option>
@@ -99,18 +107,33 @@
       <option value="64px">64px</option>
       <option value="96px">96px</option>
     </select>
-    <label class="checkbox-label"><input type="checkbox" id="boldCheck"> Bold</label>
-    <label class="checkbox-label"><input type="checkbox" id="italicCheck"> Italic</label>
-    <button id="helpBtn" style="margin-left:auto; padding: 6px 12px; border-radius:4px; border:none; background:#0078d7; color:white; cursor:pointer; font-family:inherit; font-size:14px; outline:none;">Help (H)</button>
+    <label class="checkbox-label"><input type="checkbox" id="boldCheck"> Bold <span class="kbd-hint">B</span></label>
+    <label class="checkbox-label"><input type="checkbox" id="italicCheck"> Italic <span class="kbd-hint">I</span></label>
+    <button id="helpBtn" style="margin-left:auto; padding: 6px 14px; border-radius:4px; border:none; background:#0078d7; color:white; cursor:pointer; font-family:inherit; font-size:13px; font-weight:500; outline:none;">Help [F1/H]</button>
   </div>
   
   <div class="main">
     <div class="sidebar" role="tablist" aria-label="Font Inspector Tabs">
-      <button class="tab-btn active" id="tab-metrics" role="tab" aria-selected="true" aria-controls="panel-metrics" data-target="panel-metrics">Metrics &amp; OS/2</button>
-      <button class="tab-btn" id="tab-glyphs" role="tab" aria-selected="false" aria-controls="panel-glyphs" data-target="panel-glyphs">Unicode Ranges</button>
-      <button class="tab-btn" id="tab-diagnostics" role="tab" aria-selected="false" aria-controls="panel-diagnostics" data-target="panel-diagnostics">Kerning &amp; Hinting</button>
-      <button class="tab-btn" id="tab-anatomy" role="tab" aria-selected="false" aria-controls="panel-anatomy" data-target="panel-anatomy">Glyph Anatomy</button>
-      <button class="tab-btn" id="tab-sample" role="tab" aria-selected="false" aria-controls="panel-sample" data-target="panel-sample">Live Sample</button>
+      <button class="tab-btn active" id="tab-metrics" role="tab" aria-selected="true" aria-controls="panel-metrics" data-target="panel-metrics">
+        <span>Metrics &amp; OS/2</span>
+        <span class="tab-badge">1</span>
+      </button>
+      <button class="tab-btn" id="tab-glyphs" role="tab" aria-selected="false" aria-controls="panel-glyphs" data-target="panel-glyphs">
+        <span>Unicode Ranges</span>
+        <span class="tab-badge">2</span>
+      </button>
+      <button class="tab-btn" id="tab-diagnostics" role="tab" aria-selected="false" aria-controls="panel-diagnostics" data-target="panel-diagnostics">
+        <span>Kerning &amp; Hinting</span>
+        <span class="tab-badge">3</span>
+      </button>
+      <button class="tab-btn" id="tab-anatomy" role="tab" aria-selected="false" aria-controls="panel-anatomy" data-target="panel-anatomy">
+        <span>Glyph Anatomy</span>
+        <span class="tab-badge">4</span>
+      </button>
+      <button class="tab-btn" id="tab-sample" role="tab" aria-selected="false" aria-controls="panel-sample" data-target="panel-sample">
+        <span>Live Sample</span>
+        <span class="tab-badge">5</span>
+      </button>
     </div>
     
     <div class="content">
@@ -167,20 +190,20 @@
           <input type="text" id="anatomyInput" class="anatomy-input" value="A" maxlength="10" title="Type character or hex (e.g. A, U+0041, 0x41)">
           <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
             <span style="font-size:12px; color:#777;">Quick Presets:</span>
-            <button class="chip-btn" data-char="A">A</button>
-            <button class="chip-btn" data-char="g">g</button>
-            <button class="chip-btn" data-char="Q">Q</button>
-            <button class="chip-btn" data-char="&amp;">&amp;</button>
-            <button class="chip-btn" data-char="f">f</button>
-            <button class="chip-btn" data-char="W">W</button>
-            <button class="chip-btn" data-char="0">0</button>
-            <button class="chip-btn" data-char="€">€</button>
-            <button class="chip-btn" data-char="Ω">Ω</button>
-            <button class="chip-btn" data-char="Ж">Ж</button>
-            <button class="chip-btn" data-char="★">★</button>
-            <button class="chip-btn" data-char="漢">漢</button>
+            <button class="chip-btn" data-char="A" title="Uppercase A">A</button>
+            <button class="chip-btn" data-char="g" title="Lowercase g with descender">g</button>
+            <button class="chip-btn" data-char="Q" title="Uppercase Q with tail">Q</button>
+            <button class="chip-btn" data-char="&amp;" title="Ampersand">&amp;</button>
+            <button class="chip-btn" data-char="f" title="Lowercase f with ascender">f</button>
+            <button class="chip-btn" data-char="W" title="Wide uppercase W">W</button>
+            <button class="chip-btn" data-char="0" title="Digit Zero">0</button>
+            <button class="chip-btn" data-char="€" title="Euro Currency Symbol">€</button>
+            <button class="chip-btn" data-char="Ω" title="Greek Capital Omega">Ω</button>
+            <button class="chip-btn" data-char="Ж" title="Cyrillic Capital Zhe">Ж</button>
+            <button class="chip-btn" data-char="★" title="Black Star Symbol">★</button>
+            <button class="chip-btn" data-char="漢" title="CJK Ideograph">漢</button>
           </div>
-          <button id="copyAnatomyReportBtn" class="action-btn" style="margin-left:auto;">Copy JSON Report (C)</button>
+          <button id="copyAnatomyReportBtn" class="action-btn" style="margin-left:auto;">Copy JSON Report [C]</button>
         </div>
 
         <div class="anatomy-canvas-container">
@@ -205,7 +228,15 @@
       <!-- Sample -->
       <div id="panel-sample" class="panel" role="tabpanel" aria-labelledby="tab-sample">
         <h2>Live Free Sample</h2>
-        <p>Type in the box below to test the font in real-time.</p>
+        <p>Type in the box below to test the font in real-time, or choose a quick sample preset.</p>
+        <div class="sample-presets">
+          <span style="font-size:12px; color:#666; font-weight:600;">Presets:</span>
+          <button class="chip-btn" id="samplePangramBtn">Fox Pangram</button>
+          <button class="chip-btn" id="sampleAlphaBtn">Alphabet Aa-Zz</button>
+          <button class="chip-btn" id="sampleDigitsBtn">Digits &amp; Symbols</button>
+          <button class="chip-btn" id="sampleSphinxBtn">Sphinx Pangram</button>
+          <button class="chip-btn" id="sampleClearBtn" style="color:#d9534f;">Clear</button>
+        </div>
         <div id="sampleOutput" class="sample-box" contenteditable="true" aria-label="Live editable font sample">The quick brown fox jumps over the lazy dog.
 
 0123456789
@@ -217,11 +248,14 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
   
   <canvas id="canvasMetrics"></canvas>
 
-  <div id="toastNotification" style="display:none; position:fixed; bottom:20px; right:20px; background:#333; color:white; padding:10px 18px; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:13px; z-index:2000;"></div>
+  <div id="toastNotification" title="Click to dismiss"></div>
 
   <div id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
     <div class="help-modal">
-      <h2 id="helpTitle">KFont Help &amp; Keyboard Shortcuts</h2>
+      <h2 id="helpTitle">
+        <span>KFont Help &amp; Keyboard Shortcuts</span>
+        <button class="help-close-btn" id="helpCloseBtn" title="Close Help">&times;</button>
+      </h2>
       <p>Explore typographical metrics, Unicode tables, rasterization hinting, and vector anatomy.</p>
       <ul>
         <li><strong>Metrics &amp; OS/2</strong>: Inspect font measurements and actual bounding box limits.</li>
@@ -807,6 +841,56 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
 
     document.getElementById('copyAnatomyReportBtn').onclick = copyAnatomyReport;
 
+    // Sample Presets Handlers
+    const samplePangramBtn = document.getElementById('samplePangramBtn');
+    if (samplePangramBtn) {
+      samplePangramBtn.onclick = () => {
+        sampleOutput.innerText = "The quick brown fox jumps over the lazy dog.\n\nPACK MY BOX WITH FIVE DOZEN LIQUOR JUGS.";
+        safeSetStorage('kfont_sample', sampleOutput.innerText);
+        showToast("Loaded Quick Fox Pangram");
+      };
+    }
+    const sampleAlphaBtn = document.getElementById('sampleAlphaBtn');
+    if (sampleAlphaBtn) {
+      sampleAlphaBtn.onclick = () => {
+        sampleOutput.innerText = "ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz\n0123456789";
+        safeSetStorage('kfont_sample', sampleOutput.innerText);
+        showToast("Loaded Full Alphabet & Digits");
+      };
+    }
+    const sampleDigitsBtn = document.getElementById('sampleDigitsBtn');
+    if (sampleDigitsBtn) {
+      sampleDigitsBtn.onclick = () => {
+        sampleOutput.innerText = "0123456789 + - * / = % < > [ ] { } ( ) @ # $ € £ ¥ ^ & _ ~ ` \" ' : ; , . ?";
+        safeSetStorage('kfont_sample', sampleOutput.innerText);
+        showToast("Loaded Digits & Typographic Symbols");
+      };
+    }
+    const sampleSphinxBtn = document.getElementById('sampleSphinxBtn');
+    if (sampleSphinxBtn) {
+      sampleSphinxBtn.onclick = () => {
+        sampleOutput.innerText = "Sphinx of black quartz, judge my vow.\n\nHow vexingly quick daft zebras jump!\n\nBright vixens jump; dozy fowl quack.";
+        safeSetStorage('kfont_sample', sampleOutput.innerText);
+        showToast("Loaded Sphinx & Zebras Pangrams");
+      };
+    }
+    const sampleClearBtn = document.getElementById('sampleClearBtn');
+    if (sampleClearBtn) {
+      sampleClearBtn.onclick = () => {
+        sampleOutput.innerText = "";
+        safeSetStorage('kfont_sample', "");
+        sampleOutput.focus();
+        showToast("Cleared Sample Text");
+      };
+    }
+
+    // Dismiss toast on click
+    if (toastNotification) {
+      toastNotification.onclick = () => {
+        toastNotification.style.display = 'none';
+      };
+    }
+
     // Load saved preferences
     const savedFont = safeGetStorage('kfont_font', null);
     if (savedFont && Array.from(fontList.options).some(o => o.value === savedFont)) {
@@ -840,10 +924,28 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
     // Initial render
     updateAll();
 
+    // Startup welcome toast
+    setTimeout(() => {
+      showToast("Welcome to KFont! Press F1 or H for Help & Shortcuts.");
+    }, 400);
+
+    // Responsive redraw
+    window.addEventListener('resize', () => {
+      updateAnatomy();
+      updateDiagnostics();
+    });
+
     // Help overlay logic
     document.getElementById('helpBtn').addEventListener('click', () => {
       helpOverlay.classList.add('visible');
     });
+
+    const helpCloseBtn = document.getElementById('helpCloseBtn');
+    if (helpCloseBtn) {
+      helpCloseBtn.onclick = () => {
+        helpOverlay.classList.remove('visible');
+      };
+    }
 
     document.addEventListener('keydown', (e) => {
       const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable;
@@ -852,6 +954,10 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       if (e.key === 'Escape') {
         if (helpOverlay.classList.contains('visible')) {
           helpOverlay.classList.remove('visible');
+          return;
+        }
+        if (toastNotification && toastNotification.style.display !== 'none') {
+          toastNotification.style.display = 'none';
           return;
         }
       }

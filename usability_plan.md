@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KFont
+**Target App:** KMail
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KFont
 - KMail
 - KMandel
 - KPing
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KFortress
 - KColony
 - KAlchemy
+- KFont
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KFont: Usability and UI issues fixed (integrated non-blocking toast notification system with startup welcome prompt, added click-to-dismiss for toasts, added sample presets toolbar with Pangrams/Alphabet/Digits/Clear in Live Sample tab, added visual shortcut key badges to sidebar tabs [1-5], Bold [B], Italic [I], Copy [C], and Help [F1/H], added close button and backdrop dismissal to Help modal, and added responsive window resize redraw in web; added Quick Glyph Presets [A, g, Q, W, 0, €] and Sample Presets [Fox Pangram, Alphabet, Digits, Clear] to native sidebar, synchronized radio button selection in SelectTab across glyph clicks, updated button labels with explicit shortcut badges [1-5, B, I, C, F1], and expanded ShowHelpDialog reference in native C).
 - KAlchemy: Usability and UI issues fixed (integrated non-blocking arcane toast notification system with startup welcome prompt, added click-to-dismiss for toasts, added full keyboard shortcuts for [Space/Enter] main action / workstation activation, [C] clear crucible, [A] auto-fill, [I] research hint, [O] oracle vision, [0-6] tier switching, [F1/H/?] manual, [M] minimize/restore manual, and [Esc] modal dismissal / toast dismissal / search clear, added visual shortcut badges to all action, oracle, and tier buttons, added high-DPI devicePixelRatio canvas scaling for crisp particle and aura rendering in web; updated native C with crisp ClearType typography using negative font heights, updated all button labels with explicit keyboard shortcut badges, implemented global message loop accelerator interception for F1/H/Esc/Space/Enter/C/A/I/O/F/P/N/0-6 across all child controls, updated Help dialog controls reference, and added help hint to window title).
 - KColony: Usability and UI issues fixed (integrated non-blocking cybernetic toast notification system with startup welcome prompt, replaced all blocking browser alerts with categorized toast notifications for tech breakthroughs, expeditions, trade, cavern discoveries, and scenario results, added complete keyboard shortcuts [1-7] for menu biomes, [0/Esc] inspect, [-/R] repair, [1-6] core buildings, [7-9/W/T/C/G/V/E/U/P/K/O] advanced buildings, [Space] orbital strike, [H/F1/?] manual, added backdrop-click and Escape modal dismissal, updated UI button shortcut badges and Administrator's Manual in web; updated native C with [1-7] menu hotkeys, WM_KEYDOWN accelerators for all building types, repair, inspect, orbital strike [Space], [F1/H] manual, updated button labels with shortcut badges, comprehensive DrawHelp guide with hotkeys table, synchronized window bounds to 870x660 in App.jsx, and updated window title with help hint).
 - KFortress: Usability and UI issues fixed (integrated non-blocking fantasy toast notification system with startup welcome prompt, added full keyboard shortcuts for [Space] wave, [1-5] skills & siege trebuchet, [F] firestorm, [B] blizzard, [A] academy, [M] mutators, [H]/[F1] guide, [R] reset, [Esc] modal dismissal, added backdrop-click modal dismissal, updated UI button shortcut badges and field guide shortcuts reference in web; added native floating toast banner, updated button labels with shortcut badges, implemented WM_KEYDOWN shortcuts for Space/A/M/H/F1/F/B/R/1-5/Esc, added backdrop-click dialog dismissal, updated window title with hotkey hints in native C).
