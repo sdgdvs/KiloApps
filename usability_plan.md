@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KMaze
+**Target App:** KScript
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KMaze
 - KScript
 - KMine
 - KPac
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KMandel
 - KPing
 - KConnect4
+- KMaze
 
 ## Progress Log (trimmed by Director 2026-08-22 — keeping only latest entry per app)
+- KMaze: Usability and UI issues fixed (integrated non-blocking cyber toast notification system with startup guide banner and sound unlocking, added interactive Help & Codex modal dialog [F1/H/Esc] detailing movement, active relics, item recharges, labyrinth codex, and stealth mechanics, added dynamic HUD button active countdowns and status indicators, made container layout fully responsive across all window sizes without scrollbars or clipping, added native WASD + Arrow navigation and B key support for speed shoes in both web and native C, added dedicated Win32 ShowHelpDialog guide and descriptive window title in native C, and verified clean compilation for both web and native builds).
 - KConnect4: Usability and UI issues fixed (integrated non-blocking cybernetic toast notification system with startup welcome prompt, replaced blocking browser alerts with sleek toast feedback for save, load, export, import, copy, and notation errors, added interactive column number badges above the board with hover drop previews and 1-7 click drops, added modal backdrop-click and Escape key dismissal for Help and Notation modals, added visual shortcut key badges to all action and skill buttons [Mode [V], Hint [T], Freeze [F], Undo [U], Bomb [B], Drill [D], Mag [M], Reset [R], Mute [P], Help [F1], Save [F5], Load [F9], Exp JSON [E], Imp JSON [I], Notation [N]], implemented full keyboard hotkeys suite for 1-7, B, D, M, F, T, U, R, V, P, F5, F9, E, I, N, Esc, Space, and Arrow keys in web; updated native C with ShowHelpDialog comprehensive keyboard shortcuts reference, added column number indicators above the board, added visual shortcut badges to all UI buttons, implemented message loop accelerator interception for full keyboard control without child control swallowing, updated window title with shortcut hint, and verified clean compilation and high-DPI scaling).
 - KPing: Usability and UI issues fixed (integrated cybernetic non-blocking toast notification system with startup welcome prompt and click-to-dismiss feedback, added dedicated Help & Keyboard Shortcuts modal dialog [F1/H] with comprehensive PMTU reference and hotkeys table, added visual shortcut badges to all action buttons [Ping [P], Trace [T], MTU [M], Export [E], Clear [C], Help [F1]], added live status indicator badge [IDLE, PINGING, TRACING, PMTU SWEEP], implemented Enter-to-ping on all input fields, and added Clear [C], Export [E/Ctrl+S], Presets [1-6], and Escape dismissal in web; updated native C with EditSubclassProc for instant Enter-to-ping on host input, added explicit Help [F1] and Clear [C] buttons with shortcut badges across all toolbar buttons, added dedicated ShowHelpDialog guide, implemented message loop accelerator interception for P/T/M/E/C/1-6/F1/H/Esc, updated window title with shortcut hints, and verified clean compilation and high-DPI scaling).
 - KMandel: Usability and UI issues fixed (integrated cybernetic non-blocking toast notification system with startup welcome prompt, added visual shortcut badges to all action and zoom buttons [+ / - Zoom, Z Undo, Y Redo, J Julia, S 4K Export, R/0 Reset, F1/H Help], added direct formula switching hotkeys [1-5], keyboard zoom [+ / -], reset [0], arrow keys panning, Escape key dismissal for Help modal and toasts, backdrop click dismissal, explicit Help & Controls button in sidebar in web; added WM_MOUSEWHEEL smooth zooming, Arrow keys viewport panning, +/- keyboard zooming, [1-5] direct formula keys, [0/R] reset hotkeys, comprehensive ShowHelpDialog reference guide, updated HUD badge layout and text, updated window title with shortcut hints, and verified high-DPI awareness and double buffering in native C).

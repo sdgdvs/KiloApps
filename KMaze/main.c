@@ -1368,6 +1368,43 @@ HBITMAP hbmCanvas = NULL;
 HDC hdcMem = NULL;
 DWORD* pBits = NULL;
 
+void ShowHelpDialog(HWND hwnd) {
+    const char* helpMsg =
+        "KMAZE - TACTICAL 3D DUNGEON DESCENT GUIDE\n"
+        "=========================================\n\n"
+        "[CONTROLS & MOVEMENT]\n"
+        "  W / UP ARROW    : Move Forward\n"
+        "  S / DOWN ARROW  : Move Backward\n"
+        "  A / LEFT ARROW  : Turn Left\n"
+        "  D / RIGHT ARROW : Turn Right\n"
+        "  SHIFT           : Sprint Run\n"
+        "  X / CTRL        : Stealth Crouch (Silences footsteps & cushions traps)\n"
+        "  ENTER / SPACE   : Start Descent / Play Again\n\n"
+        "[ACTIVE RELICS & ABILITIES]\n"
+        "  P               : Pickaxe (Cleave walls, fake secrets, slay minotaurs)\n"
+        "  C               : Pathfinder (Draws path to key & exit, 10s)\n"
+        "  S / B           : Speed Shoes (Double velocity, 8s)\n"
+        "  F               : Stun Spray (Freezes hunting minotaurs, 10s)\n"
+        "  T               : Time Freeze (Halts dungeon entities, 10s)\n"
+        "  V               : Save Checkpoint to file\n"
+        "  L               : Load Checkpoint descent\n"
+        "  E / I           : Export / Import Statistics\n"
+        "  K               : Rebind Keys\n"
+        "  F1 / H          : Show this Help Guide\n\n"
+        "[LABYRINTH CODEX & TILES]\n"
+        "  Green Portal    : Descent exit to next stage (45 total)\n"
+        "  Cyan Stairwell  : Deep sublevel descent shaft\n"
+        "  Gold Key & Gate : Locked doors require finding matching key\n"
+        "  Save Shrine     : Restores item charges and creates checkpoint\n"
+        "  Wall Torch      : Illuminates catacombs with radiant glow (15s)\n"
+        "  Illusion Wall   : Phantasmal fake wall hide secrets (+150 Score)\n"
+        "  Lore Tablet     : Ancient wisdom and relic drops\n"
+        "  Lava / Spikes   : Traps (-50% damage when in Stealth Crouch [X]!)\n"
+        "  Minotaur Boss   : Guards 45th descent chamber (Pickaxe/Stun to fight)\n\n"
+        "Tip: Use Stealth Crouch [X] to sneak past hunting minotaurs undetected!";
+    MessageBoxA(hwnd, helpMsg, "KMaze Help & Dungeon Codex", MB_OK | MB_ICONINFORMATION);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE:
@@ -1587,7 +1624,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         activeKeyCooldown = 300;
                     }
                 }
-                if (GetAsyncKeyState(keyBinds.speed) & 0x8000) {
+                if ((GetAsyncKeyState(keyBinds.speed) & 0x8000) || (GetAsyncKeyState('B') & 0x8000)) {
                     if (speedShoesCharges > 0 || speedBoost) {
                         if (speedShoesCharges > 0) speedShoesCharges--;
                         speedShoesTimer = 8000;
@@ -1689,11 +1726,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (GetAsyncKeyState(VK_SHIFT) & 0x8000) {
                 moveSpeed *= 1.5f;
             }
-            if (GetAsyncKeyState(keyBinds.up) & 0x8000) {
+            if ((GetAsyncKeyState(keyBinds.up) & 0x8000) || (GetAsyncKeyState('W') & 0x8000)) {
                 if (TryMove((int)(pX + dX * moveSpeed), (int)pY)) pX += dX * moveSpeed;
                 if (TryMove((int)pX, (int)(pY + dY * moveSpeed))) pY += dY * moveSpeed;
             }
-            if (GetAsyncKeyState(keyBinds.down) & 0x8000) {
+            if ((GetAsyncKeyState(keyBinds.down) & 0x8000) || (GetAsyncKeyState('S') & 0x8000)) {
                 if (TryMove((int)(pX - dX * moveSpeed), (int)pY)) pX -= dX * moveSpeed;
                 if (TryMove((int)pX, (int)(pY - dY * moveSpeed))) pY -= dY * moveSpeed;
             }
@@ -1924,7 +1961,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 AddShockwave(pX, pY);
             }
 
-            if (GetAsyncKeyState(keyBinds.right) & 0x8000) {
+            if ((GetAsyncKeyState(keyBinds.right) & 0x8000) || (GetAsyncKeyState('D') & 0x8000)) {
                 float oldDX = dX;
                 dX = dX * (float)cos(rotSpeed) - dY * (float)sin(rotSpeed);
                 dY = oldDX * (float)sin(rotSpeed) + dY * (float)cos(rotSpeed);
@@ -1932,7 +1969,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 planeX = planeX * (float)cos(rotSpeed) - planeY * (float)sin(rotSpeed);
                 planeY = oldPlaneX * (float)sin(rotSpeed) + planeY * (float)cos(rotSpeed);
             }
-            if (GetAsyncKeyState(keyBinds.left) & 0x8000) {
+            if ((GetAsyncKeyState(keyBinds.left) & 0x8000) || (GetAsyncKeyState('A') & 0x8000)) {
                 float oldDX = dX;
                 dX = dX * (float)cos(-rotSpeed) - dY * (float)sin(-rotSpeed);
                 dY = oldDX * (float)sin(-rotSpeed) + dY * (float)cos(-rotSpeed);
@@ -2732,10 +2769,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_KEYDOWN: {
+            if (wParam == VK_F1 || wParam == 'H') {
+                ShowHelpDialog(hwnd);
+                break;
+            }
             if (gameState == 0 || gameState == 1) {
                 if (wParam == 'E') ExportStats();
                 if (wParam == 'I') ImportStats();
-                if (wParam == 'K' || wParam == 'H' || wParam == VK_F1) { prevState = gameState; gameState = 4; }
+                if (wParam == 'K') { prevState = gameState; gameState = 4; }
             }
             if (gameState == 4) {
                 if (wParam == VK_ESCAPE) { waitingForKey = 0; gameState = prevState; }
@@ -2785,7 +2826,7 @@ void __stdcall MainEntry() {
     RECT wr = {0, 0, 800, 700};
     AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);
     
-    HWND hwnd = CreateWindowExA(0, "KMazeClass", "KMaze", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KMazeClass", "KMaze - Tactical 3D Dungeon Descent [Press F1/H for Guide]", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
