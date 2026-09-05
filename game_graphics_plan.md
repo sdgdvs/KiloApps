@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KGo
 - KTowers
 - KWords
 - KWizard
@@ -150,8 +149,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMatch3
 - KFreecell
 - KSudoku
+- KGo
 
 ## Completed Work Log
+
+- **KGo (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on stone placements, stone captures, move errors/violations (suicide & superko), passes, resignations, hints, territory estimator & liberty analyzer toggles, and victory scoring clears (continuous 60 FPS requestAnimationFrame animation loop in Web Canvas `kgo.html`, and double-buffered viewport rendering with physics decay in Native C Win32 GDI `KGo/main.c`), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity drag, expanding buoyant smoke & spirit puffs with negative gravity and radius growth, heavy kinematic slate stone / clam shell debris shards with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars upon captures, hints, tsumego solves, and victory scoring bursts), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion / gold halo radiating upon stone drops, captures, and victory bursts, ornate Japanese / Zen lacquer & gold leaf HUD corner filigree L-brackets with brass rivet studs and micro-accents at all four board corners, a pulsating golden energy perimeter inlay border with an animated traveling specular glint traversing the outer playfield Kaya wood frame, sculpted 3D beveled stones with diagonal specular sheen sweeps traversing stones and HUD headers, and atmospheric environmental floating Zen sakura petals and golden dust motes drifting across the board in both Web Canvas (`kgo.html`) and Native C Win32 GDI (`KGo/main.c`).
 
 - **KSudoku (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on number placements, notes toggling, pencil marks, row/column/box section completions, erase actions, pencil sweeps, undo/hints, and puzzle victory clears (continuous 60 FPS requestAnimationFrame animation loop in Web Canvas `ksudoku.html`, and double-buffered viewport rendering with physics decay in Native C Win32 GDI `KSudoku/main.c`), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity drag, expanding buoyant smoke & velvet puffs with negative gravity and radius growth, heavy kinematic wooden tile / number / ink / chalk debris shards with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars upon completions, hints, and puzzle victories), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion halo radiating upon valid placements, pencil clearing, and victory bursts, ornate Japanese / Zen cedar HUD corner filigree L-brackets with brass rivet studs and micro-accents at all four board corners, a pulsating golden energy perimeter inlay border with an animated traveling specular glint traversing the outer playfield sudoku grid frame, sculpted 3D beveled tiles with diagonal specular sheen sweeps traversing cells, keypad buttons, and headers, and atmospheric floating Zen ink / paper dust motes drifting across the board in both Web Canvas (`ksudoku.html`) and Native C Win32 GDI (`KSudoku/main.c`).
 

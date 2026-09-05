@@ -102,6 +102,39 @@
     box-shadow: inset 0 0 12px rgba(255, 215, 0, 0.15);
     animation: goldBorderShimmer 4s ease-in-out infinite alternate;
   }
+  .frame-glint {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(255, 220, 100, 0.5) 35%, rgba(255, 215, 0, 0) 70%);
+    pointer-events: none;
+    z-index: 15;
+    animation: frameGlintTravel 7s linear infinite;
+    mix-blend-mode: screen;
+  }
+  @keyframes frameGlintTravel {
+    0% { top: -15px; left: -15px; opacity: 0; }
+    5% { opacity: 0.9; }
+    25% { top: -15px; left: calc(100% - 45px); }
+    50% { top: calc(100% - 45px); left: calc(100% - 45px); }
+    75% { top: calc(100% - 45px); left: -15px; }
+    95% { opacity: 0.9; }
+    100% { top: -15px; left: -15px; opacity: 0; }
+  }
+  .zen-mote {
+    position: absolute;
+    background: radial-gradient(circle, #fff 0%, #ffd700 50%, rgba(255, 215, 0, 0) 100%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    animation: moteFloat linear infinite alternate;
+  }
+  @keyframes moteFloat {
+    0% { transform: translate(0, 0) scale(0.6); opacity: 0.2; }
+    50% { opacity: 0.85; transform: translate(15px, -25px) scale(1.2); }
+    100% { transform: translate(-15px, -50px) scale(0.5); opacity: 0.1; }
+  }
   @keyframes goldBorderShimmer {
     0% { border-color: rgba(255, 215, 0, 0.2); box-shadow: inset 0 0 6px rgba(255, 215, 0, 0.08); }
     100% { border-color: rgba(255, 225, 120, 0.55); box-shadow: inset 0 0 16px rgba(255, 215, 0, 0.3); }
@@ -186,6 +219,27 @@
     border-radius: 50%;
     z-index: 3;
     transition: transform 0.15s ease-out;
+    overflow: hidden;
+  }
+  .stone::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(135deg, transparent 35%, rgba(255, 255, 255, 0.45) 50%, transparent 65%);
+    transform: rotate(25deg);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .stone.new::after {
+    animation: stoneSheenSweep 0.65s cubic-bezier(0.2, 0.8, 0.3, 1) 0.1s forwards;
+  }
+  @keyframes stoneSheenSweep {
+    0% { transform: translate(-100%, -100%) rotate(25deg); opacity: 0; }
+    30% { opacity: 0.95; }
+    100% { transform: translate(100%, 100%) rotate(25deg); opacity: 0; }
   }
   .stone.new {
     animation: placeAnim 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -541,6 +595,7 @@
     <div class="analyzer-banner" id="analyzer-banner"></div>
   </div>
   <div class="board-container" id="board-container">
+    <div class="frame-glint"></div>
     <div class="goban-filigree goban-filigree-tl"></div>
     <div class="goban-filigree goban-filigree-tr"></div>
     <div class="goban-filigree goban-filigree-bl"></div>
@@ -1224,6 +1279,19 @@
     return captured;
   }
 
+  function spawnVictoryCelebration(winnerColor) {
+    triggerScreenShake(14.0);
+    let celebrationStones = [];
+    for (let i = 0; i < 8; i++) {
+      celebrationStones.push({
+        x: Math.floor(Math.random() * size),
+        y: Math.floor(Math.random() * size),
+        color: winnerColor || (i % 2 === 0 ? 'B' : 'W')
+      });
+    }
+    spawnCaptureSparks(celebrationStones);
+  }
+
   function calculateScore() {
     let terrB = 0;
     let terrW = 0;
@@ -1269,6 +1337,7 @@
     
     let msg = `Black: ${terrB} territory + ${captures.B} captures = ${totalB}\n`;
     msg += `White: ${terrW} territory + ${captures.W} captures + ${currentKomi} komi = ${totalW}\n\n`;
+    let winner = (totalB > totalW) ? 'B' : 'W';
     if (totalB > totalW) {
       msg += `Black wins by ${totalB - totalW}!`;
       recordGameEnd('B');
@@ -1278,7 +1347,7 @@
     }
     
     playSound('over');
-    triggerScreenShake(12.0);
+    spawnVictoryCelebration(winner);
     setTimeout(() => {
       if (currentCampaignStage !== -1) {
         if (totalB > totalW) {
@@ -1706,17 +1775,22 @@
     }
     capturedStonesForAnim = [];
     hintCell = null;
+    triggerScreenShake(3.0);
     updateStatus();
     drawBoard();
   }
 
   document.getElementById('btn-undo').addEventListener('click', doUndo);
 
-  document.getElementById('btn-hint').addEventListener('click', calculateHint);
+  document.getElementById('btn-hint').addEventListener('click', () => {
+    triggerScreenShake(3.5);
+    calculateHint();
+  });
   
   document.getElementById('btn-estimate').addEventListener('click', () => {
     showEstimator = !showEstimator;
     document.getElementById('btn-estimate').classList.toggle('active', showEstimator);
+    triggerScreenShake(2.5);
     updateStatus();
     drawBoard();
   });
@@ -1724,12 +1798,14 @@
   document.getElementById('btn-analyzer').addEventListener('click', () => {
     showAnalyzer = !showAnalyzer;
     document.getElementById('btn-analyzer').classList.toggle('active', showAnalyzer);
+    triggerScreenShake(2.5);
     updateStatus();
     drawBoard();
   });
 
   document.getElementById('btn-resign').addEventListener('click', () => {
     playSound('over');
+    triggerScreenShake(10.0);
     setTimeout(() => {
       let winner = currentPlayer === 'B' ? 'W' : 'B';
       let msg = `${currentPlayer === 'B' ? 'White' : 'Black'} wins by resignation!`;
@@ -1751,6 +1827,7 @@
   document.getElementById('btn-new').addEventListener('click', () => {
     currentCampaignStage = -1;
     currentKomi = 6.5;
+    triggerScreenShake(4.0);
     initBoard();
   });
 
@@ -1786,6 +1863,7 @@
         currentKomi = state.currentKomi || 6.5;
         document.getElementById('board-size').value = size;
         hintCell = null;
+        triggerScreenShake(4.0);
         updateStatus();
         drawBoard();
         alert('Game loaded.');
@@ -1803,6 +1881,7 @@
 
   document.getElementById('board-size').addEventListener('change', (e) => {
     size = parseInt(e.target.value);
+    triggerScreenShake(4.0);
     initBoard();
   });
 
@@ -1812,11 +1891,13 @@
 
   document.getElementById('btn-campaign').addEventListener('click', () => {
     currentCampaignStage = 0;
+    triggerScreenShake(5.0);
     startCampaignStage();
   });
 
   document.getElementById('btn-tsume').addEventListener('click', () => {
     currentTsumegoIdx = (currentTsumegoIdx + 1) % 5;
+    triggerScreenShake(5.0);
     loadTsumegoPuzzle(currentTsumegoIdx);
   });
 
@@ -1843,7 +1924,8 @@
     const container = document.createElement('div');
     container.id = 'cherry-blossoms';
     document.body.appendChild(container);
-    for (let i = 0; i < 30; i++) {
+    // Cherry blossom sakura petals
+    for (let i = 0; i < 24; i++) {
       const petal = document.createElement('div');
       petal.className = 'petal';
       petal.style.left = Math.random() * 100 + 'vw';
@@ -1852,6 +1934,19 @@
       petal.style.animationDuration = Math.random() * 5 + 5 + 's, ' + (Math.random() * 3 + 2) + 's';
       petal.style.animationDelay = Math.random() * 5 + 's, ' + Math.random() * 5 + 's';
       container.appendChild(petal);
+    }
+    // Atmospheric floating golden Zen dust motes
+    for (let i = 0; i < 20; i++) {
+      const mote = document.createElement('div');
+      mote.className = 'zen-mote';
+      const mSize = Math.random() * 4 + 2;
+      mote.style.width = mSize + 'px';
+      mote.style.height = mSize + 'px';
+      mote.style.left = Math.random() * 100 + 'vw';
+      mote.style.top = Math.random() * 100 + 'vh';
+      mote.style.animationDuration = (Math.random() * 4 + 3) + 's';
+      mote.style.animationDelay = (Math.random() * 3) + 's';
+      container.appendChild(mote);
     }
   }
   createPetals();

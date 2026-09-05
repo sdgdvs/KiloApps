@@ -262,6 +262,15 @@ typedef struct {
 } PetalParticle;
 #define MAX_PETALS 30
 PetalParticle petals[MAX_PETALS];
+
+typedef struct {
+    float x, y;
+    float vx, vy;
+    float size;
+} ZenMote;
+#define MAX_ZEN_MOTES 25
+ZenMote zenMotes[MAX_ZEN_MOTES];
+
 float animTime = 0.0f;
 
 void InitBoard();
@@ -1123,6 +1132,15 @@ void CalculateScore(HWND hwnd) {
     int winner = (totalB > totalW) ? 1 : 2;
     RecordGameEnd(winner, hwnd);
 
+    int pad = 40;
+    int cSize = 30;
+    for (int i = 0; i < 8; i++) {
+        int rx = pad + (rand() % boardSize) * cSize;
+        int ry = pad + (rand() % boardSize) * cSize;
+        SpawnCaptureExplosion(rx, ry, winner);
+    }
+    SetTimer(hwnd, 3, 16, NULL);
+
     char msg[512];
     if (currentCampaignStage != -1) {
         if (winner == 1) {
@@ -1169,6 +1187,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 petals[i].vx = (rand() % 20 - 10) / 10.0f;
                 petals[i].vy = (rand() % 20 + 20) / 10.0f;
                 petals[i].size = (rand() % 5) + 3;
+            }
+            for (int i = 0; i < MAX_ZEN_MOTES; i++) {
+                zenMotes[i].x = (float)(rand() % 800);
+                zenMotes[i].y = (float)(rand() % 800);
+                zenMotes[i].vx = ((rand() % 16) - 8) / 10.0f;
+                zenMotes[i].vy = -((rand() % 15) + 5) / 10.0f;
+                zenMotes[i].size = (float)((rand() % 3) + 2);
             }
             SetTimer(hwnd, 4, 50, NULL);
             hBtnPass = CreateWindow("BUTTON", "Pass", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
@@ -1297,6 +1322,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         petals[i].x = rand() % 800;
                     }
                 }
+                for (int i = 0; i < MAX_ZEN_MOTES; i++) {
+                    zenMotes[i].x += zenMotes[i].vx;
+                    zenMotes[i].y += zenMotes[i].vy;
+                    zenMotes[i].vx += ((rand() % 5) - 2) / 20.0f;
+                    if (zenMotes[i].vx > 1.2f) zenMotes[i].vx = 1.2f;
+                    if (zenMotes[i].vx < -1.2f) zenMotes[i].vx = -1.2f;
+                    if (zenMotes[i].y < -10) {
+                        zenMotes[i].y = 810;
+                        zenMotes[i].x = (float)(rand() % 800);
+                    }
+                }
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 2) {
                 KillTimer(hwnd, 2);
@@ -1374,6 +1410,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP memBM = CreateCompatibleBitmap(hdc, winW, winH);
             HBITMAP oldBM = (HBITMAP)SelectObject(memDC, memBM);
+            HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
 
             RECT fullRect = { 0, 0, winW, winH };
 
@@ -1513,6 +1550,36 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SelectObject(memDC, oldBInlay);
             DeleteObject(inlayPen);
 
+            // Traveling specular glint traversing the outer playfield Kaya board frame
+            float periT = fmodf(animTime * 0.6f, 1.0f);
+            float totalPeri = (float)((boardW + 30) * 4);
+            float curDist = periT * totalPeri;
+            int glintX = padding - 15;
+            int glintY = padding - 15;
+            int sideLen = boardW + 30;
+            if (curDist < sideLen) {
+                glintX = (padding - 15) + (int)curDist;
+                glintY = padding - 15;
+            } else if (curDist < sideLen * 2) {
+                glintX = padding + boardW + 15;
+                glintY = (padding - 15) + (int)(curDist - sideLen);
+            } else if (curDist < sideLen * 3) {
+                glintX = (padding + boardW + 15) - (int)(curDist - sideLen * 2);
+                glintY = padding + boardW + 15;
+            } else {
+                glintX = padding - 15;
+                glintY = (padding + boardW + 15) - (int)(curDist - sideLen * 3);
+            }
+            HBRUSH glintBrush1 = CreateSolidBrush(RGB(255, 255, 255));
+            HBRUSH glintBrush2 = CreateSolidBrush(RGB(255, 225, 120));
+            SelectObject(memDC, nullPen);
+            SelectObject(memDC, glintBrush2);
+            Ellipse(memDC, glintX - 7, glintY - 7, glintX + 7, glintY + 7);
+            SelectObject(memDC, glintBrush1);
+            Ellipse(memDC, glintX - 3, glintY - 3, glintX + 3, glintY + 3);
+            DeleteObject(glintBrush1);
+            DeleteObject(glintBrush2);
+
             // Grid lines
             HPEN hPen = CreatePen(PS_SOLID, 1, RGB(30, 22, 14));
             SelectObject(memDC, hPen);
@@ -1526,7 +1593,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             // Star points (Hoshi dots)
             HBRUSH hoshiBrush = CreateSolidBrush(RGB(25, 18, 10));
-            HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
             for (int r = 0; r < boardSize; r++) {
                 for (int c = 0; c < boardSize; c++) {
                     if (IsHoshi(c, r, boardSize)) {
@@ -1756,6 +1822,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             DeleteObject(sheenBrush);
                         }
 
+                        // Traveling diagonal specular sheen glint traversing stone face
+                        float sheenPos = fmodf(animTime * 1.5f + (r * 0.25f + c * 0.35f), 4.0f);
+                        if (sheenPos < 0.85f) {
+                            int shOff = (int)((sheenPos / 0.85f - 0.5f) * (radius * 1.5f));
+                            HPEN sheenLinePen = CreatePen(PS_SOLID, 1, board[r][c] == 1 ? RGB(90, 110, 135) : RGB(255, 255, 255));
+                            HPEN oldShP = SelectObject(memDC, sheenLinePen);
+                            MoveToEx(memDC, cx - radius/2 + shOff, cy + radius/2 + shOff, NULL);
+                            LineTo(memDC, cx + radius/2 + shOff, cy - radius/2 + shOff);
+                            SelectObject(memDC, oldShP);
+                            DeleteObject(sheenLinePen);
+                        }
+
                         // Last Move Marker Ring
                         if (c == lastMoveX && r == lastMoveY) {
                             COLORREF ringColor = (board[r][c] == 1) ? RGB(0, 240, 255) : RGB(255, 215, 0);
@@ -1967,6 +2045,22 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             DeleteObject(petalBrush);
 
+            // Atmospheric floating golden Zen dust motes
+            HBRUSH zenBrush = CreateSolidBrush(RGB(255, 215, 0));
+            HBRUSH zenCore = CreateSolidBrush(RGB(255, 255, 255));
+            for (int i = 0; i < MAX_ZEN_MOTES; i++) {
+                int px = (int)zenMotes[i].x;
+                int py = (int)zenMotes[i].y;
+                int s = (int)zenMotes[i].size;
+                SelectObject(memDC, nullPen);
+                SelectObject(memDC, zenBrush);
+                Ellipse(memDC, px - s, py - s, px + s, py + s);
+                SelectObject(memDC, zenCore);
+                Ellipse(memDC, px - 1, py - 1, px + 1, py + 1);
+            }
+            DeleteObject(zenBrush);
+            DeleteObject(zenCore);
+
             // Double-buffered BitBlt with procedural screen-shake offset
             int offX = 0, offY = 0;
             if (shakeMagnitude > 0.05f) {
@@ -2032,30 +2126,39 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (LOWORD(wParam) == ID_BTN_NEW) {
                 currentCampaignStage = -1;
                 currentKomi = 6.5f;
+                TriggerScreenShake(4.0f);
                 InitBoard();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (LOWORD(wParam) == ID_BTN_SAVE) {
                 SaveGame(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_LOAD) {
+                TriggerScreenShake(4.0f);
                 LoadGame(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_UNDO) {
+                TriggerScreenShake(3.0f);
                 DoUndo(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_REDO) {
+                TriggerScreenShake(3.0f);
                 DoRedo(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_HINT) {
+                TriggerScreenShake(3.5f);
                 CalculateHint();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (LOWORD(wParam) == ID_BTN_ESTIMATE) {
                 showEstimator = !showEstimator;
+                TriggerScreenShake(2.5f);
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (LOWORD(wParam) == ID_BTN_ANALYZER) {
                 showAnalyzer = !showAnalyzer;
+                TriggerScreenShake(2.5f);
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (LOWORD(wParam) == ID_BTN_CAMPAIGN) {
                 currentCampaignStage = 0;
+                TriggerScreenShake(5.0f);
                 StartCampaignStage(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_TSUMEGO) {
                 currentTsumegoIndex = (currentTsumegoIndex + 1) % 5;
+                TriggerScreenShake(5.0f);
                 LoadTsumegoPuzzle(hwnd, currentTsumegoIndex);
             } else if (LOWORD(wParam) == ID_BTN_STATS) {
                 char smsg[256];
