@@ -1016,6 +1016,21 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   background: rgba(255,255,255,0.1);
 }
 
+.help-kbd {
+  display: inline-block;
+  padding: 3px 8px;
+  font-family: 'Consolas', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  white-space: nowrap;
+}
+
 /* Phase 2: Transitions */
 .login-btn, .start-button, .start-item, .shutdown-btn, .taskbar-item, .xp-btn, .desktop-icon img, .os-modal-buttons button {
   transition: all 0.15s ease;

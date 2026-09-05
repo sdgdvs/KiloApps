@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.3.110';
+const MICROS_VERSION = '0.3.111';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><linearGradient id='f1' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2364B5F6'/><stop offset='100%' stop-color='%231E88E5'/></linearGradient><linearGradient id='f2' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2390CAF9'/><stop offset='100%' stop-color='%232196F3'/></linearGradient></defs><path fill='url(%23f1)' d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/><path fill='url(%23f2)' d='M2 8h20v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V8z'/></svg>";
 const HELP_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232196F3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'></circle><path d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'></path><line x1='12' y1='17' x2='12.01' y2='17'></line></svg>";
@@ -654,7 +654,7 @@ function App() {
       const timer = setTimeout(() => {
         setScreen('os');
         playStartupAudio();
-        setTimeout(() => setModal({ type: 'help' }), 1000);
+        notify('Welcome to KiloOS', 'System ready. Press F1 or H on desktop for Help & Shortcuts.');
       }, 3000);
 
       const handleKeyDown = (e) => {
@@ -662,6 +662,7 @@ function App() {
           clearTimeout(timer);
           setScreen('os');
           playStartupAudio();
+          notify('Welcome to KiloOS', 'System ready. Press F1 or H on desktop for Help & Shortcuts.');
         }
       };
       window.addEventListener('keydown', handleKeyDown);
@@ -720,12 +721,50 @@ function App() {
     return () => window.removeEventListener('os-launch-app', handler);
   }, [openApps]);
 
-  // Handle Window Switching Shortcut & Help
+  // Handle Window Switching Shortcut & Help & Global Navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Desktop Help
-      if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && (document.activeElement === document.body || document.activeElement?.className?.includes('desktop'))) {
-        if (e.key === 'F1') e.preventDefault();
+      // Escape closes open modals, menus, and flyouts
+      if (e.key === 'Escape') {
+        if (modal) {
+          if (modal.callback) modal.callback(null);
+          setModal(null);
+          return;
+        }
+        if (contextMenu) {
+          setContextMenu(null);
+          return;
+        }
+        if (calendarOpen) {
+          setCalendarOpen(false);
+          return;
+        }
+        if (startOpen) {
+          setStartOpen(false);
+          setStartFolder(null);
+          setStartSearch('');
+          return;
+        }
+        if (selectedIcons.length > 0) {
+          setSelectedIcons([]);
+          return;
+        }
+      }
+
+      // Windows / Super key or Ctrl+Escape to toggle Start Menu
+      if ((e.key === 'Meta' || (e.ctrlKey && e.key === 'Escape')) && !modal) {
+        e.preventDefault();
+        setStartOpen(prev => !prev);
+        if (startOpen) {
+          setStartFolder(null);
+          setStartSearch('');
+        }
+        return;
+      }
+
+      // Desktop / Global Help
+      if ((e.key === 'F1' || ((e.key === 'h' || e.key === 'H') && (document.activeElement === document.body || document.activeElement?.className?.includes('desktop')))) && !modal) {
+        e.preventDefault();
         setModal({ type: 'help' });
       }
       
@@ -748,7 +787,7 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [notify]);
+  }, [modal, contextMenu, calendarOpen, startOpen, selectedIcons, notify]);
 
   const openApp = useCallback((appParams) => {
     let appDef = appParams;
@@ -975,9 +1014,22 @@ function App() {
           <input 
             type="text" 
             className="start-search"
-            placeholder="Search apps..." 
+            placeholder="Search apps (Press Enter to open)..." 
             value={startSearch} 
             onChange={e => setStartSearch(e.target.value)} 
+            onKeyDown={e => {
+              if (e.key === 'Enter' && searchResults.length > 0) {
+                setStartOpen(false);
+                setStartFolder(null);
+                setStartSearch('');
+                openApp(searchResults[0]);
+              } else if (e.key === 'Escape') {
+                if (startSearch) {
+                  e.stopPropagation();
+                  setStartSearch('');
+                }
+              }
+            }}
             autoFocus 
           />
         </div>
@@ -1181,17 +1233,64 @@ function App() {
       </div>
 
       {modal && (
-        <div className="os-modal-overlay">
-          <div className="os-modal">
-            <div className="os-modal-title">
-              {modal.type === 'shutdown' ? 'Shutdown KiloOS' : modal.type === 'vfs_open' ? 'Open Virtual File' : modal.type === 'settings' ? 'Display Settings' : modal.type === 'create_app' ? 'Create New App' : modal.type === 'help' ? 'KiloOS Help' : 'Save Virtual File'}
+        <div className="os-modal-overlay" onClick={() => {
+          if (modal.callback) modal.callback(null);
+          setModal(null);
+        }}>
+          <div className="os-modal" onClick={e => e.stopPropagation()}>
+            <div className="os-modal-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>
+                {modal.type === 'shutdown' ? 'Shutdown KiloOS' : modal.type === 'vfs_open' ? 'Open Virtual File' : modal.type === 'settings' ? 'Display Settings' : modal.type === 'create_app' ? 'Create New App' : modal.type === 'help' ? 'KiloOS Help & Shortcuts' : 'Save Virtual File'}
+              </span>
+              <button 
+                onClick={() => {
+                  if (modal.callback) modal.callback(null);
+                  setModal(null);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  fontSize: '18px',
+                  cursor: 'pointer',
+                  lineHeight: 1,
+                  padding: '0 4px'
+                }}
+                title="Close (Esc)"
+              >×</button>
             </div>
             <div className="os-modal-content">
               {modal.type === 'settings' && (
                 <>
-                  <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
-                    <span>Dynamic Background Gradients</span>
-                    <input type="checkbox" checked={animationsEnabled} onChange={toggleAnimations} />
+                  <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '10px', borderBottom: '1px solid var(--border-color)'}}>
+                    <div>
+                      <div style={{fontWeight: '600'}}>Dynamic Background Gradients</div>
+                      <div style={{fontSize: '12px', color: 'var(--text-muted)'}}>Animated ambient desktop wallpaper mesh</div>
+                    </div>
+                    <input type="checkbox" checked={animationsEnabled} onChange={toggleAnimations} style={{width:'18px', height:'18px', cursor:'pointer'}} />
+                  </div>
+                  <div>
+                    <div style={{fontWeight: '600', marginBottom: '8px'}}>System Accent Color</div>
+                    <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                      {['#2196F3', '#00E676', '#FF9100', '#E040FB', '#00E5FF', '#FF5252'].map(color => (
+                        <button
+                          key={color}
+                          onClick={() => {
+                            setVfs(prev => ({ ...prev, '/.sys_settings_accent': color }));
+                          }}
+                          style={{
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '50%',
+                            backgroundColor: color,
+                            border: (vfs['/.sys_settings_accent'] === color || (!vfs['/.sys_settings_accent'] && color === '#2196F3')) ? '2px solid #fff' : '1px solid rgba(255,255,255,0.2)',
+                            cursor: 'pointer',
+                            outline: 'none',
+                            boxShadow: (vfs['/.sys_settings_accent'] === color) ? `0 0 10px ${color}` : 'none'
+                          }}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </>
               )}
@@ -1215,20 +1314,6 @@ function App() {
                   </select>
                 </>
               )}
-              {modal.type === 'display_settings' && (
-                <>
-                  <p>System Accent Color:</p>
-                  <input 
-                    type="color" 
-                    value={vfs['/.sys_settings_accent'] || '#2196F3'} 
-                    onChange={(e) => {
-                      const newColor = e.target.value;
-                      setVfs(prev => ({ ...prev, '/.sys_settings_accent': newColor }));
-                    }} 
-                    style={{ width: '100%', height: '40px', border: 'none', padding: 0, cursor: 'pointer', background: 'transparent' }} 
-                  />
-                </>
-              )}
               {modal.type === 'create_app' && (
                 <>
                   <p>App Name (without extension):</p>
@@ -1237,21 +1322,31 @@ function App() {
               )}
               {modal.type === 'help' && (
                 <>
-                  <p><b>KiloOS Desktop Environment</b></p>
-                  <p>Welcome to the web-based OS. Here are some useful shortcuts to navigate the environment:</p>
-                  <ul style={{ paddingLeft: '20px', lineHeight: '1.6', marginTop: '5px' }}>
-                    <li><b>Start Menu:</b> Click the start button to launch apps and utilities.</li>
-                    <li><b>Switch Windows:</b> Press <code>Alt + `</code> (backtick) to cycle through open windows.</li>
-                    <li><b>Snap Windows:</b> Drag a window to the left, right, or top edge to snap it.</li>
-                    <li><b>Maximize:</b> Double-click a window's title bar.</li>
-                    <li><b>Help:</b> Press <code>H</code> or <code>F1</code> on the desktop to view this help anytime.</li>
-                  </ul>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                    <div style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: '700', fontSize: '15px' }}>KiloOS Desktop Environment</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Version {MICROS_VERSION}</div>
+                    </div>
+                  </div>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Quick keyboard shortcuts & desktop controls:</p>
+                  <div className="help-shortcuts-grid" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '8px 14px', fontSize: '13px', alignItems: 'center', background: 'rgba(0,0,0,0.25)', padding: '12px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                    <kbd className="help-kbd">Win / Ctrl+Esc</kbd><span>Toggle Start Menu</span>
+                    <kbd className="help-kbd">Alt + `</kbd><span>Cycle open windows</span>
+                    <kbd className="help-kbd">F1 / H</kbd><span>Open this Help guide</span>
+                    <kbd className="help-kbd">Esc</kbd><span>Close modal, menu, or flyout</span>
+                    <kbd className="help-kbd">Enter</kbd><span>Launch top search result in Start Menu</span>
+                    <kbd className="help-kbd">Double Click</kbd><span>Maximize / restore window title bar</span>
+                    <kbd className="help-kbd">Drag Edge</kbd><span>Snap window left, right, or top to maximize</span>
+                  </div>
                 </>
               )}
               <div className="os-modal-buttons">
                 <button onClick={() => {
                   if (modal.type === 'shutdown') doShutdown();
-                  else { modal.callback(modalInput); setModal(null); }
+                  else { if (modal.callback) modal.callback(modalInput); setModal(null); }
                 }}>OK</button>
                 <button onClick={() => { 
                   if (modal.callback) modal.callback(null); 
@@ -1317,8 +1412,17 @@ function App() {
 
       <div className="notification-tray">
         {notifications.map(n => (
-          <div key={n.id} className="notification-toast">
-            <div className="notification-title">{n.title}</div>
+          <div 
+            key={n.id} 
+            className="notification-toast"
+            onClick={() => setNotifications(prev => prev.filter(item => item.id !== n.id))}
+            style={{ cursor: 'pointer' }}
+            title="Click to dismiss"
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="notification-title">{n.title}</div>
+              <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '8px', lineHeight: 1 }}>×</span>
+            </div>
             <div className="notification-message">{n.message}</div>
           </div>
         ))}
