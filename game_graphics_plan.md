@@ -105,7 +105,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 
-- KSudoku
 - KGo
 - KTowers
 - KWords
@@ -145,13 +144,16 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KVoid
 - KStarship
 - KConnect4
-- KStarDredge
 - KHangman
+- KStarDredge
 - KMech
 - KMatch3
 - KFreecell
+- KSudoku
 
 ## Completed Work Log
+
+- **KSudoku (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on number placements, notes toggling, pencil marks, row/column/box section completions, erase actions, pencil sweeps, undo/hints, and puzzle victory clears (continuous 60 FPS requestAnimationFrame animation loop in Web Canvas `ksudoku.html`, and double-buffered viewport rendering with physics decay in Native C Win32 GDI `KSudoku/main.c`), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity drag, expanding buoyant smoke & velvet puffs with negative gravity and radius growth, heavy kinematic wooden tile / number / ink / chalk debris shards with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars upon completions, hints, and puzzle victories), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion halo radiating upon valid placements, pencil clearing, and victory bursts, ornate Japanese / Zen cedar HUD corner filigree L-brackets with brass rivet studs and micro-accents at all four board corners, a pulsating golden energy perimeter inlay border with an animated traveling specular glint traversing the outer playfield sudoku grid frame, sculpted 3D beveled tiles with diagonal specular sheen sweeps traversing cells, keypad buttons, and headers, and atmospheric floating Zen ink / paper dust motes drifting across the board in both Web Canvas (`ksudoku.html`) and Native C Win32 GDI (`KSudoku/main.c`).
 
 - **KFreecell (Loop 8):** Implemented highly polished visual effects including continuous procedural screen-shake driven by quadratic physics decay and rotational damping on card moves, card snaps, auto-solve cascades, freeze thaws, wand powerups, extra cells, and victory cascades (continuous 60 FPS requestAnimationFrame animation loop in Web Canvas `kfreecell.html`, and double-buffered viewport rendering with physics decay in Native C Win32 GDI `KFreecell/main.c`), a multi-layered kinematic particle explosion engine featuring 4 distinct layers (incandescent core needle sparks with velocity drag, expanding buoyant smoke & velvet puffs with negative gravity and radius growth, heavy kinematic playing card / chip / felt debris shards with tumbling rotation, gravity, drag, and floor bounce physics, and radiant golden celebration energy stars upon thaw, wand, solve, and victory fireworks), dual-tier concentric shockwave ripple rings featuring an inner high-speed compression wave and outer chromatic dispersion halo radiating upon card snaps, powerups, and victory bursts, ornate luxury casino green felt HUD corner filigree L-brackets with gold rivet studs at all four board corners, a pulsating golden energy perimeter inlay border with an animated traveling specular glint traversing the outer playfield card table frame, sculpted card & tableau highlights with diagonal specular sheen sweeps traversing cards and foundation slots, and atmospheric floating casino velvet dust motes drifting across the table in both Web Canvas (`kfreecell.html`) and Native C Win32 GDI (`KFreecell/main.c`).
 

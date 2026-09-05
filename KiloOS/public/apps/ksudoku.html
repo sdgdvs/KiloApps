@@ -217,6 +217,78 @@
             box-sizing: border-box;
         }
 
+        /* Pulsating Golden Energy Perimeter Inlay Border */
+        .sudoku-board::before {
+            content: '';
+            position: absolute;
+            top: -2px; left: -2px; right: -2px; bottom: -2px;
+            border-radius: 14px;
+            border: 2px solid rgba(250, 204, 21, 0.4);
+            pointer-events: none;
+            z-index: 4;
+            animation: perimeterInlayGlint 4s linear infinite;
+        }
+
+        @keyframes perimeterInlayGlint {
+            0% {
+                border-color: rgba(250, 204, 21, 0.3);
+                box-shadow: inset 0 0 6px rgba(250, 204, 21, 0.2), 0 0 8px rgba(250, 204, 21, 0.25);
+            }
+            50% {
+                border-color: rgba(250, 204, 21, 0.85);
+                box-shadow: inset 0 0 14px rgba(250, 204, 21, 0.5), 0 0 18px rgba(250, 204, 21, 0.6);
+            }
+            100% {
+                border-color: rgba(250, 204, 21, 0.3);
+                box-shadow: inset 0 0 6px rgba(250, 204, 21, 0.2), 0 0 8px rgba(250, 204, 21, 0.25);
+            }
+        }
+
+        /* Ornate Board Outer Corner Filigree L-Brackets with Rivet Detailing */
+        .board-filigree {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .bf-tl {
+            top: -2px; left: -2px;
+            border-top: 3px solid #facc15;
+            border-left: 3px solid #facc15;
+            border-top-left-radius: 12px;
+            filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.6));
+        }
+        .bf-tr {
+            top: -2px; right: -2px;
+            border-top: 3px solid #facc15;
+            border-right: 3px solid #facc15;
+            border-top-right-radius: 12px;
+            filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.6));
+        }
+        .bf-bl {
+            bottom: -2px; left: -2px;
+            border-bottom: 3px solid #facc15;
+            border-left: 3px solid #facc15;
+            border-bottom-left-radius: 12px;
+            filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.6));
+        }
+        .bf-br {
+            bottom: -2px; right: -2px;
+            border-bottom: 3px solid #facc15;
+            border-right: 3px solid #facc15;
+            border-bottom-right-radius: 12px;
+            filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.6));
+        }
+        .bf-stud {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #ffffff, #facc15 60%, #854d0e 100%);
+            box-shadow: 0 0 3px #facc15;
+        }
+
         .sudoku-board.grid-4 {
             grid-template-columns: repeat(2, 1fr);
             grid-template-rows: repeat(2, 1fr);
@@ -1380,6 +1452,20 @@
                 }
                 boardEl.appendChild(block);
             }
+            // Add outer corner filigree L-brackets with brass rivet studs
+            const corners = ['bf-tl', 'bf-tr', 'bf-bl', 'bf-br'];
+            corners.forEach(cls => {
+                let fil = document.createElement('div');
+                fil.className = `board-filigree ${cls}`;
+                let stud = document.createElement('div');
+                stud.className = 'bf-stud';
+                if (cls.includes('tl')) { stud.style.top = '2px'; stud.style.left = '2px'; }
+                else if (cls.includes('tr')) { stud.style.top = '2px'; stud.style.right = '2px'; }
+                else if (cls.includes('bl')) { stud.style.bottom = '2px'; stud.style.left = '2px'; }
+                else if (cls.includes('br')) { stud.style.bottom = '2px'; stud.style.right = '2px'; }
+                fil.appendChild(stud);
+                boardEl.appendChild(fil);
+            });
             updateBlockSolvedStates(false);
 
             // Build dynamic Numpad
@@ -1553,7 +1639,7 @@
             checkWin();
         }
         
-        // Procedural Screen Shake Engine (Physics-driven Quadratic Decay)
+        // Procedural Screen Shake Engine (Physics-driven Quadratic Decay with Rotational Damping)
         let shakeTrauma = 0;
         let shakeMaxTrauma = 0;
         let shakeStartTime = 0;
@@ -1590,13 +1676,14 @@
             const angle = Math.random() * Math.PI * 2;
             const offsetX = Math.cos(angle) * currentAmp;
             const offsetY = Math.sin(angle) * currentAmp;
-            const rot = (Math.random() - 0.5) * (currentAmp * 0.25);
+            const rot = (Math.random() - 0.5) * (currentAmp * 0.28); // Rotational damping
             target.style.transform = `translate(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px) rotate(${rot.toFixed(2)}deg)`;
             shakeAnimationId = requestAnimationFrame(updateScreenShake);
         }
 
-        // Multi-Layered Particle Engine (Sparks, Smoke, Heavy Debris, Stars)
+        // Multi-Layered Particle Engine (Sparks, Smoke, Heavy Debris, Stars) & Concentric Shockwaves
         let fxParticles = [];
+        let fxShockwaves = [];
         let fxAnimId = null;
         let fxCanvas = null;
 
@@ -1612,10 +1699,58 @@
             return fxCanvas.getContext('2d');
         }
 
+        function triggerShockwave(x, y, maxRadius, colorInner = '#ffffff', colorOuter = 'rgba(59, 130, 246, 0.8)', duration = 0.5) {
+            initFxCanvas();
+            fxShockwaves.push({
+                x, y,
+                radius: 4,
+                maxRadius,
+                speed: (maxRadius - 4) / (duration * 60),
+                colorInner,
+                colorOuter,
+                life: 1.0,
+                decay: 1.0 / (duration * 60)
+            });
+            if (fxAnimId) cancelAnimationFrame(fxAnimId);
+            updateAndDrawFx();
+        }
+
         function updateAndDrawFx() {
             const ctx = fxCanvas.getContext('2d');
             ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
             let alive = false;
+
+            // Render Dual-Tier Concentric Shockwaves
+            for (let i = fxShockwaves.length - 1; i >= 0; i--) {
+                let sw = fxShockwaves[i];
+                sw.radius += sw.speed * (0.3 + 0.7 * sw.life);
+                sw.life -= sw.decay;
+
+                if (sw.life > 0 && sw.radius < sw.maxRadius * 1.3) {
+                    alive = true;
+                    ctx.save();
+                    
+                    // Outer chromatic dispersion halo
+                    ctx.beginPath();
+                    ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = sw.colorOuter;
+                    ctx.globalAlpha = Math.max(0, sw.life * 0.7);
+                    ctx.lineWidth = Math.max(1, 4 * sw.life);
+                    ctx.stroke();
+
+                    // Inner high-speed compression wave
+                    ctx.beginPath();
+                    ctx.arc(sw.x, sw.y, Math.max(1, sw.radius * 0.88), 0, Math.PI * 2);
+                    ctx.strokeStyle = sw.colorInner;
+                    ctx.globalAlpha = Math.max(0, sw.life * 0.95);
+                    ctx.lineWidth = Math.max(1, 2 * sw.life);
+                    ctx.stroke();
+
+                    ctx.restore();
+                } else {
+                    fxShockwaves.splice(i, 1);
+                }
+            }
 
             fxParticles.forEach(p => {
                 p.x += p.vx;
@@ -1626,6 +1761,13 @@
                 if (p.rotSpeed) p.rot += p.rotSpeed;
                 if (p.growth) p.size += p.growth;
                 p.life -= p.decay;
+
+                // Floor bounce physics for debris shards
+                if (p.type === 'debris' && p.y > fxCanvas.height - 15) {
+                    p.y = fxCanvas.height - 15;
+                    p.vy = -Math.abs(p.vy) * 0.45;
+                    p.vx *= 0.75;
+                }
 
                 if (p.y < fxCanvas.height + 60 && p.life > 0) alive = true;
 
@@ -1644,7 +1786,7 @@
                     ctx.lineTo(-p.size * 0.7, p.size * 0.5);
                     ctx.closePath();
                     ctx.fill();
-                    ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+                    ctx.strokeStyle = 'rgba(255,255,255,0.6)';
                     ctx.lineWidth = 1;
                     ctx.stroke();
                 } else if (p.type === 'smoke') {
@@ -1661,10 +1803,18 @@
                     ctx.fill();
                 } else if (p.shape === 'rect') {
                     ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size * 1.6);
-                } else { // spark or circle
+                } else { // spark with velocity needle trail
                     ctx.beginPath();
                     ctx.arc(0, 0, Math.max(0.5, p.size / 2), 0, Math.PI * 2);
                     ctx.fill();
+
+                    // Incandescent needle spark trail
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(-p.vx * 2.5, -p.vy * 2.5);
+                    ctx.strokeStyle = p.color;
+                    ctx.lineWidth = Math.max(0.8, p.size * 0.5);
+                    ctx.stroke();
                 }
                 ctx.restore();
             });
@@ -1685,8 +1835,10 @@
             let cx = cellRect.left - containerRect.left + cellRect.width / 2;
             let cy = cellRect.top - containerRect.top + cellRect.height / 2;
 
-            // Layer 1: Core crimson sparks
-            for (let i = 0; i < 16; i++) {
+            triggerShockwave(cx, cy, 65, '#ffffff', 'rgba(239, 68, 68, 0.8)', 0.4);
+
+            // Layer 1: Core crimson sparks with velocity trails
+            for (let i = 0; i < 18; i++) {
                 let angle = Math.random() * Math.PI * 2;
                 let speed = Math.random() * 12 + 5;
                 fxParticles.push({
@@ -1708,7 +1860,7 @@
                 });
             }
             // Layer 3: Red shatter debris
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < 12; i++) {
                 let angle = Math.random() * Math.PI * 2;
                 let speed = Math.random() * 7 + 3;
                 fxParticles.push({
@@ -1732,7 +1884,9 @@
             let cx = cellRect.left - containerRect.left + cellRect.width / 2;
             let cy = cellRect.top - containerRect.top + cellRect.height / 2;
 
-            for (let i = 0; i < 20; i++) {
+            triggerShockwave(cx, cy, 75, '#ffffff', 'rgba(56, 189, 248, 0.85)', 0.45);
+
+            for (let i = 0; i < 22; i++) {
                 let angle = Math.random() * Math.PI * 2;
                 let speed = Math.random() * 10 + 4;
                 fxParticles.push({
@@ -1766,7 +1920,9 @@
             let cx = cellRect.left - containerRect.left + cellRect.width / 2;
             let cy = cellRect.top - containerRect.top + cellRect.height / 2;
 
-            for (let i = 0; i < 14; i++) {
+            triggerShockwave(cx, cy, 48, '#ffffff', 'rgba(59, 130, 246, 0.65)', 0.35);
+
+            for (let i = 0; i < 16; i++) {
                 let angle = Math.random() * Math.PI * 2;
                 let speed = Math.random() * 7 + 2;
                 fxParticles.push({
@@ -1789,10 +1945,11 @@
             let bx = blockRect.left - containerRect.left + blockRect.width / 2;
             let by = blockRect.top - containerRect.top + blockRect.height / 2;
 
-            triggerScreenShake(3.5, 220);
+            triggerScreenShake(3.8, 240);
+            triggerShockwave(bx, by, 130, '#ffffff', 'rgba(250, 204, 21, 0.9)', 0.55);
 
             // Layer 1: Radiant gold sparks
-            for (let i = 0; i < 35; i++) {
+            for (let i = 0; i < 40; i++) {
                 let angle = Math.random() * Math.PI * 2;
                 let speed = Math.random() * 14 + 5;
                 fxParticles.push({
@@ -1803,7 +1960,7 @@
                 });
             }
             // Layer 2: Expanding golden smoke
-            for (let i = 0; i < 12; i++) {
+            for (let i = 0; i < 14; i++) {
                 let angle = Math.random() * Math.PI * 2;
                 let speed = Math.random() * 4 + 1;
                 fxParticles.push({
@@ -1814,7 +1971,7 @@
                 });
             }
             // Layer 3: Tumbling golden debris
-            for (let i = 0; i < 20; i++) {
+            for (let i = 0; i < 24; i++) {
                 let angle = Math.random() * Math.PI * 2;
                 let speed = Math.random() * 10 + 3;
                 fxParticles.push({
@@ -1823,6 +1980,18 @@
                     size: Math.random() * 6 + 3, color: '#eab308',
                     rot: Math.random() * Math.PI * 2, rotSpeed: (Math.random() - 0.5) * 0.3,
                     life: 1.1, decay: 0.015, drag: 0.94, gravity: 0.3
+                });
+            }
+            // Layer 4: Golden celebration stars
+            for (let i = 0; i < 18; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = Math.random() * 8 + 2;
+                fxParticles.push({
+                    type: 'star', x: bx, y: by,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 2,
+                    size: Math.random() * 6 + 3, color: '#facc15',
+                    rot: Math.random() * Math.PI * 2, rotSpeed: (Math.random() - 0.5) * 0.3,
+                    life: 1.2, decay: 0.015, drag: 0.95, gravity: 0.12
                 });
             }
             if (fxAnimId) cancelAnimationFrame(fxAnimId);
@@ -1838,10 +2007,11 @@
             let cx = cellRect.left - containerRect.left + cellRect.width / 2;
             let cy = cellRect.top - containerRect.top + cellRect.height / 2;
 
-            triggerScreenShake(4.0, 220);
+            triggerScreenShake(4.5, 240);
+            triggerShockwave(cx, cy, 95, '#ffffff', 'rgba(192, 132, 252, 0.9)', 0.5);
 
             // Layer 1: Amethyst core sparks
-            for (let i = 0; i < 25; i++) {
+            for (let i = 0; i < 30; i++) {
                 let angle = Math.random() * Math.PI * 2;
                 let speed = Math.random() * 12 + 4;
                 fxParticles.push({
@@ -1852,7 +2022,7 @@
                 });
             }
             // Layer 2: Swirling violet smoke
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < 12; i++) {
                 let angle = Math.random() * Math.PI * 2;
                 let speed = Math.random() * 3 + 1;
                 fxParticles.push({
@@ -1863,7 +2033,7 @@
                 });
             }
             // Layer 3: Arcane rune stars
-            for (let i = 0; i < 15; i++) {
+            for (let i = 0; i < 20; i++) {
                 let angle = Math.random() * Math.PI * 2;
                 let speed = Math.random() * 8 + 2;
                 fxParticles.push({
@@ -1882,15 +2052,21 @@
             initFxCanvas();
             const containerRect = document.querySelector('.app-container').getBoundingClientRect();
             fxParticles = [];
+            fxShockwaves = [];
             const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6', '#ef4444', '#38bdf8', '#facc15', '#ffffff'];
             let boardRect = boardEl.getBoundingClientRect();
             let bx = boardRect.left - containerRect.left + boardRect.width / 2;
             let by = boardRect.top - containerRect.top + boardRect.height / 2;
 
-            triggerScreenShake(14.0, 850);
+            triggerScreenShake(14.0, 900);
+
+            // Cascading Shockwaves
+            triggerShockwave(bx, by, 220, '#ffffff', 'rgba(250, 204, 21, 0.95)', 0.7);
+            setTimeout(() => triggerShockwave(bx, by, 280, '#ffffff', 'rgba(59, 130, 246, 0.85)', 0.8), 200);
+            setTimeout(() => triggerShockwave(bx, by, 340, '#ffffff', 'rgba(236, 72, 153, 0.85)', 0.9), 450);
 
             // Layer 1: Incandescent Core Sparks
-            for (let i = 0; i < 150; i++) {
+            for (let i = 0; i < 160; i++) {
                 let angle = Math.random() * Math.PI * 2;
                 let speed = Math.random() * 28 + 12;
                 fxParticles.push({
@@ -1901,7 +2077,7 @@
                 });
             }
             // Layer 2: Expanding Smoke Puffs
-            for (let i = 0; i < 40; i++) {
+            for (let i = 0; i < 45; i++) {
                 let angle = Math.random() * Math.PI * 2;
                 let speed = Math.random() * 8 + 2;
                 fxParticles.push({
@@ -1912,7 +2088,7 @@
                 });
             }
             // Layer 3: Heavy Kinematic Puzzle Shard Debris
-            for (let i = 0; i < 120; i++) {
+            for (let i = 0; i < 130; i++) {
                 let angle = Math.random() * Math.PI * 2;
                 let speed = Math.random() * 18 + 5;
                 fxParticles.push({
@@ -1924,7 +2100,7 @@
                 });
             }
             // Layer 4: Floating Confetti Stars
-            for (let i = 0; i < 100; i++) {
+            for (let i = 0; i < 110; i++) {
                 let angle = Math.random() * Math.PI * 2;
                 let speed = Math.random() * 10 + 3;
                 fxParticles.push({
