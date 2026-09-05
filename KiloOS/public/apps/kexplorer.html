@@ -80,6 +80,14 @@
     box-shadow: var(--focus-ring);
   }
 
+  button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: var(--text-muted) !important;
+    border-color: var(--border-color) !important;
+  }
+
   .address-bar {
     flex: 1;
     min-width: 180px;
@@ -100,7 +108,17 @@
   }
 
   .search-box {
-    width: 160px;
+    width: 170px;
+  }
+
+  .breadcrumb-bar {
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid var(--border-color);
+    padding: 5px 14px;
+    display: flex;
+    align-items: center;
+    min-height: 28px;
+    overflow-x: auto;
   }
 
   .breadcrumbs {
@@ -118,11 +136,23 @@
     padding: 2px 6px;
     border-radius: 4px;
     color: var(--primary);
+    transition: all 0.15s ease;
   }
 
-  .crumb:hover {
-    background: rgba(255, 255, 255, 0.1);
+  .crumb:hover, .crumb:focus-visible {
+    background: rgba(255, 255, 255, 0.12);
     text-decoration: underline;
+    outline: none;
+  }
+
+  .crumb:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
+
+  .crumb-sep {
+    color: var(--text-muted);
+    user-select: none;
+    padding: 0 2px;
   }
 
   .main-content {
@@ -178,6 +208,7 @@
     font-weight: 600;
     color: var(--primary);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
   }
 
   .file-name {
@@ -228,6 +259,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
   }
 
   .empty-msg {
@@ -237,16 +269,37 @@
     text-align: center;
     padding: 40px 20px;
   }
+
+  .toast {
+    position: fixed;
+    bottom: 42px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    border: 1px solid var(--primary);
+    color: #f1f5f9;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 100;
+  }
+  .toast.show {
+    opacity: 1;
+  }
 </style>
 </head>
 <body>
   <header class="toolbar" role="toolbar" aria-label="Explorer Toolbar">
     <div class="btn-group">
-      <button onclick="goUp()" id="btn-up" aria-label="Go Up Directory" title="Go Up (Alt+Up)">
+      <button onclick="goUp()" id="btn-up" aria-label="Go Up Directory" title="Go Up (Alt+Up or Backspace)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
         Up
       </button>
-      <button onclick="refresh()" aria-label="Refresh Directory" title="Refresh">
+      <button onclick="refresh()" aria-label="Refresh Directory" title="Refresh (F5)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         Refresh
       </button>
@@ -262,11 +315,11 @@
 
     <div class="address-bar">
       <span style="font-size:12px; color: var(--text-muted); margin-right:4px;">Path:</span>
-      <input type="text" id="path-input" aria-label="Current Directory Path" spellcheck="false">
+      <input type="text" id="path-input" aria-label="Current Directory Path" spellcheck="false" placeholder="/">
     </div>
 
     <div class="search-box">
-      <input type="text" id="search-input" placeholder="Search..." aria-label="Search files and folders" oninput="onSearchChange()">
+      <input type="text" id="search-input" placeholder="Search (/)..." aria-label="Search files and folders" oninput="onSearchChange()">
     </div>
 
     <select id="view-mode" onchange="toggleViewMode(this.value)" aria-label="View Mode">
@@ -274,6 +327,10 @@
       <option value="list">List View</option>
     </select>
   </header>
+
+  <nav class="breadcrumb-bar" aria-label="Breadcrumbs Navigation">
+    <div class="breadcrumbs" id="breadcrumbs" role="navigation" aria-label="Folder Path"></div>
+  </nav>
 
   <main class="main-content">
     <div class="file-list" id="list" tabindex="0" role="grid" aria-label="File List"></div>
@@ -284,6 +341,8 @@
     <span id="status-right">Path: /</span>
   </footer>
 
+  <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+
   <script>
     let currentReqId = 0;
     const callbacks = {};
@@ -292,6 +351,7 @@
     let viewMode = 'icon';
     let selectedIndex = -1;
     let currentRenderedItems = [];
+    let toastTimer = null;
 
     const RENDER_LIMIT = 500; // File bound limit to prevent DOM freeze
 
@@ -306,6 +366,17 @@
       }
     });
 
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      if (!toast) return;
+      toast.textContent = text;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
     function sendToOS(msg) {
       return new Promise((resolve) => {
         const id = ++currentReqId;
@@ -315,14 +386,25 @@
         } else {
           // Local fallback simulation if running standalone
           setTimeout(() => {
-            if (msg.type === 'VFS_LIST') resolve(allVfsFiles.length ? allVfsFiles : ['/welcome.txt', '/docs/readme.md']);
-            else resolve(true);
+            if (msg.type === 'VFS_LIST') {
+              if (!allVfsFiles.length) {
+                allVfsFiles = ['/welcome.txt', '/docs/readme.md', '/pictures/wallpaper.png', '/music/theme.wav', '/data/records.csv'];
+              }
+              resolve([...allVfsFiles]);
+            } else if (msg.type === 'VFS_WRITE') {
+              if (msg.path && !allVfsFiles.includes(msg.path)) {
+                allVfsFiles.push(msg.path);
+              }
+              resolve(true);
+            } else {
+              resolve(true);
+            }
           }, 50);
         }
       });
     }
 
-    // Path normalization and path traversal security guard
+    // Path normalization and directory traversal safety guard
     function normalizePath(p) {
       if (typeof p !== 'string') return '/';
       let clean = p.replace(/\\/g, '/');
@@ -352,12 +434,14 @@
     function goUp() {
       if (currentPath === '/') return;
       currentPath = normalizePath(currentPath + '../');
+      document.getElementById('search-input').value = '';
       refresh();
     }
 
     document.getElementById('path-input').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         currentPath = normalizePath(e.target.value);
+        document.getElementById('search-input').value = '';
         refresh();
       }
     });
@@ -370,28 +454,169 @@
       const name = prompt('Enter new file name:', 'new_document.txt');
       if (!name || !name.trim()) return;
       const cleanName = name.trim().replace(/[\\/]/g, '');
+      if (!cleanName || cleanName === '.' || cleanName === '..') {
+        alert('Please enter a valid file name without slashes.');
+        return;
+      }
       const fullPath = normalizePath(currentPath) + cleanName;
       await sendToOS({ type: 'VFS_WRITE', path: fullPath, data: '' });
       await refresh();
+      showToast(`Created file: ${cleanName}`);
     }
 
     async function createNewFolder() {
       const name = prompt('Enter new folder name:', 'New Folder');
       if (!name || !name.trim()) return;
       const cleanName = name.trim().replace(/[\\/]/g, '');
+      if (!cleanName || cleanName === '.' || cleanName === '..') {
+        alert('Please enter a valid folder name without slashes.');
+        return;
+      }
       const fullPath = normalizePath(currentPath + cleanName + '/') + '.keep';
       await sendToOS({ type: 'VFS_WRITE', path: fullPath, data: '' });
       await refresh();
+      showToast(`Created folder: ${cleanName}`);
+    }
+
+    function renderBreadcrumbs() {
+      const container = document.getElementById('breadcrumbs');
+      if (!container) return;
+      container.innerHTML = '';
+
+      // Crumb for Root
+      const rootCrumb = document.createElement('span');
+      rootCrumb.className = 'crumb';
+      rootCrumb.textContent = '/ (Root)';
+      rootCrumb.tabIndex = 0;
+      rootCrumb.setAttribute('role', 'button');
+      rootCrumb.setAttribute('aria-label', 'Navigate to Root directory');
+      if (currentPath === '/') {
+        rootCrumb.setAttribute('aria-current', 'location');
+        rootCrumb.style.fontWeight = '600';
+      }
+
+      const goToRoot = () => {
+        if (currentPath !== '/') {
+          currentPath = '/';
+          document.getElementById('search-input').value = '';
+          refresh();
+        }
+      };
+      rootCrumb.onclick = goToRoot;
+      rootCrumb.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          goToRoot();
+        }
+      };
+      container.appendChild(rootCrumb);
+
+      if (currentPath === '/') return;
+
+      const parts = currentPath.split('/').filter(Boolean);
+      let pathAccum = '/';
+
+      parts.forEach((part, idx) => {
+        pathAccum += part + '/';
+        const targetPath = pathAccum;
+
+        const sep = document.createElement('span');
+        sep.className = 'crumb-sep';
+        sep.textContent = '›';
+        container.appendChild(sep);
+
+        const crumb = document.createElement('span');
+        crumb.className = 'crumb';
+        crumb.textContent = part;
+        crumb.tabIndex = 0;
+        crumb.setAttribute('role', 'button');
+        crumb.setAttribute('aria-label', `Navigate to ${part}`);
+
+        if (idx === parts.length - 1) {
+          crumb.setAttribute('aria-current', 'location');
+          crumb.style.fontWeight = '600';
+        }
+
+        const navigateToThis = () => {
+          currentPath = targetPath;
+          document.getElementById('search-input').value = '';
+          refresh();
+        };
+        crumb.onclick = navigateToThis;
+        crumb.onkeydown = (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            navigateToThis();
+          }
+        };
+        container.appendChild(crumb);
+      });
     }
 
     async function refresh() {
       currentPath = normalizePath(currentPath);
       document.getElementById('path-input').value = currentPath;
       document.getElementById('btn-up').disabled = (currentPath === '/');
+      renderBreadcrumbs();
 
       const files = await sendToOS({ type: 'VFS_LIST' });
       allVfsFiles = files || [];
       renderCurrentView();
+    }
+
+    function getAppForFile(fileName) {
+      const lower = fileName.toLowerCase();
+      if (lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.gif') || lower.endsWith('.bmp') || lower.endsWith('.ico') || lower.endsWith('.svg') || lower.endsWith('.webp')) {
+        return 'kpaint';
+      }
+      if (lower.endsWith('.wav') || lower.endsWith('.mp3') || lower.endsWith('.ogg') || lower.endsWith('.mid') || lower.endsWith('.m4a') || lower.endsWith('.flac')) {
+        return 'kaudio';
+      }
+      if (lower.endsWith('.mp4') || lower.endsWith('.webm') || lower.endsWith('.avi') || lower.endsWith('.mov') || lower.endsWith('.mkv')) {
+        return 'kmedia';
+      }
+      if (lower.endsWith('.zip') || lower.endsWith('.kza') || lower.endsWith('.gz') || lower.endsWith('.tar') || lower.endsWith('.7z')) {
+        return 'kzip';
+      }
+      if (lower.endsWith('.hex') || lower.endsWith('.bin') || lower.endsWith('.dat')) {
+        return 'khex';
+      }
+      if (lower.endsWith('.csv') || lower.endsWith('.db') || lower.endsWith('.tsv')) {
+        return 'kdb';
+      }
+      if (lower.endsWith('.ks')) {
+        return 'kscript';
+      }
+      if (lower.endsWith('.pdf')) {
+        return 'kread';
+      }
+      if (lower.endsWith('.exe')) {
+        if (lower === 'quarantine.exe') return 'kquarantine';
+        const base = lower.replace(/\.exe$/, '');
+        const knownApps = ['kpad', 'kcalc', 'kpaint', 'kmine', 'kclock', 'ktask', 'kbbs', 'krogue', 'ksnake', 'ktetris', 'kpong', 'kterm', 'kmaze', 'kaudio', 'kradio', 'kcalendar', 'ksolitaire', 'kspace', 'kpac', 'kmail', 'kmedia', 'kimage', 'knet', 'kdb', 'kscript', 'kchess', 'ktype', 'kchart', 'kzip', 'knote', 'kcolor', 'kpass', 'kping', 'khex', 'ksys', 'kmandel', 'ktimer', 'ksynth', 'kfont', 'kconverter', 'ktodo', 'kgraph', 'kcontacts', 'kread', 'kbase', 'kvault', 'kjournal', 'kbreakout', 'kbudget', 'khabit', 'kflash', 'k2048', 'ksudoku', 'kconnect4', 'khangman', 'ksimon', 'kasteroids', 'kfreecell', 'kmatch3', 'kwords', 'kgo', 'kdarts', 'ktowers', 'kreversi', 'kquest', 'kstarship', 'kalchemy', 'kfortress', 'kcolony', 'kfarm', 'kwizard', 'kvoid', 'kdragon', 'kmech', 'kcyber', 'ktrader'];
+        if (knownApps.includes(base)) return base;
+        return 'kpad';
+      }
+      return 'kpad';
+    }
+
+    function launchItem(item) {
+      if (item.isUp) {
+        goUp();
+        return;
+      }
+      if (item.isFolder) {
+        currentPath = normalizePath(item.fullPath);
+        document.getElementById('search-input').value = '';
+        refresh();
+        return;
+      }
+      const appId = getAppForFile(item.name);
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'OS_LAUNCH_APP', appId: appId, path: item.fullPath }, '*');
+      } else {
+        showToast(`Opening "${item.name}" in ${appId.toUpperCase()}...`);
+      }
     }
 
     function renderCurrentView() {
@@ -409,10 +634,22 @@
         const normF = f.startsWith('/') ? f : '/' + f;
 
         if (searchVal) {
-          // Search mode across all files
+          // Search mode across all files and directories
           const fileName = normF.split('/').pop();
-          if (fileName.toLowerCase().includes(searchVal)) {
+          if (fileName && fileName !== '.keep' && fileName.toLowerCase().includes(searchVal)) {
             filesToShow.push({ name: fileName, fullPath: normF, isFolder: false });
+          }
+
+          // Check directories in path
+          const parts = normF.split('/').filter(Boolean);
+          let currentDir = '/';
+          for (let i = 0; i < parts.length - 1; i++) {
+            const dirName = parts[i];
+            currentDir += dirName + '/';
+            if (dirName.toLowerCase().includes(searchVal) && !itemsInDir.has(currentDir)) {
+              itemsInDir.add(currentDir);
+              foldersToShow.push({ name: dirName, fullPath: currentDir, isFolder: true });
+            }
           }
         } else {
           // Folder navigation mode
@@ -423,13 +660,14 @@
             const parts = remaining.split('/');
             if (parts.length === 1) {
               if (parts[0] !== '.keep') {
-                filesToShow.push({ name: parts[0], fullPath: f, isFolder: false });
+                filesToShow.push({ name: parts[0], fullPath: normF, isFolder: false });
               }
             } else {
               const folderName = parts[0];
+              const folderPath = currentPath + folderName + '/';
               if (!itemsInDir.has(folderName)) {
                 itemsInDir.add(folderName);
-                foldersToShow.push(folderName);
+                foldersToShow.push({ name: folderName, fullPath: folderPath, isFolder: true });
               }
             }
           }
@@ -437,7 +675,7 @@
       });
 
       // Sort folders and files alphabetically
-      foldersToShow.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+      foldersToShow.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
       filesToShow.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
 
       // Add ".." up item if not at root and not searching
@@ -445,8 +683,8 @@
         currentRenderedItems.push({ name: '..', isUp: true });
       }
 
-      foldersToShow.forEach(fName => {
-        currentRenderedItems.push({ name: fName, isFolder: true, fullPath: currentPath + fName + '/' });
+      foldersToShow.forEach(folderObj => {
+        currentRenderedItems.push(folderObj);
       });
 
       filesToShow.forEach(fileObj => {
@@ -458,7 +696,7 @@
       const itemsToRender = currentRenderedItems.slice(0, RENDER_LIMIT);
 
       if (itemsToRender.length === 0) {
-        list.innerHTML = `<div class="empty-msg">${searchVal ? 'No matching files found.' : 'Directory is empty.'}</div>`;
+        list.innerHTML = `<div class="empty-msg">${searchVal ? 'No matching files or folders found.' : 'Directory is empty.'}</div>`;
         updateStatus(0, totalItems);
         return;
       }
@@ -471,57 +709,54 @@
         domItem.setAttribute('aria-rowindex', index + 1);
 
         let iconSvg = '';
-        let labelName = item.name;
-        const escName = item.name.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 
         if (item.isUp) {
           domItem.setAttribute('aria-label', 'Go up one directory');
           iconSvg = `<div class="file-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffd700" stroke-width="2"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/><path d="M12 16V10M9 13l3-3 3 3"/></svg></div>`;
-          domItem.ondblclick = goUp;
+          domItem.ondblclick = () => launchItem(item);
         } else if (item.isFolder) {
           domItem.setAttribute('aria-label', `Folder: ${item.name}`);
           iconSvg = `<div class="file-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffd700" stroke-width="2"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg></div>`;
-          domItem.ondblclick = () => {
-            currentPath = normalizePath(currentPath + item.name + '/');
-            document.getElementById('search-input').value = '';
-            refresh();
-          };
+          domItem.ondblclick = () => launchItem(item);
         } else {
           domItem.setAttribute('aria-label', `File: ${item.name}`);
           const lowerName = item.name.toLowerCase();
-          if (lowerName.endsWith('.txt') || lowerName.endsWith('.md') || lowerName.endsWith('.log') || lowerName.endsWith('.json') || lowerName.endsWith('.js') || lowerName.endsWith('.c')) {
+          if (lowerName.endsWith('.txt') || lowerName.endsWith('.md') || lowerName.endsWith('.log') || lowerName.endsWith('.json') || lowerName.endsWith('.js') || lowerName.endsWith('.c') || lowerName.endsWith('.h') || lowerName.endsWith('.html') || lowerName.endsWith('.css') || lowerName.endsWith('.ini')) {
             iconSvg = `<div class="file-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg></div>`;
-          } else if (lowerName.endsWith('.png') || lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg') || lowerName.endsWith('.gif') || lowerName.endsWith('.ico') || lowerName.endsWith('.bmp')) {
+          } else if (lowerName.endsWith('.png') || lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg') || lowerName.endsWith('.gif') || lowerName.endsWith('.ico') || lowerName.endsWith('.bmp') || lowerName.endsWith('.svg') || lowerName.endsWith('.webp')) {
             iconSvg = `<div class="file-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
-          } else if (lowerName.endsWith('.wav') || lowerName.endsWith('.mp3') || lowerName.endsWith('.ogg') || lowerName.endsWith('.mid')) {
+          } else if (lowerName.endsWith('.wav') || lowerName.endsWith('.mp3') || lowerName.endsWith('.ogg') || lowerName.endsWith('.mid') || lowerName.endsWith('.m4a') || lowerName.endsWith('.flac')) {
             iconSvg = `<div class="file-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e91e63" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`;
-          } else if (lowerName.endsWith('.zip') || lowerName.endsWith('.gz') || lowerName.endsWith('.tar')) {
+          } else if (lowerName.endsWith('.mp4') || lowerName.endsWith('.webm') || lowerName.endsWith('.avi') || lowerName.endsWith('.mov') || lowerName.endsWith('.mkv')) {
+            iconSvg = `<div class="file-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2.18" ry="2.18"/><line x1="7" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="17" y2="20"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg></div>`;
+          } else if (lowerName.endsWith('.zip') || lowerName.endsWith('.kza') || lowerName.endsWith('.gz') || lowerName.endsWith('.tar') || lowerName.endsWith('.7z')) {
             iconSvg = `<div class="file-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff9800" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>`;
+          } else if (lowerName.endsWith('.hex') || lowerName.endsWith('.bin') || lowerName.endsWith('.dat')) {
+            iconSvg = `<div class="file-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></div>`;
+          } else if (lowerName.endsWith('.csv') || lowerName.endsWith('.db') || lowerName.endsWith('.tsv')) {
+            iconSvg = `<div class="file-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#14b8a6" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>`;
+          } else if (lowerName.endsWith('.exe')) {
+            iconSvg = `<div class="file-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>`;
           } else {
             const ext = item.name.includes('.') ? item.name.split('.').pop().toUpperCase() : 'FILE';
             iconSvg = `<div class="file-icon">${ext.substring(0, 4)}</div>`;
           }
 
-          domItem.ondblclick = () => {
-            let appId = 'kpad';
-            if (lowerName.endsWith('.png') || lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg') || lowerName.endsWith('.ico') || lowerName.endsWith('.bmp')) {
-              appId = 'kpaint';
-            } else if (lowerName.endsWith('.wav') || lowerName.endsWith('.mp3') || lowerName.endsWith('.ogg') || lowerName.endsWith('.mid')) {
-              appId = 'kaudio';
-            } else if (lowerName.endsWith('.zip')) {
-              appId = 'kzip';
-            } else if (lowerName.endsWith('quarantine.exe')) {
-              appId = 'kquarantine';
-            }
-            window.parent.postMessage({ type: 'OS_LAUNCH_APP', appId: appId, path: item.fullPath }, '*');
-          };
+          domItem.ondblclick = () => launchItem(item);
         }
 
         domItem.onclick = () => selectItem(index);
         domItem.onfocus = () => selectItem(index);
         domItem.onkeydown = (e) => handleKeyNavigation(e, index, item);
 
-        domItem.innerHTML = `${iconSvg}<div class="file-name" title="${escName}">${escName}</div>`;
+        // Safe DOM creation preventing XSS
+        domItem.innerHTML = iconSvg;
+        const nameEl = document.createElement('div');
+        nameEl.className = 'file-name';
+        nameEl.title = item.name;
+        nameEl.textContent = item.name;
+        domItem.appendChild(nameEl);
+
         list.appendChild(domItem);
       });
 
@@ -540,6 +775,11 @@
         }
       });
       selectedIndex = index;
+      const item = currentRenderedItems[index];
+      if (item) {
+        const detail = item.isUp ? 'Parent Directory' : item.isFolder ? 'Folder' : (item.name.includes('.') ? item.name.split('.').pop().toUpperCase() + ' File' : 'File');
+        document.getElementById('status-left').textContent = `Selected: ${item.name} (${detail})`;
+      }
     }
 
     function handleKeyNavigation(e, index, item) {
@@ -547,7 +787,7 @@
       if (!items.length) return;
 
       let nextIndex = index;
-      const columns = viewMode === 'list' ? 1 : Math.floor(document.getElementById('list').clientWidth / 100) || 1;
+      const columns = viewMode === 'list' ? 1 : Math.max(1, Math.floor(document.getElementById('list').clientWidth / 100));
 
       if (e.key === 'ArrowRight') {
         nextIndex = Math.min(items.length - 1, index + 1);
@@ -573,7 +813,7 @@
         e.preventDefault();
       } else if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        items[index].ondblclick ? items[index].ondblclick() : null;
+        launchItem(item);
         return;
       } else if (e.key === 'Backspace') {
         if (document.activeElement.tagName !== 'INPUT') {
@@ -589,10 +829,53 @@
       }
     }
 
+    // Global keyboard shortcuts
+    window.addEventListener('keydown', (e) => {
+      const activeTag = document.activeElement ? document.activeElement.tagName : '';
+      const isInput = activeTag === 'INPUT' || activeTag === 'SELECT' || activeTag === 'TEXTAREA';
+
+      if (e.key === 'F5' || (e.ctrlKey && e.key.toLowerCase() === 'r')) {
+        e.preventDefault();
+        refresh();
+      } else if ((e.ctrlKey && e.key.toLowerCase() === 'f') || (!isInput && e.key === '/')) {
+        e.preventDefault();
+        const searchInput = document.getElementById('search-input');
+        searchInput.focus();
+        searchInput.select();
+      } else if (e.key === 'Escape') {
+        const searchInput = document.getElementById('search-input');
+        if (document.activeElement === searchInput) {
+          searchInput.value = '';
+          renderCurrentView();
+          document.getElementById('list').focus();
+        }
+      } else if ((e.ctrlKey && e.key.toLowerCase() === 'l') || (e.altKey && e.key.toLowerCase() === 'd')) {
+        e.preventDefault();
+        const pathInput = document.getElementById('path-input');
+        pathInput.focus();
+        pathInput.select();
+      } else if (e.altKey && e.key === 'ArrowUp') {
+        e.preventDefault();
+        goUp();
+      }
+    });
+
+    document.getElementById('list').addEventListener('focus', () => {
+      if (selectedIndex === -1 && currentRenderedItems.length > 0) {
+        selectItem(0);
+        const firstItem = document.querySelector('.file-item');
+        if (firstItem) firstItem.focus();
+      }
+    });
+
     function updateStatus(renderedCount, totalCount) {
-      const leftStr = totalCount > RENDER_LIMIT 
+      const searchVal = document.getElementById('search-input').value.trim();
+      let leftStr = totalCount > RENDER_LIMIT 
         ? `Showing ${renderedCount} of ${totalCount} items (Limit ${RENDER_LIMIT})` 
         : `${totalCount} item${totalCount === 1 ? '' : 's'}`;
+      if (searchVal) {
+        leftStr += ` (filtered by "${searchVal}")`;
+      }
       document.getElementById('status-left').textContent = leftStr;
       document.getElementById('status-right').textContent = `Path: ${currentPath}`;
     }
