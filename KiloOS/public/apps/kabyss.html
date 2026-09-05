@@ -1,0 +1,531 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAbyss - Abyssal Dungeon Crawler</title>
+    <style>
+        :root {
+            --bg-abyss: #07090e;
+            --bg-panel: #0d121d;
+            --bg-panel-dark: #090c14;
+            --bg-card: #131a29;
+            --border-dungeon: #1e293b;
+            --border-glow: #38bdf8;
+            --text-primary: #cbd5e1;
+            --text-bright: #f8fafc;
+            --text-dim: #64748b;
+            --text-gold: #fbbf24;
+            --text-rune: #818cf8;
+            --accent-crimson: #ef4444;
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-purple: #a855f7;
+            --accent-amber: #f59e0b;
+            --font-mono: 'Consolas', 'Courier New', Courier, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-abyss);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 13px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Header Bar */
+        header {
+            background-color: var(--bg-panel-dark);
+            border-bottom: 1px solid var(--border-dungeon);
+            padding: 8px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .title {
+            font-weight: bold;
+            font-size: 16px;
+            color: var(--text-bright);
+            letter-spacing: 1px;
+            text-shadow: 0 0 8px rgba(129, 140, 248, 0.5);
+        }
+
+        .subtitle {
+            color: var(--text-dim);
+            font-size: 11px;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .stat-badge {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dungeon);
+            padding: 4px 10px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-badge span.label {
+            color: var(--text-dim);
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .stat-badge span.val {
+            font-weight: bold;
+            color: var(--text-bright);
+        }
+
+        .val-hp { color: var(--accent-crimson) !important; }
+        .val-sanity { color: var(--accent-cyan) !important; }
+        .val-gold { color: var(--text-gold) !important; }
+        .val-depth { color: var(--accent-purple) !important; }
+
+        /* Main Workspace */
+        .workspace {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Left Side: Dungeon Canvas & Controls */
+        .viewport-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #04060a;
+            position: relative;
+            border-right: 1px solid var(--border-dungeon);
+        }
+
+        .canvas-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        canvas#dungeonCanvas {
+            background: #020305;
+            box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.9);
+            border: 1px solid #111827;
+        }
+
+        .overlay-hud {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(13, 18, 29, 0.85);
+            border: 1px solid var(--border-dungeon);
+            border-radius: 4px;
+            padding: 8px 12px;
+            backdrop-filter: blur(4px);
+            pointer-events: none;
+        }
+
+        .overlay-hud .zone-title {
+            color: var(--text-rune);
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .overlay-hud .zone-sub {
+            color: var(--text-dim);
+            font-size: 11px;
+        }
+
+        /* Viewport Bottom Controls */
+        .viewport-toolbar {
+            background: var(--bg-panel-dark);
+            border-top: 1px solid var(--border-dungeon);
+            padding: 6px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 6px;
+        }
+
+        button {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-dungeon);
+            padding: 5px 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            transition: all 0.15s ease;
+        }
+
+        button:hover {
+            background: #1e293b;
+            color: var(--text-bright);
+            border-color: var(--accent-cyan);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        button.btn-primary {
+            background: #1e1b4b;
+            border-color: #4338ca;
+            color: #c7d2fe;
+        }
+
+        button.btn-primary:hover {
+            background: #312e81;
+            border-color: #6366f1;
+            color: #fff;
+        }
+
+        /* Right Side Panels */
+        .sidebar {
+            width: 320px;
+            background: var(--bg-panel);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .tabs-header {
+            display: flex;
+            border-bottom: 1px solid var(--border-dungeon);
+            background: var(--bg-panel-dark);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 8px 4px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-dim);
+            font-size: 11px;
+            cursor: pointer;
+            border-radius: 0;
+            text-transform: uppercase;
+        }
+
+        .tab-btn.active {
+            color: var(--accent-cyan);
+            border-bottom-color: var(--accent-cyan);
+            background: var(--bg-panel);
+            font-weight: bold;
+        }
+
+        .tab-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .panel-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dungeon);
+            border-radius: 4px;
+            padding: 10px;
+        }
+
+        .section-header {
+            font-weight: bold;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-rune);
+            margin-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 4px;
+        }
+
+        /* Message Log */
+        .log-section {
+            height: 180px;
+            background: var(--bg-panel-dark);
+            border-top: 1px solid var(--border-dungeon);
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .log-header {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .log-messages {
+            flex: 1;
+            overflow-y: auto;
+            font-size: 11px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .log-msg {
+            color: var(--text-dim);
+            line-height: 1.3;
+        }
+
+        .log-msg.important { color: var(--accent-amber); }
+        .log-msg.combat { color: var(--accent-crimson); }
+        .log-msg.magic { color: var(--accent-cyan); }
+        .log-msg.relic { color: var(--accent-purple); }
+
+        /* Equipment / Item Slots */
+        .grid-slots {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .slot {
+            aspect-ratio: 1;
+            background: #0a0e17;
+            border: 1px dashed var(--border-dungeon);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .slot:hover {
+            border-color: var(--accent-cyan);
+            color: var(--text-bright);
+        }
+
+        .slot.occupied {
+            border-style: solid;
+            border-color: #334155;
+            background: #111827;
+            color: var(--text-primary);
+        }
+
+        /* Footer Status */
+        footer {
+            background: var(--bg-panel-dark);
+            border-top: 1px solid var(--border-dungeon);
+            padding: 4px 12px;
+            font-size: 10px;
+            color: var(--text-dim);
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <div class="title">⚔️ KABYSS</div>
+            <div class="subtitle">Abyssal Crypt Crawler v0.1</div>
+        </div>
+        <div class="stats-bar">
+            <div class="stat-badge">
+                <span class="label">Depth</span>
+                <span class="val val-depth" id="statDepth">B1: Catacombs</span>
+            </div>
+            <div class="stat-badge">
+                <span class="label">HP</span>
+                <span class="val val-hp" id="statHp">100 / 100</span>
+            </div>
+            <div class="stat-badge">
+                <span class="label">Sanity</span>
+                <span class="val val-sanity" id="statSanity">100 / 100</span>
+            </div>
+            <div class="stat-badge">
+                <span class="label">Essence</span>
+                <span class="val val-gold" id="statGold">0 ✦</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="workspace">
+        <div class="viewport-container">
+            <div class="canvas-wrapper">
+                <canvas id="dungeonCanvas" width="640" height="480"></canvas>
+                <div class="overlay-hud">
+                    <div class="zone-title" id="hudZoneName">Forgotten Crypts - Entryway</div>
+                    <div class="zone-sub" id="hudZoneSub">Turn: 1 | Light: 100% | Danger: Low</div>
+                </div>
+            </div>
+            <div class="viewport-toolbar">
+                <div class="btn-group">
+                    <button id="btnNewRun" class="btn-primary">⚡ New Descent</button>
+                    <button id="btnRest">⏳ Rest (Turn)</button>
+                    <button id="btnSearch">🔍 Search Area</button>
+                </div>
+                <div class="btn-group">
+                    <button id="btnHelp">📖 Delver's Tome</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="tabs-header">
+                <button class="tab-btn active" data-tab="hero">Delver</button>
+                <button class="tab-btn" data-tab="inventory">Relics</button>
+                <button class="tab-btn" data-tab="runes">Runes</button>
+            </div>
+
+            <div class="tab-content" id="tabDelver">
+                <div class="panel-section">
+                    <div class="section-header">Delver Attributes</div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                        <span>Class:</span>
+                        <strong style="color:var(--accent-purple)">Rune Knight</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                        <span>Might:</span>
+                        <strong>14 (+2)</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                        <span>Warding:</span>
+                        <strong>12 (+1)</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                        <span>Arcana:</span>
+                        <strong>16 (+3)</strong>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <div class="section-header">Equipped Gear</div>
+                    <div class="grid-slots">
+                        <div class="slot occupied" title="Runic Longsword">🗡️<br>Blade</div>
+                        <div class="slot occupied" title="Abyssal Mail">🛡️<br>Armor</div>
+                        <div class="slot" title="Empty Trinket Slot">💍<br>Ring</div>
+                        <div class="slot" title="Empty Amulet Slot">📿<br>Amulet</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="log-section">
+                <div class="log-header">
+                    <span>Abyssal Chronicle</span>
+                    <span id="turnCounter">Turn: 1</span>
+                </div>
+                <div class="log-messages" id="logContainer">
+                    <div class="log-msg important">You step downward into the abyssal depths...</div>
+                    <div class="log-msg">The cold subterranean air chills your spine.</div>
+                    <div class="log-msg magic">Your ancient rune pulses with dim luminescence.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div>WASD/Arrows: Navigate • Space: Rest • E: Interact • R: Cast Rune</div>
+        <div>KAbyss Engine ready. Phase 1 scaffold initialized.</div>
+    </footer>
+
+    <script>
+        // KAbyss Web Engine Skeleton
+        const canvas = document.getElementById('dungeonCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function renderInitialScaffold() {
+            ctx.fillStyle = '#020305';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw grid backdrop preview
+            ctx.strokeStyle = '#0e1726';
+            ctx.lineWidth = 1;
+            const tileSize = 32;
+            for (let x = 0; x < canvas.width; x += tileSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += tileSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // Draw placeholder dungeon room preview
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(tileSize * 4, tileSize * 3, tileSize * 12, tileSize * 8);
+            ctx.strokeStyle = '#334155';
+            ctx.strokeRect(tileSize * 4, tileSize * 3, tileSize * 12, tileSize * 8);
+
+            // Draw player placeholder
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath();
+            ctx.arc(tileSize * 10, tileSize * 7, 10, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Delver glow
+            const radGrad = ctx.createRadialGradient(tileSize * 10, tileSize * 7, 5, tileSize * 10, tileSize * 7, 60);
+            radGrad.addColorStop(0, 'rgba(56, 189, 248, 0.4)');
+            radGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+            ctx.fillStyle = radGrad;
+            ctx.beginPath();
+            ctx.arc(tileSize * 10, tileSize * 7, 60, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = '12px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('@ (Hero)', tileSize * 10, tileSize * 7 - 14);
+        }
+
+        window.addEventListener('load', () => {
+            renderInitialScaffold();
+        });
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

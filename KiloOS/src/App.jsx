@@ -103,7 +103,8 @@ const APPS = [
   { id: 'kstellar', title: 'KStellar', url: '/apps/kstellar.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kstellar.ico', w: 800, h: 600, folder: 'Games' },
   { id: 'ksanctuary', title: 'KSanctuary', url: '/apps/ksanctuary.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksanctuary.ico', w: 850, h: 650, folder: 'Games' },
   { id: 'ksubmarine', title: 'KSubmarine', url: '/apps/ksubmarine.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksubmarine.ico', w: 850, h: 650, folder: 'Games' },
-  { id: 'kstardredge', title: 'KStarDredge', url: '/apps/kstardredge.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kstardredge.ico', w: 900, h: 680, folder: 'Games' }
+  { id: 'kstardredge', title: 'KStarDredge', url: '/apps/kstardredge.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kstardredge.ico', w: 900, h: 680, folder: 'Games' },
+  { id: 'kabyss', title: 'KAbyss', url: '/apps/kabyss.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kabyss.ico', w: 920, h: 680, folder: 'Games' }
 ];
 
 function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModal, openApps, closeApp }) {
