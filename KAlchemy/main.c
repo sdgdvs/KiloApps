@@ -1508,17 +1508,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hGoldPen = CreatePen(PS_SOLID, 1, RGB(241, 196, 15));
             hInnerGlowPen = CreatePen(PS_SOLID, 1, RGB(176, 92, 219));
 
-            hTitleFont = CreateFontA(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
-            hHeaderFont = CreateFontA(15, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
-            hUIFont = CreateFontA(13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
-            hSlotFont = CreateFontA(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
-            hBadgeFont = CreateFontA(11, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hTitleFont = CreateFontA(-20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hHeaderFont = CreateFontA(-15, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hUIFont = CreateFontA(-13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hSlotFont = CreateFontA(-14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hBadgeFont = CreateFontA(-11, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
 
-            g_hTierButtons[0] = CreateWindowA("BUTTON", "All", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 30, 96, 32, 22, hwnd, (HMENU)500, NULL, NULL);
+            g_hTierButtons[0] = CreateWindowA("BUTTON", "All [0]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 25, 96, 40, 22, hwnd, (HMENU)500, NULL, NULL);
             for (int t = 1; t <= TOTAL_TIERS; t++) {
                 char tStr[16];
-                wsprintfA(tStr, "T%d", t);
-                g_hTierButtons[t] = CreateWindowA("BUTTON", tStr, WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 30 + t * 33, 96, 31, 22, hwnd, (HMENU)(UINT_PTR)(500 + t), NULL, NULL);
+                wsprintfA(tStr, "T%d [%d]", t, t);
+                g_hTierButtons[t] = CreateWindowA("BUTTON", tStr, WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 25 + 42 + (t - 1) * 33, 96, 31, 22, hwnd, (HMENU)(UINT_PTR)(500 + t), NULL, NULL);
             }
 
             g_hSearchEdit = CreateWindowA("EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
@@ -1534,9 +1534,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     x, y, 110, 34, hwnd, (HMENU)(UINT_PTR)(100 + k), NULL, NULL);
             }
 
-            g_hPrevButton = CreateWindowA("BUTTON", "< Prev", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 30, 348, 65, 26, hwnd, (HMENU)601, NULL, NULL);
-            g_hPageText = CreateWindowA("STATIC", "1/1", WS_CHILD | WS_VISIBLE | SS_CENTER, 100, 353, 85, 20, hwnd, (HMENU)602, NULL, NULL);
-            g_hNextButton = CreateWindowA("BUTTON", "Next >", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 190, 348, 65, 26, hwnd, (HMENU)602, NULL, NULL);
+            g_hPrevButton = CreateWindowA("BUTTON", "< Prev [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 25, 348, 70, 26, hwnd, (HMENU)601, NULL, NULL);
+            g_hPageText = CreateWindowA("STATIC", "1/1", WS_CHILD | WS_VISIBLE | SS_CENTER, 98, 353, 85, 20, hwnd, (HMENU)602, NULL, NULL);
+            g_hNextButton = CreateWindowA("BUTTON", "Next [N] >", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 185, 348, 70, 26, hwnd, (HMENU)602, NULL, NULL);
 
             UpdateGrimoireGrid();
 
@@ -1612,7 +1612,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 g_hFamiliarFeedButtons[fa] = CreateWindowA("BUTTON", "Feed", WS_CHILD | BS_PUSHBUTTON,
                     435, 168 + fa * 36, 65, 22, hwnd, (HMENU)(UINT_PTR)(1910 + fa), NULL, NULL);
             }
-            g_hFamiliarBurstButton = CreateWindowA("BUTTON", "🔥 ACTIVATE FAMILIAR BURST", WS_CHILD | BS_PUSHBUTTON,
+            g_hFamiliarBurstButton = CreateWindowA("BUTTON", "🔥 ACTIVATE BURST [F]", WS_CHILD | BS_PUSHBUTTON,
                 285, 360, 215, 30, hwnd, (HMENU)1920, NULL, NULL);
 
             SetTimer(hwnd, 1, 1000, NULL);
@@ -1623,13 +1623,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_hUpgradeButtons[2] = CreateWindowA("BUTTON", "Upgrade", WS_CHILD | BS_PUSHBUTTON, 432, 282, 65, 24, hwnd, (HMENU)902, NULL, NULL);
             g_hUpgradeButtons[3] = CreateWindowA("BUTTON", "Upgrade", WS_CHILD | BS_PUSHBUTTON, 432, 342, 65, 24, hwnd, (HMENU)903, NULL, NULL);
 
-            g_hAutoFillButton = CreateWindowA("BUTTON", "⚡ Auto", WS_CHILD | BS_PUSHBUTTON, 280, 315, 46, 28, hwnd, (HMENU)904, NULL, NULL);
+            g_hAutoFillButton = CreateWindowA("BUTTON", "⚡ Auto [A]", WS_CHILD | BS_PUSHBUTTON, 275, 315, 52, 28, hwnd, (HMENU)904, NULL, NULL);
 
             g_hSlot1Button = CreateWindowA("BUTTON", "[ Slot 1 ]", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 295, 200, 90, 50, hwnd, (HMENU)301, NULL, NULL);
             g_hSlot2Button = CreateWindowA("BUTTON", "[ Slot 2 ]", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 400, 200, 90, 50, hwnd, (HMENU)302, NULL, NULL);
 
-            g_hMainActionButton = CreateWindowA("BUTTON", "✨ Transmute", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 315, 265, 155, 40, hwnd, (HMENU)201, NULL, NULL);
-            CreateWindowA("BUTTON", "Clear Crucible", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 330, 315, 125, 28, hwnd, (HMENU)202, NULL, NULL);
+            g_hMainActionButton = CreateWindowA("BUTTON", "✨ Transmute [Space]", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 315, 265, 155, 40, hwnd, (HMENU)201, NULL, NULL);
+            CreateWindowA("BUTTON", "Clear Crucible [C]", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 330, 315, 125, 28, hwnd, (HMENU)202, NULL, NULL);
             CreateWindowA("BUTTON", "Reset Progress", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 330, 350, 125, 26, hwnd, (HMENU)203, NULL, NULL);
 
             g_hQuestTurnInButtons[0] = CreateWindowA("BUTTON", "Turn In", WS_CHILD | BS_PUSHBUTTON, 430, 175, 65, 26, hwnd, (HMENU)800, NULL, NULL);
@@ -1637,13 +1637,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_hQuestTurnInButtons[2] = CreateWindowA("BUTTON", "Turn In", WS_CHILD | BS_PUSHBUTTON, 430, 315, 65, 26, hwnd, (HMENU)802, NULL, NULL);
             g_hQuestRerollButton = CreateWindowA("BUTTON", "🔄 Reroll (15 Gold)", WS_CHILD | BS_PUSHBUTTON, 325, 385, 140, 28, hwnd, (HMENU)803, NULL, NULL);
 
-            CreateWindowA("BUTTON", "💡 Hint (20)", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 285, 440, 105, 30, hwnd, (HMENU)204, NULL, NULL);
-            CreateWindowA("BUTTON", "👁️ Oracle (50)", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 395, 440, 105, 30, hwnd, (HMENU)205, NULL, NULL);
+            CreateWindowA("BUTTON", "💡 Hint [I] (20)", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 285, 440, 105, 30, hwnd, (HMENU)204, NULL, NULL);
+            CreateWindowA("BUTTON", "👁️ Oracle [O] (50)", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 395, 440, 105, 30, hwnd, (HMENU)205, NULL, NULL);
 
             g_hJournalEdit = CreateWindowA("EDIT", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_BORDER,
                 530, 96, 225, 415, hwnd, (HMENU)402, NULL, NULL);
 
-            AddJournalLog("Welcome Apprentice Alchemist!\r\nDiscover 60+ elements across 6 Tiers including Secret Mythic Combos!\r\n\r\nLaunch Guild Expeditions, forge Planetary Cores, and summon Elemental Familiars!");
+            AddJournalLog("Welcome Apprentice Alchemist!\r\nPress F1 or H at any time to open the Grandmaster Manual.\r\nPress Space to Transmute, C to Clear, A for Auto-Sorter, 0-6 for Tiers.\r\n\r\nLaunch Guild Expeditions, forge Planetary Cores, and summon Elemental Familiars!");
             break;
         }
 
@@ -1916,11 +1916,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id >= 700 && id <= 712) {
                 g_State.selectedEquipment = id - 700;
                 if (g_hMainActionButton) {
-                    if (g_State.selectedEquipment == 0) SetWindowTextA(g_hMainActionButton, "✨ Transmute");
-                    else if (g_State.selectedEquipment == 1) SetWindowTextA(g_hMainActionButton, "⚗️ Distill Retort");
-                    else if (g_State.selectedEquipment == 2) SetWindowTextA(g_hMainActionButton, "🧪 Extract Alembic");
-                    else if (g_State.selectedEquipment == 3) SetWindowTextA(g_hMainActionButton, "🔨 Crush Anvil");
-                    else if (g_State.selectedEquipment == 6) SetWindowTextA(g_hMainActionButton, "🥣 Brew Elixir");
+                    if (g_State.selectedEquipment == 0) SetWindowTextA(g_hMainActionButton, "✨ Transmute [Space]");
+                    else if (g_State.selectedEquipment == 1) SetWindowTextA(g_hMainActionButton, "⚗️ Distill Retort [Space]");
+                    else if (g_State.selectedEquipment == 2) SetWindowTextA(g_hMainActionButton, "🧪 Extract Alembic [Space]");
+                    else if (g_State.selectedEquipment == 3) SetWindowTextA(g_hMainActionButton, "🔨 Crush Anvil [Space]");
+                    else if (g_State.selectedEquipment == 6) SetWindowTextA(g_hMainActionButton, "🥣 Brew Elixir [Space]");
                 }
                 UpdateEquipmentUI(hwnd);
                 PlayGlassClink();
@@ -3640,15 +3640,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                     SelectObject(hdc, hHeaderFont);
                     SetTextColor(hdc, RGB(241, 196, 15));
-                    TextOutA(hdc, 35, 222, "Keyboard Shortcuts Reference:", 29);
+                    TextOutA(hdc, 35, 215, "Keyboard Shortcuts Reference:", 29);
 
                     SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
-                    TextOutA(hdc, 35, 246, "[1] - [6]  : Switch Tier Filters (T1 to T6)", 42);
-                    TextOutA(hdc, 35, 269, "[0]        : Show All Grimoire Elements", 38);
-                    TextOutA(hdc, 35, 292, "[C]        : Clear Crucible Slots", 33);
-                    TextOutA(hdc, 35, 315, "[A]        : Trigger Auto-Sorter Fill", 37);
-                    TextOutA(hdc, 35, 338, "[H]        : Open / Toggle Grandmaster Manual", 45);
-                    TextOutA(hdc, 35, 361, "[ESC]      : Close Manual Overlay", 33);
+                    TextOutA(hdc, 35, 235, "[Space] / [Enter] : Transmute / Activate Current Workstation", 60);
+                    TextOutA(hdc, 35, 253, "[1] - [6]         : Switch Tier Filters (T1 to T6)", 50);
+                    TextOutA(hdc, 35, 271, "[0]               : Show All Grimoire Elements", 46);
+                    TextOutA(hdc, 35, 289, "[C]               : Clear Crucible Slots", 40);
+                    TextOutA(hdc, 35, 307, "[A]               : Trigger Auto-Sorter Fill", 44);
+                    TextOutA(hdc, 35, 325, "[I] / [O]         : Research Hint (20) / Oracle Vision (50)", 59);
+                    TextOutA(hdc, 35, 343, "[F]               : Activate Familiar Burst Ability", 51);
+                    TextOutA(hdc, 35, 361, "[P] / [N]         : Previous / Next Grimoire Page", 49);
+                    TextOutA(hdc, 35, 379, "[F1] / [H]        : Open / Toggle Grandmaster Manual", 52);
+                    TextOutA(hdc, 35, 397, "[ESC]             : Close Manual / Clear Search", 47);
 
                 } else if (g_State.helpActiveTab == 3) {
                     SelectObject(hdc, hHeaderFont);
@@ -3735,7 +3739,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     RECT rect = { 0, 0, 800, 570 };
     AdjustWindowRect(&rect, dwStyle, FALSE);
 
-    HWND hwnd = CreateWindowA("KAlchemyClass", "KAlchemy - Fantasy Crafting & Element Discovery",
+    HWND hwnd = CreateWindowA("KAlchemyClass", "KAlchemy - Fantasy Crafting & Element Discovery (Press F1 or H for Manual)",
                                dwStyle,
                                CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top,
                                NULL, NULL, hInstance, NULL);
@@ -3745,6 +3749,55 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN) {
+            HWND hFocus = GetFocus();
+            int vk = (int)msg.wParam;
+            if (vk == VK_F1) {
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(1400, 0), 0);
+                continue;
+            } else if (vk == VK_ESCAPE) {
+                if (g_State.showHelpModal) {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(1405, 0), 0);
+                    continue;
+                } else if (hFocus == g_hSearchEdit) {
+                    SetWindowTextA(g_hSearchEdit, "");
+                    SetFocus(hwnd);
+                    continue;
+                }
+            } else if (hFocus != g_hSearchEdit) {
+                if (vk == 'H' || vk == 'h') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(1400, 0), 0);
+                    continue;
+                } else if (vk == 'C' || vk == 'c') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(202, 0), 0);
+                    continue;
+                } else if (vk == 'A' || vk == 'a') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(904, 0), 0);
+                    continue;
+                } else if (vk == 'I' || vk == 'i') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(204, 0), 0);
+                    continue;
+                } else if (vk == 'O' || vk == 'o') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(205, 0), 0);
+                    continue;
+                } else if (vk == 'F' || vk == 'f') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(1920, 0), 0);
+                    continue;
+                } else if (vk == 'P' || vk == 'p') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(601, 0), 0);
+                    continue;
+                } else if (vk == 'N' || vk == 'n') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(602, 0), 0);
+                    continue;
+                } else if (vk == VK_SPACE || vk == VK_RETURN) {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(201, 0), 0);
+                    continue;
+                } else if (vk >= '0' && vk <= '6') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(500 + (vk - '0'), 0), 0);
+                    continue;
+                }
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }

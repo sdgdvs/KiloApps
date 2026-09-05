@@ -625,7 +625,8 @@
       z-index: 100;
       opacity: 0;
       transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      pointer-events: none;
+      pointer-events: auto;
+      cursor: pointer;
     }
 
     .discovery-toast.show {
@@ -2284,7 +2285,7 @@
 
   <div class="app-main">
     <!-- Discovery Toast Notification -->
-    <div class="discovery-toast" id="discovery-toast">
+    <div class="discovery-toast" id="discovery-toast" onclick="this.classList.remove('show')" title="Click to dismiss">
       <span class="toast-icon" id="toast-icon">✨</span>
       <div>
         <div class="toast-title" id="toast-title">New Discovery!</div>
@@ -2301,13 +2302,13 @@
 
       <!-- Tier Filters -->
       <div class="tier-filter-bar" id="tier-filter-bar">
-        <button class="tier-tab active" onclick="setTierFilter(0)">All</button>
-        <button class="tier-tab" onclick="setTierFilter(1)">T1 Basic</button>
-        <button class="tier-tab" onclick="setTierFilter(2)">T2 Nature</button>
-        <button class="tier-tab" onclick="setTierFilter(3)">T3 Metallurgy</button>
-        <button class="tier-tab" onclick="setTierFilter(4)">T4 Arcane</button>
-        <button class="tier-tab" onclick="setTierFilter(5)">T5 Celestial</button>
-        <button class="tier-tab" onclick="setTierFilter(6)">T6 Mythic</button>
+        <button class="tier-tab active" onclick="setTierFilter(0)">All [0]</button>
+        <button class="tier-tab" onclick="setTierFilter(1)">T1 Basic [1]</button>
+        <button class="tier-tab" onclick="setTierFilter(2)">T2 Nature [2]</button>
+        <button class="tier-tab" onclick="setTierFilter(3)">T3 Metal [3]</button>
+        <button class="tier-tab" onclick="setTierFilter(4)">T4 Arcane [4]</button>
+        <button class="tier-tab" onclick="setTierFilter(5)">T5 Celestial [5]</button>
+        <button class="tier-tab" onclick="setTierFilter(6)">T6 Mythic [6]</button>
       </div>
 
       <div class="grimoire-search">
@@ -2429,11 +2430,11 @@
         </div>
       </div>
 
-      <button class="btn-transmute" id="btn-main-action" onclick="handleMainAction()" onmouseenter="hoverTransmute()" onmouseleave="unhoverTransmute()">✨ Transmute Elements</button>
+      <button class="btn-transmute" id="btn-main-action" onclick="handleMainAction()" onmouseenter="hoverTransmute()" onmouseleave="unhoverTransmute()">✨ Transmute Elements [Space]</button>
 
       <div class="crucible-actions">
-        <button class="btn-secondary" id="btn-auto-fill" style="display:none;" onclick="autoFillCrucible()">⚡ Auto-Fill</button>
-        <button class="btn-secondary" onclick="clearCrucible()">Clear Crucible</button>
+        <button class="btn-secondary" id="btn-auto-fill" style="display:none;" onclick="autoFillCrucible()">⚡ Auto-Fill [A]</button>
+        <button class="btn-secondary" onclick="clearCrucible()">Clear Crucible [C]</button>
         <button class="btn-secondary" onclick="resetProgress()">Reset Progress</button>
       </div>
 
@@ -2442,11 +2443,11 @@
         <div class="oracle-title">🔮 Alchemist's Oracle & Research</div>
         <div class="oracle-buttons">
           <button class="btn-oracle" onclick="getVagueHint()">
-            <span>💡 Vague Hint</span>
+            <span>💡 Vague Hint [I]</span>
             <span class="cost-tag" id="hint-cost-tag">20 Dust</span>
           </button>
           <button class="btn-oracle" onclick="getOracleVision()">
-            <span>👁️ Oracle Vision</span>
+            <span>👁️ Oracle Vision [O]</span>
             <span class="cost-tag" id="oracle-cost-tag">50 Dust</span>
           </button>
         </div>
@@ -3815,7 +3816,7 @@
         if (crucActions) crucActions.style.display = 'flex';
         if (oracleSec) oracleSec.style.display = 'flex';
         if (brewCont) brewCont.style.display = 'flex';
-        actionBtn.innerHTML = "🥣 Brew Buff Elixir";
+        actionBtn.innerHTML = "🥣 Brew Buff Elixir [Space]";
         renderBrewingUI();
       } else if (mode === 'codex') {
         descEl.innerHTML = "<strong>Master Alchemist Codex:</strong> Inspect detailed element recipes, lore, tiers, and craft metrics.";
@@ -3835,16 +3836,16 @@
 
         if (mode === 'crucible') {
           descEl.innerHTML = "<strong>Crucible:</strong> Combine 2 elements to synthesize new compounds.";
-          actionBtn.innerHTML = "✨ Transmute Elements";
+          actionBtn.innerHTML = "✨ Transmute Elements [Space]";
         } else if (mode === 'retort') {
           descEl.innerHTML = "<strong>Retort:</strong> Distill a complex element to extract primary ingredient & essence.";
-          actionBtn.innerHTML = "⚗️ Distill Primary Essence";
+          actionBtn.innerHTML = "⚗️ Distill Primary Essence [Space]";
         } else if (mode === 'alembic') {
           descEl.innerHTML = "<strong>Alembic:</strong> Extract fractional 2nd constituent essence & ingredient.";
-          actionBtn.innerHTML = "🧪 Extract Secondary Essence";
+          actionBtn.innerHTML = "🧪 Extract Secondary Essence [Space]";
         } else if (mode === 'anvil') {
           descEl.innerHTML = "<strong>Anvil:</strong> Shatter a complex element to harvest raw Alchemical Essence & Dust.";
-          actionBtn.innerHTML = "🔨 Crush for Essence";
+          actionBtn.innerHTML = "🔨 Crush for Essence [Space]";
         }
       }
       playChime(450, 'sine', 0.1);
@@ -5301,10 +5302,18 @@
 
     // Keyboard Shortcuts
     document.addEventListener('keydown', (evt) => {
-      if (evt.target.tagName === 'INPUT' || evt.target.tagName === 'TEXTAREA') return;
+      if (evt.target.tagName === 'INPUT' || evt.target.tagName === 'TEXTAREA') {
+        if (evt.key === 'Escape') {
+          evt.target.value = '';
+          renderGrimoire();
+          if (activeEquipment === 'codex') renderCodex();
+          evt.target.blur();
+        }
+        return;
+      }
       const key = evt.key.toLowerCase();
       if (key === 'h' || key === '?' || evt.key === 'F1') {
-        if (evt.key === 'F1') evt.preventDefault();
+        evt.preventDefault();
         toggleHelpModal();
       } else if (key === 'm') {
         const modal = document.getElementById('help-modal-overlay');
@@ -5314,10 +5323,19 @@
       } else if (key === 'escape') {
         closeHelpModal();
         closeCodexModal();
+        const toast = document.getElementById('discovery-toast');
+        if (toast) toast.classList.remove('show');
+      } else if (key === ' ' || evt.key === 'Enter') {
+        evt.preventDefault();
+        handleMainAction();
       } else if (key === 'c') {
         clearCrucible();
       } else if (key === 'a') {
         autoFillCrucible();
+      } else if (key === 'i') {
+        getVagueHint();
+      } else if (key === 'o') {
+        getOracleVision();
       } else if (key >= '0' && key <= '6') {
         setTierFilter(parseInt(key, 10));
       }
@@ -5329,6 +5347,11 @@
     renderGrimoire();
     updateSlotsUI();
     setGameMode(gameMode);
+
+    // Startup Welcome Notification Toast
+    setTimeout(() => {
+      triggerToast("🧪 Welcome Apprentice!", "Press F1 or H for Grandmaster Manual & Controls", "📘");
+    }, 600);
   
     // --- Loop 7 Multi-Layer Kinematic Particle, Shockwave & Screen-Shake Engine ---
     const fxCanvas = document.getElementById('fxCanvas');
@@ -5340,10 +5363,18 @@
     let dustMotes = [];
 
     function resizeCanvas() {
-      fxCanvas.width = window.innerWidth;
-      fxCanvas.height = window.innerHeight;
-      envCanvas.width = window.innerWidth;
-      envCanvas.height = window.innerHeight;
+      const dpr = window.devicePixelRatio || 1;
+      fxCanvas.width = window.innerWidth * dpr;
+      fxCanvas.height = window.innerHeight * dpr;
+      fxCanvas.style.width = window.innerWidth + 'px';
+      fxCanvas.style.height = window.innerHeight + 'px';
+      fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      envCanvas.width = window.innerWidth * dpr;
+      envCanvas.height = window.innerHeight * dpr;
+      envCanvas.style.width = window.innerWidth + 'px';
+      envCanvas.style.height = window.innerHeight + 'px';
+      ectx.setTransform(dpr, 0, 0, dpr, 0, 0);
       
       dustMotes = [];
       for(let i=0; i<80; i++) {
@@ -5721,18 +5752,21 @@
           </div>
 
           <div class="help-card-box">
-            <div class="help-card-title">⌨️ Keyboard Shortcuts</div>
+            <div class="help-card-title">⌨️ Keyboard Shortcuts Reference</div>
             <div class="help-grid-2col">
               <div>
-                <div class="help-list-item"><span class="key-badge">1</span> - <span class="key-badge">5</span> Switch Tier Filters (T1 - T5)</div>
+                <div class="help-list-item"><span class="key-badge">Space / Enter</span> Transmute / Activate Current Workstation</div>
+                <div class="help-list-item"><span class="key-badge">1</span> - <span class="key-badge">6</span> Switch Tier Filters (T1 - T6)</div>
                 <div class="help-list-item"><span class="key-badge">0</span> Show All Elements</div>
                 <div class="help-list-item"><span class="key-badge">C</span> Clear Crucible Slots</div>
+                <div class="help-list-item"><span class="key-badge">A</span> Trigger Auto-Fill (if unlocked)</div>
               </div>
               <div>
-                <div class="help-list-item"><span class="key-badge">A</span> Trigger Auto-Fill (if unlocked)</div>
-                <div class="help-list-item"><span class="key-badge">F1 / H</span> Open / Toggle Manual</div>
+                <div class="help-list-item"><span class="key-badge">I</span> Vague Research Hint (20 Dust)</div>
+                <div class="help-list-item"><span class="key-badge">O</span> Oracle Vision (50 Dust)</div>
+                <div class="help-list-item"><span class="key-badge">F1 / H / ?</span> Open / Toggle Grandmaster Manual</div>
                 <div class="help-list-item"><span class="key-badge">M</span> Minimize / Restore Manual</div>
-                <div class="help-list-item"><span class="key-badge">ESC</span> Close Modals / Help Overlay</div>
+                <div class="help-list-item"><span class="key-badge">ESC</span> Close Modals / Dismiss Toast / Clear Search</div>
               </div>
             </div>
           </div>
