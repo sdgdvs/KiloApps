@@ -24,9 +24,12 @@
 #define ID_BTN_STAR 113
 #define ID_BTN_EXPORT_EML 114
 #define ID_BTN_SAVE_DRAFT 115
+#define ID_BTN_HELP 116
 
 HWND hFolders, hEmails, hTitle, hBody, hBtnCompose, hBtnDelete, hBtnEmptyTrash, hSearchBox;
-HWND hTagFilter, hBtnImport, hBtnExport, hTab, hBtnTag, hBtnDecrypt, hBtnStar, hBtnExportEml, hBtnSaveDraft, hHelpLabel;
+HWND hTagFilter, hBtnImport, hBtnExport, hTab, hBtnTag, hBtnDecrypt, hBtnStar, hBtnExportEml, hBtnSaveDraft, hBtnHelp, hHelpLabel;
+
+WNDPROC oldSearchEditProc = NULL;
 
 typedef struct {
     int id;
@@ -81,7 +84,7 @@ int contains_nocase(const char* haystack, const char* needle) {
 }
 
 HBRUSH hbgMain, hbgList;
-HFONT hFont, hBold;
+HFONT hFont, hBold, hSmallFont;
 COLORREF textCol = RGB(248, 250, 252);
 COLORREF bgMainCol = RGB(15, 23, 42);
 COLORREF bgListCol = RGB(30, 41, 59);
@@ -193,6 +196,7 @@ void NewComposeTab() {
     
     num_tabs++;
     SelectTab(num_tabs - 1);
+    SetFocus(hBody);
 }
 
 void CloseCurrentTab() {
@@ -210,10 +214,44 @@ void CloseCurrentTab() {
     SelectTab(currentTabIdx);
 }
 
+void SelectFolder(int fIdx) {
+    if (fIdx >= 0 && fIdx <= 4) {
+        currentFolder = fIdx;
+        SendMessage(hFolders, LB_SETCURSEL, fIdx, 0);
+        RefreshEmailList();
+    }
+}
+
+void ShowHelpDialog(HWND hwnd) {
+    MessageBoxA(hwnd,
+        "=== KMail Help & Keyboard Shortcuts ===\n\n"
+        "KEYBOARD SHORTCUTS:\n"
+        " [1] - [5]     : Switch Folders (1:Inbox, 2:Starred, 3:Sent, 4:Drafts, 5:Trash)\n"
+        " [C]           : Compose New Message\n"
+        " [S]           : Star / Unstar Selected Email\n"
+        " [T]           : Add Tag to Selected Email\n"
+        " [M]           : Export Single Email (.EML)\n"
+        " [D]           : Decrypt Encrypted Message / Delete\n"
+        " [Del]         : Delete Email / Move to Trash\n"
+        " [Ctrl+S]      : Save Draft (in Compose)\n"
+        " [Ctrl+F]      : Focus Search Bar\n"
+        " [Ctrl+W]      : Close Current Tab\n"
+        " [Ctrl+Tab]    : Next Tab\n"
+        " [Esc]         : Close Active Tab / Clear Search\n"
+        " [F1] or [H]   : Show this Help Dialog\n\n"
+        "FEATURES:\n"
+        " * Multi-Tab Email Viewing & Composing\n"
+        " * Starred Priority Filtering & Folder Organization\n"
+        " * Automatic Draft Saving & Resuming\n"
+        " * Search by Subject, Sender, Body & Tags\n"
+        " * EML and JSON Mailbox Exporting\n",
+        "KMail - Help & Shortcuts", MB_OK | MB_ICONINFORMATION);
+}
+
 void RenderPane() {
     if(currentTabIdx == -1) {
         SetWindowTextA(hTitle, "No email selected");
-        SetWindowTextA(hBody, "Select an email from the list to read, or click 'Compose' to write a new one.\r\n\r\nFeatures:\r\n- Switch between Inbox, Starred, Sent, Drafts, and Trash folders.\r\n- Star priority emails to track important discussions.\r\n- Save Drafts to resume composing later.\r\n- Search and filter by tags.\r\n- Open multiple emails in tabs.\r\n- Encrypt messages with passwords.\r\n- Export single emails (.EML) or full mailbox (.JSON).\r\n\r\nPress F1 or 'H' for help.");
+        SetWindowTextA(hBody, "Select an email from the list to read, or click 'Compose [C]' to write a new one.\r\n\r\nFeatures:\r\n- Switch between Inbox [1], Starred [2], Sent [3], Drafts [4], and Trash [5] folders.\r\n- Star priority emails [S] to track important discussions.\r\n- Save Drafts [Ctrl+S] to resume composing later.\r\n- Search [Ctrl+F] and filter by tags.\r\n- Open multiple emails in tabs [Ctrl+Tab, Ctrl+W].\r\n- Encrypt messages with passwords.\r\n- Export single emails (.EML) [M] or full mailbox (.JSON) [E].\r\n\r\nPress F1 or 'H' for help.");
         ShowWindow(hBtnStar, SW_HIDE);
         ShowWindow(hBtnTag, SW_HIDE);
         ShowWindow(hBtnExportEml, SW_HIDE);
@@ -240,16 +278,16 @@ void RenderPane() {
         SetWindowLong(hBody, GWL_STYLE, GetWindowLong(hBody, GWL_STYLE) | ES_READONLY);
         
         if(em->encrypted) {
-            SetWindowTextA(hBody, "🔒 This message is encrypted. Click Decrypt to view.");
+            SetWindowTextA(hBody, "🔒 This message is encrypted. Click Decrypt [D] to view.");
             ShowWindow(hBtnDecrypt, SW_SHOW);
-            SetWindowTextA(hBtnDecrypt, "Decrypt");
+            SetWindowTextA(hBtnDecrypt, "Decrypt [D]");
             EnableWindow(hBtnDecrypt, TRUE);
         } else {
             SetWindowTextA(hBody, em->body);
             ShowWindow(hBtnDecrypt, SW_HIDE);
         }
         ShowWindow(hBtnStar, SW_SHOW);
-        SetWindowTextA(hBtnStar, em->starred ? "Unstar" : "★ Star");
+        SetWindowTextA(hBtnStar, em->starred ? "Unstar [S]" : "★ Star [S]");
         ShowWindow(hBtnTag, SW_SHOW);
         ShowWindow(hBtnExportEml, SW_SHOW);
         ShowWindow(hBtnSaveDraft, SW_HIDE);
@@ -271,7 +309,7 @@ void RenderPane() {
         ShowWindow(hBtnExportEml, SW_HIDE);
         ShowWindow(hBtnSaveDraft, SW_SHOW);
         ShowWindow(hBtnDecrypt, SW_SHOW); // Reuse as 'Send'
-        SetWindowTextA(hBtnDecrypt, "Send");
+        SetWindowTextA(hBtnDecrypt, "Send [Enter]");
         EnableWindow(hBtnDecrypt, TRUE);
     }
 }
@@ -358,6 +396,56 @@ void ParseComposeFields(const char* text, char* outTo, char* outSub, char* outBo
     lstrcpynA(outBody, p, 2047);
 }
 
+void SaveCurrentDraft(HWND hwnd) {
+    if(currentTabIdx != -1 && tabs[currentTabIdx].id == 0) {
+        char rawText[2048] = {0};
+        GetWindowTextA(hBody, rawText, 2048);
+        char to[128] = {0}, sub[128] = {0}, body[2048] = {0};
+        ParseComposeFields(rawText, to, sub, body);
+        if (sub[0] == 0) lstrcpyA(sub, "Untitled Draft");
+        if (to[0] == 0) lstrcpyA(to, "draft@kilo.os");
+
+        int did = tabs[currentTabIdx].emailId;
+        if (did > 0) {
+            for(int i=0; i<num_emails; i++) {
+                if (emails[i].id == did) {
+                    lstrcpynA(emails[i].sender, to, 128);
+                    lstrcpynA(emails[i].subject, sub, 128);
+                    lstrcpynA(emails[i].body, body, 2048);
+                    break;
+                }
+            }
+        } else {
+            if (num_emails < 200) {
+                emails[num_emails].id = nextId++;
+                emails[num_emails].folder = 3; // drafts
+                lstrcpynA(emails[num_emails].sender, to, 128);
+                lstrcpynA(emails[num_emails].subject, sub, 128);
+                lstrcpynA(emails[num_emails].body, body, 2048);
+                emails[num_emails].unread = 0;
+                emails[num_emails].encrypted = 0;
+                emails[num_emails].starred = 0;
+                emails[num_emails].tags[0] = 0;
+                tabs[currentTabIdx].emailId = emails[num_emails].id;
+                num_emails++;
+            }
+        }
+        RefreshEmailList();
+        MessageBoxA(hwnd, "Draft saved to Drafts folder.", "KMail Draft", MB_OK);
+    }
+}
+
+LRESULT CALLBACK SearchEditSubclass(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_KEYDOWN) {
+        if (wParam == VK_ESCAPE) {
+            SetWindowTextA(hwnd, "");
+            SetFocus(hEmails);
+            return 0;
+        }
+    }
+    return CallWindowProc(oldSearchEditProc, hwnd, msg, wParam, lParam);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
@@ -371,63 +459,68 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             ReleaseDC(hwnd, hdc);
             int fontHeight = -MulDiv(12, dpi, 72);
             int boldHeight = -MulDiv(14, dpi, 72);
+            int smallHeight = -MulDiv(10, dpi, 72);
 
             hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             hBold = CreateFontA(boldHeight, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hSmallFont = CreateFontA(smallHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
-            hBtnCompose = CreateWindowEx(0, "BUTTON", "Compose", WS_CHILD | WS_VISIBLE, 10, 10, 100, 30, hwnd, (HMENU)ID_BTN_COMPOSE, NULL, NULL);
+            hBtnCompose = CreateWindowEx(0, "BUTTON", "+ Compose [C]", WS_CHILD | WS_VISIBLE, 10, 10, 110, 30, hwnd, (HMENU)ID_BTN_COMPOSE, NULL, NULL);
             SendMessage(hBtnCompose, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hBtnImport = CreateWindowEx(0, "BUTTON", "Import", WS_CHILD | WS_VISIBLE, 115, 10, 60, 30, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
-            hBtnExport = CreateWindowEx(0, "BUTTON", "Export", WS_CHILD | WS_VISIBLE, 180, 10, 60, 30, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
-            hHelpLabel = CreateWindowEx(0, "STATIC", "Press F1 or H for Help", WS_CHILD | WS_VISIBLE, 250, 15, 150, 20, hwnd, NULL, NULL, NULL);
+            hBtnImport = CreateWindowEx(0, "BUTTON", "Import [I]", WS_CHILD | WS_VISIBLE, 125, 10, 75, 30, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
+            hBtnExport = CreateWindowEx(0, "BUTTON", "Export [E]", WS_CHILD | WS_VISIBLE, 205, 10, 75, 30, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
+            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE, 285, 10, 75, 30, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            hHelpLabel = CreateWindowEx(0, "STATIC", "Press F1 or H for Help", WS_CHILD | WS_VISIBLE, 370, 16, 150, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hBtnImport, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnExport, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessage(hHelpLabel, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hHelpLabel, WM_SETFONT, (WPARAM)hSmallFont, TRUE);
 
             hFolders = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", NULL,
                 WS_CHILD | WS_VISIBLE | LBS_NOTIFY | LBS_NOINTEGRALHEIGHT,
-                10, 50, 100, H - 100, hwnd, (HMENU)ID_FOLDER_LIST, NULL, NULL);
+                10, 50, 110, H - 100, hwnd, (HMENU)ID_FOLDER_LIST, NULL, NULL);
             SendMessage(hFolders, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"Inbox");
-            SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"Starred");
-            SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"Sent");
-            SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"Drafts");
-            SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"Trash");
+            SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"1. Inbox");
+            SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"2. Starred");
+            SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"3. Sent");
+            SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"4. Drafts");
+            SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"5. Trash");
             SendMessage(hFolders, LB_SETCURSEL, 0, 0);
 
-            hBtnEmptyTrash = CreateWindowEx(0, "BUTTON", "Empty Trash", WS_CHILD | WS_VISIBLE, 10, H - 40, 100, 30, hwnd, (HMENU)ID_BTN_EMPTY_TRASH, NULL, NULL);
+            hBtnEmptyTrash = CreateWindowEx(0, "BUTTON", "Empty Trash", WS_CHILD | WS_VISIBLE, 10, H - 40, 110, 30, hwnd, (HMENU)ID_BTN_EMPTY_TRASH, NULL, NULL);
             SendMessage(hBtnEmptyTrash, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            hSearchBox = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 120, 50, 200, 25, hwnd, (HMENU)ID_SEARCH_BOX, NULL, NULL);
+            hSearchBox = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 130, 50, 200, 25, hwnd, (HMENU)ID_SEARCH_BOX, NULL, NULL);
             SendMessage(hSearchBox, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageW(hSearchBox, EM_SETCUEBANNER, FALSE, (LPARAM)L"Search...");
+            SendMessageW(hSearchBox, EM_SETCUEBANNER, FALSE, (LPARAM)L"Search... (Ctrl+F)");
+            oldSearchEditProc = (WNDPROC)SetWindowLongPtrA(hSearchBox, GWLP_WNDPROC, (LONG_PTR)SearchEditSubclass);
 
-            hTagFilter = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 120, 80, 200, 25, hwnd, (HMENU)ID_TAG_FILTER, NULL, NULL);
+            hTagFilter = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 130, 80, 200, 25, hwnd, (HMENU)ID_TAG_FILTER, NULL, NULL);
             SendMessage(hTagFilter, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageW(hTagFilter, EM_SETCUEBANNER, FALSE, (LPARAM)L"Tag filter...");
 
             hEmails = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", NULL,
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_NOINTEGRALHEIGHT,
-                120, 110, 200, H - 160, hwnd, (HMENU)ID_EMAIL_LIST, NULL, NULL);
+                130, 110, 200, H - 160, hwnd, (HMENU)ID_EMAIL_LIST, NULL, NULL);
             SendMessage(hEmails, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hBtnDelete = CreateWindowEx(0, "BUTTON", "Delete", WS_CHILD | WS_VISIBLE, W - 120, 10, 90, 30, hwnd, (HMENU)ID_BTN_DELETE, NULL, NULL);
+            hBtnDelete = CreateWindowEx(0, "BUTTON", "Delete [Del]", WS_CHILD | WS_VISIBLE, W - 120, 10, 95, 30, hwnd, (HMENU)ID_BTN_DELETE, NULL, NULL);
             SendMessage(hBtnDelete, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            hTab = CreateWindowEx(0, WC_TABCONTROL, "", WS_CHILD | WS_VISIBLE | TCS_TABS, 330, 50, W-360, 25, hwnd, (HMENU)ID_TAB, NULL, NULL);
+            hTab = CreateWindowEx(0, WC_TABCONTROL, "", WS_CHILD | WS_VISIBLE | TCS_TABS, 340, 50, W-370, 25, hwnd, (HMENU)ID_TAB, NULL, NULL);
             SendMessage(hTab, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hTitle = CreateWindowEx(0, "STATIC", "No email selected",
                 WS_CHILD | WS_VISIBLE,
-                330, 85, W - 360, 40, hwnd, NULL, NULL, NULL);
+                340, 85, W - 370, 40, hwnd, NULL, NULL, NULL);
             SendMessage(hTitle, WM_SETFONT, (WPARAM)hBold, TRUE);
             
-            hBtnStar = CreateWindowEx(0, "BUTTON", "★ Star", WS_CHILD, 330, 125, 70, 25, hwnd, (HMENU)ID_BTN_STAR, NULL, NULL);
-            hBtnTag = CreateWindowEx(0, "BUTTON", "Add Tag", WS_CHILD, 405, 125, 75, 25, hwnd, (HMENU)ID_BTN_TAG, NULL, NULL);
-            hBtnExportEml = CreateWindowEx(0, "BUTTON", "Export .EML", WS_CHILD, 485, 125, 85, 25, hwnd, (HMENU)ID_BTN_EXPORT_EML, NULL, NULL);
-            hBtnDecrypt = CreateWindowEx(0, "BUTTON", "Decrypt", WS_CHILD, 575, 125, 75, 25, hwnd, (HMENU)ID_BTN_DECRYPT, NULL, NULL);
-            hBtnSaveDraft = CreateWindowEx(0, "BUTTON", "Save Draft", WS_CHILD, 655, 125, 85, 25, hwnd, (HMENU)ID_BTN_SAVE_DRAFT, NULL, NULL);
+            hBtnStar = CreateWindowEx(0, "BUTTON", "★ Star [S]", WS_CHILD, 340, 125, 80, 26, hwnd, (HMENU)ID_BTN_STAR, NULL, NULL);
+            hBtnTag = CreateWindowEx(0, "BUTTON", "Tag [T]", WS_CHILD, 425, 125, 75, 26, hwnd, (HMENU)ID_BTN_TAG, NULL, NULL);
+            hBtnExportEml = CreateWindowEx(0, "BUTTON", "Export .EML [M]", WS_CHILD, 505, 125, 100, 26, hwnd, (HMENU)ID_BTN_EXPORT_EML, NULL, NULL);
+            hBtnDecrypt = CreateWindowEx(0, "BUTTON", "Decrypt [D]", WS_CHILD, 610, 125, 90, 26, hwnd, (HMENU)ID_BTN_DECRYPT, NULL, NULL);
+            hBtnSaveDraft = CreateWindowEx(0, "BUTTON", "Save Draft [Ctrl+S]", WS_CHILD, 705, 125, 120, 26, hwnd, (HMENU)ID_BTN_SAVE_DRAFT, NULL, NULL);
             SendMessage(hBtnStar, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnTag, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnExportEml, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -436,7 +529,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             hBody = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL,
-                330, 155, W - 360, H - 200, hwnd, NULL, NULL, NULL);
+                340, 155, W - 370, H - 200, hwnd, NULL, NULL, NULL);
             SendMessage(hBody, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             RefreshEmailList();
@@ -471,6 +564,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     OpenEmailTab(id);
                 }
             }
+            else if (LOWORD(wParam) == ID_BTN_HELP) {
+                ShowHelpDialog(hwnd);
+            }
             else if (LOWORD(wParam) == ID_BTN_STAR) {
                 if(currentTabIdx != -1 && tabs[currentTabIdx].id == 1) {
                     int eid = tabs[currentTabIdx].emailId;
@@ -496,42 +592,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             else if (LOWORD(wParam) == ID_BTN_SAVE_DRAFT) {
-                if(currentTabIdx != -1 && tabs[currentTabIdx].id == 0) {
-                    char rawText[2048] = {0};
-                    GetWindowTextA(hBody, rawText, 2048);
-                    char to[128] = {0}, sub[128] = {0}, body[2048] = {0};
-                    ParseComposeFields(rawText, to, sub, body);
-                    if (sub[0] == 0) lstrcpyA(sub, "Untitled Draft");
-                    if (to[0] == 0) lstrcpyA(to, "draft@kilo.os");
-
-                    int did = tabs[currentTabIdx].emailId;
-                    if (did > 0) {
-                        for(int i=0; i<num_emails; i++) {
-                            if (emails[i].id == did) {
-                                lstrcpynA(emails[i].sender, to, 128);
-                                lstrcpynA(emails[i].subject, sub, 128);
-                                lstrcpynA(emails[i].body, body, 2048);
-                                break;
-                            }
-                        }
-                    } else {
-                        if (num_emails < 200) {
-                            emails[num_emails].id = nextId++;
-                            emails[num_emails].folder = 3; // drafts
-                            lstrcpynA(emails[num_emails].sender, to, 128);
-                            lstrcpynA(emails[num_emails].subject, sub, 128);
-                            lstrcpynA(emails[num_emails].body, body, 2048);
-                            emails[num_emails].unread = 0;
-                            emails[num_emails].encrypted = 0;
-                            emails[num_emails].starred = 0;
-                            emails[num_emails].tags[0] = 0;
-                            tabs[currentTabIdx].emailId = emails[num_emails].id;
-                            num_emails++;
-                        }
-                    }
-                    RefreshEmailList();
-                    MessageBoxA(hwnd, "Draft saved to Drafts folder.", "KMail Draft", MB_OK);
-                }
+                SaveCurrentDraft(hwnd);
             }
             else if (LOWORD(wParam) == ID_BTN_DELETE) {
                 if(currentTabIdx != -1) {
@@ -550,9 +611,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             else if (LOWORD(wParam) == ID_BTN_EMPTY_TRASH) {
-                for(int i = 0; i < num_emails; i++) if(emails[i].folder == 4) emails[i].folder = 99;
-                if(currentFolder == 4) RefreshEmailList();
-                MessageBox(hwnd, "Trash emptied.", "KMail", MB_OK);
+                if (MessageBoxA(hwnd, "Are you sure you want to empty the Trash folder?", "Confirm Empty Trash", MB_YESNO | MB_ICONQUESTION) == IDYES) {
+                    for(int i = 0; i < num_emails; i++) if(emails[i].folder == 4) emails[i].folder = 99;
+                    if(currentFolder == 4) RefreshEmailList();
+                    MessageBoxA(hwnd, "Trash folder emptied.", "KMail", MB_OK);
+                }
             }
             else if (LOWORD(wParam) == ID_BTN_COMPOSE) {
                 NewComposeTab();
@@ -561,7 +624,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ExportJson();
             }
             else if (LOWORD(wParam) == ID_BTN_IMPORT) {
-                MessageBox(hwnd, "Simulated JSON import. (Ready to load mailbox JSON files.)", "Import", MB_OK);
+                MessageBoxA(hwnd, "Simulated JSON import. (Ready to load mailbox JSON files.)", "Import", MB_OK);
             }
             else if (LOWORD(wParam) == ID_BTN_TAG) {
                 if(currentTabIdx != -1 && tabs[currentTabIdx].id == 1) {
@@ -572,7 +635,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (em->tags[0]) lstrcatA(em->tags, ",Important");
                             else lstrcpyA(em->tags, "Important");
                         }
-                        MessageBox(hwnd, "Appended 'Important' tag.", "Tag", MB_OK);
+                        MessageBoxA(hwnd, "Appended 'Important' tag.", "Tag", MB_OK);
                         RenderPane();
                         RefreshEmailList();
                     }
@@ -630,7 +693,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                         if(currentFolder == 2) RefreshEmailList();
                         CloseCurrentTab();
-                        MessageBox(hwnd, "Message Sent!", "KMail", MB_OK);
+                        MessageBoxA(hwnd, "Message Sent!", "KMail", MB_OK);
                     }
                 }
             }
@@ -639,25 +702,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_SIZE: {
             int nw = LOWORD(lParam);
             int nh = HIWORD(lParam);
-            MoveWindow(hFolders, 10, 50, 100, nh - 100, TRUE);
-            MoveWindow(hBtnEmptyTrash, 10, nh - 40, 100, 30, TRUE);
+            MoveWindow(hFolders, 10, 50, 110, nh - 100, TRUE);
+            MoveWindow(hBtnEmptyTrash, 10, nh - 40, 110, 30, TRUE);
             
-            MoveWindow(hSearchBox, 120, 50, 200, 25, TRUE);
-            MoveWindow(hTagFilter, 120, 80, 200, 25, TRUE);
-            MoveWindow(hEmails, 120, 110, 200, nh - 120, TRUE);
+            MoveWindow(hSearchBox, 130, 50, 200, 25, TRUE);
+            MoveWindow(hTagFilter, 130, 80, 200, 25, TRUE);
+            MoveWindow(hEmails, 130, 110, 200, nh - 120, TRUE);
             
-            MoveWindow(hBtnDelete, nw - 110, 10, 90, 30, TRUE);
+            MoveWindow(hBtnDelete, nw - 110, 10, 95, 30, TRUE);
             
-            MoveWindow(hTab, 330, 50, nw - 340, 25, TRUE);
-            MoveWindow(hTitle, 330, 85, nw - 340, 35, TRUE);
+            MoveWindow(hTab, 340, 50, nw - 350, 25, TRUE);
+            MoveWindow(hTitle, 340, 85, nw - 350, 35, TRUE);
             
-            MoveWindow(hBtnStar, 330, 122, 70, 26, TRUE);
-            MoveWindow(hBtnTag, 405, 122, 75, 26, TRUE);
-            MoveWindow(hBtnExportEml, 485, 122, 85, 26, TRUE);
-            MoveWindow(hBtnDecrypt, 575, 122, 75, 26, TRUE);
-            MoveWindow(hBtnSaveDraft, 655, 122, 85, 26, TRUE);
+            MoveWindow(hBtnStar, 340, 122, 80, 26, TRUE);
+            MoveWindow(hBtnTag, 425, 122, 75, 26, TRUE);
+            MoveWindow(hBtnExportEml, 505, 122, 100, 26, TRUE);
+            MoveWindow(hBtnDecrypt, 610, 122, 90, 26, TRUE);
+            MoveWindow(hBtnSaveDraft, 705, 122, 120, 26, TRUE);
             
-            MoveWindow(hBody, 330, 155, nw - 340, nh - 165, TRUE);
+            MoveWindow(hBody, 340, 155, nw - 350, nh - 165, TRUE);
             break;
         }
         case WM_CTLCOLORSTATIC: {
@@ -683,6 +746,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(hbgList);
             DeleteObject(hFont);
             DeleteObject(hBold);
+            DeleteObject(hSmallFont);
             PostQuitMessage(0);
             break;
         default:
@@ -712,7 +776,7 @@ void MainEntry() {
     DWORD style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
     RECT rect = {0, 0, W, H};
     AdjustWindowRect(&rect, style, FALSE);
-    HWND hwnd = CreateWindowEx(0, "KMailApp", "KMail - Press F1 or H for Help", style,
+    HWND hwnd = CreateWindowEx(0, "KMailApp", "KMail - Press F1 or H for Help [C: Compose | 1-5: Folders | Esc: Close Tab]", style,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
@@ -720,13 +784,50 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
-        if (msg.message == WM_KEYDOWN && (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1)) {
+        if (msg.message == WM_KEYDOWN) {
             HWND hFocus = GetFocus();
             char cls[64] = {0};
             GetClassNameA(hFocus, cls, 64);
-            if (lstrcmpiA(cls, "EDIT") != 0) {
-                MessageBoxA(hwnd, "KMail Help:\n\n- Click 'Compose' to write.\n- Star priority emails.\n- Save Drafts to finish later.\n- Export emails as .EML or full mailbox as JSON.\n- Select folders on the left.\n- Search and filter by tags.\n- Tabs let you open multiple emails.", "Help", MB_OK);
+            int isEdit = (lstrcmpiA(cls, "EDIT") == 0);
+            int isCtrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+
+            if (msg.wParam == VK_F1 || (!isEdit && (msg.wParam == 'H' || msg.wParam == 'h'))) {
+                ShowHelpDialog(hwnd);
                 continue;
+            }
+            if (isCtrl && (msg.wParam == 'S' || msg.wParam == 's')) {
+                SaveCurrentDraft(hwnd);
+                continue;
+            }
+            if (isCtrl && (msg.wParam == 'F' || msg.wParam == 'f')) {
+                SetFocus(hSearchBox);
+                SendMessage(hSearchBox, EM_SETSEL, 0, -1);
+                continue;
+            }
+            if (isCtrl && (msg.wParam == 'W' || msg.wParam == 'w')) {
+                CloseCurrentTab();
+                continue;
+            }
+            if (isCtrl && msg.wParam == VK_TAB) {
+                if (num_tabs > 1) {
+                    int nextIdx = (currentTabIdx + 1) % num_tabs;
+                    SelectTab(nextIdx);
+                }
+                continue;
+            }
+            if (!isEdit) {
+                if (msg.wParam == '1') { SelectFolder(0); continue; }
+                if (msg.wParam == '2') { SelectFolder(1); continue; }
+                if (msg.wParam == '3') { SelectFolder(2); continue; }
+                if (msg.wParam == '4') { SelectFolder(3); continue; }
+                if (msg.wParam == '5') { SelectFolder(4); continue; }
+                if (msg.wParam == 'C' || msg.wParam == 'c') { NewComposeTab(); continue; }
+                if (msg.wParam == 'S' || msg.wParam == 's') { SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_STAR, 0), 0); continue; }
+                if (msg.wParam == 'T' || msg.wParam == 't') { SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_TAG, 0), 0); continue; }
+                if (msg.wParam == 'M' || msg.wParam == 'm') { SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_EXPORT_EML, 0), 0); continue; }
+                if (msg.wParam == 'D' || msg.wParam == 'd') { SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_DECRYPT, 0), 0); continue; }
+                if (msg.wParam == VK_DELETE) { SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_DELETE, 0), 0); continue; }
+                if (msg.wParam == VK_ESCAPE) { CloseCurrentTab(); continue; }
             }
         }
         TranslateMessage(&msg);
@@ -734,4 +835,3 @@ void MainEntry() {
     }
     ExitProcess(0);
 }
-

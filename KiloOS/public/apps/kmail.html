@@ -7,95 +7,682 @@
 <style>
   :root {
     --bg-main: #0f172a;
-    --bg-glass: rgba(30, 41, 59, 0.7);
-    --border: rgba(255, 255, 255, 0.1);
+    --bg-glass: rgba(30, 41, 59, 0.75);
+    --border: rgba(255, 255, 255, 0.12);
     --text-primary: #f8fafc;
     --text-sec: #94a3b8;
     --accent: #3b82f6;
     --accent-hover: #2563eb;
     --danger: #ef4444;
-    --tag-bg: #475569;
+    --danger-hover: #dc2626;
+    --tag-bg: #334155;
     --gold: #f59e0b;
+    --success: #10b981;
   }
-  body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg-main); color: var(--text-primary); display: flex; height: 100vh; overflow: hidden; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
-  .sidebar { width: 200px; flex-shrink: 0; background: var(--bg-glass); border-right: 1px solid var(--border); backdrop-filter: blur(10px); display: flex; flex-direction: column; padding: 20px 0; }
-  .compose-btn { margin: 0 15px 15px 15px; padding: 10px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
-  .compose-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
-  .folder { padding: 10px 20px; cursor: pointer; color: var(--text-sec); display: flex; align-items: center; justify-content: space-between; transition: background 0.2s, color 0.2s; font-size: 14px; }
-  .folder:hover, .folder.active { background: rgba(255, 255, 255, 0.05); color: var(--text-primary); }
-  .folder.active { font-weight: 600; border-left: 3px solid var(--accent); }
-  .folder-badge { font-size: 11px; background: rgba(255, 255, 255, 0.1); padding: 2px 6px; border-radius: 10px; color: var(--text-sec); }
-  .list { width: 310px; flex-shrink: 0; background: rgba(15, 23, 42, 0.8); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
-  .item { padding: 14px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: all 0.2s; position: relative; display: flex; flex-direction: column; }
-  .item:hover { background: rgba(255,255,255,0.03); }
-  .item.selected { background: rgba(59, 130, 246, 0.2); border-left: 3px solid var(--accent); }
-  .item.unread .subject { font-weight: 700; color: #fff; }
-  .item.unread::after { content: ''; position: absolute; top: 16px; right: 14px; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
-  .item-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  .star-btn { background: none; border: none; font-size: 15px; cursor: pointer; padding: 0; line-height: 1; transition: transform 0.15s; }
-  .star-btn:hover { transform: scale(1.2); }
-  .star-active { color: var(--gold); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg-main);
+    color: var(--text-primary);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  
+  kbd {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    background: rgba(255,255,255,0.12);
+    padding: 2px 5px;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.2);
+    font-size: 11px;
+    color: #e2e8f0;
+    vertical-align: middle;
+  }
+
+  .sidebar {
+    width: 210px;
+    flex-shrink: 0;
+    background: var(--bg-glass);
+    border-right: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    padding: 16px 0 12px 0;
+    user-select: none;
+  }
+  .compose-btn {
+    margin: 0 12px 14px 12px;
+    padding: 10px 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  }
+  .compose-btn:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  }
+  .folder {
+    padding: 9px 16px;
+    cursor: pointer;
+    color: var(--text-sec);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.15s ease;
+    font-size: 13px;
+    border-left: 3px solid transparent;
+  }
+  .folder:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+  }
+  .folder.active {
+    background: rgba(59, 130, 246, 0.15);
+    color: #ffffff;
+    font-weight: 600;
+    border-left-color: var(--accent);
+  }
+  .folder-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .folder-badge {
+    font-size: 11px;
+    background: rgba(255, 255, 255, 0.12);
+    padding: 2px 7px;
+    border-radius: 10px;
+    color: var(--text-sec);
+    font-weight: 500;
+  }
+  .folder.active .folder-badge {
+    background: rgba(59, 130, 246, 0.3);
+    color: #93c5fd;
+  }
+
+  .search-container {
+    padding: 12px 14px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin: 10px 0;
+  }
+  .search-container input {
+    width: 100%;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--border);
+    color: white;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-container input:focus {
+    border-color: var(--accent);
+  }
+  .search-container select {
+    width: 100%;
+    background: #1e293b;
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    margin-top: 8px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .sidebar-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 12px;
+    margin-top: auto;
+  }
+  .side-action-btn {
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-sec);
+    font-size: 12px;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.15s ease;
+  }
+  .side-action-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+  }
+
+  .list {
+    width: 320px;
+    flex-shrink: 0;
+    background: rgba(15, 23, 42, 0.85);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .item {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .item:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+  .item.selected {
+    background: rgba(59, 130, 246, 0.18);
+    border-left: 3px solid var(--accent);
+  }
+  .item.unread .subject {
+    font-weight: 700;
+    color: #ffffff;
+  }
+  .item.unread::after {
+    content: '';
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+  }
+  .item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .star-btn {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: transform 0.15s;
+  }
+  .star-btn:hover {
+    transform: scale(1.25);
+  }
+  .star-active { color: var(--gold); text-shadow: 0 0 6px rgba(245, 158, 11, 0.5); }
   .star-inactive { color: #64748b; }
-  .item-tags { margin-top: 6px; display: flex; gap: 4px; flex-wrap: wrap; }
-  .tag { font-size: 10px; background: var(--tag-bg); padding: 2px 6px; border-radius: 4px; }
-  .subject { font-weight: 500; margin-bottom: 4px; font-size: 14px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .sender { font-size: 12px; color: var(--text-sec); }
-  .pane { flex: 1; display: flex; flex-direction: column; background: rgba(15, 23, 42, 0.95); position: relative; }
-  .tabs { display: flex; background: #1e293b; border-bottom: 1px solid var(--border); overflow-x: auto; }
-  kbd { font-family: monospace; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); }
-  .tab { padding: 10px 15px; cursor: pointer; border-right: 1px solid var(--border); display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-sec); }
-  .tab.active { background: var(--bg-main); color: var(--text-primary); border-bottom: 2px solid var(--accent); }
-  .tab-close { cursor: pointer; font-size: 14px; color: var(--text-sec); }
-  .tab-close:hover { color: var(--danger); }
-  .pane-header { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-  .pane-subject { font-size: 20px; font-weight: 600; margin: 0 0 8px 0; }
-  .pane-sender { font-size: 13px; color: var(--text-sec); margin: 0; }
-  .pane-actions { display: flex; flex-wrap: wrap; gap: 6px; }
-  .pane-actions button { background: rgba(255, 255, 255, 0.1); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500; transition: 0.2s; }
-  .pane-actions button:hover { background: rgba(255,255,255,0.2); }
-  .pane-actions button.btn-star-active { background: rgba(245, 158, 11, 0.25); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.5); }
-  .pane-actions button.del-btn:hover { background: var(--danger); }
-  .pane-body { padding: 20px; flex: 1; overflow-y: auto; white-space: pre-wrap; font-size: 14px; line-height: 1.6; color: #cbd5e1; }
+  .star-inactive:hover { color: #94a3b8; }
   
-  .compose-body { display: flex; flex-direction: column; gap: 10px; height: 100%; padding: 20px; box-sizing: border-box; }
-  .compose-body input, .compose-body textarea { background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px; font-family: inherit; }
-  .compose-body textarea { flex: 1; resize: none; font-size: 14px; line-height: 1.5; }
-  .compose-actions { display: flex; justify-content: space-between; align-items: center; }
-  .compose-btn-group { display: flex; gap: 8px; }
+  .item-tags {
+    margin-top: 5px;
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .tag {
+    font-size: 10px;
+    background: var(--tag-bg);
+    color: #cbd5e1;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .subject {
+    font-weight: 500;
+    margin-bottom: 3px;
+    font-size: 13.5px;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #f1f5f9;
+  }
+  .sender {
+    font-size: 12px;
+    color: var(--text-sec);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: rgba(15, 23, 42, 0.96);
+    position: relative;
+    overflow: hidden;
+  }
+  .tabs {
+    display: flex;
+    background: #1e293b;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    min-height: 38px;
+  }
+  .tab {
+    padding: 8px 14px;
+    cursor: pointer;
+    border-right: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text-sec);
+    background: rgba(0,0,0,0.15);
+    transition: all 0.15s ease;
+    user-select: none;
+    white-space: nowrap;
+    max-width: 180px;
+  }
+  .tab span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tab:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+  }
+  .tab.active {
+    background: var(--bg-main);
+    color: var(--text-primary);
+    font-weight: 500;
+    border-bottom: 2px solid var(--accent);
+  }
+  .tab-close {
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-sec);
+    padding: 0 2px;
+    border-radius: 3px;
+  }
+  .tab-close:hover {
+    color: var(--danger);
+    background: rgba(239, 68, 68, 0.15);
+  }
+  .pane-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    background: rgba(30, 41, 59, 0.3);
+  }
+  .pane-subject {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 6px 0;
+    color: #ffffff;
+  }
+  .pane-sender {
+    font-size: 13px;
+    color: var(--text-sec);
+    margin: 0;
+  }
+  .pane-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .pane-actions button {
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s ease;
+  }
+  .pane-actions button:hover {
+    background: rgba(255, 255, 255, 0.16);
+    transform: translateY(-1px);
+  }
+  .pane-actions button.btn-star-active {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    border-color: rgba(245, 158, 11, 0.4);
+  }
+  .pane-actions button.del-btn:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+  }
+  .pane-body {
+    padding: 20px;
+    flex: 1;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #cbd5e1;
+    font-family: inherit;
+  }
   
-  #empty-state { display: flex; flex: 1; align-items: center; justify-content: center; color: var(--text-sec); flex-direction: column; text-align: center; }
-  .search-container { padding: 12px 15px; border-bottom: 1px solid var(--border); margin-bottom: 5px; }
-  .search-container input { width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 6px; font-family: inherit; margin-bottom: 8px; }
-  .search-container select { width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 6px; border-radius: 4px; }
+  .compose-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+    padding: 16px 20px;
+  }
+  .compose-body input, .compose-body textarea {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--border);
+    color: white;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .compose-body input:focus, .compose-body textarea:focus {
+    border-color: var(--accent);
+  }
+  .compose-body textarea {
+    flex: 1;
+    resize: none;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .compose-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 6px;
+  }
+  .compose-btn-group {
+    display: flex;
+    gap: 8px;
+  }
+  
+  #empty-state {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-sec);
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+  #empty-state h3 {
+    margin: 0 0 8px 0;
+    color: #e2e8f0;
+    font-size: 18px;
+  }
+  #empty-state p {
+    margin: 0 0 16px 0;
+    font-size: 13.5px;
+  }
+
+  /* Toast Notification System */
+  #toast-container {
+    position: fixed;
+    bottom: 18px;
+    right: 18px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .toast {
+    background: #1e293b;
+    color: #f8fafc;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-left: 4px solid var(--accent);
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 240px;
+    max-width: 360px;
+    pointer-events: auto;
+    animation: toastIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+  }
+  .toast.toast-success { border-left-color: var(--success); }
+  .toast.toast-warning { border-left-color: var(--gold); }
+  .toast.toast-error { border-left-color: var(--danger); }
+  @keyframes toastIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes toastOut {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(20px); opacity: 0; }
+  }
+
+  /* Modal Dialogs */
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 5000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .modal-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .modal-window {
+    background: #1e293b;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 520px;
+    max-width: 90vw;
+    max-height: 85vh;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: scale(0.95);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .modal-backdrop.active .modal-window {
+    transform: scale(1);
+  }
+  .modal-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0,0,0,0.2);
+  }
+  .modal-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .modal-close-btn {
+    background: none;
+    border: none;
+    color: var(--text-sec);
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+    border-radius: 4px;
+  }
+  .modal-close-btn:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.1);
+  }
+  .modal-content {
+    padding: 18px 20px;
+    overflow-y: auto;
+    font-size: 13.5px;
+    color: #cbd5e1;
+  }
+  .modal-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    background: rgba(0,0,0,0.15);
+  }
+  .modal-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.08);
+    color: #f1f5f9;
+    transition: all 0.15s ease;
+  }
+  .modal-btn:hover {
+    background: rgba(255,255,255,0.15);
+  }
+  .modal-btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+  .modal-btn.primary:hover {
+    background: var(--accent-hover);
+  }
+  .modal-btn.danger {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: white;
+  }
+  .modal-btn.danger:hover {
+    background: var(--danger-hover);
+  }
+
+  .shortcuts-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+  }
+  .shortcuts-table tr {
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .shortcuts-table td {
+    padding: 8px 6px;
+    font-size: 13px;
+  }
+  .shortcuts-table td:first-child {
+    width: 150px;
+  }
+
+  .tag-preset-chip {
+    display: inline-block;
+    padding: 4px 10px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    font-size: 12px;
+    color: #e2e8f0;
+    cursor: pointer;
+    margin: 4px 4px 4px 0;
+    transition: all 0.15s;
+  }
+  .tag-preset-chip:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    transform: translateY(-1px);
+  }
 </style>
 </head>
 <body>
 
 <div class="sidebar">
-  <button class="compose-btn" onclick="newComposeTab()">+ New Message</button>
+  <button class="compose-btn" onclick="newComposeTab()">
+    <span>+ New Message</span>
+    <kbd>C</kbd>
+  </button>
+  
   <div class="folder active" onclick="switchFolder('inbox')" id="f-inbox">
-    <span>📥 Inbox</span>
+    <div class="folder-title">
+      <span>📥 Inbox</span>
+      <kbd>1</kbd>
+    </div>
     <span class="folder-badge" id="b-inbox">0</span>
   </div>
   <div class="folder" onclick="switchFolder('starred')" id="f-starred">
-    <span>⭐ Starred</span>
+    <div class="folder-title">
+      <span>⭐ Starred</span>
+      <kbd>2</kbd>
+    </div>
     <span class="folder-badge" id="b-starred">0</span>
   </div>
   <div class="folder" onclick="switchFolder('sent')" id="f-sent">
-    <span>📤 Sent</span>
+    <div class="folder-title">
+      <span>📤 Sent</span>
+      <kbd>3</kbd>
+    </div>
     <span class="folder-badge" id="b-sent">0</span>
   </div>
   <div class="folder" onclick="switchFolder('drafts')" id="f-drafts">
-    <span>📝 Drafts</span>
+    <div class="folder-title">
+      <span>📝 Drafts</span>
+      <kbd>4</kbd>
+    </div>
     <span class="folder-badge" id="b-drafts">0</span>
   </div>
   <div class="folder" onclick="switchFolder('trash')" id="f-trash">
-    <span>🗑️ Trash</span>
+    <div class="folder-title">
+      <span>🗑️ Trash</span>
+      <kbd>5</kbd>
+    </div>
     <span class="folder-badge" id="b-trash">0</span>
   </div>
   
   <div class="search-container">
-    <input type="text" id="search-box" placeholder="Search emails..." onkeyup="handleSearch()">
+    <input type="text" id="search-box" placeholder="Search emails... (Ctrl+F)" onkeyup="handleSearch()">
     <select id="tag-filter" onchange="handleSearch()">
       <option value="">All Tags</option>
       <option value="Urgent">Urgent</option>
@@ -105,13 +692,23 @@
     </select>
   </div>
   
-  <div style="flex:1"></div>
-  <div style="display:flex; flex-direction:column; gap:8px; padding: 0 15px; margin-bottom: 15px;">
-    <div style="text-align: center; color: var(--text-sec); font-size: 12px; margin-bottom: 4px;">Press <kbd>F1</kbd> or <kbd>H</kbd> for Help</div>
-    <button class="compose-btn" style="margin:0; background:#059669; font-size:12px; padding:8px;" onclick="document.getElementById('import-file').click()">Import JSON</button>
+  <div class="sidebar-bottom">
+    <button class="side-action-btn" onclick="showHelpModal()">
+      <span>❓ Help & Keys</span>
+      <kbd>F1</kbd>
+    </button>
+    <button class="side-action-btn" onclick="document.getElementById('import-file').click()">
+      <span>📥 Import JSON</span>
+      <kbd>I</kbd>
+    </button>
     <input type="file" id="import-file" style="display:none" onchange="importJson(event)" accept=".json">
-    <button class="compose-btn" style="margin:0; background:#0284c7; font-size:12px; padding:8px;" onclick="exportJson()">Export JSON</button>
-    <button class="compose-btn" style="margin:0; background:var(--danger); font-size:12px; padding:8px;" onclick="emptyTrash()">Empty Trash</button>
+    <button class="side-action-btn" onclick="exportJson()">
+      <span>📤 Export JSON</span>
+      <kbd>O</kbd>
+    </button>
+    <button class="side-action-btn" style="color:#f87171;" onclick="confirmEmptyTrash()">
+      <span>🗑️ Empty Trash</span>
+    </button>
   </div>
 </div>
 
@@ -121,14 +718,195 @@
   <div class="tabs" id="tabs"></div>
   <div id="pane-content" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
     <div id="empty-state">
-      <h3>No email selected</h3>
-      <p>Select an email from the list or compose a new one.</p>
-      <p style="font-size: 13px; color: var(--text-sec); margin-top: 15px;">Press <kbd>F1</kbd> or <kbd>h</kbd> for help</p>
+      <div style="font-size: 42px; margin-bottom: 12px; opacity: 0.8;">✉️</div>
+      <h3>No Email Selected</h3>
+      <p>Select an email from the list or press <kbd>C</kbd> to compose a new one.</p>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button class="modal-btn primary" onclick="newComposeTab()">+ New Message <kbd>C</kbd></button>
+        <button class="modal-btn" onclick="showHelpModal()">Help & Shortcuts <kbd>F1</kbd></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notifications -->
+<div id="toast-container"></div>
+
+<!-- Help Modal Dialog -->
+<div class="modal-backdrop" id="help-modal" onclick="onModalBackdropClick(event, 'help-modal')">
+  <div class="modal-window">
+    <div class="modal-header">
+      <h3><span>📬</span> KMail Help & Keyboard Shortcuts</h3>
+      <button class="modal-close-btn" onclick="closeModal('help-modal')">✕</button>
+    </div>
+    <div class="modal-content">
+      <p style="margin-top:0; color:#94a3b8; font-size:13px;">
+        KMail is a lightweight multi-tab email client with encryption, tagging, starring, drafts, and EML/Markdown exporting.
+      </p>
+      <h4 style="margin:14px 0 6px 0; color:#93c5fd; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Navigation & Actions</h4>
+      <table class="shortcuts-table">
+        <tr><td><kbd>1</kbd> - <kbd>5</kbd></td><td>Switch Folders (Inbox, Starred, Sent, Drafts, Trash)</td></tr>
+        <tr><td><kbd>C</kbd> / <kbd>N</kbd></td><td>Compose New Message in a tab</td></tr>
+        <tr><td><kbd>Ctrl</kbd> + <kbd>F</kbd> / <kbd>/</kbd></td><td>Focus search bar</td></tr>
+        <tr><td><kbd>S</kbd></td><td>Toggle Star priority on active email</td></tr>
+        <tr><td><kbd>R</kbd></td><td>Reply to selected email</td></tr>
+        <tr><td><kbd>T</kbd></td><td>Add tag to active email</td></tr>
+        <tr><td><kbd>Del</kbd></td><td>Move selected email to Trash / Delete</td></tr>
+        <tr><td><kbd>E</kbd></td><td>Export single email as .EML</td></tr>
+        <tr><td><kbd>M</kbd></td><td>Export single email as Markdown (.MD)</td></tr>
+        <tr><td><kbd>Ctrl</kbd> + <kbd>S</kbd></td><td>Save draft in compose mode</td></tr>
+        <tr><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td><td>Send email in compose mode</td></tr>
+        <tr><td><kbd>Ctrl</kbd> + <kbd>W</kbd></td><td>Close active tab</td></tr>
+        <tr><td><kbd>Esc</kbd></td><td>Close modal / clear search / close tab</td></tr>
+        <tr><td><kbd>F1</kbd> / <kbd>H</kbd></td><td>Open this Help dialog</td></tr>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn primary" onclick="closeModal('help-modal')">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Tag Modal Dialog -->
+<div class="modal-backdrop" id="tag-modal" onclick="onModalBackdropClick(event, 'tag-modal')">
+  <div class="modal-window" style="width: 420px;">
+    <div class="modal-header">
+      <h3><span>🏷️</span> Add Tag to Email</h3>
+      <button class="modal-close-btn" onclick="closeModal('tag-modal')">✕</button>
+    </div>
+    <div class="modal-content">
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px; color:var(--text-sec); display:block; margin-bottom:6px;">Quick Presets:</label>
+        <div>
+          <span class="tag-preset-chip" onclick="applyTag('Urgent')">🔥 Urgent</span>
+          <span class="tag-preset-chip" onclick="applyTag('Work')">💼 Work</span>
+          <span class="tag-preset-chip" onclick="applyTag('Personal')">👤 Personal</span>
+          <span class="tag-preset-chip" onclick="applyTag('News')">📰 News</span>
+          <span class="tag-preset-chip" onclick="applyTag('Finance')">💰 Finance</span>
+          <span class="tag-preset-chip" onclick="applyTag('Follow-up')">📌 Follow-up</span>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12px; color:var(--text-sec); display:block; margin-bottom:6px;">Custom Tag Name:</label>
+        <input type="text" id="custom-tag-input" placeholder="e.g. Project-Alpha" style="width:100%; background:rgba(0,0,0,0.3); border:1px solid var(--border); color:white; padding:8px 10px; border-radius:6px; font-size:13px; outline:none;" onkeydown="if(event.key==='Enter') applyCustomTag()">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn" onclick="closeModal('tag-modal')">Cancel</button>
+      <button class="modal-btn primary" onclick="applyCustomTag()">Add Tag</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Empty Trash Modal -->
+<div class="modal-backdrop" id="trash-modal" onclick="onModalBackdropClick(event, 'trash-modal')">
+  <div class="modal-window" style="width: 400px;">
+    <div class="modal-header">
+      <h3><span>🗑️</span> Empty Trash Confirmation</h3>
+      <button class="modal-close-btn" onclick="closeModal('trash-modal')">✕</button>
+    </div>
+    <div class="modal-content">
+      <p style="margin:0; color:#e2e8f0;">Are you sure you want to permanently delete all messages in the Trash folder?</p>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn" onclick="closeModal('trash-modal')">Cancel</button>
+      <button class="modal-btn danger" onclick="doEmptyTrash()">Empty Trash</button>
     </div>
   </div>
 </div>
 
 <script>
+  // Non-blocking Toast Notification Helper
+  function showToast(message, type = 'info', duration = 3500) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    let icon = 'ℹ️';
+    if (type === 'success') icon = '✅';
+    if (type === 'warning') icon = '⚠️';
+    if (type === 'error') icon = '❌';
+
+    toast.innerHTML = `
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span>${icon}</span>
+        <span>${escapeHTML(message)}</span>
+      </div>
+      <span style="font-size:11px; opacity:0.6; cursor:pointer;" onclick="this.parentElement.remove()">✕</span>
+    `;
+    
+    toast.onclick = (e) => {
+      toast.style.animation = 'toastOut 0.2s forwards';
+      setTimeout(() => toast.remove(), 200);
+    };
+
+    container.appendChild(toast);
+    setTimeout(() => {
+      if (toast.parentElement) {
+        toast.style.animation = 'toastOut 0.2s forwards';
+        setTimeout(() => toast.remove(), 200);
+      }
+    }, duration);
+  }
+
+  // Modal Dialog Handlers
+  function showModal(modalId) {
+    const m = document.getElementById(modalId);
+    if (m) m.classList.add('active');
+  }
+  function closeModal(modalId) {
+    const m = document.getElementById(modalId);
+    if (m) m.classList.remove('active');
+  }
+  function onModalBackdropClick(e, modalId) {
+    if (e.target === document.getElementById(modalId)) {
+      closeModal(modalId);
+    }
+  }
+  function showHelpModal() {
+    showModal('help-modal');
+  }
+
+  // Tag Modal
+  let tagTargetEmailId = null;
+  function openTagModal(eid) {
+    tagTargetEmailId = eid;
+    document.getElementById('custom-tag-input').value = '';
+    showModal('tag-modal');
+    setTimeout(() => document.getElementById('custom-tag-input').focus(), 50);
+  }
+  function applyTag(tagName) {
+    if (!tagTargetEmailId || !tagName) return;
+    let em = emails.find(e => e.id === tagTargetEmailId);
+    if (em) {
+      if (!em.tags) em.tags = [];
+      if (!em.tags.includes(tagName)) {
+        em.tags.push(tagName);
+        showToast(`Added tag "${tagName}"`, 'success');
+      }
+      renderList();
+      renderPane();
+    }
+    closeModal('tag-modal');
+  }
+  function applyCustomTag() {
+    const val = document.getElementById('custom-tag-input').value.trim();
+    if (val) {
+      applyTag(val);
+    }
+  }
+
+  // Trash modal
+  function confirmEmptyTrash() {
+    showModal('trash-modal');
+  }
+  function doEmptyTrash() {
+    emails = emails.filter(e => e.folder !== 'trash');
+    if (currentFolder === 'trash') renderList();
+    closeModal('trash-modal');
+    showToast("Trash folder permanently emptied.", "success");
+  }
+
   // Simple AES-GCM encryption/decryption using Web Crypto API
   async function generateKey(password) {
     const enc = new TextEncoder();
@@ -218,7 +996,10 @@
     });
     
     if (filtered.length === 0) {
-      list.innerHTML = `<div style="padding: 24px 16px; color: #64748b; text-align: center; font-size: 13px;">No emails in ${escapeHTML(currentFolder)}</div>`;
+      list.innerHTML = `<div style="padding: 32px 16px; color: #64748b; text-align: center; font-size: 13px;">
+        <div style="font-size:24px; margin-bottom:6px; opacity:0.6;">📭</div>
+        No emails in <strong>${escapeHTML(currentFolder)}</strong>
+      </div>`;
       return;
     }
 
@@ -321,6 +1102,10 @@
     tabs.push({ id: tid, type: 'compose', title: sub || 'New Message', draftId: null, data: { to, sub, body, encrypted: false, password: '' } });
     activeTabId = tid;
     renderTabs();
+    setTimeout(() => {
+      const inputTo = document.getElementById(`c-to-${tid}`);
+      if (inputTo) inputTo.focus();
+    }, 50);
   }
 
   function closeTab(tid, e) {
@@ -343,7 +1128,8 @@
   window.switchFolder = function(folder) {
     currentFolder = folder;
     document.querySelectorAll('.folder').forEach(f => f.classList.remove('active'));
-    document.getElementById(`f-${folder}`).classList.add('active');
+    const fEl = document.getElementById(`f-${folder}`);
+    if (fEl) fEl.classList.add('active');
     renderList();
   }
 
@@ -357,6 +1143,7 @@
         let t = tabs.find(tab => tab.id === activeTabId);
         if (t && t.emailId === eid) renderPane();
       }
+      showToast(em.starred ? `Starred "${em.subject}"` : `Unstarred "${em.subject}"`, 'info', 2000);
     }
   }
 
@@ -364,9 +1151,13 @@
     const pane = document.getElementById('pane-content');
     if(!activeTabId) {
       pane.innerHTML = `<div id="empty-state">
-        <h3>No email selected</h3>
-        <p>Select an email from the list or compose a new one.</p>
-        <p style="font-size: 13px; color: var(--text-sec); margin-top: 20px;">Press <kbd>F1</kbd> or <kbd>h</kbd> for help</p>
+        <div style="font-size: 42px; margin-bottom: 12px; opacity: 0.8;">✉️</div>
+        <h3>No Email Selected</h3>
+        <p>Select an email from the list or press <kbd>C</kbd> to compose a new one.</p>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <button class="modal-btn primary" onclick="newComposeTab()">+ New Message <kbd>C</kbd></button>
+          <button class="modal-btn" onclick="showHelpModal()">Help & Shortcuts <kbd>F1</kbd></button>
+        </div>
       </div>`;
       return;
     }
@@ -377,20 +1168,23 @@
       
       let tagsHtml = (em.tags || []).map(t => `<span class="tag">${escapeHTML(t)}</span>`).join('');
       
-      let actionsHtml = `<button onclick="toggleStar(${em.id})" class="${em.starred ? 'btn-star-active' : ''}">${em.starred ? '★ Starred' : '☆ Star'}</button>`;
-      actionsHtml += `<button onclick="newComposeTab(emails.find(e=>e.id==${em.id}))">Reply</button>`;
-      actionsHtml += `<button onclick="addTag(${em.id})">+ Tag</button>`;
-      actionsHtml += `<button onclick="exportSingleEml(${em.id})">Export .EML</button>`;
-      actionsHtml += `<button onclick="exportSingleMd(${em.id})">Export .MD</button>`;
-      actionsHtml += `<button class="del-btn" onclick="deleteEmail(${em.id})">Delete</button>`;
+      let actionsHtml = `<button onclick="toggleStar(${em.id})" class="${em.starred ? 'btn-star-active' : ''}"><span>${em.starred ? '★ Starred' : '☆ Star'}</span> <kbd>S</kbd></button>`;
+      actionsHtml += `<button onclick="newComposeTab(emails.find(e=>e.id==${em.id}))"><span>↩️ Reply</span> <kbd>R</kbd></button>`;
+      actionsHtml += `<button onclick="openTagModal(${em.id})"><span>🏷️ Tag</span> <kbd>T</kbd></button>`;
+      actionsHtml += `<button onclick="exportSingleEml(${em.id})"><span>📄 .EML</span> <kbd>E</kbd></button>`;
+      actionsHtml += `<button onclick="exportSingleMd(${em.id})"><span>📝 .MD</span> <kbd>M</kbd></button>`;
+      actionsHtml += `<button class="del-btn" onclick="deleteEmail(${em.id})"><span>🗑️ Delete</span> <kbd>Del</kbd></button>`;
 
       let bodyHtml = escapeHTML(em.body);
       if (em.encrypted) {
-        bodyHtml = `<div style="background:rgba(0,0,0,0.3); padding:20px; border-radius:8px; text-align:center;">
-          <p>🔒 This message is encrypted with password protection.</p>
-          <input type="password" id="dec-pass-${em.id}" placeholder="Enter password" style="padding:8px; border-radius:4px; border:1px solid var(--border); background:rgba(255,255,255,0.1); color:white;">
-          <button onclick="attemptDecrypt(${em.id})" style="padding:8px 15px; background:var(--accent); border:none; color:white; border-radius:4px; cursor:pointer; margin-left:6px;">Decrypt</button>
-        </div><div id="dec-res-${em.id}" style="margin-top:20px; display:none;"></div>`;
+        bodyHtml = `<div style="background:rgba(0,0,0,0.3); padding:24px; border-radius:8px; text-align:center; border: 1px solid var(--border);">
+          <div style="font-size:32px; margin-bottom:8px;">🔒</div>
+          <p style="margin:0 0 14px 0; font-weight:500;">This message is encrypted with password protection.</p>
+          <div style="display:flex; justify-content:center; gap:8px;">
+            <input type="password" id="dec-pass-${em.id}" placeholder="Enter decryption password" style="padding:8px 12px; border-radius:6px; border:1px solid var(--border); background:rgba(255,255,255,0.1); color:white; font-size:13px; outline:none;" onkeydown="if(event.key==='Enter') attemptDecrypt(${em.id})">
+            <button onclick="attemptDecrypt(${em.id})" style="padding:8px 16px; background:var(--accent); border:none; color:white; border-radius:6px; cursor:pointer; font-weight:500;">Decrypt</button>
+          </div>
+        </div><div id="dec-res-${em.id}" style="margin-top:20px; display:none; background:rgba(59,130,246,0.1); padding:16px; border-radius:8px; border:1px solid rgba(59,130,246,0.3);"></div>`;
       }
 
       pane.innerHTML = `
@@ -412,14 +1206,19 @@
           <textarea id="c-body-${tab.id}" placeholder="Write your message here...">${escapeHTML(tab.data.body)}</textarea>
           <div class="compose-actions">
             <div>
-              <label style="font-size:13px; display:flex; align-items:center; gap:5px; cursor:pointer;">
-                <input type="checkbox" id="c-enc-${tab.id}" ${tab.data.encrypted ? 'checked' : ''} onchange="toggleEncrypt('${tab.id}', this.checked)"> Encrypt with Password
+              <label style="font-size:13px; display:flex; align-items:center; gap:6px; cursor:pointer; user-select:none;">
+                <input type="checkbox" id="c-enc-${tab.id}" ${tab.data.encrypted ? 'checked' : ''} onchange="toggleEncrypt('${tab.id}', this.checked)"> 
+                <span>🔒 Encrypt with Password</span>
               </label>
-              <input type="password" id="c-pass-${tab.id}" placeholder="Encryption password" style="display:${tab.data.encrypted ? 'inline-block' : 'none'}; margin-left:10px; width:160px; padding:6px 10px;" value="${escapeHTML(tab.data.password)}" oninput="updateTabData('${tab.id}', 'password', this.value)">
+              <input type="password" id="c-pass-${tab.id}" placeholder="Encryption password" style="display:${tab.data.encrypted ? 'inline-block' : 'none'}; margin-top:8px; width:200px; padding:6px 10px; font-size:12px;" value="${escapeHTML(tab.data.password)}" oninput="updateTabData('${tab.id}', 'password', this.value)">
             </div>
             <div class="compose-btn-group">
-              <button class="compose-btn" style="margin:0; background:#64748b;" onclick="saveDraft('${tab.id}')">💾 Save Draft</button>
-              <button class="compose-btn" style="margin:0" onclick="sendEmail('${tab.id}')">✈️ Send Message</button>
+              <button class="modal-btn" style="display:flex; align-items:center; gap:6px;" onclick="saveDraft('${tab.id}')">
+                <span>💾 Save Draft</span> <kbd>Ctrl+S</kbd>
+              </button>
+              <button class="modal-btn primary" style="display:flex; align-items:center; gap:6px;" onclick="sendEmail('${tab.id}')">
+                <span>✈️ Send</span> <kbd>Ctrl+↵</kbd>
+              </button>
             </div>
           </div>
         </div>
@@ -477,7 +1276,7 @@
       });
     }
     renderList();
-    alert("Draft saved to Drafts folder.");
+    showToast("Draft saved to Drafts folder.", "success");
   }
 
   window.sendEmail = async function(tid) {
@@ -488,7 +1287,12 @@
     let isEncrypted = data.encrypted;
     
     if (isEncrypted) {
-      if(!data.password) { alert("Please enter a password for encryption."); return; }
+      if(!data.password) {
+        showToast("Please enter an encryption password.", "error");
+        const passInput = document.getElementById(`c-pass-${tid}`);
+        if (passInput) passInput.focus();
+        return;
+      }
       finalBody = await encryptText(data.body, data.password);
     }
 
@@ -516,49 +1320,43 @@
     }
     closeTab(tid);
     if(currentFolder === 'sent' || currentFolder === 'drafts') renderList();
+    showToast("Message sent successfully!", "success");
   }
 
   window.attemptDecrypt = async function(eid) {
     let em = emails.find(e => e.id === eid);
-    let pass = document.getElementById(`dec-pass-${eid}`).value;
-    if(!pass) return;
+    let passInput = document.getElementById(`dec-pass-${eid}`);
+    if (!passInput) return;
+    let pass = passInput.value;
+    if(!pass) {
+      showToast("Please enter password to decrypt.", "warning");
+      passInput.focus();
+      return;
+    }
     let dec = await decryptText(em.body, pass);
     if(dec !== null) {
       let resDiv = document.getElementById(`dec-res-${eid}`);
       resDiv.style.display = 'block';
-      resDiv.innerHTML = `<strong>Decrypted Content:</strong><br><br>${escapeHTML(dec).replace(/\n/g, '<br>')}`;
+      resDiv.innerHTML = `<strong style="color:#93c5fd;">🔓 Decrypted Content:</strong><br><br>${escapeHTML(dec).replace(/\n/g, '<br>')}`;
+      showToast("Decrypted successfully!", "success");
     } else {
-      alert("Incorrect password or corrupted data.");
-    }
-  }
-
-  window.addTag = function(eid) {
-    let tag = prompt("Enter tag name (e.g. Urgent, Work, Personal):");
-    if(tag) {
-      let em = emails.find(e => e.id === eid);
-      if(!em.tags) em.tags = [];
-      if(!em.tags.includes(tag)) em.tags.push(tag);
-      renderList();
-      renderPane();
+      showToast("Incorrect password or corrupted data.", "error");
     }
   }
 
   window.deleteEmail = function(eid) {
     let em = emails.find(e => e.id === eid);
+    if (!em) return;
     if(em.folder === 'trash') {
       emails = emails.filter(e => e.id !== eid);
+      showToast("Message permanently deleted.", "info");
     } else {
       em.folder = 'trash';
+      showToast("Message moved to Trash.", "info");
     }
     let t = tabs.find(t => t.type === 'read' && t.emailId === eid);
     if(t) closeTab(t.id);
     renderList();
-  }
-
-  window.emptyTrash = function() {
-    emails = emails.filter(e => e.folder !== 'trash');
-    if(currentFolder === 'trash') renderList();
-    alert("Trash emptied.");
   }
 
   window.exportSingleEml = function(eid) {
@@ -571,6 +1369,7 @@
     a.download = `email_${em.id}.eml`;
     a.click();
     URL.revokeObjectURL(a.href);
+    showToast(`Exported email_${em.id}.eml`, "success");
   }
 
   window.exportSingleMd = function(eid) {
@@ -583,18 +1382,20 @@
     a.download = `email_${em.id}.md`;
     a.click();
     URL.revokeObjectURL(a.href);
+    showToast(`Exported email_${em.id}.md`, "success");
   }
 
   window.exportJson = function() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(emails, null, 2));
     const a = document.createElement('a');
     a.href = dataStr; a.download = "kmail_backup.json"; a.click();
+    showToast("Exported mailbox backup JSON.", "success");
   }
 
   window.importJson = function(event) {
     const file = event.target.files[0];
     if (!file) return;
-    if (file.size > 1024 * 500) { alert("File too large"); return; }
+    if (file.size > 1024 * 500) { showToast("File too large (max 500KB).", "error"); return; }
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -603,18 +1404,146 @@
           emails = imported.slice(0, 1000);
           nextId = Math.max(...emails.map(m=>m.id), 0) + 1;
           renderList();
-          alert("Mailbox imported successfully.");
+          showToast(`Mailbox imported (${emails.length} emails).`, "success");
         }
-      } catch(err) { alert("Invalid JSON file."); }
+      } catch(err) { showToast("Invalid JSON mailbox file.", "error"); }
     };
     reader.readAsText(file);
     event.target.value = '';
   }
 
+  // Keyboard Shortcuts Listener
   document.addEventListener('keydown', (e) => {
-    if ((e.key.toLowerCase() === 'h' || e.key === 'F1') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-      if (e.key === 'F1') e.preventDefault();
-      alert("KMail Help:\n\n- Click '+ New Message' to compose.\n- Click Star (⭐) to toggle priority on emails.\n- Click 'Save Draft' while composing to save to Drafts.\n- Click 'Export .EML' or 'Export .MD' to export single emails.\n- Select folders on sidebar (Inbox, Starred, Sent, Drafts, Trash).\n- Search and filter by tags.\n- Tabs let you open multiple emails concurrently.");
+    const isInput = (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA');
+
+    // F1 or H Help Dialog
+    if ((e.key === 'F1' || (!isInput && (e.key === 'h' || e.key === 'H' || e.key === '?')))) {
+      e.preventDefault();
+      showHelpModal();
+      return;
+    }
+
+    // Escape handling
+    if (e.key === 'Escape') {
+      const openModals = document.querySelectorAll('.modal-backdrop.active');
+      if (openModals.length > 0) {
+        openModals.forEach(m => m.classList.remove('active'));
+        return;
+      }
+      if (document.getElementById('search-box').value) {
+        document.getElementById('search-box').value = '';
+        renderList();
+        return;
+      }
+      if (activeTabId) {
+        closeTab(activeTabId);
+        return;
+      }
+    }
+
+    // Ctrl+S: Save Draft
+    if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+      if (activeTabId) {
+        const tab = tabs.find(t => t.id === activeTabId);
+        if (tab && tab.type === 'compose') {
+          e.preventDefault();
+          saveDraft(tab.id);
+          return;
+        }
+      }
+    }
+
+    // Ctrl+Enter: Send Email
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      if (activeTabId) {
+        const tab = tabs.find(t => t.id === activeTabId);
+        if (tab && tab.type === 'compose') {
+          e.preventDefault();
+          sendEmail(tab.id);
+          return;
+        }
+      }
+    }
+
+    // Ctrl+F or '/': Search
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')) {
+      e.preventDefault();
+      const sb = document.getElementById('search-box');
+      sb.focus();
+      sb.select();
+      return;
+    }
+    if (!isInput && e.key === '/') {
+      e.preventDefault();
+      const sb = document.getElementById('search-box');
+      sb.focus();
+      sb.select();
+      return;
+    }
+
+    // Ctrl+W: Close Tab
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'w' || e.key === 'W')) {
+      if (activeTabId) {
+        e.preventDefault();
+        closeTab(activeTabId);
+        return;
+      }
+    }
+
+    if (isInput) return;
+
+    // Folder shortcuts [1-5]
+    if (e.key === '1') { switchFolder('inbox'); return; }
+    if (e.key === '2') { switchFolder('starred'); return; }
+    if (e.key === '3') { switchFolder('sent'); return; }
+    if (e.key === '4') { switchFolder('drafts'); return; }
+    if (e.key === '5') { switchFolder('trash'); return; }
+
+    // Compose new message [C] or [N]
+    if (e.key === 'c' || e.key === 'C' || e.key === 'n' || e.key === 'N') {
+      e.preventDefault();
+      newComposeTab();
+      return;
+    }
+
+    // Actions on active email tab
+    if (activeTabId) {
+      const tab = tabs.find(t => t.id === activeTabId);
+      if (tab && tab.type === 'read') {
+        const em = emails.find(item => item.id === tab.emailId);
+        if (em) {
+          if (e.key === 's' || e.key === 'S') {
+            e.preventDefault();
+            toggleStar(em.id);
+            return;
+          }
+          if (e.key === 'r' || e.key === 'R') {
+            e.preventDefault();
+            newComposeTab(em);
+            return;
+          }
+          if (e.key === 't' || e.key === 'T') {
+            e.preventDefault();
+            openTagModal(em.id);
+            return;
+          }
+          if (e.key === 'e' || e.key === 'E') {
+            e.preventDefault();
+            exportSingleEml(em.id);
+            return;
+          }
+          if (e.key === 'm' || e.key === 'M') {
+            e.preventDefault();
+            exportSingleMd(em.id);
+            return;
+          }
+          if (e.key === 'Delete') {
+            e.preventDefault();
+            deleteEmail(em.id);
+            return;
+          }
+        }
+      }
     }
   });
 
@@ -622,7 +1551,11 @@
     window.resizeTo(920, 620);
   }
 
+  // Initial render & welcome toast
   renderList();
+  setTimeout(() => {
+    showToast("Welcome to KMail! Press F1 or H for Help & Shortcuts.", "info", 4500);
+  }, 400);
 </script>
 </body>
 </html>
