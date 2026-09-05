@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KBreakout
+**Target App:** KBudget
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KBreakout
 - KBudget
 - KCalc
 - KCalendar
@@ -173,8 +172,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KAudio
 - KBBS
 - KBase
+- KBreakout
 
 ## Test Reports
+
+- **KBreakout**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
+  - ✅ Core gameplay works (Classic/Hard/Multi-Ball Chaos campaigns, 40 stages, 6 active cyber skills Laser/Split/Fire/Barrier/Gravity/Satellite, Cyber-Forge Lab with 7 crafting recipes, dynamic brick types Quantum Resonance/Prism Reflector/Explosive/Hazard/Steel, boss fortress encounters, particle explosion physics, high scores and material persistence).
+  - 🔧 FIXED: `initAudio` and `playTone` were called by all skill buttons, Cyber-Forge craft buttons, brick bounces, explosions, and game-over states, but neither function was defined, throwing fatal ReferenceErrors on every interaction. Implemented full Web Audio synthesizer suite with dynamic gain envelopes.
+  - 🔧 FIXED: Undefined variable `screenShake` was assigned in `triggerQuantumResonance()` and `triggerExplosion()`, silently breaking screen shake intensity and rotational damping. Routed calls to `triggerScreenShake()`.
+  - 🔧 FIXED: Key 'F' was bound to both FIR (Fire skill) and `toggleForge()`, causing the Cyber-Forge lab overlay to unexpectedly open during gameplay whenever activating the Fire skill. Removed 'F' from forge toggle, updated title screen prompt to 'O', and restricted 1–7 crafting keys to when the forge modal is open.
+  - 🔧 FIXED: High score was loaded and saved to localStorage, but was never updated when `score > high_score`, leaving the displayed high score permanently stuck. Added high score tracking in `update()` and `saveGameData()`.
+  - 🔧 FIXED: Canvas had `cursor: crosshair` but lacked all mouse/touch listeners, preventing mouse, touchpad, and mobile users from moving the paddle, launching stuck balls, or clicking to start/retry. Added `pointermove` and `pointerdown` event listeners.
+  - 🔧 FIXED: Boss fortress core was declared with health bar container and laser damage checks, but the boss chassis was never drawn on canvas, boss movement was missing, the health bar fill width was never updated, and balls could not collide with the boss. Added boss canvas rendering, movement update, health bar fill sync, and ball-boss bounce collision.
+  - 🔧 FIXED: Opening the Cyber-Forge lab overlay during gameplay did not pause the game loop, allowing active balls to fall and lose player lives while viewing recipes. Paused game update while `forge_open` is active.
 
 - **KBase**: ISSUES FOUND ⚠️ (6 issues, 6 fixed inline)
   - ✅ Core functionality works (simultaneous 64-bit live multi-base converter for Bin/Oct/Dec/Hex/Custom 2..36/ASCII, text string encoding suite Base64/URL/Hex/SHA-256 with clipboard copy, 64-bit interactive toggle board with shifts, rotations ROL/ROR, reversal, byte swap endianness, 64-bit bitwise logical matrix calculator AND/OR/XOR/NOT/SHL/SHR/SAR/ROL/ROR, IEEE-754 32-bit single and 64-bit double precision floating point breakdown strips and formulas, variable-length integer suite LEB128/SLEB128/Protobuf ZigZag encoder and decoder with binary layout breakdown, multi-width 8/16/32/64-bit two's complement and sign-magnitude inspector, structured bitfield slicer with bit mask and metrics Popcount/CLZ/CTZ/Parity/Pow2, activity history logging with CSV and JSON export, help and shortcuts modal).
