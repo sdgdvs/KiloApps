@@ -73,6 +73,13 @@ ViewState history[MAX_HISTORY];
 int history_idx = -1;
 int history_max = -1;
 
+// State for Drag-to-Pan and cached HUD Font
+static HFONT g_hHudFont = NULL;
+static int isDragging = 0;
+static int hasDragged = 0;
+static int dragStartX = 0, dragStartY = 0;
+static double startMinRe = 0.0, startMaxRe = 0.0, startMinIm = 0.0, startMaxIm = 0.0;
+
 // ==========================================
 // FAST MATH & VISUAL EFFECTS ENGINE (LOOP 3)
 // ==========================================
@@ -319,10 +326,11 @@ void GetColors(unsigned int n, unsigned int iter, int t, unsigned char* r, unsig
         *r = (unsigned char)((n * 128) / iter);
         *g = (unsigned char)((n * n * 255) / (iter * iter));
         *b = (unsigned char)((n * 255) / iter);
-    } else if (t == 2) { // Cyberpunk
-        *r = (unsigned char)((n * 5) % 256);
-        *g = (unsigned char)((n * 2) % 128);
-        *b = (unsigned char)(255 - ((n * 3) % 256));
+    } else if (t == 2) { // Cyberpunk Neon
+        double f = ((double)n / iter) * 6.2831853;
+        *r = (unsigned char)((FastSin(f) * 0.5 + 0.5) * 255.0);
+        *g = (unsigned char)((FastSin(f * 2.0) * 0.5 + 0.5) * 128.0);
+        *b = (unsigned char)((FastCos(f) * 0.5 + 0.5) * 255.0);
     } else if (t == 3) { // BW
         unsigned char v = ((n % 20) > 10) ? 255 : 0;
         *r = v; *g = v; *b = v;
@@ -358,8 +366,10 @@ typedef struct {
 
 DWORD WINAPI RenderThreadProc(LPVOID lpParam) {
     RenderTask* task = (RenderTask*)lpParam;
-    double re_factor = (task->mxRe - task->mRe) / (task->width - 1);
-    double im_factor = (task->mxIm - task->mIm) / (task->height - 1);
+    int denomW = task->width > 1 ? (task->width - 1) : 1;
+    int denomH = task->height > 1 ? (task->height - 1) : 1;
+    double re_factor = (task->mxRe - task->mRe) / denomW;
+    double im_factor = (task->mxIm - task->mIm) / denomH;
     
     for (int y = task->startY; y < task->endY; ++y) {
         double c_im_view = task->mxIm - y * im_factor;
@@ -417,17 +427,25 @@ DWORD WINAPI RenderThreadProc(LPVOID lpParam) {
 void RenderMandelbrotToBuffer(DWORD* buffer, int width, int height) {
     if (!buffer || width <= 1 || height <= 1) return;
     
-    int numThreads = 8;
-    HANDLE threads[8];
-    RenderTask tasks[8];
+    #define NUM_RENDER_THREADS 8
+    HANDLE threads[NUM_RENDER_THREADS];
+    RenderTask tasks[NUM_RENDER_THREADS];
+    int activeThreads = 0;
     
-    int chunkH = height / numThreads;
-    for (int i = 0; i < numThreads; i++) {
+    int chunkH = height / NUM_RENDER_THREADS;
+    if (chunkH < 1) chunkH = 1;
+
+    for (int i = 0; i < NUM_RENDER_THREADS; i++) {
         tasks[i].buffer = buffer;
         tasks[i].width = width;
         tasks[i].height = height;
         tasks[i].startY = i * chunkH;
-        tasks[i].endY = (i == numThreads - 1) ? height : (i + 1) * chunkH;
+        tasks[i].endY = (i == NUM_RENDER_THREADS - 1) ? height : (i + 1) * chunkH;
+        if (tasks[i].startY >= height) {
+            continue;
+        }
+        if (tasks[i].endY > height) tasks[i].endY = height;
+
         tasks[i].mRe = minRe; tasks[i].mxRe = maxRe;
         tasks[i].mIm = minIm; tasks[i].mxIm = maxIm;
         tasks[i].mIter = max_iter;
@@ -436,12 +454,20 @@ void RenderMandelbrotToBuffer(DWORD* buffer, int width, int height) {
         tasks[i].th = theme;
         tasks[i].fType = fractalType;
         
-        threads[i] = CreateThread(NULL, 0, RenderThreadProc, &tasks[i], 0, NULL);
+        HANDLE hTh = CreateThread(NULL, 0, RenderThreadProc, &tasks[i], 0, NULL);
+        if (hTh != NULL) {
+            threads[activeThreads++] = hTh;
+        } else {
+            // Fallback: render chunk synchronously on main thread
+            RenderThreadProc(&tasks[i]);
+        }
     }
     
-    WaitForMultipleObjects(numThreads, threads, TRUE, INFINITE);
-    for (int i = 0; i < numThreads; i++) {
-        CloseHandle(threads[i]);
+    if (activeThreads > 0) {
+        WaitForMultipleObjects(activeThreads, threads, TRUE, INFINITE);
+        for (int i = 0; i < activeThreads; i++) {
+            if (threads[i]) CloseHandle(threads[i]);
+        }
     }
 }
 
@@ -540,7 +566,7 @@ void SaveImage4K(HWND hwnd) {
             
             bih.biSize = sizeof(BITMAPINFOHEADER);
             bih.biWidth = expW;
-            bih.biHeight = -expH;
+            bih.biHeight = expH; // Positive for universal bottom-up BMP compatibility
             bih.biPlanes = 1;
             bih.biBitCount = 32;
             bih.biCompression = BI_RGB;
@@ -549,7 +575,11 @@ void SaveImage4K(HWND hwnd) {
             DWORD dwWritten;
             WriteFile(hFile, &bfh, sizeof(BITMAPFILEHEADER), &dwWritten, NULL);
             WriteFile(hFile, &bih, sizeof(BITMAPINFOHEADER), &dwWritten, NULL);
-            WriteFile(hFile, buffer, imageSize32, &dwWritten, NULL);
+            
+            int rowBytes = expW * 4;
+            for (int y = expH - 1; y >= 0; y--) {
+                WriteFile(hFile, &buffer[y * expW], rowBytes, &dwWritten, NULL);
+            }
             CloseHandle(hFile);
         }
     }
@@ -690,6 +720,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE: {
             InitAmbientMotes();
             SetTimer(hwnd, 1, 33, NULL); // 30 FPS visual effects loop
+            
+            HDC hdc = GetDC(hwnd);
+            int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+            ReleaseDC(hwnd, hdc);
+            int fontHeight = -MulDiv(11, dpi, 72);
+            g_hHudFont = CreateFont(fontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, 
+                                    OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, 
+                                    DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             break;
         }
         case WM_TIMER: {
@@ -769,13 +807,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_LBUTTONDOWN: {
-            int x = LOWORD(lParam);
-            int y = HIWORD(lParam);
+            int x = (short)LOWORD(lParam);
+            int y = (short)HIWORD(lParam);
             
             if ((wParam & MK_SHIFT) && !isJulia) {
                 // Interactive Julia bridging
-                double re_factor = (maxRe - minRe) / (bmpW - 1);
-                double im_factor = (maxIm - minIm) / (bmpH - 1);
+                double re_factor = (maxRe - minRe) / (bmpW > 1 ? (bmpW - 1) : 1);
+                double im_factor = (maxIm - minIm) / (bmpH > 1 ? (bmpH - 1) : 1);
                 juliaCRe = minRe + x * re_factor;
                 juliaCIm = maxIm - y * im_factor;
                 
@@ -787,12 +825,69 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 max_iter = 100;
                 SaveState();
                 RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
+                InvalidateRect(hwnd, NULL, FALSE);
             } else {
-                TriggerImpact(x, y, 4.5, 20);
-                Zoom(0.5, x, y); // Zoom in
-                SaveState();
+                isDragging = 1;
+                hasDragged = 0;
+                dragStartX = x;
+                dragStartY = y;
+                startMinRe = minRe;
+                startMaxRe = maxRe;
+                startMinIm = minIm;
+                startMaxIm = maxIm;
+                SetCapture(hwnd);
             }
-            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        }
+        case WM_MOUSEMOVE: {
+            if (isDragging && bmpW > 1 && bmpH > 1) {
+                int x = (short)LOWORD(lParam);
+                int y = (short)HIWORD(lParam);
+                int dx = x - dragStartX;
+                int dy = y - dragStartY;
+                
+                if (dx > 3 || dx < -3 || dy > 3 || dy < -3) {
+                    hasDragged = 1;
+                }
+                
+                if (hasDragged) {
+                    double re_factor = (startMaxRe - startMinRe) / (bmpW - 1);
+                    double im_factor = (startMaxIm - startMinIm) / (bmpH - 1);
+                    
+                    minRe = startMinRe - dx * re_factor;
+                    maxRe = startMaxRe - dx * re_factor;
+                    minIm = startMinIm + dy * im_factor;
+                    maxIm = startMaxIm + dy * im_factor;
+                    
+                    RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+            }
+            break;
+        }
+        case WM_LBUTTONUP: {
+            if (isDragging) {
+                int x = (short)LOWORD(lParam);
+                int y = (short)HIWORD(lParam);
+                isDragging = 0;
+                ReleaseCapture();
+                
+                if (!hasDragged) {
+                    // Quick click without moving -> Zoom In
+                    TriggerImpact(x, y, 4.5, 20);
+                    Zoom(0.5, x, y);
+                    SaveState();
+                } else {
+                    // Drag pan finished -> save viewport state
+                    TriggerScreenShake(2.0);
+                    SaveState();
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            break;
+        }
+        case WM_CAPTURECHANGED: {
+            isDragging = 0;
             break;
         }
         case WM_RBUTTONDOWN: {
@@ -935,6 +1030,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SaveImage4K(hwnd);
             } else if (wParam == 'H' || wParam == VK_F1) {
                 ShowHelpDialog(hwnd);
+            } else if (wParam == VK_ESCAPE) {
+                if (isDragging) {
+                    isDragging = 0;
+                    ReleaseCapture();
+                }
             }
             break;
         }
@@ -1077,7 +1177,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawPerimeterGlintGDI(hdcMem, bmpW, bmpH, glintProgress);
                 
                 // 7. Draw HUD Badge
-                RECT textBg = { 12, bmpH - 46, 540, bmpH - 12 };
+                RECT textBg = { 12, bmpH - 46, 560, bmpH - 12 };
                 HBRUSH hHudBrush = CreateSolidBrush(RGB(11, 19, 36));
                 HPEN hHudPen = CreatePen(PS_SOLID, 2, RGB(96, 165, 250));
                 HBRUSH hOldBrush = (HBRUSH)SelectObject(hdcMem, hHudBrush);
@@ -1099,26 +1199,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteObject(hHudPen);
                 DeleteObject(iconPen);
                 
-                // Draw HUD Text
+                // Draw HUD Text using cached font
                 SetBkMode(hdcMem, TRANSPARENT);
-                int dpi = GetDeviceCaps(hdcMem, LOGPIXELSY);
-                int fontHeight = -MulDiv(11, dpi, 72);
-                HFONT hFont = CreateFont(fontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, 
-                                         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, 
-                                         DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
-                HFONT hOldFont = (HFONT)SelectObject(hdcMem, hFont);
+                HFONT hOldFont = NULL;
+                if (g_hHudFont) {
+                    hOldFont = (HFONT)SelectObject(hdcMem, g_hHudFont);
+                }
                 SetTextColor(hdcMem, RGB(248, 250, 252));
                 
-                char hudMsg[160];
+                char hudMsg[256];
                 const char* curF = (fractalType >= 0 && fractalType < NUM_FRACTAL_TYPES) ? fractalNames[fractalType] : "Fractal";
-                wsprintf(hudMsg, "%s%s | [1-5/F]ormula [L]andmark [T]heme [Arrows]Pan [+/-]Zoom [F1]Help", curF, isJulia ? " (Julia)" : "");
+                wsprintf(hudMsg, "%s%s | [1-5/F]ormula [L]andmark [T]heme [Arrows/Drag]Pan [+/-]Zoom [F1]Help", curF, isJulia ? " (Julia)" : "");
                 
                 int len = 0;
                 while (hudMsg[len]) len++;
                 TextOut(hdcMem, 46, bmpH - 36, hudMsg, len);
                 
-                SelectObject(hdcMem, hOldFont);
-                DeleteObject(hFont);
+                if (hOldFont) {
+                    SelectObject(hdcMem, hOldFont);
+                }
                 
                 // 8. BitBlt memory buffer to screen
                 BitBlt(hdc, 0, 0, bmpW, bmpH, hdcMem, 0, 0, SRCCOPY);
@@ -1134,7 +1233,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return 1; // Handled in double-buffered WM_PAINT
         case WM_DESTROY:
             KillTimer(hwnd, 1);
-            if (hBitmap) DeleteObject(hBitmap);
+            if (g_hHudFont) {
+                DeleteObject(g_hHudFont);
+                g_hHudFont = NULL;
+            }
+            if (hBitmap) {
+                DeleteObject(hBitmap);
+                hBitmap = NULL;
+            }
             PostQuitMessage(0);
             break;
         default:

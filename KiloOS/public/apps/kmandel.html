@@ -867,6 +867,20 @@
 
     requestAnimationFrame(renderLoop);
 
+    function safeGetStorage(key, fallback) {
+        try {
+            const val = localStorage.getItem(key);
+            return val !== null ? JSON.parse(val) : fallback;
+        } catch (e) {
+            return fallback;
+        }
+    }
+    function safeSetStorage(key, value) {
+        try {
+            localStorage.setItem(key, JSON.stringify(value));
+        } catch (e) {}
+    }
+
     function hexToRgb(hex) {
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         return result ? [
@@ -875,13 +889,43 @@
             parseInt(result[3], 16)
         ] : [255,255,255];
     }
+    function rgbToHex(rgb) {
+        return '#' + rgb.map(x => {
+            const h = Math.max(0, Math.min(255, Math.floor(x))).toString(16);
+            return h.length === 1 ? '0' + h : h;
+        }).join('');
+    }
+
+    // Load persisted settings
+    const savedTheme = safeGetStorage('kmandel_theme', null);
+    if (savedTheme !== null && savedTheme >= 0 && savedTheme <= 6) {
+        theme = savedTheme;
+    }
+    const savedType = safeGetStorage('kmandel_fractal_type', null);
+    if (savedType !== null && savedType >= 0 && savedType < fractalNames.length) {
+        fractalType = savedType;
+        if (fractalType === 1) { minRe = -1.8; maxRe = 1.0; minIm = -1.8; maxIm = 1.0; }
+        else if (fractalType === 2) { minRe = -2.0; maxRe = 1.0; minIm = -1.5; maxIm = 1.5; }
+    }
+    const savedC1 = safeGetStorage('kmandel_custom_color1', null);
+    if (Array.isArray(savedC1) && savedC1.length === 3) customColor1 = savedC1;
+    const savedC2 = safeGetStorage('kmandel_custom_color2', null);
+    if (Array.isArray(savedC2) && savedC2.length === 3) customColor2 = savedC2;
+
+    document.getElementById('fractal-select').value = fractalType;
+    document.getElementById('theme-select').value = theme;
+    document.getElementById('custom-colors').style.display = theme === 6 ? 'block' : 'none';
+    document.getElementById('color1').value = rgbToHex(customColor1);
+    document.getElementById('color2').value = rgbToHex(customColor2);
     
     document.getElementById('color1').addEventListener('input', (e) => {
         customColor1 = hexToRgb(e.target.value);
+        safeSetStorage('kmandel_custom_color1', customColor1);
         if (theme === 6) requestRender();
     });
     document.getElementById('color2').addEventListener('input', (e) => {
         customColor2 = hexToRgb(e.target.value);
+        safeSetStorage('kmandel_custom_color2', customColor2);
         if (theme === 6) requestRender();
     });
 
@@ -1025,11 +1069,11 @@
                         r = Math.floor((n * 128) / max_iter);
                         g = Math.floor((n * n * 255) / (max_iter * max_iter));
                         b = Math.floor((n * 255) / max_iter);
-                      } else if (theme === 2) { // Cyberpunk
-                        let f = n / max_iter;
-                        r = Math.max(0, Math.floor(Math.sin(f * Math.PI) * 255));
-                        g = Math.max(0, Math.floor(Math.sin(f * Math.PI * 2) * 128));
-                        b = Math.max(0, Math.floor(Math.cos(f * Math.PI) * 255));
+                      } else if (theme === 2) { // Cyberpunk Neon
+                        let f = (n / max_iter) * 6.2831853;
+                        r = Math.floor((Math.sin(f) * 0.5 + 0.5) * 255);
+                        g = Math.floor((Math.sin(f * 2.0) * 0.5 + 0.5) * 128);
+                        b = Math.floor((Math.cos(f) * 0.5 + 0.5) * 255);
                       } else if (theme === 3) { // BW
                         let f = (n % 20) > 10 ? 255 : 0;
                         r = f; g = f; b = f;
@@ -1054,13 +1098,102 @@
           self.postMessage({ id, startY, data: buf }, [buf]);
       };
     `;
-    const workerBlob = new Blob([workerCode], { type: 'application/javascript' });
-    const workerUrl = URL.createObjectURL(workerBlob);
-    
-    const numWorkers = navigator.hardwareConcurrency || 4;
+
+    let useWorkers = true;
     const workers = [];
-    for (let i = 0; i < numWorkers; i++) {
-        workers.push(new Worker(workerUrl));
+    let numWorkers = 4;
+    try {
+        const workerBlob = new Blob([workerCode], { type: 'application/javascript' });
+        const workerUrl = URL.createObjectURL(workerBlob);
+        numWorkers = Math.min(navigator.hardwareConcurrency || 4, 8);
+        for (let i = 0; i < numWorkers; i++) {
+            workers.push(new Worker(workerUrl));
+        }
+    } catch (err) {
+        console.warn('Web Workers unavailable, using synchronous rendering fallback', err);
+        useWorkers = false;
+    }
+
+    function syncRender(targetCanvas, w, h, callback) {
+        const targetCtx = targetCanvas.getContext('2d');
+        const re_factor = (maxRe - minRe) / (w > 1 ? (w - 1) : 1);
+        const im_factor = (maxIm - minIm) / (h > 1 ? (h - 1) : 1);
+        const imgData = targetCtx.createImageData(w, h);
+        const data = imgData.data;
+        let idx = 0;
+        for (let y = 0; y < h; ++y) {
+            const c_im_view = maxIm - y * im_factor;
+            for (let x = 0; x < w; ++x) {
+                const c_re_view = minRe + x * re_factor;
+                let c_re = isJulia ? juliaCRe : c_re_view;
+                let c_im = isJulia ? juliaCIm : c_im_view;
+                let Z_re = c_re_view, Z_im = c_im_view;
+                let isInside = true;
+                let n = 0;
+                for (n = 0; n < max_iter; ++n) {
+                    const Z_re2 = Z_re * Z_re, Z_im2 = Z_im * Z_im;
+                    if (Z_re2 + Z_im2 > 4.0) { isInside = false; break; }
+                    if (fractalType === 1) {
+                        const a = Math.abs(Z_re), b = Math.abs(Z_im);
+                        Z_im = -2.0 * a * b + c_im;
+                        Z_re = Z_re2 - Z_im2 + c_re;
+                    } else if (fractalType === 2) {
+                        Z_im = -2.0 * Z_re * Z_im + c_im;
+                        Z_re = Z_re2 - Z_im2 + c_re;
+                    } else if (fractalType === 3) {
+                        const re_temp = Math.abs(Z_re2 - Z_im2);
+                        Z_im = 2.0 * Z_re * Z_im + c_im;
+                        Z_re = re_temp + c_re;
+                    } else if (fractalType === 4) {
+                        const re_temp = Math.abs(Z_re2 - Z_im2);
+                        const a = Math.abs(Z_re);
+                        Z_im = -2.0 * a * Z_im + c_im;
+                        Z_re = re_temp + c_re;
+                    } else {
+                        Z_im = 2.0 * Z_re * Z_im + c_im;
+                        Z_re = Z_re2 - Z_im2 + c_re;
+                    }
+                }
+                if (isInside) {
+                    data[idx++] = 0; data[idx++] = 0; data[idx++] = 0; data[idx++] = 255;
+                } else {
+                    let r = 0, g = 0, b = 0;
+                    if (theme === 0) {
+                        r = Math.floor((n * 255) / max_iter);
+                        g = Math.floor((n * n * 255) / (max_iter * max_iter));
+                        b = Math.floor((n * 128) / max_iter);
+                    } else if (theme === 1) {
+                        r = Math.floor((n * 128) / max_iter);
+                        g = Math.floor((n * n * 255) / (max_iter * max_iter));
+                        b = Math.floor((n * 255) / max_iter);
+                    } else if (theme === 2) {
+                        let f = (n / max_iter) * 6.2831853;
+                        r = Math.floor((Math.sin(f) * 0.5 + 0.5) * 255);
+                        g = Math.floor((Math.sin(f * 2.0) * 0.5 + 0.5) * 128);
+                        b = Math.floor((Math.cos(f) * 0.5 + 0.5) * 255);
+                    } else if (theme === 3) {
+                        let f = (n % 20) > 10 ? 255 : 0;
+                        r = f; g = f; b = f;
+                    } else if (theme === 4) {
+                        r = (n * 30) % 100;
+                        g = Math.floor((n * 255) / max_iter);
+                        b = (n * 90) % 180;
+                    } else if (theme === 5) {
+                        r = Math.floor((n * 255) / max_iter);
+                        g = Math.floor((n * 70) / max_iter);
+                        b = Math.floor((n * 190) / max_iter);
+                    } else if (theme === 6) {
+                        let f = n / max_iter;
+                        r = Math.floor(customColor1[0] + f * (customColor2[0] - customColor1[0]));
+                        g = Math.floor(customColor1[1] + f * (customColor2[1] - customColor1[1]));
+                        b = Math.floor(customColor1[2] + f * (customColor2[2] - customColor1[2]));
+                    }
+                    data[idx++] = r; data[idx++] = g; data[idx++] = b; data[idx++] = 255;
+                }
+            }
+        }
+        targetCtx.putImageData(imgData, 0, 0);
+        if (callback) callback();
     }
 
     let activeWorkers = 0;
@@ -1099,6 +1232,11 @@
           updateDisplays();
       }
       
+      if (!useWorkers || workers.length === 0) {
+          syncRender(targetCanvas, w, h, callback);
+          return;
+      }
+
       const targetCtx = targetCanvas.getContext('2d');
       const chunkH = Math.ceil(h / numWorkers);
       activeWorkers = 0;
@@ -1185,6 +1323,7 @@
             minRe = -2.0; maxRe = 1.0; minIm = -1.2; maxIm = 1.2;
         }
         max_iter = 100;
+        safeSetStorage('kmandel_fractal_type', fractalType);
         triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 6, 25);
         saveState();
         requestRender();
@@ -1193,8 +1332,11 @@
     document.getElementById('landmark-select').addEventListener('change', (e) => {
         const val = parseInt(e.target.value, 10);
         if (val >= 0) {
+            currentLandmarkIdx = val;
             applyLandmark(val);
+            showToast(`Landmark: ${landmarks[val].name}`, 'purple', 2200);
         }
+        e.target.value = "-1";
     });
 
     // ==========================================
@@ -1234,6 +1376,7 @@
     document.getElementById('theme-select').addEventListener('change', (e) => {
         theme = parseInt(e.target.value, 10);
         document.getElementById('custom-colors').style.display = theme === 6 ? 'block' : 'none';
+        safeSetStorage('kmandel_theme', theme);
         triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 4, 20);
         saveState();
         requestRender();
@@ -1312,19 +1455,48 @@
         exportCanvas.height = expH;
         
         performRender(exportCanvas, expW, expH, true, () => {
-            const link = document.createElement('a');
             const fname = `kmandel_${fractalNames[fractalType].toLowerCase().replace(/[^a-z0-9]/g, '_')}_4k.png`;
-            link.download = fname;
-            link.href = exportCanvas.toDataURL('image/png');
-            link.click();
-            document.getElementById('loading-text').textContent = "Rendering...";
-            loading.classList.remove('active');
-            showToast(`✨ Saved: ${fname}`, 'success', 3500);
+            try {
+                exportCanvas.toBlob((blob) => {
+                    if (!blob) {
+                        const link = document.createElement('a');
+                        link.download = fname;
+                        link.href = exportCanvas.toDataURL('image/png');
+                        link.click();
+                    } else {
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.download = fname;
+                        link.href = url;
+                        link.click();
+                        setTimeout(() => URL.revokeObjectURL(url), 10000);
+                    }
+                    document.getElementById('loading-text').textContent = "Rendering...";
+                    loading.classList.remove('active');
+                    showToast(`✨ Saved: ${fname}`, 'success', 3500);
+                }, 'image/png');
+            } catch (err) {
+                const link = document.createElement('a');
+                link.download = fname;
+                link.href = exportCanvas.toDataURL('image/png');
+                link.click();
+                document.getElementById('loading-text').textContent = "Rendering...";
+                loading.classList.remove('active');
+                showToast(`✨ Saved: ${fname}`, 'success', 3500);
+            }
         });
     });
 
     let currentLandmarkIdx = 0;
     window.addEventListener('keydown', (e) => {
+        // Prevent key shortcut hijacking when typing in form controls
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) {
+            if (e.key === 'Escape') {
+                e.target.blur();
+            }
+            return;
+        }
+
         // Handle Escape to dismiss Help modal & toasts
         if (e.key === 'Escape') {
             const overlay = document.getElementById('help-overlay');
@@ -1337,13 +1509,17 @@
             return;
         }
 
-        if (e.key.toLowerCase() === 'z') {
+        // Undo: Z, Ctrl+Z
+        if ((e.key.toLowerCase() === 'z' && !e.ctrlKey && !e.metaKey) || (e.ctrlKey && e.key.toLowerCase() === 'z' && !e.shiftKey)) {
             undo();
             showToast(`Undo (${historyIdx + 1}/${history.length})`, 'info', 1500);
+            return;
         }
-        if (e.key.toLowerCase() === 'y') {
+        // Redo: Y, Ctrl+Y, Ctrl+Shift+Z
+        if ((e.key.toLowerCase() === 'y' && !e.ctrlKey && !e.metaKey) || (e.ctrlKey && e.key.toLowerCase() === 'y') || (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'z')) {
             redo();
             showToast(`Redo (${historyIdx + 1}/${history.length})`, 'info', 1500);
+            return;
         }
         if (e.key.toLowerCase() === 's') document.getElementById('btn-save').click();
         if (e.key.toLowerCase() === 'r' || e.key === '0') document.getElementById('btn-reset').click();
@@ -1372,6 +1548,7 @@
                 }
                 max_iter = 100;
                 document.getElementById('fractal-select').value = fractalType;
+                safeSetStorage('kmandel_fractal_type', fractalType);
                 triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 6, 25);
                 saveState();
                 requestRender();
@@ -1382,6 +1559,7 @@
         if (e.key.toLowerCase() === 'f') {
             fractalType = (fractalType + 1) % fractalNames.length;
             document.getElementById('fractal-select').value = fractalType;
+            safeSetStorage('kmandel_fractal_type', fractalType);
             triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 6, 25);
             saveState();
             requestRender();
@@ -1396,6 +1574,7 @@
             theme = (theme + 1) % 7;
             document.getElementById('theme-select').value = theme;
             document.getElementById('custom-colors').style.display = theme === 6 ? 'block' : 'none';
+            safeSetStorage('kmandel_theme', theme);
             triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 5, 20);
             saveState();
             requestRender();
