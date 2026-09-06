@@ -2212,6 +2212,18 @@
           convertEpochToHuman();
           return;
         }
+      } else if (e.target.id === 'conv-date-input') {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          convertHumanToEpoch();
+          return;
+        }
+      } else if (e.target.id === 'city-select') {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          addWorldCity();
+          return;
+        }
       }
 
       // Avoid triggering action shortcuts when typing in inputs or selects
@@ -2226,15 +2238,13 @@
           return;
         }
       }
-      if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
+      if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
         if (e.key === 'F1') e.preventDefault();
         openHelpModal();
       } else if (e.key === 'm' || e.key === 'M') {
         toggleSound();
-        showToast(soundEnabled ? 'Audio Chimes Enabled' : 'Audio Muted', 'info');
       } else if (e.key === 'f' || e.key === 'F') {
         toggleFormat();
-        showToast(`Time format set to ${use24Hour ? '24-Hour' : '12-Hour'}`, 'info');
       } else if (e.code === 'Space') {
         e.preventDefault();
         if (currentTab === 'stopwatch') {
