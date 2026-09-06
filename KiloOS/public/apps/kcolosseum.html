@@ -102,7 +102,7 @@
 </style>
 </head>
 <body>
-  <button onclick="document.getElementById('helpModal').style.display='flex'" style="position:absolute; top:20px; right:20px; z-index:100; font-size:1.1em; padding:10px;">Lanista's Guide</button>
+  <button onclick="document.getElementById('helpModal').style.display='flex'" style="position:absolute; top:20px; right:20px; z-index:100; font-size:1.1em; padding:10px;">Lanista's Guide [H]</button>
   <h1>KColosseum - Ludus Management</h1>
   <div class="funds">Treasury: <span id="fundsDisplay">1000</span> Denarii | League: <span id="leagueDisplay">Local Pits (Level 1)</span></div>
   
@@ -136,18 +136,18 @@
     <div style="text-align:center;">
       <div id="favorDisplay" style="font-weight:bold; color:#d4af37; background:#8b0000; padding:6px; margin-bottom:12px; border-radius:5px; border:1px solid #d4af37; letter-spacing:1px;">Crowd Favor: 0%</div>
       <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
-        <button id="btnAttack" onclick="combatAction('attack')" style="min-width:90px; font-size:1.05em; padding:8px 16px;">⚔️ Attack</button>
-        <button id="btnDefend" onclick="combatAction('defend')" style="min-width:90px; font-size:1.05em; padding:8px 16px;">🛡️ Defend</button>
-        <button id="btnShowboat" onclick="combatAction('showboat')" style="min-width:90px; font-size:1.05em; padding:8px 16px;">✨ Showboat</button>
-        <button id="btnFlee" onclick="combatAction('flee')" style="min-width:90px; font-size:1.05em; padding:8px 16px;">🏃 Flee</button>
+        <button id="btnAttack" onclick="combatAction('attack')" style="min-width:90px; font-size:1.05em; padding:8px 16px;">⚔️ Attack [A]</button>
+        <button id="btnDefend" onclick="combatAction('defend')" style="min-width:90px; font-size:1.05em; padding:8px 16px;">🛡️ Defend [D]</button>
+        <button id="btnShowboat" onclick="combatAction('showboat')" style="min-width:90px; font-size:1.05em; padding:8px 16px;">✨ Showboat [S]</button>
+        <button id="btnFlee" onclick="combatAction('flee')" style="min-width:90px; font-size:1.05em; padding:8px 16px;">🏃 Flee [F]</button>
       </div>
     </div>
     <div id="combatLog" style="margin-top:15px; height:130px; overflow-y:auto; background:#fff; color:#333; padding:10px; border:1px solid #ccc; font-family:monospace; font-size:0.9em;"></div>
   </div>
 
-  <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+  <div id="helpModal" onclick="if(event.target===this)this.style.display='none'" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
     <div class="panel" style="width:80%; max-width:700px; max-height:85vh; overflow-y:auto; position:relative; background:#fdf5e6; color:#333;">
-      <button onclick="document.getElementById('helpModal').style.display='none'" style="position:absolute; top:15px; right:15px;">Close</button>
+      <button onclick="document.getElementById('helpModal').style.display='none'" style="position:absolute; top:15px; right:15px;">Close [Esc]</button>
       <h2 style="border-bottom:2px solid #d4af37; padding-bottom:10px; margin-top:0;">Lanista's Guide</h2>
       <div style="font-size:1.1em; line-height:1.6; margin-top:20px;">
         <p><strong>HOW TO PLAY:</strong><br>
@@ -155,6 +155,16 @@
         When ready, send them to the Arena to fight and earn Denarii.<br>
         If your gladiator dies, they are lost forever! Heal them between fights.</p>
         
+        <p><strong>KEYBOARD SHORTCUTS:</strong></p>
+        <ul style="list-style-type:disc; padding-left:20px;">
+          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>A / 1:</strong>&nbsp;Attack in combat</li>
+          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>D / 2:</strong>&nbsp;Defend in combat</li>
+          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>S / 3:</strong>&nbsp;Showboat in combat</li>
+          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>F / 4:</strong>&nbsp;Flee combat</li>
+          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>H:</strong>&nbsp;Toggle Lanista's Guide</li>
+          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Esc:</strong>&nbsp;Close modal or exit arena</li>
+        </ul>
+
         <p><strong>COMBAT TACTICS:</strong></p>
         <ul style="list-style-type:disc; padding-left:20px;">
           <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Attack:</strong>&nbsp;Uses STR for damage. Hit chance is based on AGI difference.</li>
@@ -360,8 +370,25 @@
         funds -= 50;
         market.length = 0;
         market.push(generateGladiator(), generateGladiator(), generateGladiator());
+        playTone(300, 'sine', 0.1, 0.2);
+        saveGame();
         updateUI();
       }
+    }
+
+    function checkBankruptcy() {
+      const minCost = market.length > 0 ? Math.min(...market.map(g => g.cost)) : 50;
+      return (owned.length === 0 && funds < minCost && funds < 50);
+    }
+
+    function claimRelief() {
+      funds += 200;
+      if (market.length === 0) {
+        market.push(generateGladiator(), generateGladiator(), generateGladiator());
+      }
+      playVictory();
+      saveGame();
+      updateUI();
     }
 
     function updateUI() {
@@ -371,6 +398,9 @@
       
       const marketList = document.getElementById('marketList');
       marketList.innerHTML = '';
+      if (market.length === 0) {
+        marketList.innerHTML = '<li><em>Market is empty. Click Refresh above to scout new recruits!</em></li>';
+      }
       market.forEach(g => {
         const li = document.createElement('li');
         const canvasId = `market_port_${g.id}`;
@@ -393,11 +423,21 @@
       const ownedList = document.getElementById('ownedList');
       ownedList.innerHTML = '';
       if (owned.length === 0) {
-        ownedList.innerHTML = '<li><em>No gladiators owned. Recruit one from the market!</em></li>';
+        let reliefHtml = '';
+        if (checkBankruptcy()) {
+          reliefHtml = `<div style="margin-top:10px; padding:10px; background:#fff0f0; border:2px dashed #8b0000; border-radius:6px; text-align:center; width:100%; box-sizing:border-box;">
+            <strong style="color:#8b0000;">⚠️ Ludus Bankrupt!</strong><br>
+            <span style="font-size:0.85em; color:#444;">All fighters lost and funds depleted. A wealthy Roman patron offers an emergency grant!</span><br>
+            <button onclick="claimRelief()" style="margin-top:8px; background:#228b22; color:#fff;">🏛️ Accept Patron Grant (+200D)</button>
+          </div>`;
+        }
+        ownedList.innerHTML = `<li><em>No gladiators owned. Recruit one from the market!</em></li>${reliefHtml}`;
       }
       owned.forEach(g => {
         const li = document.createElement('li');
         const canvasId = `owned_port_${g.id}`;
+        const healAmt = Math.min(funds, g.damageTaken);
+        const healLabel = (funds >= g.damageTaken) ? `${g.damageTaken}D` : `${healAmt}/${g.damageTaken}D`;
         li.innerHTML = `
           <div class="gladiator-card" style="margin-bottom:6px;">
             <canvas id="${canvasId}" class="portrait-canvas" width="44" height="44"></canvas>
@@ -418,7 +458,7 @@
           </div>
           <div style="margin-top:6px; display:flex; gap:8px; width:100%;">
             <button style="font-size:0.75em; background:#228b22; color:#fff;" onclick="enterArena(${g.id})" ${g.damageTaken >= getEffVit(g) * 10 ? 'disabled' : ''}>⚔️ Fight in Arena</button>
-            ${g.damageTaken > 0 ? `<button style="font-size:0.75em; background:#4169e1; color:#fff;" onclick="healGladiator(${g.id})" ${(funds < g.damageTaken) ? 'disabled' : ''}>🩹 Heal (${g.damageTaken}D)</button>` : ''}
+            ${g.damageTaken > 0 ? `<button style="font-size:0.75em; background:#4169e1; color:#fff;" onclick="healGladiator(${g.id})" ${funds <= 0 ? 'disabled' : ''}>🩹 Heal (${healLabel})</button>` : ''}
           </div>
         `;
         li.style.flexDirection = 'column';
@@ -437,6 +477,9 @@
         funds -= market[index].cost;
         owned.push(market[index]);
         market.splice(index, 1);
+        playTone(330, 'triangle', 0.12, 0.3);
+        setTimeout(() => playTone(440, 'triangle', 0.18, 0.3), 100);
+        saveGame();
         updateUI();
       }
     }
@@ -451,7 +494,9 @@
           if (type === 'trid') g.weapon = 2;
           if (type === 'armr') g.armor = 1;
           if (type === 'shld') g.shield = 1;
+          playTone(400, 'square', 0.1, 0.2);
           updateDesc(g);
+          saveGame();
           updateUI();
       }
     }
@@ -464,7 +509,10 @@
           if (stat === 'str') gladiator.str++;
           if (stat === 'agi') gladiator.agi++;
           if (stat === 'vit') gladiator.vit++;
+          playTone(280, 'sine', 0.12, 0.3);
+          setTimeout(() => playTone(370, 'sine', 0.15, 0.3), 80);
           updateDesc(gladiator);
+          saveGame();
           updateUI();
         }
       }
@@ -472,10 +520,14 @@
 
     function healGladiator(id) {
       const g = owned.find(g => g.id === id);
-      if (g && g.damageTaken > 0 && funds >= g.damageTaken) {
-        funds -= g.damageTaken;
-        g.damageTaken = 0;
+      if (g && g.damageTaken > 0 && funds > 0) {
+        let healAmt = Math.min(funds, g.damageTaken);
+        funds -= healAmt;
+        g.damageTaken -= healAmt;
+        playTone(523.25, 'sine', 0.15, 0.25);
+        setTimeout(() => playTone(659.25, 'sine', 0.2, 0.25), 100);
         updateDesc(g);
+        saveGame();
         updateUI();
       }
     }
@@ -790,6 +842,23 @@
       let drawX = x - lungeX;
       let drawY = y + bob;
 
+      if (state.stance === 'dead') {
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.beginPath();
+        ctx.ellipse(drawX, y + 36, 36, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#6b3e14';
+        ctx.beginPath();
+        ctx.arc(drawX - 16, y + 22, 18, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#d99b59';
+        ctx.beginPath();
+        ctx.ellipse(drawX + 8, y + 24, 28, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        return;
+      }
+
       // Shadow
       ctx.fillStyle = 'rgba(0,0,0,0.35)';
       ctx.beginPath();
@@ -877,6 +946,26 @@
       let lungeX = state.lunge || 0;
       let drawX = x - lungeX;
       let drawY = y;
+
+      if (state.stance === 'dead') {
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.beginPath();
+        ctx.ellipse(drawX, y + 36, 44, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#5c3a21';
+        ctx.beginPath();
+        ctx.ellipse(drawX - 25, y + 24, 20, 10, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#8b5a2b';
+        ctx.fillRect(drawX - 5, y + 10, 32, 20);
+        ctx.strokeStyle = '#cd7f32';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(drawX + 24, y + 28, 14, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+        return;
+      }
 
       // Shadow
       ctx.fillStyle = 'rgba(0,0,0,0.35)';
@@ -1310,10 +1399,18 @@
       log.innerHTML = `<em>Match starts! <strong>${currentFighter.name}</strong> vs <strong>${enemyFighter.name}</strong></em><br>`;
       
       playCheer();
+      setCombatButtonsDisabled(false);
       updateCombatUI();
 
       if (animId) cancelAnimationFrame(animId);
       animId = requestAnimationFrame(renderArenaLoop);
+    }
+
+    function setCombatButtonsDisabled(disabled) {
+      ['btnAttack', 'btnDefend', 'btnShowboat', 'btnFlee'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.disabled = disabled;
+      });
     }
     
     function updateCombatUI() {
@@ -1344,6 +1441,7 @@
         } else {
           let heal = 20 + Math.floor(Math.random() * 21);
           currentFighter.hp = Math.min(currentFighter.maxHp, currentFighter.hp + heal);
+          currentFighter.damageTaken = Math.max(0, currentFighter.maxHp - currentFighter.hp);
           logCombat(`<strong>The crowd cheers! A medical sponge is thrown! Healed <span style="color:#228b22;">${heal} HP</span>!</strong>`);
           spawnParticles(arenaCanvas.width * 0.28, arenaCanvas.height * 0.68, 18, 'heal');
           addFloatingText(`+${heal} HP!`, arenaCanvas.width * 0.28, 120, '#32cd32');
@@ -1361,6 +1459,7 @@
 
     function combatAction(action) {
       if (combatOver) return;
+      setCombatButtonsDisabled(true);
       
       const pX = arenaCanvas.width * 0.28;
       const pY = arenaCanvas.height * 0.68;
@@ -1514,7 +1613,11 @@
                 playMiss();
                 addFloatingText("MISS!", pX, pY - 30, '#aaaaaa');
               }
-              if (currentFighter.hp <= 0) checkPlayerDeath();
+              if (currentFighter.hp <= 0) {
+                checkPlayerDeath();
+              } else if (!combatOver) {
+                setCombatButtonsDisabled(false);
+              }
               updateCombatUI();
             }, 350);
           }
@@ -1522,6 +1625,8 @@
         
         if (currentFighter.hp <= 0) {
           checkPlayerDeath();
+        } else if (!enemyFighter.isTwins && !combatOver) {
+          setCombatButtonsDisabled(false);
         }
         updateCombatUI();
       }, 350);
@@ -1535,11 +1640,15 @@
       playDefeat();
       addScreenShake(12);
       addFloatingText("DEAD", arenaCanvas.width * 0.28, arenaCanvas.height * 0.68 - 30, '#ff0000');
-      owned.splice(owned.findIndex(g => g.id === currentFighter.id), 1);
+      const deadIdx = owned.findIndex(g => g.id === currentFighter.id);
+      if (deadIdx !== -1) {
+        owned.splice(deadIdx, 1);
+      }
       if (arenaLevel > 1) {
         arenaLevel--;
         logCombat(`<em>Your ludus drops to level ${arenaLevel}...</em>`);
       }
+      saveGame();
       updateUI();
       combatOver = true;
       setTimeout(exitArena, 2400);
@@ -1560,9 +1669,78 @@
           }
         }
       });
+      if (currentFighter) {
+        updateDesc(currentFighter);
+      }
+      saveGame();
       updateUI();
     }
 
+    function saveGame() {
+      try {
+        const data = {
+          funds,
+          arenaLevel,
+          nextId,
+          owned,
+          market
+        };
+        localStorage.setItem('kcolosseum_save', JSON.stringify(data));
+      } catch (e) {}
+    }
+
+    function loadGame() {
+      try {
+        const raw = localStorage.getItem('kcolosseum_save');
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (typeof data.funds === 'number') funds = data.funds;
+          if (typeof data.arenaLevel === 'number') arenaLevel = data.arenaLevel;
+          if (typeof data.nextId === 'number') nextId = data.nextId;
+          if (Array.isArray(data.owned) && data.owned.length > 0) {
+            owned.length = 0;
+            data.owned.forEach(g => { updateDesc(g); owned.push(g); });
+          }
+          if (Array.isArray(data.market) && data.market.length > 0) {
+            market.length = 0;
+            data.market.forEach(g => { updateDesc(g); market.push(g); });
+          }
+        }
+      } catch (e) {}
+    }
+
+    window.addEventListener('keydown', (e) => {
+      const key = e.key.toLowerCase();
+      const helpModal = document.getElementById('helpModal');
+      const arenaPanel = document.getElementById('arenaPanel');
+
+      if (key === 'escape') {
+        if (helpModal && helpModal.style.display !== 'none') {
+          helpModal.style.display = 'none';
+          return;
+        }
+        if (arenaPanel && arenaPanel.style.display !== 'none' && !combatOver) {
+          combatAction('flee');
+          return;
+        }
+      }
+
+      if (key === 'h') {
+        if (helpModal) {
+          helpModal.style.display = helpModal.style.display === 'flex' ? 'none' : 'flex';
+        }
+        return;
+      }
+
+      if (arenaPanel && arenaPanel.style.display !== 'none' && !combatOver) {
+        if (key === '1' || key === 'a') combatAction('attack');
+        else if (key === '2' || key === 'd') combatAction('defend');
+        else if (key === '3' || key === 's') combatAction('showboat');
+        else if (key === '4' || key === 'f') combatAction('flee');
+      }
+    });
+
+    loadGame();
     updateUI();
   </script>
 </body>

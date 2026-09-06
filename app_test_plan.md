@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KColosseum
+**Target App:** KColor
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KColosseum
 - KColor
 - KConnect4
 - KContacts
@@ -173,8 +172,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KChess
 - KClock
 - KColony
+- KColosseum
 
 ## Test Reports
+
+- **KColosseum**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
+  - ✅ Core functionality works (Roman gladiatorial ludus management simulator with recruit market, dynamic attribute training STR/AGI/VIT, weapons Gladius/Trident and armor Lorica/Scutum equipment, 5 league tiers Local Pits to Champion of Rome, canvas arena combat engine with dynamic lunge animations and CRT shake, 4 tactical actions Attack/Defend/Showboat/Flee, special boss encounters Ferocious Lion / Armed Chariot / Twin Gladiators, dynamic crowd favor system with Denarii coin drops & medical sponge healing, audio synthesizers).
+  - 🔧 FIXED: Crowd favor medical sponge healing did not decrease `currentFighter.damageTaken`, causing all healed health to be instantly wiped out upon exiting combat and when re-entering the arena. Added damageTaken recalculation upon crowd heal.
+  - 🔧 FIXED: `exitArena()` bypassed updating `currentFighter.desc`, leaving the fighter's card on the ludus dashboard displaying stale pre-battle HP until modified or reloaded. Added `updateDesc(currentFighter)` on match exit.
+  - 🔧 FIXED: Combat action buttons (`btnAttack`, `btnDefend`, `btnShowboat`, `btnFlee`) remained active during enemy turns, allowing button spam, double attacks, and simultaneous queued enemy counterattacks. Added button disabling during action resolution.
+  - 🔧 FIXED: Defeating the Ferocious Lion or Armed Chariot bosses left them standing, breathing, and spinning scythe blades because `drawLionVisual` and `drawChariotVisual` lacked `state.stance === 'dead'` handling. Added collapsed/overturned defeat rendering states.
+  - 🔧 FIXED: Player death called `owned.splice(-1, 1)` if `currentFighter` index was not found, deleting the last owned gladiator. Added `deadIdx !== -1` bounds check.
+  - 🔧 FIXED: Gladiators with damage exceeding treasury funds could not be healed even partially, softlocking players when fighters reached 0 HP; and players who lost all fighters and funds had no recourse. Added partial healing up to available funds and implemented an emergency Patron Relief Grant (+200D) when bankrupt.
+  - 🔧 FIXED: Entire app lacked keyboard shortcuts, backdrop modal dismissal, Ludus sound FX, and game persistence. Bound keys 1–4 and A/D/S/F for combat, H for guide, Esc for modal/flee, added audio cues to buy/train/heal/equip/refresh, and implemented localStorage save/load state persistence.
 
 - **KColony**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
   - ✅ Core gameplay works (planetary colony builder with 7 biomes/scenarios Mars/Cryo/Volcanic/Acid/Sandbox/100-Day Survival/Resource Rush, 19 interactive structure types, 13 tech research projects, dynamic alien assaults with laser/turret defense, 5 planetary expeditions and deep cavern diving, orbital defense umbrella with tactical kinetic orbital strikes [Space], procedural weather/disaster events, Web Audio synthesizers, cybernetic CRT particle and shockwave engine).
