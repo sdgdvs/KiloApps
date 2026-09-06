@@ -62,6 +62,47 @@ int totalWins = 0;
 HWND mainHwnd = NULL;
 int mouseCellPressed = 0;
 
+// Keyboard navigation cursor
+int cursorX = 0;
+int cursorY = 0;
+
+// Cached GDI fonts to eliminate thousands of allocations per second
+static HFONT g_numFonts[9] = {0};
+static HFONT g_hLcdFont = NULL;
+static HFONT g_hSubFont = NULL;
+static HFONT g_hQuestFont = NULL;
+
+void EnsureFonts(int size) {
+    if (!g_hLcdFont) {
+        g_hLcdFont = CreateFontA(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Courier New");
+    }
+    if (!g_hSubFont) {
+        g_hSubFont = CreateFontA(11, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+    }
+    if (!g_hQuestFont) {
+        g_hQuestFont = CreateFontA(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+    }
+    if (!g_numFonts[1]) {
+        g_numFonts[1] = CreateFontA(size - 4, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
+        g_numFonts[2] = CreateFontA(size - 2, 0, 0, 0, FW_HEAVY, FALSE, TRUE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Georgia");
+        g_numFonts[3] = CreateFontA(size, 0, 0, 0, FW_BLACK, TRUE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Impact");
+        g_numFonts[4] = CreateFontA(size - 4, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Comic Sans MS");
+        g_numFonts[5] = CreateFontA(size - 2, 0, 0, 0, FW_BOLD, FALSE, FALSE, TRUE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Times New Roman");
+        g_numFonts[6] = CreateFontA(size - 4, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Courier New");
+        g_numFonts[7] = CreateFontA(size - 3, 0, 0, 0, FW_MEDIUM, TRUE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma");
+        g_numFonts[8] = CreateFontA(size - 4, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+    }
+}
+
+void FreeFonts() {
+    if (g_hLcdFont) { DeleteObject(g_hLcdFont); g_hLcdFont = NULL; }
+    if (g_hSubFont) { DeleteObject(g_hSubFont); g_hSubFont = NULL; }
+    if (g_hQuestFont) { DeleteObject(g_hQuestFont); g_hQuestFont = NULL; }
+    for (int i = 1; i <= 8; i++) {
+        if (g_numFonts[i]) { DeleteObject(g_numFonts[i]); g_numFonts[i] = NULL; }
+    }
+}
+
 DWORD sonarTick = 0;
 DWORD detectorTick = 0;
 int detectorR = -1;
@@ -669,8 +710,9 @@ void Reveal(int startR, int startC) {
     int q[1600][2];
     int head = 0, tail = 0;
     
+    if (gameOver) return;
     if (startR < 0 || startR >= rows || startC < 0 || startC >= cols) return;
-    if (grid[startR][startC] & (CELL_REVEALED | CELL_FLAGGED)) return;
+    if (grid[startR][startC] & (CELL_REVEALED | CELL_FLAGGED | CELL_QUESTION)) return;
 
     q[tail][0] = startR;
     q[tail][1] = startC;
@@ -681,7 +723,7 @@ void Reveal(int startR, int startC) {
         int c = q[head][1];
         head++;
 
-        if (grid[r][c] & (CELL_REVEALED | CELL_FLAGGED)) continue;
+        if (grid[r][c] & (CELL_REVEALED | CELL_FLAGGED | CELL_QUESTION)) continue;
         grid[r][c] |= CELL_REVEALED;
 
         // Rapid-Clear Combo logic
@@ -754,7 +796,7 @@ void Reveal(int startR, int startC) {
                 for (int j = -1; j <= 1; j++) {
                     int nr = r + i, nc = c + j;
                     if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
-                        if (!(grid[nr][nc] & (CELL_REVEALED | CELL_FLAGGED))) {
+                        if (!(grid[nr][nc] & (CELL_REVEALED | CELL_FLAGGED | CELL_QUESTION))) {
                             if (tail < 1600) {
                                 q[tail][0] = nr;
                                 q[tail][1] = nc;
@@ -854,50 +896,61 @@ void DrawSmiley(HDC hdc, int cx, int cy, int size, int state) {
     Ellipse(hdc, cx - r, cy - r, cx + r, cy + r);
     
     HPEN hPenShine = CreatePen(PS_SOLID, 1, RGB(255, 255, 200));
-    SelectObject(hdc, hPenShine);
+    HGDIOBJ prevPen = SelectObject(hdc, hPenShine);
     Arc(hdc, cx - r + 3, cy - r + 3, cx + r - 3, cy + r - 3, cx + r, cy - r, cx - r, cy - r);
+    SelectObject(hdc, prevPen);
     DeleteObject(hPenShine);
 
     if (state == 1) { // Shocked
         HBRUSH hbrEye = CreateSolidBrush(RGB(20, 20, 20));
-        SelectObject(hdc, hbrEye);
-        SelectObject(hdc, GetStockObject(NULL_PEN));
+        HGDIOBJ prevBr = SelectObject(hdc, hbrEye);
+        prevPen = SelectObject(hdc, GetStockObject(NULL_PEN));
         Ellipse(hdc, cx - 6, cy - 6, cx - 2, cy - 2);
         Ellipse(hdc, cx + 2, cy - 6, cx + 6, cy - 2);
         Ellipse(hdc, cx - 4, cy + 1, cx + 4, cy + 9);
+        SelectObject(hdc, prevBr);
+        SelectObject(hdc, prevPen);
         DeleteObject(hbrEye);
     } else if (state == 2) { // Dead
         HPEN hPenX = CreatePen(PS_SOLID, 2, RGB(60, 40, 20));
-        SelectObject(hdc, hPenX);
+        prevPen = SelectObject(hdc, hPenX);
         MoveToEx(hdc, cx - 7, cy - 6, NULL); LineTo(hdc, cx - 3, cy - 2);
         MoveToEx(hdc, cx - 3, cy - 6, NULL); LineTo(hdc, cx - 7, cy - 2);
         MoveToEx(hdc, cx + 3, cy - 6, NULL); LineTo(hdc, cx + 7, cy - 2);
         MoveToEx(hdc, cx + 7, cy - 6, NULL); LineTo(hdc, cx + 3, cy - 2);
         Arc(hdc, cx - 6, cy + 2, cx + 6, cy + 12, cx + 6, cy + 6, cx - 6, cy + 6);
+        SelectObject(hdc, prevPen);
         DeleteObject(hPenX);
     } else if (state == 3) { // Cool Win
         HBRUSH hbrGlass = CreateSolidBrush(RGB(30, 30, 35));
         HPEN hPenGlass = CreatePen(PS_SOLID, 1, RGB(10, 10, 10));
-        SelectObject(hdc, hbrGlass);
-        SelectObject(hdc, hPenGlass);
+        HGDIOBJ prevBr = SelectObject(hdc, hbrGlass);
+        prevPen = SelectObject(hdc, hPenGlass);
         POINT ptL[4] = { {cx - 9, cy - 6}, {cx - 1, cy - 6}, {cx - 2, cy + 1}, {cx - 8, cy + 1} };
         POINT ptR[4] = { {cx + 1, cy - 6}, {cx + 9, cy - 6}, {cx + 8, cy + 1}, {cx + 2, cy + 1} };
         Polygon(hdc, ptL, 4); Polygon(hdc, ptR, 4);
         MoveToEx(hdc, cx - 1, cy - 4, NULL); LineTo(hdc, cx + 1, cy - 4);
+        SelectObject(hdc, prevBr);
+        SelectObject(hdc, prevPen);
         DeleteObject(hbrGlass); DeleteObject(hPenGlass);
         HPEN hPenSmirk = CreatePen(PS_SOLID, 2, RGB(40, 30, 0));
-        SelectObject(hdc, hPenSmirk);
+        prevPen = SelectObject(hdc, hPenSmirk);
         Arc(hdc, cx - 5, cy + 1, cx + 6, cy + 8, cx - 5, cy + 4, cx + 5, cy + 6);
+        SelectObject(hdc, prevPen);
         DeleteObject(hPenSmirk);
     } else { // Idle
         HBRUSH hbrEye = CreateSolidBrush(RGB(20, 20, 20));
-        SelectObject(hdc, hbrEye); SelectObject(hdc, GetStockObject(NULL_PEN));
+        HGDIOBJ prevBr = SelectObject(hdc, hbrEye);
+        prevPen = SelectObject(hdc, GetStockObject(NULL_PEN));
         Ellipse(hdc, cx - 6, cy - 6, cx - 2, cy - 2);
         Ellipse(hdc, cx + 2, cy - 6, cx + 6, cy - 2);
+        SelectObject(hdc, prevBr);
+        SelectObject(hdc, prevPen);
         DeleteObject(hbrEye);
         HPEN hPenSmile = CreatePen(PS_SOLID, 2, RGB(40, 30, 0));
-        SelectObject(hdc, hPenSmile);
+        prevPen = SelectObject(hdc, hPenSmile);
         Arc(hdc, cx - 6, cy - 3, cx + 6, cy + 7, cx + 6, cy + 3, cx - 6, cy + 3);
+        SelectObject(hdc, prevPen);
         DeleteObject(hPenSmile);
     }
 
@@ -906,22 +959,23 @@ void DrawSmiley(HDC hdc, int cx, int cy, int size, int state) {
 }
 
 void DrawNumberSprite(HDC hdc, int x, int y, int size, int m) {
+    if (m < 1 || m > 8) return;
     char szNum[2] = { (char)(m + '0'), 0 };
     RECT rcCell = { x, y, x + size, y + size };
-    HFONT hFont;
+    EnsureFonts(size);
     COLORREF c;
     switch(m) {
-        case 1: c = RGB(56, 189, 248); hFont = CreateFontA(size-4, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas"); break;
-        case 2: c = RGB(74, 222, 128); hFont = CreateFontA(size-2, 0, 0, 0, FW_HEAVY, FALSE, TRUE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Georgia"); break;
-        case 3: c = RGB(248, 113, 113); hFont = CreateFontA(size, 0, 0, 0, FW_BLACK, TRUE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Impact"); break;
-        case 4: c = RGB(192, 132, 252); hFont = CreateFontA(size-4, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Comic Sans MS"); break;
-        case 5: c = RGB(250, 204, 21); hFont = CreateFontA(size-2, 0, 0, 0, FW_BOLD, FALSE, FALSE, TRUE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Times New Roman"); break;
-        case 6: c = RGB(45, 212, 191); hFont = CreateFontA(size-4, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Courier New"); break;
-        case 7: c = RGB(226, 232, 240); hFont = CreateFontA(size-3, 0, 0, 0, FW_MEDIUM, TRUE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma"); break;
-        default: c = RGB(148, 163, 184); hFont = CreateFontA(size-4, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial"); break;
+        case 1: c = RGB(56, 189, 248); break;
+        case 2: c = RGB(74, 222, 128); break;
+        case 3: c = RGB(248, 113, 113); break;
+        case 4: c = RGB(192, 132, 252); break;
+        case 5: c = RGB(250, 204, 21); break;
+        case 6: c = RGB(45, 212, 191); break;
+        case 7: c = RGB(226, 232, 240); break;
+        default: c = RGB(148, 163, 184); break;
     }
     
-    HGDIOBJ oldFont = SelectObject(hdc, hFont);
+    HGDIOBJ oldFont = SelectObject(hdc, g_numFonts[m]);
     SetBkMode(hdc, TRANSPARENT);
     
     SetTextColor(hdc, RGB(20, 20, 20));
@@ -932,7 +986,6 @@ void DrawNumberSprite(HDC hdc, int x, int y, int size, int m) {
     DrawTextA(hdc, szNum, 1, &rcCell, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     
     SelectObject(hdc, oldFont);
-    DeleteObject(hFont);
 }
 
 void DrawMineSprite(HDC hdc, int x, int y, int size, int isDetonated, DWORD tick) {
@@ -1087,11 +1140,11 @@ void DrawFlagSprite(HDC hdc, int x, int y, int size, DWORD tick, DWORD placedTic
 
 void DrawQuestionSprite(HDC hdc, int x, int y, int size) {
     RECT rc = { x, y, x + size, y + size };
-    HFONT hFont = CreateFontA(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
-    HGDIOBJ oldFont = SelectObject(hdc, hFont);
+    EnsureFonts(size);
+    HGDIOBJ oldFont = SelectObject(hdc, g_hQuestFont);
     SetTextColor(hdc, RGB(56, 189, 248));
     DrawTextA(hdc, "?", 1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-    SelectObject(hdc, oldFont); DeleteObject(hFont);
+    SelectObject(hdc, oldFont);
 }
 
 void DrawScorchMarks(HDC hdc, int x, int y, int size, int m) {
@@ -1213,8 +1266,8 @@ void DrawBoardToDC(HWND hwnd, HDC hdc) {
     MoveToEx(hdc, 0, HEADER_HEIGHT - 1, NULL); LineTo(hdc, cols * CELL_SIZE, HEADER_HEIGHT - 1);
     SelectObject(hdc, oldPen); DeleteObject(hHeaderBorder);
 
-    HFONT hLcdFont = CreateFontA(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Courier New");
-    HGDIOBJ oldFont = SelectObject(hdc, hLcdFont);
+    EnsureFonts(CELL_SIZE);
+    HGDIOBJ oldFont = SelectObject(hdc, g_hLcdFont);
     SetBkMode(hdc, OPAQUE); SetBkColor(hdc, RGB(9, 10, 15));
 
     char szMines[16];
@@ -1261,8 +1314,7 @@ void DrawBoardToDC(HWND hwnd, HDC hdc) {
 
     // Mode & Power-up Sub-Header text
     SetBkMode(hdc, TRANSPARENT);
-    HFONT hSubFont = CreateFontA(11, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
-    SelectObject(hdc, hSubFont);
+    SelectObject(hdc, g_hSubFont);
     RECT rcMode = { 0, 42, cols * CELL_SIZE, HEADER_HEIGHT - 2 };
     char szMode[128];
     if (tick < statusMsgTime) {
@@ -1280,13 +1332,9 @@ void DrawBoardToDC(HWND hwnd, HDC hdc) {
         DrawTextA(hdc, szMode, -1, &rcMode, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     }
     
-    SelectObject(hdc, hLcdFont);
-    DeleteObject(hSubFont);
+    SelectObject(hdc, oldFont);
 
     // Grid Cells
-    HFONT hNumFont = CreateFontA(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Arial");
-    SelectObject(hdc, hNumFont);
-
     for (int r = 0; r < rows; r++) {
         for (int c = 0; c < cols; c++) {
             int x = c * CELL_SIZE;
@@ -1316,9 +1364,19 @@ void DrawBoardToDC(HWND hwnd, HDC hdc) {
             }
         }
     }
-    SelectObject(hdc, oldFont);
-    DeleteObject(hNumFont);
-    DeleteObject(hLcdFont);
+
+    // Keyboard Focus Indicator
+    if (cursorX >= 0 && cursorX < cols && cursorY >= 0 && cursorY < rows) {
+        int kx = cursorX * CELL_SIZE;
+        int ky = cursorY * CELL_SIZE + HEADER_HEIGHT;
+        HPEN hFocusPen = CreatePen(PS_SOLID, 2, RGB(122, 162, 247));
+        HGDIOBJ oldPenF = SelectObject(hdc, hFocusPen);
+        HGDIOBJ oldBrF = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Rectangle(hdc, kx + 1, ky + 1, kx + CELL_SIZE - 1, ky + CELL_SIZE - 1);
+        SelectObject(hdc, oldBrF);
+        SelectObject(hdc, oldPenF);
+        DeleteObject(hFocusPen);
+    }
 
     // Ornate Cybernetic Corner Filigree L-Brackets on Board Corners
     DrawCornerBracket(hdc, 2, HEADER_HEIGHT + 2, 0, 0);
@@ -1430,7 +1488,7 @@ int CheckWin() {
 
 void HandleReveal(HWND hwnd, int x, int y) {
     if (gameOver || !initialized) return;
-    if (grid[y][x] & CELL_FLAGGED) return;
+    if (grid[y][x] & (CELL_FLAGGED | CELL_QUESTION)) return;
 
     if (grid[y][x] & CELL_REVEALED) {
         int flagged = 0;
@@ -1445,13 +1503,15 @@ void HandleReveal(HWND hwnd, int x, int y) {
         if (flagged == CountMines(y, x)) {
             for (int i = -1; i <= 1; i++) {
                 for (int j = -1; j <= 1; j++) {
+                    if (gameOver) break;
                     int nr = y + i, nc = x + j;
                     if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
-                        if (!(grid[nr][nc] & CELL_FLAGGED) && !(grid[nr][nc] & CELL_REVEALED)) {
+                        if (!(grid[nr][nc] & (CELL_FLAGGED | CELL_QUESTION)) && !(grid[nr][nc] & CELL_REVEALED)) {
                             Reveal(nr, nc);
                         }
                     }
                 }
+                if (gameOver) break;
             }
         } else {
             return;
@@ -1618,16 +1678,102 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_KEYDOWN:
-            if (wParam == '1') { rushMode=0; campaignMode=0; shields=0; detectors=0; sonars=0; isSpeedrun=0; rows=9; cols=9; mines=10; currentDiff=0; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd); }
-            if (wParam == '2') { rushMode=0; campaignMode=0; shields=0; detectors=0; sonars=0; isSpeedrun=0; rows=16; cols=16; mines=40; currentDiff=1; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd); }
-            if (wParam == '3') { rushMode=0; campaignMode=0; shields=0; detectors=0; sonars=0; isSpeedrun=0; rows=16; cols=30; mines=99; currentDiff=2; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd); }
-            if (wParam == '4') { rushMode=1; rushTime=60; rushScore=0; campaignMode=0; shields=0; detectors=0; sonars=0; isSpeedrun=0; rows=9; cols=9; mines=10; currentDiff=3; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd); }
-            if (wParam == 'C') { rushMode=0; campaignMode = !campaignMode; if (campaignMode) { campaignLevel = 1; InitCampaignLevel(hwnd); } else { campaignMode=0; shields=0; detectors=0; sonars=0; isSpeedrun=0; rows=9; cols=9; mines=10; currentDiff=0; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd); } }
-            if (wParam == 'R') { UseSonarScan(hwnd); }
-            if (wParam == 'D') { UseDetectorBot(hwnd); }
-            if (wParam == 'S') { UseBlastShield(hwnd); }
+            if (wParam == VK_LEFT) {
+                if (cursorX > 0) { cursorX--; InvalidateRect(hwnd, NULL, FALSE); }
+            } else if (wParam == VK_RIGHT) {
+                if (cursorX < cols - 1) { cursorX++; InvalidateRect(hwnd, NULL, FALSE); }
+            } else if (wParam == VK_UP) {
+                if (cursorY > 0) { cursorY--; InvalidateRect(hwnd, NULL, FALSE); }
+            } else if (wParam == VK_DOWN) {
+                if (cursorY < rows - 1) { cursorY++; InvalidateRect(hwnd, NULL, FALSE); }
+            } else if (wParam == VK_RETURN) {
+                if (!gameOver && cursorX >= 0 && cursorX < cols && cursorY >= 0 && cursorY < rows) {
+                    if (!initialized) InitGame(cursorX, cursorY);
+                    HandleReveal(hwnd, cursorX, cursorY);
+                }
+            } else if (wParam == VK_SPACE || wParam == 'F') {
+                if (!gameOver && initialized && cursorX >= 0 && cursorX < cols && cursorY >= 0 && cursorY < rows) {
+                    if (!(grid[cursorY][cursorX] & CELL_REVEALED)) {
+                        if (grid[cursorY][cursorX] & CELL_FLAGGED) {
+                            grid[cursorY][cursorX] &= ~CELL_FLAGGED;
+                            grid[cursorY][cursorX] |= CELL_QUESTION;
+                            flagsPlaced--;
+                        } else if (grid[cursorY][cursorX] & CELL_QUESTION) {
+                            grid[cursorY][cursorX] &= ~CELL_QUESTION;
+                        } else {
+                            grid[cursorY][cursorX] |= CELL_FLAGGED;
+                            flagTick[cursorY][cursorX] = GetTickCount();
+                            flagsPlaced++;
+                            SpawnDustFX((float)(cursorX * CELL_SIZE + CELL_SIZE/2), (float)(cursorY * CELL_SIZE + HEADER_HEIGHT + CELL_SIZE - 2));
+                        }
+                        Beep(800, 20);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    }
+                }
+            } else if (wParam == 'Q') {
+                if (!gameOver && initialized && cursorX >= 0 && cursorX < cols && cursorY >= 0 && cursorY < rows) {
+                    if (!(grid[cursorY][cursorX] & CELL_REVEALED)) {
+                        if (grid[cursorY][cursorX] & CELL_QUESTION) {
+                            grid[cursorY][cursorX] &= ~CELL_QUESTION;
+                        } else {
+                            if (grid[cursorY][cursorX] & CELL_FLAGGED) {
+                                grid[cursorY][cursorX] &= ~CELL_FLAGGED;
+                                flagsPlaced--;
+                            }
+                            grid[cursorY][cursorX] |= CELL_QUESTION;
+                        }
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    }
+                }
+            } else if (wParam == '1') {
+                KillTimer(hwnd, 1);
+                rushMode=0; campaignMode=0; shields=0; detectors=0; sonars=0; isSpeedrun=0; rows=9; cols=9; mines=10; currentDiff=0; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; cursorX=0; cursorY=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd);
+            } else if (wParam == '2') {
+                KillTimer(hwnd, 1);
+                rushMode=0; campaignMode=0; shields=0; detectors=0; sonars=0; isSpeedrun=0; rows=16; cols=16; mines=40; currentDiff=1; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; cursorX=0; cursorY=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd);
+            } else if (wParam == '3') {
+                KillTimer(hwnd, 1);
+                rushMode=0; campaignMode=0; shields=0; detectors=0; sonars=0; isSpeedrun=0; rows=16; cols=30; mines=99; currentDiff=2; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; cursorX=0; cursorY=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd);
+            } else if (wParam == '4') {
+                KillTimer(hwnd, 1);
+                rushMode=1; rushTime=60; rushScore=0; campaignMode=0; shields=0; detectors=0; sonars=0; isSpeedrun=0; rows=9; cols=9; mines=10; currentDiff=3; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; cursorX=0; cursorY=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd);
+            } else if (wParam == 'C') {
+                KillTimer(hwnd, 1);
+                rushMode=0; campaignMode = !campaignMode; cursorX=0; cursorY=0;
+                if (campaignMode) { campaignLevel = 1; InitCampaignLevel(hwnd); }
+                else { shields=0; detectors=0; sonars=0; isSpeedrun=0; rows=9; cols=9; mines=10; currentDiff=0; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd); }
+            } else if (wParam == 'R') {
+                UseSonarScan(hwnd);
+            } else if (wParam == 'D') {
+                UseDetectorBot(hwnd);
+            } else if (wParam == 'S') {
+                UseBlastShield(hwnd);
+            } else if (wParam == VK_F1 || wParam == 'H') {
+                MessageBoxA(hwnd,
+                    "KMines Controls:\n\n"
+                    "Mouse:\n"
+                    "  Left Click: Reveal cell / Chord revealed number\n"
+                    "  Right Click: Flag / Question mark (?)\n"
+                    "  Click Smiley: New game / Restart\n\n"
+                    "Keyboard:\n"
+                    "  Arrow Keys: Move cell cursor\n"
+                    "  Enter: Dig / Chord selected cell\n"
+                    "  Space / F: Toggle Flag\n"
+                    "  Q: Toggle Question mark (?)\n"
+                    "  1 / 2 / 3: Beginner / Intermediate / Expert\n"
+                    "  4: Cyber Rush mode\n"
+                    "  C: Cyber Campaign mode\n"
+                    "  D: Detector Bot (finds 1 mine)\n"
+                    "  R: Sonar Radar scan (clears safe area)\n"
+                    "  S: Blast Shield (absorbs 1 explosion)\n"
+                    "  F1 / H: Help dialog",
+                    "KMines Help & Controls", MB_OK | MB_ICONINFORMATION);
+            }
             break;
         case WM_DESTROY:
+            KillTimer(hwnd, 1);
+            KillTimer(hwnd, 2);
+            FreeFonts();
             PostQuitMessage(0);
             return 0;
     }
