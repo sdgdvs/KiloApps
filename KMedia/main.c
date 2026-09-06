@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <commdlg.h>
+#include <shellapi.h>
 #include <stdio.h>
 
 #ifndef EM_SETCUEBANNER
@@ -36,6 +37,9 @@ HWND g_hwndMain;
 HWND hTitle, hEditSearch, hBtnOpen, hBtnPlay, hBtnStop, hBtnPrev, hBtnNext, hBtnRem, hBtnClear, hBtnMode, hBtnSpeed, hBtnExport, hListBox, hSubText, hBtnHelp;
 HWND hBtnSeekBack, hBtnSeekFwd, hTimeStatus;
 
+HFONT g_hFont = NULL;
+HFONT g_hSubFont = NULL;
+
 char g_tracks[MAX_TRACKS][MAX_PATH];
 int g_trackCount = 0;
 int g_currentIndex = -1;
@@ -48,6 +52,9 @@ int g_speedIndex = 0;
 const int g_speeds[] = {1000, 1250, 1500, 2000, 500};
 const char* g_speedLabels[] = {"Spd: 1.0x", "Spd: 1.25x", "Spd: 1.5x", "Spd: 2.0x", "Spd: 0.5x"};
 const char* g_modeLabels[] = {"Mode: Normal", "Mode: Repeat All", "Mode: Repeat 1", "Mode: Shuffle"};
+
+int g_volume = 1000;
+int g_lastVolume = 1000;
 
 typedef struct {
     int start;
@@ -75,6 +82,25 @@ void FormatTimeMs(int ms, char* out, int outSize) {
     wsprintfA(out, "%d:%02d", m, s);
 }
 
+void SetVolume(int vol) {
+    if (vol < 0) vol = 0;
+    if (vol > 1000) vol = 1000;
+    g_volume = vol;
+    if (currentFile[0] != '\0') {
+        wsprintfA(mciCmd, "setaudio myMedia volume to %d", g_volume);
+        mciSendStringA(mciCmd, NULL, 0, NULL);
+    }
+}
+
+void ToggleMute() {
+    if (g_volume > 0) {
+        g_lastVolume = g_volume;
+        SetVolume(0);
+    } else {
+        SetVolume(g_lastVolume > 0 ? g_lastVolume : 1000);
+    }
+}
+
 void LoadSrt(const char* videoPath) {
     g_subCount = 0;
     SetWindowTextA(hSubText, "");
@@ -84,6 +110,10 @@ void LoadSrt(const char* videoPath) {
     if (ext) {
         lstrcpyA(ext, ".srt");
         HANDLE hFile = CreateFileA(srtPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile == INVALID_HANDLE_VALUE) {
+            lstrcpyA(ext, ".vtt");
+            hFile = CreateFileA(srtPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        }
         if (hFile != INVALID_HANDLE_VALUE) {
             DWORD size = GetFileSize(hFile, NULL);
             if (size > 0 && size < 1024*1024) {
@@ -93,6 +123,9 @@ void LoadSrt(const char* videoPath) {
                     if (ReadFile(hFile, buf, size, &read, NULL)) {
                         buf[read] = '\0';
                         char* p = buf;
+                        if ((unsigned char)p[0] == 0xEF && (unsigned char)p[1] == 0xBB && (unsigned char)p[2] == 0xBF) {
+                            p += 3;
+                        }
                         int state = 0;
                         Subtitle curSub = {0};
                         while (*p) {
@@ -123,7 +156,7 @@ void LoadSrt(const char* videoPath) {
                                     while(*t == ' ') t++;
                                     while(*t >= '0' && *t <= '9') h = h*10 + (*t++ - '0'); if(*t==':') t++;
                                     while(*t >= '0' && *t <= '9') m = m*10 + (*t++ - '0'); if(*t==':') t++;
-                                    while(*t >= '0' && *t <= '9') s = s*10 + (*t++ - '0'); if(*t==',') t++;
+                                    while(*t >= '0' && *t <= '9') s = s*10 + (*t++ - '0'); if(*t==',' || *t=='.') t++;
                                     while(*t >= '0' && *t <= '9') ms = ms*10 + (*t++ - '0');
                                     start = h*3600000 + m*60000 + s*1000 + ms;
                                     
@@ -132,7 +165,7 @@ void LoadSrt(const char* videoPath) {
                                     while(*t == ' ') t++;
                                     while(*t >= '0' && *t <= '9') h = h*10 + (*t++ - '0'); if(*t==':') t++;
                                     while(*t >= '0' && *t <= '9') m = m*10 + (*t++ - '0'); if(*t==':') t++;
-                                    while(*t >= '0' && *t <= '9') s = s*10 + (*t++ - '0'); if(*t==',') t++;
+                                    while(*t >= '0' && *t <= '9') s = s*10 + (*t++ - '0'); if(*t==',' || *t=='.') t++;
                                     while(*t >= '0' && *t <= '9') ms = ms*10 + (*t++ - '0');
                                     end = h*3600000 + m*60000 + s*1000 + ms;
                                     
@@ -141,7 +174,7 @@ void LoadSrt(const char* videoPath) {
                                     state = 2;
                                 }
                             } else if (state == 2) {
-                                if (curSub.text[0] != '\0' && lstrlenA(curSub.text) + 2 < sizeof(curSub.text)) lstrcatA(curSub.text, "\n");
+                                if (curSub.text[0] != '\0' && lstrlenA(curSub.text) + 3 < sizeof(curSub.text)) lstrcatA(curSub.text, "\r\n");
                                 if (lstrlenA(curSub.text) + lstrlenA(line) < sizeof(curSub.text) - 1) lstrcatA(curSub.text, line);
                             }
                         }
@@ -270,6 +303,9 @@ void PlayTrackByIndex(int masterIdx) {
 
         wsprintfA(mciCmd, "set myMedia speed %d", g_speeds[g_speedIndex]);
         mciSendStringA(mciCmd, NULL, 0, NULL);
+
+        wsprintfA(mciCmd, "setaudio myMedia volume to %d", g_volume);
+        mciSendStringA(mciCmd, NULL, 0, NULL);
         
         mciSendStringA("play myMedia from 0 notify", NULL, 0, g_hwndMain);
         SetWindowTextA(hBtnPlay, "Pause");
@@ -395,16 +431,20 @@ void ExportFrameToBMP() {
     }
     
     // Fallback: Screen capture main window
-    HDC hdcWindow = GetDC(g_hwndMain);
-    HDC hdcMem = CreateCompatibleDC(hdcWindow);
     RECT rc;
     GetClientRect(g_hwndMain, &rc);
     int width = rc.right - rc.left;
     int height = rc.bottom - rc.top;
-    
+    if (width <= 0 || height <= 0) return;
+
+    HDC hdcWindow = GetDC(g_hwndMain);
+    HDC hdcMem = CreateCompatibleDC(hdcWindow);
     HBITMAP hbm = CreateCompatibleBitmap(hdcWindow, width, height);
     HBITMAP hOldBmp = (HBITMAP)SelectObject(hdcMem, hbm);
     BitBlt(hdcMem, 0, 0, width, height, hdcWindow, 0, 0, SRCCOPY);
+    
+    // Unselect bitmap before calling GetDIBits to avoid undefined driver behavior
+    SelectObject(hdcMem, hOldBmp);
     
     BITMAPINFOHEADER bi = {sizeof(BITMAPINFOHEADER), width, height, 1, 32, BI_RGB, 0, 0, 0, 0, 0};
     HANDLE hFile = CreateFileA("frame.bmp", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -424,7 +464,6 @@ void ExportFrameToBMP() {
         MessageBoxA(g_hwndMain, "Client view exported as frame.bmp.", "Export Frame", MB_OK);
     }
     
-    SelectObject(hdcMem, hOldBmp);
     DeleteObject(hbm);
     DeleteDC(hdcMem);
     ReleaseDC(g_hwndMain, hdcWindow);
@@ -436,10 +475,15 @@ void ShowHelpDialog(HWND hwnd) {
         "  Space            Play / Pause\n"
         "  Left Arrow / P   Previous Track\n"
         "  Right Arrow / N  Next Track\n"
+        "  Up / Down Arrow  Volume Up / Down (5%)\n"
+        "  U                Toggle Mute / Unmute\n"
         "  [ / ]            Seek Backward / Forward 5s\n"
         "  S                Stop Playback\n"
         "  M                Cycle Playback Mode\n"
+        "  Enter (Playlist) Play selected track\n"
+        "  Del (Playlist)   Remove selected track\n"
         "  H / F1           Show this Help\n"
+        "  Drag & Drop      Drop audio, video, or subtitles\n"
         "  Double Click     Play track from playlist\n",
         "KMedia Help", MB_OK | MB_ICONINFORMATION);
 }
@@ -447,106 +491,131 @@ void ShowHelpDialog(HWND hwnd) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            HFONT hFont = CreateFontA(-14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            DragAcceptFiles(hwnd, TRUE);
+            g_hFont = CreateFontA(-14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             hTitle = CreateWindowEx(0, "STATIC", "No file selected (Press 'H' or F1 for help)",
                 WS_CHILD | WS_VISIBLE | SS_CENTER | 0x4000,
                 10, 10, W - 36, 20, hwnd, NULL, NULL, NULL);
-            SendMessage(hTitle, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hTitle, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
             hEditSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "",
-                WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+                WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP,
                 10, 35, W - 36, 22, hwnd, (HMENU)11, NULL, NULL);
-            SendMessage(hEditSearch, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hEditSearch, EM_SETCUEBANNER, FALSE, (LPARAM)L"Filter playlist...");
+            SendMessage(hEditSearch, WM_SETFONT, (WPARAM)g_hFont, TRUE);
+            SendMessageA(hEditSearch, EM_SETCUEBANNER, FALSE, (LPARAM)L"Filter playlist... (Esc to clear)");
             
             // Row 1 controls (y=62)
             hBtnOpen = CreateWindowEx(0, "BUTTON", "Add",
-                WS_CHILD | WS_VISIBLE,
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                 10, 62, 75, 26, hwnd, (HMENU)1, NULL, NULL);
-            SendMessage(hBtnOpen, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnOpen, WM_SETFONT, (WPARAM)g_hFont, TRUE);
             
             hBtnPlay = CreateWindowEx(0, "BUTTON", "Play",
-                WS_CHILD | WS_VISIBLE,
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                 90, 62, 75, 26, hwnd, (HMENU)2, NULL, NULL);
-            SendMessage(hBtnPlay, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnPlay, WM_SETFONT, (WPARAM)g_hFont, TRUE);
             
             hBtnStop = CreateWindowEx(0, "BUTTON", "Stop",
-                WS_CHILD | WS_VISIBLE,
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                 170, 62, 75, 26, hwnd, (HMENU)3, NULL, NULL);
-            SendMessage(hBtnStop, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnStop, WM_SETFONT, (WPARAM)g_hFont, TRUE);
             
             hBtnClear = CreateWindowEx(0, "BUTTON", "Clear",
-                WS_CHILD | WS_VISIBLE,
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                 250, 62, 75, 26, hwnd, (HMENU)8, NULL, NULL);
-            SendMessage(hBtnClear, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnClear, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
-            hTimeStatus = CreateWindowEx(0, "STATIC", "0:00 / 0:00  [No Media]",
+            hTimeStatus = CreateWindowEx(0, "STATIC", "0:00 / 0:00  [No Media]  Vol:100%",
                 WS_CHILD | WS_VISIBLE | SS_RIGHT,
                 335, 66, W - 36 - 335, 20, hwnd, NULL, NULL, NULL);
-            SendMessage(hTimeStatus, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hTimeStatus, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
             // Row 2 controls (y=93)
             hBtnPrev = CreateWindowEx(0, "BUTTON", "Prev",
-                WS_CHILD | WS_VISIBLE,
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                 10, 93, 75, 26, hwnd, (HMENU)5, NULL, NULL);
-            SendMessage(hBtnPrev, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnPrev, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
             hBtnNext = CreateWindowEx(0, "BUTTON", "Next",
-                WS_CHILD | WS_VISIBLE,
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                 90, 93, 75, 26, hwnd, (HMENU)6, NULL, NULL);
-            SendMessage(hBtnNext, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnNext, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
             hBtnSeekBack = CreateWindowEx(0, "BUTTON", "<< 5s",
-                WS_CHILD | WS_VISIBLE,
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                 170, 93, 75, 26, hwnd, (HMENU)14, NULL, NULL);
-            SendMessage(hBtnSeekBack, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnSeekBack, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
             hBtnSeekFwd = CreateWindowEx(0, "BUTTON", ">> 5s",
-                WS_CHILD | WS_VISIBLE,
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                 250, 93, 75, 26, hwnd, (HMENU)15, NULL, NULL);
-            SendMessage(hBtnSeekFwd, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnSeekFwd, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
             hBtnRem = CreateWindowEx(0, "BUTTON", "Remove",
-                WS_CHILD | WS_VISIBLE,
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                 330, 93, 75, 26, hwnd, (HMENU)7, NULL, NULL);
-            SendMessage(hBtnRem, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnRem, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
             hBtnSpeed = CreateWindowEx(0, "BUTTON", "Spd: 1.0x",
-                WS_CHILD | WS_VISIBLE,
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                 410, 93, 85, 26, hwnd, (HMENU)10, NULL, NULL);
-            SendMessage(hBtnSpeed, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnSpeed, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
             // Row 3 controls (y=124)
             hBtnMode = CreateWindowEx(0, "BUTTON", "Mode: Normal",
-                WS_CHILD | WS_VISIBLE,
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                 10, 124, 155, 26, hwnd, (HMENU)9, NULL, NULL);
-            SendMessage(hBtnMode, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnMode, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
             hBtnExport = CreateWindowEx(0, "BUTTON", "Export Frame",
-                WS_CHILD | WS_VISIBLE,
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                 170, 124, 155, 26, hwnd, (HMENU)12, NULL, NULL);
-            SendMessage(hBtnExport, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnExport, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
             hBtnHelp = CreateWindowEx(0, "BUTTON", "Help (F1)",
-                WS_CHILD | WS_VISIBLE,
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                 330, 124, 165, 26, hwnd, (HMENU)13, NULL, NULL);
-            SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)g_hFont, TRUE);
             
             // ListBox
             hListBox = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "",
-                WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | WS_HSCROLL,
+                WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | WS_HSCROLL | WS_TABSTOP,
                 10, 155, W - 36, H - 315, hwnd, (HMENU)4, NULL, NULL);
-            SendMessage(hListBox, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hListBox, WM_SETFONT, (WPARAM)g_hFont, TRUE);
             
             // Subtitle / Lyrics Area
-            HFONT hSubFont = CreateFontA(-16, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            g_hSubFont = CreateFontA(-16, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             hSubText = CreateWindowEx(WS_EX_CLIENTEDGE, "STATIC", "[ Subtitles will display here when playing media with .srt ]",
                 WS_CHILD | WS_VISIBLE | SS_CENTER,
                 10, H - 150, W - 36, 105, hwnd, NULL, NULL, NULL);
-            SendMessage(hSubText, WM_SETFONT, (WPARAM)hSubFont, TRUE);
+            SendMessage(hSubText, WM_SETFONT, (WPARAM)g_hSubFont, TRUE);
 
             SetTimer(hwnd, 1, 200, NULL);
+            break;
+        }
+        case WM_DROPFILES: {
+            HDROP hDrop = (HDROP)wParam;
+            UINT count = DragQueryFileA(hDrop, 0xFFFFFFFF, NULL, 0);
+            int addedCount = 0;
+            int firstNew = g_trackCount;
+            for (UINT i = 0; i < count; i++) {
+                char szDropFile[MAX_PATH];
+                if (DragQueryFileA(hDrop, i, szDropFile, sizeof(szDropFile))) {
+                    char* ext = my_strrchr(szDropFile, '.');
+                    if (ext && (ContainsCaseInsensitive(ext, ".srt") || ContainsCaseInsensitive(ext, ".vtt"))) {
+                        LoadSrt(szDropFile);
+                    } else {
+                        AddTrack(szDropFile);
+                        addedCount++;
+                    }
+                }
+            }
+            DragFinish(hDrop);
+            RefilterPlaylist();
+            if (g_currentIndex == -1 && addedCount > 0 && firstNew < g_trackCount) {
+                PlayTrackByIndex(firstNew);
+            }
             break;
         }
         case WM_TIMER: {
@@ -564,10 +633,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     char szPos[32], szLen[32], statusBuf[128];
                     FormatTimeMs(pos, szPos, sizeof(szPos));
                     FormatTimeMs(len, szLen, sizeof(szLen));
-                    wsprintfA(statusBuf, "%s / %s  [%s]", szPos, szLen, modeStr[0] ? modeStr : "stopped");
+                    wsprintfA(statusBuf, "%s / %s  [%s]  Vol:%d%%", szPos, szLen, modeStr[0] ? modeStr : "stopped", g_volume / 10);
                     SetWindowTextA(hTimeStatus, statusBuf);
                 } else {
-                    SetWindowTextA(hTimeStatus, "0:00 / 0:00  [No Media]");
+                    char statusBuf[64];
+                    wsprintfA(statusBuf, "0:00 / 0:00  [No Media]  Vol:%d%%", g_volume / 10);
+                    SetWindowTextA(hTimeStatus, statusBuf);
                 }
             }
             break;
@@ -603,6 +674,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             g_currentIndex--;
                         }
                         RefilterPlaylist();
+                        int remaining = SendMessage(hListBox, LB_GETCOUNT, 0, 0);
+                        if (remaining > 0) {
+                            int newSel = sel < remaining ? sel : remaining - 1;
+                            SendMessage(hListBox, LB_SETCURSEL, newSel, 0);
+                        }
                     }
                 }
             } else if (LOWORD(wParam) == 8) {
@@ -649,14 +725,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkMode((HDC)wParam, TRANSPARENT);
             return (LRESULT)GetSysColorBrush(COLOR_BTNFACE);
         }
+        case WM_ERASEBKGND:
+            return 1;
         case WM_DESTROY:
             KillTimer(hwnd, 1);
             mciSendStringA("close myMedia", NULL, 0, NULL);
-            {
-                HFONT hOldFont1 = (HFONT)SendMessage(hTitle, WM_GETFONT, 0, 0);
-                HFONT hOldFont2 = (HFONT)SendMessage(hSubText, WM_GETFONT, 0, 0);
-                if (hOldFont1) DeleteObject(hOldFont1);
-                if (hOldFont2) DeleteObject(hOldFont2);
+            if (g_hFont) {
+                DeleteObject(g_hFont);
+                g_hFont = NULL;
+            }
+            if (g_hSubFont) {
+                DeleteObject(g_hSubFont);
+                g_hSubFont = NULL;
             }
             PostQuitMessage(0);
             break;
@@ -690,11 +770,20 @@ void MainEntry() {
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
         if (msg.message == WM_KEYDOWN) {
-            if (msg.wParam == VK_F1) {
+            HWND hFocus = GetFocus();
+            if (msg.wParam == VK_F1 || ((msg.wParam == 'H' || msg.wParam == 'h') && hFocus != hEditSearch)) {
                 ShowHelpDialog(g_hwndMain);
                 continue;
             }
-            HWND hFocus = GetFocus();
+            if (hFocus == hListBox) {
+                if (msg.wParam == VK_RETURN) {
+                    PlaySelectedTrack();
+                    continue;
+                } else if (msg.wParam == VK_DELETE) {
+                    SendMessage(g_hwndMain, WM_COMMAND, MAKEWPARAM(7, 0), 0);
+                    continue;
+                }
+            }
             if (hFocus != hEditSearch) {
                 if (msg.wParam == VK_SPACE) {
                     TogglePlayPause();
@@ -711,18 +800,39 @@ void MainEntry() {
                 } else if (msg.wParam == VK_OEM_6 /* ] */) {
                     SeekRelative(5000);
                     continue;
+                } else if (msg.wParam == VK_UP) {
+                    SetVolume(g_volume + 50);
+                    continue;
+                } else if (msg.wParam == VK_DOWN) {
+                    SetVolume(g_volume - 50);
+                    continue;
+                } else if (msg.wParam == 'U' || msg.wParam == 'u') {
+                    ToggleMute();
+                    continue;
                 } else if (msg.wParam == 'S' || msg.wParam == 's') {
                     StopTrack();
                     continue;
                 } else if (msg.wParam == 'M' || msg.wParam == 'm') {
                     CycleMode();
                     continue;
-                } else if (msg.wParam == 'H' || msg.wParam == 'h') {
-                    ShowHelpDialog(g_hwndMain);
+                }
+            } else {
+                if (msg.wParam == VK_ESCAPE) {
+                    SetWindowTextA(hEditSearch, "");
+                    g_searchQuery[0] = '\0';
+                    RefilterPlaylist();
+                    SetFocus(hListBox);
+                    continue;
+                } else if (msg.wParam == VK_RETURN) {
+                    if (SendMessage(hListBox, LB_GETCOUNT, 0, 0) > 0) {
+                        SendMessage(hListBox, LB_SETCURSEL, 0, 0);
+                        PlaySelectedTrack();
+                    }
                     continue;
                 }
             }
         }
+        if (IsDialogMessage(g_hwndMain, &msg)) continue;
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
