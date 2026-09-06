@@ -357,7 +357,7 @@
 </style>
 </head>
 <body>
-  <div id="toast-container"></div>
+  <div id="toast-container" role="status" aria-live="polite"></div>
   <div id="canvas-container">
     <canvas id="c"></canvas>
     
@@ -466,10 +466,10 @@
       <span id="hud-text">Mandelbrot | Shift+Click to sample Julia | F1 for Help</span>
     </div>
 
-    <div id="help-overlay">
+    <div id="help-overlay" role="dialog" aria-modal="true" aria-labelledby="help-title">
       <div class="help-card" id="help-card">
         <div class="help-header-row">
-          <h2 style="margin:0;">✨ KMandel Pro Guide &amp; Controls</h2>
+          <h2 id="help-title" style="margin:0;">✨ KMandel Pro Guide &amp; Controls</h2>
           <button class="help-close-x" id="btn-close-help-x" aria-label="Close Help">&times;</button>
         </div>
         <div class="help-grid">
@@ -992,6 +992,7 @@
     
     function updateDisplays() {
       const wRe = maxRe - minRe;
+      if (wRe <= 0 || isNaN(wRe)) return;
       const baseW = 3.0;
       const zoomLevel = (baseW / wRe);
       let zoomStr = zoomLevel < 1000 ? zoomLevel.toFixed(1) : (zoomLevel < 1000000 ? (zoomLevel/1000).toFixed(1) + 'k' : (zoomLevel/1000000).toFixed(1) + 'M');
@@ -1001,6 +1002,9 @@
       const needed_iter = Math.floor(100 * Math.pow(zoomLevel, 0.2));
       if (needed_iter > max_iter && zoomLevel > 5) {
           max_iter = Math.min(needed_iter, 2000);
+      } else if (zoomLevel <= 5 && max_iter > 100 && !isJulia) {
+          max_iter = 100;
+          iterDisp.textContent = max_iter + ' iter';
       }
       updateUndoRedoButtons();
     }
@@ -1008,12 +1012,13 @@
     // WEB WORKER LOGIC
     const workerCode = `
       self.onmessage = function(e) {
-          const { id, w, h, startY, endY, minRe, maxRe, minIm, maxIm, max_iter, isJulia, juliaCRe, juliaCIm, theme, fractalType, customColor1, customColor2 } = e.data;
+          const { renderId, id, w, h, startY, endY, minRe, maxRe, minIm, maxIm, max_iter, isJulia, juliaCRe, juliaCIm, theme, fractalType, customColor1, customColor2 } = e.data;
           
-          const re_factor = (maxRe - minRe) / (w - 1);
-          const im_factor = (maxIm - minIm) / (h - 1);
+          const re_factor = (maxRe - minRe) / (w > 1 ? (w - 1) : 1);
+          const im_factor = (maxIm - minIm) / (h > 1 ? (h - 1) : 1);
           
-          const buf = new ArrayBuffer((endY - startY) * w * 4);
+          const chunkH = endY - startY;
+          const buf = new ArrayBuffer(chunkH * w * 4);
           const data = new Uint8ClampedArray(buf);
           let idx = 0;
           
@@ -1095,7 +1100,7 @@
                   }
               }
           }
-          self.postMessage({ id, startY, data: buf }, [buf]);
+          self.postMessage({ renderId, id, startY, chunkH, w, data: buf }, [buf]);
       };
     `;
 
@@ -1109,6 +1114,7 @@
         for (let i = 0; i < numWorkers; i++) {
             workers.push(new Worker(workerUrl));
         }
+        URL.revokeObjectURL(workerUrl);
     } catch (err) {
         console.warn('Web Workers unavailable, using synchronous rendering fallback', err);
         useWorkers = false;
@@ -1219,6 +1225,8 @@
         });
     }
 
+    let currentRenderId = 0;
+
     function performRender(targetCanvas, w, h, isOffscreen, callback) {
       if (targetCanvas.width !== w || targetCanvas.height !== h) {
           targetCanvas.width = w;
@@ -1237,6 +1245,8 @@
           return;
       }
 
+      currentRenderId++;
+      const renderId = currentRenderId;
       const targetCtx = targetCanvas.getContext('2d');
       const chunkH = Math.ceil(h / numWorkers);
       activeWorkers = 0;
@@ -1249,8 +1259,9 @@
           activeWorkers++;
           
           workers[i].onmessage = function(e) {
-              const { startY: sy, data } = e.data;
-              const imgData = new ImageData(new Uint8ClampedArray(data), w, endY - startY);
+              if (e.data.renderId !== renderId) return;
+              const { startY: sy, chunkH: ch, w: cw, data } = e.data;
+              const imgData = new ImageData(new Uint8ClampedArray(data), cw, ch);
               targetCtx.putImageData(imgData, 0, sy);
               activeWorkers--;
               if (activeWorkers === 0) {
@@ -1259,7 +1270,7 @@
           };
           
           workers[i].postMessage({
-              id: i, w, h, startY, endY, minRe, maxRe, minIm, maxIm, max_iter, isJulia, juliaCRe, juliaCIm, theme, fractalType, customColor1, customColor2
+              renderId, id: i, w, h, startY, endY, minRe, maxRe, minIm, maxIm, max_iter, isJulia, juliaCRe, juliaCIm, theme, fractalType, customColor1, customColor2
           });
       }
     }
@@ -1267,6 +1278,7 @@
     function zoom(factor, centerX, centerY, dontSave) {
         const w = window.innerWidth;
         const h = window.innerHeight;
+        if (w <= 1 || h <= 1) return;
         const re_factor = (maxRe - minRe) / (w - 1);
         const im_factor = (maxIm - minIm) / (h - 1);
         
@@ -1278,10 +1290,10 @@
         
         if (newWRe < 1e-13 || newWRe > 10.0) return;
         
-        minRe = centerRe - (centerX / w) * newWRe;
+        minRe = centerRe - (centerX / (w - 1)) * newWRe;
         maxRe = minRe + newWRe;
         
-        maxIm = centerIm + (centerY / h) * newWIm;
+        maxIm = centerIm + (centerY / (h - 1)) * newWIm;
         minIm = maxIm - newWIm;
         
         triggerImpact(centerX, centerY, factor < 1.0 ? 5 : 3, 20);
@@ -1345,6 +1357,9 @@
     function showToast(message, type = 'info', duration = 3000) {
         const container = document.getElementById('toast-container');
         if (!container) return;
+        while (container.children.length >= 5) {
+            container.removeChild(container.firstChild);
+        }
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
         
@@ -1357,7 +1372,17 @@
             iconSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
         }
 
-        toast.innerHTML = `${iconSvg}<span>${message}</span>`;
+        const iconWrap = document.createElement('span');
+        iconWrap.style.display = 'inline-flex';
+        iconWrap.innerHTML = iconSvg;
+        const msgSpan = document.createElement('span');
+        if (message.includes('<') && message.includes('>')) {
+            msgSpan.innerHTML = message;
+        } else {
+            msgSpan.textContent = message;
+        }
+        toast.appendChild(iconWrap.firstElementChild || iconWrap);
+        toast.appendChild(msgSpan);
         toast.onclick = () => {
             toast.classList.add('hiding');
             setTimeout(() => toast.remove(), 250);
@@ -1634,13 +1659,20 @@
         wheelTimeout = setTimeout(saveState, 400);
     });
     
+    container.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        zoom(2.0, e.clientX, e.clientY);
+        showToast('Zoom Out (0.5x)', 'info', 1500);
+    });
+    
     container.addEventListener('pointerdown', (e) => {
-        if (e.target !== canvas) return;
+        if (e.target !== canvas || e.button !== 0) return;
         
         // Interactive Julia bridging
         if (e.shiftKey && !isJulia) {
             const w = window.innerWidth;
             const h = window.innerHeight;
+            if (w <= 1 || h <= 1) return;
             const re_factor = (maxRe - minRe) / (w - 1);
             const im_factor = (maxIm - minIm) / (h - 1);
             const clickRe = minRe + e.clientX * re_factor;
@@ -1667,37 +1699,54 @@
         dragStartY = e.clientY;
         startMinRe = minRe; startMaxRe = maxRe;
         startMinIm = minIm; startMaxIm = maxIm;
-        container.setPointerCapture(e.pointerId);
+        try { container.setPointerCapture(e.pointerId); } catch(err) {}
     });
     
     container.addEventListener('pointermove', (e) => {
         if (!isDragging) return;
-        hasDragged = true;
         const dx = e.clientX - dragStartX;
         const dy = e.clientY - dragStartY;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+            hasDragged = true;
+        }
         
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        const re_factor = (startMaxRe - startMinRe) / (w - 1);
-        const im_factor = (startMaxIm - startMinIm) / (h - 1);
-        
-        minRe = startMinRe - dx * re_factor;
-        maxRe = startMaxRe - dx * re_factor;
-        
-        minIm = startMinIm + dy * im_factor;
-        maxIm = startMaxIm + dy * im_factor;
-        
-        requestRender();
+        if (hasDragged) {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            if (w <= 1 || h <= 1) return;
+            const re_factor = (startMaxRe - startMinRe) / (w - 1);
+            const im_factor = (startMaxIm - startMinIm) / (h - 1);
+            
+            minRe = startMinRe - dx * re_factor;
+            maxRe = startMaxRe - dx * re_factor;
+            
+            minIm = startMinIm + dy * im_factor;
+            maxIm = startMaxIm + dy * im_factor;
+            
+            requestRender();
+        }
     });
     
     container.addEventListener('pointerup', (e) => {
         if (!isDragging) return;
         isDragging = false;
-        container.releasePointerCapture(e.pointerId);
-        if (hasDragged) {
+        try { container.releasePointerCapture(e.pointerId); } catch(err) {}
+        if (!hasDragged) {
+            // Quick click without moving -> Zoom In
+            zoom(0.5, e.clientX, e.clientY);
+            showToast('Zoom In (2.0x)', 'info', 1500);
+        } else {
             triggerScreenShake(2);
             saveState();
             hasDragged = false;
+        }
+    });
+
+    container.addEventListener('pointercancel', (e) => {
+        if (isDragging) {
+            isDragging = false;
+            hasDragged = false;
+            try { container.releasePointerCapture(e.pointerId); } catch(err) {}
         }
     });
 

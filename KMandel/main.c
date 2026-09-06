@@ -318,13 +318,14 @@ void LoadState(int idx) {
 }
 
 void GetColors(unsigned int n, unsigned int iter, int t, unsigned char* r, unsigned char* g, unsigned char* b) {
+    if (iter == 0) iter = 1;
     if (t == 0) { // Fire
         *r = (unsigned char)((n * 255) / iter);
-        *g = (unsigned char)((n * n * 255) / (iter * iter));
+        *g = (unsigned char)(((unsigned __int64)n * n * 255) / ((unsigned __int64)iter * iter));
         *b = (unsigned char)((n * 128) / iter);
     } else if (t == 1) { // Ocean
         *r = (unsigned char)((n * 128) / iter);
-        *g = (unsigned char)((n * n * 255) / (iter * iter));
+        *g = (unsigned char)(((unsigned __int64)n * n * 255) / ((unsigned __int64)iter * iter));
         *b = (unsigned char)((n * 255) / iter);
     } else if (t == 2) { // Cyberpunk Neon
         double f = ((double)n / iter) * 6.2831853;
@@ -472,7 +473,7 @@ void RenderMandelbrotToBuffer(DWORD* buffer, int width, int height) {
 }
 
 void ResizeBitmap(HWND hwnd, int width, int height) {
-    if (width == 0 || height == 0) return;
+    if (width <= 1 || height <= 1) return;
     if (hBitmap) DeleteObject(hBitmap);
     
     BITMAPINFO bmi = {0};
@@ -507,10 +508,10 @@ void Zoom(double factor, int mouseX, int mouseY) {
     
     if (newWRe < 1e-13 || newWRe > 10.0) return;
     
-    minRe = centerRe - ((double)mouseX / bmpW) * newWRe;
+    minRe = centerRe - ((double)mouseX / (bmpW - 1)) * newWRe;
     maxRe = minRe + newWRe;
     
-    maxIm = centerIm + ((double)mouseY / bmpH) * newWIm;
+    maxIm = centerIm + ((double)mouseY / (bmpH - 1)) * newWIm;
     minIm = maxIm - newWIm;
     
     double zoomLevel = 3.0 / newWRe;
@@ -525,25 +526,14 @@ void Zoom(double factor, int mouseX, int mouseY) {
     if (needed_iter > max_iter && zoomLevel > 5.0) {
         max_iter = needed_iter;
         if (max_iter > 2000) max_iter = 2000;
+    } else if (zoomLevel <= 5.0 && max_iter > 100) {
+        max_iter = 100;
     }
     
     RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
 }
 
 void SaveImage4K(HWND hwnd) {
-    int expW = 3840;
-    int expH = 2160;
-    int imageSize32 = expW * expH * 4;
-    DWORD* buffer = (DWORD*)HeapAlloc(GetProcessHeap(), 0, imageSize32);
-    if (!buffer) {
-        MessageBox(hwnd, "Failed to allocate memory for 4K export.", "Error", MB_OK);
-        return;
-    }
-    
-    SetWindowText(hwnd, "KMandel - Rendering 4K image...");
-    RenderMandelbrotToBuffer(buffer, expW, expH);
-    SetWindowText(hwnd, "KMandel - Press F1 or H for Help");
-    
     OPENFILENAME ofn = {0};
     char szFileName[MAX_PATH] = "kmandel_4k.bmp";
     ofn.lStructSize = sizeof(ofn);
@@ -554,34 +544,51 @@ void SaveImage4K(HWND hwnd) {
     ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
     ofn.lpstrDefExt = "bmp";
     
-    if (GetSaveFileName(&ofn)) {
-        HANDLE hFile = CreateFile(szFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (hFile != INVALID_HANDLE_VALUE) {
-            BITMAPFILEHEADER bfh = {0};
-            BITMAPINFOHEADER bih = {0};
-            
-            bfh.bfType = 0x4D42;
-            bfh.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + imageSize32;
-            bfh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
-            
-            bih.biSize = sizeof(BITMAPINFOHEADER);
-            bih.biWidth = expW;
-            bih.biHeight = expH; // Positive for universal bottom-up BMP compatibility
-            bih.biPlanes = 1;
-            bih.biBitCount = 32;
-            bih.biCompression = BI_RGB;
-            bih.biSizeImage = imageSize32;
-            
-            DWORD dwWritten;
-            WriteFile(hFile, &bfh, sizeof(BITMAPFILEHEADER), &dwWritten, NULL);
-            WriteFile(hFile, &bih, sizeof(BITMAPINFOHEADER), &dwWritten, NULL);
-            
-            int rowBytes = expW * 4;
-            for (int y = expH - 1; y >= 0; y--) {
-                WriteFile(hFile, &buffer[y * expW], rowBytes, &dwWritten, NULL);
-            }
-            CloseHandle(hFile);
+    if (!GetSaveFileName(&ofn)) {
+        return; // User cancelled dialog; avoid heavy allocation and rendering
+    }
+
+    int expW = 3840;
+    int expH = 2160;
+    int imageSize32 = expW * expH * 4;
+    DWORD* buffer = (DWORD*)HeapAlloc(GetProcessHeap(), 0, imageSize32);
+    if (!buffer) {
+        MessageBox(hwnd, "Failed to allocate memory for 4K export.", "Error", MB_OK | MB_ICONERROR);
+        return;
+    }
+    
+    SetWindowText(hwnd, "KMandel - Rendering 4K image...");
+    RenderMandelbrotToBuffer(buffer, expW, expH);
+    SetWindowText(hwnd, "KMandel Pro - [F1] Help | Drag to Pan | Scroll/Click to Zoom");
+    
+    HANDLE hFile = CreateFile(szFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        BITMAPFILEHEADER bfh = {0};
+        BITMAPINFOHEADER bih = {0};
+        
+        bfh.bfType = 0x4D42;
+        bfh.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + imageSize32;
+        bfh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+        
+        bih.biSize = sizeof(BITMAPINFOHEADER);
+        bih.biWidth = expW;
+        bih.biHeight = expH; // Positive for universal bottom-up BMP compatibility
+        bih.biPlanes = 1;
+        bih.biBitCount = 32;
+        bih.biCompression = BI_RGB;
+        bih.biSizeImage = imageSize32;
+        
+        DWORD dwWritten;
+        WriteFile(hFile, &bfh, sizeof(BITMAPFILEHEADER), &dwWritten, NULL);
+        WriteFile(hFile, &bih, sizeof(BITMAPINFOHEADER), &dwWritten, NULL);
+        
+        int rowBytes = expW * 4;
+        for (int y = expH - 1; y >= 0; y--) {
+            WriteFile(hFile, &buffer[y * expW], rowBytes, &dwWritten, NULL);
         }
+        CloseHandle(hFile);
+    } else {
+        MessageBox(hwnd, "Failed to create destination file for 4K export.", "Save Error", MB_OK | MB_ICONERROR);
     }
     HeapFree(GetProcessHeap(), 0, buffer);
 }
@@ -795,9 +802,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_MOUSEWHEEL: {
             POINT pt;
-            pt.x = LOWORD(lParam);
-            pt.y = HIWORD(lParam);
+            pt.x = (short)LOWORD(lParam);
+            pt.y = (short)HIWORD(lParam);
             ScreenToClient(hwnd, &pt);
+            if (bmpW > 1 && bmpH > 1) {
+                if (pt.x < 0) pt.x = 0;
+                if (pt.x >= bmpW) pt.x = bmpW - 1;
+                if (pt.y < 0) pt.y = 0;
+                if (pt.y >= bmpH) pt.y = bmpH - 1;
+            }
             short zDelta = (short)HIWORD(wParam);
             double factor = (zDelta > 0) ? 0.65 : 1.5;
             TriggerImpact(pt.x, pt.y, (factor < 1.0) ? 4.0 : 2.5, 12);
@@ -811,6 +824,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int y = (short)HIWORD(lParam);
             
             if ((wParam & MK_SHIFT) && !isJulia) {
+                if (isDragging) {
+                    isDragging = 0;
+                    ReleaseCapture();
+                }
                 // Interactive Julia bridging
                 double re_factor = (maxRe - minRe) / (bmpW > 1 ? (bmpW - 1) : 1);
                 double im_factor = (maxIm - minIm) / (bmpH > 1 ? (bmpH - 1) : 1);
@@ -891,9 +908,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_RBUTTONDOWN: {
-            int x = LOWORD(lParam);
-            int y = HIWORD(lParam);
-            
+            int x = (short)LOWORD(lParam);
+            int y = (short)HIWORD(lParam);
+            if (bmpW > 1 && bmpH > 1) {
+                if (x < 0) x = 0;
+                if (x >= bmpW) x = bmpW - 1;
+                if (y < 0) y = 0;
+                if (y >= bmpH) y = bmpH - 1;
+            }
+            if (isDragging) {
+                isDragging = 0;
+                ReleaseCapture();
+            }
             TriggerImpact(x, y, 3.5, 16);
             Zoom(2.0, x, y); // Zoom out
             SaveState();
@@ -901,6 +927,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_KEYDOWN: {
+            if (isDragging) {
+                isDragging = 0;
+                ReleaseCapture();
+            }
             if (wParam >= '1' && wParam <= '5') {
                 fractalType = (int)(wParam - '1');
                 isJulia = 0;
@@ -1233,6 +1263,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return 1; // Handled in double-buffered WM_PAINT
         case WM_DESTROY:
             KillTimer(hwnd, 1);
+            if (isDragging) {
+                isDragging = 0;
+                ReleaseCapture();
+            }
             if (g_hHudFont) {
                 DeleteObject(g_hHudFont);
                 g_hHudFont = NULL;
