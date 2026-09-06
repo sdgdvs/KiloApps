@@ -1,188 +1,1270 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>KNote</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KNote - Cybernetic Personal Notepad</title>
 <style>
-  body { margin: 0; background-color: #fffde7; display: flex; height: 100vh; overflow: hidden; font-family: "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-  .sidebar { width: 220px; background: #fff9c4; border-right: 1px solid #e0e0a0; display: flex; flex-direction: column; }
-  .main { flex: 1; display: flex; flex-direction: column; background: #fffef0; }
-  .toolbar { padding: 8px; display: flex; justify-content: flex-end; border-bottom: 1px solid #e0e0a0; gap: 8px; background: #fff9c4; }
-  button { background: #fff; border: 1px solid #d0d090; border-radius: 4px; padding: 5px 12px; cursor: pointer; font-family: "Segoe UI", sans-serif; font-size: 13px; transition: background 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-  button:hover { background: #f0f0c0; }
-  .search-box { padding: 8px; border-bottom: 1px solid #e0e0a0; }
-  .search-box input { width: 100%; box-sizing: border-box; padding: 6px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px; font-family: "Segoe UI", sans-serif; }
-  .note-list { flex: 1; overflow-y: auto; list-style: none; padding: 0; margin: 0; }
-  .note-item { padding: 10px; border-bottom: 1px solid #f0f0c0; cursor: pointer; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: background 0.1s; }
-  .note-item:hover { background: #fff59d; }
-  .note-item.active { background: #fff176; font-weight: bold; border-left: 3px solid #fbc02d; padding-left: 7px; }
-  textarea { flex: 1; width: 100%; box-sizing: border-box; background-color: transparent; border: none; padding: 15px; font-family: "Segoe UI", sans-serif; font-size: 15px; resize: none; outline: none; line-height: 1.5; }
-  #statusBar { padding: 6px 15px; background: #fff9c4; border-top: 1px solid #e0e0a0; font-size: 12px; color: #555; white-space: pre-wrap; }
+  :root {
+    --bg-main: #fffef0;
+    --bg-sidebar: #fff9c4;
+    --bg-hover: #fff59d;
+    --bg-active: #fff176;
+    --border: #e0e0a0;
+    --border-dark: #d0d090;
+    --text-primary: #2c2c2c;
+    --text-muted: #666;
+    --accent: #fbc02d;
+    --accent-dark: #f57f17;
+    --danger: #d32f2f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .sidebar {
+    width: 250px;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+  }
+  .sidebar-header {
+    padding: 8px;
+    display: flex;
+    gap: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .search-box {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .search-box input {
+    width: 100%;
+    padding: 6px 24px 6px 8px;
+    font-size: 13px;
+    border: 1px solid var(--border-dark);
+    border-radius: 4px;
+    font-family: inherit;
+    background: #fff;
+    outline: none;
+  }
+  .search-box input:focus {
+    border-color: var(--accent-dark);
+    box-shadow: 0 0 0 2px rgba(251, 192, 45, 0.25);
+  }
+  .search-clear {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 13px;
+    color: #888;
+    display: none;
+  }
+  .search-clear:hover { color: #333; }
+  .note-list {
+    flex: 1;
+    overflow-y: auto;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .note-item {
+    padding: 9px 12px;
+    border-bottom: 1px solid rgba(224, 224, 160, 0.6);
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.12s;
+    outline: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .note-item:hover { background: var(--bg-hover); }
+  .note-item:focus-visible {
+    background: var(--bg-hover);
+    box-shadow: inset 0 0 0 2px var(--accent-dark);
+  }
+  .note-item.active {
+    background: var(--bg-active);
+    font-weight: 600;
+    border-left: 4px solid var(--accent);
+    padding-left: 8px;
+  }
+  .note-title-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .note-title {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .note-snippet {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: normal;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .empty-state {
+    padding: 24px 16px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-style: italic;
+  }
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-main);
+    position: relative;
+    min-width: 0;
+  }
+  .toolbar {
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-sidebar);
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  button, .btn {
+    background: #fff;
+    border: 1px solid var(--border-dark);
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  button:hover, .btn:hover {
+    background: #fdfae6;
+    border-color: #b0b070;
+  }
+  button:active, .btn:active {
+    background: #ece8ba;
+    transform: translateY(1px);
+  }
+  button.primary {
+    background: #fef08a;
+    border-color: #ca8a04;
+    font-weight: 600;
+  }
+  button.primary:hover {
+    background: #fde047;
+  }
+  button.danger:hover {
+    background: #ffebee;
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+  .editor-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+  textarea {
+    flex: 1;
+    width: 100%;
+    box-sizing: border-box;
+    background-color: transparent;
+    border: none;
+    padding: 16px 20px;
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    font-size: 15px;
+    resize: none;
+    outline: none;
+    line-height: 1.6;
+    color: #222;
+  }
+  .preview-pane {
+    display: none;
+    flex: 1;
+    padding: 16px 24px;
+    overflow-y: auto;
+    font-size: 14px;
+    line-height: 1.6;
+    background: #fffdf5;
+  }
+  .preview-pane h1, .preview-pane h2, .preview-pane h3 {
+    margin-top: 0.8em;
+    margin-bottom: 0.4em;
+    color: #111;
+  }
+  .preview-pane hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 16px 0;
+  }
+  .preview-pane code {
+    background: rgba(0,0,0,0.06);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: Consolas, monospace;
+    font-size: 0.9em;
+  }
+  .preview-pane pre {
+    background: #f5f5e8;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+  }
+  .locked-overlay {
+    display: none;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    background: #fffde7;
+    color: #555;
+  }
+  .status-bar {
+    padding: 6px 16px;
+    background: var(--bg-sidebar);
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+  }
+  .tag-pill {
+    display: inline-block;
+    background: rgba(251, 192, 45, 0.35);
+    color: #5d4037;
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  /* Modals */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal {
+    background: #fffef2;
+    border: 1px solid var(--border-dark);
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    width: 90%;
+    max-width: 460px;
+    overflow: hidden;
+    animation: modalPop 0.15s ease-out;
+  }
+  @keyframes modalPop {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .modal-header {
+    padding: 12px 16px;
+    background: var(--bg-sidebar);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    color: #666;
+    padding: 2px 6px;
+    box-shadow: none;
+  }
+  .modal-close:hover { color: #000; background: none; }
+  .modal-body {
+    padding: 16px;
+    font-size: 13px;
+    line-height: 1.5;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  .modal-body input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 6px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border-dark);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+  }
+  .modal-body input:focus {
+    border-color: var(--accent-dark);
+    box-shadow: 0 0 0 2px rgba(251, 192, 45, 0.25);
+  }
+  .modal-footer {
+    padding: 10px 16px;
+    background: var(--bg-sidebar);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .toast {
+    position: fixed;
+    bottom: 35px;
+    right: 20px;
+    background: #333;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    transform: translateY(8px);
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .shortcut-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+  }
+  .shortcut-table td {
+    padding: 4px 6px;
+    border-bottom: 1px solid #eee;
+  }
+  .kbd {
+    background: #f3f3e0;
+    border: 1px solid #d0d0b0;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-family: monospace;
+    font-size: 11px;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+  }
 </style>
 </head>
 <body>
-<div class="sidebar">
-    <div style="padding: 8px;"><button id="newBtn" style="width: 100%">New Note</button></div>
-    <div class="search-box"><input type="text" id="searchInput" placeholder="Search notes..."></div>
-    <ul class="note-list" id="noteList"></ul>
-</div>
-<div class="main">
-    <div class="toolbar">
-        <button id="helpBtn">Help [F1]</button>
-        <button id="pinBtn">Pin Note</button>
-        <button id="exportBtn">Export TXT</button>
-        <button id="delBtn">Delete Note</button>
+
+<!-- Sidebar -->
+<nav class="sidebar" aria-label="Notes sidebar">
+  <div class="sidebar-header">
+    <button id="newBtn" class="primary" style="flex: 1;" aria-label="Create new note">＋ New Note</button>
+  </div>
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Search notes or #tags... (Ctrl+F)" aria-label="Search notes" autocomplete="off">
+    <span class="search-clear" id="searchClear" title="Clear search" role="button" aria-label="Clear search">✕</span>
+  </div>
+  <ul class="note-list" id="noteList" role="listbox" aria-label="Notes list" tabindex="0"></ul>
+</nav>
+
+<!-- Main Area -->
+<main class="main">
+  <!-- Toolbar -->
+  <header class="toolbar" role="toolbar" aria-label="Note editor toolbar">
+    <div class="toolbar-group">
+      <button id="pinBtn" title="Pin note to top (Ctrl+P)" aria-label="Pin note">📌 Pin</button>
+      <button id="lockBtn" title="Encrypt/Decrypt with Password" aria-label="Lock or unlock note">🔒 Lock</button>
+      <button id="viewToggleBtn" title="Toggle Preview" aria-label="Toggle preview mode">👁 Preview</button>
     </div>
-    <textarea id="noteArea" spellcheck="false" maxlength="6000"></textarea>
-    <div id="statusBar">  Words: 0 | Chars: 0</div>
+    <div class="toolbar-group">
+      <button id="exportTxtBtn" title="Export as plain text" aria-label="Export TXT">Export TXT</button>
+      <button id="exportMdBtn" title="Export as Markdown" aria-label="Export MD">Export MD</button>
+      <button id="exportJsonBtn" title="Export JSON backup" aria-label="Export JSON">Export JSON</button>
+      <button id="importBtn" title="Import JSON backup" aria-label="Import JSON">Import JSON</button>
+      <input type="file" id="fileInput" accept=".json,.txt,.md" style="display: none;">
+      <button id="delBtn" class="danger" title="Delete note" aria-label="Delete note">🗑 Delete</button>
+      <button id="helpBtn" title="Help & Shortcuts (F1)" aria-label="Help">❓ Help</button>
+    </div>
+  </header>
+
+  <!-- Editor Container -->
+  <div class="editor-container">
+    <textarea id="noteArea" spellcheck="false" maxlength="6000" placeholder="Start typing your note here... Tip: use #tags for quick organization!" aria-label="Note content"></textarea>
+    <div class="preview-pane" id="previewPane" aria-label="Note Markdown preview"></div>
+    <div class="locked-overlay" id="lockedOverlay">
+      <div style="font-size: 36px;">🔒</div>
+      <div style="font-weight: 600; font-size: 16px;">This Note is Password Encrypted</div>
+      <div style="font-size: 13px; color: #666;">Enter password to unlock and edit.</div>
+      <button id="unlockOverlayBtn" class="primary" style="margin-top: 8px; padding: 6px 16px;">Unlock Note</button>
+    </div>
+  </div>
+
+  <!-- Status Bar -->
+  <footer class="status-bar" id="statusBar" role="status" aria-live="polite">
+    <div id="statCounts">Lines: 0 | Words: 0 | Chars: 0 / 6,000</div>
+    <div id="saveStatus" style="font-size: 11px; color: #777;">Auto-saved</div>
+  </footer>
+</main>
+
+<!-- Modals -->
+<!-- Password Modal -->
+<div class="modal-backdrop" id="passModal" role="dialog" aria-modal="true" aria-labelledby="passModalTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <span id="passModalTitle">Encrypt Note</span>
+      <button class="modal-close" id="passModalClose" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="passModalDesc">Set a password to encrypt this note using AES-GCM:</p>
+      <input type="password" id="passInput" placeholder="Enter password..." autocomplete="off">
+    </div>
+    <div class="modal-footer">
+      <button id="passCancelBtn">Cancel</button>
+      <button id="passConfirmBtn" class="primary">Confirm</button>
+    </div>
+  </div>
 </div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-backdrop" id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <span id="deleteModalTitle">Confirm Delete</span>
+      <button class="modal-close" id="deleteModalClose" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>Are you sure you want to delete this note? This action cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button id="deleteCancelBtn">Cancel</button>
+      <button id="deleteConfirmBtn" class="danger">Delete Note</button>
+    </div>
+  </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal-backdrop" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
+  <div class="modal" style="max-width: 520px;">
+    <div class="modal-header">
+      <span id="helpModalTitle">KNote - User Manual & Shortcuts</span>
+      <button class="modal-close" id="helpModalClose" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <p><strong>KNote</strong> is a lightweight, high-speed personal notepad with tagging, AES encryption, and multi-format export.</p>
+      <table class="shortcut-table">
+        <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">N</span></td><td>Create new note</td></tr>
+        <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">F</span></td><td>Search notes & tags</td></tr>
+        <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">P</span></td><td>Pin / Unpin current note</td></tr>
+        <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">S</span></td><td>Save notes immediately</td></tr>
+        <tr><td><span class="kbd">F1</span> or <span class="kbd">H</span></td><td>Open this Help manual</td></tr>
+        <tr><td><span class="kbd">↑</span> / <span class="kbd">↓</span> in list</td><td>Navigate between notes</td></tr>
+        <tr><td><span class="kbd">Delete</span> in list</td><td>Delete selected note</td></tr>
+        <tr><td><span class="kbd">Esc</span></td><td>Close dialogs or clear search</td></tr>
+      </table>
+      <p style="margin-top: 14px; font-size: 12px; color: #555;">
+        <strong>Features:</strong><br>
+        • <strong>Tags:</strong> Type <code>#tagname</code> anywhere in your note to tag it. Filter notes by typing <code>#tag</code> in the search bar.<br>
+        • <strong>AES Encryption:</strong> Click 🔒 Lock to password-protect sensitive notes with Web Crypto AES-GCM.<br>
+        • <strong>Backups:</strong> Export or Import all notes using standard JSON files.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button id="helpOkBtn" class="primary">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast" id="toast"></div>
+
 <script>
+(() => {
+  // Elements
   const noteArea = document.getElementById('noteArea');
-  const newBtn = document.getElementById('newBtn');
-  const delBtn = document.getElementById('delBtn');
-  const pinBtn = document.getElementById('pinBtn');
-  const exportBtn = document.getElementById('exportBtn');
-  const helpBtn = document.getElementById('helpBtn');
-  const searchInput = document.getElementById('searchInput');
+  const previewPane = document.getElementById('previewPane');
+  const lockedOverlay = document.getElementById('lockedOverlay');
+  const unlockOverlayBtn = document.getElementById('unlockOverlayBtn');
   const noteList = document.getElementById('noteList');
-  const statusBar = document.getElementById('statusBar');
-  
+  const searchInput = document.getElementById('searchInput');
+  const searchClear = document.getElementById('searchClear');
+  const statCounts = document.getElementById('statCounts');
+  const saveStatus = document.getElementById('saveStatus');
+  const toast = document.getElementById('toast');
+
+  // Toolbar buttons
+  const newBtn = document.getElementById('newBtn');
+  const pinBtn = document.getElementById('pinBtn');
+  const lockBtn = document.getElementById('lockBtn');
+  const viewToggleBtn = document.getElementById('viewToggleBtn');
+  const exportTxtBtn = document.getElementById('exportTxtBtn');
+  const exportMdBtn = document.getElementById('exportMdBtn');
+  const exportJsonBtn = document.getElementById('exportJsonBtn');
+  const importBtn = document.getElementById('importBtn');
+  const fileInput = document.getElementById('fileInput');
+  const delBtn = document.getElementById('delBtn');
+  const helpBtn = document.getElementById('helpBtn');
+
+  // Modals
+  const passModal = document.getElementById('passModal');
+  const passModalTitle = document.getElementById('passModalTitle');
+  const passModalDesc = document.getElementById('passModalDesc');
+  const passInput = document.getElementById('passInput');
+  const passModalClose = document.getElementById('passModalClose');
+  const passCancelBtn = document.getElementById('passCancelBtn');
+  const passConfirmBtn = document.getElementById('passConfirmBtn');
+
+  const deleteModal = document.getElementById('deleteModal');
+  const deleteModalClose = document.getElementById('deleteModalClose');
+  const deleteCancelBtn = document.getElementById('deleteCancelBtn');
+  const deleteConfirmBtn = document.getElementById('deleteConfirmBtn');
+
+  const helpModal = document.getElementById('helpModal');
+  const helpModalClose = document.getElementById('helpModalClose');
+  const helpOkBtn = document.getElementById('helpOkBtn');
+
+  // State
   let notes = [];
-  try {
-      let saved = localStorage.getItem('knote_data_multi');
-      if (saved) notes = JSON.parse(saved);
-      else {
-          let old = localStorage.getItem('knote_data');
-          if (old) notes.push({ text: old, pinned: false });
-          else notes.push({ text: "Welcome to KNote!\n\nShortcuts:\n- Use the sidebar to switch notes.\n- Click New Note to create a note.\n- Click Pin Note to pin to the top.\n- Click Help or press F1/H for Help.", pinned: false });
-      }
-  } catch (e) {
-      notes = [{ text: "Welcome to KNote!\n\nShortcuts:\n- Click Help or press F1/H for Help.", pinned: false }];
-  }
-  
-  if (notes.length === 0) notes.push({ text: "", pinned: false });
-  notes.forEach(n => { if (typeof n.pinned === 'undefined') n.pinned = false; });
-
   let activeIndex = 0;
-  
-  function updateStats() {
-      let text = noteArea.value;
-      let chars = text.length;
-      let words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
-      statusBar.innerText = `  Words: ${words} | Chars: ${chars}`;
+  let isPreviewMode = false;
+  let passwordAction = null; // 'lock' or 'unlock'
+  let toastTimer = null;
+
+  function showToast(msg) {
+    if (toastTimer) clearTimeout(toastTimer);
+    toast.textContent = msg;
+    toast.classList.add('show');
+    toastTimer = setTimeout(() => {
+      toast.classList.remove('show');
+    }, 2400);
   }
-  
-  function save() {
+
+  // Safe Storage
+  function safeGetStorage(key) {
+    try { return localStorage.getItem(key); }
+    catch (e) { return null; }
+  }
+  function safeSetStorage(key, val) {
+    try {
+      localStorage.setItem(key, val);
+      return true;
+    } catch (e) {
+      showToast("Storage quota exceeded! Please delete old notes.");
+      return false;
+    }
+  }
+
+  // Cryptography Helpers (AES-GCM via Web Crypto API)
+  async function deriveKey(password, salt) {
+    const enc = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+      "raw",
+      enc.encode(password),
+      { name: "PBKDF2" },
+      false,
+      ["deriveKey"]
+    );
+    return crypto.subtle.deriveKey(
+      {
+        name: "PBKDF2",
+        salt: salt,
+        iterations: 100000,
+        hash: "SHA-256"
+      },
+      keyMaterial,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["encrypt", "decrypt"]
+    );
+  }
+
+  function bufToB64(buf) {
+    let bin = '';
+    const bytes = new Uint8Array(buf);
+    for (let i = 0; i < bytes.byteLength; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+
+  function b64ToBuf(b64) {
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes.buffer;
+  }
+
+  async function encryptNoteText(plainText, password) {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveKey(password, salt);
+    const enc = new TextEncoder();
+    const ciphertext = await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv: iv },
+      key,
+      enc.encode(plainText)
+    );
+    return `ENC:v1:${bufToB64(salt)}:${bufToB64(iv)}:${bufToB64(ciphertext)}`;
+  }
+
+  async function decryptNoteText(encString, password) {
+    const parts = encString.split(':');
+    if (parts.length !== 5 || parts[0] !== 'ENC' || parts[1] !== 'v1') {
+      throw new Error("Invalid format");
+    }
+    const salt = new Uint8Array(b64ToBuf(parts[2]));
+    const iv = new Uint8Array(b64ToBuf(parts[3]));
+    const cipherBuf = b64ToBuf(parts[4]);
+    const key = await deriveKey(password, salt);
+    const decBuf = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: iv },
+      key,
+      cipherBuf
+    );
+    const dec = new TextDecoder();
+    return dec.decode(decBuf);
+  }
+
+  // Load Notes from LocalStorage
+  function loadNotes() {
+    let saved = safeGetStorage('knote_data_multi');
+    if (saved) {
       try {
-          localStorage.setItem('knote_data_multi', JSON.stringify(notes));
+        notes = JSON.parse(saved);
       } catch (e) {
-          alert("Storage quota exceeded! Please delete some notes.");
+        notes = [];
       }
-      renderList();
+    } else {
+      let old = safeGetStorage('knote_data');
+      if (old) {
+        notes = [{ text: old, pinned: false }];
+      }
+    }
+    if (!Array.isArray(notes) || notes.length === 0) {
+      notes = [{
+        text: "Welcome to KNote!\n\n#features\n- Click '+ New Note' to create notes.\n- Type #tags to categorize and filter.\n- Click '📌 Pin' to stick a note to the top.\n- Click '🔒 Lock' to encrypt notes with AES.\n- Click '👁 Preview' for Markdown formatting.\n- Export or Import anytime via JSON, TXT, or MD.\n\nPress F1 or H for Help.",
+        pinned: false
+      }];
+    }
+    notes.forEach(n => {
+      if (typeof n.pinned === 'undefined') n.pinned = false;
+      if (typeof n.encrypted === 'undefined') n.encrypted = false;
+      if (typeof n.unlockedText === 'undefined') n.unlockedText = null;
+    });
   }
-  
+
+  function saveNotes() {
+    // Only serialize properties we want to persist
+    const toSave = notes.map(n => ({
+      text: n.text,
+      pinned: !!n.pinned,
+      encrypted: !!n.encrypted
+    }));
+    safeSetStorage('knote_data_multi', JSON.stringify(toSave));
+    saveStatus.textContent = "Saved locally";
+    setTimeout(() => { saveStatus.textContent = "Auto-saved"; }, 1500);
+  }
+
+  // Simple Markdown Parser for Preview
+  function renderMarkdown(md) {
+    if (!md) return '<p><em>Empty note</em></p>';
+    let escaped = md
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    
+    // Headers
+    escaped = escaped.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+    escaped = escaped.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+    escaped = escaped.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+    
+    // Horizontal rule
+    escaped = escaped.replace(/^---$/gim, '<hr>');
+
+    // Bold / Italic
+    escaped = escaped.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
+    escaped = escaped.replace(/\*(.*?)\*/gim, '<em>$1</em>');
+
+    // Inline code
+    escaped = escaped.replace(/`([^`]+)`/gim, '<code>$1</code>');
+
+    // #tags highlight
+    escaped = escaped.replace(/(#[a-zA-Z0-9_\-]+)/g, '<span class="tag-pill">$1</span>');
+
+    // Lists
+    escaped = escaped.replace(/^\- (.*$)/gim, '<li>$1</li>');
+    escaped = escaped.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+
+    // Paragraphs
+    escaped = escaped.replace(/\n\n/g, '</p><p>');
+    escaped = '<p>' + escaped.replace(/\n/g, '<br>') + '</p>';
+
+    return escaped;
+  }
+
+  function updateStats() {
+    const cur = notes[activeIndex];
+    const text = (cur && cur.encrypted && !cur.unlockedText) ? '' : (noteArea.value || '');
+    const chars = text.length;
+    const lines = text ? text.split('\n').length : 0;
+    const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+    statCounts.textContent = `Lines: ${lines} | Words: ${words} | Chars: ${chars} / 6,000`;
+    if (chars >= 5800) {
+      statCounts.style.color = '#d32f2f';
+      statCounts.style.fontWeight = 'bold';
+    } else {
+      statCounts.style.color = '';
+      statCounts.style.fontWeight = '';
+    }
+  }
+
+  function extractTags(text) {
+    const matches = text.match(/#[a-zA-Z0-9_\-]+/g);
+    return matches ? Array.from(new Set(matches)) : [];
+  }
+
   function renderList() {
-      noteList.innerHTML = '';
-      let query = searchInput.value.toLowerCase().trim();
-      
-      let items = notes.map((note, idx) => ({ ...note, origIndex: idx }));
-      if (query) {
-          items = items.filter(n => n.text.toLowerCase().includes(query));
-      }
-      
-      // Sort pinned notes first while maintaining order
-      items.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
-      
-      items.forEach((item) => {
-          let i = item.origIndex;
-          let li = document.createElement('li');
-          li.className = 'note-item' + (i === activeIndex ? ' active' : '');
-          let title = item.text.trim().split('\n')[0];
-          let displayTitle = (item.pinned ? '📌 ' : '') + (title ? title : 'Empty Note');
-          li.innerText = displayTitle;
-          li.onclick = () => { activeIndex = i; loadActive(); };
-          noteList.appendChild(li);
+    noteList.innerHTML = '';
+    const query = searchInput.value.toLowerCase().trim();
+    searchClear.style.display = query ? 'block' : 'none';
+
+    let items = notes.map((note, idx) => ({ ...note, origIndex: idx }));
+    if (query) {
+      items = items.filter(n => {
+        const textToSearch = (n.encrypted && n.unlockedText) ? n.unlockedText : n.text;
+        return textToSearch.toLowerCase().includes(query);
       });
-      
-      if (notes[activeIndex]) {
-          pinBtn.innerText = notes[activeIndex].pinned ? 'Unpin Note' : 'Pin Note';
-      }
-  }
-  
-  function loadActive() {
-      if (notes.length === 0) notes.push({ text: "", pinned: false });
-      if (activeIndex >= notes.length) activeIndex = notes.length - 1;
-      noteArea.value = notes[activeIndex].text;
-      updateStats();
-      renderList();
-      noteArea.focus();
-  }
-  
-  noteArea.addEventListener('input', () => {
-      notes[activeIndex].text = noteArea.value;
-      updateStats();
-      save();
-  });
-  
-  searchInput.addEventListener('input', () => {
-      renderList();
-  });
-  
-  newBtn.addEventListener('click', () => {
-      if (notes.length >= 100) {
-          alert("Maximum of 100 notes reached. Please delete some notes first.");
-          return;
-      }
-      notes.push({ text: "", pinned: false });
-      activeIndex = notes.length - 1;
-      save();
-      loadActive();
-  });
-  
-  delBtn.addEventListener('click', () => {
-      notes.splice(activeIndex, 1);
-      if (notes.length === 0) notes.push({ text: "", pinned: false });
-      if (activeIndex >= notes.length) activeIndex = notes.length - 1;
-      save();
-      loadActive();
-  });
-  
-  pinBtn.addEventListener('click', () => {
-      if (notes[activeIndex]) {
-          notes[activeIndex].pinned = !notes[activeIndex].pinned;
-          save();
-          renderList();
-      }
-  });
+    }
 
-  exportBtn.addEventListener('click', () => {
-      if (!notes[activeIndex]) return;
-      let text = notes[activeIndex].text;
-      let title = text.trim().split('\n')[0].replace(/[^a-zA-Z0-9_\-]/g, '_') || 'note';
-      let blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-      let a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `${title}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-  });
-  
-  helpBtn.addEventListener('click', () => {
-      alert("KNote Help:\n\n- Use the left sidebar to manage and search notes.\n- Click 'New Note' to add a note.\n- Use the toolbar to pin, export, or delete the current note.\n- Data is saved automatically in your browser.");
-  });
-  
-  window.addEventListener('keydown', (e) => {
-      if (e.key === 'F1' || (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA')) {
+    // Sort pinned notes first while maintaining creation order
+    items.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+
+    if (items.length === 0) {
+      const emptyLi = document.createElement('div');
+      emptyLi.className = 'empty-state';
+      emptyLi.textContent = query ? 'No matching notes found' : 'No notes available';
+      noteList.appendChild(emptyLi);
+      return;
+    }
+
+    items.forEach((item) => {
+      const i = item.origIndex;
+      const li = document.createElement('li');
+      li.className = 'note-item' + (i === activeIndex ? ' active' : '');
+      li.setAttribute('role', 'option');
+      li.setAttribute('tabindex', '0');
+      li.setAttribute('aria-selected', i === activeIndex ? 'true' : 'false');
+
+      const rawText = (item.encrypted && !item.unlockedText) ? '[Encrypted Note]' : item.text;
+      const firstLine = rawText.trim().split('\n')[0] || 'Empty Note';
+      const secondLine = rawText.trim().split('\n').slice(1).join(' ').trim();
+
+      const titleRow = document.createElement('div');
+      titleRow.className = 'note-title-row';
+
+      if (item.pinned) {
+        const pinBadge = document.createElement('span');
+        pinBadge.textContent = '📌';
+        pinBadge.title = 'Pinned note';
+        titleRow.appendChild(pinBadge);
+      }
+
+      if (item.encrypted) {
+        const lockBadge = document.createElement('span');
+        lockBadge.textContent = item.unlockedText ? '🔓' : '🔒';
+        lockBadge.title = item.unlockedText ? 'Unlocked' : 'Encrypted';
+        titleRow.appendChild(lockBadge);
+      }
+
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'note-title';
+      titleSpan.textContent = firstLine;
+      titleRow.appendChild(titleSpan);
+
+      const snippetSpan = document.createElement('span');
+      snippetSpan.className = 'note-snippet';
+      snippetSpan.textContent = secondLine || (item.encrypted ? 'Locked content' : 'No additional text');
+
+      li.appendChild(titleRow);
+      li.appendChild(snippetSpan);
+
+      li.onclick = () => {
+        activeIndex = i;
+        loadActive();
+      };
+      li.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          alert("KNote Help:\n\n- Use the left sidebar to manage and search notes.\n- Click 'New Note' to add a note.\n- Use the toolbar to pin, export, or delete the current note.\n- Data is saved automatically in your browser.");
+          activeIndex = i;
+          loadActive();
+        } else if (e.key === 'Delete') {
+          e.preventDefault();
+          activeIndex = i;
+          openDeleteModal();
+        }
+      };
+
+      noteList.appendChild(li);
+    });
+
+    const cur = notes[activeIndex];
+    if (cur) {
+      pinBtn.textContent = cur.pinned ? '📌 Unpin' : '📌 Pin';
+      if (cur.encrypted) {
+        lockBtn.textContent = cur.unlockedText ? '🔓 Lock' : '🔒 Unlock';
+      } else {
+        lockBtn.textContent = '🔒 Lock';
       }
+    }
+  }
+
+  function loadActive() {
+    if (notes.length === 0) {
+      notes.push({ text: "", pinned: false, encrypted: false });
+    }
+    if (activeIndex >= notes.length) activeIndex = notes.length - 1;
+    if (activeIndex < 0) activeIndex = 0;
+
+    const cur = notes[activeIndex];
+
+    if (cur.encrypted && !cur.unlockedText) {
+      noteArea.style.display = 'none';
+      previewPane.style.display = 'none';
+      lockedOverlay.style.display = 'flex';
+      viewToggleBtn.style.display = 'none';
+    } else {
+      lockedOverlay.style.display = 'none';
+      viewToggleBtn.style.display = 'inline-flex';
+      const displayText = cur.encrypted ? cur.unlockedText : cur.text;
+      noteArea.value = displayText || '';
+
+      if (isPreviewMode) {
+        noteArea.style.display = 'none';
+        previewPane.style.display = 'block';
+        previewPane.innerHTML = renderMarkdown(displayText);
+      } else {
+        noteArea.style.display = 'block';
+        previewPane.style.display = 'none';
+      }
+    }
+
+    updateStats();
+    renderList();
+  }
+
+  // Event Listeners
+  noteArea.addEventListener('input', () => {
+    const cur = notes[activeIndex];
+    if (cur.encrypted && cur.unlockedText !== null) {
+      cur.unlockedText = noteArea.value;
+    } else {
+      cur.text = noteArea.value;
+    }
+    updateStats();
+    saveNotes();
+    renderList();
   });
 
-  if (window.resizeTo) {
-      try { window.resizeTo(800, 600); } catch(e) {}
+  searchInput.addEventListener('input', () => {
+    renderList();
+  });
+
+  searchClear.addEventListener('click', () => {
+    searchInput.value = '';
+    searchInput.focus();
+    renderList();
+  });
+
+  // Keyboard navigation for noteList
+  noteList.addEventListener('keydown', (e) => {
+    const items = Array.from(noteList.querySelectorAll('.note-item'));
+    if (items.length === 0) return;
+    const currentFocused = document.activeElement;
+    let idx = items.indexOf(currentFocused);
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const next = idx < items.length - 1 ? idx + 1 : 0;
+      items[next].focus();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prev = idx > 0 ? idx - 1 : items.length - 1;
+      items[prev].focus();
+    }
+  });
+
+  // Toolbar Actions
+  newBtn.addEventListener('click', () => {
+    if (notes.length >= 100) {
+      showToast("Maximum of 100 notes reached. Please delete some first.");
+      return;
+    }
+    notes.push({ text: "", pinned: false, encrypted: false });
+    activeIndex = notes.length - 1;
+    searchInput.value = '';
+    saveNotes();
+    loadActive();
+    noteArea.focus();
+    showToast("New note created");
+  });
+
+  pinBtn.addEventListener('click', () => {
+    const cur = notes[activeIndex];
+    if (!cur) return;
+    cur.pinned = !cur.pinned;
+    saveNotes();
+    renderList();
+    showToast(cur.pinned ? "Note pinned to top" : "Note unpinned");
+  });
+
+  viewToggleBtn.addEventListener('click', () => {
+    isPreviewMode = !isPreviewMode;
+    viewToggleBtn.textContent = isPreviewMode ? '✏ Edit' : '👁 Preview';
+    loadActive();
+  });
+
+  // Lock / Password Modal
+  function openPasswordModal(action) {
+    passwordAction = action;
+    passInput.value = '';
+    if (action === 'lock') {
+      passModalTitle.textContent = "Encrypt Note";
+      passModalDesc.textContent = "Set a password to encrypt this note with AES-GCM:";
+      passConfirmBtn.textContent = "Encrypt & Lock";
+    } else {
+      passModalTitle.textContent = "Unlock Note";
+      passModalDesc.textContent = "Enter password to decrypt this note:";
+      passConfirmBtn.textContent = "Unlock";
+    }
+    passModal.style.display = 'flex';
+    setTimeout(() => passInput.focus(), 50);
   }
-  
+
+  function closePasswordModal() {
+    passModal.style.display = 'none';
+    passInput.value = '';
+    passwordAction = null;
+  }
+
+  lockBtn.addEventListener('click', () => {
+    const cur = notes[activeIndex];
+    if (!cur) return;
+    if (cur.encrypted) {
+      if (cur.unlockedText !== null) {
+        // Already unlocked: re-locking it
+        cur.unlockedText = null;
+        loadActive();
+        showToast("Note re-locked");
+      } else {
+        // Locked: prompt to unlock
+        openPasswordModal('unlock');
+      }
+    } else {
+      // Plain: prompt to encrypt
+      openPasswordModal('lock');
+    }
+  });
+
+  unlockOverlayBtn.addEventListener('click', () => {
+    openPasswordModal('unlock');
+  });
+
+  passModalClose.addEventListener('click', closePasswordModal);
+  passCancelBtn.addEventListener('click', closePasswordModal);
+
+  passConfirmBtn.addEventListener('click', async () => {
+    const pass = passInput.value;
+    if (!pass) {
+      showToast("Password cannot be empty");
+      return;
+    }
+    const cur = notes[activeIndex];
+    if (!cur) return;
+
+    if (passwordAction === 'lock') {
+      try {
+        const plain = noteArea.value;
+        const cipher = await encryptNoteText(plain, pass);
+        cur.text = cipher;
+        cur.encrypted = true;
+        cur.unlockedText = null;
+        saveNotes();
+        closePasswordModal();
+        loadActive();
+        showToast("Note encrypted & locked successfully");
+      } catch (err) {
+        showToast("Encryption failed: " + err.message);
+      }
+    } else if (passwordAction === 'unlock') {
+      try {
+        const plain = await decryptNoteText(cur.text, pass);
+        cur.unlockedText = plain;
+        closePasswordModal();
+        loadActive();
+        showToast("Note unlocked successfully");
+      } catch (err) {
+        showToast("Incorrect password or corrupted note data");
+      }
+    }
+  });
+
+  passInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') passConfirmBtn.click();
+    else if (e.key === 'Escape') closePasswordModal();
+  });
+
+  // Delete Modal
+  function openDeleteModal() {
+    deleteModal.style.display = 'flex';
+  }
+  function closeDeleteModal() {
+    deleteModal.style.display = 'none';
+  }
+
+  delBtn.addEventListener('click', openDeleteModal);
+  deleteModalClose.addEventListener('click', closeDeleteModal);
+  deleteCancelBtn.addEventListener('click', closeDeleteModal);
+
+  deleteConfirmBtn.addEventListener('click', () => {
+    closeDeleteModal();
+    notes.splice(activeIndex, 1);
+    if (notes.length === 0) {
+      notes.push({ text: "", pinned: false, encrypted: false });
+    }
+    if (activeIndex >= notes.length) activeIndex = notes.length - 1;
+    saveNotes();
+    loadActive();
+    showToast("Note deleted");
+  });
+
+  // Export TXT
+  exportTxtBtn.addEventListener('click', () => {
+    const cur = notes[activeIndex];
+    if (!cur) return;
+    const text = (cur.encrypted && cur.unlockedText !== null) ? cur.unlockedText : cur.text;
+    const rawTitle = text.trim().split('\n')[0].replace(/[^a-zA-Z0-9_\-]/g, '_').substring(0, 32) || 'note';
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${rawTitle}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+    showToast("Exported as TXT");
+  });
+
+  // Export MD
+  exportMdBtn.addEventListener('click', () => {
+    const cur = notes[activeIndex];
+    if (!cur) return;
+    const text = (cur.encrypted && cur.unlockedText !== null) ? cur.unlockedText : cur.text;
+    const rawTitle = text.trim().split('\n')[0].replace(/[^a-zA-Z0-9_\-]/g, '_').substring(0, 32) || 'note';
+    const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${rawTitle}.md`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+    showToast("Exported as Markdown");
+  });
+
+  // Export JSON Backup
+  exportJsonBtn.addEventListener('click', () => {
+    const exportData = notes.map((n, i) => ({
+      id: `n_${i}`,
+      pinned: !!n.pinned,
+      encrypted: !!n.encrypted,
+      text: (n.encrypted && n.unlockedText !== null) ? n.unlockedText : n.text
+    }));
+    const jsonStr = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `knote_backup_${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+    showToast("Exported JSON backup");
+  });
+
+  // Import JSON Backup
+  importBtn.addEventListener('click', () => {
+    fileInput.value = '';
+    fileInput.click();
+  });
+
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const content = evt.target.result;
+        if (file.name.endsWith('.json')) {
+          const parsed = JSON.parse(content);
+          if (Array.isArray(parsed)) {
+            let importedCount = 0;
+            parsed.forEach(item => {
+              if (item && typeof item.text === 'string' && notes.length < 100) {
+                notes.push({
+                  text: item.text,
+                  pinned: !!item.pinned,
+                  encrypted: !!item.encrypted
+                });
+                importedCount++;
+              }
+            });
+            saveNotes();
+            loadActive();
+            showToast(`Imported ${importedCount} notes from JSON`);
+          } else {
+            showToast("Invalid JSON format (must be array)");
+          }
+        } else {
+          // Plain text or markdown file import as single note
+          if (notes.length < 100) {
+            notes.push({
+              text: content,
+              pinned: false,
+              encrypted: false
+            });
+            activeIndex = notes.length - 1;
+            saveNotes();
+            loadActive();
+            showToast("Imported file as new note");
+          } else {
+            showToast("Cannot import: 100 note limit reached");
+          }
+        }
+      } catch (err) {
+        showToast("Import error: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // Help Modal
+  helpBtn.addEventListener('click', () => {
+    helpModal.style.display = 'flex';
+  });
+  helpModalClose.addEventListener('click', () => {
+    helpModal.style.display = 'none';
+  });
+  helpOkBtn.addEventListener('click', () => {
+    helpModal.style.display = 'none';
+  });
+
+  // Global Keyboard Shortcuts
+  window.addEventListener('keydown', (e) => {
+    const activeTag = document.activeElement ? document.activeElement.tagName : '';
+    const isInput = activeTag === 'INPUT' || activeTag === 'TEXTAREA';
+
+    // F1 or 'H' (outside inputs) opens Help
+    if (e.key === 'F1' || (!isInput && (e.key === 'h' || e.key === 'H') && !e.ctrlKey && !e.altKey && !e.metaKey)) {
+      e.preventDefault();
+      helpModal.style.display = 'flex';
+      return;
+    }
+
+    // Escape closes modals or clears search
+    if (e.key === 'Escape') {
+      if (passModal.style.display === 'flex') {
+        closePasswordModal();
+      } else if (deleteModal.style.display === 'flex') {
+        closeDeleteModal();
+      } else if (helpModal.style.display === 'flex') {
+        helpModal.style.display = 'none';
+      } else if (searchInput.value) {
+        searchInput.value = '';
+        renderList();
+      }
+      return;
+    }
+
+    // Ctrl+N: New Note
+    if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) {
+      e.preventDefault();
+      newBtn.click();
+      return;
+    }
+
+    // Ctrl+F: Focus Search
+    if (e.ctrlKey && (e.key === 'f' || e.key === 'F')) {
+      e.preventDefault();
+      searchInput.focus();
+      searchInput.select();
+      return;
+    }
+
+    // Ctrl+P: Pin/Unpin
+    if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) {
+      e.preventDefault();
+      pinBtn.click();
+      return;
+    }
+
+    // Ctrl+S: Manual save feedback
+    if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+      e.preventDefault();
+      saveNotes();
+      showToast("Notes saved locally");
+      return;
+    }
+  });
+
+  // Initialize
+  loadNotes();
   loadActive();
+})();
 </script>
 </body>
 </html>

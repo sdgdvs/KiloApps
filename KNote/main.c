@@ -12,7 +12,7 @@
 #define H 600
 
 HWND hEdit, hList, hBtnNew, hBtnDel, hStatus, hSearch, hBtnPin, hBtnExportMd, hBtnExportJson, hBtnImport, hBtnLock, hTab, hBtnHelp;
-HBRUSH bgBrush, sidebarBrush;
+HBRUSH bgBrush, sidebarBrush, g_hbrClass;
 HFONT hFont;
 
 #define ID_BTN_NEW 9005
@@ -61,17 +61,18 @@ void b64_encode(const unsigned char *in, int in_len, char *out) {
 void b64_decode(const char *in, unsigned char *out, int *out_len) {
     int map[256];
     for(int i=0; i<256; i++) map[i] = -1;
-    for(int i=0; i<64; i++) map[b64[i]] = i;
+    for(int i=0; i<64; i++) map[(unsigned char)b64[i]] = i;
     int i=0, j=0;
     while(in[i] && in[i] != '=') {
-        unsigned int a = map[in[i++]]; if(a==-1) break;
-        unsigned int b = map[in[i++]]; if(b==-1) break;
-        unsigned int c = in[i] == '=' ? 0 : map[in[i++]];
-        unsigned int d = in[i] == '=' ? 0 : map[in[i++]];
-        unsigned int n = (a << 18) | (b << 12) | (c << 6) | d;
+        int c0 = (unsigned char)in[i++]; int a = (c0 < 256) ? map[c0] : -1; if(a==-1) break;
+        if (!in[i] || in[i] == '=') break;
+        int c1 = (unsigned char)in[i++]; int b = (c1 < 256) ? map[c1] : -1; if(b==-1) break;
+        int c2 = (in[i] && in[i] != '=') ? (unsigned char)in[i++] : 0; int c = map[c2];
+        int c3 = (in[i] && in[i] != '=') ? (unsigned char)in[i++] : 0; int d = map[c3];
+        unsigned int n = (a << 18) | (b << 12) | ((c >= 0 ? c : 0) << 6) | (d >= 0 ? d : 0);
         out[j++] = (n >> 16) & 255;
-        if(in[i-2] != '=') out[j++] = (n >> 8) & 255;
-        if(in[i-1] != '=') out[j++] = n & 255;
+        if(c >= 0) out[j++] = (n >> 8) & 255;
+        if(d >= 0) out[j++] = n & 255;
     }
     *out_len = j;
 }
@@ -96,7 +97,7 @@ int DecryptString(const char* b64_str, const char* pass, char* out_text) {
     CryptCreateHash(hProv, CALG_SHA_256, 0, 0, &hHash);
     CryptHashData(hHash, (BYTE*)pass, lstrlenA(pass), 0);
     CryptDeriveKey(hProv, CALG_AES_256, hHash, 0, &hKey);
-    BYTE buf[10000]; int dataLen; b64_decode(b64_str, buf, &dataLen);
+    BYTE buf[10000]; int dataLen = 0; b64_decode(b64_str, buf, &dataLen);
     DWORD len = dataLen;
     if(CryptDecrypt(hKey, 0, TRUE, 0, buf, &len)) { memcpy(out_text, buf, len); out_text[len] = 0; }
     else out_text[0] = 0;
@@ -105,27 +106,45 @@ int DecryptString(const char* b64_str, const char* pass, char* out_text) {
 }
 
 char password_buf[64] = {0};
+static WNDPROC g_oldPassEditProc = NULL;
+LRESULT CALLBACK PassEditProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_KEYDOWN) {
+        if (wp == VK_RETURN) {
+            SendMessage(GetParent(hwnd), WM_COMMAND, (WPARAM)1, 0);
+            return 0;
+        } else if (wp == VK_ESCAPE) {
+            SendMessage(GetParent(hwnd), WM_CLOSE, 0, 0);
+            return 0;
+        }
+    }
+    return CallWindowProcA(g_oldPassEditProc, hwnd, msg, wp, lp);
+}
+
 LRESULT CALLBACK PassWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    static HWND hEdit;
+    static HWND hPassEdit;
     if(msg == WM_CREATE) {
         CreateWindow("STATIC", "Enter Password:", WS_CHILD|WS_VISIBLE, 10, 10, 150, 20, hwnd, NULL, NULL, NULL);
-        hEdit = CreateWindowEx(0, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_BORDER|ES_PASSWORD|ES_AUTOHSCROLL, 10, 30, 150, 20, hwnd, NULL, NULL, NULL);
+        hPassEdit = CreateWindowEx(0, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_BORDER|ES_PASSWORD|ES_AUTOHSCROLL, 10, 30, 150, 20, hwnd, NULL, NULL, NULL);
         CreateWindow("BUTTON", "OK", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 170, 30, 50, 20, hwnd, (HMENU)1, NULL, NULL);
-        SetFocus(hEdit);
+        g_oldPassEditProc = (WNDPROC)SetWindowLongPtrA(hPassEdit, GWLP_WNDPROC, (LONG_PTR)PassEditProc);
+        SetFocus(hPassEdit);
     } else if(msg == WM_COMMAND && LOWORD(wp) == 1) {
-        GetWindowTextA(hEdit, password_buf, sizeof(password_buf));
+        GetWindowTextA(hPassEdit, password_buf, sizeof(password_buf));
         DestroyWindow(hwnd);
     } else if(msg == WM_CLOSE) {
         password_buf[0] = 0; DestroyWindow(hwnd);
     } else return DefWindowProc(hwnd, msg, wp, lp);
     return 0;
 }
+
 int PromptPassword(HWND parent) {
     password_buf[0] = 0;
+    if (parent) EnableWindow(parent, FALSE);
     HWND pw = CreateWindow("PassWnd", "Password", WS_POPUP|WS_CAPTION|WS_SYSMENU, 300, 300, 250, 100, parent, NULL, NULL, NULL);
     ShowWindow(pw, SW_SHOW);
     MSG pmsg;
     while(IsWindow(pw) && GetMessage(&pmsg, NULL, 0, 0)) { TranslateMessage(&pmsg); DispatchMessage(&pmsg); }
+    if (parent) { EnableWindow(parent, TRUE); SetFocus(parent); }
     return password_buf[0] != 0;
 }
 
@@ -146,8 +165,12 @@ int StrStrI(const char* haystack, const char* needle) {
 }
 
 void SaveToMemory() {
-    if (activeNote >= 0 && !encrypted[activeNote]) {
-        GetWindowTextA(hEdit, notes[activeNote], 6000);
+    if (activeNote >= 0) {
+        if (!encrypted[activeNote]) {
+            GetWindowTextA(hEdit, notes[activeNote], 6000);
+        } else if (unlockedNotes[activeNote][0] != 0) {
+            GetWindowTextA(hEdit, unlockedNotes[activeNote], 6000);
+        }
     }
 }
 
@@ -155,28 +178,32 @@ void LoadNotes() {
     HANDLE hFile = CreateFileA("knote_data_v2.txt", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD fileSize = GetFileSize(hFile, NULL);
-        char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, fileSize + 1);
-        if (buf) {
-            DWORD bytesRead; ReadFile(hFile, buf, fileSize, &bytesRead, NULL); buf[fileSize] = 0;
-            numNotes = 0; char* p = buf;
-            while(p < buf + fileSize && numNotes < 100) {
-                char* next = p; while(*next && *next != '\1') next++; *next = 0;
-                int l = next - p;
-                if (l > 0) {
-                    if (l >= 2 && p[1] == '|') {
-                        pinned[numNotes] = (p[0] == '1') ? 1 : 0;
-                        encrypted[numNotes] = (p[0] == 'E') ? 1 : 0;
-                        if(p[0] == 'P') { pinned[numNotes] = 1; encrypted[numNotes] = 1; }
-                        p += 2; l -= 2;
-                    } else { pinned[numNotes] = 0; encrypted[numNotes] = 0; }
-                    if (l > sizeof(notes[0])-1) l = sizeof(notes[0])-1;
-                    for(int i=0; i<l; i++) notes[numNotes][i] = p[i];
-                    notes[numNotes][l] = 0;
-                    numNotes++;
+        if (fileSize != INVALID_FILE_SIZE && fileSize > 0 && fileSize < 10 * 1024 * 1024) {
+            char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, fileSize + 1);
+            if (buf) {
+                DWORD bytesRead = 0;
+                ReadFile(hFile, buf, fileSize, &bytesRead, NULL);
+                buf[bytesRead] = 0;
+                numNotes = 0; char* p = buf;
+                while(p < buf + bytesRead && numNotes < 100) {
+                    char* next = p; while(*next && *next != '\1') next++; *next = 0;
+                    int l = (int)(next - p);
+                    if (l > 0) {
+                        if (l >= 2 && p[1] == '|') {
+                            pinned[numNotes] = (p[0] == '1') ? 1 : 0;
+                            encrypted[numNotes] = (p[0] == 'E') ? 1 : 0;
+                            if(p[0] == 'P') { pinned[numNotes] = 1; encrypted[numNotes] = 1; }
+                            p += 2; l -= 2;
+                        } else { pinned[numNotes] = 0; encrypted[numNotes] = 0; }
+                        if (l > (int)sizeof(notes[0])-1) l = (int)sizeof(notes[0])-1;
+                        for(int i=0; i<l; i++) notes[numNotes][i] = p[i];
+                        notes[numNotes][l] = 0;
+                        numNotes++;
+                    }
+                    p = next + 1;
                 }
-                p = next + 1;
+                HeapFree(GetProcessHeap(), 0, buf);
             }
-            HeapFree(GetProcessHeap(), 0, buf);
         }
         CloseHandle(hFile);
     }
@@ -198,7 +225,7 @@ void SaveNotes() {
             else if(pinned[i]) flags[0] = '1';
             else if(encrypted[i]) flags[0] = 'E';
             WriteFile(hFile, flags, 2, &bw, NULL);
-            int l=lstrlenA(notes[i]);
+            int l = lstrlenA(notes[i]);
             WriteFile(hFile, notes[i], l, &bw, NULL);
             char delim = '\1';
             WriteFile(hFile, &delim, 1, &bw, NULL);
@@ -248,6 +275,7 @@ void ExportJSON() {
                 for(int j=0; txt[j]; j++) {
                     if(txt[j]=='\n') WriteFile(hFile, "\\n", 2, &bw, NULL);
                     else if(txt[j]=='\r') WriteFile(hFile, "\\r", 2, &bw, NULL);
+                    else if(txt[j]=='\\') WriteFile(hFile, "\\\\", 2, &bw, NULL);
                     else if(txt[j]=='"') WriteFile(hFile, "\\\"", 2, &bw, NULL);
                     else WriteFile(hFile, &txt[j], 1, &bw, NULL);
                 }
@@ -260,6 +288,9 @@ void ExportJSON() {
     }
 }
 
+void RefreshList();
+void RenderTabs();
+
 void ImportJSON() {
     OPENFILENAMEA ofn; char szFile[260] = "";
     ZeroMemory(&ofn, sizeof(ofn)); ofn.lStructSize = sizeof(ofn);
@@ -270,25 +301,31 @@ void ImportJSON() {
         HANDLE hFile = CreateFileA(ofn.lpstrFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile != INVALID_HANDLE_VALUE) {
             DWORD fileSize = GetFileSize(hFile, NULL);
-            char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, fileSize + 1);
-            DWORD br; ReadFile(hFile, buf, fileSize, &br, NULL);
-            char* p = buf;
-            while((p = strstr(p, "\"text\":")) != NULL) {
-                p += 7;
-                while(*p == ' ' || *p == '\t') p++;
-                if(*p == '"') {
-                    p++; char* txt = notes[numNotes]; int j=0;
-                    while(*p && *p != '"' && j < 5999) {
-                        if(*p == '\\' && *(p+1) == 'n') { txt[j++] = '\n'; p+=2; }
-                        else if(*p == '\\' && *(p+1) == 'r') { txt[j++] = '\r'; p+=2; }
-                        else if(*p == '\\' && *(p+1) == '"') { txt[j++] = '"'; p+=2; }
-                        else txt[j++] = *p++;
+            if (fileSize != INVALID_FILE_SIZE && fileSize > 0 && fileSize < 10 * 1024 * 1024) {
+                char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, fileSize + 1);
+                if (buf) {
+                    DWORD br = 0; ReadFile(hFile, buf, fileSize, &br, NULL);
+                    buf[br] = 0;
+                    char* p = buf;
+                    while((p = strstr(p, "\"text\":")) != NULL) {
+                        if (numNotes >= 100) break;
+                        p += 7;
+                        while(*p == ' ' || *p == '\t') p++;
+                        if(*p == '"') {
+                            p++; char* txt = notes[numNotes]; int j=0;
+                            while(*p && *p != '"' && j < 5999) {
+                                if(*p == '\\' && *(p+1) == 'n') { txt[j++] = '\n'; p+=2; }
+                                else if(*p == '\\' && *(p+1) == 'r') { txt[j++] = '\r'; p+=2; }
+                                else if(*p == '\\' && *(p+1) == '\\') { txt[j++] = '\\'; p+=2; }
+                                else if(*p == '\\' && *(p+1) == '"') { txt[j++] = '"'; p+=2; }
+                                else txt[j++] = *p++;
+                            }
+                            txt[j] = 0; pinned[numNotes] = 0; encrypted[numNotes] = 0; numNotes++;
+                        }
                     }
-                    txt[j] = 0; pinned[numNotes] = 0; encrypted[numNotes] = 0; numNotes++;
-                    if(numNotes>=100) break;
+                    HeapFree(GetProcessHeap(), 0, buf);
                 }
             }
-            HeapFree(GetProcessHeap(), 0, buf);
             CloseHandle(hFile);
             SaveNotes();
         }
@@ -300,30 +337,30 @@ void UpdateStats() {
     char* buf = (char*)HeapAlloc(GetProcessHeap(), 0, len + 1);
     if (buf) {
         GetWindowTextA(hEdit, buf, len + 1);
-        int words = 0, chars = len; int inWord = 0;
+        int words = 0, chars = len, lines = (len > 0) ? 1 : 0;
+        int inWord = 0;
         for (int i = 0; i < len; i++) {
+            if (buf[i] == '\n') lines++;
             if (buf[i] == ' ' || buf[i] == '\n' || buf[i] == '\r' || buf[i] == '\t') inWord = 0;
             else if (!inWord) { inWord = 1; words++; }
         }
         HeapFree(GetProcessHeap(), 0, buf);
-        char stat[64]; wsprintfA(stat, "  Words: %d | Chars: %d", words, chars);
+        char stat[96]; wsprintfA(stat, "  Lines: %d | Words: %d | Chars: %d / 6,000", lines, words, chars);
         SetWindowTextA(hStatus, stat);
     }
 }
 
-void RenderTabs();
-void RefreshList();
 void LoadActiveNote() {
     if (activeNote >= 0) {
         if(encrypted[activeNote]) {
             if(unlockedNotes[activeNote][0] != 0) {
                 EnableWindow(hEdit, TRUE);
                 SetWindowTextA(hEdit, unlockedNotes[activeNote]);
-                SetWindowTextA(hBtnLock, "Unlockd");
+                SetWindowTextA(hBtnLock, "Unlocked");
             } else {
                 EnableWindow(hEdit, FALSE);
                 SetWindowTextA(hEdit, "--- NOTE LOCKED ---");
-                SetWindowTextA(hBtnLock, "Lock");
+                SetWindowTextA(hBtnLock, "Unlock");
             }
         } else {
             EnableWindow(hEdit, TRUE);
@@ -368,8 +405,8 @@ void CloseTab(int tabIdx) {
         else activeNote = -1;
     }
     LoadActiveNote();
+    RefreshList();
 }
-
 
 void RefreshList() {
     char query[64] = {0}; if (hSearch) GetWindowTextA(hSearch, query, 64);
@@ -411,25 +448,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int fontHeight = -MulDiv(12, dpi, 72);
             hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5, DEFAULT_PITCH, "Segoe UI");
             
-            hBtnNew = CreateWindow("BUTTON", "New", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 0, 0, 100, 26, hwnd, (HMENU)ID_BTN_NEW, NULL, NULL);
-            hBtnDel = CreateWindow("BUTTON", "Del", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 100, 0, 100, 26, hwnd, (HMENU)ID_BTN_DEL, NULL, NULL);
-            hSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL, 0, 26, 200, 22, hwnd, (HMENU)ID_SEARCH, NULL, NULL);
-            SendMessageA(hSearch, EM_SETCUEBANNER, FALSE, (LPARAM)L"Search tags...");
-            hList = CreateWindowEx(0, "LISTBOX", NULL, WS_CHILD|WS_VISIBLE|WS_VSCROLL|LBS_NOTIFY, 0, 48, 200, H-48, hwnd, (HMENU)ID_LIST, NULL, NULL);
+            hBtnNew = CreateWindow("BUTTON", "New", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 0, 0, 100, 26, hwnd, (HMENU)ID_BTN_NEW, NULL, NULL);
+            hBtnDel = CreateWindow("BUTTON", "Del", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 100, 0, 100, 26, hwnd, (HMENU)ID_BTN_DEL, NULL, NULL);
+            hSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_TABSTOP|ES_AUTOHSCROLL, 0, 26, 200, 22, hwnd, (HMENU)ID_SEARCH, NULL, NULL);
+            SendMessageA(hSearch, EM_SETCUEBANNER, FALSE, (LPARAM)L"Search tags... (Ctrl+F)");
+            hList = CreateWindowEx(0, "LISTBOX", NULL, WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_VSCROLL|LBS_NOTIFY, 0, 48, 200, H-48, hwnd, (HMENU)ID_LIST, NULL, NULL);
             
-            hBtnPin = CreateWindow("BUTTON", "Pin", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 200, 0, 60, 26, hwnd, (HMENU)ID_BTN_PIN, NULL, NULL);
-            hBtnLock = CreateWindow("BUTTON", "Lock", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 260, 0, 60, 26, hwnd, (HMENU)ID_BTN_LOCK, NULL, NULL);
-            hBtnExportMd = CreateWindow("BUTTON", "Export MD", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 320, 0, 90, 26, hwnd, (HMENU)ID_BTN_EXPORT_MD, NULL, NULL);
-            hBtnExportJson = CreateWindow("BUTTON", "Export JSON", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 410, 0, 100, 26, hwnd, (HMENU)ID_BTN_EXPORT_JSON, NULL, NULL);
-            hBtnImport = CreateWindow("BUTTON", "Import JSON", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 510, 0, 100, 26, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
-            hBtnHelp = CreateWindow("BUTTON", "Help (F1)", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 610, 0, 80, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            hBtnPin = CreateWindow("BUTTON", "Pin", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 200, 0, 60, 26, hwnd, (HMENU)ID_BTN_PIN, NULL, NULL);
+            hBtnLock = CreateWindow("BUTTON", "Lock", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 260, 0, 60, 26, hwnd, (HMENU)ID_BTN_LOCK, NULL, NULL);
+            hBtnExportMd = CreateWindow("BUTTON", "Export MD", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 320, 0, 90, 26, hwnd, (HMENU)ID_BTN_EXPORT_MD, NULL, NULL);
+            hBtnExportJson = CreateWindow("BUTTON", "Export JSON", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 410, 0, 100, 26, hwnd, (HMENU)ID_BTN_EXPORT_JSON, NULL, NULL);
+            hBtnImport = CreateWindow("BUTTON", "Import JSON", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 510, 0, 100, 26, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
+            hBtnHelp = CreateWindow("BUTTON", "Help (F1)", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 610, 0, 80, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
 
-            hTab = CreateWindow(WC_TABCONTROL, "", WS_CHILD|WS_CLIPSIBLINGS|WS_VISIBLE, 200, 26, W-200, 24, hwnd, (HMENU)ID_TAB, NULL, NULL);
+            hTab = CreateWindow(WC_TABCONTROL, "", WS_CHILD|WS_CLIPSIBLINGS|WS_VISIBLE|WS_TABSTOP, 200, 26, W-200, 24, hwnd, (HMENU)ID_TAB, NULL, NULL);
 
-            hEdit = CreateWindowEx(0, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_MULTILINE|ES_WANTRETURN|ES_AUTOVSCROLL,
+            hEdit = CreateWindowEx(0, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_VSCROLL|ES_MULTILINE|ES_WANTRETURN|ES_AUTOVSCROLL,
                 200, 50, W-200, H-70, hwnd, NULL, NULL, NULL);
             SendMessage(hEdit, EM_LIMITTEXT, 6000, 0);
-            hStatus = CreateWindowEx(0, "STATIC", "  Words: 0 | Chars: 0", WS_CHILD|WS_VISIBLE, 200, H-20, W-200, 20, hwnd, (HMENU)ID_STATUS, NULL, NULL);
+            hStatus = CreateWindowEx(0, "STATIC", "  Lines: 0 | Words: 0 | Chars: 0 / 6,000", WS_CHILD|WS_VISIBLE, 200, H-20, W-200, 20, hwnd, (HMENU)ID_STATUS, NULL, NULL);
                 
             SendMessage(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hList, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -461,7 +498,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_COMMAND: {
             if (LOWORD(wParam) == ID_BTN_HELP) {
-                MessageBox(hwnd, "KNote Help:\r\n- Use left sidebar to manage notes.\r\n- Type in the search box to filter by text/tags.\r\n- Use 'Lock' to encrypt a note.\r\n- 'Export' saves notes to files.\r\n- Press F1 or H anytime for this menu.", "Help", MB_OK | MB_ICONINFORMATION);
+                MessageBox(hwnd, "KNote Help & Shortcuts:\r\n\r\n"
+                                 "- Ctrl+N: Create new note\r\n"
+                                 "- Ctrl+F: Focus search box\r\n"
+                                 "- Ctrl+P: Pin / unpin note\r\n"
+                                 "- Ctrl+S: Save notes\r\n"
+                                 "- Ctrl+W: Close active tab\r\n"
+                                 "- Delete (in list): Delete note\r\n"
+                                 "- Lock: Password encrypt with AES-256\r\n"
+                                 "- Export: Save to Markdown or JSON\r\n"
+                                 "- Import: Load from JSON backup",
+                           "Help & Shortcuts", MB_OK | MB_ICONINFORMATION);
             }
             else if (LOWORD(wParam) == ID_BTN_EXPORT_MD) { ExportNoteMD(); }
             else if (LOWORD(wParam) == ID_BTN_EXPORT_JSON) { ExportJSON(); RefreshList(); RenderTabs(); }
@@ -500,6 +547,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 if(DecryptString(notes[activeNote], password_buf, unlockedNotes[activeNote])) {
                                     LoadActiveNote(); RefreshList();
                                 } else MessageBox(hwnd, "Wrong password!", "Error", MB_OK);
+                                SecureZeroMemory(password_buf, sizeof(password_buf));
                             }
                         }
                     } else {
@@ -507,13 +555,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             encrypted[activeNote] = 1;
                             GetWindowTextA(hEdit, unlockedNotes[activeNote], 6000);
                             EncryptString(unlockedNotes[activeNote], password_buf, notes[activeNote]);
+                            SecureZeroMemory(password_buf, sizeof(password_buf));
                             LoadActiveNote(); RefreshList(); isDirty=1;
                         }
                     }
                 }
             } else if (LOWORD(wParam) == ID_LIST && HIWORD(wParam) == LBN_SELCHANGE) {
                 SaveToMemory();
-                int sel = SendMessage(hList, LB_GETCURSEL, 0, 0);
+                int sel = (int)SendMessage(hList, LB_GETCURSEL, 0, 0);
                 if (sel != LB_ERR && sel < displayCount) { OpenTab(displayToReal[sel]); }
             }
             else if ((HWND)lParam == hSearch && HIWORD(wParam) == EN_CHANGE) { RefreshList(); }
@@ -545,13 +594,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            KillTimer(hwnd, ID_TIMER_SAVE);
             SaveNotes();
-            DeleteObject(bgBrush); DeleteObject(sidebarBrush); if (hFont) DeleteObject(hFont);
-            PostQuitMessage(0); break;
+            DeleteObject(bgBrush);
+            DeleteObject(sidebarBrush);
+            if (hFont) DeleteObject(hFont);
+            if (g_hbrClass) DeleteObject(g_hbrClass);
+            PostQuitMessage(0);
+            break;
         default: return DefWindowProc(hwnd, msg, wParam, lParam);
     }
     return 0;
 }
+
 #pragma function(memset)
 void* __cdecl memset(void* dest, int c, size_t count) { char* b = (char*)dest; while (count--) *b++ = (char)c; return dest; }
 #pragma function(memcpy)
@@ -570,7 +625,6 @@ char* __cdecl strstr(const char* h, const char* n) {
     return NULL;
 }
 
-
 void MainEntry() {
     HMODULE hUser32 = GetModuleHandleA("user32.dll");
     if(hUser32) {
@@ -579,8 +633,9 @@ void MainEntry() {
         if(setDpiAware) setDpiAware();
     }
     HINSTANCE hInstance = GetModuleHandle(NULL);
+    g_hbrClass = CreateSolidBrush(RGB(255, 253, 231));
     WNDCLASS wc = {0}; wc.lpfnWndProc = WndProc; wc.hInstance = hInstance; wc.lpszClassName = "KNoteApp";
-    wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1)); wc.hbrBackground = CreateSolidBrush(RGB(255, 253, 231));
+    wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1)); wc.hbrBackground = g_hbrClass;
     RegisterClass(&wc);
     
     RECT rc = {0, 0, W, H};
@@ -595,14 +650,52 @@ void MainEntry() {
             if (hFocus) {
                 char cls[32] = {0};
                 GetClassNameA(hFocus, cls, sizeof(cls));
-                if (lstrcmpiA(cls, "EDIT") == 0) isEdit = 1;
+                if (lstrcmpiA(cls, "EDIT") == 0 && hFocus == hEdit) isEdit = 1;
+            }
+            if (GetKeyState(VK_CONTROL) & 0x8000) {
+                if (msg.wParam == 'N' || msg.wParam == 'n') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_NEW, BN_CLICKED), (LPARAM)hBtnNew);
+                    continue;
+                } else if (msg.wParam == 'S' || msg.wParam == 's') {
+                    SaveNotes();
+                    SetWindowTextA(hStatus, "  Saved locally");
+                    continue;
+                } else if (msg.wParam == 'F' || msg.wParam == 'f') {
+                    SetFocus(hSearch);
+                    SendMessage(hSearch, EM_SETSEL, 0, -1);
+                    continue;
+                } else if (msg.wParam == 'P' || msg.wParam == 'p') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_PIN, BN_CLICKED), (LPARAM)hBtnPin);
+                    continue;
+                } else if (msg.wParam == 'W' || msg.wParam == 'w') {
+                    int sel = (int)TabCtrl_GetCurSel(hTab);
+                    if (sel >= 0 && sel < numTabs) CloseTab(sel);
+                    continue;
+                }
+            }
+            if (msg.wParam == VK_DELETE && hFocus == hList) {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_DEL, BN_CLICKED), (LPARAM)hBtnDel);
+                continue;
             }
             if (msg.wParam == VK_F1 || (!isEdit && (msg.wParam == 'H' || msg.wParam == 'h'))) {
-                MessageBox(hwnd, "KNote Help:\r\n- Use left sidebar to manage notes.\r\n- Type in the search box to filter by text/tags.\r\n- Use 'Lock' to encrypt a note.\r\n- 'Export' saves notes to files.", "Help", MB_OK | MB_ICONINFORMATION);
+                MessageBox(hwnd, "KNote Help & Shortcuts:\r\n\r\n"
+                                 "- Ctrl+N: Create new note\r\n"
+                                 "- Ctrl+F: Focus search box\r\n"
+                                 "- Ctrl+P: Pin / unpin note\r\n"
+                                 "- Ctrl+S: Save notes\r\n"
+                                 "- Ctrl+W: Close active tab\r\n"
+                                 "- Delete (in list): Delete note\r\n"
+                                 "- Lock: Password encrypt with AES-256\r\n"
+                                 "- Export: Save to Markdown or JSON\r\n"
+                                 "- Import: Load from JSON backup",
+                           "Help & Shortcuts", MB_OK | MB_ICONINFORMATION);
+                continue;
             }
         }
-        TranslateMessage(&msg); 
-        DispatchMessage(&msg); 
+        if (!IsDialogMessage(hwnd, &msg)) {
+            TranslateMessage(&msg); 
+            DispatchMessage(&msg); 
+        }
     }
     ExitProcess(0);
 }
