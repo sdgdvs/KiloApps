@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KConnect4
+**Target App:** KContacts
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KConnect4
 - KContacts
 - KConverter
 - KCyber
@@ -173,8 +172,18 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KColony
 - KColosseum
 - KColor
+- KConnect4
 
 ## Test Reports
+
+- **KConnect4**: ISSUES FOUND ⚠️ (6 issues, 6 fixed inline)
+  - ✅ Core gameplay works (Classic 7x6 Connect-4, 2-Player, vs AI with 4 personalities Rookie/Aggressive/Trapper/Grandmaster Minimax, 20-Stage Campaign with obstacle hazards and dynamic 7x6 to 10x8 grids, 7-second Speed mode, special discs Bomb/Drill/Magnet and Freeze skill, live positional evaluation bar and threat radar, C4N and FEN notation viewer and custom position loader, match replay engine with step/jump/speed controls, localStorage save/load state, sound FX synthesizers and cybernetic canvas particle engine).
+  - 🔧 FIXED: Duplicate `window.addEventListener('keydown')` listener intercepted shortcuts (F1, H, N, T, U, F, B, D, M, F5, F9, Home, End, Arrows) without checking for active input focus, causing Help and Notation modals to instantly flicker open and closed upon pressing 'H', 'F1', or 'N', and hijacking keystrokes while typing custom positions in `#customPositionInput`. Removed duplicate listener so the primary guarded listener manages all keybinds cleanly.
+  - 🔧 FIXED: Notation modal (`toggleNotationModal`) opened without displaying `modalBackdrop` and failed to call `closeAllModals()`, leaving the Help modal visible underneath and preventing clicking outside the modal from closing it. Added backdrop toggling and modal coordination.
+  - 🔧 FIXED: Freeze skill blocked the column for both players indiscriminately instead of only the targeted opponent (`frozenPlayer`), locking the caster out of their own column. Furthermore, `frozenTurns` was decremented on every move rather than on the frozen player's turn, cutting the freeze duration in half. Fixed to restrict only the targeted opponent and decrement only on the frozen player's turn.
+  - 🔧 FIXED: Clicking column number badges or pressing keys 1–7 while Freeze skill was armed bypassed freeze activation and dropped regular discs instead. Extracted `applyFreezeCol(c)` and routed column badge clicks and numeric keypresses to freeze the selected column when Freeze Mode is active. Also synchronized `.hover` state on column number badges when hovering over the board.
+  - 🔧 FIXED: In `dropPiece`, the win detection branch `w1 || w2` handled game termination but bypassed `checkWin(r, col)` in an unreachable `else if`. Because `checkWinBoard` only returned a boolean without populating `winningCells`, `winningCells` remained permanently empty on victory, suppressing winning disc highlight animations, golden sparkle emission, and the canvas neon laser win beam. Implemented `findWinningCells(b, p)` to populate `winningCells` on game conclusion.
+  - 🔧 FIXED: Stepping backwards in match replay retained final `winningCells`, leaving glowing win highlights on empty board cells; C4N and JSON file downloads lacked DOM anchor attachment; FEN board import hardcoded `COLS = 7`, truncating Campaign boards with 8–10 columns; and `#customPositionInput` lacked Enter key submission. Added replay winningCells clearing, dynamic FEN column calculation, cross-browser download cleanup, and Enter key submission.
 
 - **KColor**: ISSUES FOUND ⚠️ (6 issues, 6 fixed inline)
   - ✅ Core functionality works (interactive color picker suite with precision RGB/HSL/HSV/CMYK range sliders, Universal CSS/HEX/RGB/HSL/CMYK parser with live input, 7-format color conversions table with clipboard copy HEX/RGB/HSL/HSV/CMYK/CSS-VAR/Win32-C, 9-step dynamic Tints & Shades scale, 8 color harmonies generator Complementary/Analogous/Triadic/Tetradic, WCAG 2.1 AA/AAA contrast ratios against white & dark text, palette library with localStorage persistence).
