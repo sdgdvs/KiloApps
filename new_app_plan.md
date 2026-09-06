@@ -15,6 +15,7 @@
 - **CI/CD:** Every push to `main` triggers GitHub Actions → Firebase deploy to `kiloapps.web.app`.
 - **Conflict resolution:** If `git push` fails → `git pull --rebase` → resolve conservatively (prefer remote for code you didn't write) → push again.
 - **Logging discipline:** Keep this plan file concise. Brief notes per completed phase. Do NOT dump file contents.
+- **⚠️ QUALITY OVER QUANTITY:** The project has 95+ apps. Focus on making each app EXCELLENT rather than rushing through phases. Take time to add polish, edge cases, and depth. Each phase should feel like a real product improvement, not a checkbox exercise.
 
 ## DIRECTOR NOTE (2026-07-22): DEEP FANTASY & SCI-FI GAMES
 

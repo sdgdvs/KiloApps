@@ -7,7 +7,7 @@
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    padding: 0;
+    padding: 6px;
     background-color: #030611;
     color: #fff;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -16,7 +16,7 @@
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    overflow: hidden;
+    overflow-x: hidden;
     text-rendering: optimizeLegibility;
   }
   #game-container {
@@ -24,21 +24,81 @@
     flex-direction: column;
     align-items: center;
     background: #080d1a;
-    padding: 10px;
+    padding: 8px 10px;
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 15px rgba(30, 136, 229, 0.3);
     border: 1px solid #1e88e5;
+    position: relative;
+    max-width: 320px;
+    width: 100%;
+  }
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 6px;
+    gap: 4px;
+  }
+  .app-title {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    background: linear-gradient(90deg, #00e5ff, #ffd700);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .header-actions {
+    display: flex;
+    gap: 3px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .hdr-btn {
+    background: #0d1b2a;
+    border: 1px solid #1e88e5;
+    color: #90caf9;
+    border-radius: 4px;
+    font-size: 8.5px;
+    font-weight: bold;
+    padding: 3px 5px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .hdr-btn:hover {
+    background: #1565c0;
+    color: #fff;
+    border-color: #64b5f6;
+    box-shadow: 0 0 6px rgba(30, 136, 229, 0.6);
+  }
+  .hdr-btn:active {
+    transform: scale(0.96);
+  }
+  .hdr-badge {
+    background: rgba(0, 229, 255, 0.15);
+    color: #00e5ff;
+    padding: 1px 3px;
+    border-radius: 3px;
+    font-size: 7.5px;
   }
   canvas {
     width: 300px;
     height: 340px;
     border-radius: 6px;
     background-color: #030611;
+    border: 1px solid rgba(30, 136, 229, 0.3);
   }
   .skills-bar {
     display: flex;
-    gap: 4px;
-    margin-top: 6px;
+    gap: 3px;
+    margin-top: 5px;
     width: 100%;
     max-width: 300px;
   }
@@ -47,7 +107,7 @@
     background: linear-gradient(185deg, #1565c0, #0d47a1);
     color: #fff;
     border: 1px solid #42a5f5;
-    border-radius: 6px;
+    border-radius: 5px;
     padding: 5px 2px;
     font-size: 8.5px;
     font-weight: bold;
@@ -81,35 +141,377 @@
     background: linear-gradient(185deg, #00897b, #004d40);
     border-color: #4db6ac;
   }
+  .dpad-btn {
+    background: #101c33;
+    color: #90caf9;
+    border: 1px solid #1e88e5;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    user-select: none;
+    width: 44px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .dpad-btn:hover {
+    background: #1e88e5;
+    color: #fff;
+    box-shadow: 0 0 6px rgba(30, 136, 229, 0.6);
+  }
+  .dpad-btn:active {
+    transform: scale(0.92);
+    background: #00e5ff;
+    color: #030611;
+  }
+
+  /* Toast notification system */
+  .toast-container {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 90%;
+    pointer-events: none;
+  }
+  .toast-card {
+    background: rgba(10, 20, 40, 0.95);
+    border: 1px solid #00e5ff;
+    border-radius: 8px;
+    padding: 7px 10px;
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 229, 255, 0.4);
+    font-size: 10px;
+    line-height: 1.3;
+    pointer-events: auto;
+    cursor: pointer;
+    animation: toastSlide 0.25s ease-out;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    backdrop-filter: blur(4px);
+  }
+  .toast-card.success { border-color: #00e676; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 230, 118, 0.4); }
+  .toast-card.warning { border-color: #ffd700; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8), 0 0 10px rgba(255, 215, 0, 0.4); }
+  .toast-card.danger { border-color: #ff1744; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8), 0 0 10px rgba(255, 23, 68, 0.4); }
+  @keyframes toastSlide {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Modals */
+  .modal-backdrop {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(3, 6, 17, 0.88);
+    backdrop-filter: blur(5px);
+    z-index: 500;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    border-radius: 12px;
+    padding: 10px;
+  }
+  .modal-dialog {
+    background: #0a1329;
+    border: 1px solid #00e5ff;
+    border-radius: 10px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.9), 0 0 20px rgba(0, 229, 255, 0.3);
+    width: 100%;
+    max-height: 94%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: #e0e0e0;
+  }
+  .modal-header {
+    background: #0d1e3d;
+    padding: 8px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(0, 229, 255, 0.3);
+  }
+  .modal-title {
+    font-size: 11.5px;
+    font-weight: bold;
+    color: #00e5ff;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: #90caf9;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: bold;
+    padding: 0 4px;
+  }
+  .modal-close:hover { color: #ff1744; }
+  .modal-body {
+    padding: 8px 10px;
+    overflow-y: auto;
+    font-size: 9.5px;
+    line-height: 1.4;
+  }
+  .modal-body h4 {
+    margin: 6px 0 3px 0;
+    font-size: 10px;
+    color: #ffd700;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+    padding-bottom: 2px;
+  }
+  .shortcut-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 0;
+  }
+  .key-badge {
+    background: #102a45;
+    border: 1px solid #1e88e5;
+    color: #64b5f6;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 8.5px;
+  }
+  .recipe-item {
+    background: #081120;
+    border: 1px solid #1e3a5f;
+    border-radius: 5px;
+    padding: 5px 6px;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .recipe-title {
+    font-weight: bold;
+    color: #fff;
+  }
+  .recipe-cost {
+    font-size: 8px;
+    color: #ffd700;
+  }
+  .modal-footer {
+    background: #081024;
+    padding: 6px 10px;
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid rgba(0, 229, 255, 0.2);
+  }
 </style>
 </head>
-<body data-width="400" data-height="600">
+<body data-width="420" data-height="630">
 <div id="game-container">
-  <canvas id="gameCanvas" width="300" height="340"></canvas>
-  <div class="skills-bar">
-    <button id="btnFreeze" class="skill-btn" onclick="attemptSkill('s1')">Freeze [F]</button>
-    <button id="btnSprint" class="skill-btn" onclick="attemptSkill('s2')">Sprint [Z]</button>
-    <button id="btnMagnet" class="skill-btn" onclick="attemptSkill('s3')">Magnet [M]</button>
-    <button id="btnShield" class="skill-btn" onclick="attemptSkill('s4')">Shield [B]</button>
-    <button id="btnPetUlt" class="skill-btn pet-btn" onclick="triggerPetUltimate()">Pet [U]</button>
-  </div>
-  <div class="skills-bar" style="margin-top: 4px;">
-    <button id="btnCraft" class="skill-btn craft-btn" onclick="toggleCraftMenu()">Forge [C]</button>
-    <button id="btnPetType" class="skill-btn pet-btn" onclick="cyclePetCompanion()">Type [P]</button>
-    <button id="btnMode" class="skill-btn mode-btn" onclick="toggleGameMode()">Mode [O]</button>
-    <button class="skill-btn" onclick="craftItem(1)">Pellet [7]</button>
-    <button class="skill-btn" onclick="craftItem(2)">Warp [8]</button>
-    <button class="skill-btn" onclick="craftItem(3)">Shield [9]</button>
-    <button class="skill-btn" onclick="craftItem(4)">Nuke [0]</button>
-  </div>
-  <div style="display: flex; flex-direction: column; align-items: center; margin-top: 6px; gap: 3px;">
-    <button class="skill-btn" style="width: 44px; height: 26px; font-size: 13px;" onmousedown="ndx=0;ndy=-1" ontouchstart="ndx=0;ndy=-1;event.preventDefault()">▲</button>
-    <div style="display: flex; gap: 4px;">
-      <button class="skill-btn" style="width: 44px; height: 26px; font-size: 13px;" onmousedown="ndx=-1;ndy=0" ontouchstart="ndx=-1;ndy=0;event.preventDefault()">◀</button>
-      <button class="skill-btn" style="width: 44px; height: 26px; font-size: 13px;" onmousedown="ndx=0;ndy=1" ontouchstart="ndx=0;ndy=1;event.preventDefault()">▼</button>
-      <button class="skill-btn" style="width: 44px; height: 26px; font-size: 13px;" onmousedown="ndx=1;ndy=0" ontouchstart="ndx=1;ndy=0;event.preventDefault()">▶</button>
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- App Header Toolbar -->
+  <div class="app-header">
+    <div class="app-title">
+      <span>🟡 KPac</span>
+      <span id="hdrModeBadge" class="hdr-badge">CAMP</span>
+      <span id="hdrDiffBadge" class="hdr-badge" style="color: #ffd700; background: rgba(255, 215, 0, 0.15);">NORM</span>
+    </div>
+    <div class="header-actions">
+      <button class="hdr-btn" onclick="toggleHelpModal(true)" title="Help & Shortcuts [F1/H]">Help [F1]</button>
+      <button class="hdr-btn" onclick="toggleCraftModal(true)" title="Cyber-Forge Menu [C]">Forge [C]</button>
+      <button class="hdr-btn" onclick="toggleGameMode()" title="Toggle Campaign / Arcade Endless [O]">Mode [O]</button>
+      <button class="hdr-btn" onclick="cycleDifficulty()" title="Cycle Difficulty [1-3]">Diff [1-3]</button>
+      <button class="hdr-btn" onclick="saveGame()" title="Quick Save [F5/V]">Save [F5]</button>
+      <button class="hdr-btn" onclick="loadGame()" title="Quick Load [F9/L]">Load [F9]</button>
+      <button class="hdr-btn" onclick="exportJSON()" title="Export JSON Data [E]">Exp [E]</button>
+      <button class="hdr-btn" onclick="triggerImport()" title="Import JSON Data [I]">Imp [I]</button>
     </div>
   </div>
+
+  <!-- Game Canvas -->
+  <canvas id="gameCanvas" width="300" height="340"></canvas>
+
+  <!-- Skills Bar Row 1 -->
+  <div class="skills-bar">
+    <button id="btnFreeze" class="skill-btn" onclick="attemptSkill('s1')" title="Freeze Ghosts [F]">Freeze [F]</button>
+    <button id="btnSprint" class="skill-btn" onclick="attemptSkill('s2')" title="Speed Sprint [Z]">Sprint [Z]</button>
+    <button id="btnMagnet" class="skill-btn" onclick="attemptSkill('s3')" title="Pellet Magnet [M]">Magnet [M]</button>
+    <button id="btnShield" class="skill-btn" onclick="attemptSkill('s4')" title="Aegis Forcefield [B]">Shield [B]</button>
+    <button id="btnPetUlt" class="skill-btn pet-btn" onclick="triggerPetUltimate()" title="Pet Ultimate Skill [U]">Pet [U]</button>
+  </div>
+
+  <!-- Skills Bar Row 2 (Quick Craft & Modes) -->
+  <div class="skills-bar" style="margin-top: 4px;">
+    <button id="btnCraft" class="skill-btn craft-btn" onclick="toggleCraftModal(true)" title="Cyber-Forge [C]">Forge [C]</button>
+    <button id="btnPetType" class="skill-btn pet-btn" onclick="cyclePetCompanion()" title="Cycle Companion Pet [P]">Type [P]</button>
+    <button id="btnMode" class="skill-btn mode-btn" onclick="toggleGameMode()" title="Mode [O]">Mode [O]</button>
+    <button class="skill-btn" onclick="craftItem(1)" title="Craft Super Pellet [7]">Pellet [7]</button>
+    <button class="skill-btn" onclick="craftItem(2)" title="Craft Chrono Warp [8]">Warp [8]</button>
+    <button class="skill-btn" onclick="craftItem(3)" title="Craft Aegis Shield [9]">Shield [9]</button>
+    <button class="skill-btn" onclick="craftItem(4)" title="Craft Void Pulse Bomb [0]">Nuke [0]</button>
+  </div>
+
+  <!-- Virtual D-Pad -->
+  <div style="display: flex; flex-direction: column; align-items: center; margin-top: 5px; gap: 3px;">
+    <button class="dpad-btn" onmousedown="ndx=0;ndy=-1" ontouchstart="ndx=0;ndy=-1;event.preventDefault()" title="Move Up [Up/W]">▲</button>
+    <div style="display: flex; gap: 4px;">
+      <button class="dpad-btn" onmousedown="ndx=-1;ndy=0" ontouchstart="ndx=-1;ndy=0;event.preventDefault()" title="Move Left [Left/A]">◀</button>
+      <button class="dpad-btn" onmousedown="ndx=0;ndy=1" ontouchstart="ndx=0;ndy=1;event.preventDefault()" title="Move Down [Down/S]">▼</button>
+      <button class="dpad-btn" onmousedown="ndx=1;ndy=0" ontouchstart="ndx=1;ndy=0;event.preventDefault()" title="Move Right [Right/D]">▶</button>
+    </div>
+  </div>
+
+  <!-- Help & Codex Modal Dialog -->
+  <div id="helpModal" class="modal-backdrop" onclick="if(event.target===this) toggleHelpModal(false)">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">⚡ KPac Codex & Keyboard Guide</div>
+        <button class="modal-close" onclick="toggleHelpModal(false)">✕</button>
+      </div>
+      <div class="modal-body">
+        <h4>🎮 Core & Movement Controls</h4>
+        <div class="shortcut-row"><span>Move Pac-Man</span><span class="key-badge">Arrows / WASD</span></div>
+        <div class="shortcut-row"><span>Pause / Resume Game</span><span class="key-badge">Space</span></div>
+        <div class="shortcut-row"><span>Restart (When Game Over)</span><span class="key-badge">Enter</span></div>
+        <div class="shortcut-row"><span>Toggle Help Modal</span><span class="key-badge">F1 / H / ?</span></div>
+        <div class="shortcut-row"><span>Dismiss Dialogs</span><span class="key-badge">Esc</span></div>
+
+        <h4>⚡ Cybernetic Abilities</h4>
+        <div class="shortcut-row"><span>Freeze Ghosts (Stun 6s)</span><span class="key-badge">F</span></div>
+        <div class="shortcut-row"><span>Speed Sprint (2x Speed 8s)</span><span class="key-badge">Z</span></div>
+        <div class="shortcut-row"><span>Dot Magnet (Area Vacuum)</span><span class="key-badge">M</span></div>
+        <div class="shortcut-row"><span>Aegis Shield (Absorb Hit)</span><span class="key-badge">B</span></div>
+
+        <h4>🐾 Companion Pets & Ultimate</h4>
+        <div class="shortcut-row"><span>Trigger Pet Ultimate Burst</span><span class="key-badge">U</span></div>
+        <div class="shortcut-row"><span>Cycle Companion Pet</span><span class="key-badge">P</span></div>
+        <div style="font-size: 8.5px; color: #90caf9; margin-top: 2px;">
+          • <b>Blinky Jr (Pyre)</b>: Stuns adjacent ghosts; Ultimate triggers Firestorm.<br>
+          • <b>Inky (Cyan Spark)</b>: Dot vacuum field; Ultimate triggers EMP vacuum.<br>
+          • <b>Pinky (Guardian)</b>: Grants ghost fright & shield; Ultimate gives Divine Aegis.<br>
+          • <b>Kinglet (Gold)</b>: 3x dot points; Ultimate triggers Midas Golden Rain.
+        </div>
+
+        <h4>🔨 Cyber-Forge & Mythic Relics</h4>
+        <div class="shortcut-row"><span>Open Cyber-Forge Menu</span><span class="key-badge">C</span></div>
+        <div class="shortcut-row"><span>Toggle Relics / Consumables</span><span class="key-badge">Tab</span></div>
+        <div class="shortcut-row"><span>Quick Craft Consumables</span><span class="key-badge">7 / 8 / 9 / 0</span></div>
+        <div class="shortcut-row"><span>Quick Craft Relics</span><span class="key-badge">1 - 5 (in Forge)</span></div>
+
+        <h4>💾 State & Modes</h4>
+        <div class="shortcut-row"><span>Toggle Campaign / Arcade Endless</span><span class="key-badge">O</span></div>
+        <div class="shortcut-row"><span>Difficulty (Easy / Norm / Hard)</span><span class="key-badge">1 / 2 / 3</span></div>
+        <div class="shortcut-row"><span>Quick Save / Load</span><span class="key-badge">F5 / F9 (or V/L)</span></div>
+        <div class="shortcut-row"><span>Export / Import JSON Data</span><span class="key-badge">E / I</span></div>
+      </div>
+      <div class="modal-footer">
+        <button class="hdr-btn" onclick="toggleHelpModal(false)">Close [Esc]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cyber-Forge Modal Dialog -->
+  <div id="craftModal" class="modal-backdrop" onclick="if(event.target===this) toggleCraftModal(false)">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">🔨 Cyber-Forge & Mythic Relics</div>
+        <button class="modal-close" onclick="toggleCraftModal(false)">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; gap: 4px; margin-bottom: 6px;">
+          <button id="tabConsumables" class="hdr-btn" style="flex: 1; justify-content: center; background: #1565c0; color: #fff;" onclick="setForgePage(0)">Consumables [Tab]</button>
+          <button id="tabRelics" class="hdr-btn" style="flex: 1; justify-content: center;" onclick="setForgePage(1)">Mythic Relics [Tab]</button>
+        </div>
+
+        <div id="forgeInv" style="background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.3); border-radius: 5px; padding: 4px 6px; margin-bottom: 6px; font-size: 8.5px; color: #ffd700; text-align: center;">
+          Stock: <span id="invEcto">0</span> Ecto | <span id="invEss">0</span> Ess | <span id="invDust">0</span> Dust
+        </div>
+
+        <div id="pageConsumables">
+          <div class="recipe-item">
+            <div>
+              <div class="recipe-title">1. Super Pellet [7]</div>
+              <div class="recipe-cost">Cost: 2 Ecto + 1 Dust (Fright + 500 Pts)</div>
+            </div>
+            <button class="hdr-btn" onclick="craftItem(1)">Craft [7]</button>
+          </div>
+          <div class="recipe-item">
+            <div>
+              <div class="recipe-title">2. Chrono Warp [8]</div>
+              <div class="recipe-cost">Cost: 2 Ecto + 2 Ess (Freeze + Sprint)</div>
+            </div>
+            <button class="hdr-btn" onclick="craftItem(2)">Craft [8]</button>
+          </div>
+          <div class="recipe-item">
+            <div>
+              <div class="recipe-title">3. Aegis Shield 2X [9]</div>
+              <div class="recipe-cost">Cost: 2 Dust + 2 Ess (Absorbs 2 Hits)</div>
+            </div>
+            <button class="hdr-btn" onclick="craftItem(3)">Craft [9]</button>
+          </div>
+          <div class="recipe-item">
+            <div>
+              <div class="recipe-title">4. Void Pulse Bomb [0]</div>
+              <div class="recipe-cost">Cost: 3 Ecto + 3 Dust + 1 Ess (Clears Dots & Resets Ghosts)</div>
+            </div>
+            <button class="hdr-btn" onclick="craftItem(4)">Craft [0]</button>
+          </div>
+        </div>
+
+        <div id="pageRelics" style="display: none;">
+          <div class="recipe-item">
+            <div>
+              <div class="recipe-title">1. Ghost King Crown [5]</div>
+              <div class="recipe-cost">Cost: 4 Ecto + 3 Dust (+50% Fright & 2x Ghost Pts)</div>
+            </div>
+            <button id="btnRelicCrown" class="hdr-btn" onclick="craftItem(5)">Forge</button>
+          </div>
+          <div class="recipe-item">
+            <div>
+              <div class="recipe-title">2. Chrono Hourglass [6]</div>
+              <div class="recipe-cost">Cost: 4 Ess + 3 Dust (Permanently Slows Ghosts)</div>
+            </div>
+            <button id="btnRelicHourglass" class="hdr-btn" onclick="craftItem(6)">Forge</button>
+          </div>
+          <div class="recipe-item">
+            <div>
+              <div class="recipe-title">3. Astral Devourer Orb [7]</div>
+              <div class="recipe-cost">Cost: 4 Ecto + 4 Dust (2.5x Dot Pts & Passive Vacuum)</div>
+            </div>
+            <button id="btnRelicOrb" class="hdr-btn" onclick="craftItem(7)">Forge</button>
+          </div>
+          <div class="recipe-item">
+            <div>
+              <div class="recipe-title">4. Sun Titan Aegis [8]</div>
+              <div class="recipe-cost">Cost: 4 Ess + 4 Dust (Auto-recharging Shield & Hazard Immunity)</div>
+            </div>
+            <button id="btnRelicAegis" class="hdr-btn" onclick="craftItem(8)">Forge</button>
+          </div>
+          <div class="recipe-item">
+            <div>
+              <div class="recipe-title">5. Philosopher Stone [9]</div>
+              <div class="recipe-cost">Cost: 5 Ecto + 5 Ess + 5 Dust (+1 Life & 2x Score)</div>
+            </div>
+            <button id="btnRelicStone" class="hdr-btn" onclick="craftItem(9)">Forge</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="hdr-btn" onclick="toggleCraftModal(false)">Close [Esc]</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="fileInput" style="display: none;" accept=".json" onchange="handleFileImport(event)">
 </div>
 
 <script>
@@ -551,11 +953,203 @@
   let deathTimer = 0, screenShake = 0, level = 1;
   let frightTimer = 0, victoryTimer = 0, lives = 3;
   let paused = 0, fruitActive = 0, fruitTimer = 0;
-  let saveMsgText = "", saveMsgTimer = 0, showHelp = true;
+  let saveMsgText = "", saveMsgTimer = 0, showHelp = false;
   let diffMode = 1; // 0=Easy, 1=Norm, 2=Hard
 
   let statsGamesPlayed = 0, statsGhostsEaten = 0, statsMaxScore = 0, statsRelicsForged = 0;
   let shockwaves = [], particles = [], popups = [];
+
+  // Toast System
+  function showToast(msg, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = `toast-card ${type}`;
+      toast.innerHTML = `<span>${msg}</span><span style="font-size:9px;opacity:0.6;margin-left:6px;">✕</span>`;
+      toast.onclick = () => { toast.remove(); };
+      container.appendChild(toast);
+      setTimeout(() => {
+          if (toast.parentNode) {
+              toast.style.opacity = '0';
+              toast.style.transition = 'opacity 0.3s ease';
+              setTimeout(() => toast.remove(), 300);
+          }
+      }, 3500);
+  }
+
+  function updateUIBadges() {
+      const modeBadge = document.getElementById('hdrModeBadge');
+      if (modeBadge) modeBadge.textContent = gameMode === 1 ? `ENDLESS W.${endlessWave}` : `CAMP Lv.${level}`;
+      const diffBadge = document.getElementById('hdrDiffBadge');
+      if (diffBadge) {
+          const diffs = ['EASY', 'NORM', 'HARD'];
+          diffBadge.textContent = diffs[diffMode] || 'NORM';
+      }
+      const invEcto = document.getElementById('invEcto');
+      if (invEcto) invEcto.textContent = craftEctoplasm;
+      const invEss = document.getElementById('invEss');
+      if (invEss) invEss.textContent = craftFruitEssence;
+      const invDust = document.getElementById('invDust');
+      if (invDust) invDust.textContent = craftStarDust;
+
+      if (document.getElementById('btnRelicCrown')) document.getElementById('btnRelicCrown').textContent = relicCrown ? 'Forged ✔' : 'Forge [5]';
+      if (document.getElementById('btnRelicHourglass')) document.getElementById('btnRelicHourglass').textContent = relicHourglass ? 'Forged ✔' : 'Forge [6]';
+      if (document.getElementById('btnRelicOrb')) document.getElementById('btnRelicOrb').textContent = relicOrb ? 'Forged ✔' : 'Forge [7]';
+      if (document.getElementById('btnRelicAegis')) document.getElementById('btnRelicAegis').textContent = relicAegis ? 'Forged ✔' : 'Forge [8]';
+      if (document.getElementById('btnRelicStone')) document.getElementById('btnRelicStone').textContent = relicStone ? 'Forged ✔' : 'Forge [9]';
+  }
+
+  function toggleHelpModal(show) {
+      const modal = document.getElementById('helpModal');
+      if (!modal) return;
+      if (show === undefined) show = modal.style.display !== 'flex';
+      modal.style.display = show ? 'flex' : 'none';
+      if (show) paused = 1;
+  }
+
+  function toggleCraftModal(show) {
+      const modal = document.getElementById('craftModal');
+      if (!modal) return;
+      if (show === undefined) show = modal.style.display !== 'flex';
+      modal.style.display = show ? 'flex' : 'none';
+      if (show) { updateUIBadges(); paused = 1; }
+  }
+
+  function setForgePage(p) {
+      craftMenuPage = p;
+      const tabC = document.getElementById('tabConsumables');
+      const tabR = document.getElementById('tabRelics');
+      const pageC = document.getElementById('pageConsumables');
+      const pageR = document.getElementById('pageRelics');
+      if (p === 0) {
+          if (tabC) { tabC.style.background = '#1565c0'; tabC.style.color = '#fff'; }
+          if (tabR) { tabR.style.background = '#0d1b2a'; tabR.style.color = '#90caf9'; }
+          if (pageC) pageC.style.display = 'block';
+          if (pageR) pageR.style.display = 'none';
+      } else {
+          if (tabC) { tabC.style.background = '#0d1b2a'; tabC.style.color = '#90caf9'; }
+          if (tabR) { tabR.style.background = '#1565c0'; tabR.style.color = '#fff'; }
+          if (pageC) pageC.style.display = 'none';
+          if (pageR) pageR.style.display = 'block';
+      }
+      updateUIBadges();
+  }
+
+  function cycleDifficulty() {
+      diffMode = (diffMode + 1) % 3;
+      const names = ["EASY (5 Lives, Slower Ghosts)", "NORMAL (3 Lives)", "HARD (2 Lives, Fast Ghosts)"];
+      showToast(`⚔️ Difficulty: ${names[diffMode]}`, 'warning');
+      updateUIBadges();
+      playSound(550, 0.15, 'sine');
+  }
+
+  function saveGame() {
+      try {
+          const saveState = {
+              score, highScore, level, endlessWave, endlessHighWave, lives, diffMode, gameMode,
+              craftEctoplasm, craftFruitEssence, craftStarDust,
+              relicCrown, relicHourglass, relicOrb, relicAegis, relicStone,
+              petType, petLevel
+          };
+          localStorage.setItem('kpac_quicksave', JSON.stringify(saveState));
+          saveHighScore();
+          showToast('💾 Quick Game State Saved!', 'success');
+          playSound(600, 0.25, 'triangle', 200);
+      } catch(e) {
+          showToast('Failed to save game state', 'danger');
+      }
+  }
+
+  function loadGame() {
+      try {
+          const raw = localStorage.getItem('kpac_quicksave');
+          if (!raw) {
+              showToast('No saved game found', 'warning');
+              return;
+          }
+          const s = JSON.parse(raw);
+          score = s.score || 0;
+          highScore = Math.max(highScore, s.highScore || 0);
+          level = s.level || 1;
+          endlessWave = s.endlessWave || 1;
+          endlessHighWave = Math.max(endlessHighWave, s.endlessHighWave || 1);
+          lives = s.lives || 3;
+          diffMode = s.diffMode !== undefined ? s.diffMode : 1;
+          gameMode = s.gameMode || 0;
+          craftEctoplasm = s.craftEctoplasm || 0;
+          craftFruitEssence = s.craftFruitEssence || 0;
+          craftStarDust = s.craftStarDust || 0;
+          relicCrown = s.relicCrown || 0;
+          relicHourglass = s.relicHourglass || 0;
+          relicOrb = s.relicOrb || 0;
+          relicAegis = s.relicAegis || 0;
+          relicStone = s.relicStone || 0;
+          petType = s.petType || 0;
+          petLevel = s.petLevel || 1;
+          init(true);
+          updateUIBadges();
+          showToast('📂 Quick Game State Loaded!', 'success');
+          playSound(600, 0.25, 'sine', 150);
+      } catch(e) {
+          showToast('Failed to load game state', 'danger');
+      }
+  }
+
+  function exportJSON() {
+      try {
+          const data = {
+              highScore, endlessHighWave, craftEctoplasm, craftFruitEssence, craftStarDust,
+              relicCrown, relicHourglass, relicOrb, relicAegis, relicStone,
+              petType, petLevel, statsGamesPlayed, statsGhostsEaten, statsMaxScore
+          };
+          const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'kpac_data.json';
+          a.click();
+          URL.revokeObjectURL(url);
+          showToast('📤 Exported JSON file!', 'success');
+      } catch(e) {
+          showToast('Export failed', 'danger');
+      }
+  }
+
+  function triggerImport() {
+      const fileInput = document.getElementById('fileInput');
+      if (fileInput) fileInput.click();
+  }
+
+  function handleFileImport(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+          try {
+              const data = JSON.parse(evt.target.result);
+              if (data.highScore !== undefined) highScore = Math.max(highScore, data.highScore);
+              if (data.endlessHighWave !== undefined) endlessHighWave = Math.max(endlessHighWave, data.endlessHighWave);
+              if (data.craftEctoplasm !== undefined) craftEctoplasm = data.craftEctoplasm;
+              if (data.craftFruitEssence !== undefined) craftFruitEssence = data.craftFruitEssence;
+              if (data.craftStarDust !== undefined) craftStarDust = data.craftStarDust;
+              if (data.relicCrown !== undefined) relicCrown = data.relicCrown;
+              if (data.relicHourglass !== undefined) relicHourglass = data.relicHourglass;
+              if (data.relicOrb !== undefined) relicOrb = data.relicOrb;
+              if (data.relicAegis !== undefined) relicAegis = data.relicAegis;
+              if (data.relicStone !== undefined) relicStone = data.relicStone;
+              if (data.petType !== undefined) petType = data.petType;
+              if (data.petLevel !== undefined) petLevel = data.petLevel;
+              saveHighScore();
+              updateUIBadges();
+              showToast('📥 JSON data imported successfully!', 'success');
+              playSound(700, 0.3, 'sine', 150);
+          } catch(err) {
+              showToast('Invalid JSON file', 'danger');
+          }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+  }
 
   // Web Audio Synthesizer
   let audioCtx = null;
@@ -839,6 +1433,7 @@
       fruitActive = 0; fruitTimer = 0;
       shockwaves = []; particles = []; popups = [];
       showCraftMenu = false;
+      updateUIBadges();
   }
 
   function craftItem(recipe) {
@@ -848,10 +1443,12 @@
               frightTimer = relicCrown ? 120 : 80;
               score += 500;
               saveMsgText = "CRAFTED: SUPER PELLET!"; saveMsgTimer = 25;
+              showToast("🟡 Crafted: Super Pellet! (+500 Pts & Ghost Fright)", "success");
               addExplosion(px * TS + TS/2, py * TS + TS/2, '#ffd700');
               playSound(520, 0.25, 'triangle', 200);
           } else {
               saveMsgText = "NEED: 2 ECTO + 1 DUST"; saveMsgTimer = 25;
+              showToast("❌ Need: 2 Ectoplasm + 1 Star Dust", "danger");
               playSound(180, 0.15, 'sawtooth');
           }
       } else if (recipe === 2) {
@@ -859,10 +1456,12 @@
               craftEctoplasm -= 2; craftFruitEssence -= 2;
               freezeSkillTimer = 80; speedSkillTimer = 80;
               saveMsgText = "CRAFTED: CHRONO WARP!"; saveMsgTimer = 25;
+              showToast("⚡ Crafted: Chrono Warp! (Freeze + Sprint)", "success");
               addShockwave(px * TS + TS/2, py * TS + TS/2, '#00e5ff');
               playSound(660, 0.3, 'sine', -200);
           } else {
               saveMsgText = "NEED: 2 ECTO + 2 ESS"; saveMsgTimer = 25;
+              showToast("❌ Need: 2 Ectoplasm + 2 Fruit Essence", "danger");
               playSound(180, 0.15, 'sawtooth');
           }
       } else if (recipe === 3) {
@@ -870,10 +1469,12 @@
               craftStarDust -= 2; craftFruitEssence -= 2;
               shieldActive = 1; shieldHits = 2;
               saveMsgText = "CRAFTED: AEGIS SHIELD 2X!"; saveMsgTimer = 25;
+              showToast("🛡️ Crafted: Aegis Shield 2X! (Absorbs 2 Hits)", "success");
               addShockwave(px * TS + TS/2, py * TS + TS/2, '#00e5ff');
               playSound(440, 0.3, 'square', 150);
           } else {
               saveMsgText = "NEED: 2 DUST + 2 ESS"; saveMsgTimer = 25;
+              showToast("❌ Need: 2 Star Dust + 2 Fruit Essence", "danger");
               playSound(180, 0.15, 'sawtooth');
           }
       } else if (recipe === 4) {
@@ -892,76 +1493,104 @@
                   }
               }
               saveMsgText = "CRAFTED: VOID BOMB PULSE!"; saveMsgTimer = 25;
+              showToast("💣 Crafted: Void Pulse Bomb! (Board Area Cleared)", "success");
               addExplosion(px * TS + TS/2, py * TS + TS/2, '#c832ff');
               playSound(220, 0.4, 'sawtooth', -100);
           } else {
               saveMsgText = "NEED: 3 ECTO + 3 DUST + 1 ESS"; saveMsgTimer = 25;
+              showToast("❌ Need: 3 Ecto + 3 Dust + 1 Essence", "danger");
               playSound(180, 0.15, 'sawtooth');
           }
       } else if (recipe === 5) {
-          if (relicCrown) { saveMsgText = "RELIC ALREADY FORGED!"; saveMsgTimer = 25; }
+          if (relicCrown) { saveMsgText = "RELIC ALREADY FORGED!"; saveMsgTimer = 25; showToast("Crown already forged!", "warning"); }
           else if (craftEctoplasm >= 4 && craftStarDust >= 3) {
               craftEctoplasm -= 4; craftStarDust -= 3; relicCrown = 1; statsRelicsForged++;
               saveHighScore(); saveMsgText = "FORGED: GHOST KING CROWN!"; saveMsgTimer = 30;
+              showToast("👑 Forged: Ghost King Crown! (+50% Fright & 2x Ghost Pts)", "success");
               addExplosion(px * TS + TS/2, py * TS + TS/2, '#ffd700');
               playSound(750, 0.5, 'triangle', 250);
-          } else { saveMsgText = "NEED: 4 ECTO + 3 DUST"; saveMsgTimer = 25; playSound(180, 0.15, 'sawtooth'); }
+          } else { saveMsgText = "NEED: 4 ECTO + 3 DUST"; saveMsgTimer = 25; showToast("❌ Need: 4 Ectoplasm + 3 Star Dust", "danger"); playSound(180, 0.15, 'sawtooth'); }
       } else if (recipe === 6) {
-          if (relicHourglass) { saveMsgText = "RELIC ALREADY FORGED!"; saveMsgTimer = 25; }
+          if (relicHourglass) { saveMsgText = "RELIC ALREADY FORGED!"; saveMsgTimer = 25; showToast("Hourglass already forged!", "warning"); }
           else if (craftFruitEssence >= 4 && craftStarDust >= 3) {
               craftFruitEssence -= 4; craftStarDust -= 3; relicHourglass = 1; statsRelicsForged++;
               saveHighScore(); saveMsgText = "FORGED: CHRONO HOURGLASS!"; saveMsgTimer = 30;
+              showToast("⏳ Forged: Chrono Hourglass! (Ghosts permanently slowed)", "success");
               addShockwave(px * TS + TS/2, py * TS + TS/2, '#00e5ff');
               playSound(750, 0.5, 'triangle', 250);
-          } else { saveMsgText = "NEED: 4 ESS + 3 DUST"; saveMsgTimer = 25; playSound(180, 0.15, 'sawtooth'); }
+          } else { saveMsgText = "NEED: 4 ESS + 3 DUST"; saveMsgTimer = 25; showToast("❌ Need: 4 Fruit Essence + 3 Star Dust", "danger"); playSound(180, 0.15, 'sawtooth'); }
       } else if (recipe === 7) {
-          if (relicOrb) { saveMsgText = "RELIC ALREADY FORGED!"; saveMsgTimer = 25; }
+          if (relicOrb) { saveMsgText = "RELIC ALREADY FORGED!"; saveMsgTimer = 25; showToast("Orb already forged!", "warning"); }
           else if (craftEctoplasm >= 4 && craftStarDust >= 4) {
               craftEctoplasm -= 4; craftStarDust -= 4; relicOrb = 1; statsRelicsForged++;
               saveHighScore(); saveMsgText = "FORGED: ASTRAL ORB!"; saveMsgTimer = 30;
+              showToast("🔮 Forged: Astral Devourer Orb! (2.5x Dot Pts & Passive Vacuum)", "success");
               addExplosion(px * TS + TS/2, py * TS + TS/2, '#ba68c8');
               playSound(750, 0.5, 'triangle', 250);
-          } else { saveMsgText = "NEED: 4 ECTO + 4 DUST"; saveMsgTimer = 25; playSound(180, 0.15, 'sawtooth'); }
+          } else { saveMsgText = "NEED: 4 ECTO + 4 DUST"; saveMsgTimer = 25; showToast("❌ Need: 4 Ectoplasm + 4 Star Dust", "danger"); playSound(180, 0.15, 'sawtooth'); }
       } else if (recipe === 8) {
-          if (relicAegis) { saveMsgText = "RELIC ALREADY FORGED!"; saveMsgTimer = 25; }
+          if (relicAegis) { saveMsgText = "RELIC ALREADY FORGED!"; saveMsgTimer = 25; showToast("Aegis already forged!", "warning"); }
           else if (craftFruitEssence >= 4 && craftStarDust >= 4) {
               craftFruitEssence -= 4; craftStarDust -= 4; relicAegis = 1; shieldActive = 1; shieldHits = 3; statsRelicsForged++;
               saveHighScore(); saveMsgText = "FORGED: SUN TITAN AEGIS!"; saveMsgTimer = 30;
+              showToast("🛡️ Forged: Sun Titan Aegis! (Auto-recharging shield & trap immunity)", "success");
               addShockwave(px * TS + TS/2, py * TS + TS/2, '#ff9800');
               playSound(750, 0.5, 'triangle', 250);
-          } else { saveMsgText = "NEED: 4 ESS + 4 DUST"; saveMsgTimer = 25; playSound(180, 0.15, 'sawtooth'); }
+          } else { saveMsgText = "NEED: 4 ESS + 4 DUST"; saveMsgTimer = 25; showToast("❌ Need: 4 Fruit Essence + 4 Star Dust", "danger"); playSound(180, 0.15, 'sawtooth'); }
       } else if (recipe === 9) {
-          if (relicStone) { saveMsgText = "RELIC ALREADY FORGED!"; saveMsgTimer = 25; }
+          if (relicStone) { saveMsgText = "RELIC ALREADY FORGED!"; saveMsgTimer = 25; showToast("Stone already forged!", "warning"); }
           else if (craftEctoplasm >= 5 && craftFruitEssence >= 5 && craftStarDust >= 5) {
               craftEctoplasm -= 5; craftFruitEssence -= 5; craftStarDust -= 5; relicStone = 1; lives += 1; statsRelicsForged++;
               saveHighScore(); saveMsgText = "FORGED: PHILOSOPHER STONE!"; saveMsgTimer = 30;
+              showToast("💎 Forged: Philosopher Stone! (+1 Extra Life & 2x Score Multiplier)", "success");
               addExplosion(px * TS + TS/2, py * TS + TS/2, '#ffd700');
               playSound(880, 0.6, 'sine', 300);
-          } else { saveMsgText = "NEED: 5 ECTO + 5 ESS + 5 DUST"; saveMsgTimer = 25; playSound(180, 0.15, 'sawtooth'); }
+          } else { saveMsgText = "NEED: 5 ECTO + 5 ESS + 5 DUST"; saveMsgTimer = 25; showToast("❌ Need: 5 Ecto + 5 Essence + 5 Dust", "danger"); playSound(180, 0.15, 'sawtooth'); }
       }
+      updateUIBadges();
   }
 
   function attemptSkill(s) {
-      if (s === 's1' && freezeCooldown === 0) {
-          freezeSkillTimer = 60; freezeCooldown = 150;
-          saveMsgText = "FREEZE SKILL!"; saveMsgTimer = 20;
-          addSparks(px * TS + TS/2, py * TS + TS/2, '#ffffff', 12);
-          playSound(600, 0.2, 'sine');
-      } else if (s === 's2' && speedCooldown === 0) {
-          speedSkillTimer = 80; speedCooldown = 150;
-          saveMsgText = "SPEED SPRINT!"; saveMsgTimer = 20;
-          addSparks(px * TS + TS/2, py * TS + TS/2, '#00e5ff', 12);
-          playSound(700, 0.2, 'triangle', 100);
-      } else if (s === 's3' && magnetCooldown === 0) {
-          magnetSkillTimer = 50; magnetCooldown = 150;
-          saveMsgText = "DOT MAGNET!"; saveMsgTimer = 20;
-          addSparks(px * TS + TS/2, py * TS + TS/2, '#ffeb3b', 12);
-          playSound(550, 0.2, 'square');
-      } else if (s === 's4' && shieldCooldown === 0) {
-          shieldActive = 1; shieldHits = Math.max(1, shieldHits + 1); shieldCooldown = 200;
-          saveMsgText = "GHOST SHIELD!"; saveMsgTimer = 20;
-          addSparks(px * TS + TS/2, py * TS + TS/2, '#00e5ff', 12);
-          playSound(480, 0.25, 'sine');
+      if (s === 's1') {
+          if (freezeCooldown === 0) {
+              freezeSkillTimer = 60; freezeCooldown = 150;
+              saveMsgText = "FREEZE SKILL!"; saveMsgTimer = 20;
+              showToast("🧊 Ghost Freeze Skill Activated!", "info");
+              addSparks(px * TS + TS/2, py * TS + TS/2, '#ffffff', 12);
+              playSound(600, 0.2, 'sine');
+          } else {
+              showToast("Freeze on cooldown", "warning");
+          }
+      } else if (s === 's2') {
+          if (speedCooldown === 0) {
+              speedSkillTimer = 80; speedCooldown = 150;
+              saveMsgText = "SPEED SPRINT!"; saveMsgTimer = 20;
+              showToast("⚡ Chrono Sprint Activated!", "info");
+              addSparks(px * TS + TS/2, py * TS + TS/2, '#00e5ff', 12);
+              playSound(700, 0.2, 'triangle', 100);
+          } else {
+              showToast("Sprint on cooldown", "warning");
+          }
+      } else if (s === 's3') {
+          if (magnetCooldown === 0) {
+              magnetSkillTimer = 50; magnetCooldown = 150;
+              saveMsgText = "DOT MAGNET!"; saveMsgTimer = 20;
+              showToast("🧲 Pellet Magnet Activated!", "info");
+              addSparks(px * TS + TS/2, py * TS + TS/2, '#ffeb3b', 12);
+              playSound(550, 0.2, 'square');
+          } else {
+              showToast("Magnet on cooldown", "warning");
+          }
+      } else if (s === 's4') {
+          if (shieldCooldown === 0) {
+              shieldActive = 1; shieldHits = Math.max(1, shieldHits + 1); shieldCooldown = 200;
+              saveMsgText = "GHOST SHIELD!"; saveMsgTimer = 20;
+              showToast("🛡️ Aegis Shield Activated!", "info");
+              addSparks(px * TS + TS/2, py * TS + TS/2, '#00e5ff', 12);
+              playSound(480, 0.25, 'sine');
+          } else {
+              showToast("Shield on cooldown", "warning");
+          }
       }
   }
 
@@ -973,7 +1602,9 @@
               if (gameMode === 0 && level === 20 && bossHp > 0) {
                   bossHp--; if (bossHp <= 0) victoryTimer = 30;
               }
-              saveMsgText = "PET: PYRE FIRESTORM!"; addExplosion(petX * TS + TS/2, petY * TS + TS/2, '#ff1744');
+              saveMsgText = "PET: PYRE FIRESTORM!";
+              showToast("🔥 Blinky Jr Ultimate: Pyre Firestorm!", "danger");
+              addExplosion(petX * TS + TS/2, petY * TS + TS/2, '#ff1744');
           } else if (petType === 1) {
               for (let r = py - 5; r <= py + 5; r++) {
                   for (let c = px - 5; c <= px + 5; c++) {
@@ -983,31 +1614,40 @@
                   }
               }
               freezeSkillTimer = 50; saveMsgText = "PET: EMP VACUUM STORM!";
+              showToast("⚡ Inky Ultimate: EMP Vacuum Storm!", "info");
               addShockwave(petX * TS + TS/2, petY * TS + TS/2, '#00e5ff');
           } else if (petType === 2) {
               shieldActive = 1; shieldHits += 2; frightTimer = relicCrown ? 90 : 60;
-              saveMsgText = "PET: DIVINE AEGIS + FRIGHT!"; addShockwave(petX * TS + TS/2, petY * TS + TS/2, '#f06292');
+              saveMsgText = "PET: DIVINE AEGIS + FRIGHT!";
+              showToast("💖 Pinky Ultimate: Divine Aegis & Fright!", "warning");
+              addShockwave(petX * TS + TS/2, petY * TS + TS/2, '#f06292');
           } else if (petType === 3) {
               score += 1000; craftStarDust += 1; craftFruitEssence += 1; craftEctoplasm += 1;
-              saveMsgText = "PET: MIDAS GOLDEN RAIN!"; addExplosion(petX * TS + TS/2, petY * TS + TS/2, '#ffd700');
+              saveMsgText = "PET: MIDAS GOLDEN RAIN!";
+              showToast("🌟 Kinglet Ultimate: Midas Golden Rain! (+Mats & 1000 Pts)", "success");
+              addExplosion(petX * TS + TS/2, petY * TS + TS/2, '#ffd700');
           }
           saveMsgTimer = 25;
+          updateUIBadges();
           playSound(800, 0.4, 'triangle', 200);
+      } else if (petCooldown > 0) {
+          showToast("Pet Ultimate on cooldown", "warning");
       }
   }
 
   function cyclePetCompanion() {
       petType = (petType + 1) % 4;
-      let names = ["Blinky Jr (Pyre)", "Inky (Cyan Spark)", "Pinky (Guardian)", "Kinglet (Gold)"];
+      let names = ["Blinky Jr (Pyre Stun)", "Inky (Cyan Spark Vacuum)", "Pinky (Guardian Aegis)", "Gold Kinglet (3x Pts & Mats)"];
       saveMsgText = `PET: ${names[petType]}`;
       saveMsgTimer = 25;
+      showToast(`🐾 Companion: ${names[petType]}`, 'info');
       addSparks(px * TS + TS/2, py * TS + TS/2, '#ffd700', 10);
       saveHighScore();
       playSound(650, 0.2, 'sine');
   }
 
   function toggleCraftMenu() {
-      showCraftMenu = !showCraftMenu;
+      toggleCraftModal();
   }
 
   function toggleGameMode() {
@@ -1015,11 +1655,62 @@
       init(false);
       saveMsgText = `MODE: ${gameMode ? "ARCADE ENDLESS" : "CAMPAIGN"}`;
       saveMsgTimer = 25;
+      showToast(`🎮 Mode Switched: ${gameMode ? "Arcade Endless" : "Campaign"}`, 'info');
+      updateUIBadges();
   }
 
-  // Input bindings
+  // Global Input bindings
   window.addEventListener('keydown', e => {
       let key = e.key.toUpperCase();
+      const helpOpen = document.getElementById('helpModal')?.style.display === 'flex';
+      const craftOpen = document.getElementById('craftModal')?.style.display === 'flex';
+
+      if (e.key === 'F1' || key === 'H' || key === '?') {
+          e.preventDefault();
+          toggleHelpModal();
+          return;
+      }
+      if (e.key === 'Escape') {
+          if (helpOpen) { toggleHelpModal(false); return; }
+          if (craftOpen) { toggleCraftModal(false); return; }
+          paused = !paused;
+          showToast(paused ? '⏸ Game Paused' : '▶ Game Resumed', 'info');
+          return;
+      }
+      if (e.key === 'Tab' && craftOpen) {
+          e.preventDefault();
+          setForgePage(craftMenuPage === 0 ? 1 : 0);
+          return;
+      }
+      if (e.key === 'F5' || (e.ctrlKey && key === 'S')) {
+          e.preventDefault();
+          saveGame();
+          return;
+      }
+      if (e.key === 'F9' || (e.ctrlKey && key === 'O')) {
+          e.preventDefault();
+          loadGame();
+          return;
+      }
+
+      if (helpOpen || craftOpen) {
+          if (craftOpen) {
+              if (craftMenuPage === 0) {
+                  if (key === '1' || key === '7') craftItem(1);
+                  if (key === '2' || key === '8') craftItem(2);
+                  if (key === '3' || key === '9') craftItem(3);
+                  if (key === '4' || key === '0') craftItem(4);
+              } else {
+                  if (key === '1' || key === '5') craftItem(5);
+                  if (key === '2' || key === '6') craftItem(6);
+                  if (key === '3' || key === '7') craftItem(7);
+                  if (key === '4' || key === '8') craftItem(8);
+                  if (key === '5' || key === '9') craftItem(9);
+              }
+          }
+          return;
+      }
+
       if (key === 'ARROWUP' || key === 'W') ndx = 0, ndy = -1;
       else if (key === 'ARROWDOWN' || key === 'S') ndx = 0, ndy = 1;
       else if (key === 'ARROWLEFT' || key === 'A') ndx = -1, ndy = 0;
@@ -1030,29 +1721,21 @@
       else if (key === 'B') attemptSkill('s4');
       else if (key === 'U') triggerPetUltimate();
       else if (key === 'P') cyclePetCompanion();
-      else if (key === 'C') toggleCraftMenu();
-      else if (key === 'TAB' && showCraftMenu) { e.preventDefault(); craftMenuPage = craftMenuPage ? 0 : 1; }
+      else if (key === 'C') toggleCraftModal(true);
       else if (key === 'O') toggleGameMode();
-      else if (key === ' ' || key === 'ESCAPE') paused = !paused;
-      else if (key === 'H') showHelp = !showHelp;
+      else if (key === '1') { diffMode = 0; showToast("⚔️ Difficulty: EASY (5 Lives, Slower Ghosts)", "warning"); updateUIBadges(); }
+      else if (key === '2') { diffMode = 1; showToast("⚔️ Difficulty: NORMAL (3 Lives)", "warning"); updateUIBadges(); }
+      else if (key === '3') { diffMode = 2; showToast("⚔️ Difficulty: HARD (2 Lives, Fast Ghosts)", "warning"); updateUIBadges(); }
+      else if (key === 'V') saveGame();
+      else if (key === 'L') loadGame();
+      else if (key === 'E') exportJSON();
+      else if (key === 'I') triggerImport();
+      else if (key === ' ') { paused = !paused; showToast(paused ? '⏸ Game Paused' : '▶ Game Resumed', 'info'); }
       else if (key === 'ENTER' && gameOver) init(false);
-      else if (showCraftMenu && craftMenuPage === 0) {
-          if (key === '1' || key === '7') craftItem(1);
-          if (key === '2' || key === '8') craftItem(2);
-          if (key === '3' || key === '9') craftItem(3);
-          if (key === '4' || key === '0') craftItem(4);
-      } else if (showCraftMenu && craftMenuPage === 1) {
-          if (key === '1' || key === '5') craftItem(5);
-          if (key === '2' || key === '6') craftItem(6);
-          if (key === '3' || key === '7') craftItem(7);
-          if (key === '4' || key === '8') craftItem(8);
-          if (key === '5' || key === '9') craftItem(9);
-      } else {
-          if (key === '7') craftItem(1);
-          if (key === '8') craftItem(2);
-          if (key === '9') craftItem(3);
-          if (key === '0') craftItem(4);
-      }
+      else if (key === '7') craftItem(1);
+      else if (key === '8') craftItem(2);
+      else if (key === '9') craftItem(3);
+      else if (key === '0') craftItem(4);
   });
 
   function update() {
@@ -2163,6 +2846,8 @@
 
   loadHighScore();
   init(false);
+  updateUIBadges();
+  showToast("⚡ Welcome to KPac Cyber Edition! Use WASD/Arrows to move, [F1] for Help", "info");
   setInterval(() => {
       update();
       draw();
