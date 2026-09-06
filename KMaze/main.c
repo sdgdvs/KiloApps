@@ -970,7 +970,7 @@ void ComputePathfinderPath() {
                 if (tile == 0 || tile == 2 || tile == 3 || tile == 5 || tile == 6 || tile == 8 || tile == 9 || tile == 10 || tile == 11 || tile == 13 || tile == 14 || tile == 16 || tile == 17 || tile == 18 || tile == 19 || tile == 25 || tile == 26 || tile == 28 || tile == 29 || tile == 38 || tile == 39 || tile == 40 || (tile == 4 && keysHeld > 0)) {
                     parentX[nx][ny] = cx;
                     parentY[nx][ny] = cy;
-                    qX[qTail] = nx; qY[qTail] = ny; qTail++;
+                    if (qTail < 2500) { qX[qTail] = nx; qY[qTail] = ny; qTail++; }
                 }
             }
         }
@@ -1276,7 +1276,52 @@ void SaveCheckpoint() {
         WriteFile(hSave, &curRandW, sizeof(int), &written, NULL);
         WriteFile(hSave, &curRandH, sizeof(int), &written, NULL);
         WriteFile(hSave, mapRandom, sizeof(mapRandom), &written, NULL);
+        int savedMap[45][45];
+        for (int i = 0; i < 45; i++) for (int j = 0; j < 45; j++) savedMap[i][j] = GetMapValue(i, j);
+        WriteFile(hSave, savedMap, sizeof(savedMap), &written, NULL);
         CloseHandle(hSave);
+    }
+}
+
+void LoadCheckpoint() {
+    HANDLE hLoad = CreateFileA("kmaze_save.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hLoad != INVALID_HANDLE_VALUE) {
+        DWORD readBytes = 0;
+        ReadFile(hLoad, &currentLevel, sizeof(int), &readBytes, NULL);
+        ReadFile(hLoad, &score, sizeof(int), &readBytes, NULL);
+        ReadFile(hLoad, &keysHeld, sizeof(int), &readBytes, NULL);
+        ReadFile(hLoad, &hasCompass, sizeof(int), &readBytes, NULL);
+        ReadFile(hLoad, &speedBoost, sizeof(int), &readBytes, NULL);
+        ReadFile(hLoad, &hasPickaxe, sizeof(int), &readBytes, NULL);
+        ReadFile(hLoad, &pathfinderCharges, sizeof(int), &readBytes, NULL);
+        ReadFile(hLoad, &speedShoesCharges, sizeof(int), &readBytes, NULL);
+        ReadFile(hLoad, &stunSprayCharges, sizeof(int), &readBytes, NULL);
+        ReadFile(hLoad, &timeFreezeCharges, sizeof(int), &readBytes, NULL);
+        ReadFile(hLoad, &pX, sizeof(float), &readBytes, NULL);
+        ReadFile(hLoad, &pY, sizeof(float), &readBytes, NULL);
+        ReadFile(hLoad, &dX, sizeof(float), &readBytes, NULL);
+        ReadFile(hLoad, &dY, sizeof(float), &readBytes, NULL);
+        ReadFile(hLoad, &planeX, sizeof(float), &readBytes, NULL);
+        ReadFile(hLoad, &planeY, sizeof(float), &readBytes, NULL);
+        DWORD elapsed = 0;
+        ReadFile(hLoad, &elapsed, sizeof(DWORD), &readBytes, NULL);
+        startTime = GetTickCount() - elapsed;
+        ReadFile(hLoad, &curRandW, sizeof(int), &readBytes, NULL);
+        ReadFile(hLoad, &curRandH, sizeof(int), &readBytes, NULL);
+        ReadFile(hLoad, mapRandom, sizeof(mapRandom), &readBytes, NULL);
+        int savedMap[45][45];
+        if (ReadFile(hLoad, savedMap, sizeof(savedMap), &readBytes, NULL) && readBytes == sizeof(savedMap)) {
+            for (int i = 0; i < 45; i++) for (int j = 0; j < 45; j++) SetMapValue(i, j, savedMap[i][j]);
+        }
+        CloseHandle(hLoad);
+        if (gameState == 0 || gameState == 2) gameState = 1;
+        strcpy(msgText, "Checkpoint / Save Loaded!");
+        msgTimer = 60;
+        MessageBeep(MB_OK);
+    } else {
+        strcpy(msgText, "No saved checkpoint found!");
+        msgTimer = 60;
+        MessageBeep(MB_ICONWARNING);
     }
 }
 
@@ -1405,12 +1450,52 @@ void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd, helpMsg, "KMaze Help & Dungeon Codex", MB_OK | MB_ICONINFORMATION);
 }
 
+static HBRUSH s_frameB = NULL;
+static HBRUSH s_mWall, s_mExit, s_mKey, s_mDoor, s_mFloor, s_mPlayer, s_mCoin;
+static HBRUSH s_mTrap, s_mComp, s_mSpeed, s_mTele, s_mPath, s_mBoss, s_mMono;
+static HBRUSH s_mPick, s_mStun, s_mShrine, s_mTorch, s_mShaft, s_mFake, s_mLore;
+static HFONT s_hFont = NULL;
+
+static void EnsureGdiResources(HDC hdc) {
+    if (!s_frameB) {
+        s_frameB = CreateSolidBrush(RGB(40, 40, 50));
+        s_mWall = CreateSolidBrush(RGB(153, 153, 153));
+        s_mExit = CreateSolidBrush(RGB(0, 255, 0));
+        s_mKey = CreateSolidBrush(RGB(255, 255, 0));
+        s_mDoor = CreateSolidBrush(RGB(0, 0, 255));
+        s_mFloor = CreateSolidBrush(RGB(20, 20, 25));
+        s_mPlayer = CreateSolidBrush(RGB(255, 0, 0));
+        s_mCoin = CreateSolidBrush(RGB(255, 128, 0));
+        s_mTrap = CreateSolidBrush(RGB(255, 0, 0));
+        s_mComp = CreateSolidBrush(RGB(0, 255, 255));
+        s_mSpeed = CreateSolidBrush(RGB(255, 255, 0));
+        s_mTele = CreateSolidBrush(RGB(255, 0, 255));
+        s_mPath = CreateSolidBrush(RGB(0, 255, 255));
+        s_mBoss = CreateSolidBrush(RGB(255, 215, 0));
+        s_mMono = CreateSolidBrush(RGB(255, 50, 50));
+        s_mPick = CreateSolidBrush(RGB(150, 75, 0));
+        s_mStun = CreateSolidBrush(RGB(100, 200, 255));
+        s_mShrine = CreateSolidBrush(RGB(255, 215, 0));
+        s_mTorch = CreateSolidBrush(RGB(255, 140, 0));
+        s_mShaft = CreateSolidBrush(RGB(0, 255, 200));
+        s_mFake = CreateSolidBrush(RGB(120, 70, 150));
+        s_mLore = CreateSolidBrush(RGB(0, 229, 255));
+    }
+    if (!s_hFont) {
+        int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+        int fontHeight = -MulDiv(12, dpi, 72);
+        s_hFont = CreateFontA(fontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_DONTCARE, "Consolas");
+    }
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE:
             InitGame();
             SetTimer(hwnd, 1, 30, NULL);
             break;
+        case WM_ERASEBKGND:
+            return 1;
         case WM_TIMER: {
             animFrameCount++;
             UpdateTextures();
@@ -1562,6 +1647,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int ty = (int)(pY + dY * 0.8f);
                         int tVal = GetMapValue(tx, ty);
                         if (tVal == 1 || tVal == 7 || tVal == 20 || tVal == 21 || tVal == 22 || tVal == 27 || tVal == 39) {
+                            int mapW = currentLevel >= 10 ? curRandW : 15;
+                            int mapH = currentLevel >= 10 ? curRandH : 15;
+                            if (currentLevel == 0 || currentLevel == 3) { mapW = 10; mapH = 10; }
+                            else if (currentLevel == 1 || currentLevel == 4 || currentLevel == 5 || currentLevel == 7 || currentLevel == 8) { mapW = 12; mapH = 12; }
+                            if (tx <= 0 || ty <= 0 || tx >= mapW - 1 || ty >= mapH - 1) {
+                                strcpy(msgText, "Perimeter Bedrock is unbreakable!");
+                                msgTimer = 40;
+                                activeKeyCooldown = 250;
+                                MessageBeep(MB_ICONHAND);
+                                break;
+                            }
                             hasPickaxe--;
                             SetMapValue(tx, ty, 0);
                             MessageBeep(MB_OK);
@@ -1667,37 +1763,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     MessageBeep(MB_OK);
                 }
                 if (GetAsyncKeyState('L') & 0x8000) {
-                    HANDLE hLoad = CreateFileA("kmaze_save.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-                    if (hLoad != INVALID_HANDLE_VALUE) {
-                        DWORD readBytes = 0;
-                        ReadFile(hLoad, &currentLevel, sizeof(int), &readBytes, NULL);
-                        ReadFile(hLoad, &score, sizeof(int), &readBytes, NULL);
-                        ReadFile(hLoad, &keysHeld, sizeof(int), &readBytes, NULL);
-                        ReadFile(hLoad, &hasCompass, sizeof(int), &readBytes, NULL);
-                        ReadFile(hLoad, &speedBoost, sizeof(int), &readBytes, NULL);
-                        ReadFile(hLoad, &hasPickaxe, sizeof(int), &readBytes, NULL);
-                        ReadFile(hLoad, &pathfinderCharges, sizeof(int), &readBytes, NULL);
-                        ReadFile(hLoad, &speedShoesCharges, sizeof(int), &readBytes, NULL);
-                        ReadFile(hLoad, &stunSprayCharges, sizeof(int), &readBytes, NULL);
-                        ReadFile(hLoad, &timeFreezeCharges, sizeof(int), &readBytes, NULL);
-                        ReadFile(hLoad, &pX, sizeof(float), &readBytes, NULL);
-                        ReadFile(hLoad, &pY, sizeof(float), &readBytes, NULL);
-                        ReadFile(hLoad, &dX, sizeof(float), &readBytes, NULL);
-                        ReadFile(hLoad, &dY, sizeof(float), &readBytes, NULL);
-                        ReadFile(hLoad, &planeX, sizeof(float), &readBytes, NULL);
-                        ReadFile(hLoad, &planeY, sizeof(float), &readBytes, NULL);
-                        DWORD elapsed = 0;
-                        ReadFile(hLoad, &elapsed, sizeof(DWORD), &readBytes, NULL);
-                        startTime = GetTickCount() - elapsed;
-                        ReadFile(hLoad, &curRandW, sizeof(int), &readBytes, NULL);
-                        ReadFile(hLoad, &curRandH, sizeof(int), &readBytes, NULL);
-                        ReadFile(hLoad, mapRandom, sizeof(mapRandom), &readBytes, NULL);
-                        CloseHandle(hLoad);
-                        strcpy(msgText, "Checkpoint / Save Loaded!");
-                        msgTimer = 60;
-                        activeKeyCooldown = 1000;
-                        MessageBeep(MB_OK);
-                    }
+                    LoadCheckpoint();
+                    activeKeyCooldown = 500;
                 }
             }
             if (gameState != 1) {
@@ -1875,6 +1942,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 AddParticles(160.0f, 120.0f, RGB(128, 0, 128), 30);
                 strcpy(msgText, "Cursed Relic: +500 Score, Lost Speed/Nav!"); msgTimer = 60;
             } else if (curVal == 28) { // Save Shrine Checkpoint
+                SetMapValue((int)pX, (int)pY, 0);
                 checkpointLevel = currentLevel;
                 checkpointScore = score;
                 checkpointPX = pX;
@@ -1902,6 +1970,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 strcpy(msgText, "Ancient Save Shrine Activated! Checkpoint Saved!");
                 msgTimer = 90;
             } else if (curVal == 29) { // Torch Sconce / Lantern
+                SetMapValue((int)pX, (int)pY, 0);
                 torchTimer = 15000;
                 score += 50;
                 MessageBeep(MB_ICONASTERISK);
@@ -2582,33 +2651,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     int mmX = W - 10 - mmW * mmS;
                     int mmY = 10;
                     
-                    HBRUSH frameB = CreateSolidBrush(RGB(40, 40, 50));
+                    EnsureGdiResources(hdcMem);
                     RECT frameRc = {mmX - 2, mmY - 2, mmX + mmW * mmS + 2, mmY + mmH * mmS + 2};
-                    FillRect(hdcMem, &frameRc, frameB);
-                    DeleteObject(frameB);
+                    FillRect(hdcMem, &frameRc, s_frameB);
 
-                    HBRUSH mWall = CreateSolidBrush(RGB(153, 153, 153));
-                    HBRUSH mExit = CreateSolidBrush(RGB(0, 255, 0));
-                    HBRUSH mKey = CreateSolidBrush(RGB(255, 255, 0));
-                    HBRUSH mDoor = CreateSolidBrush(RGB(0, 0, 255));
-                    HBRUSH mFloor = CreateSolidBrush(RGB(20, 20, 25));
-                    HBRUSH mPlayer = CreateSolidBrush(RGB(255, 0, 0));
-                    HBRUSH mCoin = CreateSolidBrush(RGB(255, 128, 0));
-                    HBRUSH mTrap = CreateSolidBrush(RGB(255, 0, 0));
-                    HBRUSH mComp = CreateSolidBrush(RGB(0, 255, 255));
-                    HBRUSH mSpeed = CreateSolidBrush(RGB(255, 255, 0));
-                    HBRUSH mTele = CreateSolidBrush(RGB(255, 0, 255));
-                    HBRUSH mPath = CreateSolidBrush(RGB(0, 255, 255));
-                    HBRUSH mBoss = CreateSolidBrush(RGB(255, 215, 0));
-                    HBRUSH mMono = CreateSolidBrush(RGB(255, 50, 50));
-                    HBRUSH mPick = CreateSolidBrush(RGB(150, 75, 0));
-                    HBRUSH mStun = CreateSolidBrush(RGB(100, 200, 255));
-                    HBRUSH mShrine = CreateSolidBrush(RGB(255, 215, 0));
-                    HBRUSH mTorch = CreateSolidBrush(RGB(255, 140, 0));
-                    HBRUSH mShaft = CreateSolidBrush(RGB(0, 255, 200));
-                    HBRUSH mFake = CreateSolidBrush(RGB(120, 70, 150));
-                    HBRUSH mLore = CreateSolidBrush(RGB(0, 229, 255));
-                    
                     for (int i = 0; i < mmW; i++) {
                         for (int j = 0; j < mmH; j++) {
                             if (currentLevel >= 15 && pathfinderTimer <= 0) {
@@ -2616,38 +2662,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 if (distToP > 5.5f) continue;
                             }
                             int v = GetMapValue(i, j);
-                            HBRUSH b = mFloor;
-                            if (isPathTile[i][j] && pathfinderTimer > 0) b = mPath;
-                            else if (v == 1 || v == 7 || v == 20 || v == 21 || v == 22 || v == 27) b = mWall;
-                            else if (v == 2) b = mExit;
-                            else if (v == 3) b = mKey;
-                            else if (v == 4) b = mDoor;
-                            else if (v == 5) b = mCoin;
-                            else if (v == 6) b = mTrap;
-                            else if (v == 8) b = mComp;
-                            else if (v == 9) b = mSpeed;
-                            else if (v == 10 || v == 11) b = mTele;
-                            else if (v == 12) b = mMono;
-                            else if (v == 13) b = mPick;
-                            else if (v == 14) b = mStun;
-                            else if (v == 15) b = mBoss;
-                            else if (v == 28) b = mShrine;
-                            else if (v == 29) b = mTorch;
-                            else if (v == 38) b = mShaft;
-                            else if (v == 39) b = mFake;
-                            else if (v == 40) b = mLore;
+                            HBRUSH b = s_mFloor;
+                            if (isPathTile[i][j] && pathfinderTimer > 0) b = s_mPath;
+                            else if (v == 1 || v == 7 || v == 20 || v == 21 || v == 22 || v == 27) b = s_mWall;
+                            else if (v == 2) b = s_mExit;
+                            else if (v == 3) b = s_mKey;
+                            else if (v == 4) b = s_mDoor;
+                            else if (v == 5) b = s_mCoin;
+                            else if (v == 6) b = s_mTrap;
+                            else if (v == 8) b = s_mComp;
+                            else if (v == 9) b = s_mSpeed;
+                            else if (v == 10 || v == 11) b = s_mTele;
+                            else if (v == 12) b = s_mMono;
+                            else if (v == 13) b = s_mPick;
+                            else if (v == 14) b = s_mStun;
+                            else if (v == 15) b = s_mBoss;
+                            else if (v == 28) b = s_mShrine;
+                            else if (v == 29) b = s_mTorch;
+                            else if (v == 38) b = s_mShaft;
+                            else if (v == 39) b = s_mFake;
+                            else if (v == 40) b = s_mLore;
                             
                             RECT mr = {mmX + i*mmS, mmY + j*mmS, mmX + i*mmS + mmS, mmY + j*mmS + mmS};
                             FillRect(hdcMem, &mr, b);
                         }
                     }
                     RECT mr = {mmX + (int)pX*mmS, mmY + (int)pY*mmS, mmX + (int)pX*mmS + mmS, mmY + (int)pY*mmS + mmS};
-                    FillRect(hdcMem, &mr, mPlayer);
-                    
-                    DeleteObject(mWall); DeleteObject(mExit); DeleteObject(mKey); DeleteObject(mDoor); DeleteObject(mFloor); DeleteObject(mPlayer); DeleteObject(mCoin);
-                    DeleteObject(mTrap); DeleteObject(mComp); DeleteObject(mSpeed); DeleteObject(mTele); DeleteObject(mPath); DeleteObject(mBoss);
-                    DeleteObject(mMono); DeleteObject(mPick); DeleteObject(mStun); DeleteObject(mShrine); DeleteObject(mTorch); DeleteObject(mShaft);
-                    DeleteObject(mFake); DeleteObject(mLore);
+                    FillRect(hdcMem, &mr, s_mPlayer);
                 }
             }
 
@@ -2655,10 +2696,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             GetClientRect(hwnd, &clientRect);
             StretchBlt(hdc, 0, 0, clientRect.right, clientRect.bottom, hdcMem, 0, 0, W, H, SRCCOPY);
             
-            int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
-            int fontHeight = -MulDiv(12, dpi, 72);
-            HFONT hFont = CreateFontA(fontHeight, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_DONTCARE, "Consolas");
-            HGDIOBJ oldFont = SelectObject(hdc, hFont);
+            EnsureGdiResources(hdc);
+            HGDIOBJ oldFont = SelectObject(hdc, s_hFont);
             
             SetBkMode(hdc, TRANSPARENT);
             if (gameState == 0) {
@@ -2756,7 +2795,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(hdc, 20, clientRect.bottom - 30, itemText, lstrlenA(itemText));
             }
             SelectObject(hdc, oldFont);
-            DeleteObject(hFont);
             EndPaint(hwnd, &ps);
             break;
         }
@@ -2773,9 +2811,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowHelpDialog(hwnd);
                 break;
             }
-            if (gameState == 0 || gameState == 1) {
+            if (gameState == 0 || gameState == 1 || gameState == 2) {
                 if (wParam == 'E') ExportStats();
                 if (wParam == 'I') ImportStats();
+                if (wParam == 'L') LoadCheckpoint();
                 if (wParam == 'K') { prevState = gameState; gameState = 4; }
             }
             if (gameState == 4) {
@@ -2800,8 +2839,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            KillTimer(hwnd, 1);
             if (hdcMem) DeleteDC(hdcMem);
             if (hbmCanvas) DeleteObject(hbmCanvas);
+            if (s_frameB) {
+                DeleteObject(s_frameB); DeleteObject(s_mWall); DeleteObject(s_mExit); DeleteObject(s_mKey);
+                DeleteObject(s_mDoor); DeleteObject(s_mFloor); DeleteObject(s_mPlayer); DeleteObject(s_mCoin);
+                DeleteObject(s_mTrap); DeleteObject(s_mComp); DeleteObject(s_mSpeed); DeleteObject(s_mTele);
+                DeleteObject(s_mPath); DeleteObject(s_mBoss); DeleteObject(s_mMono); DeleteObject(s_mPick);
+                DeleteObject(s_mStun); DeleteObject(s_mShrine); DeleteObject(s_mTorch); DeleteObject(s_mShaft);
+                DeleteObject(s_mFake); DeleteObject(s_mLore);
+                s_frameB = NULL;
+            }
+            if (s_hFont) { DeleteObject(s_hFont); s_hFont = NULL; }
             PostQuitMessage(0);
             return 0;
     }

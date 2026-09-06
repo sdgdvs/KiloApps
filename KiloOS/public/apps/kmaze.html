@@ -289,11 +289,11 @@
   </div>
 
   <!-- Help & Codex Modal -->
-  <div id="helpModal" onclick="if(event.target===this) toggleHelpModal(false)">
+  <div id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle" onclick="if(event.target===this) toggleHelpModal(false)">
     <div class="modalContent">
       <div class="modalHeader">
-        <h2>🛡️ KMaze - Tactical Dungeon Descent Guide</h2>
-        <button class="modalCloseBtn" onclick="toggleHelpModal(false)">✕ Close [Esc]</button>
+        <h2 id="helpModalTitle">🛡️ KMaze - Tactical Dungeon Descent Guide</h2>
+        <button class="modalCloseBtn" aria-label="Close Guide" onclick="toggleHelpModal(false)">✕ Close [Esc]</button>
       </div>
       <div class="modalBody">
         <div class="grid2">
@@ -525,10 +525,23 @@
   let gameState = 0; // 0: Start, 1: Play, 2: Win, 3: Replay, 4: Keys
   let startTime = 0;
   let endTime = 0;
-  let bestTime = localStorage.getItem('kmaze_best') ? parseFloat(localStorage.getItem('kmaze_best')) : 9999.9;
-  let totalGames = localStorage.getItem('kmaze_games') ? parseInt(localStorage.getItem('kmaze_games')) : 0;
-  let totalEscapes = localStorage.getItem('kmaze_escapes') ? parseInt(localStorage.getItem('kmaze_escapes')) : 0;
-  let totalScore = localStorage.getItem('kmaze_score') ? parseInt(localStorage.getItem('kmaze_score')) : 0;
+  function safeGetStorage(key, fallback) {
+    try {
+      let val = localStorage.getItem(key);
+      return val !== null ? val : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+  function safeSetStorage(key, val) {
+    try {
+      localStorage.setItem(key, val);
+    } catch (e) {}
+  }
+  let bestTime = parseFloat(safeGetStorage('kmaze_best', '9999.9')) || 9999.9;
+  let totalGames = parseInt(safeGetStorage('kmaze_games', '0'), 10) || 0;
+  let totalEscapes = parseInt(safeGetStorage('kmaze_escapes', '0'), 10) || 0;
+  let totalScore = parseInt(safeGetStorage('kmaze_score', '0'), 10) || 0;
   let score = 0;
   
   let msgText = "";
@@ -625,11 +638,13 @@
 
   function exportStats() {
       let data = { bestTime, totalGames, totalEscapes, totalScore };
-      let blob = new Blob([JSON.stringify(data)], {type: "application/json"});
+      let blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
       let a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
+      let url = URL.createObjectURL(blob);
+      a.href = url;
       a.download = "kmaze_stats.json";
       a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
       showToast("Statistics exported to kmaze_stats.json", "success");
   }
   function importStats(e) {
@@ -639,14 +654,14 @@
       reader.onload = function(e) {
           try {
               let data = JSON.parse(e.target.result);
-              if (data.bestTime !== undefined) bestTime = data.bestTime;
-              if (data.totalGames !== undefined) totalGames = data.totalGames;
-              if (data.totalEscapes !== undefined) totalEscapes = data.totalEscapes;
-              if (data.totalScore !== undefined) totalScore = data.totalScore;
-              localStorage.setItem('kmaze_best', bestTime);
-              localStorage.setItem('kmaze_games', totalGames);
-              localStorage.setItem('kmaze_escapes', totalEscapes);
-              localStorage.setItem('kmaze_score', totalScore);
+              if (typeof data.bestTime === 'number' && Number.isFinite(data.bestTime) && data.bestTime >= 0) bestTime = data.bestTime;
+              if (typeof data.totalGames === 'number' && Number.isFinite(data.totalGames) && data.totalGames >= 0) totalGames = Math.floor(data.totalGames);
+              if (typeof data.totalEscapes === 'number' && Number.isFinite(data.totalEscapes) && data.totalEscapes >= 0) totalEscapes = Math.floor(data.totalEscapes);
+              if (typeof data.totalScore === 'number' && Number.isFinite(data.totalScore)) totalScore = Math.floor(data.totalScore);
+              safeSetStorage('kmaze_best', bestTime);
+              safeSetStorage('kmaze_games', totalGames);
+              safeSetStorage('kmaze_escapes', totalEscapes);
+              safeSetStorage('kmaze_score', totalScore);
               msgText = "Stats Imported!"; msgTimer = 60;
               showToast("Statistics successfully imported!", "success");
           } catch (err) {
@@ -1081,6 +1096,7 @@
       let queue = [];
       let parent = Array.from({length: map.length}, () => Array(map[0].length).fill(null));
       let startX = Math.floor(pX), startY = Math.floor(pY);
+      if (startX < 0 || startX >= map.length || startY < 0 || startY >= map[0].length) return;
       queue.push([startX, startY]);
       parent[startX][startY] = [startX, startY];
 
@@ -1316,12 +1332,12 @@
           let elapsed = (endTime - startTime) / 1000;
           if (elapsed < bestTime) {
               bestTime = elapsed;
-              localStorage.setItem('kmaze_best', bestTime);
+              safeSetStorage('kmaze_best', bestTime);
           }
           totalEscapes++;
           totalScore += score;
-          localStorage.setItem('kmaze_escapes', totalEscapes);
-          localStorage.setItem('kmaze_score', totalScore);
+          safeSetStorage('kmaze_escapes', totalEscapes);
+          safeSetStorage('kmaze_score', totalScore);
           return;
       }
       
@@ -1352,18 +1368,23 @@
   
   let audioCtx;
   function playTone(freq, type, duration) {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      let osc = audioCtx.createOscillator();
-      let gain = audioCtx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + duration);
+      try {
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          let osc = audioCtx.createOscillator();
+          let gain = audioCtx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.onended = () => {
+              try { osc.disconnect(); gain.disconnect(); } catch (e) {}
+          };
+          osc.start();
+          osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
   }
   
   function saveCheckpointGame() {
@@ -1373,7 +1394,7 @@
           pX, pY, dX, dY, planeX, planeY, map, isCrouching,
           elapsed: Date.now() - startTime
       };
-      localStorage.setItem('kmaze_save', JSON.stringify(saveData));
+      safeSetStorage('kmaze_save', JSON.stringify(saveData));
       msgText = "Game Saved to Checkpoint!";
       msgTimer = 60;
       playTone(900, 'sine', 0.2);
@@ -1381,30 +1402,40 @@
   }
 
   function loadCheckpointGame() {
-      let sd = localStorage.getItem('kmaze_save');
+      let sd = safeGetStorage('kmaze_save', null);
       if (sd) {
-          let saveData = JSON.parse(sd);
-          currentLevel = saveData.currentLevel;
-          score = saveData.score;
-          keysHeld = saveData.keysHeld;
-          hasCompass = saveData.hasCompass;
-          speedBoost = saveData.speedBoost;
-          hasPickaxe = saveData.hasPickaxe;
-          pathfinderCharges = saveData.pathfinderCharges || 1;
-          speedShoesCharges = saveData.speedShoesCharges || 1;
-          stunSprayCharges = saveData.stunSprayCharges || 1;
-          timeFreezeCharges = saveData.timeFreezeCharges || 1;
-          pX = saveData.pX; pY = saveData.pY;
-          dX = saveData.dX; dY = saveData.dY;
-          planeX = saveData.planeX; planeY = saveData.planeY;
-          map = saveData.map;
-          isCrouching = !!saveData.isCrouching;
-          startTime = Date.now() - saveData.elapsed;
-          if (gameState === 0 || gameState === 2) gameState = 1;
-          msgText = "Checkpoint / Save Loaded!";
-          msgTimer = 60;
-          playTone(900, 'sine', 0.2);
-          showToast(`Resumed descent at Level ${currentLevel + 1}!`, "success");
+          try {
+              let saveData = JSON.parse(sd);
+              if (!saveData || !Array.isArray(saveData.map)) throw new Error("Invalid save data");
+              currentLevel = Number.isInteger(saveData.currentLevel) ? saveData.currentLevel : 0;
+              score = Number.isFinite(saveData.score) ? saveData.score : 0;
+              keysHeld = Number.isFinite(saveData.keysHeld) ? saveData.keysHeld : 0;
+              hasCompass = saveData.hasCompass ? 1 : 0;
+              speedBoost = saveData.speedBoost ? 1 : 0;
+              hasPickaxe = Number.isFinite(saveData.hasPickaxe) ? saveData.hasPickaxe : 1;
+              pathfinderCharges = Number.isFinite(saveData.pathfinderCharges) ? saveData.pathfinderCharges : 1;
+              speedShoesCharges = Number.isFinite(saveData.speedShoesCharges) ? saveData.speedShoesCharges : 1;
+              stunSprayCharges = Number.isFinite(saveData.stunSprayCharges) ? saveData.stunSprayCharges : 1;
+              timeFreezeCharges = Number.isFinite(saveData.timeFreezeCharges) ? saveData.timeFreezeCharges : 1;
+              pX = Number.isFinite(saveData.pX) ? saveData.pX : 1.5;
+              pY = Number.isFinite(saveData.pY) ? saveData.pY : 1.5;
+              dX = Number.isFinite(saveData.dX) ? saveData.dX : 1.0;
+              dY = Number.isFinite(saveData.dY) ? saveData.dY : 0.0;
+              planeX = Number.isFinite(saveData.planeX) ? saveData.planeX : 0.0;
+              planeY = Number.isFinite(saveData.planeY) ? saveData.planeY : 0.66;
+              map = saveData.map;
+              isCrouching = !!saveData.isCrouching;
+              startTime = Date.now() - (Number.isFinite(saveData.elapsed) ? saveData.elapsed : 0);
+              if (gameState === 0 || gameState === 2) gameState = 1;
+              msgText = "Checkpoint / Save Loaded!";
+              msgTimer = 60;
+              playTone(900, 'sine', 0.2);
+              showToast(`Resumed descent at Level ${currentLevel + 1}!`, "success");
+          } catch (err) {
+              msgText = "Corrupted checkpoint!";
+              msgTimer = 60;
+              showToast("Failed to load: Checkpoint data corrupted!", "danger");
+          }
       } else {
           msgText = "No saved checkpoint found!";
           msgTimer = 60;
@@ -1435,6 +1466,12 @@
       let ty = Math.floor(pY + dY * 0.8);
       let tVal = map[tx] && map[tx][ty];
       if (tVal === 1 || tVal === 7 || tVal === 20 || tVal === 21 || tVal === 22 || tVal === 27 || tVal === 39) {
+          if (tx <= 0 || ty <= 0 || tx >= map.length - 1 || ty >= map[0].length - 1) {
+              msgText = "Perimeter Bedrock is unbreakable!";
+              msgTimer = 40;
+              showToast("Perimeter bedrock cannot be broken!", "warning");
+              return;
+          }
           hasPickaxe--;
           map[tx][ty] = 0;
           playTone(400, 'square', 0.1);
@@ -1565,7 +1602,7 @@
               currentLevel = -1;
               score = 0;
               totalGames++;
-              localStorage.setItem('kmaze_games', totalGames);
+              safeSetStorage('kmaze_games', totalGames);
               replayLevels = [];
               nextLevel();
               showToast("Descent Begun! Press F1 or H for Guide", "info");
@@ -1613,14 +1650,17 @@
   canvas.addEventListener('mousedown', e => {
       if (gameState === 4) {
           let rect = canvas.getBoundingClientRect();
+          let cx = (e.clientX - rect.left) * (canvas.width / rect.width);
           let cy = (e.clientY - rect.top) * (canvas.height / rect.height);
-          let y = 40;
-          for (let k in keyBinds) {
-              if (cy >= y - 10 && cy <= y + 5) {
-                  waitingForKey = k;
-                  break;
+          if (cx >= 30 && cx <= 280) {
+              let y = 40;
+              for (let k in keyBinds) {
+                  if (cy >= y - 10 && cy <= y + 5) {
+                      waitingForKey = k;
+                      break;
+                  }
+                  y += 15;
               }
-              y += 15;
           }
       }
   });
@@ -1648,51 +1688,75 @@
           }
       }
 
-      // Update interactive HUD button states
+      // Update interactive HUD button states (cached to prevent layout thrashing)
       const btnPick = document.getElementById('btnPickaxe');
-      if (btnPick) btnPick.innerHTML = `<span class="badge">P</span> Break Wall (${hasPickaxe})`;
+      if (btnPick && btnPick._lastVal !== hasPickaxe) {
+          btnPick._lastVal = hasPickaxe;
+          btnPick.innerHTML = `<span class="badge">P</span> Break Wall (${hasPickaxe})`;
+      }
       const btnPath = document.getElementById('btnPathfinder');
       if (btnPath) {
-          if (pathfinderTimer > 0) {
-              btnPath.innerHTML = `<span class="badge">C</span> Path (${Math.ceil(pathfinderTimer/1000)}s)`;
-              btnPath.classList.add('active');
-          } else {
-              btnPath.innerHTML = `<span class="badge">C</span> Pathfinder (${pathfinderCharges})`;
-              btnPath.classList.remove('active');
+          let pSec = Math.ceil(pathfinderTimer / 1000);
+          let pKey = `${pathfinderTimer > 0 ? pSec : 0}_${pathfinderCharges}`;
+          if (btnPath._lastKey !== pKey) {
+              btnPath._lastKey = pKey;
+              if (pathfinderTimer > 0) {
+                  btnPath.innerHTML = `<span class="badge">C</span> Path (${pSec}s)`;
+                  btnPath.classList.add('active');
+              } else {
+                  btnPath.innerHTML = `<span class="badge">C</span> Pathfinder (${pathfinderCharges})`;
+                  btnPath.classList.remove('active');
+              }
           }
       }
       const btnSpd = document.getElementById('btnSpeed');
       if (btnSpd) {
-          if (speedShoesTimer > 0) {
-              btnSpd.innerHTML = `<span class="badge">S/B</span> Speed (${Math.ceil(speedShoesTimer/1000)}s)`;
-              btnSpd.classList.add('active');
-          } else {
-              btnSpd.innerHTML = `<span class="badge">S/B</span> Speed (${speedShoesCharges})`;
-              btnSpd.classList.remove('active');
+          let sSec = Math.ceil(speedShoesTimer / 1000);
+          let sKey = `${speedShoesTimer > 0 ? sSec : 0}_${speedShoesCharges}`;
+          if (btnSpd._lastKey !== sKey) {
+              btnSpd._lastKey = sKey;
+              if (speedShoesTimer > 0) {
+                  btnSpd.innerHTML = `<span class="badge">S/B</span> Speed (${sSec}s)`;
+                  btnSpd.classList.add('active');
+              } else {
+                  btnSpd.innerHTML = `<span class="badge">S/B</span> Speed (${speedShoesCharges})`;
+                  btnSpd.classList.remove('active');
+              }
           }
       }
       const btnStn = document.getElementById('btnStun');
       if (btnStn) {
-          if (stunSprayTimer > 0) {
-              btnStn.innerHTML = `<span class="badge">F</span> Stun (${Math.ceil(stunSprayTimer/1000)}s)`;
-              btnStn.classList.add('active');
-          } else {
-              btnStn.innerHTML = `<span class="badge">F</span> Stun (${stunSprayCharges})`;
-              btnStn.classList.remove('active');
+          let stSec = Math.ceil(stunSprayTimer / 1000);
+          let stKey = `${stunSprayTimer > 0 ? stSec : 0}_${stunSprayCharges}`;
+          if (btnStn._lastKey !== stKey) {
+              btnStn._lastKey = stKey;
+              if (stunSprayTimer > 0) {
+                  btnStn.innerHTML = `<span class="badge">F</span> Stun (${stSec}s)`;
+                  btnStn.classList.add('active');
+              } else {
+                  btnStn.innerHTML = `<span class="badge">F</span> Stun (${stunSprayCharges})`;
+                  btnStn.classList.remove('active');
+              }
           }
       }
       const btnFrz = document.getElementById('btnFreeze');
       if (btnFrz) {
-          if (timeFreezeTimer > 0) {
-              btnFrz.innerHTML = `<span class="badge">T</span> Freeze (${Math.ceil(timeFreezeTimer/1000)}s)`;
-              btnFrz.classList.add('active');
-          } else {
-              btnFrz.innerHTML = `<span class="badge">T</span> Freeze (${timeFreezeCharges})`;
-              btnFrz.classList.remove('active');
+          let fSec = Math.ceil(timeFreezeTimer / 1000);
+          let fKey = `${timeFreezeTimer > 0 ? fSec : 0}_${timeFreezeCharges}`;
+          if (btnFrz._lastKey !== fKey) {
+              btnFrz._lastKey = fKey;
+              if (timeFreezeTimer > 0) {
+                  btnFrz.innerHTML = `<span class="badge">T</span> Freeze (${fSec}s)`;
+                  btnFrz.classList.add('active');
+              } else {
+                  btnFrz.innerHTML = `<span class="badge">T</span> Freeze (${timeFreezeCharges})`;
+                  btnFrz.classList.remove('active');
+              }
           }
       }
       const btnCrch = document.getElementById('btnCrouch');
-      if (btnCrch) {
+      if (btnCrch && btnCrch._lastCrouch !== isCrouching) {
+          btnCrch._lastCrouch = isCrouching;
           if (isCrouching) {
               btnCrch.innerHTML = `<span class="badge">X</span> Crouch [ON]`;
               btnCrch.classList.add('active');
@@ -2007,6 +2071,7 @@
           addParticles(W/2, H/2, '#800080', 30);
           msgText = "Cursed Relic: +500 Score, Lost Speed/Nav!"; msgTimer = 60;
       } else if (curVal === 28) { // Save Shrine
+          map[Math.floor(pX)][Math.floor(pY)] = 0;
           saveCheckpointGame();
           hasPickaxe++;
           pathfinderCharges++;
@@ -2019,6 +2084,7 @@
           msgText = "Ancient Save Shrine Activated! Checkpoint Saved!";
           msgTimer = 90;
       } else if (curVal === 29) { // Torch Sconce
+          map[Math.floor(pX)][Math.floor(pY)] = 0;
           torchTimer = 15000;
           score += 50;
           playTone(700, 'sine', 0.2);
