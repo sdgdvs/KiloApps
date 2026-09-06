@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KColor
+**Target App:** KConnect4
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KColor
 - KConnect4
 - KContacts
 - KConverter
@@ -173,8 +172,18 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KClock
 - KColony
 - KColosseum
+- KColor
 
 ## Test Reports
+
+- **KColor**: ISSUES FOUND ⚠️ (6 issues, 6 fixed inline)
+  - ✅ Core functionality works (interactive color picker suite with precision RGB/HSL/HSV/CMYK range sliders, Universal CSS/HEX/RGB/HSL/CMYK parser with live input, 7-format color conversions table with clipboard copy HEX/RGB/HSL/HSV/CMYK/CSS-VAR/Win32-C, 9-step dynamic Tints & Shades scale, 8 color harmonies generator Complementary/Analogous/Triadic/Tetradic, WCAG 2.1 AA/AAA contrast ratios against white & dark text, palette library with localStorage persistence).
+  - 🔧 FIXED: Universal color parser canvas fallback set `fillStyle = '#000000'` before attempting to parse input, causing any invalid color string or mid-typing incomplete hex code (e.g. `#12345` or non-color text) to silently evaluate to `#000000` and turn the active color pitch black. Implemented dual-sentinel validation (`#010203` and `#040506`) to accurately reject invalid strings without corrupting color state.
+  - 🔧 FIXED: Hex regex `^#?([0-9a-fA-F]{3,8})$` matched 5-digit and 7-digit hex codes which are invalid CSS syntax, falling through to canvas fallback and resetting color to black. Fixed regex to strictly validate 3, 4, 6, and 8 hex digits.
+  - 🔧 FIXED: Universal color input lacked an HSV format parser (`hsv(...)`) despite HSV being a core app mode and exported in the formats table, and `hslMatch` rejected degree symbols `°`, causing the app's own preview HSL string (`hsl(210°, 50%, 59%)`) to fail parsing. Added HSV regex parser and degree symbol / CSS unit tolerance.
+  - 🔧 FIXED: Global keyboard shortcuts checked bare `e.key` without verifying `!e.ctrlKey && !e.metaKey && !e.altKey`, which hijacked essential browser shortcuts: `Ctrl+C` (copy selection blocked), `Ctrl+R` (page reload blocked, unexpectedly randomizing color), and `Ctrl+1`–`Ctrl+9` (browser tab switching blocked, picking palette swatches). Added modifier key checks to protect browser accelerators.
+  - 🔧 FIXED: Eyedropper button showed a dead-end toast "Eyedropper not supported in this browser" on Firefox, Safari, and sandboxed iframes. Added fallback triggering a native `<input type="color">` picker so screen/system color sampling works across all browsers.
+  - 🔧 FIXED: Large active color preview box (`#mainPreview`) lacked pointer cursor and click handler to copy HEX, saved swatches could not be deleted individually without wiping the whole library via "Clear Saved", and the app lacked a Help guide. Added click-to-copy on `#mainPreview`, right-click removal on saved swatches, and implemented a Help & Keyboard Shortcuts modal (`helpModal`, bound to `H` / `?`).
 
 - **KColosseum**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
   - ✅ Core functionality works (Roman gladiatorial ludus management simulator with recruit market, dynamic attribute training STR/AGI/VIT, weapons Gladius/Trident and armor Lorica/Scutum equipment, 5 league tiers Local Pits to Champion of Rome, canvas arena combat engine with dynamic lunge animations and CRT shake, 4 tactical actions Attack/Defend/Showboat/Flee, special boss encounters Ferocious Lion / Armed Chariot / Twin Gladiators, dynamic crowd favor system with Denarii coin drops & medical sponge healing, audio synthesizers).

@@ -388,15 +388,48 @@
     <button class="action-btn" id="randomBtn" title="Generate Random Color (Hotkey: R)" aria-label="Generate Random Color">
       🎲 Random
     </button>
-    <button class="action-btn" id="invertBtn" title="Invert Active Color" aria-label="Invert Active Color">
+    <button class="action-btn" id="invertBtn" title="Invert Active Color (Hotkey: I)" aria-label="Invert Active Color">
       🌓 Invert
     </button>
     <button class="action-btn" id="eyedropperBtn" title="Sample Screen Color" aria-label="Sample Screen Color">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m2 22 1-1h3l9-9M19 8l-5-5-2 2 5 5 2-2Z"/></svg>
       Eyedropper
     </button>
+    <button class="action-btn" id="helpBtn" title="Help & Keyboard Shortcuts (Hotkey: H / ?)" aria-label="Help and Shortcuts">
+      ❓ Help
+    </button>
   </div>
 </header>
+
+<!-- Help & Shortcuts Modal -->
+<div id="helpModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); z-index:999; justify-content:center; align-items:center; padding:16px;">
+  <div class="card" style="max-width:480px; width:100%; max-height:90vh; overflow-y:auto; gap:12px;">
+    <div class="card-title">
+      <span>KColor Help & Shortcuts</span>
+      <button class="copy-btn" id="closeHelpBtn" aria-label="Close Help">✕</button>
+    </div>
+    <div style="font-size:0.85rem; line-height:1.5; color:var(--text-muted); display:flex; flex-direction:column; gap:8px;">
+      <p><strong style="color:var(--text-main);">Features:</strong></p>
+      <ul style="padding-left:18px;">
+        <li>Precision RGB, HSL, HSV, and CMYK interactive sliders</li>
+        <li>Universal input accepting HEX, RGB, HSL, HSV, CMYK, CSS Vars, and named colors</li>
+        <li>Real-time WCAG 2.1 AA/AAA contrast ratios against white & dark text</li>
+        <li>Harmonies generator (Complementary, Analogous, Triadic, Tetradic)</li>
+        <li>9-step dynamic Tints & Shades scale</li>
+        <li>Palette library with localStorage persistence and right-click removal</li>
+      </ul>
+      <p><strong style="color:var(--text-main);">Keyboard Shortcuts:</strong></p>
+      <ul style="padding-left:18px;">
+        <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">R</kbd> — Generate random color</li>
+        <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">I</kbd> — Invert active color</li>
+        <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">C</kbd> — Copy active HEX code</li>
+        <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">1</kbd>–<kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">9</kbd> — Quick-select palette swatches 1–9</li>
+        <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">H</kbd> or <kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">?</kbd> — Open this Help guide</li>
+        <li><kbd style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:3px;">Esc</kbd> — Close modal / blur inputs</li>
+      </ul>
+    </div>
+  </div>
+</div>
 
 <div class="grid-layout">
   <!-- Left Panel: Preview & Sliders -->
@@ -682,10 +715,10 @@
   const parseCanvasCtx = document.createElement('canvas').getContext('2d');
   function parseColorString(str) {
     if (!str) return null;
-    str = str.trim();
+    str = str.replace(/^--[\w-]+\s*:\s*/, '').replace(/;+$/, '').trim();
 
     // 1. Check HEX formats (#RGB, #RGBA, #RRGGBB, #RRGGBBAA)
-    const hexMatch = str.match(/^#?([0-9a-fA-F]{3,8})$/);
+    const hexMatch = str.match(/^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/);
     if (hexMatch) {
       const hex = hexMatch[1];
       if (hex.length === 3 || hex.length === 4) {
@@ -714,25 +747,43 @@
     }
 
     // 3. Check hsl / hsla
-    const hslMatch = str.match(/^hsla?\s*\(\s*(\d+)\s*,\s*(\d+)%?\s*,\s*(\d+)%?/i);
+    const hslMatch = str.match(/^hsla?\s*\(\s*(\d+)(?:deg|°)?\s*,\s*(\d+)%?\s*,\s*(\d+)%?/i);
     if (hslMatch) {
       return hslToRgb(parseInt(hslMatch[1]), parseInt(hslMatch[2]), parseInt(hslMatch[3]));
     }
 
-    // 4. Check cmyk
+    // 4. Check hsv / hsva
+    const hsvMatch = str.match(/^hsva?\s*\(\s*(\d+)(?:deg|°)?\s*,\s*(\d+)%?\s*,\s*(\d+)%?/i);
+    if (hsvMatch) {
+      return hsvToRgb(parseInt(hsvMatch[1]), parseInt(hsvMatch[2]), parseInt(hsvMatch[3]));
+    }
+
+    // 5. Check cmyk
     const cmykMatch = str.match(/^cmyk\s*\(\s*(\d+)%?\s*,\s*(\d+)%?\s*,\s*(\d+)%?\s*,\s*(\d+)%?\s*\)/i);
     if (cmykMatch) {
       return cmykToRgb(parseInt(cmykMatch[1]), parseInt(cmykMatch[2]), parseInt(cmykMatch[3]), parseInt(cmykMatch[4]));
     }
 
-    // 5. Canvas fallback for CSS named colors (e.g. coral, dodgerblue, tomato)
+    // 6. Canvas fallback for CSS named colors (e.g. coral, dodgerblue, tomato)
     try {
-      parseCanvasCtx.fillStyle = '#000000';
+      parseCanvasCtx.fillStyle = '#010203';
       parseCanvasCtx.fillStyle = str;
-      const computed = parseCanvasCtx.fillStyle;
-      if (computed && computed.startsWith('#')) {
-        const num = parseInt(computed.slice(1), 16);
-        return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+      const c1 = parseCanvasCtx.fillStyle;
+
+      parseCanvasCtx.fillStyle = '#040506';
+      parseCanvasCtx.fillStyle = str;
+      const c2 = parseCanvasCtx.fillStyle;
+
+      if (c1 === c2) {
+        if (c1.startsWith('#')) {
+          const num = parseInt(c1.slice(1), 16);
+          return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+        } else if (c1.startsWith('rgba') || c1.startsWith('rgb')) {
+          const match = c1.match(/\d+/g);
+          if (match && match.length >= 3) {
+            return { r: parseInt(match[0]), g: parseInt(match[1]), b: parseInt(match[2]) };
+          }
+        }
       }
     } catch (e) {}
 
@@ -1048,12 +1099,24 @@
       swatch.className = 'swatch-item';
       swatch.style.backgroundColor = hex;
       swatch.tabIndex = 0;
-      swatch.role = 'button';
-      swatch.title = `Swatch ${hex}`;
+      const isSaved = savedSwatches.includes(hex);
+      swatch.title = isSaved ? `Swatch ${hex} (Click to select, Right-click to remove)` : `Preset ${hex}`;
       swatch.setAttribute('aria-label', `Palette Swatch ${hex}`);
       swatch.onclick = () => {
         const rgb = parseColorString(hex);
         if (rgb) { state = rgb; updateAll(); }
+      };
+      swatch.oncontextmenu = (e) => {
+        if (isSaved) {
+          e.preventDefault();
+          const idx = savedSwatches.indexOf(hex);
+          if (idx !== -1) {
+            savedSwatches.splice(idx, 1);
+            safeSetStorage('kcolor_saved_swatches', savedSwatches);
+            renderSwatches();
+            showToast(`Removed ${hex} from library`);
+          }
+        }
       };
       swatch.onkeydown = (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -1204,7 +1267,7 @@
     });
   });
 
-  // Eyedropper API
+  // Eyedropper API with Native Fallback
   document.getElementById('eyedropperBtn').addEventListener('click', async () => {
     if ('EyeDropper' in window) {
       try {
@@ -1220,7 +1283,25 @@
         // User canceled eyedropper
       }
     } else {
-      showToast("Eyedropper not supported in this browser");
+      // Color picker fallback for browsers lacking EyeDropper API
+      const picker = document.createElement('input');
+      picker.type = 'color';
+      picker.value = rgbToHex(state.r, state.g, state.b);
+      picker.style.position = 'fixed';
+      picker.style.opacity = '0';
+      picker.style.pointerEvents = 'none';
+      document.body.appendChild(picker);
+      picker.addEventListener('input', (e) => {
+        const rgb = parseColorString(e.target.value);
+        if (rgb) {
+          state = rgb;
+          updateAll();
+        }
+      });
+      picker.addEventListener('change', () => {
+        try { document.body.removeChild(picker); } catch (err) {}
+      });
+      picker.click();
     }
   });
 
@@ -1228,10 +1309,31 @@
   document.getElementById('randomBtn').addEventListener('click', randomizeColor);
   document.getElementById('invertBtn').addEventListener('click', invertColor);
 
-  // Copy Active Hex
+  // Copy Active Hex (Buttons & Preview Box)
   document.getElementById('copyHexBtn').addEventListener('click', () => {
     const hex = rgbToHex(state.r, state.g, state.b);
     copyStringToClipboard(hex);
+  });
+
+  mainPreview.style.cursor = 'pointer';
+  mainPreview.title = 'Click to copy HEX code';
+  mainPreview.addEventListener('click', () => {
+    const hex = rgbToHex(state.r, state.g, state.b);
+    copyStringToClipboard(hex);
+  });
+
+  // Help Modal Toggle
+  const helpModal = document.getElementById('helpModal');
+  const helpBtn = document.getElementById('helpBtn');
+  const closeHelpBtn = document.getElementById('closeHelpBtn');
+  function toggleHelp(show) {
+    if (show === undefined) show = helpModal.style.display === 'none';
+    helpModal.style.display = show ? 'flex' : 'none';
+  }
+  helpBtn.addEventListener('click', () => toggleHelp(true));
+  closeHelpBtn.addEventListener('click', () => toggleHelp(false));
+  helpModal.addEventListener('click', (e) => {
+    if (e.target === helpModal) toggleHelp(false);
   });
 
   // Add Swatch
@@ -1299,10 +1401,23 @@
 
   // Global Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-      if (e.key === 'Escape') {
-        e.target.blur();
+    if (e.key === 'Escape') {
+      if (helpModal && helpModal.style.display !== 'none') {
+        toggleHelp(false);
+        return;
       }
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        e.target.blur();
+        return;
+      }
+    }
+
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+      return;
+    }
+
+    // Never intercept browser accelerator shortcuts (Ctrl+C, Ctrl+R, Ctrl+1..9, etc.)
+    if (e.ctrlKey || e.metaKey || e.altKey) {
       return;
     }
 
@@ -1316,6 +1431,9 @@
       e.preventDefault();
       const hex = rgbToHex(state.r, state.g, state.b);
       copyStringToClipboard(hex);
+    } else if (e.key === 'h' || e.key === 'H' || e.key === '?') {
+      e.preventDefault();
+      toggleHelp();
     } else if (e.key >= '1' && e.key <= '9') {
       const idx = parseInt(e.key) - 1;
       const all = [...new Set([...savedSwatches, ...presets])];
