@@ -121,6 +121,7 @@
         <div>Planet: <span id="lbl-planet" style="color:#fff; font-weight:bold;">MARS PRIME</span></div>
         <div>Weather: <span id="lbl-weather" style="color:#ffaa00; font-weight:bold;">CLEAR</span></div>
         <div>Anomaly: <span id="lbl-anomaly" style="color:#ff00ff; font-weight:bold;">NONE</span></div>
+        <div><button class="btn" onclick="returnToMenu()" style="padding:2px 8px; font-size:10px; margin:-2px 0;">[Menu / Scenarios]</button></div>
     </div>
 
     <div id="header">
@@ -282,6 +283,11 @@
             h.style.display = h.style.display === 'none' ? 'block' : 'none';
         }
 
+        function returnToMenu() {
+            gameState = 0;
+            document.getElementById('start-screen').style.display = 'flex';
+        }
+
         document.getElementById('help-modal').addEventListener('click', (e) => {
             if (e.target.id === 'help-modal') toggleHelp();
         });
@@ -304,6 +310,7 @@
                 }
                 return;
             }
+            if (helpModal && helpModal.style.display !== 'none') return;
             if (gameState === 0) {
                 if (e.key >= '1' && e.key <= '7') {
                     startGame(parseInt(e.key) - 1);
@@ -315,25 +322,58 @@
             if (gameState === 1) {
                 if (e.key === '0' || key === 'i') selectType(0);
                 else if (e.key === '-' || key === 'r') selectType(-1);
-                else if (e.key === '1') selectType(1);
-                else if (e.key === '2') selectType(2);
-                else if (e.key === '3') selectType(3);
+                else if (e.key === '1' || key === 's') selectType(1);
+                else if (e.key === '2' || key === 'f') selectType(2);
+                else if (e.key === '3' || key === 'm') selectType(3);
                 else if (e.key === '4') selectType(4);
-                else if (e.key === '5') selectType(5);
-                else if (e.key === '6') selectType(6);
-                else if (e.key === '7' && unlockedNuke) selectType(7);
-                else if (e.key === '8' && unlockedHydro) selectType(8);
-                else if (e.key === '9' && unlockedLaser) selectType(9);
+                else if (e.key === '5' || key === 'b') selectType(5);
+                else if (e.key === '6' || key === 'l') selectType(6);
+                else if (e.key === '7' || key === 'n') {
+                    if (unlockedNuke) selectType(7);
+                    else showToast("Locked Structure", "Nuclear Reactor requires research before construction.", "warning", 2000);
+                }
+                else if (e.key === '8' || key === 'y') {
+                    if (unlockedHydro) selectType(8);
+                    else showToast("Locked Structure", "Hydroponics requires research before construction.", "warning", 2000);
+                }
+                else if (e.key === '9' || key === 'd') {
+                    if (unlockedLaser) selectType(9);
+                    else showToast("Locked Structure", "Laser Defense requires research before construction.", "warning", 2000);
+                }
                 else if (key === 'w') selectType(10);
                 else if (key === 't') selectType(11);
-                else if (key === 'c' && unlockedFactory) selectType(12);
-                else if (key === 'g' && unlockedGeo) selectType(13);
-                else if (key === 'v' && unlockedBio) selectType(14);
-                else if (key === 'e' && unlockedShield) selectType(15);
-                else if (key === 'u' && unlockedDrone) selectType(16);
-                else if (key === 'p' && unlockedTrade) selectType(17);
-                else if (key === 'k' && unlockedCavern) selectType(18);
-                else if (key === 'o' && unlockedOrbital) selectType(19);
+                else if (key === 'c') {
+                    if (unlockedFactory) selectType(12);
+                    else showToast("Locked Structure", "Factory requires research before construction.", "warning", 2000);
+                }
+                else if (key === 'g') {
+                    if (unlockedGeo) selectType(13);
+                    else showToast("Locked Structure", "Geothermal Generator requires research before construction.", "warning", 2000);
+                }
+                else if (key === 'v') {
+                    if (unlockedBio) selectType(14);
+                    else showToast("Locked Structure", "Bio-Dome requires research before construction.", "warning", 2000);
+                }
+                else if (key === 'e') {
+                    if (unlockedShield) selectType(15);
+                    else showToast("Locked Structure", "Shield Pylon requires research before construction.", "warning", 2000);
+                }
+                else if (key === 'u') {
+                    if (unlockedDrone) selectType(16);
+                    else showToast("Locked Structure", "Drone Hub requires research before construction.", "warning", 2000);
+                }
+                else if (key === 'p') {
+                    if (unlockedTrade) selectType(17);
+                    else showToast("Locked Structure", "Trade Port requires research before construction.", "warning", 2000);
+                }
+                else if (key === 'k') {
+                    if (unlockedCavern) selectType(18);
+                    else showToast("Locked Structure", "Cavern Drill requires research before construction.", "warning", 2000);
+                }
+                else if (key === 'o') {
+                    if (unlockedOrbital) selectType(19);
+                    else showToast("Locked Structure", "Orbital Beacon requires research before construction.", "warning", 2000);
+                }
                 else if (e.key === ' ') {
                     e.preventDefault();
                     orbitalStrike();
@@ -455,66 +495,90 @@
             }
         }
 
+        const researchData = {
+            1: { cost: 50, name: "Hydroponics" },
+            4: { cost: 75, name: "Advanced Alloy Factory" },
+            2: { cost: 100, name: "Nuclear Reactor" },
+            5: { cost: 120, name: "Solar Grid IV" },
+            3: { cost: 150, name: "Laser Defense Matrix" },
+            6: { cost: 180, name: "Xeno-Armor" },
+            7: { cost: 200, name: "Geothermal Generator" },
+            8: { cost: 250, name: "Bio-Dome Terraformer" },
+            9: { cost: 300, name: "Shield Pylon" },
+            11: { cost: 350, name: "Trade Port" },
+            10: { cost: 400, name: "Drone Hub" },
+            12: { cost: 450, name: "Cavern Excavator" },
+            13: { cost: 500, name: "Orbital Uplink" }
+        };
+
         function research(r) {
-            if (r === 1 && sci >= 50 && !unlockedHydro) {
+            const data = researchData[r];
+            if (!data) return;
+            if (sci < data.cost) {
+                showToast("Research Pending", `Requires ${data.cost} Science.\nCurrent: ${sci} Science (need ${data.cost - sci} more).`, "warning", 2500);
+                playTone(180, 'sawtooth', 0.15, 0.08);
+                return;
+            }
+
+            if (r === 1 && !unlockedHydro) {
                 sci -= 50; unlockedHydro = true; playUnlock();
                 document.getElementById('btn-res-hydro').style.display = 'none';
                 document.getElementById('btn-hydro').style.display = 'block';
                 showToast("Tech Breakthrough", "Hydroponics Unlocked!\nHigh-yield indoor cultivation online.", "success");
-            } else if (r === 4 && sci >= 75 && !unlockedFactory) {
+            } else if (r === 4 && !unlockedFactory) {
                 sci -= 75; unlockedFactory = true; playUnlock();
                 document.getElementById('btn-res-factory').style.display = 'none';
                 document.getElementById('btn-factory').style.display = 'block';
                 showToast("Tech Breakthrough", "Advanced Alloy Factory Unlocked!\nConverts basic Mat into high-tech AdvM.", "success");
-            } else if (r === 2 && sci >= 100 && !unlockedNuke) {
+            } else if (r === 2 && !unlockedNuke) {
                 sci -= 100; unlockedNuke = true; playUnlock();
                 document.getElementById('btn-res-nuke').style.display = 'none';
                 document.getElementById('btn-nuke').style.display = 'block';
                 showToast("Tech Breakthrough", "Nuclear Reactor Unlocked!\nProvides 20 continuous energy output.", "success");
-            } else if (r === 5 && sci >= 120 && !unlockedSolar4) {
+            } else if (r === 5 && !unlockedSolar4) {
                 sci -= 120; unlockedSolar4 = true; playUnlock();
                 document.getElementById('btn-res-solar4').style.display = 'none';
                 showToast("Tech Breakthrough", "Solar Grid IV!\nSolar panels now generate +50% power output.", "success");
-            } else if (r === 3 && sci >= 150 && !unlockedLaser) {
+            } else if (r === 3 && !unlockedLaser) {
                 sci -= 150; unlockedLaser = true; playUnlock();
                 document.getElementById('btn-res-laser').style.display = 'none';
                 document.getElementById('btn-laser').style.display = 'block';
                 showToast("Tech Breakthrough", "Laser Defense Matrix Unlocked!\nLong-range anti-alien beam projector.", "success");
-            } else if (r === 6 && sci >= 180 && !unlockedXenoArmor) {
+            } else if (r === 6 && !unlockedXenoArmor) {
                 sci -= 180; unlockedXenoArmor = true; playUnlock();
                 document.getElementById('btn-res-xeno').style.display = 'none';
                 showToast("Tech Breakthrough", "Xeno-Armor!\nWalls deal 2 counter-damage to attackers and turrets/lasers deal +1 damage.", "success");
-            } else if (r === 7 && sci >= 200 && !unlockedGeo) {
+            } else if (r === 7 && !unlockedGeo) {
                 sci -= 200; unlockedGeo = true; playUnlock();
                 document.getElementById('btn-res-geo').style.display = 'none';
                 document.getElementById('btn-geo').style.display = 'block';
                 showToast("Tech Breakthrough", "Geothermal Generator Unlocked!\nContinuous high-power output immune to surface weather.", "success");
-            } else if (r === 8 && sci >= 250 && !unlockedBio) {
+            } else if (r === 8 && !unlockedBio) {
                 sci -= 250; unlockedBio = true; playUnlock();
                 document.getElementById('btn-res-bio').style.display = 'none';
                 document.getElementById('btn-bio').style.display = 'block';
                 showToast("Tech Breakthrough", "Bio-Dome Terraformer Unlocked!\nBoosts Food, Population capacity, and Colonist Happiness.", "success");
-            } else if (r === 9 && sci >= 300 && !unlockedShield) {
+            } else if (r === 9 && !unlockedShield) {
                 sci -= 300; unlockedShield = true; playUnlock();
                 document.getElementById('btn-res-shield').style.display = 'none';
                 document.getElementById('btn-shield').style.display = 'block';
                 showToast("Tech Breakthrough", "Shield Pylon Unlocked!\n3x3 Energy Barrier protecting structures from disasters & aliens.", "success");
-            } else if (r === 11 && sci >= 350 && !unlockedTrade) {
+            } else if (r === 11 && !unlockedTrade) {
                 sci -= 350; unlockedTrade = true; playUnlock();
                 document.getElementById('btn-res-trade').style.display = 'none';
                 document.getElementById('btn-trade').style.display = 'block';
                 showToast("Tech Breakthrough", "Trade Port!\nInterstellar freighters will now dock and commercial tariffs generate steady revenue.", "success");
-            } else if (r === 10 && sci >= 400 && !unlockedDrone) {
+            } else if (r === 10 && !unlockedDrone) {
                 sci -= 400; unlockedDrone = true; playUnlock();
                 document.getElementById('btn-res-drone').style.display = 'none';
                 document.getElementById('btn-drone').style.display = 'block';
                 showToast("Tech Breakthrough", "Drone Hub Unlocked!\nAutomated nanite drones repair broken structures automatically.", "success");
-            } else if (r === 12 && sci >= 450 && !unlockedCavern) {
+            } else if (r === 12 && !unlockedCavern) {
                 sci -= 450; unlockedCavern = true; playUnlock();
                 document.getElementById('btn-res-cavern').style.display = 'none';
                 document.getElementById('btn-cavern').style.display = 'block';
                 showToast("Tech Breakthrough", "Cavern Excavator!\nCavern Drills tap deep magma power and pristine geodes immune to surface disasters.", "success");
-            } else if (r === 13 && sci >= 500 && !unlockedOrbital) {
+            } else if (r === 13 && !unlockedOrbital) {
                 sci -= 500; unlockedOrbital = true; playUnlock();
                 document.getElementById('btn-res-orbital').style.display = 'none';
                 document.getElementById('btn-orbital').style.display = 'block';
@@ -533,7 +597,12 @@
                         showToast("Scout Recon Report", "Discovered surface mineral veins!\n(+50 Mat, +50 Food)", "success");
                     } else if (r < 0.8) {
                         sci += 60;
-                        showToast("Scout Recon Report", "Mapped planetary anomaly sites!\n(+60 Science)", "discovery");
+                        if (Math.random() < 0.4) {
+                            activeAnomaly = 2;
+                            showToast("Anomaly Discovered!", "Encountered friendly Nanite Swarm mutator!\n(+20% colony productivity across all sectors)", "discovery");
+                        } else {
+                            showToast("Scout Recon Report", "Mapped planetary anomaly sites!\n(+60 Science)", "discovery");
+                        }
                     } else {
                         showToast("Scout Recon Report", "Returned safely with environmental scans.", "info");
                     }
@@ -644,10 +713,64 @@
             updateUI();
         }
 
+        const structNames = {
+            1: "Solar Panel", 2: "Farm", 3: "Mine", 4: "Habitat", 5: "Battery",
+            6: "Laboratory", 7: "Nuclear Reactor", 8: "Hydroponics", 9: "Laser Defense",
+            10: "Wall Fortification", 11: "Defense Turret", 12: "Factory", 13: "Geothermal Generator",
+            14: "Bio-Dome", 15: "Shield Pylon", 16: "Drone Hub", 17: "Trade Port",
+            18: "Cavern Drill", 19: "Orbital Beacon"
+        };
+        const structDescs = {
+            1: "Generates +4 Power in daylight (+6 with Solar IV).",
+            2: "Produces +5 Food per tick. (Consumes 5 Power)",
+            3: "Extracts +3 Mat per tick. (Consumes 10 Power)",
+            4: "Provides +5 Max Population. (Consumes 5 Power)",
+            5: "Stores +50 Max Power for nighttime and disasters.",
+            6: "Conducts research: +2 Science per tick. (Consumes 5 Power)",
+            7: "Generates +20 continuous Power 24/7.",
+            8: "High-yield indoor hydroponics: +15 Food per tick. (Consumes 10 Power)",
+            9: "Long-range defense laser: Range 5. (Consumes 20 Power)",
+            10: "Defensive wall barrier. Absorbs alien assaults and reflects damage.",
+            11: "Automated defense turret: Range 3. (Consumes 5 Power)",
+            12: "Refines 2 Mat into 1 AdvM alloy per tick. (Consumes 10 Power)",
+            13: "Deep geothermal tap: +35 continuous Power. Immune to storms.",
+            14: "Terraformer: +25 Food, +8 Pop cap, +2 Happiness. (Consumes 20 Power)",
+            15: "Projects a 3x3 energy barrier shielding from disasters and aliens.",
+            16: "Nanite drone hub: Automatically repairs damaged buildings. (Consumes 25 Power)",
+            17: "Commercial hub: +10 Happiness, +3 Mat, +1 AdvM. Freighters dock periodically.",
+            18: "Deep magma tap: +40 Power, +5 Mat, +2 AdvM 24/7. Immune to disasters.",
+            19: "Planetary defense umbrella: Intercepts meteors and enables Orbital Strikes [Space]."
+        };
+
         function build(x, y) {
             if (gameState !== 1) return;
-            if (currentType === 0) return;
             const idx = y * GRID_W + x;
+
+            if (currentType === 0) {
+                const a = aliens.find(al => al.x === x && al.y === y);
+                if (a) {
+                    showToast("Hostile Scanned", `Alien lifeform detected! Sector (${x}, ${y})\nHealth: ${a.hp} HP`, "danger", 3000);
+                    playTone(300, 'sawtooth', 0.1, 0.08);
+                    return;
+                }
+                const t = grid[idx];
+                if (t === 0) {
+                    showToast("Sector Scan", `Empty terrain at sector (${x}, ${y}).\nReady for structure construction.`, "info", 2500);
+                    playTone(600, 'sine', 0.08, 0.05);
+                } else if (t > 20) {
+                    const orig = t - 20;
+                    const name = structNames[orig] || "Structure";
+                    showToast("Damage Assessment", `DAMAGED ${name} at sector (${x}, ${y})!\nRequires 5 Mat to repair. Select Repair [-/R] to fix.`, "warning", 3500);
+                    playTone(200, 'sawtooth', 0.15, 0.08);
+                } else {
+                    const name = structNames[t] || "Structure";
+                    const desc = structDescs[t] || "Operational colony structure.";
+                    const shielded = isShielded(x, y) ? " [SHIELDED]" : "";
+                    showToast(`Inspect: ${name}`, `${desc}${shielded}\nSector: (${x}, ${y}) | Status: Operational`, "info", 3500);
+                    playTone(700, 'sine', 0.08, 0.05);
+                }
+                return;
+            }
 
             if (currentType === -1) {
                 if (grid[idx] > 20) {
@@ -657,12 +780,28 @@
                         playBuild();
                         updateUI();
                         renderAll();
+                        showToast("Repairs Complete", "Structure restored to operational status!", "success", 2000);
+                    } else {
+                        showToast("Insufficient Materials", "Need 5 Mat to repair structure.", "warning", 2500);
+                        playTone(150, 'sawtooth', 0.15, 0.08);
                     }
+                } else if (grid[idx] > 0) {
+                    showToast("Structure Operational", "This structure is fully operational and does not require repairs.", "info", 2000);
+                } else {
+                    showToast("Empty Sector", "No damaged structure to repair at this location.", "info", 2000);
                 }
                 return;
             }
 
-            if (grid[idx] !== 0) return;
+            if (grid[idx] !== 0) {
+                if (grid[idx] > 20) {
+                    showToast("Structure Damaged", "Tile contains a damaged structure. Select Repair [-/R] to restore.", "warning", 2500);
+                } else {
+                    showToast("Tile Occupied", "A structure is already built on this sector.", "info", 2000);
+                }
+                playTone(180, 'sawtooth', 0.12, 0.08);
+                return;
+            }
 
             let costMat = 0, costPwr = 0, costAdv = 0;
             if (currentType === 1) { costMat = 10; }
@@ -693,11 +832,23 @@
                 playBuild();
                 updateUI();
                 renderAll();
+            } else {
+                let missing = [];
+                if (mat < costMat) missing.push(`${costMat - mat} Mat`);
+                if (power < costPwr) missing.push(`${costPwr - power} Pwr`);
+                if (advm < costAdv) missing.push(`${costAdv - advm} AdvM`);
+                showToast("Insufficient Resources", `Need ${missing.join(', ')} to construct!`, "warning", 2500);
+                playTone(150, 'sawtooth', 0.15, 0.08);
             }
         }
 
         function updateUI() {
-            document.getElementById('lbl-planet').innerText = planetNames[planetType];
+            let pName = planetNames[planetType];
+            if (gameMode === 4) pName += " [SANDBOX]";
+            else if (gameMode === 5) pName += ` [SURVIVAL DAY ${day}/100]`;
+            else if (gameMode === 6) pName += ` [RUSH: ${mat}/1000M ${advm}/100A (DAY ${day}/50)]`;
+            document.getElementById('lbl-planet').innerText = pName;
+
             let wName = (weatherType === 1 || dustStormTicks > 0) ? "DUST STORM" : weatherNames[weatherType];
             document.getElementById('lbl-weather').innerText = wName;
             document.getElementById('lbl-anomaly').innerText = anomalyNames[activeAnomaly];
@@ -712,6 +863,10 @@
             document.getElementById('res-maxpop').innerText = maxPop;
             document.getElementById('res-happy').innerText = happiness;
             document.getElementById('res-sci').innerText = sci;
+
+            document.getElementById('res-power').style.color = (power <= 0) ? '#ff3333' : '#00ffff';
+            document.getElementById('res-food').style.color = (food <= 0) ? '#ff3333' : '#00ffff';
+            document.getElementById('res-happy').style.color = (happiness < 50) ? '#ffaa00' : '#00ffff';
         }
 
         const SVGS = {
@@ -749,7 +904,13 @@
             if (power < 15 && t > 0 && t <= 20) cell.classList.add('flicker');
             else cell.classList.remove('flicker');
 
-            if (t > 20) { cell.style.backgroundImage = `url("${SVGS.X}")`; cell.style.backgroundColor = '#330000'; cell.style.borderColor = '#ff0000'; }
+            if (t > 20) {
+                cell.style.backgroundImage = `url("${SVGS.X}")`;
+                cell.style.backgroundColor = '#330000';
+                cell.style.borderColor = '#ff0000';
+                const orig = t - 20;
+                cell.title = `DAMAGED ${structNames[orig] || 'Structure'} (Requires Repair [-/R])`;
+            }
             else if (t === 1) { cell.style.backgroundImage = `url("${SVGS.S}")`; cell.style.backgroundColor = '#102040'; cell.style.borderColor = '#00ffff'; }
             else if (t === 2) { cell.style.backgroundImage = `url("${SVGS.F}")`; cell.style.backgroundColor = '#00260e'; cell.style.borderColor = '#00ff66'; }
             else if (t === 3) { cell.style.backgroundImage = `url("${SVGS.M}")`; cell.style.backgroundColor = '#330033'; cell.style.borderColor = '#ff00ff'; }
@@ -769,7 +930,11 @@
             else if (t === 17) { cell.style.backgroundImage = `url("${SVGS.P}")`; cell.style.backgroundColor = '#152535'; cell.style.borderColor = '#ffaa00'; }
             else if (t === 18) { cell.style.backgroundImage = `url("${SVGS.K}")`; cell.style.backgroundColor = '#352010'; cell.style.borderColor = '#ee6622'; }
             else if (t === 19) { cell.style.backgroundImage = `url("${SVGS.O}")`; cell.style.backgroundColor = '#102040'; cell.style.borderColor = '#00ccff'; }
-            else { cell.style.backgroundColor = 'transparent'; cell.style.borderColor = 'rgba(0,51,51,0.5)'; }
+            else { cell.style.backgroundColor = 'transparent'; cell.style.borderColor = 'rgba(0,51,51,0.5)'; cell.title = `Sector (${x}, ${y}) - Empty`; }
+
+            if (t > 0 && t <= 20) {
+                cell.title = `${structNames[t] || 'Structure'}${isShielded(x, y) ? ' [Shielded]' : ''}`;
+            }
 
             if (isShielded(x, y) && t > 0) {
                 cell.style.boxShadow = 'inset 0 0 8px rgba(0,200,255,0.7)';
@@ -784,7 +949,10 @@
             }
             for(let a of aliens) {
                 const cell = document.getElementById(`cell-${a.x}-${a.y}`);
-                if (cell) cell.style.backgroundImage = `url("${SVGS.A}")`;
+                if (cell) {
+                    cell.style.backgroundImage = `url("${SVGS.A}")`;
+                    cell.title = `Alien Hostile (HP: ${a.hp})`;
+                }
             }
         }
 
@@ -1535,12 +1703,16 @@
                 updateUI();
                 
                 if (gameMode === 5 && day >= 100) {
+                    spawnCelebrationStars(10, 10, '#ffd700', 35);
+                    playUnlock();
                     showToast("Scenario Complete", "100 Days Survived on the Alien Frontier! You Win!", "success", 8000);
                     gameState = 0;
                     document.getElementById('start-screen').style.display = 'flex';
                 }
                 if (gameMode === 6) {
                     if (mat >= 1000 && advm >= 100) {
+                        spawnCelebrationStars(10, 10, '#00ffff', 35);
+                        playUnlock();
                         showToast("Resource Rush Complete", "Quota fulfilled on Day " + day + "! Colony Secured!", "success", 8000);
                         gameState = 0;
                         document.getElementById('start-screen').style.display = 'flex';
@@ -1549,6 +1721,11 @@
                         gameState = 0;
                         document.getElementById('start-screen').style.display = 'flex';
                     }
+                }
+                if (day > 3 && pop === 0 && maxPop === 0 && mat < 10 && grid.filter(g => g > 0 && g <= 20).length === 0) {
+                    showToast("Colony Lost", "All structures destroyed and population lost! Mission Failed.", "danger", 8000);
+                    gameState = 0;
+                    document.getElementById('start-screen').style.display = 'flex';
                 }
             }, 2000);
         }

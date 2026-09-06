@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KColony
+**Target App:** KColosseum
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KColony
 - KColosseum
 - KColor
 - KConnect4
@@ -173,8 +172,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KChat
 - KChess
 - KClock
+- KColony
 
 ## Test Reports
+
+- **KColony**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
+  - ✅ Core gameplay works (planetary colony builder with 7 biomes/scenarios Mars/Cryo/Volcanic/Acid/Sandbox/100-Day Survival/Resource Rush, 19 interactive structure types, 13 tech research projects, dynamic alien assaults with laser/turret defense, 5 planetary expeditions and deep cavern diving, orbital defense umbrella with tactical kinetic orbital strikes [Space], procedural weather/disaster events, Web Audio synthesizers, cybernetic CRT particle and shockwave engine).
+  - 🔧 FIXED: "Inspect" mode (`[0/Esc] Inspect`) was a dead stub that returned silently on cell click (`if (currentType === 0) return;`), rendering sector inspection completely non-functional. Implemented interactive scanner inspecting tile coordinates, structure operational status, power/resource output, shielded status, damage assessment, and alien lifeform scan.
+  - 🔧 FIXED: Clicking any of the 13 Tech Tree research buttons with insufficient Science failed silently with no user feedback or prompt. Added dynamic cost evaluation and informative toast feedback stating required vs current Science.
+  - 🔧 FIXED: Keyboard shortcut guide promised hotkeys for Core Structures (Solar `S`, Farm `F`, Mine `M`, Battery `B`, Lab `L`, Nuclear `N`, Hydroponics `Y`, Laser `D`), but none of these letter keys were wired in `keydown`, and hotkeys were not suppressed when the Administrator's Manual was open. Wired all letter shortcut aliases, suppressed background actions while reading Help, and added guidance toasts when attempting to select locked structures.
+  - 🔧 FIXED: Constructing structures or executing repairs failed silently when lacking required Mat, Power, or AdvM, and clicking occupied tiles gave no indication. Added detailed resource shortage warnings, occupied sector alerts, and repair status feedback.
+  - 🔧 FIXED: Nanite Swarm anomaly (`activeAnomaly = 2`) providing +20% colony productivity was implemented in the game loop but was completely unreachable across all expeditions and events. Added Nanite Swarm anomaly discovery chance to Scout Recon.
+  - 🔧 FIXED: Challenge scenarios (100-Day Survival and Resource Rush) did not display objective progress or deadlines in the topbar, and players had no button or shortcut to return to the scenario select menu once a game started. Added real-time objective/quota tracking to `lbl-planet`, added `[Menu / Scenarios]` topbar button, added victory celebration particle bursts, and added a colony wipeout defeat check.
+  - 🔧 FIXED: Grid cells lacked hover tooltips, making it impossible to identify which structure was damaged under the red hazard marker or what was built on each sector. Added dynamic `cell.title` tooltips displaying structure name, shielded state, and alien hostiles.
 
 - **KClock**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
   - ✅ Core functionality works (8-tab multi-tool suite with local precision clock, multi-city world clock grid with live day offsets and delta badges, timezone offset difference calculator, Unix Epoch timestamp ticker with ISO week / DOY / Julian Day and bidirectional timestamp converter, stopwatch with fastest/slowest lap detection, countdown timer with quick presets and custom minutes, repeating weekly alarms manager with snooze and chime synthesizers, JSON configuration export/import, keyboard shortcuts).
