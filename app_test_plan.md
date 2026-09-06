@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KClock
+**Target App:** KColony
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KClock
 - KColony
 - KColosseum
 - KColor
@@ -173,8 +172,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KChart
 - KChat
 - KChess
+- KClock
 
 ## Test Reports
+
+- **KClock**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
+  - ✅ Core functionality works (8-tab multi-tool suite with local precision clock, multi-city world clock grid with live day offsets and delta badges, timezone offset difference calculator, Unix Epoch timestamp ticker with ISO week / DOY / Julian Day and bidirectional timestamp converter, stopwatch with fastest/slowest lap detection, countdown timer with quick presets and custom minutes, repeating weekly alarms manager with snooze and chime synthesizers, JSON configuration export/import, keyboard shortcuts).
+  - 🔧 FIXED: Content area HTML contained a stray comment delimiter (`<!-- Content Area -->-->`) which rendered literal `-->` text in the browser page body. Removed stray delimiter.
+  - 🔧 FIXED: Header toggle buttons (`sound-toggle-btn` and `format-toggle-btn`) wiped out their child keyboard shortcut badge elements (`<span class="badge-key">`) on click via `.innerText` assignments and lacked toast feedback; updated handlers to preserve shortcut badges with `.innerHTML` and display state toasts.
+  - 🔧 FIXED: World Clock day difference calculation on month boundaries compared raw day numbers (`localDay` vs `targetDay`), displaying `+1 Day` instead of `-1 Day` when the target city was on the 31st of the previous month while local was on the 1st. Refactored to calculate calendar day diffs using midnight date offsets. Also added empty state and toast notifications when adding or removing cities.
+  - 🔧 FIXED: Timezone Calculator dropdowns (`#calc-src-city` and `#calc-tgt-city`) only offered 9 cities, omitting Singapore, Honolulu, São Paulo, Cairo, and Auckland available in World Clock. Synchronized all 14 timezones across calculator dropdowns, added a quick "Now" button, and converted target time calculations to UTC wall-clock time so calculations remain immune to local client DST shifts.
+  - 🔧 FIXED: Countdown timer minutes input (`#timer-mins`) lacked an `oninput` handler, leaving the big countdown display desynchronized until Start or Reset was clicked. Added `onTimerMinsChange()` live input handler.
+  - 🔧 FIXED: Stopwatch button remained labeled "Start" instead of "Resume" when paused with elapsed time, and clicking "Lap" while stopped was completely silent. Updated button label to "Resume" when paused and added informative feedback for lap recording.
+  - 🔧 FIXED: Snoozed alarms were saved to `localStorage` as standard weekly repeating alarms with `days: [snoozedDay]`, causing snoozed alarms to ring weekly forever. Added `isOneTime: true` flag and automatic deactivation upon ringing. Also added sandboxed iframe clipboard fallback for live epoch copying, appended download anchor to DOM before `.click()` in JSON export, added empty state for alarms, and optimized `updateEpochTicker` to skip background execution when not on the Epoch tab.
 
 - **KChess**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
   - ✅ Core gameplay works (standard 8x8 chessboard with 3D ornate lighting and procedural wood grain, Campaign Mode with 20 historical/tactical stages, Free Play, 6 tactical endgame Puzzles, 3-minute Blitz clock, 4-tier AI engine with alpha-beta pruning Minimax, real-time ECO Opening Book classifier, move history undo/redo stack, Quick Save (F5) / Load (F9) state persistence, FEN and PGN import/export).

@@ -752,7 +752,7 @@
     </div>
   </div>
 
-  <!-- Content Area -->-->
+  <!-- Content Area -->
   <div class="content-area">
 
     <!-- Tab 1: Clock -->
@@ -802,7 +802,12 @@
               <option value="Australia/Sydney">Sydney (AEST)</option>
               <option value="Asia/Kolkata">New Delhi (IST)</option>
               <option value="Asia/Dubai">Dubai (GST)</option>
+              <option value="Asia/Singapore">Singapore (SGT)</option>
+              <option value="Pacific/Honolulu">Honolulu (HST)</option>
               <option value="America/Los_Angeles">Los Angeles (PST)</option>
+              <option value="America/Sao_Paulo">São Paulo (BRT)</option>
+              <option value="Africa/Cairo">Cairo (EEST)</option>
+              <option value="Pacific/Auckland">Auckland (NZST)</option>
               <option value="UTC">UTC</option>
             </select>
           </div>
@@ -819,15 +824,23 @@
               <option value="Australia/Sydney">Sydney (AEST)</option>
               <option value="Asia/Kolkata">New Delhi (IST)</option>
               <option value="Asia/Dubai">Dubai (GST)</option>
+              <option value="Asia/Singapore">Singapore (SGT)</option>
+              <option value="Pacific/Honolulu">Honolulu (HST)</option>
               <option value="America/Los_Angeles">Los Angeles (PST)</option>
+              <option value="America/Sao_Paulo">São Paulo (BRT)</option>
+              <option value="Africa/Cairo">Cairo (EEST)</option>
+              <option value="Pacific/Auckland">Auckland (NZST)</option>
               <option value="UTC">UTC</option>
             </select>
           </div>
         </div>
 
         <div class="calc-box">
-          <span class="calc-label">Source Date & Time</span>
-          <input type="datetime-local" id="calc-datetime" onchange="calculateTzDiff()">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="calc-label">Source Date & Time</span>
+            <button class="btn" onclick="setCalcToNow()" style="padding: 2px 8px; font-size: 11px;">Now</button>
+          </div>
+          <input type="datetime-local" id="calc-datetime" oninput="calculateTzDiff()" onchange="calculateTzDiff()">
         </div>
 
         <div class="calc-result">
@@ -933,7 +946,7 @@
       </div>
     </div>
 
-    <!-- Tab 5: Timer -->
+    <!-- Tab 6: Timer -->
     <div id="tab-timer" class="tab-panel center-panel" role="tabpanel" aria-labelledby="tab-btn-timer">
       <div class="digital-clock" id="timer-display">05:00</div>
       
@@ -948,7 +961,7 @@
 
       <div style="margin-top: 16px; display: flex; align-items: center; gap: 8px;">
         <label for="timer-mins" style="font-size: 13px; color: var(--text-muted);">Custom Mins:</label>
-        <input type="number" id="timer-mins" value="5" min="1" max="999" style="width: 75px; text-align: center;">
+        <input type="number" id="timer-mins" value="5" min="1" max="999" style="width: 75px; text-align: center;" oninput="onTimerMinsChange()">
       </div>
 
       <div class="btn-row">
@@ -957,7 +970,7 @@
       </div>
     </div>
 
-    <!-- Tab 6: Alarms -->
+    <!-- Tab 7: Alarms -->
     <div id="tab-alarms" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-alarms">
       <div class="calc-card" style="max-width: 540px; padding: 20px;">
         <div style="font-weight: 700; font-size: 16px; color: #ffffff;">Add Repeating Alarm</div>
@@ -991,7 +1004,7 @@
       <div class="alarm-list" id="alarm-list"></div>
     </div>
 
-    <!-- Tab 7: Settings & Backup -->
+    <!-- Tab 8: Settings & Backup -->
     <div id="tab-settings" class="tab-panel center-panel" role="tabpanel" aria-labelledby="tab-btn-settings">
       <div class="settings-card">
         <div style="font-weight: 700; font-size: 18px; color: #ffffff;">Settings & Data Management</div>
@@ -1186,18 +1199,21 @@
     function toggleSound() {
       soundEnabled = !soundEnabled;
       const btn = document.getElementById('sound-toggle-btn');
-      btn.innerText = soundEnabled ? '🔊 Sound On' : '🔇 Muted';
+      btn.innerHTML = soundEnabled ? '🔊 Sound <span class="badge-key">M</span>' : '🔇 Muted <span class="badge-key">M</span>';
       document.getElementById('settings-sound-btn').innerText = soundEnabled ? 'Enabled' : 'Muted';
       saveState();
+      showToast(soundEnabled ? 'Audio Chimes Enabled' : 'Audio Muted', 'info');
     }
 
     function toggleFormat() {
       use24Hour = !use24Hour;
-      document.getElementById('format-toggle-btn').innerText = use24Hour ? '12H' : '24H';
+      document.getElementById('format-toggle-btn').innerHTML = use24Hour ? '12H <span class="badge-key">F</span>' : '24H <span class="badge-key">F</span>';
       document.getElementById('settings-format-btn').innerText = use24Hour ? '24-Hour' : '12-Hour';
       updateClock();
       updateWorldClock();
+      if (currentTab === 'tzcalc') calculateTzDiff();
       saveState();
+      showToast(`Time format set to ${use24Hour ? '24-Hour' : '12-Hour'}`, 'info');
     }
 
     // Navigation Tabs
@@ -1218,6 +1234,8 @@
           panel.classList.remove('active');
         }
       });
+      if (tabId === 'world') updateWorldClock();
+      if (tabId === 'alarms') renderAlarms();
       if (tabId === 'tzcalc') initTzCalcDefaults();
       if (tabId === 'epoch') initEpochDefaults();
     }
@@ -1262,17 +1280,27 @@
     // --- Tab 2: World Clock ---
     function addWorldCity() {
       const sel = document.getElementById('city-select').value;
-      if (!worldCities.includes(sel)) {
-        worldCities.push(sel);
-        updateWorldClock();
-        saveState();
+      if (worldCities.includes(sel)) {
+        showToast('City is already added to your world clock list.', 'warn');
+        return;
       }
+      if (worldCities.length >= 24) {
+        showToast('Maximum 24 world clock cities reached.', 'warn');
+        return;
+      }
+      worldCities.push(sel);
+      updateWorldClock();
+      saveState();
+      const rawCityName = sel.split('/')[1] ? sel.split('/')[1].replace(/_/g, ' ') : sel;
+      showToast(`Added ${rawCityName} to World Clock`, 'success');
     }
 
     function removeWorldCity(tz) {
       worldCities = worldCities.filter(c => c !== tz);
       updateWorldClock();
       saveState();
+      const rawCityName = tz.split('/')[1] ? tz.split('/')[1].replace(/_/g, ' ') : tz;
+      showToast(`Removed ${rawCityName}`, 'info');
     }
 
     function getTimezoneOffsetMinutes(tzName, date = new Date()) {
@@ -1285,33 +1313,69 @@
       }
     }
 
+    function getDayDiffLabel(tzName, refDate) {
+      try {
+        const locParts = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'numeric', day: 'numeric' }).formatToParts(refDate);
+        const tzParts = new Intl.DateTimeFormat('en-US', { timeZone: tzName, year: 'numeric', month: 'numeric', day: 'numeric' }).formatToParts(refDate);
+        const locDate = new Date(locParts.find(p => p.type === 'year').value, locParts.find(p => p.type === 'month').value - 1, locParts.find(p => p.type === 'day').value);
+        const tgtDate = new Date(tzParts.find(p => p.type === 'year').value, tzParts.find(p => p.type === 'month').value - 1, tzParts.find(p => p.type === 'day').value);
+        const diff = Math.round((tgtDate - locDate) / 86400000);
+        if (diff > 0) return `+${diff} Day${diff > 1 ? 's' : ''}`;
+        if (diff < 0) return `${diff} Day${diff < -1 ? 's' : ''}`;
+        return 'Today';
+      } catch (e) {
+        return 'Today';
+      }
+    }
+
     function updateWorldClock() {
       const grid = document.getElementById('world-grid');
-      grid.innerHTML = '';
       const now = new Date();
       const localOffset = -now.getTimezoneOffset();
 
+      if (worldCities.length === 0) {
+        grid.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 32px; grid-column: 1 / -1; font-size: 14px;">No cities added yet. Select a timezone above and click "+ Add City".</div>';
+        return;
+      }
+
+      // Check if existing cards match current worldCities order to update in-place without destroying DOM nodes
+      const existingCards = grid.querySelectorAll('.city-card');
+      const canUpdateInPlace = existingCards.length === worldCities.length &&
+        Array.from(existingCards).every((c, i) => c.dataset.tz === worldCities[i]);
+
+      if (canUpdateInPlace) {
+        worldCities.forEach((tz, i) => {
+          const card = existingCards[i];
+          try {
+            const timeStr = now.toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: !use24Hour });
+            const dateStr = now.toLocaleDateString('en-US', { timeZone: tz, weekday: 'short', month: 'short', day: 'numeric' });
+            const dayDiffLabel = getDayDiffLabel(tz, now);
+            const cityOffset = getTimezoneOffsetMinutes(tz, now);
+            const diffMinutes = cityOffset - localOffset;
+            const diffHours = (diffMinutes / 60).toFixed(1).replace('.0', '');
+            const diffSign = diffMinutes >= 0 ? '+' : '';
+            const offsetBadgeStr = `${diffSign}${diffHours}h vs Local`;
+
+            const dayDiffEl = card.querySelector('.city-daydiff');
+            const timeEl = card.querySelector('.city-time');
+            const dateEl = card.querySelector('.city-date');
+            const badgeEl = card.querySelector('.city-offset-badge');
+
+            if (dayDiffEl) dayDiffEl.innerText = dayDiffLabel;
+            if (timeEl) timeEl.innerText = timeStr;
+            if (dateEl) dateEl.innerText = `${dateStr} (${tz})`;
+            if (badgeEl) badgeEl.innerText = offsetBadgeStr;
+          } catch (e) {}
+        });
+        return;
+      }
+
+      grid.innerHTML = '';
       worldCities.forEach(tz => {
         try {
           const timeStr = now.toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: !use24Hour });
           const dateStr = now.toLocaleDateString('en-US', { timeZone: tz, weekday: 'short', month: 'short', day: 'numeric' });
-          
-          const localDay = now.getDate();
-          const targetDayStr = now.toLocaleDateString('en-US', { timeZone: tz, day: 'numeric' });
-          const targetDay = parseInt(targetDayStr, 10);
-          
-          let dayDiffLabel = 'Today';
-          if (targetDay !== localDay) {
-            const localHour = now.getHours();
-            const targetHourStr = now.toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', hour12: false });
-            const targetHour = parseInt(targetHourStr, 10);
-            if (targetHour > localHour || (targetDay > localDay && !(localDay > 25 && targetDay === 1))) {
-              dayDiffLabel = '+1 Day';
-            } else {
-              dayDiffLabel = '-1 Day';
-            }
-          }
-
+          const dayDiffLabel = getDayDiffLabel(tz, now);
           const cityOffset = getTimezoneOffsetMinutes(tz, now);
           const diffMinutes = cityOffset - localOffset;
           const diffHours = (diffMinutes / 60).toFixed(1).replace('.0', '');
@@ -1320,6 +1384,7 @@
 
           const card = document.createElement('div');
           card.className = 'city-card';
+          card.dataset.tz = tz;
           const rawCityName = tz.split('/')[1] ? tz.split('/')[1].replace(/_/g, ' ') : tz;
           const safeCityName = escapeHtml(rawCityName);
           const safeTz = escapeHtml(tz);
@@ -1355,6 +1420,14 @@
       calculateTzDiff();
     }
 
+    function setCalcToNow() {
+      const now = new Date();
+      const isoStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      document.getElementById('calc-datetime').value = isoStr;
+      calculateTzDiff();
+      showToast('Source date & time set to now', 'info');
+    }
+
     function swapCalcCities() {
       const src = document.getElementById('calc-src-city');
       const tgt = document.getElementById('calc-tgt-city');
@@ -1362,6 +1435,7 @@
       src.value = tgt.value;
       tgt.value = tmp;
       calculateTzDiff();
+      showToast('Swapped source and target cities', 'info');
     }
 
     function calculateTzDiff() {
@@ -1371,9 +1445,9 @@
 
       if (!dtVal) return;
 
-      const baseDate = new Date(dtVal);
-      const srcOffset = getTimezoneOffsetMinutes(srcTz, baseDate);
-      const tgtOffset = getTimezoneOffsetMinutes(tgtTz, baseDate);
+      const refDate = new Date(dtVal + 'Z');
+      const srcOffset = getTimezoneOffsetMinutes(srcTz, refDate);
+      const tgtOffset = getTimezoneOffsetMinutes(tgtTz, refDate);
 
       const diffMins = tgtOffset - srcOffset;
       const diffHours = diffMins / 60;
@@ -1382,10 +1456,11 @@
       document.getElementById('calc-diff-text').innerText = `${signStr}${diffHours.toFixed(1).replace('.0', '')} Hours`;
 
       try {
-        const targetDate = new Date(baseDate.getTime() + diffMins * 60000);
-        const options = { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: !use24Hour };
-        const formattedTgt = targetDate.toLocaleDateString('en-US', options);
-        document.getElementById('calc-target-result').innerHTML = `Target City Time: <strong>${escapeHtml(formattedTgt)}</strong>`;
+        const targetUtc = new Date(refDate.getTime() + diffMins * 60000);
+        const options = { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: !use24Hour };
+        const formattedTgt = targetUtc.toLocaleDateString('en-US', options);
+        const rawTgtName = tgtTz.split('/')[1] ? tgtTz.split('/')[1].replace(/_/g, ' ') : tgtTz;
+        document.getElementById('calc-target-result').innerHTML = `Target City Time (${escapeHtml(rawTgtName)}): <strong>${escapeHtml(formattedTgt)}</strong>`;
       } catch (e) {
         document.getElementById('calc-target-result').innerText = 'Calculation Error';
       }
@@ -1416,6 +1491,7 @@
     }
 
     function updateEpochTicker() {
+      if (currentTab !== 'epoch') return;
       const now = new Date();
       const nowMs = now.getTime();
       const nowSec = Math.floor(nowMs / 1000);
@@ -1487,20 +1563,41 @@
     function copyLiveEpoch(mode) {
       const now = Date.now();
       const text = mode === 'sec' ? Math.floor(now / 1000).toString() : now.toString();
-      navigator.clipboard.writeText(text).then(() => {
-        const btn = document.getElementById(mode === 'sec' ? 'copy-sec-btn' : 'copy-ms-btn');
+      const btn = document.getElementById(mode === 'sec' ? 'copy-sec-btn' : 'copy-ms-btn');
+
+      function onSuccess() {
         if (btn) {
           const orig = btn.innerText;
           btn.innerText = '✅ Copied!';
           setTimeout(() => { btn.innerText = orig; }, 1200);
         }
         showToast(`Timestamp (${mode === 'sec' ? 'seconds' : 'milliseconds'}) copied to clipboard!`, 'success');
-      }).catch(() => {
+      }
+
+      function fallbackCopy() {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          const ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          if (ok) { onSuccess(); return; }
+        } catch (e) {}
         showToast('Failed to copy to clipboard', 'warn');
-      });
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(onSuccess).catch(fallbackCopy);
+      } else {
+        fallbackCopy();
+      }
     }
 
     function initEpochDefaults() {
+      updateEpochTicker();
       const input = document.getElementById('conv-epoch-input');
       if (input && !input.value) {
         input.value = Math.floor(Date.now() / 1000);
@@ -1617,7 +1714,7 @@
         swElapsed += Date.now() - swStart;
         cancelAnimationFrame(swRaf);
         swRunning = false;
-        document.getElementById('sw-btn').innerText = 'Start';
+        document.getElementById('sw-btn').innerText = 'Resume';
         document.getElementById('sw-btn').classList.add('primary');
         showToast('Stopwatch paused', 'info');
       } else {
@@ -1644,6 +1741,8 @@
 
         renderLaps();
         showToast(`Lap ${swLaps.length} recorded: +${formatSw(splitTime)}`, 'info');
+      } else {
+        showToast('Start stopwatch to record a lap', 'warn');
       }
     }
 
@@ -1723,12 +1822,26 @@
       return `${mins}:${secs}`;
     }
 
+    function onTimerMinsChange() {
+      if (!tmRunning) {
+        let mins = parseInt(document.getElementById('timer-mins').value, 10);
+        if (isNaN(mins) || mins < 1) mins = 1;
+        if (mins > 999) mins = 999;
+        tmDuration = mins * 60000;
+        tmRemaining = tmDuration;
+        document.getElementById('timer-display').innerText = formatTm(tmDuration);
+      }
+    }
+
     function setTimerPreset(mins) {
       document.getElementById('timer-mins').value = mins;
-      resetTimer();
+      tmRunning = false;
+      clearInterval(tmInterval);
       tmDuration = mins * 60000;
       tmRemaining = tmDuration;
       document.getElementById('timer-display').innerText = formatTm(tmDuration);
+      document.getElementById('tm-btn').innerText = 'Start';
+      document.getElementById('tm-btn').classList.add('primary');
       showToast(`Timer set to ${mins} min`, 'info');
     }
 
@@ -1875,6 +1988,11 @@
       const list = document.getElementById('alarm-list');
       list.innerHTML = '';
 
+      if (alarms.length === 0) {
+        list.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 24px; font-size: 13px; border: 1px dashed var(--border-color); border-radius: 12px;">No alarms set. Configure time and days above to add an alarm.</div>';
+        return;
+      }
+
       alarms.sort((a, b) => a.time.localeCompare(b.time)).forEach((a, i) => {
         const card = document.createElement('div');
         card.className = `alarm-card ${a.active ? '' : 'disabled'}`;
@@ -1915,6 +2033,11 @@
         if (a.active && Array.isArray(a.days) && a.days.includes(currentDay) && a.time === hhmm && !a.triggered) {
           a.triggered = true;
           activeAlarmIndex = index;
+          if (a.isOneTime) {
+            a.active = false;
+            saveState();
+            renderAlarms();
+          }
           playChime([523.25, 659.25, 783.99], 0.35);
           showModal(`⏰ ${a.label || 'Alarm'}`, `Alarm ringing for ${a.time}`, true);
         }
@@ -1937,7 +2060,8 @@
           label: `${alarms[activeAlarmIndex].label || 'Alarm'} (Snoozed ${mins}m)`,
           days: [snoozedDay],
           active: true,
-          triggered: false
+          triggered: false,
+          isOneTime: true
         });
         renderAlarms();
         saveState();
@@ -1965,7 +2089,9 @@
       const a = document.createElement("a");
       a.href = url;
       a.download = `kclock_config_${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
       showToast('Configuration exported as JSON', 'success');
     }
@@ -1978,15 +2104,16 @@
       reader.onload = function(e) {
         try {
           const imported = JSON.parse(e.target.result);
-          if (imported.settings) {
-            if (typeof imported.settings.use24Hour === 'boolean') {
-              use24Hour = imported.settings.use24Hour;
+          const st = imported.settings || imported;
+          if (st) {
+            if (typeof st.use24Hour === 'boolean') {
+              use24Hour = st.use24Hour;
               document.getElementById('format-toggle-btn').innerHTML = use24Hour ? '12H <span class="badge-key">F</span>' : '24H <span class="badge-key">F</span>';
               document.getElementById('settings-format-btn').innerText = use24Hour ? '24-Hour' : '12-Hour';
               updateClock();
             }
-            if (typeof imported.settings.soundEnabled === 'boolean') {
-              soundEnabled = imported.settings.soundEnabled;
+            if (typeof st.soundEnabled === 'boolean') {
+              soundEnabled = st.soundEnabled;
               document.getElementById('sound-toggle-btn').innerHTML = soundEnabled ? '🔊 Sound <span class="badge-key">M</span>' : '🔇 Muted <span class="badge-key">M</span>';
               document.getElementById('settings-sound-btn').innerText = soundEnabled ? 'Enabled' : 'Muted';
             }
