@@ -753,23 +753,23 @@
             <div class="modal-body">
                 <div class="modal-field">
                     <label for="pollQuestionInput">Poll Question:</label>
-                    <input type="text" id="pollQuestionInput" placeholder="e.g. Which feature should we build next?">
+                    <input type="text" id="pollQuestionInput" placeholder="e.g. Which feature should we build next?" onkeydown="if(event.key==='Enter') document.getElementById('pollOpt1Input').focus()">
                 </div>
                 <div class="modal-field">
                     <label for="pollOpt1Input">Option 1:</label>
-                    <input type="text" id="pollOpt1Input" placeholder="e.g. Dark Cyber Theme">
+                    <input type="text" id="pollOpt1Input" placeholder="e.g. Dark Cyber Theme" onkeydown="if(event.key==='Enter') document.getElementById('pollOpt2Input').focus()">
                 </div>
                 <div class="modal-field">
                     <label for="pollOpt2Input">Option 2:</label>
-                    <input type="text" id="pollOpt2Input" placeholder="e.g. Rich Audio Visualizer">
+                    <input type="text" id="pollOpt2Input" placeholder="e.g. Rich Audio Visualizer" onkeydown="if(event.key==='Enter') window.submitNewPoll()">
                 </div>
                 <div class="modal-field">
                     <label for="pollOpt3Input">Option 3 (Optional):</label>
-                    <input type="text" id="pollOpt3Input" placeholder="e.g. Cloud Sync Tools">
+                    <input type="text" id="pollOpt3Input" placeholder="e.g. Cloud Sync Tools" onkeydown="if(event.key==='Enter') window.submitNewPoll()">
                 </div>
                 <div class="modal-field">
                     <label for="pollOpt4Input">Option 4 (Optional):</label>
-                    <input type="text" id="pollOpt4Input" placeholder="e.g. Game Integrations">
+                    <input type="text" id="pollOpt4Input" placeholder="e.g. Game Integrations" onkeydown="if(event.key==='Enter') window.submitNewPoll()">
                 </div>
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--border); padding-top: 10px;">
@@ -789,11 +789,11 @@
             <div class="modal-body">
                 <div class="modal-field">
                     <label for="roomNameInput">Channel Name:</label>
-                    <input type="text" id="roomNameInput" placeholder="e.g. #gaming, #science, #lobby">
+                    <input type="text" id="roomNameInput" placeholder="e.g. #gaming, #science, #lobby" onkeydown="if(event.key==='Enter') document.getElementById('roomTopicInput').focus()">
                 </div>
                 <div class="modal-field">
                     <label for="roomTopicInput">Channel Topic (Optional):</label>
-                    <input type="text" id="roomTopicInput" placeholder="e.g. Discuss gaming, tactics, and high scores">
+                    <input type="text" id="roomTopicInput" placeholder="e.g. Discuss gaming, tactics, and high scores" onkeydown="if(event.key==='Enter') window.submitNewRoom()">
                 </div>
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--border); padding-top: 10px;">
@@ -813,7 +813,7 @@
             <div class="modal-body">
                 <div class="modal-field">
                     <label id="topicModalLabel" for="channelTopicEditInput">Topic for #general:</label>
-                    <input type="text" id="channelTopicEditInput" placeholder="Enter channel topic...">
+                    <input type="text" id="channelTopicEditInput" placeholder="Enter channel topic..." onkeydown="if(event.key==='Enter') window.submitNewTopic()">
                 </div>
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--border); padding-top: 10px;">
@@ -1073,6 +1073,35 @@
         window.closeRoomModal = function() {
             if (roomModalEl) roomModalEl.classList.remove('active');
         };
+        window.renderChannelBar = function() {
+            const channelBar = document.getElementById('channelBar');
+            if (!channelBar) return;
+            channelBar.innerHTML = '';
+            rooms.forEach((r, idx) => {
+                const pill = document.createElement('div');
+                pill.className = `channel-pill ${r === currentRoom ? 'active' : ''}`;
+                pill.dataset.room = r;
+                pill.onclick = () => window.switchRoom(r);
+                if (idx < 9) {
+                    const badge = document.createElement('span');
+                    badge.className = 'key-badge';
+                    badge.textContent = idx + 1;
+                    pill.appendChild(badge);
+                    pill.appendChild(document.createTextNode(' ' + r));
+                } else {
+                    pill.textContent = r;
+                }
+                channelBar.appendChild(pill);
+            });
+            const addBtn = document.createElement('button');
+            addBtn.className = 'btn-secondary';
+            addBtn.style.cssText = 'padding: 2px 8px; font-size: 11px;';
+            addBtn.onclick = () => window.openRoomModal();
+            addBtn.title = 'Create/Join a channel';
+            addBtn.textContent = '+ Room';
+            channelBar.appendChild(addBtn);
+        };
+
         window.submitNewRoom = function() {
             const rawName = document.getElementById('roomNameInput').value.trim();
             const topic = document.getElementById('roomTopicInput').value.trim();
@@ -1084,15 +1113,12 @@
             if (!rooms.includes(formatted)) {
                 rooms.push(formatted);
                 roomTopics[formatted] = topic || ("Channel for " + formatted);
-                const channelBar = document.getElementById('channelBar');
-                const newPill = document.createElement('div');
-                newPill.className = 'channel-pill';
-                newPill.textContent = formatted;
-                newPill.onclick = () => window.switchRoom(formatted);
-                channelBar.insertBefore(newPill, channelBar.lastElementChild);
                 showToast(`Created channel ${formatted}`);
+            } else if (topic) {
+                roomTopics[formatted] = topic;
             }
             safeSaveState();
+            window.renderChannelBar();
             window.closeRoomModal();
             window.switchRoom(formatted);
         };
@@ -1356,6 +1382,7 @@
             };
             messages.push(pollMsg);
             if (messages.length > 300) messages.shift();
+            safeSaveState();
             window.renderMessages();
             showToast("Created new interactive poll!");
         };
@@ -1384,7 +1411,7 @@
         window.switchRoom = function(roomName) {
             currentRoom = roomName;
             document.querySelectorAll('.channel-pill').forEach(pill => {
-                if (pill.textContent.includes(roomName)) pill.classList.add('active');
+                if (pill.dataset.room === roomName || pill.textContent.trim().endsWith(roomName)) pill.classList.add('active');
                 else pill.classList.remove('active');
             });
             safeSaveState();
@@ -1521,10 +1548,10 @@
                 e.preventDefault();
                 if (searchInput) searchInput.focus();
             } else if (!isTyping && !e.ctrlKey && !e.altKey) {
-                if (e.key === '1') { window.switchRoom('#general'); }
-                else if (e.key === '2') { window.switchRoom('#dev'); }
-                else if (e.key === '3') { window.switchRoom('#random'); }
-                else if (e.key === '4') { window.switchRoom('#ai-lounge'); }
+                const num = parseInt(e.key, 10);
+                if (!isNaN(num) && num >= 1 && num <= rooms.length) {
+                    window.switchRoom(rooms[num - 1]);
+                }
             }
         });
 
@@ -1595,6 +1622,8 @@
                             if (parsed.roomTopics && typeof parsed.roomTopics === 'object') {
                                 roomTopics = parsed.roomTopics;
                             }
+                            safeSaveState();
+                            window.renderChannelBar();
                             showToast("Successfully imported JSON chat history!");
                             window.renderMessages();
                         } else {
@@ -1676,6 +1705,10 @@
                 if (!isFirebase) return;
                 const data = snapshot.val();
                 if (!data) return;
+                const lastMsg = messages[messages.length - 1];
+                if (lastMsg && lastMsg.user === data.user && lastMsg.text === data.text && (Date.now() - (lastMsg.timestamp || 0) < 6000)) {
+                    return;
+                }
                 addMessage(data.user || 'Anonymous', data.text || '', currentRoom);
             });
         };
@@ -1698,7 +1731,7 @@
             
             btnConnectGlobal.disabled = true;
 
-            if ((ip === 'localhost' || ip === '127.0.0.1') && (port === '8082' || port === '8081' || port === '8080')) {
+            if ((ip === 'localhost' || ip === '127.0.0.1') && (port === '6667' || port === '8082' || port === '8081' || port === '8080')) {
                 isVirtual = true;
                 ws = {
                     send: (msg) => {
@@ -1771,13 +1804,26 @@
                 return;
             }
 
+            if (msg === '/topic') {
+                window.openTopicModal();
+                inputEl.value = '';
+                return;
+            }
+
             if (msg.startsWith('/topic ')) {
                 const newTopic = msg.substring(7).trim();
                 if (newTopic) {
                     roomTopics[currentRoom] = newTopic;
                     updateTopicUI();
                     addMessage("System", `Channel topic updated to: "${newTopic}"`, currentRoom);
+                    safeSaveState();
                 }
+                inputEl.value = '';
+                return;
+            }
+
+            if (msg === '/poll') {
+                window.openPollModal();
                 inputEl.value = '';
                 return;
             }
@@ -1856,20 +1902,38 @@
                 if (newName) {
                     currentUsername = newName;
                     addMessage("System", '* You are now known as ' + currentUsername, currentRoom);
+                    safeSaveState();
                     inputEl.value = '';
                     return;
                 }
+            }
+
+            if (msg === '/join') {
+                window.openRoomModal();
+                inputEl.value = '';
+                return;
             }
 
             if (msg.startsWith('/join ')) {
                 const newRoom = msg.substring(6).trim();
                 if (newRoom) {
                     let formatted = newRoom.startsWith('#') ? newRoom : '#' + newRoom;
+                    if (!rooms.includes(formatted)) {
+                        rooms.push(formatted);
+                        roomTopics[formatted] = "Channel for " + formatted;
+                        safeSaveState();
+                        window.renderChannelBar();
+                    }
                     window.switchRoom(formatted);
                     addMessage("System", `Joined channel ${formatted}`, formatted);
                     inputEl.value = '';
                     return;
                 }
+            }
+
+            if (msg === '/ai') {
+                window.askAI();
+                return;
             }
 
             if (msg.startsWith('/ai ')) {
@@ -1899,11 +1963,17 @@
 
         window.clearLog = function() {
             messages = [];
+            safeSaveState();
             window.renderMessages();
             showToast("Cleared chat log.");
         };
 
         // Initial setup
+        const aiSelect = document.getElementById('aiPersona');
+        if (aiSelect && activePersona) {
+            aiSelect.value = activePersona;
+        }
+        window.renderChannelBar();
         window.renderMessages();
         setTimeout(() => {
             showToast("💬 Welcome to KChat Pro! Press [F1] or [H] for Help & Shortcuts.");

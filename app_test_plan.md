@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KChat
+**Target App:** KChess
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KChat
 - KChess
 - KClock
 - KColony
@@ -173,8 +172,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KCalc
 - KCalendar
 - KChart
+- KChat
 
 ## Test Reports
+
+- **KChat**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
+  - ✅ Core functionality works (multi-room channel messaging, interactive polling suite with live vote tallies & percentage bars, channel topics and pinned message banners, AI persona interactions Assistant/Cyberpunk/CodeBot/Sarcastic/Cerberus, message reactions suite, search filter, JSON and TXT export/import, Firebase Realtime Database Global room and custom TCP/WebSocket server connection, comprehensive keyboard shortcuts suite and cybernetic help modal).
+  - 🔧 FIXED: Custom channels created via `+ Room` modal or `/join`, or imported from JSON/localStorage, were never rendered into `#channelBar` upon reload, and active channel pill styling was desynchronized on startup. Implemented dynamic `renderChannelBar()` to render all channel pills with shortcut badges and exact active room highlights.
+  - 🔧 FIXED: `<select id="aiPersona">` was not synchronized with `activePersona` loaded from `localStorage` on page initialization, causing the UI dropdown to remain stuck on "Assistant" despite active Cyberpunk/CodeBot persona state. Added startup persona value sync.
+  - 🔧 FIXED: Clearing chat logs (`clearLog()`) and creating new polls (`createPoll()`) updated in-memory arrays but omitted `safeSaveState()`, causing cleared messages to reappear and newly created polls to vanish on page refresh. Added `safeSaveState()` across both operations and JSON imports.
+  - 🔧 FIXED: Modal form inputs across Create Poll, Create/Join Channel, and Edit Topic lacked Enter key handlers, ignoring Enter key presses when typing. Added Enter key navigation and submission across all modal inputs.
+  - 🔧 FIXED: Custom server Connect button defaulted to IP `127.0.0.1` and Port `6667`, but virtual node simulation only accepted ports 8080–8082, causing connection attempts with default parameters to immediately error with a socket failure. Added port `6667` to the virtual node simulation suite.
+  - 🔧 FIXED: Sending messages while connected to Firebase Global Room duplicated messages locally because `send()` added the message to the log immediately and `onChildAdded` added it again upon receiving the RTDB broadcast. Added outgoing message deduplication to `firebaseListener`.
+  - 🔧 FIXED: Slash commands `/poll`, `/topic`, `/join`, and `/ai` without arguments fell through as ordinary chat messages because handlers required trailing spaces. Added modal and AI dispatchers for bare commands, and updated `/join <#room>` to register new channels in `rooms` and re-render the channel bar.
 
 - **KChart**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
   - ✅ Core functionality works (6 interactive chart rendering engines Bar/Line/Area/Pie/Donut/Radar, trendline overlay suite Linear Fit OLS/3-point Moving Average/Mean baseline, real-time 8-metric statistical analysis suite with OLS slope and R² fit, tabular data point editor with live inline validation and Enter key advancement, 6 color themes, 5 sample domain presets, SVG/PNG/CSV/JSON export, file import & drag-and-drop, full keyboard shortcuts suite, cybernetic help guide modal).
