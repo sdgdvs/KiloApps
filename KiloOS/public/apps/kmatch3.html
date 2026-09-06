@@ -247,12 +247,12 @@
     <div class="corner-bracket bottom-left"></div>
     <div class="corner-bracket bottom-right"></div>
     <div class="glint-border"></div>
-    <div id="board"></div>
+    <div id="board" role="grid" aria-label="KMatch3 Game Board"></div>
   </div>
 
-  <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; justify-content:center; align-items:center;">
+  <div id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; justify-content:center; align-items:center;">
     <div style="background:#2d2d2d; border:2px solid #555; border-radius:8px; padding:18px; width:370px; max-height:85vh; overflow-y:auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-      <h2 style="margin-top:0; color:#ffd700;">How to Play KMatch3</h2>
+      <h2 id="helpTitle" style="margin-top:0; color:#ffd700;">How to Play KMatch3</h2>
       <p>Swap adjacent gems to form lines of 3 or more of the same color.</p>
       <p><b>Special Gems:</b><br/>
       - <b>Match 4:</b> Line Blaster (destroys row or column).<br/>
@@ -368,8 +368,6 @@
     function playMatchSound(combo) { playTone(400 + combo * 100, 'sine', 0.12); }
     function playBadSwapSound() { playTone(150, 'sawtooth', 0.12); }
     function playPowerupSound() { playTone(700, 'triangle', 0.15); }
-
-    let particles = [];
     
     function createScorePopup(x, y, text, color='#ffd700') {
       let popup = document.createElement('div');
@@ -412,6 +410,9 @@
       beam.style.height = '400px';
       beam.style.width = '10px';
       boardEl.appendChild(beam);
+      setTimeout(() => beam.remove(), 350);
+    }
+
     const fxCanvas = document.createElement('canvas');
     fxCanvas.id = 'fxCanvas';
     fxCanvas.width = 400;
@@ -808,6 +809,26 @@
         let cIdx = getColorIndex(color);
         cell.innerHTML = getGemSVG(cIdx, type, stoneHits, isIce, isBarrier);
 
+        cell.setAttribute('role', 'gridcell');
+        cell.setAttribute('tabindex', '0');
+        let label = `Row ${r+1}, Col ${c+1}`;
+        if (stoneHits > 0) label += `, Stone ${stoneHits} hits`;
+        else if (type === 3) label += `, Rainbow Gem`;
+        else if (type === 1) label += `, Horizontal Line Blaster`;
+        else if (type === 2) label += `, Vertical Line Blaster`;
+        else if (type === 4) label += `, Bomb Gem`;
+        else label += `, ${color || 'Gem'}`;
+        if (isIce) label += `, Ice`;
+        if (isBarrier) label += `, Barrier`;
+        cell.setAttribute('aria-label', label);
+
+        cell.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onCellClick({ currentTarget: cell });
+          }
+        });
+
         cell.addEventListener('click', onCellClick);
         return cell;
     }
@@ -1036,12 +1057,19 @@
       }
     }
 
+    function safeSetStorage(key, val) {
+      try { localStorage.setItem(key, val); } catch(e) {}
+    }
+    function safeGetStorage(key) {
+      try { return localStorage.getItem(key); } catch(e) { return null; }
+    }
+
     function saveStats() {
-      localStorage.setItem('kmatch3_stats', JSON.stringify({gamesPlayed, bestScore, maxCombo}));
+      safeSetStorage('kmatch3_stats', JSON.stringify({gamesPlayed, bestScore, maxCombo}));
     }
     
     function loadStats() {
-      const saved = localStorage.getItem('kmatch3_stats');
+      const saved = safeGetStorage('kmatch3_stats');
       if (saved) {
         try {
           const stats = JSON.parse(saved);
@@ -1057,13 +1085,14 @@
     function saveGame() {
       const state = {
         level, score, moves, targetScore, gameMode, bossHP,
+        collectedRed, collectedGreen, collectedBlue,
         grid: grid.map(row => row.map(cell => cell ? {color: cell.color, type: cell.type, ice: cell.ice, stoneHits: cell.stoneHits, barrier: cell.barrier} : null))
       };
-      localStorage.setItem('kmatch3_save', JSON.stringify(state));
+      safeSetStorage('kmatch3_save', JSON.stringify(state));
     }
 
     function loadGame() {
-      const saved = localStorage.getItem('kmatch3_save');
+      const saved = safeGetStorage('kmatch3_save');
       if (saved) {
         try {
           const state = JSON.parse(saved);
@@ -1073,6 +1102,9 @@
           targetScore = state.targetScore || 800;
           gameMode = state.gameMode || 0;
           bossHP = state.bossHP || 0;
+          collectedRed = state.collectedRed || 0;
+          collectedGreen = state.collectedGreen || 0;
+          collectedBlue = state.collectedBlue || 0;
           document.getElementById('mode').value = gameMode;
 
           if (gameMode === 0 && level >= 1 && level <= 20) {
@@ -1654,6 +1686,23 @@
     }
 
     document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        let help = document.getElementById('helpModal');
+        if (help && help.style.display === 'flex') {
+          hideHelp();
+          return;
+        }
+        if (powerupMode > 0) {
+          powerupMode = 0;
+          document.querySelectorAll('.powerup-btn').forEach(b => b.classList.remove('active'));
+          return;
+        }
+        if (selectedCell) {
+          selectedCell.el.classList.remove('selected');
+          selectedCell = null;
+          return;
+        }
+      }
       if (e.key === '1') { gameMode = 0; document.getElementById('mode').value = '0'; initStage(1); }
       else if (e.key === '2') { gameMode = 1; document.getElementById('mode').value = '1'; initStage(1); }
       else if (e.key === '3') { gameMode = 2; document.getElementById('mode').value = '2'; initStage(1); }
@@ -1662,27 +1711,48 @@
       else if (e.key === 's' || e.key === 'S') useShuffle();
       else if (e.key === 'l' || e.key === 'L') useColorNuke();
       else if (e.key === 'F1') { e.preventDefault(); showHelp(); }
+      else if (selectedCell && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+        let r = selectedCell.r;
+        let c = selectedCell.c;
+        let tr = r, tc = c;
+        if (e.key === 'ArrowUp') tr = r - 1;
+        else if (e.key === 'ArrowDown') tr = r + 1;
+        else if (e.key === 'ArrowLeft') tc = c - 1;
+        else if (e.key === 'ArrowRight') tc = c + 1;
+        if (tr >= 0 && tr < ROWS && tc >= 0 && tc < COLS) {
+          swapAndCheck(r, c, tr, tc);
+        }
+      }
     });
 
     function findHint() {
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
-          if (!grid[r][c] || grid[r][c].stoneHits > 0 || grid[r][c].ice) continue;
+          if (!grid[r] || !grid[r][c] || grid[r][c].stoneHits > 0 || grid[r][c].ice) continue;
+          if (grid[r][c].type === 3) {
+            if (c < COLS - 1 && grid[r][c+1] && grid[r][c+1].stoneHits === 0 && !grid[r][c+1].ice) return [{r,c}, {r, c:c+1}];
+            if (r < ROWS - 1 && grid[r+1][c] && grid[r+1][c].stoneHits === 0 && !grid[r+1][c].ice) return [{r,c}, {r:r+1, c}];
+          }
           if (c < COLS - 1 && grid[r][c+1] && grid[r][c+1].stoneHits === 0 && !grid[r][c+1].ice) {
-            swap(r, c, r, c+1);
+            let temp = grid[r][c]; grid[r][c] = grid[r][c+1]; grid[r][c+1] = temp;
             let m = findMatches();
-            swap(r, c, r, c+1);
+            temp = grid[r][c]; grid[r][c] = grid[r][c+1]; grid[r][c+1] = temp;
             if (m.hMatches.length > 0 || m.vMatches.length > 0) return [{r,c}, {r, c:c+1}];
           }
           if (r < ROWS - 1 && grid[r+1][c] && grid[r+1][c].stoneHits === 0 && !grid[r+1][c].ice) {
-            swap(r, c, r+1, c);
+            let temp = grid[r][c]; grid[r][c] = grid[r+1][c]; grid[r+1][c] = temp;
             let m = findMatches();
-            swap(r, c, r+1, c);
+            temp = grid[r][c]; grid[r][c] = grid[r+1][c]; grid[r+1][c] = temp;
             if (m.hMatches.length > 0 || m.vMatches.length > 0) return [{r,c}, {r:r+1, c}];
           }
         }
       }
       return null;
+    }
+
+    function checkMatchPossible() {
+      return findHint() !== null;
     }
 
     function clearHint() {
