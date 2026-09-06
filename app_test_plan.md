@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KChess
+**Target App:** KClock
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KChess
 - KClock
 - KColony
 - KColosseum
@@ -173,8 +172,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KCalendar
 - KChart
 - KChat
+- KChess
 
 ## Test Reports
+
+- **KChess**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
+  - ✅ Core gameplay works (standard 8x8 chessboard with 3D ornate lighting and procedural wood grain, Campaign Mode with 20 historical/tactical stages, Free Play, 6 tactical endgame Puzzles, 3-minute Blitz clock, 4-tier AI engine with alpha-beta pruning Minimax, real-time ECO Opening Book classifier, move history undo/redo stack, Quick Save (F5) / Load (F9) state persistence, FEN and PGN import/export).
+  - 🔧 FIXED: Puzzle Mode progression was broken because `puzzleIndex` was never incremented upon solving a puzzle in `handleSquareClick` or `handleHotkey('r')`, permanently trapping players on Puzzle #1. Added automatic `puzzleIndex` advancement across solved puzzles #1–6.
+  - 🔧 FIXED: 2-player pass-and-play (`vs Player`) was advertised in help guide and top status text, but `aiMode` was permanently locked to `true` with no keybinding or click handler to toggle it. Bound 'T' key to toggle `aiMode` and enabled top mode bar clicks.
+  - 🔧 FIXED: `getCapturedPieces()` hardcoded standard 16-piece starting counts, generating up to 20 phantom captured pieces in the tray and distorting net material advantage calculations during Campaign, Puzzle, and FEN games. Refactored to dynamically compute missing pieces relative to the match's starting board snapshot.
+  - 🔧 FIXED: Capture tray panel (`capBox`, height 75px) physically collided with and covered the top board file coordinate letters (A–H at y:95) and rank 8 board border. Rescaled and repositioned `capBox` and file labels so coordinates and board tiles render completely unobstructed.
+  - 🔧 FIXED: Canvas button labeled `FEN/PGN [E]` only opened FEN modal, with no visual mechanism to access PGN Move History without hotkeys. Added cross-modal navigation buttons (`PGN View [G]` and `FEN View [E]`) across both modals, and enabled Enter key submission on `#fen-input`.
+  - 🔧 FIXED: `copyFEN()` and `copyPGN()` threw unhandled promise rejections on sandboxed/iframe clipboard errors. Wrapped clipboard writes with `document.execCommand('copy')` fallbacks.
+  - 🔧 FIXED: `getSAN()` omitted `=Q` on pawn promotions, outputting malformed SAN/PGN (e.g. `e8` instead of `e8=Q`), while `loadPGN()` failed on promotions and multiline brace comments. Added `=Q` promotion notation and multiline comment/disambiguation tolerance to PGN parser. Also added touch `onpointerdown` and status bar click-for-hint/restart.
 
 - **KChat**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
   - ✅ Core functionality works (multi-room channel messaging, interactive polling suite with live vote tallies & percentage bars, channel topics and pinned message banners, AI persona interactions Assistant/Cyberpunk/CodeBot/Sarcastic/Cerberus, message reactions suite, search filter, JSON and TXT export/import, Firebase Realtime Database Global room and custom TCP/WebSocket server connection, comprehensive keyboard shortcuts suite and cybernetic help modal).
