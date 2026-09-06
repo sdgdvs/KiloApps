@@ -217,6 +217,7 @@
     height: 100%;
     display: block;
     outline: none;
+    touch-action: none;
   }
 
   /* Stats Grid */
@@ -941,8 +942,8 @@
       };
     });
     tableBody.querySelectorAll('.del-btn').forEach(btn => {
-      btn.onclick = (e) => {
-        const idx = parseInt(e.target.dataset.index);
+      btn.onclick = () => {
+        const idx = parseInt(btn.dataset.index);
         data.splice(idx, 1);
         updateAll();
         showToast('Deleted data point', 'info', '✕');
@@ -1006,7 +1007,8 @@
     const ticks = 5;
     for (let i = 0; i <= ticks; i++) {
       const y = padT + (chartH / ticks) * i;
-      const valNum = Math.round(maxVal - (maxVal / ticks) * i);
+      const rawVal = maxVal - (maxVal / ticks) * i;
+      const valStr = maxVal < 10 ? rawVal.toFixed(1) : Math.round(rawVal).toString();
 
       ctx.strokeStyle = "rgba(255, 255, 255, 0.07)";
       ctx.lineWidth = 1;
@@ -1015,7 +1017,7 @@
       ctx.lineTo(padL + chartW, y);
       ctx.stroke();
 
-      ctx.fillText(valNum.toString(), padL - 8, y);
+      ctx.fillText(valStr, padL - 8, y);
     }
 
     // Draw Axes
@@ -1495,19 +1497,23 @@
     } else if (chartType === 'radar') {
       const cx = canvasW / 2;
       const cy = canvasH / 2;
+      const radius = Math.min(canvasW, canvasH) * 0.35;
       const angleStep = (Math.PI * 2) / n;
       const dx = hoverX - cx;
       const dy = hoverY - cy;
-      let angle = Math.atan2(dy, dx);
-      if (angle < -Math.PI / 2) angle += Math.PI * 2;
+      const dist = Math.sqrt(dx * dx + dy * dy);
 
-      for (let i = 0; i < n; i++) {
-        const spokeAngle = -Math.PI / 2 + i * angleStep;
-        let diff = Math.abs(angle - spokeAngle);
-        if (diff > Math.PI) diff = Math.PI * 2 - diff;
-        if (diff < angleStep / 2) {
-          newHover = i;
-          break;
+      if (dist <= radius + 35 && dist >= 8) {
+        let angle = (Math.atan2(dy, dx) + Math.PI * 2) % (Math.PI * 2);
+
+        for (let i = 0; i < n; i++) {
+          const spokeAngle = (-Math.PI / 2 + i * angleStep + Math.PI * 4) % (Math.PI * 2);
+          let diff = Math.abs(angle - spokeAngle);
+          if (diff > Math.PI) diff = Math.PI * 2 - diff;
+          if (diff < angleStep / 2) {
+            newHover = i;
+            break;
+          }
         }
       }
     } else {
@@ -1529,8 +1535,9 @@
     }
   }
 
-  canvas.onmousemove = (e) => handlePointerMove(e.clientX, e.clientY);
-  canvas.onmouseleave = () => {
+  canvas.onpointermove = (e) => handlePointerMove(e.clientX, e.clientY);
+  canvas.onpointerdown = (e) => handlePointerMove(e.clientX, e.clientY);
+  canvas.onpointerleave = () => {
     if (hoveredIndex !== -1) {
       hoveredIndex = -1;
       renderChart();
@@ -1602,6 +1609,9 @@
 
   function setTrendMode(mode, silent = false) {
     trendMode = mode;
+    if (mode !== 'none' && (chartType === 'pie' || chartType === 'donut' || chartType === 'radar')) {
+      setChartType('line', true);
+    }
     document.querySelectorAll('#trendGroup button').forEach(b => {
       if (b.dataset.trend === trendMode) b.classList.add('active');
       else b.classList.remove('active');
@@ -1639,9 +1649,11 @@
   document.getElementById('presetSelect').onchange = (e) => {
     const val = e.target.value;
     if (val && PRESETS[val]) {
+      const presetName = e.target.selectedOptions[0].text;
       data = JSON.parse(JSON.stringify(PRESETS[val]));
       updateAll();
-      showToast(`Loaded Preset: ${document.getElementById('presetSelect').selectedOptions[0].text}`, 'success', '📊');
+      showToast(`Loaded Preset: ${presetName}`, 'success', '📊');
+      e.target.value = '';
     }
   };
 
@@ -1669,6 +1681,8 @@
     }
     data.push({ label: `Item ${data.length + 1}`, value: Math.floor(10 + Math.random() * 50) });
     updateAll();
+    const wrapper = document.querySelector('.table-wrapper');
+    if (wrapper) wrapper.scrollTop = wrapper.scrollHeight;
     showToast(`Added data point #${data.length}`, 'success', '➕');
   };
 
@@ -1763,6 +1777,10 @@
         svg += `  <text x="${width - 130}" y="${legY}" fill="#e4e4e7" font-size="12">${escapeHtml(data[i].label)}: ${vals[i]}</text>\n`;
       }
     } else if (chartType === 'radar') {
+      if (n < 3) {
+        showToast("Radar chart requires at least 3 data points to export SVG.", "warning", "⚠️");
+        return;
+      }
       const cx = width / 2;
       const cy = height / 2 + 15;
       const radius = Math.min(chartW, chartH) * 0.42;
@@ -1800,7 +1818,8 @@
       const ticks = 5;
       for (let i = 0; i <= ticks; i++) {
         const y = padT + (chartH / ticks) * i;
-        const valNum = Math.round(maxVal - (maxVal / ticks) * i);
+        const rawVal = maxVal - (maxVal / ticks) * i;
+        const valNum = maxVal < 10 ? rawVal.toFixed(1) : Math.round(rawVal).toString();
         svg += `  <line x1="${padL}" y1="${y}" x2="${padL + chartW}" y2="${y}" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>\n`;
         svg += `  <text x="${padL - 10}" y="${y + 4}" fill="#71717a" font-size="11" text-anchor="end">${valNum}</text>\n`;
       }
@@ -1853,6 +1872,24 @@
         const y1 = padT + chartH - (Math.max(0, yHat1) / maxVal) * chartH;
         svg += `  <line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="#facc15" stroke-width="2.5" stroke-dasharray="6,4"/>\n`;
         svg += `  <text x="${padL + chartW}" y="${padT + 16}" fill="#fde047" font-size="11" text-anchor="end" font-weight="bold">Fit: y = ${trendStats.slope.toFixed(2)}x + ${trendStats.intercept.toFixed(2)} (R² = ${trendStats.r2.toFixed(3)})</text>\n`;
+      } else if (trendMode === 'movavg' && n >= 2) {
+        const maPts = [];
+        for (let i = 0; i < n; i++) {
+          const start = Math.max(0, i - 1);
+          const end = Math.min(n - 1, i + 1);
+          let sum = 0, count = 0;
+          for (let k = start; k <= end; k++) {
+            sum += vals[k];
+            count++;
+          }
+          const maVal = sum / count;
+          const x = padL + i * step + step / 2;
+          const y = padT + chartH - (maVal / maxVal) * chartH;
+          maPts.push({ x, y });
+        }
+        const maPath = maPts.map((p, idx) => (idx === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ');
+        svg += `  <path d="${maPath}" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="6,4"/>\n`;
+        svg += `  <text x="${padL + chartW}" y="${padT + 16}" fill="#7dd3fc" font-size="11" text-anchor="end" font-weight="bold">Moving Average (Window: 3)</text>\n`;
       } else if (trendMode === 'mean') {
         const mean = vals.reduce((a, b) => a + b, 0) / n;
         const yMean = padT + chartH - (mean / maxVal) * chartH;
@@ -1877,11 +1914,28 @@
       showToast("No data to export PNG.", "warning", "⚠️");
       return;
     }
+    const prevHover = hoveredIndex;
+    hoveredIndex = -1;
+    renderChart();
+
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = canvas.width;
+    exportCanvas.height = canvas.height;
+    const expCtx = exportCanvas.getContext('2d');
+    expCtx.fillStyle = '#09090b';
+    expCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+    expCtx.drawImage(canvas, 0, 0);
+
+    if (prevHover !== -1) {
+      hoveredIndex = prevHover;
+      renderChart();
+    }
+
     const link = document.createElement('a');
-    link.download = 'KChart_export.png';
-    link.href = canvas.toDataURL('image/png');
+    link.download = 'kchart_export.png';
+    link.href = exportCanvas.toDataURL('image/png');
     link.click();
-    showToast('Exported PNG Image (KChart_export.png)', 'success', '📷');
+    showToast('Exported PNG Image (kchart_export.png)', 'success', '📷');
   };
 
   document.getElementById('btnExportCsv').onclick = () => {
@@ -1943,6 +1997,14 @@
     }
   };
 
+  window.addEventListener('dragover', (e) => e.preventDefault());
+  window.addEventListener('drop', (e) => {
+    e.preventDefault();
+    if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+      loadFile(e.dataTransfer.files[0]);
+    }
+  });
+
   function parseCsvLine(line) {
     const res = [];
     let cur = '', inQuotes = false;
@@ -1970,40 +2032,43 @@
     const reader = new FileReader();
     reader.onload = (event) => {
       const content = event.target.result;
-      if (file.name.endsWith('.json') || content.trim().startsWith('[')) {
+      if (file.name.endsWith('.json') || content.trim().startsWith('{') || content.trim().startsWith('[')) {
         try {
           const parsed = JSON.parse(content);
-          if (Array.isArray(parsed)) {
-            data = parsed.slice(0, 100).map((item, i) => ({
-              label: String(item.label || item.name || `Point ${i + 1}`),
-              value: Number(item.value || item.val || 0)
+          const list = Array.isArray(parsed) ? parsed : (parsed.data || parsed.items || parsed.points || parsed.values || []);
+          if (Array.isArray(list) && list.length > 0) {
+            data = list.slice(0, 100).map((item, i) => ({
+              label: String(item.label || item.name || item.title || item.x || `Point ${i + 1}`),
+              value: Number(item.value !== undefined ? item.value : (item.val !== undefined ? item.val : (item.y !== undefined ? item.y : 0)))
             }));
             updateAll();
             showToast(`Imported ${data.length} data points from JSON`, 'success', '📥');
+            return;
           }
         } catch (err) {
           showToast("Invalid JSON file format.", "error", "❌");
+          return;
         }
+      }
+
+      // Parse CSV
+      const lines = content.split(/\r?\n/).filter(line => line.trim() !== '');
+      const newData = [];
+      lines.forEach((line, idx) => {
+        if (idx === 0 && (line.toLowerCase().includes('label') || line.toLowerCase().includes('name'))) return;
+        const parts = parseCsvLine(line);
+        if (parts.length >= 2) {
+          const lbl = parts[0].replace(/^"|"$/g, '').trim();
+          const val = parseFloat(parts[1].replace(/^"|"$/g, '').trim()) || 0;
+          newData.push({ label: lbl, value: val });
+        }
+      });
+      if (newData.length > 0) {
+        data = newData.slice(0, 100);
+        updateAll();
+        showToast(`Imported ${data.length} data points from CSV`, 'success', '📥');
       } else {
-        // Parse CSV
-        const lines = content.split(/\r?\n/).filter(line => line.trim() !== '');
-        const newData = [];
-        lines.forEach((line, idx) => {
-          if (idx === 0 && (line.toLowerCase().includes('label') || line.toLowerCase().includes('name'))) return;
-          const parts = parseCsvLine(line);
-          if (parts.length >= 2) {
-            const lbl = parts[0].replace(/^"|"$/g, '').trim();
-            const val = parseFloat(parts[1].replace(/^"|"$/g, '').trim()) || 0;
-            newData.push({ label: lbl, value: val });
-          }
-        });
-        if (newData.length > 0) {
-          data = newData.slice(0, 100);
-          updateAll();
-          showToast(`Imported ${data.length} data points from CSV`, 'success', '📥');
-        } else {
-          showToast("No valid rows found in CSV file.", "warning", "⚠️");
-        }
+        showToast("No valid rows found in CSV file.", "warning", "⚠️");
       }
     };
     reader.readAsText(file);
@@ -2014,6 +2079,13 @@
   
   // Shortcuts
   window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (helpModal && helpModal.classList.contains('open')) {
+        closeHelpModal();
+        return;
+      }
+    }
+
     const tag = e.target.tagName;
     if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') {
       if (e.key === 'Escape') {
@@ -2057,7 +2129,7 @@
     } else if (e.key === 's' || e.key === 'S') {
       if (e.shiftKey) {
         document.getElementById('btnSortDesc').click();
-      } else if (e.ctrlKey) {
+      } else if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         exportSvg();
       } else {

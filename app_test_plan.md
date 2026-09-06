@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KChart
+**Target App:** KChat
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KChart
 - KChat
 - KChess
 - KClock
@@ -173,8 +172,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KBudget
 - KCalc
 - KCalendar
+- KChart
 
 ## Test Reports
+
+- **KChart**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
+  - ✅ Core functionality works (6 interactive chart rendering engines Bar/Line/Area/Pie/Donut/Radar, trendline overlay suite Linear Fit OLS/3-point Moving Average/Mean baseline, real-time 8-metric statistical analysis suite with OLS slope and R² fit, tabular data point editor with live inline validation and Enter key advancement, 6 color themes, 5 sample domain presets, SVG/PNG/CSV/JSON export, file import & drag-and-drop, full keyboard shortcuts suite, cybernetic help guide modal).
+  - 🔧 FIXED: 3-point Moving Average trendline overlay (`trendMode === 'movavg'`) was omitted from vector SVG export (`exportSvg`), causing SVG downloads to exclude active moving average trend paths and labels present on canvas. Added smoothed moving average path calculation and legend badge to SVG export.
+  - 🔧 FIXED: Radar mode SVG export lacked minimum point count validation (unlike canvas which requires ≥3 points), causing malformed SVG polygon outputs when exporting datasets with 1 or 2 points. Added radar point validation and warning toast.
+  - 🔧 FIXED: Cartesian Y-axis grid labels in canvas and SVG export used `Math.round(maxVal - (maxVal / ticks) * i)`, which generated duplicate integer labels (e.g. `3, 3, 2, 1, 1, 0`) on fractional or small-scale datasets like the Fitness preset. Added dynamic decimal precision formatting (`.toFixed(1)`) for small ranges.
+  - 🔧 FIXED: PNG export (`btnExportPng`) rendered the canvas directly onto a transparent background, causing dark gray axes and labels to appear illegible or washed out in standard image viewers. Export now composites onto a solid `#09090b` canvas matching SVG styling and temporarily suppresses active hover tooltips during capture.
+  - 🔧 FIXED: Preset dropdown (`presetSelect`) retained its selected value key after loading, preventing users from re-selecting or resetting that same preset after editing points. Reset `presetSelect.value = ''` after import so presets remain immediately re-selectable.
+  - 🔧 FIXED: Table row deletion (`del-btn`) relied on `e.target.dataset.index`, which could fail if clicks landed on child nodes. Switched to `btn.dataset.index`, and updated `btnAddRow` to auto-scroll `.table-wrapper` to bottom so new points are immediately visible.
+  - 🔧 FIXED: Canvas lacked pointer/touch events (`onpointermove`, `onpointerdown`, `onpointerleave`) and CSS `touch-action: none`, hindering hover inspection on touchscreens, and radar spoke hover angle suffered from top-axis angle wrap discontinuity. Added pointer event listeners, touch-action styling, normalized spoke angle calculations, and enabled Escape key modal dismissal.
 
 - **KCalendar**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
   - ✅ Core functionality works (interactive Month/Week/Day/Agenda views, custom category & priority color coding, daily/weekly/monthly/yearly recurrence engine, live keyword search and multi-criteria filters, event creation/editing modal, delete confirmation modal, calendar analytics overview modal, iCalendar .ics export/import, CSV export/import, Markdown agenda report generation, JSON backup export/import, keyboard shortcuts).
