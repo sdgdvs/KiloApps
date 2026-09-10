@@ -15,6 +15,11 @@ void* __cdecl memcpy(void* d, const void* s, size_t sz) { char* pd = (char*)d; c
 #pragma function(memset)
 #pragma function(memcpy)
 
+static void MySecureZero(void* p, size_t sz) {
+    volatile char* v = (volatile char*)p;
+    while(sz--) *v++ = 0;
+}
+
 int my_strlen(const char* s) { int l=0; while(s && *s++) l++; return l; }
 void my_strcpy(char* d, const char* s) { while(*s) *d++ = *s++; *d = 0; }
 void my_strcat(char* d, const char* s) { while(*d) d++; while(*s) *d++ = *s++; *d = 0; }
@@ -78,7 +83,7 @@ int EncryptData(const char* password, const char* plainText, int plainLen, char*
     HCRYPTHASH hHash;
     HCRYPTKEY hKey;
     int res = 0;
-    if(CryptAcquireContext(&hProv, NULL, MS_ENH_RSA_AES_PROV, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
+    if(CryptAcquireContextA(&hProv, NULL, MS_ENH_RSA_AES_PROV_A, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
         if(CryptCreateHash(hProv, CALG_SHA_256, 0, 0, &hHash)) {
             if(CryptHashData(hHash, (BYTE*)password, my_strlen(password), 0)) {
                 if(CryptDeriveKey(hProv, CALG_AES_256, hHash, 0, &hKey)) {
@@ -103,7 +108,7 @@ int DecryptData(const char* password, char* cipherData, int cipherLen, char* pla
     HCRYPTHASH hHash;
     HCRYPTKEY hKey;
     int res = 0;
-    if(CryptAcquireContext(&hProv, NULL, MS_ENH_RSA_AES_PROV, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
+    if(CryptAcquireContextA(&hProv, NULL, MS_ENH_RSA_AES_PROV_A, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
         if(CryptCreateHash(hProv, CALG_SHA_256, 0, 0, &hHash)) {
             if(CryptHashData(hHash, (BYTE*)password, my_strlen(password), 0)) {
                 if(CryptDeriveKey(hProv, CALG_AES_256, hHash, 0, &hKey)) {
@@ -124,48 +129,112 @@ int DecryptData(const char* password, char* cipherData, int cipherLen, char* pla
     return res;
 }
 
+void EscapeCSVField(char* dest, const char* src, int maxLen) {
+    int j = 0;
+    dest[j++] = '"';
+    for(int i = 0; src && src[i] && j < maxLen - 3; i++) {
+        if(src[i] == '"') {
+            if(j < maxLen - 4) {
+                dest[j++] = '"';
+                dest[j++] = '"';
+            }
+        } else if(src[i] == '\r' || src[i] == '\n') {
+            dest[j++] = ' ';
+        } else {
+            dest[j++] = src[i];
+        }
+    }
+    dest[j++] = '"';
+    dest[j] = 0;
+}
+
+void EscapeJSONField(char* dest, const char* src, int maxLen) {
+    int j = 0;
+    for(int i = 0; src && src[i] && j < maxLen - 2; i++) {
+        if(src[i] == '"' || src[i] == '\\') {
+            if(j < maxLen - 3) {
+                dest[j++] = '\\';
+                dest[j++] = src[i];
+            }
+        } else if(src[i] == '\r') {
+            // skip
+        } else if(src[i] == '\n') {
+            if(j < maxLen - 3) {
+                dest[j++] = '\\';
+                dest[j++] = 'n';
+            }
+        } else {
+            dest[j++] = src[i];
+        }
+    }
+    dest[j] = 0;
+}
+
 void FormatVaultToCSV(char* buffer) {
-    my_strcpy(buffer, "label,category,pass,strength\n");
+    my_strcpy(buffer, "label,category,pass,strength\r\n");
     for(int i = 0; i < g_vaultCount; i++) {
+        char escLabel[128], escCat[64], escPass[128], escStr[64];
+        EscapeCSVField(escLabel, g_vault[i].label, sizeof(escLabel));
+        EscapeCSVField(escCat, g_vault[i].category[0] ? g_vault[i].category : "Other", sizeof(escCat));
+        EscapeCSVField(escPass, g_vault[i].pass, sizeof(escPass));
+        EscapeCSVField(escStr, g_vault[i].strength, sizeof(escStr));
+
         char line[512];
-        wsprintfA(line, "\"%s\",\"%s\",\"%s\",\"%s\"\n", g_vault[i].label, g_vault[i].category, g_vault[i].pass, g_vault[i].strength);
+        wsprintfA(line, "%s,%s,%s,%s\r\n", escLabel, escCat, escPass, escStr);
         my_strcat(buffer, line);
     }
 }
 
 void ParseCSVToVault(char* text) {
     char* p = text;
-    // Skip first line (header)
+    // Skip header line
     while(*p && *p != '\n') p++;
     if(*p == '\n') p++;
 
     while(*p && g_vaultCount < 200) {
-        char line[256] = {0};
+        char line[512] = {0};
         int len = 0;
-        while(*p && *p != '\r' && *p != '\n' && len < 255) { line[len++] = *p++; }
+        while(*p && *p != '\r' && *p != '\n' && len < 510) { line[len++] = *p++; }
         while(*p == '\r' || *p == '\n') p++;
         if(len > 0) {
             char* ptr = line;
-            char* fields[4] = {0};
+            char fields[4][64];
+            for(int k=0; k<4; k++) fields[k][0] = 0;
             int fIdx = 0;
+
             while(*ptr && fIdx < 4) {
                 if(*ptr == '"') {
                     ptr++;
-                    fields[fIdx++] = ptr;
-                    while(*ptr && *ptr != '"') ptr++;
-                    if(*ptr == '"') *ptr++ = 0;
+                    int c = 0;
+                    while(*ptr && c < 63) {
+                        if(*ptr == '"' && *(ptr + 1) == '"') {
+                            fields[fIdx][c++] = '"';
+                            ptr += 2;
+                        } else if(*ptr == '"') {
+                            ptr++;
+                            break;
+                        } else {
+                            fields[fIdx][c++] = *ptr++;
+                        }
+                    }
+                    fields[fIdx][c] = 0;
                     if(*ptr == ',') ptr++;
+                    fIdx++;
                 } else {
-                    fields[fIdx++] = ptr;
-                    while(*ptr && *ptr != ',') ptr++;
-                    if(*ptr == ',') *ptr++ = 0;
+                    int c = 0;
+                    while(*ptr && *ptr != ',' && c < 63) {
+                        fields[fIdx][c++] = *ptr++;
+                    }
+                    fields[fIdx][c] = 0;
+                    if(*ptr == ',') ptr++;
+                    fIdx++;
                 }
             }
-            if(fIdx >= 3) {
-                my_strncpy(g_vault[g_vaultCount].label, fields[0] ? fields[0] : "", sizeof(g_vault[g_vaultCount].label));
-                my_strncpy(g_vault[g_vaultCount].category, fields[1] ? fields[1] : "", sizeof(g_vault[g_vaultCount].category));
-                my_strncpy(g_vault[g_vaultCount].pass, fields[2] ? fields[2] : "", sizeof(g_vault[g_vaultCount].pass));
-                my_strncpy(g_vault[g_vaultCount].strength, (fIdx >= 4 && fields[3]) ? fields[3] : "", sizeof(g_vault[g_vaultCount].strength));
+            if(fIdx >= 3 && (fields[0][0] || fields[2][0])) {
+                my_strncpy(g_vault[g_vaultCount].label, fields[0], sizeof(g_vault[g_vaultCount].label));
+                my_strncpy(g_vault[g_vaultCount].category, fields[1][0] ? fields[1] : "Other", sizeof(g_vault[g_vaultCount].category));
+                my_strncpy(g_vault[g_vaultCount].pass, fields[2], sizeof(g_vault[g_vaultCount].pass));
+                my_strncpy(g_vault[g_vaultCount].strength, fields[3][0] ? fields[3] : "Saved", sizeof(g_vault[g_vaultCount].strength));
                 g_vaultCount++;
             }
         }
@@ -205,8 +274,10 @@ int LoadVaultFromFile(const char* password) {
             if(DecryptData(password, cipherBuffer, bytesRead, plainBuffer, &plainLen)) {
                 g_vaultCount = 0;
                 ParseCSVToVault(plainBuffer);
+                MySecureZero(plainBuffer, sizeof(plainBuffer));
                 return 1;
             } else {
+                MySecureZero(plainBuffer, sizeof(plainBuffer));
                 return 0; // Decrypt failed
             }
         }
@@ -215,6 +286,7 @@ int LoadVaultFromFile(const char* password) {
 }
 
 void RefreshVaultList() {
+    int curSel = SendMessageA(hVaultList, LB_GETCURSEL, 0, 0);
     SendMessage(hVaultList, LB_RESETCONTENT, 0, 0);
     char query[64] = {0};
     GetWindowTextA(hVaultSearch, query, sizeof(query));
@@ -231,6 +303,10 @@ void RefreshVaultList() {
             int index = SendMessageA(hVaultList, LB_ADDSTRING, 0, (LPARAM)displayLine);
             SendMessageA(hVaultList, LB_SETITEMDATA, index, (LPARAM)i);
         }
+    }
+    int count = SendMessageA(hVaultList, LB_GETCOUNT, 0, 0);
+    if(count > 0 && curSel != LB_ERR) {
+        SendMessageA(hVaultList, LB_SETCURSEL, curSel < count ? curSel : count - 1, 0);
     }
 }
 
@@ -295,10 +371,23 @@ void GeneratePassword() {
     if (len > 64) len = 64;
     
     char pwd[65] = {0};
-    for(int i = 0; i < len; i++) {
-        pwd[i] = pool[GetTickCount() % (pLen + i) % pLen];
-        Sleep(1);
+    BYTE randBytes[64] = {0};
+    HCRYPTPROV hProv = 0;
+    if (CryptAcquireContextA(&hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
+        CryptGenRandom(hProv, len, randBytes);
+        CryptReleaseContext(hProv, 0);
+    } else {
+        DWORD tick = GetTickCount();
+        for(int i = 0; i < len; i++) {
+            tick = tick * 1103515245 + 12345;
+            randBytes[i] = (BYTE)(tick >> 16);
+        }
     }
+
+    for(int i = 0; i < len; i++) {
+        pwd[i] = pool[randBytes[i] % pLen];
+    }
+    pwd[len] = 0;
     SetWindowTextA(hDisplay, pwd);
 
     char strDisplay[64];
@@ -309,6 +398,11 @@ void GeneratePassword() {
 
 void LockUI(int lock) {
     g_locked = lock;
+    if(lock) {
+        MySecureZero(g_masterPass, sizeof(g_masterPass));
+        MySecureZero(g_vault, sizeof(g_vault));
+        g_vaultCount = 0;
+    }
     int showMain = lock ? SW_HIDE : SW_SHOW;
     ShowWindow(hHelpLabel, showMain);
     ShowWindow(hBtnHelp, showMain);
@@ -352,15 +446,17 @@ void ShowHelpModal(HWND hwnd) {
     MessageBoxA(hwnd,
         "KPass Security & Vault Manager\n\n"
         "Features:\n"
-        "  - Generator: Customize password length (8-64) and character sets.\n"
+        "  - Generator: Instant cryptographically secure password generation (8-64 chars).\n"
         "  - Vault: Encrypted credentials store using AES-256.\n"
         "  - Search: Real-time search by label or category.\n"
         "  - Auto-Lock: Automatically locks after 1 minute of inactivity.\n"
         "  - Export / Import: Backup credentials to CSV or JSON.\n\n"
         "Keyboard Shortcuts:\n"
+        "  - Tab / Shift+Tab: Navigate between all interactive controls\n"
         "  - F1 or 'H': Display this Help dialog\n"
         "  - Enter: Unlock vault (on lock screen) / Save / Generate\n"
-        "  - Double-Click list entry: Copy password immediately",
+        "  - Enter or Double-Click list entry: Copy password immediately\n"
+        "  - Delete key: Remove selected credential from vault",
         "KPass Help", MB_OK | MB_ICONINFORMATION);
 }
 
@@ -386,9 +482,15 @@ void ExportFile(HWND hwnd, int isJSON) {
             } else {
                 WriteFile(hFile, "[\r\n", 3, &w, NULL);
                 for(int i=0; i<g_vaultCount; i++) {
+                    char escLabel[128], escCat[64], escPass[128], escStr[64];
+                    EscapeJSONField(escLabel, g_vault[i].label, sizeof(escLabel));
+                    EscapeJSONField(escCat, g_vault[i].category[0] ? g_vault[i].category : "Other", sizeof(escCat));
+                    EscapeJSONField(escPass, g_vault[i].pass, sizeof(escPass));
+                    EscapeJSONField(escStr, g_vault[i].strength, sizeof(escStr));
+
                     char buf[512];
                     wsprintfA(buf, "  {\"label\":\"%s\", \"category\":\"%s\", \"pass\":\"%s\", \"strength\":\"%s\"}%s\r\n", 
-                            g_vault[i].label, g_vault[i].category, g_vault[i].pass, g_vault[i].strength, (i == g_vaultCount - 1) ? "" : ",");
+                            escLabel, escCat, escPass, escStr, (i == g_vaultCount - 1) ? "" : ",");
                     WriteFile(hFile, buf, my_strlen(buf), &w, NULL);
                 }
                 WriteFile(hFile, "]\r\n", 3, &w, NULL);
@@ -416,6 +518,7 @@ void ImportFile(HWND hwnd) {
             if(buf) {
                 DWORD r;
                 ReadFile(hFile, buf, 1024*1024-1, &r, NULL);
+                buf[r] = 0;
                 ParseCSVToVault(buf);
                 VirtualFree(buf, 0, MEM_RELEASE);
                 SaveVaultToFile();
@@ -435,17 +538,16 @@ static BOOL CALLBACK SetChildFont(HWND hChild, LPARAM lParam) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            // Window client width is 500, height is 620
             hHelpLabel = CreateWindowA("STATIC", "KPass Security & Vault Manager [Press H or F1 for Help]", WS_CHILD | SS_LEFT, 20, 8, 380, 18, hwnd, NULL, NULL, NULL);
-            hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | BS_PUSHBUTTON, 405, 5, 75, 22, hwnd, (HMENU)1009, NULL, NULL);
+            hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 405, 5, 75, 22, hwnd, (HMENU)1009, NULL, NULL);
 
-            hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Click Generate...", WS_CHILD | ES_CENTER | ES_READONLY | ES_AUTOHSCROLL, 20, 32, 460, 32, hwnd, NULL, NULL, NULL);
+            hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Click Generate...", WS_CHILD | WS_TABSTOP | ES_CENTER | ES_READONLY | ES_AUTOHSCROLL, 20, 32, 460, 32, hwnd, NULL, NULL, NULL);
             hStrengthDisplay = CreateWindowA("STATIC", "Strength: - (0 bits)", WS_CHILD | SS_CENTER, 20, 68, 460, 18, hwnd, NULL, NULL, NULL);
 
-            hUpper = CreateWindowA("BUTTON", "Uppercase", WS_CHILD | BS_AUTOCHECKBOX, 20, 92, 110, 20, hwnd, NULL, NULL, NULL);
-            hLower = CreateWindowA("BUTTON", "Lowercase", WS_CHILD | BS_AUTOCHECKBOX, 135, 92, 110, 20, hwnd, NULL, NULL, NULL);
-            hNum = CreateWindowA("BUTTON", "Numbers", WS_CHILD | BS_AUTOCHECKBOX, 250, 92, 110, 20, hwnd, NULL, NULL, NULL);
-            hSym = CreateWindowA("BUTTON", "Symbols", WS_CHILD | BS_AUTOCHECKBOX, 365, 92, 110, 20, hwnd, NULL, NULL, NULL);
+            hUpper = CreateWindowA("BUTTON", "Uppercase", WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX, 20, 92, 110, 20, hwnd, NULL, NULL, NULL);
+            hLower = CreateWindowA("BUTTON", "Lowercase", WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX, 135, 92, 110, 20, hwnd, NULL, NULL, NULL);
+            hNum = CreateWindowA("BUTTON", "Numbers", WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX, 250, 92, 110, 20, hwnd, NULL, NULL, NULL);
+            hSym = CreateWindowA("BUTTON", "Symbols", WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX, 365, 92, 110, 20, hwnd, NULL, NULL, NULL);
 
             SendMessage(hUpper, BM_SETCHECK, BST_CHECKED, 0);
             SendMessage(hLower, BM_SETCHECK, BST_CHECKED, 0);
@@ -453,14 +555,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hSym, BM_SETCHECK, BST_CHECKED, 0);
 
             hLenLabel = CreateWindowA("STATIC", "Length:", WS_CHILD, 20, 120, 52, 20, hwnd, NULL, NULL, NULL);
-            hLen = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "16", WS_CHILD | ES_NUMBER | ES_CENTER, 74, 118, 46, 24, hwnd, NULL, NULL, NULL);
+            hLen = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "16", WS_CHILD | WS_TABSTOP | ES_NUMBER | ES_CENTER, 74, 118, 46, 24, hwnd, NULL, NULL, NULL);
             
-            hBtnGen = CreateWindowA("BUTTON", "Generate (Enter)", WS_CHILD | BS_PUSHBUTTON, 130, 118, 150, 24, hwnd, (HMENU)1001, NULL, NULL);
-            hBtnCopy = CreateWindowA("BUTTON", "Copy Password", WS_CHILD | BS_PUSHBUTTON, 290, 118, 190, 24, hwnd, (HMENU)1002, NULL, NULL);
+            hBtnGen = CreateWindowA("BUTTON", "Generate (Enter)", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 130, 118, 150, 24, hwnd, (HMENU)1001, NULL, NULL);
+            hBtnCopy = CreateWindowA("BUTTON", "Copy Password", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 290, 118, 190, 24, hwnd, (HMENU)1002, NULL, NULL);
 
-            hLabelInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | ES_AUTOHSCROLL, 20, 152, 160, 24, hwnd, NULL, NULL, NULL);
+            hLabelInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_TABSTOP | ES_AUTOHSCROLL, 20, 152, 160, 24, hwnd, NULL, NULL, NULL);
             SendMessageA(hLabelInput, EM_SETCUEBANNER, FALSE, (LPARAM)L"Label (e.g. Email)");
-            hCatInput = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | CBS_DROPDOWN, 190, 152, 110, 120, hwnd, NULL, NULL, NULL);
+            hCatInput = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_TABSTOP | CBS_DROPDOWN, 190, 152, 110, 120, hwnd, NULL, NULL, NULL);
             SendMessageA(hCatInput, CB_ADDSTRING, 0, (LPARAM)"Personal");
             SendMessageA(hCatInput, CB_ADDSTRING, 0, (LPARAM)"Work");
             SendMessageA(hCatInput, CB_ADDSTRING, 0, (LPARAM)"Finance");
@@ -468,11 +570,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hCatInput, CB_ADDSTRING, 0, (LPARAM)"Other");
             SendMessageA(hCatInput, CB_SETCURSEL, 0, 0);
             
-            hBtnSave = CreateWindowA("BUTTON", "Save to Vault", WS_CHILD | BS_PUSHBUTTON, 310, 152, 170, 24, hwnd, (HMENU)1003, NULL, NULL);
+            hBtnSave = CreateWindowA("BUTTON", "Save to Vault", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 310, 152, 170, 24, hwnd, (HMENU)1003, NULL, NULL);
 
-            hVaultSearch = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | ES_AUTOHSCROLL, 20, 186, 160, 24, hwnd, (HMENU)2001, NULL, NULL);
+            hVaultSearch = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_TABSTOP | ES_AUTOHSCROLL, 20, 186, 160, 24, hwnd, (HMENU)2001, NULL, NULL);
             SendMessageA(hVaultSearch, EM_SETCUEBANNER, FALSE, (LPARAM)L"Search vault...");
-            hFilterCat = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | CBS_DROPDOWNLIST, 190, 186, 110, 120, hwnd, (HMENU)2003, NULL, NULL);
+            hFilterCat = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST, 190, 186, 110, 120, hwnd, (HMENU)2003, NULL, NULL);
             SendMessageA(hFilterCat, CB_ADDSTRING, 0, (LPARAM)"All Cats");
             SendMessageA(hFilterCat, CB_ADDSTRING, 0, (LPARAM)"Personal");
             SendMessageA(hFilterCat, CB_ADDSTRING, 0, (LPARAM)"Work");
@@ -481,21 +583,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hFilterCat, CB_ADDSTRING, 0, (LPARAM)"Other");
             SendMessageA(hFilterCat, CB_SETCURSEL, 0, 0);
 
-            hBtnCopyVault = CreateWindowA("BUTTON", "Copy Pass", WS_CHILD | BS_PUSHBUTTON, 310, 186, 85, 24, hwnd, (HMENU)1004, NULL, NULL);
-            hBtnDelVault = CreateWindowA("BUTTON", "Delete", WS_CHILD | BS_PUSHBUTTON, 402, 186, 78, 24, hwnd, (HMENU)1005, NULL, NULL);
+            hBtnCopyVault = CreateWindowA("BUTTON", "Copy Pass", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 310, 186, 85, 24, hwnd, (HMENU)1004, NULL, NULL);
+            hBtnDelVault = CreateWindowA("BUTTON", "Delete", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 402, 186, 78, 24, hwnd, (HMENU)1005, NULL, NULL);
 
-            hVaultList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VSCROLL | LBS_NOTIFY, 20, 220, 460, 320, hwnd, (HMENU)2002, NULL, NULL);
+            hVaultList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_TABSTOP | WS_VSCROLL | LBS_NOTIFY, 20, 220, 460, 320, hwnd, (HMENU)2002, NULL, NULL);
             
-            hBtnExpCSV = CreateWindowA("BUTTON", "Exp CSV", WS_CHILD | BS_PUSHBUTTON, 20, 550, 80, 26, hwnd, (HMENU)1006, NULL, NULL);
-            hBtnExpJSON = CreateWindowA("BUTTON", "Exp JSON", WS_CHILD | BS_PUSHBUTTON, 106, 550, 80, 26, hwnd, (HMENU)1007, NULL, NULL);
-            hBtnImp = CreateWindowA("BUTTON", "Imp CSV", WS_CHILD | BS_PUSHBUTTON, 192, 550, 80, 26, hwnd, (HMENU)1008, NULL, NULL);
-            hBtnLockMain = CreateWindowA("BUTTON", "Lock Vault", WS_CHILD | BS_PUSHBUTTON, 360, 550, 120, 26, hwnd, (HMENU)1010, NULL, NULL);
+            hBtnExpCSV = CreateWindowA("BUTTON", "Exp CSV", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 20, 550, 80, 26, hwnd, (HMENU)1006, NULL, NULL);
+            hBtnExpJSON = CreateWindowA("BUTTON", "Exp JSON", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 106, 550, 80, 26, hwnd, (HMENU)1007, NULL, NULL);
+            hBtnImp = CreateWindowA("BUTTON", "Imp CSV", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 192, 550, 80, 26, hwnd, (HMENU)1008, NULL, NULL);
+            hBtnLockMain = CreateWindowA("BUTTON", "Lock Vault", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 360, 550, 120, 26, hwnd, (HMENU)1010, NULL, NULL);
 
             // Lock screen controls
             hLockLabel = CreateWindowA("STATIC", "KPass Vault Locked", WS_CHILD | SS_CENTER, 40, 185, 420, 26, hwnd, NULL, NULL, NULL);
-            hLockInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | ES_PASSWORD | ES_AUTOHSCROLL | ES_CENTER, 125, 220, 250, 26, hwnd, NULL, NULL, NULL);
+            hLockInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_TABSTOP | ES_PASSWORD | ES_AUTOHSCROLL | ES_CENTER, 125, 220, 250, 26, hwnd, NULL, NULL, NULL);
             SendMessageA(hLockInput, EM_SETCUEBANNER, FALSE, (LPARAM)L"Master Password");
-            hBtnUnlock = CreateWindowA("BUTTON", "Unlock / Setup (Enter)", WS_CHILD | BS_PUSHBUTTON, 150, 258, 200, 32, hwnd, (HMENU)3001, NULL, NULL);
+            hBtnUnlock = CreateWindowA("BUTTON", "Unlock / Setup (Enter)", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 150, 258, 200, 32, hwnd, (HMENU)3001, NULL, NULL);
             hLockHelpLabel = CreateWindowA("STATIC", "Enter your master password to unlock.\nIf first time, entering a password initializes your encrypted vault.", WS_CHILD | SS_CENTER, 40, 305, 420, 36, hwnd, NULL, NULL, NULL);
 
             hBgBrush = CreateSolidBrush(RGB(30, 30, 30));
@@ -520,14 +622,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTimer(hwnd, 1, 1000, NULL);
             break;
         }
+        case WM_ERASEBKGND:
+            return 1;
         case WM_TIMER: {
             if(!g_locked) {
                 LASTINPUTINFO lii;
                 lii.cbSize = sizeof(LASTINPUTINFO);
                 if(GetLastInputInfo(&lii)) {
                     if(GetTickCount() - lii.dwTime > 60000) {
-                        g_masterPass[0] = 0;
-                        g_vaultCount = 0;
                         LockUI(1);
                     }
                 }
@@ -604,6 +706,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         g_vaultCount--;
                         SaveVaultToFile();
                         RefreshVaultList();
+                        int count = SendMessageA(hVaultList, LB_GETCOUNT, 0, 0);
+                        if(count > 0) {
+                            SendMessageA(hVaultList, LB_SETCURSEL, sel < count ? sel : count - 1, 0);
+                        }
                         SetWindowTextA(hStrengthDisplay, "Entry deleted.");
                     }
                 } else if (wmId == 1006) {
@@ -613,8 +719,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else if (wmId == 1008) {
                     ImportFile(hwnd);
                 } else if (wmId == 1010) { // Lock
-                    g_masterPass[0] = 0;
-                    g_vaultCount = 0;
                     LockUI(1);
                     SetWindowTextA(hLockInput, "");
                 } else if ((wmId == 2001 && wmEvent == EN_CHANGE) || (wmId == 2003 && wmEvent == CBN_SELCHANGE)) {
@@ -651,11 +755,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return (LRESULT)hEditBrush;
         }
         case WM_DESTROY:
+            KillTimer(hwnd, 1);
             if (hBgBrush) DeleteObject(hBgBrush);
             if (hEditBrush) DeleteObject(hEditBrush);
             if (hFont) DeleteObject(hFont);
             if (hBtnFont) DeleteObject(hBtnFont);
             if (hSmallFont) DeleteObject(hSmallFont);
+            MySecureZero(g_masterPass, sizeof(g_masterPass));
+            MySecureZero(g_vault, sizeof(g_vault));
             PostQuitMessage(0);
             return 0;
     }
@@ -709,12 +816,23 @@ void __stdcall MainEntry() {
                     } else if (hFoc == hLen || hFoc == hDisplay) {
                         SendMessage(hwnd, WM_COMMAND, 1001, 0);
                         continue;
+                    } else if (hFoc == hVaultList) {
+                        SendMessage(hwnd, WM_COMMAND, 1004, 0);
+                        continue;
                     }
+                }
+            } else if (msg.wParam == VK_DELETE && !g_locked) {
+                HWND hFoc = GetFocus();
+                if (hFoc == hVaultList) {
+                    SendMessage(hwnd, WM_COMMAND, 1005, 0);
+                    continue;
                 }
             }
         }
-        TranslateMessage(&msg);
-        DispatchMessageA(&msg);
+        if (!IsDialogMessageA(hwnd, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessageA(&msg);
+        }
     }
     if (wc.hbrBackground) DeleteObject(wc.hbrBackground);
     ExitProcess(0);
