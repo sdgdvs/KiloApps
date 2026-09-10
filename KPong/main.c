@@ -137,6 +137,11 @@ int win_screen = 0;
 int is_paused = 0;
 int show_stats_overlay = 0;
 int show_help_overlay = 1;
+int sound_enabled = 1;
+
+void PlayGameSound(DWORD dwType) {
+    if (sound_enabled) MessageBeep(dwType);
+}
 
 int game_mode = 0; // 0: Classic, 1: Obstacle Arena, 2: Power-Up Frenzy, 3: Multi-Ball, 4: Campaign
 int is_pvp = 0;    // 0: 1P vs AI, 1: 2P Local PvP
@@ -486,7 +491,7 @@ void ExportStatsJSON() {
         fprintf(f, "}\n");
         fclose(f);
         SetStatusMessage("Exported kpong_stats.json!");
-        MessageBeep(MB_OK);
+        PlayGameSound(MB_OK);
     } else {
         SetStatusMessage("Failed to export stats!");
     }
@@ -509,22 +514,22 @@ void ImportStatsJSON() {
     char* p = strstr(buf, "\"total_games\":");
     if (p) {
         p += 14; while (*p == ' ' || *p == '\t') p++;
-        stats.total_games = atoi(p);
+        int val = atoi(p); if (val >= 0) stats.total_games = val;
     }
     p = strstr(buf, "\"wins\":");
     if (p) {
         p += 7; while (*p == ' ' || *p == '\t') p++;
-        stats.wins = atoi(p);
+        int val = atoi(p); if (val >= 0) stats.wins = val;
     }
     p = strstr(buf, "\"losses\":");
     if (p) {
         p += 9; while (*p == ' ' || *p == '\t') p++;
-        stats.losses = atoi(p);
+        int val = atoi(p); if (val >= 0) stats.losses = val;
     }
     p = strstr(buf, "\"high_rally\":");
     if (p) {
         p += 13; while (*p == ' ' || *p == '\t') p++;
-        stats.high_rally = atoi(p);
+        int val = atoi(p); if (val >= 0) stats.high_rally = val;
     }
 
     char* top = strstr(buf, "\"top_scores\"");
@@ -534,12 +539,14 @@ void ImportStatsJSON() {
             cur = strstr(cur, "\"rally\":");
             if (!cur) break;
             cur += 8; while (*cur == ' ' || *cur == '\t') cur++;
-            stats.top_scores[i].rally = atoi(cur);
+            int rVal = atoi(cur);
+            if (rVal >= 0) stats.top_scores[i].rally = rVal;
 
             char* m = strstr(cur, "\"mode\":");
             if (m && m < cur + 50) {
                 m += 7; while (*m == ' ' || *m == '\t') m++;
-                stats.top_scores[i].mode = atoi(m);
+                int mVal = atoi(m);
+                if (mVal >= 0 && mVal <= 4) stats.top_scores[i].mode = mVal;
             }
 
             char* d = strstr(cur, "\"date\":");
@@ -555,7 +562,7 @@ void ImportStatsJSON() {
     }
     SaveStats();
     SetStatusMessage("Imported stats from JSON!");
-    MessageBeep(MB_OK);
+    PlayGameSound(MB_OK);
 }
 
 void SaveGameState() {
@@ -575,7 +582,10 @@ void SaveGameState() {
         for (int i = 0; i < MAX_BALLS; i++) s.balls[i] = balls[i];
         fwrite(&s, sizeof(SaveState), 1, f);
         fclose(f);
-        MessageBeep(MB_OK);
+        PlayGameSound(MB_OK);
+        SetStatusMessage("Game State Saved (F5)!");
+    } else {
+        SetStatusMessage("Failed to save game state!");
     }
 }
 
@@ -596,9 +606,12 @@ void LoadGameState() {
             skill_fireball_ready = s.skill_fireball_ready; skill_fireball_cooldown = s.skill_fireball_cooldown;
             for (int i = 0; i < MAX_BALLS; i++) balls[i] = s.balls[i];
             game_over = 0; is_paused = 0;
-            MessageBeep(MB_OK);
+            PlayGameSound(MB_OK);
+            SetStatusMessage("Game State Loaded (F9)!");
         }
         fclose(f);
+    } else {
+        SetStatusMessage("No save file found (F9)!");
     }
 }
 
@@ -672,6 +685,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 skill_fireball_ready = 0; skill_fireball_cooldown = 0;
                 boss_shield_hp = 3; boss_shield_timer = 0;
                 obs1_active = 1; obs2_active = 1;
+                p1_buff_timer = 0; p2_buff_timer = 0;
+                p1_debuff_timer = 0; p2_debuff_timer = 0;
+                p1_freeze_timer = 0; p2_freeze_timer = 0;
+                p1_shield_timer = 0; p2_shield_timer = 0;
+                memset(particles, 0, sizeof(particles));
+                memset(shockwaves, 0, sizeof(shockwaves));
                 ResetBalls();
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
@@ -692,6 +711,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         case WM_KEYDOWN:
+            if ((GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_MENU) & 0x8000)) break;
+
             if (is_replaying) {
                 if (wParam == 'P' || wParam == VK_ESCAPE) { StopReplay(); }
                 else if (wParam == VK_SPACE) { replay_paused = !replay_paused; }
@@ -709,8 +730,48 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetStatusMessage(is_paused ? "Game Paused" : "Game Resumed");
                 break;
             }
+
+            if (show_help_overlay || show_stats_overlay) {
+                if ((wParam == 'H' || wParam == VK_F1) && show_help_overlay) {
+                    show_help_overlay = 0; InvalidateRect(hwnd, NULL, FALSE);
+                } else if (wParam == 'L' && show_stats_overlay) {
+                    show_stats_overlay = 0; InvalidateRect(hwnd, NULL, FALSE);
+                } else if (show_stats_overlay) {
+                    if (wParam == 'E') ExportStatsJSON();
+                    if (wParam == 'I') ImportStatsJSON();
+                }
+                break;
+            }
+
+            if (game_over) {
+                if (wParam == 'P') { StartReplay(); break; }
+                if (wParam == 'R') {
+                    p1_score = 0; p2_score = 0; rally = 0;
+                    game_over = 0; win_screen = 0;
+                    skill_slow_timer = 0; skill_slow_cooldown = 0;
+                    skill_mega_timer = 0; skill_mega_cooldown = 0;
+                    skill_fireball_ready = 0; skill_fireball_cooldown = 0;
+                    boss_shield_hp = 3; boss_shield_timer = 0;
+                    obs1_active = 1; obs2_active = 1;
+                    p1_buff_timer = 0; p2_buff_timer = 0;
+                    p1_debuff_timer = 0; p2_debuff_timer = 0;
+                    p1_freeze_timer = 0; p2_freeze_timer = 0;
+                    p1_shield_timer = 0; p2_shield_timer = 0;
+                    memset(particles, 0, sizeof(particles));
+                    memset(shockwaves, 0, sizeof(shockwaves));
+                    ResetBalls();
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
+                }
+            }
+
             if (wParam == 'P') { StartReplay(); break; }
             if (wParam == VK_SPACE) { is_paused = !is_paused; SetStatusMessage(is_paused ? "Game Paused" : "Game Resumed"); }
+            if (wParam == 'U') {
+                sound_enabled = !sound_enabled;
+                SetStatusMessage(sound_enabled ? "Sound FX: ON [U]" : "Sound FX: MUTED [U]");
+                break;
+            }
             if (wParam == 'M') {
                 char* mNames[] = {"Classic", "Obstacles", "Frenzy", "Multi-Ball", "Campaign"};
                 game_mode = (game_mode + 1) % 5; p1_score = 0; p2_score = 0; rally = 0; ResetBalls();
@@ -729,10 +790,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == 'H' || wParam == VK_F1) show_help_overlay = !show_help_overlay;
             if (wParam == VK_F5) SaveGameState();
             if (wParam == VK_F9) LoadGameState();
-            if (show_stats_overlay) {
-                if (wParam == 'E') ExportStatsJSON();
-                if (wParam == 'I') ImportStatsJSON();
-            }
             break;
 
         case WM_TIMER:
@@ -761,11 +818,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             if (is_paused) { InvalidateRect(hwnd, NULL, FALSE); break; }
 
+            int hasFocus = (GetForegroundWindow() == hwnd);
+
             if (game_over) {
-                if (GetAsyncKeyState('P') & 0x8000) {
+                if (hasFocus && (GetAsyncKeyState('P') & 0x8000)) {
                     StartReplay();
                 }
-                if (GetAsyncKeyState('R') & 0x8000) {
+                if (hasFocus && (GetAsyncKeyState('R') & 0x8000)) {
                     p1_score = 0; p2_score = 0; rally = 0;
                     game_over = 0; win_screen = 0;
                     skill_slow_timer = 0; skill_slow_cooldown = 0;
@@ -773,27 +832,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     skill_fireball_ready = 0; skill_fireball_cooldown = 0;
                     boss_shield_hp = 3; boss_shield_timer = 0;
                     obs1_active = 1; obs2_active = 1;
+                    p1_buff_timer = 0; p2_buff_timer = 0;
+                    p1_debuff_timer = 0; p2_debuff_timer = 0;
+                    p1_freeze_timer = 0; p2_freeze_timer = 0;
+                    p1_shield_timer = 0; p2_shield_timer = 0;
+                    memset(particles, 0, sizeof(particles));
+                    memset(shockwaves, 0, sizeof(shockwaves));
                     ResetBalls();
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
 
-            // Skills Activation
-            if ((GetAsyncKeyState('F') & 0x8000) && skill_slow_cooldown == 0) {
-                skill_slow_timer = 180; skill_slow_cooldown = 360;
-                AddShockwave(W / 2, H / 2, GetPrimaryColor());
-                MessageBeep(MB_OK);
-            }
-            if ((GetAsyncKeyState('E') & 0x8000) && skill_mega_cooldown == 0) {
-                skill_mega_timer = 240; skill_mega_cooldown = 450;
-                AddShockwave(20, p1_y + p1_pad_h / 2, RGB(255, 215, 0));
-                MessageBeep(MB_OK);
-            }
-            if ((GetAsyncKeyState('B') & 0x8000) && skill_fireball_cooldown == 0) {
-                skill_fireball_ready = 1; skill_fireball_cooldown = 300;
-                AddShockwave(20, p1_y + p1_pad_h / 2, RGB(255, 100, 0));
-                MessageBeep(MB_OK);
+            // Skills Activation (Guarded by window focus and non-modal states)
+            if (hasFocus && !show_help_overlay && !show_stats_overlay) {
+                if ((GetAsyncKeyState('F') & 0x8000) && skill_slow_cooldown == 0) {
+                    skill_slow_timer = 180; skill_slow_cooldown = 360;
+                    AddShockwave(W / 2, H / 2, GetPrimaryColor());
+                    PlayGameSound(MB_OK);
+                }
+                if ((GetAsyncKeyState('E') & 0x8000) && skill_mega_cooldown == 0) {
+                    skill_mega_timer = 240; skill_mega_cooldown = 450;
+                    AddShockwave(20, p1_y + p1_pad_h / 2, RGB(255, 215, 0));
+                    PlayGameSound(MB_OK);
+                }
+                if ((GetAsyncKeyState('B') & 0x8000) && skill_fireball_cooldown == 0) {
+                    skill_fireball_ready = 1; skill_fireball_cooldown = 300;
+                    AddShockwave(20, p1_y + p1_pad_h / 2, RGB(255, 100, 0));
+                    PlayGameSound(MB_OK);
+                }
             }
 
             // Timers Update
@@ -948,7 +1015,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         portal_cooldown = 30;
                         AddShockwave(portal1_x, portal1_y, GetPrimaryColor());
                         AddShockwave(portal2_x, portal2_y, GetSecondaryColor());
-                        MessageBeep(MB_OK);
+                        PlayGameSound(MB_OK);
                     } else {
                         float d2 = sqrtf((balls[b].x - portal2_x)*(balls[b].x - portal2_x) + (balls[b].y - portal2_y)*(balls[b].y - portal2_y));
                         if (d2 < 18.0f) {
@@ -956,7 +1023,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             portal_cooldown = 30;
                             AddShockwave(portal2_x, portal2_y, GetSecondaryColor());
                             AddShockwave(portal1_x, portal1_y, GetPrimaryColor());
-                            MessageBeep(MB_OK);
+                            PlayGameSound(MB_OK);
                         }
                     }
                 }
@@ -996,7 +1063,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (balls[b].last_hitter == 1) p1_shield_timer = 300; else if (balls[b].last_hitter == 2) p2_shield_timer = 300;
                     }
                     powerup_x = -1; powerup_y = -1;
-                    MessageBeep(MB_ICONASTERISK);
+                    PlayGameSound(MB_ICONASTERISK);
                 }
 
                 // Walls
@@ -1004,25 +1071,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     balls[b].y = 0; balls[b].dy = -balls[b].dy; arena_pulse = 1.0f; screen_shake = 4.0f;
                     AddParticles(balls[b].x + BALL_SIZE / 2, 0, RGB(255, 255, 255), 10, 5.0f);
                     AddShockwave((int)(balls[b].x + BALL_SIZE / 2), 0, GetPrimaryColor());
-                    MessageBeep(0xFFFFFFFF);
+                    PlayGameSound(0xFFFFFFFF);
                 }
                 if (balls[b].y > H - BALL_SIZE) {
                     balls[b].y = H - BALL_SIZE; balls[b].dy = -balls[b].dy; arena_pulse = 1.0f; screen_shake = 4.0f;
                     AddParticles(balls[b].x + BALL_SIZE / 2, (float)H, RGB(255, 255, 255), 10, 5.0f);
                     AddShockwave((int)(balls[b].x + BALL_SIZE / 2), H, GetSecondaryColor());
-                    MessageBeep(0xFFFFFFFF);
+                    PlayGameSound(0xFFFFFFFF);
                 }
 
                 // Obstacles
                 if (has_obstacles && obs1_active && balls[b].x + BALL_SIZE > W / 2 - 10 && balls[b].x < W / 2 + 10 && balls[b].y + BALL_SIZE > obs_y && balls[b].y < obs_y + 40) {
                     if (balls[b].is_fireball) { obs1_active = 0; obs1_respawn = 150; AddParticles(W / 2, (float)(obs_y + 20), RGB(255, 100, 0), 25, 8.0f); }
                     else { balls[b].dx = -balls[b].dx; AddParticles(W / 2, (float)(balls[b].y + BALL_SIZE / 2), GetPrimaryColor(), 10, 4.0f); }
-                    MessageBeep(0xFFFFFFFF);
+                    PlayGameSound(0xFFFFFFFF);
                 }
                 if (has_obstacles && obs2_active && balls[b].x + BALL_SIZE > obs2_x && balls[b].x < obs2_x + 40 && balls[b].y + BALL_SIZE > H / 2 - 10 && balls[b].y < H / 2 + 10) {
                     if (balls[b].is_fireball) { obs2_active = 0; obs2_respawn = 150; AddParticles((float)(obs2_x + 20), H / 2, RGB(255, 100, 0), 25, 8.0f); }
                     else { balls[b].dy = -balls[b].dy; AddParticles((float)(obs2_x + 20), H / 2, GetSecondaryColor(), 10, 4.0f); }
-                    MessageBeep(0xFFFFFFFF);
+                    PlayGameSound(0xFFFFFFFF);
                 }
 
                 // Stage 20 Boss Shield
@@ -1031,15 +1098,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     balls[b].y + BALL_SIZE >= boss_shield_y && balls[b].y <= boss_shield_y + boss_shield_h && balls[b].dx > 0) {
                     if (balls[b].is_fireball) { boss_shield_hp = 0; boss_shield_timer = 360; AddParticles(W - 50, (float)(balls[b].y + BALL_SIZE / 2), RGB(255, 50, 0), 30, 10.0f); }
                     else { boss_shield_hp--; balls[b].dx = -balls[b].dx; AddParticles(W - 50, (float)(balls[b].y + BALL_SIZE / 2), RGB(255, 215, 0), 15, 6.0f); if (boss_shield_hp <= 0) boss_shield_timer = 360; }
-                    MessageBeep(0xFFFFFFFF);
+                    PlayGameSound(0xFFFFFFFF);
                 }
 
                 // Player Shields (Powerup)
                 if (p1_shield_timer > 0 && balls[b].x < 10 && balls[b].dx < 0) {
-                    balls[b].dx = -balls[b].dx; AddShockwave(5, (int)balls[b].y, GetPrimaryColor()); MessageBeep(MB_OK);
+                    balls[b].dx = -balls[b].dx; AddShockwave(5, (int)balls[b].y, GetPrimaryColor()); PlayGameSound(MB_OK);
                 }
                 if (p2_shield_timer > 0 && balls[b].x > W - 10 - BALL_SIZE && balls[b].dx > 0) {
-                    balls[b].dx = -balls[b].dx; AddShockwave(W - 5, (int)balls[b].y, GetSecondaryColor()); MessageBeep(MB_OK);
+                    balls[b].dx = -balls[b].dx; AddShockwave(W - 5, (int)balls[b].y, GetSecondaryColor()); PlayGameSound(MB_OK);
                 }
 
                 // P1 Paddle
@@ -1058,7 +1125,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         AddParticles((float)balls[b].x, (float)(balls[b].y + BALL_SIZE / 2), RGB(255, 255, 255), 30, 14.0f);
                         AddShockwave((int)balls[b].x, (int)(balls[b].y + BALL_SIZE / 2), RGB(255, 255, 0));
                     }
-                    MessageBeep(0xFFFFFFFF);
+                    PlayGameSound(0xFFFFFFFF);
                 }
 
                 // P2 Paddle
@@ -1076,7 +1143,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         AddParticles((float)(balls[b].x + BALL_SIZE), (float)(balls[b].y + BALL_SIZE / 2), RGB(255, 255, 255), 30, 14.0f);
                         AddShockwave((int)(balls[b].x + BALL_SIZE), (int)(balls[b].y + BALL_SIZE / 2), RGB(255, 255, 0));
                     }
-                    MessageBeep(0xFFFFFFFF);
+                    PlayGameSound(0xFFFFFFFF);
                 }
 
                 // Scoring
@@ -1084,14 +1151,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     balls[b].active = 0; p2_score++; rally = 0; screen_shake = 12.0f;
                     AddParticles(0, (float)(balls[b].y + BALL_SIZE / 2), GetSecondaryColor(), 36, 12.0f);
                     AddShockwave(0, (int)(balls[b].y + BALL_SIZE / 2), GetSecondaryColor());
-                    MessageBeep(MB_ICONEXCLAMATION);
+                    PlayGameSound(MB_ICONEXCLAMATION);
                     if (ActiveBallCount() == 0) ResetBalls();
                 }
                 if (balls[b].x > W + 15) {
                     balls[b].active = 0; p1_score++; rally = 0; screen_shake = 12.0f;
                     AddParticles((float)W, (float)(balls[b].y + BALL_SIZE / 2), GetPrimaryColor(), 36, 12.0f);
                     AddShockwave(W, (int)(balls[b].y + BALL_SIZE / 2), GetPrimaryColor());
-                    MessageBeep(MB_ICONEXCLAMATION);
+                    PlayGameSound(MB_ICONEXCLAMATION);
                     if (ActiveBallCount() == 0) ResetBalls();
                 }
             }
@@ -1118,6 +1185,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             InvalidateRect(hwnd, NULL, FALSE);
             break;
+
+        case WM_ERASEBKGND:
+            return 1;
 
         case WM_PAINT: {
             PAINTSTRUCT ps;
@@ -1731,13 +1801,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(memDC, W / 2 - 75, 26, modeHud, lstrlenA(modeHud));
 
                 // Skills Footer HUD Bar
-                char skillsStr[160];
+                char skillsStr[180];
                 char sSlow[16], sMega[16], sFire[16];
                 if (skill_slow_timer > 0) wsprintfA(sSlow, "ON"); else if (skill_slow_cooldown == 0) wsprintfA(sSlow, "RDY"); else wsprintfA(sSlow, "%ds", skill_slow_cooldown / 30);
                 if (skill_mega_timer > 0) wsprintfA(sMega, "ON"); else if (skill_mega_cooldown == 0) wsprintfA(sMega, "RDY"); else wsprintfA(sMega, "%ds", skill_mega_cooldown / 30);
                 if (skill_fireball_ready) wsprintfA(sFire, "RDY!"); else if (skill_fireball_cooldown == 0) wsprintfA(sFire, "RDY"); else wsprintfA(sFire, "%ds", skill_fireball_cooldown / 30);
 
-                wsprintfA(skillsStr, "[F]Slow:%s [E]Mega:%s [B]Fire:%s | [M]Mode [1-3]Diff [V]PvP [T]Theme [P]Replay [F1]Help", sSlow, sMega, sFire);
+                wsprintfA(skillsStr, "[F]Slow:%s [E]Mega:%s [B]Fire:%s | [M]Mode [1-3]Diff [V]PvP [T]Theme [U]Snd:%s [P]Replay [F1]Help", sSlow, sMega, sFire, sound_enabled ? "ON" : "OFF");
                 SetTextColor(memDC, GetPrimaryColor());
                 TextOutA(memDC, 6, H - 20, skillsStr, lstrlenA(skillsStr));
 
@@ -1784,7 +1854,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetTextColor(memDC, RGB(255, 255, 255));
                     TextOutA(memDC, 40, 58, "P1: W/S, Up/Down, or Mouse Drag  |  P2: Up/Down (in PvP)", 56);
                     TextOutA(memDC, 40, 78, "Skills: [F] Slow-Mo, [E] Mega, [B] Fireball", 43);
-                    TextOutA(memDC, 40, 98, "System: [Space] Pause, [M] Mode, [1-3] Diff, [V] PvP, [T] Theme", 63);
+                    TextOutA(memDC, 40, 98, "System: [Space] Pause, [M] Mode, [1-3] Diff, [V] PvP, [T] Theme, [U] Sound", 74);
                     TextOutA(memDC, 40, 118, "Replay: [P] Match Replay (Space: Pause, <-/->: Scrub)", 53);
                     TextOutA(memDC, 40, 138, "Stats:  [L] Stats Overlay  [E] Export  [I] Import JSON", 54);
                     TextOutA(memDC, 40, 158, "Save:   [F5] Save Game  |  [F9] Load Game", 41);
@@ -1850,6 +1920,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            SaveStats();
             KillTimer(hwnd, TIMER_ID);
             PostQuitMessage(0);
             break;
@@ -1867,7 +1938,7 @@ void MainEntry() {
     wc.lpfnWndProc = WndProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = "KPongApp";
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wc.hbrBackground = NULL;
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
     RegisterClass(&wc);
 
