@@ -243,7 +243,9 @@
     <button id="btnTrace" class="btn btn-primary" title="Start/Stop Route Trace [T]">Trace <span class="kbd-badge">T</span></button>
     <button id="btnMTU" class="btn btn-mtu" title="Path MTU Discovery [M]">MTU <span class="kbd-badge">M</span></button>
     <button id="btnExport" class="btn btn-secondary" title="Export Log [E]">Export <span class="kbd-badge">E</span></button>
+    <button id="btnCopy" class="btn btn-secondary" title="Copy Console Log [Ctrl+C]">Copy <span class="kbd-badge">^C</span></button>
     <button id="btnClear" class="btn btn-secondary" title="Clear Console [C]">Clear <span class="kbd-badge">C</span></button>
+    <button id="btnSound" class="btn btn-secondary" title="Toggle Sound Feedback [U]">Audio: ON <span class="kbd-badge">U</span></button>
     <button id="btnHelp" class="btn btn-secondary" title="Help Guide [F1]">Help <span class="kbd-badge">F1</span></button>
   </div>
   
@@ -257,7 +259,7 @@
         <span id="statusBadge" class="status-badge"><span class="pulse-dot"></span><span id="statusText">IDLE</span></span>
         <span style="margin-left: auto; font-size: 11.5px; color: var(--text-dim); font-family: monospace;">Press <strong style="color:var(--text-muted)">Enter / [P]</strong> to Ping • <strong style="color:var(--text-muted)">[F1]</strong> Help</span>
       </div>
-      <textarea id="out" readonly spellcheck="false">Welcome to KPing Network Diagnostics.
+      <textarea id="out" readonly spellcheck="false" role="log" aria-live="polite" aria-atomic="false">Welcome to KPing Network Diagnostics.
 Features: ICMP Ping [P], Path MTU Discovery (PMTU) [M], Route Tracing [T], Hex Dump, DF-Flag Toggle, Log Export [E].
 Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
 
@@ -277,25 +279,26 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
         <span>Path MTU</span>
         <strong id="valMTU">-</strong>
       </div>
-      <div class="graph-box">
+      <div class="graph-box" style="position: relative;">
         <span style="font-size: 10.5px; color: var(--text-muted); position: absolute; top: 3px; left: 8px; font-family: monospace;">Latency & Jitter (ms)</span>
-        <canvas id="graphCanvas"></canvas>
+        <canvas id="graphCanvas" role="img" aria-label="Network latency and jitter telemetry chart"></canvas>
+        <div id="graphTooltip" style="display:none; position:absolute; pointer-events:none; background:rgba(15,23,42,0.95); border:1px solid var(--accent); padding:3px 8px; border-radius:4px; font-size:11px; font-family:monospace; color:#93c5fd; z-index:10; box-shadow:0 4px 12px rgba(0,0,0,0.5); white-space:nowrap;"></div>
       </div>
     </div>
   </div>
 
   <!-- Toast Notification Container -->
-  <div id="toastContainer" class="toast-container"></div>
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 
   <!-- Help & Shortcuts Modal -->
-  <div id="helpModal" class="modal-overlay">
+  <div id="helpModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
     <div class="modal-dialog glass">
       <div class="modal-header">
-        <div class="modal-title">
+        <div id="helpModalTitle" class="modal-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
           KPing Reference & Keyboard Shortcuts
         </div>
-        <button id="modalCloseBtn" class="modal-close" title="Close [Esc]">&times;</button>
+        <button id="modalCloseBtn" class="modal-close" title="Close [Esc]" aria-label="Close modal dialog">&times;</button>
       </div>
       
       <div class="info-block">
@@ -332,9 +335,19 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
             <td>Save session logs & latency telemetry to JSON file</td>
           </tr>
           <tr>
+            <td><span class="shortcut-key">Ctrl+C</span></td>
+            <td><strong>Copy Log</strong></td>
+            <td>Copy complete console output to system clipboard</td>
+          </tr>
+          <tr>
             <td><span class="shortcut-key">C</span></td>
             <td><strong>Clear</strong></td>
             <td>Clear terminal output console & telemetry graph</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">U</span></td>
+            <td><strong>Toggle Audio</strong></td>
+            <td>Enable or mute synthesized audio event feedback</td>
           </tr>
           <tr>
             <td><span class="shortcut-key">1</span> - <span class="shortcut-key">6</span></td>
@@ -365,6 +378,34 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 870, height: 650 }, '*');
   }
 
+  function escapeHtml(str) {
+    if (typeof str !== 'string') return String(str ?? '');
+    return str.replace(/[&<>"']/g, m => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[m]));
+  }
+
+  function safeGetStorage(key, defaultVal) {
+    try {
+      const v = localStorage.getItem(key);
+      return v !== null ? JSON.parse(v) : defaultVal;
+    } catch (e) {
+      return defaultVal;
+    }
+  }
+
+  function safeSetStorage(key, val) {
+    try {
+      localStorage.setItem(key, JSON.stringify(val));
+    } catch (e) {
+      console.warn('localStorage access failed:', e);
+    }
+  }
+
   const hostInput = document.getElementById('host');
   const presetSelect = document.getElementById('presetSelect');
   const countInput = document.getElementById('count');
@@ -377,11 +418,14 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
   const btnMTU = document.getElementById('btnMTU');
   const btnTrace = document.getElementById('btnTrace');
   const btnExport = document.getElementById('btnExport');
+  const btnCopy = document.getElementById('btnCopy');
   const btnClear = document.getElementById('btnClear');
+  const btnSound = document.getElementById('btnSound');
   const btnHelp = document.getElementById('btnHelp');
   const out = document.getElementById('out');
   const canvas = document.getElementById('graphCanvas');
   const ctx = canvas.getContext('2d');
+  const graphTooltip = document.getElementById('graphTooltip');
   
   const valJitter = document.getElementById('valJitter');
   const valLoss = document.getElementById('valLoss');
@@ -402,11 +446,133 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
   
   let historyData = [];
   let logEntries = [];
+  let lastFocusedEl = null;
 
-  function showToast(message, type = 'info', duration = 4000) {
+  // Audio subsystem
+  let soundMuted = safeGetStorage('kping_sound_muted', false);
+  let audioCtx = null;
+
+  function updateSoundButton() {
+    if (btnSound) {
+      btnSound.innerHTML = soundMuted ? 'Audio: OFF <span class="kbd-badge">U</span>' : 'Audio: ON <span class="kbd-badge">U</span>';
+      btnSound.style.opacity = soundMuted ? '0.7' : '1';
+    }
+  }
+  updateSoundButton();
+
+  function getAudioContext() {
+    if (soundMuted) return null;
+    try {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function playTone(freq, type = 'sine', duration = 0.08, gainVal = 0.12) {
+    const actx = getAudioContext();
+    if (!actx) return;
+    try {
+      const osc = actx.createOscillator();
+      const gain = actx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, actx.currentTime);
+      gain.gain.setValueAtTime(gainVal, actx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(actx.destination);
+      osc.start();
+      osc.stop(actx.currentTime + duration);
+    } catch (e) {}
+  }
+
+  function playPingSound(ms) {
+    if (soundMuted) return;
+    // Map latency 1ms - 100ms to frequency 800Hz down to 350Hz
+    const clamped = Math.max(1, Math.min(100, ms));
+    const freq = 800 - (clamped * 4.5);
+    playTone(freq, 'sine', 0.06, 0.15);
+  }
+
+  function playTimeoutSound() {
+    if (soundMuted) return;
+    playTone(180, 'square', 0.12, 0.1);
+  }
+
+  function playPmtuSound(pass) {
+    if (soundMuted) return;
+    if (pass) {
+      playTone(660, 'sine', 0.08, 0.15);
+      setTimeout(() => playTone(880, 'sine', 0.08, 0.15), 60);
+    } else {
+      playTone(220, 'sawtooth', 0.15, 0.12);
+    }
+  }
+
+  function playTraceSound() {
+    if (soundMuted) return;
+    playTone(480, 'triangle', 0.05, 0.1);
+  }
+
+  function playCompleteSound() {
+    if (soundMuted) return;
+    playTone(523.25, 'sine', 0.09, 0.12); // C5
+    setTimeout(() => playTone(659.25, 'sine', 0.09, 0.12), 80); // E5
+    setTimeout(() => playTone(783.99, 'sine', 0.14, 0.15), 160); // G5
+  }
+
+  function toggleSound() {
+    soundMuted = !soundMuted;
+    safeSetStorage('kping_sound_muted', soundMuted);
+    updateSoundButton();
+    showToast(`Audio feedback: <strong>${soundMuted ? 'Muted' : 'Enabled'}</strong>`, 'info', 2000);
+    if (!soundMuted) playTone(600, 'sine', 0.08, 0.15);
+  }
+
+  // Persistent settings
+  function loadConfig() {
+    const cfg = safeGetStorage('kping_config_v1', null);
+    if (cfg && typeof cfg === 'object') {
+      if (typeof cfg.host === 'string' && cfg.host.trim()) hostInput.value = cfg.host.trim();
+      if (typeof cfg.count === 'number') countInput.value = Math.max(1, Math.min(1000, cfg.count));
+      if (typeof cfg.size === 'number') sizeInput.value = Math.max(1, Math.min(65500, cfg.size));
+      if (typeof cfg.ttl === 'number') ttlInput.value = Math.max(1, Math.min(255, cfg.ttl));
+      if (typeof cfg.continuous === 'boolean') {
+        continuousCheck.checked = cfg.continuous;
+        countInput.disabled = cfg.continuous;
+      }
+      if (typeof cfg.hexdump === 'boolean') hexdumpCheck.checked = cfg.hexdump;
+      if (typeof cfg.dfbit === 'boolean') dfCheck.checked = cfg.dfbit;
+    }
+  }
+
+  function saveConfig() {
+    safeSetStorage('kping_config_v1', {
+      host: hostInput.value.trim(),
+      count: parseInt(countInput.value) || 4,
+      size: parseInt(sizeInput.value) || 32,
+      ttl: parseInt(ttlInput.value) || 115,
+      continuous: continuousCheck.checked,
+      hexdump: hexdumpCheck.checked,
+      dfbit: dfCheck.checked
+    });
+  }
+
+  [hostInput, countInput, sizeInput, ttlInput, continuousCheck, hexdumpCheck, dfCheck].forEach(el => {
+    el.addEventListener('change', saveConfig);
+  });
+
+  function showToast(messageHtml, type = 'info', duration = 4000) {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    toast.innerHTML = message;
+    toast.setAttribute('role', 'status');
+    toast.innerHTML = messageHtml;
     toast.onclick = () => {
       toast.style.opacity = '0';
       toast.style.transform = 'translateY(-10px)';
@@ -439,11 +605,16 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
   }
 
   function openHelpModal() {
+    lastFocusedEl = document.activeElement;
     helpModal.classList.add('active');
+    modalCloseBtn.focus();
   }
 
   function closeHelpModal() {
     helpModal.classList.remove('active');
+    if (lastFocusedEl && typeof lastFocusedEl.focus === 'function') {
+      lastFocusedEl.focus();
+    }
   }
 
   modalCloseBtn.onclick = closeHelpModal;
@@ -455,7 +626,8 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
   presetSelect.addEventListener('change', () => {
     if (presetSelect.value) {
       hostInput.value = presetSelect.value;
-      showToast(`Selected Preset: <strong>${presetSelect.options[presetSelect.selectedIndex].text}</strong>`, 'info', 2500);
+      saveConfig();
+      showToast(`Selected Preset: <strong>${escapeHtml(presetSelect.options[presetSelect.selectedIndex].text)}</strong>`, 'info', 2500);
     }
   });
 
@@ -463,7 +635,8 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
     if (idx >= 1 && idx < presetSelect.options.length) {
       presetSelect.selectedIndex = idx;
       hostInput.value = presetSelect.value;
-      showToast(`Preset [${idx}]: <strong>${presetSelect.options[idx].text}</strong>`, 'info', 2500);
+      saveConfig();
+      showToast(`Preset [${idx}]: <strong>${escapeHtml(presetSelect.options[idx].text)}</strong>`, 'info', 2500);
     }
   }
 
@@ -475,17 +648,17 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
     canvas.height = rect.height * dpr;
     canvas.style.width = `${rect.width}px`;
     canvas.style.height = `${rect.height}px`;
-    ctx.resetTransform();
-    ctx.scale(dpr, dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     drawGraph();
   }
   window.addEventListener('resize', resizeCanvas);
 
   continuousCheck.addEventListener('change', () => {
     countInput.disabled = continuousCheck.checked;
+    saveConfig();
   });
 
-  function append(text, type="info", rawObj=null) {
+  function append(text, type = "info", rawObj = null) {
       out.value += text;
       if (out.value.length > 30000) {
           out.value = out.value.substring(out.value.length - 20000);
@@ -508,6 +681,37 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       valMTU.textContent = "-";
       drawGraph();
       showToast("Terminal output and telemetry cleared", "info", 2000);
+  }
+
+  function copyLog() {
+      const text = out.value;
+      if (!text || text.trim().length === 0) {
+          showToast("Log is empty", "warning", 2000);
+          return;
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => {
+              showToast("Console log copied to clipboard! [Ctrl+C]", "success", 2500);
+          }).catch(() => fallbackCopy(text));
+      } else {
+          fallbackCopy(text);
+      }
+  }
+
+  function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+          document.execCommand('copy');
+          showToast("Console log copied to clipboard! [Ctrl+C]", "success", 2500);
+      } catch (e) {
+          showToast("Unable to copy to clipboard", "error", 2500);
+      }
+      document.body.removeChild(ta);
   }
 
   function generateHexDump(size) {
@@ -536,11 +740,17 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       countInput.disabled = disabled || continuousCheck.checked;
   }
 
+  function isBusy() {
+      return isPinging || isTracing || isMtuSweeping;
+  }
+
   function startPing() {
+      if (isBusy()) return;
       currentHost = hostInput.value.trim() || '127.0.0.1';
-      const size = parseInt(sizeInput.value) || 32;
-      const count = parseInt(countInput.value) || 4;
-      const ttl = parseInt(ttlInput.value) || 115;
+      saveConfig();
+      const size = Math.max(1, Math.min(65500, parseInt(sizeInput.value) || 32));
+      const count = Math.max(1, Math.min(1000, parseInt(countInput.value) || 4));
+      const ttl = Math.max(1, Math.min(255, parseInt(ttlInput.value) || 115));
       const continuous = continuousCheck.checked;
       const df = dfCheck.checked;
       
@@ -565,8 +775,9 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       setInputsDisabled(true);
       
       stats = { sent: 0, recv: 0, lost: 0, min: Infinity, max: -Infinity, sum: 0 };
-      showToast(`Pinging <strong>${currentHost}</strong> (${size}B payload)...`, 'info', 2500);
+      showToast(`Pinging <strong>${escapeHtml(currentHost)}</strong> (${size}B payload)...`, 'info', 2500);
       
+      if (pingInterval) clearInterval(pingInterval);
       pingInterval = setInterval(() => {
           if (!continuous && stats.sent >= count) {
               stopPing();
@@ -579,6 +790,7 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
               historyData.push(null);
               if (historyData.length > 200) historyData.shift();
               append(`Packet needs to be fragmented but DF set. (Packet size ${size+28} exceeds MTU)\n`, 'error', { host: currentHost, error: 'DF_SET_FRAGMENTATION_NEEDED', size });
+              playTimeoutSound();
           } else {
               const success = Math.random() > 0.05; 
               if (success) {
@@ -591,11 +803,13 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
                   historyData.push(time);
                   if (historyData.length > 200) historyData.shift();
                   append(`Reply from ${currentHost}: bytes=${size} time=${time}ms TTL=${ttl}\n`, 'reply', { host: currentHost, bytes: size, time, ttl, df });
+                  playPingSound(time);
               } else {
                   stats.lost++;
                   historyData.push(null);
                   if (historyData.length > 200) historyData.shift();
                   append(`Request timed out.\n`, 'timeout', { host: currentHost, error: 'timeout' });
+                  playTimeoutSound();
               }
           }
           updateAnalytics();
@@ -604,7 +818,7 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
   }
   
   function updateAnalytics() {
-      const lossPercent = Math.round((stats.lost / stats.sent) * 100) || 0;
+      const lossPercent = stats.sent > 0 ? Math.round((stats.lost / stats.sent) * 100) : 0;
       valLoss.textContent = `${lossPercent}%`;
       
       let jitterSum = 0;
@@ -623,47 +837,180 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       valJitter.textContent = `${avgJitter}ms`;
   }
 
-  function drawGraph() {
+  function drawGraph(hoverIdx = -1) {
       const rect = canvas.parentElement.getBoundingClientRect();
       const w = rect.width;
       const h = rect.height;
       ctx.clearRect(0, 0, w, h);
+
+      const paddingLeft = 32;
+      const paddingRight = 14;
+      const paddingTop = 18;
+      const paddingBottom = 16;
+      const plotW = w - paddingLeft - paddingRight;
+      const plotH = h - paddingTop - paddingBottom;
+
+      const valid = historyData.filter(d => d !== null);
+      let maxTime = valid.length > 0 ? Math.max(...valid) : 40;
+      if (maxTime < 40) maxTime = 40;
+      // Round maxTime up to nearest 10
+      maxTime = Math.ceil(maxTime / 10) * 10;
+
+      // Draw horizontal threshold grid lines
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
+      ctx.lineWidth = 1;
+      ctx.font = '9px Consolas, monospace';
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.6)';
+      ctx.textAlign = 'right';
+
+      const gridSteps = [0, 0.5, 1];
+      for (let step of gridSteps) {
+          const y = paddingTop + plotH * (1 - step);
+          const label = `${Math.round(maxTime * step)}ms`;
+          ctx.beginPath();
+          ctx.moveTo(paddingLeft, y);
+          ctx.lineTo(w - paddingRight, y);
+          ctx.stroke();
+          ctx.fillText(label, paddingLeft - 4, y + 3);
+      }
+
       if (historyData.length === 0) return;
       
-      const padding = 15;
-      const valid = historyData.filter(d => d !== null);
-      let maxTime = valid.length > 0 ? Math.max(...valid) : 50;
-      if (maxTime < 40) maxTime = 40;
-      
       const pts = historyData.length;
-      const stepX = (w - padding * 2) / Math.max(10, pts - 1);
+      const stepX = plotW / Math.max(10, pts - 1);
       
+      // Fill gradient under curve
+      const gradient = ctx.createLinearGradient(0, paddingTop, 0, paddingTop + plotH);
+      gradient.addColorStop(0, 'rgba(59, 130, 246, 0.35)');
+      gradient.addColorStop(1, 'rgba(59, 130, 246, 0.02)');
+
+      ctx.beginPath();
+      let firstFilled = false;
+      let firstX = paddingLeft;
+      let lastX = paddingLeft;
+
+      for (let i = 0; i < pts; i++) {
+          const val = historyData[i];
+          const x = paddingLeft + i * stepX;
+          if (val !== null) {
+              const y = paddingTop + plotH - ((val / maxTime) * plotH);
+              if (!firstFilled) {
+                  ctx.moveTo(x, paddingTop + plotH);
+                  ctx.lineTo(x, y);
+                  firstFilled = true;
+                  firstX = x;
+              } else {
+                  ctx.lineTo(x, y);
+              }
+              lastX = x;
+          }
+      }
+      if (firstFilled) {
+          ctx.lineTo(lastX, paddingTop + plotH);
+          ctx.closePath();
+          ctx.fillStyle = gradient;
+          ctx.fill();
+      }
+
+      // Stroke line
       ctx.beginPath();
       ctx.strokeStyle = '#3b82f6';
       ctx.lineWidth = 2;
-      
-      let first = true;
+      let firstStroke = true;
       for (let i = 0; i < pts; i++) {
           const val = historyData[i];
-          const x = padding + i * stepX;
+          const x = paddingLeft + i * stepX;
           if (val === null) {
-              ctx.fillStyle = '#ef4444';
-              ctx.fillRect(x - 2, h - padding - 2, 4, 4);
-              first = true;
+              firstStroke = true;
               continue;
           }
-          const y = h - padding - ((val / maxTime) * (h - padding * 2));
-          if (first) { ctx.moveTo(x, y); first = false; } else { ctx.lineTo(x, y); }
-          ctx.fillStyle = '#3b82f6';
-          ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
-          ctx.beginPath(); ctx.moveTo(x, y);
+          const y = paddingTop + plotH - ((val / maxTime) * plotH);
+          if (firstStroke) {
+              ctx.moveTo(x, y);
+              firstStroke = false;
+          } else {
+              ctx.lineTo(x, y);
+          }
       }
       ctx.stroke();
+
+      // Draw points
+      for (let i = 0; i < pts; i++) {
+          const val = historyData[i];
+          const x = paddingLeft + i * stepX;
+          const isHovered = (i === hoverIdx);
+
+          if (val === null) {
+              // Packet loss indicator
+              ctx.fillStyle = '#ef4444';
+              ctx.fillRect(x - 3, paddingTop + plotH - 3, 6, 6);
+          } else {
+              const y = paddingTop + plotH - ((val / maxTime) * plotH);
+              ctx.fillStyle = isHovered ? '#60a5fa' : '#3b82f6';
+              ctx.beginPath();
+              ctx.arc(x, y, isHovered ? 5 : 3, 0, Math.PI * 2);
+              ctx.fill();
+              if (isHovered) {
+                  ctx.strokeStyle = '#ffffff';
+                  ctx.lineWidth = 1.5;
+                  ctx.stroke();
+              }
+          }
+      }
   }
+
+  // Interactive tooltip on canvas
+  canvas.addEventListener('mousemove', (e) => {
+      if (historyData.length === 0) return;
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      const paddingLeft = 32;
+      const paddingRight = 14;
+      const plotW = rect.width - paddingLeft - paddingRight;
+      const pts = historyData.length;
+      const stepX = plotW / Math.max(10, pts - 1);
+
+      let closestIdx = -1;
+      let closestDist = Infinity;
+      for (let i = 0; i < pts; i++) {
+          const x = paddingLeft + i * stepX;
+          const dist = Math.abs(mouseX - x);
+          if (dist < closestDist && dist < 20) {
+              closestDist = dist;
+              closestIdx = i;
+          }
+      }
+
+      if (closestIdx !== -1) {
+          const val = historyData[closestIdx];
+          const packetNum = closestIdx + 1;
+          const x = paddingLeft + closestIdx * stepX;
+          graphTooltip.style.display = 'block';
+          graphTooltip.style.left = `${Math.min(rect.width - 110, Math.max(10, x - 40))}px`;
+          graphTooltip.style.top = `${Math.max(5, mouseY - 28)}px`;
+          if (val === null) {
+              graphTooltip.innerHTML = `<span style="color:#f87171;">#${packetNum}: Lost (Timeout)</span>`;
+          } else {
+              graphTooltip.innerHTML = `<span>#${packetNum}: <strong>${val}ms</strong></span>`;
+          }
+          drawGraph(closestIdx);
+      } else {
+          graphTooltip.style.display = 'none';
+          drawGraph(-1);
+      }
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+      graphTooltip.style.display = 'none';
+      drawGraph(-1);
+  });
 
   function stopPing() {
       if (!isPinging) return;
       clearInterval(pingInterval);
+      pingInterval = null;
       isPinging = false;
       setStatus('idle');
       btnAction.innerHTML = 'Ping <span class="kbd-badge">P</span>';
@@ -672,7 +1019,7 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       btnMTU.disabled = false;
       setInputsDisabled(false);
       
-      const lossPercent = Math.round((stats.lost / stats.sent) * 100) || 0;
+      const lossPercent = stats.sent > 0 ? Math.round((stats.lost / stats.sent) * 100) : 0;
       append(`\nPing statistics for ${currentHost}:\n`, 'summary_header');
       append(`    Packets: Sent = ${stats.sent}, Received = ${stats.recv}, Lost = ${stats.lost} (${lossPercent}% loss),\n`, 'summary_packets');
       
@@ -683,18 +1030,21 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
           append(`Approximate round trip times in milli-seconds:\n`, 'summary_times_header');
           append(`    Minimum = ${min}ms, Maximum = ${max}ms, Average = ${avg}ms\n`, 'summary_times', { min, max, avg });
       }
+      playCompleteSound();
       showToast(`Ping completed (${lossPercent}% loss)`, lossPercent === 0 ? 'success' : 'warning', 3000);
   }
 
   function startMtuSweep() {
+      if (isBusy()) return;
       currentHost = hostInput.value.trim() || '127.0.0.1';
+      saveConfig();
       out.value = "";
       logEntries = [];
       historyData = [];
       valJitter.textContent = "-";
       valLoss.textContent = "-";
       valMTU.textContent = "...";
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawGraph();
 
       append(`============================================================\n`, 'mtu_header');
       append(` KPing Path MTU (PMTU) & Fragmentation Diagnostics\n`, 'mtu_header');
@@ -715,8 +1065,9 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       let maxPass = 0;
 
       const maxAllowedPayload = (currentHost === '127.0.0.1' || currentHost === 'localhost') ? 65500 : 1472;
-      showToast(`Starting Path MTU sweep for <strong>${currentHost}</strong>...`, 'info', 2500);
+      showToast(`Starting Path MTU sweep for <strong>${escapeHtml(currentHost)}</strong>...`, 'info', 2500);
 
+      if (pingInterval) clearInterval(pingInterval);
       pingInterval = setInterval(() => {
           if (pIndex >= probeSizes.length) {
               finishMtuSweep(maxPass);
@@ -732,9 +1083,11 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
               const lat = Math.floor(Math.random() * 15) + (currentHost === '127.0.0.1' ? 1 : 12);
               historyData.push(lat);
               append(`[Probe ${pIndex}/${probeSizes.length}] Payload ${curSize} B (IP Packet ${totalIpSize} B) -> [PASS] Unfragmented reply OK (${lat}ms)\n`, 'mtu_pass', { probe: pIndex, size: curSize, totalIpSize, pass: true, latency: lat });
+              playPmtuSound(true);
           } else {
               historyData.push(null);
               append(`[Probe ${pIndex}/${probeSizes.length}] Payload ${curSize} B (IP Packet ${totalIpSize} B) -> [FRAG] Packet exceeds Path MTU (DF set)\n`, 'mtu_frag', { probe: pIndex, size: curSize, totalIpSize, pass: false, error: 'Packet needs to be fragmented but DF set' });
+              playPmtuSound(false);
           }
           drawGraph();
       }, 700);
@@ -742,6 +1095,7 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
 
   function finishMtuSweep(maxPass) {
       clearInterval(pingInterval);
+      pingInterval = null;
       isMtuSweeping = false;
       setStatus('idle');
       btnMTU.innerHTML = 'MTU <span class="kbd-badge">M</span>';
@@ -767,12 +1121,14 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       append(`   - Recommended TCP MSS:      ${recommendedMSS} bytes (MTU - 40B TCP/IP headers)\n`, 'mtu_summary');
       append(`   - Classification:           ${classification}\n`, 'mtu_summary');
       append(`------------------------------------------------------------\n\n`, 'mtu_summary', { maxPass, calculatedMTU, recommendedMSS, classification });
+      playCompleteSound();
       showToast(`PMTU Sweep Complete: <strong>${calculatedMTU}B MTU</strong> (MSS ${recommendedMSS}B)`, 'success', 3500);
   }
 
   function stopMtuSweep() {
       if (!isMtuSweeping) return;
       clearInterval(pingInterval);
+      pingInterval = null;
       isMtuSweeping = false;
       setStatus('idle');
       btnMTU.innerHTML = 'MTU <span class="kbd-badge">M</span>';
@@ -784,29 +1140,16 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       showToast("Path MTU Discovery cancelled", "warning", 2500);
   }
 
-  btnAction.onclick = () => {
-      if (isPinging) stopPing();
-      else startPing();
-  };
-
-  btnMTU.onclick = () => {
-      if (isMtuSweeping) stopMtuSweep();
-      else startMtuSweep();
-  };
-
-  btnTrace.onclick = () => {
-      if (isPinging && !isTracing) return;
-      if (isTracing) {
-          stopTrace();
-          return;
-      }
+  function startTrace() {
+      if (isBusy()) return;
       currentHost = hostInput.value.trim() || '127.0.0.1';
+      saveConfig();
       out.value = "";
       logEntries = [];
       historyData = [];
       valJitter.textContent = "-";
       valLoss.textContent = "-";
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawGraph();
       
       append(`Tracing route to ${currentHost} over a maximum of 30 hops:\n\n`, 'trace_header');
       
@@ -817,15 +1160,17 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       btnAction.disabled = true;
       btnMTU.disabled = true;
       setInputsDisabled(true);
-      showToast(`Tracing route to <strong>${currentHost}</strong>...`, 'info', 2500);
+      showToast(`Tracing route to <strong>${escapeHtml(currentHost)}</strong>...`, 'info', 2500);
       
       let hop = 1;
       const maxHops = currentHost === '127.0.0.1' || currentHost === 'localhost' ? 1 : 8 + Math.floor(Math.random() * 5); 
       
+      if (pingInterval) clearInterval(pingInterval);
       pingInterval = setInterval(() => {
           if (hop > maxHops) {
               append(`\nTrace complete.\n`, 'trace_complete');
               stopTrace();
+              playCompleteSound();
               showToast("Route Trace complete", "success", 3000);
               return;
           }
@@ -843,13 +1188,15 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
               const rHost = `router-${hop}.network`;
               append(` ${hop.toString().padStart(2, ' ')}    ${t1} ms    ${t2} ms    ${t3} ms  ${rHost} [${ip}]\n`, 'trace_hop', { hop, t1, t2, t3, host: rHost, ip });
           }
+          playTraceSound();
           hop++;
       }, 1000);
-  };
-  
+  }
+
   function stopTrace() {
       if (!isTracing) return;
       clearInterval(pingInterval);
+      pingInterval = null;
       isTracing = false;
       setStatus('idle');
       btnTrace.innerHTML = 'Trace <span class="kbd-badge">T</span>';
@@ -858,25 +1205,46 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       btnMTU.disabled = false;
       setInputsDisabled(false);
   }
-  
+
+  btnAction.onclick = () => {
+      if (isPinging) stopPing();
+      else startPing();
+  };
+
+  btnMTU.onclick = () => {
+      if (isMtuSweeping) stopMtuSweep();
+      else startMtuSweep();
+  };
+
+  btnTrace.onclick = () => {
+      if (isTracing) stopTrace();
+      else startTrace();
+  };
+
   function exportLog() {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+      const payload = JSON.stringify({
           host: hostInput.value.trim(),
           timestamp: new Date().toISOString(),
           stats,
           logs: logEntries
-      }, null, 2));
+      }, null, 2);
+
+      const blob = new Blob([payload], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
-      anchor.setAttribute("href", dataStr);
-      anchor.setAttribute("download", `kping_log_${new Date().getTime()}.json`);
+      anchor.setAttribute("href", url);
+      anchor.setAttribute("download", `kping_log_${Date.now()}.json`);
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
       showToast("Log exported as <strong>kping_log.json</strong>", "success", 3000);
   }
 
   btnExport.onclick = exportLog;
+  btnCopy.onclick = copyLog;
   btnClear.onclick = clearOutput;
+  btnSound.onclick = toggleSound;
   btnHelp.onclick = openHelpModal;
 
   // Enter to ping on input fields
@@ -884,7 +1252,7 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
     inp.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        if (!isPinging && !isTracing && !isMtuSweeping) {
+        if (!isBusy()) {
           startPing();
         }
       }
@@ -896,11 +1264,20 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       const active = document.activeElement;
       const isInput = active.tagName === 'INPUT' || (active.tagName === 'TEXTAREA' && active.id !== 'out') || active.tagName === 'SELECT';
 
-      // Save / Export hotkey
+      // Save / Export hotkey (Ctrl+S)
       if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
           e.preventDefault();
           exportLog();
           return;
+      }
+
+      // Copy Console hotkey (Ctrl+C when not selecting in text/inputs)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
+          if (!isInput && window.getSelection().toString().length === 0) {
+              e.preventDefault();
+              copyLog();
+              return;
+          }
       }
 
       // Escape hotkey
@@ -928,7 +1305,7 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
               if (isPinging) stopPing(); else startPing();
           } else if (e.key === 't' || e.key === 'T') {
               e.preventDefault();
-              btnTrace.click();
+              if (isTracing) stopTrace(); else startTrace();
           } else if (e.key === 'm' || e.key === 'M') {
               e.preventDefault();
               if (isMtuSweeping) stopMtuSweep(); else startMtuSweep();
@@ -938,6 +1315,9 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
           } else if (e.key === 'c' || e.key === 'C') {
               e.preventDefault();
               clearOutput();
+          } else if (e.key === 'u' || e.key === 'U') {
+              e.preventDefault();
+              toggleSound();
           } else if (e.key >= '1' && e.key <= '6') {
               e.preventDefault();
               selectPresetByIndex(parseInt(e.key));
@@ -945,6 +1325,8 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       }
   });
 
+  // Initialize
+  loadConfig();
   setTimeout(resizeCanvas, 100);
 
   // Startup Welcome Toast

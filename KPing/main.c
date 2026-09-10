@@ -56,6 +56,40 @@ const char* PRESET_HOSTS[] = {
     "192.168.1.1"
 };
 
+void SanitizeHost(char* dest, const char* src, int maxLen) {
+    if (!dest || maxLen <= 0) return;
+    dest[0] = 0;
+    if (!src) return;
+    int j = 0;
+    for (int i = 0; src[i] != 0 && j < maxLen - 1; i++) {
+        char c = src[i];
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+            c == '.' || c == '-' || c == '_' || c == ':') {
+            dest[j++] = c;
+        }
+    }
+    dest[j] = 0;
+    if (j == 0) lstrcpyA(dest, "127.0.0.1");
+}
+
+void CopyConsoleToClipboard(HWND hwnd) {
+    int len = GetWindowTextLengthA(hOutput);
+    if (len <= 0) return;
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len + 1);
+    if (!hMem) return;
+    char* pMem = (char*)GlobalLock(hMem);
+    if (!pMem) { GlobalFree(hMem); return; }
+    GetWindowTextA(hOutput, pMem, len + 1);
+    GlobalUnlock(hMem);
+    if (OpenClipboard(hwnd)) {
+        EmptyClipboard();
+        SetClipboardData(CF_TEXT, hMem);
+        CloseClipboard();
+    } else {
+        GlobalFree(hMem);
+    }
+}
+
 void AppendText(const char* text) {
     int len = GetWindowTextLengthA(hOutput);
     if (len > 30000) {
@@ -65,6 +99,7 @@ void AppendText(const char* text) {
     }
     SendMessageA(hOutput, EM_SETSEL, len, len);
     SendMessageA(hOutput, EM_REPLACESEL, 0, (LPARAM)text);
+    SendMessageA(hOutput, WM_VSCROLL, SB_BOTTOM, 0);
 }
 
 void ClearOutput() {
@@ -156,21 +191,40 @@ DWORD WINAPI PingThread(LPVOID param) {
     int mode = (int)(INT_PTR)param; // 0 = Ping, 1 = Trace, 2 = MTU Sweep
     bCancelOperation = FALSE;
     
+    char rawHost[256];
+    GetWindowTextA(hInput, rawHost, 256);
     char host[256];
-    GetWindowTextA(hInput, host, 256);
-    if (host[0] == 0) lstrcpyA(host, "127.0.0.1");
+    SanitizeHost(host, rawHost, 256);
 
     char countStr[32] = "4";
     GetWindowTextA(hInputCount, countStr, 32);
-    if (countStr[0] == 0) lstrcpyA(countStr, "4");
+    int countVal = 4;
+    for (int i = 0; countStr[i] >= '0' && countStr[i] <= '9'; i++) {
+        countVal = countVal * 10 + (countStr[i] - '0');
+    }
+    if (countVal < 1) countVal = 1;
+    if (countVal > 1000) countVal = 1000;
+    wsprintfA(countStr, "%d", countVal);
 
     char sizeStr[32] = "32";
     GetWindowTextA(hInputSize, sizeStr, 32);
-    if (sizeStr[0] == 0) lstrcpyA(sizeStr, "32");
+    int sizeVal = 32;
+    for (int i = 0; sizeStr[i] >= '0' && sizeStr[i] <= '9'; i++) {
+        sizeVal = sizeVal * 10 + (sizeStr[i] - '0');
+    }
+    if (sizeVal < 1) sizeVal = 1;
+    if (sizeVal > 65500) sizeVal = 65500;
+    wsprintfA(sizeStr, "%d", sizeVal);
 
     char ttlStr[32] = "115";
     GetWindowTextA(hInputTTL, ttlStr, 32);
-    if (ttlStr[0] == 0) lstrcpyA(ttlStr, "115");
+    int ttlVal = 115;
+    for (int i = 0; ttlStr[i] >= '0' && ttlStr[i] <= '9'; i++) {
+        ttlVal = ttlVal * 10 + (ttlStr[i] - '0');
+    }
+    if (ttlVal < 1) ttlVal = 1;
+    if (ttlVal > 255) ttlVal = 255;
+    wsprintfA(ttlStr, "%d", ttlVal);
 
     BOOL continuous = SendMessage(hCheckCont, BM_GETCHECK, 0, 0) == BST_CHECKED;
     BOOL hexdump = SendMessage(hCheckHex, BM_GETCHECK, 0, 0) == BST_CHECKED;
@@ -182,7 +236,7 @@ DWORD WINAPI PingThread(LPVOID param) {
         EnableWindow(hBtn, FALSE);
         EnableWindow(hBtnTrace, FALSE);
 
-        char banner[512];
+        char banner[1024];
         wsprintfA(banner, "============================================================\r\n"
                           " KPing Path MTU (PMTU) & Fragmentation Diagnostics\r\n"
                           " Target Host: %s\r\n"
@@ -214,7 +268,7 @@ DWORD WINAPI PingThread(LPVOID param) {
             si.wShowWindow = SW_HIDE;
 
             PROCESS_INFORMATION pi;
-            char outAccum[2048] = { 0 };
+            char outAccum[4096] = { 0 };
             int outAccumLen = 0;
 
             if (CreateProcessA(NULL, cmd, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
@@ -240,7 +294,7 @@ DWORD WINAPI PingThread(LPVOID param) {
 
             if (bCancelOperation) break;
 
-            char logLine[256];
+            char logLine[512];
             BOOL isFragmentError = StrContains(outAccum, "fragment") || StrContains(outAccum, "DF set") || StrContains(outAccum, "DF");
             BOOL isSuccess = StrContains(outAccum, "Reply from") || StrContains(outAccum, "bytes=");
             BOOL isTimeout = StrContains(outAccum, "timed out") || StrContains(outAccum, "Destination host unreachable");
@@ -273,7 +327,7 @@ DWORD WINAPI PingThread(LPVOID param) {
             else if (calculatedMTU >= 1400) classification = "VPN / Tunnel Encapsulation (1400-1479 bytes)";
             else if (calculatedMTU > 0) classification = "Restricted MTU / Nested Tunnel (<1400 bytes)";
 
-            char summary[512];
+            char summary[1024];
             wsprintfA(summary, "\r\n------------------------------------------------------------\r\n"
                                " PMTU Diagnostics Report for %s:\r\n"
                                "   - Max Unfragmented Payload: %d bytes\r\n"
@@ -370,15 +424,17 @@ DWORD WINAPI PingThread(LPVOID param) {
 
                 char buf[512];
                 DWORD bytesRead;
+                BOOL lastCharWasCR = FALSE;
                 while (ReadFile(hRead, buf, sizeof(buf) - 1, &bytesRead, NULL) && bytesRead > 0) {
                     buf[bytesRead] = 0;
                     char formatBuf[1024];
                     int j = 0;
                     for (DWORD i = 0; i < bytesRead && j < 1020; i++) {
-                        if (buf[i] == '\n' && (i == 0 || buf[i-1] != '\r')) {
+                        if (buf[i] == '\n' && !lastCharWasCR && (i == 0 || buf[i-1] != '\r')) {
                             formatBuf[j++] = '\r';
                         }
                         formatBuf[j++] = buf[i];
+                        lastCharWasCR = (buf[i] == '\r');
                     }
                     formatBuf[j] = 0;
                     AppendText(formatBuf);
@@ -436,10 +492,12 @@ void TriggerMTU() {
 }
 
 void CancelCurrentOperation() {
+    bCancelOperation = TRUE;
+    if (hPingProcess) {
+        TerminateProcess(hPingProcess, 0);
+    }
     if (hThread) {
-        bCancelOperation = TRUE;
-        if (hPingProcess) TerminateProcess(hPingProcess, 0);
-        AppendText("\r\n[!] Operation cancelled.\r\n");
+        AppendText("\r\n[!] Operation cancelled by user.\r\n");
     }
 }
 
@@ -496,12 +554,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             hStaticCount = CreateWindowEx(0, "STATIC", "Count:", WS_CHILD | WS_VISIBLE, 15, 44, 42, 22, hwnd, NULL, NULL, NULL);
             hInputCount = CreateWindowEx(0, "EDIT", "4", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_NUMBER, 60, 42, 40, 22, hwnd, NULL, NULL, NULL);
+            SetWindowLongPtr(hInputCount, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
 
             hStaticSize = CreateWindowEx(0, "STATIC", "Size:", WS_CHILD | WS_VISIBLE, 110, 44, 35, 22, hwnd, NULL, NULL, NULL);
             hInputSize = CreateWindowEx(0, "EDIT", "32", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_NUMBER, 148, 42, 45, 22, hwnd, NULL, NULL, NULL);
+            SetWindowLongPtr(hInputSize, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
 
             hStaticTTL = CreateWindowEx(0, "STATIC", "TTL:", WS_CHILD | WS_VISIBLE, 203, 44, 30, 22, hwnd, NULL, NULL, NULL);
             hInputTTL = CreateWindowEx(0, "EDIT", "115", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_NUMBER, 235, 42, 38, 22, hwnd, NULL, NULL, NULL);
+            SetWindowLongPtr(hInputTTL, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
 
             hCheckCont = CreateWindowEx(0, "BUTTON", "Continuous (-t)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 285, 44, 110, 20, hwnd, NULL, NULL, NULL);
             hCheckHex = CreateWindowEx(0, "BUTTON", "Hex Dump", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 405, 44, 85, 20, hwnd, NULL, NULL, NULL);
@@ -510,11 +571,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hOutput = CreateWindowEx(0, "EDIT", "Welcome to KPing Network Diagnostics.\r\nFeatures: ICMP Ping [P], Path MTU Discovery (PMTU) [M], Route Tracing [T], Hex Dump, DF-Flag Toggle, Log Export [E].\r\nPress Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.\r\n\r\n",
                 WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY,
                 15, 75, W - 30, H - 90, hwnd, NULL, NULL, NULL);
+            SendMessage(hOutput, EM_LIMITTEXT, 1048576, 0);
 
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
             SendMessage(hOutput, WM_SETFONT, (WPARAM)hFontMono, TRUE);
             break;
         }
+        case WM_ERASEBKGND:
+            return 1;
         case WM_CTLCOLORSTATIC: {
             HDC hdc = (HDC)wParam;
             if ((HWND)lParam == hStatic || (HWND)lParam == hStaticCount || (HWND)lParam == hStaticSize || (HWND)lParam == hStaticTTL ||
@@ -586,6 +650,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return 0;
         }
         case WM_DESTROY:
+            CancelCurrentOperation();
+            if (hThread) {
+                WaitForSingleObject(hThread, 300);
+            }
             DeleteObject((HBRUSH)GetClassLongPtr(hwnd, GCLP_HBRBACKGROUND));
             DeleteObject(hbg);
             DeleteObject(hinputBg);
@@ -643,7 +711,7 @@ void MainEntry() {
                 continue;
             }
             if (!isEditing) {
-                if (msg.wParam == 'P' || msg.wParam == 'p' || msg.wParam == VK_RETURN) {
+                if (msg.wParam == 'P' || msg.wParam == 'p' || (msg.wParam == VK_RETURN && (hFocus == hBtn || hFocus == hwnd || hFocus == hOutput))) {
                     TriggerPing();
                     continue;
                 } else if (msg.wParam == 'T' || msg.wParam == 't') {
@@ -656,7 +724,11 @@ void MainEntry() {
                     ExportLog(hwnd);
                     continue;
                 } else if (msg.wParam == 'C' || msg.wParam == 'c') {
-                    ClearOutput();
+                    if (GetKeyState(VK_CONTROL) < 0) {
+                        CopyConsoleToClipboard(hwnd);
+                    } else {
+                        ClearOutput();
+                    }
                     continue;
                 } else if (msg.wParam >= '1' && msg.wParam <= '6') {
                     int pIdx = (int)(msg.wParam - '0');
