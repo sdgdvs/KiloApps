@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KFortress
+**Target App:** KFreecell
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KFortress
 - KFreecell
 - KGo
 - KGraph
@@ -173,8 +172,20 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KFarm
 - KFlash
 - KFont
+- KFortress
 
 ## Test Reports
+
+- **KFortress**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
+  - ✅ Core gameplay works (12 diverse campaign maps with biome environmental art and ambient weather effects, 7 defense towers with 3-tier upgrade trees and 4 mythic elemental fusions Inferno/Superconductor/Venomspite/SolarBeam, 4 tactical traps Spike Pit/Oil Slick/Barricade/Dynamite, interactive controllable Commander hero with 4 active skills and auto-attack, 5 challenge mutators Bloodlust/Titan/Eclipse/Meteor/PhaseShift, Research Academy with 8 persistent upgrades, multi-mode Campaign/Endless/BossBlitz, and Web Audio dynamic synthesizers).
+  - 🔧 FIXED: In `castTrebuchet()` and base damage handling, screen shake was assigned to an undeclared global variable (`screenShake = 22;` and `screenShake = (dmgToBase >= 3) ? 15 : 5;`), bypassing the kinematic screen shake physics engine (`triggerScreenShake()`). Switched both to `triggerScreenShake()`.
+  - 🔧 FIXED: Global `keydown` listener checked bare `e.key` without verifying `!e.ctrlKey && !e.altKey && !e.metaKey`, intercepting browser accelerators (`Ctrl+R` which wiped player defenses mid-session, `Ctrl+F` which cast Firestorm spending 100g, `Ctrl+A` opening Academy, `Ctrl+H` opening Guide, `Ctrl+1..5` casting skills). Added modifier guards.
+  - 🔧 FIXED: Gameplay hotkeys (`Space`, `1-5`, `F`, `B`, `R`) continued to fire in the background when modal dialogs (Research Academy, Mutators, Commander's Field Guide) were open. Suppressed background hotkeys while any modal is visible.
+  - 🔧 FIXED: Commander skills (`castHeal`, `castShield`, `castMeteor`, `castReinforce`, `castTrebuchet`) and battle spells (`btnFirestorm`, `btnBlizzard`) lacked `gameOver` guards, allowing actions and gold expenditure after citadel walls were breached. Added `if (gameOver) return;` to all skills and spells.
+  - 🔧 FIXED: Selecting a trap card (Spike, Oil, Barricade, Dynamite) and clicking an empty tower slot placed a corrupted trap-tower with `NaN` damage and undefined stats into the stone pedestal. Added guard to disallow trap placement on tower slots with toast feedback.
+  - 🔧 FIXED: Purchasing "Wall Durability (+10 HP)" or "Hero Cooldowns (-10%)" in the Research Academy did not update `maxBaseHp` or hero skill cooldown ceilings until a full game reset. Updated `buyTech()` to dynamically apply base HP and hero cooldown changes immediately.
+  - 🔧 FIXED: Tower selection circle hardcoded range to `130px`, misleading players on high-range towers (Siege Ballista 190, Venomspite 210) or upgraded towers. Dynamically set range circle to match the selected tower's actual attack radius.
+  - 🔧 FIXED: Citadel breach / defeat state only disabled `#waveBtn` without visual canvas feedback or defeat notice. Added red canvas defeat banner ("CITADEL HAS FALLEN") and toast notification prompting player to reset.
 
 - **KFont**: ISSUES FOUND ⚠️ (6 issues, 6 fixed inline)
   - ✅ Core functionality works (font typography inspector suite with 5 tab views: Canvas/OS2 Font Metrics & BBox table, Unicode Range Explorer across 12 blocks with character inspection, OpenType Kerning comparison pairs with font-feature-settings and rasterization hinting canvas across 6 scale sizes, Glyph Anatomy & Vector Metrics dissector with baseline/cap/x-height/ascent/descent guides and ABC side bearings, Live Sample tester with 5 quick pangram presets, JSON anatomy report export, and localStorage persistence).

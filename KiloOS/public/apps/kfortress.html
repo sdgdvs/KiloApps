@@ -938,6 +938,17 @@
       if (gold >= cost && lvl < 5) {
         gold -= cost;
         t.setLvl(lvl + 1);
+        if (id === 'techWall') {
+          maxBaseHp = 20 + techWallHp * 10;
+          baseHp = Math.min(maxBaseHp, baseHp + 10);
+        } else if (id === 'techHero') {
+          let cdMod = 1 - (techHeroCd * 0.1);
+          if (mutators.eclipse) cdMod *= 1.4;
+          hero.maxHealCd = Math.max(30, Math.floor(300 * cdMod));
+          hero.maxShieldCd = Math.max(60, Math.floor(600 * cdMod));
+          hero.maxMeteorCd = Math.max(45, Math.floor(450 * cdMod));
+          hero.maxSummonCd = Math.max(50, Math.floor(500 * cdMod));
+        }
         playBeep(600, 0.1, 'square', 0.15);
         playBeep(900, 0.15, 'triangle', 0.15);
         showToast("Research Upgraded", `${t.name} reached Level ${lvl + 1}/5!`, "success", 3000);
@@ -1024,7 +1035,7 @@
     });
 
     function castHeal() {
-      if (hero.healCd > 0 || hero.respawnTimer > 0) return;
+      if (gameOver || hero.healCd > 0 || hero.respawnTimer > 0) return;
       hero.healCd = hero.maxHealCd;
       hero.hp = Math.min(hero.maxHp, hero.hp + 50);
       baseHp = Math.min(maxBaseHp, baseHp + 5);
@@ -1035,7 +1046,7 @@
     }
     
     function castShield() {
-      if (hero.shieldCd > 0 || hero.respawnTimer > 0) return;
+      if (gameOver || hero.shieldCd > 0 || hero.respawnTimer > 0) return;
       hero.shieldCd = hero.maxShieldCd;
       hero.shieldActive = 150;
       playBeep(300, 0.3, 'square', 0.2);
@@ -1044,7 +1055,7 @@
     }
     
     function castMeteor() {
-      if (hero.meteorCd > 0 || hero.respawnTimer > 0) return;
+      if (gameOver || hero.meteorCd > 0 || hero.respawnTimer > 0) return;
       hero.meteorCd = hero.maxMeteorCd;
       playBeep(150, 0.4, 'sawtooth', 0.3);
       spawnFloatingText(hero.x, hero.y - 40, "METEOR STRIKE!", "#ef4444");
@@ -1061,7 +1072,7 @@
     }
 
     function castReinforce() {
-      if (hero.summonCd > 0 || hero.respawnTimer > 0) return;
+      if (gameOver || hero.summonCd > 0 || hero.respawnTimer > 0) return;
       hero.summonCd = hero.maxSummonCd;
       const count = 2 + (techMilitia > 0 ? 1 : 0);
       const hpBonus = 1 + (techMilitia * 0.5);
@@ -1084,11 +1095,11 @@
     }
 
     function castTrebuchet(targetX, targetY) {
-      if (trebuchetCd > 0) return;
+      if (gameOver || trebuchetCd > 0) return;
       trebuchetCd = maxTrebuchetCd;
       const tx = targetX || hero.targetX;
       const ty = targetY || hero.targetY;
-      screenShake = 22;
+      triggerScreenShake(22);
       playBeep(120, 0.4, 'sawtooth', 0.35);
       spawnExplosion(tx, ty, "#fbbf24");
       spawnFloatingText(tx, ty - 40, "SIEGE TREBUCHET!", "#fbbf24");
@@ -1116,6 +1127,34 @@
         document.getElementById('helpModal').style.display = 'none';
         return;
       }
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+      const anyModalOpen = 
+        document.getElementById('academyModal').style.display === 'flex' ||
+        document.getElementById('mutatorsModal').style.display === 'flex' ||
+        document.getElementById('helpModal').style.display === 'flex';
+
+      if (e.key.toLowerCase() === 'a') {
+        const modal = document.getElementById('academyModal');
+        modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
+        if (modal.style.display === 'flex') updateAcademyUI();
+        return;
+      }
+      if (e.key.toLowerCase() === 'm') {
+        const modal = document.getElementById('mutatorsModal');
+        modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
+        if (modal.style.display === 'flex') updateMutatorUI();
+        return;
+      }
+      if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
+        if(e.key === 'F1') e.preventDefault();
+        const modal = document.getElementById('helpModal');
+        modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
+        return;
+      }
+
+      if (anyModalOpen) return;
+
       // Space to start wave
       if (e.code === 'Space') {
         e.preventDefault();
@@ -1135,21 +1174,6 @@
       }
       if (e.key.toLowerCase() === 'b') {
         document.getElementById('btnBlizzard').click();
-      }
-      if (e.key.toLowerCase() === 'a') {
-        const modal = document.getElementById('academyModal');
-        modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
-        if (modal.style.display === 'flex') updateAcademyUI();
-      }
-      if (e.key.toLowerCase() === 'm') {
-        const modal = document.getElementById('mutatorsModal');
-        modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
-        if (modal.style.display === 'flex') updateMutatorUI();
-      }
-      if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
-        if(e.key === 'F1') e.preventDefault();
-        const modal = document.getElementById('helpModal');
-        modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
       }
       if (e.key.toLowerCase() === 'r' && !waveInProgress) {
         document.getElementById('resetBtn').click();
@@ -1190,6 +1214,10 @@
 
           if (!targetSlot.occupied) {
             const def = towerDefs[selectedTowerType];
+            if (def && def.isTrap) {
+              showToast("Traps on Field", "Traps must be placed on the enemy path or ground, not tower pedestals!", "warning", 2500);
+              return;
+            }
             if (gold >= def.cost) {
               gold -= def.cost;
               targetSlot.occupied = true;
@@ -1309,6 +1337,7 @@
     });
     
     document.getElementById('btnFirestorm').addEventListener('click', () => {
+      if (gameOver) return;
       if(gold >= 100) {
         gold -= 100;
         playBeep(100, 0.5, 'sawtooth', 0.4);
@@ -1322,6 +1351,7 @@
       }
     });
     document.getElementById('btnBlizzard').addEventListener('click', () => {
+      if (gameOver) return;
       if(gold >= 80) {
         gold -= 80;
         blizzTimer = 300;
@@ -1902,7 +1932,7 @@
           if (hero.shieldActive > 0) dmgToBase = 0;
           baseHp -= dmgToBase;
           if (dmgToBase > 0) {
-            screenShake = (dmgToBase >= 3) ? 15 : 5;
+            triggerScreenShake((dmgToBase >= 3) ? 15 : 5);
             playBeep(180, 0.15, 'sawtooth', 0.25);
             spawnFloatingText(waypoints[waypoints.length - 1].x - 20, waypoints[waypoints.length - 1].y - 30, "-" + dmgToBase + " HP", "#ef4444");
           } else {
@@ -1913,6 +1943,7 @@
             baseHp = 0;
             gameOver = true;
             playBeep(120, 0.4, 'sawtooth', 0.3);
+            showToast("Citadel Fallen!", "Fortress walls breached! Press [R] or click RESET to retry.", "danger", 6000);
           }
           updateHUD();
           continue;
@@ -2480,9 +2511,13 @@
       // Selected Range Circle
       if (selectedSlotIndex !== -1) {
         const slot = scaledSlots[selectedSlotIndex];
+        const rawSlot = slots[selectedSlotIndex];
+        const displayRange = (rawSlot && rawSlot.occupied && rawSlot.tower)
+          ? rawSlot.tower.range
+          : (towerDefs[selectedTowerType] && towerDefs[selectedTowerType].range ? towerDefs[selectedTowerType].range : 130);
         ctx.save();
         ctx.beginPath();
-        ctx.arc(slot.sx, slot.sy, 130, 0, Math.PI * 2);
+        ctx.arc(slot.sx, slot.sy, displayRange, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(251, 191, 36, 0.08)'; ctx.fill();
         ctx.strokeStyle = 'rgba(251, 191, 36, 0.85)'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]); ctx.stroke();
         ctx.restore();
@@ -2771,6 +2806,23 @@
       ctx.fill();
 
       ctx.restore();
+
+      if (gameOver) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.72)';
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = '#ef4444';
+        ctx.font = '900 28px Segoe UI';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = 'rgba(239, 68, 68, 0.9)';
+        ctx.shadowBlur = 16;
+        ctx.fillText('CITADEL HAS FALLEN', w / 2, h / 2 - 10);
+        ctx.fillStyle = '#fde047';
+        ctx.font = '700 13px Segoe UI';
+        ctx.shadowBlur = 4;
+        ctx.fillText('Click RESET [R] to rebuild your defenses', w / 2, h / 2 + 22);
+        ctx.restore();
+      }
 
       ctx.restore();
     }
