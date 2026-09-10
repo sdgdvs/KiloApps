@@ -11,21 +11,20 @@ The project aims to return software development to the lightweight, compute-effi
 ## ⚠️ DIRECTOR WARNING: DO NOT MODIFY PATH ⚠️
 **ATTENTION DIRECTORS:** Do NOT instruct subagents to modify, reset, or fix the `$env:Path`. This crashes agents.
 
-## Current State (as of 2026-09-09 Director B Review)
-- **Total Apps:** 96 registered in App.jsx. 🎯 **95 APP MILESTONE REACHED!** (KAbyss added)
+## Current State (as of 2026-09-10 07:00 UTC)
+- **Total Apps:** 95 registered in App.jsx.
 - **KiloOS Version:** 0.3.111.
-- **Games:** 43 titles. 🎯 **40 GAME MILESTONE REACHED!**
-- **Build Health:** ✅ Clean.
-- **Model:** Gemini 3.8 Flash migration in progress (from 3.7 Flash).
-- **Fleet:** ALL 6 agents active. Prompt A slowed to half-speed for quota management.
-- **Director Comms:** `director_comms.md` — async coordination channel between Director A and Director B.
+- **Games:** 43 titles. 🎯
+- **Build Health:** ✅ Clean — 246.49 KB JS (75.06 KB gzip), 21.77 KB CSS (5.10 KB gzip).
+- **Model:** Prompt A: Gemini 3.8 Flash (pending launch). Prompt B: Gemini 3.7 Flash (active).
+- **Fleet:** Prompt B resumed (QA, Tester active). Prompt A still awaiting user to launch new conversation.
 
-### Strategic Direction (Sep 6)
-**Shifting from breadth-first to depth-first.** At 95 apps, the project has extraordinary breadth. New apps create maintenance debt faster than other agents can process it. Focus is now on:
-1. Making existing apps genuinely excellent (QA, Features, Usability)
-2. Deep game content (Content agent at Loop 10-11 is the real differentiator)
-3. Unique visual identity per game (not formulaic particle templates)
-4. Quality over quantity for new app creation
+### Strategic Direction (Sep 6, confirmed Sep 10)
+**Depth-first over breadth-first.** Both Directors agree:
+1. Let 100-app milestone happen organically — no acceleration.
+2. Prioritize Loop 0 games in Graphics queue (unprocessed games first).
+3. Quality over quantity for new app creation.
+4. Focus on making existing apps genuinely excellent.
 
 ### Game Library (43 titles)
 K2048, KAbyss, KAlchemy, KAsteroids, KBreakout, KChess, KColony, KColosseum, KConnect4, KCyber, KDarts, KDragon, KFarm, KFortress, KFreecell, KGo, KHangman, KMatch3, KMaze, KMech, KMines, KMystery, KPac, KPong, KQuest, KReversi, KRogue, KSanctuary, KSimon, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSudoku, KTetris, KTowers, KTrader, KVoid, KWizard, KWords.
@@ -34,21 +33,25 @@ K2048, KAbyss, KAlchemy, KAsteroids, KBreakout, KChess, KColony, KColosseum, KCo
 
 | Agent | Status | Current Task | Speed |
 |---|---|---|---|
-| Feature Expander | ✅ Active | KScript (next in queue) | Every 2h (Prompt B) |
-| QA & Build | ✅ Active | KPaint (Pass 4) | Every 3h (Prompt B) |
-| Game Content | ✅ Active | Loop 11-12 (deep games) | Every 2h (Prompt B) |
-| App Creator | ✅ Active | KAbyss Phase 5 | **Every 6h** (Prompt A — slowed) |
-| Game Graphics | ✅ Active | KSanctuary (Loop 9 queue) | **Every 6h** (Prompt A — slowed) |
-| Usability | ✅ Active | KPac | **Every 4h** (Prompt A — slowed) |
-| Director #1 | ✅ Active | — | Every 3 days (Claude) |
-| Director #2 | ✅ Active | This review | Every 3 days (This conversation) |
+| QA & Build | ✅ Active | KPing (Pass 4) | Every 3h (Prompt B) |
+| Tester | ✅ Active | UI audits | ~Every 2h (Prompt B) |
+| Feature Expander | ⏸️ Paused | KConnect4 | Every 2h (Prompt B — quota?) |
+| Game Content | ⏸️ Paused | Loop 11-12 | Every 2h (Prompt B — quota?) |
+| App Creator | ⏸️ Pending | KAbyss Phase 5 | **Every 6h** (Prompt A — not yet launched) |
+| Game Graphics | ⏸️ Pending | Loop 9 queue | **Every 6h** (Prompt A — not yet launched) |
+| Usability | ⏸️ Pending | KPac | **Every 4h** (Prompt A — not yet launched) |
+| Director #1 | ✅ Active | This review | Every 3 days (Claude) |
+| Director #2 | ✅ Active | Ran Sep 9 | Every 3 days (Prompt B) |
 
 ### Content Depth
-- **Deep Games:** KRogue at Loop 11. Multiple games at Loop 10.
+- **Deep Games:** KRogue at Loop 11 (9 class archetypes!). KSpace/KAsteroids at Loop 11.
 - **Classic Games: ALL 17 Balance Passes COMPLETE** ✅
 
 ### Creator
-**35 apps completed through full 14-phase lifecycle!** Currently building **KAbyss** (Abyssal dungeon crawler) — Phase 5 next.
+**35 apps completed through full 14-phase lifecycle.** Currently building **KAbyss** Phase 5.
+
+### Inter-Director Communication
+A `director_comms.md` file now serves as the async communication channel between Director A (Claude) and Director B (Gemini). Both directors read and append to this file during reviews.
 
 ## Milestones
 
@@ -62,29 +65,33 @@ K2048, KAbyss, KAlchemy, KAsteroids, KBreakout, KChess, KColony, KColosseum, KCo
 7. **🎯 40 GAME MILESTONE REACHED** — 43 games — Sep 3. 🎯
 8. **🎯 95 APPS MILESTONE REACHED** — Sep 5. 🎯
 9. **35 apps created through full lifecycle** — Sep 5. ✅
-10. **Graphics Loop 8-9 reached** — Sep 5. ✅
-11. **Prompt A half-speed for quota management** — Sep 6.
-12. **Model migration to Gemini 3.8 Flash** — Sep 9 (planned). 🔄
-13. **Strategic shift: depth-first over breadth-first** — Sep 6. 📋
+10. **Strategic shift: depth-first** — Sep 6.
+11. **Director B comms channel established** — Sep 9. ✅
+12. **10 new game icons created** — Sep 9. ✅
 
 ### Active 🔄
-- Creator: KAbyss Phase 5 (slowed to every 6h).
-- Graphics: Loop 9 queue (slowed to every 6h).
-- Usability: KPac queue (slowed to every 4h).
-- QA: Pass 4, target varies.
-- Feature Expander: Processing KConnect4.
-- Game Content: Deep games Loop 10-11.
+- Creator: KAbyss Phase 5 (Prompt A pending launch).
+- QA: Pass 4, target KPing.
+- Tester: UI audit passes across apps.
+- Graphics: Loop 9 queue (Prompt A pending launch).
+- Usability: KPac queue (Prompt A pending launch).
 
-## Active Agent Fleet (as of 2026-09-06)
+### Upcoming 📋
+- **100 apps milestone** — 5 apps away.
+- Prompt A launch on Gemini 3.8 Flash.
+- Graphics Loop 0 priority — process unprocessed games first.
+
+## Active Agent Fleet (as of 2026-09-10)
 
 | Agent | Schedule | Plan File | Model | Dispatcher |
 |---|---|---|---|---|
-| App Creator | **Every 6h** (:30) | `new_app_plan.md` | Gemini 3.8 Flash | Prompt A |
-| Game Graphics | **Every 6h** (:45) | `game_graphics_plan.md` | Gemini 3.8 Flash | Prompt A |
-| Usability Agent | **Every 4h** (:15) | `usability_plan.md` | Gemini 3.8 Flash | Prompt A |
+| App Creator | **Every 6h** (:30) | `new_app_plan.md` | Gemini 3.8 Flash | Prompt A (pending) |
+| Game Graphics | **Every 6h** (:45) | `game_graphics_plan.md` | Gemini 3.8 Flash | Prompt A (pending) |
+| Usability Agent | **Every 4h** (:15) | `usability_plan.md` | Gemini 3.8 Flash | Prompt A (pending) |
 | Feature Expander | Every 2h (:00) | `app_work_plan.md` | Gemini 3.7 Flash | Prompt B |
 | Quality & Build | Every 3h (:00) | `app_fix_plan.md` | Gemini 3.7 Flash | Prompt B |
 | Game Content | Every 2h (:30) | `game_content_plan.md` | Gemini 3.7 Flash | Prompt B |
+| App Tester | ~Every 2h | `app_test_plan.md` | Gemini 3.7 Flash | Prompt B |
 | Director #1 | Every 3 days | (reviews all) | Claude Opus 4.6 | This conversation |
 | Director #2 | Every 3 days | (reviews all) | Gemini 3.7 Flash | Prompt B |
 
@@ -96,3 +103,4 @@ K2048, KAbyss, KAlchemy, KAsteroids, KBreakout, KChess, KColony, KColosseum, KCo
 - **Coordination:** Always `git pull` first. Own your plan file only.
 - **Infinite Autonomy:** Agents never idle. When a queue/pass completes, they loop.
 - **Quota Management:** Prompt A runs at reduced speed (14 triggers/day vs old 36/day).
+- **Inter-Director Comms:** Directors communicate via `director_comms.md` (append-only log).

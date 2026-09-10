@@ -104,6 +104,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 ## Game Queue (round-robin — pick top, work on it, move to bottom)
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
+**⚠️ PRIORITY: If ANY game in the queue is at Loop 0 (not yet processed), work on it FIRST before continuing higher-loop games.**
 
 
 - KSanctuary
