@@ -347,12 +347,11 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       const ctx = canvas.getContext('2d');
       ctx.font = getFontString();
       
-      const metrics = ctx.measureText("Hxyg\u00C5\u00D4\u0178\u00E7");
-      
-      const asc = metrics.fontBoundingBoxAscent || 0;
-      const desc = metrics.fontBoundingBoxDescent || 0;
-      const aAsc = metrics.actualBoundingBoxAscent || 0;
-      const aDesc = metrics.actualBoundingBoxDescent || 0;
+      const szPx = parseFloat(sizeList.value) || 48;
+      const asc = metrics.fontBoundingBoxAscent || metrics.actualBoundingBoxAscent || (szPx * 0.8);
+      const desc = metrics.fontBoundingBoxDescent || metrics.actualBoundingBoxDescent || (szPx * 0.2);
+      const aAsc = metrics.actualBoundingBoxAscent || (asc * 0.9);
+      const aDesc = metrics.actualBoundingBoxDescent || (desc * 0.5);
       
       const emHeight = asc + desc;
       const lineGap = emHeight * 0.12; 
@@ -409,10 +408,11 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       function activateCell(cell) {
         const cp = parseInt(cell.getAttribute('data-codepoint'), 10);
         if (!isNaN(cp)) {
-          anatomyInput.value = String.fromCodePoint(cp);
+          const char = String.fromCodePoint(cp);
+          anatomyInput.value = char;
           safeSetStorage('kfont_anatomy_char', anatomyInput.value);
           switchToTab('panel-anatomy');
-          updateAnatomy();
+          showToast(`Inspecting "${char}" (U+${cp.toString(16).toUpperCase().padStart(4, '0')}) in Anatomy dissector`);
         }
       }
 
@@ -717,7 +717,10 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
     }
     
     function updateSample() {
-      sampleOutput.style.font = getFontString();
+      sampleOutput.style.fontFamily = `"${fontList.value}", sans-serif`;
+      sampleOutput.style.fontSize = sizeList.value;
+      sampleOutput.style.fontWeight = boldCheck.checked ? 'bold' : 'normal';
+      sampleOutput.style.fontStyle = italicCheck.checked ? 'italic' : 'normal';
     }
     
     function updateAll() {
@@ -738,13 +741,25 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         p.classList.toggle('active', p.id === targetId);
       });
       safeSetStorage('kfont_tab', targetId);
+      if (targetId === 'panel-anatomy') updateAnatomy();
+      else if (targetId === 'panel-diagnostics') updateDiagnostics();
+      else if (targetId === 'panel-metrics') updateMetrics();
     }
 
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.onclick = () => {
-        switchToTab(btn.dataset.target);
-        if (btn.dataset.target === 'panel-anatomy') {
-          updateAnatomy();
+    const tabBtns = Array.from(document.querySelectorAll('.tab-btn'));
+    tabBtns.forEach((btn, idx) => {
+      btn.onclick = () => switchToTab(btn.dataset.target);
+      btn.onkeydown = (e) => {
+        if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+          e.preventDefault();
+          const next = tabBtns[(idx + 1) % tabBtns.length];
+          next.focus();
+          next.click();
+        } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+          e.preventDefault();
+          const prev = tabBtns[(idx - 1 + tabBtns.length) % tabBtns.length];
+          prev.focus();
+          prev.click();
         }
       };
     });
@@ -772,6 +787,12 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
     anatomyInput.oninput = () => {
       safeSetStorage('kfont_anatomy_char', anatomyInput.value);
       updateAnatomy();
+    };
+    anatomyInput.onkeydown = (e) => {
+      if (e.key === 'Enter') {
+        anatomyInput.blur();
+        showToast(`Inspecting "${anatomyInput.value}"`);
+      }
     };
     sampleOutput.oninput = () => {
       safeSetStorage('kfont_sample', sampleOutput.innerText);
@@ -960,11 +981,24 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
           toastNotification.style.display = 'none';
           return;
         }
+        if (isInput && document.activeElement && document.activeElement.blur) {
+          document.activeElement.blur();
+          return;
+        }
       }
 
       if (e.key === 'F1') {
         e.preventDefault();
         helpOverlay.classList.toggle('visible');
+        return;
+      }
+
+      // Suppress single-key shortcuts when modifier keys are pressed or modal is open
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+      if (helpOverlay.classList.contains('visible')) {
+        if (e.key.toLowerCase() === 'h') {
+          helpOverlay.classList.remove('visible');
+        }
         return;
       }
 
@@ -979,7 +1013,6 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
           switchToTab('panel-diagnostics');
         } else if (e.key === '4') {
           switchToTab('panel-anatomy');
-          updateAnatomy();
         } else if (e.key === '5') {
           switchToTab('panel-sample');
           sampleOutput.focus();

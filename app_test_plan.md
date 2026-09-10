@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KFont
+**Target App:** KFortress
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KFont
 - KFortress
 - KFreecell
 - KGo
@@ -173,8 +172,18 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KDragon
 - KFarm
 - KFlash
+- KFont
 
 ## Test Reports
+
+- **KFont**: ISSUES FOUND ⚠️ (6 issues, 6 fixed inline)
+  - ✅ Core functionality works (font typography inspector suite with 5 tab views: Canvas/OS2 Font Metrics & BBox table, Unicode Range Explorer across 12 blocks with character inspection, OpenType Kerning comparison pairs with font-feature-settings and rasterization hinting canvas across 6 scale sizes, Glyph Anatomy & Vector Metrics dissector with baseline/cap/x-height/ascent/descent guides and ABC side bearings, Live Sample tester with 5 quick pangram presets, JSON anatomy report export, and localStorage persistence).
+  - 🔧 FIXED: Global `keydown` listener checked bare `e.key` without verifying `!e.ctrlKey && !e.altKey && !e.metaKey`, which hijacked essential browser shortcuts (`Ctrl+1` through `Ctrl+5` for browser tab switching, `Ctrl+C` for clipboard copy, `Ctrl+H` for history, `Ctrl+B` for bookmarks, `Ctrl+I` for page info). Added modifier key guards to protect native browser accelerators.
+  - 🔧 FIXED: Single-key shortcuts (1–5, B, I, C) continued to fire in the background when the Help & Keyboard Shortcuts overlay was open, unexpectedly switching tabs or toggling font bold/italic while reading documentation. Suppressed background hotkeys while `#helpOverlay` is visible.
+  - 🔧 FIXED: In `updateMetrics()`, `metrics.fontBoundingBoxAscent` and `descent` lacked fallbacks for browser engines lacking the `FontBoundingBox` metrics API (e.g. Safari / older engines), causing all Em Height, Line Gap, and extrapolated OS/2 metrics to evaluate to `0.00 px`. Added fallback to `actualBoundingBox` and em-fraction approximations.
+  - 🔧 FIXED: Switching tabs via buttons or keyboard shortcuts did not refresh dynamic canvas renders for the target tab (e.g. switching to Diagnostics did not re-render hinting, switching to Anatomy did not recalculate responsive canvas dimensions). Centralized panel refresh inside `switchToTab()`.
+  - 🔧 FIXED: In `updateSample()`, setting `sampleOutput.style.font = getFontString()` used shorthand CSS font syntax that reset `line-height` from CSS `1.5` to default `normal`, compressing multiline sample text. Switched to individual property assignments (`fontFamily`, `fontSize`, `fontWeight`, `fontStyle`) to preserve container line-height.
+  - 🔧 FIXED: `#anatomyInput` lacked an Enter key handler to commit text and blur focus, clicking glyph cells switched tabs without user feedback, active inputs were not blurred on Escape, and tab buttons lacked Arrow key navigation. Added Enter key submission and blur, toast feedback when clicking glyphs, Escape blur on active inputs, and WAI-ARIA Arrow key navigation across tablist buttons.
 
 - **KFlash**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
   - ✅ Core functionality works (interactive 3D flipping flashcard interface, Spaced Repetition study controls with Got It / Needs Review status tags, 8 built-in sample packs across Math, Science, Languages, and History with 300+ flashcards, search query filtering and review-only mode, deck statistics with mastery progress meter, card CRUD with in-place modal editing, shuffle, and print view).
