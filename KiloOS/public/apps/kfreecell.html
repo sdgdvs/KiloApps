@@ -280,7 +280,7 @@
     <div id="status" style="font-size: 14px; font-weight: 800; color: #ffd700;"></div>
   </div>
 
-  <div id="stats-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:2000;">
+  <div id="stats-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:2000;" onclick="if(event.target===this)this.style.display='none'">
     <div style="background:#1e2530; padding:24px; border-radius:10px; border:2px solid #d4af37; text-align:center; box-shadow: 0 0 30px rgba(0,0,0,0.8);">
       <h2 style="margin-top:0; color:#ffd700;">Statistics</h2>
       <p>Games Played: <span id="stat-played">0</span></p>
@@ -290,10 +290,11 @@
       <p>Campaign Progress: Stage <span id="stat-campaign">1</span> / 20</p>
       <p>Time Attack Wins: <span id="stat-tawins">0</span> (Best Win: <span id="stat-tabest">--</span>)</p>
       <button class="btn" style="margin-top:12px;" onclick="document.getElementById('stats-modal').style.display='none'">Close</button>
+      <button class="btn" style="margin-top:12px; margin-left:8px; background:linear-gradient(180deg,#7f1d1d,#450a0a); border-color:#ef4444;" onclick="resetStats()">Reset Stats</button>
     </div>
   </div>
 
-  <div id="settings-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:2000;">
+  <div id="settings-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:2000;" onclick="if(event.target===this)this.style.display='none'">
     <div style="background:#1e2530; padding:24px; border-radius:10px; border:2px solid #d4af37; text-align:center; box-shadow: 0 0 30px rgba(0,0,0,0.8);">
       <h2 style="margin-top:0; color:#ffd700;">Settings</h2>
       <p>Select Card Back Design:</p>
@@ -303,7 +304,7 @@
     </div>
   </div>
 
-  <div id="help-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:2000;">
+  <div id="help-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:2000;" onclick="if(event.target===this)this.style.display='none'">
     <div style="background:#1e2530; padding:24px; border-radius:10px; border:2px solid #d4af37; max-width:540px; text-align:left; box-shadow: 0 0 30px rgba(0,0,0,0.8);">
       <h2 style="margin-top:0; text-align:center; color:#ffd700;">How to Play Freecell (Loop 7 Expansion)</h2>
       <p><b>Rules:</b></p>
@@ -343,7 +344,7 @@
         <div class="cell" data-type="free" data-index="2"></div>
         <div class="cell" data-type="free" data-index="3"></div>
       </div>
-      <div id="decorative-deck" class="cell" style="border: 2px solid #ffd700; cursor:pointer;"></div>
+      <div id="decorative-deck" class="cell" style="border: 2px solid #ffd700; cursor:pointer;" title="Card Back: Click to cycle design"></div>
       <div class="group" id="foundations">
         <div class="cell" data-type="found" data-index="0"></div>
         <div class="cell" data-type="found" data-index="1"></div>
@@ -372,88 +373,54 @@
       }
       if(audioCtx.state === 'suspended') audioCtx.resume();
     }
-    let shakeTrauma = 0;
-    let shakeMaxTrauma = 0;
-    let shakeStartTime = 0;
-    let shakeDuration = 0;
-    let shakeAnimationId = null;
-
-    function triggerScreenShake(intensity, durationMs = 250) {
-      shakeTrauma = Math.max(shakeTrauma, intensity);
-      shakeMaxTrauma = shakeTrauma;
-      shakeStartTime = performance.now();
-      shakeDuration = durationMs;
-      if (!shakeAnimationId) {
-        updateScreenShake();
-      }
-    }
-
-    function updateScreenShake() {
-      const board = document.querySelector('.felt-board');
-      if (!board) {
-        shakeAnimationId = null;
-        return;
-      }
-      const now = performance.now();
-      const elapsed = now - shakeStartTime;
-      if (elapsed >= shakeDuration || shakeTrauma <= 0.001) {
-        board.style.transform = '';
-        shakeTrauma = 0;
-        shakeAnimationId = null;
-        return;
-      }
-      const progress = elapsed / shakeDuration;
-      const decay = 1 - progress;
-      const currentAmp = shakeMaxTrauma * (decay * decay); // Quadratic physics decay
-      const angle = Math.random() * Math.PI * 2;
-      const offsetX = Math.cos(angle) * currentAmp;
-      const offsetY = Math.sin(angle) * currentAmp;
-      const rot = (Math.random() - 0.5) * (currentAmp * 0.25);
-      board.style.transform = `translate(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px) rotate(${rot.toFixed(2)}deg)`;
-      shakeAnimationId = requestAnimationFrame(updateScreenShake);
+    let screenShakeAmp = 0;
+    function triggerScreenShake(intensity) {
+      screenShakeAmp = Math.max(screenShakeAmp, intensity);
     }
 
     function playSound(type) {
-      if(!audioCtx) initAudio();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      const now = audioCtx.currentTime;
-      if (type === 'flip') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(300, now);
-        osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-        osc.start(now); osc.stop(now + 0.1);
-      } else if (type === 'place') {
-        triggerScreenShake(3.5, 200);
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(400, now);
-        osc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-        osc.start(now); osc.stop(now + 0.15);
-      } else if (type === 'win') {
-        triggerScreenShake(14.0, 900);
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(440, now);
-        osc.frequency.setValueAtTime(554, now + 0.2);
-        osc.frequency.setValueAtTime(659, now + 0.4);
-        osc.frequency.setValueAtTime(880, now + 0.6);
-        gain.gain.setValueAtTime(0.25, now);
-        gain.gain.linearRampToValueAtTime(0, now + 1.2);
-        osc.start(now); osc.stop(now + 1.2);
-      } else if (type === 'error') {
-        triggerScreenShake(2.0, 150);
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(220, now);
-        osc.frequency.linearRampToValueAtTime(110, now + 0.2);
-        gain.gain.setValueAtTime(0.25, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-        osc.start(now); osc.stop(now + 0.2);
-      }
+      try {
+        if(!audioCtx) initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+        if (type === 'flip') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(300, now);
+          osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+          osc.start(now); osc.stop(now + 0.1);
+        } else if (type === 'place') {
+          triggerScreenShake(3.5);
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(400, now);
+          osc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+          osc.start(now); osc.stop(now + 0.15);
+        } else if (type === 'win') {
+          triggerScreenShake(14.0);
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.setValueAtTime(554, now + 0.2);
+          osc.frequency.setValueAtTime(659, now + 0.4);
+          osc.frequency.setValueAtTime(880, now + 0.6);
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.linearRampToValueAtTime(0, now + 1.2);
+          osc.start(now); osc.stop(now + 1.2);
+        } else if (type === 'error') {
+          triggerScreenShake(2.0);
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.linearRampToValueAtTime(110, now + 0.2);
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+          osc.start(now); osc.stop(now + 0.2);
+        }
+      } catch(e) {}
     }
 
     const suits = ['♠', '♥', '♣', '♦'];
@@ -675,29 +642,75 @@
         state = prev;
         numFreeCells = state.free.length;
         document.getElementById('status').innerText = "";
+        playSound('flip');
         updateGameInfo();
         render();
+      } else {
+        document.getElementById('status').innerText = "Nothing to Undo";
       }
     }
 
+    function isAnyModalOpen() {
+      const sm = document.getElementById('stats-modal');
+      const stm = document.getElementById('settings-modal');
+      const hm = document.getElementById('help-modal');
+      return (sm && sm.style.display === 'flex') ||
+             (stm && stm.style.display === 'flex') ||
+             (hm && hm.style.display === 'flex');
+    }
+
+    function closeAllModals() {
+      const sm = document.getElementById('stats-modal');
+      const stm = document.getElementById('settings-modal');
+      const hm = document.getElementById('help-modal');
+      if (sm) sm.style.display = 'none';
+      if (stm) stm.style.display = 'none';
+      if (hm) hm.style.display = 'none';
+    }
+
     document.addEventListener('keydown', function(e) {
-      if (!e.ctrlKey && !e.metaKey && (e.key === 'u' || e.key === 'U')) {
+      if (e.key === 'Escape') {
+        if (isAnyModalOpen()) {
+          closeAllModals();
+          return;
+        }
+        if (state.selected) {
+          state.selected = null;
+          render();
+          return;
+        }
+      }
+
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
+        return;
+      }
+
+      if (isAnyModalOpen()) {
+        return;
+      }
+
+      if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (e.key === 'u' || e.key === 'U') {
+          undoMove();
+        } else if (e.key === 'a' || e.key === 'A') {
+          autoSolvePowerup();
+        } else if (e.key === 'p' || e.key === 'P') {
+          shufflePowerup();
+        } else if (e.key === 'w' || e.key === 'W') {
+          wandPowerup();
+        } else if (e.key === 'e' || e.key === 'E') {
+          extraCellPowerup();
+        } else if (e.key === 'n' || e.key === 'N') {
+          initGame();
+        } else if (e.key === 'h' || e.key === 'H' || e.key === '?') {
+          showHelp();
+        } else if (e.key === 's' || e.key === 'S') {
+          showSettings();
+        }
+      }
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === 'z' || e.key === 'Z')) {
+        e.preventDefault();
         undoMove();
-      }
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
-        undoMove();
-      }
-      if (!e.ctrlKey && !e.metaKey && (e.key === 'a' || e.key === 'A')) {
-        autoSolvePowerup();
-      }
-      if (!e.ctrlKey && !e.metaKey && (e.key === 'p' || e.key === 'P')) {
-        shufflePowerup();
-      }
-      if (!e.ctrlKey && !e.metaKey && (e.key === 'w' || e.key === 'W')) {
-        wandPowerup();
-      }
-      if (!e.ctrlKey && !e.metaKey && (e.key === 'e' || e.key === 'E')) {
-        extraCellPowerup();
       }
     });
 
@@ -823,6 +836,13 @@
       const back = cardBacks[settings.cardBack];
       deckEl.style.backgroundColor = back.color;
       deckEl.style.backgroundImage = back.pattern;
+      deckEl.title = "Card Back: Click to cycle design";
+      deckEl.onclick = () => {
+        settings.cardBack = (settings.cardBack + 1) % cardBacks.length;
+        localStorage.setItem('kfreecell_settings', JSON.stringify(settings));
+        updateCardBackUI();
+        playSound('flip');
+      };
       deckEl.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
         <svg width="40" height="50" viewBox="0 0 40 50">
           <rect x="2" y="2" width="36" height="46" rx="3" fill="none" stroke="#ffd700" stroke-width="1.5"/>
@@ -851,6 +871,33 @@
           };
           opts.appendChild(div);
         });
+      }
+    }
+
+    function saveStats() {
+      localStorage.setItem('kfreecell_stats', JSON.stringify({ stats, campaignStage, maxCampaignStage }));
+    }
+
+    function loadStats() {
+      const saved = localStorage.getItem('kfreecell_stats');
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          if (data.stats) Object.assign(stats, data.stats);
+          if (data.campaignStage) campaignStage = data.campaignStage;
+          if (data.maxCampaignStage) maxCampaignStage = data.maxCampaignStage;
+        } catch(e) {}
+      }
+    }
+
+    function resetStats() {
+      if (confirm("Reset all statistics and campaign progress?")) {
+        stats = { played: 0, wins: 0, streak: 0, bestStreak: 0, bestTime: 0, taWins: 0, taBestTime: 0 };
+        campaignStage = 1;
+        maxCampaignStage = 1;
+        saveStats();
+        showStats();
+        updateGameInfo();
       }
     }
 
@@ -888,9 +935,12 @@
     }
 
     function saveGame() {
-      const data = { state, undoStack, stats, gameInProgress, timeElapsed, campaignStage, maxCampaignStage, powerupsShuffle, powerupsWand, powerupsExtraCell, timeRemaining, extraCellActive, extraCellTimer };
+      const mode = document.getElementById('game-mode').value;
+      const seedVal = document.getElementById('seed-input').value;
+      const data = { state, undoStack, stats, gameInProgress, timeElapsed, campaignStage, maxCampaignStage, powerupsShuffle, powerupsWand, powerupsExtraCell, timeRemaining, extraCellActive, extraCellTimer, buildRule, emptyKingOnly, mode, seedVal };
       localStorage.setItem('kfreecell_save', JSON.stringify(data));
       document.getElementById('status').innerText = "Game Saved";
+      playSound('place');
     }
 
     function loadGame() {
@@ -910,12 +960,23 @@
         extraCellActive = data.extraCellActive || false;
         extraCellTimer = data.extraCellTimer || 0;
         timeRemaining = data.timeRemaining || 180;
+        buildRule = data.buildRule || 'color';
+        emptyKingOnly = !!data.emptyKingOnly;
         numFreeCells = state.free.length;
+        if (data.mode) {
+          document.getElementById('game-mode').value = data.mode;
+          updateModeUI();
+        }
+        if (data.seedVal) {
+          document.getElementById('seed-input').value = data.seedVal;
+        }
         document.getElementById('status').innerText = "Game Loaded";
+        playSound('flip');
         updateGameInfo();
         render();
       } else {
         document.getElementById('status').innerText = "No Save Found";
+        playSound('error');
       }
       const savedSettings = localStorage.getItem('kfreecell_settings');
       if (savedSettings) {
@@ -1340,7 +1401,6 @@
     let fxParticles = [];
     let fxShockwaves = [];
     let dustMotes = [];
-    let screenShakeAmp = 0;
     let fxCanvas = null;
     let fxCtx = null;
 
@@ -1370,10 +1430,6 @@
         fxCanvas.height = fxCanvas.offsetHeight;
       }
       return fxCanvas;
-    }
-
-    function triggerScreenShake(intensity) {
-      screenShakeAmp = Math.max(screenShakeAmp, intensity);
     }
 
     function spawnShockwave(x, y, color = '#ffd700', maxRadius = 140, speed = 6.0) {
@@ -1550,6 +1606,9 @@
       }
       ctx.restore();
     }
+
+    let victoryCascadeCards = [];
+    let victoryCascadeFrame = 0;
 
     // Continuous 60 FPS RequestAnimationFrame FX Loop
     function runFxLoop(timestamp) {
@@ -1735,6 +1794,45 @@
         screenShakeAmp = 0;
         if (boardEl && boardEl.style.transform !== '') {
           boardEl.style.transform = '';
+        }
+      }
+
+      // 6. Victory Cascade Cards Render
+      if (victoryCascadeCards.length > 0) {
+        victoryCascadeFrame++;
+        let remaining = false;
+        victoryCascadeCards.forEach(c => {
+          if (victoryCascadeFrame >= c.delay) c.active = true;
+          if (c.active) {
+            remaining = true;
+            c.x += c.vx;
+            c.y += c.vy;
+            c.vy += 0.5;
+            if (c.y >= h - 106) {
+              c.y = h - 106;
+              c.vy = -c.vy * 0.75;
+              c.vx += (Math.random() - 0.5) * 2;
+            }
+            if (c.x <= 0 || c.x >= w - 74) {
+              c.vx = -c.vx;
+            }
+            fxCtx.save();
+            fxCtx.fillStyle = '#ffffff';
+            fxCtx.strokeStyle = (c.s === 1 || c.s === 3) ? '#d32f2f' : '#1e1e1e';
+            fxCtx.lineWidth = 2;
+            fxCtx.beginPath();
+            if (fxCtx.roundRect) fxCtx.roundRect(c.x, c.y, 74, 106, 6);
+            else fxCtx.rect(c.x, c.y, 74, 106);
+            fxCtx.fill();
+            fxCtx.stroke();
+            fxCtx.font = 'bold 16px Segoe UI';
+            fxCtx.fillStyle = (c.s === 1 || c.s === 3) ? '#d32f2f' : '#1e1e1e';
+            fxCtx.fillText(ranks[c.r-1] + suits[c.s], c.x + 8, c.y + 22);
+            fxCtx.restore();
+          }
+        });
+        if (!remaining || victoryCascadeFrame >= 600) {
+          victoryCascadeCards = [];
         }
       }
 
@@ -2214,6 +2312,7 @@
               stats.taBestTime = timeElapsed;
             }
           }
+          saveStats();
           gameInProgress = false;
           spawnVictoryFireworks();
           startVictoryCascade();
@@ -2223,20 +2322,16 @@
     }
 
     function startVictoryCascade() {
-      const canvas = document.getElementById('fx-canvas');
-      if(!canvas) return;
-      const ctx = canvas.getContext('2d');
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      
-      let cascadeCards = [];
+      ensureFxCanvas();
+      victoryCascadeCards = [];
+      victoryCascadeFrame = 0;
       const foundEls = document.querySelectorAll('#foundations .cell');
       
       let delay = 0;
       for(let r=13; r>=1; r--) {
         for(let s=0; s<4; s++) {
           const rect = foundEls[s] ? foundEls[s].getBoundingClientRect() : {left: window.innerWidth/2, top: 100};
-          cascadeCards.push({
+          victoryCascadeCards.push({
             s, r,
             x: rect.left, y: rect.top,
             vx: (Math.random() - 0.5) * 8,
@@ -2247,49 +2342,6 @@
           delay += 6;
         }
       }
-      
-      let frame = 0;
-      function animateCascade() {
-        frame++;
-        let remaining = false;
-        
-        cascadeCards.forEach(c => {
-          if (frame >= c.delay) c.active = true;
-          if (c.active) {
-            remaining = true;
-            c.x += c.vx;
-            c.y += c.vy;
-            c.vy += 0.5;
-            
-            if (c.y >= canvas.height - 106) {
-              c.y = canvas.height - 106;
-              c.vy = -c.vy * 0.75;
-              c.vx += (Math.random() - 0.5) * 2;
-            }
-            if (c.x <= 0 || c.x >= canvas.width - 74) {
-              c.vx = -c.vx;
-            }
-            
-            ctx.fillStyle = '#ffffff';
-            ctx.strokeStyle = (c.s === 1 || c.s === 3) ? '#d32f2f' : '#1e1e1e';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            if (ctx.roundRect) ctx.roundRect(c.x, c.y, 74, 106, 6);
-            else ctx.rect(c.x, c.y, 74, 106);
-            ctx.fill();
-            ctx.stroke();
-            
-            ctx.font = 'bold 16px Segoe UI';
-            ctx.fillStyle = (c.s === 1 || c.s === 3) ? '#d32f2f' : '#1e1e1e';
-            ctx.fillText(ranks[c.r-1] + suits[c.s], c.x + 8, c.y + 22);
-          }
-        });
-        
-        if (remaining && frame < 600) {
-          requestAnimationFrame(animateCascade);
-        }
-      }
-      animateCascade();
     }
 
     function isSafeToAutoMove(card) {
@@ -2400,6 +2452,53 @@
         e.stopPropagation();
         handleCardClick(type, index, cardIdx);
       };
+
+      el.ondblclick = (e) => {
+        e.stopPropagation();
+        if (c.frozen) {
+          playSound('error');
+          return;
+        }
+        if (canMoveToFound(c)) {
+          let prevState = JSON.parse(JSON.stringify(state));
+          prevState.selected = null;
+          undoStack.push(prevState);
+          state.found[c.s] = c.r;
+          if (type === 'tab') {
+            state.tab[index].splice(cardIdx, 1);
+            thawAdjacent(index);
+          } else if (type === 'free') {
+            state.free[index] = null;
+          }
+          if (document.getElementById('game-mode').value === 'timeattack') timeRemaining += 15;
+          state.moves = (state.moves || 0) + 1;
+          const foundEl = document.querySelectorAll('#foundations .cell')[c.s];
+          if (foundEl) spawnSnapSparks(foundEl.getBoundingClientRect(), c);
+          playSound('place');
+          updateGameInfo();
+          autoComplete();
+          checkWin();
+          render();
+          return;
+        }
+        if (type === 'tab' && cardIdx === state.tab[index].length - 1) {
+          let emptyIdx = state.free.findIndex(fc => !fc);
+          if (emptyIdx !== -1) {
+            let prevState = JSON.parse(JSON.stringify(state));
+            prevState.selected = null;
+            undoStack.push(prevState);
+            state.free[emptyIdx] = c;
+            state.tab[index].pop();
+            thawAdjacent(index);
+            state.moves = (state.moves || 0) + 1;
+            playSound('place');
+            updateGameInfo();
+            autoComplete();
+            checkWin();
+            render();
+          }
+        }
+      };
     }
 
     function render() {
@@ -2453,6 +2552,7 @@
       });
     }
 
+    loadStats();
     const initSavedSettings = localStorage.getItem('kfreecell_settings');
     if (initSavedSettings) {
       settings = JSON.parse(initSavedSettings);

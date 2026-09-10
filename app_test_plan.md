@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KFreecell
+**Target App:** KGo
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KFreecell
 - KGo
 - KGraph
 - KHabit
@@ -173,8 +172,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KFlash
 - KFont
 - KFortress
+- KFreecell
 
 ## Test Reports
+
+- **KFreecell**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
+  - ✅ Core gameplay works (Classic FreeCell, Numbered Deal 1-1M, 20-stage Campaign with King-only slots/Suit rules/Frozen cards, 180s Time Attack mode, 4 active skills Auto-Solve/Magic Wand/+1 Temporary Free Cell/Shuffle, interactive SVG suits and face cards, multi-tier particle canvas engine, and audio synthesizers).
+  - 🔧 FIXED: Statistics (`stats`), win streaks, best times, and Campaign progression (`campaignStage`, `maxCampaignStage`) were never persisted to `localStorage`, resetting all game records, player statistics, and campaign stage unlocks to 0 on every browser refresh. Implemented `saveStats()`, `loadStats()`, and added a "Reset Stats" confirmation button in the Stats modal.
+  - 🔧 FIXED: Game saving (`saveGame()`) and loading (`loadGame()`) omitted active game mode (`#game-mode`), custom seed input, `buildRule`, and `emptyKingOnly` constraints, causing saved Campaign or Time Attack sessions to restore as Random Deal with standard color rules upon reload. Persisted and restored all rule variations and state.
+  - 🔧 FIXED: Extra Cell powerup (`+1 Cell [E]`) failed to call `render()` when its 30-second duration expired, leaving the visual 5th slot stuck on board. If the slot was occupied when the timer expired, the slot became permanent and was never reclaimed upon subsequent moves. Reclaimed expired cells reactively once emptied and triggered DOM re-render.
+  - 🔧 FIXED: Victory card cascade ran a concurrent `requestAnimationFrame` loop that directly conflicted with the continuous 60 FPS `runFxLoop` on `#fx-canvas`, with `runFxLoop`'s frame clear erasing cascade cards and inducing visual screen flickering. Integrated cascade rendering directly into `runFxLoop`.
+  - 🔧 FIXED: `#decorative-deck` card element displayed `cursor: pointer` without a click handler. Connected click handler to dynamically cycle through the 4 luxury card back designs with audio feedback, matching the Settings modal.
+  - 🔧 FIXED: Double-clicking cards had no effect, forcing players to manually click source and target destinations for every single play. Implemented standard `ondblclick` handlers allowing cards to auto-play to Foundations, or top tableau cards to open Free Cells.
+  - 🔧 FIXED: Global `keydown` shortcuts lacked modifier guards (`!e.altKey`), input focus guards (allowing keys to trigger powerups while typing in `#seed-input`), and modal state suppression (firing background game actions while Help, Stats, or Settings modals were open). Added modifier guards, modal background suppression, `Escape` to dismiss modals/selection, and hotkeys `N` (New Game), `H`/`?` (Help), `S` (Settings), and backdrop click dismissal on all modals.
 
 - **KFortress**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
   - ✅ Core gameplay works (12 diverse campaign maps with biome environmental art and ambient weather effects, 7 defense towers with 3-tier upgrade trees and 4 mythic elemental fusions Inferno/Superconductor/Venomspite/SolarBeam, 4 tactical traps Spike Pit/Oil Slick/Barricade/Dynamite, interactive controllable Commander hero with 4 active skills and auto-attack, 5 challenge mutators Bloodlust/Titan/Eclipse/Meteor/PhaseShift, Research Academy with 8 persistent upgrades, multi-mode Campaign/Endless/BossBlitz, and Web Audio dynamic synthesizers).
