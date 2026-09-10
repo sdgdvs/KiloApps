@@ -35,7 +35,10 @@ static char currentFontFace[32] = "Georgia";
 static COLORREF g_bgColor = RGB(250, 250, 250);
 static COLORREF g_textColor = RGB(30, 30, 30);
 
-static char g_lastSearchQuery[128] = {0};
+static FINDREPLACEA g_fr;
+static HWND g_hFindDlg = NULL;
+static char g_szFindWhat[128] = {0};
+static UINT g_uFindReplaceMsg = 0;
 
 void UpdateWindowTitle(HWND hwnd) {
     if (!hwnd) return;
@@ -214,9 +217,91 @@ void ExtractFileName(const char* fullPath, char* dest, int maxLen) {
     lstrcpynA(dest, lastSlash, maxLen);
 }
 
+void LoadFileFromPath(HWND hwnd, const char* szFilePath, BOOL inNewTab) {
+    HANDLE hFile = CreateFileA(szFilePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return;
+    
+    DWORD dwFileSize = GetFileSize(hFile, NULL);
+    if (dwFileSize == INVALID_FILE_SIZE || dwFileSize == 0) {
+        CloseHandle(hFile);
+        return;
+    }
+
+    char* pszRaw = (char*)VirtualAlloc(NULL, dwFileSize + 1, MEM_COMMIT, PAGE_READWRITE);
+    if (!pszRaw) {
+        CloseHandle(hFile);
+        return;
+    }
+
+    DWORD dwRead = 0;
+    if (ReadFile(hFile, pszRaw, dwFileSize, &dwRead, NULL)) {
+        pszRaw[dwRead] = 0;
+
+        // Check if Unix newlines (\n without \r) need normalization to \r\n
+        int newlineCount = 0;
+        for (DWORD i = 0; i < dwRead; i++) {
+            if (pszRaw[i] == '\n' && (i == 0 || pszRaw[i - 1] != '\r')) {
+                newlineCount++;
+            }
+        }
+
+        char* pszNormalized = pszRaw;
+        if (newlineCount > 0) {
+            char* pConv = (char*)VirtualAlloc(NULL, dwRead + newlineCount + 1, MEM_COMMIT, PAGE_READWRITE);
+            if (pConv) {
+                DWORD dst = 0;
+                for (DWORD src = 0; src < dwRead; src++) {
+                    if (pszRaw[src] == '\n' && (src == 0 || pszRaw[src - 1] != '\r')) {
+                        pConv[dst++] = '\r';
+                    }
+                    pConv[dst++] = pszRaw[src];
+                }
+                pConv[dst] = 0;
+                pszNormalized = pConv;
+            }
+        }
+
+        char fname[64];
+        ExtractFileName(szFilePath, fname, sizeof(fname));
+
+        if (inNewTab || g_NumTabs == 0) {
+            AddNewTab(hwnd, fname, pszNormalized);
+        } else {
+            SetWindowTextA(hEdit, pszNormalized);
+            lstrcpynA(g_Tabs[g_ActiveTab].szTitle, fname, 60);
+            g_Tabs[g_ActiveTab].dwBookmark = 0;
+
+            if (g_Tabs[g_ActiveTab].pszText) {
+                VirtualFree(g_Tabs[g_ActiveTab].pszText, 0, MEM_RELEASE);
+                g_Tabs[g_ActiveTab].pszText = NULL;
+                g_Tabs[g_ActiveTab].dwTextLen = 0;
+            }
+            int normLen = lstrlenA(pszNormalized);
+            char* buf = (char*)VirtualAlloc(NULL, normLen + 1, MEM_COMMIT, PAGE_READWRITE);
+            if (buf) {
+                lstrcpyA(buf, pszNormalized);
+                g_Tabs[g_ActiveTab].pszText = buf;
+                g_Tabs[g_ActiveTab].dwTextLen = normLen;
+            }
+
+            TCITEMA tie;
+            tie.mask = TCIF_TEXT;
+            tie.pszText = g_Tabs[g_ActiveTab].szTitle;
+            TabCtrl_SetItem(g_hTabCtrl, g_ActiveTab, &tie);
+            UpdateWindowTitle(hwnd);
+        }
+
+        if (pszNormalized != pszRaw) {
+            VirtualFree(pszNormalized, 0, MEM_RELEASE);
+        }
+    }
+    VirtualFree(pszRaw, 0, MEM_RELEASE);
+    CloseHandle(hFile);
+}
+
 void OpenFileAndLoad(HWND hwnd, BOOL inNewTab) {
     OPENFILENAMEA ofn;
-    char szFile[260] = {0};
+    char szFile[MAX_PATH] = {0};
 
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);
@@ -228,38 +313,7 @@ void OpenFileAndLoad(HWND hwnd, BOOL inNewTab) {
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
     if (GetOpenFileNameA(&ofn)) {
-        HANDLE hFile = CreateFileA(ofn.lpstrFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (hFile != INVALID_HANDLE_VALUE) {
-            DWORD dwFileSize = GetFileSize(hFile, NULL);
-            if (dwFileSize != INVALID_FILE_SIZE) {
-                char* pszFileText = (char*)VirtualAlloc(NULL, dwFileSize + 1, MEM_COMMIT, PAGE_READWRITE);
-                if (pszFileText) {
-                    DWORD dwRead = 0;
-                    if (ReadFile(hFile, pszFileText, dwFileSize, &dwRead, NULL)) {
-                        pszFileText[dwRead] = 0;
-                        
-                        char fname[64];
-                        ExtractFileName(ofn.lpstrFile, fname, sizeof(fname));
-
-                        if (inNewTab || g_NumTabs == 0) {
-                            AddNewTab(hwnd, fname, pszFileText);
-                        } else {
-                            SetWindowTextA(hEdit, pszFileText);
-                            lstrcpynA(g_Tabs[g_ActiveTab].szTitle, fname, 60);
-                            g_Tabs[g_ActiveTab].dwBookmark = 0;
-                            
-                            TCITEMA tie;
-                            tie.mask = TCIF_TEXT;
-                            tie.pszText = g_Tabs[g_ActiveTab].szTitle;
-                            TabCtrl_SetItem(g_hTabCtrl, g_ActiveTab, &tie);
-                            UpdateWindowTitle(hwnd);
-                        }
-                    }
-                    VirtualFree(pszFileText, 0, MEM_RELEASE);
-                }
-            }
-            CloseHandle(hFile);
-        }
+        LoadFileFromPath(hwnd, ofn.lpstrFile, inNewTab);
     }
 }
 
@@ -288,10 +342,10 @@ void SaveStatsExport(HWND hwnd, const char* statsText) {
     }
 }
 
-void PerformSearch(HWND hwnd) {
+void PerformSearchNext(HWND hwnd, const char* query, BOOL down, BOOL matchCase) {
     int len = GetWindowTextLengthA(hEdit);
-    if (len <= 0) {
-        MessageBoxA(hwnd, "Document is empty.", "Find Text", MB_OK | MB_ICONINFORMATION);
+    if (len <= 0 || !query || !query[0]) {
+        MessageBoxA(hwnd, "No text to search.", "Find Text", MB_OK | MB_ICONINFORMATION);
         return;
     }
 
@@ -299,40 +353,71 @@ void PerformSearch(HWND hwnd) {
     if (!text) return;
     GetWindowTextA(hEdit, text, len + 1);
 
+    int qLen = lstrlenA(query);
     DWORD selStart = 0, selEnd = 0;
     SendMessageA(hEdit, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
 
-    int qLen = lstrlenA(g_lastSearchQuery);
-    if (qLen == 0) {
-        VirtualFree(text, 0, MEM_RELEASE);
-        return;
-    }
-
     int foundIdx = -1;
-    for (int i = (int)selEnd; i <= len - qLen; i++) {
-        int match = 1;
-        for (int j = 0; j < qLen; j++) {
-            char c1 = text[i + j];
-            char c2 = g_lastSearchQuery[j];
-            if (c1 >= 'A' && c1 <= 'Z') c1 += 32;
-            if (c2 >= 'A' && c2 <= 'Z') c2 += 32;
-            if (c1 != c2) { match = 0; break; }
-        }
-        if (match) { foundIdx = i; break; }
-    }
 
-    // Wrap around if not found from cursor
-    if (foundIdx == -1 && selEnd > 0) {
-        for (int i = 0; i < (int)selEnd && i <= len - qLen; i++) {
+    if (down) {
+        for (int i = (int)selEnd; i <= len - qLen; i++) {
             int match = 1;
             for (int j = 0; j < qLen; j++) {
                 char c1 = text[i + j];
-                char c2 = g_lastSearchQuery[j];
-                if (c1 >= 'A' && c1 <= 'Z') c1 += 32;
-                if (c2 >= 'A' && c2 <= 'Z') c2 += 32;
+                char c2 = query[j];
+                if (!matchCase) {
+                    if (c1 >= 'A' && c1 <= 'Z') c1 += 32;
+                    if (c2 >= 'A' && c2 <= 'Z') c2 += 32;
+                }
                 if (c1 != c2) { match = 0; break; }
             }
             if (match) { foundIdx = i; break; }
+        }
+        if (foundIdx == -1 && selEnd > 0) {
+            for (int i = 0; i < (int)selEnd && i <= len - qLen; i++) {
+                int match = 1;
+                for (int j = 0; j < qLen; j++) {
+                    char c1 = text[i + j];
+                    char c2 = query[j];
+                    if (!matchCase) {
+                        if (c1 >= 'A' && c1 <= 'Z') c1 += 32;
+                        if (c2 >= 'A' && c2 <= 'Z') c2 += 32;
+                    }
+                    if (c1 != c2) { match = 0; break; }
+                }
+                if (match) { foundIdx = i; break; }
+            }
+        }
+    } else {
+        int startPos = (int)selStart - 1;
+        if (startPos > len - qLen) startPos = len - qLen;
+        for (int i = startPos; i >= 0; i--) {
+            int match = 1;
+            for (int j = 0; j < qLen; j++) {
+                char c1 = text[i + j];
+                char c2 = query[j];
+                if (!matchCase) {
+                    if (c1 >= 'A' && c1 <= 'Z') c1 += 32;
+                    if (c2 >= 'A' && c2 <= 'Z') c2 += 32;
+                }
+                if (c1 != c2) { match = 0; break; }
+            }
+            if (match) { foundIdx = i; break; }
+        }
+        if (foundIdx == -1 && selStart < (DWORD)len) {
+            for (int i = len - qLen; i >= (int)selStart; i--) {
+                int match = 1;
+                for (int j = 0; j < qLen; j++) {
+                    char c1 = text[i + j];
+                    char c2 = query[j];
+                    if (!matchCase) {
+                        if (c1 >= 'A' && c1 <= 'Z') c1 += 32;
+                        if (c2 >= 'A' && c2 <= 'Z') c2 += 32;
+                    }
+                    if (c1 != c2) { match = 0; break; }
+                }
+                if (match) { foundIdx = i; break; }
+            }
         }
     }
 
@@ -340,10 +425,44 @@ void PerformSearch(HWND hwnd) {
         SendMessageA(hEdit, EM_SETSEL, foundIdx, foundIdx + qLen);
         SendMessageA(hEdit, EM_SCROLLCARET, 0, 0);
     } else {
-        MessageBoxA(hwnd, "Text not found.", "Find Text", MB_OK | MB_ICONINFORMATION);
+        char notFoundMsg[256];
+        wsprintfA(notFoundMsg, "Cannot find \"%s\".", query);
+        MessageBoxA(hwnd, notFoundMsg, "Find Text", MB_OK | MB_ICONINFORMATION);
     }
 
     VirtualFree(text, 0, MEM_RELEASE);
+}
+
+void OpenFindDialog(HWND hwnd) {
+    if (g_hFindDlg) {
+        SetFocus(g_hFindDlg);
+        return;
+    }
+    DWORD selStart = 0, selEnd = 0;
+    SendMessageA(hEdit, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
+    if (selEnd > selStart && (selEnd - selStart) < sizeof(g_szFindWhat)) {
+        int selLen = (int)(selEnd - selStart);
+        int docLen = GetWindowTextLengthA(hEdit);
+        if (docLen > 0) {
+            char* pDoc = (char*)VirtualAlloc(NULL, docLen + 1, MEM_COMMIT, PAGE_READWRITE);
+            if (pDoc) {
+                GetWindowTextA(hEdit, pDoc, docLen + 1);
+                for (int i = 0; i < selLen; i++) {
+                    g_szFindWhat[i] = pDoc[selStart + i];
+                }
+                g_szFindWhat[selLen] = 0;
+                VirtualFree(pDoc, 0, MEM_RELEASE);
+            }
+        }
+    }
+
+    ZeroMemory(&g_fr, sizeof(g_fr));
+    g_fr.lStructSize = sizeof(g_fr);
+    g_fr.hwndOwner = hwnd;
+    g_fr.lpstrFindWhat = g_szFindWhat;
+    g_fr.wFindWhatLen = sizeof(g_szFindWhat);
+    g_fr.Flags = FR_DOWN;
+    g_hFindDlg = FindTextA(&g_fr);
 }
 
 void ShowHelpDialog(HWND hwnd) {
@@ -359,12 +478,15 @@ void ShowHelpDialog(HWND hwnd) {
         "  Ctrl + Tab            : Switch to Next Tab\n"
         "  Ctrl + Shift + Tab    : Switch to Previous Tab\n"
         "  Ctrl + 1 .. 9         : Jump Directly to Tab 1-9\n"
-        "  Ctrl + F              : Find / Search Text in Active Tab\n"
+        "  Ctrl + A              : Select All Text in Active Tab\n"
+        "  Ctrl + F              : Find Text (Windows Search Dialog)\n"
         "  Ctrl + B              : Save Bookmark at Current Position\n"
         "  Ctrl + S              : Reading Statistics Engine & WPM\n"
         "  Ctrl + '+' / '-'      : Increase / Decrease Font Size\n\n"
         "FEATURES:\n"
+        "  * Drag-and-Drop File Loading (single and multi-file)\n"
         "  * Multi-Tab Sessions (up to 12 concurrent docs)\n"
+        "  * Automatic Unix Newline Normalization (\\n to \\r\\n)\n"
         "  * Per-tab Independent Cursor & Bookmarks\n"
         "  * Reading Speed & Time Remaining Estimator\n"
         "  * High-DPI Crisp Font Scaling & Themes (Light/Dark/Sepia/Contrast)";
@@ -372,9 +494,24 @@ void ShowHelpDialog(HWND hwnd) {
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == g_uFindReplaceMsg && g_uFindReplaceMsg != 0) {
+        LPFINDREPLACEA lpfr = (LPFINDREPLACEA)lParam;
+        if (lpfr->Flags & FR_DIALOGTERM) {
+            g_hFindDlg = NULL;
+            return 0;
+        }
+        if (lpfr->Flags & FR_FINDNEXT) {
+            PerformSearchNext(hwnd, lpfr->lpstrFindWhat, (lpfr->Flags & FR_DOWN) != 0, (lpfr->Flags & FR_MATCHCASE) != 0);
+            return 0;
+        }
+    }
+
     switch (msg) {
         case WM_CREATE: {
             g_hMainWnd = hwnd;
+            g_uFindReplaceMsg = RegisterWindowMessageA(FINDMSGSTRINGA);
+            DragAcceptFiles(hwnd, TRUE);
+
             HMENU hMenu = CreateMenu();
             
             // File Menu
@@ -438,12 +575,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_hTabCtrl = CreateWindowExA(0, WC_TABCONTROLA, "", 
                 WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | TCS_TABS | TCS_FOCUSNEVER, 
                 0, 0, 850, tabHeight, hwnd, (HMENU)2001, GetModuleHandleA(NULL), NULL);
+            SendMessageA(g_hTabCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), TRUE);
 
             // Edit Control
             hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", 
-                WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_NOHIDESEL | ES_WANTRETURN | ES_READONLY, 
+                WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_NOHIDESEL | ES_WANTRETURN | ES_READONLY, 
                 0, tabHeight, 850, 550, hwnd, NULL, NULL, NULL);
 
+            SendMessageA(hEdit, EM_SETLIMITTEXT, 0, 0);
             SendMessageA(hEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(16, 16));
 
             UpdateFont(hwnd);
@@ -459,11 +598,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 "  * Press Ctrl+O to open a text document into the current tab.\r\n"
                 "  * Press Ctrl+T to open a new tab session.\r\n"
                 "  * Press Ctrl+1 through Ctrl+9 to quickly switch tabs.\r\n"
+                "  * Press Ctrl+A to select all text in the active document.\r\n"
+                "  * Press Ctrl+F to open the Windows Find Text dialog.\r\n"
                 "  * Press Ctrl+B to save your reading bookmark.\r\n"
                 "  * Press Ctrl+S to view real-time reading stats and estimated time.\r\n"
+                "  * Drag and drop any text/document files directly into this window.\r\n"
                 "  * Use Themes & Font menus to customize your reading environment.\r\n\r\n"
                 "Happy Reading!");
             break;
+        }
+        case WM_DROPFILES: {
+            HDROP hDrop = (HDROP)wParam;
+            char szDropFile[MAX_PATH];
+            UINT numFiles = DragQueryFileA(hDrop, 0xFFFFFFFF, NULL, 0);
+            for (UINT i = 0; i < numFiles; i++) {
+                if (DragQueryFileA(hDrop, i, szDropFile, sizeof(szDropFile))) {
+                    LoadFileFromPath(hwnd, szDropFile, (i > 0 || g_NumTabs > 0));
+                }
+            }
+            DragFinish(hDrop);
+            break;
+        }
+        case WM_ERASEBKGND: {
+            HDC hdc = (HDC)wParam;
+            RECT rc;
+            GetClientRect(hwnd, &rc);
+            FillRect(hdc, &rc, hBrush);
+            return 1;
         }
         case WM_SIZE: {
             int w = LOWORD(lParam);
@@ -524,7 +685,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             }
                         }
                         int estMins = (words + 199) / 200; // 200 WPM
-                        char msg[512];
+                        char msg[1024];
                         wsprintfA(msg, "--- KREAD READING STATISTICS ENGINE ---\n\nActive Tab:\t\t%s (%d of %d)\nTotal Characters:\t%d\nTotal Words:\t\t%d\nTotal Lines:\t\t%d\nEst. Reading Speed:\t200 WPM\nEst. Time Remaining:\t%d minutes", 
                             g_Tabs[g_ActiveTab].szTitle, g_ActiveTab + 1, g_NumTabs, chars, words, lines, estMins);
                         
@@ -542,7 +703,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Find Text
             if (id == 1004) {
-                PerformSearch(hwnd);
+                OpenFindDialog(hwnd);
             }
 
             // Help
@@ -589,6 +750,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            if (g_hFindDlg) {
+                DestroyWindow(g_hFindDlg);
+                g_hFindDlg = NULL;
+            }
             SaveActiveTabState();
             for (int i = 0; i < g_NumTabs; i++) {
                 if (g_Tabs[i].pszText) {
@@ -624,10 +789,17 @@ void __stdcall MainEntry() {
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
+        if (g_hFindDlg && IsDialogMessageA(g_hFindDlg, &msg)) {
+            continue;
+        }
         if (msg.message == WM_KEYDOWN) {
             BOOL ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
             BOOL shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
 
+            if (ctrl && (msg.wParam == 'A' || msg.wParam == 'a')) {
+                SendMessageA(hEdit, EM_SETSEL, 0, -1);
+                continue;
+            }
             if (ctrl && (msg.wParam == 'T' || msg.wParam == 't')) {
                 SendMessageA(hwnd, WM_COMMAND, 1030, 0);
                 continue;

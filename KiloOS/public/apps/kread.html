@@ -359,6 +359,33 @@
     outline: 2px solid var(--mark-active);
   }
 
+  mark.user-highlight {
+    border-radius: 3px;
+    padding: 1px 2px;
+    cursor: pointer;
+    transition: filter 0.15s, outline 0.15s;
+  }
+  mark.user-highlight:hover {
+    filter: brightness(0.92);
+  }
+  mark.user-highlight.hl-yellow { background-color: #fef08a; color: #713f12; }
+  mark.user-highlight.hl-green  { background-color: #bbf7d0; color: #14532d; }
+  mark.user-highlight.hl-blue   { background-color: #bfdbfe; color: #1e3a8a; }
+  mark.user-highlight.hl-pink   { background-color: #fbcfe8; color: #831843; }
+  body.theme-dark mark.user-highlight.hl-yellow { background-color: #854d0e; color: #fef08a; }
+  body.theme-dark mark.user-highlight.hl-green  { background-color: #166534; color: #bbf7d0; }
+  body.theme-dark mark.user-highlight.hl-blue   { background-color: #1e40af; color: #bfdbfe; }
+  body.theme-dark mark.user-highlight.hl-pink   { background-color: #9d174d; color: #fbcfe8; }
+  body.theme-sepia mark.user-highlight.hl-yellow { background-color: #fcd34d; color: #78350f; }
+  body.theme-sepia mark.user-highlight.hl-green  { background-color: #a7f3d0; color: #064e3b; }
+  body.theme-sepia mark.user-highlight.hl-blue   { background-color: #bae6fd; color: #0c4a6e; }
+  body.theme-sepia mark.user-highlight.hl-pink   { background-color: #fbcfe8; color: #701a75; }
+  body.theme-contrast mark.user-highlight { outline: 1px solid #00ff66; }
+  body.theme-contrast mark.user-highlight.hl-yellow { background-color: #ffff00; color: #000; }
+  body.theme-contrast mark.user-highlight.hl-green  { background-color: #00ff66; color: #000; }
+  body.theme-contrast mark.user-highlight.hl-blue   { background-color: #00ffff; color: #000; }
+  body.theme-contrast mark.user-highlight.hl-pink   { background-color: #ff00ff; color: #000; }
+
   .empty-state {
     flex: 1;
     display: flex;
@@ -653,7 +680,7 @@
   </div>
 
   <!-- Multi-Tab Reading Bar -->
-  <div class="tabs-bar" id="tabsBar">
+  <div class="tabs-bar" id="tabsBar" role="tablist" aria-label="Document Tabs">
     <div class="tabs-list" id="tabsList"></div>
     <button class="btn btn-new-tab" id="btnNewTab" title="New Reading Tab (Ctrl+T)">+ Tab <kbd>Ctrl+T</kbd></button>
   </div>
@@ -697,10 +724,10 @@
   </div>
 
   <!-- Bookmarks Drawer -->
-  <div class="drawer" id="bookmarksDrawer">
+  <div class="drawer" id="bookmarksDrawer" role="dialog" aria-label="Bookmarks Drawer" aria-modal="false">
     <div class="drawer-header">
       <span class="drawer-title">🔖 Bookmarks</span>
-      <button class="btn" id="btnCloseBookmarks">✕</button>
+      <button class="btn" id="btnCloseBookmarks" aria-label="Close Bookmarks">✕</button>
     </div>
     <div class="drawer-body" id="bookmarksList">
       <p style="opacity: 0.6; font-size: 13px;">No bookmarks saved yet in this tab.</p>
@@ -708,25 +735,25 @@
   </div>
 
   <!-- Notes & Highlights Drawer -->
-  <div class="drawer" id="notesDrawer">
+  <div class="drawer" id="notesDrawer" role="dialog" aria-label="Highlights and Notes Drawer" aria-modal="false">
     <div class="drawer-header">
       <span class="drawer-title">📝 Highlights & Notes</span>
-      <button class="btn" id="btnCloseNotes">✕</button>
+      <button class="btn" id="btnCloseNotes" aria-label="Close Notes">✕</button>
     </div>
     <div class="drawer-body" id="notesList">
       <p style="opacity: 0.6; font-size: 13px;">No notes or highlights added.</p>
     </div>
     <div style="padding: 12px; border-top: 1px solid var(--border-color); display: flex; gap: 6px;">
-      <button class="btn" id="btnExportJSON" style="flex: 1; font-size: 12px;">📥 JSON</button>
-      <button class="btn" id="btnExportMD" style="flex: 1; font-size: 12px;">📝 Markdown</button>
-      <button class="btn" id="btnExportTXT" style="flex: 1; font-size: 12px;">📄 Text</button>
+      <button class="btn" id="btnExportJSON" style="flex: 1; font-size: 12px;" title="Export highlights and bookmarks to JSON">📥 JSON</button>
+      <button class="btn" id="btnExportMD" style="flex: 1; font-size: 12px;" title="Export highlights and bookmarks to Markdown">📝 Markdown</button>
+      <button class="btn" id="btnExportTXT" style="flex: 1; font-size: 12px;" title="Export highlights and bookmarks to Plain Text">📄 Text</button>
     </div>
   </div>
 
   <!-- Help Modal -->
-  <div class="modal-overlay" id="helpModal">
+  <div class="modal-overlay" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
     <div class="modal-content">
-      <div class="modal-title">❓ KRead User & Keyboard Guide</div>
+      <div class="modal-title" id="helpModalTitle">❓ KRead User & Keyboard Guide</div>
       <div style="font-size: 13px; line-height: 1.6; opacity: 0.9;">
         <p><strong>Keyboard Shortcuts:</strong></p>
         <ul style="margin-left: 20px; margin-bottom: 14px;">
@@ -736,6 +763,7 @@
           <li><kbd>Ctrl</kbd> + <kbd>W</kbd> - Close Active Tab</li>
           <li><kbd>Ctrl</kbd> + <kbd>Tab</kbd> / <kbd>Ctrl+Shift+Tab</kbd> - Next / Previous Tab</li>
           <li><kbd>Ctrl</kbd> + <kbd>1-9</kbd> - Switch to Tab 1 through 9</li>
+          <li><kbd>F2</kbd> - Rename Active Tab</li>
           <li><kbd>Ctrl</kbd> + <kbd>F</kbd> - Find Text in Document</li>
           <li><kbd>Ctrl</kbd> + <kbd>B</kbd> - Quick Add Bookmark</li>
           <li><kbd>Ctrl</kbd> + <kbd>S</kbd> - Open Reading Statistics</li>
@@ -745,8 +773,8 @@
         <p><strong>Features:</strong></p>
         <ul style="margin-left: 20px;">
           <li><strong>Multi-Tab Sessions:</strong> Open multiple documents with preserved scroll, notes, and stats.</li>
-          <li><strong>Double-click Tab:</strong> Rename any tab with custom title.</li>
-          <li><strong>Annotation & Notes:</strong> Select text to highlight in 4 colors or attach notes.</li>
+          <li><strong>Double-click or F2 on Tab:</strong> Rename any tab with custom title.</li>
+          <li><strong>Annotation & Notes:</strong> Select text to highlight in 4 colors or attach notes; click in text to jump to note.</li>
           <li><strong>Reading Stats Engine:</strong> Real-time word count, line count, and WPM reading estimates.</li>
           <li><strong>Themes & Fonts:</strong> High-Contrast, Sepia, Dark, and Light themes with Serif/Sans/Mono typography.</li>
         </ul>
@@ -758,9 +786,9 @@
   </div>
 
   <!-- Reading Statistics Modal -->
-  <div class="modal-overlay" id="statsModal">
+  <div class="modal-overlay" id="statsModal" role="dialog" aria-modal="true" aria-labelledby="statsModalTitle">
     <div class="modal-content">
-      <div class="modal-title">📊 Reading Statistics Engine</div>
+      <div class="modal-title" id="statsModalTitle">📊 Reading Statistics Engine</div>
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-val" id="statWords">0</div>
@@ -794,9 +822,9 @@
   </div>
 
   <!-- Custom Rename Tab Modal -->
-  <div class="modal-overlay" id="renameModal">
+  <div class="modal-overlay" id="renameModal" role="dialog" aria-modal="true" aria-labelledby="renameModalTitle">
     <div class="modal-content" style="max-width: 400px;">
-      <div class="modal-title">🏷️ Rename Tab</div>
+      <div class="modal-title" id="renameModalTitle">🏷️ Rename Tab</div>
       <input type="text" class="modal-input" id="renameInput" placeholder="Tab title...">
       <div class="modal-actions">
         <button class="btn" id="btnCancelRename">Cancel</button>
@@ -806,9 +834,9 @@
   </div>
 
   <!-- Custom Add Note Modal -->
-  <div class="modal-overlay" id="noteModal">
+  <div class="modal-overlay" id="noteModal" role="dialog" aria-modal="true" aria-labelledby="noteModalTitle">
     <div class="modal-content" style="max-width: 440px;">
-      <div class="modal-title">📝 Add Annotation Note</div>
+      <div class="modal-title" id="noteModalTitle">📝 Add Annotation Note</div>
       <p id="noteSelectedTextPreview" style="font-size: 12px; font-style: italic; opacity: 0.8; border-left: 3px solid var(--accent); padding-left: 8px; max-height: 60px; overflow: hidden; text-overflow: ellipsis;"></p>
       <textarea class="modal-textarea" id="noteInput" placeholder="Write your thoughts or annotation here..."></textarea>
       <div class="modal-actions">
@@ -819,7 +847,7 @@
   </div>
 
   <!-- Custom Confirmation Modal -->
-  <div class="modal-overlay" id="confirmModal">
+  <div class="modal-overlay" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
     <div class="modal-content" style="max-width: 400px;">
       <div class="modal-title" id="confirmModalTitle">⚠️ Confirm Action</div>
       <p id="confirmModalMsg" style="font-size: 13px; opacity: 0.9; margin-top: 6px;"></p>
@@ -1092,7 +1120,10 @@
         const item = document.createElement('div');
         item.className = 'tab-item' + (tab.id === activeTabId ? ' active' : '');
         item.setAttribute('data-id', tab.id);
-        item.title = `${tab.title} (Ctrl+${index + 1} | Double-click to rename)`;
+        item.setAttribute('role', 'tab');
+        item.setAttribute('tabindex', '0');
+        item.setAttribute('aria-selected', tab.id === activeTabId ? 'true' : 'false');
+        item.title = `${tab.title} (Ctrl+${index + 1} | Double-click or F2 to rename)`;
 
         const badge = document.createElement('span');
         badge.className = 'tab-badge';
@@ -1106,6 +1137,7 @@
         closeBtn.className = 'tab-close';
         closeBtn.innerHTML = '✕';
         closeBtn.title = 'Close Tab (Ctrl+W)';
+        closeBtn.setAttribute('aria-label', `Close ${tab.title}`);
         closeBtn.onclick = (e) => {
           e.stopPropagation();
           closeTab(tab.id);
@@ -1114,6 +1146,19 @@
         item.onclick = () => {
           if (tab.id !== activeTabId) {
             switchTab(tab.id);
+          }
+        };
+
+        item.onkeydown = (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (tab.id !== activeTabId) switchTab(tab.id);
+          } else if (e.key === 'Delete' || (e.ctrlKey && (e.key === 'w' || e.key === 'W'))) {
+            e.preventDefault();
+            closeTab(tab.id);
+          } else if (e.key === 'F2') {
+            e.preventDefault();
+            openRenameModal(tab.id, tab.title);
           }
         };
 
@@ -1246,8 +1291,69 @@
       if (!tab) return;
       if (searchMatches.length > 0) return;
       
-      let html = escapeHtml(tab.text);
+      const text = tab.text || '';
+      if (!tab.notes || tab.notes.length === 0) {
+        textContent.innerHTML = escapeHtml(text);
+        return;
+      }
+
+      // Collect intervals for valid highlighted note snippets
+      const intervals = [];
+      tab.notes.forEach(n => {
+        if (!n.text || n.text.length < 2) return;
+        let idx = text.indexOf(n.text);
+        let count = 0;
+        while (idx !== -1 && count < 8) {
+          intervals.push({ start: idx, end: idx + n.text.length, note: n });
+          count++;
+          idx = text.indexOf(n.text, idx + n.text.length);
+        }
+      });
+
+      // Sort intervals: start ascending, length descending
+      intervals.sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
+
+      // Filter non-overlapping intervals
+      const nonOverlapping = [];
+      let lastEnd = 0;
+      for (const inv of intervals) {
+        if (inv.start >= lastEnd) {
+          nonOverlapping.push(inv);
+          lastEnd = inv.end;
+        }
+      }
+
+      let html = '';
+      let cursor = 0;
+      for (const inv of nonOverlapping) {
+        html += escapeHtml(text.substring(cursor, inv.start));
+        const snippet = escapeHtml(text.substring(inv.start, inv.end));
+        const colorClass = inv.note.color ? `hl-${inv.note.color}` : 'hl-yellow';
+        const titleText = inv.note.note ? `💬 ${escapeHtml(inv.note.note)}` : 'Highlighted text';
+        html += `<mark class="user-highlight ${colorClass}" data-note-id="${inv.note.id}" title="${titleText}">${snippet}</mark>`;
+        cursor = inv.end;
+      }
+      html += escapeHtml(text.substring(cursor));
       textContent.innerHTML = html;
+
+      // Click highlight to open note in notes drawer
+      textContent.querySelectorAll('mark.user-highlight').forEach(el => {
+        el.onclick = (e) => {
+          e.stopPropagation();
+          const noteId = parseInt(el.getAttribute('data-note-id'));
+          if (noteId) {
+            notesDrawer.classList.add('open');
+            btnToggleNotes.classList.add('active');
+            renderNotes();
+            const card = notesList.querySelector(`[data-card-note-id="${noteId}"]`);
+            if (card) {
+              card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              card.style.outline = '2px solid var(--accent)';
+              setTimeout(() => card.style.outline = '', 1500);
+            }
+          }
+        };
+      });
     }
 
     function escapeHtml(str) {
@@ -1358,24 +1464,32 @@
       files.forEach((file, index) => {
         const reader = new FileReader();
         reader.onload = (ev) => {
-          const content = ev.target.result;
-          const currentTab = getActiveTab();
-          
-          if (index === 0 && (!currentTab.text || currentTab.title === 'Untitled')) {
-            currentTab.title = file.name;
-            currentTab.text = content;
-            currentTab.scroll = 0;
-            currentTab.timeSpent = 0;
-            currentTab.bookmarks = [];
-            currentTab.notes = [];
-            clearSearchHighlights();
-            saveTabsSession();
-            renderTabs();
-            renderContent();
-            showToast(`Loaded "${file.name}"`, '📂');
-          } else {
-            createNewTab(file.name, content);
+          try {
+            const content = ev.target.result;
+            const currentTab = getActiveTab();
+            
+            if (index === 0 && (!currentTab.text || currentTab.title === 'Untitled')) {
+              currentTab.title = file.name;
+              currentTab.text = content;
+              currentTab.scroll = 0;
+              currentTab.timeSpent = 0;
+              currentTab.bookmarks = [];
+              currentTab.notes = [];
+              clearSearchHighlights();
+              saveTabsSession();
+              renderTabs();
+              renderContent();
+              showToast(`Loaded "${file.name}"`, '📂');
+            } else {
+              createNewTab(file.name, content);
+            }
+          } catch(err) {
+            console.error('Error processing file', err);
+            showToast(`Error reading "${file.name}"`, '⚠️');
           }
+        };
+        reader.onerror = () => {
+          showToast(`Failed to open "${file.name}"`, '⚠️');
         };
         reader.readAsText(file);
       });
@@ -1414,23 +1528,31 @@
         files.forEach((file, index) => {
           const reader = new FileReader();
           reader.onload = (ev) => {
-            const content = ev.target.result;
-            const currentTab = getActiveTab();
-            if (index === 0 && (!currentTab.text || currentTab.title === 'Untitled')) {
-              currentTab.title = file.name;
-              currentTab.text = content;
-              currentTab.scroll = 0;
-              currentTab.timeSpent = 0;
-              currentTab.bookmarks = [];
-              currentTab.notes = [];
-              clearSearchHighlights();
-              saveTabsSession();
-              renderTabs();
-              renderContent();
-              showToast(`Loaded "${file.name}"`, '📂');
-            } else {
-              createNewTab(file.name, content);
+            try {
+              const content = ev.target.result;
+              const currentTab = getActiveTab();
+              if (index === 0 && (!currentTab.text || currentTab.title === 'Untitled')) {
+                currentTab.title = file.name;
+                currentTab.text = content;
+                currentTab.scroll = 0;
+                currentTab.timeSpent = 0;
+                currentTab.bookmarks = [];
+                currentTab.notes = [];
+                clearSearchHighlights();
+                saveTabsSession();
+                renderTabs();
+                renderContent();
+                showToast(`Loaded "${file.name}"`, '📂');
+              } else {
+                createNewTab(file.name, content);
+              }
+            } catch(err) {
+              console.error('Error processing dropped file', err);
+              showToast(`Error reading "${file.name}"`, '⚠️');
             }
+          };
+          reader.onerror = () => {
+            showToast(`Failed to load "${file.name}"`, '⚠️');
           };
           reader.readAsText(file);
         });
@@ -1583,7 +1705,9 @@
       const scrollable = readerContainer.scrollHeight - readerContainer.clientHeight;
       const pct = scrollable > 0 ? Math.round((readerContainer.scrollTop / scrollable) * 100) : 0;
       
-      const snippet = tab.text.substring(0, 120).replace(/\s+/g, ' ') + '...';
+      const charOffset = tab.text.length > 0 ? Math.floor((tab.text.length * pct) / 100) : 0;
+      const startOffset = Math.max(0, charOffset - 20);
+      const snippet = tab.text.substring(startOffset, startOffset + 120).replace(/\s+/g, ' ') + '...';
       const bm = {
         id: Date.now(),
         scroll: readerContainer.scrollTop,
@@ -1654,6 +1778,9 @@
 
     // Text Selection, Highlights & Notes
     readerContainer.onmouseup = handleTextSelection;
+    if (selectionPopover) {
+      selectionPopover.onmousedown = (e) => e.preventDefault();
+    }
 
     function handleTextSelection(e) {
       const sel = window.getSelection();
@@ -1671,8 +1798,16 @@
       const rect = range.getBoundingClientRect();
       const containerRect = readerContainer.getBoundingClientRect();
 
-      selectionPopover.style.top = (rect.top - containerRect.top - 44 + readerContainer.scrollTop) + 'px';
-      selectionPopover.style.left = (rect.left - containerRect.left + (rect.width / 2) - 80) + 'px';
+      let top = rect.top - containerRect.top - 44 + readerContainer.scrollTop;
+      if (top < readerContainer.scrollTop + 10) {
+        top = rect.bottom - containerRect.top + 10 + readerContainer.scrollTop;
+      }
+      let left = rect.left - containerRect.left + (rect.width / 2) - 80;
+      const maxLeft = containerRect.width - 230;
+      left = Math.max(10, Math.min(left, maxLeft));
+
+      selectionPopover.style.top = top + 'px';
+      selectionPopover.style.left = left + 'px';
       selectionPopover.style.display = 'flex';
     }
 
@@ -1713,6 +1848,7 @@
       if (!tab.notes) tab.notes = [];
       tab.notes.unshift(item);
       saveTabsSession();
+      renderTextWithHighlights();
       selectionPopover.style.display = 'none';
       if (sel) sel.removeAllRanges();
       renderNotes();
@@ -1730,7 +1866,7 @@
         return;
       }
       notesList.innerHTML = notes.map(n => `
-        <div class="note-card">
+        <div class="note-card" data-card-note-id="${n.id}">
           <div class="card-meta">
             <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${getHighlightColorCode(n.color)};"></span>
             <span>${n.date}</span>
@@ -1738,11 +1874,38 @@
           <div class="note-snippet">${escapeHtml(n.text)}</div>
           ${n.note ? `<div style="font-weight: 500; font-size: 12px; margin-top: 4px;">💬 ${escapeHtml(n.note)}</div>` : ''}
           <div class="card-actions">
+            <button class="btn" onclick="jumpToNote(${n.id})">Jump</button>
             <button class="btn" onclick="deleteNote(${n.id})">Delete</button>
           </div>
         </div>
       `).join('');
     }
+
+    window.jumpToNote = (id) => {
+      const tab = getActiveTab();
+      if (!tab || !tab.notes) return;
+      const n = tab.notes.find(x => x.id === id);
+      if (!n) return;
+
+      const markEl = textContent.querySelector(`mark.user-highlight[data-note-id="${id}"]`);
+      if (markEl) {
+        markEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        markEl.style.outline = '3px solid var(--mark-active)';
+        setTimeout(() => markEl.style.outline = '', 2000);
+        showToast('Jumped to highlight', '📍');
+      } else {
+        const idx = tab.text.indexOf(n.text);
+        if (idx !== -1) {
+          const scrollable = readerContainer.scrollHeight - readerContainer.clientHeight;
+          if (scrollable > 0 && tab.text.length > 0) {
+            readerContainer.scrollTop = Math.round((idx / tab.text.length) * scrollable);
+            showToast('Jumped to approximate location', '📍');
+          }
+        }
+      }
+      notesDrawer.classList.remove('open');
+      btnToggleNotes.classList.remove('active');
+    };
 
     function getHighlightColorCode(c) {
       switch(c) {
@@ -1758,6 +1921,7 @@
       if (!tab || !tab.notes) return;
       tab.notes = tab.notes.filter(n => n.id !== id);
       saveTabsSession();
+      renderTextWithHighlights();
       renderNotes();
       showToast('Annotation removed', '🗑️');
     };
@@ -1909,8 +2073,12 @@
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = filename;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(a.href);
+      setTimeout(() => {
+        URL.revokeObjectURL(a.href);
+        if (a.parentNode) a.parentNode.removeChild(a);
+      }, 1000);
     }
 
     // Modal Overlay Backdrop Dismissal
@@ -1935,6 +2103,56 @@
       }
       
       const ctrl = e.ctrlKey || e.metaKey;
+      const isModalOpen = helpModal.classList.contains('open') || 
+                          statsModal.classList.contains('open') || 
+                          renameModal.classList.contains('open') || 
+                          noteModal.classList.contains('open') || 
+                          confirmModal.classList.contains('open');
+
+      if (e.key === 'Escape') {
+        if (searchPanel.classList.contains('open')) toggleSearchPanel();
+        bookmarksDrawer.classList.remove('open');
+        notesDrawer.classList.remove('open');
+        statsModal.classList.remove('open');
+        if (helpModal) helpModal.classList.remove('open');
+        renameModal.classList.remove('open');
+        noteModal.classList.remove('open');
+        confirmModal.classList.remove('open');
+        selectionPopover.style.display = 'none';
+        btnToggleBookmarks.classList.remove('active');
+        btnToggleNotes.classList.remove('active');
+        return;
+      }
+
+      if (confirmModal.classList.contains('open')) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          btnOkConfirm.click();
+        }
+        return;
+      }
+
+      if (isModalOpen) return;
+
+      if (e.key === 'F2') {
+        e.preventDefault();
+        const tab = getActiveTab();
+        if (tab) openRenameModal(tab.id, tab.title);
+        return;
+      }
+
+      if (ctrl && (e.key === 'a' || e.key === 'A')) {
+        if (textContent && textContent.style.display !== 'none') {
+          const range = document.createRange();
+          range.selectNodeContents(textContent);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          e.preventDefault();
+        }
+        return;
+      }
+
       if (ctrl && (e.key === 't' || e.key === 'T')) {
         e.preventDefault();
         createNewTab();
@@ -1984,18 +2202,6 @@
       } else if ((e.key.toLowerCase() === 'h' || e.key === 'F1') && !ctrl && !e.altKey) {
         if (e.key === 'F1') e.preventDefault();
         if (helpModal) helpModal.classList.add('open');
-      } else if (e.key === 'Escape') {
-        if (searchPanel.classList.contains('open')) toggleSearchPanel();
-        bookmarksDrawer.classList.remove('open');
-        notesDrawer.classList.remove('open');
-        statsModal.classList.remove('open');
-        if (helpModal) helpModal.classList.remove('open');
-        renameModal.classList.remove('open');
-        noteModal.classList.remove('open');
-        confirmModal.classList.remove('open');
-        selectionPopover.style.display = 'none';
-        btnToggleBookmarks.classList.remove('active');
-        btnToggleNotes.classList.remove('active');
       }
     });
 
