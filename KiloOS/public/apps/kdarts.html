@@ -155,7 +155,7 @@
         <option value="red">Style: Red</option>
         <option value="gold">Style: Gold</option>
       </select>
-      <button onclick="toggleSound()">Sound: ON</button>
+      <button id="btnSound" onclick="toggleSound()">Sound: ON</button>
       <button onclick="toggleHelp()">Help</button>
     </div>
     
@@ -222,11 +222,14 @@ let dartColor = '#00f0ff';
 
 function toggleHelp() {
     const p = document.getElementById('helpPanel');
-    p.style.display = p.style.display === 'none' ? 'block' : 'none';
+    if (!p) return;
+    const isVisible = getComputedStyle(p).display !== 'none';
+    p.style.display = isVisible ? 'none' : 'block';
 }
 function toggleSound() {
     soundEnabled = !soundEnabled;
-    event.target.innerText = `Sound: ${soundEnabled ? 'ON' : 'OFF'}`;
+    const btn = document.getElementById('btnSound');
+    if (btn) btn.innerText = `Sound: ${soundEnabled ? 'ON' : 'OFF'}`;
 }
 function changeDartStyle() {
     const style = document.getElementById('dartStyle').value;
@@ -518,6 +521,8 @@ function updateBadges() {
 }
 
 function activateFocus() {
+    let isP1OrHuman = (currentPlayer === 0 || (!isCampaign && aiDifficulty === 'Human'));
+    if (!isP1OrHuman || state !== 'PLAYING') return;
     if (focusUses[currentPlayer] > 0 && !focusActive[currentPlayer]) {
         focusActive[currentPlayer] = true;
         focusUses[currentPlayer]--;
@@ -531,6 +536,8 @@ function activateFocus() {
 }
 
 function activateMagnet() {
+    let isP1OrHuman = (currentPlayer === 0 || (!isCampaign && aiDifficulty === 'Human'));
+    if (!isP1OrHuman || state !== 'PLAYING') return;
     if (magnetUses[currentPlayer] > 0 && !magnetActive[currentPlayer]) {
         magnetActive[currentPlayer] = true;
         magnetUses[currentPlayer]--;
@@ -544,6 +551,8 @@ function activateMagnet() {
 }
 
 function activateLaser() {
+    let isP1OrHuman = (currentPlayer === 0 || (!isCampaign && aiDifficulty === 'Human'));
+    if (!isP1OrHuman || state !== 'PLAYING') return;
     if (laserUses[currentPlayer] > 0 && !laserActive[currentPlayer]) {
         laserActive[currentPlayer] = true;
         laserUses[currentPlayer]--;
@@ -557,44 +566,21 @@ function activateLaser() {
 }
 
 function activateUndoDart() {
-    if (undoUses[currentPlayer] > 0 && darts.length > 0) {
+    let isP1OrHuman = (currentPlayer === 0 || (!isCampaign && aiDifficulty === 'Human'));
+    if (!isP1OrHuman) return;
+    if (undoUses[currentPlayer] > 0 && darts.length > 0 && historyStack.length > 0) {
         undoUses[currentPlayer]--;
+        let remainingUndo = undoUses[currentPlayer];
         playSound('powerup');
         triggerShake(5, 8);
         spawnMultiLayerExplosion(CX, CY, '#ffd700', 1.0);
         spawnShockwave(CX, CY, '#ffd700', 75);
-        const lastDart = darts.pop();
-        dartsLeft++;
-        totalDarts[currentPlayer]--;
         
-        const pts = lastDart.pts;
-        const number = lastDart.number;
-        const mult = lastDart.mult;
-        
-        if (gameMode === '501' || gameMode === '301') {
-            scores[currentPlayer] += pts;
-        } else if (gameMode === 'cricket') {
-            if (mult > 0 && cricketHits[currentPlayer][number] !== undefined) {
-                cricketHits[currentPlayer][number] = Math.max(0, cricketHits[currentPlayer][number] - mult);
-            }
-        } else if (gameMode === 'atc') {
-            if (number === atcTarget[currentPlayer] - mult || number === atcTarget[currentPlayer] - 1) {
-                atcTarget[currentPlayer] = Math.max(1, atcTarget[currentPlayer] - mult);
-            }
-        } else if (gameMode === 'blitz') {
-            if (number === 25) {
-                blitzHits[currentPlayer] = Math.max(0, blitzHits[currentPlayer] - mult);
-            }
-        } else if (gameMode === 'killer') {
-            let oppSector = currentPlayer === 0 ? 19 : 20;
-            if (isKiller[currentPlayer] && number === oppSector) {
-                killerLives[1 - currentPlayer] = Math.min(5, killerLives[1 - currentPlayer] + mult);
-            }
-        }
-        
+        const prevSnap = historyStack.pop();
+        restoreSnapshot(prevSnap);
+        undoUses[currentPlayer] = remainingUndo;
         if (state === 'TURN_END') state = 'PLAYING';
         statusEl.innerText = "Dart Undone! Re-throw last dart.";
-        updateScoreUI();
         updateBadges();
     }
 }
@@ -647,6 +633,11 @@ function undo() {
             redoStack.push(getSnapshot());
             restoreSnapshot(historyStack.pop());
         } while (historyStack.length > 0 && currentPlayer === 1 && aiDifficulty !== 'Human');
+        statusEl.innerText = "Turn Undone";
+    } else {
+        const oldMsg = statusEl.innerText;
+        statusEl.innerText = "Nothing to undo";
+        setTimeout(() => { if (statusEl.innerText === "Nothing to undo") statusEl.innerText = oldMsg; }, 1200);
     }
 }
 
@@ -662,68 +653,88 @@ function redo() {
                 aiTimeoutId = setTimeout(nextTurn, 1800);
             }
         }
+        statusEl.innerText = "Turn Redone";
+    } else {
+        const oldMsg = statusEl.innerText;
+        statusEl.innerText = "Nothing to redo";
+        setTimeout(() => { if (statusEl.innerText === "Nothing to redo") statusEl.innerText = oldMsg; }, 1200);
     }
 }
 
 function setDifficulty(diff) {
     aiDifficulty = diff;
+    updateWind();
+    updateScoreUI();
 }
 
 function saveState() {
     const stateObj = {
         isCampaign, campaignStage, gameMode, aiDifficulty, currentPlayer,
         cricketHits, atcTarget, blitzHits, killerLives, isKiller, totalDarts, highestCheckout,
-        scores, prevScores, focusUses, magnetUses, undoUses, laserUses, dartsLeft, state
+        scores, prevScores, focusActive, focusUses, magnetActive, magnetUses, undoUses, laserActive, laserUses, dartsLeft, state
     };
-    localStorage.setItem('kdarts_save_loop7', JSON.stringify(stateObj));
-    const oldMsg = statusEl.innerText;
-    statusEl.innerText = "Game Saved Successfully!";
-    setTimeout(() => { if (statusEl.innerText === "Game Saved Successfully!") statusEl.innerText = oldMsg; }, 1500);
+    try {
+        localStorage.setItem('kdarts_save_loop7', JSON.stringify(stateObj));
+        const oldMsg = statusEl.innerText;
+        statusEl.innerText = "Game Saved Successfully!";
+        setTimeout(() => { if (statusEl.innerText === "Game Saved Successfully!") statusEl.innerText = oldMsg; }, 1500);
+    } catch (e) {
+        statusEl.innerText = "Failed to save game!";
+    }
 }
 
 function loadState() {
     const saved = localStorage.getItem('kdarts_save_loop7');
-    if (saved) {
-        try {
-            const stateObj = JSON.parse(saved);
-            isCampaign = stateObj.isCampaign || false;
-            campaignStage = stateObj.campaignStage || 0;
-            gameMode = stateObj.gameMode;
-            aiDifficulty = stateObj.aiDifficulty;
-            currentPlayer = stateObj.currentPlayer;
-            cricketHits = stateObj.cricketHits;
-            atcTarget = stateObj.atcTarget || [1, 1];
-            blitzHits = stateObj.blitzHits || [0, 0];
-            killerLives = stateObj.killerLives || [5, 5];
-            isKiller = stateObj.isKiller || [false, false];
-            totalDarts = stateObj.totalDarts;
-            highestCheckout = stateObj.highestCheckout || [0, 0];
-            scores = stateObj.scores;
-            prevScores = stateObj.prevScores;
-            focusUses = stateObj.focusUses || [2, 2];
-            magnetUses = stateObj.magnetUses || [2, 2];
-            undoUses = stateObj.undoUses || [1, 1];
-            laserUses = stateObj.laserUses || [2, 2];
-            dartsLeft = stateObj.dartsLeft;
-            state = stateObj.state;
-            darts = [];
-            
-            document.getElementById('diff').value = aiDifficulty;
-            updateScoreUI();
-            updateBadges();
-            
-            if (state === 'PLAYING' && currentPlayer === 1 && aiDifficulty !== 'Human') {
-                clearTimeout(aiTimeoutId);
-                aiTimeoutId = setTimeout(aiThrow, 1000);
-            } else if (state === 'TURN_END' && currentPlayer === 1 && aiDifficulty !== 'Human') {
-                clearTimeout(aiTimeoutId);
-                aiTimeoutId = setTimeout(nextTurn, 1800);
-            }
-            
-            statusEl.innerText = "Game Loaded!";
-        } catch (e) {
-            console.error("Load failed", e);
+    if (!saved) {
+        const oldMsg = statusEl.innerText;
+        statusEl.innerText = "No saved game found!";
+        setTimeout(() => { if (statusEl.innerText === "No saved game found!") statusEl.innerText = oldMsg; }, 1500);
+        return;
+    }
+    try {
+        const stateObj = JSON.parse(saved);
+        isCampaign = stateObj.isCampaign || false;
+        campaignStage = stateObj.campaignStage || 0;
+        gameMode = stateObj.gameMode || '501';
+        aiDifficulty = stateObj.aiDifficulty || 'Medium';
+        currentPlayer = stateObj.currentPlayer || 0;
+        cricketHits = stateObj.cricketHits || [{15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}, {15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}];
+        atcTarget = stateObj.atcTarget || [1, 1];
+        blitzHits = stateObj.blitzHits || [0, 0];
+        killerLives = stateObj.killerLives || [5, 5];
+        isKiller = stateObj.isKiller || [false, false];
+        totalDarts = stateObj.totalDarts || [0, 0];
+        highestCheckout = stateObj.highestCheckout || [0, 0];
+        scores = stateObj.scores || [501, 501];
+        prevScores = stateObj.prevScores || [501, 501];
+        focusActive = stateObj.focusActive || [false, false];
+        focusUses = stateObj.focusUses || [2, 2];
+        magnetActive = stateObj.magnetActive || [false, false];
+        magnetUses = stateObj.magnetUses || [2, 2];
+        undoUses = stateObj.undoUses || [1, 1];
+        laserActive = stateObj.laserActive || [false, false];
+        laserUses = stateObj.laserUses || [2, 2];
+        dartsLeft = stateObj.dartsLeft !== undefined ? stateObj.dartsLeft : 3;
+        state = stateObj.state || 'PLAYING';
+        darts = [];
+        
+        document.getElementById('diff').value = aiDifficulty;
+        updateWind();
+        updateScoreUI();
+        updateBadges();
+        
+        if (state === 'PLAYING' && currentPlayer === 1 && aiDifficulty !== 'Human') {
+            clearTimeout(aiTimeoutId);
+            aiTimeoutId = setTimeout(aiThrow, 1000);
+        } else if (state === 'TURN_END' && currentPlayer === 1 && aiDifficulty !== 'Human') {
+            clearTimeout(aiTimeoutId);
+            aiTimeoutId = setTimeout(nextTurn, 1800);
         }
+        
+        statusEl.innerText = "Game Loaded!";
+    } catch (e) {
+        console.error("Load failed", e);
+        statusEl.innerText = "Failed to load save file!";
     }
 }
 
@@ -886,28 +897,30 @@ function throwDart(rawX, rawY) {
     dartsLeft--;
     totalDarts[currentPlayer]++;
 
+    let isP1OrHuman = (currentPlayer === 0 || (!isCampaign && aiDifficulty === 'Human'));
     let turnName = currentPlayer === 0 ? "Player 1" : (isCampaign ? CAMPAIGN_STAGES[campaignStage].opponent : (aiDifficulty === 'Human' ? "Player 2" : "AI"));
+    let passHint = isP1OrHuman ? " (Click or Space)" : "";
 
     if (gameMode === '501') {
         scores[currentPlayer] -= pts;
         if (scores[currentPlayer] < 0 || scores[currentPlayer] === 1) {
-            statusEl.innerText = `${turnName} Bust!`;
+            statusEl.innerText = `${turnName} Bust!${passHint}`;
             scores[currentPlayer] = prevScores[currentPlayer];
             state = 'TURN_END';
         } else if (scores[currentPlayer] === 0) {
             if (hit.mult === 2) {
-                statusEl.innerText = `${turnName} Wins with Double Out!`;
+                statusEl.innerText = `${turnName} Wins with Double Out!${passHint}`;
                 if (prevScores[currentPlayer] > highestCheckout[currentPlayer]) {
                     highestCheckout[currentPlayer] = prevScores[currentPlayer];
                 }
                 state = 'WON';
             } else {
-                statusEl.innerText = `${turnName} Bust! Must finish on a Double.`;
+                statusEl.innerText = `${turnName} Bust! Must finish on a Double.${passHint}`;
                 scores[currentPlayer] = prevScores[currentPlayer];
                 state = 'TURN_END';
             }
         } else if (dartsLeft === 0) {
-            statusEl.innerText = `${turnName} Turn Over. Score: ${scores[currentPlayer]}`;
+            statusEl.innerText = `${turnName} Turn Over. Score: ${scores[currentPlayer]}${passHint}`;
             state = 'TURN_END';
         } else {
             statusEl.innerText = `${turnName} Hit ${pts}! Darts left: ${dartsLeft}`;
@@ -915,17 +928,17 @@ function throwDart(rawX, rawY) {
     } else if (gameMode === '301') {
         scores[currentPlayer] -= pts;
         if (scores[currentPlayer] < 0) {
-            statusEl.innerText = `${turnName} Bust!`;
+            statusEl.innerText = `${turnName} Bust!${passHint}`;
             scores[currentPlayer] = prevScores[currentPlayer];
             state = 'TURN_END';
         } else if (scores[currentPlayer] === 0) {
-            statusEl.innerText = `${turnName} Wins 301!`;
+            statusEl.innerText = `${turnName} Wins 301!${passHint}`;
             if (prevScores[currentPlayer] > highestCheckout[currentPlayer]) {
                 highestCheckout[currentPlayer] = prevScores[currentPlayer];
             }
             state = 'WON';
         } else if (dartsLeft === 0) {
-            statusEl.innerText = `${turnName} Turn Over. Score: ${scores[currentPlayer]}`;
+            statusEl.innerText = `${turnName} Turn Over. Score: ${scores[currentPlayer]}${passHint}`;
             state = 'TURN_END';
         } else {
             statusEl.innerText = `${turnName} Hit ${pts}! Darts left: ${dartsLeft}`;
@@ -943,10 +956,10 @@ function throwDart(rawX, rawY) {
         }
         
         if (allClosed) {
-            statusEl.innerText = `${turnName} Wins in ${totalDarts[currentPlayer]} darts!`;
+            statusEl.innerText = `${turnName} Wins in ${totalDarts[currentPlayer]} darts!${passHint}`;
             state = 'WON';
         } else if (dartsLeft === 0) {
-            statusEl.innerText = `${turnName} Turn Over.`;
+            statusEl.innerText = `${turnName} Turn Over.${passHint}`;
             state = 'TURN_END';
         } else {
             statusEl.innerText = `${turnName}: ${hitMsg} - Darts left: ${dartsLeft}`;
@@ -955,13 +968,13 @@ function throwDart(rawX, rawY) {
         if (hit.number === atcTarget[currentPlayer]) {
             atcTarget[currentPlayer] += hit.mult;
             if (atcTarget[currentPlayer] > 20) {
-                statusEl.innerText = `${turnName} Completed Around the Clock!`;
+                statusEl.innerText = `${turnName} Completed Around the Clock!${passHint}`;
                 state = 'WON';
             } else {
                 statusEl.innerText = `${turnName} Hit ${hit.number}! Next target: ${atcTarget[currentPlayer]}`;
             }
         } else if (dartsLeft === 0) {
-            statusEl.innerText = `${turnName} Turn Over. Target: ${atcTarget[currentPlayer]}`;
+            statusEl.innerText = `${turnName} Turn Over. Target: ${atcTarget[currentPlayer]}${passHint}`;
             state = 'TURN_END';
         } else {
             statusEl.innerText = `Miss Target ${atcTarget[currentPlayer]}! Darts left: ${dartsLeft}`;
@@ -970,13 +983,13 @@ function throwDart(rawX, rawY) {
         if (hit.number === 25) {
             blitzHits[currentPlayer] += hit.mult;
             if (blitzHits[currentPlayer] >= 10) {
-                statusEl.innerText = `${turnName} Blitz Victory! 10 Bullseyes!`;
+                statusEl.innerText = `${turnName} Blitz Victory! 10 Bullseyes!${passHint}`;
                 state = 'WON';
             } else {
                 statusEl.innerText = `${turnName} Bullseye Hit! Total: ${blitzHits[currentPlayer]}/10`;
             }
         } else if (dartsLeft === 0) {
-            statusEl.innerText = `${turnName} Turn Over. Bullseyes: ${blitzHits[currentPlayer]}/10`;
+            statusEl.innerText = `${turnName} Turn Over. Bullseyes: ${blitzHits[currentPlayer]}/10${passHint}`;
             state = 'TURN_END';
         } else {
             statusEl.innerText = `Miss Bullseye! Darts left: ${dartsLeft}`;
@@ -997,13 +1010,13 @@ function throwDart(rawX, rawY) {
                 killerLives[1 - currentPlayer] -= dmg;
                 if (killerLives[1 - currentPlayer] <= 0) {
                     killerLives[1 - currentPlayer] = 0;
-                    statusEl.innerText = `${turnName} KILLER VICTORY! Opponent eliminated!`;
+                    statusEl.innerText = `${turnName} KILLER VICTORY! Opponent eliminated!${passHint}`;
                     state = 'WON';
                 } else {
                     statusEl.innerText = `${turnName} HIT! Opponent -${dmg} Lives (Left: ${killerLives[1 - currentPlayer]})`;
                 }
             } else if (dartsLeft === 0) {
-                statusEl.innerText = `${turnName} Turn Over. Opponent Lives: ${killerLives[1 - currentPlayer]}`;
+                statusEl.innerText = `${turnName} Turn Over. Opponent Lives: ${killerLives[1 - currentPlayer]}${passHint}`;
                 state = 'TURN_END';
             } else {
                 statusEl.innerText = `Miss! Darts left: ${dartsLeft}`;
@@ -1099,27 +1112,6 @@ function aiThrow() {
     throwDart(idealX + rx, idealY + ry);
 }
 
-canvas.addEventListener('mousedown', (e) => {
-    let isP1OrHuman = (currentPlayer === 0 || (!isCampaign && aiDifficulty === 'Human'));
-    if (state === 'PLAYING' && isP1OrHuman) {
-        throwDart(mouseX + wobbleX, mouseY + wobbleY);
-    } else if ((state === 'TURN_END' || state === 'WON' || state === 'CAMPAIGN_OVER') && isP1OrHuman) {
-        nextTurn();
-    }
-});
-
-window.addEventListener('keydown', (e) => {
-    const k = e.key.toUpperCase();
-    if (k === 'F') activateFocus();
-    else if (k === 'M') activateMagnet();
-    else if (k === 'U') activateUndoDart();
-    else if (k === 'C') startCampaign(0);
-    else if (k === '1') setMode('501');
-    else if (k === '2') setMode('301');
-    else if (k === '3') setMode('cricket');
-    else if (k === '4') setMode('atc');
-    else if (k === '5') setMode('blitz');
-});
 
 function getHitDetails(x, y) {
     const dx = x - CX;
@@ -2014,7 +2006,7 @@ function update() {
         const crossColor = focusActive[currentPlayer] ? '#00ff88' : (laserActive[currentPlayer] ? '#ff0080' : '#ffff00');
         ctx.beginPath();
         ctx.moveTo(tx - 18, ty); ctx.lineTo(tx + 18, ty);
-        ctx.moveTo(tx, ty - 18); ctx.lineTo(tx + 18, ty);
+        ctx.moveTo(tx, ty - 18); ctx.lineTo(tx, ty + 18);
         ctx.strokeStyle = crossColor;
         ctx.lineWidth = 2;
         ctx.stroke();
@@ -2050,6 +2042,8 @@ function update() {
 }
 
 canvas.addEventListener('click', (e) => {
+    const helpP = document.getElementById('helpPanel');
+    if (helpP && getComputedStyle(helpP).display !== 'none') return;
     let isP1OrHuman = (currentPlayer === 0 || (!isCampaign && aiDifficulty === 'Human'));
     if (state === 'PLAYING' && isP1OrHuman) {
         throwDart(mouseX + wobbleX, mouseY + wobbleY);
@@ -2059,7 +2053,28 @@ canvas.addEventListener('click', (e) => {
 });
 
 window.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
     const k = e.key.toLowerCase();
+    const helpP = document.getElementById('helpPanel');
+    const isHelpOpen = helpP && getComputedStyle(helpP).display !== 'none';
+    
+    if (k === 'escape' || (k === 'h' && isHelpOpen)) {
+        if (helpP) helpP.style.display = 'none';
+        return;
+    }
+    if (k === 'h') {
+        toggleHelp();
+        return;
+    }
+    if (isHelpOpen) return;
+    
+    let isP1OrHuman = (currentPlayer === 0 || (!isCampaign && aiDifficulty === 'Human'));
+    if ((e.key === ' ' || e.key === 'Enter') && (state === 'TURN_END' || state === 'WON' || state === 'CAMPAIGN_OVER') && isP1OrHuman) {
+        e.preventDefault();
+        nextTurn();
+        return;
+    }
+    
     if (k === 'f') activateFocus();
     else if (k === 'm') activateMagnet();
     else if (k === 'u') activateUndoDart();
@@ -2071,6 +2086,10 @@ window.addEventListener('keydown', (e) => {
     else if (k === '4') setMode('atc');
     else if (k === '5') setMode('blitz');
     else if (k === '6') setMode('killer');
+    else if (k === 's') saveState();
+    else if (k === 'o') loadState();
+    else if (k === 'z') undo();
+    else if (k === 'y') redo();
 });
 
 update();

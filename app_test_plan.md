@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KDarts
+**Target App:** KDragon
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KDarts
 - KDragon
 - KFarm
 - KFlash
@@ -173,8 +172,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KConverter
 - KCyber
 - KDB
+- KDarts
 
 ## Test Reports
+
+- **KDarts**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
+  - ✅ Core gameplay works (3D Sisal Dartboard simulation with metallic wire spider and number ring, mahogany pub cabinet frame, dynamic mouse aiming with atmospheric wobble and wind gusts, 6 game modes 501 Double Out/301/Cricket/Around the Clock/Bullseye Blitz/Killer Darts, 20-stage Campaign mode leading to World Championship Finals, 4 AI difficulty levels Easy/Medium/Hard/Legend and local Vs Human 2-player mode, 4 power-up skills Focus/Magnet/Laser Sight/Undo Dart, Web Audio sound synthesizers, and multi-layer particle explosion engine).
+  - 🔧 FIXED: Redundant duplicate `canvas.addEventListener('mousedown')` and `window.addEventListener('keydown')` event listeners in the middle of the script fired concurrently with bottom listeners, causing every single mouse click to throw two darts in rapid succession and triggering duplicate key handlers. Removed duplicate listeners.
+  - 🔧 FIXED: On initial page load, `helpPanel.style.display` was empty string, causing the first click on the Help button to evaluate `p.style.display === 'none'` as false and re-set display to `'none'`, failing to open the modal until clicked a second time. Switched to computed style check `getComputedStyle(p).display !== 'none'`.
+  - 🔧 FIXED: `toggleSound()` referenced `event.target` without passing event or providing a button element ID, risking `ReferenceError: event is not defined` in strict environments/Firefox. Assigned `id="btnSound"` to the sound button and queried it directly.
+  - 🔧 FIXED: In `update()`, the crosshair vertical reticle was drawn with `ctx.moveTo(tx, ty - 18); ctx.lineTo(tx + 18, ty);`, producing an asymmetric diagonal slant rather than a true vertical axis. Corrected endpoint to `(tx, ty + 18)`.
+  - 🔧 FIXED: Active skill handlers (`activateFocus`, `activateMagnet`, `activateLaser`, `activateUndoDart`) lacked human player and active game state guards, allowing skills to be expended during AI turns or after round conclusion. Furthermore, `activateUndoDart` manual math failed to restore original score after a bust. Guarded skills with `isP1OrHuman` state checks and rewound the last `historyStack` snapshot to restore score, multiplier, and dart counts without math corruption.
+  - 🔧 FIXED: Selecting a new difficulty in `#diff` changed `aiDifficulty` without calling `updateWind()` or `updateScoreUI()`, leaving the UI title saying "vs AI" even when "Vs Human" was selected and not updating wobble/wind physics. Also `saveState`/`loadState` did not preserve active power-up flags (`focusActive`, `magnetActive`, `laserActive`) and `loadState` failed silently when no save existed. Synchronized UI/physics on difficulty change, added missing save feedback, and persisted full skill state.
+  - 🔧 FIXED: Global keydown listener lacked modifier guards (`ctrlKey`, `altKey`, `metaKey`), hijacking browser shortcuts (e.g. `Ctrl+1`, `Ctrl+F`, `Ctrl+C`). Canvas clicks and hotkeys also fired through an open Help modal. Added modifier guards, modal background suppression, `Escape`/`H` toggling, `Space`/`Enter` turn advancement, and turn progression prompts (`Click or Space`).
 
 - **KDB**: ISSUES FOUND ⚠️ (6 issues, 6 fixed inline)
   - ✅ Core functionality works (employee database table management with 500-record capacity, multi-criteria substring and relational query engine, 4-column bidirectional sorting, CRUD operations with edit and delete confirmation modals, XOR cipher database encryption with crypto key protection, CSV/JSON import and export with duplicate detection, executive Markdown directory report generation, department distribution analytics charts, and toast notification subsystem).
