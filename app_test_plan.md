@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KGo
+**Target App:** KGraph
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KGo
 - KGraph
 - KHabit
 - KHangman
@@ -173,8 +172,20 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KFont
 - KFortress
 - KFreecell
+- KGo
 
 ## Test Reports
+
+- **KGo**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
+  - ✅ Core gameplay works (9x9, 13x13, 19x19 Go/Baduk goban with hoshi star points and Tatami lantern aesthetic, Superko and suicide validation, territory and liberties flood fill, 4 AI personalities Territorial/Influence/Balanced/Grandmaster, AI Hint move recommendation, live Territory Estimator and Group Liberty Analyzer overlays, 20-stage Campaign and Tsumego life-and-death puzzles, Web Audio placement/capture synth sounds, multi-tier particle spark and canvas smoke physics, cherry blossom atmospheric effects).
+  - 🔧 FIXED: Global `keydown` listener checked bare `e.key` without verifying `!e.ctrlKey && !e.altKey && !e.metaKey`, hijacking browser accelerators (`Ctrl+S` triggering Group Analyzer, `Ctrl+H` calculating hint, `Ctrl+T` toggling territory estimator, `Ctrl+U` triggering undo). Added modifier key guards and modal background suppression.
+  - 🔧 FIXED: Help modal could not be dismissed via `Escape` or by clicking the modal backdrop overlay. Added backdrop click dismissal, `Escape` key close, and wired `P` (Pass) and `?`/`F1` (Help) keyboard shortcuts to match the in-game documentation.
+  - 🔧 FIXED: Tsumego life-and-death puzzles (Stages 3, 7, 11, 14, 16) lacked victory detection when the objective was met (e.g. capturing White's corner group at (0,0) or playing the vital eye/crane/belly tesuji), causing the AI to continue making moves and forcing an unwanted full 19x19 game. Added goal completion verification in `placeStone()` to celebrate, record win, and smoothly advance to the next stage.
+  - 🔧 FIXED: In `#btn-tsume`, `currentTsumegoIdx` was initialized to 0 and immediately incremented on the first click, skipping Stage 3 ("Corner Capture") and launching Stage 7 instead. Re-indexed to start cleanly on the first puzzle.
+  - 🔧 FIXED: `#btn-save` and `#btn-load` omitted `currentCampaignStage`, `aiToggle` state, and `aiDifficulty` from `localStorage`, causing saved Campaign or Tsumego sessions to restore as unlinked free-play matches with reset AI settings. Persisted and restored all campaign and AI configuration fields.
+  - 🔧 FIXED: `#ai-toggle` lacked a `change` event listener, preventing White AI from reactively taking its turn if the checkbox was toggled to active while White was to move. Added change listener to trigger `makeAIMove()`.
+  - 🔧 FIXED: Changing `#board-size` via dropdown did not reset `currentCampaignStage = -1`, desynchronizing board dimensions with campaign progression. Reset campaign state upon manual board dimension changes.
+  - 🔧 FIXED: In `drawBoard()`, `mouseleave` on board cells updated `hoverPos` without calling `drawBoard()`, freezing the group highlight and analyzer banner on the last inspected stone group when the cursor moved off stones or left the board. Refreshed analyzer rendering on both `mouseenter` and `mouseleave`, and added a confirmation prompt to `#btn-score` to prevent accidental in-progress game resets.
 
 - **KFreecell**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
   - ✅ Core gameplay works (Classic FreeCell, Numbered Deal 1-1M, 20-stage Campaign with King-only slots/Suit rules/Frozen cards, 180s Time Attack mode, 4 active skills Auto-Solve/Magic Wand/+1 Temporary Free Cell/Shuffle, interactive SVG suits and face cards, multi-tier particle canvas engine, and audio synthesizers).

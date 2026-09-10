@@ -648,6 +648,8 @@
         <li><strong>H Key:</strong> Optimal AI Hint - Evaluates & highlights the top move with score.</li>
         <li><strong>T Key:</strong> Territory Estimator - Overlays map of controlled territory & Atari danger warnings.</li>
         <li><strong>S Key:</strong> Group Liberty Analyzer - Highlights stone groups & displays numbered liberty badges on adjacent empty points.</li>
+        <li><strong>P Key:</strong> Pass turn.</li>
+        <li><strong>? / Esc:</strong> Help guide / Close dialogs.</li>
       </ul>
     </div>
   </div>
@@ -731,7 +733,7 @@
     {size: 19, handicap: 0, komi: 7.5, aiPersonality: 'grandmaster', name: "Stage 20: Grandmaster Go Legend Challenge", isTsumego: false, initialStones: [], targetDesc: ""}
   ];
   let currentCampaignStage = -1;
-  let currentTsumegoIdx = 0;
+  let currentTsumegoIdx = -1;
 
   function placeHandicapStones(boardSize, count) {
     if (count <= 0) return;
@@ -1215,10 +1217,11 @@
         
         cell.addEventListener('mouseenter', () => {
           hoverPos = {x, y};
-          if (showAnalyzer && board[y][x] !== null) drawBoard();
+          if (showAnalyzer) drawBoard();
         });
         cell.addEventListener('mouseleave', () => {
           hoverPos = {x: -1, y: -1};
+          if (showAnalyzer) drawBoard();
         });
         cell.addEventListener('click', () => placeStone(x, y));
         boardEl.appendChild(cell);
@@ -1443,6 +1446,34 @@
       capturedStonesForAnim = [];
     }
     
+    if (currentCampaignStage !== -1 && campaign[currentCampaignStage].isTsumego) {
+      let solved = false;
+      let stage = campaign[currentCampaignStage];
+      if (stage.name.includes("Corner Capture") && caps > 0) solved = true;
+      else if (stage.name.includes("Side Crane") && (caps > 0 || (x === 4 && y === 2))) solved = true;
+      else if (stage.name.includes("Two Eyes") && ((x === 1 && y === 0) || (x === 2 && y === 0))) solved = true;
+      else if (stage.name.includes("Center") && caps > 0) solved = true;
+      else if (stage.name.includes("Belly Attachment") && ((x === 6 && y === 6) || caps > 0)) solved = true;
+
+      if (solved) {
+        playSound('over');
+        spawnVictoryCelebration('B');
+        recordGameEnd('B');
+        setTimeout(() => {
+          alert(`🎉 TSUMEGO SOLVED!\n\n${stage.name}\n${stage.targetDesc}\n\nExcellent move! Stage cleared!`);
+          currentCampaignStage++;
+          if (currentCampaignStage >= 20) {
+            alert("CONGRATULATIONS! You completed all 20 Campaign Stages!");
+            currentCampaignStage = -1;
+            initBoard();
+          } else {
+            startCampaignStage();
+          }
+        }, 350);
+        return;
+      }
+    }
+
     if (currentPlayer === 'W' && document.getElementById('ai-toggle').checked) {
       setTimeout(makeAIMove, 500);
     }
@@ -1822,7 +1853,10 @@
     }, 50);
   });
 
-  document.getElementById('btn-score').addEventListener('click', calculateScore);
+  document.getElementById('btn-score').addEventListener('click', () => {
+    if (consecutivePasses < 2 && !confirm("Score and conclude the current game?")) return;
+    calculateScore();
+  });
   
   document.getElementById('btn-new').addEventListener('click', () => {
     currentCampaignStage = -1;
@@ -1841,7 +1875,10 @@
       lastMove,
       undoStack,
       redoStack,
-      currentKomi
+      currentKomi,
+      currentCampaignStage,
+      aiToggle: document.getElementById('ai-toggle').checked,
+      aiDifficulty: document.getElementById('ai-difficulty').value
     };
     localStorage.setItem('kgo_save', JSON.stringify(state));
     alert('Game saved.');
@@ -1861,6 +1898,9 @@
         undoStack = state.undoStack || [];
         redoStack = state.redoStack || [];
         currentKomi = state.currentKomi || 6.5;
+        if (state.currentCampaignStage !== undefined) currentCampaignStage = state.currentCampaignStage;
+        if (state.aiToggle !== undefined) document.getElementById('ai-toggle').checked = state.aiToggle;
+        if (state.aiDifficulty) document.getElementById('ai-difficulty').value = state.aiDifficulty;
         document.getElementById('board-size').value = size;
         hintCell = null;
         triggerScreenShake(4.0);
@@ -1880,9 +1920,16 @@
   });
 
   document.getElementById('board-size').addEventListener('change', (e) => {
+    currentCampaignStage = -1;
     size = parseInt(e.target.value);
     triggerScreenShake(4.0);
     initBoard();
+  });
+
+  document.getElementById('ai-toggle').addEventListener('change', (e) => {
+    if (e.target.checked && currentPlayer === 'W') {
+      setTimeout(makeAIMove, 500);
+    }
   });
 
   document.getElementById('btn-stats').addEventListener('click', () => {
@@ -1896,7 +1943,8 @@
   });
 
   document.getElementById('btn-tsume').addEventListener('click', () => {
-    currentTsumegoIdx = (currentTsumegoIdx + 1) % 5;
+    const tsumegoCount = 5;
+    currentTsumegoIdx = (currentTsumegoIdx + 1) % tsumegoCount;
     triggerScreenShake(5.0);
     loadTsumegoPuzzle(currentTsumegoIdx);
   });
@@ -1907,8 +1955,20 @@
   document.getElementById('btn-close-help').addEventListener('click', () => {
     document.getElementById('help-modal').style.display = 'none';
   });
+  document.getElementById('help-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'help-modal') {
+      document.getElementById('help-modal').style.display = 'none';
+    }
+  });
 
   window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.getElementById('help-modal').style.display = 'none';
+      return;
+    }
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
+    if (document.getElementById('help-modal').style.display === 'flex') return;
+
     if (e.key === 'u' || e.key === 'U') {
       doUndo();
     } else if (e.key === 'h' || e.key === 'H') {
@@ -1917,6 +1977,10 @@
       document.getElementById('btn-estimate').click();
     } else if (e.key === 's' || e.key === 'S') {
       document.getElementById('btn-analyzer').click();
+    } else if (e.key === 'p' || e.key === 'P') {
+      document.getElementById('btn-pass').click();
+    } else if (e.key === '?' || e.key === 'F1') {
+      document.getElementById('btn-help').click();
     }
   });
 
