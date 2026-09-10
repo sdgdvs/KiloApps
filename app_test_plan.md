@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KCyber
+**Target App:** KDB
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KCyber
 - KDB
 - KDarts
 - KDragon
@@ -173,8 +172,20 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KConnect4
 - KContacts
 - KConverter
+- KCyber
 
 ## Test Reports
+
+- **KCyber**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
+  - ✅ Core functionality works (cyberdeck terminal command-line hacking simulation, canvas CRT phosphor HUD and particle engine with animated ICE daemons and data cartridges, Mastermind-style 4-digit PIN brute-force module, Web Audio sound synthesizers, black-market upgrade shop, contracts mission board with dynamic rewards, network topology map with multi-tiered ICE nodes, trace dampener slow tool, and sensor blind cloak subsystem).
+  - 🔧 FIXED: In `printLine()`, `terminalDiv.scrollTop = terminalDiv.scrollHeight` was updated while `outputDiv.scrollTop` was never touched. Because `#output` is styled with `flex: 1; overflow-y: auto`, incoming output lines and combat logs failed to auto-scroll into view once output exceeded the viewport fold. Added `outputDiv.scrollTop = outputDiv.scrollHeight`.
+  - 🔧 FIXED: When cracking a node PIN (`exact === 4`), `ice_interval` was never cleared and `iceAttack()` continued executing while connected to root, subjecting the player to continuous MEM damage, alarms, and screen shake with no mechanism to defend (as `cloak` and `slow` commands were disabled in connected mode). Cleared `ice_interval` upon successful node breach and guarded `iceAttack()` to only fire during active intrusion attempts (`hacking_node`).
+  - 🔧 FIXED: In `drawVisuals()`, connected HUD title rendered double zeros (`[DATA://NODE_002]`) because `connected_node` was already formatted with a leading zero. Updated string interpolation to `[DATA://NODE_${connected_node}]`.
+  - 🔧 FIXED: Terminal CLI lacked command history navigation. Added command history buffer (`cmdHistory`) with ArrowUp and ArrowDown key navigation for easy recall of previous commands and PIN guesses.
+  - 🔧 FIXED: `connect <node>` failed to verify if player MEM was depleted (`<= 0`), allowing players with 0% memory to initiate hacks only to instantly terminate on the first ICE cycle. Also normalized single-digit node arguments (`connect 2` -> `02`) so users can connect without mandatory zero padding, and added helpful rejection message for local gateway `01`.
+  - 🔧 FIXED: Sub-states (shop, hacking, connected node) lacked universal utility commands. Added `help`, `status`, and `clear` to all modes without consuming hacking attempts, and added `exit` as an intuitive alias for `disconnect` in connected mode.
+  - 🔧 FIXED: System boot failed to initialize `generateMissions()`, causing `accept <id>` on a clean start to fail with "Invalid contract ID", and active contracts had no visibility in `status` or `contracts`. Called `generateMissions()` on startup, displayed active contract status across both commands, and updated `status` to reflect real-time network connection state.
+  - 🔧 FIXED: In `download <filename>`, file matching was strictly case-sensitive, failing valid downloads like `download SYS_LOGS.DAT`, and root cyberdeck terminal threw "Command not found" on standard `ls`/`dir`. Made file downloads and contract completion case-insensitive, added helpful usage hints, and added local `/bin` module listings for `ls`/`dir` at the root prompt.
 
 - **KConverter**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
   - ✅ Core functionality works (multi-category universal unit converter supporting 9 physical dimensions Length/Weight/Temperature/Data/Speed/Area/Volume/Time/Pressure across 64 built-in units, precision decimal and scientific notation formatting, Single Convert mode with live bi-directional evaluation and equation breakdown, Batch Mode converting across all units in active category simultaneously with live search filter, Smart Parser evaluating natural language and engineering expressions with dimensions check, pinned Favorites system with 1-click loading, Custom Units engine with multiplier factors, audit trail History Log with CSV and JSON export, full keyboard shortcuts suite and reference modal).

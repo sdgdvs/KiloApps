@@ -248,7 +248,7 @@
     }
 
     function iceAttack() {
-      if (hacking_node || connected_node) {
+      if (hacking_node) {
         if (ice_frozen_ticks > 0) {
           ice_frozen_ticks--;
           printLine(`[${ice_name}] ICE is blinded...`);
@@ -271,7 +271,7 @@
             updatePrompt();
             if (ice_interval) clearInterval(ice_interval);
           } else {
-            printLine(`[${ice_name}] attacks! System MEM reduced to ${player_mem}%`);
+            printLine(`[${ice_name}] attacks! System MEM reduced to ${player_mem}/${player_max_mem}`);
           }
         }
       }
@@ -294,7 +294,7 @@
         titleText = ice_frozen_ticks > 0 ? '[ICE://STUNNED]' : `[ICE://${ice_name.toUpperCase()}]`;
       } else if (connected_node) {
         hudColor = '#00ffff';
-        titleText = `[DATA://NODE_0${connected_node}]`;
+        titleText = `[DATA://NODE_${connected_node}]`;
       }
       ctx.strokeStyle = hudColor;
 
@@ -745,6 +745,7 @@
       line.className = 'line';
       line.textContent = text;
       outputDiv.appendChild(line);
+      outputDiv.scrollTop = outputDiv.scrollHeight;
       terminalDiv.scrollTop = terminalDiv.scrollHeight;
     }
 
@@ -760,6 +761,24 @@
         if (cmdName === 'exit' || cmdName === 'abort') {
           in_shop = false;
           printLine("Exiting shop.");
+          updatePrompt();
+          return;
+        }
+
+        if (cmdName === 'help') {
+          printLine("Shop commands: ls (list upgrades), buy <item>, status, clear, exit");
+          updatePrompt();
+          return;
+        }
+
+        if (cmdName === 'status') {
+          printLine(`DECK STATUS: Credits: ${player_credits} cr | MEM: ${player_mem}/${player_max_mem} | Heat: ${player_heat}%`);
+          updatePrompt();
+          return;
+        }
+
+        if (cmdName === 'clear') {
+          outputDiv.innerHTML = '';
           updatePrompt();
           return;
         }
@@ -834,7 +853,7 @@
           return;
         }
         
-        printLine("Command not found. Available: ls, buy <item>, exit");
+        printLine("Command not found. Available: ls, buy <item>, status, clear, exit");
         updatePrompt();
         return;
       }
@@ -850,6 +869,21 @@
           if (player_heat > 100) player_heat = 100;
           printLine(`[WARNING] Heat increased to ${player_heat}%`);
           if (ice_interval) clearInterval(ice_interval);
+          updatePrompt();
+          return;
+        }
+        if (guess === 'help' || guess === '?') {
+          printLine("Hacking commands: <4-digit PIN> to guess, cloak (blind ICE), slow (halve trace), status, clear, abort");
+          updatePrompt();
+          return;
+        }
+        if (guess === 'status') {
+          printLine(`HACK STATUS: MEM: ${player_mem}/${player_max_mem} | Cloak: ${tool_cloak}/${player_max_cloak} | Slow: ${tool_slow}/${player_max_slow} | Attempts: ${hacking_attempts} | Heat: ${player_heat}%`);
+          updatePrompt();
+          return;
+        }
+        if (guess === 'clear') {
+          outputDiv.innerHTML = '';
           updatePrompt();
           return;
         }
@@ -883,7 +917,7 @@
         }
         
         if (!/^\d{4}$/.test(guess)) {
-          printLine("Invalid input. Enter 4 digits (e.g., 1234) or 'abort' to cancel.");
+          printLine("Invalid input. Enter 4 digits (e.g., 1234), 'status', or 'abort' to cancel.");
           return;
         }
         
@@ -919,6 +953,7 @@
           spawnBurst(90, 80, 45, 'star', '#00ffcc');
           spawnBurst(90, 80, 30, 'spark', '#ffff33');
           printLine(`ACCESS GRANTED. Connected to node [${hacking_node}].`);
+          if (ice_interval) clearInterval(ice_interval);
           connected_node = hacking_node;
           hacking_node = null;
           printLine("Type 'ls' to list files, 'download <file>' to extract, 'disconnect' to exit.");
@@ -952,10 +987,28 @@
         const args = trimmed.split(' ').filter(Boolean);
         const cmd = args[0].toLowerCase();
         
-        if (cmd === 'disconnect' || cmd === 'abort') {
+        if (cmd === 'disconnect' || cmd === 'abort' || cmd === 'exit') {
            connected_node = null;
            printLine("Disconnected from node.");
            if (ice_interval) clearInterval(ice_interval);
+           updatePrompt();
+           return;
+        }
+
+        if (cmd === 'help') {
+           printLine("Connected commands: ls (list files), download <file>, status, clear, disconnect / exit");
+           updatePrompt();
+           return;
+        }
+
+        if (cmd === 'status') {
+           printLine(`NODE ${connected_node} STATUS: Root access granted | Deck MEM: ${player_mem}/${player_max_mem} | Credits: ${player_credits} cr`);
+           updatePrompt();
+           return;
+        }
+
+        if (cmd === 'clear') {
+           outputDiv.innerHTML = '';
            updatePrompt();
            return;
         }
@@ -966,25 +1019,29 @@
              printLine("No files found. Directory is empty.");
            } else {
              printLine("Files:");
-             printLine(`  ${file.name} (${file.size}MB)`);
+             printLine(`  ${file.name} (${file.size}MB, ${file.value} cr)`);
            }
            updatePrompt();
            return;
         }
         
          if (cmd === 'download') {
+           const file = node_files[connected_node];
            if (args.length < 2) {
-             printLine("Usage: download <filename>");
+             if (file.name !== "empty") {
+               printLine(`Usage: download <filename> (e.g. 'download ${file.name}')`);
+             } else {
+               printLine("Usage: download <filename> (No files currently stored on node)");
+             }
            } else {
-             const fname = args[1];
-             const file = node_files[connected_node];
-             if (file.name !== "empty" && fname === file.name) {
-               printLine(`Downloading ${fname}...`);
+             const fname = args[1].toLowerCase();
+             if (file.name !== "empty" && fname === file.name.toLowerCase()) {
+               printLine(`Downloading ${file.name}...`);
                player_credits += file.value;
                spawnBurst(90, 80, 35, 'bit', '#00ffff');
                spawnBurst(90, 80, 20, 'star', '#ffffff');
                printLine(`Download complete. Data value: ${file.value} credits.`);
-               if (active_mission && active_mission.file === file.name && active_mission.node === connected_node) {
+               if (active_mission && active_mission.file.toLowerCase() === file.name.toLowerCase() && active_mission.node === connected_node) {
                  printLine(`CONTRACT COMPLETE! Reward transferred.`);
                  active_mission = null;
                }
@@ -997,7 +1054,7 @@
            return;
         }
         
-        printLine("Command not found. Available: ls, download, disconnect");
+        printLine("Command not found. Available: ls, download, status, clear, disconnect / exit");
         updatePrompt();
         return;
       }
@@ -1075,15 +1132,29 @@
           printLine("Entering upgrade shop... Type 'ls' to view items, 'exit' to leave.");
           updatePrompt();
           break;
+        case 'ls':
+        case 'dir':
+          printLine("LOCAL STORAGE (/bin):");
+          printLine("  bruteforce.exe [v2.1]  - PIN permutation cracker");
+          printLine("  ice_cloak.sys  [v1.0]  - Sensor blind subsystem");
+          printLine("  trace_slow.sys [v1.0]  - Defensive trace dampener");
+          printLine("  netmap.drv     [v3.4]  - Grid topology scanner");
+          printLine("Available commands: help, map, connect, shop, contracts, status, clear, reboot");
+          break;
         case 'status':
           printLine("DECK STATUS:");
           printLine("  CPU: 100%");
-          printLine(`  MEM: ${player_mem}%`);
-          printLine(`  CLOAK: ${tool_cloak} charges`);
-          printLine(`  SLOW: ${tool_slow} charges`);
+          printLine(`  MEM: ${player_mem}/${player_max_mem}`);
+          printLine(`  CLOAK: ${tool_cloak}/${player_max_cloak} charges`);
+          printLine(`  SLOW: ${tool_slow}/${player_max_slow} charges`);
           printLine(`  CREDITS: ${player_credits} cr`);
           printLine(`  HEAT: ${player_heat}%`);
-          printLine("  NET: DISCONNECTED");
+          printLine(`  NET: ${connected_node ? 'CONNECTED (NODE ' + connected_node + ')' : (hacking_node ? 'INTRUSION (NODE ' + hacking_node + ')' : 'DISCONNECTED')}`);
+          if (active_mission) {
+            printLine(`  CONTRACT: [${active_mission.id}] Download ${active_mission.file} from NODE ${active_mission.node} (${active_mission.reward} cr)`);
+          } else {
+            printLine("  CONTRACT: None (type 'contracts' to view)");
+          }
           break;
         case 'reboot':
           player_mem = player_max_mem;
@@ -1107,6 +1178,10 @@
           break;
         case 'contracts':
           if (missions.length === 0) generateMissions();
+          if (active_mission) {
+            printLine(`ACTIVE CONTRACT: [${active_mission.id}] Target Node: ${active_mission.node} | File: ${active_mission.file} | Reward: ${active_mission.reward} cr`);
+            printLine("");
+          }
           printLine("AVAILABLE CONTRACTS:");
           missions.forEach(m => {
              printLine(` [${m.id}] Target Node: ${m.node} | File: ${m.file} | Diff: ${m.diff} | Reward: ${m.reward} cr`);
@@ -1149,19 +1224,29 @@
           if (args.length < 2) {
             printLine("Error: No target node specified. Usage: connect <node_id>");
           } else {
+            const rawTarget = args[1];
+            const target = rawTarget.padStart(2, '0');
+            if (target === '01') {
+              printLine("Node [01] is local gateway. Connection to localhost loopback rejected.");
+              break;
+            }
+            if (player_mem <= 0) {
+              printLine("ERROR: Cyberdeck MEM depleted (0%). Run 'reboot' to restore system memory.");
+              break;
+            }
             const validNodes = ['02', '03', '04', '05'];
-            if (validNodes.includes(args[1])) {
-              hacking_node = args[1];
+            if (validNodes.includes(target)) {
+              hacking_node = target;
               hacking_target = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
               hacking_attempts = player_max_cpu;
-              if (args[1] === '02') { ice_name = "Basic ICE"; ice_damage = 5; }
-              else if (args[1] === '03') { ice_name = "Tracer ICE"; ice_damage = 10; }
-              else if (args[1] === '04') { ice_name = "Hunter ICE"; ice_damage = 15; }
-              else if (args[1] === '05') { ice_name = "Black ICE"; ice_damage = 25; }
+              if (target === '02') { ice_name = "Basic ICE"; ice_damage = 5; }
+              else if (target === '03') { ice_name = "Tracer ICE"; ice_damage = 10; }
+              else if (target === '04') { ice_name = "Hunter ICE"; ice_damage = 15; }
+              else if (target === '05') { ice_name = "Black ICE"; ice_damage = 25; }
               
               ice_damage += Math.floor(player_heat / 5);
 
-              printLine(`Attempting connection to node [${args[1]}]...`);
+              printLine(`Attempting connection to node [${target}]...`);
               playDialup();
               printLine("Establishing handshake...");
               printLine(`WARNING: ${ice_name} detected on this node.`);
@@ -1176,7 +1261,7 @@
               if (current_interval < 500) current_interval = 500;
               ice_interval = setInterval(iceAttack, current_interval);
             } else {
-              printLine(`Attempting connection to node [${args[1]}]...`);
+              printLine(`Attempting connection to node [${rawTarget}]...`);
               printLine("Establishing handshake...");
               printLine("Error: Connection refused. Invalid node or ICE active.");
             }
@@ -1187,18 +1272,45 @@
       }
     }
 
+    const cmdHistory = [];
+    let historyIdx = -1;
+
     cmdInput.addEventListener('keydown', (e) => {
       if (audioCtx.state === 'suspended') audioCtx.resume();
-      if (e.key !== 'Enter') {
-        playKeyClack();
-      } else {
+      if (e.key === 'ArrowUp') {
+        if (cmdHistory.length > 0) {
+          e.preventDefault();
+          if (historyIdx === -1) historyIdx = cmdHistory.length - 1;
+          else if (historyIdx > 0) historyIdx--;
+          cmdInput.value = cmdHistory[historyIdx];
+        }
+      } else if (e.key === 'ArrowDown') {
+        if (cmdHistory.length > 0 && historyIdx !== -1) {
+          e.preventDefault();
+          if (historyIdx < cmdHistory.length - 1) {
+            historyIdx++;
+            cmdInput.value = cmdHistory[historyIdx];
+          } else {
+            historyIdx = -1;
+            cmdInput.value = '';
+          }
+        }
+      } else if (e.key === 'Enter') {
+        const val = cmdInput.value;
+        if (val.trim()) {
+          cmdHistory.push(val);
+          historyIdx = -1;
+        }
         spawnBurst(90, 80, 8, 'spark', '#00ff66');
-        processCommand(cmdInput.value);
+        processCommand(val);
         cmdInput.value = '';
+      } else {
+        playKeyClack();
       }
     });
 
     // Boot sequence
+    generateMissions();
     printLine("KCyber OS booting...");
     printLine("Loading modules... OK");
     printLine("Initializing memory... OK");
