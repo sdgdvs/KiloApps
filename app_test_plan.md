@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KFarm
+**Target App:** KFlash
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KFarm
 - KFlash
 - KFont
 - KFortress
@@ -173,8 +172,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KDB
 - KDarts
 - KDragon
+- KFarm
 
 ## Test Reports
+
+- **KFarm**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
+  - ✅ Core gameplay works (10x10 farm grid simulation with procedural dirt furrows and day/night lighting, multi-seasonal crop cycle Spring/Summer/Fall/Winter with Wheat/Corn/Tomato/Pumpkin, weather system Clear/Rain/Drought/Crows, livestock Chickens and Cows with wandering pasture sprites, production upgrades Mill/Mayo Maker/Cheese Press/Scarecrow/Fertilizer/3x3 Upgraded Tools, Web Audio synthesizer effects and 4-tier kinematic particle explosion engine).
+  - 🔧 FIXED: Keyboard listener checked bare `e.key` without verifying `!e.ctrlKey && !e.altKey && !e.metaKey`, hijacking essential browser accelerators (`Ctrl+H` for history, `Ctrl+1` through `Ctrl+4` for tab navigation, `Ctrl+S`, `Ctrl+R`). Added modifier guards and added dedicated `S` (Save) and `R` (Reset) shortcuts to the Almanac reference guide.
+  - 🔧 FIXED: Game lacked bankruptcy handling and farm restart options. If a player spent starting funds on seeds that died or were eaten without owning livestock, money reached $0 with no recovery mechanism, permanently softlocking the game. Implemented an automatic Town Relief Subsidy grant (+ $25) when bankrupt and unable to plant, and added a safe "Reset Farm" button with confirmation.
+  - 🔧 FIXED: High-value progression purchases (Fertilizer, 3x3 Upgraded Tools, Scarecrow, Mill, Mayo Maker, Cheese Press) had no audio feedback, rendering major milestones silent. Added a 4-tone rising chime synthesizer sound `upgrade` to `playSound()` and wired it across all upgrade purchases.
+  - 🔧 FIXED: Harvesting or tilling with 3x3 Upgraded Tools executed `shakeAmount += 15` and `showToast()` on every single cell in the AoE loop, creating up to 135 screen shake (causing disorienting off-screen viewport oscillations) and spamming multiple redundant toast alerts. Capped screen shake to safe bounds and aggregated AoE harvests into a single summary toast (e.g. `Harvested N crops (+$X)!`).
+  - 🔧 FIXED: Canvas click coordinates `(e.clientX - rect.left) / CELL_SIZE` assumed a static 400px CSS dimension without accounting for display scaling, high-DPI zoom, or mobile viewports, offsetting clicked tiles; and mobile touch events were unhandled. Added dynamic `scaleX`/`scaleY` coordinate normalization and touchstart event forwarding.
+  - 🔧 FIXED: Clicking already-watered crops provided no feedback or guidance, leaving players unsure if the action registered. Added informative toast showing remaining crop maturity progress (e.g. `Already watered today! Growth: 1/2d`).
+  - 🔧 FIXED: Roaming chickens and cows were hardcoded to 3 chickens and 2 cows in the draw loop, meaning newly purchased livestock provided daily income but never appeared in the pasture; and all farm state was lost on page refresh or KiloOS app switching. Dynamically expanded roaming animal lists up to 8 chickens and 6 cows, and implemented full `localStorage` auto-save and load persistence (`kfarm_save_v1`).
 
 - **KDragon**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
   - ✅ Core gameplay works (dragon pet raising simulation with egg incubation, needs management Hunger/Happiness/Energy/Age, dynamic feeding, playing, sleeping, wilderness gold expeditions, 3 training minigames Strength Power Meter/Speed Reflex/Loyalty Cup Guess, 4-item Bazaar Shop, elemental adult evolution Fire/Water/Earth at Age 10 with specialized combat skills Fireball/Healing Stream/Earthquake, turn-based dragon battle arena with Web Audio FX and 60 FPS canvas particle engine).
