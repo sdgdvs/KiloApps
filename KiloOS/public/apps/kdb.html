@@ -263,6 +263,10 @@
     color: var(--primary);
     background-color: rgba(24, 33, 47, 0.98);
   }
+  th:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: -2px;
+  }
   .sort-indicator {
     display: inline-block;
     margin-left: 4px;
@@ -558,7 +562,7 @@
         <button id="searchClearBtn" class="search-clear-btn" onclick="clearSearch()" aria-label="Clear search" title="Clear search (Esc)">&times;</button>
       </div>
       <div class="pwd-box">
-        <input type="password" id="dbPassword" aria-label="Database Encryption Password" placeholder="Crypto Key" onchange="loadRecords()" title="Set password to encrypt/decrypt database">
+        <input type="password" id="dbPassword" aria-label="Database Encryption Password" placeholder="Crypto Key" onchange="handlePasswordChange()" onkeydown="if(event.key==='Enter'){this.blur();handlePasswordChange();}" title="Set password to encrypt/decrypt database">
       </div>
       <button class="btn-accent" onclick="openStatsModal()" title="View Department Analytics & Database Metrics (A)">Stats <span class="kbd-badge">A</span></button>
       <button class="btn-secondary" onclick="exportCSV()" title="Export database as CSV (E)">Exp CSV <span class="kbd-badge">E</span></button>
@@ -580,10 +584,10 @@
     <table id="empTable">
       <thead>
         <tr>
-          <th style="width: 90px;" onclick="handleSort('id')">ID <span id="sort-id" class="sort-indicator"></span></th>
-          <th onclick="handleSort('name')">Name <span id="sort-name" class="sort-indicator"></span></th>
-          <th onclick="handleSort('dept')">Department <span id="sort-dept" class="sort-indicator"></span></th>
-          <th onclick="handleSort('role')">Role <span id="sort-role" class="sort-indicator"></span></th>
+          <th style="width: 90px;" tabindex="0" role="button" aria-label="Sort by ID" onclick="handleSort('id')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();handleSort('id');}">ID <span id="sort-id" class="sort-indicator"></span></th>
+          <th tabindex="0" role="button" aria-label="Sort by Name" onclick="handleSort('name')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();handleSort('name');}">Name <span id="sort-name" class="sort-indicator"></span></th>
+          <th tabindex="0" role="button" aria-label="Sort by Department" onclick="handleSort('dept')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();handleSort('dept');}">Department <span id="sort-dept" class="sort-indicator"></span></th>
+          <th tabindex="0" role="button" aria-label="Sort by Role" onclick="handleSort('role')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();handleSort('role');}">Role <span id="sort-role" class="sort-indicator"></span></th>
           <th style="width: 110px; text-align: right; cursor: default;">Actions</th>
         </tr>
       </thead>
@@ -824,6 +828,37 @@ window.addEventListener('keydown', function(e) {
     return;
   }
 
+  const isAnyModalActive = Boolean(document.querySelector('.modal-overlay.active'));
+
+  if (e.key === 'Enter' && isAnyModalActive) {
+    const deleteModal = document.getElementById('deleteModal');
+    if (deleteModal && deleteModal.classList.contains('active')) {
+      e.preventDefault();
+      confirmDelete();
+      return;
+    }
+    const resetModal = document.getElementById('resetModal');
+    if (resetModal && resetModal.classList.contains('active')) {
+      e.preventDefault();
+      confirmReset();
+      return;
+    }
+    const helpModal = document.getElementById('helpModal');
+    if (helpModal && helpModal.classList.contains('active')) {
+      e.preventDefault();
+      closeHelpModal();
+      return;
+    }
+    const statsModal = document.getElementById('statsModal');
+    if (statsModal && statsModal.classList.contains('active')) {
+      e.preventDefault();
+      closeStatsModal();
+      return;
+    }
+  }
+
+  if (isAnyModalActive) return;
+
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
     e.preventDefault();
     const searchInput = document.getElementById('searchInput');
@@ -925,20 +960,44 @@ function decodeUtf8(str) {
 function cryptData(text, key) {
   if (!key) return text;
   const utf8 = encodeUtf8(text);
+  const keyUtf8 = encodeUtf8(key);
   let out = '';
   for (let i = 0; i < utf8.length; i++) {
-    out += String.fromCharCode(utf8.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+    out += String.fromCharCode(utf8.charCodeAt(i) ^ keyUtf8.charCodeAt(i % keyUtf8.length));
   }
   return out;
 }
 
 function decryptData(cipher, key) {
   if (!key) return cipher;
+  const keyUtf8 = encodeUtf8(key);
   let raw = '';
   for (let i = 0; i < cipher.length; i++) {
-    raw += String.fromCharCode(cipher.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+    raw += String.fromCharCode(cipher.charCodeAt(i) ^ keyUtf8.charCodeAt(i % keyUtf8.length));
   }
   return decodeUtf8(raw);
+}
+
+function handlePasswordChange() {
+  const key = getPassword();
+  const raw = localStorage.getItem(STORAGE_KEY);
+
+  if (raw && raw.startsWith('ENC:') && records.length === 0) {
+    loadRecords();
+    return;
+  }
+
+  if (records && records.length > 0) {
+    saveRecords();
+    filterTable();
+    if (key) {
+      showToast('Database encrypted with key.', 'success');
+    } else {
+      showToast('Encryption key removed. Database saved unencrypted.', 'info');
+    }
+  } else {
+    loadRecords();
+  }
 }
 
 function handleSort(col) {
@@ -1001,6 +1060,8 @@ function loadRecords() {
           const dec = decryptData(atob(data.substring(4)), key);
           data = dec;
         } catch(e) {
+          records = [];
+          renderTable();
           updateStatus('Failed to decrypt. Wrong key?', true);
           showToast('Failed to decrypt database. Wrong key?', 'danger');
           return;
@@ -1012,10 +1073,10 @@ function loadRecords() {
         records = parsed.slice(0, MAX_RECORDS);
         updateStatus('Database loaded successfully', false);
       } else {
-        records = [...DEFAULT_RECORDS];
+        records = DEFAULT_RECORDS.map(r => ({ ...r }));
       }
     } else {
-      records = [...DEFAULT_RECORDS];
+      records = DEFAULT_RECORDS.map(r => ({ ...r }));
       saveRecords();
     }
   } catch (e) {
@@ -1043,6 +1104,15 @@ function saveRecords() {
   }
 }
 
+function getNextSuggestedId() {
+  let maxId = 0;
+  records.forEach(r => {
+    const pid = parseInt(r.id, 10);
+    if (!isNaN(pid) && pid > maxId) maxId = pid;
+  });
+  return maxId > 0 ? String(maxId + 1) : String(records.length + 101);
+}
+
 function renderTable(filteredRecords = null) {
   let displayList = filteredRecords !== null ? filteredRecords : records;
   displayList = sortRecordList(displayList);
@@ -1051,6 +1121,16 @@ function renderTable(filteredRecords = null) {
   tbody.innerHTML = '';
 
   document.getElementById('recordBadge').textContent = `${displayList.length} of ${records.length} records`;
+
+  const addIdInput = document.getElementById('addId');
+  if (addIdInput && !addIdInput.value) {
+    addIdInput.placeholder = `ID (e.g. ${getNextSuggestedId()})`;
+  }
+
+  const quotaEl = document.getElementById('storageQuotaText');
+  if (quotaEl) {
+    quotaEl.textContent = `Storage: ${records.length} / ${MAX_RECORDS} records (${getPassword() ? 'Encrypted' : 'LocalStorage Active'})`;
+  }
 
   if (displayList.length === 0) {
     const tr = document.createElement('tr');
@@ -1129,7 +1209,7 @@ function addRecord() {
     return;
   }
 
-  if (records.some(r => r.id.toLowerCase() === id.toLowerCase())) {
+  if (records.some(r => String(r.id).toLowerCase() === id.toLowerCase())) {
     updateStatus(`Duplicate ID '${id}' is not allowed.`, true);
     showToast(`Employee with ID '${id}' already exists.`, 'danger');
     return;
@@ -1144,12 +1224,13 @@ function addRecord() {
   roleInput.value = '';
 
   filterTable();
+  idInput.focus();
   updateStatus(`Added employee ${name} (${id})`);
   showToast(`Added employee ${name} (ID: ${id})`, 'success');
 }
 
 function deleteRecord(id) {
-  const index = records.findIndex(r => r.id === id);
+  const index = records.findIndex(r => String(r.id).toLowerCase() === String(id).toLowerCase());
   if (index !== -1) {
     const deleted = records.splice(index, 1)[0];
     saveRecords();
@@ -1160,7 +1241,7 @@ function deleteRecord(id) {
 }
 
 function openEditModal(id) {
-  const rec = records.find(r => r.id === id);
+  const rec = records.find(r => String(r.id).toLowerCase() === String(id).toLowerCase());
   if (!rec) return;
 
   document.getElementById('editOriginalId').value = rec.id;
@@ -1191,12 +1272,12 @@ function saveEditedRecord() {
     return;
   }
 
-  if (newId.toLowerCase() !== origId.toLowerCase() && records.some(r => r.id.toLowerCase() === newId.toLowerCase())) {
+  if (newId.toLowerCase() !== origId.toLowerCase() && records.some(r => String(r.id).toLowerCase() === newId.toLowerCase())) {
     showToast(`Employee with ID '${newId}' already exists.`, 'danger');
     return;
   }
 
-  const rec = records.find(r => r.id === origId);
+  const rec = records.find(r => String(r.id).toLowerCase() === origId.toLowerCase());
   if (rec) {
     rec.id = newId;
     rec.name = newName;
@@ -1245,6 +1326,14 @@ function filterTable() {
         if (field === 'id') return r.id.toLowerCase().includes(val);
         if (field === 'name') return r.name.toLowerCase().includes(val);
       } 
+      else if (term.startsWith('id>=')) {
+        const num = parseInt(term.replace('id>=', '').trim(), 10);
+        if (!isNaN(num)) return parseInt(r.id, 10) >= num;
+      }
+      else if (term.startsWith('id<=')) {
+        const num = parseInt(term.replace('id<=', '').trim(), 10);
+        if (!isNaN(num)) return parseInt(r.id, 10) <= num;
+      }
       else if (term.startsWith('id>')) {
         const num = parseInt(term.replace('id>', '').trim(), 10);
         if (!isNaN(num)) return parseInt(r.id, 10) > num;
@@ -1252,7 +1341,11 @@ function filterTable() {
       else if (term.startsWith('id<')) {
         const num = parseInt(term.replace('id<', '').trim(), 10);
         if (!isNaN(num)) return parseInt(r.id, 10) < num;
-      } 
+      }
+      else if (term.startsWith('id=')) {
+        const matchVal = term.replace('id=', '').trim();
+        return r.id.toLowerCase() === matchVal.toLowerCase();
+      }
       
       return r.id.toLowerCase().includes(term) ||
              r.name.toLowerCase().includes(term) ||
@@ -1363,7 +1456,7 @@ function exportCSV() {
   }
   let csv = 'ID,Name,Department,Role\n';
   records.forEach(r => {
-    const escapeCsv = val => `"${String(val || '').replace(/"/g, '""').replace(/[\r\n]+/g, ' ')}"`;
+    const escapeCsv = val => `"${String(val !== null && val !== undefined ? val : '').replace(/"/g, '""').replace(/[\r\n]+/g, ' ')}"`;
     csv += `${escapeCsv(r.id)},${escapeCsv(r.name)},${escapeCsv(r.dept)},${escapeCsv(r.role)}\n`;
   });
 
@@ -1569,10 +1662,11 @@ function exportMarkdown() {
   md += `| Department | Headcount | Distribution |\n`;
   md += `| :--- | :--- | :--- |\n`;
   const sortedDepts = Object.keys(depts).sort((a, b) => depts[b] - depts[a]);
+  const escapeMdCell = val => String(val !== null && val !== undefined ? val : '').replace(/\|/g, '\\|').replace(/[\r\n]+/g, ' ');
   sortedDepts.forEach(dept => {
     const count = depts[dept];
     const pct = ((count / records.length) * 100).toFixed(1);
-    md += `| ${dept} | ${count} | ${pct}% |\n`;
+    md += `| ${escapeMdCell(dept)} | ${count} | ${pct}% |\n`;
   });
   md += `\n`;
 
@@ -1580,7 +1674,7 @@ function exportMarkdown() {
   md += `| ID | Full Name | Department | Role |\n`;
   md += `| :--- | :--- | :--- | :--- |\n`;
   sortedList.forEach(r => {
-    md += `| ${r.id} | ${r.name} | ${r.dept} | ${r.role} |\n`;
+    md += `| ${escapeMdCell(r.id)} | ${escapeMdCell(r.name)} | ${escapeMdCell(r.dept)} | ${escapeMdCell(r.role)} |\n`;
   });
   md += `\n---\n*KDB - KiloApps High Performance Lightweight Suite*\n`;
 
@@ -1598,7 +1692,7 @@ function exportMarkdown() {
 }
 
 function confirmReset() {
-  records = [...DEFAULT_RECORDS];
+  records = DEFAULT_RECORDS.map(r => ({ ...r }));
   sortCol = null;
   sortAsc = true;
   updateSortIndicators();

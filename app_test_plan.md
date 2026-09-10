@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KDB
+**Target App:** KDarts
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KDB
 - KDarts
 - KDragon
 - KFarm
@@ -173,8 +172,18 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KContacts
 - KConverter
 - KCyber
+- KDB
 
 ## Test Reports
+
+- **KDB**: ISSUES FOUND ⚠️ (6 issues, 6 fixed inline)
+  - ✅ Core functionality works (employee database table management with 500-record capacity, multi-criteria substring and relational query engine, 4-column bidirectional sorting, CRUD operations with edit and delete confirmation modals, XOR cipher database encryption with crypto key protection, CSV/JSON import and export with duplicate detection, executive Markdown directory report generation, department distribution analytics charts, and toast notification subsystem).
+  - 🔧 FIXED: In the global keyboard event listener, background shortcuts (`a`, `e`, `i`, `j`, `o`, `m`, `r`, `h`, `/`, `Ctrl+F`, `Ctrl+N`) fired underneath active dialogs, allowing file import prompts, background search focus, or markdown/CSV/JSON file downloads to trigger while modal dialogs (Stats, Help, Delete, Reset) were open. Added `isAnyModalActive` modal presence guard and wired up intuitive `Enter` key handling to confirm Delete, confirm Reset, and dismiss Help/Stats modals.
+  - 🔧 FIXED: Column header elements (`<th>`) had click-to-sort listeners but lacked `tabindex="0"`, `role="button"`, and keyboard `Enter`/`Space` key handlers, rendering table sorting inaccessible via keyboard navigation. Added tabindex, role, key handlers, and `:focus-visible` styling.
+  - 🔧 FIXED: Entering or clearing an encryption key in `#dbPassword` called `loadRecords()`, which did not encrypt or unencrypt active in-memory records in `localStorage` until subsequent record edits, leaving data saved in plaintext. Created `handlePasswordChange()` with Enter key submission on `#dbPassword` to immediately persist active database records encrypted or decrypted in `localStorage`. Also UTF-8 encoded encryption keys in `cryptData()` and `decryptData()` to prevent `btoa()` `InvalidCharacterError` crashes on non-ASCII passwords.
+  - 🔧 FIXED: `#storageQuotaText` was a static placeholder string (`Limit 500 records`) that never updated to reflect storage capacity or active encryption status. Wired live record count `${records.length} / ${MAX_RECORDS}` and encryption indicator into `renderTable()`. Updated `#addId` placeholder to dynamically reflect `getNextSuggestedId()` and re-focused `#addId` upon adding an employee.
+  - 🔧 FIXED: Search query engine in `filterTable()` lacked relational operators `id>=`, `id<=`, and exact match `id=`, and `exportCSV()` coerced numeric ID `0` to empty string. Supported extended ID query comparisons, fixed CSV field zero coercion, and escaped markdown pipe characters `\|` in `exportMarkdown()` roster and department summary tables.
+  - 🔧 FIXED: Database reset (`confirmReset()`) copied `DEFAULT_RECORDS` shallowly, mutating default records across subsequent in-place edits. Deep-copied default records on reset and initial load, and properly cleared table state when decryption fails.
 
 - **KCyber**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
   - ✅ Core functionality works (cyberdeck terminal command-line hacking simulation, canvas CRT phosphor HUD and particle engine with animated ICE daemons and data cartridges, Mastermind-style 4-digit PIN brute-force module, Web Audio sound synthesizers, black-market upgrade shop, contracts mission board with dynamic rewards, network topology map with multi-tiered ICE nodes, trace dampener slow tool, and sensor blind cloak subsystem).
