@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KDragon
+**Target App:** KFarm
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KDragon
 - KFarm
 - KFlash
 - KFont
@@ -173,8 +172,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KCyber
 - KDB
 - KDarts
+- KDragon
 
 ## Test Reports
+
+- **KDragon**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
+  - ✅ Core gameplay works (dragon pet raising simulation with egg incubation, needs management Hunger/Happiness/Energy/Age, dynamic feeding, playing, sleeping, wilderness gold expeditions, 3 training minigames Strength Power Meter/Speed Reflex/Loyalty Cup Guess, 4-item Bazaar Shop, elemental adult evolution Fire/Water/Earth at Age 10 with specialized combat skills Fireball/Healing Stream/Earthquake, turn-based dragon battle arena with Web Audio FX and 60 FPS canvas particle engine).
+  - 🔧 FIXED: Critical syntax error in `tick()` at line 1770 where `if (this.state === 'dragon' && this.stats.age >= 10)` was never closed with a curly brace `}`, causing `SyntaxError: Unexpected token ';'` that broke script execution entirely on load and prevented egg incubation, button clicks, and all game actions. Added missing closing brace.
+  - 🔧 FIXED: In `battleTurn()`, lack of an active `if (!this.battleState) return;` guard caused `TypeError: Cannot read properties of null (reading 'enemySpd')` when hotkeys or attack buttons were rapidly pressed upon battle victory or defeat. Guarded `battleTurn()`, prevented execution of `special` prior to elemental evolution with warning feedback, and logged enemy remaining HP on attack and elemental strikes.
+  - 🔧 FIXED: Battle view lacked visual HP indicators for both player and enemy dragon, leaving players with no on-screen feedback on combat damage or remaining health. Enhanced `entity-art` during `battleState` to display real-time dual HP gauges (`Player HP: X/Y` and `Enemy HP: A/B`) and called `this.updateUI()` on combat resolution turns.
+  - 🔧 FIXED: Global keyboard listener lacked modifier key guards (`e.ctrlKey`, `e.altKey`, `e.metaKey`), causing single-letter and numeric hotkeys (`F`, `P`, `S`, `T`, `O`, `B`, `H`, `1`-`7`) to intercept essential browser shortcuts (`Ctrl+F`, `Ctrl+P`, `Ctrl+S`, `Ctrl+T`, `Ctrl+B`, `Ctrl+H`, `Ctrl+1`-`Ctrl+7`). Added modifier key guards.
+  - 🔧 FIXED: Keyboard hotkeys remained active while the Dragon Master's Guide modal was open, executing background game actions (feeding, sleeping, training, battles) while reading instructions. Suppressed non-modal keystrokes while `#help-modal` is active.
+  - 🔧 FIXED: Starting screen had no clickable Help button despite displaying "Press H or F1 for Help", hindering mouse and touch-only users before hatching. Added `#btn-start-help` button beside "Incubate Egg" and wired it in `init()`.
+  - 🔧 FIXED: Minigame hit, react, and treat box buttons lacked debounce/single-fire guards, allowing double-clicking to award duplicate stat points; and `hoard` expeditions and `startMinigame()` omitted `this.updateUI()`, leaving stats header desynchronized upon deducting energy and hunger. Added click guards and synchronized UI stats.
 
 - **KDarts**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
   - ✅ Core gameplay works (3D Sisal Dartboard simulation with metallic wire spider and number ring, mahogany pub cabinet frame, dynamic mouse aiming with atmospheric wobble and wind gusts, 6 game modes 501 Double Out/301/Cricket/Around the Clock/Bullseye Blitz/Killer Darts, 20-stage Campaign mode leading to World Championship Finals, 4 AI difficulty levels Easy/Medium/Hard/Legend and local Vs Human 2-player mode, 4 power-up skills Focus/Magnet/Laser Sight/Undo Dart, Web Audio sound synthesizers, and multi-layer particle explosion engine).

@@ -587,6 +587,7 @@
             <p>A mysterious egg awaits...</p>
             <p style="font-size: 14px; font-style: italic;">Press H or F1 for Help</p>
             <button id="btn-hatch"><span class="btn-badge">Space</span> Incubate Egg</button>
+            <button id="btn-start-help"><span class="btn-badge">F1</span> Help (❓)</button>
         </div>
     </div>
 
@@ -936,6 +937,9 @@
             
             init() {
                 document.getElementById('btn-hatch').addEventListener('click', () => this.hatch());
+                document.getElementById('btn-start-help')?.addEventListener('click', () => {
+                    document.getElementById('help-modal').style.display = 'block';
+                });
                 document.getElementById('btn-feed').addEventListener('click', () => this.action('feed'));
                 document.getElementById('btn-play').addEventListener('click', () => this.action('play'));
                 document.getElementById('btn-sleep').addEventListener('click', () => this.action('sleep'));
@@ -961,6 +965,8 @@
                 
                 // Comprehensive global keyboard navigation
                 window.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey || e.altKey || e.metaKey) return;
+
                     if (e.key === 'F1' || e.key.toLowerCase() === 'h') {
                         e.preventDefault();
                         const hm = document.getElementById('help-modal');
@@ -982,6 +988,10 @@
                         }
                         return;
                     }
+
+                    // Suppress background keys while Help modal is open
+                    const hm = document.getElementById('help-modal');
+                    if (hm && hm.style.display === 'block') return;
                     if (this.state === 'egg') {
                         if (e.key === ' ' || e.key === 'Enter' || e.key === '1') {
                             e.preventDefault();
@@ -1289,7 +1299,7 @@
   <rect x="9" y="13" width="4" height="1" fill="rgb(180,30,30)" />
 </svg>`;
                     let enemySvg = adultBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(128,0,128)").replace(/rgb\(220,60,60\)/g, "rgb(180,50,180)").replace('id="player-svg"', 'id="enemy-svg"');
-                    document.getElementById('entity-art').innerHTML = `<div style="display:flex; justify-content:space-between; width:350px; align-items:center;">${playerSvg}<div style="font-weight:bold; color:red; font-size:24px;">VS</div><div style="transform: scaleX(-1);">${enemySvg}</div></div>`;
+                    document.getElementById('entity-art').innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; gap:8px;"><div style="display:flex; justify-content:space-between; width:350px; align-items:center;">${playerSvg}<div style="font-weight:bold; color:red; font-size:24px;">VS</div><div style="transform: scaleX(-1);">${enemySvg}</div></div><div style="font-size:13px; font-weight:bold; display:flex; justify-content:space-between; width:330px; background:rgba(0,0,0,0.3); padding:4px 10px; border-radius:4px; border:1px solid rgba(90,56,20,0.35); color:#f7e0b5;"><span>Player HP: <b style="color:#69db7c;">${Math.max(0, this.battleState.playerHp)}</b>/${this.battleState.playerMaxHp}</span><span>Enemy HP: <b style="color:#ff6b6b;">${Math.max(0, this.battleState.enemyHp)}</b>/${this.battleState.enemyMaxHp}</span></div></div>`;
                 } else {
                     document.getElementById('entity-art').innerHTML = playerSvg;
                     if (!this.isBusy) document.getElementById('controls').style.display = 'flex';
@@ -1355,6 +1365,7 @@
                     this.showToast("🗺️ Dragon departed on an expedition...", "info");
                     this.isBusy = true;
                     document.getElementById('controls').style.display = 'none';
+                    this.updateUI();
                     
                     setTimeout(() => {
                         let foundGold = Math.floor(Math.random() * 20) + 10;
@@ -1382,6 +1393,7 @@
                 document.getElementById('train-controls').style.display = 'none';
                 this.stats.energy = Math.max(0, this.stats.energy - 15);
                 this.stats.hunger = Math.max(0, this.stats.hunger - 5);
+                this.updateUI();
                 
                 if (type === 'str') {
                     document.getElementById('minigame-str').style.display = 'flex';
@@ -1402,6 +1414,7 @@
                     
                     document.getElementById('btn-str-hit').onclick = () => {
                         clearInterval(this.minigameInterval);
+                        document.getElementById('btn-str-hit').onclick = null;
                         let gain = Math.floor(this.minigameValue / 20);
                         this.stats.strength += gain;
                         this.log(`You hit with power ${this.minigameValue}! Strength +${gain}`);
@@ -1423,10 +1436,14 @@
                     document.getElementById('btn-spd-react').onclick = () => {
                         if (this.minigameState === 'waiting') {
                             clearTimeout(this.minigameTimeout);
+                            this.minigameState = null;
+                            document.getElementById('btn-spd-react').onclick = null;
                             this.log("Too early! You missed.");
                             this.showToast("Too early! You missed.", "warn");
                             this.endMinigame('spd');
                         } else if (this.minigameState === 'ready') {
+                            this.minigameState = null;
+                            document.getElementById('btn-spd-react').onclick = null;
                             let time = Date.now() - this.minigameValue;
                             let gain = time < 300 ? 5 : (time < 500 ? 3 : 1);
                             this.stats.speed += gain;
@@ -1438,9 +1455,12 @@
                 } else if (type === 'loy') {
                     document.getElementById('minigame-loy').style.display = 'flex';
                     let correctBox = Math.floor(Math.random() * 3);
+                    let pickedDone = false;
                     
                     document.querySelectorAll('.btn-loy-box').forEach(btn => {
                         btn.onclick = () => {
+                            if (pickedDone) return;
+                            pickedDone = true;
                             let picked = parseInt(btn.getAttribute('data-box'));
                             if (picked === correctBox) {
                                 this.stats.loyalty += 5;
@@ -1535,9 +1555,17 @@
             },
             
             battleTurn(action) {
+                if (!this.battleState) return;
+                
                 if (action === 'flee') {
                     this.log("You fled the battle!");
                     this.endBattle(false);
+                    return;
+                }
+                
+                if (action === 'special' && this.element === 'None') {
+                    this.log("Your dragon has no elemental power yet!");
+                    this.showToast("No elemental power yet!", "warn");
                     return;
                 }
                 
@@ -1550,7 +1578,7 @@
                         let dmg = Math.max(1, this.stats.strength * 2 + Math.floor(Math.random() * 5));
                         if (enemyDefending) dmg = Math.floor(dmg / 2);
                         this.battleState.enemyHp -= dmg;
-                        this.log(`You hit the enemy for ${dmg} damage!`);
+                        this.log(`You hit the enemy for ${dmg} damage! (Enemy HP: ${Math.max(0, this.battleState.enemyHp)}/${this.battleState.enemyMaxHp})`);
                         this.playSound('clash');
                         this.triggerAnim('player', 'attacking');
                         setTimeout(() => {
@@ -1565,7 +1593,7 @@
                         let dmg = Math.max(1, this.stats.strength * 3 + 10);
                         if (enemyDefending) dmg = Math.floor(dmg / 2);
                         this.battleState.enemyHp -= dmg;
-                        this.log(`You used Fireball! Dealt ${dmg} damage.`);
+                        this.log(`You used Fireball! Dealt ${dmg} damage. (Enemy HP: ${Math.max(0, this.battleState.enemyHp)}/${this.battleState.enemyMaxHp})`);
                         this.triggerAnim('player', 'attacking');
                         setTimeout(() => {
                             this.triggerAnim('enemy', 'shaking');
@@ -1581,7 +1609,7 @@
                         if (enemyDefending) dmg = Math.floor(dmg / 2);
                         this.battleState.enemyHp -= dmg;
                         this.battleState.enemySpd = Math.max(1, this.battleState.enemySpd - 5);
-                        this.log(`You used Earthquake! Dealt ${dmg} damage and slowed enemy.`);
+                        this.log(`You used Earthquake! Dealt ${dmg} damage and slowed enemy. (Enemy HP: ${Math.max(0, this.battleState.enemyHp)}/${this.battleState.enemyMaxHp})`);
                         this.triggerAnim('player', 'attacking');
                         setTimeout(() => {
                             this.triggerAnim('enemy', 'shaking');
@@ -1591,6 +1619,8 @@
                 } else if (action === 'defend') {
                     this.log("You are defending.");
                 }
+                
+                this.updateUI();
                 
                 if (this.battleState.enemyHp <= 0) {
                     this.log("Enemy dragon defeated!");
@@ -1604,7 +1634,7 @@
                         let dmg = Math.max(1, this.battleState.enemyStr * 2 + Math.floor(Math.random() * 5));
                         if (playerDefending) dmg = Math.floor(dmg / 2);
                         this.battleState.playerHp -= dmg;
-                        this.log(`Enemy hit you for ${dmg} damage! (HP: ${this.battleState.playerHp}/${this.battleState.playerMaxHp})`);
+                        this.log(`Enemy hit you for ${dmg} damage! (HP: ${Math.max(0, this.battleState.playerHp)}/${this.battleState.playerMaxHp})`);
                         this.playSound('clash');
                         this.triggerAnim('enemy', 'attacking-enemy');
                         setTimeout(() => {
@@ -1617,6 +1647,8 @@
                 } else {
                     this.log("Enemy is defending.");
                 }
+                
+                this.updateUI();
                 
                 if (this.battleState.playerHp <= 0) {
                     this.log("Your dragon was defeated and fled!");
@@ -1765,6 +1797,7 @@
                     else this.element = 'Water';
                     this.log(`Your baby dragon evolved into an ADULT ${this.element.toUpperCase()} DRAGON!`);
                     this.showToast(`✨ <b>EVOLUTION!</b> Baby dragon evolved into an <b>ADULT ${this.element.toUpperCase()} DRAGON</b>!`, "gold", 7000);
+                }
                 this.updateUI();
             }
         };
