@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KFlash
+**Target App:** KFont
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KFlash
 - KFont
 - KFortress
 - KFreecell
@@ -173,8 +172,20 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KDarts
 - KDragon
 - KFarm
+- KFlash
 
 ## Test Reports
+
+- **KFlash**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
+  - ✅ Core functionality works (interactive 3D flipping flashcard interface, Spaced Repetition study controls with Got It / Needs Review status tags, 8 built-in sample packs across Math, Science, Languages, and History with 300+ flashcards, search query filtering and review-only mode, deck statistics with mastery progress meter, card CRUD with in-place modal editing, shuffle, and print view).
+  - 🔧 FIXED: In Review-Only mode, marking a card as "Got It ✓" executed `renderCard()` which removed the card from `filteredIndices`, shifting all subsequent cards down by one index, and then immediately invoked `btnNext.click()` (`currentIndex++`), permanently skipping the very next card without ever displaying it to the user. Streamlined rating into `handleStudyRating()` to dynamically update filtered indices and advance smoothly without skipping cards.
+  - 🔧 FIXED: Deleting a card, shuffling the deck, filtering via search, loading sample packs, or importing files failed to hide `#studyControls` when cards were flipped, leaving orphan "Got It ✓" and "Needs Review ↻" study buttons visible on the front face of new cards. Added centralized `resetCardFlip()` to reset flip state and hide study controls across all deck transitions.
+  - 🔧 FIXED: Global keyboard listener checked bare `e.code` (`Space`, `Enter`, `ArrowLeft`, `ArrowRight`) without verifying `!e.ctrlKey && !e.altKey && !e.metaKey`, hijacking browser shortcuts (e.g. `Alt+Left` back navigation). Furthermore, keystrokes continued to manipulate background flashcards while modal dialogs (Stats, Help, Add/Edit, Sample Packs) were active. Added modifier guards and suppressed background card controls while modals are active.
+  - 🔧 FIXED: Flipping logic checked `deck.length > 0` rather than `filteredIndices.length > 0`, causing empty search results ("No matches found" / "Try a different search") to flip and display active study controls. Restricted flipping to matching filtered cards and shook container when empty.
+  - 🔧 FIXED: None of the 4 modal dialogs closed when clicking the background backdrop or pressing `Escape`. Added backdrop dismissal, Esc key dismissal, and wired `Ctrl+Enter` to quickly save cards inside `#addCardModal`.
+  - 🔧 FIXED: `btnPrint` rendered card questions and answers via unescaped string interpolation into `div.innerHTML`, causing mathematical inequalities and HTML characters (such as `<, >, <=, or >=` in Algebra 101) to break DOM parsing. Added `escapeHtml()` sanitization.
+  - 🔧 FIXED: Loading sample packs copied shallow object references (`deck = [...importedDeck]`), mutating the global `SAMPLE_PACKS` constant in memory when cards were edited or marked as known, and users had no way to reset study progress on a deck. Deep-cloned sample cards on load and added a "Reset Progress" button in the Stats modal.
+  - 🔧 FIXED: Help documentation promised CSV export, but `btnExport` only generated JSON, while CSV import parsed rows using naive `line.split(',')`, corrupting cards containing commas within quotes. Added dual JSON/CSV export prompt, implemented RFC-compliant quoted CSV parser with header detection, and wired up `1`/`G` (Got It), `2`/`R` (Needs Review), `A` (Add), `S` (Shuffle), and `?`/`H` (Help) keyboard shortcuts.
 
 - **KFarm**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
   - ✅ Core gameplay works (10x10 farm grid simulation with procedural dirt furrows and day/night lighting, multi-seasonal crop cycle Spring/Summer/Fall/Winter with Wheat/Corn/Tomato/Pumpkin, weather system Clear/Rain/Drought/Crows, livestock Chickens and Cows with wandering pasture sprites, production upgrades Mill/Mayo Maker/Cheese Press/Scarecrow/Fertilizer/3x3 Upgraded Tools, Web Audio synthesizer effects and 4-tier kinematic particle explosion engine).
