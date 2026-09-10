@@ -1,6 +1,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <commdlg.h>
+#include <shellapi.h>
 
 void* __cdecl memset(void* p, int c, size_t sz) {
     char* pb = (char*)p;
@@ -21,7 +22,7 @@ HBRUSH hBrush = NULL;
 COLORREF curColor = RGB(0,0,0);
 int curSize = 4;
 int brushShape = 0; // 0 = Round, 1 = Square
-int currentTool = 0; // 0=Freehand, 1=Line, 2=Rect, 3=Ellipse, 4=Spray, 5=Eraser
+int currentTool = 0; // 0=Freehand, 1=Line, 2=Rect, 3=Ellipse, 4=Spray, 5=Eraser, 6=Fill, 7=Pick
 int startX = 0, startY = 0;
 int scrollX = 0, scrollY = 0;
 
@@ -35,11 +36,10 @@ int redoCount = 0;
 // Controls
 HWND hBtnBlack, hBtnRed, hBtnGreen, hBtnBlue, hBtnYellow, hBtnPurple, hBtnEraser, hBtnCustomColor;
 HWND hBtnSizeSmall, hBtnSizeMed, hBtnSizeLarge, hBtnShapeToggle;
-HWND hBtnFreehand, hBtnLine, hBtnRect, hBtnEllipse, hBtnSpray;
-HWND hBtnUndo, hBtnRedo, hBtnInvert, hBtnGray, hBtnBright, hBtnFlipH, hBtnRotate90;
+HWND hBtnFreehand, hBtnLine, hBtnRect, hBtnEllipse, hBtnSpray, hBtnFill, hBtnPipette;
+HWND hBtnUndo, hBtnRedo, hBtnInvert, hBtnGray, hBtnBright, hBtnDark, hBtnFlipH, hBtnFlipV, hBtnRotate90, hBtnRotateCCW;
 HWND hBtnClear, hBtnSave, hBtnOpen, hBtnHelp;
-
-HWND hBtnEdge, hBtnSharpen, hBtnEmboss, hBtnWand;
+HWND hBtnEdge, hBtnSharpen, hBtnEmboss;
 
 HFONT hFont = NULL;
 
@@ -47,6 +47,7 @@ void PushUndo();
 void PerformUndo();
 void PerformRedo();
 void UpdatePen();
+void UpdateTitleStatus(HWND hwnd);
 
 void UpdatePen() {
     if (hPen) DeleteObject(hPen);
@@ -70,6 +71,16 @@ void UpdatePen() {
         SelectObject(hdcMem, hPen);
         SelectObject(hdcMem, hBrush);
     }
+}
+
+void UpdateTitleStatus(HWND hwnd) {
+    const char* toolNames[] = {"Brush", "Line", "Rect", "Ellipse", "Spray", "Eraser", "Fill", "Pick"};
+    const char* toolName = (currentTool >= 0 && currentTool <= 7) ? toolNames[currentTool] : "Brush";
+    char title[160];
+    wsprintfA(title, "KPaint Pro - Tool: %s | Size: %dpx (%s) | Color: #%02X%02X%02X - Press F1 for Help",
+        toolName, curSize, brushShape ? "Square" : "Round",
+        GetRValue(curColor), GetGValue(curColor), GetBValue(curColor));
+    SetWindowTextA(hwnd, title);
 }
 
 // Push state to undo stack
@@ -169,7 +180,6 @@ void FilterInvert() {
 
 void FilterGrayscale() {
     PushUndo();
-    HDC hdc = GetDC(NULL);
     BITMAPINFO bi = {0};
     bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bi.bmiHeader.biWidth = 2000;
@@ -192,12 +202,10 @@ void FilterGrayscale() {
         SetDIBits(hdcMem, hbmCanvas, 0, 2000, pBits, &bi, DIB_RGB_COLORS);
         GlobalFree(pBits);
     }
-    ReleaseDC(NULL, hdc);
 }
 
 void FilterBrightness(int delta) {
     PushUndo();
-    HDC hdc = GetDC(NULL);
     BITMAPINFO bi = {0};
     bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bi.bmiHeader.biWidth = 2000;
@@ -217,13 +225,10 @@ void FilterBrightness(int delta) {
         SetDIBits(hdcMem, hbmCanvas, 0, 2000, pBits, &bi, DIB_RGB_COLORS);
         GlobalFree(pBits);
     }
-    ReleaseDC(NULL, hdc);
 }
-
 
 void FilterConvolve(int type) {
     PushUndo();
-    HDC hdc = GetDC(NULL);
     BITMAPINFO bi = {0};
     bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bi.bmiHeader.biWidth = 2000;
@@ -266,7 +271,7 @@ void FilterConvolve(int type) {
                     }
                 }
                 int dstIdx = (y*2000 + x)*3;
-                pDst[dstIdx] = (BYTE)(b/div + offset < 0 ? 0 : (b/div + offset > 255 ? 255 : b/div + offset));
+                pDst[dstIdx]   = (BYTE)(b/div + offset < 0 ? 0 : (b/div + offset > 255 ? 255 : b/div + offset));
                 pDst[dstIdx+1] = (BYTE)(g/div + offset < 0 ? 0 : (g/div + offset > 255 ? 255 : g/div + offset));
                 pDst[dstIdx+2] = (BYTE)(r/div + offset < 0 ? 0 : (r/div + offset > 255 ? 255 : r/div + offset));
             }
@@ -275,7 +280,6 @@ void FilterConvolve(int type) {
     }
     if (pSrc) GlobalFree(pSrc);
     if (pDst) GlobalFree(pDst);
-    ReleaseDC(NULL, hdc);
 }
 
 // Transforms
@@ -291,9 +295,20 @@ void FlipHorizontal() {
     DeleteObject(hbmTemp);
 }
 
+void FlipVertical() {
+    PushUndo();
+    HDC hdcTemp = CreateCompatibleDC(hdcMem);
+    HBITMAP hbmTemp = CreateCompatibleBitmap(hdcMem, 2000, 2000);
+    HBITMAP hOld = (HBITMAP)SelectObject(hdcTemp, hbmTemp);
+    StretchBlt(hdcTemp, 0, 0, 2000, 2000, hdcMem, 0, 1999, 2000, -2000, SRCCOPY);
+    BitBlt(hdcMem, 0, 0, 2000, 2000, hdcTemp, 0, 0, SRCCOPY);
+    SelectObject(hdcTemp, hOld);
+    DeleteDC(hdcTemp);
+    DeleteObject(hbmTemp);
+}
+
 void Rotate90CW() {
     PushUndo();
-    HDC hdc = GetDC(NULL);
     BITMAPINFO bi = {0};
     bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bi.bmiHeader.biWidth = 2000;
@@ -319,7 +334,35 @@ void Rotate90CW() {
     }
     if (pSrc) GlobalFree(pSrc);
     if (pDst) GlobalFree(pDst);
-    ReleaseDC(NULL, hdc);
+}
+
+void Rotate90CCW() {
+    PushUndo();
+    BITMAPINFO bi = {0};
+    bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bi.bmiHeader.biWidth = 2000;
+    bi.bmiHeader.biHeight = -2000;
+    bi.bmiHeader.biPlanes = 1;
+    bi.bmiHeader.biBitCount = 24;
+    bi.bmiHeader.biCompression = BI_RGB;
+    
+    BYTE* pSrc = (BYTE*)GlobalAlloc(GPTR, 2000 * 2000 * 3);
+    BYTE* pDst = (BYTE*)GlobalAlloc(GPTR, 2000 * 2000 * 3);
+    if (pSrc && pDst) {
+        GetDIBits(hdcMem, hbmCanvas, 0, 2000, pSrc, &bi, DIB_RGB_COLORS);
+        for (int y = 0; y < 2000; y++) {
+            for (int x = 0; x < 2000; x++) {
+                int srcIdx = (y * 2000 + x) * 3;
+                int dstIdx = ((1999 - x) * 2000 + y) * 3;
+                pDst[dstIdx]   = pSrc[srcIdx];
+                pDst[dstIdx+1] = pSrc[srcIdx+1];
+                pDst[dstIdx+2] = pSrc[srcIdx+2];
+            }
+        }
+        SetDIBits(hdcMem, hbmCanvas, 0, 2000, pDst, &bi, DIB_RGB_COLORS);
+    }
+    if (pSrc) GlobalFree(pSrc);
+    if (pDst) GlobalFree(pDst);
 }
 
 int SaveBitmap(const char* path, HBITMAP hbm) {
@@ -334,7 +377,9 @@ int SaveBitmap(const char* path, HBITMAP hbm) {
 
     DWORD dwBmpSize = ((2000 * 24 + 31) / 32) * 4 * 2000;
     HANDLE hDIB = GlobalAlloc(GHND, dwBmpSize);
+    if (!hDIB) { ReleaseDC(NULL, hdc); return 0; }
     char* lpbitmap = (char*)GlobalLock(hDIB);
+    if (!lpbitmap) { GlobalFree(hDIB); ReleaseDC(NULL, hdc); return 0; }
     
     HDC tempDC = CreateCompatibleDC(hdc);
     HBITMAP tempBmp = CreateCompatibleBitmap(hdc, 2000, 2000);
@@ -345,6 +390,7 @@ int SaveBitmap(const char* path, HBITMAP hbm) {
     
     GetDIBits(hdc, tempBmp, 0, 2000, lpbitmap, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
 
+    int success = 0;
     HANDLE hFile = CreateFileA(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD dwBytesWritten = 0;
@@ -353,9 +399,11 @@ int SaveBitmap(const char* path, HBITMAP hbm) {
         bmfHeader.bfSize = dwBmpSize + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
         bmfHeader.bfType = 0x4D42;
 
-        WriteFile(hFile, &bmfHeader, sizeof(BITMAPFILEHEADER), &dwBytesWritten, NULL);
-        WriteFile(hFile, &bi, sizeof(BITMAPINFOHEADER), &dwBytesWritten, NULL);
-        WriteFile(hFile, lpbitmap, dwBmpSize, &dwBytesWritten, NULL);
+        if (WriteFile(hFile, &bmfHeader, sizeof(BITMAPFILEHEADER), &dwBytesWritten, NULL) &&
+            WriteFile(hFile, &bi, sizeof(BITMAPINFOHEADER), &dwBytesWritten, NULL) &&
+            WriteFile(hFile, lpbitmap, dwBmpSize, &dwBytesWritten, NULL)) {
+            success = 1;
+        }
         CloseHandle(hFile);
     }
     
@@ -364,7 +412,7 @@ int SaveBitmap(const char* path, HBITMAP hbm) {
     GlobalUnlock(hDIB);
     GlobalFree(hDIB);
     ReleaseDC(NULL, hdc);
-    return 1;
+    return success;
 }
 
 void LoadBitmapFile(HWND hwnd, const char* path) {
@@ -398,7 +446,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             RECT r = {0, 0, 2000, 2000};
             FillRect(hdcMem, &r, (HBRUSH)GetStockObject(WHITE_BRUSH));
             
-            HFONT hWelcomeFont = CreateFontA(-24, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH, "Segoe UI");
+            HFONT hWelcomeFont = CreateFontA(-24, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5, DEFAULT_PITCH, "Segoe UI");
             SetTextColor(hdcMem, RGB(150, 150, 150));
             SetBkMode(hdcMem, TRANSPARENT);
             HFONT hOldF = (HFONT)SelectObject(hdcMem, hWelcomeFont);
@@ -410,67 +458,83 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             UpdatePen();
             
-            hFont = CreateFontA(-12, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH, "Segoe UI");
+            hFont = CreateFontA(-12, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5, DEFAULT_PITCH, "Segoe UI");
             
             // Colors
-            hBtnBlack = CreateWindowA("BUTTON", "Black", WS_CHILD | WS_VISIBLE, 5, 5, 58, 22, hwnd, (HMENU)101, NULL, NULL);
-            hBtnRed = CreateWindowA("BUTTON", "Red", WS_CHILD | WS_VISIBLE, 68, 5, 58, 22, hwnd, (HMENU)102, NULL, NULL);
-            hBtnGreen = CreateWindowA("BUTTON", "Green", WS_CHILD | WS_VISIBLE, 5, 30, 58, 22, hwnd, (HMENU)103, NULL, NULL);
-            hBtnBlue = CreateWindowA("BUTTON", "Blue", WS_CHILD | WS_VISIBLE, 68, 30, 58, 22, hwnd, (HMENU)104, NULL, NULL);
-            hBtnYellow = CreateWindowA("BUTTON", "Yellow", WS_CHILD | WS_VISIBLE, 5, 55, 58, 22, hwnd, (HMENU)105, NULL, NULL);
-            hBtnPurple = CreateWindowA("BUTTON", "Purple", WS_CHILD | WS_VISIBLE, 68, 55, 58, 22, hwnd, (HMENU)106, NULL, NULL);
-            hBtnCustomColor = CreateWindowA("BUTTON", "Custom...", WS_CHILD | WS_VISIBLE, 5, 80, 121, 22, hwnd, (HMENU)107, NULL, NULL);
+            hBtnBlack = CreateWindowA("BUTTON", "Black", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 5, 58, 22, hwnd, (HMENU)101, NULL, NULL);
+            hBtnRed = CreateWindowA("BUTTON", "Red", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 5, 58, 22, hwnd, (HMENU)102, NULL, NULL);
+            hBtnGreen = CreateWindowA("BUTTON", "Green", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 30, 58, 22, hwnd, (HMENU)103, NULL, NULL);
+            hBtnBlue = CreateWindowA("BUTTON", "Blue", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 30, 58, 22, hwnd, (HMENU)104, NULL, NULL);
+            hBtnYellow = CreateWindowA("BUTTON", "Yellow", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 55, 58, 22, hwnd, (HMENU)105, NULL, NULL);
+            hBtnPurple = CreateWindowA("BUTTON", "Purple", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 55, 58, 22, hwnd, (HMENU)106, NULL, NULL);
+            hBtnCustomColor = CreateWindowA("BUTTON", "Custom...", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 80, 121, 22, hwnd, (HMENU)107, NULL, NULL);
 
             // Tools & Eraser
-            hBtnFreehand = CreateWindowA("BUTTON", "Brush", WS_CHILD | WS_VISIBLE, 5, 110, 58, 22, hwnd, (HMENU)401, NULL, NULL);
-            hBtnLine = CreateWindowA("BUTTON", "Line", WS_CHILD | WS_VISIBLE, 68, 110, 58, 22, hwnd, (HMENU)402, NULL, NULL);
-            hBtnRect = CreateWindowA("BUTTON", "Rect", WS_CHILD | WS_VISIBLE, 5, 135, 58, 22, hwnd, (HMENU)403, NULL, NULL);
-            hBtnEllipse = CreateWindowA("BUTTON", "Ellipse", WS_CHILD | WS_VISIBLE, 68, 135, 58, 22, hwnd, (HMENU)404, NULL, NULL);
-            hBtnSpray = CreateWindowA("BUTTON", "Spray", WS_CHILD | WS_VISIBLE, 5, 160, 58, 22, hwnd, (HMENU)405, NULL, NULL);
-            hBtnEraser = CreateWindowA("BUTTON", "Eraser", WS_CHILD | WS_VISIBLE, 68, 160, 58, 22, hwnd, (HMENU)406, NULL, NULL);
+            hBtnFreehand = CreateWindowA("BUTTON", "Brush", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 107, 58, 22, hwnd, (HMENU)401, NULL, NULL);
+            hBtnLine = CreateWindowA("BUTTON", "Line", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 107, 58, 22, hwnd, (HMENU)402, NULL, NULL);
+            hBtnRect = CreateWindowA("BUTTON", "Rect", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 132, 58, 22, hwnd, (HMENU)403, NULL, NULL);
+            hBtnEllipse = CreateWindowA("BUTTON", "Ellipse", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 132, 58, 22, hwnd, (HMENU)404, NULL, NULL);
+            hBtnSpray = CreateWindowA("BUTTON", "Spray", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 157, 58, 22, hwnd, (HMENU)405, NULL, NULL);
+            hBtnEraser = CreateWindowA("BUTTON", "Eraser", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 157, 58, 22, hwnd, (HMENU)406, NULL, NULL);
+            hBtnFill = CreateWindowA("BUTTON", "Fill (G)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 182, 58, 22, hwnd, (HMENU)407, NULL, NULL);
+            hBtnPipette = CreateWindowA("BUTTON", "Pick (I)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 182, 58, 22, hwnd, (HMENU)408, NULL, NULL);
 
             // Size & Shape
-            hBtnSizeSmall = CreateWindowA("BUTTON", "2px", WS_CHILD | WS_VISIBLE, 5, 190, 38, 22, hwnd, (HMENU)201, NULL, NULL);
-            hBtnSizeMed = CreateWindowA("BUTTON", "6px", WS_CHILD | WS_VISIBLE, 46, 190, 38, 22, hwnd, (HMENU)202, NULL, NULL);
-            hBtnSizeLarge = CreateWindowA("BUTTON", "14px", WS_CHILD | WS_VISIBLE, 87, 190, 39, 22, hwnd, (HMENU)203, NULL, NULL);
-            hBtnShapeToggle = CreateWindowA("BUTTON", "Shape: Round", WS_CHILD | WS_VISIBLE, 5, 215, 121, 22, hwnd, (HMENU)204, NULL, NULL);
+            hBtnSizeSmall = CreateWindowA("BUTTON", "2px", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 209, 38, 22, hwnd, (HMENU)201, NULL, NULL);
+            hBtnSizeMed = CreateWindowA("BUTTON", "6px", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 46, 209, 38, 22, hwnd, (HMENU)202, NULL, NULL);
+            hBtnSizeLarge = CreateWindowA("BUTTON", "14px", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 87, 209, 39, 22, hwnd, (HMENU)203, NULL, NULL);
+            hBtnShapeToggle = CreateWindowA("BUTTON", "Shape: Round", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 234, 121, 22, hwnd, (HMENU)204, NULL, NULL);
 
             // Filters & Transforms
-            hBtnInvert = CreateWindowA("BUTTON", "Invert", WS_CHILD | WS_VISIBLE, 5, 245, 58, 22, hwnd, (HMENU)501, NULL, NULL);
-            hBtnGray = CreateWindowA("BUTTON", "Gray", WS_CHILD | WS_VISIBLE, 68, 245, 58, 22, hwnd, (HMENU)502, NULL, NULL);
-            hBtnBright = CreateWindowA("BUTTON", "+Bright", WS_CHILD | WS_VISIBLE, 5, 270, 58, 22, hwnd, (HMENU)503, NULL, NULL);
-            hBtnFlipH = CreateWindowA("BUTTON", "Flip H", WS_CHILD | WS_VISIBLE, 68, 270, 58, 22, hwnd, (HMENU)504, NULL, NULL);
-            hBtnRotate90 = CreateWindowA("BUTTON", "Rotate 90", WS_CHILD | WS_VISIBLE, 5, 295, 121, 22, hwnd, (HMENU)505, NULL, NULL);
+            hBtnInvert = CreateWindowA("BUTTON", "Invert", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 261, 58, 22, hwnd, (HMENU)501, NULL, NULL);
+            hBtnGray = CreateWindowA("BUTTON", "Gray", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 261, 58, 22, hwnd, (HMENU)502, NULL, NULL);
+            hBtnBright = CreateWindowA("BUTTON", "+Bright", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 286, 58, 22, hwnd, (HMENU)503, NULL, NULL);
+            hBtnDark = CreateWindowA("BUTTON", "-Bright", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 286, 58, 22, hwnd, (HMENU)509, NULL, NULL);
+            hBtnFlipH = CreateWindowA("BUTTON", "Flip H", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 311, 58, 22, hwnd, (HMENU)504, NULL, NULL);
+            hBtnFlipV = CreateWindowA("BUTTON", "Flip V", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 311, 58, 22, hwnd, (HMENU)510, NULL, NULL);
+            hBtnRotate90 = CreateWindowA("BUTTON", "Rot CW", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 336, 58, 22, hwnd, (HMENU)505, NULL, NULL);
+            hBtnRotateCCW = CreateWindowA("BUTTON", "Rot CCW", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 336, 58, 22, hwnd, (HMENU)511, NULL, NULL);
+
+            // Convolve Filters
+            hBtnEdge = CreateWindowA("BUTTON", "Edge", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 363, 38, 22, hwnd, (HMENU)506, NULL, NULL);
+            hBtnSharpen = CreateWindowA("BUTTON", "Sharp", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 46, 363, 38, 22, hwnd, (HMENU)507, NULL, NULL);
+            hBtnEmboss = CreateWindowA("BUTTON", "Emboss", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 87, 363, 39, 22, hwnd, (HMENU)508, NULL, NULL);
 
             // History & Actions
-            hBtnUndo = CreateWindowA("BUTTON", "Undo", WS_CHILD | WS_VISIBLE, 5, 325, 58, 22, hwnd, (HMENU)601, NULL, NULL);
-            hBtnRedo = CreateWindowA("BUTTON", "Redo", WS_CHILD | WS_VISIBLE, 68, 325, 58, 22, hwnd, (HMENU)602, NULL, NULL);
-            hBtnOpen = CreateWindowA("BUTTON", "Open BMP", WS_CHILD | WS_VISIBLE, 5, 355, 121, 22, hwnd, (HMENU)303, NULL, NULL);
-            hBtnSave = CreateWindowA("BUTTON", "Save BMP", WS_CHILD | WS_VISIBLE, 5, 380, 121, 22, hwnd, (HMENU)302, NULL, NULL);
-            hBtnClear = CreateWindowA("BUTTON", "Clear Canvas", WS_CHILD | WS_VISIBLE, 5, 405, 121, 22, hwnd, (HMENU)301, NULL, NULL);
+            hBtnUndo = CreateWindowA("BUTTON", "Undo", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 390, 58, 22, hwnd, (HMENU)601, NULL, NULL);
+            hBtnRedo = CreateWindowA("BUTTON", "Redo", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 390, 58, 22, hwnd, (HMENU)602, NULL, NULL);
+            hBtnOpen = CreateWindowA("BUTTON", "Open BMP", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 415, 58, 22, hwnd, (HMENU)303, NULL, NULL);
+            hBtnSave = CreateWindowA("BUTTON", "Save BMP", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 415, 58, 22, hwnd, (HMENU)302, NULL, NULL);
+            hBtnClear = CreateWindowA("BUTTON", "Clear Canvas", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 440, 121, 22, hwnd, (HMENU)301, NULL, NULL);
+            hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 465, 121, 22, hwnd, (HMENU)701, NULL, NULL);
 
-            
-            hBtnEdge = CreateWindowA("BUTTON", "Edge", WS_CHILD | WS_VISIBLE, 5, 435, 58, 22, hwnd, (HMENU)506, NULL, NULL);
-            hBtnSharpen = CreateWindowA("BUTTON", "Sharpen", WS_CHILD | WS_VISIBLE, 68, 435, 58, 22, hwnd, (HMENU)507, NULL, NULL);
-            hBtnEmboss = CreateWindowA("BUTTON", "Emboss", WS_CHILD | WS_VISIBLE, 5, 460, 58, 22, hwnd, (HMENU)508, NULL, NULL);
-            hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE, 5, 485, 121, 22, hwnd, (HMENU)701, NULL, NULL);
-
-            // Set Fonts
             HWND controls[] = {
                 hBtnBlack, hBtnRed, hBtnGreen, hBtnBlue, hBtnYellow, hBtnPurple, hBtnCustomColor,
-                hBtnFreehand, hBtnLine, hBtnRect, hBtnEllipse, hBtnSpray, hBtnEraser,
+                hBtnFreehand, hBtnLine, hBtnRect, hBtnEllipse, hBtnSpray, hBtnEraser, hBtnFill, hBtnPipette,
                 hBtnSizeSmall, hBtnSizeMed, hBtnSizeLarge, hBtnShapeToggle,
-                hBtnInvert, hBtnGray, hBtnBright, hBtnFlipH, hBtnRotate90,
-                hBtnUndo, hBtnRedo, hBtnOpen, hBtnSave, hBtnClear,
-
-                hBtnEdge, hBtnSharpen, hBtnEmboss, hBtnHelp
-
+                hBtnInvert, hBtnGray, hBtnBright, hBtnDark, hBtnFlipH, hBtnFlipV, hBtnRotate90, hBtnRotateCCW,
+                hBtnEdge, hBtnSharpen, hBtnEmboss,
+                hBtnUndo, hBtnRedo, hBtnOpen, hBtnSave, hBtnClear, hBtnHelp
             };
             for (int i = 0; i < sizeof(controls)/sizeof(controls[0]); i++) {
                 SendMessage(controls[i], WM_SETFONT, (WPARAM)hFont, TRUE);
             }
+
+            DragAcceptFiles(hwnd, TRUE);
+            UpdateTitleStatus(hwnd);
             break;
         }
+        case WM_DROPFILES: {
+            HDROP hDrop = (HDROP)wParam;
+            char droppedFile[MAX_PATH] = {0};
+            if (DragQueryFileA(hDrop, 0, droppedFile, MAX_PATH)) {
+                LoadBitmapFile(hwnd, droppedFile);
+            }
+            DragFinish(hDrop);
+            break;
+        }
+        case WM_ERASEBKGND:
+            return 1;
         case WM_COMMAND: {
             int id = LOWORD(wParam);
             if (id == 101) curColor = RGB(0,0,0);
@@ -498,7 +562,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetWindowTextA(hBtnShapeToggle, brushShape ? "Shape: Square" : "Shape: Round");
             }
             
-            if (id >= 101 && id <= 204) UpdatePen();
+            if (id >= 101 && id <= 204) {
+                UpdatePen();
+                UpdateTitleStatus(hwnd);
+            }
             
             if (id == 301) {
                 PushUndo();
@@ -519,7 +586,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (SaveBitmap(file, hbmCanvas)) {
                         MessageBoxA(hwnd, "Saved successfully!", "KPaint", MB_OK | MB_ICONINFORMATION);
                     } else {
-                        MessageBoxA(hwnd, "Failed to save.", "Error", MB_OK | MB_ICONERROR);
+                        MessageBoxA(hwnd, "Failed to save bitmap.", "KPaint Error", MB_OK | MB_ICONERROR);
                     }
                 }
             }
@@ -536,27 +603,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             
-            if (id == 401) { currentTool = 0; UpdatePen(); }
-            if (id == 402) { currentTool = 1; UpdatePen(); }
-            if (id == 403) { currentTool = 2; UpdatePen(); }
-            if (id == 404) { currentTool = 3; UpdatePen(); }
-            if (id == 405) { currentTool = 4; UpdatePen(); }
-            if (id == 406) { currentTool = 5; UpdatePen(); }
+            if (id == 401) { currentTool = 0; UpdatePen(); UpdateTitleStatus(hwnd); }
+            if (id == 402) { currentTool = 1; UpdatePen(); UpdateTitleStatus(hwnd); }
+            if (id == 403) { currentTool = 2; UpdatePen(); UpdateTitleStatus(hwnd); }
+            if (id == 404) { currentTool = 3; UpdatePen(); UpdateTitleStatus(hwnd); }
+            if (id == 405) { currentTool = 4; UpdatePen(); UpdateTitleStatus(hwnd); }
+            if (id == 406) { currentTool = 5; UpdatePen(); UpdateTitleStatus(hwnd); }
+            if (id == 407) { currentTool = 6; UpdatePen(); UpdateTitleStatus(hwnd); }
+            if (id == 408) { currentTool = 7; UpdatePen(); UpdateTitleStatus(hwnd); }
 
             if (id == 501) { FilterInvert(); InvalidateRect(hwnd, NULL, FALSE); }
             if (id == 502) { FilterGrayscale(); InvalidateRect(hwnd, NULL, FALSE); }
             if (id == 503) { FilterBrightness(25); InvalidateRect(hwnd, NULL, FALSE); }
+            if (id == 509) { FilterBrightness(-25); InvalidateRect(hwnd, NULL, FALSE); }
             if (id == 504) { FlipHorizontal(); InvalidateRect(hwnd, NULL, FALSE); }
+            if (id == 510) { FlipVertical(); InvalidateRect(hwnd, NULL, FALSE); }
             if (id == 505) { Rotate90CW(); InvalidateRect(hwnd, NULL, FALSE); }
+            if (id == 511) { Rotate90CCW(); InvalidateRect(hwnd, NULL, FALSE); }
 
             if (id == 506) { FilterConvolve(0); InvalidateRect(hwnd, NULL, FALSE); }
             if (id == 507) { FilterConvolve(1); InvalidateRect(hwnd, NULL, FALSE); }
             if (id == 508) { FilterConvolve(2); InvalidateRect(hwnd, NULL, FALSE); }
 
-
             if (id == 601) { PerformUndo(); InvalidateRect(hwnd, NULL, FALSE); }
             if (id == 602) { PerformRedo(); InvalidateRect(hwnd, NULL, FALSE); }
-            if (id == 701) { MessageBoxA(hwnd, "Welcome to KPaint Pro!\n\nTools:\n- Brush (B)\n- Line (L)\n- Rect (R)\n- Ellipse (C)\n- Spray (S)\n- Eraser (E)\n\nShortcuts:\n- Ctrl+Z : Undo\n- Ctrl+Y : Redo\n- F1 or H : Help", "KPaint Help", MB_OK | MB_ICONINFORMATION); }
+            if (id == 701) {
+                MessageBoxA(hwnd, "Welcome to KPaint Pro!\n\nTools:\n- Brush (B)\n- Line (L)\n- Rect (R)\n- Ellipse (C)\n- Spray (A or S)\n- Eraser (E)\n- Fill (G)\n- Eyedropper / Pick (I)\n\nShortcuts:\n- Ctrl+Z : Undo\n- Ctrl+Y : Redo\n- Ctrl+S : Save BMP\n- Ctrl+O : Open BMP\n- [ / ] : Brush Size -/+\n- F1 or H : Help\n\nDrag & drop BMP files to open!", "KPaint Help", MB_OK | MB_ICONINFORMATION);
+            }
             break;
         }
         case WM_KEYDOWN: {
@@ -567,21 +640,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else if (wParam == 'Y' || wParam == 'y') {
                     PerformRedo();
                     InvalidateRect(hwnd, NULL, FALSE);
+                } else if (wParam == 'S' || wParam == 's') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(302, 0), 0);
+                } else if (wParam == 'O' || wParam == 'o') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(303, 0), 0);
                 }
             } else if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
-                MessageBoxA(hwnd, "Welcome to KPaint Pro!\n\nTools:\n- Brush (B)\n- Line (L)\n- Rect (R)\n- Ellipse (C)\n- Spray (S)\n- Eraser (E)\n\nShortcuts:\n- Ctrl+Z : Undo\n- Ctrl+Y : Redo\n- F1 or H : Help", "KPaint Help", MB_OK | MB_ICONINFORMATION);
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(701, 0), 0);
             } else if (wParam == 'B' || wParam == 'b') {
-                currentTool = 0; UpdatePen();
+                currentTool = 0; UpdatePen(); UpdateTitleStatus(hwnd);
             } else if (wParam == 'L' || wParam == 'l') {
-                currentTool = 1; UpdatePen();
+                currentTool = 1; UpdatePen(); UpdateTitleStatus(hwnd);
             } else if (wParam == 'R' || wParam == 'r') {
-                currentTool = 2; UpdatePen();
+                currentTool = 2; UpdatePen(); UpdateTitleStatus(hwnd);
             } else if (wParam == 'C' || wParam == 'c') {
-                currentTool = 3; UpdatePen();
-            } else if (wParam == 'S' || wParam == 's') {
-                currentTool = 4; UpdatePen();
+                currentTool = 3; UpdatePen(); UpdateTitleStatus(hwnd);
+            } else if (wParam == 'A' || wParam == 'a' || wParam == 'S' || wParam == 's') {
+                currentTool = 4; UpdatePen(); UpdateTitleStatus(hwnd);
             } else if (wParam == 'E' || wParam == 'e') {
-                currentTool = 5; UpdatePen();
+                currentTool = 5; UpdatePen(); UpdateTitleStatus(hwnd);
+            } else if (wParam == 'G' || wParam == 'g') {
+                currentTool = 6; UpdatePen(); UpdateTitleStatus(hwnd);
+            } else if (wParam == 'I' || wParam == 'i') {
+                currentTool = 7; UpdatePen(); UpdateTitleStatus(hwnd);
+            } else if (wParam == VK_OEM_4 /* [ */) {
+                curSize = max(1, curSize - 2);
+                UpdatePen(); UpdateTitleStatus(hwnd);
+            } else if (wParam == VK_OEM_6 /* ] */) {
+                curSize = min(80, curSize + 2);
+                UpdatePen(); UpdateTitleStatus(hwnd);
             }
             break;
         }
@@ -589,6 +676,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int x = (short)LOWORD(lParam) - 130 + scrollX;
             int y = (short)HIWORD(lParam) + scrollY;
             if ((short)LOWORD(lParam) >= 130) {
+                if (currentTool == 7) { // Pipette / Pick
+                    curColor = GetPixel(hdcMem, x, y);
+                    currentTool = 0; // return to brush
+                    UpdatePen();
+                    UpdateTitleStatus(hwnd);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return;
+                }
+                if (currentTool == 6) { // Bucket Fill
+                    PushUndo();
+                    SelectObject(hdcMem, hBrush);
+                    COLORREF target = GetPixel(hdcMem, x, y);
+                    if (target != curColor) {
+                        ExtFloodFill(hdcMem, x, y, target, FLOODFILLSURFACE);
+                    }
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return;
+                }
                 PushUndo();
                 isPainting = 1;
                 startX = x; startY = y;
@@ -661,7 +766,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (isPainting) {
                 int x = (short)LOWORD(lParam) - 130 + scrollX;
                 int y = (short)HIWORD(lParam) + scrollY;
-                if (currentTool != 0 && currentTool != 5 && currentTool != 4) {
+                if (currentTool != 0 && currentTool != 5 && currentTool != 4 && currentTool != 6 && currentTool != 7) {
                     HDC hdc = GetDC(hwnd);
                     SetROP2(hdc, R2_NOTXORPEN);
                     SelectObject(hdc, hPen);
@@ -676,6 +781,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (currentTool == 1) { MoveToEx(hdcMem, startX, startY, NULL); LineTo(hdcMem, x, y); }
                     else if (currentTool == 2) { Rectangle(hdcMem, startX, startY, x, y); }
                     else if (currentTool == 3) { Ellipse(hdcMem, startX, startY, x, y); }
+                    SelectObject(hdcMem, hBrush);
                     
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
@@ -733,6 +839,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            SelectObject(hdcMem, GetStockObject(BLACK_PEN));
+            SelectObject(hdcMem, GetStockObject(WHITE_BRUSH));
+            SelectObject(hdcMem, GetStockObject(DEFAULT_BITMAP));
             if (hPen) DeleteObject(hPen);
             if (hBrush) DeleteObject(hBrush);
             if (hdcMem) DeleteDC(hdcMem);
@@ -771,8 +880,10 @@ void __stdcall MainEntry() {
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessageA(&msg);
+        if (!IsDialogMessage(hwnd, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessageA(&msg);
+        }
     }
     ExitProcess(0);
 }
