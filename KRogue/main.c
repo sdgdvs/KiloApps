@@ -2505,7 +2505,6 @@ void draw_entity_gdi(HDC memDC, int x, int y, Entity* e) {
         int is_enraged = (e->hp < e->max_hp / 2);
         if (is_enraged) {
             HBRUSH b = CreateSolidBrush(RGB(255, 0, 255));
-            HBRUSH oldB = (HBRUSH)SelectObject(memDC, b);
             RECT r = { cx - 9, cy - 10, cx + 9, cy + 9 };
             FillRect(memDC, &r, b);
             DeleteObject(b);
@@ -2515,10 +2514,8 @@ void draw_entity_gdi(HDC memDC, int x, int y, Entity* e) {
             DeleteObject(b2);
             SetPixel(memDC, cx - 4, cy - 4, RGB(255, 255, 255));
             SetPixel(memDC, cx + 4, cy - 4, RGB(255, 255, 255));
-            SelectObject(memDC, oldB);
         } else {
             HBRUSH b = CreateSolidBrush(RGB(200, 50, 50));
-            HBRUSH oldB = (HBRUSH)SelectObject(memDC, b);
             RECT r = { cx - 9, cy - 10, cx + 9, cy + 9 };
             FillRect(memDC, &r, b);
             DeleteObject(b);
@@ -2526,7 +2523,6 @@ void draw_entity_gdi(HDC memDC, int x, int y, Entity* e) {
             RECT r2 = { cx - 7, cy - 7, cx + 7, cy + 1 };
             FillRect(memDC, &r2, b2);
             DeleteObject(b2);
-            SelectObject(memDC, oldB);
         }
     } else {
         SetTextColor(memDC, e->fg);
@@ -3282,11 +3278,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         }
         case WM_DESTROY: {
+            KillTimer(hwnd, 1);
             if (g_font) DeleteObject(g_font);
             PostQuitMessage(0);
             return 0;
         }
         case WM_KEYDOWN: {
+            if (GetKeyState(VK_CONTROL) < 0 || GetKeyState(VK_MENU) < 0) break;
             if(g.state == 1 || g.state == 10) { // dead or victory
                 if(wParam == 'R') init_game();
                 if(wParam == VK_F9) load_game();
@@ -3524,6 +3522,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             EndPaint(hwnd, &ps);
             return 0;
         }
+        case WM_ERASEBKGND:
+            return 1;
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
