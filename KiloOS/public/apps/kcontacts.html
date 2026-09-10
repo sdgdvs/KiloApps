@@ -812,19 +812,19 @@
       <div class="modal-title" id="exportModalTitle"><span>📤</span> Export Contacts Directory</div>
       <div style="font-size: 12px; color: var(--text-muted);">Choose your desired export format:</div>
       <div class="export-option-grid">
-        <div class="export-card" data-fmt="md">
+        <div class="export-card" data-fmt="md" tabindex="0" role="button" aria-label="Export as Markdown">
           <div class="export-card-title">📝 Markdown</div>
           <div class="export-card-desc">Formatted directory with categories &amp; links (.md)</div>
         </div>
-        <div class="export-card" data-fmt="json">
+        <div class="export-card" data-fmt="json" tabindex="0" role="button" aria-label="Export as JSON">
           <div class="export-card-title">📦 JSON</div>
           <div class="export-card-desc">Full structured database backup (.json)</div>
         </div>
-        <div class="export-card" data-fmt="vcf">
+        <div class="export-card" data-fmt="vcf" tabindex="0" role="button" aria-label="Export as vCard">
           <div class="export-card-title">📇 vCard 3.0</div>
           <div class="export-card-desc">Standard address book file for phone/OS (.vcf)</div>
         </div>
-        <div class="export-card" data-fmt="csv">
+        <div class="export-card" data-fmt="csv" tabindex="0" role="button" aria-label="Export as CSV">
           <div class="export-card-title">📊 CSV</div>
           <div class="export-card-desc">Spreadsheet table for Excel / Sheets (.csv)</div>
         </div>
@@ -1205,7 +1205,16 @@
       filtered.forEach(c => {
         const item = document.createElement('div');
         item.className = `contact-item ${c.id === selectedId ? 'active' : ''}`;
+        item.setAttribute('role', 'button');
+        item.setAttribute('tabindex', '0');
+        item.setAttribute('aria-label', c.name || 'Unnamed Contact');
         item.onclick = () => selectContact(c.id);
+        item.onkeydown = (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            selectContact(c.id);
+          }
+        };
 
         const avatar = document.createElement('div');
         avatar.className = 'avatar';
@@ -1253,12 +1262,23 @@
           c.tags.slice(0, 3).forEach(tag => {
             const tagEl = document.createElement('span');
             tagEl.className = 'tag-badge';
+            tagEl.setAttribute('role', 'button');
+            tagEl.setAttribute('tabindex', '0');
+            tagEl.setAttribute('aria-label', `Filter by tag ${tag}`);
             tagEl.textContent = `#${tag}`;
-            tagEl.onclick = (e) => {
-              e.stopPropagation();
+            const toggleTag = (e) => {
+              if (e) e.stopPropagation();
               selectedTag = selectedTag === tag ? null : tag;
               updateTagPills();
               renderList();
+            };
+            tagEl.onclick = toggleTag;
+            tagEl.onkeydown = (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleTag(e);
+              }
             };
             tagsRow.appendChild(tagEl);
           });
@@ -1310,12 +1330,22 @@
         c.tags.forEach(tag => {
           const tBadge = document.createElement('span');
           tBadge.className = 'tag-badge';
+          tBadge.setAttribute('role', 'button');
+          tBadge.setAttribute('tabindex', '0');
+          tBadge.setAttribute('aria-label', `Filter by tag ${tag}`);
           tBadge.textContent = `#${tag}`;
-          tBadge.onclick = () => {
+          const triggerHeaderTag = () => {
             selectedTag = tag;
             updateTagPills();
             renderList();
             showToast(`Filtered by #${tag}`);
+          };
+          tBadge.onclick = triggerHeaderTag;
+          tBadge.onkeydown = (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              triggerHeaderTag();
+            }
           };
           headerTags.appendChild(tBadge);
         });
@@ -1339,21 +1369,26 @@
         showToast(`Contact limit (${MAX_CONTACTS}) reached.`);
         return;
       }
+      const newCat = (currentFilter !== 'All' && currentFilter !== 'Favorites') ? currentFilter : 'Personal';
+      const newFav = currentFilter === 'Favorites';
       const newContact = {
-        id: 'c_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+        id: 'c_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
         name: 'New Contact',
         phone: '',
         email: '',
-        category: 'Personal',
+        category: newCat,
         company: '',
         title: '',
-        tags: [],
+        tags: selectedTag ? [selectedTag] : [],
         notes: '',
-        fav: false
+        fav: newFav
       };
       contacts.unshift(newContact);
       saveContacts();
       updateTagPills();
+      if (searchInput.value) {
+        searchInput.value = '';
+      }
       selectContact(newContact.id);
       setTimeout(() => {
         inpName.focus();
@@ -1434,8 +1469,12 @@
       if (!selectedId) return;
       const c = contacts.find(item => item.id === selectedId);
       if (c && c.phone) {
-        const safePhone = c.phone.replace(/[^0-9+\-\s()]/g, '');
-        window.open(`tel:${encodeURIComponent(safePhone)}`, '_self');
+        const safePhone = c.phone.replace(/[^0-9+\-\s()]/g, '').trim();
+        const a = document.createElement('a');
+        a.href = `tel:${safePhone}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
         showToast(`📞 Dialing ${c.phone}...`);
       } else {
         showToast('⚠️ No phone number specified');
@@ -1447,8 +1486,12 @@
       if (!selectedId) return;
       const c = contacts.find(item => item.id === selectedId);
       if (c && c.email) {
-        const safeEmail = c.email.replace(/[^\w.@+\-]/g, '');
-        window.open(`mailto:${encodeURIComponent(safeEmail)}`, '_self');
+        const safeEmail = c.email.trim();
+        const a = document.createElement('a');
+        a.href = `mailto:${encodeURIComponent(safeEmail)}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
         showToast(`✉️ Opening email to ${c.email}...`);
       } else {
         showToast('⚠️ No email address specified');
@@ -1551,10 +1594,17 @@
     document.getElementById('btnExport').onclick = openExport;
 
     document.querySelectorAll('.export-card').forEach(card => {
-      card.onclick = () => {
+      const handleCardExport = () => {
         const fmt = card.getAttribute('data-fmt');
         closeExport();
         doExport(fmt);
+      };
+      card.onclick = handleCardExport;
+      card.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleCardExport();
+        }
       };
     });
 
@@ -1623,7 +1673,7 @@
           `"${(c.title||'').replace(/"/g, '""')}"`,
           `"${(c.tags||[]).join(', ').replace(/"/g, '""')}"`,
           c.fav ? "TRUE" : "FALSE",
-          `"${(c.notes||'').replace(/"/g, '""')}"`
+          `"${(c.notes||'').replace(/\r?\n/g, ' ').replace(/"/g, '""')}"`
         ].join(','));
         content = [headers.join(','), ...rows].join('\n');
         filename = 'kcontacts_export.csv';
@@ -1655,7 +1705,9 @@
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
       showToast(`📤 Exported ${contacts.length} contacts to ${filename}`);
     }
@@ -1673,8 +1725,9 @@
       reader.onload = (event) => {
         const text = event.target.result || '';
         let count = 0;
+        const fname = (file.name || '').toLowerCase();
 
-        if (file.name.endsWith('.json') || (text.trim().startsWith('[') && text.trim().endsWith(']'))) {
+        if (fname.endsWith('.json') || (text.trim().startsWith('[') && text.trim().endsWith(']'))) {
           try {
             const parsed = JSON.parse(text);
             if (Array.isArray(parsed)) {
@@ -1700,7 +1753,7 @@
           } catch (err) {
             showToast('⚠️ Invalid JSON file.');
           }
-        } else if (file.name.endsWith('.vcf') || text.includes('BEGIN:VCARD')) {
+        } else if (fname.endsWith('.vcf') || text.includes('BEGIN:VCARD')) {
           // Unfold RFC 2426 continuation lines
           const unfolded = text.replace(/\r?\n[ \t]/g, '');
           const cards = unfolded.split(/END:VCARD/i);
@@ -1889,10 +1942,17 @@
         return;
       }
 
+      // Enter on Delete confirmation modal
+      if (deleteModal.style.display === 'flex' && e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('btnConfirmDelete').click();
+        return;
+      }
+
       // Non-input hotkeys
       if (!isInput) {
         // Quick Category Switch (1 - 7)
-        if (e.key >= '1' && e.key <= '7') {
+        if (!e.ctrlKey && !e.altKey && !e.metaKey && e.key >= '1' && e.key <= '7') {
           const idx = parseInt(e.key, 10) - 1;
           if (idx >= 0 && idx < CATEGORIES_LIST.length) {
             e.preventDefault();
@@ -1903,7 +1963,7 @@
         }
 
         // New Contact (N or Ctrl+N)
-        if (e.key === 'n' || e.key === 'N') {
+        if (!e.altKey && (e.key === 'n' || e.key === 'N')) {
           e.preventDefault();
           createNewContact();
           return;
@@ -1922,7 +1982,8 @@
               nextIdx = currentIdx > 0 ? currentIdx - 1 : items.length - 1;
             }
             items[nextIdx].click();
-            items[nextIdx].scrollIntoView({ block: 'nearest' });
+            const activeItem = contactList.querySelector('.contact-item.active');
+            if (activeItem) activeItem.scrollIntoView({ block: 'nearest' });
           }
           return;
         }

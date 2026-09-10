@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KContacts
+**Target App:** KConverter
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KContacts
 - KConverter
 - KCyber
 - KDB
@@ -173,8 +172,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KColosseum
 - KColor
 - KConnect4
+- KContacts
 
 ## Test Reports
+
+- **KContacts**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
+  - ✅ Core functionality works (address book and contact manager with dynamic category pills All/Favs/Work/Personal/Family/Friends/Other, dynamic interactive hashtag filtering chips `#all-tags` and per-tag filters, live full-text search with clear button, avatar initials generator with deterministic hue gradients, full contact profile editor with name, company, title, phone, email, tags, notes, and favorite toggle, automated duplicate contact merger with tag & note consolidation, multi-format export Markdown/JSON/vCard 3.0/CSV, multi-format import parser for JSON arrays, RFC 2426 vCard address books, and CSV spreadsheets with quoted fields, localStorage persistence `kcontacts_data_v3`).
+  - 🔧 FIXED: Numeric keyboard shortcuts (keys 1–7) for switching categories checked bare `e.key` without verifying `!e.ctrlKey && !e.altKey && !e.metaKey`, hijacking browser tab switching accelerators (`Ctrl+1` through `Ctrl+7`). Added modifier key guards.
+  - 🔧 FIXED: In ArrowDown/ArrowUp keyboard navigation, calling `items[nextIdx].click()` triggered `selectContact()` which re-rendered the contact list and completely rebuilt the DOM, causing the subsequent `items[nextIdx].scrollIntoView()` call to execute on a detached DOM element. Updated navigation to scroll the newly rendered active contact element into view.
+  - 🔧 FIXED: Export modal format cards (`.export-card`) and contact list tag chips lacked `tabindex="0"`, `role="button"`, and keyboard event handlers, preventing keyboard navigation and screen reader users from selecting export formats or activating tag filters. Added accessibility attributes and Enter/Space handlers.
+  - 🔧 FIXED: In `doExport()`, the download anchor was clicked via `a.click()` without being attached to `document.body`, failing silently in Firefox and sandboxed iframe environments. Attached anchor to DOM before triggering click and cleanly removed it afterwards.
+  - 🔧 FIXED: CSV export did not strip or escape newlines in contact `notes`, causing multiline notes to break single CSV records across multiple lines and corrupting subsequent imports into line-by-line CSV parsers. Replaced newlines in notes with spaces during CSV generation.
+  - 🔧 FIXED: Quick Action phone and email buttons called `window.open('tel:...', '_self')` and `window.open('mailto:...', '_self')`, which navigated the hosting iframe window and could result in browser security errors or blank error pages (`ERR_UNKNOWN_URL_SCHEME`). Routed actions through standard temporary anchor dispatching.
+  - 🔧 FIXED: Creating a new contact while filtering by a specific category (e.g. "Work") or tag caused the new draft (defaulting to "Personal") to immediately vanish from the contact list. Now inherits the active category/tag filter and clears active search text so the draft remains visible and selected. Also added Enter key submission on the Delete confirmation modal and case-insensitive file extension checks on import.
 
 - **KConnect4**: ISSUES FOUND ⚠️ (6 issues, 6 fixed inline)
   - ✅ Core gameplay works (Classic 7x6 Connect-4, 2-Player, vs AI with 4 personalities Rookie/Aggressive/Trapper/Grandmaster Minimax, 20-Stage Campaign with obstacle hazards and dynamic 7x6 to 10x8 grids, 7-second Speed mode, special discs Bomb/Drill/Magnet and Freeze skill, live positional evaluation bar and threat radar, C4N and FEN notation viewer and custom position loader, match replay engine with step/jump/speed controls, localStorage save/load state, sound FX synthesizers and cybernetic canvas particle engine).
