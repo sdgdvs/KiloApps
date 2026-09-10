@@ -1,6 +1,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <commdlg.h>
+#include <shellapi.h>
 #include <stdio.h>
 
 #define W 960
@@ -8,19 +9,20 @@
 
 HWND hMainWnd = NULL;
 HWND hInput, hOutput, hMemory, hRegexFind, hRegexRep;
-HWND hBtnRun, hBtnLoad, hBtnSave, hBtnStep, hBtnRec, hBtnPlay, hBtnRep, hBtnHelp;
+HWND hBtnRun, hBtnLoad, hBtnSave, hBtnStep, hBtnRec, hBtnPlay, hBtnRep, hBtnHelp, hBtnClear;
 
 int vars[26] = {0};
+int varAssigned[26] = {0};
 int nodeCount = 0;
 int dpi = 96;
 #define S(x) MulDiv(x, dpi, 96)
 const char* debugPtr = NULL;
-char debugInput[4096];
-char outStr[4096];
-char memStr[4096];
+char debugInput[16384];
+char outStr[16384];
+char memStr[16384];
 
 int isRecording = 0;
-char macroBuf[4096];
+char macroBuf[8192];
 int macroLen = 0;
 WNDPROC oldEditProc;
 WNDPROC oldFindProc;
@@ -45,7 +47,13 @@ int ParseFactor(const char** p) {
     nodeCount++;
     SkipWhitespace(p);
     int val = 0;
-    if (**p == '(') {
+    if (**p == '+') {
+        (*p)++;
+        return ParseFactor(p);
+    } else if (**p == '-') {
+        (*p)++;
+        return -ParseFactor(p);
+    } else if (**p == '(') {
         (*p)++;
         val = ParseExpr(p);
         SkipWhitespace(p);
@@ -106,7 +114,7 @@ void UpdateMemoryUI() {
     wsprintfA(memStr, "AST Nodes: %d\r\n\r\n", nodeCount);
     int active = 0;
     for (int i = 0; i < 26; i++) {
-        if (vars[i] != 0) {
+        if (varAssigned[i]) {
             char t[32];
             wsprintfA(t, "%c = %d\r\n", 'A' + i, vars[i]);
             lstrcatA(memStr, t);
@@ -124,7 +132,7 @@ int StepScript(int* lastVal) {
     if (!debugPtr) {
         GetWindowTextA(hInput, debugInput, sizeof(debugInput));
         debugPtr = debugInput;
-        for (int i = 0; i < 26; i++) vars[i] = 0;
+        for (int i = 0; i < 26; i++) { vars[i] = 0; varAssigned[i] = 0; }
         outStr[0] = '\0';
         nodeCount = 0;
     }
@@ -172,6 +180,7 @@ int StepScript(int* lastVal) {
     int val = ParseExpr(&debugPtr);
     if (isAssign) {
         vars[varIdx] = val;
+        varAssigned[varIdx] = 1;
         char vname = varIdx + 'A';
         char vstr[32];
         IntToStr(val, vstr);
@@ -190,7 +199,8 @@ void RunScript() {
 }
 
 void SimpleRegexReplace() {
-    char f[256], r[256], inBuf[4096], outBuf[4096];
+    char f[256], r[256];
+    char inBuf[16384], outBuf[16384];
     GetWindowTextA(hRegexFind, f, sizeof(f));
     GetWindowTextA(hRegexRep, r, sizeof(r));
     GetWindowTextA(hInput, inBuf, sizeof(inBuf));
@@ -233,6 +243,7 @@ void ShowHelpDialog(HWND hwnd) {
         "[SYNTAX & EXPRESSIONS]\n"
         " - Variables: Single letters 'a' through 'z' (e.g. a = 10)\n"
         " - Arithmetic: +, -, *, /, % and nested parentheses ()\n"
+        " - Unary Operators: Negative (-5) and Positive (+10)\n"
         " - Console Output: print <expression>\n"
         " - Comments: Lines starting with // are ignored\n\n"
         "[TOOLBAR CONTROLS & SHORTCUTS]\n"
@@ -240,11 +251,12 @@ void ShowHelpDialog(HWND hwnd) {
         " - [F10] or [Alt+S]     : Step Line-by-Line\n"
         " - [Ctrl+S]             : Save Script File (.ksc)\n"
         " - [Ctrl+O]             : Load Script File (.ksc)\n"
+        " - [Ctrl+K]             : Clear Console & State\n"
         " - [Alt+M] / [Ctrl+M]   : Toggle Macro Recording\n"
         " - [Alt+P] / [Ctrl+P]   : Play Recorded Macro\n"
         " - [Enter in Find/Rep]  : Execute Replace\n"
         " - [F1] or [Alt+H]      : Open this Help Guide\n"
-        " - [Escape]             : Reset/Cancel\n\n"
+        " - [Drag & Drop]        : Drop .ksc file into window\n\n"
         "[MACRO ENGINE]\n"
         " Click 'Rec Macro' (or Alt+M) to record editor keystrokes.\n"
         " Click 'Play Macro' (or Alt+P) to replay automated input.";
@@ -281,6 +293,10 @@ LRESULT CALLBACK InputEditProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
         if (GetKeyState(VK_CONTROL) < 0 && (wp == 'O' || wp == 'o')) {
             SendMessage(GetParent(hwnd), WM_COMMAND, 2, 0);
+            return 0;
+        }
+        if (GetKeyState(VK_CONTROL) < 0 && (wp == 'K' || wp == 'k')) {
+            SendMessage(GetParent(hwnd), WM_COMMAND, 9, 0);
             return 0;
         }
         if ((GetKeyState(VK_MENU) < 0 || GetKeyState(VK_CONTROL) < 0) && (wp == 'M' || wp == 'm')) {
@@ -345,23 +361,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
             
             // Toolbar Buttons with clear keyboard shortcut hints
-            hBtnRec  = CreateWindowEx(0, "BUTTON", "Rec [Alt+M]", WS_CHILD | WS_VISIBLE, S(8), S(8), S(95), S(26), hwnd, (HMENU)4, NULL, NULL);
-            hBtnPlay = CreateWindowEx(0, "BUTTON", "Play [Alt+P]", WS_CHILD | WS_VISIBLE, S(108), S(8), S(95), S(26), hwnd, (HMENU)5, NULL, NULL);
-            hBtnStep = CreateWindowEx(0, "BUTTON", "Step [F10]", WS_CHILD | WS_VISIBLE, S(208), S(8), S(85), S(26), hwnd, (HMENU)6, NULL, NULL);
-            hBtnRun  = CreateWindowEx(0, "BUTTON", "Run [F5]", WS_CHILD | WS_VISIBLE, S(298), S(8), S(80), S(26), hwnd, (HMENU)1, NULL, NULL);
-            hBtnLoad = CreateWindowEx(0, "BUTTON", "Load [Ctrl+O]", WS_CHILD | WS_VISIBLE, S(383), S(8), S(95), S(26), hwnd, (HMENU)2, NULL, NULL);
-            hBtnSave = CreateWindowEx(0, "BUTTON", "Save [Ctrl+S]", WS_CHILD | WS_VISIBLE, S(483), S(8), S(95), S(26), hwnd, (HMENU)3, NULL, NULL);
-            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE, S(583), S(8), S(80), S(26), hwnd, (HMENU)8, NULL, NULL);
+            hBtnRec   = CreateWindowEx(0, "BUTTON", "Rec [Alt+M]", WS_CHILD | WS_VISIBLE, S(8), S(8), S(90), S(26), hwnd, (HMENU)4, NULL, NULL);
+            hBtnPlay  = CreateWindowEx(0, "BUTTON", "Play [Alt+P]", WS_CHILD | WS_VISIBLE, S(102), S(8), S(90), S(26), hwnd, (HMENU)5, NULL, NULL);
+            hBtnStep  = CreateWindowEx(0, "BUTTON", "Step [F10]", WS_CHILD | WS_VISIBLE, S(196), S(8), S(80), S(26), hwnd, (HMENU)6, NULL, NULL);
+            hBtnRun   = CreateWindowEx(0, "BUTTON", "Run [F5]", WS_CHILD | WS_VISIBLE, S(280), S(8), S(75), S(26), hwnd, (HMENU)1, NULL, NULL);
+            hBtnLoad  = CreateWindowEx(0, "BUTTON", "Load [Ctrl+O]", WS_CHILD | WS_VISIBLE, S(359), S(8), S(90), S(26), hwnd, (HMENU)2, NULL, NULL);
+            hBtnSave  = CreateWindowEx(0, "BUTTON", "Save [Ctrl+S]", WS_CHILD | WS_VISIBLE, S(453), S(8), S(90), S(26), hwnd, (HMENU)3, NULL, NULL);
+            hBtnClear = CreateWindowEx(0, "BUTTON", "Clear [Ctrl+K]", WS_CHILD | WS_VISIBLE, S(547), S(8), S(90), S(26), hwnd, (HMENU)9, NULL, NULL);
+            hBtnHelp  = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE, S(641), S(8), S(75), S(26), hwnd, (HMENU)8, NULL, NULL);
             
-            hRegexFind = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Find...", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, S(668), S(9), S(90), S(24), hwnd, NULL, NULL, NULL);
-            hRegexRep  = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Replace...", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, S(763), S(9), S(90), S(24), hwnd, NULL, NULL, NULL);
-            hBtnRep    = CreateWindowEx(0, "BUTTON", "Rep [Enter]", WS_CHILD | WS_VISIBLE, S(858), S(8), S(90), S(26), hwnd, (HMENU)7, NULL, NULL);
+            hRegexFind = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, S(722), S(9), S(75), S(24), hwnd, NULL, NULL, NULL);
+            hRegexRep  = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, S(801), S(9), S(75), S(24), hwnd, NULL, NULL, NULL);
+            hBtnRep    = CreateWindowEx(0, "BUTTON", "Rep [Enter]", WS_CHILD | WS_VISIBLE, S(880), S(8), S(72), S(26), hwnd, (HMENU)7, NULL, NULL);
             
-            HWND hwnds[] = {hBtnRec, hBtnPlay, hBtnStep, hBtnRun, hBtnLoad, hBtnSave, hRegexFind, hRegexRep, hBtnRep, hBtnHelp};
-            for (int i = 0; i < 10; i++) SendMessage(hwnds[i], WM_SETFONT, (WPARAM)hFont, TRUE);
+            HWND hwnds[] = {hBtnRec, hBtnPlay, hBtnStep, hBtnRun, hBtnLoad, hBtnSave, hBtnClear, hRegexFind, hRegexRep, hBtnRep, hBtnHelp};
+            for (int i = 0; i < 11; i++) SendMessage(hwnds[i], WM_SETFONT, (WPARAM)hFont, TRUE);
             
             oldFindProc = (WNDPROC)SetWindowLongPtr(hRegexFind, GWLP_WNDPROC, (LONG_PTR)FindEditProc);
             oldRepProc  = (WNDPROC)SetWindowLongPtr(hRegexRep, GWLP_WNDPROC, (LONG_PTR)RepEditProc);
+            
+            // Enable Drag-and-Drop file loading
+            DragAcceptFiles(hwnd, TRUE);
             
             // Panels
             hInput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "// Welcome to KScript!\r\n// Press F1, Alt+H, or click Help for instructions\r\na = 10\r\nb = 20\r\nprint a * b + 5\r\nprint a % 3",
@@ -383,6 +403,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Run script on startup
             RunScript();
             break;
+        }
+        case WM_DROPFILES: {
+            HDROP hDrop = (HDROP)wParam;
+            char szFile[MAX_PATH] = {0};
+            if (DragQueryFileA(hDrop, 0, szFile, sizeof(szFile))) {
+                HANDLE hFile = CreateFileA(szFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (hFile != INVALID_HANDLE_VALUE) {
+                    DWORD dwSize = GetFileSize(hFile, NULL);
+                    if (dwSize > 0 && dwSize < 1024 * 1024) {
+                        char* buf = (char*)VirtualAlloc(NULL, dwSize + 1, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+                        if (buf) {
+                            DWORD dwRead;
+                            if (ReadFile(hFile, buf, dwSize, &dwRead, NULL)) {
+                                buf[dwRead] = '\0';
+                                SetWindowTextA(hInput, buf);
+                                RunScript();
+                            }
+                            VirtualFree(buf, 0, MEM_RELEASE);
+                        }
+                    }
+                    CloseHandle(hFile);
+                }
+            }
+            DragFinish(hDrop);
+            return 0;
         }
         case WM_COMMAND: {
             int wmId = LOWORD(wParam);
@@ -407,8 +452,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 SetFocus(hInput);
                 for (int i = 0; i < macroLen; i++) {
-                    SendMessage(hInput, WM_CHAR, macroBuf[i], 0);
-                    Sleep(15);
+                    SendMessage(hInput, WM_CHAR, (WPARAM)(unsigned char)macroBuf[i], 0);
                 }
             }
             else if (wmId == 7) {
@@ -417,8 +461,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (wmId == 8) {
                 ShowHelpDialog(hwnd);
             }
+            else if (wmId == 9) {
+                debugPtr = NULL;
+                for (int i = 0; i < 26; i++) { vars[i] = 0; varAssigned[i] = 0; }
+                outStr[0] = '\0';
+                nodeCount = 0;
+                UpdateMemoryUI();
+            }
             else if (wmId == 2) {
-                char szFile[260] = {0};
+                char szFile[MAX_PATH] = {0};
                 OPENFILENAMEA ofn = {0};
                 ofn.lStructSize = sizeof(ofn);
                 ofn.hwndOwner = hwnd;
@@ -431,22 +482,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     HANDLE hFile = CreateFileA(szFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
                     if (hFile != INVALID_HANDLE_VALUE) {
                         DWORD dwSize = GetFileSize(hFile, NULL);
-                        if (dwSize > 0) {
+                        if (dwSize > 0 && dwSize < 1024 * 1024) {
                             char* buf = (char*)VirtualAlloc(NULL, dwSize + 1, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-                            DWORD dwRead;
-                            if (ReadFile(hFile, buf, dwSize, &dwRead, NULL)) {
-                                buf[dwRead] = '\0';
-                                SetWindowTextA(hInput, buf);
-                                RunScript();
+                            if (buf) {
+                                DWORD dwRead;
+                                if (ReadFile(hFile, buf, dwSize, &dwRead, NULL)) {
+                                    buf[dwRead] = '\0';
+                                    SetWindowTextA(hInput, buf);
+                                    RunScript();
+                                }
+                                VirtualFree(buf, 0, MEM_RELEASE);
                             }
-                            VirtualFree(buf, 0, MEM_RELEASE);
                         }
                         CloseHandle(hFile);
                     }
                 }
             }
             else if (wmId == 3) {
-                char szFile[260] = "script.ksc";
+                char szFile[MAX_PATH] = "script.ksc";
                 OPENFILENAMEA ofn = {0};
                 ofn.lStructSize = sizeof(ofn);
                 ofn.hwndOwner = hwnd;
@@ -462,10 +515,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int len = GetWindowTextLengthA(hInput);
                         if (len > 0) {
                             char* buf = (char*)VirtualAlloc(NULL, len + 1, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-                            GetWindowTextA(hInput, buf, len + 1);
-                            DWORD dwWritten;
-                            WriteFile(hFile, buf, len, &dwWritten, NULL);
-                            VirtualFree(buf, 0, MEM_RELEASE);
+                            if (buf) {
+                                GetWindowTextA(hInput, buf, len + 1);
+                                DWORD dwWritten;
+                                WriteFile(hFile, buf, len, &dwWritten, NULL);
+                                VirtualFree(buf, 0, MEM_RELEASE);
+                            }
                         }
                         CloseHandle(hFile);
                     }
@@ -506,13 +561,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 StepScript(&lv);
                 return 0;
             }
+            if (GetKeyState(VK_CONTROL) < 0 && (wParam == 'K' || wParam == 'k')) {
+                SendMessage(hwnd, WM_COMMAND, 9, 0);
+                return 0;
+            }
             break;
         }
         case WM_CTLCOLOREDIT:
         case WM_CTLCOLORSTATIC: {
             HDC hdc = (HDC)wParam;
             HWND hCtl = (HWND)lParam;
-            SetBkMode(hdc, TRANSPARENT);
+            SetBkMode(hdc, OPAQUE);
+            SetBkColor(hdc, RGB(20, 24, 38));
             if (hCtl == hMemory) SetTextColor(hdc, RGB(56, 189, 248));
             else if (hCtl == hOutput) SetTextColor(hdc, RGB(196, 181, 253));
             else SetTextColor(hdc, RGB(241, 245, 249));
@@ -538,6 +598,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hInput, S(8), topY, panelW, bottomH, TRUE);
             MoveWindow(hOutput, S(8) + panelW + panelGap, topY, panelW, bottomH, TRUE);
             MoveWindow(hMemory, S(8) + (panelW + panelGap) * 2, topY, nw - S(8) - (S(8) + (panelW + panelGap) * 2), bottomH, TRUE);
+
+            int repW = S(75);
+            int repInputW = S(75);
+            int rx3 = nw - S(8) - repW;
+            int rx2 = rx3 - S(6) - repInputW;
+            int rx1 = rx2 - S(6) - repInputW;
+            if (rx1 > S(640)) {
+                MoveWindow(hRegexFind, rx1, S(9), repInputW, S(24), TRUE);
+                MoveWindow(hRegexRep, rx2, S(9), repInputW, S(24), TRUE);
+                MoveWindow(hBtnRep, rx3, S(8), repW, S(26), TRUE);
+            }
             break;
         }
         case WM_DESTROY:

@@ -434,41 +434,41 @@
             <span id="statusBadge" class="status-badge">READY</span>
         </div>
         <div class="toolbar">
-            <button id="btnRec" style="background:#f43f5e" title="Record Keystrokes (Alt+M)">
+            <button id="btnRec" type="button" style="background:#f43f5e" title="Record Keystrokes (Alt+M)" aria-label="Record Macro (Alt+M)">
                 <span>⏺ Rec</span> <span class="btn-key">Alt+M</span>
             </button>
-            <button id="btnPlay" style="background:#10b981" title="Play Macro (Alt+P)">
+            <button id="btnPlay" type="button" style="background:#10b981" title="Play Macro (Alt+P)" aria-label="Play Macro (Alt+P)">
                 <span>▶ Play</span> <span class="btn-key">Alt+P</span>
             </button>
-            <button id="btnStep" style="background:#f59e0b" title="Step line-by-line (F10)">
+            <button id="btnStep" type="button" style="background:#f59e0b" title="Step line-by-line (F10)" aria-label="Step line by line (F10)">
                 <span>⏭ Step</span> <span class="btn-key">F10</span>
             </button>
-            <button id="btnRun" title="Execute Script (F5 / Ctrl+Enter)">
+            <button id="btnRun" type="button" title="Execute Script (F5 / Ctrl+Enter)" aria-label="Run Script (F5)">
                 <span>⚡ Run</span> <span class="btn-key">F5</span>
             </button>
-            <button id="btnLoad" style="background:#475569" title="Load Script File (Ctrl+O)">
+            <button id="btnLoad" type="button" style="background:#475569" title="Load Script File (Ctrl+O)" aria-label="Load Script File (Ctrl+O)">
                 <span>📂 Load</span> <span class="btn-key">Ctrl+O</span>
             </button>
-            <button id="btnSave" style="background:#475569" title="Save Script File (Ctrl+S)">
+            <button id="btnSave" type="button" style="background:#475569" title="Save Script File (Ctrl+S)" aria-label="Save Script File (Ctrl+S)">
                 <span>💾 Save</span> <span class="btn-key">Ctrl+S</span>
             </button>
-            <button id="btnClear" style="background:#64748b" title="Clear Output (Ctrl+K)">
+            <button id="btnClear" type="button" style="background:#64748b" title="Clear Output (Ctrl+K)" aria-label="Clear Console (Ctrl+K)">
                 <span>🧹 Clear</span> <span class="btn-key">Ctrl+K</span>
             </button>
-            <button id="btnHelp" style="background:#3b82f6" title="Help & Reference (F1)">
+            <button id="btnHelp" type="button" style="background:#3b82f6" title="Help & Reference (F1)" aria-label="Help and Shortcuts (F1)">
                 <span>❓ Help</span> <span class="btn-key">F1</span>
             </button>
         </div>
     </div>
 
     <!-- Presets bar -->
-    <div class="presets-bar">
+    <div class="presets-bar" role="region" aria-label="Script Presets">
         <span>Presets:</span>
-        <button class="preset-chip" onclick="loadPreset('basic')">📐 Basic Math</button>
-        <button class="preset-chip" onclick="loadPreset('vars')">🔄 Variables</button>
-        <button class="preset-chip" onclick="loadPreset('accum')">📈 Accumulator</button>
-        <button class="preset-chip" onclick="loadPreset('algebra')">🧪 Algebra Formula</button>
-        <button class="preset-chip" onclick="loadPreset('modulo')">⚙️ Modulo Clock</button>
+        <button type="button" class="preset-chip" onclick="loadPreset('basic')" aria-label="Load Basic Math preset">📐 Basic Math</button>
+        <button type="button" class="preset-chip" onclick="loadPreset('vars')" aria-label="Load Variables preset">🔄 Variables</button>
+        <button type="button" class="preset-chip" onclick="loadPreset('accum')" aria-label="Load Accumulator preset">📈 Accumulator</button>
+        <button type="button" class="preset-chip" onclick="loadPreset('algebra')" aria-label="Load Algebra Formula preset">🧪 Algebra Formula</button>
+        <button type="button" class="preset-chip" onclick="loadPreset('modulo')" aria-label="Load Modulo Clock preset">⚙️ Modulo Clock</button>
     </div>
     
     <div class="panels">
@@ -477,12 +477,12 @@
             <div class="panel-header">
                 <span>Script Editor</span>
                 <div class="find-replace">
-                    <input id="regexFind" placeholder="/find/" title="Regex Find Pattern">
-                    <input id="regexRep" placeholder="replace" title="Replace String">
-                    <button id="btnRep" style="padding:3px 8px; font-size:11px;" title="Replace All Matches">Rep All</button>
+                    <input id="regexFind" placeholder="/find/" title="Regex Find Pattern" aria-label="Regex search pattern">
+                    <input id="regexRep" placeholder="replace" title="Replace String" aria-label="Replace string">
+                    <button id="btnRep" type="button" style="padding:3px 8px; font-size:11px;" title="Replace All Matches (Enter)" aria-label="Replace all occurrences">Rep All</button>
                 </div>
             </div>
-            <textarea id="exprInput" spellcheck="false" placeholder="// Write script here...
+            <textarea id="exprInput" spellcheck="false" aria-label="Script Editor" placeholder="// Write script here...
 a = 10
 b = 20
 print a * b + 5"></textarea>
@@ -493,7 +493,7 @@ print a * b + 5"></textarea>
             <div class="panel-header">
                 <span>Output Console</span>
             </div>
-            <div id="outputArea" class="output"></div>
+            <div id="outputArea" class="output" role="region" aria-label="Output Console" aria-live="polite"></div>
         </div>
 
         <!-- Memory Inspector Panel -->
@@ -501,17 +501,17 @@ print a * b + 5"></textarea>
             <div class="panel-header">
                 <span>Memory Inspector</span>
             </div>
-            <div id="memoryArea" class="output" style="color:var(--cyan);"></div>
+            <div id="memoryArea" class="output" role="region" aria-label="Memory Inspector" aria-live="polite" style="color:var(--cyan);"></div>
         </div>
     </div>
 </div>
 
 <!-- Help Modal -->
-<div id="helpModal" class="modal-overlay">
+<div id="helpModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal">
         <div class="modal-header">
-            <h2>⚡ KScript Guide & Shortcuts</h2>
-            <button id="modalClose" class="modal-close" title="Close [Esc]">&times;</button>
+            <h2 id="modalTitle">⚡ KScript Guide & Shortcuts</h2>
+            <button id="modalClose" type="button" class="modal-close" title="Close [Esc]" aria-label="Close Help">&times;</button>
         </div>
         <div style="font-size: 13px; line-height: 1.6; color: #e2e8f0;">
             <p><strong>KScript</strong> is a lightweight, high-performance scripting language and expression evaluator.</p>
@@ -574,8 +574,8 @@ print a * b + 5"></textarea>
     const PRESETS = {
         basic: "// Basic Math Calculations\na = 15\nb = 4\nprint a + b\nprint a - b\nprint a * b\nprint a / b\nprint a % b",
         vars: "// Variables & Swapping\na = 100\nb = 200\nt = a\na = b\nb = t\nprint a\nprint b",
-        accum: "// Accumulator Sum & Average\ns = 0\ns = s + 10\ns = s + 25\ns = s + 45\nprint s\navg = s / 3\nprint avg",
-        algebra: "// Algebraic Expression\nx = 12\ny = 5\nz = (x * x + y * y) / (x - y)\nprint z\nrem = (x * 3) % y\nprint rem",
+        accum: "// Accumulator Sum & Average\ns = 0\ns = s + 10\ns = s + 25\ns = s + 45\nprint s\nm = s / 3\nprint m",
+        algebra: "// Algebraic Expression\nx = 12\ny = 5\nz = (x * x + y * y) / (x - y)\nprint z\nr = (x * 3) % y\nprint r",
         modulo: "// Clock Arithmetic (Modulo 12)\nh = 9\nh = (h + 5) % 12\nprint h\nh = (h + 10) % 12\nprint h"
     };
 
@@ -637,6 +637,15 @@ print a * b + 5"></textarea>
         }
     });
 
+    // Reset stepper on code modification
+    exprInput.addEventListener('input', () => {
+        if (debugGen) {
+            debugGen = null;
+            statusBadge.textContent = "READY";
+            statusBadge.className = "status-badge";
+        }
+    });
+
     // Global Hotkeys
     document.addEventListener('keydown', (e) => {
         // Escape closes modals and toasts
@@ -651,57 +660,62 @@ print a * b + 5"></textarea>
         }
 
         // F1 or Alt+H for Help
-        if (e.key === 'F1' || (e.altKey && (e.key === 'h' || e.key === 'H'))) {
+        if (e.key === 'F1' || (e.altKey && !e.ctrlKey && (e.key === 'h' || e.key === 'H'))) {
             e.preventDefault();
             if (helpModal.classList.contains('active')) closeHelp();
             else openHelp();
             return;
         }
 
+        // When modal is active, suppress background actions
+        if (helpModal.classList.contains('active')) {
+            return;
+        }
+
         // F5 or Ctrl+Enter for Run
-        if (e.key === 'F5' || (e.ctrlKey && e.key === 'Enter')) {
+        if (e.key === 'F5' || (e.ctrlKey && !e.altKey && e.key === 'Enter')) {
             e.preventDefault();
             btnRun.click();
             return;
         }
 
         // F10 or Alt+S for Step
-        if (e.key === 'F10' || (e.altKey && (e.key === 's' || e.key === 'S'))) {
+        if (e.key === 'F10' || (e.altKey && !e.ctrlKey && (e.key === 's' || e.key === 'S'))) {
             e.preventDefault();
             btnStep.click();
             return;
         }
 
         // Ctrl+S for Save
-        if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+        if (e.ctrlKey && !e.altKey && (e.key === 's' || e.key === 'S')) {
             e.preventDefault();
             btnSave.click();
             return;
         }
 
         // Ctrl+O for Load
-        if (e.ctrlKey && (e.key === 'o' || e.key === 'O')) {
+        if (e.ctrlKey && !e.altKey && (e.key === 'o' || e.key === 'O')) {
             e.preventDefault();
             btnLoad.click();
             return;
         }
 
         // Ctrl+K for Clear
-        if (e.ctrlKey && (e.key === 'k' || e.key === 'K')) {
+        if (e.ctrlKey && !e.altKey && (e.key === 'k' || e.key === 'K')) {
             e.preventDefault();
             btnClear.click();
             return;
         }
 
         // Alt+M for Rec Macro
-        if (e.altKey && (e.key === 'm' || e.key === 'M')) {
+        if (e.altKey && !e.ctrlKey && (e.key === 'm' || e.key === 'M')) {
             e.preventDefault();
             btnRec.click();
             return;
         }
 
         // Alt+P for Play Macro
-        if (e.altKey && (e.key === 'p' || e.key === 'P')) {
+        if (e.altKey && !e.ctrlKey && (e.key === 'p' || e.key === 'P')) {
             e.preventDefault();
             btnPlay.click();
             return;
@@ -711,6 +725,7 @@ print a * b + 5"></textarea>
     // Generator-based Parser for Execution and Step-Through Debugging
     function* runParserGen(str) {
         let vars = new Array(26).fill(0);
+        let assigned = new Array(26).fill(false);
         let outStr = "";
         let nodeCount = 0;
         
@@ -735,7 +750,13 @@ print a * b + 5"></textarea>
             skipSpace();
             let val = 0;
             let c = peek();
-            if (c === '(') {
+            if (c === '+') {
+                advance();
+                return parseFactor();
+            } else if (c === '-') {
+                advance();
+                return -parseFactor();
+            } else if (c === '(') {
                 advance(); 
                 val = parseExpr(); 
                 skipSpace();
@@ -748,7 +769,7 @@ print a * b + 5"></textarea>
                 let start = idx;
                 while (peek() >= '0' && peek() <= '9') advance();
                 if (idx > start) val = parseInt(str.substring(start, idx), 10);
-                else if (idx < str.length && peek() !== ';' && peek() !== '\n') advance();
+                else if (idx < str.length && peek() !== ';' && peek() !== '\n' && peek() !== '\r') advance();
             }
             skipSpace(); 
             return val;
@@ -795,7 +816,7 @@ print a * b + 5"></textarea>
                     let val = parseExpr();
                     outStr += `Print: ${val}\n`;
                     lastVal = val;
-                    yield {vars, outStr, nodeCount, lastVal};
+                    yield {vars, assigned, outStr, nodeCount, lastVal};
                     continue;
                 }
             }
@@ -819,14 +840,15 @@ print a * b + 5"></textarea>
             let val = parseExpr();
             if (isAssign) {
                 vars[varIdx] = val;
+                assigned[varIdx] = true;
                 outStr += `${String.fromCharCode(varIdx + 65)} = ${val}\n`;
             }
             lastVal = val;
-            yield {vars, outStr, nodeCount, lastVal};
+            yield {vars, assigned, outStr, nodeCount, lastVal};
         }
         
         outStr += `\nReturn: ${lastVal}`;
-        return {vars, outStr, nodeCount, lastVal};
+        return {vars, assigned, outStr, nodeCount, lastVal};
     }
 
     function updateUI(state) {
@@ -835,7 +857,8 @@ print a * b + 5"></textarea>
         let mem = `AST Nodes: ${state.nodeCount}\n\n`;
         let activeCount = 0;
         for (let i = 0; i < 26; i++) {
-            if (state.vars[i] !== 0) {
+            const hasVal = state.assigned ? state.assigned[i] : (state.vars[i] !== 0);
+            if (hasVal) {
                 mem += `${String.fromCharCode(65 + i)} = ${state.vars[i]}\n`;
                 activeCount++;
             }
@@ -906,7 +929,7 @@ print a * b + 5"></textarea>
         showToast("Console cleared.", "info", 1500);
     };
 
-    // Regex Replace
+    // Regex Replace with /pattern/flags and raw pattern support
     btnRep.onclick = () => {
         try {
             let pat = document.getElementById('regexFind').value;
@@ -915,7 +938,14 @@ print a * b + 5"></textarea>
                 showToast("Please enter a search pattern.", "warning");
                 return;
             }
-            let regex = new RegExp(pat, 'g');
+            let regex;
+            const matchSlash = pat.match(/^\/(.+)\/([gimsuy]*)$/);
+            if (matchSlash) {
+                const flags = matchSlash[2].includes('g') ? matchSlash[2] : matchSlash[2] + 'g';
+                regex = new RegExp(matchSlash[1], flags);
+            } else {
+                regex = new RegExp(pat, 'g');
+            }
             const before = exprInput.value;
             exprInput.value = exprInput.value.replace(regex, rep);
             if (before !== exprInput.value) {
@@ -928,12 +958,25 @@ print a * b + 5"></textarea>
         }
     };
 
+    document.getElementById('regexFind').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            btnRep.click();
+        }
+    });
+    document.getElementById('regexRep').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            btnRep.click();
+        }
+    });
+
     // Macro Engine
     let isRecording = false;
     let macroKeys = [];
     
     exprInput.addEventListener('keydown', (e) => {
-        if (isRecording) {
+        if (isRecording && !e.ctrlKey && !e.altKey && !e.metaKey) {
             if (e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace') {
                 macroKeys.push(e.key);
             }
@@ -967,14 +1010,19 @@ print a * b + 5"></textarea>
         exprInput.focus();
         showToast("Replaying macro...", "info", 1500);
         for (let key of macroKeys) {
+            const start = exprInput.selectionStart;
+            const end = exprInput.selectionEnd;
             if (key === 'Enter') {
-                exprInput.value += '\n';
+                exprInput.setRangeText('\n', start, end, 'end');
             } else if (key === 'Backspace') {
-                exprInput.value = exprInput.value.slice(0, -1);
+                if (start > 0 || start !== end) {
+                    const delStart = (start === end) ? start - 1 : start;
+                    exprInput.setRangeText('', delStart, end, 'end');
+                }
             } else {
-                exprInput.value += key;
+                exprInput.setRangeText(key, start, end, 'end');
             }
-            await new Promise(r => setTimeout(r, 25));
+            await new Promise(r => setTimeout(r, 20));
         }
         showToast("Macro replay finished.", "success", 2000);
     };
@@ -987,10 +1035,13 @@ print a * b + 5"></textarea>
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = e => { 
-                exprInput.value = e.target.result;
+            reader.onload = ev => { 
+                exprInput.value = ev.target.result;
                 showToast(`Loaded "${file.name}"`, "success");
                 btnRun.click();
+            };
+            reader.onerror = () => {
+                showToast("Failed to read selected file.", "error");
             };
             reader.readAsText(file);
         };
@@ -1003,10 +1054,34 @@ print a * b + 5"></textarea>
         const a = document.createElement('a');
         a.href = url;
         a.download = 'script.ksc';
+        document.body.appendChild(a);
         a.click();
-        URL.revokeObjectURL(url);
+        setTimeout(() => {
+            if (a.parentNode) a.parentNode.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 250);
         showToast("Saved as script.ksc", "success");
     };
+
+    // Drag and drop script files onto the window
+    window.addEventListener('dragover', (e) => {
+        e.preventDefault();
+    });
+    window.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+            exprInput.value = ev.target.result;
+            showToast(`Loaded "${file.name}"`, "success");
+            btnRun.click();
+        };
+        reader.onerror = () => {
+            showToast("Failed to read dropped file.", "error");
+        };
+        reader.readAsText(file);
+    });
 
     // Startup welcome toast
     window.addEventListener('load', () => {
