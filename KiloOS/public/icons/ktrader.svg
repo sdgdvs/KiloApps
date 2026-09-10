@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="tradebg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0a0e1a"/>
+      <stop offset="100%" stop-color="#141c30"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#tradebg)"/>
+  <circle cx="10" cy="12" r="1" fill="#fff"/>
+  <circle cx="54" cy="10" r="1.2" fill="#fff"/>
+  <circle cx="56" cy="52" r="1" fill="#80d8ff"/>
+  <ellipse cx="32" cy="32" rx="26" ry="14" fill="none" stroke="#ffc107" stroke-width="2" stroke-dasharray="4,2" transform="rotate(-20 32 32)"/>
+  <rect x="18" y="28" width="28" height="8" rx="2" fill="#78909c"/>
+  <polygon points="44,26 56,31 56,33 44,38" fill="#cfd8dc"/>
+  <polygon points="47,28 53,31 53,33 47,36" fill="#ffb300"/>
+  <rect x="22" y="20" width="8" height="8" rx="1" fill="#ff6d00" stroke="#ffd180" stroke-width="1"/>
+  <rect x="32" y="20" width="8" height="8" rx="1" fill="#00b0ff" stroke="#80d8ff" stroke-width="1"/>
+  <rect x="26" y="36" width="10" height="8" rx="1" fill="#ffd600" stroke="#fff9c4" stroke-width="1"/>
+  <rect x="14" y="26" width="6" height="4" fill="#37474f"/>
+  <rect x="14" y="34" width="6" height="4" fill="#37474f"/>
+  <polygon points="14,27 6,28 14,29" fill="#00e5ff"/>
+  <polygon points="14,35 6,36 14,37" fill="#00e5ff"/>
+</svg>

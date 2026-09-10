@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="arcane" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a0933"/>
+      <stop offset="100%" stop-color="#311b92"/>
+    </linearGradient>
+    <linearGradient id="hat" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7b1fa2"/>
+      <stop offset="100%" stop-color="#4a148c"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#arcane)"/>
+  <path d="M18 16 Q 24 10 28 8 Q 30 14 36 28 L 46 44 L 14 44 Z" fill="url(#hat)"/>
+  <ellipse cx="30" cy="45" rx="22" ry="6" fill="#311b92" stroke="#ab47bc" stroke-width="1.5"/>
+  <path d="M16 42 Q 30 38 44 42" stroke="#fbc02d" stroke-width="3" fill="none"/>
+  <polygon points="30,37 32,41 36,41 33,43 34,47 30,44 26,47 27,43 24,41 28,41" fill="#fff176"/>
+  <line x1="54" y1="54" x2="44" y2="44" stroke="#8d6e63" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="43" cy="43" r="6" fill="#00e5ff" opacity="0.4"/>
+  <circle cx="43" cy="43" r="3.5" fill="#e0f7fa"/>
+  <polygon points="43,33 44,37 48,38 44,39 43,43 42,39 38,38 42,37" fill="#00e5ff"/>
+  <circle cx="50" cy="30" r="1.5" fill="#e040fb"/>
+  <circle cx="16" cy="22" r="1.5" fill="#fdd835"/>
+  <circle cx="12" cy="34" r="1.2" fill="#00e5ff"/>
+</svg>

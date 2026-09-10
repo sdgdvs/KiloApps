@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bgdrag" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#261818"/>
+      <stop offset="100%" stop-color="#110d0d"/>
+    </linearGradient>
+    <linearGradient id="fire" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="30%" stop-color="#ffd600"/>
+      <stop offset="70%" stop-color="#ff6d00"/>
+      <stop offset="100%" stop-color="#dd2c00" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bgdrag)"/>
+  <path d="M8 56 Q 16 40 18 32 L 26 22 L 36 24 L 40 32 L 34 38 L 24 38 Q 20 50 16 56 Z" fill="#b71c1c"/>
+  <path d="M18 32 L 30 20 L 36 24 L 26 34 Z" fill="#d32f2f"/>
+  <path d="M22 24 Q 16 14 10 10 Q 14 18 20 25 Z" fill="#ffd700" stroke="#ff8f00" stroke-width="0.5"/>
+  <path d="M26 23 Q 22 15 16 12 Q 20 18 24 24 Z" fill="#ffb300"/>
+  <polygon points="26,27 30,26 28,29" fill="#ffd600"/>
+  <circle cx="28" cy="27" r="0.8" fill="#000"/>
+  <polygon points="34,35 32,38 35,38" fill="#ffffff"/>
+  <polygon points="38,33 36,36 39,36" fill="#ffffff"/>
+  <path d="M38 34 Q 48 24 60 22 Q 52 34 62 38 Q 48 42 38 36 Z" fill="url(#fire)"/>
+  <path d="M38 34 Q 46 28 54 27 Q 48 34 55 36 Q 44 38 38 35 Z" fill="#fff9c4"/>
+</svg>
