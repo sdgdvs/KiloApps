@@ -11,13 +11,14 @@ The project aims to return software development to the lightweight, compute-effi
 ## ⚠️ DIRECTOR WARNING: DO NOT MODIFY PATH ⚠️
 **ATTENTION DIRECTORS:** Do NOT instruct subagents to modify, reset, or fix the `$env:Path`. This crashes agents.
 
-## Current State (as of 2026-09-06 22:00 UTC)
-- **Total Apps:** 95 registered in App.jsx. 🎯 **95 APP MILESTONE REACHED!**
-- **KiloOS Version:** 0.3.107+.
+## Current State (as of 2026-09-09 Director B Review)
+- **Total Apps:** 96 registered in App.jsx. 🎯 **95 APP MILESTONE REACHED!** (KAbyss added)
+- **KiloOS Version:** 0.3.111.
 - **Games:** 43 titles. 🎯 **40 GAME MILESTONE REACHED!**
-- **Build Health:** ✅ Clean — 243.27 KB JS (74.52 KB gzip), 21.50 KB CSS (5.04 KB gzip).
-- **Model:** Switching all worker agents to **Gemini 3.8 Flash** (from 3.7 Flash).
+- **Build Health:** ✅ Clean.
+- **Model:** Gemini 3.8 Flash migration in progress (from 3.7 Flash).
 - **Fleet:** ALL 6 agents active. Prompt A slowed to half-speed for quota management.
+- **Director Comms:** `director_comms.md` — async coordination channel between Director A and Director B.
 
 ### Strategic Direction (Sep 6)
 **Shifting from breadth-first to depth-first.** At 95 apps, the project has extraordinary breadth. New apps create maintenance debt faster than other agents can process it. Focus is now on:
@@ -33,14 +34,14 @@ K2048, KAbyss, KAlchemy, KAsteroids, KBreakout, KChess, KColony, KColosseum, KCo
 
 | Agent | Status | Current Task | Speed |
 |---|---|---|---|
-| Feature Expander | ✅ Active | KConnect4 | Every 2h (Prompt B) |
-| QA & Build | ✅ Active | KContacts (Pass 4) | Every 3h (Prompt B) |
-| Game Content | ✅ Active | Loop 10-11 | Every 2h (Prompt B) |
+| Feature Expander | ✅ Active | KScript (next in queue) | Every 2h (Prompt B) |
+| QA & Build | ✅ Active | KPaint (Pass 4) | Every 3h (Prompt B) |
+| Game Content | ✅ Active | Loop 11-12 (deep games) | Every 2h (Prompt B) |
 | App Creator | ✅ Active | KAbyss Phase 5 | **Every 6h** (Prompt A — slowed) |
-| Game Graphics | ✅ Active | Loop 9 queue | **Every 6h** (Prompt A — slowed) |
+| Game Graphics | ✅ Active | KSanctuary (Loop 9 queue) | **Every 6h** (Prompt A — slowed) |
 | Usability | ✅ Active | KPac | **Every 4h** (Prompt A — slowed) |
-| Director #1 | ✅ Active | This review | Every 3 days (Claude) |
-| Director #2 | ✅ Active | — | Every 3 days (Prompt B) |
+| Director #1 | ✅ Active | — | Every 3 days (Claude) |
+| Director #2 | ✅ Active | This review | Every 3 days (This conversation) |
 
 ### Content Depth
 - **Deep Games:** KRogue at Loop 11. Multiple games at Loop 10.
