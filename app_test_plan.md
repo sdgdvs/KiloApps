@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KConverter
+**Target App:** KCyber
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KConverter
 - KCyber
 - KDB
 - KDarts
@@ -173,8 +172,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KColor
 - KConnect4
 - KContacts
+- KConverter
 
 ## Test Reports
+
+- **KConverter**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
+  - ✅ Core functionality works (multi-category universal unit converter supporting 9 physical dimensions Length/Weight/Temperature/Data/Speed/Area/Volume/Time/Pressure across 64 built-in units, precision decimal and scientific notation formatting, Single Convert mode with live bi-directional evaluation and equation breakdown, Batch Mode converting across all units in active category simultaneously with live search filter, Smart Parser evaluating natural language and engineering expressions with dimensions check, pinned Favorites system with 1-click loading, Custom Units engine with multiplier factors, audit trail History Log with CSV and JSON export, full keyboard shortcuts suite and reference modal).
+  - 🔧 FIXED: In `exportHistoryCSV()` and `exportHistoryJSON()`, the download anchor `a` was clicked via `a.click()` without being attached to `document.body`, failing silently in Firefox and sandboxed iframe environments, and `URL.revokeObjectURL(url)` was invoked synchronously on the next line before the browser could process the download. Attached anchor to DOM, added deferred URL revocation, and escaped double quotes `"` in CSV records as `""`.
+  - 🔧 FIXED: In `populateDropdowns()`, existing dropdown selections (`unitFrom`, `unitTo`, `batchUnitFrom`) were unconditionally reset to indices 0 and 1 every time custom units were added or deleted, wiping out user selections. Cached previous selections and restored them when still valid.
+  - 🔧 FIXED: `convert()` and `parseExpressInput()` invoked `logHistory()` unconditionally during `window.onload`, polluting the history log with phantom conversion entries every time the app was opened or refreshed. Added `isInitialLoad` guard to prevent startup history spam and added check for empty history before clearing in `clearHistory()`.
+  - 🔧 FIXED: Global `keydown` handler checked `e.key.toLowerCase() === 'h'` without verifying `!e.ctrlKey && !e.altKey && !e.metaKey`, hijacking the browser's native History shortcut (`Ctrl+H`), and keys 1–6 switched app views in the background while the Help Modal was open. Added modifier guards and suppressed 1–6 when `helpModal` is active.
+  - 🔧 FIXED: Navigation tabs (`.nav-tab`) lacked `tabindex="0"` and keyboard Enter/Space activation, the Smart Parser (`#expressInput`) and batch input (`#batchInputVal`) lacked Enter key handlers despite the Help guide advertising `Enter Evaluate / Calculate`, and pressing Enter while focused on a favorite card's Delete button (`✕`) triggered `card.onkeydown` and unexpectedly loaded the favorite instead of deleting it. Added tabindex, Enter/Space activation, and guarded card keydown.
+  - 🔧 FIXED: `switchView('custom')` failed to invoke `renderCustomUnitsTable()`, `addCustomUnit` omitted `convert()` and `renderBatch()`, and `deleteCustomUnit` omitted `renderBatch()`. Added custom view refresh and synchronized calculation updates on custom unit changes.
+  - 🔧 FIXED: Smart Parser failed on standard English unit names (e.g. `yards`, `centimeters`, `millimeters`, `foot`, `ton`, `milligram`, `gigabyte`, `quarts`, `milliliters`, `hectares`, `pascals`) and leading verbs (`convert`, `calculate`). Expanded `expressAliasTable` with standard English names, supported command prefixes, added unresolved unit feedback, fixed negative zero formatting in `formatNumber`, and updated `swapUnits()` to swap the output value into the input value for reversible unit conversions.
 
 - **KContacts**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
   - ✅ Core functionality works (address book and contact manager with dynamic category pills All/Favs/Work/Personal/Family/Friends/Other, dynamic interactive hashtag filtering chips `#all-tags` and per-tag filters, live full-text search with clear button, avatar initials generator with deterministic hue gradients, full contact profile editor with name, company, title, phone, email, tags, notes, and favorite toggle, automated duplicate contact merger with tag & note consolidation, multi-format export Markdown/JSON/vCard 3.0/CSV, multi-format import parser for JSON arrays, RFC 2426 vCard address books, and CSV spreadsheets with quoted fields, localStorage persistence `kcontacts_data_v3`).

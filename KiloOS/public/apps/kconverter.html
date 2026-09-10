@@ -552,12 +552,12 @@
 
     <!-- Top Navigation Tabs -->
     <nav class="nav-tabs" role="tablist">
-      <div class="nav-tab active" role="tab" id="tab-single" onclick="switchView('single')">Single Convert <span class="badge">1</span></div>
-      <div class="nav-tab" role="tab" id="tab-batch" onclick="switchView('batch')">Batch Mode <span class="badge">2</span></div>
-      <div class="nav-tab" role="tab" id="tab-express" onclick="switchView('express')">Smart Parser ⚡ <span class="badge">3</span></div>
-      <div class="nav-tab" role="tab" id="tab-fav" onclick="switchView('fav')">Favorites ⭐ <span class="badge">4</span></div>
-      <div class="nav-tab" role="tab" id="tab-custom" onclick="switchView('custom')">Custom Units 🛠️ <span class="badge">5</span></div>
-      <div class="nav-tab" role="tab" id="tab-history" onclick="switchView('history')">History Log 📜 <span class="badge">6</span></div>
+      <div class="nav-tab active" role="tab" tabindex="0" id="tab-single" onclick="switchView('single')">Single Convert <span class="badge">1</span></div>
+      <div class="nav-tab" role="tab" tabindex="0" id="tab-batch" onclick="switchView('batch')">Batch Mode <span class="badge">2</span></div>
+      <div class="nav-tab" role="tab" tabindex="0" id="tab-express" onclick="switchView('express')">Smart Parser ⚡ <span class="badge">3</span></div>
+      <div class="nav-tab" role="tab" tabindex="0" id="tab-fav" onclick="switchView('fav')">Favorites ⭐ <span class="badge">4</span></div>
+      <div class="nav-tab" role="tab" tabindex="0" id="tab-custom" onclick="switchView('custom')">Custom Units 🛠️ <span class="badge">5</span></div>
+      <div class="nav-tab" role="tab" tabindex="0" id="tab-history" onclick="switchView('history')">History Log 📜 <span class="badge">6</span></div>
     </nav>
 
     <!-- Main Content Panel -->
@@ -882,17 +882,26 @@
       { token: 'kilometer', cat: 'length', key: 'km', dim: 'Length [L]' },
       { token: 'kilometers', cat: 'length', key: 'km', dim: 'Length [L]' },
       { token: 'cm', cat: 'length', key: 'cm', dim: 'Length [L]' },
+      { token: 'centimeter', cat: 'length', key: 'cm', dim: 'Length [L]' },
+      { token: 'centimeters', cat: 'length', key: 'cm', dim: 'Length [L]' },
       { token: 'mm', cat: 'length', key: 'mm', dim: 'Length [L]' },
+      { token: 'millimeter', cat: 'length', key: 'mm', dim: 'Length [L]' },
+      { token: 'millimeters', cat: 'length', key: 'mm', dim: 'Length [L]' },
       { token: 'mi', cat: 'length', key: 'mi', dim: 'Length [L]' },
       { token: 'mile', cat: 'length', key: 'mi', dim: 'Length [L]' },
       { token: 'miles', cat: 'length', key: 'mi', dim: 'Length [L]' },
       { token: 'yd', cat: 'length', key: 'yd', dim: 'Length [L]' },
+      { token: 'yard', cat: 'length', key: 'yd', dim: 'Length [L]' },
+      { token: 'yards', cat: 'length', key: 'yd', dim: 'Length [L]' },
       { token: 'ft', cat: 'length', key: 'ft', dim: 'Length [L]' },
+      { token: 'foot', cat: 'length', key: 'ft', dim: 'Length [L]' },
       { token: 'feet', cat: 'length', key: 'ft', dim: 'Length [L]' },
       { token: 'in', cat: 'length', key: 'in', dim: 'Length [L]' },
       { token: 'inch', cat: 'length', key: 'in', dim: 'Length [L]' },
       { token: 'inches', cat: 'length', key: 'in', dim: 'Length [L]' },
       { token: 'nmi', cat: 'length', key: 'nmi', dim: 'Length [L]' },
+      { token: 'nauticalmile', cat: 'length', key: 'nmi', dim: 'Length [L]' },
+      { token: 'nauticalmiles', cat: 'length', key: 'nmi', dim: 'Length [L]' },
 
       // Weight
       { token: 'kg', cat: 'weight', key: 'kg', dim: 'Mass [M]' },
@@ -900,15 +909,27 @@
       { token: 'kilograms', cat: 'weight', key: 'kg', dim: 'Mass [M]' },
       { token: 'g', cat: 'weight', key: 'g', dim: 'Mass [M]' },
       { token: 'gram', cat: 'weight', key: 'g', dim: 'Mass [M]' },
+      { token: 'grams', cat: 'weight', key: 'g', dim: 'Mass [M]' },
       { token: 'mg', cat: 'weight', key: 'mg', dim: 'Mass [M]' },
+      { token: 'milligram', cat: 'weight', key: 'mg', dim: 'Mass [M]' },
+      { token: 'milligrams', cat: 'weight', key: 'mg', dim: 'Mass [M]' },
       { token: 't', cat: 'weight', key: 't', dim: 'Mass [M]' },
+      { token: 'ton', cat: 'weight', key: 't', dim: 'Mass [M]' },
+      { token: 'tons', cat: 'weight', key: 't', dim: 'Mass [M]' },
+      { token: 'tonne', cat: 'weight', key: 't', dim: 'Mass [M]' },
+      { token: 'tonnes', cat: 'weight', key: 't', dim: 'Mass [M]' },
+      { token: 'metricton', cat: 'weight', key: 't', dim: 'Mass [M]' },
+      { token: 'metrictons', cat: 'weight', key: 't', dim: 'Mass [M]' },
       { token: 'lb', cat: 'weight', key: 'lb', dim: 'Mass [M]' },
       { token: 'lbs', cat: 'weight', key: 'lb', dim: 'Mass [M]' },
       { token: 'pound', cat: 'weight', key: 'lb', dim: 'Mass [M]' },
       { token: 'pounds', cat: 'weight', key: 'lb', dim: 'Mass [M]' },
       { token: 'oz', cat: 'weight', key: 'oz', dim: 'Mass [M]' },
       { token: 'ounce', cat: 'weight', key: 'oz', dim: 'Mass [M]' },
+      { token: 'ounces', cat: 'weight', key: 'oz', dim: 'Mass [M]' },
       { token: 'st', cat: 'weight', key: 'st', dim: 'Mass [M]' },
+      { token: 'stone', cat: 'weight', key: 'st', dim: 'Mass [M]' },
+      { token: 'stones', cat: 'weight', key: 'st', dim: 'Mass [M]' },
 
       // Temp
       { token: 'c', cat: 'temp', key: 'c', dim: 'Temperature [Θ]' },
@@ -919,86 +940,132 @@
       { token: 'degf', cat: 'temp', key: 'f', dim: 'Temperature [Θ]' },
       { token: 'k', cat: 'temp', key: 'k', dim: 'Temperature [Θ]' },
       { token: 'kelvin', cat: 'temp', key: 'k', dim: 'Temperature [Θ]' },
+      { token: 'kelvins', cat: 'temp', key: 'k', dim: 'Temperature [Θ]' },
 
       // Data
       { token: 'b', cat: 'data', key: 'b', dim: 'Information [Bits]' },
       { token: 'byte', cat: 'data', key: 'b', dim: 'Information [Bits]' },
       { token: 'bytes', cat: 'data', key: 'b', dim: 'Information [Bits]' },
       { token: 'kb', cat: 'data', key: 'kb', dim: 'Information [Bits]' },
+      { token: 'kilobyte', cat: 'data', key: 'kb', dim: 'Information [Bits]' },
+      { token: 'kilobytes', cat: 'data', key: 'kb', dim: 'Information [Bits]' },
       { token: 'mb', cat: 'data', key: 'mb', dim: 'Information [Bits]' },
+      { token: 'megabyte', cat: 'data', key: 'mb', dim: 'Information [Bits]' },
+      { token: 'megabytes', cat: 'data', key: 'mb', dim: 'Information [Bits]' },
       { token: 'gb', cat: 'data', key: 'gb', dim: 'Information [Bits]' },
+      { token: 'gigabyte', cat: 'data', key: 'gb', dim: 'Information [Bits]' },
+      { token: 'gigabytes', cat: 'data', key: 'gb', dim: 'Information [Bits]' },
       { token: 'tb', cat: 'data', key: 'tb', dim: 'Information [Bits]' },
+      { token: 'terabyte', cat: 'data', key: 'tb', dim: 'Information [Bits]' },
+      { token: 'terabytes', cat: 'data', key: 'tb', dim: 'Information [Bits]' },
       { token: 'pb', cat: 'data', key: 'pb', dim: 'Information [Bits]' },
+      { token: 'petabyte', cat: 'data', key: 'pb', dim: 'Information [Bits]' },
+      { token: 'petabytes', cat: 'data', key: 'pb', dim: 'Information [Bits]' },
 
       // Speed
       { token: 'm/s', cat: 'speed', key: 'mps', dim: 'Velocity [L · T⁻¹]' },
       { token: 'mps', cat: 'speed', key: 'mps', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'meterpersecond', cat: 'speed', key: 'mps', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'meterspersecond', cat: 'speed', key: 'mps', dim: 'Velocity [L · T⁻¹]' },
       { token: 'km/h', cat: 'speed', key: 'kph', dim: 'Velocity [L · T⁻¹]' },
       { token: 'kph', cat: 'speed', key: 'kph', dim: 'Velocity [L · T⁻¹]' },
       { token: 'kmh', cat: 'speed', key: 'kph', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'kilometerperhour', cat: 'speed', key: 'kph', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'kilometersperhour', cat: 'speed', key: 'kph', dim: 'Velocity [L · T⁻¹]' },
       { token: 'mph', cat: 'speed', key: 'mph', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'mileperhour', cat: 'speed', key: 'mph', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'milesperhour', cat: 'speed', key: 'mph', dim: 'Velocity [L · T⁻¹]' },
       { token: 'knot', cat: 'speed', key: 'knot', dim: 'Velocity [L · T⁻¹]' },
       { token: 'knots', cat: 'speed', key: 'knot', dim: 'Velocity [L · T⁻¹]' },
       { token: 'ft/s', cat: 'speed', key: 'fps', dim: 'Velocity [L · T⁻¹]' },
       { token: 'fps', cat: 'speed', key: 'fps', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'footpersecond', cat: 'speed', key: 'fps', dim: 'Velocity [L · T⁻¹]' },
+      { token: 'feetpersecond', cat: 'speed', key: 'fps', dim: 'Velocity [L · T⁻¹]' },
 
       // Area
       { token: 'm^2', cat: 'area', key: 'sqm', dim: 'Area [L²]' },
       { token: 'sqm', cat: 'area', key: 'sqm', dim: 'Area [L²]' },
       { token: 'm2', cat: 'area', key: 'sqm', dim: 'Area [L²]' },
+      { token: 'squaremeter', cat: 'area', key: 'sqm', dim: 'Area [L²]' },
+      { token: 'squaremeters', cat: 'area', key: 'sqm', dim: 'Area [L²]' },
       { token: 'km^2', cat: 'area', key: 'sqkm', dim: 'Area [L²]' },
       { token: 'sqkm', cat: 'area', key: 'sqkm', dim: 'Area [L²]' },
       { token: 'km2', cat: 'area', key: 'sqkm', dim: 'Area [L²]' },
+      { token: 'squarekilometer', cat: 'area', key: 'sqkm', dim: 'Area [L²]' },
+      { token: 'squarekilometers', cat: 'area', key: 'sqkm', dim: 'Area [L²]' },
       { token: 'ft^2', cat: 'area', key: 'sqft', dim: 'Area [L²]' },
       { token: 'sqft', cat: 'area', key: 'sqft', dim: 'Area [L²]' },
       { token: 'ft2', cat: 'area', key: 'sqft', dim: 'Area [L²]' },
+      { token: 'squarefoot', cat: 'area', key: 'sqft', dim: 'Area [L²]' },
+      { token: 'squarefeet', cat: 'area', key: 'sqft', dim: 'Area [L²]' },
       { token: 'acre', cat: 'area', key: 'acre', dim: 'Area [L²]' },
       { token: 'acres', cat: 'area', key: 'acre', dim: 'Area [L²]' },
       { token: 'ha', cat: 'area', key: 'ha', dim: 'Area [L²]' },
+      { token: 'hectare', cat: 'area', key: 'ha', dim: 'Area [L²]' },
+      { token: 'hectares', cat: 'area', key: 'ha', dim: 'Area [L²]' },
 
       // Volume
       { token: 'l', cat: 'volume', key: 'l', dim: 'Volume [L³]' },
       { token: 'liter', cat: 'volume', key: 'l', dim: 'Volume [L³]' },
       { token: 'liters', cat: 'volume', key: 'l', dim: 'Volume [L³]' },
       { token: 'ml', cat: 'volume', key: 'ml', dim: 'Volume [L³]' },
+      { token: 'milliliter', cat: 'volume', key: 'ml', dim: 'Volume [L³]' },
+      { token: 'milliliters', cat: 'volume', key: 'ml', dim: 'Volume [L³]' },
       { token: 'm^3', cat: 'volume', key: 'cbm', dim: 'Volume [L³]' },
       { token: 'cbm', cat: 'volume', key: 'cbm', dim: 'Volume [L³]' },
       { token: 'm3', cat: 'volume', key: 'cbm', dim: 'Volume [L³]' },
+      { token: 'cubicmeter', cat: 'volume', key: 'cbm', dim: 'Volume [L³]' },
+      { token: 'cubicmeters', cat: 'volume', key: 'cbm', dim: 'Volume [L³]' },
       { token: 'gal', cat: 'volume', key: 'gal', dim: 'Volume [L³]' },
       { token: 'gallon', cat: 'volume', key: 'gal', dim: 'Volume [L³]' },
       { token: 'gallons', cat: 'volume', key: 'gal', dim: 'Volume [L³]' },
       { token: 'qt', cat: 'volume', key: 'qt', dim: 'Volume [L³]' },
+      { token: 'quart', cat: 'volume', key: 'qt', dim: 'Volume [L³]' },
+      { token: 'quarts', cat: 'volume', key: 'qt', dim: 'Volume [L³]' },
       { token: 'floz', cat: 'volume', key: 'floz', dim: 'Volume [L³]' },
+      { token: 'fluidounce', cat: 'volume', key: 'floz', dim: 'Volume [L³]' },
+      { token: 'fluidounces', cat: 'volume', key: 'floz', dim: 'Volume [L³]' },
 
       // Time
       { token: 's', cat: 'time', key: 'sec', dim: 'Time [T]' },
       { token: 'sec', cat: 'time', key: 'sec', dim: 'Time [T]' },
+      { token: 'secs', cat: 'time', key: 'sec', dim: 'Time [T]' },
       { token: 'second', cat: 'time', key: 'sec', dim: 'Time [T]' },
       { token: 'seconds', cat: 'time', key: 'sec', dim: 'Time [T]' },
       { token: 'min', cat: 'time', key: 'min', dim: 'Time [T]' },
+      { token: 'mins', cat: 'time', key: 'min', dim: 'Time [T]' },
       { token: 'minute', cat: 'time', key: 'min', dim: 'Time [T]' },
       { token: 'minutes', cat: 'time', key: 'min', dim: 'Time [T]' },
       { token: 'h', cat: 'time', key: 'hr', dim: 'Time [T]' },
       { token: 'hr', cat: 'time', key: 'hr', dim: 'Time [T]' },
+      { token: 'hrs', cat: 'time', key: 'hr', dim: 'Time [T]' },
       { token: 'hour', cat: 'time', key: 'hr', dim: 'Time [T]' },
       { token: 'hours', cat: 'time', key: 'hr', dim: 'Time [T]' },
       { token: 'd', cat: 'time', key: 'day', dim: 'Time [T]' },
       { token: 'day', cat: 'time', key: 'day', dim: 'Time [T]' },
       { token: 'days', cat: 'time', key: 'day', dim: 'Time [T]' },
       { token: 'wk', cat: 'time', key: 'wk', dim: 'Time [T]' },
+      { token: 'wks', cat: 'time', key: 'wk', dim: 'Time [T]' },
       { token: 'week', cat: 'time', key: 'wk', dim: 'Time [T]' },
       { token: 'weeks', cat: 'time', key: 'wk', dim: 'Time [T]' },
       { token: 'yr', cat: 'time', key: 'yr', dim: 'Time [T]' },
+      { token: 'yrs', cat: 'time', key: 'yr', dim: 'Time [T]' },
       { token: 'year', cat: 'time', key: 'yr', dim: 'Time [T]' },
       { token: 'years', cat: 'time', key: 'yr', dim: 'Time [T]' },
 
       // Pressure
       { token: 'pa', cat: 'pressure', key: 'pa', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
       { token: 'pascal', cat: 'pressure', key: 'pa', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
+      { token: 'pascals', cat: 'pressure', key: 'pa', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
       { token: 'kpa', cat: 'pressure', key: 'kpa', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
+      { token: 'kilopascal', cat: 'pressure', key: 'kpa', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
+      { token: 'kilopascals', cat: 'pressure', key: 'kpa', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
       { token: 'bar', cat: 'pressure', key: 'bar', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
+      { token: 'bars', cat: 'pressure', key: 'bar', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
       { token: 'psi', cat: 'pressure', key: 'psi', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
       { token: 'atm', cat: 'pressure', key: 'atm', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
+      { token: 'atmosphere', cat: 'pressure', key: 'atm', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
+      { token: 'atmospheres', cat: 'pressure', key: 'atm', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
       { token: 'mmhg', cat: 'pressure', key: 'mmhg', dim: 'Pressure [M · L⁻¹ · T⁻²]' },
       { token: 'torr', cat: 'pressure', key: 'mmhg', dim: 'Pressure [M · L⁻¹ · T⁻²]' }
     ];
@@ -1032,6 +1099,7 @@
     let favorites = safeGetStorage('kconv_favs', []);
     let customUnits = safeGetStorage('kconv_custom_units', []);
     let historyLog = safeGetStorage('kconv_history', []);
+    let isInitialLoad = false;
 
     function escapeHTML(str) {
       if (str === null || str === undefined) return '';
@@ -1047,6 +1115,7 @@
     window.onload = () => {
       if (window.resizeTo) window.resizeTo(900, 650);
       if (window.parent) window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 900, height: 650 }, '*');
+      isInitialLoad = true;
       renderCategories();
       populateDropdowns();
       renderCustomUnitsTable();
@@ -1054,6 +1123,7 @@
       renderHistory();
       convert();
       parseExpressInput();
+      isInitialLoad = false;
 
       // Enter key shortcut for custom units
       const nameInp = document.getElementById('customUnitName');
@@ -1072,6 +1142,35 @@
         });
       }
 
+      // Enter key in express input
+      const expInp = document.getElementById('expressInput');
+      if (expInp) {
+        expInp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            parseExpressInput();
+            showToast('⚡ Evaluated expression');
+          }
+        });
+      }
+
+      // Enter key in batch input
+      const bInp = document.getElementById('batchInputVal');
+      if (bInp) {
+        bInp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') renderBatch();
+        });
+      }
+
+      // Keyboard navigation on nav tabs
+      document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            tab.click();
+          }
+        });
+      });
+
       // Global keyboard navigation
       document.addEventListener('keydown', (e) => {
         const isEditing = e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA';
@@ -1082,15 +1181,17 @@
           return;
         }
 
-        // F1 or H for help
-        if (e.key === 'F1' || (!isEditing && e.key.toLowerCase() === 'h')) {
+        // F1 or H for help (guarded against Ctrl/Alt/Meta shortcuts)
+        if (e.key === 'F1' || (!isEditing && !e.ctrlKey && !e.altKey && !e.metaKey && e.key.toLowerCase() === 'h')) {
           e.preventDefault();
           toggleHelpModal();
           return;
         }
 
-        // 1-6 view switching when not editing
-        if (!isEditing && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        // 1-6 view switching when not editing and help modal is closed
+        const helpModal = document.getElementById('helpModal');
+        const helpOpen = helpModal && helpModal.classList.contains('open');
+        if (!isEditing && !helpOpen && !e.ctrlKey && !e.altKey && !e.metaKey) {
           if (e.key === '1') switchView('single');
           else if (e.key === '2') switchView('batch');
           else if (e.key === '3') switchView('express');
@@ -1187,6 +1288,7 @@
       if (viewName === 'batch') renderBatch();
       if (viewName === 'express') parseExpressInput();
       if (viewName === 'fav') renderFavorites();
+      if (viewName === 'custom') renderCustomUnitsTable();
       if (viewName === 'history') renderHistory();
     }
 
@@ -1245,6 +1347,10 @@
       const ut = document.getElementById('unitTo');
       const buf = document.getElementById('batchUnitFrom');
 
+      const prevUf = uf.value;
+      const prevUt = ut.value;
+      const prevBuf = buf.value;
+
       uf.innerHTML = ''; ut.innerHTML = ''; buf.innerHTML = '';
 
       const modeUnits = getAllUnitsForCategory(currentCategory);
@@ -1258,9 +1364,10 @@
         buf.innerHTML += `<option value="${key}">${safeName}</option>`;
       });
 
-      if (keys.length > 1) {
-        ut.value = keys[1];
-      }
+      if (keys.includes(prevUf)) uf.value = prevUf;
+      if (keys.includes(prevUt)) ut.value = prevUt;
+      else if (keys.length > 1) ut.value = keys[1];
+      if (keys.includes(prevBuf)) buf.value = prevBuf;
     }
 
     function formatNumber(num) {
@@ -1277,10 +1384,16 @@
           return num.toExponential(4);
         }
         let str = num.toFixed(6);
-        return str.replace(/\.?0+$/, '');
+        if (str.includes('.')) {
+          str = str.replace(/(\.[0-9]*[1-9])0+$/, '$1').replace(/\.0+$/, '');
+        }
+        if (str === '-0') str = '0';
+        return str;
       }
 
-      return num.toFixed(parseInt(prec, 10));
+      let str = num.toFixed(parseInt(prec, 10));
+      if (parseFloat(str) === 0) str = str.replace(/^-/, '');
+      return str;
     }
 
     function convert() {
@@ -1344,30 +1457,44 @@
       const temp = uf.value;
       uf.value = ut.value;
       ut.value = temp;
+
+      const outVal = document.getElementById('outputVal').value;
+      if (outVal && !isNaN(parseFloat(outVal))) {
+        document.getElementById('inputVal').value = parseFloat(outVal);
+      }
       convert();
     }
 
     function copyFormula() {
       const text = document.getElementById('formulaText').innerText;
-      copyToClipboard(text);
+      if (text && text.includes('=')) {
+        copyToClipboard(text);
+      } else {
+        showToast('⚠️ No equation to copy', 'warning');
+      }
     }
 
     /* BATCH CONVERSION MODE */
     function renderBatch() {
       const val = parseFloat(document.getElementById('batchInputVal').value);
       const fromKey = document.getElementById('batchUnitFrom').value;
-      const search = document.getElementById('batchSearch').value.toLowerCase();
+      const search = document.getElementById('batchSearch').value.toLowerCase().trim();
       const tbody = document.getElementById('batchTableBody');
 
       tbody.innerHTML = '';
 
-      if (isNaN(val)) return;
+      if (isNaN(val)) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--text-muted);">Please enter a valid numeric value</td></tr>';
+        return;
+      }
 
       const modeUnits = getAllUnitsForCategory(currentCategory);
       if (!modeUnits[fromKey]) return;
 
+      let rowCount = 0;
       for (const [key, u] of Object.entries(modeUnits)) {
-        if (search && !u.name.toLowerCase().includes(search)) continue;
+        if (search && !u.name.toLowerCase().includes(search) && !key.toLowerCase().includes(search)) continue;
+        rowCount++;
 
         let res = 0;
         if (currentCategory === 'temp') {
@@ -1414,6 +1541,10 @@
         tr.appendChild(tdAct);
         tbody.appendChild(tr);
       }
+
+      if (rowCount === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--text-muted);">No units match the search filter.</td></tr>';
+      }
     }
 
     /* SMART EXPRESSION PARSER MODE */
@@ -1456,8 +1587,10 @@
 
     function parseExpressInput() {
       const card = document.getElementById('expressResultCard');
-      const valStr = document.getElementById('expressInput').value.trim();
+      let valStr = document.getElementById('expressInput').value.trim();
       if (!valStr || !card) return;
+
+      valStr = valStr.replace(/^(?:convert|calc|calculate|what is|how many)\s+/i, '');
 
       const numMatch = valStr.match(/^([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)\s*(.*)$/);
       if (!numMatch) {
@@ -1504,7 +1637,10 @@
       const uFrom = modeUnits[fromAlias.key];
       const uTo = modeUnits[toAlias.key];
 
-      if (!uFrom || !uTo) return;
+      if (!uFrom || !uTo) {
+        card.innerHTML = `<div style="color: #f87171; font-weight: 500;">⚠️ Specified units could not be resolved in category.</div>`;
+        return;
+      }
 
       let result = 0;
       let isBelowAbsZero = false;
@@ -1633,6 +1769,7 @@
         `;
         card.onclick = () => loadFavorite(fav);
         card.onkeydown = (e) => {
+          if (e.target !== card) return;
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             loadFavorite(fav);
@@ -1694,6 +1831,8 @@
       showToast(`Custom Unit "${name}" added!`, 'success');
       renderCustomUnitsTable();
       populateDropdowns();
+      convert();
+      renderBatch();
     }
 
     function renderCustomUnitsTable() {
@@ -1725,12 +1864,14 @@
       renderCustomUnitsTable();
       populateDropdowns();
       convert();
+      renderBatch();
       showToast('Custom unit deleted');
     }
 
     /* HISTORY LOG SYSTEM */
     let lastLogTime = 0;
     function logHistory(catKey, fromVal, fromName, toValStr, toName) {
+      if (isInitialLoad) return;
       const now = Date.now();
       if (now - lastLogTime < 1500) return;
       lastLogTime = now;
@@ -1774,6 +1915,10 @@
     }
 
     function clearHistory() {
+      if (historyLog.length === 0) {
+        showToast('⚠️ History is already empty', 'warning');
+        return;
+      }
       historyLog = [];
       safeRemoveStorage('kconv_history');
       renderHistory();
@@ -1785,18 +1930,24 @@
         showToast('⚠️ History is empty!', 'warning');
         return;
       }
-      let csv = 'Time,Category,From,To\n';
+      let csv = 'Time,Category,From,To\r\n';
       historyLog.forEach(h => {
-        csv += `"${h.time}","${h.category}","${h.from}","${h.to}"\n`;
+        const t = String(h.time).replace(/"/g, '""');
+        const c = String(h.category).replace(/"/g, '""');
+        const f = String(h.from).replace(/"/g, '""');
+        const to = String(h.to).replace(/"/g, '""');
+        csv += `"${t}","${c}","${f}","${to}"\r\n`;
       });
 
-      const blob = new Blob([csv], { type: 'text/csv' });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = 'kconverter_history.csv';
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
       showToast('📥 Exported CSV');
     }
 
@@ -1811,8 +1962,10 @@
       const a = document.createElement('a');
       a.href = url;
       a.download = 'kconverter_history.json';
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
       showToast('📥 Exported JSON');
     }
   </script>
