@@ -6772,10 +6772,580 @@
             window.addEventListener('resize', resizeCanvas);
             resizeCanvas();
 
+            // --- GRAPHICS SPRITE SYSTEM & ANIMATED ASSETS (LOOP 1) ---
+            let globalAnimTime = 0;
+
+            // Ambient Deep-Sea Marine Snow & Bioluminescent Plankton Motes
+            const MARINE_MOTES = [];
+            for (let i = 0; i < 42; i++) {
+                MARINE_MOTES.push({
+                    x: (Math.random() - 0.5) * 2,
+                    y: (Math.random() - 0.5) * 2,
+                    size: 0.8 + Math.random() * 1.6,
+                    alpha: 0.15 + Math.random() * 0.45,
+                    speed: 0.006 + Math.random() * 0.015,
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+
+            // Cavitation Micro-Bubble Particle Pool
+            const SUB_BUBBLES = [];
+            function addSubBubble(x, y, vx, vy, life, size) {
+                if (SUB_BUBBLES.length < 60) {
+                    SUB_BUBBLES.push({ x, y, vx, vy, life, maxLife: life, size });
+                }
+            }
+
+            // 1. Bathyscaphe Submersible Sprite (DSV Abyss)
+            function drawSubmarineSprite(ctx, cx, cy, headingRad, dpr, palette, time, speed, isPinging) {
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(headingRad);
+
+                const propPhase = time * (12 + Math.abs(speed) * 14);
+                const propBladeSpan = Math.abs(Math.sin(propPhase));
+
+                // Cavitation micro-bubbles from stern propeller
+                if (Math.abs(speed) > 0.1 || isPinging) {
+                    if (Math.random() < 0.4) {
+                        const bx = cx - Math.cos(headingRad) * (17 * dpr) + (Math.random() - 0.5) * 4 * dpr;
+                        const by = cy - Math.sin(headingRad) * (17 * dpr) + (Math.random() - 0.5) * 4 * dpr;
+                        addSubBubble(bx, by, -Math.cos(headingRad) * (speed * 0.4 + 0.2), -Math.sin(headingRad) * (speed * 0.4 + 0.2), 0.7 + Math.random() * 0.5, (1.2 + Math.random() * 1.5) * dpr);
+                    }
+                }
+
+                // Propeller Shaft & Spinning Blades
+                ctx.fillStyle = '#64748b';
+                ctx.fillRect(-17 * dpr, -1.2 * dpr, 4 * dpr, 2.4 * dpr);
+                ctx.fillStyle = '#e2e8f0';
+                ctx.beginPath();
+                ctx.ellipse(-17 * dpr, 0, 1.4 * dpr, (4.5 * propBladeSpan + 1.2) * dpr, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Stern Hydrodynamic Stabilizer Fins
+                ctx.fillStyle = '#0f766e';
+                ctx.strokeStyle = palette.vessel;
+                ctx.lineWidth = 1 * dpr;
+
+                // Port horizontal fin
+                ctx.beginPath();
+                ctx.moveTo(-13 * dpr, -7.5 * dpr);
+                ctx.lineTo(-7 * dpr, -3.2 * dpr);
+                ctx.lineTo(-13 * dpr, -1 * dpr);
+                ctx.closePath();
+                ctx.fill(); ctx.stroke();
+
+                // Starboard horizontal fin
+                ctx.beginPath();
+                ctx.moveTo(-13 * dpr, 7.5 * dpr);
+                ctx.lineTo(-7 * dpr, 3.2 * dpr);
+                ctx.lineTo(-13 * dpr, 1 * dpr);
+                ctx.closePath();
+                ctx.fill(); ctx.stroke();
+
+                // Main Bathyscaphe Pressure Hull (Teal Titanium Multi-Plate Gradient)
+                const hullGrad = ctx.createLinearGradient(0, -6 * dpr, 0, 6 * dpr);
+                hullGrad.addColorStop(0, '#2dd4bf');
+                hullGrad.addColorStop(0.35, '#0d9488');
+                hullGrad.addColorStop(0.75, '#115e59');
+                hullGrad.addColorStop(1, '#042f2e');
+                ctx.fillStyle = hullGrad;
+                ctx.strokeStyle = palette.vessel;
+                ctx.lineWidth = 1.2 * dpr;
+
+                ctx.beginPath();
+                // Rounded bow hemisphere
+                ctx.arc(6 * dpr, 0, 5.2 * dpr, -Math.PI / 2, Math.PI / 2);
+                // Tapered stern cone
+                ctx.lineTo(-13 * dpr, 2.4 * dpr);
+                ctx.lineTo(-14 * dpr, 0);
+                ctx.lineTo(-13 * dpr, -2.4 * dpr);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Titanium Hull Seam Bands
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+                ctx.lineWidth = 0.8 * dpr;
+                ctx.beginPath();
+                ctx.moveTo(-4 * dpr, -4.5 * dpr); ctx.lineTo(-4 * dpr, 4.5 * dpr);
+                ctx.moveTo(2 * dpr, -5 * dpr); ctx.lineTo(2 * dpr, 5 * dpr);
+                ctx.stroke();
+
+                // Conning Tower / Sensor Sail
+                ctx.fillStyle = '#0d9488';
+                ctx.strokeStyle = palette.vessel;
+                ctx.lineWidth = 1 * dpr;
+                ctx.beginPath();
+                ctx.roundRect(-4 * dpr, -2.2 * dpr, 7 * dpr, 4.4 * dpr, 1.5 * dpr);
+                ctx.fill(); ctx.stroke();
+
+                // Forward Optronic Periscope Mast
+                ctx.strokeStyle = '#f8fafc';
+                ctx.lineWidth = 1.2 * dpr;
+                ctx.beginPath();
+                ctx.moveTo(1 * dpr, 0);
+                ctx.lineTo(4.5 * dpr, 0);
+                ctx.stroke();
+
+                // Forward Acrylic Observation Dome / Viewport Glow
+                ctx.fillStyle = '#38bdf8';
+                ctx.shadowColor = '#00f0ff';
+                ctx.shadowBlur = 6 * dpr;
+                ctx.beginPath();
+                ctx.arc(8.5 * dpr, 0, 2.2 * dpr, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // Viewport Specular Glint
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(9 * dpr, -0.6 * dpr, 0.7 * dpr, 0, Math.PI * 2);
+                ctx.fill();
+
+                // High-Lux Forward Searchlight Illuminator Cones
+                if (state.searchlights) {
+                    const beamGrad = ctx.createRadialGradient(10 * dpr, 0, 2 * dpr, 36 * dpr, 0, 32 * dpr);
+                    beamGrad.addColorStop(0, 'rgba(0, 240, 255, 0.42)');
+                    beamGrad.addColorStop(0.65, 'rgba(0, 210, 255, 0.12)');
+                    beamGrad.addColorStop(1, 'rgba(0, 210, 255, 0)');
+                    ctx.fillStyle = beamGrad;
+                    ctx.beginPath();
+                    ctx.moveTo(9 * dpr, -1.8 * dpr);
+                    ctx.lineTo(38 * dpr, -15 * dpr);
+                    ctx.lineTo(38 * dpr, 15 * dpr);
+                    ctx.lineTo(9 * dpr, 1.8 * dpr);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                ctx.restore();
+            }
+
+            // 2. Colossal Abyssal Leviathan Serpent Sprite
+            function drawLeviathanCreature(ctx, cX, cY, dpr, isSwept, isSelected, time) {
+                ctx.save();
+                ctx.translate(cX, cY);
+
+                const baseColor = isSwept || isSelected ? '#f43f5e' : 'rgba(244, 63, 94, 0.35)';
+                const glowColor = '#ff2e5b';
+                const numSegments = 6;
+                const segSpacing = 3.4 * dpr;
+                const waveFreq = 3.6;
+                const waveAmp = 2.8 * dpr;
+
+                if (isSwept || isSelected) {
+                    ctx.shadowColor = glowColor;
+                    ctx.shadowBlur = 10 * dpr;
+                }
+                ctx.fillStyle = baseColor;
+
+                // Menacing Serpent Head
+                const headAngle = Math.sin(time * waveFreq) * 0.25;
+                ctx.save();
+                ctx.rotate(headAngle);
+                ctx.beginPath();
+                ctx.moveTo(8 * dpr, 0);
+                ctx.lineTo(3 * dpr, -4.5 * dpr);
+                ctx.lineTo(-2 * dpr, -3.5 * dpr);
+                ctx.lineTo(-2 * dpr, 3.5 * dpr);
+                ctx.lineTo(3 * dpr, 4.5 * dpr);
+                ctx.closePath();
+                ctx.fill();
+
+                // Luminous Abyssal Eye
+                ctx.fillStyle = '#fef08a';
+                ctx.beginPath();
+                ctx.arc(4 * dpr, -1.8 * dpr, 1.3 * dpr, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                // Undulating Sinusoidal Body Segments
+                ctx.fillStyle = baseColor;
+                for (let i = 1; i <= numSegments; i++) {
+                    const segX = -i * segSpacing;
+                    const segY = Math.sin(time * waveFreq - i * 0.7) * waveAmp;
+                    const segRad = Math.max(1.6 * dpr, (numSegments - i * 0.6) * 0.9 * dpr);
+
+                    ctx.beginPath();
+                    ctx.arc(segX, segY, segRad, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Photophore Bioluminescent Nodes along Dorsal Ridge
+                    if (i % 2 === 1 && (isSwept || isSelected)) {
+                        ctx.fillStyle = '#38bdf8';
+                        ctx.beginPath();
+                        ctx.arc(segX, segY - segRad - 1.2 * dpr, 1 * dpr, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = baseColor;
+                    }
+                }
+
+                // Bifurcated Tail Fluke
+                const tailX = -(numSegments + 1) * segSpacing;
+                const tailY = Math.sin(time * waveFreq - (numSegments + 1) * 0.7) * waveAmp;
+                ctx.beginPath();
+                ctx.moveTo(tailX, tailY);
+                ctx.lineTo(tailX - 6.5 * dpr, tailY - 5.5 * dpr);
+                ctx.lineTo(tailX - 3.2 * dpr, tailY);
+                ctx.lineTo(tailX - 6.5 * dpr, tailY + 5.5 * dpr);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.restore();
+            }
+
+            // 3. Giant Architeuthis Squid Sprite
+            function drawSquidCreature(ctx, cX, cY, dpr, isSwept, isSelected, time) {
+                ctx.save();
+                ctx.translate(cX, cY);
+
+                const baseColor = isSwept || isSelected ? '#f472b6' : 'rgba(244, 114, 182, 0.35)';
+                ctx.fillStyle = baseColor;
+                if (isSwept || isSelected) {
+                    ctx.shadowColor = '#f472b6';
+                    ctx.shadowBlur = 8 * dpr;
+                }
+
+                // Hydrodynamic Torpedo Mantle
+                ctx.beginPath();
+                ctx.moveTo(7.5 * dpr, 0);
+                ctx.quadraticCurveTo(0, -4.5 * dpr, -4 * dpr, -3.2 * dpr);
+                ctx.lineTo(-4 * dpr, 3.2 * dpr);
+                ctx.quadraticCurveTo(0, 4.5 * dpr, 7.5 * dpr, 0);
+                ctx.closePath();
+                ctx.fill();
+
+                // Lateral Mantle Steering Fins (pulsing with wave cycle)
+                const finFlap = Math.sin(time * 4) * 1.5 * dpr;
+                ctx.beginPath();
+                ctx.moveTo(7.5 * dpr, 0);
+                ctx.lineTo(3.5 * dpr, -6.5 * dpr + finFlap);
+                ctx.lineTo(2 * dpr, -2 * dpr);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(7.5 * dpr, 0);
+                ctx.lineTo(3.5 * dpr, 6.5 * dpr - finFlap);
+                ctx.lineTo(2 * dpr, 2 * dpr);
+                ctx.closePath();
+                ctx.fill();
+
+                // Large Glowing Cephalopod Eye
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(-2 * dpr, -1.2 * dpr, 1.5 * dpr, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#0284c7';
+                ctx.beginPath();
+                ctx.arc(-2 * dpr, -1.2 * dpr, 0.8 * dpr, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Undulating Sinuous Tentacles Trailing Behind
+                ctx.strokeStyle = baseColor;
+                ctx.lineWidth = 1.2 * dpr;
+                for (let t = -2; t <= 2; t++) {
+                    const offY = t * 1.5 * dpr;
+                    const phase = time * 3.2 + t * 0.8;
+                    const wave1 = Math.sin(phase) * 2.8 * dpr;
+                    const wave2 = Math.cos(phase * 1.2) * 3.8 * dpr;
+
+                    ctx.beginPath();
+                    ctx.moveTo(-4 * dpr, offY);
+                    ctx.quadraticCurveTo(-9 * dpr, offY + wave1, -15 * dpr - (Math.abs(t) === 0 ? 4 * dpr : 0), offY + wave2);
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            }
+
+            // 4. Bioluminescent Siphonophore / Flora Sprite
+            function drawFloraCreature(ctx, cX, cY, dpr, isSwept, isSelected, time) {
+                ctx.save();
+                ctx.translate(cX, cY);
+
+                const baseColor = isSwept || isSelected ? '#34d399' : 'rgba(52, 211, 153, 0.35)';
+                ctx.fillStyle = baseColor;
+                if (isSwept || isSelected) {
+                    ctx.shadowColor = '#34d399';
+                    ctx.shadowBlur = 8 * dpr;
+                }
+
+                // Pulsating Gelatinous Colony Bell
+                const pulse = 1 + Math.sin(time * 2.6) * 0.12;
+                ctx.beginPath();
+                ctx.arc(0, -2 * dpr, 5 * dpr * pulse, Math.PI, 0);
+                ctx.quadraticCurveTo(0, 0.5 * dpr, -5 * dpr * pulse, -2 * dpr);
+                ctx.closePath();
+                ctx.fill();
+
+                // Radiant Emerald Nucleus
+                ctx.fillStyle = '#a7f3d0';
+                ctx.beginPath();
+                ctx.arc(0, -2 * dpr, 2.2 * dpr, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Trailing Dactylozooid Filaments with Glowing Pearl Nodes
+                ctx.strokeStyle = baseColor;
+                ctx.lineWidth = 1 * dpr;
+                for (let i = -2; i <= 2; i++) {
+                    const fx = i * 2 * dpr;
+                    const sway = Math.sin(time * 2.2 + i * 0.9) * 2.6 * dpr;
+                    ctx.beginPath();
+                    ctx.moveTo(fx, 0);
+                    ctx.quadraticCurveTo(fx + sway * 0.5, 6 * dpr, fx + sway, 12 * dpr);
+                    ctx.stroke();
+
+                    // Pearlescent Photophore Node
+                    if (isSwept || isSelected) {
+                        ctx.fillStyle = '#6ee7b7';
+                        ctx.beginPath();
+                        ctx.arc(fx + sway * 0.6, 7 * dpr, 1.1 * dpr, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                ctx.restore();
+            }
+
+            // 5. Abyssal Anglerfish / Deep-Sea Fauna Sprite
+            function drawFaunaCreature(ctx, cX, cY, dpr, isSwept, isSelected, time) {
+                ctx.save();
+                ctx.translate(cX, cY);
+
+                const baseColor = isSwept || isSelected ? '#38bdf8' : 'rgba(56, 189, 248, 0.35)';
+                ctx.fillStyle = baseColor;
+                if (isSwept || isSelected) {
+                    ctx.shadowColor = '#38bdf8';
+                    ctx.shadowBlur = 8 * dpr;
+                }
+
+                // Rotund Spiny Bathypelagic Body
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 5.5 * dpr, 4 * dpr, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Rapid Wagging Tail Fin
+                const tailWag = Math.sin(time * 5) * 1.6 * dpr;
+                ctx.beginPath();
+                ctx.moveTo(-5 * dpr, 0);
+                ctx.lineTo(-9.5 * dpr, -3.5 * dpr + tailWag);
+                ctx.lineTo(-7.5 * dpr, tailWag * 0.5);
+                ctx.lineTo(-9.5 * dpr, 3.5 * dpr + tailWag);
+                ctx.closePath();
+                ctx.fill();
+
+                // Pectoral Fin
+                ctx.beginPath();
+                ctx.moveTo(-1 * dpr, 1 * dpr);
+                ctx.lineTo(2.2 * dpr, 4.2 * dpr);
+                ctx.lineTo(0, 3 * dpr);
+                ctx.closePath();
+                ctx.fill();
+
+                // Curiosity Eye
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(3 * dpr, -1.2 * dpr, 1.3 * dpr, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#0f172a';
+                ctx.beginPath();
+                ctx.arc(3.4 * dpr, -1.2 * dpr, 0.7 * dpr, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Arched Illicium Lure Stalk
+                ctx.strokeStyle = baseColor;
+                ctx.lineWidth = 1 * dpr;
+                const escaSway = Math.sin(time * 3) * 1.4 * dpr;
+                ctx.beginPath();
+                ctx.moveTo(2 * dpr, -3.5 * dpr);
+                ctx.quadraticCurveTo(4 * dpr, -8.5 * dpr, 7.5 * dpr, -5.5 * dpr + escaSway);
+                ctx.stroke();
+
+                // Bioluminescent Esca Glowing Bulb
+                ctx.fillStyle = isSwept || isSelected ? '#fef08a' : '#67e8f9';
+                ctx.shadowColor = '#fef08a';
+                ctx.shadowBlur = (6 + Math.sin(time * 4) * 3) * dpr;
+                ctx.beginPath();
+                ctx.arc(7.5 * dpr, -5.5 * dpr + escaSway, 1.7 * dpr, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+
+            // 6. Sunken Titanic Salvage Module Sprite
+            function drawSalvageSprite(ctx, cX, cY, dpr, isSwept, isSelected, time, harvested) {
+                ctx.save();
+                ctx.translate(cX, cY);
+
+                const baseColor = harvested ? 'rgba(251, 191, 36, 0.35)' : '#fbbf24';
+                ctx.fillStyle = baseColor;
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 1 * dpr;
+                if ((isSwept || isSelected) && !harvested) {
+                    ctx.shadowColor = '#fbbf24';
+                    ctx.shadowBlur = 9 * dpr;
+                }
+
+                // Heavy Titanium Enclosure Box
+                ctx.beginPath();
+                ctx.roundRect(-5.5 * dpr, -4.2 * dpr, 11 * dpr, 8.4 * dpr, 2 * dpr);
+                ctx.fill();
+                ctx.stroke();
+
+                // Truss Reinforcement X-Bracing
+                ctx.strokeStyle = '#78350f';
+                ctx.lineWidth = 0.9 * dpr;
+                ctx.beginPath();
+                ctx.moveTo(-4.5 * dpr, -3.2 * dpr); ctx.lineTo(4.5 * dpr, 3.2 * dpr);
+                ctx.moveTo(4.5 * dpr, -3.2 * dpr); ctx.lineTo(-4.5 * dpr, 3.2 * dpr);
+                ctx.stroke();
+
+                // Flashing Optical Beacon Strobe Diode
+                if (!harvested) {
+                    const beaconOn = ((time * 2.8) % 1.0) > 0.45;
+                    ctx.fillStyle = beaconOn ? '#ffffff' : '#b45309';
+                    ctx.shadowColor = '#f59e0b';
+                    ctx.shadowBlur = beaconOn ? 8 * dpr : 0;
+                    ctx.beginPath();
+                    ctx.arc(0, -4.8 * dpr, 1.4 * dpr, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.restore();
+            }
+
+            // 7. Hostile Autonomous Combat Drone Sprite
+            function drawCombatDroneSprite(ctx, tX, tY, dpr, thr, isThreatLocked, time) {
+                ctx.save();
+                ctx.translate(tX, tY);
+
+                const aggroColor = thr.state === 'attacking' ? '#ef4444' : (thr.state === 'stunned' ? '#00f0ff' : '#f59e0b');
+                ctx.strokeStyle = aggroColor;
+                ctx.fillStyle = thr.state === 'attacking' ? 'rgba(239, 68, 68, 0.35)' : 'rgba(245, 158, 11, 0.25)';
+                ctx.lineWidth = 1.4 * dpr;
+
+                // Armored Drone Octagonal Core
+                ctx.beginPath();
+                const r = 7 * dpr;
+                for (let a = 0; a < 8; a++) {
+                    const ang = (a * 45) * Math.PI / 180;
+                    const px = Math.cos(ang) * r;
+                    const py = Math.sin(ang) * r;
+                    if (a === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+                }
+                ctx.closePath();
+                ctx.fill(); ctx.stroke();
+
+                // Ducted Propulsion Thruster Pods (Left & Right)
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(-9.5 * dpr, -3 * dpr, 2.5 * dpr, 6 * dpr);
+                ctx.fillRect(7 * dpr, -3 * dpr, 2.5 * dpr, 6 * dpr);
+
+                // Central Active Sensor Lens Eye (Red Laser)
+                ctx.fillStyle = aggroColor;
+                ctx.shadowColor = aggroColor;
+                ctx.shadowBlur = 8 * dpr;
+                ctx.beginPath();
+                ctx.arc(0, 0, 2.2 * dpr, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+
+            // 8. Ordnance Torpedo Sprite with Cavitation Wake
+            function drawTorpedoSprite(ctx, tpX, tpY, angle, dpr, ordColor, time) {
+                ctx.save();
+                ctx.translate(tpX, tpY);
+                ctx.rotate(angle);
+
+                // Torpedo Conical Warhead & Cylindrical Body
+                ctx.fillStyle = ordColor;
+                ctx.shadowColor = ordColor;
+                ctx.shadowBlur = 6 * dpr;
+                ctx.beginPath();
+                ctx.moveTo(6.5 * dpr, 0);
+                ctx.lineTo(2 * dpr, -2.2 * dpr);
+                ctx.lineTo(-6.5 * dpr, -2 * dpr);
+                ctx.lineTo(-6.5 * dpr, 2 * dpr);
+                ctx.lineTo(2 * dpr, 2.2 * dpr);
+                ctx.closePath();
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // Stabilizer Fins
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.moveTo(-4.5 * dpr, -3.8 * dpr); ctx.lineTo(-6.5 * dpr, -2 * dpr); ctx.lineTo(-6.5 * dpr, -3.8 * dpr); ctx.closePath(); ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(-4.5 * dpr, 3.8 * dpr); ctx.lineTo(-6.5 * dpr, 2 * dpr); ctx.lineTo(-6.5 * dpr, 3.8 * dpr); ctx.closePath(); ctx.fill();
+
+                // Trailing Cavitation Micro-Bubbles
+                for (let b = 1; b <= 3; b++) {
+                    const bDist = -7 * dpr - b * 4.2 * dpr;
+                    const bOff = Math.sin(time * 24 + b) * 1.5 * dpr;
+                    ctx.fillStyle = 'rgba(240, 248, 255, ' + (0.75 - b * 0.22) + ')';
+                    ctx.beginPath();
+                    ctx.arc(bDist, bOff, (1.8 - b * 0.4) * dpr, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.restore();
+            }
+
+            // 9. Acoustic Decoy Beacon Sprite with Radiating Sonar Waves
+            function drawDecoySprite(ctx, dX, dY, dpr, time, life) {
+                ctx.save();
+                ctx.translate(dX, dY);
+
+                // Radiating Spherical Acoustic Wavefronts
+                const pulseR = ((time * 2.2) % 1.0) * 18 * dpr;
+                const pulseAlpha = Math.max(0, 1 - pulseR / (18 * dpr));
+                ctx.strokeStyle = '#a855f7';
+                ctx.globalAlpha = pulseAlpha;
+                ctx.lineWidth = 1.5 * dpr;
+                ctx.beginPath();
+                ctx.arc(0, 0, pulseR, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.globalAlpha = 1.0;
+
+                // Buoy Canister
+                ctx.fillStyle = '#c084fc';
+                ctx.shadowColor = '#c084fc';
+                ctx.shadowBlur = 6 * dpr;
+                ctx.beginPath();
+                ctx.roundRect(-3.5 * dpr, -4.5 * dpr, 7 * dpr, 9 * dpr, 1.8 * dpr);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // Active Strobe Pulse
+                ctx.fillStyle = ((time * 4) % 1.0 > 0.5) ? '#ffffff' : '#7e22ce';
+                ctx.beginPath();
+                ctx.arc(0, 0, 1.4 * dpr, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+
             function drawSonarView(w, h, cx, cy, dpr, maxR, palette) {
                 // Dark background with persistence trail
                 ctx.fillStyle = palette.radarBg;
                 ctx.fillRect(0, 0, w, h);
+
+                // Ambient Marine Snow & Plankton Motes
+                ctx.fillStyle = 'rgba(0, 210, 255, 0.16)';
+                MARINE_MOTES.forEach(mote => {
+                    mote.y += mote.speed;
+                    if (mote.y > 1) mote.y = -1;
+                    const mx = cx + mote.x * maxR;
+                    const my = cy + mote.y * maxR;
+                    if (Math.hypot(mx - cx, my - cy) <= maxR) {
+                        ctx.beginPath();
+                        ctx.arc(mx, my, mote.size * dpr, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
 
                 // Range rings
                 ctx.strokeStyle = palette.ring;
@@ -6833,25 +7403,30 @@
                     }
                 }
 
-                // Center Submersible Icon (Vessel dot)
-                ctx.fillStyle = palette.vessel;
-                ctx.beginPath();
-                ctx.arc(cx, cy, 4.5 * dpr, 0, Math.PI * 2);
-                ctx.fill();
+                // Cavitation Bubbles Simulation & Render
+                for (let i = SUB_BUBBLES.length - 1; i >= 0; i--) {
+                    const b = SUB_BUBBLES[i];
+                    b.x += b.vx;
+                    b.y += b.vy;
+                    b.life -= 0.025;
+                    if (b.life <= 0) {
+                        SUB_BUBBLES.splice(i, 1);
+                        continue;
+                    }
+                    const bAlpha = b.life / b.maxLife;
+                    ctx.fillStyle = `rgba(180, 240, 255, ${bAlpha * 0.7})`;
+                    ctx.beginPath();
+                    ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
 
-                // Heading arrow
+                // Center Submersible Bathyscaphe Vessel Sprite
                 const headingRad = (state.heading - 90) * (Math.PI / 180);
-                ctx.strokeStyle = palette.vessel;
-                ctx.lineWidth = 2 * dpr;
-                ctx.beginPath();
-                ctx.moveTo(cx, cy);
-                ctx.lineTo(cx + Math.cos(headingRad) * (18 * dpr), cy + Math.sin(headingRad) * (18 * dpr));
-                ctx.stroke();
+                drawSubmarineSprite(ctx, cx, cy, headingRad, dpr, palette, globalAnimTime, state.speed, state.isPinging);
 
                 // Unified Sonar Contacts (Fauna + Salvage Nodes)
                 const sContacts = getAllSectorContacts();
                 sContacts.forEach((c, idx) => {
-                    // Compute position relative to submarine (maxR represents 2.0 km radius)
                     const relX = (c.x - state.posX) / 2.0;
                     const relY = (c.y - state.posY) / 2.0;
                     const distNorm = Math.sqrt(relX * relX + relY * relY);
@@ -6866,69 +7441,29 @@
                     const isSwept = angleDiff < 0.25 || (state.isPinging && Math.abs(state.pingRadius - maxR * distNorm) < 25);
                     const isSelected = idx === state.selectedTargetIdx;
 
-                    let contactColor = palette.contactActive;
-                    if (c.isSalvage) contactColor = '#fbbf24'; // Gold for salvage
-                    else if (c.type === 'leviathan') contactColor = '#f43f5e';
-                    else if (c.type === 'squid') contactColor = '#f472b6';
-                    else if (c.type === 'flora') contactColor = '#34d399';
-                    else if (c.type === 'trench') contactColor = '#fbbf24';
+                    // Render Dedicated Sprite for Contact
+                    if (c.isSalvage) {
+                        drawSalvageSprite(ctx, cX, cY, dpr, isSwept, isSelected, globalAnimTime, c.harvested);
+                    } else if (c.type === 'leviathan') {
+                        drawLeviathanCreature(ctx, cX, cY, dpr, isSwept, isSelected, globalAnimTime);
+                    } else if (c.type === 'squid') {
+                        drawSquidCreature(ctx, cX, cY, dpr, isSwept, isSelected, globalAnimTime);
+                    } else if (c.type === 'flora') {
+                        drawFloraCreature(ctx, cX, cY, dpr, isSwept, isSelected, globalAnimTime);
+                    } else {
+                        drawFaunaCreature(ctx, cX, cY, dpr, isSwept, isSelected, globalAnimTime);
+                    }
 
                     if (isSwept || isSelected) {
-                        ctx.fillStyle = contactColor;
-                        ctx.shadowColor = contactColor;
-                        ctx.shadowBlur = isSelected ? 14 : 8;
-                        ctx.beginPath();
-                        
-                        if (c.isSalvage) {
-                            // Diamond icon for salvage nodes
-                            const dS = 5.5 * dpr;
-                            ctx.moveTo(cX, cY - dS);
-                            ctx.lineTo(cX + dS, cY);
-                            ctx.lineTo(cX, cY + dS);
-                            ctx.lineTo(cX - dS, cY);
-                            ctx.closePath();
-                            ctx.fill();
-                        } else if (c.type === 'leviathan') {
-                            // Large multi-arc leviathan echo
-                            ctx.arc(cX, cY, 7 * dpr, 0, Math.PI * 2);
-                            ctx.fill();
-                            ctx.strokeStyle = '#f43f5e';
-                            ctx.lineWidth = 1.5 * dpr;
-                            ctx.beginPath();
-                            ctx.arc(cX, cY, 12 * dpr, sweepAngle - 0.6, sweepAngle + 0.6);
-                            ctx.stroke();
-                        } else if (c.type === 'squid') {
-                            ctx.arc(cX, cY, 5 * dpr, 0, Math.PI * 2);
-                            ctx.fill();
-                        } else if (c.type === 'flora') {
-                            ctx.rect(cX - 4 * dpr, cY - 4 * dpr, 8 * dpr, 8 * dpr);
-                            ctx.fill();
-                        } else {
-                            ctx.arc(cX, cY, 4.5 * dpr, 0, Math.PI * 2);
-                            ctx.fill();
-                        }
-                        ctx.shadowBlur = 0;
-
                         // Contact labels
                         ctx.fillStyle = palette.textBright;
                         ctx.font = `bold ${8.5 * dpr}px monospace`;
                         const displayName = c.isSalvage ? (c.harvested ? `[DEPLETED]` : `💎 ${c.name}`) : (c.discovered ? c.name : `[${c.type.toUpperCase()}]`);
-                        ctx.fillText(displayName, cX + 8 * dpr, cY - 4 * dpr);
+                        ctx.fillText(displayName, cX + 9 * dpr, cY - 4 * dpr);
                         
                         ctx.font = `${7.5 * dpr}px monospace`;
                         ctx.fillStyle = palette.ringText;
-                        ctx.fillText(`${Math.round(distNorm * 2000)}m`, cX + 8 * dpr, cY + 7 * dpr);
-                    } else {
-                        ctx.fillStyle = palette.contactDim;
-                        ctx.beginPath();
-                        if (c.isSalvage) {
-                            const dS = 3 * dpr;
-                            ctx.moveTo(cX, cY - dS); ctx.lineTo(cX + dS, cY); ctx.lineTo(cX, cY + dS); ctx.lineTo(cX - dS, cY); ctx.closePath();
-                            ctx.fill();
-                        } else {
-                            ctx.arc(cX, cY, 3 * dpr, 0, Math.PI * 2);
-                            ctx.fill();
-                        }
+                        ctx.fillText(`${Math.round(distNorm * 2000)}m`, cX + 9 * dpr, cY + 7 * dpr);
                     }
 
                     // Targeting Reticle for Selected Contact
@@ -6979,26 +7514,17 @@
                     const tY = cy + relY * maxR;
                     const isThreatLocked = (idx === state.selectedThreatIdx);
 
-                    // Threat icon (Pulsating Red Crosshair / Diamond)
-                    ctx.strokeStyle = thr.state === 'attacking' ? '#ef4444' : (thr.state === 'stunned' ? '#00f0ff' : '#f59e0b');
-                    ctx.fillStyle = thr.state === 'attacking' ? 'rgba(239, 68, 68, 0.4)' : 'rgba(245, 158, 11, 0.3)';
-                    ctx.lineWidth = 1.5 * dpr;
-
-                    // Diamond
-                    const dSize = (thr.type === 'leviathan' ? 8 : 6) * dpr;
-                    ctx.beginPath();
-                    ctx.moveTo(tX, tY - dSize);
-                    ctx.lineTo(tX + dSize, tY);
-                    ctx.lineTo(tX, tY + dSize);
-                    ctx.lineTo(tX - dSize, tY);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.stroke();
+                    // Threat Sprite (Leviathan or Combat Drone)
+                    if (thr.type === 'leviathan') {
+                        drawLeviathanCreature(ctx, tX, tY, dpr, true, isThreatLocked, globalAnimTime);
+                    } else {
+                        drawCombatDroneSprite(ctx, tX, tY, dpr, thr, isThreatLocked, globalAnimTime);
+                    }
 
                     // Threat Label & HP bar
                     ctx.fillStyle = thr.type === 'leviathan' ? '#f87171' : '#fbbf24';
                     ctx.font = `bold ${8 * dpr}px monospace`;
-                    ctx.fillText(`${thr.type === 'leviathan' ? '🐉' : '🤖'} ${thr.name} [${thr.hp}HP]`, tX + 9 * dpr, tY - 4 * dpr);
+                    ctx.fillText(`${thr.type === 'leviathan' ? '🐉' : '🤖'} ${thr.name} [${thr.hp}HP]`, tX + 9 * dpr, tY - 5 * dpr);
                     
                     // State tag
                     ctx.font = `${7 * dpr}px monospace`;
@@ -7029,15 +7555,11 @@
                     const dX = cx + relX * maxR;
                     const dY = cy + relY * maxR;
 
-                    ctx.strokeStyle = '#a855f7';
-                    ctx.lineWidth = 1.5 * dpr;
-                    ctx.beginPath();
-                    ctx.arc(dX, dY, (dec.pulseRadius || 10) * dpr * 0.4, 0, Math.PI * 2);
-                    ctx.stroke();
+                    drawDecoySprite(ctx, dX, dY, dpr, globalAnimTime, dec.life);
 
                     ctx.fillStyle = '#c084fc';
                     ctx.font = `bold ${7.5 * dpr}px monospace`;
-                    ctx.fillText(`🚨 DECOY [${Math.round(dec.life)}s]`, dX + 6 * dpr, dY - 4 * dpr);
+                    ctx.fillText(`🚨 DECOY [${Math.round(dec.life)}s]`, dX + 8 * dpr, dY - 4 * dpr);
                 });
 
                 // --- DRAW ACTIVE TORPEDOES ON SONAR ---
@@ -7047,24 +7569,9 @@
                     const tpX = cx + relX * maxR;
                     const tpY = cy + relY * maxR;
                     const ord = ORDNANCE_TYPES[torp.type];
-
-                    // Torpedo projectile
-                    ctx.fillStyle = ord.color;
-                    ctx.shadowColor = ord.color;
-                    ctx.shadowBlur = 8;
-                    ctx.beginPath();
-                    ctx.arc(tpX, tpY, 3.5 * dpr, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
-
-                    // Wake line
-                    ctx.strokeStyle = ord.color;
-                    ctx.lineWidth = 1.5 * dpr;
                     const angle = Math.atan2(torp.vy, torp.vx);
-                    ctx.beginPath();
-                    ctx.moveTo(tpX, tpY);
-                    ctx.lineTo(tpX - Math.cos(angle) * (14 * dpr), tpY - Math.sin(angle) * (14 * dpr));
-                    ctx.stroke();
+
+                    drawTorpedoSprite(ctx, tpX, tpY, angle, dpr, ord.color, globalAnimTime);
                 });
 
                 // --- DRAW UNDERWATER EXPLOSIONS & FLOATING TEXT ON SONAR ---
@@ -7255,28 +7762,17 @@
                     }
                 });
 
-                // Submarine Vessel Center Marker
-                ctx.fillStyle = palette.vessel;
-                ctx.beginPath();
-                ctx.arc(cx, cy, 6 * dpr, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Submarine heading vector arrow
+                // Submarine Bathyscaphe Vessel Sprite on Nav Map
                 const hRad = (state.heading - 90) * (Math.PI / 180);
-                ctx.strokeStyle = palette.vessel;
-                ctx.lineWidth = 2.5 * dpr;
-                ctx.beginPath();
-                ctx.moveTo(cx, cy);
-                ctx.lineTo(cx + Math.cos(hRad) * (26 * dpr), cy + Math.sin(hRad) * (26 * dpr));
-                ctx.stroke();
+                drawSubmarineSprite(ctx, cx, cy, hRad, dpr, palette, globalAnimTime, state.speed, false);
 
                 // Submarine Nav Label
                 ctx.fillStyle = palette.textBright;
                 ctx.font = `bold ${9 * dpr}px monospace`;
-                ctx.fillText('DSV ABYSS (YOU)', cx + 10 * dpr, cy - 8 * dpr);
+                ctx.fillText('DSV ABYSS (YOU)', cx + 18 * dpr, cy - 8 * dpr);
                 ctx.font = `${8 * dpr}px monospace`;
                 ctx.fillStyle = palette.ringText;
-                ctx.fillText(`DEPTH: ${Math.round(state.depth)}m | SPD: ${state.speed.toFixed(1)}kts`, cx + 10 * dpr, cy + 10 * dpr);
+                ctx.fillText(`DEPTH: ${Math.round(state.depth)}m | SPD: ${state.speed.toFixed(1)}kts`, cx + 18 * dpr, cy + 10 * dpr);
             }
 
             function drawDisplay() {
@@ -7346,6 +7842,7 @@
             function gameLoop(now) {
                 const dt = Math.min(0.1, (now - lastTime) / 1000.0);
                 lastTime = now;
+                globalAnimTime += dt;
 
                 updateSimulation(dt);
                 drawDisplay();

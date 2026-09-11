@@ -2333,6 +2333,313 @@ void DrawCustomButton(HDC hdc, int id, int x, int y, int w, int h, const char* l
     TextOutA(hdc, tx, ty, label, (int)strlen(label));
 }
 
+// --- GRAPHICS SPRITE SYSTEM (LOOP 1) ---
+
+static int RotPointX(int cx, float lx, float ly, float fx, float fy) {
+    return cx + (int)(lx * fx - ly * fy);
+}
+
+static int RotPointY(int cy, float lx, float ly, float fx, float fy) {
+    return cy + (int)(lx * fy + ly * fx);
+}
+
+// 1. Bathyscaphe Submersible Sprite
+static void DrawSubmarineVesselSprite(HDC hdc, int cx, int cy, float headingDeg, float speed, const SubmarineTheme* th) {
+    float rad = (headingDeg - 90.0f) * (3.14159265f / 180.0f);
+    float fx = cosf(rad);
+    float fy = sinf(rad);
+
+    // Stern Stabilizer Fins
+    POINT portFin[3] = {
+        { RotPointX(cx, -8.0f, -2.5f, fx, fy), RotPointY(cy, -8.0f, -2.5f, fx, fy) },
+        { RotPointX(cx, -14.0f, -7.0f, fx, fy), RotPointY(cy, -14.0f, -7.0f, fx, fy) },
+        { RotPointX(cx, -13.0f, -1.0f, fx, fy), RotPointY(cy, -13.0f, -1.0f, fx, fy) }
+    };
+    POINT stbdFin[3] = {
+        { RotPointX(cx, -8.0f, 2.5f, fx, fy), RotPointY(cy, -8.0f, 2.5f, fx, fy) },
+        { RotPointX(cx, -14.0f, 7.0f, fx, fy), RotPointY(cy, -14.0f, 7.0f, fx, fy) },
+        { RotPointX(cx, -13.0f, 1.0f, fx, fy), RotPointY(cy, -13.0f, 1.0f, fx, fy) }
+    };
+
+    HBRUSH hBrFin = CreateSolidBrush(RGB(15, 118, 110));
+    HPEN hPenBorder = CreatePen(PS_SOLID, 1, th->accentEmerald);
+    HPEN hPenOld = (HPEN)SelectObject(hdc, hPenBorder);
+    HBRUSH hBrOld = (HBRUSH)SelectObject(hdc, hBrFin);
+
+    Polygon(hdc, portFin, 3);
+    Polygon(hdc, stbdFin, 3);
+
+    // Main Streamlined Pressure Hull
+    POINT hull[8] = {
+        { RotPointX(cx, 11.0f, 0.0f, fx, fy),  RotPointY(cy, 11.0f, 0.0f, fx, fy) },
+        { RotPointX(cx, 7.0f, -4.5f, fx, fy),  RotPointY(cy, 7.0f, -4.5f, fx, fy) },
+        { RotPointX(cx, -4.0f, -4.8f, fx, fy), RotPointY(cy, -4.0f, -4.8f, fx, fy) },
+        { RotPointX(cx, -12.0f, -2.5f, fx, fy),RotPointY(cy, -12.0f, -2.5f, fx, fy) },
+        { RotPointX(cx, -14.0f, 0.0f, fx, fy), RotPointY(cy, -14.0f, 0.0f, fx, fy) },
+        { RotPointX(cx, -12.0f, 2.5f, fx, fy), RotPointY(cy, -12.0f, 2.5f, fx, fy) },
+        { RotPointX(cx, -4.0f, 4.8f, fx, fy),  RotPointY(cy, -4.0f, 4.8f, fx, fy) },
+        { RotPointX(cx, 7.0f, 4.5f, fx, fy),   RotPointY(cy, 7.0f, 4.5f, fx, fy) }
+    };
+
+    HBRUSH hBrHull = CreateSolidBrush(RGB(13, 148, 136));
+    SelectObject(hdc, hBrHull);
+    Polygon(hdc, hull, 8);
+    DeleteObject(hBrHull);
+    DeleteObject(hBrFin);
+
+    // Conning Tower / Sail
+    POINT sail[4] = {
+        { RotPointX(cx, -3.0f, -1.8f, fx, fy), RotPointY(cy, -3.0f, -1.8f, fx, fy) },
+        { RotPointX(cx, 3.0f, -1.8f, fx, fy),  RotPointY(cy, 3.0f, -1.8f, fx, fy) },
+        { RotPointX(cx, 3.0f, 1.8f, fx, fy),   RotPointY(cy, 3.0f, 1.8f, fx, fy) },
+        { RotPointX(cx, -3.0f, 1.8f, fx, fy),  RotPointY(cy, -3.0f, 1.8f, fx, fy) }
+    };
+    HBRUSH hBrSail = CreateSolidBrush(RGB(20, 184, 166));
+    SelectObject(hdc, hBrSail);
+    Polygon(hdc, sail, 4);
+    DeleteObject(hBrSail);
+
+    // Bow Viewport Acrylic Dome Glow
+    int vpX = RotPointX(cx, 9.0f, 0.0f, fx, fy);
+    int vpY = RotPointY(cy, 9.0f, 0.0f, fx, fy);
+    HBRUSH hBrVp = CreateSolidBrush(RGB(0, 240, 255));
+    SelectObject(hdc, hBrVp);
+    Ellipse(hdc, vpX - 2, vpY - 2, vpX + 3, vpY + 3);
+    DeleteObject(hBrVp);
+
+    // Propeller spinning blade
+    DWORD tick = GetTickCount();
+    float propPhase = tick * 0.015f * (1.0f + fabsf(speed) * 2.0f);
+    float bladeSpan = 4.5f * fabsf(sinf(propPhase)) + 1.5f;
+
+    int pTip1X = RotPointX(cx, -15.0f, -bladeSpan, fx, fy);
+    int pTip1Y = RotPointY(cy, -15.0f, -bladeSpan, fx, fy);
+    int pTip2X = RotPointX(cx, -15.0f, bladeSpan, fx, fy);
+    int pTip2Y = RotPointY(cy, -15.0f, bladeSpan, fx, fy);
+
+    HPEN hPenProp = CreatePen(PS_SOLID, 2, RGB(226, 232, 240));
+    SelectObject(hdc, hPenProp);
+    MoveToEx(hdc, pTip1X, pTip1Y, NULL);
+    LineTo(hdc, pTip2X, pTip2Y);
+    DeleteObject(hPenProp);
+
+    // Trailing cavitation bubble dots if moving
+    if (fabsf(speed) > 0.3f) {
+        HPEN hPenBubble = CreatePen(PS_SOLID, 1, RGB(180, 240, 255));
+        SelectObject(hdc, hPenBubble);
+        int b1X = RotPointX(cx, -18.0f, (float)((tick / 40) % 3 - 1), fx, fy);
+        int b1Y = RotPointY(cy, -18.0f, (float)((tick / 40) % 3 - 1), fx, fy);
+        int b2X = RotPointX(cx, -23.0f, (float)((tick / 60) % 5 - 2), fx, fy);
+        int b2Y = RotPointY(cy, -23.0f, (float)((tick / 60) % 5 - 2), fx, fy);
+        SetPixel(hdc, b1X, b1Y, RGB(224, 242, 254));
+        SetPixel(hdc, b2X, b2Y, RGB(186, 230, 253));
+        DeleteObject(hPenBubble);
+    }
+
+    SelectObject(hdc, hPenOld);
+    SelectObject(hdc, hBrOld);
+    DeleteObject(hPenBorder);
+}
+
+// 2. Leviathan Abyssal Serpent Sprite
+static void DrawLeviathanSprite(HDC hdc, int x, int y, COLORREF clr, BOOL isSwept) {
+    DWORD tick = GetTickCount();
+    float wavePhase = tick * 0.005f;
+
+    HBRUSH hBr = CreateSolidBrush(clr);
+    HPEN hPen = CreatePen(PS_SOLID, 1, clr);
+    HPEN hPenOld = (HPEN)SelectObject(hdc, hPen);
+    HBRUSH hBrOld = (HBRUSH)SelectObject(hdc, hBr);
+
+    // Head
+    POINT headPts[5] = {
+        { x + 7, y },
+        { x + 2, y - 4 },
+        { x - 2, y - 3 },
+        { x - 2, y + 3 },
+        { x + 2, y + 4 }
+    };
+    Polygon(hdc, headPts, 5);
+
+    // Eye
+    SetPixel(hdc, x + 3, y - 2, RGB(254, 240, 138));
+
+    // Body segments (sine wave)
+    for (int s = 1; s <= 5; s++) {
+        int sx = x - s * 4;
+        int sy = y + (int)(sinf(wavePhase - s * 0.7f) * 3.5f);
+        int rad = (6 - s) / 2 + 1;
+        Ellipse(hdc, sx - rad, sy - rad, sx + rad + 1, sy + rad + 1);
+
+        if (s % 2 == 1 && isSwept) {
+            SetPixel(hdc, sx, sy - rad - 1, RGB(56, 189, 248));
+        }
+    }
+
+    // Tail fluke
+    int tx = x - 24;
+    int ty = y + (int)(sinf(wavePhase - 4.2f) * 3.5f);
+    POINT tailPts[3] = {
+        { tx, ty },
+        { tx - 5, ty - 4 },
+        { tx - 5, ty + 4 }
+    };
+    Polygon(hdc, tailPts, 3);
+
+    SelectObject(hdc, hPenOld);
+    SelectObject(hdc, hBrOld);
+    DeleteObject(hPen);
+    DeleteObject(hBr);
+}
+
+// 3. Giant Architeuthis Squid Sprite
+static void DrawSquidSprite(HDC hdc, int x, int y, COLORREF clr, BOOL isSwept) {
+    DWORD tick = GetTickCount();
+    float wave = tick * 0.006f;
+
+    HBRUSH hBr = CreateSolidBrush(clr);
+    HPEN hPen = CreatePen(PS_SOLID, 1, clr);
+    HPEN hPenOld = (HPEN)SelectObject(hdc, hPen);
+    HBRUSH hBrOld = (HBRUSH)SelectObject(hdc, hBr);
+
+    // Mantle cone
+    POINT mantle[5] = {
+        { x + 7, y },
+        { x + 1, y - 4 },
+        { x - 4, y - 3 },
+        { x - 4, y + 3 },
+        { x + 1, y + 4 }
+    };
+    Polygon(hdc, mantle, 5);
+
+    // Lateral fins
+    int finOff = (int)(sinf(wave * 2.0f) * 1.5f);
+    POINT fin1[3] = { { x + 7, y }, { x + 2, y - 6 + finOff }, { x + 1, y - 2 } };
+    POINT fin2[3] = { { x + 7, y }, { x + 2, y + 6 - finOff }, { x + 1, y + 2 } };
+    Polygon(hdc, fin1, 3);
+    Polygon(hdc, fin2, 3);
+
+    // Eye
+    SetPixel(hdc, x - 2, y - 1, RGB(255, 255, 255));
+
+    // Tentacles
+    for (int t = -1; t <= 1; t++) {
+        int startY = y + t * 2;
+        int t1Y = startY + (int)(sinf(wave + t) * 3.0f);
+        int t2Y = startY + (int)(cosf(wave * 1.2f + t) * 4.0f);
+        MoveToEx(hdc, x - 4, startY, NULL);
+        LineTo(hdc, x - 9, t1Y);
+        LineTo(hdc, x - 15, t2Y);
+    }
+
+    SelectObject(hdc, hPenOld);
+    SelectObject(hdc, hBrOld);
+    DeleteObject(hPen);
+    DeleteObject(hBr);
+}
+
+// 4. Abyssal Anglerfish Sprite
+static void DrawAnglerFishSprite(HDC hdc, int x, int y, COLORREF clr, BOOL isSwept) {
+    DWORD tick = GetTickCount();
+    HBRUSH hBr = CreateSolidBrush(clr);
+    HPEN hPen = CreatePen(PS_SOLID, 1, clr);
+    HPEN hPenOld = (HPEN)SelectObject(hdc, hPen);
+    HBRUSH hBrOld = (HBRUSH)SelectObject(hdc, hBr);
+
+    // Rotund body
+    Ellipse(hdc, x - 5, y - 4, x + 6, y + 5);
+
+    // Tail fin
+    int wag = (int)(sinf(tick * 0.01f) * 2.0f);
+    POINT tail[3] = { { x - 5, y }, { x - 9, y - 3 + wag }, { x - 9, y + 3 + wag } };
+    Polygon(hdc, tail, 3);
+
+    // Pectoral fin
+    POINT pec[3] = { { x - 1, y + 1 }, { x + 2, y + 4 }, { x, y + 3 } };
+    Polygon(hdc, pec, 3);
+
+    // Eye
+    SetPixel(hdc, x + 3, y - 1, RGB(255, 255, 255));
+
+    // Illicium rod and glowing esca lure
+    int escaOff = (int)(sinf(tick * 0.005f) * 1.5f);
+    MoveToEx(hdc, x + 2, y - 3, NULL);
+    LineTo(hdc, x + 4, y - 6);
+    LineTo(hdc, x + 7, y - 5 + escaOff);
+
+    HBRUSH hBrEsca = CreateSolidBrush(isSwept ? RGB(254, 240, 138) : RGB(103, 232, 249));
+    SelectObject(hdc, hBrEsca);
+    Ellipse(hdc, x + 6, y - 6 + escaOff, x + 9, y - 3 + escaOff);
+    DeleteObject(hBrEsca);
+
+    SelectObject(hdc, hPenOld);
+    SelectObject(hdc, hBrOld);
+    DeleteObject(hPen);
+    DeleteObject(hBr);
+}
+
+// 5. Bioluminescent Siphonophore / Flora Sprite
+static void DrawSiphonophoreSprite(HDC hdc, int x, int y, COLORREF clr, BOOL isSwept) {
+    DWORD tick = GetTickCount();
+    HBRUSH hBr = CreateSolidBrush(clr);
+    HPEN hPen = CreatePen(PS_SOLID, 1, clr);
+    HPEN hPenOld = (HPEN)SelectObject(hdc, hPen);
+    HBRUSH hBrOld = (HBRUSH)SelectObject(hdc, hBr);
+
+    // Bell dome
+    Ellipse(hdc, x - 4, y - 4, x + 5, y + 2);
+
+    // Glowing core
+    SetPixel(hdc, x, y - 1, RGB(167, 243, 208));
+
+    // Trailing filaments
+    for (int i = -1; i <= 1; i++) {
+        int fx = x + i * 2;
+        int sway = (int)(sinf(tick * 0.004f + i) * 2.0f);
+        MoveToEx(hdc, fx, y + 1, NULL);
+        LineTo(hdc, fx + sway / 2, y + 6);
+        LineTo(hdc, fx + sway, y + 10);
+        if (isSwept) {
+            SetPixel(hdc, fx + sway / 2, y + 6, RGB(110, 231, 183));
+        }
+    }
+
+    SelectObject(hdc, hPenOld);
+    SelectObject(hdc, hBrOld);
+    DeleteObject(hPen);
+    DeleteObject(hBr);
+}
+
+// 6. Salvage Node / Sunken Module Sprite
+static void DrawSalvageNodeSprite(HDC hdc, int x, int y, COLORREF clr, BOOL isSwept, BOOL harvested) {
+    HBRUSH hBr = CreateSolidBrush(clr);
+    HPEN hPen = CreatePen(PS_SOLID, 1, clr);
+    HPEN hPenOld = (HPEN)SelectObject(hdc, hPen);
+    HBRUSH hBrOld = (HBRUSH)SelectObject(hdc, hBr);
+
+    // Outer frame box
+    Rectangle(hdc, x - 5, y - 4, x + 6, y + 5);
+
+    // Inner cross struts
+    HPEN hPenStrut = CreatePen(PS_SOLID, 1, RGB(120, 53, 15));
+    SelectObject(hdc, hPenStrut);
+    MoveToEx(hdc, x - 4, y - 3, NULL); LineTo(hdc, x + 5, y + 4);
+    MoveToEx(hdc, x + 4, y - 3, NULL); LineTo(hdc, x - 5, y + 4);
+    DeleteObject(hPenStrut);
+
+    // Blinking strobe beacon if active
+    if (!harvested) {
+        DWORD tick = GetTickCount();
+        BOOL beaconOn = ((tick / 350) % 2 == 0);
+        SetPixel(hdc, x, y - 5, beaconOn ? RGB(255, 255, 255) : RGB(245, 158, 11));
+    }
+
+    SelectObject(hdc, hPenOld);
+    SelectObject(hdc, hBrOld);
+    DeleteObject(hPen);
+    DeleteObject(hBr);
+}
+
 void DrawNavMapChart(HDC hdc, int cx, int cy, int mapW, int mapH, const SubmarineTheme* th) {
     RECT rcMap = { cx - mapW / 2, cy - mapH / 2, cx + mapW / 2, cy + mapH / 2 };
     HBRUSH hBrMap = CreateSolidBrush(RGB(1, 8, 14));
@@ -2427,7 +2734,6 @@ void DrawNavMapChart(HDC hdc, int cx, int cy, int mapW, int mapH, const Submarin
         }
     }
 
-    
     // Outposts on Nav Map
     for (int i = 0; i < OUTPOST_COUNT; i++) {
         const OutpostInfo* out = &g_outposts[i];
@@ -2453,11 +2759,7 @@ void DrawNavMapChart(HDC hdc, int cx, int cy, int mapW, int mapH, const Submarin
         int sy = cy + (int)((sn->y - g_sub.posY) * scale);
 
         if (sx >= rcMap.left + 5 && sx <= rcMap.right - 5 && sy >= rcMap.top + 5 && sy <= rcMap.bottom - 5) {
-            HBRUSH hBrSn = CreateSolidBrush(sn->harvested ? th->borderPanel : RGB(251, 191, 36));
-            SelectObject(hdc, hBrSn);
-            POINT pts[4] = { { sx, sy - 5 }, { sx + 5, sy }, { sx, sy + 5 }, { sx - 5, sy } };
-            Polygon(hdc, pts, 4);
-            DeleteObject(hBrSn);
+            DrawSalvageNodeSprite(hdc, sx, sy, sn->harvested ? th->borderPanel : RGB(251, 191, 36), TRUE, sn->harvested);
 
             if (!sn->harvested) {
                 SetTextColor(hdc, RGB(251, 191, 36));
@@ -2466,21 +2768,11 @@ void DrawNavMapChart(HDC hdc, int cx, int cy, int mapW, int mapH, const Submarin
         }
     }
 
-    // Vessel Center
-    HBRUSH hBrSub = CreateSolidBrush(th->accentEmerald);
-    SelectObject(hdc, hBrSub);
-    Ellipse(hdc, cx - 5, cy - 5, cx + 5, cy + 5);
-    DeleteObject(hBrSub);
-
-    float hRad = (g_sub.heading - 90.0f) * (3.14159265f / 180.0f);
-    HPEN hPenHeading = CreatePen(PS_SOLID, 2, th->accentEmerald);
-    SelectObject(hdc, hPenHeading);
-    MoveToEx(hdc, cx, cy, NULL);
-    LineTo(hdc, cx + (int)(cosf(hRad) * 22), cy + (int)(sinf(hRad) * 22));
-    DeleteObject(hPenHeading);
+    // Submersible Bathyscaphe Vessel Center Sprite
+    DrawSubmarineVesselSprite(hdc, cx, cy, g_sub.heading, g_sub.speed, th);
 
     SetTextColor(hdc, th->textBright);
-    TextOutA(hdc, cx + 8, cy - 18, "DSV ABYSS (YOU)", 15);
+    TextOutA(hdc, cx + 18, cy - 18, "DSV ABYSS (YOU)", 15);
 
     SelectObject(hdc, hPenOld);
     DeleteObject(hPenGrid);
@@ -4272,17 +4564,8 @@ void DrawUI(HDC hdc, RECT* rcClient) {
             DeleteObject(hPenPing);
         }
 
-        HBRUSH hBrSub = CreateSolidBrush(th->accentEmerald);
-        SelectObject(hdc, hBrSub);
-        Ellipse(hdc, scx - 4, scy - 4, scx + 4, scy + 4);
-        DeleteObject(hBrSub);
-
-        float hRad = (g_sub.heading - 90.0f) * (3.14159265f / 180.0f);
-        HPEN hPenHeading = CreatePen(PS_SOLID, 2, th->accentEmerald);
-        SelectObject(hdc, hPenHeading);
-        MoveToEx(hdc, scx, scy, NULL);
-        LineTo(hdc, scx + (int)(cosf(hRad) * 16), scy + (int)(sinf(hRad) * 16));
-        DeleteObject(hPenHeading);
+        // Submarine Bathyscaphe Vessel Sprite
+        DrawSubmarineVesselSprite(hdc, scx, scy, g_sub.heading, g_sub.speed, th);
 
         // Unified Sonar Contacts (Fauna + Salvage Nodes)
         UnifiedContact contacts[8];
@@ -4312,17 +4595,20 @@ void DrawUI(HDC hdc, RECT* rcClient) {
             else if (c->type == 2) cClr = th->accentEmerald; // Flora
             else if (c->type == 3) cClr = th->accentAmber; // Trench
 
-            HBRUSH hBrContact = CreateSolidBrush(isSwept || isSelected ? cClr : th->radarRing);
-            SelectObject(hdc, hBrContact);
+            COLORREF drawClr = (isSwept || isSelected) ? cClr : th->radarRing;
 
             if (c->isSalvage) {
-                POINT pts[4] = { { fcx, fcy - 4 }, { fcx + 4, fcy }, { fcx, fcy + 4 }, { fcx - 4, fcy } };
-                Polygon(hdc, pts, 4);
+                BOOL isH = (c->index >= 0 && c->index < SALVAGE_NODE_COUNT) ? g_salvageNodes[c->index].harvested : FALSE;
+                DrawSalvageNodeSprite(hdc, fcx, fcy, drawClr, isSwept || isSelected, isH);
+            } else if (c->type == 4) {
+                DrawLeviathanSprite(hdc, fcx, fcy, drawClr, isSwept || isSelected);
+            } else if (c->type == 1) {
+                DrawSquidSprite(hdc, fcx, fcy, drawClr, isSwept || isSelected);
+            } else if (c->type == 2) {
+                DrawSiphonophoreSprite(hdc, fcx, fcy, drawClr, isSwept || isSelected);
             } else {
-                int dotRad = (c->type == 4 ? 6 : (c->type == 1 ? 4 : 3));
-                Ellipse(hdc, fcx - dotRad, fcy - dotRad, fcx + dotRad, fcy + dotRad);
+                DrawAnglerFishSprite(hdc, fcx, fcy, drawClr, isSwept || isSelected);
             }
-            DeleteObject(hBrContact);
 
             if (isSwept || isSelected) {
                 SetTextColor(hdc, th->textBright);

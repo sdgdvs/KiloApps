@@ -121,7 +121,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KChess
 - KPong
 - KMines
-- KSubmarine
 - KAsteroids
 - K2048
 - KDarts
@@ -152,9 +151,12 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSpace
 - KPac
 - KSanctuary
+- KAbyss
+- KSubmarine
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
 
+- KSubmarine (Loop 1): Submersible bathyscaphe sprite with spinning propeller & cavitation bubbles, animated abyssal Leviathan, Architeuthis squid, siphonophore, and anglerfish sprites.
 - KSanctuary (Loop 1): Sub-mountain cross-section cutaway canvas with animated dwellers and reactor telemetry, pixel-art facility icons, dweller portraits, and wasteland landmark sprites.
 - Icon Audit Pass: Created distinctive procedural ICO and vector SVG icons for all 10 missing web apps (KColony, KFarm, KWizard, KVoid, KDragon, KMech, KCyber, KTrader, KMystery, KStellar).
 - KPac (Loop 9): 3D Pac-Man with ambient aura, animated wavy-skirt ghosts with tracking pupils, high-detail fruits, energizers, and cybernetic circuit walls.
@@ -199,6 +201,5 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KCyber (Loop 2): Cyberdeck sprites, ICE Daemon enemy, holographic data payload, and hack-themed particle effects.
 - KTetris (Loop 8): Screen-shake, multi-layer particles, dual shockwaves, HUD reticles, and tetromino specular sheen.
 - KSnake (Loop 8): Screen-shake, multi-layer particles, dual shockwaves, HUD reticles, and viper body specular sheen.
-- KSubmarine (Loop 0): Not yet processed.
 - KStarDredge (Loop 0): Not yet processed.
 - KAbyss (Loop 0): In queue.
