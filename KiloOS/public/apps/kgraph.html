@@ -894,10 +894,12 @@
       // Exponent substitution
       expr = expr.replace(/\^/g, '**');
       
-      // Substitute angle / parameter variables 'theta', 'th', 't' with 'x' for unified evaluation
+      // Substitute angle / parameter variables 'theta', 'th', 't', 'θ' with 'x' for unified evaluation
       expr = expr.replace(/\btheta\b/gi, 'x');
       expr = expr.replace(/\bth\b/gi, 'x');
       expr = expr.replace(/\bt\b/gi, 'x');
+      expr = expr.replace(/θ/g, 'x');
+      expr = expr.replace(/\bX\b/g, 'x');
       
       // Replace Math functions
       const funcs = ['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sqrt', 'abs', 'log', 'exp', 'floor', 'ceil', 'round', 'sign', 'min', 'max'];
@@ -1187,8 +1189,11 @@
     
     function loadCartesianPreset(expr) {
       setPlotMode('cartesian');
-      cartesianFuncs[0].expr = expr;
-      cartesianFuncs[0].enabled = true;
+      cartesianFuncs.forEach((f, i) => {
+        if (i === 0) { f.expr = expr; f.enabled = true; }
+        else { f.enabled = false; }
+      });
+      resetView();
       buildModeControls();
       replotAll();
       switchTab('tabFuncs');
@@ -1196,8 +1201,11 @@
 
     function loadPolarPreset(expr) {
       setPlotMode('polar');
-      polarFuncs[0].expr = expr;
-      polarFuncs[0].enabled = true;
+      polarFuncs.forEach((f, i) => {
+        if (i === 0) { f.expr = expr; f.enabled = true; }
+        else { f.enabled = false; }
+      });
+      resetView();
       buildModeControls();
       replotAll();
       switchTab('tabFuncs');
@@ -1205,9 +1213,11 @@
 
     function loadParametricPreset(exprX, exprY) {
       setPlotMode('parametric');
-      parametricCurves[0].exprX = exprX;
-      parametricCurves[0].exprY = exprY;
-      parametricCurves[0].enabled = true;
+      parametricCurves.forEach((c, i) => {
+        if (i === 0) { c.exprX = exprX; c.exprY = exprY; c.enabled = true; }
+        else { c.enabled = false; }
+      });
+      resetView();
       buildModeControls();
       replotAll();
       switchTab('tabFuncs');
@@ -1232,8 +1242,10 @@
     function togglePolarFunc(idx, enabled) { polarFuncs[idx].enabled = enabled; replotAll(); }
     function updatePolarExpr(idx, expr) { polarFuncs[idx].expr = expr; replotAll(); }
     function updatePolarRange() {
-      polarMinTh = parseFloat(document.getElementById('polarMinInput').value) || 0;
-      polarMaxTh = parseFloat(document.getElementById('polarMaxInput').value) || (4 * Math.PI);
+      const minEl = document.getElementById('polarMinInput');
+      const maxEl = document.getElementById('polarMaxInput');
+      if (minEl) polarMinTh = !isNaN(parseFloat(minEl.value)) ? parseFloat(minEl.value) : 0;
+      if (maxEl) polarMaxTh = !isNaN(parseFloat(maxEl.value)) ? parseFloat(maxEl.value) : (4 * Math.PI);
       replotAll();
     }
 
@@ -1244,8 +1256,10 @@
       replotAll();
     }
     function updateParamRange() {
-      paramMinT = parseFloat(document.getElementById('paramMinInput').value) || 0;
-      paramMaxT = parseFloat(document.getElementById('paramMaxInput').value) || (2 * Math.PI);
+      const minEl = document.getElementById('paramMinInput');
+      const maxEl = document.getElementById('paramMaxInput');
+      if (minEl) paramMinT = !isNaN(parseFloat(minEl.value)) ? parseFloat(minEl.value) : 0;
+      if (maxEl) paramMaxT = !isNaN(parseFloat(maxEl.value)) ? parseFloat(maxEl.value) : (2 * Math.PI);
       replotAll();
     }
 
@@ -1327,7 +1341,7 @@
           }
           const rootX = (low + high) / 2;
           const rootY = fn(rootX);
-          if (Math.abs(rootY) < 1e-4) {
+          if (Math.abs(rootY) < 1e-4 && !computedRoots.some(r => Math.abs(r.x - rootX) < 1e-3)) {
             computedRoots.push({ x: rootX, y: rootY, funcIdx: idx });
           }
         }
@@ -1391,7 +1405,7 @@
               }
               const interX = (low + high) / 2;
               const interY = fn1(interX);
-              if (!isNaN(interY)) {
+              if (!isNaN(interY) && !computedIntersections.some(pt => Math.abs(pt.x - interX) < 1e-3 && pt.f1 === i1 && pt.f2 === i2)) {
                 computedIntersections.push({ x: interX, y: interY, f1: i1, f2: i2 });
               }
             }
@@ -1421,6 +1435,7 @@
       view_cx = x;
       view_cy = y;
       drawGraph();
+      showToast(`Focused on (${x.toFixed(4)}, ${y.toFixed(4)})`);
     }
 
     // --- Graph Rendering ---
@@ -1785,7 +1800,6 @@
       const headerLine = document.getElementById('readoutHeaderLine');
       
       if (currentMode === 'cartesian') {
-        document.getElementById('readoutX').innerText = currentHoverX.toFixed(4);
         headerLine.innerHTML = `<span>x:</span> <span class="readout-val">${currentHoverX.toFixed(4)}</span>`;
         
         let html = '';
@@ -1861,6 +1875,35 @@
       drawGraph();
     });
     
+    let lastTouch = { x: 0, y: 0 };
+    canvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        isDragging = true;
+        lastTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    }, { passive: true });
+    
+    window.addEventListener('touchend', () => {
+      isDragging = false;
+    });
+    
+    canvas.addEventListener('touchmove', (e) => {
+      if (!isDragging || e.touches.length !== 1) return;
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches[0].clientX;
+      const clientY = e.touches[0].clientY;
+      const dx = clientX - lastTouch.x;
+      const dy = clientY - lastTouch.y;
+      lastTouch = { x: clientX, y: clientY };
+      
+      const w = rect.width;
+      const h = rect.height;
+      const view_height = 2 * view_scale * (h / w);
+      view_cx -= (dx / w) * (2 * view_scale);
+      view_cy += (dy / h) * view_height;
+      drawGraph();
+    }, { passive: true });
+    
     canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
       const zoomFactor = e.deltaY < 0 ? 0.85 : 1.18;
@@ -1891,38 +1934,79 @@
       const link = document.createElement('a');
       link.download = `KGraph_${currentMode}_snapshot.png`;
       link.href = canvas.toDataURL('image/png');
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
       showToast('📷 PNG snapshot exported!');
     }
     
     function exportCSV() {
-      const minX = view_cx - view_scale;
-      const maxX = view_cx + view_scale;
-      const steps = 200;
-      const dx = (maxX - minX) / steps;
-      
-      let csv = 'x,y1,y2,y3,y4,y5\n';
-      for (let i = 0; i <= steps; i++) {
-        const x = minX + i * dx;
-        let row = [x.toFixed(5)];
-        compiledCartesian.forEach((fn, idx) => {
-          if (fn && cartesianFuncs[idx].enabled) {
-            const y = fn(x);
-            row.push(isNaN(y) ? '' : y.toFixed(5));
-          } else {
-            row.push('');
-          }
-        });
-        csv += row.join(',') + '\n';
+      let csv = '';
+      if (currentMode === 'cartesian') {
+        const minX = view_cx - view_scale;
+        const maxX = view_cx + view_scale;
+        const steps = 200;
+        const dx = (maxX - minX) / steps;
+        csv = 'x,y1,y2,y3,y4,y5\n';
+        for (let i = 0; i <= steps; i++) {
+          const x = minX + i * dx;
+          let row = [x.toFixed(5)];
+          compiledCartesian.forEach((fn, idx) => {
+            if (fn && cartesianFuncs[idx].enabled) {
+              const y = fn(x);
+              row.push(isNaN(y) ? '' : y.toFixed(5));
+            } else {
+              row.push('');
+            }
+          });
+          csv += row.join(',') + '\n';
+        }
+      } else if (currentMode === 'polar') {
+        const steps = 200;
+        const dTh = (polarMaxTh - polarMinTh) / steps;
+        csv = 'theta_rad,theta_deg,r1,r2,r3\n';
+        for (let i = 0; i <= steps; i++) {
+          const th = polarMinTh + i * dTh;
+          let row = [th.toFixed(5), (th * 180 / Math.PI).toFixed(2)];
+          compiledPolar.forEach((fn, idx) => {
+            if (fn && polarFuncs[idx].enabled) {
+              const r = fn(th);
+              row.push(isNaN(r) ? '' : r.toFixed(5));
+            } else {
+              row.push('');
+            }
+          });
+          csv += row.join(',') + '\n';
+        }
+      } else if (currentMode === 'parametric') {
+        const steps = 200;
+        const dt = (paramMaxT - paramMinT) / steps;
+        csv = 't,curve1_x,curve1_y,curve2_x,curve2_y\n';
+        for (let i = 0; i <= steps; i++) {
+          const t = paramMinT + i * dt;
+          let row = [t.toFixed(5)];
+          compiledParametric.forEach((p, idx) => {
+            if (p && parametricCurves[idx].enabled && p.fnX && p.fnY) {
+              const x = p.fnX(t);
+              const y = p.fnY(t);
+              row.push(isNaN(x) ? '' : x.toFixed(5), isNaN(y) ? '' : y.toFixed(5));
+            } else {
+              row.push('', '');
+            }
+          });
+          csv += row.join(',') + '\n';
+        }
       }
       
-      const blob = new Blob([csv], { type: 'text/csv' });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `KGraph_${currentMode}_data.csv`;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
       showToast('📊 CSV data points exported!');
     }
     
@@ -1932,6 +2016,11 @@
         cartesianFuncs: cartesianFuncs,
         polarFuncs: polarFuncs,
         parametricCurves: parametricCurves,
+        polarMinTh: polarMinTh,
+        polarMaxTh: polarMaxTh,
+        showPolarGrid: showPolarGrid,
+        paramMinT: paramMinT,
+        paramMaxT: paramMaxT,
         view_cx: view_cx,
         view_cy: view_cy,
         view_scale: view_scale
@@ -1942,8 +2031,10 @@
       const a = document.createElement('a');
       a.href = url;
       a.download = 'KGraph_config.json';
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
       showToast('💾 Graph configuration saved to JSON!');
     }
     
@@ -1957,6 +2048,11 @@
           if (config.cartesianFuncs) cartesianFuncs = config.cartesianFuncs;
           if (config.polarFuncs) polarFuncs = config.polarFuncs;
           if (config.parametricCurves) parametricCurves = config.parametricCurves;
+          if (config.polarMinTh !== undefined) polarMinTh = config.polarMinTh;
+          if (config.polarMaxTh !== undefined) polarMaxTh = config.polarMaxTh;
+          if (config.showPolarGrid !== undefined) showPolarGrid = config.showPolarGrid;
+          if (config.paramMinT !== undefined) paramMinT = config.paramMinT;
+          if (config.paramMaxT !== undefined) paramMaxT = config.paramMaxT;
           if (config.mode) currentMode = config.mode;
           if (config.view_cx !== undefined) view_cx = config.view_cx;
           if (config.view_cy !== undefined) view_cy = config.view_cy;
@@ -1969,6 +2065,7 @@
         }
       };
       reader.readAsText(file);
+      event.target.value = '';
     }
     
     let toastTimeout;
@@ -1988,7 +2085,8 @@
     }
 
     // Initialization
-    window.resizeTo(1024, 768);
+    try { window.resizeTo(1024, 768); } catch(e) {}
+    replotAll();
     buildModeControls();
     buildPresets();
     setTimeout(resizeCanvas, 100);
@@ -2001,13 +2099,21 @@
         return;
       }
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+      
+      const modal = document.getElementById('helpModal');
+      const isModalOpen = modal && modal.classList.contains('active');
       
       if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
-        if (e.key === 'F1') e.preventDefault();
-        const modal = document.getElementById('helpModal');
-        if (modal.classList.contains('active')) closeHelpModal();
+        e.preventDefault();
+        if (isModalOpen) closeHelpModal();
         else openHelpModal();
-      } else if (e.key === '1') {
+        return;
+      }
+      
+      if (isModalOpen) return;
+      
+      if (e.key === '1') {
         switchTab('tabFuncs');
         showToast('Tab: [1] Functions');
       } else if (e.key === '2') {

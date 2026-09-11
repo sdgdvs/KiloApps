@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KGraph
+**Target App:** KHabit
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KGraph
 - KHabit
 - KHangman
 - KHex
@@ -173,8 +172,20 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KFortress
 - KFreecell
 - KGo
+- KGraph
 
 ## Test Reports
+
+- **KGraph**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
+  - ✅ Core functionality works (interactive function, polar, and parametric graphing suite with real-time expression evaluation, Cartesian y(x) with derivative overlay and Simpson's rule definite integral shading, Polar r(θ) with concentric range circles and radial spokes, Parametric (x,y)(t) curves, bisection root finder, curve intersection finder, 18-preset library across Cartesian, Polar, and Parametric curves, hover crosshair coordinate & numerical derivative readout, pan & zoom canvas, PNG snapshot export, CSV data points export, and JSON configuration save/load).
+  - 🔧 FIXED: In `updateReadout()`, `document.getElementById('readoutX').innerText = currentHoverX.toFixed(4)` directly accessed an element that was destroyed whenever switching to Polar or Parametric modes (`headerLine.innerHTML = ...`), causing `TypeError: Cannot set properties of null (setting 'innerText')` on subsequent mouse movements upon switching back to Cartesian mode and freezing canvas mouse updates. Removed the redundant `readoutX` lookup and relied on `headerLine.innerHTML`.
+  - 🔧 FIXED: In initialization, `replotAll()` was never invoked, leaving `compiledCartesian = []` and causing the default curves (`sin(x)`, `cos(x)`) not to render on initial page load until the user clicked Plot. Added `replotAll()` to the startup sequence.
+  - 🔧 FIXED: Global `keydown` listener checked bare `e.key` without verifying `!e.ctrlKey && !e.altKey && !e.metaKey`, hijacking browser accelerators (`Ctrl+C` switching mode to Cartesian instead of copying text, `Ctrl+P` switching to Polar instead of printing, `Ctrl+H` opening Help instead of browser history, `Ctrl+R` resetting view instead of reloading, `Ctrl+1..4` switching tabs instead of browser tabs, `Ctrl+0`, `Ctrl++`, `Ctrl+-`). Added modifier key guards and modal background suppression.
+  - 🔧 FIXED: In `compileMathExpr()`, input expressions lacked replacement for the Greek theta character `θ` and uppercase `X`, despite `θ` being shown in the polar input placeholder and Help documentation. Entering `θ` or `X` caused `ReferenceError: θ is not defined` and expression compilation failure. Added `expr.replace(/θ/g, 'x')` and `expr.replace(/\bX\b/g, 'x')`.
+  - 🔧 FIXED: In `exportPNG()`, `exportCSV()`, and `exportJSON()`, download anchor elements were clicked without being attached to `document.body`, failing silently in Firefox and sandboxed iframe environments, and `URL.revokeObjectURL(url)` was invoked synchronously on the immediate next line before the browser could begin downloading. Attached anchors to the DOM, removed them cleanly after click, and deferred object URL revocation.
+  - 🔧 FIXED: `exportCSV()` hardcoded Cartesian headers and data (`x,y1..y5`) regardless of the active plot mode, causing Polar and Parametric exports to output blank or irrelevant Cartesian data. Added dedicated CSV export branches for Polar (`theta_rad,theta_deg,r1..r3`) and Parametric (`t,curve1_x,curve1_y,curve2_x,curve2_y`) modes.
+  - 🔧 FIXED: `exportJSON()` and `importJSON()` omitted custom polar/parametric range and grid settings (`polarMinTh`, `polarMaxTh`, `showPolarGrid`, `paramMinT`, `paramMaxT`), resetting them to defaults upon reloading configurations, and `importJSON()` failed to reset `event.target.value = ''` (preventing re-importing the same configuration file). Persisted and restored all range settings and reset the file input.
+  - 🔧 FIXED: In `updatePolarRange()` and `updateParamRange()`, `parseFloat(...) || default` treated `0` as falsy, resetting custom min/max ranges to default whenever `0` was entered. Replaced falsy fallback with `!isNaN()` validation; isolated preset loading so previously active curves do not clutter newly loaded presets; and added touch event handlers (`touchstart`, `touchmove`, `touchend`) to canvas for mobile and touch display panning.
 
 - **KGo**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
   - ✅ Core gameplay works (9x9, 13x13, 19x19 Go/Baduk goban with hoshi star points and Tatami lantern aesthetic, Superko and suicide validation, territory and liberties flood fill, 4 AI personalities Territorial/Influence/Balanced/Grandmaster, AI Hint move recommendation, live Territory Estimator and Group Liberty Analyzer overlays, 20-stage Campaign and Tsumego life-and-death puzzles, Web Audio placement/capture synth sounds, multi-tier particle spark and canvas smoke physics, cherry blossom atmospheric effects).
