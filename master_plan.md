@@ -17,15 +17,16 @@ The project aims to return software development to the lightweight, compute-effi
 - **Games:** 43 titles. 🎯 **40 GAME MILESTONE REACHED!**
 - **Build Health:** ✅ Clean.
 - **Model:** Gemini 3.8 Flash migration pending user relaunch of Prompt A. Director B on Claude Opus 4.6.
-- **Fleet:** QA agent active (Pass 4 — 26 apps completed). Other 5 agents appear **idle** — Prompt A and Prompt B dispatchers need restart.
+- **Fleet:** Prompt B runs **QA + App Tester only** (per user directive Sep 10). Feature Expander and Game Content **intentionally paused** until reliability improves across all apps. Prompt A agents still pending relaunch.
 - **Director Comms:** `director_comms.md` — 3 entries exchanged. Graphics Loop 0 priority RESOLVED.
 
-### Strategic Direction (Sep 6, confirmed Sep 10)
-**Depth-first over breadth-first.** Both Directors agree:
-1. Let 100-app milestone happen organically — no acceleration.
-2. Prioritize Loop 0 games in Graphics queue (unprocessed games first).
-3. Quality over quantity for new app creation.
-4. Focus on making existing apps genuinely excellent.
+### Strategic Direction (Sep 10 — user directive)
+**Reliability-first.** User practical testing found low usability/reliability across many apps. New strategy:
+1. **Pause content and feature expansion** until QA + Tester cycles fix broken/nonfunctional features.
+2. QA agent continues deep bug-fix passes (Pass 4+).
+3. App Tester agent performs meaningful user-perspective testing and fixes broken UX.
+4. Feature Expander and Game Content will resume **only after** several testing/QA cycles are complete.
+5. Depth-first strategy continues — no new app acceleration.
 
 ### Game Library (43 titles)
 K2048, KAbyss, KAlchemy, KAsteroids, KBreakout, KChess, KColony, KColosseum, KConnect4, KCyber, KDarts, KDragon, KFarm, KFortress, KFreecell, KGo, KHangman, KMatch3, KMaze, KMech, KMines, KMystery, KPac, KPong, KQuest, KReversi, KRogue, KSanctuary, KSimon, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSudoku, KTetris, KTowers, KTrader, KVoid, KWizard, KWords.
@@ -34,15 +35,15 @@ K2048, KAbyss, KAlchemy, KAsteroids, KBreakout, KChess, KColony, KColosseum, KCo
 
 | Agent | Status | Current Task | Speed |
 |---|---|---|---|
-| QA & Build | ✅ Active | KPing (Pass 4) | Every 3h (Prompt B) |
-| Tester | ✅ Active | UI audits | ~Every 2h (Prompt B) |
-| Feature Expander | ⏸️ Paused | KConnect4 | Every 2h (Prompt B — quota?) |
-| Game Content | ⏸️ Paused | Loop 11-12 | Every 2h (Prompt B — quota?) |
-| App Creator | ⏸️ Pending | KAbyss Phase 5 | **Every 6h** (Prompt A — not yet launched) |
-| Game Graphics | ⏸️ Pending | Loop 9 queue | **Every 6h** (Prompt A — not yet launched) |
-| Usability | ⏸️ Pending | KPac | **Every 4h** (Prompt A — not yet launched) |
-| Director #1 | ✅ Active | This review | Every 3 days (Claude) |
-| Director #2 | ✅ Active | Ran Sep 9 | Every 3 days (Prompt B) |
+| QA & Build | ✅ Active | Pass 4 | Every 3h (Prompt B) |
+| App Tester | ✅ Active | UI audits + broken feature fixes | ~Every 2h (Prompt B) |
+| Feature Expander | ⏸️ **Paused (user directive)** | — | Paused until reliability improves |
+| Game Content | ⏸️ **Paused (user directive)** | — | Paused until reliability improves |
+| App Creator | ⏸️ Pending | KAbyss Phase 5 | Prompt A — not yet launched |
+| Game Graphics | ⏸️ Pending | Loop 9 queue | Prompt A — not yet launched |
+| Usability | ⏸️ Pending | KPac | Prompt A — not yet launched |
+| Director #1 (A) | ✅ Active | — | Every 3 days (Claude) |
+| Director #2 (B) | ✅ Active | — | Every 3 days (This conversation) |
 
 ### Content Depth
 - **Deep Games:** KRogue at Loop 11 (9 class archetypes!). KSpace/KAsteroids at Loop 11.

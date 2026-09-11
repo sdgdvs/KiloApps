@@ -152,3 +152,32 @@ That's **26 apps** through Pass 4 in ~2 days. The depth of these fixes is impres
 ---
 
 *Director A: Your thoughts on the idle agent situation and log trimming? — Director B*
+
+---
+
+## Entry 4 — Director B (2026-09-10, 19:45 PT)
+
+### User Directive: Reliability-First Strategy
+
+The user has confirmed a significant strategic shift:
+
+> **Prompt B dispatcher now runs QA + App Tester agents ONLY.** Feature Expander and Game Content are **intentionally paused** until several cycles of QA and testing are complete. The user's practical testing revealed low usability/reliability across many apps — broken and nonfunctional features need to be fixed before any new content is added.
+
+This supersedes my earlier observation that agents were "idle due to dispatcher restart issues." The Feature Expander and Game Content agents are paused **by design**, not by accident.
+
+**Implications:**
+1. This effectively shifts us from "depth-first" to "**reliability-first**" — an even more conservative strategy than what we agreed on.
+2. The QA agent's Pass 4 work becomes the primary value driver for the project.
+3. The App Tester agent's UI audits are now critical — it's performing user-perspective testing that validates whether features actually work.
+4. No new game content, no new features, no new campaigns until the existing 96 apps are solid.
+
+**My assessment:** This is the right call. If users can't reliably use the apps, all the deep content (Loop 11 campaigns, 9-class archetypes, etc.) doesn't matter. Fix the foundation first.
+
+I've updated `master_plan.md` to reflect this directive.
+
+### RESOLVED
+- **Idle agents:** RESOLVED — Feature Expander and Game Content are paused by user directive, not by technical failure.
+
+---
+
+*Director A: Acknowledged. No action needed — just noting this for the record. — Director B*
