@@ -95,6 +95,8 @@ typedef struct {
     int bestTimeD3;
     int vegasCash;         // Cumulative Vegas Bankroll ($)
     int maxCampaignStage;  // Highest stage unlocked (1..20)
+    int themeId;           // Saved deck theme ID (0..4)
+    int feltId;            // Saved felt color ID (0..3)
 } SolitaireStats;
 
 typedef struct {
@@ -306,9 +308,13 @@ void LoadStats() {
         CloseHandle(hFile);
     }
     if (stats.maxCampaignStage < 1) stats.maxCampaignStage = 1;
+    if (stats.themeId >= 0 && stats.themeId <= 4) themeId = stats.themeId;
+    if (stats.feltId >= 0 && stats.feltId <= 3) feltId = stats.feltId;
 }
 
 void SaveStats() {
+    stats.themeId = themeId;
+    stats.feltId = feltId;
     HANDLE hFile = CreateFileA("ksolitaire.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD written = 0;
@@ -849,8 +855,9 @@ void DrawPerimeterInlay(HDC hdc, int winW, int winH, DWORD tick) {
         }
 
         HBRUSH glintBrush = CreateSolidBrush(RGB(255, 255, 255));
-        SelectObject(hdc, glintBrush);
+        HBRUSH prevGB = (HBRUSH)SelectObject(hdc, glintBrush);
         Ellipse(hdc, gx - 4, gy - 4, gx + 4, gy + 4);
+        SelectObject(hdc, prevGB);
         DeleteObject(glintBrush);
     }
 
@@ -891,8 +898,9 @@ void DrawShockwavesGDI(HDC hdc) {
             int ir = (r * 3) / 4;
             if (ir > 2) {
                 HPEN compPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-                SelectObject(hdc, compPen);
+                HPEN prevCP = (HPEN)SelectObject(hdc, compPen);
                 Ellipse(hdc, (int)shockwaves[s].x - ir, (int)shockwaves[s].y - ir, (int)shockwaves[s].x + ir, (int)shockwaves[s].y + ir);
+                SelectObject(hdc, prevCP);
                 DeleteObject(compPen);
             }
 
@@ -1452,6 +1460,7 @@ void DrawCourtCardGDI(HDC hdc, int rank, int suit, int x, int y) {
     HBRUSH skinBrush = CreateSolidBrush(RGB(255, 224, 189));
     SelectObject(hdc, skinBrush);
     Ellipse(hdc, cx - 11, cy - 15, cx + 11, cy + 7);
+    SelectObject(hdc, oldBrush);
     DeleteObject(skinBrush);
 
     HPEN facePen = CreatePen(PS_SOLID, 1, RGB(50, 50, 50));
@@ -1459,6 +1468,7 @@ void DrawCourtCardGDI(HDC hdc, int rank, int suit, int x, int y) {
     MoveToEx(hdc, cx - 5, cy - 6, NULL); LineTo(hdc, cx - 3, cy - 6);
     MoveToEx(hdc, cx + 3, cy - 6, NULL); LineTo(hdc, cx + 5, cy - 6);
     MoveToEx(hdc, cx - 3, cy + 1, NULL); LineTo(hdc, cx + 3, cy + 1);
+    SelectObject(hdc, goldPen);
     DeleteObject(facePen);
 
     if (rank == 13) { // King
@@ -1466,6 +1476,7 @@ void DrawCourtCardGDI(HDC hdc, int rank, int suit, int x, int y) {
         SelectObject(hdc, beardBrush);
         POINT beardPts[3] = { {cx - 10, cy + 1}, {cx + 10, cy + 1}, {cx, cy + 12} };
         Polygon(hdc, beardPts, 3);
+        SelectObject(hdc, oldBrush);
         DeleteObject(beardBrush);
 
         HBRUSH crownBrush = CreateSolidBrush(RGB(255, 215, 0));
@@ -1473,12 +1484,14 @@ void DrawCourtCardGDI(HDC hdc, int rank, int suit, int x, int y) {
         POINT crownPts[5] = { {cx - 12, cy - 12}, {cx - 8, cy - 22}, {cx, cy - 16}, {cx + 8, cy - 22}, {cx + 12, cy - 12} };
         Polygon(hdc, crownPts, 5);
         Ellipse(hdc, cx - 2, cy - 18, cx + 2, cy - 14);
+        SelectObject(hdc, oldBrush);
         DeleteObject(crownBrush);
 
         HBRUSH robeBrush = CreateSolidBrush(RGB(185, 28, 28));
         SelectObject(hdc, robeBrush);
         POINT robePts[4] = { {cx - 14, cy + 5}, {cx + 14, cy + 5}, {cx + 18, fy + fh - 2}, {cx - 18, fy + fh - 2} };
         Polygon(hdc, robePts, 4);
+        SelectObject(hdc, oldBrush);
         DeleteObject(robeBrush);
 
         HPEN scPen = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
@@ -1486,70 +1499,82 @@ void DrawCourtCardGDI(HDC hdc, int rank, int suit, int x, int y) {
         MoveToEx(hdc, cx + 14, fy + 8, NULL);
         LineTo(hdc, cx + 14, fy + fh - 4);
         Ellipse(hdc, cx + 11, fy + 4, cx + 17, fy + 10);
+        SelectObject(hdc, goldPen);
         DeleteObject(scPen);
 
         HBRUSH shieldBrush = CreateSolidBrush(RGB(30, 100, 200));
         SelectObject(hdc, shieldBrush);
         POINT shieldPts[4] = { {cx - 16, fy + 16}, {cx - 8, fy + 16}, {cx - 8, fy + 24}, {cx - 12, fy + 28} };
         Polygon(hdc, shieldPts, 4);
+        SelectObject(hdc, oldBrush);
         DeleteObject(shieldBrush);
     } else if (rank == 12) { // Queen
         HBRUSH hairBrush = CreateSolidBrush(RGB(180, 130, 50));
         SelectObject(hdc, hairBrush);
         Ellipse(hdc, cx - 14, cy - 10, cx - 6, cy + 8);
         Ellipse(hdc, cx + 6, cy - 10, cx + 14, cy + 8);
+        SelectObject(hdc, oldBrush);
         DeleteObject(hairBrush);
 
         HBRUSH tiaraBrush = CreateSolidBrush(RGB(255, 215, 0));
         SelectObject(hdc, tiaraBrush);
         POINT tiaraPts[5] = { {cx - 10, cy - 12}, {cx - 6, cy - 20}, {cx, cy - 15}, {cx + 6, cy - 20}, {cx + 10, cy - 12} };
         Polygon(hdc, tiaraPts, 5);
+        SelectObject(hdc, oldBrush);
         DeleteObject(tiaraBrush);
 
         HBRUSH gownBrush = CreateSolidBrush(RGB(126, 34, 206));
         SelectObject(hdc, gownBrush);
         POINT gownPts[4] = { {cx - 12, cy + 5}, {cx + 12, cy + 5}, {cx + 16, fy + fh - 2}, {cx - 16, fy + fh - 2} };
         Polygon(hdc, gownPts, 4);
+        SelectObject(hdc, oldBrush);
         DeleteObject(gownBrush);
 
         HBRUSH roseBrush = CreateSolidBrush(RGB(244, 63, 94));
         SelectObject(hdc, roseBrush);
         Ellipse(hdc, cx + 8, cy + 10, cx + 16, cy + 18);
         Ellipse(hdc, cx + 10, cy + 12, cx + 14, cy + 16);
+        SelectObject(hdc, oldBrush);
         DeleteObject(roseBrush);
 
         HPEN stemPen = CreatePen(PS_SOLID, 2, RGB(34, 197, 94));
         SelectObject(hdc, stemPen);
         MoveToEx(hdc, cx + 12, cy + 18, NULL); LineTo(hdc, cx + 12, cy + 28);
+        SelectObject(hdc, goldPen);
         DeleteObject(stemPen);
     } else if (rank == 11) { // Jack
         HBRUSH capBrush = CreateSolidBrush(RGB(220, 38, 38));
         SelectObject(hdc, capBrush);
         Ellipse(hdc, cx - 12, cy - 20, cx + 12, cy - 10);
+        SelectObject(hdc, oldBrush);
         DeleteObject(capBrush);
 
         HPEN fPen = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
         SelectObject(hdc, fPen);
         MoveToEx(hdc, cx + 8, cy - 14, NULL);
         LineTo(hdc, cx + 16, cy - 24);
+        SelectObject(hdc, goldPen);
         DeleteObject(fPen);
 
         HBRUSH tabBrush = CreateSolidBrush(RGB(37, 99, 235));
         SelectObject(hdc, tabBrush);
         POINT tabPts[4] = { {cx - 12, cy + 5}, {cx + 12, cy + 5}, {cx + 14, fy + fh - 2}, {cx - 14, fy + fh - 2} };
         Polygon(hdc, tabPts, 4);
+        SelectObject(hdc, oldBrush);
         DeleteObject(tabBrush);
 
         HPEN spPen = CreatePen(PS_SOLID, 3, RGB(148, 163, 184));
         SelectObject(hdc, spPen);
         MoveToEx(hdc, cx - 14, fy + 4, NULL);
         LineTo(hdc, cx - 14, fy + fh - 4);
+        SelectObject(hdc, goldPen);
         DeleteObject(spPen);
 
         HPEN hiltPen = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
         SelectObject(hdc, hiltPen);
         MoveToEx(hdc, cx - 18, fy + fh - 10, NULL);
         LineTo(hdc, cx - 10, fy + fh - 10);
+        SelectObject(hdc, goldPen);
         DeleteObject(hiltPen);
     }
 
@@ -1592,6 +1617,7 @@ void DrawCardBackGDI(HDC hdc, int x, int y, int isXRay) {
     HBRUSH crownBrush = CreateSolidBrush(isXRay ? RGB(0, 229, 255) : RGB(255, 215, 0));
     SelectObject(hdc, crownBrush);
     Ellipse(hdc, cx - 14, cy - 14, cx + 14, cy + 14);
+    SelectObject(hdc, oldBrush);
     DeleteObject(crownBrush);
 
     SetTextColor(hdc, RGB(0, 0, 0));
@@ -1602,6 +1628,7 @@ void DrawCardBackGDI(HDC hdc, int x, int y, int isXRay) {
     SelectObject(hdc, oldBrush);
     DeleteObject(borderPen);
     DeleteObject(latPen);
+    DeleteObject(darkPen);
 }
 
 // --- Main GDI Card Renderer ---
@@ -1716,6 +1743,7 @@ void DrawSlotOutline(HDC hdc, int x, int y, const char *label, int isHintDst) {
     Ellipse(hdc, x + CARD_W - 8, y + 4, x + CARD_W - 4, y + 8);
     Ellipse(hdc, x + 4, y + CARD_H - 8, x + 8, y + CARD_H - 4);
     Ellipse(hdc, x + CARD_W - 8, y + CARD_H - 8, x + CARD_W - 4, y + CARD_H - 4);
+    SelectObject(hdc, oldBrush);
     DeleteObject(dotBrush);
 
     SelectObject(hdc, oldPen);
@@ -1885,21 +1913,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             InvalidateRect(hwnd, NULL, FALSE);
             break;
         }
+        case WM_ERASEBKGND:
+            return 1;
         case WM_KEYDOWN: {
-            if (wParam == VK_F2) NewGame(hwnd);
-            else if (wParam == VK_F1 || wParam == VK_HELP) ShowHelpDialog(hwnd);
-            else if (wParam == 'W' || wParam == 'w') UseMagicWand(hwnd);
-            else if (wParam == 'X' || wParam == 'x') UseXRayVision(hwnd);
-            else if (wParam == 'S' || wParam == 's') UseShuffleStock(hwnd);
-            else if (wParam == 'U' || wParam == 'u') PerformUndo();
-            else if (wParam == 'H' || wParam == 'h') GiveHint(hwnd);
-            else if (GetKeyState(VK_CONTROL) & 0x8000) {
-                if (wParam == 'Z') PerformUndo();
-                else if (wParam == 'Y') PerformRedo();
-                else if (wParam == 'H') GiveHint(hwnd);
-                else if (wParam == 'F') {
+            if (GetKeyState(VK_CONTROL) & 0x8000) {
+                if (wParam == 'Z' || wParam == 'z') PerformUndo();
+                else if (wParam == 'Y' || wParam == 'y') PerformRedo();
+                else if (wParam == 'H' || wParam == 'h') GiveHint(hwnd);
+                else if (wParam == 'F' || wParam == 'f') {
                     if (CanAutoFinish()) { autoFinishActive = 1; SetTimer(hwnd, 2, 100, NULL); }
                 }
+            } else {
+                if (wParam == VK_F2 || wParam == 'N' || wParam == 'n') NewGame(hwnd);
+                else if (wParam == VK_F1 || wParam == VK_HELP) ShowHelpDialog(hwnd);
+                else if (wParam == VK_ESCAPE) ClearSelectionAndHints();
+                else if (wParam == 'W' || wParam == 'w') UseMagicWand(hwnd);
+                else if (wParam == 'X' || wParam == 'x') UseXRayVision(hwnd);
+                else if (wParam == 'S' || wParam == 's') UseShuffleStock(hwnd);
+                else if (wParam == 'U' || wParam == 'u') PerformUndo();
+                else if (wParam == 'H' || wParam == 'h') GiveHint(hwnd);
             }
             InvalidateRect(hwnd, NULL, FALSE);
             break;
@@ -2546,6 +2578,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             KillTimer(hwnd, 2);
             KillTimer(hwnd, 3);
             KillTimer(hwnd, 5);
+            KillTimer(hwnd, 6);
+            SaveGameState();
+            SaveStats();
             PostQuitMessage(0);
             break;
         default:
@@ -2557,6 +2592,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 void MainEntry() {
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
+    wc.style = CS_DBLCLKS;
     wc.lpfnWndProc = WndProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = "KSolitaireApp";

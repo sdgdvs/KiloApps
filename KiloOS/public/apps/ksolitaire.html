@@ -699,34 +699,34 @@
   </div>
 
   <div class="toolbar">
-    <button class="btn btn-primary" onclick="newGame()">⚡ New Game</button>
+    <button class="btn btn-primary" onclick="newGame()" aria-label="Start new game (F2 or N)">⚡ New Game</button>
     
-    <select id="mode-select" class="btn" onchange="changeGameMode(this.value)">
+    <select id="mode-select" class="btn" onchange="changeGameMode(this.value)" aria-label="Select game mode">
       <option value="classic">Classic Solitaire</option>
       <option value="vegas">Vegas Money Mode</option>
       <option value="campaign">Campaign Mode (20 Stages)</option>
     </select>
 
-    <select id="stage-select" class="btn" style="display:none;" onchange="changeStage(this.value)">
+    <select id="stage-select" class="btn" style="display:none;" onchange="changeStage(this.value)" aria-label="Select campaign stage">
       <!-- Filled dynamically -->
     </select>
 
-    <select id="draw-mode-select" class="btn" onchange="changeDrawMode(this.value)">
+    <select id="draw-mode-select" class="btn" onchange="changeDrawMode(this.value)" aria-label="Select draw count mode">
       <option value="1">Draw 1</option>
       <option value="3">Draw 3</option>
     </select>
 
     <!-- Active Skills -->
-    <button id="wand-btn" class="btn btn-skill" onclick="useMagicWand()" title="Magic Wand [W]: Auto play 1 card to foundation">🪄 Wand (<span id="wand-cnt">3</span>)</button>
-    <button id="xray-btn" class="btn btn-skill" onclick="useXRayVision()" title="X-Ray Vision [X]: Reveal face-down cards for 5s">👁️ X-Ray (<span id="xray-cnt">3</span>)</button>
-    <button id="shuffle-btn" class="btn btn-skill" onclick="useShuffleStock()" title="Shuffle Stock [S]: Reshuffle waste/stock pile">🔀 Shuffle (<span id="shuf-cnt">3</span>)</button>
+    <button id="wand-btn" class="btn btn-skill" onclick="useMagicWand()" title="Magic Wand [W]: Auto play 1 card to foundation" aria-label="Magic Wand skill">🪄 Wand (<span id="wand-cnt">3</span>)</button>
+    <button id="xray-btn" class="btn btn-skill" onclick="useXRayVision()" title="X-Ray Vision [X]: Reveal face-down cards for 5s" aria-label="X-Ray Vision skill">👁️ X-Ray (<span id="xray-cnt">3</span>)</button>
+    <button id="shuffle-btn" class="btn btn-skill" onclick="useShuffleStock()" title="Shuffle Stock [S]: Reshuffle waste/stock pile" aria-label="Shuffle Stock skill">🔀 Shuffle (<span id="shuf-cnt">3</span>)</button>
 
-    <button id="undo-btn" class="btn" onclick="undoMove()" disabled title="Free Undo (U / Ctrl+Z)">↩ Undo</button>
-    <button id="redo-btn" class="btn" onclick="redoMove()" disabled title="Redo (Ctrl+Y)">↪ Redo</button>
-    <button class="btn btn-warning" onclick="giveHint()" title="Smart Hint [H / Ctrl+H]">💡 Hint [H]</button>
-    <button id="autofinish-btn" class="btn btn-success" onclick="autoFinish()" disabled title="Auto Complete remaining cards">✨ Auto-Finish</button>
+    <button id="undo-btn" class="btn" onclick="undoMove()" disabled title="Free Undo (U / Ctrl+Z)" aria-label="Undo move">↩ Undo</button>
+    <button id="redo-btn" class="btn" onclick="redoMove()" disabled title="Redo (Ctrl+Y)" aria-label="Redo move">↪ Redo</button>
+    <button class="btn btn-warning" onclick="giveHint()" title="Smart Hint [H / Ctrl+H]" aria-label="Show hint">💡 Hint [H]</button>
+    <button id="autofinish-btn" class="btn btn-success" onclick="autoFinish()" disabled title="Auto Complete remaining cards" aria-label="Auto finish game">✨ Auto-Finish</button>
 
-    <select id="theme-select" class="btn" onchange="changeTheme(this.value)">
+    <select id="theme-select" class="btn" onchange="changeTheme(this.value)" aria-label="Select card deck theme">
       <option value="theme-navy">Deck: Navy</option>
       <option value="theme-crimson">Deck: Crimson</option>
       <option value="theme-emerald">Deck: Emerald</option>
@@ -734,16 +734,16 @@
       <option value="theme-gold">Deck: Gold</option>
     </select>
 
-    <select id="felt-select" class="btn" onchange="changeFelt(this.value)">
+    <select id="felt-select" class="btn" onchange="changeFelt(this.value)" aria-label="Select felt table color">
       <option value="#0d5c2e">Felt: Classic Green</option>
       <option value="#0f172a">Felt: Slate Dark</option>
       <option value="#1e1b4b">Felt: Royal Indigo</option>
       <option value="#450a0a">Felt: Deep Crimson</option>
     </select>
 
-    <button class="btn" onclick="openStatsModal()" title="Game Statistics">📊 Stats</button>
-    <button class="btn" onclick="openHelpModal()" title="How to Play & Rules [F1]">📖 Help [F1]</button>
-    <button class="btn" onclick="toggleSound()"><span id="sound-icon">🔊</span></button>
+    <button class="btn" onclick="openStatsModal()" title="Game Statistics" aria-label="Open statistics dialog">📊 Stats</button>
+    <button class="btn" onclick="openHelpModal()" title="How to Play & Rules [F1]" aria-label="Open help and rules dialog">📖 Help [F1]</button>
+    <button class="btn" onclick="toggleSound()" aria-label="Toggle sound mute"><span id="sound-icon">🔊</span></button>
   </div>
 
   <div id="mode-info" class="mode-banner">
@@ -787,11 +787,11 @@
 </div>
 
 <!-- Stats Modal -->
-<div id="stats-modal" class="modal-overlay" onclick="if(event.target===this)closeStatsModal()">
+<div id="stats-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="stats-modal-title" onclick="if(event.target===this)closeStatsModal()">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">Game Statistics</div>
-      <button class="modal-close" onclick="closeStatsModal()">&times;</button>
+      <div id="stats-modal-title" class="modal-title">Game Statistics</div>
+      <button class="modal-close" aria-label="Close statistics dialog" onclick="closeStatsModal()">&times;</button>
     </div>
     <div class="stats-grid">
       <div class="stat-card"><div class="lbl">Games Played</div><div id="st-played" class="val">0</div></div>
@@ -807,22 +807,22 @@
     </div>
     <div style="display:flex; justify-content: space-between; gap: 8px;">
       <div style="display:flex; gap: 8px;">
-        <button class="btn btn-warning" onclick="resetStats()">Clear</button>
-        <button class="btn btn-primary" onclick="exportStats()">Export</button>
-        <button class="btn btn-primary" onclick="document.getElementById('import-file').click()">Import</button>
+        <button class="btn btn-warning" onclick="resetStats()" aria-label="Reset statistics">Clear</button>
+        <button class="btn btn-primary" onclick="exportStats()" aria-label="Export statistics JSON">Export</button>
+        <button class="btn btn-primary" onclick="document.getElementById('import-file').click()" aria-label="Import statistics JSON">Import</button>
         <input type="file" id="import-file" style="display:none;" accept=".json" onchange="importStats(event)">
       </div>
-      <button class="btn btn-primary" onclick="closeStatsModal()">Close</button>
+      <button class="btn btn-primary" onclick="closeStatsModal()" aria-label="Close dialog">Close</button>
     </div>
   </div>
 </div>
 
 <!-- Help Modal -->
-<div id="help-modal" class="modal-overlay" onclick="if(event.target===this)closeHelpModal()">
+<div id="help-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="help-modal-title" onclick="if(event.target===this)closeHelpModal()">
   <div class="modal" style="max-width: 540px;">
     <div class="modal-header">
-      <div class="modal-title">📖 How to Play & Rules</div>
-      <button class="modal-close" onclick="closeHelpModal()">&times;</button>
+      <div id="help-modal-title" class="modal-title">📖 How to Play & Rules</div>
+      <button class="modal-close" aria-label="Close help dialog" onclick="closeHelpModal()">&times;</button>
     </div>
     <div style="max-height: 65vh; overflow-y: auto; font-size: 13.5px; line-height: 1.6; color: #e2e8f0; display: flex; flex-direction: column; gap: 10px; text-align: left; padding-right: 6px;">
       <div style="color:#ffd700; font-weight:700; font-size:14px; border-bottom:1px solid rgba(255,215,0,0.25); padding-bottom:3px;">Objective</div>
@@ -974,6 +974,8 @@ let timerInterval = null;
 let gameStarted = false;
 let gameWon = false;
 let soundEnabled = true;
+let winAnimId = null;
+let autoFinishInterval = null;
 
 // Undo / Redo Stacks
 let undoStack = [];
@@ -1054,33 +1056,100 @@ function toggleHelpModal() {
   }
 }
 
+// --- Storage Helpers ---
+function safeGetStorage(key, defVal = null) {
+  try {
+    let val = localStorage.getItem(key);
+    return val !== null ? val : defVal;
+  } catch (e) {
+    return defVal;
+  }
+}
+
+function safeSetStorage(key, val) {
+  try {
+    localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 // --- Initialization ---
 function init() {
   loadStats();
   populateStageSelect();
+
+  // Restore saved deck theme, felt color, and sound preference
+  let savedTheme = safeGetStorage('ksolitaire_theme', 'theme-navy');
+  changeTheme(savedTheme);
+  let themeSelect = document.getElementById('theme-select');
+  if (themeSelect) themeSelect.value = savedTheme;
+
+  let savedFelt = safeGetStorage('ksolitaire_felt', '#0d5c2e');
+  changeFelt(savedFelt);
+  let feltSelect = document.getElementById('felt-select');
+  if (feltSelect) feltSelect.value = savedFelt;
+
+  let savedSound = safeGetStorage('ksolitaire_sound', 'true');
+  soundEnabled = savedSound !== 'false';
+  let soundIcon = document.getElementById('sound-icon');
+  if (soundIcon) soundIcon.textContent = soundEnabled ? '🔊' : '🔇';
+
   loadSavedGame();
 
-  showToast("Welcome to KSolitaire! Press [F1] for Help & Rules, [H] for Hint.", 4500);
+  showToast("Welcome to KSolitaire! Press [F1] for Help & Rules, [H] for Hint, [F2]/[N] for New Game.", 4500);
 
   window.addEventListener('keydown', (e) => {
-    let k = e.key.toLowerCase();
+    let helpActive = document.getElementById('help-modal')?.classList.contains('active');
+    let statsActive = document.getElementById('stats-modal')?.classList.contains('active');
+    let anyModal = helpActive || statsActive;
+
     if (e.key === 'Escape') {
-      closeHelpModal();
-      closeStatsModal();
+      if (anyModal) {
+        closeHelpModal();
+        closeStatsModal();
+      } else {
+        selectedSelection = null;
+        clearHints();
+        render();
+      }
+      return;
     }
-    else if (e.key === 'F1' || (e.key === '?' && !e.ctrlKey)) {
+
+    if (e.key === 'F1' || (e.key === '?' && !e.ctrlKey && !e.altKey && !e.metaKey)) {
       e.preventDefault();
       toggleHelpModal();
+      return;
     }
-    else if (e.ctrlKey && k === 'z') { e.preventDefault(); undoMove(); }
-    else if (e.ctrlKey && k === 'y') { e.preventDefault(); redoMove(); }
-    else if (e.ctrlKey && k === 'h') { e.preventDefault(); giveHint(); }
-    else if (e.ctrlKey && k === 'f') { e.preventDefault(); autoFinish(); }
-    else if (k === 'w' && !e.ctrlKey) { useMagicWand(); }
-    else if (k === 'x' && !e.ctrlKey) { useXRayVision(); }
-    else if (k === 's' && !e.ctrlKey) { useShuffleStock(); }
-    else if (k === 'u' && !e.ctrlKey) { undoMove(); }
-    else if (k === 'h' && !e.ctrlKey) { giveHint(); }
+
+    // Suppress hotkeys if user is typing in an input/select or if a modal dialog is open
+    let tag = e.target?.tagName?.toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    if (anyModal) return;
+
+    let k = e.key.toLowerCase();
+    if (e.key === 'F2' || (k === 'n' && !e.ctrlKey && !e.altKey && !e.metaKey)) {
+      e.preventDefault();
+      newGame();
+      return;
+    }
+
+    if (e.ctrlKey && !e.altKey && !e.metaKey) {
+      if (k === 'z') { e.preventDefault(); undoMove(); }
+      else if (k === 'y') { e.preventDefault(); redoMove(); }
+      else if (k === 'h') { e.preventDefault(); giveHint(); }
+      else if (k === 'f') { e.preventDefault(); autoFinish(); }
+      return;
+    }
+
+    if (!e.ctrlKey && !e.altKey && !e.metaKey) {
+      if (k === 'w') { useMagicWand(); }
+      else if (k === 'x') { useXRayVision(); }
+      else if (k === 's') { useShuffleStock(); }
+      else if (k === 'u') { undoMove(); }
+      else if (k === 'h') { giveHint(); }
+    }
   });
 }
 
@@ -1099,14 +1168,14 @@ function populateStageSelect() {
 
 function loadStats() {
   try {
-    let d = localStorage.getItem('ksolitaire_stats');
+    let d = safeGetStorage('ksolitaire_stats');
     if (d) stats = Object.assign(stats, JSON.parse(d));
   } catch(e){}
   if (!stats.maxCampaignStage) stats.maxCampaignStage = 1;
 }
 
 function saveStats() {
-  try { localStorage.setItem('ksolitaire_stats', JSON.stringify(stats)); } catch(e){}
+  safeSetStorage('ksolitaire_stats', stats);
   populateStageSelect();
 }
 
@@ -1172,6 +1241,14 @@ function newGame() {
 
   stopTimer();
   stopXRay();
+  if (winAnimId) {
+    cancelAnimationFrame(winAnimId);
+    winAnimId = null;
+  }
+  if (autoFinishInterval) {
+    clearInterval(autoFinishInterval);
+    autoFinishInterval = null;
+  }
   timerSeconds = 0;
   movesCount = 0;
   stockPasses = 1;
@@ -1329,35 +1406,35 @@ function saveState(recordUndo = false) {
     redoStack = [];
   }
 
-  try {
-    localStorage.setItem('ksolitaire_savestate', JSON.stringify(snapshot));
-  } catch(e){}
+  safeSetStorage('ksolitaire_savestate', snapshot);
 
   updateUIStats();
 }
 
 function loadSavedGame() {
   try {
-    let d = localStorage.getItem('ksolitaire_savestate');
+    let d = safeGetStorage('ksolitaire_savestate');
     if (d) {
-      let snapshot = JSON.parse(d);
-      stock = snapshot.stock;
-      waste = snapshot.waste;
-      foundations = snapshot.foundations;
-      tableau = snapshot.tableau;
-      movesCount = snapshot.movesCount;
-      scoreCount = snapshot.scoreCount;
-      timerSeconds = snapshot.timerSeconds;
-      gameStarted = snapshot.gameStarted;
-      stockPasses = snapshot.stockPasses || 0;
-      wandCharges = snapshot.wandCharges !== undefined ? snapshot.wandCharges : 3;
-      xrayCharges = snapshot.xrayCharges !== undefined ? snapshot.xrayCharges : 3;
-      shuffleCharges = snapshot.shuffleCharges !== undefined ? snapshot.shuffleCharges : 3;
+      let snapshot = typeof d === 'string' ? JSON.parse(d) : d;
+      if (snapshot && snapshot.stock && snapshot.tableau) {
+        stock = snapshot.stock;
+        waste = snapshot.waste;
+        foundations = snapshot.foundations;
+        tableau = snapshot.tableau;
+        movesCount = snapshot.movesCount || 0;
+        scoreCount = snapshot.scoreCount || 0;
+        timerSeconds = snapshot.timerSeconds || 0;
+        gameStarted = !!snapshot.gameStarted;
+        stockPasses = snapshot.stockPasses || 0;
+        wandCharges = snapshot.wandCharges !== undefined ? snapshot.wandCharges : 3;
+        xrayCharges = snapshot.xrayCharges !== undefined ? snapshot.xrayCharges : 3;
+        shuffleCharges = snapshot.shuffleCharges !== undefined ? snapshot.shuffleCharges : 3;
 
-      if (gameStarted) startTimer();
-      updateTimerDisplay();
-      render();
-      return;
+        if (gameStarted) startTimer();
+        updateTimerDisplay();
+        render();
+        return;
+      }
     }
   } catch(e){}
   newGame();
@@ -1365,6 +1442,10 @@ function loadSavedGame() {
 
 function undoMove() {
   if (undoStack.length === 0) return;
+  if (autoFinishInterval) {
+    clearInterval(autoFinishInterval);
+    autoFinishInterval = null;
+  }
   
   let currentSnapshot = {
     stock: JSON.parse(JSON.stringify(stock)),
@@ -1926,8 +2007,9 @@ function canAutoFinish() {
 
 function autoFinish() {
   if (!canAutoFinish()) return;
+  if (autoFinishInterval) clearInterval(autoFinishInterval);
   
-  let stepTimer = setInterval(() => {
+  autoFinishInterval = setInterval(() => {
     let movedAny = false;
 
     for (let t = 0; t < 7; t++) {
@@ -1945,7 +2027,8 @@ function autoFinish() {
     }
 
     if (!movedAny || gameWon) {
-      clearInterval(stepTimer);
+      clearInterval(autoFinishInterval);
+      autoFinishInterval = null;
     }
   }, 100);
 }
@@ -2566,7 +2649,7 @@ function startWinCascade() {
     frame++;
     ctx.globalCompositeOperation = 'destination-out';
     ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
     ctx.globalCompositeOperation = 'source-over';
 
     cards.forEach(c => {
@@ -2580,16 +2663,16 @@ function startWinCascade() {
         c.y += c.vy;
         c.vy += 0.75;
 
-        if (c.y + 118 >= canvas.height) {
-          c.y = canvas.height - 118;
+        if (c.y + 118 >= window.innerHeight) {
+          c.y = window.innerHeight - 118;
           c.vy = -c.vy * 0.85;
         }
 
-        if (c.x <= 0 || c.x + 84 >= canvas.width) {
+        if (c.x <= 0 || c.x + 84 >= window.innerWidth) {
           c.vx = -c.vx;
         }
 
-        if (c.x < -120 || c.x > canvas.width + 120 || c.y > canvas.height + 150) {
+        if (c.x < -120 || c.x > window.innerWidth + 120 || c.y > window.innerHeight + 150) {
           c.active = false;
           c.finished = true;
         }
@@ -2597,10 +2680,12 @@ function startWinCascade() {
     });
 
     if (cards.some(c => !c.finished)) {
-      requestAnimationFrame(loop);
+      winAnimId = requestAnimationFrame(loop);
+    } else {
+      winAnimId = null;
     }
   }
-  requestAnimationFrame(loop);
+  winAnimId = requestAnimationFrame(loop);
 }
 
 function drawCardToCanvas(ctx, card, x, y) {
@@ -2714,7 +2799,7 @@ function createCardEl(card) {
   if (card.isFrozen) {
     el.classList.add('frozen');
   }
-  if (window.isDealing) {
+  if (isDealing) {
     el.classList.add('anim-deal');
   }
   
@@ -2787,17 +2872,19 @@ function changeDrawMode(val) {
 
 function changeTheme(val) {
   document.body.className = val;
-  try { localStorage.setItem('ksolitaire_theme', val); } catch(e){}
+  safeSetStorage('ksolitaire_theme', val);
 }
 
 function changeFelt(val) {
   document.body.style.setProperty('--bg-color', val);
-  try { localStorage.setItem('ksolitaire_felt', val); } catch(e){}
+  safeSetStorage('ksolitaire_felt', val);
 }
 
 function toggleSound() {
   soundEnabled = !soundEnabled;
   document.getElementById('sound-icon').textContent = soundEnabled ? '🔊' : '🔇';
+  safeSetStorage('ksolitaire_sound', soundEnabled ? 'true' : 'false');
+  showToast(soundEnabled ? "Sound Effects Enabled 🔊" : "Sound Effects Muted 🔇", 1500);
 }
 
 function openStatsModal() {
@@ -2849,38 +2936,50 @@ function resetStats() {
 }
 
 function exportStats() {
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(stats, null, 2));
-  const dlAnchorElem = document.createElement('a');
-  dlAnchorElem.setAttribute("href", dataStr);
-  dlAnchorElem.setAttribute("download", "ksolitaire_stats.json");
-  dlAnchorElem.click();
-  showToast("Statistics exported to ksolitaire_stats.json");
+  try {
+    const jsonStr = JSON.stringify(stats, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const dlAnchorElem = document.createElement('a');
+    dlAnchorElem.href = url;
+    dlAnchorElem.download = "ksolitaire_stats.json";
+    document.body.appendChild(dlAnchorElem);
+    dlAnchorElem.click();
+    document.body.removeChild(dlAnchorElem);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast("Statistics exported to ksolitaire_stats.json");
+  } catch (e) {
+    showToast("Error exporting statistics.");
+  }
 }
 
 function importStats(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
+  reader.onerror = function() {
+    showToast("Error reading JSON file.");
+  };
   reader.onload = function(e) {
     try {
       const imported = JSON.parse(e.target.result);
-      if (typeof imported.played !== 'undefined') {
+      if (imported && typeof imported === 'object' && typeof imported.played !== 'undefined') {
         stats = {
-          played: imported.played || 0,
-          wins: imported.wins || 0,
-          currentStreak: imported.currentStreak || 0,
-          bestStreak: imported.bestStreak || 0,
-          highScore: imported.highScore || 0,
-          vegasCash: imported.vegasCash || 0,
-          maxCampaignStage: imported.maxCampaignStage || 1,
-          bestTimeD1: imported.bestTimeD1 || null,
-          bestTimeD3: imported.bestTimeD3 || null
+          played: Math.max(0, parseInt(imported.played) || 0),
+          wins: Math.max(0, parseInt(imported.wins) || 0),
+          currentStreak: Math.max(0, parseInt(imported.currentStreak) || 0),
+          bestStreak: Math.max(0, parseInt(imported.bestStreak) || 0),
+          highScore: parseInt(imported.highScore) || 0,
+          vegasCash: parseInt(imported.vegasCash) || 0,
+          maxCampaignStage: Math.min(20, Math.max(1, parseInt(imported.maxCampaignStage) || 1)),
+          bestTimeD1: imported.bestTimeD1 ? Math.max(0, parseInt(imported.bestTimeD1)) : null,
+          bestTimeD3: imported.bestTimeD3 ? Math.max(0, parseInt(imported.bestTimeD3)) : null
         };
         saveStats();
         openStatsModal();
         showToast("Statistics imported successfully!");
       } else {
-        showToast("Error: Invalid JSON format.");
+        showToast("Error: Invalid JSON schema.");
       }
     } catch(err) {
       showToast("Error reading JSON file.");
