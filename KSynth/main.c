@@ -6,13 +6,14 @@
 #define W 660
 #define H 450
 
-HWND hComboPreset, hComboWave, hBtnPlay, hBtnSeq, hBtnHelp, hFreq, hAttack, hDecay, hSustain, hRelease;
+HWND hComboPreset, hComboWave, hBtnPlay, hBtnSeq, hBtnExportWav, hBtnHelp, hFreq, hAttack, hDecay, hSustain, hRelease;
 HWND hDelayTime, hDelayFdbk, hDelayMix;
 HWND hComboArp, hArpBpm, hArpOct;
 HWND hScopeWnd;
 
 HWAVEOUT hWaveOut;
 WAVEHDR waveHdr;
+static int g_octaveShift = 0;
 
 int GetDPI() {
     HDC hdc = GetDC(NULL);
@@ -230,7 +231,7 @@ void PlayTone() {
     if (waveOutOpen(&hWaveOut, WAVE_MAPPER, &wfx, 0, 0, CALLBACK_NULL) == MMSYSERR_NOERROR) {
         memset(&waveHdr, 0, sizeof(WAVEHDR));
         waveHdr.lpData = (LPSTR)buffer;
-        waveHdr.dwBufferLength = waveHdr.dwBufferLength ? waveHdr.dwBufferLength : (DWORD)(SAMPLE_RATE * sizeof(short));
+        waveHdr.dwBufferLength = (DWORD)(bufferSampleCount * sizeof(short));
         waveHdr.dwBytesRecorded = 0;
         waveHdr.dwUser = 0;
         waveHdr.dwFlags = 0;
@@ -291,6 +292,8 @@ void ApplyPreset(int idx) {
 // Custom Oscilloscope Window Procedure
 LRESULT CALLBACK ScopeProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
+        case WM_ERASEBKGND:
+            return 1;
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
@@ -299,44 +302,108 @@ LRESULT CALLBACK ScopeProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int w = rect.right - rect.left;
             int h = rect.bottom - rect.top;
 
+            HDC memDC = CreateCompatibleDC(hdc);
+            HBITMAP memBM = CreateCompatibleBitmap(hdc, w, h);
+            HBITMAP oldBM = (HBITMAP)SelectObject(memDC, memBM);
+
             HBRUSH hBg = CreateSolidBrush(RGB(15, 18, 26));
-            FillRect(hdc, &rect, hBg);
+            FillRect(memDC, &rect, hBg);
             DeleteObject(hBg);
 
             HPEN hGridPen = CreatePen(PS_DOT, 1, RGB(40, 48, 64));
-            HPEN hOldPen = (HPEN)SelectObject(hdc, hGridPen);
+            HPEN hOldPen = (HPEN)SelectObject(memDC, hGridPen);
             int stepX = Scale(30); if (stepX < 1) stepX = 1;
             int stepY = Scale(20); if (stepY < 1) stepY = 1;
             for (int x = 0; x < w; x += stepX) {
-                MoveToEx(hdc, x, 0, NULL); LineTo(hdc, x, h);
+                MoveToEx(memDC, x, 0, NULL); LineTo(memDC, x, h);
             }
             for (int y = 0; y < h; y += stepY) {
-                MoveToEx(hdc, 0, y, NULL); LineTo(hdc, w, y);
+                MoveToEx(memDC, 0, y, NULL); LineTo(memDC, w, y);
             }
-            DeleteObject(SelectObject(hdc, hOldPen));
+            DeleteObject(SelectObject(memDC, hOldPen));
 
             HPEN hScopePen = CreatePen(PS_SOLID, Scale(2), RGB(0, 243, 255));
-            hOldPen = (HPEN)SelectObject(hdc, hScopePen);
+            hOldPen = (HPEN)SelectObject(memDC, hScopePen);
 
             int midY = h / 2;
             int step = bufferSampleCount / w;
             if (step < 1) step = 1;
 
-            MoveToEx(hdc, 0, midY, NULL);
+            MoveToEx(memDC, 0, midY, NULL);
             for (int x = 0; x < w; x++) {
                 int sampleIdx = x * step;
                 if (sampleIdx >= bufferSampleCount) break;
                 short sample = buffer[sampleIdx];
                 int y = midY - (sample * (h / 2) / 32768);
-                LineTo(hdc, x, y);
+                LineTo(memDC, x, y);
             }
 
-            DeleteObject(SelectObject(hdc, hOldPen));
+            DeleteObject(SelectObject(memDC, hOldPen));
+
+            BitBlt(hdc, 0, 0, w, h, memDC, 0, 0, SRCCOPY);
+            SelectObject(memDC, oldBM);
+            DeleteObject(memBM);
+            DeleteDC(memDC);
+
             EndPaint(hwnd, &ps);
             return 0;
         }
     }
     return DefWindowProc(hwnd, msg, wParam, lParam);
+}
+
+void ExportWav(HWND hwnd) {
+    if (bufferSampleCount <= 0) {
+        MessageBoxA(hwnd, "No audio data synthesized yet. Play a tone first!", "Export WAV", MB_OK | MB_ICONWARNING);
+        return;
+    }
+
+    HANDLE hFile = CreateFileA("ksynth_output.wav", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        MessageBoxA(hwnd, "Could not open ksynth_output.wav for writing.", "Export Error", MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    DWORD dataSize = (DWORD)(bufferSampleCount * sizeof(short));
+    DWORD fileSize = 36 + dataSize;
+    DWORD written = 0;
+
+    unsigned char hdr[44];
+    hdr[0] = 'R'; hdr[1] = 'I'; hdr[2] = 'F'; hdr[3] = 'F';
+    hdr[4] = (unsigned char)(fileSize & 0xFF);
+    hdr[5] = (unsigned char)((fileSize >> 8) & 0xFF);
+    hdr[6] = (unsigned char)((fileSize >> 16) & 0xFF);
+    hdr[7] = (unsigned char)((fileSize >> 24) & 0xFF);
+    hdr[8] = 'W'; hdr[9] = 'A'; hdr[10] = 'V'; hdr[11] = 'E';
+    hdr[12] = 'f'; hdr[13] = 'm'; hdr[14] = 't'; hdr[15] = ' ';
+    hdr[16] = 16; hdr[17] = 0; hdr[18] = 0; hdr[19] = 0;
+    hdr[20] = 1; hdr[21] = 0; // PCM
+    hdr[22] = 1; hdr[23] = 0; // Mono
+    DWORD sr = SAMPLE_RATE;
+    hdr[24] = (unsigned char)(sr & 0xFF);
+    hdr[25] = (unsigned char)((sr >> 8) & 0xFF);
+    hdr[26] = (unsigned char)((sr >> 16) & 0xFF);
+    hdr[27] = (unsigned char)((sr >> 24) & 0xFF);
+    DWORD br = SAMPLE_RATE * 2;
+    hdr[28] = (unsigned char)(br & 0xFF);
+    hdr[29] = (unsigned char)((br >> 8) & 0xFF);
+    hdr[30] = (unsigned char)((br >> 16) & 0xFF);
+    hdr[31] = (unsigned char)((br >> 24) & 0xFF);
+    hdr[32] = 2; hdr[33] = 0; // Align
+    hdr[34] = 16; hdr[35] = 0; // 16-bit
+    hdr[36] = 'd'; hdr[37] = 'a'; hdr[38] = 't'; hdr[39] = 'a';
+    hdr[40] = (unsigned char)(dataSize & 0xFF);
+    hdr[41] = (unsigned char)((dataSize >> 8) & 0xFF);
+    hdr[42] = (unsigned char)((dataSize >> 16) & 0xFF);
+    hdr[43] = (unsigned char)((dataSize >> 24) & 0xFF);
+
+    WriteFile(hFile, hdr, 44, &written, NULL);
+    WriteFile(hFile, buffer, dataSize, &written, NULL);
+    CloseHandle(hFile);
+
+    char msg[128];
+    wsprintfA(msg, "Exported %d samples to ksynth_output.wav!", bufferSampleCount);
+    MessageBoxA(hwnd, msg, "KSynth WAV Export", MB_OK | MB_ICONINFORMATION);
 }
 
 BOOL CALLBACK SetFontProc(HWND child, LPARAM hFont) {
@@ -350,15 +417,17 @@ void ShowHelp(HWND hwnd) {
         "Musical Keys (Octave 4):\n"
         "  White Keys: [A]=C4, [S]=D4, [D]=E4, [F]=F4, [G]=G4, [H]=A4, [J]=B4, [K]=C5\n"
         "  Black Keys: [W]=C#4, [E]=D#4, [T]=F#4, [Y]=G#4, [U]=A#4\n\n"
-        "Controls:\n"
-        "  Preset: Select synthesized instrument patches\n"
-        "  Waveform: Sine, Square, Sawtooth, Triangle, Noise\n"
-        "  ADSR: Attack, Decay, Sustain, Release times\n"
-        "  Delay: Delay time, Feedback, and Wet/Dry Mix\n"
-        "  Arpeggiator: Up, Down, Up-Down, Random arpeggios\n\n"
-        "Shortcuts:\n"
-        "  [F1] or [?] : Open this Help guide\n"
-        "  [A-K]       : Trigger real-time synthesizer notes",
+        "Keyboard Shortcuts:\n"
+        "  [Z] / [X]     : Shift octave down / up (-2 to +2)\n"
+        "  [Tab]         : Cycle focus between controls\n"
+        "  [F1] or [?]   : Open this Help guide\n"
+        "  [Export WAV]  : Save current sound as standard 16-bit 44.1 kHz WAV file\n\n"
+        "Synthesizer Modules:\n"
+        "  Preset      : Lead, Bass, Pad, Chiptune, Bell, Noise\n"
+        "  Waveform    : Sine, Square, Sawtooth, Triangle, Noise\n"
+        "  ADSR        : Attack, Decay, Sustain, Release times\n"
+        "  Delay       : Delay time, Feedback, and Wet/Dry Mix\n"
+        "  Arpeggiator : Up, Down, Up-Down, Random arpeggios",
         "KSynth Workstation Help", MB_OK | MB_ICONINFORMATION);
 }
 
@@ -371,7 +440,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             // Preset Selection
             CreateScaledWindowEx(0, "STATIC", "Preset:", WS_CHILD | WS_VISIBLE, 15, 15, 80, 20, hwnd, NULL, NULL, NULL);
-            hComboPreset = CreateScaledWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 100, 12, 160, 150, hwnd, (HMENU)10, NULL, NULL);
+            hComboPreset = CreateScaledWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 100, 12, 160, 150, hwnd, (HMENU)10, NULL, NULL);
             SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"0: Neon Lead");
             SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"1: Sub Bass");
             SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"2: Warm Pad");
@@ -382,7 +451,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Waveform Selection
             CreateScaledWindowEx(0, "STATIC", "Waveform:", WS_CHILD | WS_VISIBLE, 15, 45, 80, 20, hwnd, NULL, NULL, NULL);
-            hComboWave = CreateScaledWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 100, 42, 160, 150, hwnd, NULL, NULL, NULL);
+            hComboWave = CreateScaledWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 100, 42, 160, 150, hwnd, NULL, NULL, NULL);
             SendMessage(hComboWave, CB_ADDSTRING, 0, (LPARAM)"Sine");
             SendMessage(hComboWave, CB_ADDSTRING, 0, (LPARAM)"Square");
             SendMessage(hComboWave, CB_ADDSTRING, 0, (LPARAM)"Sawtooth");
@@ -392,34 +461,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             // Frequency
             CreateScaledWindowEx(0, "STATIC", "Freq (Hz):", WS_CHILD | WS_VISIBLE, 15, 75, 80, 20, hwnd, NULL, NULL, NULL);
-            hFreq = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "440", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER, 100, 72, 80, 22, hwnd, NULL, NULL, NULL);
+            hFreq = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "440", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER | WS_TABSTOP, 100, 72, 80, 22, hwnd, NULL, NULL, NULL);
 
             // ADSR Group
             CreateScaledWindowEx(0, "STATIC", "Attack (s):", WS_CHILD | WS_VISIBLE, 15, 105, 80, 20, hwnd, NULL, NULL, NULL);
-            hAttack = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.05", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 102, 80, 22, hwnd, NULL, NULL, NULL);
+            hAttack = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.05", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 100, 102, 80, 22, hwnd, NULL, NULL, NULL);
 
             CreateScaledWindowEx(0, "STATIC", "Decay (s):", WS_CHILD | WS_VISIBLE, 15, 135, 80, 20, hwnd, NULL, NULL, NULL);
-            hDecay = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.20", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 132, 80, 22, hwnd, NULL, NULL, NULL);
+            hDecay = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.20", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 100, 132, 80, 22, hwnd, NULL, NULL, NULL);
 
             CreateScaledWindowEx(0, "STATIC", "Sustain (0-1):", WS_CHILD | WS_VISIBLE, 15, 165, 80, 20, hwnd, NULL, NULL, NULL);
-            hSustain = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.60", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 162, 80, 22, hwnd, NULL, NULL, NULL);
+            hSustain = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.60", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 100, 162, 80, 22, hwnd, NULL, NULL, NULL);
 
             CreateScaledWindowEx(0, "STATIC", "Release (s):", WS_CHILD | WS_VISIBLE, 15, 195, 80, 20, hwnd, NULL, NULL, NULL);
-            hRelease = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.40", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 192, 80, 22, hwnd, NULL, NULL, NULL);
+            hRelease = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.40", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 100, 192, 80, 22, hwnd, NULL, NULL, NULL);
 
             // Delay Group
             CreateScaledWindowEx(0, "STATIC", "Delay (s):", WS_CHILD | WS_VISIBLE, 15, 225, 80, 20, hwnd, NULL, NULL, NULL);
-            hDelayTime = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.30", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 222, 80, 22, hwnd, NULL, NULL, NULL);
+            hDelayTime = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.30", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 100, 222, 80, 22, hwnd, NULL, NULL, NULL);
 
             CreateScaledWindowEx(0, "STATIC", "Fdbk (0-1):", WS_CHILD | WS_VISIBLE, 15, 255, 80, 20, hwnd, NULL, NULL, NULL);
-            hDelayFdbk = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.40", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 252, 80, 22, hwnd, NULL, NULL, NULL);
+            hDelayFdbk = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.40", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 100, 252, 80, 22, hwnd, NULL, NULL, NULL);
 
             CreateScaledWindowEx(0, "STATIC", "Mix (0-1):", WS_CHILD | WS_VISIBLE, 15, 285, 80, 20, hwnd, NULL, NULL, NULL);
-            hDelayMix = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.50", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 282, 80, 22, hwnd, NULL, NULL, NULL);
+            hDelayMix = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.50", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 100, 282, 80, 22, hwnd, NULL, NULL, NULL);
 
             // Arpeggiator Group
             CreateScaledWindowEx(0, "STATIC", "Arp Mode:", WS_CHILD | WS_VISIBLE, 15, 320, 80, 20, hwnd, NULL, NULL, NULL);
-            hComboArp = CreateScaledWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 100, 317, 160, 120, hwnd, NULL, NULL, NULL);
+            hComboArp = CreateScaledWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 100, 317, 160, 120, hwnd, NULL, NULL, NULL);
             SendMessage(hComboArp, CB_ADDSTRING, 0, (LPARAM)"Off");
             SendMessage(hComboArp, CB_ADDSTRING, 0, (LPARAM)"Up");
             SendMessage(hComboArp, CB_ADDSTRING, 0, (LPARAM)"Down");
@@ -427,10 +496,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hComboArp, CB_ADDSTRING, 0, (LPARAM)"Random");
             SendMessage(hComboArp, CB_SETCURSEL, 0, 0);
 
-            // Play & Help Buttons
-            hBtnPlay = CreateScaledWindowEx(0, "BUTTON", "▶ Play Tone", WS_CHILD | WS_VISIBLE, 15, 360, 105, 32, hwnd, (HMENU)1, NULL, NULL);
-            hBtnSeq  = CreateScaledWindowEx(0, "BUTTON", "⚡ Run Arp", WS_CHILD | WS_VISIBLE, 125, 360, 105, 32, hwnd, (HMENU)2, NULL, NULL);
-            hBtnHelp = CreateScaledWindowEx(0, "BUTTON", "❓ Help [F1]", WS_CHILD | WS_VISIBLE, 235, 360, 105, 32, hwnd, (HMENU)3, NULL, NULL);
+            // Play, Arp, Export WAV & Help Buttons
+            hBtnPlay      = CreateScaledWindowEx(0, "BUTTON", "▶ Play", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 15, 360, 75, 32, hwnd, (HMENU)1, NULL, NULL);
+            hBtnSeq       = CreateScaledWindowEx(0, "BUTTON", "⚡ Arp", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 95, 360, 75, 32, hwnd, (HMENU)2, NULL, NULL);
+            hBtnExportWav = CreateScaledWindowEx(0, "BUTTON", "🔊 WAV", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 175, 360, 75, 32, hwnd, (HMENU)4, NULL, NULL);
+            hBtnHelp      = CreateScaledWindowEx(0, "BUTTON", "❓ Help", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 255, 360, 75, 32, hwnd, (HMENU)3, NULL, NULL);
 
             // Oscilloscope Box Window
             WNDCLASS sc = {0};
@@ -441,9 +511,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             hScopeWnd = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "KSynthScope", "", WS_CHILD | WS_VISIBLE, 280, 12, 350, 230, hwnd, NULL, GetModuleHandle(NULL), NULL);
 
-            CreateScaledWindowEx(0, "STATIC", "Keyboard Mapping (C4 to C5):\nWhite: [A, S, D, F, G, H, J, K] (C, D, E, F, G, A, B, C)\nBlack: [W, E, T, Y, U] (C#, D#, F#, G#, A#)\nPress F1, '?', or click Help for shortcuts.", WS_CHILD | WS_VISIBLE, 280, 252, 350, 75, hwnd, NULL, NULL, NULL);
+            CreateScaledWindowEx(0, "STATIC", "Keyboard Mapping (C4 to C5):\nWhite: [A, S, D, F, G, H, J, K] (C, D, E, F, G, A, B, C)\nBlack: [W, E, T, Y, U] (C#, D#, F#, G#, A#)\nOctave Shift: [Z] Down | [X] Up | F1: Help", WS_CHILD | WS_VISIBLE, 280, 252, 350, 75, hwnd, NULL, NULL, NULL);
 
-            CreateScaledWindowEx(0, "STATIC", "KSynth Workstation | 44.1 kHz 16-bit Mono", WS_CHILD | WS_VISIBLE, 350, 368, 280, 20, hwnd, NULL, NULL, NULL);
+            CreateScaledWindowEx(0, "STATIC", "KSynth Workstation | 44.1 kHz 16-bit Mono", WS_CHILD | WS_VISIBLE, 345, 368, 290, 20, hwnd, NULL, NULL, NULL);
 
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
             break;
@@ -460,6 +530,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 PlayArpeggiator();
             } else if (LOWORD(wParam) == 3) {
                 ShowHelp(hwnd);
+            } else if (LOWORD(wParam) == 4) {
+                ExportWav(hwnd);
             } else if (HIWORD(wParam) == CBN_SELCHANGE && (HWND)lParam == hComboPreset) {
                 int sel = SendMessage(hComboPreset, CB_GETCURSEL, 0, 0);
                 ApplyPreset(sel);
@@ -487,6 +559,17 @@ void* __cdecl memset(void* dest, int c, size_t count) {
     char* bytes = (char*)dest;
     while (count--) *bytes++ = (char)c;
     return dest;
+}
+
+void UpdateWindowTitle(HWND hwnd) {
+    char title[128];
+    if (g_octaveShift == 0) {
+        wsprintfA(title, "KSynth Workstation Pro [Press F1 for Help]");
+    } else {
+        wsprintfA(title, "KSynth Workstation Pro [Octave: %s%d | Press F1 for Help]",
+                  g_octaveShift > 0 ? "+" : "", g_octaveShift);
+    }
+    SetWindowTextA(hwnd, title);
 }
 
 void MainEntry() {
@@ -520,8 +603,24 @@ void MainEntry() {
                 continue;
             }
             HWND hFocus = GetFocus();
-            if (hFocus != hFreq && hFocus != hAttack && hFocus != hDecay && hFocus != hSustain && hFocus != hRelease &&
-                hFocus != hDelayTime && hFocus != hDelayFdbk && hFocus != hDelayMix) {
+            BOOL isEditing = (hFocus == hFreq || hFocus == hAttack || hFocus == hDecay ||
+                              hFocus == hSustain || hFocus == hRelease || hFocus == hDelayTime ||
+                              hFocus == hDelayFdbk || hFocus == hDelayMix);
+            if (!isEditing) {
+                if (key == 'Z') {
+                    if (g_octaveShift > -2) {
+                        g_octaveShift--;
+                        UpdateWindowTitle(hwnd);
+                    }
+                    continue;
+                }
+                if (key == 'X') {
+                    if (g_octaveShift < 2) {
+                        g_octaveShift++;
+                        UpdateWindowTitle(hwnd);
+                    }
+                    continue;
+                }
                 double noteMap[256] = {0};
                 noteMap['A'] = 261.63; noteMap['W'] = 277.18; noteMap['S'] = 293.66;
                 noteMap['E'] = 311.13; noteMap['D'] = 329.63; noteMap['F'] = 349.23;
@@ -529,16 +628,24 @@ void MainEntry() {
                 noteMap['H'] = 440.00; noteMap['U'] = 466.16; noteMap['J'] = 493.88;
                 noteMap['K'] = 523.25;
                 if (key < 256 && noteMap[key] > 0) {
+                    double mult = 1.0;
+                    if (g_octaveShift == -2) mult = 0.25;
+                    else if (g_octaveShift == -1) mult = 0.5;
+                    else if (g_octaveShift == 1) mult = 2.0;
+                    else if (g_octaveShift == 2) mult = 4.0;
+                    int finalFreq = (int)(noteMap[key] * mult + 0.5);
                     char buf[32];
-                    wsprintfA(buf, "%d", (int)(noteMap[key] + 0.5));
+                    wsprintfA(buf, "%d", finalFreq);
                     SetWindowTextA(hFreq, buf);
                     PlayTone();
                     continue;
                 }
             }
         }
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        if (!IsDialogMessage(hwnd, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
     ExitProcess(0);
 }

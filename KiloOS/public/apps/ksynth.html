@@ -421,16 +421,16 @@
   }
 </style>
 </head>
-<body data-width="980" data-height="820">
-  <div id="toastContainer"></div>
+<body data-width="980" data-height="820" role="application">
+  <div id="toastContainer" aria-live="polite"></div>
 
-  <div id="helpModal" onclick="if(event.target===this) toggleHelp(false)" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; justify-content:center; align-items:center; flex-direction:column; color:#fff; backdrop-filter:blur(3px);">
+  <div id="helpModal" role="dialog" aria-modal="true" aria-label="KSynth Workstation Pro Guide" onclick="if(event.target===this) toggleHelp(false)" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; justify-content:center; align-items:center; flex-direction:column; color:#fff; backdrop-filter:blur(3px);">
     <div style="background:#161922; border:1px solid var(--accent-cyan); padding:22px; border-radius:10px; max-width:500px; width:92%; box-shadow:0 10px 30px rgba(0,243,255,0.25);">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px;">
         <h2 style="color:var(--accent-cyan); font-size:17px; display:flex; align-items:center; gap:8px;">
           <span>🎹</span> KSynth Workstation Pro Guide
         </h2>
-        <button class="btn" onclick="toggleHelp(false)" style="padding:2px 8px; font-size:14px;">✕</button>
+        <button class="btn" onclick="toggleHelp(false)" aria-label="Close Guide" style="padding:2px 8px; font-size:14px;">✕</button>
       </div>
       <div style="font-size:13px; color:#ccc; display:flex; flex-direction:column; gap:10px; max-height:60vh; overflow-y:auto; padding-right:4px;">
         <div>
@@ -444,8 +444,9 @@
           <div style="font-weight:700; color:var(--accent-yellow); margin-bottom:4px;">Synthesizer Controls & Shortcuts</div>
           <ul style="list-style:none; padding-left:0; display:flex; flex-direction:column; gap:4px; font-size:12px;">
             <li><b>[Z] / [X]</b> : Shift keyboard octave down / up (-2 to +2)</li>
+            <li><b>[Esc]</b> : Close Help guide / Stop all active sound voices (Panic)</li>
             <li><b>[F1] / [?]</b> : Toggle this Help guide</li>
-            <li><b>[Esc]</b> : Close Help guide</li>
+            <li><b>🔊 Export WAV</b> : Synthesizes 16-bit 44.1 kHz PCM audio file of active patch</li>
             <li><b>Dual Oscillators</b> : Morph waveforms (Saw, Square, Sine, Tri, Noise), detune, and blend</li>
             <li><b>Resonant Filter & Delay</b> : Sculpt harmonics and add stereo-timed echoes</li>
             <li><b>16-Step Sequencer</b> : Click steps to toggle and customize pitch per step</li>
@@ -468,7 +469,7 @@
     
     <div class="header-actions">
       <label for="presetSelect" style="font-size:12px; color:var(--text-muted); font-weight:600;">PRESET:</label>
-      <select id="presetSelect">
+      <select id="presetSelect" aria-label="Synthesizer Patch Preset">
         <option value="lead">Neon Lead</option>
         <option value="bass">Sub Punch Bass</option>
         <option value="pad">80s Analog Pad</option>
@@ -477,15 +478,18 @@
         <option value="pluck">Plucked Synth</option>
       </select>
       
-      <button id="btnSavePreset" class="btn">💾 Save Preset</button>
-      <button id="btnLoadPreset" class="btn">📂 Load Preset</button>
+      <button id="btnSavePreset" class="btn" title="Export Synth Preset as JSON">💾 Save</button>
+      <button id="btnLoadPreset" class="btn" title="Import Synth Preset JSON">📂 Load</button>
       <input type="file" id="presetFileInput" accept=".json" style="display:none;">
 
-      <button id="btnExportSeq" class="btn">🎵 Export Seq</button>
-      <button id="btnImportSeq" class="btn">📥 Import Seq</button>
+      <button id="btnExportWav" class="btn" title="Export Synth Audio Preview to WAV">🔊 WAV</button>
+
+      <button id="btnExportSeq" class="btn" title="Export Sequencer Pattern">🎵 Seq Out</button>
+      <button id="btnImportSeq" class="btn" title="Import Sequencer Pattern">📥 Seq In</button>
       <input type="file" id="seqFileInput" accept=".json" style="display:none;">
       
-      <button id="btnHelp" class="btn" onclick="toggleHelp()">❓ Help [F1]</button>
+      <button id="btnPanic" class="btn btn-danger" title="Stop All Notes & Reset Sound">🔇 Panic</button>
+      <button id="btnHelp" class="btn" onclick="toggleHelp()" title="Help & Keyboard Shortcuts [F1]">❓ Help [F1]</button>
     </div>
   </header>
 
@@ -898,7 +902,7 @@
     const now = audioCtx.currentTime;
 
     voiceObj.voiceGain.gain.cancelScheduledValues(now);
-    const currentGain = voiceObj.voiceGain.gain.value;
+    const currentGain = Math.max(0.0001, voiceObj.voiceGain.gain.value);
     voiceObj.voiceGain.gain.setValueAtTime(currentGain, now);
     voiceObj.voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + Math.max(0.01, release));
 
@@ -1128,6 +1132,7 @@
   const btnArpHold = document.getElementById('btnArpHold');
 
   btnArpToggle.addEventListener('click', () => {
+    ensureAudioActive();
     arpEnabled = !arpEnabled;
     if (arpEnabled) {
       btnArpToggle.innerText = "ARP: ON";
@@ -1293,6 +1298,7 @@
 
   const btnSeqPlay = document.getElementById('btnSeqPlay');
   btnSeqPlay.addEventListener('click', () => {
+    ensureAudioActive();
     isSeqPlaying = !isSeqPlaying;
     if (isSeqPlaying) {
       btnSeqPlay.innerText = '⏸ Pause';
@@ -1318,6 +1324,20 @@
       s.note = noteOptions[Math.floor(Math.random() * noteOptions.length)];
     });
     updateSeqGridActive();
+  });
+
+  document.getElementById('seqBpm').addEventListener('input', () => {
+    if (isSeqPlaying) startSequencer();
+    if (arpEnabled) startArp();
+  });
+  document.getElementById('arpRate').addEventListener('change', () => {
+    if (arpEnabled) startArp();
+  });
+  document.getElementById('arpMode').addEventListener('change', () => {
+    if (arpEnabled) startArp();
+  });
+  document.getElementById('arpOctaves').addEventListener('input', () => {
+    if (arpEnabled) startArp();
   });
 
   function startSequencer() {
@@ -1376,22 +1396,27 @@
         const keyEl = document.createElement('div');
         keyEl.className = `key ${k.black ? 'black' : 'white'}`;
         keyEl.dataset.midi = midiNum;
+        keyEl.setAttribute('role', 'button');
+        keyEl.setAttribute('tabindex', '0');
+        keyEl.setAttribute('aria-label', `${k.note}${3 + oct + currentOctaveShift}`);
 
         const label = document.createElement('span');
         label.className = 'key-label';
         label.innerText = `${k.note}${3 + oct + currentOctaveShift}`;
         keyEl.appendChild(label);
 
-        keyEl.addEventListener('mousedown', (e) => {
-          e.preventDefault();
+        const handleNoteStart = (e) => {
+          if (e) e.preventDefault();
+          ensureAudioActive();
           if (arpEnabled) {
             arpHeldNotes.add(midiNum);
           } else {
             triggerNoteOn(midiNum);
           }
-        });
+        };
 
-        const handleMouseUp = () => {
+        const handleNoteEnd = (e) => {
+          if (e) e.preventDefault();
           if (arpEnabled) {
             if (!arpHold) arpHeldNotes.delete(midiNum);
           } else {
@@ -1399,8 +1424,13 @@
           }
         };
 
-        keyEl.addEventListener('mouseup', handleMouseUp);
-        keyEl.addEventListener('mouseleave', handleMouseUp);
+        keyEl.addEventListener('mousedown', handleNoteStart);
+        keyEl.addEventListener('mouseup', handleNoteEnd);
+        keyEl.addEventListener('mouseleave', handleNoteEnd);
+
+        keyEl.addEventListener('touchstart', handleNoteStart, { passive: false });
+        keyEl.addEventListener('touchend', handleNoteEnd, { passive: false });
+        keyEl.addEventListener('touchcancel', handleNoteEnd, { passive: false });
 
         pianoContainer.appendChild(keyEl);
       });
@@ -1420,12 +1450,32 @@
     'a': 60, 'w': 61, 's': 62, 'e': 63, 'd': 64, 'f': 65,
     't': 66, 'g': 67, 'y': 68, 'h': 69, 'u': 70, 'j': 71, 'k': 72
   };
-  const activeKeySet = new Set();
+  // Map of key -> midiNum to ensure note-off stops exact pitched note even after octave shifts
+  const activeKeySet = new Map();
+
+  function panicAllNotesOff() {
+    for (const [noteNum] of activeVoices) {
+      triggerNoteOff(noteNum);
+    }
+    activeVoices.clear();
+    activeKeySet.clear();
+    arpHeldNotes.clear();
+    updateVoiceDisplay();
+    pianoContainer.querySelectorAll('.key.active').forEach(k => k.classList.remove('active'));
+    showToast('All audio voices reset', 'info', 1500);
+  }
+
+  document.getElementById('btnPanic').addEventListener('click', panicAllNotesOff);
 
   window.addEventListener('keydown', (e) => {
     if (e.repeat) return;
     if (e.key === 'Escape') {
-      toggleHelp(false);
+      const hm = document.getElementById('helpModal');
+      if (hm && hm.style.display !== 'none') {
+        toggleHelp(false);
+      } else {
+        panicAllNotesOff();
+      }
       return;
     }
     if (e.key === '?' || e.key === 'F1') {
@@ -1433,23 +1483,29 @@
       toggleHelp();
       return;
     }
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
+    const hm = document.getElementById('helpModal');
+    if (hm && hm.style.display !== 'none') return;
 
     const key = e.key.toLowerCase();
     if (key === 'z') {
       currentOctaveShift = Math.max(-2, currentOctaveShift - 1);
       renderPiano();
+      showToast(`Octave shifted: ${currentOctaveShift >= 0 ? '+' : ''}${currentOctaveShift}`, 'info', 1200);
       return;
     }
     if (key === 'x') {
       currentOctaveShift = Math.min(2, currentOctaveShift + 1);
       renderPiano();
+      showToast(`Octave shifted: ${currentOctaveShift >= 0 ? '+' : ''}${currentOctaveShift}`, 'info', 1200);
       return;
     }
 
-    if (computerKeyMap[key]) {
+    if (computerKeyMap[key] !== undefined) {
       const midiNum = computerKeyMap[key] + (currentOctaveShift * 12);
-      activeKeySet.add(key);
+      activeKeySet.set(key, midiNum);
       if (arpEnabled) {
         arpHeldNotes.add(midiNum);
       } else {
@@ -1461,8 +1517,8 @@
   window.addEventListener('keyup', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
     const key = e.key.toLowerCase();
-    if (computerKeyMap[key]) {
-      const midiNum = computerKeyMap[key] + (currentOctaveShift * 12);
+    if (activeKeySet.has(key)) {
+      const midiNum = activeKeySet.get(key);
       activeKeySet.delete(key);
       if (arpEnabled) {
         if (!arpHold) arpHeldNotes.delete(midiNum);
@@ -1470,6 +1526,23 @@
         triggerNoteOff(midiNum);
       }
     }
+  });
+
+  window.addEventListener('blur', () => {
+    activeKeySet.forEach((midiNum) => {
+      if (arpEnabled) {
+        if (!arpHold) arpHeldNotes.delete(midiNum);
+      } else {
+        triggerNoteOff(midiNum);
+      }
+    });
+    activeKeySet.clear();
+    for (const [noteNum] of activeVoices) {
+      triggerNoteOff(noteNum);
+    }
+    activeVoices.clear();
+    updateVoiceDisplay();
+    pianoContainer.querySelectorAll('.key.active').forEach(k => k.classList.remove('active'));
   });
 
   // ----------------------------------------------------
@@ -1608,8 +1681,12 @@
     const a = document.createElement('a');
     a.href = url;
     a.download = 'ksynth_preset.json';
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 500);
     showToast('Preset exported as ksynth_preset.json', 'success');
   });
 
@@ -1620,16 +1697,19 @@
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
+    reader.onerror = () => showToast('Failed to read preset file.', 'error');
     reader.onload = (event) => {
       try {
         const p = JSON.parse(event.target.result);
         applyPreset(p);
+        saveCurrentPatch();
         showToast('Preset loaded successfully!', 'success');
       } catch (err) {
         showToast('Failed to parse preset file.', 'error');
       }
     };
     reader.readAsText(file);
+    e.target.value = '';
   });
 
   // Export Sequence JSON
@@ -1643,8 +1723,12 @@
     const a = document.createElement('a');
     a.href = url;
     a.download = 'ksynth_sequence.json';
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 500);
     showToast('Sequence exported as ksynth_sequence.json', 'success');
   });
 
@@ -1655,6 +1739,7 @@
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
+    reader.onerror = () => showToast('Failed to read sequence file.', 'error');
     reader.onload = (event) => {
       try {
         const data = JSON.parse(event.target.result);
@@ -1673,6 +1758,7 @@
             }
           });
           updateSeqGridActive();
+          saveCurrentPatch();
           showToast('Sequence loaded successfully!', 'success');
         }
       } catch (err) {
@@ -1680,7 +1766,248 @@
       }
     };
     reader.readAsText(file);
+    e.target.value = '';
   });
+
+  // Export Audio Preview to WAV (16-bit 44.1 kHz PCM)
+  document.getElementById('btnExportWav').addEventListener('click', exportWavAudio);
+
+  async function exportWavAudio() {
+    try {
+      showToast("Synthesizing WAV file...", "info", 1500);
+      const sampleRate = 44100;
+      const duration = 2.5; // 2.5 seconds preview
+      const OfflineContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+      if (!OfflineContext) {
+        showToast("Offline audio rendering not supported in this browser.", "error");
+        return;
+      }
+      const offlineCtx = new OfflineContext(1, sampleRate * duration, sampleRate);
+
+      const osc1Type = document.getElementById('osc1Wave').value;
+      const osc1Oct = parseInt(document.getElementById('osc1Oct').value);
+      const osc1Detune = parseInt(document.getElementById('osc1Detune').value);
+      const osc1Vol = parseFloat(document.getElementById('osc1Vol').value);
+
+      const osc2Type = document.getElementById('osc2Wave').value;
+      const osc2Oct = parseInt(document.getElementById('osc2Oct').value);
+      const osc2Detune = parseInt(document.getElementById('osc2Detune').value);
+      const osc2Vol = parseFloat(document.getElementById('osc2Vol').value);
+
+      const filterType = document.getElementById('filterType').value;
+      const filterCutoff = parseFloat(document.getElementById('filterCutoff').value);
+      const filterRes = parseFloat(document.getElementById('filterRes').value);
+      const masterVol = parseFloat(document.getElementById('masterVol').value);
+
+      const attack = parseFloat(document.getElementById('attack').value);
+      const decay = parseFloat(document.getElementById('decay').value);
+      const sustain = parseFloat(document.getElementById('sustain').value);
+      const release = parseFloat(document.getElementById('release').value);
+
+      const filter = offlineCtx.createBiquadFilter();
+      filter.type = filterType;
+      filter.frequency.value = filterCutoff;
+      filter.Q.value = filterRes;
+
+      const master = offlineCtx.createGain();
+      master.gain.value = masterVol;
+
+      filter.connect(master);
+      master.connect(offlineCtx.destination);
+
+      const baseFreq = 261.63; // C4
+      const notes = [baseFreq, baseFreq * 1.25, baseFreq * 1.5]; // C major chord arpeggio
+      const noteDuration = 0.9;
+
+      notes.forEach((freq, nIdx) => {
+        const voiceGain = offlineCtx.createGain();
+        const startT = nIdx * 0.18;
+        const noteEndT = startT + noteDuration;
+
+        voiceGain.gain.setValueAtTime(0.0001, startT);
+        voiceGain.gain.linearRampToValueAtTime(0.3, startT + Math.max(0.002, attack));
+        voiceGain.gain.linearRampToValueAtTime(Math.max(0.0001, 0.3 * sustain), startT + attack + decay);
+        voiceGain.gain.setValueAtTime(Math.max(0.0001, 0.3 * sustain), noteEndT);
+        voiceGain.gain.exponentialRampToValueAtTime(0.0001, noteEndT + Math.max(0.01, release));
+
+        // Osc 1
+        const f1 = freq * Math.pow(2, osc1Oct);
+        if (osc1Type === 'noise') {
+          const buf = offlineCtx.createBuffer(1, sampleRate * 2, sampleRate);
+          const d = buf.getChannelData(0);
+          for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+          const noise = offlineCtx.createBufferSource();
+          noise.buffer = buf;
+          noise.loop = true;
+          const g = offlineCtx.createGain();
+          g.gain.value = osc1Vol;
+          noise.connect(g);
+          g.connect(voiceGain);
+          noise.start(startT);
+          noise.stop(noteEndT + release + 0.1);
+        } else {
+          const o1 = offlineCtx.createOscillator();
+          o1.type = osc1Type;
+          o1.frequency.value = f1;
+          o1.detune.value = osc1Detune;
+          const g = offlineCtx.createGain();
+          g.gain.value = osc1Vol;
+          o1.connect(g);
+          g.connect(voiceGain);
+          o1.start(startT);
+          o1.stop(noteEndT + release + 0.1);
+        }
+
+        // Osc 2
+        const f2 = freq * Math.pow(2, osc2Oct);
+        if (osc2Type === 'noise') {
+          const buf = offlineCtx.createBuffer(1, sampleRate * 2, sampleRate);
+          const d = buf.getChannelData(0);
+          for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+          const noise = offlineCtx.createBufferSource();
+          noise.buffer = buf;
+          noise.loop = true;
+          const g = offlineCtx.createGain();
+          g.gain.value = osc2Vol;
+          noise.connect(g);
+          g.connect(voiceGain);
+          noise.start(startT);
+          noise.stop(noteEndT + release + 0.1);
+        } else {
+          const o2 = offlineCtx.createOscillator();
+          o2.type = osc2Type;
+          o2.frequency.value = f2;
+          o2.detune.value = osc2Detune;
+          const g = offlineCtx.createGain();
+          g.gain.value = osc2Vol;
+          o2.connect(g);
+          g.connect(voiceGain);
+          o2.start(startT);
+          o2.stop(noteEndT + release + 0.1);
+        }
+
+        voiceGain.connect(filter);
+      });
+
+      const renderedBuffer = await offlineCtx.startRendering();
+      const wavBlob = audioBufferToWavBlob(renderedBuffer);
+      const url = URL.createObjectURL(wavBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ksynth_preview.wav';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 500);
+      showToast("Exported audio as ksynth_preview.wav", "success");
+    } catch (err) {
+      console.error(err);
+      showToast("Failed to render WAV audio.", "error");
+    }
+  }
+
+  function audioBufferToWavBlob(buffer) {
+    const numChannels = 1;
+    const sampleRate = buffer.sampleRate;
+    const format = 1; // PCM
+    const bitDepth = 16;
+    const samples = buffer.getChannelData(0);
+    const dataLen = samples.length * 2;
+    const bufferLen = 44 + dataLen;
+    const arrayBuffer = new ArrayBuffer(bufferLen);
+    const view = new DataView(arrayBuffer);
+
+    function writeString(offset, str) {
+      for (let i = 0; i < str.length; i++) {
+        view.setUint8(offset + i, str.charCodeAt(i));
+      }
+    }
+
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + dataLen, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, format, true);
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true); // byte rate
+    view.setUint16(32, 2, true); // block align
+    view.setUint16(34, bitDepth, true);
+    writeString(36, 'data');
+    view.setUint32(40, dataLen, true);
+
+    let offset = 44;
+    for (let i = 0; i < samples.length; i++, offset += 2) {
+      const s = Math.max(-1, Math.min(1, samples[i]));
+      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    }
+    return new Blob([view], { type: 'audio/wav' });
+  }
+
+  // LocalStorage Persistence
+  function saveCurrentPatch() {
+    try {
+      const config = {
+        preset: document.getElementById('presetSelect').value,
+        osc1Wave: document.getElementById('osc1Wave').value,
+        osc1Oct: document.getElementById('osc1Oct').value,
+        osc1Detune: document.getElementById('osc1Detune').value,
+        osc1Vol: document.getElementById('osc1Vol').value,
+        osc2Wave: document.getElementById('osc2Wave').value,
+        osc2Oct: document.getElementById('osc2Oct').value,
+        osc2Detune: document.getElementById('osc2Detune').value,
+        osc2Vol: document.getElementById('osc2Vol').value,
+        filterType: document.getElementById('filterType').value,
+        filterCutoff: document.getElementById('filterCutoff').value,
+        filterRes: document.getElementById('filterRes').value,
+        masterVol: document.getElementById('masterVol').value,
+        delayTime: document.getElementById('delayTime').value,
+        delayFdbk: document.getElementById('delayFdbk').value,
+        delayMix: document.getElementById('delayMix').value,
+        attack: document.getElementById('attack').value,
+        decay: document.getElementById('decay').value,
+        sustain: document.getElementById('sustain').value,
+        release: document.getElementById('release').value,
+        bpm: document.getElementById('seqBpm').value,
+        seqSteps: seqStepsData
+      };
+      localStorage.setItem('ksynth_state_v1', JSON.stringify(config));
+    } catch (e) {}
+  }
+
+  function loadSavedPatch() {
+    try {
+      const saved = localStorage.getItem('ksynth_state_v1');
+      if (!saved) return;
+      const config = JSON.parse(saved);
+      if (config && typeof config === 'object') {
+        applyPreset(config);
+        if (config.preset) document.getElementById('presetSelect').value = config.preset;
+        if (config.bpm) {
+          const bpm = Math.max(50, Math.min(220, parseInt(config.bpm)));
+          document.getElementById('seqBpm').value = bpm;
+          document.getElementById('bpmVal').innerText = bpm;
+        }
+        if (Array.isArray(config.seqSteps) && config.seqSteps.length === 16) {
+          config.seqSteps.forEach((s, idx) => {
+            if (s && typeof s === 'object') {
+              seqStepsData[idx].on = !!s.on;
+              if (typeof s.note === 'string' && noteOptions.includes(s.note)) {
+                seqStepsData[idx].note = s.note;
+              }
+            }
+          });
+          updateSeqGridActive();
+        }
+      }
+    } catch (e) {}
+  }
+
+  // Load saved patch on initial start
+  loadSavedPatch();
 
 </script>
 </body>
