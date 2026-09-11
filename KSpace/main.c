@@ -2309,11 +2309,11 @@ void DrawEnemyShipGDI(HDC hdc, float fx, float fy, float ftype, int cloaked, int
         POINT pts[6] = { {x + 10, y + 22}, {x + 20, y + 2}, {x + 14, y + 8}, {x + 10, y}, {x + 6, y + 8}, {x, y + 2} };
         Polygon(hdc, pts, 6);
         HPEN glow = CreatePen(PS_SOLID, 1, RGB(255, 234, 0));
-        SelectObject(hdc, glow);
+        HPEN oldGlowPen = (HPEN)SelectObject(hdc, glow);
         HBRUSH nullB = (HBRUSH)GetStockObject(NULL_BRUSH);
         SelectObject(hdc, nullB);
         Ellipse(hdc, x - 2, y - 2, x + 22, y + 24);
-        SelectObject(hdc, oldBr); DeleteObject(glow);
+        SelectObject(hdc, oldGlowPen); SelectObject(hdc, oldBr); DeleteObject(glow);
         HBRUSH cB = CreateSolidBrush(RGB(255, 234, 0));
         SelectObject(hdc, cB);
         Ellipse(hdc, x + 8, y + 9, x + 12, y + 13);
@@ -2322,11 +2322,11 @@ void DrawEnemyShipGDI(HDC hdc, float fx, float fy, float ftype, int cloaked, int
         POINT pts[8] = { {x + 18, y + 32}, {x + 34, y + 12}, {x + 28, y + 2}, {x + 18, y + 8}, {x + 8, y + 2}, {x + 2, y + 12}, {x + 10, y + 22}, {x + 18, y + 32} };
         Polygon(hdc, pts, 8);
         HPEN glow = CreatePen(PS_SOLID, 1, RGB(0, 229, 255));
-        SelectObject(hdc, glow);
+        HPEN oldGlowPen = (HPEN)SelectObject(hdc, glow);
         HBRUSH nullB = (HBRUSH)GetStockObject(NULL_BRUSH);
         SelectObject(hdc, nullB);
         Ellipse(hdc, x, y, x + 36, y + 34);
-        SelectObject(hdc, oldBr); DeleteObject(glow);
+        SelectObject(hdc, oldGlowPen); SelectObject(hdc, oldBr); DeleteObject(glow);
         HBRUSH cB = CreateSolidBrush(RGB(0, 229, 255));
         SelectObject(hdc, cB);
         Ellipse(hdc, x + 15, y + 14, x + 21, y + 20);
@@ -2405,10 +2405,10 @@ void DrawDroneWingsGDI(HDC hdc, int frame) {
 
         // Point Defense Energy Ring
         HPEN spen = CreatePen(PS_SOLID, 1, (frame % 4 < 2) ? RGB(0, 229, 255) : RGB(255, 255, 255));
-        SelectObject(hdc, spen);
-        SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        HPEN oSp = (HPEN)SelectObject(hdc, spen);
+        HBRUSH oSb = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
         Ellipse(hdc, dx - 2, dy - 2, dx + 12, dy + 12);
-        SelectObject(hdc, oldPen); DeleteObject(spen);
+        SelectObject(hdc, oSp); SelectObject(hdc, oSb); DeleteObject(spen);
     }
     SelectObject(hdc, oldPen);
 }
@@ -2638,10 +2638,10 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
             Polygon(hdc, ipts, 8);
             
             HPEN glowPen = CreatePen(PS_SOLID, 2, RGB(0, 229, 255));
-            SelectObject(hdc, glowPen);
+            HPEN oldGlowPen = (HPEN)SelectObject(hdc, glowPen);
             MoveToEx(hdc, x + 20, y + 20, NULL); LineTo(hdc, x + 30, y + 30); LineTo(hdc, x + 40, y + 20);
             MoveToEx(hdc, x + 70, y + 20, NULL); LineTo(hdc, x + 60, y + 30); LineTo(hdc, x + 50, y + 20);
-            SelectObject(hdc, oldBr); DeleteObject(ib); DeleteObject(glowPen);
+            SelectObject(hdc, oldGlowPen); SelectObject(hdc, oldBr); DeleteObject(ib); DeleteObject(glowPen);
 
             HBRUSH br = CreateSolidBrush(RGB(100, 14, 30));
             oldBr = (HBRUSH)SelectObject(hdc, br);
@@ -2710,9 +2710,9 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
             Polygon(hdc, ipts, 6);
 
             HPEN glowPen = CreatePen(PS_SOLID, 2, RGB(213, 0, 249));
-            SelectObject(hdc, glowPen);
+            HPEN oldGlowPen = (HPEN)SelectObject(hdc, glowPen);
             MoveToEx(hdc, x + 15, y + 20, NULL); LineTo(hdc, x + 45, y + 20);
-            SelectObject(hdc, oldBr); DeleteObject(ib); DeleteObject(glowPen);
+            SelectObject(hdc, oldGlowPen); SelectObject(hdc, oldBr); DeleteObject(ib); DeleteObject(glowPen);
 
             HBRUSH br = CreateSolidBrush(RGB(100, 14, 30));
             oldBr = (HBRUSH)SelectObject(hdc, br);
@@ -3108,25 +3108,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
 
                 // 3-Layer Parallax Starfield Rendering (Loop 2)
+                HPEN spenStar = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+                HPEN oldStarPen = (HPEN)SelectObject(memDC, spenStar);
+                HBRUSH sbrStar1 = CreateSolidBrush(RGB(180, 230, 255));
+                HBRUSH sbrStar0 = CreateSolidBrush(timeStopTimer > 0 ? RGB(0, 229, 255) : RGB(100, 130, 180));
                 for (int i = 0; i < MAX_STARS; i++) {
                     if (stars[i].layer == 2) {
-                        HPEN spen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-                        HPEN oldPen = (HPEN)SelectObject(memDC, spen);
                         MoveToEx(memDC, (int)stars[i].x, (int)stars[i].y, NULL);
                         LineTo(memDC, (int)stars[i].x, (int)stars[i].y + 4);
-                        SelectObject(memDC, oldPen); DeleteObject(spen);
                     } else if (stars[i].layer == 1) {
-                        HBRUSH sbr = CreateSolidBrush(RGB(180, 230, 255));
                         RECT sr = {(int)stars[i].x, (int)stars[i].y, (int)stars[i].x + 1, (int)stars[i].y + 1};
-                        FillRect(memDC, &sr, sbr);
-                        DeleteObject(sbr);
+                        FillRect(memDC, &sr, sbrStar1);
                     } else {
-                        HBRUSH sbr = CreateSolidBrush(timeStopTimer > 0 ? RGB(0, 229, 255) : RGB(100, 130, 180));
                         RECT sr = {(int)stars[i].x, (int)stars[i].y, (int)stars[i].x + 1, (int)stars[i].y + 1};
-                        FillRect(memDC, &sr, sbr);
-                        DeleteObject(sbr);
+                        FillRect(memDC, &sr, sbrStar0);
                     }
                 }
+                SelectObject(memDC, oldStarPen);
+                DeleteObject(spenStar);
+                DeleteObject(sbrStar1);
+                DeleteObject(sbrStar0);
 
                 SetBkMode(memDC, TRANSPARENT);
                 oldFont = (HFONT)SelectObject(memDC, hFontMenu);
@@ -3507,8 +3508,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             EndPaint(hwnd, &ps);
             break;
         }
+        case WM_ERASEBKGND:
+            return 1;
 
         case WM_DESTROY:
+            SaveLeaderboard();
             if (hFontTitle) DeleteObject(hFontTitle);
             if (hFontMenu) DeleteObject(hFontMenu);
             if (hFontHUD) DeleteObject(hFontHUD);

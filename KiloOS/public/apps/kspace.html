@@ -177,8 +177,43 @@ window.addEventListener('load', () => {
   const STATE_KEYBINDS = 8;
   const STATE_REPLAY = 9;
 
+  function safeGetStorage(key, fallback = null) {
+    try {
+      const val = localStorage.getItem(key);
+      return val !== null ? val : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+  function safeSetStorage(key, val) {
+    try {
+      localStorage.setItem(key, val);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  function safeRemoveStorage(key) {
+    try {
+      localStorage.removeItem(key);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  let soundEnabled = safeGetStorage('kspace_sound', '1') !== '0';
+  function toggleSound() {
+    soundEnabled = !soundEnabled;
+    safeSetStorage('kspace_sound', soundEnabled ? '1' : '0');
+    showToast(soundEnabled ? 'Audio Sound FX: Enabled' : 'Audio Sound FX: Muted', 'info');
+  }
+
   let keybinds = { up: 'arrowup', down: 'arrowdown', left: 'arrowleft', right: 'arrowright', fire: ' ', hyperJump: 'j', drone: 'w', overcharge: 'o', timeStop: 't', dash: 'd', bomb: 'b', shield: 's', pause: 'p' };
-  try { let kb = localStorage.getItem('kspace_keybinds'); if (kb) keybinds = Object.assign(keybinds, JSON.parse(kb)); } catch(e) {}
+  try {
+    let kb = safeGetStorage('kspace_keybinds');
+    if (kb) keybinds = Object.assign(keybinds, JSON.parse(kb));
+  } catch(e) {}
 
   let shotsFired = 0;
   let shotsHit = 0;
@@ -205,24 +240,37 @@ window.addEventListener('load', () => {
     }, duration);
   }
 
+  function triggerDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      if (a.parentNode) a.parentNode.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 1000);
+  }
+
   function exportStats() {
     let acc = shotsFired > 0 ? ((shotsHit / shotsFired) * 100).toFixed(1) : 0;
     let data = { score, wave, mode: MODES[modeIndex].name, enemiesKilled, timeSurvivedSeconds: Math.floor(timeSurvivedFrames/60), shotsFired, shotsHit, accuracyPct: acc };
     let json = JSON.stringify(data, null, 2);
     let blob = new Blob([json], { type: 'application/json' });
-    let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'kspace_stats.json'; a.click();
+    triggerDownload(blob, 'kspace_stats.json');
     showToast('Mission stats exported (JSON)', 'success');
   }
   function exportCSV() {
     let acc = shotsFired > 0 ? ((shotsHit / shotsFired) * 100).toFixed(1) : 0;
     let csv = `Score,Wave,Mode,EnemiesKilled,TimeSurvivedSec,ShotsFired,ShotsHit,AccuracyPct\n${score},${wave},${MODES[modeIndex].name},${enemiesKilled},${Math.floor(timeSurvivedFrames/60)},${shotsFired},${shotsHit},${acc}`;
     let blob = new Blob([csv], { type: 'text/csv' });
-    let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'kspace_stats.csv'; a.click();
+    triggerDownload(blob, 'kspace_stats.csv');
     showToast('Mission stats exported (CSV)', 'success');
   }
   function exportHighScores() {
     let blob = new Blob([JSON.stringify(leaderboard, null, 2)], { type: 'application/json' });
-    let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'kspace_highscores.json'; a.click();
+    triggerDownload(blob, 'kspace_highscores.json');
     showToast('Leaderboard exported (JSON)', 'success');
   }
   function importHighScores() {
@@ -231,6 +279,7 @@ window.addEventListener('load', () => {
       let file = e.target.files[0];
       if (!file) return;
       let reader = new FileReader();
+      reader.onerror = () => showToast('Failed to read file', 'warning');
       reader.onload = ev => {
         try {
           let data = JSON.parse(ev.target.result);
@@ -247,6 +296,7 @@ window.addEventListener('load', () => {
             } else { showToast('No valid high scores found', 'warning'); }
           } else { showToast('Invalid JSON format', 'warning'); }
         } catch(err) { showToast('Invalid JSON file', 'warning'); }
+        e.target.value = '';
       };
       reader.readAsText(file);
     };
@@ -254,8 +304,8 @@ window.addEventListener('load', () => {
   }
   function exportReplay() {
     if (!lastReplaySaved) { showToast('No replay available yet!', 'warning'); return; }
-    let blob = new Blob([JSON.stringify(lastReplaySaved)], { type: 'application/json' });
-    let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'kspace_replay.json'; a.click();
+    let blob = new Blob([JSON.stringify(lastReplaySaved, null, 2)], { type: 'application/json' });
+    triggerDownload(blob, 'kspace_replay.json');
     showToast('Mission replay exported (JSON)', 'success');
   }
   function loadReplay() {
@@ -264,6 +314,7 @@ window.addEventListener('load', () => {
       let file = e.target.files[0];
       if (!file) return;
       let reader = new FileReader();
+      reader.onerror = () => showToast('Failed to read file', 'warning');
       reader.onload = ev => {
         try {
           let data = JSON.parse(ev.target.result);
@@ -273,6 +324,7 @@ window.addEventListener('load', () => {
              startReplay(data);
           } else { showToast('Invalid replay file', 'warning'); }
         } catch(err) { showToast('Invalid JSON file', 'warning'); }
+        e.target.value = '';
       };
       reader.readAsText(file);
     };
@@ -397,13 +449,13 @@ window.addEventListener('load', () => {
   }
 
   // Local Storage Persistence
-  try { highScore = parseInt(localStorage.getItem('kspace_highscore') || '0', 10) || 0; } catch (e) {}
-  try { totalKills = parseInt(localStorage.getItem('kspace_totalkills') || '0', 10) || 0; } catch (e) {}
+  try { highScore = parseInt(safeGetStorage('kspace_highscore', '0'), 10) || 0; } catch (e) {}
+  try { totalKills = parseInt(safeGetStorage('kspace_totalkills', '0'), 10) || 0; } catch (e) {}
 
   let leaderboard = [];
   function loadLeaderboard() {
     try {
-      let data = localStorage.getItem('kspace_leaderboard');
+      let data = safeGetStorage('kspace_leaderboard');
       if (data) {
         leaderboard = JSON.parse(data);
       } else {
@@ -422,9 +474,7 @@ window.addEventListener('load', () => {
   loadLeaderboard();
 
   function saveLeaderboard() {
-    try {
-      localStorage.setItem('kspace_leaderboard', JSON.stringify(leaderboard));
-    } catch (e) {}
+    safeSetStorage('kspace_leaderboard', JSON.stringify(leaderboard));
   }
 
   function addScoreToLeaderboard(newScore, newWave, modeName) {
@@ -435,7 +485,7 @@ window.addEventListener('load', () => {
   }
 
   function hasSavedGame() {
-    try { return localStorage.getItem('kspace_save') !== null; } catch (e) { return false; }
+    return safeGetStorage('kspace_save') !== null;
   }
 
   function saveGameState() {
@@ -459,15 +509,14 @@ window.addEventListener('load', () => {
       overchargeEnergy: overchargeEnergy,
       boss: boss
     };
-    try {
-      localStorage.setItem('kspace_save', JSON.stringify(saveObj));
+    if (safeSetStorage('kspace_save', JSON.stringify(saveObj))) {
       playSound(2);
-    } catch (e) {}
+    }
   }
 
   function loadGameState() {
     try {
-      let str = localStorage.getItem('kspace_save');
+      let str = safeGetStorage('kspace_save');
       if (!str) return false;
       let saveObj = JSON.parse(str);
       p = saveObj.p;
@@ -508,12 +557,13 @@ window.addEventListener('load', () => {
   }
 
   function clearSavedGame() {
-    try { localStorage.removeItem('kspace_save'); } catch (e) {}
+    safeRemoveStorage('kspace_save');
   }
 
   // --- AUDIO SYNTHESIZER ---
   let audioCtx;
   function playSound(type) {
+    if (!soundEnabled) return;
     try {
       if (!audioCtx) {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -908,7 +958,7 @@ window.addEventListener('load', () => {
       addExplosion(boss.x + boss.w / 2, boss.y + boss.h / 2, 35, '#ff1744');
       if (boss.hp <= 0) destroyBoss();
     }
-    try { localStorage.setItem('kspace_totalkills', totalKills); } catch (e) {}
+    try { safeSetStorage('kspace_totalkills', totalKills); } catch (e) {}
   }
 
   function useHyperShield() {
@@ -955,14 +1005,15 @@ window.addEventListener('load', () => {
   // --- KEYBOARD & INPUT ---
   const keys = {};
   document.addEventListener('keydown', e => {
-    if (!waitForKeybind && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Spacebar', 'KeyB', 'KeyP', 'Escape', 'KeyH', 'F1'].includes(e.code) || [' ', 'b', 'B', 'p', 'P', 't', 'T', 'd', 'D', 's', 'S', 'h', 'H'].includes(e.key)) {
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
+    if (!waitForKeybind && (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Spacebar', 'KeyB', 'KeyP', 'Escape', 'KeyH', 'F1'].includes(e.code) || [' ', 'b', 'B', 'p', 'P', 't', 'T', 'd', 'D', 's', 'S', 'h', 'H', 'j', 'J', 'w', 'W', 'o', 'O', 'm', 'M'].includes(e.key))) {
       e.preventDefault();
     }
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
     
     if (waitForKeybind) {
       keybinds[waitForKeybind] = e.key.toLowerCase();
-      localStorage.setItem('kspace_keybinds', JSON.stringify(keybinds));
+      safeSetStorage('kspace_keybinds', JSON.stringify(keybinds));
       waitForKeybind = null;
       return;
     }
@@ -970,6 +1021,11 @@ window.addEventListener('load', () => {
     keys[e.code] = true;
 
     const keyLower = e.key ? e.key.toLowerCase() : '';
+
+    if (keyLower === 'm') {
+      toggleSound();
+      return;
+    }
 
     if (gameState === STATE_MENU) {
       let optCount = hasSavedGame() ? 7 : 6;
@@ -1009,6 +1065,12 @@ window.addEventListener('load', () => {
       } else if (keyLower === 'h' || e.key === 'F1') {
         previousState = STATE_PLAYING;
         gameState = STATE_HELP;
+      } else if (keyLower === keybinds.hyperJump || keyLower === 'j') {
+        useHyperJump();
+      } else if (keyLower === keybinds.drone) {
+        deployDroneWing();
+      } else if (keyLower === keybinds.overcharge || keyLower === 'o') {
+        useOvercharge();
       } else if (keyLower === keybinds.timeStop) {
         useTimeStop();
       } else if (keyLower === keybinds.dash) {
@@ -1144,7 +1206,10 @@ window.addEventListener('load', () => {
         showToast('Game progress loaded!', 'success');
       }
     }
-    else if (menuIndex === 4) gameState = STATE_MENU;
+    else if (menuIndex === 4) {
+      isReplaying = false;
+      gameState = STATE_MENU;
+    }
   }
 
   function startNewGame(modeIdx, forceSeed = null) {
@@ -1998,9 +2063,9 @@ window.addEventListener('load', () => {
 
     if (score > highScore) {
       highScore = score;
-      try { localStorage.setItem('kspace_highscore', highScore); } catch (ex) {}
+      safeSetStorage('kspace_highscore', highScore);
     }
-    try { localStorage.setItem('kspace_totalkills', totalKills); } catch (ex) {}
+    safeSetStorage('kspace_totalkills', totalKills);
 
     // Powerup Drop Chance
     let dropChance = e.isElite ? 0.8 : 0.22;
@@ -2979,6 +3044,7 @@ window.addEventListener('load', () => {
       "ARROWS / DRAG : Move Ship",
       "SPACE / CLICK : Fire Weapon",
       "[P] / [||]    : Pause Game",
+      "[M]           : Toggle Audio Mute",
       "",
       "--- LOOP 11 SYSTEMS ---",
       "[J] : Hyper-Jump Warp Drive",
@@ -3090,7 +3156,7 @@ window.addEventListener('load', () => {
     ctx.fillStyle = '#80d8ff';
     ctx.font = '12px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('Press [P] to Resume | [H] for Help', W / 2, H - 35);
+    ctx.fillText(soundEnabled ? 'Sound: ON [M] | Press [P] to Resume | [H] Help' : 'Sound: MUTED [M] | Press [P] to Resume | [H] Help', W / 2, H - 35);
     ctx.textAlign = 'left';
   }
 
