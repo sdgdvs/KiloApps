@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KNote
+**Target App:** KPass
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KNote
 - KPass
 - KMedia
 - KNet
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KMine
 - KPac
 - KQuest
+- KNote
 
 ## Progress Log (trimmed by Director 2026-09-06 — keeping only latest entry per app)
+- KNote: Usability and UI issues fixed (integrated non-blocking toast notification system with startup welcome prompt and click-to-dismiss feedback, added 1-click Quick Starter template chips [To-Do, Meeting, Pitch, Code, Cheatsheet], added 2-space Tab indentation and Shift+Tab dedentation in note editor, added modal backdrop-click dismissal for Pass/Delete/Help modals, added visible keyboard shortcut badges to toolbar buttons [＋ New Note [Ctrl+N], 📌 Pin [Ctrl+P], 👁 Preview [Ctrl+E], 🗑 Delete [Del], ❓ Help [F1]], implemented Ctrl+E preview toggle, Ctrl+D delete, Ctrl+S save feedback, and Escape dismissals in web; fixed critical bug in native C where typing 'H' in the search box triggered the Help dialog, added SearchEditProc subclass for Escape search clearing and Enter/Down list focus, added confirmation dialog before deleting notes, added Ctrl+Tab forward tab cycling and Ctrl+1..9 direct tab navigation, added dedicated ShowHelpDialog user guide, updated toolbar button labels with shortcut badges, dynamic window title with active note and shortcut guide, and verified clean compilation).
 - KQuest: Usability and UI issues fixed (fixed critical C2371 compilation error in native C, expanded native controls layout to fill 1000x760 window eliminating empty space and doubling log edit height, added SetBtn helper with explicit keyboard shortcut badges [1-6] and disabled state handling across all 20+ game states, added message loop accelerator forwarding in WinMain so child controls do not swallow hotkeys, updated window title with shortcut guide, scaled canvas sprites dynamically; fixed broken F5/F9/S Quick Save/Load ReferenceErrors in web JS, added cybernetic toast notification system with startup welcome prompt, audio toggle feedback, achievement/save toasts, added MutationObserver for automatic [1-6] key badges on action buttons, added Escape key return handling to Town Square, and synchronized 1000x760 dimensions).
 - KPac: Usability and UI issues fixed (synchronized 400x630 auto-opening window bounds in App.jsx and data-width/height, added dedicated Pause [Space] button to toolbar, added full canvas mouse click and touch swipe directional steering with pause/resume and restart handling, added cybernetic startup toast notification and centered in-game status prompts, added visible keyboard shortcut badges to D-pad buttons [▲ [W], ◀ [A], ▼ [S], ▶ [D]] in web; added WM_LBUTTONDOWN for mouse steering, overlay dismissal, pause toggle and game restart, handled VK_ESCAPE for overlay dismissal and pausing, added VK_F5/VK_F9 shortcuts for Save/Load, added startup welcome banner, redesigned in-game Help overlay with cybernetic styling and full keyboard guide, and updated window title with shortcut hint in native C).
 - KMine: Usability and UI issues fixed (integrated non-blocking cyber toast notification system with startup welcome prompt, replaced blocking alerts with custom Help & Shortcuts modal dialog [F1/?/Esc], added visual shortcut badges to toolbar buttons [Restart [F2], Hint [H], Save [F5], Load [F9], Exp [E], Imp [I], Replay [P], Help [F1]], added direct difficulty switching hotkeys [1-3], F1 help, Esc dismissal, and synchronized 1020x720 bounds in App.jsx for seamless Expert mode rendering; updated native C with ShowHelpDialog comprehensive guide and shortcuts reference, added menu shortcut accelerators, implemented keyboard shortcuts for F1/H/1-3/F2/F5/F9/E/I/P/Esc, updated window title with F1 help and difficulty hints, and verified clean compilation for both web and native builds).
@@ -153,7 +154,6 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KNet: Usability and UI issues fixed (added Help modal dialog, toast feedback, Enter-to-execute on all inputs, and high-DPI canvas scaling in web; added dark terminal styling, live filter on typing, Enter-to-fetch/filter, and global F1 shortcut in native).
 - KMedia: Usability and UI issues fixed (added drag & drop file loading, visual empty state, seek buttons, volume mute toggle, non-blocking toast notifications, video click play/pause and dblclick fullscreen to web; fixed play/pause toggle bug, added live playback time/status indicator, seek buttons, and F1 hotkey handling in edit controls to native C).
 - KPass: Usability and UI issues fixed (synchronized 500x620 layout, centered native controls & expanded vault listbox, applied crisp DPI fonts to all controls, added Enter-to-unlock and native Lock Vault button, added explicit F1/H Help button and non-blocking clipboard feedback in native; replaced web blocking alert modals with sleek toast notifications, added header Help button, quick-copy on password click, and password mask/reveal toggle in web vault).
-- KNote: Usability and UI issues fixed (synchronized App.jsx and native client dimensions to 800x600, added explicit F1/H help bindings with visual text in native and web versions, calculated dynamic native font heights, and verified WS_CLIPCHILDREN and SetProcessDPIAware).
 - KTodo: Usability and UI issues fixed (replaced blocking browser alerts with modern dark Help modal dialog and non-blocking toast notifications with startup welcome toast, added 1/2 view switching shortcuts, Escape and backdrop-click modal dismissal, and explicit F1/H header button in web; added WS_CLIPCHILDREN to eliminate native flicker, added ShowHelpDialog with comprehensive shortcut and feature guide, updated status bar and action buttons with explicit F1/H and shortcut hints, and implemented dynamic responsive button layout in native C).
 - KSys: Usability and UI issues fixed (mapped F1 for help natively and on web, explicitly stated F1 support in UI labels/buttons, verified 1024x768 bounds, compiled successfully).
 - KType: Usability and UI issues fixed (canvas scaling relative to devicePixelRatio applied in web for crisp text, automatic toggleHelp() on load added for first-time users, native currentMode default swapped to Help screen, SetProcessDPIAware validated).

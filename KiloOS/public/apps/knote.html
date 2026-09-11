@@ -356,21 +356,41 @@
     position: fixed;
     bottom: 35px;
     right: 20px;
-    background: #333;
+    background: #2c2c2c;
     color: #fff;
-    padding: 8px 16px;
-    border-radius: 4px;
+    padding: 9px 18px;
+    border-radius: 6px;
     font-size: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
     z-index: 2000;
     opacity: 0;
-    pointer-events: none;
+    pointer-events: auto;
+    cursor: pointer;
+    user-select: none;
     transition: opacity 0.2s ease, transform 0.2s ease;
     transform: translateY(8px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
   }
   .toast.show {
     opacity: 1;
     transform: translateY(0);
+  }
+  .template-chip {
+    background: #fff;
+    border: 1px dashed var(--border-dark);
+    border-radius: 12px;
+    padding: 2px 9px;
+    font-size: 11px;
+    cursor: pointer;
+    color: #444;
+    transition: all 0.15s;
+    outline: none;
+  }
+  .template-chip:hover {
+    background: #fff9c4;
+    border-color: var(--accent-dark);
+    color: #000;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   }
   .shortcut-table {
     width: 100%;
@@ -397,7 +417,7 @@
 <!-- Sidebar -->
 <nav class="sidebar" aria-label="Notes sidebar">
   <div class="sidebar-header">
-    <button id="newBtn" class="primary" style="flex: 1;" aria-label="Create new note">＋ New Note</button>
+    <button id="newBtn" class="primary" style="flex: 1;" aria-label="Create new note">＋ New Note [Ctrl+N]</button>
   </div>
   <div class="search-box">
     <input type="text" id="searchInput" placeholder="Search notes or #tags... (Ctrl+F)" aria-label="Search notes" autocomplete="off">
@@ -411,9 +431,9 @@
   <!-- Toolbar -->
   <header class="toolbar" role="toolbar" aria-label="Note editor toolbar">
     <div class="toolbar-group">
-      <button id="pinBtn" title="Pin note to top (Ctrl+P)" aria-label="Pin note">📌 Pin</button>
+      <button id="pinBtn" title="Pin note to top (Ctrl+P)" aria-label="Pin note">📌 Pin [Ctrl+P]</button>
       <button id="lockBtn" title="Encrypt/Decrypt with Password" aria-label="Lock or unlock note">🔒 Lock</button>
-      <button id="viewToggleBtn" title="Toggle Preview" aria-label="Toggle preview mode">👁 Preview</button>
+      <button id="viewToggleBtn" title="Toggle Preview (Ctrl+E)" aria-label="Toggle preview mode">👁 Preview [Ctrl+E]</button>
     </div>
     <div class="toolbar-group">
       <button id="exportTxtBtn" title="Export as plain text" aria-label="Export TXT">Export TXT</button>
@@ -421,13 +441,22 @@
       <button id="exportJsonBtn" title="Export JSON backup" aria-label="Export JSON">Export JSON</button>
       <button id="importBtn" title="Import JSON backup" aria-label="Import JSON">Import JSON</button>
       <input type="file" id="fileInput" accept=".json,.txt,.md" style="display: none;">
-      <button id="delBtn" class="danger" title="Delete note" aria-label="Delete note">🗑 Delete</button>
-      <button id="helpBtn" title="Help & Shortcuts (F1)" aria-label="Help">❓ Help</button>
+      <button id="delBtn" class="danger" title="Delete note (Del)" aria-label="Delete note">🗑 Delete [Del]</button>
+      <button id="helpBtn" title="Help & Shortcuts (F1)" aria-label="Help">❓ Help [F1]</button>
     </div>
   </header>
 
   <!-- Editor Container -->
   <div class="editor-container">
+    <!-- Template Quick Starters -->
+    <div id="templateBar" style="display: flex; gap: 6px; padding: 6px 14px; background: rgba(255, 249, 196, 0.45); border-bottom: 1px solid var(--border); font-size: 11px; align-items: center; flex-wrap: wrap;">
+      <span style="font-weight: 600; color: #665;">Templates:</span>
+      <button type="button" class="template-chip" data-tmpl="todo">☑ To-Do</button>
+      <button type="button" class="template-chip" data-tmpl="meeting">📅 Meeting</button>
+      <button type="button" class="template-chip" data-tmpl="idea">💡 Pitch</button>
+      <button type="button" class="template-chip" data-tmpl="code">💻 Code</button>
+      <button type="button" class="template-chip" data-tmpl="guide">📖 Cheatsheet</button>
+    </div>
     <textarea id="noteArea" spellcheck="false" maxlength="6000" placeholder="Start typing your note here... Tip: use #tags for quick organization!" aria-label="Note content"></textarea>
     <div class="preview-pane" id="previewPane" aria-label="Note Markdown preview"></div>
     <div class="locked-overlay" id="lockedOverlay">
@@ -494,11 +523,15 @@
         <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">N</span></td><td>Create new note</td></tr>
         <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">F</span></td><td>Search notes & tags</td></tr>
         <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">P</span></td><td>Pin / Unpin current note</td></tr>
+        <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">E</span></td><td>Toggle Markdown Preview</td></tr>
         <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">S</span></td><td>Save notes immediately</td></tr>
+        <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">D</span></td><td>Delete current note</td></tr>
+        <tr><td><span class="kbd">Tab</span></td><td>Indent 2 spaces in editor (Shift+Tab to dedent)</td></tr>
         <tr><td><span class="kbd">F1</span> or <span class="kbd">H</span></td><td>Open this Help manual</td></tr>
         <tr><td><span class="kbd">↑</span> / <span class="kbd">↓</span> in list</td><td>Navigate between notes</td></tr>
+        <tr><td><span class="kbd">Enter</span> in list</td><td>Open selected note</td></tr>
         <tr><td><span class="kbd">Delete</span> in list</td><td>Delete selected note</td></tr>
-        <tr><td><span class="kbd">Esc</span></td><td>Close dialogs or clear search</td></tr>
+        <tr><td><span class="kbd">Esc</span></td><td>Close dialogs, toast, or clear search</td></tr>
       </table>
       <p style="margin-top: 14px; font-size: 12px; color: #555;">
         <strong>Features:</strong><br>
@@ -568,14 +601,19 @@
   let passwordAction = null; // 'lock' or 'unlock'
   let toastTimer = null;
 
-  function showToast(msg) {
+  function showToast(msg, duration = 2400) {
     if (toastTimer) clearTimeout(toastTimer);
     toast.textContent = msg;
     toast.classList.add('show');
     toastTimer = setTimeout(() => {
       toast.classList.remove('show');
-    }, 2400);
+    }, duration);
   }
+
+  toast.addEventListener('click', () => {
+    toast.classList.remove('show');
+    if (toastTimer) clearTimeout(toastTimer);
+  });
 
   // Safe Storage
   function safeGetStorage(key) {
@@ -845,7 +883,7 @@
 
     const cur = notes[activeIndex];
     if (cur) {
-      pinBtn.textContent = cur.pinned ? '📌 Unpin' : '📌 Pin';
+      pinBtn.textContent = cur.pinned ? '📌 Unpin [Ctrl+P]' : '📌 Pin [Ctrl+P]';
       if (cur.encrypted) {
         lockBtn.textContent = cur.unlockedText ? '🔓 Lock' : '🔒 Unlock';
       } else {
@@ -868,9 +906,11 @@
       previewPane.style.display = 'none';
       lockedOverlay.style.display = 'flex';
       viewToggleBtn.style.display = 'none';
+      if (templateBar) templateBar.style.display = 'none';
     } else {
       lockedOverlay.style.display = 'none';
       viewToggleBtn.style.display = 'inline-flex';
+      if (templateBar) templateBar.style.display = 'flex';
       const displayText = cur.encrypted ? cur.unlockedText : cur.text;
       noteArea.value = displayText || '';
 
@@ -884,6 +924,7 @@
       }
     }
 
+    viewToggleBtn.textContent = isPreviewMode ? '✏ Edit [Ctrl+E]' : '👁 Preview [Ctrl+E]';
     updateStats();
     renderList();
   }
@@ -899,6 +940,39 @@
     updateStats();
     saveNotes();
     renderList();
+  });
+
+  // Tab key indentation support in editor
+  noteArea.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const start = noteArea.selectionStart;
+      const end = noteArea.selectionEnd;
+      const value = noteArea.value;
+      if (!e.shiftKey) {
+        noteArea.value = value.substring(0, start) + '  ' + value.substring(end);
+        noteArea.selectionStart = noteArea.selectionEnd = start + 2;
+      } else {
+        if (start >= 2 && value.substring(start - 2, start) === '  ') {
+          noteArea.value = value.substring(0, start - 2) + value.substring(end);
+          noteArea.selectionStart = noteArea.selectionEnd = start - 2;
+        } else if (start >= 1 && value.substring(start - 1, start) === ' ') {
+          noteArea.value = value.substring(0, start - 1) + value.substring(end);
+          noteArea.selectionStart = noteArea.selectionEnd = start - 1;
+        }
+      }
+      const cur = notes[activeIndex];
+      if (cur) {
+        if (cur.encrypted && cur.unlockedText !== null) {
+          cur.unlockedText = noteArea.value;
+        } else {
+          cur.text = noteArea.value;
+        }
+        updateStats();
+        saveNotes();
+        renderList();
+      }
+    }
   });
 
   searchInput.addEventListener('input', () => {
@@ -950,13 +1024,14 @@
     cur.pinned = !cur.pinned;
     saveNotes();
     renderList();
-    showToast(cur.pinned ? "Note pinned to top" : "Note unpinned");
+    showToast(cur.pinned ? "Note pinned to top [Ctrl+P]" : "Note unpinned");
   });
 
   viewToggleBtn.addEventListener('click', () => {
     isPreviewMode = !isPreviewMode;
-    viewToggleBtn.textContent = isPreviewMode ? '✏ Edit' : '👁 Preview';
+    viewToggleBtn.textContent = isPreviewMode ? '✏ Edit [Ctrl+E]' : '👁 Preview [Ctrl+E]';
     loadActive();
+    showToast(isPreviewMode ? "Markdown preview mode" : "Editor mode");
   });
 
   // Lock / Password Modal
@@ -1203,6 +1278,58 @@
     helpModal.style.display = 'none';
   });
 
+  // Backdrop click dismissals
+  passModal.addEventListener('click', (e) => {
+    if (e.target === passModal) closePasswordModal();
+  });
+  deleteModal.addEventListener('click', (e) => {
+    if (e.target === deleteModal) closeDeleteModal();
+  });
+  helpModal.addEventListener('click', (e) => {
+    if (e.target === helpModal) helpModal.style.display = 'none';
+  });
+
+  // Template Quick Starters
+  const templateBar = document.getElementById('templateBar');
+  const TEMPLATES = {
+    todo: "# Tasks Checklist\n\n- [ ] High-priority task #todo\n- [ ] Review documentation\n- [ ] Team sync meeting\n- [x] Workspace initialized\n\n#work #tasks",
+    meeting: "# Meeting Notes - " + new Date().toISOString().slice(0, 10) + "\n\n**Attendees:** \n**Goal:** \n\n## Agenda\n1. Project Status\n2. Blockers & Risks\n3. Next Steps\n\n## Action Items\n- [ ] Follow up on deliverables #action\n\n#meeting",
+    idea: "# Project Pitch: [Name]\n\n## Executive Summary\nA brief 1-2 sentence overview of the project concept.\n\n## Problem & Solution\n- **Problem:** Current workflow limitations.\n- **Solution:** Proposed streamlined feature.\n\n## Key Milestones\n- [ ] Phase 1: Prototype\n- [ ] Phase 2: User Validation\n\n#ideas #projects",
+    code: "# Code Snippet: [Title]\n\nStack: JavaScript / Web\n\n```js\n// Implementation\nfunction solveProblem() {\n  return 'optimal';\n}\n```\n\n#snippets #dev",
+    guide: "# Markdown Cheatsheet\n\n# Heading 1\n## Heading 2\n### Heading 3\n\nFormatting: **bold**, *italic*, `inline code`\n\n- List item 1\n- List item 2\n\n> Blockquote insight\n\n---\n\nTags: #reference #cheatsheet"
+  };
+
+  if (templateBar) {
+    templateBar.querySelectorAll('.template-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tmplKey = btn.getAttribute('data-tmpl');
+        const tmplContent = TEMPLATES[tmplKey];
+        if (!tmplContent) return;
+        const cur = notes[activeIndex];
+        if (!cur) return;
+        if (cur.encrypted && !cur.unlockedText) {
+          showToast("Cannot apply template to locked note");
+          return;
+        }
+        if (!noteArea.value || noteArea.value.trim() === '') {
+          noteArea.value = tmplContent;
+        } else {
+          noteArea.value += '\n\n' + tmplContent;
+        }
+        if (cur.encrypted && cur.unlockedText !== null) {
+          cur.unlockedText = noteArea.value;
+        } else {
+          cur.text = noteArea.value;
+        }
+        updateStats();
+        saveNotes();
+        renderList();
+        noteArea.focus();
+        showToast("Template applied: " + btn.textContent.trim());
+      });
+    });
+  }
+
   // Global Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
     const activeTag = document.activeElement ? document.activeElement.tagName : '';
@@ -1215,8 +1342,12 @@
       return;
     }
 
-    // Escape closes modals or clears search
+    // Escape closes modals, toasts, or clears search
     if (e.key === 'Escape') {
+      if (toast.classList.contains('show')) {
+        toast.classList.remove('show');
+        if (toastTimer) clearTimeout(toastTimer);
+      }
       if (passModal.style.display === 'flex') {
         closePasswordModal();
       } else if (deleteModal.style.display === 'flex') {
@@ -1252,11 +1383,25 @@
       return;
     }
 
+    // Ctrl+E: Toggle Markdown Preview
+    if (e.ctrlKey && (e.key === 'e' || e.key === 'E')) {
+      e.preventDefault();
+      viewToggleBtn.click();
+      return;
+    }
+
+    // Ctrl+D: Delete Note
+    if (e.ctrlKey && (e.key === 'd' || e.key === 'D')) {
+      e.preventDefault();
+      openDeleteModal();
+      return;
+    }
+
     // Ctrl+S: Manual save feedback
     if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
       e.preventDefault();
       saveNotes();
-      showToast("Notes saved locally");
+      showToast("Notes saved locally [Ctrl+S]");
       return;
     }
   });
@@ -1264,6 +1409,7 @@
   // Initialize
   loadNotes();
   loadActive();
+  showToast("Welcome to KNote! Press F1 or H for Help & Shortcuts.", 3500);
 })();
 </script>
 </body>

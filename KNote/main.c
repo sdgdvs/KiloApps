@@ -368,9 +368,22 @@ void LoadActiveNote() {
             SetWindowTextA(hBtnLock, "Lock");
         }
         UpdateStats();
-        SetWindowTextA(hBtnPin, pinned[activeNote] ? "Unpin" : "Pin");
+        SetWindowTextA(hBtnPin, pinned[activeNote] ? "Unpin [^P]" : "Pin [^P]");
+
+        HWND hMain = GetAncestor(hEdit, GA_ROOT);
+        if (hMain) {
+            char title[128];
+            char noteName[32] = "Untitled";
+            char* raw = encrypted[activeNote] ? (unlockedNotes[activeNote][0] ? unlockedNotes[activeNote] : "Locked") : notes[activeNote];
+            int k = 0; while(raw[k] && raw[k] != '\r' && raw[k] != '\n' && k < 24) { noteName[k] = raw[k]; k++; }
+            noteName[k] = 0; if (k == 0) lstrcpyA(noteName, "Empty Note");
+            wsprintfA(title, "KNote - [%s] - Press F1 or H for Help", noteName);
+            SetWindowTextA(hMain, title);
+        }
     } else {
         SetWindowTextA(hEdit, ""); EnableWindow(hEdit, FALSE);
+        HWND hMain = GetAncestor(hEdit, GA_ROOT);
+        if (hMain) SetWindowTextA(hMain, "KNote - Press F1 or H for Help");
     }
     RenderTabs();
 }
@@ -431,6 +444,45 @@ void RefreshList() {
     }
 }
 
+void ShowHelpDialog(HWND hwnd) {
+    MessageBoxA(hwnd,
+        "KNote - Personal Notepad & Organizer\r\n"
+        "======================================\r\n\r\n"
+        "KEYBOARD SHORTCUTS:\r\n"
+        "  - Ctrl+N        : Create new note\r\n"
+        "  - Ctrl+F        : Focus search & tags box\r\n"
+        "  - Ctrl+P        : Pin / unpin current note\r\n"
+        "  - Ctrl+S        : Save notes immediately\r\n"
+        "  - Ctrl+W        : Close active tab\r\n"
+        "  - Ctrl+Tab      : Cycle next open tab\r\n"
+        "  - Ctrl+1..9     : Switch directly to tab 1 to 9\r\n"
+        "  - Ctrl+D / Del  : Delete selected note\r\n"
+        "  - Esc           : Clear search / return to note list\r\n"
+        "  - F1 or H       : Open this Help manual\r\n\r\n"
+        "FEATURES:\r\n"
+        "  - Tags: Type #tag anywhere in notes to categorize\r\n"
+        "  - AES-256: Lock notes with secure password encryption\r\n"
+        "  - Backups: Export Markdown or standard JSON\r\n"
+        "  - Multi-tab: Open and edit multiple notes seamlessly",
+        "KNote Help & Shortcuts", MB_OK | MB_ICONINFORMATION);
+}
+
+static WNDPROC g_oldSearchEditProc = NULL;
+LRESULT CALLBACK SearchEditProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_KEYDOWN) {
+        if (wp == VK_ESCAPE) {
+            SetWindowTextA(hwnd, "");
+            RefreshList();
+            SetFocus(hList);
+            return 0;
+        } else if (wp == VK_RETURN || wp == VK_DOWN) {
+            SetFocus(hList);
+            return 0;
+        }
+    }
+    return CallWindowProcA(g_oldSearchEditProc, hwnd, msg, wp, lp);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
@@ -448,25 +500,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int fontHeight = -MulDiv(12, dpi, 72);
             hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5, DEFAULT_PITCH, "Segoe UI");
             
-            hBtnNew = CreateWindow("BUTTON", "New", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 0, 0, 100, 26, hwnd, (HMENU)ID_BTN_NEW, NULL, NULL);
-            hBtnDel = CreateWindow("BUTTON", "Del", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 100, 0, 100, 26, hwnd, (HMENU)ID_BTN_DEL, NULL, NULL);
+            hBtnNew = CreateWindow("BUTTON", "New [^N]", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 0, 0, 100, 26, hwnd, (HMENU)ID_BTN_NEW, NULL, NULL);
+            hBtnDel = CreateWindow("BUTTON", "Del [Del]", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 100, 0, 100, 26, hwnd, (HMENU)ID_BTN_DEL, NULL, NULL);
             hSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_TABSTOP|ES_AUTOHSCROLL, 0, 26, 200, 22, hwnd, (HMENU)ID_SEARCH, NULL, NULL);
-            SendMessageA(hSearch, EM_SETCUEBANNER, FALSE, (LPARAM)L"Search tags... (Ctrl+F)");
+            SendMessageA(hSearch, EM_SETCUEBANNER, FALSE, (LPARAM)L"Search tags... (Ctrl+F, Esc clear)");
             hList = CreateWindowEx(0, "LISTBOX", NULL, WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_VSCROLL|LBS_NOTIFY, 0, 48, 200, H-48, hwnd, (HMENU)ID_LIST, NULL, NULL);
             
-            hBtnPin = CreateWindow("BUTTON", "Pin", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 200, 0, 60, 26, hwnd, (HMENU)ID_BTN_PIN, NULL, NULL);
-            hBtnLock = CreateWindow("BUTTON", "Lock", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 260, 0, 60, 26, hwnd, (HMENU)ID_BTN_LOCK, NULL, NULL);
-            hBtnExportMd = CreateWindow("BUTTON", "Export MD", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 320, 0, 90, 26, hwnd, (HMENU)ID_BTN_EXPORT_MD, NULL, NULL);
-            hBtnExportJson = CreateWindow("BUTTON", "Export JSON", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 410, 0, 100, 26, hwnd, (HMENU)ID_BTN_EXPORT_JSON, NULL, NULL);
-            hBtnImport = CreateWindow("BUTTON", "Import JSON", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 510, 0, 100, 26, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
-            hBtnHelp = CreateWindow("BUTTON", "Help (F1)", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 610, 0, 80, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            hBtnPin = CreateWindow("BUTTON", "Pin [^P]", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 200, 0, 70, 26, hwnd, (HMENU)ID_BTN_PIN, NULL, NULL);
+            hBtnLock = CreateWindow("BUTTON", "Lock", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 270, 0, 65, 26, hwnd, (HMENU)ID_BTN_LOCK, NULL, NULL);
+            hBtnExportMd = CreateWindow("BUTTON", "Exp MD", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 335, 0, 75, 26, hwnd, (HMENU)ID_BTN_EXPORT_MD, NULL, NULL);
+            hBtnExportJson = CreateWindow("BUTTON", "Exp JSON", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 410, 0, 80, 26, hwnd, (HMENU)ID_BTN_EXPORT_JSON, NULL, NULL);
+            hBtnImport = CreateWindow("BUTTON", "Imp JSON", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 490, 0, 80, 26, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
+            hBtnHelp = CreateWindow("BUTTON", "Help [F1]", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 570, 0, 80, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+
+            g_oldSearchEditProc = (WNDPROC)SetWindowLongPtrA(hSearch, GWLP_WNDPROC, (LONG_PTR)SearchEditProc);
 
             hTab = CreateWindow(WC_TABCONTROL, "", WS_CHILD|WS_CLIPSIBLINGS|WS_VISIBLE|WS_TABSTOP, 200, 26, W-200, 24, hwnd, (HMENU)ID_TAB, NULL, NULL);
 
             hEdit = CreateWindowEx(0, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_VSCROLL|ES_MULTILINE|ES_WANTRETURN|ES_AUTOVSCROLL,
                 200, 50, W-200, H-70, hwnd, NULL, NULL, NULL);
             SendMessage(hEdit, EM_LIMITTEXT, 6000, 0);
-            hStatus = CreateWindowEx(0, "STATIC", "  Lines: 0 | Words: 0 | Chars: 0 / 6,000", WS_CHILD|WS_VISIBLE, 200, H-20, W-200, 20, hwnd, (HMENU)ID_STATUS, NULL, NULL);
+            hStatus = CreateWindowEx(0, "STATIC", "  Ready. Press F1 or H for Help. | Lines: 0 | Words: 0 | Chars: 0 / 6,000", WS_CHILD|WS_VISIBLE, 200, H-20, W-200, 20, hwnd, (HMENU)ID_STATUS, NULL, NULL);
                 
             SendMessage(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hList, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -498,17 +552,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_COMMAND: {
             if (LOWORD(wParam) == ID_BTN_HELP) {
-                MessageBox(hwnd, "KNote Help & Shortcuts:\r\n\r\n"
-                                 "- Ctrl+N: Create new note\r\n"
-                                 "- Ctrl+F: Focus search box\r\n"
-                                 "- Ctrl+P: Pin / unpin note\r\n"
-                                 "- Ctrl+S: Save notes\r\n"
-                                 "- Ctrl+W: Close active tab\r\n"
-                                 "- Delete (in list): Delete note\r\n"
-                                 "- Lock: Password encrypt with AES-256\r\n"
-                                 "- Export: Save to Markdown or JSON\r\n"
-                                 "- Import: Load from JSON backup",
-                           "Help & Shortcuts", MB_OK | MB_ICONINFORMATION);
+                ShowHelpDialog(hwnd);
             }
             else if (LOWORD(wParam) == ID_BTN_EXPORT_MD) { ExportNoteMD(); }
             else if (LOWORD(wParam) == ID_BTN_EXPORT_JSON) { ExportJSON(); RefreshList(); RenderTabs(); }
@@ -522,6 +566,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (LOWORD(wParam) == ID_BTN_DEL) {
                 if (activeNote>=0) {
+                    if (MessageBoxA(hwnd, "Are you sure you want to delete this note?\nThis action cannot be undone.", "Confirm Delete", MB_YESNO | MB_ICONQUESTION) != IDYES) break;
                     int toDel = activeNote;
                     for(int i=0; i<numTabs; i++) if(tabs[i]==toDel) { CloseTab(i); break; }
                     for(int i=toDel; i<numNotes-1; i++) {
@@ -584,10 +629,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int nw = LOWORD(lParam), nh = HIWORD(lParam); int sideW = 200, topH = 26;
             MoveWindow(hBtnNew, 0, 0, 100, topH, TRUE); MoveWindow(hBtnDel, 100, 0, 100, topH, TRUE);
             MoveWindow(hSearch, 0, topH, sideW, 22, TRUE); MoveWindow(hList, 0, topH + 22, sideW, nh - (topH + 22), TRUE);
-            MoveWindow(hBtnPin, sideW, 0, 60, topH, TRUE); MoveWindow(hBtnLock, sideW + 60, 0, 60, topH, TRUE);
-            MoveWindow(hBtnExportMd, sideW + 120, 0, 90, topH, TRUE); MoveWindow(hBtnExportJson, sideW + 210, 0, 100, topH, TRUE);
-            MoveWindow(hBtnImport, sideW + 310, 0, 100, topH, TRUE);
-            MoveWindow(hBtnHelp, sideW + 410, 0, 80, topH, TRUE);
+            int bx = sideW;
+            MoveWindow(hBtnPin, bx, 0, 70, topH, TRUE); bx += 70;
+            MoveWindow(hBtnLock, bx, 0, 65, topH, TRUE); bx += 65;
+            MoveWindow(hBtnExportMd, bx, 0, 75, topH, TRUE); bx += 75;
+            MoveWindow(hBtnExportJson, bx, 0, 80, topH, TRUE); bx += 80;
+            MoveWindow(hBtnImport, bx, 0, 80, topH, TRUE); bx += 80;
+            MoveWindow(hBtnHelp, bx, 0, 80, topH, TRUE);
             MoveWindow(hTab, sideW, topH, nw - sideW, 24, TRUE);
             MoveWindow(hEdit, sideW, topH + 24, nw - sideW, nh - topH - 44, TRUE);
             MoveWindow(hStatus, sideW, nh - 20, nw - sideW, 20, TRUE);
@@ -650,7 +698,7 @@ void MainEntry() {
             if (hFocus) {
                 char cls[32] = {0};
                 GetClassNameA(hFocus, cls, sizeof(cls));
-                if (lstrcmpiA(cls, "EDIT") == 0 && hFocus == hEdit) isEdit = 1;
+                if (lstrcmpiA(cls, "EDIT") == 0) isEdit = 1;
             }
             if (GetKeyState(VK_CONTROL) & 0x8000) {
                 if (msg.wParam == 'N' || msg.wParam == 'n') {
@@ -658,7 +706,7 @@ void MainEntry() {
                     continue;
                 } else if (msg.wParam == 'S' || msg.wParam == 's') {
                     SaveNotes();
-                    SetWindowTextA(hStatus, "  Saved locally");
+                    SetWindowTextA(hStatus, "  Saved locally [Ctrl+S]");
                     continue;
                 } else if (msg.wParam == 'F' || msg.wParam == 'f') {
                     SetFocus(hSearch);
@@ -667,9 +715,31 @@ void MainEntry() {
                 } else if (msg.wParam == 'P' || msg.wParam == 'p') {
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_PIN, BN_CLICKED), (LPARAM)hBtnPin);
                     continue;
+                } else if (msg.wParam == 'D' || msg.wParam == 'd') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_DEL, BN_CLICKED), (LPARAM)hBtnDel);
+                    continue;
                 } else if (msg.wParam == 'W' || msg.wParam == 'w') {
                     int sel = (int)TabCtrl_GetCurSel(hTab);
                     if (sel >= 0 && sel < numTabs) CloseTab(sel);
+                    continue;
+                } else if (msg.wParam == VK_TAB) {
+                    if (numTabs > 1) {
+                        int sel = (int)TabCtrl_GetCurSel(hTab);
+                        sel = (sel + 1) % numTabs;
+                        TabCtrl_SetCurSel(hTab, sel);
+                        activeNote = tabs[sel];
+                        LoadActiveNote();
+                        RefreshList();
+                    }
+                    continue;
+                } else if (msg.wParam >= '1' && msg.wParam <= '9') {
+                    int targetTab = (int)(msg.wParam - '1');
+                    if (targetTab < numTabs) {
+                        TabCtrl_SetCurSel(hTab, targetTab);
+                        activeNote = tabs[targetTab];
+                        LoadActiveNote();
+                        RefreshList();
+                    }
                     continue;
                 }
             }
@@ -678,17 +748,7 @@ void MainEntry() {
                 continue;
             }
             if (msg.wParam == VK_F1 || (!isEdit && (msg.wParam == 'H' || msg.wParam == 'h'))) {
-                MessageBox(hwnd, "KNote Help & Shortcuts:\r\n\r\n"
-                                 "- Ctrl+N: Create new note\r\n"
-                                 "- Ctrl+F: Focus search box\r\n"
-                                 "- Ctrl+P: Pin / unpin note\r\n"
-                                 "- Ctrl+S: Save notes\r\n"
-                                 "- Ctrl+W: Close active tab\r\n"
-                                 "- Delete (in list): Delete note\r\n"
-                                 "- Lock: Password encrypt with AES-256\r\n"
-                                 "- Export: Save to Markdown or JSON\r\n"
-                                 "- Import: Load from JSON backup",
-                           "Help & Shortcuts", MB_OK | MB_ICONINFORMATION);
+                ShowHelpDialog(hwnd);
                 continue;
             }
         }
