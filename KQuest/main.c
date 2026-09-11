@@ -56,6 +56,7 @@ void TriggerGdiScreenShake(int intensity);
 void AddGdiShockwave(int x, int y, COLORREF color, int maxRadius);
 void AddGdiParticles(int x, int y, COLORREF color, int count, int multilayer);
 void AddGdiFloatText(const char* text, int x, int y, COLORREF color, int isCrit);
+void TriggerGdiSpellFX(int type);
 
 #define MAX_INV_SLOTS 30
 
@@ -1569,6 +1570,23 @@ void ImportScoreJSON() {
     }
 }
 
+static void SetBtn(HWND btn, int slot, const char* label) {
+    if (!btn) return;
+    if (!label || !label[0] || lstrcmpA(label, "---") == 0) {
+        SetWindowTextA(btn, "---");
+        EnableWindow(btn, FALSE);
+        return;
+    }
+    EnableWindow(btn, TRUE);
+    char buf[80];
+    if (label[0] == '[') {
+        SetWindowTextA(btn, label);
+    } else {
+        wsprintfA(buf, "[%d] %s", slot, label);
+        SetWindowTextA(btn, buf);
+    }
+}
+
 void SetupButtons() {
     ShowWindow(hBtn1, SW_SHOW);
     ShowWindow(hBtn2, SW_SHOW);
@@ -1579,95 +1597,93 @@ void SetupButtons() {
 
     switch (gameState) {
         case STATE_CHAR_CREATE:
-            SetWindowTextA(hBtn1, "Select Warrior");
-            SetWindowTextA(hBtn2, "Select Mage");
-            SetWindowTextA(hBtn3, "Select Rogue");
-            SetWindowTextA(hBtn4, "Select Paladin");
-            SetWindowTextA(hBtn5, "Select Ranger");
-            SetWindowTextA(hBtn6, "Begin Quest");
+            SetBtn(hBtn1, 1, "Warrior");
+            SetBtn(hBtn2, 2, "Mage");
+            SetBtn(hBtn3, 3, "Rogue");
+            SetBtn(hBtn4, 4, "Paladin");
+            SetBtn(hBtn5, 5, "Ranger");
+            SetBtn(hBtn6, 6, "Begin Quest");
             break;
 
         case STATE_TOWN: {
             char invBtn[64];
-            wsprintfA(invBtn, "🎒 Inventory (%d/%d)", player.invCount, player.maxInvSlots);
-            SetWindowTextA(hBtn1, "Enter Dungeon");
-            SetWindowTextA(hBtn2, "🏟️ Boss Rush");
-            SetWindowTextA(hBtn3, invBtn);
-            SetWindowTextA(hBtn4, "📜 Board / Train");
-            SetWindowTextA(hBtn5, "💾 Save / Load");
-            SetWindowTextA(hBtn6, "▶️ More Options");
+            wsprintfA(invBtn, "Inv (%d/%d)", player.invCount, player.maxInvSlots);
+            SetBtn(hBtn1, 1, "Enter Dungeon");
+            SetBtn(hBtn2, 2, "Boss Rush");
+            SetBtn(hBtn3, 3, invBtn);
+            SetBtn(hBtn4, 4, "Board / Train");
+            SetBtn(hBtn5, 5, "Save / Load");
+            SetBtn(hBtn6, 6, "More Options");
             break;
         }
 
         case STATE_TOWN_PAGE2:
-            SetWindowTextA(hBtn1, "🚩 Factions");
-            SetWindowTextA(hBtn2, "🐎 Mounts");
-            SetWindowTextA(hBtn3, "👑 Kingdom & War");
-            SetWindowTextA(hBtn4, "⚙️ System Utils");
-            SetWindowTextA(hBtn5, "🏆 Achievements");
-            SetWindowTextA(hBtn6, "◀️ Back to Town 1");
+            SetBtn(hBtn1, 1, "Factions");
+            SetBtn(hBtn2, 2, "Mounts");
+            SetBtn(hBtn3, 3, "Kingdom & War");
+            SetBtn(hBtn4, 4, "System Utils");
+            SetBtn(hBtn5, 5, "Achievements");
+            SetBtn(hBtn6, 6, "Back to Town");
             break;
 
         case STATE_SAVE_LOAD: {
             char selBtn[64];
-            wsprintfA(selBtn, "Select Slot (%d/4)", g_SelectedSaveSlot + 1);
+            wsprintfA(selBtn, "Slot (%d/4)", g_SelectedSaveSlot + 1);
             char saveBtn[64];
-            wsprintfA(saveBtn, "💾 Save Slot %d", g_SelectedSaveSlot + 1);
+            wsprintfA(saveBtn, "Save Slot %d", g_SelectedSaveSlot + 1);
             char loadBtn[64];
-            wsprintfA(loadBtn, "📂 Load Slot %d", g_SelectedSaveSlot + 1);
+            wsprintfA(loadBtn, "Load Slot %d", g_SelectedSaveSlot + 1);
             char delBtn[64];
-            wsprintfA(delBtn, "🗑️ Clear Slot %d", g_SelectedSaveSlot + 1);
+            wsprintfA(delBtn, "Clear Slot %d", g_SelectedSaveSlot + 1);
 
-            SetWindowTextA(hBtn1, selBtn);
-            SetWindowTextA(hBtn2, saveBtn);
-            SetWindowTextA(hBtn3, loadBtn);
-            SetWindowTextA(hBtn4, delBtn);
-            SetWindowTextA(hBtn5, "⚡ Quick Save (Slot 1)");
-            SetWindowTextA(hBtn6, "⬅️ Back to Town");
+            SetBtn(hBtn1, 1, selBtn);
+            SetBtn(hBtn2, 2, saveBtn);
+            SetBtn(hBtn3, 3, loadBtn);
+            SetBtn(hBtn4, 4, delBtn);
+            SetBtn(hBtn5, 5, "Quick Save (F5)");
+            SetBtn(hBtn6, 6, "Back to Town");
             break;
         }
 
         case STATE_ACHIEVEMENTS: {
             char ngBtn[64];
-            wsprintfA(ngBtn, "✨ Start NG+ (NG+ %d)", player.ngLevel + 1);
-            SetWindowTextA(hBtn1, "Refresh");
-            SetWindowTextA(hBtn2, "❓ Help & Codex");
-            SetWindowTextA(hBtn3, "---");
-            SetWindowTextA(hBtn4, "---");
-            SetWindowTextA(hBtn5, ngBtn);
-            SetWindowTextA(hBtn6, "⬅️ Back to Town");
+            wsprintfA(ngBtn, "Start NG+%d", player.ngLevel + 1);
+            SetBtn(hBtn1, 1, "Refresh");
+            SetBtn(hBtn2, 2, "Help & Codex");
+            SetBtn(hBtn3, 3, "---");
+            SetBtn(hBtn4, 4, "---");
+            SetBtn(hBtn5, 5, ngBtn);
+            SetBtn(hBtn6, 6, "Back to Town");
             break;
         }
 
-        case STATE_HELP: {
-            SetWindowTextA(hBtn1, "🎮 How to Play");
-            SetWindowTextA(hBtn2, "⌨️ Controls");
-            SetWindowTextA(hBtn3, "🐉 Bestiary");
-            SetWindowTextA(hBtn4, "⚒️ Recipes");
-            SetWindowTextA(hBtn5, "❓ Next Tab");
-            SetWindowTextA(hBtn6, "⬅️ Back to Town");
+        case STATE_HELP:
+            SetBtn(hBtn1, 1, "How to Play");
+            SetBtn(hBtn2, 2, "Controls Ref");
+            SetBtn(hBtn3, 3, "Bestiary");
+            SetBtn(hBtn4, 4, "Recipes");
+            SetBtn(hBtn5, 5, "Next Tab");
+            SetBtn(hBtn6, 6, "Back to Town");
             break;
-        }
 
-        case STATE_INVENTORY: {
-            SetWindowTextA(hBtn1, "Next Item");
-            SetWindowTextA(hBtn2, "Use / Equip");
-            SetWindowTextA(hBtn3, "Sell Item");
-            SetWindowTextA(hBtn4, "💰 Sell Commons");
-            SetWindowTextA(hBtn5, "➕ Expand Slots");
-            SetWindowTextA(hBtn6, "⬅️ Back to Town");
+        case STATE_INVENTORY:
+            SetBtn(hBtn1, 1, "Next Item");
+            SetBtn(hBtn2, 2, "Use / Equip");
+            SetBtn(hBtn3, 3, "Sell Item");
+            SetBtn(hBtn4, 4, "Sell Commons");
+            SetBtn(hBtn5, 5, "Expand Slots");
+            SetBtn(hBtn6, 6, "Back to Town");
             break;
-        }
 
         case STATE_BOSS_RUSH: {
             char wBtn[64];
-            wsprintfA(wBtn, "Fight Wave %d", player.arenaWave > 0 ? player.arenaWave : 1);
-            SetWindowTextA(hBtn1, wBtn);
-            SetWindowTextA(hBtn2, "Sword (5 Tr)");
-            SetWindowTextA(hBtn3, "Armor (5 Tr)");
-            SetWindowTextA(hBtn4, "Ring (8 Tr)");
-            SetWindowTextA(hBtn5, "Elixir (4 Tr)");
-            SetWindowTextA(hBtn6, "Back to Town");
+            wsprintfA(wBtn, "Wave %d", player.arenaWave > 0 ? player.arenaWave : 1);
+            SetBtn(hBtn1, 1, wBtn);
+            SetBtn(hBtn2, 2, "Sword (5 Tr)");
+            SetBtn(hBtn3, 3, "Armor (5 Tr)");
+            SetBtn(hBtn4, 4, "Ring (8 Tr)");
+            SetBtn(hBtn5, 5, "Elixir (4 Tr)");
+            SetBtn(hBtn6, 6, "Back to Town");
             break;
         }
 
@@ -1676,164 +1692,164 @@ void SetupButtons() {
             wsprintfA(oBtn, "Offense (%d/3)", player.offensePoints);
             wsprintfA(dBtn, "Defense (%d/3)", player.defensePoints);
             wsprintfA(uBtn, "Utility (%d/3)", player.utilityPoints);
-            SetWindowTextA(hBtn1, oBtn);
-            SetWindowTextA(hBtn2, dBtn);
-            SetWindowTextA(hBtn3, uBtn);
-            SetWindowTextA(hBtn4, "Respec (30G)");
-            SetWindowTextA(hBtn5, "Merc Guild");
-            SetWindowTextA(hBtn6, "Back to Town");
+            SetBtn(hBtn1, 1, oBtn);
+            SetBtn(hBtn2, 2, dBtn);
+            SetBtn(hBtn3, 3, uBtn);
+            SetBtn(hBtn4, 4, "Respec (30G)");
+            SetBtn(hBtn5, 5, "Merc Guild");
+            SetBtn(hBtn6, 6, "Back to Town");
             break;
         }
 
         case STATE_QUEST_BOARD:
-            SetWindowTextA(hBtn1, "Accept B1 (Bronze)");
-            SetWindowTextA(hBtn2, "Accept B2 (Silver)");
-            SetWindowTextA(hBtn3, "Accept B3 (Silver)");
-            SetWindowTextA(hBtn4, "Accept B4 (Gold)");
-            SetWindowTextA(hBtn5, "🎁 Claim Rewards");
-            SetWindowTextA(hBtn6, "Back to Town");
+            SetBtn(hBtn1, 1, "Accept B1");
+            SetBtn(hBtn2, 2, "Accept B2");
+            SetBtn(hBtn3, 3, "Accept B3");
+            SetBtn(hBtn4, 4, "Accept B4");
+            SetBtn(hBtn5, 5, "Claim Rewards");
+            SetBtn(hBtn6, 6, "Back to Town");
             break;
 
         case STATE_MERCENARY:
             if (player.companion.active == 0) {
-                SetWindowTextA(hBtn1, "Hire Paladin (80G)");
-                SetWindowTextA(hBtn2, "Hire Archmage (100G)");
-                SetWindowTextA(hBtn3, "Hire Cleric (70G)");
-                SetWindowTextA(hBtn4, "Hire Ranger (90G)");
-                SetWindowTextA(hBtn5, "---");
-                SetWindowTextA(hBtn6, "Back to Town");
+                SetBtn(hBtn1, 1, "Paladin (80G)");
+                SetBtn(hBtn2, 2, "Archmage (100G)");
+                SetBtn(hBtn3, 3, "Cleric (70G)");
+                SetBtn(hBtn4, 4, "Ranger (90G)");
+                SetBtn(hBtn5, 5, "---");
+                SetBtn(hBtn6, 6, "Back to Town");
             } else {
-                SetWindowTextA(hBtn1, player.companion.isDown ? "Revive Comp (20G)" : "---");
-                SetWindowTextA(hBtn2, "Dismiss Comp");
-                SetWindowTextA(hBtn3, "---");
-                SetWindowTextA(hBtn4, "---");
-                SetWindowTextA(hBtn5, "---");
-                SetWindowTextA(hBtn6, "Back to Town");
+                SetBtn(hBtn1, 1, player.companion.isDown ? "Revive Comp (20G)" : "---");
+                SetBtn(hBtn2, 2, "Dismiss Comp");
+                SetBtn(hBtn3, 3, "---");
+                SetBtn(hBtn4, 4, "---");
+                SetBtn(hBtn5, 5, "---");
+                SetBtn(hBtn6, 6, "Back to Town");
             }
             break;
 
-                case STATE_SHOP:
-            SetWindowTextA(hBtn1, "Buy HP Potion (15G)");
-            SetWindowTextA(hBtn2, "Buy MP Potion (15G)");
-            SetWindowTextA(hBtn3, "Steel Sword (+6 STR, 50G)");
-            SetWindowTextA(hBtn4, "Plate Armor (+9 DEF, 75G)");
-            SetWindowTextA(hBtn5, "Back to Town");
-            SetWindowTextA(hBtn6, "🍻 Tavern (NPC)");
+        case STATE_SHOP:
+            SetBtn(hBtn1, 1, "HP Pot (15G)");
+            SetBtn(hBtn2, 2, "MP Pot (15G)");
+            SetBtn(hBtn3, 3, "Sword (50G)");
+            SetBtn(hBtn4, 4, "Armor (75G)");
+            SetBtn(hBtn5, 5, "Back to Town");
+            SetBtn(hBtn6, 6, "Tavern (NPC)");
             break;
             
         case STATE_TAVERN:
-            SetWindowTextA(hBtn1, "Talk to Barkeep");
-            SetWindowTextA(hBtn2, "Listen to Rumors");
-            SetWindowTextA(hBtn3, "Buy Ale (5G)");
-            SetWindowTextA(hBtn4, "Ask for Side Quest");
-            SetWindowTextA(hBtn5, "Back to Town");
-            SetWindowTextA(hBtn6, "---");
+            SetBtn(hBtn1, 1, "Talk Barkeep");
+            SetBtn(hBtn2, 2, "Listen Rumors");
+            SetBtn(hBtn3, 3, "Buy Ale (5G)");
+            SetBtn(hBtn4, 4, "Ask Side Quest");
+            SetBtn(hBtn5, 5, "Back to Town");
+            SetBtn(hBtn6, 6, "---");
             break;
 
         case STATE_FACTIONS:
-            SetWindowTextA(hBtn1, "Join Vanguard (STR)");
-            SetWindowTextA(hBtn2, "Join Arcane (INT)");
-            SetWindowTextA(hBtn3, "Join Syndicate (AGI)");
-            SetWindowTextA(hBtn4, "---");
-            SetWindowTextA(hBtn5, "---");
-            SetWindowTextA(hBtn6, "Back");
+            SetBtn(hBtn1, 1, "Vanguard (STR)");
+            SetBtn(hBtn2, 2, "Arcane (INT)");
+            SetBtn(hBtn3, 3, "Syndicate (AGI)");
+            SetBtn(hBtn4, 4, "---");
+            SetBtn(hBtn5, 5, "---");
+            SetBtn(hBtn6, 6, "Back");
             break;
         case STATE_MOUNTS:
-            SetWindowTextA(hBtn1, "Buy Horse(100G)");
-            SetWindowTextA(hBtn2, "Buy Wolf(200G)");
-            SetWindowTextA(hBtn3, "Buy Dragon(500G)");
-            SetWindowTextA(hBtn4, "---");
-            SetWindowTextA(hBtn5, "---");
-            SetWindowTextA(hBtn6, "Back");
+            SetBtn(hBtn1, 1, "Horse (100G)");
+            SetBtn(hBtn2, 2, "Wolf (200G)");
+            SetBtn(hBtn3, 3, "Dragon (500G)");
+            SetBtn(hBtn4, 4, "---");
+            SetBtn(hBtn5, 5, "---");
+            SetBtn(hBtn6, 6, "Back");
             break;
         case STATE_KINGDOM: {
             char b1[64], b2[64];
             wsprintfA(b1, "Castle L%d (%dG)", player.castleLevel, player.castleLevel * 100);
             wsprintfA(b2, "Barracks L%d (%dG)", player.barracksLevel, player.barracksLevel * 80);
-            SetWindowTextA(hBtn1, b1);
-            SetWindowTextA(hBtn2, b2);
-            SetWindowTextA(hBtn3, "Recruit Troops");
-            SetWindowTextA(hBtn4, "⚔️ Army Battle");
-            SetWindowTextA(hBtn5, "🛡️ Castle Defense");
-            SetWindowTextA(hBtn6, "⬅️ Back to Town");
+            SetBtn(hBtn1, 1, b1);
+            SetBtn(hBtn2, 2, b2);
+            SetBtn(hBtn3, 3, "Recruit Troops");
+            SetBtn(hBtn4, 4, "Army Battle");
+            SetBtn(hBtn5, 5, "Castle Defense");
+            SetBtn(hBtn6, 6, "Back to Town");
             break;
         }
         case STATE_ARMY_BATTLE:
-            SetWindowTextA(hBtn1, "🛡️ Shield Wall");
-            SetWindowTextA(hBtn2, "🏹 Arrow Volley");
-            SetWindowTextA(hBtn3, "🔮 Arcane Meteor");
-            SetWindowTextA(hBtn4, "🐎 Knight Charge");
-            SetWindowTextA(hBtn5, "👑 Hero Rally");
-            SetWindowTextA(hBtn6, "🏳️ Retreat");
+            SetBtn(hBtn1, 1, "Shield Wall");
+            SetBtn(hBtn2, 2, "Arrow Volley");
+            SetBtn(hBtn3, 3, "Arcane Meteor");
+            SetBtn(hBtn4, 4, "Knight Charge");
+            SetBtn(hBtn5, 5, "Hero Rally");
+            SetBtn(hBtn6, 6, "Retreat");
             break;
         case STATE_CASTLE_DEFENSE:
-            SetWindowTextA(hBtn1, "🏹 Fire Ballista");
-            SetWindowTextA(hBtn2, "🔥 Boiling Oil");
-            SetWindowTextA(hBtn3, "⚔️ Garrison Sally");
-            SetWindowTextA(hBtn4, "🔮 Arcane Barrier");
-            SetWindowTextA(hBtn5, "👑 Duel Boss");
-            SetWindowTextA(hBtn6, "🔨 Repair (2 Iron)");
+            SetBtn(hBtn1, 1, "Fire Ballista");
+            SetBtn(hBtn2, 2, "Boiling Oil");
+            SetBtn(hBtn3, 3, "Garrison Sally");
+            SetBtn(hBtn4, 4, "Arcane Barrier");
+            SetBtn(hBtn5, 5, "Duel Boss");
+            SetBtn(hBtn6, 6, "Repair (2 Iron)");
             break;
         case STATE_CRAFTING:
-            SetWindowTextA(hBtn1, "Salvage Loot (20G)");
-            SetWindowTextA(hBtn2, "Craft Fire Bomb");
-            SetWindowTextA(hBtn3, "Craft Greater HP");
-            SetWindowTextA(hBtn4, "Craft Masterwork Relic");
-            SetWindowTextA(hBtn5, "Imbue Weapon/Armor");
-            SetWindowTextA(hBtn6, "Back to Town");
+            SetBtn(hBtn1, 1, "Salvage Loot");
+            SetBtn(hBtn2, 2, "Fire Bomb");
+            SetBtn(hBtn3, 3, "Greater HP");
+            SetBtn(hBtn4, 4, "Masterwork");
+            SetBtn(hBtn5, 5, "Imbue Equip");
+            SetBtn(hBtn6, 6, "Back to Town");
             break;
 
         case STATE_DUNGEON:
-            SetWindowTextA(hBtn1, "Advance Chamber");
-            SetWindowTextA(hBtn2, "Descend Staircase");
-            SetWindowTextA(hBtn3, "Use HP Potion");
-            SetWindowTextA(hBtn4, "Use MP Potion");
-            SetWindowTextA(hBtn5, "Return to Town");
-            SetWindowTextA(hBtn6, "---");
+            SetBtn(hBtn1, 1, "Advance Chamber");
+            SetBtn(hBtn2, 2, "Descend Stairs");
+            SetBtn(hBtn3, 3, "Use HP Pot");
+            SetBtn(hBtn4, 4, "Use MP Pot");
+            SetBtn(hBtn5, 5, "Return to Town");
+            SetBtn(hBtn6, 6, "---");
             break;
 
         case STATE_MAGIC_MENU:
-            if (lstrcmpA(player.heroClass, "Mage") == 0) SetWindowTextA(hBtn1, "Fireball (10 MP)");
-            else if (lstrcmpA(player.heroClass, "Rogue") == 0) SetWindowTextA(hBtn1, "Shadow Strike (8 MP)");
-            else if (lstrcmpA(player.heroClass, "Paladin") == 0) SetWindowTextA(hBtn1, "Smite (8 MP)");
-            else if (lstrcmpA(player.heroClass, "Ranger") == 0) SetWindowTextA(hBtn1, "Aimed Shot (8 MP)");
-            else SetWindowTextA(hBtn1, "Shield Bash (5 MP)");
+            if (lstrcmpA(player.heroClass, "Mage") == 0) SetBtn(hBtn1, 1, "Fireball (10 MP)");
+            else if (lstrcmpA(player.heroClass, "Rogue") == 0) SetBtn(hBtn1, 1, "Shadow (8 MP)");
+            else if (lstrcmpA(player.heroClass, "Paladin") == 0) SetBtn(hBtn1, 1, "Smite (8 MP)");
+            else if (lstrcmpA(player.heroClass, "Ranger") == 0) SetBtn(hBtn1, 1, "Aimed Shot (8 MP)");
+            else SetBtn(hBtn1, 1, "Shield Bash (5 MP)");
 
-            SetWindowTextA(hBtn2, "Lightning Storm (18 MP)");
-            SetWindowTextA(hBtn3, "Holy Shield (14 MP)");
-            SetWindowTextA(hBtn4, "Berserk Might (12 MP)");
-            SetWindowTextA(hBtn5, "---");
-            SetWindowTextA(hBtn6, "Back to Combat");
+            SetBtn(hBtn2, 2, "Lightning (18 MP)");
+            SetBtn(hBtn3, 3, "Holy Shield (14 MP)");
+            SetBtn(hBtn4, 4, "Berserk (12 MP)");
+            SetBtn(hBtn5, 5, "---");
+            SetBtn(hBtn6, 6, "Back to Combat");
             break;
 
         case STATE_COMBAT:
-            SetWindowTextA(hBtn1, "Attack");
-            SetWindowTextA(hBtn2, "Spells / Magic");
-            SetWindowTextA(hBtn3, "Use HP / Gr.HP");
+            SetBtn(hBtn1, 1, "Attack");
+            SetBtn(hBtn2, 2, "Spells / Magic");
+            SetBtn(hBtn3, 3, "Use HP / Gr.HP");
             if (player.fireBombs > 0) {
-                SetWindowTextA(hBtn4, "Throw Fire Bomb");
+                SetBtn(hBtn4, 4, "Fire Bomb");
             } else {
-                SetWindowTextA(hBtn4, "Use MP Potion");
+                SetBtn(hBtn4, 4, "Use MP Potion");
             }
-            SetWindowTextA(hBtn5, "Flee Battle");
+            SetBtn(hBtn5, 5, "Flee Battle");
             if (player.offensePoints >= 3) {
-                SetWindowTextA(hBtn6, "Execute (12 MP)");
+                SetBtn(hBtn6, 6, "Execute (12 MP)");
             } else if (player.defensePoints >= 3) {
-                SetWindowTextA(hBtn6, "Iron Will (8 MP)");
+                SetBtn(hBtn6, 6, "Iron Will (8 MP)");
             } else if (player.utilityPoints >= 3) {
-                SetWindowTextA(hBtn6, "Mana Surge (0 MP)");
+                SetBtn(hBtn6, 6, "Mana Surge (0 MP)");
             } else {
-                SetWindowTextA(hBtn6, "---");
+                SetBtn(hBtn6, 6, "---");
             }
             break;
 
         case STATE_GAME_OVER:
-            SetWindowTextA(hBtn1, "Restart Journey");
-            SetWindowTextA(hBtn2, "---");
-            SetWindowTextA(hBtn3, "---");
-            SetWindowTextA(hBtn4, "---");
-            SetWindowTextA(hBtn5, "---");
-            SetWindowTextA(hBtn6, "---");
+            SetBtn(hBtn1, 1, "Restart Quest");
+            SetBtn(hBtn2, 2, "---");
+            SetBtn(hBtn3, 3, "---");
+            SetBtn(hBtn4, 4, "---");
+            SetBtn(hBtn5, 5, "---");
+            SetBtn(hBtn6, 6, "---");
             break;
     }
 }
@@ -4503,10 +4519,10 @@ void RenderGdiScene(HDC hdc, int w, int h) {
         }
     }
 
-    int heroX = 140;
-    int heroY = 70;
-    int monsterX = 560;
-    int monsterY = 65;
+    int heroX = w / 5;
+    int heroY = h / 2;
+    int monsterX = w * 4 / 5;
+    int monsterY = h / 2 - 5;
 
     if (g_HeroActionTimer > 0) {
         g_HeroActionTimer--;
@@ -4523,7 +4539,7 @@ void RenderGdiScene(HDC hdc, int w, int h) {
     } else if (gameState == STATE_CASTLE_DEFENSE && g_SiegeEnemyHp > 0) {
         DrawGdiMonsterSprite(hdc, monsterX, monsterY, g_SiegeWaves[g_SiegeWaveIndex].name, g_GfxFrame, 0, 0, 0);
     } else if (gameState == STATE_TOWN || gameState == STATE_TOWN_PAGE2 || gameState == STATE_FACTIONS || gameState == STATE_MOUNTS || gameState == STATE_KINGDOM || gameState == STATE_SHOP || gameState == STATE_CRAFTING || gameState == STATE_TAVERN) {
-        DrawGdiNPCSprite(hdc, 560, 70, g_GfxFrame);
+        DrawGdiNPCSprite(hdc, monsterX, heroY, g_GfxFrame);
     }
 
     if (g_GdiSpellFxType > 0) {
@@ -4777,27 +4793,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBgBrush = CreateSolidBrush(RGB(17, 17, 27));
             hPanelBrush = CreateSolidBrush(RGB(30, 30, 46));
 
-            hGfxCanvas = CreateWindowA("STATIC", "", WS_CHILD | WS_VISIBLE, 15, 10, 755, 130, hwnd, (HMENU)100, GetModuleHandle(NULL), NULL);
+            hGfxCanvas = CreateWindowA("STATIC", "", WS_CHILD | WS_VISIBLE, 15, 10, 955, 140, hwnd, (HMENU)100, GetModuleHandle(NULL), NULL);
             g_OldCanvasProc = (WNDPROC)SetWindowLongPtrA(hGfxCanvas, GWLP_WNDPROC, (LONG_PTR)GfxCanvasProc);
 
             hStatusText = CreateWindowA("STATIC", "",
                 WS_CHILD | WS_VISIBLE | SS_LEFT,
-                15, 145, 755, 20, hwnd, (HMENU)101, GetModuleHandle(NULL), NULL);
+                15, 158, 955, 24, hwnd, (HMENU)101, GetModuleHandle(NULL), NULL);
 
             hInfoText = CreateWindowA("STATIC", "",
                 WS_CHILD | WS_VISIBLE | SS_LEFT,
-                15, 168, 755, 85, hwnd, (HMENU)102, GetModuleHandle(NULL), NULL);
+                15, 186, 955, 88, hwnd, (HMENU)102, GetModuleHandle(NULL), NULL);
 
             hLogEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
-                15, 260, 755, 158, hwnd, (HMENU)103, GetModuleHandle(NULL), NULL);
+                15, 280, 955, 375, hwnd, (HMENU)103, GetModuleHandle(NULL), NULL);
 
-            hBtn1 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 15,  430, 118, 38, hwnd, (HMENU)201, GetModuleHandle(NULL), NULL);
-            hBtn2 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 142, 430, 118, 38, hwnd, (HMENU)202, GetModuleHandle(NULL), NULL);
-            hBtn3 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 269, 430, 118, 38, hwnd, (HMENU)203, GetModuleHandle(NULL), NULL);
-            hBtn4 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 396, 430, 118, 38, hwnd, (HMENU)204, GetModuleHandle(NULL), NULL);
-            hBtn5 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 523, 430, 118, 38, hwnd, (HMENU)205, GetModuleHandle(NULL), NULL);
-            hBtn6 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 650, 430, 118, 38, hwnd, (HMENU)206, GetModuleHandle(NULL), NULL);
+            hBtn1 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 15,  665, 150, 44, hwnd, (HMENU)201, GetModuleHandle(NULL), NULL);
+            hBtn2 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 176, 665, 150, 44, hwnd, (HMENU)202, GetModuleHandle(NULL), NULL);
+            hBtn3 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 337, 665, 150, 44, hwnd, (HMENU)203, GetModuleHandle(NULL), NULL);
+            hBtn4 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 498, 665, 150, 44, hwnd, (HMENU)204, GetModuleHandle(NULL), NULL);
+            hBtn5 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 659, 665, 150, 44, hwnd, (HMENU)205, GetModuleHandle(NULL), NULL);
+            hBtn6 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 820, 665, 150, 44, hwnd, (HMENU)206, GetModuleHandle(NULL), NULL);
 
             HDC hdc = GetDC(hwnd);
             int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
@@ -4964,7 +4980,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     RECT wr = {0, 0, 1000, 760};
     AdjustWindowRect(&wr, (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN, FALSE);
-    HWND hwnd = CreateWindowA("KQuestClass", "KQuest - Fantasy Dungeon RPG (Press H for Help)", (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN,
+    HWND hwnd = CreateWindowA("KQuestClass", "KQuest - Fantasy Dungeon RPG [F1/H: Help | 1-6: Actions | Esc: Back]", (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN,
                               CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top,
                               NULL, NULL, hInstance, NULL);
 
@@ -4973,6 +4989,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN) {
+            // Forward accelerators to main window so focus in edit/button controls does not swallow hotkeys
+            if (msg.wParam == VK_F1 || msg.wParam == 'H' || msg.wParam == 'h' ||
+                msg.wParam == VK_ESCAPE || msg.wParam == VK_F5 || msg.wParam == VK_F9 ||
+                msg.wParam == 'S' || msg.wParam == 's' || msg.wParam == 'L' || msg.wParam == 'l' ||
+                msg.wParam == 'I' || msg.wParam == 'i' || msg.wParam == 'P' || msg.wParam == 'p' ||
+                msg.wParam == 'B' || msg.wParam == 'b' ||
+                (msg.wParam >= '1' && msg.wParam <= '6')) {
+                SendMessage(hwnd, WM_KEYDOWN, msg.wParam, msg.lParam);
+                continue;
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }

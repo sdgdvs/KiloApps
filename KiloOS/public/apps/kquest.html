@@ -561,17 +561,44 @@
       font-size: 0.8rem;
       border: 1px solid #45475a;
     }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(40px);
+      background: rgba(24, 24, 37, 0.95);
+      color: #f9e2af;
+      border: 1px solid #89b4fa;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.8), 0 0 14px rgba(137, 180, 250, 0.3);
+      border-radius: 8px;
+      padding: 10px 22px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      z-index: 10000;
+      pointer-events: auto;
+      cursor: pointer;
+      opacity: 0;
+      transition: all 0.25s ease-out;
+      text-align: center;
+      max-width: 90%;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
   </style>
 </head>
-<body data-width="1000" data-height="720">
+<body data-width="1000" data-height="760">
 
   <!-- Header -->
   <header>
-    <h1>🗡️ KQuest <span style="font-size:0.75rem; color:#a6adc8; margin-left:8px; font-weight:normal;">(Press H for Help)</span> <span class="badge">Phase 14</span></h1>
+    <h1>🗡️ KQuest <span style="font-size:0.75rem; color:#a6adc8; margin-left:8px; font-weight:normal;">(Press H / F1 for Help)</span> <span class="badge">Phase 14</span></h1>
     <div class="subtitle">Fantasy Text RPG & Dungeon Crawler (Web Audio API, Save Slots, Comprehensive Help & Lore Codex)</div>
     <div style="display:flex; gap:6px; align-items:center;">
       <button class="btn btn-accent" id="audio-toggle-btn" onclick="toggleAudio()" style="font-size:0.75rem; padding:4px 8px;">🔊 SFX: ON</button>
-      <button class="btn btn-primary" onclick="openHelpModal()" style="font-size:0.75rem; padding:4px 8px;">❓ Help & Codex (H)</button>
+      <button class="btn btn-primary" onclick="openHelpModal()" style="font-size:0.75rem; padding:4px 8px;">❓ Help & Codex (H/F1)</button>
     </div>
   </header>
 
@@ -1680,7 +1707,30 @@
       ctx.restore();
     }
 
-    window.addEventListener('load', initGFX);
+    // --- Non-Blocking Toast Notification System ---
+    let toastTimeout = null;
+    function showToast(msg, duration = 3200) {
+      let toast = document.getElementById('toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        toast.onclick = () => toast.classList.remove('show');
+        document.body.appendChild(toast);
+      }
+      toast.textContent = msg;
+      toast.classList.add('show');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+      }, duration);
+    }
+
+    window.addEventListener('load', () => {
+      initGFX();
+      setTimeout(() => {
+        showToast('⚔️ Welcome to KQuest! Press [H] or [F1] for Codex & Help, [1-6] for Actions, [F5] Quick Save.', 4500);
+      }, 500);
+    });
 
     // --- PHASE 13: WEB AUDIO API SOUND EFFECTS ENGINE ---
 
@@ -1706,6 +1756,7 @@
       if (btn) {
         btn.textContent = soundEnabled ? '🔊 SFX: ON' : '🔇 SFX: OFF';
       }
+      showToast(soundEnabled ? '🔊 Audio SFX Enabled' : '🔇 Audio SFX Muted', 2000);
       logMsg(`Audio Sound Effects ${soundEnabled ? 'ENABLED 🔊' : 'DISABLED 🔇'}.`, 'system');
       if (soundEnabled) sfxItemPickup();
     }
@@ -2711,6 +2762,7 @@
         player.achievements[id] = 1;
         const ach = ACHIEVEMENTS_DEF[id];
         player.gold += ach.reward;
+        showToast(`🏆 Achievement: "${ach.name}" (+${ach.reward}G)`, 3500);
         logMsg(`🏆 ACHIEVEMENT UNLOCKED: "${ach.name}"! (+${ach.reward} Gold)`, 'loot');
         updateUI();
       }
@@ -2725,6 +2777,7 @@
       };
       localStorage.setItem('kquest_save_slot_' + slotNum, JSON.stringify(data));
       unlockAchievement(9);
+      showToast(`💾 Game saved to Slot ${slotNum}!`, 2500);
       logMsg(`💾 Game saved to Slot ${slotNum} successfully!`, 'system');
       renderSaveLoad();
     }
@@ -2732,6 +2785,7 @@
     function loadSlot(slotNum) {
       const raw = localStorage.getItem('kquest_save_slot_' + slotNum);
       if (!raw) {
+        showToast(`❌ Save Slot ${slotNum} is empty!`, 2500);
         logMsg(`❌ Save Slot ${slotNum} is empty!`, 'warning');
         return;
       }
@@ -2740,9 +2794,11 @@
         player = data.player;
         if (data.ngLevel !== undefined) player.ngLevel = data.ngLevel;
         if (data.achievements) player.achievements = data.achievements;
+        showToast(`📂 Loaded Slot ${slotNum}! Welcome back, ${player.name}!`, 2500);
         logMsg(`📂 Loaded Save Slot ${slotNum}! Welcome back, ${player.name}!`, 'system');
         setGameState(STATE.TOWN);
       } catch (e) {
+        showToast(`❌ Error loading Save Slot ${slotNum}!`, 2500);
         logMsg(`❌ Error loading Save Slot ${slotNum}!`, 'warning');
       }
     }
@@ -5413,14 +5469,14 @@
 
       if (e.key === 'F5') {
         e.preventDefault();
-        saveToSlot(0);
-        logMsg('⚡ Quick Saved game to Slot 1 (F5)!', 'system');
+        saveSlot(0);
+        showToast('⚡ Quick Saved game to Slot 1 (F5)!', 2500);
         return;
       }
       if (e.key === 'F9') {
         e.preventDefault();
-        loadFromSlot(0);
-        logMsg('⚡ Quick Loaded game from Slot 1 (F9)!', 'system');
+        loadSlot(0);
+        showToast('📂 Quick Loaded game from Slot 1 (F9)!', 2500);
         return;
       }
 
@@ -5428,14 +5484,27 @@
         e.preventDefault();
         toggleHelpModal();
       } else if (e.key === 'Escape') {
-        closeHelpModal();
+        const modal = document.getElementById('help-modal-overlay');
+        if (modal && modal.style.display === 'flex') {
+          closeHelpModal();
+        } else if (typeof gameState !== 'undefined' && gameState !== STATE.TOWN && gameState !== STATE.CHAR_CREATE && gameState !== STATE.COMBAT) {
+          setGameState(STATE.TOWN);
+          showToast('🏰 Returned to Town Square [Esc]', 2000);
+          logMsg('Returned to Town Square.', 'town');
+        }
       } else if (e.key === 's' || e.key === 'S') {
-        if (typeof saveToSlot === 'function') {
-          saveToSlot(0);
-          logMsg('⚡ Quick Saved game to Slot 1!', 'system');
+        if (typeof gameState !== 'undefined' && gameState === STATE.COMBAT) {
+          if (typeof castHolyShield === 'function') castHolyShield();
+        } else {
+          saveSlot(0);
+          showToast('⚡ Quick Saved game to Slot 1 [S]!', 2500);
         }
       } else if (e.key === 'l' || e.key === 'L') {
-        setGameState(STATE.SAVE_LOAD);
+        if (typeof gameState !== 'undefined' && gameState === STATE.COMBAT) {
+          if (typeof castLightningStorm === 'function') castLightningStorm();
+        } else {
+          setGameState(STATE.SAVE_LOAD);
+        }
       } else if (e.key === 'i' || e.key === 'I') {
         setGameState(STATE.INVENTORY);
       }
@@ -5452,6 +5521,30 @@
       }
     });
 
+    const saveToSlot = function(slot) { saveSlot(slot); };
+    const loadFromSlot = function(slot) { loadSlot(slot); };
+
+    // Automatically badge buttons in controls-panel with their keyboard shortcut [1-6]
+    const controlsObserver = new MutationObserver(() => {
+      const panel = document.getElementById('controls-panel');
+      if (!panel) return;
+      const buttons = panel.querySelectorAll('button');
+      buttons.forEach((btn, idx) => {
+        if (idx < 6 && !btn.getAttribute('data-badged')) {
+          btn.setAttribute('data-badged', 'true');
+          const bindKey = (typeof KEY_BINDS !== 'undefined' && KEY_BINDS[idx]) ? KEY_BINDS[idx] : (idx + 1);
+          const badge = document.createElement('span');
+          badge.style.cssText = 'background:#181825; color:#f9e2af; border:1px solid #45475a; border-radius:4px; font-size:0.75rem; padding:1px 5px; margin-right:6px; font-weight:700; pointer-events:none;';
+          badge.textContent = `[${bindKey}]`;
+          btn.insertBefore(badge, btn.firstChild);
+        }
+      });
+    });
+    const panelElem = document.getElementById('controls-panel');
+    if (panelElem) {
+      controlsObserver.observe(panelElem, { childList: true });
+    }
+
     // Start in Character Creation Mode
     setGameState(STATE.CHAR_CREATE);
 
@@ -5461,6 +5554,7 @@
         a.href = dataStr;
         a.download = "kquest_score.json";
         a.click();
+        showToast('💾 High Score JSON Exported!', 2500);
         logMsg('💾 High Score JSON Exported!', 'system');
     }
     function importScoreJSON(event) {
@@ -5472,12 +5566,15 @@
                 const imported = JSON.parse(e.target.result);
                 if (imported && imported.name) {
                     player = imported;
+                    showToast('📂 High Score JSON Imported Successfully!', 2500);
                     logMsg('📂 High Score JSON Imported Successfully!', 'system');
                     setGameState(STATE.TOWN);
                 } else {
+                    showToast('❌ Invalid JSON format.', 3000);
                     logMsg('❌ Invalid JSON format.', 'warning');
                 }
             } catch (err) {
+                showToast('❌ Error parsing JSON.', 3000);
                 logMsg('❌ Error parsing JSON.', 'warning');
             }
         };
