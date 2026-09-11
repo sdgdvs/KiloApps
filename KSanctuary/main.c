@@ -2288,6 +2288,251 @@ static void DrawProgressBar(HDC hdc, int x, int y, int w, int h, float pct, COLO
     }
 }
 
+// ==========================================
+// KSanctuary Pixel Art Sprite Graphics Engine
+// ==========================================
+
+static int GetSurvivorRoleIndex(const char* role) {
+    if (strstr(role, "Overseer") != NULL) return 0;
+    if (strstr(role, "Engineer") != NULL || strstr(role, "Machinist") != NULL) return 1;
+    if (strstr(role, "Hydro") != NULL || strstr(role, "Water") != NULL) return 2;
+    if (strstr(role, "Agro") != NULL || strstr(role, "Botanist") != NULL || strstr(role, "Farmer") != NULL) return 3;
+    if (strstr(role, "Physician") != NULL || strstr(role, "Medic") != NULL || strstr(role, "Doctor") != NULL) return 4;
+    if (strstr(role, "Guard") != NULL || strstr(role, "Security") != NULL || strstr(role, "Soldier") != NULL) return 5;
+    return 6; // Scavenger / Wastelander
+}
+
+static void DrawDwellerSprite(HDC hdc, int x, int y, int roleIdx, int dwellerSeed, int isSick) {
+    // 32 x 48 Vault Dweller Sprite in Vault 704 Blue & Gold Jumpsuit
+    FillSolidRect(hdc, x, y, 32, 48, RGB(8, 12, 9));
+    DrawBoxBorder(hdc, x, y, 32, 48, COL_BORDER);
+
+    // Color definitions
+    COLORREF skinCol = isSick ? RGB(160, 195, 150) : RGB(235, 185, 145);
+    COLORREF suitBlue = RGB(22, 60, 140);
+    COLORREF goldTrim = RGB(245, 180, 20);
+    COLORREF bootCol = RGB(45, 35, 30);
+    COLORREF beltCol = RGB(85, 70, 55);
+
+    // Hair color based on dwellerSeed
+    COLORREF hairCol;
+    int hMod = (dwellerSeed + 3) % 5;
+    if (hMod == 0) hairCol = RGB(65, 45, 30);        // Dark brown
+    else if (hMod == 1) hairCol = RGB(215, 185, 90);  // Blonde
+    else if (hMod == 2) hairCol = RGB(160, 75, 40);   // Auburn
+    else if (hMod == 3) hairCol = RGB(170, 170, 175); // Silver/Grey
+    else hairCol = RGB(30, 28, 32);                  // Jet Black
+
+    // Hair base
+    FillSolidRect(hdc, x + 10, y + 5, 12, 6, hairCol);
+
+    // Head / Face
+    FillSolidRect(hdc, x + 11, y + 9, 10, 8, skinCol);
+
+    // Eyes
+    COLORREF eyeCol = isSick ? RGB(80, 160, 70) : RGB(20, 20, 25);
+    FillSolidRect(hdc, x + 13, y + 12, 2, 2, eyeCol);
+    FillSolidRect(hdc, x + 17, y + 12, 2, 2, eyeCol);
+
+    // Mouth / Expression
+    FillSolidRect(hdc, x + 14, y + 15, 4, 1, isSick ? RGB(120, 90, 80) : RGB(180, 120, 100));
+
+    // Vault Jumpsuit Torso
+    FillSolidRect(hdc, x + 8, y + 18, 16, 13, suitBlue);
+    // Gold center zipper & neck collar
+    FillSolidRect(hdc, x + 15, y + 18, 2, 12, goldTrim);
+    FillSolidRect(hdc, x + 12, y + 18, 8, 2, goldTrim);
+
+    // Stencil 704 on chest
+    FillSolidRect(hdc, x + 10, y + 21, 3, 3, goldTrim);
+
+    // Utility Belt & Buckle
+    FillSolidRect(hdc, x + 8, y + 30, 16, 3, beltCol);
+    FillSolidRect(hdc, x + 14, y + 30, 4, 3, RGB(200, 200, 210));
+
+    // Trousers
+    FillSolidRect(hdc, x + 10, y + 33, 5, 8, suitBlue);
+    FillSolidRect(hdc, x + 17, y + 33, 5, 8, suitBlue);
+
+    // Boots
+    FillSolidRect(hdc, x + 9, y + 41, 6, 4, bootCol);
+    FillSolidRect(hdc, x + 17, y + 41, 6, 4, bootCol);
+
+    // Role-specific accessories
+    if (roleIdx == 0) {
+        // Overseer: Comms headset & gold epaulets
+        FillSolidRect(hdc, x + 9, y + 10, 2, 6, RGB(40, 200, 100));
+        FillSolidRect(hdc, x + 11, y + 14, 3, 1, RGB(40, 200, 100));
+        FillSolidRect(hdc, x + 7, y + 18, 3, 2, goldTrim);
+        FillSolidRect(hdc, x + 22, y + 18, 3, 2, goldTrim);
+    } else if (roleIdx == 1) {
+        // Engineer: Welding goggles & wrench
+        FillSolidRect(hdc, x + 10, y + 10, 12, 4, RGB(50, 50, 50));
+        FillSolidRect(hdc, x + 12, y + 11, 3, 2, RGB(255, 140, 0));
+        FillSolidRect(hdc, x + 17, y + 11, 3, 2, RGB(255, 140, 0));
+        FillSolidRect(hdc, x + 6, y + 24, 2, 7, RGB(180, 180, 190));
+    } else if (roleIdx == 2) {
+        // Hydrologist: Gas respirator mask
+        FillSolidRect(hdc, x + 12, y + 13, 8, 5, RGB(0, 160, 190));
+        FillSolidRect(hdc, x + 14, y + 16, 4, 3, RGB(20, 100, 120));
+    } else if (roleIdx == 3) {
+        // Botanist/Farmer: Wide straw hat & plant pin
+        FillSolidRect(hdc, x + 7, y + 6, 18, 3, RGB(190, 160, 90));
+        FillSolidRect(hdc, x + 10, y + 3, 12, 3, RGB(170, 140, 75));
+        FillSolidRect(hdc, x + 21, y + 20, 3, 3, RGB(50, 210, 70));
+    } else if (roleIdx == 4) {
+        // Physician: Head mirror & medical mask
+        FillSolidRect(hdc, x + 14, y + 6, 4, 4, RGB(240, 240, 255));
+        FillSolidRect(hdc, x + 12, y + 13, 8, 4, RGB(220, 240, 235));
+    } else if (roleIdx == 5) {
+        // Security: Combat flak helmet & armor
+        FillSolidRect(hdc, x + 9, y + 4, 14, 6, RGB(70, 85, 75));
+        FillSolidRect(hdc, x + 9, y + 20, 14, 8, RGB(80, 95, 85));
+    } else if (roleIdx == 6) {
+        // Scavenger: Gas mask with twin filter canisters
+        FillSolidRect(hdc, x + 11, y + 11, 10, 7, RGB(60, 55, 50));
+        FillSolidRect(hdc, x + 12, y + 12, 3, 2, RGB(220, 190, 60));
+        FillSolidRect(hdc, x + 17, y + 12, 3, 2, RGB(220, 190, 60));
+        FillSolidRect(hdc, x + 9, y + 16, 3, 4, RGB(40, 40, 40));
+        FillSolidRect(hdc, x + 20, y + 16, 3, 4, RGB(40, 40, 40));
+    }
+}
+
+static void DrawFacilitySprite(HDC hdc, int x, int y, const char* facId, int active) {
+    FillSolidRect(hdc, x, y, 30, 30, RGB(10, 14, 11));
+    DrawBoxBorder(hdc, x, y, 30, 30, active ? COL_BORDER_HI : COL_BORDER);
+
+    if (strcmp(facId, "cmd") == 0) {
+        // Overseer Command Terminal
+        FillSolidRect(hdc, x + 4, y + 4, 22, 16, RGB(20, 30, 24));
+        DrawBoxBorder(hdc, x + 4, y + 4, 22, 16, RGB(60, 120, 70));
+        FillSolidRect(hdc, x + 6, y + 6, 18, 12, RGB(10, 45, 20));
+        HPEN hPen = CreatePen(PS_SOLID, 1, RGB(50, 230, 100));
+        HPEN oldP = (HPEN)SelectObject(hdc, hPen);
+        MoveToEx(hdc, x + 15, y + 12, NULL);
+        LineTo(hdc, x + 21, y + 8);
+        SelectObject(hdc, oldP);
+        DeleteObject(hPen);
+        FillSolidRect(hdc, x + 14, y + 11, 2, 2, RGB(250, 220, 40));
+        FillSolidRect(hdc, x + 3, y + 22, 24, 4, RGB(40, 50, 45));
+        FillSolidRect(hdc, x + 6, y + 23, 18, 2, RGB(80, 100, 90));
+    } else if (strcmp(facId, "gen") == 0) {
+        // Diesel-Bio Generator Turbine
+        FillSolidRect(hdc, x + 5, y + 5, 20, 20, RGB(40, 40, 45));
+        DrawBoxBorder(hdc, x + 5, y + 5, 20, 20, RGB(90, 85, 80));
+        COLORREF coreCol = active ? RGB(255, 160, 20) : RGB(140, 90, 30);
+        FillSolidRect(hdc, x + 11, y + 11, 8, 8, coreCol);
+        FillSolidRect(hdc, x + 13, y + 13, 4, 4, RGB(255, 240, 180));
+        FillSolidRect(hdc, x + 13, y + 3, 4, 3, RGB(70, 70, 75));
+        FillSolidRect(hdc, x + 13, y + 24, 4, 3, RGB(70, 70, 75));
+        FillSolidRect(hdc, x + 3, y + 13, 3, 4, RGB(70, 70, 75));
+        FillSolidRect(hdc, x + 24, y + 13, 3, 4, RGB(70, 70, 75));
+        if (active) {
+            FillSolidRect(hdc, x + 8, y + 8, 2, 2, RGB(100, 230, 255));
+            FillSolidRect(hdc, x + 20, y + 19, 2, 2, RGB(100, 230, 255));
+        }
+    } else if (strcmp(facId, "water") == 0) {
+        // Water Purifier Cisterns
+        FillSolidRect(hdc, x + 6, y + 7, 7, 18, RGB(20, 35, 55));
+        FillSolidRect(hdc, x + 17, y + 7, 7, 18, RGB(20, 35, 55));
+        DrawBoxBorder(hdc, x + 6, y + 7, 7, 18, RGB(40, 120, 180));
+        DrawBoxBorder(hdc, x + 17, y + 7, 7, 18, RGB(40, 120, 180));
+        FillSolidRect(hdc, x + 7, y + 13, 5, 11, RGB(30, 160, 230));
+        FillSolidRect(hdc, x + 18, y + 11, 5, 13, RGB(30, 160, 230));
+        FillSolidRect(hdc, x + 12, y + 10, 6, 3, RGB(120, 140, 160));
+        FillSolidRect(hdc, x + 9, y + 16, 2, 2, RGB(200, 240, 255));
+        FillSolidRect(hdc, x + 19, y + 18, 2, 2, RGB(200, 240, 255));
+    } else if (strcmp(facId, "farm") == 0) {
+        // Hydroponics Bay
+        FillSolidRect(hdc, x + 5, y + 4, 20, 3, RGB(180, 50, 210));
+        FillSolidRect(hdc, x + 7, y + 7, 16, 2, RGB(240, 140, 255));
+        FillSolidRect(hdc, x + 4, y + 21, 22, 5, RGB(55, 40, 25));
+        FillSolidRect(hdc, x + 7, y + 13, 3, 8, RGB(40, 200, 80));
+        FillSolidRect(hdc, x + 6, y + 11, 4, 3, RGB(60, 230, 100));
+        FillSolidRect(hdc, x + 14, y + 11, 3, 10, RGB(40, 200, 80));
+        FillSolidRect(hdc, x + 13, y + 9, 5, 3, RGB(60, 230, 100));
+        FillSolidRect(hdc, x + 21, y + 14, 3, 7, RGB(40, 200, 80));
+        FillSolidRect(hdc, x + 20, y + 12, 4, 3, RGB(60, 230, 100));
+    } else if (strcmp(facId, "quarters") == 0 || strcmp(facId, "quarters_ext") == 0) {
+        // Living Quarters Bunks
+        FillSolidRect(hdc, x + 5, y + 7, 20, 18, RGB(15, 20, 25));
+        DrawBoxBorder(hdc, x + 5, y + 7, 20, 18, RGB(80, 90, 100));
+        FillSolidRect(hdc, x + 7, y + 10, 14, 4, RGB(25, 65, 140));
+        FillSolidRect(hdc, x + 19, y + 9, 3, 3, RGB(220, 220, 230));
+        FillSolidRect(hdc, x + 7, y + 18, 14, 4, RGB(25, 65, 140));
+        FillSolidRect(hdc, x + 19, y + 17, 3, 3, RGB(220, 220, 230));
+        FillSolidRect(hdc, x + 6, y + 7, 2, 18, RGB(140, 145, 155));
+        FillSolidRect(hdc, x + 24, y + 12, 3, 3, RGB(255, 200, 50));
+    } else if (strcmp(facId, "infirmary") == 0) {
+        // Med-Lab Infirmary Red Cross
+        FillSolidRect(hdc, x + 12, y + 5, 6, 18, RGB(230, 45, 45));
+        FillSolidRect(hdc, x + 6, y + 11, 18, 6, RGB(230, 45, 45));
+        FillSolidRect(hdc, x + 13, y + 12, 4, 4, RGB(255, 180, 180));
+        FillSolidRect(hdc, x + 4, y + 25, 6, 1, RGB(50, 230, 100));
+        FillSolidRect(hdc, x + 10, y + 23, 2, 3, RGB(50, 230, 100));
+        FillSolidRect(hdc, x + 12, y + 26, 2, 2, RGB(50, 230, 100));
+        FillSolidRect(hdc, x + 14, y + 25, 12, 1, RGB(50, 230, 100));
+    } else if (strcmp(facId, "workshop") == 0) {
+        // Scrap Workshop Anvil & Hammer
+        FillSolidRect(hdc, x + 6, y + 15, 18, 5, RGB(90, 95, 105));
+        FillSolidRect(hdc, x + 10, y + 20, 10, 6, RGB(70, 75, 85));
+        FillSolidRect(hdc, x + 7, y + 25, 16, 2, RGB(60, 65, 75));
+        FillSolidRect(hdc, x + 9, y + 7, 10, 4, RGB(180, 175, 160));
+        FillSolidRect(hdc, x + 13, y + 11, 2, 6, RGB(140, 100, 60));
+        if (active) {
+            FillSolidRect(hdc, x + 19, y + 12, 2, 2, RGB(255, 170, 20));
+            FillSolidRect(hdc, x + 23, y + 14, 2, 2, RGB(255, 230, 60));
+        }
+    } else if (strcmp(facId, "security") == 0) {
+        // Security Shield & Gun
+        FillSolidRect(hdc, x + 8, y + 5, 14, 18, RGB(50, 60, 55));
+        DrawBoxBorder(hdc, x + 8, y + 5, 14, 18, RGB(120, 140, 130));
+        FillSolidRect(hdc, x + 6, y + 13, 18, 2, RGB(180, 180, 190));
+        FillSolidRect(hdc, x + 14, y + 8, 2, 12, RGB(180, 180, 190));
+        FillSolidRect(hdc, x + 14, y + 13, 2, 2, RGB(255, 40, 40));
+    } else {
+        FillSolidRect(hdc, x + 6, y + 6, 18, 18, RGB(30, 40, 35));
+        DrawBoxBorder(hdc, x + 6, y + 6, 18, 18, COL_BORDER_HI);
+        FillSolidRect(hdc, x + 11, y + 11, 8, 8, active ? COL_GREEN : COL_AMBER);
+    }
+}
+
+static void DrawWastelandLocationSprite(HDC hdc, int x, int y, int locIdx) {
+    FillSolidRect(hdc, x, y, 32, 32, RGB(12, 10, 8));
+    DrawBoxBorder(hdc, x, y, 32, 32, COL_BORDER);
+
+    if (locIdx == 0) {
+        // Ruined Supermarket
+        FillSolidRect(hdc, x + 4, y + 10, 24, 16, RGB(45, 38, 30));
+        DrawBoxBorder(hdc, x + 4, y + 10, 24, 16, RGB(90, 75, 60));
+        FillSolidRect(hdc, x + 10, y + 5, 12, 5, RGB(180, 60, 40));
+        FillSolidRect(hdc, x + 7, y + 18, 6, 6, RGB(20, 18, 15));
+    } else if (locIdx == 1) {
+        // Radio Relay Tower
+        FillSolidRect(hdc, x + 14, y + 4, 4, 22, RGB(140, 145, 150));
+        FillSolidRect(hdc, x + 9, y + 22, 14, 4, RGB(100, 105, 110));
+        FillSolidRect(hdc, x + 8, y + 6, 2, 3, RGB(245, 160, 20));
+        FillSolidRect(hdc, x + 22, y + 6, 2, 3, RGB(245, 160, 20));
+        FillSolidRect(hdc, x + 5, y + 4, 2, 5, RGB(245, 160, 20));
+        FillSolidRect(hdc, x + 25, y + 4, 2, 5, RGB(245, 160, 20));
+    } else if (locIdx == 2) {
+        // Deep Underground Cavern
+        FillSolidRect(hdc, x + 4, y + 4, 24, 24, RGB(25, 20, 18));
+        FillSolidRect(hdc, x + 8, y + 4, 3, 8, RGB(65, 55, 50));
+        FillSolidRect(hdc, x + 16, y + 4, 4, 11, RGB(65, 55, 50));
+        FillSolidRect(hdc, x + 23, y + 4, 3, 7, RGB(65, 55, 50));
+        FillSolidRect(hdc, x + 10, y + 21, 4, 4, RGB(80, 240, 90));
+        FillSolidRect(hdc, x + 18, y + 19, 5, 5, RGB(80, 240, 90));
+    } else {
+        // Abandoned Military Silo
+        FillSolidRect(hdc, x + 6, y + 14, 20, 14, RGB(55, 60, 55));
+        FillSolidRect(hdc, x + 11, y + 6, 10, 8, RGB(70, 75, 70));
+        FillSolidRect(hdc, x + 8, y + 22, 4, 3, RGB(240, 180, 20));
+        FillSolidRect(hdc, x + 14, y + 22, 4, 3, RGB(240, 180, 20));
+        FillSolidRect(hdc, x + 20, y + 22, 4, 3, RGB(240, 180, 20));
+    }
+}
+
 // GUI Rendering
 static void DrawHUD(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int startY) {
     float fProd, fNeed, wProd, wNeed, sProd;
@@ -2534,16 +2779,19 @@ static void DrawFacilitiesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x
 
             DrawStyledBox(hdc, cx, cy, colW, cardH, COL_DARK_CARD, COL_BORDER);
 
+            // Facility Sprite Icon
+            DrawFacilitySprite(hdc, cx + 5, cy + 5, fac->id, fac->assigned > 0);
+
             // Row 1: Name + Level + Status
             SelectObject(hdc, hFontBold);
             SetTextColor(hdc, COL_TEXT_BRIGHT);
-            TextOutA(hdc, cx + 6, cy + 4, fac->name, (int)strlen(fac->name));
+            TextOutA(hdc, cx + 38, cy + 4, fac->name, (int)strlen(fac->name));
 
             char lvlBuf[12];
             sprintf(lvlBuf, "LV%d", fac->level);
             SelectObject(hdc, hFontSmall);
             SetTextColor(hdc, COL_AMBER);
-            TextOutA(hdc, cx + 165, cy + 5, lvlBuf, (int)strlen(lvlBuf));
+            TextOutA(hdc, cx + 180, cy + 5, lvlBuf, (int)strlen(lvlBuf));
 
             const char* stText = "ONLINE";
             COLORREF stColor = COL_GREEN;
@@ -2598,20 +2846,20 @@ static void DrawFacilitiesView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x
                 sprintf(outBuf, "Medical Triage (%d Staff) | -%d kW", assignedCount, fac->powerCost);
             }
             SetTextColor(hdc, COL_TEXT_MAIN);
-            TextOutA(hdc, cx + 6, cy + 19, outBuf, (int)strlen(outBuf));
+            TextOutA(hdc, cx + 38, cy + 19, outBuf, (int)strlen(outBuf));
 
             // Row 3: Staff names
             if (strlen(staffNames) > 0) {
                 char sBuf[80];
                 sprintf(sBuf, "Staff: %s", staffNames);
                 SetTextColor(hdc, COL_TEXT_DIM);
-                TextOutA(hdc, cx + 6, cy + 34, sBuf, (int)strlen(sBuf));
+                TextOutA(hdc, cx + 38, cy + 34, sBuf, (int)strlen(sBuf));
             } else if (fac->maxWorkers > 0) {
                 SetTextColor(hdc, COL_TEXT_DIM);
-                TextOutA(hdc, cx + 6, cy + 34, "Staff: None (Assign idle survivor below)", 40);
+                TextOutA(hdc, cx + 38, cy + 34, "Staff: None (Assign idle survivor below)", 40);
             } else {
                 SetTextColor(hdc, COL_TEXT_DIM);
-                TextOutA(hdc, cx + 6, cy + 34, "Automated Life Support Chamber", 30);
+                TextOutA(hdc, cx + 38, cy + 34, "Automated Life Support Chamber", 30);
             }
 
             // Row 4: Staff [-] [+] controls and Upgrade Button
@@ -2758,46 +3006,50 @@ static void DrawSurvivorsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x,
 
             DrawStyledBox(hdc, x, cy, w, cardH, COL_DARK_CARD, COL_BORDER);
 
+            // Dweller Sprite
+            int roleIdx = GetSurvivorRoleIndex(s->role);
+            DrawDwellerSprite(hdc, x + 6, cy + 8, roleIdx, i, (s->rads >= 50));
+
             // Name & Role & Mood Badge
             SelectObject(hdc, hFontBold);
             SetTextColor(hdc, COL_TEXT_BRIGHT);
-            TextOutA(hdc, x + 8, cy + 5, s->name, (int)strlen(s->name));
+            TextOutA(hdc, x + 44, cy + 5, s->name, (int)strlen(s->name));
 
             const char* moodStr = (s->morale >= 85) ? "[ECSTATIC]" : ((s->morale >= 65) ? "[CONTENT]" : ((s->morale >= 45) ? "[DISCONTENT]" : ((s->morale >= 25) ? "[UNREST]" : "[MUTINOUS]")));
             COLORREF moodCol = (s->morale >= 65) ? COL_GREEN : ((s->morale >= 45) ? COL_AMBER : COL_RED);
             SelectObject(hdc, hFontSmall);
             SetTextColor(hdc, moodCol);
-            TextOutA(hdc, x + 125, cy + 5, moodStr, (int)strlen(moodStr));
+            TextOutA(hdc, x + 155, cy + 5, moodStr, (int)strlen(moodStr));
 
             char roleBuf[64];
-            sprintf(roleBuf, "%s | STR:%d AGI:%d INT:%d", s->role, s->str, s->agi, s->inte);
+            sprintf(roleBuf, "%s | S:%d A:%d I:%d", s->role, s->str, s->agi, s->inte);
             SetTextColor(hdc, COL_TEXT_DIM);
-            TextOutA(hdc, x + 8, cy + 22, roleBuf, (int)strlen(roleBuf));
+            TextOutA(hdc, x + 44, cy + 22, roleBuf, (int)strlen(roleBuf));
 
             // Column 2: Health, Morale, Radiation Meters
             // Health Bar
-            TextOutA(hdc, x + 200, cy + 4, "HP", 2);
+            TextOutA(hdc, x + 215, cy + 4, "HP", 2);
             char hpVal[8];
             sprintf(hpVal, "%d%%", s->health);
-            TextOutA(hdc, x + 265, cy + 4, hpVal, (int)strlen(hpVal));
+            TextOutA(hdc, x + 275, cy + 4, hpVal, (int)strlen(hpVal));
             COLORREF hpColor = s->health < 40 ? COL_RED : (s->health < 75 ? COL_AMBER : COL_GREEN);
-            DrawProgressBar(hdc, x + 200, cy + 15, 85, 6, s->health / 100.0f, hpColor);
+            DrawProgressBar(hdc, x + 215, cy + 15, 80, 6, s->health / 100.0f, hpColor);
 
             // Morale Bar
-            TextOutA(hdc, x + 200, cy + 23, "MOR", 3);
+            TextOutA(hdc, x + 215, cy + 23, "MOR", 3);
             char morVal[8];
             sprintf(morVal, "%d%%", s->morale);
-            TextOutA(hdc, x + 265, cy + 23, morVal, (int)strlen(morVal));
-            DrawProgressBar(hdc, x + 200, cy + 34, 85, 6, s->morale / 100.0f, COL_AMBER);
+            TextOutA(hdc, x + 275, cy + 23, morVal, (int)strlen(morVal));
+            DrawProgressBar(hdc, x + 215, cy + 34, 80, 6, s->morale / 100.0f, COL_AMBER);
 
             // Radiation Bar
-            TextOutA(hdc, x + 200, cy + 42, "RAD", 3);
+            TextOutA(hdc, x + 215, cy + 42, "RAD", 3);
             char radVal[16];
             sprintf(radVal, "%dR", s->rads);
             COLORREF radColor = (s->rads >= 75) ? COL_RED : ((s->rads >= 50) ? RGB(255, 140, 0) : ((s->rads >= 25) ? COL_AMBER : COL_GREEN));
             SetTextColor(hdc, radColor);
-            TextOutA(hdc, x + 265, cy + 42, radVal, (int)strlen(radVal));
-            DrawProgressBar(hdc, x + 200, cy + 53, 85, 6, s->rads / 100.0f, radColor);
+            TextOutA(hdc, x + 275, cy + 42, radVal, (int)strlen(radVal));
+            DrawProgressBar(hdc, x + 215, cy + 53, 80, 6, s->rads / 100.0f, radColor);
 
             // Column 3: Current Job & Action Buttons
             char jobLabel[48];
@@ -2844,13 +3096,12 @@ static void DrawSurvivorsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x,
                 DrawButtonControl(hdc, hFontSmall, actX + actW + actGap, cy + 34, actW, 24, "RAD-AWAY", canRadAway ? COL_AMBER : COL_TEXT_DIM, canRadAway ? RGB(45, 40, 20) : COL_DARK_CARD, canRadAway ? COL_AMBER : COL_BORDER, BTN_TREAT_RADAWAY, i, 0);
 
                 // DECON SHOWER button
-                int canDecon = (s->rads > 10 && g_state.water >= 5.0f && g_state.scrap >= 5.0f);
-                DrawButtonControl(hdc, hFontSmall, actX + (actW + actGap) * 2, cy + 34, actW, 24, "DECON", canDecon ? RGB(100, 200, 255) : COL_TEXT_DIM, canDecon ? RGB(20, 35, 45) : COL_DARK_CARD, canDecon ? RGB(100, 200, 255) : COL_BORDER, BTN_TREAT_DECON, i, 0);
+                int canDecon = (s->rads > 10 && g_state.water >= 5.0f && g_state.scrap >= 5);
+                DrawButtonControl(hdc, hFontSmall, actX + (actW + actGap) * 2, cy + 34, actW, 24, "DECON (-5W)", canDecon ? COL_CYAN : COL_TEXT_DIM, canDecon ? RGB(20, 35, 45) : COL_DARK_CARD, canDecon ? COL_CYAN : COL_BORDER, BTN_TREAT_DECON, i, 0);
             }
         }
     } else {
-        // RADIO BEACON & AIRLOCK TERMINAL
-        // Top Broadcast Box
+        // RADIO BEACON & AIRLOCK CANDIDATES SUB-TAB
         int boxH = 68;
         DrawStyledBox(hdc, x, startY, w, boxH, COL_DARK_CARD, COL_BORDER);
 
@@ -2908,26 +3159,30 @@ static void DrawSurvivorsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x,
 
                 DrawStyledBox(hdc, x, cy, w, cardH, COL_DARK_CARD, COL_BORDER);
 
+                // Candidate Sprite
+                int candRoleIdx = GetSurvivorRoleIndex(c->role);
+                DrawDwellerSprite(hdc, x + 6, cy + 7, candRoleIdx, i + 20, 0);
+
                 // Candidate Name & Role
                 SelectObject(hdc, hFontBold);
                 SetTextColor(hdc, COL_TEXT_BRIGHT);
-                TextOutA(hdc, x + 8, cy + 6, c->name, (int)strlen(c->name));
+                TextOutA(hdc, x + 44, cy + 6, c->name, (int)strlen(c->name));
 
                 SelectObject(hdc, hFontSmall);
                 SetTextColor(hdc, COL_AMBER);
-                TextOutA(hdc, x + 180, cy + 7, c->role, (int)strlen(c->role));
+                TextOutA(hdc, x + 185, cy + 7, c->role, (int)strlen(c->role));
 
                 // Trait
                 char trBuf[64];
                 sprintf(trBuf, "Trait: %s", c->trait);
                 SetTextColor(hdc, COL_TEXT_MAIN);
-                TextOutA(hdc, x + 8, cy + 24, trBuf, (int)strlen(trBuf));
+                TextOutA(hdc, x + 44, cy + 24, trBuf, (int)strlen(trBuf));
 
                 // Stats & Condition
                 char statBuf[64];
                 sprintf(statBuf, "STR:%d AGI:%d INT:%d | Health:%d%% Morale:%d%%", c->str, c->agi, c->inte, c->health, c->morale);
                 SetTextColor(hdc, COL_TEXT_DIM);
-                TextOutA(hdc, x + 8, cy + 42, statBuf, (int)strlen(statBuf));
+                TextOutA(hdc, x + 44, cy + 42, statBuf, (int)strlen(statBuf));
 
                 // Actions: Turn Away & Admit
                 int canAdmit = (g_state.population < g_state.maxPop && g_state.numSurvivors < MAX_SURVIVORS);
@@ -2974,32 +3229,35 @@ static void DrawExpeditionsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int 
 
         DrawStyledBox(hdc, x, cy, w, cardH, COL_DARK_CARD, COL_BORDER);
 
+        // Wasteland Location Sprite
+        DrawWastelandLocationSprite(hdc, x + 6, cy + 6, i);
+
         // Name & Hazard Badge
         SelectObject(hdc, hFontBold);
         SetTextColor(hdc, COL_TEXT_BRIGHT);
-        TextOutA(hdc, x + 8, cy + 6, exp->name, (int)strlen(exp->name));
+        TextOutA(hdc, x + 44, cy + 6, exp->name, (int)strlen(exp->name));
 
         SelectObject(hdc, hFontSmall);
         COLORREF riskCol = (exp->riskLevel == 1) ? COL_GREEN : ((exp->riskLevel == 2) ? COL_AMBER : COL_RED);
         SetTextColor(hdc, riskCol);
         char rBuf[48];
         sprintf(rBuf, "[ %s - TIER %d ]", exp->risk, exp->riskLevel);
-        TextOutA(hdc, x + 240, cy + 6, rBuf, (int)strlen(rBuf));
+        TextOutA(hdc, x + 250, cy + 6, rBuf, (int)strlen(rBuf));
 
         SetTextColor(hdc, COL_TEXT_DIM);
         char durBuf[32];
         sprintf(durBuf, "Duration: %d Cycle(s)", exp->duration);
-        TextOutA(hdc, x + 380, cy + 6, durBuf, (int)strlen(durBuf));
+        TextOutA(hdc, x + 390, cy + 6, durBuf, (int)strlen(durBuf));
 
         // Desc
         SetTextColor(hdc, COL_TEXT_MAIN);
-        TextOutA(hdc, x + 8, cy + 24, exp->desc, (int)strlen(exp->desc));
+        TextOutA(hdc, x + 44, cy + 24, exp->desc, (int)strlen(exp->desc));
 
         // Yields & Blueprint
         char yldBuf[80];
         sprintf(yldBuf, "Yields: ~%d Food, ~%d Scrap, ~%d Meds", exp->potentialFood, exp->potentialScrap, exp->potentialMeds);
         SetTextColor(hdc, COL_TEXT_BRIGHT);
-        TextOutA(hdc, x + 8, cy + 42, yldBuf, (int)strlen(yldBuf));
+        TextOutA(hdc, x + 44, cy + 42, yldBuf, (int)strlen(yldBuf));
 
         if (strlen(exp->blueprintReward) > 0) {
             int isUnlocked = 0;

@@ -1842,6 +1842,22 @@
                 </div>
 
                 <div id="fac-subview-rooms">
+                    <!-- Vault 704 Subterranean Architectural Cross-Section -->
+                    <div id="vault-overview-box" style="margin-bottom:10px; border:1px solid var(--panel-border); background:#060a07; border-radius:3px; position:relative; overflow:hidden;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 8px; background:var(--panel-header); border-bottom:1px solid var(--panel-border); font-size:10px; font-weight:bold; color:var(--text-bright); letter-spacing:1px;">
+                            <span style="display:flex; align-items:center; gap:6px;">
+                                <span style="color:var(--accent-amber);">[ARCHITECTURAL TELEMETRY]</span>
+                                <span>VAULT 704 // SUB-MOUNTAIN STRUCTURAL CROSS-SECTION</span>
+                            </span>
+                            <span id="vault-canvas-status" style="font-size:9px; color:var(--accent-green); display:flex; align-items:center; gap:5px;">
+                                <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--accent-green); box-shadow:0 0 6px var(--accent-green);"></span>
+                                SENSORS ONLINE &bull; 60 FPS CUTAWAY
+                            </span>
+                        </div>
+                        <canvas id="vault-cutaway-canvas" width="620" height="140" style="width:100%; height:140px; display:block; cursor:pointer; image-rendering:pixelated; background:#060a07;"></canvas>
+                        <div id="vault-canvas-tooltip" style="position:absolute; pointer-events:none; background:rgba(10,18,12,0.92); border:1px solid var(--border-corner); padding:3px 7px; font-size:9px; color:var(--text-bright); border-radius:2px; display:none; z-index:10; box-shadow:0 0 8px rgba(0,0,0,0.8);"></div>
+                    </div>
+
                     <div class="facilities-grid" id="facilities-grid">
                         <!-- Injected by JavaScript -->
                     </div>
@@ -3102,6 +3118,649 @@
         function toggleTheme() {
             applyTheme(currentThemeIndex + 1);
             playSound('click');
+        }
+
+        // ==========================================
+        // Vault 704 Graphics & Sprite Engine
+        // ==========================================
+
+        function getFacilitySvgIcon(facId, lvl = 1, active = true) {
+            const stroke = active ? 'var(--text-bright)' : 'var(--text-dim)';
+            const accent = active ? 'var(--accent-green)' : 'var(--text-dim)';
+            const amber = 'var(--accent-amber)';
+            const cyan = 'var(--accent-cyan)';
+            const red = 'var(--danger-red)';
+
+            if (facId === 'cmd') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="4" width="30" height="22" rx="2" fill="#0d1f14" stroke="${stroke}" stroke-width="1.5"/>
+                    <rect x="6" y="7" width="24" height="16" fill="#06120a"/>
+                    <circle cx="18" cy="15" r="6" stroke="${accent}" stroke-width="1" stroke-dasharray="2 2" opacity="0.6"/>
+                    <circle cx="18" cy="15" r="2" fill="${accent}"/>
+                    <line x1="18" y1="15" x2="23" y2="11" stroke="${accent}" stroke-width="1.5"/>
+                    <circle cx="21" cy="13" r="1" fill="${amber}"/>
+                    <rect x="5" y="28" width="26" height="4" rx="1" fill="#182b1e" stroke="${stroke}" stroke-width="1"/>
+                    <line x1="9" y1="30" x2="27" y2="30" stroke="${accent}" stroke-width="1" stroke-dasharray="2 1"/>
+                </svg>`;
+            } else if (facId === 'gen') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="6" width="28" height="24" rx="2" fill="#1b1207" stroke="${amber}" stroke-width="1.5"/>
+                    <circle cx="18" cy="18" r="9" fill="#2b1a09" stroke="${amber}" stroke-width="1"/>
+                    <circle cx="18" cy="18" r="5" fill="${active ? '#f59e0b' : '#78350f'}" opacity="${active ? '0.9' : '0.4'}"/>
+                    <circle cx="18" cy="18" r="2.5" fill="#fef3c7"/>
+                    <line x1="18" y1="4" x2="18" y2="8" stroke="${amber}" stroke-width="2"/>
+                    <line x1="18" y1="28" x2="18" y2="32" stroke="${amber}" stroke-width="2"/>
+                    <line x1="4" y1="18" x2="8" y2="18" stroke="${amber}" stroke-width="2"/>
+                    <line x1="28" y1="18" x2="32" y2="18" stroke="${amber}" stroke-width="2"/>
+                    <path d="M11 11 L14 14 M25 11 L22 14 M11 25 L14 22 M25 25 L22 22" stroke="${cyan}" stroke-width="1"/>
+                </svg>`;
+            } else if (facId === 'water') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="6" y="6" width="10" height="24" rx="2" fill="#081e2b" stroke="${cyan}" stroke-width="1.2"/>
+                    <rect x="20" y="6" width="10" height="24" rx="2" fill="#081e2b" stroke="${cyan}" stroke-width="1.2"/>
+                    <rect x="8" y="14" width="6" height="14" fill="${cyan}" opacity="0.6"/>
+                    <rect x="22" y="12" width="6" height="16" fill="${cyan}" opacity="0.6"/>
+                    <path d="M16 12 H20 M16 22 H20" stroke="${stroke}" stroke-width="1.5"/>
+                    <circle cx="11" cy="18" r="1" fill="#fff"/>
+                    <circle cx="25" cy="20" r="1" fill="#fff"/>
+                    <path d="M18 4 C18 4 15 8 15 10 C15 11.5 16.5 12.5 18 12.5 C19.5 12.5 21 11.5 21 10 C21 8 18 4 18 4 Z" fill="${cyan}"/>
+                </svg>`;
+            } else if (facId === 'farm') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="4" width="28" height="5" rx="1" fill="#4a044e" stroke="#c026d3" stroke-width="1"/>
+                    <line x1="8" y1="9" x2="6" y2="16" stroke="#c026d3" stroke-width="1" stroke-dasharray="2 2" opacity="0.6"/>
+                    <line x1="28" y1="9" x2="30" y2="16" stroke="#c026d3" stroke-width="1" stroke-dasharray="2 2" opacity="0.6"/>
+                    <rect x="5" y="25" width="26" height="7" rx="1" fill="#1c140a" stroke="${stroke}" stroke-width="1.2"/>
+                    <path d="M10 25 C10 18 13 15 13 13 C14 16 12 21 11 25 Z" fill="${accent}"/>
+                    <path d="M18 25 C18 16 22 12 23 10 C24 14 20 20 19 25 Z" fill="${accent}"/>
+                    <path d="M26 25 C26 19 28 17 28 15 C29 17 27 22 26.5 25 Z" fill="${accent}"/>
+                    <circle cx="13" cy="13" r="1.5" fill="#86efac"/>
+                    <circle cx="23" cy="10" r="1.5" fill="#86efac"/>
+                </svg>`;
+            } else if (facId === 'quarters' || facId === 'quarters_ext') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="5" y="6" width="26" height="24" rx="2" fill="#0c1219" stroke="${stroke}" stroke-width="1.5"/>
+                    <line x1="6" y1="16" x2="26" y2="16" stroke="${stroke}" stroke-width="1.5"/>
+                    <line x1="6" y1="26" x2="26" y2="26" stroke="${stroke}" stroke-width="1.5"/>
+                    <rect x="8" y="11" width="16" height="5" fill="#1e3a8a" rx="1"/>
+                    <rect x="8" y="21" width="16" height="5" fill="#1e3a8a" rx="1"/>
+                    <rect x="20" y="10" width="4" height="4" fill="#cbd5e1" rx="0.5"/>
+                    <rect x="20" y="20" width="4" height="4" fill="#cbd5e1" rx="0.5"/>
+                    <line x1="26" y1="6" x2="26" y2="30" stroke="${stroke}" stroke-width="1.5"/>
+                    <circle cx="29" cy="11" r="2" fill="${amber}"/>
+                </svg>`;
+            } else if (facId === 'infirmary') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="5" width="28" height="26" rx="2" fill="#180b0b" stroke="${red}" stroke-width="1.5"/>
+                    <path d="M15 9 H21 V15 H27 V21 H21 V27 H15 V21 H9 V15 H15 Z" fill="${red}"/>
+                    <path d="M6 29 L11 29 L14 26 L17 31 L20 28 L23 30 L30 30" stroke="${accent}" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>`;
+            } else if (facId === 'workshop') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="5" width="28" height="26" rx="2" fill="#16120c" stroke="${amber}" stroke-width="1.5"/>
+                    <path d="M8 18 H28 L25 24 H11 Z" fill="#475569" stroke="${stroke}" stroke-width="1"/>
+                    <rect x="14" y="24" width="8" height="5" fill="#334155"/>
+                    <path d="M12 9 L24 21 M11 11 L13 9 L15 11 L13 13 Z" stroke="${amber}" stroke-width="1.5"/>
+                    <path d="M24 9 L12 21 M23 9 L25 11 L23 13 L21 11 Z" stroke="${cyan}" stroke-width="1.5"/>
+                    <circle cx="18" cy="15" r="1.5" fill="#fef08a"/>
+                </svg>`;
+            } else {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="5" y="5" width="26" height="26" rx="2" fill="#111827" stroke="${stroke}" stroke-width="1.5"/>
+                    <path d="M18 9 L26 13 V19 C26 24 18 27 18 27 C18 27 10 24 10 19 V13 Z" fill="#1f2937" stroke="${accent}" stroke-width="1.2"/>
+                    <circle cx="18" cy="17" r="3" fill="${red}"/>
+                </svg>`;
+            }
+        }
+
+        function getDwellerAvatarSvg(surv, seed = 0) {
+            const isSick = (surv.rads || 0) >= 50 || (surv.health < 40);
+            const skin = isSick ? '#a3b899' : '#fbcfe8';
+            const suit = '#1e3a8a';
+            const gold = '#f59e0b';
+            const hairHues = ['#451a03', '#d97706', '#b45309', '#94a3b8', '#18181b'];
+            const hair = hairHues[(seed + 3) % hairHues.length];
+
+            let accSvg = '';
+            const role = (surv.role || '').toLowerCase();
+            if (role.includes('overseer')) {
+                accSvg = `<rect x="6" y="11" width="3" height="7" rx="1" fill="#10b981"/>
+                          <line x1="8" y1="16" x2="13" y2="18" stroke="#10b981" stroke-width="1.5"/>
+                          <circle cx="13" cy="18" r="1.5" fill="#34d399"/>
+                          <rect x="5" y="24" width="4" height="2.5" fill="${gold}"/>
+                          <rect x="27" y="24" width="4" height="2.5" fill="${gold}"/>`;
+            } else if (role.includes('engineer') || role.includes('machinist')) {
+                accSvg = `<rect x="9" y="12" width="18" height="5" rx="1" fill="#1e293b"/>
+                          <circle cx="13" cy="14.5" r="2" fill="#f97316"/>
+                          <circle cx="23" cy="14.5" r="2" fill="#f97316"/>
+                          <line x1="4" y1="28" x2="4" y2="38" stroke="#94a3b8" stroke-width="2"/>`;
+            } else if (role.includes('hydro') || role.includes('water')) {
+                accSvg = `<rect x="11" y="16" width="14" height="7" rx="2" fill="#0891b2"/>
+                          <circle cx="18" cy="20" r="2.5" fill="#164e63"/>`;
+            } else if (role.includes('agro') || role.includes('botanist') || role.includes('farmer')) {
+                accSvg = `<ellipse cx="18" cy="9" rx="14" ry="3.5" fill="#ca8a04"/>
+                          <rect x="11" y="4" width="14" height="5" rx="1" fill="#a16207"/>
+                          <circle cx="26" cy="27" r="2" fill="#22c55e"/>`;
+            } else if (role.includes('physician') || role.includes('medic') || role.includes('doctor')) {
+                accSvg = `<circle cx="18" cy="7" r="3" fill="#f8fafc" stroke="#64748b" stroke-width="1"/>
+                          <rect x="12" y="16" width="12" height="6" rx="1" fill="#e2e8f0"/>
+                          <line x1="18" y1="17" x2="18" y2="21" stroke="#ef4444" stroke-width="1.5"/>
+                          <line x1="16" y1="19" x2="20" y2="19" stroke="#ef4444" stroke-width="1.5"/>`;
+            } else if (role.includes('guard') || role.includes('security') || role.includes('soldier')) {
+                accSvg = `<path d="M10 6 C10 3 26 3 26 6 V13 H10 Z" fill="#334155" stroke="#475569" stroke-width="1"/>
+                          <rect x="9" y="24" width="18" height="8" rx="1" fill="#475569"/>`;
+            } else {
+                accSvg = `<rect x="11" y="13" width="14" height="10" rx="2" fill="#3f3f46"/>
+                          <circle cx="14" cy="15.5" r="2.5" fill="#facc15"/>
+                          <circle cx="22" cy="15.5" r="2.5" fill="#facc15"/>
+                          <circle cx="18" cy="21" r="2.5" fill="#18181b"/>`;
+            }
+
+            return `<svg viewBox="0 0 36 44" width="36" height="44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 13 C9 5 27 5 26 13 Z" fill="${hair}"/>
+                <rect x="11" y="10" width="14" height="11" rx="2" fill="${skin}"/>
+                <rect x="13" y="13.5" width="2" height="2" fill="${isSick ? '#15803d' : '#0f172a'}"/>
+                <rect x="21" y="13.5" width="2" height="2" fill="${isSick ? '#15803d' : '#0f172a'}"/>
+                <line x1="15" y1="18.5" x2="21" y2="18.5" stroke="#991b1b" stroke-width="1"/>
+                <rect x="8" y="22" width="20" height="12" rx="1.5" fill="${suit}"/>
+                <rect x="17" y="22" width="2" height="12" fill="${gold}"/>
+                <rect x="12" y="22" width="12" height="2" fill="${gold}"/>
+                <rect x="11" y="25" width="3" height="3" rx="0.5" fill="${gold}"/>
+                <rect x="8" y="32" width="20" height="3" fill="#78350f"/>
+                <rect x="16" y="32" width="4" height="3" fill="#cbd5e1"/>
+                <rect x="10" y="35" width="6" height="6" fill="${suit}"/>
+                <rect x="20" y="35" width="6" height="6" fill="${suit}"/>
+                <rect x="9" y="40" width="7" height="4" rx="1" fill="#1c1917"/>
+                <rect x="20" y="40" width="7" height="4" rx="1" fill="#1c1917"/>
+                ${accSvg}
+            </svg>`;
+        }
+
+        function getExpeditionLandmarkSvg(expId, riskLevel = 1) {
+            const stroke = riskLevel <= 1 ? 'var(--accent-green)' : (riskLevel <= 2 ? 'var(--accent-amber)' : 'var(--danger-red)');
+            const fill = riskLevel <= 1 ? 'rgba(16,185,129,0.1)' : (riskLevel <= 2 ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)');
+
+            if (expId === 'exp1') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="10" width="28" height="20" rx="1" fill="${fill}" stroke="${stroke}" stroke-width="1.2"/>
+                    <rect x="8" y="5" width="14" height="6" fill="#78350f" stroke="${stroke}" stroke-width="1"/>
+                    <path d="M10 24 L14 18 H22 L24 24" stroke="${stroke}" stroke-width="1.2"/>
+                    <line x1="18" y1="20" x2="18" y2="28" stroke="${stroke}" stroke-width="1"/>
+                    <line x1="26" y1="14" x2="30" y2="18" stroke="var(--danger-red)" stroke-width="1.5"/>
+                </svg>`;
+            } else if (expId === 'exp2') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 4 L11 30 H25 Z" fill="${fill}" stroke="${stroke}" stroke-width="1.2"/>
+                    <line x1="14" y1="16" x2="22" y2="16" stroke="${stroke}" stroke-width="1"/>
+                    <line x1="12" y1="23" x2="24" y2="23" stroke="${stroke}" stroke-width="1"/>
+                    <circle cx="18" cy="4" r="2" fill="${stroke}"/>
+                    <path d="M12 6 C10 8 10 11 12 13 M24 6 C26 8 26 11 24 13" stroke="${stroke}" stroke-width="1.2"/>
+                </svg>`;
+            } else if (expId === 'exp3') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="6" width="28" height="24" rx="1" fill="#150f0c" stroke="${stroke}" stroke-width="1.2"/>
+                    <path d="M8 6 L10 16 L12 6 L16 19 L19 6 L24 17 L27 6" fill="#2d1e18" stroke="${stroke}" stroke-width="1"/>
+                    <circle cx="12" cy="25" r="2" fill="#22c55e"/>
+                    <circle cx="22" cy="24" r="3" fill="#22c55e"/>
+                </svg>`;
+            } else {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="6" y="14" width="24" height="16" rx="2" fill="${fill}" stroke="${stroke}" stroke-width="1.2"/>
+                    <path d="M13 14 V7 C13 5 23 5 23 7 V14 Z" fill="#334155" stroke="${stroke}" stroke-width="1"/>
+                    <line x1="8" y1="24" x2="28" y2="24" stroke="var(--accent-amber)" stroke-width="2" stroke-dasharray="3 3"/>
+                </svg>`;
+            }
+        }
+
+        // Vault 704 Sub-Terrain Cutaway Canvas Animation Engine
+        let vaultCanvas = null;
+        let vaultCtx = null;
+        let vaultAnimId = null;
+        let vaultDwellers = [];
+        let vaultParticles = [];
+        let vaultHoverRoom = null;
+
+        const VAULT_ROOM_SPECS = [
+            { id: 'cmd', name: 'OVERSEER COMMAND', level: 1, x: 78, y: 18, w: 128, h: 52, color: '#10b981', staffKey: 'cmd' },
+            { id: 'farm', name: 'HYDROPONICS BAY', level: 1, x: 210, y: 18, w: 135, h: 52, color: '#a855f7', staffKey: 'farm' },
+            { id: 'quarters', name: 'LIVING QUARTERS', level: 1, x: 350, y: 18, w: 125, h: 52, color: '#f59e0b', staffKey: 'quarters' },
+            { id: 'workshop', name: 'SCRAP WORKSHOP', level: 1, x: 520, y: 18, w: 94, h: 52, color: '#38bdf8', staffKey: 'workshop' },
+            { id: 'gen', name: 'TURBINE REACTOR', level: 2, x: 38, y: 76, w: 152, h: 54, color: '#f97316', staffKey: 'gen' },
+            { id: 'water', name: 'WATER FILTRATION', level: 2, x: 195, y: 76, w: 150, h: 54, color: '#06b6d4', staffKey: 'water' },
+            { id: 'infirmary', name: 'MED-LAB INFIRMARY', level: 2, x: 350, y: 76, w: 125, h: 54, color: '#ef4444', staffKey: 'infirmary' },
+            { id: 'security', name: 'ARMORY DEFENSE', level: 2, x: 520, y: 76, w: 94, h: 54, color: '#84cc16', staffKey: 'security' }
+        ];
+
+        function initVaultCutaway() {
+            vaultCanvas = document.getElementById('vault-cutaway-canvas');
+            if (!vaultCanvas) return;
+            vaultCtx = vaultCanvas.getContext('2d');
+            if (!vaultCtx) return;
+
+            // Initialize Little Animated Vault Dwellers
+            vaultDwellers = [
+                { x: 95, y: 56, vx: 0.35, room: VAULT_ROOM_SPECS[0], frame: 0, animTick: 0, role: 0 },
+                { x: 235, y: 56, vx: -0.3, room: VAULT_ROOM_SPECS[1], frame: 0, animTick: 0, role: 3 },
+                { x: 375, y: 56, vx: 0.25, room: VAULT_ROOM_SPECS[2], frame: 0, animTick: 0, role: 4 },
+                { x: 65, y: 116, vx: 0.4, room: VAULT_ROOM_SPECS[4], frame: 0, animTick: 0, role: 1 },
+                { x: 230, y: 116, vx: -0.35, room: VAULT_ROOM_SPECS[5], frame: 0, animTick: 0, role: 2 },
+                { x: 380, y: 116, vx: 0.3, room: VAULT_ROOM_SPECS[6], frame: 0, animTick: 0, role: 4 }
+            ];
+
+            // Environmental Ash & Fallout Particles
+            vaultParticles = [];
+            for (let p = 0; p < 24; p++) {
+                vaultParticles.push({
+                    x: Math.random() * 620,
+                    y: Math.random() * 140,
+                    vx: (Math.random() - 0.4) * 0.4,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    type: Math.random() > 0.6 ? 'rad' : 'ash',
+                    alpha: 0.2 + Math.random() * 0.5
+                });
+            }
+
+            // Mouse interaction
+            vaultCanvas.addEventListener('mousemove', (e) => {
+                const rect = vaultCanvas.getBoundingClientRect();
+                const mx = (e.clientX - rect.left) * (vaultCanvas.width / rect.width);
+                const my = (e.clientY - rect.top) * (vaultCanvas.height / rect.height);
+
+                let found = null;
+                for (const r of VAULT_ROOM_SPECS) {
+                    if (mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h) {
+                        found = r;
+                        break;
+                    }
+                }
+                vaultHoverRoom = found;
+                const tt = document.getElementById('vault-canvas-tooltip');
+                if (tt) {
+                    if (found) {
+                        const fac = (state.facilities || []).find(f => f.id === found.id);
+                        const staff = (state.survivors || []).filter(s => s.job === found.id).length;
+                        tt.style.display = 'block';
+                        tt.style.left = `${Math.min(e.clientX - rect.left + 10, rect.width - 150)}px`;
+                        tt.style.top = `${e.clientY - rect.top - 25}px`;
+                        tt.innerHTML = `<strong>${found.name}</strong> &bull; LVL ${fac ? (fac.level || 1) : 1} &bull; ${staff} Staff`;
+                    } else {
+                        tt.style.display = 'none';
+                    }
+                }
+            });
+
+            vaultCanvas.addEventListener('mouseleave', () => {
+                vaultHoverRoom = null;
+                const tt = document.getElementById('vault-canvas-tooltip');
+                if (tt) tt.style.display = 'none';
+            });
+
+            vaultCanvas.addEventListener('click', () => {
+                if (vaultHoverRoom) {
+                    const card = document.getElementById('fac-card-' + vaultHoverRoom.id);
+                    if (card) {
+                        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        card.style.borderColor = 'var(--accent-amber)';
+                        setTimeout(() => { card.style.borderColor = ''; }, 1200);
+                    }
+                }
+            });
+
+            if (vaultAnimId) cancelAnimationFrame(vaultAnimId);
+            animateVaultCutaway(0);
+        }
+
+        function animateVaultCutaway(timestamp) {
+            if (!vaultCanvas || !vaultCtx) {
+                vaultAnimId = requestAnimationFrame(animateVaultCutaway);
+                return;
+            }
+            drawVaultCutaway(timestamp * 0.001);
+            vaultAnimId = requestAnimationFrame(animateVaultCutaway);
+        }
+
+        function drawVaultCutaway(t) {
+            const w = vaultCanvas.width;
+            const h = vaultCanvas.height;
+            const ctx = vaultCtx;
+
+            ctx.fillStyle = '#0a0f0b';
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.fillStyle = '#101611';
+            ctx.fillRect(0, 14, w, 2);
+            ctx.fillRect(0, 72, w, 4);
+            ctx.fillRect(0, 134, w, 6);
+
+            ctx.fillStyle = 'rgba(52, 211, 153, 0.4)';
+            for (let i = 0; i < 8; i++) {
+                const ox = (i * 78 + 35) % w;
+                const oy = ((i * 37 + 5) % 120) + 16;
+                ctx.fillRect(ox, oy, 2, 2);
+            }
+
+            // Top surface strip
+            ctx.fillStyle = '#1b1712';
+            ctx.fillRect(0, 0, w, 14);
+            ctx.fillStyle = '#2d241a';
+            ctx.fillRect(0, 12, w, 2);
+            ctx.strokeStyle = '#4b3f33';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(15, 12); ctx.lineTo(15, 3);
+            ctx.moveTo(35, 12); ctx.lineTo(35, 4);
+            ctx.moveTo(15, 6); ctx.lineTo(35, 7);
+            ctx.moveTo(15, 10); ctx.lineTo(35, 10);
+            ctx.moveTo(70, 12); ctx.lineTo(74, 4); ctx.lineTo(71, 1);
+            ctx.moveTo(74, 7); ctx.lineTo(79, 5);
+            ctx.stroke();
+
+            // Vault 704 Cog Door
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath();
+            ctx.arc(20, 45, 16, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#64748b';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2.5;
+            for (let a = 0; a < 8; a++) {
+                const ang = (a * Math.PI) / 4;
+                ctx.beginPath();
+                ctx.moveTo(20 + Math.cos(ang) * 13, 45 + Math.sin(ang) * 13);
+                ctx.lineTo(20 + Math.cos(ang) * 17, 45 + Math.sin(ang) * 17);
+                ctx.stroke();
+            }
+            ctx.fillStyle = '#fef08a';
+            ctx.font = 'bold 7px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('704', 20, 48);
+
+            // Airlock
+            ctx.fillStyle = '#111813';
+            ctx.fillRect(36, 36, 40, 18);
+            ctx.strokeStyle = '#2f4530';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(36, 36, 40, 18);
+            ctx.fillStyle = '#10b981';
+            ctx.fillRect(72, 38, 2, 14);
+
+            // Elevator Shaft
+            ctx.fillStyle = '#090d0b';
+            ctx.fillRect(480, 16, 35, 116);
+            ctx.strokeStyle = '#334155';
+            ctx.strokeRect(480, 16, 35, 116);
+            ctx.strokeStyle = 'rgba(100, 116, 139, 0.3)';
+            ctx.beginPath();
+            for (let ey = 20; ey < 130; ey += 16) {
+                ctx.moveTo(480, ey); ctx.lineTo(515, ey + 16);
+                ctx.moveTo(515, ey); ctx.lineTo(480, ey + 16);
+            }
+            ctx.stroke();
+            ctx.strokeStyle = '#94a3b8';
+            ctx.beginPath();
+            ctx.moveTo(497, 16); ctx.lineTo(497, 132);
+            ctx.stroke();
+
+            // Elevator Car
+            const elevY = 22 + Math.floor((Math.sin(t * 0.8) * 0.5 + 0.5) * 74);
+            ctx.fillStyle = '#ca8a04';
+            ctx.fillRect(484, elevY, 27, 24);
+            ctx.strokeStyle = '#fef08a';
+            ctx.strokeRect(484, elevY, 27, 24);
+            ctx.fillStyle = 'rgba(254, 240, 138, 0.4)';
+            ctx.fillRect(486, elevY + 3, 23, 18);
+            ctx.fillStyle = '#422006';
+            ctx.fillRect(491, elevY + 5, 2, 14);
+            ctx.fillRect(497, elevY + 5, 2, 14);
+            ctx.fillRect(503, elevY + 5, 2, 14);
+
+            // Rooms
+            for (const r of VAULT_ROOM_SPECS) {
+                ctx.fillStyle = '#0e1610';
+                ctx.fillRect(r.x, r.y, r.w, r.h);
+                ctx.strokeStyle = (vaultHoverRoom && vaultHoverRoom.id === r.id) ? 'var(--border-corner)' : '#1f2e21';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(r.x, r.y, r.w, r.h);
+
+                ctx.fillStyle = 'rgba(26, 37, 27, 0.7)';
+                ctx.fillRect(r.x + 1, r.y + 1, r.w - 2, 8);
+                ctx.fillStyle = r.color;
+                ctx.font = 'bold 6px monospace';
+                ctx.textAlign = 'left';
+                ctx.fillText(r.name, r.x + 4, r.y + 7);
+
+                if (r.id === 'cmd') {
+                    const rcx = r.x + 22, rcy = r.y + 28;
+                    ctx.strokeStyle = '#065f46';
+                    ctx.beginPath();
+                    ctx.arc(rcx, rcy, 12, 0, Math.PI * 2);
+                    ctx.stroke();
+                    const sweep = t * 2.5;
+                    ctx.strokeStyle = '#10b981';
+                    ctx.beginPath();
+                    ctx.moveTo(rcx, rcy);
+                    ctx.lineTo(rcx + Math.cos(sweep) * 11, rcy + Math.sin(sweep) * 11);
+                    ctx.stroke();
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.fillRect(rcx + 4, rcy - 5, 2, 2);
+                    ctx.fillRect(rcx - 6, rcy + 3, 2, 2);
+                    ctx.fillStyle = '#1e293b';
+                    ctx.fillRect(r.x + 42, r.y + 15, 24, 30);
+                    ctx.fillStyle = (Math.floor(t * 4) % 2 === 0) ? '#10b981' : '#f59e0b';
+                    ctx.fillRect(r.x + 46, r.y + 18, 3, 3);
+                    ctx.fillRect(r.x + 52, r.y + 18, 3, 3);
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.fillRect(r.x + 46, r.y + 24, 16, 2);
+                    ctx.fillRect(r.x + 46, r.y + 29, 16, 2);
+                    ctx.fillStyle = '#334155';
+                    ctx.fillRect(r.x + 80, r.y + 32, 24, 14);
+                    ctx.fillStyle = '#047857';
+                    ctx.fillRect(r.x + 86, r.y + 22, 12, 10);
+                    ctx.fillStyle = '#6ee7b7';
+                    ctx.fillRect(r.x + 88, r.y + 24, 8, 6);
+                } else if (r.id === 'farm') {
+                    ctx.fillStyle = '#701a75';
+                    ctx.fillRect(r.x + 10, r.y + 10, r.w - 20, 3);
+                    ctx.fillStyle = 'rgba(232, 121, 249, 0.18)';
+                    ctx.beginPath();
+                    ctx.moveTo(r.x + 10, r.y + 13);
+                    ctx.lineTo(r.x + 4, r.y + 44);
+                    ctx.lineTo(r.x + r.w - 4, r.y + 44);
+                    ctx.lineTo(r.x + r.w - 10, r.y + 13);
+                    ctx.fill();
+                    ctx.fillStyle = '#291809';
+                    ctx.fillRect(r.x + 8, r.y + 38, r.w - 16, 8);
+                    ctx.fillStyle = '#22c55e';
+                    for (let c = 0; c < 8; c++) {
+                        const cx = r.x + 14 + c * 14;
+                        const sway = Math.sin(t * 3 + c) * 1.5;
+                        ctx.fillRect(cx + sway, r.y + 26, 2, 12);
+                        ctx.fillRect(cx - 2 + sway, r.y + 26, 6, 4);
+                    }
+                } else if (r.id === 'quarters') {
+                    ctx.fillStyle = '#1e3a8a';
+                    ctx.fillRect(r.x + 10, r.y + 20, 36, 6);
+                    ctx.fillRect(r.x + 10, r.y + 36, 36, 6);
+                    ctx.fillStyle = '#f8fafc';
+                    ctx.fillRect(r.x + 40, r.y + 19, 5, 5);
+                    ctx.fillRect(r.x + 40, r.y + 35, 5, 5);
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillRect(r.x + 8, r.y + 15, 2, 32);
+                    ctx.fillRect(r.x + 46, r.y + 15, 2, 32);
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.fillRect(r.x + 75, r.y + 28, 4, 6);
+                    ctx.fillStyle = 'rgba(245, 158, 11, 0.25)';
+                    ctx.beginPath();
+                    ctx.arc(r.x + 77, r.y + 31, 12, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (r.id === 'workshop') {
+                    ctx.fillStyle = '#475569';
+                    ctx.fillRect(r.x + 20, r.y + 32, 22, 6);
+                    ctx.fillRect(r.x + 26, r.y + 38, 10, 8);
+                    ctx.fillStyle = '#334155';
+                    ctx.fillRect(r.x + 55, r.y + 15, 26, 18);
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.fillRect(r.x + 60, r.y + 18, 2, 10);
+                    ctx.fillRect(r.x + 66, r.y + 20, 8, 2);
+                    if (Math.floor(t * 8) % 4 === 0) {
+                        ctx.fillStyle = '#fbbf24';
+                        ctx.fillRect(r.x + 38, r.y + 28, 2, 2);
+                        ctx.fillRect(r.x + 42, r.y + 24, 1.5, 1.5);
+                        ctx.fillRect(r.x + 35, r.y + 22, 1.5, 1.5);
+                    }
+                } else if (r.id === 'gen') {
+                    const tcx = r.x + 35, tcy = r.y + 30;
+                    ctx.fillStyle = '#1c1917';
+                    ctx.beginPath();
+                    ctx.arc(tcx, tcy, 18, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#78350f';
+                    ctx.stroke();
+                    const spin = t * 4;
+                    ctx.strokeStyle = '#ca8a04';
+                    ctx.lineWidth = 1.5;
+                    for (let s = 0; s < 4; s++) {
+                        const sang = spin + (s * Math.PI) / 2;
+                        ctx.beginPath();
+                        ctx.moveTo(tcx, tcy);
+                        ctx.lineTo(tcx + Math.cos(sang) * 16, tcy + Math.sin(sang) * 16);
+                        ctx.stroke();
+                    }
+                    const pulse = Math.sin(t * 6) * 2;
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.beginPath();
+                    ctx.arc(tcx, tcy, 6 + pulse, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#fef3c7';
+                    ctx.beginPath();
+                    ctx.arc(tcx, tcy, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    if (Math.random() > 0.4) {
+                        ctx.strokeStyle = '#38bdf8';
+                        ctx.beginPath();
+                        ctx.moveTo(tcx + 14, tcy - 8);
+                        ctx.lineTo(tcx + 20 + Math.random() * 4, tcy - 5 + Math.random() * 4);
+                        ctx.stroke();
+                    }
+                    ctx.fillStyle = '#1e293b';
+                    ctx.fillRect(r.x + 75, r.y + 16, 55, 30);
+                    for (let b = 0; b < 4; b++) {
+                        ctx.fillStyle = '#10b981';
+                        ctx.fillRect(r.x + 80 + b * 13, r.y + 22, 8, 18);
+                    }
+                } else if (r.id === 'water') {
+                    for (let c = 0; c < 3; c++) {
+                        const cx = r.x + 20 + c * 38;
+                        ctx.fillStyle = '#082f49';
+                        ctx.fillRect(cx, r.y + 14, 24, 34);
+                        ctx.strokeStyle = '#0284c7';
+                        ctx.strokeRect(cx, r.y + 14, 24, 34);
+                        const rip = Math.sin(t * 3 + c) * 2;
+                        ctx.fillStyle = 'rgba(6, 182, 212, 0.65)';
+                        ctx.fillRect(cx + 1, r.y + 22 + rip, 22, 25 - rip);
+                        const by = r.y + 40 - ((t * 20 + c * 8) % 18);
+                        ctx.fillStyle = '#e0f2fe';
+                        ctx.fillRect(cx + 6 + (c % 2) * 8, by, 2, 2);
+                    }
+                    ctx.strokeStyle = '#94a3b8';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(r.x + 44, r.y + 24); ctx.lineTo(r.x + 58, r.y + 24);
+                    ctx.moveTo(r.x + 82, r.y + 24); ctx.lineTo(r.x + 96, r.y + 24);
+                    ctx.stroke();
+                } else if (r.id === 'infirmary') {
+                    ctx.fillStyle = '#ef4444';
+                    ctx.fillRect(r.x + 14, r.y + 16, 4, 12);
+                    ctx.fillRect(r.x + 10, r.y + 20, 12, 4);
+                    ctx.fillStyle = '#334155';
+                    ctx.fillRect(r.x + 36, r.y + 32, 38, 6);
+                    ctx.fillStyle = '#f8fafc';
+                    ctx.fillRect(r.x + 38, r.y + 26, 10, 6);
+                    ctx.fillStyle = '#022c22';
+                    ctx.fillRect(r.x + 85, r.y + 16, 32, 20);
+                    ctx.strokeStyle = '#10b981';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(r.x + 85, r.y + 16, 32, 20);
+                    ctx.beginPath();
+                    ctx.moveTo(r.x + 86, r.y + 26);
+                    ctx.lineTo(r.x + 94, r.y + 26);
+                    ctx.lineTo(r.x + 97, r.y + 19);
+                    ctx.lineTo(r.x + 100, r.y + 32);
+                    ctx.lineTo(r.x + 103, r.y + 26);
+                    ctx.lineTo(r.x + 115, r.y + 26);
+                    ctx.stroke();
+                } else if (r.id === 'security') {
+                    ctx.fillStyle = '#334155';
+                    ctx.fillRect(r.x + 15, r.y + 16, 30, 28);
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.fillRect(r.x + 20, r.y + 19, 20, 2);
+                    ctx.fillRect(r.x + 20, r.y + 26, 20, 2);
+                    ctx.fillRect(r.x + 20, r.y + 33, 20, 2);
+                    ctx.strokeStyle = 'rgba(239, 68, 68, 0.7)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(r.x + 60, r.y + 24);
+                    ctx.lineTo(r.x + 88, r.y + 34);
+                    ctx.stroke();
+                }
+            }
+
+            // Dwellers
+            for (const d of vaultDwellers) {
+                d.x += d.vx;
+                d.animTick++;
+                if (d.animTick > 8) {
+                    d.frame = (d.frame + 1) % 2;
+                    d.animTick = 0;
+                }
+                const minX = d.room.x + 10;
+                const maxX = d.room.x + d.room.w - 14;
+                if (d.x < minX) { d.x = minX; d.vx = Math.abs(d.vx); }
+                else if (d.x > maxX) { d.x = maxX; d.vx = -Math.abs(d.vx); }
+
+                const dx = Math.floor(d.x);
+                const dy = d.room.y + d.room.h - 13;
+
+                ctx.fillStyle = d.role === 0 ? '#10b981' : (d.role === 1 ? '#f97316' : '#d97706');
+                ctx.fillRect(dx + 1, dy, 5, 2);
+                ctx.fillStyle = '#fed7aa';
+                ctx.fillRect(dx + 1, dy + 2, 5, 4);
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(d.vx > 0 ? dx + 4 : dx + 2, dy + 3, 1, 1);
+
+                ctx.fillStyle = '#1e3a8a';
+                ctx.fillRect(dx, dy + 6, 7, 4);
+                ctx.fillStyle = '#f59e0b';
+                ctx.fillRect(dx + 3, dy + 6, 1, 4);
+
+                ctx.fillStyle = '#1e3a8a';
+                if (d.frame === 0) {
+                    ctx.fillRect(dx + 1, dy + 10, 2, 3);
+                    ctx.fillRect(dx + 4, dy + 10, 2, 3);
+                } else {
+                    ctx.fillRect(dx, dy + 10, 2, 3);
+                    ctx.fillRect(dx + 5, dy + 10, 2, 3);
+                }
+            }
+
+            // Ash Particles
+            for (const p of vaultParticles) {
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.x < 0) p.x = w;
+                if (p.x > w) p.x = 0;
+                if (p.y < 0) p.y = h;
+                if (p.y > h) p.y = 0;
+
+                ctx.fillStyle = (p.type === 'rad') ? `rgba(52, 211, 153, ${p.alpha})` : `rgba(245, 158, 11, ${p.alpha * 0.7})`;
+                ctx.fillRect(Math.floor(p.x), Math.floor(p.y), 1.5, 1.5);
+            }
+        }
+
+        function updateVaultCutawayRooms() {
+            if (!vaultCanvas) initVaultCutaway();
         }
 
         // Shelter State Model
@@ -5248,19 +5907,27 @@
                 const canUpgrade = curLvl < 3 && state.scrap >= upgCost;
                 const upgBtnText = curLvl >= 3 ? 'MAX LEVEL' : `UPGRADE LV${curLvl + 1} (${upgCost}S)`;
 
+                card.id = 'fac-card-' + fac.id;
                 card.innerHTML = `
-                    <div class="fac-top">
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <span class="fac-name">${fac.name}</span>
-                            <span class="fac-level" style="color:var(--accent-amber); font-weight:bold; font-size:10px;">LVL ${curLvl}</span>
+                    <div style="display:flex; gap:8px; align-items:flex-start;">
+                        <div class="fac-badge-icon" style="flex-shrink:0; width:44px; height:44px; border:1px solid var(--panel-border); background:rgba(0,0,0,0.45); border-radius:2px; display:flex; align-items:center; justify-content:center; box-shadow:inset 0 0 8px rgba(0,0,0,0.6);">
+                            ${getFacilitySvgIcon(fac.id, curLvl, assignedWorkers.length > 0)}
                         </div>
-                        ${statusHtml}
-                    </div>
-                    <div class="fac-stats">
-                        ${fac.desc}<br>
-                        <strong>${yieldText}</strong><br>
-                        <span style="color:var(--text-dim);">Power Draw: ${fac.powerCost > 0 ? `-${fac.powerCost} kW` : 'Self-Sufficient'}</span>
-                        ${staffDetailHtml}
+                        <div style="flex:1; min-width:0;">
+                            <div class="fac-top">
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <span class="fac-name">${fac.name}</span>
+                                    <span class="fac-level" style="color:var(--accent-amber); font-weight:bold; font-size:10px;">LVL ${curLvl}</span>
+                                </div>
+                                ${statusHtml}
+                            </div>
+                            <div class="fac-stats" style="margin-top:2px;">
+                                ${fac.desc}<br>
+                                <strong>${yieldText}</strong><br>
+                                <span style="color:var(--text-dim);">Power Draw: ${fac.powerCost > 0 ? `-${fac.powerCost} kW` : 'Self-Sufficient'}</span>
+                                ${staffDetailHtml}
+                            </div>
+                        </div>
                     </div>
                     ${workerControlHtml}
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; padding-top:4px; border-top:1px dashed var(--panel-border);">
@@ -5275,6 +5942,7 @@
             });
 
             renderBlueprints();
+            updateVaultCutawayRooms();
         }
 
         function renderBlueprints() {
@@ -5554,7 +6222,7 @@
             if (!list) return;
             list.innerHTML = '';
 
-            state.survivors.forEach(surv => {
+            state.survivors.forEach((surv, index) => {
                 const row = document.createElement('div');
                 row.className = 'survivor-row';
 
@@ -5605,13 +6273,18 @@
                 });
 
                 row.innerHTML = `
-                    <div class="survivor-identity">
-                        <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
-                            <span class="survivor-name">${surv.name}</span>
-                            ${effBadge}
-                            ${moodBadge}
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div class="dweller-avatar-wrap" style="flex-shrink:0; width:40px; height:48px; border:1px solid var(--panel-border); background:#060a07; border-radius:2px; display:flex; align-items:center; justify-content:center; box-shadow:inset 0 0 6px rgba(0,0,0,0.7); overflow:hidden;">
+                            ${getDwellerAvatarSvg(surv, index)}
                         </div>
-                        <span class="survivor-role">${surv.role} &bull; <strong style="color:var(--text-bright);">STR:${surv.str} AGI:${surv.agi} INT:${surv.int}</strong></span>
+                        <div class="survivor-identity">
+                            <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
+                                <span class="survivor-name">${surv.name}</span>
+                                ${effBadge}
+                                ${moodBadge}
+                            </div>
+                            <span class="survivor-role">${surv.role} &bull; <strong style="color:var(--text-bright);">STR:${surv.str} AGI:${surv.agi} INT:${surv.int}</strong></span>
+                        </div>
                     </div>
                     <div class="survivor-meters" style="min-width:180px;">
                         <div class="meter-group">
@@ -5680,20 +6353,18 @@
         }
 
         function deconShower(survId) {
-            const waterCost = 5;
-            const scrapCost = 5;
-            if (state.water < waterCost || state.scrap < scrapCost) {
-                logEvent(`Insufficient resources for Decon Shower! Need ${waterCost} Water and ${scrapCost} Scrap.`, 'warn');
+            if (state.water < 5 || state.scrap < 5) {
+                logEvent('Insufficient purified water and tech scrap for Decontamination Shower cycle!', 'warn');
                 playSound('alert');
                 return;
             }
             const surv = state.survivors.find(s => s.id === survId);
             if (!surv) return;
-            state.water -= waterCost;
-            state.scrap -= scrapCost;
+            state.water -= 5;
+            state.scrap -= 5;
             surv.rads = Math.max(0, (surv.rads || 0) - 25);
-            surv.morale = Math.min(100, surv.morale + 3);
-            logEvent(`DECONTAMINATION: ${surv.name} cycled through high-pressure isotope decon shower. Rads reduced to ${surv.rads}.`, 'info');
+            surv.morale = Math.min(100, surv.morale + 4);
+            logEvent(`DECONTAMINATION: High-pressure saline shower cleansed acute surface radiation on ${surv.name}.`, 'cycle');
             playSound('pump');
             updateAll();
         }
@@ -5713,32 +6384,39 @@
 
             const canAdmit = state.population < state.maxPop;
 
-            state.candidates.forEach(cand => {
+            state.candidates.forEach((cand, idx) => {
                 const card = document.createElement('div');
                 card.className = 'bp-card';
                 card.style.padding = '8px';
 
                 card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-size:12px; font-weight:bold; color:var(--text-bright);">${cand.name}</span>
-                        <span style="font-size:9px; color:var(--accent-amber); font-weight:bold; background:rgba(245,158,11,0.15); padding:1px 5px; border:1px solid rgba(245,158,11,0.3); border-radius:2px;">${cand.role}</span>
-                    </div>
-                    <div style="font-size:10px; color:var(--text-main); margin-top:2px;">
-                        <strong>Trait:</strong> ${cand.trait || 'Hardy Wastelander'}
-                    </div>
-                    <div style="font-size:10px; color:var(--text-dim); margin-top:2px;">
-                        Attributes: <strong style="color:var(--text-bright);">STR ${cand.str}</strong> &bull; <strong style="color:var(--text-bright);">AGI ${cand.agi}</strong> &bull; <strong style="color:var(--text-bright);">INT ${cand.int}</strong>
-                    </div>
-                    <div style="font-size:10px; color:var(--text-dim);">
-                        Condition: Health ${cand.health}% &bull; Morale ${cand.morale}%
-                    </div>
-                    <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:6px; padding-top:4px; border-top:1px dashed var(--panel-border);">
-                        <button class="btn-upgrade" onclick="dismissCandidate('${cand.id}')" style="font-size:9px; color:var(--danger-red); border-color:var(--panel-border);">
-                            TURN AWAY
-                        </button>
-                        <button class="btn-upgrade" onclick="admitCandidate('${cand.id}')" ${!canAdmit ? 'disabled' : ''} style="font-size:9px; color:var(--accent-green); font-weight:bold; border-color:var(--border-corner);">
-                            ${canAdmit ? 'ADMIT TO VAULT' : 'QUARTERS FULL'}
-                        </button>
+                    <div style="display:flex; gap:8px; align-items:flex-start;">
+                        <div class="dweller-avatar-wrap" style="flex-shrink:0; width:40px; height:48px; border:1px solid var(--panel-border); background:#060a07; border-radius:2px; display:flex; align-items:center; justify-content:center; box-shadow:inset 0 0 6px rgba(0,0,0,0.7); overflow:hidden;">
+                            ${getDwellerAvatarSvg(cand, 20 + idx)}
+                        </div>
+                        <div style="flex:1; min-width:0;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:12px; font-weight:bold; color:var(--text-bright);">${cand.name}</span>
+                                <span style="font-size:9px; color:var(--accent-amber); font-weight:bold; background:rgba(245,158,11,0.15); padding:1px 5px; border:1px solid rgba(245,158,11,0.3); border-radius:2px;">${cand.role}</span>
+                            </div>
+                            <div style="font-size:10px; color:var(--text-main); margin-top:2px;">
+                                <strong>Trait:</strong> ${cand.trait || 'Hardy Wastelander'}
+                            </div>
+                            <div style="font-size:10px; color:var(--text-dim); margin-top:2px;">
+                                Attributes: <strong style="color:var(--text-bright);">STR ${cand.str}</strong> &bull; <strong style="color:var(--text-bright);">AGI ${cand.agi}</strong> &bull; <strong style="color:var(--text-bright);">INT ${cand.int}</strong>
+                            </div>
+                            <div style="font-size:10px; color:var(--text-dim);">
+                                Condition: Health ${cand.health}% &bull; Morale ${cand.morale}%
+                            </div>
+                            <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:6px; padding-top:4px; border-top:1px dashed var(--panel-border);">
+                                <button class="btn-upgrade" onclick="dismissCandidate('${cand.id}')" style="font-size:9px; color:var(--danger-red); border-color:var(--panel-border);">
+                                    TURN AWAY
+                                </button>
+                                <button class="btn-upgrade" onclick="admitCandidate('${cand.id}')" ${!canAdmit ? 'disabled' : ''} style="font-size:9px; color:var(--accent-green); font-weight:bold; border-color:var(--border-corner);">
+                                    ${canAdmit ? 'ADMIT TO VAULT' : 'QUARTERS FULL'}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 `;
 
@@ -5941,23 +6619,30 @@
                 }
 
                 card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
-                        <span class="scout-name">${exp.name}</span>
-                        <span class="risk-badge ${riskClass}">${exp.risk}</span>
-                    </div>
-                    <div class="scout-risk">
-                        <span>Duration: <strong>${exp.duration} Day(s)</strong></span>
-                        <span style="color:var(--text-dim);">Hazard Tier ${exp.riskLevel || 1}</span>
-                    </div>
-                    <div style="font-size:10px; color:var(--text-main); line-height:1.35;">${exp.desc}</div>
-                    
-                    <div class="scout-rewards">
-                        <div>Potential Yields: <strong class="reward-highlight">~${exp.potentialFood} Food</strong>, <strong class="reward-highlight">~${exp.potentialScrap} Tech Scrap</strong>, <strong class="reward-highlight">~${exp.potentialMeds} Meds</strong></div>
-                        ${bpDisplay}
-                    </div>
+                    <div style="display:flex; gap:8px; align-items:flex-start;">
+                        <div class="exp-badge-wrap" style="flex-shrink:0; width:44px; height:44px; border:1px solid var(--panel-border); background:rgba(0,0,0,0.45); border-radius:2px; display:flex; align-items:center; justify-content:center; box-shadow:inset 0 0 8px rgba(0,0,0,0.6);">
+                            ${getExpeditionLandmarkSvg(exp.id, exp.riskLevel)}
+                        </div>
+                        <div style="flex:1; min-width:0;">
+                            <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                                <span class="scout-name">${exp.name}</span>
+                                <span class="risk-badge ${riskClass}">${exp.risk}</span>
+                            </div>
+                            <div class="scout-risk" style="margin-top:2px;">
+                                <span>Duration: <strong>${exp.duration} Day(s)</strong></span>
+                                <span style="color:var(--text-dim);">Hazard Tier ${exp.riskLevel || 1}</span>
+                            </div>
+                            <div style="font-size:10px; color:var(--text-main); line-height:1.35; margin-top:2px;">${exp.desc}</div>
+                            
+                            <div class="scout-rewards" style="margin-top:4px;">
+                                <div>Potential Yields: <strong class="reward-highlight">~${exp.potentialFood} Food</strong>, <strong class="reward-highlight">~${exp.potentialScrap} Tech Scrap</strong>, <strong class="reward-highlight">~${exp.potentialMeds} Meds</strong></div>
+                                ${bpDisplay}
+                            </div>
 
-                    ${scoutInfoHtml}
-                    ${btnHtml}
+                            ${scoutInfoHtml}
+                            ${btnHtml}
+                        </div>
+                    </div>
                 `;
 
                 grid.appendChild(card);
@@ -6400,6 +7085,9 @@
                 }
             });
 
+            if (tabId === 'facilities') {
+                initVaultCutaway();
+            }
             playSound('click');
         }
 
@@ -6944,6 +7632,7 @@
             logEvent('Vault 704 Overseer System initialized. All security bulkheads sealed.', 'cycle');
             logEvent('Life support and biometric sensors operating on standby power.', 'info');
             updateAll();
+            initVaultCutaway();
         });
     </script>
 </body>

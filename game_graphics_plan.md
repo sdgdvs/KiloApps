@@ -107,7 +107,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **⚠️ PRIORITY: If ANY game in the queue is at Loop 0 (not yet processed), work on it FIRST before continuing higher-loop games.**
 
 
-- KSanctuary
 - KSnake
 - KTetris
 - KCyber
@@ -152,9 +151,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KQuest
 - KSpace
 - KPac
+- KSanctuary
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
 
+- KSanctuary (Loop 1): Sub-mountain cross-section cutaway canvas with animated dwellers and reactor telemetry, pixel-art facility icons, dweller portraits, and wasteland landmark sprites.
 - Icon Audit Pass: Created distinctive procedural ICO and vector SVG icons for all 10 missing web apps (KColony, KFarm, KWizard, KVoid, KDragon, KMech, KCyber, KTrader, KMystery, KStellar).
 - KPac (Loop 9): 3D Pac-Man with ambient aura, animated wavy-skirt ghosts with tracking pupils, high-detail fruits, energizers, and cybernetic circuit walls.
 - KSpace (Loop 9): Multi-chassis player fighter, custom projectile types, detailed enemy sprites across 14 types, capital boss encounters, and companion drones.
@@ -200,5 +201,4 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSnake (Loop 8): Screen-shake, multi-layer particles, dual shockwaves, HUD reticles, and viper body specular sheen.
 - KSubmarine (Loop 0): Not yet processed.
 - KStarDredge (Loop 0): Not yet processed.
-- KSanctuary (Loop 0): In queue.
 - KAbyss (Loop 0): In queue.
