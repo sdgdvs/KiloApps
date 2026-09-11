@@ -75,7 +75,7 @@
   .help-box td:last-child { color: #ddd; }
   .help-box button { margin-top: 14px; width: 100%; padding: 8px; }
 
-  #toast { display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #222; color: #81c784; border: 1px solid #4caf50; padding: 8px 18px; border-radius: 20px; font-size: 12px; z-index: 10000; box-shadow: 0 4px 15px rgba(0,0,0,0.6); pointer-events: none; transition: opacity 0.25s ease; opacity: 0; }
+  #toast { display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #222; color: #81c784; border: 1px solid #4caf50; padding: 8px 18px; border-radius: 20px; font-size: 12px; z-index: 10000; box-shadow: 0 4px 15px rgba(0,0,0,0.6); pointer-events: auto; cursor: pointer; transition: opacity 0.25s ease; opacity: 0; user-select: none; }
 </style>
 </head>
 <body data-width="950" data-height="700">
@@ -83,19 +83,20 @@
 <div class="header">
   <div class="title" id="title">No media selected (Press 'H' or F1 for help)</div>
   <div class="controls">
-    <button id="btnAdd">Add Media/Subtitles</button>
-    <button id="btnPlay" class="secondary">▶ Play</button>
-    <button id="btnStop" class="secondary">■ Stop</button>
-    <button id="btnPrev" class="secondary">⏮ Prev</button>
-    <button id="btnNext" class="secondary">⏭ Next</button>
-    <button id="btnSeekBack" class="secondary">« 5s</button>
-    <button id="btnSeekFwd" class="secondary">» 5s</button>
-    <button id="btnRemove" class="secondary">Remove</button>
-    <button id="btnClear" class="secondary">Clear</button>
-    <button id="btnMode" class="secondary">Mode: Normal</button>
-    <button id="btnSpeed" class="secondary">1.0x</button>
-    <button id="btnExport" class="secondary">Export Frame</button>
-    <button id="btnHelp" class="secondary">Help (F1)</button>
+    <button id="btnAdd" title="Open media or subtitle files">+ Add [Ctrl+O]</button>
+    <button id="btnDemo" class="secondary" title="Load synthetic demo audio track">🎵 Demo</button>
+    <button id="btnPlay" class="secondary" title="Play or Pause">▶ Play [Space]</button>
+    <button id="btnStop" class="secondary" title="Stop playback">■ Stop [S]</button>
+    <button id="btnPrev" class="secondary" title="Previous track">⏮ Prev [P]</button>
+    <button id="btnNext" class="secondary" title="Next track">⏭ Next [N]</button>
+    <button id="btnSeekBack" class="secondary" title="Seek backward 5s">« 5s [[]</button>
+    <button id="btnSeekFwd" class="secondary" title="Seek forward 5s">» 5s []]</button>
+    <button id="btnRemove" class="secondary" title="Remove selected track">Remove [Del]</button>
+    <button id="btnClear" class="secondary" title="Clear playlist">Clear</button>
+    <button id="btnMode" class="secondary" title="Cycle playback mode">Mode: Normal [M]</button>
+    <button id="btnSpeed" class="secondary" title="Cycle playback speed">1.0x</button>
+    <button id="btnExport" class="secondary" title="Export current frame">Export [E]</button>
+    <button id="btnHelp" class="secondary" title="Help and shortcuts">Help [F1]</button>
   </div>
   <div class="seek-bar-container">
     <span id="timeDisplay" style="font-variant-numeric: tabular-nums; min-width: 90px;">0:00 / 0:00</span>
@@ -114,7 +115,8 @@
       <div class="empty-state" id="emptyState">
         <div class="empty-icon">🎬</div>
         <div class="empty-title">No Media Loaded</div>
-        <div class="empty-desc">Drag &amp; drop audio, video, or subtitle files here, or click <strong>Add Media</strong> to get started.</div>
+        <div class="empty-desc">Drag &amp; drop audio, video, or subtitle files here, or click <strong>+ Add [Ctrl+O]</strong> to get started.</div>
+        <button id="btnEmptyDemo" style="margin-top:14px; background:#2e7d32; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; border:none; border-radius:4px; color:#fff; pointer-events:auto; transition:background 0.15s ease;" onmouseover="this.style.background='#388e3c'" onmouseout="this.style.background='#2e7d32'">🎵 Load Demo Audio Track</button>
         <div class="empty-hint">Press <strong>H</strong> or <strong>F1</strong> for keyboard shortcuts</div>
       </div>
       <div class="drop-overlay" id="dropOverlay">
@@ -159,6 +161,7 @@
   <div class="help-box" id="helpBox">
     <h2 id="helpTitle">KMedia Shortcuts &amp; Help</h2>
     <table>
+      <tr><td>Ctrl+O</td><td>Open / Add Media Files</td></tr>
       <tr><td>Space</td><td>Play / Pause</td></tr>
       <tr><td>Left / Right Arrow</td><td>Seek Backward / Forward 5s</td></tr>
       <tr><td>[ / ]</td><td>Seek Backward / Forward 5s</td></tr>
@@ -168,9 +171,10 @@
       <tr><td>Del</td><td>Remove selected track</td></tr>
       <tr><td>S</td><td>Stop Playback</td></tr>
       <tr><td>M</td><td>Cycle Playback Mode</td></tr>
+      <tr><td>E / Ctrl+E</td><td>Export Video Frame</td></tr>
       <tr><td>F</td><td>Toggle Fullscreen</td></tr>
       <tr><td>H / F1</td><td>Toggle this Help screen</td></tr>
-      <tr><td>Esc</td><td>Close Help / Exit Fullscreen</td></tr>
+      <tr><td>Esc</td><td>Close Help / Clear Search</td></tr>
       <tr><td>Drag &amp; Drop</td><td>Drop files to add to playlist</td></tr>
       <tr><td>Click Video</td><td>Play / Pause toggle</td></tr>
       <tr><td>Double Click</td><td>Toggle Fullscreen</td></tr>
@@ -185,6 +189,8 @@
   const UI = {
     title: document.getElementById('title'),
     btnAdd: document.getElementById('btnAdd'),
+    btnDemo: document.getElementById('btnDemo'),
+    btnEmptyDemo: document.getElementById('btnEmptyDemo'),
     btnPlay: document.getElementById('btnPlay'),
     btnStop: document.getElementById('btnStop'),
     btnPrev: document.getElementById('btnPrev'),
@@ -254,14 +260,80 @@
   function showToast(msg) {
     const toast = document.getElementById('toast');
     toast.textContent = msg;
+    toast.title = "Click to dismiss";
     toast.style.display = 'block';
     setTimeout(() => { toast.style.opacity = '1'; }, 10);
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => {
       toast.style.opacity = '0';
       setTimeout(() => { toast.style.display = 'none'; }, 250);
-    }, 2400);
+    }, 2800);
   }
+  document.getElementById('toast').onclick = () => {
+    const toast = document.getElementById('toast');
+    clearTimeout(toastTimer);
+    toast.style.opacity = '0';
+    setTimeout(() => { toast.style.display = 'none'; }, 250);
+  };
+
+  function generateDemoAudio() {
+    const sampleRate = 22050;
+    const duration = 6.0;
+    const numSamples = Math.floor(sampleRate * duration);
+    const buffer = new ArrayBuffer(44 + numSamples * 2);
+    const view = new DataView(buffer);
+
+    function writeString(v, offset, str) {
+      for (let i = 0; i < str.length; i++) {
+        v.setUint8(offset + i, str.charCodeAt(i));
+      }
+    }
+    writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + numSamples * 2, true);
+    writeString(view, 8, 'WAVE');
+    writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true); // PCM
+    view.setUint16(22, 1, true); // Mono
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeString(view, 36, 'data');
+    view.setUint32(40, numSamples * 2, true);
+
+    const notes = [261.63, 329.63, 392.00, 523.25, 440.00, 349.23, 392.00, 329.63];
+    const tempo = 0.25;
+    for (let i = 0; i < numSamples; i++) {
+      const t = i / sampleRate;
+      const noteIdx = Math.floor(t / tempo) % notes.length;
+      const freq = notes[noteIdx];
+      const bassFreq = (Math.floor(t / (tempo * 4)) % 2 === 0) ? 130.81 : 110.00;
+      const noteT = (t % tempo);
+      const env = Math.max(0, 1 - noteT / tempo);
+      const lead = Math.sin(2 * Math.PI * freq * t) * 0.45 * env;
+      const bass = Math.sin(2 * Math.PI * bassFreq * t) * 0.35;
+      const sample = Math.max(-1, Math.min(1, lead + bass));
+      view.setInt16(44 + i * 2, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+    }
+    return new Blob([buffer], { type: 'audio/wav' });
+  }
+
+  function loadDemoTrack() {
+    try {
+      const blob = generateDemoAudio();
+      const url = URL.createObjectURL(blob);
+      playlist.push({ name: 'Demo - Synth Arpeggio Loop.wav', url: url });
+      renderPlaylist();
+      playTrack(playlist.length - 1);
+      showToast('Loaded demo audio track!');
+    } catch (e) {
+      showToast('Failed to generate demo track: ' + e.message);
+    }
+  }
+
+  if (UI.btnDemo) UI.btnDemo.onclick = loadDemoTrack;
+  if (UI.btnEmptyDemo) UI.btnEmptyDemo.onclick = loadDemoTrack;
 
   // Setup Canvas Crispness & Idle Display
   const wCtx = UI.waveform.getContext('2d');
@@ -420,12 +492,12 @@
 
   // Play/Pause State Synchronization
   UI.mediaPlayer.addEventListener('play', () => {
-    UI.btnPlay.textContent = '⏸ Pause';
+    UI.btnPlay.textContent = '⏸ Pause [Space]';
     UI.btnPlay.classList.remove('secondary');
   });
 
   UI.mediaPlayer.addEventListener('pause', () => {
-    UI.btnPlay.textContent = '▶ Play';
+    UI.btnPlay.textContent = '▶ Play [Space]';
     UI.btnPlay.classList.add('secondary');
   });
 
@@ -439,7 +511,7 @@
     if (UI.mediaPlayer.src) {
       UI.mediaPlayer.pause();
       UI.mediaPlayer.currentTime = 0;
-      UI.btnPlay.textContent = '▶ Play';
+      UI.btnPlay.textContent = '▶ Play [Space]';
       UI.btnPlay.classList.add('secondary');
     }
   };
@@ -511,7 +583,7 @@
   UI.btnMode.onclick = () => {
     currentModeIndex = (currentModeIndex + 1) % modes.length;
     safeSetStorage('kmedia_mode', currentModeIndex);
-    UI.btnMode.textContent = 'Mode: ' + modes[currentModeIndex];
+    UI.btnMode.textContent = 'Mode: ' + modes[currentModeIndex] + ' [M]';
     showToast('Mode: ' + modes[currentModeIndex]);
   };
 
@@ -852,6 +924,18 @@
       return;
     }
 
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') {
+      UI.fileInput.click();
+      e.preventDefault();
+      return;
+    }
+
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') {
+      UI.btnExport.click();
+      e.preventDefault();
+      return;
+    }
+
     if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
       helpOverlay.style.display = helpOverlay.style.display === 'flex' ? 'none' : 'flex';
       e.preventDefault();
@@ -895,6 +979,9 @@
     } else if (e.key.toLowerCase() === 'm') {
       UI.btnMode.click();
       e.preventDefault();
+    } else if (e.key.toLowerCase() === 'e') {
+      UI.btnExport.click();
+      e.preventDefault();
     } else if (e.key.toLowerCase() === 'f') {
       toggleFullscreen();
       e.preventDefault();
@@ -913,7 +1000,7 @@
   });
 
   // Restore saved state
-  UI.btnMode.textContent = 'Mode: ' + modes[currentModeIndex];
+  UI.btnMode.textContent = 'Mode: ' + modes[currentModeIndex] + ' [M]';
   UI.btnSpeed.textContent = speeds[currentSpeedIndex].toFixed(1) + 'x';
   UI.mediaPlayer.playbackRate = speeds[currentSpeedIndex];
 
@@ -929,6 +1016,11 @@
 
   updateVolume(lastVolume);
   renderPlaylist();
+
+  // Startup welcome toast notification
+  setTimeout(() => {
+    showToast("Welcome to KMedia! Press 'H' or F1 for help, or drop files to play.");
+  }, 350);
 </script>
 </body>
 </html>

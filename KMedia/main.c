@@ -51,7 +51,7 @@ int g_playbackMode = 0;
 int g_speedIndex = 0;
 const int g_speeds[] = {1000, 1250, 1500, 2000, 500};
 const char* g_speedLabels[] = {"Spd: 1.0x", "Spd: 1.25x", "Spd: 1.5x", "Spd: 2.0x", "Spd: 0.5x"};
-const char* g_modeLabels[] = {"Mode: Normal", "Mode: Repeat All", "Mode: Repeat 1", "Mode: Shuffle"};
+const char* g_modeLabels[] = {"Mode: Normal [M]", "Mode: Repeat All [M]", "Mode: Repeat 1 [M]", "Mode: Shuffle [M]"};
 
 int g_volume = 1000;
 int g_lastVolume = 1000;
@@ -293,6 +293,10 @@ void PlayTrackByIndex(int masterIdx) {
         char titleBuf[MAX_PATH + 64];
         wsprintfA(titleBuf, "%s (Press 'H' or F1 for help)", title);
         SetWindowTextA(hTitle, titleBuf);
+
+        char winTitle[MAX_PATH + 64];
+        wsprintfA(winTitle, "KMedia - [%s] - [F1 Help]", title);
+        SetWindowTextA(g_hwndMain, winTitle);
         
         mciSendStringA("close myMedia", NULL, 0, NULL);
         wsprintfA(mciCmd, "open \"%s\" alias myMedia", currentFile);
@@ -308,7 +312,7 @@ void PlayTrackByIndex(int masterIdx) {
         mciSendStringA(mciCmd, NULL, 0, NULL);
         
         mciSendStringA("play myMedia from 0 notify", NULL, 0, g_hwndMain);
-        SetWindowTextA(hBtnPlay, "Pause");
+        SetWindowTextA(hBtnPlay, "Pause [Space]");
         
         LoadSrt(currentFile);
         
@@ -348,7 +352,8 @@ void PlayNextTrackAuto() {
         if (g_currentIndex + 1 < g_trackCount) {
             PlayTrackByIndex(g_currentIndex + 1);
         } else {
-            SetWindowTextA(hBtnPlay, "Play");
+            SetWindowTextA(hBtnPlay, "Play [Space]");
+            SetWindowTextA(g_hwndMain, "KMedia - [Finished] - [F1 Help]");
         }
     }
 }
@@ -378,10 +383,10 @@ void TogglePlayPause() {
         mciSendStringA("status myMedia mode", modeStr, sizeof(modeStr), NULL);
         if (lstrcmpA(modeStr, "playing") == 0) {
             mciSendStringA("pause myMedia", NULL, 0, NULL);
-            SetWindowTextA(hBtnPlay, "Play");
+            SetWindowTextA(hBtnPlay, "Play [Space]");
         } else {
             mciSendStringA("play myMedia notify", NULL, 0, g_hwndMain);
-            SetWindowTextA(hBtnPlay, "Pause");
+            SetWindowTextA(hBtnPlay, "Pause [Space]");
         }
     } else if (g_trackCount > 0) {
         PlaySelectedTrack();
@@ -391,7 +396,8 @@ void TogglePlayPause() {
 void StopTrack() {
     mciSendStringA("stop myMedia", NULL, 0, NULL);
     mciSendStringA("seek myMedia to start", NULL, 0, NULL);
-    SetWindowTextA(hBtnPlay, "Play");
+    SetWindowTextA(hBtnPlay, "Play [Space]");
+    SetWindowTextA(g_hwndMain, "KMedia - [Stopped] - [F1 Help]");
 }
 
 void SeekRelative(int msDelta) {
@@ -472,17 +478,20 @@ void ExportFrameToBMP() {
 void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd,
         "KMedia Keyboard & Mouse Shortcuts:\n\n"
-        "  Space            Play / Pause\n"
+        "  Ctrl+O           Add / Open Media Files\n"
+        "  Space            Play / Pause Toggle\n"
+        "  S                Stop Playback\n"
         "  Left Arrow / P   Previous Track\n"
         "  Right Arrow / N  Next Track\n"
+        "  [ / ]            Seek Backward / Forward 5s\n"
         "  Up / Down Arrow  Volume Up / Down (5%)\n"
         "  U                Toggle Mute / Unmute\n"
-        "  [ / ]            Seek Backward / Forward 5s\n"
-        "  S                Stop Playback\n"
         "  M                Cycle Playback Mode\n"
-        "  Enter (Playlist) Play selected track\n"
-        "  Del (Playlist)   Remove selected track\n"
-        "  H / F1           Show this Help\n"
+        "  E / Ctrl+E       Export Video Frame to BMP\n"
+        "  Del              Remove Selected Track\n"
+        "  Enter (Search)   Focus and play matching track\n"
+        "  Esc (Search)     Clear search filter\n"
+        "  H / F1           Show this Help dialog\n"
         "  Drag & Drop      Drop audio, video, or subtitles\n"
         "  Double Click     Play track from playlist\n",
         "KMedia Help", MB_OK | MB_ICONINFORMATION);
@@ -506,76 +515,76 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hEditSearch, EM_SETCUEBANNER, FALSE, (LPARAM)L"Filter playlist... (Esc to clear)");
             
             // Row 1 controls (y=62)
-            hBtnOpen = CreateWindowEx(0, "BUTTON", "Add",
+            hBtnOpen = CreateWindowEx(0, "BUTTON", "Add [Ctrl+O]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                10, 62, 75, 26, hwnd, (HMENU)1, NULL, NULL);
+                10, 62, 95, 26, hwnd, (HMENU)1, NULL, NULL);
             SendMessage(hBtnOpen, WM_SETFONT, (WPARAM)g_hFont, TRUE);
             
-            hBtnPlay = CreateWindowEx(0, "BUTTON", "Play",
+            hBtnPlay = CreateWindowEx(0, "BUTTON", "Play [Space]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                90, 62, 75, 26, hwnd, (HMENU)2, NULL, NULL);
+                110, 62, 95, 26, hwnd, (HMENU)2, NULL, NULL);
             SendMessage(hBtnPlay, WM_SETFONT, (WPARAM)g_hFont, TRUE);
             
-            hBtnStop = CreateWindowEx(0, "BUTTON", "Stop",
+            hBtnStop = CreateWindowEx(0, "BUTTON", "Stop [S]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                170, 62, 75, 26, hwnd, (HMENU)3, NULL, NULL);
+                210, 62, 75, 26, hwnd, (HMENU)3, NULL, NULL);
             SendMessage(hBtnStop, WM_SETFONT, (WPARAM)g_hFont, TRUE);
             
             hBtnClear = CreateWindowEx(0, "BUTTON", "Clear",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                250, 62, 75, 26, hwnd, (HMENU)8, NULL, NULL);
+                290, 62, 65, 26, hwnd, (HMENU)8, NULL, NULL);
             SendMessage(hBtnClear, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
             hTimeStatus = CreateWindowEx(0, "STATIC", "0:00 / 0:00  [No Media]  Vol:100%",
                 WS_CHILD | WS_VISIBLE | SS_RIGHT,
-                335, 66, W - 36 - 335, 20, hwnd, NULL, NULL, NULL);
+                365, 66, W - 36 - 365, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hTimeStatus, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
             // Row 2 controls (y=93)
-            hBtnPrev = CreateWindowEx(0, "BUTTON", "Prev",
+            hBtnPrev = CreateWindowEx(0, "BUTTON", "Prev [P]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                 10, 93, 75, 26, hwnd, (HMENU)5, NULL, NULL);
             SendMessage(hBtnPrev, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
-            hBtnNext = CreateWindowEx(0, "BUTTON", "Next",
+            hBtnNext = CreateWindowEx(0, "BUTTON", "Next [N]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                 90, 93, 75, 26, hwnd, (HMENU)6, NULL, NULL);
             SendMessage(hBtnNext, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
-            hBtnSeekBack = CreateWindowEx(0, "BUTTON", "<< 5s",
+            hBtnSeekBack = CreateWindowEx(0, "BUTTON", "<< 5s [[]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                 170, 93, 75, 26, hwnd, (HMENU)14, NULL, NULL);
             SendMessage(hBtnSeekBack, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
-            hBtnSeekFwd = CreateWindowEx(0, "BUTTON", ">> 5s",
+            hBtnSeekFwd = CreateWindowEx(0, "BUTTON", ">> 5s []]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                 250, 93, 75, 26, hwnd, (HMENU)15, NULL, NULL);
             SendMessage(hBtnSeekFwd, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
-            hBtnRem = CreateWindowEx(0, "BUTTON", "Remove",
+            hBtnRem = CreateWindowEx(0, "BUTTON", "Rem [Del]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                330, 93, 75, 26, hwnd, (HMENU)7, NULL, NULL);
+                330, 93, 80, 26, hwnd, (HMENU)7, NULL, NULL);
             SendMessage(hBtnRem, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
             hBtnSpeed = CreateWindowEx(0, "BUTTON", "Spd: 1.0x",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                410, 93, 85, 26, hwnd, (HMENU)10, NULL, NULL);
+                415, 93, 85, 26, hwnd, (HMENU)10, NULL, NULL);
             SendMessage(hBtnSpeed, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
             // Row 3 controls (y=124)
-            hBtnMode = CreateWindowEx(0, "BUTTON", "Mode: Normal",
+            hBtnMode = CreateWindowEx(0, "BUTTON", "Mode: Normal [M]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                 10, 124, 155, 26, hwnd, (HMENU)9, NULL, NULL);
             SendMessage(hBtnMode, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
-            hBtnExport = CreateWindowEx(0, "BUTTON", "Export Frame",
+            hBtnExport = CreateWindowEx(0, "BUTTON", "Export Frame [E]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                 170, 124, 155, 26, hwnd, (HMENU)12, NULL, NULL);
             SendMessage(hBtnExport, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
-            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help (F1)",
+            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help [F1]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                330, 124, 165, 26, hwnd, (HMENU)13, NULL, NULL);
+                330, 124, 170, 26, hwnd, (HMENU)13, NULL, NULL);
             SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)g_hFont, TRUE);
             
             // ListBox
@@ -586,7 +595,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             // Subtitle / Lyrics Area
             g_hSubFont = CreateFontA(-16, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
-            hSubText = CreateWindowEx(WS_EX_CLIENTEDGE, "STATIC", "[ Subtitles will display here when playing media with .srt ]",
+            hSubText = CreateWindowEx(WS_EX_CLIENTEDGE, "STATIC", "[ Drag & drop media files here or click Add [Ctrl+O] | Press F1 for Help ]",
                 WS_CHILD | WS_VISIBLE | SS_CENTER,
                 10, H - 150, W - 36, 105, hwnd, NULL, NULL, NULL);
             SendMessage(hSubText, WM_SETFONT, (WPARAM)g_hSubFont, TRUE);
@@ -668,7 +677,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             mciSendStringA("close myMedia", NULL, 0, NULL);
                             currentFile[0] = '\0';
                             SetWindowTextA(hTitle, "No file selected (Press 'H' or F1 for help)");
-                            SetWindowTextA(hSubText, "[ Subtitles will display here when playing media with .srt ]");
+                            SetWindowTextA(hSubText, g_trackCount == 0 ? "[ Drag & drop media files here or click Add [Ctrl+O] | Press F1 for Help ]" : "[ Subtitles will display here when playing media with .srt ]");
+                            SetWindowTextA(g_hwndMain, "KMedia - [Stopped] - [F1 Help]");
                             g_currentIndex = -1;
                         } else if (g_currentIndex > masterIdx) {
                             g_currentIndex--;
@@ -688,7 +698,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 StopTrack();
                 mciSendStringA("close myMedia", NULL, 0, NULL);
                 SetWindowTextA(hTitle, "No file selected (Press 'H' or F1 for help)");
-                SetWindowTextA(hSubText, "[ Subtitles will display here when playing media with .srt ]");
+                SetWindowTextA(hSubText, "[ Drag & drop media files here or click Add [Ctrl+O] | Press F1 for Help ]");
+                SetWindowTextA(g_hwndMain, "KMedia - [Stopped] - [F1 Help]");
                 RefilterPlaylist();
             } else if (LOWORD(wParam) == 9) {
                 CycleMode();
@@ -761,7 +772,7 @@ void MainEntry() {
     RECT rc = {0, 0, W, H};
     AdjustWindowRect(&rc, style, FALSE);
 
-    g_hwndMain = CreateWindowEx(0, "KMediaApp", "KMedia", style,
+    g_hwndMain = CreateWindowEx(0, "KMediaApp", "KMedia - [F1 Help | Space Play/Pause | Drag & Drop]", style,
         CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(g_hwndMain, SW_SHOW);
@@ -773,6 +784,14 @@ void MainEntry() {
             HWND hFocus = GetFocus();
             if (msg.wParam == VK_F1 || ((msg.wParam == 'H' || msg.wParam == 'h') && hFocus != hEditSearch)) {
                 ShowHelpDialog(g_hwndMain);
+                continue;
+            }
+            if ((GetKeyState(VK_CONTROL) & 0x8000) && (msg.wParam == 'O' || msg.wParam == 'o')) {
+                OpenFileDlg(g_hwndMain);
+                continue;
+            }
+            if ((GetKeyState(VK_CONTROL) & 0x8000) && (msg.wParam == 'E' || msg.wParam == 'e')) {
+                ExportFrameToBMP();
                 continue;
             }
             if (hFocus == hListBox) {
@@ -814,6 +833,12 @@ void MainEntry() {
                     continue;
                 } else if (msg.wParam == 'M' || msg.wParam == 'm') {
                     CycleMode();
+                    continue;
+                } else if (msg.wParam == 'E' || msg.wParam == 'e') {
+                    ExportFrameToBMP();
+                    continue;
+                } else if (msg.wParam == VK_DELETE) {
+                    SendMessage(g_hwndMain, WM_COMMAND, MAKEWPARAM(7, 0), 0);
                     continue;
                 }
             } else {
