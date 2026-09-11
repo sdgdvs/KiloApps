@@ -1900,10 +1900,48 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             Init(0);
             randSeed = GetTickCount();
             SetTimer(hwnd, 1, 100, NULL);
+            lstrcpyA(saveMsgText, "WELCOME! [F1: HELP]");
+            saveMsgTimer = 35;
             break;
+        case WM_LBUTTONDOWN: {
+            if (showHelp) { showHelp = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+            if (showCraftMenu) { showCraftMenu = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+            if (gameOver) { Init(0); InvalidateRect(hwnd, NULL, FALSE); return 0; }
+            if (paused) { paused = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+
+            int mouseX = (short)LOWORD(lParam);
+            int mouseY = (short)HIWORD(lParam);
+            int offsetX = (W - 300) / 2;
+            int offsetY = (H - 350) / 2 - 20;
+            int clickX = mouseX - offsetX;
+            int clickY = mouseY - offsetY;
+            int pacX = px * TS + TS / 2;
+            int pacY = py * TS + TS / 2;
+            int dx = clickX - pacX;
+            int dy = clickY - pacY;
+
+            int adx = dx < 0 ? -dx : dx;
+            int ady = dy < 0 ? -dy : dy;
+            if (adx > ady) {
+                ndx = dx > 0 ? 1 : -1;
+                ndy = 0;
+            } else {
+                ndx = 0;
+                ndy = dy > 0 ? 1 : -1;
+            }
+            return 0;
+        }
         case WM_KEYDOWN: {
             int key = wParam;
             if (key >= 'a' && key <= 'z') key -= 32;
+
+            if (key == VK_ESCAPE) {
+                if (showHelp) { showHelp = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (showCraftMenu) { showCraftMenu = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                paused = !paused;
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
 
             if (bindState > 0) {
                 if (bindState == 1) bindUp = key;
@@ -2031,8 +2069,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (key == '1') { diffMode = 0; lstrcpyA(saveMsgText, "DIFF: EASY"); saveMsgTimer = 20; MessageBeep(MB_OK); }
             if (key == '2') { diffMode = 1; lstrcpyA(saveMsgText, "DIFF: NORMAL"); saveMsgTimer = 20; MessageBeep(MB_OK); }
             if (key == '3') { diffMode = 2; lstrcpyA(saveMsgText, "DIFF: HARD"); saveMsgTimer = 20; MessageBeep(MB_OK); }
-            if (key == 'V') SaveGame();
-            if (key == 'L') LoadGame();
+            if (key == VK_F5 || key == 'V') SaveGame();
+            if (key == VK_F9 || key == 'L') LoadGame();
             break;
         }
         case WM_TIMER:
@@ -2825,22 +2863,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetTextColor(memDC, RGB(0, 230, 118));
                 TextOutA(memDC, 20, 190, "[Tab] Toggle Relics | [C] Close", 31);
             } else if (showHelp) {
-                HBRUSH overlay = CreateSolidBrush(RGB(0, 0, 0));
-                RECT overlayRect = {0, 0, W, H};
+                HBRUSH overlay = CreateSolidBrush(RGB(5, 12, 25));
+                RECT overlayRect = {10, 15, W - 10, H - 65};
                 FillRect(memDC, &overlayRect, overlay);
                 DeleteObject(overlay);
+                HPEN bordPen = CreatePen(PS_SOLID, 2, RGB(0, 229, 255));
+                SelectObject(memDC, bordPen);
+                SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                Rectangle(memDC, 10, 15, W - 10, H - 65);
+                DeleteObject(bordPen);
+
+                SetTextColor(memDC, RGB(0, 255, 255));
+                TextOutA(memDC, 30, 24, "=== KPac Guide & Shortcuts ===", 30);
                 SetTextColor(memDC, RGB(255, 255, 255));
-                TextOutA(memDC, 70, 30, "KPac Loop 11 - Help", 19);
-                TextOutA(memDC, 25, 55, "Move: Arrows / WASD | Space: Pause", 34);
-                TextOutA(memDC, 25, 75, "Skills: F(Frz) Z(Spr) M(Mag) B(Shd)", 35);
-                TextOutA(memDC, 25, 95, "Pet: [U] Pet Ultimate | [P] Cycle Pet", 37);
-                TextOutA(memDC, 25, 115, "Mode: [O] Toggle Campaign / Endless", 35);
-                TextOutA(memDC, 25, 135, "Cyber-Forge: [C] Menu [Tab] Relics", 34);
-                TextOutA(memDC, 25, 155, "Portals: Blue/Purple Void Rifts", 31);
-                TextOutA(memDC, 25, 175, "Diff: 1(Easy) 2(Norm) 3(Hard)", 29);
-                TextOutA(memDC, 25, 195, "Save/Load: V / L | Replay: R / T", 32);
+                TextOutA(memDC, 20, 48, "Move: Arrows / WASD | Click Screen", 34);
+                TextOutA(memDC, 20, 68, "Space: Pause | Enter: Restart Game", 34);
+                TextOutA(memDC, 20, 88, "Skills: F(Freeze) Z(Speed) M(Mag) B(Shd)", 40);
+                TextOutA(memDC, 20, 108, "Pet: [U] Pet Ult | [P] Cycle Pet Type", 37);
+                TextOutA(memDC, 20, 128, "Mode: [O] Toggle Campaign / Endless", 35);
+                TextOutA(memDC, 20, 148, "Forge: [C] Cyber-Forge | [Tab] Relics", 37);
+                TextOutA(memDC, 20, 168, "Craft: [7]Pellet [8]Warp [9]Shd [0]Nuke", 39);
+                TextOutA(memDC, 20, 188, "Diff: [1]Easy  [2]Normal  [3]Hard", 33);
+                TextOutA(memDC, 20, 208, "Save/Load: [F5/V] Save | [F9/L] Load", 36);
+                TextOutA(memDC, 20, 228, "Export/Import JSON: [E] Exp | [I] Imp", 37);
                 SetTextColor(memDC, RGB(0, 230, 118));
-                TextOutA(memDC, 35, 230, "Press H or F1 to Start/Resume", 29);
+                TextOutA(memDC, 25, 252, "Press F1, H, Esc or Click to Close", 34);
             }
 
             if (saveMsgTimer > 0) {
@@ -2854,14 +2901,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (gameOver) {
                 if (gameOver == 2) {
                     SetTextColor(memDC, RGB(76, 175, 80));
-                    TextOutA(memDC, W/2 - 70, H/2 - 20, "CAMPAIGN VICTORY!", 17);
+                    TextOutA(memDC, W/2 - 80, H/2 - 20, "CAMPAIGN VICTORY! [Enter]", 25);
                 } else {
                     SetTextColor(memDC, RGB(244, 67, 54));
-                    TextOutA(memDC, W/2 - 45, H/2 - 20, "GAME OVER", 9);
+                    TextOutA(memDC, W/2 - 70, H/2 - 20, "GAME OVER - [Enter]", 19);
+                    SetTextColor(memDC, RGB(255, 215, 0));
+                    TextOutA(memDC, W/2 - 85, H/2 + 2, "Press Enter or Click to Restart", 31);
                 }
             } else if (paused) {
                 SetTextColor(memDC, RGB(255, 255, 0));
-                TextOutA(memDC, W/2 - 30, H/2 - 10, "PAUSED", 6);
+                TextOutA(memDC, W/2 - 80, H/2 - 15, "PAUSED - [Space] to Resume", 26);
+                SetTextColor(memDC, RGB(0, 229, 255));
+                TextOutA(memDC, W/2 - 70, H/2 + 5, "or Click Screen to Resume", 25);
             }
 
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
@@ -2892,7 +2943,7 @@ void MainEntry() {
     AdjustWindowRect(&rect, (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN, FALSE);
     int winW = rect.right - rect.left;
     int winH = rect.bottom - rect.top;
-    HWND hwnd = CreateWindowEx(0, "KPacApp", "KPac", (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN,
+    HWND hwnd = CreateWindowEx(0, "KPacApp", "KPac - Cyber Edition [F1: Help | Space: Pause | WASD: Move]", (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, winW, winH, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);

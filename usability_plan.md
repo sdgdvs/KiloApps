@@ -1,4 +1,4 @@
-﻿# Usability & UX Plan
+# Usability & UX Plan
 
 ## Coordination Rules (DO NOT DELETE â€” required for subagent context)
 
@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KPac
+**Target App:** KQuest
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KPac
 - KQuest
 - KNote
 - KPass
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KMaze
 - KScript
 - KMine
+- KPac
 
 ## Progress Log (trimmed by Director 2026-09-06 — keeping only latest entry per app)
+- KPac: Usability and UI issues fixed (synchronized 400x630 auto-opening window bounds in App.jsx and data-width/height, added dedicated Pause [Space] button to toolbar, added full canvas mouse click and touch swipe directional steering with pause/resume and restart handling, added cybernetic startup toast notification and centered in-game status prompts, added visible keyboard shortcut badges to D-pad buttons [▲ [W], ◀ [A], ▼ [S], ▶ [D]] in web; added WM_LBUTTONDOWN for mouse steering, overlay dismissal, pause toggle and game restart, handled VK_ESCAPE for overlay dismissal and pausing, added VK_F5/VK_F9 shortcuts for Save/Load, added startup welcome banner, redesigned in-game Help overlay with cybernetic styling and full keyboard guide, and updated window title with shortcut hint in native C).
 - KMine: Usability and UI issues fixed (integrated non-blocking cyber toast notification system with startup welcome prompt, replaced blocking alerts with custom Help & Shortcuts modal dialog [F1/?/Esc], added visual shortcut badges to toolbar buttons [Restart [F2], Hint [H], Save [F5], Load [F9], Exp [E], Imp [I], Replay [P], Help [F1]], added direct difficulty switching hotkeys [1-3], F1 help, Esc dismissal, and synchronized 1020x720 bounds in App.jsx for seamless Expert mode rendering; updated native C with ShowHelpDialog comprehensive guide and shortcuts reference, added menu shortcut accelerators, implemented keyboard shortcuts for F1/H/1-3/F2/F5/F9/E/I/P/Esc, updated window title with F1 help and difficulty hints, and verified clean compilation for both web and native builds).
 - KScript: Usability and UI issues fixed (integrated non-blocking cyber toast notification system with startup welcome prompt, replaced blocking alerts with custom Help & Shortcuts modal dialog [F1/Alt+H/Esc], added 1-click Preset Script chips [Basic Math, Variables, Accumulator, Algebra, Modulo], added Tab key indentation support [2 spaces] in editor, added visible keyboard shortcut badges to toolbar buttons [Rec [Alt+M], Play [Alt+P], Step [F10], Run [F5], Load [Ctrl+O], Save [Ctrl+S], Clear [Ctrl+K], Help [F1], Rep [Enter]], and added full hotkey suite; updated native C with single-line comment support [//], edit control subclassing for Enter-to-replace in find/replace boxes, accelerator interception for F5/F10/Ctrl+S/Ctrl+O/Alt+M/Alt+P/F1, comprehensive ShowHelpDialog reference guide, updated button labels with shortcut badges, and verified clean compilation for both web and native builds).
 - KMaze: Usability and UI issues fixed (integrated non-blocking cyber toast notification system with startup guide banner and sound unlocking, added interactive Help & Codex modal dialog [F1/H/Esc] detailing movement, active relics, item recharges, labyrinth codex, and stealth mechanics, added dynamic HUD button active countdowns and status indicators, made container layout fully responsive across all window sizes without scrollbars or clipping, added native WASD + Arrow navigation and B key support for speed shoes in both web and native C, added dedicated Win32 ShowHelpDialog guide and descriptive window title in native C, and verified clean compilation for both web and native builds).
@@ -155,7 +156,6 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KQuest: Usability and UI issues fixed (synchronized App.jsx and native client dimensions to 1000x760, added explicit F1/H help bindings with visual text in native and web versions, calculated dynamic native font heights, and verified WS_CLIPCHILDREN and SetProcessDPIAware).
 - KTodo: Usability and UI issues fixed (replaced blocking browser alerts with modern dark Help modal dialog and non-blocking toast notifications with startup welcome toast, added 1/2 view switching shortcuts, Escape and backdrop-click modal dismissal, and explicit F1/H header button in web; added WS_CLIPCHILDREN to eliminate native flicker, added ShowHelpDialog with comprehensive shortcut and feature guide, updated status bar and action buttons with explicit F1/H and shortcut hints, and implemented dynamic responsive button layout in native C).
 - KSys: Usability and UI issues fixed (mapped F1 for help natively and on web, explicitly stated F1 support in UI labels/buttons, verified 1024x768 bounds, compiled successfully).
-- KPac: Usability and UI issues fixed (adjusted App.jsx bounds to 340x520, synced native dimensions and added offsets, added WS_CLIPCHILDREN and negative font heights for crisp text, added F1 hotkey handling and explicit help text in both versions).
 - KType: Usability and UI issues fixed (canvas scaling relative to devicePixelRatio applied in web for crisp text, automatic toggleHelp() on load added for first-time users, native currentMode default swapped to Help screen, SetProcessDPIAware validated).
 - KFarm: Usability and UI issues fixed (added non-blocking toast notifications for weather, market transactions, out-of-season warnings, and crop actions in web; fixed duplicate morning animal money bug in web nextDay(); added 1-4 seed selection and Space for Sleep shortcuts across web and native; added global message loop hotkey interception in native; updated button labels and Farmer's Almanac with explicit shortcuts; increased App.jsx window bounds to 620x760).
 - KSolitaire: Usability and UI issues fixed (mapped F1 to Help dialog and H to Hints across web and native with explicit toolbar and status bar labels, added non-blocking toast notifications with welcome prompt on startup and clear feedback for hints/skills/stats, added Escape key and backdrop-click modal dismissal in web, and updated window title and menu shortcuts in native C).
