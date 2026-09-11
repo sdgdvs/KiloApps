@@ -923,10 +923,16 @@
         safeSetStorage('kmandel_custom_color1', customColor1);
         if (theme === 6) requestRender();
     });
+    document.getElementById('color1').addEventListener('change', () => {
+        saveState();
+    });
     document.getElementById('color2').addEventListener('input', (e) => {
         customColor2 = hexToRgb(e.target.value);
         safeSetStorage('kmandel_custom_color2', customColor2);
         if (theme === 6) requestRender();
+    });
+    document.getElementById('color2').addEventListener('change', () => {
+        saveState();
     });
 
     // Interaction state
@@ -960,6 +966,8 @@
         document.getElementById('fractal-select').value = fractalType;
         document.getElementById('theme-select').value = theme;
         document.getElementById('custom-colors').style.display = theme === 6 ? 'block' : 'none';
+        document.getElementById('color1').value = rgbToHex(customColor1);
+        document.getElementById('color2').value = rgbToHex(customColor2);
         updateUndoRedoButtons();
     }
     
@@ -997,15 +1005,14 @@
       const zoomLevel = (baseW / wRe);
       let zoomStr = zoomLevel < 1000 ? zoomLevel.toFixed(1) : (zoomLevel < 1000000 ? (zoomLevel/1000).toFixed(1) + 'k' : (zoomLevel/1000000).toFixed(1) + 'M');
       zoomDisp.textContent = zoomStr + 'x';
-      iterDisp.textContent = max_iter + ' iter';
       
       const needed_iter = Math.floor(100 * Math.pow(zoomLevel, 0.2));
       if (needed_iter > max_iter && zoomLevel > 5) {
           max_iter = Math.min(needed_iter, 2000);
       } else if (zoomLevel <= 5 && max_iter > 100 && !isJulia) {
           max_iter = 100;
-          iterDisp.textContent = max_iter + ' iter';
       }
+      iterDisp.textContent = max_iter + ' iter';
       updateUndoRedoButtons();
     }
 
@@ -1112,7 +1119,12 @@
         const workerUrl = URL.createObjectURL(workerBlob);
         numWorkers = Math.min(navigator.hardwareConcurrency || 4, 8);
         for (let i = 0; i < numWorkers; i++) {
-            workers.push(new Worker(workerUrl));
+            const w = new Worker(workerUrl);
+            w.onerror = function(err) {
+                console.warn('Web Worker error, falling back to sync render', err);
+                useWorkers = false;
+            };
+            workers.push(w);
         }
         URL.revokeObjectURL(workerUrl);
     } catch (err) {
@@ -1468,6 +1480,9 @@
     });
     
     document.getElementById('btn-save').addEventListener('click', () => {
+        const btnSave = document.getElementById('btn-save');
+        if (btnSave.disabled) return;
+        btnSave.disabled = true;
         document.getElementById('loading-text').textContent = "Rendering 4K PNG...";
         loading.classList.add('active');
         showToast('Generating Ultra-HD 4K PNG...', 'warning', 3000);
@@ -1487,26 +1502,34 @@
                         const link = document.createElement('a');
                         link.download = fname;
                         link.href = exportCanvas.toDataURL('image/png');
+                        document.body.appendChild(link);
                         link.click();
+                        document.body.removeChild(link);
                     } else {
                         const url = URL.createObjectURL(blob);
                         const link = document.createElement('a');
                         link.download = fname;
                         link.href = url;
+                        document.body.appendChild(link);
                         link.click();
+                        document.body.removeChild(link);
                         setTimeout(() => URL.revokeObjectURL(url), 10000);
                     }
                     document.getElementById('loading-text').textContent = "Rendering...";
                     loading.classList.remove('active');
+                    btnSave.disabled = false;
                     showToast(`✨ Saved: ${fname}`, 'success', 3500);
                 }, 'image/png');
             } catch (err) {
                 const link = document.createElement('a');
                 link.download = fname;
                 link.href = exportCanvas.toDataURL('image/png');
+                document.body.appendChild(link);
                 link.click();
+                document.body.removeChild(link);
                 document.getElementById('loading-text').textContent = "Rendering...";
                 loading.classList.remove('active');
+                btnSave.disabled = false;
                 showToast(`✨ Saved: ${fname}`, 'success', 3500);
             }
         });
@@ -1534,26 +1557,40 @@
             return;
         }
 
+        // Toggle Help overlay (F1 or H)
+        if (e.key === 'F1' || (e.key.toLowerCase() === 'h' && !e.ctrlKey && !e.altKey && !e.metaKey)) {
+            e.preventDefault();
+            const overlay = document.getElementById('help-overlay');
+            overlay.style.display = overlay.style.display === 'none' || overlay.style.display === '' ? 'flex' : 'none';
+            return;
+        }
+
+        // Suppress background hotkeys while Help modal is open
+        const overlay = document.getElementById('help-overlay');
+        if (overlay && (overlay.style.display === 'flex' || overlay.style.display === 'block')) {
+            return;
+        }
+
         // Undo: Z, Ctrl+Z
-        if ((e.key.toLowerCase() === 'z' && !e.ctrlKey && !e.metaKey) || (e.ctrlKey && e.key.toLowerCase() === 'z' && !e.shiftKey)) {
+        if ((e.key.toLowerCase() === 'z' && !e.ctrlKey && !e.altKey && !e.metaKey) || (e.ctrlKey && !e.altKey && !e.metaKey && e.key.toLowerCase() === 'z' && !e.shiftKey)) {
             undo();
             showToast(`Undo (${historyIdx + 1}/${history.length})`, 'info', 1500);
             return;
         }
         // Redo: Y, Ctrl+Y, Ctrl+Shift+Z
-        if ((e.key.toLowerCase() === 'y' && !e.ctrlKey && !e.metaKey) || (e.ctrlKey && e.key.toLowerCase() === 'y') || (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'z')) {
+        if ((e.key.toLowerCase() === 'y' && !e.ctrlKey && !e.altKey && !e.metaKey) || (e.ctrlKey && !e.altKey && !e.metaKey && e.key.toLowerCase() === 'y') || (e.ctrlKey && e.shiftKey && !e.altKey && !e.metaKey && e.key.toLowerCase() === 'z')) {
             redo();
             showToast(`Redo (${historyIdx + 1}/${history.length})`, 'info', 1500);
             return;
         }
-        if (e.key.toLowerCase() === 's') document.getElementById('btn-save').click();
-        if (e.key.toLowerCase() === 'r' || e.key === '0') document.getElementById('btn-reset').click();
+        if (e.key.toLowerCase() === 's' && !e.ctrlKey && !e.altKey && !e.metaKey) document.getElementById('btn-save').click();
+        if ((e.key.toLowerCase() === 'r' || e.key === '0') && !e.ctrlKey && !e.altKey && !e.metaKey) document.getElementById('btn-reset').click();
         
-        if (e.key === '+' || e.key === '=' || e.key === 'Add') {
+        if ((e.key === '+' || e.key === '=' || e.key === 'Add') && !e.ctrlKey && !e.altKey && !e.metaKey) {
             zoom(0.5, window.innerWidth / 2, window.innerHeight / 2);
             showToast('Zoom In (2.0x)', 'info', 1500);
         }
-        if (e.key === '-' || e.key === '_' || e.key === 'Subtract') {
+        if ((e.key === '-' || e.key === '_' || e.key === 'Subtract') && !e.ctrlKey && !e.altKey && !e.metaKey) {
             zoom(2.0, window.innerWidth / 2, window.innerHeight / 2);
             showToast('Zoom Out (0.5x)', 'info', 1500);
         }
@@ -1581,7 +1618,7 @@
             }
         }
 
-        if (e.key.toLowerCase() === 'f') {
+        if (e.key.toLowerCase() === 'f' && !e.ctrlKey && !e.altKey && !e.metaKey) {
             fractalType = (fractalType + 1) % fractalNames.length;
             document.getElementById('fractal-select').value = fractalType;
             safeSetStorage('kmandel_fractal_type', fractalType);
@@ -1590,12 +1627,12 @@
             requestRender();
             showToast(`Formula: ${fractalNames[fractalType]}`, 'info', 2200);
         }
-        if (e.key.toLowerCase() === 'l' || e.key.toLowerCase() === 'p') {
+        if ((e.key.toLowerCase() === 'l' || e.key.toLowerCase() === 'p') && !e.ctrlKey && !e.altKey && !e.metaKey) {
             currentLandmarkIdx = (currentLandmarkIdx + 1) % landmarks.length;
             applyLandmark(currentLandmarkIdx);
             showToast(`Landmark: ${landmarks[currentLandmarkIdx].name}`, 'purple', 2200);
         }
-        if (e.key.toLowerCase() === 't') {
+        if (e.key.toLowerCase() === 't' && !e.ctrlKey && !e.altKey && !e.metaKey) {
             theme = (theme + 1) % 7;
             document.getElementById('theme-select').value = theme;
             document.getElementById('custom-colors').style.display = theme === 6 ? 'block' : 'none';
@@ -1605,25 +1642,20 @@
             requestRender();
             showToast(`Theme: ${themeNames[theme] || 'Custom'}`, 'purple', 2200);
         }
-        if (e.key.toLowerCase() === 'j') document.getElementById('btn-julia').click();
-        if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
-            if (e.key === 'F1') e.preventDefault();
-            const overlay = document.getElementById('help-overlay');
-            overlay.style.display = overlay.style.display === 'none' || overlay.style.display === '' ? 'flex' : 'none';
-        }
+        if (e.key.toLowerCase() === 'j' && !e.ctrlKey && !e.altKey && !e.metaKey) document.getElementById('btn-julia').click();
 
         const panAmount = 0.1;
         let moved = false;
-        if (e.key === 'ArrowUp') {
+        if (e.key === 'ArrowUp' && !e.ctrlKey && !e.altKey && !e.metaKey) {
             const h = maxIm - minIm;
             minIm += h * panAmount; maxIm += h * panAmount; moved = true;
-        } else if (e.key === 'ArrowDown') {
+        } else if (e.key === 'ArrowDown' && !e.ctrlKey && !e.altKey && !e.metaKey) {
             const h = maxIm - minIm;
             minIm -= h * panAmount; maxIm -= h * panAmount; moved = true;
-        } else if (e.key === 'ArrowLeft') {
+        } else if (e.key === 'ArrowLeft' && !e.ctrlKey && !e.altKey && !e.metaKey) {
             const w = maxRe - minRe;
             minRe -= w * panAmount; maxRe -= w * panAmount; moved = true;
-        } else if (e.key === 'ArrowRight') {
+        } else if (e.key === 'ArrowRight' && !e.ctrlKey && !e.altKey && !e.metaKey) {
             const w = maxRe - minRe;
             minRe -= w * panAmount; maxRe -= w * panAmount; moved = true;
         }

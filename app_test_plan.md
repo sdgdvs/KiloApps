@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KMandel
+**Target App:** KMatch3
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KMandel
 - KMatch3
 - KMaze
 - KMech
@@ -173,8 +172,18 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KImage
 - KJournal
 - KMail
+- KMandel
 
 ## Test Reports
+
+- **KMandel**: ISSUES FOUND ⚠️ (6 issues, 6 fixed inline)
+  - ✅ Core functionality works (interactive fractal explorer supporting 5 formulas Mandelbrot/Burning Ship/Tricorn/Celtic/Buffalo, 12 landmark presets, Julia set explorer with interactive coordinate sampling, real-time zoom/pan navigation with 256-level undo/redo history, 7 color themes with custom dual-color gradient picker, and 4K Ultra-HD PNG renderer).
+  - 🔧 FIXED: In `#btn-save`, download anchor element was clicked without being attached to `document.body` (`link.click()`), causing 4K PNG file downloads to fail silently in Firefox and sandboxed iframe environments. Attached anchor to DOM before clicking and cleanly removed it afterwards.
+  - 🔧 FIXED: In `#btn-save`, button lacked a disabled-state lock during long-running 4K rendering, permitting rapid duplicate clicks that triggered concurrent multi-gigapixel canvas allocations and worker message race conditions. Added busy lock state guard on `#btn-save`.
+  - 🔧 FIXED: Global keyboard listener checked bare keys (`s`, `r`, `0`, `f`, `l`, `p`, `t`, `j`, `h`, `+`, `-`) without verifying `!e.ctrlKey && !e.altKey && !e.metaKey`, intercepting standard browser accelerators: `Ctrl+S` (hijacked to export 4K PNG), `Ctrl+R` (hijacked to reset view), `Ctrl+0` (reset browser zoom hijacked to reset view), `Ctrl+F` (find in page hijacked to cycle formulas), `Ctrl+P` (print hijacked to cycle landmarks), `Ctrl+L` (address bar focus hijacked to cycle landmarks), `Ctrl+T` (new tab hijacked to cycle themes), `Ctrl+J` (browser downloads hijacked to toggle Julia mode), `Ctrl+H` (history hijacked to toggle help), `Alt+Z`/`Alt+Y` (hijacked for undo/redo), and `Alt+ArrowLeft`/`Alt+ArrowRight` (browser history navigation hijacked for viewport panning). Added modifier guards across all shortcuts.
+  - 🔧 FIXED: Keyboard shortcuts continued to fire in the background underneath an open Help overlay (`#help-overlay`), mutating formulas, jumping landmarks, or triggering exports while users read the guide. Suppressed background hotkeys while the modal is open.
+  - 🔧 FIXED: In `loadState()`, custom color picker inputs (`#color1`, `#color2`) were never updated to reflect the restored custom palette, leaving the pickers displaying stale colors upon undo/redo; additionally added 'change' listeners to save history when custom colors are picked.
+  - 🔧 FIXED: In `updateDisplays()`, `iterDisp.textContent` was initially formatted before dynamic iteration depth recalculation, causing the iteration HUD to display stale values during deep zooms until subsequent frame updates; moved display update after recalculation and added `onerror` fallback to Web Workers instantiation to degrade to synchronous rendering instead of hanging the loading spinner.
 
 - **KMail**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
   - ✅ Core functionality works (multi-tab email suite with folders Inbox/Starred/Sent/Drafts/Trash, starred priority tagging, tags categorization, auto-saving drafts, email reply thread generator, PBKDF2/AES-GCM encrypted email composer and decryption engine, full-text subject/sender/body search with tag filtering, single-message EML and Markdown export, full JSON mailbox backup export and import, and non-blocking toast notifications).
