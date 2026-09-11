@@ -655,7 +655,7 @@
     <header>
         <div class="brand">
             <div class="title"><span>⚔️</span> KABYSS</div>
-            <div class="subtitle">Abyssal Crypt Crawler v0.3 - Rune Magic</div>
+            <div class="subtitle">Abyssal Crypt Crawler v0.4 - Monster Bestiary & Turn AI</div>
         </div>
         <div class="stats-bar">
             <div class="stat-badge">
@@ -716,6 +716,7 @@
                 <button class="tab-btn active" data-tab="hero">Delver</button>
                 <button class="tab-btn" data-tab="inventory">Relics</button>
                 <button class="tab-btn" data-tab="runes">Runes</button>
+                <button class="tab-btn" data-tab="bestiary">Bestiary</button>
             </div>
 
             <div class="tab-content" id="tabDelver">
@@ -866,6 +867,47 @@
                 </div>
             </div>
 
+            <div class="tab-content" id="tabBestiary" style="display:none;">
+                <div class="panel-section">
+                    <div class="section-header">
+                        <span>Depth Threat Radar</span>
+                        <span id="bestiaryActiveCount" style="color:var(--accent-crimson); font-size:10px;">0 Active</span>
+                    </div>
+                    <div id="bestiaryActiveList" style="display:flex; flex-direction:column; gap:6px; max-height:160px; overflow-y:auto;"></div>
+                </div>
+
+                <div class="panel-section">
+                    <div class="section-header">Abyssal Bestiary & Tactics</div>
+                    <div style="font-size:11px; color:var(--text-dim); line-height:1.4; display:flex; flex-direction:column; gap:6px;">
+                        <div style="background:#090d16; padding:6px; border:1px solid #1e293b; border-radius:4px;">
+                            <strong style="color:#e2e8f0;">💀 Crypt Skeleton (B1-B3)</strong>
+                            <div style="color:var(--text-bright); font-size:10px;">HP: 32+ | ATK: 9+ | Melee Pursuit</div>
+                            <div style="color:var(--text-dim); font-size:10px;">Relentless undead guardian. <span style="color:#f97316;">Weak to Pyre Blast (Fire DMG x1.5).</span></div>
+                        </div>
+                        <div style="background:#090d16; padding:6px; border:1px solid #1e293b; border-radius:4px;">
+                            <strong style="color:#2dd4bf;">🦎 Mire Ghoul (B4-B6)</strong>
+                            <div style="color:var(--text-bright); font-size:10px;">HP: 44+ | ATK: 12+ | Ambush Prowler</div>
+                            <div style="color:var(--text-dim); font-size:10px;">Amphibious beast lurking in flooded pools. <span style="color:#eab308;">Weak to Chain Bolt (Shock DMG x1.4).</span></div>
+                        </div>
+                        <div style="background:#090d16; padding:6px; border:1px solid #1e293b; border-radius:4px;">
+                            <strong style="color:#c084fc;">👻 Void Wraith (B7+)</strong>
+                            <div style="color:var(--text-bright); font-size:10px;">HP: 46+ | ATK: 15+ | Ethereal Phasing</div>
+                            <div style="color:var(--text-dim); font-size:10px;">Phases through rubble/doors. Drains -3 Sanity & -4 Aether. <span style="color:#38bdf8;">Aegis barrier deflects touch.</span></div>
+                        </div>
+                        <div style="background:#090d16; padding:6px; border:1px solid #1e293b; border-radius:4px;">
+                            <strong style="color:#eab308;">🧙 Crypt Acolyte (B7-B9)</strong>
+                            <div style="color:var(--text-bright); font-size:10px;">HP: 36+ | ATK: 14+ | Ranged Caster</div>
+                            <div style="color:var(--text-dim); font-size:10px;">Fires necrotic Shadow Bolts 4 tiles away. Vulnerable in close melee.</div>
+                        </div>
+                        <div style="background:#090d16; padding:6px; border:1px solid #1e293b; border-radius:4px;">
+                            <strong style="color:#f43f5e;">🐙 Abyssal Leviathan (B10+)</strong>
+                            <div style="color:var(--text-bright); font-size:10px;">HP: 95+ | ATK: 24+ | Apex Behemoth</div>
+                            <div style="color:var(--text-dim); font-size:10px;">Colossal void horror. Devastating crush attacks. <span style="color:#06b6d4;">Vulnerable to Glacial Nova (2-turn Freeze).</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="log-section">
                 <div class="log-header">
                     <span>Abyssal Chronicle</span>
@@ -913,6 +955,15 @@
                     <li><strong>ᛟ Void Warp:</strong> Phase-shifts delver 3 tiles forward through obstacles or over bottomless chasms.</li>
                     <li><strong>ᚨ Aegis Ward:</strong> Prismatic runic barrier absorbs up to 35 damage and restores +15 Sanity.</li>
                 </ul>
+                <h4>Abyssal Bestiary & Tactical Combat</h4>
+                <ul>
+                    <li><strong>Bump-to-Attack:</strong> Walk directly towards an adjacent monster to strike with your enchanted weapon or staff! Delver's Might and Arcana amplify melee blows.</li>
+                    <li><strong>💀 Crypt Skeletons:</strong> Tireless undead that chase down intruders. Highly vulnerable to <strong>ᚠ Pyre Blast (+50% DMG)</strong>.</li>
+                    <li><strong>🦎 Mire Ghouls:</strong> Amphibious stalkers that lurk in flooded depths. Highly vulnerable to <strong>ᛋ Chain Bolt (+40% DMG)</strong>.</li>
+                    <li><strong>👻 Void Wraiths:</strong> Spectral horrors that phase through doors and rubble. Their ghostly touch drains Sanity & Aether. Repelled by <strong>ᚨ Aegis Ward</strong>.</li>
+                    <li><strong>🧙 Crypt Acolytes:</strong> Necromancers hurling long-range necrotic Shadow Bolts. Rush them down in close melee!</li>
+                    <li><strong>🐙 Abyssal Leviathans:</strong> Colossal titans with devastating crushing power. Encase them with <strong>ᚦ Glacial Nova (2-turn Freeze)</strong> to neutralize their turns!</li>
+                </ul>
                 <h4>Field of View & Darkness</h4>
                 <p>The Abyss is shrouded in darkness. Your torch projects light across chambers and corridors. Light rays pass unobstructed through flooded waters and open cosmic chasms.</p>
             </div>
@@ -920,8 +971,8 @@
     </div>
 
     <footer>
-        <div>WASD: Move • Space: Rest • E: Interact • Z/X/V: Cast Runes • 1-3: Tabs • H: Manual</div>
-        <div id="footerStatus">KAbyss Engine v0.3 • Rune Magic System Active</div>
+        <div>WASD: Move • Space: Rest • E: Interact • Z/X/V: Cast Runes • 1-4: Tabs • H: Manual</div>
+        <div id="footerStatus">KAbyss Engine v0.4 • Monster Bestiary & Tactical AI Active</div>
     </footer>
 
     <script>
@@ -1038,6 +1089,8 @@
         let lightMap = [];
         let torches = [];
         let chests = [];
+        let monsters = [];
+        let combatTexts = [];
         let torchParticles = [];
         let spellEffects = [];
 
@@ -1045,6 +1098,85 @@
         let crtEnabled = true;
         let turn = 1;
         let depthLevel = 1;
+
+        // --- Monster Bestiary Database ---
+        const BESTIARY = {
+            SKELETON: {
+                id: 'SKELETON',
+                name: 'Crypt Skeleton',
+                symbol: '💀',
+                color: '#e2e8f0',
+                baseHp: 32,
+                hpScale: 4,
+                baseAtk: 9,
+                atkScale: 2,
+                exp: 22,
+                essence: 18,
+                behavior: 'Relentless Melee',
+                desc: 'Undead crypt wardens wielding tarnished blades.',
+                weakness: 'Vulnerable to Fire (ᚠ Pyre deals +50% DMG).'
+            },
+            GHOUL: {
+                id: 'GHOUL',
+                name: 'Mire Ghoul',
+                symbol: '🦎',
+                color: '#2dd4bf',
+                baseHp: 44,
+                hpScale: 5,
+                baseAtk: 12,
+                atkScale: 2,
+                exp: 30,
+                essence: 25,
+                behavior: 'Amphibious Prowler',
+                desc: 'Slithers silently through flooded shallows to ambush delvers.',
+                weakness: 'Vulnerable to Shock (ᛋ Tempest arcing in water).'
+            },
+            WRAITH: {
+                id: 'WRAITH',
+                name: 'Void Wraith',
+                symbol: '👻',
+                color: '#c084fc',
+                baseHp: 46,
+                hpScale: 6,
+                baseAtk: 15,
+                atkScale: 3,
+                exp: 42,
+                essence: 35,
+                behavior: 'Ethereal Phasing',
+                desc: 'Phase-shifts through walls and chasms. Drains Sanity & Aether on strike.',
+                weakness: 'Vulnerable to Warding (ᚨ Aegis repels phantom touch).'
+            },
+            ACOLYTE: {
+                id: 'ACOLYTE',
+                name: 'Crypt Acolyte',
+                symbol: '🧙',
+                color: '#eab308',
+                baseHp: 36,
+                hpScale: 4,
+                baseAtk: 14,
+                atkScale: 2,
+                exp: 35,
+                essence: 30,
+                behavior: 'Ranged Necromancer',
+                desc: 'Hurls necrotic shadow bolts up to 4 tiles away.',
+                weakness: 'Low physical defenses; vulnerable in close melee.'
+            },
+            LEVIATHAN: {
+                id: 'LEVIATHAN',
+                name: 'Abyssal Leviathan',
+                symbol: '🐙',
+                color: '#f43f5e',
+                baseHp: 95,
+                hpScale: 12,
+                baseAtk: 24,
+                atkScale: 4,
+                exp: 80,
+                essence: 75,
+                behavior: 'Apex Behemoth',
+                desc: 'Cosmic monstrosity from the bottomless deep. Crushes all in its path.',
+                weakness: 'Susceptible to Glacial Nova (Freeze skips turns).'
+            }
+        };
 
         // --- Ancient Runes & Enchanted Staves Magic System ---
         const RUNES = {
@@ -1224,6 +1356,70 @@
                     osc.start(now);
                     osc.stop(now + 0.35);
                 });
+            },
+            playHit() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(320, now);
+                osc.frequency.exponentialRampToValueAtTime(80, now + 0.12);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.12);
+            },
+            playMonsterDeath() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.exponentialRampToValueAtTime(45, now + 0.35);
+                gain.gain.setValueAtTime(0.22, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            },
+            playPlayerHurt() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(140, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.18);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.18);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.18);
+            },
+            playShadowBolt() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(750, now);
+                osc.frequency.exponentialRampToValueAtTime(220, now + 0.22);
+                gain.gain.setValueAtTime(0.16, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.22);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.22);
             }
         };
 
@@ -1317,6 +1513,7 @@
                 generateVoidAbyss(level);
             }
 
+            spawnMonsters(level);
             computeFOV();
             updateHUD();
             logMessage(zInfo.enterMsg, 'important');
@@ -1791,6 +1988,347 @@
             }
         }
 
+        // --- Monster Bestiary & Tactical AI System ---
+        function checkLOS(x0, y0, x1, y1) {
+            let dx = Math.abs(x1 - x0);
+            let dy = Math.abs(y1 - y0);
+            let sx = (x0 < x1) ? 1 : -1;
+            let sy = (y0 < y1) ? 1 : -1;
+            let err = dx - dy;
+
+            let cx = x0;
+            let cy = y0;
+
+            while (true) {
+                if (cx === x1 && cy === y1) return true;
+                if (cx !== x0 || cy !== y0) {
+                    if (cx < 0 || cx >= MAP_WIDTH || cy < 0 || cy >= MAP_HEIGHT) return false;
+                    const tile = dungeon[cy][cx];
+                    if (tile === TILE.WALL || tile === TILE.PILLAR || tile === TILE.DOOR_CLOSED) {
+                        return false;
+                    }
+                }
+                let e2 = 2 * err;
+                if (e2 > -dy) {
+                    err -= dy;
+                    cx += sx;
+                }
+                if (e2 < dx) {
+                    err += dx;
+                    cy += sy;
+                }
+            }
+        }
+
+        function spawnCombatText(x, y, text, color) {
+            combatTexts.push({
+                x: x,
+                y: y,
+                text: text,
+                color: color,
+                life: 1.0
+            });
+        }
+
+        function spawnMonsters(level) {
+            monsters = [];
+            const zone = getZone(level);
+            let types = [];
+            if (zone === ZONE.CATACOMBS) {
+                types = ['SKELETON'];
+                if (level >= 2) types.push('SKELETON');
+                if (level >= 3) types.push('ACOLYTE');
+            } else if (zone === ZONE.SUNKEN_GROTTO) {
+                types = ['SKELETON', 'GHOUL', 'GHOUL'];
+                if (level >= 5) types.push('ACOLYTE');
+            } else if (zone === ZONE.FORGOTTEN_CRYPT) {
+                types = ['SKELETON', 'WRAITH', 'ACOLYTE', 'WRAITH'];
+            } else {
+                types = ['WRAITH', 'WRAITH', 'LEVIATHAN'];
+            }
+
+            const numToSpawn = 5 + Math.floor(level * 0.8) + Math.floor(Math.random() * 3);
+
+            for (let i = 0; i < numToSpawn; i++) {
+                const typeKey = types[Math.floor(Math.random() * types.length)];
+                const b = BESTIARY[typeKey];
+                if (!b) continue;
+
+                let attempts = 0;
+                let spawned = false;
+                while (attempts < 80 && !spawned) {
+                    attempts++;
+                    const rx = 2 + Math.floor(Math.random() * (MAP_WIDTH - 4));
+                    const ry = 2 + Math.floor(Math.random() * (MAP_HEIGHT - 4));
+                    const t = dungeon[ry][rx];
+
+                    if ((t === TILE.FLOOR || t === TILE.WATER) && t !== TILE.STAIRS_UP && t !== TILE.STAIRS_DOWN && t !== TILE.CHEST && t !== TILE.ALTAR) {
+                        const distFromPlayer = Math.hypot(rx - player.x, ry - player.y);
+                        if (distFromPlayer >= 6) {
+                            const occupied = monsters.some(m => m.x === rx && m.y === ry);
+                            if (!occupied) {
+                                const hp = b.baseHp + (level - 1) * b.hpScale;
+                                const atk = b.baseAtk + (level - 1) * b.atkScale;
+                                monsters.push({
+                                    id: `m_${Date.now()}_${i}_${Math.random()}`,
+                                    type: typeKey,
+                                    name: b.name,
+                                    symbol: b.symbol,
+                                    color: b.color,
+                                    x: rx,
+                                    y: ry,
+                                    hp: hp,
+                                    maxHp: hp,
+                                    atk: atk,
+                                    exp: b.exp + level * 2,
+                                    essence: b.essence + level * 2,
+                                    state: 'idle',
+                                    freezeTurns: 0,
+                                    alertRange: (typeKey === 'LEVIATHAN' ? 10 : (typeKey === 'WRAITH' ? 9 : 7)),
+                                    alive: true
+                                });
+                                spawned = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function damageMonster(m, dmg, dmgType = 'PHYSICAL', isCrit = false) {
+            if (!m.alive) return;
+            m.hp -= dmg;
+            m.state = 'alert';
+            let txtColor = '#f87171';
+            if (dmgType === 'FIRE') txtColor = '#f97316';
+            else if (dmgType === 'CRYO') txtColor = '#06b6d4';
+            else if (dmgType === 'SHOCK') txtColor = '#eab308';
+            else if (isCrit) txtColor = '#fbbf24';
+
+            spawnCombatText(m.x, m.y, `${isCrit ? 'CRIT! ' : ''}-${dmg} ${dmgType !== 'PHYSICAL' ? dmgType : ''}`, txtColor);
+
+            if (m.hp <= 0) {
+                m.alive = false;
+                player.exp += m.exp;
+                player.essence += m.essence;
+                AudioSys.playMonsterDeath();
+                logMessage(`⚔️ SLAIN: You defeated ${m.name}! (+${m.exp} EXP, +${m.essence} Essence)`, 'relic');
+
+                const unowned = Object.keys(RUNES).filter(r => !player.ownedRunes.includes(r));
+                if (unowned.length > 0 && Math.random() < 0.35) {
+                    const newRune = unowned[Math.floor(Math.random() * unowned.length)];
+                    player.ownedRunes.push(newRune);
+                    logMessage(`✦ Bestiary Spoils: ${m.name} yielded ${RUNES[newRune].name} (${RUNES[newRune].symbol})! Inscribe in Tab [3].`, 'magic');
+                }
+                checkLevelUp();
+            } else {
+                AudioSys.playHit();
+                logMessage(`⚔️ Struck ${m.name} for ${dmg} ${dmgType} DMG! (${m.hp}/${m.maxHp} HP)`, 'combat');
+            }
+        }
+
+        function attackMonster(m) {
+            AudioSys.init();
+            let baseDmg = 12 + Math.floor(player.might / 2) + Math.floor(player.arcana / 3) + Math.floor(Math.random() * 6);
+            const staff = STAVES[player.equippedStaff];
+            baseDmg += staff.arcanaBonus;
+
+            const isCrit = Math.random() < 0.15;
+            if (isCrit) {
+                baseDmg = Math.floor(baseDmg * 1.5);
+            }
+
+            damageMonster(m, baseDmg, 'PHYSICAL', isCrit);
+            advanceTurn();
+        }
+
+        function updateMonsters() {
+            for (const m of monsters) {
+                if (!m.alive) continue;
+
+                if (m.freezeTurns > 0) {
+                    m.freezeTurns--;
+                    logMessage(`❄️ ${m.name} is encased in glacial ice and cannot act!`, 'magic');
+                    continue;
+                }
+
+                const dist = Math.hypot(player.x - m.x, player.y - m.y);
+                const hasLOS = checkLOS(m.x, m.y, player.x, player.y);
+
+                if (dist <= m.alertRange && hasLOS) {
+                    m.state = 'alert';
+                }
+
+                if (m.state === 'alert') {
+                    const isAdj = Math.abs(player.x - m.x) <= 1 && Math.abs(player.y - m.y) <= 1;
+                    if (isAdj) {
+                        let rawDmg = m.atk + Math.floor(Math.random() * 5) - 2;
+                        let wardReduction = Math.floor(player.warding / 3);
+                        let netDmg = Math.max(3, rawDmg - wardReduction);
+
+                        if (player.shield > 0) {
+                            if (player.shield >= netDmg) {
+                                player.shield -= netDmg;
+                                logMessage(`🛡️ Aegis Ward absorbs all ${netDmg} DMG from ${m.name}!`, 'magic');
+                                spawnCombatText(player.x, player.y, `ABSORB ${netDmg}`, '#38bdf8');
+                                netDmg = 0;
+                            } else {
+                                netDmg -= player.shield;
+                                logMessage(`🛡️ Aegis Ward absorbs ${player.shield} DMG before collapsing!`, 'important');
+                                spawnCombatText(player.x, player.y, `WARD BROKE`, '#38bdf8');
+                                player.shield = 0;
+                            }
+                        }
+
+                        if (netDmg > 0) {
+                            player.hp = Math.max(0, player.hp - netDmg);
+                            AudioSys.playPlayerHurt();
+                            spawnCombatText(player.x, player.y, `-${netDmg}`, '#ef4444');
+                            logMessage(`💥 ${m.name} strikes you for ${netDmg} DMG! (${player.hp}/${player.maxHp} HP)`, 'combat');
+                        }
+
+                        if (m.type === 'WRAITH') {
+                            player.sanity = Math.max(0, player.sanity - 3);
+                            player.aether = Math.max(0, player.aether - 4);
+                            logMessage(`👻 Void Wraith drains your mind & spirit (-3 Sanity, -4 Aether)!`, 'important');
+                        } else if (m.type === 'LEVIATHAN') {
+                            player.sanity = Math.max(0, player.sanity - 2);
+                            logMessage(`🐙 Abyssal Leviathan's crushing slam rattles your skull (-2 Sanity)!`, 'important');
+                        }
+
+                        if (player.hp <= 0) {
+                            logMessage('💀 You have fallen to the abyssal horrors. Click [New Descent] to rise again.', 'important');
+                        }
+                    } else if (m.type === 'ACOLYTE' && dist <= 4 && hasLOS) {
+                        let rawDmg = m.atk + Math.floor(Math.random() * 4);
+                        let netDmg = Math.max(3, rawDmg - Math.floor(player.warding / 4));
+
+                        spellEffects.push({
+                            type: 'void',
+                            x: m.x,
+                            y: m.y,
+                            radius: 8,
+                            duration: 6
+                        });
+
+                        if (player.shield > 0) {
+                            if (player.shield >= netDmg) {
+                                player.shield -= netDmg;
+                                spawnCombatText(player.x, player.y, `ABSORB ${netDmg}`, '#38bdf8');
+                                netDmg = 0;
+                            } else {
+                                netDmg -= player.shield;
+                                player.shield = 0;
+                            }
+                        }
+
+                        if (netDmg > 0) {
+                            player.hp = Math.max(0, player.hp - netDmg);
+                            AudioSys.playPlayerHurt();
+                            spawnCombatText(player.x, player.y, `-${netDmg} SHADOW`, '#a855f7');
+                            logMessage(`🔮 ${m.name} casts necrotic Shadow Bolt for ${netDmg} DMG!`, 'combat');
+                        } else {
+                            logMessage(`🛡️ Aegis Ward deflects ${m.name}'s Shadow Bolt!`, 'magic');
+                        }
+                        AudioSys.playShadowBolt();
+                    } else {
+                        let bestDx = 0;
+                        let bestDy = 0;
+                        let bestDist = dist;
+
+                        const dirs = [
+                            { dx: 1, dy: 0 }, { dx: -1, dy: 0 }, { dx: 0, dy: 1 }, { dx: 0, dy: -1 },
+                            { dx: 1, dy: 1 }, { dx: -1, dy: -1 }, { dx: 1, dy: -1 }, { dx: -1, dy: 1 }
+                        ];
+
+                        for (const d of dirs) {
+                            const testX = m.x + d.dx;
+                            const testY = m.y + d.dy;
+                            if (testX < 1 || testX >= MAP_WIDTH - 1 || testY < 1 || testY >= MAP_HEIGHT - 1) continue;
+
+                            if (testX === player.x && testY === player.y) continue;
+
+                            const tile = dungeon[testY][testX];
+                            const isWraith = (m.type === 'WRAITH');
+                            if (!isWraith) {
+                                if (tile === TILE.WALL || tile === TILE.PILLAR || tile === TILE.CHASM || tile === TILE.DOOR_CLOSED) continue;
+                            } else {
+                                if (tile === TILE.WALL && (testX === 0 || testX === MAP_WIDTH - 1 || testY === 0 || testY === MAP_HEIGHT - 1)) continue;
+                            }
+
+                            const occupied = monsters.some(other => other.alive && other !== m && other.x === testX && other.y === testY);
+                            if (occupied) continue;
+
+                            const newDist = Math.hypot(player.x - testX, player.y - testY);
+                            if (newDist < bestDist) {
+                                bestDist = newDist;
+                                bestDx = d.dx;
+                                bestDy = d.dy;
+                            }
+                        }
+
+                        if (bestDx !== 0 || bestDy !== 0) {
+                            m.x += bestDx;
+                            m.y += bestDy;
+                        }
+                    }
+                } else {
+                    if (Math.random() < 0.25) {
+                        const dirs = [{ dx: 1, dy: 0 }, { dx: -1, dy: 0 }, { dx: 0, dy: 1 }, { dx: 0, dy: -1 }];
+                        const d = dirs[Math.floor(Math.random() * dirs.length)];
+                        const testX = m.x + d.dx;
+                        const testY = m.y + d.dy;
+                        if (testX > 0 && testX < MAP_WIDTH - 1 && testY > 0 && testY < MAP_HEIGHT - 1) {
+                            const tile = dungeon[testY][testX];
+                            if (tile === TILE.FLOOR || tile === TILE.WATER) {
+                                if (!monsters.some(other => other.alive && other !== m && other.x === testX && other.y === testY)) {
+                                    m.x = testX;
+                                    m.y = testY;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function renderBestiaryUI() {
+            const listEl = document.getElementById('bestiaryActiveList');
+            if (listEl) {
+                listEl.innerHTML = '';
+                const aliveMonsters = monsters.filter(m => m.alive);
+                const countEl = document.getElementById('bestiaryActiveCount');
+                if (countEl) countEl.innerText = `${aliveMonsters.length} Active`;
+
+                if (aliveMonsters.length === 0) {
+                    listEl.innerHTML = '<div style="color:var(--accent-emerald); font-size:11px; padding:6px;">✓ Floor Cleared! All horrors defeated.</div>';
+                } else {
+                    aliveMonsters.forEach(m => {
+                        const isSeen = visible[m.y] && visible[m.y][m.x];
+                        const card = document.createElement('div');
+                        card.className = 'stash-rune-card';
+                        const dist = Math.round(Math.hypot(player.x - m.x, player.y - m.y));
+                        card.innerHTML = `
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span style="font-size:16px;">${m.symbol}</span>
+                                <div>
+                                    <div style="display:flex; align-items:center; gap:6px;">
+                                        <strong style="color:${m.color}; font-size:11px;">${m.name}</strong>
+                                        <span style="color:var(--text-dim); font-size:10px;">(${dist} tiles away)</span>
+                                    </div>
+                                    <div style="font-size:10px; color:var(--text-dim);">
+                                        HP: <span style="color:var(--text-bright);">${m.hp}/${m.maxHp}</span> | ATK: ${m.atk} | ${m.freezeTurns > 0 ? '❄️ Frozen' : (m.state === 'alert' ? '<span style="color:#ef4444">⚠️ Alert</span>' : 'Idle')}
+                                    </div>
+                                </div>
+                            </div>
+                            <span style="font-size:10px; color:${isSeen ? 'var(--accent-cyan)' : 'var(--text-dim)'};">${isSeen ? 'In Sight' : 'Hidden'}</span>
+                        `;
+                        listEl.appendChild(card);
+                    });
+                }
+            }
+        }
+
         // --- Camera Updates ---
         function updateCamera() {
             const targetX = player.x * TILE_SIZE + TILE_SIZE / 2 - canvas.width / 2;
@@ -1976,6 +2514,53 @@
                 }
             }
 
+            // Draw Monsters
+            for (const m of monsters) {
+                if (!m.alive) continue;
+                if (visible[m.y] && visible[m.y][m.x]) {
+                    const msx = Math.floor(m.x * TILE_SIZE - camera.x);
+                    const msy = Math.floor(m.y * TILE_SIZE - camera.y);
+
+                    // Monster subtle aura / shadow
+                    ctx.save();
+                    ctx.fillStyle = m.color;
+                    ctx.globalAlpha = 0.28;
+                    ctx.beginPath();
+                    ctx.arc(msx + 16, msy + 16, 12, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+
+                    // Monster Glyph / Symbol
+                    ctx.font = '15px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(m.symbol, msx + 16, msy + 21);
+
+                    // Alert indicator !
+                    if (m.state === 'alert') {
+                        ctx.fillStyle = '#ef4444';
+                        ctx.font = 'bold 11px monospace';
+                        ctx.fillText('!', msx + 24, msy + 11);
+                    }
+
+                    // Frozen indicator
+                    if (m.freezeTurns > 0) {
+                        ctx.font = '11px monospace';
+                        ctx.fillText('❄️', msx + 6, msy + 12);
+                    }
+
+                    // Mini Health Bar when wounded
+                    if (m.hp < m.maxHp) {
+                        const barW = 24;
+                        const barH = 3;
+                        const hpPct = Math.max(0, m.hp / m.maxHp);
+                        ctx.fillStyle = '#1e293b';
+                        ctx.fillRect(msx + 4, msy + 3, barW, barH);
+                        ctx.fillStyle = hpPct > 0.4 ? '#10b981' : '#ef4444';
+                        ctx.fillRect(msx + 4, msy + 3, Math.floor(barW * hpPct), barH);
+                    }
+                }
+            }
+
             // Draw Delver (Player)
             const playerSX = Math.floor(player.x * TILE_SIZE - camera.x);
             const playerSY = Math.floor(player.y * TILE_SIZE - camera.y);
@@ -2130,6 +2715,28 @@
                 ctx.restore();
             }
 
+            // Draw & Update Floating Combat Texts
+            for (let i = combatTexts.length - 1; i >= 0; i--) {
+                const ct = combatTexts[i];
+                ct.y -= 0.02;
+                ct.life -= 0.035;
+                if (ct.life <= 0) {
+                    combatTexts.splice(i, 1);
+                    continue;
+                }
+                const csx = Math.floor(ct.x * TILE_SIZE - camera.x + 16);
+                const csy = Math.floor(ct.y * TILE_SIZE - camera.y);
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, ct.life);
+                ctx.fillStyle = ct.color;
+                ctx.font = 'bold 12px monospace';
+                ctx.textAlign = 'center';
+                ctx.shadowColor = '#000';
+                ctx.shadowBlur = 4;
+                ctx.fillText(ct.text, csx, csy);
+                ctx.restore();
+            }
+
             // Subterranean Vignette Shader (Edge darkening)
             const vigGrad = ctx.createRadialGradient(
                 canvas.width / 2, canvas.height / 2, canvas.width * 0.35,
@@ -2163,6 +2770,7 @@
                 }
             }
 
+            updateMonsters();
             computeFOV();
             updateHUD();
         }
@@ -2199,6 +2807,13 @@
             if (dy < 0) player.facing = 'up';
 
             if (nx < 0 || nx >= MAP_WIDTH || ny < 0 || ny >= MAP_HEIGHT) return;
+
+            // Check for monster bump-to-attack
+            const targetMonster = monsters.find(m => m.alive && m.x === nx && m.y === ny);
+            if (targetMonster) {
+                attackMonster(targetMonster);
+                return;
+            }
 
             const targetTile = dungeon[ny][nx];
 
@@ -2434,6 +3049,14 @@
                 explored[ty][tx] = true;
                 lightMap[ty][tx] = 1.0;
 
+                // Check for monster in fireblast path
+                const targetM = monsters.find(m => m.alive && m.x === tx && m.y === ty);
+                if (targetM) {
+                    let dmg = 35 + Math.floor(player.arcana * 0.8);
+                    if (targetM.type === 'SKELETON') dmg = Math.floor(dmg * 1.5);
+                    damageMonster(targetM, dmg, 'FIRE');
+                }
+
                 const tile = dungeon[ty][tx];
                 if (tile === TILE.WALL || tile === TILE.PILLAR || tile === TILE.CHASM) {
                     break;
@@ -2487,6 +3110,18 @@
                 }
             }
 
+            // Hit monsters in frost nova radius and freeze them for 2 turns
+            monsters.forEach(m => {
+                if (!m.alive) return;
+                const dist = Math.hypot(m.x - player.x, m.y - player.y);
+                if (dist <= rad + 0.3) {
+                    let dmg = 24 + Math.floor(player.arcana * 0.5);
+                    if (m.type === 'LEVIATHAN') dmg = Math.floor(dmg * 1.3);
+                    m.freezeTurns = 2;
+                    damageMonster(m, dmg, 'CRYO');
+                }
+            });
+
             spellEffects.push({
                 type: 'frost',
                 x: player.x,
@@ -2523,6 +3158,14 @@
                 visible[ty][tx] = true;
                 explored[ty][tx] = true;
                 lightMap[ty][tx] = 1.0;
+
+                // Hit monsters along electric beam
+                const targetM = monsters.find(m => m.alive && m.x === tx && m.y === ty);
+                if (targetM) {
+                    let dmg = 42 + Math.floor(player.arcana * 0.9);
+                    if (targetM.type === 'GHOUL') dmg = Math.floor(dmg * 1.4);
+                    damageMonster(targetM, dmg, 'SHOCK');
+                }
 
                 if (dungeon[ty][tx] === TILE.DOOR_CLOSED) {
                     dungeon[ty][tx] = TILE.DOOR_OPEN;
@@ -2589,6 +3232,16 @@
                     radius: 12,
                     duration: 9
                 });
+
+                // Disorient adjacent monsters
+                monsters.forEach(m => {
+                    if (!m.alive) return;
+                    if (Math.abs(m.x - player.x) <= 1 && Math.abs(m.y - player.y) <= 1) {
+                        m.freezeTurns = Math.max(m.freezeTurns, 1);
+                        spawnCombatText(m.x, m.y, 'STUNNED', '#a855f7');
+                    }
+                });
+
                 AudioSys.playVoid();
                 logMessage('🌀 VOID WARP: You phase-shift across space, slipping through walls and chasms!', 'relic');
             } else {
@@ -2848,10 +3501,13 @@
                 [TILE.ALTAR]: 'Ancient Runic Altar'
             };
             const curTile = dungeon[player.y] ? dungeon[player.y][player.x] : TILE.FLOOR;
-            document.getElementById('hudTileInfo').innerText = `Position: (${player.x}, ${player.y}) | ${tileNames[curTile] || 'Floor'}`;
+            const monsterNearby = monsters.find(m => m.alive && Math.abs(m.x - player.x) <= 1 && Math.abs(m.y - player.y) <= 1);
+            const monNote = monsterNearby ? ` | Near: ${monsterNearby.symbol} ${monsterNearby.name} (${monsterNearby.hp} HP)` : '';
+            document.getElementById('hudTileInfo').innerText = `Position: (${player.x}, ${player.y}) | ${tileNames[curTile] || 'Floor'}${monNote}`;
 
             renderSpellHotbar();
             renderRuneUI();
+            renderBestiaryUI();
         }
 
         function switchTab(tabName) {
@@ -2862,7 +3518,9 @@
             document.getElementById('tabDelver').style.display = (tabName === 'hero') ? 'flex' : 'none';
             document.getElementById('tabInventory').style.display = (tabName === 'inventory') ? 'flex' : 'none';
             document.getElementById('tabRunes').style.display = (tabName === 'runes') ? 'flex' : 'none';
+            document.getElementById('tabBestiary').style.display = (tabName === 'bestiary') ? 'flex' : 'none';
             if (tabName === 'runes') renderRuneUI();
+            if (tabName === 'bestiary') renderBestiaryUI();
         }
 
         // --- Input Event Handlers ---
@@ -2871,10 +3529,11 @@
                 e.preventDefault();
             }
 
-            // Tab switching hotkeys 1, 2, 3 (when not using numpad for movement)
+            // Tab switching hotkeys 1, 2, 3, 4
             if (e.code === 'Digit1') { switchTab('hero'); return; }
             if (e.code === 'Digit2') { switchTab('inventory'); return; }
             if (e.code === 'Digit3') { switchTab('runes'); return; }
+            if (e.code === 'Digit4') { switchTab('bestiary'); return; }
 
             switch (e.key) {
                 // Movement

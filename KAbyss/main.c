@@ -271,12 +271,69 @@ static int g_numChests = 0;
 static LogMessage g_logs[MAX_LOG_MSGS];
 static int g_logCount = 0;
 
+// Monster Bestiary Definitions
+#define MONSTER_SKELETON  0
+#define MONSTER_GHOUL     1
+#define MONSTER_WRAITH    2
+#define MONSTER_ACOLYTE   3
+#define MONSTER_LEVIATHAN 4
+#define NUM_MONSTER_TYPES 5
+
+typedef struct {
+    const char* name;
+    const char* symbol;
+    COLORREF color;
+    int baseHp;
+    int hpScale;
+    int baseAtk;
+    int atkScale;
+    int exp;
+    int essence;
+    const char* desc;
+    const char* weakness;
+} MonsterDef;
+
+static const MonsterDef g_monsterDefs[NUM_MONSTER_TYPES] = {
+    { "Crypt Skeleton", "S", RGB(226, 232, 240), 32, 4, 9, 2, 22, 18, "Undead crypt warden with tarnished blade.", "Weak to Fire (Pyre x1.5)" },
+    { "Mire Ghoul", "G", RGB(45, 212, 191), 44, 5, 12, 2, 30, 25, "Amphibious beast lurking in flooded shallows.", "Weak to Shock (Tempest x1.4)" },
+    { "Void Wraith", "W", RGB(192, 132, 252), 46, 6, 15, 3, 42, 35, "Phases through walls; drains Sanity & Aether.", "Vulnerable to Aegis barrier" },
+    { "Crypt Acolyte", "N", RGB(234, 179, 8), 36, 4, 14, 2, 35, 30, "Necromancer hurling long-range Shadow Bolts.", "Weak in close melee" },
+    { "Abyssal Leviathan", "L", RGB(244, 63, 94), 95, 12, 24, 4, 80, 75, "Colossal horror with crushing slams.", "Susceptible to Glacial Nova (2-turn Freeze)" }
+};
+
+typedef struct {
+    int type;
+    int x, y;
+    int hp, max_hp;
+    int atk;
+    int exp, essence;
+    int state; // 0=idle, 1=alert
+    int freezeTurns;
+    int alertRange;
+    BOOL alive;
+} Monster;
+
+#define MAX_MONSTERS 32
+static Monster g_monsters[MAX_MONSTERS];
+static int g_numMonsters = 0;
+
+typedef struct {
+    float x, y;
+    char text[32];
+    COLORREF color;
+    float life;
+} CombatText;
+
+#define MAX_COMBAT_TEXTS 16
+static CombatText g_combatTexts[MAX_COMBAT_TEXTS];
+static int g_numCombatTexts = 0;
+
 static Delver g_player;
 static int g_depthLevel = 1;
 static int g_turn = 1;
 static BOOL g_fovEnabled = TRUE;
 static BOOL g_crtEnabled = TRUE;
-static int g_activeTab = 0; // 0=Hero, 1=Inventory, 2=Runes
+static int g_activeTab = 0; // 0=Hero, 1=Inventory, 2=Runes, 3=Bestiary
 static BOOL g_showHelpModal = FALSE;
 static float g_animFlicker = 0.0f;
 static int g_frameCount = 0;
@@ -305,6 +362,12 @@ void UpdateEmbers(void);
 void CastSpell(int socketIdx);
 void SocketRune(int socketIdx, int runeIdx);
 void UnsocketRune(int socketIdx);
+BOOL CheckLOS(int x0, int y0, int x1, int y1);
+void SpawnCombatText(float x, float y, const char* text, COLORREF color);
+void SpawnMonsters(int level);
+void DamageMonster(int idx, int dmg, const char* dmgType, BOOL isCrit);
+void AttackMonster(int idx);
+void UpdateMonsters(void);
 
 // Custom pseudo random helper
 static unsigned int g_randSeed = 123456789;
@@ -454,6 +517,351 @@ void UpdateEmbers(void) {
             g_numEmbers--;
         } else {
             i++;
+        }
+    }
+}
+
+// --- Monster Bestiary & Tactical Turn-Based AI System ---
+BOOL CheckLOS(int x0, int y0, int x1, int y1) {
+    int dx = abs(x1 - x0);
+    int dy = abs(y1 - y0);
+    int sx = (x0 < x1) ? 1 : -1;
+    int sy = (y0 < y1) ? 1 : -1;
+    int err = dx - dy;
+
+    int cx = x0;
+    int cy = y0;
+
+    while (1) {
+        if (cx == x1 && cy == y1) return TRUE;
+        if (cx != x0 || cy != y0) {
+            if (cx < 0 || cx >= MAP_WIDTH || cy < 0 || cy >= MAP_HEIGHT) return FALSE;
+            int tile = g_dungeon[cy][cx];
+            if (tile == TILE_WALL || tile == TILE_PILLAR || tile == TILE_DOOR_CLOSED) {
+                return FALSE;
+            }
+        }
+        int e2 = 2 * err;
+        if (e2 > -dy) {
+            err -= dy;
+            cx += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            cy += sy;
+        }
+    }
+}
+
+void SpawnCombatText(float x, float y, const char* text, COLORREF color) {
+    if (g_numCombatTexts < MAX_COMBAT_TEXTS) {
+        g_combatTexts[g_numCombatTexts].x = x;
+        g_combatTexts[g_numCombatTexts].y = y;
+        snprintf(g_combatTexts[g_numCombatTexts].text, sizeof(g_combatTexts[g_numCombatTexts].text), "%s", text);
+        g_combatTexts[g_numCombatTexts].color = color;
+        g_combatTexts[g_numCombatTexts].life = 1.0f;
+        g_numCombatTexts++;
+    }
+}
+
+void SpawnMonsters(int level) {
+    g_numMonsters = 0;
+    DepthZone zone = GetDepthZone(level);
+    int types[6];
+    int numTypes = 0;
+
+    if (zone == ZONE_CATACOMBS) {
+        types[numTypes++] = MONSTER_SKELETON;
+        types[numTypes++] = MONSTER_SKELETON;
+        if (level >= 3) types[numTypes++] = MONSTER_ACOLYTE;
+    } else if (zone == ZONE_SUNKEN_GROTTO) {
+        types[numTypes++] = MONSTER_SKELETON;
+        types[numTypes++] = MONSTER_GHOUL;
+        types[numTypes++] = MONSTER_GHOUL;
+        if (level >= 5) types[numTypes++] = MONSTER_ACOLYTE;
+    } else if (zone == ZONE_FORGOTTEN_CRYPT) {
+        types[numTypes++] = MONSTER_SKELETON;
+        types[numTypes++] = MONSTER_WRAITH;
+        types[numTypes++] = MONSTER_ACOLYTE;
+        types[numTypes++] = MONSTER_WRAITH;
+    } else { // ZONE_VOID_ABYSS
+        types[numTypes++] = MONSTER_WRAITH;
+        types[numTypes++] = MONSTER_WRAITH;
+        types[numTypes++] = MONSTER_LEVIATHAN;
+    }
+
+    int numToSpawn = 5 + (int)(level * 0.8f) + RandInt(0, 2);
+    if (numToSpawn > MAX_MONSTERS) numToSpawn = MAX_MONSTERS;
+
+    for (int i = 0; i < numToSpawn; i++) {
+        int tIdx = types[RandInt(0, numTypes - 1)];
+        const MonsterDef* md = &g_monsterDefs[tIdx];
+
+        int attempts = 0;
+        BOOL spawned = FALSE;
+        while (attempts < 80 && !spawned) {
+            attempts++;
+            int rx = RandInt(2, MAP_WIDTH - 3);
+            int ry = RandInt(2, MAP_HEIGHT - 3);
+            int t = g_dungeon[ry][rx];
+
+            if ((t == TILE_FLOOR || t == TILE_WATER) && t != TILE_STAIRS_UP && t != TILE_STAIRS_DOWN && t != TILE_CHEST && t != TILE_ALTAR) {
+                int dist = (int)sqrtf((float)((rx - g_player.x) * (rx - g_player.x) + (ry - g_player.y) * (ry - g_player.y)));
+                if (dist >= 6) {
+                    BOOL occupied = FALSE;
+                    for (int m = 0; m < g_numMonsters; m++) {
+                        if (g_monsters[m].x == rx && g_monsters[m].y == ry) { occupied = TRUE; break; }
+                    }
+                    if (!occupied) {
+                        int hp = md->baseHp + (level - 1) * md->hpScale;
+                        int atk = md->baseAtk + (level - 1) * md->atkScale;
+                        g_monsters[g_numMonsters].type = tIdx;
+                        g_monsters[g_numMonsters].x = rx;
+                        g_monsters[g_numMonsters].y = ry;
+                        g_monsters[g_numMonsters].hp = hp;
+                        g_monsters[g_numMonsters].max_hp = hp;
+                        g_monsters[g_numMonsters].atk = atk;
+                        g_monsters[g_numMonsters].exp = md->exp + level * 2;
+                        g_monsters[g_numMonsters].essence = md->essence + level * 2;
+                        g_monsters[g_numMonsters].state = 0;
+                        g_monsters[g_numMonsters].freezeTurns = 0;
+                        g_monsters[g_numMonsters].alertRange = (tIdx == MONSTER_LEVIATHAN ? 10 : (tIdx == MONSTER_WRAITH ? 9 : 7));
+                        g_monsters[g_numMonsters].alive = TRUE;
+                        g_numMonsters++;
+                        spawned = TRUE;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void DamageMonster(int idx, int dmg, const char* dmgType, BOOL isCrit) {
+    if (idx < 0 || idx >= g_numMonsters || !g_monsters[idx].alive) return;
+    Monster* m = &g_monsters[idx];
+    const MonsterDef* md = &g_monsterDefs[m->type];
+
+    m->hp -= dmg;
+    m->state = 1; // Alert
+
+    char txt[32];
+    snprintf(txt, sizeof(txt), "%s-%d", isCrit ? "CRIT! " : "", dmg);
+    COLORREF col = RGB(248, 113, 113);
+    if (strcmp(dmgType, "FIRE") == 0) col = RGB(249, 115, 22);
+    else if (strcmp(dmgType, "CRYO") == 0) col = RGB(6, 182, 212);
+    else if (strcmp(dmgType, "SHOCK") == 0) col = RGB(234, 179, 8);
+    SpawnCombatText((float)m->x, (float)m->y, txt, col);
+
+    if (m->hp <= 0) {
+        m->alive = FALSE;
+        g_player.exp += m->exp;
+        g_player.essence += m->essence;
+
+        char buf[128];
+        snprintf(buf, sizeof(buf), "SLAIN: You destroyed %s! (+%d EXP, +%d Essence)", md->name, m->exp, m->essence);
+        AddLog(buf, COLOR_TEXT_GOLD);
+        Beep(330, 40); Beep(165, 80);
+
+        // Chance to discover an unowned rune
+        int unowned[NUM_RUNES];
+        int unCount = 0;
+        for (int r = 0; r < NUM_RUNES; r++) {
+            if (!g_player.ownedRunes[r]) unowned[unCount++] = r;
+        }
+        if (unCount > 0 && RandInt(0, 100) < 35) {
+            int rPick = unowned[RandInt(0, unCount - 1)];
+            g_player.ownedRunes[rPick] = TRUE;
+            char rBuf[128];
+            snprintf(rBuf, sizeof(rBuf), "Bestiary Spoils: Discovered %s (%s)! Inscribe in Tab [3].", g_runeDefs[rPick].name, g_runeDefs[rPick].symbol);
+            AddLog(rBuf, COLOR_ACCENT_CYAN);
+            Beep(880, 50); Beep(1175, 70);
+        }
+
+        CheckLevelUp();
+    } else {
+        char buf[128];
+        snprintf(buf, sizeof(buf), "Hit %s for %d %s DMG! (%d/%d HP)", md->name, dmg, dmgType, m->hp, m->max_hp);
+        AddLog(buf, COLOR_ACCENT_RED);
+        Beep(520, 30);
+    }
+}
+
+void AttackMonster(int idx) {
+    if (idx < 0 || idx >= g_numMonsters) return;
+    int baseDmg = 12 + g_player.might / 2 + g_player.arcana / 3 + RandInt(0, 5);
+    baseDmg += g_staffDefs[g_player.equippedStaff].arcanaBonus;
+
+    BOOL isCrit = (RandInt(0, 100) < 15);
+    if (isCrit) baseDmg = (int)(baseDmg * 1.5f);
+
+    DamageMonster(idx, baseDmg, "PHYSICAL", isCrit);
+    AdvanceTurn();
+}
+
+void UpdateMonsters(void) {
+    for (int m = 0; m < g_numMonsters; m++) {
+        if (!g_monsters[m].alive) continue;
+        Monster* mon = &g_monsters[m];
+        const MonsterDef* md = &g_monsterDefs[mon->type];
+
+        if (mon->freezeTurns > 0) {
+            mon->freezeTurns--;
+            char fBuf[128];
+            snprintf(fBuf, sizeof(fBuf), "%s is encased in glacial ice and cannot act!", md->name);
+            AddLog(fBuf, COLOR_ACCENT_CYAN);
+            continue;
+        }
+
+        float dist = sqrtf((float)((g_player.x - mon->x) * (g_player.x - mon->x) + (g_player.y - mon->y) * (g_player.y - mon->y)));
+        BOOL hasLOS = CheckLOS(mon->x, mon->y, g_player.x, g_player.y);
+
+        if (dist <= (float)mon->alertRange && hasLOS) {
+            mon->state = 1;
+        }
+
+        if (mon->state == 1) {
+            BOOL isAdj = (abs(g_player.x - mon->x) <= 1 && abs(g_player.y - mon->y) <= 1);
+            if (isAdj) {
+                // Melee strike
+                int rawDmg = mon->atk + RandInt(0, 4) - 2;
+                int netDmg = rawDmg - g_player.warding / 3;
+                if (netDmg < 3) netDmg = 3;
+
+                if (g_player.shield > 0) {
+                    if (g_player.shield >= netDmg) {
+                        g_player.shield -= netDmg;
+                        netDmg = 0;
+                        SpawnCombatText((float)g_player.x, (float)g_player.y, "ABSORB", RGB(56, 189, 248));
+                        AddLog("Aegis Ward absorbs the monster's blow!", COLOR_BORDER_GLOW);
+                    } else {
+                        netDmg -= g_player.shield;
+                        g_player.shield = 0;
+                        SpawnCombatText((float)g_player.x, (float)g_player.y, "WARD BROKE", RGB(56, 189, 248));
+                        AddLog("Aegis Ward absorbed partial damage and collapsed!", COLOR_ACCENT_AMBER);
+                    }
+                }
+
+                if (netDmg > 0) {
+                    g_player.hp -= netDmg;
+                    if (g_player.hp < 0) g_player.hp = 0;
+                    char dTxt[32];
+                    snprintf(dTxt, sizeof(dTxt), "-%d", netDmg);
+                    SpawnCombatText((float)g_player.x, (float)g_player.y, dTxt, COLOR_ACCENT_RED);
+
+                    char aBuf[128];
+                    snprintf(aBuf, sizeof(aBuf), "%s strikes you for %d DMG! (%d/%d HP)", md->name, netDmg, g_player.hp, g_player.max_hp);
+                    AddLog(aBuf, COLOR_ACCENT_RED);
+                    Beep(180, 40);
+                }
+
+                if (mon->type == MONSTER_WRAITH) {
+                    g_player.sanity = (g_player.sanity > 3) ? (g_player.sanity - 3) : 0;
+                    g_player.aether = (g_player.aether > 4) ? (g_player.aether - 4) : 0;
+                    AddLog("Void Wraith drains your mind & spirit (-3 Sanity, -4 Aether)!", COLOR_ACCENT_PURPLE);
+                } else if (mon->type == MONSTER_LEVIATHAN) {
+                    g_player.sanity = (g_player.sanity > 2) ? (g_player.sanity - 2) : 0;
+                    AddLog("Abyssal Leviathan's crushing slam shakes the floor (-2 Sanity)!", COLOR_ACCENT_AMBER);
+                }
+
+                if (g_player.hp <= 0) {
+                    AddLog("You have fallen in the Abyss! Press F2 / Ctrl+N to descend anew.", COLOR_ACCENT_RED);
+                }
+            } else if (mon->type == MONSTER_ACOLYTE && dist <= 4.0f && hasLOS) {
+                // Ranged Shadow Bolt
+                int rawDmg = mon->atk + RandInt(0, 3);
+                int netDmg = rawDmg - g_player.warding / 4;
+                if (netDmg < 3) netDmg = 3;
+
+                if (g_player.shield > 0) {
+                    if (g_player.shield >= netDmg) {
+                        g_player.shield -= netDmg;
+                        netDmg = 0;
+                    } else {
+                        netDmg -= g_player.shield;
+                        g_player.shield = 0;
+                    }
+                }
+
+                if (netDmg > 0) {
+                    g_player.hp -= netDmg;
+                    if (g_player.hp < 0) g_player.hp = 0;
+                    char dTxt[32];
+                    snprintf(dTxt, sizeof(dTxt), "-%d SHADOW", netDmg);
+                    SpawnCombatText((float)g_player.x, (float)g_player.y, dTxt, COLOR_ACCENT_PURPLE);
+
+                    char bBuf[128];
+                    snprintf(bBuf, sizeof(bBuf), "%s casts Shadow Bolt for %d DMG!", md->name, netDmg);
+                    AddLog(bBuf, COLOR_ACCENT_RED);
+                    Beep(260, 40);
+                }
+            } else {
+                // Pathfinding towards player
+                int bestDx = 0, bestDy = 0;
+                float bestDist = dist;
+
+                int dirs[8][2] = {
+                    {1, 0}, {-1, 0}, {0, 1}, {0, -1},
+                    {1, 1}, {-1, -1}, {1, -1}, {-1, 1}
+                };
+
+                for (int d = 0; d < 8; d++) {
+                    int testX = mon->x + dirs[d][0];
+                    int testY = mon->y + dirs[d][1];
+                    if (testX < 1 || testX >= MAP_WIDTH - 1 || testY < 1 || testY >= MAP_HEIGHT - 1) continue;
+                    if (testX == g_player.x && testY == g_player.y) continue;
+
+                    int tile = g_dungeon[testY][testX];
+                    BOOL isWraith = (mon->type == MONSTER_WRAITH);
+                    if (!isWraith) {
+                        if (tile == TILE_WALL || tile == TILE_PILLAR || tile == TILE_CHASM || tile == TILE_DOOR_CLOSED) continue;
+                    } else {
+                        if (tile == TILE_WALL && (testX == 0 || testX == MAP_WIDTH - 1 || testY == 0 || testY == MAP_HEIGHT - 1)) continue;
+                    }
+
+                    BOOL occ = FALSE;
+                    for (int o = 0; o < g_numMonsters; o++) {
+                        if (o != m && g_monsters[o].alive && g_monsters[o].x == testX && g_monsters[o].y == testY) {
+                            occ = TRUE; break;
+                        }
+                    }
+                    if (occ) continue;
+
+                    float newD = sqrtf((float)((g_player.x - testX) * (g_player.x - testX) + (g_player.y - testY) * (g_player.y - testY)));
+                    if (newD < bestDist) {
+                        bestDist = newD;
+                        bestDx = dirs[d][0];
+                        bestDy = dirs[d][1];
+                    }
+                }
+
+                if (bestDx != 0 || bestDy != 0) {
+                    mon->x += bestDx;
+                    mon->y += bestDy;
+                }
+            }
+        } else {
+            // Wander
+            if (RandInt(0, 100) < 25) {
+                int dirs[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+                int pickD = RandInt(0, 3);
+                int testX = mon->x + dirs[pickD][0];
+                int testY = mon->y + dirs[pickD][1];
+                if (testX > 0 && testX < MAP_WIDTH - 1 && testY > 0 && testY < MAP_HEIGHT - 1) {
+                    int t = g_dungeon[testY][testX];
+                    if (t == TILE_FLOOR || t == TILE_WATER) {
+                        BOOL occ = FALSE;
+                        for (int o = 0; o < g_numMonsters; o++) {
+                            if (o != m && g_monsters[o].alive && g_monsters[o].x == testX && g_monsters[o].y == testY) {
+                                occ = TRUE; break;
+                            }
+                        }
+                        if (!occ) {
+                            mon->x = testX;
+                            mon->y = testY;
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -931,6 +1339,8 @@ void InitGame(int depth) {
         GenerateVoidAbyss(depth);
     }
 
+    g_numCombatTexts = 0;
+    SpawnMonsters(depth);
     ComputeFOV();
 
     char buf[128];
@@ -981,6 +1391,7 @@ void AdvanceTurn(void) {
             AddLog("Subterranean echoes fray your willpower (-2 Sanity).", COLOR_ACCENT_AMBER);
         }
     }
+    UpdateMonsters();
     ComputeFOV();
 }
 
@@ -994,6 +1405,14 @@ void MovePlayer(int dx, int dy) {
     if (dy < 0) g_player.facing = 0;
 
     if (nx < 0 || nx >= MAP_WIDTH || ny < 0 || ny >= MAP_HEIGHT) return;
+
+    // Check for monster bump-to-attack
+    for (int m = 0; m < g_numMonsters; m++) {
+        if (g_monsters[m].alive && g_monsters[m].x == nx && g_monsters[m].y == ny) {
+            AttackMonster(m);
+            return;
+        }
+    }
 
     int tile = g_dungeon[ny][nx];
     if (tile == TILE_WALL || tile == TILE_PILLAR || tile == TILE_CHASM) {
@@ -1139,6 +1558,15 @@ void CastSpell(int socketIdx) {
             g_explored[ty][tx] = TRUE;
             g_lightMap[ty][tx] = 1.0f;
 
+            // Check monster in blast
+            for (int m = 0; m < g_numMonsters; m++) {
+                if (g_monsters[m].alive && g_monsters[m].x == tx && g_monsters[m].y == ty) {
+                    int dmg = 35 + (int)(g_player.arcana * 0.8f);
+                    if (g_monsters[m].type == MONSTER_SKELETON) dmg = (int)(dmg * 1.5f);
+                    DamageMonster(m, dmg, "FIRE", FALSE);
+                }
+            }
+
             if (g_dungeon[ty][tx] == TILE_WALL || g_dungeon[ty][tx] == TILE_PILLAR || g_dungeon[ty][tx] == TILE_CHASM) {
                 break;
             }
@@ -1184,6 +1612,17 @@ void CastSpell(int socketIdx) {
                 }
             }
         }
+        // Hit all monsters in radius and freeze them
+        for (int m = 0; m < g_numMonsters; m++) {
+            if (!g_monsters[m].alive) continue;
+            float dist = sqrtf((float)((g_monsters[m].x - g_player.x) * (g_monsters[m].x - g_player.x) + (g_monsters[m].y - g_player.y) * (g_monsters[m].y - g_player.y)));
+            if (dist <= 2.3f) {
+                int dmg = 24 + (int)(g_player.arcana * 0.5f);
+                if (g_monsters[m].type == MONSTER_LEVIATHAN) dmg = (int)(dmg * 1.3f);
+                g_monsters[m].freezeTurns = 2;
+                DamageMonster(m, dmg, "CRYO", FALSE);
+            }
+        }
         if (g_numSpellFX < MAX_SPELL_FX) {
             g_spellFX[g_numSpellFX].type = 1;
             g_spellFX[g_numSpellFX].x = g_player.x;
@@ -1213,6 +1652,15 @@ void CastSpell(int socketIdx) {
             g_visible[ty][tx] = TRUE;
             g_explored[ty][tx] = TRUE;
             g_lightMap[ty][tx] = 1.0f;
+
+            // Check monster along electric arc
+            for (int m = 0; m < g_numMonsters; m++) {
+                if (g_monsters[m].alive && g_monsters[m].x == tx && g_monsters[m].y == ty) {
+                    int dmg = 42 + (int)(g_player.arcana * 0.9f);
+                    if (g_monsters[m].type == MONSTER_GHOUL) dmg = (int)(dmg * 1.4f);
+                    DamageMonster(m, dmg, "SHOCK", FALSE);
+                }
+            }
 
             if (g_dungeon[ty][tx] == TILE_DOOR_CLOSED) {
                 g_dungeon[ty][tx] = TILE_DOOR_OPEN;
@@ -1261,6 +1709,15 @@ void CastSpell(int socketIdx) {
             }
             g_player.x = targetX;
             g_player.y = targetY;
+
+            // Stun adjacent monsters
+            for (int m = 0; m < g_numMonsters; m++) {
+                if (g_monsters[m].alive && abs(g_monsters[m].x - g_player.x) <= 1 && abs(g_monsters[m].y - g_player.y) <= 1) {
+                    if (g_monsters[m].freezeTurns < 1) g_monsters[m].freezeTurns = 1;
+                    SpawnCombatText((float)g_monsters[m].x, (float)g_monsters[m].y, "STUNNED", RGB(168, 85, 247));
+                }
+            }
+
             AddLog("VOID WARP! You phase-shift through space, slipping through obstacles!", COLOR_ACCENT_PURPLE);
             Beep(200, 80); Beep(550, 60);
         } else {
@@ -1661,6 +2118,63 @@ void RenderGame(HDC hdc, HWND hwnd) {
         }
     }
 
+    // Draw Active Monsters
+    SelectObject(memDC, fontBold);
+    for (int m = 0; m < g_numMonsters; m++) {
+        if (!g_monsters[m].alive) continue;
+        int mx = g_monsters[m].x;
+        int my = g_monsters[m].y;
+        if (g_fovEnabled && !g_visible[my][mx]) continue;
+        if (!g_fovEnabled && !g_explored[my][mx]) continue;
+
+        int mScrX = vpX + (mx * TILE_SIZE - g_camX);
+        int mScrY = vpY + (my * TILE_SIZE - g_camY);
+        if (mScrX < vpX - TILE_SIZE || mScrX >= vpX + VIEWPORT_W ||
+            mScrY < vpY - TILE_SIZE || mScrY >= vpY + VIEWPORT_H) continue;
+
+        const MonsterDef* mdef = &g_monsterDefs[g_monsters[m].type];
+
+        // Monster base avatar
+        HBRUSH mBgBr = CreateSolidBrush(RGB(20, 10, 18));
+        HBRUSH oldMB = (HBRUSH)SelectObject(memDC, mBgBr);
+        HPEN mPen = CreatePen(PS_SOLID, 1, mdef->color);
+        HPEN oldMP = (HPEN)SelectObject(memDC, mPen);
+        Ellipse(memDC, mScrX + 4, mScrY + 4, mScrX + TILE_SIZE - 4, mScrY + TILE_SIZE - 4);
+        SelectObject(memDC, oldMP);
+        DeleteObject(mPen);
+        SelectObject(memDC, oldMB);
+        DeleteObject(mBgBr);
+
+        // Monster glyph
+        SetTextColor(memDC, mdef->color);
+        TextOutA(memDC, mScrX + 11, mScrY + 7, mdef->symbol, (int)strlen(mdef->symbol));
+
+        // Mini HP Bar
+        int barW = TILE_SIZE - 8;
+        int barH = 3;
+        int barY = mScrY + 2;
+        RECT mBarBg = { mScrX + 4, barY, mScrX + 4 + barW, barY + barH };
+        HBRUSH mBarDark = CreateSolidBrush(RGB(10, 10, 10));
+        FillRect(memDC, &mBarBg, mBarDark);
+        DeleteObject(mBarDark);
+
+        int curW = (int)((float)barW * ((float)g_monsters[m].hp / (float)g_monsters[m].max_hp));
+        if (curW < 0) curW = 0; if (curW > barW) curW = barW;
+        RECT mBarFill = { mScrX + 4, barY, mScrX + 4 + curW, barY + barH };
+        HBRUSH mFill = CreateSolidBrush(COLOR_ACCENT_RED);
+        FillRect(memDC, &mBarFill, mFill);
+        DeleteObject(mFill);
+
+        // Alert or Freeze indicator
+        if (g_monsters[m].freezeTurns > 0) {
+            SetTextColor(memDC, RGB(56, 189, 248));
+            TextOutA(memDC, mScrX + 2, mScrY + 5, "*", 1);
+        } else if (g_monsters[m].state == 1) {
+            SetTextColor(memDC, COLOR_ACCENT_AMBER);
+            TextOutA(memDC, mScrX + 2, mScrY + 5, "!", 1);
+        }
+    }
+
     // Draw Player / Delver with Torchlight Illumination Shader
     int plScrX = vpX + (g_player.x * TILE_SIZE - g_camX);
     int plScrY = vpY + (g_player.y * TILE_SIZE - g_camY);
@@ -1782,6 +2296,25 @@ void RenderGame(HDC hdc, HWND hwnd) {
         }
     }
 
+    // Draw Floating Combat Texts
+    SelectObject(memDC, fontSmall);
+    for (int i = 0; i < g_numCombatTexts; i++) {
+        CombatText* ct = &g_combatTexts[i];
+        int ctScrX = vpX + (int)(ct->x * TILE_SIZE - g_camX) + 8;
+        int ctScrY = vpY + (int)(ct->y * TILE_SIZE - g_camY) - (14 - ct->life) * 2;
+        if (ctScrX >= vpX && ctScrX < vpX + VIEWPORT_W - 50 && ctScrY >= vpY && ctScrY < vpY + VIEWPORT_H) {
+            SetTextColor(memDC, ct->color);
+            TextOutA(memDC, ctScrX, ctScrY, ct->text, (int)strlen(ct->text));
+        }
+        ct->life--;
+        ct->y -= 0.05f;
+        if (ct->life <= 0) {
+            g_combatTexts[i] = g_combatTexts[g_numCombatTexts - 1];
+            g_numCombatTexts--;
+            i--;
+        }
+    }
+
     // CRT Scanlines Shader Pass (Subtle horizontal scan line rasterization)
     if (g_crtEnabled) {
         HPEN crtPen = CreatePen(PS_SOLID, 1, RGB(2, 4, 7));
@@ -1896,13 +2429,16 @@ void RenderGame(HDC hdc, HWND hwnd) {
     SelectObject(memDC, fontSmall);
     // Tab 0: Delver
     SetTextColor(memDC, g_activeTab == 0 ? COLOR_BORDER_GLOW : COLOR_TEXT_DIM);
-    TextOutA(memDC, sbX + 20, sbY + 7, "[1] DELVER", 10);
+    TextOutA(memDC, sbX + 8, sbY + 7, "[1] DELV", 8);
     // Tab 1: Relics
     SetTextColor(memDC, g_activeTab == 1 ? COLOR_BORDER_GLOW : COLOR_TEXT_DIM);
-    TextOutA(memDC, sbX + 120, sbY + 7, "[2] RELICS", 10);
+    TextOutA(memDC, sbX + 82, sbY + 7, "[2] PACK", 8);
     // Tab 2: Runes
     SetTextColor(memDC, g_activeTab == 2 ? COLOR_BORDER_GLOW : COLOR_TEXT_DIM);
-    TextOutA(memDC, sbX + 220, sbY + 7, "[3] RUNES", 9);
+    TextOutA(memDC, sbX + 156, sbY + 7, "[3] RUNES", 9);
+    // Tab 3: Bestiary
+    SetTextColor(memDC, g_activeTab == 3 ? COLOR_BORDER_GLOW : COLOR_TEXT_DIM);
+    TextOutA(memDC, sbX + 234, sbY + 7, "[4] BEASTS", 10);
 
     int contentY = sbY + 36;
 
@@ -2165,6 +2701,53 @@ void RenderGame(HDC hdc, HWND hwnd) {
             TextOutA(memDC, sbX + 22, curY + 4, rBuf, (int)strlen(rBuf));
             curY += 24;
         }
+    } else if (g_activeTab == 3) {
+        // TAB 3: BESTIARY & THREAT RADAR
+        RECT cardRect = {sbX + 8, contentY, sbX + sbW - 8, contentY + 308};
+        HBRUSH cardBg = CreateSolidBrush(COLOR_BG_CARD);
+        FillRect(memDC, &cardRect, cardBg);
+        DeleteObject(cardBg);
+        FrameRect(memDC, &cardRect, (HBRUSH)GetStockObject(DKGRAY_BRUSH));
+
+        SelectObject(memDC, fontBold);
+        SetTextColor(memDC, COLOR_TEXT_RUNE);
+        TextOutA(memDC, sbX + 16, contentY + 8, "BESTIARY & THREAT RADAR", 23);
+
+        int livingCount = 0;
+        for (int m = 0; m < g_numMonsters; m++) {
+            if (g_monsters[m].alive) livingCount++;
+        }
+        SelectObject(memDC, fontSmall);
+        char radBuf[80];
+        snprintf(radBuf, sizeof(radBuf), "Hostiles on Floor: %d | Threat: %s", livingCount, livingCount > 6 ? "HIGH" : livingCount > 2 ? "MED" : "LOW");
+        SetTextColor(memDC, COLOR_ACCENT_AMBER);
+        TextOutA(memDC, sbX + 16, contentY + 28, radBuf, (int)strlen(radBuf));
+
+        int bY = contentY + 48;
+        for (int b = 0; b < NUM_MONSTER_TYPES && bY < contentY + 300; b++) {
+            const MonsterDef* md = &g_monsterDefs[b];
+            RECT bRect = {sbX + 14, bY, sbX + sbW - 14, bY + 48};
+            HBRUSH bBr = CreateSolidBrush(RGB(14, 18, 28));
+            FillRect(memDC, &bRect, bBr);
+            DeleteObject(bBr);
+
+            SelectObject(memDC, fontBold);
+            SetTextColor(memDC, md->color);
+            char bName[64];
+            snprintf(bName, sizeof(bName), "[%s] %s", md->symbol, md->name);
+            TextOutA(memDC, sbX + 20, bY + 4, bName, (int)strlen(bName));
+
+            SelectObject(memDC, fontSmall);
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            char bStats[80];
+            snprintf(bStats, sizeof(bStats), "Base HP: %d | Atk: %d | Exp: %d", md->baseHp, md->baseAtk, md->exp);
+            TextOutA(memDC, sbX + 20, bY + 18, bStats, (int)strlen(bStats));
+
+            SetTextColor(memDC, COLOR_TEXT_BRIGHT);
+            TextOutA(memDC, sbX + 20, bY + 32, md->weakness, (int)strlen(md->weakness));
+
+            bY += 51;
+        }
     }
 
     // MESSAGE CHRONICLE LOG (sbX + 8, 380..600)
@@ -2211,11 +2794,12 @@ void RenderGame(HDC hdc, HWND hwnd) {
         int my = modalRect.top + 46;
         TextOutA(memDC, modalRect.left + 20, my, "- WASD / Arrow Keys / Numpad / Vi: Navigate grid", 48); my += 18;
         TextOutA(memDC, modalRect.left + 20, my, "- Space: Rest 1 turn (+2 HP, +1 Sanity, +3 Aether)", 50); my += 18;
+        TextOutA(memDC, modalRect.left + 20, my, "- Bump Combat: Walk into monsters to strike in melee", 52); my += 18;
         TextOutA(memDC, modalRect.left + 20, my, "- Z / X / V: Cast Elemental Spells from Staff Sockets 1 / 2 / 3", 63); my += 18;
         TextOutA(memDC, modalRect.left + 20, my, "- R: Search surrounding area for secret coffers & altars", 56); my += 18;
         TextOutA(memDC, modalRect.left + 20, my, "- E / Enter: Interact / Descend stairs / Commune with Altars", 60); my += 18;
-        TextOutA(memDC, modalRect.left + 20, my, "- 1, 2, 3: Switch Sidebar Tabs (Delver / Relics / Rune Forge)", 61); my += 18;
-        TextOutA(memDC, modalRect.left + 20, my, "- Runes: Pyre (Fire), Frost (Ice), Tempest (Shock), Void, Aegis", 63); my += 18;
+        TextOutA(memDC, modalRect.left + 20, my, "- 1, 2, 3, 4: Tabs (Delver / Pack / Rune Forge / Bestiary)", 57); my += 18;
+        TextOutA(memDC, modalRect.left + 20, my, "- Bestiary: Skeletons (fire), Wraiths (phasing), Leviathans (frost)", 67); my += 18;
         TextOutA(memDC, modalRect.left + 20, my, "- Biomes: B1-3 Catacombs | B4-6 Sunken Grotto | B7-9 Crypt | B10+ Void", 70); my += 18;
         TextOutA(memDC, modalRect.left + 20, my, "- C: Toggle CRT Scanlines | F: Toggle Field of View", 51); my += 18;
         TextOutA(memDC, modalRect.left + 20, my, "- Ctrl+N / F2: Start New Descent", 32); my += 22;
@@ -2432,6 +3016,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case '3':
             g_activeTab = 2;
             break;
+        case '4':
+            g_activeTab = 3;
+            break;
 
         case VK_F2:
             g_player.hp = g_player.max_hp;
@@ -2468,9 +3055,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         int sbX = 728;
         int sbY = 46;
         if (mouseY >= sbY && mouseY <= sbY + 28 && mouseX >= sbX && mouseX <= sbX + 308) {
-            if (mouseX < sbX + 100) g_activeTab = 0;
-            else if (mouseX < sbX + 200) g_activeTab = 1;
-            else g_activeTab = 2;
+            int t = (mouseX - sbX) / 77;
+            if (t < 0) t = 0;
+            if (t > 3) t = 3;
+            g_activeTab = t;
             InvalidateRect(hwnd, NULL, FALSE);
             break;
         }
