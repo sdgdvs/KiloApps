@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KJournal
+**Target App:** KMail
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KJournal
 - KMail
 - KMandel
 - KMatch3
@@ -173,8 +172,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KHangman
 - KHex
 - KImage
+- KJournal
 
 ## Test Reports
+
+- **KJournal**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
+  - ✅ Core functionality works (daily journaling workspace with real-time word/character count and estimated reading time, daily writing word goal progress bar, 6 quick-starter prompt chips, 6 guided reflection templates in library Morning/Evening/Gratitude/Goals/Stoic/BrainDump with replace and append options, 6 mood selectors 😀/😊/😐/😔/⚡/🧘 with analytics breakdown and percentage gauges, interactive mini calendar navigator with entry indicators and month browsing, hashtag cloud extraction with filter toggling, search query filtering, writing streak & longest streak tracker, PIN lock overlay security system, and multi-format data export JSON/Markdown/TXT and JSON backup import).
+  - 🔧 FIXED: In the mini calendar widget, if the user was viewing today's entry and browsed past/future months using the prev/next month buttons, clicking the "Today" button (`•` / `todayCalMonth()`) failed to re-render the calendar to the current month because `selectDateWithAutoSave(todayStr)` returned early without calling `renderCalendar()` when `selectedDate === dateStr`. Added explicit calendar re-rendering when the target date matches the currently selected date.
+  - 🔧 FIXED: Global keyboard listener checked bare `e.key.toLowerCase() === 'h'` and `e.key >= '1' && e.key <= '6'` without verifying `!e.ctrlKey && !e.altKey && !e.metaKey`, intercepting browser accelerators: `Ctrl+H` (browser history hijacked to open KJournal Help modal) and `Alt+1`..`Alt+6` (tab switching hijacked to select moods). Added proper modifier guards across all shortcuts.
+  - 🔧 FIXED: Global keyboard shortcuts (`H`, `1`..`6`, `Ctrl+S`, `Ctrl+N`, `Ctrl+T`, `Ctrl+F`) continued to fire in the background while modal dialogs (Help, Analytics, Settings, Import/Export, Confirm) were open, changing entry moods, jumping dates, or stacking dialogs while reading modal contents. Added modal suppression guard across all background shortcuts.
+  - 🔧 FIXED: When entering PIN setup (`create_1` or `create_2` mode via Settings), the PIN keypad overlay lacked a visible "Cancel" button, trapping mouse and touch-only users who changed their minds unless they used a physical keyboard to press Escape. Added a responsive Cancel button to the PIN card during creation modes.
+  - 🔧 FIXED: `exportData()` exported journal entries from memory/storage without checking `isDirty`, causing entries typed or edited within the 1800ms auto-save debounce window to be omitted or outdated in exported JSON, Markdown, or TXT backup files. Added automatic save invocation prior to export when unsaved changes exist.
+  - 🔧 FIXED: In `deleteCurrentEntry()`, deleting an entry left the mood picker highlighted on the deleted entry's mood rather than resetting to the default `😊`. Added mood reset to default upon entry deletion.
+  - 🔧 FIXED: Pressing `Escape` while focused on `#searchInput` did not clear or blur the search field, and `#storageInfo` in the Settings modal displayed static text without showing the active entry count and approximate LocalStorage usage. Added Escape search clear/blur and dynamic storage statistics calculation upon opening Settings.
 
 - **KImage**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
   - ✅ Core functionality works (interactive image studio with slideshow playlist, GPU/Canvas adjustments Brightness/Contrast/Saturation/Blur, 8 cinematic filter presets, 3x3 Spatial Convolution matrix engine with 9 presets and custom weights/divisor/bias/channel targeting, 90° rotations and H/V flipping, aspect-constrained interactive crop tool, dimensions resize with aspect lock, freehand annotation brush with color picker and radius slider, sub-sampled multi-channel RGB histogram, EXIF camera metadata inspector, multi-format export PNG/JPEG/WEBP/BMP, and keyboard accelerators).

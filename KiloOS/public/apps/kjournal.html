@@ -467,6 +467,7 @@
       <button class="pin-btn" onclick="pressPin('0')">0</button>
       <button class="pin-btn action" onclick="backspacePin()">⌫</button>
     </div>
+    <button id="pinCancelBtn" class="btn" onclick="hidePinOverlay()" style="margin-top:14px; width:100%; justify-content:center; display:none;">Cancel</button>
   </div>
 </div>
 
@@ -1077,6 +1078,8 @@
     const overlay = document.getElementById('pinOverlay');
     const title = document.getElementById('pinTitle');
     const sub = document.getElementById('pinSub');
+    const cancelBtn = document.getElementById('pinCancelBtn');
+    if (cancelBtn) cancelBtn.style.display = (mode === 'verify') ? 'none' : 'inline-flex';
     overlay.style.display = 'flex';
 
     if (mode === 'verify') {
@@ -1094,6 +1097,8 @@
   function hidePinOverlay() {
     const overlay = document.getElementById('pinOverlay');
     if (overlay) overlay.style.display = 'none';
+    const cancelBtn = document.getElementById('pinCancelBtn');
+    if (cancelBtn) cancelBtn.style.display = 'none';
     pinBuffer = '';
     updatePinDots();
   }
@@ -1183,7 +1188,10 @@
 
   // Calendar Navigator Widget
   function selectDateWithAutoSave(dateStr) {
-    if (selectedDate === dateStr) return;
+    if (selectedDate === dateStr) {
+      renderCalendar();
+      return;
+    }
     if (isDirty) {
       saveEntry(false);
     }
@@ -1503,6 +1511,7 @@
         }
         delete entries[selectedDate];
         document.getElementById('journalArea').value = '';
+        selectMood('😊', false);
         isDirty = false;
         const saveStatus = document.getElementById('saveStatus');
         if (saveStatus) saveStatus.innerText = 'Entry deleted';
@@ -1681,6 +1690,14 @@
   }
 
   function openSettingsModal() {
+    const info = document.getElementById('storageInfo');
+    if (info) {
+      const count = Object.keys(entries).filter(d => entries[d] && entries[d].text && entries[d].text.trim()).length;
+      const bytes = (localStorage.getItem('kjournal_data') || '').length;
+      const kb = (bytes / 1024).toFixed(1);
+      info.innerText = `All data is stored privately in browser LocalStorage. Current: ${count} active entries (~${kb} KB).`;
+    }
+    updateLockBtnState();
     openModal('settingsModal');
   }
 
@@ -1700,6 +1717,9 @@
 
   // Import / Export Systems
   function exportData(format) {
+    if (isDirty) {
+      saveEntry(false);
+    }
     const dates = Object.keys(entries).filter(d => entries[d] && typeof entries[d].text === 'string' && entries[d].text.trim()).sort();
     if (dates.length === 0) {
       showToast('No entries to export');
@@ -1844,48 +1864,64 @@
       return;
     }
 
+    const anyModalOpen = !!document.querySelector('.modal-backdrop.active');
+
+    if (e.key === 'Escape') {
+      if (anyModalOpen) {
+        document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('active'));
+        return;
+      }
+      const s = document.getElementById('searchInput');
+      if (s && (document.activeElement === s || s.value)) {
+        clearSearch();
+        s.blur();
+        return;
+      }
+    }
+
+    if (anyModalOpen) {
+      return;
+    }
+
     if (e.key === 'F1') {
       e.preventDefault();
       openModal('helpModal');
       return;
     }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 's') {
       e.preventDefault();
       saveEntry(true);
       return;
     }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'n') {
       e.preventDefault();
       todayCalMonth();
       document.getElementById('journalArea').focus();
       showToast("Jumped to today's entry");
       return;
     }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'f') {
       e.preventDefault();
       const s = document.getElementById('searchInput');
       if (s) { s.focus(); s.select(); }
       return;
     }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 't') {
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 't') {
       e.preventDefault();
       openTemplatesModal();
       return;
     }
     if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-      if (e.key.toLowerCase() === 'h') {
+      if (!e.ctrlKey && !e.altKey && !e.metaKey && (e.key.toLowerCase() === 'h' || e.key === '?')) {
         e.preventDefault();
         openModal('helpModal');
         return;
       }
-      if (e.key >= '1' && e.key <= '6') {
+      if (!e.ctrlKey && !e.altKey && !e.metaKey && e.key >= '1' && e.key <= '6') {
         const moods = ['😀', '😊', '😐', '😔', '⚡', '🧘'];
         selectMood(moods[parseInt(e.key, 10) - 1]);
         return;
       }
-    }
-    if (e.key === 'Escape') {
-      document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('active'));
     }
   });
 </script>
