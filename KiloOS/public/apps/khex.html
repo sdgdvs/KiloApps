@@ -1050,24 +1050,53 @@
     if (activeTab !== 'converter') {
       switchTab(activeTab);
     }
+
+    // Input Enter key listeners
+    const sp = document.getElementById('searchPattern');
+    if (sp) sp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { executeSearch(); e.preventDefault(); } });
+    const rp = document.getElementById('replacePattern');
+    if (rp) rp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { executeReplaceAll(); e.preventDefault(); } });
+    const oa = document.getElementById('opArg');
+    if (oa) oa.addEventListener('keydown', (e) => { if (e.key === 'Enter') { applyByteOperation(); e.preventDefault(); } });
+
+    // WAI-ARIA tab arrow navigation
+    const tabBtns = Array.from(document.querySelectorAll('.tab-btn'));
+    tabBtns.forEach((btn, idx) => {
+      btn.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight') {
+          const nextIdx = (idx + 1) % tabBtns.length;
+          tabBtns[nextIdx].focus();
+          tabBtns[nextIdx].click();
+          e.preventDefault();
+        } else if (e.key === 'ArrowLeft') {
+          const prevIdx = (idx - 1 + tabBtns.length) % tabBtns.length;
+          tabBtns[prevIdx].focus();
+          tabBtns[prevIdx].click();
+          e.preventDefault();
+        }
+      });
+    });
+
     showToast('⚡ KHex Suite Ready', 'Press [F1] or click Help for full shortcuts & documentation.', 'info', 5000);
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'F1' || ((e.key === 'h' || e.key === 'H') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA')) {
+    let m = document.getElementById('helpModal');
+    let isHelpOpen = (m && m.style.display !== 'none');
+
+    if (e.key === 'F1' || (!e.ctrlKey && !e.altKey && !e.metaKey && (e.key === 'h' || e.key === 'H') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA')) {
       toggleHelp();
       e.preventDefault();
       return;
     }
     if (e.key === 'Escape') {
-      let m = document.getElementById('helpModal');
-      if (m && m.style.display !== 'none') {
+      if (isHelpOpen) {
         m.style.display = 'none';
         e.preventDefault();
       }
       return;
     }
-    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+    if (!isHelpOpen && !e.ctrlKey && !e.altKey && !e.metaKey && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
       if (e.key === '1') { switchTab('converter'); e.preventDefault(); }
       else if (e.key === '2') { switchTab('editor'); e.preventDefault(); }
       else if (e.key === '3') { switchTab('entropy'); e.preventDefault(); }
@@ -1310,7 +1339,23 @@
   }
 
   function computeEntropyAndDistribution() {
-    let target = (binaryBuffer && binaryBuffer.length > 0) ? binaryBuffer : new Uint8Array([0, 0, 0, 0]);
+    if (!binaryBuffer || binaryBuffer.length === 0) {
+      document.getElementById('entropyVal').innerText = '0.000';
+      let badge = document.getElementById('entropyClassBadge');
+      badge.innerText = 'Empty Buffer';
+      badge.style.color = 'var(--text-dim)';
+      badge.style.borderColor = 'var(--border-color)';
+      document.getElementById('entropyBar').style.width = '0%';
+      document.getElementById('entropyPopCount').innerText = '0 / 0 bits (0.0%)';
+      document.getElementById('entropyNullRatio').innerText = '0 (0.0%)';
+      document.getElementById('entropyAsciiRatio').innerText = '0 (0.0%)';
+      document.getElementById('entropyHighRatio').innerText = '0 (0.0%)';
+      document.getElementById('uniqueBytesCountLabel').innerText = '0 Unique Bytes in 0 Bytes Total';
+      document.getElementById('byteFreqHistogram').innerHTML = '<div style="color:var(--text-dim); font-size:0.8rem; padding:8px;">Buffer is empty. Load or type data to view frequency distribution.</div>';
+      dissectHeader();
+      return;
+    }
+    let target = binaryBuffer;
     let len = target.length;
     let entropy = calculateShannonEntropy(target);
     let cls = getEntropyClassification(entropy);
@@ -1399,7 +1444,12 @@
   }
 
   function dissectHeader() {
-    let target = (binaryBuffer && binaryBuffer.length > 0) ? binaryBuffer : new Uint8Array([0, 0, 0, 0]);
+    if (!binaryBuffer || binaryBuffer.length === 0) {
+      document.getElementById('detectedFileType').value = 'Empty Buffer';
+      document.getElementById('sigDetailsBox').innerText = 'Buffer is empty. Load a file or enter text to inspect headers.';
+      return;
+    }
+    let target = binaryBuffer;
     let sig = detectFileSignature(target);
     document.getElementById('detectedFileType').value = sig.name + (sig.ext ? ' (' + sig.ext + ')' : '');
 
@@ -1530,7 +1580,9 @@
     textBuf.value = sample;
     binaryBuffer = new TextEncoder().encode(sample);
     try { localStorage.setItem('khex_text_buf', sample); } catch (e) {}
+    selectedOffset = 0;
     renderHexView();
+    selectByte(0);
     showToast('Sample Data Loaded', 'Hex viewer buffer loaded with 98 sample bytes.', 'success');
   }
 
@@ -1548,10 +1600,13 @@
       binaryBuffer = new Uint8Array(evt.target.result);
       let safeName = file.name.replace(/</g, "&lt;").replace(/>/g, "&gt;");
       textBuf.value = "[Loaded binary file: " + safeName + " (" + binaryBuffer.length + " bytes)]";
+      selectedOffset = 0;
       renderHexView();
+      if (binaryBuffer.length > 0) selectByte(0);
       showToast('File Loaded', `Successfully loaded "${file.name}" (${binaryBuffer.length.toLocaleString()} bytes).`, 'success');
     };
     reader.readAsArrayBuffer(slice);
+    e.target.value = '';
   }
 
   function renderHexView(highlightRange = null) {
@@ -1633,7 +1688,10 @@
 
       container.appendChild(rowEl);
     }
-    if (prevScroll > 0) {
+    if (highlightRange && container) {
+      let targetRow = Math.floor(highlightRange.start / 16);
+      container.scrollTop = Math.max(0, targetRow * 24 - 48);
+    } else if (prevScroll > 0) {
       container.scrollTop = prevScroll;
     }
   }
@@ -1657,6 +1715,11 @@
   }
 
   // --- TAB 3: SEARCH & REPLACE LOGIC ---
+  let lastSearchPattern = '';
+  let lastSearchMode = '';
+  let searchMatches = [];
+  let currentSearchIdx = 0;
+
   function executeSearch() {
     let mode = document.getElementById('searchMode').value;
     let pattern = document.getElementById('searchPattern').value;
@@ -1685,32 +1748,39 @@
       return;
     }
 
-    let matches = [];
-    for (let i = 0; i <= binaryBuffer.length - searchBytes.length; i++) {
-      let match = true;
-      for (let j = 0; j < searchBytes.length; j++) {
-        if (binaryBuffer[i + j] !== searchBytes[j]) {
-          match = false;
-          break;
+    if (pattern !== lastSearchPattern || mode !== lastSearchMode || !searchMatches.length) {
+      lastSearchPattern = pattern;
+      lastSearchMode = mode;
+      searchMatches = [];
+      for (let i = 0; i <= binaryBuffer.length - searchBytes.length; i++) {
+        let match = true;
+        for (let j = 0; j < searchBytes.length; j++) {
+          if (binaryBuffer[i + j] !== searchBytes[j]) {
+            match = false;
+            break;
+          }
         }
+        if (match) searchMatches.push(i);
       }
-      if (match) matches.push(i);
+      currentSearchIdx = 0;
+    } else {
+      currentSearchIdx = (currentSearchIdx + 1) % searchMatches.length;
     }
 
-    if (matches.length === 0) {
+    if (searchMatches.length === 0) {
       resultsBox.innerText = 'No matches found.';
       showToast('Search Completed', 'No matches found for the given pattern.', 'info');
     } else {
-      let resText = 'Found ' + matches.length + ' match(es):\n';
-      matches.forEach((off, idx) => {
-        resText += '[' + (idx + 1) + '] Offset: 0x' + off.toString(16).toUpperCase() + ' (' + off + ')\n';
+      let resText = `Found ${searchMatches.length} match(es). Active: [${currentSearchIdx + 1}/${searchMatches.length}]\n`;
+      searchMatches.forEach((off, idx) => {
+        let marker = (idx === currentSearchIdx) ? ' ➜ ' : '   ';
+        resText += `${marker}[${idx + 1}] Offset: 0x${off.toString(16).toUpperCase()} (${off})\n`;
       });
       resultsBox.innerText = resText;
-      showToast('Matches Found', `Located ${matches.length} occurrence(s) in buffer.`, 'success');
+      showToast('Match Found', `Occurrence ${currentSearchIdx + 1} of ${searchMatches.length} at 0x${searchMatches[currentSearchIdx].toString(16).toUpperCase()}`, 'success');
       
-      // Select & highlight first match
-      selectedOffset = matches[0];
-      renderHexView({ start: matches[0], end: matches[0] + searchBytes.length });
+      selectedOffset = searchMatches[currentSearchIdx];
+      renderHexView({ start: searchMatches[currentSearchIdx], end: searchMatches[currentSearchIdx] + searchBytes.length });
     }
   }
 
@@ -1775,7 +1845,16 @@
 
   // --- TAB 4: CHECKSUM & HASH SUITE LOGIC ---
   function computeHashes() {
-    if (!binaryBuffer.length) return;
+    if (!binaryBuffer || !binaryBuffer.length) {
+      document.getElementById('hashSum8').innerText = '0x00';
+      document.getElementById('hashSum16').innerText = '0x0000';
+      document.getElementById('hashSum32').innerText = '0x00000000';
+      document.getElementById('hashXor8').innerText = '0x00';
+      document.getElementById('hashCRC32').innerText = '0x00000000';
+      document.getElementById('hashMD5').innerText = 'd41d8cd98f00b204e9800998ecf8427e';
+      document.getElementById('hashSHA256').innerText = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+      return;
+    }
 
     // Sum8, Sum16, Sum32, XOR8
     let sum8 = 0, sum16 = 0, sum32 = 0, xor8 = 0;
@@ -1923,10 +2002,16 @@
 
   // --- TAB 5: BYTE OPERATIONS LOGIC ---
   function applyByteOperation() {
+    let previewBox = document.getElementById('opPreviewBox');
+    if (!binaryBuffer || binaryBuffer.length === 0) {
+      if (previewBox) previewBox.innerText = 'Buffer is empty. Load or type data before applying operations.';
+      showToast('Buffer Empty', 'Please load or type data into the buffer before applying operations.', 'warning');
+      return;
+    }
+
     let type = document.getElementById('opType').value;
     let argStr = document.getElementById('opArg').value.replace(/[^0-9a-fA-F]/g, '');
     let argVal = parseInt(argStr, 16) || 0;
-    let previewBox = document.getElementById('opPreviewBox');
 
     let newBuf = new Uint8Array(binaryBuffer.length);
     newBuf.set(binaryBuffer);
@@ -1957,6 +2042,11 @@
 
     binaryBuffer = newBuf;
     textBuf.value = new TextDecoder().decode(binaryBuffer);
+    try {
+      if (textBuf.value.length < 32768) {
+        localStorage.setItem('khex_text_buf', textBuf.value);
+      }
+    } catch (e) {}
     previewBox.innerText = 'Operation "' + type + '" applied successfully to ' + binaryBuffer.length + ' bytes.';
     showToast('Operation Applied', `Operation "${type}" successfully applied to ${binaryBuffer.length.toLocaleString()} bytes.`, 'success');
     renderHexView();

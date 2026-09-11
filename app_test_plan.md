@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KHex
+**Target App:** KImage
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KHex
 - KImage
 - KJournal
 - KMail
@@ -173,8 +172,20 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KGraph
 - KHabit
 - KHangman
+- KHex
 
 ## Test Reports
+
+- **KHex**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
+  - ✅ Core functionality works (7-tab hex & binary data suite: Base Converter & 32-bit Bitfield Manipulator, 16-byte/row interactive Hex Viewer & Buffer with ASCII column and offset inspector, Shannon Entropy randomness meter & File Magic Header Signature Dissector across 21 formats, Pattern Search & Replace with ASCII and hex modes, Checksum & Hash suite with 8/16/32-bit sums, XOR8, CRC32, MD5, and SHA-256, Byte Operations with Invert/XOR/Fill/16-bit & 32-bit word swap/Reverse, Formatted HexDump/C Array/Python bytes/Base64/RAW binary export, Web Audio & kinematic 4-layer particle engine).
+  - 🔧 FIXED: Global keyboard listener checked bare `e.key` without verifying `!e.ctrlKey && !e.altKey && !e.metaKey`, hijacking browser accelerators (`Ctrl+1`..`Ctrl+7` for browser tab switching, `Ctrl+H` for history, and `Ctrl+E` for address bar search). Added modifier key guards and modal suppression so shortcuts do not fire in the background when the Help dialog is open.
+  - 🔧 FIXED: In Search & Replace, clicking "Find Next" (`executeSearch()`) always selected and highlighted `matches[0]` on every click instead of cycling forward through subsequent matches, and did not scroll the hex container to make the highlighted match visible. Implemented search state tracking (`lastSearchPattern`, `currentSearchIdx`) to cycle through occurrences, display active match position (e.g. `[1/5]`), and scroll the hex view directly to the active match.
+  - 🔧 FIXED: Text inputs `#searchPattern`, `#replacePattern`, and `#opArg` lacked `Enter` key listeners, forcing users to click action buttons with the mouse. Wired `Enter` key handlers to execute search, replace all, and apply byte operations respectively.
+  - 🔧 FIXED: Tab buttons had WAI-ARIA `role="tab"` and `role="tablist"` attributes but lacked keyboard arrow navigation. Implemented standard `ArrowLeft` / `ArrowRight` focus and selection cycling across the 7 suite tabs.
+  - 🔧 FIXED: In `handleFileSelect()`, `fileInput.value = ''` was never reset after loading, causing subsequent attempts to reload the same file to fail silently because the `change` event would not trigger. Added input value reset and synchronized byte offset selection (`selectByte(0)`) on file and sample data loads.
+  - 🔧 FIXED: In `computeHashes()`, empty buffers (`!binaryBuffer.length`) triggered an early return without clearing or updating hash displays, leaving previous digests visible on screen. Reset all sums, CRC32, MD5 (`d41d8cd9...`), and SHA-256 (`e3b0c442...`) to standard empty hash representations.
+  - 🔧 FIXED: `computeEntropyAndDistribution()` and `dissectHeader()` coerced empty buffers into `new Uint8Array([0,0,0,0])`, misleadingly reporting "1 Unique Bytes in 4 Bytes Total" with false 0x00 counts and "Raw Binary" header signature. Accurately handle 0-byte buffers as "Empty Buffer" with zeroed metrics and descriptive empty-state notices.
+  - 🔧 FIXED: `applyByteOperation()` executed operations against 0-byte buffers with misleading success toasts. Added buffer validation to guard operations when empty with informative warning toasts, and persisted modified buffer text in `localStorage`.
 
 - **KHangman**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
   - ✅ Core gameplay works (Classic hangman with 10 built-in categories plus custom word input, 20-stage Campaign with escalating word length and strike limits ending in Polymath Grandmaster challenge, 60s Time Attack Blitz mode with time extensions, 5 active skills Vowel Reveal/Consonant Radar/Strike Shield/Freeze Timer/Bomb Nuke, 3D gallows with procedural wood grain, animated character sprite with blinking and facial states, kinematic rope/noose physics with wind sway, loss ghost floating animation, multi-layer particle explosion engine, and Web Audio synthesizers).
