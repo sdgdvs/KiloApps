@@ -734,15 +734,20 @@
                 <h4>Navigation & Controls</h4>
                 <ul>
                     <li><strong>WASD / Arrow Keys / Numpad / Vi (hjklyubn):</strong> Move Delver across the grid.</li>
-                    <li><strong>Spacebar:</strong> Rest 1 turn to steady yourself (recuperates 1 HP/Sanity).</li>
-                    <li><strong>E / Enter:</strong> Interact with doors, stairs, chests, or altars.</li>
-                    <li><strong>S:</strong> Search adjacent tiles for hidden passages and traps.</li>
+                    <li><strong>Spacebar:</strong> Rest 1 turn to steady yourself (recuperates +2 HP, +1 Sanity).</li>
+                    <li><strong>E / Enter:</strong> Interact with doors, stairs, altars, or coffers.</li>
+                    <li><strong>S:</strong> Search adjacent tiles for hidden passages and relic coffers.</li>
                     <li><strong>Mouse Click:</strong> Click on visible floor tiles to move or inspect obstacles.</li>
                 </ul>
+                <h4>Subterranean Depth Biomes</h4>
+                <ul>
+                    <li><strong>The Catacombs (B1 - B3):</strong> Traditional limestone crypts and stone corridors. Warm amber torches light ancient sarcophagi.</li>
+                    <li><strong>Sunken Grotto (B4 - B6):</strong> Cavernous flooded grottos with shallow water pools, stalagmites, and bioluminescent cyan fungi.</li>
+                    <li><strong>Forgotten Crypt (B7 - B9):</strong> Necrotic tomb labyrinth with blood-red skull braziers and ancient Runic Altars (press [E] to commune for blessings).</li>
+                    <li><strong>The Void Abyss (B10+):</strong> Shattered floating obsidian platforms suspended over bottomless cosmic chasms. Void rift crystals pulse with astral energy.</li>
+                </ul>
                 <h4>Field of View & Darkness</h4>
-                <p>The Abyss is shrouded in primordial darkness. Your torch projects a field of light that illuminates corridors and chambers. Unexplored tiles remain pitch black; previously seen tiles remain remembered in faint gray memory.</p>
-                <h4>Subterranean Hazards</h4>
-                <p>Wandering deep crypts drains sanity. Keep your torch lit and avoid staying motionless in cursed chambers.</p>
+                <p>The Abyss is shrouded in darkness. Your torch projects light across chambers and corridors. Light rays pass unobstructed through flooded waters and open cosmic chasms.</p>
             </div>
         </div>
     </div>
@@ -765,8 +770,92 @@
             PILLAR: 7,
             TORCH: 8,
             CHEST: 9,
-            RUBBLE: 10
+            RUBBLE: 10,
+            WATER: 11,
+            CHASM: 12,
+            ALTAR: 13
         };
+
+        const ZONE = {
+            CATACOMBS: 0,
+            SUNKEN_GROTTO: 1,
+            FORGOTTEN_CRYPT: 2,
+            VOID_ABYSS: 3
+        };
+
+        function getZone(depth) {
+            if (depth <= 3) return ZONE.CATACOMBS;
+            if (depth <= 6) return ZONE.SUNKEN_GROTTO;
+            if (depth <= 9) return ZONE.FORGOTTEN_CRYPT;
+            return ZONE.VOID_ABYSS;
+        }
+
+        const ZONE_INFO = [
+            {
+                name: "The Catacombs",
+                shortName: "Catacombs",
+                sub: "Ancient limestone crypts & dust",
+                enterMsg: "You step into the dusty Catacombs. Cobwebs drape from ancient sarcophagi.",
+                wallRgb: "30, 41, 59",
+                wallBorder: "#334155",
+                floorRgb: "15, 23, 42",
+                floorBg: "#070a12",
+                torchColor: "#f59e0b",
+                torchGlow: "rgba(251, 191, 36, 0.45)",
+                torchEmoji: "🔥",
+                sconceName: "Wall Torch Sconce",
+                pillarName: "Limestone Column",
+                particleColor: "#f59e0b"
+            },
+            {
+                name: "Sunken Grotto",
+                shortName: "Sunken Grotto",
+                sub: "Flooded cavern network & azure spores",
+                enterMsg: "Moisture drips from stalactites into flooded pools. Glowing azure fungi illuminate the Sunken Grotto.",
+                wallRgb: "13, 43, 56",
+                wallBorder: "#164e63",
+                floorRgb: "8, 29, 38",
+                floorBg: "#03131a",
+                torchColor: "#06b6d4",
+                torchGlow: "rgba(6, 182, 212, 0.50)",
+                torchEmoji: "🍄",
+                sconceName: "Bioluminescent Fungi",
+                pillarName: "Stalagmite Spire",
+                particleColor: "#06b6d4"
+            },
+            {
+                name: "Forgotten Crypt",
+                shortName: "Forgotten Crypt",
+                sub: "Necrotic tombs & runic altars",
+                enterMsg: "Ancient necrotic runes bleed sinister crimson light into the suffocating chill of the Forgotten Crypt.",
+                wallRgb: "45, 18, 24",
+                wallBorder: "#7f1d1d",
+                floorRgb: "24, 10, 14",
+                floorBg: "#0f0508",
+                torchColor: "#ef4444",
+                torchGlow: "rgba(239, 68, 68, 0.50)",
+                torchEmoji: "🩸",
+                sconceName: "Occult Skull Brazier",
+                pillarName: "Necrotic Monolith",
+                particleColor: "#ef4444"
+            },
+            {
+                name: "The Void Abyss",
+                shortName: "Void Abyss",
+                sub: "Cosmic islands over bottomless chasms",
+                enterMsg: "Reality tears apart. Cosmic chasms yawn beneath floating obsidian platforms in the Void Abyss.",
+                wallRgb: "33, 16, 56",
+                wallBorder: "#581c87",
+                floorRgb: "15, 7, 28",
+                floorBg: "#07020d",
+                torchColor: "#a855f7",
+                torchGlow: "rgba(168, 85, 247, 0.55)",
+                torchEmoji: "🌀",
+                sconceName: "Void Rift Crystal",
+                pillarName: "Astral Void Pylon",
+                particleColor: "#c084fc"
+            }
+        ];
 
         const MAP_WIDTH = 48;
         const MAP_HEIGHT = 36;
@@ -810,6 +899,7 @@
         // Particle generator for atmospheric subterranean embers
         function spawnEmber(x, y, isTorch = false) {
             if (torchParticles.length > 60) return;
+            const zInfo = ZONE_INFO[getZone(depthLevel)];
             torchParticles.push({
                 x: x + (Math.random() - 0.5) * 16,
                 y: y + (Math.random() - 0.5) * 12,
@@ -818,7 +908,7 @@
                 life: 1.0,
                 decay: 0.015 + Math.random() * 0.02,
                 size: 1.2 + Math.random() * 2.0,
-                color: isTorch ? (Math.random() > 0.4 ? '#f59e0b' : '#ef4444') : (Math.random() > 0.5 ? '#38bdf8' : '#818cf8')
+                color: isTorch ? (Math.random() > 0.3 ? zInfo.particleColor : '#fbbf24') : (Math.random() > 0.5 ? '#38bdf8' : '#818cf8')
             });
         }
 
@@ -830,9 +920,12 @@
             height: canvas.height
         };
 
-        // --- Dungeon Generation ---
+        // --- Master Dungeon Depth Generator ---
         function generateDungeon(level) {
             depthLevel = level;
+            const zoneIdx = getZone(depthLevel);
+            const zInfo = ZONE_INFO[zoneIdx];
+
             dungeon = [];
             explored = [];
             visible = [];
@@ -840,20 +933,42 @@
             torches = [];
             chests = [];
 
+            const initialTile = (zoneIdx === ZONE.VOID_ABYSS) ? TILE.CHASM : TILE.WALL;
             for (let y = 0; y < MAP_HEIGHT; y++) {
                 dungeon[y] = [];
                 explored[y] = [];
                 visible[y] = [];
                 lightMap[y] = [];
                 for (let x = 0; x < MAP_WIDTH; x++) {
-                    dungeon[y][x] = TILE.WALL;
+                    // Borders are always solid WALL to constrain the level
+                    if (x === 0 || x === MAP_WIDTH - 1 || y === 0 || y === MAP_HEIGHT - 1) {
+                        dungeon[y][x] = TILE.WALL;
+                    } else {
+                        dungeon[y][x] = initialTile;
+                    }
                     explored[y][x] = false;
                     visible[y][x] = false;
                     lightMap[y][x] = 0;
                 }
             }
 
-            // Generate interconnected rooms with BSP/Random Walk
+            if (zoneIdx === ZONE.CATACOMBS) {
+                generateCatacombs(level);
+            } else if (zoneIdx === ZONE.SUNKEN_GROTTO) {
+                generateSunkenGrotto(level);
+            } else if (zoneIdx === ZONE.FORGOTTEN_CRYPT) {
+                generateForgottenCrypt(level);
+            } else {
+                generateVoidAbyss(level);
+            }
+
+            computeFOV();
+            updateHUD();
+            logMessage(zInfo.enterMsg, 'important');
+        }
+
+        // 1. Catacombs Generation: Classic Rectangular Crypts & Stone Corridors
+        function generateCatacombs(level) {
             const rooms = [];
             const numRooms = 8 + Math.floor(Math.random() * 4);
 
@@ -874,14 +989,12 @@
 
                 if (!overlap) {
                     rooms.push({ x: rx, y: ry, w: rw, h: rh });
-                    // Carve room
                     for (let y = ry; y < ry + rh; y++) {
                         for (let x = rx; x < rx + rw; x++) {
                             dungeon[y][x] = TILE.FLOOR;
                         }
                     }
 
-                    // Occasional pillars in larger rooms
                     if (rw >= 7 && rh >= 6) {
                         dungeon[ry + 2][rx + 2] = TILE.PILLAR;
                         dungeon[ry + 2][rx + rw - 3] = TILE.PILLAR;
@@ -889,12 +1002,10 @@
                         dungeon[ry + rh - 3][rx + rw - 3] = TILE.PILLAR;
                     }
 
-                    // Wall torch in room
                     torches.push({ x: rx + Math.floor(rw / 2), y: ry, intensity: 4 });
                 }
             }
 
-            // Connect rooms with corridors
             for (let i = 0; i < rooms.length - 1; i++) {
                 const r1 = rooms[i];
                 const r2 = rooms[i + 1];
@@ -903,7 +1014,6 @@
                 const cx2 = Math.floor(r2.x + r2.w / 2);
                 const cy2 = Math.floor(r2.y + r2.h / 2);
 
-                // Horizontal then vertical corridor
                 while (cx1 !== cx2) {
                     dungeon[cy1][cx1] = TILE.FLOOR;
                     cx1 += (cx2 > cx1) ? 1 : -1;
@@ -914,7 +1024,6 @@
                 }
             }
 
-            // Place doors at room entryways
             for (const room of rooms) {
                 for (let x = room.x; x < room.x + room.w; x++) {
                     if (dungeon[room.y - 1][x] === TILE.FLOOR && dungeon[room.y][x] === TILE.FLOOR) {
@@ -926,19 +1035,14 @@
                 }
             }
 
-            // Spawn Delver in first room
             const startRoom = rooms[0];
             player.x = Math.floor(startRoom.x + startRoom.w / 2);
             player.y = Math.floor(startRoom.y + startRoom.h / 2);
             dungeon[player.y][player.x] = TILE.STAIRS_UP;
 
-            // Spawn Stairs Down in last room
             const endRoom = rooms[rooms.length - 1];
-            const exitX = Math.floor(endRoom.x + endRoom.w / 2);
-            const exitY = Math.floor(endRoom.y + endRoom.h / 2);
-            dungeon[exitY][exitX] = TILE.STAIRS_DOWN;
+            dungeon[Math.floor(endRoom.y + endRoom.h / 2)][Math.floor(endRoom.x + endRoom.w / 2)] = TILE.STAIRS_DOWN;
 
-            // Place some chests & rubble
             for (let i = 1; i < rooms.length - 1; i++) {
                 const r = rooms[i];
                 if (Math.random() < 0.7) {
@@ -957,10 +1061,300 @@
                     }
                 }
             }
+        }
 
-            computeFOV();
-            updateHUD();
-            logMessage(`Entered Catacombs Depth B${level}. Shrouded in forgotten silence.`, 'important');
+        // 2. Sunken Grotto Generation: Organic Flooded Caverns, Shallow Water Pools & Spores
+        function generateSunkenGrotto(level) {
+            const caverns = [];
+            const numCaverns = 7 + Math.floor(Math.random() * 4);
+
+            for (let c = 0; c < numCaverns * 4 && caverns.length < numCaverns; c++) {
+                const cx = 5 + Math.floor(Math.random() * (MAP_WIDTH - 12));
+                const cy = 5 + Math.floor(Math.random() * (MAP_HEIGHT - 12));
+                const rad = 3 + Math.floor(Math.random() * 3);
+
+                let overlap = false;
+                for (const cav of caverns) {
+                    if (Math.hypot(cav.x - cx, cav.y - cy) < rad + cav.rad + 2) {
+                        overlap = true;
+                        break;
+                    }
+                }
+
+                if (!overlap) {
+                    caverns.push({ x: cx, y: cy, rad: rad });
+                    // Carve organic cavern cluster
+                    for (let dy = -rad; dy <= rad; dy++) {
+                        for (let dx = -rad; dx <= rad; dx++) {
+                            if (dx * dx + dy * dy <= rad * rad + 0.8) {
+                                const nx = cx + dx;
+                                const ny = cy + dy;
+                                if (nx > 1 && nx < MAP_WIDTH - 2 && ny > 1 && ny < MAP_HEIGHT - 2) {
+                                    dungeon[ny][nx] = TILE.FLOOR;
+                                }
+                            }
+                        }
+                    }
+
+                    // Water pool in central depression of cavern
+                    for (let dy = -rad + 1; dy <= rad - 1; dy++) {
+                        for (let dx = -rad + 1; dx <= rad - 1; dx++) {
+                            if (dx * dx + dy * dy <= (rad - 1) * (rad - 1) && Math.random() < 0.55) {
+                                const nx = cx + dx;
+                                const ny = cy + dy;
+                                if (nx > 1 && nx < MAP_WIDTH - 2 && ny > 1 && ny < MAP_HEIGHT - 2) {
+                                    dungeon[ny][nx] = TILE.WATER;
+                                }
+                            }
+                        }
+                    }
+
+                    // Natural stalagmite spires
+                    if (rad >= 4 && Math.random() < 0.7) {
+                        const px = cx + (Math.random() > 0.5 ? 2 : -2);
+                        const py = cy + (Math.random() > 0.5 ? 2 : -2);
+                        if (dungeon[py][px] === TILE.FLOOR) dungeon[py][px] = TILE.PILLAR;
+                    }
+
+                    // Bioluminescent fungi clump (cyan torch light)
+                    torches.push({ x: cx, y: cy, intensity: 5 });
+                }
+            }
+
+            // Connect caverns with winding subterranean tunnels
+            for (let i = 0; i < caverns.length - 1; i++) {
+                let x = caverns[i].x;
+                let y = caverns[i].y;
+                const tx = caverns[i + 1].x;
+                const ty = caverns[i + 1].y;
+
+                while (x !== tx || y !== ty) {
+                    if (x > 1 && x < MAP_WIDTH - 2 && y > 1 && y < MAP_HEIGHT - 2) {
+                        if (dungeon[y][x] === TILE.WALL) dungeon[y][x] = TILE.FLOOR;
+                        // Occasional wider cavern passage
+                        if (Math.random() < 0.3) {
+                            if (dungeon[y + 1][x] === TILE.WALL) dungeon[y + 1][x] = TILE.FLOOR;
+                            if (dungeon[y][x + 1] === TILE.WALL) dungeon[y][x + 1] = TILE.FLOOR;
+                        }
+                    }
+                    if (Math.random() < 0.5 && x !== tx) {
+                        x += (tx > x) ? 1 : -1;
+                    } else if (y !== ty) {
+                        y += (ty > y) ? 1 : -1;
+                    } else {
+                        x += (tx > x) ? 1 : -1;
+                    }
+                }
+            }
+
+            // Spawn player & exit
+            player.x = caverns[0].x;
+            player.y = caverns[0].y;
+            dungeon[player.y][player.x] = TILE.STAIRS_UP;
+
+            const endCav = caverns[caverns.length - 1];
+            dungeon[endCav.y][endCav.x] = TILE.STAIRS_DOWN;
+
+            // Waterlogged chests
+            for (let i = 1; i < caverns.length - 1; i++) {
+                const c = caverns[i];
+                if (Math.random() < 0.75) {
+                    const cx = c.x + Math.floor((Math.random() - 0.5) * c.rad);
+                    const cy = c.y + Math.floor((Math.random() - 0.5) * c.rad);
+                    if (dungeon[cy][cx] === TILE.FLOOR || dungeon[cy][cx] === TILE.WATER) {
+                        dungeon[cy][cx] = TILE.CHEST;
+                        chests.push({ x: cx, y: cy, opened: false, essence: 50 + Math.floor(Math.random() * 60) });
+                    }
+                }
+            }
+        }
+
+        // 3. Forgotten Crypt Generation: Dense Necrotic Vaults & Runic Sacrificial Altars
+        function generateForgottenCrypt(level) {
+            const vaults = [];
+            const numVaults = 10 + Math.floor(Math.random() * 4);
+
+            for (let v = 0; v < numVaults * 4 && vaults.length < numVaults; v++) {
+                const vw = 4 + Math.floor(Math.random() * 4);
+                const vh = 4 + Math.floor(Math.random() * 4);
+                const vx = 2 + Math.floor(Math.random() * (MAP_WIDTH - vw - 4));
+                const vy = 2 + Math.floor(Math.random() * (MAP_HEIGHT - vh - 4));
+
+                let overlap = false;
+                for (const vault of vaults) {
+                    if (vx <= vault.x + vault.w + 1 && vx + vw + 1 >= vault.x &&
+                        vy <= vault.y + vault.h + 1 && vy + vh + 1 >= vault.y) {
+                        overlap = true;
+                        break;
+                    }
+                }
+
+                if (!overlap) {
+                    vaults.push({ x: vx, y: vy, w: vw, h: vh });
+                    for (let y = vy; y < vy + vh; y++) {
+                        for (let x = vx; x < vx + vw; x++) {
+                            dungeon[y][x] = TILE.FLOOR;
+                        }
+                    }
+
+                    // Sarcophagi / necrotic rubble
+                    if (Math.random() < 0.6) {
+                        dungeon[vy + 1][vx + 1] = TILE.RUBBLE;
+                    }
+
+                    // Occult skull brazier (blood red)
+                    torches.push({ x: vx + Math.floor(vw / 2), y: vy, intensity: 4 });
+                }
+            }
+
+            // Connect vaults with maze corridors
+            for (let i = 0; i < vaults.length - 1; i++) {
+                const v1 = vaults[i];
+                const v2 = vaults[i + 1];
+                let cx1 = Math.floor(v1.x + v1.w / 2);
+                let cy1 = Math.floor(v1.y + v1.h / 2);
+                const cx2 = Math.floor(v2.x + v2.w / 2);
+                const cy2 = Math.floor(v2.y + v2.h / 2);
+
+                while (cx1 !== cx2) {
+                    dungeon[cy1][cx1] = TILE.FLOOR;
+                    cx1 += (cx2 > cx1) ? 1 : -1;
+                }
+                while (cy1 !== cy2) {
+                    dungeon[cy1][cx1] = TILE.FLOOR;
+                    cy1 += (cy2 > cy1) ? 1 : -1;
+                }
+            }
+
+            // Reinforced doors at entryways
+            for (const vault of vaults) {
+                for (let x = vault.x; x < vault.x + vault.w; x++) {
+                    if (dungeon[vault.y - 1][x] === TILE.FLOOR && dungeon[vault.y][x] === TILE.FLOOR) {
+                        if (Math.random() < 0.8) dungeon[vault.y][x] = TILE.DOOR_CLOSED;
+                    }
+                    if (dungeon[vault.y + vault.h][x] === TILE.FLOOR && dungeon[vault.y + vault.h - 1][x] === TILE.FLOOR) {
+                        if (Math.random() < 0.8) dungeon[vault.y + vault.h - 1][x] = TILE.DOOR_CLOSED;
+                    }
+                }
+            }
+
+            // Spawn Runic Altars in central vaults
+            if (vaults.length > 3) {
+                const altarVault1 = vaults[Math.floor(vaults.length / 3)];
+                const ax1 = Math.floor(altarVault1.x + altarVault1.w / 2);
+                const ay1 = Math.floor(altarVault1.y + altarVault1.h / 2);
+                dungeon[ay1][ax1] = TILE.ALTAR;
+
+                if (vaults.length > 6) {
+                    const altarVault2 = vaults[Math.floor(vaults.length * 2 / 3)];
+                    const ax2 = Math.floor(altarVault2.x + altarVault2.w / 2);
+                    const ay2 = Math.floor(altarVault2.y + altarVault2.h / 2);
+                    dungeon[ay2][ax2] = TILE.ALTAR;
+                }
+            }
+
+            // Spawn player & exit
+            player.x = Math.floor(vaults[0].x + vaults[0].w / 2);
+            player.y = Math.floor(vaults[0].y + vaults[0].h / 2);
+            dungeon[player.y][player.x] = TILE.STAIRS_UP;
+
+            const endV = vaults[vaults.length - 1];
+            dungeon[Math.floor(endV.y + endV.h / 2)][Math.floor(endV.x + endV.w / 2)] = TILE.STAIRS_DOWN;
+
+            // Necrotic coffer rewards
+            for (let i = 1; i < vaults.length - 1; i++) {
+                const v = vaults[i];
+                if (Math.random() < 0.65) {
+                    const cx = v.x + 1 + Math.floor(Math.random() * (v.w - 2));
+                    const cy = v.y + 1 + Math.floor(Math.random() * (v.h - 2));
+                    if (dungeon[cy][cx] === TILE.FLOOR) {
+                        dungeon[cy][cx] = TILE.CHEST;
+                        chests.push({ x: cx, y: cy, opened: false, essence: 90 + Math.floor(Math.random() * 80) });
+                    }
+                }
+            }
+        }
+
+        // 4. Void Abyss Generation: Floating Obsidian Platforms over Cosmic Chasms & Void Rifts
+        function generateVoidAbyss(level) {
+            const platforms = [];
+            const numPlatforms = 7 + Math.floor(Math.random() * 3);
+
+            for (let p = 0; p < numPlatforms * 4 && platforms.length < numPlatforms; p++) {
+                const pw = 5 + Math.floor(Math.random() * 4);
+                const ph = 5 + Math.floor(Math.random() * 4);
+                const px = 3 + Math.floor(Math.random() * (MAP_WIDTH - pw - 6));
+                const py = 3 + Math.floor(Math.random() * (MAP_HEIGHT - ph - 6));
+
+                let overlap = false;
+                for (const plat of platforms) {
+                    if (px <= plat.x + plat.w + 2 && px + pw + 2 >= plat.x &&
+                        py <= plat.y + plat.h + 2 && py + ph + 2 >= plat.y) {
+                        overlap = true;
+                        break;
+                    }
+                }
+
+                if (!overlap) {
+                    platforms.push({ x: px, y: py, w: pw, h: ph });
+                    // Carve floating platform
+                    for (let y = py; y < py + ph; y++) {
+                        for (let x = px; x < px + pw; x++) {
+                            dungeon[y][x] = TILE.FLOOR;
+                        }
+                    }
+
+                    // Astral Void Pylon in platform corner
+                    if (Math.random() < 0.8) {
+                        dungeon[py + 1][px + 1] = TILE.PILLAR;
+                        dungeon[py + ph - 2][px + pw - 2] = TILE.PILLAR;
+                    }
+
+                    // Pulsating Void Rift Crystal (violet illumination)
+                    torches.push({ x: px + Math.floor(pw / 2), y: py + Math.floor(ph / 2), intensity: 6 });
+                }
+            }
+
+            // Connect platforms with narrow Void Bridges spanning the cosmic chasms
+            for (let i = 0; i < platforms.length - 1; i++) {
+                const p1 = platforms[i];
+                const p2 = platforms[i + 1];
+                let cx1 = Math.floor(p1.x + p1.w / 2);
+                let cy1 = Math.floor(p1.y + p1.h / 2);
+                const cx2 = Math.floor(p2.x + p2.w / 2);
+                const cy2 = Math.floor(p2.y + p2.h / 2);
+
+                while (cx1 !== cx2) {
+                    dungeon[cy1][cx1] = TILE.FLOOR;
+                    cx1 += (cx2 > cx1) ? 1 : -1;
+                }
+                while (cy1 !== cy2) {
+                    dungeon[cy1][cx1] = TILE.FLOOR;
+                    cy1 += (cy2 > cy1) ? 1 : -1;
+                }
+            }
+
+            // Spawn player on first platform
+            player.x = Math.floor(platforms[0].x + 2);
+            player.y = Math.floor(platforms[0].y + 2);
+            dungeon[player.y][player.x] = TILE.STAIRS_UP;
+
+            // Spawn Stairs Down on final platform
+            const endPlat = platforms[platforms.length - 1];
+            dungeon[Math.floor(endPlat.y + endPlat.h / 2)][Math.floor(endPlat.x + endPlat.w / 2)] = TILE.STAIRS_DOWN;
+
+            // High-value Astral Relic Coffers
+            for (let i = 1; i < platforms.length - 1; i++) {
+                const plat = platforms[i];
+                if (Math.random() < 0.8) {
+                    const cx = plat.x + 2 + Math.floor(Math.random() * (plat.w - 3));
+                    const cy = plat.y + 2 + Math.floor(Math.random() * (plat.h - 3));
+                    if (dungeon[cy][cx] === TILE.FLOOR) {
+                        dungeon[cy][cx] = TILE.CHEST;
+                        chests.push({ x: cx, y: cy, opened: false, essence: 160 + Math.floor(Math.random() * 120) });
+                    }
+                }
+            }
         }
 
         // --- Field Of View (Raycasting) ---
@@ -1084,26 +1478,28 @@
                     }
 
                     const tile = dungeon[y][x];
+                    const zIdx = getZone(depthLevel);
+                    const zInfo = ZONE_INFO[zIdx];
 
                     // Base tile color
                     if (tile === TILE.WALL) {
-                        ctx.fillStyle = isVisible ? `rgba(30, 41, 59, ${0.4 + light * 0.6})` : '#0d131f';
+                        ctx.fillStyle = isVisible ? `rgba(${zInfo.wallRgb}, ${0.4 + light * 0.6})` : '#0d131f';
                         ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
-                        ctx.strokeStyle = isVisible ? `rgba(51, 65, 85, ${light})` : '#162032';
+                        ctx.strokeStyle = isVisible ? zInfo.wallBorder : '#162032';
                         ctx.strokeRect(screenX + 1, screenY + 1, TILE_SIZE - 2, TILE_SIZE - 2);
                         
                         // Brick detailing
                         if (isVisible) {
-                            ctx.fillStyle = `rgba(15, 23, 42, ${light * 0.7})`;
+                            ctx.fillStyle = `rgba(${zInfo.wallRgb}, ${light * 0.7})`;
                             ctx.fillRect(screenX + 4, screenY + 8, TILE_SIZE - 8, 2);
                             ctx.fillRect(screenX + 4, screenY + 18, TILE_SIZE - 8, 2);
                         }
                     } else if (tile === TILE.FLOOR || tile === TILE.RUBBLE) {
-                        ctx.fillStyle = isVisible ? `rgba(15, 23, 42, ${0.3 + light * 0.7})` : '#070a12';
+                        ctx.fillStyle = isVisible ? `rgba(${zInfo.floorRgb}, ${0.3 + light * 0.7})` : zInfo.floorBg;
                         ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
                         
                         // Cobblestone dot
-                        ctx.fillStyle = isVisible ? `rgba(30, 41, 59, ${light * 0.6})` : '#0b101b';
+                        ctx.fillStyle = isVisible ? `rgba(${zInfo.wallRgb}, ${light * 0.6})` : '#0b101b';
                         ctx.fillRect(screenX + 14, screenY + 14, 4, 4);
 
                         if (tile === TILE.RUBBLE) {
@@ -1112,10 +1508,39 @@
                             ctx.textAlign = 'center';
                             ctx.fillText('∴', screenX + 16, screenY + 20);
                         }
-                    } else if (tile === TILE.PILLAR) {
-                        ctx.fillStyle = isVisible ? '#0f172a' : '#070a12';
+                    } else if (tile === TILE.WATER) {
+                        ctx.fillStyle = isVisible ? `rgba(6, 78, 100, ${0.4 + light * 0.6})` : '#04222d';
                         ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
-                        ctx.fillStyle = isVisible ? `rgba(99, 102, 241, ${0.4 + light * 0.6})` : '#1e1b4b';
+                        if (isVisible) {
+                            ctx.fillStyle = '#38bdf8';
+                            ctx.font = '13px monospace';
+                            ctx.textAlign = 'center';
+                            const wave = Math.sin(Date.now() / 250 + x * 2 + y) * 2;
+                            ctx.fillText('~', screenX + 16, screenY + 20 + wave);
+                        }
+                    } else if (tile === TILE.CHASM) {
+                        ctx.fillStyle = '#020108';
+                        ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                        if (isExplored) {
+                            const starTwinkle = Math.sin(x * 12.7 + y * 9.3 + Date.now() / 450);
+                            if (starTwinkle > 0.4) {
+                                ctx.fillStyle = `rgba(168, 85, 247, ${0.3 + starTwinkle * 0.5})`;
+                                ctx.fillRect(screenX + 15, screenY + 15, 2, 2);
+                            }
+                        }
+                    } else if (tile === TILE.ALTAR) {
+                        ctx.fillStyle = isVisible ? '#2a0a14' : '#14050a';
+                        ctx.fillRect(screenX + 2, screenY + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                        ctx.strokeStyle = isVisible ? '#ef4444' : '#7f1d1d';
+                        ctx.strokeRect(screenX + 3, screenY + 3, TILE_SIZE - 6, TILE_SIZE - 6);
+                        ctx.fillStyle = isVisible ? '#f87171' : '#ef4444';
+                        ctx.font = 'bold 14px monospace';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('⛩️', screenX + 16, screenY + 21);
+                    } else if (tile === TILE.PILLAR) {
+                        ctx.fillStyle = isVisible ? (zIdx === ZONE.SUNKEN_GROTTO ? '#0e3a47' : '#0f172a') : '#070a12';
+                        ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                        ctx.fillStyle = isVisible ? zInfo.torchColor : '#1e1b4b';
                         ctx.beginPath();
                         ctx.arc(screenX + 16, screenY + 16, 10, 0, Math.PI * 2);
                         ctx.fill();
@@ -1167,6 +1592,7 @@
                 if (visible[torch.y][torch.x]) {
                     const sx = Math.floor(torch.x * TILE_SIZE - camera.x);
                     const sy = Math.floor(torch.y * TILE_SIZE - camera.y);
+                    const zInfo = ZONE_INFO[getZone(depthLevel)];
                     
                     // Torch sconce illumination glow shader
                     const torchFlicker = Math.sin(Date.now() / 140 + torch.x * 5) * 4;
@@ -1174,9 +1600,9 @@
                         sx + 16, sy + 16, 2,
                         sx + 16, sy + 16, 50 + torchFlicker
                     );
-                    torchGlow.addColorStop(0, 'rgba(251, 191, 36, 0.45)');
-                    torchGlow.addColorStop(0.3, 'rgba(245, 158, 11, 0.22)');
-                    torchGlow.addColorStop(0.7, 'rgba(239, 68, 68, 0.08)');
+                    torchGlow.addColorStop(0, zInfo.torchGlow);
+                    torchGlow.addColorStop(0.4, zInfo.torchGlow.replace(/[\d\.]+\)$/, '0.18)'));
+                    torchGlow.addColorStop(0.8, zInfo.torchGlow.replace(/[\d\.]+\)$/, '0.04)'));
                     torchGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
                     ctx.fillStyle = torchGlow;
                     ctx.beginPath();
@@ -1184,10 +1610,10 @@
                     ctx.fill();
 
                     // Flame Icon & Ember Emission
-                    ctx.fillStyle = '#f59e0b';
+                    ctx.fillStyle = zInfo.torchColor;
                     ctx.font = '14px monospace';
                     ctx.textAlign = 'center';
-                    ctx.fillText('🔥', sx + 16, sy + 20);
+                    ctx.fillText(zInfo.torchEmoji, sx + 16, sy + 20);
 
                     if (Math.random() < 0.15) {
                         spawnEmber(sx + 16, sy + 16, true);
@@ -1286,17 +1712,36 @@
         // --- Turn & Action Handling ---
         function advanceTurn() {
             turn++;
-            document.getElementById('turnCounter').innerText = `Turn: ${turn}`;
-            document.getElementById('hudZoneSub').innerText = `Turn: ${turn} | Light: 100% | Torch: Burning`;
+            const zIdx = getZone(depthLevel);
+            const zInfo = ZONE_INFO[zIdx];
 
-            // Occasional sanity drop in deep dark
-            if (turn % 40 === 0 && player.sanity > 10) {
+            document.getElementById('turnCounter').innerText = `Turn: ${turn}`;
+            document.getElementById('hudZoneSub').innerText = `Turn: ${turn} | Light: 100% | ${zInfo.sconceName}`;
+
+            // Sanity strain: faster in Void Abyss
+            const sanityRate = (depthLevel >= 10) ? 25 : 40;
+            if (turn % sanityRate === 0 && player.sanity > 10) {
                 player.sanity -= 2;
-                logMessage('The ancient subterranean echoes fray your willpower (-2 Sanity).', 'important');
+                if (depthLevel >= 10) {
+                    logMessage('Cosmic whispers from the Void Abyss twist your willpower (-2 Sanity).', 'important');
+                } else {
+                    logMessage('The ancient subterranean echoes fray your willpower (-2 Sanity).', 'important');
+                }
             }
 
             computeFOV();
             updateHUD();
+        }
+
+        function communeAltar(ax, ay) {
+            dungeon[ay][ax] = TILE.RUBBLE;
+            player.sanity = Math.min(player.maxSanity, player.sanity + 30);
+            player.hp = Math.min(player.maxHp, player.hp + 20);
+            player.essence += 35;
+            player.exp += 30;
+            logMessage('✦ ALTAR COMMUNION: Primordial runic energies infuse your spirit! (+30 Sanity, +20 HP, +35 Essence, +30 EXP)', 'relic');
+            checkLevelUp();
+            advanceTurn();
         }
 
         function movePlayer(dx, dy) {
@@ -1313,8 +1758,12 @@
             const targetTile = dungeon[ny][nx];
 
             // Collision checks
-            if (targetTile === TILE.WALL || targetTile === TILE.PILLAR) {
-                logMessage('Stone wall blocks your path.');
+            if (targetTile === TILE.WALL || targetTile === TILE.PILLAR || targetTile === TILE.CHASM) {
+                if (targetTile === TILE.CHASM) {
+                    logMessage('A bottomless cosmic void chasm drops into infinity! You cannot step into the abyss.', 'important');
+                } else {
+                    logMessage('Stone wall blocks your path.');
+                }
                 return;
             }
 
@@ -1325,14 +1774,19 @@
                 return;
             }
 
+            if (targetTile === TILE.ALTAR) {
+                communeAltar(nx, ny);
+                return;
+            }
+
             if (targetTile === TILE.CHEST) {
                 const chest = chests.find(c => c.x === nx && c.y === ny);
                 if (chest && !chest.opened) {
                     chest.opened = true;
                     dungeon[ny][nx] = TILE.FLOOR;
                     player.essence += chest.essence;
-                    player.exp += 20;
-                    logMessage(`Opened Relic Chest! Acquired +${chest.essence} Essence & +20 EXP!`, 'relic');
+                    player.exp += 25;
+                    logMessage(`Opened Relic Chest! Acquired +${chest.essence} Essence & +25 EXP!`, 'relic');
                     checkLevelUp();
                     advanceTurn();
                     return;
@@ -1343,7 +1797,9 @@
             player.x = nx;
             player.y = ny;
 
-            if (targetTile === TILE.STAIRS_DOWN) {
+            if (targetTile === TILE.WATER) {
+                logMessage('You wade through shallow subterranean waters. (Splashing echoes)', 'magic');
+            } else if (targetTile === TILE.STAIRS_DOWN) {
                 logMessage('You stand before the spiraling descent deeper into the Abyss. Press [E] to Descend.', 'important');
             } else if (targetTile === TILE.STAIRS_UP) {
                 logMessage('The sealed stone portal back to the surface remains shut.');
@@ -1376,6 +1832,9 @@
                         if (dungeon[ny][nx] === TILE.CHEST) {
                             logMessage(`Detected ancient Relic Coffer nearby at (${nx}, ${ny})!`, 'relic');
                             found = true;
+                        } else if (dungeon[ny][nx] === TILE.ALTAR) {
+                            logMessage(`Detected consecrated Runic Altar at (${nx}, ${ny})!`, 'relic');
+                            found = true;
                         }
                     }
                 }
@@ -1391,13 +1850,39 @@
             if (current === TILE.STAIRS_DOWN) {
                 depthLevel++;
                 turn = 1;
-                logMessage(`You descend into Depth B${depthLevel}... The atmosphere grows heavier.`, 'important');
+                logMessage(`You descend into Depth B${depthLevel}...`, 'important');
                 generateDungeon(depthLevel);
+            } else if (current === TILE.ALTAR) {
+                communeAltar(player.x, player.y);
             } else if (current === TILE.DOOR_CLOSED) {
                 dungeon[player.y][player.x] = TILE.DOOR_OPEN;
                 advanceTurn();
             } else {
-                logMessage('Nothing to interact with here.');
+                // Check adjacent tiles for altar or closed door
+                let interacted = false;
+                for (let dy = -1; dy <= 1; dy++) {
+                    for (let dx = -1; dx <= 1; dx++) {
+                        const nx = player.x + dx;
+                        const ny = player.y + dy;
+                        if (nx >= 0 && nx < MAP_WIDTH && ny >= 0 && ny < MAP_HEIGHT) {
+                            if (dungeon[ny][nx] === TILE.ALTAR) {
+                                communeAltar(nx, ny);
+                                interacted = true;
+                                break;
+                            } else if (dungeon[ny][nx] === TILE.DOOR_CLOSED) {
+                                dungeon[ny][nx] = TILE.DOOR_OPEN;
+                                logMessage('You push open the heavy subterranean door.', 'magic');
+                                advanceTurn();
+                                interacted = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (interacted) break;
+                }
+                if (!interacted) {
+                    logMessage('Nothing to interact with here.');
+                }
             }
         }
 
@@ -1425,8 +1910,12 @@
         }
 
         function updateHUD() {
-            document.getElementById('statDepth').innerText = `B${depthLevel}: Catacombs`;
-            document.getElementById('hudZoneName').innerText = `Forgotten Crypts - B${depthLevel}`;
+            const zIdx = getZone(depthLevel);
+            const zInfo = ZONE_INFO[zIdx];
+
+            document.getElementById('statDepth').innerText = `B${depthLevel}: ${zInfo.shortName}`;
+            document.getElementById('hudZoneName').innerText = `${zInfo.name} - B${depthLevel}`;
+            document.getElementById('hudZoneSub').innerText = `Turn: ${turn} | Light: 100% | ${zInfo.sconceName}`;
             document.getElementById('statHp').innerText = `${player.hp} / ${player.maxHp}`;
             document.getElementById('statSanity').innerText = `${player.sanity} / ${player.maxSanity}`;
             document.getElementById('statGold').innerText = `${player.essence} ✦`;
@@ -1454,10 +1943,13 @@
                 [TILE.DOOR_OPEN]: 'Archway (Open)',
                 [TILE.STAIRS_DOWN]: 'Spiraling Stairs Down',
                 [TILE.STAIRS_UP]: 'Sealed Surface Stairs',
-                [TILE.PILLAR]: 'Runic Column',
-                [TILE.TORCH]: 'Wall Torch Sconce',
+                [TILE.PILLAR]: zInfo.pillarName,
+                [TILE.TORCH]: zInfo.sconceName,
                 [TILE.CHEST]: 'Relic Coffer',
-                [TILE.RUBBLE]: 'Ancient Rubble'
+                [TILE.RUBBLE]: 'Ancient Rubble / Sarcophagus',
+                [TILE.WATER]: 'Flooded Shallows (Water)',
+                [TILE.CHASM]: 'Bottomless Void Chasm',
+                [TILE.ALTAR]: 'Ancient Runic Altar'
             };
             const curTile = dungeon[player.y] ? dungeon[player.y][player.x] : TILE.FLOOR;
             document.getElementById('hudTileInfo').innerText = `Position: (${player.x}, ${player.y}) | ${tileNames[curTile] || 'Floor'}`;

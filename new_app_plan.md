@@ -55,14 +55,14 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KAbyss (Abyssal dungeon crawler with magical relics, ancient runes, and procedural crypts)
-**Phase:** 5 (next to do)
-**Status:** In Progress (Phase 4 completed: Dark atmospheric subterranean theme, CRT scanlines and dungeon torchlight illumination shaders)
+**Phase:** 6 (next to do)
+**Status:** In Progress (Phase 5 completed: Procedural dungeon depth generation for Catacombs, Sunken Grotto, Forgotten Crypt, and Void Abyss)
 
 - [x] Phase 1: Scaffold KAbyss directory (`KAbyss/`), create web HTML skeleton (`KiloOS/public/apps/kabyss.html`), register in App.jsx.
 - [x] Phase 2: Core dungeon crawl engine (tile map grid, hero character, FOV lighting, movement, turn system).
 - [x] Phase 3: Native C version (`KAbyss/main.c`, `build.bat`) using Win32 API with functional parity.
 - [x] Phase 4: Dark atmospheric subterranean theme, CRT scanlines and dungeon torchlight illumination shaders.
-- [ ] Phase 5: Procedural dungeon depth generation (Catacombs, Sunken Grotto, Forgotten Crypt, Void Abyss).
+- [x] Phase 5: Procedural dungeon depth generation (Catacombs, Sunken Grotto, Forgotten Crypt, Void Abyss).
 - [ ] Phase 6: Relic & Ancient Rune magic system (enchanted staves, rune socketing, elemental spellcasting).
 - [ ] Phase 7: Monster bestiary & tactical turn-based AI (crypt skeletons, void wraiths, abyssal leviathans).
 - [ ] Phase 8: Inventory management, equipment slots, potion brewing, and ancient alchemy cauldrons.

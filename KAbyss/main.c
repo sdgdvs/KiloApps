@@ -43,6 +43,107 @@
 #define TILE_TORCH        8
 #define TILE_CHEST        9
 #define TILE_RUBBLE       10
+#define TILE_WATER        11
+#define TILE_CHASM        12
+#define TILE_ALTAR        13
+
+typedef enum {
+    ZONE_CATACOMBS = 0,
+    ZONE_SUNKEN_GROTTO = 1,
+    ZONE_FORGOTTEN_CRYPT = 2,
+    ZONE_VOID_ABYSS = 3
+} DepthZone;
+
+typedef struct {
+    const char* name;
+    const char* shortName;
+    const char* sub;
+    const char* enterMsg;
+    const char* sconceName;
+    const char* pillarName;
+    COLORREF wallColor;
+    COLORREF wallBorder;
+    COLORREF floorColor;
+    COLORREF floorBg;
+    COLORREF torchColor;
+    COLORREF torchHalo;
+    COLORREF particleColor1;
+    COLORREF particleColor2;
+} ZoneTheme;
+
+static const ZoneTheme g_zoneThemes[4] = {
+    {
+        "The Catacombs",
+        "Catacombs",
+        "Ancient limestone crypts & dust",
+        "Entered Catacombs Depth B%d. Shrouded in forgotten silence.",
+        "Wall Torch Sconce",
+        "Limestone Column",
+        RGB(30, 41, 59),
+        RGB(51, 65, 85),
+        RGB(15, 23, 42),
+        RGB(7, 10, 18),
+        RGB(245, 158, 11),
+        RGB(55, 32, 10),
+        RGB(245, 158, 11),
+        RGB(239, 68, 68)
+    },
+    {
+        "Sunken Grotto",
+        "Sunken Grotto",
+        "Flooded cavern network & azure spores",
+        "Entered Sunken Grotto B%d. Moisture drips into flooded pools.",
+        "Bioluminescent Fungi",
+        "Stalagmite Spire",
+        RGB(13, 43, 56),
+        RGB(22, 78, 99),
+        RGB(8, 29, 38),
+        RGB(3, 19, 26),
+        RGB(6, 182, 212),
+        RGB(8, 47, 73),
+        RGB(6, 182, 212),
+        RGB(16, 185, 129)
+    },
+    {
+        "Forgotten Crypt",
+        "Forgotten Crypt",
+        "Necrotic tombs & runic altars",
+        "Entered Forgotten Crypt B%d. Necrotic runes bleed crimson light.",
+        "Occult Skull Brazier",
+        "Necrotic Monolith",
+        RGB(45, 18, 24),
+        RGB(127, 29, 29),
+        RGB(24, 10, 14),
+        RGB(15, 5, 8),
+        RGB(239, 68, 68),
+        RGB(69, 10, 10),
+        RGB(239, 68, 68),
+        RGB(168, 85, 247)
+    },
+    {
+        "The Void Abyss",
+        "Void Abyss",
+        "Cosmic islands over bottomless chasms",
+        "Entered Void Abyss B%d. Cosmic chasms yawn beneath obsidian stone.",
+        "Void Rift Crystal",
+        "Astral Void Pylon",
+        RGB(33, 16, 56),
+        RGB(88, 28, 135),
+        RGB(15, 7, 28),
+        RGB(7, 2, 13),
+        RGB(168, 85, 247),
+        RGB(59, 7, 100),
+        RGB(192, 132, 252),
+        RGB(56, 189, 248)
+    }
+};
+
+static DepthZone GetDepthZone(int depth) {
+    if (depth <= 3) return ZONE_CATACOMBS;
+    if (depth <= 6) return ZONE_SUNKEN_GROTTO;
+    if (depth <= 9) return ZONE_FORGOTTEN_CRYPT;
+    return ZONE_VOID_ABYSS;
+}
 
 #define MAX_TORCHES 64
 #define MAX_CHESTS  32
@@ -128,12 +229,18 @@ static int g_camY = 0;
 
 // Function declarations
 void InitGame(int depth);
+void GenerateCatacombs(int depth);
+void GenerateSunkenGrotto(int depth);
+void GenerateForgottenCrypt(int depth);
+void GenerateVoidAbyss(int depth);
 void ComputeFOV(void);
 void AddLog(const char* text, COLORREF color);
 void MovePlayer(int dx, int dy);
+void AdvanceTurn(void);
 void RestTurn(void);
 void SearchArea(void);
 void InteractTile(void);
+void CommuneAltar(int x, int y);
 void CheckLevelUp(void);
 void SpawnEmber(float x, float y, BOOL isTorch);
 void UpdateEmbers(void);
@@ -261,13 +368,16 @@ void ComputeFOV(void) {
 
 void SpawnEmber(float x, float y, BOOL isTorch) {
     if (g_numEmbers >= MAX_EMBERS) return;
+    DepthZone z = GetDepthZone(g_depthLevel);
+    const ZoneTheme* zt = &g_zoneThemes[z];
+
     g_embers[g_numEmbers].x = x + (float)(RandInt(0, 16) - 8);
     g_embers[g_numEmbers].y = y + (float)(RandInt(0, 12) - 6);
     g_embers[g_numEmbers].vx = ((float)RandInt(0, 100) - 50.0f) * 0.008f;
     g_embers[g_numEmbers].vy = -((float)RandInt(30, 80) * 0.015f);
     g_embers[g_numEmbers].life = 1.0f;
     g_embers[g_numEmbers].decay = 0.02f + ((float)RandInt(0, 50) * 0.0004f);
-    g_embers[g_numEmbers].color = isTorch ? (RandInt(0, 10) > 4 ? COLOR_ACCENT_AMBER : COLOR_ACCENT_RED) : (RandInt(0, 10) > 5 ? COLOR_BORDER_GLOW : COLOR_TEXT_RUNE);
+    g_embers[g_numEmbers].color = isTorch ? (RandInt(0, 10) > 4 ? zt->particleColor1 : zt->particleColor2) : (RandInt(0, 10) > 5 ? COLOR_BORDER_GLOW : COLOR_TEXT_RUNE);
     g_numEmbers++;
 }
 
@@ -285,22 +395,8 @@ void UpdateEmbers(void) {
     }
 }
 
-void InitGame(int depth) {
-    g_depthLevel = depth;
-    g_turn = 1;
-    g_numTorches = 0;
-    g_numChests = 0;
-    g_numEmbers = 0;
-
-    for (int y = 0; y < MAP_HEIGHT; y++) {
-        for (int x = 0; x < MAP_WIDTH; x++) {
-            g_dungeon[y][x] = TILE_WALL;
-            g_explored[y][x] = FALSE;
-            g_visible[y][x] = FALSE;
-            g_lightMap[y][x] = 0.0f;
-        }
-    }
-
+// 1. Catacombs: Classic Rectangular Crypts & Stone Corridors
+void GenerateCatacombs(int depth) {
     Room rooms[MAX_ROOMS];
     int roomCount = 0;
     int targetRooms = 8 + RandInt(0, 4);
@@ -350,7 +446,6 @@ void InitGame(int depth) {
         }
     }
 
-    // Connect rooms
     for (int i = 0; i < roomCount - 1; i++) {
         int cx1 = rooms[i].x + rooms[i].w / 2;
         int cy1 = rooms[i].y + rooms[i].h / 2;
@@ -367,7 +462,6 @@ void InitGame(int depth) {
         }
     }
 
-    // Closed doors on room borders
     for (int i = 0; i < roomCount; i++) {
         for (int x = rooms[i].x; x < rooms[i].x + rooms[i].w; x++) {
             if (g_dungeon[rooms[i].y - 1][x] == TILE_FLOOR && g_dungeon[rooms[i].y][x] == TILE_FLOOR) {
@@ -379,20 +473,17 @@ void InitGame(int depth) {
         }
     }
 
-    // Spawn player in first room
     if (roomCount > 0) {
         g_player.x = rooms[0].x + rooms[0].w / 2;
         g_player.y = rooms[0].y + rooms[0].h / 2;
         g_dungeon[g_player.y][g_player.x] = TILE_STAIRS_UP;
 
-        // Spawn stairs down in last room
         int endIdx = roomCount - 1;
         int ex = rooms[endIdx].x + rooms[endIdx].w / 2;
         int ey = rooms[endIdx].y + rooms[endIdx].h / 2;
         g_dungeon[ey][ex] = TILE_STAIRS_DOWN;
     }
 
-    // Spawn chests and rubble in middle rooms
     for (int i = 1; i < roomCount - 1; i++) {
         if (RandInt(0, 100) < 70 && g_numChests < MAX_CHESTS) {
             int cx = rooms[i].x + 1 + RandInt(0, rooms[i].w - 3);
@@ -414,19 +505,401 @@ void InitGame(int depth) {
             }
         }
     }
+}
+
+// 2. Sunken Grotto: Organic Caverns, Flooded Water Pools & Cyan Fungi
+void GenerateSunkenGrotto(int depth) {
+    typedef struct { int x, y, rad; } Cav;
+    Cav caverns[12];
+    int numCaverns = 0;
+    int targetCaverns = 7 + RandInt(0, 3);
+
+    for (int c = 0; c < targetCaverns * 4 && numCaverns < targetCaverns && numCaverns < 12; c++) {
+        int cx = RandInt(5, MAP_WIDTH - 10);
+        int cy = RandInt(5, MAP_HEIGHT - 10);
+        int rad = RandInt(3, 5);
+
+        BOOL overlap = FALSE;
+        for (int i = 0; i < numCaverns; i++) {
+            int dist = (int)sqrtf((float)((caverns[i].x - cx) * (caverns[i].x - cx) + (caverns[i].y - cy) * (caverns[i].y - cy)));
+            if (dist < rad + caverns[i].rad + 2) {
+                overlap = TRUE;
+                break;
+            }
+        }
+
+        if (!overlap) {
+            caverns[numCaverns].x = cx;
+            caverns[numCaverns].y = cy;
+            caverns[numCaverns].rad = rad;
+
+            for (int dy = -rad; dy <= rad; dy++) {
+                for (int dx = -rad; dx <= rad; dx++) {
+                    if (dx * dx + dy * dy <= rad * rad) {
+                        int nx = cx + dx;
+                        int ny = cy + dy;
+                        if (nx > 1 && nx < MAP_WIDTH - 2 && ny > 1 && ny < MAP_HEIGHT - 2) {
+                            g_dungeon[ny][nx] = TILE_FLOOR;
+                        }
+                    }
+                }
+            }
+
+            // Central flooded pool
+            for (int dy = -rad + 1; dy <= rad - 1; dy++) {
+                for (int dx = -rad + 1; dx <= rad - 1; dx++) {
+                    if (dx * dx + dy * dy <= (rad - 1) * (rad - 1) && RandInt(0, 100) < 55) {
+                        int nx = cx + dx;
+                        int ny = cy + dy;
+                        if (nx > 1 && nx < MAP_WIDTH - 2 && ny > 1 && ny < MAP_HEIGHT - 2) {
+                            g_dungeon[ny][nx] = TILE_WATER;
+                        }
+                    }
+                }
+            }
+
+            // Stalagmite rock spire
+            if (rad >= 4 && RandInt(0, 100) < 70) {
+                int px = cx + (RandInt(0, 1) ? 2 : -2);
+                int py = cy + (RandInt(0, 1) ? 2 : -2);
+                if (g_dungeon[py][px] == TILE_FLOOR) g_dungeon[py][px] = TILE_PILLAR;
+            }
+
+            // Bioluminescent fungi
+            if (g_numTorches < MAX_TORCHES) {
+                g_torches[g_numTorches].x = cx;
+                g_torches[g_numTorches].y = cy;
+                g_torches[g_numTorches].intensity = 5;
+                g_numTorches++;
+            }
+
+            numCaverns++;
+        }
+    }
+
+    // Connect caverns with natural winding paths
+    for (int i = 0; i < numCaverns - 1; i++) {
+        int x = caverns[i].x;
+        int y = caverns[i].y;
+        int tx = caverns[i + 1].x;
+        int ty = caverns[i + 1].y;
+
+        while (x != tx || y != ty) {
+            if (x > 1 && x < MAP_WIDTH - 2 && y > 1 && y < MAP_HEIGHT - 2) {
+                if (g_dungeon[y][x] == TILE_WALL) g_dungeon[y][x] = TILE_FLOOR;
+                if (RandInt(0, 100) < 30) {
+                    if (g_dungeon[y + 1][x] == TILE_WALL) g_dungeon[y + 1][x] = TILE_FLOOR;
+                    if (g_dungeon[y][x + 1] == TILE_WALL) g_dungeon[y][x + 1] = TILE_FLOOR;
+                }
+            }
+            if (RandInt(0, 1) && x != tx) {
+                x += (tx > x) ? 1 : -1;
+            } else if (y != ty) {
+                y += (ty > y) ? 1 : -1;
+            } else {
+                x += (tx > x) ? 1 : -1;
+            }
+        }
+    }
+
+    if (numCaverns > 0) {
+        g_player.x = caverns[0].x;
+        g_player.y = caverns[0].y;
+        g_dungeon[g_player.y][g_player.x] = TILE_STAIRS_UP;
+
+        int endIdx = numCaverns - 1;
+        g_dungeon[caverns[endIdx].y][caverns[endIdx].x] = TILE_STAIRS_DOWN;
+    }
+
+    for (int i = 1; i < numCaverns - 1; i++) {
+        if (RandInt(0, 100) < 75 && g_numChests < MAX_CHESTS) {
+            int cx = caverns[i].x + RandInt(-1, 1);
+            int cy = caverns[i].y + RandInt(-1, 1);
+            if (g_dungeon[cy][cx] == TILE_FLOOR || g_dungeon[cy][cx] == TILE_WATER) {
+                g_dungeon[cy][cx] = TILE_CHEST;
+                g_chests[g_numChests].x = cx;
+                g_chests[g_numChests].y = cy;
+                g_chests[g_numChests].opened = 0;
+                g_chests[g_numChests].essence = 50 + RandInt(0, 60);
+                g_numChests++;
+            }
+        }
+    }
+}
+
+// 3. Forgotten Crypt: Dense Necrotic Vaults & Runic Altars
+void GenerateForgottenCrypt(int depth) {
+    Room vaults[MAX_ROOMS];
+    int vaultCount = 0;
+    int targetVaults = 10 + RandInt(0, 4);
+
+    for (int v = 0; v < targetVaults * 4 && vaultCount < targetVaults && vaultCount < MAX_ROOMS; v++) {
+        int vw = RandInt(4, 7);
+        int vh = RandInt(4, 7);
+        int vx = RandInt(2, MAP_WIDTH - vw - 3);
+        int vy = RandInt(2, MAP_HEIGHT - vh - 3);
+
+        BOOL overlap = FALSE;
+        for (int i = 0; i < vaultCount; i++) {
+            if (vx <= vaults[i].x + vaults[i].w + 1 && vx + vw + 1 >= vaults[i].x &&
+                vy <= vaults[i].y + vaults[i].h + 1 && vy + vh + 1 >= vaults[i].y) {
+                overlap = TRUE;
+                break;
+            }
+        }
+
+        if (!overlap) {
+            vaults[vaultCount].x = vx;
+            vaults[vaultCount].y = vy;
+            vaults[vaultCount].w = vw;
+            vaults[vaultCount].h = vh;
+
+            for (int y = vy; y < vy + vh; y++) {
+                for (int x = vx; x < vx + vw; x++) {
+                    g_dungeon[y][x] = TILE_FLOOR;
+                }
+            }
+
+            if (RandInt(0, 100) < 60) {
+                g_dungeon[vy + 1][vx + 1] = TILE_RUBBLE;
+            }
+
+            if (g_numTorches < MAX_TORCHES) {
+                g_torches[g_numTorches].x = vx + vw / 2;
+                g_torches[g_numTorches].y = vy;
+                g_torches[g_numTorches].intensity = 4;
+                g_numTorches++;
+            }
+
+            vaultCount++;
+        }
+    }
+
+    for (int i = 0; i < vaultCount - 1; i++) {
+        int cx1 = vaults[i].x + vaults[i].w / 2;
+        int cy1 = vaults[i].y + vaults[i].h / 2;
+        int cx2 = vaults[i + 1].x + vaults[i + 1].w / 2;
+        int cy2 = vaults[i + 1].y + vaults[i + 1].h / 2;
+
+        while (cx1 != cx2) {
+            g_dungeon[cy1][cx1] = TILE_FLOOR;
+            cx1 += (cx2 > cx1) ? 1 : -1;
+        }
+        while (cy1 != cy2) {
+            g_dungeon[cy1][cx1] = TILE_FLOOR;
+            cy1 += (cy2 > cy1) ? 1 : -1;
+        }
+    }
+
+    for (int i = 0; i < vaultCount; i++) {
+        for (int x = vaults[i].x; x < vaults[i].x + vaults[i].w; x++) {
+            if (g_dungeon[vaults[i].y - 1][x] == TILE_FLOOR && g_dungeon[vaults[i].y][x] == TILE_FLOOR) {
+                if (RandInt(0, 100) < 80) g_dungeon[vaults[i].y][x] = TILE_DOOR_CLOSED;
+            }
+            if (g_dungeon[vaults[i].y + vaults[i].h][x] == TILE_FLOOR && g_dungeon[vaults[i].y + vaults[i].h - 1][x] == TILE_FLOOR) {
+                if (RandInt(0, 100) < 80) g_dungeon[vaults[i].y + vaults[i].h - 1][x] = TILE_DOOR_CLOSED;
+            }
+        }
+    }
+
+    // Place 1-2 Runic Altars in vaults
+    if (vaultCount > 3) {
+        int aIdx1 = vaultCount / 3;
+        g_dungeon[vaults[aIdx1].y + vaults[aIdx1].h / 2][vaults[aIdx1].x + vaults[aIdx1].w / 2] = TILE_ALTAR;
+        if (vaultCount > 6) {
+            int aIdx2 = vaultCount * 2 / 3;
+            g_dungeon[vaults[aIdx2].y + vaults[aIdx2].h / 2][vaults[aIdx2].x + vaults[aIdx2].w / 2] = TILE_ALTAR;
+        }
+    }
+
+    if (vaultCount > 0) {
+        g_player.x = vaults[0].x + vaults[0].w / 2;
+        g_player.y = vaults[0].y + vaults[0].h / 2;
+        g_dungeon[g_player.y][g_player.x] = TILE_STAIRS_UP;
+
+        int endIdx = vaultCount - 1;
+        int ex = vaults[endIdx].x + vaults[endIdx].w / 2;
+        int ey = vaults[endIdx].y + vaults[endIdx].h / 2;
+        g_dungeon[ey][ex] = TILE_STAIRS_DOWN;
+    }
+
+    for (int i = 1; i < vaultCount - 1; i++) {
+        if (RandInt(0, 100) < 70 && g_numChests < MAX_CHESTS) {
+            int cx = vaults[i].x + 1 + RandInt(0, vaults[i].w - 3);
+            int cy = vaults[i].y + 1 + RandInt(0, vaults[i].h - 3);
+            if (g_dungeon[cy][cx] == TILE_FLOOR) {
+                g_dungeon[cy][cx] = TILE_CHEST;
+                g_chests[g_numChests].x = cx;
+                g_chests[g_numChests].y = cy;
+                g_chests[g_numChests].opened = 0;
+                g_chests[g_numChests].essence = 90 + RandInt(0, 80);
+                g_numChests++;
+            }
+        }
+    }
+}
+
+// 4. Void Abyss: Floating Obsidian Platforms over Cosmic Chasms & Void Rifts
+void GenerateVoidAbyss(int depth) {
+    Room plats[MAX_ROOMS];
+    int platCount = 0;
+    int targetPlats = 7 + RandInt(0, 3);
+
+    for (int p = 0; p < targetPlats * 4 && platCount < targetPlats && platCount < MAX_ROOMS; p++) {
+        int pw = RandInt(5, 8);
+        int ph = RandInt(5, 8);
+        int px = RandInt(3, MAP_WIDTH - pw - 5);
+        int py = RandInt(3, MAP_HEIGHT - ph - 5);
+
+        BOOL overlap = FALSE;
+        for (int i = 0; i < platCount; i++) {
+            if (px <= plats[i].x + plats[i].w + 2 && px + pw + 2 >= plats[i].x &&
+                py <= plats[i].y + plats[i].h + 2 && py + ph + 2 >= plats[i].y) {
+                overlap = TRUE;
+                break;
+            }
+        }
+
+        if (!overlap) {
+            plats[platCount].x = px;
+            plats[platCount].y = py;
+            plats[platCount].w = pw;
+            plats[platCount].h = ph;
+
+            for (int y = py; y < py + ph; y++) {
+                for (int x = px; x < px + pw; x++) {
+                    g_dungeon[y][x] = TILE_FLOOR;
+                }
+            }
+
+            // Astral Void Pylons
+            if (RandInt(0, 100) < 80) {
+                g_dungeon[py + 1][px + 1] = TILE_PILLAR;
+                g_dungeon[py + ph - 2][px + pw - 2] = TILE_PILLAR;
+            }
+
+            // Void Rift Crystal
+            if (g_numTorches < MAX_TORCHES) {
+                g_torches[g_numTorches].x = px + pw / 2;
+                g_torches[g_numTorches].y = py + ph / 2;
+                g_torches[g_numTorches].intensity = 6;
+                g_numTorches++;
+            }
+
+            platCount++;
+        }
+    }
+
+    // Narrow Void Bridges spanning the chasms
+    for (int i = 0; i < platCount - 1; i++) {
+        int cx1 = plats[i].x + plats[i].w / 2;
+        int cy1 = plats[i].y + plats[i].h / 2;
+        int cx2 = plats[i + 1].x + plats[i + 1].w / 2;
+        int cy2 = plats[i + 1].y + plats[i + 1].h / 2;
+
+        while (cx1 != cx2) {
+            g_dungeon[cy1][cx1] = TILE_FLOOR;
+            cx1 += (cx2 > cx1) ? 1 : -1;
+        }
+        while (cy1 != cy2) {
+            g_dungeon[cy1][cx1] = TILE_FLOOR;
+            cy1 += (cy2 > cy1) ? 1 : -1;
+        }
+    }
+
+    if (platCount > 0) {
+        g_player.x = plats[0].x + 2;
+        g_player.y = plats[0].y + 2;
+        g_dungeon[g_player.y][g_player.x] = TILE_STAIRS_UP;
+
+        int endIdx = platCount - 1;
+        int ex = plats[endIdx].x + plats[endIdx].w / 2;
+        int ey = plats[endIdx].y + plats[endIdx].h / 2;
+        g_dungeon[ey][ex] = TILE_STAIRS_DOWN;
+    }
+
+    for (int i = 1; i < platCount - 1; i++) {
+        if (RandInt(0, 100) < 80 && g_numChests < MAX_CHESTS) {
+            int cx = plats[i].x + 2 + RandInt(0, plats[i].w - 4);
+            int cy = plats[i].y + 2 + RandInt(0, plats[i].h - 4);
+            if (g_dungeon[cy][cx] == TILE_FLOOR) {
+                g_dungeon[cy][cx] = TILE_CHEST;
+                g_chests[g_numChests].x = cx;
+                g_chests[g_numChests].y = cy;
+                g_chests[g_numChests].opened = 0;
+                g_chests[g_numChests].essence = 160 + RandInt(0, 120);
+                g_numChests++;
+            }
+        }
+    }
+}
+
+void InitGame(int depth) {
+    g_depthLevel = depth;
+    g_turn = 1;
+    g_numTorches = 0;
+    g_numChests = 0;
+    g_numEmbers = 0;
+
+    DepthZone z = GetDepthZone(depth);
+    const ZoneTheme* zt = &g_zoneThemes[z];
+    int initTile = (z == ZONE_VOID_ABYSS) ? TILE_CHASM : TILE_WALL;
+
+    for (int y = 0; y < MAP_HEIGHT; y++) {
+        for (int x = 0; x < MAP_WIDTH; x++) {
+            if (x == 0 || x == MAP_WIDTH - 1 || y == 0 || y == MAP_HEIGHT - 1) {
+                g_dungeon[y][x] = TILE_WALL;
+            } else {
+                g_dungeon[y][x] = initTile;
+            }
+            g_explored[y][x] = FALSE;
+            g_visible[y][x] = FALSE;
+            g_lightMap[y][x] = 0.0f;
+        }
+    }
+
+    if (z == ZONE_CATACOMBS) {
+        GenerateCatacombs(depth);
+    } else if (z == ZONE_SUNKEN_GROTTO) {
+        GenerateSunkenGrotto(depth);
+    } else if (z == ZONE_FORGOTTEN_CRYPT) {
+        GenerateForgottenCrypt(depth);
+    } else {
+        GenerateVoidAbyss(depth);
+    }
 
     ComputeFOV();
 
     char buf[128];
-    snprintf(buf, sizeof(buf), "Entered Catacombs Depth B%d. Shrouded in forgotten silence.", depth);
+    snprintf(buf, sizeof(buf), zt->enterMsg, depth);
     AddLog(buf, COLOR_ACCENT_AMBER);
+}
+
+void CommuneAltar(int x, int y) {
+    g_dungeon[y][x] = TILE_RUBBLE;
+    g_player.sanity += 30;
+    if (g_player.sanity > g_player.max_sanity) g_player.sanity = g_player.max_sanity;
+    g_player.hp += 20;
+    if (g_player.hp > g_player.max_hp) g_player.hp = g_player.max_hp;
+    g_player.essence += 35;
+    g_player.exp += 30;
+
+    AddLog("ALTAR COMMUNION! Primordial runic energies infuse your spirit! (+30 Sanity, +20 HP, +35 Essence, +30 EXP)", COLOR_TEXT_GOLD);
+    Beep(523, 60); Beep(659, 60); Beep(784, 80);
+    CheckLevelUp();
+    AdvanceTurn();
 }
 
 void AdvanceTurn(void) {
     g_turn++;
-    if (g_turn % 40 == 0 && g_player.sanity > 10) {
+    int sanityInterval = (g_depthLevel >= 10) ? 25 : 40;
+    if (g_turn % sanityInterval == 0 && g_player.sanity > 10) {
         g_player.sanity -= 2;
-        AddLog("Subterranean echoes fray your willpower (-2 Sanity).", COLOR_ACCENT_AMBER);
+        if (g_depthLevel >= 10) {
+            AddLog("Cosmic whispers from the Void Abyss twist your willpower (-2 Sanity).", COLOR_ACCENT_PURPLE);
+        } else {
+            AddLog("Subterranean echoes fray your willpower (-2 Sanity).", COLOR_ACCENT_AMBER);
+        }
     }
     ComputeFOV();
 }
@@ -443,9 +916,14 @@ void MovePlayer(int dx, int dy) {
     if (nx < 0 || nx >= MAP_WIDTH || ny < 0 || ny >= MAP_HEIGHT) return;
 
     int tile = g_dungeon[ny][nx];
-    if (tile == TILE_WALL || tile == TILE_PILLAR) {
-        AddLog("Stone wall blocks your path.", COLOR_TEXT_DIM);
-        Beep(180, 30);
+    if (tile == TILE_WALL || tile == TILE_PILLAR || tile == TILE_CHASM) {
+        if (tile == TILE_CHASM) {
+            AddLog("A bottomless void chasm drops into infinity! You dare not step off.", COLOR_ACCENT_AMBER);
+            Beep(140, 40);
+        } else {
+            AddLog("Stone wall blocks your path.", COLOR_TEXT_DIM);
+            Beep(180, 30);
+        }
         return;
     }
 
@@ -457,16 +935,21 @@ void MovePlayer(int dx, int dy) {
         return;
     }
 
+    if (tile == TILE_ALTAR) {
+        CommuneAltar(nx, ny);
+        return;
+    }
+
     if (tile == TILE_CHEST) {
         for (int c = 0; c < g_numChests; c++) {
             if (g_chests[c].x == nx && g_chests[c].y == ny && !g_chests[c].opened) {
                 g_chests[c].opened = 1;
                 g_dungeon[ny][nx] = TILE_FLOOR;
                 g_player.essence += g_chests[c].essence;
-                g_player.exp += 20;
+                g_player.exp += 25;
 
                 char buf[128];
-                snprintf(buf, sizeof(buf), "Opened Relic Chest! +%d Essence & +20 EXP!", g_chests[c].essence);
+                snprintf(buf, sizeof(buf), "Opened Relic Chest! +%d Essence & +25 EXP!", g_chests[c].essence);
                 AddLog(buf, COLOR_TEXT_GOLD);
                 Beep(600, 40); Beep(800, 50);
                 CheckLevelUp();
@@ -478,12 +961,18 @@ void MovePlayer(int dx, int dy) {
 
     g_player.x = nx;
     g_player.y = ny;
-    Beep(240, 20);
 
-    if (tile == TILE_STAIRS_DOWN) {
+    if (tile == TILE_WATER) {
+        AddLog("You wade through shallow flooded waters. (Splash)", COLOR_ACCENT_CYAN);
+        Beep(200, 25);
+    } else if (tile == TILE_STAIRS_DOWN) {
         AddLog("Spiraling descent deeper into Abyss. Press [E] to Descend.", COLOR_ACCENT_AMBER);
+        Beep(240, 20);
     } else if (tile == TILE_STAIRS_UP) {
         AddLog("The sealed stone portal back to surface remains shut.", COLOR_TEXT_DIM);
+        Beep(240, 20);
+    } else {
+        Beep(240, 20);
     }
 
     AdvanceTurn();
@@ -516,6 +1005,11 @@ void SearchArea(void) {
                     snprintf(buf, sizeof(buf), "Detected ancient Relic Coffer at (%d, %d)!", nx, ny);
                     AddLog(buf, COLOR_TEXT_GOLD);
                     found = TRUE;
+                } else if (g_dungeon[ny][nx] == TILE_ALTAR) {
+                    char buf[128];
+                    snprintf(buf, sizeof(buf), "Detected consecrated Runic Altar at (%d, %d)!", nx, ny);
+                    AddLog(buf, COLOR_TEXT_GOLD);
+                    found = TRUE;
                 }
             }
         }
@@ -531,17 +1025,44 @@ void InteractTile(void) {
     int cur = g_dungeon[g_player.y][g_player.x];
     if (cur == TILE_STAIRS_DOWN) {
         g_depthLevel++;
+        DepthZone z = GetDepthZone(g_depthLevel);
         char buf[128];
-        snprintf(buf, sizeof(buf), "Descended into Depth B%d! The air thickens...", g_depthLevel);
+        snprintf(buf, sizeof(buf), "Descended into Depth B%d (%s)...", g_depthLevel, g_zoneThemes[z].shortName);
         AddLog(buf, COLOR_ACCENT_AMBER);
         Beep(300, 60); Beep(450, 80);
         InitGame(g_depthLevel);
+    } else if (cur == TILE_ALTAR) {
+        CommuneAltar(g_player.x, g_player.y);
     } else if (cur == TILE_DOOR_CLOSED) {
         g_dungeon[g_player.y][g_player.x] = TILE_DOOR_OPEN;
         AddLog("Pushed open the door.", COLOR_ACCENT_CYAN);
         AdvanceTurn();
     } else {
-        AddLog("Nothing to interact with here.", COLOR_TEXT_DIM);
+        BOOL interacted = FALSE;
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dx = -1; dx <= 1; dx++) {
+                int nx = g_player.x + dx;
+                int ny = g_player.y + dy;
+                if (nx >= 0 && nx < MAP_WIDTH && ny >= 0 && ny < MAP_HEIGHT) {
+                    if (g_dungeon[ny][nx] == TILE_ALTAR) {
+                        CommuneAltar(nx, ny);
+                        interacted = TRUE;
+                        break;
+                    } else if (g_dungeon[ny][nx] == TILE_DOOR_CLOSED) {
+                        g_dungeon[ny][nx] = TILE_DOOR_OPEN;
+                        AddLog("Pushed open the door.", COLOR_ACCENT_CYAN);
+                        Beep(350, 40);
+                        AdvanceTurn();
+                        interacted = TRUE;
+                        break;
+                    }
+                }
+            }
+            if (interacted) break;
+        }
+        if (!interacted) {
+            AddLog("Nothing to interact with here.", COLOR_TEXT_DIM);
+        }
     }
 }
 
@@ -606,19 +1127,21 @@ void RenderGame(HDC hdc, HWND hwnd) {
     char badgeBuf[64];
     
     // Depth Badge
-    snprintf(badgeBuf, sizeof(badgeBuf), "DEPTH: B%d", g_depthLevel);
+    DepthZone z = GetDepthZone(g_depthLevel);
+    const ZoneTheme* zt = &g_zoneThemes[z];
+    snprintf(badgeBuf, sizeof(badgeBuf), "DEPTH: B%d (%s)", g_depthLevel, zt->shortName);
     SetTextColor(memDC, COLOR_ACCENT_PURPLE);
-    TextOutA(memDC, 450, 11, badgeBuf, (int)strlen(badgeBuf));
+    TextOutA(memDC, 420, 11, badgeBuf, (int)strlen(badgeBuf));
 
     // HP Badge
     snprintf(badgeBuf, sizeof(badgeBuf), "HP: %d/%d", g_player.hp, g_player.max_hp);
     SetTextColor(memDC, COLOR_ACCENT_RED);
-    TextOutA(memDC, 570, 11, badgeBuf, (int)strlen(badgeBuf));
+    TextOutA(memDC, 590, 11, badgeBuf, (int)strlen(badgeBuf));
 
     // Sanity Badge
     snprintf(badgeBuf, sizeof(badgeBuf), "SANITY: %d/%d", g_player.sanity, g_player.max_sanity);
     SetTextColor(memDC, COLOR_ACCENT_CYAN);
-    TextOutA(memDC, 700, 11, badgeBuf, (int)strlen(badgeBuf));
+    TextOutA(memDC, 715, 11, badgeBuf, (int)strlen(badgeBuf));
 
     // Essence Badge
     snprintf(badgeBuf, sizeof(badgeBuf), "ESSENCE: %d*", g_player.essence);
@@ -678,15 +1201,27 @@ void RenderGame(HDC hdc, HWND hwnd) {
             COLORREF tileColor = RGB(7, 10, 18);
 
             if (tile == TILE_WALL) {
-                int r = isVisible ? (int)(30 * (0.4f + light * 0.6f)) : 13;
-                int g = isVisible ? (int)(41 * (0.4f + light * 0.6f)) : 19;
-                int b = isVisible ? (int)(59 * (0.4f + light * 0.6f)) : 31;
+                int baseR = GetRValue(zt->wallColor);
+                int baseG = GetGValue(zt->wallColor);
+                int baseB = GetBValue(zt->wallColor);
+                int r = isVisible ? (int)(baseR * (0.4f + light * 0.6f)) : (baseR / 3);
+                int g = isVisible ? (int)(baseG * (0.4f + light * 0.6f)) : (baseG / 3);
+                int b = isVisible ? (int)(baseB * (0.4f + light * 0.6f)) : (baseB / 3);
                 tileColor = RGB(r, g, b);
             } else if (tile == TILE_FLOOR || tile == TILE_RUBBLE) {
-                int r = isVisible ? (int)(15 * (0.3f + light * 0.7f)) : 7;
-                int g = isVisible ? (int)(23 * (0.3f + light * 0.7f)) : 10;
-                int b = isVisible ? (int)(42 * (0.3f + light * 0.7f)) : 18;
+                int baseR = GetRValue(zt->floorColor);
+                int baseG = GetGValue(zt->floorColor);
+                int baseB = GetBValue(zt->floorColor);
+                int r = isVisible ? (int)(baseR * (0.3f + light * 0.7f)) : (baseR / 3);
+                int g = isVisible ? (int)(baseG * (0.3f + light * 0.7f)) : (baseG / 3);
+                int b = isVisible ? (int)(baseB * (0.3f + light * 0.7f)) : (baseB / 3);
                 tileColor = RGB(r, g, b);
+            } else if (tile == TILE_WATER) {
+                tileColor = isVisible ? RGB(6, 78, 100) : RGB(4, 34, 45);
+            } else if (tile == TILE_CHASM) {
+                tileColor = RGB(2, 1, 8);
+            } else if (tile == TILE_ALTAR) {
+                tileColor = isVisible ? RGB(42, 10, 20) : RGB(20, 5, 10);
             } else if (tile == TILE_PILLAR) {
                 tileColor = isVisible ? RGB(30, 27, 75) : RGB(10, 12, 20);
             } else if (tile == TILE_DOOR_CLOSED) {
@@ -706,7 +1241,7 @@ void RenderGame(HDC hdc, HWND hwnd) {
 
             // Tile Glyphs / Details
             if (tile == TILE_WALL && isVisible) {
-                HPEN brickPen = CreatePen(PS_SOLID, 1, RGB(15, 23, 42));
+                HPEN brickPen = CreatePen(PS_SOLID, 1, zt->wallBorder);
                 HPEN oldBrPen = (HPEN)SelectObject(memDC, brickPen);
                 MoveToEx(memDC, scrX + 4, scrY + 10, NULL);
                 LineTo(memDC, scrX + TILE_SIZE - 4, scrY + 10);
@@ -714,8 +1249,21 @@ void RenderGame(HDC hdc, HWND hwnd) {
                 LineTo(memDC, scrX + TILE_SIZE - 4, scrY + 22);
                 SelectObject(memDC, oldBrPen);
                 DeleteObject(brickPen);
+            } else if (tile == TILE_WATER && isVisible) {
+                SelectObject(memDC, fontSmall);
+                SetTextColor(memDC, RGB(56, 189, 248));
+                TextOutA(memDC, scrX + 11, scrY + 8, "~", 1);
+            } else if (tile == TILE_CHASM) {
+                if (isExplored) {
+                    SetPixel(memDC, scrX + 14, scrY + 14, RGB(168, 85, 247));
+                    SetPixel(memDC, scrX + 15, scrY + 14, RGB(168, 85, 247));
+                }
+            } else if (tile == TILE_ALTAR) {
+                SelectObject(memDC, fontBold);
+                SetTextColor(memDC, isVisible ? COLOR_ACCENT_RED : RGB(140, 20, 20));
+                TextOutA(memDC, scrX + 7, scrY + 8, "[+]", 3);
             } else if (tile == TILE_PILLAR) {
-                HBRUSH pBr = CreateSolidBrush(isVisible ? COLOR_TEXT_RUNE : RGB(49, 46, 129));
+                HBRUSH pBr = CreateSolidBrush(isVisible ? zt->torchColor : RGB(49, 46, 129));
                 HBRUSH oldP = (HBRUSH)SelectObject(memDC, pBr);
                 Ellipse(memDC, scrX + 6, scrY + 6, scrX + TILE_SIZE - 6, scrY + TILE_SIZE - 6);
                 SelectObject(memDC, oldP);
@@ -766,9 +1314,9 @@ void RenderGame(HDC hdc, HWND hwnd) {
 
             // Sconce Warm Halo Glow
             int tFlicker = (int)(sinf((float)g_frameCount * 0.2f + (float)tx) * 3.0f);
-            HBRUSH sconceHalo = CreateSolidBrush(RGB(55, 32, 10));
+            HBRUSH sconceHalo = CreateSolidBrush(zt->torchHalo);
             HBRUSH oldSc = (HBRUSH)SelectObject(memDC, sconceHalo);
-            HPEN sconcePen = CreatePen(PS_SOLID, 1, RGB(180, 83, 9));
+            HPEN sconcePen = CreatePen(PS_SOLID, 1, zt->torchColor);
             HPEN oldScPen = (HPEN)SelectObject(memDC, sconcePen);
             Ellipse(memDC, scrX - 8 - tFlicker, scrY - 8 - tFlicker, scrX + TILE_SIZE + 8 + tFlicker, scrY + TILE_SIZE + 8 + tFlicker);
             SelectObject(memDC, oldScPen);
@@ -777,7 +1325,7 @@ void RenderGame(HDC hdc, HWND hwnd) {
             DeleteObject(sconceHalo);
 
             SelectObject(memDC, fontBold);
-            SetTextColor(memDC, COLOR_ACCENT_AMBER);
+            SetTextColor(memDC, zt->torchColor);
             TextOutA(memDC, scrX + 10, scrY + 7, "*", 1);
 
             if (RandInt(0, 10) < 2) {
@@ -890,14 +1438,16 @@ void RenderGame(HDC hdc, HWND hwnd) {
     FrameRect(memDC, &hudBox, (HBRUSH)GetStockObject(GRAY_BRUSH));
 
     SelectObject(memDC, fontSmall);
-    SetTextColor(memDC, COLOR_TEXT_RUNE);
+    DepthZone curZ = GetDepthZone(g_depthLevel);
+    const ZoneTheme* ztHud = &g_zoneThemes[curZ];
+    SetTextColor(memDC, ztHud->torchColor);
     char zoneText[64];
-    snprintf(zoneText, sizeof(zoneText), "Forgotten Crypts - B%d", g_depthLevel);
+    snprintf(zoneText, sizeof(zoneText), "%s - B%d", ztHud->name, g_depthLevel);
     TextOutA(memDC, vpX + 18, vpY + 15, zoneText, (int)strlen(zoneText));
 
     SetTextColor(memDC, COLOR_TEXT_DIM);
     char turnText[64];
-    snprintf(turnText, sizeof(turnText), "Turn: %d | Light: 100%% | Torch: Lit", g_turn);
+    snprintf(turnText, sizeof(turnText), "Turn: %d | Light: 100%% | %s: Lit", g_turn, ztHud->sconceName);
     TextOutA(memDC, vpX + 18, vpY + 33, turnText, (int)strlen(turnText));
 
     // 3. BOTTOM VIEWPORT TOOLBAR (12..716, 574..606)
@@ -1135,7 +1685,7 @@ void RenderGame(HDC hdc, HWND hwnd) {
 
     // 5. HELP MODAL DIALOG (When H or F1 pressed)
     if (g_showHelpModal) {
-        RECT modalRect = {width / 2 - 280, height / 2 - 180, width / 2 + 280, height / 2 + 180};
+        RECT modalRect = {width / 2 - 290, height / 2 - 190, width / 2 + 290, height / 2 + 190};
         HBRUSH modalBg = CreateSolidBrush(COLOR_BG_PANEL);
         FillRect(memDC, &modalRect, modalBg);
         DeleteObject(modalBg);
@@ -1157,7 +1707,8 @@ void RenderGame(HDC hdc, HWND hwnd) {
         TextOutA(memDC, modalRect.left + 20, my, "- WASD / Arrow Keys / Numpad / Vi: Navigate grid", 48); my += 20;
         TextOutA(memDC, modalRect.left + 20, my, "- Space: Rest 1 turn (Recuperates +2 HP, +1 Sanity)", 51); my += 20;
         TextOutA(memDC, modalRect.left + 20, my, "- R/X: Search surrounding area for secret coffers & traps", 57); my += 20;
-        TextOutA(memDC, modalRect.left + 20, my, "- E / Enter: Interact / Descend into deeper abyss depths", 56); my += 20;
+        TextOutA(memDC, modalRect.left + 20, my, "- E / Enter: Interact / Descend stairs / Commune with Altars", 60); my += 20;
+        TextOutA(memDC, modalRect.left + 20, my, "- Biomes: B1-3 Catacombs | B4-6 Sunken Grotto | B7-9 Crypt | B10+ Void", 70); my += 20;
         TextOutA(memDC, modalRect.left + 20, my, "- 1, 2, 3: Switch Sidebar Tabs (Delver / Relics / Runes)", 56); my += 20;
         TextOutA(memDC, modalRect.left + 20, my, "- C: Toggle CRT Scanlines & Atmospheric Phosphor Grid", 53); my += 20;
         TextOutA(memDC, modalRect.left + 20, my, "- F: Toggle Field of View (FOV Omnivision)", 42); my += 20;
