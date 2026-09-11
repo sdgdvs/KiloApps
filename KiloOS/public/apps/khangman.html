@@ -221,7 +221,7 @@
     </select>
     
     <div id="custom-container" style="display: none; margin-bottom: 15px;">
-        <input type="text" id="custom-words" placeholder="e.g. APPLE, BANANA, CHERRY" style="padding: 7px; width: 260px; background: #1c2432; color: white; border: 1px solid #3a485c; border-radius: 6px; font-size: 14px;">
+        <input type="text" id="custom-words" placeholder="e.g. APPLE, BANANA, CHERRY" onkeydown="if(event.key === 'Enter'){initGame();this.blur();}" style="padding: 7px; width: 260px; background: #1c2432; color: white; border: 1px solid #3a485c; border-radius: 6px; font-size: 14px;">
         <button onclick="initGame()" class="btn" style="background-color: #007acc; margin-left: 5px;">Play Custom</button>
     </div>
     
@@ -259,7 +259,7 @@
     </div>
 </div>
 
-<div id="help-modal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; flex-direction: column;">
+<div id="help-modal" onclick="if(event.target === this) hideHelp();" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; flex-direction: column;">
     <div style="background: #161c26; padding: 25px; border-radius: 12px; max-width: 460px; text-align: left; border: 2px solid #3a485c; color: #e0e6ed; box-shadow: 0 8px 32px rgba(0,0,0,0.8);">
         <h2 style="color: #4facfe; margin-top: 0;">How to Play KHangman</h2>
         <p><strong>Rules:</strong> Guess the hidden word letter by letter before your strikes run out.</p>
@@ -362,6 +362,273 @@
     let ropeAngularVelocity = 0;
     let ropeAngularAcceleration = 0;
     let windForce = 0;
+
+    function showHelp() {
+        document.getElementById('help-modal').style.display = 'flex';
+    }
+
+    function hideHelp() {
+        document.getElementById('help-modal').style.display = 'none';
+    }
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new AudioContext();
+        }
+    }
+
+    function toggleMute() {
+        isMuted = !isMuted;
+        document.getElementById('mute-btn').innerText = isMuted ? '🔇 Muted' : '🔊 Sound';
+    }
+
+    function playSound(type) {
+        if (isMuted) return;
+        try {
+            initAudio();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            const now = audioCtx.currentTime;
+            
+            if (type === 'valid') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(850, now + 0.1);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (type === 'invalid') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(280, now);
+                osc.frequency.exponentialRampToValueAtTime(130, now + 0.2);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'win') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(554, now + 0.08);
+                osc.frequency.setValueAtTime(659, now + 0.16);
+                osc.frequency.setValueAtTime(880, now + 0.24);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.45);
+                osc.start(now);
+                osc.stop(now + 0.45);
+            } else if (type === 'lose') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(320, now);
+                osc.frequency.exponentialRampToValueAtTime(45, now + 0.6);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.6);
+                osc.start(now);
+                osc.stop(now + 0.6);
+            } else if (type === 'shield') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(750, now);
+                osc.frequency.exponentialRampToValueAtTime(1150, now + 0.25);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'bomb') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.25);
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'vowel') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(900, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } else if (type === 'freeze') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(400, now + 0.2);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            }
+        } catch (e) {}
+    }
+
+    function loadStats() {
+        const saved = localStorage.getItem('khangman_stats');
+        if (saved) {
+            try {
+                stats = JSON.parse(saved);
+                if (stats.blitzBest === undefined) stats.blitzBest = 0;
+            } catch (e) {}
+        }
+        updateStatsDisplay();
+    }
+    
+    function saveStats() {
+        try {
+            localStorage.setItem('khangman_stats', JSON.stringify(stats));
+        } catch (e) {}
+        updateStatsDisplay();
+    }
+    
+    function updateStatsDisplay() {
+        const elWins = document.getElementById('stat-wins');
+        if (elWins) elWins.innerText = stats.wins;
+        const elLosses = document.getElementById('stat-losses');
+        if (elLosses) elLosses.innerText = stats.losses;
+        const elStreak = document.getElementById('stat-streak');
+        if (elStreak) elStreak.innerText = stats.streak;
+        const elBest = document.getElementById('stat-best');
+        if (elBest) elBest.innerText = stats.best;
+        const elBlitzBest = document.getElementById('stat-blitz-best');
+        if (elBlitzBest) elBlitzBest.innerText = stats.blitzBest;
+    }
+
+    function resetStats() {
+        if (confirm("Reset all lifetime statistics?")) {
+            stats = { wins: 0, losses: 0, streak: 0, best: 0, blitzBest: 0 };
+            saveStats();
+        }
+    }
+
+    function saveGameState() {
+        const msgEl = document.getElementById('message');
+        if (gameEnded) {
+            if (msgEl) {
+                msgEl.innerText = "Cannot save a finished game.";
+                msgEl.style.color = "#f44336";
+            }
+            return;
+        }
+        const state = {
+            word: word,
+            category: document.getElementById('category').value,
+            guessed: Array.from(guessed),
+            errors: errors,
+            gameMode: gameMode,
+            campaignLevel: campaignLevel,
+            maxErrors: maxErrors,
+            vowelReveals: vowelReveals,
+            consonantRadars: consonantRadars,
+            shields: shields,
+            freezes: freezes,
+            bombs: bombs,
+            freezeTimerSeconds: freezeTimerSeconds,
+            blitzTime: blitzTime,
+            blitzWords: blitzWords
+        };
+        try {
+            localStorage.setItem('khangman_save', JSON.stringify(state));
+            if (msgEl) {
+                msgEl.innerText = "💾 Game saved to local storage!";
+                msgEl.style.color = "#81c784";
+            }
+        } catch (e) {
+            if (msgEl) {
+                msgEl.innerText = "⚠️ Failed to save game.";
+                msgEl.style.color = "#f44336";
+            }
+        }
+    }
+
+    function loadGameState() {
+        const saved = localStorage.getItem('khangman_save');
+        const msgEl = document.getElementById('message');
+        if (saved) {
+            try {
+                const state = JSON.parse(saved);
+                if (blitzTimerId) clearInterval(blitzTimerId);
+                word = state.word;
+                document.getElementById('category').value = state.category;
+                if (state.category === "Custom") {
+                    document.getElementById('custom-container').style.display = 'block';
+                    if (!CATEGORIES["Custom"] || !CATEGORIES["Custom"].includes(state.word)) {
+                        CATEGORIES["Custom"] = [state.word];
+                    }
+                } else {
+                    document.getElementById('custom-container').style.display = 'none';
+                }
+                guessed = new Set(state.guessed);
+                errors = state.errors;
+                gameMode = state.gameMode || 0;
+                campaignLevel = state.campaignLevel || 1;
+                maxErrors = state.maxErrors || 6;
+                vowelReveals = state.vowelReveals !== undefined ? state.vowelReveals : 2;
+                consonantRadars = state.consonantRadars !== undefined ? state.consonantRadars : 2;
+                shields = state.shields !== undefined ? state.shields : 2;
+                freezes = state.freezes !== undefined ? state.freezes : 2;
+                bombs = state.bombs !== undefined ? state.bombs : 2;
+                freezeTimerSeconds = state.freezeTimerSeconds || 0;
+                blitzTime = state.blitzTime || 60;
+                blitzWords = state.blitzWords || 0;
+                gameEnded = false;
+                
+                updateSkillButtons();
+                if (msgEl) {
+                    msgEl.innerText = "📂 Game loaded. Guess a letter";
+                    msgEl.style.color = "#e0e6ed";
+                }
+                document.getElementById('word-display').classList.remove('win-animation');
+                document.getElementById('hangman-canvas').classList.remove('shake-animation');
+                document.getElementById('campaign-btn').innerText = (gameMode === 1 && campaignLevel > 1) ? `Campaign (${campaignLevel}/20)` : "Campaign (20)";
+                
+                initKeyboard();
+                if (gameMode === 2) startBlitzTimer();
+                updateDisplay();
+            } catch (e) {
+                if (msgEl) {
+                    msgEl.innerText = "⚠️ Failed to load saved game.";
+                    msgEl.style.color = "#f44336";
+                }
+            }
+        } else {
+            if (msgEl) {
+                msgEl.innerText = "⚠️ No saved game found.";
+                msgEl.style.color = "#f44336";
+            }
+        }
+    }
+
+    function updateSkillButtons() {
+        const vBtn = document.getElementById('vowel-btn');
+        if (vBtn) {
+            vBtn.innerText = `Vowel[V](${vowelReveals})`;
+            vBtn.disabled = vowelReveals <= 0 || gameEnded;
+        }
+        const rBtn = document.getElementById('radar-btn');
+        if (rBtn) {
+            rBtn.innerText = `Radar[H](${consonantRadars})`;
+            rBtn.disabled = consonantRadars <= 0 || gameEnded;
+        }
+        const sBtn = document.getElementById('shield-btn');
+        if (sBtn) {
+            sBtn.innerText = `Shield[S](${shields})`;
+            sBtn.disabled = shields <= 0 || gameEnded;
+        }
+        const fBtn = document.getElementById('freeze-btn');
+        if (fBtn) {
+            fBtn.innerText = `Freeze[F](${freezes})`;
+            fBtn.disabled = freezes <= 0 || gameEnded;
+        }
+        const bBtn = document.getElementById('bomb-btn');
+        if (bBtn) {
+            bBtn.innerText = `Bomb[B](${bombs})`;
+            bBtn.disabled = bombs <= 0 || gameEnded;
+        }
+    }
 
     function initDustMotes() {
         dustMotes = [];
@@ -1358,6 +1625,20 @@
                 } else if (gameMode === 1) {
                     const st = CAMPAIGN_STAGES[campaignLevel - 1];
                     msgEl.innerText = `${st.name} | ❄️ FROZEN (${freezeTimerSeconds}s)`;
+                } else {
+                    msgEl.innerText = `❄️ FROZEN (${freezeTimerSeconds}s) | Guess a letter`;
+                }
+                if (gameMode !== 2 && freezeTimerSeconds <= 0) {
+                    clearInterval(blitzTimerId);
+                    blitzTimerId = null;
+                    if (gameMode === 1) {
+                        const st = CAMPAIGN_STAGES[campaignLevel - 1];
+                        msgEl.innerText = `${st.name} (Max Strikes: ${st.maxErrors})`;
+                        msgEl.style.color = "#ffc107";
+                    } else {
+                        msgEl.innerText = "Guess a letter";
+                        msgEl.style.color = "#e0e6ed";
+                    }
                 }
                 return;
             }
@@ -1520,7 +1801,12 @@
         if (shields <= 0 || gameEnded) return;
         triggerScreenShake(6);
         spawnShockwave(120, 100, 60, '#8e24aa');
-        alert("Strike Shield absorbs 1 wrong guess automatically!");
+        playSound('shield');
+        const msgEl = document.getElementById('message');
+        if (msgEl) {
+            msgEl.innerText = `🛡️ Strike Shield active! (${shields} strikes protected)`;
+            msgEl.style.color = '#ce93d8';
+        }
     }
 
     function useFreezeTimer() {
@@ -1743,6 +2029,25 @@
     document.addEventListener('keydown', (e) => {
         if (e.ctrlKey || e.altKey || e.metaKey) return;
         if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
+
+        const helpModal = document.getElementById('help-modal');
+        if (e.key === 'Escape') {
+            if (helpModal && helpModal.style.display !== 'none') {
+                hideHelp();
+                return;
+            }
+        }
+
+        if (helpModal && helpModal.style.display !== 'none') {
+            return;
+        }
+
+        if (e.key === '?' || e.key === 'F1') {
+            e.preventDefault();
+            showHelp();
+            return;
+        }
+
         const keyUpper = e.key.toUpperCase();
         if (keyUpper === 'V' && vowelReveals > 0 && !gameEnded) {
             useVowelReveal();
@@ -1754,7 +2059,7 @@
             useFreezeTimer();
         } else if (keyUpper === 'B' && bombs > 0 && !gameEnded) {
             useBomb();
-        } else if (keyUpper >= 'A' && keyUpper <= 'Z') {
+        } else if (e.key.length === 1 && keyUpper >= 'A' && keyUpper <= 'Z') {
             guess(keyUpper);
         }
     });

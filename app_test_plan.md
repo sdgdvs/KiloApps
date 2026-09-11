@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KHangman
+**Target App:** KHex
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KHangman
 - KHex
 - KImage
 - KJournal
@@ -173,8 +172,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KGo
 - KGraph
 - KHabit
+- KHangman
 
 ## Test Reports
+
+- **KHangman**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
+  - ✅ Core gameplay works (Classic hangman with 10 built-in categories plus custom word input, 20-stage Campaign with escalating word length and strike limits ending in Polymath Grandmaster challenge, 60s Time Attack Blitz mode with time extensions, 5 active skills Vowel Reveal/Consonant Radar/Strike Shield/Freeze Timer/Bomb Nuke, 3D gallows with procedural wood grain, animated character sprite with blinking and facial states, kinematic rope/noose physics with wind sway, loss ghost floating animation, multi-layer particle explosion engine, and Web Audio synthesizers).
+  - 🔧 FIXED: Critical regression from Loop 8 graphics update where 12 essential JavaScript functions (`showHelp`, `hideHelp`, `initAudio`, `toggleMute`, `playSound`, `loadStats`, `saveStats`, `updateStatsDisplay`, `resetStats`, `saveGameState`, `loadGameState`, `updateSkillButtons`) were accidentally overwritten and missing from the file. On initial page load, `loadStats()` threw `ReferenceError: loadStats is not defined`, crashing script execution and preventing `initGame()`, keyboard listeners, and canvas rendering from starting. Restored all 12 functions with full Web Audio synthesis, statistics tracking, game state persistence, and skill button state management.
+  - 🔧 FIXED: In the global `keydown` listener, single-character letter check was written as `keyUpper >= 'A' && keyUpper <= 'Z'` without verifying `e.key.length === 1`. Non-character keys like `Shift`, `Enter`, `Backspace`, `ArrowUp`, `CapsLock`, and `Delete` evaluated to true (e.g. `'SHIFT' >= 'A' && 'SHIFT' <= 'Z'`), passing multi-letter strings to `guess()`, adding phantom strike errors against the player, and causing unnecessary strikes when using Shift or standard navigation keys. Added `e.key.length === 1` guard.
+  - 🔧 FIXED: Background keyboard shortcuts (letter guessing, skills V/H/S/F/B) continued to fire underneath an active Help modal, executing guesses and using power-ups while reading instructions. Suppressed background keystrokes while `#help-modal` is displayed.
+  - 🔧 FIXED: Help modal could not be dismissed via `Escape` or by clicking the dark modal backdrop overlay, and in-game shortcuts `?` and `F1` were unhandled. Added backdrop click dismissal, `Escape` key close, and wired `?`/`F1` to open the Help guide.
+  - 🔧 FIXED: `#custom-words` text input lacked an `Enter` key listener, forcing users to click the "Play Custom" button manually before typing letters. Added `Enter` key handler to immediately start custom games and blur input focus.
+  - 🔧 FIXED: Clicking the Strike Shield button (`#shield-btn`) or pressing `S` triggered a disruptive browser `alert()`, pausing the browser event loop mid-game. Replaced alert with smooth visual status text (`msgEl.innerText`) and shield sound effect.
+  - 🔧 FIXED: In `startBlitzTimer()`, freezing the timer in Freeplay or Campaign mode did not clean up the interval upon timer expiration, and Freeplay mode lacked a countdown readout for the 15-second freeze effect. Added freeze countdown text to Freeplay and properly cleared the freeze interval once expired in non-Blitz modes.
 
 - **KHabit**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
   - ✅ Core functionality works (daily habit tracking dashboard with progress bar and 7-day visual history chart, habit creation with name, description, categories Health/Work/Personal/Other, and target streak milestone masteries 7/30/90 days, daily completion checkmarking with active fire flicker animations, delete animations with confirmation, real-time statistics modal with active/mastered habit counts, longest streak, and most consistent category analysis, accent color theme customization Purple/Orange/Blue/Green with live preview, search filter, sort options Alphabetical/Highest Streak, JSON data backup import and export, and localStorage persistence).
