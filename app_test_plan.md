@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KMail
+**Target App:** KMandel
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KMail
 - KMandel
 - KMatch3
 - KMaze
@@ -173,8 +172,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KHex
 - KImage
 - KJournal
+- KMail
 
 ## Test Reports
+
+- **KMail**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
+  - ✅ Core functionality works (multi-tab email suite with folders Inbox/Starred/Sent/Drafts/Trash, starred priority tagging, tags categorization, auto-saving drafts, email reply thread generator, PBKDF2/AES-GCM encrypted email composer and decryption engine, full-text subject/sender/body search with tag filtering, single-message EML and Markdown export, full JSON mailbox backup export and import, and non-blocking toast notifications).
+  - 🔧 FIXED: Global keyboard listener checked bare `e.key` (`c`, `n`, `1`..`5`, `h`, `r`, `t`, `e`, `m`) without checking `!e.ctrlKey && !e.altKey && !e.metaKey`, hijacking browser accelerators: `Ctrl+C` (copying text in emails hijacked to open a new compose tab), `Ctrl+N` (new window hijacked to compose), `Ctrl+1`..`Ctrl+5` and `Alt+1`..`Alt+5` (browser tab switching hijacked to change mail folders), `Ctrl+H` (browser history hijacked to open Help modal), `Ctrl+R` (browser refresh hijacked to reply), `Ctrl+T` (new tab hijacked to open Tag modal), and `Ctrl+E` (address bar focus hijacked to export EML). Added modifier key guards across all shortcuts.
+  - 🔧 FIXED: Keyboard shortcuts continued to fire in the background underneath active modals (Help, Tag, and Trash modals), manipulating folders and stacking compose tabs while reading dialogs. Suppressed background hotkeys whenever any modal is displayed.
+  - 🔧 FIXED: Sidebar buttons displayed `<kbd>I</kbd>` and `<kbd>O</kbd>` shortcuts for "Import JSON" and "Export JSON", but neither key was wired in the `keydown` listener, leaving both promised hotkeys dead. Wired `I` to trigger mailbox file upload and `O` to trigger backup JSON export, and documented both in the Help modal table.
+  - 🔧 FIXED: Clicking "Empty Trash" (`doEmptyTrash()`) only called `renderList()` if `currentFolder === 'trash'`. If emptied from Inbox or another folder, the Trash folder badge (`#b-trash`) never updated, falsely displaying stale item counts; and any open tabs displaying messages purged from Trash remained open as orphan ghost views. Updated `doEmptyTrash()` to close tabs for deleted messages and refresh folder badges across all views.
+  - 🔧 FIXED: Users could add tags to emails, but had no way to remove an existing tag. Added `removeTag()` with click-to-delete `✕` buttons on email header tags, and made clicking existing tag chips in the Tag modal toggle/remove them.
+  - 🔧 FIXED: In `exportSingleEml()`, `exportSingleMd()`, and `exportJson()`, download anchor elements were clicked without being attached to `document.body` (`a.click()`), causing file downloads to fail silently in Firefox and sandboxed iframe environments. Attached anchors to DOM before clicking and cleanly removed them afterwards.
+  - 🔧 FIXED: Search input used `onkeyup="handleSearch()"` which ignored mouse context-menu paste, cut, and drag-and-drop inputs; pressing `Escape` cleared search text without blurring `#search-box` (leaving users trapped in input mode where hotkeys were blocked); and saving a draft with an empty recipient stored `'draft@kilo.os'` as the recipient, which pre-populated into the "To:" field upon reopening. Switched to `oninput`, added blur on Escape, removed dummy recipient fallback, and added recipient validation prior to sending.
 
 - **KJournal**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
   - ✅ Core functionality works (daily journaling workspace with real-time word/character count and estimated reading time, daily writing word goal progress bar, 6 quick-starter prompt chips, 6 guided reflection templates in library Morning/Evening/Gratitude/Goals/Stoic/BrainDump with replace and append options, 6 mood selectors 😀/😊/😐/😔/⚡/🧘 with analytics breakdown and percentage gauges, interactive mini calendar navigator with entry indicators and month browsing, hashtag cloud extraction with filter toggling, search query filtering, writing streak & longest streak tracker, PIN lock overlay security system, and multi-format data export JSON/Markdown/TXT and JSON backup import).

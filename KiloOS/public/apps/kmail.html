@@ -682,7 +682,7 @@
   </div>
   
   <div class="search-container">
-    <input type="text" id="search-box" placeholder="Search emails... (Ctrl+F)" aria-label="Search emails" onkeyup="handleSearch()">
+    <input type="text" id="search-box" placeholder="Search emails... (Ctrl+F)" aria-label="Search emails" oninput="handleSearch()">
     <select id="tag-filter" aria-label="Filter emails by tag" onchange="handleSearch()">
       <option value="">All Tags</option>
       <option value="Urgent">Urgent</option>
@@ -754,6 +754,8 @@
         <tr><td><kbd>Del</kbd></td><td>Move selected email to Trash / Delete</td></tr>
         <tr><td><kbd>E</kbd></td><td>Export single email as .EML</td></tr>
         <tr><td><kbd>M</kbd></td><td>Export single email as Markdown (.MD)</td></tr>
+        <tr><td><kbd>I</kbd></td><td>Import Mailbox from JSON</td></tr>
+        <tr><td><kbd>O</kbd></td><td>Export Mailbox as JSON backup</td></tr>
         <tr><td><kbd>Ctrl</kbd> + <kbd>S</kbd></td><td>Save draft in compose mode</td></tr>
         <tr><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td><td>Send email in compose mode</td></tr>
         <tr><td><kbd>Ctrl</kbd> + <kbd>W</kbd></td><td>Close active tab</td></tr>
@@ -884,6 +886,10 @@
         em.tags.push(tagName);
         safeSaveEmails();
         showToast(`Added tag "${tagName}"`, 'success');
+      } else {
+        em.tags = em.tags.filter(t => t !== tagName);
+        safeSaveEmails();
+        showToast(`Removed tag "${tagName}"`, 'info');
       }
       renderList();
       renderPane();
@@ -896,15 +902,30 @@
       applyTag(val);
     }
   }
+  window.removeTag = function(eid, tagName) {
+    let em = emails.find(e => e.id === eid);
+    if (em && em.tags) {
+      em.tags = em.tags.filter(t => t !== tagName);
+      safeSaveEmails();
+      renderList();
+      renderPane();
+      showToast(`Removed tag "${tagName}"`, 'info');
+    }
+  };
 
   // Trash modal
   function confirmEmptyTrash() {
     showModal('trash-modal');
   }
   function doEmptyTrash() {
+    const trashIds = new Set(emails.filter(e => e.folder === 'trash').map(e => e.id));
     emails = emails.filter(e => e.folder !== 'trash');
+    tabs = tabs.filter(t => !trashIds.has(t.emailId) && !trashIds.has(t.draftId));
+    if (activeTabId && !tabs.some(t => t.id === activeTabId)) {
+      activeTabId = tabs.length > 0 ? tabs[tabs.length - 1].id : null;
+    }
     safeSaveEmails();
-    if (currentFolder === 'trash') renderList();
+    renderTabs();
     closeModal('trash-modal');
     showToast("Trash folder permanently emptied.", "success");
   }
@@ -1237,7 +1258,7 @@
       let em = emails.find(e => e.id === tab.emailId);
       if(!em) { closeTab(tab.id); return; }
       
-      let tagsHtml = (em.tags || []).map(t => `<span class="tag">${escapeHTML(t)}</span>`).join('');
+      let tagsHtml = (em.tags || []).map(t => `<span class="tag">${escapeHTML(t)} <span style="cursor:pointer;margin-left:3px;opacity:0.75;" onclick="removeTag(${em.id}, '${escapeHTML(t)}')" title="Remove tag ${escapeHTML(t)}" aria-label="Remove tag ${escapeHTML(t)}">✕</span></span>`).join('');
       
       let actionsHtml = `<button onclick="toggleStar(${em.id})" class="${em.starred ? 'btn-star-active' : ''}"><span>${em.starred ? '★ Starred' : '☆ Star'}</span> <kbd>S</kbd></button>`;
       actionsHtml += `<button onclick="newComposeTab(emails.find(e=>e.id==${em.id}))"><span>↩️ Reply</span> <kbd>R</kbd></button>`;
@@ -1252,7 +1273,7 @@
           <div style="font-size:32px; margin-bottom:8px;">🔒</div>
           <p style="margin:0 0 14px 0; font-weight:500;">This message is encrypted with password protection.</p>
           <div style="display:flex; justify-content:center; gap:8px;">
-            <input type="password" id="dec-pass-${em.id}" placeholder="Enter decryption password" style="padding:8px 12px; border-radius:6px; border:1px solid var(--border); background:rgba(255,255,255,0.1); color:white; font-size:13px; outline:none;" onkeydown="if(event.key==='Enter') attemptDecrypt(${em.id})">
+            <input type="password" id="dec-pass-${em.id}" placeholder="Enter decryption password (e.g. 'pass')" style="padding:8px 12px; border-radius:6px; border:1px solid var(--border); background:rgba(255,255,255,0.1); color:white; font-size:13px; outline:none;" onkeydown="if(event.key==='Enter') attemptDecrypt(${em.id})">
             <button onclick="attemptDecrypt(${em.id})" style="padding:8px 16px; background:var(--accent); border:none; color:white; border-radius:6px; cursor:pointer; font-weight:500;">Decrypt</button>
           </div>
         </div><div id="dec-res-${em.id}" style="margin-top:20px; display:none; background:rgba(59,130,246,0.1); padding:16px; border-radius:8px; border:1px solid rgba(59,130,246,0.3);"></div>`;
@@ -1323,8 +1344,9 @@
       let existingDraft = emails.find(e => e.id === t.draftId);
       if (existingDraft) {
         existingDraft.subject = data.sub || 'Untitled Draft';
-        existingDraft.sender = data.to || 'draft@kilo.os';
+        existingDraft.sender = (data.to || '').trim();
         existingDraft.body = data.body;
+        existingDraft.encrypted = !!data.encrypted;
       }
     } else {
       let draftId = nextId++;
@@ -1333,11 +1355,11 @@
         id: draftId,
         folder: 'drafts',
         subject: data.sub || 'Untitled Draft',
-        sender: data.to || 'draft@kilo.os',
+        sender: (data.to || '').trim(),
         body: data.body,
         unread: false,
         tags: ["Work"],
-        encrypted: false,
+        encrypted: !!data.encrypted,
         starred: false
       });
     }
@@ -1350,6 +1372,12 @@
     let t = tabs.find(t => t.id === tid);
     if(!t) return;
     let data = t.data;
+    if (!data.to || !data.to.trim()) {
+      showToast("Please specify a recipient (To:).", "warning");
+      const inputTo = document.getElementById(`c-to-${tid}`);
+      if (inputTo) inputTo.focus();
+      return;
+    }
     let finalBody = data.body;
     let isEncrypted = data.encrypted;
     
@@ -1368,7 +1396,7 @@
       if (existingDraft) {
         existingDraft.folder = 'sent';
         existingDraft.subject = data.sub || 'No Subject';
-        existingDraft.sender = data.to || 'unknown@kilo.os';
+        existingDraft.sender = data.to.trim();
         existingDraft.body = finalBody;
         existingDraft.encrypted = isEncrypted;
       }
@@ -1377,7 +1405,7 @@
         id: nextId++,
         folder: 'sent',
         subject: data.sub || 'No Subject',
-        sender: data.to || 'unknown@kilo.os',
+        sender: data.to.trim(),
         body: finalBody,
         unread: false,
         tags: [],
@@ -1436,7 +1464,9 @@
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `email_${em.id}.eml`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     showToast(`Exported email_${em.id}.eml`, "success");
   }
@@ -1449,7 +1479,9 @@
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `email_${em.id}.md`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     showToast(`Exported email_${em.id}.md`, "success");
   }
@@ -1459,7 +1491,9 @@
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = "kmail_backup.json";
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     showToast("Exported mailbox backup JSON.", "success");
   }
@@ -1500,13 +1534,8 @@
   // Keyboard Shortcuts Listener
   document.addEventListener('keydown', (e) => {
     const isInput = (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA');
-
-    // F1 or H Help Dialog
-    if ((e.key === 'F1' || (!isInput && (e.key === 'h' || e.key === 'H' || e.key === '?')))) {
-      e.preventDefault();
-      showHelpModal();
-      return;
-    }
+    const hasModifier = e.ctrlKey || e.altKey || e.metaKey;
+    const anyModalOpen = document.querySelectorAll('.modal-backdrop.active').length > 0;
 
     // Escape handling
     if (e.key === 'Escape') {
@@ -1515,8 +1544,10 @@
         openModals.forEach(m => m.classList.remove('active'));
         return;
       }
-      if (document.getElementById('search-box').value) {
-        document.getElementById('search-box').value = '';
+      const sb = document.getElementById('search-box');
+      if (sb && (sb.value || document.activeElement === sb)) {
+        sb.value = '';
+        sb.blur();
         renderList();
         return;
       }
@@ -1526,8 +1557,11 @@
       }
     }
 
+    // Suppress background keystrokes when any modal is open
+    if (anyModalOpen) return;
+
     // Ctrl+S: Save Draft
-    if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === 's' || e.key === 'S')) {
       if (activeTabId) {
         const tab = tabs.find(t => t.id === activeTabId);
         if (tab && tab.type === 'compose') {
@@ -1539,7 +1573,7 @@
     }
 
     // Ctrl+Enter: Send Email
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key === 'Enter') {
       if (activeTabId) {
         const tab = tabs.find(t => t.id === activeTabId);
         if (tab && tab.type === 'compose') {
@@ -1550,15 +1584,8 @@
       }
     }
 
-    // Ctrl+F or '/': Search
-    if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')) {
-      e.preventDefault();
-      const sb = document.getElementById('search-box');
-      sb.focus();
-      sb.select();
-      return;
-    }
-    if (!isInput && e.key === '/') {
+    // Ctrl+F: Search
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === 'f' || e.key === 'F')) {
       e.preventDefault();
       const sb = document.getElementById('search-box');
       sb.focus();
@@ -1567,7 +1594,7 @@
     }
 
     // Ctrl+W: Close Tab
-    if ((e.ctrlKey || e.metaKey) && (e.key === 'w' || e.key === 'W')) {
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === 'w' || e.key === 'W')) {
       if (activeTabId) {
         e.preventDefault();
         closeTab(activeTabId);
@@ -1576,6 +1603,24 @@
     }
 
     if (isInput) return;
+
+    // F1 or H or ? Help Dialog
+    if (e.key === 'F1' || (!hasModifier && (e.key === 'h' || e.key === 'H' || e.key === '?'))) {
+      e.preventDefault();
+      showHelpModal();
+      return;
+    }
+
+    if (!hasModifier && e.key === '/') {
+      e.preventDefault();
+      const sb = document.getElementById('search-box');
+      sb.focus();
+      sb.select();
+      return;
+    }
+
+    // Do not trigger single-key actions if Ctrl, Alt, or Meta is pressed
+    if (hasModifier) return;
 
     // Folder shortcuts [1-5]
     if (e.key === '1') { switchFolder('inbox'); return; }
@@ -1588,6 +1633,18 @@
     if (e.key === 'c' || e.key === 'C' || e.key === 'n' || e.key === 'N') {
       e.preventDefault();
       newComposeTab();
+      return;
+    }
+
+    // Import [I] / Export [O] Mailbox JSON
+    if (e.key === 'i' || e.key === 'I') {
+      e.preventDefault();
+      document.getElementById('import-file').click();
+      return;
+    }
+    if (e.key === 'o' || e.key === 'O') {
+      e.preventDefault();
+      exportJson();
       return;
     }
 
