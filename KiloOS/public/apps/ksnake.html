@@ -46,6 +46,7 @@
         <div id="header">
             <span id="scoreDisplay">Score: 0</span>
             <span id="modeDisplay">Mode: Classic</span>
+            <span id="soundToggle" onclick="toggleSound()" style="cursor:pointer;" title="Toggle Sound (U)">🔊 Sound</span>
             <span id="highDisplay">High: 0</span>
         </div>
 
@@ -58,7 +59,7 @@
             <canvas id="gameCanvas" width="400" height="400" aria-label="KSnake Game" role="application" tabindex="0"></canvas>
 
             <!-- MENU OVERLAY -->
-            <div id="menuOverlay" class="overlay">
+            <div id="menuOverlay" class="overlay" role="dialog" aria-modal="true" aria-label="KSnake Arcade Main Menu">
                 <h2>KSNAKE ARCADE</h2>
                 <p>Mode: <span id="currentModeText" class="menu-opt">Classic</span> (Press <b style="color:#00d2d3">M</b>)</p>
                 <p>Difficulty: <span id="diffText" class="menu-opt">Medium</span> (Press <b style="color:#00d2d3">1-3</b>)</p>
@@ -67,6 +68,7 @@
                     <button class="btn" onclick="startNewGame()">[ENTER] Play</button>
                     <button class="btn" onclick="openMapEditor()">[E] Map Editor</button>
                     <button class="btn" id="resumeBtn" onclick="resumeGame()" style="display:none;">[R] Resume</button>
+                    <button class="btn" id="btnSoundToggle" onclick="toggleSound()">[U] Sound: ON</button>
                     <button class="btn" onclick="showLeaderboard()">[H / F1] Help & Scores</button>
                     <button class="btn" onclick="showExportImport()">[D] Data Ex/Imp</button>
                     <button class="btn" onclick="showConfig()">[C] Keybinds</button>
@@ -76,7 +78,7 @@
             </div>
 
             <!-- MAP EDITOR OVERLAY -->
-            <div id="editorOverlay" class="overlay" style="display:none;">
+            <div id="editorOverlay" class="overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Map Editor Lab">
                 <h2 style="color: #fbc531;">MAP EDITOR LAB</h2>
                 <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-bottom:8px;">
                     <button class="btn active-tool" id="toolWall" onclick="setEditorTool('wall')">[1] Wall</button>
@@ -96,7 +98,7 @@
             </div>
 
             <!-- BRANCH SELECTION OVERLAY -->
-            <div id="branchOverlay" class="overlay" style="display:none;">
+            <div id="branchOverlay" class="overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Campaign Route Selection">
                 <h2 style="color:#fbc531;">CAMPAIGN ROUTE SELECTION</h2>
                 <p style="font-size:13px; color:#a4b0be; margin-bottom:8px;">Milestone Reached! Choose your campaign branch path:</p>
                 <div class="branch-card" onclick="chooseCampaignBranch(0)">
@@ -110,7 +112,7 @@
             </div>
 
             <!-- GAME OVER OVERLAY -->
-            <div id="gameOverOverlay" class="overlay" style="display:none;">
+            <div id="gameOverOverlay" class="overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Game Result Dialog">
                 <h2 id="gameOverTitle" style="color: #ff4757;">GAME OVER</h2>
                 <p id="finalScoreText" style="font-size: 15px; font-weight: bold; color: #fbc531;"></p>
                 <div id="highScoreEntry" style="display:none; margin: 6px 0;">
@@ -124,7 +126,7 @@
             </div>
 
             <!-- PAUSE OVERLAY -->
-            <div id="pauseOverlay" class="overlay" style="display:none;">
+            <div id="pauseOverlay" class="overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Game Paused Dialog">
                 <h2 style="color: #fbc531;">PAUSED</h2>
                 <p>Press <b style="color:#00d2d3">P</b> or <b style="color:#00d2d3">ESC</b> to Resume</p>
                 <p>Press <b style="color:#4cd137">S</b> or <b style="color:#4cd137">Q</b> to Save & Exit</p>
@@ -135,10 +137,10 @@
             </div>
 
             <!-- LEADERBOARD & HELP OVERLAY -->
-            <div id="leaderboardOverlay" class="overlay" style="display:none;">
+            <div id="leaderboardOverlay" class="overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="High Scores and Help Dialog">
                 <h2>HIGH SCORES & HELP</h2>
                 <div style="font-size: 12px; text-align: left; margin-bottom: 8px; background: rgba(0,0,0,0.5); padding: 8px; border-radius: 4px; border: 1px solid #3d3d5c;">
-                    <b style="color:#00d2d3">Controls:</b> WASD / Arrows to Move, P/ESC to Pause, H/F1 for Help.<br>
+                    <b style="color:#00d2d3">Controls:</b> WASD / Arrows to Move, P/ESC to Pause, H/F1 for Help, U to Mute.<br>
                     <b style="color:#4cd137">Skills:</b> G = Ghost mode, F = Freeze/Slow, M = Magnet.<br>
                     <b style="color:#fbc531">Modes:</b> Classic, Maze, Ramp, Wrap, Campaign, VS, Custom, Gauntlet!
                 </div>
@@ -152,7 +154,7 @@
             </div>
 
             <!-- KEYBINDS OVERLAY -->
-            <div id="configOverlay" class="overlay" style="display:none;">
+            <div id="configOverlay" class="overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Keybindings Configuration Dialog">
                 <h2>KEYBINDINGS</h2>
                 <p style="font-size:12px; color:#8395a7; margin-bottom:6px;">Click an input to rebind, then press a key:</p>
                 <div style="font-size:13px; text-align:left; width:80%; margin:auto; display:flex; flex-direction:column; gap:4px;">
@@ -172,7 +174,7 @@
             </div>
             
             <!-- MATCH STATS OVERLAY -->
-            <div id="statsExportOverlay" class="overlay" style="display:none;">
+            <div id="statsExportOverlay" class="overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Match Statistics Dialog">
                 <h2>MATCH STATS</h2>
                 <p id="matchStatsText" style="white-space:pre-wrap; font-size:13px; color:#fbc531;"></p>
                 <div style="display:flex; gap:6px;">
@@ -184,7 +186,7 @@
             </div>
 
             <!-- EXPORT / IMPORT OVERLAY -->
-            <div id="exportImportOverlay" class="overlay" style="display:none;">
+            <div id="exportImportOverlay" class="overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Data Export and Import Dialog">
                 <h2>DATA EXPORT / IMPORT</h2>
                 <p>Export JSON Data or Paste JSON to Import:</p>
                 <textarea id="dataBox" placeholder="Stats JSON will appear here..."></textarea>
@@ -366,8 +368,39 @@
             }
         }
         
+        // Exception-Safe Storage Helpers
+        function safeGetStorage(key, fallback = null) {
+            try {
+                const val = localStorage.getItem(key);
+                return val !== null ? val : fallback;
+            } catch (e) {
+                return fallback;
+            }
+        }
+        function safeGetJSON(key, fallback = null) {
+            try {
+                const raw = localStorage.getItem(key);
+                return raw ? JSON.parse(raw) : fallback;
+            } catch (e) {
+                return fallback;
+            }
+        }
+        function safeSetStorage(key, val) {
+            try {
+                localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+        function safeRemoveStorage(key) {
+            try {
+                localStorage.removeItem(key);
+            } catch (e) {}
+        }
+        
         // Keybindings
-        let keyBinds = JSON.parse(localStorage.getItem('ksnakeKeyBinds')) || {
+        let keyBinds = safeGetJSON('ksnakeKeyBinds', null) || {
             up: 'w', down: 's', left: 'a', right: 'd',
             ghost: 'g', freeze: 'f', magnet: 'm', pause: 'p'
         };
@@ -384,7 +417,7 @@
         let gameLoop = null;
 
         // Custom Map & Editor State
-        let customObstacles = JSON.parse(localStorage.getItem('ksnakeCustomObstacles')) || [];
+        let customObstacles = safeGetJSON('ksnakeCustomObstacles', null) || [];
         let customPortalA = {x: 2, y: 10};
         let customPortalB = {x: 17, y: 10};
         let customPortalActive = true;
@@ -416,9 +449,9 @@
         let boss = { alive: false, hp: 15, maxHp: 15, body: [], dir: {x: 0, y: 1}, type: 0, laserCharge: 0, laserRow: -1, laserCol: -1, invisible: false, phaseTimer: 0 };
 
         // Stats & Leaderboard
-        let totalApples = parseInt(localStorage.getItem('ksnakeTotalApples')) || 0;
-        let gamesPlayed = parseInt(localStorage.getItem('ksnakeGamesPlayed')) || 0;
-        let leaderboard = JSON.parse(localStorage.getItem('ksnakeLeaderboard')) || [
+        let totalApples = parseInt(safeGetStorage('ksnakeTotalApples', '0'), 10) || 0;
+        let gamesPlayed = parseInt(safeGetStorage('ksnakeGamesPlayed', '0'), 10) || 0;
+        let leaderboard = safeGetJSON('ksnakeLeaderboard', null) || [
             { name: 'ACE', score: 250, mode: 'Classic', date: '2026-07-01' },
             { name: 'SNA', score: 180, mode: 'Maze', date: '2026-07-05' },
             { name: 'VIP', score: 120, mode: 'Ramp', date: '2026-07-10' },
@@ -429,45 +462,77 @@
         let lastMatchStats = null;
         let lastReplayData = null;
 
-        // Web Audio Synth
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSound(type) {
+        // Web Audio Synth & Sound FX Toggle
+        let soundEnabled = safeGetStorage('ksnakeSoundEnabled', 'true') !== 'false';
+        let audioCtx = null;
+        function getAudioContext() {
             try {
-                if(audioCtx.state === 'suspended') audioCtx.resume();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
+                if (!audioCtx) {
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContextClass) audioCtx = new AudioContextClass();
+                }
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume().catch(() => {});
+                }
+                return audioCtx;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function updateSoundButtonUI() {
+            const btn = document.getElementById('btnSoundToggle');
+            if (btn) btn.innerText = soundEnabled ? '[U] Sound: ON' : '[U] Sound: MUTED';
+            const hdr = document.getElementById('soundToggle');
+            if (hdr) hdr.innerText = soundEnabled ? '🔊 Sound' : '🔇 Muted';
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            safeSetStorage('ksnakeSoundEnabled', soundEnabled ? 'true' : 'false');
+            updateSoundButtonUI();
+            showToast(soundEnabled ? "Audio Sound: ON [U]" : "Audio Sound: MUTED [U]");
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                const ctxAudio = getAudioContext();
+                if (!ctxAudio) return;
+                const osc = ctxAudio.createOscillator();
+                const gain = ctxAudio.createGain();
                 osc.connect(gain);
-                gain.connect(audioCtx.destination);
+                gain.connect(ctxAudio.destination);
                 
                 if (type === 'eat') {
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(1100, audioCtx.currentTime + 0.1);
-                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-                    osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+                    osc.frequency.setValueAtTime(600, ctxAudio.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1100, ctxAudio.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.1, ctxAudio.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctxAudio.currentTime + 0.1);
+                    osc.start(); osc.stop(ctxAudio.currentTime + 0.1);
                 } else if (type === 'skill') {
                     osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.2);
-                    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-                    osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+                    osc.frequency.setValueAtTime(400, ctxAudio.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1200, ctxAudio.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.12, ctxAudio.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctxAudio.currentTime + 0.2);
+                    osc.start(); osc.stop(ctxAudio.currentTime + 0.2);
                 } else if (type === 'die') {
                     osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.35);
-                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
-                    osc.start(); osc.stop(audioCtx.currentTime + 0.35);
+                    osc.frequency.setValueAtTime(220, ctxAudio.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(40, ctxAudio.currentTime + 0.35);
+                    gain.gain.setValueAtTime(0.15, ctxAudio.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctxAudio.currentTime + 0.35);
+                    osc.start(); osc.stop(ctxAudio.currentTime + 0.35);
                 } else if (type === 'victory') {
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
-                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.15);
-                    osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.30);
-                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-                    osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+                    osc.frequency.setValueAtTime(523.25, ctxAudio.currentTime);
+                    osc.frequency.setValueAtTime(659.25, ctxAudio.currentTime + 0.15);
+                    osc.frequency.setValueAtTime(783.99, ctxAudio.currentTime + 0.30);
+                    gain.gain.setValueAtTime(0.15, ctxAudio.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctxAudio.currentTime + 0.5);
+                    osc.start(); osc.stop(ctxAudio.currentTime + 0.5);
                 }
             } catch(e){}
         }
@@ -524,7 +589,7 @@
         }
 
         function editorSave() {
-            localStorage.setItem('ksnakeCustomObstacles', JSON.stringify(customObstacles));
+            safeSetStorage('ksnakeCustomObstacles', customObstacles);
             showToast("Custom Map saved successfully!");
         }
 
@@ -605,9 +670,10 @@
             const highest = leaderboard.length > 0 ? Math.max(...leaderboard.map(l => l.score)) : 0;
             document.getElementById('highDisplay').innerText = `High: ${highest}`;
             
-            const savedState = localStorage.getItem('ksnakeSaveState');
+            const savedState = safeGetStorage('ksnakeSaveState');
             resumeBtn.style.display = savedState ? 'inline-block' : 'none';
             document.getElementById('btnStatsExport').style.display = lastMatchStats ? 'inline-block' : 'none';
+            updateSoundButtonUI();
         }
 
         function cycleMode() {
@@ -631,6 +697,11 @@
         function showMenu() {
             hideOverlays();
             gameState = 0;
+            const goTitle = document.getElementById('gameOverTitle');
+            if (goTitle) {
+                goTitle.innerText = 'GAME OVER';
+                goTitle.style.color = '#ff4757';
+            }
             menuOverlay.style.display = 'flex';
             updateMenuUI();
         }
@@ -828,7 +899,7 @@
             if (!replay) {
                 rngSeed = Date.now();
                 gamesPlayed++;
-                localStorage.setItem('ksnakeGamesPlayed', gamesPlayed);
+                safeSetStorage('ksnakeGamesPlayed', gamesPlayed);
                 lastReplayData = { seed: rngSeed, mode: gameMode, diff: difficulty, wrap: wrapMode, events: {} };
             }
             matchTicks = 0;
@@ -1045,7 +1116,7 @@
                 totalApples++;
                 applesEaten++;
                 matchApplesEaten++;
-                localStorage.setItem('ksnakeTotalApples', totalApples);
+                safeSetStorage('ksnakeTotalApples', totalApples);
 
                 if (boss.alive) {
                     boss.hp--;
@@ -1197,7 +1268,7 @@
             const lowestHigh = leaderboard.length < 5 ? 0 : leaderboard[leaderboard.length-1].score;
             document.getElementById('highScoreEntry').style.display = (score > lowestHigh) ? 'block' : 'none';
             gameOverOverlay.style.display = 'flex';
-            lastMatchStats = { ticks: matchTicks, apples: matchApplesEaten, coverage: Math.round((gridCoverage.size / 400) * 100) };
+            lastMatchStats = { ticks: matchTicks, apples: matchApplesEaten, coverage: Math.round((gridCoverage.size / 400) * 100), score: score, mode: gameMode };
             requestAnimationFrame(draw);
         }
 
@@ -1213,7 +1284,10 @@
             document.getElementById('gameOverTitle').innerText = (gameMode === 'gauntlet') ? 'GAUNTLET CONQUERED!' : 'CAMPAIGN MASTER!';
             document.getElementById('gameOverTitle').style.color = '#ffd700';
             document.getElementById('finalScoreText').innerText = `Victory Score: ${score}`;
+            const lowestHigh = leaderboard.length < 5 ? 0 : leaderboard[leaderboard.length-1].score;
+            document.getElementById('highScoreEntry').style.display = (score > lowestHigh) ? 'block' : 'none';
             gameOverOverlay.style.display = 'flex';
+            lastMatchStats = { ticks: matchTicks, apples: matchApplesEaten, coverage: Math.round((gridCoverage.size / 400) * 100), score: score, mode: gameMode };
             requestAnimationFrame(draw);
         }
 
@@ -1806,11 +1880,13 @@
         }
 
         function saveScoreEntry() {
-            const initials = (document.getElementById('initialsInput').value || 'AAA').toUpperCase();
-            leaderboard.push({ name: initials, score: score, mode: gameMode, date: '2026-08-31' });
+            const input = document.getElementById('initialsInput');
+            const initials = ((input ? input.value : '') || 'AAA').trim().toUpperCase().slice(0, 3) || 'AAA';
+            const today = new Date().toISOString().split('T')[0];
+            leaderboard.push({ name: initials, score: score, mode: gameMode.charAt(0).toUpperCase() + gameMode.slice(1), date: today });
             leaderboard.sort((a,b) => b.score - a.score);
             leaderboard = leaderboard.slice(0, 5);
-            localStorage.setItem('ksnakeLeaderboard', JSON.stringify(leaderboard));
+            safeSetStorage('ksnakeLeaderboard', leaderboard);
             showLeaderboard();
         }
 
@@ -1855,34 +1931,64 @@
             const a = document.createElement('a');
             a.href = url;
             a.download = 'ksnake_backup.json';
+            document.body.appendChild(a);
             a.click();
-            URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
             showToast("Backup file exported!");
         }
 
         function copyDataText() {
             const box = document.getElementById('dataBox');
             box.select();
-            navigator.clipboard.writeText(box.value);
-            showToast("Data copied to clipboard!");
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(box.value).then(() => {
+                    showToast("Data copied to clipboard!");
+                }).catch(() => fallbackCopy(box));
+            } else {
+                fallbackCopy(box);
+            }
+        }
+
+        function fallbackCopy(box) {
+            try {
+                box.select();
+                document.execCommand('copy');
+                showToast("Data copied to clipboard!");
+            } catch(e) {
+                showToast("Please copy text manually.");
+            }
         }
 
         function importData() {
             try {
-                const d = JSON.parse(document.getElementById('dataBox').value);
-                if (d.gamesPlayed !== undefined) gamesPlayed = d.gamesPlayed;
-                if (d.totalApples !== undefined) totalApples = d.totalApples;
-                if (d.leaderboard) leaderboard = d.leaderboard;
-                if (d.customObstacles) customObstacles = d.customObstacles;
-                if (d.keyBinds) keyBinds = d.keyBinds;
-                localStorage.setItem('ksnakeGamesPlayed', gamesPlayed);
-                localStorage.setItem('ksnakeTotalApples', totalApples);
-                localStorage.setItem('ksnakeLeaderboard', JSON.stringify(leaderboard));
-                localStorage.setItem('ksnakeCustomObstacles', JSON.stringify(customObstacles));
-                localStorage.setItem('ksnakeKeyBinds', JSON.stringify(keyBinds));
+                const text = document.getElementById('dataBox').value;
+                if (!text || !text.trim()) throw new Error("Empty data");
+                const d = JSON.parse(text);
+                if (typeof d !== 'object' || d === null) throw new Error("Invalid format");
+                
+                if (typeof d.gamesPlayed === 'number' && isFinite(d.gamesPlayed) && d.gamesPlayed >= 0) gamesPlayed = Math.floor(d.gamesPlayed);
+                if (typeof d.totalApples === 'number' && isFinite(d.totalApples) && d.totalApples >= 0) totalApples = Math.floor(d.totalApples);
+                if (Array.isArray(d.leaderboard)) {
+                    leaderboard = d.leaderboard.filter(e => e && typeof e.score === 'number').slice(0, 10);
+                }
+                if (Array.isArray(d.customObstacles)) {
+                    customObstacles = d.customObstacles.filter(o => o && typeof o.x === 'number' && typeof o.y === 'number').slice(0, 120);
+                }
+                if (d.keyBinds && typeof d.keyBinds === 'object') {
+                    keyBinds = { ...keyBinds, ...d.keyBinds };
+                }
+
+                safeSetStorage('ksnakeGamesPlayed', gamesPlayed);
+                safeSetStorage('ksnakeTotalApples', totalApples);
+                safeSetStorage('ksnakeLeaderboard', leaderboard);
+                safeSetStorage('ksnakeCustomObstacles', customObstacles);
+                safeSetStorage('ksnakeKeyBinds', keyBinds);
                 showToast("Data imported successfully!");
                 showMenu();
-            } catch(e) { showToast("Invalid JSON data format."); }
+            } catch(e) {
+                showToast("Invalid JSON data format.");
+            }
         }
 
         // Keybindings Management
@@ -1915,7 +2021,7 @@
         }
 
         function saveBinds() {
-            localStorage.setItem('ksnakeKeyBinds', JSON.stringify(keyBinds));
+            safeSetStorage('ksnakeKeyBinds', keyBinds);
             showToast("Keybindings saved!");
             showMenu();
         }
@@ -1950,14 +2056,16 @@
 
         function exportStatsCSV() {
             const stats = lastMatchStats || { ticks: matchTicks, apples: matchApplesEaten, coverage: Math.round((gridCoverage.size / 400) * 100), score, mode: gameMode };
-            const csv = `Metric,Value\nTicks Alive,${stats.ticks}\nApples Eaten,${stats.apples}\nCoverage,${stats.coverage}%\nScore,${stats.score || score}\nMode,${stats.mode || gameMode}\nDate,${new Date().toLocaleDateString()}\n`;
+            const csv = `Metric,Value\nTicks Alive,${stats.ticks}\nApples Eaten,${stats.apples}\nCoverage,${stats.coverage}%\nScore,${stats.score !== undefined ? stats.score : score}\nMode,${stats.mode || gameMode}\nDate,${new Date().toLocaleDateString()}\n`;
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = 'ksnake_stats.csv';
+            document.body.appendChild(a);
             a.click();
-            URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
             showToast("Stats CSV exported!");
         }
 
@@ -1968,8 +2076,10 @@
             const a = document.createElement('a');
             a.href = url;
             a.download = 'ksnake_stats.json';
+            document.body.appendChild(a);
             a.click();
-            URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
             showToast("Stats JSON exported!");
         }
 
@@ -1980,8 +2090,10 @@
             const a = document.createElement('a');
             a.href = url;
             a.download = 'ksnake_replay.ksr';
+            document.body.appendChild(a);
             a.click();
-            URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
             showToast("Replay (.ksr) exported!");
         }
 
@@ -1994,7 +2106,7 @@
                 campaignBranch, gauntletStage, applesEaten,
                 ghostCd, ghostActive, freezeCd, freezeActive, magnetCd, magnetActive
             };
-            localStorage.setItem('ksnakeSaveState', JSON.stringify(saveState));
+            safeSetStorage('ksnakeSaveState', saveState);
             if (gameLoop) clearInterval(gameLoop);
             showToast("Game saved! Press [R] in menu to Resume.");
             showMenu();
@@ -2008,13 +2120,12 @@
         }
 
         function resumeGame() {
-            const raw = localStorage.getItem('ksnakeSaveState');
-            if (!raw) {
+            const s = safeGetJSON('ksnakeSaveState', null);
+            if (!s) {
                 showToast("No saved game to resume.");
                 return;
             }
             try {
-                const s = JSON.parse(raw);
                 snake = s.snake || [{x: 5, y: 5}];
                 dir = s.dir || {x: 1, y: 0};
                 lastDir = s.lastDir || {x: 1, y: 0};
@@ -2036,7 +2147,7 @@
                 freezeActive = s.freezeActive || 0;
                 magnetCd = s.magnetCd || 0;
                 magnetActive = s.magnetActive || 0;
-                localStorage.removeItem('ksnakeSaveState');
+                safeRemoveStorage('ksnakeSaveState');
                 hideOverlays();
                 gameState = 1;
                 document.getElementById('scoreDisplay').innerText = `Score: ${score}`;
@@ -2058,11 +2169,36 @@
                    exportImportOverlay.style.display === 'flex';
         }
 
+        // Touch Steering Controls
+        let touchStartX = 0, touchStartY = 0;
+        canvas.addEventListener('touchstart', e => {
+            if (e.touches && e.touches.length > 0) {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }
+        }, { passive: true });
+
+        canvas.addEventListener('touchend', e => {
+            if (gameState !== 1 || !e.changedTouches || e.changedTouches.length === 0) return;
+            const dx = e.changedTouches[0].clientX - touchStartX;
+            const dy = e.changedTouches[0].clientY - touchStartY;
+            const absDx = Math.abs(dx);
+            const absDy = Math.abs(dy);
+            if (Math.max(absDx, absDy) < 20) return;
+            if (absDx > absDy) {
+                if (dx > 0 && lastDir.x !== -1) dir = {x: 1, y: 0};
+                else if (dx < 0 && lastDir.x !== 1) dir = {x: -1, y: 0};
+            } else {
+                if (dy > 0 && lastDir.y !== -1) dir = {x: 0, y: 1};
+                else if (dy < 0 && lastDir.y !== 1) dir = {x: 0, y: -1};
+            }
+        }, { passive: true });
+
         // Keyboard Controls
         window.addEventListener('keydown', e => {
             const k = e.key.toLowerCase();
 
-            // Key rebinding mode in config overlay
+            // Rebinding in config overlay
             if (activeRebindKey && configOverlay.style.display === 'flex') {
                 e.preventDefault();
                 if (e.key === 'Escape') {
@@ -2082,7 +2218,16 @@
                 return;
             }
 
-            // If a sub-overlay is open, let ESC or H/F1 close it back to menu
+            // Do not hijack browser accelerators (Ctrl+R, Ctrl+Shift+I, Alt+F4, etc.)
+            if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+            // If typing in an input field, do not trigger game shortcuts
+            if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+                if (e.key === 'Escape') showMenu();
+                return;
+            }
+
+            // If a sub-overlay is open, let ESC or Enter close it back to menu
             if (isAnySubOverlayOpen()) {
                 if (e.key === 'Escape' || e.key === 'Enter') {
                     showMenu();
@@ -2092,6 +2237,12 @@
                     showMenu();
                     return;
                 }
+                return;
+            }
+
+            // Sound Toggle Hotkey 'U'
+            if (k === 'u') {
+                toggleSound();
                 return;
             }
 
@@ -2119,6 +2270,12 @@
                 if (k === '1') chooseCampaignBranch(0);
                 else if (k === '2') chooseCampaignBranch(1);
             } else if (gameState === 1) {
+                // Prevent default scrolling on movement / skill keys during game
+                if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key) ||
+                    [keyBinds.up, keyBinds.down, keyBinds.left, keyBinds.right].includes(k)) {
+                    e.preventDefault();
+                }
+
                 if ((k === keyBinds.up || e.key === 'ArrowUp') && lastDir.y !== 1) dir = {x: 0, y: -1};
                 else if ((k === keyBinds.down || e.key === 'ArrowDown') && lastDir.y !== -1) dir = {x: 0, y: 1};
                 else if ((k === keyBinds.left || e.key === 'ArrowLeft') && lastDir.x !== 1) dir = {x: -1, y: 0};

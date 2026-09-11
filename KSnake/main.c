@@ -206,6 +206,9 @@ char initials_input[4] = "AAA";
 int initials_pos = 0;
 int is_high_score_entry = 0;
 
+static HFONT g_hFont = NULL;
+static HFONT g_hFontSmall = NULL;
+
 // Forward Declarations
 int random_int(int max);
 void PlaceFood(void);
@@ -449,6 +452,7 @@ void LoadCustomMap() {
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD br;
         ReadFile(hFile, &num_custom_obstacles, sizeof(int), &br, NULL);
+        if (num_custom_obstacles < 0) num_custom_obstacles = 0;
         if (num_custom_obstacles > 120) num_custom_obstacles = 120;
         ReadFile(hFile, custom_obstacles, sizeof(struct Point) * num_custom_obstacles, &br, NULL);
         ReadFile(hFile, &custom_portal_active, sizeof(int), &br, NULL);
@@ -578,6 +582,8 @@ int RestoreGameState() {
     if (hFile == INVALID_HANDLE_VALUE) return 0;
     DWORD br;
     ReadFile(hFile, &snake_len, sizeof(int), &br, NULL);
+    if (snake_len < 1) snake_len = 1;
+    if (snake_len > 400) snake_len = 400;
     ReadFile(hFile, snake, sizeof(struct Point) * snake_len, &br, NULL);
     ReadFile(hFile, &dir_x, sizeof(int), &br, NULL);
     ReadFile(hFile, &dir_y, sizeof(int), &br, NULL);
@@ -589,6 +595,8 @@ int RestoreGameState() {
     ReadFile(hFile, &score_mult, sizeof(int), &br, NULL);
     ReadFile(hFile, &current_speed, sizeof(int), &br, NULL);
     ReadFile(hFile, &num_obstacles, sizeof(int), &br, NULL);
+    if (num_obstacles < 0) num_obstacles = 0;
+    if (num_obstacles > 120) num_obstacles = 120;
     ReadFile(hFile, obstacles, sizeof(struct Point) * num_obstacles, &br, NULL);
     ReadFile(hFile, &campaign_level, sizeof(int), &br, NULL);
     ReadFile(hFile, &campaign_branch, sizeof(int), &br, NULL);
@@ -1301,7 +1309,6 @@ void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_gho
         HBRUSH headHlBrush = CreateSolidBrush(RGB(headSpec, 255, headSpec + 50));
         SelectObject(hdc, headHlBrush);
         Ellipse(hdc, px + 4, py + 4, px + 8, py + 8);
-        DeleteObject(headHlBrush);
 
         if ((anim_tick % 4) < 2) {
             tongueBrush = CreateSolidBrush(RGB(255, 71, 87));
@@ -1314,12 +1321,18 @@ void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_gho
             tonguePts[2].x = cx + d_x * (CELL_SIZE/2 + 4) - d_y * 2;
             tonguePts[2].y = cy + d_y * (CELL_SIZE/2 + 4) - d_x * 2;
             Polygon(hdc, tonguePts, 3);
+            SelectObject(hdc, oldBrush);
             DeleteObject(tongueBrush);
+        } else {
+            SelectObject(hdc, oldBrush);
         }
 
-        DeleteObject(eyeBrush); DeleteObject(pupilBrush);
-        SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
-        DeleteObject(headBrush); DeleteObject(headPen);
+        DeleteObject(headHlBrush);
+        DeleteObject(pupilBrush);
+        DeleteObject(eyeBrush);
+        SelectObject(hdc, oldPen);
+        DeleteObject(headBrush);
+        DeleteObject(headPen);
     } else if (index == total - 1) {
         HBRUSH tailBrush = CreateSolidBrush(is_ghost ? RGB(72, 219, 251) : (speed_active_timer > 0 ? RGB(241, 196, 15) : RGB(39, 174, 96)));
         HPEN tailPen = CreatePen(PS_SOLID, 1, RGB(25, 110, 90));
@@ -1366,9 +1379,10 @@ void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_gho
         HBRUSH hlBrush = CreateSolidBrush(RGB(specIntensity, 255, specIntensity + 50));
         SelectObject(hdc, hlBrush);
         Ellipse(hdc, px + inset + 2, py + inset + 2, px + inset + 6, py + inset + 6);
+        SelectObject(hdc, oldBrush);
         DeleteObject(hlBrush);
 
-        SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
+        SelectObject(hdc, oldPen);
         DeleteObject(bodyBrush); DeleteObject(bodyPen);
     }
 }
@@ -1401,6 +1415,7 @@ void DrawRivalGDI(HDC hdc, int x, int y, int index, int type) {
             Ellipse(hdc, px+4, py+4, px+8, py+8);
             Ellipse(hdc, px+CELL_SIZE-8, py+4, px+CELL_SIZE-4, py+8);
         }
+        SelectObject(hdc, oldBrush);
         DeleteObject(eyeBrush);
     }
     
@@ -1428,6 +1443,7 @@ void DrawBossGDI(HDC hdc, int x, int y, int index) {
         HBRUSH eyeBrush = CreateSolidBrush(RGB(255, 255, 0));
         SelectObject(hdc, eyeBrush);
         Ellipse(hdc, px+4, py+4, px+CELL_SIZE-4, py+CELL_SIZE-4);
+        SelectObject(hdc, oldBrush);
         DeleteObject(eyeBrush);
     }
 
@@ -1458,6 +1474,7 @@ void DrawGemGDI(HDC hdc, int x, int y, COLORREF color) {
         HBRUSH shine = CreateSolidBrush(RGB(255, 255, 255));
         SelectObject(hdc, shine);
         Ellipse(hdc, px+4, py+4, px+6, py+6);
+        SelectObject(hdc, oldBrush);
         DeleteObject(shine);
         
         if (color == RGB(255, 71, 87)) {
@@ -1465,6 +1482,7 @@ void DrawGemGDI(HDC hdc, int x, int y, COLORREF color) {
             SelectObject(hdc, stem);
             MoveToEx(hdc, px+CELL_SIZE/2, py+2, NULL);
             LineTo(hdc, px+CELL_SIZE/2, py-2);
+            SelectObject(hdc, oldPen);
             DeleteObject(stem);
         }
     }
@@ -1544,6 +1562,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             LoadStats();
             LoadConfig();
             LoadCustomMap();
+            if (!g_hFont) g_hFont = CreateFontA(-20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            if (!g_hFontSmall) g_hFontSmall = CreateFontA(-14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             break;
 
         case WM_LBUTTONDOWN: {
@@ -1798,6 +1818,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             if (game_state == 2) {
+                KillTimer(hwnd, TIMER_ID);
                 is_high_score_entry = 0;
                 if (score > leaderboard[4].score) {
                     is_high_score_entry = 1;
@@ -1837,10 +1858,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             } else {
                                 score += 5000;
                                 game_state = 4; // GRAND GAUNTLET VICTORY!
+                                KillTimer(hwnd, TIMER_ID);
+                                is_high_score_entry = 0;
+                                if (score > leaderboard[4].score) {
+                                    is_high_score_entry = 1;
+                                    initials_input[0] = 'A'; initials_input[1] = 'A'; initials_input[2] = 'A'; initials_input[3] = '\0';
+                                    initials_pos = 0;
+                                }
                             }
                         } else if (game_mode == 4 && campaign_level == 30) {
                             score += 10000;
                             game_state = 4; // CAMPAIGN CONQUERED!
+                            KillTimer(hwnd, TIMER_ID);
+                            is_high_score_entry = 0;
+                            if (score > leaderboard[4].score) {
+                                    is_high_score_entry = 1;
+                                    initials_input[0] = 'A'; initials_input[1] = 'A'; initials_input[2] = 'A'; initials_input[3] = '\0';
+                                    initials_pos = 0;
+                            }
                         }
                     }
                 }
@@ -1883,10 +1918,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 score += 1000 * gauntlet_stage;
                                 InitGauntletStage(gauntlet_stage);
                             } else {
+                                score += 5000;
                                 game_state = 4;
+                                KillTimer(hwnd, TIMER_ID);
+                                is_high_score_entry = 0;
+                                if (score > leaderboard[4].score) {
+                                    is_high_score_entry = 1;
+                                    initials_input[0] = 'A'; initials_input[1] = 'A'; initials_input[2] = 'A'; initials_input[3] = '\0';
+                                    initials_pos = 0;
+                                }
                             }
                         } else if (game_mode == 4 && campaign_level == 30) {
+                            score += 10000;
                             game_state = 4;
+                            KillTimer(hwnd, TIMER_ID);
+                            is_high_score_entry = 0;
+                            if (score > leaderboard[4].score) {
+                                is_high_score_entry = 1;
+                                initials_input[0] = 'A'; initials_input[1] = 'A'; initials_input[2] = 'A'; initials_input[3] = '\0';
+                                initials_pos = 0;
+                            }
                         }
                     }
                 }
@@ -1929,7 +1980,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         case WM_CHAR: {
-            if (game_state == 2 && is_high_score_entry) {
+            if ((game_state == 2 || game_state == 4) && is_high_score_entry) {
                 if (wParam >= 'a' && wParam <= 'z') wParam -= 32;
                 if (wParam >= 'A' && wParam <= 'Z') {
                     if (initials_pos < 3) initials_input[initials_pos++] = (char)wParam;
@@ -1938,10 +1989,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else if (wParam == VK_RETURN) {
                     int i, j;
                     struct HighScoreEntry entry;
+                    SYSTEMTIME st;
                     lstrcpyA(entry.name, initials_input);
                     entry.score = score;
                     lstrcpyA(entry.mode, mode_names[game_mode]);
-                    lstrcpyA(entry.date, "2026-08-31");
+                    GetLocalTime(&st);
+                    wsprintfA(entry.date, "%04d-%02d-%02d", st.wYear, st.wMonth, st.wDay);
 
                     leaderboard[4] = entry;
                     for(i=0; i<4; i++) {
@@ -2119,8 +2172,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             RECT logicalRect = {0, 0, 520, 620};
             HBRUSH bg = CreateSolidBrush(RGB(15, 15, 26)); FillRect(hdc, &logicalRect, bg); DeleteObject(bg);
 
-            HFONT hFont = CreateFontA(-20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
-            HFONT hFontSmall = CreateFontA(-14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            HFONT hFont = g_hFont ? g_hFont : (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+            HFONT hFontSmall = g_hFontSmall ? g_hFontSmall : hFont;
             HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
 
             SetBkMode(hdc, TRANSPARENT);
@@ -2304,20 +2357,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SelectObject(hdc, hFont);
                 }
             } else if (game_state == 4) { // VICTORY!
+                char sbuf[32];
                 SetTextColor(hdc, RGB(255, 215, 0));
                 if (game_mode == 7) {
-                    TextOutA(hdc, 110, 160, "GAUNTLET CHAMPION!", 18);
+                    TextOutA(hdc, 110, 140, "GAUNTLET CHAMPION!", 18);
                     SetTextColor(hdc, RGB(76, 209, 55));
-                    TextOutA(hdc, 100, 210, "ALL 4 BOSSES DEFEATED!", 22);
+                    TextOutA(hdc, 100, 180, "ALL 4 BOSSES DEFEATED!", 22);
                 } else {
-                    TextOutA(hdc, 120, 160, "CAMPAIGN CONQUERED!", 19);
+                    TextOutA(hdc, 120, 140, "CAMPAIGN CONQUERED!", 19);
                     SetTextColor(hdc, RGB(76, 209, 55));
-                    TextOutA(hdc, 110, 210, "STAGE 30 MASTER VICTORY!", 24);
+                    TextOutA(hdc, 110, 180, "STAGE 30 MASTER VICTORY!", 24);
                 }
-                SelectObject(hdc, hFontSmall);
                 SetTextColor(hdc, RGB(255, 255, 255));
-                TextOutA(hdc, 130, 300, "Press ENTER or ESC to Return", 28);
-                SelectObject(hdc, hFont);
+                wsprintfA(sbuf, "Final Score: %d", score); TextOutA(hdc, 160, 220, sbuf, lstrlenA(sbuf));
+
+                if (is_high_score_entry) {
+                    char ibuf[32];
+                    SetTextColor(hdc, RGB(76, 209, 55));
+                    TextOutA(hdc, 130, 260, "NEW HIGH SCORE RANK!", 20);
+                    SetTextColor(hdc, RGB(255, 255, 255));
+                    wsprintfA(ibuf, "Initials: [%s]", initials_input);
+                    TextOutA(hdc, 170, 300, ibuf, lstrlenA(ibuf));
+                    SelectObject(hdc, hFontSmall);
+                    TextOutA(hdc, 130, 350, "Type Initials & Press ENTER", 27);
+                    SelectObject(hdc, hFont);
+                } else {
+                    SelectObject(hdc, hFontSmall);
+                    TextOutA(hdc, 130, 280, "Press ENTER or ESC to Return", 28);
+                    SelectObject(hdc, hFont);
+                }
             } else { // PLAYING
                 int i, r, gx, gy;
                 char score_text[64];
@@ -2565,8 +2633,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             SelectObject(hdc, oldFont);
-            DeleteObject(hFont);
-            DeleteObject(hFontSmall);
 
             SetWindowOrgEx(hdc, 0, 0, NULL);
             XFORM xform = { scale, 0.0f, 0.0f, scale, 0.0f, 0.0f };
@@ -2581,6 +2647,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            SaveStats();
+            if (g_hFont) { DeleteObject(g_hFont); g_hFont = NULL; }
+            if (g_hFontSmall) { DeleteObject(g_hFontSmall); g_hFontSmall = NULL; }
             KillTimer(hwnd, TIMER_ID);
             PostQuitMessage(0);
             break;
