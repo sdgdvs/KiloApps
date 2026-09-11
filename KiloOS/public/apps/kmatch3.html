@@ -250,7 +250,7 @@
     <div id="board" role="grid" aria-label="KMatch3 Game Board"></div>
   </div>
 
-  <div id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; justify-content:center; align-items:center;">
+  <div id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle" onclick="if(event.target === this) hideHelp()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; justify-content:center; align-items:center;">
     <div style="background:#2d2d2d; border:2px solid #555; border-radius:8px; padding:18px; width:370px; max-height:85vh; overflow-y:auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
       <h2 id="helpTitle" style="margin-top:0; color:#ffd700;">How to Play KMatch3</h2>
       <p>Swap adjacent gems to form lines of 3 or more of the same color.</p>
@@ -345,6 +345,7 @@
     let gamesPlayed = 0;
     let bestScore = 0;
     let maxCombo = 1;
+    let campaignLevel = 1;
     let powerupMode = 0; // 0 = none, 1 = hammer, 2 = color nuke
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -903,14 +904,19 @@
 
       cellSize = Math.floor(400 / Math.max(ROWS, COLS));
       score = 0;
+      isProcessing = false;
+      selectedCell = null;
       collectedRed = 0; collectedGreen = 0; collectedBlue = 0;
       bossMoveTimer = 0; powerupMode = 0;
       hintTimer = 0;
       clearHint();
       document.querySelectorAll('.powerup-btn').forEach(b => b.classList.remove('active'));
 
+      let isTimedStage = (gameMode === 0 && CAMPAIGN_STAGES[level-1].timeLimit > 0) || (gameMode === 2);
+      document.getElementById('btnMoves').textContent = isTimedStage ? "[E] +15s" : "[E] +Moves";
+
       scoreEl.textContent = score;
-      targetEl.textContent = targetScore;
+      targetEl.textContent = (gameMode === 0 && CAMPAIGN_STAGES[level-1].bossHP > 0) ? "BOSS" : targetScore;
       movesEl.textContent = moves;
 
       let iceToPlace = (gameMode === 0) ? CAMPAIGN_STAGES[level - 1].iceCount : (gameMode === 1 ? 0 : 4);
@@ -1001,33 +1007,64 @@
     }
 
     function useHammer() {
-      if (score >= 300) {
-        powerupMode = 1;
-        playPowerupSound();
-        document.querySelectorAll('.powerup-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('btnHammer').classList.add('active');
+      if (isProcessing) return;
+      if (powerupMode === 1) {
+        powerupMode = 0;
+        document.getElementById('btnHammer').classList.remove('active');
+        return;
       }
+      if (score < 300) {
+        playBadSwapSound();
+        createScorePopup(60, 200, 'Need 300 pts!', '#ff4444');
+        return;
+      }
+      powerupMode = 1;
+      playPowerupSound();
+      document.querySelectorAll('.powerup-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('btnHammer').classList.add('active');
     }
+
     function useColorNuke() {
-      if (score >= 300) {
-        powerupMode = 2;
-        playPowerupSound();
-        document.querySelectorAll('.powerup-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('btnNuke').classList.add('active');
+      if (isProcessing) return;
+      if (powerupMode === 2) {
+        powerupMode = 0;
+        document.getElementById('btnNuke').classList.remove('active');
+        return;
       }
+      if (score < 300) {
+        playBadSwapSound();
+        createScorePopup(320, 200, 'Need 300 pts!', '#ff4444');
+        return;
+      }
+      powerupMode = 2;
+      playPowerupSound();
+      document.querySelectorAll('.powerup-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('btnNuke').classList.add('active');
     }
+
     function useExtraMoves() {
-      if (score >= 300) {
-        score -= 300;
-        scoreEl.textContent = score;
-        playPowerupSound();
-        let isTimed = (gameMode === 0 && CAMPAIGN_STAGES[level-1].timeLimit > 0) || (gameMode === 2);
-        if (typeof moves === 'number') {
-          moves += isTimed ? 15 : 5;
-          movesEl.textContent = moves;
-        }
+      if (isProcessing) return;
+      if (gameMode === 1) {
+        playBadSwapSound();
+        createScorePopup(150, 200, 'Infinite in Zen!', '#ffd700');
+        return;
+      }
+      if (score < 300) {
+        playBadSwapSound();
+        createScorePopup(150, 200, 'Need 300 pts!', '#ff4444');
+        return;
+      }
+      score -= 300;
+      scoreEl.textContent = score;
+      playPowerupSound();
+      let isTimed = (gameMode === 0 && CAMPAIGN_STAGES[level-1].timeLimit > 0) || (gameMode === 2);
+      if (typeof moves === 'number') {
+        moves += isTimed ? 15 : 5;
+        movesEl.textContent = moves;
+        createScorePopup(150, 200, isTimed ? '+15s!' : '+5 Moves!', '#40ff40');
       }
     }
+
     function shuffleBoard() {
       do {
         for (let r = 0; r < ROWS; r++) {
@@ -1049,12 +1086,17 @@
     }
 
     function useShuffle() {
-      if (score >= 300) {
-        score -= 300;
-        scoreEl.textContent = score;
-        playPowerupSound();
-        shuffleBoard();
+      if (isProcessing) return;
+      if (score < 300) {
+        playBadSwapSound();
+        createScorePopup(240, 200, 'Need 300 pts!', '#ff4444');
+        return;
       }
+      score -= 300;
+      scoreEl.textContent = score;
+      playPowerupSound();
+      createScorePopup(240, 200, 'Shuffled!', '#00e5ff');
+      shuffleBoard();
     }
 
     function safeSetStorage(key, val) {
@@ -1065,7 +1107,7 @@
     }
 
     function saveStats() {
-      safeSetStorage('kmatch3_stats', JSON.stringify({gamesPlayed, bestScore, maxCombo}));
+      safeSetStorage('kmatch3_stats', JSON.stringify({gamesPlayed, bestScore, maxCombo, campaignLevel}));
     }
     
     function loadStats() {
@@ -1076,6 +1118,7 @@
           gamesPlayed = stats.gamesPlayed || 0;
           bestScore = stats.bestScore || 0;
           maxCombo = stats.maxCombo || 1;
+          campaignLevel = stats.campaignLevel || 1;
         } catch(e) {}
       }
       bestScoreEl.textContent = bestScore;
@@ -1107,19 +1150,26 @@
           collectedBlue = state.collectedBlue || 0;
           document.getElementById('mode').value = gameMode;
 
+          let isTimed = false;
           if (gameMode === 0 && level >= 1 && level <= 20) {
             const cfg = CAMPAIGN_STAGES[level - 1];
             stageNameEl.textContent = cfg.name;
             ROWS = cfg.rows; COLS = cfg.cols;
             maxBossHP = cfg.bossHP;
+            isTimed = cfg.timeLimit > 0;
+            targetEl.textContent = (cfg.bossHP > 0) ? "BOSS" : targetScore;
           } else {
             stageNameEl.textContent = gameMode === 1 ? "Zen" : "Timed Rush";
             ROWS = 8; COLS = 8; maxBossHP = 0;
+            isTimed = (gameMode === 2);
+            targetEl.textContent = targetScore;
           }
+
+          document.getElementById('movesLabel').textContent = (gameMode === 1) ? "Zen" : (isTimed ? "Time" : "Moves");
+          document.getElementById('btnMoves').textContent = isTimed ? "[E] +15s" : "[E] +Moves";
 
           cellSize = Math.floor(400 / Math.max(ROWS, COLS));
           scoreEl.textContent = score;
-          targetEl.textContent = targetScore;
           movesEl.textContent = moves;
 
           boardEl.innerHTML = '';
@@ -1166,11 +1216,16 @@
           });
           return;
       } else if (powerupMode === 2) { // Color Nuke
+          if (!grid[r] || !grid[r][c] || grid[r][c].stoneHits > 0 || !grid[r][c].color) {
+              playBadSwapSound();
+              createScorePopup(c * cellSize + 10, r * cellSize + 10, 'Select a gem!', '#ff4444');
+              return;
+          }
           powerupMode = 0;
           document.querySelectorAll('.powerup-btn').forEach(b => b.classList.remove('active'));
           score -= 300; scoreEl.textContent = score;
           isProcessing = true;
-          let targetC = grid[r][c] && grid[r][c].color ? grid[r][c].color : COLORS[0];
+          let targetC = grid[r][c].color;
           processMatches({hMatches:[], vMatches:[]}, {r: r, c: c, color: targetC}).then(() => {
               checkLevelProgress();
               saveGame();
@@ -1203,6 +1258,8 @@
     }
 
     async function swapAndCheck(r1, c1, r2, c2) {
+      if (isProcessing) return;
+      if (!grid[r1] || !grid[r1][c1] || !grid[r2] || !grid[r2][c2]) return;
       if (grid[r1][c1].stoneHits > 0 || grid[r2][c2].stoneHits > 0 || grid[r1][c1].ice || grid[r2][c2].ice) {
         playBadSwapSound();
         if (selectedCell) selectedCell.el.classList.remove('selected');
@@ -1371,6 +1428,7 @@
 
         if (specialTrigger) {
             if (grid[specialTrigger.r][specialTrigger.c] && grid[specialTrigger.r][specialTrigger.c].stoneHits > 0) {
+                if (specialTrigger.single) grid[specialTrigger.r][specialTrigger.c].stoneHits = 1;
                 stoneToBreak.add(`${specialTrigger.r},${specialTrigger.c}`);
             } else {
                 toDestroy.add(`${specialTrigger.r},${specialTrigger.c}`);
@@ -1627,13 +1685,21 @@
     }
 
     function changeMode() {
+        if (isProcessing) return;
         gameMode = parseInt(document.getElementById('mode').value);
-        initStage(1);
+        if (gameMode === 0) initStage(campaignLevel);
+        else initStage(1);
     }
 
     function checkLevelProgress() {
       if (gameMode === 1) {
-          if (score >= level * 2000) { level++; }
+          if (score >= level * 2000) {
+            level++;
+            targetScore = level * 2000;
+            targetEl.textContent = targetScore;
+            stageNameEl.textContent = "Zen Lv." + level;
+            createScorePopup(200, 200, "Zen Level " + level + "!", "#ffd700");
+          }
           return;
       }
       
@@ -1667,9 +1733,15 @@
           if (level < 20) {
             alert("Stage Cleared! Advancing to next stage.");
             level++;
+            if (level > campaignLevel) {
+              campaignLevel = level;
+              saveStats();
+            }
             initStage(level);
           } else {
             alert("VICTORY!\nYou have defeated the Jewel King and completed all 20 stages of KMatch3!");
+            campaignLevel = 1;
+            saveStats();
             initStage(1);
           }
         } else if (gameMode === 2) {
@@ -1686,9 +1758,11 @@
     }
 
     document.addEventListener('keydown', (e) => {
+      let help = document.getElementById('helpModal');
+      let isHelpOpen = (help && help.style.display === 'flex');
+
       if (e.key === 'Escape') {
-        let help = document.getElementById('helpModal');
-        if (help && help.style.display === 'flex') {
+        if (isHelpOpen) {
           hideHelp();
           return;
         }
@@ -1703,15 +1777,43 @@
           return;
         }
       }
-      if (e.key === '1') { gameMode = 0; document.getElementById('mode').value = '0'; initStage(1); }
-      else if (e.key === '2') { gameMode = 1; document.getElementById('mode').value = '1'; initStage(1); }
-      else if (e.key === '3') { gameMode = 2; document.getElementById('mode').value = '2'; initStage(1); }
-      else if (e.key === 'h' || e.key === 'H') useHammer();
-      else if (e.key === 'e' || e.key === 'E' || e.key === 'm' || e.key === 'M') useExtraMoves();
-      else if (e.key === 's' || e.key === 'S') useShuffle();
-      else if (e.key === 'l' || e.key === 'L') useColorNuke();
-      else if (e.key === 'F1') { e.preventDefault(); showHelp(); }
-      else if (selectedCell && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+
+      if (e.key === 'F1' || e.key === '?') {
+        e.preventDefault();
+        if (isHelpOpen) hideHelp(); else showHelp();
+        return;
+      }
+
+      // Guard modifier shortcuts (Ctrl, Alt, Meta) and background keystrokes when modal is displayed
+      if (e.ctrlKey || e.altKey || e.metaKey || isHelpOpen) return;
+
+      if (e.key === '1') {
+        if (gameMode !== 0) {
+          gameMode = 0;
+          document.getElementById('mode').value = '0';
+          initStage(campaignLevel);
+        }
+      } else if (e.key === '2') {
+        if (gameMode !== 1) {
+          gameMode = 1;
+          document.getElementById('mode').value = '1';
+          initStage(1);
+        }
+      } else if (e.key === '3') {
+        if (gameMode !== 2) {
+          gameMode = 2;
+          document.getElementById('mode').value = '2';
+          initStage(1);
+        }
+      } else if (e.key === 'h' || e.key === 'H') {
+        useHammer();
+      } else if (e.key === 'e' || e.key === 'E' || e.key === 'm' || e.key === 'M') {
+        useExtraMoves();
+      } else if (e.key === 's' || e.key === 'S') {
+        useShuffle();
+      } else if (e.key === 'l' || e.key === 'L') {
+        useColorNuke();
+      } else if (selectedCell && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
         e.preventDefault();
         let r = selectedCell.r;
         let c = selectedCell.c;
@@ -1764,6 +1866,8 @@
     }
 
     setInterval(() => {
+        let help = document.getElementById('helpModal');
+        if (help && help.style.display === 'flex') return;
         let isTimed = (gameMode === 0 && CAMPAIGN_STAGES[level-1].timeLimit > 0) || (gameMode === 2);
         if (isTimed && typeof moves === 'number' && moves > 0 && !isProcessing) {
             moves--;

@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KMatch3
+**Target App:** KMaze
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KMatch3
 - KMaze
 - KMech
 - KMedia
@@ -173,8 +172,20 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KJournal
 - KMail
 - KMandel
+- KMatch3
 
 ## Test Reports
+
+- **KMatch3**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
+  - ✅ Core gameplay works (Classic Match-3 gem engine with 4 special gems: Line Blaster, Rainbow Gem, 3x3 Bomb, Cross Blaster, 20-stage Campaign with escalating board sizes 6x6 to 10x10, Ice tiles, multi-hit Stone & Iron obstacles, Stage 20 Jewel King Boss with shield barrier mechanics, Zen infinite relaxation mode, Timed Rush speed challenge, 4 active skills Hammer/Extra Moves/Shuffle/Color Nuke, Web Audio synthesizer sound effects, multi-tier particle spark and canvas shockwave physics).
+  - 🔧 FIXED: Global keyboard listener checked bare keys (`1`, `2`, `3`, `h`, `e`, `m`, `s`, `l`, arrow keys) without verifying `!e.ctrlKey && !e.altKey && !e.metaKey`, hijacking native browser accelerators: `Ctrl+S` (hijacked to spend 300 points and scramble board via shuffle), `Ctrl+H` (browser history hijacked to activate Hammer), `Ctrl+L` (address bar focus hijacked to activate Color Nuke), `Ctrl+E` (address bar search hijacked to buy extra moves), `Ctrl+1`..`Ctrl+3` / `Alt+1`..`Alt+3` (browser tab switching hijacked to reset the active stage and switch game modes), and `Alt+ArrowLeft`/`Alt+ArrowRight` (browser history navigation hijacked for gem swapping). Added modifier key guards across all shortcuts.
+  - 🔧 FIXED: Background keyboard shortcuts (skills, mode switches, arrow swapping) continued to fire underneath an active Help modal (`#helpModal`), manipulating and restarting background games while users read documentation. Suppressed background hotkeys while `#helpModal` is displayed.
+  - 🔧 FIXED: In Timed Rush or timed Campaign stages (e.g. Stage 4, 7, 10, 13, 16, 19), the countdown interval continued ticking down while the Help modal was open, causing stages to fail and trigger Game Over alerts while users read instructions. Added modal pause check to interval to pause countdown and hint timer while Help is displayed.
+  - 🔧 FIXED: Clicking `[H] Hammer` or `[L] Color Nuke` powerup buttons activated their mode, but clicking the active button a second time did not toggle or cancel the mode, forcing users to click a cell or press Escape. Enabled click toggling to cancel active powerup modes.
+  - 🔧 FIXED: In Zen mode (`gameMode === 1`), `moves = '∞'`. Clicking `[E] +Moves` deducted 300 score from the player without granting extra moves because `typeof moves === 'number'` evaluated to false. Added guard to prevent point deductions and display a toast informing the player that moves are infinite in Zen mode.
+  - 🔧 FIXED: Clicking any skill button with insufficient score (<300 pts) produced zero audio or visual feedback. Added audio buzz and floating warning popup (`Need 300 pts!`).
+  - 🔧 FIXED: `swapAndCheck()` lacked an `isProcessing` guard, permitting rapid duplicate arrow keystrokes during swap animations to launch concurrent swap routines that desynchronized grid state and created ghost cells. Added `if (isProcessing) return;` and cell bounds checks to `swapAndCheck()`, and guarded skill buttons against mid-cascade execution.
+  - 🔧 FIXED: `loadGame()` failed to update `document.getElementById('movesLabel')`, leaving timed stages labeled as "Moves" instead of "Time". Synchronized moves label and dynamic `#btnMoves` text (`+15s` vs `+Moves`), added persistent `campaignLevel` in stats to prevent switching to Zen or Timed Rush from wiping campaign progress, ensured Hammer completely shatters multi-hit stone/iron obstacles in one hit per documentation, guarded Color Nuke against invalid non-gem clicks, and replaced `/0` target score with `BOSS` on Stage 20.
 
 - **KMandel**: ISSUES FOUND ⚠️ (6 issues, 6 fixed inline)
   - ✅ Core functionality works (interactive fractal explorer supporting 5 formulas Mandelbrot/Burning Ship/Tricorn/Celtic/Buffalo, 12 landmark presets, Julia set explorer with interactive coordinate sampling, real-time zoom/pan navigation with 256-level undo/redo history, 7 color themes with custom dual-color gradient picker, and 4K Ultra-HD PNG renderer).
