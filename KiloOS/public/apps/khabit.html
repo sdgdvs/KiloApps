@@ -558,7 +558,7 @@
                     <li><code>Space</code> - Toggle Checkmark</li>
                     <li><code>Delete</code> - Delete Habit</li>
                 </ul>
-                <p style="margin-top: 10px;"><strong>Data:</strong> Use Import/Export to save your habits as a CSV file and transfer them across devices.</p>
+                <p style="margin-top: 10px;"><strong>Data:</strong> Use Import/Export to save your habits as a JSON file and transfer them across devices.</p>
             </div>
             <div class="modal-actions">
                 <button class="btn-cancel" id="close-help-btn">Close</button>
@@ -666,6 +666,16 @@
         const targetInput = document.getElementById('habit-target');
 
         // Utils
+        const escapeHtml = (str) => {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        };
+
         const getTodayStr = () => {
             const d = new Date();
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -674,16 +684,16 @@
         const calculateStreak = (completions) => {
             if (!completions || completions.length === 0) return 0;
             
-            const sorted = [...completions].sort((a, b) => b.localeCompare(a));
+            const uniqueDates = Array.from(new Set(completions)).sort((a, b) => b.localeCompare(a));
             let streak = 0;
             let current = new Date();
             current.setHours(0,0,0,0);
             
-            let firstDate = new Date(sorted[0] + "T00:00:00");
+            let firstDate = new Date(uniqueDates[0] + "T00:00:00");
             firstDate.setHours(0,0,0,0);
             
-            const diffTime = Math.abs(current - firstDate);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const diffTime = current.getTime() - firstDate.getTime();
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
             
             if (diffDays > 1) {
                 return 0; // Streak broken
@@ -691,8 +701,8 @@
             
             let checkDate = new Date(firstDate);
             
-            for (let i = 0; i < sorted.length; i++) {
-                const cDate = new Date(sorted[i] + "T00:00:00");
+            for (let i = 0; i < uniqueDates.length; i++) {
+                const cDate = new Date(uniqueDates[i] + "T00:00:00");
                 cDate.setHours(0,0,0,0);
                 
                 if (cDate.getTime() === checkDate.getTime()) {
@@ -741,7 +751,7 @@
             let completedToday = 0;
             
             habits.forEach(habit => {
-                if (habit.completions.includes(today)) {
+                if (habit.completions && habit.completions.includes(today)) {
                     completedToday++;
                 }
             });
@@ -769,7 +779,7 @@
                 let activeHabitsOnDate = habits.length;
                 
                 habits.forEach(habit => {
-                    if (habit.completions.includes(dateStr)) {
+                    if (habit.completions && habit.completions.includes(dateStr)) {
                         completedOnDate++;
                     }
                 });
@@ -777,7 +787,7 @@
                 const fillHeight = activeHabitsOnDate > 0 ? (completedOnDate / activeHabitsOnDate) * 100 : 0;
                 
                 historyChart.innerHTML += `
-                    <div class="history-day">
+                    <div class="history-day" title="${dateStr}: ${completedOnDate}/${activeHabitsOnDate} completed (${Math.round(fillHeight)}%)">
                         <div class="history-bar-bg">
                             <div class="history-bar-fill" style="height: ${fillHeight}%"></div>
                         </div>
@@ -789,7 +799,11 @@
             habitListEl.innerHTML = '';
             
             const searchTerm = searchInput.value.trim().toLowerCase();
-            const filteredHabits = habits.filter(h => h.name.toLowerCase().includes(searchTerm));
+            const filteredHabits = habits.filter(h =>
+                (h.name && h.name.toLowerCase().includes(searchTerm)) ||
+                (h.category && h.category.toLowerCase().includes(searchTerm)) ||
+                (h.description && h.description.toLowerCase().includes(searchTerm))
+            );
 
             if (filteredHabits.length === 0) {
                 habitListEl.innerHTML = `
@@ -805,7 +819,7 @@
 
             filteredHabits.forEach(habit => {
                 const streak = calculateStreak(habit.completions);
-                const isCompletedToday = habit.completions.includes(today);
+                const isCompletedToday = habit.completions && habit.completions.includes(today);
                 const target = habit.targetStreak || 0;
                 
                 let streakText = streak.toString();
@@ -825,8 +839,8 @@
                 }
                 card.innerHTML = `
                     <div class="habit-info">
-                        <h3>${habit.name} <span class="category-tag">${habit.category || 'Other'}</span>${masteredHtml}</h3>
-                        ${habit.description ? `<p>${habit.description}</p>` : ''}
+                        <h3>${escapeHtml(habit.name)} <span class="category-tag">${escapeHtml(habit.category || 'Other')}</span>${masteredHtml}</h3>
+                        ${habit.description ? `<p>${escapeHtml(habit.description)}</p>` : ''}
                     </div>
                     <div class="habit-actions">
                         <div class="streak-info ${streak > 0 ? 'active' : ''}" title="Current Streak">
@@ -843,8 +857,16 @@
                             </svg>
                         </button>
                     </div>
-                \`;
+                `;
                 habitListEl.appendChild(card);
+            });
+
+            document.querySelectorAll('.habit-card').forEach((card, idx) => {
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('.check-btn') || e.target.closest('.delete-btn')) return;
+                    selectedHabitIndex = idx;
+                    updateSelection();
+                });
             });
 
             document.querySelectorAll('.check-btn').forEach(btn => {
@@ -866,8 +888,9 @@
                 });
             });
 
-            if (habits.length > 0) {
-                if (selectedHabitIndex >= habits.length) selectedHabitIndex = habits.length - 1;
+            const cards = document.querySelectorAll('.habit-card');
+            if (cards.length > 0) {
+                if (selectedHabitIndex >= cards.length) selectedHabitIndex = cards.length - 1;
                 updateSelection();
             } else {
                 selectedHabitIndex = -1;
@@ -888,6 +911,7 @@
         const toggleHabit = (id) => {
             const habit = habits.find(h => h.id === id);
             if (!habit) return;
+            if (!Array.isArray(habit.completions)) habit.completions = [];
 
             const today = getTodayStr();
             const index = habit.completions.indexOf(today);
@@ -898,6 +922,7 @@
                 habit.completions.push(today);
             }
 
+            if (sortSelect && sortSelect.value === 'streak') sortHabits();
             saveHabits();
             renderHabits();
         };
@@ -911,6 +936,7 @@
                 targetStreak: targetStreak || 0,
                 completions: []
             });
+            sortHabits();
             saveHabits();
             renderHabits();
         };
@@ -1012,13 +1038,15 @@
         addBtn.addEventListener('click', openModal);
 
         exportBtn.addEventListener('click', () => {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(habits, null, 2));
+            const blob = new Blob([JSON.stringify(habits, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
             const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "khabit_export.json");
+            downloadAnchorNode.href = url;
+            downloadAnchorNode.download = 'khabit_export.json';
             document.body.appendChild(downloadAnchorNode);
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
         });
 
         statsBtn.addEventListener('click', () => {
@@ -1027,6 +1055,8 @@
             let longestStreak = 0;
             let categoryStreaks = {};
             let categoryCounts = {};
+            const today = getTodayStr();
+            let completedToday = 0;
 
             habits.forEach(h => {
                 let streak = calculateStreak(h.completions);
@@ -1035,6 +1065,9 @@
                 }
                 if (streak > longestStreak) {
                     longestStreak = streak;
+                }
+                if (h.completions && h.completions.includes(today)) {
+                    completedToday++;
                 }
                 let cat = h.category || 'Other';
                 if (!categoryStreaks[cat]) {
@@ -1055,11 +1088,14 @@
                 }
             }
 
+            const completionRate = totalActive > 0 ? Math.round((completedToday / totalActive) * 100) : 0;
+
             statsContent.innerHTML = `
                 <p><strong>Total Active Habits:</strong> ${totalActive}</p>
+                <p><strong>Today's Progress:</strong> ${completedToday} / ${totalActive} (${completionRate}%)</p>
                 <p><strong>Total Mastered Habits:</strong> ${totalMastered}</p>
-                <p><strong>Longest Active Streak:</strong> ${longestStreak}</p>
-                <p><strong>Most Consistent Category:</strong> ${mostConsistentCat} (${highestAvg >= 0 ? highestAvg.toFixed(1) : 0} avg streak)</p>
+                <p><strong>Longest Active Streak:</strong> ${longestStreak} days</p>
+                <p><strong>Most Consistent Category:</strong> ${escapeHtml(mostConsistentCat)} (${highestAvg >= 0 ? highestAvg.toFixed(1) : 0} avg streak)</p>
             `;
             statsModal.classList.add('active');
         });
@@ -1087,7 +1123,7 @@
         importBtn.addEventListener('click', () => {
             const input = document.createElement('input');
             input.type = 'file';
-            input.accept = 'application/json';
+            input.accept = '.json,application/json';
             input.onchange = e => {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -1097,12 +1133,20 @@
                     try {
                         const parsed = JSON.parse(readerEvent.target.result);
                         if (Array.isArray(parsed)) {
-                            habits = parsed;
+                            habits = parsed.map(h => ({
+                                id: h.id || generateId(),
+                                name: String(h.name || 'Untitled Habit'),
+                                description: String(h.description || ''),
+                                category: String(h.category || 'Other'),
+                                targetStreak: parseInt(h.targetStreak) || 0,
+                                completions: Array.isArray(h.completions) ? h.completions.filter(c => typeof c === 'string') : []
+                            }));
+                            sortHabits();
                             saveHabits();
                             renderHabits();
                             alert("Import successful!");
                         } else {
-                            alert("Invalid format: expected array.");
+                            alert("Invalid format: expected JSON array.");
                         }
                     } catch (err) {
                         alert("Error parsing JSON file.");
@@ -1130,22 +1174,67 @@
             }
         });
 
-        nameInput.addEventListener('keypress', (e) => {
+        nameInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') saveBtn.click();
         });
-        descInput.addEventListener('keypress', (e) => {
+        descInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') saveBtn.click();
         });
 
+        const closeAllModals = () => {
+            modal.classList.remove('active');
+            settingsModal.classList.remove('active');
+            statsModal.classList.remove('active');
+            helpModal.classList.remove('active');
+        };
+
         document.addEventListener('keydown', (e) => {
-            if (modal.classList.contains('active') || settingsModal.classList.contains('active')) {
+            const anyModalActive = modal.classList.contains('active') ||
+                                   settingsModal.classList.contains('active') ||
+                                   helpModal.classList.contains('active') ||
+                                   statsModal.classList.contains('active');
+
+            if (e.key === 'Escape') {
+                if (anyModalActive) {
+                    closeAllModals();
+                    return;
+                }
+                if (document.activeElement === searchInput) {
+                    searchInput.value = '';
+                    renderHabits();
+                    searchInput.blur();
+                    return;
+                }
+            }
+
+            if (anyModalActive) {
                 return;
             }
-            if (e.ctrlKey && e.key.toLowerCase() === 'n') {
-                e.preventDefault();
-                openModal();
+
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key.toLowerCase() === 'n' && !e.shiftKey) {
+                    e.preventDefault();
+                    openModal();
+                }
                 return;
             }
+            if (e.altKey) return;
+
+            const isInputFocused = ['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName);
+
+            if (!isInputFocused) {
+                if (e.key === '?' || e.key.toLowerCase() === 'h') {
+                    e.preventDefault();
+                    helpBtn.click();
+                    return;
+                }
+                if (e.key.toLowerCase() === 's') {
+                    e.preventDefault();
+                    statsBtn.click();
+                    return;
+                }
+            }
+
             const cards = document.querySelectorAll('.habit-card');
             if (cards.length === 0) return;
 
@@ -1153,17 +1242,19 @@
                 e.preventDefault();
                 selectedHabitIndex = (selectedHabitIndex + 1) % cards.length;
                 updateSelection();
+                if (cards[selectedHabitIndex]) cards[selectedHabitIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 selectedHabitIndex = (selectedHabitIndex - 1 + cards.length) % cards.length;
                 updateSelection();
-            } else if (e.key === ' ') {
+                if (cards[selectedHabitIndex]) cards[selectedHabitIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            } else if (e.key === ' ' && !isInputFocused) {
                 if (selectedHabitIndex >= 0 && selectedHabitIndex < cards.length) {
                     e.preventDefault();
                     const btn = cards[selectedHabitIndex].querySelector('.check-btn');
                     if (btn) btn.click();
                 }
-            } else if (e.key === 'Delete') {
+            } else if (e.key === 'Delete' && !isInputFocused) {
                 if (selectedHabitIndex >= 0 && selectedHabitIndex < cards.length) {
                     e.preventDefault();
                     const btn = cards[selectedHabitIndex].querySelector('.delete-btn');

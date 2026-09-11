@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KHabit
+**Target App:** KHangman
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KHabit
 - KHangman
 - KHex
 - KImage
@@ -173,8 +172,20 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KFreecell
 - KGo
 - KGraph
+- KHabit
 
 ## Test Reports
+
+- **KHabit**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
+  - ✅ Core functionality works (daily habit tracking dashboard with progress bar and 7-day visual history chart, habit creation with name, description, categories Health/Work/Personal/Other, and target streak milestone masteries 7/30/90 days, daily completion checkmarking with active fire flicker animations, delete animations with confirmation, real-time statistics modal with active/mastered habit counts, longest streak, and most consistent category analysis, accent color theme customization Purple/Orange/Blue/Green with live preview, search filter, sort options Alphabetical/Highest Streak, JSON data backup import and export, and localStorage persistence).
+  - 🔧 FIXED: In global `keydown` listener, pressing `Space` or `Delete` while typing in the `#search-input` field (or any text input) was intercepted by `e.preventDefault()`, toggling or deleting the selected habit instead of allowing spaces or deletion in the search box. Added input focus check (`isInputFocused`) to prevent hijacking input keystrokes.
+  - 🔧 FIXED: Global `keydown` shortcuts fired in the background when the Help modal (`#help-modal`) or Statistics modal (`#stats-modal`) was open (only `#add-modal` and `#settings-modal` were guarded), allowing background habit toggling, deletion, and `Ctrl+N` dialog stacking. Added `anyModalActive` guard across all four modals.
+  - 🔧 FIXED: None of the four modals (Add Habit, Settings, Statistics, Guide) supported `Escape` key dismissal. Added global `Escape` handler to close any active modal or clear and blur the search box.
+  - 🔧 FIXED: Habit cards had hover and `.selected` CSS styles, but lacked a click event handler to set `selectedHabitIndex`, meaning habits could only be selected using Arrow keys and clicking cards with a mouse did not select them for subsequent Space/Delete hotkey use. Added click-to-select event listeners to all habit cards.
+  - 🔧 FIXED: In `renderHabits()`, habit name, category, and description were interpolated directly into `card.innerHTML` without escaping, exposing the app to XSS / markup corruption when creating or importing habits with special HTML characters. Added `escapeHtml()` sanitization across all interpolated text.
+  - 🔧 FIXED: `importBtn` parsed JSON arrays without field validation or defaults, so imported habits lacking a `completions` array caused `renderHabits()` to throw `TypeError: Cannot read properties of undefined (reading 'includes')` and crash the entire UI. Added comprehensive property normalization and array fallbacks during JSON import.
+  - 🔧 FIXED: Help modal documentation stated "Use Import/Export to save your habits as a CSV file", contradicting the JSON import/export buttons and file parser. Corrected documentation to specify JSON files, and upgraded `exportBtn` from a data URI to standard `Blob` and `URL.createObjectURL` with deferred revocation.
+  - 🔧 FIXED: `calculateStreak` used `Math.ceil(diffTime / 86400000)` without calendar-day rounding or completion deduplication, erroneously breaking active streaks on 25-hour Daylight Savings Time transitions. Switched to `Math.round` and `Set` deduplication, added hover tooltip descriptions to daily history bars, and expanded search filtering to match habit category and description fields.
 
 - **KGraph**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
   - ✅ Core functionality works (interactive function, polar, and parametric graphing suite with real-time expression evaluation, Cartesian y(x) with derivative overlay and Simpson's rule definite integral shading, Polar r(θ) with concentric range circles and radial spokes, Parametric (x,y)(t) curves, bisection root finder, curve intersection finder, 18-preset library across Cartesian, Polar, and Parametric curves, hover crosshair coordinate & numerical derivative readout, pan & zoom canvas, PNG snapshot export, CSV data points export, and JSON configuration save/load).
