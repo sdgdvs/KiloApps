@@ -25,11 +25,74 @@ HWND hClearBtn;
 HWND hFilterEdit;
 HWND hContentEdit;
 HBRUSH g_hEditBgBrush = NULL;
+HBRUSH g_hBgBrush = NULL;
+HBRUSH g_hInputBgBrush = NULL;
+WNDPROC g_OldUrlEditProc = NULL;
+WNDPROC g_OldFilterEditProc = NULL;
 
 // History State
 char history[100][512];
 int historyCount = 0;
 int historyIdx = -1;
+
+void FetchUrl(HWND hwnd, BOOL addToHistory);
+void RunPing(const char* targetHost);
+void RunPortScan();
+void DisplayLogSummary();
+
+void ShowHelpDialog(HWND hwnd) {
+    MessageBoxA(hwnd,
+        "KNet Network Diagnostics & Traffic Suite\n"
+        "====================================================\n\n"
+        "KEYBOARD SHORTCUTS:\n"
+        "  • F1 or H            : Show this Help & Shortcut guide\n"
+        "  • Enter (in URL)     : Execute HTTP Fetch or command\n"
+        "  • Enter (in Filter)  : Refresh Traffic Log filter\n"
+        "  • P                  : Start Ping & Latency test\n"
+        "  • S                  : Start Custom Port Scan\n"
+        "  • E or Ctrl+S        : Export Traffic Log to CSV\n"
+        "  • L                  : Display Traffic Log summary\n"
+        "  • C                  : Clear output display\n"
+        "  • Esc (in Edit)      : Clear current search or URL field\n"
+        "  • Alt + Left / Right : Navigate HTTP history backward / forward\n\n"
+        "SPECIAL URL COMMANDS (Type in URL box and press Enter):\n"
+        "  • ping:<host>        : Ping specified host (e.g. ping:8.8.8.8)\n"
+        "  • scan:<host>        : Audit ports on specified host\n"
+        "  • dns:<domain>       : Resolve DNS A-records\n"
+        "  • whois:<domain>     : Regional WHOIS registry lookup\n"
+        "  • trace:<domain>     : Traceroute network hops\n"
+        "  • ifconfig           : Display local adapter configuration\n"
+        "  • sniff              : Live packet sniffer simulation\n\n"
+        "Dual-target KiloApp • Native C & Web HTML5",
+        "KNet Help & Shortcuts", MB_OK | MB_ICONINFORMATION);
+}
+
+LRESULT CALLBACK UrlEditSubclass(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_KEYDOWN) {
+        if (wParam == VK_RETURN) {
+            FetchUrl(GetParent(hwnd), TRUE);
+            return 0;
+        } else if (wParam == VK_ESCAPE) {
+            SetWindowTextA(hwnd, "");
+            return 0;
+        }
+    }
+    return CallWindowProcA(g_OldUrlEditProc, hwnd, msg, wParam, lParam);
+}
+
+LRESULT CALLBACK FilterEditSubclass(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_KEYDOWN) {
+        if (wParam == VK_RETURN) {
+            DisplayLogSummary();
+            return 0;
+        } else if (wParam == VK_ESCAPE) {
+            SetWindowTextA(hwnd, "");
+            DisplayLogSummary();
+            return 0;
+        }
+    }
+    return CallWindowProcA(g_OldFilterEditProc, hwnd, msg, wParam, lParam);
+}
 
 // Traffic Log Entry
 typedef struct {
@@ -177,6 +240,9 @@ void FetchUrl(HWND hwnd, BOOL addToHistory) {
 
     if (lstrcmpiA(url, "ifconfig") == 0) { RunIfconfig(); return; }
     if (lstrcmpiA(url, "sniff") == 0) { RunSniffer(); return; }
+    if (lstrcmpiA(url, "scan") == 0) { RunPortScan(); return; }
+    if (lstrlenA(url) > 5 && (url[0]=='p'||url[0]=='P') && (url[1]=='i'||url[1]=='I') && (url[2]=='n'||url[2]=='N') && (url[3]=='g'||url[3]=='G') && url[4]==':') { RunPing(url + 5); return; }
+    if (lstrlenA(url) > 5 && (url[0]=='s'||url[0]=='S') && (url[1]=='c'||url[1]=='C') && (url[2]=='a'||url[2]=='A') && (url[3]=='n'||url[3]=='N') && url[4]==':') { RunPortScan(); return; }
     if (lstrlenA(url) > 4 && (url[0]=='d'||url[0]=='D') && (url[1]=='n'||url[1]=='N') && (url[2]=='s'||url[2]=='S') && url[3]==':') { RunDNS(url + 4); return; }
     if (lstrlenA(url) > 6 && (url[0]=='w'||url[0]=='W') && (url[1]=='h'||url[1]=='H') && (url[2]=='o'||url[2]=='O') && (url[3]=='i'||url[3]=='I') && (url[4]=='s'||url[4]=='S') && url[5]==':') { RunWHOIS(url + 6); return; }
     if (lstrlenA(url) > 6 && (url[0]=='t'||url[0]=='T') && (url[1]=='r'||url[1]=='R') && (url[2]=='a'||url[2]=='A') && (url[3]=='c'||url[3]=='C') && (url[4]=='e'||url[4]=='E') && url[5]==':') { RunTrace(url + 6); return; }
@@ -472,18 +538,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HFONT hFont = CreateFontA(-14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             HFONT hFontMono = CreateFontA(-14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Consolas");
             g_hEditBgBrush = CreateSolidBrush(RGB(5, 8, 17));
+            g_hBgBrush = CreateSolidBrush(RGB(15, 23, 42));
+            g_hInputBgBrush = CreateSolidBrush(RGB(9, 13, 22));
             
             // Top Nav Row
-            hBtnBack = CreateWindowEx(0, "BUTTON", "<", WS_CHILD | WS_VISIBLE | WS_DISABLED, 10, 10, 30, 24, hwnd, (HMENU)2, NULL, NULL);
+            hBtnBack = CreateWindowEx(0, "BUTTON", "< [Alt+Left]", WS_CHILD | WS_VISIBLE | WS_DISABLED, 10, 10, 58, 24, hwnd, (HMENU)2, NULL, NULL);
             SendMessage(hBtnBack, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hBtnForward = CreateWindowEx(0, "BUTTON", ">", WS_CHILD | WS_VISIBLE | WS_DISABLED, 45, 10, 30, 24, hwnd, (HMENU)3, NULL, NULL);
+            hBtnForward = CreateWindowEx(0, "BUTTON", "> [Alt+Right]", WS_CHILD | WS_VISIBLE | WS_DISABLED, 72, 10, 58, 24, hwnd, (HMENU)3, NULL, NULL);
             SendMessage(hBtnForward, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hUrlEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "http://example.com", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 85, 10, W - 385, 24, hwnd, NULL, NULL, NULL);
+            hUrlEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "http://example.com", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 135, 10, W - 440, 24, hwnd, NULL, NULL, NULL);
             SendMessage(hUrlEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
+            g_OldUrlEditProc = (WNDPROC)SetWindowLongPtrA(hUrlEdit, GWLP_WNDPROC, (LONG_PTR)UrlEditSubclass);
             
-            hBookmarks = CreateWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, W - 295, 10, 135, 180, hwnd, (HMENU)4, NULL, NULL);
+            hBookmarks = CreateWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, W - 300, 10, 135, 180, hwnd, (HMENU)4, NULL, NULL);
             SendMessage(hBookmarks, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"Bookmarks...");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"http://example.com");
@@ -498,57 +567,74 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"sniff");
             SendMessage(hBookmarks, CB_SETCURSEL, 0, 0);
             
-            HWND hHelpBtn = CreateWindowEx(0, "BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE, W - 155, 10, 75, 24, hwnd, (HMENU)10, NULL, NULL);
+            HWND hHelpBtn = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE, W - 160, 10, 70, 24, hwnd, (HMENU)10, NULL, NULL);
             SendMessage(hHelpBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hGoBtn = CreateWindowEx(0, "BUTTON", "Fetch", WS_CHILD | WS_VISIBLE, W - 75, 10, 65, 24, hwnd, (HMENU)1, NULL, NULL);
+            hGoBtn = CreateWindowEx(0, "BUTTON", "Fetch [Enter]", WS_CHILD | WS_VISIBLE, W - 85, 10, 75, 24, hwnd, (HMENU)1, NULL, NULL);
             SendMessage(hGoBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             // Second Action Bar Row
-            hPingBtn = CreateWindowEx(0, "BUTTON", "Ping Stats", WS_CHILD | WS_VISIBLE, 10, 42, 85, 24, hwnd, (HMENU)5, NULL, NULL);
+            hPingBtn = CreateWindowEx(0, "BUTTON", "Ping [P]", WS_CHILD | WS_VISIBLE, 10, 42, 75, 24, hwnd, (HMENU)5, NULL, NULL);
             SendMessage(hPingBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hScanBtn = CreateWindowEx(0, "BUTTON", "Port Scan", WS_CHILD | WS_VISIBLE, 100, 42, 85, 24, hwnd, (HMENU)6, NULL, NULL);
+            hScanBtn = CreateWindowEx(0, "BUTTON", "Scan [S]", WS_CHILD | WS_VISIBLE, 90, 42, 75, 24, hwnd, (HMENU)6, NULL, NULL);
             SendMessage(hScanBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hExportBtn = CreateWindowEx(0, "BUTTON", "Export Log", WS_CHILD | WS_VISIBLE, 190, 42, 85, 24, hwnd, (HMENU)7, NULL, NULL);
+            hExportBtn = CreateWindowEx(0, "BUTTON", "Export [E]", WS_CHILD | WS_VISIBLE, 170, 42, 80, 24, hwnd, (HMENU)7, NULL, NULL);
             SendMessage(hExportBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hClearBtn = CreateWindowEx(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE, 280, 42, 60, 24, hwnd, (HMENU)8, NULL, NULL);
+            hClearBtn = CreateWindowEx(0, "BUTTON", "Clear [C]", WS_CHILD | WS_VISIBLE, 255, 42, 70, 24, hwnd, (HMENU)8, NULL, NULL);
             SendMessage(hClearBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            HWND hLogSummaryBtn = CreateWindowEx(0, "BUTTON", "View Logs", WS_CHILD | WS_VISIBLE, 345, 42, 80, 24, hwnd, (HMENU)9, NULL, NULL);
+            HWND hLogSummaryBtn = CreateWindowEx(0, "BUTTON", "Logs [L]", WS_CHILD | WS_VISIBLE, 330, 42, 70, 24, hwnd, (HMENU)9, NULL, NULL);
             SendMessage(hLogSummaryBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            hFilterEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 435, 42, W - 445, 24, hwnd, NULL, NULL, NULL);
+            hFilterEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 405, 42, W - 415, 24, hwnd, NULL, NULL, NULL);
             SendMessage(hFilterEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
+            g_OldFilterEditProc = (WNDPROC)SetWindowLongPtrA(hFilterEdit, GWLP_WNDPROC, (LONG_PTR)FilterEditSubclass);
 
             // Output Display Area
             hContentEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT",
                 "KNet 2.0 Network Diagnostic Suite Ready.\r\n"
-                "------------------------------------------------------------\r\n"
-                "- Enter URL or target host above and press Enter (or Fetch).\r\n"
-                "- Click 'Ping Stats' for continuous latency/loss statistics.\r\n"
-                "- Click 'Port Scan' to audit common server ports.\r\n"
-                "- Click 'View Logs' or type in the filter box to filter traffic.\r\n"
-                "- Click 'Export Log' to save all activity to CSV.\r\n"
+                "============================================================\r\n"
+                "- Enter URL or target host above and press Enter (or click Fetch).\r\n"
+                "- Click 'Ping [P]' for continuous latency & packet loss stats.\r\n"
+                "- Click 'Scan [S]' to audit standard and custom server ports.\r\n"
+                "- Click 'Logs [L]' or type in filter box to filter traffic live.\r\n"
+                "- Click 'Export [E]' or press Ctrl+S to save activity to CSV.\r\n"
+                "- Special commands: ping:, scan:, dns:, whois:, trace:, ifconfig, sniff\r\n"
                 "- Press 'H' or F1 at any time for Help & shortcut reference.\r\n"
-                "------------------------------------------------------------\r\n",
+                "============================================================\r\n",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
                 10, 74, W - 35, H - 125, hwnd, NULL, NULL, NULL);
             SendMessage(hContentEdit, WM_SETFONT, (WPARAM)hFontMono, TRUE);
             break;
         }
-        case WM_CTLCOLORSTATIC:
+        case WM_ERASEBKGND: {
+            HDC hdc = (HDC)wParam;
+            RECT rc;
+            GetClientRect(hwnd, &rc);
+            FillRect(hdc, &rc, g_hBgBrush ? g_hBgBrush : (HBRUSH)(COLOR_BTNFACE + 1));
+            return 1;
+        }
+        case WM_CTLCOLORSTATIC: {
+            HDC hdc = (HDC)wParam;
+            SetTextColor(hdc, RGB(226, 232, 240));
+            SetBkColor(hdc, RGB(15, 23, 42));
+            return (LRESULT)g_hBgBrush;
+        }
         case WM_CTLCOLOREDIT: {
             HWND hCtrl = (HWND)lParam;
+            HDC hdc = (HDC)wParam;
             if (hCtrl == hContentEdit) {
-                HDC hdc = (HDC)wParam;
                 SetTextColor(hdc, RGB(226, 232, 240));
                 SetBkColor(hdc, RGB(5, 8, 17));
                 return (LRESULT)g_hEditBgBrush;
+            } else {
+                SetTextColor(hdc, RGB(248, 250, 252));
+                SetBkColor(hdc, RGB(9, 13, 22));
+                return (LRESULT)g_hInputBgBrush;
             }
-            break;
         }
         case WM_COMMAND: {
             int wmId = LOWORD(wParam);
@@ -561,16 +647,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (idx > 0) {
                     char buf[256];
                     SendMessage(hBookmarks, CB_GETLBTEXT, idx, (LPARAM)buf);
-                    if (lstrlenA(buf) > 5 && buf[0]=='p' && buf[1]=='i' && buf[2]=='n' && buf[3]=='g' && buf[4]==':') {
-                        SetWindowTextA(hUrlEdit, buf + 5);
-                        RunPing(buf + 5);
-                    } else if (lstrlenA(buf) > 5 && buf[0]=='s' && buf[1]=='c' && buf[2]=='a' && buf[3]=='n' && buf[4]==':') {
-                        SetWindowTextA(hUrlEdit, buf + 5);
-                        RunPortScan();
-                    } else {
-                        SetWindowTextA(hUrlEdit, buf);
-                        FetchUrl(hwnd, TRUE);
-                    }
+                    SetWindowTextA(hUrlEdit, buf);
+                    FetchUrl(hwnd, TRUE);
                 }
                 SendMessage(hBookmarks, CB_SETCURSEL, 0, 0);
             } else if (wmId == 1) { // Fetch
@@ -594,11 +672,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (wmId == 7) { // Export Log
                 ExportTrafficLogCSV();
             } else if (wmId == 8) { // Clear
-                SetWindowTextA(hContentEdit, "Cleared.");
+                SetWindowTextA(hContentEdit, "Cleared. Press F1 or 'H' for Help.\r\n");
             } else if (wmId == 9) { // View Logs
                 DisplayLogSummary();
             } else if (wmId == 10) { // Help
-                MessageBoxA(hwnd, "KNet Help & Shortcuts:\n\n- Enter a URL or select from Bookmarks.\n- Press Enter in URL box or click Fetch for HTTP GET.\n- Use Ping Stats for latency & packet loss testing.\n- Use Port Scan to check open ports.\n- Type in the filter box to filter traffic logs live.\n- Click Export Log to save CSV.\n- Press 'H' or F1 anytime for this menu.", "KNet Help", MB_OK | MB_ICONINFORMATION);
+                ShowHelpDialog(hwnd);
             }
             break;
         }
@@ -611,32 +689,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_SIZE: {
             int nw = LOWORD(lParam);
             int nh = HIWORD(lParam);
-            MoveWindow(hBtnBack, 10, 10, 30, 24, TRUE);
-            MoveWindow(hBtnForward, 45, 10, 30, 24, TRUE);
+            MoveWindow(hBtnBack, 10, 10, 58, 24, TRUE);
+            MoveWindow(hBtnForward, 72, 10, 58, 24, TRUE);
             
-            int goX = (nw > 75) ? (nw - 75) : 0;
-            MoveWindow(hGoBtn, goX, 10, 65, 24, TRUE);
+            int goX = (nw > 85) ? (nw - 85) : 0;
+            MoveWindow(hGoBtn, goX, 10, 75, 24, TRUE);
 
-            int helpX = (nw > 155) ? (nw - 155) : 0;
+            int helpX = (nw > 160) ? (nw - 160) : 0;
             HWND hHelpBtn = GetDlgItem(hwnd, 10);
-            if (hHelpBtn) MoveWindow(hHelpBtn, helpX, 10, 75, 24, TRUE);
+            if (hHelpBtn) MoveWindow(hHelpBtn, helpX, 10, 70, 24, TRUE);
 
-            int bkX = (nw > 295) ? (nw - 295) : 0;
+            int bkX = (nw > 300) ? (nw - 300) : 0;
             MoveWindow(hBookmarks, bkX, 10, 135, 180, TRUE);
 
-            int urlWidth = (bkX > 90) ? (bkX - 90) : 10;
-            MoveWindow(hUrlEdit, 85, 10, urlWidth, 24, TRUE);
+            int urlWidth = (bkX > 140) ? (bkX - 140) : 10;
+            MoveWindow(hUrlEdit, 135, 10, urlWidth, 24, TRUE);
             
-            MoveWindow(hPingBtn, 10, 42, 85, 24, TRUE);
-            MoveWindow(hScanBtn, 100, 42, 85, 24, TRUE);
-            MoveWindow(hExportBtn, 190, 42, 85, 24, TRUE);
-            MoveWindow(hClearBtn, 280, 42, 60, 24, TRUE);
+            MoveWindow(hPingBtn, 10, 42, 75, 24, TRUE);
+            MoveWindow(hScanBtn, 90, 42, 75, 24, TRUE);
+            MoveWindow(hExportBtn, 170, 42, 80, 24, TRUE);
+            MoveWindow(hClearBtn, 255, 42, 70, 24, TRUE);
             
             HWND hLogSummaryBtn = GetDlgItem(hwnd, 9);
-            MoveWindow(hLogSummaryBtn, 345, 42, 80, 24, TRUE);
+            if (hLogSummaryBtn) MoveWindow(hLogSummaryBtn, 330, 42, 70, 24, TRUE);
             
-            int filterWidth = (nw > 455) ? (nw - 445) : 10;
-            if (hFilterEdit) MoveWindow(hFilterEdit, 435, 42, filterWidth, 24, TRUE);
+            int filterWidth = (nw > 415) ? (nw - 415) : 10;
+            if (hFilterEdit) MoveWindow(hFilterEdit, 405, 42, filterWidth, 24, TRUE);
 
             int cw = (nw > 20) ? (nw - 20) : 10;
             int ch = (nh > 84) ? (nh - 84) : 10;
@@ -647,6 +725,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (g_hEditBgBrush) {
                 DeleteObject(g_hEditBgBrush);
                 g_hEditBgBrush = NULL;
+            }
+            if (g_hBgBrush) {
+                DeleteObject(g_hBgBrush);
+                g_hBgBrush = NULL;
+            }
+            if (g_hInputBgBrush) {
+                DeleteObject(g_hInputBgBrush);
+                g_hInputBgBrush = NULL;
             }
             PostQuitMessage(0);
             break;
@@ -671,14 +757,14 @@ void MainEntry() {
     wc.hInstance = hInstance;
     wc.lpszClassName = "KNetApp";
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
-    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wc.hbrBackground = CreateSolidBrush(RGB(15, 23, 42));
     RegisterClass(&wc);
 
     DWORD style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
     RECT rect = { 0, 0, W, H };
     AdjustWindowRect(&rect, style, FALSE);
 
-    HWND hwnd = CreateWindowEx(0, "KNetApp", "KNet - Network Diagnostics Suite (Press 'h' or F1 for help)", style,
+    HWND hwnd = CreateWindowEx(0, "KNetApp", "KNet - Network Diagnostics Suite [F1 for Help | Enter to Fetch]", style,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
@@ -687,16 +773,46 @@ void MainEntry() {
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
         if (msg.message == WM_KEYDOWN) {
-            if (msg.wParam == VK_F1 || ((msg.wParam == 'H' || msg.wParam == 'h') && GetFocus() != hUrlEdit && GetFocus() != hFilterEdit)) {
-                MessageBoxA(hwnd, "KNet Help & Shortcuts:\n\n- Enter a URL or select from Bookmarks.\n- Press Enter in URL box or click Fetch for HTTP GET.\n- Use Ping Stats for latency & packet loss testing.\n- Use Port Scan to check open ports.\n- Type in the filter box to filter traffic logs live.\n- Click Export Log to save CSV.\n- Press 'H' or F1 anytime for this menu.", "KNet Help", MB_OK | MB_ICONINFORMATION);
+            HWND hFocus = GetFocus();
+            BOOL isEditFocus = (hFocus == hUrlEdit || hFocus == hFilterEdit);
+            BOOL ctrlDown = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+            BOOL altDown = (GetKeyState(VK_MENU) & 0x8000) != 0;
+
+            if (msg.wParam == VK_F1) {
+                ShowHelpDialog(hwnd);
                 continue;
             }
-            if (msg.wParam == VK_RETURN) {
-                if (GetFocus() == hUrlEdit) {
-                    FetchUrl(hwnd, TRUE);
+            if (ctrlDown && (msg.wParam == 'S' || msg.wParam == 's')) {
+                ExportTrafficLogCSV();
+                continue;
+            }
+            if (altDown && msg.wParam == VK_LEFT) {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(2, BN_CLICKED), (LPARAM)hBtnBack);
+                continue;
+            }
+            if (altDown && msg.wParam == VK_RIGHT) {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(3, BN_CLICKED), (LPARAM)hBtnForward);
+                continue;
+            }
+
+            if (!isEditFocus) {
+                if (msg.wParam == 'H' || msg.wParam == 'h') {
+                    ShowHelpDialog(hwnd);
                     continue;
-                } else if (GetFocus() == hFilterEdit) {
+                } else if (msg.wParam == 'P' || msg.wParam == 'p') {
+                    RunPing(NULL);
+                    continue;
+                } else if (msg.wParam == 'S' || msg.wParam == 's') {
+                    RunPortScan();
+                    continue;
+                } else if (msg.wParam == 'E' || msg.wParam == 'e') {
+                    ExportTrafficLogCSV();
+                    continue;
+                } else if (msg.wParam == 'L' || msg.wParam == 'l') {
                     DisplayLogSummary();
+                    continue;
+                } else if (msg.wParam == 'C' || msg.wParam == 'c') {
+                    SetWindowTextA(hContentEdit, "Cleared. Press F1 or 'H' for Help.\r\n");
                     continue;
                 }
             }

@@ -469,7 +469,8 @@
     opacity: 0;
     transform: translateY(10px);
     transition: opacity 0.2s ease, transform 0.2s ease;
-    pointer-events: none;
+    cursor: pointer;
+    pointer-events: auto;
     z-index: 2000;
   }
   .toast-notification.show {
@@ -481,6 +482,22 @@
   }
   .toast-notification.error {
     border-color: var(--danger);
+  }
+  .btn-chip {
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    color: var(--accent);
+    padding: 3px 9px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn-chip:hover {
+    background: var(--accent);
+    color: var(--bg-dark);
+    box-shadow: 0 0 8px var(--accent-glow);
   }
   @keyframes knetFadeIn {
     from { opacity: 0; transform: scale(0.96); }
@@ -495,9 +512,9 @@
     <div class="logo-title">
       <div class="logo-icon">K</div> KNet
     </div>
-    <button class="btn" id="btnHelp" title="Help (F1)"><span style="color:var(--accent);font-weight:bold;">?</span> Help (F1)</button>
-    <button class="btn" id="btnBack" title="Back" disabled>&lt;</button>
-    <button class="btn" id="btnForward" title="Forward" disabled>&gt;</button>
+    <button class="btn" id="btnHelp" title="Help (F1)"><span style="color:var(--accent);font-weight:bold;">?</span> Help [F1]</button>
+    <button class="btn" id="btnBack" title="Back (Alt+Left)" disabled>&lt; [Alt+←]</button>
+    <button class="btn" id="btnForward" title="Forward (Alt+Right)" disabled>&gt; [Alt+→]</button>
     <input type="text" class="input-url" id="urlInput" value="http://example.com" placeholder="Enter URL or target host (e.g. http://example.com, 8.8.8.8)..." />
     <select class="select-preset" id="bookmarks">
       <option value="">Bookmarks...</option>
@@ -506,17 +523,22 @@
       <option value="https://lite.cnn.com">CNN Lite</option>
       <option value="scan">Subnet Scan</option>
       <option value="ping:8.8.8.8">Ping 8.8.8.8</option>
+      <option value="dns:example.com">DNS Resolve</option>
+      <option value="whois:example.com">WHOIS Check</option>
+      <option value="trace:example.com">Traceroute</option>
+      <option value="ifconfig">Interfaces</option>
+      <option value="sniff">Packet Sniffer</option>
     </select>
-    <button class="btn btn-primary" id="btnGo">Execute</button>
+    <button class="btn btn-primary" id="btnGo">Execute [Enter]</button>
   </div>
 
   <div class="tab-bar">
-    <button class="tab-btn active" data-tab="tab-http">🌐 HTTP Inspector</button>
-    <button class="tab-btn" data-tab="tab-ping">📡 Ping & Latency Stats</button>
-    <button class="tab-btn" data-tab="tab-scan">🔍 Custom Port Monitor</button>
-    <button class="tab-btn" data-tab="tab-logs">📋 Traffic Log & Filter</button>
-    <button class="tab-btn" data-tab="tab-utils">🛠️ Net Utils</button>
-    <button class="tab-btn" data-tab="tab-sniff">🦈 Sniffer</button>
+    <button class="tab-btn active" data-tab="tab-http">[1] 🌐 HTTP Inspector</button>
+    <button class="tab-btn" data-tab="tab-ping">[2] 📡 Ping & Latency</button>
+    <button class="tab-btn" data-tab="tab-scan">[3] 🔍 Port Monitor</button>
+    <button class="tab-btn" data-tab="tab-logs">[4] 📋 Traffic Log</button>
+    <button class="tab-btn" data-tab="tab-utils">[5] 🛠️ Net Utils</button>
+    <button class="tab-btn" data-tab="tab-sniff">[6] 🦈 Sniffer</button>
   </div>
 </header>
 
@@ -530,14 +552,24 @@
         <span id="httpStatusBadge" class="badge badge-info">READY</span>
       </div>
       <div style="display:flex; gap:8px;">
-        <input type="text" class="filter-input" id="httpSearchInput" placeholder="Filter/Search within response body..." />
-        <button class="btn" id="btnSearchHttp">Find</button>
+        <input type="text" class="filter-input" id="httpSearchInput" placeholder="Filter/Search within response body (Press Enter to find, Esc to clear)..." />
+        <button class="btn" id="btnSearchHttp">Find [Enter]</button>
         <button class="btn" id="btnClearHttp">Clear</button>
       </div>
+      <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:2px;">
+        <span style="font-size:11px; color:var(--text-muted); font-weight:700;">QUICK START:</span>
+        <button class="btn-chip" data-url="http://example.com">🌐 Example.com</button>
+        <button class="btn-chip" data-url="https://news.ycombinator.com">📰 Hacker News</button>
+        <button class="btn-chip" data-url="https://lite.cnn.com">⚡ CNN Lite</button>
+        <button class="btn-chip" data-url="ping:8.8.8.8">📡 Ping 8.8.8.8</button>
+        <button class="btn-chip" data-url="scan">🔍 Port Scan</button>
+        <button class="btn-chip" data-url="dns:example.com">🛠️ DNS Check</button>
+        <button class="btn-chip" data-url="sniff">🦈 Sniffer</button>
+      </div>
     </div>
-    <div class="content-box" id="httpContentArea">Welcome to KNet 2.0 Web Interface.
+    <div class="content-box" id="httpContentArea">Welcome to KNet 2.0 Network Suite.
 Ready. Select a target URL above and click Execute (or press Enter in URL box).
-(Press 'h' or F1 for help)</div>
+(Press 'H' or F1 for Help & Keyboard Shortcuts)</div>
   </div>
 
   <!-- TAB 2: Ping & Latency Statistics -->
@@ -578,15 +610,15 @@ Ready. Select a target URL above and click Execute (or press Enter in URL box).
         <span>Real-time Latency Chart (ms)</span>
         <div style="display:flex; gap:6px; align-items:center;">
           <input type="text" class="input-url" id="pingTargetInput" value="8.8.8.8" placeholder="Host / IP..." style="width:130px; padding:4px 8px; font-size:12px;" />
-          <button class="btn" id="btnStartPing">Start Continuous Ping</button>
-          <button class="btn btn-danger" id="btnStopPing" disabled>Stop</button>
-          <button class="btn" id="btnClearPing">Reset Stats</button>
+          <button class="btn" id="btnStartPing">Start Ping [P]</button>
+          <button class="btn btn-danger" id="btnStopPing" disabled>Stop [Esc]</button>
+          <button class="btn" id="btnClearPing">Reset Stats [C]</button>
         </div>
       </div>
       <div class="chart-container">
         <canvas id="pingCanvas"></canvas>
       </div>
-      <div class="content-box" id="pingLogArea" style="height: 120px; flex:none;">Ping log ready.</div>
+      <div class="content-box" id="pingLogArea" style="height: 120px; flex:none;">Ping log ready. Press 'P' or click Start Ping.</div>
     </div>
   </div>
 
@@ -595,7 +627,7 @@ Ready. Select a target URL above and click Execute (or press Enter in URL box).
     <div class="panel">
       <div class="panel-title">
         <span>Custom Port Inspector & Subnet Scanner</span>
-        <button class="btn btn-primary" id="btnRunScan">Start Scan</button>
+        <button class="btn btn-primary" id="btnRunScan">Start Scan [S]</button>
       </div>
       <div style="display:flex; gap:10px; align-items:center;">
         <label style="font-size:12px; color:var(--text-muted);">Target Host / IP:</label>
@@ -629,14 +661,14 @@ Ready. Select a target URL above and click Execute (or press Enter in URL box).
         <span>Traffic Log Manager & Filter</span>
         <div style="display:flex; gap:6px;">
           <button class="btn" id="btnExportJson">Export JSON</button>
-          <button class="btn" id="btnExportCsv">Export CSV</button>
+          <button class="btn" id="btnExportCsv">Export CSV [E]</button>
           <button class="btn" id="btnImportLog">Import Log</button>
           <input type="file" id="fileImport" accept=".json,.csv" style="display:none;" />
-          <button class="btn btn-danger" id="btnClearLogs">Clear Log</button>
+          <button class="btn btn-danger" id="btnClearLogs">Clear Log [C]</button>
         </div>
       </div>
       <div class="filter-bar">
-        <input type="text" class="filter-input" id="logFilterQuery" placeholder="Filter logs by URL, type, or status code..." />
+        <input type="text" class="filter-input" id="logFilterQuery" placeholder="Filter logs by URL, type, or status code (Esc to clear)..." />
         <label style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:4px;">
           <input type="checkbox" id="logRegexCheck"> Regex
         </label>
@@ -697,9 +729,9 @@ Ready. Select a target URL above and click Execute (or press Enter in URL box).
       <div class="panel-title">
         <span>Live Packet Sniffer Simulation</span>
         <div>
-          <button class="btn btn-primary" id="btnStartSniffer">Start Capture</button>
-          <button class="btn btn-danger" id="btnStopSniffer" disabled>Stop</button>
-          <button class="btn" id="btnClearSniffer">Clear</button>
+          <button class="btn btn-primary" id="btnStartSniffer">Start Capture [Space]</button>
+          <button class="btn btn-danger" id="btnStopSniffer" disabled>Stop [Esc]</button>
+          <button class="btn" id="btnClearSniffer">Clear [C]</button>
         </div>
       </div>
     </div>
@@ -751,17 +783,22 @@ Ready. Select a target URL above and click Execute (or press Enter in URL box).
         </thead>
         <tbody>
           <tr><td><code>F1</code> or <code>H</code></td><td>Open / Close this Help dialog</td></tr>
+          <tr><td><code>1 - 6</code></td><td>Switch tabs directly (HTTP, Ping, Scan, Logs, Utils, Sniffer)</td></tr>
           <tr><td><code>Enter</code> in URL Bar</td><td>Execute HTTP request / diagnostic</td></tr>
-          <tr><td><code>Enter</code> in Ping Target</td><td>Start continuous latency test</td></tr>
-          <tr><td><code>Enter</code> in Port Inputs</td><td>Start custom port scan</td></tr>
-          <tr><td><code>Enter</code> in Filter / Search</td><td>Filter response text or traffic log live</td></tr>
-          <tr><td><code>Esc</code></td><td>Close Help dialog</td></tr>
-          <tr><td><code>🌐 HTTP Inspector</code></td><td>Inspect web pages, REST endpoints, and status codes</td></tr>
-          <tr><td><code>📡 Ping & Latency</code></td><td>Continuous latency testing, packet loss & jitter chart</td></tr>
-          <tr><td><code>🔍 Port Monitor</code></td><td>Audit standard or custom ports on target host</td></tr>
-          <tr><td><code>📋 Traffic Log</code></td><td>Filter traffic records live, export to CSV/JSON</td></tr>
-          <tr><td><code>🛠️ Net Utils</code></td><td>DNS lookup, WHOIS, Traceroute, and interface config</td></tr>
-          <tr><td><code>🦈 Sniffer</code></td><td>Simulate live packet traffic inspection</td></tr>
+          <tr><td><code>Enter</code> in Search / Filter</td><td>Filter response text or traffic log live</td></tr>
+          <tr><td><code>P</code></td><td>Start / Stop Continuous Ping</td></tr>
+          <tr><td><code>S</code></td><td>Trigger Custom Port Scan</td></tr>
+          <tr><td><code>E</code> or <code>Ctrl+S</code></td><td>Export Traffic Log to CSV</td></tr>
+          <tr><td><code>C</code></td><td>Clear active tab output / stats / logs</td></tr>
+          <tr><td><code>Space</code> in Sniffer</td><td>Start / Stop packet capture</td></tr>
+          <tr><td><code>Alt + ← / →</code></td><td>History Back / Forward navigation</td></tr>
+          <tr><td><code>Esc</code></td><td>Close dialog / Stop active Ping or Sniffer / Clear search</td></tr>
+          <tr><td><code>ping:&lt;host&gt;</code></td><td>URL prefix to run Ping test on target host</td></tr>
+          <tr><td><code>scan:&lt;host&gt;</code></td><td>URL prefix to run Port Scan on target host</td></tr>
+          <tr><td><code>dns:&lt;host&gt;</code></td><td>URL prefix to perform DNS lookup</td></tr>
+          <tr><td><code>whois:&lt;host&gt;</code></td><td>URL prefix to perform WHOIS lookup</td></tr>
+          <tr><td><code>trace:&lt;host&gt;</code></td><td>URL prefix to run Traceroute simulation</td></tr>
+          <tr><td><code>ifconfig / sniff</code></td><td>URL commands to inspect interfaces or run sniffer</td></tr>
         </tbody>
       </table>
       <p style="margin-top:12px; font-size:12px; color:var(--text-muted);">
@@ -800,6 +837,7 @@ Ready. Select a target URL above and click Execute (or press Enter in URL box).
       toast = document.createElement('div');
       toast.id = 'knetToast';
       toast.className = 'toast-notification';
+      toast.onclick = () => { toast.classList.remove('show'); };
       document.body.appendChild(toast);
     }
     toast.textContent = msg;
@@ -807,8 +845,15 @@ Ready. Select a target URL above and click Execute (or press Enter in URL box).
     clearTimeout(toast._timer);
     toast._timer = setTimeout(() => {
       toast.className = 'toast-notification';
-    }, 2800);
+    }, 3200);
   }
+
+  // Welcome prompt on launch
+  function initStartupToast() {
+    showToast("Welcome to KNet! Press F1 or 'H' for Help & Shortcuts", "info");
+  }
+  window.addEventListener('DOMContentLoaded', initStartupToast);
+  setTimeout(initStartupToast, 250);
 
   // Help Modal Toggle
   const helpModal = document.getElementById('helpModal');
@@ -843,6 +888,17 @@ Ready. Select a target URL above and click Execute (or press Enter in URL box).
     });
   });
 
+  // Quick Starter Chips
+  document.querySelectorAll('.btn-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const u = chip.dataset.url;
+      if (u) {
+        urlInput.value = u;
+        fetchUrl(u, true);
+      }
+    });
+  });
+
   function updateNavButtons() {
     btnBack.disabled = navIdx <= 0;
     btnForward.disabled = navIdx >= navHistory.length - 1;
@@ -850,17 +906,120 @@ Ready. Select a target URL above and click Execute (or press Enter in URL box).
 
   // Global keydown listener
   window.addEventListener('keydown', (e) => {
+    const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName);
+
     if (e.key === 'F1') {
       e.preventDefault();
       toggleHelp();
       return;
     }
-    if (e.key === 'Escape' && helpModal && helpModal.style.display !== 'none') {
-      toggleHelp(false);
+
+    if (e.key === 'Escape') {
+      if (helpModal && helpModal.style.display !== 'none') {
+        toggleHelp(false);
+        return;
+      }
+      if (isInput) {
+        if (document.activeElement === httpSearchInput) {
+          httpSearchInput.value = '';
+        } else if (document.activeElement === document.getElementById('logFilterQuery')) {
+          document.getElementById('logFilterQuery').value = '';
+          renderLogs();
+        }
+        document.activeElement.blur();
+        return;
+      }
+      if (pingTimer) {
+        document.getElementById('btnStopPing').click();
+        showToast('Continuous ping stopped.', 'info');
+      }
+      if (snifferTimer) {
+        document.getElementById('btnStopSniffer').click();
+        showToast('Packet sniffer stopped.', 'info');
+      }
       return;
     }
-    if ((e.key === 'h' || e.key === 'H') && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-      toggleHelp();
+
+    // Direct tab hotkeys 1-6 when not typing in input
+    if (!isInput && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      if (e.key >= '1' && e.key <= '6') {
+        const idx = parseInt(e.key) - 1;
+        if (tabBtns[idx]) {
+          e.preventDefault();
+          tabBtns[idx].click();
+          return;
+        }
+      }
+      if (e.key === 'h' || e.key === 'H') {
+        e.preventDefault();
+        toggleHelp();
+        return;
+      }
+      if (e.key === 'p' || e.key === 'P') {
+        e.preventDefault();
+        const pingTab = document.querySelector('[data-tab="tab-ping"]');
+        if (!pingTab.classList.contains('active')) pingTab.click();
+        if (pingTimer) {
+          document.getElementById('btnStopPing').click();
+        } else {
+          document.getElementById('btnStartPing').click();
+        }
+        return;
+      }
+      if (e.key === 's' || e.key === 'S') {
+        e.preventDefault();
+        const scanTab = document.querySelector('[data-tab="tab-scan"]');
+        if (!scanTab.classList.contains('active')) scanTab.click();
+        document.getElementById('btnRunScan').click();
+        return;
+      }
+      if (e.key === 'e' || e.key === 'E') {
+        e.preventDefault();
+        document.getElementById('btnExportCsv').click();
+        return;
+      }
+      if (e.key === 'c' || e.key === 'C') {
+        e.preventDefault();
+        const activeTab = document.querySelector('.tab-content.active');
+        if (activeTab?.id === 'tab-ping') {
+          document.getElementById('btnClearPing').click();
+        } else if (activeTab?.id === 'tab-logs') {
+          document.getElementById('btnClearLogs').click();
+        } else if (activeTab?.id === 'tab-sniff') {
+          document.getElementById('btnClearSniffer').click();
+        } else if (activeTab?.id === 'tab-http') {
+          document.getElementById('btnClearHttp').click();
+        }
+        return;
+      }
+      if (e.key === ' ' && document.querySelector('[data-tab="tab-sniff"]').classList.contains('active')) {
+        e.preventDefault();
+        if (snifferTimer) {
+          document.getElementById('btnStopSniffer').click();
+        } else {
+          document.getElementById('btnStartSniffer').click();
+        }
+        return;
+      }
+    }
+
+    // Ctrl+S export shortcut
+    if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+      e.preventDefault();
+      document.getElementById('btnExportCsv').click();
+      return;
+    }
+
+    // Alt+Arrow navigation
+    if (e.altKey && e.key === 'ArrowLeft') {
+      e.preventDefault();
+      if (!btnBack.disabled) btnBack.click();
+      return;
+    }
+    if (e.altKey && e.key === 'ArrowRight') {
+      e.preventDefault();
+      if (!btnForward.disabled) btnForward.click();
+      return;
     }
   });
 
@@ -959,6 +1118,44 @@ Ready. Select a target URL above and click Execute (or press Enter in URL box).
       urlInput.value = url;
       document.querySelector('[data-tab="tab-scan"]').click();
       runPortScan();
+      return;
+    }
+
+    if (url.startsWith('dns:')) {
+      urlInput.value = url;
+      document.querySelector('[data-tab="tab-utils"]').click();
+      document.getElementById('utilTargetInput').value = url.slice(4);
+      document.getElementById('btnDns').click();
+      return;
+    }
+
+    if (url.startsWith('whois:')) {
+      urlInput.value = url;
+      document.querySelector('[data-tab="tab-utils"]').click();
+      document.getElementById('utilTargetInput').value = url.slice(6);
+      document.getElementById('btnWhois').click();
+      return;
+    }
+
+    if (url.startsWith('trace:')) {
+      urlInput.value = url;
+      document.querySelector('[data-tab="tab-utils"]').click();
+      document.getElementById('utilTargetInput').value = url.slice(6);
+      document.getElementById('btnTrace').click();
+      return;
+    }
+
+    if (url.toLowerCase() === 'ifconfig') {
+      urlInput.value = url;
+      document.querySelector('[data-tab="tab-utils"]').click();
+      document.getElementById('btnIfconfig').click();
+      return;
+    }
+
+    if (url.toLowerCase() === 'sniff') {
+      urlInput.value = url;
+      document.querySelector('[data-tab="tab-sniff"]').click();
+      document.getElementById('btnStartSniffer').click();
       return;
     }
 
