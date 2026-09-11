@@ -414,7 +414,8 @@
     font-weight: 600;
     z-index: 9999;
     opacity: 0;
-    pointer-events: none;
+    pointer-events: auto;
+    cursor: pointer;
     transition: transform 0.25s ease, opacity 0.25s ease;
   }
   #toast.show {
@@ -427,8 +428,11 @@
   <!-- Lock Screen Overlay -->
   <div id="lockScreen" role="dialog" aria-modal="true" aria-labelledby="lockTitle">
     <h1 id="lockTitle">KPass Vault Locked</h1>
-    <input type="password" id="masterPass" placeholder="Master Password" autofocus aria-label="Master Password">
-    <button class="primary" id="btnUnlock">Unlock / Setup</button>
+    <div style="position:relative; width:100%; max-width:300px; margin-bottom:15px; display:flex; align-items:center;">
+      <input type="password" id="masterPass" placeholder="Master Password" autofocus aria-label="Master Password" style="width:100%; margin-bottom:0; font-size:16px; text-align:center; padding-right:38px;">
+      <button type="button" id="btnToggleMasterPass" title="Show / Hide Master Password" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); background:transparent; border:none; color:#aaa; font-size:16px; cursor:pointer; padding:4px 6px; width:auto; max-width:none;">👁</button>
+    </div>
+    <button class="primary" id="btnUnlock">Unlock / Setup [Enter]</button>
     <div id="lockError" role="alert"></div>
     <div class="setup-msg" id="setupMsg">If this is your first time, entering a password will initialize your encrypted vault. Press Enter to unlock.</div>
   </div>
@@ -443,9 +447,10 @@
       <p style="margin: 0 0 8px;"><strong>Backup:</strong> Easily export or restore credentials using CSV or JSON formats.</p>
       <div style="background:#1a1a1a; padding:10px; border-radius:4px; font-size:12px; color:#2ecc71; margin-top:10px;">
         <div><strong>Shortcuts:</strong></div>
-        <div>&bull; '1' / '2' = Switch Tabs | 'H' or F1 = Toggle Help | Esc = Close Modals</div>
+        <div>&bull; '1' / '2' = Switch Tabs | 'H' or F1 = Toggle Help | Esc = Close Modals / Clear Search</div>
         <div>&bull; Enter = Unlock / Save / Generate | Ctrl+F or '/' = Focus Search</div>
-        <div>&bull; Ctrl+S = Save Credential | Ctrl+G = Generate New Password</div>
+        <div>&bull; Ctrl+S = Save Credential | Ctrl+G = Generate | Ctrl+C or 'C' = Copy Password</div>
+        <div>&bull; Alt+L = Lock Vault | Alt+J = Export JSON | Alt+E = Export CSV | Alt+I = Import File</div>
       </div>
       <div style="text-align: right; margin-top: 14px;">
         <button id="btnCloseHelp" style="background: #e74c3c; border-color: #e74c3c;">Close Help</button>
@@ -497,9 +502,9 @@
   </div>
   
   <div class="tabs" role="tablist">
-    <div class="tab active" id="tabGen" role="tab" aria-selected="true" tabindex="0">Generator</div>
-    <div class="tab" id="tabVault" role="tab" aria-selected="false" tabindex="0">Vault (<span id="vaultCount">0</span>)</div>
-    <div class="tab-help" id="btnHelpToggle" role="button" tabindex="0" title="Help &amp; Shortcuts (F1)">? Help (F1)</div>
+    <div class="tab active" id="tabGen" role="tab" aria-selected="true" tabindex="0">Generator [1]</div>
+    <div class="tab" id="tabVault" role="tab" aria-selected="false" tabindex="0">Vault (<span id="vaultCount">0</span>) [2]</div>
+    <div class="tab-help" id="btnHelpToggle" role="button" tabindex="0" title="Help &amp; Shortcuts (F1)">? Help [F1]</div>
   </div>
   
   <div class="content" id="contentGen" role="tabpanel" aria-labelledby="tabGen">
@@ -548,11 +553,11 @@
           <option value="Social">Social</option>
           <option value="Other">Other</option>
         </select>
-        <button id="btnSave" title="Save password to vault">Save to Vault</button>
+        <button id="btnSave" title="Save password to vault (Ctrl+S)">Save to Vault [Ctrl+S]</button>
       </div>
       <div class="control-row" style="margin-top: 6px;">
-        <button class="primary" id="btnGen" style="flex: 1;">Generate (Enter)</button>
-        <button class="primary" id="btnCopy" style="flex: 1; background: #3498db; border-color: #3498db;">Copy Password</button>
+        <button class="primary" id="btnGen" style="flex: 1;">Generate [Enter]</button>
+        <button class="primary" id="btnCopy" style="flex: 1; background: #3498db; border-color: #3498db;">Copy [Ctrl+C]</button>
       </div>
     </div>
   </div>
@@ -578,10 +583,10 @@
         <option value="label-desc">Z &rarr; A</option>
         <option value="cat">Category</option>
       </select>
-      <button class="btn-sm" id="btnExportJSON" title="Export vault to JSON">JSON</button>
-      <button class="btn-sm" id="btnExportCSV" title="Export vault to CSV">CSV</button>
-      <button class="btn-sm" id="btnImport" title="Import credentials from CSV or JSON">Import</button>
-      <button class="btn-sm btn-danger" id="btnLock" title="Instantly lock vault">Lock</button>
+      <button class="btn-sm" id="btnExportJSON" title="Export vault to JSON (Alt+J)">JSON [Alt+J]</button>
+      <button class="btn-sm" id="btnExportCSV" title="Export vault to CSV (Alt+E)">CSV [Alt+E]</button>
+      <button class="btn-sm" id="btnImport" title="Import credentials from CSV or JSON (Alt+I)">Import [Alt+I]</button>
+      <button class="btn-sm btn-danger" id="btnLock" title="Instantly lock vault (Alt+L)">Lock [Alt+L]</button>
       <input type="file" id="fileImport" accept=".json,.csv" style="display:none;">
     </div>
     <div class="vault-status-bar">
@@ -609,6 +614,12 @@
     }
 
     // Toast Notification System
+    const toastEl = document.getElementById('toast');
+    if (toastEl) {
+      toastEl.addEventListener('click', () => {
+        toastEl.classList.remove('show');
+      });
+    }
     function showToast(msg, isSuccess = true) {
       const toast = document.getElementById('toast');
       toast.innerText = msg;
@@ -617,7 +628,7 @@
       clearTimeout(toast.timer);
       toast.timer = setTimeout(() => {
         toast.classList.remove('show');
-      }, 2200);
+      }, 2400);
     }
 
     // Safe clipboard helper
@@ -694,10 +705,26 @@
 
     const lockScreen = document.getElementById('lockScreen');
     const masterPassInput = document.getElementById('masterPass');
+    const btnToggleMasterPass = document.getElementById('btnToggleMasterPass');
     const btnUnlock = document.getElementById('btnUnlock');
     const lockError = document.getElementById('lockError');
     const setupMsg = document.getElementById('setupMsg');
     const btnLock = document.getElementById('btnLock');
+
+    if (btnToggleMasterPass) {
+        btnToggleMasterPass.addEventListener('click', () => {
+            if (masterPassInput.type === 'password') {
+                masterPassInput.type = 'text';
+                btnToggleMasterPass.innerText = '🔒';
+                btnToggleMasterPass.title = 'Hide Master Password';
+            } else {
+                masterPassInput.type = 'password';
+                btnToggleMasterPass.innerText = '👁';
+                btnToggleMasterPass.title = 'Show Master Password';
+            }
+            masterPassInput.focus();
+        });
+    }
 
     // UI elements
     const tabGen = document.getElementById('tabGen');
@@ -962,6 +989,33 @@
                 if (contentGen.style.display !== 'none') {
                     handleSave();
                 }
+                return;
+            }
+            if ((e.ctrlKey && e.key.toLowerCase() === 'c') || (!isInput && e.key.toLowerCase() === 'c')) {
+                if (contentGen.style.display !== 'none') {
+                    e.preventDefault();
+                    btnCopy.click();
+                    return;
+                }
+            }
+            if (e.altKey && e.key.toLowerCase() === 'l') {
+                e.preventDefault();
+                lockVault();
+                return;
+            }
+            if (e.altKey && e.key.toLowerCase() === 'j') {
+                e.preventDefault();
+                document.getElementById('btnExportJSON').click();
+                return;
+            }
+            if (e.altKey && e.key.toLowerCase() === 'e') {
+                e.preventDefault();
+                document.getElementById('btnExportCSV').click();
+                return;
+            }
+            if (e.altKey && e.key.toLowerCase() === 'i') {
+                e.preventDefault();
+                document.getElementById('btnImport').click();
                 return;
             }
         }
@@ -1379,6 +1433,7 @@
     });
 
     generate();
+    showToast("Welcome to KPass! Press F1 for Help & Shortcuts");
   </script>
 </body>
 </html>
