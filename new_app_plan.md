@@ -55,8 +55,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KAbyss (Abyssal dungeon crawler with magical relics, ancient runes, and procedural crypts)
-**Phase:** 8 (next to do)
-**Status:** In Progress (Phase 7 completed: Monster bestiary & tactical turn-based AI with crypt skeletons, mire ghouls, void wraiths, acolytes, and abyssal leviathans)
+**Phase:** 9 (next to do)
+**Status:** In Progress (Phase 8 completed: Inventory management, equipment slots, potion brewing, and ancient alchemy cauldrons)
 
 - [x] Phase 1: Scaffold KAbyss directory (`KAbyss/`), create web HTML skeleton (`KiloOS/public/apps/kabyss.html`), register in App.jsx.
 - [x] Phase 2: Core dungeon crawl engine (tile map grid, hero character, FOV lighting, movement, turn system).
@@ -65,7 +65,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 5: Procedural dungeon depth generation (Catacombs, Sunken Grotto, Forgotten Crypt, Void Abyss).
 - [x] Phase 6: Relic & Ancient Rune magic system (enchanted staves, rune socketing, elemental spellcasting).
 - [x] Phase 7: Monster bestiary & tactical turn-based AI (crypt skeletons, void wraiths, abyssal leviathans).
-- [ ] Phase 8: Inventory management, equipment slots, potion brewing, and ancient alchemy cauldrons.
+- [x] Phase 8: Inventory management, equipment slots, potion brewing, and ancient alchemy cauldrons.
 - [ ] Phase 9: Sanity, hunger & subterranean curse hazards (torches extinguishing, cursed effigies, eldritch whispers).
 - [ ] Phase 10: Ancient runic shrines & relic enchanting altars (imbue weapons with frost/fire/void enchantments).
 - [ ] Phase 11: Subterranean merchants & wandering black market hermits (trade gold for relics).

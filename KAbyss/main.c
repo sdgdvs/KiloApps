@@ -46,6 +46,7 @@
 #define TILE_WATER        11
 #define TILE_CHASM        12
 #define TILE_ALTAR        13
+#define TILE_CAULDRON     14
 
 typedef enum {
     ZONE_CATACOMBS = 0,
@@ -225,6 +226,135 @@ typedef struct {
 static SpellFX g_spellFX[MAX_SPELL_FX];
 static int g_numSpellFX = 0;
 
+typedef enum {
+    ITEM_TYPE_CONSUMABLE = 0,
+    ITEM_TYPE_EQUIPMENT,
+    ITEM_TYPE_REAGENT,
+    ITEM_TYPE_KEY
+} ItemCategory;
+
+typedef enum {
+    SLOT_NONE = 0,
+    SLOT_WEAPON,
+    SLOT_ARMOR,
+    SLOT_RELIC,
+    SLOT_AMULET
+} EquipSlot;
+
+typedef enum {
+    ITEM_NONE = 0,
+    // Consumables
+    ITEM_HEAL_SALVE,
+    ITEM_ELIXIR_VITALITY,
+    ITEM_SANITY_INCENSE,
+    ITEM_LUCID_DRAUGHT,
+    ITEM_AETHER_PHIAL,
+    ITEM_STONESKIN_BREW,
+    ITEM_LIQUID_FIRE,
+    ITEM_PANACEA_DEEP,
+    // Weapons
+    ITEM_WPN_STAFF,
+    ITEM_WPN_RUNIC_BLADE,
+    ITEM_WPN_VOID_DAGGER,
+    // Armor
+    ITEM_ARM_ABYSSAL_MAIL,
+    ITEM_ARM_SHADOW_CLOAK,
+    ITEM_ARM_AEGIS_CUIRASS,
+    // Relics
+    ITEM_REL_TORCH,
+    ITEM_REL_LANTERN,
+    ITEM_REL_CENSER,
+    // Amulets
+    ITEM_AMU_LIFE,
+    ITEM_AMU_STAR,
+    ITEM_AMU_VOID,
+    // Reagents
+    ITEM_ING_BLOOD_LOTUS,
+    ITEM_ING_AZURE_SPORES,
+    ITEM_ING_BRIMSTONE,
+    ITEM_ING_VOID_DUST,
+    ITEM_ING_AETHER_BLOSSOM,
+    // Keys
+    ITEM_KEY_RUNIC,
+    NUM_ITEM_DEFS
+} ItemId;
+
+typedef struct {
+    ItemId id;
+    const char* name;
+    ItemCategory category;
+    EquipSlot slot;
+    const char* symbol;
+    COLORREF color;
+    const char* desc;
+    int might;
+    int warding;
+    int arcana;
+    int light;
+    int maxHp;
+    int maxAether;
+    int maxSanity;
+} ItemDef;
+
+typedef struct {
+    ItemId id;
+    int count;
+} InventorySlot;
+
+#define MAX_PACK_SLOTS 16
+
+static const ItemDef g_itemDefs[NUM_ITEM_DEFS] = {
+    { ITEM_NONE, "None", ITEM_TYPE_KEY, SLOT_NONE, "-", RGB(100,100,100), "None", 0,0,0,0, 0,0,0 },
+    { ITEM_HEAL_SALVE, "Healing Salve", ITEM_TYPE_CONSUMABLE, SLOT_NONE, "+", COLOR_ACCENT_GREEN, "Restores +35 HP.", 0,0,0,0, 35,0,0 },
+    { ITEM_ELIXIR_VITALITY, "Elixir of Vitality", ITEM_TYPE_CONSUMABLE, SLOT_NONE, "+", COLOR_ACCENT_GREEN, "Restores +65 HP, +10 Sanity.", 0,0,0,0, 65,0,10 },
+    { ITEM_SANITY_INCENSE, "Sanity Incense", ITEM_TYPE_CONSUMABLE, SLOT_NONE, "~", COLOR_BORDER_GLOW, "Clears madness (+30 Sanity).", 0,0,0,0, 0,0,30 },
+    { ITEM_LUCID_DRAUGHT, "Draught of Lucid Mind", ITEM_TYPE_CONSUMABLE, SLOT_NONE, "~", COLOR_BORDER_GLOW, "Restores +50 Sanity, +10 Aether.", 0,0,0,0, 0,10,50 },
+    { ITEM_AETHER_PHIAL, "Aether Phial", ITEM_TYPE_CONSUMABLE, SLOT_NONE, "*", COLOR_ACCENT_CYAN, "Concentrated mana (+40 Aether).", 0,0,0,0, 0,40,0 },
+    { ITEM_STONESKIN_BREW, "Stoneskin Brew", ITEM_TYPE_CONSUMABLE, SLOT_NONE, "#", COLOR_ACCENT_AMBER, "Hardens flesh (+40 Ward Shield).", 0,0,0,0, 0,0,0 },
+    { ITEM_LIQUID_FIRE, "Liquid Fire Flask", ITEM_TYPE_CONSUMABLE, SLOT_NONE, "!", COLOR_ACCENT_RED, "50 Fire AOE to enemies within 2 tiles.", 0,0,0,0, 0,0,0 },
+    { ITEM_PANACEA_DEEP, "Panacea of the Deep", ITEM_TYPE_CONSUMABLE, SLOT_NONE, "@", COLOR_TEXT_GOLD, "+60 HP, +40 Sanity, +35 Aether.", 0,0,0,0, 60,35,40 },
+    { ITEM_WPN_STAFF, "Ashwood Rune Staff", ITEM_TYPE_EQUIPMENT, SLOT_WEAPON, "/", RGB(168,85,247), "+2 Arcana.", 0,0,2,0, 0,0,0 },
+    { ITEM_WPN_RUNIC_BLADE, "Runic Longsword", ITEM_TYPE_EQUIPMENT, SLOT_WEAPON, "/", COLOR_ACCENT_AMBER, "+5 Might, +1 Warding.", 5,1,0,0, 0,0,0 },
+    { ITEM_WPN_VOID_DAGGER, "Voidfang Dagger", ITEM_TYPE_EQUIPMENT, SLOT_WEAPON, "/", RGB(168,85,247), "+7 Might, +3 Arcana.", 7,0,3,0, 0,0,0 },
+    { ITEM_ARM_ABYSSAL_MAIL, "Abyssal Mail", ITEM_TYPE_EQUIPMENT, SLOT_ARMOR, "[", COLOR_BORDER_GLOW, "+3 Warding, +10 Max HP.", 0,3,0,0, 10,0,0 },
+    { ITEM_ARM_SHADOW_CLOAK, "Shadowweave Cloak", ITEM_TYPE_EQUIPMENT, SLOT_ARMOR, "[", RGB(168,85,247), "+4 Warding, +2 Arcana.", 0,4,2,0, 0,0,0 },
+    { ITEM_ARM_AEGIS_CUIRASS, "Aegis Cuirass", ITEM_TYPE_EQUIPMENT, SLOT_ARMOR, "[", COLOR_TEXT_RUNE, "+7 Warding, +25 Max HP.", 0,7,0,0, 25,0,0 },
+    { ITEM_REL_TORCH, "Torch of Eld", ITEM_TYPE_EQUIPMENT, SLOT_RELIC, "i", COLOR_TEXT_GOLD, "+7 Light Radius.", 0,0,0,7, 0,0,0 },
+    { ITEM_REL_LANTERN, "Aether Lantern", ITEM_TYPE_EQUIPMENT, SLOT_RELIC, "i", COLOR_ACCENT_CYAN, "+8 Light Radius, +15 Max Aether.", 0,0,1,8, 0,15,0 },
+    { ITEM_REL_CENSER, "Radiant Censer", ITEM_TYPE_EQUIPMENT, SLOT_RELIC, "i", COLOR_TEXT_GOLD, "+9 Light Radius, +20 Max Sanity.", 0,1,1,9, 0,0,20 },
+    { ITEM_AMU_LIFE, "Amulet of Vitality", ITEM_TYPE_EQUIPMENT, SLOT_AMULET, "o", COLOR_ACCENT_RED, "+30 Max HP, +1 Might, +1 Warding.", 1,1,0,0, 30,0,0 },
+    { ITEM_AMU_STAR, "Astral Star Pendant", ITEM_TYPE_EQUIPMENT, SLOT_AMULET, "o", COLOR_ACCENT_CYAN, "+25 Max Aether, +2 Arcana.", 0,0,2,0, 0,25,0 },
+    { ITEM_AMU_VOID, "Void Eye Talisman", ITEM_TYPE_EQUIPMENT, SLOT_AMULET, "o", RGB(168,85,247), "+4 Arcana, +20 Max Sanity.", 0,0,4,0, 0,0,20 },
+    { ITEM_ING_BLOOD_LOTUS, "Blood Lotus", ITEM_TYPE_REAGENT, SLOT_NONE, "%", RGB(244,63,94), "Reagent for Vitality & Panacea elixirs.", 0,0,0,0, 0,0,0 },
+    { ITEM_ING_AZURE_SPORES, "Azure Spores", ITEM_TYPE_REAGENT, SLOT_NONE, "%", RGB(52,211,153), "Reagent for Lucid Mind & Stoneskin.", 0,0,0,0, 0,0,0 },
+    { ITEM_ING_BRIMSTONE, "Brimstone Ash", ITEM_TYPE_REAGENT, SLOT_NONE, "%", RGB(245,158,11), "Reagent for Liquid Fire & Stoneskin.", 0,0,0,0, 0,0,0 },
+    { ITEM_ING_VOID_DUST, "Void Dust", ITEM_TYPE_REAGENT, SLOT_NONE, "%", RGB(168,85,247), "Reagent for Aether Phials & Liquid Fire.", 0,0,0,0, 0,0,0 },
+    { ITEM_ING_AETHER_BLOSSOM, "Aether Blossom", ITEM_TYPE_REAGENT, SLOT_NONE, "%", RGB(56,189,248), "Mana-rich catalyst for high-tier brews.", 0,0,0,0, 0,0,0 },
+    { ITEM_KEY_RUNIC, "Ancient Runic Key", ITEM_TYPE_KEY, SLOT_NONE, "k", COLOR_TEXT_GOLD, "Unlocks crypt chests and sealed doors.", 0,0,0,0, 0,0,0 }
+};
+
+#define NUM_RECIPES 6
+
+typedef struct {
+    ItemId res;
+    const char* name;
+    const char* desc;
+    struct {
+        ItemId id;
+        int count;
+    } ing[3];
+    int numIng;
+} AlchemyRecipe;
+
+static const AlchemyRecipe g_recipes[NUM_RECIPES] = {
+    { ITEM_ELIXIR_VITALITY, "Elixir of Vitality", "+65 HP, +10 Sanity", { { ITEM_ING_BLOOD_LOTUS, 1 }, { ITEM_ING_AETHER_BLOSSOM, 1 }, { ITEM_NONE, 0 } }, 2 },
+    { ITEM_LUCID_DRAUGHT, "Draught of Lucid Mind", "+50 Sanity, +10 Aether", { { ITEM_ING_AZURE_SPORES, 1 }, { ITEM_ING_AETHER_BLOSSOM, 1 }, { ITEM_NONE, 0 } }, 2 },
+    { ITEM_AETHER_PHIAL, "Aether Phial", "+40 Aether mana", { { ITEM_ING_VOID_DUST, 1 }, { ITEM_ING_AETHER_BLOSSOM, 1 }, { ITEM_NONE, 0 } }, 2 },
+    { ITEM_STONESKIN_BREW, "Stoneskin Brew", "+40 Ward Shield", { { ITEM_ING_AZURE_SPORES, 1 }, { ITEM_ING_BRIMSTONE, 1 }, { ITEM_NONE, 0 } }, 2 },
+    { ITEM_LIQUID_FIRE, "Liquid Fire Flask", "50 Fire AOE damage", { { ITEM_ING_BRIMSTONE, 1 }, { ITEM_ING_VOID_DUST, 1 }, { ITEM_NONE, 0 } }, 2 },
+    { ITEM_PANACEA_DEEP, "Panacea of the Deep", "+60 HP, +40 San, +35 MP", { { ITEM_ING_BLOOD_LOTUS, 1 }, { ITEM_ING_BRIMSTONE, 1 }, { ITEM_ING_VOID_DUST, 1 } }, 3 }
+};
+
 typedef struct {
     int x, y;
     int hp, max_hp;
@@ -238,11 +368,25 @@ typedef struct {
     int warding;
     int arcana;
     int light_radius;
+    int base_hp, base_max_hp;
+    int base_sanity, base_max_sanity;
+    int base_aether, base_max_aether;
+    int base_might;
+    int base_warding;
+    int base_arcana;
+    int base_light_radius;
     int facing; // 0=Up, 1=Right, 2=Down, 3=Left
     int equippedStaff; // 0=Ashwood, 1=Cinder, 2=Arch-Magi
     int staffSockets[3]; // Rune index 0..4 or -1 for empty
     BOOL ownedRunes[NUM_RUNES];
+    ItemId equipWeapon;
+    ItemId equipArmor;
+    ItemId equipRelic;
+    ItemId equipAmulet;
+    InventorySlot pack[MAX_PACK_SLOTS];
+    int numPackItems;
 } Delver;
+
 
 typedef struct {
     float x, y;
@@ -368,6 +512,14 @@ void SpawnMonsters(int level);
 void DamageMonster(int idx, int dmg, const char* dmgType, BOOL isCrit);
 void AttackMonster(int idx);
 void UpdateMonsters(void);
+void RecalcPlayerStats(void);
+BOOL AddPackItem(ItemId id, int count);
+BOOL RemovePackItem(ItemId id, int count);
+int GetPackItemCount(ItemId id);
+void UsePackItem(int packIdx);
+void EquipPackItem(int packIdx);
+void UnequipSlot(EquipSlot slot);
+void BrewRecipe(int recipeIdx);
 
 // Custom pseudo random helper
 static unsigned int g_randSeed = 123456789;
@@ -393,18 +545,66 @@ void AddLog(const char* text, COLORREF color) {
     }
 }
 
+void RecalcPlayerStats(void) {
+    int m = g_player.base_might;
+    int w = g_player.base_warding;
+    int a = g_player.base_arcana + g_staffDefs[g_player.equippedStaff].arcanaBonus;
+    int l = g_player.base_light_radius;
+    int mhp = g_player.base_max_hp;
+    int mmp = g_player.base_max_aether;
+    int msan = g_player.base_max_sanity;
+
+    // Rune socket passives
+    for (int s = 0; s < g_staffDefs[g_player.equippedStaff].maxSockets; s++) {
+        int r = g_player.staffSockets[s];
+        if (r == RUNE_PYRE) m += 3;
+        else if (r == RUNE_FROST) w += 3;
+        else if (r == RUNE_TEMPEST) { m += 2; a += 2; }
+        else if (r == RUNE_VOID) { a += 3; l += 1; }
+        else if (r == RUNE_AEGIS) { w += 4; msan += 10; }
+    }
+
+    // Equipment slot bonuses
+    ItemId eq[4] = { g_player.equipWeapon, g_player.equipArmor, g_player.equipRelic, g_player.equipAmulet };
+    for (int i = 0; i < 4; i++) {
+        if (eq[i] > ITEM_NONE && eq[i] < NUM_ITEM_DEFS) {
+            const ItemDef* id = &g_itemDefs[eq[i]];
+            m += id->might;
+            w += id->warding;
+            a += id->arcana;
+            l += id->light;
+            mhp += id->maxHp;
+            mmp += id->maxAether;
+            msan += id->maxSanity;
+        }
+    }
+
+    g_player.might = m;
+    g_player.warding = w;
+    g_player.arcana = a;
+    g_player.light_radius = l;
+    g_player.max_hp = mhp;
+    g_player.max_aether = mmp;
+    g_player.max_sanity = msan;
+
+    if (g_player.hp > g_player.max_hp) g_player.hp = g_player.max_hp;
+    if (g_player.aether > g_player.max_aether) g_player.aether = g_player.max_aether;
+    if (g_player.sanity > g_player.max_sanity) g_player.sanity = g_player.max_sanity;
+}
+
 void CheckLevelUp(void) {
     if (g_player.exp >= g_player.max_exp) {
         g_player.exp -= g_player.max_exp;
         g_player.level++;
         g_player.max_exp = (int)(g_player.max_exp * 1.5f);
-        g_player.max_hp += 15;
+        g_player.base_max_hp += 15;
+        g_player.base_max_aether += 10;
+        g_player.base_might += 2;
+        g_player.base_warding += 1;
+        g_player.base_arcana += 2;
+        RecalcPlayerStats();
         g_player.hp = g_player.max_hp;
-        g_player.max_aether += 10;
         g_player.aether = g_player.max_aether;
-        g_player.might += 2;
-        g_player.warding += 1;
-        g_player.arcana += 2;
 
         char buf[128];
         snprintf(buf, sizeof(buf), "LEVEL UP! Delver reached Level %d! (+15 HP, +10 Aether, +2 Might, +2 Arcana)", g_player.level);
@@ -412,6 +612,255 @@ void CheckLevelUp(void) {
         Beep(880, 70); Beep(1175, 100);
     }
 }
+
+BOOL AddPackItem(ItemId id, int count) {
+    if (id <= ITEM_NONE || id >= NUM_ITEM_DEFS || count <= 0) return FALSE;
+    const ItemDef* idef = &g_itemDefs[id];
+    if (idef->category == ITEM_TYPE_CONSUMABLE || idef->category == ITEM_TYPE_REAGENT || idef->category == ITEM_TYPE_KEY) {
+        for (int i = 0; i < g_player.numPackItems; i++) {
+            if (g_player.pack[i].id == id) {
+                g_player.pack[i].count += count;
+                return TRUE;
+            }
+        }
+    }
+    if (g_player.numPackItems >= MAX_PACK_SLOTS) {
+        AddLog("Delver's Pack is full! Cannot carry more items.", COLOR_ACCENT_RED);
+        return FALSE;
+    }
+    g_player.pack[g_player.numPackItems].id = id;
+    g_player.pack[g_player.numPackItems].count = count;
+    g_player.numPackItems++;
+    return TRUE;
+}
+
+BOOL RemovePackItem(ItemId id, int count) {
+    for (int i = 0; i < g_player.numPackItems; i++) {
+        if (g_player.pack[i].id == id) {
+            if (g_player.pack[i].count > count) {
+                g_player.pack[i].count -= count;
+                return TRUE;
+            } else if (g_player.pack[i].count == count) {
+                for (int j = i; j < g_player.numPackItems - 1; j++) {
+                    g_player.pack[j] = g_player.pack[j + 1];
+                }
+                g_player.numPackItems--;
+                return TRUE;
+            } else {
+                return FALSE;
+            }
+        }
+    }
+    return FALSE;
+}
+
+int GetPackItemCount(ItemId id) {
+    int total = 0;
+    for (int i = 0; i < g_player.numPackItems; i++) {
+        if (g_player.pack[i].id == id) {
+            total += g_player.pack[i].count;
+        }
+    }
+    return total;
+}
+
+void EquipPackItem(int packIdx) {
+    if (packIdx < 0 || packIdx >= g_player.numPackItems) return;
+    ItemId newItem = g_player.pack[packIdx].id;
+    const ItemDef* def = &g_itemDefs[newItem];
+    if (def->category != ITEM_TYPE_EQUIPMENT) return;
+
+    ItemId oldItem = ITEM_NONE;
+    if (def->slot == SLOT_WEAPON) {
+        oldItem = g_player.equipWeapon;
+        g_player.equipWeapon = newItem;
+    } else if (def->slot == SLOT_ARMOR) {
+        oldItem = g_player.equipArmor;
+        g_player.equipArmor = newItem;
+    } else if (def->slot == SLOT_RELIC) {
+        oldItem = g_player.equipRelic;
+        g_player.equipRelic = newItem;
+    } else if (def->slot == SLOT_AMULET) {
+        oldItem = g_player.equipAmulet;
+        g_player.equipAmulet = newItem;
+    } else {
+        return;
+    }
+
+    RemovePackItem(newItem, 1);
+    if (oldItem != ITEM_NONE) {
+        AddPackItem(oldItem, 1);
+    }
+
+    RecalcPlayerStats();
+    char buf[128];
+    snprintf(buf, sizeof(buf), "Equipped %s (%s).", def->name, def->desc);
+    AddLog(buf, COLOR_TEXT_RUNE);
+    Beep(700, 40); Beep(900, 50);
+}
+
+void UnequipSlot(EquipSlot slot) {
+    ItemId itemToUnequip = ITEM_NONE;
+    if (slot == SLOT_WEAPON) itemToUnequip = g_player.equipWeapon;
+    else if (slot == SLOT_ARMOR) itemToUnequip = g_player.equipArmor;
+    else if (slot == SLOT_RELIC) itemToUnequip = g_player.equipRelic;
+    else if (slot == SLOT_AMULET) itemToUnequip = g_player.equipAmulet;
+
+    if (itemToUnequip == ITEM_NONE) return;
+
+    if (g_player.numPackItems >= MAX_PACK_SLOTS) {
+        AddLog("Cannot unequip: Delver's Pack is full!", COLOR_ACCENT_RED);
+        return;
+    }
+
+    if (slot == SLOT_WEAPON) g_player.equipWeapon = ITEM_NONE;
+    else if (slot == SLOT_ARMOR) g_player.equipArmor = ITEM_NONE;
+    else if (slot == SLOT_RELIC) g_player.equipRelic = ITEM_NONE;
+    else if (slot == SLOT_AMULET) g_player.equipAmulet = ITEM_NONE;
+
+    AddPackItem(itemToUnequip, 1);
+    RecalcPlayerStats();
+
+    char buf[128];
+    snprintf(buf, sizeof(buf), "Unequipped %s to Delver's Pack.", g_itemDefs[itemToUnequip].name);
+    AddLog(buf, COLOR_TEXT_DIM);
+    Beep(500, 40);
+}
+
+void UsePackItem(int packIdx) {
+    if (packIdx < 0 || packIdx >= g_player.numPackItems) return;
+    ItemId id = g_player.pack[packIdx].id;
+    const ItemDef* def = &g_itemDefs[id];
+
+    if (def->category == ITEM_TYPE_EQUIPMENT) {
+        EquipPackItem(packIdx);
+        return;
+    }
+
+    if (def->category != ITEM_TYPE_CONSUMABLE) {
+        char buf[128];
+        snprintf(buf, sizeof(buf), "%s: %s", def->name, def->desc);
+        AddLog(buf, def->color);
+        return;
+    }
+
+    char logBuf[128];
+    logBuf[0] = '\0';
+
+    if (id == ITEM_HEAL_SALVE) {
+        int heal = 35;
+        g_player.hp += heal;
+        if (g_player.hp > g_player.max_hp) g_player.hp = g_player.max_hp;
+        snprintf(logBuf, sizeof(logBuf), "Applied Healing Salve (+%d HP).", heal);
+        Beep(587, 40); Beep(880, 60);
+    } else if (id == ITEM_ELIXIR_VITALITY) {
+        g_player.hp += 65;
+        if (g_player.hp > g_player.max_hp) g_player.hp = g_player.max_hp;
+        g_player.sanity += 10;
+        if (g_player.sanity > g_player.max_sanity) g_player.sanity = g_player.max_sanity;
+        snprintf(logBuf, sizeof(logBuf), "Drank Elixir of Vitality! (+65 HP, +10 Sanity).");
+        Beep(650, 40); Beep(980, 70);
+    } else if (id == ITEM_SANITY_INCENSE) {
+        g_player.sanity += 30;
+        if (g_player.sanity > g_player.max_sanity) g_player.sanity = g_player.max_sanity;
+        snprintf(logBuf, sizeof(logBuf), "Burned Sanity Incense (+30 Sanity).");
+        Beep(440, 50); Beep(660, 60);
+    } else if (id == ITEM_LUCID_DRAUGHT) {
+        g_player.sanity += 50;
+        if (g_player.sanity > g_player.max_sanity) g_player.sanity = g_player.max_sanity;
+        g_player.aether += 10;
+        if (g_player.aether > g_player.max_aether) g_player.aether = g_player.max_aether;
+        snprintf(logBuf, sizeof(logBuf), "Drank Draught of Lucid Mind! (+50 Sanity, +10 Aether).");
+        Beep(520, 50); Beep(780, 60);
+    } else if (id == ITEM_AETHER_PHIAL) {
+        g_player.aether += 40;
+        if (g_player.aether > g_player.max_aether) g_player.aether = g_player.max_aether;
+        snprintf(logBuf, sizeof(logBuf), "Drank Aether Phial (+40 Aether).");
+        Beep(700, 50); Beep(1050, 70);
+    } else if (id == ITEM_STONESKIN_BREW) {
+        g_player.shield += 40;
+        if (g_player.shield > 80) g_player.shield = 80;
+        snprintf(logBuf, sizeof(logBuf), "Drank Stoneskin Brew! Obsidian skin (+40 Ward Shield).");
+        Beep(300, 70); Beep(450, 80);
+    } else if (id == ITEM_LIQUID_FIRE) {
+        int hits = 0;
+        for (int m = 0; m < g_numMonsters; m++) {
+            if (g_monsters[m].alive && abs(g_monsters[m].x - g_player.x) <= 2 && abs(g_monsters[m].y - g_player.y) <= 2) {
+                DamageMonster(m, 50, "FIRE", TRUE);
+                hits++;
+            }
+        }
+        if (g_numSpellFX < MAX_SPELL_FX) {
+            g_spellFX[g_numSpellFX].type = 0;
+            g_spellFX[g_numSpellFX].x = g_player.x;
+            g_spellFX[g_numSpellFX].y = g_player.y;
+            g_spellFX[g_numSpellFX].radius = 2;
+            g_spellFX[g_numSpellFX].duration = 6;
+            g_spellFX[g_numSpellFX].color = COLOR_ACCENT_RED;
+            g_numSpellFX++;
+        }
+        snprintf(logBuf, sizeof(logBuf), "Shattered Liquid Fire Flask! Conflagration struck %d enemies!", hits);
+        Beep(250, 60); Beep(400, 80);
+    } else if (id == ITEM_PANACEA_DEEP) {
+        g_player.hp += 60;
+        if (g_player.hp > g_player.max_hp) g_player.hp = g_player.max_hp;
+        g_player.sanity += 40;
+        if (g_player.sanity > g_player.max_sanity) g_player.sanity = g_player.max_sanity;
+        g_player.aether += 35;
+        if (g_player.aether > g_player.max_aether) g_player.aether = g_player.max_aether;
+        snprintf(logBuf, sizeof(logBuf), "Consumed Panacea of the Deep! (+60 HP, +40 Sanity, +35 Aether)!");
+        Beep(600, 50); Beep(800, 60); Beep(1200, 90);
+    }
+
+    if (logBuf[0]) AddLog(logBuf, def->color);
+    RemovePackItem(id, 1);
+    AdvanceTurn();
+}
+
+void BrewRecipe(int recipeIdx) {
+    if (recipeIdx < 0 || recipeIdx >= NUM_RECIPES) return;
+    const AlchemyRecipe* rec = &g_recipes[recipeIdx];
+
+    // Check ingredients
+    for (int i = 0; i < rec->numIng; i++) {
+        if (GetPackItemCount(rec->ing[i].id) < rec->ing[i].count) {
+            char buf[128];
+            snprintf(buf, sizeof(buf), "Cannot brew %s: Missing %s!", rec->name, g_itemDefs[rec->ing[i].id].name);
+            AddLog(buf, COLOR_ACCENT_RED);
+            Beep(250, 60);
+            return;
+        }
+    }
+
+    // Check pack space if result is new item
+    if (GetPackItemCount(rec->res) == 0 && g_player.numPackItems >= MAX_PACK_SLOTS) {
+        BOOL slotFrees = FALSE;
+        for (int i = 0; i < rec->numIng; i++) {
+            if (GetPackItemCount(rec->ing[i].id) == rec->ing[i].count) {
+                slotFrees = TRUE;
+                break;
+            }
+        }
+        if (!slotFrees) {
+            AddLog("Delver's Pack is full! Make space before brewing.", COLOR_ACCENT_RED);
+            return;
+        }
+    }
+
+    // Consume ingredients
+    for (int i = 0; i < rec->numIng; i++) {
+        RemovePackItem(rec->ing[i].id, rec->ing[i].count);
+    }
+
+    // Add brewed potion
+    AddPackItem(rec->res, 1);
+
+    char buf[128];
+    snprintf(buf, sizeof(buf), "Ancient Cauldron bubbled! Brewed %s (%s)!", rec->name, rec->desc);
+    AddLog(buf, RGB(52, 211, 153));
+    Beep(520, 50); Beep(740, 60); Beep(980, 80);
+}
+
 
 void ComputeFOV(void) {
     for (int y = 0; y < MAP_HEIGHT; y++) {
@@ -675,6 +1124,26 @@ void DamageMonster(int idx, int dmg, const char* dmgType, BOOL isCrit) {
             snprintf(rBuf, sizeof(rBuf), "Bestiary Spoils: Discovered %s (%s)! Inscribe in Tab [3].", g_runeDefs[rPick].name, g_runeDefs[rPick].symbol);
             AddLog(rBuf, COLOR_ACCENT_CYAN);
             Beep(880, 50); Beep(1175, 70);
+        }
+
+        // Ingredient & Potion drops matching monster types
+        if (m->type == MONSTER_GHOUL) {
+            if (RandInt(0, 100) < 55) { AddPackItem(ITEM_ING_AZURE_SPORES, 1); AddLog("Harvested Azure Spores from the mire ghoul.", RGB(52, 211, 153)); }
+            if (RandInt(0, 100) < 25) { AddPackItem(ITEM_HEAL_SALVE, 1); AddLog("Salvaged Healing Salve from remains.", COLOR_ACCENT_GREEN); }
+        } else if (m->type == MONSTER_SKELETON) {
+            if (RandInt(0, 100) < 45) { AddPackItem(ITEM_ING_BRIMSTONE, 1); AddLog("Harvested Brimstone Ash from crypt bones.", RGB(245, 158, 11)); }
+            if (RandInt(0, 100) < 15) { AddPackItem(ITEM_KEY_RUNIC, 1); AddLog("Found Ancient Runic Key among the bones!", COLOR_TEXT_GOLD); }
+        } else if (m->type == MONSTER_WRAITH) {
+            if (RandInt(0, 100) < 60) { AddPackItem(ITEM_ING_VOID_DUST, 1); AddLog("Collected Void Dust from the dissipating wraith.", RGB(168, 85, 247)); }
+            if (RandInt(0, 100) < 30) { AddPackItem(ITEM_AETHER_PHIAL, 1); AddLog("Found glowing Aether Phial in the ethereal residue.", COLOR_ACCENT_CYAN); }
+        } else if (m->type == MONSTER_ACOLYTE) {
+            if (RandInt(0, 100) < 50) { AddPackItem(ITEM_ING_BLOOD_LOTUS, 1); AddLog("Harvested Blood Lotus from the acolyte's pouch.", RGB(244, 63, 94)); }
+            if (RandInt(0, 100) < 30) { AddPackItem(ITEM_LUCID_DRAUGHT, 1); AddLog("Found Draught of Lucid Mind on the acolyte.", COLOR_BORDER_GLOW); }
+        } else if (m->type == MONSTER_LEVIATHAN) {
+            AddPackItem(ITEM_ING_AETHER_BLOSSOM, 1);
+            AddLog("Harvested luminous Aether Blossom from the fallen Leviathan!", RGB(56, 189, 248));
+            if (RandInt(0, 100) < 50) { AddPackItem(ITEM_PANACEA_DEEP, 1); AddLog("Discovered rare Panacea of the Deep!", COLOR_TEXT_GOLD); }
+            if (RandInt(0, 100) < 35) { AddPackItem(ITEM_ARM_AEGIS_CUIRASS, 1); AddLog("Discovered Aegis Cuirass (+7 Def)!", COLOR_TEXT_RUNE); }
         }
 
         CheckLevelUp();
@@ -976,6 +1445,15 @@ void GenerateCatacombs(int depth) {
             }
         }
     }
+
+    if (roomCount >= 3) {
+        int cr = 1 + RandInt(0, roomCount - 3);
+        int cx = rooms[cr].x + rooms[cr].w / 2;
+        int cy = rooms[cr].y + rooms[cr].h / 2;
+        if (g_dungeon[cy][cx] == TILE_FLOOR) {
+            g_dungeon[cy][cx] = TILE_CAULDRON;
+        }
+    }
 }
 
 // 2. Sunken Grotto: Organic Caverns, Flooded Water Pools & Cyan Fungi
@@ -1096,7 +1574,17 @@ void GenerateSunkenGrotto(int depth) {
             }
         }
     }
+
+    if (numCaverns >= 3) {
+        int cr = 1 + RandInt(0, numCaverns - 3);
+        int cx = caverns[cr].x;
+        int cy = caverns[cr].y;
+        if (g_dungeon[cy][cx] == TILE_FLOOR || g_dungeon[cy][cx] == TILE_WATER) {
+            g_dungeon[cy][cx] = TILE_CAULDRON;
+        }
+    }
 }
+
 
 // 3. Forgotten Crypt: Dense Necrotic Vaults & Runic Altars
 void GenerateForgottenCrypt(int depth) {
@@ -1208,7 +1696,17 @@ void GenerateForgottenCrypt(int depth) {
             }
         }
     }
+
+    if (vaultCount >= 4) {
+        int cIdx = vaultCount / 2;
+        int cx = vaults[cIdx].x + vaults[cIdx].w / 2;
+        int cy = vaults[cIdx].y + vaults[cIdx].h / 2;
+        if (g_dungeon[cy][cx] == TILE_FLOOR) {
+            g_dungeon[cy][cx] = TILE_CAULDRON;
+        }
+    }
 }
+
 
 // 4. Void Abyss: Floating Obsidian Platforms over Cosmic Chasms & Void Rifts
 void GenerateVoidAbyss(int depth) {
@@ -1303,7 +1801,17 @@ void GenerateVoidAbyss(int depth) {
             }
         }
     }
+
+    if (platCount >= 3) {
+        int pIdx = platCount / 2;
+        int cx = plats[pIdx].x + plats[pIdx].w / 2;
+        int cy = plats[pIdx].y + plats[pIdx].h / 2;
+        if (g_dungeon[cy][cx] == TILE_FLOOR) {
+            g_dungeon[cy][cx] = TILE_CAULDRON;
+        }
+    }
 }
+
 
 void InitGame(int depth) {
     g_depthLevel = depth;
@@ -1439,6 +1947,13 @@ void MovePlayer(int dx, int dy) {
         return;
     }
 
+    if (tile == TILE_CAULDRON) {
+        AddLog("You approach the Ancient Alchemy Cauldron! Switched to Tab [2] Pack to brew potions.", RGB(52, 211, 153));
+        g_activeTab = 1;
+        Beep(650, 40); Beep(880, 60);
+        return;
+    }
+
     if (tile == TILE_CHEST) {
         for (int c = 0; c < g_numChests; c++) {
             if (g_chests[c].x == nx && g_chests[c].y == ny && !g_chests[c].opened) {
@@ -1460,15 +1975,43 @@ void MovePlayer(int dx, int dy) {
                     snprintf(buf, sizeof(buf), "Chest opened! +%d Essence and found %s (%s)!", g_chests[c].essence, g_runeDefs[pick].name, g_runeDefs[pick].symbol);
                 } else if (g_player.equippedStaff == 0 && g_depthLevel >= 4 && RandInt(0, 100) < 40) {
                     g_player.equippedStaff = 1;
+                    RecalcPlayerStats();
                     snprintf(buf, sizeof(buf), "Chest opened! +%d Essence & found Cinderwood Scepter (+4 Arcana)!", g_chests[c].essence);
                 } else if (g_player.equippedStaff < 2 && g_depthLevel >= 7 && RandInt(0, 100) < 35) {
                     g_player.equippedStaff = 2;
+                    RecalcPlayerStats();
                     snprintf(buf, sizeof(buf), "Chest opened! +%d Essence & found Staff of the Arch-Magi (3 Sockets)!", g_chests[c].essence);
                 } else {
                     snprintf(buf, sizeof(buf), "Opened Relic Chest! +%d Essence & +25 EXP!", g_chests[c].essence);
                 }
 
                 AddLog(buf, COLOR_TEXT_GOLD);
+
+                // Additional loot: reagents, potions, or gear
+                int roll = RandInt(0, 100);
+                if (roll < 35) {
+                    ItemId ings[] = { ITEM_ING_BLOOD_LOTUS, ITEM_ING_AZURE_SPORES, ITEM_ING_BRIMSTONE, ITEM_ING_VOID_DUST, ITEM_ING_AETHER_BLOSSOM };
+                    ItemId pickIng = ings[RandInt(0, 4)];
+                    AddPackItem(pickIng, 1);
+                    char lbuf[128];
+                    snprintf(lbuf, sizeof(lbuf), "Looted %s from chest!", g_itemDefs[pickIng].name);
+                    AddLog(lbuf, RGB(52, 211, 153));
+                } else if (roll < 65) {
+                    ItemId pots[] = { ITEM_HEAL_SALVE, ITEM_SANITY_INCENSE, ITEM_AETHER_PHIAL, ITEM_STONESKIN_BREW };
+                    ItemId pickPot = pots[RandInt(0, 3)];
+                    AddPackItem(pickPot, 1);
+                    char lbuf[128];
+                    snprintf(lbuf, sizeof(lbuf), "Found %s in chest!", g_itemDefs[pickPot].name);
+                    AddLog(lbuf, COLOR_ACCENT_GREEN);
+                } else if (roll < 85) {
+                    ItemId gears[] = { ITEM_WPN_RUNIC_BLADE, ITEM_WPN_VOID_DAGGER, ITEM_ARM_SHADOW_CLOAK, ITEM_ARM_AEGIS_CUIRASS, ITEM_REL_LANTERN, ITEM_REL_CENSER, ITEM_AMU_LIFE, ITEM_AMU_STAR, ITEM_AMU_VOID };
+                    ItemId pickGear = gears[RandInt(0, 8)];
+                    AddPackItem(pickGear, 1);
+                    char lbuf[128];
+                    snprintf(lbuf, sizeof(lbuf), "Discovered %s (+Gear) in chest!", g_itemDefs[pickGear].name);
+                    AddLog(lbuf, COLOR_TEXT_RUNE);
+                }
+
                 Beep(600, 40); Beep(800, 50);
                 CheckLevelUp();
                 AdvanceTurn();
@@ -1476,6 +2019,7 @@ void MovePlayer(int dx, int dy) {
             }
         }
     }
+
 
     g_player.x = nx;
     g_player.y = ny;
@@ -1748,6 +2292,7 @@ void SocketRune(int socketIdx, int runeIdx) {
     }
 
     g_player.staffSockets[socketIdx] = runeIdx;
+    RecalcPlayerStats();
     char buf[128];
     snprintf(buf, sizeof(buf), "Inscribed %s into Socket %d! Granted spell: %s.", g_runeDefs[runeIdx].name, socketIdx + 1, g_runeDefs[runeIdx].spellName);
     AddLog(buf, COLOR_BORDER_GLOW);
@@ -1760,6 +2305,7 @@ void UnsocketRune(int socketIdx) {
     int r = g_player.staffSockets[socketIdx];
     if (r >= 0 && r < NUM_RUNES) {
         g_player.staffSockets[socketIdx] = -1;
+        RecalcPlayerStats();
         char buf[128];
         snprintf(buf, sizeof(buf), "Unsocketed %s from Staff Socket %d.", g_runeDefs[r].name, socketIdx + 1);
         AddLog(buf, COLOR_TEXT_DIM);
@@ -1785,6 +2331,11 @@ void SearchArea(void) {
                     snprintf(buf, sizeof(buf), "Detected consecrated Runic Altar at (%d, %d)!", nx, ny);
                     AddLog(buf, COLOR_TEXT_GOLD);
                     found = TRUE;
+                } else if (g_dungeon[ny][nx] == TILE_CAULDRON) {
+                    char buf[128];
+                    snprintf(buf, sizeof(buf), "Detected Ancient Alchemy Cauldron at (%d, %d)!", nx, ny);
+                    AddLog(buf, RGB(52, 211, 153));
+                    found = TRUE;
                 }
             }
         }
@@ -1808,6 +2359,10 @@ void InteractTile(void) {
         InitGame(g_depthLevel);
     } else if (cur == TILE_ALTAR) {
         CommuneAltar(g_player.x, g_player.y);
+    } else if (cur == TILE_CAULDRON) {
+        AddLog("Standing before Ancient Alchemy Cauldron! Switched to Tab [2] Pack to brew potions.", RGB(52, 211, 153));
+        g_activeTab = 1;
+        Beep(650, 50);
     } else if (cur == TILE_DOOR_CLOSED) {
         g_dungeon[g_player.y][g_player.x] = TILE_DOOR_OPEN;
         AddLog("Pushed open the door.", COLOR_ACCENT_CYAN);
@@ -1821,6 +2376,12 @@ void InteractTile(void) {
                 if (nx >= 0 && nx < MAP_WIDTH && ny >= 0 && ny < MAP_HEIGHT) {
                     if (g_dungeon[ny][nx] == TILE_ALTAR) {
                         CommuneAltar(nx, ny);
+                        interacted = TRUE;
+                        break;
+                    } else if (g_dungeon[ny][nx] == TILE_CAULDRON) {
+                        AddLog("Approached Ancient Alchemy Cauldron! Switched to Tab [2] Pack to brew potions.", RGB(52, 211, 153));
+                        g_activeTab = 1;
+                        Beep(650, 50);
                         interacted = TRUE;
                         break;
                     } else if (g_dungeon[ny][nx] == TILE_DOOR_CLOSED) {
@@ -2006,6 +2567,8 @@ void RenderGame(HDC hdc, HWND hwnd) {
                 tileColor = RGB(2, 1, 8);
             } else if (tile == TILE_ALTAR) {
                 tileColor = isVisible ? RGB(42, 10, 20) : RGB(20, 5, 10);
+            } else if (tile == TILE_CAULDRON) {
+                tileColor = isVisible ? RGB(6, 40, 30) : RGB(3, 20, 15);
             } else if (tile == TILE_PILLAR) {
                 tileColor = isVisible ? RGB(30, 27, 75) : RGB(10, 12, 20);
             } else if (tile == TILE_DOOR_CLOSED) {
@@ -2046,6 +2609,10 @@ void RenderGame(HDC hdc, HWND hwnd) {
                 SelectObject(memDC, fontBold);
                 SetTextColor(memDC, isVisible ? COLOR_ACCENT_RED : RGB(140, 20, 20));
                 TextOutA(memDC, scrX + 7, scrY + 8, "[+]", 3);
+            } else if (tile == TILE_CAULDRON) {
+                SelectObject(memDC, fontBold);
+                SetTextColor(memDC, isVisible ? RGB(52, 211, 153) : RGB(16, 120, 80));
+                TextOutA(memDC, scrX + 7, scrY + 8, "{U}", 3);
             } else if (tile == TILE_PILLAR) {
                 HBRUSH pBr = CreateSolidBrush(isVisible ? zt->torchColor : RGB(49, 46, 129));
                 HBRUSH oldP = (HBRUSH)SelectObject(memDC, pBr);
@@ -2566,8 +3133,8 @@ void RenderGame(HDC hdc, HWND hwnd) {
         TextOutA(memDC, sbX + 130, contentY + 198, stBuf, (int)strlen(stBuf));
 
         // GEAR SECTION
-        int gearY = contentY + 224;
-        RECT gearCard = {sbX + 8, gearY, sbX + sbW - 8, gearY + 84};
+        int gearY = contentY + 218;
+        RECT gearCard = {sbX + 8, gearY, sbX + sbW - 8, gearY + 115};
         HBRUSH gCardBg = CreateSolidBrush(COLOR_BG_CARD);
         FillRect(memDC, &gearCard, gCardBg);
         DeleteObject(gCardBg);
@@ -2575,42 +3142,147 @@ void RenderGame(HDC hdc, HWND hwnd) {
 
         SelectObject(memDC, fontBold);
         SetTextColor(memDC, COLOR_TEXT_RUNE);
-        TextOutA(memDC, sbX + 16, gearY + 6, "EQUIPPED RELICS & STAFF", 23);
+        TextOutA(memDC, sbX + 16, gearY + 5, "EQUIPMENT (Click to Unequip)", 28);
 
         SelectObject(memDC, fontSmall);
+        // Staff
         SetTextColor(memDC, RGB(168, 85, 247));
         char staffStr[80];
         snprintf(staffStr, sizeof(staffStr), "[Stf] %s", g_staffDefs[g_player.equippedStaff].name);
-        TextOutA(memDC, sbX + 16, gearY + 24, staffStr, (int)strlen(staffStr));
+        TextOutA(memDC, sbX + 16, gearY + 23, staffStr, (int)strlen(staffStr));
 
-        SetTextColor(memDC, COLOR_TEXT_BRIGHT);
-        TextOutA(memDC, sbX + 16, gearY + 42, "[Wpn] Runic Longsword (+4 Atk)", 30);
-        TextOutA(memDC, sbX + 16, gearY + 60, "[Arm] Abyssal Mail (+3 Def)", 27);
+        // Weapon
+        SetTextColor(memDC, g_player.equipWeapon != ITEM_NONE ? COLOR_ACCENT_AMBER : COLOR_TEXT_DIM);
+        char wpnStr[80];
+        snprintf(wpnStr, sizeof(wpnStr), "[Wpn] %s", g_player.equipWeapon != ITEM_NONE ? g_itemDefs[g_player.equipWeapon].name : "(Empty Weapon Slot)");
+        TextOutA(memDC, sbX + 16, gearY + 41, wpnStr, (int)strlen(wpnStr));
+
+        // Armor
+        SetTextColor(memDC, g_player.equipArmor != ITEM_NONE ? COLOR_BORDER_GLOW : COLOR_TEXT_DIM);
+        char armStr[80];
+        snprintf(armStr, sizeof(armStr), "[Arm] %s", g_player.equipArmor != ITEM_NONE ? g_itemDefs[g_player.equipArmor].name : "(Empty Armor Slot)");
+        TextOutA(memDC, sbX + 16, gearY + 59, armStr, (int)strlen(armStr));
+
+        // Relic
+        SetTextColor(memDC, g_player.equipRelic != ITEM_NONE ? COLOR_TEXT_GOLD : COLOR_TEXT_DIM);
+        char relStr[80];
+        snprintf(relStr, sizeof(relStr), "[Rel] %s", g_player.equipRelic != ITEM_NONE ? g_itemDefs[g_player.equipRelic].name : "(Empty Relic Slot)");
+        TextOutA(memDC, sbX + 16, gearY + 77, relStr, (int)strlen(relStr));
+
+        // Amulet
+        SetTextColor(memDC, g_player.equipAmulet != ITEM_NONE ? COLOR_ACCENT_PURPLE : COLOR_TEXT_DIM);
+        char amuStr[80];
+        snprintf(amuStr, sizeof(amuStr), "[Amu] %s", g_player.equipAmulet != ITEM_NONE ? g_itemDefs[g_player.equipAmulet].name : "(Empty Amulet Slot)");
+        TextOutA(memDC, sbX + 16, gearY + 95, amuStr, (int)strlen(amuStr));
 
     } else if (g_activeTab == 1) {
-        // RELICS / PACK INVENTORY
-        RECT cardRect = {sbX + 8, contentY, sbX + sbW - 8, contentY + 308};
+        // TOP CARD: DELVER'S PACK INVENTORY
+        int packCardH = 230;
+        RECT packCard = {sbX + 8, contentY, sbX + sbW - 8, contentY + packCardH};
         HBRUSH cardBg = CreateSolidBrush(COLOR_BG_CARD);
-        FillRect(memDC, &cardRect, cardBg);
+        FillRect(memDC, &packCard, cardBg);
         DeleteObject(cardBg);
-        FrameRect(memDC, &cardRect, (HBRUSH)GetStockObject(DKGRAY_BRUSH));
+        FrameRect(memDC, &packCard, (HBRUSH)GetStockObject(DKGRAY_BRUSH));
 
         SelectObject(memDC, fontBold);
         SetTextColor(memDC, COLOR_TEXT_RUNE);
-        TextOutA(memDC, sbX + 16, contentY + 8, "DELVER'S PACK (3/12)", 20);
+        char pHeader[64];
+        snprintf(pHeader, sizeof(pHeader), "DELVER'S PACK (%d/%d) - [Click: Use/Equip]", g_player.numPackItems, MAX_PACK_SLOTS);
+        TextOutA(memDC, sbX + 16, contentY + 6, pHeader, (int)strlen(pHeader));
 
         SelectObject(memDC, fontSmall);
-        SetTextColor(memDC, COLOR_ACCENT_GREEN);
-        TextOutA(memDC, sbX + 16, contentY + 34, "1. Healing Salve (+35 HP)", 25);
-        SetTextColor(memDC, COLOR_BORDER_GLOW);
-        TextOutA(memDC, sbX + 16, contentY + 54, "2. Sanity Incense (+25 Sanity)", 30);
-        SetTextColor(memDC, COLOR_TEXT_GOLD);
-        TextOutA(memDC, sbX + 16, contentY + 74, "3. Ancient Runic Key", 20);
-        SetTextColor(memDC, COLOR_TEXT_DIM);
-        TextOutA(memDC, sbX + 16, contentY + 94, "4. [Empty Slot]", 15);
-        TextOutA(memDC, sbX + 16, contentY + 114, "5. [Empty Slot]", 15);
-        TextOutA(memDC, sbX + 16, contentY + 134, "6. [Empty Slot]", 15);
+        int itemY = contentY + 25;
+        for (int i = 0; i < 8; i++) {
+            if (i < g_player.numPackItems) {
+                const ItemDef* def = &g_itemDefs[g_player.pack[i].id];
+                char rowBuf[100];
+                if (def->category == ITEM_TYPE_EQUIPMENT) {
+                    snprintf(rowBuf, sizeof(rowBuf), "%d. [%s] %s (Equip)", i + 1, def->symbol, def->name);
+                    SetTextColor(memDC, COLOR_BORDER_GLOW);
+                } else if (def->category == ITEM_TYPE_CONSUMABLE) {
+                    snprintf(rowBuf, sizeof(rowBuf), "%d. [%s] %s x%d", i + 1, def->symbol, def->name, g_player.pack[i].count);
+                    SetTextColor(memDC, COLOR_ACCENT_GREEN);
+                } else if (def->category == ITEM_TYPE_REAGENT) {
+                    snprintf(rowBuf, sizeof(rowBuf), "%d. [%s] %s x%d", i + 1, def->symbol, def->name, g_player.pack[i].count);
+                    SetTextColor(memDC, COLOR_TEXT_GOLD);
+                } else {
+                    snprintf(rowBuf, sizeof(rowBuf), "%d. [%s] %s", i + 1, def->symbol, def->name);
+                    SetTextColor(memDC, COLOR_TEXT_RUNE);
+                }
+                TextOutA(memDC, sbX + 16, itemY, rowBuf, (int)strlen(rowBuf));
+            } else {
+                char emptyBuf[32];
+                snprintf(emptyBuf, sizeof(emptyBuf), "%d. [ Empty Slot ]", i + 1);
+                SetTextColor(memDC, COLOR_TEXT_DIM);
+                TextOutA(memDC, sbX + 16, itemY, emptyBuf, (int)strlen(emptyBuf));
+            }
+            itemY += 21;
+        }
 
+        SetTextColor(memDC, RGB(148, 163, 184));
+        TextOutA(memDC, sbX + 16, contentY + packCardH - 18, "Hint: [U] Use Consumable | [Del] Discard Slot 1", 47);
+
+        // BOTTOM CARD: ANCIENT ALCHEMY CAULDRON
+        int caulY = contentY + packCardH + 8;
+        int caulH = 275;
+        RECT caulCard = {sbX + 8, caulY, sbX + sbW - 8, caulY + caulH};
+        HBRUSH cBg = CreateSolidBrush(COLOR_BG_CARD);
+        FillRect(memDC, &caulCard, cBg);
+        DeleteObject(cBg);
+        FrameRect(memDC, &caulCard, (HBRUSH)GetStockObject(DKGRAY_BRUSH));
+
+        SelectObject(memDC, fontBold);
+        SetTextColor(memDC, RGB(52, 211, 153));
+        TextOutA(memDC, sbX + 16, caulY + 6, "{U} ANCIENT ALCHEMY CAULDRON", 28);
+
+        SelectObject(memDC, fontSmall);
+        // Reagents count bar
+        char rgtBuf[100];
+        snprintf(rgtBuf, sizeof(rgtBuf), "Lotus:%d Spore:%d Ash:%d Dust:%d Blsm:%d",
+                 GetPackItemCount(ITEM_ING_BLOOD_LOTUS),
+                 GetPackItemCount(ITEM_ING_AZURE_SPORES),
+                 GetPackItemCount(ITEM_ING_BRIMSTONE),
+                 GetPackItemCount(ITEM_ING_VOID_DUST),
+                 GetPackItemCount(ITEM_ING_AETHER_BLOSSOM));
+        SetTextColor(memDC, COLOR_TEXT_GOLD);
+        TextOutA(memDC, sbX + 16, caulY + 24, rgtBuf, (int)strlen(rgtBuf));
+
+        // 6 Recipes list
+        int recY = caulY + 42;
+        for (int r = 0; r < NUM_RECIPES; r++) {
+            const AlchemyRecipe* rec = &g_recipes[r];
+            BOOL canBrew = TRUE;
+            for (int k = 0; k < rec->numIng; k++) {
+                if (GetPackItemCount(rec->ing[k].id) < rec->ing[k].count) {
+                    canBrew = FALSE;
+                    break;
+                }
+            }
+
+            RECT rBtn = {sbX + 14, recY, sbX + sbW - 14, recY + 34};
+            HBRUSH rBr = CreateSolidBrush(canBrew ? RGB(6, 40, 30) : RGB(14, 18, 28));
+            FillRect(memDC, &rBtn, rBr);
+            DeleteObject(rBr);
+
+            HPEN rPen = CreatePen(PS_SOLID, 1, canBrew ? RGB(16, 185, 129) : RGB(40, 50, 68));
+            HPEN oldRP = (HPEN)SelectObject(memDC, rPen);
+            SelectObject(memDC, GetStockObject(NULL_BRUSH));
+            Rectangle(memDC, rBtn.left, rBtn.top, rBtn.right, rBtn.bottom);
+            SelectObject(memDC, oldRP);
+            DeleteObject(rPen);
+
+            char rLine1[80];
+            snprintf(rLine1, sizeof(rLine1), "[Brew %d] %s", r + 1, rec->name);
+            SetTextColor(memDC, canBrew ? RGB(110, 231, 183) : COLOR_TEXT_DIM);
+            TextOutA(memDC, sbX + 20, recY + 3, rLine1, (int)strlen(rLine1));
+
+            char rLine2[80];
+            snprintf(rLine2, sizeof(rLine2), "%s", rec->desc);
+            SetTextColor(memDC, canBrew ? COLOR_TEXT_BRIGHT : RGB(80, 95, 115));
+            TextOutA(memDC, sbX + 20, recY + 17, rLine2, (int)strlen(rLine2));
+
+            recY += 38;
+        }
     } else if (g_activeTab == 2) {
         // TAB 2: RUNIC FORGE & SOCKETING STATION
         RECT cardRect = {sbX + 8, contentY, sbX + sbW - 8, contentY + 308};
@@ -2835,36 +3507,53 @@ void RenderGame(HDC hdc, HWND hwnd) {
     DeleteDC(memDC);
 }
 
+void ResetPlayerRun(void) {
+    g_player.base_max_hp = 100;
+    g_player.base_max_sanity = 100;
+    g_player.base_max_aether = 50;
+    g_player.base_might = 14;
+    g_player.base_warding = 12;
+    g_player.base_arcana = 14;
+    g_player.base_light_radius = 7;
+    g_player.hp = 100;
+    g_player.sanity = 100;
+    g_player.aether = 50;
+    g_player.shield = 0;
+    g_player.essence = 0;
+    g_player.level = 1;
+    g_player.exp = 0;
+    g_player.max_exp = 100;
+    g_player.facing = 2; // Down
+    g_player.equippedStaff = 0; // Ashwood Rune Staff
+    g_player.staffSockets[0] = 0; // Pyre Rune socketed
+    g_player.staffSockets[1] = -1; // Empty
+    g_player.staffSockets[2] = -1;
+    for (int r = 0; r < NUM_RUNES; r++) g_player.ownedRunes[r] = FALSE;
+    g_player.ownedRunes[0] = TRUE; // Delver starts with Pyre Rune
+
+    // Starting Equipment & Pack
+    g_player.equipWeapon = ITEM_WPN_RUNIC_BLADE;
+    g_player.equipArmor = ITEM_ARM_ABYSSAL_MAIL;
+    g_player.equipRelic = ITEM_REL_TORCH;
+    g_player.equipAmulet = ITEM_NONE;
+    g_player.numPackItems = 0;
+    AddPackItem(ITEM_HEAL_SALVE, 2);
+    AddPackItem(ITEM_SANITY_INCENSE, 1);
+    AddPackItem(ITEM_KEY_RUNIC, 1);
+    AddPackItem(ITEM_ING_BLOOD_LOTUS, 1);
+    AddPackItem(ITEM_ING_AETHER_BLOSSOM, 1);
+    RecalcPlayerStats();
+}
+
 // Window Procedure
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
     case WM_CREATE:
-        g_player.hp = 100;
-        g_player.max_hp = 100;
-        g_player.sanity = 100;
-        g_player.max_sanity = 100;
-        g_player.aether = 50;
-        g_player.max_aether = 50;
-        g_player.shield = 0;
-        g_player.essence = 0;
-        g_player.level = 1;
-        g_player.exp = 0;
-        g_player.max_exp = 100;
-        g_player.might = 14;
-        g_player.warding = 12;
-        g_player.arcana = 16;
-        g_player.light_radius = 7;
-        g_player.facing = 2; // Down
-        g_player.equippedStaff = 0; // Ashwood Rune Staff
-        g_player.staffSockets[0] = 0; // Pyre Rune socketed
-        g_player.staffSockets[1] = -1; // Empty
-        g_player.staffSockets[2] = -1;
-        for (int r = 0; r < NUM_RUNES; r++) g_player.ownedRunes[r] = FALSE;
-        g_player.ownedRunes[0] = TRUE; // Delver starts with Pyre Rune
-
+        ResetPlayerRun();
         InitGame(1);
         SetTimer(hwnd, TIMER_ID, TIMER_INTERVAL, NULL);
         break;
+
 
     case WM_TIMER:
         if (wParam == TIMER_ID) {
@@ -2930,21 +3619,72 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
 
         case 'U':
+            if (g_activeTab == 1) {
+                // Find and use first consumable
+                BOOL used = FALSE;
+                for (int i = 0; i < g_player.numPackItems; i++) {
+                    if (g_itemDefs[g_player.pack[i].id].category == ITEM_TYPE_CONSUMABLE) {
+                        UsePackItem(i);
+                        used = TRUE;
+                        break;
+                    }
+                }
+                if (!used) AddLog("No consumable potion or salve in Delver's Pack.", COLOR_TEXT_DIM);
+            } else {
+                MovePlayer(1, -1);
+            }
+            break;
+
         case VK_NUMPAD9:
             MovePlayer(1, -1);
             break;
 
         case 'B':
+            if (g_activeTab != 1) {
+                g_activeTab = 1;
+                AddLog("Opened Delver's Pack & Ancient Alchemy Cauldron [2].", RGB(52, 211, 153));
+            } else {
+                // Brew first available recipe!
+                BOOL brewed = FALSE;
+                for (int r = 0; r < NUM_RECIPES; r++) {
+                    const AlchemyRecipe* rec = &g_recipes[r];
+                    BOOL canBrew = TRUE;
+                    for (int k = 0; k < rec->numIng; k++) {
+                        if (GetPackItemCount(rec->ing[k].id) < rec->ing[k].count) {
+                            canBrew = FALSE;
+                            break;
+                        }
+                    }
+                    if (canBrew) {
+                        BrewRecipe(r);
+                        brewed = TRUE;
+                        break;
+                    }
+                }
+                if (!brewed) {
+                    AddLog("No cauldron recipes can currently be brewed with available reagents.", COLOR_TEXT_DIM);
+                }
+            }
+            break;
+
+        case VK_DELETE:
+            if (g_activeTab == 1 && g_player.numPackItems > 0) {
+                ItemId dropId = g_player.pack[0].id;
+                char buf[128];
+                snprintf(buf, sizeof(buf), "Discarded %s from Delver's Pack.", g_itemDefs[dropId].name);
+                RemovePackItem(dropId, 1);
+                AddLog(buf, COLOR_TEXT_DIM);
+                Beep(300, 30);
+            }
+            break;
+
         case VK_NUMPAD1:
             MovePlayer(-1, 1);
             break;
 
         case 'N':
             if (GetAsyncKeyState(VK_CONTROL)) {
-                g_player.hp = g_player.max_hp;
-                g_player.sanity = g_player.max_sanity;
-                g_player.aether = g_player.max_aether;
-                g_player.shield = 0;
+                ResetPlayerRun();
                 InitGame(1);
                 AddLog("Embarking on a brand new descent into the Abyss.", COLOR_ACCENT_AMBER);
             } else {
@@ -3021,10 +3761,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
 
         case VK_F2:
-            g_player.hp = g_player.max_hp;
-            g_player.sanity = g_player.max_sanity;
-            g_player.aether = g_player.max_aether;
-            g_player.shield = 0;
+            ResetPlayerRun();
             InitGame(1);
             AddLog("Embarking on a brand new descent into the Abyss.", COLOR_ACCENT_AMBER);
             break;
@@ -3062,6 +3799,58 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             InvalidateRect(hwnd, NULL, FALSE);
             break;
         }
+
+        // Check Tab 0 (Delver Equipment) clicks to unequip
+        if (g_activeTab == 0 && mouseX >= sbX + 16 && mouseX <= sbX + 308 - 16) {
+            int gearY = sbY + 36 + 218;
+            if (mouseY >= gearY + 38 && mouseY <= gearY + 56) {
+                UnequipSlot(SLOT_WEAPON);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            } else if (mouseY > gearY + 56 && mouseY <= gearY + 74) {
+                UnequipSlot(SLOT_ARMOR);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            } else if (mouseY > gearY + 74 && mouseY <= gearY + 92) {
+                UnequipSlot(SLOT_RELIC);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            } else if (mouseY > gearY + 92 && mouseY <= gearY + 115) {
+                UnequipSlot(SLOT_AMULET);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+        }
+
+        // Check Tab 1 (Delver's Pack & Cauldron) clicks
+        if (g_activeTab == 1 && mouseX >= sbX + 14 && mouseX <= sbX + 308 - 14) {
+            int contentY = sbY + 36;
+            // Check Pack items (0..7)
+            int itemY = contentY + 25;
+            for (int i = 0; i < 8; i++) {
+                if (mouseY >= itemY && mouseY <= itemY + 20) {
+                    if (i < g_player.numPackItems) {
+                        UsePackItem(i);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        return 0;
+                    }
+                }
+                itemY += 21;
+            }
+
+            // Check Cauldron Recipes (0..5)
+            int caulY = contentY + 230 + 8;
+            int recY = caulY + 42;
+            for (int r = 0; r < NUM_RECIPES; r++) {
+                if (mouseY >= recY && mouseY <= recY + 34) {
+                    BrewRecipe(r);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                recY += 38;
+            }
+        }
+
 
         // Check Tab 2 (Runic Forge) clicks
         if (g_activeTab == 2 && mouseX >= sbX + 16 && mouseX <= sbX + 308 - 16) {
@@ -3104,10 +3893,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         if (mouseY >= 574 && mouseY <= 608 && mouseX >= vpX && mouseX <= vpX + VIEWPORT_W) {
             if (mouseX < vpX + 105) {
                 // New Descent
-                g_player.hp = g_player.max_hp;
-                g_player.sanity = g_player.max_sanity;
-                g_player.aether = g_player.max_aether;
-                g_player.shield = 0;
+                ResetPlayerRun();
                 InitGame(1);
             } else if (mouseX < vpX + 210) {
                 // Rest
