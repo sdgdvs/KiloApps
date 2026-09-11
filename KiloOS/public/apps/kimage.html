@@ -566,12 +566,12 @@
     
     <!-- Left Sidebar: Controls -->
     <div class="side-panel hidden" id="leftPanel">
-      <div class="panel-tabs">
-        <button class="tab-btn active" data-tab="tabAdjust"><span class="key-badge">1</span> Adjust</button>
-        <button class="tab-btn" data-tab="tabKernel"><span class="key-badge">2</span> Kernel FX</button>
-        <button class="tab-btn" data-tab="tabTransform"><span class="key-badge">3</span> Transform</button>
-        <button class="tab-btn" data-tab="tabResize"><span class="key-badge">4</span> Resize</button>
-        <button class="tab-btn" data-tab="tabDraw"><span class="key-badge">5</span> Draw</button>
+      <div class="panel-tabs" role="tablist" aria-label="Tool Panels">
+        <button class="tab-btn active" role="tab" aria-selected="true" data-tab="tabAdjust"><span class="key-badge">1</span> Adjust</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="tabKernel"><span class="key-badge">2</span> Kernel FX</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="tabTransform"><span class="key-badge">3</span> Transform</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="tabResize"><span class="key-badge">4</span> Resize</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="tabDraw"><span class="key-badge">5</span> Draw</button>
       </div>
 
       <div class="panel-content">
@@ -1109,7 +1109,10 @@
 
   // Setup Event Listeners
   ui.btnOpen.onclick = () => ui.fileInput.click();
-  ui.fileInput.onchange = (e) => loadFiles(e.target.files);
+  ui.fileInput.onchange = (e) => {
+    loadFiles(e.target.files);
+    ui.fileInput.value = '';
+  };
   if (ui.btnHelp) {
     ui.btnHelp.onclick = openHelpModal;
   }
@@ -1124,10 +1127,18 @@
   function switchTab(tabId) {
     const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
     if (!btn) return;
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-selected', 'false');
+    });
     document.querySelectorAll('.tab-page').forEach(p => p.classList.add('hidden'));
     btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
     document.getElementById(tabId)?.classList.remove('hidden');
+    if (tabId === 'tabResize' && ui.mainCanvas.width && ui.mainCanvas.height) {
+      document.getElementById('inputWidth').value = ui.mainCanvas.width;
+      document.getElementById('inputHeight').value = ui.mainCanvas.height;
+    }
   }
 
   // Keyboard Shortcuts
@@ -1153,18 +1164,22 @@
       return;
     }
 
-    if (ctrl && (e.key === 's' || e.key === 'S')) {
+    if (ctrl && !e.altKey && (e.key === 's' || e.key === 'S')) {
       e.preventDefault();
       switchTab('tabResize');
       showToast('Opened Export / Save tab', 'info');
       return;
     }
 
-    if (ctrl && (e.key === 'o' || e.key === 'O')) {
+    if (ctrl && !e.altKey && (e.key === 'o' || e.key === 'O')) {
       e.preventDefault();
       ui.fileInput.click();
       return;
     }
+
+    // Suppress background hotkeys if modal is active or modifier keys are pressed
+    if (helpModal && helpModal.classList.contains('active')) return;
+    if (ctrl || e.altKey) return;
 
     if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
       e.preventDefault();
@@ -1227,10 +1242,24 @@
   }, { passive: false });
 
   // Tab switching
-  document.querySelectorAll('.tab-btn').forEach(btn => {
+  const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
+  tabButtons.forEach((btn, idx) => {
     btn.onclick = () => {
       if (btn.dataset.tab) switchTab(btn.dataset.tab);
     };
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        const nextIdx = (idx + 1) % tabButtons.length;
+        tabButtons[nextIdx].focus();
+        tabButtons[nextIdx].click();
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prevIdx = (idx - 1 + tabButtons.length) % tabButtons.length;
+        tabButtons[prevIdx].focus();
+        tabButtons[prevIdx].click();
+      }
+    });
   });
 
   // Load Files into Playlist
@@ -1387,22 +1416,37 @@
       ctx.lineWidth = p.size;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-      p.points.forEach((pt, i) => {
-        if (i === 0) ctx.moveTo(pt.x, pt.y);
-        else ctx.lineTo(pt.x, pt.y);
-      });
-      ctx.stroke();
+      if (p.points.length === 1) {
+        ctx.arc(p.points[0].x, p.points[0].y, Math.max(1, p.size / 2), 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+      } else {
+        p.points.forEach((pt, i) => {
+          if (i === 0) ctx.moveTo(pt.x, pt.y);
+          else ctx.lineTo(pt.x, pt.y);
+        });
+        ctx.stroke();
+      }
     });
 
     // Update Zoom Transform CSS
     ui.canvasWrapper.style.transform = `scale(${state.zoom})`;
     ui.zoomLevel.textContent = `${Math.round(state.zoom * 100)}%`;
 
+    // Synchronize active canvas dimensions to Inspector and Resize fields
+    const metaDim = document.getElementById('metaDim');
+    if (metaDim) metaDim.textContent = `${targetW} × ${targetH} px`;
+    const metaAspect = document.getElementById('metaAspect');
+    if (metaAspect) metaAspect.textContent = getAspectRatio(targetW, targetH);
+    const metaMP = document.getElementById('metaMP');
+    if (metaMP) metaMP.textContent = `${((targetW * targetH) / 1000000).toFixed(2)} MP`;
+
     renderHistogram();
   }
 
   // Render RGB Color Histogram
   function renderHistogram() {
+    if (ui.rightPanel.classList.contains('hidden')) return;
     const w = ui.mainCanvas.width;
     const h = ui.mainCanvas.height;
     if (!w || !h) return;
@@ -1643,6 +1687,11 @@
   }
 
   document.getElementById('btnApplyKernel').onclick = applyConvolutionMatrix;
+  [...kernelInputs, document.getElementById('kernelDivisor'), document.getElementById('kernelBias')].forEach(el => {
+    el?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); applyConvolutionMatrix(); }
+    });
+  });
 
   document.getElementById('btnRevertOriginal').onclick = () => {
     const item = state.playlist[state.currentIndex];
@@ -1680,14 +1729,29 @@
   const cropControls = document.getElementById('cropControls');
   btnToggleCrop.onclick = () => {
     state.crop.active = !state.crop.active;
+    if (state.crop.active && state.draw.active) {
+      state.draw.active = false;
+      btnToggleDraw?.classList.remove('primary');
+      ui.mainCanvas.style.cursor = 'default';
+    }
     btnToggleCrop.classList.toggle('primary', state.crop.active);
     cropControls.classList.toggle('hidden', !state.crop.active);
     ui.cropOverlay.style.display = state.crop.active ? 'block' : 'none';
     if (state.crop.active) {
-      state.crop.x = ui.mainCanvas.width * 0.1;
-      state.crop.y = ui.mainCanvas.height * 0.1;
-      state.crop.w = ui.mainCanvas.width * 0.8;
-      state.crop.h = ui.mainCanvas.height * 0.8;
+      state.crop.x = Math.round(ui.mainCanvas.width * 0.1);
+      state.crop.y = Math.round(ui.mainCanvas.height * 0.1);
+      state.crop.w = Math.round(ui.mainCanvas.width * 0.8);
+      state.crop.h = Math.round(ui.mainCanvas.height * 0.8);
+      const aspectVal = document.getElementById('cropAspectSelect')?.value;
+      if (aspectVal && aspectVal !== 'free') {
+        const parts = aspectVal.split(':').map(Number);
+        const aspect = parts[0] / parts[1];
+        state.crop.h = Math.round(state.crop.w / aspect);
+        if (state.crop.y + state.crop.h > ui.mainCanvas.height) {
+          state.crop.h = ui.mainCanvas.height - state.crop.y;
+          state.crop.w = Math.round(state.crop.h * aspect);
+        }
+      }
       updateCropOverlayUI();
       showToast("Crop tool active: drag frame to position", "info");
     }
@@ -1837,13 +1901,29 @@
   document.getElementById('inputWidth').oninput = () => {
     if (document.getElementById('checkAspect').checked) syncAspectHeight();
   };
+  document.getElementById('inputHeight').oninput = () => {
+    if (document.getElementById('checkAspect').checked) syncAspectWidth();
+  };
   function syncAspectHeight() {
-    const item = state.playlist[state.currentIndex];
-    if (!item) return;
+    const curW = ui.mainCanvas.width || 1;
+    const curH = ui.mainCanvas.height || 1;
     const w = parseInt(document.getElementById('inputWidth').value) || 1;
-    const ratio = item.img.height / item.img.width;
+    const ratio = curH / curW;
     document.getElementById('inputHeight').value = Math.round(w * ratio);
   }
+  function syncAspectWidth() {
+    const curW = ui.mainCanvas.width || 1;
+    const curH = ui.mainCanvas.height || 1;
+    const h = parseInt(document.getElementById('inputHeight').value) || 1;
+    const ratio = curW / curH;
+    document.getElementById('inputWidth').value = Math.round(h * ratio);
+  }
+  document.getElementById('inputWidth').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btnApplyResize').click(); }
+  });
+  document.getElementById('inputHeight').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btnApplyResize').click(); }
+  });
   document.getElementById('btnApplyResize').onclick = () => {
     const w = parseInt(document.getElementById('inputWidth').value);
     const h = parseInt(document.getElementById('inputHeight').value);
@@ -1870,6 +1950,12 @@
   const btnToggleDraw = document.getElementById('btnToggleDraw');
   btnToggleDraw.onclick = () => {
     state.draw.active = !state.draw.active;
+    if (state.draw.active && state.crop.active) {
+      state.crop.active = false;
+      btnToggleCrop?.classList.remove('primary');
+      cropControls?.classList.add('hidden');
+      ui.cropOverlay.style.display = 'none';
+    }
     btnToggleDraw.classList.toggle('primary', state.draw.active);
     ui.mainCanvas.style.cursor = state.draw.active ? 'crosshair' : 'default';
     showToast(state.draw.active ? "Annotation brush enabled" : "Annotation brush disabled", "info");
@@ -1896,6 +1982,7 @@
     const x = (e.clientX - rect.left) * scaleX;
     const y = (e.clientY - rect.top) * scaleY;
     state.draw.paths.push({ color: state.draw.color, size: state.draw.size, points: [{ x, y }] });
+    renderCanvas();
   });
   ui.mainCanvas.addEventListener('pointermove', (e) => {
     if (!state.draw.isDrawing || !state.draw.active) return;
@@ -1953,11 +2040,15 @@
       const bmpBlob = canvasToBMP(ui.mainCanvas);
       const url = URL.createObjectURL(bmpBlob);
       link.href = url;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
       setTimeout(() => URL.revokeObjectURL(url), 2000);
     } else {
       link.href = ui.mainCanvas.toDataURL(fmt, quality);
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
     }
     showToast("Export download started", "success");
   };

@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KImage
+**Target App:** KJournal
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KImage
 - KJournal
 - KMail
 - KMandel
@@ -173,8 +172,20 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KHabit
 - KHangman
 - KHex
+- KImage
 
 ## Test Reports
+
+- **KImage**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
+  - ✅ Core functionality works (interactive image studio with slideshow playlist, GPU/Canvas adjustments Brightness/Contrast/Saturation/Blur, 8 cinematic filter presets, 3x3 Spatial Convolution matrix engine with 9 presets and custom weights/divisor/bias/channel targeting, 90° rotations and H/V flipping, aspect-constrained interactive crop tool, dimensions resize with aspect lock, freehand annotation brush with color picker and radius slider, sub-sampled multi-channel RGB histogram, EXIF camera metadata inspector, multi-format export PNG/JPEG/WEBP/BMP, and keyboard accelerators).
+  - 🔧 FIXED: Global keyboard listener checked bare `e.key` (`h`, `o`, `c`, `d`, `f`, `1`..`5`, `+`, `-`, `0`, `ArrowLeft`, `ArrowRight`, `Space`, `[`, `]`) without verifying `!ctrl && !e.altKey`, intercepting browser accelerators: `Ctrl+H` (history hijacked to open Help modal), `Ctrl+F` (find in page hijacked to toggle fullscreen), `Ctrl+C` (copy hijacked to enable crop), `Ctrl+D` (bookmark hijacked to enable brush), `Ctrl+1` through `Ctrl+5` (browser tab switching hijacked to switch KImage tabs), `Ctrl+0` (browser zoom reset), and `Alt+Left`/`Alt+Right` (browser back/forward navigation). Added proper modifier guards.
+  - 🔧 FIXED: Keyboard shortcuts continued to fire in the background underneath an active Help modal (`#helpModal`), toggling slideshows, rotating images, activating crop/draw, and changing zoom while reading documentation. Suppressed background hotkeys while `#helpModal` is displayed.
+  - 🔧 FIXED: In `ui.fileInput.onchange`, `ui.fileInput.value = ''` was never reset after loading images, causing subsequent attempts to reload the same image file to fail silently because the `change` event would not fire. Added `ui.fileInput.value = ''` reset.
+  - 🔧 FIXED: In `btnExportDownload`, the created download anchor element was clicked directly without being attached to `document.body` (`link.click()`), causing image downloads to fail silently in Firefox and sandboxed iframe environments. Attached anchor to DOM before clicking and cleanly removed it afterwards.
+  - 🔧 FIXED: In the Resize tab, `#inputHeight` lacked an `oninput` handler, preventing bidirectional aspect-ratio synchronization when typing a new height. Furthermore, `syncAspectHeight()` calculated aspect ratios using unrotated image dimensions (`item.img.height / item.img.width`) rather than active canvas dimensions (`ui.mainCanvas.height / ui.mainCanvas.width`), desynchronizing calculations after 90° or 270° rotations. Added bidirectional aspect ratio calculation based on active canvas dimensions.
+  - 🔧 FIXED: Numeric inputs (`#inputWidth`, `#inputHeight`, `#kernelDivisor`, `#kernelBias`, matrix weights `#k00`..`#k22`) lacked `Enter` key listeners, forcing users to click action buttons with the mouse. Wired `Enter` key handlers to trigger resize and convolution matrix application respectively.
+  - 🔧 FIXED: In the Annotation Brush tool, single mouse/pointer clicks without drag movements produced no visible markings because `pointerdown` did not call `renderCanvas()` and single-point Canvas2D paths render nothing with `stroke()`. Added single-point arc/circle rendering, called `renderCanvas()` on `pointerdown`, and added an early return to `renderHistogram()` when the right Inspector panel is hidden to eliminate CPU lag during drawing and slider adjustments.
+  - 🔧 FIXED: Activating Crop and Draw simultaneously caused UI conflict where crop overlay pointer capture obstructed drawing. Added mutual exclusion so enabling one tool deactivates the other, added WAI-ARIA `role="tablist"`/`role="tab"` with `ArrowLeft`/`ArrowRight` navigation across tool tabs, and synchronized live canvas dimensions to the EXIF & Property Inspector and Resize inputs upon rotation, cropping, and resizing.
 
 - **KHex**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
   - ✅ Core functionality works (7-tab hex & binary data suite: Base Converter & 32-bit Bitfield Manipulator, 16-byte/row interactive Hex Viewer & Buffer with ASCII column and offset inspector, Shannon Entropy randomness meter & File Magic Header Signature Dissector across 21 formats, Pattern Search & Replace with ASCII and hex modes, Checksum & Hash suite with 8/16/32-bit sums, XOR8, CRC32, MD5, and SHA-256, Byte Operations with Invert/XOR/Fill/16-bit & 32-bit word swap/Reverse, Formatted HexDump/C Array/Python bytes/Base64/RAW binary export, Web Audio & kinematic 4-layer particle engine).
