@@ -3781,17 +3781,45 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         
         int isTarget = (g_state.selectedAstIndex == i);
         HPEN hPenAst = CreatePen(PS_SOLID, isTarget ? 2 : 1, isTarget ? pal->vector : pal->vectorDim);
-        HBRUSH hBrAst = CreateSolidBrush(pal->bgPanel);
+        HBRUSH hBrAst = CreateSolidBrush(RGB(15, 23, 42));
         HGDIOBJ oldAstPen = SelectObject(hdc, hPenAst);
         HGDIOBJ oldAstBr = SelectObject(hdc, hBrAst);
         
         Polygon(hdc, pts, ast->numVerts);
         
-        // Ore node center
+        // Crater pits on asteroid surface
+        HBRUSH hBrCrater = CreateSolidBrush(RGB(7, 12, 22));
+        HPEN hPenCrRim = CreatePen(PS_SOLID, 1, RGB(30, 58, 138));
+        HGDIOBJ oldCrP = SelectObject(hdc, hPenCrRim);
+        HGDIOBJ oldCrB = SelectObject(hdc, hBrCrater);
+        int crR = (int)(ast->radius * 0.22f);
+        if (crR > 2) {
+            Ellipse(hdc, ax - crR * 2, ay - crR, ax, ay + crR);
+            Ellipse(hdc, ax + (int)(crR * 0.5f), ay + (int)(crR * 0.5f), ax + crR * 2, ay + crR * 2);
+        }
+        SelectObject(hdc, oldCrP);
+        SelectObject(hdc, oldCrB);
+        DeleteObject(hPenCrRim);
+        DeleteObject(hBrCrater);
+
+        // Branching ore veins radiating to vertices
+        HPEN hPenVein = CreatePen(PS_SOLID, 1, ORE_DEFS[ast->oreType].color);
+        HGDIOBJ oldVnP = SelectObject(hdc, hPenVein);
+        for (int v = 0; v < ast->numVerts; v += 2) {
+            MoveToEx(hdc, ax, ay, NULL);
+            LineTo(hdc, (ax + pts[v].x) / 2, (ay + pts[v].y) / 2);
+            LineTo(hdc, pts[v].x - (int)((pts[v].x - ax) * 0.2f), pts[v].y - (int)((pts[v].y - ay) * 0.2f));
+        }
+        SelectObject(hdc, oldVnP);
+        DeleteObject(hPenVein);
+        
+        // Ore node center (crystalline mineral cluster)
         HBRUSH hBrOreNode = CreateSolidBrush(ORE_DEFS[ast->oreType].color);
-        RECT rcNode = { ax - 3, ay - 3, ax + 4, ay + 4 };
+        RECT rcNode = { ax - 4, ay - 4, ax + 5, ay + 5 };
         FillRect(hdc, &rcNode, hBrOreNode);
         DeleteObject(hBrOreNode);
+        SetPixel(hdc, ax - 1, ay - 1, RGB(255, 255, 255));
+        SetPixel(hdc, ax, ay - 1, RGB(255, 255, 255));
         
         SelectObject(hdc, oldAstPen);
         SelectObject(hdc, oldAstBr);
@@ -3942,17 +3970,22 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         if (ox < viewportX || ox > viewportX + viewportW || oy < viewportY || oy > viewportY + viewportH) continue;
         
         POINT ptsChunk[4] = {
-            { ox, oy - 4 },
-            { ox + 4, oy },
-            { ox, oy + 4 },
-            { ox - 4, oy }
+            { ox, oy - 5 },
+            { ox + 5, oy },
+            { ox, oy + 5 },
+            { ox - 5, oy }
         };
         HBRUSH hBrChunk = CreateSolidBrush(ORE_DEFS[chunk->oreType].color);
-        HPEN hPenChunk = CreatePen(PS_SOLID, 1, pal->laserCore);
+        HPEN hPenChunk = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
         HGDIOBJ oldChPen = SelectObject(hdc, hPenChunk);
         HGDIOBJ oldChBr = SelectObject(hdc, hBrChunk);
         
         Polygon(hdc, ptsChunk, 4);
+        
+        // Inner facet ridge
+        MoveToEx(hdc, ox - 5, oy, NULL); LineTo(hdc, ox + 5, oy);
+        MoveToEx(hdc, ox, oy - 5, NULL); LineTo(hdc, ox, oy + 5);
+        SetPixel(hdc, ox - 1, oy - 2, RGB(255, 255, 255));
         
         SelectObject(hdc, oldChPen);
         SelectObject(hdc, oldChBr);
@@ -3985,16 +4018,28 @@ void RenderGame(HDC hdc, RECT* clientRect) {
             DeleteObject(hPenRSh);
         }
 
-        // Raider Hull Geometry
-        POINT ptsRLocal[5] = {
-            { (int)(r->radius), 0 },
-            { (int)(-r->radius * 0.8f), (int)(r->radius * 0.7f) },
-            { (int)(-r->radius * 0.4f), 0 },
-            { (int)(-r->radius * 0.8f), (int)(-r->radius * 0.7f) },
-            { (int)(r->radius), 0 }
+        // Raider Engine Flame
+        int exLen = 6 + (int)(sin(GetTickCount() * 0.03f + rx) * 3);
+        int exX = rx - (int)((r->radius * 0.7f + exLen) * cosR);
+        int exY = ry - (int)((r->radius * 0.7f + exLen) * sinR);
+        HPEN hPenEx = CreatePen(PS_SOLID, 2, RGB(239, 68, 68));
+        HGDIOBJ oldExP = SelectObject(hdc, hPenEx);
+        MoveToEx(hdc, rx - (int)(r->radius * 0.7f * cosR), ry - (int)(r->radius * 0.7f * sinR), NULL);
+        LineTo(hdc, exX, exY);
+        SelectObject(hdc, oldExP);
+        DeleteObject(hPenEx);
+
+        // Raider Hull Geometry (Distinct jagged marauder silhouette)
+        POINT ptsRLocal[6] = {
+            { (int)(r->radius + 4), 0 },
+            { (int)(-r->radius * 0.3f), (int)(r->radius * 0.85f) },
+            { (int)(-r->radius), (int)(r->radius * 0.5f) },
+            { (int)(-r->radius * 0.5f), 0 },
+            { (int)(-r->radius), (int)(-r->radius * 0.5f) },
+            { (int)(-r->radius * 0.3f), (int)(-r->radius * 0.85f) }
         };
-        POINT ptsRWorld[5];
-        for (int v = 0; v < 5; v++) {
+        POINT ptsRWorld[6];
+        for (int v = 0; v < 6; v++) {
             ptsRWorld[v].x = rx + (int)(ptsRLocal[v].x * cosR - ptsRLocal[v].y * sinR);
             ptsRWorld[v].y = ry + (int)(ptsRLocal[v].x * sinR + ptsRLocal[v].y * cosR);
         }
@@ -4003,7 +4048,16 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         HBRUSH hBrRHull = CreateSolidBrush(RGB(20, 5, 10));
         HGDIOBJ oldRP = SelectObject(hdc, hPenRHull);
         HGDIOBJ oldRB = SelectObject(hdc, hBrRHull);
-        Polygon(hdc, ptsRWorld, 5);
+        Polygon(hdc, ptsRWorld, 6);
+        
+        // Sensor Slit
+        int sx = rx + (int)(r->radius * 0.3f * cosR);
+        int sy = ry + (int)(r->radius * 0.3f * sinR);
+        HBRUSH hBrSlit = CreateSolidBrush(RGB(244, 63, 94));
+        RECT rcSlit = { sx - 2, sy - 2, sx + 3, sy + 3 };
+        FillRect(hdc, &rcSlit, hBrSlit);
+        DeleteObject(hBrSlit);
+
         SelectObject(hdc, oldRP);
         SelectObject(hdc, oldRB);
         DeleteObject(hPenRHull);
@@ -4146,51 +4200,144 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         }
     }
     
-    // Draw Dredge Ship (Cockpit Center)
+    // Draw Dredge Ship (The Iron Dredge - Industrial Heavy Salvage Barge)
+    float cosA = (float)cos(g_state.shipAngle);
+    float sinA = (float)sin(g_state.shipAngle);
+
+    // 1. Dynamic Animated Thruster Plumes
+    int isThrusting = g_state.thrusting || (g_state.shipVx * g_state.shipVx + g_state.shipVy * g_state.shipVy > 0.3f);
+    if (isThrusting) {
+        int flk = (int)(sin(GetTickCount() * 0.05f) * 4) + (rand() % 4);
+        int pLen = (g_state.thrusting ? 20 : 10) + flk;
+        
+        HPEN hPenFlm = CreatePen(PS_SOLID, 1, RGB(239, 68, 68));
+        HBRUSH hBrFlm = CreateSolidBrush(RGB(245, 158, 11));
+        HGDIOBJ oldFlmP = SelectObject(hdc, hPenFlm);
+        HGDIOBJ oldFlmB = SelectObject(hdc, hBrFlm);
+        
+        int tyOffsets[2] = { -12, 12 };
+        for (int t = 0; t < 2; t++) {
+            POINT flmLocal[3] = {
+                { -20, tyOffsets[t] - 4 },
+                { -20 - pLen, tyOffsets[t] },
+                { -20, tyOffsets[t] + 4 }
+            };
+            POINT flmWorld[3];
+            for (int k = 0; k < 3; k++) {
+                flmWorld[k].x = cx + (int)(flmLocal[k].x * cosA - flmLocal[k].y * sinA);
+                flmWorld[k].y = cyCenter + (int)(flmLocal[k].x * sinA + flmLocal[k].y * cosA);
+            }
+            Polygon(hdc, flmWorld, 3);
+        }
+        SelectObject(hdc, oldFlmP);
+        SelectObject(hdc, oldFlmB);
+        DeleteObject(hPenFlm);
+        DeleteObject(hBrFlm);
+    } else {
+        int tyOffsets[2] = { -12, 12 };
+        for (int t = 0; t < 2; t++) {
+            int nx = cx + (int)(-21.0f * cosA - (float)tyOffsets[t] * sinA);
+            int ny = cyCenter + (int)(-21.0f * sinA + (float)tyOffsets[t] * cosA);
+            SetPixel(hdc, nx, ny, RGB(56, 189, 248));
+        }
+    }
+
+    // 2. Shield Bubble
     if (g_state.shield > 0.0f) {
         HPEN hPenShield = CreatePen(PS_SOLID, 1, pal->vectorDim);
         HGDIOBJ oldShPen = SelectObject(hdc, hPenShield);
         HGDIOBJ oldShBr = SelectObject(hdc, GetStockObject(NULL_BRUSH));
-        Ellipse(hdc, cx - 28, cyCenter - 28, cx + 28, cyCenter + 28);
+        Ellipse(hdc, cx - 29, cyCenter - 29, cx + 29, cyCenter + 29);
         SelectObject(hdc, oldShPen);
         SelectObject(hdc, oldShBr);
         DeleteObject(hPenShield);
     }
     
-    // Rotate Ship Vertices
-    POINT shipLocal[6] = {
-        { 22, 0 },
-        { -8, -16 },
-        { -20, -12 },
-        { -16, 0 },
-        { -20, 12 },
-        { -8, 16 }
+    // 3. Main Industrial Barge Hull Geometry (Reinforced 8-point heavy hull)
+    POINT shipLocal[8] = {
+        { 20, 0 },
+        { 10, -12 },
+        { -6, -18 },
+        { -22, -14 },
+        { -18, 0 },
+        { -22, 14 },
+        { -6, 18 },
+        { 10, 12 }
     };
-    POINT shipWorld[6];
-    float cosA = (float)cos(g_state.shipAngle);
-    float sinA = (float)sin(g_state.shipAngle);
-    for (int i = 0; i < 6; i++) {
+    POINT shipWorld[8];
+    for (int i = 0; i < 8; i++) {
         shipWorld[i].x = cx + (int)(shipLocal[i].x * cosA - shipLocal[i].y * sinA);
         shipWorld[i].y = cyCenter + (int)(shipLocal[i].x * sinA + shipLocal[i].y * cosA);
     }
     
     HPEN hPenShip = CreatePen(PS_SOLID, 2, pal->vector);
-    HBRUSH hBrShip = CreateSolidBrush(pal->bgPanel);
+    HBRUSH hBrShip = CreateSolidBrush(RGB(15, 23, 42));
     HGDIOBJ oldSpPen = SelectObject(hdc, hPenShip);
     HGDIOBJ oldSpBr = SelectObject(hdc, hBrShip);
-    Polygon(hdc, shipWorld, 6);
+    Polygon(hdc, shipWorld, 8);
     SelectObject(hdc, oldSpPen);
     SelectObject(hdc, oldSpBr);
     DeleteObject(hPenShip);
     DeleteObject(hBrShip);
     
-    // Center Cockpit Glass
-    HBRUSH hBrGlass = CreateSolidBrush(pal->vectorDim);
-    int gx = cx + (int)(4.0f * cosA);
-    int gy = cyCenter + (int)(4.0f * sinA);
+    // 4. Forward Hydraulic Dredge Pincers (Dual Claws with Caution Stripes)
+    POINT clawL_Local[4] = { { 8, -8 }, { 26, -11 }, { 28, -6 }, { 14, -4 } };
+    POINT clawR_Local[4] = { { 8, 8 }, { 26, 11 }, { 28, 6 }, { 14, 4 } };
+    POINT clawL_World[4], clawR_World[4];
+    for (int i = 0; i < 4; i++) {
+        clawL_World[i].x = cx + (int)(clawL_Local[i].x * cosA - clawL_Local[i].y * sinA);
+        clawL_World[i].y = cyCenter + (int)(clawL_Local[i].x * sinA + clawL_Local[i].y * cosA);
+        clawR_World[i].x = cx + (int)(clawR_Local[i].x * cosA - clawR_Local[i].y * sinA);
+        clawR_World[i].y = cyCenter + (int)(clawR_Local[i].x * sinA + clawR_Local[i].y * cosA);
+    }
+    HPEN hPenClaw = CreatePen(PS_SOLID, 1, RGB(245, 158, 11));
+    HBRUSH hBrClaw = CreateSolidBrush(RGB(51, 65, 85));
+    HGDIOBJ oldClwP = SelectObject(hdc, hPenClaw);
+    HGDIOBJ oldClwB = SelectObject(hdc, hBrClaw);
+    Polygon(hdc, clawL_World, 4);
+    Polygon(hdc, clawR_World, 4);
+    SelectObject(hdc, oldClwP);
+    SelectObject(hdc, oldClwB);
+    DeleteObject(hPenClaw);
+    DeleteObject(hBrClaw);
+
+    // Hazard warning stripe hash line on claws
+    HPEN hPenHz = CreatePen(PS_SOLID, 2, RGB(245, 158, 11));
+    HGDIOBJ oldHzP = SelectObject(hdc, hPenHz);
+    int h1x = cx + (int)(16.0f * cosA - (-8.0f) * sinA);
+    int h1y = cyCenter + (int)(16.0f * sinA + (-8.0f) * cosA);
+    int h2x = cx + (int)(22.0f * cosA - (-8.0f) * sinA);
+    int h2y = cyCenter + (int)(22.0f * sinA + (-8.0f) * cosA);
+    MoveToEx(hdc, h1x, h1y, NULL); LineTo(hdc, h2x, h2y);
+    int h3x = cx + (int)(16.0f * cosA - (8.0f) * sinA);
+    int h3y = cyCenter + (int)(16.0f * sinA + (8.0f) * cosA);
+    int h4x = cx + (int)(22.0f * cosA - (8.0f) * sinA);
+    int h4y = cyCenter + (int)(22.0f * sinA + (8.0f) * cosA);
+    MoveToEx(hdc, h3x, h3y, NULL); LineTo(hdc, h4x, h4y);
+    SelectObject(hdc, oldHzP);
+    DeleteObject(hPenHz);
+
+    // 5. Magnetic Ore Intake Funnel
+    HBRUSH hBrFunnel = CreateSolidBrush(g_state.tractorActive ? RGB(0, 240, 255) : RGB(245, 158, 11));
+    int fnX = cx + (int)(16.0f * cosA);
+    int fnY = cyCenter + (int)(16.0f * sinA);
+    RECT rcFn = { fnX - 2, fnY - 2, fnX + 3, fnY + 3 };
+    FillRect(hdc, &rcFn, hBrFunnel);
+    DeleteObject(hBrFunnel);
+
+    // 6. Armored Cockpit Bridge Glass & Specular Glint
+    HBRUSH hBrGlass = CreateSolidBrush(RGB(56, 189, 248));
+    int gx = cx + (int)(5.0f * cosA);
+    int gy = cyCenter + (int)(5.0f * sinA);
     RECT rcGlass = { gx - 3, gy - 3, gx + 4, gy + 4 };
     FillRect(hdc, &rcGlass, hBrGlass);
     DeleteObject(hBrGlass);
+    SetPixel(hdc, gx, gy - 1, RGB(255, 255, 255));
+    
+    // 7. Transponder Beacon (Flashing Green)
+    int bx = cx + (int)(2.0f * cosA - (-6.0f) * sinA);
+    int by = cyCenter + (int)(2.0f * sinA + (-6.0f) * cosA);
+    SetPixel(hdc, bx, by, ((GetTickCount() / 400) % 2 == 0) ? RGB(34, 197, 94) : RGB(6, 95, 70));
     
     // HUD Telemetry Overlays
     SelectObject(hdc, g_fontSmall);

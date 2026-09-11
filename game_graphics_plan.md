@@ -136,7 +136,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KStarship
 - KConnect4
 - KHangman
-- KStarDredge
 - KMech
 - KMatch3
 - KFreecell
@@ -153,9 +152,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSanctuary
 - KAbyss
 - KSubmarine
+- KStarDredge
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
 
+- KStarDredge (Loop 1): The Iron Dredge industrial salvage barge with animated plasma thrusters, hazard-striped hydraulic claws, craggy volumetric asteroids with glowing mineral veins, and raider warships.
 - KSubmarine (Loop 1): Submersible bathyscaphe sprite with spinning propeller & cavitation bubbles, animated abyssal Leviathan, Architeuthis squid, siphonophore, and anglerfish sprites.
 - KSanctuary (Loop 1): Sub-mountain cross-section cutaway canvas with animated dwellers and reactor telemetry, pixel-art facility icons, dweller portraits, and wasteland landmark sprites.
 - Icon Audit Pass: Created distinctive procedural ICO and vector SVG icons for all 10 missing web apps (KColony, KFarm, KWizard, KVoid, KDragon, KMech, KCyber, KTrader, KMystery, KStellar).
@@ -201,5 +202,4 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KCyber (Loop 2): Cyberdeck sprites, ICE Daemon enemy, holographic data payload, and hack-themed particle effects.
 - KTetris (Loop 8): Screen-shake, multi-layer particles, dual shockwaves, HUD reticles, and tetromino specular sheen.
 - KSnake (Loop 8): Screen-shake, multi-layer particles, dual shockwaves, HUD reticles, and viper body specular sheen.
-- KStarDredge (Loop 0): Not yet processed.
 - KAbyss (Loop 0): In queue.

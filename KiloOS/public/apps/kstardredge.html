@@ -8028,16 +8028,16 @@
                 ctx.restore();
             }
 
-            // Render Asteroids
+            // Render Asteroids (Enhanced craggy celestial bodies with glowing ore veins & craters)
             for (const ast of state.asteroids) {
                 ctx.save();
                 ctx.translate(ast.x, ast.y);
                 ctx.rotate(ast.rot);
 
-                // Asteroid Body
-                ctx.strokeStyle = (ast === state.selectedTarget) ? pal.vector : (ast.scanned ? '#38bdf8' : pal.vectorDim);
-                ctx.fillStyle = pal.shipFill;
-                ctx.lineWidth = (ast === state.selectedTarget) ? 2 : 1.2;
+                const oreInfo = ORE_TYPES[ast.oreType] || { color: '#38bdf8', name: 'Ore' };
+                const isSelected = (ast === state.selectedTarget);
+
+                // Volumetric Asteroid Body
                 ctx.beginPath();
                 for (let i = 0; i < ast.verts.length; i++) {
                     const v = ast.verts[i];
@@ -8047,25 +8047,84 @@
                     else ctx.lineTo(px, py);
                 }
                 ctx.closePath();
+
+                // 3D Spherical Lighting Gradient
+                const rockGrad = ctx.createRadialGradient(-ast.radius * 0.35, -ast.radius * 0.35, ast.radius * 0.1, 0, 0, ast.radius * 1.1);
+                rockGrad.addColorStop(0, isSelected ? '#1e293b' : '#172033');
+                rockGrad.addColorStop(0.65, '#0b1329');
+                rockGrad.addColorStop(1, '#020617');
+                ctx.fillStyle = rockGrad;
                 ctx.fill();
+
+                ctx.strokeStyle = isSelected ? pal.vector : (ast.scanned ? '#38bdf8' : pal.vectorDim);
+                ctx.lineWidth = isSelected ? 2 : 1.2;
                 ctx.stroke();
 
-                // Ore Mineral Glow Node
-                const oreInfo = ORE_TYPES[ast.oreType];
-                ctx.fillStyle = oreInfo ? oreInfo.color : pal.vectorDim;
+                // Surface Craters (3 craggy depression pits)
+                const cOffsets = [
+                    { x: -ast.radius * 0.32, y: -ast.radius * 0.22, r: ast.radius * 0.22 },
+                    { x: ast.radius * 0.28, y: ast.radius * 0.18, r: ast.radius * 0.18 },
+                    { x: ast.radius * 0.1, y: -ast.radius * 0.4, r: ast.radius * 0.14 }
+                ];
+                for (const cr of cOffsets) {
+                    ctx.fillStyle = 'rgba(2, 6, 23, 0.75)';
+                    ctx.beginPath();
+                    ctx.arc(cr.x, cr.y, cr.r, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(cr.x, cr.y, cr.r, Math.PI * 0.8, Math.PI * 1.8);
+                    ctx.stroke();
+                }
+
+                // Branching Radiant Ore Veins
+                ctx.strokeStyle = oreInfo.color;
+                ctx.lineWidth = isSelected ? 1.8 : 1.2;
+                ctx.globalAlpha = ast.scanned ? 0.9 : 0.65;
+                for (let i = 0; i < Math.min(6, ast.verts.length); i += 2) {
+                    const v = ast.verts[i];
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    const midR = v.r * 0.5;
+                    const midA = v.a + 0.15;
+                    ctx.lineTo(Math.cos(midA) * midR, Math.sin(midA) * midR);
+                    ctx.lineTo(Math.cos(v.a) * (v.r * 0.85), Math.sin(v.a) * (v.r * 0.85));
+                    ctx.stroke();
+                }
+                ctx.globalAlpha = 1.0;
+
+                // Central Ore Mineral Crystal Node
+                ctx.fillStyle = oreInfo.color;
+                ctx.shadowColor = oreInfo.color;
+                ctx.shadowBlur = isSelected ? 10 : 4;
                 ctx.beginPath();
-                ctx.arc(0, 0, 4, 0, Math.PI * 2);
+                ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // Mineral Core Specular Glint
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(-1, -1, 1.5, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Geode Anomaly Halo for prospected asteroids
+                // Geode Anomaly Halo & Internal Resonator
                 if (ast.scanned && ast.geodeType !== 'None') {
-                    ctx.strokeStyle = ast.geodeType.includes('Dark') ? '#f43f5e' : '#c084fc';
+                    const isDark = ast.geodeType.includes('Dark');
+                    ctx.strokeStyle = isDark ? '#f43f5e' : '#c084fc';
                     ctx.lineWidth = 1.5;
                     ctx.setLineDash([4, 4]);
                     ctx.beginPath();
                     ctx.arc(0, 0, ast.radius + 6, 0, Math.PI * 2);
                     ctx.stroke();
                     ctx.setLineDash([]);
+
+                    const pulse = Math.sin(Date.now() * 0.005) * 0.5 + 0.5;
+                    ctx.fillStyle = isDark ? `rgba(244, 63, 94, ${0.4 + pulse * 0.4})` : `rgba(192, 132, 252, ${0.4 + pulse * 0.4})`;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 7, 0, Math.PI * 2);
+                    ctx.fill();
                 }
 
                 ctx.restore();
@@ -8086,54 +8145,95 @@
                 }
             }
 
-            // Phase 8: Render Derelict Spaceships
+            // Phase 8: Render Derelict Spaceships (Evocative ruined star-hulks)
             for (const der of state.derelicts) {
                 ctx.save();
                 ctx.translate(der.x, der.y);
                 ctx.rotate(der.rot);
 
-                // Derelict Hull Geometry
+                const isSelectedDer = (der === state.selectedDerelict);
+
+                // Hull Geometry Base
+                ctx.fillStyle = '#0a101f';
                 ctx.strokeStyle = der.airlockBreached ? '#10b981' : '#f43f5e';
-                ctx.fillStyle = '#0f172a';
-                ctx.lineWidth = (der === state.selectedDerelict) ? 2.5 : 1.5;
+                ctx.lineWidth = isSelectedDer ? 2.5 : 1.6;
 
                 ctx.beginPath();
-                ctx.moveTo(35, 0);
-                ctx.lineTo(15, -18);
-                ctx.lineTo(-15, -24);
-                ctx.lineTo(-35, -12);
+                ctx.moveTo(36, 0);
+                ctx.lineTo(16, -18);
+                ctx.lineTo(-16, -24);
+                ctx.lineTo(-36, -13);
                 ctx.lineTo(-28, 0);
-                ctx.lineTo(-35, 12);
-                ctx.lineTo(-15, 24);
-                ctx.lineTo(15, 18);
+                ctx.lineTo(-36, 13);
+                ctx.lineTo(-16, 24);
+                ctx.lineTo(16, 18);
                 ctx.closePath();
                 ctx.fill();
                 ctx.stroke();
 
-                // Fracture cracks
-                ctx.strokeStyle = '#ef4444';
+                // Exposed Titanium Internal Bulkhead Ribs
+                ctx.strokeStyle = 'rgba(100, 116, 139, 0.7)';
                 ctx.lineWidth = 1.2;
                 ctx.beginPath();
-                ctx.moveTo(-5, -15); ctx.lineTo(8, 2); ctx.lineTo(-2, 16);
+                ctx.moveTo(16, -18); ctx.lineTo(16, 18);
+                ctx.moveTo(0, -21); ctx.lineTo(0, 21);
+                ctx.moveTo(-16, -24); ctx.lineTo(-16, 24);
                 ctx.stroke();
 
-                // Flashing Emergency Beacon
-                const flash = Math.sin(Date.now() * 0.008) > 0;
-                if (flash) {
+                // Spinal Keel Conduit
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+                ctx.beginPath();
+                ctx.moveTo(-28, 0); ctx.lineTo(34, 0);
+                ctx.stroke();
+
+                // Jagged Hull Breach & Plasma Scorch Marks
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(-8, -16); ctx.lineTo(6, 2); ctx.lineTo(-4, 18);
+                ctx.stroke();
+
+                // Airlock Hatch Indicator
+                ctx.fillStyle = der.airlockBreached ? '#10b981' : '#ef4444';
+                ctx.fillRect(8, -4, 6, 8);
+                ctx.strokeStyle = '#f8fafc';
+                ctx.lineWidth = 0.8;
+                ctx.strokeRect(8, -4, 6, 8);
+
+                // Flashing Emergency Transponder Beacon
+                const flashTime = (Date.now() * 0.007) % (Math.PI * 2);
+                const beaconPulse = Math.sin(flashTime) > 0.3;
+                if (beaconPulse) {
                     ctx.fillStyle = '#f43f5e';
                     ctx.shadowColor = '#f43f5e';
-                    ctx.shadowBlur = 10;
+                    ctx.shadowBlur = 12;
                     ctx.beginPath();
-                    ctx.arc(0, 0, 4, 0, Math.PI * 2);
+                    ctx.arc(-26, 0, 3.5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Expanding rescue pulse ripple
+                    ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(-26, 0, 12, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+                } else {
+                    ctx.fillStyle = '#881337';
+                    ctx.beginPath();
+                    ctx.arc(-26, 0, 2.5, 0, Math.PI * 2);
                     ctx.fill();
                 }
 
-                // Internal Reactor Glow
+                // Internal Reactor Core
                 if (!der.reactorHarvested) {
                     ctx.fillStyle = '#f59e0b';
+                    ctx.shadowColor = '#f59e0b';
+                    ctx.shadowBlur = 8;
                     ctx.beginPath();
-                    ctx.arc(-18, 0, 3, 0, Math.PI * 2);
+                    ctx.arc(-12, 0, 3.5, 0, Math.PI * 2);
                     ctx.fill();
+                    ctx.shadowBlur = 0;
                 }
 
                 ctx.restore();
@@ -8269,28 +8369,53 @@
                     ctx.globalAlpha = 1.0;
                 }
 
-                // Raider Hull Geometry
+                // Raider Hull Geometry (Enhanced distinct faction silhouettes & engine torches)
+                const isCorsair = (r.type === 'corsair');
+                const isGunship = (r.type === 'gunship');
+
+                // Raider Engine Thruster Plumes
+                const rExhaustLen = 8 + Math.sin(Date.now() * 0.04 + r.x) * 4;
+                ctx.fillStyle = '#ef4444';
+                ctx.shadowColor = '#ef4444';
+                ctx.shadowBlur = 8;
+                if (isCorsair) {
+                    ctx.beginPath();
+                    ctx.moveTo(-r.radius * 0.7, -3); ctx.lineTo(-r.radius * 0.7 - rExhaustLen, 0); ctx.lineTo(-r.radius * 0.7, 3);
+                    ctx.fill();
+                } else {
+                    ctx.beginPath();
+                    ctx.moveTo(-r.radius, -r.radius * 0.4); ctx.lineTo(-r.radius - rExhaustLen, -r.radius * 0.4); ctx.lineTo(-r.radius, -r.radius * 0.2);
+                    ctx.moveTo(-r.radius, r.radius * 0.2); ctx.lineTo(-r.radius - rExhaustLen, r.radius * 0.4); ctx.lineTo(-r.radius, r.radius * 0.4);
+                    ctx.fill();
+                }
+                ctx.shadowBlur = 0;
+
+                // Main Warship Chassis
                 ctx.fillStyle = '#1e1b4b';
                 ctx.strokeStyle = r.color;
                 ctx.lineWidth = 2;
                 ctx.beginPath();
-                if (r.type === 'corsair') {
-                    // Fast triangular dagger
-                    ctx.moveTo(r.radius + 6, 0);
-                    ctx.lineTo(-r.radius, -r.radius * 0.8);
-                    ctx.lineTo(-r.radius * 0.4, 0);
-                    ctx.lineTo(-r.radius, r.radius * 0.8);
-                } else if (r.type === 'gunship') {
-                    // Heavy twin-nacelle marauder
+                if (isCorsair) {
+                    // Fast Razor Dagger with forward swept winglets
                     ctx.moveTo(r.radius + 8, 0);
-                    ctx.lineTo(r.radius * 0.2, -r.radius * 0.6);
-                    ctx.lineTo(-r.radius, -r.radius);
+                    ctx.lineTo(-r.radius * 0.3, -r.radius * 0.9);
+                    ctx.lineTo(-r.radius, -r.radius * 0.5);
                     ctx.lineTo(-r.radius * 0.5, 0);
-                    ctx.lineTo(-r.radius, r.radius);
-                    ctx.lineTo(r.radius * 0.2, r.radius * 0.6);
+                    ctx.lineTo(-r.radius, r.radius * 0.5);
+                    ctx.lineTo(-r.radius * 0.3, r.radius * 0.9);
+                } else if (isGunship) {
+                    // Heavy twin-nacelle marauder with forward cannon barrels
+                    ctx.moveTo(r.radius + 10, 0);
+                    ctx.lineTo(r.radius * 0.4, -r.radius * 0.5);
+                    ctx.lineTo(r.radius * 0.8, -r.radius * 0.7);
+                    ctx.lineTo(-r.radius, -r.radius * 0.9);
+                    ctx.lineTo(-r.radius * 0.5, 0);
+                    ctx.lineTo(-r.radius, r.radius * 0.9);
+                    ctx.lineTo(r.radius * 0.8, r.radius * 0.7);
+                    ctx.lineTo(r.radius * 0.4, r.radius * 0.5);
                 } else {
                     // Massive spiked dreadnought
-                    ctx.moveTo(r.radius + 12, 0);
+                    ctx.moveTo(r.radius + 14, 0);
                     ctx.lineTo(r.radius * 0.4, -r.radius * 0.8);
                     ctx.lineTo(-r.radius * 0.2, -r.radius * 1.1);
                     ctx.lineTo(-r.radius, -r.radius * 0.7);
@@ -8303,11 +8428,12 @@
                 ctx.fill();
                 ctx.stroke();
 
-                // Raider Core cockpit
-                ctx.fillStyle = r.stunTimer > 0 ? '#c084fc' : '#ef4444';
-                ctx.beginPath();
-                ctx.arc(2, 0, 3.5, 0, Math.PI * 2);
-                ctx.fill();
+                // Raider Sensor Visor / Cockpit Slit
+                ctx.fillStyle = r.stunTimer > 0 ? '#c084fc' : '#f43f5e';
+                ctx.shadowColor = ctx.fillStyle;
+                ctx.shadowBlur = 6;
+                ctx.fillRect(r.radius * 0.2, -2, 5, 4);
+                ctx.shadowBlur = 0;
 
                 ctx.restore();
 
@@ -8422,23 +8548,42 @@
                 ctx.restore();
             }
 
-            // Render Floating Ore Chunks
+            // Render Floating Ore Chunks (Faceted Gemstone & Mineral Crystals)
             for (const chunk of state.oreChunks) {
                 ctx.save();
                 ctx.translate(chunk.x, chunk.y);
                 ctx.rotate(chunk.rot);
-                const oreInfo = ORE_TYPES[chunk.oreType];
-                ctx.fillStyle = oreInfo ? oreInfo.color : pal.vectorDim;
-                ctx.strokeStyle = pal.laserCore;
+                const oreInfo = ORE_TYPES[chunk.oreType] || { color: '#38bdf8' };
+
+                // Lower shadowed facet
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+                ctx.beginPath();
+                ctx.moveTo(0, 6); ctx.lineTo(6, 0); ctx.lineTo(0, -6);
+                ctx.closePath(); ctx.fill();
+
+                // Upper glowing crystalline facet
+                ctx.fillStyle = oreInfo.color;
+                ctx.shadowColor = oreInfo.color;
+                ctx.shadowBlur = 6;
+                ctx.beginPath();
+                ctx.moveTo(0, -6); ctx.lineTo(-6, 0); ctx.lineTo(0, 6);
+                ctx.closePath(); ctx.fill();
+
+                // Facet Ridge
+                ctx.strokeStyle = '#ffffff';
                 ctx.lineWidth = 1;
                 ctx.beginPath();
-                ctx.moveTo(0, -5);
-                ctx.lineTo(5, 0);
-                ctx.lineTo(0, 5);
-                ctx.lineTo(-5, 0);
-                ctx.closePath();
-                ctx.fill();
+                ctx.moveTo(0, -6); ctx.lineTo(0, 6);
+                ctx.moveTo(-6, 0); ctx.lineTo(6, 0);
                 ctx.stroke();
+
+                // Specular Glint
+                const glintPulse = (Date.now() + (chunk.x % 1000)) % 1200 < 200;
+                if (glintPulse) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(-1.5, -3, 3, 3);
+                }
+                ctx.shadowBlur = 0;
                 ctx.restore();
             }
 
@@ -8490,46 +8635,218 @@
                 }
             }
 
-            // Render Dredge Ship (Cockpit Center)
+            // Render Dredge Ship (The Iron Dredge - Industrial Heavy Salvage Barge)
             ctx.save();
             ctx.translate(cx, cy);
             ctx.rotate(state.ship.angle);
 
-            // Shield Bubble
-            if (state.shield > 0) {
-                ctx.strokeStyle = pal.vectorDim;
-                ctx.globalAlpha = (state.shield / 100) * 0.4;
-                ctx.lineWidth = 1.5;
-                ctx.beginPath();
-                ctx.arc(0, 0, 28, 0, Math.PI * 2);
-                ctx.stroke();
-                ctx.globalAlpha = 1.0;
+            // 1. Dynamic Thruster Plumes (Animated twin plasma torches & RCS)
+            const isThrusting = state.ship.thrusting || (Math.hypot(state.ship.vx, state.ship.vy) > 0.4);
+            const isReversing = state.ship.reversing;
+            const engineFlicker = Math.sin(Date.now() * 0.05) * 4 + (Math.random() * 3);
+
+            if (isThrusting) {
+                const thrusterYOffsets = [-12, 12];
+                for (const ty of thrusterYOffsets) {
+                    const plumeLen = 16 + (state.ship.thrusting ? 18 : 6) + engineFlicker;
+
+                    // Outer plasma flame
+                    const plumeGrad = ctx.createLinearGradient(-20, ty, -20 - plumeLen, ty);
+                    plumeGrad.addColorStop(0, '#f59e0b');
+                    plumeGrad.addColorStop(0.4, '#ef4444');
+                    plumeGrad.addColorStop(1, 'rgba(239, 68, 68, 0)');
+                    ctx.fillStyle = plumeGrad;
+                    ctx.beginPath();
+                    ctx.moveTo(-20, ty - 4.5);
+                    ctx.lineTo(-20 - plumeLen, ty);
+                    ctx.lineTo(-20, ty + 4.5);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Inner white-hot ion core
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    ctx.beginPath();
+                    ctx.moveTo(-20, ty - 2);
+                    ctx.lineTo(-20 - plumeLen * 0.5, ty);
+                    ctx.lineTo(-20, ty + 2);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            } else {
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.7)';
+                ctx.fillRect(-22, -14, 3, 4);
+                ctx.fillRect(-22, 10, 3, 4);
             }
 
-            // Ship Hull (Industrial Heavy Mining Barge)
-            ctx.fillStyle = pal.shipFill;
-            ctx.strokeStyle = pal.shipStroke;
-            ctx.lineWidth = 2;
+            if (isReversing) {
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.8)';
+                ctx.beginPath();
+                ctx.moveTo(8, -16); ctx.lineTo(18, -22); ctx.lineTo(12, -14); ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(8, 16); ctx.lineTo(18, 22); ctx.lineTo(12, 14); ctx.fill();
+            }
+
+            // 2. Halogen Work-light Cones (Forward salvage illumination beams)
+            const lightGrad = ctx.createRadialGradient(24, 0, 8, 110, 0, 100);
+            lightGrad.addColorStop(0, 'rgba(254, 240, 138, 0.18)');
+            lightGrad.addColorStop(0.5, 'rgba(254, 240, 138, 0.06)');
+            lightGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
+            ctx.fillStyle = lightGrad;
             ctx.beginPath();
-            ctx.moveTo(22, 0);          // Nose mining ram
-            ctx.lineTo(-8, -16);        // Port wing
-            ctx.lineTo(-20, -12);       // Port thruster
-            ctx.lineTo(-16, 0);         // Center rear cargo intake
-            ctx.lineTo(-20, 12);        // Starboard thruster
-            ctx.lineTo(-8, 16);         // Starboard wing
+            ctx.moveTo(22, -8);
+            ctx.lineTo(140, -45);
+            ctx.lineTo(140, 45);
+            ctx.lineTo(22, 8);
+            ctx.closePath();
+            ctx.fill();
+
+            // 3. Main Industrial Barge Hull Plating
+            // Base Chassis Body
+            ctx.fillStyle = '#0f172a';
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 1.8;
+            ctx.beginPath();
+            ctx.moveTo(20, 0);
+            ctx.lineTo(10, -12);
+            ctx.lineTo(-6, -18);
+            ctx.lineTo(-22, -14);
+            ctx.lineTo(-18, 0);
+            ctx.lineTo(-22, 14);
+            ctx.lineTo(-6, 18);
+            ctx.lineTo(10, 12);
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
 
-            // Cockpit Bridge Glass
-            ctx.fillStyle = pal.vectorDim;
+            // Armor Sponson Plates (Gunmetal heavy plating with beveled seams)
+            ctx.fillStyle = '#1e293b';
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 1.2;
+            // Port Sponson
             ctx.beginPath();
-            ctx.arc(4, 0, 4, 0, Math.PI * 2);
+            ctx.moveTo(4, -10); ctx.lineTo(-4, -17); ctx.lineTo(-18, -13); ctx.lineTo(-12, -7);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+            // Starboard Sponson
+            ctx.beginPath();
+            ctx.moveTo(4, 10); ctx.lineTo(-4, 17); ctx.lineTo(-18, 13); ctx.lineTo(-12, 7);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+
+            // Lateral Heat Radiator Thermal Vents
+            const heatAlpha = Math.min(1, Math.max(0.2, (state.heat || 0) / 80));
+            ctx.fillStyle = `rgba(245, 158, 11, ${heatAlpha})`;
+            for (let v = 0; v < 3; v++) {
+                ctx.fillRect(-14 + v * 4, -13, 2, 4);
+                ctx.fillRect(-14 + v * 4, 9, 2, 4);
+            }
+
+            // 4. Heavy Forward Dredge Hydraulic Jaws (with Hazard Caution Chevron Stripes)
+            // Left Pincer Claw
+            ctx.fillStyle = '#334155';
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.moveTo(8, -8); ctx.lineTo(26, -11); ctx.lineTo(28, -6); ctx.lineTo(14, -4);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+
+            // Right Pincer Claw
+            ctx.beginPath();
+            ctx.moveTo(8, 8); ctx.lineTo(26, 11); ctx.lineTo(28, 6); ctx.lineTo(14, 4);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+
+            // Industrial Caution Hazard Stripes
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(14, -10); ctx.lineTo(18, -6);
+            ctx.moveTo(19, -10); ctx.lineTo(23, -7);
+            ctx.moveTo(14, 10); ctx.lineTo(18, 6);
+            ctx.moveTo(19, 10); ctx.lineTo(23, 7);
+            ctx.stroke();
+
+            // 5. Magnetic Ore Extraction Funnel & Tractor Emitter
+            ctx.fillStyle = state.ship.tractorActive ? '#00f0ff' : '#f59e0b';
+            ctx.shadowColor = ctx.fillStyle;
+            ctx.shadowBlur = state.ship.tractorActive ? 12 : 5;
+            ctx.beginPath();
+            ctx.arc(17, 0, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // 6. Ore Vault Hopper & Cargo Pods
+            ctx.fillStyle = '#090d16';
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(-8, -5, 12, 10);
+            ctx.fillRect(-8, -5, 12, 10);
+
+            // Container Status LEDs (Green = operational, Amber = processing)
+            const ledPulse = Math.sin(Date.now() * 0.006) > 0;
+            ctx.fillStyle = ledPulse ? '#10b981' : '#059669';
+            ctx.fillRect(-6, -4, 2, 2);
+            ctx.fillRect(-6, 2, 2, 2);
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillRect(0, -4, 2, 2);
+            ctx.fillRect(0, 2, 2, 2);
+
+            // 7. Reinforced Command Bridge Canopy
+            ctx.fillStyle = '#0284c7';
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(11, 0);
+            ctx.lineTo(5, -4);
+            ctx.lineTo(-2, -4);
+            ctx.lineTo(-2, 4);
+            ctx.lineTo(5, 4);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Canopy Specular Glint Slash
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(8, -2); ctx.lineTo(2, 2);
+            ctx.stroke();
+
+            // 8. Communications Mast & Flashing Transponder Strobe
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(2, 0); ctx.lineTo(2, -8);
+            ctx.stroke();
+            const strobeOn = (Date.now() % 800) < 120;
+            ctx.fillStyle = strobeOn ? '#22c55e' : '#065f46';
+            ctx.beginPath();
+            ctx.arc(2, -8, 1.8, 0, Math.PI * 2);
             ctx.fill();
 
-            // Tractor Beam Emitter Node
-            ctx.fillStyle = '#f59e0b';
-            ctx.fillRect(16, -2, 6, 4);
+            // 9. Shield Bubble (Pulsing energy mesh envelope)
+            if (state.shield > 0) {
+                const sRatio = state.shield / 100;
+                const shieldPulse = Math.sin(Date.now() * 0.006) * 1.5;
+                ctx.strokeStyle = pal.vector;
+                ctx.globalAlpha = 0.25 + sRatio * 0.35;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(0, 0, 29 + shieldPulse, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Subtle hexagonal deflection ring
+                ctx.strokeStyle = '#00f0ff';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                for (let h = 0; h < 6; h++) {
+                    const hAng = (h * Math.PI) / 3 + Date.now() * 0.001;
+                    const hx = Math.cos(hAng) * (28 + shieldPulse);
+                    const hy = Math.sin(hAng) * (28 + shieldPulse);
+                    if (h === 0) ctx.moveTo(hx, hy);
+                    else ctx.lineTo(hx, hy);
+                }
+                ctx.closePath();
+                ctx.stroke();
+                ctx.globalAlpha = 1.0;
+            }
 
             ctx.restore();
 
