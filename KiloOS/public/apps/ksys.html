@@ -566,11 +566,11 @@
   <div id="toast-container"></div>
 
   <!-- Help & Shortcuts Modal -->
-  <div id="help-modal" class="modal-overlay" style="display: none;" onclick="handleModalBackdropClick(event, 'help-modal')">
+  <div id="help-modal" class="modal-overlay" style="display: none;" onclick="handleModalBackdropClick(event, 'help-modal')" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
     <div class="modal-card" style="width: 580px; max-width: 95%;">
       <div class="card-header">
-        <h2>❓ KSys Diagnostics Workstation Guide</h2>
-        <button class="btn btn-outline btn-sm" onclick="closeHelpModal()">✕</button>
+        <h2 id="help-modal-title">❓ KSys Diagnostics Workstation Guide</h2>
+        <button class="btn btn-outline btn-sm" onclick="closeHelpModal()" aria-label="Close Help Dialog">✕</button>
       </div>
       <div style="font-size: 13px; line-height: 1.6; color: var(--text-muted); max-height: 440px; overflow-y: auto; padding-right: 6px;">
         <div style="background: var(--bg-primary); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 14px;">
@@ -602,11 +602,11 @@
   </div>
 
   <!-- Service Detail Modal -->
-  <div id="service-modal" class="modal-overlay" style="display: none;" onclick="handleModalBackdropClick(event, 'service-modal')">
+  <div id="service-modal" class="modal-overlay" style="display: none;" onclick="handleModalBackdropClick(event, 'service-modal')" role="dialog" aria-modal="true" aria-labelledby="modal-svc-title">
     <div class="modal-card">
       <div class="card-header">
         <h2 id="modal-svc-title">⚙️ Service Details</h2>
-        <button class="btn btn-outline btn-sm" onclick="closeServiceModal()">✕</button>
+        <button class="btn btn-outline btn-sm" onclick="closeServiceModal()" aria-label="Close Details Dialog">✕</button>
       </div>
       <div class="info-list" style="margin-bottom: 20px;">
         <div class="info-item"><span class="info-label">Service Name:</span><span class="info-val" id="modal-svc-name">--</span></div>
@@ -625,23 +625,23 @@
   </div>
 
   <!-- Register Daemon Modal -->
-  <div id="add-service-modal" class="modal-overlay" style="display: none;" onclick="handleModalBackdropClick(event, 'add-service-modal')">
+  <div id="add-service-modal" class="modal-overlay" style="display: none;" onclick="handleModalBackdropClick(event, 'add-service-modal')" role="dialog" aria-modal="true" aria-labelledby="add-svc-title">
     <div class="modal-card">
       <div class="card-header">
-        <h2>➕ Register Custom Service Daemon</h2>
-        <button class="btn btn-outline btn-sm" onclick="closeAddServiceModal()">✕</button>
+        <h2 id="add-svc-title">➕ Register Custom Service Daemon</h2>
+        <button class="btn btn-outline btn-sm" onclick="closeAddServiceModal()" aria-label="Close Registration Dialog">✕</button>
       </div>
       <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
         <div>
-          <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">Service Identifier / Name:</label>
-          <input type="text" id="add-svc-name" class="search-input" style="width: 100%;" placeholder="e.g. MyTaskDaemon">
+          <label for="add-svc-name" style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">Service Identifier / Name:</label>
+          <input type="text" id="add-svc-name" class="search-input" style="width: 100%;" placeholder="e.g. MyTaskDaemon" onkeydown="if(event.key==='Enter') submitCustomService()">
         </div>
         <div>
-          <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">Display Name:</label>
-          <input type="text" id="add-svc-disp" class="search-input" style="width: 100%;" placeholder="e.g. Custom Task Daemon Service">
+          <label for="add-svc-disp" style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">Display Name:</label>
+          <input type="text" id="add-svc-disp" class="search-input" style="width: 100%;" placeholder="e.g. Custom Task Daemon Service" onkeydown="if(event.key==='Enter') submitCustomService()">
         </div>
         <div>
-          <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">Category:</label>
+          <label for="add-svc-cat" style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">Category:</label>
           <select id="add-svc-cat" class="select-input" style="width: 100%;">
             <option value="Core System">Core System</option>
             <option value="Drivers">Drivers</option>
@@ -676,17 +676,17 @@
     </div>
   </header>
 
-  <nav>
-    <button class="tab-btn active" id="tabbtn-inspector" onclick="switchTab('inspector')"><span>[1]</span> 🔍 Component Inspector</button>
-    <button class="tab-btn" id="tabbtn-benchmarks" onclick="switchTab('benchmarks')"><span>[2]</span> ⚡ Diagnostic Benchmarks</button>
-    <button class="tab-btn" id="tabbtn-services" onclick="switchTab('services')"><span>[3]</span> ⚙️ Services & Telemetry</button>
-    <button class="tab-btn" id="tabbtn-logs" onclick="switchTab('logs')"><span>[4]</span> 📋 Event History Logs</button>
-    <button class="tab-btn" id="tabbtn-export" onclick="switchTab('export')"><span>[5]</span> 💾 System Report Export</button>
+  <nav role="tablist" aria-label="System Diagnostics Navigation">
+    <button class="tab-btn active" id="tabbtn-inspector" role="tab" aria-selected="true" aria-controls="tab-inspector" onclick="switchTab('inspector')"><span>[1]</span> 🔍 Component Inspector</button>
+    <button class="tab-btn" id="tabbtn-benchmarks" role="tab" aria-selected="false" aria-controls="tab-benchmarks" onclick="switchTab('benchmarks')"><span>[2]</span> ⚡ Diagnostic Benchmarks</button>
+    <button class="tab-btn" id="tabbtn-services" role="tab" aria-selected="false" aria-controls="tab-services" onclick="switchTab('services')"><span>[3]</span> ⚙️ Services & Telemetry</button>
+    <button class="tab-btn" id="tabbtn-logs" role="tab" aria-selected="false" aria-controls="tab-logs" onclick="switchTab('logs')"><span>[4]</span> 📋 Event History Logs</button>
+    <button class="tab-btn" id="tabbtn-export" role="tab" aria-selected="false" aria-controls="tab-export" onclick="switchTab('export')"><span>[5]</span> 💾 System Report Export</button>
   </nav>
 
   <main>
     <!-- Hardware Inspector Tab -->
-    <section id="tab-inspector" class="tab-content active">
+    <section id="tab-inspector" class="tab-content active" role="tabpanel" aria-labelledby="tabbtn-inspector">
       <div class="grid-3">
         <!-- CPU Card -->
         <div class="card">
@@ -769,7 +769,7 @@
     </section>
 
     <!-- Benchmarks Tab -->
-    <section id="tab-benchmarks" class="tab-content">
+    <section id="tab-benchmarks" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-benchmarks">
       <div style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center;">
         <button class="btn btn-accent" id="btn-run-all" onclick="runAllBenchmarks()">▶ Run All Diagnostic Benchmarks</button>
         <span id="bench-status-text" style="font-size: 13px; color: var(--text-muted);">Ready to test CPU, RAM, and Storage throughput.</span>
@@ -830,7 +830,7 @@
     </section>
 
     <!-- Services & Telemetry Tab -->
-    <section id="tab-services" class="tab-content">
+    <section id="tab-services" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-services">
       <!-- Live Telemetry Sparklines Header -->
       <div class="telemetry-header">
         <div class="telemetry-metric">
@@ -906,7 +906,7 @@
     </section>
 
     <!-- Event Logs Tab -->
-    <section id="tab-logs" class="tab-content">
+    <section id="tab-logs" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-logs">
       <div class="card">
         <div class="card-header">
           <h2>📋 System Event History Viewer</h2>
@@ -932,7 +932,7 @@
     </section>
 
     <!-- Export Report Tab -->
-    <section id="tab-export" class="tab-content">
+    <section id="tab-export" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-export">
       <div class="card">
         <div class="card-header">
           <h2>💾 Detailed System Information Report</h2>
@@ -978,6 +978,74 @@
     { id: "NVMeStorageDriver", name: "NVMeStorageDriver", disp: "NVMe Controller Kernel Driver", cat: "Drivers", start: "Automatic", status: "RUNNING", bin: "System Kernel Driver (stornvme)", mem: "16 MB", desc: "High-speed PCIe NVMe storage controller driver." }
   ];
 
+  // Exception-Safe LocalStorage Helpers
+  function safeGetStorage(key, fallback) {
+    try {
+      const val = localStorage.getItem(key);
+      return val ? JSON.parse(val) : fallback;
+    } catch(e) {
+      return fallback;
+    }
+  }
+
+  function safeSetStorage(key, val) {
+    try {
+      localStorage.setItem(key, JSON.stringify(val));
+    } catch(e) {}
+  }
+
+  // Synthesized Web Audio Acoustic Feedback
+  let audioCtx = null;
+  function getAudioContext() {
+    if (!audioCtx) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) audioCtx = new AudioContextClass();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    return audioCtx;
+  }
+
+  function playFeedback(type) {
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      const now = ctx.currentTime;
+
+      if (type === 'click') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(400, now + 0.05);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+        osc.start(now);
+        osc.stop(now + 0.05);
+      } else if (type === 'success') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now); // C5
+        osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+        osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      } else if (type === 'warn') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(320, now);
+        osc.frequency.exponentialRampToValueAtTime(220, now + 0.12);
+        gain.gain.setValueAtTime(0.09, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        osc.start(now);
+        osc.stop(now + 0.12);
+      }
+    } catch(e) {}
+  }
+
   // Telemetry Sparkline Data History
   const cpuHistory = new Array(30).fill(10);
   const memHistory = new Array(30).fill(25);
@@ -999,9 +1067,10 @@
     const toast = document.createElement('div');
     toast.className = `ksys-toast ${type}`;
     let icon = 'ℹ️';
-    if (type === 'success') icon = '✅';
-    else if (type === 'warn') icon = '⚠️';
-    else if (type === 'error') icon = '❌';
+    if (type === 'success') { icon = '✅'; playFeedback('success'); }
+    else if (type === 'warn') { icon = '⚠️'; playFeedback('warn'); }
+    else if (type === 'error') { icon = '❌'; playFeedback('warn'); }
+    else { playFeedback('click'); }
     toast.innerHTML = `<span style="font-size: 16px;">${icon}</span><span style="flex:1;">${escapeHtml(message)}</span>`;
     container.appendChild(toast);
     setTimeout(() => {
@@ -1013,6 +1082,14 @@
   }
 
   // Modal Controls
+  function isAnyModalOpen() {
+    const modals = ['help-modal', 'service-modal', 'add-service-modal'];
+    return modals.some(id => {
+      const el = document.getElementById(id);
+      return el && el.style.display !== 'none';
+    });
+  }
+
   function showHelp() {
     document.getElementById('help-modal').style.display = 'flex';
   }
@@ -1034,6 +1111,7 @@
   }
 
   window.addEventListener('keydown', (e) => {
+    // Input/Textarea handling
     if (e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
       if (e.key === 'Escape') {
         closeAllModals();
@@ -1041,29 +1119,45 @@
       }
       return;
     }
+
+    // Escape closes modals or clears search
     if (e.key === 'Escape') {
-      closeAllModals();
+      if (isAnyModalOpen()) {
+        closeAllModals();
+        return;
+      }
+      const svcSearch = document.getElementById('svc-search-input');
+      const logSearch = document.getElementById('log-search');
+      if (svcSearch && svcSearch.value) { svcSearch.value = ''; renderServices(); return; }
+      if (logSearch && logSearch.value) { logSearch.value = ''; filterLogs(); return; }
       return;
     }
-    if (e.key === '1') { switchTab('inspector'); return; }
-    if (e.key === '2') { switchTab('benchmarks'); return; }
-    if (e.key === '3') { switchTab('services'); return; }
-    if (e.key === '4') { switchTab('logs'); return; }
-    if (e.key === '5') { switchTab('export'); return; }
-    if ((e.key.toLowerCase() === 'h' || e.key === 'F1') && !e.ctrlKey && !e.altKey && !e.metaKey) {
-      if (e.key === 'F1') e.preventDefault();
-      showHelp();
-      return;
-    }
-    if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.altKey && !e.metaKey) {
-      const activeTab = document.querySelector('.tab-content.active');
-      if (activeTab && activeTab.id === 'tab-benchmarks') {
-        runAllBenchmarks();
-      } else if (activeTab && activeTab.id === 'tab-services') {
-        refreshServices();
-      } else if (activeTab && activeTab.id === 'tab-export') {
-        generateReport();
-        showToast('System audit report refreshed.', 'info');
+
+    // Block background shortcuts while modals are active
+    if (isAnyModalOpen()) return;
+
+    // Guard all shortcuts against browser modifier keys (Ctrl/Alt/Meta)
+    if (!e.ctrlKey && !e.altKey && !e.metaKey) {
+      if (e.key === '1') { switchTab('inspector'); return; }
+      if (e.key === '2') { switchTab('benchmarks'); return; }
+      if (e.key === '3') { switchTab('services'); return; }
+      if (e.key === '4') { switchTab('logs'); return; }
+      if (e.key === '5') { switchTab('export'); return; }
+      if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
+        if (e.key === 'F1') e.preventDefault();
+        showHelp();
+        return;
+      }
+      if (e.key.toLowerCase() === 'r') {
+        const activeTab = document.querySelector('.tab-content.active');
+        if (activeTab && activeTab.id === 'tab-benchmarks') {
+          runAllBenchmarks();
+        } else if (activeTab && activeTab.id === 'tab-services') {
+          refreshServices();
+        } else if (activeTab && activeTab.id === 'tab-export') {
+          generateReport();
+          showToast('System audit report refreshed.', 'info');
+        }
       }
     }
   });
@@ -1102,7 +1196,7 @@
   }
 
   function escapeHtml(str) {
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
   function filterLogs() { renderLogs(); }
@@ -1114,16 +1208,23 @@
 
   function exportLogs() {
     const content = eventLogs.map(e => `[${e.timestamp}] [${e.level}] ${e.message}`).join('\n');
-    downloadBlob(content, 'ksys_event_log.txt', 'text/plain');
+    downloadBlob(content || '[No event logs recorded]\n', 'ksys_event_log.txt', 'text/plain');
   }
 
   // Navigation
+  const TAB_ORDER = ['inspector', 'benchmarks', 'services', 'logs', 'export'];
   function switchTab(tabId) {
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.remove('active');
+      btn.setAttribute('aria-selected', 'false');
+    });
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
-    const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick') && b.getAttribute('onclick').includes(tabId));
-    if (activeBtn) activeBtn.classList.add('active');
+    const activeBtn = document.getElementById('tabbtn-' + tabId);
+    if (activeBtn) {
+      activeBtn.classList.add('active');
+      activeBtn.setAttribute('aria-selected', 'true');
+    }
     const targetContent = document.getElementById('tab-' + tabId);
     if (targetContent) targetContent.classList.add('active');
 
@@ -1133,6 +1234,34 @@
       generateReport();
     }
   }
+
+  // Accessible Arrow Key Navigation across Tabs
+  document.addEventListener('DOMContentLoaded', () => {
+    const navEl = document.querySelector('nav');
+    if (navEl) {
+      navEl.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          const currentIdx = TAB_ORDER.findIndex(id => {
+            const btn = document.getElementById('tabbtn-' + id);
+            return btn && btn.classList.contains('active');
+          });
+          const nextIdx = (currentIdx + 1) % TAB_ORDER.length;
+          switchTab(TAB_ORDER[nextIdx]);
+          document.getElementById('tabbtn-' + TAB_ORDER[nextIdx])?.focus();
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          const currentIdx = TAB_ORDER.findIndex(id => {
+            const btn = document.getElementById('tabbtn-' + id);
+            return btn && btn.classList.contains('active');
+          });
+          const prevIdx = (currentIdx - 1 + TAB_ORDER.length) % TAB_ORDER.length;
+          switchTab(TAB_ORDER[prevIdx]);
+          document.getElementById('tabbtn-' + TAB_ORDER[prevIdx])?.focus();
+        }
+      });
+    }
+  });
 
   // System Hardware Inspector Updates
   async function inspectHardware() {
@@ -1243,43 +1372,66 @@
     const workerCount = navigator.hardwareConcurrency || 4;
     document.getElementById('cpu-worker-count').textContent = workerCount;
 
-    const workerCode = `
-      self.onmessage = function(e) {
-        const start = performance.now();
-        let ops = 0;
-        const iterations = e.data.iterations;
-        for (let i = 0; i < iterations; i++) {
-          ops += Math.sqrt(i) * Math.sin(i) + Math.cos(i);
-        }
-        const time = performance.now() - start;
-        self.postMessage({ ops, time });
-      };
-    `;
-
-    const blob = new Blob([workerCode], { type: 'application/javascript' });
-    const workerUrl = URL.createObjectURL(blob);
     const iterations = 5000000;
     const startAll = performance.now();
+    let totalTime = 0;
+    let mflops = 0;
 
-    const promises = [];
-    for (let i = 0; i < workerCount; i++) {
-      promises.push(new Promise(resolve => {
-        const w = new Worker(workerUrl);
-        w.onmessage = (msg) => {
-          w.terminate();
-          resolve(msg.data);
+    try {
+      const workerCode = `
+        self.onmessage = function(e) {
+          const start = performance.now();
+          let ops = 0;
+          const iters = e.data.iterations;
+          for (let i = 0; i < iters; i++) {
+            ops += Math.sqrt(i) * Math.sin(i) + Math.cos(i);
+          }
+          const time = performance.now() - start;
+          self.postMessage({ ops, time });
         };
-        w.postMessage({ iterations });
-      }));
+      `;
+
+      const blob = new Blob([workerCode], { type: 'application/javascript' });
+      const workerUrl = URL.createObjectURL(blob);
+
+      const promises = [];
+      for (let i = 0; i < workerCount; i++) {
+        promises.push(new Promise((resolve, reject) => {
+          try {
+            const w = new Worker(workerUrl);
+            w.onmessage = (msg) => {
+              w.terminate();
+              resolve(msg.data);
+            };
+            w.onerror = (err) => {
+              w.terminate();
+              reject(err);
+            };
+            w.postMessage({ iterations });
+          } catch(e) {
+            reject(e);
+          }
+        }));
+      }
+
+      progress.style.width = '60%';
+      await Promise.all(promises);
+      URL.revokeObjectURL(workerUrl);
+
+      totalTime = performance.now() - startAll;
+      const totalOps = workerCount * iterations;
+      mflops = Math.round((totalOps / (Math.max(1, totalTime) / 1000)) / 100000);
+    } catch(err) {
+      // Fallback single-threaded stress calculation if Web Workers are blocked by sandbox/CSP
+      const iters = 2500000;
+      const fStart = performance.now();
+      let dummy = 0;
+      for (let i = 0; i < iters; i++) {
+        dummy += Math.sqrt(i) * Math.sin(i) + Math.cos(i);
+      }
+      totalTime = performance.now() - fStart;
+      mflops = Math.round((iters / (Math.max(1, totalTime) / 1000)) / 100000);
     }
-
-    progress.style.width = '60%';
-    const results = await Promise.all(promises);
-    URL.revokeObjectURL(workerUrl);
-
-    const totalTime = performance.now() - startAll;
-    const totalOps = workerCount * iterations;
-    const mflops = Math.round((totalOps / (totalTime / 1000)) / 100000);
 
     progress.style.width = '100%';
     scoreEl.textContent = `${mflops} MFLOPS`;
@@ -1296,8 +1448,19 @@
     const scoreEl = document.getElementById('ram-score');
     progress.style.width = '20%';
 
-    const bufferSize = 32 * 1024 * 1024; // 32MB Float64Array (256MB raw)
-    const array = new Float64Array(bufferSize);
+    let bufferSize = 32 * 1024 * 1024; // 32M Float64 elements (~256MB)
+    let array;
+    try {
+      array = new Float64Array(bufferSize);
+    } catch(allocErr) {
+      bufferSize = 8 * 1024 * 1024; // Fallback to 8M elements (~64MB)
+      try {
+        array = new Float64Array(bufferSize);
+      } catch(allocErr2) {
+        bufferSize = 2 * 1024 * 1024;
+        array = new Float64Array(bufferSize);
+      }
+    }
 
     // Write speed test
     progress.style.width = '50%';
@@ -1305,7 +1468,7 @@
     for (let i = 0; i < bufferSize; i++) {
       array[i] = i * 1.5;
     }
-    const writeTimeSec = (performance.now() - startWrite) / 1000;
+    const writeTimeSec = Math.max(0.001, (performance.now() - startWrite) / 1000);
     const bytesWrittenMB = (bufferSize * 8) / (1024 * 1024);
     const writeSpeedMBs = Math.round(bytesWrittenMB / writeTimeSec);
 
@@ -1316,7 +1479,7 @@
     for (let i = 0; i < bufferSize; i += 4) {
       dummySum += array[i];
     }
-    const readTimeSec = (performance.now() - startRead) / 1000;
+    const readTimeSec = Math.max(0.001, (performance.now() - startRead) / 1000);
     const bytesReadMB = (bufferSize * 8) / (1024 * 1024);
     const readSpeedMBs = Math.round(bytesReadMB / readTimeSec);
 
@@ -1455,6 +1618,7 @@
               </button>
               <button class="btn btn-outline btn-sm" onclick="restartService('${s.id}')">Restart</button>
               <button class="btn btn-outline btn-sm" onclick="inspectService('${s.id}')">Inspect</button>
+              ${s.id.startsWith('custom_') ? `<button class="btn btn-outline btn-sm" style="color: var(--accent-red); border-color: rgba(248,113,113,0.4);" onclick="deleteCustomService('${s.id}')">Delete</button>` : ''}
             </div>
           </td>
         `;
@@ -1484,6 +1648,7 @@
       logEvent('INFO', `Started system service: ${svc.name} (${svc.disp})`);
       showToast(`Started service: ${svc.name}`, 'success');
     }
+    if (svc.id.startsWith('custom_')) saveCustomServices();
     renderServices();
   }
 
@@ -1497,6 +1662,10 @@
     showToast(`Restarting service: ${svc.name}...`, 'info');
     setTimeout(() => {
       svc.status = 'RUNNING';
+      if (!svc.mem || svc.mem === '0 MB') {
+        svc.mem = `${Math.floor(Math.random() * 40 + 10)} MB`;
+      }
+      if (svc.id.startsWith('custom_')) saveCustomServices();
       renderServices();
       logEvent('INFO', `Service restarted successfully: ${svc.name}`);
       showToast(`Service restarted: ${svc.name}`, 'success');
@@ -1540,6 +1709,34 @@
     }, 50);
   }
 
+  function saveCustomServices() {
+    const customList = systemServices.filter(s => s.id.startsWith('custom_'));
+    safeSetStorage('ksys_custom_services_v1', customList);
+  }
+
+  function loadCustomServices() {
+    const customList = safeGetStorage('ksys_custom_services_v1', []);
+    if (Array.isArray(customList)) {
+      customList.forEach(c => {
+        if (c && c.id && !systemServices.some(s => s.id === c.id)) {
+          systemServices.push(c);
+        }
+      });
+    }
+  }
+
+  function deleteCustomService(svcId) {
+    const idx = systemServices.findIndex(s => s.id === svcId);
+    if (idx !== -1) {
+      const s = systemServices[idx];
+      systemServices.splice(idx, 1);
+      saveCustomServices();
+      logEvent('INFO', `Removed custom service daemon: ${s.name}`);
+      showToast(`Removed daemon: ${s.name}`, 'info');
+      renderServices();
+    }
+  }
+
   function submitCustomService() {
     const rawName = document.getElementById('add-svc-name').value.trim();
     const rawDisp = document.getElementById('add-svc-disp').value.trim();
@@ -1549,6 +1746,10 @@
       return;
     }
     const name = rawName.replace(/[^a-zA-Z0-9_\-]/g, '');
+    if (!name) {
+      showToast('Service name must contain valid alphanumeric characters.', 'warn');
+      return;
+    }
     const disp = rawDisp || rawName;
     const id = "custom_" + Date.now();
 
@@ -1564,6 +1765,7 @@
       desc: "User-registered custom diagnostic service daemon."
     });
 
+    saveCustomServices();
     logEvent('INFO', `Added custom system service: ${name} (${disp})`);
     showToast(`Registered daemon: ${name}`, 'success');
     closeAddServiceModal();
@@ -1610,10 +1812,12 @@
   function drawSparkline(canvasId, data, color) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const dpr = window.devicePixelRatio || 1;
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
+    if (w < 10 || h < 10) return; // Prevent zero-width layout errors when tab is hidden
+
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
 
     canvas.width = w * dpr;
     canvas.height = h * dpr;
@@ -1622,8 +1826,8 @@
     ctx.clearRect(0, 0, w, h);
     ctx.beginPath();
 
-    const maxVal = Math.max(100, Math.max(...data));
-    const step = w / (data.length - 1);
+    const maxVal = Math.max(10, Math.max(...data));
+    const step = w / Math.max(1, data.length - 1);
 
     data.forEach((val, idx) => {
       const x = idx * step;
@@ -1785,8 +1989,10 @@
     a.download = filename;
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 1500);
     logEvent('INFO', `Exported system report file: ${filename}`);
     showToast(`Downloaded report: ${filename}`, 'success');
   }
@@ -1794,6 +2000,7 @@
   // Initialization
   window.addEventListener('DOMContentLoaded', () => {
     logEvent('INFO', 'KSys System Inspector & Diagnostic Workstation initialized');
+    loadCustomServices();
     inspectHardware();
     renderServices();
     setInterval(updateUptime, 1000);
