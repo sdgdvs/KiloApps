@@ -106,6 +106,7 @@
 
         .val-hp { color: var(--accent-crimson) !important; }
         .val-sanity { color: var(--accent-cyan) !important; }
+        .val-aether { color: #38bdf8 !important; }
         .val-gold { color: var(--text-gold) !important; }
         .val-depth { color: var(--accent-purple) !important; }
 
@@ -274,6 +275,123 @@
             border-color: #27364f;
         }
 
+        /* Spellcasting Hotbar */
+        .spell-hotbar {
+            background: rgba(13, 18, 29, 0.96);
+            border-top: 1px solid var(--border-dungeon);
+            padding: 5px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 6;
+            overflow-x: auto;
+        }
+
+        .spell-hotbar-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: var(--text-rune);
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .spell-btn {
+            background: #090e17;
+            border: 1px solid #1e293b;
+            color: var(--text-primary);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .spell-btn:hover:not(.disabled) {
+            border-color: var(--border-glow);
+            background: #111a2e;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+            color: var(--text-bright);
+        }
+
+        .spell-btn.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            border-color: #1e293b;
+            background: #070a10;
+        }
+
+        .spell-key {
+            background: #1e293b;
+            color: var(--text-gold);
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .spell-cost {
+            color: #38bdf8;
+            font-size: 10px;
+        }
+
+        .socket-card {
+            background: #090d16;
+            border: 1px solid #1e293b;
+            border-radius: 4px;
+            padding: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .socket-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .socket-btn-unsocket {
+            background: #271418;
+            border-color: #7f1d1d;
+            color: #fca5a5;
+            font-size: 10px;
+            padding: 2px 8px;
+        }
+
+        .socket-btn-unsocket:hover {
+            background: #450a0a;
+            border-color: #ef4444;
+            color: #fff;
+        }
+
+        .stash-rune-card {
+            background: #0c121e;
+            border: 1px solid #1e293b;
+            border-radius: 4px;
+            padding: 6px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stash-btn-socket {
+            background: #0f272a;
+            border-color: #164e63;
+            color: #67e8f9;
+            font-size: 10px;
+            padding: 2px 8px;
+        }
+
+        .stash-btn-socket:hover {
+            background: #155e75;
+            border-color: #06b6d4;
+            color: #fff;
+        }
+
         /* Right Side Panels */
         .sidebar {
             width: 330px;
@@ -368,6 +486,7 @@
 
         .bar-hp { background: linear-gradient(90deg, #b91c1c, #ef4444); }
         .bar-sanity { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+        .bar-aether { background: linear-gradient(90deg, #0ea5e9, #67e8f9); }
         .bar-exp { background: linear-gradient(90deg, #7c3aed, #a855f7); }
 
         /* Equipment / Item Slots */
@@ -536,7 +655,7 @@
     <header>
         <div class="brand">
             <div class="title"><span>⚔️</span> KABYSS</div>
-            <div class="subtitle">Abyssal Crypt Crawler v0.2</div>
+            <div class="subtitle">Abyssal Crypt Crawler v0.3 - Rune Magic</div>
         </div>
         <div class="stats-bar">
             <div class="stat-badge">
@@ -550,6 +669,10 @@
             <div class="stat-badge">
                 <span class="label">Sanity</span>
                 <span class="val val-sanity" id="statSanity">100 / 100</span>
+            </div>
+            <div class="stat-badge">
+                <span class="label">Aether</span>
+                <span class="val val-aether" id="statAether">50 / 50</span>
             </div>
             <div class="stat-badge">
                 <span class="label">Essence</span>
@@ -568,6 +691,10 @@
                     <div class="zone-sub" id="hudZoneSub">Turn: 1 | Light: 100% | Torch: Burning</div>
                 </div>
                 <div class="overlay-tileinfo" id="hudTileInfo">Position: (10, 8) | Floor</div>
+            </div>
+            <div class="spell-hotbar" id="spellHotbar">
+                <span class="spell-hotbar-label">🪄 Spell Hotbar:</span>
+                <div id="spellButtonsList" style="display:flex; gap:6px; flex:1; overflow-x:auto;"></div>
             </div>
             <div class="viewport-toolbar">
                 <div class="btn-group">
@@ -615,6 +742,14 @@
                     </div>
 
                     <div class="stat-row">
+                        <span class="stat-name">Aether (Spell Mana)</span>
+                        <span id="delverAetherTxt">50 / 50</span>
+                    </div>
+                    <div class="bar-container">
+                        <div class="bar-fill bar-aether" id="barAether" style="width: 100%;"></div>
+                    </div>
+
+                    <div class="stat-row">
                         <span class="stat-name">Experience</span>
                         <span id="delverExpTxt">0 / 100</span>
                     </div>
@@ -649,9 +784,9 @@
                 <div class="panel-section">
                     <div class="section-header">Equipped Relics & Gear</div>
                     <div class="grid-slots">
-                        <div class="slot occupied" title="Runic Longsword (+4 DMG)">
-                            <div class="slot-icon">🗡️</div>
-                            <div>Blade</div>
+                        <div class="slot occupied" id="gearWeaponSlot" title="Equipped Enchanted Staff">
+                            <div class="slot-icon" id="gearWeaponIcon">🪄</div>
+                            <div id="gearWeaponName">Staff</div>
                         </div>
                         <div class="slot occupied" title="Abyssal Mail (+3 DEF)">
                             <div class="slot-icon">🛡️</div>
@@ -696,16 +831,37 @@
 
             <div class="tab-content" id="tabRunes" style="display:none;">
                 <div class="panel-section">
-                    <div class="section-header">Inscribed Ancient Runes</div>
-                    <div style="display:flex; flex-direction:column; gap:6px;">
-                        <div style="padding:6px; background:#090d16; border:1px solid #1e293b; border-radius:3px;">
-                            <div style="color:var(--accent-cyan); font-weight:bold;">⚡ Rune of Flare</div>
-                            <div style="font-size:11px; color:var(--text-dim);">Illuminates wide area for 20 turns and scorches shadows.</div>
+                    <div class="section-header">
+                        <span>Equipped Enchanted Staff</span>
+                        <span id="staffTierTxt" style="color:var(--text-rune); font-size:10px;">Tier I</span>
+                    </div>
+                    <div id="staffCard" style="padding:8px; background:#090d16; border:1px solid #1e293b; border-radius:4px; margin-bottom:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong id="staffName" style="color:var(--accent-purple); font-size:12px;">🪄 Ashwood Rune Staff</strong>
+                            <span id="staffArcana" style="color:var(--accent-cyan); font-size:11px;">+2 Arcana</span>
                         </div>
-                        <div style="padding:6px; background:#090d16; border:1px solid #1e293b; border-radius:3px;">
-                            <div style="color:var(--accent-purple); font-weight:bold;">🌀 Rune of Aegis</div>
-                            <div style="font-size:11px; color:var(--text-dim);">Absorbs next 30 subterranean damage.</div>
-                        </div>
+                        <div id="staffDesc" style="color:var(--text-dim); font-size:10px; margin-top:3px;">Carved from petrified ash. Holds 2 elemental runes.</div>
+                    </div>
+                    <div class="section-header" style="font-size:10px; margin-top:6px;">Staff Rune Sockets</div>
+                    <div id="staffSocketsList" style="display:flex; flex-direction:column; gap:6px;"></div>
+                </div>
+
+                <div class="panel-section">
+                    <div class="section-header">
+                        <span>Delver's Rune Stash</span>
+                        <span id="runeCountTxt" style="color:var(--text-gold); font-size:10px;">3 Runes</span>
+                    </div>
+                    <div id="runeStashList" style="display:flex; flex-direction:column; gap:6px;"></div>
+                </div>
+
+                <div class="panel-section">
+                    <div class="section-header">Elemental Grimoire & Lore</div>
+                    <div style="font-size:11px; color:var(--text-dim); line-height:1.45; display:flex; flex-direction:column; gap:4px;">
+                        <div><strong style="color:#f97316;">ᚠ Pyre:</strong> Blasts 4 tiles. Incinerates rubble & wooden doors. Deals 35 Fire DMG.</div>
+                        <div><strong style="color:#06b6d4;">ᚦ Frost:</strong> 2-tile nova. Freezes water into solid ice. +Warding. Deals 24 Cryo DMG.</div>
+                        <div><strong style="color:#eab308;">ᛋ Tempest:</strong> Piercing lightning beam 6 tiles. Shatters doors. Deals 42 Shock DMG.</div>
+                        <div><strong style="color:#a855f7;">ᛟ Void:</strong> Phase-shifts delver 3 tiles forward through obstacles or chasms.</div>
+                        <div><strong style="color:#38bdf8;">ᚨ Aegis:</strong> Runic barrier (+35 Ward Shield) and restores +15 Sanity.</div>
                     </div>
                 </div>
             </div>
@@ -746,6 +902,17 @@
                     <li><strong>Forgotten Crypt (B7 - B9):</strong> Necrotic tomb labyrinth with blood-red skull braziers and ancient Runic Altars (press [E] to commune for blessings).</li>
                     <li><strong>The Void Abyss (B10+):</strong> Shattered floating obsidian platforms suspended over bottomless cosmic chasms. Void rift crystals pulse with astral energy.</li>
                 </ul>
+                <h4>Relic & Ancient Rune Magic System</h4>
+                <ul>
+                    <li><strong>Z, X, V / Hotbar Clicks:</strong> Cast elemental spells from your equipped Staff Sockets!</li>
+                    <li><strong>Aether (Mana):</strong> Casting consumes Aether. Rest with [Space] or commune with Altars to restore Aether.</li>
+                    <li><strong>Rune Socketing [Tab 3]:</strong> Inscribe discovered runes into your staff sockets to change your active spells and passive bonuses.</li>
+                    <li><strong>ᚠ Pyre Blast:</strong> Seared ball of fire blasts 4 tiles forward, incinerating wooden doors and rubble.</li>
+                    <li><strong>ᚦ Glacial Nova:</strong> Freezes flooded water into solid ice walkways and protects with frost armor.</li>
+                    <li><strong>ᛋ Chain Bolt:</strong> Piercing electrical arc traveling 6 tiles forward, blasting open doors.</li>
+                    <li><strong>ᛟ Void Warp:</strong> Phase-shifts delver 3 tiles forward through obstacles or over bottomless chasms.</li>
+                    <li><strong>ᚨ Aegis Ward:</strong> Prismatic runic barrier absorbs up to 35 damage and restores +15 Sanity.</li>
+                </ul>
                 <h4>Field of View & Darkness</h4>
                 <p>The Abyss is shrouded in darkness. Your torch projects light across chambers and corridors. Light rays pass unobstructed through flooded waters and open cosmic chasms.</p>
             </div>
@@ -753,8 +920,8 @@
     </div>
 
     <footer>
-        <div>WASD/Arrows: Navigate • Space: Rest • E: Interact • S: Search • Click: Move</div>
-        <div id="footerStatus">KAbyss Engine v0.2 • Turn Engine active</div>
+        <div>WASD: Move • Space: Rest • E: Interact • Z/X/V: Cast Runes • 1-3: Tabs • H: Manual</div>
+        <div id="footerStatus">KAbyss Engine v0.3 • Rune Magic System Active</div>
     </footer>
 
     <script>
@@ -872,11 +1039,193 @@
         let torches = [];
         let chests = [];
         let torchParticles = [];
+        let spellEffects = [];
 
         let fovEnabled = true;
         let crtEnabled = true;
         let turn = 1;
         let depthLevel = 1;
+
+        // --- Ancient Runes & Enchanted Staves Magic System ---
+        const RUNES = {
+            PYRE: {
+                id: 'PYRE',
+                name: 'Pyre Rune',
+                symbol: 'ᚠ',
+                element: 'Fire',
+                color: '#f97316',
+                spellName: 'Pyre Blast',
+                cost: 12,
+                desc: 'Hurls roaring flame 4 tiles. Burns doors & rubble. Deals 35 Fire DMG.',
+                passive: '+3 Might'
+            },
+            FROST: {
+                id: 'FROST',
+                name: 'Frost Rune',
+                symbol: 'ᚦ',
+                element: 'Ice',
+                color: '#06b6d4',
+                spellName: 'Glacial Nova',
+                cost: 10,
+                desc: 'Freezes 2-tile radius. Freezes water into ice walkways. Deals 24 Cryo DMG.',
+                passive: '+3 Warding'
+            },
+            TEMPEST: {
+                id: 'TEMPEST',
+                name: 'Tempest Rune',
+                symbol: 'ᛋ',
+                element: 'Lightning',
+                color: '#eab308',
+                spellName: 'Chain Bolt',
+                cost: 14,
+                desc: 'Piercing electrical bolt 6 tiles. Shatters doors. Deals 42 Shock DMG.',
+                passive: '+2 Might, +2 Arcana'
+            },
+            VOID: {
+                id: 'VOID',
+                name: 'Void Rune',
+                symbol: 'ᛟ',
+                element: 'Eldritch',
+                color: '#a855f7',
+                spellName: 'Void Warp',
+                cost: 15,
+                desc: 'Phase-shifts delver 3 paces forward through walls & chasms.',
+                passive: '+3 Arcana, +1 Light'
+            },
+            AEGIS: {
+                id: 'AEGIS',
+                name: 'Aegis Rune',
+                symbol: 'ᚨ',
+                element: 'Warding',
+                color: '#38bdf8',
+                spellName: 'Aegis Ward',
+                cost: 10,
+                desc: 'Conjures runic prism absorbing 35 damage and restores +15 Sanity.',
+                passive: '+4 Warding, +10 Max Sanity'
+            }
+        };
+
+        const STAVES = {
+            ASHWOOD: {
+                id: 'ASHWOOD',
+                name: 'Ashwood Rune Staff',
+                tier: 'Tier I',
+                maxSockets: 2,
+                arcanaBonus: 2,
+                desc: 'Carved from petrified subterranean ash. Holds 2 ancient elemental runes.'
+            },
+            CINDER: {
+                id: 'CINDER',
+                name: 'Cinderwood Scepter',
+                tier: 'Tier II',
+                maxSockets: 2,
+                arcanaBonus: 4,
+                desc: 'Forged in subterranean magma vents. Holds 2 runes with +4 Arcana.'
+            },
+            ARCHMAGI: {
+                id: 'ARCHMAGI',
+                name: 'Staff of the Arch-Magi',
+                tier: 'Tier III',
+                maxSockets: 3,
+                arcanaBonus: 6,
+                desc: 'Ancient crystalline conduit. Holds 3 elemental runes with -2 Aether cost.'
+            }
+        };
+
+        // Synthesized Procedural Audio System for Magic
+        const AudioSys = {
+            ctx: null,
+            init() {
+                if (!this.ctx && (window.AudioContext || window.webkitAudioContext)) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            },
+            playPyre() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(260, now);
+                osc.frequency.exponentialRampToValueAtTime(60, now + 0.3);
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            },
+            playFrost() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                [600, 880, 1175].forEach((freq, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.04);
+                    gain.gain.setValueAtTime(0.12, now + i * 0.04);
+                    gain.gain.linearRampToValueAtTime(0.001, now + i * 0.04 + 0.22);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + i * 0.04);
+                    osc.stop(now + i * 0.04 + 0.22);
+                });
+            },
+            playTempest() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(980, now);
+                osc.frequency.exponentialRampToValueAtTime(140, now + 0.25);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.25);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            },
+            playVoid() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(120, now);
+                osc.frequency.exponentialRampToValueAtTime(380, now + 0.28);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            },
+            playAegis() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                [440, 554, 659].forEach((freq) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.35);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                });
+            }
+        };
 
         const player = {
             x: 10,
@@ -885,6 +1234,9 @@
             maxHp: 100,
             sanity: 100,
             maxSanity: 100,
+            aether: 50,
+            maxAether: 50,
+            shield: 0,
             essence: 0,
             level: 1,
             exp: 0,
@@ -893,7 +1245,10 @@
             warding: 12,
             arcana: 16,
             lightRadius: 7,
-            facing: 'down'
+            facing: 'down',
+            equippedStaff: 'ASHWOOD',
+            staffSockets: ['PYRE', 'AEGIS'],
+            ownedRunes: ['PYRE', 'AEGIS', 'FROST']
         };
 
         // Particle generator for atmospheric subterranean embers
@@ -1669,6 +2024,22 @@
                 ctx.restore();
             }
 
+            // Delver Aegis Ward Barrier Aura
+            if (player.shield > 0) {
+                ctx.save();
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 2;
+                ctx.shadowColor = '#38bdf8';
+                ctx.shadowBlur = 8;
+                const shieldPulse = Math.sin(Date.now() / 150) * 2;
+                ctx.beginPath();
+                ctx.arc(playerSX + 16, playerSY + 16, 14 + shieldPulse, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.2)';
+                ctx.fill();
+                ctx.restore();
+            }
+
             // Delver Body Avatar
             ctx.fillStyle = '#38bdf8';
             ctx.beginPath();
@@ -1695,6 +2066,69 @@
             ctx.font = 'bold 11px monospace';
             ctx.textAlign = 'center';
             ctx.fillText('@', playerSX + 16, playerSY + 20);
+
+            // Draw Active Spell VFX (Fireball blasts, lightning bolts, frost novas, void rifts)
+            for (let i = spellEffects.length - 1; i >= 0; i--) {
+                const fx = spellEffects[i];
+                fx.duration--;
+                if (fx.duration <= 0) {
+                    spellEffects.splice(i, 1);
+                    continue;
+                }
+
+                ctx.save();
+                if (fx.type === 'pyre') {
+                    const sx = fx.x * TILE_SIZE - camera.x + 16;
+                    const sy = fx.y * TILE_SIZE - camera.y + 16;
+                    ctx.fillStyle = '#f97316';
+                    ctx.shadowColor = '#ef4444';
+                    ctx.shadowBlur = 12;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, fx.radius || 10, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Flame blast core
+                    ctx.fillStyle = '#fef08a';
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, (fx.radius || 10) * 0.5, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (fx.type === 'frost') {
+                    const sx = fx.x * TILE_SIZE - camera.x + 16;
+                    const sy = fx.y * TILE_SIZE - camera.y + 16;
+                    ctx.strokeStyle = '#06b6d4';
+                    ctx.lineWidth = 3;
+                    ctx.shadowColor = '#38bdf8';
+                    ctx.shadowBlur = 10;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, fx.radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                    fx.radius += 3.5;
+                } else if (fx.type === 'tempest') {
+                    const sx1 = fx.x1 * TILE_SIZE - camera.x + 16;
+                    const sy1 = fx.y1 * TILE_SIZE - camera.y + 16;
+                    const sx2 = fx.x2 * TILE_SIZE - camera.x + 16;
+                    const sy2 = fx.y2 * TILE_SIZE - camera.y + 16;
+                    ctx.strokeStyle = '#fef08a';
+                    ctx.lineWidth = 3;
+                    ctx.shadowColor = '#eab308';
+                    ctx.shadowBlur = 14;
+                    ctx.beginPath();
+                    ctx.moveTo(sx1, sy1);
+                    ctx.lineTo(sx2, sy2);
+                    ctx.stroke();
+                } else if (fx.type === 'void') {
+                    const sx = fx.x * TILE_SIZE - camera.x + 16;
+                    const sy = fx.y * TILE_SIZE - camera.y + 16;
+                    ctx.strokeStyle = '#c084fc';
+                    ctx.lineWidth = 2.5;
+                    ctx.shadowColor = '#a855f7';
+                    ctx.shadowBlur = 12;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, fx.radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                    fx.radius += 2.0;
+                }
+                ctx.restore();
+            }
 
             // Subterranean Vignette Shader (Edge darkening)
             const vigGrad = ctx.createRadialGradient(
@@ -1737,9 +2171,20 @@
             dungeon[ay][ax] = TILE.RUBBLE;
             player.sanity = Math.min(player.maxSanity, player.sanity + 30);
             player.hp = Math.min(player.maxHp, player.hp + 20);
+            player.aether = Math.min(player.maxAether, player.aether + 25);
             player.essence += 35;
             player.exp += 30;
-            logMessage('✦ ALTAR COMMUNION: Primordial runic energies infuse your spirit! (+30 Sanity, +20 HP, +35 Essence, +30 EXP)', 'relic');
+
+            // Chance to discover an unowned Ancient Rune
+            const unowned = Object.keys(RUNES).filter(r => !player.ownedRunes.includes(r));
+            if (unowned.length > 0 && Math.random() < 0.6) {
+                const newRune = unowned[Math.floor(Math.random() * unowned.length)];
+                player.ownedRunes.push(newRune);
+                logMessage(`✦ RUNIC COMMUNION: The altar reveals the ${RUNES[newRune].name} (${RUNES[newRune].symbol})! Inscribe it in Tab [3].`, 'relic');
+                AudioSys.playAegis();
+            } else {
+                logMessage('✦ ALTAR COMMUNION: Primordial runic energies infuse your spirit! (+30 Sanity, +20 HP, +25 Aether, +35 Essence, +30 EXP)', 'relic');
+            }
             checkLevelUp();
             advanceTurn();
         }
@@ -1786,7 +2231,24 @@
                     dungeon[ny][nx] = TILE.FLOOR;
                     player.essence += chest.essence;
                     player.exp += 25;
-                    logMessage(`Opened Relic Chest! Acquired +${chest.essence} Essence & +25 EXP!`, 'relic');
+                    let chestMsg = `Opened Relic Chest! Acquired +${chest.essence} Essence & +25 EXP!`;
+
+                    // Chance for ancient rune drop
+                    const unowned = Object.keys(RUNES).filter(r => !player.ownedRunes.includes(r));
+                    if (unowned.length > 0 && Math.random() < 0.5) {
+                        const newRune = unowned[Math.floor(Math.random() * unowned.length)];
+                        player.ownedRunes.push(newRune);
+                        chestMsg += ` Found ${RUNES[newRune].name} (${RUNES[newRune].symbol})!`;
+                        AudioSys.playTempest();
+                    } else if (player.equippedStaff === 'ASHWOOD' && depthLevel >= 4 && Math.random() < 0.4) {
+                        player.equippedStaff = 'CINDER';
+                        chestMsg += ` Discovered Cinderwood Scepter (Tier II, +4 Arcana)!`;
+                    } else if (player.equippedStaff !== 'ARCHMAGI' && depthLevel >= 7 && Math.random() < 0.35) {
+                        player.equippedStaff = 'ARCHMAGI';
+                        chestMsg += ` Discovered Staff of the Arch-Magi (Tier III, 3 Sockets, -2 MP)!`;
+                    }
+
+                    logMessage(chestMsg, 'relic');
                     checkLevelUp();
                     advanceTurn();
                     return;
@@ -1817,7 +2279,10 @@
             if (player.sanity < player.maxSanity) {
                 player.sanity = Math.min(player.maxSanity, player.sanity + 1);
             }
-            logMessage('You steady your breath and rest for a turn (+2 HP, +1 Sanity).', 'heal');
+            if (player.aether < player.maxAether) {
+                player.aether = Math.min(player.maxAether, player.aether + 3);
+            }
+            logMessage('You steady your breath and rest for a turn (+2 HP, +1 Sanity, +3 Aether).', 'heal');
             advanceTurn();
         }
 
@@ -1893,10 +2358,12 @@
                 player.maxExp = Math.floor(player.maxExp * 1.5);
                 player.maxHp += 15;
                 player.hp = player.maxHp;
+                player.maxAether += 10;
+                player.aether = player.maxAether;
                 player.might += 2;
                 player.warding += 1;
                 player.arcana += 2;
-                logMessage(`✦ LEVEL UP! Delver is now Level ${player.level}! (+15 Max HP, +2 Might, +2 Arcana)`, 'relic');
+                logMessage(`✦ LEVEL UP! Delver is now Level ${player.level}! (+15 Max HP, +10 Max Aether, +2 Might, +2 Arcana)`, 'relic');
             }
         }
 
@@ -1909,6 +2376,406 @@
             container.scrollTop = container.scrollHeight;
         }
 
+        // --- Relic & Ancient Rune Magic Spellcasting System ---
+        function castSpellFromSocket(socketIdx) {
+            AudioSys.init();
+            if (socketIdx < 0 || socketIdx >= player.staffSockets.length) return;
+            const runeKey = player.staffSockets[socketIdx];
+            if (!runeKey) {
+                logMessage(`Socket ${socketIdx + 1} is empty! Inscribe a rune in Tab [3].`, 'important');
+                return;
+            }
+            const rune = RUNES[runeKey];
+            if (!rune) return;
+
+            let cost = rune.cost;
+            if (player.equippedStaff === 'ARCHMAGI') cost = Math.max(4, cost - 2);
+
+            if (player.aether < cost) {
+                logMessage(`Not enough Aether! Required: ${cost} MP, Current: ${player.aether} MP.`, 'combat');
+                return;
+            }
+
+            player.aether -= cost;
+
+            if (runeKey === 'PYRE') {
+                castPyre();
+            } else if (runeKey === 'FROST') {
+                castFrost();
+            } else if (runeKey === 'TEMPEST') {
+                castTempest();
+            } else if (runeKey === 'VOID') {
+                castVoid();
+            } else if (runeKey === 'AEGIS') {
+                castAegis();
+            }
+
+            advanceTurn();
+        }
+
+        function castPyre() {
+            let dx = 0, dy = 0;
+            if (player.facing === 'up') dy = -1;
+            else if (player.facing === 'down') dy = 1;
+            else if (player.facing === 'left') dx = -1;
+            else if (player.facing === 'right') dx = 1;
+
+            let curX = player.x;
+            let curY = player.y;
+
+            for (let step = 1; step <= 4; step++) {
+                const tx = player.x + dx * step;
+                const ty = player.y + dy * step;
+                if (tx < 1 || tx >= MAP_WIDTH - 1 || ty < 1 || ty >= MAP_HEIGHT - 1) break;
+
+                curX = tx;
+                curY = ty;
+                visible[ty][tx] = true;
+                explored[ty][tx] = true;
+                lightMap[ty][tx] = 1.0;
+
+                const tile = dungeon[ty][tx];
+                if (tile === TILE.WALL || tile === TILE.PILLAR || tile === TILE.CHASM) {
+                    break;
+                }
+                if (tile === TILE.DOOR_CLOSED) {
+                    dungeon[ty][tx] = TILE.DOOR_OPEN;
+                    logMessage('🔥 Pyre Blast incinerates the closed door into charred splinters!', 'combat');
+                    break;
+                }
+                if (tile === TILE.RUBBLE) {
+                    dungeon[ty][tx] = TILE.FLOOR;
+                    logMessage('🔥 Pyre Blast blasts the rubble into smoking cinder!', 'combat');
+                    break;
+                }
+            }
+
+            spellEffects.push({
+                type: 'pyre',
+                x: curX,
+                y: curY,
+                radius: 14,
+                duration: 8
+            });
+
+            for (let i = 0; i < 16; i++) {
+                spawnEmber(curX * TILE_SIZE + 16, curY * TILE_SIZE + 16, true);
+            }
+
+            AudioSys.playPyre();
+            logMessage('🔥 PYRE BLAST: You cast a roaring fireball! Scorches a blazing trail 4 tiles forward (35 Fire DMG).', 'combat');
+        }
+
+        function castFrost() {
+            const rad = 2;
+            let frozenWaterCount = 0;
+
+            for (let dy = -rad; dy <= rad; dy++) {
+                for (let dx = -rad; dx <= rad; dx++) {
+                    const tx = player.x + dx;
+                    const ty = player.y + dy;
+                    if (tx >= 0 && tx < MAP_WIDTH && ty >= 0 && ty < MAP_HEIGHT) {
+                        visible[ty][tx] = true;
+                        explored[ty][tx] = true;
+                        lightMap[ty][tx] = Math.max(lightMap[ty][tx], 0.7);
+
+                        if (dungeon[ty][tx] === TILE.WATER) {
+                            dungeon[ty][tx] = TILE.FLOOR;
+                            frozenWaterCount++;
+                        }
+                    }
+                }
+            }
+
+            spellEffects.push({
+                type: 'frost',
+                x: player.x,
+                y: player.y,
+                radius: 12,
+                duration: 10
+            });
+
+            AudioSys.playFrost();
+            if (frozenWaterCount > 0) {
+                logMessage(`❄️ GLACIAL NOVA: Sub-zero frost detonates! Froze ${frozenWaterCount} water pools into solid ice sheets.`, 'magic');
+            } else {
+                logMessage('❄️ GLACIAL NOVA: Sub-zero frost radiates outward (24 Cryo DMG), chilling the subterranean air.', 'magic');
+            }
+        }
+
+        function castTempest() {
+            let dx = 0, dy = 0;
+            if (player.facing === 'up') dy = -1;
+            else if (player.facing === 'down') dy = 1;
+            else if (player.facing === 'left') dx = -1;
+            else if (player.facing === 'right') dx = 1;
+
+            let endX = player.x;
+            let endY = player.y;
+
+            for (let step = 1; step <= 6; step++) {
+                const tx = player.x + dx * step;
+                const ty = player.y + dy * step;
+                if (tx < 1 || tx >= MAP_WIDTH - 1 || ty < 1 || ty >= MAP_HEIGHT - 1) break;
+
+                endX = tx;
+                endY = ty;
+                visible[ty][tx] = true;
+                explored[ty][tx] = true;
+                lightMap[ty][tx] = 1.0;
+
+                if (dungeon[ty][tx] === TILE.DOOR_CLOSED) {
+                    dungeon[ty][tx] = TILE.DOOR_OPEN;
+                    logMessage('⚡ Chain Bolt violently blows open the ironbound door!', 'combat');
+                }
+                if (dungeon[ty][tx] === TILE.WALL || dungeon[ty][tx] === TILE.PILLAR) {
+                    break;
+                }
+            }
+
+            spellEffects.push({
+                type: 'tempest',
+                x1: player.x,
+                y1: player.y,
+                x2: endX,
+                y2: endY,
+                duration: 7
+            });
+
+            AudioSys.playTempest();
+            logMessage('⚡ CHAIN BOLT: A crackling arc of blue lightning pierces down the corridor (42 Shock DMG)!', 'relic');
+        }
+
+        function castVoid() {
+            let dx = 0, dy = 0;
+            if (player.facing === 'up') dy = -1;
+            else if (player.facing === 'down') dy = 1;
+            else if (player.facing === 'left') dx = -1;
+            else if (player.facing === 'right') dx = 1;
+
+            let targetX = player.x;
+            let targetY = player.y;
+            let blinked = false;
+
+            for (let dist = 3; dist >= 1; dist--) {
+                const tx = player.x + dx * dist;
+                const ty = player.y + dy * dist;
+                if (tx > 0 && tx < MAP_WIDTH - 1 && ty > 0 && ty < MAP_HEIGHT - 1) {
+                    const t = dungeon[ty][tx];
+                    if (t === TILE.FLOOR || t === TILE.WATER || t === TILE.DOOR_OPEN || t === TILE.STAIRS_DOWN || t === TILE.STAIRS_UP) {
+                        targetX = tx;
+                        targetY = ty;
+                        blinked = true;
+                        break;
+                    }
+                }
+            }
+
+            spellEffects.push({
+                type: 'void',
+                x: player.x,
+                y: player.y,
+                radius: 8,
+                duration: 9
+            });
+
+            if (blinked) {
+                player.x = targetX;
+                player.y = targetY;
+                spellEffects.push({
+                    type: 'void',
+                    x: targetX,
+                    y: targetY,
+                    radius: 12,
+                    duration: 9
+                });
+                AudioSys.playVoid();
+                logMessage('🌀 VOID WARP: You phase-shift across space, slipping through walls and chasms!', 'relic');
+            } else {
+                AudioSys.playVoid();
+                logMessage('🌀 VOID WARP: Cosmic energies warp, but solid stone blocks your phase-step.', 'important');
+            }
+        }
+
+        function castAegis() {
+            player.shield = Math.min(60, (player.shield || 0) + 35);
+            player.sanity = Math.min(player.maxSanity, player.sanity + 15);
+            AudioSys.playAegis();
+            logMessage('🛡️ AEGIS WARD: Radiant runic prism forms around you (+35 Ward Shield, +15 Sanity restored)!', 'heal');
+        }
+
+        // --- Rune Socketing & Staff UI System ---
+        function socketRune(socketIdx, runeId) {
+            AudioSys.init();
+            if (!player.ownedRunes.includes(runeId)) return;
+            const staff = STAVES[player.equippedStaff];
+            if (socketIdx < 0 || socketIdx >= staff.maxSockets) return;
+
+            const existingIdx = player.staffSockets.indexOf(runeId);
+            if (existingIdx !== -1) {
+                player.staffSockets[existingIdx] = null;
+            }
+
+            player.staffSockets[socketIdx] = runeId;
+            const rune = RUNES[runeId];
+            logMessage(`Inscribed ${rune.name} (${rune.symbol}) into Socket ${socketIdx + 1}! Granted spell: ${rune.spellName}.`, 'relic');
+            AudioSys.playAegis();
+            updateHUD();
+        }
+
+        function unsocketRune(socketIdx) {
+            AudioSys.init();
+            if (socketIdx < 0 || socketIdx >= player.staffSockets.length) return;
+            const runeId = player.staffSockets[socketIdx];
+            if (!runeId) return;
+            const rune = RUNES[runeId];
+            player.staffSockets[socketIdx] = null;
+            logMessage(`Unsocketed ${rune.name} from Staff Socket ${socketIdx + 1}.`, 'magic');
+            updateHUD();
+        }
+
+        function renderRuneUI() {
+            const staff = STAVES[player.equippedStaff];
+            const staffNameEl = document.getElementById('staffName');
+            if (staffNameEl) {
+                staffNameEl.innerText = `🪄 ${staff.name}`;
+                document.getElementById('staffTierTxt').innerText = staff.tier;
+                document.getElementById('staffArcana').innerText = `+${staff.arcanaBonus} Arcana`;
+                document.getElementById('staffDesc').innerText = staff.desc;
+            }
+
+            // Sockets List
+            const socketsList = document.getElementById('staffSocketsList');
+            if (socketsList) {
+                socketsList.innerHTML = '';
+                for (let s = 0; s < staff.maxSockets; s++) {
+                    const runeKey = player.staffSockets[s];
+                    const socketDiv = document.createElement('div');
+                    socketDiv.className = 'socket-card';
+
+                    if (runeKey && RUNES[runeKey]) {
+                        const rune = RUNES[runeKey];
+                        const cost = (player.equippedStaff === 'ARCHMAGI') ? Math.max(4, rune.cost - 2) : rune.cost;
+                        socketDiv.innerHTML = `
+                            <div class="socket-info">
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <span style="color:${rune.color}; font-size:14px; font-weight:bold;">${rune.symbol}</span>
+                                    <strong style="color:${rune.color}; font-size:11px;">Socket ${s + 1}: ${rune.name}</strong>
+                                    <span style="color:var(--text-dim); font-size:10px;">[Key: ${s === 0 ? 'Z' : (s === 1 ? 'X' : 'V')}]</span>
+                                </div>
+                                <div style="color:var(--text-dim); font-size:10px;">
+                                    Spell: <span style="color:var(--text-bright);">${rune.spellName}</span> (${cost} MP) • ${rune.passive}
+                                </div>
+                            </div>
+                            <button class="socket-btn-unsocket" data-socket="${s}">Unsocket</button>
+                        `;
+                    } else {
+                        socketDiv.innerHTML = `
+                            <div class="socket-info">
+                                <span style="color:var(--text-dim); font-size:11px;">Socket ${s + 1}: [Empty Socket]</span>
+                                <span style="color:#475569; font-size:10px;">Select a rune from your stash below to inscribe.</span>
+                            </div>
+                            <span style="color:var(--text-dim); font-size:10px;">Empty</span>
+                        `;
+                    }
+                    socketsList.appendChild(socketDiv);
+                }
+
+                socketsList.querySelectorAll('.socket-btn-unsocket').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const sIdx = parseInt(btn.getAttribute('data-socket'));
+                        unsocketRune(sIdx);
+                    });
+                });
+            }
+
+            // Rune Stash List
+            const stashList = document.getElementById('runeStashList');
+            if (stashList) {
+                stashList.innerHTML = '';
+                document.getElementById('runeCountTxt').innerText = `${player.ownedRunes.length} Runes Owned`;
+
+                player.ownedRunes.forEach(runeKey => {
+                    const rune = RUNES[runeKey];
+                    if (!rune) return;
+                    const isSocketed = player.staffSockets.includes(runeKey);
+                    const socketedIdx = player.staffSockets.indexOf(runeKey);
+
+                    const card = document.createElement('div');
+                    card.className = 'stash-rune-card';
+                    card.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="color:${rune.color}; font-size:16px; font-weight:bold;">${rune.symbol}</span>
+                            <div>
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <strong style="color:${rune.color}; font-size:11px;">${rune.name}</strong>
+                                    <span style="color:var(--text-dim); font-size:10px;">(${rune.element})</span>
+                                </div>
+                                <div style="color:var(--text-dim); font-size:10px;">${rune.desc}</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:4px; align-items:center;">
+                            ${isSocketed ? `<span style="color:var(--accent-cyan); font-size:10px; font-weight:bold;">In Socket ${socketedIdx + 1}</span>` : `
+                                <button class="stash-btn-socket" data-rune="${runeKey}" data-target="0">Socket 1</button>
+                                ${staff.maxSockets >= 2 ? `<button class="stash-btn-socket" data-rune="${runeKey}" data-target="1">Socket 2</button>` : ''}
+                                ${staff.maxSockets >= 3 ? `<button class="stash-btn-socket" data-rune="${runeKey}" data-target="2">Socket 3</button>` : ''}
+                            `}
+                        </div>
+                    `;
+                    stashList.appendChild(card);
+                });
+
+                stashList.querySelectorAll('.stash-btn-socket').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const rKey = btn.getAttribute('data-rune');
+                        const sIdx = parseInt(btn.getAttribute('data-target'));
+                        socketRune(sIdx, rKey);
+                    });
+                });
+            }
+        }
+
+        function renderSpellHotbar() {
+            const list = document.getElementById('spellButtonsList');
+            if (!list) return;
+            list.innerHTML = '';
+            const staff = STAVES[player.equippedStaff];
+            const keys = ['Z', 'X', 'V'];
+
+            for (let s = 0; s < staff.maxSockets; s++) {
+                const runeKey = player.staffSockets[s];
+                const btn = document.createElement('button');
+                btn.className = 'spell-btn';
+                const keyLabel = keys[s] || `${s + 1}`;
+
+                if (runeKey && RUNES[runeKey]) {
+                    const rune = RUNES[runeKey];
+                    const cost = (player.equippedStaff === 'ARCHMAGI') ? Math.max(4, rune.cost - 2) : rune.cost;
+                    const canAfford = player.aether >= cost;
+
+                    if (!canAfford) btn.classList.add('disabled');
+                    btn.innerHTML = `
+                        <span class="spell-key">${keyLabel}</span>
+                        <span style="color:${rune.color}; font-weight:bold;">${rune.symbol}</span>
+                        <span>${rune.spellName}</span>
+                        <span class="spell-cost">${cost} MP</span>
+                    `;
+                    btn.title = `${rune.name}: ${rune.desc}`;
+                    btn.addEventListener('click', () => {
+                        castSpellFromSocket(s);
+                    });
+                } else {
+                    btn.classList.add('disabled');
+                    btn.innerHTML = `
+                        <span class="spell-key">${keyLabel}</span>
+                        <span style="color:var(--text-dim);">[Empty Socket]</span>
+                    `;
+                    btn.title = 'Inscribe a rune in the Runes Tab [3] to unlock this spell.';
+                }
+                list.appendChild(btn);
+            }
+        }
+
         function updateHUD() {
             const zIdx = getZone(depthLevel);
             const zInfo = ZONE_INFO[zIdx];
@@ -1916,24 +2783,53 @@
             document.getElementById('statDepth').innerText = `B${depthLevel}: ${zInfo.shortName}`;
             document.getElementById('hudZoneName').innerText = `${zInfo.name} - B${depthLevel}`;
             document.getElementById('hudZoneSub').innerText = `Turn: ${turn} | Light: 100% | ${zInfo.sconceName}`;
-            document.getElementById('statHp').innerText = `${player.hp} / ${player.maxHp}`;
+            
+            const shieldTxt = (player.shield > 0) ? ` (+${player.shield} Ward)` : '';
+            document.getElementById('statHp').innerText = `${player.hp} / ${player.maxHp}${shieldTxt}`;
             document.getElementById('statSanity').innerText = `${player.sanity} / ${player.maxSanity}`;
+            document.getElementById('statAether').innerText = `${player.aether} / ${player.maxAether}`;
             document.getElementById('statGold').innerText = `${player.essence} ✦`;
 
             document.getElementById('delverLevel').innerText = player.level;
-            document.getElementById('delverHpTxt').innerText = `${player.hp} / ${player.maxHp}`;
+            document.getElementById('delverHpTxt').innerText = `${player.hp} / ${player.maxHp}${shieldTxt}`;
             document.getElementById('barHp').style.width = `${(player.hp / player.maxHp) * 100}%`;
 
             document.getElementById('delverSanityTxt').innerText = `${player.sanity} / ${player.maxSanity}`;
             document.getElementById('barSanity').style.width = `${(player.sanity / player.maxSanity) * 100}%`;
 
+            document.getElementById('delverAetherTxt').innerText = `${player.aether} / ${player.maxAether}`;
+            document.getElementById('barAether').style.width = `${(player.aether / player.maxAether) * 100}%`;
+
             document.getElementById('delverExpTxt').innerText = `${player.exp} / ${player.maxExp}`;
             document.getElementById('barExp').style.width = `${(player.exp / player.maxExp) * 100}%`;
 
-            document.getElementById('statMight').innerText = `${player.might} (+${Math.floor((player.might-10)/2)})`;
-            document.getElementById('statWarding').innerText = `${player.warding} (+${Math.floor((player.warding-10)/2)})`;
-            document.getElementById('statArcana').innerText = `${player.arcana} (+${Math.floor((player.arcana-10)/2)})`;
+            // Dynamic Might / Warding / Arcana calculated with Staff & Runes passive bonuses
+            const staff = STAVES[player.equippedStaff];
+            let bonusMight = 0;
+            let bonusWarding = 0;
+            let bonusArcana = staff.arcanaBonus;
+
+            player.staffSockets.forEach(rKey => {
+                if (rKey === 'PYRE') bonusMight += 3;
+                else if (rKey === 'FROST') bonusWarding += 3;
+                else if (rKey === 'TEMPEST') { bonusMight += 2; bonusArcana += 2; }
+                else if (rKey === 'VOID') { bonusArcana += 3; }
+                else if (rKey === 'AEGIS') { bonusWarding += 4; }
+            });
+
+            document.getElementById('statMight').innerText = `${player.might + bonusMight} (+${Math.floor((player.might + bonusMight - 10) / 2)})`;
+            document.getElementById('statWarding').innerText = `${player.warding + bonusWarding} (+${Math.floor((player.warding + bonusWarding - 10) / 2)})`;
+            document.getElementById('statArcana').innerText = `${player.arcana + bonusArcana} (+${Math.floor((player.arcana + bonusArcana - 10) / 2)})`;
             document.getElementById('statLightRad').innerText = `${player.lightRadius} Tiles`;
+
+            // Weapon slot in Delver tab
+            const wpnName = document.getElementById('gearWeaponName');
+            if (wpnName) {
+                const runeSymbols = player.staffSockets.filter(Boolean).map(r => RUNES[r].symbol).join('');
+                wpnName.innerText = runeSymbols ? `${staff.name.split(' ')[0]} [${runeSymbols}]` : staff.name.split(' ')[0];
+                const gearSlot = document.getElementById('gearWeaponSlot');
+                if (gearSlot) gearSlot.title = `${staff.name} (${runeSymbols || 'No Runes'})`;
+            }
 
             const tileNames = {
                 [TILE.VOID]: 'Void',
@@ -1953,6 +2849,20 @@
             };
             const curTile = dungeon[player.y] ? dungeon[player.y][player.x] : TILE.FLOOR;
             document.getElementById('hudTileInfo').innerText = `Position: (${player.x}, ${player.y}) | ${tileNames[curTile] || 'Floor'}`;
+
+            renderSpellHotbar();
+            renderRuneUI();
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                if (b.getAttribute('data-tab') === tabName) b.classList.add('active');
+                else b.classList.remove('active');
+            });
+            document.getElementById('tabDelver').style.display = (tabName === 'hero') ? 'flex' : 'none';
+            document.getElementById('tabInventory').style.display = (tabName === 'inventory') ? 'flex' : 'none';
+            document.getElementById('tabRunes').style.display = (tabName === 'runes') ? 'flex' : 'none';
+            if (tabName === 'runes') renderRuneUI();
         }
 
         // --- Input Event Handlers ---
@@ -1960,6 +2870,11 @@
             if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
                 e.preventDefault();
             }
+
+            // Tab switching hotkeys 1, 2, 3 (when not using numpad for movement)
+            if (e.code === 'Digit1') { switchTab('hero'); return; }
+            if (e.code === 'Digit2') { switchTab('inventory'); return; }
+            if (e.code === 'Digit3') { switchTab('runes'); return; }
 
             switch (e.key) {
                 // Movement
@@ -1973,6 +2888,8 @@
                 case 'ArrowDown':
                 case 's':
                 case 'S':
+                case 'j':
+                case '2':
                     movePlayer(0, 1);
                     break;
                 case 'ArrowLeft':
@@ -2011,6 +2928,24 @@
                 case '5':
                 case '.':
                     restTurn();
+                    break;
+                // Search
+                case 'r':
+                case 'R':
+                    searchArea();
+                    break;
+                // Spellcasting hotkeys: Z, X, V
+                case 'z':
+                case 'Z':
+                    castSpellFromSocket(0);
+                    break;
+                case 'x':
+                case 'X':
+                    castSpellFromSocket(1);
+                    break;
+                case 'v':
+                case 'V':
+                    castSpellFromSocket(2);
                     break;
                 // CRT Toggle
                 case 'c':
@@ -2070,6 +3005,8 @@
             turn = 1;
             player.hp = player.maxHp;
             player.sanity = player.maxSanity;
+            player.aether = player.maxAether;
+            player.shield = 0;
             generateDungeon(1);
         });
 
@@ -2094,13 +3031,8 @@
         // Tab Switching
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-
                 const tab = btn.getAttribute('data-tab');
-                document.getElementById('tabDelver').style.display = tab === 'hero' ? 'flex' : 'none';
-                document.getElementById('tabInventory').style.display = tab === 'inventory' ? 'flex' : 'none';
-                document.getElementById('tabRunes').style.display = tab === 'runes' ? 'flex' : 'none';
+                switchTab(tab);
             });
         });
 

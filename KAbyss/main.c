@@ -172,10 +172,65 @@ typedef struct {
     int turn;
 } LogMessage;
 
+#define RUNE_PYRE     0
+#define RUNE_FROST    1
+#define RUNE_TEMPEST  2
+#define RUNE_VOID     3
+#define RUNE_AEGIS    4
+#define NUM_RUNES     5
+
+typedef struct {
+    const char* name;
+    const char* symbol;
+    const char* element;
+    COLORREF color;
+    const char* spellName;
+    int cost;
+    const char* desc;
+    const char* passive;
+} RuneDef;
+
+static const RuneDef g_runeDefs[NUM_RUNES] = {
+    { "Pyre Rune", "F", "Fire", RGB(249, 115, 22), "Pyre Blast", 12, "Hurls flame 4 tiles (35 Fire DMG). Burns obstacles.", "+3 Might" },
+    { "Frost Rune", "I", "Ice", RGB(6, 182, 212), "Glacial Nova", 10, "Freezes 2-tile radius (24 Cryo DMG). Freezes water.", "+3 Warding" },
+    { "Tempest Rune", "L", "Lightning", RGB(234, 179, 8), "Chain Bolt", 14, "Piercing bolt 6 tiles (42 Shock DMG). Shatters doors.", "+2 Might, +2 Arcana" },
+    { "Void Rune", "V", "Eldritch", RGB(168, 85, 247), "Void Warp", 15, "Phase-shifts 3 paces forward through obstacles & chasms.", "+3 Arcana, +1 Light" },
+    { "Aegis Rune", "A", "Warding", RGB(56, 189, 248), "Aegis Ward", 10, "Prismatic barrier absorbs 35 DMG, +15 Sanity.", "+4 Warding, +10 Sanity" }
+};
+
+typedef struct {
+    const char* name;
+    const char* tier;
+    int maxSockets;
+    int arcanaBonus;
+    const char* desc;
+} StaffDef;
+
+static const StaffDef g_staffDefs[3] = {
+    { "Ashwood Rune Staff", "Tier I", 2, 2, "Petrified ash. Holds 2 ancient elemental runes." },
+    { "Cinderwood Scepter", "Tier II", 2, 4, "Magma-forged. Holds 2 runes with +4 Arcana." },
+    { "Staff of the Arch-Magi", "Tier III", 3, 6, "Ancient conduit. Holds 3 runes with -2 MP cost." }
+};
+
+typedef struct {
+    int type; // 0=pyre, 1=frost, 2=tempest, 3=void
+    int x, y;
+    int x2, y2;
+    int radius;
+    int duration;
+    COLORREF color;
+} SpellFX;
+
+#define MAX_SPELL_FX 16
+static SpellFX g_spellFX[MAX_SPELL_FX];
+static int g_numSpellFX = 0;
+
 typedef struct {
     int x, y;
     int hp, max_hp;
     int sanity, max_sanity;
+    int aether, max_aether;
+    int shield;
     int essence;
     int level;
     int exp, max_exp;
@@ -184,6 +239,9 @@ typedef struct {
     int arcana;
     int light_radius;
     int facing; // 0=Up, 1=Right, 2=Down, 3=Left
+    int equippedStaff; // 0=Ashwood, 1=Cinder, 2=Arch-Magi
+    int staffSockets[3]; // Rune index 0..4 or -1 for empty
+    BOOL ownedRunes[NUM_RUNES];
 } Delver;
 
 typedef struct {
@@ -244,6 +302,9 @@ void CommuneAltar(int x, int y);
 void CheckLevelUp(void);
 void SpawnEmber(float x, float y, BOOL isTorch);
 void UpdateEmbers(void);
+void CastSpell(int socketIdx);
+void SocketRune(int socketIdx, int runeIdx);
+void UnsocketRune(int socketIdx);
 
 // Custom pseudo random helper
 static unsigned int g_randSeed = 123456789;
@@ -276,12 +337,14 @@ void CheckLevelUp(void) {
         g_player.max_exp = (int)(g_player.max_exp * 1.5f);
         g_player.max_hp += 15;
         g_player.hp = g_player.max_hp;
+        g_player.max_aether += 10;
+        g_player.aether = g_player.max_aether;
         g_player.might += 2;
         g_player.warding += 1;
         g_player.arcana += 2;
 
         char buf[128];
-        snprintf(buf, sizeof(buf), "LEVEL UP! Delver reached Level %d! (+15 Max HP, +2 Might, +2 Arcana)", g_player.level);
+        snprintf(buf, sizeof(buf), "LEVEL UP! Delver reached Level %d! (+15 HP, +10 Aether, +2 Might, +2 Arcana)", g_player.level);
         AddLog(buf, COLOR_ACCENT_PURPLE);
         Beep(880, 70); Beep(1175, 100);
     }
@@ -881,11 +944,28 @@ void CommuneAltar(int x, int y) {
     if (g_player.sanity > g_player.max_sanity) g_player.sanity = g_player.max_sanity;
     g_player.hp += 20;
     if (g_player.hp > g_player.max_hp) g_player.hp = g_player.max_hp;
+    g_player.aether += 25;
+    if (g_player.aether > g_player.max_aether) g_player.aether = g_player.max_aether;
     g_player.essence += 35;
     g_player.exp += 30;
 
-    AddLog("ALTAR COMMUNION! Primordial runic energies infuse your spirit! (+30 Sanity, +20 HP, +35 Essence, +30 EXP)", COLOR_TEXT_GOLD);
-    Beep(523, 60); Beep(659, 60); Beep(784, 80);
+    int unowned[NUM_RUNES];
+    int unownedCount = 0;
+    for (int r = 0; r < NUM_RUNES; r++) {
+        if (!g_player.ownedRunes[r]) unowned[unownedCount++] = r;
+    }
+
+    if (unownedCount > 0 && RandInt(0, 100) < 60) {
+        int pick = unowned[RandInt(0, unownedCount - 1)];
+        g_player.ownedRunes[pick] = TRUE;
+        char buf[128];
+        snprintf(buf, sizeof(buf), "RUNIC COMMUNION! Altar reveals the %s (%s)! Inscribe in Tab [3].", g_runeDefs[pick].name, g_runeDefs[pick].symbol);
+        AddLog(buf, COLOR_TEXT_GOLD);
+        Beep(523, 60); Beep(784, 80);
+    } else {
+        AddLog("ALTAR COMMUNION! Primordial runic energies infuse you! (+30 Sanity, +20 HP, +25 Aether, +35 Essence, +30 EXP)", COLOR_TEXT_GOLD);
+        Beep(523, 60); Beep(659, 60); Beep(784, 80);
+    }
     CheckLevelUp();
     AdvanceTurn();
 }
@@ -948,8 +1028,27 @@ void MovePlayer(int dx, int dy) {
                 g_player.essence += g_chests[c].essence;
                 g_player.exp += 25;
 
+                int unowned[NUM_RUNES];
+                int unownedCount = 0;
+                for (int r = 0; r < NUM_RUNES; r++) {
+                    if (!g_player.ownedRunes[r]) unowned[unownedCount++] = r;
+                }
+
                 char buf[128];
-                snprintf(buf, sizeof(buf), "Opened Relic Chest! +%d Essence & +25 EXP!", g_chests[c].essence);
+                if (unownedCount > 0 && RandInt(0, 100) < 50) {
+                    int pick = unowned[RandInt(0, unownedCount - 1)];
+                    g_player.ownedRunes[pick] = TRUE;
+                    snprintf(buf, sizeof(buf), "Chest opened! +%d Essence and found %s (%s)!", g_chests[c].essence, g_runeDefs[pick].name, g_runeDefs[pick].symbol);
+                } else if (g_player.equippedStaff == 0 && g_depthLevel >= 4 && RandInt(0, 100) < 40) {
+                    g_player.equippedStaff = 1;
+                    snprintf(buf, sizeof(buf), "Chest opened! +%d Essence & found Cinderwood Scepter (+4 Arcana)!", g_chests[c].essence);
+                } else if (g_player.equippedStaff < 2 && g_depthLevel >= 7 && RandInt(0, 100) < 35) {
+                    g_player.equippedStaff = 2;
+                    snprintf(buf, sizeof(buf), "Chest opened! +%d Essence & found Staff of the Arch-Magi (3 Sockets)!", g_chests[c].essence);
+                } else {
+                    snprintf(buf, sizeof(buf), "Opened Relic Chest! +%d Essence & +25 EXP!", g_chests[c].essence);
+                }
+
                 AddLog(buf, COLOR_TEXT_GOLD);
                 Beep(600, 40); Beep(800, 50);
                 CheckLevelUp();
@@ -987,9 +1086,228 @@ void RestTurn(void) {
         g_player.sanity += 1;
         if (g_player.sanity > g_player.max_sanity) g_player.sanity = g_player.max_sanity;
     }
-    AddLog("You steady your breath and rest (+2 HP, +1 Sanity).", COLOR_ACCENT_GREEN);
+    if (g_player.aether < g_player.max_aether) {
+        g_player.aether += 3;
+        if (g_player.aether > g_player.max_aether) g_player.aether = g_player.max_aether;
+    }
+    AddLog("You steady your breath and rest (+2 HP, +1 Sanity, +3 Aether).", COLOR_ACCENT_GREEN);
     Beep(440, 40);
     AdvanceTurn();
+}
+
+// --- Relic & Ancient Rune Magic Spellcasting System ---
+void CastSpell(int socketIdx) {
+    if (socketIdx < 0 || socketIdx >= g_staffDefs[g_player.equippedStaff].maxSockets) return;
+    int runeIdx = g_player.staffSockets[socketIdx];
+    if (runeIdx < 0 || runeIdx >= NUM_RUNES) {
+        AddLog("Selected staff socket is empty! Inscribe a rune in Tab [3].", COLOR_ACCENT_AMBER);
+        return;
+    }
+
+    const RuneDef* rd = &g_runeDefs[runeIdx];
+    int cost = rd->cost;
+    if (g_player.equippedStaff == 2) {
+        cost -= 2;
+        if (cost < 4) cost = 4;
+    }
+
+    if (g_player.aether < cost) {
+        char buf[128];
+        snprintf(buf, sizeof(buf), "Not enough Aether! Required: %d MP, Available: %d MP.", cost, g_player.aether);
+        AddLog(buf, COLOR_ACCENT_RED);
+        Beep(160, 40);
+        return;
+    }
+
+    g_player.aether -= cost;
+
+    int dx = 0, dy = 0;
+    if (g_player.facing == 0) dy = -1;
+    else if (g_player.facing == 1) dx = 1;
+    else if (g_player.facing == 2) dy = 1;
+    else if (g_player.facing == 3) dx = -1;
+
+    if (runeIdx == RUNE_PYRE) {
+        int curX = g_player.x;
+        int curY = g_player.y;
+        for (int step = 1; step <= 4; step++) {
+            int tx = g_player.x + dx * step;
+            int ty = g_player.y + dy * step;
+            if (tx < 1 || tx >= MAP_WIDTH - 1 || ty < 1 || ty >= MAP_HEIGHT - 1) break;
+            curX = tx; curY = ty;
+            g_visible[ty][tx] = TRUE;
+            g_explored[ty][tx] = TRUE;
+            g_lightMap[ty][tx] = 1.0f;
+
+            if (g_dungeon[ty][tx] == TILE_WALL || g_dungeon[ty][tx] == TILE_PILLAR || g_dungeon[ty][tx] == TILE_CHASM) {
+                break;
+            }
+            if (g_dungeon[ty][tx] == TILE_DOOR_CLOSED) {
+                g_dungeon[ty][tx] = TILE_DOOR_OPEN;
+                AddLog("Pyre Blast burns down the door into charred embers!", COLOR_ACCENT_RED);
+                break;
+            }
+            if (g_dungeon[ty][tx] == TILE_RUBBLE) {
+                g_dungeon[ty][tx] = TILE_FLOOR;
+                AddLog("Pyre Blast incinerates the rubble into ash!", COLOR_ACCENT_RED);
+                break;
+            }
+        }
+        if (g_numSpellFX < MAX_SPELL_FX) {
+            g_spellFX[g_numSpellFX].type = 0;
+            g_spellFX[g_numSpellFX].x = curX;
+            g_spellFX[g_numSpellFX].y = curY;
+            g_spellFX[g_numSpellFX].radius = 16;
+            g_spellFX[g_numSpellFX].duration = 6;
+            g_spellFX[g_numSpellFX].color = RGB(249, 115, 22);
+            g_numSpellFX++;
+        }
+        for (int i = 0; i < 12; i++) {
+            SpawnEmber((float)(curX * TILE_SIZE + 16), (float)(curY * TILE_SIZE + 16), TRUE);
+        }
+        AddLog("PYRE BLAST! You cast a roaring fireball 4 tiles ahead (35 Fire DMG)!", RGB(249, 115, 22));
+        Beep(440, 40); Beep(220, 60);
+
+    } else if (runeIdx == RUNE_FROST) {
+        int frozenCount = 0;
+        for (int fdy = -2; fdy <= 2; fdy++) {
+            for (int fdx = -2; fdx <= 2; fdx++) {
+                int tx = g_player.x + fdx;
+                int ty = g_player.y + fdy;
+                if (tx >= 0 && tx < MAP_WIDTH && ty >= 0 && ty < MAP_HEIGHT) {
+                    g_visible[ty][tx] = TRUE;
+                    g_explored[ty][tx] = TRUE;
+                    if (g_dungeon[ty][tx] == TILE_WATER) {
+                        g_dungeon[ty][tx] = TILE_FLOOR;
+                        frozenCount++;
+                    }
+                }
+            }
+        }
+        if (g_numSpellFX < MAX_SPELL_FX) {
+            g_spellFX[g_numSpellFX].type = 1;
+            g_spellFX[g_numSpellFX].x = g_player.x;
+            g_spellFX[g_numSpellFX].y = g_player.y;
+            g_spellFX[g_numSpellFX].radius = 14;
+            g_spellFX[g_numSpellFX].duration = 8;
+            g_spellFX[g_numSpellFX].color = RGB(6, 182, 212);
+            g_numSpellFX++;
+        }
+        if (frozenCount > 0) {
+            char fbuf[128];
+            snprintf(fbuf, sizeof(fbuf), "GLACIAL NOVA! Freezing wave froze %d water pools into solid ice sheets!", frozenCount);
+            AddLog(fbuf, COLOR_ACCENT_CYAN);
+        } else {
+            AddLog("GLACIAL NOVA! Sub-zero frost radiates outward (24 Cryo DMG)!", COLOR_ACCENT_CYAN);
+        }
+        Beep(880, 50); Beep(1175, 70);
+
+    } else if (runeIdx == RUNE_TEMPEST) {
+        int endX = g_player.x;
+        int endY = g_player.y;
+        for (int step = 1; step <= 6; step++) {
+            int tx = g_player.x + dx * step;
+            int ty = g_player.y + dy * step;
+            if (tx < 1 || tx >= MAP_WIDTH - 1 || ty < 1 || ty >= MAP_HEIGHT - 1) break;
+            endX = tx; endY = ty;
+            g_visible[ty][tx] = TRUE;
+            g_explored[ty][tx] = TRUE;
+            g_lightMap[ty][tx] = 1.0f;
+
+            if (g_dungeon[ty][tx] == TILE_DOOR_CLOSED) {
+                g_dungeon[ty][tx] = TILE_DOOR_OPEN;
+                AddLog("Chain Bolt shatters open the door!", COLOR_TEXT_GOLD);
+            }
+            if (g_dungeon[ty][tx] == TILE_WALL || g_dungeon[ty][tx] == TILE_PILLAR) break;
+        }
+        if (g_numSpellFX < MAX_SPELL_FX) {
+            g_spellFX[g_numSpellFX].type = 2;
+            g_spellFX[g_numSpellFX].x = g_player.x;
+            g_spellFX[g_numSpellFX].y = g_player.y;
+            g_spellFX[g_numSpellFX].x2 = endX;
+            g_spellFX[g_numSpellFX].y2 = endY;
+            g_spellFX[g_numSpellFX].duration = 6;
+            g_spellFX[g_numSpellFX].color = RGB(234, 179, 8);
+            g_numSpellFX++;
+        }
+        AddLog("CHAIN BOLT! Crackling electrical bolt arcs 6 tiles (42 Shock DMG)!", RGB(234, 179, 8));
+        Beep(1200, 40); Beep(700, 50);
+
+    } else if (runeIdx == RUNE_VOID) {
+        int targetX = g_player.x;
+        int targetY = g_player.y;
+        BOOL blinked = FALSE;
+        for (int dist = 3; dist >= 1; dist--) {
+            int tx = g_player.x + dx * dist;
+            int ty = g_player.y + dy * dist;
+            if (tx > 0 && tx < MAP_WIDTH - 1 && ty > 0 && ty < MAP_HEIGHT - 1) {
+                int t = g_dungeon[ty][tx];
+                if (t == TILE_FLOOR || t == TILE_WATER || t == TILE_DOOR_OPEN || t == TILE_STAIRS_DOWN || t == TILE_STAIRS_UP) {
+                    targetX = tx; targetY = ty;
+                    blinked = TRUE;
+                    break;
+                }
+            }
+        }
+        if (blinked) {
+            if (g_numSpellFX < MAX_SPELL_FX) {
+                g_spellFX[g_numSpellFX].type = 3;
+                g_spellFX[g_numSpellFX].x = targetX;
+                g_spellFX[g_numSpellFX].y = targetY;
+                g_spellFX[g_numSpellFX].radius = 12;
+                g_spellFX[g_numSpellFX].duration = 7;
+                g_spellFX[g_numSpellFX].color = RGB(168, 85, 247);
+                g_numSpellFX++;
+            }
+            g_player.x = targetX;
+            g_player.y = targetY;
+            AddLog("VOID WARP! You phase-shift through space, slipping through obstacles!", COLOR_ACCENT_PURPLE);
+            Beep(200, 80); Beep(550, 60);
+        } else {
+            AddLog("VOID WARP! Spatial distortions flare, but solid stone blocks destination.", COLOR_ACCENT_PURPLE);
+        }
+
+    } else if (runeIdx == RUNE_AEGIS) {
+        g_player.shield += 35;
+        if (g_player.shield > 60) g_player.shield = 60;
+        g_player.sanity += 15;
+        if (g_player.sanity > g_player.max_sanity) g_player.sanity = g_player.max_sanity;
+        AddLog("AEGIS WARD! Luminous runic barrier envelops you (+35 Shield, +15 Sanity)!", COLOR_BORDER_GLOW);
+        Beep(554, 60); Beep(659, 80);
+    }
+
+    AdvanceTurn();
+}
+
+void SocketRune(int socketIdx, int runeIdx) {
+    if (runeIdx < 0 || runeIdx >= NUM_RUNES || !g_player.ownedRunes[runeIdx]) return;
+    int maxS = g_staffDefs[g_player.equippedStaff].maxSockets;
+    if (socketIdx < 0 || socketIdx >= maxS) return;
+
+    for (int s = 0; s < maxS; s++) {
+        if (g_player.staffSockets[s] == runeIdx) {
+            g_player.staffSockets[s] = -1;
+        }
+    }
+
+    g_player.staffSockets[socketIdx] = runeIdx;
+    char buf[128];
+    snprintf(buf, sizeof(buf), "Inscribed %s into Socket %d! Granted spell: %s.", g_runeDefs[runeIdx].name, socketIdx + 1, g_runeDefs[runeIdx].spellName);
+    AddLog(buf, COLOR_BORDER_GLOW);
+    Beep(659, 60);
+}
+
+void UnsocketRune(int socketIdx) {
+    int maxS = g_staffDefs[g_player.equippedStaff].maxSockets;
+    if (socketIdx < 0 || socketIdx >= maxS) return;
+    int r = g_player.staffSockets[socketIdx];
+    if (r >= 0 && r < NUM_RUNES) {
+        g_player.staffSockets[socketIdx] = -1;
+        char buf[128];
+        snprintf(buf, sizeof(buf), "Unsocketed %s from Staff Socket %d.", g_runeDefs[r].name, socketIdx + 1);
+        AddLog(buf, COLOR_TEXT_DIM);
+        Beep(330, 40);
+    }
 }
 
 void SearchArea(void) {
@@ -1131,22 +1449,31 @@ void RenderGame(HDC hdc, HWND hwnd) {
     const ZoneTheme* zt = &g_zoneThemes[z];
     snprintf(badgeBuf, sizeof(badgeBuf), "DEPTH: B%d (%s)", g_depthLevel, zt->shortName);
     SetTextColor(memDC, COLOR_ACCENT_PURPLE);
-    TextOutA(memDC, 420, 11, badgeBuf, (int)strlen(badgeBuf));
+    TextOutA(memDC, 330, 11, badgeBuf, (int)strlen(badgeBuf));
 
     // HP Badge
     snprintf(badgeBuf, sizeof(badgeBuf), "HP: %d/%d", g_player.hp, g_player.max_hp);
     SetTextColor(memDC, COLOR_ACCENT_RED);
-    TextOutA(memDC, 590, 11, badgeBuf, (int)strlen(badgeBuf));
+    TextOutA(memDC, 490, 11, badgeBuf, (int)strlen(badgeBuf));
 
     // Sanity Badge
     snprintf(badgeBuf, sizeof(badgeBuf), "SANITY: %d/%d", g_player.sanity, g_player.max_sanity);
     SetTextColor(memDC, COLOR_ACCENT_CYAN);
-    TextOutA(memDC, 715, 11, badgeBuf, (int)strlen(badgeBuf));
+    TextOutA(memDC, 600, 11, badgeBuf, (int)strlen(badgeBuf));
+
+    // Aether Badge
+    if (g_player.shield > 0) {
+        snprintf(badgeBuf, sizeof(badgeBuf), "MP: %d/%d [+%d]", g_player.aether, g_player.max_aether, g_player.shield);
+    } else {
+        snprintf(badgeBuf, sizeof(badgeBuf), "MP: %d/%d", g_player.aether, g_player.max_aether);
+    }
+    SetTextColor(memDC, RGB(168, 85, 247));
+    TextOutA(memDC, 740, 11, badgeBuf, (int)strlen(badgeBuf));
 
     // Essence Badge
     snprintf(badgeBuf, sizeof(badgeBuf), "ESSENCE: %d*", g_player.essence);
     SetTextColor(memDC, COLOR_TEXT_GOLD);
-    TextOutA(memDC, 870, 11, badgeBuf, (int)strlen(badgeBuf));
+    TextOutA(memDC, 895, 11, badgeBuf, (int)strlen(badgeBuf));
 
     // Header border line
     HPEN borderPen = CreatePen(PS_SOLID, 1, COLOR_BORDER);
@@ -1394,6 +1721,18 @@ void RenderGame(HDC hdc, HWND hwnd) {
         SetPixel(memDC, fx + 1, fy, RGB(255, 255, 255));
         SetPixel(memDC, fx, fy + 1, RGB(255, 255, 255));
 
+        // Prismatic Shield Halo if Ward active
+        if (g_player.shield > 0) {
+            HPEN shieldPen = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
+            HPEN oldSP = (HPEN)SelectObject(memDC, shieldPen);
+            HBRUSH oldSB = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
+            int shRad = 15 + (int)(sinf((float)g_frameCount * 0.2f) * 2.0f);
+            Ellipse(memDC, plScrX + 16 - shRad, plScrY + 16 - shRad, plScrX + 16 + shRad, plScrY + 16 + shRad);
+            SelectObject(memDC, oldSB);
+            SelectObject(memDC, oldSP);
+            DeleteObject(shieldPen);
+        }
+
         if (RandInt(0, 10) < 3) {
             SpawnEmber((float)(plScrX + 16), (float)(plScrY + 14), TRUE);
         }
@@ -1407,6 +1746,39 @@ void RenderGame(HDC hdc, HWND hwnd) {
             SetPixel(memDC, ex, ey, g_embers[i].color);
             SetPixel(memDC, ex + 1, ey, g_embers[i].color);
             SetPixel(memDC, ex, ey + 1, g_embers[i].color);
+        }
+    }
+
+    // Draw Active Elemental Spell VFX
+    for (int i = 0; i < g_numSpellFX; i++) {
+        SpellFX* fx = &g_spellFX[i];
+        int fxScrX = vpX + (fx->x * TILE_SIZE - g_camX);
+        int fxScrY = vpY + (fx->y * TILE_SIZE - g_camY);
+        HPEN fxPen = CreatePen(PS_SOLID, 2, fx->color);
+        HPEN oldFxP = (HPEN)SelectObject(memDC, fxPen);
+
+        if (fx->type == 2) {
+            // Tempest Chain Bolt Line
+            int fxScrX2 = vpX + (fx->x2 * TILE_SIZE - g_camX) + 16;
+            int fxScrY2 = vpY + (fx->y2 * TILE_SIZE - g_camY) + 16;
+            MoveToEx(memDC, fxScrX + 16, fxScrY + 16, NULL);
+            LineTo(memDC, fxScrX2, fxScrY2);
+        } else {
+            // Radial spell wave (Pyre blast, Glacial nova, Void warp)
+            HBRUSH oldFxB = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
+            int r = fx->radius + (8 - fx->duration) * 2;
+            Ellipse(memDC, fxScrX + 16 - r, fxScrY + 16 - r, fxScrX + 16 + r, fxScrY + 16 + r);
+            SelectObject(memDC, oldFxB);
+        }
+
+        SelectObject(memDC, oldFxP);
+        DeleteObject(fxPen);
+
+        fx->duration--;
+        if (fx->duration <= 0) {
+            g_spellFX[i] = g_spellFX[g_numSpellFX - 1];
+            g_numSpellFX--;
+            i--;
         }
     }
 
@@ -1449,6 +1821,47 @@ void RenderGame(HDC hdc, HWND hwnd) {
     char turnText[64];
     snprintf(turnText, sizeof(turnText), "Turn: %d | Light: 100%% | %s: Lit", g_turn, ztHud->sconceName);
     TextOutA(memDC, vpX + 18, vpY + 33, turnText, (int)strlen(turnText));
+
+    // Spell Hotbar Overlay inside Viewport (Bottom Center/Left)
+    {
+        int hbY = vpY + VIEWPORT_H - 34;
+        int maxS = g_staffDefs[g_player.equippedStaff].maxSockets;
+        const char* keyLabels[3] = {"[Z]", "[X]", "[V]"};
+        for (int s = 0; s < maxS; s++) {
+            int slotX = vpX + 10 + s * 160;
+            RECT slotRect = {slotX, hbY, slotX + 152, hbY + 26};
+            int runeIdx = g_player.staffSockets[s];
+
+            HBRUSH slotBg = CreateSolidBrush(runeIdx >= 0 ? RGB(16, 22, 38) : RGB(10, 14, 22));
+            FillRect(memDC, &slotRect, slotBg);
+            DeleteObject(slotBg);
+
+            COLORREF bCol = (runeIdx >= 0) ? g_runeDefs[runeIdx].color : RGB(45, 55, 75);
+            HPEN slotPen = CreatePen(PS_SOLID, 1, bCol);
+            HPEN oldSlP = (HPEN)SelectObject(memDC, slotPen);
+            SelectObject(memDC, GetStockObject(NULL_BRUSH));
+            Rectangle(memDC, slotRect.left, slotRect.top, slotRect.right, slotRect.bottom);
+            SelectObject(memDC, oldSlP);
+            DeleteObject(slotPen);
+
+            SelectObject(memDC, fontSmall);
+            if (runeIdx >= 0) {
+                const RuneDef* rd = &g_runeDefs[runeIdx];
+                int c = rd->cost;
+                if (g_player.equippedStaff == 2 && c > 4) c -= 2;
+
+                char sBuf[64];
+                snprintf(sBuf, sizeof(sBuf), "%s %s (%d)", keyLabels[s], rd->symbol, c);
+                SetTextColor(memDC, rd->color);
+                TextOutA(memDC, slotX + 6, hbY + 6, sBuf, (int)strlen(sBuf));
+            } else {
+                char sBuf[64];
+                snprintf(sBuf, sizeof(sBuf), "%s [Empty]", keyLabels[s]);
+                SetTextColor(memDC, COLOR_TEXT_DIM);
+                TextOutA(memDC, slotX + 6, hbY + 6, sBuf, (int)strlen(sBuf));
+            }
+        }
+    }
 
     // 3. BOTTOM VIEWPORT TOOLBAR (12..716, 574..606)
     RECT tbRect = {vpX, 574, vpX + VIEWPORT_W, 608};
@@ -1530,63 +1943,85 @@ void RenderGame(HDC hdc, HWND hwnd) {
 
         // Sanity Bar
         SetTextColor(memDC, COLOR_TEXT_DIM);
-        TextOutA(memDC, sbX + 16, contentY + 62, "Sanity (Willpower)", 18);
+        TextOutA(memDC, sbX + 16, contentY + 60, "Sanity (Willpower)", 18);
         char sanTxt[32];
         snprintf(sanTxt, sizeof(sanTxt), "%d / %d", g_player.sanity, g_player.max_sanity);
         SetTextColor(memDC, COLOR_TEXT_BRIGHT);
-        TextOutA(memDC, sbX + sbW - 85, contentY + 62, sanTxt, (int)strlen(sanTxt));
+        TextOutA(memDC, sbX + sbW - 85, contentY + 60, sanTxt, (int)strlen(sanTxt));
 
-        RECT sanBarBg = {sbX + 16, contentY + 78, sbX + sbW - 16, contentY + 84};
+        RECT sanBarBg = {sbX + 16, contentY + 74, sbX + sbW - 16, contentY + 79};
         FillRect(memDC, &sanBarBg, barDark);
         int sanW = (int)((float)(sbW - 32) * ((float)g_player.sanity / (float)g_player.max_sanity));
         if (sanW < 0) sanW = 0; if (sanW > sbW - 32) sanW = sbW - 32;
-        RECT sanBarFill = {sbX + 16, contentY + 78, sbX + 16 + sanW, contentY + 84};
+        RECT sanBarFill = {sbX + 16, contentY + 74, sbX + 16 + sanW, contentY + 79};
         HBRUSH sanFill = CreateSolidBrush(COLOR_BORDER_GLOW);
         FillRect(memDC, &sanBarFill, sanFill);
         DeleteObject(sanFill);
 
+        // Aether (Mana) Bar
+        SetTextColor(memDC, COLOR_TEXT_DIM);
+        TextOutA(memDC, sbX + 16, contentY + 84, "Aether (Mana)", 13);
+        char mpTxt[32];
+        if (g_player.shield > 0) {
+            snprintf(mpTxt, sizeof(mpTxt), "%d / %d [+%d]", g_player.aether, g_player.max_aether, g_player.shield);
+        } else {
+            snprintf(mpTxt, sizeof(mpTxt), "%d / %d", g_player.aether, g_player.max_aether);
+        }
+        SetTextColor(memDC, COLOR_TEXT_BRIGHT);
+        TextOutA(memDC, sbX + sbW - 85, contentY + 84, mpTxt, (int)strlen(mpTxt));
+
+        RECT mpBarBg = {sbX + 16, contentY + 98, sbX + sbW - 16, contentY + 103};
+        FillRect(memDC, &mpBarBg, barDark);
+        int mpW = (int)((float)(sbW - 32) * ((float)g_player.aether / (float)g_player.max_aether));
+        if (mpW < 0) mpW = 0; if (mpW > sbW - 32) mpW = sbW - 32;
+        RECT mpBarFill = {sbX + 16, contentY + 98, sbX + 16 + mpW, contentY + 103};
+        HBRUSH mpFill = CreateSolidBrush(RGB(168, 85, 247));
+        FillRect(memDC, &mpBarFill, mpFill);
+        DeleteObject(mpFill);
+
         // EXP Bar
         SetTextColor(memDC, COLOR_TEXT_DIM);
-        TextOutA(memDC, sbX + 16, contentY + 92, "Experience", 10);
+        TextOutA(memDC, sbX + 16, contentY + 108, "Experience", 10);
         char expTxt[32];
         snprintf(expTxt, sizeof(expTxt), "%d / %d", g_player.exp, g_player.max_exp);
         SetTextColor(memDC, COLOR_TEXT_BRIGHT);
-        TextOutA(memDC, sbX + sbW - 85, contentY + 92, expTxt, (int)strlen(expTxt));
+        TextOutA(memDC, sbX + sbW - 85, contentY + 108, expTxt, (int)strlen(expTxt));
 
-        RECT expBarBg = {sbX + 16, contentY + 108, sbX + sbW - 16, contentY + 114};
+        RECT expBarBg = {sbX + 16, contentY + 122, sbX + sbW - 16, contentY + 127};
         FillRect(memDC, &expBarBg, barDark);
         DeleteObject(barDark);
         int expW = (int)((float)(sbW - 32) * ((float)g_player.exp / (float)g_player.max_exp));
         if (expW < 0) expW = 0; if (expW > sbW - 32) expW = sbW - 32;
-        RECT expBarFill = {sbX + 16, contentY + 108, sbX + 16 + expW, contentY + 114};
-        HBRUSH expFill = CreateSolidBrush(COLOR_ACCENT_PURPLE);
+        RECT expBarFill = {sbX + 16, contentY + 122, sbX + 16 + expW, contentY + 127};
+        HBRUSH expFill = CreateSolidBrush(COLOR_TEXT_GOLD);
         FillRect(memDC, &expBarFill, expFill);
         DeleteObject(expFill);
 
         // Stats rows
         SetTextColor(memDC, COLOR_TEXT_DIM);
-        TextOutA(memDC, sbX + 16, contentY + 126, "Class:", 6);
+        TextOutA(memDC, sbX + 16, contentY + 134, "Class:", 6);
         SetTextColor(memDC, COLOR_ACCENT_PURPLE);
-        TextOutA(memDC, sbX + 130, contentY + 126, "Rune Knight", 11);
+        TextOutA(memDC, sbX + 130, contentY + 134, "Rune Knight", 11);
 
         SetTextColor(memDC, COLOR_TEXT_DIM);
-        TextOutA(memDC, sbX + 16, contentY + 144, "Might (Atk):", 12);
+        TextOutA(memDC, sbX + 16, contentY + 150, "Might (Atk):", 12);
         char stBuf[32];
         snprintf(stBuf, sizeof(stBuf), "%d (+%d)", g_player.might, (g_player.might - 10) / 2);
         SetTextColor(memDC, COLOR_TEXT_BRIGHT);
-        TextOutA(memDC, sbX + 130, contentY + 144, stBuf, (int)strlen(stBuf));
+        TextOutA(memDC, sbX + 130, contentY + 150, stBuf, (int)strlen(stBuf));
 
         SetTextColor(memDC, COLOR_TEXT_DIM);
-        TextOutA(memDC, sbX + 16, contentY + 162, "Warding (Def):", 14);
+        TextOutA(memDC, sbX + 16, contentY + 166, "Warding (Def):", 14);
         snprintf(stBuf, sizeof(stBuf), "%d (+%d)", g_player.warding, (g_player.warding - 10) / 2);
         SetTextColor(memDC, COLOR_TEXT_BRIGHT);
-        TextOutA(memDC, sbX + 130, contentY + 162, stBuf, (int)strlen(stBuf));
+        TextOutA(memDC, sbX + 130, contentY + 166, stBuf, (int)strlen(stBuf));
 
         SetTextColor(memDC, COLOR_TEXT_DIM);
-        TextOutA(memDC, sbX + 16, contentY + 180, "Arcana (Magic):", 15);
-        snprintf(stBuf, sizeof(stBuf), "%d (+%d)", g_player.arcana, (g_player.arcana - 10) / 2);
+        TextOutA(memDC, sbX + 16, contentY + 182, "Arcana (Magic):", 15);
+        int totalArc = g_player.arcana + g_staffDefs[g_player.equippedStaff].arcanaBonus;
+        snprintf(stBuf, sizeof(stBuf), "%d (+%d)", totalArc, (totalArc - 10) / 2);
         SetTextColor(memDC, COLOR_TEXT_BRIGHT);
-        TextOutA(memDC, sbX + 130, contentY + 180, stBuf, (int)strlen(stBuf));
+        TextOutA(memDC, sbX + 130, contentY + 182, stBuf, (int)strlen(stBuf));
 
         SetTextColor(memDC, COLOR_TEXT_DIM);
         TextOutA(memDC, sbX + 16, contentY + 198, "Light Radius:", 13);
@@ -1595,8 +2030,8 @@ void RenderGame(HDC hdc, HWND hwnd) {
         TextOutA(memDC, sbX + 130, contentY + 198, stBuf, (int)strlen(stBuf));
 
         // GEAR SECTION
-        int gearY = contentY + 238;
-        RECT gearCard = {sbX + 8, gearY, sbX + sbW - 8, gearY + 70};
+        int gearY = contentY + 224;
+        RECT gearCard = {sbX + 8, gearY, sbX + sbW - 8, gearY + 84};
         HBRUSH gCardBg = CreateSolidBrush(COLOR_BG_CARD);
         FillRect(memDC, &gearCard, gCardBg);
         DeleteObject(gCardBg);
@@ -1604,12 +2039,17 @@ void RenderGame(HDC hdc, HWND hwnd) {
 
         SelectObject(memDC, fontBold);
         SetTextColor(memDC, COLOR_TEXT_RUNE);
-        TextOutA(memDC, sbX + 16, gearY + 6, "EQUIPPED RELICS & GEAR", 22);
+        TextOutA(memDC, sbX + 16, gearY + 6, "EQUIPPED RELICS & STAFF", 23);
 
         SelectObject(memDC, fontSmall);
+        SetTextColor(memDC, RGB(168, 85, 247));
+        char staffStr[80];
+        snprintf(staffStr, sizeof(staffStr), "[Stf] %s", g_staffDefs[g_player.equippedStaff].name);
+        TextOutA(memDC, sbX + 16, gearY + 24, staffStr, (int)strlen(staffStr));
+
         SetTextColor(memDC, COLOR_TEXT_BRIGHT);
-        TextOutA(memDC, sbX + 16, gearY + 26, "[Wpn] Runic Longsword (+4 Atk)", 30);
-        TextOutA(memDC, sbX + 16, gearY + 44, "[Arm] Abyssal Mail (+3 Def)", 27);
+        TextOutA(memDC, sbX + 16, gearY + 42, "[Wpn] Runic Longsword (+4 Atk)", 30);
+        TextOutA(memDC, sbX + 16, gearY + 60, "[Arm] Abyssal Mail (+3 Def)", 27);
 
     } else if (g_activeTab == 1) {
         // RELICS / PACK INVENTORY
@@ -1636,7 +2076,7 @@ void RenderGame(HDC hdc, HWND hwnd) {
         TextOutA(memDC, sbX + 16, contentY + 134, "6. [Empty Slot]", 15);
 
     } else if (g_activeTab == 2) {
-        // RUNES
+        // TAB 2: RUNIC FORGE & SOCKETING STATION
         RECT cardRect = {sbX + 8, contentY, sbX + sbW - 8, contentY + 308};
         HBRUSH cardBg = CreateSolidBrush(COLOR_BG_CARD);
         FillRect(memDC, &cardRect, cardBg);
@@ -1645,21 +2085,86 @@ void RenderGame(HDC hdc, HWND hwnd) {
 
         SelectObject(memDC, fontBold);
         SetTextColor(memDC, COLOR_TEXT_RUNE);
-        TextOutA(memDC, sbX + 16, contentY + 8, "INSCRIBED ANCIENT RUNES", 23);
+        TextOutA(memDC, sbX + 16, contentY + 8, "RUNIC FORGE & SOCKETS", 21);
 
-        SelectObject(memDC, fontBold);
-        SetTextColor(memDC, COLOR_BORDER_GLOW);
-        TextOutA(memDC, sbX + 16, contentY + 36, "* Rune of Flare", 15);
+        // Staff Info
         SelectObject(memDC, fontSmall);
-        SetTextColor(memDC, COLOR_TEXT_DIM);
-        TextOutA(memDC, sbX + 16, contentY + 54, "Illuminates crypts for 20 turns.", 32);
+        SetTextColor(memDC, RGB(168, 85, 247));
+        char stfBuf[80];
+        const StaffDef* curStf = &g_staffDefs[g_player.equippedStaff];
+        snprintf(stfBuf, sizeof(stfBuf), "%s (%s)", curStf->name, curStf->tier);
+        TextOutA(memDC, sbX + 16, contentY + 28, stfBuf, (int)strlen(stfBuf));
 
+        // Render Sockets
+        int curY = contentY + 46;
+        for (int s = 0; s < curStf->maxSockets; s++) {
+            RECT sockRect = {sbX + 16, curY, sbX + sbW - 16, curY + 30};
+            int rIdx = g_player.staffSockets[s];
+
+            HBRUSH sBr = CreateSolidBrush(rIdx >= 0 ? RGB(18, 24, 40) : RGB(10, 14, 22));
+            FillRect(memDC, &sockRect, sBr);
+            DeleteObject(sBr);
+
+            HPEN sPen = CreatePen(PS_SOLID, 1, rIdx >= 0 ? g_runeDefs[rIdx].color : RGB(50, 60, 80));
+            HPEN oldSP2 = (HPEN)SelectObject(memDC, sPen);
+            SelectObject(memDC, GetStockObject(NULL_BRUSH));
+            Rectangle(memDC, sockRect.left, sockRect.top, sockRect.right, sockRect.bottom);
+            SelectObject(memDC, oldSP2);
+            DeleteObject(sPen);
+
+            char sockLine[80];
+            if (rIdx >= 0) {
+                const RuneDef* rd = &g_runeDefs[rIdx];
+                snprintf(sockLine, sizeof(sockLine), "Socket %d: [%s] %s (%d MP)", s + 1, rd->symbol, rd->spellName, rd->cost);
+                SetTextColor(memDC, rd->color);
+                TextOutA(memDC, sbX + 22, curY + 4, sockLine, (int)strlen(sockLine));
+                SetTextColor(memDC, COLOR_TEXT_DIM);
+                char passLine[80];
+                snprintf(passLine, sizeof(passLine), "%s | Click to remove", rd->passive);
+                TextOutA(memDC, sbX + 22, curY + 16, passLine, (int)strlen(passLine));
+            } else {
+                snprintf(sockLine, sizeof(sockLine), "Socket %d: [ Empty Slot ]", s + 1);
+                SetTextColor(memDC, COLOR_TEXT_DIM);
+                TextOutA(memDC, sbX + 22, curY + 4, sockLine, (int)strlen(sockLine));
+                TextOutA(memDC, sbX + 22, curY + 16, "Click a rune below to socket", 28);
+            }
+
+            curY += 34;
+        }
+
+        // Delver's Rune Stash Header
+        curY += 4;
         SelectObject(memDC, fontBold);
-        SetTextColor(memDC, COLOR_ACCENT_PURPLE);
-        TextOutA(memDC, sbX + 16, contentY + 80, "* Rune of Aegis", 15);
+        SetTextColor(memDC, COLOR_TEXT_GOLD);
+        TextOutA(memDC, sbX + 16, curY, "COLLECTED ANCIENT RUNES", 23);
+        curY += 20;
+
+        // Render Owned Runes
         SelectObject(memDC, fontSmall);
-        SetTextColor(memDC, COLOR_TEXT_DIM);
-        TextOutA(memDC, sbX + 16, contentY + 98, "Absorbs 30 subterranean dmg.", 28);
+        for (int r = 0; r < NUM_RUNES; r++) {
+            BOOL owned = g_player.ownedRunes[r];
+            BOOL socketed = FALSE;
+            for (int s = 0; s < curStf->maxSockets; s++) {
+                if (g_player.staffSockets[s] == r) { socketed = TRUE; break; }
+            }
+
+            RECT runeRect = {sbX + 16, curY, sbX + sbW - 16, curY + 22};
+            HBRUSH rBr = CreateSolidBrush(owned ? RGB(14, 20, 32) : RGB(8, 10, 16));
+            FillRect(memDC, &runeRect, rBr);
+            DeleteObject(rBr);
+
+            const RuneDef* rd = &g_runeDefs[r];
+            char rBuf[80];
+            if (owned) {
+                snprintf(rBuf, sizeof(rBuf), "[%s] %s - %s %s", rd->symbol, rd->name, rd->spellName, socketed ? "(Inscribed)" : "(Click to Socket)");
+                SetTextColor(memDC, rd->color);
+            } else {
+                snprintf(rBuf, sizeof(rBuf), "[?] %s (Undiscovered in Crypts)", rd->name);
+                SetTextColor(memDC, RGB(60, 70, 90));
+            }
+            TextOutA(memDC, sbX + 22, curY + 4, rBuf, (int)strlen(rBuf));
+            curY += 24;
+        }
     }
 
     // MESSAGE CHRONICLE LOG (sbX + 8, 380..600)
@@ -1704,15 +2209,16 @@ void RenderGame(HDC hdc, HWND hwnd) {
         SelectObject(memDC, fontSmall);
         SetTextColor(memDC, COLOR_TEXT_PRIMARY);
         int my = modalRect.top + 46;
-        TextOutA(memDC, modalRect.left + 20, my, "- WASD / Arrow Keys / Numpad / Vi: Navigate grid", 48); my += 20;
-        TextOutA(memDC, modalRect.left + 20, my, "- Space: Rest 1 turn (Recuperates +2 HP, +1 Sanity)", 51); my += 20;
-        TextOutA(memDC, modalRect.left + 20, my, "- R/X: Search surrounding area for secret coffers & traps", 57); my += 20;
-        TextOutA(memDC, modalRect.left + 20, my, "- E / Enter: Interact / Descend stairs / Commune with Altars", 60); my += 20;
-        TextOutA(memDC, modalRect.left + 20, my, "- Biomes: B1-3 Catacombs | B4-6 Sunken Grotto | B7-9 Crypt | B10+ Void", 70); my += 20;
-        TextOutA(memDC, modalRect.left + 20, my, "- 1, 2, 3: Switch Sidebar Tabs (Delver / Relics / Runes)", 56); my += 20;
-        TextOutA(memDC, modalRect.left + 20, my, "- C: Toggle CRT Scanlines & Atmospheric Phosphor Grid", 53); my += 20;
-        TextOutA(memDC, modalRect.left + 20, my, "- F: Toggle Field of View (FOV Omnivision)", 42); my += 20;
-        TextOutA(memDC, modalRect.left + 20, my, "- N: Start New Descent", 22); my += 24;
+        TextOutA(memDC, modalRect.left + 20, my, "- WASD / Arrow Keys / Numpad / Vi: Navigate grid", 48); my += 18;
+        TextOutA(memDC, modalRect.left + 20, my, "- Space: Rest 1 turn (+2 HP, +1 Sanity, +3 Aether)", 50); my += 18;
+        TextOutA(memDC, modalRect.left + 20, my, "- Z / X / V: Cast Elemental Spells from Staff Sockets 1 / 2 / 3", 63); my += 18;
+        TextOutA(memDC, modalRect.left + 20, my, "- R: Search surrounding area for secret coffers & altars", 56); my += 18;
+        TextOutA(memDC, modalRect.left + 20, my, "- E / Enter: Interact / Descend stairs / Commune with Altars", 60); my += 18;
+        TextOutA(memDC, modalRect.left + 20, my, "- 1, 2, 3: Switch Sidebar Tabs (Delver / Relics / Rune Forge)", 61); my += 18;
+        TextOutA(memDC, modalRect.left + 20, my, "- Runes: Pyre (Fire), Frost (Ice), Tempest (Shock), Void, Aegis", 63); my += 18;
+        TextOutA(memDC, modalRect.left + 20, my, "- Biomes: B1-3 Catacombs | B4-6 Sunken Grotto | B7-9 Crypt | B10+ Void", 70); my += 18;
+        TextOutA(memDC, modalRect.left + 20, my, "- C: Toggle CRT Scanlines | F: Toggle Field of View", 51); my += 18;
+        TextOutA(memDC, modalRect.left + 20, my, "- Ctrl+N / F2: Start New Descent", 32); my += 22;
 
         SetTextColor(memDC, COLOR_TEXT_GOLD);
         TextOutA(memDC, modalRect.left + 20, my, "Press [H], [F1], or [ESC] to close manual.", 42);
@@ -1753,6 +2259,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         g_player.max_hp = 100;
         g_player.sanity = 100;
         g_player.max_sanity = 100;
+        g_player.aether = 50;
+        g_player.max_aether = 50;
+        g_player.shield = 0;
         g_player.essence = 0;
         g_player.level = 1;
         g_player.exp = 0;
@@ -1762,6 +2271,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         g_player.arcana = 16;
         g_player.light_radius = 7;
         g_player.facing = 2; // Down
+        g_player.equippedStaff = 0; // Ashwood Rune Staff
+        g_player.staffSockets[0] = 0; // Pyre Rune socketed
+        g_player.staffSockets[1] = -1; // Empty
+        g_player.staffSockets[2] = -1;
+        for (int r = 0; r < NUM_RUNES; r++) g_player.ownedRunes[r] = FALSE;
+        g_player.ownedRunes[0] = TRUE; // Delver starts with Pyre Rune
 
         InitGame(1);
         SetTimer(hwnd, TIMER_ID, TIMER_INTERVAL, NULL);
@@ -1844,6 +2359,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (GetAsyncKeyState(VK_CONTROL)) {
                 g_player.hp = g_player.max_hp;
                 g_player.sanity = g_player.max_sanity;
+                g_player.aether = g_player.max_aether;
+                g_player.shield = 0;
                 InitGame(1);
                 AddLog("Embarking on a brand new descent into the Abyss.", COLOR_ACCENT_AMBER);
             } else {
@@ -1876,13 +2393,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         // Search
         case 'R':
-        case 'X':
             SearchArea();
+            break;
+
+        // Spells from Staff Sockets
+        case 'Z':
+            CastSpell(0);
+            break;
+
+        case 'X':
+            CastSpell(1);
+            break;
+
+        case 'V':
+            if (g_staffDefs[g_player.equippedStaff].maxSockets >= 3) {
+                CastSpell(2);
+            } else {
+                g_fovEnabled = !g_fovEnabled;
+                ComputeFOV();
+                AddLog(g_fovEnabled ? "Field of View: ENABLED." : "Field of View: DISABLED (Omnivision).", COLOR_BORDER_GLOW);
+            }
             break;
 
         // Toggle FOV
         case 'F':
-        case 'V':
             g_fovEnabled = !g_fovEnabled;
             ComputeFOV();
             AddLog(g_fovEnabled ? "Field of View: ENABLED." : "Field of View: DISABLED (Omnivision).", COLOR_BORDER_GLOW);
@@ -1902,6 +2436,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case VK_F2:
             g_player.hp = g_player.max_hp;
             g_player.sanity = g_player.max_sanity;
+            g_player.aether = g_player.max_aether;
+            g_player.shield = 0;
             InitGame(1);
             AddLog("Embarking on a brand new descent into the Abyss.", COLOR_ACCENT_AMBER);
             break;
@@ -1939,6 +2475,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
 
+        // Check Tab 2 (Runic Forge) clicks
+        if (g_activeTab == 2 && mouseX >= sbX + 16 && mouseX <= sbX + 308 - 16) {
+            int curStfMax = g_staffDefs[g_player.equippedStaff].maxSockets;
+            int sy = sbY + 36 + 46;
+            // Check clicks on Staff Sockets (to unsocket)
+            for (int s = 0; s < curStfMax; s++) {
+                if (mouseY >= sy && mouseY <= sy + 30) {
+                    UnsocketRune(s);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                sy += 34;
+            }
+
+            // Check clicks on Owned Runes (to socket into first available slot)
+            sy += 24; // header offset
+            for (int r = 0; r < NUM_RUNES; r++) {
+                if (mouseY >= sy && mouseY <= sy + 22) {
+                    if (g_player.ownedRunes[r]) {
+                        // Find first empty socket, or socket into slot 0
+                        int targetSlot = 0;
+                        for (int s = 0; s < curStfMax; s++) {
+                            if (g_player.staffSockets[s] == -1) {
+                                targetSlot = s;
+                                break;
+                            }
+                        }
+                        SocketRune(targetSlot, r);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        return 0;
+                    }
+                }
+                sy += 24;
+            }
+        }
+
         // Check toolbar buttons
         int vpX = 12;
         if (mouseY >= 574 && mouseY <= 608 && mouseX >= vpX && mouseX <= vpX + VIEWPORT_W) {
@@ -1946,6 +2518,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 // New Descent
                 g_player.hp = g_player.max_hp;
                 g_player.sanity = g_player.max_sanity;
+                g_player.aether = g_player.max_aether;
+                g_player.shield = 0;
                 InitGame(1);
             } else if (mouseX < vpX + 210) {
                 // Rest
@@ -1970,6 +2544,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             InvalidateRect(hwnd, NULL, FALSE);
             break;
+        }
+
+        // Check Spell Hotbar clicks inside Viewport (hbY = 46 + VIEWPORT_H - 34 = 532)
+        if (mouseY >= 46 + VIEWPORT_H - 34 && mouseY <= 46 + VIEWPORT_H - 8 && mouseX >= vpX + 10) {
+            int maxS = g_staffDefs[g_player.equippedStaff].maxSockets;
+            for (int s = 0; s < maxS; s++) {
+                int slotX = vpX + 10 + s * 160;
+                if (mouseX >= slotX && mouseX <= slotX + 152) {
+                    CastSpell(s);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+            }
         }
 
         // Check viewport click
