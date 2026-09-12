@@ -107,7 +107,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **⚠️ PRIORITY: If ANY game in the queue is at Loop 0 (not yet processed), work on it FIRST before continuing higher-loop games.**
 
 
-- KSnake
 - KTetris
 - KCyber
 - KBreakout
@@ -153,9 +152,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSubmarine
 - KStarDredge
 - KAbyss
+- KSnake
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
 
+- KSnake (Loop 9): Themed sprites for all 4 Bosses (Hydra, Basilisk, Inferno, Void) and CPU rivals with animated scanning visors, fangs, and pulsar capacitors.
 - KAbyss (Loop 1): Hooded delver sprite with lantern/blade, animated monster sprites (Skeleton, Ghoul, Wraith, Acolyte, Leviathan), and custom dungeon sprites (Chest, Altar, Cauldron, Doors, Stairs).
 - KStarDredge (Loop 1): The Iron Dredge industrial salvage barge with animated plasma thrusters, hazard-striped hydraulic claws, craggy volumetric asteroids with glowing mineral veins, and raider warships.
 - KSubmarine (Loop 1): Submersible bathyscaphe sprite with spinning propeller & cavitation bubbles, animated abyssal Leviathan, Architeuthis squid, siphonophore, and anglerfish sprites.
@@ -202,4 +203,3 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KBreakout (Loop 8): Screen-shake, multi-layer particles, dual shockwaves, metallic paddle with thruster nozzles.
 - KCyber (Loop 2): Cyberdeck sprites, ICE Daemon enemy, holographic data payload, and hack-themed particle effects.
 - KTetris (Loop 8): Screen-shake, multi-layer particles, dual shockwaves, HUD reticles, and tetromino specular sheen.
-- KSnake (Loop 8): Screen-shake, multi-layer particles, dual shockwaves, HUD reticles, and viper body specular sheen.

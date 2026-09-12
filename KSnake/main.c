@@ -1387,68 +1387,280 @@ void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_gho
     }
 }
 
-void DrawRivalGDI(HDC hdc, int x, int y, int index, int type) {
+void DrawRivalGDI(HDC hdc, int x, int y, int index, int total, int type, int d_x, int d_y) {
     int px = x * CELL_SIZE, py = y * CELL_SIZE + 45;
+    int cx = px + CELL_SIZE / 2, cy = py + CELL_SIZE / 2;
     int is_aggro = (type == 1);
-    HBRUSH brush = CreateSolidBrush(is_aggro ? (index == 0 ? RGB(192, 57, 43) : RGB(231, 76, 60)) : (index == 0 ? RGB(44, 62, 80) : RGB(52, 73, 94)));
-    HPEN pen = CreatePen(PS_SOLID, 1, RGB(20, 30, 40));
-    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
-    HPEN oldPen = (HPEN)SelectObject(hdc, pen);
+    HBRUSH oldBrush;
+    HPEN oldPen;
 
-    if (index == 0 && is_aggro) {
-        POINT pts[3];
-        pts[0].x = px + CELL_SIZE/2; pts[0].y = py + 2;
-        pts[1].x = px + CELL_SIZE - 2; pts[1].y = py + CELL_SIZE - 2;
-        pts[2].x = px + 2; pts[2].y = py + CELL_SIZE - 2;
-        Polygon(hdc, pts, 3);
-    } else {
-        Ellipse(hdc, px + 1, py + 1, px + CELL_SIZE - 1, py + CELL_SIZE - 1);
-    }
-    
     if (index == 0) {
-        HBRUSH eyeBrush = CreateSolidBrush(RGB(231, 76, 60));
-        SelectObject(hdc, eyeBrush);
         if (is_aggro) {
-            Ellipse(hdc, px+6, py+8, px+10, py+12);
-            Ellipse(hdc, px+CELL_SIZE-10, py+8, px+CELL_SIZE-6, py+12);
+            // Scarlet Viper: Arrowhead skull with flared rear horns
+            HBRUSH headBrush = CreateSolidBrush(RGB(192, 57, 43));
+            HPEN headPen = CreatePen(PS_SOLID, 1, RGB(90, 20, 15));
+            oldBrush = (HBRUSH)SelectObject(hdc, headBrush);
+            oldPen = (HPEN)SelectObject(hdc, headPen);
+
+            POINT pts[7];
+            pts[0].x = cx + d_x * 12;                  pts[0].y = cy + d_y * 12; // Snout
+            pts[1].x = cx + d_x * 3 + d_y * 8;         pts[1].y = cy + d_y * 3 - d_x * 8;
+            pts[2].x = cx - d_x * 6 + d_y * 11;        pts[2].y = cy - d_y * 6 - d_x * 11; // Horn 1
+            pts[3].x = cx - d_x * 4;                   pts[3].y = cy - d_y * 4;
+            pts[4].x = cx - d_x * 6 - d_y * 11;        pts[4].y = cy - d_y * 6 + d_x * 11; // Horn 2
+            pts[5].x = cx + d_x * 3 - d_y * 8;         pts[5].y = cy + d_y * 3 + d_x * 8;
+            pts[6] = pts[0];
+            Polygon(hdc, pts, 6);
+
+            // Predatory eyes
+            HBRUSH eyeBrush = CreateSolidBrush(RGB(255, 200, 50));
+            SelectObject(hdc, eyeBrush);
+            int e1x = cx + d_x * 4 + d_y * 4, e1y = cy + d_y * 4 - d_x * 4;
+            int e2x = cx + d_x * 4 - d_y * 4, e2y = cy + d_y * 4 + d_x * 4;
+            Ellipse(hdc, e1x - 2, e1y - 2, e1x + 2, e1y + 2);
+            Ellipse(hdc, e2x - 2, e2y - 2, e2x + 2, e2y + 2);
+
+            // Fangs
+            HBRUSH fangBrush = CreateSolidBrush(RGB(255, 255, 255));
+            SelectObject(hdc, fangBrush);
+            Ellipse(hdc, cx + d_x * 9 + d_y * 2 - 1, cy + d_y * 9 - d_x * 2 - 1, cx + d_x * 9 + d_y * 2 + 2, cy + d_y * 9 - d_x * 2 + 2);
+            Ellipse(hdc, cx + d_x * 9 - d_y * 2 - 1, cy + d_y * 9 + d_x * 2 - 1, cx + d_x * 9 - d_y * 2 + 2, cy + d_y * 9 + d_x * 2 + 2);
+
+            SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
+            DeleteObject(headBrush); DeleteObject(headPen);
+            DeleteObject(eyeBrush); DeleteObject(fangBrush);
         } else {
-            Ellipse(hdc, px+4, py+4, px+8, py+8);
-            Ellipse(hdc, px+CELL_SIZE-8, py+4, px+CELL_SIZE-4, py+8);
+            // Cobalt Racer: Sleek cobra hood
+            HBRUSH headBrush = CreateSolidBrush(RGB(41, 128, 185));
+            HPEN headPen = CreatePen(PS_SOLID, 1, RGB(15, 60, 110));
+            oldBrush = (HBRUSH)SelectObject(hdc, headBrush);
+            oldPen = (HPEN)SelectObject(hdc, headPen);
+
+            Ellipse(hdc, px + 1, py + 1, px + CELL_SIZE - 1, py + CELL_SIZE - 1);
+
+            // Amber eyes
+            HBRUSH eyeBrush = CreateSolidBrush(RGB(241, 196, 15));
+            SelectObject(hdc, eyeBrush);
+            int e1x = cx + d_x * 3 + d_y * 4, e1y = cy + d_y * 3 - d_x * 4;
+            int e2x = cx + d_x * 3 - d_y * 4, e2y = cy + d_y * 3 + d_x * 4;
+            Ellipse(hdc, e1x - 2, e1y - 2, e1x + 2, e1y + 2);
+            Ellipse(hdc, e2x - 2, e2y - 2, e2x + 2, e2y + 2);
+
+            // Specular sheen dot
+            HBRUSH specBrush = CreateSolidBrush(RGB(180, 230, 255));
+            SelectObject(hdc, specBrush);
+            Ellipse(hdc, cx - 2, cy - 2, cx + 2, cy + 2);
+
+            SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
+            DeleteObject(headBrush); DeleteObject(headPen);
+            DeleteObject(eyeBrush); DeleteObject(specBrush);
         }
-        SelectObject(hdc, oldBrush);
-        DeleteObject(eyeBrush);
+    } else {
+        // Body segment
+        int inset = 2 + (index * 3) / (total > 0 ? total : 1);
+        if (inset > 6) inset = 6;
+        HBRUSH bodyBrush = CreateSolidBrush(is_aggro ? RGB(160, 40, 30) : RGB(30, 100, 160));
+        HPEN bodyPen = CreatePen(PS_SOLID, 1, is_aggro ? RGB(80, 15, 10) : RGB(10, 40, 80));
+        oldBrush = (HBRUSH)SelectObject(hdc, bodyBrush);
+        oldPen = (HPEN)SelectObject(hdc, bodyPen);
+
+        Ellipse(hdc, px + inset, py + inset, px + CELL_SIZE - inset, py + CELL_SIZE - inset);
+
+        // Chevron dorsal spine mark
+        HPEN spinePen = CreatePen(PS_SOLID, 1, is_aggro ? RGB(231, 76, 60) : RGB(116, 185, 255));
+        SelectObject(hdc, spinePen);
+        MoveToEx(hdc, cx - 2, cy, NULL);
+        LineTo(hdc, cx, cy - 2);
+        LineTo(hdc, cx + 2, cy);
+
+        SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
+        DeleteObject(bodyBrush); DeleteObject(bodyPen); DeleteObject(spinePen);
     }
-    
-    SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
-    DeleteObject(brush); DeleteObject(pen);
 }
 
-void DrawBossGDI(HDC hdc, int x, int y, int index) {
+void DrawBossGDI(HDC hdc, int x, int y, int index, int total, int d_x, int d_y) {
     if (boss.invisible && (anim_tick % 4 < 2)) return; // Void phasing
     int px = x * CELL_SIZE, py = y * CELL_SIZE + 45;
-    COLORREF bColor;
-    if (boss.boss_type == 0) bColor = (index == 0 ? RGB(45, 52, 54) : RGB(99, 110, 114));
-    else if (boss.boss_type == 1) bColor = (index == 0 ? RGB(0, 180, 216) : RGB(144, 224, 239)); // Cyber Basilisk
-    else if (boss.boss_type == 2) bColor = (index == 0 ? RGB(230, 57, 70) : RGB(244, 162, 97)); // Inferno Wyrm
-    else bColor = (index == 0 ? RGB(114, 9, 183) : RGB(181, 23, 158)); // Void Ouroboros
+    int cx = px + CELL_SIZE / 2, cy = py + CELL_SIZE / 2;
+    HBRUSH oldBrush;
+    HPEN oldPen;
 
-    HBRUSH brush = CreateSolidBrush(bColor);
-    HPEN pen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
-    HPEN oldPen = (HPEN)SelectObject(hdc, pen);
-
-    Rectangle(hdc, px, py, px + CELL_SIZE, py + CELL_SIZE);
-    
     if (index == 0) {
-        HBRUSH eyeBrush = CreateSolidBrush(RGB(255, 255, 0));
-        SelectObject(hdc, eyeBrush);
-        Ellipse(hdc, px+4, py+4, px+CELL_SIZE-4, py+CELL_SIZE-4);
-        SelectObject(hdc, oldBrush);
-        DeleteObject(eyeBrush);
-    }
+        if (boss.boss_type == 0) {
+            // Hydra Viper: 3-pronged flared emerald crest
+            HBRUSH crownBrush = CreateSolidBrush(RGB(39, 174, 96));
+            HPEN crownPen = CreatePen(PS_SOLID, 1, RGB(10, 60, 30));
+            oldBrush = (HBRUSH)SelectObject(hdc, crownBrush);
+            oldPen = (HPEN)SelectObject(hdc, crownPen);
 
-    SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
-    DeleteObject(brush); DeleteObject(pen);
+            POINT pts[7];
+            pts[0].x = cx + d_x * 13;                  pts[0].y = cy + d_y * 13; // Main snout
+            pts[1].x = cx + d_x * 4 + d_y * 12;        pts[1].y = cy + d_y * 4 - d_x * 12; // Crest 1
+            pts[2].x = cx - d_x * 7 + d_y * 8;         pts[2].y = cy - d_y * 7 - d_x * 8;
+            pts[3].x = cx - d_x * 9;                   pts[3].y = cy - d_y * 9; // Rear base
+            pts[4].x = cx - d_x * 7 - d_y * 8;         pts[4].y = cy - d_y * 7 + d_x * 8;
+            pts[5].x = cx + d_x * 4 - d_y * 12;        pts[5].y = cy + d_y * 4 + d_x * 12; // Crest 2
+            pts[6] = pts[0];
+            Polygon(hdc, pts, 6);
+
+            // Venom glands on side crests
+            int glandGlow = 180 + (anim_tick % 8) * 9;
+            HBRUSH glandBrush = CreateSolidBrush(RGB(50, glandGlow, 150));
+            SelectObject(hdc, glandBrush);
+            Ellipse(hdc, cx + d_x * 3 + d_y * 9 - 3, cy + d_y * 3 - d_x * 9 - 3, cx + d_x * 3 + d_y * 9 + 3, cy + d_y * 3 - d_x * 9 + 3);
+            Ellipse(hdc, cx + d_x * 3 - d_y * 9 - 3, cy + d_y * 3 + d_x * 9 - 3, cx + d_x * 3 - d_y * 9 + 3, cy + d_y * 3 + d_x * 9 + 3);
+
+            // Piercing gold eyes
+            HBRUSH eyeBrush = CreateSolidBrush(RGB(255, 215, 0));
+            SelectObject(hdc, eyeBrush);
+            Ellipse(hdc, cx + d_x * 5 + d_y * 4 - 2, cy + d_y * 5 - d_x * 4 - 2, cx + d_x * 5 + d_y * 4 + 2, cy + d_y * 5 - d_x * 4 + 2);
+            Ellipse(hdc, cx + d_x * 5 - d_y * 4 - 2, cy + d_y * 5 + d_x * 4 - 2, cx + d_x * 5 - d_y * 4 + 2, cy + d_y * 5 + d_x * 4 + 2);
+
+            // Long white fangs
+            HBRUSH fangBrush = CreateSolidBrush(RGB(255, 255, 255));
+            SelectObject(hdc, fangBrush);
+            Ellipse(hdc, cx + d_x * 10 + d_y * 3 - 1, cy + d_y * 10 - d_x * 3 - 1, cx + d_x * 10 + d_y * 3 + 2, cy + d_y * 10 - d_x * 3 + 2);
+            Ellipse(hdc, cx + d_x * 10 - d_y * 3 - 1, cy + d_y * 10 + d_x * 3 - 1, cx + d_x * 10 - d_y * 3 + 2, cy + d_y * 10 + d_x * 3 + 2);
+
+            SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
+            DeleteObject(crownBrush); DeleteObject(crownPen);
+            DeleteObject(glandBrush); DeleteObject(eyeBrush); DeleteObject(fangBrush);
+
+        } else if (boss.boss_type == 1) {
+            // Cyber Basilisk: Titanium armored chassis with scanning cyan visor & antennae
+            HBRUSH helmBrush = CreateSolidBrush(RGB(45, 52, 54));
+            HPEN helmPen = CreatePen(PS_SOLID, 1, RGB(0, 210, 211));
+            oldBrush = (HBRUSH)SelectObject(hdc, helmBrush);
+            oldPen = (HPEN)SelectObject(hdc, helmPen);
+
+            POINT pts[7];
+            pts[0].x = cx + d_x * 12;                  pts[0].y = cy + d_y * 12;
+            pts[1].x = cx + d_x * 6 + d_y * 9;         pts[1].y = cy + d_y * 6 - d_x * 9;
+            pts[2].x = cx - d_x * 5 + d_y * 10;        pts[2].y = cy - d_y * 5 - d_x * 10;
+            pts[3].x = cx - d_x * 10;                  pts[3].y = cy - d_y * 10;
+            pts[4].x = cx - d_x * 5 - d_y * 10;        pts[4].y = cy - d_y * 5 + d_x * 10;
+            pts[5].x = cx + d_x * 6 - d_y * 9;         pts[5].y = cy + d_y * 6 + d_x * 9;
+            pts[6] = pts[0];
+            Polygon(hdc, pts, 6);
+
+            // Cybernetic antenna prongs
+            HPEN antPen = CreatePen(PS_SOLID, 1, RGB(116, 185, 255));
+            SelectObject(hdc, antPen);
+            MoveToEx(hdc, cx - d_x * 5 + d_y * 10, cy - d_y * 5 - d_x * 10, NULL);
+            LineTo(hdc, cx - d_x * 10 + d_y * 13, cy - d_y * 10 - d_x * 13);
+            MoveToEx(hdc, cx - d_x * 5 - d_y * 10, cy - d_y * 5 + d_x * 10, NULL);
+            LineTo(hdc, cx - d_x * 10 - d_y * 13, cy - d_y * 10 + d_x * 13);
+
+            // Scanning Cyan Visor Line
+            HPEN visorPen = CreatePen(PS_SOLID, 2, (anim_tick % 6 < 3) ? RGB(0, 255, 255) : RGB(72, 219, 251));
+            SelectObject(hdc, visorPen);
+            MoveToEx(hdc, cx + d_x * 5 + d_y * 6, cy + d_y * 5 - d_x * 6, NULL);
+            LineTo(hdc, cx + d_x * 5 - d_y * 6, cy + d_y * 5 + d_x * 6);
+
+            SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
+            DeleteObject(helmBrush); DeleteObject(helmPen);
+            DeleteObject(antPen); DeleteObject(visorPen);
+
+        } else if (boss.boss_type == 2) {
+            // Inferno Wyrm: Molten volcanic skull with swept obsidian horns
+            HBRUSH skullBrush = CreateSolidBrush(RGB(192, 57, 43));
+            HPEN skullPen = CreatePen(PS_SOLID, 1, RGB(243, 156, 18));
+            oldBrush = (HBRUSH)SelectObject(hdc, skullBrush);
+            oldPen = (HPEN)SelectObject(hdc, skullPen);
+
+            POINT pts[7];
+            pts[0].x = cx + d_x * 13;                  pts[0].y = cy + d_y * 13;
+            pts[1].x = cx + d_x * 6 + d_y * 7;         pts[1].y = cy + d_y * 6 - d_x * 7;
+            pts[2].x = cx - d_x * 7 + d_y * 12;        pts[2].y = cy - d_y * 7 - d_x * 12; // Horn 1
+            pts[3].x = cx - d_x * 8;                   pts[3].y = cy - d_y * 8;
+            pts[4].x = cx - d_x * 7 - d_y * 12;        pts[4].y = cy - d_y * 7 + d_x * 12; // Horn 2
+            pts[5].x = cx + d_x * 6 - d_y * 7;         pts[5].y = cy + d_y * 6 + d_x * 7;
+            pts[6] = pts[0];
+            Polygon(hdc, pts, 6);
+
+            // Fiery molten eyes
+            HBRUSH eyeBrush = CreateSolidBrush(RGB(255, 240, 100));
+            SelectObject(hdc, eyeBrush);
+            Ellipse(hdc, cx + d_x * 4 + d_y * 4 - 2, cy + d_y * 4 - d_x * 4 - 2, cx + d_x * 4 + d_y * 4 + 2, cy + d_y * 4 - d_x * 4 + 2);
+            Ellipse(hdc, cx + d_x * 4 - d_y * 4 - 2, cy + d_y * 4 + d_x * 4 - 2, cx + d_x * 4 - d_y * 4 + 2, cy + d_y * 4 + d_x * 4 + 2);
+
+            // Magma fissure line
+            HPEN magmaPen = CreatePen(PS_SOLID, 1, RGB(255, 220, 0));
+            SelectObject(hdc, magmaPen);
+            MoveToEx(hdc, cx, cy - 3, NULL);
+            LineTo(hdc, cx + d_x * 6, cy + d_y * 6);
+
+            SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
+            DeleteObject(skullBrush); DeleteObject(skullPen);
+            DeleteObject(eyeBrush); DeleteObject(magmaPen);
+
+        } else {
+            // Void Ouroboros: Cosmic dark-matter mask with celestial horns & event-horizon eye
+            HBRUSH voidBrush = CreateSolidBrush(RGB(44, 0, 62));
+            HPEN voidPen = CreatePen(PS_SOLID, 1, RGB(186, 85, 211));
+            oldBrush = (HBRUSH)SelectObject(hdc, voidBrush);
+            oldPen = (HPEN)SelectObject(hdc, voidPen);
+
+            POINT pts[7];
+            pts[0].x = cx + d_x * 12;                  pts[0].y = cy + d_y * 12;
+            pts[1].x = cx + d_x * 4 + d_y * 10;        pts[1].y = cy + d_y * 4 - d_x * 10;
+            pts[2].x = cx - d_x * 6 + d_y * 11;        pts[2].y = cy - d_y * 6 - d_x * 11;
+            pts[3].x = cx - d_x * 9;                   pts[3].y = cy - d_y * 9;
+            pts[4].x = cx - d_x * 6 - d_y * 11;        pts[4].y = cy - d_y * 6 + d_x * 11;
+            pts[5].x = cx + d_x * 4 - d_y * 10;        pts[5].y = cy + d_y * 4 + d_x * 10;
+            pts[6] = pts[0];
+            Polygon(hdc, pts, 6);
+
+            // Center Event-Horizon eye
+            HBRUSH eyeBrush = CreateSolidBrush(RGB(0, 0, 0));
+            HPEN eyePen = CreatePen(PS_SOLID, 1, RGB(224, 86, 253));
+            SelectObject(hdc, eyeBrush);
+            SelectObject(hdc, eyePen);
+            Ellipse(hdc, cx - 4, cy - 4, cx + 4, cy + 4);
+
+            HBRUSH starBrush = CreateSolidBrush(RGB(255, 255, 255));
+            SelectObject(hdc, starBrush);
+            Ellipse(hdc, cx - 1, cy - 1, cx + 1, cy + 1);
+
+            SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
+            DeleteObject(voidBrush); DeleteObject(voidPen);
+            DeleteObject(eyeBrush); DeleteObject(eyePen); DeleteObject(starBrush);
+        }
+
+    } else {
+        // Boss Body Segments
+        COLORREF segColor, rimColor;
+        if (boss.boss_type == 0) { segColor = RGB(39, 174, 96); rimColor = RGB(16, 172, 132); }
+        else if (boss.boss_type == 1) { segColor = RGB(53, 59, 72); rimColor = RGB(0, 210, 211); }
+        else if (boss.boss_type == 2) { segColor = RGB(192, 57, 43); rimColor = RGB(243, 156, 18); }
+        else { segColor = RGB(75, 0, 130); rimColor = RGB(224, 86, 253); }
+
+        HBRUSH brush = CreateSolidBrush(segColor);
+        HPEN pen = CreatePen(PS_SOLID, 1, rimColor);
+        oldBrush = (HBRUSH)SelectObject(hdc, brush);
+        oldPen = (HPEN)SelectObject(hdc, pen);
+
+        if (boss.boss_type == 1) {
+            // Hexagonal cyber plates
+            POINT pts[6];
+            int i;
+            for(i = 0; i < 6; i++) {
+                pts[i].x = cx + (cos_tab16[(i * 16) / 6] * 10) / 100;
+                pts[i].y = cy + (sin_tab16[(i * 16) / 6] * 10) / 100;
+            }
+            Polygon(hdc, pts, 6);
+        } else {
+            Ellipse(hdc, px + 2, py + 2, px + CELL_SIZE - 2, py + CELL_SIZE - 2);
+        }
+
+        // Segment core node
+        HBRUSH coreBrush = CreateSolidBrush(rimColor);
+        SelectObject(hdc, coreBrush);
+        Ellipse(hdc, cx - 3, cy - 3, cx + 3, cy + 3);
+
+        SelectObject(hdc, oldBrush); SelectObject(hdc, oldPen);
+        DeleteObject(brush); DeleteObject(pen); DeleteObject(coreBrush);
+    }
 }
 
 void DrawGemGDI(HDC hdc, int x, int y, COLORREF color) {
@@ -2516,11 +2728,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 for(r = 0; r < num_rivals; r++) {
                     if (!rivals[r].alive) continue;
-                    for(i = rivals[r].len - 1; i >= 0; i--) DrawRivalGDI(hdc, rivals[r].body[i].x, rivals[r].body[i].y, i, rivals[r].type);
+                    int r_dx = rivals[r].dir_x, r_dy = rivals[r].dir_y;
+                    if (rivals[r].len > 1) {
+                        int t_dx = rivals[r].body[0].x - rivals[r].body[1].x;
+                        int t_dy = rivals[r].body[0].y - rivals[r].body[1].y;
+                        if (ABS(t_dx) <= 1 && ABS(t_dy) <= 1 && (t_dx != 0 || t_dy != 0)) {
+                            r_dx = t_dx; r_dy = t_dy;
+                        }
+                    }
+                    for(i = rivals[r].len - 1; i >= 0; i--) {
+                        DrawRivalGDI(hdc, rivals[r].body[i].x, rivals[r].body[i].y, i, rivals[r].len, rivals[r].type, r_dx, r_dy);
+                    }
                 }
 
                 if (boss.alive) {
-                    for(i = boss.len - 1; i >= 0; i--) DrawBossGDI(hdc, boss.body[i].x, boss.body[i].y, i);
+                    int b_dx = boss.dir_x, b_dy = boss.dir_y;
+                    if (boss.len > 1) {
+                        int t_dx = boss.body[0].x - boss.body[1].x;
+                        int t_dy = boss.body[0].y - boss.body[1].y;
+                        if (ABS(t_dx) <= 1 && ABS(t_dy) <= 1 && (t_dx != 0 || t_dy != 0)) {
+                            b_dx = t_dx; b_dy = t_dy;
+                        }
+                    }
+                    for(i = boss.len - 1; i >= 0; i--) {
+                        DrawBossGDI(hdc, boss.body[i].x, boss.body[i].y, i, boss.len, b_dx, b_dy);
+                    }
                 }
 
                 for (i = snake_len - 1; i >= 0; i--) {
