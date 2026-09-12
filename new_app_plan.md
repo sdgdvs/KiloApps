@@ -55,8 +55,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KAbyss (Abyssal dungeon crawler with magical relics, ancient runes, and procedural crypts)
-**Phase:** 12 (next to do)
-**Status:** In Progress (Phase 11 completed: Subterranean merchants & wandering black market hermits - Grimhollow the Abyssal Broker and Malakor the Blind Hermit trading gold for relics, survival supplies, runes, cartography, and pack pawning)
+**Phase:** 13 (next to do)
+**Status:** In Progress (Phase 12 completed: Boss encounters & abyssal lords - The Crypt Keeper, Abyssal Wyrm, and Void Monarch with multi-phase mechanics, custom sprite rendering, viewport boss health bars, and legendary loot drops)
 
 - [x] Phase 1: Scaffold KAbyss directory (`KAbyss/`), create web HTML skeleton (`KiloOS/public/apps/kabyss.html`), register in App.jsx.
 - [x] Phase 2: Core dungeon crawl engine (tile map grid, hero character, FOV lighting, movement, turn system).
@@ -69,7 +69,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 9: Sanity, hunger & subterranean curse hazards (torches extinguishing, cursed effigies, eldritch whispers).
 - [x] Phase 10: Ancient runic shrines & relic enchanting altars (imbue weapons with frost/fire/void enchantments).
 - [x] Phase 11: Subterranean merchants & wandering black market hermits (trade gold for relics).
-- [ ] Phase 12: Boss encounters & abyssal lords (The Crypt Keeper, Abyssal Wyrm, Void Monarch).
+- [x] Phase 12: Boss encounters & abyssal lords (The Crypt Keeper, Abyssal Wyrm, Void Monarch).
 - [ ] Phase 13: Procedural dungeon audio & atmospheric soundscapes (torch crackle, monster growls, spell casting).
 - [ ] Phase 14: Comprehensive Help & Delver's Tome (Dungeon bestiary, spell grimoire, runic index, survival tactics).
 

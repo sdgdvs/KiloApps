@@ -211,6 +211,88 @@
             margin-top: 2px;
         }
 
+        /* Abyssal Lord Boss HUD Bar */
+        .boss-hud-bar {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 320px;
+            background: rgba(9, 12, 22, 0.95);
+            border: 1px solid var(--accent-purple);
+            box-shadow: 0 0 16px rgba(168, 85, 247, 0.35), inset 0 0 10px rgba(0, 0, 0, 0.8);
+            border-radius: 4px;
+            padding: 6px 12px;
+            z-index: 7;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            animation: bossBarPulse 2s infinite ease-in-out;
+        }
+
+        @keyframes bossBarPulse {
+            0%, 100% { box-shadow: 0 0 12px rgba(168, 85, 247, 0.25); }
+            50% { box-shadow: 0 0 20px rgba(244, 63, 94, 0.45); }
+        }
+
+        .boss-hud-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .boss-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .boss-title {
+            font-weight: bold;
+            font-size: 11px;
+            letter-spacing: 0.8px;
+            color: #f8fafc;
+            text-transform: uppercase;
+        }
+
+        .boss-subtitle {
+            font-size: 10px;
+            color: var(--text-dim);
+            font-style: italic;
+        }
+
+        .boss-hp-track {
+            position: relative;
+            height: 12px;
+            background: #1e1322;
+            border: 1px solid #3b1d44;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .boss-hp-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #ef4444, #f59e0b);
+            transition: width 0.2s ease-out;
+        }
+
+        .boss-hp-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 1px 2px #000;
+        }
+
         .overlay-tileinfo {
             position: absolute;
             bottom: 12px;
@@ -875,6 +957,19 @@
             <div class="canvas-wrapper">
                 <canvas id="dungeonCanvas" width="704" height="480"></canvas>
                 <div class="crt-scanlines crt-flicker" id="crtOverlay"></div>
+                <div class="boss-hud-bar" id="bossHudBar" style="display: none;">
+                    <div class="boss-hud-header">
+                        <div class="boss-title-wrap">
+                            <span id="bossCrest">👑</span>
+                            <span class="boss-title" id="bossTitle">THE CRYPT KEEPER</span>
+                        </div>
+                        <span class="boss-subtitle" id="bossSubtitle">Abyssal Lord</span>
+                    </div>
+                    <div class="boss-hp-track">
+                        <div class="boss-hp-fill" id="bossHpFill"></div>
+                        <div class="boss-hp-text" id="bossHpText">280 / 280 HP (100%)</div>
+                    </div>
+                </div>
                 <div class="overlay-hud">
                     <div class="zone-title" id="hudZoneName">Forgotten Crypts - B1</div>
                     <div class="zone-sub" id="hudZoneSub">Turn: 1 | Light: 100% | Torch: Burning</div>
@@ -1120,6 +1215,21 @@
                             <div style="color:var(--text-bright); font-size:10px;">HP: 95+ | ATK: 24+ | Apex Behemoth</div>
                             <div style="color:var(--text-dim); font-size:10px;">Colossal void horror. Devastating crush attacks. <span style="color:#06b6d4;">Vulnerable to Glacial Nova (2-turn Freeze).</span></div>
                         </div>
+                        <div style="background:#130b1c; padding:6px; border:1px solid #7e22ce; border-radius:4px;">
+                            <strong style="color:#fbbf24;">👑💀 The Crypt Keeper (Boss B3)</strong>
+                            <div style="color:var(--text-bright); font-size:10px;">HP: 280+ | ATK: 28+ | Abyssal Lord of Catacombs</div>
+                            <div style="color:var(--text-dim); font-size:10px;">Sweeps colossal tomb cleaver & awakens skeleton minions. Bone plating deflects physical hits. <span style="color:#f97316;">Shattered by Sacred Fire (ᚠ Pyre x1.75).</span></div>
+                        </div>
+                        <div style="background:#071a16; padding:6px; border:1px solid #059669; border-radius:4px;">
+                            <strong style="color:#34d399;">🐉 Abyssal Wyrm (Boss B6)</strong>
+                            <div style="color:var(--text-bright); font-size:10px;">HP: 380+ | ATK: 36+ | Sovereign of Sunken Grotto</div>
+                            <div style="color:var(--text-dim); font-size:10px;">Spits caustic acid venom (dissolves hunger & HP) and surges through stone. Constricting coils drain sanity. <span style="color:#06b6d4;">Vulnerable to Glacial Frost (ᚦ Cryo).</span></div>
+                        </div>
+                        <div style="background:#160924; padding:6px; border:1px solid #a855f7; border-radius:4px;">
+                            <strong style="color:#c084fc;">👁️🌌 The Void Monarch (Boss B10+)</strong>
+                            <div style="color:var(--text-bright); font-size:10px;">HP: 520+ | ATK: 46+ | Celestial Void Sovereign</div>
+                            <div style="color:var(--text-dim); font-size:10px;">Channels Cosmic Collapse beams, pulls delvers via gravitational singularity, and emits Dread Aura. <span style="color:#38bdf8;">Shield with ᚨ Aegis; shatter with ⚡ Tempest.</span></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1322,6 +1432,13 @@
                     <li><strong>B:</strong> Open the Ancient Alchemy Cauldron to brew potions and elixirs!</li>
                     <li><strong>S / R:</strong> Search adjacent tiles for hidden passages, merchants, altars, shrines, and relic coffers.</li>
                     <li><strong>Mouse Click:</strong> Click on visible floor tiles to move or inspect obstacles.</li>
+                </ul>
+                <h4>Boss Encounters & Abyssal Lords [Phase 12]</h4>
+                <ul>
+                    <li><strong>👑 The Crypt Keeper (Depth B3 Boss):</strong> Ancient titan of the Catacombs clad in ossified plate armor. Wields a colossal tomb cleaver capable of knockback cleaves. Deflects physical damage with Bone Plating—shatter it with Sacred Fire (ᚠ Pyre or Flamebrand) for +75% bonus damage! Beware his ability to awaken Crypt Skeleton minions when wounded. Drops the legendary <em>Keeper's Crypt Greatsword</em> (+10 Might, +3 Warding, +15 Max HP) and Ancient Runic Key!</li>
+                    <li><strong>🐉 Abyssal Wyrm (Depth B6 Boss):</strong> Apex bio-horror of the Sunken Grotto. Slithers through submerged depths and spews caustic acid venom up to 5 tiles away, inflicting hunger loss and severe acid burns. Can surge 2 paces forward to trap you. Vulnerable to Glacial Frost (ᚦ Cryo / Frostbite) which freezes its scales and seals corrosive glands. Drops the <em>Wyrmscale Carapace</em> (+9 Warding, +40 Max HP, +2 Might) and Panacea of the Deep!</li>
+                    <li><strong>👁️🌌 The Void Monarch (Depth B10+ Sovereign):</strong> Cosmic sovereign reigning over the Void Abyss. Emits a continuous Dread Aura that chips away sanity within line of sight. Channels devastating long-range Cosmic Collapse beams (35-48 Void DMG) that pierce barriers, and creates Gravitational Singularities dragging delvers into the black hole. When struck, phases across space with Dimensional Blink. Shield with ᚨ Aegis and counter with ⚡ Tempest! Drops the ultimate <em>Crown of the Void Monarch</em> (+10 Light, +35 Max Aether, +35 Max Sanity, +5 Arcana, +2 Warding)!</li>
+                    <li><strong>Boss Health Bar:</strong> Whenever an Abyssal Lord is active on the floor, a prominent health bar appears at the top of the dungeon viewport showing their lord title, current HP, and phase status.</li>
                 </ul>
                 <h4>Subterranean Merchants & Wandering Black Market Hermits [Phase 11]</h4>
                 <ul>
@@ -1621,6 +1738,57 @@
                 behavior: 'Apex Behemoth',
                 desc: 'Cosmic monstrosity from the bottomless deep. Crushes all in its path.',
                 weakness: 'Susceptible to Glacial Nova (Freeze skips turns).'
+            },
+            CRYPT_KEEPER: {
+                id: 'CRYPT_KEEPER',
+                name: 'The Crypt Keeper',
+                symbol: '👑💀',
+                color: '#f59e0b',
+                isBoss: true,
+                bossTitle: 'Ancient Catacombs Lord',
+                baseHp: 280,
+                hpScale: 25,
+                baseAtk: 28,
+                atkScale: 4,
+                exp: 250,
+                essence: 220,
+                behavior: 'Tomb Cleaver & Minion Summoner',
+                desc: 'Ancient undead titan clad in runic plate armor. Sweeps a colossal tomb cleaver, commands skeletal crypt wardens, and shields with bone plating.',
+                weakness: 'Sacred Fire (ᚠ Pyre / Flamebrand deals +75% bonus DMG and shatters bone armor).'
+            },
+            ABYSSAL_WYRM: {
+                id: 'ABYSSAL_WYRM',
+                name: 'Abyssal Wyrm',
+                symbol: '🐉',
+                color: '#10b981',
+                isBoss: true,
+                bossTitle: 'Terror of the Sunken Grotto',
+                baseHp: 380,
+                hpScale: 35,
+                baseAtk: 36,
+                atkScale: 5,
+                exp: 400,
+                essence: 350,
+                behavior: 'Caustic Spitter & Subterranean Slither',
+                desc: 'Colossal serpentine bio-horror that slithers through subterranean depths. Spews caustic acid saliva, surges across stone, and crushes composure.',
+                weakness: 'Glacial Frost (ᚦ Frost / Cryo freezes scales and closes acid glands).'
+            },
+            VOID_MONARCH: {
+                id: 'VOID_MONARCH',
+                name: 'The Void Monarch',
+                symbol: '👁️🌌',
+                color: '#c084fc',
+                isBoss: true,
+                bossTitle: 'Sovereign of the Cosmic Abyss',
+                baseHp: 520,
+                hpScale: 45,
+                baseAtk: 46,
+                atkScale: 6,
+                exp: 650,
+                essence: 500,
+                behavior: 'Cosmic Singularity & Astral Beam',
+                desc: 'Cosmic sovereign reigning over the celestial void. Warps space with gravitational singularities, fires piercing astral collapse beams, and exudes an aura of dread.',
+                weakness: 'Aegis Ward & Tempest (⚡ Shock pierces cosmic barrier; ᚨ Aegis shields sanity).'
             }
         };
 
@@ -2172,6 +2340,15 @@
                 desc: 'Carved from astral obsidian (+7 Might, +3 Arcana).',
                 might: 7, warding: 0, arcana: 3, light: 0, maxHp: 0, maxAether: 0, maxSanity: 0
             },
+            WPN_CRYPT_GREATSWORD: {
+                id: 'WPN_CRYPT_GREATSWORD',
+                name: "Keeper's Crypt Greatsword",
+                type: ITEM_TYPES.EQUIPMENT,
+                slot: EQUIP_SLOTS.WEAPON,
+                icon: '🗡️',
+                desc: 'Massive runic greatsword dropped by The Crypt Keeper (+10 Might, +3 Warding, +15 Max HP).',
+                might: 10, warding: 3, arcana: 0, light: 0, maxHp: 15, maxAether: 0, maxSanity: 0
+            },
 
             // Armor
             ARM_ABYSSAL_MAIL: {
@@ -2201,6 +2378,15 @@
                 desc: 'Imbued with runic barrier plating (+7 Warding, +25 Max HP).',
                 might: 0, warding: 7, arcana: 0, light: 0, maxHp: 25, maxAether: 0, maxSanity: 0
             },
+            ARM_WYRMSCALE: {
+                id: 'ARM_WYRMSCALE',
+                name: 'Wyrmscale Carapace',
+                type: ITEM_TYPES.EQUIPMENT,
+                slot: EQUIP_SLOTS.ARMOR,
+                icon: '🛡️',
+                desc: 'Impervious toxic chitin carved from the Abyssal Wyrm (+9 Warding, +40 Max HP, +2 Might).',
+                might: 2, warding: 9, arcana: 0, light: 0, maxHp: 40, maxAether: 0, maxSanity: 0
+            },
 
             // Relic / Light
             REL_TORCH: {
@@ -2229,6 +2415,15 @@
                 icon: '✨',
                 desc: 'Sacred relic emitting holy light (+9 Light Radius, +20 Max Sanity).',
                 might: 0, warding: 1, arcana: 1, light: 9, maxHp: 0, maxAether: 0, maxSanity: 20
+            },
+            REL_MONARCH_CROWN: {
+                id: 'REL_MONARCH_CROWN',
+                name: 'Crown of the Void Monarch',
+                type: ITEM_TYPES.EQUIPMENT,
+                slot: EQUIP_SLOTS.RELIC,
+                icon: '👑',
+                desc: 'Radiant astral crown dropped by The Void Monarch (+10 Light, +35 Max Aether, +35 Max Sanity, +5 Arcana, +2 Warding).',
+                might: 0, warding: 2, arcana: 5, light: 10, maxHp: 0, maxAether: 35, maxSanity: 35
             },
 
             // Amulet
@@ -3924,6 +4119,66 @@
                     }
                 }
             }
+
+            // --- Abyssal Lord Boss Encounter Spawning ---
+            let bossKey = null;
+            if (level === 3) {
+                bossKey = 'CRYPT_KEEPER';
+            } else if (level === 6) {
+                bossKey = 'ABYSSAL_WYRM';
+            } else if (level >= 10 && (level === 10 || level % 4 === 0)) {
+                bossKey = 'VOID_MONARCH';
+            }
+
+            if (bossKey && BESTIARY[bossKey]) {
+                const b = BESTIARY[bossKey];
+                let bAttempts = 0;
+                let bSpawned = false;
+                while (bAttempts < 120 && !bSpawned) {
+                    bAttempts++;
+                    const rx = 3 + Math.floor(Math.random() * (MAP_WIDTH - 6));
+                    const ry = 3 + Math.floor(Math.random() * (MAP_HEIGHT - 6));
+                    const t = dungeon[ry][rx];
+                    if ((t === TILE.FLOOR || t === TILE.WATER) && t !== TILE.STAIRS_UP && t !== TILE.STAIRS_DOWN && t !== TILE.CHEST && t !== TILE.ALTAR && t !== TILE.CAULDRON && t !== TILE.MERCHANT) {
+                        const distFromPlayer = Math.hypot(rx - player.x, ry - player.y);
+                        if (distFromPlayer >= 7) {
+                            const occupied = monsters.some(m => m.x === rx && m.y === ry);
+                            if (!occupied) {
+                                const hp = b.baseHp + (level - 1) * b.hpScale;
+                                const atk = b.baseAtk + (level - 1) * b.atkScale;
+                                monsters.push({
+                                    id: `boss_${Date.now()}_${bossKey}`,
+                                    type: bossKey,
+                                    name: b.name,
+                                    symbol: b.symbol,
+                                    color: b.color,
+                                    x: rx,
+                                    y: ry,
+                                    hp: hp,
+                                    maxHp: hp,
+                                    atk: atk,
+                                    exp: b.exp + level * 10,
+                                    essence: b.essence + level * 10,
+                                    state: 'alert',
+                                    freezeTurns: 0,
+                                    alertRange: 14,
+                                    isBoss: true,
+                                    bonePlated: (bossKey === 'CRYPT_KEEPER'),
+                                    alive: true
+                                });
+                                bSpawned = true;
+                                if (bossKey === 'CRYPT_KEEPER') {
+                                    logMessage(`⚠️ ABYSSAL LORD RISES: The Crypt Keeper awakens in the sepulcher! Beware his bone armor and tomb cleave!`, 'important');
+                                } else if (bossKey === 'ABYSSAL_WYRM') {
+                                    logMessage(`⚠️ ABYSSAL LORD RISES: The sunken waters churn—The Abyssal Wyrm coils from the depths!`, 'important');
+                                } else if (bossKey === 'VOID_MONARCH') {
+                                    logMessage(`⚠️ ABYSSAL LORD RISES: Reality tears asunder—The Void Monarch commands the abyssal vortex!`, 'important');
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         function damageMonster(m, dmg, dmgType = 'PHYSICAL', isCrit = false) {
@@ -3943,10 +4198,15 @@
                 player.exp += m.exp;
                 player.essence += m.essence;
                 AudioSys.playMonsterDeath();
-                logMessage(`⚔️ SLAIN: You defeated ${m.name}! (+${m.exp} EXP, +${m.essence} Essence)`, 'relic');
+
+                if (m.isBoss) {
+                    logMessage(`👑✦ ABYSSAL LORD DEFEATED: You have vanquished ${m.name}! (+${m.exp} EXP, +${m.essence} Gold Essence) ✦👑`, 'relic');
+                } else {
+                    logMessage(`⚔️ SLAIN: You defeated ${m.name}! (+${m.exp} EXP, +${m.essence} Essence)`, 'relic');
+                }
 
                 const unowned = Object.keys(RUNES).filter(r => !player.ownedRunes.includes(r));
-                if (unowned.length > 0 && Math.random() < 0.35) {
+                if (unowned.length > 0 && (m.isBoss || Math.random() < 0.35)) {
                     const newRune = unowned[Math.floor(Math.random() * unowned.length)];
                     player.ownedRunes.push(newRune);
                     logMessage(`✦ Bestiary Spoils: ${m.name} yielded ${RUNES[newRune].name} (${RUNES[newRune].symbol})! Inscribe in Tab [3].`, 'magic');
@@ -3955,7 +4215,16 @@
                 // Monster drops ingredients, potions, or rare gear
                 const dropRoll = Math.random();
                 let droppedItem = null;
-                if (m.type === 'SKELETON') {
+                if (m.type === 'CRYPT_KEEPER') {
+                    droppedItem = 'WPN_CRYPT_GREATSWORD';
+                    addItem('ITEM_KEY_RUNIC', 1);
+                } else if (m.type === 'ABYSSAL_WYRM') {
+                    droppedItem = 'ARM_WYRMSCALE';
+                    addItem('PANACEA_DEEP', 1);
+                } else if (m.type === 'VOID_MONARCH') {
+                    droppedItem = 'REL_MONARCH_CROWN';
+                    addItem('PANACEA_DEEP', 1);
+                } else if (m.type === 'SKELETON') {
                     if (dropRoll < 0.45) droppedItem = 'ING_BRIMSTONE';
                     else if (dropRoll < 0.70) droppedItem = 'HEAL_SALVE';
                     else if (dropRoll < 0.85) droppedItem = 'WPN_RUNIC_BLADE';
@@ -3985,6 +4254,24 @@
             } else {
                 AudioSys.playHit();
                 logMessage(`⚔️ Struck ${m.name} for ${dmg} ${dmgType} DMG! (${m.hp}/${m.maxHp} HP)`, 'combat');
+
+                // Void Monarch Dimensional Phase Blink reaction
+                if (m.type === 'VOID_MONARCH' && Math.random() < 0.35) {
+                    for (let blinkAttempt = 0; blinkAttempt < 15; blinkAttempt++) {
+                        const bx = m.x + Math.floor(Math.random() * 5) - 2;
+                        const by = m.y + Math.floor(Math.random() * 5) - 2;
+                        if (bx >= 1 && bx < MAP_WIDTH - 1 && by >= 1 && by < MAP_HEIGHT - 1) {
+                            const bt = dungeon[by][bx];
+                            if ((bt === TILE.FLOOR || bt === TILE.WATER) && !monsters.some(o => o.alive && o.x === bx && o.y === by) && (bx !== player.x || by !== player.y)) {
+                                m.x = bx;
+                                m.y = by;
+                                spawnCombatText(bx, by, 'PHASE BLINK!', '#c084fc');
+                                logMessage('🌀 DIMENSIONAL BLINK: The Void Monarch folds space, phasing across the arena!', 'magic');
+                                break;
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -4050,6 +4337,26 @@
                 logMessage(`🌀 VOIDSEVER: Cosmic void cleaves ${m.name} (+${voidBonus} Void DMG), siphoning +${aGain} Aether & +${sGain} Sanity!`, 'magic');
             }
 
+            // Boss passives & resistances
+            if (m.type === 'CRYPT_KEEPER') {
+                if (m.bonePlated) {
+                    if (player.weaponEnchant === 'FIRE') {
+                        m.bonePlated = false;
+                        baseDmg = Math.floor(baseDmg * 1.75);
+                        logMessage(`🔥 BONE SHATTER: Sacred flame incinerates The Crypt Keeper's bone plating (+75% DMG)!`, 'magic');
+                        spawnCombatText(m.x, m.y, 'BONE SHIELD BROKEN', '#f97316');
+                    } else {
+                        baseDmg = Math.max(1, Math.floor(baseDmg * 0.75));
+                        logMessage(`🛡️ BONE PLATING: The Crypt Keeper's dense ossified armor deflects 25% damage!`, 'combat');
+                    }
+                }
+            } else if (m.type === 'ABYSSAL_WYRM') {
+                if (player.weaponEnchant === 'FROST') {
+                    baseDmg = Math.floor(baseDmg * 1.4);
+                    logMessage(`❄️ GLACIAL FRACTURE: Frost rime crystallizes the Abyssal Wyrm's scales (+40% DMG)!`, 'magic');
+                }
+            }
+
             damageMonster(m, baseDmg, player.weaponEnchant !== 'NONE' ? player.weaponEnchant : 'PHYSICAL', isCrit);
             advanceTurn();
         }
@@ -4071,10 +4378,38 @@
                     m.state = 'alert';
                 }
 
+                // Void Monarch Passive Dread Aura
+                if (m.type === 'VOID_MONARCH' && hasLOS && dist <= 8 && turn % 2 === 0) {
+                    if (player.shield <= 0) {
+                        player.sanity = Math.max(0, player.sanity - 1);
+                        logMessage(`👁️ DREAD AURA: The Void Monarch's gaze crushes your mind (-1 Sanity)!`, 'important');
+                        spawnCombatText(player.x, player.y, '-1 SAN', '#c084fc');
+                    }
+                }
+
                 if (m.state === 'alert') {
                     const isAdj = Math.abs(player.x - m.x) <= 1 && Math.abs(player.y - m.y) <= 1;
                     if (isAdj) {
                         let rawDmg = m.atk + Math.floor(Math.random() * 5) - 2;
+
+                        // The Crypt Keeper Tomb Cleave mechanic
+                        if (m.type === 'CRYPT_KEEPER' && Math.random() < 0.35) {
+                            rawDmg = Math.floor(rawDmg * 1.4);
+                            logMessage(`💥 TOMB CLEAVE: The Crypt Keeper sweeps his massive tomb cleaver!`, 'important');
+                            const kdx = Math.sign(player.x - m.x);
+                            const kdy = Math.sign(player.y - m.y);
+                            const kx = player.x + kdx;
+                            const ky = player.y + kdy;
+                            if (kx >= 1 && kx < MAP_WIDTH - 1 && ky >= 1 && ky < MAP_HEIGHT - 1) {
+                                const kt = dungeon[ky][kx];
+                                if (kt === TILE.FLOOR || kt === TILE.WATER) {
+                                    player.x = kx;
+                                    player.y = ky;
+                                    spawnCombatText(player.x, player.y, 'KNOCKBACK!', '#f59e0b');
+                                }
+                            }
+                        }
+
                         let wardReduction = Math.floor(player.warding / 3);
                         let netDmg = Math.max(3, rawDmg - wardReduction);
 
@@ -4106,11 +4441,83 @@
                         } else if (m.type === 'LEVIATHAN') {
                             player.sanity = Math.max(0, player.sanity - 2);
                             logMessage(`🐙 Abyssal Leviathan's crushing slam rattles your skull (-2 Sanity)!`, 'important');
+                        } else if (m.type === 'ABYSSAL_WYRM') {
+                            player.sanity = Math.max(0, player.sanity - 3);
+                            logMessage(`🐉 Suffocating coils of the Abyssal Wyrm crush your breath (-3 Sanity)!`, 'important');
+                        } else if (m.type === 'VOID_MONARCH') {
+                            player.sanity = Math.max(0, player.sanity - 3);
+                            player.aether = Math.max(0, player.aether - 5);
+                            logMessage(`🌌 The Void Monarch siphons soul and mind (-3 Sanity, -5 Aether)!`, 'important');
+                        }
+
+                        // The Crypt Keeper minion summon
+                        if (m.type === 'CRYPT_KEEPER' && m.hp < m.maxHp * 0.6 && Math.random() < 0.25) {
+                            const skelCount = monsters.filter(o => o.alive && o.type === 'SKELETON').length;
+                            if (skelCount < 2) {
+                                for (let s = 0; s < 2; s++) {
+                                    const sx = m.x + (Math.random() > 0.5 ? 1 : -1);
+                                    const sy = m.y + (Math.random() > 0.5 ? 1 : -1);
+                                    if (dungeon[sy] && (dungeon[sy][sx] === TILE.FLOOR || dungeon[sy][sx] === TILE.WATER) && !monsters.some(o => o.alive && o.x === sx && o.y === sy)) {
+                                        const sb = BESTIARY.SKELETON;
+                                        monsters.push({
+                                            id: `m_skel_minion_${Date.now()}_${s}`,
+                                            type: 'SKELETON',
+                                            name: 'Crypt Skeleton',
+                                            symbol: sb.symbol,
+                                            color: sb.color,
+                                            x: sx,
+                                            y: sy,
+                                            hp: sb.baseHp,
+                                            maxHp: sb.baseHp,
+                                            atk: sb.baseAtk,
+                                            exp: 15,
+                                            essence: 10,
+                                            state: 'alert',
+                                            freezeTurns: 0,
+                                            alertRange: 8,
+                                            alive: true
+                                        });
+                                    }
+                                }
+                                logMessage(`💀 TOMB AWAKENING: The Crypt Keeper summons Crypt Skeletons from ancient stone!`, 'important');
+                                spawnCombatText(m.x, m.y, 'SUMMON UNDEAD', '#f59e0b');
+                            }
                         }
 
                         if (player.hp <= 0) {
                             logMessage('💀 You have fallen to the abyssal horrors. Click [New Descent] to rise again.', 'important');
                         }
+                    } else if (m.type === 'ABYSSAL_WYRM' && dist <= 5 && hasLOS) {
+                        // Caustic Acid Spit
+                        let rawDmg = m.atk + Math.floor(Math.random() * 5);
+                        let netDmg = Math.max(5, rawDmg - Math.floor(player.warding / 4));
+                        if (player.shield > 0) {
+                            if (player.shield >= netDmg) { player.shield -= netDmg; netDmg = 0; }
+                            else { netDmg -= player.shield; player.shield = 0; }
+                        }
+                        if (netDmg > 0) {
+                            player.hp = Math.max(0, player.hp - netDmg);
+                            player.hunger = Math.max(0, player.hunger - 8);
+                            AudioSys.playPlayerHurt();
+                            spawnCombatText(player.x, player.y, `-${netDmg} ACID`, '#10b981');
+                            logMessage(`🧪 CAUSTIC BILE: Abyssal Wyrm spews corrosive venom for ${netDmg} Acid DMG, dissolving provisions (-8 Hunger)!`, 'combat');
+                        }
+                        spellEffects.push({ type: 'frost', x: player.x, y: player.y, radius: 12, duration: 8 });
+                    } else if (m.type === 'VOID_MONARCH' && dist <= 6 && hasLOS) {
+                        // Cosmic Collapse Beam
+                        let rawDmg = m.atk + Math.floor(Math.random() * 6) + 5;
+                        let netDmg = Math.max(8, rawDmg - Math.floor(player.warding / 5));
+                        if (player.shield > 0) {
+                            if (player.shield >= netDmg) { player.shield -= netDmg; netDmg = 0; }
+                            else { netDmg -= player.shield; player.shield = 0; }
+                        }
+                        if (netDmg > 0) {
+                            player.hp = Math.max(0, player.hp - netDmg);
+                            AudioSys.playPlayerHurt();
+                            spawnCombatText(player.x, player.y, `-${netDmg} VOID`, '#c084fc');
+                            logMessage(`🌌 COSMIC COLLAPSE: The Void Monarch unleashes an astral beam for ${netDmg} Void DMG!`, 'combat');
+                        }
+                        spellEffects.push({ type: 'void', x: player.x, y: player.y, radius: 14, duration: 8 });
                     } else if (m.type === 'ACOLYTE' && dist <= 4 && hasLOS) {
                         let rawDmg = m.atk + Math.floor(Math.random() * 4);
                         let netDmg = Math.max(3, rawDmg - Math.floor(player.warding / 4));
@@ -4144,6 +4551,19 @@
                         }
                         AudioSys.playShadowBolt();
                     } else {
+                        // Gravitational Singularity check for Void Monarch at range
+                        if (m.type === 'VOID_MONARCH' && dist > 3 && Math.random() < 0.35) {
+                            const pullDx = Math.sign(m.x - player.x);
+                            const pullDy = Math.sign(m.y - player.y);
+                            const px = player.x + pullDx;
+                            const py = player.y + pullDy;
+                            if (dungeon[py] && (dungeon[py][px] === TILE.FLOOR || dungeon[py][px] === TILE.WATER)) {
+                                player.x = px;
+                                player.y = py;
+                                spawnCombatText(player.x, player.y, 'GRAVITY PULL', '#a855f7');
+                                logMessage('🌀 GRAVITATIONAL SINGULARITY: The Void Monarch warps spacetime, dragging you into the vortex!', 'magic');
+                            }
+                        }
                         let bestDx = 0;
                         let bestDy = 0;
                         let bestDist = dist;
@@ -4648,6 +5068,203 @@
                 ctx.fillRect(cx - 1, by + 3, 1, 1.5);
                 ctx.fillRect(cx + 1, by + 3, 1, 1.5);
                 ctx.fillRect(cx + 3, by + 3, 1, 1.5);
+
+            } else if (type === 'CRYPT_KEEPER') {
+                const bHover = Math.sin(animTime * 3) * 1.5;
+                const ky = cy + bHover;
+                // Golden Runic Aura
+                ctx.fillStyle = 'rgba(245, 158, 11, 0.22)';
+                ctx.beginPath();
+                ctx.arc(cx, ky, 15, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Armored Skull
+                ctx.fillStyle = '#f1f5f9';
+                ctx.beginPath();
+                ctx.arc(cx, ky - 6, 7, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Ancient Gold Crown
+                ctx.fillStyle = '#fbbf24';
+                ctx.beginPath();
+                ctx.moveTo(cx - 7, ky - 10);
+                ctx.lineTo(cx - 5, ky - 15);
+                ctx.lineTo(cx - 2, ky - 11);
+                ctx.lineTo(cx, ky - 16);
+                ctx.lineTo(cx + 2, ky - 11);
+                ctx.lineTo(cx + 5, ky - 15);
+                ctx.lineTo(cx + 7, ky - 10);
+                ctx.closePath();
+                ctx.fill();
+                // Crown Rubies
+                ctx.fillStyle = '#ef4444';
+                ctx.fillRect(cx - 1, ky - 13, 2, 2);
+
+                // Crimson glowing eye sockets
+                ctx.fillStyle = '#450a0a';
+                ctx.fillRect(cx - 4, ky - 7, 3, 3);
+                ctx.fillRect(cx + 1, ky - 7, 3, 3);
+                ctx.fillStyle = '#ef4444';
+                ctx.shadowColor = '#f43f5e';
+                ctx.shadowBlur = 6;
+                ctx.fillRect(cx - 3, ky - 6, 1.5, 1.5);
+                ctx.fillRect(cx + 2, ky - 6, 1.5, 1.5);
+                ctx.shadowBlur = 0;
+
+                // Jawbone with gold teeth
+                ctx.fillStyle = '#e2e8f0';
+                ctx.fillRect(cx - 4, ky - 1, 8, 3);
+                ctx.fillStyle = '#fbbf24';
+                ctx.fillRect(cx - 2, ky, 1.5, 2);
+                ctx.fillRect(cx + 1, ky, 1.5, 2);
+
+                // Heavy Runic Iron Breastplate
+                ctx.fillStyle = '#1e293b';
+                ctx.beginPath();
+                ctx.moveTo(cx - 7, ky + 2);
+                ctx.lineTo(cx + 7, ky + 2);
+                ctx.lineTo(cx + 5, ky + 10);
+                ctx.lineTo(cx - 5, ky + 10);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Colossal Tomb Greatsword
+                ctx.strokeStyle = '#94a3b8';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(cx + 8, ky + 10);
+                ctx.lineTo(cx + 13, ky - 12);
+                ctx.stroke();
+                // Glowing rune on greatsword
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(cx + 9, ky + 4);
+                ctx.lineTo(cx + 12, ky - 6);
+                ctx.stroke();
+
+            } else if (type === 'ABYSSAL_WYRM') {
+                const wyrmTime = animTime * 4;
+                // Coiled toxic shadow
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
+                ctx.beginPath();
+                ctx.arc(cx, cy, 15, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Serpentine Segments
+                const numSegments = 5;
+                for (let s = numSegments - 1; s >= 0; s--) {
+                    const offsetAngle = wyrmTime - s * 0.7;
+                    const segX = cx + Math.sin(offsetAngle) * (6 - s);
+                    const segY = cy + (s - 2) * 3 + Math.cos(offsetAngle) * 2;
+                    const rad = 7 - s * 0.8;
+
+                    // Emerald scales
+                    ctx.fillStyle = (s % 2 === 0) ? '#065f46' : '#047857';
+                    ctx.beginPath();
+                    ctx.arc(segX, segY, rad, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Glowing toxic dorsal ridge
+                    ctx.fillStyle = '#34d399';
+                    ctx.fillRect(segX - 1, segY - rad - 1, 2, 2.5);
+                }
+
+                // Dragon / Viper Head
+                const headY = cy - 6 + Math.sin(wyrmTime) * 2;
+                ctx.fillStyle = '#064e3b';
+                ctx.beginPath();
+                ctx.ellipse(cx, headY, 7, 5, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Serpentine Horns
+                ctx.strokeStyle = '#059669';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(cx - 4, headY - 2); ctx.lineTo(cx - 8, headY - 8);
+                ctx.moveTo(cx + 4, headY - 2); ctx.lineTo(cx + 8, headY - 8);
+                ctx.stroke();
+
+                // Bioluminescent toxic eyes
+                ctx.fillStyle = '#facc15';
+                ctx.shadowColor = '#10b981';
+                ctx.shadowBlur = 6;
+                ctx.fillRect(cx - 4, headY - 3, 2, 2);
+                ctx.fillRect(cx + 2, headY - 3, 2, 2);
+                ctx.shadowBlur = 0;
+
+                // Dripping acid fangs
+                ctx.fillStyle = '#f8fafc';
+                ctx.fillRect(cx - 3, headY + 2, 1.5, 3);
+                ctx.fillRect(cx + 1.5, headY + 2, 1.5, 3);
+                ctx.fillStyle = '#10b981';
+                ctx.fillRect(cx - 2, headY + 4, 1, 2);
+
+            } else if (type === 'VOID_MONARCH') {
+                const vFloat = Math.sin(animTime * 3) * 2.5;
+                const my = cy + vFloat;
+
+                // Cosmic Event Horizon Void Aura
+                ctx.fillStyle = 'rgba(147, 51, 234, 0.28)';
+                ctx.beginPath();
+                ctx.arc(cx, my, 16, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Orbiting Void Crystals
+                for (let o = 0; o < 3; o++) {
+                    const orbAngle = animTime * 3 + o * (Math.PI * 2 / 3);
+                    const ox = cx + Math.cos(orbAngle) * 13;
+                    const oy = my + Math.sin(orbAngle) * 7;
+                    ctx.fillStyle = '#c084fc';
+                    ctx.shadowColor = '#a855f7';
+                    ctx.shadowBlur = 6;
+                    ctx.beginPath();
+                    ctx.arc(ox, oy, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+
+                // Royal Obsidian Astral Mantle
+                ctx.fillStyle = '#3b0764';
+                ctx.beginPath();
+                ctx.moveTo(cx - 8, my + 10);
+                ctx.lineTo(cx - 10, my - 3);
+                ctx.lineTo(cx + 10, my - 3);
+                ctx.lineTo(cx + 8, my + 10);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = '#c084fc';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Sovereign Void Crown
+                ctx.fillStyle = '#7e22ce';
+                ctx.beginPath();
+                ctx.moveTo(cx - 7, my - 4);
+                ctx.lineTo(cx - 6, my - 13);
+                ctx.lineTo(cx - 2, my - 7);
+                ctx.lineTo(cx, my - 14);
+                ctx.lineTo(cx + 2, my - 7);
+                ctx.lineTo(cx + 6, my - 13);
+                ctx.lineTo(cx + 7, my - 4);
+                ctx.closePath();
+                ctx.fill();
+
+                // Center Cosmic Eye of Singularity
+                ctx.fillStyle = '#020617';
+                ctx.beginPath();
+                ctx.arc(cx, my - 1, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#e9d5ff';
+                ctx.shadowColor = '#38bdf8';
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.arc(cx, my - 1, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
             }
 
             ctx.restore();
@@ -6503,6 +7120,35 @@
             const monsterNearby = monsters.find(m => m.alive && Math.abs(m.x - player.x) <= 1 && Math.abs(m.y - player.y) <= 1);
             const monNote = monsterNearby ? ` | Near: ${monsterNearby.symbol} ${monsterNearby.name} (${monsterNearby.hp} HP)` : '';
             document.getElementById('hudTileInfo').innerText = `Position: (${player.x}, ${player.y}) | ${tileNames[curTile] || 'Floor'}${monNote}`;
+
+            // Boss HUD bar update
+            const boss = monsters.find(m => m.alive && (m.isBoss || m.type === 'CRYPT_KEEPER' || m.type === 'ABYSSAL_WYRM' || m.type === 'VOID_MONARCH'));
+            const bossBarEl = document.getElementById('bossHudBar');
+            if (bossBarEl) {
+                if (boss) {
+                    bossBarEl.style.display = 'flex';
+                    const crest = (boss.type === 'CRYPT_KEEPER' ? '👑💀' : (boss.type === 'ABYSSAL_WYRM' ? '🐉' : '👁️🌌'));
+                    document.getElementById('bossCrest').innerText = crest;
+                    document.getElementById('bossTitle').innerText = boss.name;
+                    const sub = (boss.type === 'CRYPT_KEEPER' ? 'Abyssal Lord of Catacombs' : (boss.type === 'ABYSSAL_WYRM' ? 'Terror of Sunken Grotto' : 'Sovereign of the Void Abyss'));
+                    document.getElementById('bossSubtitle').innerText = sub;
+                    const pct = Math.max(0, Math.min(100, Math.round((boss.hp / boss.maxHp) * 100)));
+                    const fillEl = document.getElementById('bossHpFill');
+                    if (fillEl) {
+                        fillEl.style.width = `${pct}%`;
+                        if (boss.type === 'CRYPT_KEEPER') {
+                            fillEl.style.background = 'linear-gradient(90deg, #ef4444, #f59e0b)';
+                        } else if (boss.type === 'ABYSSAL_WYRM') {
+                            fillEl.style.background = 'linear-gradient(90deg, #10b981, #06b6d4)';
+                        } else {
+                            fillEl.style.background = 'linear-gradient(90deg, #a855f7, #38bdf8)';
+                        }
+                    }
+                    document.getElementById('bossHpText').innerText = `${boss.hp} / ${boss.maxHp} HP (${pct}%)`;
+                } else {
+                    bossBarEl.style.display = 'none';
+                }
+            }
 
             renderSpellHotbar();
             renderRuneUI();

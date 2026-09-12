@@ -297,6 +297,10 @@ typedef enum {
     ITEM_ING_AETHER_BLOSSOM,
     // Keys
     ITEM_KEY_RUNIC,
+    // Boss Drops
+    ITEM_WPN_CRYPT_GREATSWORD,
+    ITEM_ARM_WYRMSCALE,
+    ITEM_REL_MONARCH_CROWN,
     NUM_ITEM_DEFS
 } ItemId;
 
@@ -354,7 +358,10 @@ static const ItemDef g_itemDefs[NUM_ITEM_DEFS] = {
     { ITEM_ING_BRIMSTONE, "Brimstone Ash", ITEM_TYPE_REAGENT, SLOT_NONE, "%", RGB(245,158,11), "Reagent for Liquid Fire & Stoneskin.", 0,0,0,0, 0,0,0 },
     { ITEM_ING_VOID_DUST, "Void Dust", ITEM_TYPE_REAGENT, SLOT_NONE, "%", RGB(168,85,247), "Reagent for Aether Phials & Liquid Fire.", 0,0,0,0, 0,0,0 },
     { ITEM_ING_AETHER_BLOSSOM, "Aether Blossom", ITEM_TYPE_REAGENT, SLOT_NONE, "%", RGB(56,189,248), "Mana-rich catalyst for high-tier brews.", 0,0,0,0, 0,0,0 },
-    { ITEM_KEY_RUNIC, "Ancient Runic Key", ITEM_TYPE_KEY, SLOT_NONE, "k", COLOR_TEXT_GOLD, "Unlocks crypt chests and sealed doors.", 0,0,0,0, 0,0,0 }
+    { ITEM_KEY_RUNIC, "Ancient Runic Key", ITEM_TYPE_KEY, SLOT_NONE, "k", COLOR_TEXT_GOLD, "Unlocks crypt chests and sealed doors.", 0,0,0,0, 0,0,0 },
+    { ITEM_WPN_CRYPT_GREATSWORD, "Keeper's Greatsword", ITEM_TYPE_EQUIPMENT, SLOT_WEAPON, "/", RGB(245,158,11), "+10 Might, +3 Warding, +15 Max HP. Heavy tomb blade.", 10,3,0,0, 15,0,0 },
+    { ITEM_ARM_WYRMSCALE, "Wyrmscale Carapace", ITEM_TYPE_EQUIPMENT, SLOT_ARMOR, "[", RGB(16,185,129), "+9 Warding, +40 Max HP, +2 Might. Impervious to acid.", 2,9,0,0, 40,0,0 },
+    { ITEM_REL_MONARCH_CROWN, "Crown of Void Monarch", ITEM_TYPE_EQUIPMENT, SLOT_RELIC, "o", RGB(192,132,252), "+10 Light, +35 Max Aether, +35 Max Sanity, +5 Arcana.", 0,2,5,10, 0,35,35 }
 };
 
 #define NUM_RECIPES 6
@@ -446,12 +453,15 @@ static LogMessage g_logs[MAX_LOG_MSGS];
 static int g_logCount = 0;
 
 // Monster Bestiary Definitions
-#define MONSTER_SKELETON  0
-#define MONSTER_GHOUL     1
-#define MONSTER_WRAITH    2
-#define MONSTER_ACOLYTE   3
-#define MONSTER_LEVIATHAN 4
-#define NUM_MONSTER_TYPES 5
+#define MONSTER_SKELETON      0
+#define MONSTER_GHOUL         1
+#define MONSTER_WRAITH        2
+#define MONSTER_ACOLYTE       3
+#define MONSTER_LEVIATHAN     4
+#define MONSTER_CRYPT_KEEPER  5
+#define MONSTER_ABYSSAL_WYRM  6
+#define MONSTER_VOID_MONARCH  7
+#define NUM_MONSTER_TYPES     8
 
 typedef struct {
     const char* name;
@@ -472,7 +482,10 @@ static const MonsterDef g_monsterDefs[NUM_MONSTER_TYPES] = {
     { "Mire Ghoul", "G", RGB(45, 212, 191), 44, 5, 12, 2, 30, 25, "Amphibious beast lurking in flooded shallows.", "Weak to Shock (Tempest x1.4)" },
     { "Void Wraith", "W", RGB(192, 132, 252), 46, 6, 15, 3, 42, 35, "Phases through walls; drains Sanity & Aether.", "Vulnerable to Aegis barrier" },
     { "Crypt Acolyte", "N", RGB(234, 179, 8), 36, 4, 14, 2, 35, 30, "Necromancer hurling long-range Shadow Bolts.", "Weak in close melee" },
-    { "Abyssal Leviathan", "L", RGB(244, 63, 94), 95, 12, 24, 4, 80, 75, "Colossal horror with crushing slams.", "Susceptible to Glacial Nova (2-turn Freeze)" }
+    { "Abyssal Leviathan", "L", RGB(244, 63, 94), 95, 12, 24, 4, 80, 75, "Colossal horror with crushing slams.", "Susceptible to Glacial Nova (2-turn Freeze)" },
+    { "The Crypt Keeper", "K", RGB(245, 158, 11), 280, 25, 28, 4, 250, 220, "Catacombs Lord. Bone plating, tomb cleaves, summons skeletons.", "Weak to Sacred Fire (Pyre x1.75)" },
+    { "Abyssal Wyrm", "Y", RGB(16, 185, 129), 380, 35, 36, 5, 400, 350, "Sunken Grotto Sovereign. Spits caustic acid, coils & burrows.", "Weak to Glacial Frost (Cryo Freeze)" },
+    { "The Void Monarch", "M", RGB(192, 132, 252), 520, 45, 46, 6, 650, 500, "Cosmic Void Sovereign. Astral beams, singularity pull, dread aura.", "Weak to Aegis Ward & Tempest Shock" }
 };
 
 typedef struct {
@@ -484,6 +497,8 @@ typedef struct {
     int state; // 0=idle, 1=alert
     int freezeTurns;
     int alertRange;
+    BOOL isBoss;
+    BOOL bonePlated;
     BOOL alive;
 } Monster;
 
@@ -1144,7 +1159,7 @@ void SpawnMonsters(int level) {
     }
 
     int numToSpawn = 5 + (int)(level * 0.8f) + RandInt(0, 2);
-    if (numToSpawn > MAX_MONSTERS) numToSpawn = MAX_MONSTERS;
+    if (numToSpawn > MAX_MONSTERS - 2) numToSpawn = MAX_MONSTERS - 2;
 
     for (int i = 0; i < numToSpawn; i++) {
         int tIdx = types[RandInt(0, numTypes - 1)];
@@ -1179,9 +1194,74 @@ void SpawnMonsters(int level) {
                         g_monsters[g_numMonsters].state = 0;
                         g_monsters[g_numMonsters].freezeTurns = 0;
                         g_monsters[g_numMonsters].alertRange = (tIdx == MONSTER_LEVIATHAN ? 10 : (tIdx == MONSTER_WRAITH ? 9 : 7));
+                        g_monsters[g_numMonsters].isBoss = FALSE;
+                        g_monsters[g_numMonsters].bonePlated = FALSE;
                         g_monsters[g_numMonsters].alive = TRUE;
                         g_numMonsters++;
                         spawned = TRUE;
+                    }
+                }
+            }
+        }
+    }
+
+    // --- Abyssal Lord Boss Encounter Spawning ---
+    int bossType = -1;
+    if (level == 3) {
+        bossType = MONSTER_CRYPT_KEEPER;
+    } else if (level == 6) {
+        bossType = MONSTER_ABYSSAL_WYRM;
+    } else if (level >= 10 && (level == 10 || level % 4 == 0)) {
+        bossType = MONSTER_VOID_MONARCH;
+    }
+
+    if (bossType >= 0 && g_numMonsters < MAX_MONSTERS) {
+        const MonsterDef* bmd = &g_monsterDefs[bossType];
+        int bAttempts = 0;
+        BOOL bSpawned = FALSE;
+        while (bAttempts < 120 && !bSpawned) {
+            bAttempts++;
+            int rx = RandInt(3, MAP_WIDTH - 4);
+            int ry = RandInt(3, MAP_HEIGHT - 4);
+            int t = g_dungeon[ry][rx];
+
+            if ((t == TILE_FLOOR || t == TILE_WATER) && t != TILE_STAIRS_UP && t != TILE_STAIRS_DOWN && t != TILE_CHEST && t != TILE_ALTAR && t != TILE_SHRINE && t != TILE_MERCHANT && t != TILE_CAULDRON) {
+                int dist = (int)sqrtf((float)((rx - g_player.x) * (rx - g_player.x) + (ry - g_player.y) * (ry - g_player.y)));
+                if (dist >= 7) {
+                    BOOL occupied = FALSE;
+                    for (int m = 0; m < g_numMonsters; m++) {
+                        if (g_monsters[m].x == rx && g_monsters[m].y == ry) { occupied = TRUE; break; }
+                    }
+                    if (!occupied) {
+                        int hp = bmd->baseHp + (level - 1) * bmd->hpScale;
+                        int atk = bmd->baseAtk + (level - 1) * bmd->atkScale;
+                        g_monsters[g_numMonsters].type = bossType;
+                        g_monsters[g_numMonsters].x = rx;
+                        g_monsters[g_numMonsters].y = ry;
+                        g_monsters[g_numMonsters].hp = hp;
+                        g_monsters[g_numMonsters].max_hp = hp;
+                        g_monsters[g_numMonsters].atk = atk;
+                        g_monsters[g_numMonsters].exp = bmd->exp + level * 10;
+                        g_monsters[g_numMonsters].essence = bmd->essence + level * 10;
+                        g_monsters[g_numMonsters].state = 1; // Alert
+                        g_monsters[g_numMonsters].freezeTurns = 0;
+                        g_monsters[g_numMonsters].alertRange = 14;
+                        g_monsters[g_numMonsters].isBoss = TRUE;
+                        g_monsters[g_numMonsters].bonePlated = (bossType == MONSTER_CRYPT_KEEPER);
+                        g_monsters[g_numMonsters].alive = TRUE;
+                        g_numMonsters++;
+                        bSpawned = TRUE;
+
+                        if (bossType == MONSTER_CRYPT_KEEPER) {
+                            AddLog("ABYSSAL LORD RISES: The Crypt Keeper stirs in the catacomb sepulcher!", COLOR_ACCENT_AMBER);
+                            Beep(220, 60); Beep(160, 100);
+                        } else if (bossType == MONSTER_ABYSSAL_WYRM) {
+                            AddLog("ABYSSAL LORD RISES: The sunken waters churn—The Abyssal Wyrm coils from the depths!", COLOR_ACCENT_GREEN);
+                            Beep(180, 60); Beep(240, 80);
+                        } else if (bossType == MONSTER_VOID_MONARCH) {
+                            AddLog("ABYSSAL LORD RISES: Reality tears asunder—The Void Monarch commands the abyssal vortex!", COLOR_ACCENT_PURPLE);
+                            Beep(140, 80); Beep(280, 120);
+                        }
                     }
                 }
             }
@@ -1211,9 +1291,15 @@ void DamageMonster(int idx, int dmg, const char* dmgType, BOOL isCrit) {
         g_player.essence += m->essence;
 
         char buf[128];
-        snprintf(buf, sizeof(buf), "SLAIN: You destroyed %s! (+%d EXP, +%d Essence)", md->name, m->exp, m->essence);
-        AddLog(buf, COLOR_TEXT_GOLD);
-        Beep(330, 40); Beep(165, 80);
+        if (m->isBoss) {
+            snprintf(buf, sizeof(buf), "ABYSSAL LORD DEFEATED: You conquered %s! (+%d EXP, +%d Gold)", md->name, m->exp, m->essence);
+            AddLog(buf, COLOR_TEXT_GOLD);
+            Beep(440, 80); Beep(554, 80); Beep(659, 120); Beep(880, 200);
+        } else {
+            snprintf(buf, sizeof(buf), "SLAIN: You destroyed %s! (+%d EXP, +%d Essence)", md->name, m->exp, m->essence);
+            AddLog(buf, COLOR_TEXT_GOLD);
+            Beep(330, 40); Beep(165, 80);
+        }
 
         // Chance to discover an unowned rune
         int unowned[NUM_RUNES];
@@ -1221,7 +1307,7 @@ void DamageMonster(int idx, int dmg, const char* dmgType, BOOL isCrit) {
         for (int r = 0; r < NUM_RUNES; r++) {
             if (!g_player.ownedRunes[r]) unowned[unCount++] = r;
         }
-        if (unCount > 0 && RandInt(0, 100) < 35) {
+        if (unCount > 0 && (m->isBoss || RandInt(0, 100) < 35)) {
             int rPick = unowned[RandInt(0, unCount - 1)];
             g_player.ownedRunes[rPick] = TRUE;
             char rBuf[128];
@@ -1230,8 +1316,20 @@ void DamageMonster(int idx, int dmg, const char* dmgType, BOOL isCrit) {
             Beep(880, 50); Beep(1175, 70);
         }
 
-        // Ingredient & Potion drops matching monster types
-        if (m->type == MONSTER_GHOUL) {
+        // Boss drops
+        if (m->type == MONSTER_CRYPT_KEEPER) {
+            AddPackItem(ITEM_WPN_CRYPT_GREATSWORD, 1);
+            AddPackItem(ITEM_KEY_RUNIC, 1);
+            AddLog("Spoils of Catacombs: Discovered Keeper's Greatsword (+10 Might, +3 Ward) & Key!", COLOR_TEXT_GOLD);
+        } else if (m->type == MONSTER_ABYSSAL_WYRM) {
+            AddPackItem(ITEM_ARM_WYRMSCALE, 1);
+            AddPackItem(ITEM_PANACEA_DEEP, 1);
+            AddLog("Spoils of Grotto: Discovered Wyrmscale Carapace (+9 Ward, +40 HP) & Panacea!", COLOR_TEXT_GOLD);
+        } else if (m->type == MONSTER_VOID_MONARCH) {
+            AddPackItem(ITEM_REL_MONARCH_CROWN, 1);
+            AddPackItem(ITEM_PANACEA_DEEP, 1);
+            AddLog("Spoils of the Void: Discovered Crown of Void Monarch (+10 Light, +35 MP/SAN)!", COLOR_TEXT_GOLD);
+        } else if (m->type == MONSTER_GHOUL) {
             if (RandInt(0, 100) < 55) { AddPackItem(ITEM_ING_AZURE_SPORES, 1); AddLog("Harvested Azure Spores from the mire ghoul.", RGB(52, 211, 153)); }
             if (RandInt(0, 100) < 25) { AddPackItem(ITEM_HEAL_SALVE, 1); AddLog("Salvaged Healing Salve from remains.", COLOR_ACCENT_GREEN); }
         } else if (m->type == MONSTER_SKELETON) {
@@ -1256,6 +1354,29 @@ void DamageMonster(int idx, int dmg, const char* dmgType, BOOL isCrit) {
         snprintf(buf, sizeof(buf), "Hit %s for %d %s DMG! (%d/%d HP)", md->name, dmg, dmgType, m->hp, m->max_hp);
         AddLog(buf, COLOR_ACCENT_RED);
         Beep(520, 30);
+
+        // Dimensional Phase Blink for Void Monarch
+        if (m->type == MONSTER_VOID_MONARCH && RandInt(0, 100) < 35) {
+            for (int bAtt = 0; bAtt < 15; bAtt++) {
+                int bx = m->x + RandInt(-2, 2);
+                int by = m->y + RandInt(-2, 2);
+                if (bx >= 1 && bx < MAP_WIDTH - 1 && by >= 1 && by < MAP_HEIGHT - 1) {
+                    int bt = g_dungeon[by][bx];
+                    if ((bt == TILE_FLOOR || bt == TILE_WATER) && (bx != g_player.x || by != g_player.y)) {
+                        BOOL occ = FALSE;
+                        for (int o = 0; o < g_numMonsters; o++) {
+                            if (o != idx && g_monsters[o].alive && g_monsters[o].x == bx && g_monsters[o].y == by) { occ = TRUE; break; }
+                        }
+                        if (!occ) {
+                            m->x = bx; m->y = by;
+                            SpawnCombatText((float)bx, (float)by, "PHASE BLINK!", RGB(192, 132, 252));
+                            AddLog("DIMENSIONAL BLINK: The Void Monarch folds space, phasing across the chamber!", COLOR_ACCENT_PURPLE);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -1263,6 +1384,22 @@ void AttackMonster(int idx) {
     if (idx < 0 || idx >= g_numMonsters) return;
     int baseDmg = 12 + g_player.might / 2 + g_player.arcana / 3 + RandInt(0, 5);
     baseDmg += g_staffDefs[g_player.equippedStaff].arcanaBonus;
+
+    // Crypt Keeper Bone Plating Check
+    if (g_monsters[idx].type == MONSTER_CRYPT_KEEPER && g_monsters[idx].bonePlated) {
+        if (g_player.weaponEnchant == ENCHANT_FIRE) {
+            g_monsters[idx].bonePlated = FALSE;
+            baseDmg = (int)(baseDmg * 1.75f);
+            AddLog("BONE SHATTER: Sacred flame incinerates The Crypt Keeper's bone plating (+75% DMG)!", RGB(249, 115, 22));
+            SpawnCombatText((float)g_monsters[idx].x, (float)g_monsters[idx].y, "BONE SHIELD BROKEN", RGB(249, 115, 22));
+        } else {
+            baseDmg = (int)(baseDmg * 0.75f);
+            AddLog("BONE PLATING: The Crypt Keeper's heavy ossified armor deflects 25% damage!", COLOR_TEXT_DIM);
+        }
+    } else if (g_monsters[idx].type == MONSTER_ABYSSAL_WYRM && g_player.weaponEnchant == ENCHANT_FROST) {
+        baseDmg = (int)(baseDmg * 1.4f);
+        AddLog("GLACIAL FRACTURE: Frost rime crystallizes the Abyssal Wyrm's scales (+40% DMG)!", COLOR_ACCENT_CYAN);
+    }
 
     BOOL isCrit = (RandInt(0, 100) < 15);
     if (isCrit) baseDmg = (int)(baseDmg * 1.5f);
@@ -1273,7 +1410,7 @@ void AttackMonster(int idx) {
     if (g_monsters[idx].alive && g_player.weaponEnchant != ENCHANT_NONE) {
         if (g_player.weaponEnchant == ENCHANT_FIRE) {
             int fireDmg = RandInt(10, 16);
-            if (g_monsters[idx].type == MONSTER_SKELETON) {
+            if (g_monsters[idx].type == MONSTER_SKELETON || g_monsters[idx].type == MONSTER_CRYPT_KEEPER) {
                 fireDmg = (int)(fireDmg * 1.5f);
             }
             DamageMonster(idx, fireDmg, "FIRE", FALSE);
@@ -1325,11 +1462,38 @@ void UpdateMonsters(void) {
             mon->state = 1;
         }
 
+        // Void Monarch Passive Dread Aura
+        if (mon->type == MONSTER_VOID_MONARCH && dist <= 8.0f && hasLOS && (g_turn % 2 == 0)) {
+            if (g_player.shield <= 0) {
+                g_player.sanity = (g_player.sanity > 0) ? (g_player.sanity - 1) : 0;
+                AddLog("DREAD AURA: The Void Monarch crushes your sanity (-1 Sanity)!", COLOR_ACCENT_PURPLE);
+                SpawnCombatText((float)g_player.x, (float)g_player.y, "-1 SAN", RGB(192, 132, 252));
+            }
+        }
+
         if (mon->state == 1) {
             BOOL isAdj = (abs(g_player.x - mon->x) <= 1 && abs(g_player.y - mon->y) <= 1);
             if (isAdj) {
                 // Melee strike
                 int rawDmg = mon->atk + RandInt(0, 4) - 2;
+
+                // Crypt Keeper Tomb Cleave
+                if (mon->type == MONSTER_CRYPT_KEEPER && RandInt(0, 100) < 35) {
+                    rawDmg = (int)(rawDmg * 1.4f);
+                    AddLog("TOMB CLEAVE: The Crypt Keeper sweeps his massive greatsword!", COLOR_ACCENT_AMBER);
+                    int kdx = (g_player.x > mon->x) ? 1 : ((g_player.x < mon->x) ? -1 : 0);
+                    int kdy = (g_player.y > mon->y) ? 1 : ((g_player.y < mon->y) ? -1 : 0);
+                    int kx = g_player.x + kdx;
+                    int ky = g_player.y + kdy;
+                    if (kx >= 1 && kx < MAP_WIDTH - 1 && ky >= 1 && ky < MAP_HEIGHT - 1) {
+                        int kt = g_dungeon[ky][kx];
+                        if (kt == TILE_FLOOR || kt == TILE_WATER) {
+                            g_player.x = kx; g_player.y = ky;
+                            SpawnCombatText((float)kx, (float)ky, "KNOCKBACK!", RGB(245, 158, 11));
+                        }
+                    }
+                }
+
                 int netDmg = rawDmg - g_player.warding / 3;
                 if (netDmg < 3) netDmg = 3;
 
@@ -1367,10 +1531,94 @@ void UpdateMonsters(void) {
                 } else if (mon->type == MONSTER_LEVIATHAN) {
                     g_player.sanity = (g_player.sanity > 2) ? (g_player.sanity - 2) : 0;
                     AddLog("Abyssal Leviathan's crushing slam shakes the floor (-2 Sanity)!", COLOR_ACCENT_AMBER);
+                } else if (mon->type == MONSTER_ABYSSAL_WYRM) {
+                    g_player.sanity = (g_player.sanity > 3) ? (g_player.sanity - 3) : 0;
+                    AddLog("Abyssal Wyrm coils crush your breath (-3 Sanity)!", COLOR_ACCENT_GREEN);
+                } else if (mon->type == MONSTER_VOID_MONARCH) {
+                    g_player.sanity = (g_player.sanity > 3) ? (g_player.sanity - 3) : 0;
+                    g_player.aether = (g_player.aether > 5) ? (g_player.aether - 5) : 0;
+                    AddLog("The Void Monarch siphons soul and mind (-3 Sanity, -5 Aether)!", COLOR_ACCENT_PURPLE);
+                }
+
+                // Crypt Keeper minion summons
+                if (mon->type == MONSTER_CRYPT_KEEPER && mon->hp < mon->max_hp * 6 / 10 && RandInt(0, 100) < 25) {
+                    int skelCount = 0;
+                    for (int s = 0; s < g_numMonsters; s++) {
+                        if (g_monsters[s].alive && g_monsters[s].type == MONSTER_SKELETON) skelCount++;
+                    }
+                    if (skelCount < 2 && g_numMonsters < MAX_MONSTERS) {
+                        for (int s = 0; s < 2 && g_numMonsters < MAX_MONSTERS; s++) {
+                            int sx = mon->x + (s == 0 ? 1 : -1);
+                            int sy = mon->y + (s == 0 ? -1 : 1);
+                            if (sx >= 1 && sx < MAP_WIDTH - 1 && sy >= 1 && sy < MAP_HEIGHT - 1) {
+                                int st = g_dungeon[sy][sx];
+                                if (st == TILE_FLOOR || st == TILE_WATER) {
+                                    g_monsters[g_numMonsters].type = MONSTER_SKELETON;
+                                    g_monsters[g_numMonsters].x = sx;
+                                    g_monsters[g_numMonsters].y = sy;
+                                    g_monsters[g_numMonsters].hp = g_monsterDefs[MONSTER_SKELETON].baseHp;
+                                    g_monsters[g_numMonsters].max_hp = g_monsterDefs[MONSTER_SKELETON].baseHp;
+                                    g_monsters[g_numMonsters].atk = g_monsterDefs[MONSTER_SKELETON].baseAtk;
+                                    g_monsters[g_numMonsters].exp = 15;
+                                    g_monsters[g_numMonsters].essence = 10;
+                                    g_monsters[g_numMonsters].state = 1;
+                                    g_monsters[g_numMonsters].freezeTurns = 0;
+                                    g_monsters[g_numMonsters].alertRange = 8;
+                                    g_monsters[g_numMonsters].isBoss = FALSE;
+                                    g_monsters[g_numMonsters].bonePlated = FALSE;
+                                    g_monsters[g_numMonsters].alive = TRUE;
+                                    g_numMonsters++;
+                                }
+                            }
+                        }
+                        AddLog("TOMB AWAKENING: The Crypt Keeper summons Crypt Skeletons!", COLOR_ACCENT_AMBER);
+                        SpawnCombatText((float)mon->x, (float)mon->y, "SUMMON UNDEAD", RGB(245, 158, 11));
+                    }
                 }
 
                 if (g_player.hp <= 0) {
                     AddLog("You have fallen in the Abyss! Press F2 / Ctrl+N to descend anew.", COLOR_ACCENT_RED);
+                }
+            } else if (mon->type == MONSTER_ABYSSAL_WYRM && dist <= 5.0f && hasLOS) {
+                // Caustic Acid Spit
+                int rawDmg = mon->atk + RandInt(0, 4);
+                int netDmg = rawDmg - g_player.warding / 4;
+                if (netDmg < 4) netDmg = 4;
+                if (g_player.shield > 0) {
+                    if (g_player.shield >= netDmg) { g_player.shield -= netDmg; netDmg = 0; }
+                    else { netDmg -= g_player.shield; g_player.shield = 0; }
+                }
+                if (netDmg > 0) {
+                    g_player.hp -= netDmg;
+                    if (g_player.hp < 0) g_player.hp = 0;
+                    g_player.hunger = (g_player.hunger > 8) ? (g_player.hunger - 8) : 0;
+                    char dTxt[32];
+                    snprintf(dTxt, sizeof(dTxt), "-%d ACID", netDmg);
+                    SpawnCombatText((float)g_player.x, (float)g_player.y, dTxt, COLOR_ACCENT_GREEN);
+                    char bBuf[128];
+                    snprintf(bBuf, sizeof(bBuf), "CAUSTIC BILE: %s spews acid for %d DMG (-8 Hunger)!", md->name, netDmg);
+                    AddLog(bBuf, COLOR_ACCENT_GREEN);
+                    Beep(210, 40);
+                }
+            } else if (mon->type == MONSTER_VOID_MONARCH && dist <= 6.0f && hasLOS) {
+                // Cosmic Collapse Beam
+                int rawDmg = mon->atk + RandInt(0, 6) + 4;
+                int netDmg = rawDmg - g_player.warding / 5;
+                if (netDmg < 6) netDmg = 6;
+                if (g_player.shield > 0) {
+                    if (g_player.shield >= netDmg) { g_player.shield -= netDmg; netDmg = 0; }
+                    else { netDmg -= g_player.shield; g_player.shield = 0; }
+                }
+                if (netDmg > 0) {
+                    g_player.hp -= netDmg;
+                    if (g_player.hp < 0) g_player.hp = 0;
+                    char dTxt[32];
+                    snprintf(dTxt, sizeof(dTxt), "-%d VOID", netDmg);
+                    SpawnCombatText((float)g_player.x, (float)g_player.y, dTxt, COLOR_ACCENT_PURPLE);
+                    char bBuf[128];
+                    snprintf(bBuf, sizeof(bBuf), "COSMIC COLLAPSE: %s channels astral annihilation for %d DMG!", md->name, netDmg);
+                    AddLog(bBuf, COLOR_ACCENT_PURPLE);
+                    Beep(160, 60);
                 }
             } else if (mon->type == MONSTER_ACOLYTE && dist <= 4.0f && hasLOS) {
                 // Ranged Shadow Bolt
@@ -1401,6 +1649,21 @@ void UpdateMonsters(void) {
                     Beep(260, 40);
                 }
             } else {
+                // Gravitational Singularity for Void Monarch
+                if (mon->type == MONSTER_VOID_MONARCH && dist > 3.0f && RandInt(0, 100) < 35) {
+                    int pullDx = (mon->x > g_player.x) ? 1 : ((mon->x < g_player.x) ? -1 : 0);
+                    int pullDy = (mon->y > g_player.y) ? 1 : ((mon->y < g_player.y) ? -1 : 0);
+                    int px = g_player.x + pullDx;
+                    int py = g_player.y + pullDy;
+                    if (px >= 1 && px < MAP_WIDTH - 1 && py >= 1 && py < MAP_HEIGHT - 1) {
+                        int pt = g_dungeon[py][px];
+                        if (pt == TILE_FLOOR || pt == TILE_WATER) {
+                            g_player.x = px; g_player.y = py;
+                            SpawnCombatText((float)px, (float)py, "GRAVITY PULL", RGB(192, 132, 252));
+                            AddLog("GRAVITATIONAL SINGULARITY: The Void Monarch drags you into the vortex!", COLOR_ACCENT_PURPLE);
+                        }
+                    }
+                }
                 // Pathfinding towards player
                 int bestDx = 0, bestDy = 0;
                 float bestDist = dist;
@@ -3609,6 +3872,167 @@ static void DrawMonsterSprite(HDC hdc, int x, int y, int type, int frame, int st
         MoveToEx(hdc, cx + 3, by + 3, NULL); LineTo(hdc, cx + 3, by + 5);
         SelectObject(hdc, nullPen);
         DeleteObject(fangPen);
+
+    } else if (type == MONSTER_CRYPT_KEEPER) {
+        int ky = cy + (int)(sinf((float)frame * 0.2f) * 1.5f);
+
+        // Amber Runic Aura
+        HPEN auraPen = CreatePen(PS_SOLID, 1, RGB(245, 158, 11));
+        SelectObject(hdc, auraPen);
+        Ellipse(hdc, cx - 14, ky - 14, cx + 14, ky + 14);
+        SelectObject(hdc, nullPen);
+        DeleteObject(auraPen);
+
+        // Skull
+        HBRUSH skullBr = CreateSolidBrush(RGB(241, 245, 249));
+        SelectObject(hdc, skullBr);
+        Ellipse(hdc, cx - 7, ky - 8, cx + 7, ky + 2);
+        RECT jawR = {cx - 4, ky, cx + 4, ky + 4};
+        FillRect(hdc, &jawR, skullBr);
+        DeleteObject(skullBr);
+
+        // Ancient Gold Crown
+        HBRUSH crownBr = CreateSolidBrush(RGB(251, 191, 36));
+        SelectObject(hdc, crownBr);
+        POINT crPts[5] = {
+            {cx - 7, ky - 7},
+            {cx - 4, ky - 14},
+            {cx, ky - 9},
+            {cx + 4, ky - 14},
+            {cx + 7, ky - 7}
+        };
+        Polygon(hdc, crPts, 5);
+        DeleteObject(crownBr);
+
+        // Crimson Glowing Eyes
+        HBRUSH eyeBr = CreateSolidBrush(RGB(239, 68, 68));
+        RECT eL = {cx - 4, ky - 6, cx - 1, ky - 3};
+        RECT eR = {cx + 1, ky - 6, cx + 4, ky - 3};
+        FillRect(hdc, &eL, eyeBr);
+        FillRect(hdc, &eR, eyeBr);
+        DeleteObject(eyeBr);
+
+        // Heavy Runic Breastplate
+        HBRUSH plateBr = CreateSolidBrush(RGB(30, 41, 59));
+        SelectObject(hdc, plateBr);
+        POINT plPts[4] = {
+            {cx - 7, ky + 3},
+            {cx + 7, ky + 3},
+            {cx + 5, ky + 11},
+            {cx - 5, ky + 11}
+        };
+        Polygon(hdc, plPts, 4);
+        DeleteObject(plateBr);
+
+        // Colossal Tomb Greatsword
+        HPEN swordPen = CreatePen(PS_SOLID, 2, RGB(148, 163, 184));
+        SelectObject(hdc, swordPen);
+        MoveToEx(hdc, cx + 7, ky + 10, NULL); LineTo(hdc, cx + 12, ky - 11);
+        SelectObject(hdc, nullPen);
+        DeleteObject(swordPen);
+        HPEN runePen = CreatePen(PS_SOLID, 1, RGB(239, 68, 68));
+        SelectObject(hdc, runePen);
+        MoveToEx(hdc, cx + 8, ky + 4, NULL); LineTo(hdc, cx + 11, ky - 5);
+        SelectObject(hdc, nullPen);
+        DeleteObject(runePen);
+
+    } else if (type == MONSTER_ABYSSAL_WYRM) {
+        // Serpentine body segments
+        for (int s = 4; s >= 0; s--) {
+            int segX = cx + (int)(sinf((float)frame * 0.35f - (float)s * 0.7f) * (float)(5 - s));
+            int segY = cy + (s - 2) * 3;
+            int rad = 6 - s;
+            if (rad < 3) rad = 3;
+
+            HBRUSH scaleBr = CreateSolidBrush((s % 2 == 0) ? RGB(6, 95, 70) : RGB(4, 120, 87));
+            SelectObject(hdc, scaleBr);
+            Ellipse(hdc, segX - rad, segY - rad, segX + rad, segY + rad);
+            DeleteObject(scaleBr);
+
+            // Glowing toxic dorsal ridge
+            SetPixel(hdc, segX, segY - rad, RGB(52, 211, 153));
+        }
+
+        // Viper/Dragon Head
+        int headY = cy - 6 + (int)(sinf((float)frame * 0.35f) * 2.0f);
+        HBRUSH headBr = CreateSolidBrush(RGB(6, 78, 59));
+        SelectObject(hdc, headBr);
+        Ellipse(hdc, cx - 6, headY - 4, cx + 6, headY + 5);
+        DeleteObject(headBr);
+
+        // Toxic eyes
+        SetPixel(hdc, cx - 3, headY - 2, RGB(250, 204, 21));
+        SetPixel(hdc, cx + 2, headY - 2, RGB(250, 204, 21));
+
+        // Horns
+        HPEN hornPen = CreatePen(PS_SOLID, 1, RGB(5, 150, 105));
+        SelectObject(hdc, hornPen);
+        MoveToEx(hdc, cx - 3, headY - 2, NULL); LineTo(hdc, cx - 7, headY - 7);
+        MoveToEx(hdc, cx + 3, headY - 2, NULL); LineTo(hdc, cx + 7, headY - 7);
+        SelectObject(hdc, nullPen);
+        DeleteObject(hornPen);
+
+        // Acid fangs
+        SetPixel(hdc, cx - 2, headY + 3, RGB(248, 250, 252));
+        SetPixel(hdc, cx + 1, headY + 3, RGB(248, 250, 252));
+        SetPixel(hdc, cx - 1, headY + 5, RGB(16, 185, 129));
+
+    } else if (type == MONSTER_VOID_MONARCH) {
+        int my = cy + (int)(sinf((float)frame * 0.2f) * 2.5f);
+
+        // Void Cosmic Aura
+        HPEN auraPen = CreatePen(PS_SOLID, 1, RGB(168, 85, 247));
+        SelectObject(hdc, auraPen);
+        Ellipse(hdc, cx - 15, my - 15, cx + 15, my + 15);
+        SelectObject(hdc, nullPen);
+        DeleteObject(auraPen);
+
+        // Orbiting Void Crystals
+        for (int o = 0; o < 3; o++) {
+            float ang = (float)frame * 0.15f + (float)o * 2.094f;
+            int ox = cx + (int)(cosf(ang) * 12.0f);
+            int oy = my + (int)(sinf(ang) * 6.0f);
+            HBRUSH orbBr = CreateSolidBrush(RGB(192, 132, 252));
+            SelectObject(hdc, orbBr);
+            Ellipse(hdc, ox - 2, oy - 2, ox + 3, oy + 3);
+            DeleteObject(orbBr);
+        }
+
+        // Obsidian Astral Mantle
+        HBRUSH mantleBr = CreateSolidBrush(RGB(59, 7, 100));
+        SelectObject(hdc, mantleBr);
+        POINT mPts[4] = {
+            {cx - 8, my + 10},
+            {cx - 10, my - 3},
+            {cx + 10, my - 3},
+            {cx + 8, my + 10}
+        };
+        Polygon(hdc, mPts, 4);
+        DeleteObject(mantleBr);
+
+        // Pointed Void Crown
+        HBRUSH crBr = CreateSolidBrush(RGB(126, 34, 206));
+        SelectObject(hdc, crBr);
+        POINT crPts[5] = {
+            {cx - 7, my - 4},
+            {cx - 5, my - 12},
+            {cx, my - 7},
+            {cx + 5, my - 12},
+            {cx + 7, my - 4}
+        };
+        Polygon(hdc, crPts, 5);
+        DeleteObject(crBr);
+
+        // Center Cosmic Eye Singularity
+        HBRUSH eyeBg = CreateSolidBrush(RGB(2, 6, 23));
+        SelectObject(hdc, eyeBg);
+        Ellipse(hdc, cx - 4, my - 4, cx + 4, my + 4);
+        DeleteObject(eyeBg);
+
+        HBRUSH eyeCore = CreateSolidBrush(RGB(233, 213, 255));
+        SelectObject(hdc, eyeCore);
+        Ellipse(hdc, cx - 2, my - 2, cx + 2, my + 2);
+        DeleteObject(eyeCore);
     }
 
     SelectObject(hdc, oldP);
@@ -4452,6 +4876,68 @@ void RenderGame(HDC hdc, HWND hwnd) {
              g_turn, g_player.torchLit ? "LIT" : "UNLIT [T]", fuelPct, g_player.hunger);
     TextOutA(memDC, vpX + 18, vpY + 33, turnText, (int)strlen(turnText));
 
+    // Boss HUD Bar Overlay (Top Center of Viewport)
+    int bossIdx = -1;
+    for (int m = 0; m < g_numMonsters; m++) {
+        if (g_monsters[m].alive && g_monsters[m].isBoss) {
+            bossIdx = m;
+            break;
+        }
+    }
+    if (bossIdx >= 0) {
+        const Monster* bm = &g_monsters[bossIdx];
+        const MonsterDef* bDef = &g_monsterDefs[bm->type];
+        int bBarW = 340;
+        int bBarH = 40;
+        int bBarX = vpX + (VIEWPORT_W - bBarW) / 2;
+        int bBarY = vpY + 10;
+        RECT bBarBox = {bBarX, bBarY, bBarX + bBarW, bBarY + bBarH};
+        HBRUSH bBg = CreateSolidBrush(RGB(18, 12, 28));
+        FillRect(memDC, &bBarBox, bBg);
+        DeleteObject(bBg);
+
+        HPEN bPen = CreatePen(PS_SOLID, 2, bDef->color);
+        HPEN oldBP = (HPEN)SelectObject(memDC, bPen);
+        SelectObject(memDC, GetStockObject(NULL_BRUSH));
+        Rectangle(memDC, bBarBox.left, bBarBox.top, bBarBox.right, bBarBox.bottom);
+        SelectObject(memDC, oldBP);
+        DeleteObject(bPen);
+
+        SelectObject(memDC, fontBold);
+        SetTextColor(memDC, bDef->color);
+        char bTitle[80];
+        snprintf(bTitle, sizeof(bTitle), "%s (B%d LORD)", bDef->name, g_depthLevel);
+        TextOutA(memDC, bBarX + 12, bBarY + 4, bTitle, (int)strlen(bTitle));
+
+        // Boss Health Bar Track
+        int trackX = bBarX + 12;
+        int trackY = bBarY + 22;
+        int trackW = bBarW - 24;
+        int trackH = 10;
+        RECT trackBg = {trackX, trackY, trackX + trackW, trackY + trackH};
+        HBRUSH trkBgBr = CreateSolidBrush(RGB(35, 15, 25));
+        FillRect(memDC, &trackBg, trkBgBr);
+        DeleteObject(trkBgBr);
+
+        int maxHp = bDef->baseHp + (g_depthLevel - 1) * 20;
+        int curHp = bm->hp;
+        int fillW = (maxHp > 0) ? (curHp * trackW / maxHp) : 0;
+        if (fillW < 0) fillW = 0;
+        if (fillW > trackW) fillW = trackW;
+        if (fillW > 0) {
+            RECT fillR = {trackX, trackY, trackX + fillW, trackY + trackH};
+            HBRUSH fillBr = CreateSolidBrush(bDef->color);
+            FillRect(memDC, &fillR, fillBr);
+            DeleteObject(fillBr);
+        }
+
+        SelectObject(memDC, fontSmall);
+        char hpNum[32];
+        snprintf(hpNum, sizeof(hpNum), "%d / %d HP", curHp, maxHp);
+        SetTextColor(memDC, RGB(255, 255, 255));
+        TextOutA(memDC, bBarX + bBarW - 85, bBarY + 5, hpNum, (int)strlen(hpNum));
+    }
+
     // Spell Hotbar Overlay inside Viewport (Bottom Center/Left)
     {
         int hbY = vpY + VIEWPORT_H - 34;
@@ -4970,30 +5456,32 @@ void RenderGame(HDC hdc, HWND hwnd) {
         SetTextColor(memDC, COLOR_ACCENT_AMBER);
         TextOutA(memDC, sbX + 16, contentY + 28, radBuf, (int)strlen(radBuf));
 
-        int bY = contentY + 48;
-        for (int b = 0; b < NUM_MONSTER_TYPES && bY < contentY + 300; b++) {
+        int bY = contentY + 46;
+        for (int b = 0; b < NUM_MONSTER_TYPES && bY < contentY + 295; b++) {
             const MonsterDef* md = &g_monsterDefs[b];
-            RECT bRect = {sbX + 14, bY, sbX + sbW - 14, bY + 48};
-            HBRUSH bBr = CreateSolidBrush(RGB(14, 18, 28));
+            BOOL isLord = (b >= 5);
+            int rowH = isLord ? 30 : 25;
+            RECT bRect = {sbX + 14, bY, sbX + sbW - 14, bY + rowH};
+            HBRUSH bBr = CreateSolidBrush(isLord ? RGB(26, 16, 32) : RGB(14, 18, 28));
             FillRect(memDC, &bRect, bBr);
             DeleteObject(bBr);
 
             SelectObject(memDC, fontBold);
             SetTextColor(memDC, md->color);
             char bName[64];
-            snprintf(bName, sizeof(bName), "[%s] %s", md->symbol, md->name);
-            TextOutA(memDC, sbX + 20, bY + 4, bName, (int)strlen(bName));
+            snprintf(bName, sizeof(bName), "[%s] %s%s", md->symbol, md->name, isLord ? " (LORD)" : "");
+            TextOutA(memDC, sbX + 20, bY + 2, bName, (int)strlen(bName));
 
             SelectObject(memDC, fontSmall);
-            SetTextColor(memDC, COLOR_TEXT_DIM);
+            SetTextColor(memDC, isLord ? COLOR_TEXT_GOLD : COLOR_TEXT_DIM);
             char bStats[80];
-            snprintf(bStats, sizeof(bStats), "Base HP: %d | Atk: %d | Exp: %d", md->baseHp, md->baseAtk, md->exp);
-            TextOutA(memDC, sbX + 20, bY + 18, bStats, (int)strlen(bStats));
+            snprintf(bStats, sizeof(bStats), "HP:%d Atk:%d Exp:%d", md->baseHp, md->baseAtk, md->exp);
+            TextOutA(memDC, sbX + 200, bY + 2, bStats, (int)strlen(bStats));
 
-            SetTextColor(memDC, COLOR_TEXT_BRIGHT);
-            TextOutA(memDC, sbX + 20, bY + 32, md->weakness, (int)strlen(md->weakness));
+            SetTextColor(memDC, isLord ? RGB(253, 230, 138) : RGB(148, 163, 184));
+            TextOutA(memDC, sbX + 20, bY + 13, md->weakness, (int)strlen(md->weakness));
 
-            bY += 51;
+            bY += rowH + 2;
         }
     }
 
@@ -5054,7 +5542,8 @@ void RenderGame(HDC hdc, HWND hwnd) {
         TextOutA(memDC, modalRect.left + 20, my, "- Ancient Shrines: Touch glowing runic monoliths for divine blessings & ancient runes", 85); my += 16;
         TextOutA(memDC, modalRect.left + 20, my, "- M / Merchant: Trade Gold for relics, survival goods & sell pack items [Phase 11]", 83); my += 16;
         TextOutA(memDC, modalRect.left + 20, my, "- Biomes: B1-3 Catacombs | B4-6 Sunken Grotto | B7-9 Crypt | B10+ Void", 70); my += 16;
-        TextOutA(memDC, modalRect.left + 20, my, "- C: CRT Phosphors | F: Field of View | Ctrl+N / F2: New Descent", 64); my += 20;
+        TextOutA(memDC, modalRect.left + 20, my, "- Abyssal Lords: B3 Crypt Keeper | B6 Abyssal Wyrm | B10+ Void Monarch", 70); my += 16;
+        TextOutA(memDC, modalRect.left + 20, my, "- C: CRT Phosphors | F: Field of View | Ctrl+N / F2: New Descent", 64); my += 18;
 
         SetTextColor(memDC, COLOR_TEXT_GOLD);
         TextOutA(memDC, modalRect.left + 20, my, "Press [H], [F1], or [ESC] to close manual.", 42);
