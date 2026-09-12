@@ -107,7 +107,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **⚠️ PRIORITY: If ANY game in the queue is at Loop 0 (not yet processed), work on it FIRST before continuing higher-loop games.**
 
 
-- KCyber
 - KBreakout
 - KMaze
 - KColony
@@ -153,6 +152,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KAbyss
 - KSnake
 - KTetris
+- KCyber
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
 
@@ -202,4 +202,5 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KColony (Loop 6): Multi-layer particles, screen-shake, cybernetic HUD brackets, and planetary biome motes.
 - KMaze (Loop 8): Screen-shake, 4-layer particles, dual shockwaves, dungeon HUD reticles, and atmospheric embers.
 - KBreakout (Loop 8): Screen-shake, multi-layer particles, dual shockwaves, metallic paddle with thruster nozzles.
-- KCyber (Loop 2): Cyberdeck sprites, ICE Daemon enemy, holographic data payload, and hack-themed particle effects.
+- KCyber (Loop 3): 3D perspective cyberspace wireframe grid, distant skyline silhouettes, matrix code streams, and darknet shop terminal.
+

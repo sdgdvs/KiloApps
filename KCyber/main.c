@@ -837,6 +837,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             }
                         } else if (connected_node) {
                             SpawnParticles(vx + 80, vy + 105, 1, RGB(0, 255, 255), 1);
+                        } else if (in_shop) {
+                            SpawnParticles(vx + 80, vy + 95, 1, RGB(255, 190, 0), 0);
                         } else {
                             SpawnParticles(vx + 80, vy + 95, 1, RGB(0, 255, 100), 1);
                         }
@@ -916,23 +918,119 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (vx > 220) { // ensure space available
                 int cx = vx + vw / 2;
                 int cy = vy + 75;
+                int horizonY = vy + 44;
+
+                // Mode Theme & Palette
+                COLORREF hudColor = RGB(0, 255, 100);
+                COLORREF bgFillColor = RGB(0, 15, 5);
+                COLORREF gridColor = RGB(0, 60, 25);
+                COLORREF skylineColor = RGB(0, 40, 18);
+                const char* hudTitle = "[SYS://DECK.OS]";
+
+                if (hacking_node) {
+                    if (ice_frozen_ticks > 0) {
+                        hudColor = RGB(0, 220, 255);
+                        bgFillColor = RGB(0, 16, 26);
+                        gridColor = RGB(0, 65, 90);
+                        skylineColor = RGB(0, 45, 65);
+                        hudTitle = "[ICE://BLINDED]";
+                    } else {
+                        hudColor = RGB(255, 50, 50);
+                        bgFillColor = RGB(24, 4, 4);
+                        gridColor = RGB(90, 20, 20);
+                        skylineColor = RGB(65, 12, 12);
+                        hudTitle = "[ICE://TARGET]";
+                    }
+                } else if (connected_node) {
+                    hudColor = RGB(0, 255, 255);
+                    bgFillColor = RGB(0, 16, 22);
+                    gridColor = RGB(0, 70, 85);
+                    skylineColor = RGB(0, 48, 60);
+                    hudTitle = "[DATA://ROOT]";
+                } else if (in_shop) {
+                    hudColor = RGB(255, 190, 0);
+                    bgFillColor = RGB(20, 14, 0);
+                    gridColor = RGB(90, 65, 0);
+                    skylineColor = RGB(60, 42, 0);
+                    hudTitle = "[DARKNET://SHOP]";
+                }
 
                 // HUD Box Background
                 RECT hudBox = { vx, vy, vx + vw, vy + vh };
-                HBRUSH hudBg = CreateSolidBrush(RGB(0, 15, 5));
+                HBRUSH hudBg = CreateSolidBrush(bgFillColor);
                 FillRect(memDC, &hudBox, hudBg);
                 DeleteObject(hudBg);
 
-                // HUD Color & Theme
-                COLORREF hudColor = RGB(0, 255, 100);
-                const char* hudTitle = "[SYS://DECK.OS]";
-                if (hacking_node) {
-                    hudColor = ice_frozen_ticks > 0 ? RGB(0, 220, 255) : RGB(255, 50, 50);
-                    hudTitle = ice_frozen_ticks > 0 ? "[ICE://BLINDED]" : "[ICE://TARGET]";
-                } else if (connected_node) {
-                    hudColor = RGB(0, 255, 255);
-                    hudTitle = "[DATA://ROOT]";
+                // Distant Cyberspace Skyline Silhouettes
+                HBRUSH skyB = CreateSolidBrush(skylineColor);
+                HPEN skyP = CreatePen(PS_SOLID, 1, gridColor);
+                HGDIOBJ oldSkyB = SelectObject(memDC, skyB);
+                HGDIOBJ oldSkyP = SelectObject(memDC, skyP);
+                static const int skyX[7] = { 10, 28, 44, 66, 96, 114, 132 };
+                static const int skyW[7] = { 12, 10, 14, 12, 12, 10, 14 };
+                static const int skyH[7] = { 18, 25, 20, 28, 24, 17, 23 };
+                for (int t = 0; t < 7; t++) {
+                    int tx = vx + skyX[t];
+                    int tw = skyW[t];
+                    int th = skyH[t];
+                    Rectangle(memDC, tx, horizonY - th, tx + tw, horizonY);
+                    if (((g_animTick + t * 4) & 8) != 0) {
+                        SetPixel(memDC, tx + tw / 2, horizonY - th - 2, hudColor);
+                    }
                 }
+                SelectObject(memDC, oldSkyB);
+                SelectObject(memDC, oldSkyP);
+                DeleteObject(skyB);
+                DeleteObject(skyP);
+
+                // 3D Perspective Cyberspace Grid Floor
+                HPEN gridP = CreatePen(PS_SOLID, 1, gridColor);
+                HGDIOBJ oldGridP = SelectObject(memDC, gridP);
+
+                // Horizon line
+                MoveToEx(memDC, vx + 2, horizonY, NULL);
+                LineTo(memDC, vx + vw - 2, horizonY);
+
+                // Longitudinal rays from (cx, horizonY) to bottom
+                static const int rayOffsets[7] = { -65, -42, -20, 0, 20, 42, 65 };
+                for (int r = 0; r < 7; r++) {
+                    MoveToEx(memDC, cx, horizonY, NULL);
+                    LineTo(memDC, cx + (rayOffsets[r] * 12) / 10, vy + vh - 2);
+                }
+
+                // Transverse horizontal rungs moving forward
+                for (int h = 0; h < 4; h++) {
+                    int phase = (g_animTick * 2 + h * 24) % 96;
+                    int ry = horizonY + (phase * phase * (vh - 46)) / (96 * 96);
+                    if (ry > horizonY && ry < vy + vh - 2) {
+                        MoveToEx(memDC, vx + 4, ry, NULL);
+                        LineTo(memDC, vx + vw - 4, ry);
+                    }
+                }
+                SelectObject(memDC, oldGridP);
+                DeleteObject(gridP);
+
+                // Background Hex Data Stream Motes
+                for (int c = 0; c < 4; c++) {
+                    int mx = vx + 22 + c * 38;
+                    int my = vy + 18 + ((g_animTick * 2 + c * 31) % (vh - 28));
+                    SetPixel(memDC, mx, my, hudColor);
+                    SetPixel(memDC, mx, my - 1, gridColor);
+                }
+
+                // Lateral Motherboard Circuit Bus Conduits & Flowing Data Packets
+                HPEN busPen = CreatePen(PS_SOLID, 1, gridColor);
+                SelectObject(memDC, busPen);
+                MoveToEx(memDC, vx + 6, vy + 16, NULL); LineTo(memDC, vx + 6, vy + vh - 8);
+                MoveToEx(memDC, vx + vw - 6, vy + 16, NULL); LineTo(memDC, vx + vw - 6, vy + vh - 8);
+                DeleteObject(busPen);
+
+                int bPkt1 = vy + 16 + ((g_animTick * 3) % (vh - 24));
+                int bPkt2 = vy + vh - 8 - ((g_animTick * 2) % (vh - 24));
+                SetPixel(memDC, vx + 6, bPkt1, hudColor);
+                SetPixel(memDC, vx + 6, bPkt1 + 1, hudColor);
+                SetPixel(memDC, vx + vw - 6, bPkt2, hudColor);
+                SetPixel(memDC, vx + vw - 6, bPkt2 + 1, hudColor);
 
                 // Corner L-Brackets
                 HPEN hudPen = CreatePen(PS_SOLID, 2, hudColor);
@@ -1125,9 +1223,79 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SetTextColor(memDC, RGB(0, 255, 255));
                     TextOutA(memDC, cx - 18, cartY + cartH - 16, "SEC-DAT", 7);
 
+                } else if (in_shop) {
+                    // --- BLACK MARKET / DARKNET CONTRABAND VAULT ---
+                    int bobY = (FastSin(g_animTick) * 4) / 128;
+
+                    // Amber Platform Pedestal
+                    HPEN pedPen = CreatePen(PS_SOLID, 1, RGB(180, 130, 0));
+                    SelectObject(memDC, pedPen);
+                    Arc(memDC, cx - 42, cy + 34 + bobY / 2, cx + 42, cy + 46 + bobY / 2, 0, 0, 0, 0);
+                    DeleteObject(pedPen);
+
+                    // 3 Orbiting Golden Crypto-Credits
+                    for (int c = 0; c < 3; c++) {
+                        int cAngle = (g_animTick * 2) + c * 10;
+                        int ox = cx + (FastCos(cAngle) * 46) / 128;
+                        int oy = cy + bobY + (FastSin(cAngle) * 14) / 128;
+                        HBRUSH goldB = CreateSolidBrush(RGB(255, 215, 0));
+                        SelectObject(memDC, goldB);
+                        Ellipse(memDC, ox - 3, oy - 3, ox + 4, oy + 4);
+                        DeleteObject(goldB);
+                    }
+
+                    // Central Contraband Vault (Octagon)
+                    HPEN vPen = CreatePen(PS_SOLID, 2, RGB(255, 190, 0));
+                    HBRUSH vBrush = CreateSolidBrush(RGB(35, 24, 0));
+                    SelectObject(memDC, vPen);
+                    SelectObject(memDC, vBrush);
+                    POINT vPts[8];
+                    for (int i = 0; i < 8; i++) {
+                        int ang = i * 4 + 2;
+                        vPts[i].x = cx + (FastCos(ang) * 24) / 128;
+                        vPts[i].y = cy + bobY + (FastSin(ang) * 24) / 128;
+                    }
+                    Polygon(memDC, vPts, 8);
+                    DeleteObject(vPen);
+                    DeleteObject(vBrush);
+
+                    // Inner Contraband Chip Slot
+                    HBRUSH slotB = CreateSolidBrush(RGB(65, 45, 0));
+                    RECT slotRect = { cx - 9, cy + bobY - 7, cx + 9, cy + bobY + 7 };
+                    FillRect(memDC, &slotRect, slotB);
+                    DeleteObject(slotB);
+
+                    // Gold Connector Pins
+                    HBRUSH goldB = CreateSolidBrush(RGB(255, 215, 0));
+                    for (int p = 0; p < 4; p++) {
+                        RECT pin = { cx - 7 + p * 4, cy + bobY + 4, cx - 5 + p * 4, cy + bobY + 7 };
+                        FillRect(memDC, &pin, goldB);
+                    }
+                    DeleteObject(goldB);
+
+                    // Pulsing Lock Emblem
+                    int lockOn = (g_animTick & 8) != 0;
+                    HPEN lockPen = CreatePen(PS_SOLID, 1, lockOn ? RGB(255, 255, 150) : RGB(255, 180, 0));
+                    SelectObject(memDC, lockPen);
+                    Arc(memDC, cx - 4, cy + bobY - 6, cx + 4, cy + bobY, 0, 0, 0, 0);
+                    Rectangle(memDC, cx - 4, cy + bobY - 3, cx + 5, cy + bobY + 3);
+                    DeleteObject(lockPen);
+
+                    SetTextColor(memDC, RGB(255, 190, 0));
+                    TextOutA(memDC, cx - 22, cy + bobY + 34, "DARKNET", 7);
+
                 } else {
                     // --- PLAYER: CYBERDECK CONSOLE ---
                     int bobY = (FastSin(g_animTick) * 3) / 128;
+
+                    // Grounding Neural Cables into Cyberspace Floor
+                    HPEN cablePen = CreatePen(PS_SOLID, 1, RGB(0, 150, 60));
+                    SelectObject(memDC, cablePen);
+                    MoveToEx(memDC, cx - 36, cy + 10 + bobY + 20, NULL);
+                    LineTo(memDC, cx - 56, vy + vh - 4);
+                    MoveToEx(memDC, cx + 36, cy + 10 + bobY + 20, NULL);
+                    LineTo(memDC, cx + 56, vy + vh - 4);
+                    DeleteObject(cablePen);
 
                     // Holographic Pedestal Ring
                     HPEN pedPen = CreatePen(PS_SOLID, 1, RGB(0, 100, 40));

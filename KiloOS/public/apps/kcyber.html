@@ -229,6 +229,9 @@
         } else if (connected_node) {
           color = '#00ffff';
           type = 'bit';
+        } else if (in_shop) {
+          color = '#ffb700';
+          type = 'spark';
         }
         particles.push({
           x: x,
@@ -284,18 +287,141 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const cx = 90;
       const cy = 82;
+      const horizonY = 50;
+
+      // 0. Mode Theme & Palette
+      let hudColor = '#00ff66';
+      let bgTheme = '#011206';
+      let gridColor = 'rgba(0, 255, 100, 0.22)';
+      let horizonGlow = 'rgba(0, 255, 100, 0.18)';
+      let titleText = '[SYS://DECK.OS]';
+
+      if (hacking_node) {
+        if (ice_frozen_ticks > 0) {
+          hudColor = '#00e5ff';
+          bgTheme = '#021522';
+          gridColor = 'rgba(0, 229, 255, 0.25)';
+          horizonGlow = 'rgba(0, 229, 255, 0.22)';
+          titleText = '[ICE://STUNNED]';
+        } else {
+          hudColor = '#ff3333';
+          bgTheme = '#180406';
+          gridColor = 'rgba(255, 50, 60, 0.25)';
+          horizonGlow = 'rgba(255, 40, 50, 0.22)';
+          titleText = `[ICE://${ice_name.toUpperCase()}]`;
+        }
+      } else if (connected_node) {
+        hudColor = '#00ffff';
+        bgTheme = '#00141d';
+        gridColor = 'rgba(0, 255, 255, 0.22)';
+        horizonGlow = 'rgba(0, 255, 255, 0.18)';
+        titleText = `[DATA://NODE_${connected_node}]`;
+      } else if (in_shop) {
+        hudColor = '#ffb700';
+        bgTheme = '#191202';
+        gridColor = 'rgba(255, 183, 0, 0.22)';
+        horizonGlow = 'rgba(255, 183, 0, 0.18)';
+        titleText = '[DARKNET://SHOP]';
+      }
+
+      // Base background fill
+      ctx.fillStyle = bgTheme;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Horizon atmospheric glow band
+      const hGrad = ctx.createLinearGradient(0, horizonY - 14, 0, horizonY + 16);
+      hGrad.addColorStop(0, 'transparent');
+      hGrad.addColorStop(0.5, horizonGlow);
+      hGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = hGrad;
+      ctx.fillRect(0, horizonY - 14, canvas.width, 30);
+
+      // Distant Cyberspace Skyline / Network Topology Silhouettes
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+      const skylineNodes = [
+        { x: 12, w: 14, h: 22 },
+        { x: 30, w: 10, h: 32 },
+        { x: 44, w: 16, h: 26 },
+        { x: 68, w: 12, h: 36 },
+        { x: 100, w: 15, h: 34 },
+        { x: 120, w: 10, h: 24 },
+        { x: 134, w: 18, h: 30 },
+        { x: 156, w: 12, h: 18 }
+      ];
+      for (let i = 0; i < skylineNodes.length; i++) {
+        const sn = skylineNodes[i];
+        ctx.fillRect(sn.x, horizonY - sn.h, sn.w, sn.h);
+        ctx.strokeStyle = gridColor;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(sn.x, horizonY - sn.h, sn.w, sn.h);
+
+        // Tower rooftop antenna beacon diode
+        if ((animTick + i * 5) % 16 < 8) {
+          ctx.fillStyle = hudColor;
+          ctx.fillRect(sn.x + Math.floor(sn.w / 2) - 1, horizonY - sn.h - 3, 2, 2);
+        }
+      }
+
+      // 3D Perspective Cyberspace Grid Floor
+      ctx.strokeStyle = gridColor;
+      ctx.lineWidth = 1;
+
+      // Longitudinal perspective rays converging at vanishing point (cx, horizonY)
+      const rayBottomOffsets = [-90, -65, -42, -22, 0, 22, 42, 65, 90];
+      for (let r = 0; r < rayBottomOffsets.length; r++) {
+        ctx.beginPath();
+        ctx.moveTo(cx, horizonY);
+        ctx.lineTo(cx + rayBottomOffsets[r] * 1.8, canvas.height);
+        ctx.stroke();
+      }
+
+      // Transverse horizontal grid lines moving towards the camera
+      const numRungs = 5;
+      const speed = 0.008;
+      for (let r = 0; r < numRungs; r++) {
+        const phase = ((animTick * speed + r / numRungs) % 1.0);
+        const py = horizonY + Math.pow(phase, 2.2) * (canvas.height - horizonY);
+        ctx.beginPath();
+        ctx.moveTo(6, py);
+        ctx.lineTo(canvas.width - 6, py);
+        ctx.stroke();
+      }
+
+      // Digital Matrix Rain / Hex Data Motes in Background
+      const hexChars = ['0', '1', 'F', 'A', '8', 'C', '4', 'E', '7', 'D'];
+      const streamColumns = [20, 38, 74, 106, 142, 160];
+      ctx.font = '8px monospace';
+      ctx.textAlign = 'center';
+      for (let c = 0; c < streamColumns.length; c++) {
+        const colX = streamColumns[c];
+        const seed = (c * 37 + Math.floor(animTick / 6)) % 100;
+        const charY = 18 + ((animTick * 1.4 + c * 25) % (canvas.height - 24));
+        ctx.fillStyle = (animTick % 6 < 3) ? '#ffffff' : hudColor;
+        ctx.globalAlpha = 0.6;
+        ctx.fillText(hexChars[(seed + c) % hexChars.length], colX, charY);
+        ctx.globalAlpha = 0.25;
+        ctx.fillText(hexChars[(seed + c + 3) % hexChars.length], colX, charY - 10);
+        ctx.globalAlpha = 1.0;
+      }
+
+      // Lateral Motherboard Circuit Bus Conduits & Flowing Data Packets
+      ctx.strokeStyle = gridColor;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(10, 20); ctx.lineTo(10, 145); ctx.lineTo(24, 152);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(170, 20); ctx.lineTo(170, 145); ctx.lineTo(156, 152);
+      ctx.stroke();
+
+      const pkt1Y = 20 + ((animTick * 2) % 125);
+      const pkt2Y = 145 - ((animTick * 1.6) % 125);
+      ctx.fillStyle = hudColor;
+      ctx.fillRect(9, pkt1Y, 3, 4);
+      ctx.fillRect(169, pkt2Y, 3, 4);
 
       // 1. HUD Reticle & Corner Brackets
       ctx.lineWidth = 2;
-      let hudColor = '#00ff66';
-      let titleText = '[SYS://DECK.OS]';
-      if (hacking_node) {
-        hudColor = ice_frozen_ticks > 0 ? '#00e5ff' : '#ff3333';
-        titleText = ice_frozen_ticks > 0 ? '[ICE://STUNNED]' : `[ICE://${ice_name.toUpperCase()}]`;
-      } else if (connected_node) {
-        hudColor = '#00ffff';
-        titleText = `[DATA://NODE_${connected_node}]`;
-      }
       ctx.strokeStyle = hudColor;
 
       // Corner L-brackets
@@ -539,9 +665,115 @@
         ctx.textAlign = 'center';
         ctx.fillText(`SEC-DAT`, cx, cartY + cartH - 8);
 
+      } else if (in_shop) {
+        // --- BLACK MARKET / DARKNET CONTRABAND VAULT ---
+        const bobY = Math.sin(animTick * 0.05) * 4;
+
+        // Amber Holo-Platform Pedestal
+        ctx.save();
+        ctx.translate(cx, cy + 42 + bobY * 0.3);
+        ctx.strokeStyle = 'rgba(255, 183, 0, 0.45)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 48, 13, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Hexagonal Pedestal Base
+        ctx.strokeStyle = 'rgba(255, 183, 0, 0.25)';
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const ang = i * (Math.PI / 3) + animTick * 0.02;
+          const px = Math.cos(ang) * 52;
+          const py = Math.sin(ang) * 14;
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore();
+
+        // Orbiting Golden Crypto-Credits (3 tokens)
+        for (let c = 0; c < 3; c++) {
+          const cAng = (animTick * 0.04) + c * ((Math.PI * 2) / 3);
+          const cDistX = 52;
+          const cDistY = 16;
+          const ox = cx + Math.cos(cAng) * cDistX;
+          const oy = cy + bobY + Math.sin(cAng) * cDistY;
+
+          ctx.fillStyle = '#ffd700';
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(ox, oy, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#996500';
+          ctx.beginPath();
+          ctx.arc(ox, oy, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Central Contraband Vault (Octagonal Amber Chassis)
+        ctx.save();
+        ctx.translate(cx, cy + bobY);
+        const vaultR = 26;
+        ctx.fillStyle = '#1c1300';
+        ctx.strokeStyle = '#ffb700';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          const a = i * (Math.PI / 4) + Math.PI / 8;
+          const px = Math.cos(a) * vaultR;
+          const py = Math.sin(a) * vaultR;
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Inner Contraband Chip Slot
+        ctx.fillStyle = '#3a2700';
+        ctx.fillRect(-10, -8, 20, 16);
+        ctx.strokeStyle = '#ffe066';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(-10, -8, 20, 16);
+
+        // Gold connector teeth
+        ctx.fillStyle = '#ffd700';
+        for (let p = -8; p <= 6; p += 4) {
+          ctx.fillRect(p, 8, 2, 3);
+        }
+
+        // Pulsing illicit lock emblem
+        const lockPulse = 0.5 + Math.sin(animTick * 0.1) * 0.5;
+        ctx.fillStyle = `rgba(255, 215, 0, ${lockPulse})`;
+        ctx.beginPath();
+        ctx.arc(0, -2, 4, Math.PI, 0);
+        ctx.rect(-4, -2, 8, 6);
+        ctx.fill();
+
+        ctx.restore();
+
+        // Label
+        ctx.fillStyle = '#ffb700';
+        ctx.font = 'bold 8px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('DARKNET//BZR', cx, cy + bobY + 38);
+
       } else {
         // --- PLAYER: CYBERDECK CONSOLE ---
         const bobY = Math.sin(animTick * 0.04) * 3.5;
+
+        // Neural Trunk Interface Cables grounding into cyberspace grid
+        ctx.strokeStyle = 'rgba(0, 255, 120, 0.35)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(cx - 36, cy + 12 + bobY + 24);
+        ctx.quadraticCurveTo(cx - 52, cy + 12 + bobY + 36, cx - 68, 156);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx + 36, cy + 12 + bobY + 24);
+        ctx.quadraticCurveTo(cx + 52, cy + 12 + bobY + 36, cx + 68, 156);
+        ctx.stroke();
 
         // Holographic Pedestal Ring
         ctx.save();
@@ -707,6 +939,12 @@
           ctx.stroke();
         }
         ctx.restore();
+      }
+
+      // 4. CRT Scanlines Raster Overlay
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+      for (let sy = 0; sy < canvas.height; sy += 3) {
+        ctx.fillRect(0, sy, canvas.width, 1);
       }
     }
 
