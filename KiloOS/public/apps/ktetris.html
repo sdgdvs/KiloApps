@@ -9,18 +9,18 @@
 </style>
 </head>
 <body>
-<div id="toast" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(18, 22, 34, 0.95); border: 1px solid #00f0f0; color: #00f0f0; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 16px rgba(0,240,240,0.35); opacity: 0; pointer-events: none; transition: opacity 0.3s ease; z-index: 1000; font-family: 'Segoe UI', system-ui, sans-serif;"></div>
+<div id="toast" onclick="this.style.opacity='0'" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(18, 22, 34, 0.96); border: 1px solid #00f0f0; color: #00f0f0; padding: 9px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 18px rgba(0,240,240,0.4); opacity: 0; pointer-events: auto; cursor: pointer; transition: opacity 0.25s ease; z-index: 1000; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; align-items: center; gap: 8px;"></div>
 <canvas id="gameCanvas"></canvas>
 <script>
   function showToast(msg, dur = 3500) {
       const t = document.getElementById('toast');
       if (!t) return;
-      t.innerText = msg;
+      t.innerHTML = `<span>${msg}</span><span style="opacity:0.6;font-size:11px;margin-left:8px;">[✕]</span>`;
       t.style.opacity = '1';
       clearTimeout(t._timer);
       t._timer = setTimeout(() => { t.style.opacity = '0'; }, dur);
   }
-  setTimeout(() => showToast("Welcome to KTetris! Press 'H' or F1 for Help & Controls", 4500), 400);
+  setTimeout(() => showToast("Welcome to KTetris! Press [H] or F1 for Controls & Help", 4500), 400);
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playSound(freq, type, dur) {
@@ -454,6 +454,7 @@
       score += 300;
       addPopup(BOARD_W / 2 - 25, H * CELL / 2, "ROW NUKE! +300", "#ff6600");
       playSound(180, 'sawtooth', 0.1); setTimeout(() => playSound(120, 'square', 0.15), 100);
+      showToast("Row Nuke activated! -3 Rows, +300 pts [B]");
   }
 
   function usePieceSwap() {
@@ -468,6 +469,7 @@
       rot = 0; cx = 3; cy = -2;
       addPopup(BOARD_W / 2 - 25, H * CELL / 2 + 20, "PIECE SWAP!", "#00ffcc");
       playSound(750, 'sine', 0.08);
+      showToast("Piece Swapped with Next Queue! [S]");
   }
 
   function useGravityFreeze() {
@@ -476,6 +478,27 @@
       freezeTimerMs = 10000;
       addPopup(BOARD_W / 2 - 35, H * CELL / 2 - 20, "GRAVITY FREEZE!", "#00f0ff");
       playSound(1200, 'sine', 0.12);
+      showToast("Gravity Freeze activated (10s)! [F]");
+  }
+
+  function useHold() {
+      if (gameOver || isPaused || startScreen || winScreen || showLeaderboard || showHelp || showKeybinds) return;
+      if (!holdUsed) {
+          if (holdPc === -1) {
+              holdPc = pc; holdIsBomb = isBomb; spawn();
+          } else {
+              let temp = pc; let tempBomb = isBomb;
+              pc = holdPc; isBomb = holdIsBomb;
+              holdPc = temp; holdIsBomb = tempBomb;
+              rot = 0; cx = 3; cy = -2;
+          }
+          holdUsed = true;
+          playSound(700, 'sine', 0.08);
+          showToast("Piece held in reserve! [C]");
+          if (!isReplaying) currentReplay.inputs.push({t: replayTick, k: 'hold'});
+      } else {
+          showToast("Hold slot locked until current piece locks!");
+      }
   }
 
   function spawn() {
@@ -714,7 +737,66 @@
       return (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs + '.' + tenths;
   }
 
-  // Interactive Skill Button Clicks & Menu Navigation
+  let hoverMenuIdx = -1;
+  function getStartMenuItems() {
+      let items = [
+          { id: 'marathon', label: '1. Marathon (Endless)', key: '1', color: '#00ffff', act: () => { gameMode = MODE_MARATHON; startScreen = false; score = 0; isReplaying = false; init(); showToast("Marathon Mode Started!"); } },
+          { id: 'sprint',   label: '2. Sprint (40-Lines Race)', key: '2', color: '#00ffc8', act: () => { gameMode = MODE_SPRINT; startScreen = false; score = 0; isReplaying = false; init(); showToast("Sprint Mode Started (40 Lines)!"); } },
+          { id: 'ultra',    label: '3. Ultra (2-Minute Timed)', key: '3', color: '#ffaa00', act: () => { gameMode = MODE_ULTRA; startScreen = false; score = 0; isReplaying = false; init(); showToast("Ultra Mode Started (2 Minutes)!"); } },
+          { id: 'campaign', label: '4. Campaign (20 Stages)', key: '4', color: '#ff66aa', act: () => { gameMode = MODE_CAMPAIGN; startScreen = false; campaignLevel = 1; score = 0; isReplaying = false; init(); showToast("Campaign Stage 1 Started!"); } },
+          { id: 'scores',   label: '5 / [L]. High Scores & Leaderboard', key: '5', color: '#00ff66', act: () => { showLeaderboard = true; startScreen = false; } },
+          { id: 'help',     label: '[H / F1]. Help & Controls Guide', key: 'H', color: '#ffd700', act: () => { showHelp = true; } },
+          { id: 'keys',     label: '[K]. Configure Keybinds', key: 'K', color: '#38bdf8', act: () => { showKeybinds = true; bindIndex = 0; startScreen = false; } }
+      ];
+      if (hasSavedGame()) {
+          items.push({ id: 'resume', label: '[V]. Resume Saved Game', key: 'V', color: '#e879f9', act: () => { isReplaying = false; loadGameState(); } });
+      }
+      if (savedReplay) {
+          items.push({ id: 'replay', label: '[W]. Watch Last Replay', key: 'W', color: '#f43f5e', act: () => { isReplaying = true; currentReplay = savedReplay; startScreen = false; init(); showToast("Playing saved replay..."); } });
+      }
+      return items;
+  }
+
+  // Mouse hover tracking for dynamic cursor and button glow
+  canvas.addEventListener('mousemove', e => {
+      const rect = canvas.getBoundingClientRect();
+      const winW = window.innerWidth;
+      const winH = window.innerHeight;
+      const scale = Math.min(winW / 370, winH / 510) * 0.98;
+      const mx = (e.clientX - rect.left) / scale;
+      const my = (e.clientY - rect.top) / scale;
+
+      let isHover = false;
+      if (startScreen) {
+          const items = getStartMenuItems();
+          hoverMenuIdx = -1;
+          for (let i = 0; i < items.length; i++) {
+              const by = 85 + i * 34;
+              if (mx >= 35 && mx <= 335 && my >= by && my <= by + 28) {
+                  hoverMenuIdx = i;
+                  isHover = true;
+                  break;
+              }
+          }
+          if (my >= 460 && my <= 500) isHover = true;
+      } else if (showHelp || showLeaderboard || showKeybinds) {
+          isHover = true;
+      } else if (isPaused) {
+          isHover = true;
+      } else if (winScreen || gameOver) {
+          isHover = (my >= 180 && my <= 270);
+      } else {
+          // In-game: sidebar buttons or game board steering
+          if (mx >= SIDEBAR_X - 5 && mx <= SIDEBAR_X + 140) {
+              if (my >= 292 && my <= 500) isHover = true;
+          } else if (mx >= 0 && mx < BOARD_W && my >= 0 && my < H * CELL) {
+              isHover = true;
+          }
+      }
+      canvas.style.cursor = isHover ? 'pointer' : 'default';
+  });
+
+  // Interactive Skill Button Clicks, Menu Navigation, & Board Touch/Steering
   canvas.addEventListener('click', e => {
       const rect = canvas.getBoundingClientRect();
       const winW = window.innerWidth;
@@ -728,44 +810,118 @@
           return;
       }
 
+      if (showKeybinds) {
+          if (my >= 455 && my <= 495) { showKeybinds = false; startScreen = true; return; }
+          return;
+      }
+
       if (startScreen) {
-          if (mx >= 35 && mx <= 335) {
-              if (my >= 115 && my <= 145) { gameMode = MODE_MARATHON; startScreen = false; score = 0; isReplaying = false; init(); return; }
-              if (my >= 145 && my <= 175) { gameMode = MODE_SPRINT;   startScreen = false; score = 0; isReplaying = false; init(); return; }
-              if (my >= 175 && my <= 205) { gameMode = MODE_ULTRA;    startScreen = false; score = 0; isReplaying = false; init(); return; }
-              if (my >= 205 && my <= 235) { gameMode = MODE_CAMPAIGN; startScreen = false; campaignLevel = 1; score = 0; isReplaying = false; init(); return; }
-              if (my >= 235 && my <= 265) { showLeaderboard = true; startScreen = false; return; }
-              if (my >= 265 && my <= 295) { showHelp = true; return; }
-              if (my >= 360 && my <= 390 && hasSavedGame()) { isReplaying = false; loadGameState(); return; }
-              if (my >= 320 && my <= 350) { showKeybinds = true; bindIndex = 0; startScreen = false; return; }
-              if (my >= 295 && my <= 325 && savedReplay) { isReplaying = true; currentReplay = savedReplay; startScreen = false; init(); return; }
+          const items = getStartMenuItems();
+          for (let i = 0; i < items.length; i++) {
+              const by = 85 + i * 34;
+              if (mx >= 35 && mx <= 335 && my >= by && my <= by + 28) {
+                  items[i].act();
+                  return;
+              }
           }
-          if (my >= 455 && my <= 480) { showHelp = true; return; }
-          if (my >= 480 && my <= 505) { showLeaderboard = true; startScreen = false; return; }
+          if (my >= 455 && my <= 485) { showHelp = true; return; }
+          if (my >= 485 && my <= 508) { showLeaderboard = true; startScreen = false; return; }
           return;
       }
 
       if (showLeaderboard) {
-          if (my >= 400 && my <= 450) { showLeaderboard = false; startScreen = true; }
+          if (my >= 435 && my <= 470) { showLeaderboard = false; startScreen = true; return; }
+          if (my >= 470 && my <= 500) {
+              if (mx < 185) exportLeaderboard();
+              else importLeaderboard();
+              return;
+          }
           return;
       }
 
       if (winScreen || gameOver) {
+          if (mx >= 20 && mx <= 180) {
+              if (my >= 180 && my <= 210) { startScreen = true; winScreen = false; gameOver = false; return; }
+              if (my >= 210 && my <= 235) { exportStats(); return; }
+              if (my >= 235 && my <= 265 && !isReplaying) {
+                  localStorage.setItem('ktetris_replay', JSON.stringify(currentReplay));
+                  addPopup(BOARD_W / 2 - 25, H * CELL / 2, "REPLAY SAVED!", "#00ff00");
+                  savedReplay = currentReplay;
+                  showToast("Replay saved!");
+                  return;
+              }
+          }
           startScreen = true; winScreen = false; gameOver = false;
           return;
       }
 
+      if (isPaused) {
+          if (mx >= 25 && mx <= 175 && my >= 225 && my <= 250) {
+              startScreen = true; isPaused = false;
+              return;
+          }
+          isPaused = false;
+          showToast("Game Resumed");
+          playSound(500, 'sine', 0.1);
+          return;
+      }
+
+      // During active gameplay
       if (!gameOver && !isPaused && !startScreen && !winScreen && !showLeaderboard && !showHelp && !showKeybinds) {
-          if (mx >= SIDEBAR_X && mx <= SIDEBAR_X + 140) {
-              if (my >= 380 && my <= 400) useRowNuke();
-              else if (my >= 400 && my <= 420) usePieceSwap();
-              else if (my >= 420 && my <= 440) useGravityFreeze();
-              else if (my >= 468 && my <= 498) showHelp = true;
+          // Sidebar interactive buttons
+          if (mx >= SIDEBAR_X - 5 && mx <= SIDEBAR_X + 140) {
+              if (my >= 292 && my <= 367) { useHold(); return; }
+              if (my >= 380 && my <= 400) { useRowNuke(); return; }
+              if (my >= 401 && my <= 421) { usePieceSwap(); return; }
+              if (my >= 422 && my <= 442) { useGravityFreeze(); return; }
+              if (my >= 443 && my <= 466) { isPaused = true; showToast("Game Paused [P] - Click to Resume"); playSound(400, 'sine', 0.1); return; }
+              if (my >= 468 && my <= 495) { showHelp = true; return; }
+          }
+
+          // Game board touch/mouse directional steering
+          if (mx >= 0 && mx < BOARD_W && my >= 0 && my < H * CELL) {
+              if (my >= (H - 4) * CELL) {
+                  // Bottom click: hard drop
+                  let startY = cy; let dropDist = 0;
+                  while (!checkCol(pc, rot, cx, cy + 1)) { cy++; dropDist++; }
+                  score += dropDist * 2; spawnDropParticles(cx, startY, cy, isBomb ? 15 : (pc + 1));
+                  spawnHardDropImpact(cx, cy);
+                  let oldLevel = campaignLevel; lock();
+                  if (!winScreen && !gameOver && (gameMode !== MODE_CAMPAIGN || campaignLevel === oldLevel)) spawn();
+                  if (!isReplaying) currentReplay.inputs.push({t: replayTick, k: 'drop'});
+                  return;
+              }
+              if (mx < BOARD_W * 0.35) {
+                  // Steer Left
+                  if (!checkCol(pc, rot, cx - 1, cy)) {
+                      cx--;
+                      playSound(400, 'sine', 0.04);
+                      if (!isReplaying) currentReplay.inputs.push({t: replayTick, k: 'left'});
+                  }
+                  return;
+              }
+              if (mx > BOARD_W * 0.65) {
+                  // Steer Right
+                  if (!checkCol(pc, rot, cx + 1, cy)) {
+                      cx++;
+                      playSound(400, 'sine', 0.04);
+                      if (!isReplaying) currentReplay.inputs.push({t: replayTick, k: 'right'});
+                  }
+                  return;
+              }
+              // Center click: Rotate
+              let nr = (rot + 1) % 4;
+              if (!checkCol(pc, nr, cx, cy)) rot = nr;
+              else if (!checkCol(pc, nr, cx - 1, cy)) { cx--; rot = nr; }
+              else if (!checkCol(pc, nr, cx + 1, cy)) { cx++; rot = nr; }
+              else if (!checkCol(pc, nr, cx - 2, cy)) { cx -= 2; rot = nr; }
+              else if (!checkCol(pc, nr, cx + 2, cy)) { cx += 2; rot = nr; }
+              playSound(600, 'sine', 0.05);
+              if (!isReplaying) currentReplay.inputs.push({t: replayTick, k: 'up'});
           }
       }
   });
 
-  
   document.addEventListener('keydown', e => {
       let key = e.key === ' ' ? ' ' : (e.key.length === 1 ? e.key.toLowerCase() : e.key);
 
@@ -787,15 +943,15 @@
       }
 
       if (startScreen) {
-          if (e.key === '1') { gameMode = MODE_MARATHON; startScreen = false; score = 0; isReplaying = false; init(); return; }
-          if (e.key === '2') { gameMode = MODE_SPRINT;   startScreen = false; score = 0; isReplaying = false; init(); return; }
-          if (e.key === '3') { gameMode = MODE_ULTRA;    startScreen = false; score = 0; isReplaying = false; init(); return; }
-          if (e.key === '4') { gameMode = MODE_CAMPAIGN; startScreen = false; campaignLevel = 1; score = 0; isReplaying = false; init(); return; }
+          if (e.key === '1') { gameMode = MODE_MARATHON; startScreen = false; score = 0; isReplaying = false; init(); showToast("Marathon Mode Started!"); return; }
+          if (e.key === '2') { gameMode = MODE_SPRINT;   startScreen = false; score = 0; isReplaying = false; init(); showToast("Sprint Mode Started (40 Lines)!"); return; }
+          if (e.key === '3') { gameMode = MODE_ULTRA;    startScreen = false; score = 0; isReplaying = false; init(); showToast("Ultra Mode Started (2 Minutes)!"); return; }
+          if (e.key === '4') { gameMode = MODE_CAMPAIGN; startScreen = false; campaignLevel = 1; score = 0; isReplaying = false; init(); showToast("Campaign Stage 1 Started!"); return; }
           if (e.key === '5' || e.key.toLowerCase() === 'l') { showLeaderboard = true; startScreen = false; return; }
           if (e.key.toLowerCase() === 'v' || e.key.toLowerCase() === 'r') { isReplaying = false; loadGameState(); return; }
           if (e.key === 'F1' || e.key.toLowerCase() === 'h') { e.preventDefault(); showHelp = true; return; }
           if (e.key.toLowerCase() === 'k') { showKeybinds = true; bindIndex = 0; startScreen = false; return; }
-          if (e.key.toLowerCase() === 'w' && savedReplay) { isReplaying = true; currentReplay = savedReplay; startScreen = false; init(); return; }
+          if (e.key.toLowerCase() === 'w' && savedReplay) { isReplaying = true; currentReplay = savedReplay; startScreen = false; init(); showToast("Playing saved replay..."); return; }
           return;
       }
       if (showLeaderboard) {
@@ -811,7 +967,16 @@
           return;
       }
 
-      if (key === keybinds.pause) { isPaused = !isPaused; return; }
+      if (e.key === 'Escape') {
+          isPaused = !isPaused;
+          showToast(isPaused ? "Game Paused [P]" : "Game Resumed");
+          return;
+      }
+      if (key === keybinds.pause) {
+          isPaused = !isPaused;
+          showToast(isPaused ? "Game Paused [P]" : "Game Resumed");
+          return;
+      }
       if (e.key === 'F1' || key === 'h') { e.preventDefault(); showHelp = true; return; }
       if (key === 'v') { saveGameState(); return; }
       if (key === keybinds.nuke) { useRowNuke(); if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'nuke'}); return; }
@@ -832,12 +997,7 @@
           if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'up'});
       }
       if (key === keybinds.hold || e.key === 'Shift') {
-          if (!holdUsed) {
-              if (holdPc === -1) { holdPc = pc; holdIsBomb = isBomb; spawn(); } 
-              else { let temp = pc; let tempBomb = isBomb; pc = holdPc; isBomb = holdIsBomb; holdPc = temp; holdIsBomb = tempBomb; rot = 0; cx = 3; cy = -2; }
-              holdUsed = true; playSound(700, 'sine', 0.08);
-              if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'hold'});
-          }
+          useHold();
       }
       if (key === keybinds.drop) {
           let startY = cy; let dropDist = 0;
@@ -1723,78 +1883,126 @@
       drawSkillBadge(ctx, SIDEBAR_X, 401, 1, swapCharges, false, 0, '[S]', 'Swap', '#00ffc8');
       drawSkillBadge(ctx, SIDEBAR_X, 421, 2, freezeCharges, freezeTimerMs > 0, Math.ceil(freezeTimerMs / 1000), '[F]', 'Freeze', '#64c8ff');
 
-      // Hints
-      ctx.fillStyle = '#aaaaaa';
-      ctx.font = 'bold 10px system-ui, monospace';
-      ctx.fillText('[Arrows] Move/Rot', SIDEBAR_X, 452);
-      ctx.fillText('[Space] Hard Drop', SIDEBAR_X, 468);
-      ctx.fillStyle = '#00ffcc';
-      ctx.fillText('[H/F1] Help', SIDEBAR_X, 484);
+      // Interactive HUD Buttons
+      // Pause Button
+      ctx.fillStyle = 'rgba(20, 24, 36, 0.9)';
+      ctx.fillRect(SIDEBAR_X, 443, 138, 22);
+      ctx.strokeStyle = '#ffff55';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(SIDEBAR_X + 0.5, 443.5, 137, 21);
+      ctx.fillStyle = '#ffff55';
+      ctx.font = 'bold 10px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('[P] PAUSE / RESUME', SIDEBAR_X + 69, 458);
+
+      // Help Button
+      ctx.fillStyle = 'rgba(20, 24, 36, 0.9)';
+      ctx.fillRect(SIDEBAR_X, 468, 138, 22);
+      ctx.strokeStyle = '#00f0f0';
+      ctx.strokeRect(SIDEBAR_X + 0.5, 468.5, 137, 21);
+      ctx.fillStyle = '#00f0f0';
+      ctx.fillText('[H/F1] HELP & GUIDE', SIDEBAR_X + 69, 483);
+      ctx.textAlign = 'left';
+
+      // Footer hint
+      ctx.fillStyle = '#666677';
+      ctx.font = '9px system-ui, monospace';
+      ctx.fillText('[Click/Tap/Arrows] Steer', SIDEBAR_X, 502);
 
       // Screens & Overlays
       if (showHelp) {
-          ctx.fillStyle = 'rgba(10, 11, 16, 0.94)';
+          ctx.fillStyle = 'rgba(10, 11, 16, 0.96)';
           ctx.fillRect(0, 0, 370, 510);
           ctx.fillStyle = '#00ffff';
-          ctx.font = 'bold 20px system-ui, sans-serif';
+          ctx.font = 'bold 18px system-ui, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('CONTROLS & HELP', 370 / 2, 45);
-          ctx.fillStyle = '#ffffff';
-          ctx.font = '13px system-ui, monospace';
+          ctx.fillText('CONTROLS & HOW TO PLAY', 370 / 2, 38);
+
+          ctx.fillStyle = '#8888aa';
+          ctx.font = '11px system-ui, sans-serif';
+          ctx.fillText('Master tetromino maneuvers and active cyber-skills', 370 / 2, 54);
+
           ctx.textAlign = 'left';
-          let hints = [
-              "Left/Right : Move Piece",
-              "Up Arrow   : Rotate Piece",
-              "Down Arrow : Soft Drop",
-              "Space      : Hard Drop",
-              "C or Shift : Hold Piece",
-              "B          : Use Nuke Skill",
-              "S          : Use Swap Skill",
-              "F          : Use Freeze Skill",
-              "P          : Pause Game",
-              "V          : Save Game",
-              "H or F1    : Toggle Help"
+          let guideSections = [
+              { key: '[← / →]', desc: 'Move Piece Left / Right (or tap sides)' },
+              { key: '[↑ / Z / X]', desc: 'Rotate Clockwise (or tap center)' },
+              { key: '[↓]', desc: 'Soft Drop (faster fall)' },
+              { key: '[Space]', desc: 'Hard Drop (instant drop / tap bottom)' },
+              { key: '[C / Shift]', desc: 'Hold Piece Slot (swap with reserve)' },
+              { key: '[B]', desc: 'Row Nuke Skill: Clears 3 bottom rows' },
+              { key: '[S]', desc: 'Piece Swap Skill: Rerolls with next queue' },
+              { key: '[F]', desc: 'Gravity Freeze Skill: Halts drop for 10s' },
+              { key: '[P / Esc]', desc: 'Pause / Resume Game' },
+              { key: '[V]', desc: 'Quick-Save Match State' },
+              { key: '[1 - 4]', desc: 'Select Game Mode on Start Menu' }
           ];
-          hints.forEach((h, idx) => {
-              ctx.fillText(h, 60, 90 + idx * 25);
+
+          guideSections.forEach((g, idx) => {
+              let y = 78 + idx * 30;
+              ctx.fillStyle = 'rgba(25, 30, 48, 0.7)';
+              ctx.fillRect(20, y - 13, 330, 24);
+              ctx.strokeStyle = '#282a36';
+              ctx.strokeRect(20.5, y - 12.5, 329, 23);
+
+              ctx.fillStyle = '#00ffc8';
+              ctx.font = 'bold 11px system-ui, monospace';
+              ctx.fillText(g.key, 28, y + 4);
+
+              ctx.fillStyle = '#dddddd';
+              ctx.font = '11px system-ui, sans-serif';
+              ctx.fillText(g.desc, 118, y + 4);
           });
-          ctx.fillStyle = '#666677';
+
+          // Close button
+          ctx.fillStyle = 'rgba(0, 240, 240, 0.15)';
+          ctx.fillRect(85, 455, 200, 32);
+          ctx.strokeStyle = '#00f0f0';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(85.5, 455.5, 199, 31);
+          ctx.fillStyle = '#00ffff';
+          ctx.font = 'bold 12px system-ui, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('Press H, F1, ESC, or ENTER to return', 370 / 2, 480);
+          ctx.fillText('✕ Close Guide [Esc / Enter]', 370 / 2, 476);
           ctx.textAlign = 'left';
       } else if (showKeybinds) {
           ctx.fillStyle = 'rgba(10, 11, 16, 0.94)';
           ctx.fillRect(0, 0, 370, 510);
           ctx.fillStyle = '#00ffff';
-          ctx.font = 'bold 20px system-ui, sans-serif';
+          ctx.font = 'bold 18px system-ui, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('KEYBINDS CONFIG', 185, 50);
+          ctx.fillText('KEYBINDS CONFIG', 185, 45);
           ctx.fillStyle = '#ffffff';
-          ctx.font = '14px system-ui, monospace';
+          ctx.font = '13px system-ui, monospace';
           ctx.textAlign = 'left';
           bindNames.forEach((b, i) => {
               ctx.fillStyle = i === bindIndex ? '#00ff66' : '#aaaaaa';
-              ctx.fillText(b.toUpperCase() + ": " + (i === bindIndex ? "[PRESS KEY]" : keybinds[b]), 50, 100 + i * 25);
+              ctx.fillText(b.toUpperCase() + ": " + (i === bindIndex ? "[PRESS NEW KEY]" : keybinds[b]), 50, 85 + i * 26);
           });
-          ctx.fillStyle = '#666677';
+          // Cancel button
+          ctx.fillStyle = 'rgba(255, 68, 68, 0.2)';
+          ctx.fillRect(85, 455, 200, 32);
+          ctx.strokeStyle = '#ff4444';
+          ctx.strokeRect(85.5, 455.5, 199, 31);
+          ctx.fillStyle = '#ff6666';
+          ctx.font = 'bold 12px system-ui, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('Press ESC to cancel', 185, 480);
+          ctx.fillText('✕ Cancel [Esc]', 185, 476);
           ctx.textAlign = 'left';
       } else if (showLeaderboard) {
-          ctx.fillStyle = 'rgba(10, 11, 16, 0.92)';
+          ctx.fillStyle = 'rgba(10, 11, 16, 0.95)';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
 
           ctx.fillStyle = '#00ffff';
           ctx.font = 'bold 18px system-ui, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('LEADERBOARD', 370 / 2, 45);
+          ctx.fillText('HIGH SCORES & LEADERBOARD', 370 / 2, 42);
 
           ctx.fillStyle = '#8888aa';
           ctx.font = '11px system-ui, monospace';
-          ctx.fillText('RANK   SCORE   MODE     TIME', 370 / 2, 75);
+          ctx.fillText('RANK   SCORE   MODE     TIME', 370 / 2, 70);
 
           ctx.strokeStyle = '#282a36';
-          ctx.beginPath(); ctx.moveTo(20, 85); ctx.lineTo(370 - 20, 85); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(20, 80); ctx.lineTo(370 - 20, 80); ctx.stroke();
 
           if (leaderboard.length === 0) {
               ctx.fillStyle = '#666677';
@@ -1802,7 +2010,7 @@
               ctx.fillText('No scores recorded yet!', 370 / 2, 140);
           } else {
               leaderboard.forEach((entry, idx) => {
-                  let yPos = 115 + idx * 35;
+                  let yPos = 110 + idx * 36;
                   ctx.fillStyle = idx === 0 ? '#ffea00' : (idx === 1 ? '#e0e0e0' : (idx === 2 ? '#cd7f32' : '#ffffff'));
                   ctx.font = 'bold 12px system-ui, monospace';
                   ctx.textAlign = 'left';
@@ -1815,91 +2023,179 @@
               });
           }
 
-          ctx.fillStyle = '#aaaaaa';
-          ctx.font = '12px system-ui, sans-serif';
+          // Return to menu button
+          ctx.fillStyle = 'rgba(0, 240, 240, 0.15)';
+          ctx.fillRect(85, 430, 200, 28);
+          ctx.strokeStyle = '#00f0f0';
+          ctx.strokeRect(85.5, 430.5, 199, 27);
+          ctx.fillStyle = '#00ffff';
+          ctx.font = 'bold 11px system-ui, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('ENTER: Menu | E: Export | I: Import', 370 / 2, 480);
+          ctx.fillText('✕ Return to Menu [Esc / Enter]', 370 / 2, 448);
+
+          // Export / Import buttons
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+          ctx.fillRect(35, 468, 140, 26);
+          ctx.strokeStyle = '#555566';
+          ctx.strokeRect(35.5, 468.5, 139, 25);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText('[E] Export JSON', 105, 485);
+
+          ctx.fillRect(195, 468, 140, 26);
+          ctx.strokeRect(195.5, 468.5, 139, 25);
+          ctx.fillText('[I] Import JSON', 265, 485);
           ctx.textAlign = 'left';
       } else if (gameOver) {
-          ctx.fillStyle = 'rgba(0,0,0,0.78)';
-          ctx.fillRect(10, 140, BOARD_W - 20, 120);
+          ctx.fillStyle = 'rgba(10, 11, 16, 0.9)';
+          ctx.fillRect(10, 120, BOARD_W - 20, 160);
+          ctx.strokeStyle = '#ff3333';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(10.5, 120.5, BOARD_W - 21, 159);
+
           ctx.fillStyle = '#ff3333';
-          ctx.font = 'bold 20px system-ui, monospace';
-          ctx.fillText('GAME OVER', 35, 185);
-          ctx.fillStyle = '#aaaaaa';
-          ctx.font = '12px system-ui, monospace';
-          ctx.fillText('[ENTER] MENU', 48, 220);
-          ctx.fillText('[E] EXPORT STATS', 48, 240);
-          ctx.fillText('[S] SAVE REPLAY', 48, 260);
-      } else if (winScreen) {
-          ctx.fillStyle = 'rgba(0,0,0,0.78)';
-          ctx.fillRect(10, 130, BOARD_W - 20, 130);
-          ctx.fillStyle = '#00ff66';
-          ctx.font = 'bold 20px system-ui, monospace';
-          ctx.fillText('VICTORY!', 50, 175);
+          ctx.font = 'bold 20px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('GAME OVER', BOARD_W / 2, 152);
+
+          // Buttons
+          ctx.fillStyle = 'rgba(255, 51, 51, 0.2)';
+          ctx.fillRect(20, 175, BOARD_W - 40, 26);
+          ctx.strokeStyle = '#ff5555';
+          ctx.strokeRect(20.5, 175.5, BOARD_W - 41, 25);
           ctx.fillStyle = '#ffffff';
-          ctx.font = '12px system-ui, monospace';
-          ctx.fillText(gameMode === MODE_SPRINT ? `TIME: ${formatTime(modeTimerMs)}` : 'STAGE CLEARED!', 30, 205);
-          ctx.fillText('[ENTER] MENU', 30, 230);
-          ctx.fillText('[E] EXPORT STATS | [S] SAVE REPLAY', 30, 250);
+          ctx.font = 'bold 11px system-ui, sans-serif';
+          ctx.fillText('▶ MAIN MENU [Enter]', BOARD_W / 2, 192);
+
+          ctx.fillStyle = 'rgba(0, 240, 240, 0.15)';
+          ctx.fillRect(20, 207, BOARD_W - 40, 24);
+          ctx.strokeStyle = '#00f0f0';
+          ctx.strokeRect(20.5, 207.5, BOARD_W - 41, 23);
+          ctx.fillStyle = '#00ffff';
+          ctx.fillText('📊 EXPORT STATS [E]', BOARD_W / 2, 223);
+
+          ctx.fillStyle = 'rgba(0, 255, 100, 0.15)';
+          ctx.fillRect(20, 237, BOARD_W - 40, 24);
+          ctx.strokeStyle = '#00ff66';
+          ctx.strokeRect(20.5, 237.5, BOARD_W - 41, 23);
+          ctx.fillStyle = '#00ff66';
+          ctx.fillText('💾 SAVE REPLAY [S]', BOARD_W / 2, 253);
+          ctx.textAlign = 'left';
+      } else if (winScreen) {
+          ctx.fillStyle = 'rgba(10, 11, 16, 0.9)';
+          ctx.fillRect(10, 115, BOARD_W - 20, 165);
+          ctx.strokeStyle = '#00ff66';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(10.5, 115.5, BOARD_W - 21, 164);
+
+          ctx.fillStyle = '#00ff66';
+          ctx.font = 'bold 20px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('VICTORY!', BOARD_W / 2, 144);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '11px system-ui, monospace';
+          ctx.fillText(gameMode === MODE_SPRINT ? `TIME: ${formatTime(modeTimerMs)}` : 'STAGE CLEARED!', BOARD_W / 2, 162);
+
+          // Buttons
+          ctx.fillStyle = 'rgba(0, 255, 100, 0.2)';
+          ctx.fillRect(20, 175, BOARD_W - 40, 26);
+          ctx.strokeStyle = '#00ff66';
+          ctx.strokeRect(20.5, 175.5, BOARD_W - 41, 25);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 11px system-ui, sans-serif';
+          ctx.fillText('▶ MAIN MENU [Enter]', BOARD_W / 2, 192);
+
+          ctx.fillStyle = 'rgba(0, 240, 240, 0.15)';
+          ctx.fillRect(20, 207, BOARD_W - 40, 24);
+          ctx.strokeStyle = '#00f0f0';
+          ctx.strokeRect(20.5, 207.5, BOARD_W - 41, 23);
+          ctx.fillStyle = '#00ffff';
+          ctx.fillText('📊 EXPORT STATS [E]', BOARD_W / 2, 223);
+
+          ctx.fillStyle = 'rgba(255, 170, 0, 0.15)';
+          ctx.fillRect(20, 237, BOARD_W - 40, 24);
+          ctx.strokeStyle = '#ffaa00';
+          ctx.strokeRect(20.5, 237.5, BOARD_W - 41, 23);
+          ctx.fillStyle = '#ffaa00';
+          ctx.fillText('💾 SAVE REPLAY [S]', BOARD_W / 2, 253);
+          ctx.textAlign = 'left';
       } else if (startScreen) {
-          ctx.fillStyle = 'rgba(10, 11, 16, 0.94)';
+          ctx.fillStyle = 'rgba(10, 11, 16, 0.95)';
           ctx.fillRect(0, 0, 370, 510);
 
           ctx.fillStyle = '#00ffff';
           ctx.font = 'bold 24px system-ui, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('K-TETRIS', 370 / 2, 50);
+          ctx.fillText('K-TETRIS', 370 / 2, 42);
 
           ctx.fillStyle = '#8888aa';
-          ctx.font = '12px system-ui, sans-serif';
-          ctx.fillText('Select Game Mode:', 370 / 2, 85);
+          ctx.font = '11px system-ui, sans-serif';
+          ctx.fillText('CYBERNETIC FALLING BLOCKS • SELECT MODE:', 370 / 2, 64);
 
-          let options = [
-              "1. Marathon (Endless)",
-              "2. Sprint (40-Lines Race)",
-              "3. Ultra (2-Minute Timed)",
-              "4. Campaign (20 Stages)"
-          ];
+          let menuItems = getStartMenuItems();
+          menuItems.forEach((item, idx) => {
+              let by = 85 + idx * 34;
+              let isHov = (hoverMenuIdx === idx);
 
-          options.forEach((opt, idx) => {
-              ctx.fillStyle = '#ffffff';
-              ctx.font = '13px system-ui, monospace';
+              ctx.fillStyle = isHov ? 'rgba(35, 45, 75, 0.95)' : 'rgba(20, 25, 38, 0.85)';
+              ctx.fillRect(35, by, 300, 28);
+              ctx.strokeStyle = isHov ? '#ffffff' : item.color;
+              ctx.lineWidth = isHov ? 1.5 : 1;
+              ctx.strokeRect(35.5, by + 0.5, 299, 27);
+
+              ctx.fillStyle = item.color;
+              ctx.font = 'bold 12px system-ui, sans-serif';
               ctx.textAlign = 'left';
-              ctx.fillText(opt, 70, 125 + idx * 32);
+              ctx.fillText(item.label, 50, by + 18);
+
+              // Arrow indicator on hover
+              if (isHov) {
+                  ctx.fillStyle = '#00ffff';
+                  ctx.fillText('▶', 315, by + 18);
+              }
           });
 
-          ctx.fillStyle = '#00ff66';
-          ctx.fillText('5 / [L]. High Scores', 70, 125 + 4 * 32);
-
-          let yOffset = 125 + 5 * 32;
-          ctx.fillStyle = '#ffaa00';
-          ctx.fillText('[H / F1]. Help & Controls', 70, yOffset);
-          ctx.fillStyle = '#00ccff';
-          ctx.fillText('[K]. Configure Keybinds', 70, yOffset + 96);
-          if (savedReplay) { ctx.fillStyle = '#ff55aa'; ctx.fillText('[W]. Watch Last Replay', 70, yOffset + 64); }
-
-
-          if (hasSavedGame()) {
-              ctx.fillStyle = '#ff00ff';
-              ctx.font = 'bold 13px system-ui, monospace';
-              ctx.fillText('[V]. Resume Saved Game', 70, yOffset + 96);
-          }
-
-          ctx.fillStyle = '#ffff00';
-          ctx.font = 'bold 12px system-ui, sans-serif';
+          // Bottom hints
+          ctx.fillStyle = '#ffff55';
+          ctx.font = 'bold 11px system-ui, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('Press [H] or F1 for Help / Controls', 370 / 2, 470);
-          ctx.fillStyle = '#666677';
-          ctx.font = '11px system-ui, sans-serif';
-          ctx.fillText('Press [L] for Leaderboard', 370 / 2, 490);
+          ctx.fillText('Press [H] or F1 for Help & Controls Guide', 370 / 2, 468);
+          ctx.fillStyle = '#666688';
+          ctx.font = '10px system-ui, sans-serif';
+          ctx.fillText('Click any card to launch • Full Mouse & Touch Support', 370 / 2, 488);
           ctx.textAlign = 'left';
       } else if (isPaused) {
-          ctx.fillStyle = 'rgba(0,0,0,0.75)';
-          ctx.fillRect(15, 160, BOARD_W - 30, 70);
+          ctx.fillStyle = 'rgba(10, 11, 16, 0.88)';
+          ctx.fillRect(15, 125, BOARD_W - 30, 140);
+          ctx.strokeStyle = '#ffff00';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(15.5, 125.5, BOARD_W - 31, 139);
+
           ctx.fillStyle = '#ffff00';
-          ctx.font = 'bold 20px system-ui, monospace';
-          ctx.fillText('PAUSED', 55, 202);
+          ctx.font = 'bold 20px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('GAME PAUSED', BOARD_W / 2, 160);
+
+          ctx.fillStyle = '#aaaaaa';
+          ctx.font = '11px system-ui, sans-serif';
+          ctx.fillText('Click anywhere or press [P] to Resume', BOARD_W / 2, 180);
+
+          // Resume Button
+          ctx.fillStyle = 'rgba(0, 255, 100, 0.2)';
+          ctx.fillRect(25, 195, BOARD_W - 50, 26);
+          ctx.strokeStyle = '#00ff66';
+          ctx.strokeRect(25.5, 195.5, BOARD_W - 51, 25);
+          ctx.fillStyle = '#00ff66';
+          ctx.font = 'bold 11px system-ui, sans-serif';
+          ctx.fillText('▶ RESUME GAME [P]', BOARD_W / 2, 212);
+
+          // Main Menu Button
+          ctx.fillStyle = 'rgba(255, 68, 68, 0.2)';
+          ctx.fillRect(25, 227, BOARD_W - 50, 24);
+          ctx.strokeStyle = '#ff4444';
+          ctx.strokeRect(25.5, 227.5, BOARD_W - 51, 23);
+          ctx.fillStyle = '#ff6666';
+          ctx.fillText('✕ MAIN MENU', BOARD_W / 2, 243);
+          ctx.textAlign = 'left';
       }
   }
 

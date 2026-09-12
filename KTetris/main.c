@@ -93,6 +93,15 @@ int swap_charges = 3;
 int freeze_charges = 2;
 int freeze_timer_ms = 0;
 
+// Toast Notification System
+char g_toast_msg[128] = "Welcome to KTetris! Press [H] or F1 for Controls & Guide";
+int g_toast_timer = 200; // ~4 seconds at 50fps (20ms)
+
+void ShowNativeToast(const char* msg, int duration_ms) {
+    lstrcpynA(g_toast_msg, msg, sizeof(g_toast_msg));
+    g_toast_timer = duration_ms / 20;
+}
+
 #pragma function(memcpy)
 void* __cdecl memcpy(void* dest, const void* src, size_t n) {
     char* d = (char*)dest;
@@ -806,6 +815,7 @@ void UseRowNuke() {
     score += 300;
     AddPopup((float)(W * CELL_SIZE / 2 - 35), (float)(H * CELL_SIZE / 2), "ROW NUKE! +300", RGB(255, 100, 0));
     Beep(180, 100); Beep(120, 150);
+    ShowNativeToast("Row Nuke Activated! -3 Rows, +300 pts [B]", 1800);
 }
 
 void UsePieceSwap() {
@@ -822,6 +832,7 @@ void UsePieceSwap() {
     current_y = -2;
     AddPopup((float)(W * CELL_SIZE / 2 - 35), (float)(H * CELL_SIZE / 2 + 20), "PIECE SWAP!", RGB(0, 255, 200));
     Beep(750, 60);
+    ShowNativeToast("Piece Swapped with Next Queue! [S]", 1800);
 }
 
 void UseGravityFreeze() {
@@ -830,6 +841,38 @@ void UseGravityFreeze() {
     freeze_timer_ms = 10000;
     AddPopup((float)(W * CELL_SIZE / 2 - 40), (float)(H * CELL_SIZE / 2 - 20), "GRAVITY FREEZE!", RGB(0, 240, 255));
     Beep(1200, 100);
+    ShowNativeToast("Gravity Freeze Activated (10s)! [F]", 2000);
+}
+
+void UseHoldPiece() {
+    if (game_over || is_paused || start_screen || win_screen || show_leaderboard || show_help || show_keybinds || is_replaying) return;
+    if (!hold_used) {
+        if (hold_piece == -1) {
+            hold_piece = current_piece;
+            hold_is_bomb = current_is_bomb;
+            SpawnPiece();
+        } else {
+            int temp = current_piece;
+            int tb = current_is_bomb;
+            current_piece = hold_piece;
+            current_is_bomb = hold_is_bomb;
+            hold_piece = temp;
+            hold_is_bomb = tb;
+            current_rot = 0;
+            current_x = W / 2 - 2;
+            current_y = -2;
+        }
+        hold_used = 1;
+        Beep(700, 30);
+        ShowNativeToast("Piece Held in Reserve Slot! [C]", 1500);
+        if (current_replay.count < 5000) {
+            current_replay.events[current_replay.count].tick = replay_tick;
+            current_replay.events[current_replay.count].key = 'C';
+            current_replay.count++;
+        }
+    } else {
+        ShowNativeToast("Hold slot locked until current piece locks!", 1500);
+    }
 }
 
 void lock_piece() {
@@ -1690,6 +1733,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
 
+                if (g_toast_timer > 0) g_toast_timer--;
+
                 InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
@@ -1711,49 +1756,136 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int mx = (int)((LOWORD(lParam) - offsetX) / scale);
             int my = (int)((HIWORD(lParam) - offsetY) / scale);
 
+            if (g_toast_timer > 0 && my >= total_h - 45) {
+                g_toast_timer = 0;
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+
             if (show_help) {
                 show_help = 0;
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
 
-            if (start_screen) {
-                if (mx >= 35 && mx <= total_w - 35) {
-                    if (my >= 110 && my <= 135) { game_mode = MODE_MARATHON; start_screen = 0; score = 0; InitGame(); InvalidateRect(hwnd, NULL, FALSE); break; }
-                    if (my >= 140 && my <= 165) { game_mode = MODE_SPRINT;   start_screen = 0; score = 0; InitGame(); InvalidateRect(hwnd, NULL, FALSE); break; }
-                    if (my >= 170 && my <= 195) { game_mode = MODE_ULTRA;    start_screen = 0; score = 0; InitGame(); InvalidateRect(hwnd, NULL, FALSE); break; }
-                    if (my >= 200 && my <= 225) { game_mode = MODE_CAMPAIGN; start_screen = 0; campaign_level = 1; score = 0; InitGame(); InvalidateRect(hwnd, NULL, FALSE); break; }
-                    if (my >= 230 && my <= 255) { show_leaderboard = 1; start_screen = 0; InvalidateRect(hwnd, NULL, FALSE); break; }
-                    if (my >= 260 && my <= 285) { show_help = 1; InvalidateRect(hwnd, NULL, FALSE); break; }
-                    if (HasSavedGame() && my >= 290 && my <= 315) { LoadGameStateFromFile(); InvalidateRect(hwnd, NULL, FALSE); break; }
-                    if (my >= 320 && my <= 345) { show_keybinds = 1; bind_index = 0; start_screen = 0; InvalidateRect(hwnd, NULL, FALSE); break; }
-                    if (has_saved_replay && my >= 350 && my <= 375) { is_replaying = 1; start_screen = 0; InitGame(); InvalidateRect(hwnd, NULL, FALSE); break; }
+            if (show_keybinds) {
+                if (my >= 445 && my <= 495) {
+                    show_keybinds = 0;
+                    start_screen = 1;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
                 }
-                if (my >= 455 && my <= 480) { show_help = 1; InvalidateRect(hwnd, NULL, FALSE); break; }
-                if (my >= 480 && my <= 505) { show_leaderboard = 1; start_screen = 0; InvalidateRect(hwnd, NULL, FALSE); break; }
                 break;
             }
 
             if (show_leaderboard) {
-                if (my >= 405 && my <= 440) { show_leaderboard = 0; start_screen = 1; InvalidateRect(hwnd, NULL, FALSE); }
+                if (my >= 420 && my <= 455) {
+                    show_leaderboard = 0;
+                    start_screen = 1;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
+                }
+                if (my >= 460 && my <= 495) {
+                    if (mx < total_w / 2) ExportLeaderboardJSON();
+                    else ImportLeaderboardJSON();
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
+                }
                 break;
             }
 
             if (game_over || win_screen) {
-                if (my >= H * CELL_SIZE / 2 && my <= H * CELL_SIZE / 2 + 65) {
-                    start_screen = 1; game_over = 0; win_screen = 0;
-                    InvalidateRect(hwnd, NULL, FALSE);
+                if (mx >= 20 && mx <= total_w - 40) {
+                    if (my >= 170 && my <= 200) {
+                        start_screen = 1; game_over = 0; win_screen = 0;
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        break;
+                    }
+                    if (my >= 205 && my <= 235) { ExportStats(); break; }
+                    if (my >= 235 && my <= 265 && !is_replaying) { SaveReplay(); break; }
                 }
+                start_screen = 1; game_over = 0; win_screen = 0;
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+
+            if (is_paused) {
+                if (mx >= 25 && mx <= total_w - 50 && my >= 225 && my <= 250) {
+                    start_screen = 1; is_paused = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
+                }
+                is_paused = 0;
+                ShowNativeToast("Game Resumed", 1200);
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+
+            if (start_screen) {
+                if (mx >= 35 && mx <= total_w - 35) {
+                    if (my >= 85 && my <= 113) { game_mode = MODE_MARATHON; start_screen = 0; score = 0; InitGame(); ShowNativeToast("Marathon Mode Started!", 1500); InvalidateRect(hwnd, NULL, FALSE); break; }
+                    if (my >= 119 && my <= 147) { game_mode = MODE_SPRINT;   start_screen = 0; score = 0; InitGame(); ShowNativeToast("Sprint Mode Started (40 Lines)!", 1500); InvalidateRect(hwnd, NULL, FALSE); break; }
+                    if (my >= 153 && my <= 181) { game_mode = MODE_ULTRA;    start_screen = 0; score = 0; InitGame(); ShowNativeToast("Ultra Mode Started (2 Minutes)!", 1500); InvalidateRect(hwnd, NULL, FALSE); break; }
+                    if (my >= 187 && my <= 215) { game_mode = MODE_CAMPAIGN; start_screen = 0; campaign_level = 1; score = 0; InitGame(); ShowNativeToast("Campaign Stage 1 Started!", 1500); InvalidateRect(hwnd, NULL, FALSE); break; }
+                    if (my >= 221 && my <= 249) { show_leaderboard = 1; start_screen = 0; InvalidateRect(hwnd, NULL, FALSE); break; }
+                    if (my >= 255 && my <= 283) { show_help = 1; InvalidateRect(hwnd, NULL, FALSE); break; }
+                    if (my >= 289 && my <= 317) { show_keybinds = 1; bind_index = 0; start_screen = 0; InvalidateRect(hwnd, NULL, FALSE); break; }
+                    if (HasSavedGame() && my >= 323 && my <= 351) { LoadGameStateFromFile(); InvalidateRect(hwnd, NULL, FALSE); break; }
+                    if (has_saved_replay && my >= 357 && my <= 385) { is_replaying = 1; start_screen = 0; InitGame(); ShowNativeToast("Playing Saved Replay...", 1500); InvalidateRect(hwnd, NULL, FALSE); break; }
+                }
+                if (my >= 455 && my <= 485) { show_help = 1; InvalidateRect(hwnd, NULL, FALSE); break; }
+                if (my >= 485 && my <= 508) { show_leaderboard = 1; start_screen = 0; InvalidateRect(hwnd, NULL, FALSE); break; }
                 break;
             }
 
             if (!game_over && !is_paused && !start_screen && !win_screen && !show_leaderboard && !show_help && !show_keybinds && !is_replaying) {
                 int sideX = W * CELL_SIZE + 15;
-                if (mx >= sideX && mx <= sideX + 140) {
-                    if (my >= 378 && my <= 398) { UseRowNuke(); InvalidateRect(hwnd, NULL, FALSE); }
-                    else if (my >= 398 && my <= 415) { UsePieceSwap(); InvalidateRect(hwnd, NULL, FALSE); }
-                    else if (my >= 415 && my <= 435) { UseGravityFreeze(); InvalidateRect(hwnd, NULL, FALSE); }
-                    else if (my >= 465 && my <= 495) { show_help = 1; InvalidateRect(hwnd, NULL, FALSE); }
+                if (mx >= sideX - 5 && mx <= sideX + 140) {
+                    if (my >= 292 && my <= 367) { UseHoldPiece(); InvalidateRect(hwnd, NULL, FALSE); break; }
+                    if (my >= 378 && my <= 398) { UseRowNuke(); InvalidateRect(hwnd, NULL, FALSE); break; }
+                    if (my >= 399 && my <= 418) { UsePieceSwap(); InvalidateRect(hwnd, NULL, FALSE); break; }
+                    if (my >= 419 && my <= 439) { UseGravityFreeze(); InvalidateRect(hwnd, NULL, FALSE); break; }
+                    if (my >= 443 && my <= 466) { is_paused = 1; ShowNativeToast("Game Paused [P] - Click to Resume", 2000); InvalidateRect(hwnd, NULL, FALSE); break; }
+                    if (my >= 468 && my <= 495) { show_help = 1; InvalidateRect(hwnd, NULL, FALSE); break; }
+                }
+                if (mx >= 0 && mx < W * CELL_SIZE && my >= 0 && my < H * CELL_SIZE) {
+                    if (my >= (H - 4) * CELL_SIZE) {
+                        int start_y = current_y; int drop_dist = 0;
+                        while (!check_collision(current_piece, current_rot, current_x, current_y + 1)) { current_y++; drop_dist++; }
+                        score += drop_dist * 2;
+                        SpawnDropParticles(current_x, start_y, current_y, current_is_bomb ? 15 : (current_piece + 1));
+                        SpawnHardDropImpact(current_x, current_y);
+                        int old_level = campaign_level; lock_piece();
+                        if (!win_screen && !game_over && (game_mode != MODE_CAMPAIGN || campaign_level == old_level)) { SpawnPiece(); }
+                        if (current_replay.count < 5000) { current_replay.events[current_replay.count].tick = replay_tick; current_replay.events[current_replay.count].key = ' '; current_replay.count++; }
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        break;
+                    }
+                    if (mx < (W * CELL_SIZE) * 0.35) {
+                        if (!check_collision(current_piece, current_rot, current_x - 1, current_y)) {
+                            current_x--;
+                            if (current_replay.count < 5000) { current_replay.events[current_replay.count].tick = replay_tick; current_replay.events[current_replay.count].key = 'L'; current_replay.count++; }
+                            InvalidateRect(hwnd, NULL, FALSE);
+                        }
+                        break;
+                    }
+                    if (mx > (W * CELL_SIZE) * 0.65) {
+                        if (!check_collision(current_piece, current_rot, current_x + 1, current_y)) {
+                            current_x++;
+                            if (current_replay.count < 5000) { current_replay.events[current_replay.count].tick = replay_tick; current_replay.events[current_replay.count].key = 'R'; current_replay.count++; }
+                            InvalidateRect(hwnd, NULL, FALSE);
+                        }
+                        break;
+                    }
+                    int next_r = (current_rot + 1) % 4;
+                    if (!check_collision(current_piece, next_r, current_x, current_y)) { current_rot = next_r; }
+                    else if (!check_collision(current_piece, next_r, current_x - 1, current_y)) { current_x--; current_rot = next_r; }
+                    else if (!check_collision(current_piece, next_r, current_x + 1, current_y)) { current_x++; current_rot = next_r; }
+                    else if (!check_collision(current_piece, next_r, current_x - 2, current_y)) { current_x -= 2; current_rot = next_r; }
+                    else if (!check_collision(current_piece, next_r, current_x + 2, current_y)) { current_x += 2; current_rot = next_r; }
+                    if (current_replay.count < 5000) { current_replay.events[current_replay.count].tick = replay_tick; current_replay.events[current_replay.count].key = 'U'; current_replay.count++; }
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
                 }
             }
             break;
@@ -1768,7 +1900,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 *(bp[bind_index]) = (int)wParam;
                 bind_index++;
                 SaveKeys();
-                if (bind_index >= 10) { show_keybinds = 0; start_screen = 1; }
+                if (bind_index >= 10) { show_keybinds = 0; start_screen = 1; ShowNativeToast("Keybinds Updated!", 1500); }
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }
@@ -1782,15 +1914,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             if (start_screen) {
-                if (wParam == '1') { game_mode = MODE_MARATHON; start_screen = 0; score = 0; InitGame(); }
-                if (wParam == '2') { game_mode = MODE_SPRINT;   start_screen = 0; score = 0; InitGame(); }
-                if (wParam == '3') { game_mode = MODE_ULTRA;    start_screen = 0; score = 0; InitGame(); }
-                if (wParam == '4') { game_mode = MODE_CAMPAIGN; start_screen = 0; campaign_level = 1; score = 0; InitGame(); }
+                if (wParam == '1') { game_mode = MODE_MARATHON; start_screen = 0; score = 0; InitGame(); ShowNativeToast("Marathon Mode Started!", 1500); }
+                if (wParam == '2') { game_mode = MODE_SPRINT;   start_screen = 0; score = 0; InitGame(); ShowNativeToast("Sprint Mode Started (40 Lines)!", 1500); }
+                if (wParam == '3') { game_mode = MODE_ULTRA;    start_screen = 0; score = 0; InitGame(); ShowNativeToast("Ultra Mode Started (2 Minutes)!", 1500); }
+                if (wParam == '4') { game_mode = MODE_CAMPAIGN; start_screen = 0; campaign_level = 1; score = 0; InitGame(); ShowNativeToast("Campaign Stage 1 Started!", 1500); }
                 if (wParam == '5' || wParam == 'L') { show_leaderboard = 1; start_screen = 0; }
                 if (wParam == 'V' || wParam == 'R') { LoadGameStateFromFile(); }
                 if (wParam == 'H' || wParam == VK_F1) { show_help = 1; }
                 if (wParam == 'K') { show_keybinds = 1; bind_index = 0; start_screen = 0; }
-                if (wParam == 'W' && has_saved_replay) { is_replaying = 1; start_screen = 0; InitGame(); }
+                if (wParam == 'W' && has_saved_replay) { is_replaying = 1; start_screen = 0; InitGame(); ShowNativeToast("Playing Saved Replay...", 1500); }
 
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
@@ -1810,7 +1942,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (win_screen) {
                 if (wParam == 'E') ExportStats();
                 if (wParam == 'S' && !is_replaying) SaveReplay();
-                if (wParam == VK_RETURN) {
+                if (wParam == VK_RETURN || wParam == VK_ESCAPE) {
                     start_screen = 1; win_screen = 0;
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
@@ -1819,7 +1951,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (game_over) {
                 if (wParam == 'E') ExportStats();
                 if (wParam == 'S' && !is_replaying) SaveReplay();
-                if (wParam == VK_RETURN) {
+                if (wParam == VK_RETURN || wParam == VK_ESCAPE) {
                     start_screen = 1; game_over = 0;
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
@@ -1831,9 +1963,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 if (is_replaying) return 0;
                 
-                if (wParam == keys.pause) { is_paused = !is_paused; InvalidateRect(hwnd, NULL, FALSE); break; }
+                if (wParam == VK_ESCAPE) {
+                    is_paused = !is_paused;
+                    ShowNativeToast(is_paused ? "Game Paused [P] - Click to Resume" : "Game Resumed", 1500);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
+                }
+                if (wParam == keys.pause) {
+                    is_paused = !is_paused;
+                    ShowNativeToast(is_paused ? "Game Paused [P] - Click to Resume" : "Game Resumed", 1500);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
+                }
                 if (wParam == 'H' || wParam == VK_F1) { show_help = 1; InvalidateRect(hwnd, NULL, FALSE); break; }
-                if (wParam == 'V') { SaveGameStateToFile(); AddPopup((float)(W * CELL_SIZE / 2 - 30), (float)(H * CELL_SIZE / 2), "GAME SAVED!", RGB(0, 255, 255)); InvalidateRect(hwnd, NULL, FALSE); break; }
+                if (wParam == 'V') { SaveGameStateToFile(); ShowNativeToast("Game State Saved! [V]", 1800); AddPopup((float)(W * CELL_SIZE / 2 - 30), (float)(H * CELL_SIZE / 2), "GAME SAVED!", RGB(0, 255, 255)); InvalidateRect(hwnd, NULL, FALSE); break; }
                 if (wParam == keys.nuke) { UseRowNuke(); if(current_replay.count < 5000) { current_replay.events[current_replay.count].tick = replay_tick; current_replay.events[current_replay.count].key = 'B'; current_replay.count++; } InvalidateRect(hwnd, NULL, FALSE); break; }
                 if (wParam == keys.swap) { UsePieceSwap(); if(current_replay.count < 5000) { current_replay.events[current_replay.count].tick = replay_tick; current_replay.events[current_replay.count].key = 'S'; current_replay.count++; } InvalidateRect(hwnd, NULL, FALSE); break; }
                 if (wParam == keys.freeze) { UseGravityFreeze(); if(current_replay.count < 5000) { current_replay.events[current_replay.count].tick = replay_tick; current_replay.events[current_replay.count].key = 'F'; current_replay.count++; } InvalidateRect(hwnd, NULL, FALSE); break; }
@@ -1853,11 +1996,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if(current_replay.count < 5000) { current_replay.events[current_replay.count].tick = replay_tick; current_replay.events[current_replay.count].key = 'U'; current_replay.count++; }
                 }
                 if (wParam == keys.hold || wParam == VK_SHIFT) {
-                    if (!hold_used) {
-                        if (hold_piece == -1) { hold_piece = current_piece; hold_is_bomb = current_is_bomb; SpawnPiece(); }
-                        else { int temp = current_piece; int tb = current_is_bomb; current_piece = hold_piece; current_is_bomb = hold_is_bomb; hold_piece = temp; hold_is_bomb = tb; current_rot = 0; current_x = W / 2 - 2; current_y = -2; }
-                        hold_used = 1; Beep(700, 30); if(current_replay.count < 5000) { current_replay.events[current_replay.count].tick = replay_tick; current_replay.events[current_replay.count].key = 'C'; current_replay.count++; }
-                    }
+                    UseHoldPiece();
                 }
                 if (wParam == keys.drop) {
                     int start_y = current_y; int drop_dist = 0;
@@ -2435,13 +2574,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DrawSkillBadge(memDC, sideX, 400, 1, swap_charges, 0, 0, "[S]", "Swap", RGB(0, 255, 200), currentTick);
             DrawSkillBadge(memDC, sideX, 419, 2, freeze_charges, freeze_timer_ms > 0, (freeze_timer_ms / 1000) + 1, "[F]", "Freeze", RGB(100, 200, 255), currentTick);
 
-            // Hints
-            SetTextColor(memDC, RGB(170, 170, 170));
+            // Interactive HUD Buttons
+            // Pause button at sideX, 443, 138, 22
+            Draw3DPanel(memDC, sideX, 443, 138, 22);
+            SetTextColor(memDC, RGB(255, 255, 85));
             SelectObject(memDC, g_hFontSmall);
-            TextOutA(memDC, sideX, 442, "[Arrows] Move/Rot", 17);
-            TextOutA(memDC, sideX, 458, "[Space] Hard Drop", 17);
-            SetTextColor(memDC, RGB(0, 255, 204));
-            TextOutA(memDC, sideX, 474, "[H/F1] Help", 11);
+            TextOutA(memDC, sideX + 16, 447, "[P] PAUSE / RESUME", 18);
+
+            // Help button at sideX, 468, 138, 22
+            Draw3DPanel(memDC, sideX, 468, 138, 22);
+            SetTextColor(memDC, RGB(0, 240, 240));
+            TextOutA(memDC, sideX + 16, 472, "[H/F1] HELP & GUIDE", 19);
+
+            // Steer hint
+            SetTextColor(memDC, RGB(120, 120, 150));
+            TextOutA(memDC, sideX + 10, 498, "[Click/Tap/Arrows] Steer", 24);
 
             // Overlays & Screens
             SelectObject(memDC, g_hFontMain);
@@ -2453,40 +2600,66 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteObject(ov);
                 
                 SetTextColor(memDC, RGB(0, 255, 255));
-                TextOutA(memDC, total_w / 2 - 60, 40, "CONTROLS & HELP", 15);
+                TextOutA(memDC, total_w / 2 - 85, 30, "CONTROLS & HOW TO PLAY", 22);
                 
-                SetTextColor(memDC, RGB(255, 255, 255));
-                const char* hints[] = {
-                    "Left/Right : Move Piece",
-                    "Up Arrow   : Rotate Piece",
-                    "Down Arrow : Soft Drop",
-                    "Space      : Hard Drop",
-                    "C or Shift : Hold Piece",
-                    "B          : Use Nuke Skill",
-                    "S          : Use Swap Skill",
-                    "F          : Use Freeze Skill",
-                    "P          : Pause Game",
-                    "V          : Save Game",
-                    "H or F1    : Toggle Help"
+                SetTextColor(memDC, RGB(136, 136, 170));
+                SelectObject(memDC, g_hFontSmall);
+                TextOutA(memDC, total_w / 2 - 115, 52, "Master tetromino maneuvers & active cyber-skills", 48);
+
+                const char* help_keys[] = {
+                    "[<- / ->]",
+                    "[^ / Z / X]",
+                    "[v]",
+                    "[Space]",
+                    "[C / Shift]",
+                    "[B]",
+                    "[S]",
+                    "[F]",
+                    "[P / Esc]",
+                    "[V]",
+                    "[1 - 4]"
                 };
+                const char* help_desc[] = {
+                    "Move Piece Left / Right (or tap sides)",
+                    "Rotate Clockwise (or tap center)",
+                    "Soft Drop (faster fall)",
+                    "Hard Drop (instant drop & lock / tap bottom)",
+                    "Hold Piece Slot (swap with reserve)",
+                    "Row Nuke Skill: Clears 3 bottom rows",
+                    "Piece Swap Skill: Rerolls with next queue",
+                    "Gravity Freeze Skill: Halts drop for 10s",
+                    "Pause / Resume Game",
+                    "Quick-Save Match State to File",
+                    "Select Game Mode on Start Menu"
+                };
+
                 for (int i = 0; i < 11; i++) {
-                    TextOutA(memDC, 60, 90 + i * 25, hints[i], lstrlenA(hints[i]));
+                    int y = 75 + i * 32;
+                    Draw3DPanel(memDC, 20, y, 330, 26);
+                    SetTextColor(memDC, RGB(0, 255, 200));
+                    TextOutA(memDC, 28, y + 5, help_keys[i], lstrlenA(help_keys[i]));
+                    SetTextColor(memDC, RGB(220, 220, 220));
+                    TextOutA(memDC, 118, y + 5, help_desc[i], lstrlenA(help_desc[i]));
                 }
                 
-                SetTextColor(memDC, RGB(100, 100, 120));
-                TextOutA(memDC, total_w / 2 - 125, 480, "Press H, F1, ESC, or ENTER to return", 36);
+                Draw3DPanel(memDC, 85, 445, 200, 30);
+                SetTextColor(memDC, RGB(0, 255, 255));
+                TextOutA(memDC, total_w / 2 - 80, 452, "X Close Guide [Esc / Enter]", 27);
             } else if (show_keybinds) {
                 HBRUSH ov = CreateSolidBrush(RGB(10, 11, 16)); RECT ovRc = {0, 0, total_w, total_h}; FillRect(memDC, &ovRc, ov); DeleteObject(ov);
-                SetTextColor(memDC, RGB(0, 255, 255)); TextOutA(memDC, total_w / 2 - 60, 40, "KEYBINDS CONFIG", 15);
-                SetTextColor(memDC, RGB(255, 255, 255));
-                for(int i=0; i<10; i++) {
+                SetTextColor(memDC, RGB(0, 255, 255)); TextOutA(memDC, total_w / 2 - 60, 35, "KEYBINDS CONFIG", 15);
+                SelectObject(memDC, g_hFontSmall);
+                for (int i = 0; i < 10; i++) {
                     char buf[64];
-                    if (i == bind_index) wsprintfA(buf, "%s: [PRESS KEY]", bind_names[i]);
+                    if (i == bind_index) wsprintfA(buf, "%s: [PRESS NEW KEY]", bind_names[i]);
                     else wsprintfA(buf, "%s: SET", bind_names[i]);
-                    SetTextColor(memDC, (i == bind_index) ? RGB(0,255,102) : RGB(170,170,170));
-                    TextOutA(memDC, 50, 100 + i * 25, buf, lstrlenA(buf));
+                    Draw3DPanel(memDC, 40, 75 + i * 34, 290, 28);
+                    SetTextColor(memDC, (i == bind_index) ? RGB(0, 255, 102) : RGB(180, 180, 180));
+                    TextOutA(memDC, 55, 81 + i * 34, buf, lstrlenA(buf));
                 }
-                SetTextColor(memDC, RGB(100, 100, 120)); TextOutA(memDC, total_w / 2 - 60, 480, "Press ESC to cancel", 19);
+                Draw3DPanel(memDC, 85, 445, 200, 30);
+                SetTextColor(memDC, RGB(255, 100, 100));
+                TextOutA(memDC, total_w / 2 - 45, 452, "X Cancel [Esc]", 14);
             } else if (show_leaderboard) {
                 HBRUSH ov = CreateSolidBrush(RGB(10, 11, 16));
                 RECT ovRc = {0, 0, total_w, total_h};
@@ -2494,9 +2667,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteObject(ov);
 
                 SetTextColor(memDC, RGB(0, 255, 255));
-                TextOutA(memDC, total_w / 2 - 45, 30, "LEADERBOARD", 11);
+                TextOutA(memDC, total_w / 2 - 100, 30, "HIGH SCORES & LEADERBOARD", 25);
 
                 SetTextColor(memDC, RGB(136, 136, 170));
+                SelectObject(memDC, g_hFontSmall);
                 TextOutA(memDC, 20, 65, "RANK  SCORE   MODE      TIME", 28);
 
                 HPEN hP = CreatePen(PS_SOLID, 1, RGB(40, 42, 54));
@@ -2509,7 +2683,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     TextOutA(memDC, total_w / 2 - 60, 130, "No scores recorded!", 19);
                 } else {
                     for (int i = 0; i < num_leaderboard_entries; i++) {
-                        int yPos = 105 + i * 32;
+                        int yPos = 105 + i * 34;
                         char rBuf[16], sBuf[16], mBuf[16], tBuf[16];
                         wsprintfA(rBuf, "#%d", i + 1);
                         wsprintfA(sBuf, "%d", leaderboard[i].score);
@@ -2528,22 +2702,63 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
 
-                SetTextColor(memDC, RGB(170, 170, 170));
-                TextOutA(memDC, total_w / 2 - 100, 420, "ENTER: Menu | E: Export | I: Import", 35);
-            } else if (game_over) {
-                SetTextColor(memDC, RGB(255, 51, 51));
-                TextOutA(memDC, 45, H * CELL_SIZE / 2 - 10, "GAME OVER", 9);
-                SetTextColor(memDC, RGB(180, 180, 180));
-                TextOutA(memDC, 40, H * CELL_SIZE / 2 + 10, "PRESS ENTER", 11);
-                TextOutA(memDC, 40, H * CELL_SIZE / 2 + 30, "[E] EXPORT STATS", 16);
-                TextOutA(memDC, 40, H * CELL_SIZE / 2 + 50, "[S] SAVE REPLAY", 15);
-            } else if (win_screen) {
-                SetTextColor(memDC, RGB(0, 255, 100));
-                TextOutA(memDC, 50, H * CELL_SIZE / 2 - 10, "YOU WIN!", 8);
+                Draw3DPanel(memDC, 85, 420, 200, 28);
+                SetTextColor(memDC, RGB(0, 255, 255));
+                TextOutA(memDC, total_w / 2 - 80, 426, "X Return to Menu [Esc]", 22);
+
+                Draw3DPanel(memDC, 35, 460, 140, 26);
                 SetTextColor(memDC, RGB(255, 255, 255));
-                TextOutA(memDC, 25, H * CELL_SIZE / 2 + 10, "ENTER TO MENU", 13);
-                TextOutA(memDC, 25, H * CELL_SIZE / 2 + 30, "[E] EXPORT STATS", 16);
-                TextOutA(memDC, 25, H * CELL_SIZE / 2 + 50, "[S] SAVE REPLAY", 15);
+                TextOutA(memDC, 55, 466, "[E] Export JSON", 15);
+
+                Draw3DPanel(memDC, 195, 460, 140, 26);
+                TextOutA(memDC, 215, 466, "[I] Import JSON", 15);
+            } else if (game_over) {
+                Draw3DPanel(memDC, 10, 120, total_w - 20, 160);
+                SetTextColor(memDC, RGB(255, 51, 51));
+                SelectObject(memDC, g_hFontMain);
+                TextOutA(memDC, total_w / 2 - 45, 135, "GAME OVER", 9);
+
+                SelectObject(memDC, g_hFontSmall);
+                Draw3DPanel(memDC, 20, 170, total_w - 40, 26);
+                SetTextColor(memDC, RGB(255, 255, 255));
+                TextOutA(memDC, total_w / 2 - 55, 175, "> MAIN MENU [Enter]", 19);
+
+                Draw3DPanel(memDC, 20, 203, total_w - 40, 24);
+                SetTextColor(memDC, RGB(0, 240, 240));
+                TextOutA(memDC, total_w / 2 - 55, 207, "[E] EXPORT STATS", 16);
+
+                Draw3DPanel(memDC, 20, 233, total_w - 40, 24);
+                SetTextColor(memDC, RGB(0, 255, 102));
+                TextOutA(memDC, total_w / 2 - 50, 237, "[S] SAVE REPLAY", 15);
+            } else if (win_screen) {
+                Draw3DPanel(memDC, 10, 115, total_w - 20, 165);
+                SetTextColor(memDC, RGB(0, 255, 100));
+                SelectObject(memDC, g_hFontMain);
+                TextOutA(memDC, total_w / 2 - 35, 130, "VICTORY!", 8);
+
+                SelectObject(memDC, g_hFontSmall);
+                SetTextColor(memDC, RGB(255, 255, 255));
+                char vSub[64];
+                if (game_mode == MODE_SPRINT) {
+                    char tStr[32];
+                    FormatTimeString(mode_timer_ms, tStr, 32);
+                    wsprintfA(vSub, "TIME: %s", tStr);
+                } else {
+                    lstrcpynA(vSub, "STAGE CLEARED!", sizeof(vSub));
+                }
+                TextOutA(memDC, total_w / 2 - 40, 150, vSub, lstrlenA(vSub));
+
+                Draw3DPanel(memDC, 20, 170, total_w - 40, 26);
+                SetTextColor(memDC, RGB(255, 255, 255));
+                TextOutA(memDC, total_w / 2 - 55, 175, "> MAIN MENU [Enter]", 19);
+
+                Draw3DPanel(memDC, 20, 203, total_w - 40, 24);
+                SetTextColor(memDC, RGB(0, 240, 240));
+                TextOutA(memDC, total_w / 2 - 55, 207, "[E] EXPORT STATS", 16);
+
+                Draw3DPanel(memDC, 20, 233, total_w - 40, 24);
+                SetTextColor(memDC, RGB(255, 170, 0));
+                TextOutA(memDC, total_w / 2 - 50, 237, "[S] SAVE REPLAY", 15);
             } else if (start_screen) {
                 HBRUSH ov = CreateSolidBrush(RGB(10, 11, 16));
                 RECT ovRc = {0, 0, total_w, total_h};
@@ -2551,39 +2766,95 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteObject(ov);
 
                 SetTextColor(memDC, RGB(0, 255, 255));
-                TextOutA(memDC, total_w / 2 - 40, 40, "K-TETRIS", 8);
+                SelectObject(memDC, g_hFontMain);
+                TextOutA(memDC, total_w / 2 - 40, 30, "K-TETRIS", 8);
 
                 SetTextColor(memDC, RGB(136, 136, 170));
-                TextOutA(memDC, total_w / 2 - 60, 75, "Select Game Mode:", 17);
+                SelectObject(memDC, g_hFontSmall);
+                TextOutA(memDC, total_w / 2 - 110, 56, "CYBERNETIC FALLING BLOCKS * SELECT MODE:", 40);
 
-                SetTextColor(memDC, RGB(255, 255, 255));
-                TextOutA(memDC, 45, 115, "1. Marathon (Endless)", 21);
-                TextOutA(memDC, 45, 145, "2. Sprint (40-Lines Race)", 25);
-                TextOutA(memDC, 45, 175, "3. Ultra (2-Minute Timed)", 25);
-                TextOutA(memDC, 45, 205, "4. Campaign (20 Stages)", 23);
+                Draw3DPanel(memDC, 35, 85, 300, 28);
+                SetTextColor(memDC, RGB(0, 255, 255));
+                TextOutA(memDC, 50, 92, "1. Marathon (Endless)", 21);
 
-                SetTextColor(memDC, RGB(0, 255, 102));
-                TextOutA(memDC, 45, 235, "5 / [L]. High Scores", 20);
+                Draw3DPanel(memDC, 35, 119, 300, 28);
+                SetTextColor(memDC, RGB(0, 255, 200));
+                TextOutA(memDC, 50, 126, "2. Sprint (40-Lines Race)", 25);
 
+                Draw3DPanel(memDC, 35, 153, 300, 28);
                 SetTextColor(memDC, RGB(255, 170, 0));
-                TextOutA(memDC, 45, 265, "[H / F1]. Help & Controls", 25);
+                TextOutA(memDC, 50, 160, "3. Ultra (2-Minute Timed)", 25);
+
+                Draw3DPanel(memDC, 35, 187, 300, 28);
+                SetTextColor(memDC, RGB(255, 102, 170));
+                TextOutA(memDC, 50, 194, "4. Campaign (20 Stages)", 23);
+
+                Draw3DPanel(memDC, 35, 221, 300, 28);
+                SetTextColor(memDC, RGB(0, 255, 102));
+                TextOutA(memDC, 50, 228, "5 / [L]. High Scores & Leaderboard", 34);
+
+                Draw3DPanel(memDC, 35, 255, 300, 28);
+                SetTextColor(memDC, RGB(255, 215, 0));
+                TextOutA(memDC, 50, 262, "[H / F1]. Help & Controls Guide", 31);
+
+                Draw3DPanel(memDC, 35, 289, 300, 28);
+                SetTextColor(memDC, RGB(0, 204, 255));
+                TextOutA(memDC, 50, 296, "[K]. Configure Keybinds", 23);
 
                 if (HasSavedGame()) {
-                    SetTextColor(memDC, RGB(255, 0, 255));
-                    TextOutA(memDC, 45, 295, "[V]. Resume Saved Game", 22);
+                    Draw3DPanel(memDC, 35, 323, 300, 28);
+                    SetTextColor(memDC, RGB(232, 121, 249));
+                    TextOutA(memDC, 50, 330, "[V]. Resume Saved Game", 22);
                 }
 
-                SetTextColor(memDC, RGB(255, 255, 0));
-                TextOutA(memDC, total_w / 2 - 110, 465, "Press [H] or F1 for Help", 24);
-                SetTextColor(memDC, RGB(136, 136, 170));
-                TextOutA(memDC, total_w / 2 - 100, 485, "Press [L] for Leaderboard", 25);
-                SetTextColor(memDC, RGB(0, 204, 255));
-                TextOutA(memDC, 45, 325, "[K]. Configure Keybinds", 23);
-                if (has_saved_replay) { SetTextColor(memDC, RGB(255, 85, 170)); TextOutA(memDC, 45, 355, "[W]. Watch Last Replay", 22); }
+                if (has_saved_replay) {
+                    Draw3DPanel(memDC, 35, 357, 300, 28);
+                    SetTextColor(memDC, RGB(255, 85, 170));
+                    TextOutA(memDC, 50, 364, "[W]. Watch Last Replay", 22);
+                }
 
+                SetTextColor(memDC, RGB(255, 255, 85));
+                TextOutA(memDC, total_w / 2 - 110, 460, "Press [H] or F1 for Help & Controls", 35);
+                SetTextColor(memDC, RGB(120, 120, 150));
+                TextOutA(memDC, total_w / 2 - 110, 480, "Click cards to launch * Full Mouse Support", 42);
             } else if (is_paused) {
+                Draw3DPanel(memDC, 15, 125, W * CELL_SIZE - 30, 140);
                 SetTextColor(memDC, RGB(255, 255, 0));
-                TextOutA(memDC, 55, H * CELL_SIZE / 2, "PAUSED", 6);
+                SelectObject(memDC, g_hFontMain);
+                TextOutA(memDC, 40, 145, "GAME PAUSED", 11);
+
+                SetTextColor(memDC, RGB(170, 170, 170));
+                SelectObject(memDC, g_hFontSmall);
+                TextOutA(memDC, 20, 172, "Click anywhere or press [P] to Resume", 37);
+
+                Draw3DPanel(memDC, 25, 195, W * CELL_SIZE - 50, 26);
+                SetTextColor(memDC, RGB(0, 255, 102));
+                TextOutA(memDC, 35, 200, "> RESUME GAME [P]", 17);
+
+                Draw3DPanel(memDC, 25, 227, W * CELL_SIZE - 50, 24);
+                SetTextColor(memDC, RGB(255, 102, 102));
+                TextOutA(memDC, 50, 232, "X MAIN MENU", 11);
+            }
+
+            if (g_toast_timer > 0) {
+                int tbW = total_w - 40;
+                int tbH = 26;
+                int tbX = 20;
+                int tbY = total_h - 36;
+                HBRUSH tbBrush = CreateSolidBrush(RGB(18, 22, 34));
+                HPEN tbPen = CreatePen(PS_SOLID, 1, RGB(0, 240, 240));
+                HBRUSH oldTbB = (HBRUSH)SelectObject(memDC, tbBrush);
+                HPEN oldTbP = (HPEN)SelectObject(memDC, tbPen);
+                RoundRect(memDC, tbX, tbY, tbX + tbW, tbY + tbH, 10, 10);
+                SelectObject(memDC, oldTbP);
+                SelectObject(memDC, oldTbB);
+                DeleteObject(tbPen);
+                DeleteObject(tbBrush);
+
+                SelectObject(memDC, g_hFontSmall);
+                SetTextColor(memDC, RGB(0, 240, 240));
+                RECT tRc = { tbX + 8, tbY + 4, tbX + tbW - 8, tbY + tbH };
+                DrawTextA(memDC, g_toast_msg, -1, &tRc, DT_CENTER | DT_SINGLELINE);
             }
             
             SelectObject(memDC, hOldFont);
@@ -2633,7 +2904,7 @@ void MainEntry() {
     int winWidth = r.right - r.left;
     int winHeight = r.bottom - r.top;
 
-    HWND hwnd = CreateWindowEx(0, "KTetrisApp", "KTetris", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+    HWND hwnd = CreateWindowEx(0, "KTetrisApp", "KTetris - [H/F1: Help] [P: Pause] [C/Shift: Hold] [B: Nuke] [S: Swap] [F: Freeze]", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, winWidth, winHeight, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
