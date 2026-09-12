@@ -894,6 +894,7 @@
                     <button id="btnRekindle" class="btn-action" title="Reignite Torch via Pyre, Ash or flame">🔥 Rekindle [T]</button>
                 </div>
                 <div class="btn-group">
+                    <button id="btnMerchantTop" class="btn-action" title="Subterranean Merchant & Black Market Hermit">💰 Market [M]</button>
                     <button id="btnCauldronTop" class="btn-action" title="Brew potions at the Ancient Alchemy Cauldron">⚗️ Cauldron [B]</button>
                     <button id="btnEnchantTop" class="btn-action" title="Relic Enchanting Altar: Imbue weapon with Fire, Frost, or Void">⛩️ Enchant [I]</button>
                     <button id="btnToggleCRT" class="btn-action" title="Toggle CRT scanlines & phosphors">📺 CRT: On</button>
@@ -1259,6 +1260,50 @@
         </div>
     </div>
 
+    <!-- Phase 11: Subterranean Black Market & Wandering Hermit Modal -->
+    <div class="modal-backdrop" id="modalMerchant">
+        <div class="modal-card" style="width: 680px; max-height: 88vh;">
+            <div class="modal-header" style="background:#18101e; border-bottom:1px solid #fbbf24;">
+                <div class="modal-title" style="color:#fbbf24; display:flex; align-items:center; gap:8px;">
+                    <span id="merchantAvatarIcon" style="font-size:20px;">🧙‍♂️</span>
+                    <div>
+                        <span id="merchantTitle">Subterranean Black Market</span>
+                        <div id="merchantSubtitle" style="font-size:10px; color:var(--text-dim); font-weight:normal;">Grimhollow the Abyssal Broker | Crypt Outpost</div>
+                    </div>
+                </div>
+                <button class="modal-close" id="modalMerchantClose">&times;</button>
+            </div>
+            <div class="modal-body" style="display:flex; flex-direction:column; gap:10px;">
+                <div style="background:#090d16; border:1px solid #1e293b; border-radius:4px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-style:italic; color:#cbd5e1; font-size:11px; max-width:440px;" id="merchantQuote">
+                        "Torches, salves, forbidden relics... gold shines the same even in the deepest abyss."
+                    </div>
+                    <div style="background:#1c1917; border:1px solid #fbbf24; padding:4px 10px; border-radius:4px; font-weight:bold; font-size:12px; color:#fbbf24; white-space:nowrap;">
+                        Delver's Gold: <span id="merchantGoldVal">0</span> ✦
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:8px; border-bottom:1px solid #1e293b; padding-bottom:6px;">
+                    <button class="btn-primary" id="btnMerchantTabBuy" style="font-size:11px; padding:4px 14px; background:#451a03; border-color:#d97706; color:#fef3c7;">Buy Black Market Wares [1]</button>
+                    <button class="btn-action" id="btnMerchantTabSell" style="font-size:11px; padding:4px 14px;">Sell Pack Items [2]</button>
+                </div>
+
+                <div id="merchantBuySection" style="display:flex; flex-direction:column; gap:8px; max-height:380px; overflow-y:auto; padding-right:4px;">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <div id="merchantSellSection" style="display:none; flex-direction:column; gap:8px; max-height:380px; overflow-y:auto; padding-right:4px;">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #1e293b; padding-top:8px; font-size:10px; color:var(--text-dim);">
+                    <span>Shortcuts: [1..8] Buy/Sell Item | [Tab / S] Switch Buy/Sell | [ESC / M] Close Market</span>
+                    <button id="btnMerchantCloseBtm" class="btn-action" style="font-size:11px; padding:3px 12px;">Close Market [ESC]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-backdrop" id="modalHelp">
         <div class="modal-card">
             <div class="modal-header">
@@ -1270,12 +1315,20 @@
                 <ul>
                     <li><strong>WASD / Arrow Keys / Numpad / Vi (hjklyubn):</strong> Move Delver across the grid.</li>
                     <li><strong>Spacebar:</strong> Rest 1 turn to steady yourself (recuperates +2 HP, +1 Sanity, disallowed if starving).</li>
-                    <li><strong>E / Enter:</strong> Interact with doors, stairs, altars, shrines, cauldrons, or coffers.</li>
+                    <li><strong>E / Enter:</strong> Interact with doors, stairs, altars, shrines, merchants, cauldrons, or coffers.</li>
+                    <li><strong>M:</strong> Open the Subterranean Black Market & Hermit shop anytime you encounter or stand near a merchant!</li>
                     <li><strong>I:</strong> Open the Relic Enchanting Altar to imbue your weapon with elemental magic!</li>
                     <li><strong>T:</strong> Rekindle Torch via Pyre spell, Brimstone Ash, or standing next to flame!</li>
                     <li><strong>B:</strong> Open the Ancient Alchemy Cauldron to brew potions and elixirs!</li>
-                    <li><strong>S / R:</strong> Search adjacent tiles for hidden passages, altars, shrines, and relic coffers.</li>
+                    <li><strong>S / R:</strong> Search adjacent tiles for hidden passages, merchants, altars, shrines, and relic coffers.</li>
                     <li><strong>Mouse Click:</strong> Click on visible floor tiles to move or inspect obstacles.</li>
+                </ul>
+                <h4>Subterranean Merchants & Wandering Black Market Hermits [Phase 11]</h4>
+                <ul>
+                    <li><strong>Grimhollow the Abyssal Broker (Depths B1-B6):</strong> Found in Catacombs and Sunken Grottos. Sells essential survival goods (Iron Rations, Purifying Salts, Torch Oil & Pitch), healing salves, Runic Longswords, Shadowweave Cloaks, and dungeon cartography maps in exchange for gold/essence!</li>
+                    <li><strong>Malakor the Blind Hermit (Depths B7+):</strong> Lurks in the Forgotten Crypt and Void Abyss. Trades rare occult relics (Voidfang Daggers, Aegis Cuirass, Radiant Censers, Void Eye Talismans), Primordial Runes, and Malediction Cleansings for high-tier essence!</li>
+                    <li><strong>Sell Pack Items:</strong> Visit any merchant stall to pawn excess potions, reagents, and gear for gold/essence to fund your next vital equipment purchase!</li>
+                    <li><strong>Delver's Cartography Map:</strong> Purchase a floor map from the merchant to reveal all rooms, corridors, chests, and stairs instantly!</li>
                 </ul>
                 <h4>Ancient Runic Shrines & Relic Enchanting Altars [Phase 10]</h4>
                 <ul>
@@ -1368,7 +1421,8 @@
             ALTAR: 13,
             CAULDRON: 14,
             EFFIGY: 15,
-            SHRINE: 16
+            SHRINE: 16,
+            MERCHANT: 17
         };
 
         const ENCHANTMENTS = {
@@ -1879,6 +1933,40 @@
                     gain.connect(this.ctx.destination);
                     osc.start(now + idx * 0.06);
                     osc.stop(now + idx * 0.06 + 0.25);
+                });
+            },
+            playCoin() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                [987, 1318].forEach((freq, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.08);
+                    gain.gain.setValueAtTime(0.14, now + i * 0.08);
+                    gain.gain.linearRampToValueAtTime(0.001, now + i * 0.08 + 0.16);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + i * 0.08);
+                    osc.stop(now + i * 0.08 + 0.16);
+                });
+            },
+            playMerchant() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                [523, 659, 784, 1046].forEach((freq, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.06);
+                    gain.gain.setValueAtTime(0.12, now + i * 0.06);
+                    gain.gain.linearRampToValueAtTime(0.001, now + i * 0.06 + 0.2);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + i * 0.06);
+                    osc.stop(now + i * 0.06 + 0.2);
                 });
             }
         };
@@ -2628,6 +2716,325 @@
             advanceTurn();
         }
 
+        // --- Phase 11: Subterranean Merchants & Wandering Black Market Hermits System ---
+        const MERCHANT_WARES = [
+            // Survival & Consumables
+            { id: 'FOOD_RATIONS', type: 'item', price: 15, name: 'Iron Rations', icon: '🍞', category: 'Survival', desc: 'Restores +45 Hunger and +10 HP.' },
+            { id: 'PURIFYING_SALT', type: 'item', price: 20, name: 'Purifying Salt', icon: '🧂', category: 'Survival', desc: 'Purges curses & restores +20 Sanity.' },
+            { id: 'TORCH_FUEL', type: 'torch', price: 18, name: 'Torch Pitch & Oil', icon: '🛢️', category: 'Survival', desc: 'Refuels torch to max capacity (+80 Fuel) & reignites.' },
+            { id: 'HEAL_SALVE', type: 'item', price: 22, name: 'Healing Salve', icon: '🧪', category: 'Potion', desc: 'Restores +35 HP and +5 Sanity.' },
+            { id: 'SANITY_INCENSE', type: 'item', price: 25, name: 'Sanity Incense', icon: '🕯️', category: 'Potion', desc: 'Clears madness; restores +30 Sanity.' },
+            { id: 'AETHER_PHIAL', type: 'item', price: 28, name: 'Aether Phial', icon: '💎', category: 'Potion', desc: 'Concentrated mana; restores +40 Aether.' },
+            { id: 'STONESKIN_BREW', type: 'item', price: 30, name: 'Stoneskin Brew', icon: '🍶', category: 'Potion', desc: 'Grants +40 Ward Shield barrier.' },
+            { id: 'PANACEA_DEEP', type: 'item', price: 45, minDepth: 4, name: 'Panacea of the Deep', icon: '✨', category: 'Elixir', desc: '+60 HP, +40 Sanity, +35 Aether, cleanses curses.' },
+
+            // Weapons & Armor
+            { id: 'WPN_RUNIC_BLADE', type: 'item', price: 55, name: 'Runic Longsword', icon: '🗡️', category: 'Weapon', desc: '+5 Might, +1 Warding.' },
+            { id: 'WPN_VOID_DAGGER', type: 'item', price: 75, minDepth: 5, name: 'Voidfang Dagger', icon: '🗡️', category: 'Weapon', desc: '+7 Might, +3 Arcana.' },
+            { id: 'ARM_SHADOW_CLOAK', type: 'item', price: 60, name: 'Shadowweave Cloak', icon: '🧥', category: 'Armor', desc: '+4 Warding, +2 Arcana.' },
+            { id: 'ARM_AEGIS_CUIRASS', type: 'item', price: 85, minDepth: 5, name: 'Aegis Cuirass', icon: '🛡️', category: 'Armor', desc: '+7 Warding, +25 Max HP.' },
+
+            // Relics & Amulets
+            { id: 'REL_LANTERN', type: 'item', price: 65, name: 'Aether Lantern', icon: '🏮', category: 'Relic', desc: '+8 Light Radius, +15 Max Aether.' },
+            { id: 'REL_CENSER', type: 'item', price: 80, minDepth: 5, name: 'Radiant Censer', icon: '🪔', category: 'Relic', desc: '+9 Light Radius, +20 Max Sanity.' },
+            { id: 'AMU_LIFE', type: 'item', price: 55, name: 'Amulet of Vitality', icon: '📿', category: 'Amulet', desc: '+30 Max HP, +1 Might, +1 Warding.' },
+            { id: 'AMU_STAR', type: 'item', price: 70, name: 'Astral Star Pendant', icon: '⭐', category: 'Amulet', desc: '+25 Max Aether, +2 Arcana.' },
+            { id: 'AMU_VOID', type: 'item', price: 90, minDepth: 7, name: 'Void Eye Talisman', icon: '👁️', category: 'Amulet', desc: '+4 Arcana, +20 Max Sanity.' },
+
+            // Reagents
+            { id: 'ING_BLOOD_LOTUS', type: 'item', price: 16, name: 'Blood Lotus', icon: '🌸', category: 'Reagent', desc: 'Alchemy reagent for healing brews.' },
+            { id: 'ING_AZURE_SPORES', type: 'item', price: 16, name: 'Azure Spores', icon: '🍄', category: 'Reagent', desc: 'Reagent for Lucid Mind & Stoneskin.' },
+            { id: 'ING_BRIMSTONE', type: 'item', price: 18, name: 'Brimstone Ash', icon: '🌋', category: 'Reagent', desc: 'Volcanic ash for fire flasks & Flamebrand.' },
+            { id: 'ING_VOID_DUST', type: 'item', price: 20, minDepth: 4, name: 'Void Dust', icon: '✨', category: 'Reagent', desc: 'Reagent for Aether brews & Voidsever.' },
+
+            // Black Market Hermit Services
+            { id: 'SRV_MAP', type: 'service', price: 35, name: "Delver's Floor Cartography", icon: '🗺️', category: 'Service', desc: 'Reveals all rooms, passages, stairs, and chests on this floor!' },
+            { id: 'SRV_CLEANSE', type: 'service', price: 40, name: "Hermit's Malediction Cleanse", icon: '🛐', category: 'Service', desc: 'Purges all curses, restores +35 Sanity, +30 HP, +25 Aether.' },
+            { id: 'SRV_RUNE', type: 'service', price: 75, name: 'Primordial Rune Siphon', icon: '🔮', category: 'Service', desc: 'Unlocks a random undiscovered Ancient Rune (Pyre/Frost/Tempest/Void/Aegis).' },
+            { id: 'SRV_MYSTERY', type: 'service', price: 50, name: 'Void Mystery Relic', icon: '🎁', category: 'Service', desc: 'Hermit draws a random high-tier treasure or legendary elixir from the dark.' }
+        ];
+
+        let merchantTab = 'buy'; // 'buy' or 'sell'
+
+        function openMerchantModal() {
+            AudioSys.init();
+            AudioSys.playMerchant();
+            merchantTab = 'buy';
+            renderMerchantUI();
+            const modal = document.getElementById('modalMerchant');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeMerchantModal() {
+            const modal = document.getElementById('modalMerchant');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function switchMerchantTab(tab) {
+            merchantTab = tab;
+            const btnBuy = document.getElementById('btnMerchantTabBuy');
+            const btnSell = document.getElementById('btnMerchantTabSell');
+            const secBuy = document.getElementById('merchantBuySection');
+            const secSell = document.getElementById('merchantSellSection');
+
+            if (tab === 'buy') {
+                if (btnBuy) { btnBuy.className = 'btn-primary'; btnBuy.style.background = '#451a03'; btnBuy.style.borderColor = '#d97706'; }
+                if (btnSell) { btnSell.className = 'btn-action'; btnSell.style.background = ''; btnSell.style.borderColor = ''; }
+                if (secBuy) secBuy.style.display = 'flex';
+                if (secSell) secSell.style.display = 'none';
+            } else {
+                if (btnSell) { btnSell.className = 'btn-primary'; btnSell.style.background = '#064e3b'; btnSell.style.borderColor = '#10b981'; }
+                if (btnBuy) { btnBuy.className = 'btn-action'; btnBuy.style.background = ''; btnBuy.style.borderColor = ''; }
+                if (secBuy) secBuy.style.display = 'none';
+                if (secSell) secSell.style.display = 'flex';
+            }
+            renderMerchantUI();
+        }
+
+        function getSellPrice(itemKey) {
+            const it = ITEMS[itemKey];
+            if (!it) return 5;
+            if (it.type === ITEM_TYPES.EQUIPMENT) {
+                if (it.id === 'WPN_VOID_DAGGER' || it.id === 'ARM_AEGIS_CUIRASS' || it.id === 'AMU_VOID') return 40;
+                if (it.id === 'REL_CENSER' || it.id === 'AMU_STAR') return 35;
+                return 25;
+            }
+            if (it.type === ITEM_TYPES.REAGENT) return 8;
+            if (it.id === 'PANACEA_DEEP') return 22;
+            if (it.id === 'FOOD_RATIONS') return 7;
+            if (it.id === 'PURIFYING_SALT') return 10;
+            if (it.type === ITEM_TYPES.CONSUMABLE) return 11;
+            return 5;
+        }
+
+        function renderMerchantUI() {
+            const goldEl = document.getElementById('merchantGoldVal');
+            if (goldEl) goldEl.innerText = player.essence;
+
+            const isDeep = (depthLevel > 6);
+            const mTitle = document.getElementById('merchantTitle');
+            const mSub = document.getElementById('merchantSubtitle');
+            const mQuote = document.getElementById('merchantQuote');
+            const mAvatar = document.getElementById('merchantAvatarIcon');
+
+            if (isDeep) {
+                if (mTitle) mTitle.innerText = "Malakor's Black Market Sanctuary";
+                if (mSub) mSub.innerText = "Malakor the Blind Hermit | Deep Crypt & Void Outcast";
+                if (mQuote) mQuote.innerText = '"The dark whispers truths the sighted can never see... give me your essence, delver."';
+                if (mAvatar) mAvatar.innerText = "🧕";
+            } else {
+                if (mTitle) mTitle.innerText = "Subterranean Black Market";
+                if (mSub) mSub.innerText = "Grimhollow the Abyssal Broker | Catacombs Outpost";
+                if (mQuote) mQuote.innerText = '"Torches, salves, blade steel... gold shines the same even in the deepest abyss."';
+                if (mAvatar) mAvatar.innerText = "🧙‍♂️";
+            }
+
+            // Render Buy Section
+            const buySec = document.getElementById('merchantBuySection');
+            if (buySec) {
+                buySec.innerHTML = '';
+                const available = MERCHANT_WARES.filter(w => !w.minDepth || depthLevel >= w.minDepth);
+                available.forEach((ware, idx) => {
+                    const canAfford = (player.essence >= ware.price);
+                    const row = document.createElement('div');
+                    row.style.background = '#0d131f';
+                    row.style.border = '1px solid #1e293b';
+                    row.style.borderRadius = '4px';
+                    row.style.padding = '8px 10px';
+                    row.style.display = 'flex';
+                    row.style.justifyContent = 'space-between';
+                    row.style.alignItems = 'center';
+                    row.style.gap = '8px';
+
+                    row.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:10px; flex:1;">
+                            <span style="font-size:20px;">${ware.icon}</span>
+                            <div>
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <strong style="color:var(--text-bright); font-size:12px;">[${idx + 1}] ${ware.name}</strong>
+                                    <span style="font-size:9px; background:#1e293b; color:#94a3b8; padding:1px 5px; border-radius:3px; text-transform:uppercase;">${ware.category}</span>
+                                </div>
+                                <div style="color:var(--text-dim); font-size:10px; margin-top:2px;">${ware.desc}</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                            <span style="font-weight:bold; color:#fbbf24; font-size:12px;">${ware.price} ✦</span>
+                            <button class="${canAfford ? 'btn-primary' : 'btn-action'}" data-buy-idx="${idx}" ${canAfford ? '' : 'disabled'}
+                                style="font-size:11px; padding:4px 10px; ${canAfford ? 'background:#854d0e; border-color:#eab308; color:#fef9c3;' : 'opacity:0.4; cursor:not-allowed;'}">
+                                Buy
+                            </button>
+                        </div>
+                    `;
+                    buySec.appendChild(row);
+                });
+
+                buySec.querySelectorAll('button[data-buy-idx]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const idx = parseInt(btn.getAttribute('data-buy-idx'));
+                        buyMerchantItem(idx);
+                    });
+                });
+            }
+
+            // Render Sell Section
+            const sellSec = document.getElementById('merchantSellSection');
+            if (sellSec) {
+                sellSec.innerHTML = '';
+                if (player.pack.length === 0) {
+                    sellSec.innerHTML = '<div style="text-align:center; color:var(--text-dim); padding:20px; font-style:italic;">Your Delver\'s Pack is currently empty. Delve deeper to loot potions and relics!</div>';
+                } else {
+                    player.pack.forEach((slot, pIdx) => {
+                        const it = ITEMS[slot.id];
+                        if (!it) return;
+                        const sellPrice = getSellPrice(slot.id);
+                        const row = document.createElement('div');
+                        row.style.background = '#0d131f';
+                        row.style.border = '1px solid #1e293b';
+                        row.style.borderRadius = '4px';
+                        row.style.padding = '8px 10px';
+                        row.style.display = 'flex';
+                        row.style.justifyContent = 'space-between';
+                        row.style.alignItems = 'center';
+                        row.style.gap = '8px';
+
+                        row.innerHTML = `
+                            <div style="display:flex; align-items:center; gap:10px; flex:1;">
+                                <span style="font-size:20px;">${it.icon}</span>
+                                <div>
+                                    <div style="display:flex; align-items:center; gap:6px;">
+                                        <strong style="color:var(--text-bright); font-size:12px;">${it.name}</strong>
+                                        <span style="font-size:9px; background:#1e293b; color:#38bdf8; padding:1px 5px; border-radius:3px;">Qty: ${slot.count}</span>
+                                        <span style="font-size:9px; background:#1e293b; color:#94a3b8; padding:1px 5px; border-radius:3px; text-transform:uppercase;">${it.type}</span>
+                                    </div>
+                                    <div style="color:var(--text-dim); font-size:10px; margin-top:2px;">${it.desc}</div>
+                                </div>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                                <span style="font-weight:bold; color:#10b981; font-size:12px;">+${sellPrice} ✦</span>
+                                <button class="btn-primary" data-sell-idx="${pIdx}"
+                                    style="font-size:11px; padding:4px 10px; background:#065f46; border-color:#10b981; color:#ecfdf5;">
+                                    Sell (1)
+                                </button>
+                            </div>
+                        `;
+                        sellSec.appendChild(row);
+                    });
+
+                    sellSec.querySelectorAll('button[data-sell-idx]').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const pIdx = parseInt(btn.getAttribute('data-sell-idx'));
+                            sellMerchantItem(pIdx);
+                        });
+                    });
+                }
+            }
+        }
+
+        function buyMerchantItem(wareIndex) {
+            AudioSys.init();
+            const available = MERCHANT_WARES.filter(w => !w.minDepth || depthLevel >= w.minDepth);
+            const ware = available[wareIndex];
+            if (!ware) return;
+
+            if (player.essence < ware.price) {
+                logMessage(`Not enough gold! Need ${ware.price} ✦ (You have ${player.essence} ✦).`, 'combat');
+                return;
+            }
+
+            if (ware.type === 'item') {
+                if (!canAddItem(ware.id)) {
+                    logMessage(`Cannot purchase ${ware.name}! Your Delver's Pack is full (16/16 slots).`, 'combat');
+                    return;
+                }
+                player.essence -= ware.price;
+                addItem(ware.id, 1);
+                AudioSys.playCoin();
+                spawnCombatText(player.x, player.y, `-${ware.price} ✦`, '#fbbf24');
+                logMessage(`💰 BOUGHT: Purchased ${ware.name} for ${ware.price} Essence! Added to Pack [2].`, 'relic');
+            } else if (ware.type === 'torch') {
+                player.essence -= ware.price;
+                player.torchFuel = player.maxTorchFuel;
+                player.torchLit = true;
+                AudioSys.playCoin();
+                AudioSys.playPyre();
+                spawnCombatText(player.x, player.y, 'TORCH REIGNITED!', '#f59e0b');
+                logMessage(`🔥 BOUGHT: Torch pitch & lamp oil purchased for ${ware.price} ✦! Torch fully refueled & burning bright!`, 'heal');
+            } else if (ware.id === 'SRV_MAP') {
+                player.essence -= ware.price;
+                for (let y = 0; y < MAP_HEIGHT; y++) {
+                    for (let x = 0; x < MAP_WIDTH; x++) {
+                        explored[y][x] = true;
+                    }
+                }
+                AudioSys.playCoin();
+                spawnCombatText(player.x, player.y, 'MAP REVEALED!', '#38bdf8');
+                logMessage(`🗺️ CARTOGRAPHY: Purchased floor parchment for ${ware.price} ✦! The subterranean labyrinth is revealed!`, 'magic');
+            } else if (ware.id === 'SRV_CLEANSE') {
+                player.essence -= ware.price;
+                let cMsg = '';
+                if (player.curse !== CURSES.NONE) {
+                    cMsg = ` Banished occult curse of ${player.curse}!`;
+                    player.curse = CURSES.NONE;
+                    player.curseTurns = 0;
+                }
+                player.sanity = Math.min(player.maxSanity, player.sanity + 35);
+                player.hp = Math.min(player.maxHp, player.hp + 30);
+                player.aether = Math.min(player.maxAether, player.aether + 25);
+                AudioSys.playCoin();
+                AudioSys.playAegis();
+                spawnCombatText(player.x, player.y, 'MALEDICTION PURGED!', '#34d399');
+                logMessage(`🛐 MALEDICTION CLEANSE: Hermit's sacred rite cleanses your soul (+35 Sanity, +30 HP, +25 Aether)!${cMsg}`, 'heal');
+            } else if (ware.id === 'SRV_RUNE') {
+                const unowned = Object.keys(RUNES).filter(r => !player.ownedRunes.includes(r));
+                player.essence -= ware.price;
+                AudioSys.playCoin();
+                if (unowned.length > 0) {
+                    const pickRune = unowned[Math.floor(Math.random() * unowned.length)];
+                    player.ownedRunes.push(pickRune);
+                    spawnCombatText(player.x, player.y, `RUNE: ${RUNES[pickRune].name}!`, '#c084fc');
+                    logMessage(`🔮 RUNE SIPHON: Hermit channeled forbidden glyphs: ${RUNES[pickRune].name} (${RUNES[pickRune].symbol}) unlocked! Inscribe in Tab [3].`, 'relic');
+                } else {
+                    player.exp += 75;
+                    player.maxAether += 5;
+                    player.aether = player.maxAether;
+                    spawnCombatText(player.x, player.y, '+75 EXP +5 MP!', '#c084fc');
+                    logMessage(`🔮 RUNE SIPHON: All runes mastered! Hermit expands your soul capacity (+75 EXP, +5 Max Aether)!`, 'magic');
+                }
+            } else if (ware.id === 'SRV_MYSTERY') {
+                player.essence -= ware.price;
+                const mysteryPool = [
+                    'PANACEA_DEEP', 'ARM_AEGIS_CUIRASS', 'WPN_VOID_DAGGER', 'REL_CENSER',
+                    'AMU_VOID', 'STONESKIN_BREW', 'LIQUID_FIRE', 'ELIXIR_VITALITY'
+                ];
+                const pickItem = mysteryPool[Math.floor(Math.random() * mysteryPool.length)];
+                addItem(pickItem, 1);
+                AudioSys.playCoin();
+                spawnCombatText(player.x, player.y, `MYSTERY: ${ITEMS[pickItem].name}!`, '#fbbf24');
+                logMessage(`🎁 MYSTERY RELIC: Hermit reaches into the void pouch and hands you ${ITEMS[pickItem].name}!`, 'relic');
+            }
+
+            renderMerchantUI();
+            updateHUD();
+        }
+
+        function sellMerchantItem(packIdx) {
+            AudioSys.init();
+            if (packIdx < 0 || packIdx >= player.pack.length) return;
+            const slot = player.pack[packIdx];
+            const it = ITEMS[slot.id];
+            if (!it) return;
+
+            const sellPrice = getSellPrice(slot.id);
+            player.essence += sellPrice;
+            removeItem(slot.id, 1);
+            AudioSys.playCoin();
+            spawnCombatText(player.x, player.y, `+${sellPrice} ✦`, '#10b981');
+            logMessage(`💰 SOLD: Pawned 1 ${it.name} to the merchant for +${sellPrice} Essence!`, 'relic');
+
+            renderMerchantUI();
+            updateHUD();
+        }
+
         function brewCauldronRecipe(recipeIdx) {
             AudioSys.init();
             const recipe = RECIPES[recipeIdx];
@@ -2932,6 +3339,12 @@
                 const sx = Math.floor(sRoom.x + sRoom.w / 2);
                 const sy = Math.floor(sRoom.y + sRoom.h / 2);
                 if (dungeon[sy][sx] === TILE.FLOOR) dungeon[sy][sx] = TILE.SHRINE;
+
+                // Place Subterranean Merchant in Catacombs
+                const mRoom = rooms[2];
+                const mx = Math.floor(mRoom.x + 2);
+                const my = Math.floor(mRoom.y + 2);
+                if (dungeon[my][mx] === TILE.FLOOR) dungeon[my][mx] = TILE.MERCHANT;
             }
         }
 
@@ -3063,6 +3476,12 @@
                 if (dungeon[cShrine.y][cShrine.x] === TILE.FLOOR || dungeon[cShrine.y][cShrine.x] === TILE.WATER) {
                     dungeon[cShrine.y][cShrine.x] = TILE.SHRINE;
                 }
+
+                // Place Merchant in Grotto
+                const cMerch = caverns[2];
+                if (dungeon[cMerch.y][cMerch.x] === TILE.FLOOR || dungeon[cMerch.y][cMerch.x] === TILE.WATER) {
+                    dungeon[cMerch.y][cMerch.x] = TILE.MERCHANT;
+                }
             }
         }
 
@@ -3178,13 +3597,20 @@
                 }
             }
 
-            // Place Ancient Cauldron in Crypt
+            // Place Ancient Cauldron & Black Market Hermit in Crypt
             if (vaults.length > 2) {
                 const cMid = vaults[Math.floor(vaults.length / 2)];
                 const ccx = Math.floor(cMid.x + cMid.w / 2);
                 const ccy = Math.floor(cMid.y + cMid.h / 2);
                 if (dungeon[ccy][ccx] === TILE.FLOOR) {
                     dungeon[ccy][ccx] = TILE.CAULDRON;
+                }
+
+                const hVault = vaults[2];
+                const hx = Math.floor(hVault.x + 2);
+                const hy = Math.floor(hVault.y + 2);
+                if (dungeon[hy][hx] === TILE.FLOOR) {
+                    dungeon[hy][hx] = TILE.MERCHANT;
                 }
             }
         }
@@ -3296,6 +3722,12 @@
                 const sx = Math.floor(pShrine.x + pShrine.w / 2);
                 const sy = Math.floor(pShrine.y + pShrine.h / 2);
                 if (dungeon[sy][sx] === TILE.FLOOR) dungeon[sy][sx] = TILE.SHRINE;
+
+                // Place Black Market Hermit on Void Abyss platform
+                const pMerch = platforms[2];
+                const mx = Math.floor(pMerch.x + pMerch.w / 2);
+                const my = Math.floor(pMerch.y + pMerch.h / 2);
+                if (dungeon[my][mx] === TILE.FLOOR) dungeon[my][mx] = TILE.MERCHANT;
             }
         }
 
@@ -4525,6 +4957,64 @@
                     ctx.fill();
                     ctx.restore();
                 }
+            } else if (tile === TILE.MERCHANT) {
+                // Subterranean Merchant Stall & Wandering Black Market Hermit
+                // Carpet / rug base
+                ctx.fillStyle = isVisible ? '#450a0a' : '#1a0404';
+                ctx.fillRect(sx + 2, sy + 14, 28, 16);
+                ctx.strokeStyle = isVisible ? '#d97706' : '#78350f';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(sx + 2, sy + 14, 28, 16);
+
+                // Merchant counter / chest stall
+                ctx.fillStyle = isVisible ? '#78350f' : '#29180b';
+                ctx.fillRect(sx + 4, sy + 16, 24, 12);
+                ctx.fillStyle = isVisible ? '#b45309' : '#451a03';
+                ctx.fillRect(sx + 5, sy + 17, 22, 3);
+
+                // Hooded cloaked merchant body
+                const cloakCol = (depthLevel <= 6) ? (isVisible ? '#4c1d95' : '#2e1065') : (isVisible ? '#312e81' : '#1e1b4b');
+                ctx.fillStyle = cloakCol;
+                ctx.beginPath();
+                ctx.ellipse(cx, cy - 3, 8, 9, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Dark cowl shadow
+                ctx.fillStyle = '#090514';
+                ctx.beginPath();
+                ctx.ellipse(cx, cy - 4, 4.5, 5, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Glowing merchant eyes
+                const eyeColor = (depthLevel <= 6) ? '#fbbf24' : '#38bdf8';
+                const eyeBlink = Math.sin(animTime * 4) > -0.92;
+                if (isVisible && eyeBlink) {
+                    ctx.fillStyle = eyeColor;
+                    ctx.fillRect(cx - 3, cy - 5, 2, 2);
+                    ctx.fillRect(cx + 1, cy - 5, 2, 2);
+                }
+
+                // Brass merchant lantern on stall
+                if (isVisible) {
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.fillRect(sx + 6, sy + 13, 3, 4);
+                    const lPulse = Math.sin(animTime * 8) * 0.3 + 0.7;
+                    ctx.fillStyle = `rgba(254, 240, 138, ${lPulse})`;
+                    ctx.fillRect(sx + 6.5, sy + 11, 2, 2);
+                }
+
+                // Floating gold coin / essence icon above merchant
+                if (isVisible) {
+                    const coinFloat = Math.sin(animTime * 3) * 2;
+                    ctx.save();
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.shadowColor = '#f59e0b';
+                    ctx.shadowBlur = 6;
+                    ctx.font = 'bold 11px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('✦', cx, sy + 4 + coinFloat);
+                    ctx.restore();
+                }
             }
 
             ctx.restore();
@@ -4663,7 +5153,7 @@
                     } else if (tile === TILE.ALTAR || tile === TILE.CAULDRON || tile === TILE.PILLAR ||
                                tile === TILE.DOOR_CLOSED || tile === TILE.DOOR_OPEN ||
                                tile === TILE.STAIRS_DOWN || tile === TILE.STAIRS_UP || tile === TILE.CHEST ||
-                               tile === TILE.EFFIGY || tile === TILE.SHRINE) {
+                               tile === TILE.EFFIGY || tile === TILE.SHRINE || tile === TILE.MERCHANT) {
                         drawTileSprite(ctx, screenX, screenY, tile, isVisible, animTime, zIdx, zInfo);
                     }
 
@@ -5120,6 +5610,12 @@
                 return;
             }
 
+            if (targetTile === TILE.MERCHANT) {
+                openMerchantModal();
+                logMessage('💰 You step up to the Subterranean Merchant stall. Trade gold for survival wares, relics, and black market services (Press [M] anytime).', 'relic');
+                return;
+            }
+
             if (targetTile === TILE.SHRINE) {
                 communeShrine(nx, ny);
                 return;
@@ -5241,6 +5737,9 @@
                         } else if (dungeon[ny][nx] === TILE.SHRINE) {
                             logMessage(`Detected sacred Ancient Runic Shrine at (${nx}, ${ny})!`, 'relic');
                             found = true;
+                        } else if (dungeon[ny][nx] === TILE.MERCHANT) {
+                            logMessage(`Spotted Subterranean Merchant stall nearby at (${nx}, ${ny})!`, 'relic');
+                            found = true;
                         } else if (dungeon[ny][nx] === TILE.CAULDRON) {
                             logMessage(`Detected bubbling Alchemy Cauldron at (${nx}, ${ny})!`, 'heal');
                             found = true;
@@ -5263,6 +5762,8 @@
                 generateDungeon(depthLevel);
             } else if (current === TILE.ALTAR) {
                 openEnchantModal();
+            } else if (current === TILE.MERCHANT) {
+                openMerchantModal();
             } else if (current === TILE.SHRINE) {
                 communeShrine(player.x, player.y);
             } else if (current === TILE.CAULDRON) {
@@ -5271,7 +5772,7 @@
                 dungeon[player.y][player.x] = TILE.DOOR_OPEN;
                 advanceTurn();
             } else {
-                // Check adjacent tiles for altar, shrine, cauldron, or closed door
+                // Check adjacent tiles for altar, shrine, merchant, cauldron, or closed door
                 let interacted = false;
                 for (let dy = -1; dy <= 1; dy++) {
                     for (let dx = -1; dx <= 1; dx++) {
@@ -5280,6 +5781,10 @@
                         if (nx >= 0 && nx < MAP_WIDTH && ny >= 0 && ny < MAP_HEIGHT) {
                             if (dungeon[ny][nx] === TILE.ALTAR) {
                                 openEnchantModal();
+                                interacted = true;
+                                break;
+                            } else if (dungeon[ny][nx] === TILE.MERCHANT) {
+                                openMerchantModal();
                                 interacted = true;
                                 break;
                             } else if (dungeon[ny][nx] === TILE.SHRINE) {
@@ -5991,7 +6496,8 @@
                 [TILE.ALTAR]: 'Relic Enchanting Altar',
                 [TILE.CAULDRON]: 'Ancient Alchemy Cauldron',
                 [TILE.EFFIGY]: 'Demonic Cursed Effigy',
-                [TILE.SHRINE]: 'Ancient Celestial Runic Shrine'
+                [TILE.SHRINE]: 'Ancient Celestial Runic Shrine',
+                [TILE.MERCHANT]: (depthLevel <= 6) ? 'Subterranean Merchant Stall (Grimhollow)' : 'Black Market Hermit (Malakor)'
             };
             const curTile = dungeon[player.y] ? dungeon[player.y][player.x] : TILE.FLOOR;
             const monsterNearby = monsters.find(m => m.alive && Math.abs(m.x - player.x) <= 1 && Math.abs(m.y - player.y) <= 1);
@@ -6198,9 +6704,40 @@
                 return;
             }
 
+            // Subterranean Black Market hotkey M
+            if (e.key === 'm' || e.key === 'M') {
+                const mModal = document.getElementById('modalMerchant');
+                if (mModal && mModal.style.display === 'flex') {
+                    closeMerchantModal();
+                } else {
+                    openMerchantModal();
+                }
+                return;
+            }
+
+            // Market modal active shortcuts
+            const mModalActive = document.getElementById('modalMerchant');
+            if (mModalActive && mModalActive.style.display === 'flex') {
+                if (e.key >= '1' && e.key <= '8') {
+                    const idx = parseInt(e.key) - 1;
+                    if (merchantTab === 'buy') {
+                        buyMerchantItem(idx);
+                    } else {
+                        sellMerchantItem(idx);
+                    }
+                    return;
+                }
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    switchMerchantTab(merchantTab === 'buy' ? 'sell' : 'buy');
+                    return;
+                }
+            }
+
             if (e.key === 'Escape') {
                 closeCauldronModal();
                 closeEnchantModal();
+                closeMerchantModal();
                 const mHelp = document.getElementById('modalHelp');
                 if (mHelp) mHelp.style.display = 'none';
                 return;
@@ -6354,8 +6891,20 @@
         document.getElementById('btnImbueFire')?.addEventListener('click', () => imbueEnchantment('FIRE'));
         document.getElementById('btnImbueFrost')?.addEventListener('click', () => imbueEnchantment('FROST'));
         document.getElementById('btnImbueVoid')?.addEventListener('click', () => imbueEnchantment('VOID'));
-        document.getElementById('btnDisenchant')?.addEventListener('click', () => imbueEnchantment('NONE'));
         document.getElementById('btnAltarCleanse')?.addEventListener('click', altarCleanse);
+
+        // Merchant Modal Event Listeners
+        document.getElementById('btnMerchantTop')?.addEventListener('click', openMerchantModal);
+        document.getElementById('modalMerchantClose')?.addEventListener('click', closeMerchantModal);
+        document.getElementById('btnMerchantCloseBtm')?.addEventListener('click', closeMerchantModal);
+        document.getElementById('btnMerchantTabBuy')?.addEventListener('click', () => switchMerchantTab('buy'));
+        document.getElementById('btnMerchantTabSell')?.addEventListener('click', () => switchMerchantTab('sell'));
+        const modalMerchantEl = document.getElementById('modalMerchant');
+        if (modalMerchantEl) {
+            modalMerchantEl.addEventListener('click', (e) => {
+                if (e.target === modalMerchantEl) closeMerchantModal();
+            });
+        }
 
         // Filter buttons in Delver's Pack
         document.querySelectorAll('.filter-btn').forEach(btn => {

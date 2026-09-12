@@ -49,6 +49,7 @@
 #define TILE_CAULDRON     14
 #define TILE_EFFIGY       15
 #define TILE_SHRINE       16
+#define TILE_MERCHANT     17
 
 // Weapon Enchantments
 #define ENCHANT_NONE      0
@@ -509,6 +510,8 @@ static BOOL g_crtEnabled = TRUE;
 static int g_activeTab = 0; // 0=Hero, 1=Inventory, 2=Runes, 3=Bestiary
 static BOOL g_showHelpModal = FALSE;
 static BOOL g_showEnchantModal = FALSE;
+static BOOL g_showMerchantModal = FALSE;
+static int g_merchantMode = 0; // 0=Buy, 1=Sell
 static float g_animFlicker = 0.0f;
 static int g_frameCount = 0;
 
@@ -535,6 +538,10 @@ void CloseEnchantAltar(void);
 void ImbueEnchantment(int enchantType);
 void CommuneAltarBenediction(void);
 void CommuneShrine(int x, int y);
+void OpenMerchantShop(void);
+void CloseMerchantShop(void);
+void BuyMerchantItem(int itemNum);
+void SellPackItemToMerchant(int packIdx);
 void CheckLevelUp(void);
 void SpawnEmber(float x, float y, BOOL isTorch);
 void UpdateEmbers(void);
@@ -1151,7 +1158,7 @@ void SpawnMonsters(int level) {
             int ry = RandInt(2, MAP_HEIGHT - 3);
             int t = g_dungeon[ry][rx];
 
-            if ((t == TILE_FLOOR || t == TILE_WATER) && t != TILE_STAIRS_UP && t != TILE_STAIRS_DOWN && t != TILE_CHEST && t != TILE_ALTAR) {
+            if ((t == TILE_FLOOR || t == TILE_WATER) && t != TILE_STAIRS_UP && t != TILE_STAIRS_DOWN && t != TILE_CHEST && t != TILE_ALTAR && t != TILE_SHRINE && t != TILE_MERCHANT && t != TILE_CAULDRON) {
                 int dist = (int)sqrtf((float)((rx - g_player.x) * (rx - g_player.x) + (ry - g_player.y) * (ry - g_player.y)));
                 if (dist >= 6) {
                     BOOL occupied = FALSE;
@@ -1412,7 +1419,7 @@ void UpdateMonsters(void) {
                     int tile = g_dungeon[testY][testX];
                     BOOL isWraith = (mon->type == MONSTER_WRAITH);
                     if (!isWraith) {
-                        if (tile == TILE_WALL || tile == TILE_PILLAR || tile == TILE_CHASM || tile == TILE_DOOR_CLOSED) continue;
+                        if (tile == TILE_WALL || tile == TILE_PILLAR || tile == TILE_CHASM || tile == TILE_DOOR_CLOSED || tile == TILE_MERCHANT) continue;
                     } else {
                         if (tile == TILE_WALL && (testX == 0 || testX == MAP_WIDTH - 1 || testY == 0 || testY == MAP_HEIGHT - 1)) continue;
                     }
@@ -1615,6 +1622,15 @@ void GenerateCatacombs(int depth) {
             g_dungeon[ey][ex] = TILE_EFFIGY;
         }
     }
+
+    // Place Subterranean Merchant in Catacombs
+    if (roomCount >= 3) {
+        int mx = rooms[2].x + 2;
+        int my = rooms[2].y + 2;
+        if (g_dungeon[my][mx] == TILE_FLOOR) {
+            g_dungeon[my][mx] = TILE_MERCHANT;
+        }
+    }
 }
 
 // 2. Sunken Grotto: Organic Caverns, Flooded Water Pools & Cyan Fungi
@@ -1775,6 +1791,15 @@ void GenerateSunkenGrotto(int depth) {
             g_dungeon[ey][ex] = TILE_EFFIGY;
         }
     }
+
+    // Place Subterranean Merchant in Sunken Grotto
+    if (numCaverns >= 3) {
+        int mx = caverns[2].x;
+        int my = caverns[2].y;
+        if (g_dungeon[my][mx] == TILE_FLOOR || g_dungeon[my][mx] == TILE_WATER) {
+            g_dungeon[my][mx] = TILE_MERCHANT;
+        }
+    }
 }
 
 
@@ -1920,6 +1945,15 @@ void GenerateForgottenCrypt(int depth) {
             }
         }
     }
+
+    // Place Wandering Black Market Hermit in Crypt
+    if (vaultCount >= 4) {
+        int mx = vaults[2].x + 2;
+        int my = vaults[2].y + 2;
+        if (g_dungeon[my][mx] == TILE_FLOOR) {
+            g_dungeon[my][mx] = TILE_MERCHANT;
+        }
+    }
 }
 
 
@@ -2056,6 +2090,15 @@ void GenerateVoidAbyss(int depth) {
             if (g_dungeon[ey][ex] == TILE_FLOOR) {
                 g_dungeon[ey][ex] = TILE_EFFIGY;
             }
+        }
+    }
+
+    // Place Black Market Hermit on Void Abyss platform
+    if (platCount >= 4) {
+        int mx = plats[2].x + plats[2].w / 2;
+        int my = plats[2].y + plats[2].h / 2;
+        if (g_dungeon[my][mx] == TILE_FLOOR) {
+            g_dungeon[my][mx] = TILE_MERCHANT;
         }
     }
 }
@@ -2262,7 +2305,215 @@ void CommuneShrine(int x, int y) {
     AdvanceTurn();
 }
 
+int GetItemSellValue(ItemId id) {
+    if (id <= ITEM_NONE || id >= NUM_ITEM_DEFS) return 5;
+    const ItemDef* def = &g_itemDefs[id];
+    if (def->category == ITEM_TYPE_EQUIPMENT) {
+        if (id == ITEM_WPN_VOID_DAGGER || id == ITEM_ARM_AEGIS_CUIRASS || id == ITEM_AMU_VOID) return 40;
+        if (id == ITEM_REL_CENSER || id == ITEM_AMU_STAR) return 35;
+        return 25;
+    }
+    if (def->category == ITEM_TYPE_REAGENT) return 8;
+    if (id == ITEM_PANACEA_DEEP) return 22;
+    if (id == ITEM_FOOD_RATIONS) return 7;
+    if (id == ITEM_PURIFYING_SALT) return 10;
+    if (def->category == ITEM_TYPE_CONSUMABLE) return 11;
+    return 5;
+}
+
+void OpenMerchantShop(void) {
+    g_showMerchantModal = TRUE;
+    g_showEnchantModal = FALSE;
+    g_showHelpModal = FALSE;
+    g_merchantMode = 0;
+    Beep(520, 60); Beep(660, 80);
+    if (g_depthLevel <= 6) {
+        AddLog("Subterranean Broker: 'Torches, salves, blade steel... gold shines the same even in the deep.'", COLOR_TEXT_GOLD);
+    } else {
+        AddLog("Blind Hermit: 'The void whispers truths the sighted can never see... trade your essence, delver.'", COLOR_TEXT_RUNE);
+    }
+}
+
+void CloseMerchantShop(void) {
+    g_showMerchantModal = FALSE;
+    Beep(440, 40);
+}
+
+void BuyMerchantItem(int itemNum) {
+    if (itemNum < 0 || itemNum >= 8) return;
+    BOOL isDeep = (g_depthLevel > 6);
+    char buf[128];
+
+    if (!isDeep) {
+        int prices[8] = { 15, 18, 22, 55, 60, 65, 35, 40 };
+        int price = prices[itemNum];
+
+        if (g_player.essence < price) {
+            snprintf(buf, sizeof(buf), "Not enough Gold! Need %d Essence (You have %d).", price, g_player.essence);
+            AddLog(buf, COLOR_ACCENT_RED);
+            Beep(180, 50);
+            return;
+        }
+
+        if (itemNum == 0) {
+            if (AddPackItem(ITEM_FOOD_RATIONS, 1)) {
+                g_player.essence -= price;
+                AddLog("Purchased Iron Rations for 15 Gold! Added to Pack [2].", COLOR_TEXT_GOLD);
+            } else { AddLog("Delver's Pack is full!", COLOR_ACCENT_RED); return; }
+        } else if (itemNum == 1) {
+            g_player.essence -= price;
+            g_player.torchFuel = g_player.maxTorchFuel;
+            g_player.torchLit = TRUE;
+            RecalcPlayerStats();
+            ComputeFOV();
+            AddLog("Purchased Torch Pitch & Lamp Oil! Handheld torch fully refueled and rekindled!", COLOR_TEXT_GOLD);
+            SpawnCombatText((float)g_player.x, (float)g_player.y, "TORCH LIT!", COLOR_TEXT_GOLD);
+        } else if (itemNum == 2) {
+            if (AddPackItem(ITEM_HEAL_SALVE, 1)) {
+                g_player.essence -= price;
+                AddLog("Purchased Healing Salve for 22 Gold! Added to Pack [2].", COLOR_TEXT_GOLD);
+            } else { AddLog("Delver's Pack is full!", COLOR_ACCENT_RED); return; }
+        } else if (itemNum == 3) {
+            if (AddPackItem(ITEM_WPN_RUNIC_BLADE, 1)) {
+                g_player.essence -= price;
+                AddLog("Purchased Runic Longsword (+5 Might, +1 Ward) for 55 Gold!", COLOR_TEXT_GOLD);
+            } else { AddLog("Delver's Pack is full!", COLOR_ACCENT_RED); return; }
+        } else if (itemNum == 4) {
+            if (AddPackItem(ITEM_ARM_SHADOW_CLOAK, 1)) {
+                g_player.essence -= price;
+                AddLog("Purchased Shadowweave Cloak (+4 Ward, +2 Arcana) for 60 Gold!", COLOR_TEXT_GOLD);
+            } else { AddLog("Delver's Pack is full!", COLOR_ACCENT_RED); return; }
+        } else if (itemNum == 5) {
+            if (AddPackItem(ITEM_REL_LANTERN, 1)) {
+                g_player.essence -= price;
+                AddLog("Purchased Aether Lantern (+8 Light, +15 Max MP) for 65 Gold!", COLOR_TEXT_GOLD);
+            } else { AddLog("Delver's Pack is full!", COLOR_ACCENT_RED); return; }
+        } else if (itemNum == 6) {
+            g_player.essence -= price;
+            for (int y = 0; y < MAP_HEIGHT; y++) {
+                for (int x = 0; x < MAP_WIDTH; x++) {
+                    g_explored[y][x] = TRUE;
+                }
+            }
+            AddLog("CARTOGRAPHY REVEALED! The broker unrolls a complete subterranean floor map!", COLOR_ACCENT_CYAN);
+            SpawnCombatText((float)g_player.x, (float)g_player.y, "MAP REVEALED!", COLOR_ACCENT_CYAN);
+        } else if (itemNum == 7) {
+            g_player.essence -= price;
+            g_player.curse = CURSE_NONE;
+            g_player.curseTurns = 0;
+            g_player.sanity += 35;
+            if (g_player.sanity > g_player.max_sanity) g_player.sanity = g_player.max_sanity;
+            g_player.hp += 30;
+            if (g_player.hp > g_player.max_hp) g_player.hp = g_player.max_hp;
+            g_player.aether += 25;
+            if (g_player.aether > g_player.max_aether) g_player.aether = g_player.max_aether;
+            AddLog("MALEDICTION PURGED! Sacred herbs and incense cleanse your body and soul (+35 Sanity, +30 HP, +25 MP)!", COLOR_ACCENT_GREEN);
+            SpawnCombatText((float)g_player.x, (float)g_player.y, "CLEANSED!", COLOR_ACCENT_GREEN);
+        }
+    } else {
+        int prices[8] = { 45, 75, 85, 80, 90, 35, 75, 50 };
+        int price = prices[itemNum];
+
+        if (g_player.essence < price) {
+            snprintf(buf, sizeof(buf), "Not enough Gold! Need %d Essence (You have %d).", price, g_player.essence);
+            AddLog(buf, COLOR_ACCENT_RED);
+            Beep(180, 50);
+            return;
+        }
+
+        if (itemNum == 0) {
+            if (AddPackItem(ITEM_PANACEA_DEEP, 1)) {
+                g_player.essence -= price;
+                AddLog("Purchased Panacea of the Deep for 45 Gold! Added to Pack [2].", COLOR_TEXT_GOLD);
+            } else { AddLog("Delver's Pack is full!", COLOR_ACCENT_RED); return; }
+        } else if (itemNum == 1) {
+            if (AddPackItem(ITEM_WPN_VOID_DAGGER, 1)) {
+                g_player.essence -= price;
+                AddLog("Purchased Voidfang Dagger (+7 Might, +3 Arcana) for 75 Gold!", COLOR_TEXT_GOLD);
+            } else { AddLog("Delver's Pack is full!", COLOR_ACCENT_RED); return; }
+        } else if (itemNum == 2) {
+            if (AddPackItem(ITEM_ARM_AEGIS_CUIRASS, 1)) {
+                g_player.essence -= price;
+                AddLog("Purchased Aegis Cuirass (+7 Ward, +25 Max HP) for 85 Gold!", COLOR_TEXT_GOLD);
+            } else { AddLog("Delver's Pack is full!", COLOR_ACCENT_RED); return; }
+        } else if (itemNum == 3) {
+            if (AddPackItem(ITEM_REL_CENSER, 1)) {
+                g_player.essence -= price;
+                AddLog("Purchased Radiant Censer (+9 Light, +20 Max Sanity) for 80 Gold!", COLOR_TEXT_GOLD);
+            } else { AddLog("Delver's Pack is full!", COLOR_ACCENT_RED); return; }
+        } else if (itemNum == 4) {
+            if (AddPackItem(ITEM_AMU_VOID, 1)) {
+                g_player.essence -= price;
+                AddLog("Purchased Void Eye Talisman (+4 Arcana, +20 Max Sanity) for 90 Gold!", COLOR_TEXT_GOLD);
+            } else { AddLog("Delver's Pack is full!", COLOR_ACCENT_RED); return; }
+        } else if (itemNum == 5) {
+            g_player.essence -= price;
+            for (int y = 0; y < MAP_HEIGHT; y++) {
+                for (int x = 0; x < MAP_WIDTH; x++) {
+                    g_explored[y][x] = TRUE;
+                }
+            }
+            AddLog("CARTOGRAPHY REVEALED! The hermit unravels the celestial abyss map!", COLOR_ACCENT_CYAN);
+            SpawnCombatText((float)g_player.x, (float)g_player.y, "MAP REVEALED!", COLOR_ACCENT_CYAN);
+        } else if (itemNum == 6) {
+            int unowned[NUM_RUNES];
+            int unownedCount = 0;
+            for (int r = 0; r < NUM_RUNES; r++) {
+                if (!g_player.ownedRunes[r]) unowned[unownedCount++] = r;
+            }
+            g_player.essence -= price;
+            if (unownedCount > 0) {
+                int pick = unowned[RandInt(0, unownedCount - 1)];
+                g_player.ownedRunes[pick] = TRUE;
+                snprintf(buf, sizeof(buf), "RUNE SIPHON! Hermit channels ancient glyphs: %s (%s) unlocked! Inscribe in Tab [3].", g_runeDefs[pick].name, g_runeDefs[pick].symbol);
+                AddLog(buf, COLOR_TEXT_RUNE);
+                SpawnCombatText((float)g_player.x, (float)g_player.y, "RUNE UNLOCKED!", COLOR_TEXT_RUNE);
+            } else {
+                g_player.exp += 75;
+                g_player.base_max_aether += 5;
+                RecalcPlayerStats();
+                g_player.aether = g_player.max_aether;
+                AddLog("RUNE SIPHON: All runes mastered! Hermit expands soul capacity (+75 EXP, +5 Max Aether)!", COLOR_TEXT_GOLD);
+                SpawnCombatText((float)g_player.x, (float)g_player.y, "+5 MAX AETHER!", COLOR_TEXT_GOLD);
+            }
+        } else if (itemNum == 7) {
+            ItemId mysteryPool[] = { ITEM_PANACEA_DEEP, ITEM_ARM_AEGIS_CUIRASS, ITEM_WPN_VOID_DAGGER, ITEM_REL_CENSER, ITEM_AMU_VOID, ITEM_STONESKIN_BREW, ITEM_LIQUID_FIRE, ITEM_ELIXIR_VITALITY };
+            ItemId pick = mysteryPool[RandInt(0, 7)];
+            if (AddPackItem(pick, 1)) {
+                g_player.essence -= price;
+                snprintf(buf, sizeof(buf), "VOID MYSTERY RELIC! Hermit draws %s from the dark!", g_itemDefs[pick].name);
+                AddLog(buf, COLOR_TEXT_GOLD);
+                SpawnCombatText((float)g_player.x, (float)g_player.y, "MYSTERY RELIC!", COLOR_TEXT_GOLD);
+            } else { AddLog("Delver's Pack is full!", COLOR_ACCENT_RED); return; }
+        }
+    }
+
+    Beep(650, 40); Beep(850, 60);
+    CheckLevelUp();
+}
+
+void SellPackItemToMerchant(int packIdx) {
+    if (packIdx < 0 || packIdx >= g_player.numPackItems) return;
+    InventorySlot* slot = &g_player.pack[packIdx];
+    if (slot->id <= ITEM_NONE || slot->id >= NUM_ITEM_DEFS) return;
+
+    ItemId soldId = slot->id;
+    int sellVal = GetItemSellValue(soldId);
+    g_player.essence += sellVal;
+    RemovePackItem(soldId, 1);
+
+    char buf[128];
+    snprintf(buf, sizeof(buf), "SOLD: Pawned 1x %s to the merchant for +%d Gold/Essence!", g_itemDefs[soldId].name, sellVal);
+    AddLog(buf, COLOR_TEXT_GOLD);
+
+    snprintf(buf, sizeof(buf), "+%d Gold", sellVal);
+    SpawnCombatText((float)g_player.x, (float)g_player.y, buf, COLOR_TEXT_GOLD);
+
+    Beep(580, 40); Beep(740, 50);
+}
+
 static const char* g_eldritchWhispers[8] = {
+
     "The stone breathes... can you feel its cold subterranean pulse?",
     "Your shadow detached itself three paces ago and creeps behind you...",
     "The flame flickers... the void reaches out hungry tendrils to claim you.",
@@ -2465,6 +2716,11 @@ void MovePlayer(int dx, int dy) {
 
     if (tile == TILE_ALTAR) {
         OpenEnchantAltar();
+        return;
+    }
+
+    if (tile == TILE_MERCHANT) {
+        OpenMerchantShop();
         return;
     }
 
@@ -2917,6 +3173,11 @@ void SearchArea(void) {
                     snprintf(buf, sizeof(buf), "Detected glowing Ancient Runic Shrine at (%d, %d)!", nx, ny);
                     AddLog(buf, COLOR_TEXT_RUNE);
                     found = TRUE;
+                } else if (g_dungeon[ny][nx] == TILE_MERCHANT) {
+                    char buf[128];
+                    snprintf(buf, sizeof(buf), "Spotted Subterranean Merchant stall at (%d, %d)!", nx, ny);
+                    AddLog(buf, COLOR_TEXT_GOLD);
+                    found = TRUE;
                 } else if (g_dungeon[ny][nx] == TILE_CAULDRON) {
                     char buf[128];
                     snprintf(buf, sizeof(buf), "Detected Ancient Alchemy Cauldron at (%d, %d)!", nx, ny);
@@ -2945,6 +3206,8 @@ void InteractTile(void) {
         InitGame(g_depthLevel);
     } else if (cur == TILE_ALTAR) {
         OpenEnchantAltar();
+    } else if (cur == TILE_MERCHANT) {
+        OpenMerchantShop();
     } else if (cur == TILE_SHRINE) {
         CommuneShrine(g_player.x, g_player.y);
     } else if (cur == TILE_CAULDRON) {
@@ -2964,6 +3227,10 @@ void InteractTile(void) {
                 if (nx >= 0 && nx < MAP_WIDTH && ny >= 0 && ny < MAP_HEIGHT) {
                     if (g_dungeon[ny][nx] == TILE_ALTAR) {
                         OpenEnchantAltar();
+                        interacted = TRUE;
+                        break;
+                    } else if (g_dungeon[ny][nx] == TILE_MERCHANT) {
+                        OpenMerchantShop();
                         interacted = TRUE;
                         break;
                     } else if (g_dungeon[ny][nx] == TILE_SHRINE) {
@@ -3628,6 +3895,71 @@ static void DrawTileSprite(HDC hdc, int x, int y, int tile, BOOL isVisible, int 
             SetPixel(hdc, cx - 1, crystalY, RGB(224, 242, 254));
             SetPixel(hdc, cx + 1, crystalY, RGB(224, 242, 254));
         }
+    } else if (tile == TILE_MERCHANT) {
+        // 1. Velvet/Abyssal woven carpet on floor
+        RECT rugR = {x + 3, y + 16, x + 29, y + 30};
+        HBRUSH rugBr = CreateSolidBrush(isVisible ? ((g_depthLevel > 6) ? RGB(49, 14, 61) : RGB(88, 28, 28)) : RGB(25, 10, 15));
+        FillRect(hdc, &rugR, rugBr);
+        DeleteObject(rugBr);
+
+        // Carpet gold fringe border
+        if (isVisible) {
+            HPEN fringePen = CreatePen(PS_SOLID, 1, RGB(217, 119, 6));
+            HPEN oldP = (HPEN)SelectObject(hdc, fringePen);
+            MoveToEx(hdc, x + 3, y + 16, NULL); LineTo(hdc, x + 29, y + 16);
+            MoveToEx(hdc, x + 3, y + 30, NULL); LineTo(hdc, x + 29, y + 30);
+            SelectObject(hdc, oldP);
+            DeleteObject(fringePen);
+        }
+
+        // 2. Merchant Stall Counter
+        RECT stallR = {x + 5, y + 13, x + 27, y + 21};
+        HBRUSH stallBr = CreateSolidBrush(isVisible ? RGB(69, 26, 3) : RGB(30, 15, 5));
+        FillRect(hdc, &stallR, stallBr);
+        DeleteObject(stallBr);
+
+        // Counter edge highlight
+        if (isVisible) {
+            RECT rimR = {x + 5, y + 12, x + 27, y + 14};
+            HBRUSH rimBr = CreateSolidBrush(RGB(146, 64, 14));
+            FillRect(hdc, &rimR, rimBr);
+            DeleteObject(rimBr);
+        }
+
+        // 3. Hooded Merchant Figure behind counter
+        HBRUSH cloakBr = CreateSolidBrush(isVisible ? ((g_depthLevel > 6) ? RGB(30, 10, 50) : RGB(45, 15, 5)) : RGB(15, 10, 20));
+        HBRUSH oldB = (HBRUSH)SelectObject(hdc, cloakBr);
+        HPEN nullP = (HPEN)GetStockObject(NULL_PEN);
+        HPEN oldP = (HPEN)SelectObject(hdc, nullP);
+        Ellipse(hdc, cx - 6, cy - 12, cx + 6, cy + 2);
+        SelectObject(hdc, oldP);
+        SelectObject(hdc, oldB);
+        DeleteObject(cloakBr);
+
+        // 4. Glowing eyes under deep hood
+        if (isVisible) {
+            int blink = ((frame / 20) % 8 == 0);
+            if (!blink) {
+                COLORREF eyeCol = (g_depthLevel > 6) ? RGB(168, 85, 247) : RGB(251, 191, 36);
+                SetPixel(hdc, cx - 3, cy - 6, eyeCol);
+                SetPixel(hdc, cx + 2, cy - 6, eyeCol);
+            }
+
+            // 5. Brass lantern on stall
+            RECT lR = {x + 7, y + 14, x + 10, y + 19};
+            HBRUSH lBr = CreateSolidBrush(RGB(251, 191, 36));
+            FillRect(hdc, &lR, lBr);
+            DeleteObject(lBr);
+            SetPixel(hdc, x + 8, y + 13, RGB(254, 240, 138));
+
+            // 6. Floating Gold Coin / Essence Glint above head
+            int coinOff = (int)(sinf((float)frame * 0.25f) * 2.0f);
+            SetPixel(hdc, cx, y + 3 + coinOff, RGB(251, 191, 36));
+            SetPixel(hdc, cx - 1, y + 3 + coinOff, RGB(254, 240, 138));
+            SetPixel(hdc, cx + 1, y + 3 + coinOff, RGB(254, 240, 138));
+            SetPixel(hdc, cx, y + 2 + coinOff, RGB(255, 255, 255));
+            SetPixel(hdc, cx, y + 4 + coinOff, RGB(217, 119, 6));
+        }
     }
 }
 
@@ -3882,7 +4214,7 @@ void RenderGame(HDC hdc, HWND hwnd) {
             } else if (tile == TILE_ALTAR || tile == TILE_SHRINE || tile == TILE_CAULDRON || tile == TILE_PILLAR ||
                        tile == TILE_DOOR_CLOSED || tile == TILE_DOOR_OPEN ||
                        tile == TILE_STAIRS_DOWN || tile == TILE_STAIRS_UP || tile == TILE_CHEST ||
-                       tile == TILE_EFFIGY) {
+                       tile == TILE_EFFIGY || tile == TILE_MERCHANT) {
                 DrawTileSprite(memDC, scrX, scrY, tile, isVisible, g_frameCount, zt);
             }
 
@@ -4720,6 +5052,7 @@ void RenderGame(HDC hdc, HWND hwnd) {
         TextOutA(memDC, modalRect.left + 20, my, "- 1, 2, 3, 4: Sidebar Tabs (Delver stats / Pack & Alchemy / Rune Forge / Bestiary)", 82); my += 16;
         TextOutA(memDC, modalRect.left + 20, my, "- I / Altar: Open Relic Enchanting Altar to imbue Flamebrand / Frostbite / Voidsever", 84); my += 16;
         TextOutA(memDC, modalRect.left + 20, my, "- Ancient Shrines: Touch glowing runic monoliths for divine blessings & ancient runes", 85); my += 16;
+        TextOutA(memDC, modalRect.left + 20, my, "- M / Merchant: Trade Gold for relics, survival goods & sell pack items [Phase 11]", 83); my += 16;
         TextOutA(memDC, modalRect.left + 20, my, "- Biomes: B1-3 Catacombs | B4-6 Sunken Grotto | B7-9 Crypt | B10+ Void", 70); my += 16;
         TextOutA(memDC, modalRect.left + 20, my, "- C: CRT Phosphors | F: Field of View | Ctrl+N / F2: New Descent", 64); my += 20;
 
@@ -4846,6 +5179,164 @@ void RenderGame(HDC hdc, HWND hwnd) {
         TextOutA(memDC, modalRect.left + 20, my, "[0/C] Disenchant Weapon  |  [1..4] Select Action  |  [ESC / I] Return to Dungeon", 79);
     }
 
+    // 5c. SUBTERRANEAN BLACK MARKET MODAL DIALOG (When M pressed or Merchant visited)
+    if (g_showMerchantModal) {
+        RECT modalRect = {width / 2 - 340, height / 2 - 240, width / 2 + 340, height / 2 + 240};
+        HBRUSH modalBg = CreateSolidBrush(RGB(10, 14, 24));
+        FillRect(memDC, &modalRect, modalBg);
+        DeleteObject(modalBg);
+
+        HPEN glowModalPen = CreatePen(PS_SOLID, 2, RGB(251, 191, 36));
+        HPEN oldMP = (HPEN)SelectObject(memDC, glowModalPen);
+        SelectObject(memDC, GetStockObject(NULL_BRUSH));
+        Rectangle(memDC, modalRect.left, modalRect.top, modalRect.right, modalRect.bottom);
+        SelectObject(memDC, oldMP);
+        DeleteObject(glowModalPen);
+
+        BOOL isDeep = (g_depthLevel > 6);
+        const char* title = isDeep ? "MALAKOR'S BLACK MARKET SANCTUARY" : "SUBTERRANEAN BLACK MARKET";
+        const char* sub = isDeep ? "Malakor the Blind Hermit | Deep Crypt & Void Outcast" : "Grimhollow the Abyssal Broker | Catacombs Outpost";
+
+        SelectObject(memDC, fontTitle);
+        SetTextColor(memDC, COLOR_TEXT_GOLD);
+        TextOutA(memDC, modalRect.left + 20, modalRect.top + 12, title, (int)strlen(title));
+
+        SelectObject(memDC, fontSmall);
+        SetTextColor(memDC, COLOR_TEXT_DIM);
+        TextOutA(memDC, modalRect.left + 20, modalRect.top + 34, sub, (int)strlen(sub));
+
+        // Header bar: Quote & Gold
+        RECT qBar = {modalRect.left + 20, modalRect.top + 52, modalRect.right - 20, modalRect.top + 80};
+        HBRUSH qBr = CreateSolidBrush(RGB(15, 23, 42));
+        FillRect(memDC, &qBar, qBr);
+        DeleteObject(qBr);
+        FrameRect(memDC, &qBar, (HBRUSH)GetStockObject(DKGRAY_BRUSH));
+
+        SelectObject(memDC, fontSmall);
+        SetTextColor(memDC, RGB(203, 213, 225));
+        const char* quote = isDeep ? "\"The dark whispers truths the sighted can never see... trade your essence, delver.\"" :
+                                    "\"Torches, salves, blade steel... gold shines the same even in the deepest abyss.\"";
+        TextOutA(memDC, modalRect.left + 28, modalRect.top + 58, quote, (int)strlen(quote));
+
+        char goldTxt[64];
+        snprintf(goldTxt, sizeof(goldTxt), "Gold: %d *", g_player.essence);
+        SelectObject(memDC, fontBold);
+        SetTextColor(memDC, COLOR_TEXT_GOLD);
+        TextOutA(memDC, modalRect.right - 140, modalRect.top + 58, goldTxt, (int)strlen(goldTxt));
+
+        // Tab Mode Buttons (BUY / SELL)
+        int tabY = modalRect.top + 86;
+        RECT bTabBuy = {modalRect.left + 20, tabY, modalRect.left + 180, tabY + 24};
+        RECT bTabSell = {modalRect.left + 190, tabY, modalRect.left + 350, tabY + 24};
+
+        HBRUSH buyBr = CreateSolidBrush(g_merchantMode == 0 ? RGB(69, 26, 3) : RGB(20, 27, 45));
+        HBRUSH sellBr = CreateSolidBrush(g_merchantMode == 1 ? RGB(6, 78, 59) : RGB(20, 27, 45));
+        FillRect(memDC, &bTabBuy, buyBr);
+        FillRect(memDC, &bTabSell, sellBr);
+        DeleteObject(buyBr);
+        DeleteObject(sellBr);
+
+        FrameRect(memDC, &bTabBuy, (HBRUSH)GetStockObject(DKGRAY_BRUSH));
+        FrameRect(memDC, &bTabSell, (HBRUSH)GetStockObject(DKGRAY_BRUSH));
+
+        SelectObject(memDC, fontBold);
+        SetTextColor(memDC, g_merchantMode == 0 ? RGB(254, 240, 138) : COLOR_TEXT_DIM);
+        TextOutA(memDC, modalRect.left + 34, tabY + 4, "[1..8] BUY WARES", 16);
+
+        SetTextColor(memDC, g_merchantMode == 1 ? RGB(167, 243, 208) : COLOR_TEXT_DIM);
+        TextOutA(memDC, modalRect.left + 204, tabY + 4, "[S/TAB] SELL PACK", 17);
+
+        int rowY = tabY + 30;
+
+        if (g_merchantMode == 0) {
+            // BUY MODE (8 Wares)
+            const char* wareNames[2][8] = {
+                { "Iron Rations (Food)", "Torch Pitch & Oil", "Healing Salve", "Runic Longsword", "Shadowweave Cloak", "Aether Lantern", "Floor Cartography", "Malediction Cleanse" },
+                { "Panacea of the Deep", "Voidfang Dagger", "Aegis Cuirass", "Radiant Censer", "Void Eye Talisman", "Floor Cartography", "Primordial Rune Siphon", "Void Mystery Relic" }
+            };
+            const char* wareDescs[2][8] = {
+                { "+45 Hunger, +10 HP (Survival)", "Full torch refill (+80 turns) & relight", "+35 HP, +5 Sanity potion", "+5 Might, +1 Ward weapon", "+4 Ward, +2 Arcana armor", "+8 Light Radius, +15 Max Aether", "Reveals all floor rooms & stairs", "Purges all curses, +35 San, +30 HP, +25 MP" },
+                { "+60 HP, +40 San, +35 MP, cleanses curses", "+7 Might, +3 Arcana weapon", "+7 Ward, +25 Max HP armor", "+9 Light Radius, +20 Max Sanity relic", "+4 Arcana, +20 Max Sanity amulet", "Reveals all floor rooms & stairs", "Unlocks an unmastered Ancient Rune", "Draws random high-tier treasure/elixir" }
+            };
+            int warePrices[2][8] = {
+                { 15, 18, 22, 55, 60, 65, 35, 40 },
+                { 45, 75, 85, 80, 90, 35, 75, 50 }
+            };
+            int dIdx = isDeep ? 1 : 0;
+
+            for (int i = 0; i < 8; i++) {
+                RECT rR = {modalRect.left + 20, rowY, modalRect.right - 20, rowY + 38};
+                BOOL afford = (g_player.essence >= warePrices[dIdx][i]);
+                HBRUSH rBr = CreateSolidBrush(afford ? RGB(16, 23, 38) : RGB(10, 14, 22));
+                FillRect(memDC, &rR, rBr);
+                DeleteObject(rBr);
+                FrameRect(memDC, &rR, (HBRUSH)GetStockObject(DKGRAY_BRUSH));
+
+                SelectObject(memDC, fontBold);
+                SetTextColor(memDC, afford ? RGB(255, 255, 255) : COLOR_TEXT_DIM);
+                char lineTitle[128];
+                snprintf(lineTitle, sizeof(lineTitle), "[%d] %s", i + 1, wareNames[dIdx][i]);
+                TextOutA(memDC, modalRect.left + 28, rowY + 4, lineTitle, (int)strlen(lineTitle));
+
+                SelectObject(memDC, fontSmall);
+                SetTextColor(memDC, COLOR_TEXT_DIM);
+                TextOutA(memDC, modalRect.left + 28, rowY + 20, wareDescs[dIdx][i], (int)strlen(wareDescs[dIdx][i]));
+
+                char pBuf[32];
+                snprintf(pBuf, sizeof(pBuf), "%d Gold", warePrices[dIdx][i]);
+                SelectObject(memDC, fontBold);
+                SetTextColor(memDC, afford ? COLOR_TEXT_GOLD : RGB(150, 50, 50));
+                TextOutA(memDC, modalRect.right - 110, rowY + 10, pBuf, (int)strlen(pBuf));
+
+                rowY += 41;
+            }
+        } else {
+            // SELL MODE (Display Pack items up to 8)
+            if (g_player.numPackItems == 0) {
+                SelectObject(memDC, fontMono);
+                SetTextColor(memDC, COLOR_TEXT_DIM);
+                TextOutA(memDC, modalRect.left + 40, rowY + 60, "Your Delver's Pack is empty. Delve into the crypts to find treasures!", 69);
+            } else {
+                int showCount = g_player.numPackItems > 8 ? 8 : g_player.numPackItems;
+                for (int i = 0; i < showCount; i++) {
+                    InventorySlot* slot = &g_player.pack[i];
+                    const ItemDef* it = &g_itemDefs[slot->id];
+                    int sVal = GetItemSellValue(slot->id);
+
+                    RECT rR = {modalRect.left + 20, rowY, modalRect.right - 20, rowY + 38};
+                    HBRUSH rBr = CreateSolidBrush(RGB(12, 28, 22));
+                    FillRect(memDC, &rR, rBr);
+                    DeleteObject(rBr);
+                    FrameRect(memDC, &rR, (HBRUSH)GetStockObject(DKGRAY_BRUSH));
+
+                    SelectObject(memDC, fontBold);
+                    SetTextColor(memDC, RGB(236, 253, 245));
+                    char sTitle[128];
+                    snprintf(sTitle, sizeof(sTitle), "[%d] %s (Qty: %d)", i + 1, it->name, slot->count);
+                    TextOutA(memDC, modalRect.left + 28, rowY + 4, sTitle, (int)strlen(sTitle));
+
+                    SelectObject(memDC, fontSmall);
+                    SetTextColor(memDC, COLOR_TEXT_DIM);
+                    TextOutA(memDC, modalRect.left + 28, rowY + 20, it->desc, (int)strlen(it->desc));
+
+                    char pBuf[32];
+                    snprintf(pBuf, sizeof(pBuf), "+%d Gold", sVal);
+                    SelectObject(memDC, fontBold);
+                    SetTextColor(memDC, RGB(52, 211, 153));
+                    TextOutA(memDC, modalRect.right - 110, rowY + 10, pBuf, (int)strlen(pBuf));
+
+                    rowY += 41;
+                }
+            }
+        }
+
+        // Bottom status line
+        SelectObject(memDC, fontSmall);
+        SetTextColor(memDC, COLOR_TEXT_DIM);
+        TextOutA(memDC, modalRect.left + 20, modalRect.bottom - 22,
+                 "Shortcuts: [1..8] Trade Item  |  [S/TAB] Switch Buy/Sell  |  [ESC / M] Close Market", 83);
+    }
+
     // 6. BOTTOM FOOTER (0..width, height-24..height)
     RECT footerRect = {0, height - 24, width, height};
     FillRect(memDC, &footerRect, panelDarkBrush);
@@ -4963,6 +5454,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ImbueEnchantment(ENCHANT_NONE);
             } else if (wParam == 'I' || wParam == VK_ESCAPE || wParam == VK_SPACE || wParam == VK_RETURN) {
                 g_showEnchantModal = FALSE;
+            }
+            InvalidateRect(hwnd, NULL, FALSE);
+            return 0;
+        }
+
+        if (g_showMerchantModal) {
+            if (wParam >= '1' && wParam <= '8') {
+                int idx = (int)(wParam - '1');
+                if (g_merchantMode == 0) {
+                    BuyMerchantItem(idx);
+                } else {
+                    SellPackItemToMerchant(idx);
+                }
+            } else if (wParam == 'S' || wParam == VK_TAB) {
+                g_merchantMode = 1 - g_merchantMode;
+                Beep(480, 30);
+            } else if (wParam == 'M' || wParam == VK_ESCAPE || wParam == VK_SPACE || wParam == VK_RETURN) {
+                CloseMerchantShop();
             }
             InvalidateRect(hwnd, NULL, FALSE);
             return 0;
@@ -5174,9 +5683,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_showEnchantModal = !g_showEnchantModal;
             break;
 
+        case 'M':
+            if (g_showMerchantModal) {
+                CloseMerchantShop();
+            } else {
+                OpenMerchantShop();
+            }
+            break;
+
         case VK_ESCAPE:
             if (g_showHelpModal) g_showHelpModal = FALSE;
             if (g_showEnchantModal) g_showEnchantModal = FALSE;
+            if (g_showMerchantModal) g_showMerchantModal = FALSE;
             break;
         }
 
@@ -5189,6 +5707,40 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         if (g_showHelpModal) {
             g_showHelpModal = FALSE;
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        }
+
+        if (g_showMerchantModal) {
+            RECT clientRect;
+            GetClientRect(hwnd, &clientRect);
+            int width = clientRect.right - clientRect.left;
+            int height = clientRect.bottom - clientRect.top;
+            RECT modalRect = {width / 2 - 340, height / 2 - 240, width / 2 + 340, height / 2 + 240};
+
+            int tabY = modalRect.top + 86;
+            if (mouseY >= tabY && mouseY <= tabY + 24) {
+                if (mouseX >= modalRect.left + 20 && mouseX <= modalRect.left + 180) {
+                    g_merchantMode = 0;
+                } else if (mouseX >= modalRect.left + 190 && mouseX <= modalRect.left + 350) {
+                    g_merchantMode = 1;
+                }
+            } else if (mouseX >= modalRect.left + 20 && mouseX <= modalRect.right - 20) {
+                int rowY = tabY + 30;
+                for (int i = 0; i < 8; i++) {
+                    if (mouseY >= rowY && mouseY <= rowY + 38) {
+                        if (g_merchantMode == 0) {
+                            BuyMerchantItem(i);
+                        } else {
+                            SellPackItemToMerchant(i);
+                        }
+                        break;
+                    }
+                    rowY += 41;
+                }
+            } else {
+                CloseMerchantShop();
+            }
             InvalidateRect(hwnd, NULL, FALSE);
             break;
         }
