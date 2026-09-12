@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <stdio.h>
 #include <math.h>
 #define GRID_COLS 10
 #define GRID_ROWS 10
@@ -254,6 +255,83 @@ HWND hMillBtn;
 HWND hMayoBtn;
 HWND hCheeseBtn;
 HWND hHelpBtn;
+HWND hSaveBtn;
+HWND hResetBtn;
+
+char toast_msg[128] = "";
+int toast_timer = 0;
+int toast_is_error = 0;
+int hover_cx = -1, hover_cy = -1;
+
+void ShowNativeToast(const char* msg, int isError) {
+    lstrcpynA(toast_msg, msg, sizeof(toast_msg));
+    toast_timer = 90;
+    toast_is_error = isError;
+}
+
+void SaveGame() {
+    FILE* fp = fopen("kfarm.sav", "wb");
+    if (!fp) return;
+    int magic = 0x4641524D;
+    int version = 1;
+    fwrite(&magic, sizeof(int), 1, fp);
+    fwrite(&version, sizeof(int), 1, fp);
+    fwrite(&current_day, sizeof(int), 1, fp);
+    fwrite(&money, sizeof(int), 1, fp);
+    fwrite(&fertilizer_bought, sizeof(int), 1, fp);
+    fwrite(&tools_upgraded, sizeof(int), 1, fp);
+    fwrite(&chickens, sizeof(int), 1, fp);
+    fwrite(&cows, sizeof(int), 1, fp);
+    fwrite(&weather, sizeof(int), 1, fp);
+    fwrite(&has_scarecrow, sizeof(int), 1, fp);
+    fwrite(&has_mill, sizeof(int), 1, fp);
+    fwrite(&has_mayo_maker, sizeof(int), 1, fp);
+    fwrite(&has_cheese_press, sizeof(int), 1, fp);
+    fwrite(growth_times, sizeof(int), 4, fp);
+    fwrite(sell_values, sizeof(int), 4, fp);
+    fwrite(grid, sizeof(Cell), GRID_COLS * GRID_ROWS, fp);
+    fclose(fp);
+}
+
+BOOL LoadGame() {
+    FILE* fp = fopen("kfarm.sav", "rb");
+    if (!fp) return FALSE;
+    int magic = 0, version = 0;
+    if (fread(&magic, sizeof(int), 1, fp) != 1 || magic != 0x4641524D) { fclose(fp); return FALSE; }
+    if (fread(&version, sizeof(int), 1, fp) != 1 || version != 1) { fclose(fp); return FALSE; }
+    fread(&current_day, sizeof(int), 1, fp);
+    fread(&money, sizeof(int), 1, fp);
+    fread(&fertilizer_bought, sizeof(int), 1, fp);
+    fread(&tools_upgraded, sizeof(int), 1, fp);
+    fread(&chickens, sizeof(int), 1, fp);
+    fread(&cows, sizeof(int), 1, fp);
+    fread(&weather, sizeof(int), 1, fp);
+    fread(&has_scarecrow, sizeof(int), 1, fp);
+    fread(&has_mill, sizeof(int), 1, fp);
+    fread(&has_mayo_maker, sizeof(int), 1, fp);
+    fread(&has_cheese_press, sizeof(int), 1, fp);
+    fread(growth_times, sizeof(int), 4, fp);
+    fread(sell_values, sizeof(int), 4, fp);
+    fread(grid, sizeof(Cell), GRID_COLS * GRID_ROWS, fp);
+    fclose(fp);
+    current_season = ((current_day - 1) / 7) % 4;
+    return TRUE;
+}
+
+void CheckBankruptcy(HWND hwnd) {
+    int has_crops = 0;
+    for (int i = 0; i < GRID_COLS * GRID_ROWS; i++) {
+        if (grid[i].type == 2 || grid[i].type == 3) {
+            has_crops = 1;
+            break;
+        }
+    }
+    if (money < 5 && chickens == 0 && cows == 0 && !has_crops) {
+        money += 25;
+        ShowNativeToast("Town Relief: +$25 grant received!", 0);
+        SaveGame();
+    }
+}
 
 void PlaySoundEffect(int type) {
     switch(type) {
@@ -269,8 +347,8 @@ void PlaySoundEffect(int type) {
 }
 
 void UpdateTitle(HWND hwnd) {
-    char title[128];
-    wsprintf(title, "KFarm - %s, Day %d | %s | $%d | Ch:%d Co:%d", season_names[current_season], current_day, weather_names[weather], money, chickens, cows);
+    char title[160];
+    wsprintf(title, "KFarm - %s, Day %d | %s | $%d | Ch:%d Co:%d [H: Almanac]", season_names[current_season], current_day, weather_names[weather], money, chickens, cows);
     SetWindowText(hwnd, title);
 }
 
@@ -293,48 +371,85 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 season_particles[i].size = 3 + rand() % 4;
                 season_particles[i].sway = (float)(rand() % 628) / 100.0f;
             }
-            hUpgradeToolsBtn = CreateWindow("BUTTON", "Tools ($200)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                S(10), S(440), S(110), S(30), hwnd, (HMENU) 9, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hUpgradeToolsBtn = CreateWindow("BUTTON", "Tools ($200) [T]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                S(10), S(435), S(115), S(28), hwnd, (HMENU) 9, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hNextDayBtn = CreateWindow("BUTTON", "Sleep [Space]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                S(130), S(440), S(140), S(30), hwnd, (HMENU) 1, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hUpgradeBtn = CreateWindow("BUTTON", "Fertilizer ($100)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                S(280), S(440), S(120), S(30), hwnd, (HMENU) 6, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                S(135), S(435), S(140), S(28), hwnd, (HMENU) 1, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hUpgradeBtn = CreateWindow("BUTTON", "Fertilizer ($100) [F]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                S(285), S(435), S(125), S(28), hwnd, (HMENU) 6, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
             hSeedBtns[0] = CreateWindow("BUTTON", "[1] Wheat (-$5) [Sp/Fa]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON | WS_GROUP,
-                S(10), S(480), S(145), S(20), hwnd, (HMENU) 2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                S(10), S(470), S(145), S(20), hwnd, (HMENU) 2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hSeedBtns[1] = CreateWindow("BUTTON", "[2] Corn (-$10) [Su]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
-                S(160), S(480), S(145), S(20), hwnd, (HMENU) 3, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                S(160), S(470), S(145), S(20), hwnd, (HMENU) 3, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hBuyChickenBtn = CreateWindow("BUTTON", "Chicken ($50) [C]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                S(310), S(470), S(100), S(20), hwnd, (HMENU) 7, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+
             hSeedBtns[2] = CreateWindow("BUTTON", "[3] Tomato (-$15) [Su/Fa]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
-                S(10), S(505), S(145), S(20), hwnd, (HMENU) 4, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                S(10), S(495), S(145), S(20), hwnd, (HMENU) 4, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hSeedBtns[3] = CreateWindow("BUTTON", "[4] Pumpkin (-$25) [Fa]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
-                S(160), S(505), S(145), S(20), hwnd, (HMENU) 5, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-                
-            hBuyChickenBtn = CreateWindow("BUTTON", "Chicken ($50)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                S(310), S(480), S(100), S(20), hwnd, (HMENU) 7, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hBuyCowBtn = CreateWindow("BUTTON", "Cow ($150)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                S(310), S(505), S(100), S(20), hwnd, (HMENU) 8, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                S(160), S(495), S(145), S(20), hwnd, (HMENU) 5, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hBuyCowBtn = CreateWindow("BUTTON", "Cow ($150) [O]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                S(310), S(495), S(100), S(20), hwnd, (HMENU) 8, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
-            hBuyScarecrowBtn = CreateWindow("BUTTON", "Scarecrow ($100)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                S(10), S(530), S(140), S(20), hwnd, (HMENU) 10, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hMillBtn = CreateWindow("BUTTON", "Mill ($150)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                S(160), S(530), S(100), S(20), hwnd, (HMENU) 11, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hMayoBtn = CreateWindow("BUTTON", "Mayo ($100)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                S(270), S(530), S(100), S(20), hwnd, (HMENU) 12, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hBuyScarecrowBtn = CreateWindow("BUTTON", "Scarecrow ($100) [K]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                S(10), S(520), S(130), S(22), hwnd, (HMENU) 10, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hMillBtn = CreateWindow("BUTTON", "Mill ($150) [M]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                S(145), S(520), S(125), S(22), hwnd, (HMENU) 11, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hMayoBtn = CreateWindow("BUTTON", "Mayo ($100) [Y]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                S(275), S(520), S(135), S(22), hwnd, (HMENU) 12, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
-            hCheeseBtn = CreateWindow("BUTTON", "Cheese ($200)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                S(10), S(555), S(140), S(20), hwnd, (HMENU) 13, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hHelpBtn = CreateWindow("BUTTON", "Almanac (H/F1)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                S(160), S(555), S(100), S(20), hwnd, (HMENU) 14, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hCheeseBtn = CreateWindow("BUTTON", "Cheese ($200) [E]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                S(10), S(548), S(120), S(24), hwnd, (HMENU) 13, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hHelpBtn = CreateWindow("BUTTON", "Almanac [F1]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                S(135), S(548), S(85), S(24), hwnd, (HMENU) 14, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hSaveBtn = CreateWindow("BUTTON", "Save [S]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                S(225), S(548), S(85), S(24), hwnd, (HMENU) 15, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hResetBtn = CreateWindow("BUTTON", "Reset [R]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                S(315), S(548), S(95), S(24), hwnd, (HMENU) 16, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
             SendMessage(hSeedBtns[0], BM_SETCHECK, BST_CHECKED, 0);
             HFONT hFont = CreateFont(S(-13), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             EnumChildWindows(hwnd, SetFontCallback, (LPARAM)hFont);
+
+            if (LoadGame()) {
+                if (fertilizer_bought) { EnableWindow(hUpgradeBtn, FALSE); SetWindowText(hUpgradeBtn, "Fertilizer (Owned)"); }
+                if (tools_upgraded) { EnableWindow(hUpgradeToolsBtn, FALSE); SetWindowText(hUpgradeToolsBtn, "Tools Upgraded (3x3)"); }
+                if (has_scarecrow) { EnableWindow(hBuyScarecrowBtn, FALSE); SetWindowText(hBuyScarecrowBtn, "Scarecrow (Owned)"); }
+                if (has_mill) { EnableWindow(hMillBtn, FALSE); SetWindowText(hMillBtn, "Mill (Owned)"); }
+                if (has_mayo_maker) { EnableWindow(hMayoBtn, FALSE); SetWindowText(hMayoBtn, "Mayo Maker (Owned)"); }
+                if (has_cheese_press) { EnableWindow(hCheeseBtn, FALSE); SetWindowText(hCheeseBtn, "Cheese Press (Owned)"); }
+                ShowNativeToast("Saved farm loaded!", 0);
+            } else {
+                ShowNativeToast("Welcome to KFarm! [H/F1] for Almanac", 0);
+            }
+            UpdateTitle(hwnd);
             return 0;
         case WM_KEYDOWN:
             if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
                 SendMessage(hwnd, WM_COMMAND, 14, 0);
             } else if (wParam == VK_SPACE) {
                 SendMessage(hwnd, WM_COMMAND, 1, 0);
+            } else if (wParam == 'S' || wParam == 's') {
+                SendMessage(hwnd, WM_COMMAND, 15, 0);
+            } else if (wParam == 'R' || wParam == 'r') {
+                SendMessage(hwnd, WM_COMMAND, 16, 0);
+            } else if (wParam == 'F' || wParam == 'f') {
+                if (!fertilizer_bought) SendMessage(hwnd, WM_COMMAND, 6, 0);
+            } else if (wParam == 'T' || wParam == 't') {
+                if (!tools_upgraded) SendMessage(hwnd, WM_COMMAND, 9, 0);
+            } else if (wParam == 'C' || wParam == 'c') {
+                SendMessage(hwnd, WM_COMMAND, 7, 0);
+            } else if (wParam == 'O' || wParam == 'o') {
+                SendMessage(hwnd, WM_COMMAND, 8, 0);
+            } else if (wParam == 'K' || wParam == 'k') {
+                if (!has_scarecrow) SendMessage(hwnd, WM_COMMAND, 10, 0);
+            } else if (wParam == 'M' || wParam == 'm') {
+                if (!has_mill) SendMessage(hwnd, WM_COMMAND, 11, 0);
+            } else if (wParam == 'Y' || wParam == 'y') {
+                if (!has_mayo_maker) SendMessage(hwnd, WM_COMMAND, 12, 0);
+            } else if (wParam == 'E' || wParam == 'e') {
+                if (!has_cheese_press) SendMessage(hwnd, WM_COMMAND, 13, 0);
             } else if (wParam >= '1' && wParam <= '4') {
                 SendMessage(hwnd, WM_COMMAND, 2 + (wParam - '1'), 0);
             }
@@ -345,6 +460,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 PlaySoundEffect(6);
                 InvalidateRect(hwnd, NULL, TRUE);
                 SetTimer(hwnd, 1, 1000, NULL);
+                CheckBankruptcy(hwnd);
+                SaveGame();
             }
             if (LOWORD(wParam) == 6 && time_of_day == 0 && !fertilizer_bought) {
                 if (money >= 100) {
@@ -355,8 +472,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SetWindowText(hUpgradeBtn, "Fertilizer (Owned)");
                     SpawnShockwave(210.0f, 230.0f, RGB(129, 199, 132), 80.0f);
                     shake_amount += 8.0f;
+                    ShowNativeToast("Fertilizer purchased! Crops grow faster", 0);
                     UpdateTitle(hwnd);
+                    SaveGame();
                 } else {
+                    ShowNativeToast("Need $100 for Fertilizer!", 1);
                     MessageBeep(MB_ICONERROR);
                 }
             }
@@ -367,8 +487,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     PlaySoundEffect(4);
                     SpawnExplosionParticles(40.0f, 45.0f, 0);
                     shake_amount += 6.0f;
+                    char buf[64];
+                    wsprintf(buf, "Bought Chicken! Total: %d", chickens);
+                    ShowNativeToast(buf, 0);
                     UpdateTitle(hwnd);
+                    SaveGame();
                 } else {
+                    ShowNativeToast("Need $50 for a Chicken!", 1);
                     MessageBeep(MB_ICONERROR);
                 }
             }
@@ -379,8 +504,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     PlaySoundEffect(5);
                     SpawnExplosionParticles(60.0f, 340.0f, 1);
                     shake_amount += 8.0f;
+                    char buf[64];
+                    wsprintf(buf, "Bought Cow! Total: %d", cows);
+                    ShowNativeToast(buf, 0);
                     UpdateTitle(hwnd);
+                    SaveGame();
                 } else {
+                    ShowNativeToast("Need $150 for a Cow!", 1);
                     MessageBeep(MB_ICONERROR);
                 }
             }
@@ -389,11 +519,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     money -= 200;
                     tools_upgraded = 1;
                     EnableWindow(hUpgradeToolsBtn, FALSE);
-                    SetWindowText(hUpgradeToolsBtn, "Tools (Owned)");
+                    SetWindowText(hUpgradeToolsBtn, "Tools Upgraded (3x3)");
                     SpawnShockwave(210.0f, 230.0f, RGB(66, 165, 245), 90.0f);
                     shake_amount += 12.0f;
+                    ShowNativeToast("Tools upgraded! Now affect 3x3 area", 0);
                     UpdateTitle(hwnd);
+                    SaveGame();
                 } else {
+                    ShowNativeToast("Need $200 to Upgrade Tools!", 1);
                     MessageBeep(MB_ICONERROR);
                 }
             }
@@ -405,8 +538,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SetWindowText(hBuyScarecrowBtn, "Scarecrow (Owned)");
                     SpawnShockwave(380.0f, 50.0f, RGB(255, 215, 0), 60.0f);
                     shake_amount += 10.0f;
+                    ShowNativeToast("Scarecrow installed! Crops protected", 0);
                     UpdateTitle(hwnd);
+                    SaveGame();
                 } else {
+                    ShowNativeToast("Need $100 for Scarecrow!", 1);
                     MessageBeep(MB_ICONERROR);
                 }
             }
@@ -419,8 +555,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SetWindowText(hMillBtn, "Mill (Owned)");
                     SpawnShockwave(30.0f, 50.0f, RGB(255, 224, 130), 60.0f);
                     shake_amount += 8.0f;
+                    ShowNativeToast("Mill built! Wheat flour sells for $25", 0);
                     UpdateTitle(hwnd);
+                    SaveGame();
                 } else {
+                    ShowNativeToast("Need $150 for Mill!", 1);
                     MessageBeep(MB_ICONERROR);
                 }
             }
@@ -429,11 +568,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     money -= 100;
                     has_mayo_maker = 1;
                     EnableWindow(hMayoBtn, FALSE);
-                    SetWindowText(hMayoBtn, "Mayo (Owned)");
+                    SetWindowText(hMayoBtn, "Mayo Maker (Owned)");
                     SpawnShockwave(210.0f, 230.0f, RGB(255, 245, 157), 60.0f);
                     shake_amount += 8.0f;
+                    ShowNativeToast("Mayo Maker built! Chickens give $15/day", 0);
                     UpdateTitle(hwnd);
+                    SaveGame();
                 } else {
+                    ShowNativeToast("Need $100 for Mayo Maker!", 1);
                     MessageBeep(MB_ICONERROR);
                 }
             }
@@ -442,20 +584,109 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     money -= 200;
                     has_cheese_press = 1;
                     EnableWindow(hCheeseBtn, FALSE);
-                    SetWindowText(hCheeseBtn, "Cheese (Owned)");
+                    SetWindowText(hCheeseBtn, "Cheese Press (Owned)");
                     SpawnShockwave(210.0f, 230.0f, RGB(255, 224, 130), 70.0f);
                     shake_amount += 10.0f;
+                    ShowNativeToast("Cheese Press built! Cows give $40/day", 0);
                     UpdateTitle(hwnd);
+                    SaveGame();
                 } else {
+                    ShowNativeToast("Need $200 for Cheese Press!", 1);
                     MessageBeep(MB_ICONERROR);
                 }
             }
             if (LOWORD(wParam) == 14) {
-                MessageBox(hwnd, "How to Play:\nClick Grass to Till. Select a seed and click tilled soil to Plant.\nClick planted seed to Water (daily!). Click grown crop to Harvest.\n\nCrops:\nWheat: Grow 2d, Val $10 (Mill $25), Sp/Fa\nCorn: Grow 3d, Val $20, Su\nTomato: Grow 4d, Val $30, Su/Fa\nPumpkin: Grow 5d, Val $50, Fa\n\nAnimals:\nChicken: $5/day (Mayo $15/day)\nCow: $15/day (Cheese $40/day)\n\nWeather:\nClear: Need 1 water\nRain: Auto-waters crops\nDrought: Need 2 water\nCrows: Eats crops (Buy Scarecrow!)\n\nShortcuts:\n[1]-[4]: Select Seed\n[Space]: Sleep (Next Day)\n[H] or [F1]: Open Almanac", "Farmer's Almanac", MB_OK | MB_ICONINFORMATION);
+                MessageBox(hwnd,
+                    "=== FARMER'S ALMANAC ===\n\n"
+                    "HOW TO PLAY:\n"
+                    "Click Grass -> Till into soil\n"
+                    "Select Seed -> Click Soil to Plant\n"
+                    "Click Planted Crop -> Water (Daily!)\n"
+                    "Click Grown Crop -> Harvest for Profit!\n\n"
+                    "CROPS:\n"
+                    "[1] Wheat: 2 days, $10 base ($25 with Mill), Spring/Fall\n"
+                    "[2] Corn: 3 days, $20 base, Summer\n"
+                    "[3] Tomato: 4 days, $30 base, Summer/Fall\n"
+                    "[4] Pumpkin: 5 days, $50 base, Fall\n\n"
+                    "LIVESTOCK & UPGRADES:\n"
+                    "Chicken: $5/day ($15 with Mayo Maker)\n"
+                    "Cow: $15/day ($40 with Cheese Press)\n"
+                    "Fertilizer: Crops mature 1 day faster\n"
+                    "Tools Upgrade: Till, water & harvest 3x3 tiles!\n"
+                    "Scarecrow: Protects crops from crows\n\n"
+                    "WEATHER:\n"
+                    "Clear: Normal (1 water needed)\n"
+                    "Rain: Auto-waters all crops!\n"
+                    "Drought: Needs 2 waterings!\n"
+                    "Crows: Eaten without a Scarecrow!\n\n"
+                    "KEYBOARD SHORTCUTS:\n"
+                    "[1] - [4]: Select Seeds\n"
+                    "[Space]: Sleep / Next Day\n"
+                    "[H] or [F1]: Farmer's Almanac\n"
+                    "[F]: Buy Fertilizer ($100)\n"
+                    "[T]: Upgrade Tools 3x3 ($200)\n"
+                    "[C]: Buy Chicken ($50)\n"
+                    "[O]: Buy Cow ($150)\n"
+                    "[K]: Buy Scarecrow ($100)\n"
+                    "[M]: Buy Mill ($150)\n"
+                    "[Y]: Buy Mayo Maker ($100)\n"
+                    "[E]: Buy Cheese Press ($200)\n"
+                    "[S]: Save Farm\n"
+                    "[R]: Reset Farm",
+                    "Farmer's Almanac - KFarm", MB_OK | MB_ICONINFORMATION);
+            }
+            if (LOWORD(wParam) == 15) {
+                SaveGame();
+                ShowNativeToast("Farm saved successfully!", 0);
+            }
+            if (LOWORD(wParam) == 16) {
+                if (MessageBox(hwnd, "Are you sure you want to reset your farm? All progress will be lost.", "Reset Farm", MB_YESNO | MB_ICONWARNING) == IDYES) {
+                    remove("kfarm.sav");
+                    current_day = 1;
+                    time_of_day = 0;
+                    current_season = 0;
+                    money = 50;
+                    fertilizer_bought = 0;
+                    tools_upgraded = 0;
+                    chickens = 0;
+                    cows = 0;
+                    weather = 0;
+                    has_scarecrow = 0;
+                    has_mill = 0;
+                    has_mayo_maker = 0;
+                    has_cheese_press = 0;
+                    growth_times[0] = 2; growth_times[1] = 3; growth_times[2] = 4; growth_times[3] = 5;
+                    sell_values[0] = 10; sell_values[1] = 20; sell_values[2] = 30; sell_values[3] = 50;
+                    memset(grid, 0, sizeof(grid));
+
+                    EnableWindow(hUpgradeBtn, TRUE);
+                    SetWindowText(hUpgradeBtn, "Fertilizer ($100) [F]");
+                    EnableWindow(hUpgradeToolsBtn, TRUE);
+                    SetWindowText(hUpgradeToolsBtn, "Tools ($200) [T]");
+                    EnableWindow(hBuyScarecrowBtn, TRUE);
+                    SetWindowText(hBuyScarecrowBtn, "Scarecrow ($100) [K]");
+                    EnableWindow(hMillBtn, TRUE);
+                    SetWindowText(hMillBtn, "Mill ($150) [M]");
+                    EnableWindow(hMayoBtn, TRUE);
+                    SetWindowText(hMayoBtn, "Mayo ($100) [Y]");
+                    EnableWindow(hCheeseBtn, TRUE);
+                    SetWindowText(hCheeseBtn, "Cheese ($200) [E]");
+
+                    selected_seed = 0;
+                    CheckRadioButton(hwnd, 2, 5, 2);
+
+                    ShowNativeToast("Farm reset to new game!", 0);
+                    UpdateTitle(hwnd);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
             }
             if (LOWORD(wParam) >= 2 && LOWORD(wParam) <= 5) {
                 selected_seed = LOWORD(wParam) - 2;
                 CheckRadioButton(hwnd, 2, 5, LOWORD(wParam));
+                const char* sNames[4] = {"Wheat ($5)", "Corn ($10)", "Tomato ($15)", "Pumpkin ($25)"};
+                char sBuf[64];
+                wsprintf(sBuf, "Selected seed: [%d] %s", selected_seed + 1, sNames[selected_seed]);
+                ShowNativeToast(sBuf, 0);
             }
             return 0;
         case WM_TIMER:
@@ -559,6 +790,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         }
                     }
                 }
+                if (toast_timer > 0) toast_timer--;
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }
@@ -570,7 +802,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 time_of_day = 0;
                 SpawnShockwave(210.0f, 230.0f, RGB(255, 245, 157), 130.0f);
                 shake_amount += 8.0f;
-                money += (chickens * (has_mayo_maker ? 15 : 5)) + (cows * (has_cheese_press ? 40 : 15));
+                int inc = (chickens * (has_mayo_maker ? 15 : 5)) + (cows * (has_cheese_press ? 40 : 15));
+                money += inc;
                 for (int i = 0; i < GRID_COLS * GRID_ROWS; i++) {
                     if (grid[i].type == 2 || grid[i].type == 3) {
                         if ((crop_seasons[grid[i].cropType] & (1 << current_season)) == 0) {
@@ -602,17 +835,50 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                 }
                 
+                char morning_msg[128];
+                if (inc > 0) {
+                    wsprintf(morning_msg, "Day %d (%s) - %s | +$%d from animals", current_day, season_names[current_season], weather_names[weather], inc);
+                } else {
+                    wsprintf(morning_msg, "Day %d (%s) - %s", current_day, season_names[current_season], weather_names[weather]);
+                }
+                ShowNativeToast(morning_msg, 0);
+                CheckBankruptcy(hwnd);
+                SaveGame();
+
                 InvalidateRect(hwnd, NULL, TRUE);
                 UpdateTitle(hwnd);
             }
             return 0;
+        case WM_MOUSEMOVE: {
+            POINT pt = { (short)LOWORD(lParam), (short)HIWORD(lParam) };
+            HDC hdc = GetDC(hwnd);
+            SetMapMode(hdc, MM_ISOTROPIC);
+            SetWindowExtEx(hdc, 420, 610, NULL);
+            SetViewportExtEx(hdc, S(420), S(610), NULL);
+            DPtoLP(hdc, &pt, 1);
+            ReleaseDC(hwnd, hdc);
+            int ncx = -1, ncy = -1;
+            if (pt.x >= OFFSET_X && pt.y >= OFFSET_Y) {
+                ncx = (pt.x - OFFSET_X) / CELL_SIZE;
+                ncy = (pt.y - OFFSET_Y) / CELL_SIZE;
+                if (ncx < 0 || ncx >= GRID_COLS || ncy < 0 || ncy >= GRID_ROWS) {
+                    ncx = -1; ncy = -1;
+                }
+            }
+            if (ncx != hover_cx || ncy != hover_cy) {
+                hover_cx = ncx;
+                hover_cy = ncy;
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            return 0;
+        }
         case WM_LBUTTONDOWN: {
             if (time_of_day == 1) return 0;
             POINT pt = { (short)LOWORD(lParam), (short)HIWORD(lParam) };
             HDC hdc = GetDC(hwnd);
             SetMapMode(hdc, MM_ISOTROPIC);
-            SetWindowExtEx(hdc, 420, 590, NULL);
-            SetViewportExtEx(hdc, S(420), S(590), NULL);
+            SetWindowExtEx(hdc, 420, 610, NULL);
+            SetViewportExtEx(hdc, S(420), S(610), NULL);
             DPtoLP(hdc, &pt, 1);
             ReleaseDC(hwnd, hdc);
             
@@ -641,6 +907,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 int min_y = is_aoe ? (cy > 0 ? cy - 1 : 0) : cy;
                 int max_y = is_aoe ? (cy < GRID_ROWS - 1 ? cy + 1 : GRID_ROWS - 1) : cy;
                 
+                const char* sNames[4] = {"Wheat", "Corn", "Tomato", "Pumpkin"};
                 for (int y = min_y; y <= max_y; y++) {
                     for (int x = min_x; x <= max_x; x++) {
                         int idx = y * GRID_COLS + x;
@@ -650,12 +917,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             grid[idx].type = 1;
                             SpawnParticles((float)px, (float)py, RGB(93, 64, 55), 10);
                             shake_amount += 5.0f;
+                            ShowNativeToast("Tilled soil!", 0);
+                            SaveGame();
                         } else if (action == 1 && x == cx && y == cy && grid[idx].type == 1) {
                             if ((crop_seasons[selected_seed] & (1 << current_season)) != 0 && money >= seed_costs[selected_seed]) {
                                 money -= seed_costs[selected_seed];
                                 grid[idx].type = 2; grid[idx].growth = 0; grid[idx].cropType = selected_seed;
                                 SpawnParticles((float)px, (float)py, RGB(139, 195, 74), 10);
+                                char pBuf[64];
+                                wsprintf(pBuf, "Planted %s (-$%d)", sNames[selected_seed], seed_costs[selected_seed]);
+                                ShowNativeToast(pBuf, 0);
+                                SaveGame();
                             } else {
+                                ShowNativeToast("Cannot plant: Out of season or low funds!", 1);
                                 MessageBeep(MB_ICONERROR);
                             }
                         } else if (action == 2 && grid[idx].type == 2) {
@@ -663,6 +937,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             if (grid[idx].watered < req) {
                                 grid[idx].watered++;
                                 SpawnWaterParticles((float)px, (float)py, 20);
+                                ShowNativeToast("Watered crops!", 0);
+                                SaveGame();
                             }
                         } else if (action == 3 && grid[idx].type == 3) {
                             money += sell_values[grid[idx].cropType];
@@ -670,6 +946,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             grid[idx].type = 1; grid[idx].watered = 0;
                             SpawnExplosionParticles((float)px, (float)py, cType);
                             shake_amount += 15.0f;
+                            char hBuf[64];
+                            wsprintf(hBuf, "Harvested %s! (+$%d)", sNames[cType], sell_values[cType]);
+                            ShowNativeToast(hBuf, 0);
+                            SaveGame();
                         }
                     }
                 }
@@ -695,8 +975,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             DeleteObject(hSky);
             
             SetMapMode(hdc, MM_ISOTROPIC);
-            SetWindowExtEx(hdc, 420, 590, NULL);
-            SetViewportExtEx(hdc, S(420), S(590), NULL);
+            SetWindowExtEx(hdc, 420, 610, NULL);
+            SetViewportExtEx(hdc, S(420), S(610), NULL);
             
             int shake_dx = 0, shake_dy = 0;
             if (shake_amount > 0.1f) {
@@ -1287,6 +1567,52 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 DeleteObject(hOverlay);
             }
 
+            // Hover reticle
+            if (hover_cx >= 0 && hover_cy >= 0 && time_of_day == 0) {
+                int isAoE = tools_upgraded;
+                int minX = isAoE ? (hover_cx > 0 ? hover_cx - 1 : 0) : hover_cx;
+                int maxX = isAoE ? (hover_cx < GRID_COLS - 1 ? hover_cx + 1 : GRID_COLS - 1) : hover_cx;
+                int minY = isAoE ? (hover_cy > 0 ? hover_cy - 1 : 0) : hover_cy;
+                int maxY = isAoE ? (hover_cy < GRID_ROWS - 1 ? hover_cy + 1 : GRID_ROWS - 1) : hover_cy;
+
+                HPEN hHoverPen = CreatePen(PS_DOT, 1, RGB(255, 255, 255));
+                HPEN hOldP = (HPEN)SelectObject(hdc, hHoverPen);
+                HBRUSH hOldB = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                Rectangle(hdc, OFFSET_X + minX * CELL_SIZE + 1, OFFSET_Y + minY * CELL_SIZE + 1,
+                               OFFSET_X + (maxX + 1) * CELL_SIZE - 1, OFFSET_Y + (maxY + 1) * CELL_SIZE - 1);
+                SelectObject(hdc, hOldP);
+                SelectObject(hdc, hOldB);
+                DeleteObject(hHoverPen);
+            }
+
+            // On-screen floating toast notification
+            if (toast_timer > 0 && toast_msg[0] != '\0') {
+                SIZE sz;
+                GetTextExtentPoint32(hdc, toast_msg, lstrlen(toast_msg), &sz);
+                int tx = 210;
+                int ty = 410;
+                int boxW = sz.cx + 24;
+                int boxH = sz.cy + 10;
+                int left = tx - boxW / 2;
+                int top = ty - boxH / 2;
+                int right = tx + boxW / 2;
+                int bottom = ty + boxH / 2;
+
+                HBRUSH hToastBg = CreateSolidBrush(RGB(62, 39, 35));
+                HPEN hToastPen = CreatePen(PS_SOLID, 2, toast_is_error ? RGB(244, 67, 54) : RGB(129, 199, 132));
+                HBRUSH hOldTB = (HBRUSH)SelectObject(hdc, hToastBg);
+                HPEN hOldTP = (HPEN)SelectObject(hdc, hToastPen);
+                RoundRect(hdc, left, top, right, bottom, 12, 12);
+                SelectObject(hdc, hOldTB);
+                SelectObject(hdc, hOldTP);
+                DeleteObject(hToastBg);
+                DeleteObject(hToastPen);
+
+                SetBkMode(hdc, TRANSPARENT);
+                SetTextColor(hdc, RGB(255, 243, 224));
+                TextOut(hdc, left + 12, top + 5, toast_msg, lstrlen(toast_msg));
+            }
+
             SelectObject(hdc, GetStockObject(SYSTEM_FONT));
             DeleteObject(hGuiFont);
 
@@ -1327,11 +1653,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
         if (setDPIAware) setDPIAware();
     }
 
-    RECT rect = {0, 0, S(420), S(590)};
+    RECT rect = {0, 0, S(420), S(610)};
     AdjustWindowRect(&rect, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN, FALSE);
 
     HWND hwnd = CreateWindowEx(
-        0, CLASS_NAME, "KFarm - Spring, Day 1 | Clear | $50 | Ch:0 Co:0", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN,
+        0, CLASS_NAME, "KFarm - Spring, Day 1 | Clear | $50 | Ch:0 Co:0 [H: Almanac]", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top,
         NULL, NULL, hInstance, NULL
     );
@@ -1343,17 +1669,58 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     MSG msg = {0};
     while (GetMessage(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
-            if (msg.wParam == VK_F1 || msg.wParam == 'H' || msg.wParam == 'h') {
+            WPARAM wp = msg.wParam;
+            if (wp == VK_F1 || wp == 'H' || wp == 'h') {
                 SendMessage(hwnd, WM_COMMAND, 14, 0);
                 continue;
             }
-            if (msg.wParam == VK_SPACE) {
+            if (wp == VK_SPACE) {
                 SendMessage(hwnd, WM_COMMAND, 1, 0);
                 continue;
             }
-            if (msg.wParam >= '1' && msg.wParam <= '4') {
-                int seedCmd = 2 + (msg.wParam - '1');
+            if (wp >= '1' && wp <= '4') {
+                int seedCmd = 2 + (wp - '1');
                 SendMessage(hwnd, WM_COMMAND, seedCmd, 0);
+                continue;
+            }
+            if (wp == 'S' || wp == 's') {
+                SendMessage(hwnd, WM_COMMAND, 15, 0);
+                continue;
+            }
+            if (wp == 'R' || wp == 'r') {
+                SendMessage(hwnd, WM_COMMAND, 16, 0);
+                continue;
+            }
+            if (wp == 'F' || wp == 'f') {
+                if (!fertilizer_bought) SendMessage(hwnd, WM_COMMAND, 6, 0);
+                continue;
+            }
+            if (wp == 'T' || wp == 't') {
+                if (!tools_upgraded) SendMessage(hwnd, WM_COMMAND, 9, 0);
+                continue;
+            }
+            if (wp == 'C' || wp == 'c') {
+                SendMessage(hwnd, WM_COMMAND, 7, 0);
+                continue;
+            }
+            if (wp == 'O' || wp == 'o') {
+                SendMessage(hwnd, WM_COMMAND, 8, 0);
+                continue;
+            }
+            if (wp == 'K' || wp == 'k') {
+                if (!has_scarecrow) SendMessage(hwnd, WM_COMMAND, 10, 0);
+                continue;
+            }
+            if (wp == 'M' || wp == 'm') {
+                if (!has_mill) SendMessage(hwnd, WM_COMMAND, 11, 0);
+                continue;
+            }
+            if (wp == 'Y' || wp == 'y') {
+                if (!has_mayo_maker) SendMessage(hwnd, WM_COMMAND, 12, 0);
+                continue;
+            }
+            if (wp == 'E' || wp == 'e') {
+                if (!has_cheese_press) SendMessage(hwnd, WM_COMMAND, 13, 0);
                 continue;
             }
         }
