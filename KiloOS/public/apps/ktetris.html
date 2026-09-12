@@ -851,28 +851,99 @@
   });
 
   // Sprite / 3D Beveled Gem Block Renderer
-  function draw3DPanel(ctx, x, y, w, h) {
+  function drawSkillBadge(ctx, x, y, skillType, charges, isActive, timerSec, hotkey, name, color) {
       ctx.save();
-      ctx.shadowColor = 'rgba(0,0,0,0.8)';
-      ctx.shadowBlur = 6;
-      ctx.shadowOffsetX = 3;
-      ctx.shadowOffsetY = 3;
-      
-      ctx.fillStyle = '#1a1a24';
+      const w = 138, h = 18;
+      // Badge backing
+      ctx.fillStyle = isActive ? 'rgba(0, 50, 80, 0.9)' : (charges > 0 ? 'rgba(20, 24, 34, 0.85)' : 'rgba(15, 15, 20, 0.7)');
       ctx.fillRect(x, y, w, h);
-      ctx.shadowColor = 'transparent';
       
-      ctx.fillStyle = 'rgba(255,255,255,0.15)';
-      ctx.beginPath();
-      ctx.moveTo(x, y + h); ctx.lineTo(x, y); ctx.lineTo(x + w, y);
-      ctx.lineTo(x + w - 3, y + 3); ctx.lineTo(x + 3, y + 3); ctx.lineTo(x + 3, y + h - 3);
-      ctx.fill();
-      
-      ctx.fillStyle = 'rgba(0,0,0,0.5)';
-      ctx.beginPath();
-      ctx.moveTo(x, y + h); ctx.lineTo(x + w, y + h); ctx.lineTo(x + w, y);
-      ctx.lineTo(x + w - 3, y + 3); ctx.lineTo(x + w - 3, y + h - 3); ctx.lineTo(x + 3, y + h - 3);
-      ctx.fill();
+      // Border with active neon pulse
+      ctx.strokeStyle = isActive ? '#00ffff' : (charges > 0 ? color : '#333344');
+      ctx.lineWidth = 1;
+      if (isActive) {
+          ctx.shadowColor = '#00ffff';
+          ctx.shadowBlur = 6;
+      }
+      ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+      ctx.shadowBlur = 0;
+
+      // Icon (14x14 at x+2, y+2)
+      const ix = x + 2, iy = y + 2;
+      if (skillType === 0) { // Nuke: Radiation Trefoil / Warhead
+          ctx.fillStyle = charges > 0 ? '#ff5500' : '#442211';
+          ctx.beginPath();
+          ctx.arc(ix + 7, iy + 7, 6, 0, Math.PI * 2);
+          ctx.fill();
+          // Trefoil blades
+          ctx.fillStyle = charges > 0 ? '#ffea00' : '#665522';
+          for (let a = 0; a < 3; a++) {
+              const ang = (a * 120 - 90) * (Math.PI / 180);
+              ctx.beginPath();
+              ctx.moveTo(ix + 7, iy + 7);
+              ctx.arc(ix + 7, iy + 7, 5.5, ang - 0.5, ang + 0.5);
+              ctx.closePath();
+              ctx.fill();
+          }
+          // Center core
+          ctx.fillStyle = charges > 0 ? '#111118' : '#000000';
+          ctx.beginPath();
+          ctx.arc(ix + 7, iy + 7, 2, 0, Math.PI * 2);
+          ctx.fill();
+      } else if (skillType === 1) { // Swap: Dual Orbital Arrows
+          ctx.strokeStyle = charges > 0 ? '#00ffc8' : '#225544';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(ix + 7, iy + 7, 5, 0.4, Math.PI - 0.4);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(ix + 7, iy + 7, 5, Math.PI + 0.4, Math.PI * 2 - 0.4);
+          ctx.stroke();
+          // Arrow heads
+          ctx.fillStyle = charges > 0 ? '#00ffc8' : '#225544';
+          ctx.beginPath();
+          ctx.moveTo(ix + 12, iy + 6); ctx.lineTo(ix + 13, iy + 10); ctx.lineTo(ix + 9, iy + 9);
+          ctx.closePath(); ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(ix + 2, iy + 8); ctx.lineTo(ix + 1, iy + 4); ctx.lineTo(ix + 5, iy + 5);
+          ctx.closePath(); ctx.fill();
+      } else if (skillType === 2) { // Freeze: Snowflake Crystal
+          ctx.strokeStyle = (isActive || charges > 0) ? '#82dcff' : '#223344';
+          ctx.lineWidth = 1.2;
+          if (isActive) {
+              ctx.shadowColor = '#82dcff';
+              ctx.shadowBlur = 4;
+          }
+          ctx.beginPath();
+          ctx.moveTo(ix + 7, iy + 1.5); ctx.lineTo(ix + 7, iy + 12.5);
+          ctx.moveTo(ix + 2.5, iy + 4); ctx.lineTo(ix + 11.5, iy + 10);
+          ctx.moveTo(ix + 2.5, iy + 10); ctx.lineTo(ix + 11.5, iy + 4);
+          ctx.stroke();
+          ctx.fillStyle = (isActive || charges > 0) ? '#ffffff' : '#334455';
+          ctx.fillRect(ix + 6, iy + 6, 2, 2);
+      }
+
+      // Label text
+      ctx.font = 'bold 10px system-ui, monospace';
+      ctx.textAlign = 'left';
+      ctx.fillStyle = isActive ? '#00ffff' : (charges > 0 ? color : '#666677');
+      const label = isActive ? `${hotkey} FROZEN (${timerSec}s)` : `${hotkey} ${name}`;
+      ctx.fillText(label, x + 18, y + 12);
+
+      // Charge pips on right side
+      const maxPips = (skillType === 1) ? 3 : 2;
+      for (let p = 0; p < maxPips; p++) {
+          const px = x + 126 - (maxPips - 1 - p) * 6;
+          const py = y + 5;
+          ctx.fillStyle = (p < charges) ? color : 'rgba(50, 50, 60, 0.6)';
+          if (p < charges) {
+              ctx.shadowColor = color;
+              ctx.shadowBlur = 3;
+          } else {
+              ctx.shadowBlur = 0;
+          }
+          ctx.fillRect(px, py, 4, 7);
+      }
       ctx.restore();
   }
 
@@ -881,22 +952,46 @@
       const baseColor = colors[colorIdx] || '#888899';
       const tick = Date.now();
       
-      if (drawState === 1) { // Ghost
+      if (drawState === 1) { // Holographic Ghost Projection
           ctx.save();
-          const pulse = 0.4 + 0.25 * Math.sin(tick * 0.009);
+          const pulse = 0.45 + 0.25 * Math.sin(tick * 0.009);
           ctx.globalAlpha = pulse;
           ctx.strokeStyle = baseColor;
-          ctx.lineWidth = 1.5;
+          ctx.lineWidth = 1.2;
+          
+          // Corner holographic L-brackets
+          const arm = Math.max(3, Math.floor(size / 4));
+          ctx.beginPath();
+          // TL
+          ctx.moveTo(px + 1.5, py + 1.5 + arm); ctx.lineTo(px + 1.5, py + 1.5); ctx.lineTo(px + 1.5 + arm, py + 1.5);
+          // TR
+          ctx.moveTo(px + size - 1.5 - arm, py + 1.5); ctx.lineTo(px + size - 1.5, py + 1.5); ctx.lineTo(px + size - 1.5, py + 1.5 + arm);
+          // BL
+          ctx.moveTo(px + 1.5, py + size - 1.5 - arm); ctx.lineTo(px + 1.5, py + size - 1.5); ctx.lineTo(px + 1.5 + arm, py + size - 1.5);
+          // BR
+          ctx.moveTo(px + size - 1.5 - arm, py + size - 1.5); ctx.lineTo(px + size - 1.5, py + size - 1.5); ctx.lineTo(px + size - 1.5, py + size - 1.5 - arm);
+          ctx.stroke();
+          
+          // Outer subtle frame
+          ctx.strokeStyle = 'rgba(255,255,255,0.18)';
           ctx.strokeRect(px + 1.5, py + 1.5, size - 3, size - 3);
-          
-          // Animated scanline for ghost
-          const scanY = (tick * 0.05) % size;
+
+          // Animated phosphor scanline
+          const scanY = (tick * 0.05) % (size - 4);
           ctx.fillStyle = baseColor;
-          ctx.globalAlpha = pulse * 0.8;
-          ctx.fillRect(px + 2, py + scanY, size - 4, 2);
+          ctx.globalAlpha = pulse * 0.9;
+          ctx.fillRect(px + 2, py + 2 + scanY, size - 4, 1.5);
           
+          // Interior subtle reticle cross
+          ctx.strokeStyle = baseColor;
+          ctx.globalAlpha = pulse * 0.35;
+          ctx.beginPath();
+          ctx.moveTo(px + size / 2, py + 3); ctx.lineTo(px + size / 2, py + size - 3);
+          ctx.moveTo(px + 3, py + size / 2); ctx.lineTo(px + size - 3, py + size / 2);
+          ctx.stroke();
+
           ctx.fillStyle = baseColor;
-          ctx.globalAlpha = pulse * 0.15;
+          ctx.globalAlpha = pulse * 0.12;
           ctx.fillRect(px + 2, py + 2, size - 4, size - 4);
           ctx.restore();
           return;
@@ -943,69 +1038,153 @@
 
       // Inner Gem Texture / Pattern based on piece type (colorIdx)
       ctx.save();
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-      if (colorIdx >= 1 && colorIdx <= 3) {
-          // Inner circle
+      if (colorIdx === 1) { // Cyan: I - Prismatic Dual Optical Refraction Slits & Diamond Core
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+          ctx.fillRect(px + bSize + 1, py + bSize + 2, size - (bSize + 1) * 2, 2);
+          ctx.fillStyle = 'rgba(0, 255, 255, 0.35)';
+          ctx.fillRect(px + bSize + 1, py + size - bSize - 4, size - (bSize + 1) * 2, 2);
+          // Diamond Core
+          ctx.fillStyle = '#ffffff';
           ctx.beginPath();
-          ctx.arc(px + size / 2, py + size / 2, size / 4, 0, Math.PI * 2);
-          ctx.fill();
-      } else if (colorIdx >= 4 && colorIdx <= 6) {
-          // Diamond pattern
+          ctx.moveTo(px + size / 2, py + size / 2 - 3);
+          ctx.lineTo(px + size / 2 + 3, py + size / 2);
+          ctx.lineTo(px + size / 2, py + size / 2 + 3);
+          ctx.lineTo(px + size / 2 - 3, py + size / 2);
+          ctx.closePath(); ctx.fill();
+      } else if (colorIdx === 2) { // Blue: J - Stepped Sapphire Chevron Facet
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(px + bSize + 2, py + size - bSize - 2);
+          ctx.lineTo(px + bSize + 2, py + bSize + 2);
+          ctx.lineTo(px + size - bSize - 2, py + bSize + 2);
+          ctx.stroke();
+          ctx.fillStyle = 'rgba(120, 160, 255, 0.35)';
+          ctx.fillRect(px + bSize + 3, py + bSize + 3, size - (bSize + 3) * 2, size - (bSize + 3) * 2);
+      } else if (colorIdx === 3) { // Orange: L - Amber Radiant Sunstone & Diagonal Luster
+          ctx.fillStyle = 'rgba(255, 255, 200, 0.4)';
+          ctx.beginPath();
+          ctx.moveTo(px + bSize + 2, py + size - bSize - 2);
+          ctx.lineTo(px + size - bSize - 2, py + bSize + 2);
+          ctx.lineTo(px + size - bSize - 2, py + bSize + 5);
+          ctx.lineTo(px + bSize + 5, py + size - bSize - 2);
+          ctx.closePath(); ctx.fill();
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(px + size / 2 - 1, py + size / 2 - 1, 3, 3);
+      } else if (colorIdx === 4) { // Yellow: O - Topaz Brilliant Cut with 4 Corner Facets & Gold Crest
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+          const pad = bSize + 2;
+          ctx.beginPath();
+          ctx.moveTo(px + pad, py + pad); ctx.lineTo(px + size / 2, py + pad + 2); ctx.lineTo(px + pad + 2, py + size / 2); ctx.closePath(); ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(px + size - pad, py + pad); ctx.lineTo(px + size / 2, py + pad + 2); ctx.lineTo(px + size - pad - 2, py + size / 2); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(px + size / 2 - 2, py + size / 2 - 2, 4, 4);
+      } else if (colorIdx === 5) { // Green: S - Emerald Table-Cut Pavilion
+          ctx.fillStyle = 'rgba(200, 255, 220, 0.4)';
           ctx.beginPath();
           ctx.moveTo(px + size / 2, py + bSize + 2);
           ctx.lineTo(px + size - bSize - 2, py + size / 2);
           ctx.lineTo(px + size / 2, py + size - bSize - 2);
           ctx.lineTo(px + bSize + 2, py + size / 2);
+          ctx.closePath(); ctx.fill();
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(px + size / 2 - 1, py + size / 2 - 1, 2, 2);
+      } else if (colorIdx === 6) { // Purple: T - Royal Amethyst Crown Jewel with 3 Radiating Facet Arms
+          ctx.fillStyle = 'rgba(255, 220, 255, 0.4)';
+          ctx.beginPath();
+          ctx.arc(px + size / 2, py + size / 2, Math.max(2, size / 5), 0, Math.PI * 2);
           ctx.fill();
-      } else if (colorIdx >= 7 && colorIdx <= 9) {
-          // Inner cross
-          ctx.fillRect(px + size / 2 - 2, py + bSize + 2, 4, size - (bSize + 2) * 2);
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(px + size / 2, py + size / 2); ctx.lineTo(px + size / 2, py + bSize + 2);
+          ctx.moveTo(px + size / 2, py + size / 2); ctx.lineTo(px + bSize + 2, py + size - bSize - 2);
+          ctx.moveTo(px + size / 2, py + size / 2); ctx.lineTo(px + size - bSize - 2, py + size - bSize - 2);
+          ctx.stroke();
+      } else if (colorIdx === 7) { // Red: Z - Crimson Ruby Lattice Prism
+          ctx.fillStyle = 'rgba(255, 200, 200, 0.45)';
+          ctx.beginPath();
+          ctx.moveTo(px + bSize + 2, py + bSize + 2);
+          ctx.lineTo(px + size - bSize - 2, py + size / 2);
+          ctx.lineTo(px + bSize + 2, py + size - bSize - 2);
+          ctx.closePath(); ctx.fill();
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(px + size / 2 - 1, py + size / 2 - 1, 2, 2);
+      } else if (colorIdx >= 8 && colorIdx <= 13) { // Pentominoes: Concentric Geometric Gem Facets
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.rect(px + bSize + 2, py + bSize + 2, size - (bSize + 2) * 2, size - (bSize + 2) * 2);
+          ctx.stroke();
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+          ctx.beginPath();
+          ctx.arc(px + size / 2, py + size / 2, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+      } else if (colorIdx === 14) { // Garbage: Heavy Armored Steel Bulkhead Tile
+          // Steel plating base
+          ctx.fillStyle = '#4c505c';
+          ctx.fillRect(px + bSize, py + bSize, size - bSize * 2, size - bSize * 2);
+          
+          // 4 Corner Steel Hex-Bolts
+          ctx.fillStyle = '#d0d4e0';
+          const rSize = Math.max(1, Math.floor(size / 8));
+          ctx.fillRect(px + bSize + 1, py + bSize + 1, rSize, rSize);
+          ctx.fillRect(px + size - bSize - 1 - rSize, py + bSize + 1, rSize, rSize);
+          ctx.fillRect(px + bSize + 1, py + size - bSize - 1 - rSize, rSize, rSize);
+          ctx.fillRect(px + size - bSize - 1 - rSize, py + size - bSize - 1 - rSize, rSize, rSize);
+          
+          // Center Industrial Hazard Caution Stripe
+          ctx.fillStyle = '#f0c020';
           ctx.fillRect(px + bSize + 2, py + size / 2 - 2, size - (bSize + 2) * 2, 4);
-      } else {
-          // Default square box
-          ctx.fillRect(px + bSize + 1, py + bSize + 1, size - (bSize + 1) * 2, size - (bSize + 1) * 2);
+          ctx.fillStyle = '#222228';
+          for (let hx = px + bSize + 2; hx < px + size - bSize - 2; hx += 4) {
+              ctx.beginPath();
+              ctx.moveTo(hx, py + size / 2 + 2);
+              ctx.lineTo(hx + 2, py + size / 2 - 2);
+              ctx.lineTo(hx + 3, py + size / 2 - 2);
+              ctx.lineTo(hx + 1, py + size / 2 + 2);
+              ctx.closePath();
+              ctx.fill();
+          }
+      } else if (colorIdx === 15) { // Bomb: Demolition Ordnance Sprite
+          // Gunmetal cylindrical body
+          ctx.fillStyle = '#2a1616';
+          ctx.beginPath();
+          ctx.arc(px + size / 2, py + size / 2, Math.max(3, size / 2 - 3), 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#ff3333';
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+
+          // Pulsing danger core
+          const innerPulse = 0.5 + 0.5 * Math.abs(Math.sin(tick * 0.015));
+          ctx.fillStyle = '#ff1100';
+          ctx.beginPath();
+          ctx.arc(px + size / 2, py + size / 2, Math.max(2, (size / 4) * innerPulse), 0, Math.PI * 2);
+          ctx.fill();
+
+          // Live dynamic spark fuse at top-right
+          const fuseCol = Math.sin(tick * 0.04) > 0 ? '#ffff00' : '#ffffff';
+          ctx.fillStyle = fuseCol;
+          ctx.beginPath();
+          ctx.arc(px + size - bSize - 2, py + bSize + 2, 1.5, 0, Math.PI * 2);
+          ctx.fill();
       }
       ctx.restore();
 
-      // Gem Corner Flare
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-      ctx.beginPath();
-      ctx.moveTo(px + bSize + 1, py + bSize + 1);
-      ctx.lineTo(px + bSize + 4, py + bSize + 1);
-      ctx.lineTo(px + bSize + 1, py + bSize + 4);
-      ctx.closePath();
-      ctx.fill();
-
-      // Special details
-      if (colorIdx === 15) { // Bomb
-          const fuseFlicker = randomFloat() > 0.5 ? '#ffff00' : '#ffffff';
-          const innerPulse = Math.abs(Math.sin(tick * 0.015));
-          ctx.fillStyle = '#ff0000';
+      // Gem Corner Flare (specular accent)
+      if (colorIdx !== 14 && colorIdx !== 15) {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
           ctx.beginPath();
-          ctx.arc(px + size / 2, py + size / 2, Math.max(3, size / 3), 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = fuseFlicker;
-          ctx.beginPath();
-          ctx.arc(px + size / 2, py + size / 2, Math.max(1, (size / 4) * innerPulse), 0, Math.PI * 2);
-          ctx.fill();
-      } else if (colorIdx === 14) { // Garbage
-          // Metallic / Rusty look
-          ctx.fillStyle = '#8B4513'; // Rusty dots
-          ctx.fillRect(px + 4, py + 4, 3, 3);
-          ctx.fillRect(px + size - 7, py + size - 7, 3, 3);
-          ctx.fillStyle = '#A0522D';
-          ctx.fillRect(px + size - 8, py + 5, 2, 2);
-          
-          // Cross metallic sheen
-          ctx.fillStyle = 'rgba(200, 200, 200, 0.2)';
-          ctx.beginPath();
-          ctx.moveTo(px + 1, py + size / 2);
-          ctx.lineTo(px + size - 1, py + 1);
-          ctx.lineTo(px + size - 1, py + 4);
-          ctx.lineTo(px + 4, py + size - 1);
+          ctx.moveTo(px + bSize + 1, py + bSize + 1);
+          ctx.lineTo(px + bSize + 4, py + bSize + 1);
+          ctx.lineTo(px + bSize + 1, py + bSize + 4);
+          ctx.closePath();
           ctx.fill();
       }
       
+      // Specular sheen sweep for active piece
       if (drawState === 2 && colorIdx !== 14 && colorIdx !== 15) {
           ctx.save();
           ctx.beginPath();
@@ -1020,16 +1199,13 @@
           ctx.lineTo(px - size + reflectionOffset + size * 2, py + size * 2);
           ctx.lineTo(px - size * 2 + reflectionOffset + size * 2, py + size * 2);
           ctx.fill();
-          
           ctx.restore();
       }
 
       // Glinting highlight animation for placed blocks (drawState === 0)
       if (drawState === 0 && colorIdx !== 14 && colorIdx !== 15) {
-          // Sweeping highlight
-          let sweep = (tick * 0.15) % 3000; // 3 seconds cycle
+          let sweep = (tick * 0.15) % 3000;
           let diag = px + py; 
-          // Check if the sweep line is near the block's diagonal
           if (sweep > diag - 30 && sweep < diag + 30) {
               let intensity = Math.max(0, 1.0 - Math.abs(sweep - diag) / 30.0);
               ctx.save();
@@ -1227,13 +1403,46 @@
           }
       }
 
-      // Active & Ghost Pieces
+      // Active & Ghost Pieces with Holographic Drop Alignment Guide Beams
       if (!gameOver && !isPaused && !startScreen && !winScreen && !showLeaderboard) {
           let drawVal = isBomb ? 15 : (pc + 1);
           // Ghost piece
           let ghost_y = cy;
           while (!checkCol(pc, rot, cx, ghost_y + 1)) ghost_y++;
           let shape = tetrominos[pc][rot];
+
+          // Holographic Drop Alignment Guide Beams
+          if (ghost_y > cy) {
+              ctx.save();
+              ctx.strokeStyle = 'rgba(0, 240, 255, 0.3)';
+              ctx.lineWidth = 1;
+              ctx.setLineDash([2, 4]);
+              for (let j = 0; j < 5; j++) {
+                  let lowest_i = -1;
+                  let highest_i = -1;
+                  for (let i = 0; i < 5; i++) {
+                      if (shape & (1 << (24 - (i * 5 + j)))) {
+                          if (highest_i === -1) highest_i = i;
+                          lowest_i = i;
+                      }
+                  }
+                  if (lowest_i !== -1 && cx + j >= 0 && cx + j < W) {
+                      let beamX = offX + (cx + j) * CELL;
+                      let topY = offY + (cy + lowest_i + 1) * CELL;
+                      let botY = offY + (ghost_y + highest_i) * CELL;
+                      if (botY > topY) {
+                          ctx.beginPath();
+                          ctx.moveTo(beamX + 2, topY);
+                          ctx.lineTo(beamX + 2, botY);
+                          ctx.moveTo(beamX + CELL - 2, topY);
+                          ctx.lineTo(beamX + CELL - 2, botY);
+                          ctx.stroke();
+                      }
+                  }
+              }
+              ctx.restore();
+          }
+
           for (let i = 0; i < 5; i++) {
               for (let j = 0; j < 5; j++) {
                   if (shape & (1 << (24 - (i * 5 + j)))) {
@@ -1256,11 +1465,46 @@
           }
       }
 
-      // Line flashes
+      // Line flashes (Plasma Laser Sweep & Mosaic Dissolve)
       for (let f of lineFlashes) {
           let alpha = f.life / f.maxLife;
-          ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.9})`;
-          ctx.fillRect(offX, offY + f.y * CELL, BOARD_W, CELL);
+          let progress = 1 - alpha;
+          let rowY = offY + f.y * CELL;
+          ctx.save();
+          // Expanding plasma glow
+          let auraH = CELL * (0.8 + 0.4 * Math.sin(progress * Math.PI));
+          let grad = ctx.createLinearGradient(offX, 0, offX + BOARD_W, 0);
+          grad.addColorStop(0, 'rgba(0, 240, 255, 0)');
+          grad.addColorStop(0.2, `rgba(0, 240, 255, ${alpha * 0.7})`);
+          grad.addColorStop(0.5, `rgba(255, 255, 255, ${alpha * 0.95})`);
+          grad.addColorStop(0.8, `rgba(255, 100, 220, ${alpha * 0.7})`);
+          grad.addColorStop(1, 'rgba(255, 100, 220, 0)');
+          ctx.fillStyle = grad;
+          ctx.fillRect(offX, rowY + (CELL - auraH) / 2, BOARD_W, auraH);
+
+          // Intense core laser beam
+          ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+          ctx.lineWidth = 2.5;
+          ctx.shadowColor = '#00ffff';
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.moveTo(offX, rowY + CELL / 2);
+          ctx.lineTo(offX + BOARD_W, rowY + CELL / 2);
+          ctx.stroke();
+
+          // Crackling plasma arcs
+          ctx.strokeStyle = `rgba(180, 240, 255, ${alpha * 0.8})`;
+          ctx.lineWidth = 1;
+          ctx.shadowBlur = 4;
+          ctx.beginPath();
+          for (let s = 0; s < 10; s++) {
+              let arcX = offX + ((s * 22 + progress * 120) % BOARD_W);
+              let arcY = rowY + CELL / 2 + (s % 2 === 0 ? -4 : 4) * (1 - progress * 0.5);
+              ctx.moveTo(arcX, arcY);
+              ctx.lineTo(arcX + 6, rowY + CELL / 2);
+          }
+          ctx.stroke();
+          ctx.restore();
       }
 
       // Shockwaves
@@ -1470,20 +1714,14 @@
           }
       }
 
-      // SKILLS Panel
+      // SKILLS Panel with Graphical Badges
       ctx.fillStyle = '#ffd700';
       ctx.font = 'bold 11px system-ui, sans-serif';
       ctx.fillText('ACTIVE SKILLS:', SIDEBAR_X, 375);
 
-      ctx.font = '11px system-ui, monospace';
-      ctx.fillStyle = nukeCharges > 0 ? '#ff7832' : '#666666';
-      ctx.fillText(`[B] Nuke: ${nukeCharges}`, SIDEBAR_X, 393);
-
-      ctx.fillStyle = swapCharges > 0 ? '#00ffc8' : '#666666';
-      ctx.fillText(`[S] Swap: ${swapCharges}`, SIDEBAR_X, 411);
-
-      ctx.fillStyle = freezeTimerMs > 0 ? '#00ffff' : (freezeCharges > 0 ? '#64c8ff' : '#666666');
-      ctx.fillText(freezeTimerMs > 0 ? `[F] FROZEN (${Math.ceil(freezeTimerMs / 1000)}s)` : `[F] Freeze: ${freezeCharges}`, SIDEBAR_X, 429);
+      drawSkillBadge(ctx, SIDEBAR_X, 381, 0, nukeCharges, false, 0, '[B]', 'Nuke', '#ff7832');
+      drawSkillBadge(ctx, SIDEBAR_X, 401, 1, swapCharges, false, 0, '[S]', 'Swap', '#00ffc8');
+      drawSkillBadge(ctx, SIDEBAR_X, 421, 2, freezeCharges, freezeTimerMs > 0, Math.ceil(freezeTimerMs / 1000), '[F]', 'Freeze', '#64c8ff');
 
       // Hints
       ctx.fillStyle = '#aaaaaa';

@@ -1104,29 +1104,116 @@ void InitGame() {
 
 #include <math.h>
 
+void DrawSkillBadge(HDC hdc, int x, int y, int skillType, int charges, int isActive, int timerSec, const char* hotkey, const char* name, COLORREF color, DWORD tick) {
+    RECT rc = { x, y, x + 138, y + 17 };
+    HBRUSH bgBrush = CreateSolidBrush(isActive ? RGB(0, 45, 75) : (charges > 0 ? RGB(20, 24, 34) : RGB(15, 15, 20)));
+    FillRect(hdc, &rc, bgBrush);
+    DeleteObject(bgBrush);
+
+    HPEN borderPen = CreatePen(PS_SOLID, 1, isActive ? RGB(0, 255, 255) : (charges > 0 ? color : RGB(50, 50, 60)));
+    HPEN oldPen = (HPEN)SelectObject(hdc, borderPen);
+    HBRUSH nullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, nullBrush);
+    Rectangle(hdc, x, y, x + 138, y + 17);
+
+    int ix = x + 2, iy = y + 1;
+    if (skillType == 0) { // Nuke: Radiation Trefoil / Warhead
+        HBRUSH iconBg = CreateSolidBrush(charges > 0 ? RGB(200, 70, 0) : RGB(60, 35, 25));
+        HBRUSH oB = (HBRUSH)SelectObject(hdc, iconBg);
+        HPEN iconP = CreatePen(PS_SOLID, 1, charges > 0 ? RGB(255, 140, 0) : RGB(80, 50, 40));
+        HPEN oP = (HPEN)SelectObject(hdc, iconP);
+        Ellipse(hdc, ix + 1, iy + 1, ix + 13, iy + 13);
+        HBRUSH coreB = CreateSolidBrush(charges > 0 ? RGB(255, 230, 50) : RGB(30, 20, 20));
+        SelectObject(hdc, coreB);
+        Ellipse(hdc, ix + 4, iy + 4, ix + 10, iy + 10);
+        SelectObject(hdc, oB);
+        SelectObject(hdc, oP);
+        DeleteObject(coreB);
+        DeleteObject(iconP);
+        DeleteObject(iconBg);
+    } else if (skillType == 1) { // Swap: Dual Orbital Arrows
+        HPEN arrowPen = CreatePen(PS_SOLID, 1, charges > 0 ? RGB(0, 230, 200) : RGB(40, 70, 70));
+        HPEN oP = (HPEN)SelectObject(hdc, arrowPen);
+        Arc(hdc, ix + 2, iy + 2, ix + 12, iy + 12, ix + 2, iy + 7, ix + 12, iy + 7);
+        MoveToEx(hdc, ix + 11, iy + 4, NULL); LineTo(hdc, ix + 12, iy + 7); LineTo(hdc, ix + 9, iy + 7);
+        MoveToEx(hdc, ix + 3, iy + 10, NULL); LineTo(hdc, ix + 2, iy + 7); LineTo(hdc, ix + 5, iy + 7);
+        SelectObject(hdc, oP);
+        DeleteObject(arrowPen);
+    } else if (skillType == 2) { // Freeze: Snowflake Crystal
+        HPEN icePen = CreatePen(PS_SOLID, 1, (isActive || charges > 0) ? RGB(130, 220, 255) : RGB(40, 60, 80));
+        HPEN oP = (HPEN)SelectObject(hdc, icePen);
+        MoveToEx(hdc, ix + 7, iy + 2, NULL); LineTo(hdc, ix + 7, iy + 12);
+        MoveToEx(hdc, ix + 3, iy + 4, NULL); LineTo(hdc, ix + 11, iy + 10);
+        MoveToEx(hdc, ix + 3, iy + 10, NULL); LineTo(hdc, ix + 11, iy + 4);
+        SelectObject(hdc, oP);
+        DeleteObject(icePen);
+    }
+
+    SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, isActive ? RGB(0, 255, 255) : (charges > 0 ? color : RGB(100, 100, 110)));
+    SelectObject(hdc, g_hFontSmall);
+    char buf[32];
+    if (isActive) {
+        wsprintfA(buf, "%s FROZEN (%ds)", hotkey, timerSec);
+    } else {
+        wsprintfA(buf, "%s %s", hotkey, name);
+    }
+    TextOutA(hdc, x + 18, y + 1, buf, lstrlenA(buf));
+
+    int maxPips = (skillType == 1) ? 3 : 2;
+    for (int p = 0; p < maxPips; p++) {
+        int px = x + 124 - (maxPips - 1 - p) * 6;
+        int py = y + 4;
+        HBRUSH pipB = CreateSolidBrush((p < charges) ? color : RGB(40, 40, 50));
+        RECT rPip = { px, py, px + 4, py + 8 };
+        FillRect(hdc, &rPip, pipB);
+        DeleteObject(pipB);
+    }
+
+    SelectObject(hdc, oldBrush);
+    SelectObject(hdc, oldPen);
+    DeleteObject(borderPen);
+}
+
 void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int drawState, DWORD tick) {
     if (colorIdx <= 0 || colorIdx >= 16) return;
     
-    // Ghost
+    // Ghost Piece: Holographic Grid Projection
     if (drawState == 1) {
-        HPEN pen = CreatePen(PS_SOLID, 1, colors[colorIdx]);
+        COLORREF baseCol = colors[colorIdx];
+        HPEN pen = CreatePen(PS_SOLID, 1, baseCol);
         HPEN oldPen = (HPEN)SelectObject(hdc, pen);
-        HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        HBRUSH nullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+        HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, nullBrush);
+        
+        // Holographic corner brackets
+        int arm = size / 4;
+        if (arm < 3) arm = 3;
+        // TL
+        MoveToEx(hdc, px + 1, py + 1 + arm, NULL); LineTo(hdc, px + 1, py + 1); LineTo(hdc, px + 1 + arm, py + 1);
+        // TR
+        MoveToEx(hdc, px + size - 1 - arm, py + 1, NULL); LineTo(hdc, px + size - 1, py + 1); LineTo(hdc, px + size - 1, py + 1 + arm);
+        // BL
+        MoveToEx(hdc, px + 1, py + size - 1 - arm, NULL); LineTo(hdc, px + 1, py + size - 1); LineTo(hdc, px + 1 + arm, py + size - 1);
+        // BR
+        MoveToEx(hdc, px + size - 1 - arm, py + size - 1, NULL); LineTo(hdc, px + size - 1, py + size - 1); LineTo(hdc, px + size - 1, py + size - 1 - arm);
+        
+        // Subtle outer border
         Rectangle(hdc, px + 1, py + 1, px + size - 1, py + size - 1);
         
-        // Scanline
-        int scanY = (tick / 20) % size;
-        if (scanY < 2) scanY = 2;
-        if (scanY > size - 4) scanY = size - 4;
-        HBRUSH scanBrush = CreateSolidBrush(colors[colorIdx]);
-        RECT rScan = { px + 2, py + scanY, px + size - 2, py + scanY + 2 };
+        // Animated phosphor scanline
+        int scanY = (tick / 20) % (size > 4 ? size - 4 : 2);
+        HBRUSH scanBrush = CreateSolidBrush(baseCol);
+        RECT rScan = { px + 2, py + 2 + scanY, px + size - 2, py + 2 + scanY + 1 };
         FillRect(hdc, &rScan, scanBrush);
         DeleteObject(scanBrush);
         
-        MoveToEx(hdc, px + 4, py + size / 2, NULL); LineTo(hdc, px + size - 4, py + size / 2);
-        MoveToEx(hdc, px + size / 2, py + 4, NULL); LineTo(hdc, px + size / 2, py + size - 4);
-        SelectObject(hdc, oldPen);
+        // Central faint reticle
+        MoveToEx(hdc, px + size / 2, py + 3, NULL); LineTo(hdc, px + size / 2, py + size - 3);
+        MoveToEx(hdc, px + 3, py + size / 2, NULL); LineTo(hdc, px + size - 3, py + size / 2);
+
         SelectObject(hdc, oldBrush);
+        SelectObject(hdc, oldPen);
         DeleteObject(pen);
         return;
     }
@@ -1134,16 +1221,17 @@ void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int drawSt
     int bSize = size / 6;
     if (bSize < 2) bSize = 2;
     
-    // Active Piece Glow Aura Simulation (draw a larger rect behind)
+    // Active Piece Glow Aura
     if (drawState == 2) {
         int glowW = (int)(2.0 * sin((tick % 1000) * 0.00628));
         if (glowW > 0) {
             HPEN glowPen = CreatePen(PS_SOLID, glowW, colors[colorIdx]);
             HPEN oldGlowPen = (HPEN)SelectObject(hdc, glowPen);
-            HBRUSH nullBrush = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            HBRUSH nullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+            HBRUSH oldGlowBrush = (HBRUSH)SelectObject(hdc, nullBrush);
             Rectangle(hdc, px, py, px + size, py + size);
             SelectObject(hdc, oldGlowPen);
-            SelectObject(hdc, nullBrush);
+            SelectObject(hdc, oldGlowBrush);
             DeleteObject(glowPen);
         }
     }
@@ -1181,86 +1269,186 @@ void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int drawSt
     Polygon(hdc, ptSh, 6);
 
     COLORREF baseColor = colors[colorIdx];
-    int lr = GetRValue(baseColor) + 60; if (lr > 255) lr = 255;
-    int lg = GetGValue(baseColor) + 60; if (lg > 255) lg = 255;
-    int lb = GetBValue(baseColor) + 60; if (lb > 255) lb = 255;
+    int lr = GetRValue(baseColor) + 70; if (lr > 255) lr = 255;
+    int lg = GetGValue(baseColor) + 70; if (lg > 255) lg = 255;
+    int lb = GetBValue(baseColor) + 70; if (lb > 255) lb = 255;
     COLORREF lighterColor = RGB(lr, lg, lb);
     
-    HBRUSH innerBrush;
-    if (colorIdx >= 1 && colorIdx <= 3) {
-        innerBrush = CreateSolidBrush(lighterColor);
-        SelectObject(hdc, innerBrush);
-        Ellipse(hdc, px + size / 4, py + size / 4, px + size * 3 / 4, py + size * 3 / 4);
-        DeleteObject(innerBrush);
-    } else if (colorIdx >= 4 && colorIdx <= 6) {
-        innerBrush = CreateSolidBrush(lighterColor);
-        SelectObject(hdc, innerBrush);
-        POINT ptDiamond[4] = {
+    // Unique Gem Crystal Facets per Block Type
+    if (colorIdx == 1) { // Cyan: I - Prismatic Dual Optical Refraction Slits & Diamond Core
+        HBRUSH slitB = CreateSolidBrush(lighterColor);
+        RECT rSlit1 = { px + bSize + 1, py + bSize + 2, px + size - bSize - 1, py + bSize + 4 };
+        RECT rSlit2 = { px + bSize + 1, py + size - bSize - 4, px + size - bSize - 1, py + size - bSize - 2 };
+        FillRect(hdc, &rSlit1, slitB);
+        FillRect(hdc, &rSlit2, slitB);
+        // Center diamond
+        HBRUSH wB = CreateSolidBrush(RGB(255, 255, 255));
+        SelectObject(hdc, wB);
+        POINT ptDia[4] = {
+            { px + size / 2, py + size / 2 - 3 },
+            { px + size / 2 + 3, py + size / 2 },
+            { px + size / 2, py + size / 2 + 3 },
+            { px + size / 2 - 3, py + size / 2 }
+        };
+        Polygon(hdc, ptDia, 4);
+        DeleteObject(wB);
+        DeleteObject(slitB);
+    } else if (colorIdx == 2) { // Blue: J - Stepped Sapphire Chevron Facet
+        HPEN stepP = CreatePen(PS_SOLID, 2, lighterColor);
+        HPEN oP = (HPEN)SelectObject(hdc, stepP);
+        MoveToEx(hdc, px + bSize + 2, py + size - bSize - 2, NULL);
+        LineTo(hdc, px + bSize + 2, py + bSize + 2);
+        LineTo(hdc, px + size - bSize - 2, py + bSize + 2);
+        SelectObject(hdc, oP);
+        DeleteObject(stepP);
+        HBRUSH cB = CreateSolidBrush(RGB(150, 190, 255));
+        RECT rC = { px + size / 2 - 1, py + size / 2 - 1, px + size / 2 + 2, py + size / 2 + 2 };
+        FillRect(hdc, &rC, cB);
+        DeleteObject(cB);
+    } else if (colorIdx == 3) { // Orange: L - Amber Radiant Sunstone & Diagonal Luster
+        HPEN diagP = CreatePen(PS_SOLID, 2, lighterColor);
+        HPEN oP = (HPEN)SelectObject(hdc, diagP);
+        MoveToEx(hdc, px + bSize + 2, py + size - bSize - 2, NULL);
+        LineTo(hdc, px + size - bSize - 2, py + bSize + 2);
+        SelectObject(hdc, oP);
+        DeleteObject(diagP);
+        HBRUSH wB = CreateSolidBrush(RGB(255, 255, 255));
+        RECT rL = { px + size / 2 - 1, py + size / 2 - 1, px + size / 2 + 2, py + size / 2 + 2 };
+        FillRect(hdc, &rL, wB);
+        DeleteObject(wB);
+    } else if (colorIdx == 4) { // Yellow: O - Topaz Brilliant Cut with 4 Corner Facets & Gold Crest
+        HBRUSH topB = CreateSolidBrush(lighterColor);
+        SelectObject(hdc, topB);
+        int pad = bSize + 2;
+        POINT ptCorner1[3] = { { px + pad, py + pad }, { px + size / 2, py + pad + 2 }, { px + pad + 2, py + size / 2 } };
+        Polygon(hdc, ptCorner1, 3);
+        POINT ptCorner2[3] = { { px + size - pad, py + pad }, { px + size / 2, py + pad + 2 }, { px + size - pad - 2, py + size / 2 } };
+        Polygon(hdc, ptCorner2, 3);
+        DeleteObject(topB);
+        HBRUSH wB = CreateSolidBrush(RGB(255, 255, 255));
+        RECT rO = { px + size / 2 - 2, py + size / 2 - 2, px + size / 2 + 2, py + size / 2 + 2 };
+        FillRect(hdc, &rO, wB);
+        DeleteObject(wB);
+    } else if (colorIdx == 5) { // Green: S - Emerald Table-Cut Pavilion
+        HBRUSH emB = CreateSolidBrush(lighterColor);
+        SelectObject(hdc, emB);
+        POINT ptDia[4] = {
             { px + size / 2, py + bSize + 2 },
             { px + size - bSize - 2, py + size / 2 },
             { px + size / 2, py + size - bSize - 2 },
             { px + bSize + 2, py + size / 2 }
         };
-        Polygon(hdc, ptDiamond, 4);
-        DeleteObject(innerBrush);
-    } else if (colorIdx >= 7 && colorIdx <= 9) {
-        innerBrush = CreateSolidBrush(lighterColor);
-        RECT rCross1 = { px + size / 2 - 2, py + bSize + 2, px + size / 2 + 2, py + size - bSize - 2 };
-        RECT rCross2 = { px + bSize + 2, py + size / 2 - 2, px + size - bSize - 2, py + size / 2 + 2 };
-        FillRect(hdc, &rCross1, innerBrush);
-        FillRect(hdc, &rCross2, innerBrush);
-        DeleteObject(innerBrush);
-    } else {
-        innerBrush = CreateSolidBrush(lighterColor);
-        RECT rInner = { px + bSize + 2, py + bSize + 2, px + size - 2 - bSize, py + size - 2 - bSize };
-        FillRect(hdc, &rInner, innerBrush);
-        DeleteObject(innerBrush);
-    }
-
-    HBRUSH whiteBrush = CreateSolidBrush(RGB(255, 255, 255));
-    RECT rFlare = { px + bSize + 1, py + bSize + 1, px + bSize + 4, py + bSize + 4 };
-    FillRect(hdc, &rFlare, whiteBrush);
-    DeleteObject(whiteBrush);
-
-    if (colorIdx == 15) { // Bomb
-        int rPulse = (int)(2.0 * sin((tick % 1000) * 0.01));
-        HBRUSH redBrush = CreateSolidBrush(RGB(255, 0, 0));
-        SelectObject(hdc, redBrush);
-        Ellipse(hdc, px + size / 4 - rPulse, py + size / 4 - rPulse, px + size * 3 / 4 + rPulse, py + size * 3 / 4 + rPulse);
-        DeleteObject(redBrush);
-        
-        if (random_int(2) == 0) {
-            HBRUSH yellowBrush = CreateSolidBrush(RGB(255, 255, 0));
-            SelectObject(hdc, yellowBrush);
-            Ellipse(hdc, px + size / 2 - 2, py + size / 2 - 2, px + size / 2 + 2, py + size / 2 + 2);
-            DeleteObject(yellowBrush);
-        }
-    } else if (colorIdx == 14) { // Garbage
-        HBRUSH rustBrush1 = CreateSolidBrush(RGB(139, 69, 19));
-        RECT rRust1 = { px + 4, py + 4, px + 7, py + 7 };
-        RECT rRust2 = { px + size - 7, py + size - 7, px + size - 4, py + size - 4 };
-        FillRect(hdc, &rRust1, rustBrush1);
-        FillRect(hdc, &rRust2, rustBrush1);
-        DeleteObject(rustBrush1);
-
-        HBRUSH rustBrush2 = CreateSolidBrush(RGB(160, 82, 45));
-        RECT rRust3 = { px + size - 8, py + 5, px + size - 6, py + 7 };
-        FillRect(hdc, &rRust3, rustBrush2);
-        DeleteObject(rustBrush2);
-
-        HBRUSH sheenBrush = CreateSolidBrush(RGB(150, 150, 150));
-        SelectObject(hdc, sheenBrush);
-        POINT ptSheen[4] = {
-            { px + 1, py + size / 2 },
-            { px + size - 1, py + 1 },
-            { px + size - 1, py + 4 },
-            { px + 4, py + size - 1 }
+        Polygon(hdc, ptDia, 4);
+        DeleteObject(emB);
+        HBRUSH wB = CreateSolidBrush(RGB(255, 255, 255));
+        RECT rS = { px + size / 2 - 1, py + size / 2 - 1, px + size / 2 + 1, py + size / 2 + 1 };
+        FillRect(hdc, &rS, wB);
+        DeleteObject(wB);
+    } else if (colorIdx == 6) { // Purple: T - Royal Amethyst Crown Jewel with 3 Radiating Facet Arms
+        HBRUSH amB = CreateSolidBrush(lighterColor);
+        SelectObject(hdc, amB);
+        Ellipse(hdc, px + size / 2 - 3, py + size / 2 - 3, px + size / 2 + 3, py + size / 2 + 3);
+        DeleteObject(amB);
+        HPEN armP = CreatePen(PS_SOLID, 1, lighterColor);
+        HPEN oP = (HPEN)SelectObject(hdc, armP);
+        MoveToEx(hdc, px + size / 2, py + size / 2, NULL); LineTo(hdc, px + size / 2, py + bSize + 2);
+        MoveToEx(hdc, px + size / 2, py + size / 2, NULL); LineTo(hdc, px + bSize + 2, py + size - bSize - 2);
+        MoveToEx(hdc, px + size / 2, py + size / 2, NULL); LineTo(hdc, px + size - bSize - 2, py + size - bSize - 2);
+        SelectObject(hdc, oP);
+        DeleteObject(armP);
+    } else if (colorIdx == 7) { // Red: Z - Crimson Ruby Lattice Prism
+        HBRUSH ruB = CreateSolidBrush(lighterColor);
+        SelectObject(hdc, ruB);
+        POINT ptZ[3] = {
+            { px + bSize + 2, py + bSize + 2 },
+            { px + size - bSize - 2, py + size / 2 },
+            { px + bSize + 2, py + size - bSize - 2 }
         };
-        Polygon(hdc, ptSheen, 4);
-        DeleteObject(sheenBrush);
+        Polygon(hdc, ptZ, 3);
+        DeleteObject(ruB);
+        HBRUSH wB = CreateSolidBrush(RGB(255, 255, 255));
+        RECT rZ = { px + size / 2 - 1, py + size / 2 - 1, px + size / 2 + 1, py + size / 2 + 1 };
+        FillRect(hdc, &rZ, wB);
+        DeleteObject(wB);
+    } else if (colorIdx >= 8 && colorIdx <= 13) { // Pentominoes: Concentric Geometric Gem Facets
+        HPEN penP = CreatePen(PS_SOLID, 1, lighterColor);
+        HPEN oP = (HPEN)SelectObject(hdc, penP);
+        HBRUSH nB = (HBRUSH)GetStockObject(NULL_BRUSH);
+        HBRUSH oB = (HBRUSH)SelectObject(hdc, nB);
+        Rectangle(hdc, px + bSize + 2, py + bSize + 2, px + size - bSize - 2, py + size - bSize - 2);
+        HBRUSH wB = CreateSolidBrush(RGB(255, 255, 255));
+        SelectObject(hdc, wB);
+        Ellipse(hdc, px + size / 2 - 2, py + size / 2 - 2, px + size / 2 + 2, py + size / 2 + 2);
+        SelectObject(hdc, oB);
+        SelectObject(hdc, oP);
+        DeleteObject(wB);
+        DeleteObject(penP);
+    } else if (colorIdx == 14) { // Garbage: Heavy Armored Steel Bulkhead Tile
+        HBRUSH plateB = CreateSolidBrush(RGB(80, 85, 95));
+        RECT rPlate = { px + bSize, py + bSize, px + size - bSize, py + size - bSize };
+        FillRect(hdc, &rPlate, plateB);
+        DeleteObject(plateB);
+
+        // 4 Corner Steel Hex-Bolts
+        HBRUSH boltB = CreateSolidBrush(RGB(210, 215, 230));
+        int rS = size / 8; if (rS < 2) rS = 2;
+        RECT rB1 = { px + bSize + 1, py + bSize + 1, px + bSize + 1 + rS, py + bSize + 1 + rS };
+        RECT rB2 = { px + size - bSize - 1 - rS, py + bSize + 1, px + size - bSize - 1, py + bSize + 1 + rS };
+        RECT rB3 = { px + bSize + 1, py + size - bSize - 1 - rS, px + bSize + 1 + rS, py + size - bSize - 1 };
+        RECT rB4 = { px + size - bSize - 1 - rS, py + size - bSize - 1 - rS, px + size - bSize - 1, py + size - bSize - 1 };
+        FillRect(hdc, &rB1, boltB);
+        FillRect(hdc, &rB2, boltB);
+        FillRect(hdc, &rB3, boltB);
+        FillRect(hdc, &rB4, boltB);
+        DeleteObject(boltB);
+
+        // Industrial Hazard Caution Bar across center
+        HBRUSH hazB = CreateSolidBrush(RGB(240, 190, 30));
+        RECT rHaz = { px + bSize + 2, py + size / 2 - 2, px + size - bSize - 2, py + size / 2 + 2 };
+        FillRect(hdc, &rHaz, hazB);
+        DeleteObject(hazB);
+        
+        HPEN strP = CreatePen(PS_SOLID, 1, RGB(35, 35, 40));
+        HPEN oP = (HPEN)SelectObject(hdc, strP);
+        for (int hx = px + bSize + 3; hx < px + size - bSize - 3; hx += 4) {
+            MoveToEx(hdc, hx, py + size / 2 + 1, NULL);
+            LineTo(hdc, hx + 2, py + size / 2 - 2);
+        }
+        SelectObject(hdc, oP);
+        DeleteObject(strP);
+    } else if (colorIdx == 15) { // Bomb: Demolition Ordnance Sprite
+        HBRUSH ordB = CreateSolidBrush(RGB(40, 20, 20));
+        SelectObject(hdc, ordB);
+        HPEN ordP = CreatePen(PS_SOLID, 1, RGB(255, 50, 50));
+        HPEN oP = (HPEN)SelectObject(hdc, ordP);
+        Ellipse(hdc, px + 2, py + 2, px + size - 2, py + size - 2);
+        SelectObject(hdc, oP);
+        DeleteObject(ordP);
+        DeleteObject(ordB);
+
+        // Pulsing red explosive core
+        int rPulse = (int)(2.0 * sin((tick % 1000) * 0.01));
+        HBRUSH redBrush = CreateSolidBrush(RGB(255, 30, 0));
+        SelectObject(hdc, redBrush);
+        Ellipse(hdc, px + size / 2 - 3 - rPulse, py + size / 2 - 3 - rPulse, px + size / 2 + 3 + rPulse, py + size / 2 + 3 + rPulse);
+        DeleteObject(redBrush);
+
+        // Live dynamic spark fuse at top-right
+        HBRUSH sparkB = CreateSolidBrush((tick / 100) % 2 == 0 ? RGB(255, 255, 0) : RGB(255, 255, 255));
+        RECT rSpk = { px + size - bSize - 3, py + bSize + 1, px + size - bSize - 1, py + bSize + 3 };
+        FillRect(hdc, &rSpk, sparkB);
+        DeleteObject(sparkB);
     }
-    
-    // Sweeping highlight animation
+
+    // Specular flare accent for non-bomb/garbage
+    if (colorIdx != 14 && colorIdx != 15) {
+        HBRUSH whiteBrush = CreateSolidBrush(RGB(255, 255, 255));
+        RECT rFlare = { px + bSize + 1, py + bSize + 1, px + bSize + 3, py + bSize + 3 };
+        FillRect(hdc, &rFlare, whiteBrush);
+        DeleteObject(whiteBrush);
+    }
+
+    // Sweeping highlight animation for placed blocks
     if (drawState == 0 && colorIdx != 14 && colorIdx != 15) {
         int sweep = (tick / 5) % 3000;
         int diag = px + py;
@@ -1278,6 +1466,7 @@ void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int drawSt
         }
     }
 
+    // Specular sweep for active falling piece
     if (drawState == 2 && colorIdx != 14 && colorIdx != 15) {
         int refOffset = (int)(px * 0.5 + py * 0.5 + tick * 0.05) % (size * 3);
         HRGN rgn1 = CreateRectRgn(px + 1, py + 1, px + size - 1, py + size - 1);
@@ -1922,7 +2111,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             
-            // Draw active & Ghost piece
+            // Draw active & Ghost piece with Holographic Drop Alignment Guide Beams
             if (!game_over && !is_paused && !start_screen && !win_screen && !show_leaderboard && !show_help && !show_keybinds) {
                 unsigned int shape = tetrominos[current_piece][current_rot];
                 int draw_val = current_is_bomb ? 15 : (current_piece + 1);
@@ -1932,6 +2121,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 while (!check_collision(current_piece, current_rot, current_x, ghost_y + 1)) {
                     ghost_y++;
                 }
+
+                // Holographic Drop Alignment Guide Beams
+                if (ghost_y > current_y) {
+                    HPEN guidePen = CreatePen(PS_DOT, 1, RGB(0, 140, 160));
+                    HPEN oldGP = (HPEN)SelectObject(memDC, guidePen);
+                    for (int x = 0; x < 5; x++) {
+                        int lowest_y = -1;
+                        int highest_y = -1;
+                        for (int y = 0; y < 5; y++) {
+                            if (shape & (1 << (24 - (y * 5 + x)))) {
+                                if (highest_y == -1) highest_y = y;
+                                lowest_y = y;
+                            }
+                        }
+                        if (lowest_y != -1 && current_x + x >= 0 && current_x + x < W) {
+                            int gx = offX + (current_x + x) * CELL_SIZE;
+                            int topY = offY + (current_y + lowest_y + 1) * CELL_SIZE;
+                            int botY = offY + (ghost_y + highest_y) * CELL_SIZE;
+                            if (botY > topY) {
+                                MoveToEx(memDC, gx + 2, topY, NULL);
+                                LineTo(memDC, gx + 2, botY);
+                                MoveToEx(memDC, gx + CELL_SIZE - 2, topY, NULL);
+                                LineTo(memDC, gx + CELL_SIZE - 2, botY);
+                            }
+                        }
+                    }
+                    SelectObject(memDC, oldGP);
+                    DeleteObject(guidePen);
+                }
+
                 for (int y = 0; y < 5; y++) {
                     for (int x = 0; x < 5; x++) {
                         if (shape & (1 << (24 - (y * 5 + x)))) {
@@ -1955,12 +2174,39 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
-            // Draw Line Flashes
+            // Draw Line Flashes (Plasma Laser Sweep & Mosaic Dissolve)
             for (int i = 0; i < num_flashes; i++) {
-                HBRUSH flashBrush = CreateSolidBrush(RGB(255, 255, 255));
-                RECT rFlash = { offX, offY + line_flashes[i].y * CELL_SIZE, offX + W * CELL_SIZE, offY + (line_flashes[i].y + 1) * CELL_SIZE };
-                FillRect(memDC, &rFlash, flashBrush);
-                DeleteObject(flashBrush);
+                int rowY = offY + line_flashes[i].y * CELL_SIZE;
+                float progress = 1.0f - (float)line_flashes[i].life / (float)line_flashes[i].max_life;
+                
+                // Outer plasma aura
+                int auraH = (int)(CELL_SIZE * (0.8f + 0.3f * sin(progress * 3.14159f)));
+                int auraY = rowY + (CELL_SIZE - auraH) / 2;
+                COLORREF auraCol = (i % 2 == 0) ? RGB(0, 240, 255) : RGB(255, 100, 220);
+                HBRUSH auraB = CreateSolidBrush(RGB(GetRValue(auraCol) / 3, GetGValue(auraCol) / 3, GetBValue(auraCol) / 3));
+                RECT rAura = { offX, auraY, offX + W * CELL_SIZE, auraY + auraH };
+                FillRect(memDC, &rAura, auraB);
+                DeleteObject(auraB);
+
+                // High-intensity white core
+                HPEN corePen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+                HPEN oldP = (HPEN)SelectObject(memDC, corePen);
+                MoveToEx(memDC, offX, rowY + CELL_SIZE / 2, NULL);
+                LineTo(memDC, offX + W * CELL_SIZE, rowY + CELL_SIZE / 2);
+                SelectObject(memDC, oldP);
+                DeleteObject(corePen);
+
+                // Crackling plasma arcs
+                HPEN sparkPen = CreatePen(PS_SOLID, 1, auraCol);
+                oldP = (HPEN)SelectObject(memDC, sparkPen);
+                for (int s = 0; s < 8; s++) {
+                    int sx = offX + ((s * 25 + (int)(progress * 140)) % (W * CELL_SIZE));
+                    int sy = rowY + CELL_SIZE / 2 + ((s % 2 == 0) ? -4 : 4);
+                    MoveToEx(memDC, sx, sy, NULL);
+                    LineTo(memDC, sx + 5, rowY + CELL_SIZE / 2);
+                }
+                SelectObject(memDC, oldP);
+                DeleteObject(sparkPen);
             }
 
             // Draw Shockwaves
@@ -2181,27 +2427,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
-            // SKILLS Panel
+            // SKILLS Panel with Graphical Badges
             SetTextColor(memDC, RGB(255, 215, 0));
-            TextOutA(memDC, sideX, 368, "ACTIVE SKILLS:", 14);
+            TextOutA(memDC, sideX, 366, "ACTIVE SKILLS:", 14);
 
-            char nuke_str[32], swap_str[32], freeze_str[32];
-            wsprintfA(nuke_str, "[B] Nuke: %d", nuke_charges);
-            wsprintfA(swap_str, "[S] Swap: %d", swap_charges);
-            if (freeze_timer_ms > 0) {
-                wsprintfA(freeze_str, "[F] FROZEN (%ds)", (freeze_timer_ms / 1000) + 1);
-            } else {
-                wsprintfA(freeze_str, "[F] Freeze: %d", freeze_charges);
-            }
-
-            SetTextColor(memDC, nuke_charges > 0 ? RGB(255, 120, 50) : RGB(100, 100, 100));
-            TextOutA(memDC, sideX, 385, nuke_str, lstrlenA(nuke_str));
-
-            SetTextColor(memDC, swap_charges > 0 ? RGB(0, 255, 200) : RGB(100, 100, 100));
-            TextOutA(memDC, sideX, 402, swap_str, lstrlenA(swap_str));
-
-            SetTextColor(memDC, freeze_timer_ms > 0 ? RGB(0, 255, 255) : (freeze_charges > 0 ? RGB(100, 200, 255) : RGB(100, 100, 100)));
-            TextOutA(memDC, sideX, 419, freeze_str, lstrlenA(freeze_str));
+            DrawSkillBadge(memDC, sideX, 381, 0, nuke_charges, 0, 0, "[B]", "Nuke", RGB(255, 120, 50), currentTick);
+            DrawSkillBadge(memDC, sideX, 400, 1, swap_charges, 0, 0, "[S]", "Swap", RGB(0, 255, 200), currentTick);
+            DrawSkillBadge(memDC, sideX, 419, 2, freeze_charges, freeze_timer_ms > 0, (freeze_timer_ms / 1000) + 1, "[F]", "Freeze", RGB(100, 200, 255), currentTick);
 
             // Hints
             SetTextColor(memDC, RGB(170, 170, 170));
