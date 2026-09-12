@@ -177,6 +177,20 @@ int campaign_branch = 0; // 0=Solar Path, 1=Shadow Path
 int campaign_level = 1;
 int pending_branch_choice = 0;
 
+// Floating Toast Notification
+char native_toast_msg[128] = "Welcome to KSnake! Press [H] or [F1] for Help.";
+int native_toast_timer = 45;
+
+void ShowToastNative(const char* msg) {
+    int i = 0;
+    while (msg[i] != '\0' && i < 127) {
+        native_toast_msg[i] = msg[i];
+        i++;
+    }
+    native_toast_msg[i] = '\0';
+    native_toast_timer = 40;
+}
+
 // CPU Rivals & Boss
 struct CPUSnake rivals[4];
 int num_rivals = 0;
@@ -1776,6 +1790,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             LoadCustomMap();
             if (!g_hFont) g_hFont = CreateFontA(-20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             if (!g_hFontSmall) g_hFontSmall = CreateFontA(-14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            SetTimer(hwnd, TIMER_ID, 80, NULL);
             break;
 
         case WM_LBUTTONDOWN: {
@@ -1785,37 +1800,201 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int dpi = GetDeviceCaps(hdc, LOGPIXELSX);
             ReleaseDC(hwnd, hdc);
             float scale = dpi / 96.0f;
+            int lx = (int)(mx / scale);
+            int ly = (int)(my / scale);
             int gx = (int)(mx / (scale * CELL_SIZE));
             int gy = (int)((my / scale - 45) / CELL_SIZE);
-            if (game_state == 8) { // Map Editor
-                if (gx >= 0 && gx < GRID_WIDTH && gy >= 0 && gy < GRID_HEIGHT) {
-                    editor_cursor_x = gx; editor_cursor_y = gy;
-                    if (editor_brush == 0) { // Toggle Wall
-                        int i, found = -1;
-                        for(i=0; i<num_custom_obstacles; i++) {
-                            if (custom_obstacles[i].x == gx && custom_obstacles[i].y == gy) { found = i; break; }
-                        }
-                        if (found >= 0) {
-                            custom_obstacles[found] = custom_obstacles[num_custom_obstacles-1];
-                            num_custom_obstacles--;
-                        } else if (num_custom_obstacles < 120) {
-                            custom_obstacles[num_custom_obstacles].x = gx;
-                            custom_obstacles[num_custom_obstacles].y = gy;
-                            num_custom_obstacles++;
-                        }
-                    } else if (editor_brush == 1) {
-                        custom_portal_a.x = gx; custom_portal_a.y = gy; custom_portal_active = 1;
-                    } else if (editor_brush == 2) {
-                        custom_portal_b.x = gx; custom_portal_b.y = gy; custom_portal_active = 1;
-                    } else if (editor_brush == 3) {
-                        int i;
-                        for(i=0; i<num_custom_obstacles; i++) {
-                            if (custom_obstacles[i].x == gx && custom_obstacles[i].y == gy) {
-                                custom_obstacles[i] = custom_obstacles[num_custom_obstacles-1];
+
+            if (game_state == 0) { // Main Menu Click Navigation
+                if (ly >= 45 && ly < 70) {
+                    game_mode = (game_mode + 1) % NUM_MODES;
+                    ShowToastNative(mode_names[game_mode]);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (ly >= 70 && ly < 95) {
+                    difficulty = (difficulty + 1) % 3;
+                    ShowToastNative(difficulty == 0 ? "Difficulty: Easy" : (difficulty == 1 ? "Difficulty: Medium" : "Difficulty: Hard"));
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (ly >= 95 && ly < 120) {
+                    wrap_mode = !wrap_mode;
+                    ShowToastNative(wrap_mode ? "Wall Wrap: ON" : "Wall Wrap: OFF");
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (ly >= 120 && ly < 145) {
+                    game_state = 8;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (ly >= 145 && ly < 170) {
+                    game_state = 6; config_step = 0;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (ly >= 170 && ly < 195) {
+                    game_state = 7;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (ly >= 195 && ly < 220) {
+                    ImportReplay();
+                } else if (ly >= 220 && ly < 245) {
+                    if (RestoreGameState()) {
+                        game_state = 1;
+                        SetTimer(hwnd, TIMER_ID, current_speed, NULL);
+                        ShowToastNative("Game Resumed!");
+                    } else {
+                        ShowToastNative("No Saved Game Found");
+                    }
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (ly >= 270 && ly < 305) {
+                    game_state = 5;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (ly >= 310 && ly < 355) {
+                    is_replay_mode = 0;
+                    InitGame();
+                    SetTimer(hwnd, TIMER_ID, current_speed, NULL);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (ly >= 400 && ly < 440) {
+                    PostMessage(hwnd, WM_CLOSE, 0, 0);
+                }
+            } else if (game_state == 1) { // Playing
+                if (ly < 45) { // Top HUD Bar -> Pause
+                    game_state = 3;
+                    SetTimer(hwnd, TIMER_ID, 80, NULL);
+                    ShowToastNative("Game Paused");
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (ly >= 550) { // Bottom Skills HUD
+                    if (lx < 170 && ghost_cd == 0) {
+                        ghost_active = 50; ghost_cd = 150;
+                        ShowToastNative("Ghost Skill Activated!");
+                    } else if (lx >= 170 && lx < 340 && freeze_cd == 0) {
+                        freeze_active = 100; freeze_cd = 200;
+                        ShowToastNative("Freeze Skill Activated!");
+                    } else if (lx >= 340 && magnet_cd == 0) {
+                        magnet_active = 80; magnet_cd = 150;
+                        ShowToastNative("Magnet Skill Activated!");
+                    }
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (gx >= 0 && gx < GRID_WIDTH && gy >= 0 && gy < GRID_HEIGHT) {
+                    // Steer snake toward clicked cell
+                    int dx = gx - snake[0].x;
+                    int dy = gy - snake[0].y;
+                    if (ABS(dx) > ABS(dy)) {
+                        if (dx > 0 && last_dir_x != -1) { dir_x = 1; dir_y = 0; }
+                        else if (dx < 0 && last_dir_x != 1) { dir_x = -1; dir_y = 0; }
+                        else if (dy > 0 && last_dir_y != -1) { dir_x = 0; dir_y = 1; }
+                        else if (dy < 0 && last_dir_y != 1) { dir_x = 0; dir_y = -1; }
+                    } else {
+                        if (dy > 0 && last_dir_y != -1) { dir_x = 0; dir_y = 1; }
+                        else if (dy < 0 && last_dir_y != 1) { dir_x = 0; dir_y = -1; }
+                        else if (dx > 0 && last_dir_x != -1) { dir_x = 1; dir_y = 0; }
+                        else if (dx < 0 && last_dir_x != 1) { dir_x = -1; dir_y = 0; }
+                    }
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (game_state == 3) { // Paused
+                if (lx < 260) {
+                    game_state = 1;
+                    SetTimer(hwnd, TIMER_ID, current_speed, NULL);
+                    ShowToastNative("Resumed");
+                } else {
+                    SaveGameState();
+                    game_state = 0;
+                    SetTimer(hwnd, TIMER_ID, 80, NULL);
+                    ShowToastNative("Saved to ksnake_save.dat");
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (game_state == 5) { // High Scores & Help
+                game_state = 0;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (game_state == 7) { // Stats
+                if (ly >= 250 && ly < 285) {
+                    ExportMatchStatsCSV();
+                    ShowToastNative("Match Stats CSV Exported");
+                } else if (ly >= 290 && ly < 325) {
+                    ExportReplay();
+                    ShowToastNative("Replay Exported");
+                } else {
+                    game_state = 0;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (game_state == 9) { // Route Selection
+                if (lx >= 40 && lx <= 230) {
+                    campaign_branch = 0;
+                    campaign_level++;
+                    InitCampaignStage(campaign_level);
+                    apples_eaten = 0;
+                    game_state = 1;
+                    SetTimer(hwnd, TIMER_ID, current_speed, NULL);
+                    ShowToastNative("Solar Highway Selected!");
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (lx >= 270 && lx <= 460) {
+                    campaign_branch = 1;
+                    campaign_level++;
+                    InitCampaignStage(campaign_level);
+                    apples_eaten = 0;
+                    game_state = 1;
+                    SetTimer(hwnd, TIMER_ID, current_speed, NULL);
+                    ShowToastNative("Shadow Labyrinth Selected!");
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if ((game_state == 2 || game_state == 4) && !is_high_score_entry) {
+                game_state = 0;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (game_state == 8) { // Map Editor
+                if (ly >= 45 && ly < 45 + GRID_HEIGHT * CELL_SIZE) {
+                    if (gx >= 0 && gx < GRID_WIDTH && gy >= 0 && gy < GRID_HEIGHT) {
+                        editor_cursor_x = gx; editor_cursor_y = gy;
+                        if (editor_brush == 0) { // Toggle Wall
+                            int i, found = -1;
+                            for(i=0; i<num_custom_obstacles; i++) {
+                                if (custom_obstacles[i].x == gx && custom_obstacles[i].y == gy) { found = i; break; }
+                            }
+                            if (found >= 0) {
+                                custom_obstacles[found] = custom_obstacles[num_custom_obstacles-1];
                                 num_custom_obstacles--;
-                                break;
+                            } else if (num_custom_obstacles < 120) {
+                                custom_obstacles[num_custom_obstacles].x = gx;
+                                custom_obstacles[num_custom_obstacles].y = gy;
+                                num_custom_obstacles++;
+                            }
+                        } else if (editor_brush == 1) {
+                            custom_portal_a.x = gx; custom_portal_a.y = gy; custom_portal_active = 1;
+                        } else if (editor_brush == 2) {
+                            custom_portal_b.x = gx; custom_portal_b.y = gy; custom_portal_active = 1;
+                        } else if (editor_brush == 3) {
+                            int i;
+                            for(i=0; i<num_custom_obstacles; i++) {
+                                if (custom_obstacles[i].x == gx && custom_obstacles[i].y == gy) {
+                                    custom_obstacles[i] = custom_obstacles[num_custom_obstacles-1];
+                                    num_custom_obstacles--;
+                                    break;
+                                }
                             }
                         }
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
+                } else if (ly >= 545 && ly < 568) {
+                    if (lx < 130) { editor_brush = 0; ShowToastNative("Tool: Wall [1]"); }
+                    else if (lx < 240) { editor_brush = 1; ShowToastNative("Tool: Portal A [2]"); }
+                    else if (lx < 360) { editor_brush = 2; ShowToastNative("Tool: Portal B [3]"); }
+                    else { editor_brush = 3; ShowToastNative("Tool: Erase [4]"); }
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (ly >= 568 && ly < 588) {
+                    if (lx >= 160 && lx < 230) { ClearCustomMap(); ShowToastNative("Map Cleared"); }
+                    else if (lx >= 230 && lx < 310) {
+                        int x;
+                        for(x=0; x<GRID_WIDTH; x++) {
+                            if (num_custom_obstacles < 118) {
+                                custom_obstacles[num_custom_obstacles].x = x; custom_obstacles[num_custom_obstacles].y = 0; num_custom_obstacles++;
+                                custom_obstacles[num_custom_obstacles].x = x; custom_obstacles[num_custom_obstacles].y = GRID_HEIGHT-1; num_custom_obstacles++;
+                            }
+                        }
+                        ShowToastNative("Border Created");
+                    } else if (lx >= 310) {
+                        GenerateRandomMazeToCustom();
+                        ShowToastNative("Random Maze Generated");
+                    }
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (ly >= 588) {
+                    if (lx < 160) {
+                        game_mode = 6; InitGame(); SetTimer(hwnd, TIMER_ID, current_speed, NULL);
+                    } else if (lx < 260) {
+                        SaveCustomMap(); ShowToastNative("Custom Map Saved");
+                    } else {
+                        game_state = 0;
                     }
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
@@ -1833,6 +2012,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (particle_count > 0 || num_shockwaves > 0) InvalidateRect(hwnd, NULL, FALSE);
             }
             if (boss_banner_timer > 0) boss_banner_timer--;
+            if (native_toast_timer > 0) {
+                native_toast_timer--;
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
             if (game_state != 1) break;
             anim_tick++;
             match_ticks++;
@@ -2229,19 +2412,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_KEYDOWN: {
             if (game_state == 0) { // Menu
-                if (wParam == 'M') { game_mode = (game_mode + 1) % NUM_MODES; }
-                else if (wParam == '1') difficulty = 0;
-                else if (wParam == '2') difficulty = 1;
-                else if (wParam == '3') difficulty = 2;
-                else if (wParam == 'W') wrap_mode = !wrap_mode;
+                if (wParam == 'M') {
+                    game_mode = (game_mode + 1) % NUM_MODES;
+                    ShowToastNative(mode_names[game_mode]);
+                }
+                else if (wParam == '1') { difficulty = 0; ShowToastNative("Difficulty: Easy"); }
+                else if (wParam == '2') { difficulty = 1; ShowToastNative("Difficulty: Medium"); }
+                else if (wParam == '3') { difficulty = 2; ShowToastNative("Difficulty: Hard"); }
+                else if (wParam == 'W') {
+                    wrap_mode = !wrap_mode;
+                    ShowToastNative(wrap_mode ? "Wall Wrap: ON" : "Wall Wrap: OFF");
+                }
                 else if (wParam == 'H' || wParam == VK_F1) game_state = 5;
                 else if (wParam == 'R') {
                     if (RestoreGameState()) {
                         game_state = 1; SetTimer(hwnd, TIMER_ID, current_speed, NULL);
+                        ShowToastNative("Game Resumed!");
+                    } else {
+                        ShowToastNative("No Saved Game Found");
                     }
                 }
                 else if (wParam == 'E' || wParam == 'O') { game_state = 8; InvalidateRect(hwnd, NULL, TRUE); }
-                else if (wParam == 'I') ImportStatsText();
+                else if (wParam == 'I') { ImportStatsText(); ShowToastNative("Stats Text Imported"); }
                 else if (wParam == 'C') { game_state = 6; config_step = 0; InvalidateRect(hwnd, NULL, TRUE); }
                 else if (wParam == 'X') { ImportReplay(); }
                 else if (wParam == 'S') { game_state = 7; InvalidateRect(hwnd, NULL, TRUE); }
@@ -2276,23 +2468,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         custom_portal_b.x = editor_cursor_x; custom_portal_b.y = editor_cursor_y; custom_portal_active = 1;
                     }
                 }
-                else if (wParam == '1') editor_brush = 0; // Wall
-                else if (wParam == '2') editor_brush = 1; // Portal A
-                else if (wParam == '3') editor_brush = 2; // Portal B
-                else if (wParam == '4') editor_brush = 3; // Erase
-                else if (wParam == 'C') ClearCustomMap();
+                else if (wParam == '1') { editor_brush = 0; ShowToastNative("Tool: Wall [1]"); }
+                else if (wParam == '2') { editor_brush = 1; ShowToastNative("Tool: Portal A [2]"); }
+                else if (wParam == '3') { editor_brush = 2; ShowToastNative("Tool: Portal B [3]"); }
+                else if (wParam == '4') { editor_brush = 3; ShowToastNative("Tool: Erase [4]"); }
+                else if (wParam == 'C') { ClearCustomMap(); ShowToastNative("Map Cleared"); }
                 else if (wParam == 'B') { // Border
-                    int x, y;
+                    int x;
                     for(x=0; x<GRID_WIDTH; x++) {
                         if (num_custom_obstacles < 118) {
                             custom_obstacles[num_custom_obstacles].x = x; custom_obstacles[num_custom_obstacles].y = 0; num_custom_obstacles++;
                             custom_obstacles[num_custom_obstacles].x = x; custom_obstacles[num_custom_obstacles].y = GRID_HEIGHT-1; num_custom_obstacles++;
                         }
                     }
+                    ShowToastNative("Border Created");
                 }
-                else if (wParam == 'R') GenerateRandomMazeToCustom();
-                else if (wParam == 'S') SaveCustomMap();
-                else if (wParam == 'L') LoadCustomMap();
+                else if (wParam == 'R') { GenerateRandomMazeToCustom(); ShowToastNative("Random Maze Generated"); }
+                else if (wParam == 'S') { SaveCustomMap(); ShowToastNative("Custom Map Saved"); }
+                else if (wParam == 'L') { LoadCustomMap(); ShowToastNative("Custom Map Loaded"); }
                 else if (wParam == 'T' || wParam == VK_RETURN) {
                     game_mode = 6; // Custom map mode
                     InitGame();
@@ -2307,12 +2500,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     InitCampaignStage(campaign_level);
                     apples_eaten = 0;
                     game_state = 1;
+                    SetTimer(hwnd, TIMER_ID, current_speed, NULL);
+                    ShowToastNative("Solar Highway Selected!");
                 } else if (wParam == '2') {
                     campaign_branch = 1; // Shadow Path
                     campaign_level++;
                     InitCampaignStage(campaign_level);
                     apples_eaten = 0;
                     game_state = 1;
+                    SetTimer(hwnd, TIMER_ID, current_speed, NULL);
+                    ShowToastNative("Shadow Labyrinth Selected!");
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (game_state == 6) { // Config
@@ -2324,19 +2521,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (config_step == 4) bind_ghost = wParam;
                 else if (config_step == 5) bind_freeze = wParam;
                 else if (config_step == 6) bind_mag = wParam;
-                else if (config_step == 7) { bind_pause = wParam; SaveConfig(); game_state = 0; }
+                else if (config_step == 7) { bind_pause = wParam; SaveConfig(); game_state = 0; ShowToastNative("Keybindings Saved"); }
                 if (game_state == 6) config_step++;
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (game_state == 7) { // Stats Export
-                if (wParam == 'C') ExportMatchStatsCSV();
-                else if (wParam == 'R') ExportReplay();
+                if (wParam == 'C') { ExportMatchStatsCSV(); ShowToastNative("Stats CSV Exported"); }
+                else if (wParam == 'R') { ExportReplay(); ShowToastNative("Replay Exported"); }
                 else if (wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == 'S') game_state = 0;
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (game_state == 5) {
                 if (wParam == VK_RETURN || wParam == VK_ESCAPE || wParam == 'H' || wParam == VK_F1) { game_state = 0; InvalidateRect(hwnd, NULL, TRUE); }
             } else if (game_state == 3) {
-                if (wParam == bind_pause || wParam == 'P' || wParam == VK_ESCAPE) { game_state = 1; SetTimer(hwnd, TIMER_ID, current_speed, NULL); }
-                else if (wParam == 'Q' || wParam == 'S') { SaveGameState(); game_state = 0; InvalidateRect(hwnd, NULL, TRUE); }
+                if (wParam == bind_pause || wParam == 'P' || wParam == VK_ESCAPE) { game_state = 1; SetTimer(hwnd, TIMER_ID, current_speed, NULL); ShowToastNative("Resumed"); }
+                else if (wParam == 'Q' || wParam == 'S') { SaveGameState(); game_state = 0; SetTimer(hwnd, TIMER_ID, 80, NULL); ShowToastNative("Saved to ksnake_save.dat"); InvalidateRect(hwnd, NULL, TRUE); }
             } else if (game_state == 2 || game_state == 4) {
                 if ((wParam == VK_RETURN || wParam == VK_ESCAPE) && !is_high_score_entry) { game_state = 0; InvalidateRect(hwnd, NULL, TRUE); }
             } else if (game_state == 1) { // Playing
@@ -2346,9 +2543,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     else if ((wParam == VK_DOWN || wParam == bind_down) && last_dir_y != -1) { dir_x = 0; dir_y = 1; a = 'D'; }
                     else if ((wParam == VK_LEFT || wParam == bind_left) && last_dir_x != 1) { dir_x = -1; dir_y = 0; a = 'L'; }
                     else if ((wParam == VK_RIGHT || wParam == bind_right) && last_dir_x != -1) { dir_x = 1; dir_y = 0; a = 'R'; }
-                    else if (wParam == bind_ghost && ghost_cd == 0) { ghost_active = 50; ghost_cd = 150; a = 'G'; }
-                    else if (wParam == bind_freeze && freeze_cd == 0) { freeze_active = 100; freeze_cd = 200; a = 'F'; }
-                    else if (wParam == bind_mag && magnet_cd == 0) { magnet_active = 80; magnet_cd = 150; a = 'M'; }
+                    else if (wParam == bind_ghost && ghost_cd == 0) { ghost_active = 50; ghost_cd = 150; a = 'G'; ShowToastNative("Ghost Skill Activated!"); }
+                    else if (wParam == bind_freeze && freeze_cd == 0) { freeze_active = 100; freeze_cd = 200; a = 'F'; ShowToastNative("Freeze Skill Activated!"); }
+                    else if (wParam == bind_mag && magnet_cd == 0) { magnet_active = 80; magnet_cd = 150; a = 'M'; ShowToastNative("Magnet Skill Activated!"); }
                     
                     if (a != 0 && replay_event_count < 30000) {
                         replay_events[replay_event_count].tick = match_ticks + 1;
@@ -2356,8 +2553,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         replay_event_count++;
                     }
                 }
-                if (wParam == bind_pause || wParam == 'P' || wParam == VK_ESCAPE) { game_state = 3; KillTimer(hwnd, TIMER_ID); InvalidateRect(hwnd, NULL, TRUE); }
-                else if (wParam == VK_F1 || wParam == 'H') { game_state = 5; KillTimer(hwnd, TIMER_ID); InvalidateRect(hwnd, NULL, TRUE); }
+                if (wParam == bind_pause || wParam == 'P' || wParam == VK_ESCAPE) { game_state = 3; SetTimer(hwnd, TIMER_ID, 80, NULL); ShowToastNative("Game Paused"); InvalidateRect(hwnd, NULL, TRUE); }
+                else if (wParam == VK_F1 || wParam == 'H') { game_state = 5; SetTimer(hwnd, TIMER_ID, 80, NULL); InvalidateRect(hwnd, NULL, TRUE); }
             }
             break;
         }
@@ -2862,6 +3059,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SelectObject(hdc, oP2); SelectObject(hdc, oB1);
                     DeleteObject(sw2Pen);
                 }
+            }
+
+            if (native_toast_timer > 0) {
+                int tLen = lstrlenA(native_toast_msg);
+                int tw = tLen * 7 + 28;
+                RECT tr = { 260 - tw / 2, 10, 260 + tw / 2, 36 };
+                HBRUSH toastB = CreateSolidBrush(RGB(22, 34, 58));
+                HPEN toastP = CreatePen(PS_SOLID, 1, RGB(72, 219, 251));
+                HBRUSH oldB = (HBRUSH)SelectObject(hdc, toastB);
+                HPEN oldP = (HPEN)SelectObject(hdc, toastP);
+                RoundRect(hdc, tr.left, tr.top, tr.right, tr.bottom, 8, 8);
+                SelectObject(hdc, oldB);
+                SelectObject(hdc, oldP);
+                DeleteObject(toastB);
+                DeleteObject(toastP);
+
+                HFONT oldTFont = (HFONT)SelectObject(hdc, hFontSmall);
+                SetBkMode(hdc, TRANSPARENT);
+                SetTextColor(hdc, RGB(72, 219, 251));
+                DrawTextA(hdc, native_toast_msg, tLen, &tr, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                SelectObject(hdc, oldTFont);
             }
 
             SelectObject(hdc, oldFont);

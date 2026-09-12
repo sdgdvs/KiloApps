@@ -6,37 +6,39 @@
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; padding: 0; background: #0f0f1a; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #fff; user-select: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
-        #gameContainer { position: relative; width: 440px; max-width: 95vw; max-height: 95vh; overflow-y: auto; background: #161626; border: 3px solid #2e2e4a; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); padding: 18px; display: flex; flex-direction: column; align-items: center; }
-        #header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: bold; font-size: 15px; color: #4cd137; }
-        #header span { background: #22223b; padding: 6px 10px; border-radius: 6px; border: 1px solid #3d3d5c; }
-        #bossBarContainer { width: 100%; background: #22223b; border: 1px solid #ff0055; border-radius: 6px; height: 22px; margin-bottom: 10px; display: none; position: relative; overflow: hidden; }
+        #gameContainer { position: relative; width: 440px; max-width: 95vw; max-height: 96vh; background: #161626; border: 3px solid #2e2e4a; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); padding: 12px; display: flex; flex-direction: column; align-items: center; }
+        #header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: bold; font-size: 13px; color: #4cd137; }
+        #header span { background: #22223b; padding: 5px 8px; border-radius: 6px; border: 1px solid #3d3d5c; }
+        #bossBarContainer { width: 100%; background: #22223b; border: 1px solid #ff0055; border-radius: 6px; height: 22px; margin-bottom: 8px; display: none; position: relative; overflow: hidden; }
         #bossBarFill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff0055, #ff4757); transition: width 0.2s; }
         #bossBarText { position: absolute; width: 100%; text-align: center; font-size: 12px; font-weight: bold; color: #fff; line-height: 22px; text-shadow: 0 0 4px #000; }
         canvas { background: #0a0a12; border: 2px solid #3d3d5c; border-radius: 8px; box-shadow: inset 0 0 15px rgba(0,0,0,0.8); max-width: 100%; cursor: pointer; }
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 15, 26, 0.96); border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 16px; z-index: 10; border: 1px solid #3d3d5c; box-sizing: border-box; }
-        h2 { margin: 0 0 12px 0; color: #00d2d3; text-transform: uppercase; letter-spacing: 2px; font-size: 22px; text-shadow: 0 0 8px rgba(0,210,211,0.5); }
-        p { margin: 5px 0; font-size: 14px; color: #c8d6e5; }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 15, 26, 0.96); border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 14px; z-index: 10; border: 1px solid #3d3d5c; box-sizing: border-box; }
+        h2 { margin: 0 0 10px 0; color: #00d2d3; text-transform: uppercase; letter-spacing: 2px; font-size: 20px; text-shadow: 0 0 8px rgba(0,210,211,0.5); }
+        p { margin: 4px 0; font-size: 13px; color: #c8d6e5; }
         .menu-opt { color: #fbc531; font-weight: bold; }
-        .btn { background: #2e2e4a; color: #fff; border: 1px solid #48dbfb; border-radius: 6px; padding: 7px 14px; font-weight: bold; cursor: pointer; margin-top: 6px; transition: all 0.2s; font-size: 13px; }
+        .btn { background: #2e2e4a; color: #fff; border: 1px solid #48dbfb; border-radius: 6px; padding: 6px 12px; font-weight: bold; cursor: pointer; margin-top: 5px; transition: all 0.2s; font-size: 12px; }
         .btn:hover { background: #48dbfb; color: #0f0f1a; }
         .btn.active-tool { background: #00d2d3; color: #0f0f1a; border-color: #fff; }
-        .skill-btn { background: #22223b; color: #48dbfb; border: 1px solid #3d3d5c; border-radius: 6px; padding: 8px 10px; font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.2s; flex: 1; text-align: center; }
+        .modal-close-btn { position: absolute; top: 8px; right: 12px; background: none; border: none; color: #8395a7; font-size: 18px; cursor: pointer; font-weight: bold; padding: 2px 6px; line-height: 1; border-radius: 4px; transition: all 0.2s; }
+        .modal-close-btn:hover { color: #ff4757; transform: scale(1.15); }
+        .skill-btn { background: #22223b; color: #48dbfb; border: 1px solid #3d3d5c; border-radius: 6px; padding: 6px 8px; font-size: 12px; font-weight: bold; cursor: pointer; transition: all 0.2s; flex: 1; text-align: center; }
         .skill-btn.ready { border-color: #4cd137; color: #4cd137; box-shadow: 0 0 6px rgba(76,209,55,0.4); }
         .skill-btn.active { background: #00d2d3; color: #0f0f1a; border-color: #00d2d3; }
-        .skills-bar { width: 100%; display: flex; gap: 8px; margin-top: 10px; }
+        .skills-bar { width: 100%; display: flex; gap: 8px; margin-top: 8px; }
         input[type="text"] { background: #0a0a12; border: 1px solid #48dbfb; color: #fff; padding: 6px; border-radius: 4px; text-align: center; font-weight: bold; width: 140px; font-size: 15px; text-transform: uppercase; }
-        table { width: 100%; font-size: 13px; border-collapse: collapse; margin-top: 8px; }
+        table { width: 100%; font-size: 12px; border-collapse: collapse; margin-top: 6px; }
         th { border-bottom: 1px solid #48dbfb; color: #00d2d3; padding: 4px; }
         td { padding: 4px; text-align: center; border-bottom: 1px solid #22223b; }
-        textarea { width: 100%; height: 95px; background: #0a0a12; border: 1px solid #3d3d5c; color: #4cd137; font-family: monospace; font-size: 12px; border-radius: 4px; padding: 6px; resize: none; margin-top: 6px; }
-        #controlsHint { margin-top: 10px; font-size: 12px; color: #8395a7; text-align: center; }
-        .powerup-legend { display: flex; justify-content: space-around; width: 100%; margin-top: 8px; font-size: 11px; background: #0a0a12; padding: 6px; border-radius: 4px; border: 1px solid #22223b; flex-wrap: wrap; gap: 4px; }
+        textarea { width: 100%; height: 90px; background: #0a0a12; border: 1px solid #3d3d5c; color: #4cd137; font-family: monospace; font-size: 12px; border-radius: 4px; padding: 6px; resize: none; margin-top: 6px; }
+        #controlsHint { margin-top: 6px; font-size: 11px; color: #8395a7; text-align: center; }
+        .powerup-legend { display: flex; justify-content: space-around; width: 100%; margin-top: 6px; font-size: 11px; background: #0a0a12; padding: 5px; border-radius: 4px; border: 1px solid #22223b; flex-wrap: wrap; gap: 4px; }
         .legend-item { display: flex; align-items: center; gap: 4px; }
         .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
         .branch-card { background: #1f1f33; border: 2px solid #48dbfb; border-radius: 8px; padding: 10px; margin: 6px 0; width: 90%; cursor: pointer; transition: all 0.2s; text-align: left; }
         .branch-card:hover { transform: scale(1.02); border-color: #fbc531; background: #292942; }
         .toast-container { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
-        .toast { background: #22223b; color: #48dbfb; border: 1px solid #48dbfb; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.6); opacity: 0; transform: translateY(-10px); transition: all 0.25s ease-out; pointer-events: auto; text-align: center; }
+        .toast { background: #22223b; color: #48dbfb; border: 1px solid #48dbfb; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.6); opacity: 0; transform: translateY(-10px); transition: all 0.25s ease-out; pointer-events: auto; text-align: center; cursor: pointer; }
         .toast.show { opacity: 1; transform: translateY(0); }
     </style>
 </head>
@@ -46,6 +48,7 @@
         <div id="header">
             <span id="scoreDisplay">Score: 0</span>
             <span id="modeDisplay">Mode: Classic</span>
+            <span id="pauseToggle" onclick="togglePauseGame()" style="cursor:pointer;" title="Pause / Resume Game (P)">⏸ Pause</span>
             <span id="soundToggle" onclick="toggleSound()" style="cursor:pointer;" title="Toggle Sound (U)">🔊 Sound</span>
             <span id="highDisplay">High: 0</span>
         </div>
@@ -61,10 +64,12 @@
             <!-- MENU OVERLAY -->
             <div id="menuOverlay" class="overlay" role="dialog" aria-modal="true" aria-label="KSnake Arcade Main Menu">
                 <h2>KSNAKE ARCADE</h2>
-                <p>Mode: <span id="currentModeText" class="menu-opt">Classic</span> (Press <b style="color:#00d2d3">M</b>)</p>
-                <p>Difficulty: <span id="diffText" class="menu-opt">Medium</span> (Press <b style="color:#00d2d3">1-3</b>)</p>
-                <p>Wrap Walls: <span id="wrapStatus" class="menu-opt">OFF</span> (Press <b style="color:#00d2d3">W</b>)</p>
-                <div style="margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;">
+                <div style="display:flex; gap:6px; justify-content:center; margin-bottom:6px; flex-wrap:wrap;">
+                    <button class="btn" onclick="cycleMode()" title="Cycle Game Mode (M)" style="margin-top:0; font-size:12px; padding:4px 8px;">Mode: <span id="currentModeText" class="menu-opt">Classic</span> <b style="color:#00d2d3;">[M]</b></button>
+                    <button class="btn" onclick="cycleDifficulty()" title="Cycle Difficulty (1-3)" style="margin-top:0; font-size:12px; padding:4px 8px;">Diff: <span id="diffText" class="menu-opt">Medium</span> <b style="color:#00d2d3;">[1-3]</b></button>
+                    <button class="btn" onclick="toggleWrap()" title="Toggle Wall Wrapping (W)" style="margin-top:0; font-size:12px; padding:4px 8px;">Wrap: <span id="wrapStatus" class="menu-opt">OFF</span> <b style="color:#00d2d3;">[W]</b></button>
+                </div>
+                <div style="margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;">
                     <button class="btn" onclick="startNewGame()">[ENTER] Play</button>
                     <button class="btn" onclick="openMapEditor()">[E] Map Editor</button>
                     <button class="btn" id="resumeBtn" onclick="resumeGame()" style="display:none;">[R] Resume</button>
@@ -74,11 +79,12 @@
                     <button class="btn" onclick="showConfig()">[C] Keybinds</button>
                     <button class="btn" onclick="showStatsExport()" id="btnStatsExport" style="display:none;">[S] Stats</button>
                 </div>
-                <p id="statsDisplay" style="margin-top: 10px; font-size: 12px; color: #8395a7;"></p>
+                <p id="statsDisplay" style="margin-top: 8px; font-size: 11px; color: #8395a7;"></p>
             </div>
 
             <!-- MAP EDITOR OVERLAY -->
             <div id="editorOverlay" class="overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Map Editor Lab">
+                <button class="modal-close-btn" onclick="closeMapEditor()" title="Close Editor (ESC)">✕</button>
                 <h2 style="color: #fbc531;">MAP EDITOR LAB</h2>
                 <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-bottom:8px;">
                     <button class="btn active-tool" id="toolWall" onclick="setEditorTool('wall')">[1] Wall</button>
@@ -127,6 +133,7 @@
 
             <!-- PAUSE OVERLAY -->
             <div id="pauseOverlay" class="overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Game Paused Dialog">
+                <button class="modal-close-btn" onclick="resumeFromPause()" title="Resume (P / ESC)">✕</button>
                 <h2 style="color: #fbc531;">PAUSED</h2>
                 <p>Press <b style="color:#00d2d3">P</b> or <b style="color:#00d2d3">ESC</b> to Resume</p>
                 <p>Press <b style="color:#4cd137">S</b> or <b style="color:#4cd137">Q</b> to Save & Exit</p>
@@ -138,6 +145,7 @@
 
             <!-- LEADERBOARD & HELP OVERLAY -->
             <div id="leaderboardOverlay" class="overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="High Scores and Help Dialog">
+                <button class="modal-close-btn" onclick="showMenu()" title="Back to Menu (ESC)">✕</button>
                 <h2>HIGH SCORES & HELP</h2>
                 <div style="font-size: 12px; text-align: left; margin-bottom: 8px; background: rgba(0,0,0,0.5); padding: 8px; border-radius: 4px; border: 1px solid #3d3d5c;">
                     <b style="color:#00d2d3">Controls:</b> WASD / Arrows to Move, P/ESC to Pause, H/F1 for Help, U to Mute.<br>
@@ -155,6 +163,7 @@
 
             <!-- KEYBINDS OVERLAY -->
             <div id="configOverlay" class="overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Keybindings Configuration Dialog">
+                <button class="modal-close-btn" onclick="showMenu()" title="Back (ESC)">✕</button>
                 <h2>KEYBINDINGS</h2>
                 <p style="font-size:12px; color:#8395a7; margin-bottom:6px;">Click an input to rebind, then press a key:</p>
                 <div style="font-size:13px; text-align:left; width:80%; margin:auto; display:flex; flex-direction:column; gap:4px;">
@@ -175,6 +184,7 @@
             
             <!-- MATCH STATS OVERLAY -->
             <div id="statsExportOverlay" class="overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Match Statistics Dialog">
+                <button class="modal-close-btn" onclick="showMenu()" title="Close (ESC)">✕</button>
                 <h2>MATCH STATS</h2>
                 <p id="matchStatsText" style="white-space:pre-wrap; font-size:13px; color:#fbc531;"></p>
                 <div style="display:flex; gap:6px;">
@@ -187,6 +197,7 @@
 
             <!-- EXPORT / IMPORT OVERLAY -->
             <div id="exportImportOverlay" class="overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Data Export and Import Dialog">
+                <button class="modal-close-btn" onclick="showMenu()" title="Back (ESC)">✕</button>
                 <h2>DATA EXPORT / IMPORT</h2>
                 <p>Export JSON Data or Paste JSON to Import:</p>
                 <textarea id="dataBox" placeholder="Stats JSON will appear here..."></textarea>
@@ -625,29 +636,50 @@
             }
         }
 
-        // Canvas Click for Map Editor
+        // Canvas Click for Map Editor and Gameplay Steering
         canvas.addEventListener('click', e => {
-            if (gameState !== 8) return;
-            const rect = canvas.getBoundingClientRect();
-            const gx = Math.floor((e.clientX - rect.left) / (rect.width / WIDTH));
-            const gy = Math.floor((e.clientY - rect.top) / (rect.height / HEIGHT));
-            if (gx < 0 || gx >= WIDTH || gy < 0 || gy >= HEIGHT) return;
+            if (gameState === 8) {
+                const rect = canvas.getBoundingClientRect();
+                const gx = Math.floor((e.clientX - rect.left) / (rect.width / WIDTH));
+                const gy = Math.floor((e.clientY - rect.top) / (rect.height / HEIGHT));
+                if (gx < 0 || gx >= WIDTH || gy < 0 || gy >= HEIGHT) return;
 
-            if (editorTool === 'wall') {
-                const idx = customObstacles.findIndex(o => o.x === gx && o.y === gy);
-                if (idx >= 0) customObstacles.splice(idx, 1);
-                else customObstacles.push({x: gx, y: gy});
-            } else if (editorTool === 'portalA') {
-                customPortalA = {x: gx, y: gy};
-                customPortalActive = true;
-            } else if (editorTool === 'portalB') {
-                customPortalB = {x: gx, y: gy};
-                customPortalActive = true;
-            } else if (editorTool === 'erase') {
-                const idx = customObstacles.findIndex(o => o.x === gx && o.y === gy);
-                if (idx >= 0) customObstacles.splice(idx, 1);
+                if (editorTool === 'wall') {
+                    const idx = customObstacles.findIndex(o => o.x === gx && o.y === gy);
+                    if (idx >= 0) customObstacles.splice(idx, 1);
+                    else customObstacles.push({x: gx, y: gy});
+                } else if (editorTool === 'portalA') {
+                    customPortalA = {x: gx, y: gy};
+                    customPortalActive = true;
+                } else if (editorTool === 'portalB') {
+                    customPortalB = {x: gx, y: gy};
+                    customPortalActive = true;
+                } else if (editorTool === 'erase') {
+                    const idx = customObstacles.findIndex(o => o.x === gx && o.y === gy);
+                    if (idx >= 0) customObstacles.splice(idx, 1);
+                }
+                renderEditorCanvas();
+            } else if (gameState === 1) {
+                // Interactive mouse / tap steering
+                const rect = canvas.getBoundingClientRect();
+                const gx = Math.floor((e.clientX - rect.left) / (rect.width / WIDTH));
+                const gy = Math.floor((e.clientY - rect.top) / (rect.height / HEIGHT));
+                if (gx < 0 || gx >= WIDTH || gy < 0 || gy >= HEIGHT) return;
+                const head = snake[0];
+                const dx = gx - head.x;
+                const dy = gy - head.y;
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    if (dx > 0 && lastDir.x !== -1) dir = { x: 1, y: 0 };
+                    else if (dx < 0 && lastDir.x !== 1) dir = { x: -1, y: 0 };
+                    else if (dy > 0 && lastDir.y !== -1) dir = { x: 0, y: 1 };
+                    else if (dy < 0 && lastDir.y !== 1) dir = { x: 0, y: -1 };
+                } else {
+                    if (dy > 0 && lastDir.y !== -1) dir = { x: 0, y: 1 };
+                    else if (dy < 0 && lastDir.y !== 1) dir = { x: 0, y: -1 };
+                    else if (dx > 0 && lastDir.x !== -1) dir = { x: 1, y: 0 };
+                    else if (dx < 0 && lastDir.x !== 1) dir = { x: -1, y: 0 };
+                }
             }
-            renderEditorCanvas();
         });
 
         function chooseCampaignBranch(branch) {
@@ -680,6 +712,31 @@
             let idx = modesList.indexOf(gameMode);
             gameMode = modesList[(idx + 1) % modesList.length];
             updateMenuUI();
+            showToast(`Mode: ${gameMode.toUpperCase()}`);
+        }
+
+        function cycleDifficulty() {
+            difficulty = (difficulty + 1) % 3;
+            updateMenuUI();
+            const diffs = ['Easy (1/3)', 'Medium (2/3)', 'Hard (3/3)'];
+            showToast(`Difficulty: ${diffs[difficulty]}`);
+        }
+
+        function toggleWrap() {
+            wrapMode = !wrapMode;
+            updateMenuUI();
+            showToast(`Wall Wrapping: ${wrapMode ? 'ON' : 'OFF'}`);
+        }
+
+        function togglePauseGame() {
+            if (gameState === 1) {
+                gameState = 3;
+                clearInterval(gameLoop);
+                pauseOverlay.style.display = 'flex';
+                showToast("Game Paused");
+            } else if (gameState === 3) {
+                resumeFromPause();
+            }
         }
 
         function hideOverlays() {
@@ -2397,11 +2454,18 @@
             const toast = document.createElement('div');
             toast.className = 'toast';
             toast.innerText = msg;
+            toast.title = 'Click to dismiss';
+            toast.onclick = () => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 150);
+            };
             container.appendChild(toast);
             setTimeout(() => toast.classList.add('show'), 10);
             setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 250);
+                if (toast.parentElement) {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 250);
+                }
             }, duration);
         }
 
@@ -2792,6 +2856,15 @@
                     showMenu();
                 }
             }
+        });
+
+        // Backdrop click dismissal for modal dialogs
+        [leaderboardOverlay, configOverlay, statsExportOverlay, exportImportOverlay].forEach(overlay => {
+            overlay.addEventListener('click', e => {
+                if (e.target === overlay) {
+                    showMenu();
+                }
+            });
         });
 
         updateMenuUI();
