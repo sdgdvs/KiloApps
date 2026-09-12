@@ -13,9 +13,10 @@
 #define MAX_FILE_SIZE (100 * 1024 * 1024) // 100MB limit per file
 
 HWND hListBox, hEditSearch, hChkRegex, hEditPassword, hComboCompress;
-HWND hBtnOpen, hBtnAdd, hBtnRemove, hBtnPack, hBtnExtractSel, hBtnExtractAll, hBtnBatchExtract, hBtnVerify, hBtnPreview, hBtnHelp;
-HWND hStatus, hHeader;
+HWND hBtnOpen, hBtnAdd, hBtnRemove, hBtnPack, hBtnExtractSel, hBtnExtractAll, hBtnBatchExtract, hBtnVerify, hBtnPreview, hBtnDemo, hBtnHelp;
+HWND hStatus, hHeader, hMainWnd;
 HFONT hFont, hMonoFont;
+WNDPROC g_pfnOrigSearchProc = NULL;
 
 typedef struct {
     char name[256];
@@ -189,27 +190,49 @@ int RegexMatch(const char* str, const char* pattern) {
     return !*str;
 }
 
+void UpdateWindowTitle() {
+    if (!hMainWnd) return;
+    char title[160];
+    if (numFiles == 0) {
+        lstrcpyA(title, "KZip Archiver Studio - [Empty] - (Press F1 for Help)");
+    } else {
+        wsprintfA(title, "KZip Archiver Studio - %d file(s) loaded - [F1 Help]", numFiles);
+    }
+    SetWindowTextA(hMainWnd, title);
+}
+
 void ShowHelp(HWND hwnd) {
     MessageBoxA(hwnd,
-        "KZip Archiver Studio Help\n\n"
-        "Operations:\n"
-        "  * Open .kza: Open an existing archive\n"
-        "  * Add File: Add files to archive (or Drag & Drop)\n"
-        "  * Remove: Remove selected file (or Del key)\n"
-        "  * Pack .kza: Compress and save archive to .kza\n"
-        "  * Ext. Sel: Extract selected file\n"
-        "  * Ext. All: Extract all files\n"
-        "  * Batch Ext: Extract multiple .kza archives\n"
-        "  * Verify: Check CRC32 integrity of all files\n"
-        "  * Preview: Inspect file details & hex dump\n\n"
-        "Search & Filtering:\n"
-        "  * Filter: Instant search (wildcard * and . supported with Regex)\n"
-        "  * Password: Optional archive password\n\n"
-        "Keyboard Shortcuts:\n"
-        "  * F1 or 'H': Show this Help dialog\n"
-        "  * Enter / Double-Click: Extract / Preview selected file\n"
+        "KZip Archiver Studio - User & Keyboard Reference\n"
+        "================================================\n\n"
+        "ARCHIVE OPERATIONS:\n"
+        "  * Open [Ctrl+O]: Load an existing .kza compressed archive\n"
+        "  * Add File [Ctrl+N]: Add files into current archive (or Drag & Drop)\n"
+        "  * Remove [Del]: Remove selected file from archive\n"
+        "  * Pack [Ctrl+S]: Compress and save archive to .kza file\n"
+        "  * Ext. Sel [Enter]: Extract selected file to current directory\n"
+        "  * Ext. All [Ctrl+E]: Extract all files to current directory\n"
+        "  * Batch Ext [B]: Unpack multiple .kza archives in batch\n"
+        "  * Verify [V]: Check CRC32 checksums against file corruption\n"
+        "  * Preview [P]: Inspect file header, compression stats & hex dump\n"
+        "  * Demo [D]: Load sample bundle (3 files) for instant testing\n\n"
+        "SEARCH & COMPRESSION:\n"
+        "  * Filter: Instant live search (wildcard * and . supported with Regex)\n"
+        "  * Method: RLE Fast (run-length compression) or Store (uncompressed)\n"
+        "  * Password: Enter password before packing to apply XOR cipher\n\n"
+        "GLOBAL KEYBOARD ACCELERATORS:\n"
+        "  * F1 or 'H': Show this Help & Shortcuts guide\n"
+        "  * Ctrl+O: Open archive\n"
+        "  * Ctrl+S: Pack archive\n"
+        "  * Ctrl+E: Extract all files\n"
+        "  * Ctrl+N: Add file\n"
+        "  * Enter / Double-Click: Preview selected file\n"
         "  * Delete: Remove selected file\n"
-        "  * Escape (in Filter): Clear search filter",
+        "  * Escape: Clear search filter\n"
+        "  * V: Verify CRC32 checksums\n"
+        "  * P: Deep Preview\n"
+        "  * B: Batch Extract\n"
+        "  * D: Load Demo Files",
         "KZip Archiver Studio - Help",
         MB_OK | MB_ICONINFORMATION);
 }
@@ -257,7 +280,7 @@ void RefreshList() {
     }
 
     if (numFiles == 0) {
-        SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)"  (Archive is empty. Click 'Add File' or drag & drop files here to begin)");
+        SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)"  (Archive is empty. Click 'Add File', 'Demo', or drag & drop files here)");
     } else if (numVisible == 0) {
         SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)"  (No files match current search filter. Press Esc in search to clear)");
     }
@@ -270,12 +293,13 @@ void RefreshList() {
 
     char statusBuf[256];
     if (numFiles == 0) {
-        lstrcpyA(statusBuf, "Ready. Archive is empty (Drag & drop files or click 'Add File'). Press 'H' or F1 for Help.");
+        lstrcpyA(statusBuf, "Ready. Archive is empty (Drag & drop files or click 'Add [Ctrl+N]' or 'Demo [D]'). Press F1 for Help.");
     } else {
-        wsprintfA(statusBuf, "Files: %d | Raw: %lu B -> Packed: %lu B | Saved: %d%% | Double-click/Enter to extract | F1 for Help",
+        wsprintfA(statusBuf, "Files: %d | Raw: %lu B -> Packed: %lu B | Saved: %d%% | Double-click/Enter to preview | F1 for Help",
             numFiles, totalUncomp, totalComp, overallRatio);
     }
     SetWindowTextA(hStatus, statusBuf);
+    UpdateWindowTitle();
 }
 
 void ClearArchive() {
@@ -679,6 +703,110 @@ void VerifyIntegrity() {
     MessageBoxA(NULL, report, "KZip Integrity Verification", failed == 0 ? (MB_OK | MB_ICONINFORMATION) : (MB_OK | MB_ICONWARNING));
 }
 
+static void AddMemoryFile(const char* name, const char* content, DWORD len) {
+    if (numFiles >= MAX_FILES) return;
+    char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len ? len : 1);
+    if (!buf) return;
+    if (len > 0 && content) memcpy(buf, content, len);
+
+    lstrcpynA(archive[numFiles].name, name, sizeof(archive[numFiles].name));
+    archive[numFiles].uncompSize = len;
+    archive[numFiles].crc32 = CalculateCRC32((const unsigned char*)buf, len);
+    archive[numFiles].data = buf;
+
+    DWORD compressMode = (DWORD)SendMessage(hComboCompress, CB_GETCURSEL, 0, 0); // 0 = Store, 1 = RLE
+    if (compressMode == 1 && len > 0) {
+        unsigned char* compBuf = (unsigned char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * 3 + 16);
+        if (compBuf) {
+            DWORD compLen = CompressRLE((const unsigned char*)buf, len, compBuf);
+            if (compLen > 0 && compLen < len) {
+                archive[numFiles].compSize = compLen;
+                archive[numFiles].method = 1;
+            } else {
+                archive[numFiles].compSize = len;
+                archive[numFiles].method = 0;
+            }
+            HeapFree(GetProcessHeap(), 0, compBuf);
+        } else {
+            archive[numFiles].compSize = len;
+            archive[numFiles].method = 0;
+        }
+    } else {
+        archive[numFiles].compSize = len;
+        archive[numFiles].method = 0;
+    }
+    numFiles++;
+}
+
+void AddDemoBundle() {
+    ClearArchive();
+
+    const char* readme =
+        "=========================================\r\n"
+        "  KZip Archiver Studio - Sample Readme   \r\n"
+        "=========================================\r\n\r\n"
+        "Welcome to KZip Archiver for KiloOS!\r\n"
+        "Features:\r\n"
+        "- High-speed RLE compression\r\n"
+        "- CRC32 checksum verification\r\n"
+        "- XOR password cipher encryption\r\n"
+        "- Instant hex dump preview\r\n\r\n"
+        "Keyboard Shortcuts:\r\n"
+        "  Ctrl+O : Open .kza archive\r\n"
+        "  Ctrl+S : Pack archive\r\n"
+        "  Ctrl+E : Extract all files\r\n"
+        "  Ctrl+N : Add file to archive\r\n"
+        "  Del    : Remove selected\r\n"
+        "  Enter  : Preview selected file\r\n"
+        "  V      : Verify CRC32 checksums\r\n"
+        "  P      : Deep Preview file\r\n"
+        "  B      : Batch Extract\r\n"
+        "  F1 / H : Comprehensive Help\r\n";
+
+    const char* config =
+        "[KZip]\r\n"
+        "Version=2.1.0\r\n"
+        "Compression=RLE\r\n"
+        "AutoVerifyCRC=1\r\n"
+        "MaxFileSizeMB=100\r\n"
+        "Theme=CyberSlate\r\n";
+
+    char pattern[1400];
+    const char* chunk = "KZIP-COMPRESSION-TEST-RUN-LENGTH-ENCODING-DATA-CHUNK-TEST##########\r\n";
+    DWORD chunkLen = (DWORD)lstrlenA(chunk);
+    DWORD pos = 0;
+    while (pos + chunkLen < 1380) {
+        memcpy(pattern + pos, chunk, chunkLen);
+        pos += chunkLen;
+    }
+    pattern[pos] = '\0';
+
+    AddMemoryFile("README.txt", readme, (DWORD)lstrlenA(readme));
+    AddMemoryFile("CONFIG.ini", config, (DWORD)lstrlenA(config));
+    AddMemoryFile("PATTERN.log", pattern, pos);
+
+    RefreshList();
+    MessageBoxA(hMainWnd, "Demo bundle loaded with 3 sample files!\r\nTest 'Preview [P]', 'Verify [V]', or 'Pack [Ctrl+S]'.", "KZip Archiver Studio", MB_OK | MB_ICONINFORMATION);
+}
+
+LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_KEYDOWN) {
+        if (wParam == VK_ESCAPE) {
+            SetWindowTextA(hwnd, "");
+            RefreshList();
+            SetFocus(hListBox);
+            return 0;
+        } else if (wParam == VK_RETURN || wParam == VK_DOWN) {
+            SetFocus(hListBox);
+            if (numVisible > 0) {
+                SendMessage(hListBox, LB_SETCURSEL, 0, 0);
+            }
+            return 0;
+        }
+    }
+    return CallWindowProc(g_pfnOrigSearchProc, hwnd, msg, wParam, lParam);
+}
+
 BOOL CALLBACK SetFontEnumProc(HWND child, LPARAM font) {
     SendMessage(child, WM_SETFONT, (WPARAM)font, TRUE);
     return TRUE;
@@ -687,6 +815,7 @@ BOOL CALLBACK SetFontEnumProc(HWND child, LPARAM font) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
+            hMainWnd = hwnd;
             hFont = CreateFontA(-14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             hMonoFont = CreateFontA(-13, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
 
@@ -716,20 +845,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,
                 10, 56, W - 35, H - 138, hwnd, (HMENU)100, NULL, NULL);
 
-            // Action Buttons Row
-            hBtnOpen = CreateWindowEx(0, "BUTTON", "Open .kza", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, H - 72, 72, 26, hwnd, (HMENU)1, NULL, NULL);
-            hBtnAdd = CreateWindowEx(0, "BUTTON", "Add File", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 87, H - 72, 72, 26, hwnd, (HMENU)2, NULL, NULL);
-            hBtnRemove = CreateWindowEx(0, "BUTTON", "Remove", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 164, H - 72, 70, 26, hwnd, (HMENU)5, NULL, NULL);
-            hBtnPack = CreateWindowEx(0, "BUTTON", "Pack .kza", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 239, H - 72, 75, 26, hwnd, (HMENU)3, NULL, NULL);
-            hBtnExtractSel = CreateWindowEx(0, "BUTTON", "Ext. Sel", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 319, H - 72, 75, 26, hwnd, (HMENU)4, NULL, NULL);
-            hBtnExtractAll = CreateWindowEx(0, "BUTTON", "Ext. All", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 399, H - 72, 75, 26, hwnd, (HMENU)6, NULL, NULL);
-            hBtnBatchExtract = CreateWindowEx(0, "BUTTON", "Batch Ext", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 479, H - 72, 78, 26, hwnd, (HMENU)8, NULL, NULL);
-            hBtnVerify = CreateWindowEx(0, "BUTTON", "Verify", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 562, H - 72, 68, 26, hwnd, (HMENU)7, NULL, NULL);
-            hBtnPreview = CreateWindowEx(0, "BUTTON", "Preview", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 635, H - 72, 68, 26, hwnd, (HMENU)9, NULL, NULL);
-            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 708, H - 72, 75, 26, hwnd, (HMENU)10, NULL, NULL);
+            // Action Buttons Row with shortcut badges
+            hBtnOpen = CreateWindowEx(0, "BUTTON", "Open [Ctrl+O]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, H - 72, 80, 26, hwnd, (HMENU)1, NULL, NULL);
+            hBtnAdd = CreateWindowEx(0, "BUTTON", "Add [Ctrl+N]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 95, H - 72, 78, 26, hwnd, (HMENU)2, NULL, NULL);
+            hBtnRemove = CreateWindowEx(0, "BUTTON", "Remove [Del]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 178, H - 72, 80, 26, hwnd, (HMENU)5, NULL, NULL);
+            hBtnPack = CreateWindowEx(0, "BUTTON", "Pack [Ctrl+S]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, H - 72, 80, 26, hwnd, (HMENU)3, NULL, NULL);
+            hBtnExtractSel = CreateWindowEx(0, "BUTTON", "Ext. Sel [Enter]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 348, H - 72, 86, 26, hwnd, (HMENU)4, NULL, NULL);
+            hBtnExtractAll = CreateWindowEx(0, "BUTTON", "Ext. All [Ctrl+E]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 439, H - 72, 86, 26, hwnd, (HMENU)6, NULL, NULL);
+            hBtnBatchExtract = CreateWindowEx(0, "BUTTON", "Batch [B]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 530, H - 72, 66, 26, hwnd, (HMENU)8, NULL, NULL);
+            hBtnVerify = CreateWindowEx(0, "BUTTON", "Verify [V]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 601, H - 72, 64, 26, hwnd, (HMENU)7, NULL, NULL);
+            hBtnPreview = CreateWindowEx(0, "BUTTON", "Preview [P]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 670, H - 72, 68, 26, hwnd, (HMENU)9, NULL, NULL);
+            hBtnDemo = CreateWindowEx(0, "BUTTON", "Demo [D]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 743, H - 72, 64, 26, hwnd, (HMENU)11, NULL, NULL);
+            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 812, H - 72, 66, 26, hwnd, (HMENU)10, NULL, NULL);
 
             // Status Bar Label
-            hStatus = CreateWindowEx(WS_EX_STATICEDGE, "STATIC", "Ready. Archive is empty (Drag & drop files or click 'Add File'). Press 'H' or F1 for Help.", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, H - 38, W - 35, 24, hwnd, NULL, NULL, NULL);
+            hStatus = CreateWindowEx(WS_EX_STATICEDGE, "STATIC", "Ready. Archive is empty (Drag & drop files or click 'Add [Ctrl+N]' or 'Demo [D]'). Press F1 for Help.", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, H - 38, W - 35, 24, hwnd, NULL, NULL, NULL);
+
+            // Subclass Search Edit for Escape clearing and Enter navigation
+            g_pfnOrigSearchProc = (WNDPROC)SetWindowLongPtrA(hEditSearch, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
 
             // Set Fonts
             EnumChildWindows(hwnd, SetFontEnumProc, (LPARAM)hFont);
@@ -737,6 +870,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hHeader, WM_SETFONT, (WPARAM)hMonoFont, TRUE);
 
             DragAcceptFiles(hwnd, TRUE);
+            UpdateWindowTitle();
             break;
         }
         case WM_DROPFILES: {
@@ -871,6 +1005,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (id == 10) { // Help
                 ShowHelp(hwnd);
+            } else if (id == 11) { // Demo
+                AddDemoBundle();
             } else if (id == 105 && code == BN_CLICKED) { // Regex Checkbox
                 RefreshList();
             }
@@ -883,7 +1019,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_GETMINMAXINFO: {
             LPMINMAXINFO mmi = (LPMINMAXINFO)lParam;
-            mmi->ptMinTrackSize.x = 800;
+            mmi->ptMinTrackSize.x = 840;
             mmi->ptMinTrackSize.y = 420;
             break;
         }
@@ -894,16 +1030,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hListBox, 10, 56, nw - 20, nh - 138, TRUE);
 
             int btnY = nh - 72;
-            MoveWindow(hBtnOpen, 10, btnY, 72, 26, TRUE);
-            MoveWindow(hBtnAdd, 87, btnY, 72, 26, TRUE);
-            MoveWindow(hBtnRemove, 164, btnY, 70, 26, TRUE);
-            MoveWindow(hBtnPack, 239, btnY, 75, 26, TRUE);
-            MoveWindow(hBtnExtractSel, 319, btnY, 75, 26, TRUE);
-            MoveWindow(hBtnExtractAll, 399, btnY, 75, 26, TRUE);
-            MoveWindow(hBtnBatchExtract, 479, btnY, 78, 26, TRUE);
-            MoveWindow(hBtnVerify, 562, btnY, 68, 26, TRUE);
-            MoveWindow(hBtnPreview, 635, btnY, 68, 26, TRUE);
-            MoveWindow(hBtnHelp, 708, btnY, 75, 26, TRUE);
+            int x = 10;
+            int btnH = 26;
+            int gap = 5;
+            MoveWindow(hBtnOpen, x, btnY, 80, btnH, TRUE); x += 80 + gap;
+            MoveWindow(hBtnAdd, x, btnY, 78, btnH, TRUE); x += 78 + gap;
+            MoveWindow(hBtnRemove, x, btnY, 80, btnH, TRUE); x += 80 + gap;
+            MoveWindow(hBtnPack, x, btnY, 80, btnH, TRUE); x += 80 + gap;
+            MoveWindow(hBtnExtractSel, x, btnY, 86, btnH, TRUE); x += 86 + gap;
+            MoveWindow(hBtnExtractAll, x, btnY, 86, btnH, TRUE); x += 86 + gap;
+            MoveWindow(hBtnBatchExtract, x, btnY, 66, btnH, TRUE); x += 66 + gap;
+            MoveWindow(hBtnVerify, x, btnY, 64, btnH, TRUE); x += 64 + gap;
+            MoveWindow(hBtnPreview, x, btnY, 68, btnH, TRUE); x += 68 + gap;
+            MoveWindow(hBtnDemo, x, btnY, 64, btnH, TRUE); x += 64 + gap;
+            MoveWindow(hBtnHelp, x, btnY, 66, btnH, TRUE);
 
             MoveWindow(hStatus, 10, nh - 38, nw - 20, 24, TRUE);
             break;
@@ -939,7 +1079,7 @@ void MainEntry() {
     RECT rect = { 0, 0, W, H };
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
 
-    HWND hwnd = CreateWindowEx(0, "KZipApp", "KZip Archiver", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+    HWND hwnd = CreateWindowEx(0, "KZipApp", "KZip Archiver Studio - [Empty] - (Press F1 for Help)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
@@ -948,26 +1088,60 @@ void MainEntry() {
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
         if (msg.message == WM_KEYDOWN) {
-            if (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1) {
-                HWND hFocus = GetFocus();
-                if (hFocus != hEditSearch && hFocus != hEditPassword) {
+            BOOL isCtrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+            HWND hFocus = GetFocus();
+            BOOL inEdit = (hFocus == hEditSearch || hFocus == hEditPassword);
+
+            if (isCtrl) {
+                if (msg.wParam == 'O' || msg.wParam == 'o') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(1, BN_CLICKED), (LPARAM)hBtnOpen);
+                    continue;
+                } else if (msg.wParam == 'S' || msg.wParam == 's') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(3, BN_CLICKED), (LPARAM)hBtnPack);
+                    continue;
+                } else if (msg.wParam == 'E' || msg.wParam == 'e') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(6, BN_CLICKED), (LPARAM)hBtnExtractAll);
+                    continue;
+                } else if (msg.wParam == 'N' || msg.wParam == 'n') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(2, BN_CLICKED), (LPARAM)hBtnAdd);
+                    continue;
+                }
+            }
+
+            if (msg.wParam == VK_F1) {
+                ShowHelp(hwnd);
+                continue;
+            }
+
+            if (!inEdit) {
+                if (msg.wParam == 'H' || msg.wParam == 'h') {
                     ShowHelp(hwnd);
-                }
-            } else if (msg.wParam == VK_DELETE) {
-                HWND hFocus = GetFocus();
-                if (hFocus == hListBox) {
-                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(5, BN_CLICKED), (LPARAM)hBtnRemove);
-                }
-            } else if (msg.wParam == VK_RETURN) {
-                HWND hFocus = GetFocus();
-                if (hFocus == hListBox) {
+                    continue;
+                } else if (msg.wParam == 'V' || msg.wParam == 'v') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(7, BN_CLICKED), (LPARAM)hBtnVerify);
+                    continue;
+                } else if (msg.wParam == 'P' || msg.wParam == 'p') {
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(9, BN_CLICKED), (LPARAM)hBtnPreview);
+                    continue;
+                } else if (msg.wParam == 'B' || msg.wParam == 'b') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(8, BN_CLICKED), (LPARAM)hBtnBatchExtract);
+                    continue;
+                } else if (msg.wParam == 'D' || msg.wParam == 'd') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(11, BN_CLICKED), (LPARAM)hBtnDemo);
+                    continue;
+                } else if (msg.wParam == VK_DELETE) {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(5, BN_CLICKED), (LPARAM)hBtnRemove);
+                    continue;
+                } else if (msg.wParam == VK_RETURN) {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(9, BN_CLICKED), (LPARAM)hBtnPreview);
+                    continue;
                 }
-            } else if (msg.wParam == VK_ESCAPE) {
-                HWND hFocus = GetFocus();
-                if (hFocus == hEditSearch) {
+            } else {
+                if (msg.wParam == VK_ESCAPE) {
                     SetWindowTextA(hEditSearch, "");
                     RefreshList();
+                    SetFocus(hListBox);
+                    continue;
                 }
             }
         }

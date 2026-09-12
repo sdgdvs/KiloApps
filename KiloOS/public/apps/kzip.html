@@ -304,6 +304,7 @@
       transition: opacity 0.25s ease, transform 0.25s ease;
       z-index: 200;
       white-space: nowrap;
+      cursor: pointer;
     }
     .toast.toast-error {
       border-color: var(--accent-red);
@@ -312,6 +313,45 @@
     .toast.visible {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
+    }
+    .shortcut-tag {
+      font-size: 10px;
+      opacity: 0.8;
+      background: rgba(255, 255, 255, 0.12);
+      padding: 1px 4px;
+      border-radius: 4px;
+      margin-left: 3px;
+      font-family: monospace;
+      font-weight: 600;
+    }
+    .quick-chip {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--accent-blue);
+      font-size: 12px;
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .quick-chip:hover {
+      background: var(--item-hover);
+      border-color: var(--accent-blue);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+    th.sortable {
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.15s;
+    }
+    th.sortable:hover {
+      color: var(--text-main);
+      background-color: var(--item-hover);
     }
   </style>
 </head>
@@ -328,7 +368,10 @@
 <div class="toolbar" role="toolbar" aria-label="Archive Controls">
   <div class="toolbar-group">
     <label for="searchInput" class="toolbar-label">Filter:</label>
-    <input type="text" id="searchInput" class="search-input" placeholder="Search files..." aria-label="Filter files by name">
+    <div style="position: relative; display: flex; align-items: center;">
+      <input type="text" id="searchInput" class="search-input" placeholder="Search files..." aria-label="Filter files by name">
+      <button id="btnClearSearch" style="position: absolute; right: 4px; padding: 0 4px; font-size: 11px; background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: none;" title="Clear search (Esc)">✕</button>
+    </div>
     <label style="font-size: 11px; display: flex; align-items: center; gap: 3px;"><input type="checkbox" id="regexCheck" aria-label="Use Regex">Regex</label>
   </div>
 
@@ -344,19 +387,23 @@
     <label for="passwordInput" class="toolbar-label">Password:</label>
     <input type="password" id="passwordInput" class="password-input" placeholder="Optional password" aria-label="Archive password">
   </div>
+
+  <div class="toolbar-group" style="margin-left: auto;">
+    <button id="btnDemoFiles" style="font-size: 12px; padding: 4px 10px; background: rgba(56, 189, 248, 0.15); border-color: var(--accent-blue);" title="Load 3 sample demo files (D)">✨ Demo [D]</button>
+  </div>
 </div>
 
 <div class="actions-row" role="region" aria-label="Archive Operations">
-  <button id="btnOpen" aria-label="Open KZA archive">📂 Open .kza</button>
-  <button id="btnAdd" aria-label="Add file to archive">➕ Add File...</button>
-  <button id="btnRemove" class="btn-danger" aria-label="Remove selected files">🗑️ Remove</button>
-  <button id="btnPack" class="btn-primary" aria-label="Pack archive to KZA file">📦 Pack to .kza</button>
-  <button id="btnExtractSel" aria-label="Extract selected files">🎯 Extract Selected</button>
-  <button id="btnExtractAll" aria-label="Extract all files">⚡ Extract All</button>
-  <button id="btnBatchExtract" aria-label="Batch Extract">📑 Batch Extract</button>
-  <button id="btnVerify" aria-label="Verify CRC32 integrity">🛡️ Verify CRC32</button>
-  <button id="btnPreview" aria-label="Deep Preview">🔍 Preview</button>
-  <button id="btnHelpApp" aria-label="Help (F1)" title="Help (H or F1)">❓ Help (F1)</button>
+  <button id="btnOpen" aria-label="Open KZA archive" title="Open archive (Ctrl+O)">📂 Open <span class="shortcut-tag">[Ctrl+O]</span></button>
+  <button id="btnAdd" aria-label="Add file to archive" title="Add file (Ctrl+N)">➕ Add File <span class="shortcut-tag">[Ctrl+N]</span></button>
+  <button id="btnRemove" class="btn-danger" aria-label="Remove selected files" title="Remove selected (Delete)">🗑️ Remove <span class="shortcut-tag">[Del]</span></button>
+  <button id="btnPack" class="btn-primary" aria-label="Pack archive to KZA file" title="Pack archive (Ctrl+S)">📦 Pack <span class="shortcut-tag">[Ctrl+S]</span></button>
+  <button id="btnExtractSel" aria-label="Extract selected files" title="Extract selected (Enter)">🎯 Ext. Sel <span class="shortcut-tag">[Enter]</span></button>
+  <button id="btnExtractAll" aria-label="Extract all files" title="Extract all (Ctrl+E)">⚡ Ext. All <span class="shortcut-tag">[Ctrl+E]</span></button>
+  <button id="btnBatchExtract" aria-label="Batch Extract" title="Batch extract (B)">📑 Batch <span class="shortcut-tag">[B]</span></button>
+  <button id="btnVerify" aria-label="Verify CRC32 integrity" title="Verify CRC32 (V)">🛡️ Verify <span class="shortcut-tag">[V]</span></button>
+  <button id="btnPreview" aria-label="Deep Preview" title="Preview selected (P)">🔍 Preview <span class="shortcut-tag">[P]</span></button>
+  <button id="btnHelpApp" aria-label="Help (F1)" title="Help (F1 or H)">❓ Help <span class="shortcut-tag">[F1]</span></button>
 </div>
 <input type="file" id="batchInput" multiple accept=".kza" style="display:none">
 <input type="file" id="localFileInput" multiple style="display:none">
@@ -366,12 +413,12 @@
     <thead>
       <tr>
         <th scope="col" style="width: 30px;"><input type="checkbox" id="selectAll" aria-label="Select all files"></th>
-        <th scope="col">Filename</th>
-        <th scope="col">Original Size</th>
-        <th scope="col">Packed Size</th>
-        <th scope="col">Savings</th>
-        <th scope="col">CRC32</th>
-        <th scope="col">Method</th>
+        <th scope="col" class="sortable" onclick="sortBy('name')" title="Click to sort by filename">Filename <span id="sort_name"></span></th>
+        <th scope="col" class="sortable" onclick="sortBy('uncompSize')" title="Click to sort by original size">Original Size <span id="sort_uncompSize"></span></th>
+        <th scope="col" class="sortable" onclick="sortBy('compSize')" title="Click to sort by packed size">Packed Size <span id="sort_compSize"></span></th>
+        <th scope="col" class="sortable" onclick="sortBy('savings')" title="Click to sort by compression savings">Savings <span id="sort_savings"></span></th>
+        <th scope="col" class="sortable" onclick="sortBy('crc32')" title="Click to sort by CRC32">CRC32 <span id="sort_crc32"></span></th>
+        <th scope="col" class="sortable" onclick="sortBy('method')" title="Click to sort by method">Method <span id="sort_method"></span></th>
       </tr>
     </thead>
     <tbody id="fileTableBody">
@@ -427,20 +474,32 @@
     <div class="modal-body" style="line-height: 1.6;">
       <p style="margin-bottom: 8px;"><strong>Archive Operations:</strong></p>
       <ul style="margin-left: 20px; margin-bottom: 12px;">
-        <li><strong>Open .kza:</strong> Load an existing compressed archive.</li>
-        <li><strong>Add File...:</strong> Add files into archive (or drag & drop).</li>
-        <li><strong>Pack to .kza:</strong> Compress files into a downloadable archive.</li>
-        <li><strong>Extract Selected / All:</strong> Unpack stored files back to disk.</li>
-        <li><strong>Batch Extract:</strong> Unpack multiple archives at once.</li>
-        <li><strong>Verify CRC32:</strong> Test data integrity against corruption.</li>
-        <li><strong>Preview:</strong> Inspect metadata, chunk structures, and hex dump.</li>
+        <li><strong>Open [Ctrl+O]:</strong> Load an existing compressed archive (.kza).</li>
+        <li><strong>Add File [Ctrl+N]:</strong> Add files into archive (or drag & drop).</li>
+        <li><strong>Remove [Del]:</strong> Remove selected files from archive.</li>
+        <li><strong>Pack [Ctrl+S]:</strong> Compress and download current archive.</li>
+        <li><strong>Extract Selected [Enter]:</strong> Extract selected files to disk.</li>
+        <li><strong>Extract All [Ctrl+E]:</strong> Extract all files to disk.</li>
+        <li><strong>Batch Extract [B]:</strong> Unpack multiple .kza archives in batch.</li>
+        <li><strong>Verify CRC32 [V]:</strong> Test data checksums against corruption.</li>
+        <li><strong>Preview [P]:</strong> Inspect file header, RLE savings & hex dump.</li>
+        <li><strong>Demo [D]:</strong> Load 3 sample files for instant testing.</li>
       </ul>
       <p style="margin-bottom: 8px;"><strong>Keyboard Shortcuts:</strong></p>
       <ul style="margin-left: 20px;">
-        <li><strong>H</strong> or <strong>F1</strong>: Toggle this help dialog</li>
-        <li><strong>Delete</strong>: Remove selected file from archive</li>
+        <li><strong>F1</strong> or <strong>H</strong>: Toggle this Help dialog</li>
+        <li><strong>Ctrl+O</strong>: Open archive</li>
+        <li><strong>Ctrl+S</strong>: Pack archive to .kza</li>
+        <li><strong>Ctrl+E</strong>: Extract all files</li>
+        <li><strong>Ctrl+N</strong>: Add file to archive</li>
+        <li><strong>Ctrl+A</strong>: Select / Deselect all files</li>
+        <li><strong>Delete</strong>: Remove selected files</li>
+        <li><strong>Enter / Double-Click</strong>: Preview selected file</li>
+        <li><strong>V</strong>: Verify CRC32 checksums</li>
+        <li><strong>P</strong>: Deep preview</li>
+        <li><strong>B</strong>: Batch extract</li>
+        <li><strong>D</strong>: Load demo files bundle</li>
         <li><strong>Escape</strong>: Close active modal or clear search filter</li>
-        <li><strong>Double-click / Enter</strong>: Inspect file preview</li>
       </ul>
     </div>
     <div style="display: flex; justify-content: flex-end;">
@@ -479,6 +538,8 @@
   const batchInput = document.getElementById('batchInput');
   const btnVerify = document.getElementById('btnVerify');
   const btnPreview = document.getElementById('btnPreview');
+  const btnClearSearch = document.getElementById('btnClearSearch');
+  const btnDemoFiles = document.getElementById('btnDemoFiles');
 
   const verifyModal = document.getElementById('verifyModal');
   const modalReport = document.getElementById('modalReport');
@@ -495,7 +556,117 @@
     if (toastTimer) clearTimeout(toastTimer);
     toastTimer = setTimeout(() => {
       toast.classList.remove('visible');
-    }, 2800);
+    }, 3000);
+  }
+
+  const toastEl = document.getElementById('toastNotification');
+  if (toastEl) {
+    toastEl.onclick = () => {
+      toastEl.classList.remove('visible');
+      if (toastTimer) clearTimeout(toastTimer);
+    };
+  }
+
+  if (btnClearSearch) {
+    btnClearSearch.onclick = () => {
+      searchInput.value = '';
+      renderTable();
+      searchInput.focus();
+    };
+  }
+
+  let sortColumn = null;
+  let sortAsc = true;
+
+  function sortBy(col) {
+    if (sortColumn === col) {
+      sortAsc = !sortAsc;
+    } else {
+      sortColumn = col;
+      sortAsc = true;
+    }
+    ['name', 'uncompSize', 'compSize', 'savings', 'crc32', 'method'].forEach(c => {
+      const el = document.getElementById('sort_' + c);
+      if (el) el.textContent = (c === sortColumn) ? (sortAsc ? ' ▲' : ' ▼') : '';
+    });
+
+    files.sort((a, b) => {
+      let valA = a[col];
+      let valB = b[col];
+      if (col === 'savings') {
+        valA = a.uncompSize > 0 ? (100 - (a.compSize * 100 / a.uncompSize)) : 0;
+        valB = b.uncompSize > 0 ? (100 - (b.compSize * 100 / b.uncompSize)) : 0;
+      }
+      if (typeof valA === 'string') {
+        return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      }
+      return sortAsc ? (valA - valB) : (valB - valA);
+    });
+    renderTable();
+  }
+
+  function addSampleFile(name, contentStr) {
+    const encoder = new TextEncoder();
+    const rawBytes = encoder.encode(contentStr);
+    const crc = calculateCRC32(rawBytes);
+    const method = parseInt(compMethod.value);
+
+    let packedBytes = rawBytes;
+    let compSize = rawBytes.length;
+    let actualMethod = 0;
+
+    if (method === 1 && rawBytes.length > 0) {
+      const rleBytes = compressRLE(rawBytes);
+      if (rleBytes.length < rawBytes.length) {
+        packedBytes = rleBytes;
+        compSize = rleBytes.length;
+        actualMethod = 1;
+      }
+    }
+
+    files.push({
+      name: sanitizeFilename(name),
+      uncompSize: rawBytes.length,
+      compSize: compSize,
+      crc32: crc,
+      method: actualMethod,
+      rawBytes: rawBytes,
+      packedBytes: packedBytes
+    });
+    renderTable();
+    showToast(`Added '${name}'`);
+  }
+
+  function addSampleText() {
+    addSampleFile('README.md', '# KZip Archiver Studio\\n\\nHigh performance micro-archiver for KiloOS.\\nSupports RLE compression, CRC32 integrity verification, password cipher encryption, and instant hex inspection.\\n');
+  }
+
+  function addSampleJson() {
+    addSampleFile('config.json', JSON.stringify({
+      app: "KZip Archiver",
+      version: "2.1.0",
+      defaultMethod: "RLE Fast",
+      maxFileSizeMB: 100,
+      theme: "cyber-slate"
+    }, null, 2));
+  }
+
+  function addSampleRLE() {
+    const pattern = "KILOAPPS-KZIP-RLE-TEST-CHUNK-################################################\\n".repeat(60);
+    addSampleFile('pattern_test.log', pattern);
+  }
+
+  function loadDemoArchive() {
+    files = [];
+    selectedIndices.clear();
+    addSampleText();
+    addSampleJson();
+    addSampleRLE();
+    showToast("Demo bundle loaded with 3 sample files!");
+  }
+
+  if (btnDemoFiles) {
+    btnDemoFiles.onclick = () => loadDemoArchive();
   }
 
   if (localFileInput) {
@@ -766,11 +937,17 @@
     if (files.length === 0) {
       const emptyTr = document.createElement('tr');
       emptyTr.innerHTML = `
-        <td colspan="7" style="text-align: center; padding: 48px 16px; color: var(--text-muted);">
+        <td colspan="7" style="text-align: center; padding: 36px 16px; color: var(--text-muted);">
           <div style="font-size: 38px; margin-bottom: 8px;">📦</div>
           <div style="font-size: 15px; font-weight: 600; color: var(--text-main); margin-bottom: 4px;">Archive is empty</div>
-          <div style="font-size: 13px; margin-bottom: 6px;">Drag and drop files or <code>.kza</code> archives here, or click <strong>Add File...</strong></div>
-          <div style="font-size: 11px; opacity: 0.75;">Press <strong>H</strong> or <strong>F1</strong> anytime for Help</div>
+          <div style="font-size: 13px; margin-bottom: 14px;">Drag and drop files or <code>.kza</code> archives here, or click <strong>Add File...</strong></div>
+          <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 14px;">
+            <button class="quick-chip" onclick="addSampleText()" title="Add markdown documentation">📄 Sample Readme</button>
+            <button class="quick-chip" onclick="addSampleJson()" title="Add structured configuration JSON">📊 Config JSON</button>
+            <button class="quick-chip" onclick="addSampleRLE()" title="Add repetitive log file testing 95% RLE savings">🗜️ RLE Compress Test (95% Savings)</button>
+            <button class="quick-chip" onclick="loadDemoArchive()" title="Load full demo bundle with 3 files">📦 Load Demo Bundle</button>
+          </div>
+          <div style="font-size: 11px; opacity: 0.75;">Shortcuts: <strong>Ctrl+O</strong> Open | <strong>Ctrl+S</strong> Pack | <strong>Ctrl+E</strong> Extract All | <strong>F1 / H</strong> Help</div>
         </td>
       `;
       fileTableBody.appendChild(emptyTr);
@@ -784,6 +961,10 @@
       fileTableBody.appendChild(noMatchTr);
     }
 
+    if (btnClearSearch) {
+      btnClearSearch.style.display = filterText ? 'block' : 'none';
+    }
+
     if (selectAll) {
       selectAll.checked = files.length > 0 && selectedIndices.size === files.length;
     }
@@ -793,7 +974,7 @@
     overallSavings.textContent = `Total Savings: ${overallRatio}%`;
     
     if (files.length === 0) {
-      statusMessage.textContent = `Ready. Archive is empty (Drag & drop files or click 'Add File'). Press 'H' or F1 for Help.`;
+      statusMessage.textContent = `Ready. Archive is empty (Drag & drop files or click 'Add [Ctrl+N]' or 'Demo [D]'). Press F1 for Help.`;
     } else {
       statusMessage.textContent = `Archive loaded: ${files.length} file(s) present. (Press 'H' or F1 for Help)`;
     }
@@ -933,13 +1114,15 @@
           userHashNum = parseInt(calculateCRC32(new TextEncoder().encode(userPass)), 16);
         }
         if (userHashNum !== pwdHashNum) {
-          return alert("Access Denied: Incorrect Password!");
+          passwordInput.focus();
+          showToast("Access Denied: Incorrect Password! Enter password in toolbar.", true);
+          return;
         }
       }
 
       for (const f of parsed.files) {
         if (f.uncompSize > MAX_FILE_SIZE || f.compSize > MAX_FILE_SIZE) {
-          alert(`File ${f.name} exceeds max size limit (100MB). Skipping.`);
+          showToast(`File ${f.name} exceeds max size limit (100MB). Skipping.`, true);
           continue;
         }
         let payload = base64ToUint8(f.data);
@@ -977,6 +1160,7 @@
       }
     }
     renderTable();
+    showToast(`Loaded archive (${files.length} file(s))`);
   }
 
   btnOpen.onclick = async () => {
@@ -991,12 +1175,12 @@
         }
       }
     } catch (e) {
-      alert("Failed to parse archive format: " + e.message);
+      showToast("Failed to parse archive format: " + e.message, true);
     }
   };
 
   btnExtractSel.onclick = async () => {
-    if (selectedIndices.size === 0) return alert("Select at least one file to extract.");
+    if (selectedIndices.size === 0) return showToast("Select at least one file to extract.", true);
     let count = 0;
     for (const idx of selectedIndices) {
       const f = files[idx];
@@ -1005,11 +1189,11 @@
       await sendToOS({ type: 'VFS_WRITE', path: '/' + safeName, data: b64 });
       count++;
     }
-    alert(`Extracted ${count} selected file(s) to root directory!`);
+    showToast(`Extracted ${count} selected file(s) to root directory!`);
   };
 
   btnExtractAll.onclick = async () => {
-    if (files.length === 0) return alert("Archive is empty!");
+    if (files.length === 0) return showToast("Archive is empty - nothing to extract!", true);
     let count = 0;
     for (const f of files) {
       const safeName = sanitizeFilename(f.name);
@@ -1017,11 +1201,11 @@
       await sendToOS({ type: 'VFS_WRITE', path: '/' + safeName, data: b64 });
       count++;
     }
-    alert(`Extracted ${count} file(s) to root directory!`);
+    showToast(`Extracted ${count} file(s) to root directory!`);
   };
 
   btnVerify.onclick = () => {
-    if (files.length === 0) return alert("No files to verify.");
+    if (files.length === 0) return showToast("No files in archive to verify.", true);
     modalReport.innerHTML = '';
     let passCount = 0;
     let failCount = 0;
@@ -1061,7 +1245,7 @@
   btnOkModal.onclick = closeModal;
 
   btnPreview.onclick = () => {
-    if (selectedIndices.size !== 1) return alert("Select exactly one file to preview.");
+    if (selectedIndices.size !== 1) return showToast("Select exactly one file to preview.", true);
     const idx = Array.from(selectedIndices)[0];
     const f = files[idx];
     
@@ -1128,10 +1312,10 @@
            const pwdHashNum = parsed.pwdHash || 0;
            let userHashNum = 0;
            if (parsed.flags & 1) {
-             const userPass = prompt(`Archive ${file.name} is password protected! Enter Password:`);
+             const userPass = passwordInput.value || prompt(`Archive ${file.name} is password protected! Enter Password:`);
              if (userPass) userHashNum = parseInt(calculateCRC32(new TextEncoder().encode(userPass)), 16);
              if (userHashNum !== pwdHashNum) {
-               alert(`Incorrect password for ${file.name}. Skipping.`);
+               showToast(`Incorrect password for ${file.name}. Skipping.`, true);
                continue;
              }
            }
@@ -1149,7 +1333,6 @@
         console.error("Batch extract failed for", file.name, err);
       }
     }
-    alert(`Batch extraction complete: ${count} files extracted.`);
     showToast(`Batch extraction complete: ${count} files extracted.`);
   };
 
@@ -1167,21 +1350,69 @@
   btnOkHelp.onclick = () => helpModal.classList.remove('active');
   if (btnHelpApp) btnHelpApp.onclick = toggleHelp;
 
+  // Modal Backdrop Click Dismissals
+  [verifyModal, document.getElementById('previewModal'), helpModal].forEach(m => {
+    if (m) {
+      m.onclick = (e) => {
+        if (e.target === m) m.classList.remove('active');
+      };
+    }
+  });
+
   // Global Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
+    const inInput = (document.activeElement === searchInput || document.activeElement === passwordInput);
+    const isCtrl = e.ctrlKey || e.metaKey;
+
+    if (isCtrl) {
+      if (e.key === 'o' || e.key === 'O') {
+        e.preventDefault();
+        btnOpen.click();
+      } else if (e.key === 's' || e.key === 'S') {
+        e.preventDefault();
+        btnPack.click();
+      } else if (e.key === 'e' || e.key === 'E') {
+        e.preventDefault();
+        btnExtractAll.click();
+      } else if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        btnAdd.click();
+      } else if ((e.key === 'a' || e.key === 'A') && !inInput) {
+        e.preventDefault();
+        if (selectAll) {
+          selectAll.checked = !selectAll.checked;
+          selectAll.dispatchEvent(new Event('change'));
+        }
+      }
+      return;
+    }
+
     if (e.key === 'Escape') {
       if (verifyModal.classList.contains('active')) closeModal();
       else if (helpModal.classList.contains('active')) helpModal.classList.remove('active');
       else if (document.getElementById('previewModal').classList.contains('active')) document.getElementById('previewModal').classList.remove('active');
-      else if (document.activeElement === searchInput) {
+      else if (searchInput.value) {
         searchInput.value = '';
         renderTable();
       }
-    } else if (e.key === 'Delete' && selectedIndices.size > 0 && document.activeElement !== searchInput && document.activeElement !== passwordInput) {
-      btnRemove.click();
-    } else if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && document.activeElement !== searchInput && document.activeElement !== passwordInput) {
-      if (e.key === 'F1') e.preventDefault();
-      toggleHelp();
+    } else if (!inInput) {
+      if (e.key === 'Delete' && selectedIndices.size > 0) {
+        btnRemove.click();
+      } else if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
+        if (e.key === 'F1') e.preventDefault();
+        toggleHelp();
+      } else if (e.key === 'v' || e.key === 'V') {
+        btnVerify.click();
+      } else if (e.key === 'p' || e.key === 'P') {
+        btnPreview.click();
+      } else if (e.key === 'b' || e.key === 'B') {
+        btnBatchExtract.click();
+      } else if (e.key === 'd' || e.key === 'D') {
+        loadDemoArchive();
+      } else if (e.key === 'Enter') {
+        if (selectedIndices.size === 1) btnPreview.click();
+        else if (selectedIndices.size > 1) btnExtractSel.click();
+      }
     }
   });
 
@@ -1260,6 +1491,7 @@
   window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 900, height: 650 }, '*');
 
   renderTable();
+  showToast("Welcome to KZip Archiver Studio! Press 'H' or F1 for Help.");
 </script>
 </body>
 </html>
