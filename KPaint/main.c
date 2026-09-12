@@ -33,21 +33,30 @@ int undoCount = 0;
 HBITMAP hbmRedoStack[MAX_HISTORY];
 int redoCount = 0;
 
+#ifndef min
+#define min(a,b) (((a) < (b)) ? (a) : (b))
+#endif
+#ifndef max
+#define max(a,b) (((a) > (b)) ? (a) : (b))
+#endif
+
 // Controls
 HWND hBtnBlack, hBtnRed, hBtnGreen, hBtnBlue, hBtnYellow, hBtnPurple, hBtnEraser, hBtnCustomColor;
 HWND hBtnSizeSmall, hBtnSizeMed, hBtnSizeLarge, hBtnShapeToggle;
 HWND hBtnFreehand, hBtnLine, hBtnRect, hBtnEllipse, hBtnSpray, hBtnFill, hBtnPipette;
 HWND hBtnUndo, hBtnRedo, hBtnInvert, hBtnGray, hBtnBright, hBtnDark, hBtnFlipH, hBtnFlipV, hBtnRotate90, hBtnRotateCCW;
-HWND hBtnClear, hBtnSave, hBtnOpen, hBtnHelp;
+HWND hBtnClear, hBtnSave, hBtnOpen, hBtnHelp, hBtnDemoArt;
 HWND hBtnEdge, hBtnSharpen, hBtnEmboss;
 
 HFONT hFont = NULL;
+static HBITMAP hbmStockOld = NULL;
 
 void PushUndo();
 void PerformUndo();
 void PerformRedo();
 void UpdatePen();
 void UpdateTitleStatus(HWND hwnd);
+void GenerateDemoArtwork(HWND hwnd);
 
 void UpdatePen() {
     if (hPen) DeleteObject(hPen);
@@ -74,10 +83,10 @@ void UpdatePen() {
 }
 
 void UpdateTitleStatus(HWND hwnd) {
-    const char* toolNames[] = {"Brush", "Line", "Rect", "Ellipse", "Spray", "Eraser", "Fill", "Pick"};
+    const char* toolNames[] = {"Brush", "Line", "Rect", "Circle", "Spray", "Eraser", "Fill", "Pick"};
     const char* toolName = (currentTool >= 0 && currentTool <= 7) ? toolNames[currentTool] : "Brush";
-    char title[160];
-    wsprintfA(title, "KPaint Pro - Tool: %s | Size: %dpx (%s) | Color: #%02X%02X%02X - Press F1 for Help",
+    char title[180];
+    wsprintfA(title, "KPaint Pro - Tool: %s | Size: %dpx (%s) | Color: #%02X%02X%02X | Press F1 for Help, D for Demo",
         toolName, curSize, brushShape ? "Square" : "Round",
         GetRValue(curColor), GetGValue(curColor), GetBValue(curColor));
     SetWindowTextA(hwnd, title);
@@ -435,13 +444,134 @@ void LoadBitmapFile(HWND hwnd, const char* path) {
     }
 }
 
+void GenerateDemoArtwork(HWND hwnd) {
+    if (!hdcMem) return;
+    PushUndo();
+    
+    // Sky background
+    RECT rSky = {0, 0, 2000, 2000};
+    HBRUSH hSky = CreateSolidBrush(RGB(15, 20, 36));
+    FillRect(hdcMem, &rSky, hSky);
+    DeleteObject(hSky);
+
+    // Warm sunset gradient band
+    for (int y = 140; y < 440; y++) {
+        int t = y - 140;
+        int r = min(255, 240 - t / 3);
+        int g = min(255, 80 + t / 3);
+        int b = min(255, 50 + t / 2);
+        HPEN hBand = CreatePen(PS_SOLID, 1, RGB(r, g, b));
+        HPEN hOld = (HPEN)SelectObject(hdcMem, hBand);
+        MoveToEx(hdcMem, 0, y, NULL);
+        LineTo(hdcMem, 2000, y);
+        SelectObject(hdcMem, hOld);
+        DeleteObject(hBand);
+    }
+
+    // Radiant Sun
+    HBRUSH hSun = CreateSolidBrush(RGB(255, 225, 95));
+    HPEN hSunPen = CreatePen(PS_SOLID, 2, RGB(255, 245, 140));
+    HBRUSH hOldB = (HBRUSH)SelectObject(hdcMem, hSun);
+    HPEN hOldP = (HPEN)SelectObject(hdcMem, hSunPen);
+    Ellipse(hdcMem, 440, 180, 640, 380);
+    SelectObject(hdcMem, hOldB);
+    SelectObject(hdcMem, hOldP);
+    DeleteObject(hSun);
+    DeleteObject(hSunPen);
+
+    // Distant Purple Mountains
+    POINT mtn1[3] = { {0, 540}, {260, 280}, {520, 540} };
+    HBRUSH hMtn1 = CreateSolidBrush(RGB(65, 40, 85));
+    HPEN hPenMtn1 = CreatePen(PS_SOLID, 1, RGB(65, 40, 85));
+    SelectObject(hdcMem, hMtn1);
+    SelectObject(hdcMem, hPenMtn1);
+    Polygon(hdcMem, mtn1, 3);
+    DeleteObject(hMtn1); DeleteObject(hPenMtn1);
+    
+    POINT mtn2[3] = { {380, 540}, {720, 240}, {1060, 540} };
+    HBRUSH hMtn2 = CreateSolidBrush(RGB(82, 50, 105));
+    HPEN hPenMtn2 = CreatePen(PS_SOLID, 1, RGB(82, 50, 105));
+    SelectObject(hdcMem, hMtn2);
+    SelectObject(hdcMem, hPenMtn2);
+    Polygon(hdcMem, mtn2, 3);
+    DeleteObject(hMtn2); DeleteObject(hPenMtn2);
+
+    // Midground Dark Ridge
+    POINT mtn3[3] = { {140, 600}, {460, 350}, {820, 600} };
+    HBRUSH hMtn3 = CreateSolidBrush(RGB(32, 42, 68));
+    HPEN hPenMtn3 = CreatePen(PS_SOLID, 1, RGB(32, 42, 68));
+    SelectObject(hdcMem, hMtn3);
+    SelectObject(hdcMem, hPenMtn3);
+    Polygon(hdcMem, mtn3, 3);
+    DeleteObject(hMtn3); DeleteObject(hPenMtn3);
+
+    // Lake with Sunset Reflection
+    RECT rLake = {0, 540, 2000, 780};
+    HBRUSH hLake = CreateSolidBrush(RGB(20, 30, 52));
+    FillRect(hdcMem, &rLake, hLake);
+    DeleteObject(hLake);
+
+    for (int y = 560; y < 740; y += 16) {
+        HPEN hRipple = CreatePen(PS_SOLID, 2, RGB(255, 175, 90));
+        HPEN hOldR = (HPEN)SelectObject(hdcMem, hRipple);
+        MoveToEx(hdcMem, 490 - (y - 540), y, NULL);
+        LineTo(hdcMem, 590 + (y - 540), y);
+        SelectObject(hdcMem, hOldR);
+        DeleteObject(hRipple);
+    }
+
+    // Foreground Meadow
+    RECT rGrass = {0, 780, 2000, 2000};
+    HBRUSH hGrass = CreateSolidBrush(RGB(16, 28, 22));
+    FillRect(hdcMem, &rGrass, hGrass);
+    DeleteObject(hGrass);
+
+    // Pine Trees
+    int treeX[] = {70, 180, 300, 780, 920, 1060};
+    for (int i = 0; i < 6; i++) {
+        int tx = treeX[i];
+        int ty = 720 + (i % 3) * 20;
+        RECT rTrunk = {tx - 4, ty, tx + 4, ty + 40};
+        HBRUSH hTrunk = CreateSolidBrush(RGB(55, 38, 25));
+        FillRect(hdcMem, &rTrunk, hTrunk);
+        DeleteObject(hTrunk);
+        
+        POINT pPine[3] = { {tx - 28, ty + 10}, {tx, ty - 65}, {tx + 28, ty + 10} };
+        HBRUSH hPine = CreateSolidBrush(RGB(22, 52, 32));
+        HPEN hPinePen = CreatePen(PS_SOLID, 1, RGB(22, 52, 32));
+        SelectObject(hdcMem, hPine);
+        SelectObject(hdcMem, hPinePen);
+        Polygon(hdcMem, pPine, 3);
+        DeleteObject(hPine);
+        DeleteObject(hPinePen);
+    }
+
+    // Retro Title Badge on Canvas
+    HFONT hTitleFont = CreateFontA(-22, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5, DEFAULT_PITCH, "Segoe UI");
+    HFONT hOldF = (HFONT)SelectObject(hdcMem, hTitleFont);
+    SetTextColor(hdcMem, RGB(245, 245, 255));
+    SetBkMode(hdcMem, TRANSPARENT);
+    TextOutA(hdcMem, 40, 40, "KPaint Demo Art (Mountain Sunset)", 33);
+    HFONT hSubFont = CreateFontA(-14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5, DEFAULT_PITCH, "Segoe UI");
+    SelectObject(hdcMem, hSubFont);
+    SetTextColor(hdcMem, RGB(180, 205, 230));
+    TextOutA(hdcMem, 40, 72, "Test tools: Pick [I], Fill [G], Spray [A], Invert [V], Gray [Y], Size [1-3], F1 Help", 84);
+    SelectObject(hdcMem, hOldF);
+    DeleteObject(hTitleFont);
+    DeleteObject(hSubFont);
+
+    UpdatePen();
+    UpdateTitleStatus(hwnd);
+    InvalidateRect(hwnd, NULL, FALSE);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
             HDC hdc = GetDC(hwnd);
             hdcMem = CreateCompatibleDC(hdc);
             hbmCanvas = CreateCompatibleBitmap(hdc, 2000, 2000);
-            SelectObject(hdcMem, hbmCanvas);
+            hbmStockOld = (HBITMAP)SelectObject(hdcMem, hbmCanvas);
             
             RECT r = {0, 0, 2000, 2000};
             FillRect(hdcMem, &r, (HBRUSH)GetStockObject(WHITE_BRUSH));
@@ -450,7 +580,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(hdcMem, RGB(150, 150, 150));
             SetBkMode(hdcMem, TRANSPARENT);
             HFONT hOldF = (HFONT)SelectObject(hdcMem, hWelcomeFont);
-            TextOutA(hdcMem, 20, 20, "Welcome to KPaint Pro! Press F1 or H for Help", 45);
+            TextOutA(hdcMem, 20, 20, "Welcome to KPaint Pro! Press F1 for Help | D for Demo Art", 58);
             SelectObject(hdcMem, hOldF);
             DeleteObject(hWelcomeFont);
             
@@ -470,26 +600,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnCustomColor = CreateWindowA("BUTTON", "Custom...", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 80, 121, 22, hwnd, (HMENU)107, NULL, NULL);
 
             // Tools & Eraser
-            hBtnFreehand = CreateWindowA("BUTTON", "Brush", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 107, 58, 22, hwnd, (HMENU)401, NULL, NULL);
-            hBtnLine = CreateWindowA("BUTTON", "Line", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 107, 58, 22, hwnd, (HMENU)402, NULL, NULL);
-            hBtnRect = CreateWindowA("BUTTON", "Rect", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 132, 58, 22, hwnd, (HMENU)403, NULL, NULL);
-            hBtnEllipse = CreateWindowA("BUTTON", "Ellipse", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 132, 58, 22, hwnd, (HMENU)404, NULL, NULL);
-            hBtnSpray = CreateWindowA("BUTTON", "Spray", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 157, 58, 22, hwnd, (HMENU)405, NULL, NULL);
-            hBtnEraser = CreateWindowA("BUTTON", "Eraser", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 157, 58, 22, hwnd, (HMENU)406, NULL, NULL);
+            hBtnFreehand = CreateWindowA("BUTTON", "Brush (B)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 107, 58, 22, hwnd, (HMENU)401, NULL, NULL);
+            hBtnLine = CreateWindowA("BUTTON", "Line (L)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 107, 58, 22, hwnd, (HMENU)402, NULL, NULL);
+            hBtnRect = CreateWindowA("BUTTON", "Rect (R)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 132, 58, 22, hwnd, (HMENU)403, NULL, NULL);
+            hBtnEllipse = CreateWindowA("BUTTON", "Circle (C)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 132, 58, 22, hwnd, (HMENU)404, NULL, NULL);
+            hBtnSpray = CreateWindowA("BUTTON", "Spray (A)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 157, 58, 22, hwnd, (HMENU)405, NULL, NULL);
+            hBtnEraser = CreateWindowA("BUTTON", "Eraser (E)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 157, 58, 22, hwnd, (HMENU)406, NULL, NULL);
             hBtnFill = CreateWindowA("BUTTON", "Fill (G)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 182, 58, 22, hwnd, (HMENU)407, NULL, NULL);
             hBtnPipette = CreateWindowA("BUTTON", "Pick (I)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 182, 58, 22, hwnd, (HMENU)408, NULL, NULL);
 
             // Size & Shape
-            hBtnSizeSmall = CreateWindowA("BUTTON", "2px", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 209, 38, 22, hwnd, (HMENU)201, NULL, NULL);
-            hBtnSizeMed = CreateWindowA("BUTTON", "6px", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 46, 209, 38, 22, hwnd, (HMENU)202, NULL, NULL);
-            hBtnSizeLarge = CreateWindowA("BUTTON", "14px", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 87, 209, 39, 22, hwnd, (HMENU)203, NULL, NULL);
+            hBtnSizeSmall = CreateWindowA("BUTTON", "2px [1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 209, 38, 22, hwnd, (HMENU)201, NULL, NULL);
+            hBtnSizeMed = CreateWindowA("BUTTON", "6px [2]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 46, 209, 38, 22, hwnd, (HMENU)202, NULL, NULL);
+            hBtnSizeLarge = CreateWindowA("BUTTON", "14px [3]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 87, 209, 39, 22, hwnd, (HMENU)203, NULL, NULL);
             hBtnShapeToggle = CreateWindowA("BUTTON", "Shape: Round", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 234, 121, 22, hwnd, (HMENU)204, NULL, NULL);
 
             // Filters & Transforms
-            hBtnInvert = CreateWindowA("BUTTON", "Invert", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 261, 58, 22, hwnd, (HMENU)501, NULL, NULL);
-            hBtnGray = CreateWindowA("BUTTON", "Gray", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 261, 58, 22, hwnd, (HMENU)502, NULL, NULL);
-            hBtnBright = CreateWindowA("BUTTON", "+Bright", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 286, 58, 22, hwnd, (HMENU)503, NULL, NULL);
-            hBtnDark = CreateWindowA("BUTTON", "-Bright", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 286, 58, 22, hwnd, (HMENU)509, NULL, NULL);
+            hBtnInvert = CreateWindowA("BUTTON", "Invert [V]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 261, 58, 22, hwnd, (HMENU)501, NULL, NULL);
+            hBtnGray = CreateWindowA("BUTTON", "Gray [Y]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 261, 58, 22, hwnd, (HMENU)502, NULL, NULL);
+            hBtnBright = CreateWindowA("BUTTON", "+Bright [+]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 286, 58, 22, hwnd, (HMENU)503, NULL, NULL);
+            hBtnDark = CreateWindowA("BUTTON", "-Bright [-]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 286, 58, 22, hwnd, (HMENU)509, NULL, NULL);
             hBtnFlipH = CreateWindowA("BUTTON", "Flip H", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 311, 58, 22, hwnd, (HMENU)504, NULL, NULL);
             hBtnFlipV = CreateWindowA("BUTTON", "Flip V", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 311, 58, 22, hwnd, (HMENU)510, NULL, NULL);
             hBtnRotate90 = CreateWindowA("BUTTON", "Rot CW", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 336, 58, 22, hwnd, (HMENU)505, NULL, NULL);
@@ -501,12 +631,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnEmboss = CreateWindowA("BUTTON", "Emboss", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 87, 363, 39, 22, hwnd, (HMENU)508, NULL, NULL);
 
             // History & Actions
-            hBtnUndo = CreateWindowA("BUTTON", "Undo", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 390, 58, 22, hwnd, (HMENU)601, NULL, NULL);
-            hBtnRedo = CreateWindowA("BUTTON", "Redo", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 390, 58, 22, hwnd, (HMENU)602, NULL, NULL);
-            hBtnOpen = CreateWindowA("BUTTON", "Open BMP", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 415, 58, 22, hwnd, (HMENU)303, NULL, NULL);
-            hBtnSave = CreateWindowA("BUTTON", "Save BMP", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 415, 58, 22, hwnd, (HMENU)302, NULL, NULL);
+            hBtnUndo = CreateWindowA("BUTTON", "Undo ^Z", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 390, 58, 22, hwnd, (HMENU)601, NULL, NULL);
+            hBtnRedo = CreateWindowA("BUTTON", "Redo ^Y", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 390, 58, 22, hwnd, (HMENU)602, NULL, NULL);
+            hBtnOpen = CreateWindowA("BUTTON", "Open ^O", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 415, 58, 22, hwnd, (HMENU)303, NULL, NULL);
+            hBtnSave = CreateWindowA("BUTTON", "Save ^S", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 415, 58, 22, hwnd, (HMENU)302, NULL, NULL);
             hBtnClear = CreateWindowA("BUTTON", "Clear Canvas", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 440, 121, 22, hwnd, (HMENU)301, NULL, NULL);
             hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 465, 121, 22, hwnd, (HMENU)701, NULL, NULL);
+            hBtnDemoArt = CreateWindowA("BUTTON", "Demo Art (D)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 490, 121, 22, hwnd, (HMENU)304, NULL, NULL);
 
             HWND controls[] = {
                 hBtnBlack, hBtnRed, hBtnGreen, hBtnBlue, hBtnYellow, hBtnPurple, hBtnCustomColor,
@@ -514,7 +645,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 hBtnSizeSmall, hBtnSizeMed, hBtnSizeLarge, hBtnShapeToggle,
                 hBtnInvert, hBtnGray, hBtnBright, hBtnDark, hBtnFlipH, hBtnFlipV, hBtnRotate90, hBtnRotateCCW,
                 hBtnEdge, hBtnSharpen, hBtnEmboss,
-                hBtnUndo, hBtnRedo, hBtnOpen, hBtnSave, hBtnClear, hBtnHelp
+                hBtnUndo, hBtnRedo, hBtnOpen, hBtnSave, hBtnClear, hBtnHelp, hBtnDemoArt
             };
             for (int i = 0; i < sizeof(controls)/sizeof(controls[0]); i++) {
                 SendMessage(controls[i], WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -625,10 +756,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (id == 507) { FilterConvolve(1); InvalidateRect(hwnd, NULL, FALSE); }
             if (id == 508) { FilterConvolve(2); InvalidateRect(hwnd, NULL, FALSE); }
 
+            if (id == 304) { GenerateDemoArtwork(hwnd); }
             if (id == 601) { PerformUndo(); InvalidateRect(hwnd, NULL, FALSE); }
             if (id == 602) { PerformRedo(); InvalidateRect(hwnd, NULL, FALSE); }
             if (id == 701) {
-                MessageBoxA(hwnd, "Welcome to KPaint Pro!\n\nTools:\n- Brush (B)\n- Line (L)\n- Rect (R)\n- Ellipse (C)\n- Spray (A or S)\n- Eraser (E)\n- Fill (G)\n- Eyedropper / Pick (I)\n\nShortcuts:\n- Ctrl+Z : Undo\n- Ctrl+Y : Redo\n- Ctrl+S : Save BMP\n- Ctrl+O : Open BMP\n- [ / ] : Brush Size -/+\n- F1 or H : Help\n\nDrag & drop BMP files to open!", "KPaint Help", MB_OK | MB_ICONINFORMATION);
+                MessageBoxA(hwnd,
+                    "KPaint Pro - Help & Shortcuts Guide\n\n"
+                    "Drawing Tools:\n"
+                    "  [B]  Brush (Freehand drawing)\n"
+                    "  [L]  Line\n"
+                    "  [R]  Rectangle\n"
+                    "  [C]  Circle / Ellipse\n"
+                    "  [A]  Spray / Airbrush\n"
+                    "  [E]  Eraser\n"
+                    "  [G]  Bucket Fill\n"
+                    "  [I]  Eyedropper / Color Pick\n\n"
+                    "Brush & Shapes:\n"
+                    "  [1]  Small (2px)    [2] Medium (6px)    [3] Large (14px)\n"
+                    "  [ [ ] / [ ] ]  Decrease / Increase Brush Size\n"
+                    "  Shape Toggle: Round / Square\n\n"
+                    "Image Filters & Transforms:\n"
+                    "  [V]  Invert Colors    [Y] Grayscale\n"
+                    "  [+]  +Brightness     [-] -Brightness\n"
+                    "  Edge Detect, Sharpen, Emboss, Flip H/V, Rotate CW/CCW\n\n"
+                    "Quick Starter & Actions:\n"
+                    "  [D]  Generate Demo Artwork (Mountain Sunset)\n"
+                    "  Ctrl+Z  Undo          Ctrl+Y  Redo\n"
+                    "  Ctrl+S  Save BMP      Ctrl+O  Open BMP\n"
+                    "  F1 / H  This Help Guide\n\n"
+                    "Drag & drop any BMP file onto the window to open!",
+                    "KPaint Help", MB_OK | MB_ICONINFORMATION);
             }
             break;
         }
@@ -663,6 +820,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 currentTool = 6; UpdatePen(); UpdateTitleStatus(hwnd);
             } else if (wParam == 'I' || wParam == 'i') {
                 currentTool = 7; UpdatePen(); UpdateTitleStatus(hwnd);
+            } else if (wParam == 'D' || wParam == 'd') {
+                GenerateDemoArtwork(hwnd);
+            } else if (wParam == '1') {
+                curSize = 2; UpdatePen(); UpdateTitleStatus(hwnd);
+            } else if (wParam == '2') {
+                curSize = 6; UpdatePen(); UpdateTitleStatus(hwnd);
+            } else if (wParam == '3') {
+                curSize = 14; UpdatePen(); UpdateTitleStatus(hwnd);
+            } else if (wParam == 'V' || wParam == 'v') {
+                FilterInvert(); InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'Y' || wParam == 'y') {
+                FilterGrayscale(); InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == VK_OEM_4 /* [ */) {
                 curSize = max(1, curSize - 2);
                 UpdatePen(); UpdateTitleStatus(hwnd);
@@ -682,7 +851,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     UpdatePen();
                     UpdateTitleStatus(hwnd);
                     InvalidateRect(hwnd, NULL, FALSE);
-                    return;
+                    return 0;
                 }
                 if (currentTool == 6) { // Bucket Fill
                     PushUndo();
@@ -692,7 +861,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         ExtFloodFill(hdcMem, x, y, target, FLOODFILLSURFACE);
                     }
                     InvalidateRect(hwnd, NULL, FALSE);
-                    return;
+                    return 0;
                 }
                 PushUndo();
                 isPainting = 1;
@@ -841,7 +1010,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_DESTROY:
             SelectObject(hdcMem, GetStockObject(BLACK_PEN));
             SelectObject(hdcMem, GetStockObject(WHITE_BRUSH));
-            SelectObject(hdcMem, GetStockObject(DEFAULT_BITMAP));
+            if (hbmStockOld) SelectObject(hdcMem, hbmStockOld);
             if (hPen) DeleteObject(hPen);
             if (hBrush) DeleteObject(hBrush);
             if (hdcMem) DeleteDC(hdcMem);
@@ -880,6 +1049,86 @@ void __stdcall MainEntry() {
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN) {
+            WPARAM wParam = msg.wParam;
+            BOOL bCtrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+            if (bCtrl) {
+                if (wParam == 'Z' || wParam == 'z') {
+                    PerformUndo();
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    continue;
+                } else if (wParam == 'Y' || wParam == 'y') {
+                    PerformRedo();
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    continue;
+                } else if (wParam == 'S' || wParam == 's') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(302, 0), 0);
+                    continue;
+                } else if (wParam == 'O' || wParam == 'o') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(303, 0), 0);
+                    continue;
+                }
+            } else {
+                if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(701, 0), 0);
+                    continue;
+                } else if (wParam == 'B' || wParam == 'b') {
+                    currentTool = 0; UpdatePen(); UpdateTitleStatus(hwnd);
+                    continue;
+                } else if (wParam == 'L' || wParam == 'l') {
+                    currentTool = 1; UpdatePen(); UpdateTitleStatus(hwnd);
+                    continue;
+                } else if (wParam == 'R' || wParam == 'r') {
+                    currentTool = 2; UpdatePen(); UpdateTitleStatus(hwnd);
+                    continue;
+                } else if (wParam == 'C' || wParam == 'c') {
+                    currentTool = 3; UpdatePen(); UpdateTitleStatus(hwnd);
+                    continue;
+                } else if (wParam == 'A' || wParam == 'a' || wParam == 'S' || wParam == 's') {
+                    currentTool = 4; UpdatePen(); UpdateTitleStatus(hwnd);
+                    continue;
+                } else if (wParam == 'E' || wParam == 'e') {
+                    currentTool = 5; UpdatePen(); UpdateTitleStatus(hwnd);
+                    continue;
+                } else if (wParam == 'G' || wParam == 'g') {
+                    currentTool = 6; UpdatePen(); UpdateTitleStatus(hwnd);
+                    continue;
+                } else if (wParam == 'I' || wParam == 'i') {
+                    currentTool = 7; UpdatePen(); UpdateTitleStatus(hwnd);
+                    continue;
+                } else if (wParam == 'D' || wParam == 'd') {
+                    GenerateDemoArtwork(hwnd);
+                    continue;
+                } else if (wParam == '1') {
+                    curSize = 2; UpdatePen(); UpdateTitleStatus(hwnd);
+                    continue;
+                } else if (wParam == '2') {
+                    curSize = 6; UpdatePen(); UpdateTitleStatus(hwnd);
+                    continue;
+                } else if (wParam == '3') {
+                    curSize = 14; UpdatePen(); UpdateTitleStatus(hwnd);
+                    continue;
+                } else if (wParam == 'V' || wParam == 'v') {
+                    FilterInvert(); InvalidateRect(hwnd, NULL, FALSE);
+                    continue;
+                } else if (wParam == 'Y' || wParam == 'y') {
+                    FilterGrayscale(); InvalidateRect(hwnd, NULL, FALSE);
+                    continue;
+                } else if (wParam == VK_OEM_PLUS || wParam == VK_ADD) {
+                    FilterBrightness(25); InvalidateRect(hwnd, NULL, FALSE);
+                    continue;
+                } else if (wParam == VK_OEM_MINUS || wParam == VK_SUBTRACT) {
+                    FilterBrightness(-25); InvalidateRect(hwnd, NULL, FALSE);
+                    continue;
+                } else if (wParam == VK_OEM_4 /* [ */) {
+                    curSize = max(1, curSize - 2); UpdatePen(); UpdateTitleStatus(hwnd);
+                    continue;
+                } else if (wParam == VK_OEM_6 /* ] */) {
+                    curSize = min(80, curSize + 2); UpdatePen(); UpdateTitleStatus(hwnd);
+                    continue;
+                }
+            }
+        }
         if (!IsDialogMessage(hwnd, &msg)) {
             TranslateMessage(&msg);
             DispatchMessageA(&msg);
