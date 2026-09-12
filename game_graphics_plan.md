@@ -150,12 +150,13 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSpace
 - KPac
 - KSanctuary
-- KAbyss
 - KSubmarine
 - KStarDredge
+- KAbyss
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
 
+- KAbyss (Loop 1): Hooded delver sprite with lantern/blade, animated monster sprites (Skeleton, Ghoul, Wraith, Acolyte, Leviathan), and custom dungeon sprites (Chest, Altar, Cauldron, Doors, Stairs).
 - KStarDredge (Loop 1): The Iron Dredge industrial salvage barge with animated plasma thrusters, hazard-striped hydraulic claws, craggy volumetric asteroids with glowing mineral veins, and raider warships.
 - KSubmarine (Loop 1): Submersible bathyscaphe sprite with spinning propeller & cavitation bubbles, animated abyssal Leviathan, Architeuthis squid, siphonophore, and anglerfish sprites.
 - KSanctuary (Loop 1): Sub-mountain cross-section cutaway canvas with animated dwellers and reactor telemetry, pixel-art facility icons, dweller portraits, and wasteland landmark sprites.
@@ -202,4 +203,3 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KCyber (Loop 2): Cyberdeck sprites, ICE Daemon enemy, holographic data payload, and hack-themed particle effects.
 - KTetris (Loop 8): Screen-shake, multi-layer particles, dual shockwaves, HUD reticles, and tetromino specular sheen.
 - KSnake (Loop 8): Screen-shake, multi-layer particles, dual shockwaves, HUD reticles, and viper body specular sheen.
-- KAbyss (Loop 0): In queue.

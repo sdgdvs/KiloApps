@@ -3206,9 +3206,698 @@
             camera.y = Math.max(0, Math.min(maxY, targetY));
         }
 
+        // --- Sprite Rendering Engines ---
+        function drawDelverSprite(ctx, px, py, facing, animTime, hasShield) {
+            ctx.save();
+            const cx = px + 16;
+            const cy = py + 16;
+            const bob = Math.sin(animTime * 5) * 1.2;
+
+            // Shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+            ctx.beginPath();
+            ctx.ellipse(cx, cy + 12, 9, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Delver body offset by breathing bob
+            const by = cy + bob;
+
+            // Cloak & Body Back
+            ctx.fillStyle = '#0f172a'; // Deep abyss cloak
+            ctx.beginPath();
+            ctx.moveTo(cx - 8, by + 10);
+            ctx.lineTo(cx - 9, by - 2);
+            ctx.lineTo(cx + 9, by - 2);
+            ctx.lineTo(cx + 8, by + 10);
+            ctx.closePath();
+            ctx.fill();
+
+            // Cloak Trim / Pauldrons
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(cx - 9, by - 3, 18, 4);
+            ctx.fillStyle = '#0284c7';
+            ctx.fillRect(cx - 8, by - 2, 3, 2);
+            ctx.fillRect(cx + 5, by - 2, 3, 2);
+
+            // Dark Hood / Cowl
+            ctx.fillStyle = '#090d16';
+            ctx.beginPath();
+            ctx.arc(cx, by - 4, 7, Math.PI, 0, false);
+            ctx.lineTo(cx + 7, by + 2);
+            ctx.lineTo(cx - 7, by + 2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Face opening shadow
+            ctx.fillStyle = '#020408';
+            ctx.beginPath();
+            ctx.ellipse(cx, by - 3, 4.5, 3.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Glowing Visor / Gaze Slits (direction-aware)
+            let eyeOffsetX = 0;
+            let eyeOffsetY = 0;
+            if (facing === 'left') { eyeOffsetX = -2; }
+            else if (facing === 'right') { eyeOffsetX = 2; }
+            else if (facing === 'up') { eyeOffsetY = -2; }
+            else if (facing === 'down') { eyeOffsetY = 1; }
+
+            if (facing !== 'up') {
+                ctx.fillStyle = '#38bdf8';
+                ctx.shadowColor = '#38bdf8';
+                ctx.shadowBlur = 5;
+                ctx.fillRect(cx - 3 + eyeOffsetX, by - 4 + eyeOffsetY, 2.5, 1.8);
+                ctx.fillRect(cx + 0.5 + eyeOffsetX, by - 4 + eyeOffsetY, 2.5, 1.8);
+                ctx.shadowBlur = 0;
+            } else {
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(cx - 2, by - 5, 4, 2);
+            }
+
+            // Off-hand: Hanging Brass Lantern with animated flickering flame
+            const lanX = (facing === 'left') ? cx + 8 : cx - 8;
+            const lanY = by + 2;
+            // Lantern chain & bracket
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(cx - 5, by + 1);
+            ctx.lineTo(lanX, lanY - 3);
+            ctx.stroke();
+
+            // Lantern iron cage
+            ctx.fillStyle = '#451a03';
+            ctx.fillRect(lanX - 3, lanY - 3, 6, 7);
+            // Glowing amber glass
+            const fGlow = Math.sin(animTime * 12) * 0.15;
+            ctx.fillStyle = `rgba(245, 158, 11, ${0.75 + fGlow})`;
+            ctx.fillRect(lanX - 2, lanY - 2, 4, 5);
+            // Teardrop flame
+            ctx.fillStyle = '#fef08a';
+            ctx.fillRect(lanX - 1, lanY - 1, 2, 3);
+
+            // Main-hand: Runic blade
+            const bladeX = (facing === 'left') ? cx - 10 : cx + 7;
+            const bladeY = by - 1;
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(bladeX, bladeY + 5);
+            ctx.lineTo(bladeX + (facing === 'left' ? -2 : 2), bladeY - 6);
+            ctx.stroke();
+            // Blade runic core
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(bladeX - 0.5, bladeY - 2, 1, 3);
+            // Crossguard & pommel
+            ctx.fillStyle = '#d97706';
+            ctx.fillRect(bladeX - 2, bladeY + 2, 4, 1.5);
+
+            // Aegis ward effect if shield is active
+            if (hasShield) {
+                ctx.save();
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 1.5;
+                ctx.shadowColor = '#38bdf8';
+                ctx.shadowBlur = 8;
+                const shieldPulse = Math.sin(animTime * 6) * 2;
+                ctx.beginPath();
+                ctx.arc(cx, cy, 14 + shieldPulse, 0, Math.PI * 2);
+                ctx.stroke();
+                // Rotating rune ward nodes
+                for (let r = 0; r < 3; r++) {
+                    const ang = animTime * 3 + (r * Math.PI * 2 / 3);
+                    const rx = cx + Math.cos(ang) * (14 + shieldPulse);
+                    const ry = cy + Math.sin(ang) * (14 + shieldPulse);
+                    ctx.fillStyle = '#e0f2fe';
+                    ctx.fillRect(rx - 1.5, ry - 1.5, 3, 3);
+                }
+                ctx.restore();
+            }
+
+            ctx.restore();
+        }
+
+        function drawMonsterSprite(ctx, msx, msy, m, animTime) {
+            ctx.save();
+            const cx = msx + 16;
+            const cy = msy + 16;
+            const type = m.type || m.id;
+
+            // Monster Floor Shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.beginPath();
+            ctx.ellipse(cx, cy + 11, 8, 3.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (type === 'SKELETON') {
+                const clatter = Math.sin(animTime * 6 + m.x) * 0.8;
+                const sy = cy + clatter;
+
+                // Bleached Skull
+                ctx.fillStyle = '#e2e8f0';
+                ctx.beginPath();
+                ctx.arc(cx, sy - 5, 5, 0, Math.PI * 2);
+                ctx.fill();
+                // Jawbone
+                ctx.fillRect(cx - 3, sy - 1, 6, 3);
+
+                // Dark Eye Sockets
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(cx - 3.5, sy - 6, 2.5, 2.5);
+                ctx.fillRect(cx + 1, sy - 6, 2.5, 2.5);
+                // Glowing crimson malice pinprick in sockets
+                ctx.fillStyle = '#ef4444';
+                ctx.fillRect(cx - 2.5, sy - 5, 1, 1);
+                ctx.fillRect(cx + 2, sy - 5, 1, 1);
+
+                // Spine & Ribs
+                ctx.strokeStyle = '#cbd5e1';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(cx, sy + 2);
+                ctx.lineTo(cx, sy + 8);
+                ctx.stroke();
+
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(cx - 4, sy + 4); ctx.lineTo(cx + 4, sy + 4);
+                ctx.moveTo(cx - 3.5, sy + 6); ctx.lineTo(cx + 3.5, sy + 6);
+                ctx.stroke();
+
+                // Ancient Jagged Crypt Blade in hand
+                ctx.strokeStyle = '#94a3b8';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(cx + 5, sy + 6);
+                ctx.lineTo(cx + 9, sy - 5);
+                ctx.stroke();
+                // Crossguard
+                ctx.strokeStyle = '#78350f';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(cx + 3, sy + 4);
+                ctx.lineTo(cx + 7, sy + 5);
+                ctx.stroke();
+
+            } else if (type === 'GHOUL') {
+                const breathe = Math.sin(animTime * 4 + m.y) * 1.2;
+                const gy = cy + breathe;
+
+                // Hunched amphibious mire-beast body
+                ctx.fillStyle = '#0f766e';
+                ctx.beginPath();
+                ctx.ellipse(cx - 1, gy + 3, 7, 5, -0.2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Dorsal spine ridges
+                ctx.fillStyle = '#2dd4bf';
+                ctx.beginPath();
+                ctx.moveTo(cx - 5, gy - 2); ctx.lineTo(cx - 3, gy - 5); ctx.lineTo(cx - 1, gy - 2);
+                ctx.moveTo(cx - 1, gy - 2); ctx.lineTo(cx + 1, gy - 5); ctx.lineTo(cx + 3, gy - 2);
+                ctx.fill();
+
+                // Predatory Ghoul Head
+                ctx.fillStyle = '#115e59';
+                ctx.beginPath();
+                ctx.ellipse(cx + 4, gy - 2, 5, 4, 0.3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Glowing yellow/teal predatory slit eye
+                ctx.fillStyle = '#facc15';
+                ctx.fillRect(cx + 4, gy - 4, 2, 1.5);
+                ctx.fillStyle = '#042f2e';
+                ctx.fillRect(cx + 5, gy - 4, 1, 1.5);
+
+                // Gaping maw with sharp fangs
+                ctx.fillStyle = '#042f2e';
+                ctx.fillRect(cx + 6, gy - 1, 3, 3);
+                ctx.fillStyle = '#f8fafc';
+                ctx.fillRect(cx + 7, gy - 1, 1, 1);
+                ctx.fillRect(cx + 8, gy + 1, 1, 1);
+
+                // Sharp claws on forelimbs
+                ctx.strokeStyle = '#042f2e';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.moveTo(cx + 2, gy + 6); ctx.lineTo(cx + 6, gy + 9);
+                ctx.moveTo(cx - 3, gy + 6); ctx.lineTo(cx - 2, gy + 9);
+                ctx.stroke();
+
+            } else if (type === 'WRAITH') {
+                const floatY = Math.sin(animTime * 3 + m.x) * 3;
+                const wy = cy + floatY;
+
+                // Ethereal purple phantom aura
+                ctx.fillStyle = 'rgba(168, 85, 247, 0.22)';
+                ctx.beginPath();
+                ctx.arc(cx, wy, 11, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Tattered void cowl
+                ctx.fillStyle = '#6b21a8';
+                ctx.beginPath();
+                ctx.arc(cx, wy - 3, 6, Math.PI, 0, false);
+                ctx.lineTo(cx + 6, wy + 5);
+                ctx.lineTo(cx - 6, wy + 5);
+                ctx.closePath();
+                ctx.fill();
+
+                // Deep void hood interior
+                ctx.fillStyle = '#05020a';
+                ctx.beginPath();
+                ctx.ellipse(cx, wy - 2, 4, 3, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Glowing amethyst phantom eyes
+                ctx.fillStyle = '#e9d5ff';
+                ctx.shadowColor = '#c084fc';
+                ctx.shadowBlur = 6;
+                ctx.fillRect(cx - 2.5, wy - 3, 1.5, 1.5);
+                ctx.fillRect(cx + 1, wy - 3, 1.5, 1.5);
+                ctx.shadowBlur = 0;
+
+                // Undulating spectral wisps trailing below
+                ctx.fillStyle = '#9333ea';
+                for (let w = -4; w <= 4; w += 4) {
+                    const wave = Math.sin(animTime * 5 + w) * 2;
+                    ctx.beginPath();
+                    ctx.moveTo(cx + w - 2, wy + 5);
+                    ctx.lineTo(cx + w + wave, wy + 11);
+                    ctx.lineTo(cx + w + 2, wy + 5);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+            } else if (type === 'ACOLYTE') {
+                const chant = Math.sin(animTime * 4 + m.y) * 0.8;
+                const ay = cy + chant;
+
+                // Dark golden-trimmed cultist robe
+                ctx.fillStyle = '#292524';
+                ctx.beginPath();
+                ctx.moveTo(cx - 6, ay + 9);
+                ctx.lineTo(cx - 7, ay - 2);
+                ctx.lineTo(cx + 7, ay - 2);
+                ctx.lineTo(cx + 6, ay + 9);
+                ctx.closePath();
+                ctx.fill();
+
+                // Golden vestment trim
+                ctx.strokeStyle = '#eab308';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(cx, ay - 1);
+                ctx.lineTo(cx, ay + 9);
+                ctx.stroke();
+
+                // Deep pointed hood
+                ctx.fillStyle = '#1c1917';
+                ctx.beginPath();
+                ctx.moveTo(cx, ay - 9);
+                ctx.lineTo(cx + 6, ay - 1);
+                ctx.lineTo(cx - 6, ay - 1);
+                ctx.closePath();
+                ctx.fill();
+
+                // Shadow face & glowing golden eyes
+                ctx.fillStyle = '#0c0a09';
+                ctx.beginPath();
+                ctx.ellipse(cx, ay - 2, 3.5, 2.5, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#fde047';
+                ctx.fillRect(cx - 2, ay - 3, 1.2, 1.2);
+                ctx.fillRect(cx + 0.8, ay - 3, 1.2, 1.2);
+
+                // Ashwood Staff with pulsating Arcane Eye Orb
+                const staffX = cx + 8;
+                ctx.strokeStyle = '#78350f';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(staffX, ay + 9);
+                ctx.lineTo(staffX, ay - 7);
+                ctx.stroke();
+
+                // Pulsating Eldritch Staff Orb
+                const orbPulse = Math.sin(animTime * 8) * 1.5;
+                ctx.fillStyle = '#f59e0b';
+                ctx.shadowColor = '#eab308';
+                ctx.shadowBlur = 6;
+                ctx.beginPath();
+                ctx.arc(staffX, ay - 8, 3 + orbPulse * 0.3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#fef08a';
+                ctx.fillRect(staffX - 1, ay - 9, 2, 2);
+                ctx.shadowBlur = 0;
+
+            } else if (type === 'LEVIATHAN') {
+                const bossPulse = Math.sin(animTime * 3) * 1.5;
+                const by = cy + bossPulse;
+
+                // Pulsating Abyssal Flame Aura
+                ctx.fillStyle = 'rgba(220, 38, 38, 0.25)';
+                ctx.beginPath();
+                ctx.arc(cx, by, 14, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Armored Obsidian Skull & Carapace
+                ctx.fillStyle = '#18181b';
+                ctx.beginPath();
+                ctx.ellipse(cx, by, 10, 8, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#581c87';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // Curved Demonic Abyssal Horns
+                ctx.strokeStyle = '#7f1d1d';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(cx - 6, by - 4);
+                ctx.quadraticCurveTo(cx - 11, by - 10, cx - 8, by - 12);
+                ctx.moveTo(cx + 6, by - 4);
+                ctx.quadraticCurveTo(cx + 11, by - 10, cx + 8, by - 12);
+                ctx.stroke();
+
+                // Cluster of 6 glowing crimson eyes
+                ctx.fillStyle = '#ef4444';
+                ctx.shadowColor = '#ef4444';
+                ctx.shadowBlur = 5;
+                ctx.fillRect(cx - 5, by - 3, 2, 2);
+                ctx.fillRect(cx + 3, by - 3, 2, 2);
+                ctx.fillRect(cx - 3, by - 1, 2, 2);
+                ctx.fillRect(cx + 1, by - 1, 2, 2);
+                ctx.fillRect(cx - 1.5, by + 1, 3, 1.5);
+                ctx.shadowBlur = 0;
+
+                // Jagged Maw with Razor Fangs
+                ctx.fillStyle = '#450a0a';
+                ctx.fillRect(cx - 4, by + 3, 8, 3);
+                ctx.fillStyle = '#f8fafc';
+                ctx.fillRect(cx - 3, by + 3, 1, 1.5);
+                ctx.fillRect(cx - 1, by + 3, 1, 1.5);
+                ctx.fillRect(cx + 1, by + 3, 1, 1.5);
+                ctx.fillRect(cx + 3, by + 3, 1, 1.5);
+            }
+
+            ctx.restore();
+        }
+
+        function drawTileSprite(ctx, sx, sy, tile, isVisible, animTime, zIdx, zInfo) {
+            ctx.save();
+            const cx = sx + 16;
+            const cy = sy + 16;
+
+            if (tile === TILE.CHEST) {
+                // Oak chest body
+                ctx.fillStyle = isVisible ? '#451a03' : '#1e1108';
+                ctx.fillRect(sx + 5, sy + 8, 22, 16);
+
+                // Wood grain horizontal plank divider
+                ctx.fillStyle = isVisible ? '#78350f' : '#2d180a';
+                ctx.fillRect(sx + 5, sy + 14, 22, 1);
+
+                // Iron reinforcing corner brackets & bands
+                ctx.fillStyle = isVisible ? '#1e293b' : '#0f172a';
+                ctx.fillRect(sx + 5, sy + 8, 4, 16);
+                ctx.fillRect(sx + 23, sy + 8, 4, 16);
+                ctx.fillRect(sx + 13, sy + 8, 6, 16);
+
+                // Iron rivet studs
+                if (isVisible) {
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillRect(sx + 6, sy + 9, 2, 2);
+                    ctx.fillRect(sx + 6, sy + 21, 2, 2);
+                    ctx.fillRect(sx + 24, sy + 9, 2, 2);
+                    ctx.fillRect(sx + 24, sy + 21, 2, 2);
+                }
+
+                // Polished Brass lock plate & keyhole
+                ctx.fillStyle = isVisible ? '#fbbf24' : '#78350f';
+                ctx.fillRect(sx + 14, sy + 12, 4, 6);
+                ctx.fillStyle = '#1c1917';
+                ctx.fillRect(sx + 15.5, sy + 13.5, 1, 2.5);
+
+                // Specular glint on gold lock every 2.5s
+                if (isVisible) {
+                    const glint = (animTime * 2) % 4;
+                    if (glint < 0.6) {
+                        ctx.fillStyle = '#fffbeb';
+                        ctx.fillRect(sx + 14 + glint * 5, sy + 12, 1.5, 4);
+                    }
+                }
+
+            } else if (tile === TILE.ALTAR) {
+                // Stepped obsidian plinth
+                ctx.fillStyle = isVisible ? '#1c1917' : '#0c0a09';
+                ctx.fillRect(sx + 3, sy + 6, 26, 20);
+                ctx.fillStyle = isVisible ? '#292524' : '#141210';
+                ctx.fillRect(sx + 5, sy + 4, 22, 16);
+
+                // Top slab surface
+                ctx.fillStyle = isVisible ? '#2e1017' : '#14060a';
+                ctx.fillRect(sx + 6, sy + 5, 20, 10);
+
+                // Pulsating carved blood runes
+                const runeGlow = Math.sin(animTime * 3) * 0.35 + 0.65;
+                ctx.strokeStyle = isVisible ? `rgba(239, 68, 68, ${runeGlow})` : '#7f1d1d';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(cx - 5, cy - 3); ctx.lineTo(cx, cy - 8); ctx.lineTo(cx + 5, cy - 3);
+                ctx.moveTo(cx, cy - 8); ctx.lineTo(cx, cy);
+                ctx.moveTo(cx - 3, cy - 4); ctx.lineTo(cx + 3, cy - 4);
+                ctx.stroke();
+
+                // Corner tallow candles
+                if (isVisible) {
+                    const cf1 = Math.sin(animTime * 10) * 1;
+                    const cf2 = Math.cos(animTime * 8) * 1;
+                    // Candle sticks
+                    ctx.fillStyle = '#fef3c7';
+                    ctx.fillRect(sx + 4, sy + 3, 2, 4);
+                    ctx.fillRect(sx + 26, sy + 3, 2, 4);
+                    // Flame drops
+                    ctx.fillStyle = '#f97316';
+                    ctx.fillRect(sx + 4, sy + 1 + cf1 * 0.5, 2, 2);
+                    ctx.fillRect(sx + 26, sy + 1 + cf2 * 0.5, 2, 2);
+                    ctx.fillStyle = '#fef08a';
+                    ctx.fillRect(sx + 4.5, sy + 1.5 + cf1 * 0.5, 1, 1);
+                    ctx.fillRect(sx + 26.5, sy + 1.5 + cf2 * 0.5, 1, 1);
+                }
+
+            } else if (tile === TILE.CAULDRON) {
+                // Cast-iron cauldron body
+                ctx.fillStyle = isVisible ? '#1e293b' : '#0f172a';
+                ctx.beginPath();
+                ctx.ellipse(cx, cy + 3, 9, 8, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Three iron tripod feet
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(cx - 8, cy + 9, 3, 4);
+                ctx.fillRect(cx + 5, cy + 9, 3, 4);
+                ctx.fillRect(cx - 1.5, cy + 10, 3, 3);
+
+                // Heavy iron rim
+                ctx.fillStyle = isVisible ? '#334155' : '#1e293b';
+                ctx.beginPath();
+                ctx.ellipse(cx, cy - 3, 9, 3.5, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Boiling emerald potion pool
+                ctx.fillStyle = isVisible ? '#059669' : '#022c22';
+                ctx.beginPath();
+                ctx.ellipse(cx, cy - 3, 7.5, 2.5, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Rising animated potion bubbles
+                if (isVisible) {
+                    ctx.fillStyle = '#34d399';
+                    for (let b = 0; b < 3; b++) {
+                        const phase = (animTime * 2.5 + b * 1.3) % 1;
+                        const bx = cx - 4 + b * 4;
+                        const by = cy - 3 - phase * 7;
+                        const bSize = (1 - phase) * 2;
+                        if (bSize > 0.5) {
+                            ctx.beginPath();
+                            ctx.arc(bx, by, bSize, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+                }
+
+            } else if (tile === TILE.DOOR_CLOSED) {
+                // Heavy oak planks
+                ctx.fillStyle = isVisible ? '#78350f' : '#291b0b';
+                ctx.fillRect(sx + 4, sy + 2, 24, 28);
+
+                // Plank vertical lines
+                ctx.fillStyle = isVisible ? '#451a03' : '#180f06';
+                ctx.fillRect(sx + 11, sy + 2, 1.5, 28);
+                ctx.fillRect(sx + 19, sy + 2, 1.5, 28);
+
+                // Horizontal iron strap braces
+                ctx.fillStyle = isVisible ? '#1e293b' : '#0f172a';
+                ctx.fillRect(sx + 4, sy + 6, 24, 3);
+                ctx.fillRect(sx + 4, sy + 22, 24, 3);
+
+                // Iron studs
+                if (isVisible) {
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.fillRect(sx + 6, sy + 7, 2, 1);
+                    ctx.fillRect(sx + 14, sy + 7, 2, 1);
+                    ctx.fillRect(sx + 22, sy + 7, 2, 1);
+                    ctx.fillRect(sx + 6, sy + 23, 2, 1);
+                    ctx.fillRect(sx + 14, sy + 23, 2, 1);
+                    ctx.fillRect(sx + 22, sy + 23, 2, 1);
+                }
+
+                // Forged iron ring handle
+                ctx.strokeStyle = isVisible ? '#cbd5e1' : '#475569';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(sx + 21, sy + 15, 3, 0, Math.PI * 2);
+                ctx.stroke();
+
+            } else if (tile === TILE.DOOR_OPEN) {
+                // Open stone doorway threshold
+                ctx.fillStyle = isVisible ? '#0f172a' : '#070a12';
+                ctx.fillRect(sx + 4, sy + 2, 24, 28);
+
+                // Stone lintel frame
+                ctx.strokeStyle = isVisible ? '#334155' : '#1e293b';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(sx + 3, sy + 2, 26, 28);
+
+                // Swung-open door leaf recessed to the side
+                ctx.fillStyle = isVisible ? '#451a03' : '#180f06';
+                ctx.fillRect(sx + 4, sy + 2, 5, 28);
+                ctx.fillStyle = isVisible ? '#1e293b' : '#0f172a';
+                ctx.fillRect(sx + 4, sy + 7, 5, 2.5);
+                ctx.fillRect(sx + 4, sy + 21, 5, 2.5);
+
+            } else if (tile === TILE.STAIRS_DOWN) {
+                // Recessed stone staircase descending into abyss
+                ctx.fillStyle = isVisible ? '#090d16' : '#030508';
+                ctx.fillRect(sx + 3, sy + 3, 26, 26);
+
+                const stepColors = isVisible ?
+                    ['#334155', '#1e293b', '#0f172a', '#020617'] :
+                    ['#1e293b', '#0f172a', '#020617', '#000000'];
+
+                for (let s = 0; s < 4; s++) {
+                    const stepY = sy + 4 + s * 6;
+                    ctx.fillStyle = stepColors[s];
+                    ctx.fillRect(sx + 4 + s * 2, stepY, 24 - s * 4, 5);
+                    ctx.fillStyle = isVisible ? '#64748b' : '#334155';
+                    ctx.fillRect(sx + 4 + s * 2, stepY, 24 - s * 4, 1);
+                }
+
+                // Descending rune arrow
+                ctx.fillStyle = isVisible ? '#a855f7' : '#581c87';
+                ctx.beginPath();
+                ctx.moveTo(cx, cy + 5); ctx.lineTo(cx - 4, cy); ctx.lineTo(cx + 4, cy);
+                ctx.closePath();
+                ctx.fill();
+
+            } else if (tile === TILE.STAIRS_UP) {
+                // Stone staircase ascending to upper levels
+                ctx.fillStyle = isVisible ? '#090d16' : '#030508';
+                ctx.fillRect(sx + 3, sy + 3, 26, 26);
+
+                const stepColors = isVisible ?
+                    ['#020617', '#0f172a', '#1e293b', '#38bdf8'] :
+                    ['#000000', '#020617', '#0f172a', '#0284c7'];
+
+                for (let s = 0; s < 4; s++) {
+                    const stepY = sy + 22 - s * 6;
+                    ctx.fillStyle = stepColors[s];
+                    ctx.fillRect(sx + 4 + (3 - s) * 2, stepY, 24 - (3 - s) * 4, 5);
+                    ctx.fillStyle = isVisible ? '#7dd3fc' : '#0369a1';
+                    ctx.fillRect(sx + 4 + (3 - s) * 2, stepY, 24 - (3 - s) * 4, 1);
+                }
+
+                // Ascending beacon rune arrow
+                ctx.fillStyle = isVisible ? '#38bdf8' : '#0284c7';
+                ctx.beginPath();
+                ctx.moveTo(cx, cy - 5); ctx.lineTo(cx - 4, cy); ctx.lineTo(cx + 4, cy);
+                ctx.closePath();
+                ctx.fill();
+
+            } else if (tile === TILE.PILLAR) {
+                // Fluted stone column
+                ctx.fillStyle = isVisible ? (zIdx === ZONE.SUNKEN_GROTTO ? '#0e3a47' : '#1e293b') : '#070a12';
+                ctx.fillRect(sx + 6, sy + 2, 20, 28);
+
+                // Column base & capital
+                ctx.fillStyle = isVisible ? '#475569' : '#1e293b';
+                ctx.fillRect(sx + 4, sy + 2, 24, 3);
+                ctx.fillRect(sx + 4, sy + 27, 24, 3);
+
+                // Fluted vertical grooves
+                ctx.fillStyle = isVisible ? '#0f172a' : '#020617';
+                ctx.fillRect(sx + 9, sy + 5, 2, 22);
+                ctx.fillRect(sx + 15, sy + 5, 2, 22);
+                ctx.fillRect(sx + 21, sy + 5, 2, 22);
+
+                // Central runic sconce gem
+                ctx.fillStyle = isVisible ? zInfo.torchColor : '#312e81';
+                ctx.beginPath();
+                ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        function drawTorchSconce(ctx, sx, sy, animTime, zInfo) {
+            ctx.save();
+            const cx = sx + 16;
+            const cy = sy + 16;
+
+            // Iron wall sconce bracket
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(cx - 2, cy - 2, 4, 10);
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(cx - 4, cy + 4, 8, 2);
+
+            // Wooden torch head
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(cx - 2, cy - 6, 4, 5);
+
+            // Animated flickering flame teardrop
+            const flickerX = Math.sin(animTime * 12 + sx) * 1.5;
+            const flickerY = Math.cos(animTime * 14 + sy) * 2;
+
+            // Outer flame
+            ctx.fillStyle = '#f97316';
+            ctx.beginPath();
+            ctx.moveTo(cx - 4, cy - 5);
+            ctx.quadraticCurveTo(cx - 5, cy - 11, cx + flickerX, cy - 14 + flickerY);
+            ctx.quadraticCurveTo(cx + 5, cy - 11, cx + 4, cy - 5);
+            ctx.closePath();
+            ctx.fill();
+
+            // Inner bright core
+            ctx.fillStyle = '#fde047';
+            ctx.beginPath();
+            ctx.moveTo(cx - 2, cy - 6);
+            ctx.quadraticCurveTo(cx - 2.5, cy - 9, cx + flickerX * 0.5, cy - 11 + flickerY * 0.5);
+            ctx.quadraticCurveTo(cx + 2.5, cy - 9, cx + 2, cy - 6);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.restore();
+        }
+
         // --- Rendering ---
         function render() {
             updateCamera();
+
+            const animTime = Date.now() / 1000;
 
             ctx.fillStyle = '#010204';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -3286,64 +3975,10 @@
                                 ctx.fillRect(screenX + 15, screenY + 15, 2, 2);
                             }
                         }
-                    } else if (tile === TILE.ALTAR) {
-                        ctx.fillStyle = isVisible ? '#2a0a14' : '#14050a';
-                        ctx.fillRect(screenX + 2, screenY + 2, TILE_SIZE - 4, TILE_SIZE - 4);
-                        ctx.strokeStyle = isVisible ? '#ef4444' : '#7f1d1d';
-                        ctx.strokeRect(screenX + 3, screenY + 3, TILE_SIZE - 6, TILE_SIZE - 6);
-                        ctx.fillStyle = isVisible ? '#f87171' : '#ef4444';
-                        ctx.font = 'bold 14px monospace';
-                        ctx.textAlign = 'center';
-                        ctx.fillText('⛩️', screenX + 16, screenY + 21);
-                    } else if (tile === TILE.CAULDRON) {
-                        ctx.fillStyle = isVisible ? '#04241d' : '#02120e';
-                        ctx.fillRect(screenX + 2, screenY + 2, TILE_SIZE - 4, TILE_SIZE - 4);
-                        ctx.strokeStyle = isVisible ? '#10b981' : '#065f46';
-                        ctx.strokeRect(screenX + 3, screenY + 3, TILE_SIZE - 6, TILE_SIZE - 6);
-                        ctx.fillStyle = isVisible ? '#34d399' : '#059669';
-                        ctx.font = 'bold 14px monospace';
-                        ctx.textAlign = 'center';
-                        ctx.fillText('⚗️', screenX + 16, screenY + 21);
-                    } else if (tile === TILE.PILLAR) {
-                        ctx.fillStyle = isVisible ? (zIdx === ZONE.SUNKEN_GROTTO ? '#0e3a47' : '#0f172a') : '#070a12';
-                        ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
-                        ctx.fillStyle = isVisible ? zInfo.torchColor : '#1e1b4b';
-                        ctx.beginPath();
-                        ctx.arc(screenX + 16, screenY + 16, 10, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.strokeStyle = isVisible ? '#818cf8' : '#312e81';
-                        ctx.stroke();
-                    } else if (tile === TILE.DOOR_CLOSED) {
-                        ctx.fillStyle = isVisible ? '#78350f' : '#291b0b';
-                        ctx.fillRect(screenX + 4, screenY + 2, TILE_SIZE - 8, TILE_SIZE - 4);
-                        ctx.fillStyle = isVisible ? '#fbbf24' : '#78350f';
-                        ctx.fillRect(screenX + 14, screenY + 14, 4, 4);
-                    } else if (tile === TILE.DOOR_OPEN) {
-                        ctx.fillStyle = isVisible ? '#1e293b' : '#0a0f1d';
-                        ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
-                        ctx.strokeStyle = isVisible ? '#78350f' : '#291b0b';
-                        ctx.strokeRect(screenX + 2, screenY + 2, 4, TILE_SIZE - 4);
-                    } else if (tile === TILE.STAIRS_DOWN) {
-                        ctx.fillStyle = isVisible ? '#1e1b4b' : '#090c14';
-                        ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
-                        ctx.fillStyle = isVisible ? '#a855f7' : '#4c1d95';
-                        ctx.font = '16px monospace';
-                        ctx.textAlign = 'center';
-                        ctx.fillText('▼', screenX + 16, screenY + 22);
-                    } else if (tile === TILE.STAIRS_UP) {
-                        ctx.fillStyle = isVisible ? '#1e1b4b' : '#090c14';
-                        ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
-                        ctx.fillStyle = isVisible ? '#38bdf8' : '#0369a1';
-                        ctx.font = '16px monospace';
-                        ctx.textAlign = 'center';
-                        ctx.fillText('▲', screenX + 16, screenY + 22);
-                    } else if (tile === TILE.CHEST) {
-                        ctx.fillStyle = isVisible ? '#1e293b' : '#070a12';
-                        ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
-                        ctx.fillStyle = isVisible ? '#fbbf24' : '#78350f';
-                        ctx.font = '15px monospace';
-                        ctx.textAlign = 'center';
-                        ctx.fillText('📦', screenX + 16, screenY + 22);
+                    } else if (tile === TILE.ALTAR || tile === TILE.CAULDRON || tile === TILE.PILLAR ||
+                               tile === TILE.DOOR_CLOSED || tile === TILE.DOOR_OPEN ||
+                               tile === TILE.STAIRS_DOWN || tile === TILE.STAIRS_UP || tile === TILE.CHEST) {
+                        drawTileSprite(ctx, screenX, screenY, tile, isVisible, animTime, zIdx, zInfo);
                     }
 
                     // Memory fog overlay for explored but not currently visible tiles
@@ -3376,11 +4011,8 @@
                     ctx.arc(sx + 16, sy + 16, 50 + torchFlicker, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Flame Icon & Ember Emission
-                    ctx.fillStyle = zInfo.torchColor;
-                    ctx.font = '14px monospace';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(zInfo.torchEmoji, sx + 16, sy + 20);
+                    // Torch Sconce Sprite & Animated Flame
+                    drawTorchSconce(ctx, sx, sy, animTime, zInfo);
 
                     if (Math.random() < 0.15) {
                         spawnEmber(sx + 16, sy + 16, true);
@@ -3395,19 +4027,8 @@
                     const msx = Math.floor(m.x * TILE_SIZE - camera.x);
                     const msy = Math.floor(m.y * TILE_SIZE - camera.y);
 
-                    // Monster subtle aura / shadow
-                    ctx.save();
-                    ctx.fillStyle = m.color;
-                    ctx.globalAlpha = 0.28;
-                    ctx.beginPath();
-                    ctx.arc(msx + 16, msy + 16, 12, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.restore();
-
-                    // Monster Glyph / Symbol
-                    ctx.font = '15px monospace';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(m.symbol, msx + 16, msy + 21);
+                    // Monster Custom Sprite & Animations
+                    drawMonsterSprite(ctx, msx, msy, m, animTime);
 
                     // Alert indicator !
                     if (m.state === 'alert') {
@@ -3483,48 +4104,8 @@
                 ctx.restore();
             }
 
-            // Delver Aegis Ward Barrier Aura
-            if (player.shield > 0) {
-                ctx.save();
-                ctx.strokeStyle = '#38bdf8';
-                ctx.lineWidth = 2;
-                ctx.shadowColor = '#38bdf8';
-                ctx.shadowBlur = 8;
-                const shieldPulse = Math.sin(Date.now() / 150) * 2;
-                ctx.beginPath();
-                ctx.arc(playerSX + 16, playerSY + 16, 14 + shieldPulse, 0, Math.PI * 2);
-                ctx.stroke();
-                ctx.fillStyle = 'rgba(56, 189, 248, 0.2)';
-                ctx.fill();
-                ctx.restore();
-            }
-
-            // Delver Body Avatar
-            ctx.fillStyle = '#38bdf8';
-            ctx.beginPath();
-            ctx.arc(playerSX + 16, playerSY + 16, 10, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = '#f8fafc';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-
-            // Facing indicator
-            ctx.fillStyle = '#f8fafc';
-            let eyeX = playerSX + 16;
-            let eyeY = playerSY + 16;
-            if (player.facing === 'up') eyeY -= 5;
-            if (player.facing === 'down') eyeY += 5;
-            if (player.facing === 'left') eyeX -= 5;
-            if (player.facing === 'right') eyeX += 5;
-            ctx.beginPath();
-            ctx.arc(eyeX, eyeY, 2.5, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Delver Rune Knight Symbol
-            ctx.fillStyle = '#0f172a';
-            ctx.font = 'bold 11px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText('@', playerSX + 16, playerSY + 20);
+            // Delver Sprite with Torchlight, Runic Blade & Directional Gaze
+            drawDelverSprite(ctx, playerSX, playerSY, player.facing, animTime, player.shield > 0);
 
             // Draw Active Spell VFX (Fireball blasts, lightning bolts, frost novas, void rifts)
             for (let i = spellEffects.length - 1; i >= 0; i--) {

@@ -2419,6 +2419,586 @@ void UpdateCamera(void) {
     g_camY = targetY;
 }
 
+// --- Custom GDI Sprite Rendering Engines ---
+static void DrawDelverSprite(HDC hdc, int x, int y, int facing, int frame, BOOL hasShield) {
+    int cx = x + 16;
+    int cy = y + 16;
+    int bob = (int)(sinf((float)frame * 0.25f) * 1.5f);
+    int by = cy + bob;
+
+    // Floor shadow
+    HBRUSH shadowBr = CreateSolidBrush(RGB(0, 0, 0));
+    HBRUSH oldB = (HBRUSH)SelectObject(hdc, shadowBr);
+    HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
+    HPEN oldP = (HPEN)SelectObject(hdc, nullPen);
+    Ellipse(hdc, cx - 8, cy + 8, cx + 8, cy + 14);
+
+    // Cloak / Torso (deep abyssal dark navy/slate)
+    HBRUSH cloakBr = CreateSolidBrush(RGB(15, 23, 42));
+    SelectObject(hdc, cloakBr);
+    POINT cloakPts[4] = {
+        {cx - 7, by + 10},
+        {cx - 8, by - 2},
+        {cx + 8, by - 2},
+        {cx + 7, by + 10}
+    };
+    Polygon(hdc, cloakPts, 4);
+    DeleteObject(cloakBr);
+
+    // Pauldrons (steel & cyan runes)
+    HBRUSH pauldBr = CreateSolidBrush(RGB(30, 41, 59));
+    SelectObject(hdc, pauldBr);
+    RECT pR = {cx - 9, by - 3, cx + 9, by + 1};
+    FillRect(hdc, &pR, pauldBr);
+    DeleteObject(pauldBr);
+
+    HBRUSH runeBr = CreateSolidBrush(RGB(2, 132, 199));
+    RECT rL = {cx - 8, by - 2, cx - 5, by};
+    RECT rR = {cx + 5, by - 2, cx + 8, by};
+    FillRect(hdc, &rL, runeBr);
+    FillRect(hdc, &rR, runeBr);
+    DeleteObject(runeBr);
+
+    // Dark Hood / Cowl
+    HBRUSH hoodBr = CreateSolidBrush(RGB(9, 13, 22));
+    SelectObject(hdc, hoodBr);
+    HPEN hoodPen = CreatePen(PS_SOLID, 1, RGB(30, 41, 59));
+    SelectObject(hdc, hoodPen);
+    Ellipse(hdc, cx - 7, by - 9, cx + 7, by + 3);
+    SelectObject(hdc, nullPen);
+    DeleteObject(hoodPen);
+    DeleteObject(hoodBr);
+
+    // Face shadow opening
+    HBRUSH faceBr = CreateSolidBrush(RGB(2, 4, 8));
+    SelectObject(hdc, faceBr);
+    Ellipse(hdc, cx - 4, by - 6, cx + 4, by);
+    DeleteObject(faceBr);
+
+    // Glowing visor slits / eyes
+    int eyeX = 0, eyeY = 0;
+    if (facing == 3) eyeX = -2;      // left
+    else if (facing == 1) eyeX = 2;  // right
+    else if (facing == 0) eyeY = -2; // up
+    else if (facing == 2) eyeY = 1;  // down
+
+    if (facing != 0) {
+        COLORREF visorCol = RGB(56, 189, 248);
+        SetPixel(hdc, cx - 3 + eyeX, by - 4 + eyeY, visorCol);
+        SetPixel(hdc, cx - 2 + eyeX, by - 4 + eyeY, visorCol);
+        SetPixel(hdc, cx + 1 + eyeX, by - 4 + eyeY, visorCol);
+        SetPixel(hdc, cx + 2 + eyeX, by - 4 + eyeY, visorCol);
+    }
+
+    // Off-hand lantern
+    int lanX = (facing == 3) ? (cx + 8) : (cx - 8);
+    int lanY = by + 2;
+    // Chain
+    HPEN chainPen = CreatePen(PS_SOLID, 1, RGB(148, 163, 184));
+    SelectObject(hdc, chainPen);
+    MoveToEx(hdc, cx - 5, by + 1, NULL);
+    LineTo(hdc, lanX, lanY - 3);
+    SelectObject(hdc, nullPen);
+    DeleteObject(chainPen);
+
+    // Lantern iron frame & amber fire
+    RECT lanRect = {lanX - 3, lanY - 3, lanX + 3, lanY + 4};
+    HBRUSH lanIron = CreateSolidBrush(RGB(69, 26, 3));
+    FillRect(hdc, &lanRect, lanIron);
+    DeleteObject(lanIron);
+
+    RECT fireRect = {lanX - 2, lanY - 2, lanX + 2, lanY + 3};
+    HBRUSH lanFire = CreateSolidBrush(RGB(245, 158, 11));
+    FillRect(hdc, &fireRect, lanFire);
+    DeleteObject(lanFire);
+
+    SetPixel(hdc, lanX - 1, lanY - 1, RGB(254, 240, 138));
+    SetPixel(hdc, lanX, lanY - 1, RGB(254, 240, 138));
+
+    // Main-hand Runic Sword
+    int bladeX = (facing == 3) ? (cx - 9) : (cx + 7);
+    int bladeY = by - 1;
+    HPEN bladePen = CreatePen(PS_SOLID, 1, RGB(203, 213, 225));
+    SelectObject(hdc, bladePen);
+    MoveToEx(hdc, bladeX, bladeY + 5, NULL);
+    LineTo(hdc, bladeX + (facing == 3 ? -2 : 2), bladeY - 6);
+    SelectObject(hdc, nullPen);
+    DeleteObject(bladePen);
+
+    SetPixel(hdc, bladeX, bladeY - 1, RGB(56, 189, 248));
+    SetPixel(hdc, bladeX, bladeY - 2, RGB(56, 189, 248));
+
+    // Crossguard
+    HPEN guardPen = CreatePen(PS_SOLID, 1, RGB(217, 119, 6));
+    SelectObject(hdc, guardPen);
+    MoveToEx(hdc, bladeX - 2, bladeY + 3, NULL);
+    LineTo(hdc, bladeX + 2, bladeY + 3);
+    SelectObject(hdc, nullPen);
+    DeleteObject(guardPen);
+
+    // Prismatic Shield Halo if Ward active
+    if (hasShield) {
+        HPEN shieldPen = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
+        SelectObject(hdc, shieldPen);
+        int shRad = 15 + (int)(sinf((float)frame * 0.2f) * 2.0f);
+        Ellipse(hdc, cx - shRad, cy - shRad, cx + shRad, cy + shRad);
+        SelectObject(hdc, nullPen);
+        DeleteObject(shieldPen);
+    }
+
+    SelectObject(hdc, oldP);
+    SelectObject(hdc, oldB);
+    DeleteObject(shadowBr);
+}
+
+static void DrawMonsterSprite(HDC hdc, int x, int y, int type, int frame, int state, int freeze) {
+    int cx = x + 16;
+    int cy = y + 16;
+
+    // Floor shadow
+    HBRUSH shadowBr = CreateSolidBrush(RGB(0, 0, 0));
+    HBRUSH oldB = (HBRUSH)SelectObject(hdc, shadowBr);
+    HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
+    HPEN oldP = (HPEN)SelectObject(hdc, nullPen);
+    Ellipse(hdc, cx - 7, cy + 9, cx + 7, cy + 13);
+
+    if (type == MONSTER_SKELETON) {
+        int clatter = (int)(sinf((float)frame * 0.35f + (float)x) * 1.0f);
+        int sy = cy + clatter;
+
+        // Bleached skull
+        HBRUSH skullBr = CreateSolidBrush(RGB(226, 232, 240));
+        SelectObject(hdc, skullBr);
+        Ellipse(hdc, cx - 5, sy - 9, cx + 5, sy + 1);
+        RECT jawR = {cx - 3, sy - 1, cx + 3, sy + 3};
+        FillRect(hdc, &jawR, skullBr);
+        DeleteObject(skullBr);
+
+        // Dark eye sockets & red eye glints
+        HBRUSH eyeBr = CreateSolidBrush(RGB(15, 23, 42));
+        RECT eL = {cx - 4, sy - 6, cx - 1, sy - 3};
+        RECT eR = {cx + 1, sy - 6, cx + 4, sy - 3};
+        FillRect(hdc, &eL, eyeBr);
+        FillRect(hdc, &eR, eyeBr);
+        DeleteObject(eyeBr);
+
+        SetPixel(hdc, cx - 3, sy - 5, RGB(239, 68, 68));
+        SetPixel(hdc, cx + 2, sy - 5, RGB(239, 68, 68));
+
+        // Spine & ribs
+        HPEN ribPen = CreatePen(PS_SOLID, 1, RGB(203, 213, 225));
+        SelectObject(hdc, ribPen);
+        MoveToEx(hdc, cx, sy + 2, NULL); LineTo(hdc, cx, sy + 9);
+        MoveToEx(hdc, cx - 4, sy + 4, NULL); LineTo(hdc, cx + 5, sy + 4);
+        MoveToEx(hdc, cx - 3, sy + 7, NULL); LineTo(hdc, cx + 4, sy + 7);
+        SelectObject(hdc, nullPen);
+        DeleteObject(ribPen);
+
+        // Tarnished blade
+        HPEN bladePen = CreatePen(PS_SOLID, 1, RGB(148, 163, 184));
+        SelectObject(hdc, bladePen);
+        MoveToEx(hdc, cx + 5, sy + 7, NULL); LineTo(hdc, cx + 9, sy - 4);
+        SelectObject(hdc, nullPen);
+        DeleteObject(bladePen);
+
+    } else if (type == MONSTER_GHOUL) {
+        int breathe = (int)(sinf((float)frame * 0.25f + (float)y) * 1.5f);
+        int gy = cy + breathe;
+
+        // Hunched mire-beast body
+        HBRUSH ghoulBr = CreateSolidBrush(RGB(15, 118, 110));
+        SelectObject(hdc, ghoulBr);
+        Ellipse(hdc, cx - 7, gy - 2, cx + 6, gy + 8);
+        DeleteObject(ghoulBr);
+
+        // Dorsal teal spines
+        HPEN spinePen = CreatePen(PS_SOLID, 1, RGB(45, 212, 191));
+        SelectObject(hdc, spinePen);
+        MoveToEx(hdc, cx - 4, gy - 2, NULL); LineTo(hdc, cx - 2, gy - 5); LineTo(hdc, cx, gy - 2);
+        MoveToEx(hdc, cx, gy - 2, NULL); LineTo(hdc, cx + 2, gy - 5); LineTo(hdc, cx + 4, gy - 2);
+        SelectObject(hdc, nullPen);
+        DeleteObject(spinePen);
+
+        // Ghoul head & jaws
+        HBRUSH headBr = CreateSolidBrush(RGB(17, 94, 89));
+        SelectObject(hdc, headBr);
+        Ellipse(hdc, cx + 2, gy - 5, cx + 9, gy + 3);
+        DeleteObject(headBr);
+
+        // Glowing predatory eye
+        SetPixel(hdc, cx + 5, gy - 3, RGB(250, 204, 21));
+        SetPixel(hdc, cx + 6, gy - 3, RGB(4, 47, 46));
+
+        // Sharp claws
+        HPEN clawPen = CreatePen(PS_SOLID, 1, RGB(4, 47, 46));
+        SelectObject(hdc, clawPen);
+        MoveToEx(hdc, cx + 2, gy + 5, NULL); LineTo(hdc, cx + 6, gy + 9);
+        MoveToEx(hdc, cx - 3, gy + 5, NULL); LineTo(hdc, cx - 1, gy + 9);
+        SelectObject(hdc, nullPen);
+        DeleteObject(clawPen);
+
+    } else if (type == MONSTER_WRAITH) {
+        int floatY = (int)(sinf((float)frame * 0.2f + (float)x) * 3.0f);
+        int wy = cy + floatY;
+
+        // Tattered purple cowl
+        HBRUSH wraithBr = CreateSolidBrush(RGB(107, 33, 168));
+        SelectObject(hdc, wraithBr);
+        Ellipse(hdc, cx - 6, wy - 8, cx + 6, wy + 4);
+        RECT tailR = {cx - 5, wy, cx + 5, wy + 6};
+        FillRect(hdc, &tailR, wraithBr);
+        DeleteObject(wraithBr);
+
+        // Void face hollow
+        HBRUSH voidBr = CreateSolidBrush(RGB(5, 2, 10));
+        SelectObject(hdc, voidBr);
+        Ellipse(hdc, cx - 4, wy - 5, cx + 4, wy + 1);
+        DeleteObject(voidBr);
+
+        // Amethyst phantom eyes
+        SetPixel(hdc, cx - 2, wy - 3, RGB(233, 213, 255));
+        SetPixel(hdc, cx + 1, wy - 3, RGB(233, 213, 255));
+
+        // Spectral wisps
+        HPEN wispPen = CreatePen(PS_SOLID, 1, RGB(147, 51, 234));
+        SelectObject(hdc, wispPen);
+        int w1 = (int)(sinf((float)frame * 0.3f) * 2.0f);
+        int w2 = (int)(cosf((float)frame * 0.25f) * 2.0f);
+        MoveToEx(hdc, cx - 3, wy + 6, NULL); LineTo(hdc, cx - 3 + w1, wy + 11);
+        MoveToEx(hdc, cx + 1, wy + 6, NULL); LineTo(hdc, cx + 1 + w2, wy + 11);
+        SelectObject(hdc, nullPen);
+        DeleteObject(wispPen);
+
+    } else if (type == MONSTER_ACOLYTE) {
+        int chant = (int)(sinf((float)frame * 0.25f + (float)y) * 1.0f);
+        int ay = cy + chant;
+
+        // Dark cultist robe
+        HBRUSH robeBr = CreateSolidBrush(RGB(41, 37, 36));
+        SelectObject(hdc, robeBr);
+        POINT robePts[4] = {
+            {cx - 6, ay + 9},
+            {cx - 7, ay - 2},
+            {cx + 7, ay - 2},
+            {cx + 6, ay + 9}
+        };
+        Polygon(hdc, robePts, 4);
+        DeleteObject(robeBr);
+
+        // Pointed hood
+        HBRUSH hoodBr = CreateSolidBrush(RGB(28, 25, 23));
+        SelectObject(hdc, hoodBr);
+        POINT hoodPts[3] = {
+            {cx, ay - 9},
+            {cx + 6, ay - 1},
+            {cx - 6, ay - 1}
+        };
+        Polygon(hdc, hoodPts, 3);
+        DeleteObject(hoodBr);
+
+        // Golden eyes in hood shadow
+        SetPixel(hdc, cx - 2, ay - 3, RGB(253, 224, 71));
+        SetPixel(hdc, cx + 1, ay - 3, RGB(253, 224, 71));
+
+        // Ashwood Staff & glowing orb
+        int staffX = cx + 8;
+        HPEN staffPen = CreatePen(PS_SOLID, 1, RGB(120, 53, 15));
+        SelectObject(hdc, staffPen);
+        MoveToEx(hdc, staffX, ay + 9, NULL); LineTo(hdc, staffX, ay - 7);
+        SelectObject(hdc, nullPen);
+        DeleteObject(staffPen);
+
+        HBRUSH orbBr = CreateSolidBrush(RGB(245, 158, 11));
+        SelectObject(hdc, orbBr);
+        Ellipse(hdc, staffX - 3, ay - 10, staffX + 3, ay - 4);
+        DeleteObject(orbBr);
+
+    } else if (type == MONSTER_LEVIATHAN) {
+        int bossPulse = (int)(sinf((float)frame * 0.15f) * 1.5f);
+        int by = cy + bossPulse;
+
+        // Obsidian skull & carapace
+        HBRUSH carBr = CreateSolidBrush(RGB(24, 24, 27));
+        SelectObject(hdc, carBr);
+        HPEN carPen = CreatePen(PS_SOLID, 1, RGB(88, 28, 135));
+        SelectObject(hdc, carPen);
+        Ellipse(hdc, cx - 10, by - 8, cx + 10, by + 8);
+        SelectObject(hdc, nullPen);
+        DeleteObject(carPen);
+        DeleteObject(carBr);
+
+        // Horns
+        HPEN hornPen = CreatePen(PS_SOLID, 2, RGB(127, 29, 29));
+        SelectObject(hdc, hornPen);
+        MoveToEx(hdc, cx - 6, by - 4, NULL); LineTo(hdc, cx - 9, by - 12);
+        MoveToEx(hdc, cx + 6, by - 4, NULL); LineTo(hdc, cx + 9, by - 12);
+        SelectObject(hdc, nullPen);
+        DeleteObject(hornPen);
+
+        // Cluster of crimson eyes
+        COLORREF redEye = RGB(239, 68, 68);
+        SetPixel(hdc, cx - 4, by - 3, redEye);
+        SetPixel(hdc, cx + 3, by - 3, redEye);
+        SetPixel(hdc, cx - 2, by - 1, redEye);
+        SetPixel(hdc, cx + 1, by - 1, redEye);
+
+        // Fangs
+        HPEN fangPen = CreatePen(PS_SOLID, 1, RGB(248, 250, 252));
+        SelectObject(hdc, fangPen);
+        MoveToEx(hdc, cx - 3, by + 3, NULL); LineTo(hdc, cx - 3, by + 5);
+        MoveToEx(hdc, cx, by + 3, NULL); LineTo(hdc, cx, by + 5);
+        MoveToEx(hdc, cx + 3, by + 3, NULL); LineTo(hdc, cx + 3, by + 5);
+        SelectObject(hdc, nullPen);
+        DeleteObject(fangPen);
+    }
+
+    SelectObject(hdc, oldP);
+    SelectObject(hdc, oldB);
+    DeleteObject(shadowBr);
+}
+
+static void DrawTileSprite(HDC hdc, int x, int y, int tile, BOOL isVisible, int frame, const ZoneTheme* zt) {
+    int cx = x + 16;
+    int cy = y + 16;
+
+    if (tile == TILE_CHEST) {
+        // Oak chest body
+        RECT cR = {x + 5, y + 8, x + 27, y + 24};
+        HBRUSH woodBr = CreateSolidBrush(isVisible ? RGB(69, 26, 3) : RGB(30, 17, 8));
+        FillRect(hdc, &cR, woodBr);
+        DeleteObject(woodBr);
+
+        // Iron bands
+        HBRUSH ironBr = CreateSolidBrush(isVisible ? RGB(30, 41, 59) : RGB(15, 23, 42));
+        RECT iL = {x + 5, y + 8, x + 9, y + 24};
+        RECT iR = {x + 23, y + 8, x + 27, y + 24};
+        RECT iM = {x + 13, y + 8, x + 19, y + 24};
+        FillRect(hdc, &iL, ironBr);
+        FillRect(hdc, &iR, ironBr);
+        FillRect(hdc, &iM, ironBr);
+        DeleteObject(ironBr);
+
+        // Brass lock plate & keyhole
+        HBRUSH goldBr = CreateSolidBrush(isVisible ? RGB(251, 191, 36) : RGB(120, 53, 15));
+        RECT gR = {x + 14, y + 12, x + 18, y + 18};
+        FillRect(hdc, &gR, goldBr);
+        DeleteObject(goldBr);
+
+        SetPixel(hdc, x + 15, y + 14, RGB(28, 25, 23));
+        SetPixel(hdc, x + 16, y + 14, RGB(28, 25, 23));
+
+    } else if (tile == TILE_ALTAR) {
+        // Obsidian stepped plinth
+        RECT bR1 = {x + 3, y + 6, x + 29, y + 26};
+        HBRUSH baseBr = CreateSolidBrush(isVisible ? RGB(28, 25, 23) : RGB(12, 10, 9));
+        FillRect(hdc, &bR1, baseBr);
+        DeleteObject(baseBr);
+
+        RECT bR2 = {x + 5, y + 4, x + 27, y + 20};
+        HBRUSH topBr = CreateSolidBrush(isVisible ? RGB(46, 16, 23) : RGB(20, 6, 10));
+        FillRect(hdc, &bR2, topBr);
+        DeleteObject(topBr);
+
+        // Crimson runes
+        HPEN runePen = CreatePen(PS_SOLID, 1, isVisible ? RGB(239, 68, 68) : RGB(127, 29, 29));
+        HPEN oldP = (HPEN)SelectObject(hdc, runePen);
+        MoveToEx(hdc, cx - 4, cy - 3, NULL); LineTo(hdc, cx, cy - 7); LineTo(hdc, cx + 4, cy - 3);
+        MoveToEx(hdc, cx, cy - 7, NULL); LineTo(hdc, cx, cy);
+        SelectObject(hdc, oldP);
+        DeleteObject(runePen);
+
+        // Corner candles
+        if (isVisible) {
+            SetPixel(hdc, x + 5, y + 2, RGB(249, 115, 22));
+            SetPixel(hdc, x + 26, y + 2, RGB(249, 115, 22));
+        }
+
+    } else if (tile == TILE_CAULDRON) {
+        HBRUSH ironBr = CreateSolidBrush(isVisible ? RGB(30, 41, 59) : RGB(15, 23, 42));
+        HBRUSH oldB = (HBRUSH)SelectObject(hdc, ironBr);
+        HPEN nullP = (HPEN)GetStockObject(NULL_PEN);
+        HPEN oldP = (HPEN)SelectObject(hdc, nullP);
+
+        // Pot body
+        Ellipse(hdc, cx - 8, cy - 4, cx + 8, cy + 10);
+
+        // Emerald potion surface
+        HBRUSH brewBr = CreateSolidBrush(isVisible ? RGB(5, 150, 105) : RGB(2, 44, 34));
+        SelectObject(hdc, brewBr);
+        Ellipse(hdc, cx - 6, cy - 5, cx + 6, cy - 1);
+        DeleteObject(brewBr);
+
+        // Animated bubble
+        if (isVisible) {
+            int bPhase = (frame * 2) % 10;
+            SetPixel(hdc, cx - 2, cy - 3 - bPhase / 2, RGB(52, 211, 153));
+        }
+
+        SelectObject(hdc, oldP);
+        SelectObject(hdc, oldB);
+        DeleteObject(ironBr);
+
+    } else if (tile == TILE_DOOR_CLOSED) {
+        // Oak door planks
+        RECT dR = {x + 4, y + 2, x + 28, y + 30};
+        HBRUSH doorBr = CreateSolidBrush(isVisible ? RGB(120, 53, 15) : RGB(41, 27, 11));
+        FillRect(hdc, &dR, doorBr);
+        DeleteObject(doorBr);
+
+        // Plank divisions
+        HPEN divPen = CreatePen(PS_SOLID, 1, isVisible ? RGB(69, 26, 3) : RGB(24, 15, 6));
+        HPEN oldP = (HPEN)SelectObject(hdc, divPen);
+        MoveToEx(hdc, x + 12, y + 2, NULL); LineTo(hdc, x + 12, y + 30);
+        MoveToEx(hdc, x + 20, y + 2, NULL); LineTo(hdc, x + 20, y + 30);
+
+        // Iron crossbars
+        HBRUSH barBr = CreateSolidBrush(isVisible ? RGB(30, 41, 59) : RGB(15, 23, 42));
+        RECT bar1 = {x + 4, y + 6, x + 28, y + 9};
+        RECT bar2 = {x + 4, y + 22, x + 28, y + 25};
+        FillRect(hdc, &bar1, barBr);
+        FillRect(hdc, &bar2, barBr);
+        DeleteObject(barBr);
+
+        // Iron ring handle
+        SelectObject(hdc, (HPEN)GetStockObject(NULL_PEN));
+        HBRUSH ringBr = CreateSolidBrush(isVisible ? RGB(203, 213, 225) : RGB(71, 85, 105));
+        HBRUSH oldB = (HBRUSH)SelectObject(hdc, ringBr);
+        Ellipse(hdc, x + 20, y + 13, x + 25, y + 18);
+        SelectObject(hdc, oldB);
+        DeleteObject(ringBr);
+
+        SelectObject(hdc, oldP);
+        DeleteObject(divPen);
+
+    } else if (tile == TILE_DOOR_OPEN) {
+        RECT dR = {x + 4, y + 2, x + 28, y + 30};
+        HBRUSH bgBr = CreateSolidBrush(isVisible ? RGB(15, 23, 42) : RGB(7, 10, 18));
+        FillRect(hdc, &dR, bgBr);
+        DeleteObject(bgBr);
+
+        // Open door leaf on side
+        RECT leafR = {x + 4, y + 2, x + 9, y + 30};
+        HBRUSH leafBr = CreateSolidBrush(isVisible ? RGB(69, 26, 3) : RGB(24, 15, 6));
+        FillRect(hdc, &leafR, leafBr);
+        DeleteObject(leafBr);
+
+        HPEN framePen = CreatePen(PS_SOLID, 1, isVisible ? RGB(51, 65, 85) : RGB(30, 41, 59));
+        HPEN oldP = (HPEN)SelectObject(hdc, framePen);
+        MoveToEx(hdc, x + 3, y + 2, NULL); LineTo(hdc, x + 29, y + 2);
+        MoveToEx(hdc, x + 29, y + 2, NULL); LineTo(hdc, x + 29, y + 30);
+        SelectObject(hdc, oldP);
+        DeleteObject(framePen);
+
+    } else if (tile == TILE_STAIRS_DOWN) {
+        RECT sR = {x + 3, y + 3, x + 29, y + 29};
+        HBRUSH bgBr = CreateSolidBrush(RGB(3, 5, 8));
+        FillRect(hdc, &sR, bgBr);
+        DeleteObject(bgBr);
+
+        for (int s = 0; s < 4; s++) {
+            int sy = y + 4 + s * 6;
+            RECT stepR = {x + 4 + s * 2, sy, x + 28 - s * 2, sy + 5};
+            int val = isVisible ? (60 - s * 14) : (35 - s * 8);
+            if (val < 0) val = 0;
+            HBRUSH stepBr = CreateSolidBrush(RGB(val, val + 5, val + 15));
+            FillRect(hdc, &stepR, stepBr);
+            DeleteObject(stepBr);
+        }
+
+        // Descending purple marker
+        HPEN mPen = CreatePen(PS_SOLID, 1, isVisible ? RGB(168, 85, 247) : RGB(88, 28, 135));
+        HPEN oldP = (HPEN)SelectObject(hdc, mPen);
+        MoveToEx(hdc, cx - 4, cy, NULL); LineTo(hdc, cx, cy + 4); LineTo(hdc, cx + 4, cy);
+        SelectObject(hdc, oldP);
+        DeleteObject(mPen);
+
+    } else if (tile == TILE_STAIRS_UP) {
+        RECT sR = {x + 3, y + 3, x + 29, y + 29};
+        HBRUSH bgBr = CreateSolidBrush(RGB(3, 5, 8));
+        FillRect(hdc, &sR, bgBr);
+        DeleteObject(bgBr);
+
+        for (int s = 0; s < 4; s++) {
+            int sy = y + 22 - s * 6;
+            RECT stepR = {x + 4 + (3 - s) * 2, sy, x + 28 - (3 - s) * 2, sy + 5};
+            int val = isVisible ? (20 + s * 15) : (10 + s * 8);
+            HBRUSH stepBr = CreateSolidBrush(RGB(val, val + 15, val + 35));
+            FillRect(hdc, &stepR, stepBr);
+            DeleteObject(stepBr);
+        }
+
+        // Ascending cyan marker
+        HPEN mPen = CreatePen(PS_SOLID, 1, isVisible ? RGB(56, 189, 248) : RGB(2, 132, 199));
+        HPEN oldP = (HPEN)SelectObject(hdc, mPen);
+        MoveToEx(hdc, cx - 4, cy, NULL); LineTo(hdc, cx, cy - 4); LineTo(hdc, cx + 4, cy);
+        SelectObject(hdc, oldP);
+        DeleteObject(mPen);
+
+    } else if (tile == TILE_PILLAR) {
+        RECT colR = {x + 6, y + 2, x + 26, y + 30};
+        HBRUSH colBr = CreateSolidBrush(isVisible ? RGB(30, 41, 59) : RGB(10, 15, 24));
+        FillRect(hdc, &colR, colBr);
+        DeleteObject(colBr);
+
+        HBRUSH capBr = CreateSolidBrush(isVisible ? RGB(71, 85, 105) : RGB(30, 41, 59));
+        RECT c1 = {x + 4, y + 2, x + 28, y + 5};
+        RECT c2 = {x + 4, y + 27, x + 28, y + 30};
+        FillRect(hdc, &c1, capBr);
+        FillRect(hdc, &c2, capBr);
+        DeleteObject(capBr);
+
+        // Gem in pillar
+        HBRUSH gemBr = CreateSolidBrush(isVisible ? zt->torchColor : RGB(49, 46, 129));
+        HBRUSH oldB = (HBRUSH)SelectObject(hdc, gemBr);
+        HPEN nullP = (HPEN)GetStockObject(NULL_PEN);
+        HPEN oldP = (HPEN)SelectObject(hdc, nullP);
+        Ellipse(hdc, cx - 3, cy - 3, cx + 3, cy + 3);
+        SelectObject(hdc, oldP);
+        SelectObject(hdc, oldB);
+        DeleteObject(gemBr);
+    }
+}
+
+static void DrawTorchSconce(HDC hdc, int x, int y, int frame, const ZoneTheme* zt) {
+    int cx = x + 16;
+    int cy = y + 16;
+
+    // Iron bracket
+    RECT bR = {cx - 2, cy - 2, cx + 2, cy + 8};
+    HBRUSH bBr = CreateSolidBrush(RGB(51, 65, 85));
+    FillRect(hdc, &bR, bBr);
+    DeleteObject(bBr);
+
+    // Wood head
+    RECT wR = {cx - 2, cy - 6, cx + 2, cy - 2};
+    HBRUSH wBr = CreateSolidBrush(RGB(120, 53, 15));
+    FillRect(hdc, &wR, wBr);
+    DeleteObject(wBr);
+
+    // Animated flame shape
+    int fOff = (int)(sinf((float)frame * 0.4f + (float)x) * 1.5f);
+    HBRUSH flameBr = CreateSolidBrush(RGB(249, 115, 22));
+    HBRUSH oldB = (HBRUSH)SelectObject(hdc, flameBr);
+    HPEN nullP = (HPEN)GetStockObject(NULL_PEN);
+    HPEN oldP = (HPEN)SelectObject(hdc, nullP);
+
+    POINT flamePts[4] = {
+        {cx - 3, cy - 5},
+        {cx + fOff, cy - 12},
+        {cx + 3, cy - 5},
+        {cx, cy - 3}
+    };
+    Polygon(hdc, flamePts, 4);
+    DeleteObject(flameBr);
+
+    // Inner bright spark
+    SetPixel(hdc, cx, cy - 7, RGB(253, 224, 71));
+    SetPixel(hdc, cx + (fOff > 0 ? 1 : 0), cy - 8, RGB(254, 240, 138));
+
+    SelectObject(hdc, oldP);
+    SelectObject(hdc, oldB);
+}
+
 // Rendering
 void RenderGame(HDC hdc, HWND hwnd) {
     RECT clientRect;
@@ -2605,44 +3185,10 @@ void RenderGame(HDC hdc, HWND hwnd) {
                     SetPixel(memDC, scrX + 14, scrY + 14, RGB(168, 85, 247));
                     SetPixel(memDC, scrX + 15, scrY + 14, RGB(168, 85, 247));
                 }
-            } else if (tile == TILE_ALTAR) {
-                SelectObject(memDC, fontBold);
-                SetTextColor(memDC, isVisible ? COLOR_ACCENT_RED : RGB(140, 20, 20));
-                TextOutA(memDC, scrX + 7, scrY + 8, "[+]", 3);
-            } else if (tile == TILE_CAULDRON) {
-                SelectObject(memDC, fontBold);
-                SetTextColor(memDC, isVisible ? RGB(52, 211, 153) : RGB(16, 120, 80));
-                TextOutA(memDC, scrX + 7, scrY + 8, "{U}", 3);
-            } else if (tile == TILE_PILLAR) {
-                HBRUSH pBr = CreateSolidBrush(isVisible ? zt->torchColor : RGB(49, 46, 129));
-                HBRUSH oldP = (HBRUSH)SelectObject(memDC, pBr);
-                Ellipse(memDC, scrX + 6, scrY + 6, scrX + TILE_SIZE - 6, scrY + TILE_SIZE - 6);
-                SelectObject(memDC, oldP);
-                DeleteObject(pBr);
-            } else if (tile == TILE_RUBBLE) {
-                SelectObject(memDC, fontSmall);
-                SetTextColor(memDC, isVisible ? RGB(148, 163, 184) : RGB(51, 65, 85));
-                TextOutA(memDC, scrX + 11, scrY + 8, "::", 2);
-            } else if (tile == TILE_STAIRS_DOWN) {
-                SelectObject(memDC, fontBold);
-                SetTextColor(memDC, isVisible ? COLOR_ACCENT_PURPLE : RGB(76, 29, 149));
-                TextOutA(memDC, scrX + 10, scrY + 8, "v", 1);
-            } else if (tile == TILE_STAIRS_UP) {
-                SelectObject(memDC, fontBold);
-                SetTextColor(memDC, isVisible ? COLOR_BORDER_GLOW : RGB(3, 105, 161));
-                TextOutA(memDC, scrX + 10, scrY + 8, "^", 1);
-            } else if (tile == TILE_CHEST) {
-                SelectObject(memDC, fontBold);
-                SetTextColor(memDC, isVisible ? COLOR_TEXT_GOLD : RGB(120, 53, 15));
-                TextOutA(memDC, scrX + 9, scrY + 8, "[$]", 3);
-            } else if (tile == TILE_DOOR_CLOSED) {
-                SelectObject(memDC, fontBold);
-                SetTextColor(memDC, isVisible ? COLOR_TEXT_GOLD : RGB(120, 53, 15));
-                TextOutA(memDC, scrX + 10, scrY + 8, "+", 1);
-            } else if (tile == TILE_DOOR_OPEN) {
-                SelectObject(memDC, fontBold);
-                SetTextColor(memDC, COLOR_TEXT_DIM);
-                TextOutA(memDC, scrX + 10, scrY + 8, "/", 1);
+            } else if (tile == TILE_ALTAR || tile == TILE_CAULDRON || tile == TILE_PILLAR ||
+                       tile == TILE_DOOR_CLOSED || tile == TILE_DOOR_OPEN ||
+                       tile == TILE_STAIRS_DOWN || tile == TILE_STAIRS_UP || tile == TILE_CHEST) {
+                DrawTileSprite(memDC, scrX, scrY, tile, isVisible, g_frameCount, zt);
             }
 
             // Memory fog overlay for explored but not currently visible
@@ -2675,9 +3221,8 @@ void RenderGame(HDC hdc, HWND hwnd) {
             SelectObject(memDC, oldSc);
             DeleteObject(sconceHalo);
 
-            SelectObject(memDC, fontBold);
-            SetTextColor(memDC, zt->torchColor);
-            TextOutA(memDC, scrX + 10, scrY + 7, "*", 1);
+            // Sconce Iron Bracket & Animated Flame
+            DrawTorchSconce(memDC, scrX, scrY, g_frameCount, zt);
 
             if (RandInt(0, 10) < 2) {
                 SpawnEmber((float)(scrX + 16), (float)(scrY + 12), TRUE);
@@ -2701,20 +3246,8 @@ void RenderGame(HDC hdc, HWND hwnd) {
 
         const MonsterDef* mdef = &g_monsterDefs[g_monsters[m].type];
 
-        // Monster base avatar
-        HBRUSH mBgBr = CreateSolidBrush(RGB(20, 10, 18));
-        HBRUSH oldMB = (HBRUSH)SelectObject(memDC, mBgBr);
-        HPEN mPen = CreatePen(PS_SOLID, 1, mdef->color);
-        HPEN oldMP = (HPEN)SelectObject(memDC, mPen);
-        Ellipse(memDC, mScrX + 4, mScrY + 4, mScrX + TILE_SIZE - 4, mScrY + TILE_SIZE - 4);
-        SelectObject(memDC, oldMP);
-        DeleteObject(mPen);
-        SelectObject(memDC, oldMB);
-        DeleteObject(mBgBr);
-
-        // Monster glyph
-        SetTextColor(memDC, mdef->color);
-        TextOutA(memDC, mScrX + 11, mScrY + 7, mdef->symbol, (int)strlen(mdef->symbol));
+        // Monster Custom Sprite & Animations
+        DrawMonsterSprite(memDC, mScrX, mScrY, g_monsters[m].type, g_frameCount, g_monsters[m].state, g_monsters[m].freezeTurns);
 
         // Mini HP Bar
         int barW = TILE_SIZE - 8;
@@ -2775,44 +3308,8 @@ void RenderGame(HDC hdc, HWND hwnd) {
         SelectObject(memDC, oldIH);
         DeleteObject(innerHalo);
 
-        // Delver Body Avatar
-        HBRUSH bodyBr = CreateSolidBrush(RGB(8, 47, 73));
-        HBRUSH oldB = (HBRUSH)SelectObject(memDC, bodyBr);
-        HPEN bodyPen = CreatePen(PS_SOLID, 2, COLOR_BORDER_GLOW);
-        HPEN oldBP = (HPEN)SelectObject(memDC, bodyPen);
-        Ellipse(memDC, plScrX + 5, plScrY + 5, plScrX + TILE_SIZE - 5, plScrY + TILE_SIZE - 5);
-        SelectObject(memDC, oldBP);
-        DeleteObject(bodyPen);
-        SelectObject(memDC, oldB);
-        DeleteObject(bodyBr);
-
-        // Player Symbol
-        SelectObject(memDC, fontBold);
-        SetTextColor(memDC, COLOR_TEXT_BRIGHT);
-        TextOutA(memDC, plScrX + 11, plScrY + 7, "@", 1);
-
-        // Facing pointer
-        int fx = plScrX + 16;
-        int fy = plScrY + 16;
-        if (g_player.facing == 0) fy -= 10;
-        else if (g_player.facing == 2) fy += 10;
-        else if (g_player.facing == 3) fx -= 10;
-        else if (g_player.facing == 1) fx += 10;
-        SetPixel(memDC, fx, fy, RGB(255, 255, 255));
-        SetPixel(memDC, fx + 1, fy, RGB(255, 255, 255));
-        SetPixel(memDC, fx, fy + 1, RGB(255, 255, 255));
-
-        // Prismatic Shield Halo if Ward active
-        if (g_player.shield > 0) {
-            HPEN shieldPen = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
-            HPEN oldSP = (HPEN)SelectObject(memDC, shieldPen);
-            HBRUSH oldSB = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
-            int shRad = 15 + (int)(sinf((float)g_frameCount * 0.2f) * 2.0f);
-            Ellipse(memDC, plScrX + 16 - shRad, plScrY + 16 - shRad, plScrX + 16 + shRad, plScrY + 16 + shRad);
-            SelectObject(memDC, oldSB);
-            SelectObject(memDC, oldSP);
-            DeleteObject(shieldPen);
-        }
+        // Delver Custom Sprite with Cloak, Cowl, Lantern & Blade
+        DrawDelverSprite(memDC, plScrX, plScrY, g_player.facing, g_frameCount, g_player.shield > 0);
 
         if (RandInt(0, 10) < 3) {
             SpawnEmber((float)(plScrX + 16), (float)(plScrY + 14), TRUE);
