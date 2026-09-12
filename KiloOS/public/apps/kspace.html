@@ -231,7 +231,15 @@ window.addEventListener('load', () => {
     if (!container) return;
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.textContent = msg;
+    toast.innerHTML = `<span>${msg}</span><span style="margin-left:6px;opacity:0.6;font-size:9px;">[✕]</span>`;
+    toast.style.pointerEvents = 'auto';
+    toast.style.cursor = 'pointer';
+    toast.title = 'Click to dismiss';
+    toast.onclick = (e) => {
+      e.stopPropagation();
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 200);
+    };
     container.appendChild(toast);
     requestAnimationFrame(() => toast.classList.add('show'));
     setTimeout(() => {
@@ -841,12 +849,16 @@ window.addEventListener('load', () => {
 
   function useHyperJump() {
     if (gameState !== STATE_PLAYING) return;
-    if (hyperJumpEnergy < 100 && hyperJumpTimer <= 0) return;
+    if (hyperJumpEnergy < 100 && hyperJumpTimer <= 0) {
+      showToast(`Warp Drive charging: ${hyperJumpEnergy}%`, 'warning', 1500);
+      return;
+    }
     hyperJumpEnergy = 0;
     hyperJumpTimer = 90; // 1.5 seconds hyper-warp
     invincibleTimer = 90;
     screenShake = 18;
     playSound(7);
+    showToast('🚀 HYPER-JUMP WARP ENGAGED!', 'info', 1800);
     addShockwave(p.x + 10, p.y + 10, 80, '#00e5ff');
     addExplosion(p.x + 10, p.y + 10, 35, '#00e5ff');
 
@@ -884,17 +896,24 @@ window.addEventListener('load', () => {
       let dIdx = droneCount - 1;
       drones.push({ x: p.x + (dIdx === 0 ? -22 : 22), y: p.y + 6, shootTimer: dIdx * 7 });
       playSound(2);
+      showToast(`🛸 Support Drone Deployed! (${droneCount}/2)`, 'success', 1800);
       addExplosion(p.x + (dIdx === 0 ? -22 : 22), p.y + 6, 15, '#00e5ff');
+    } else {
+      showToast('Maximum drones deployed (2/2)', 'warning', 1500);
     }
   }
 
   function useOvercharge() {
     if (gameState !== STATE_PLAYING) return;
-    if (overchargeEnergy < 100 && overchargeTimer <= 0) return;
+    if (overchargeEnergy < 100 && overchargeTimer <= 0) {
+      showToast(`Overcharge charging: ${overchargeEnergy}%`, 'warning', 1500);
+      return;
+    }
     overchargeEnergy = 0;
     overchargeTimer = 480; // 8 seconds hyper-mode
     screenShake = 12;
     playSound(3);
+    showToast('⚡ OVERCHARGE HYPER-MODE ACTIVE!', 'info', 2000);
     addShockwave(p.x + 10, p.y + 10, 60, '#ffea00');
     addExplosion(p.x + 10, p.y + 10, 30, '#ffea00');
   }
@@ -902,11 +921,14 @@ window.addEventListener('load', () => {
   function useTimeStop() {
     if (gameState !== STATE_PLAYING) return;
     recordSkillInReplay('t');
-    if (timeStopCooldown <= 0 || timeStopTimer > 0) {
+    if (timeStopCooldown <= 0 && timeStopTimer <= 0) {
       timeStopTimer = 375; // 6 seconds
       timeStopCooldown = 600; // 10 seconds CD
       playSound(3);
+      showToast('⏳ CHRONO TIME STOP ENGAGED!', 'info', 1800);
       addExplosion(W / 2, H / 2, 40, '#00e5ff');
+    } else {
+      showToast(`Time Stop on cooldown (${Math.ceil(timeStopCooldown / 60)}s)`, 'warning', 1500);
     }
   }
 
@@ -920,16 +942,24 @@ window.addEventListener('load', () => {
       invincibleTimer = 125; // 2 seconds invincibility
       dashCooldown = 300; // 5 seconds CD
       playSound(2);
+      showToast('💨 Tactical Dash Burst!', 'info', 1500);
       addExplosion(p.x + 10, p.y + 10, 25, '#00e5ff');
+    } else {
+      showToast(`Dash on cooldown (${Math.ceil(dashCooldown / 60)}s)`, 'warning', 1500);
     }
   }
 
   function useSmartBomb() {
-    if (gameState !== STATE_PLAYING || p.bombs <= 0) return;
+    if (gameState !== STATE_PLAYING) return;
+    if (p.bombs <= 0) {
+      showToast('No smart bombs available!', 'warning', 1500);
+      return;
+    }
     recordSkillInReplay('b');
     p.bombs--;
     bombFlash = 15;
     playSound(4);
+    showToast(`💥 SMART BOMB DETONATED! (${p.bombs} left)`, 'info', 1800);
     addExplosion(W / 2, H / 2, 50, '#ffffff');
 
     for (let i = enemies.length - 1; i >= 0; i--) {
@@ -964,11 +994,14 @@ window.addEventListener('load', () => {
   function useHyperShield() {
     if (gameState !== STATE_PLAYING) return;
     recordSkillInReplay('s');
-    if (hyperShieldCooldown <= 0 || hyperShieldTimer === 0) {
+    if (hyperShieldCooldown <= 0 && hyperShieldTimer <= 0) {
       hyperShieldTimer = 500; // 8 seconds energy barrier
       hyperShieldCooldown = 750; // 12.5 seconds CD
       playSound(2);
+      showToast('🛡 HYPER-SHIELD ACTIVATED!', 'success', 2000);
       addExplosion(p.x + 10, p.y + 10, 25, '#ffea00');
+    } else {
+      showToast(`Shield on cooldown (${Math.ceil(hyperShieldCooldown / 60)}s)`, 'warning', 1500);
     }
   }
 
@@ -1111,6 +1144,7 @@ window.addEventListener('load', () => {
   });
 
   // Touch / Pointer controls
+  let isPointerDown = false;
   canvas.addEventListener('pointerdown', e => {
     const rect = canvas.getBoundingClientRect();
     const mx = (e.clientX - rect.left) * (W / rect.width);
@@ -1143,13 +1177,20 @@ window.addEventListener('load', () => {
         }
       }
     } else if (gameState === STATE_PAUSED) {
+      let clickedOption = false;
       for (let i = 0; i < 5; i++) {
         let btnY = 175 + i * 36;
         if (mx >= 40 && mx <= 280 && my >= btnY - 14 && my <= btnY + 14) {
           menuIndex = i;
           handlePauseSelect();
+          clickedOption = true;
           return;
         }
+      }
+      if (!clickedOption) {
+        // Clicking backdrop resumes game
+        gameState = STATE_PLAYING;
+        return;
       }
     } else if (gameState === STATE_HELP) {
       gameState = (previousState === STATE_PLAYING || previousState === STATE_PAUSED) ? STATE_PAUSED : STATE_MENU;
@@ -1167,11 +1208,14 @@ window.addEventListener('load', () => {
         gameState = STATE_HELP;
         return;
       }
+      isPointerDown = true;
+      p.x = Math.max(0, Math.min(W - 20, mx - 10));
+      p.y = Math.max(0, Math.min(H - 20, my - 10));
     }
   });
 
   canvas.addEventListener('pointermove', e => {
-    if (gameState === STATE_PLAYING && e.buttons === 1) {
+    if (gameState === STATE_PLAYING && (e.buttons === 1 || isPointerDown)) {
       const rect = canvas.getBoundingClientRect();
       const mx = (e.clientX - rect.left) * (W / rect.width);
       const my = (e.clientY - rect.top) * (H / rect.height);
@@ -1179,6 +1223,9 @@ window.addEventListener('load', () => {
       p.y = Math.max(0, Math.min(H - 20, my - 10));
     }
   });
+
+  window.addEventListener('pointerup', () => { isPointerDown = false; });
+  window.addEventListener('pointercancel', () => { isPointerDown = false; });
 
   function handleMenuSelect() {
     let saved = hasSavedGame();
@@ -1541,7 +1588,7 @@ window.addEventListener('load', () => {
         gameState = STATE_GAMEOVER;
       }
     } else {
-      let isFire = (keys[keybinds.fire] || keys['enter'] || keys['spacebar'] || keys[' ']);
+      let isFire = (keys[keybinds.fire] || keys['enter'] || keys['spacebar'] || keys[' '] || isPointerDown);
       let fireRate = (overchargeTimer > 0) ? 3 : ((rapidTimer > 0) ? 3 : 7);
       let willFire = (isFire && frameCount % fireRate === 0);
 

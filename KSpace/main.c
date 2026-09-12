@@ -229,7 +229,20 @@ DWORD WINAPI SndThread(LPVOID param) {
     return 0;
 }
 
+int soundMuted = 0;
+char toastMsg[96] = {0};
+int toastTimer = 0;
+int toastType = 0; // 0 = info (cyan), 1 = success (green), 2 = warning (red/amber)
+int mouseFiring = 0;
+
+void ShowNativeToast(const char* msg, int type, int duration) {
+    lstrcpynA(toastMsg, msg, sizeof(toastMsg));
+    toastType = type;
+    toastTimer = duration;
+}
+
 void PlaySnd(int type) {
+    if (soundMuted) return;
     HANDLE hThread = CreateThread(NULL, 0, SndThread, (LPVOID)(intptr_t)type, 0, NULL);
     if (hThread) CloseHandle(hThread);
 }
@@ -492,6 +505,7 @@ void ExportStatsCSV() {
     DWORD written;
     WriteFile(hFile, buf, lstrlenA(buf), &written, NULL);
     CloseHandle(hFile);
+    ShowNativeToast("Stats exported to kspace_stats.csv", 1, 150);
 }
 void ExportStatsJSON() {
     HANDLE hFile = CreateFileA("kspace_stats.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -502,6 +516,7 @@ void ExportStatsJSON() {
     DWORD written;
     WriteFile(hFile, buf, lstrlenA(buf), &written, NULL);
     CloseHandle(hFile);
+    ShowNativeToast("Stats exported to kspace_stats.json", 1, 150);
 }
 void ExportHighScoresJSON() {
     HANDLE hFile = CreateFileA("kspace_highscores.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -517,6 +532,7 @@ void ExportHighScoresJSON() {
     lstrcpyA(buf, "]\r\n");
     WriteFile(hFile, buf, lstrlenA(buf), &written, NULL);
     CloseHandle(hFile);
+    ShowNativeToast("High scores exported to JSON!", 1, 150);
 }
 
 void AddScoreToLeaderboard(int newScore, int newWave, int mode) {
@@ -594,6 +610,7 @@ void SaveGameState() {
         RegSetValueExA(hKey, "Data", 0, REG_BINARY, (const BYTE*)&s, sizeof(SaveState));
         RegCloseKey(hKey);
         PlaySnd(2);
+        ShowNativeToast("Game progress saved!", 1, 150);
     }
 }
 
@@ -652,10 +669,12 @@ int LoadGameState() {
             gameState = STATE_PLAYING;
             RegCloseKey(hKey);
             PlaySnd(3);
+            ShowNativeToast("Game progress loaded!", 1, 150);
             return 1;
         }
         RegCloseKey(hKey);
     }
+    ShowNativeToast("No saved game found!", 2, 150);
     return 0;
 }
 
@@ -830,11 +849,14 @@ void SpawnFormation(int type) {
 // Active Skills
 void UseTimeStop() {
     if (gameState != STATE_PLAYING) return;
-    if (timeStopCooldown <= 0 || timeStopTimer > 0) {
+    if (timeStopCooldown <= 0 && timeStopTimer <= 0) {
         timeStopTimer = 375; // 6 seconds
         timeStopCooldown = 600; // 10 seconds CD
         PlaySnd(3);
+        ShowNativeToast("CHRONO-FIELD ENGAGED!", 0, 100);
         AddExplosion(W / 2.0f, H / 2.0f, 35, RGB(0, 229, 255));
+    } else {
+        ShowNativeToast("Time Stop on cooldown!", 2, 80);
     }
 }
 
@@ -847,15 +869,23 @@ void UseTacticalDash() {
         invincibleTimer = 125; // 2 seconds
         dashCooldown = 300; // 5 seconds CD
         PlaySnd(2);
+        ShowNativeToast("Tactical Dash burst!", 0, 80);
         AddExplosion(p.x + 10.0f, p.y + 10.0f, 25, RGB(0, 176, 255));
+    } else {
+        ShowNativeToast("Dash on cooldown!", 2, 80);
     }
 }
 
 void UseSmartBomb() {
-    if (bombCount <= 0 || gameState != STATE_PLAYING) return;
+    if (gameState != STATE_PLAYING) return;
+    if (bombCount <= 0) {
+        ShowNativeToast("No smart bombs left!", 2, 80);
+        return;
+    }
     bombCount--;
     bombFlash = 15;
     PlaySnd(4);
+    ShowNativeToast("SMART BOMB DETONATED!", 0, 100);
     AddExplosion(W / 2.0f, H / 2.0f, 50, RGB(255, 255, 255));
 
     for (int i = 0; i < MAX_ENEMIES; i++) {
@@ -907,11 +937,14 @@ void UseSmartBomb() {
 
 void UseHyperShield() {
     if (gameState != STATE_PLAYING) return;
-    if (hyperShieldCooldown <= 0 || hyperShieldTimer == 0) {
+    if (hyperShieldCooldown <= 0 && hyperShieldTimer <= 0) {
         hyperShieldTimer = 500; // 8 seconds
         hyperShieldCooldown = 750; // 12.5 seconds CD
         PlaySnd(2);
+        ShowNativeToast("HYPER SHIELD ACTIVATED!", 1, 100);
         AddExplosion(p.x + 10.0f, p.y + 10.0f, 25, RGB(255, 234, 0));
+    } else {
+        ShowNativeToast("Shield on cooldown!", 2, 80);
     }
 }
 
@@ -923,9 +956,12 @@ void UseOvercharge() {
         overchargeTimer = 360; // 6 seconds hyper mode
         overchargeEnergy = 0;
         PlaySnd(7);
+        ShowNativeToast("OVERCHARGE HYPER-MODE ACTIVE!", 0, 100);
         AddShockwave(p.x + 10.0f, p.y + 10.0f, 60.0f, RGB(255, 234, 0));
         AddShockwave(p.x + 10.0f, p.y + 10.0f, 40.0f, RGB(0, 229, 255));
         AddExplosion(p.x + 10.0f, p.y + 10.0f, 30, RGB(255, 234, 0));
+    } else {
+        ShowNativeToast("Overcharge energy insufficient!", 2, 80);
     }
 }
 
@@ -937,6 +973,7 @@ void UseHyperJump() {
         hyperJumpTimer = 40;
         invincibleTimer = 90; // 1.5s invulnerability
         PlaySnd(9);
+        ShowNativeToast("WARP DRIVE ENGAGED!", 0, 100);
         AddShockwave(p.x + 10.0f, p.y + 10.0f, 95.0f, RGB(0, 229, 255));
         AddShockwave(p.x + 10.0f, p.y + 10.0f, 60.0f, RGB(255, 234, 0));
         AddExplosion(p.x + 10.0f, p.y + 10.0f, 40, RGB(0, 229, 255));
@@ -988,6 +1025,8 @@ void UseHyperJump() {
                 }
             }
         }
+    } else {
+        ShowNativeToast("Warp Drive charging...", 2, 80);
     }
 }
 
@@ -1001,8 +1040,11 @@ void DeployDroneWing() {
         drones[dIdx].y = p.y + 6.0f;
         drones[dIdx].shootTimer = 0;
         PlaySnd(2);
+        ShowNativeToast("Support Drone deployed!", 1, 100);
         AddShockwave(drones[dIdx].x + 6.0f, drones[dIdx].y + 6.0f, 30.0f, RGB(0, 229, 255));
         AddExplosion(drones[dIdx].x + 6.0f, drones[dIdx].y + 6.0f, 15, RGB(0, 229, 255));
+    } else {
+        ShowNativeToast("Max drones deployed (2/2)!", 2, 80);
     }
 }
 
@@ -1294,6 +1336,7 @@ void ApplyPowerup(int type) {
 }
 
 void Update() {
+    if (toastTimer > 0) toastTimer--;
     if (bombFlash > 0) bombFlash--;
     if (bossDeathFlash > 0) bossDeathFlash -= 5;
     if (screenShake > 0) screenShake = (screenShake * 88) / 100;
@@ -1533,7 +1576,7 @@ void Update() {
     if (p.y > H - 20) p.y = H - 20;
 
     // Firing
-    if ((GetAsyncKeyState(kbFire) & 0x8001) || (GetAsyncKeyState(VK_RETURN) & 0x8001)) {
+    if ((GetAsyncKeyState(kbFire) & 0x8001) || (GetAsyncKeyState(VK_RETURN) & 0x8001) || mouseFiring) {
         int fireRate = (overchargeTimer > 0) ? 3 : ((rapidTimer > 0) ? 3 : 7);
         if (frameCount % fireRate == 0) Shoot();
     }
@@ -2811,9 +2854,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 stars[i].size = (layer == 0) ? 1 : ((layer == 1) ? 1 : 2);
             }
             SetTimer(hwnd, 1, 16, NULL);
+            ShowNativeToast("KSPACE: Press [H] or [F1] for Controls", 0, 240);
             break;
 
         case WM_KEYDOWN:
+            if (wParam == 'M') {
+                soundMuted = !soundMuted;
+                ShowNativeToast(soundMuted ? "Sound: MUTED" : "Sound: ON", 0, 90);
+                break;
+            }
             if (gameState == STATE_MENU) {
                 int opts = HasSavedGame() ? 6 : 5;
                 if (wParam == 'H' || wParam == VK_F1) {
@@ -2872,6 +2921,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_LBUTTONDOWN: {
             int mx = LOWORD(lParam);
             int my = HIWORD(lParam);
+            if (toastTimer > 0 && my <= 32) {
+                toastTimer = 0;
+                break;
+            }
             if (gameState == STATE_MENU) {
                 if (my >= H - 48 && my <= H - 15) {
                     previousState = STATE_MENU;
@@ -2880,7 +2933,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     int saved = HasSavedGame();
                     int count = saved ? 6 : 5;
                     for (int i = 0; i < count; i++) {
-                        int y = 175 + i * 32;
+                        int y = 160 + i * 32;
                         if (my >= y - 12 && my <= y + 18) {
                             menuIndex = i;
                             if (menuIndex == 0) StartNewGame(MODE_CLASSIC);
@@ -2903,10 +2956,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
             } else if (gameState == STATE_PAUSED) {
+                int clicked = 0;
                 for (int i = 0; i < 5; i++) {
-                    int y = 175 + i * 34;
+                    int y = 160 + i * 34;
                     if (my >= y - 12 && my <= y + 18) {
                         menuIndex = i;
+                        clicked = 1;
                         if (menuIndex == 0) gameState = STATE_PLAYING;
                         else if (menuIndex == 1) { previousState = STATE_PAUSED; gameState = STATE_HELP; }
                         else if (menuIndex == 2) SaveGameState();
@@ -2915,6 +2970,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         break;
                     }
                 }
+                if (!clicked) {
+                    gameState = STATE_PLAYING;
+                }
             } else if (gameState == STATE_PLAYING) {
                 if (mx >= W - 52 && mx <= W - 30 && my >= 4 && my <= 26) {
                     previousState = STATE_PLAYING;
@@ -2922,6 +2980,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else if (mx >= W - 28 && mx <= W - 8 && my >= 4 && my <= 26) {
                     gameState = STATE_PAUSED;
                     menuIndex = 0;
+                } else if (my >= H - 24) {
+                    if (mx < 46) UseHyperJump();
+                    else if (mx < 92) DeployDroneWing();
+                    else if (mx < 138) UseOvercharge();
+                    else if (mx < 184) UseTimeStop();
+                    else if (mx < 230) UseTacticalDash();
+                    else if (mx < 276) UseSmartBomb();
+                    else UseHyperShield();
+                } else {
+                    mouseFiring = 1;
+                    p.x = (float)(mx - 10);
+                    p.y = (float)(my - 10);
+                    if (p.x < 0) p.x = 0;
+                    if (p.x > W - 20) p.x = W - 20;
+                    if (p.y < 0) p.y = 0;
+                    if (p.y > H - 20) p.y = H - 20;
                 }
             } else if (gameState == STATE_HELP) {
                 gameState = (previousState == STATE_PLAYING || previousState == STATE_PAUSED) ? STATE_PAUSED : STATE_MENU;
@@ -2930,6 +3004,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
+
+        case WM_MOUSEMOVE: {
+            if (gameState == STATE_PLAYING && (wParam & MK_LBUTTON)) {
+                int mx = LOWORD(lParam);
+                int my = HIWORD(lParam);
+                if (my < H - 24) {
+                    p.x = (float)(mx - 10);
+                    p.y = (float)(my - 10);
+                    if (p.x < 0) p.x = 0;
+                    if (p.x > W - 20) p.x = W - 20;
+                    if (p.y < 0) p.y = 0;
+                    if (p.y > H - 20) p.y = H - 20;
+                }
+            }
+            break;
+        }
+
+        case WM_LBUTTONUP:
+            mouseFiring = 0;
+            break;
 
         case WM_TIMER:
             Update();
@@ -3201,9 +3295,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SelectObject(memDC, hFontHUD);
                     SetTextColor(memDC, RGB(255, 255, 255));
                     char* lines[] = {
-                        "ARROWS : Move Ship",
-                        "SPACE  : Fire Weapon",
-                        "P      : Pause Game",
+                        "ARROWS / DRAG : Move Ship",
+                        "SPACE / CLICK : Fire Weapon",
+                        "P / [||]      : Pause Game",
+                        "M             : Toggle Sound Mute",
                         "",
                         "--- LOOP 11 SYSTEMS ---",
                         "J : Hyper-Jump Warp Drive",
@@ -3216,14 +3311,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         "",
                         "--- POWERUP PODS ---",
                         "S:Spread L:Laser H:Shield",
-                        "B:Bomb R:Rapid T:Time",
-                        "W:Drone Pod O:Overcharge Core"
+                        "B:Bomb R:Rapid T:Time"
                     };
                     for (int i = 0; i < 17; i++) {
                         TextOutA(memDC, 20, 50 + i * 16, lines[i], lstrlenA(lines[i]));
                     }
                     SetTextColor(memDC, RGB(255, 234, 0));
-                    TextOutA(memDC, W/2 - 90, H - 28, "Press [H] or ENTER to return", 28);
+                    TextOutA(memDC, W/2 - 110, H - 28, "Press [H], [ESC], or Click to return", 36);
                 } else if (gameState == STATE_LEADERBOARD) {
                     SelectObject(memDC, hFontTitle);
                     SetTextColor(memDC, RGB(0, 229, 255));
@@ -3404,14 +3498,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     TextOutA(memDC, 10, H - 36, ocStr, lstrlenA(ocStr));
 
-                    // Skill Badges Status
-                    char skillStr[96];
-                    wsprintfA(skillStr, "[T]Stop:%s  [D]Dash:%s  [S]Shield:%s",
-                        timeStopTimer > 0 ? "ACT" : (timeStopCooldown <= 0 ? "RDY" : "CD"),
-                        invincibleTimer > 0 ? "ACT" : (dashCooldown <= 0 ? "RDY" : "CD"),
-                        hyperShieldTimer > 0 ? "ACT" : (hyperShieldCooldown <= 0 ? "RDY" : "CD"));
-                    SetTextColor(memDC, RGB(0, 230, 118));
-                    TextOutA(memDC, 10, H - 20, skillStr, lstrlenA(skillStr));
+                    // Interactive Skill Toolbar (responsive & clickable)
+                    char* skillNames[7] = {"[J]WRP", "[W]DRN", "[O]OVR", "[T]TIM", "[D]DSH", "[B]BMB", "[S]SHL"};
+                    int isReady[7];
+                    isReady[0] = (hyperJumpEnergy >= 100);
+                    isReady[1] = (droneCount < 2);
+                    isReady[2] = (overchargeEnergy >= 100);
+                    isReady[3] = (timeStopCooldown <= 0 && timeStopTimer <= 0);
+                    isReady[4] = (dashCooldown <= 0);
+                    isReady[5] = (bombCount > 0);
+                    isReady[6] = (hyperShieldCooldown <= 0 && hyperShieldTimer <= 0);
+
+                    for (int sIdx = 0; sIdx < 7; sIdx++) {
+                        int bx = 4 + sIdx * 45;
+                        RECT bRc = {bx, H - 20, bx + 42, H - 4};
+                        HBRUSH bBg = CreateSolidBrush(RGB(10, 25, 50));
+                        FillRect(memDC, &bRc, bBg);
+                        DeleteObject(bBg);
+                        COLORREF bdrCol = isReady[sIdx] ? RGB(0, 229, 255) : RGB(80, 80, 90);
+                        HPEN bPen = CreatePen(PS_SOLID, 1, bdrCol);
+                        HGDIOBJ oldP = SelectObject(memDC, bPen);
+                        HGDIOBJ nullB = SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                        Rectangle(memDC, bRc.left, bRc.top, bRc.right, bRc.bottom);
+                        SelectObject(memDC, oldP); SelectObject(memDC, nullB);
+                        DeleteObject(bPen);
+                        SetTextColor(memDC, isReady[sIdx] ? RGB(0, 229, 255) : RGB(130, 130, 140));
+                        TextOutA(memDC, bx + 2, H - 18, skillNames[sIdx], lstrlenA(skillNames[sIdx]));
+                    }
 
                     if (bossActive) {
                         HBRUSH barBg = CreateSolidBrush(RGB(30, 30, 30));
@@ -3485,6 +3598,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
+            if (toastTimer > 0) {
+                SelectObject(memDC, hFontHUD);
+                int tw = lstrlenA(toastMsg) * 7 + 24;
+                if (tw > W - 16) tw = W - 16;
+                int tx = W / 2 - tw / 2;
+                int ty = 8;
+                int th = 22;
+                RECT tRc = {tx, ty, tx + tw, ty + th};
+                HBRUSH tBg = CreateSolidBrush(RGB(10, 25, 50));
+                FillRect(memDC, &tRc, tBg);
+                DeleteObject(tBg);
+
+                COLORREF bdrCol = (toastType == 1) ? RGB(0, 230, 118) : ((toastType == 2) ? RGB(255, 23, 68) : RGB(0, 229, 255));
+                HPEN tPen = CreatePen(PS_SOLID, 1, bdrCol);
+                HGDIOBJ oldP = SelectObject(memDC, tPen);
+                HGDIOBJ nullB = SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                Rectangle(memDC, tRc.left, tRc.top, tRc.right, tRc.bottom);
+                SelectObject(memDC, oldP); SelectObject(memDC, nullB);
+                DeleteObject(tPen);
+
+                SetTextColor(memDC, bdrCol);
+                SetBkMode(memDC, TRANSPARENT);
+                TextOutA(memDC, tx + 10, ty + 4, toastMsg, lstrlenA(toastMsg));
+            }
+
             if (oldFont) {
                 SelectObject(memDC, oldFont);
             }
@@ -3538,7 +3676,7 @@ void MainEntry() {
 
     RECT wr = {0, 0, W, H};
     AdjustWindowRect(&wr, (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN, FALSE);
-    HWND hwnd = CreateWindowEx(0, "KSpaceApp", "KSpace", (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN,
+    HWND hwnd = CreateWindowEx(0, "KSpaceApp", "KSpace - Deep Space Shooter [F1/H: Help | P: Pause | Click: Fire]", (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
