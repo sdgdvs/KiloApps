@@ -47,6 +47,15 @@
 #define TILE_CHASM        12
 #define TILE_ALTAR        13
 #define TILE_CAULDRON     14
+#define TILE_EFFIGY       15
+
+typedef enum {
+    CURSE_NONE = 0,
+    CURSE_DARKNESS = 1,
+    CURSE_ENFEEBLE = 2,
+    CURSE_DECAY = 3,
+    CURSE_VOID = 4
+} CurseType;
 
 typedef enum {
     ZONE_CATACOMBS = 0,
@@ -159,6 +168,7 @@ typedef struct {
 typedef struct {
     int x, y;
     int intensity;
+    BOOL lit;
 } Torch;
 
 typedef struct {
@@ -252,6 +262,9 @@ typedef enum {
     ITEM_STONESKIN_BREW,
     ITEM_LIQUID_FIRE,
     ITEM_PANACEA_DEEP,
+    ITEM_FOOD_RATIONS,
+    ITEM_CRYPT_MUSHROOM,
+    ITEM_PURIFYING_SALT,
     // Weapons
     ITEM_WPN_STAFF,
     ITEM_WPN_RUNIC_BLADE,
@@ -312,7 +325,10 @@ static const ItemDef g_itemDefs[NUM_ITEM_DEFS] = {
     { ITEM_AETHER_PHIAL, "Aether Phial", ITEM_TYPE_CONSUMABLE, SLOT_NONE, "*", COLOR_ACCENT_CYAN, "Concentrated mana (+40 Aether).", 0,0,0,0, 0,40,0 },
     { ITEM_STONESKIN_BREW, "Stoneskin Brew", ITEM_TYPE_CONSUMABLE, SLOT_NONE, "#", COLOR_ACCENT_AMBER, "Hardens flesh (+40 Ward Shield).", 0,0,0,0, 0,0,0 },
     { ITEM_LIQUID_FIRE, "Liquid Fire Flask", ITEM_TYPE_CONSUMABLE, SLOT_NONE, "!", COLOR_ACCENT_RED, "50 Fire AOE to enemies within 2 tiles.", 0,0,0,0, 0,0,0 },
-    { ITEM_PANACEA_DEEP, "Panacea of the Deep", ITEM_TYPE_CONSUMABLE, SLOT_NONE, "@", COLOR_TEXT_GOLD, "+60 HP, +40 Sanity, +35 Aether.", 0,0,0,0, 60,35,40 },
+    { ITEM_PANACEA_DEEP, "Panacea of the Deep", ITEM_TYPE_CONSUMABLE, SLOT_NONE, "@", COLOR_TEXT_GOLD, "+60 HP, +40 Sanity, +35 Aether, cures curses.", 0,0,0,0, 60,35,40 },
+    { ITEM_FOOD_RATIONS, "Iron Rations", ITEM_TYPE_CONSUMABLE, SLOT_NONE, "+", COLOR_TEXT_GOLD, "Nutritious dried meat & hardtack (+45 Hunger, +10 HP).", 0,0,0,0, 10,0,0 },
+    { ITEM_CRYPT_MUSHROOM, "Crypt Truffle", ITEM_TYPE_CONSUMABLE, SLOT_NONE, "%", COLOR_ACCENT_CYAN, "Cavern fungal mushroom (+25 Hunger, +5 MP, -4 Sanity).", 0,0,0,0, 0,5,-4 },
+    { ITEM_PURIFYING_SALT, "Purifying Salt", ITEM_TYPE_CONSUMABLE, SLOT_NONE, "*", COLOR_BORDER_GLOW, "Consecrated crystal salt. Purges curses (+20 Sanity).", 0,0,0,0, 0,0,20 },
     { ITEM_WPN_STAFF, "Ashwood Rune Staff", ITEM_TYPE_EQUIPMENT, SLOT_WEAPON, "/", RGB(168,85,247), "+2 Arcana.", 0,0,2,0, 0,0,0 },
     { ITEM_WPN_RUNIC_BLADE, "Runic Longsword", ITEM_TYPE_EQUIPMENT, SLOT_WEAPON, "/", COLOR_ACCENT_AMBER, "+5 Might, +1 Warding.", 5,1,0,0, 0,0,0 },
     { ITEM_WPN_VOID_DAGGER, "Voidfang Dagger", ITEM_TYPE_EQUIPMENT, SLOT_WEAPON, "/", RGB(168,85,247), "+7 Might, +3 Arcana.", 7,0,3,0, 0,0,0 },
@@ -368,6 +384,11 @@ typedef struct {
     int warding;
     int arcana;
     int light_radius;
+    int hunger, max_hunger;
+    int torchFuel, maxTorchFuel;
+    BOOL torchLit;
+    CurseType curse;
+    int curseTurns;
     int base_hp, base_max_hp;
     int base_sanity, base_max_sanity;
     int base_aether, base_max_aether;
@@ -578,6 +599,33 @@ void RecalcPlayerStats(void) {
             msan += id->maxSanity;
         }
     }
+
+    // Torch extinguished effect
+    if (!g_player.torchLit) {
+        if (l > 1) l = 1;
+    }
+    // Curse of Darkness
+    if (g_player.curse == CURSE_DARKNESS) {
+        l -= 3;
+        if (l < 1) l = 1;
+    }
+    // Curse of Enfeeblement
+    if (g_player.curse == CURSE_ENFEEBLE) {
+        m -= 4;
+        w -= 3;
+    }
+    // Starvation penalty
+    if (g_player.hunger <= 15) {
+        m -= 2;
+        w -= 1;
+    }
+    // Deep delirium / low sanity panic
+    if (g_player.sanity < 20) {
+        m -= 2;
+    }
+    if (m < 1) m = 1;
+    if (w < 0) w = 0;
+    if (l < 1) l = 1;
 
     g_player.might = m;
     g_player.warding = w;
@@ -808,8 +856,33 @@ void UsePackItem(int packIdx) {
         if (g_player.sanity > g_player.max_sanity) g_player.sanity = g_player.max_sanity;
         g_player.aether += 35;
         if (g_player.aether > g_player.max_aether) g_player.aether = g_player.max_aether;
-        snprintf(logBuf, sizeof(logBuf), "Consumed Panacea of the Deep! (+60 HP, +40 Sanity, +35 Aether)!");
+        g_player.curse = CURSE_NONE;
+        g_player.curseTurns = 0;
+        snprintf(logBuf, sizeof(logBuf), "Consumed Panacea of the Deep! (+60 HP, +40 Sanity, +35 MP, Curses Cleansed)!");
         Beep(600, 50); Beep(800, 60); Beep(1200, 90);
+    } else if (id == ITEM_FOOD_RATIONS) {
+        g_player.hunger += 45;
+        if (g_player.hunger > g_player.max_hunger) g_player.hunger = g_player.max_hunger;
+        g_player.hp += 10;
+        if (g_player.hp > g_player.max_hp) g_player.hp = g_player.max_hp;
+        snprintf(logBuf, sizeof(logBuf), "Ate Iron Rations (+45 Hunger, +10 HP). Satiated!");
+        Beep(450, 40); Beep(600, 50);
+    } else if (id == ITEM_CRYPT_MUSHROOM) {
+        g_player.hunger += 25;
+        if (g_player.hunger > g_player.max_hunger) g_player.hunger = g_player.max_hunger;
+        g_player.aether += 5;
+        if (g_player.aether > g_player.max_aether) g_player.aether = g_player.max_aether;
+        g_player.sanity -= 4;
+        if (g_player.sanity < 0) g_player.sanity = 0;
+        snprintf(logBuf, sizeof(logBuf), "Ate Crypt Truffle (+25 Hunger, +5 MP, -4 Sanity). Visions swirl!");
+        Beep(320, 50); Beep(480, 60);
+    } else if (id == ITEM_PURIFYING_SALT) {
+        g_player.curse = CURSE_NONE;
+        g_player.curseTurns = 0;
+        g_player.sanity += 20;
+        if (g_player.sanity > g_player.max_sanity) g_player.sanity = g_player.max_sanity;
+        snprintf(logBuf, sizeof(logBuf), "Scattered Purifying Salt! All curses dissolved (+20 Sanity)!");
+        Beep(660, 50); Beep(880, 80);
     }
 
     if (logBuf[0]) AddLog(logBuf, def->color);
@@ -919,6 +992,7 @@ void ComputeFOV(void) {
 
     // Ambient torch lighting
     for (int t = 0; t < g_numTorches; t++) {
+        if (!g_torches[t].lit) continue;
         int tx = g_torches[t].x;
         int ty = g_torches[t].y;
         if (g_explored[ty][tx]) {
@@ -1379,6 +1453,7 @@ void GenerateCatacombs(int depth) {
                 g_torches[g_numTorches].x = rx + rw / 2;
                 g_torches[g_numTorches].y = ry;
                 g_torches[g_numTorches].intensity = 4;
+                g_torches[g_numTorches].lit = TRUE;
                 g_numTorches++;
             }
 
@@ -1454,6 +1529,16 @@ void GenerateCatacombs(int depth) {
             g_dungeon[cy][cx] = TILE_CAULDRON;
         }
     }
+
+    // Place Cursed Effigy in Catacombs
+    if (roomCount >= 4) {
+        int efRoom = 1 + RandInt(0, roomCount - 3);
+        int ex = rooms[efRoom].x + 2;
+        int ey = rooms[efRoom].y + 2;
+        if (g_dungeon[ey][ex] == TILE_FLOOR) {
+            g_dungeon[ey][ex] = TILE_EFFIGY;
+        }
+    }
 }
 
 // 2. Sunken Grotto: Organic Caverns, Flooded Water Pools & Cyan Fungi
@@ -1519,6 +1604,7 @@ void GenerateSunkenGrotto(int depth) {
                 g_torches[g_numTorches].x = cx;
                 g_torches[g_numTorches].y = cy;
                 g_torches[g_numTorches].intensity = 5;
+                g_torches[g_numTorches].lit = TRUE;
                 g_numTorches++;
             }
 
@@ -1583,6 +1669,16 @@ void GenerateSunkenGrotto(int depth) {
             g_dungeon[cy][cx] = TILE_CAULDRON;
         }
     }
+
+    // Place Cursed Effigy in Sunken Grotto
+    if (numCaverns >= 4) {
+        int efCav = 1 + RandInt(0, numCaverns - 3);
+        int ex = caverns[efCav].x + 1;
+        int ey = caverns[efCav].y + 1;
+        if (g_dungeon[ey][ex] == TILE_FLOOR || g_dungeon[ey][ex] == TILE_WATER) {
+            g_dungeon[ey][ex] = TILE_EFFIGY;
+        }
+    }
 }
 
 
@@ -1627,6 +1723,7 @@ void GenerateForgottenCrypt(int depth) {
                 g_torches[g_numTorches].x = vx + vw / 2;
                 g_torches[g_numTorches].y = vy;
                 g_torches[g_numTorches].intensity = 4;
+                g_torches[g_numTorches].lit = TRUE;
                 g_numTorches++;
             }
 
@@ -1705,14 +1802,26 @@ void GenerateForgottenCrypt(int depth) {
             g_dungeon[cy][cx] = TILE_CAULDRON;
         }
     }
+
+    // Place 2 Cursed Effigies in Crypt
+    if (vaultCount >= 4) {
+        for (int e = 0; e < 2; e++) {
+            int ev = 1 + (e * (vaultCount / 3)) % (vaultCount - 1);
+            int ex = vaults[ev].x + vaults[ev].w - 2;
+            int ey = vaults[ev].y + vaults[ev].h - 2;
+            if (g_dungeon[ey][ex] == TILE_FLOOR) {
+                g_dungeon[ey][ex] = TILE_EFFIGY;
+            }
+        }
+    }
 }
 
 
-// 4. Void Abyss: Floating Obsidian Platforms over Cosmic Chasms & Void Rifts
+// 4. The Void Abyss: Obsidian Platforms Over Cosmic Chasms
 void GenerateVoidAbyss(int depth) {
     Room plats[MAX_ROOMS];
     int platCount = 0;
-    int targetPlats = 7 + RandInt(0, 3);
+    int targetPlats = 8 + RandInt(0, 3);
 
     for (int p = 0; p < targetPlats * 4 && platCount < targetPlats && platCount < MAX_ROOMS; p++) {
         int pw = RandInt(5, 8);
@@ -1752,6 +1861,7 @@ void GenerateVoidAbyss(int depth) {
                 g_torches[g_numTorches].x = px + pw / 2;
                 g_torches[g_numTorches].y = py + ph / 2;
                 g_torches[g_numTorches].intensity = 6;
+                g_torches[g_numTorches].lit = TRUE;
                 g_numTorches++;
             }
 
@@ -1808,6 +1918,18 @@ void GenerateVoidAbyss(int depth) {
         int cy = plats[pIdx].y + plats[pIdx].h / 2;
         if (g_dungeon[cy][cx] == TILE_FLOOR) {
             g_dungeon[cy][cx] = TILE_CAULDRON;
+        }
+    }
+
+    // Place 2-3 Cursed Effigies in Void Abyss
+    if (platCount >= 4) {
+        for (int e = 0; e < 2; e++) {
+            int ep = 1 + (e * 2) % (platCount - 1);
+            int ex = plats[ep].x + 1;
+            int ey = plats[ep].y + 1;
+            if (g_dungeon[ey][ex] == TILE_FLOOR) {
+                g_dungeon[ey][ex] = TILE_EFFIGY;
+            }
         }
     }
 }
@@ -1867,6 +1989,12 @@ void CommuneAltar(int x, int y) {
     g_player.essence += 35;
     g_player.exp += 30;
 
+    if (g_player.curse != CURSE_NONE) {
+        g_player.curse = CURSE_NONE;
+        g_player.curseTurns = 0;
+        AddLog("Consecrated runic radiance purges all subterranean curses from your soul!", COLOR_BORDER_GLOW);
+    }
+
     int unowned[NUM_RUNES];
     int unownedCount = 0;
     for (int r = 0; r < NUM_RUNES; r++) {
@@ -1888,17 +2016,140 @@ void CommuneAltar(int x, int y) {
     AdvanceTurn();
 }
 
+static const char* g_eldritchWhispers[8] = {
+    "The stone breathes... can you feel its cold subterranean pulse?",
+    "Your shadow detached itself three paces ago and creeps behind you...",
+    "The flame flickers... the void reaches out hungry tendrils to claim you.",
+    "A chorus of forgotten delvers whispers through the crags: 'Join us...'",
+    "Something with too many eyes crawls silently along the ceiling...",
+    "Your thoughts fray like rotten parchment in the suffocating deep.",
+    "The abyss remembers your true name... and whispers it in your ear.",
+    "The effigy smiles... its stone lips parted in soundless mockery."
+};
+
 void AdvanceTurn(void) {
     g_turn++;
-    int sanityInterval = (g_depthLevel >= 10) ? 25 : 40;
-    if (g_turn % sanityInterval == 0 && g_player.sanity > 10) {
-        g_player.sanity -= 2;
-        if (g_depthLevel >= 10) {
-            AddLog("Cosmic whispers from the Void Abyss twist your willpower (-2 Sanity).", COLOR_ACCENT_PURPLE);
-        } else {
-            AddLog("Subterranean echoes fray your willpower (-2 Sanity).", COLOR_ACCENT_AMBER);
+
+    // 1. Hunger processing
+    int hungerRate = (g_player.curse == CURSE_DECAY) ? 3 : 5;
+    if (g_turn % hungerRate == 0 && g_player.hunger > 0) {
+        g_player.hunger--;
+        if (g_player.hunger == 35) {
+            AddLog("Your stomach growls with hunger. Delver is getting peckish.", COLOR_ACCENT_AMBER);
+        } else if (g_player.hunger == 15) {
+            AddLog("Ravenous hunger sets in (-2 Might, -1 Ward)! Find iron rations.", COLOR_ACCENT_RED);
+            Beep(220, 50);
         }
     }
+    // Starvation damage
+    if (g_player.hunger <= 0) {
+        g_player.hunger = 0;
+        if (g_turn % 3 == 0) {
+            g_player.hp -= 2;
+            if (g_player.hp < 1) g_player.hp = 1;
+            AddLog("STARVATION! Your body wastes away from hunger (-2 HP)!", COLOR_ACCENT_RED);
+            SpawnCombatText((float)g_player.x, (float)g_player.y, "-2 STARVE", COLOR_ACCENT_RED);
+            Beep(180, 60);
+        }
+    }
+
+    // 2. Torch fuel processing
+    if (g_player.torchLit) {
+        int fuelLoss = (g_player.curse == CURSE_DARKNESS) ? 2 : 1;
+        g_player.torchFuel -= fuelLoss;
+        if (g_player.torchFuel <= 0) {
+            g_player.torchFuel = 0;
+            g_player.torchLit = FALSE;
+            AddLog("Your torch has burned out into cold cinder! Darkness closes in (Press T to Rekindle)!", COLOR_ACCENT_RED);
+            Beep(200, 80); Beep(150, 100);
+        } else if (g_player.torchFuel == 25) {
+            AddLog("Your torch is sputtering low on oil and pitch! Light is waning...", COLOR_ACCENT_AMBER);
+        }
+    }
+
+    // 3. Darkness sanity drain
+    float currentLight = g_lightMap[g_player.y][g_player.x];
+    if (!g_player.torchLit || currentLight < 0.2f) {
+        if (g_turn % 4 == 0 && g_player.sanity > 0) {
+            g_player.sanity--;
+            if (g_turn % 8 == 0) {
+                AddLog("The suffocating pitch-black darkness claws at your willpower (-1 Sanity).", COLOR_ACCENT_PURPLE);
+            }
+        }
+    }
+
+    // 4. Proximity to Cursed Effigies
+    int effMinY = (g_player.y - 3 < 0) ? 0 : g_player.y - 3;
+    int effMaxY = (g_player.y + 3 >= MAP_HEIGHT) ? MAP_HEIGHT - 1 : g_player.y + 3;
+    int effMinX = (g_player.x - 3 < 0) ? 0 : g_player.x - 3;
+    int effMaxX = (g_player.x + 3 >= MAP_WIDTH) ? MAP_WIDTH - 1 : g_player.x + 3;
+    for (int y = effMinY; y <= effMaxY; y++) {
+        for (int x = effMinX; x <= effMaxX; x++) {
+            if (g_dungeon[y][x] == TILE_EFFIGY) {
+                if (g_turn % 3 == 0 && g_player.sanity > 0) {
+                    g_player.sanity--;
+                    if (g_turn % 6 == 0) {
+                        AddLog("The Cursed Effigy hums malevolently nearby... Sanity drained (-1).", COLOR_ACCENT_PURPLE);
+                        SpawnCombatText((float)g_player.x, (float)g_player.y, "-1 SANITY", COLOR_ACCENT_PURPLE);
+                    }
+                }
+            }
+        }
+    }
+
+    // 5. Eldritch Whispers & Sanity Strain
+    int whisperInterval = (g_player.curse == CURSE_VOID) ? 12 : 20;
+    if ((g_player.sanity < 45 || g_player.curse == CURSE_VOID) && (g_turn % whisperInterval == 0)) {
+        int wIdx = RandInt(0, 7);
+        char wBuf[256];
+        snprintf(wBuf, sizeof(wBuf), "ELDRITCH WHISPER: \"%s\" (-1 Sanity)", g_eldritchWhispers[wIdx]);
+        AddLog(wBuf, COLOR_ACCENT_PURPLE);
+        if (g_player.sanity > 0) g_player.sanity--;
+        Beep(160, 40);
+        SpawnCombatText((float)g_player.x, (float)g_player.y, "WHISPER", COLOR_ACCENT_PURPLE);
+    }
+
+    // 6. Deep Madness if Sanity is 0
+    if (g_player.sanity <= 0) {
+        g_player.sanity = 0;
+        if (g_turn % 6 == 0) {
+            g_player.hp -= 3;
+            if (g_player.hp < 1) g_player.hp = 1;
+            AddLog("PSYCHIC COLLAPSE! Total madness wracks your mind (-3 HP)!", COLOR_ACCENT_RED);
+            SpawnCombatText((float)g_player.x, (float)g_player.y, "-3 MADNESS", COLOR_ACCENT_PURPLE);
+            Beep(140, 70);
+        }
+    }
+
+    // 7. Curse Turn Countdown
+    if (g_player.curseTurns > 0) {
+        g_player.curseTurns--;
+        if (g_player.curseTurns <= 0) {
+            g_player.curse = CURSE_NONE;
+            AddLog("The subterranean curse has dissolved from your spirit!", COLOR_TEXT_GOLD);
+            Beep(587, 60); Beep(880, 80);
+        }
+    }
+
+    // 8. Wall Torches Snuffed Out by Subterranean Gusts
+    if (g_turn % 50 == 0 && RandInt(0, 100) < 35 && g_numTorches > 0) {
+        int cand[MAX_TORCHES];
+        int candCount = 0;
+        for (int t = 0; t < g_numTorches; t++) {
+            if (g_torches[t].lit) {
+                float dist = sqrtf((float)((g_torches[t].x - g_player.x) * (g_torches[t].x - g_player.x) + (g_torches[t].y - g_player.y) * (g_torches[t].y - g_player.y)));
+                if (dist < 14.0f) cand[candCount++] = t;
+            }
+        }
+        if (candCount > 0) {
+            int snuffed = cand[RandInt(0, candCount - 1)];
+            g_torches[snuffed].lit = FALSE;
+            AddLog("An icy subterranean draft sweeps the crypt! A wall torch was snuffed out!", COLOR_ACCENT_AMBER);
+            Beep(240, 50);
+        }
+    }
+
+    RecalcPlayerStats();
     UpdateMonsters();
     ComputeFOV();
 }
@@ -1931,6 +2182,30 @@ void MovePlayer(int dx, int dy) {
             AddLog("Stone wall blocks your path.", COLOR_TEXT_DIM);
             Beep(180, 30);
         }
+        return;
+    }
+
+    if (tile == TILE_EFFIGY) {
+        g_dungeon[ny][nx] = TILE_RUBBLE;
+        g_player.essence += 50;
+        g_player.exp += 40;
+        if (RandInt(0, 100) < 45) {
+            int c = 1 + RandInt(0, 3);
+            g_player.curse = (CurseType)c;
+            g_player.curseTurns = 35;
+            const char* cNames[] = { "None", "Curse of Shadows", "Curse of Enfeeblement", "Curse of Decay", "Curse of the Void" };
+            char cBuf[128];
+            snprintf(cBuf, sizeof(cBuf), "MALEDICTED! Cursed Effigy shatters and unleashes %s (35 turns)!", cNames[c]);
+            AddLog(cBuf, COLOR_ACCENT_PURPLE);
+            SpawnCombatText((float)nx, (float)ny, "MALEDICTION!", COLOR_ACCENT_PURPLE);
+            Beep(180, 80); Beep(130, 100);
+        } else {
+            AddLog("Smashed Cursed Effigy! The demonic bone idol crumbles into inert rubble (+50 Essence, +40 EXP).", COLOR_TEXT_GOLD);
+            SpawnCombatText((float)nx, (float)ny, "SHATTERED!", COLOR_TEXT_GOLD);
+            Beep(440, 50); Beep(660, 60);
+        }
+        CheckLevelUp();
+        AdvanceTurn();
         return;
     }
 
@@ -1997,8 +2272,8 @@ void MovePlayer(int dx, int dy) {
                     snprintf(lbuf, sizeof(lbuf), "Looted %s from chest!", g_itemDefs[pickIng].name);
                     AddLog(lbuf, RGB(52, 211, 153));
                 } else if (roll < 65) {
-                    ItemId pots[] = { ITEM_HEAL_SALVE, ITEM_SANITY_INCENSE, ITEM_AETHER_PHIAL, ITEM_STONESKIN_BREW };
-                    ItemId pickPot = pots[RandInt(0, 3)];
+                    ItemId pots[] = { ITEM_HEAL_SALVE, ITEM_SANITY_INCENSE, ITEM_AETHER_PHIAL, ITEM_STONESKIN_BREW, ITEM_FOOD_RATIONS, ITEM_CRYPT_MUSHROOM, ITEM_PURIFYING_SALT };
+                    ItemId pickPot = pots[RandInt(0, 6)];
                     AddPackItem(pickPot, 1);
                     char lbuf[128];
                     snprintf(lbuf, sizeof(lbuf), "Found %s in chest!", g_itemDefs[pickPot].name);
@@ -2024,6 +2299,15 @@ void MovePlayer(int dx, int dy) {
     g_player.x = nx;
     g_player.y = ny;
 
+    // Relight adjacent extinguished wall torches if player's torch is lit
+    for (int t = 0; t < g_numTorches; t++) {
+        if (!g_torches[t].lit && abs(g_torches[t].x - g_player.x) <= 1 && abs(g_torches[t].y - g_player.y) <= 1 && g_player.torchLit) {
+            g_torches[t].lit = TRUE;
+            AddLog("Your burning torch reignites the wall sconce! Warm light spreads.", COLOR_TEXT_GOLD);
+            Beep(650, 40);
+        }
+    }
+
     if (tile == TILE_WATER) {
         AddLog("You wade through shallow flooded waters. (Splash)", COLOR_ACCENT_CYAN);
         Beep(200, 25);
@@ -2041,6 +2325,12 @@ void MovePlayer(int dx, int dy) {
 }
 
 void RestTurn(void) {
+    if (g_player.hunger <= 0) {
+        AddLog("You are starving and cannot regenerate strength by resting! Eat food rations.", COLOR_ACCENT_RED);
+        Beep(180, 50);
+        AdvanceTurn();
+        return;
+    }
     if (g_player.hp < g_player.max_hp) {
         g_player.hp += 2;
         if (g_player.hp > g_player.max_hp) g_player.hp = g_player.max_hp;
@@ -2056,6 +2346,46 @@ void RestTurn(void) {
     AddLog("You steady your breath and rest (+2 HP, +1 Sanity, +3 Aether).", COLOR_ACCENT_GREEN);
     Beep(440, 40);
     AdvanceTurn();
+}
+
+void RekindleTorch(void) {
+    BOOL canRekindle = FALSE;
+    BOOL usedBrimstone = FALSE;
+    if (GetPackItemCount(ITEM_ING_BRIMSTONE) > 0) {
+        canRekindle = TRUE;
+        usedBrimstone = TRUE;
+    } else if (g_player.ownedRunes[RUNE_PYRE] && g_player.aether >= 5) {
+        canRekindle = TRUE;
+        g_player.aether -= 5;
+    } else {
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dx = -1; dx <= 1; dx++) {
+                int tx = g_player.x + dx;
+                int ty = g_player.y + dy;
+                if (tx >= 0 && tx < MAP_WIDTH && ty >= 0 && ty < MAP_HEIGHT) {
+                    if (g_dungeon[ty][tx] == TILE_ALTAR) canRekindle = TRUE;
+                    for (int t = 0; t < g_numTorches; t++) {
+                        if (g_torches[t].x == tx && g_torches[t].y == ty && g_torches[t].lit) {
+                            canRekindle = TRUE;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (canRekindle) {
+        if (usedBrimstone) RemovePackItem(ITEM_ING_BRIMSTONE, 1);
+        g_player.torchFuel = g_player.maxTorchFuel;
+        g_player.torchLit = TRUE;
+        RecalcPlayerStats();
+        ComputeFOV();
+        AddLog("Rekindled torch! Warm golden light blazes across the crypts (160 turns).", COLOR_TEXT_GOLD);
+        Beep(520, 50); Beep(780, 80);
+    } else {
+        AddLog("Cannot rekindle torch! Requires Brimstone Ash, Pyre spell (5 MP), or adjacent lit sconce.", COLOR_ACCENT_RED);
+        Beep(180, 50);
+    }
 }
 
 // --- Relic & Ancient Rune Magic Spellcasting System ---
@@ -2956,10 +3286,44 @@ static void DrawTileSprite(HDC hdc, int x, int y, int tile, BOOL isVisible, int 
         SelectObject(hdc, oldP);
         SelectObject(hdc, oldB);
         DeleteObject(gemBr);
+    } else if (tile == TILE_EFFIGY) {
+        // Cursed Bone Totem / Horned Effigy
+        RECT bR = {x + 6, y + 22, x + 26, y + 29};
+        HBRUSH baseBr = CreateSolidBrush(isVisible ? RGB(59, 23, 71) : RGB(25, 10, 30));
+        FillRect(hdc, &bR, baseBr);
+        DeleteObject(baseBr);
+
+        RECT pR = {x + 11, y + 8, x + 21, y + 23};
+        HBRUSH boneBr = CreateSolidBrush(isVisible ? RGB(203, 213, 225) : RGB(70, 70, 80));
+        FillRect(hdc, &pR, boneBr);
+        DeleteObject(boneBr);
+
+        if (isVisible) {
+            HBRUSH skullBr = CreateSolidBrush(RGB(226, 232, 240));
+            HBRUSH oldSk = (HBRUSH)SelectObject(hdc, skullBr);
+            HPEN nullP = (HPEN)GetStockObject(NULL_PEN);
+            HPEN oldP = (HPEN)SelectObject(hdc, nullP);
+            Ellipse(hdc, x + 10, y + 3, x + 22, y + 15);
+
+            HPEN hornPen = CreatePen(PS_SOLID, 1, RGB(168, 85, 247));
+            SelectObject(hdc, hornPen);
+            MoveToEx(hdc, x + 11, y + 6, NULL); LineTo(hdc, x + 7, y + 1);
+            MoveToEx(hdc, x + 21, y + 6, NULL); LineTo(hdc, x + 25, y + 1);
+            SelectObject(hdc, oldP);
+            DeleteObject(hornPen);
+            SelectObject(hdc, oldSk);
+            DeleteObject(skullBr);
+
+            COLORREF eyeColor = ((frame / 8) % 2 == 0) ? RGB(239, 68, 68) : RGB(168, 85, 247);
+            SetPixel(hdc, x + 13, y + 8, eyeColor);
+            SetPixel(hdc, x + 14, y + 8, eyeColor);
+            SetPixel(hdc, x + 17, y + 8, eyeColor);
+            SetPixel(hdc, x + 18, y + 8, eyeColor);
+        }
     }
 }
 
-static void DrawTorchSconce(HDC hdc, int x, int y, int frame, const ZoneTheme* zt) {
+static void DrawTorchSconce(HDC hdc, int x, int y, int frame, const ZoneTheme* zt, BOOL lit) {
     int cx = x + 16;
     int cy = y + 16;
 
@@ -2971,32 +3335,38 @@ static void DrawTorchSconce(HDC hdc, int x, int y, int frame, const ZoneTheme* z
 
     // Wood head
     RECT wR = {cx - 2, cy - 6, cx + 2, cy - 2};
-    HBRUSH wBr = CreateSolidBrush(RGB(120, 53, 15));
+    HBRUSH wBr = CreateSolidBrush(lit ? RGB(120, 53, 15) : RGB(40, 30, 25));
     FillRect(hdc, &wR, wBr);
     DeleteObject(wBr);
 
-    // Animated flame shape
-    int fOff = (int)(sinf((float)frame * 0.4f + (float)x) * 1.5f);
-    HBRUSH flameBr = CreateSolidBrush(RGB(249, 115, 22));
-    HBRUSH oldB = (HBRUSH)SelectObject(hdc, flameBr);
-    HPEN nullP = (HPEN)GetStockObject(NULL_PEN);
-    HPEN oldP = (HPEN)SelectObject(hdc, nullP);
+    if (lit) {
+        // Animated flame shape
+        int fOff = (int)(sinf((float)frame * 0.4f + (float)x) * 1.5f);
+        HBRUSH flameBr = CreateSolidBrush(zt ? zt->torchColor : RGB(249, 115, 22));
+        HBRUSH oldB = (HBRUSH)SelectObject(hdc, flameBr);
+        HPEN nullP = (HPEN)GetStockObject(NULL_PEN);
+        HPEN oldP = (HPEN)SelectObject(hdc, nullP);
 
-    POINT flamePts[4] = {
-        {cx - 3, cy - 5},
-        {cx + fOff, cy - 12},
-        {cx + 3, cy - 5},
-        {cx, cy - 3}
-    };
-    Polygon(hdc, flamePts, 4);
-    DeleteObject(flameBr);
+        POINT flamePts[4] = {
+            {cx - 3, cy - 5},
+            {cx + fOff, cy - 12},
+            {cx + 3, cy - 5},
+            {cx, cy - 3}
+        };
+        Polygon(hdc, flamePts, 4);
+        DeleteObject(flameBr);
 
-    // Inner bright spark
-    SetPixel(hdc, cx, cy - 7, RGB(253, 224, 71));
-    SetPixel(hdc, cx + (fOff > 0 ? 1 : 0), cy - 8, RGB(254, 240, 138));
+        // Inner bright spark
+        SetPixel(hdc, cx, cy - 7, RGB(253, 224, 71));
+        SetPixel(hdc, cx + (fOff > 0 ? 1 : 0), cy - 8, RGB(254, 240, 138));
 
-    SelectObject(hdc, oldP);
-    SelectObject(hdc, oldB);
+        SelectObject(hdc, oldP);
+        SelectObject(hdc, oldB);
+    } else {
+        // Unlit charred wisp
+        SetPixel(hdc, cx, cy - 7, RGB(100, 116, 139));
+        SetPixel(hdc, cx, cy - 9, RGB(71, 85, 105));
+    }
 }
 
 // Rendering
@@ -3045,19 +3415,24 @@ void RenderGame(HDC hdc, HWND hwnd) {
     // Depth Badge
     DepthZone z = GetDepthZone(g_depthLevel);
     const ZoneTheme* zt = &g_zoneThemes[z];
-    snprintf(badgeBuf, sizeof(badgeBuf), "DEPTH: B%d (%s)", g_depthLevel, zt->shortName);
+    snprintf(badgeBuf, sizeof(badgeBuf), "DEPTH: B%d", g_depthLevel);
     SetTextColor(memDC, COLOR_ACCENT_PURPLE);
-    TextOutA(memDC, 330, 11, badgeBuf, (int)strlen(badgeBuf));
+    TextOutA(memDC, 220, 11, badgeBuf, (int)strlen(badgeBuf));
 
     // HP Badge
     snprintf(badgeBuf, sizeof(badgeBuf), "HP: %d/%d", g_player.hp, g_player.max_hp);
     SetTextColor(memDC, COLOR_ACCENT_RED);
-    TextOutA(memDC, 490, 11, badgeBuf, (int)strlen(badgeBuf));
+    TextOutA(memDC, 340, 11, badgeBuf, (int)strlen(badgeBuf));
 
     // Sanity Badge
-    snprintf(badgeBuf, sizeof(badgeBuf), "SANITY: %d/%d", g_player.sanity, g_player.max_sanity);
+    snprintf(badgeBuf, sizeof(badgeBuf), "SAN: %d/%d", g_player.sanity, g_player.max_sanity);
     SetTextColor(memDC, COLOR_ACCENT_CYAN);
-    TextOutA(memDC, 600, 11, badgeBuf, (int)strlen(badgeBuf));
+    TextOutA(memDC, 450, 11, badgeBuf, (int)strlen(badgeBuf));
+
+    // Hunger Badge
+    snprintf(badgeBuf, sizeof(badgeBuf), "HUNGER: %d/%d", g_player.hunger, g_player.max_hunger);
+    SetTextColor(memDC, g_player.hunger <= 15 ? COLOR_ACCENT_RED : COLOR_ACCENT_AMBER);
+    TextOutA(memDC, 570, 11, badgeBuf, (int)strlen(badgeBuf));
 
     // Aether Badge
     if (g_player.shield > 0) {
@@ -3066,12 +3441,19 @@ void RenderGame(HDC hdc, HWND hwnd) {
         snprintf(badgeBuf, sizeof(badgeBuf), "MP: %d/%d", g_player.aether, g_player.max_aether);
     }
     SetTextColor(memDC, RGB(168, 85, 247));
-    TextOutA(memDC, 740, 11, badgeBuf, (int)strlen(badgeBuf));
+    TextOutA(memDC, 705, 11, badgeBuf, (int)strlen(badgeBuf));
 
     // Essence Badge
     snprintf(badgeBuf, sizeof(badgeBuf), "ESSENCE: %d*", g_player.essence);
     SetTextColor(memDC, COLOR_TEXT_GOLD);
-    TextOutA(memDC, 895, 11, badgeBuf, (int)strlen(badgeBuf));
+    TextOutA(memDC, 835, 11, badgeBuf, (int)strlen(badgeBuf));
+
+    // Curse Badge (if active)
+    if (g_player.curse != CURSE_NONE) {
+        snprintf(badgeBuf, sizeof(badgeBuf), "!CURSE [%dt]", g_player.curseTurns);
+        SetTextColor(memDC, RGB(239, 68, 68));
+        TextOutA(memDC, 945, 11, badgeBuf, (int)strlen(badgeBuf));
+    }
 
     // Header border line
     HPEN borderPen = CreatePen(PS_SOLID, 1, COLOR_BORDER);
@@ -3159,6 +3541,8 @@ void RenderGame(HDC hdc, HWND hwnd) {
                 tileColor = isVisible ? RGB(30, 27, 75) : RGB(9, 12, 20);
             } else if (tile == TILE_CHEST) {
                 tileColor = isVisible ? RGB(30, 41, 59) : RGB(7, 10, 18);
+            } else if (tile == TILE_EFFIGY) {
+                tileColor = isVisible ? RGB(35, 10, 45) : RGB(14, 5, 18);
             }
 
             RECT tr = {scrX, scrY, scrX + TILE_SIZE, scrY + TILE_SIZE};
@@ -3187,7 +3571,8 @@ void RenderGame(HDC hdc, HWND hwnd) {
                 }
             } else if (tile == TILE_ALTAR || tile == TILE_CAULDRON || tile == TILE_PILLAR ||
                        tile == TILE_DOOR_CLOSED || tile == TILE_DOOR_OPEN ||
-                       tile == TILE_STAIRS_DOWN || tile == TILE_STAIRS_UP || tile == TILE_CHEST) {
+                       tile == TILE_STAIRS_DOWN || tile == TILE_STAIRS_UP || tile == TILE_CHEST ||
+                       tile == TILE_EFFIGY) {
                 DrawTileSprite(memDC, scrX, scrY, tile, isVisible, g_frameCount, zt);
             }
 
@@ -3209,23 +3594,27 @@ void RenderGame(HDC hdc, HWND hwnd) {
             int scrX = vpX + (tx * TILE_SIZE - g_camX);
             int scrY = vpY + (ty * TILE_SIZE - g_camY);
 
-            // Sconce Warm Halo Glow
-            int tFlicker = (int)(sinf((float)g_frameCount * 0.2f + (float)tx) * 3.0f);
-            HBRUSH sconceHalo = CreateSolidBrush(zt->torchHalo);
-            HBRUSH oldSc = (HBRUSH)SelectObject(memDC, sconceHalo);
-            HPEN sconcePen = CreatePen(PS_SOLID, 1, zt->torchColor);
-            HPEN oldScPen = (HPEN)SelectObject(memDC, sconcePen);
-            Ellipse(memDC, scrX - 8 - tFlicker, scrY - 8 - tFlicker, scrX + TILE_SIZE + 8 + tFlicker, scrY + TILE_SIZE + 8 + tFlicker);
-            SelectObject(memDC, oldScPen);
-            DeleteObject(sconcePen);
-            SelectObject(memDC, oldSc);
-            DeleteObject(sconceHalo);
+            if (g_torches[t].lit) {
+                // Sconce Warm Halo Glow
+                int tFlicker = (int)(sinf((float)g_frameCount * 0.2f + (float)tx) * 3.0f);
+                HBRUSH sconceHalo = CreateSolidBrush(zt->torchHalo);
+                HBRUSH oldSc = (HBRUSH)SelectObject(memDC, sconceHalo);
+                HPEN sconcePen = CreatePen(PS_SOLID, 1, zt->torchColor);
+                HPEN oldScPen = (HPEN)SelectObject(memDC, sconcePen);
+                Ellipse(memDC, scrX - 8 - tFlicker, scrY - 8 - tFlicker, scrX + TILE_SIZE + 8 + tFlicker, scrY + TILE_SIZE + 8 + tFlicker);
+                SelectObject(memDC, oldScPen);
+                DeleteObject(sconcePen);
+                SelectObject(memDC, oldSc);
+                DeleteObject(sconceHalo);
 
-            // Sconce Iron Bracket & Animated Flame
-            DrawTorchSconce(memDC, scrX, scrY, g_frameCount, zt);
+                // Sconce Iron Bracket & Animated Flame
+                DrawTorchSconce(memDC, scrX, scrY, g_frameCount, zt, TRUE);
 
-            if (RandInt(0, 10) < 2) {
-                SpawnEmber((float)(scrX + 16), (float)(scrY + 12), TRUE);
+                if (RandInt(0, 10) < 2) {
+                    SpawnEmber((float)(scrX + 16), (float)(scrY + 12), TRUE);
+                }
+            } else {
+                DrawTorchSconce(memDC, scrX, scrY, g_frameCount, zt, FALSE);
             }
         }
     }
@@ -3415,8 +3804,10 @@ void RenderGame(HDC hdc, HWND hwnd) {
     TextOutA(memDC, vpX + 18, vpY + 15, zoneText, (int)strlen(zoneText));
 
     SetTextColor(memDC, COLOR_TEXT_DIM);
-    char turnText[64];
-    snprintf(turnText, sizeof(turnText), "Turn: %d | Light: 100%% | %s: Lit", g_turn, ztHud->sconceName);
+    char turnText[80];
+    int fuelPct = (g_player.maxTorchFuel > 0) ? (g_player.torchFuel * 100 / g_player.maxTorchFuel) : 0;
+    snprintf(turnText, sizeof(turnText), "Turn: %d | Torch: %s (%d%%) | Food: %d",
+             g_turn, g_player.torchLit ? "LIT" : "UNLIT [T]", fuelPct, g_player.hunger);
     TextOutA(memDC, vpX + 18, vpY + 33, turnText, (int)strlen(turnText));
 
     // Spell Hotbar Overlay inside Viewport (Bottom Center/Left)
@@ -3466,13 +3857,14 @@ void RenderGame(HDC hdc, HWND hwnd) {
 
     SelectObject(memDC, fontSmall);
     SetTextColor(memDC, COLOR_TEXT_BRIGHT);
-    TextOutA(memDC, vpX + 6, 584, "[N] Descent", 11);
-    TextOutA(memDC, vpX + 112, 584, "[Space] Rest", 12);
-    TextOutA(memDC, vpX + 218, 584, "[R/X] Search", 12);
-    TextOutA(memDC, vpX + 320, 584, "[E] Descend", 11);
-    TextOutA(memDC, vpX + 418, 584, g_crtEnabled ? "[C] CRT: ON" : "[C] CRT: OFF", g_crtEnabled ? 11 : 12);
-    TextOutA(memDC, vpX + 526, 584, g_fovEnabled ? "[F] FOV: ON" : "[F] FOV: OFF", g_fovEnabled ? 11 : 12);
-    TextOutA(memDC, vpX + 636, 584, "[H] Tome", 8);
+    TextOutA(memDC, vpX + 4, 584, "[N] New", 7);
+    TextOutA(memDC, vpX + 76, 584, "[Space] Rest", 12);
+    TextOutA(memDC, vpX + 172, 584, "[R] Search", 10);
+    TextOutA(memDC, vpX + 262, 584, "[E] Descend", 11);
+    TextOutA(memDC, vpX + 358, 584, g_player.torchLit ? "[T] Rekindle" : "[T] LIGHT TORCH", g_player.torchLit ? 12 : 15);
+    TextOutA(memDC, vpX + 478, 584, g_crtEnabled ? "[C] CRT: ON" : "[C] CRT: OFF", g_crtEnabled ? 11 : 12);
+    TextOutA(memDC, vpX + 574, 584, g_fovEnabled ? "[F] FOV: ON" : "[F] FOV: OFF", g_fovEnabled ? 11 : 12);
+    TextOutA(memDC, vpX + 660, 584, "[H] Tome", 8);
 
     // 4. RIGHT SIDEBAR (728..1036, 46..608)
     int sbX = 728;
@@ -3579,58 +3971,94 @@ void RenderGame(HDC hdc, HWND hwnd) {
         FillRect(memDC, &mpBarFill, mpFill);
         DeleteObject(mpFill);
 
+        // Hunger Bar
+        SetTextColor(memDC, COLOR_TEXT_DIM);
+        TextOutA(memDC, sbX + 16, contentY + 108, "Hunger (Nourish)", 16);
+        char hngTxt[32];
+        snprintf(hngTxt, sizeof(hngTxt), "%d / %d", g_player.hunger, g_player.max_hunger);
+        SetTextColor(memDC, g_player.hunger <= 15 ? RGB(239, 68, 68) : COLOR_TEXT_BRIGHT);
+        TextOutA(memDC, sbX + sbW - 85, contentY + 108, hngTxt, (int)strlen(hngTxt));
+
+        RECT hngBarBg = {sbX + 16, contentY + 122, sbX + sbW - 16, contentY + 127};
+        FillRect(memDC, &hngBarBg, barDark);
+        int hngW = (int)((float)(sbW - 32) * ((float)g_player.hunger / (float)g_player.max_hunger));
+        if (hngW < 0) hngW = 0; if (hngW > sbW - 32) hngW = sbW - 32;
+        RECT hngBarFill = {sbX + 16, contentY + 122, sbX + 16 + hngW, contentY + 127};
+        HBRUSH hngFill = CreateSolidBrush(g_player.hunger <= 15 ? RGB(220, 38, 38) : RGB(217, 119, 6));
+        FillRect(memDC, &hngBarFill, hngFill);
+        DeleteObject(hngFill);
+
         // EXP Bar
         SetTextColor(memDC, COLOR_TEXT_DIM);
-        TextOutA(memDC, sbX + 16, contentY + 108, "Experience", 10);
+        TextOutA(memDC, sbX + 16, contentY + 132, "Experience", 10);
         char expTxt[32];
         snprintf(expTxt, sizeof(expTxt), "%d / %d", g_player.exp, g_player.max_exp);
         SetTextColor(memDC, COLOR_TEXT_BRIGHT);
-        TextOutA(memDC, sbX + sbW - 85, contentY + 108, expTxt, (int)strlen(expTxt));
+        TextOutA(memDC, sbX + sbW - 85, contentY + 132, expTxt, (int)strlen(expTxt));
 
-        RECT expBarBg = {sbX + 16, contentY + 122, sbX + sbW - 16, contentY + 127};
+        RECT expBarBg = {sbX + 16, contentY + 144, sbX + sbW - 16, contentY + 149};
         FillRect(memDC, &expBarBg, barDark);
         DeleteObject(barDark);
         int expW = (int)((float)(sbW - 32) * ((float)g_player.exp / (float)g_player.max_exp));
         if (expW < 0) expW = 0; if (expW > sbW - 32) expW = sbW - 32;
-        RECT expBarFill = {sbX + 16, contentY + 122, sbX + 16 + expW, contentY + 127};
+        RECT expBarFill = {sbX + 16, contentY + 144, sbX + 16 + expW, contentY + 149};
         HBRUSH expFill = CreateSolidBrush(COLOR_TEXT_GOLD);
         FillRect(memDC, &expBarFill, expFill);
         DeleteObject(expFill);
 
         // Stats rows
         SetTextColor(memDC, COLOR_TEXT_DIM);
-        TextOutA(memDC, sbX + 16, contentY + 134, "Class:", 6);
+        TextOutA(memDC, sbX + 16, contentY + 154, "Class:", 6);
         SetTextColor(memDC, COLOR_ACCENT_PURPLE);
-        TextOutA(memDC, sbX + 130, contentY + 134, "Rune Knight", 11);
+        TextOutA(memDC, sbX + 130, contentY + 154, "Rune Knight", 11);
 
         SetTextColor(memDC, COLOR_TEXT_DIM);
-        TextOutA(memDC, sbX + 16, contentY + 150, "Might (Atk):", 12);
+        TextOutA(memDC, sbX + 16, contentY + 168, "Might (Atk):", 12);
         char stBuf[32];
         snprintf(stBuf, sizeof(stBuf), "%d (+%d)", g_player.might, (g_player.might - 10) / 2);
         SetTextColor(memDC, COLOR_TEXT_BRIGHT);
-        TextOutA(memDC, sbX + 130, contentY + 150, stBuf, (int)strlen(stBuf));
+        TextOutA(memDC, sbX + 130, contentY + 168, stBuf, (int)strlen(stBuf));
 
         SetTextColor(memDC, COLOR_TEXT_DIM);
-        TextOutA(memDC, sbX + 16, contentY + 166, "Warding (Def):", 14);
+        TextOutA(memDC, sbX + 16, contentY + 182, "Warding (Def):", 14);
         snprintf(stBuf, sizeof(stBuf), "%d (+%d)", g_player.warding, (g_player.warding - 10) / 2);
-        SetTextColor(memDC, COLOR_TEXT_BRIGHT);
-        TextOutA(memDC, sbX + 130, contentY + 166, stBuf, (int)strlen(stBuf));
-
-        SetTextColor(memDC, COLOR_TEXT_DIM);
-        TextOutA(memDC, sbX + 16, contentY + 182, "Arcana (Magic):", 15);
-        int totalArc = g_player.arcana + g_staffDefs[g_player.equippedStaff].arcanaBonus;
-        snprintf(stBuf, sizeof(stBuf), "%d (+%d)", totalArc, (totalArc - 10) / 2);
         SetTextColor(memDC, COLOR_TEXT_BRIGHT);
         TextOutA(memDC, sbX + 130, contentY + 182, stBuf, (int)strlen(stBuf));
 
         SetTextColor(memDC, COLOR_TEXT_DIM);
-        TextOutA(memDC, sbX + 16, contentY + 198, "Light Radius:", 13);
-        snprintf(stBuf, sizeof(stBuf), "%d Tiles", g_player.light_radius);
-        SetTextColor(memDC, COLOR_TEXT_GOLD);
-        TextOutA(memDC, sbX + 130, contentY + 198, stBuf, (int)strlen(stBuf));
+        TextOutA(memDC, sbX + 16, contentY + 196, "Arcana (Magic):", 15);
+        int totalArc = g_player.arcana + g_staffDefs[g_player.equippedStaff].arcanaBonus;
+        snprintf(stBuf, sizeof(stBuf), "%d (+%d)", totalArc, (totalArc - 10) / 2);
+        SetTextColor(memDC, COLOR_TEXT_BRIGHT);
+        TextOutA(memDC, sbX + 130, contentY + 196, stBuf, (int)strlen(stBuf));
+
+        SetTextColor(memDC, COLOR_TEXT_DIM);
+        TextOutA(memDC, sbX + 16, contentY + 210, "Torch & Light:", 14);
+        char torchStatBuf[48];
+        if (g_player.torchLit) {
+            snprintf(torchStatBuf, sizeof(torchStatBuf), "Lit (%dt) | Rad %d", g_player.torchFuel, g_player.light_radius);
+            SetTextColor(memDC, COLOR_TEXT_GOLD);
+        } else {
+            snprintf(torchStatBuf, sizeof(torchStatBuf), "UNLIT [T:Rekindle] (Rad 1)");
+            SetTextColor(memDC, RGB(239, 68, 68));
+        }
+        TextOutA(memDC, sbX + 130, contentY + 210, torchStatBuf, (int)strlen(torchStatBuf));
+
+        // Occult Curse Status row (if afflicted)
+        if (g_player.curse != CURSE_NONE) {
+            SetTextColor(memDC, RGB(239, 68, 68));
+            TextOutA(memDC, sbX + 16, contentY + 224, "Active Curse:", 13);
+            const char* cName = "Darkness";
+            if (g_player.curse == CURSE_ENFEEBLE) cName = "Enfeeblement";
+            else if (g_player.curse == CURSE_DECAY) cName = "Decaying Hunger";
+            else if (g_player.curse == CURSE_VOID) cName = "Void Delirium";
+            char curBuf[48];
+            snprintf(curBuf, sizeof(curBuf), "%s (%dt left)", cName, g_player.curseTurns);
+            TextOutA(memDC, sbX + 130, contentY + 224, curBuf, (int)strlen(curBuf));
+        }
 
         // GEAR SECTION
-        int gearY = contentY + 218;
+        int gearY = contentY + 242;
         RECT gearCard = {sbX + 8, gearY, sbX + sbW - 8, gearY + 115};
         HBRUSH gCardBg = CreateSolidBrush(COLOR_BG_CARD);
         FillRect(memDC, &gearCard, gCardBg);
@@ -3942,7 +4370,7 @@ void RenderGame(HDC hdc, HWND hwnd) {
 
     // 5. HELP MODAL DIALOG (When H or F1 pressed)
     if (g_showHelpModal) {
-        RECT modalRect = {width / 2 - 290, height / 2 - 190, width / 2 + 290, height / 2 + 190};
+        RECT modalRect = {width / 2 - 310, height / 2 - 210, width / 2 + 310, height / 2 + 210};
         HBRUSH modalBg = CreateSolidBrush(COLOR_BG_PANEL);
         FillRect(memDC, &modalRect, modalBg);
         DeleteObject(modalBg);
@@ -3956,22 +4384,24 @@ void RenderGame(HDC hdc, HWND hwnd) {
 
         SelectObject(memDC, fontTitle);
         SetTextColor(memDC, COLOR_BORDER_GLOW);
-        TextOutA(memDC, modalRect.left + 20, modalRect.top + 16, "DELVER'S TOME & SURVIVAL MANUAL", 31);
+        TextOutA(memDC, modalRect.left + 20, modalRect.top + 14, "DELVER'S TOME & SURVIVAL MANUAL", 31);
 
         SelectObject(memDC, fontSmall);
         SetTextColor(memDC, COLOR_TEXT_PRIMARY);
-        int my = modalRect.top + 46;
-        TextOutA(memDC, modalRect.left + 20, my, "- WASD / Arrow Keys / Numpad / Vi: Navigate grid", 48); my += 18;
-        TextOutA(memDC, modalRect.left + 20, my, "- Space: Rest 1 turn (+2 HP, +1 Sanity, +3 Aether)", 50); my += 18;
-        TextOutA(memDC, modalRect.left + 20, my, "- Bump Combat: Walk into monsters to strike in melee", 52); my += 18;
-        TextOutA(memDC, modalRect.left + 20, my, "- Z / X / V: Cast Elemental Spells from Staff Sockets 1 / 2 / 3", 63); my += 18;
-        TextOutA(memDC, modalRect.left + 20, my, "- R: Search surrounding area for secret coffers & altars", 56); my += 18;
-        TextOutA(memDC, modalRect.left + 20, my, "- E / Enter: Interact / Descend stairs / Commune with Altars", 60); my += 18;
-        TextOutA(memDC, modalRect.left + 20, my, "- 1, 2, 3, 4: Tabs (Delver / Pack / Rune Forge / Bestiary)", 57); my += 18;
-        TextOutA(memDC, modalRect.left + 20, my, "- Bestiary: Skeletons (fire), Wraiths (phasing), Leviathans (frost)", 67); my += 18;
-        TextOutA(memDC, modalRect.left + 20, my, "- Biomes: B1-3 Catacombs | B4-6 Sunken Grotto | B7-9 Crypt | B10+ Void", 70); my += 18;
-        TextOutA(memDC, modalRect.left + 20, my, "- C: Toggle CRT Scanlines | F: Toggle Field of View", 51); my += 18;
-        TextOutA(memDC, modalRect.left + 20, my, "- Ctrl+N / F2: Start New Descent", 32); my += 22;
+        int my = modalRect.top + 40;
+        TextOutA(memDC, modalRect.left + 20, my, "- WASD / Arrows / Vi / Numpad: Navigate subterranean grid", 57); my += 16;
+        TextOutA(memDC, modalRect.left + 20, my, "- Space / Num5: Rest 1 turn (+2 HP, +1 Sanity, +3 Aether, disallow when starving)", 82); my += 16;
+        TextOutA(memDC, modalRect.left + 20, my, "- Bump Combat: Walk into monsters to strike in melee", 52); my += 16;
+        TextOutA(memDC, modalRect.left + 20, my, "- Z / X / V: Cast Elemental Spells from Staff Sockets 1 / 2 / 3", 63); my += 16;
+        TextOutA(memDC, modalRect.left + 20, my, "- R / Search: Search surrounding area for secret coffers & altars", 65); my += 16;
+        TextOutA(memDC, modalRect.left + 20, my, "- E / Enter: Interact / Descend stairs / Commune with Altars", 60); my += 16;
+        TextOutA(memDC, modalRect.left + 20, my, "- T / Rekindle: Re-ignite torch via Pyre spell, Brimstone Ash, or adjacent fire", 79); my += 16;
+        TextOutA(memDC, modalRect.left + 20, my, "- Hunger & Darkness: Starving (0 food) drains HP. Pitch blackness drains Sanity!", 80); my += 16;
+        TextOutA(memDC, modalRect.left + 20, my, "- Cursed Effigies [!]: Walk into totems to shatter them for essence (beware curses)", 84); my += 16;
+        TextOutA(memDC, modalRect.left + 20, my, "- Curses & Salt: Purifying Salt / Altars purge curses (Darkness, Enfeeble, Decay)", 81); my += 16;
+        TextOutA(memDC, modalRect.left + 20, my, "- 1, 2, 3, 4: Sidebar Tabs (Delver stats / Pack & Alchemy / Rune Forge / Bestiary)", 82); my += 16;
+        TextOutA(memDC, modalRect.left + 20, my, "- Biomes: B1-3 Catacombs | B4-6 Sunken Grotto | B7-9 Crypt | B10+ Void", 70); my += 16;
+        TextOutA(memDC, modalRect.left + 20, my, "- C: CRT Phosphors | F: Field of View | Ctrl+N / F2: New Descent", 64); my += 20;
 
         SetTextColor(memDC, COLOR_TEXT_GOLD);
         TextOutA(memDC, modalRect.left + 20, my, "Press [H], [F1], or [ESC] to close manual.", 42);
@@ -4014,6 +4444,13 @@ void ResetPlayerRun(void) {
     g_player.base_light_radius = 7;
     g_player.hp = 100;
     g_player.sanity = 100;
+    g_player.hunger = 100;
+    g_player.max_hunger = 100;
+    g_player.torchFuel = 160;
+    g_player.maxTorchFuel = 160;
+    g_player.torchLit = TRUE;
+    g_player.curse = CURSE_NONE;
+    g_player.curseTurns = 0;
     g_player.aether = 50;
     g_player.shield = 0;
     g_player.essence = 0;
@@ -4036,6 +4473,8 @@ void ResetPlayerRun(void) {
     g_player.numPackItems = 0;
     AddPackItem(ITEM_HEAL_SALVE, 2);
     AddPackItem(ITEM_SANITY_INCENSE, 1);
+    AddPackItem(ITEM_FOOD_RATIONS, 2);
+    AddPackItem(ITEM_PURIFYING_SALT, 1);
     AddPackItem(ITEM_KEY_RUNIC, 1);
     AddPackItem(ITEM_ING_BLOOD_LOTUS, 1);
     AddPackItem(ITEM_ING_AETHER_BLOSSOM, 1);
@@ -4217,6 +4656,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SearchArea();
             break;
 
+        // Rekindle Torch
+        case 'T':
+            RekindleTorch();
+            break;
+
         // Spells from Staff Sockets
         case 'Z':
             CastSpell(0);
@@ -4299,7 +4743,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         // Check Tab 0 (Delver Equipment) clicks to unequip
         if (g_activeTab == 0 && mouseX >= sbX + 16 && mouseX <= sbX + 308 - 16) {
-            int gearY = sbY + 36 + 218;
+            int gearY = sbY + 36 + 242;
             if (mouseY >= gearY + 38 && mouseY <= gearY + 56) {
                 UnequipSlot(SLOT_WEAPON);
                 InvalidateRect(hwnd, NULL, FALSE);
@@ -4388,24 +4832,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         // Check toolbar buttons
         int vpX = 12;
         if (mouseY >= 574 && mouseY <= 608 && mouseX >= vpX && mouseX <= vpX + VIEWPORT_W) {
-            if (mouseX < vpX + 105) {
+            if (mouseX < vpX + 70) {
                 // New Descent
                 ResetPlayerRun();
                 InitGame(1);
-            } else if (mouseX < vpX + 210) {
+            } else if (mouseX < vpX + 160) {
                 // Rest
                 RestTurn();
-            } else if (mouseX < vpX + 315) {
+            } else if (mouseX < vpX + 250) {
                 // Search
                 SearchArea();
-            } else if (mouseX < vpX + 410) {
+            } else if (mouseX < vpX + 345) {
                 // Descend
                 InteractTile();
-            } else if (mouseX < vpX + 520) {
+            } else if (mouseX < vpX + 465) {
+                // Rekindle Torch
+                RekindleTorch();
+            } else if (mouseX < vpX + 560) {
                 // Toggle CRT
                 g_crtEnabled = !g_crtEnabled;
                 AddLog(g_crtEnabled ? "CRT Phosphors & Scanlines: ENABLED." : "CRT Scanlines: DISABLED.", COLOR_ACCENT_CYAN);
-            } else if (mouseX < vpX + 630) {
+            } else if (mouseX < vpX + 645) {
                 // Toggle FOV
                 g_fovEnabled = !g_fovEnabled;
                 ComputeFOV();
