@@ -48,6 +48,13 @@
 #define TILE_ALTAR        13
 #define TILE_CAULDRON     14
 #define TILE_EFFIGY       15
+#define TILE_SHRINE       16
+
+// Weapon Enchantments
+#define ENCHANT_NONE      0
+#define ENCHANT_FIRE      1
+#define ENCHANT_FROST     2
+#define ENCHANT_VOID      3
 
 typedef enum {
     CURSE_NONE = 0,
@@ -406,6 +413,7 @@ typedef struct {
     ItemId equipAmulet;
     InventorySlot pack[MAX_PACK_SLOTS];
     int numPackItems;
+    int weaponEnchant; // 0=None, 1=Fire (Flamebrand), 2=Frost (Frostbite), 3=Void (Voidsever)
 } Delver;
 
 
@@ -500,6 +508,7 @@ static BOOL g_fovEnabled = TRUE;
 static BOOL g_crtEnabled = TRUE;
 static int g_activeTab = 0; // 0=Hero, 1=Inventory, 2=Runes, 3=Bestiary
 static BOOL g_showHelpModal = FALSE;
+static BOOL g_showEnchantModal = FALSE;
 static float g_animFlicker = 0.0f;
 static int g_frameCount = 0;
 
@@ -521,6 +530,11 @@ void RestTurn(void);
 void SearchArea(void);
 void InteractTile(void);
 void CommuneAltar(int x, int y);
+void OpenEnchantAltar(void);
+void CloseEnchantAltar(void);
+void ImbueEnchantment(int enchantType);
+void CommuneAltarBenediction(void);
+void CommuneShrine(int x, int y);
 void CheckLevelUp(void);
 void SpawnEmber(float x, float y, BOOL isTorch);
 void UpdateEmbers(void);
@@ -598,6 +612,15 @@ void RecalcPlayerStats(void) {
             mmp += id->maxAether;
             msan += id->maxSanity;
         }
+    }
+
+    // Weapon Enchantment passives
+    if (g_player.weaponEnchant == ENCHANT_FIRE) {
+        m += 2; // Flamebrand: +2 Might
+    } else if (g_player.weaponEnchant == ENCHANT_FROST) {
+        w += 3; // Frostbite: +3 Warding
+    } else if (g_player.weaponEnchant == ENCHANT_VOID) {
+        a += 2; // Voidsever: +2 Arcana
     }
 
     // Torch extinguished effect
@@ -1238,6 +1261,39 @@ void AttackMonster(int idx) {
     if (isCrit) baseDmg = (int)(baseDmg * 1.5f);
 
     DamageMonster(idx, baseDmg, "PHYSICAL", isCrit);
+
+    // Phase 10: Weapon Enchantment Elemental Bursts
+    if (g_monsters[idx].alive && g_player.weaponEnchant != ENCHANT_NONE) {
+        if (g_player.weaponEnchant == ENCHANT_FIRE) {
+            int fireDmg = RandInt(10, 16);
+            if (g_monsters[idx].type == MONSTER_SKELETON) {
+                fireDmg = (int)(fireDmg * 1.5f);
+            }
+            DamageMonster(idx, fireDmg, "FIRE", FALSE);
+            AddLog("Flamebrand bursts with primordial fire!", RGB(249, 115, 22));
+            Beep(700, 30);
+        } else if (g_player.weaponEnchant == ENCHANT_FROST) {
+            int cryoDmg = RandInt(8, 14);
+            DamageMonster(idx, cryoDmg, "CRYO", FALSE);
+            if (RandInt(0, 100) < 35 && g_monsters[idx].alive) {
+                g_monsters[idx].freezeTurns = 2;
+                char fzBuf[96];
+                snprintf(fzBuf, sizeof(fzBuf), "Frostbite encases %s in permafrost (2 turns)!", g_monsterDefs[g_monsters[idx].type].name);
+                AddLog(fzBuf, RGB(6, 182, 212));
+            }
+            Beep(850, 30);
+        } else if (g_player.weaponEnchant == ENCHANT_VOID) {
+            int voidDmg = RandInt(12, 20);
+            DamageMonster(idx, voidDmg, "VOID", FALSE);
+            g_player.aether += 4;
+            if (g_player.aether > g_player.max_aether) g_player.aether = g_player.max_aether;
+            g_player.sanity += 3;
+            if (g_player.sanity > g_player.max_sanity) g_player.sanity = g_player.max_sanity;
+            AddLog("Voidsever cleaves the soul! (+4 Aether, +3 Sanity siphoned)", RGB(168, 85, 247));
+            Beep(920, 35);
+        }
+    }
+
     AdvanceTurn();
 }
 
@@ -1530,6 +1586,26 @@ void GenerateCatacombs(int depth) {
         }
     }
 
+    // Place Relic Enchanting Altar in Catacombs
+    if (roomCount >= 3) {
+        int ar = 1 + RandInt(0, roomCount - 3);
+        int ax = rooms[ar].x + 2;
+        int ay = rooms[ar].y + rooms[ar].h / 2;
+        if (g_dungeon[ay][ax] == TILE_FLOOR) {
+            g_dungeon[ay][ax] = TILE_ALTAR;
+        }
+    }
+
+    // Place Ancient Runic Shrine in Catacombs
+    if (roomCount >= 4) {
+        int sr = 2 + RandInt(0, roomCount - 4);
+        int sx = rooms[sr].x + rooms[sr].w - 2;
+        int sy = rooms[sr].y + 2;
+        if (g_dungeon[sy][sx] == TILE_FLOOR) {
+            g_dungeon[sy][sx] = TILE_SHRINE;
+        }
+    }
+
     // Place Cursed Effigy in Catacombs
     if (roomCount >= 4) {
         int efRoom = 1 + RandInt(0, roomCount - 3);
@@ -1670,6 +1746,26 @@ void GenerateSunkenGrotto(int depth) {
         }
     }
 
+    // Place Relic Enchanting Altar in Sunken Grotto
+    if (numCaverns >= 3) {
+        int ar = 1 + RandInt(0, numCaverns - 3);
+        int ax = caverns[ar].x + 1;
+        int ay = caverns[ar].y;
+        if (g_dungeon[ay][ax] == TILE_FLOOR || g_dungeon[ay][ax] == TILE_WATER) {
+            g_dungeon[ay][ax] = TILE_ALTAR;
+        }
+    }
+
+    // Place Ancient Runic Shrine in Sunken Grotto
+    if (numCaverns >= 4) {
+        int sr = 2 + RandInt(0, numCaverns - 4);
+        int sx = caverns[sr].x;
+        int sy = caverns[sr].y + 1;
+        if (g_dungeon[sy][sx] == TILE_FLOOR || g_dungeon[sy][sx] == TILE_WATER) {
+            g_dungeon[sy][sx] = TILE_SHRINE;
+        }
+    }
+
     // Place Cursed Effigy in Sunken Grotto
     if (numCaverns >= 4) {
         int efCav = 1 + RandInt(0, numCaverns - 3);
@@ -1803,6 +1899,16 @@ void GenerateForgottenCrypt(int depth) {
         }
     }
 
+    // Place Ancient Runic Shrine in Crypt
+    if (vaultCount >= 4) {
+        int sIdx = vaultCount / 2;
+        int sx = vaults[sIdx].x + 1;
+        int sy = vaults[sIdx].y + 1;
+        if (g_dungeon[sy][sx] == TILE_FLOOR) {
+            g_dungeon[sy][sx] = TILE_SHRINE;
+        }
+    }
+
     // Place 2 Cursed Effigies in Crypt
     if (vaultCount >= 4) {
         for (int e = 0; e < 2; e++) {
@@ -1921,6 +2027,26 @@ void GenerateVoidAbyss(int depth) {
         }
     }
 
+    // Place Relic Enchanting Altar in Void Abyss
+    if (platCount >= 3) {
+        int aIdx = 1;
+        int ax = plats[aIdx].x + 2;
+        int ay = plats[aIdx].y + 2;
+        if (g_dungeon[ay][ax] == TILE_FLOOR) {
+            g_dungeon[ay][ax] = TILE_ALTAR;
+        }
+    }
+
+    // Place Ancient Runic Shrine in Void Abyss
+    if (platCount >= 4) {
+        int sIdx = platCount - 2;
+        int sx = plats[sIdx].x + 2;
+        int sy = plats[sIdx].y + 2;
+        if (g_dungeon[sy][sx] == TILE_FLOOR) {
+            g_dungeon[sy][sx] = TILE_SHRINE;
+        }
+    }
+
     // Place 2-3 Cursed Effigies in Void Abyss
     if (platCount >= 4) {
         for (int e = 0; e < 2; e++) {
@@ -1978,40 +2104,160 @@ void InitGame(int depth) {
     AddLog(buf, COLOR_ACCENT_AMBER);
 }
 
-void CommuneAltar(int x, int y) {
-    g_dungeon[y][x] = TILE_RUBBLE;
-    g_player.sanity += 30;
+void OpenEnchantAltar(void) {
+    g_showEnchantModal = TRUE;
+    AddLog("Approached the Ancient Relic Enchanting Altar! Imbue weapon with elements [1..3] or receive Benediction [4].", COLOR_TEXT_GOLD);
+    Beep(659, 50); Beep(880, 80);
+}
+
+void CloseEnchantAltar(void) {
+    g_showEnchantModal = FALSE;
+}
+
+void ImbueEnchantment(int enchantType) {
+    if (g_player.equipWeapon == ITEM_NONE) {
+        AddLog("You must equip a weapon first before imbuing an elemental enchantment!", COLOR_ACCENT_RED);
+        Beep(200, 60);
+        return;
+    }
+
+    if (enchantType == ENCHANT_NONE) {
+        if (g_player.weaponEnchant == ENCHANT_NONE) {
+            AddLog("Your weapon has no enchantment to dispel.", COLOR_TEXT_DIM);
+            return;
+        }
+        g_player.weaponEnchant = ENCHANT_NONE;
+        RecalcPlayerStats();
+        AddLog("Dispelled active runes from weapon. Enchantment cleansed.", COLOR_ACCENT_CYAN);
+        Beep(440, 50);
+        return;
+    }
+
+    if (enchantType == ENCHANT_FIRE) {
+        BOOL hasMat = (GetPackItemCount(ITEM_ING_BRIMSTONE) > 0);
+        BOOL hasEss = (g_player.essence >= 25);
+        if (!hasMat && !hasEss) {
+            AddLog("Cannot imbue Flamebrand! Requires 25 Essence or 1 Brimstone Ash.", COLOR_ACCENT_RED);
+            Beep(200, 60);
+            return;
+        }
+        if (hasMat) {
+            RemovePackItem(ITEM_ING_BRIMSTONE, 1);
+        } else {
+            g_player.essence -= 25;
+        }
+        g_player.weaponEnchant = ENCHANT_FIRE;
+        RecalcPlayerStats();
+        AddLog("FLAMEBRAND IMBUED! +10..16 Fire DMG (1.5x vs Undead), +2 Might passive.", RGB(249, 115, 22));
+        Beep(523, 60); Beep(659, 80); Beep(784, 100);
+    } else if (enchantType == ENCHANT_FROST) {
+        BOOL hasMat = (GetPackItemCount(ITEM_ING_AZURE_SPORES) > 0);
+        BOOL hasEss = (g_player.essence >= 25);
+        if (!hasMat && !hasEss) {
+            AddLog("Cannot imbue Frostbite! Requires 25 Essence or 1 Azure Spores.", COLOR_ACCENT_RED);
+            Beep(200, 60);
+            return;
+        }
+        if (hasMat) {
+            RemovePackItem(ITEM_ING_AZURE_SPORES, 1);
+        } else {
+            g_player.essence -= 25;
+        }
+        g_player.weaponEnchant = ENCHANT_FROST;
+        RecalcPlayerStats();
+        AddLog("FROSTBITE IMBUED! +8..14 Cryo DMG, 35% Freeze (2 turns), +3 Warding passive.", RGB(6, 182, 212));
+        Beep(587, 60); Beep(740, 80); Beep(880, 100);
+    } else if (enchantType == ENCHANT_VOID) {
+        BOOL hasMat = (GetPackItemCount(ITEM_ING_VOID_DUST) > 0);
+        BOOL hasEss = (g_player.essence >= 30);
+        if (!hasMat && !hasEss) {
+            AddLog("Cannot imbue Voidsever! Requires 30 Essence or 1 Void Dust.", COLOR_ACCENT_RED);
+            Beep(200, 60);
+            return;
+        }
+        if (hasMat) {
+            RemovePackItem(ITEM_ING_VOID_DUST, 1);
+        } else {
+            g_player.essence -= 30;
+        }
+        g_player.weaponEnchant = ENCHANT_VOID;
+        RecalcPlayerStats();
+        AddLog("VOIDSEVER IMBUED! +12..20 Void DMG (pierces def), siphons +4 MP/+3 Sanity, +2 Arcana.", RGB(168, 85, 247));
+        Beep(440, 60); Beep(659, 80); Beep(988, 120);
+    }
+}
+
+void CommuneAltarBenediction(void) {
+    g_player.sanity += 25;
     if (g_player.sanity > g_player.max_sanity) g_player.sanity = g_player.max_sanity;
-    g_player.hp += 20;
+    g_player.hp += 30;
     if (g_player.hp > g_player.max_hp) g_player.hp = g_player.max_hp;
-    g_player.aether += 25;
+    g_player.aether += 20;
     if (g_player.aether > g_player.max_aether) g_player.aether = g_player.max_aether;
-    g_player.essence += 35;
-    g_player.exp += 30;
 
     if (g_player.curse != CURSE_NONE) {
         g_player.curse = CURSE_NONE;
         g_player.curseTurns = 0;
-        AddLog("Consecrated runic radiance purges all subterranean curses from your soul!", COLOR_BORDER_GLOW);
+        AddLog("Consecrated benediction purges all subterranean curses from your soul!", COLOR_BORDER_GLOW);
     }
+    AddLog("ALTAR BENEDICTION! Consecrated light restores +30 HP, +25 Sanity, +20 Aether.", COLOR_TEXT_GOLD);
+    Beep(523, 60); Beep(659, 60); Beep(784, 80);
+}
 
-    int unowned[NUM_RUNES];
-    int unownedCount = 0;
-    for (int r = 0; r < NUM_RUNES; r++) {
-        if (!g_player.ownedRunes[r]) unowned[unownedCount++] = r;
-    }
+void CommuneAltar(int x, int y) {
+    (void)x; (void)y;
+    OpenEnchantAltar();
+}
 
-    if (unownedCount > 0 && RandInt(0, 100) < 60) {
-        int pick = unowned[RandInt(0, unownedCount - 1)];
-        g_player.ownedRunes[pick] = TRUE;
-        char buf[128];
-        snprintf(buf, sizeof(buf), "RUNIC COMMUNION! Altar reveals the %s (%s)! Inscribe in Tab [3].", g_runeDefs[pick].name, g_runeDefs[pick].symbol);
-        AddLog(buf, COLOR_TEXT_GOLD);
-        Beep(523, 60); Beep(784, 80);
+void CommuneShrine(int x, int y) {
+    g_dungeon[y][x] = TILE_RUBBLE;
+    int roll = RandInt(0, 3);
+    char buf[160];
+
+    if (roll == 0) {
+        g_player.sanity += 35;
+        if (g_player.sanity > g_player.max_sanity) g_player.sanity = g_player.max_sanity;
+        g_player.hp += 25;
+        if (g_player.hp > g_player.max_hp) g_player.hp = g_player.max_hp;
+        g_player.aether += 20;
+        if (g_player.aether > g_player.max_aether) g_player.aether = g_player.max_aether;
+        if (g_player.curse != CURSE_NONE) {
+            g_player.curse = CURSE_NONE;
+            g_player.curseTurns = 0;
+        }
+        snprintf(buf, sizeof(buf), "SHRINE OF PURIFYING RADIANCE! Divine luminescence cleanses all curses! (+35 San, +25 HP, +20 MP)");
+        AddLog(buf, COLOR_BORDER_GLOW);
+    } else if (roll == 1) {
+        g_player.aether += 45;
+        if (g_player.aether > g_player.max_aether) g_player.aether = g_player.max_aether;
+        g_player.essence += 35;
+        snprintf(buf, sizeof(buf), "SHRINE OF ELDRITCH AETHER! Primordial torrent infuses your soul! (+45 Aether, +35 Essence)");
+        AddLog(buf, RGB(168, 85, 247));
+    } else if (roll == 2) {
+        g_player.shield += 40;
+        g_player.might += 3;
+        snprintf(buf, sizeof(buf), "SHRINE OF IRON AEGIS! Prismatic ward wraps your body! (+40 Ward Shield, +3 Might surge)");
+        AddLog(buf, RGB(56, 189, 248));
     } else {
-        AddLog("ALTAR COMMUNION! Primordial runic energies infuse you! (+30 Sanity, +20 HP, +25 Aether, +35 Essence, +30 EXP)", COLOR_TEXT_GOLD);
-        Beep(523, 60); Beep(659, 60); Beep(784, 80);
+        int unowned[NUM_RUNES];
+        int unownedCount = 0;
+        for (int r = 0; r < NUM_RUNES; r++) {
+            if (!g_player.ownedRunes[r]) unowned[unownedCount++] = r;
+        }
+        if (unownedCount > 0) {
+            int pick = unowned[RandInt(0, unownedCount - 1)];
+            g_player.ownedRunes[pick] = TRUE;
+            snprintf(buf, sizeof(buf), "SHRINE OF PRIMORDIAL RUNES! Ancient glyphs manifest: %s (%s)! Inscribe in Tab [3].", g_runeDefs[pick].name, g_runeDefs[pick].symbol);
+            AddLog(buf, COLOR_TEXT_GOLD);
+        } else {
+            g_player.exp += 60;
+            g_player.essence += 40;
+            snprintf(buf, sizeof(buf), "SHRINE OF PRIMORDIAL RUNES! Celestial resonance transcends mortality! (+60 EXP, +40 Essence)");
+            AddLog(buf, COLOR_TEXT_GOLD);
+        }
     }
+    SpawnCombatText((float)x, (float)y, "SHRINE BLESSING!", COLOR_TEXT_GOLD);
+    Beep(523, 60); Beep(659, 70); Beep(784, 80); Beep(1046, 120);
     CheckLevelUp();
     AdvanceTurn();
 }
@@ -2218,7 +2464,12 @@ void MovePlayer(int dx, int dy) {
     }
 
     if (tile == TILE_ALTAR) {
-        CommuneAltar(nx, ny);
+        OpenEnchantAltar();
+        return;
+    }
+
+    if (tile == TILE_SHRINE) {
+        CommuneShrine(nx, ny);
         return;
     }
 
@@ -2363,7 +2614,7 @@ void RekindleTorch(void) {
                 int tx = g_player.x + dx;
                 int ty = g_player.y + dy;
                 if (tx >= 0 && tx < MAP_WIDTH && ty >= 0 && ty < MAP_HEIGHT) {
-                    if (g_dungeon[ty][tx] == TILE_ALTAR) canRekindle = TRUE;
+                    if (g_dungeon[ty][tx] == TILE_ALTAR || g_dungeon[ty][tx] == TILE_SHRINE) canRekindle = TRUE;
                     for (int t = 0; t < g_numTorches; t++) {
                         if (g_torches[t].x == tx && g_torches[t].y == ty && g_torches[t].lit) {
                             canRekindle = TRUE;
@@ -2658,8 +2909,13 @@ void SearchArea(void) {
                     found = TRUE;
                 } else if (g_dungeon[ny][nx] == TILE_ALTAR) {
                     char buf[128];
-                    snprintf(buf, sizeof(buf), "Detected consecrated Runic Altar at (%d, %d)!", nx, ny);
+                    snprintf(buf, sizeof(buf), "Detected consecrated Relic Enchanting Altar at (%d, %d)!", nx, ny);
                     AddLog(buf, COLOR_TEXT_GOLD);
+                    found = TRUE;
+                } else if (g_dungeon[ny][nx] == TILE_SHRINE) {
+                    char buf[128];
+                    snprintf(buf, sizeof(buf), "Detected glowing Ancient Runic Shrine at (%d, %d)!", nx, ny);
+                    AddLog(buf, COLOR_TEXT_RUNE);
                     found = TRUE;
                 } else if (g_dungeon[ny][nx] == TILE_CAULDRON) {
                     char buf[128];
@@ -2688,7 +2944,9 @@ void InteractTile(void) {
         Beep(300, 60); Beep(450, 80);
         InitGame(g_depthLevel);
     } else if (cur == TILE_ALTAR) {
-        CommuneAltar(g_player.x, g_player.y);
+        OpenEnchantAltar();
+    } else if (cur == TILE_SHRINE) {
+        CommuneShrine(g_player.x, g_player.y);
     } else if (cur == TILE_CAULDRON) {
         AddLog("Standing before Ancient Alchemy Cauldron! Switched to Tab [2] Pack to brew potions.", RGB(52, 211, 153));
         g_activeTab = 1;
@@ -2705,7 +2963,11 @@ void InteractTile(void) {
                 int ny = g_player.y + dy;
                 if (nx >= 0 && nx < MAP_WIDTH && ny >= 0 && ny < MAP_HEIGHT) {
                     if (g_dungeon[ny][nx] == TILE_ALTAR) {
-                        CommuneAltar(nx, ny);
+                        OpenEnchantAltar();
+                        interacted = TRUE;
+                        break;
+                    } else if (g_dungeon[ny][nx] == TILE_SHRINE) {
+                        CommuneShrine(nx, ny);
                         interacted = TRUE;
                         break;
                     } else if (g_dungeon[ny][nx] == TILE_CAULDRON) {
@@ -3320,6 +3582,52 @@ static void DrawTileSprite(HDC hdc, int x, int y, int tile, BOOL isVisible, int 
             SetPixel(hdc, x + 17, y + 8, eyeColor);
             SetPixel(hdc, x + 18, y + 8, eyeColor);
         }
+    } else if (tile == TILE_SHRINE) {
+        // Ancient Runic Shrine - Stepped pedestal with levitating rune crystal
+        RECT bR1 = {x + 4, y + 20, x + 28, y + 29};
+        HBRUSH baseBr = CreateSolidBrush(isVisible ? RGB(30, 41, 59) : RGB(15, 20, 30));
+        FillRect(hdc, &bR1, baseBr);
+        DeleteObject(baseBr);
+
+        RECT bR2 = {x + 8, y + 14, x + 24, y + 21};
+        HBRUSH midBr = CreateSolidBrush(isVisible ? RGB(51, 65, 85) : RGB(25, 32, 42));
+        FillRect(hdc, &bR2, midBr);
+        DeleteObject(midBr);
+
+        // Floating Runic Crystal / Monolith
+        if (isVisible) {
+            int floatOffset = ((frame / 6) % 4);
+            int crystalY = cy - 6 - floatOffset;
+
+            // Celestial glow halo
+            HBRUSH glowBr = CreateSolidBrush(RGB(20, 45, 75));
+            HBRUSH oldG = (HBRUSH)SelectObject(hdc, glowBr);
+            HPEN nullP = (HPEN)GetStockObject(NULL_PEN);
+            HPEN oldP = (HPEN)SelectObject(hdc, nullP);
+            Ellipse(hdc, cx - 10, crystalY - 10, cx + 10, crystalY + 10);
+
+            // Diamond Crystal
+            POINT pts[4] = {
+                { cx, crystalY - 8 },
+                { cx + 6, crystalY },
+                { cx, crystalY + 8 },
+                { cx - 6, crystalY }
+            };
+            COLORREF cryCol = ((frame / 12) % 2 == 0) ? RGB(6, 182, 212) : RGB(129, 140, 248);
+            HBRUSH cryBr = CreateSolidBrush(cryCol);
+            SelectObject(hdc, cryBr);
+            Polygon(hdc, pts, 4);
+            DeleteObject(cryBr);
+
+            SelectObject(hdc, oldP);
+            SelectObject(hdc, oldG);
+            DeleteObject(glowBr);
+
+            // Radiant Core
+            SetPixel(hdc, cx, crystalY, RGB(255, 255, 255));
+            SetPixel(hdc, cx - 1, crystalY, RGB(224, 242, 254));
+            SetPixel(hdc, cx + 1, crystalY, RGB(224, 242, 254));
+        }
     }
 }
 
@@ -3543,6 +3851,8 @@ void RenderGame(HDC hdc, HWND hwnd) {
                 tileColor = isVisible ? RGB(30, 41, 59) : RGB(7, 10, 18);
             } else if (tile == TILE_EFFIGY) {
                 tileColor = isVisible ? RGB(35, 10, 45) : RGB(14, 5, 18);
+            } else if (tile == TILE_SHRINE) {
+                tileColor = isVisible ? RGB(16, 32, 54) : RGB(8, 16, 27);
             }
 
             RECT tr = {scrX, scrY, scrX + TILE_SIZE, scrY + TILE_SIZE};
@@ -3569,7 +3879,7 @@ void RenderGame(HDC hdc, HWND hwnd) {
                     SetPixel(memDC, scrX + 14, scrY + 14, RGB(168, 85, 247));
                     SetPixel(memDC, scrX + 15, scrY + 14, RGB(168, 85, 247));
                 }
-            } else if (tile == TILE_ALTAR || tile == TILE_CAULDRON || tile == TILE_PILLAR ||
+            } else if (tile == TILE_ALTAR || tile == TILE_SHRINE || tile == TILE_CAULDRON || tile == TILE_PILLAR ||
                        tile == TILE_DOOR_CLOSED || tile == TILE_DOOR_OPEN ||
                        tile == TILE_STAIRS_DOWN || tile == TILE_STAIRS_UP || tile == TILE_CHEST ||
                        tile == TILE_EFFIGY) {
@@ -3858,13 +4168,16 @@ void RenderGame(HDC hdc, HWND hwnd) {
     SelectObject(memDC, fontSmall);
     SetTextColor(memDC, COLOR_TEXT_BRIGHT);
     TextOutA(memDC, vpX + 4, 584, "[N] New", 7);
-    TextOutA(memDC, vpX + 76, 584, "[Space] Rest", 12);
-    TextOutA(memDC, vpX + 172, 584, "[R] Search", 10);
-    TextOutA(memDC, vpX + 262, 584, "[E] Descend", 11);
-    TextOutA(memDC, vpX + 358, 584, g_player.torchLit ? "[T] Rekindle" : "[T] LIGHT TORCH", g_player.torchLit ? 12 : 15);
-    TextOutA(memDC, vpX + 478, 584, g_crtEnabled ? "[C] CRT: ON" : "[C] CRT: OFF", g_crtEnabled ? 11 : 12);
-    TextOutA(memDC, vpX + 574, 584, g_fovEnabled ? "[F] FOV: ON" : "[F] FOV: OFF", g_fovEnabled ? 11 : 12);
-    TextOutA(memDC, vpX + 660, 584, "[H] Tome", 8);
+    TextOutA(memDC, vpX + 70, 584, "[Space] Rest", 12);
+    TextOutA(memDC, vpX + 164, 584, "[R] Search", 10);
+    TextOutA(memDC, vpX + 248, 584, "[E] Descend", 11);
+    TextOutA(memDC, vpX + 338, 584, g_player.torchLit ? "[T] Rekindle" : "[T] LIGHT", g_player.torchLit ? 12 : 9);
+    SetTextColor(memDC, COLOR_TEXT_GOLD);
+    TextOutA(memDC, vpX + 434, 584, "[I] Enchant", 11);
+    SetTextColor(memDC, COLOR_TEXT_BRIGHT);
+    TextOutA(memDC, vpX + 524, 584, g_crtEnabled ? "[C] CRT" : "[C] CRT", 7);
+    TextOutA(memDC, vpX + 586, 584, g_fovEnabled ? "[F] FOV" : "[F] FOV", 7);
+    TextOutA(memDC, vpX + 648, 584, "[H] Tome", 8);
 
     // 4. RIGHT SIDEBAR (728..1036, 46..608)
     int sbX = 728;
@@ -4077,9 +4390,14 @@ void RenderGame(HDC hdc, HWND hwnd) {
         TextOutA(memDC, sbX + 16, gearY + 23, staffStr, (int)strlen(staffStr));
 
         // Weapon
-        SetTextColor(memDC, g_player.equipWeapon != ITEM_NONE ? COLOR_ACCENT_AMBER : COLOR_TEXT_DIM);
-        char wpnStr[80];
-        snprintf(wpnStr, sizeof(wpnStr), "[Wpn] %s", g_player.equipWeapon != ITEM_NONE ? g_itemDefs[g_player.equipWeapon].name : "(Empty Weapon Slot)");
+        COLORREF wpnCol = (g_player.equipWeapon != ITEM_NONE) ? COLOR_ACCENT_AMBER : COLOR_TEXT_DIM;
+        const char* encTag = "";
+        if (g_player.weaponEnchant == ENCHANT_FIRE) { encTag = " [Flamebrand]"; wpnCol = RGB(249, 115, 22); }
+        else if (g_player.weaponEnchant == ENCHANT_FROST) { encTag = " [Frostbite]"; wpnCol = RGB(6, 182, 212); }
+        else if (g_player.weaponEnchant == ENCHANT_VOID) { encTag = " [Voidsever]"; wpnCol = RGB(168, 85, 247); }
+        SetTextColor(memDC, wpnCol);
+        char wpnStr[96];
+        snprintf(wpnStr, sizeof(wpnStr), "[Wpn] %s%s", g_player.equipWeapon != ITEM_NONE ? g_itemDefs[g_player.equipWeapon].name : "(Empty Weapon Slot)", encTag);
         TextOutA(memDC, sbX + 16, gearY + 41, wpnStr, (int)strlen(wpnStr));
 
         // Armor
@@ -4400,11 +4718,132 @@ void RenderGame(HDC hdc, HWND hwnd) {
         TextOutA(memDC, modalRect.left + 20, my, "- Cursed Effigies [!]: Walk into totems to shatter them for essence (beware curses)", 84); my += 16;
         TextOutA(memDC, modalRect.left + 20, my, "- Curses & Salt: Purifying Salt / Altars purge curses (Darkness, Enfeeble, Decay)", 81); my += 16;
         TextOutA(memDC, modalRect.left + 20, my, "- 1, 2, 3, 4: Sidebar Tabs (Delver stats / Pack & Alchemy / Rune Forge / Bestiary)", 82); my += 16;
+        TextOutA(memDC, modalRect.left + 20, my, "- I / Altar: Open Relic Enchanting Altar to imbue Flamebrand / Frostbite / Voidsever", 84); my += 16;
+        TextOutA(memDC, modalRect.left + 20, my, "- Ancient Shrines: Touch glowing runic monoliths for divine blessings & ancient runes", 85); my += 16;
         TextOutA(memDC, modalRect.left + 20, my, "- Biomes: B1-3 Catacombs | B4-6 Sunken Grotto | B7-9 Crypt | B10+ Void", 70); my += 16;
         TextOutA(memDC, modalRect.left + 20, my, "- C: CRT Phosphors | F: Field of View | Ctrl+N / F2: New Descent", 64); my += 20;
 
         SetTextColor(memDC, COLOR_TEXT_GOLD);
         TextOutA(memDC, modalRect.left + 20, my, "Press [H], [F1], or [ESC] to close manual.", 42);
+    }
+
+    // 5b. ENCHANTING ALTAR MODAL DIALOG (When I pressed or Altar visited)
+    if (g_showEnchantModal) {
+        RECT modalRect = {width / 2 - 320, height / 2 - 220, width / 2 + 320, height / 2 + 220};
+        HBRUSH modalBg = CreateSolidBrush(RGB(10, 15, 26));
+        FillRect(memDC, &modalRect, modalBg);
+        DeleteObject(modalBg);
+
+        HPEN glowModalPen = CreatePen(PS_SOLID, 2, RGB(251, 191, 36));
+        HPEN oldMP = (HPEN)SelectObject(memDC, glowModalPen);
+        SelectObject(memDC, GetStockObject(NULL_BRUSH));
+        Rectangle(memDC, modalRect.left, modalRect.top, modalRect.right, modalRect.bottom);
+        SelectObject(memDC, oldMP);
+        DeleteObject(glowModalPen);
+
+        SelectObject(memDC, fontTitle);
+        SetTextColor(memDC, COLOR_TEXT_GOLD);
+        TextOutA(memDC, modalRect.left + 20, modalRect.top + 14, "ANCIENT RELIC ENCHANTING ALTAR", 30);
+
+        SelectObject(memDC, fontSmall);
+        SetTextColor(memDC, COLOR_TEXT_DIM);
+        TextOutA(memDC, modalRect.left + 20, modalRect.top + 36, "Imbue equipped weapon with elemental runic enchantments & invoke benedictions", 77);
+
+        int my = modalRect.top + 58;
+
+        // Current Weapon & Active Enchantment status card
+        RECT wCard = {modalRect.left + 20, my, modalRect.right - 20, my + 44};
+        HBRUSH wCardBg = CreateSolidBrush(RGB(16, 23, 38));
+        FillRect(memDC, &wCard, wCardBg);
+        DeleteObject(wCardBg);
+        FrameRect(memDC, &wCard, (HBRUSH)GetStockObject(DKGRAY_BRUSH));
+
+        SelectObject(memDC, fontBold);
+        SetTextColor(memDC, COLOR_TEXT_BRIGHT);
+        char wpnInfo[128];
+        const char* encTitle = "Unenchanted";
+        COLORREF encCol = COLOR_TEXT_DIM;
+        if (g_player.weaponEnchant == ENCHANT_FIRE) { encTitle = "Flamebrand (Fire I)"; encCol = RGB(249, 115, 22); }
+        else if (g_player.weaponEnchant == ENCHANT_FROST) { encTitle = "Frostbite (Cryo I)"; encCol = RGB(6, 182, 212); }
+        else if (g_player.weaponEnchant == ENCHANT_VOID) { encTitle = "Voidsever (Void I)"; encCol = RGB(168, 85, 247); }
+
+        snprintf(wpnInfo, sizeof(wpnInfo), "Equipped Weapon: %s", (g_player.equipWeapon != ITEM_NONE) ? g_itemDefs[g_player.equipWeapon].name : "None (Equip a weapon first!)");
+        TextOutA(memDC, modalRect.left + 28, my + 6, wpnInfo, (int)strlen(wpnInfo));
+
+        SelectObject(memDC, fontSmall);
+        SetTextColor(memDC, encCol);
+        char encInfo[128];
+        snprintf(encInfo, sizeof(encInfo), "Current Imbuement: %s", encTitle);
+        TextOutA(memDC, modalRect.left + 28, my + 24, encInfo, (int)strlen(encInfo));
+
+        // Reagents Stash line
+        char stashInfo[128];
+        snprintf(stashInfo, sizeof(stashInfo), "Essence: %d* | Brimstone: %d | Azure: %d | Void Dust: %d",
+                 g_player.essence, GetPackItemCount(ITEM_ING_BRIMSTONE), GetPackItemCount(ITEM_ING_AZURE_SPORES), GetPackItemCount(ITEM_ING_VOID_DUST));
+        SetTextColor(memDC, COLOR_TEXT_GOLD);
+        TextOutA(memDC, modalRect.left + 280, my + 24, stashInfo, (int)strlen(stashInfo));
+
+        my += 54;
+
+        // Option 1: Flamebrand
+        RECT opt1 = {modalRect.left + 20, my, modalRect.right - 20, my + 44};
+        HBRUSH o1Bg = CreateSolidBrush(g_player.weaponEnchant == ENCHANT_FIRE ? RGB(35, 20, 10) : RGB(18, 22, 34));
+        FillRect(memDC, &opt1, o1Bg);
+        DeleteObject(o1Bg);
+        FrameRect(memDC, &opt1, (HBRUSH)GetStockObject(DKGRAY_BRUSH));
+        SelectObject(memDC, fontBold);
+        SetTextColor(memDC, RGB(249, 115, 22));
+        TextOutA(memDC, modalRect.left + 28, my + 6, "[1] FLAMEBRAND (Fire) - Cost: 25 Essence OR 1 Brimstone Ash", 59);
+        SelectObject(memDC, fontSmall);
+        SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+        TextOutA(memDC, modalRect.left + 28, my + 24, "Effect: +10..16 Fire DMG (1.5x vs Undead/Skeletons). Passive: +2 Might.", 71);
+        my += 50;
+
+        // Option 2: Frostbite
+        RECT opt2 = {modalRect.left + 20, my, modalRect.right - 20, my + 44};
+        HBRUSH o2Bg = CreateSolidBrush(g_player.weaponEnchant == ENCHANT_FROST ? RGB(10, 25, 35) : RGB(18, 22, 34));
+        FillRect(memDC, &opt2, o2Bg);
+        DeleteObject(o2Bg);
+        FrameRect(memDC, &opt2, (HBRUSH)GetStockObject(DKGRAY_BRUSH));
+        SelectObject(memDC, fontBold);
+        SetTextColor(memDC, RGB(6, 182, 212));
+        TextOutA(memDC, modalRect.left + 28, my + 6, "[2] FROSTBITE (Cryo) - Cost: 25 Essence OR 1 Azure Spores", 57);
+        SelectObject(memDC, fontSmall);
+        SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+        TextOutA(memDC, modalRect.left + 28, my + 24, "Effect: +8..14 Cryo DMG, 35% chance to Freeze target 2 turns. Passive: +3 Warding.", 82);
+        my += 50;
+
+        // Option 3: Voidsever
+        RECT opt3 = {modalRect.left + 20, my, modalRect.right - 20, my + 44};
+        HBRUSH o3Bg = CreateSolidBrush(g_player.weaponEnchant == ENCHANT_VOID ? RGB(28, 15, 38) : RGB(18, 22, 34));
+        FillRect(memDC, &opt3, o3Bg);
+        DeleteObject(o3Bg);
+        FrameRect(memDC, &opt3, (HBRUSH)GetStockObject(DKGRAY_BRUSH));
+        SelectObject(memDC, fontBold);
+        SetTextColor(memDC, RGB(168, 85, 247));
+        TextOutA(memDC, modalRect.left + 28, my + 6, "[3] VOIDSEVER (Void) - Cost: 30 Essence OR 1 Void Dust", 54);
+        SelectObject(memDC, fontSmall);
+        SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+        TextOutA(memDC, modalRect.left + 28, my + 24, "Effect: +12..20 Void DMG (pierces def), siphons +4 MP & +3 Sanity. Passive: +2 Arcana.", 86);
+        my += 50;
+
+        // Option 4: Altar Benediction & Cleanse
+        RECT opt4 = {modalRect.left + 20, my, modalRect.right - 20, my + 44};
+        HBRUSH o4Bg = CreateSolidBrush(RGB(18, 22, 34));
+        FillRect(memDC, &opt4, o4Bg);
+        DeleteObject(o4Bg);
+        FrameRect(memDC, &opt4, (HBRUSH)GetStockObject(DKGRAY_BRUSH));
+        SelectObject(memDC, fontBold);
+        SetTextColor(memDC, COLOR_TEXT_GOLD);
+        TextOutA(memDC, modalRect.left + 28, my + 6, "[4] ALTAR BENEDICTION (Free) - Consecrated Renewal", 50);
+        SelectObject(memDC, fontSmall);
+        SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+        TextOutA(memDC, modalRect.left + 28, my + 24, "Purges all active curses, restores +30 HP, +25 Sanity, and +20 Aether.", 70);
+        my += 52;
+
+        // Controls bar
+        SetTextColor(memDC, COLOR_TEXT_DIM);
+        TextOutA(memDC, modalRect.left + 20, my, "[0/C] Disenchant Weapon  |  [1..4] Select Action  |  [ESC / I] Return to Dungeon", 79);
     }
 
     // 6. BOTTOM FOOTER (0..width, height-24..height)
@@ -4467,6 +4906,7 @@ void ResetPlayerRun(void) {
 
     // Starting Equipment & Pack
     g_player.equipWeapon = ITEM_WPN_RUNIC_BLADE;
+    g_player.weaponEnchant = ENCHANT_NONE;
     g_player.equipArmor = ITEM_ARM_ABYSSAL_MAIL;
     g_player.equipRelic = ITEM_REL_TORCH;
     g_player.equipAmulet = ITEM_NONE;
@@ -4476,6 +4916,7 @@ void ResetPlayerRun(void) {
     AddPackItem(ITEM_FOOD_RATIONS, 2);
     AddPackItem(ITEM_PURIFYING_SALT, 1);
     AddPackItem(ITEM_KEY_RUNIC, 1);
+    AddPackItem(ITEM_ING_BRIMSTONE, 1);
     AddPackItem(ITEM_ING_BLOOD_LOTUS, 1);
     AddPackItem(ITEM_ING_AETHER_BLOSSOM, 1);
     RecalcPlayerStats();
@@ -4507,6 +4948,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }
+        }
+
+        if (g_showEnchantModal) {
+            if (wParam == '1') {
+                ImbueEnchantment(ENCHANT_FIRE);
+            } else if (wParam == '2') {
+                ImbueEnchantment(ENCHANT_FROST);
+            } else if (wParam == '3') {
+                ImbueEnchantment(ENCHANT_VOID);
+            } else if (wParam == '4') {
+                CommuneAltarBenediction();
+            } else if (wParam == '0' || wParam == 'C') {
+                ImbueEnchantment(ENCHANT_NONE);
+            } else if (wParam == 'I' || wParam == VK_ESCAPE || wParam == VK_SPACE || wParam == VK_RETURN) {
+                g_showEnchantModal = FALSE;
+            }
+            InvalidateRect(hwnd, NULL, FALSE);
+            return 0;
         }
 
         switch (wParam) {
@@ -4711,8 +5170,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_showHelpModal = !g_showHelpModal;
             break;
 
+        case 'I':
+            g_showEnchantModal = !g_showEnchantModal;
+            break;
+
         case VK_ESCAPE:
             if (g_showHelpModal) g_showHelpModal = FALSE;
+            if (g_showEnchantModal) g_showEnchantModal = FALSE;
             break;
         }
 
@@ -4725,6 +5189,40 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         if (g_showHelpModal) {
             g_showHelpModal = FALSE;
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        }
+
+        if (g_showEnchantModal) {
+            RECT clientRect;
+            GetClientRect(hwnd, &clientRect);
+            int width = clientRect.right - clientRect.left;
+            int height = clientRect.bottom - clientRect.top;
+            RECT modalRect = {width / 2 - 320, height / 2 - 220, width / 2 + 320, height / 2 + 220};
+
+            int opt1Y = modalRect.top + 58 + 54;
+            int opt2Y = opt1Y + 50;
+            int opt3Y = opt2Y + 50;
+            int opt4Y = opt3Y + 50;
+            int opt0Y = opt4Y + 52;
+
+            if (mouseX >= modalRect.left + 20 && mouseX <= modalRect.right - 20) {
+                if (mouseY >= opt1Y && mouseY <= opt1Y + 44) {
+                    ImbueEnchantment(ENCHANT_FIRE);
+                } else if (mouseY >= opt2Y && mouseY <= opt2Y + 44) {
+                    ImbueEnchantment(ENCHANT_FROST);
+                } else if (mouseY >= opt3Y && mouseY <= opt3Y + 44) {
+                    ImbueEnchantment(ENCHANT_VOID);
+                } else if (mouseY >= opt4Y && mouseY <= opt4Y + 44) {
+                    CommuneAltarBenediction();
+                } else if (mouseY >= opt0Y && mouseY <= opt0Y + 24) {
+                    ImbueEnchantment(ENCHANT_NONE);
+                } else if (mouseY < modalRect.top + 45) {
+                    g_showEnchantModal = FALSE;
+                }
+            } else {
+                g_showEnchantModal = FALSE;
+            }
             InvalidateRect(hwnd, NULL, FALSE);
             break;
         }
@@ -4832,27 +5330,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         // Check toolbar buttons
         int vpX = 12;
         if (mouseY >= 574 && mouseY <= 608 && mouseX >= vpX && mouseX <= vpX + VIEWPORT_W) {
-            if (mouseX < vpX + 70) {
+            if (mouseX < vpX + 65) {
                 // New Descent
                 ResetPlayerRun();
                 InitGame(1);
-            } else if (mouseX < vpX + 160) {
+            } else if (mouseX < vpX + 155) {
                 // Rest
                 RestTurn();
-            } else if (mouseX < vpX + 250) {
+            } else if (mouseX < vpX + 240) {
                 // Search
                 SearchArea();
-            } else if (mouseX < vpX + 345) {
+            } else if (mouseX < vpX + 330) {
                 // Descend
                 InteractTile();
-            } else if (mouseX < vpX + 465) {
+            } else if (mouseX < vpX + 425) {
                 // Rekindle Torch
                 RekindleTorch();
-            } else if (mouseX < vpX + 560) {
+            } else if (mouseX < vpX + 515) {
+                // Enchant Altar
+                g_showEnchantModal = !g_showEnchantModal;
+            } else if (mouseX < vpX + 580) {
                 // Toggle CRT
                 g_crtEnabled = !g_crtEnabled;
                 AddLog(g_crtEnabled ? "CRT Phosphors & Scanlines: ENABLED." : "CRT Scanlines: DISABLED.", COLOR_ACCENT_CYAN);
-            } else if (mouseX < vpX + 645) {
+            } else if (mouseX < vpX + 640) {
                 // Toggle FOV
                 g_fovEnabled = !g_fovEnabled;
                 ComputeFOV();

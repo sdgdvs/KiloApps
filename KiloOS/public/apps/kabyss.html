@@ -895,6 +895,7 @@
                 </div>
                 <div class="btn-group">
                     <button id="btnCauldronTop" class="btn-action" title="Brew potions at the Ancient Alchemy Cauldron">⚗️ Cauldron [B]</button>
+                    <button id="btnEnchantTop" class="btn-action" title="Relic Enchanting Altar: Imbue weapon with Fire, Frost, or Void">⛩️ Enchant [I]</button>
                     <button id="btnToggleCRT" class="btn-action" title="Toggle CRT scanlines & phosphors">📺 CRT: On</button>
                     <button id="btnToggleFOV" class="btn-action" title="Toggle full map vision (Debug)">👁️ FOV: On</button>
                     <button id="btnHelp">📖 Delver's Tome</button>
@@ -1035,6 +1036,16 @@
             </div>
 
             <div class="tab-content" id="tabRunes" style="display:none;">
+                <div class="panel-section" style="background:linear-gradient(180deg, #130924 0%, #0d121d 100%); border-color:#7c3aed; margin-bottom:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <span style="color:#c084fc; font-weight:bold; font-size:11px;">⛩️ Relic Enchanting Altar</span>
+                            <div style="color:var(--text-dim); font-size:10px;">Imbue weapon with Fire, Frost or Void</div>
+                        </div>
+                        <button id="btnOpenEnchantTab" class="btn-primary" style="font-size:10px; padding:3px 8px; background:#6b21a8; border-color:#a855f7; color:#faf5ff;">Enchant [I]</button>
+                    </div>
+                </div>
+
                 <div class="panel-section">
                     <div class="section-header">
                         <span>Equipped Enchanted Staff</span>
@@ -1152,6 +1163,102 @@
         </div>
     </div>
 
+    <div class="modal-backdrop" id="modalEnchant">
+        <div class="modal-card" style="width: 580px;">
+            <div class="modal-header" style="background:#13101d; border-bottom:1px solid #7c3aed;">
+                <div class="modal-title" style="color:#c084fc; display:flex; align-items:center; gap:8px;">
+                    <span>⛩️</span> Ancient Relic Enchanting Altar
+                </div>
+                <button class="modal-close" id="modalEnchantClose">&times;</button>
+            </div>
+            <div class="modal-body" style="display:flex; flex-direction:column; gap:10px;">
+                <div style="background:#090d16; border:1px solid #1e293b; border-radius:4px; padding:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-size:10px; text-transform:uppercase; color:var(--text-dim);">Equipped Weapon on Altar</div>
+                        <div id="enchantWeaponName" style="font-size:14px; font-weight:bold; color:var(--text-bright); margin-top:2px;">Ashwood Rune Staff</div>
+                        <div id="enchantWeaponStats" style="font-size:11px; color:var(--accent-cyan); margin-top:2px;">Base: +2 Arcana</div>
+                    </div>
+                    <div id="enchantCurrentBadge" style="padding:4px 10px; border-radius:4px; font-weight:bold; font-size:11px; background:#1e1b4b; color:#a5b4fc; border:1px solid #4338ca;">
+                        Unenchanted
+                    </div>
+                </div>
+
+                <div style="background:#0a0e17; border:1px solid #1e293b; border-radius:4px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-size:11px;">
+                        <span style="color:var(--text-dim);">Essence: </span><strong id="enchantEssenceTxt" style="color:var(--text-gold);">0</strong>
+                    </div>
+                    <div id="enchantReagentsTxt" style="font-size:11px; color:var(--text-dim); display:flex; gap:10px;">
+                        <span>🌋 Ash: <strong id="enchantAshTxt" style="color:#f97316;">0</strong></span>
+                        <span>🍄 Spores: <strong id="enchantSporesTxt" style="color:#06b6d4;">0</strong></span>
+                        <span>✨ Dust: <strong id="enchantDustTxt" style="color:#c084fc;">0</strong></span>
+                    </div>
+                </div>
+
+                <div style="font-size:10px; font-weight:bold; color:var(--text-rune); text-transform:uppercase;">
+                    Primordial Elemental Enchantments
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <!-- Flamebrand -->
+                    <div class="enchant-card" style="background:#130b0a; border:1px solid #7c2d12; border-radius:4px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:bold; color:#f97316; font-size:12px; display:flex; align-items:center; gap:6px;">
+                                <span>🔥</span> Flamebrand (Fire Enchantment)
+                            </div>
+                            <div style="font-size:10px; color:#fed7aa; margin-top:2px;">
+                                +10..16 Fire DMG per melee strike. Vulnerability x1.5 vs Skeletons & Undead.
+                            </div>
+                            <div style="font-size:9px; color:#fb923c; margin-top:2px;">
+                                Cost: 25 Essence OR 1 Brimstone Ash
+                            </div>
+                        </div>
+                        <button class="btn-primary" id="btnImbueFire" style="background:#9a3412; border-color:#ea580c; color:#fff7ed; font-size:11px; padding:5px 10px; flex-shrink:0;">Imbue [1]</button>
+                    </div>
+
+                    <!-- Frostbite -->
+                    <div class="enchant-card" style="background:#07151e; border:1px solid #0e7490; border-radius:4px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:bold; color:#06b6d4; font-size:12px; display:flex; align-items:center; gap:6px;">
+                                <span>❄️</span> Frostbite (Frost Enchantment)
+                            </div>
+                            <div style="font-size:10px; color:#cffafe; margin-top:2px;">
+                                +8..14 Cryo DMG, +3 Warding defense, 35% chance to Freeze enemy solid (2 turns).
+                            </div>
+                            <div style="font-size:9px; color:#38bdf8; margin-top:2px;">
+                                Cost: 25 Essence OR 1 Azure Spores
+                            </div>
+                        </div>
+                        <button class="btn-primary" id="btnImbueFrost" style="background:#0e7490; border-color:#06b6d4; color:#ecfeff; font-size:11px; padding:5px 10px; flex-shrink:0;">Imbue [2]</button>
+                    </div>
+
+                    <!-- Voidsever -->
+                    <div class="enchant-card" style="background:#130924; border:1px solid #6b21a8; border-radius:4px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:bold; color:#c084fc; font-size:12px; display:flex; align-items:center; gap:6px;">
+                                <span>🌀</span> Voidsever (Void Enchantment)
+                            </div>
+                            <div style="font-size:10px; color:#e9d5ff; margin-top:2px;">
+                                +12..20 Void DMG (ignores all warding), siphons +4 Aether & +3 Sanity per strike.
+                            </div>
+                            <div style="font-size:9px; color:#a855f7; margin-top:2px;">
+                                Cost: 30 Essence OR 1 Void Dust
+                            </div>
+                        </div>
+                        <button class="btn-primary" id="btnImbueVoid" style="background:#6b21a8; border-color:#a855f7; color:#faf5ff; font-size:11px; padding:5px 10px; flex-shrink:0;">Imbue [3]</button>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #1e293b; padding-top:8px; margin-top:4px;">
+                    <button id="btnAltarCleanse" class="btn-action" style="background:#064e3b; border-color:#10b981; color:#a7f3d0; font-size:11px; padding:4px 10px;">
+                        ✦ Consecrated Altar Benediction (+30 HP, +25 Sanity, Purge Curses)
+                    </button>
+                    <button id="btnDisenchant" class="btn-action" style="font-size:10px; color:var(--text-dim);">
+                        Remove Enchantment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-backdrop" id="modalHelp">
         <div class="modal-card">
             <div class="modal-header">
@@ -1163,11 +1270,20 @@
                 <ul>
                     <li><strong>WASD / Arrow Keys / Numpad / Vi (hjklyubn):</strong> Move Delver across the grid.</li>
                     <li><strong>Spacebar:</strong> Rest 1 turn to steady yourself (recuperates +2 HP, +1 Sanity, disallowed if starving).</li>
-                    <li><strong>E / Enter:</strong> Interact with doors, stairs, altars, cauldrons, or coffers.</li>
+                    <li><strong>E / Enter:</strong> Interact with doors, stairs, altars, shrines, cauldrons, or coffers.</li>
+                    <li><strong>I:</strong> Open the Relic Enchanting Altar to imbue your weapon with elemental magic!</li>
                     <li><strong>T:</strong> Rekindle Torch via Pyre spell, Brimstone Ash, or standing next to flame!</li>
                     <li><strong>B:</strong> Open the Ancient Alchemy Cauldron to brew potions and elixirs!</li>
-                    <li><strong>S / R:</strong> Search adjacent tiles for hidden passages, altars, and relic coffers.</li>
+                    <li><strong>S / R:</strong> Search adjacent tiles for hidden passages, altars, shrines, and relic coffers.</li>
                     <li><strong>Mouse Click:</strong> Click on visible floor tiles to move or inspect obstacles.</li>
+                </ul>
+                <h4>Ancient Runic Shrines & Relic Enchanting Altars [Phase 10]</h4>
+                <ul>
+                    <li><strong>Ancient Runic Shrines:</strong> Glowing sacred monoliths found deep in the crypts. Commune with them to receive divine blessings: Purifying Radiance (cures curses, +45 Sanity, refills torch), Eldritch Aether (+5 Max Aether permanently, full mana restore), Iron Aegis (+60 Ward Barrier, +2 permanent Warding), or Primordial Runes (reveals a lost Ancient Rune).</li>
+                    <li><strong>Relic Enchanting Altars [I]:</strong> Obsidian altars imbued with primordial elemental conduits. Interact with them or press [I] to imbue your weapon with:</li>
+                    <li><strong>🔥 Flamebrand (Fire):</strong> Adds +10..16 Fire Damage per strike. Deals 1.5x damage against Crypt Skeletons and undead (+2 Might passive).</li>
+                    <li><strong>❄️ Frostbite (Frost):</strong> Adds +8..14 Cryo Damage per strike. 35% chance to Freeze enemies solid for 2 turns (+3 Warding passive).</li>
+                    <li><strong>🌀 Voidsever (Void):</strong> Adds +12..20 Void Damage that completely bypasses monster armor/warding. Siphons +4 Aether and +3 Sanity back to you on every hit (+2 Arcana passive).</li>
                 </ul>
                 <h4>Survival Hazards: Sanity, Hunger & Occult Curses</h4>
                 <ul>
@@ -1251,7 +1367,15 @@
             CHASM: 12,
             ALTAR: 13,
             CAULDRON: 14,
-            EFFIGY: 15
+            EFFIGY: 15,
+            SHRINE: 16
+        };
+
+        const ENCHANTMENTS = {
+            NONE: { id: 'NONE', name: 'None', prefix: '', icon: '⚔️', color: '#94a3b8', desc: 'Unenchanted weapon.' },
+            FIRE: { id: 'FIRE', name: 'Flamebrand', prefix: 'Flamebrand', icon: '🔥', color: '#f97316', cost: 25, reagent: 'ING_BRIMSTONE', reagentName: 'Brimstone Ash', desc: '+10-16 Fire DMG on strike, 1.5x vs Skeletons & Undead.' },
+            FROST: { id: 'FROST', name: 'Frostbite', prefix: 'Frostbite', icon: '❄️', color: '#06b6d4', cost: 25, reagent: 'ING_AZURE_SPORES', reagentName: 'Azure Spores', desc: '+8-14 Cryo DMG, +3 Warding, 35% chance to Freeze solid.' },
+            VOID: { id: 'VOID', name: 'Voidsever', prefix: 'Voidsever', icon: '🌀', color: '#c084fc', cost: 30, reagent: 'ING_VOID_DUST', reagentName: 'Void Dust', desc: '+12-20 Void DMG (ignores warding), siphons +4 MP & +3 Sanity.' }
         };
 
         const CURSES = {
@@ -1738,6 +1862,24 @@
                 gain.connect(this.ctx.destination);
                 osc.start(now);
                 osc.stop(now + 0.15);
+            },
+            playEnchant() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                [330, 495, 660, 990].forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+                    osc.frequency.exponentialRampToValueAtTime(freq * 1.25, now + idx * 0.06 + 0.25);
+                    gain.gain.setValueAtTime(0.14, now + idx * 0.06);
+                    gain.gain.linearRampToValueAtTime(0.001, now + idx * 0.06 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.06);
+                    osc.stop(now + idx * 0.06 + 0.25);
+                });
             }
         };
 
@@ -2187,7 +2329,8 @@
                 armor: 'ARM_ABYSSAL_MAIL',
                 relic: 'REL_TORCH',
                 amulet: null
-            }
+            },
+            weaponEnchant: 'NONE'
         };
 
         // Inventory Management Functions
@@ -2305,6 +2448,184 @@
         function closeCauldronModal() {
             const modal = document.getElementById('modalCauldron');
             if (modal) modal.style.display = 'none';
+        }
+
+        function openEnchantModal() {
+            AudioSys.init();
+            renderEnchantUI();
+            const modal = document.getElementById('modalEnchant');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeEnchantModal() {
+            const modal = document.getElementById('modalEnchant');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function renderEnchantUI() {
+            const eqWpn = ITEMS[player.equipment.weapon];
+            const nameEl = document.getElementById('enchantWeaponName');
+            const statsEl = document.getElementById('enchantWeaponStats');
+            const badgeEl = document.getElementById('enchantCurrentBadge');
+
+            if (nameEl) {
+                nameEl.innerText = eqWpn ? eqWpn.name : 'No Weapon Equipped';
+            }
+            if (statsEl) {
+                if (eqWpn) {
+                    statsEl.innerText = `Base Might: +${eqWpn.might || 0} | Arcana: +${eqWpn.arcana || 0} | Warding: +${eqWpn.warding || 0}`;
+                } else {
+                    statsEl.innerText = 'Equip a weapon in Delver tab [1] to imbue enchantments';
+                }
+            }
+            if (badgeEl) {
+                const enc = ENCHANTMENTS[player.weaponEnchant] || ENCHANTMENTS.NONE;
+                badgeEl.innerText = enc.id === 'NONE' ? 'Unenchanted' : `${enc.icon} ${enc.name} Imbued`;
+                badgeEl.style.color = enc.color;
+                badgeEl.style.borderColor = enc.color;
+            }
+
+            const essTxt = document.getElementById('enchantEssenceTxt');
+            if (essTxt) essTxt.innerText = player.essence;
+
+            const ashTxt = document.getElementById('enchantAshTxt');
+            if (ashTxt) ashTxt.innerText = getItemCount('ING_BRIMSTONE');
+
+            const sporeTxt = document.getElementById('enchantSporesTxt');
+            if (sporeTxt) sporeTxt.innerText = getItemCount('ING_AZURE_SPORES');
+
+            const dustTxt = document.getElementById('enchantDustTxt');
+            if (dustTxt) dustTxt.innerText = getItemCount('ING_VOID_DUST');
+        }
+
+        function imbueEnchantment(enchantKey) {
+            AudioSys.init();
+            const enc = ENCHANTMENTS[enchantKey];
+            if (!enc || enc.id === 'NONE') {
+                player.weaponEnchant = 'NONE';
+                logMessage('Weapon enchantment removed upon the altar.', 'magic');
+                renderEnchantUI();
+                updateHUD();
+                return;
+            }
+
+            const eqWpn = ITEMS[player.equipment.weapon];
+            if (!eqWpn) {
+                logMessage('Cannot enchant! You must equip a weapon in Delver tab [1] first.', 'important');
+                return;
+            }
+
+            // Check reagent or essence
+            const hasReagent = (getItemCount(enc.reagent) >= 1);
+            if (!hasReagent && player.essence < enc.cost) {
+                logMessage(`Cannot imbue ${enc.name}! Need 1 ${enc.reagentName} or ${enc.cost} Essence (You have ${player.essence}).`, 'combat');
+                return;
+            }
+
+            if (hasReagent) {
+                removeItem(enc.reagent, 1);
+                logMessage(`Consumed 1 ${enc.reagentName} to empower altar!`, 'magic');
+            } else {
+                player.essence -= enc.cost;
+                logMessage(`Channeled ${enc.cost} Essence into the ancient altar!`, 'magic');
+            }
+
+            player.weaponEnchant = enc.id;
+            AudioSys.playEnchant();
+            if (enc.id === 'FIRE') AudioSys.playPyre();
+            else if (enc.id === 'FROST') AudioSys.playFrost();
+            else if (enc.id === 'VOID') AudioSys.playVoid();
+
+            spawnCombatText(player.x, player.y, `${enc.prefix.toUpperCase()}!`, enc.color);
+            logMessage(`⛩️ RELIC ENCHANTING: You place ${eqWpn.name} upon the altar! ${enc.desc}`, 'relic');
+            renderEnchantUI();
+            updateHUD();
+        }
+
+        function altarCleanse() {
+            AudioSys.init();
+            player.hp = Math.min(player.maxHp, player.hp + 30);
+            player.sanity = Math.min(player.maxSanity, player.sanity + 25);
+            player.aether = Math.min(player.maxAether, player.aether + 20);
+            let cMsg = '';
+            if (player.curse !== CURSES.NONE) {
+                cMsg = ` Cleansed occult curse of ${player.curse}!`;
+                player.curse = CURSES.NONE;
+                player.curseTurns = 0;
+            }
+            AudioSys.playAegis();
+            spawnCombatText(player.x, player.y, 'BENEDICTION!', '#34d399');
+            logMessage(`✦ ALTAR BENEDICTION: Sacred flames wash over you (+30 HP, +25 Sanity, +20 Aether)!${cMsg}`, 'heal');
+            renderEnchantUI();
+            updateHUD();
+        }
+
+        function communeShrine(sx, sy) {
+            AudioSys.init();
+            dungeon[sy][sx] = TILE.RUBBLE;
+            const blessings = [
+                {
+                    name: "Shrine of Purifying Radiance",
+                    run: () => {
+                        player.sanity = Math.min(player.maxSanity, player.sanity + 45);
+                        player.hp = Math.min(player.maxHp, player.hp + 35);
+                        player.torchFuel = player.maxTorchFuel;
+                        player.torchLit = true;
+                        let cMsg = '';
+                        if (player.curse !== CURSES.NONE) {
+                            cMsg = ` Banished ${player.curse}!`;
+                            player.curse = CURSES.NONE;
+                            player.curseTurns = 0;
+                        }
+                        spawnCombatText(player.x, player.y, 'PURIFIED!', '#38bdf8');
+                        logMessage(`✦ SHRINE OF RADIANCE: Divine light cleanses all curses, soothes your mind (+45 Sanity, +35 HP, Torch refueled)!${cMsg}`, 'heal');
+                    }
+                },
+                {
+                    name: "Shrine of Eldritch Aether",
+                    run: () => {
+                        player.maxAether += 5;
+                        player.aether = player.maxAether;
+                        player.essence += 40;
+                        player.exp += 35;
+                        spawnCombatText(player.x, player.y, '+5 MAX MP!', '#c084fc');
+                        logMessage(`✦ SHRINE OF ELDRITCH AETHER: Cosmic ley-lines permanently expand your mana pool (+5 Max Aether, Full Mana, +40 Essence, +35 EXP)!`, 'magic');
+                    }
+                },
+                {
+                    name: "Shrine of the Iron Aegis",
+                    run: () => {
+                        player.shield = Math.min(80, (player.shield || 0) + 60);
+                        player.hp = Math.min(player.maxHp, player.hp + 50);
+                        player.warding += 2;
+                        spawnCombatText(player.x, player.y, '+60 WARD!', '#34d399');
+                        logMessage(`✦ SHRINE OF THE IRON AEGIS: Celestial plating encases your body (+60 Ward Shield, +2 Permanent Warding, +50 HP)!`, 'heal');
+                    }
+                },
+                {
+                    name: "Shrine of Primordial Runes",
+                    run: () => {
+                        const unowned = Object.keys(RUNES).filter(r => !player.ownedRunes.includes(r));
+                        if (unowned.length > 0) {
+                            const newRune = unowned[Math.floor(Math.random() * unowned.length)];
+                            player.ownedRunes.push(newRune);
+                            spawnCombatText(player.x, player.y, `RUNE: ${RUNES[newRune].name}!`, '#fbbf24');
+                            logMessage(`✦ SHRINE OF PRIMORDIAL RUNES: The sacred monolith reveals the lost ${RUNES[newRune].name} (${RUNES[newRune].symbol})! Inscribe it in Tab [3].`, 'relic');
+                        } else {
+                            player.exp += 50;
+                            player.essence += 50;
+                            spawnCombatText(player.x, player.y, '+50 EXP +50 ESS', '#fbbf24');
+                            logMessage(`✦ SHRINE OF PRIMORDIAL RUNES: Ancient memories flood your consciousness (+50 EXP, +50 Essence)!`, 'relic');
+                        }
+                    }
+                }
+            ];
+
+            const b = blessings[Math.floor(Math.random() * blessings.length)];
+            b.run();
+            AudioSys.playAegis();
+            checkLevelUp();
+            advanceTurn();
         }
 
         function brewCauldronRecipe(recipeIdx) {
@@ -2592,7 +2913,7 @@
                 }
             }
 
-            // Place Ancient Alchemy Cauldron in Catacombs
+            // Place Ancient Alchemy Cauldron, Enchanting Altar & Shrine in Catacombs
             if (rooms.length > 2) {
                 const cRoom = rooms[Math.floor(rooms.length / 2)];
                 const ccx = Math.floor(cRoom.x + cRoom.w / 2);
@@ -2600,6 +2921,17 @@
                 if (dungeon[ccy][ccx] === TILE.FLOOR) {
                     dungeon[ccy][ccx] = TILE.CAULDRON;
                 }
+            }
+            if (rooms.length > 3) {
+                const aRoom = rooms[1];
+                const ax = Math.floor(aRoom.x + aRoom.w / 2);
+                const ay = Math.floor(aRoom.y + aRoom.h / 2);
+                if (dungeon[ay][ax] === TILE.FLOOR) dungeon[ay][ax] = TILE.ALTAR;
+
+                const sRoom = rooms[rooms.length - 2];
+                const sx = Math.floor(sRoom.x + sRoom.w / 2);
+                const sy = Math.floor(sRoom.y + sRoom.h / 2);
+                if (dungeon[sy][sx] === TILE.FLOOR) dungeon[sy][sx] = TILE.SHRINE;
             }
         }
 
@@ -2715,11 +3047,21 @@
                 }
             }
 
-            // Place Ancient Cauldron in Grotto
+            // Place Ancient Cauldron, Altar & Shrine in Grotto
             if (caverns.length > 2) {
                 const cMid = caverns[Math.floor(caverns.length / 2)];
                 if (dungeon[cMid.y][cMid.x] === TILE.FLOOR || dungeon[cMid.y][cMid.x] === TILE.WATER) {
                     dungeon[cMid.y][cMid.x] = TILE.CAULDRON;
+                }
+            }
+            if (caverns.length > 3) {
+                const cAltar = caverns[1];
+                if (dungeon[cAltar.y][cAltar.x] === TILE.FLOOR || dungeon[cAltar.y][cAltar.x] === TILE.WATER) {
+                    dungeon[cAltar.y][cAltar.x] = TILE.ALTAR;
+                }
+                const cShrine = caverns[caverns.length - 2];
+                if (dungeon[cShrine.y][cShrine.x] === TILE.FLOOR || dungeon[cShrine.y][cShrine.x] === TILE.WATER) {
+                    dungeon[cShrine.y][cShrine.x] = TILE.SHRINE;
                 }
             }
         }
@@ -2804,7 +3146,7 @@
                     const altarVault2 = vaults[Math.floor(vaults.length * 2 / 3)];
                     const ax2 = Math.floor(altarVault2.x + altarVault2.w / 2);
                     const ay2 = Math.floor(altarVault2.y + altarVault2.h / 2);
-                    dungeon[ay2][ax2] = TILE.ALTAR;
+                    dungeon[ay2][ax2] = TILE.SHRINE;
                 }
             }
 
@@ -2935,7 +3277,7 @@
                 }
             }
 
-            // Place Ancient Cauldron on Void Abyss platform
+            // Place Ancient Cauldron, Enchanting Altar & Shrine on Void Abyss platforms
             if (platforms.length > 2) {
                 const pMid = platforms[Math.floor(platforms.length / 2)];
                 const ccx = Math.floor(pMid.x + pMid.w / 2);
@@ -2943,6 +3285,17 @@
                 if (dungeon[ccy][ccx] === TILE.FLOOR) {
                     dungeon[ccy][ccx] = TILE.CAULDRON;
                 }
+            }
+            if (platforms.length > 3) {
+                const pAltar = platforms[1];
+                const ax = Math.floor(pAltar.x + pAltar.w / 2);
+                const ay = Math.floor(pAltar.y + pAltar.h / 2);
+                if (dungeon[ay][ax] === TILE.FLOOR) dungeon[ay][ax] = TILE.ALTAR;
+
+                const pShrine = platforms[platforms.length - 2];
+                const sx = Math.floor(pShrine.x + pShrine.w / 2);
+                const sy = Math.floor(pShrine.y + pShrine.h / 2);
+                if (dungeon[sy][sx] === TILE.FLOOR) dungeon[sy][sx] = TILE.SHRINE;
             }
         }
 
@@ -3214,6 +3567,9 @@
                 }
             });
 
+            if (player.weaponEnchant === 'FIRE') bonusMight += 2;
+            else if (player.weaponEnchant === 'VOID') bonusArcana += 2;
+
             let baseDmg = 12 + Math.floor((player.might + bonusMight) / 2) + Math.floor((player.arcana + bonusArcana) / 3) + Math.floor(Math.random() * 6);
             const staff = STAVES[player.equippedStaff];
             baseDmg += staff.arcanaBonus;
@@ -3223,7 +3579,46 @@
                 baseDmg = Math.floor(baseDmg * 1.5);
             }
 
-            damageMonster(m, baseDmg, 'PHYSICAL', isCrit);
+            // Elemental Enchantment Imbuement effects
+            if (player.weaponEnchant === 'FIRE') {
+                let fireBonus = 10 + Math.floor(Math.random() * 7); // 10..16
+                if (m.id === 'SKELETON') {
+                    fireBonus = Math.floor(fireBonus * 1.5);
+                    logMessage(`🔥 FLAMEBRAND: Undead ${m.name} suffers vulnerability to sacred fire (+${fireBonus} Fire DMG)!`, 'magic');
+                } else {
+                    logMessage(`🔥 FLAMEBRAND: Searing fire lashes ${m.name} (+${fireBonus} Fire DMG)!`, 'magic');
+                }
+                baseDmg += fireBonus;
+                spawnCombatText(m.x, m.y, `+${fireBonus} FIRE`, '#f97316');
+                AudioSys.playPyre();
+            } else if (player.weaponEnchant === 'FROST') {
+                let frostBonus = 8 + Math.floor(Math.random() * 7); // 8..14
+                baseDmg += frostBonus;
+                spawnCombatText(m.x, m.y, `+${frostBonus} FROST`, '#06b6d4');
+                AudioSys.playFrost();
+                if (Math.random() < 0.35) {
+                    m.freezeTurns = Math.max(m.freezeTurns || 0, 2);
+                    spawnCombatText(m.x, m.y, 'FROZEN!', '#38bdf8');
+                    logMessage(`❄️ FROSTBITE: Glacial chill encases ${m.name} in solid ice (Frozen 2 turns)!`, 'magic');
+                } else {
+                    logMessage(`❄️ FROSTBITE: Glacial frost rime bites ${m.name} (+${frostBonus} Cryo DMG)!`, 'magic');
+                }
+            } else if (player.weaponEnchant === 'VOID') {
+                let voidBonus = 12 + Math.floor(Math.random() * 9); // 12..20
+                baseDmg += voidBonus;
+                const aGain = Math.min(4, player.maxAether - player.aether);
+                const sGain = Math.min(3, player.maxSanity - player.sanity);
+                player.aether = Math.min(player.maxAether, player.aether + 4);
+                player.sanity = Math.min(player.maxSanity, player.sanity + 3);
+                spawnCombatText(m.x, m.y, `+${voidBonus} VOID`, '#c084fc');
+                if (aGain > 0 || sGain > 0) {
+                    spawnCombatText(player.x, player.y, `+${aGain}MP +${sGain}SAN`, '#a855f7');
+                }
+                AudioSys.playVoid();
+                logMessage(`🌀 VOIDSEVER: Cosmic void cleaves ${m.name} (+${voidBonus} Void DMG), siphoning +${aGain} Aether & +${sGain} Sanity!`, 'magic');
+            }
+
+            damageMonster(m, baseDmg, player.weaponEnchant !== 'NONE' ? player.weaponEnchant : 'PHYSICAL', isCrit);
             advanceTurn();
         }
 
@@ -4099,6 +4494,37 @@
                 ctx.fillStyle = isVisible ? `rgba(239, 68, 68, ${eyeGlow})` : '#7f1d1d';
                 ctx.fillRect(cx - 3, cy - 4, 2, 2);
                 ctx.fillRect(cx + 1, cy - 4, 2, 2);
+
+            } else if (tile === TILE.SHRINE) {
+                // Ancient Celestial Runic Shrine
+                ctx.fillStyle = isVisible ? '#1e293b' : '#0f172a';
+                ctx.fillRect(sx + 7, sy + 4, 18, 25);
+                ctx.strokeStyle = isVisible ? '#38bdf8' : '#0e7490';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(sx + 7, sy + 4, 18, 25);
+
+                // Carved glowing rune sigil
+                const runePulse = Math.sin(animTime * 4) * 0.35 + 0.65;
+                ctx.strokeStyle = isVisible ? `rgba(56, 189, 248, ${runePulse})` : '#0284c7';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(cx - 4, cy - 4); ctx.lineTo(cx, cy - 8); ctx.lineTo(cx + 4, cy - 4);
+                ctx.moveTo(cx, cy - 8); ctx.lineTo(cx, cy + 6);
+                ctx.moveTo(cx - 3, cy); ctx.lineTo(cx + 3, cy);
+                ctx.stroke();
+
+                // Hovering celestial blessing orb
+                if (isVisible) {
+                    const orbFloat = Math.sin(animTime * 5) * 2;
+                    ctx.save();
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.shadowColor = '#38bdf8';
+                    ctx.shadowBlur = 8;
+                    ctx.beginPath();
+                    ctx.arc(cx, sy + 2 + orbFloat, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
             }
 
             ctx.restore();
@@ -4237,7 +4663,7 @@
                     } else if (tile === TILE.ALTAR || tile === TILE.CAULDRON || tile === TILE.PILLAR ||
                                tile === TILE.DOOR_CLOSED || tile === TILE.DOOR_OPEN ||
                                tile === TILE.STAIRS_DOWN || tile === TILE.STAIRS_UP || tile === TILE.CHEST ||
-                               tile === TILE.EFFIGY) {
+                               tile === TILE.EFFIGY || tile === TILE.SHRINE) {
                         drawTileSprite(ctx, screenX, screenY, tile, isVisible, animTime, zIdx, zInfo);
                     }
 
@@ -4689,7 +5115,13 @@
             }
 
             if (targetTile === TILE.ALTAR) {
-                communeAltar(nx, ny);
+                openEnchantModal();
+                logMessage('⛩️ You approach the Relic Enchanting Altar. Place your weapon upon the stone to imbue elemental power (Press [I] anytime).', 'relic');
+                return;
+            }
+
+            if (targetTile === TILE.SHRINE) {
+                communeShrine(nx, ny);
                 return;
             }
 
@@ -4804,7 +5236,10 @@
                             logMessage(`Detected ancient Relic Coffer nearby at (${nx}, ${ny})!`, 'relic');
                             found = true;
                         } else if (dungeon[ny][nx] === TILE.ALTAR) {
-                            logMessage(`Detected consecrated Runic Altar at (${nx}, ${ny})!`, 'relic');
+                            logMessage(`Detected Relic Enchanting Altar at (${nx}, ${ny})!`, 'relic');
+                            found = true;
+                        } else if (dungeon[ny][nx] === TILE.SHRINE) {
+                            logMessage(`Detected sacred Ancient Runic Shrine at (${nx}, ${ny})!`, 'relic');
                             found = true;
                         } else if (dungeon[ny][nx] === TILE.CAULDRON) {
                             logMessage(`Detected bubbling Alchemy Cauldron at (${nx}, ${ny})!`, 'heal');
@@ -4827,14 +5262,16 @@
                 logMessage(`You descend into Depth B${depthLevel}...`, 'important');
                 generateDungeon(depthLevel);
             } else if (current === TILE.ALTAR) {
-                communeAltar(player.x, player.y);
+                openEnchantModal();
+            } else if (current === TILE.SHRINE) {
+                communeShrine(player.x, player.y);
             } else if (current === TILE.CAULDRON) {
                 openCauldronModal();
             } else if (current === TILE.DOOR_CLOSED) {
                 dungeon[player.y][player.x] = TILE.DOOR_OPEN;
                 advanceTurn();
             } else {
-                // Check adjacent tiles for altar, cauldron, or closed door
+                // Check adjacent tiles for altar, shrine, cauldron, or closed door
                 let interacted = false;
                 for (let dy = -1; dy <= 1; dy++) {
                     for (let dx = -1; dx <= 1; dx++) {
@@ -4842,7 +5279,11 @@
                         const ny = player.y + dy;
                         if (nx >= 0 && nx < MAP_WIDTH && ny >= 0 && ny < MAP_HEIGHT) {
                             if (dungeon[ny][nx] === TILE.ALTAR) {
-                                communeAltar(nx, ny);
+                                openEnchantModal();
+                                interacted = true;
+                                break;
+                            } else if (dungeon[ny][nx] === TILE.SHRINE) {
+                                communeShrine(nx, ny);
                                 interacted = true;
                                 break;
                             } else if (dungeon[ny][nx] === TILE.CAULDRON) {
@@ -5412,6 +5853,11 @@
                 bonusMight -= 2;
             }
 
+            // Weapon Enchantment passive bonuses
+            if (player.weaponEnchant === 'FIRE') bonusMight += 2;
+            else if (player.weaponEnchant === 'FROST') bonusWarding += 3;
+            else if (player.weaponEnchant === 'VOID') bonusArcana += 2;
+
             const finalMight = Math.max(1, player.might + bonusMight);
             const finalWarding = Math.max(0, player.warding + bonusWarding);
             const finalArcana = Math.max(0, player.arcana + bonusArcana);
@@ -5494,10 +5940,14 @@
             const wpnSlot = document.getElementById('gearWeaponSlot');
             if (wpnSlot) {
                 const runeSymbols = player.staffSockets.filter(Boolean).map(r => RUNES[r].symbol).join('');
-                document.getElementById('gearWeaponIcon').innerText = eqWpn ? eqWpn.icon : '·';
-                document.getElementById('gearWeaponName').innerText = eqWpn ? (runeSymbols ? `${eqWpn.name.split(' ')[0]} [${runeSymbols}]` : eqWpn.name.split(' ')[0]) : 'Empty';
+                const enc = ENCHANTMENTS[player.weaponEnchant] || ENCHANTMENTS.NONE;
+                document.getElementById('gearWeaponIcon').innerText = (enc.id !== 'NONE') ? enc.icon : (eqWpn ? eqWpn.icon : '·');
+                const baseWpnName = eqWpn ? eqWpn.name.split(' ')[0] : 'Empty';
+                const displayName = (enc.id !== 'NONE') ? `${enc.prefix} ${runeSymbols ? '['+runeSymbols+']' : ''}` : (runeSymbols ? `${baseWpnName} [${runeSymbols}]` : baseWpnName);
+                document.getElementById('gearWeaponName').innerText = displayName;
                 wpnSlot.className = eqWpn ? 'slot occupied' : 'slot';
-                wpnSlot.title = eqWpn ? `${eqWpn.name}: ${eqWpn.desc} (Click to unequip)` : 'Empty Weapon Slot';
+                wpnSlot.style.borderColor = (enc.id !== 'NONE') ? enc.color : '';
+                wpnSlot.title = eqWpn ? `${enc.id !== 'NONE' ? enc.name + ' Imbued ' : ''}${eqWpn.name}: ${eqWpn.desc} (Click to unequip)` : 'Empty Weapon Slot';
             }
 
             const armSlot = document.getElementById('gearArmorSlot');
@@ -5538,9 +5988,10 @@
                 [TILE.RUBBLE]: 'Ancient Rubble / Sarcophagus',
                 [TILE.WATER]: 'Flooded Shallows (Water)',
                 [TILE.CHASM]: 'Bottomless Void Chasm',
-                [TILE.ALTAR]: 'Ancient Runic Altar',
+                [TILE.ALTAR]: 'Relic Enchanting Altar',
                 [TILE.CAULDRON]: 'Ancient Alchemy Cauldron',
-                [TILE.EFFIGY]: 'Demonic Cursed Effigy'
+                [TILE.EFFIGY]: 'Demonic Cursed Effigy',
+                [TILE.SHRINE]: 'Ancient Celestial Runic Shrine'
             };
             const curTile = dungeon[player.y] ? dungeon[player.y][player.x] : TILE.FLOOR;
             const monsterNearby = monsters.find(m => m.alive && Math.abs(m.x - player.x) <= 1 && Math.abs(m.y - player.y) <= 1);
@@ -5741,6 +6192,20 @@
                 return;
             }
 
+            // Enchanting Altar hotkey I
+            if (e.key === 'i' || e.key === 'I') {
+                openEnchantModal();
+                return;
+            }
+
+            if (e.key === 'Escape') {
+                closeCauldronModal();
+                closeEnchantModal();
+                const mHelp = document.getElementById('modalHelp');
+                if (mHelp) mHelp.style.display = 'none';
+                return;
+            }
+
             switch (e.key) {
                 // Movement
                 case 'ArrowUp':
@@ -5876,6 +6341,21 @@
                 if (e.target === modalCauldronEl) closeCauldronModal();
             });
         }
+
+        document.getElementById('btnEnchantTop')?.addEventListener('click', openEnchantModal);
+        document.getElementById('btnOpenEnchantTab')?.addEventListener('click', openEnchantModal);
+        document.getElementById('modalEnchantClose')?.addEventListener('click', closeEnchantModal);
+        const modalEnchantEl = document.getElementById('modalEnchant');
+        if (modalEnchantEl) {
+            modalEnchantEl.addEventListener('click', (e) => {
+                if (e.target === modalEnchantEl) closeEnchantModal();
+            });
+        }
+        document.getElementById('btnImbueFire')?.addEventListener('click', () => imbueEnchantment('FIRE'));
+        document.getElementById('btnImbueFrost')?.addEventListener('click', () => imbueEnchantment('FROST'));
+        document.getElementById('btnImbueVoid')?.addEventListener('click', () => imbueEnchantment('VOID'));
+        document.getElementById('btnDisenchant')?.addEventListener('click', () => imbueEnchantment('NONE'));
+        document.getElementById('btnAltarCleanse')?.addEventListener('click', altarCleanse);
 
         // Filter buttons in Delver's Pack
         document.querySelectorAll('.filter-btn').forEach(btn => {
