@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -11,6 +11,7 @@
             --bg-panel-dark: #070b16;
             --bg-card: #0f1c33;
             --bg-card-hover: #16284a;
+            --bg-card-active: #1e3866;
             --border-stellar: #1c3156;
             --border-highlight: #00f0ff;
             --text-primary: #cbd5e1;
@@ -52,21 +53,23 @@
             width: 100vw;
             height: 100vh;
             pointer-events: none;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
             background-size: 100% 3px, 6px 100%;
             z-index: 999;
-            opacity: 0.6;
+            opacity: 0.55;
         }
 
         /* Header */
         header {
             background-color: var(--bg-panel-dark);
             border-bottom: 1px solid var(--border-stellar);
-            padding: 8px 16px;
+            padding: 6px 14px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 10;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         .brand {
@@ -76,25 +79,26 @@
         }
 
         .brand-icon {
-            width: 24px;
-            height: 24px;
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
-            background: radial-gradient(circle, #00f0ff 20%, #1e3a8a 70%, transparent 100%);
-            box-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+            background: radial-gradient(circle, #00f0ff 25%, #1e3a8a 70%, transparent 100%);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.6);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: bold;
             color: #fff;
+            letter-spacing: 0.5px;
         }
 
         .title {
             font-weight: bold;
             font-size: 15px;
             color: var(--text-bright);
-            letter-spacing: 1px;
-            text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+            letter-spacing: 1.5px;
+            text-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
         }
 
         .subtitle {
@@ -105,19 +109,25 @@
 
         .stats-bar {
             display: flex;
-            gap: 14px;
+            gap: 10px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .stat-badge {
             background: var(--bg-card);
             border: 1px solid var(--border-stellar);
-            padding: 4px 10px;
+            padding: 3px 8px;
             border-radius: 4px;
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 12px;
+            font-size: 11px;
+            transition: border-color 0.2s;
+        }
+
+        .stat-badge:hover {
+            border-color: var(--accent-cyan);
         }
 
         .stat-badge .label {
@@ -134,12 +144,13 @@
         .stat-badge .val.green { color: var(--accent-emerald); }
         .stat-badge .val.amber { color: var(--accent-amber); }
         .stat-badge .val.purple { color: var(--accent-purple); }
+        .stat-badge .val.rose { color: var(--accent-rose); }
 
         /* Main Workspace */
         .workspace {
             display: flex;
             flex: 1;
-            height: calc(100vh - 84px);
+            height: calc(100vh - 78px);
             position: relative;
         }
 
@@ -147,7 +158,7 @@
         .viewport-container {
             flex: 1;
             position: relative;
-            background: radial-gradient(ellipse at center, #0a1428 0%, #03060c 80%);
+            background: radial-gradient(ellipse at center, #0a1428 0%, #03060c 85%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -158,26 +169,33 @@
             display: block;
             width: 100%;
             height: 100%;
+            cursor: grab;
+        }
+
+        canvas#stellarCanvas:active {
+            cursor: grabbing;
         }
 
         .viewport-overlay {
             position: absolute;
-            top: 12px;
-            left: 12px;
+            top: 10px;
+            left: 10px;
             display: flex;
             flex-direction: column;
             gap: 8px;
             pointer-events: none;
+            max-width: 320px;
         }
 
         .overlay-card {
-            background: rgba(10, 17, 32, 0.85);
+            background: rgba(10, 17, 32, 0.88);
             border: 1px solid var(--border-stellar);
             border-left: 3px solid var(--accent-cyan);
             border-radius: 4px;
             padding: 8px 12px;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(5px);
             pointer-events: auto;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
         }
 
         .overlay-title {
@@ -186,21 +204,127 @@
             letter-spacing: 1px;
             color: var(--accent-cyan);
             margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .overlay-text {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-bright);
+            line-height: 1.4;
+        }
+
+        .viewport-controls {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            display: flex;
+            gap: 6px;
+            pointer-events: auto;
+            z-index: 5;
+        }
+
+        .nav-btn {
+            background: rgba(10, 17, 32, 0.85);
+            border: 1px solid var(--border-stellar);
+            color: var(--text-primary);
+            padding: 4px 9px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            background: rgba(0, 240, 255, 0.1);
+        }
+
+        /* Selection Card in Viewport */
+        .selection-card {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 250px;
+            background: rgba(10, 17, 32, 0.92);
+            border: 1px solid var(--accent-blue);
+            border-radius: 4px;
+            padding: 10px 12px;
+            backdrop-filter: blur(6px);
+            z-index: 8;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+            display: none;
+        }
+
+        .selection-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-stellar);
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+        }
+
+        .selection-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--accent-cyan);
+        }
+
+        .selection-close {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .selection-close:hover { color: #fff; }
+
+        .selection-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+
+        .selection-actions {
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .sel-act-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-stellar);
+            color: var(--text-primary);
+            font-size: 10px;
+            font-family: var(--font-mono);
+            padding: 4px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .sel-act-btn:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
         }
 
         /* Sidebar Tabs */
         .sidebar {
-            width: 380px;
+            width: 400px;
             background: var(--bg-panel);
             border-left: 1px solid var(--border-stellar);
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            box-shadow: -4px 0 18px rgba(0,0,0,0.4);
         }
 
         .sidebar-tabs {
@@ -211,7 +335,7 @@
 
         .tab-btn {
             flex: 1;
-            padding: 10px 6px;
+            padding: 9px 4px;
             background: transparent;
             border: none;
             border-bottom: 2px solid transparent;
@@ -234,12 +358,13 @@
             color: var(--accent-cyan);
             border-bottom-color: var(--accent-cyan);
             background: rgba(0, 240, 255, 0.1);
+            font-weight: bold;
         }
 
         .tab-content {
             flex: 1;
             overflow-y: auto;
-            padding: 14px;
+            padding: 12px;
             display: none;
         }
 
@@ -262,15 +387,21 @@
             background: var(--bg-card);
             border: 1px solid var(--border-stellar);
             border-radius: 4px;
-            padding: 10px;
-            margin-bottom: 10px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            transition: border-color 0.2s;
+        }
+
+        .metric-card:hover {
+            border-color: rgba(0, 240, 255, 0.4);
         }
 
         .metric-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 6px;
-            font-size: 12px;
+            margin-bottom: 4px;
+            font-size: 11px;
+            align-items: center;
         }
 
         .metric-row:last-child {
@@ -279,11 +410,11 @@
 
         .progress-bar-container {
             width: 100%;
-            height: 8px;
+            height: 7px;
             background: #070c18;
-            border-radius: 4px;
+            border-radius: 3px;
             overflow: hidden;
-            margin-top: 4px;
+            margin-top: 3px;
             border: 1px solid #14223d;
         }
 
@@ -291,25 +422,30 @@
             height: 100%;
             background: linear-gradient(90deg, #00f0ff, #10b981);
             width: 14%;
-            transition: width 0.4s ease;
+            transition: width 0.3s ease;
         }
 
         .progress-bar-fill.temp {
             background: linear-gradient(90deg, #38bdf8, #f59e0b, #ef4444);
         }
 
+        .progress-bar-fill.danger {
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+        }
+
         .action-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 10px;
+            gap: 7px;
+            margin-top: 8px;
+            margin-bottom: 12px;
         }
 
         .action-btn {
             background: var(--bg-card);
             border: 1px solid var(--border-stellar);
             color: var(--text-bright);
-            padding: 8px 10px;
+            padding: 7px 8px;
             border-radius: 4px;
             font-family: var(--font-mono);
             font-size: 11px;
@@ -321,38 +457,118 @@
             gap: 2px;
         }
 
-        .action-btn:hover {
+        .action-btn:hover:not(:disabled) {
             border-color: var(--accent-cyan);
             background: var(--bg-card-hover);
-            box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            border-color: #131c2e;
         }
 
         .action-btn .btn-title {
             font-weight: bold;
             color: var(--accent-cyan);
+            font-size: 11px;
         }
 
         .action-btn .btn-desc {
             font-size: 10px;
             color: var(--text-dim);
+            line-height: 1.2;
+        }
+
+        .ship-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-stellar);
+            border-radius: 4px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .ship-card:hover {
+            border-color: var(--accent-cyan);
+            background: var(--bg-card-hover);
+        }
+
+        .ship-card.selected {
+            border-color: var(--accent-cyan);
+            background: var(--bg-card-active);
+            box-shadow: 0 0 8px rgba(0, 240, 255, 0.25);
+        }
+
+        .ship-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .ship-name {
+            font-weight: bold;
+            color: var(--text-bright);
+            font-size: 12px;
+        }
+
+        .ship-status {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+
+        .ship-status.docked { background: rgba(56, 189, 248, 0.2); color: var(--accent-blue); }
+        .ship-status.mining { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); }
+        .ship-status.transit { background: rgba(168, 85, 247, 0.2); color: var(--accent-purple); }
+        .ship-status.survey { background: rgba(16, 185, 129, 0.2); color: var(--accent-emerald); }
+
+        .ship-controls {
+            display: flex;
+            gap: 5px;
+            margin-top: 6px;
+        }
+
+        .mini-btn {
+            flex: 1;
+            background: #0b1526;
+            border: 1px solid var(--border-stellar);
+            color: var(--text-primary);
+            font-size: 10px;
+            font-family: var(--font-mono);
+            padding: 3px 4px;
+            border-radius: 3px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+        }
+
+        .mini-btn:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
         }
 
         /* Log / Footer */
         footer {
             background: var(--bg-panel-dark);
             border-top: 1px solid var(--border-stellar);
-            padding: 6px 14px;
+            padding: 5px 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 11px;
             color: var(--text-dim);
-            height: 38px;
+            height: 36px;
+            z-index: 10;
         }
 
         .footer-controls {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             align-items: center;
         }
 
@@ -365,31 +581,75 @@
             font-family: var(--font-mono);
             font-size: 10px;
             cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .time-btn:hover {
+            border-color: var(--accent-cyan);
         }
 
         .time-btn.active {
             background: rgba(0, 240, 255, 0.2);
             border-color: var(--accent-cyan);
             color: var(--accent-cyan);
+            font-weight: bold;
         }
 
         .log-line {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 50vw;
+            max-width: 48vw;
             color: var(--text-primary);
         }
 
         .log-line span.highlight {
             color: var(--accent-cyan);
+            font-weight: bold;
+        }
+
+        .log-line span.warn {
+            color: var(--accent-rose);
+            font-weight: bold;
+        }
+
+        /* Audio toggle */
+        .audio-toggle {
+            background: transparent;
+            border: 1px solid var(--border-stellar);
+            color: var(--text-dim);
+            padding: 3px 7px;
+            border-radius: 3px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .audio-toggle.active {
+            color: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-panel-dark);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1c3156;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-cyan);
         }
     </style>
 </head>
 <body>
     <div class="scanlines"></div>
 
-    <!-- Header Stats -->
+    <!-- Header Stats Bar -->
     <header>
         <div class="brand">
             <div class="brand-icon">KC</div>
@@ -400,27 +660,35 @@
         </div>
 
         <div class="stats-bar">
-            <div class="stat-badge">
+            <div class="stat-badge" title="Stellar Simulation Cycle">
                 <span class="label">Cycle:</span>
-                <span class="val" id="statCycle">1.04</span>
+                <span class="val" id="statCycle">1.00</span>
             </div>
-            <div class="stat-badge">
+            <div class="stat-badge" title="Available Fleet & Colony Power">
                 <span class="label">Energy:</span>
                 <span class="val green" id="statEnergy">14,250 kW</span>
+                <span style="font-size:9px; color:var(--text-dim);" id="rateEnergy">(+120)</span>
             </div>
-            <div class="stat-badge">
+            <div class="stat-badge" title="Raw Structural Minerals">
                 <span class="label">Minerals:</span>
                 <span class="val" id="statMinerals">8,400 t</span>
+                <span style="font-size:9px; color:var(--text-dim);" id="rateMinerals">(+15)</span>
             </div>
-            <div class="stat-badge">
+            <div class="stat-badge" title="Volatiles (Ice, N2, NH3)">
                 <span class="label">Volatiles:</span>
                 <span class="val purple" id="statVolatiles">2,150 t</span>
+                <span style="font-size:9px; color:var(--text-dim);" id="rateVolatiles">(+10)</span>
             </div>
-            <div class="stat-badge">
+            <div class="stat-badge" title="Hydroponic Food Supplies">
+                <span class="label">Food:</span>
+                <span class="val green" id="statFood">5,800 t</span>
+                <span style="font-size:9px; color:var(--text-dim);" id="rateFood">(+25)</span>
+            </div>
+            <div class="stat-badge" title="Exoplanet Habitability Index">
                 <span class="label">Habitability:</span>
                 <span class="val amber" id="statHabitability">18.4%</span>
             </div>
-            <div class="stat-badge">
+            <div class="stat-badge" title="Awakened Colonists / Cryo Sleepers">
                 <span class="label">Colonists:</span>
                 <span class="val" id="statColonists">25,000</span>
             </div>
@@ -430,13 +698,46 @@
     <!-- Main Workspace -->
     <div class="workspace">
         <!-- Center Orbital System Viewport -->
-        <div class="viewport-container">
-            <canvas id="stellarCanvas" width="900" height="600"></canvas>
+        <div class="viewport-container" id="canvasContainer">
+            <canvas id="stellarCanvas"></canvas>
 
+            <!-- Top Left System HUD Overlay -->
             <div class="viewport-overlay">
                 <div class="overlay-card">
-                    <div class="overlay-title">Current Sector: Kepler-186e / Prime Anchor</div>
-                    <div class="overlay-text">Target: Aethelgard Prime (Class-IV Barren Greenhouse)</div>
+                    <div class="overlay-title">
+                        <span>Sector: Kepler-186e / Prime Anchor</span>
+                        <span style="font-size:9px; color:var(--accent-emerald);">SCAN: NOMINAL</span>
+                    </div>
+                    <div class="overlay-text">
+                        Primary Target: <strong>Aethelgard Prime</strong> (Class-IV Barren Greenhouse)<br>
+                        Anchor Fleet: <strong>5 Vessels Operational</strong> | Outpost Nodes: <strong>3 Detected</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Viewport Navigation Controls -->
+            <div class="viewport-controls">
+                <button class="nav-btn" id="btnCenterPlanet">Focus Planet</button>
+                <button class="nav-btn" id="btnCenterFleet">Focus Ark</button>
+                <button class="nav-btn" id="btnZoomIn">Zoom +</button>
+                <button class="nav-btn" id="btnZoomOut">Zoom -</button>
+                <button class="nav-btn" id="btnResetView">Reset View</button>
+            </div>
+
+            <!-- Context Selection Inspector Panel (Appears on click) -->
+            <div class="selection-card" id="selectionCard">
+                <div class="selection-header">
+                    <span class="selection-title" id="selTitle">Aethelgard Prime</span>
+                    <button class="selection-close" id="selClose">✕</button>
+                </div>
+                <div id="selDetails">
+                    <div class="selection-row"><span>Type:</span><strong id="selType">Class-IV Exoplanet</strong></div>
+                    <div class="selection-row"><span>Status:</span><span id="selStatus">Active Terraforming</span></div>
+                    <div class="selection-row"><span>Distance:</span><span id="selDist">280 AU</span></div>
+                </div>
+                <div class="selection-actions" id="selActions">
+                    <button class="sel-act-btn" id="selAct1">Inspect Biometrics</button>
+                    <button class="sel-act-btn" id="selAct2">Dispatch Vessel</button>
                 </div>
             </div>
         </div>
@@ -447,126 +748,382 @@
                 <button class="tab-btn active" data-tab="tab-terra">Terraform</button>
                 <button class="tab-btn" data-tab="tab-fleet">Logistics</button>
                 <button class="tab-btn" data-tab="tab-colony">Colony</button>
-                <button class="tab-btn" data-tab="tab-survey">Survey</button>
+                <button class="tab-btn" data-tab="tab-economy">Economy</button>
             </div>
 
-            <!-- Tab: Terraforming -->
+            <!-- Tab 1: Terraforming Parameters & Interventions -->
             <div class="tab-content active" id="tab-terra">
                 <div class="section-header">
-                    <span>Planetary Biometrics</span>
-                    <span style="color: var(--accent-emerald);">Active Target</span>
+                    <span>Planetary Biometrics (Aethelgard)</span>
+                    <span style="color: var(--accent-cyan);" id="habitabilityBadge">Hostile (18.4%)</span>
                 </div>
 
+                <!-- Atmospheric Pressure -->
                 <div class="metric-card">
                     <div class="metric-row">
                         <span>Atmospheric Pressure</span>
                         <strong id="valPressure">0.32 atm</strong>
+                    </div>
+                    <div class="metric-row" style="color: var(--text-dim); font-size:10px;">
+                        <span>Target: 0.95 - 1.05 atm (Earth Standard)</span>
+                        <span id="driftPressure">+0.002/cyc</span>
                     </div>
                     <div class="progress-bar-container">
                         <div class="progress-bar-fill" id="barPressure" style="width: 32%;"></div>
                     </div>
                 </div>
 
+                <!-- Surface Temperature -->
                 <div class="metric-card">
                     <div class="metric-row">
                         <span>Surface Equilibrium Temp</span>
-                        <strong id="valTemp">-48 °C</strong>
+                        <strong id="valTemp">-48.0 °C</strong>
+                    </div>
+                    <div class="metric-row" style="color: var(--text-dim); font-size:10px;">
+                        <span>Target: 14.0 °C to 20.0 °C</span>
+                        <span id="driftTemp">+0.15°C/cyc</span>
                     </div>
                     <div class="progress-bar-container">
                         <div class="progress-bar-fill temp" id="barTemp" style="width: 25%;"></div>
                     </div>
                 </div>
 
+                <!-- Hydrosphere / Ocean Coverage -->
                 <div class="metric-card">
                     <div class="metric-row">
-                        <span>Hydrosphere / Surface Water</span>
+                        <span>Hydrosphere / Liquid Water</span>
                         <strong id="valWater">12.8%</strong>
+                    </div>
+                    <div class="metric-row" style="color: var(--text-dim); font-size:10px;">
+                        <span>Target: 50.0% - 70.0% Coverage</span>
+                        <span id="driftWater">+0.05%/cyc</span>
                     </div>
                     <div class="progress-bar-container">
                         <div class="progress-bar-fill" id="barWater" style="width: 13%;"></div>
                     </div>
                 </div>
 
+                <!-- Oxygen Concentration -->
                 <div class="metric-card">
                     <div class="metric-row">
-                        <span>Oxygen Ratio (O2 / N2)</span>
-                        <strong id="valOxygen">3.1% (Low)</strong>
+                        <span>Oxygen (O2 Concentration)</span>
+                        <strong id="valOxygen">3.1% (Anoxic)</strong>
+                    </div>
+                    <div class="metric-row" style="color: var(--text-dim); font-size:10px;">
+                        <span>Target: 20.9% (Breathable)</span>
+                        <span id="driftOxygen">+0.01%/cyc</span>
                     </div>
                     <div class="progress-bar-container">
                         <div class="progress-bar-fill" id="barOxygen" style="width: 15%;"></div>
                     </div>
                 </div>
 
-                <div class="section-header" style="margin-top: 14px;">
+                <!-- Radiation Shield / Magnetosphere -->
+                <div class="metric-card">
+                    <div class="metric-row">
+                        <span>Magnetosphere / Shielding</span>
+                        <strong id="valMagnet">0.18 Gauss (Lethal)</strong>
+                    </div>
+                    <div class="metric-row" style="color: var(--text-dim); font-size:10px;">
+                        <span>Target: &gt; 0.50 Gauss (Deflects Solar Winds)</span>
+                        <span id="driftMagnet">Stable</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill danger" id="barMagnet" style="width: 28%;"></div>
+                    </div>
+                </div>
+
+                <div class="section-header" style="margin-top: 12px;">
                     <span>Orbital & Surface Interventions</span>
+                    <span style="font-size:10px; color:var(--text-dim);">Click to Deploy / Activate</span>
                 </div>
 
                 <div class="action-grid">
-                    <button class="action-btn" id="btnSolarMirror">
+                    <button class="action-btn" id="btnSolarMirror" title="Position mirrors to concentrate sunlight onto the ice caps">
                         <span class="btn-title">Orbital Solar Mirror</span>
-                        <span class="btn-desc">+1.8°C / cycle (-250 Energy)</span>
+                        <span class="btn-desc">+1.8°C / trigger<br>Cost: 350 kW, 150 Min</span>
                     </button>
-                    <button class="action-btn" id="btnAtmoProcessor">
-                        <span class="btn-title">Atmo Processor</span>
-                        <span class="btn-desc">+0.04 atm (-120 Minerals)</span>
+
+                    <button class="action-btn" id="btnAtmoProcessor" title="Vaporize minerals into dense atmospheric buffer gas">
+                        <span class="btn-title">Atmo Gas Injector</span>
+                        <span class="btn-desc">+0.05 atm / trigger<br>Cost: 180 Min, 100 kW</span>
                     </button>
-                    <button class="action-btn" id="btnCometDrop">
-                        <span class="btn-title">Capture Comet Ice</span>
-                        <span class="btn-desc">+2.5% Water (-300 Volatiles)</span>
+
+                    <button class="action-btn" id="btnCometDrop" title="Tug icy comets from the outer belt to collide softly into polar basins">
+                        <span class="btn-title">Redirect Ice Comet</span>
+                        <span class="btn-desc">+2.5% Water, +0.02 atm<br>Cost: 300 Vol, 150 kW</span>
                     </button>
-                    <button class="action-btn" id="btnBioseeding">
-                        <span class="btn-title">Lichen Seeding</span>
-                        <span class="btn-desc">+0.8% O2 (-100 Energy)</span>
+
+                    <button class="action-btn" id="btnBioseeding" title="Spread genetically engineered cyanobacteria and lichen across barren crags">
+                        <span class="btn-title">Extremophile Lichen</span>
+                        <span class="btn-desc">+0.9% O2, +0.5% Hab<br>Cost: 120 Food, 100 kW</span>
                     </button>
+
+                    <button class="action-btn" id="btnCoreDynamo" title="Subsurface superconducting ring to stimulate planetary magnetic dipole">
+                        <span class="btn-title">Magnetic Core Dynamo</span>
+                        <span class="btn-desc">+0.08 Gauss Shielding<br>Cost: 400 Min, 250 kW</span>
+                    </button>
+
+                    <button class="action-btn" id="btnAlgaeBlooms" title="Distribute oxygen-generating algae in nascent lakes">
+                        <span class="btn-title">Ocean Algae Seeding</span>
+                        <span class="btn-desc">+1.4% O2, +1.2% Hab<br>Cost: 200 Vol, 150 Food</span>
+                    </button>
+                </div>
+
+                <div class="section-header">
+                    <span>Continuous Facilities Online</span>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-row"><span>Solar Mirror Array</span><strong id="cntMirrors">2 Deployed</strong></div>
+                    <div class="metric-row"><span>Troposphere Processors</span><strong id="cntProcessors">3 Online</strong></div>
+                    <div class="metric-row"><span>Bioseeding Stations</span><strong id="cntBioseed">1 Active</strong></div>
+                    <div class="metric-row"><span>Core Dynamo Rings</span><strong id="cntDynamo">1 Primed</strong></div>
                 </div>
             </div>
 
-            <!-- Tab: Fleet Logistics -->
+            <!-- Tab 2: Fleet & Logistics -->
             <div class="tab-content" id="tab-fleet">
                 <div class="section-header">
                     <span>Ark Fleet Roster</span>
-                    <span style="color: var(--accent-cyan);">4 Vessels Active</span>
+                    <span style="color: var(--accent-cyan);" id="fleetCountHeader">5 Vessels Active</span>
+                </div>
+
+                <!-- Vessel: CSS Genesis -->
+                <div class="ship-card selected" data-ship="genesis">
+                    <div class="ship-header">
+                        <span class="ship-name">CSS Genesis (Colony Flagship)</span>
+                        <span class="ship-status docked" id="status-genesis">Stationary Orbit</span>
+                    </div>
+                    <div class="metric-row" style="color: var(--text-dim); font-size:10px;">
+                        <span>Hull: 100% | Main Fusion: 5,000 kW | Cryo Vaults: 75,000 sleepers</span>
+                    </div>
+                    <div class="metric-row" style="font-size:10px;">
+                        <span>Location: Aethelgard Prime Geosynchronous Anchor</span>
+                    </div>
+                    <div class="ship-controls">
+                        <button class="mini-btn btn-ship-order" data-ship="genesis" data-order="anchor">Hold Orbit</button>
+                        <button class="mini-btn btn-ship-order" data-ship="genesis" data-order="boost">Boost Sensor Array</button>
+                    </div>
+                </div>
+
+                <!-- Vessel: Ark Vanguard -->
+                <div class="ship-card" data-ship="vanguard">
+                    <div class="ship-header">
+                        <span class="ship-name">Ark Vanguard (Agronomy Vessel)</span>
+                        <span class="ship-status docked" id="status-vanguard">Lagrange Point 1</span>
+                    </div>
+                    <div class="metric-row" style="color: var(--text-dim); font-size:10px;">
+                        <span>Hydroponic Ring: 100% | Food Yield: +15 t/cyc</span>
+                    </div>
+                    <div class="ship-controls">
+                        <button class="mini-btn btn-ship-order" data-ship="vanguard" data-order="ration">Optimize Yield</button>
+                        <button class="mini-btn btn-ship-order" data-ship="vanguard" data-order="orbit">Low Orbit</button>
+                    </div>
+                </div>
+
+                <!-- Vessel: Surveyor Aeon -->
+                <div class="ship-card" data-ship="aeon">
+                    <div class="ship-header">
+                        <span class="ship-name">Surveyor Aeon (Deep Scout)</span>
+                        <span class="ship-status survey" id="status-aeon">Scanning Orbit</span>
+                    </div>
+                    <div class="metric-row" style="color: var(--text-dim); font-size:10px;">
+                        <span>Sensors: Long-Range Quantum Interferometer | Speed: 0.15 c</span>
+                    </div>
+                    <div class="ship-controls">
+                        <button class="mini-btn btn-ship-order" data-ship="aeon" data-order="survey-tartarus">Scan Belt</button>
+                        <button class="mini-btn btn-ship-order" data-ship="aeon" data-order="survey-boreas">Scan Moon</button>
+                        <button class="mini-btn btn-ship-order" data-ship="aeon" data-order="survey-planet">Scan Planet</button>
+                    </div>
+                </div>
+
+                <!-- Vessel: Harvester Drake -->
+                <div class="ship-card" data-ship="drake">
+                    <div class="ship-header">
+                        <span class="ship-name">Harvester Drake (Extraction Rig)</span>
+                        <span class="ship-status mining" id="status-drake">Harvesting</span>
+                    </div>
+                    <div class="metric-row" style="color: var(--text-dim); font-size:10px;">
+                        <span>Cargo Hold: 3,200 t Capacity | Current Task: Volatiles Extraction</span>
+                    </div>
+                    <div class="ship-controls">
+                        <button class="mini-btn btn-ship-order" data-ship="drake" data-order="mine-tartarus">Mine Minerals</button>
+                        <button class="mini-btn btn-ship-order" data-ship="drake" data-order="mine-boreas">Scoop Ice</button>
+                        <button class="mini-btn btn-ship-order" data-ship="drake" data-order="dock">Dock Depot</button>
+                    </div>
+                </div>
+
+                <!-- Vessel: Freighter Titan-1 -->
+                <div class="ship-card" data-ship="titan">
+                    <div class="ship-header">
+                        <span class="ship-name">Freighter Titan-1 (Hauler)</span>
+                        <span class="ship-status transit" id="status-titan">Supply Route</span>
+                    </div>
+                    <div class="metric-row" style="color: var(--text-dim); font-size:10px;">
+                        <span>Cargo: 2,400 t Rare Minerals en route to Surface Domes</span>
+                    </div>
+                    <div class="ship-controls">
+                        <button class="mini-btn btn-ship-order" data-ship="titan" data-order="route-supply">Automated Loop</button>
+                        <button class="mini-btn btn-ship-order" data-ship="titan" data-order="hold">Standby</button>
+                    </div>
+                </div>
+
+                <div class="section-header" style="margin-top: 10px;">
+                    <span>Fleet Automated Logistics</span>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-row"><strong>CSS Genesis (Flagship Ark)</strong><span style="color: var(--accent-emerald);">Stationary</span></div>
-                    <div class="metric-row"><span style="color: var(--text-dim);">Crew: 15,000 cryo-sleepers | Fuel: 94%</span></div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-row"><strong>Survey Vessel Aeon</strong><span style="color: var(--accent-blue);">Scanning Orbit</span></div>
-                    <div class="metric-row"><span style="color: var(--text-dim);">Sensor Grid: 100% | Speed: 0.12 c</span></div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-row"><strong>Freighter Convoy Titan-1</strong><span style="color: var(--accent-amber);">En Route Depot</span></div>
-                    <div class="metric-row"><span style="color: var(--text-dim);">Cargo: 2,400 t Rare Minerals</span></div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-row"><strong>Harvester Drake</strong><span style="color: var(--accent-purple);">Scooping Ring</span></div>
-                    <div class="metric-row"><span style="color: var(--text-dim);">Yield: +85 Volatiles / min</span></div>
+                    <div class="metric-row"><span>Tartarus Belt → Planet Depot</span><strong style="color:var(--accent-emerald);">Active (45s cycle)</strong></div>
+                    <div class="metric-row"><span>Boreas Ice Rings → Genesis</span><strong style="color:var(--accent-emerald);">Active (60s cycle)</strong></div>
+                    <div class="metric-row"><span>Zephyr Orbital Station Fuel Link</span><strong style="color:var(--accent-blue);">Nominal</strong></div>
                 </div>
             </div>
 
-            <!-- Tab: Colony Habitats -->
+            <!-- Tab 3: Colony Habitats & Life Support -->
             <div class="tab-content" id="tab-colony">
                 <div class="section-header">
                     <span>Ground Settlement Dome Alpha</span>
+                    <span style="color: var(--accent-emerald);">Pressurized</span>
                 </div>
+
                 <div class="metric-card">
-                    <div class="metric-row"><span>Dome Integrity</span><strong style="color: var(--accent-emerald);">98.2%</strong></div>
-                    <div class="metric-row"><span>Hydroponic Food Output</span><strong>+420 kg/cycle</strong></div>
-                    <div class="metric-row"><span>Colonist Morale</span><strong style="color: var(--accent-cyan);">Optimistic (84%)</strong></div>
-                    <div class="metric-row"><span>Atmospheric Scrubber</span><strong>Online</strong></div>
+                    <div class="metric-row">
+                        <span>Active Surface Population</span>
+                        <strong id="colonyPop">25,000</strong>
+                    </div>
+                    <div class="metric-row">
+                        <span>Cryo-Sleepers in Ark Vaults</span>
+                        <strong id="colonyCryo">75,000</strong>
+                    </div>
+                    <div class="metric-row">
+                        <span>Dome Housing Capacity</span>
+                        <strong id="colonyCapacity">30,000</strong>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="barHousing" style="width: 83%;"></div>
+                    </div>
+                </div>
+
+                <div class="section-header">
+                    <span>Life Support Demographics</span>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-row">
+                        <span>Colonist Morale</span>
+                        <strong style="color: var(--accent-emerald);" id="valMorale">86% (Optimistic)</strong>
+                    </div>
+                    <div class="metric-row">
+                        <span>Life Support Integrity</span>
+                        <strong style="color: var(--accent-cyan);">99.4% (Stable)</strong>
+                    </div>
+                    <div class="metric-row">
+                        <span>O2 Filtration Consumption</span>
+                        <span>-12.5 kW / cyc</span>
+                    </div>
+                    <div class="metric-row">
+                        <span>Water Recycling Efficiency</span>
+                        <span>97.2% closed loop</span>
+                    </div>
+                    <div class="metric-row">
+                        <span>Daily Food Rationing</span>
+                        <span>Full Sustenance (Normal)</span>
+                    </div>
+                </div>
+
+                <div class="section-header" style="margin-top: 10px;">
+                    <span>Colony Expansion Projects</span>
+                </div>
+
+                <div class="action-grid">
+                    <button class="action-btn" id="btnAwakenSleepers">
+                        <span class="btn-title">Awaken 2,500 Sleepers</span>
+                        <span class="btn-desc">+2,500 Pop, -100 Food<br>Req: Dome Capacity</span>
+                    </button>
+
+                    <button class="action-btn" id="btnBuildDome">
+                        <span class="btn-title">Expand Habitat Domes</span>
+                        <span class="btn-desc">+15,000 Housing Cap<br>Cost: 450 Min, 150 kW</span>
+                    </button>
+
+                    <button class="action-btn" id="btnHydroponics">
+                        <span class="btn-title">Hydroponic Tower</span>
+                        <span class="btn-desc">+25 Food/cyc<br>Cost: 200 Min, 100 Vol</span>
+                    </button>
+
+                    <button class="action-btn" id="btnSolarFarm">
+                        <span class="btn-title">Surface Solar Grid</span>
+                        <span class="btn-desc">+180 kW Base Power<br>Cost: 220 Minerals</span>
+                    </button>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-row"><span>Biosphere Integration Progress</span><strong id="valBioProgress">14.2%</strong></div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="barBioProgress" style="width: 14%;"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Tab: Survey & Precursors -->
-            <div class="tab-content" id="tab-survey">
+            <!-- Tab 4: Economy & Sector Intel -->
+            <div class="tab-content" id="tab-economy">
                 <div class="section-header">
-                    <span>Cartography & Relics</span>
+                    <span>Resource Loops & Production Net</span>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-row">
+                        <span style="color: var(--accent-emerald);">Energy Generation:</span>
+                        <span>+680 kW/cyc</span>
+                    </div>
+                    <div class="metric-row">
+                        <span style="color: var(--accent-rose);">Energy Consumption:</span>
+                        <span>-560 kW/cyc</span>
+                    </div>
+                    <div class="metric-row" style="border-top: 1px solid var(--border-stellar); padding-top:4px;">
+                        <span><strong>Net Energy Delta:</strong></span>
+                        <strong style="color: var(--accent-emerald);">+120 kW/cyc</strong>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-row">
+                        <span style="color: var(--accent-cyan);">Mining Yield:</span>
+                        <span>+35 t/cyc</span>
+                    </div>
+                    <div class="metric-row">
+                        <span style="color: var(--accent-rose);">Refinery & Build Usage:</span>
+                        <span>-20 t/cyc</span>
+                    </div>
+                    <div class="metric-row" style="border-top: 1px solid var(--border-stellar); padding-top:4px;">
+                        <span><strong>Net Minerals Delta:</strong></span>
+                        <strong style="color: var(--accent-cyan);">+15 t/cyc</strong>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-row">
+                        <span style="color: var(--accent-purple);">Volatiles Scooped:</span>
+                        <span>+18 t/cyc</span>
+                    </div>
+                    <div class="metric-row">
+                        <span style="color: var(--accent-rose);">Terraforming Injection:</span>
+                        <span>-8 t/cyc</span>
+                    </div>
+                    <div class="metric-row" style="border-top: 1px solid var(--border-stellar); padding-top:4px;">
+                        <span><strong>Net Volatiles Delta:</strong></span>
+                        <strong style="color: var(--accent-purple);">+10 t/cyc</strong>
+                    </div>
+                </div>
+
+                <div class="section-header" style="margin-top: 10px;">
+                    <span>Sector Celestial Intel</span>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-row"><span>Magnetic Field</span><strong>0.44 Gauss (Moderate)</strong></div>
-                    <div class="metric-row"><span>Precursor Signal</span><strong style="color: var(--accent-purple);">Detected (Sub-crust)</strong></div>
-                    <div class="metric-row"><span>Tectonic Stability</span><strong>89% Stable</strong></div>
+                    <div class="metric-row"><strong>Kepler-186 Helios Core</strong><span>Type M1V Red Dwarf</span></div>
+                    <div class="metric-row"><strong>Tartarus Belt</strong><span style="color: var(--accent-cyan);">High Heavy Metal Density</span></div>
+                    <div class="metric-row"><strong>Boreas Minor</strong><span style="color: var(--accent-purple);">Nitrogen / Water Ice Glaciers</span></div>
+                    <div class="metric-row"><strong>Zephyr Orbital Yard</strong><span>Automated Fleet Maintenance Dock</span></div>
+                    <div class="metric-row"><strong>Precursor Sub-surface Resonance</strong><span style="color: var(--accent-amber);">Signal Detected at 420 MHz</span></div>
                 </div>
             </div>
         </div>
@@ -575,205 +1132,836 @@
     <!-- Bottom Footer Log & Controls -->
     <footer>
         <div class="footer-controls">
-            <span>WARP:</span>
+            <span>TIME WARP:</span>
             <button class="time-btn" id="btnPause">PAUSE</button>
             <button class="time-btn active" id="btnSpeed1">1x</button>
             <button class="time-btn" id="btnSpeed2">2x</button>
             <button class="time-btn" id="btnSpeed5">5x</button>
+            <button class="audio-toggle active" id="btnAudioToggle">AUDIO: ON</button>
         </div>
 
         <div class="log-line" id="logBanner">
-            <span class="highlight">[FLEET DISPATCH]</span> KCosmic orbital engine initialized. All fleet telemetry online.
+            <span class="highlight">[FLEET DISPATCH]</span> KCosmic orbital simulation engine operational. All telemetry online.
         </div>
 
-        <div>KCosmic Engine v0.1 • Phase 1</div>
+        <div>KCosmic Engine v0.2 • Phase 2</div>
     </footer>
 
     <script>
-        // KCosmic Simulation & Stellar Viewport Engine
-        const canvas = document.getElementById('stellarCanvas');
-        const ctx = canvas.getContext('2d');
+        // --- Web Audio Synthesizer Engine ---
+        let audioCtx = null;
+        let audioEnabled = true;
 
-        function resizeCanvas() {
-            const container = canvas.parentElement;
-            canvas.width = container.clientWidth;
-            canvas.height = container.clientHeight;
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtx = new AudioContext();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
         }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
 
-        // Simulation State
+        function playSound(type) {
+            if (!audioEnabled || !audioCtx) return;
+            try {
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'click') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.05);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'success') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.08);
+                    osc.frequency.setValueAtTime(783.99, now + 0.16);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'warn') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.setValueAtTime(196, now + 0.1);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'deploy') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(900, now + 0.2);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                }
+            } catch (e) {
+                // Audio safely ignored if restricted
+            }
+        }
+
+        // --- Simulation State Model ---
         const sim = {
-            cycle: 1.04,
+            cycle: 1.00,
             speed: 1,
             paused: false,
+            time: 0,
+
+            // Resources
             energy: 14250,
             minerals: 8400,
             volatiles: 2150,
-            habitability: 18.4,
+            food: 5800,
             colonists: 25000,
-            pressure: 0.32,
-            temp: -48,
-            water: 12.8,
-            oxygen: 3.1,
-            time: 0
+            cryoSleepers: 75000,
+            housingCap: 30000,
+            morale: 86,
+
+            // Resource Deltas (per cycle)
+            deltaEnergy: 120,
+            deltaMinerals: 15,
+            deltaVolatiles: 10,
+            deltaFood: 25,
+
+            // Planetary Parameters
+            pressure: 0.32,         // Target: ~1.00 atm
+            temp: -48.0,            // Target: ~15.0 °C
+            water: 12.8,            // Target: 50 - 70%
+            oxygen: 3.1,            // Target: 20.9%
+            magnet: 0.18,           // Target: > 0.50 Gauss
+            habitability: 18.4,
+
+            // Active Infrastructure
+            solarMirrors: 2,
+            atmoProcessors: 3,
+            bioseedStations: 1,
+            coreDynamos: 1,
+            hydroTowers: 2,
+            surfaceSolar: 3,
+
+            // Interactive Camera Viewport
+            camX: 0,
+            camY: 0,
+            zoom: 1.0,
+            isDragging: false,
+            lastMouseX: 0,
+            lastMouseY: 0,
+
+            // Selected entity on map
+            selected: null
         };
 
-        // Star System Objects
-        const stars = Array.from({ length: 120 }, () => ({
-            x: Math.random() * 2000,
-            y: Math.random() * 2000,
-            size: Math.random() * 1.6 + 0.4,
-            alpha: Math.random() * 0.8 + 0.2
+        // Star System Bodies
+        const celestialBodies = [
+            {
+                id: 'sun',
+                name: 'Kepler-186 Helios',
+                type: 'Red Dwarf Star',
+                x: -300,
+                y: 0,
+                radius: 52,
+                color: '#ff7733',
+                glowColor: 'rgba(255, 120, 50, 0.4)',
+                isStar: true
+            },
+            {
+                id: 'aethelgard',
+                name: 'Aethelgard Prime',
+                type: 'Class-IV Exoplanet',
+                orbitRadius: 360,
+                orbitSpeed: 0.08,
+                angle: 0.4,
+                radius: 40,
+                color: '#38bdf8',
+                atmoColor: 'rgba(0, 240, 255, 0.35)',
+                isPlanet: true
+            },
+            {
+                id: 'boreas',
+                name: 'Boreas Minor',
+                type: 'Frozen Ice Moon',
+                parent: 'aethelgard',
+                orbitRadius: 90,
+                orbitSpeed: 0.25,
+                angle: 1.2,
+                radius: 12,
+                color: '#e0f2fe',
+                isMoon: true
+            },
+            {
+                id: 'zephyr',
+                name: 'Zephyr Station',
+                type: 'Orbital Shipyard',
+                parent: 'aethelgard',
+                orbitRadius: 65,
+                orbitSpeed: -0.18,
+                angle: 3.0,
+                radius: 7,
+                color: '#10b981',
+                isStation: true
+            }
+        ];
+
+        // Fleet Ships
+        const fleet = [
+            {
+                id: 'genesis',
+                name: 'CSS Genesis',
+                role: 'Flagship Ark',
+                parent: 'aethelgard',
+                orbitDist: 50,
+                orbitSpeed: 0.12,
+                angle: 0.0,
+                color: '#00f0ff',
+                status: 'Stationary Orbit',
+                hull: 100,
+                mission: 'Command & Cryo-Vaults'
+            },
+            {
+                id: 'vanguard',
+                name: 'Ark Vanguard',
+                role: 'Agronomy Ark',
+                parent: 'aethelgard',
+                orbitDist: 78,
+                orbitSpeed: 0.09,
+                angle: 2.2,
+                color: '#10b981',
+                status: 'Lagrange Point 1',
+                hull: 100,
+                mission: 'Hydroponics & Habitation'
+            },
+            {
+                id: 'aeon',
+                name: 'Surveyor Aeon',
+                role: 'Deep Scout',
+                parent: 'aethelgard',
+                orbitDist: 130,
+                orbitSpeed: 0.35,
+                angle: 1.5,
+                color: '#38bdf8',
+                status: 'Scanning Orbit',
+                hull: 98,
+                mission: 'Sector Reconnaissance'
+            },
+            {
+                id: 'drake',
+                name: 'Harvester Drake',
+                role: 'Mining Rig',
+                targetBelt: true,
+                x: 180,
+                y: -140,
+                vx: 0.2,
+                vy: 0.1,
+                color: '#f59e0b',
+                status: 'Harvesting',
+                hull: 94,
+                mission: 'Volatiles & Ore Extraction'
+            },
+            {
+                id: 'titan',
+                name: 'Freighter Titan-1',
+                role: 'Heavy Hauler',
+                parent: 'aethelgard',
+                orbitDist: 110,
+                orbitSpeed: -0.15,
+                angle: 4.2,
+                color: '#a855f7',
+                status: 'Supply Route',
+                hull: 100,
+                mission: 'Automated Transport'
+            }
+        ];
+
+        // Background Starfield
+        const starCount = 180;
+        const backgroundStars = Array.from({ length: starCount }, () => ({
+            x: (Math.random() - 0.5) * 4000,
+            y: (Math.random() - 0.5) * 4000,
+            size: Math.random() * 1.5 + 0.4,
+            alpha: Math.random() * 0.7 + 0.3
         }));
 
-        // Render Loop
+        // Asteroid Belt (Tartarus Ring)
+        const asteroidCount = 140;
+        const asteroids = Array.from({ length: asteroidCount }, () => {
+            const dist = 540 + (Math.random() - 0.5) * 90;
+            const angle = Math.random() * Math.PI * 2;
+            return {
+                dist,
+                angle,
+                speed: (0.015 + Math.random() * 0.01) * (Math.random() > 0.5 ? 1 : 1),
+                size: Math.random() * 2.2 + 1.0,
+                alpha: Math.random() * 0.6 + 0.4
+            };
+        });
+
+        // --- Canvas Initialization & Resizing ---
+        const canvas = document.getElementById('stellarCanvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('canvasContainer');
+
+        function resize() {
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // --- Terraforming Calculation Logic ---
+        function calculateHabitability() {
+            // Pressure score: optimal at 1.0 atm (0 score at <=0 or >=3.0)
+            const p = sim.pressure;
+            let pScore = 0;
+            if (p >= 0.2 && p <= 2.2) {
+                pScore = 100 - Math.abs(1.0 - p) * 70;
+            }
+            pScore = Math.max(0, Math.min(100, pScore));
+
+            // Temperature score: optimal at 15°C (-50°C = 0, +60°C = 0)
+            const t = sim.temp;
+            let tScore = 0;
+            if (t >= -45 && t <= 55) {
+                tScore = 100 - Math.abs(15.0 - t) * 1.6;
+            }
+            tScore = Math.max(0, Math.min(100, tScore));
+
+            // Water score: optimal at 60% coverage (0 at <5%, 100 at 50-70%)
+            const w = sim.water;
+            let wScore = 0;
+            if (w >= 5) {
+                wScore = Math.min(100, (w / 60) * 100);
+            }
+
+            // Oxygen score: optimal at 20.9% (breathable at >=16%)
+            const o = sim.oxygen;
+            let oScore = Math.min(100, (o / 20.9) * 100);
+
+            // Magnetosphere score: optimal at >=0.5 Gauss
+            const m = sim.magnet;
+            let mScore = Math.min(100, (m / 0.5) * 100);
+
+            // Weighted average Habitability
+            const total = (pScore * 0.25) + (tScore * 0.25) + (wScore * 0.2) + (oScore * 0.2) + (mScore * 0.1);
+            sim.habitability = +Math.max(0, Math.min(100, total)).toFixed(1);
+
+            // Update badge text
+            const badge = document.getElementById('habitabilityBadge');
+            if (sim.habitability < 25) {
+                badge.textContent = `Hostile (${sim.habitability}%)`;
+                badge.style.color = 'var(--accent-rose)';
+            } else if (sim.habitability < 50) {
+                badge.textContent = `Harsh (${sim.habitability}%)`;
+                badge.style.color = 'var(--accent-amber)';
+            } else if (sim.habitability < 75) {
+                badge.textContent = `Developing (${sim.habitability}%)`;
+                badge.style.color = 'var(--accent-blue)';
+            } else {
+                badge.textContent = `Garden World (${sim.habitability}%)`;
+                badge.style.color = 'var(--accent-emerald)';
+            }
+        }
+
+        // --- Continuous Simulation Step ---
+        let lastSimTick = Date.now();
+
+        function simTick() {
+            if (sim.paused) return;
+
+            // Resource loops per cycle
+            const rate = sim.speed;
+
+            // Energy loops
+            const energyGen = 600 + (sim.surfaceSolar * 60);
+            const energyDrain = 200 + (sim.solarMirrors * 75) + (sim.atmoProcessors * 60) + (sim.coreDynamos * 80) + Math.floor(sim.colonists / 1000) * 5;
+            sim.deltaEnergy = energyGen - energyDrain;
+            sim.energy = Math.max(0, sim.energy + Math.floor(sim.deltaEnergy * 0.05 * rate));
+
+            // Minerals loops
+            const mineralGain = 20 + (sim.drakeStatus === 'mining' ? 25 : 10);
+            const mineralDrain = (sim.atmoProcessors * 3);
+            sim.deltaMinerals = mineralGain - mineralDrain;
+            sim.minerals = Math.max(0, sim.minerals + Math.floor(sim.deltaMinerals * 0.05 * rate));
+
+            // Volatiles loops
+            const volGain = 14 + (sim.drakeStatus === 'mining' ? 18 : 6);
+            const volDrain = (sim.solarMirrors * 2);
+            sim.deltaVolatiles = volGain - volDrain;
+            sim.volatiles = Math.max(0, sim.volatiles + Math.floor(sim.deltaVolatiles * 0.05 * rate));
+
+            // Food loops
+            const foodGain = 15 + (sim.hydroTowers * 12);
+            const foodDrain = Math.floor(sim.colonists / 2000);
+            sim.deltaFood = foodGain - foodDrain;
+            sim.food = Math.max(0, sim.food + Math.floor(sim.deltaFood * 0.05 * rate));
+
+            // Natural Terraforming slow drifts driven by active structures
+            if (sim.energy > 500) {
+                sim.temp = +(sim.temp + (sim.solarMirrors * 0.012 * rate)).toFixed(2);
+                sim.pressure = +(sim.pressure + (sim.atmoProcessors * 0.0003 * rate)).toFixed(3);
+                if (sim.temp > -20 && sim.water > 10) {
+                    sim.oxygen = +(sim.oxygen + (sim.bioseedStations * 0.0008 * rate)).toFixed(3);
+                }
+                if (sim.temp > 0 && sim.water < 65) {
+                    sim.water = +(sim.water + 0.001 * rate).toFixed(2);
+                }
+            }
+
+            // Morale adjustments
+            if (sim.food <= 100 || sim.energy <= 200) {
+                sim.morale = Math.max(10, +(sim.morale - 0.2 * rate).toFixed(1));
+            } else if (sim.habitability > 25 && sim.morale < 95) {
+                sim.morale = Math.min(99, +(sim.morale + 0.05 * rate).toFixed(1));
+            }
+
+            calculateHabitability();
+            updateUI();
+        }
+
+        // --- Render Loop ---
         function render() {
-            ctx.fillStyle = '#050811';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
+            const cx = canvas.width / 2 + sim.camX;
+            const cy = canvas.height / 2 + sim.camY;
+            const z = sim.zoom;
 
-            // Draw Background Stars
-            stars.forEach(s => {
-                ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha * (0.6 + Math.sin(sim.time * 2 + s.x) * 0.2)})`;
-                ctx.beginPath();
-                ctx.arc((s.x % canvas.width), (s.y % canvas.height), s.size, 0, Math.PI * 2);
-                ctx.fill();
+            // 1. Draw Starfield (Parallax with zoom)
+            backgroundStars.forEach(s => {
+                const sx = cx + (s.x * z);
+                const sy = cy + (s.y * z);
+                if (sx >= -10 && sx <= canvas.width + 10 && sy >= -10 && sy <= canvas.height + 10) {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha * (0.6 + Math.sin(sim.time * 2 + s.x) * 0.2)})`;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, s.size * Math.min(1.5, z), 0, Math.PI * 2);
+                    ctx.fill();
+                }
             });
 
-            // Draw Stellar Grid
-            ctx.strokeStyle = 'rgba(28, 49, 86, 0.25)';
+            // 2. Draw Stellar Coordinate Grid
+            ctx.strokeStyle = 'rgba(28, 49, 86, 0.2)';
             ctx.lineWidth = 1;
-            const step = 60;
-            for (let x = 0; x < canvas.width; x += step) {
+            const step = 80 * z;
+            const startX = (cx % step);
+            const startY = (cy % step);
+            for (let x = startX; x < canvas.width; x += step) {
                 ctx.beginPath();
                 ctx.moveTo(x, 0);
                 ctx.lineTo(x, canvas.height);
                 ctx.stroke();
             }
-            for (let y = 0; y < canvas.height; y += step) {
+            for (let y = startY; y < canvas.height; y += step) {
                 ctx.beginPath();
                 ctx.moveTo(0, y);
                 ctx.lineTo(canvas.width, y);
                 ctx.stroke();
             }
 
-            // Central Star / Primary Sun (Off-center left)
-            const sunX = cx - 240;
-            const sunY = cy;
-            const sunRadius = 55;
-            const sunGrad = ctx.createRadialGradient(sunX, sunY, 10, sunX, sunY, sunRadius * 1.8);
-            sunGrad.addColorStop(0, '#ffffff');
-            sunGrad.addColorStop(0.3, '#38bdf8');
-            sunGrad.addColorStop(0.7, 'rgba(0, 240, 255, 0.4)');
-            sunGrad.addColorStop(1, 'rgba(0, 240, 255, 0)');
+            // 3. Central Sun (Kepler-186)
+            const sun = celestialBodies[0];
+            const sunX = cx + sun.x * z;
+            const sunY = cy + sun.y * z;
+            const sunR = sun.radius * z;
+
+            // Sun Outer Corona
+            const sunGrad = ctx.createRadialGradient(sunX, sunY, sunR * 0.2, sunX, sunY, sunR * 2.2);
+            sunGrad.addColorStop(0, '#fff4e6');
+            sunGrad.addColorStop(0.3, '#ff9933');
+            sunGrad.addColorStop(0.7, 'rgba(255, 80, 20, 0.35)');
+            sunGrad.addColorStop(1, 'rgba(255, 50, 0, 0)');
             ctx.fillStyle = sunGrad;
             ctx.beginPath();
-            ctx.arc(sunX, sunY, sunRadius * 1.8, 0, Math.PI * 2);
+            ctx.arc(sunX, sunY, sunR * 2.2, 0, Math.PI * 2);
             ctx.fill();
 
-            // Core Sun
-            ctx.fillStyle = '#e0f2fe';
+            // Sun Core
+            ctx.fillStyle = '#ffeedb';
             ctx.beginPath();
-            ctx.arc(sunX, sunY, sunRadius * 0.6, 0, Math.PI * 2);
+            ctx.arc(sunX, sunY, sunR * 0.8, 0, Math.PI * 2);
             ctx.fill();
 
-            // Target Planet: Aethelgard Prime
-            const orbitRadius = 260;
-            const planetAngle = sim.time * 0.15;
-            const px = sunX + Math.cos(planetAngle) * orbitRadius;
-            const py = sunY + Math.sin(planetAngle) * (orbitRadius * 0.7);
+            // Sun Label
+            ctx.fillStyle = 'rgba(255, 180, 100, 0.7)';
+            ctx.font = `${Math.max(9, 10 * z)}px monospace`;
+            ctx.textAlign = 'center';
+            ctx.fillText(sun.name, sunX, sunY + sunR + 14 * z);
 
-            // Orbit path
-            ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+            // 4. Tartarus Asteroid Belt
+            asteroids.forEach(a => {
+                if (!sim.paused) a.angle += a.speed * 0.005 * sim.speed;
+                const ax = sunX + Math.cos(a.angle) * (a.dist * z);
+                const ay = sunY + Math.sin(a.angle) * (a.dist * z * 0.7);
+                ctx.fillStyle = `rgba(160, 175, 200, ${a.alpha})`;
+                ctx.beginPath();
+                ctx.arc(ax, ay, a.size * z, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // 5. Target Planet: Aethelgard Prime
+            const planet = celestialBodies[1];
+            if (!sim.paused) planet.angle += planet.orbitSpeed * 0.008 * sim.speed;
+            const planetOrbitR = planet.orbitRadius * z;
+            const px = sunX + Math.cos(planet.angle) * planetOrbitR;
+            const py = sunY + Math.sin(planet.angle) * (planetOrbitR * 0.7);
+            const pr = planet.radius * z;
+
+            planet.currX = px;
+            planet.currY = py;
+
+            // Draw Orbit Ellipse
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.2)';
+            ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.ellipse(sunX, sunY, orbitRadius, orbitRadius * 0.7, 0, 0, Math.PI * 2);
+            ctx.ellipse(sunX, sunY, planetOrbitR, planetOrbitR * 0.7, 0, 0, Math.PI * 2);
             ctx.stroke();
 
-            // Planet Body
-            const planetRadius = 38;
-
-            // Atmospheric Glow Ring
-            const atmoGrad = ctx.createRadialGradient(px, py, planetRadius * 0.9, px, py, planetRadius * 1.4);
-            atmoGrad.addColorStop(0, 'rgba(0, 240, 255, 0.4)');
-            atmoGrad.addColorStop(0.6, 'rgba(16, 185, 129, 0.25)');
+            // Planet Atmospheric Glow (Dynamic with Pressure & O2)
+            const atmoR = pr * (1.15 + (sim.pressure * 0.2));
+            const atmoGrad = ctx.createRadialGradient(px, py, pr * 0.85, px, py, atmoR);
+            const hue = sim.oxygen > 15 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(0, 240, 255, 0.35)';
+            atmoGrad.addColorStop(0, hue);
+            atmoGrad.addColorStop(0.7, 'rgba(56, 189, 248, 0.15)');
             atmoGrad.addColorStop(1, 'rgba(0, 240, 255, 0)');
             ctx.fillStyle = atmoGrad;
             ctx.beginPath();
-            ctx.arc(px, py, planetRadius * 1.4, 0, Math.PI * 2);
+            ctx.arc(px, py, atmoR, 0, Math.PI * 2);
             ctx.fill();
 
-            // Planet Surface
-            const planetGrad = ctx.createRadialGradient(px - 10, py - 10, 5, px, py, planetRadius);
-            planetGrad.addColorStop(0, '#38bdf8');
-            planetGrad.addColorStop(0.5, '#1e293b');
-            planetGrad.addColorStop(1, '#090d16');
+            // Planet Surface (reflects temperature & water coverage)
+            const planetGrad = ctx.createRadialGradient(px - pr * 0.3, py - pr * 0.3, pr * 0.1, px, py, pr);
+            if (sim.temp < -20) {
+                // Frozen ice world
+                planetGrad.addColorStop(0, '#cce7ff');
+                planetGrad.addColorStop(0.5, '#4a6f99');
+                planetGrad.addColorStop(1, '#111d33');
+            } else if (sim.water > 40 && sim.oxygen > 12) {
+                // Thriving Gaia
+                planetGrad.addColorStop(0, '#38bdf8');
+                planetGrad.addColorStop(0.4, '#10b981');
+                planetGrad.addColorStop(0.8, '#1e3a8a');
+                planetGrad.addColorStop(1, '#070f1e');
+            } else {
+                // Barren greenhouse transition
+                planetGrad.addColorStop(0, '#60a5fa');
+                planetGrad.addColorStop(0.5, '#78716c');
+                planetGrad.addColorStop(1, '#1c1917');
+            }
             ctx.fillStyle = planetGrad;
             ctx.beginPath();
-            ctx.arc(px, py, planetRadius, 0, Math.PI * 2);
+            ctx.arc(px, py, pr, 0, Math.PI * 2);
             ctx.fill();
 
-            // Planetary Ring / Orbital Marker
-            ctx.strokeStyle = 'rgba(0, 240, 255, 0.5)';
-            ctx.lineWidth = 1.5;
-            ctx.strokeRect(px - planetRadius - 8, py - planetRadius - 8, (planetRadius + 8) * 2, (planetRadius + 8) * 2);
+            // Target Reticle if selected
+            if (sim.selected && sim.selected.id === planet.id) {
+                ctx.strokeStyle = '#00f0ff';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(px - pr - 6, py - pr - 6, (pr + 6) * 2, (pr + 6) * 2);
+            }
 
             // Planet Label
             ctx.fillStyle = '#38bdf8';
-            ctx.font = '11px monospace';
+            ctx.font = `bold ${Math.max(10, 11 * z)}px monospace`;
             ctx.textAlign = 'center';
-            ctx.fillText('Aethelgard Prime [Terraforming Active]', px, py + planetRadius + 22);
+            ctx.fillText(`${planet.name} [Hab: ${sim.habitability}%]`, px, py + pr + 16 * z);
 
-            // Orbiting Ships (Fleet Arks & Probes)
-            for (let i = 0; i < 3; i++) {
-                const shipAngle = sim.time * 0.8 + (i * Math.PI * 2 / 3);
-                const shipDist = planetRadius + 22 + (i * 10);
-                const sx = px + Math.cos(shipAngle) * shipDist;
-                const sy = py + Math.sin(shipAngle) * (shipDist * 0.8);
+            // 6. Boreas Minor Moon
+            const moon = celestialBodies[2];
+            if (!sim.paused) moon.angle += moon.orbitSpeed * 0.02 * sim.speed;
+            const moonDist = moon.orbitRadius * z;
+            const mx = px + Math.cos(moon.angle) * moonDist;
+            const my = py + Math.sin(moon.angle) * (moonDist * 0.6);
+            const mr = moon.radius * z;
+            moon.currX = mx;
+            moon.currY = my;
 
-                ctx.fillStyle = (i === 0) ? '#00f0ff' : '#10b981';
-                ctx.beginPath();
-                ctx.arc(sx, sy, 3.5, 0, Math.PI * 2);
-                ctx.fill();
+            ctx.strokeStyle = 'rgba(224, 242, 254, 0.15)';
+            ctx.beginPath();
+            ctx.ellipse(px, py, moonDist, moonDist * 0.6, 0, 0, Math.PI * 2);
+            ctx.stroke();
 
-                // Vector trail
-                ctx.strokeStyle = 'rgba(0, 240, 255, 0.3)';
+            ctx.fillStyle = moon.color;
+            ctx.beginPath();
+            ctx.arc(mx, my, mr, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#cbd5e1';
+            ctx.font = `${Math.max(8, 9 * z)}px monospace`;
+            ctx.fillText(moon.name, mx, my + mr + 10 * z);
+
+            // 7. Zephyr Orbital Station
+            const station = celestialBodies[3];
+            if (!sim.paused) station.angle += station.orbitSpeed * 0.02 * sim.speed;
+            const stDist = station.orbitRadius * z;
+            const stX = px + Math.cos(station.angle) * stDist;
+            const stY = py + Math.sin(station.angle) * (stDist * 0.6);
+            const stR = station.radius * z;
+            station.currX = stX;
+            station.currY = stY;
+
+            ctx.fillStyle = station.color;
+            ctx.fillRect(stX - stR, stY - stR, stR * 2, stR * 2);
+
+            // 8. Fleet Ships
+            fleet.forEach((ship, idx) => {
+                let sx, sy;
+                if (ship.targetBelt) {
+                    // Mining in asteroid belt
+                    if (!sim.paused) {
+                        ship.x += ship.vx * sim.speed;
+                        ship.y += ship.vy * sim.speed;
+                        if (ship.x > 350 || ship.x < -100) ship.vx *= -1;
+                        if (ship.y > 200 || ship.y < -200) ship.vy *= -1;
+                    }
+                    sx = cx + ship.x * z;
+                    sy = cy + ship.y * z;
+                } else {
+                    // In orbit around Aethelgard
+                    if (!sim.paused) ship.angle += ship.orbitSpeed * 0.02 * sim.speed;
+                    const dist = ship.orbitDist * z;
+                    sx = px + Math.cos(ship.angle) * dist;
+                    sy = py + Math.sin(ship.angle) * (dist * 0.7);
+                }
+
+                ship.currX = sx;
+                ship.currY = sy;
+
+                // Thruster Vector Trail
+                ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
                 ctx.beginPath();
                 ctx.moveTo(sx, sy);
-                ctx.lineTo(sx - Math.cos(shipAngle) * 8, sy - Math.sin(shipAngle) * 8);
+                ctx.lineTo(sx - Math.cos(ship.angle || 0) * 8 * z, sy - Math.sin(ship.angle || 0) * 8 * z);
                 ctx.stroke();
-            }
 
-            // Step simulation time
+                // Ship Icon (Diamond / Chevron)
+                ctx.fillStyle = ship.color;
+                ctx.beginPath();
+                ctx.arc(sx, sy, 3.5 * z, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Selected Reticle
+                if (sim.selected && sim.selected.id === ship.id) {
+                    ctx.strokeStyle = ship.color;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, 7 * z, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                // Small Tag
+                ctx.fillStyle = ship.color;
+                ctx.font = `${Math.max(8, 9 * z)}px monospace`;
+                ctx.textAlign = 'left';
+                ctx.fillText(ship.name.split(' ')[0], sx + 6 * z, sy + 3 * z);
+            });
+
+            // Step Time
             if (!sim.paused) {
                 sim.time += 0.016 * sim.speed;
-                sim.cycle = +(sim.cycle + 0.002 * sim.speed).toFixed(2);
+                sim.cycle = +(sim.cycle + 0.003 * sim.speed).toFixed(2);
                 document.getElementById('statCycle').textContent = sim.cycle.toFixed(2);
+
+                const now = Date.now();
+                if (now - lastSimTick > 1000) {
+                    simTick();
+                    lastSimTick = now;
+                }
             }
 
             requestAnimationFrame(render);
         }
 
+        // --- Viewport Navigation & Interaction ---
+        canvas.addEventListener('mousedown', (e) => {
+            initAudio();
+            sim.isDragging = true;
+            sim.lastMouseX = e.clientX;
+            sim.lastMouseY = e.clientY;
+
+            // Check if clicked an object
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            let found = null;
+            // Check fleet
+            fleet.forEach(s => {
+                if (s.currX && Math.hypot(s.currX - clickX, s.currY - clickY) < 18) {
+                    found = s;
+                }
+            });
+            // Check celestial bodies
+            if (!found) {
+                celestialBodies.forEach(b => {
+                    if (b.currX && Math.hypot(b.currX - clickX, b.currY - clickY) < (b.radius * sim.zoom + 10)) {
+                        found = b;
+                    }
+                });
+            }
+
+            if (found) {
+                selectEntity(found);
+                playSound('click');
+            }
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (sim.isDragging) {
+                const dx = e.clientX - sim.lastMouseX;
+                const dy = e.clientY - sim.lastMouseY;
+                sim.camX += dx;
+                sim.camY += dy;
+                sim.lastMouseX = e.clientX;
+                sim.lastMouseY = e.clientY;
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            sim.isDragging = false;
+        });
+
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            initAudio();
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            sim.zoom = Math.max(0.4, Math.min(2.5, sim.zoom * delta));
+        }, { passive: false });
+
+        // Selection Inspector
+        function selectEntity(item) {
+            sim.selected = item;
+            const card = document.getElementById('selectionCard');
+            const title = document.getElementById('selTitle');
+            const type = document.getElementById('selType');
+            const status = document.getElementById('selStatus');
+            const dist = document.getElementById('selDist');
+            const act1 = document.getElementById('selAct1');
+            const act2 = document.getElementById('selAct2');
+
+            card.style.display = 'block';
+            title.textContent = item.name;
+            type.textContent = item.role || item.type || 'Object';
+            status.textContent = item.status || 'Active';
+            dist.textContent = item.isPlanet ? '360 AU' : (item.parent ? 'Orbiting Anchor' : 'Deep Space');
+
+            if (item.isPlanet) {
+                act1.textContent = 'Focus Planetary Biometrics';
+                act2.textContent = 'Deploy Orbital Satellite';
+                act1.onclick = () => {
+                    switchTab('tab-terra');
+                    playSound('click');
+                };
+                act2.onclick = () => {
+                    document.getElementById('btnSolarMirror').click();
+                };
+            } else if (item.role) {
+                act1.textContent = 'Inspect Vessel Telemetry';
+                act2.textContent = 'Order Return to Orbit';
+                act1.onclick = () => {
+                    switchTab('tab-fleet');
+                    playSound('click');
+                };
+                act2.onclick = () => {
+                    item.status = 'Stationary Orbit';
+                    logMsg(`${item.name} repositioned to stable geosynchronous parking orbit.`);
+                    playSound('deploy');
+                };
+            } else {
+                act1.textContent = 'Survey Body';
+                act2.textContent = 'Center Camera';
+                act1.onclick = () => {
+                    logMsg(`Telemetry scan completed for ${item.name}.`);
+                    playSound('success');
+                };
+                act2.onclick = () => {
+                    centerOn(item);
+                };
+            }
+        }
+
+        document.getElementById('selClose').addEventListener('click', () => {
+            document.getElementById('selectionCard').style.display = 'none';
+            sim.selected = null;
+        });
+
+        function centerOn(item) {
+            if (item.currX !== undefined) {
+                const cx = canvas.width / 2;
+                const cy = canvas.height / 2;
+                sim.camX = cx - (item.currX - sim.camX);
+                sim.camY = cy - (item.currY - sim.camY);
+            }
+        }
+
+        // Navigation Buttons
+        document.getElementById('btnCenterPlanet').addEventListener('click', () => {
+            const planet = celestialBodies[1];
+            centerOn(planet);
+            selectEntity(planet);
+            playSound('click');
+        });
+
+        document.getElementById('btnCenterFleet').addEventListener('click', () => {
+            const genesis = fleet[0];
+            centerOn(genesis);
+            selectEntity(genesis);
+            playSound('click');
+        });
+
+        document.getElementById('btnZoomIn').addEventListener('click', () => {
+            sim.zoom = Math.min(2.5, sim.zoom * 1.25);
+            playSound('click');
+        });
+
+        document.getElementById('btnZoomOut').addEventListener('click', () => {
+            sim.zoom = Math.max(0.4, sim.zoom * 0.8);
+            playSound('click');
+        });
+
+        document.getElementById('btnResetView').addEventListener('click', () => {
+            sim.camX = 0;
+            sim.camY = 0;
+            sim.zoom = 1.0;
+            playSound('click');
+        });
+
         // Tab Switching
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+            if (btn) btn.classList.add('active');
+            const target = document.getElementById(tabId);
+            if (target) target.classList.add('active');
+        }
+
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                btn.classList.add('active');
-                const target = document.getElementById(btn.dataset.tab);
-                if (target) target.classList.add('active');
+                initAudio();
+                playSound('click');
+                switchTab(btn.dataset.tab);
             });
         });
 
-        // Time Control Handlers
+        // Speed Controls
         const pauseBtn = document.getElementById('btnPause');
         const sp1Btn = document.getElementById('btnSpeed1');
         const sp2Btn = document.getElementById('btnSpeed2');
         const sp5Btn = document.getElementById('btnSpeed5');
 
         function setSpeed(speed, isPause = false) {
+            initAudio();
+            playSound('click');
             sim.speed = speed;
             sim.paused = isPause;
             [pauseBtn, sp1Btn, sp2Btn, sp5Btn].forEach(b => b.classList.remove('active'));
@@ -788,81 +1976,277 @@
         sp2Btn.addEventListener('click', () => setSpeed(2));
         sp5Btn.addEventListener('click', () => setSpeed(5));
 
-        // Interventions / Action Handlers
-        function logMsg(txt) {
+        // Audio Toggle
+        const audioBtn = document.getElementById('btnAudioToggle');
+        audioBtn.addEventListener('click', () => {
+            initAudio();
+            audioEnabled = !audioEnabled;
+            audioBtn.textContent = audioEnabled ? 'AUDIO: ON' : 'AUDIO: OFF';
+            audioBtn.classList.toggle('active', audioEnabled);
+            if (audioEnabled) playSound('click');
+        });
+
+        function logMsg(txt, isWarn = false) {
             const banner = document.getElementById('logBanner');
-            banner.innerHTML = `<span class="highlight">[FLEET DISPATCH]</span> ${txt}`;
+            if (isWarn) {
+                banner.innerHTML = `<span class="warn">[ALERT]</span> ${txt}`;
+                playSound('warn');
+            } else {
+                banner.innerHTML = `<span class="highlight">[FLEET DISPATCH]</span> ${txt}`;
+            }
         }
 
+        // --- Intervention & Building Handlers ---
         document.getElementById('btnSolarMirror').addEventListener('click', () => {
-            if (sim.energy >= 250) {
-                sim.energy -= 250;
-                sim.temp += 1.8;
-                sim.habitability = Math.min(100, +(sim.habitability + 1.2).toFixed(1));
+            initAudio();
+            if (sim.energy >= 350 && sim.minerals >= 150) {
+                sim.energy -= 350;
+                sim.minerals -= 150;
+                sim.solarMirrors++;
+                sim.temp = +(sim.temp + 1.8).toFixed(1);
+                document.getElementById('cntMirrors').textContent = `${sim.solarMirrors} Deployed`;
+                calculateHabitability();
                 updateUI();
-                logMsg('Orbital Solar Mirror angled. Surface thermal equilibrium rising (+1.8°C).');
+                logMsg(`Orbital Solar Mirror #${sim.solarMirrors} deployed. Focused insolation rising (+1.8°C).`);
+                playSound('deploy');
             } else {
-                logMsg('Insufficient energy reserves for Solar Mirror alignment.');
+                logMsg('Insufficient resources (Req: 350 kW Energy, 150 t Minerals).', true);
             }
         });
 
         document.getElementById('btnAtmoProcessor').addEventListener('click', () => {
-            if (sim.minerals >= 120) {
-                sim.minerals -= 120;
-                sim.pressure = +(sim.pressure + 0.04).toFixed(2);
-                sim.habitability = Math.min(100, +(sim.habitability + 1.5).toFixed(1));
+            initAudio();
+            if (sim.minerals >= 180 && sim.energy >= 100) {
+                sim.minerals -= 180;
+                sim.energy -= 100;
+                sim.atmoProcessors++;
+                sim.pressure = +(sim.pressure + 0.05).toFixed(2);
+                document.getElementById('cntProcessors').textContent = `${sim.atmoProcessors} Online`;
+                calculateHabitability();
                 updateUI();
-                logMsg('Atmospheric Processor active. Heavy gas vapor released into troposphere (+0.04 atm).');
+                logMsg(`Troposphere Injector #${sim.atmoProcessors} constructed. Gas pressure increasing (+0.05 atm).`);
+                playSound('deploy');
             } else {
-                logMsg('Insufficient mineral reserves for Atmospheric Processor feed.');
+                logMsg('Insufficient resources (Req: 180 t Minerals, 100 kW Energy).', true);
             }
         });
 
         document.getElementById('btnCometDrop').addEventListener('click', () => {
-            if (sim.volatiles >= 300) {
+            initAudio();
+            if (sim.volatiles >= 300 && sim.energy >= 150) {
                 sim.volatiles -= 300;
+                sim.energy -= 150;
                 sim.water = +(sim.water + 2.5).toFixed(1);
-                sim.habitability = Math.min(100, +(sim.habitability + 2.0).toFixed(1));
+                sim.pressure = +(sim.pressure + 0.02).toFixed(2);
+                calculateHabitability();
                 updateUI();
-                logMsg('Captured comet nuclei guided into polar trajectory. Hydrosphere coverage expanded (+2.5%).');
+                logMsg('Ice comet deflected into polar basin. Hydrosphere coverage expanded (+2.5% Water).');
+                playSound('success');
             } else {
-                logMsg('Insufficient volatiles for orbital comet deflection.');
+                logMsg('Insufficient resources (Req: 300 t Volatiles, 150 kW Energy).', true);
             }
         });
 
         document.getElementById('btnBioseeding').addEventListener('click', () => {
-            if (sim.energy >= 100) {
+            initAudio();
+            if (sim.food >= 120 && sim.energy >= 100) {
+                sim.food -= 120;
                 sim.energy -= 100;
-                sim.oxygen = +(sim.oxygen + 0.8).toFixed(1);
-                sim.habitability = Math.min(100, +(sim.habitability + 1.8).toFixed(1));
+                sim.bioseedStations++;
+                sim.oxygen = +(sim.oxygen + 0.9).toFixed(1);
+                document.getElementById('cntBioseed').textContent = `${sim.bioseedStations} Active`;
+                calculateHabitability();
                 updateUI();
-                logMsg('Genetically adapted extremophile lichen seeded across equatorial plains (+0.8% O2).');
+                logMsg('Lichen bioseeding distributed across crags. Atmospheric O2 generating (+0.9% O2).');
+                playSound('success');
             } else {
-                logMsg('Insufficient energy for bio-seeding dissemination.');
+                logMsg('Insufficient resources (Req: 120 t Biomass, 100 kW Energy).', true);
             }
         });
 
+        document.getElementById('btnCoreDynamo').addEventListener('click', () => {
+            initAudio();
+            if (sim.minerals >= 400 && sim.energy >= 250) {
+                sim.minerals -= 400;
+                sim.energy -= 250;
+                sim.coreDynamos++;
+                sim.magnet = +(sim.magnet + 0.08).toFixed(2);
+                document.getElementById('cntDynamo').textContent = `${sim.coreDynamos} Primed`;
+                calculateHabitability();
+                updateUI();
+                logMsg(`Subsurface Magnetic Dynamo #${sim.coreDynamos} online. Planetary magnetosphere bolstered (+0.08 Gauss).`);
+                playSound('deploy');
+            } else {
+                logMsg('Insufficient resources (Req: 400 t Minerals, 250 kW Energy).', true);
+            }
+        });
+
+        document.getElementById('btnAlgaeBlooms').addEventListener('click', () => {
+            initAudio();
+            if (sim.water < 20) {
+                logMsg('Algae blooms require liquid oceans (Surface water must exceed 20%).', true);
+                return;
+            }
+            if (sim.volatiles >= 200 && sim.food >= 150) {
+                sim.volatiles -= 200;
+                sim.food -= 150;
+                sim.oxygen = +(sim.oxygen + 1.4).toFixed(1);
+                calculateHabitability();
+                updateUI();
+                logMsg('Pelagic cyanobacteria blooms seeded into lakes (+1.4% O2, +1.2% Habitability).');
+                playSound('success');
+            } else {
+                logMsg('Insufficient resources (Req: 200 t Volatiles, 150 t Biomass).', true);
+            }
+        });
+
+        // Colony Habitats Actions
+        document.getElementById('btnAwakenSleepers').addEventListener('click', () => {
+            initAudio();
+            if (sim.colonists + 2500 > sim.housingCap) {
+                logMsg('Cannot awaken sleepers: Insufficient dome housing capacity. Expand habitats first!', true);
+                return;
+            }
+            if (sim.cryoSleepers >= 2500 && sim.food >= 100) {
+                sim.cryoSleepers -= 2500;
+                sim.colonists += 2500;
+                sim.food -= 100;
+                updateUI();
+                logMsg('2,500 colonists revived from CSS Genesis cryo-stasis and assigned to Dome Alpha.');
+                playSound('success');
+            } else {
+                logMsg('Insufficient stored sleepers or food reserves for revivification.', true);
+            }
+        });
+
+        document.getElementById('btnBuildDome').addEventListener('click', () => {
+            initAudio();
+            if (sim.minerals >= 450 && sim.energy >= 150) {
+                sim.minerals -= 450;
+                sim.energy -= 150;
+                sim.housingCap += 15000;
+                updateUI();
+                logMsg('Pressurized Geodesic Dome Beta completed (+15,000 housing capacity).');
+                playSound('deploy');
+            } else {
+                logMsg('Insufficient resources (Req: 450 t Minerals, 150 kW Energy).', true);
+            }
+        });
+
+        document.getElementById('btnHydroponics').addEventListener('click', () => {
+            initAudio();
+            if (sim.minerals >= 200 && sim.volatiles >= 100) {
+                sim.minerals -= 200;
+                sim.volatiles -= 100;
+                sim.hydroTowers++;
+                updateUI();
+                logMsg(`Vertical Hydroponic Agronomy Tower #${sim.hydroTowers} operational (+25 Food/cyc).`);
+                playSound('deploy');
+            } else {
+                logMsg('Insufficient resources (Req: 200 t Minerals, 100 t Volatiles).', true);
+            }
+        });
+
+        document.getElementById('btnSolarFarm').addEventListener('click', () => {
+            initAudio();
+            if (sim.minerals >= 220) {
+                sim.minerals -= 220;
+                sim.surfaceSolar++;
+                updateUI();
+                logMsg(`Surface Photovoltaic Field #${sim.surfaceSolar} connected to grid (+180 kW).`);
+                playSound('deploy');
+            } else {
+                logMsg('Insufficient resources (Req: 220 t Minerals).', true);
+            }
+        });
+
+        // Ship Orders Handlers
+        document.querySelectorAll('.btn-ship-order').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                initAudio();
+                const shipId = btn.dataset.ship;
+                const order = btn.dataset.order;
+                const ship = fleet.find(s => s.id === shipId);
+                if (!ship) return;
+
+                if (order === 'mine-tartarus') {
+                    ship.targetBelt = true;
+                    ship.status = 'Mining Belt';
+                    logMsg(`${ship.name} dispatched to Tartarus Belt for heavy mineral excavation.`);
+                } else if (order === 'mine-boreas') {
+                    ship.targetBelt = false;
+                    ship.parent = 'boreas';
+                    ship.status = 'Scooping Ring';
+                    logMsg(`${ship.name} orbiting Boreas Minor to scoop ice volatiles.`);
+                } else if (order === 'survey-tartarus' || order === 'survey-boreas' || order === 'survey-planet') {
+                    ship.status = 'Long-Range Scan';
+                    logMsg(`${ship.name} initiating high-resolution sensor sweep.`);
+                } else if (order === 'anchor' || order === 'dock' || order === 'orbit' || order === 'hold') {
+                    ship.targetBelt = false;
+                    ship.parent = 'aethelgard';
+                    ship.status = 'Stationary Orbit';
+                    logMsg(`${ship.name} anchored in stable geosynchronous orbit.`);
+                } else if (order === 'route-supply') {
+                    ship.status = 'Supply Route';
+                    logMsg(`${ship.name} maintaining automated freight conveyor.`);
+                } else {
+                    logMsg(`${ship.name} order executed: ${order}.`);
+                }
+
+                // Update ship status in UI
+                const statusEl = document.getElementById(`status-${shipId}`);
+                if (statusEl) statusEl.textContent = ship.status;
+                playSound('click');
+            });
+        });
+
+        // --- UI Updater ---
         function updateUI() {
+            // Header stats
             document.getElementById('statEnergy').textContent = `${sim.energy.toLocaleString()} kW`;
             document.getElementById('statMinerals').textContent = `${sim.minerals.toLocaleString()} t`;
             document.getElementById('statVolatiles').textContent = `${sim.volatiles.toLocaleString()} t`;
+            document.getElementById('statFood').textContent = `${sim.food.toLocaleString()} t`;
+            document.getElementById('statColonists').textContent = sim.colonists.toLocaleString();
             document.getElementById('statHabitability').textContent = `${sim.habitability.toFixed(1)}%`;
 
-            document.getElementById('valPressure').textContent = `${sim.pressure.toFixed(2)} atm`;
-            document.getElementById('barPressure').style.width = `${Math.min(100, sim.pressure * 100)}%`;
+            document.getElementById('rateEnergy').textContent = `(${sim.deltaEnergy >= 0 ? '+' : ''}${sim.deltaEnergy})`;
+            document.getElementById('rateMinerals').textContent = `(${sim.deltaMinerals >= 0 ? '+' : ''}${sim.deltaMinerals})`;
+            document.getElementById('rateVolatiles').textContent = `(${sim.deltaVolatiles >= 0 ? '+' : ''}${sim.deltaVolatiles})`;
+            document.getElementById('rateFood').textContent = `(${sim.deltaFood >= 0 ? '+' : ''}${sim.deltaFood})`;
 
-            document.getElementById('valTemp').textContent = `${sim.temp.toFixed(0)} °C`;
-            const tempPercent = Math.max(0, Math.min(100, ((sim.temp + 100) / 150) * 100));
+            // Terraforming Tab
+            document.getElementById('valPressure').textContent = `${sim.pressure.toFixed(2)} atm`;
+            document.getElementById('barPressure').style.width = `${Math.min(100, (sim.pressure / 1.5) * 100)}%`;
+
+            document.getElementById('valTemp').textContent = `${sim.temp.toFixed(1)} °C`;
+            const tempPercent = Math.max(0, Math.min(100, ((sim.temp + 60) / 100) * 100));
             document.getElementById('barTemp').style.width = `${tempPercent}%`;
 
             document.getElementById('valWater').textContent = `${sim.water.toFixed(1)}%`;
             document.getElementById('barWater').style.width = `${Math.min(100, sim.water)}%`;
 
-            document.getElementById('valOxygen').textContent = `${sim.oxygen.toFixed(1)}% (${sim.oxygen > 15 ? 'Breathable' : 'Low'})`;
-            document.getElementById('barOxygen').style.width = `${Math.min(100, sim.oxygen * 4)}%`;
+            const o2status = sim.oxygen >= 16 ? 'Breathable' : (sim.oxygen >= 8 ? 'Hypoxic' : 'Anoxic');
+            document.getElementById('valOxygen').textContent = `${sim.oxygen.toFixed(1)}% (${o2status})`;
+            document.getElementById('barOxygen').style.width = `${Math.min(100, (sim.oxygen / 21) * 100)}%`;
+
+            const magStatus = sim.magnet >= 0.5 ? 'Deflecting Solar Winds' : (sim.magnet >= 0.3 ? 'Moderate' : 'Lethal Radiation');
+            document.getElementById('valMagnet').textContent = `${sim.magnet.toFixed(2)} G (${magStatus})`;
+            document.getElementById('barMagnet').style.width = `${Math.min(100, (sim.magnet / 0.6) * 100)}%`;
+
+            // Colony Tab
+            document.getElementById('colonyPop').textContent = sim.colonists.toLocaleString();
+            document.getElementById('colonyCryo').textContent = sim.cryoSleepers.toLocaleString();
+            document.getElementById('colonyCapacity').textContent = sim.housingCap.toLocaleString();
+            document.getElementById('barHousing').style.width = `${Math.min(100, (sim.colonists / sim.housingCap) * 100)}%`;
+            document.getElementById('valMorale').textContent = `${sim.morale.toFixed(0)}% (${sim.morale > 75 ? 'Optimistic' : (sim.morale > 50 ? 'Steady' : 'Despondent')})`;
+            document.getElementById('valBioProgress').textContent = `${(sim.habitability * 0.9).toFixed(1)}%`;
+            document.getElementById('barBioProgress').style.width = `${Math.min(100, sim.habitability * 0.9)}%`;
         }
 
-        // Start render loop
+        // Start render and initial update
+        calculateHabitability();
+        updateUI();
         render();
     </script>
 </body>
