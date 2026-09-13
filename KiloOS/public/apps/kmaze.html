@@ -283,7 +283,7 @@
     <button id="btnSave" class="hudBtn" onclick="saveCheckpointGame()" title="Save current dungeon descent to checkpoint"><span class="badge">V</span> Save</button>
     <button id="btnLoad" class="hudBtn" onclick="loadCheckpointGame()" title="Load last saved checkpoint descent"><span class="badge">L</span> Load</button>
     <button id="btnHelp" class="hudBtn" onclick="toggleHelpModal()" title="View comprehensive guide, tile codex, and tips"><span class="badge">F1/H</span> Guide</button>
-    <button id="btnKeys" class="hudBtn" onclick="prevState=gameState; gameState=4;" title="Rebind control keys"><span class="badge">K</span> Keybinds</button>
+    <button id="btnKeys" class="hudBtn" onclick="toggleKeybinds()" title="Rebind control keys"><span class="badge">K</span> Keybinds</button>
     <button id="btnExport" class="hudBtn" onclick="exportStats()" title="Export best times and statistics to JSON"><span class="badge">E</span> Export</button>
     <button id="btnImport" class="hudBtn" onclick="document.getElementById('importFile').click()" title="Import saved statistics JSON"><span class="badge">I</span> Import</button>
   </div>
@@ -599,6 +599,26 @@
   let replayLevelIdx = 0;
   let replayFrameIdx = 0;
   let prevState = 0;
+  function toggleKeybinds() {
+      if (gameState === 4) {
+          gameState = prevState;
+          waitingForKey = null;
+      } else {
+          prevState = gameState;
+          gameState = 4;
+      }
+  }
+  function startGame() {
+      gameState = 1;
+      startTime = Date.now();
+      currentLevel = -1;
+      score = 0;
+      totalGames++;
+      safeSetStorage('kmaze_games', totalGames);
+      replayLevels = [];
+      nextLevel();
+      showToast("Descent Begun! Press F1 or H for Guide", "info");
+  }
 
   function showToast(text, type = 'info', duration = 3200) {
       const container = document.getElementById('toastContainer');
@@ -643,7 +663,9 @@
       let url = URL.createObjectURL(blob);
       a.href = url;
       a.download = "kmaze_stats.json";
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       showToast("Statistics exported to kmaze_stats.json", "success");
   }
@@ -1572,6 +1594,10 @@
   }
   
   function saveCheckpointGame() {
+      if (gameState !== 1) {
+          showToast("Cannot save: dungeon descent not active!", "warning");
+          return;
+      }
       let saveData = {
           currentLevel, score, keysHeld, hasCompass, speedBoost, hasPickaxe,
           pathfinderCharges, speedShoesCharges, stunSprayCharges, timeFreezeCharges,
@@ -1610,7 +1636,7 @@
               map = saveData.map;
               isCrouching = !!saveData.isCrouching;
               startTime = Date.now() - (Number.isFinite(saveData.elapsed) ? saveData.elapsed : 0);
-              if (gameState === 0 || gameState === 2) gameState = 1;
+              gameState = 1;
               msgText = "Checkpoint / Save Loaded!";
               msgTimer = 60;
               playTone(900, 'sine', 0.2);
@@ -1756,71 +1782,85 @@
 
   const keys = {};
   document.addEventListener('keydown', e => {
-      keys[e.key] = true;
-      if (e.key === 'w' || e.key === 'W') keys['ArrowUp'] = true;
-      if (e.key === 's' || e.key === 'S') keys['ArrowDown'] = true;
-      if (e.key === 'a' || e.key === 'A') keys['ArrowLeft'] = true;
-      if (e.key === 'd' || e.key === 'D') keys['ArrowRight'] = true;
-
       // Unlock Web Audio context safely on user gesture
       if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 
+      const modal = document.getElementById('helpModal');
+      const isModalOpen = modal && modal.classList.contains('open');
+
       if (e.key === 'Escape') {
-          const modal = document.getElementById('helpModal');
-          if (modal && modal.classList.contains('open')) {
+          if (isModalOpen) {
               toggleHelpModal(false);
               return;
           }
-          if (gameState === 4) { gameState = prevState; return; }
+          if (gameState === 4) {
+              if (waitingForKey) { waitingForKey = null; }
+              else { gameState = prevState; }
+              return;
+          }
           if (gameState === 3) { gameState = 2; return; }
       }
 
-      if (gameState === 2 && (e.key === 'r' || e.key === 'R') && replayLevels.length > 0) {
+      if (isModalOpen) return;
+
+      const hasMod = e.ctrlKey || e.altKey || e.metaKey;
+
+      if (!hasMod) {
+          keys[e.key] = true;
+          if (e.key === 'w' || e.key === 'W') keys['ArrowUp'] = true;
+          if (e.key === 's' || e.key === 'S') keys['ArrowDown'] = true;
+          if (e.key === 'a' || e.key === 'A') keys['ArrowLeft'] = true;
+          if (e.key === 'd' || e.key === 'D') keys['ArrowRight'] = true;
+      }
+
+      if (gameState === 2 && !hasMod && (e.key === 'r' || e.key === 'R') && replayLevels.length > 0) {
           gameState = 3;
           replayLevelIdx = replayLevels.length - 1;
           replayFrameIdx = 0;
-      } else if (e.key === 'Enter' || (gameState === 0 && e.key === ' ')) {
+      } else if (!hasMod && (e.key === 'Enter' || (gameState === 0 && e.key === ' '))) {
           if (gameState === 0 || gameState === 2) {
-              gameState = 1;
-              startTime = Date.now();
-              currentLevel = -1;
-              score = 0;
-              totalGames++;
-              safeSetStorage('kmaze_games', totalGames);
-              replayLevels = [];
-              nextLevel();
-              showToast("Descent Begun! Press F1 or H for Guide", "info");
+              startGame();
           }
-      } else if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
+      } else if (e.key === 'F1' || (!hasMod && (e.key === 'h' || e.key === 'H'))) {
           if (e.key === 'F1') e.preventDefault();
           toggleHelpModal();
-      } else if (e.key === 'k' || e.key === 'K') {
-          if (gameState === 0 || gameState === 1 || gameState === 2) {
-              prevState = gameState; gameState = 4;
-          }
+      } else if (!hasMod && (e.key === 'k' || e.key === 'K')) {
+          toggleKeybinds();
       }
       if (gameState === 4) {
           if (waitingForKey) {
               keyBinds[waitingForKey] = e.key;
               waitingForKey = null;
           }
-      } else if (gameState === 3) {
+      } else if (gameState === 3 && !hasMod) {
           if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-              replayFrameIdx = Math.min(replayFrameIdx + 1, replayLevels[replayLevelIdx].frames.length - 1);
+              replayFrameIdx = Math.min(replayFrameIdx + 1, Math.max(0, replayLevels[replayLevelIdx].frames.length - 1));
           }
           if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
               replayFrameIdx = Math.max(replayFrameIdx - 1, 0);
           }
+          if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+              replayLevelIdx = Math.min(replayLevelIdx + 1, replayLevels.length - 1);
+              replayFrameIdx = 0;
+          }
+          if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+              replayLevelIdx = Math.max(replayLevelIdx - 1, 0);
+              replayFrameIdx = 0;
+          }
       } else if (gameState === 1) {
-          let k = e.key.toLowerCase();
-          if (k === (keyBinds.pickaxe || 'p').toLowerCase()) usePickaxe();
-          if (k === (keyBinds.pathfinder || 'c').toLowerCase()) usePathfinder();
-          if (k === (keyBinds.speed || 's').toLowerCase() || k === 'b') useSpeedShoes();
-          if (k === (keyBinds.stun || 'f').toLowerCase()) useStunSpray();
-          if (k === (keyBinds.freeze || 't').toLowerCase()) useTimeFreeze();
-          if (k === (keyBinds.crouch || 'x').toLowerCase() || e.key === 'Control') toggleCrouch();
-          if (k === 'v') saveCheckpointGame();
-          if (k === 'l') loadCheckpointGame();
+          if (!hasMod) {
+              let k = e.key.toLowerCase();
+              if (k === (keyBinds.pickaxe || 'p').toLowerCase()) usePickaxe();
+              if (k === (keyBinds.pathfinder || 'c').toLowerCase()) usePathfinder();
+              if (k === (keyBinds.speed || 's').toLowerCase() || k === 'b') useSpeedShoes();
+              if (k === (keyBinds.stun || 'f').toLowerCase()) useStunSpray();
+              if (k === (keyBinds.freeze || 't').toLowerCase()) useTimeFreeze();
+              if (k === (keyBinds.crouch || 'x').toLowerCase()) toggleCrouch();
+              if (k === 'v') saveCheckpointGame();
+              if (k === 'l') loadCheckpointGame();
+          } else if (e.key === 'Control' && !e.altKey && !e.metaKey) {
+              toggleCrouch();
+          }
       }
   });
   document.addEventListener('keyup', e => {
@@ -1832,6 +1872,11 @@
   });
 
   canvas.addEventListener('mousedown', e => {
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      if (gameState === 0 || gameState === 2) {
+          startGame();
+          return;
+      }
       if (gameState === 4) {
           let rect = canvas.getBoundingClientRect();
           let cx = (e.clientX - rect.left) * (canvas.width / rect.width);
@@ -1851,6 +1896,8 @@
 
   function update() {
       if (gameState !== 1) return;
+      const modal = document.getElementById('helpModal');
+      if (modal && modal.classList.contains('open')) return;
       frameCount++;
       updateTextures();
       
@@ -3083,13 +3130,20 @@
           uiCtx.fillText("<- Prev | Next ->", 10, 45);
           uiCtx.fillText("ESC to return", 10, 60);
       } else if (gameState === 4) {
-          uiCtx.fillText("KEYBINDS", W/2 - 30, 20);
-          let y = 40;
+          uiCtx.fillStyle = 'rgba(10, 16, 28, 0.9)';
+          uiCtx.fillRect(20, 8, W - 40, H - 16);
+          uiCtx.strokeStyle = '#00f0ff';
+          uiCtx.strokeRect(20, 8, W - 40, H - 16);
+          uiCtx.fillStyle = '#00f0ff';
+          uiCtx.fillText("KEYBINDS (Click to Rebind)", W/2 - 85, 24);
+          let y = 42;
           for (let k in keyBinds) {
-              uiCtx.fillText(`${k}: ${waitingForKey === k ? '...' : keyBinds[k]}`, 40, y);
+              uiCtx.fillStyle = (waitingForKey === k) ? '#ffff00' : 'white';
+              uiCtx.fillText(`${k}: ${waitingForKey === k ? '[PRESS ANY KEY]' : keyBinds[k]}`, 35, y);
               y += 15;
           }
-          uiCtx.fillText("Click key name to rebind. Press ESC to close.", 10, H - 20);
+          uiCtx.fillStyle = '#94a3b8';
+          uiCtx.fillText("Click to rebind. ESC or [K] to return.", 30, H - 16);
       } else {
           let elapsed = (Date.now() - startTime) / 1000;
           let biome = "Catacombs";

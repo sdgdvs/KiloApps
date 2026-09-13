@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KMaze
+**Target App:** KMech
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KMaze
 - KMech
 - KMedia
 - KMine
@@ -173,10 +172,21 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KMail
 - KMandel
 - KMatch3
+- KMaze
 
 ## Test Reports
 
 > 📁 **Archived Reports**: Historical test reports have been archived to [archive/app_test_reports_archive.md](archive/app_test_reports_archive.md) to preserve token efficiency.
+
+- **KMaze**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
+  - ✅ Core gameplay works (Raycasting 3D labyrinth engine with 45 descent stages across 5 biomes Catacombs/Cyber/Frost/Abyssal/Inferno, procedural maze generator, 4-layer particle physics, Minotaur AI with footstep stealth detection, Boss combat with Overlord on floor 45, 5 relics Pickaxe/Pathfinder/Speed Shoes/Stun Spray/Time Freeze, crouch stealth mechanics, wall torch lighting, frame-by-frame replay viewer, checkpoint save/load, and stats export/import).
+  - 🔧 FIXED: In `exportStats()`, the created download anchor was clicked without being attached to the DOM (`a.click()`), causing statistics JSON exports to fail silently in Firefox and sandboxed iframe environments. Attached anchor to `document.body` prior to clicking and cleanly removed it afterwards.
+  - 🔧 FIXED: Global keyboard listener checked bare keys (`h`, `k`, `r`, `p`, `c`, `s`, `f`, `t`, `v`, `l`, `w`, `a`, `s`, `d`) without verifying `!e.ctrlKey && !e.altKey && !e.metaKey`, hijacking browser accelerators: `Ctrl+S` (hijacked to consume Speed Shoes), `Ctrl+P` (hijacked to swing Pickaxe), `Ctrl+F` (find hijacked to fire Stun Spray), `Ctrl+T` (new tab hijacked to fire Time Freeze), `Ctrl+C` (copy text hijacked to activate Pathfinder), `Ctrl+V` (paste hijacked to save checkpoint), `Ctrl+L` (address bar focus hijacked to load checkpoint), `Ctrl+H` (browser history hijacked to toggle Help), `Ctrl+K` (browser search hijacked to toggle Keybinds), `Ctrl+R` (browser reload hijacked to trigger Replay on victory screen), and `Alt+ArrowLeft`/`Alt+ArrowRight` (browser navigation hijacked to turn adventurer). Added modifier key guards across all keyboard hotkeys.
+  - 🔧 FIXED: Keyboard shortcuts (`p`, `c`, `s`, `f`, `t`, `x`, `v`, `l`, `w`, `a`, `s`, `d`) continued firing beneath the Help & Codex modal (`#helpModal`), allowing blind movement and relic consumption; and the game loop in `update()` continued ticking, allowing roaming Minotaurs to trample and kill the player while reading instructions. Suppressed background hotkeys and paused `update()` when `#helpModal` is displayed.
+  - 🔧 FIXED: Clicking `saveCheckpointGame()` (`btnSave` or `V`) outside of an active game session (`gameState !== 1`, e.g. start screen or win screen) saved invalid state with `elapsed: Date.now()` (56 years) and corrupted the player's saved descent. Added `gameState === 1` guard with warning toast.
+  - 🔧 FIXED: In Keybinds mode (`gameState === 4`), clicking the `Keybinds` HUD button (`btnKeys`) overwrote `prevState` with 4, permanently trapping the user in Keybinds mode on Escape. Replaced with `toggleKeybinds()` so clicking the button or pressing `K` toggles in and out safely, handled Escape during active rebinding to cancel without closing, and added a high-contrast semi-transparent backdrop panel over the 3D raycast view for readability.
+  - 🔧 FIXED: In `loadCheckpointGame()`, loading a checkpoint while in Keybinds mode left `gameState === 4` instead of restoring the game view. Explicitly set `gameState = 1` upon loading a valid checkpoint.
+  - 🔧 FIXED: In `canvas.addEventListener('mousedown')`, clicking the canvas on start screen (`gameState === 0`) or victory screen (`gameState === 2`) did nothing, requiring physical keyboard `Enter` or `Space` to start descent. Added canvas click start support and enabled `ArrowUp`/`ArrowDown`/`W`/`S` in Replay mode to browse across completed stages.
 
 - **KMatch3**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
   - ✅ Core gameplay works (Classic Match-3 gem engine with 4 special gems: Line Blaster, Rainbow Gem, 3x3 Bomb, Cross Blaster, 20-stage Campaign with escalating board sizes 6x6 to 10x10, Ice tiles, multi-hit Stone & Iron obstacles, Stage 20 Jewel King Boss with shield barrier mechanics, Zen infinite relaxation mode, Timed Rush speed challenge, 4 active skills Hammer/Extra Moves/Shuffle/Color Nuke, Web Audio synthesizer sound effects, multi-tier particle spark and canvas shockwave physics).
