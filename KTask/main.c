@@ -85,6 +85,16 @@ void my_strcat(char* dest, const char* src) {
     *dest = 0;
 }
 
+void my_strncat(char* dest, const char* src, int maxDest) {
+    if (!dest || !src || maxDest <= 0) return;
+    int d = 0;
+    while (dest[d] && d < maxDest - 1) d++;
+    while (*src && d < maxDest - 1) {
+        dest[d++] = *src++;
+    }
+    dest[d] = '\0';
+}
+
 void my_itoa(int num, char* str) {
     if (num < 0) {
         *str++ = '-';
@@ -325,6 +335,7 @@ LRESULT CALLBACK InspectWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             }
 
             g_OldInspectEditProc = (WNDPROC)SetWindowLongPtrA(hEdit, GWLP_WNDPROC, (LONG_PTR)InspectEditProc);
+            SendMessageA(hEdit, EM_SETLIMITTEXT, 0, 0);
 
             CREATESTRUCTA* cs = (CREATESTRUCTA*)lParam;
             if (cs && cs->lpCreateParams) {
@@ -377,16 +388,16 @@ void PerformInspectProcess(HWND parentHwnd) {
     }
 
     my_strcpy(report, "===================================================================\r\n");
-    my_strcat(report, "           KTASK DEEP PROCESS & MEMORY INSPECTOR REPORT           \r\n");
-    my_strcat(report, "===================================================================\r\n");
-    my_strcat(report, "Process Info: ");
-    my_strcat(report, itemText);
-    my_strcat(report, "\r\n\r\n");
+    my_strncat(report, "           KTASK DEEP PROCESS & MEMORY INSPECTOR REPORT           \r\n", 65535);
+    my_strncat(report, "===================================================================\r\n", 65535);
+    my_strncat(report, "Process Info: ", 65535);
+    my_strncat(report, itemText, 65535);
+    my_strncat(report, "\r\n\r\n", 65535);
 
     // 1. Thread List
-    my_strcat(report, "-------------------------------------------------------------------\r\n");
-    my_strcat(report, " 1. ACTIVE THREADS SNAPSHOT (Toolhelp32)\r\n");
-    my_strcat(report, "-------------------------------------------------------------------\r\n");
+    my_strncat(report, "-------------------------------------------------------------------\r\n", 65535);
+    my_strncat(report, " 1. ACTIVE THREADS SNAPSHOT (Toolhelp32)\r\n", 65535);
+    my_strncat(report, "-------------------------------------------------------------------\r\n", 65535);
 
     HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
     int threadIdx = 0;
@@ -417,20 +428,20 @@ void PerformInspectProcess(HWND parentHwnd) {
                     my_strcat(lineBuf, "\t| Delta: ");
                     my_strcat(lineBuf, deltaPriStr);
                     my_strcat(lineBuf, "\r\n");
-                    my_strcat(report, lineBuf);
+                    my_strncat(report, lineBuf, 65535);
                 }
             } while (Thread32Next(hSnap, &te32));
         }
         CloseHandle(hSnap);
     }
     if (threadIdx == 0) {
-        my_strcat(report, "  (No accessible thread details found or process restricted)\r\n");
+        my_strncat(report, "  (No accessible thread details found or process restricted)\r\n", 65535);
     }
 
     // 2. Loaded Modules
-    my_strcat(report, "\r\n-------------------------------------------------------------------\r\n");
-    my_strcat(report, " 2. LOADED MODULES & LIBRARIES (Toolhelp32)\r\n");
-    my_strcat(report, "-------------------------------------------------------------------\r\n");
+    my_strncat(report, "\r\n-------------------------------------------------------------------\r\n", 65535);
+    my_strncat(report, " 2. LOADED MODULES & LIBRARIES (Toolhelp32)\r\n", 65535);
+    my_strncat(report, "-------------------------------------------------------------------\r\n", 65535);
 
     HANDLE hModSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, pid);
     int modCount = 0;
@@ -441,7 +452,7 @@ void PerformInspectProcess(HWND parentHwnd) {
             do {
                 modCount++;
                 if (modCount > 40) {
-                    my_strcat(report, "  ... [Truncated remaining loaded modules] ...\r\n");
+                    my_strncat(report, "  ... [Truncated remaining loaded modules] ...\r\n", 65535);
                     break;
                 }
                 char lineBuf[512] = {0};
@@ -460,19 +471,19 @@ void PerformInspectProcess(HWND parentHwnd) {
                 my_strcat(lineBuf, " KB\r\n    Path: ");
                 my_strcat(lineBuf, me32.szExePath);
                 my_strcat(lineBuf, "\r\n");
-                my_strcat(report, lineBuf);
+                my_strncat(report, lineBuf, 65535);
             } while (Module32Next(hModSnap, &me32));
         }
         CloseHandle(hModSnap);
     }
     if (modCount == 0) {
-        my_strcat(report, "  (Module query denied or unavailable for system process)\r\n");
+        my_strncat(report, "  (Module query denied or unavailable for system process)\r\n", 65535);
     }
 
     // 3. Virtual Memory Map
-    my_strcat(report, "\r\n-------------------------------------------------------------------\r\n");
-    my_strcat(report, " 3. VIRTUAL MEMORY REGION MAP (VirtualQueryEx)\r\n");
-    my_strcat(report, "-------------------------------------------------------------------\r\n");
+    my_strncat(report, "\r\n-------------------------------------------------------------------\r\n", 65535);
+    my_strncat(report, " 3. VIRTUAL MEMORY REGION MAP (VirtualQueryEx)\r\n", 65535);
+    my_strncat(report, "-------------------------------------------------------------------\r\n", 65535);
 
     HANDLE hProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
     int regCount = 0;
@@ -482,7 +493,7 @@ void PerformInspectProcess(HWND parentHwnd) {
         while (VirtualQueryEx(hProc, pAddr, &mbi, sizeof(mbi)) == sizeof(mbi)) {
             regCount++;
             if (regCount > 50) {
-                my_strcat(report, "  ... [Truncated remaining memory regions] ...\r\n");
+                my_strncat(report, "  ... [Truncated remaining memory regions] ...\r\n", 65535);
                 break;
             }
 
@@ -516,7 +527,7 @@ void PerformInspectProcess(HWND parentHwnd) {
             my_strcat(lineBuf, protStr);
             my_strcat(lineBuf, "\r\n");
 
-            my_strcat(report, lineBuf);
+            my_strncat(report, lineBuf, 65535);
 
             unsigned char* nextAddr = (unsigned char*)mbi.BaseAddress + mbi.RegionSize;
             if (nextAddr <= pAddr) break;
@@ -525,10 +536,10 @@ void PerformInspectProcess(HWND parentHwnd) {
         CloseHandle(hProc);
     }
     if (regCount == 0) {
-        my_strcat(report, "  (Virtual Memory query restricted for this system process)\r\n");
+        my_strncat(report, "  (Virtual Memory query restricted for this system process)\r\n", 65535);
     }
 
-    my_strcat(report, "===================================================================\r\n");
+    my_strncat(report, "===================================================================\r\n", 65535);
 
     static BOOL regDone = FALSE;
     HINSTANCE hInst = GetModuleHandleA(NULL);
@@ -848,12 +859,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return 0;
         }
         case WM_CREATE: {
-            hSearchBox = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 10, 10, 360, 25, hwnd, (HMENU)3, NULL, NULL);
+            hSearchBox = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL, 10, 10, 360, 25, hwnd, (HMENU)3, NULL, NULL);
 #ifndef EM_SETCUEBANNER
 #define EM_SETCUEBANNER 0x1501
 #endif
             SendMessageW(hSearchBox, EM_SETCUEBANNER, 0, (LPARAM)L"Filter by Name or PID... (Enter: focus list | F1: Help)");
-            hListBox = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_NOINTEGRALHEIGHT, 10, 45, 360, 165, hwnd, (HMENU)4, NULL, NULL);
+            hListBox = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL | LBS_NOTIFY | LBS_NOINTEGRALHEIGHT, 10, 45, 360, 165, hwnd, (HMENU)4, NULL, NULL);
             hStatusText = CreateWindowA("STATIC", "Processes: 0", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 215, 360, 20, hwnd, (HMENU)5, NULL, NULL);
 
             g_hFont = CreateFontA(-13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
@@ -869,13 +880,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SendMessageA(hStatusText, WM_SETFONT, (WPARAM)g_hFont, FALSE);
             }
 
-            hBtnRefresh = CreateWindowA("BUTTON", "Refresh [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 240, 95, 25, hwnd, (HMENU)1, NULL, NULL);
-            hBtnPriority = CreateWindowA("BUTTON", "Priority [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 110, 240, 85, 25, hwnd, (HMENU)6, NULL, NULL);
-            hBtnInspect = CreateWindowA("BUTTON", "Inspect [I]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 200, 240, 80, 25, hwnd, (HMENU)9, NULL, NULL);
-            hBtnExportCSV = CreateWindowA("BUTTON", "CSV [C]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 285, 240, 55, 25, hwnd, (HMENU)7, NULL, NULL);
-            hBtnExportJSON = CreateWindowA("BUTTON", "JSON [J]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 345, 240, 55, 25, hwnd, (HMENU)8, NULL, NULL);
-            hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 405, 240, 75, 25, hwnd, (HMENU)10, NULL, NULL);
-            hBtnEndTask = CreateWindowA("BUTTON", "End Task [Del]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 485, 240, 105, 25, hwnd, (HMENU)2, NULL, NULL);
+            hBtnRefresh = CreateWindowA("BUTTON", "Refresh [F5]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 10, 240, 95, 25, hwnd, (HMENU)1, NULL, NULL);
+            hBtnPriority = CreateWindowA("BUTTON", "Priority [P]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 110, 240, 85, 25, hwnd, (HMENU)6, NULL, NULL);
+            hBtnInspect = CreateWindowA("BUTTON", "Inspect [I]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 200, 240, 80, 25, hwnd, (HMENU)9, NULL, NULL);
+            hBtnExportCSV = CreateWindowA("BUTTON", "CSV [C]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 285, 240, 55, 25, hwnd, (HMENU)7, NULL, NULL);
+            hBtnExportJSON = CreateWindowA("BUTTON", "JSON [J]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 345, 240, 55, 25, hwnd, (HMENU)8, NULL, NULL);
+            hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 405, 240, 75, 25, hwnd, (HMENU)10, NULL, NULL);
+            hBtnEndTask = CreateWindowA("BUTTON", "End Task [Del]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 485, 240, 105, 25, hwnd, (HMENU)2, NULL, NULL);
             
             if (g_hFont) {
                 SendMessageA(hBtnRefresh, WM_SETFONT, (WPARAM)g_hFont, FALSE);
@@ -897,6 +908,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_SIZE:
             LayoutControls(hwnd);
             break;
+
+        case WM_ERASEBKGND: {
+            HDC hdc = (HDC)wParam;
+            RECT rc;
+            GetClientRect(hwnd, &rc);
+            FillRect(hdc, &rc, (HBRUSH)(COLOR_BTNFACE + 1));
+            return 1;
+        }
+
+        case WM_CTLCOLORSTATIC: {
+            HDC hdcStatic = (HDC)wParam;
+            SetBkMode(hdcStatic, TRANSPARENT);
+            SetTextColor(hdcStatic, RGB(30, 30, 30));
+            return (INT_PTR)GetSysColorBrush(COLOR_BTNFACE);
+        }
 
         case WM_TIMER:
             if (wParam == 1) {
@@ -982,7 +1008,7 @@ void __stdcall MainEntry() {
     wc.hInstance = GetModuleHandleA(NULL);
     wc.lpszClassName = "KTaskClass";
     wc.hCursor = LoadCursorA(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
 
     RegisterClassA(&wc);
     
@@ -1007,15 +1033,17 @@ void __stdcall MainEntry() {
                 if (msg.wParam == VK_F1 || msg.wParam == 'H' || msg.wParam == 'h') { ShowHelpDialog(hwnd); continue; }
                 if (msg.wParam == VK_F5 || msg.wParam == 'R' || msg.wParam == 'r') { RefreshList(); ShowNativeToast("Process list refreshed."); continue; }
                 if (msg.wParam == VK_DELETE) { PerformEndTask(hwnd); continue; }
-                if (msg.wParam == 'I' || msg.wParam == 'i' || msg.wParam == VK_RETURN) { PerformInspectProcess(hwnd); continue; }
+                if (msg.wParam == 'I' || msg.wParam == 'i') { PerformInspectProcess(hwnd); continue; }
                 if (msg.wParam == 'P' || msg.wParam == 'p') { PerformSetPriority(hwnd); continue; }
                 if (msg.wParam == 'C' || msg.wParam == 'c') { PerformExportCSV(hwnd); continue; }
                 if (msg.wParam == 'J' || msg.wParam == 'j') { PerformExportJSON(hwnd); continue; }
                 if (msg.wParam == VK_ESCAPE) { SetWindowTextA(hSearchBox, ""); RefreshList(); continue; }
             }
         }
-        TranslateMessage(&msg);
-        DispatchMessageA(&msg);
+        if (!IsDialogMessage(hwnd, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessageA(&msg);
+        }
     }
     ExitProcess(0);
 }

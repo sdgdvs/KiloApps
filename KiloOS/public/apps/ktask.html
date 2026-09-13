@@ -819,16 +819,16 @@
         KTask Monitor <span style="font-size: 11px; color: var(--text-muted); margin-left: 8px; font-weight: normal;">(Press 'H' or F1 for help)</span>
       </h1>
 
-      <div class="nav-tabs" role="tablist">
-        <button class="tab-btn active" id="tab-tasks-btn" onclick="switchTab('tasks')">
+      <div class="nav-tabs" role="tablist" aria-label="Navigation Tabs">
+        <button class="tab-btn active" id="tab-tasks-btn" role="tab" aria-selected="true" aria-controls="pane-tasks" onclick="switchTab('tasks')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>
           [1] Processes
         </button>
-        <button class="tab-btn" id="tab-charts-btn" onclick="switchTab('charts')">
+        <button class="tab-btn" id="tab-charts-btn" role="tab" aria-selected="false" aria-controls="pane-charts" onclick="switchTab('charts')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
           [2] Performance
         </button>
-        <button class="tab-btn" id="tab-system-btn" onclick="switchTab('system')">
+        <button class="tab-btn" id="tab-system-btn" role="tab" aria-selected="false" aria-controls="pane-system" onclick="switchTab('system')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect></svg>
           [3] Summary
         </button>
@@ -929,14 +929,14 @@
 
   <div class="tab-content">
     <!-- Tab Pane 1: Process List -->
-    <div class="tab-pane active" id="pane-tasks">
+    <div class="tab-pane active" id="pane-tasks" role="tabpanel" aria-labelledby="tab-tasks-btn">
       <!-- Quick Filter Chips -->
-      <div class="filter-chips-bar" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 4px;">
+      <div class="filter-chips-bar" role="radiogroup" aria-label="Quick process filters" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 4px;">
         <span style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Quick Filter:</span>
-        <button class="chip-btn active" id="chip-all" onclick="applyQuickFilter('all')">All Tasks</button>
-        <button class="chip-btn" id="chip-cpu" onclick="applyQuickFilter('high-cpu')">⚡ High CPU (&gt;2%)</button>
-        <button class="chip-btn" id="chip-mem" onclick="applyQuickFilter('high-mem')">💾 High RAM (&gt;25MB)</button>
-        <button class="chip-btn" id="chip-pri" onclick="applyQuickFilter('high-pri')">⭐ High Priority</button>
+        <button class="chip-btn active" id="chip-all" role="radio" aria-checked="true" onclick="applyQuickFilter('all')">All Tasks</button>
+        <button class="chip-btn" id="chip-cpu" role="radio" aria-checked="false" onclick="applyQuickFilter('high-cpu')">⚡ High CPU (&gt;2%)</button>
+        <button class="chip-btn" id="chip-mem" role="radio" aria-checked="false" onclick="applyQuickFilter('high-mem')">💾 High RAM (&gt;25MB)</button>
+        <button class="chip-btn" id="chip-pri" role="radio" aria-checked="false" onclick="applyQuickFilter('high-pri')">⭐ High Priority</button>
         <button class="chip-btn chip-spawn" onclick="spawnDemoTask()" title="Add a synthetic background task for testing">＋ Spawn Demo Task</button>
       </div>
 
@@ -946,7 +946,7 @@
     </div>
 
     <!-- Tab Pane 2: Real-time Canvas Charts -->
-    <div class="tab-pane" id="pane-charts">
+    <div class="tab-pane" id="pane-charts" role="tabpanel" aria-labelledby="tab-charts-btn">
       <div class="charts-grid">
         <div class="chart-card">
           <div class="chart-header">
@@ -977,7 +977,7 @@
     </div>
 
     <!-- Tab Pane 3: System Performance Summary -->
-    <div class="tab-pane" id="pane-system">
+    <div class="tab-pane" id="pane-system" role="tabpanel" aria-labelledby="tab-system-btn">
       <div class="summary-grid">
         <div class="summary-card">
           <div class="summary-label">Total System Threads</div>
@@ -1049,15 +1049,15 @@
         <button class="btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="closeInspectModal()">✕</button>
       </div>
 
-      <div class="inspect-tabs" role="tablist">
-        <button class="inspect-tab-btn active" id="itab-threads-btn" onclick="switchInspectTab('threads')">🧵 Threads</button>
-        <button class="inspect-tab-btn" id="itab-modules-btn" onclick="switchInspectTab('modules')">📦 Loaded Modules</button>
-        <button class="inspect-tab-btn" id="itab-memory-btn" onclick="switchInspectTab('memory')">🧠 Memory Map</button>
-        <button class="inspect-tab-btn" id="itab-hex-btn" onclick="switchInspectTab('hex')">💻 Hex Peek</button>
+      <div class="inspect-tabs" role="tablist" aria-label="Process details tabs">
+        <button class="inspect-tab-btn active" id="itab-threads-btn" role="tab" aria-selected="true" aria-controls="ipane-threads" onclick="switchInspectTab('threads')">🧵 Threads</button>
+        <button class="inspect-tab-btn" id="itab-modules-btn" role="tab" aria-selected="false" aria-controls="ipane-modules" onclick="switchInspectTab('modules')">📦 Loaded Modules</button>
+        <button class="inspect-tab-btn" id="itab-memory-btn" role="tab" aria-selected="false" aria-controls="ipane-memory" onclick="switchInspectTab('memory')">🧠 Memory Map</button>
+        <button class="inspect-tab-btn" id="itab-hex-btn" role="tab" aria-selected="false" aria-controls="ipane-hex" onclick="switchInspectTab('hex')">💻 Hex Peek</button>
       </div>
 
       <div class="inspect-body">
-        <div class="inspect-pane active" id="ipane-threads">
+        <div class="inspect-pane active" id="ipane-threads" role="tabpanel" aria-labelledby="itab-threads-btn">
           <table class="inspect-table">
             <thead>
               <tr><th>Thread ID</th><th>Priority</th><th>State</th><th>Kernel Time</th><th>User Time</th></tr>
@@ -1066,7 +1066,7 @@
           </table>
         </div>
 
-        <div class="inspect-pane" id="ipane-modules">
+        <div class="inspect-pane" id="ipane-modules" role="tabpanel" aria-labelledby="itab-modules-btn">
           <table class="inspect-table">
             <thead>
               <tr><th>Module Name</th><th>Base Address</th><th>Size</th><th>Type / Path</th></tr>
@@ -1075,7 +1075,7 @@
           </table>
         </div>
 
-        <div class="inspect-pane" id="ipane-memory">
+        <div class="inspect-pane" id="ipane-memory" role="tabpanel" aria-labelledby="itab-memory-btn">
           <table class="inspect-table">
             <thead>
               <tr><th>Base Address</th><th>Size</th><th>State</th><th>Protection Flags</th></tr>
@@ -1084,7 +1084,7 @@
           </table>
         </div>
 
-        <div class="inspect-pane" id="ipane-hex">
+        <div class="inspect-pane" id="ipane-hex" role="tabpanel" aria-labelledby="itab-hex-btn">
           <div class="hex-toolbar">
             <span>Segment: <strong style="color:var(--primary); font-family:monospace;">0x00400000 (PE Header)</strong></span>
             <span class="status-badge" style="font-size:9px;">READWRITE / EXECUTE</span>
@@ -1161,8 +1161,20 @@
     let cpuHistory = new Array(HISTORY_LEN).fill(10);
     let memHistory = new Array(HISTORY_LEN).fill(2.4);
 
+    function escapeHtml(str) {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     // Dynamic System Stats update
     setInterval(() => {
+      if (document.hidden) return;
+
       const cpu = Math.floor(Math.random() * 25) + 5;
       if (cpu > peakCpu) peakCpu = cpu;
 
@@ -1222,13 +1234,17 @@
 
     function switchTab(tabName) {
       activeTab = tabName;
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const isActive = btn.id === `tab-${tabName}-btn`;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+      document.querySelectorAll('.tab-pane').forEach(pane => {
+        pane.classList.toggle('active', pane.id === `pane-${tabName}`);
+      });
 
       const targetBtn = document.getElementById(`tab-${tabName}-btn`);
-      const targetPane = document.getElementById(`pane-${tabName}`);
-      if (targetBtn) targetBtn.classList.add('active');
-      if (targetPane) targetPane.classList.add('active');
+      if (targetBtn) targetBtn.focus();
 
       if (tabName === 'charts') {
         setTimeout(drawCharts, 50);
@@ -1284,7 +1300,7 @@
     function showToast(message) {
       const toast = document.getElementById('toast');
       if (!toast) return;
-      toast.innerHTML = `<span style="flex:1;">${message}</span><button onclick="dismissToast(event)" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:14px; padding:0 2px; line-height:1;" title="Dismiss [✕]">✕</button>`;
+      toast.innerHTML = `<span style="flex:1;">${escapeHtml(message)}</span><button onclick="dismissToast(event)" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:14px; padding:0 2px; line-height:1;" title="Dismiss [✕]">✕</button>`;
       toast.onclick = () => dismissToast();
       toast.classList.add('show');
       if (toastTimer) clearTimeout(toastTimer);
@@ -1315,12 +1331,20 @@
       const current = document.getElementById('filterSelect')?.value || 'all';
       ['all', 'cpu', 'mem', 'pri'].forEach(key => {
         const chip = document.getElementById(`chip-${key}`);
-        if (chip) chip.classList.remove('active');
+        if (chip) {
+          chip.classList.remove('active');
+          chip.setAttribute('aria-checked', 'false');
+        }
       });
-      if (current === 'all') document.getElementById('chip-all')?.classList.add('active');
-      else if (current === 'high-cpu') document.getElementById('chip-cpu')?.classList.add('active');
-      else if (current === 'high-mem') document.getElementById('chip-mem')?.classList.add('active');
-      else if (current === 'high-pri') document.getElementById('chip-pri')?.classList.add('active');
+      const activeMap = { 'all': 'chip-all', 'high-cpu': 'chip-cpu', 'high-mem': 'chip-mem', 'high-pri': 'chip-pri' };
+      const activeId = activeMap[current];
+      if (activeId) {
+        const chip = document.getElementById(activeId);
+        if (chip) {
+          chip.classList.add('active');
+          chip.setAttribute('aria-checked', 'true');
+        }
+      }
     }
 
     let demoTaskCounter = 1;
@@ -1418,13 +1442,17 @@
         csv += `"${id}","${title.replace(/"/g, '""')}",${stats.cpu},${stats.mem},"${stats.priority || 'Normal'}","Active"\n`;
       });
 
-      const blob = new Blob([csv], { type: 'text/csv' });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `ktask_processes_${Date.now()}.csv`;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      setTimeout(() => {
+        if (a.parentNode) document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 1500);
       showToast('Exported process snapshot to CSV.');
     }
 
@@ -1448,13 +1476,17 @@
         };
       });
 
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `ktask_processes_${Date.now()}.json`;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      setTimeout(() => {
+        if (a.parentNode) document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 1500);
       showToast('Exported process snapshot to JSON.');
     }
 
@@ -1555,7 +1587,7 @@
 
         card.innerHTML = `
           <div class="task-left">
-            <div class="task-icon" aria-hidden="true">${initial}</div>
+            <div class="task-icon" aria-hidden="true">${escapeHtml(initial)}</div>
             <div class="task-info">
               <div class="task-title"></div>
               <div class="task-meta">
@@ -1750,13 +1782,14 @@
 
     function switchInspectTab(tabName) {
       activeInspectTab = tabName;
-      document.querySelectorAll('.inspect-tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.inspect-pane').forEach(pane => pane.classList.remove('active'));
-
-      const targetBtn = document.getElementById(`itab-${tabName}-btn`);
-      const targetPane = document.getElementById(`ipane-${tabName}`);
-      if (targetBtn) targetBtn.classList.add('active');
-      if (targetPane) targetPane.classList.add('active');
+      document.querySelectorAll('.inspect-tab-btn').forEach(btn => {
+        const isActive = btn.id === `itab-${tabName}-btn`;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+      document.querySelectorAll('.inspect-pane').forEach(pane => {
+        pane.classList.toggle('active', pane.id === `ipane-${tabName}`);
+      });
     }
 
     function populateInspectData(pid, title) {
@@ -1793,7 +1826,7 @@
         ];
         modules.forEach(m => {
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td><strong>${m.name}</strong></td><td style="color:var(--primary);">${m.addr}</td><td>${m.size}</td><td style="color:var(--text-muted);">${m.path}</td>`;
+          tr.innerHTML = `<td><strong>${escapeHtml(m.name)}</strong></td><td style="color:var(--primary);">${escapeHtml(m.addr)}</td><td>${escapeHtml(m.size)}</td><td style="color:var(--text-muted);">${escapeHtml(m.path)}</td>`;
           modTbody.appendChild(tr);
         });
       }
@@ -1812,7 +1845,7 @@
         ];
         memRegions.forEach(r => {
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td style="color:var(--primary);">${r.addr}</td><td>${r.size}</td><td><span class="status-badge" style="background:${r.state==='COMMIT'?'rgba(52,211,153,0.15)':'rgba(255,255,255,0.05)'}; color:${r.state==='COMMIT'?'var(--success)':'var(--text-muted)'}">${r.state}</span></td><td>${r.prot}</td>`;
+          tr.innerHTML = `<td style="color:var(--primary);">${escapeHtml(r.addr)}</td><td>${escapeHtml(r.size)}</td><td><span class="status-badge" style="background:${r.state==='COMMIT'?'rgba(52,211,153,0.15)':'rgba(255,255,255,0.05)'}; color:${r.state==='COMMIT'?'var(--success)':'var(--text-muted)'}">${escapeHtml(r.state)}</span></td><td>${escapeHtml(r.prot)}</td>`;
           memTbody.appendChild(tr);
         });
       }
@@ -1845,6 +1878,24 @@
       }
     }
 
+    function fallbackCopyText(text) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        ta.style.top = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast(`Copied inspection report for PID ${currentInspectPid}!`);
+      } catch (err) {
+        showToast(`Inspection report prepared for PID ${currentInspectPid}!`);
+      }
+    }
+
     function exportInspectReport() {
       if (!currentInspectPid) return;
       const report = `===================================================================\n` +
@@ -1859,9 +1910,9 @@
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(report).then(() => {
           showToast(`Copied inspection report for PID ${currentInspectPid}!`);
-        }).catch(() => showToast('Report generated.'));
+        }).catch(() => fallbackCopyText(report));
       } else {
-        showToast(`Inspection report prepared for PID ${currentInspectPid}!`);
+        fallbackCopyText(report);
       }
     }
 
@@ -1921,6 +1972,20 @@
         return;
       }
 
+      // Check for modifier shortcuts (Ctrl+E, Ctrl+J)
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === 'e' || e.key === 'E') {
+          e.preventDefault();
+          exportCSV();
+        } else if (e.key === 'j' || e.key === 'J') {
+          e.preventDefault();
+          exportJSON();
+        }
+        return; // Don't allow Ctrl+1, Ctrl+2, Ctrl+P, etc. to hijack browser actions
+      }
+
+      if (e.altKey) return; // Don't hijack Alt shortcuts
+
       if (e.key === '1') {
         e.preventDefault();
         switchTab('tasks');
@@ -1934,47 +1999,59 @@
         e.preventDefault();
         refresh();
       } else if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        selectAdjacentTask(1);
+        if (activeTab === 'tasks') {
+          e.preventDefault();
+          selectAdjacentTask(1);
+        }
       } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        selectAdjacentTask(-1);
+        if (activeTab === 'tasks') {
+          e.preventDefault();
+          selectAdjacentTask(-1);
+        }
       } else if (e.key === 'Enter') {
-        e.preventDefault();
-        const target = allTasks.find(t => String(t.id) === String(selectedTaskId)) || allTasks[0];
-        if (target) {
-          openInspectModal(target.id, target.title);
+        if (activeTab === 'tasks') {
+          e.preventDefault();
+          const target = allTasks.find(t => String(t.id) === String(selectedTaskId)) || allTasks[0];
+          if (target) {
+            openInspectModal(target.id, target.title);
+          }
         }
       } else if (e.key === 'p' || e.key === 'P') {
-        e.preventDefault();
-        const target = allTasks.find(t => String(t.id) === String(selectedTaskId)) || allTasks[0];
-        if (target) {
-          const curPri = taskStats[target.id]?.priority || 'Normal';
-          const nextPri = curPri === 'Normal' ? 'High' : (curPri === 'High' ? 'Low' : 'Normal');
-          changePriority(target.id, nextPri);
-          renderTasks();
+        if (activeTab === 'tasks') {
+          e.preventDefault();
+          const target = allTasks.find(t => String(t.id) === String(selectedTaskId)) || allTasks[0];
+          if (target) {
+            const curPri = taskStats[target.id]?.priority || 'Normal';
+            const nextPri = curPri === 'Normal' ? 'High' : (curPri === 'High' ? 'Low' : 'Normal');
+            changePriority(target.id, nextPri);
+            renderTasks();
+          }
         }
-      } else if ((e.key === 'e' || e.key === 'E') && !e.ctrlKey && !e.metaKey) {
+      } else if (e.key === 'e' || e.key === 'E') {
         e.preventDefault();
         exportCSV();
-      } else if ((e.key === 'j' || e.key === 'J') && !e.ctrlKey && !e.metaKey) {
+      } else if (e.key === 'j' || e.key === 'J') {
         e.preventDefault();
         exportJSON();
       } else if (e.key === 'Delete') {
-        e.preventDefault();
-        const target = allTasks.find(t => String(t.id) === String(selectedTaskId)) || allTasks[0];
-        if (target) {
-          promptKillTask(target.id, target.title);
-        } else {
-          showToast('No active tasks to terminate.');
+        if (activeTab === 'tasks') {
+          e.preventDefault();
+          const target = allTasks.find(t => String(t.id) === String(selectedTaskId)) || allTasks[0];
+          if (target) {
+            promptKillTask(target.id, target.title);
+          } else {
+            showToast('No active tasks to terminate.');
+          }
         }
       } else if (e.key === 'i' || e.key === 'I') {
-        e.preventDefault();
-        const target = allTasks.find(t => String(t.id) === String(selectedTaskId)) || allTasks[0];
-        if (target) {
-          openInspectModal(target.id, target.title);
-        } else {
-          showToast('No active tasks to inspect.');
+        if (activeTab === 'tasks') {
+          e.preventDefault();
+          const target = allTasks.find(t => String(t.id) === String(selectedTaskId)) || allTasks[0];
+          if (target) {
+            openInspectModal(target.id, target.title);
+          } else {
+            showToast('No active tasks to inspect.');
+          }
         }
       } else if (e.key === 'F1' || e.key === 'h' || e.key === 'H') {
         e.preventDefault();
