@@ -881,20 +881,192 @@ void DrawGrid(HDC hdc, HFONT hFont) {
         }
     }
     
-    // 4. Aliens
+    // 4. Aliens (3 Caste Sprites: Swarmer, Spitter, Goliath + Tactical Health Gauge)
     for (int i = 0; i < alienCount; i++) {
         RECT rc = { effOffsetX + aliens[i].x * CELL_SIZE, effOffsetY + aliens[i].y * CELL_SIZE, effOffsetX + (aliens[i].x + 1) * CELL_SIZE, effOffsetY + (aliens[i].y + 1) * CELL_SIZE };
-        COLORREF alienCol = RGB(255, 0, 255);
-        HPEN p2 = CreatePen(PS_SOLID, 1, alienCol); HPEN oldP = SelectObject(hdc, p2);
-        HBRUSH b2 = CreateSolidBrush(RGB(80, 0, 80)); HBRUSH oldB = SelectObject(hdc, b2);
-        Ellipse(hdc, rc.left+2, rc.top+2, rc.right-2, rc.bottom-2);
-        SelectObject(hdc, oldB); DeleteObject(b2);
+        int hp = aliens[i].hp;
+        int maxHp = 3 + (day / 10);
+        if (maxHp < hp) maxHp = hp;
         
-        b2 = CreateSolidBrush(RGB(0,0,0)); oldB = SelectObject(hdc, b2);
-        Ellipse(hdc, rc.left+5, rc.top+7, rc.left+9, rc.top+11);
-        Ellipse(hdc, rc.right-9, rc.top+7, rc.right-5, rc.top+11);
-        SelectObject(hdc, oldB); DeleteObject(b2);
-        SelectObject(hdc, oldP); DeleteObject(p2);
+        if (hp <= 3) {
+            // Caste 1: Xeno-Swarmer (Swift 6-legged bio-arachnid)
+            HPEN pLeg = CreatePen(PS_SOLID, 1, RGB(220, 0, 220));
+            HPEN oldP = SelectObject(hdc, pLeg);
+            int legTwitch = ((animFrame + i * 2) % 4 < 2) ? 1 : -1;
+            // 6 animated scuttling legs
+            MoveToEx(hdc, rc.left + 5, rc.top + 7, NULL); LineTo(hdc, rc.left + 1, rc.top + 3 + legTwitch);
+            MoveToEx(hdc, rc.right - 5, rc.top + 7, NULL); LineTo(hdc, rc.right - 1, rc.top + 3 - legTwitch);
+            MoveToEx(hdc, rc.left + 5, rc.top + 10, NULL); LineTo(hdc, rc.left, rc.top + 10);
+            MoveToEx(hdc, rc.right - 5, rc.top + 10, NULL); LineTo(hdc, rc.right, rc.top + 10);
+            MoveToEx(hdc, rc.left + 5, rc.top + 13, NULL); LineTo(hdc, rc.left + 1, rc.bottom - 3 - legTwitch);
+            MoveToEx(hdc, rc.right - 5, rc.top + 13, NULL); LineTo(hdc, rc.right - 1, rc.bottom - 3 + legTwitch);
+            SelectObject(hdc, oldP); DeleteObject(pLeg);
+
+            // Carapace body
+            HBRUSH b2 = CreateSolidBrush(RGB(90, 0, 90));
+            HPEN pBody = CreatePen(PS_SOLID, 1, RGB(255, 0, 255));
+            HBRUSH oldB = SelectObject(hdc, b2); oldP = SelectObject(hdc, pBody);
+            Ellipse(hdc, rc.left + 5, rc.top + 5, rc.right - 5, rc.bottom - 4);
+            SelectObject(hdc, oldB); DeleteObject(b2);
+            SelectObject(hdc, oldP); DeleteObject(pBody);
+
+            // Mandibles
+            HPEN pMan = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+            oldP = SelectObject(hdc, pMan);
+            MoveToEx(hdc, rc.left + 8, rc.top + 5, NULL); LineTo(hdc, rc.left + 7, rc.top + 2);
+            MoveToEx(hdc, rc.right - 8, rc.top + 5, NULL); LineTo(hdc, rc.right - 7, rc.top + 2);
+            SelectObject(hdc, oldP); DeleteObject(pMan);
+
+            // Compound eyes
+            SetPixel(hdc, rc.left + 8, rc.top + 7, RGB(255, 50, 80));
+            SetPixel(hdc, rc.right - 8, rc.top + 7, RGB(255, 50, 80));
+        } else if (hp <= 7) {
+            // Caste 2: Xeno-Spitter (Acid-sac venom ravager)
+            // Dorsal barbs
+            HPEN pBarb = CreatePen(PS_SOLID, 1, RGB(0, 255, 100));
+            HPEN oldP = SelectObject(hdc, pBarb);
+            MoveToEx(hdc, rc.left + 4, rc.top + 12, NULL); LineTo(hdc, rc.left + 1, rc.top + 15);
+            MoveToEx(hdc, rc.right - 4, rc.top + 12, NULL); LineTo(hdc, rc.right - 1, rc.top + 15);
+            MoveToEx(hdc, rc.left + 5, rc.top + 8, NULL); LineTo(hdc, rc.left + 2, rc.top + 6);
+            MoveToEx(hdc, rc.right - 5, rc.top + 8, NULL); LineTo(hdc, rc.right - 2, rc.top + 6);
+            SelectObject(hdc, oldP); DeleteObject(pBarb);
+
+            // Pulsing acid venom sac (bottom)
+            int sacPulse = ((animFrame + i) % 6 < 3) ? 1 : 0;
+            HBRUSH bSac = CreateSolidBrush(RGB(0, 180, 50));
+            HPEN pSac = CreatePen(PS_SOLID, 1, RGB(50, 255, 120));
+            HBRUSH oldB = SelectObject(hdc, bSac); oldP = SelectObject(hdc, pSac);
+            Ellipse(hdc, rc.left + 4 - sacPulse, rc.top + 8, rc.right - 4 + sacPulse, rc.bottom - 2);
+            SelectObject(hdc, oldB); DeleteObject(bSac);
+            SelectObject(hdc, oldP); DeleteObject(pSac);
+
+            // Head (top)
+            HBRUSH bHead = CreateSolidBrush(RGB(20, 80, 30));
+            oldB = SelectObject(hdc, bHead);
+            Ellipse(hdc, rc.left + 6, rc.top + 3, rc.right - 6, rc.top + 10);
+            SelectObject(hdc, oldB); DeleteObject(bHead);
+
+            // Yellow eyes
+            SetPixel(hdc, rc.left + 8, rc.top + 5, RGB(255, 255, 0));
+            SetPixel(hdc, rc.right - 8, rc.top + 5, RGB(255, 255, 0));
+        } else {
+            // Caste 3: Xeno-Goliath (Armored hive juggernaut)
+            POINT hornPts[7] = {
+                {rc.left + 10, rc.top + 2},
+                {rc.right - 3, rc.top + 7},
+                {rc.right - 5, rc.bottom - 3},
+                {rc.left + 10, rc.bottom - 1},
+                {rc.left + 5, rc.bottom - 3},
+                {rc.left + 3, rc.top + 7},
+                {rc.left + 10, rc.top + 2}
+            };
+            HBRUSH bArm = CreateSolidBrush(RGB(50, 10, 35));
+            HPEN pArm = CreatePen(PS_SOLID, 2, RGB(255, 0, 90));
+            HBRUSH oldB = SelectObject(hdc, bArm);
+            HPEN oldP = SelectObject(hdc, pArm);
+            Polygon(hdc, hornPts, 6);
+            SelectObject(hdc, oldP); DeleteObject(pArm);
+            SelectObject(hdc, oldB); DeleteObject(bArm);
+
+            // Glowing magma/plasma core
+            int cPulse = ((animFrame * 2 + i) % 8 < 4) ? 3 : 4;
+            HBRUSH bCore = CreateSolidBrush(RGB(255, 120, 0));
+            oldB = SelectObject(hdc, bCore);
+            HPEN nullP = CreatePen(PS_NULL, 0, 0);
+            oldP = SelectObject(hdc, nullP);
+            Ellipse(hdc, rc.left + 10 - cPulse, rc.top + 11 - cPulse, rc.left + 10 + cPulse, rc.top + 11 + cPulse);
+            SelectObject(hdc, oldP); DeleteObject(nullP);
+            SelectObject(hdc, oldB); DeleteObject(bCore);
+
+            // Heavy crushing pincers
+            HPEN pClaw = CreatePen(PS_SOLID, 2, RGB(255, 50, 100));
+            oldP = SelectObject(hdc, pClaw);
+            MoveToEx(hdc, rc.left + 3, rc.top + 7, NULL); LineTo(hdc, rc.left + 1, rc.top + 3);
+            MoveToEx(hdc, rc.right - 3, rc.top + 7, NULL); LineTo(hdc, rc.right - 1, rc.top + 3);
+            SelectObject(hdc, oldP); DeleteObject(pClaw);
+
+            // Threat targeting brackets for Goliath
+            if ((animFrame % 10) < 6) {
+                HPEN pRet = CreatePen(PS_SOLID, 1, RGB(255, 0, 50));
+                oldP = SelectObject(hdc, pRet);
+                MoveToEx(hdc, rc.left, rc.top + 4, NULL); LineTo(hdc, rc.left, rc.top); LineTo(hdc, rc.left + 4, rc.top);
+                MoveToEx(hdc, rc.right, rc.top + 4, NULL); LineTo(hdc, rc.right, rc.top); LineTo(hdc, rc.right - 4, rc.top);
+                MoveToEx(hdc, rc.left, rc.bottom - 4, NULL); LineTo(hdc, rc.left, rc.bottom); LineTo(hdc, rc.left + 4, rc.bottom);
+                MoveToEx(hdc, rc.right, rc.bottom - 4, NULL); LineTo(hdc, rc.right, rc.bottom); LineTo(hdc, rc.right - 4, rc.bottom);
+                SelectObject(hdc, oldP); DeleteObject(pRet);
+            }
+        }
+
+        // Tactical Mini Health Gauge Bar
+        int barW = 16;
+        int barH = 2;
+        int barX = rc.left + 2;
+        int barY = rc.top + 1;
+        RECT rcBarBg = { barX, barY, barX + barW, barY + barH };
+        HBRUSH bBarBg = CreateSolidBrush(RGB(10, 10, 10));
+        FillRect(hdc, &rcBarBg, bBarBg);
+        DeleteObject(bBarBg);
+
+        int fillW = (hp * barW) / maxHp;
+        if (fillW > barW) fillW = barW;
+        if (fillW < 1 && hp > 0) fillW = 1;
+        COLORREF hpCol = RGB(0, 255, 120);
+        if (hp * 3 < maxHp) hpCol = RGB(255, 50, 50);
+        else if (hp * 2 < maxHp) hpCol = RGB(255, 200, 0);
+
+        RECT rcBarFill = { barX, barY, barX + fillW, barY + barH };
+        HBRUSH bBarFill = CreateSolidBrush(hpCol);
+        FillRect(hdc, &rcBarFill, bBarFill);
+        DeleteObject(bBarFill);
+    }
+
+    // 4.5 Autonomous Colony Logistics: Nanite Drones & Surface Rover
+    int hasDroneHub = 0, hasTradePort = 0, dHubX = 0, dHubY = 0, tPortX = 0, tPortY = 0;
+    for (int gy = 0; gy < GRID_H; gy++) {
+        for (int gx = 0; gx < GRID_W; gx++) {
+            int gt = grid[gy * GRID_W + gx];
+            if (gt == 16) { hasDroneHub = 1; dHubX = effOffsetX + gx * CELL_SIZE + 10; dHubY = effOffsetY + gy * CELL_SIZE + 10; }
+            if (gt == 17) { hasTradePort = 1; tPortX = effOffsetX + gx * CELL_SIZE + 10; tPortY = effOffsetY + gy * CELL_SIZE + 10; }
+        }
+    }
+    // Hovering Nanite Repair Drone
+    if (hasDroneHub && power > 0) {
+        float dAngle = (animFrame * 0.08f);
+        int droneX = dHubX + (int)(cosf(dAngle) * 40.0f);
+        int droneY = dHubY + (int)(sinf(dAngle * 1.3f) * 30.0f);
+        // Scanner beam
+        HPEN pBeam = CreatePen(PS_SOLID, 1, RGB(0, 150, 200));
+        HPEN oldP = SelectObject(hdc, pBeam);
+        MoveToEx(hdc, droneX, droneY + 2, NULL); LineTo(hdc, droneX - 5, droneY + 12);
+        MoveToEx(hdc, droneX, droneY + 2, NULL); LineTo(hdc, droneX + 5, droneY + 12);
+        SelectObject(hdc, oldP); DeleteObject(pBeam);
+        // Drone body
+        HBRUSH bDr = CreateSolidBrush(RGB(180, 210, 230));
+        HBRUSH oldB = SelectObject(hdc, bDr);
+        HPEN pDr = CreatePen(PS_SOLID, 1, RGB(0, 255, 255));
+        oldP = SelectObject(hdc, pDr);
+        Ellipse(hdc, droneX - 4, droneY - 2, droneX + 4, droneY + 2);
+        SelectObject(hdc, oldP); DeleteObject(pDr);
+        SelectObject(hdc, oldB); DeleteObject(bDr);
+        // Thruster sparks
+        SetPixel(hdc, droneX - 3, droneY - 2, RGB(0, 255, 200));
+        SetPixel(hdc, droneX + 3, droneY - 2, RGB(0, 255, 200));
+    }
+    // Surface Cargo Logistics Rover
+    if (hasTradePort && power > 0) {
+        float rProgress = ((animFrame % 60) / 60.0f);
+        int curRx = tPortX + (int)((rProgress < 0.5f ? rProgress * 2.0f : (1.0f - rProgress) * 2.0f) * 60.0f);
+        int curRy = tPortY;
+        RECT rcRover = { curRx - 3, curRy - 2, curRx + 3, curRy + 2 };
+        HBRUSH bRov = CreateSolidBrush(RGB(255, 170, 0));
+        FillRect(hdc, &rcRover, bRov);
+        DeleteObject(bRov);
+        // Headlight beam
+        HPEN pHead = CreatePen(PS_SOLID, 1, RGB(255, 240, 150));
+        HPEN oldP = SelectObject(hdc, pHead);
+        MoveToEx(hdc, curRx + 3, curRy - 1, NULL); LineTo(hdc, curRx + 8, curRy - 3);
+        MoveToEx(hdc, curRx + 3, curRy + 1, NULL); LineTo(hdc, curRx + 8, curRy + 3);
+        SelectObject(hdc, oldP); DeleteObject(pHead);
     }
     
     // 5. Dual-Tier Concentric Shockwave Ripple Rings

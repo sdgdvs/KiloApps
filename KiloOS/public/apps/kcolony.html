@@ -870,27 +870,31 @@
         }
 
         const SVGS = {
-            S: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1a3366"/><stop offset="50%" stop-color="#0066cc"/><stop offset="100%" stop-color="#001a33"/></linearGradient></defs><rect x="1" y="3" width="18" height="14" rx="2" fill="url(#sg)" stroke="#00ffff" stroke-width="1"/><line x1="1" y1="7.5" x2="19" y2="7.5" stroke="#00ffff" stroke-width="0.75" opacity="0.8"/><line x1="1" y1="12.5" x2="19" y2="12.5" stroke="#00ffff" stroke-width="0.75" opacity="0.8"/><line x1="7" y1="3" x2="7" y2="17" stroke="#00ffff" stroke-width="0.75" opacity="0.8"/><line x1="13" y1="3" x2="13" y2="17" stroke="#00ffff" stroke-width="0.75" opacity="0.8"/><polygon points="2,4 6,4 3,16 2,16" fill="rgba(255,255,255,0.4)"/><circle cx="10" cy="10" r="1.5" fill="#ffff00"><animate attributeName="opacity" values="0.6;1;0.6" dur="1s" repeatCount="indefinite"/></circle></svg>')}`,
-            F: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="fg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#004411"/><stop offset="100%" stop-color="#001a05"/></linearGradient></defs><rect x="1" y="7" width="18" height="12" rx="1" fill="url(#fg)" stroke="#00ff66" stroke-width="1"/><path d="M4,18 Q4,10 7,6 M10,18 Q10,7 13,4 M16,18 Q16,11 19,7" stroke="#33ff88" fill="none" stroke-width="1.75"/><circle cx="7" cy="6" r="1.5" fill="#ffff33"/><circle cx="13" cy="4" r="1.5" fill="#ffff33"/><circle cx="19" cy="7" r="1.5" fill="#ffff33"/><ellipse cx="10" cy="17" rx="8" ry="1.5" fill="#003300" opacity="0.6"/></svg>')}`,
-            M: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="mg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#660066"/><stop offset="100%" stop-color="#220022"/></linearGradient></defs><path d="M3,19 L10,3 L17,19 Z" fill="url(#mg)" stroke="#ff00ff" stroke-width="1.2"/><polygon points="10,5 12,12 8,12" fill="#ff66ff"/><rect x="8" y="11" width="4" height="8" fill="#1a001a" stroke="#ff00ff" stroke-width="1"/><circle cx="10" cy="3" r="2" fill="#ffffff"><animate attributeName="opacity" values="0.4;1;0.4" dur="0.8s" repeatCount="indefinite"/></circle><polygon points="4,18 7,18 5,14" fill="#ff00ff"/></svg>')}`,
-            H: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="hg" cx="50%" cy="30%" r="70%"><stop offset="0%" stop-color="#006688"/><stop offset="70%" stop-color="#002233"/><stop offset="100%" stop-color="#00111a"/></radialGradient></defs><path d="M2,18 A8,8 0 0,1 18,18 Z" fill="url(#hg)" stroke="#00ffff" stroke-width="1.5"/><rect x="8" y="12" width="4" height="6" fill="#00ffff" rx="1"/><line x1="2" y1="18" x2="18" y2="18" stroke="#00ffff" stroke-width="1.5"/><circle cx="6" cy="11" r="1.5" fill="#ffffff" opacity="0.8"/><circle cx="14" cy="11" r="1.5" fill="#ffffff" opacity="0.8"/><path d="M4,17 A6,6 0 0,1 10,7" stroke="rgba(255,255,255,0.4)" stroke-width="1" fill="none"/></svg>')}`,
-            B: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#663300"/><stop offset="50%" stop-color="#cc6600"/><stop offset="100%" stop-color="#331a00"/></linearGradient></defs><rect x="4" y="5" width="12" height="13" rx="2" fill="url(#bg)" stroke="#ff8800" stroke-width="1.2"/><rect x="7" y="2" width="6" height="3" rx="1" fill="#ffaa00"/><rect x="6" y="8" width="8" height="8" rx="1" fill="#ffaa00"><animate attributeName="opacity" values="1;0.3;1" dur="0.9s" repeatCount="indefinite"/></rect><line x1="10" y1="9" x2="10" y2="15" stroke="#ffffff" stroke-width="1.5"/></svg>')}`,
-            L: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#440088"/><stop offset="100%" stop-color="#1a0033"/></linearGradient></defs><path d="M8,2 L12,2 L12,7 L18,17 L2,17 L8,7 Z" fill="url(#lg)" stroke="#aa00ff" stroke-width="1.5"/><ellipse cx="10" cy="13" rx="3" ry="2" fill="#dd66ff"><animate attributeName="rx" values="2;5.5;2" dur="0.9s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;1;0.6" dur="0.9s" repeatCount="indefinite"/></ellipse><circle cx="10" cy="2" r="1.5" fill="#ffffff"/><line x1="6" y1="17" x2="14" y2="17" stroke="#ff00ff" stroke-width="2"/></svg>')}`,
-            N: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ng" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#005533"/><stop offset="100%" stop-color="#002211"/></linearGradient></defs><path d="M5,18 L7,5 L13,5 L15,18 Z" fill="url(#ng)" stroke="#00ffaa" stroke-width="1.5"/><circle cx="10" cy="11" r="3.5" fill="#00ffaa"><animate attributeName="r" values="2.5;4.5;2.5" dur="0.75s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.4;1" dur="0.75s" repeatCount="indefinite"/></circle><polygon points="10,8 11.5,12 8.5,12" fill="#ffffff"/><line x1="4" y1="18" x2="16" y2="18" stroke="#00ffaa" stroke-width="2"/></svg>')}`,
-            Y: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="yg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#335500"/><stop offset="100%" stop-color="#112200"/></linearGradient></defs><rect x="2" y="11" width="16" height="7" rx="1" fill="url(#yg)" stroke="#aaff00" stroke-width="1.2"/><path d="M4,11 C4,5 8,5 10,2 C12,5 16,5 16,11" fill="none" stroke="#ccff00" stroke-width="1.5"/><circle cx="10" cy="3" r="1.5" fill="#ffff00"/><circle cx="6" cy="8" r="1" fill="#aaff00"/><circle cx="14" cy="8" r="1" fill="#aaff00"/></svg>')}`,
-            D: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="dg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#880000"/><stop offset="100%" stop-color="#330000"/></linearGradient></defs><rect x="3" y="13" width="14" height="6" rx="1" fill="url(#dg)" stroke="#ff0000" stroke-width="1.2"/><circle cx="10" cy="9" r="4.5" fill="#ff0000" stroke="#ffffff" stroke-width="0.75"/><line x1="10" y1="9" x2="10" y2="1" stroke="#ff3333" stroke-width="2.5"/><circle cx="10" cy="1" r="2" fill="#ffffff"><animate attributeName="r" values="1.5;2.5;1.5" dur="0.4s" repeatCount="indefinite"/></circle></svg>')}`,
-            W: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="18" height="18" fill="#2a2a2a" stroke="#aaaaaa" stroke-width="1.5"/><line x1="1" y1="6" x2="19" y2="6" stroke="#888888" stroke-width="1"/><line x1="1" y1="12" x2="19" y2="12" stroke="#888888" stroke-width="1"/><line x1="7" y1="1" x2="7" y2="6" stroke="#888888" stroke-width="1"/><line x1="13" y1="6" x2="13" y2="12" stroke="#888888" stroke-width="1"/><line x1="7" y1="12" x2="7" y2="19" stroke="#888888" stroke-width="1"/><polygon points="2,2 5,2 3,18 2,18" fill="rgba(255,255,255,0.2)"/></svg>')}`,
-            T: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polygon points="2,18 18,18 15,10 5,10" fill="#442a00" stroke="#ffaa00" stroke-width="1.2"/><rect x="7" y="3" width="6" height="7" fill="#ffaa00" rx="1"/><line x1="8.5" y1="3" x2="8.5" y2="0" stroke="#ffffff" stroke-width="1.5"/><line x1="11.5" y1="3" x2="11.5" y2="0" stroke="#ffffff" stroke-width="1.5"/><circle cx="10" cy="14" r="2" fill="#ff3300"/></svg>')}`,
-            C: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polygon points="2,18 18,18 18,8 14,12 14,6 10,10 10,4 2,8" fill="#3a3a3a" stroke="#e0e0e0" stroke-width="1.2"/><rect x="14.5" y="2" width="2.5" height="5" fill="#e0e0e0"/><circle cx="6" cy="13" r="2" fill="#ffaa00"><animate attributeName="opacity" values="0.4;1;0.4" dur="0.6s" repeatCount="indefinite"/></circle></svg>')}`,
-            G: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="12" width="14" height="6" rx="1" fill="#441a00" stroke="#ff6600" stroke-width="1.2"/><polygon points="6,12 10,3 14,12" fill="#ff8800"/><circle cx="10" cy="3" r="2.5" fill="#ffff00"><animate attributeName="opacity" values="0.3;1;0.3" dur="0.6s" repeatCount="indefinite"/><animate attributeName="r" values="2;3.2;2" dur="0.6s" repeatCount="indefinite"/></circle></svg>')}`,
-            V: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2,18 A8,8 0 0,1 18,18 Z" fill="#003322" stroke="#00ffb4" stroke-width="1.5"/><circle cx="10" cy="11" r="5" fill="#00ff88"><animate attributeName="r" values="4;5.8;4" dur="1.2s" repeatCount="indefinite"/></circle><polygon points="7,15 10,9 13,15" fill="#004411"/><circle cx="10" cy="6" r="1.5" fill="#ffffff"/></svg>')}`,
-            E: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polygon points="10,1 18,5 18,15 10,19 2,15 2,5" fill="#002244" stroke="#00ccff" stroke-width="1.5"/><circle cx="10" cy="10" r="4" fill="#00ffff"><animate attributeName="opacity" values="0.3;1;0.3" dur="0.5s" repeatCount="indefinite"/><animate attributeName="r" values="3;5;3" dur="0.5s" repeatCount="indefinite"/></circle><line x1="10" y1="1" x2="10" y2="19" stroke="#ffffff" stroke-width="0.75"/></svg>')}`,
-            U: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="14" width="16" height="4" rx="1" fill="#223300" stroke="#ccff00" stroke-width="1.2"/><rect x="5" y="6" width="10" height="5" rx="1" fill="#ccff00"/><line x1="2" y1="5" x2="18" y2="5" stroke="#ccff00" stroke-width="1.5"><animate attributeName="y1" values="5;7.5;5" dur="0.4s" repeatCount="indefinite"/><animate attributeName="y2" values="5;7.5;5" dur="0.4s" repeatCount="indefinite"/></line><circle cx="7" cy="8.5" r="1" fill="#000"/><circle cx="13" cy="8.5" r="1" fill="#000"/></svg>')}`,
-            P: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="18" height="18" rx="2" fill="#152535" stroke="#ffaa00" stroke-width="1.5"/><line x1="4" y1="4" x2="16" y2="16" stroke="#ffaa00" stroke-width="1.2"/><line x1="16" y1="4" x2="4" y2="16" stroke="#ffaa00" stroke-width="1.2"/><circle cx="10" cy="10" r="4.5" fill="#ffcc00"><animate attributeName="opacity" values="0.5;1;0.5" dur="0.7s" repeatCount="indefinite"/></circle></svg>')}`,
-            K: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polygon points="10,2 3,17 17,17" fill="#352010" stroke="#ee6622" stroke-width="1.5"/><rect x="8" y="7" width="4" height="7" fill="#ff8844"><animate attributeName="y" values="7;11;7" dur="0.35s" repeatCount="indefinite"/></rect><ellipse cx="10" cy="17" rx="6" ry="2" fill="#ff3300"/></svg>')}`,
-            O: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2,16 Q10,5 18,16" stroke="#00ccff" fill="none" stroke-width="1.8"/><line x1="10" y1="16" x2="10" y2="2" stroke="#00ccff" stroke-width="2"/><circle cx="10" cy="2" r="3" fill="#aaccff"><animate attributeName="r" values="2;4.5;2" dur="0.45s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.4;1" dur="0.45s" repeatCount="indefinite"/></circle></svg>')}`,
-            X: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><line x1="2" y1="2" x2="18" y2="18" stroke="#ff0000" stroke-width="3.5"/><line x1="18" y1="2" x2="2" y2="18" stroke="#ff0000" stroke-width="3.5"/><circle cx="10" cy="10" r="3" fill="#ffaa00"><animate attributeName="r" values="1;4;1" dur="0.3s" repeatCount="indefinite"/></circle></svg>')}`,
-            A: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="8" fill="#660066" stroke="#ff00ff" stroke-width="1.5"/><circle cx="6.5" cy="8.5" r="2.5" fill="#000"/><circle cx="13.5" cy="8.5" r="2.5" fill="#000"/><circle cx="6.5" cy="8.5" r="1" fill="#ff0000"/><circle cx="13.5" cy="8.5" r="1" fill="#ff0000"/><path d="M6,14 Q10,17 14,14" stroke="#ff00ff" fill="none" stroke-width="1.8"/><polygon points="9,2 10,5 11,2" fill="#ff00ff"/></svg>')}`
+            S: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sg7" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0d2b45"/><stop offset="50%" stop-color="#005599"/><stop offset="100%" stop-color="#001428"/></linearGradient></defs><rect x="2" y="2" width="16" height="16" rx="1.5" fill="#081018" stroke="#00ffff" stroke-width="0.8"/><rect x="3.5" y="3.5" width="13" height="13" fill="url(#sg7)"/><line x1="3.5" y1="8" x2="16.5" y2="8" stroke="#00ffff" stroke-width="0.5" opacity="0.8"/><line x1="3.5" y1="12" x2="16.5" y2="12" stroke="#00ffff" stroke-width="0.5" opacity="0.8"/><line x1="8" y1="3.5" x2="8" y2="16.5" stroke="#00ffff" stroke-width="0.5" opacity="0.8"/><line x1="12" y1="3.5" x2="12" y2="16.5" stroke="#00ffff" stroke-width="0.5" opacity="0.8"/><circle cx="10" cy="10" r="1.2" fill="#ffff00"/><polygon points="4,4 9,4 5,16 4,16" fill="rgba(255,255,255,0.3)"/></svg>')}`,
+            F: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="fg7" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#003311"/><stop offset="100%" stop-color="#001505"/></linearGradient></defs><path d="M2,18 L2,10 A8,8 0 0,1 18,10 L18,18 Z" fill="url(#fg7)" stroke="#00ff66" stroke-width="1"/><path d="M4,17 Q6,12 8,7 M10,17 Q10,10 10,5 M16,17 Q14,12 12,7" stroke="#33ff88" stroke-width="1.2" fill="none"/><circle cx="8" cy="7" r="1.2" fill="#ffff44"/><circle cx="10" cy="5" r="1.2" fill="#ffff44"/><circle cx="12" cy="7" r="1.2" fill="#ffff44"/><line x1="2" y1="18" x2="18" y2="18" stroke="#00aa44" stroke-width="1.5"/></svg>')}`,
+            M: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="mg7" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4a154b"/><stop offset="100%" stop-color="#19051a"/></linearGradient></defs><rect x="2" y="15" width="16" height="3" fill="#331133" stroke="#ff00ff" stroke-width="0.8"/><path d="M4,15 L9,2 L11,2 L16,15 Z" fill="url(#mg7)" stroke="#ff00ff" stroke-width="1"/><line x1="6" y1="10" x2="14" y2="10" stroke="#ff66ff" stroke-width="0.8"/><line x1="7" y1="6" x2="13" y2="6" stroke="#ff66ff" stroke-width="0.8"/><rect x="9" y="8" width="2" height="10" fill="#ffffff"/><circle cx="10" cy="2" r="1.5" fill="#ffaa00"><animate attributeName="opacity" values="0.3;1;0.3" dur="0.8s" repeatCount="indefinite"/></circle></svg>')}`,
+            H: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="hg7" cx="50%" cy="35%" r="65%"><stop offset="0%" stop-color="#006688"/><stop offset="60%" stop-color="#002233"/><stop offset="100%" stop-color="#000d14"/></radialGradient></defs><path d="M2,17 A8,8 0 0,1 18,17 Z" fill="url(#hg7)" stroke="#00ffff" stroke-width="1.2"/><rect x="8" y="12" width="4" height="5" rx="0.5" fill="#00ffff" opacity="0.9"/><circle cx="6" cy="9" r="1.2" fill="#ffffff"/><circle cx="14" cy="9" r="1.2" fill="#ffffff"/><circle cx="10" cy="6" r="1.2" fill="#ffffff"/><line x1="10" y1="1" x2="10" y2="3" stroke="#00ffff" stroke-width="1.2"/><circle cx="10" cy="1" r="1" fill="#ff3333"/><line x1="1" y1="17" x2="19" y2="17" stroke="#00ffff" stroke-width="1.5"/></svg>')}`,
+            B: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bg7" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#4a2600"/><stop offset="50%" stop-color="#aa5500"/><stop offset="100%" stop-color="#2a1200"/></linearGradient></defs><rect x="4" y="5" width="12" height="13" rx="1.5" fill="url(#bg7)" stroke="#ff8800" stroke-width="1.2"/><rect x="7.5" y="2.5" width="5" height="2.5" rx="0.5" fill="#ffaa00"/><rect x="6" y="7" width="8" height="2" fill="#00ff66"/><rect x="6" y="10" width="8" height="2" fill="#ffcc00"/><rect x="6" y="13" width="8" height="2" fill="#ff8800"><animate attributeName="opacity" values="0.4;1;0.4" dur="0.7s" repeatCount="indefinite"/></rect></svg>')}`,
+            L: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg7" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#3c0066"/><stop offset="100%" stop-color="#120020"/></linearGradient></defs><polygon points="7,2 13,2 13,6 18,17 2,17 7,6" fill="url(#lg7)" stroke="#aa00ff" stroke-width="1.2"/><circle cx="10" cy="12" r="3.5" fill="none" stroke="#dd66ff" stroke-width="1.2"/><circle cx="10" cy="12" r="1.5" fill="#ffffff"><animate attributeName="r" values="1;2.2;1" dur="0.9s" repeatCount="indefinite"/></circle><line x1="2" y1="18" x2="18" y2="18" stroke="#aa00ff" stroke-width="1.5"/></svg>')}`,
+            N: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ng7" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#003822"/><stop offset="100%" stop-color="#00140c"/></linearGradient></defs><path d="M4,17 L6,4 L14,4 L16,17 Z" fill="url(#ng7)" stroke="#00ffaa" stroke-width="1.2"/><circle cx="10" cy="11" r="4" fill="none" stroke="#00ffaa" stroke-width="1.2"/><circle cx="10" cy="11" r="2" fill="#00ffaa"><animate attributeName="r" values="1.5;3;1.5" dur="0.6s" repeatCount="indefinite"/></circle><line x1="6" y1="4" x2="14" y2="4" stroke="#ffff00" stroke-width="1.5" stroke-dasharray="2,2"/></svg>')}`,
+            Y: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="yg7" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#223b00"/><stop offset="100%" stop-color="#091200"/></linearGradient></defs><rect x="3" y="11" width="14" height="7" rx="1" fill="url(#yg7)" stroke="#aaff00" stroke-width="1"/><path d="M4,11 C4,4 8,4 10,2 C12,4 16,4 16,11" fill="none" stroke="#ccff00" stroke-width="1.2"/><circle cx="7" cy="7" r="1.5" fill="#aaff00"/><circle cx="13" cy="7" r="1.5" fill="#aaff00"/><line x1="10" y1="2" x2="10" y2="11" stroke="#aa00ff" stroke-width="1"><animate attributeName="opacity" values="0.4;1;0.4" dur="0.8s" repeatCount="indefinite"/></line></svg>')}`,
+            D: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="dg7" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#660000"/><stop offset="100%" stop-color="#220000"/>
+    </linearGradient></defs><rect x="3" y="13" width="14" height="5" rx="1" fill="url(#dg7)" stroke="#ff0000" stroke-width="1"/><circle cx="10" cy="9" r="4.5" fill="#880000" stroke="#ff3333" stroke-width="1"/><line x1="8.5" y1="8" x2="8.5" y2="1" stroke="#ff3333" stroke-width="1.8"/><line x1="11.5" y1="8" x2="11.5" y2="1" stroke="#ff3333" stroke-width="1.8"/><circle cx="10" cy="1" r="1.8" fill="#ffffff"><animate attributeName="r" values="1;2.5;1" dur="0.3s" repeatCount="indefinite"/></circle></svg>')}`,
+            W: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="17" height="17" rx="1" fill="#24282c" stroke="#8899aa" stroke-width="1.2"/><line x1="1.5" y1="6" x2="18.5" y2="6" stroke="#556677" stroke-width="0.8"/><line x1="1.5" y1="11" x2="18.5" y2="11" stroke="#556677" stroke-width="0.8"/><line x1="1.5" y1="15" x2="18.5" y2="15" stroke="#556677" stroke-width="0.8"/><rect x="7" y="2.5" width="2" height="2" fill="#00ffff"/><rect x="15" y="7.5" width="2" height="2" fill="#00ffff"/><rect x="7" y="12.5" width="2" height="2" fill="#00ffff"/></svg>')}`,
+            T: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polygon points="2,18 18,18 15,11 5,11" fill="#3a2200" stroke="#ffaa00" stroke-width="1"/><circle cx="10" cy="9" r="3.5" fill="#ffaa00"/><line x1="8.5" y1="8" x2="8.5" y2="1" stroke="#ffffff" stroke-width="1.6"/><line x1="11.5" y1="8" x2="11.5" y2="1" stroke="#ffffff" stroke-width="1.6"/><circle cx="10" cy="9" r="1.5" fill="#ff3300"/></svg>')}`,
+            C: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polygon points="2,18 18,18 18,7 14,11 14,5 10,9 10,4 2,8" fill="#2b2d30" stroke="#cccccc" stroke-width="1.2"/><rect x="14.5" y="2" width="2.5" height="5" fill="#999999"/><circle cx="6" cy="13" r="2.5" fill="#ffaa00"><animate attributeName="opacity" values="0.3;1;0.3" dur="0.5s" repeatCount="indefinite"/></circle><line x1="4" y1="18" x2="4" y2="12" stroke="#ff6600" stroke-width="1"/></svg>')}`,
+            G: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="2.5" y="11" width="15" height="7" rx="1" fill="#3d1500" stroke="#ff6600" stroke-width="1.2"/><polygon points="5,11 10,2 15,11" fill="#ff6600"/><circle cx="10" cy="2" r="2" fill="#ffff00"><animate attributeName="r" values="1.5;3;1.5" dur="0.5s" repeatCount="indefinite"/></circle><line x1="10" y1="11" x2="10" y2="18" stroke="#ffcc00" stroke-width="1.5"/></svg>')}`,
+            V: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2,18 A8,8 0 0,1 18,18 Z" fill="#002b1c" stroke="#00ffb4" stroke-width="1.2"/><circle cx="10" cy="11" r="5" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="4;5.5;4" dur="1s" repeatCount="indefinite"/></circle><polygon points="8,15 10,8 12,15" fill="#004d1a"/><line x1="10" y1="2" x2="10" y2="5" stroke="#ffffff" stroke-width="1.2"/><circle cx="10" cy="2" r="1.2" fill="#00ffcc"/></svg>')}`,
+            E: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polygon points="10,1 18,5 18,15 10,19 2,15 2,5" fill="#001a33" stroke="#00ccff" stroke-width="1.2"/><circle cx="10" cy="10" r="4.5" fill="#00ffff" opacity="0.7"><animate attributeName="opacity" values="0.3;1;0.3" dur="0.6s" repeatCount="indefinite"/></circle><polygon points="10,4 14,10 10,16 6,10" fill="#ffffff" opacity="0.6"/></svg>')}`,
+            U: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="13" width="16" height="5" rx="1" fill="#1c2b00" stroke="#ccff00" stroke-width="1.2"/><rect x="5" y="7" width="10" height="5" rx="1" fill="#334d00" stroke="#ccff00" stroke-width="0.8"/><text x="10" y="11" fill="#ffffff" font-size="5" font-weight="bold" text-anchor="middle" font-family="sans-serif">H</text><ellipse cx="10" cy="4" rx="4" ry="1.5" fill="#ccff00"><animate attributeName="cy" values="3.5;5;3.5" dur="0.4s" repeatCount="indefinite"/></ellipse></svg>')}`,
+            P: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="1.5" y="1.5" width="17" height="17" rx="1.5" fill="#101d29" stroke="#ffaa00" stroke-width="1.2"/><line x1="3" y1="3" x2="17" y2="17" stroke="#ffaa00" stroke-width="0.8"/><line x1="17" y1="3" x2="3" y2="17" stroke="#ffaa00" stroke-width="0.8"/><circle cx="10" cy="10" r="4" fill="#ffcc00"><animate attributeName="opacity" values="0.5;1;0.5" dur="0.8s" repeatCount="indefinite"/></circle><rect x="3" y="12" width="4" height="3" fill="#00ffff"/><rect x="13" y="12" width="4" height="3" fill="#ff6600"/></svg>')}`,
+            K: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polygon points="10,2 3,17 17,17" fill="#2d1708" stroke="#ee6622" stroke-width="1.2"/><rect x="8.5" y="6" width="3" height="8" fill="#ff8844"><animate attributeName="y" values="6;10;6" dur="0.3s" repeatCount="indefinite"/></rect><polygon points="8.5,14 11.5,14 10,18" fill="#ffff00"/><circle cx="10" cy="3" r="1.5" fill="#ff3300"/></svg>')}`,
+            O: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M3,16 Q10,6 17,16" stroke="#00ccff" fill="none" stroke-width="1.8"/><line x1="10" y1="16" x2="10" y2="3" stroke="#00ccff" stroke-width="1.5"/><circle cx="10" cy="3" r="2.5" fill="#aaccff"/><line x1="10" y1="3" x2="10" y2="0" stroke="#ffffff" stroke-width="1.5"><animate attributeName="opacity" values="0.2;1;0.2" dur="0.3s" repeatCount="indefinite"/></line></svg>')}`,
+            X: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="18" height="18" fill="#2b0000" stroke="#ff0000" stroke-width="1.2"/><line x1="3" y1="3" x2="17" y2="17" stroke="#ff2222" stroke-width="2.5"/><line x1="17" y1="3" x2="3" y2="17" stroke="#ff2222" stroke-width="2.5"/><circle cx="10" cy="10" r="3" fill="#ffaa00"><animate attributeName="r" values="1.5;4.5;1.5" dur="0.4s" repeatCount="indefinite"/></circle></svg>')}`,
+            A_SWARMER: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><line x1="10" y1="10" x2="2" y2="5" stroke="#cc00cc" stroke-width="1.4"/><line x1="10" y1="10" x2="18" y2="5" stroke="#cc00cc" stroke-width="1.4"/><line x1="10" y1="10" x2="1" y2="11" stroke="#cc00cc" stroke-width="1.4"/><line x1="10" y1="10" x2="19" y2="11" stroke="#cc00cc" stroke-width="1.4"/><line x1="10" y1="10" x2="2" y2="17" stroke="#cc00cc" stroke-width="1.4"/><line x1="10" y1="10" x2="18" y2="17" stroke="#cc00cc" stroke-width="1.4"/><ellipse cx="10" cy="10.5" rx="4.5" ry="5.5" fill="#4d004d" stroke="#ff00ff" stroke-width="1.2"/><circle cx="8" cy="8" r="1.2" fill="#ff0055"/><circle cx="12" cy="8" r="1.2" fill="#ff0055"/><polygon points="8,4 10,7 9,3" fill="#ffffff"/><polygon points="12,4 10,7 11,3" fill="#ffffff"/></svg>')}`,
+            A_SPITTER: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><ellipse cx="10" cy="12" rx="6" ry="5" fill="#004d1a" stroke="#00ff66" stroke-width="1.2"/><circle cx="10" cy="12" r="3.5" fill="#33ff88"><animate attributeName="r" values="2.8;4.2;2.8" dur="0.7s" repeatCount="indefinite"/></circle><circle cx="10" cy="5.5" r="3.5" fill="#225500" stroke="#00ff66" stroke-width="1"/><circle cx="8.5" cy="4.5" r="1.1" fill="#ffff00"/><circle cx="11.5" cy="4.5" r="1.1" fill="#ffff00"/><line x1="4" y1="9" x2="1" y2="7" stroke="#00ff66" stroke-width="1.2"/><line x1="16" y1="9" x2="19" y2="7" stroke="#00ff66" stroke-width="1.2"/><line x1="5" y1="14" x2="2" y2="17" stroke="#00ff66" stroke-width="1.2"/><line x1="15" y1="14" x2="18" y2="17" stroke="#00ff66" stroke-width="1.2"/></svg>')}`,
+            A_GOLIATH: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polygon points="10,2 18,7 16,17 4,17 2,7" fill="#33001a" stroke="#ff0055" stroke-width="1.5"/><polygon points="10,4 15,8 13,15 7,15 5,8" fill="#1a000d"/><circle cx="10" cy="11" r="3" fill="#ff3300"><animate attributeName="r" values="2;3.8;2" dur="0.5s" repeatCount="indefinite"/></circle><polygon points="1,5 4,8 2,12" fill="#ff0055"/><polygon points="19,5 16,8 18,12" fill="#ff0055"/><circle cx="8" cy="7" r="1.2" fill="#ffff00"/><circle cx="12" cy="7" r="1.2" fill="#ffff00"/></svg>')}`,
+            A: `data:image/svg+xml,${encodeURIComponent('<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><ellipse cx="10" cy="10" rx="6" ry="6" fill="#4d004d" stroke="#ff00ff" stroke-width="1.2"/><circle cx="7" cy="8" r="1.5" fill="#ff0055"/><circle cx="13" cy="8" r="1.5" fill="#ff0055"/></svg>')}`
         };
 
         function renderCell(x, y) {
@@ -950,8 +954,17 @@
             for(let a of aliens) {
                 const cell = document.getElementById(`cell-${a.x}-${a.y}`);
                 if (cell) {
-                    cell.style.backgroundImage = `url("${SVGS.A}")`;
-                    cell.title = `Alien Hostile (HP: ${a.hp})`;
+                    let svg = SVGS.A_SWARMER;
+                    let casteName = "Xeno-Swarmer";
+                    if (a.hp >= 8) {
+                        svg = SVGS.A_GOLIATH;
+                        casteName = "Xeno-Goliath";
+                    } else if (a.hp >= 4) {
+                        svg = SVGS.A_SPITTER;
+                        casteName = "Xeno-Spitter";
+                    }
+                    cell.style.backgroundImage = `url("${svg}")`;
+                    cell.title = `${casteName} [Hostile] (HP: ${a.hp})`;
                 }
             }
         }
@@ -1189,8 +1202,109 @@
                         ctx.setLineDash([4, 4]);
                         ctx.strokeRect(minX, minY, maxX - minX, maxY - minY);
                         ctx.setLineDash([]);
+                        
+                        // Faint hexagonal barrier center shimmer
+                        ctx.fillStyle = `rgba(0, 220, 255, ${pulseAlpha * 0.12})`;
+                        ctx.fillRect(minX, minY, maxX - minX, maxY - minY);
                     }
                 }
+            }
+
+            // Tactical Alien HUD Overlays (Health Gauges & Threat Targeters)
+            for (let a of aliens) {
+                const ax = a.x * 21;
+                const ay = a.y * 21;
+                const maxHp = Math.max(a.hp, 3 + Math.floor(day / 10));
+                const hpPct = Math.max(0, Math.min(1, a.hp / maxHp));
+                
+                // Micro Health Bar
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                ctx.fillRect(ax + 2, ay + 1, 16, 2.5);
+                ctx.strokeStyle = 'rgba(0, 255, 255, 0.4)';
+                ctx.lineWidth = 0.5;
+                ctx.strokeRect(ax + 2, ay + 1, 16, 2.5);
+                
+                ctx.fillStyle = hpPct < 0.3 ? '#ff3333' : (hpPct < 0.65 ? '#ffaa00' : '#00ff88');
+                ctx.fillRect(ax + 2.5, ay + 1.5, 15 * hpPct, 1.5);
+                
+                // Threat targeting brackets for Goliaths (hp >= 8)
+                if (a.hp >= 8) {
+                    const reticlePulse = 0.6 + 0.4 * Math.sin(globalAnimTime * 6);
+                    ctx.strokeStyle = `rgba(255, 0, 85, ${reticlePulse})`;
+                    ctx.lineWidth = 1.2;
+                    ctx.beginPath();
+                    ctx.moveTo(ax + 1, ay + 5); ctx.lineTo(ax + 1, ay + 1); ctx.lineTo(ax + 5, ay + 1);
+                    ctx.moveTo(ax + 19, ay + 5); ctx.lineTo(ax + 19, ay + 1); ctx.lineTo(ax + 15, ay + 1);
+                    ctx.moveTo(ax + 1, ay + 15); ctx.lineTo(ax + 1, ay + 19); ctx.lineTo(ax + 5, ay + 19);
+                    ctx.moveTo(ax + 19, ay + 15); ctx.lineTo(ax + 19, ay + 19); ctx.lineTo(ax + 15, ay + 19);
+                    ctx.stroke();
+                }
+            }
+
+            // Autonomous Colony Drones & Transport Logistics
+            let droneHubs = [];
+            let tradePorts = [];
+            let factories = [];
+            for (let idx = 0; idx < grid.length; idx++) {
+                if (grid[idx] === 16) droneHubs.push(idx);
+                if (grid[idx] === 17) tradePorts.push(idx);
+                if (grid[idx] === 12 || grid[idx] === 3) factories.push(idx);
+            }
+
+            // Nanite Repair Drones (patrolling when Drone Hub is operational)
+            if (droneHubs.length > 0 && power > 0) {
+                for (let d = 0; d < Math.min(3, droneHubs.length * 2); d++) {
+                    const hIdx = droneHubs[d % droneHubs.length];
+                    const hx = (hIdx % GRID_W) * 21 + 10;
+                    const hy = Math.floor(hIdx / GRID_W) * 21 + 10;
+                    const tOffset = globalAnimTime * 1.5 + d * 2.1;
+                    const dx = hx + Math.sin(tOffset) * 45 + Math.cos(tOffset * 0.7) * 20;
+                    const dy = hy + Math.cos(tOffset * 1.2) * 35;
+
+                    // Downward scanner cone
+                    const coneGrad = ctx.createRadialGradient(dx, dy + 2, 1, dx, dy + 14, 12);
+                    coneGrad.addColorStop(0, 'rgba(0, 255, 255, 0.25)');
+                    coneGrad.addColorStop(1, 'rgba(0, 255, 255, 0)');
+                    ctx.fillStyle = coneGrad;
+                    ctx.beginPath();
+                    ctx.moveTo(dx, dy); ctx.lineTo(dx - 8, dy + 14); ctx.lineTo(dx + 8, dy + 14); ctx.closePath();
+                    ctx.fill();
+
+                    // Drone Chassis
+                    ctx.fillStyle = '#b0c4de';
+                    ctx.fillRect(dx - 3, dy - 2, 6, 3);
+                    ctx.fillStyle = '#00ffff';
+                    ctx.fillRect(dx - 1, dy - 1, 2, 1);
+                    // Spinning rotors glow
+                    ctx.fillStyle = (Math.floor(globalAnimTime * 30) % 2 === 0) ? '#00ffaa' : '#ffffff';
+                    ctx.fillRect(dx - 4, dy - 3, 2, 1);
+                    ctx.fillRect(dx + 2, dy - 3, 2, 1);
+                }
+            }
+
+            // Overland Logistics Rover (when Trade Port is operational)
+            if (tradePorts.length > 0 && power > 0) {
+                const pIdx = tradePorts[0];
+                const px = (pIdx % GRID_W) * 21 + 10;
+                const py = Math.floor(pIdx / GRID_W) * 21 + 10;
+                const rProg = (globalAnimTime * 0.3) % 1.0;
+                let targetX = px + 60, targetY = py;
+                if (factories.length > 0) {
+                    targetX = (factories[0] % GRID_W) * 21 + 10;
+                    targetY = Math.floor(factories[0] / GRID_W) * 21 + 10;
+                }
+                const curRx = px + (targetX - px) * (rProg < 0.5 ? rProg * 2 : (1 - rProg) * 2);
+                const curRy = py + (targetY - py) * (rProg < 0.5 ? rProg * 2 : (1 - rProg) * 2);
+
+                // Rover body & headlights
+                ctx.fillStyle = '#ffaa00';
+                ctx.fillRect(curRx - 3, curRy - 2, 6, 4);
+                ctx.fillStyle = '#222';
+                ctx.fillRect(curRx - 4, curRy - 3, 2, 6);
+                ctx.fillRect(curRx + 2, curRy - 3, 2, 6);
+                ctx.fillStyle = 'rgba(255, 230, 100, 0.4)';
+                ctx.beginPath();
+                ctx.arc(curRx + 4, curRy, 6, -0.4, 0.4); ctx.lineTo(curRx + 1, curRy); ctx.fill();
             }
 
             // 4. Atmospheric Planetary Biome Motes
