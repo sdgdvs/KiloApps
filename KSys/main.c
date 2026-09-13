@@ -2,6 +2,22 @@
 #include <windows.h>
 #include <commctrl.h>
 
+#pragma function(memset, memcpy)
+void* __cdecl memset(void* dest, int c, size_t count) {
+    char* p = (char*)dest;
+    while (count--) *p++ = (char)c;
+    return dest;
+}
+
+void* __cdecl memcpy(void* dest, const void* src, size_t count) {
+    char* d = (char*)dest;
+    const char* s = (const char*)src;
+    while (count--) *d++ = *s++;
+    return dest;
+}
+
+void UpdateView(void);
+
 #define W 1024
 #define H 768
 
@@ -17,6 +33,11 @@
 #define ID_BTN_HELP          1010
 #define ID_BTN_SVC_REFRESH  1011
 #define ID_BTN_SVC_FILTER   1012
+#define ID_BTN_INSP_REFRESH 1013
+#define ID_BTN_INSP_BENCH   1014
+#define ID_BTN_LOG_CLEAR    1015
+#define ID_BTN_LOG_EXPORT   1016
+#define ID_STATUS_BAR       1017
 
 HWND hTabCtrl = NULL;
 HWND hOutput = NULL;
@@ -30,11 +51,18 @@ HWND hBtnExpHtml = NULL;
 HWND hBtnHelp = NULL;
 HWND hBtnSvcRefresh = NULL;
 HWND hBtnSvcFilter = NULL;
+HWND hBtnInspRefresh = NULL;
+HWND hBtnInspBench = NULL;
+HWND hBtnLogClear = NULL;
+HWND hBtnLogExport = NULL;
+HWND hStatusBar = NULL;
 
 char g_LogBuffer[16384] = {0};
 char g_CpuResult[128] = "Not Executed";
 char g_RamResult[128] = "Not Executed";
 char g_DiskResult[128] = "Not Executed";
+char g_ToastMsg[256] = "Welcome to KSys! Tabs: [1-5] | Run: [R] | Help: [F1] / [H]";
+DWORD g_ToastExpire = 0;
 
 int g_CurrentTab = 0;
 int g_ServiceFilterMode = 0; // 0: All, 1: Running Only, 2: Stopped Only
@@ -428,15 +456,38 @@ BOOL SaveReportFile(const char* filename, const char* content) {
     return ok;
 }
 
+void ShowNativeToast(HWND hwnd, const char* msg) {
+    lstrcpynA(g_ToastMsg, msg, sizeof(g_ToastMsg));
+    g_ToastExpire = GetTickCount() + 4000;
+    if (hStatusBar) {
+        SetWindowTextA(hStatusBar, g_ToastMsg);
+    }
+}
+
+void ClearLogs(HWND hwnd) {
+    g_LogBuffer[0] = '\0';
+    LogEvent("INFO", "Event history logs cleared by user");
+    ShowNativeToast(hwnd, "Event history logs cleared.");
+    UpdateView();
+}
+
+void ExportLogs(HWND hwnd) {
+    if (SaveReportFile("ksys_event_log.txt", g_LogBuffer[0] ? g_LogBuffer : "[No event logs recorded]\r\n")) {
+        ShowNativeToast(hwnd, "SUCCESS: Exported event log to ksys_event_log.txt");
+    } else {
+        ShowNativeToast(hwnd, "ERROR: Failed to write ksys_event_log.txt");
+    }
+}
+
 void ExportReport(HWND hwndOwner, int type) {
     static char reportBuf[8192];
     GetSystemAuditText(reportBuf, sizeof(reportBuf));
 
     if (type == 0) { // TXT
         if (SaveReportFile("ksys_report.txt", reportBuf)) {
-            MessageBoxA(hwndOwner, "Report successfully exported to ksys_report.txt", "Export Success", MB_OK | MB_ICONINFORMATION);
+            ShowNativeToast(hwndOwner, "SUCCESS: Exported report to ksys_report.txt");
         } else {
-            MessageBoxA(hwndOwner, "Failed to write ksys_report.txt. Check folder permissions.", "Export Error", MB_OK | MB_ICONERROR);
+            ShowNativeToast(hwndOwner, "ERROR: Failed to write ksys_report.txt");
         }
     } else if (type == 1) { // JSON
         char jsonBuf[12288];
@@ -450,9 +501,9 @@ void ExportReport(HWND hwndOwner, int type) {
             g_CpuResult, g_RamResult, g_DiskResult
         );
         if (SaveReportFile("ksys_report.json", jsonBuf)) {
-            MessageBoxA(hwndOwner, "Report successfully exported to ksys_report.json", "Export Success", MB_OK | MB_ICONINFORMATION);
+            ShowNativeToast(hwndOwner, "SUCCESS: Exported report to ksys_report.json");
         } else {
-            MessageBoxA(hwndOwner, "Failed to write ksys_report.json. Check folder permissions.", "Export Error", MB_OK | MB_ICONERROR);
+            ShowNativeToast(hwndOwner, "ERROR: Failed to write ksys_report.json");
         }
     } else if (type == 2) { // HTML
         char htmlBuf[14336];
@@ -464,9 +515,9 @@ void ExportReport(HWND hwndOwner, int type) {
             reportBuf
         );
         if (SaveReportFile("ksys_report.html", htmlBuf)) {
-            MessageBoxA(hwndOwner, "Report successfully exported to ksys_report.html", "Export Success", MB_OK | MB_ICONINFORMATION);
+            ShowNativeToast(hwndOwner, "SUCCESS: Exported report to ksys_report.html");
         } else {
-            MessageBoxA(hwndOwner, "Failed to write ksys_report.html. Check folder permissions.", "Export Error", MB_OK | MB_ICONERROR);
+            ShowNativeToast(hwndOwner, "ERROR: Failed to write ksys_report.html");
         }
     }
 }
@@ -475,19 +526,27 @@ void UpdateView() {
     static char contentBuf[16384];
 
     // Show/hide buttons based on tab
+    BOOL isInspTab  = (g_CurrentTab == 0);
     BOOL isBenchTab = (g_CurrentTab == 1);
     BOOL isSvcTab   = (g_CurrentTab == 2);
+    BOOL isLogTab   = (g_CurrentTab == 3);
     BOOL isExpTab   = (g_CurrentTab == 4);
 
-    ShowWindow(hBtnCpu, isBenchTab ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnRam, isBenchTab ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnInspRefresh, isInspTab ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnInspBench,   isInspTab ? SW_SHOW : SW_HIDE);
+
+    ShowWindow(hBtnCpu,  isBenchTab ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnRam,  isBenchTab ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnDisk, isBenchTab ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnAll, isBenchTab ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnAll,  isBenchTab ? SW_SHOW : SW_HIDE);
 
     ShowWindow(hBtnSvcRefresh, isSvcTab ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnSvcFilter, isSvcTab ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnSvcFilter,  isSvcTab ? SW_SHOW : SW_HIDE);
 
-    ShowWindow(hBtnExpTxt, isExpTab ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnLogClear,  isLogTab ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnLogExport, isLogTab ? SW_SHOW : SW_HIDE);
+
+    ShowWindow(hBtnExpTxt,  isExpTab ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnExpJson, isExpTab ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnExpHtml, isExpTab ? SW_SHOW : SW_HIDE);
 
@@ -509,7 +568,7 @@ void UpdateView() {
         GetServicesAndTelemetryText(contentBuf, sizeof(contentBuf));
         SetWindowTextA(hOutput, contentBuf);
     } else if (g_CurrentTab == 3) { // Event History Logs
-        SetWindowTextA(hOutput, g_LogBuffer);
+        SetWindowTextA(hOutput, g_LogBuffer[0] ? g_LogBuffer : "[No event logs recorded yet]\r\n");
     } else if (g_CurrentTab == 4) { // Report Export
         GetSystemAuditText(contentBuf, sizeof(contentBuf));
         SetWindowTextA(hOutput, contentBuf);
@@ -532,21 +591,24 @@ void ShowHelpDialog(HWND hwnd) {
         "  [3]           - Services & Telemetry Manager Tab\n"
         "  [4]           - Event History Logs Tab\n"
         "  [5]           - Detailed System Report Export Tab\n"
+        "  [Left/Right]  - Switch between Navigation Tabs\n"
         "  [Tab]         - Cycle Focus through Controls / Buttons\n"
         "  [F1] or [H]   - Display this Help Guide\n"
-        "  [R]           - Run All Benchmarks / Refresh Services\n"
+        "  [Esc]         - Return to Hardware Inspector [1]\n"
+        "  [R] or [F5]   - Run All Benchmarks / Refresh Active View\n"
         "  [C]           - Run CPU Benchmark (Benchmarks Tab)\n"
         "  [M]           - Run RAM Benchmark (Benchmarks Tab)\n"
         "  [D]           - Run Disk Benchmark (Benchmarks Tab)\n"
         "  [S]           - Toggle Service Filter (Services Tab)\n"
-        "  [E]           - Export TXT Report (Export Tab)\n"
+        "  [L]           - Clear Event History Logs (Logs Tab)\n"
+        "  [E]           - Export Report or Log (Export/Logs Tab)\n"
         "  [J]           - Export JSON Report (Export Tab)\n"
         "  [T]           - Export HTML Report (Export Tab)\n\n"
         "FEATURES:\n"
         "  - Inspector   : Logical CPU cores, Memory load, Disk space & display.\n"
         "  - Benchmarks  : Multi-threaded CPU matrix, RAM throughput, Disk I/O.\n"
         "  - Services    : Live CPU usage, Win32 services & drivers filter.\n"
-        "  - Event Logs  : Diagnostic history audit trail.\n"
+        "  - Event Logs  : Diagnostic history audit trail with clear & export.\n"
         "  - Export      : Save TXT, JSON, or HTML diagnostic summaries.",
         "KSys Diagnostics Help",
         MB_OK | MB_ICONINFORMATION);
@@ -578,28 +640,39 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TabCtrl_InsertItem(hTabCtrl, 4, &tie);
 
             hOutput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL | ES_MULTILINE | ES_READONLY, 
-                5, 40, W - 25, H - 125, hwnd, (HMENU)ID_TXT_MAIN, NULL, NULL);
+                5, 40, W - 25, H - 145, hwnd, (HMENU)ID_TXT_MAIN, NULL, NULL);
+
+            // Inspector Buttons
+            hBtnInspRefresh = CreateWindow("BUTTON", "Refresh [R]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 10, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_INSP_REFRESH, NULL, NULL);
+            hBtnInspBench   = CreateWindow("BUTTON", "Run Benchmarks [2]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 130, H - 75, 160, 25, hwnd, (HMENU)ID_BTN_INSP_BENCH, NULL, NULL);
 
             // Benchmark Buttons
-            hBtnCpu = CreateWindow("BUTTON", "Test CPU [C]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 10, H - 75, 105, 25, hwnd, (HMENU)ID_BTN_CPU, NULL, NULL);
-            hBtnRam = CreateWindow("BUTTON", "Test RAM [M]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 125, H - 75, 105, 25, hwnd, (HMENU)ID_BTN_RAM, NULL, NULL);
+            hBtnCpu  = CreateWindow("BUTTON", "Test CPU [C]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 10, H - 75, 105, 25, hwnd, (HMENU)ID_BTN_CPU, NULL, NULL);
+            hBtnRam  = CreateWindow("BUTTON", "Test RAM [M]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 125, H - 75, 105, 25, hwnd, (HMENU)ID_BTN_RAM, NULL, NULL);
             hBtnDisk = CreateWindow("BUTTON", "Test Disk [D]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 240, H - 75, 105, 25, hwnd, (HMENU)ID_BTN_DISK, NULL, NULL);
-            hBtnAll = CreateWindow("BUTTON", "Run All [R]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 355, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_ALL, NULL, NULL);
+            hBtnAll  = CreateWindow("BUTTON", "Run All [R]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 355, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_ALL, NULL, NULL);
 
             // Service Buttons
             hBtnSvcRefresh = CreateWindow("BUTTON", "Refresh [R]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 10, H - 75, 120, 25, hwnd, (HMENU)ID_BTN_SVC_REFRESH, NULL, NULL);
             hBtnSvcFilter  = CreateWindow("BUTTON", "Filter: All Services [S]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 140, H - 75, 180, 25, hwnd, (HMENU)ID_BTN_SVC_FILTER, NULL, NULL);
 
+            // Log Buttons
+            hBtnLogClear  = CreateWindow("BUTTON", "Clear Logs [L]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 10, H - 75, 120, 25, hwnd, (HMENU)ID_BTN_LOG_CLEAR, NULL, NULL);
+            hBtnLogExport = CreateWindow("BUTTON", "Export Log [E]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 140, H - 75, 120, 25, hwnd, (HMENU)ID_BTN_LOG_EXPORT, NULL, NULL);
+
             // Export Buttons
-            hBtnExpTxt = CreateWindow("BUTTON", "Export TXT [E]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 10, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_EXP_TXT, NULL, NULL);
+            hBtnExpTxt  = CreateWindow("BUTTON", "Export TXT [E]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 10, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_EXP_TXT, NULL, NULL);
             hBtnExpJson = CreateWindow("BUTTON", "Export JSON [J]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 130, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_EXP_JSON, NULL, NULL);
             hBtnExpHtml = CreateWindow("BUTTON", "Export HTML [T]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 250, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_EXP_HTML, NULL, NULL);
 
-            hBtnHelp = CreateWindow("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, W - 110, H - 75, 90, 25, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            hBtnHelp = CreateWindow("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, W - 115, H - 75, 95, 25, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+
+            hStatusBar = CreateWindowEx(0, "STATIC", g_ToastMsg, WS_CHILD | WS_VISIBLE | SS_LEFTNOWORDWRAP, 10, H - 45, W - 25, 20, hwnd, (HMENU)ID_STATUS_BAR, NULL, NULL);
 
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
 
             LogEvent("INFO", "KSys Workstation Diagnostics initialized");
+            ShowNativeToast(hwnd, "Welcome to KSys! Tabs: [1-5] | Run: [R] | Help: [F1] / [H]");
             UpdateView();
             SetTimer(hwnd, 1, 1000, NULL);
             break;
@@ -616,30 +689,54 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_COMMAND: {
             WORD id = LOWORD(wParam);
-            if (id == ID_BTN_CPU) {
+            if (id == ID_BTN_INSP_REFRESH) {
+                ShowNativeToast(hwnd, "Hardware specifications refreshed.");
+                UpdateView();
+            } else if (id == ID_BTN_INSP_BENCH) {
+                g_CurrentTab = 1;
+                if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, 1);
+                ShowNativeToast(hwnd, "Switched to Diagnostic Benchmarks [2]");
+                UpdateView();
+            } else if (id == ID_BTN_CPU) {
                 RunCpuBenchmark();
+                ShowNativeToast(hwnd, "CPU Benchmark finished.");
                 UpdateView();
             } else if (id == ID_BTN_RAM) {
                 RunRamBenchmark();
+                ShowNativeToast(hwnd, "RAM Benchmark finished.");
                 UpdateView();
             } else if (id == ID_BTN_DISK) {
                 RunDiskBenchmark();
+                ShowNativeToast(hwnd, "Disk Benchmark finished.");
                 UpdateView();
             } else if (id == ID_BTN_ALL) {
                 RunCpuBenchmark();
                 RunRamBenchmark();
                 RunDiskBenchmark();
+                ShowNativeToast(hwnd, "All diagnostic benchmarks complete.");
                 UpdateView();
             } else if (id == ID_BTN_SVC_REFRESH) {
                 LogEvent("INFO", "Refreshed Win32 Services & Telemetry status");
+                ShowNativeToast(hwnd, "Refreshed Services & Telemetry.");
                 UpdateView();
             } else if (id == ID_BTN_SVC_FILTER) {
                 g_ServiceFilterMode = (g_ServiceFilterMode + 1) % 3;
-                if (g_ServiceFilterMode == 0) SetWindowTextA(hBtnSvcFilter, "Filter: All Services [S]");
-                else if (g_ServiceFilterMode == 1) SetWindowTextA(hBtnSvcFilter, "Filter: Running Only [S]");
-                else if (g_ServiceFilterMode == 2) SetWindowTextA(hBtnSvcFilter, "Filter: Stopped Only [S]");
+                if (g_ServiceFilterMode == 0) {
+                    SetWindowTextA(hBtnSvcFilter, "Filter: All Services [S]");
+                    ShowNativeToast(hwnd, "Filter: Showing All Services");
+                } else if (g_ServiceFilterMode == 1) {
+                    SetWindowTextA(hBtnSvcFilter, "Filter: Running Only [S]");
+                    ShowNativeToast(hwnd, "Filter: Showing Running Services Only");
+                } else if (g_ServiceFilterMode == 2) {
+                    SetWindowTextA(hBtnSvcFilter, "Filter: Stopped Only [S]");
+                    ShowNativeToast(hwnd, "Filter: Showing Stopped Services Only");
+                }
                 LogEvent("INFO", "Toggled Service Manager filter mode");
                 UpdateView();
+            } else if (id == ID_BTN_LOG_CLEAR) {
+                ClearLogs(hwnd);
+            } else if (id == ID_BTN_LOG_EXPORT) {
+                ExportLogs(hwnd);
             } else if (id == ID_BTN_EXP_TXT) {
                 ExportReport(hwnd, 0);
             } else if (id == ID_BTN_EXP_JSON) {
@@ -652,8 +749,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_TIMER: {
-            if (wParam == 1 && (g_CurrentTab == 0 || g_CurrentTab == 2)) {
-                UpdateView();
+            if (wParam == 1) {
+                if (g_CurrentTab == 0 || g_CurrentTab == 2) {
+                    UpdateView();
+                }
+                if (g_ToastExpire != 0 && GetTickCount() > g_ToastExpire) {
+                    g_ToastExpire = 0;
+                    lstrcpynA(g_ToastMsg, "KSys Workstation Ready | Keys: [1-5] Tabs, [R] Run/Refresh, [F1] Help", sizeof(g_ToastMsg));
+                    if (hStatusBar) SetWindowTextA(hStatusBar, g_ToastMsg);
+                }
             }
             break;
         }
@@ -661,19 +765,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int nw = LOWORD(lParam);
             int nh = HIWORD(lParam);
             if (hTabCtrl) MoveWindow(hTabCtrl, 5, 5, nw - 10, 30, TRUE);
-            if (hOutput) MoveWindow(hOutput, 5, 40, nw - 10, nh - 85, TRUE);
-            if (hBtnCpu) MoveWindow(hBtnCpu, 10, nh - 38, 105, 25, TRUE);
-            if (hBtnRam) MoveWindow(hBtnRam, 125, nh - 38, 105, 25, TRUE);
-            if (hBtnDisk) MoveWindow(hBtnDisk, 240, nh - 38, 105, 25, TRUE);
-            if (hBtnAll) MoveWindow(hBtnAll, 355, nh - 38, 110, 25, TRUE);
+            if (hOutput) MoveWindow(hOutput, 5, 38, nw - 10, nh - 110, TRUE);
 
-            if (hBtnSvcRefresh) MoveWindow(hBtnSvcRefresh, 10, nh - 38, 120, 25, TRUE);
-            if (hBtnSvcFilter) MoveWindow(hBtnSvcFilter, 140, nh - 38, 180, 25, TRUE);
+            if (hBtnInspRefresh) MoveWindow(hBtnInspRefresh, 10, nh - 68, 110, 26, TRUE);
+            if (hBtnInspBench)   MoveWindow(hBtnInspBench, 130, nh - 68, 160, 26, TRUE);
 
-            if (hBtnExpTxt) MoveWindow(hBtnExpTxt, 10, nh - 38, 110, 25, TRUE);
-            if (hBtnExpJson) MoveWindow(hBtnExpJson, 130, nh - 38, 110, 25, TRUE);
-            if (hBtnExpHtml) MoveWindow(hBtnExpHtml, 250, nh - 38, 110, 25, TRUE);
-            if (hBtnHelp) MoveWindow(hBtnHelp, nw - 110, nh - 38, 100, 25, TRUE);
+            if (hBtnCpu)  MoveWindow(hBtnCpu, 10, nh - 68, 105, 26, TRUE);
+            if (hBtnRam)  MoveWindow(hBtnRam, 125, nh - 68, 105, 26, TRUE);
+            if (hBtnDisk) MoveWindow(hBtnDisk, 240, nh - 68, 105, 26, TRUE);
+            if (hBtnAll)  MoveWindow(hBtnAll, 355, nh - 68, 110, 26, TRUE);
+
+            if (hBtnSvcRefresh) MoveWindow(hBtnSvcRefresh, 10, nh - 68, 120, 26, TRUE);
+            if (hBtnSvcFilter)  MoveWindow(hBtnSvcFilter, 140, nh - 68, 180, 26, TRUE);
+
+            if (hBtnLogClear)  MoveWindow(hBtnLogClear, 10, nh - 68, 120, 26, TRUE);
+            if (hBtnLogExport) MoveWindow(hBtnLogExport, 140, nh - 68, 120, 26, TRUE);
+
+            if (hBtnExpTxt)  MoveWindow(hBtnExpTxt, 10, nh - 68, 110, 26, TRUE);
+            if (hBtnExpJson) MoveWindow(hBtnExpJson, 130, nh - 68, 110, 26, TRUE);
+            if (hBtnExpHtml) MoveWindow(hBtnExpHtml, 250, nh - 68, 110, 26, TRUE);
+
+            if (hBtnHelp) MoveWindow(hBtnHelp, nw - 115, nh - 68, 95, 26, TRUE);
+
+            if (hStatusBar) MoveWindow(hStatusBar, 10, nh - 34, nw - 20, 22, TRUE);
             break;
         }
         case WM_DESTROY:
@@ -685,13 +799,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return DefWindowProc(hwnd, msg, wParam, lParam);
     }
     return 0;
-}
-
-#pragma function(memset)
-void* __cdecl memset(void* dest, int c, size_t count) {
-    char* bytes = (char*)dest;
-    while (count--) *bytes++ = (char)c;
-    return dest;
 }
 
 void MainEntry() {
@@ -733,38 +840,68 @@ void MainEntry() {
                     if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, newTab);
                     UpdateView();
                     continue;
+                } else if (msg.wParam == VK_LEFT) {
+                    g_CurrentTab = (g_CurrentTab - 1 + 5) % 5;
+                    if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, g_CurrentTab);
+                    UpdateView();
+                    continue;
+                } else if (msg.wParam == VK_RIGHT) {
+                    g_CurrentTab = (g_CurrentTab + 1) % 5;
+                    if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, g_CurrentTab);
+                    UpdateView();
+                    continue;
                 } else if (msg.wParam == VK_F1 || msg.wParam == 'H' || msg.wParam == 'h') {
                     ShowHelpDialog(hwnd);
                     continue;
-                } else if (msg.wParam == 'R' || msg.wParam == 'r') {
+                } else if (msg.wParam == VK_ESCAPE) {
+                    if (g_CurrentTab != 0) {
+                        g_CurrentTab = 0;
+                        if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, 0);
+                        UpdateView();
+                        ShowNativeToast(hwnd, "Switched to Hardware Inspector [1]");
+                    }
+                    continue;
+                } else if (msg.wParam == VK_F5 || msg.wParam == 'R' || msg.wParam == 'r') {
                     if (g_CurrentTab == 1) {
                         RunCpuBenchmark();
                         RunRamBenchmark();
                         RunDiskBenchmark();
-                        UpdateView();
+                        ShowNativeToast(hwnd, "All diagnostic benchmarks complete.");
                     } else if (g_CurrentTab == 2) {
                         LogEvent("INFO", "Refreshed Win32 Services & Telemetry status");
-                        UpdateView();
-                    } else if (g_CurrentTab == 4) {
-                        UpdateView();
+                        ShowNativeToast(hwnd, "Refreshed Services & Telemetry.");
+                    } else if (g_CurrentTab == 0) {
+                        ShowNativeToast(hwnd, "Hardware specifications refreshed.");
+                    } else {
+                        ShowNativeToast(hwnd, "Refreshed view.");
                     }
+                    UpdateView();
                     continue;
                 } else if ((msg.wParam == 'C' || msg.wParam == 'c') && g_CurrentTab == 1) {
                     RunCpuBenchmark();
+                    ShowNativeToast(hwnd, "CPU Benchmark finished.");
                     UpdateView();
                     continue;
                 } else if ((msg.wParam == 'M' || msg.wParam == 'm') && g_CurrentTab == 1) {
                     RunRamBenchmark();
+                    ShowNativeToast(hwnd, "RAM Benchmark finished.");
                     UpdateView();
                     continue;
                 } else if ((msg.wParam == 'D' || msg.wParam == 'd') && g_CurrentTab == 1) {
                     RunDiskBenchmark();
+                    ShowNativeToast(hwnd, "Disk Benchmark finished.");
                     UpdateView();
                     continue;
                 } else if ((msg.wParam == 'S' || msg.wParam == 's') && g_CurrentTab == 2) {
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SVC_FILTER, BN_CLICKED), 0);
                     continue;
-                } else if ((msg.wParam == 'E' || msg.wParam == 'e') && g_CurrentTab == 4) {
+                } else if ((msg.wParam == 'L' || msg.wParam == 'l') && g_CurrentTab == 3) {
+                    ClearLogs(hwnd);
+                    continue;
+                } else if ((msg.wParam == 'E' || msg.wParam == 'e') && g_CurrentTab == 3) {
+                    ExportLogs(hwnd);
+                    continue;
+                } else if ((msg.wParam == 'E' || msg.wParam == 'e') && (g_CurrentTab == 4 || g_CurrentTab == 0)) {
                     ExportReport(hwnd, 0);
                     continue;
                 } else if ((msg.wParam == 'J' || msg.wParam == 'j') && g_CurrentTab == 4) {

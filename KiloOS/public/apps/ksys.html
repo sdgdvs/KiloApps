@@ -39,11 +39,13 @@
   header {
     background-color: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
-    padding: 12px 20px;
+    padding: 10px 18px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    flex-wrap: wrap;
+    gap: 10px;
   }
 
   .brand {
@@ -67,7 +69,7 @@
   }
 
   .brand-title h1 {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 700;
     letter-spacing: 0.5px;
   }
@@ -79,13 +81,15 @@
 
   .top-stats {
     display: flex;
-    gap: 20px;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
   }
 
   .stat-badge {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    padding: 6px 14px;
+    padding: 5px 12px;
     border-radius: 20px;
     font-size: 12px;
     display: flex;
@@ -106,8 +110,56 @@
     background-color: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
     display: flex;
-    padding: 0 20px;
+    padding: 0 16px;
     gap: 4px;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: thin;
+  }
+
+  /* Quick Actions Bar & Chips */
+  .quick-actions-bar {
+    background: rgba(30, 41, 59, 0.6);
+    border-bottom: 1px solid var(--border-color);
+    padding: 6px 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    overflow-x: auto;
+  }
+
+  .quick-chip {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 4px 10px;
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+  }
+
+  .quick-chip:hover {
+    border-color: var(--accent-blue);
+    background: rgba(56, 189, 248, 0.12);
+    transform: translateY(-1px);
+    color: #fff;
+  }
+
+  .quick-chip kbd {
+    background: rgba(255,255,255,0.08);
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-family: 'Consolas', monospace;
+    color: var(--accent-blue);
+    border: 1px solid rgba(56, 189, 248, 0.25);
   }
 
   .tab-btn {
@@ -576,14 +628,15 @@
         <div style="background: var(--bg-primary); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 14px;">
           <h3 style="color: var(--accent-blue); font-size: 13px; margin-bottom: 6px;">⌨️ Keyboard Shortcuts</h3>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; font-family: Consolas, monospace;">
-            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">1</kbd> Component Inspector</div>
-            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">2</kbd> Diagnostic Benchmarks</div>
-            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">3</kbd> Services & Telemetry</div>
-            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">4</kbd> Event History Logs</div>
-            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">5</kbd> Report Export</div>
+            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">1 - 5</kbd> Switch Tabs 1 to 5</div>
+            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">← / →</kbd> Cycle Previous/Next Tab</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">F1 / H</kbd> Open this Help Dialog</div>
-            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">Esc</kbd> Dismiss Dialogs / Modals</div>
-            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">R</kbd> Run Benchmarks / Refresh</div>
+            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">Esc</kbd> Dismiss Dialogs / Clear Search</div>
+            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">R / F5</kbd> Run Benchmarks / Refresh</div>
+            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">C / M / D</kbd> CPU / RAM / Disk Bench</div>
+            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">S</kbd> Cycle Service Filter Mode</div>
+            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">L</kbd> Clear Event Logs (Logs Tab)</div>
+            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">E / J / T</kbd> Export TXT / JSON / HTML</div>
           </div>
         </div>
         <h4 style="color: var(--accent-green); font-size: 13px; margin: 10px 0 4px 0;">🔍 1. Hardware Inspector</h4>
@@ -683,6 +736,17 @@
     <button class="tab-btn" id="tabbtn-logs" role="tab" aria-selected="false" aria-controls="tab-logs" onclick="switchTab('logs')"><span>[4]</span> 📋 Event History Logs</button>
     <button class="tab-btn" id="tabbtn-export" role="tab" aria-selected="false" aria-controls="tab-export" onclick="switchTab('export')"><span>[5]</span> 💾 System Report Export</button>
   </nav>
+
+  <!-- Quick Actions Toolbar -->
+  <div class="quick-actions-bar">
+    <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin-right: 4px;">⚡ Quick Actions:</span>
+    <button class="quick-chip" onclick="switchTab('benchmarks'); runAllBenchmarks();" title="Run full benchmark suite (Hotkey: 2, then R)">▶ Run Benchmarks <kbd>[2/R]</kbd></button>
+    <button class="quick-chip" onclick="refreshActiveView()" title="Refresh live telemetry and hardware metrics (Hotkey: R or F5)">🔄 Refresh <kbd>[R]</kbd></button>
+    <button class="quick-chip" onclick="switchTab('services')" title="Manage system services and background daemons (Hotkey: 3)">⚙️ Services <kbd>[3]</kbd></button>
+    <button class="quick-chip" onclick="quickExportTxt()" title="Export text diagnostics report (Hotkey: E)">📄 Export TXT <kbd>[E]</kbd></button>
+    <button class="quick-chip" onclick="quickCopyReport()" title="Copy diagnostics report to clipboard">📋 Copy Report</button>
+    <button class="quick-chip" onclick="showHelp()" title="Open Help and Keyboard Guide (Hotkey: F1 or H)">❓ Help <kbd>[F1]</kbd></button>
+  </div>
 
   <main>
     <!-- Hardware Inspector Tab -->
@@ -872,7 +936,10 @@
         </div>
 
         <div class="services-toolbar">
-          <input type="text" id="svc-search-input" class="search-input" placeholder="Search services by name or binary..." oninput="renderServices()">
+          <div style="display: flex; gap: 8px; flex: 1; min-width: 260px;">
+            <input type="text" id="svc-search-input" class="search-input" placeholder="Search services by name or binary..." oninput="renderServices()">
+            <button class="btn btn-outline btn-sm" onclick="clearServiceSearch()" title="Clear Search Filter">✕ Clear</button>
+          </div>
           <select id="svc-filter-category" class="select-input" onchange="renderServices()">
             <option value="ALL">All Categories</option>
             <option value="Core System">Core System Services</option>
@@ -883,6 +950,15 @@
             <option value="RUNNING">Running Only</option>
             <option value="STOPPED">Stopped Only</option>
           </select>
+        </div>
+
+        <div style="display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; align-items: center;">
+          <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Filter:</span>
+          <button class="quick-chip" onclick="setServiceFilter('ALL', 'ALL')">All Services</button>
+          <button class="quick-chip" onclick="setServiceFilter('Core System', 'ALL')">Core System</button>
+          <button class="quick-chip" onclick="setServiceFilter('Drivers', 'ALL')">Drivers</button>
+          <button class="quick-chip" onclick="setServiceFilter('ALL', 'RUNNING')">⚡ Running Only</button>
+          <button class="quick-chip" onclick="setServiceFilter('ALL', 'STOPPED')">⏹ Stopped Only</button>
         </div>
 
         <div class="services-table-container">
@@ -1060,7 +1136,7 @@
     }
   } catch(e) {}
 
-  // Dynamic Non-blocking Toast Notification
+  // Dynamic Non-blocking Toast Notification with Click-to-Dismiss
   function showToast(message, type = 'info', duration = 3500) {
     const container = document.getElementById('toast-container');
     if (!container) return;
@@ -1071,14 +1147,78 @@
     else if (type === 'warn') { icon = '⚠️'; playFeedback('warn'); }
     else if (type === 'error') { icon = '❌'; playFeedback('warn'); }
     else { playFeedback('click'); }
-    toast.innerHTML = `<span style="font-size: 16px;">${icon}</span><span style="flex:1;">${escapeHtml(message)}</span>`;
-    container.appendChild(toast);
-    setTimeout(() => {
+    toast.innerHTML = `
+      <span style="font-size: 16px;">${icon}</span>
+      <span style="flex:1;">${escapeHtml(message)}</span>
+      <button class="toast-close-btn" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:14px; padding:2px 6px; margin-left:6px; border-radius:4px; line-height:1;" title="Dismiss (Click)">✕</button>
+    `;
+
+    function dismiss() {
       toast.style.opacity = '0';
       toast.style.transform = 'translateY(10px) scale(0.95)';
-      toast.style.transition = 'all 0.3s ease';
-      setTimeout(() => toast.remove(), 300);
-    }, duration);
+      toast.style.transition = 'all 0.25s ease';
+      setTimeout(() => toast.remove(), 250);
+    }
+
+    toast.onclick = () => {
+      dismiss();
+    };
+
+    container.appendChild(toast);
+    setTimeout(dismiss, duration);
+  }
+
+  // Quick Action Helpers
+  function refreshActiveView() {
+    const activeTab = document.querySelector('.tab-content.active');
+    if (activeTab && activeTab.id === 'tab-benchmarks') {
+      runAllBenchmarks();
+    } else if (activeTab && activeTab.id === 'tab-services') {
+      refreshServices();
+    } else if (activeTab && activeTab.id === 'tab-export') {
+      generateReport();
+      showToast('System audit report refreshed.', 'info');
+    } else if (activeTab && activeTab.id === 'tab-logs') {
+      renderLogs();
+      showToast('Event history logs refreshed.', 'info');
+    } else {
+      inspectHardware();
+      showToast('Hardware specifications refreshed.', 'info');
+    }
+  }
+
+  function cycleServiceFilter() {
+    const sel = document.getElementById('svc-filter-status');
+    if (!sel) return;
+    if (sel.value === 'ALL') sel.value = 'RUNNING';
+    else if (sel.value === 'RUNNING') sel.value = 'STOPPED';
+    else sel.value = 'ALL';
+    renderServices();
+    showToast(`Service Filter: ${sel.options[sel.selectedIndex].text}`, 'info');
+  }
+
+  function setServiceFilter(cat, status) {
+    if (cat !== undefined) document.getElementById('svc-filter-category').value = cat;
+    if (status !== undefined) document.getElementById('svc-filter-status').value = status;
+    renderServices();
+    showToast(`Filtered services: ${cat !== 'ALL' ? cat : ''} ${status !== 'ALL' ? status : 'All'}`, 'info');
+  }
+
+  function clearServiceSearch() {
+    const input = document.getElementById('svc-search-input');
+    if (input) {
+      input.value = '';
+      renderServices();
+      input.focus();
+    }
+  }
+
+  function quickExportTxt() {
+    downloadReport('txt');
+  }
+
+  function quickCopyReport() {
+    copyReportToClipboard();
   }
 
   // Modal Controls
@@ -1130,6 +1270,7 @@
       const logSearch = document.getElementById('log-search');
       if (svcSearch && svcSearch.value) { svcSearch.value = ''; renderServices(); return; }
       if (logSearch && logSearch.value) { logSearch.value = ''; filterLogs(); return; }
+      switchTab('inspector');
       return;
     }
 
@@ -1148,16 +1289,63 @@
         showHelp();
         return;
       }
-      if (e.key.toLowerCase() === 'r') {
+      if (e.key.toLowerCase() === 'r' || e.key === 'F5') {
+        if (e.key === 'F5') e.preventDefault();
+        refreshActiveView();
+        return;
+      }
+      if (e.key.toLowerCase() === 'c') {
         const activeTab = document.querySelector('.tab-content.active');
         if (activeTab && activeTab.id === 'tab-benchmarks') {
-          runAllBenchmarks();
-        } else if (activeTab && activeTab.id === 'tab-services') {
-          refreshServices();
-        } else if (activeTab && activeTab.id === 'tab-export') {
-          generateReport();
-          showToast('System audit report refreshed.', 'info');
+          runCpuBenchmark();
+        } else if (activeTab && activeTab.id === 'tab-logs') {
+          clearLogs();
         }
+        return;
+      }
+      if (e.key.toLowerCase() === 'm') {
+        const activeTab = document.querySelector('.tab-content.active');
+        if (activeTab && activeTab.id === 'tab-benchmarks') {
+          runRamBenchmark();
+        }
+        return;
+      }
+      if (e.key.toLowerCase() === 'd') {
+        const activeTab = document.querySelector('.tab-content.active');
+        if (activeTab && activeTab.id === 'tab-benchmarks') {
+          runDiskBenchmark();
+        }
+        return;
+      }
+      if (e.key.toLowerCase() === 's') {
+        const activeTab = document.querySelector('.tab-content.active');
+        if (activeTab && activeTab.id === 'tab-services') {
+          cycleServiceFilter();
+        } else {
+          switchTab('services');
+        }
+        return;
+      }
+      if (e.key.toLowerCase() === 'l') {
+        const activeTab = document.querySelector('.tab-content.active');
+        if (activeTab && activeTab.id === 'tab-logs') {
+          clearLogs();
+        } else {
+          switchTab('logs');
+        }
+        return;
+      }
+      if (e.key.toLowerCase() === 'e') {
+        downloadReport('txt');
+        return;
+      }
+      if (e.key.toLowerCase() === 'j') {
+        downloadReport('json');
+        return;
+      }
+      if (e.key.toLowerCase() === 't') {
+        downloadReport('html');
+        return;
       }
     }
   });

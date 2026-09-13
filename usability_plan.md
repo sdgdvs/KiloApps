@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KSys
+**Target App:** KTodo
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KSys
 - KTodo
 - KConverter
 - KGraph
@@ -105,10 +104,13 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KSynth
 - KTask
 - KRogue
+- KSys
 
 ## Progress Log
 
 > 📁 **Archived Progress Log**: Older entries have been archived to [archive/usability_plan_archive.md](archive/usability_plan_archive.md) to preserve token efficiency.
+
+- KSys: Usability and UI issues fixed (integrated non-blocking cybernetic toast notification system with startup welcome prompt and [✕] click-to-dismiss button, added responsive 1-click Quick Starter toolbar [▶ Run Benchmarks [2/R], 🔄 Refresh [R], ⚙️ Services [3], 📄 Export TXT [E], 📋 Copy Report, ❓ Help [F1]], added services search clear [✕] button and 1-click quick filter chips [All Services, Core System, Drivers, ⚡ Running Only, ⏹ Stopped Only], expanded keyboard shortcuts [C/M/D for benchmarks, S for services filter, L for clear logs, E/J/T for exports, Esc dismiss/clear, F5/R refresh] with Help modal guide and responsive header/nav wrapping in web; fixed MSVC unresolved external _memcpy intrinsic compilation error, added bottom status bar and non-blocking ShowNativeToast notification system replacing blocking MessageBox modals on report export, added dedicated controls for Inspector [Refresh [R], Run Benchmarks [2]] and Event Logs [Clear Logs [L], Export Log [E]], added global message loop accelerators for F1/H/F5/R/C/M/D/S/L/E/J/T/Esc and Left/Right tab navigation, updated window title with shortcut hints, and verified clean compilation across both builds).
 
 - KRogue: Usability and UI issues fixed (enabled vertical responsive scrolling on body preventing viewport overflow, integrated interactive toast notification system with [✕] click-to-dismiss and startup guidance, added dedicated ⚔️ New Run [Enter] toolbar button and [.] Wait Turn button, built on-screen virtual directional touch/mouse D-Pad cluster [↖↑↗←•→↙↓↘] with quick action buttons, improved canvas click navigation to step directly towards any clicked tile in web; added native floating toast banner system with auto-fade and click-to-dismiss for startup guidance, save/load, and abilities, implemented full mouse control in WM_LBUTTONDOWN for tile navigation/attacks/waiting, character creation options, and targeting, built interactive 8-button bottom HUD action bar [[A] Ability, [I] Inv, [M] Spells, [C] Sheet, [.] Wait, [F5] Save, [F9] Load, [F1] Help], styled character creation start button, and verified clean compilation across both builds).
 
