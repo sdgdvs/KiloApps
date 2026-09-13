@@ -860,6 +860,51 @@
             box-shadow: 0 0 30px rgba(56, 189, 248, 0.2);
         }
 
+        .modal-card.tome-card-modal {
+            width: 820px;
+            max-width: 95vw;
+            height: 620px;
+            max-height: 90vh;
+            box-shadow: 0 0 40px rgba(56, 189, 248, 0.25);
+            overflow: hidden;
+        }
+
+        .tome-tab-nav {
+            display: flex;
+            background: rgba(10, 14, 23, 0.95);
+            border-bottom: 1px solid var(--border-dungeon);
+            padding: 0 8px;
+            gap: 4px;
+        }
+
+        .tome-tab-btn {
+            flex: 1;
+            padding: 9px 6px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-dim);
+            font-size: 11px;
+            cursor: pointer;
+            border-radius: 0;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .tome-tab-btn:hover {
+            color: var(--text-primary);
+            background: rgba(56, 189, 248, 0.06);
+        }
+
+        .tome-tab-btn.active {
+            color: var(--accent-cyan);
+            border-bottom-color: var(--accent-cyan);
+            background: var(--bg-panel);
+            font-weight: bold;
+        }
+
         .modal-header {
             padding: 10px 16px;
             border-bottom: 1px solid var(--border-dungeon);
@@ -900,6 +945,62 @@
         .modal-body ul {
             margin-left: 20px;
             margin-bottom: 8px;
+        }
+
+        .tome-section {
+            display: none;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .tome-section.active {
+            display: flex;
+        }
+
+        .tome-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .tome-box {
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid var(--border-dungeon);
+            border-radius: 6px;
+            padding: 12px 14px;
+        }
+
+        .tome-box h4 {
+            margin: 0 0 8px 0;
+            font-size: 12px;
+            color: var(--text-rune);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 4px;
+        }
+
+        .tome-badge {
+            display: inline-block;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .badge-fire { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+        .badge-frost { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.4); }
+        .badge-void { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); }
+        .badge-holy { background: rgba(251, 191, 36, 0.2); color: #fde047; border: 1px solid rgba(251, 191, 36, 0.4); }
+        .badge-nature { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); }
+
+        .tome-item-row {
+            margin-bottom: 8px;
+            font-size: 11px;
+            line-height: 1.45;
+        }
+        .tome-item-row strong {
+            color: var(--text-bright);
         }
 
         /* Footer Status */
@@ -1417,112 +1518,259 @@
     </div>
 
     <div class="modal-backdrop" id="modalHelp">
-        <div class="modal-card">
+        <div class="modal-card tome-card-modal">
             <div class="modal-header">
-                <div class="modal-title">📖 Delver's Tome & Survival Manual</div>
+                <div class="modal-title">📖 Delver's Tome & Survival Manual (Comprehensive Codex)</div>
                 <button class="modal-close" id="modalClose">&times;</button>
             </div>
-            <div class="modal-body">
-                <h4>Navigation & Controls</h4>
-                <ul>
-                    <li><strong>WASD / Arrow Keys / Numpad / Vi (hjklyubn):</strong> Move Delver across the grid.</li>
-                    <li><strong>Spacebar:</strong> Rest 1 turn to steady yourself (recuperates +2 HP, +1 Sanity, disallowed if starving).</li>
-                    <li><strong>E / Enter:</strong> Interact with doors, stairs, altars, shrines, merchants, cauldrons, or coffers.</li>
-                    <li><strong>M:</strong> Open the Subterranean Black Market & Hermit shop anytime you encounter or stand near a merchant!</li>
-                    <li><strong>I:</strong> Open the Relic Enchanting Altar to imbue your weapon with elemental magic!</li>
-                    <li><strong>T:</strong> Rekindle Torch via Pyre spell, Brimstone Ash, or standing next to flame!</li>
-                    <li><strong>B:</strong> Open the Ancient Alchemy Cauldron to brew potions and elixirs!</li>
-                    <li><strong>S / R:</strong> Search adjacent tiles for hidden passages, merchants, altars, shrines, and relic coffers.</li>
-                    <li><strong>Mouse Click:</strong> Click on visible floor tiles to move or inspect obstacles.</li>
-                    <li><strong>O:</strong> Toggle Procedural Sound FX & Dungeon Audio on/off!</li>
-                </ul>
-                <h4>Procedural Dungeon Audio & Atmospheric Soundscapes [Phase 13]</h4>
-                <ul>
-                    <li><strong>Procedural Web Audio Engine:</strong> Generates real-time subterranean acoustic reverberations, atmospheric drone hums, and organic soundscapes completely in code without static external audio files.</li>
-                    <li><strong>Subterranean Ambient Soundscapes:</strong> Continuous low subterranean drone with slow LFO breathing modulation that adapts dynamically to your current depth zone: dusty Catacomb resonances (55Hz/82Hz), subaquatic echo reverberations in the Sunken Grotto (73Hz/110Hz), eerie diminished chords in the Forgotten Crypt (46Hz/69Hz), and cosmic sub-bass rumbles in the Void Abyss (39Hz/58Hz).</li>
-                    <li><strong>Procedural Torch Crackle:</strong> Realistic flickering flame sizzle and ember micro-pops generated dynamically as torches burn, flare, or rekindle.</li>
-                    <li><strong>Monster Growls & Vocalizations:</strong> Guttural beast growls, skeletal bone clicks, ethereal wails, and terrifying Abyssal Lord roars when horrors strike, aggro, or awaken.</li>
-                    <li><strong>Spell Casting Soundscapes:</strong> Elemental resonance swells for Pyre explosions, Glacial chimes, Tempest thunderclaps, Void gravity rifts, and Aegis sanctuary bells.</li>
-                    <li><strong>Environmental Soundscapes:</strong> Cavern water drips, echoing subterranean drafts, and eldritch void whispers when sanity is drained.</li>
-                    <li><strong>Audio Controls [O]:</strong> Press [O] or use the toolbar buttons to toggle Sound Effects (🔊 Audio: On/Off) and Atmospheric Ambience (🎵 Ambience: On/Off).</li>
-                </ul>
-                <h4>Boss Encounters & Abyssal Lords [Phase 12]</h4>
-                <ul>
-                    <li><strong>👑 The Crypt Keeper (Depth B3 Boss):</strong> Ancient titan of the Catacombs clad in ossified plate armor. Wields a colossal tomb cleaver capable of knockback cleaves. Deflects physical damage with Bone Plating—shatter it with Sacred Fire (ᚠ Pyre or Flamebrand) for +75% bonus damage! Beware his ability to awaken Crypt Skeleton minions when wounded. Drops the legendary <em>Keeper's Crypt Greatsword</em> (+10 Might, +3 Warding, +15 Max HP) and Ancient Runic Key!</li>
-                    <li><strong>🐉 Abyssal Wyrm (Depth B6 Boss):</strong> Apex bio-horror of the Sunken Grotto. Slithers through submerged depths and spews caustic acid venom up to 5 tiles away, inflicting hunger loss and severe acid burns. Can surge 2 paces forward to trap you. Vulnerable to Glacial Frost (ᚦ Cryo / Frostbite) which freezes its scales and seals corrosive glands. Drops the <em>Wyrmscale Carapace</em> (+9 Warding, +40 Max HP, +2 Might) and Panacea of the Deep!</li>
-                    <li><strong>👁️🌌 The Void Monarch (Depth B10+ Sovereign):</strong> Cosmic sovereign reigning over the Void Abyss. Emits a continuous Dread Aura that chips away sanity within line of sight. Channels devastating long-range Cosmic Collapse beams (35-48 Void DMG) that pierce barriers, and creates Gravitational Singularities dragging delvers into the black hole. When struck, phases across space with Dimensional Blink. Shield with ᚨ Aegis and counter with ⚡ Tempest! Drops the ultimate <em>Crown of the Void Monarch</em> (+10 Light, +35 Max Aether, +35 Max Sanity, +5 Arcana, +2 Warding)!</li>
-                    <li><strong>Boss Health Bar:</strong> Whenever an Abyssal Lord is active on the floor, a prominent health bar appears at the top of the dungeon viewport showing their lord title, current HP, and phase status.</li>
-                </ul>
-                <h4>Subterranean Merchants & Wandering Black Market Hermits [Phase 11]</h4>
-                <ul>
-                    <li><strong>Grimhollow the Abyssal Broker (Depths B1-B6):</strong> Found in Catacombs and Sunken Grottos. Sells essential survival goods (Iron Rations, Purifying Salts, Torch Oil & Pitch), healing salves, Runic Longswords, Shadowweave Cloaks, and dungeon cartography maps in exchange for gold/essence!</li>
-                    <li><strong>Malakor the Blind Hermit (Depths B7+):</strong> Lurks in the Forgotten Crypt and Void Abyss. Trades rare occult relics (Voidfang Daggers, Aegis Cuirass, Radiant Censers, Void Eye Talismans), Primordial Runes, and Malediction Cleansings for high-tier essence!</li>
-                    <li><strong>Sell Pack Items:</strong> Visit any merchant stall to pawn excess potions, reagents, and gear for gold/essence to fund your next vital equipment purchase!</li>
-                    <li><strong>Delver's Cartography Map:</strong> Purchase a floor map from the merchant to reveal all rooms, corridors, chests, and stairs instantly!</li>
-                </ul>
-                <h4>Ancient Runic Shrines & Relic Enchanting Altars [Phase 10]</h4>
-                <ul>
-                    <li><strong>Ancient Runic Shrines:</strong> Glowing sacred monoliths found deep in the crypts. Commune with them to receive divine blessings: Purifying Radiance (cures curses, +45 Sanity, refills torch), Eldritch Aether (+5 Max Aether permanently, full mana restore), Iron Aegis (+60 Ward Barrier, +2 permanent Warding), or Primordial Runes (reveals a lost Ancient Rune).</li>
-                    <li><strong>Relic Enchanting Altars [I]:</strong> Obsidian altars imbued with primordial elemental conduits. Interact with them or press [I] to imbue your weapon with:</li>
-                    <li><strong>🔥 Flamebrand (Fire):</strong> Adds +10..16 Fire Damage per strike. Deals 1.5x damage against Crypt Skeletons and undead (+2 Might passive).</li>
-                    <li><strong>❄️ Frostbite (Frost):</strong> Adds +8..14 Cryo Damage per strike. 35% chance to Freeze enemies solid for 2 turns (+3 Warding passive).</li>
-                    <li><strong>🌀 Voidsever (Void):</strong> Adds +12..20 Void Damage that completely bypasses monster armor/warding. Siphons +4 Aether and +3 Sanity back to you on every hit (+2 Arcana passive).</li>
-                </ul>
-                <h4>Survival Hazards: Sanity, Hunger & Occult Curses</h4>
-                <ul>
-                    <li><strong>Hunger Decay:</strong> Hunger drains every few turns. If hunger reaches 0, you starve and take HP damage each turn! Eat Food Rations (+45) or Crypt Mushrooms (+25).</li>
-                    <li><strong>Torch Burnout:</strong> Your torch burns down as you explore. When extinguished, your light radius drops to 1 tile and darkness sanity drain begins!</li>
-                    <li><strong>Pitch Darkness & Sanity:</strong> Navigating without light chips away at your Sanity. At low sanity, horrific eldritch whispers echo through the deep.</li>
-                    <li><strong>Cursed Effigies [!]:</strong> Sinister bone totems placed by cultists drain Sanity when delvers draw near. Bump into them to shatter them for essence, but beware of occult curses!</li>
-                    <li><strong>Occult Curses:</strong> Hexes such as Curse of Darkness, Enfeeblement, and Decaying Hunger afflict delvers. Purify them using Purifying Salt, Panacea, or Runic Altars.</li>
-                </ul>
-                <h4>Inventory & Equipment Slots [Tab 2 & Tab 1]</h4>
-                <ul>
-                    <li><strong>Delver's Pack [Tab 2]:</strong> Holds up to 16 items including potions, equipment, alchemy reagents, and keys. Filter by Potions, Gear, or Reagents.</li>
-                    <li><strong>Using Consumables:</strong> Click [Drink] on potions to restore Health, Sanity, Aether, or gain Ward Shields!</li>
-                    <li><strong>Equipment Slots [Tab 1]:</strong> Equip weapons (Runic Longsword, Voidfang Dagger), armor (Abyssal Mail, Shadowweave Cloak, Aegis Cuirass), relics (Torch of Eld, Aether Lantern, Radiant Censer), and amulets (Amulet of Vitality, Star Pendant, Void Eye) to amplify Might, Warding, Arcana, and Max stats!</li>
-                    <li><strong>Unequipping:</strong> Click any occupied equipment slot in Tab 1 to return the gear to your Delver's Pack.</li>
-                </ul>
-                <h4>Ancient Alchemy Cauldrons & Potion Brewing [B]</h4>
-                <ul>
-                    <li><strong>Cauldrons:</strong> Ancient iron cauldrons bubble with eldritch waters throughout the catacombs and grottos. Stand near one or press [B] anytime to brew!</li>
-                    <li><strong>Reagents:</strong> Harvest Blood Lotus, Azure Spores, Brimstone Ash, Void Dust, and Aether Blossoms from chests and defeated beasts.</li>
-                    <li><strong>Elixir of Vitality:</strong> Blood Lotus + Aether Blossom = +65 HP, +10 Sanity.</li>
-                    <li><strong>Draught of Lucid Mind:</strong> Azure Spores + Aether Blossom = +50 Sanity, +10 Aether.</li>
-                    <li><strong>Aether Phial:</strong> Void Dust + Aether Blossom = +40 Aether mana.</li>
-                    <li><strong>Stoneskin Brew:</strong> Azure Spores + Brimstone Ash = +40 Ward Shield.</li>
-                    <li><strong>Liquid Fire Flask:</strong> Brimstone Ash + Void Dust = 50 Fire AOE damage blast!</li>
-                    <li><strong>Panacea of the Deep:</strong> Blood Lotus + Brimstone Ash + Void Dust = +60 HP, +40 Sanity, +35 Aether!</li>
-                </ul>
-                <h4>Subterranean Depth Biomes</h4>
-                <ul>
-                    <li><strong>The Catacombs (B1 - B3):</strong> Traditional limestone crypts and stone corridors. Warm amber torches light ancient sarcophagi.</li>
-                    <li><strong>Sunken Grotto (B4 - B6):</strong> Cavernous flooded grottos with shallow water pools, stalagmites, and bioluminescent cyan fungi.</li>
-                    <li><strong>Forgotten Crypt (B7 - B9):</strong> Necrotic tomb labyrinth with blood-red skull braziers and ancient Runic Altars (press [E] to commune for blessings).</li>
-                    <li><strong>The Void Abyss (B10+):</strong> Shattered floating obsidian platforms suspended over bottomless cosmic chasms. Void rift crystals pulse with astral energy.</li>
-                </ul>
-                <h4>Relic & Ancient Rune Magic System</h4>
-                <ul>
-                    <li><strong>Z, X, V / Hotbar Clicks:</strong> Cast elemental spells from your equipped Staff Sockets!</li>
-                    <li><strong>Aether (Mana):</strong> Casting consumes Aether. Rest with [Space] or commune with Altars to restore Aether.</li>
-                    <li><strong>Rune Socketing [Tab 3]:</strong> Inscribe discovered runes into your staff sockets to change your active spells and passive bonuses.</li>
-                    <li><strong>ᚠ Pyre Blast:</strong> Seared ball of fire blasts 4 tiles forward, incinerating wooden doors and rubble.</li>
-                    <li><strong>ᚦ Glacial Nova:</strong> Freezes flooded water into solid ice walkways and protects with frost armor.</li>
-                    <li><strong>ᛋ Chain Bolt:</strong> Piercing electrical arc traveling 6 tiles forward, blasting open doors.</li>
-                    <li><strong>ᛟ Void Warp:</strong> Phase-shifts delver 3 tiles forward through obstacles or over bottomless chasms.</li>
-                    <li><strong>ᚨ Aegis Ward:</strong> Prismatic runic barrier absorbs up to 35 damage and restores +15 Sanity.</li>
-                </ul>
-                <h4>Abyssal Bestiary & Tactical Combat</h4>
-                <ul>
-                    <li><strong>Bump-to-Attack:</strong> Walk directly towards an adjacent monster to strike with your enchanted weapon or staff! Delver's Might and Arcana amplify melee blows.</li>
-                    <li><strong>💀 Crypt Skeletons:</strong> Tireless undead that chase down intruders. Highly vulnerable to <strong>ᚠ Pyre Blast (+50% DMG)</strong>. Drops Brimstone Ash & Blades.</li>
-                    <li><strong>🦎 Mire Ghouls:</strong> Amphibious stalkers that lurk in flooded depths. Highly vulnerable to <strong>ᛋ Chain Bolt (+40% DMG)</strong>. Drops Azure Spores.</li>
-                    <li><strong>👻 Void Wraiths:</strong> Spectral horrors that phase through doors and rubble. Drains Sanity & Aether. Repelled by <strong>ᚨ Aegis Ward</strong>. Drops Void Dust.</li>
-                    <li><strong>🧙 Crypt Acolytes:</strong> Necromancers hurling long-range necrotic Shadow Bolts. Rush them down in close melee! Drops Aether Blossoms.</li>
-                    <li><strong>🐙 Abyssal Leviathans:</strong> Colossal titans with devastating crushing power. Encase them with <strong>ᚦ Glacial Nova (2-turn Freeze)</strong>! Drops Panacea & Aegis Armor.</li>
-                </ul>
-                <h4>Field of View & Darkness</h4>
-                <p>The Abyss is shrouded in darkness. Your torch projects light across chambers and corridors. Light rays pass unobstructed through flooded waters and open cosmic chasms.</p>
+            <div class="tome-tab-nav">
+                <button class="tome-tab-btn active" data-tome-tab="tactics">🧭 Tactics & Survival</button>
+                <button class="tome-tab-btn" data-tome-tab="bestiary">🐉 Abyssal Bestiary & Lords</button>
+                <button class="tome-tab-btn" data-tome-tab="grimoire">📜 Spell Grimoire & Arcana</button>
+                <button class="tome-tab-btn" data-tome-tab="runes">ᛟ Runic Index & Shrines</button>
+                <button class="tome-tab-btn" data-tome-tab="alchemy">⚗️ Alchemy Codex & Gear</button>
+            </div>
+            <div class="modal-body" id="modalHelpBody">
+                <!-- Tab 1: Survival Tactics -->
+                <div class="tome-section active" id="tomeTactics">
+                    <div class="tome-grid-2">
+                        <div class="tome-box">
+                            <h4>🎮 Core Controls & Commands</h4>
+                            <div class="tome-item-row"><strong>WASD / Arrows / Vi (hjklyubn):</strong> Move delver & bump-attack adjacent foes.</div>
+                            <div class="tome-item-row"><strong>Spacebar / Num5:</strong> Rest 1 turn (+2 HP, +1 Sanity, +3 Aether, disabled if starving).</div>
+                            <div class="tome-item-row"><strong>E / Enter:</strong> Interact with doors, stairs, altars, shrines, and coffers.</div>
+                            <div class="tome-item-row"><strong>Z / X / V:</strong> Cast Elemental Spells from Staff Sockets 1 / 2 / 3.</div>
+                            <div class="tome-item-row"><strong>R / S:</strong> Search surrounding area for secret doors, coffers & hidden shrines.</div>
+                            <div class="tome-item-row"><strong>T / Rekindle:</strong> Re-ignite extinguished torch via Pyre spell or Brimstone Ash.</div>
+                            <div class="tome-item-row"><strong>B / Cauldron:</strong> Open Ancient Alchemy Cauldron to brew potions & elixirs.</div>
+                            <div class="tome-item-row"><strong>I / Altar:</strong> Open Relic Enchanting Altar (Flamebrand, Frostbite, Voidsever).</div>
+                            <div class="tome-item-row"><strong>M / Market:</strong> Open Subterranean Black Market merchant exchange.</div>
+                            <div class="tome-item-row"><strong>1 - 4:</strong> Sidebar Tabs (Delver Attributes / Pack / Rune Forge / Bestiary).</div>
+                            <div class="tome-item-row"><strong>O / C / F:</strong> Audio FX & Drone / CRT Phosphors / FOV Lighting toggles.</div>
+                        </div>
+
+                        <div class="tome-box">
+                            <h4>⚠️ Survival Hazards & Mechanics</h4>
+                            <div class="tome-item-row"><strong>Hunger & Starvation:</strong> Nourishment depletes every few turns. At 0 Hunger, the delver starves and suffers direct HP damage each turn, and rest healing is disabled! Forage for Food Rations (+45) or Crypt Mushrooms (+25).</div>
+                            <div class="tome-item-row"><strong>Torch Burn & Pitch Darkness:</strong> Your torch burns down as turns elapse. In pitch darkness, your vision shrinks to 1 tile and darkness sanity drain begins! Rekindle immediately with [T] or Pyre blast.</div>
+                            <div class="tome-item-row"><strong>Sanity Loss & Eldritch Whispers:</strong> Navigating without light, fighting horrors, and cursed effigies chip away Sanity. When Sanity drops low, dreadful whispers echo through the deep.</div>
+                            <div class="tome-item-row"><strong>Cursed Effigies [!]:</strong> Sinister bone totems drain Sanity in radius. Bump to smash them for essence, but beware of Occult Curses!</div>
+                            <div class="tome-item-row"><strong>Curses & Cleansing:</strong> Hexes (Darkness, Enfeeble, Decaying Hunger, Voidrot) weaken you. Cleanse them via Purifying Salts, Panacea, or Runic Shrines.</div>
+                        </div>
+                    </div>
+
+                    <div class="tome-grid-2">
+                        <div class="tome-box">
+                            <h4>⚔️ Tactical Melee & Dungeon Navigation</h4>
+                            <div class="tome-item-row"><strong>Bump Combat:</strong> Walk into enemies to strike. Might scales physical weapon damage; Arcana scales elemental enchantment damage.</div>
+                            <div class="tome-item-row"><strong>Doorway Chokepoints:</strong> Fall back to 1-tile doorways to force mobs to engage you one by one rather than surrounding you.</div>
+                            <div class="tome-item-row"><strong>Field of View:</strong> Light rays illuminate chambers and corridors but are blocked by stone walls and closed doors. Chasms and water pools transmit light.</div>
+                        </div>
+
+                        <div class="tome-box">
+                            <h4>🗺️ Subterranean Depth Biomes</h4>
+                            <div class="tome-item-row"><strong>The Catacombs (B1 - B3):</strong> Ancient limestone crypts with sarcophagi & warm torches. Boss: <span class="tome-badge badge-fire">👑 The Crypt Keeper (B3)</span>.</div>
+                            <div class="tome-item-row"><strong>Sunken Grotto (B4 - B6):</strong> Submerged caverns, shallow water pools & bioluminescent cyan fungi. Boss: <span class="tome-badge badge-frost">🐉 Abyssal Wyrm (B6)</span>.</div>
+                            <div class="tome-item-row"><strong>Forgotten Crypt (B7 - B9):</strong> Necrotic tomb labyrinth with skull braziers & runic altars. Occult acolytes prowl the darkness.</div>
+                            <div class="tome-item-row"><strong>The Void Abyss (B10+):</strong> Shattered obsidian platforms over bottomless cosmic chasms. Boss: <span class="tome-badge badge-void">👁️🌌 The Void Monarch (B10+)</span>.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Abyssal Bestiary & Lords -->
+                <div class="tome-section" id="tomeBestiary">
+                    <div class="tome-grid-2">
+                        <div class="tome-box">
+                            <h4>💀 Crypt Horrors & Tactics</h4>
+                            <div class="tome-item-row">
+                                <strong>💀 Crypt Skeleton</strong> (HP: 22 | ATK: 5-8 | DEF: 2)<br>
+                                Relentless undead bones that patrol the corridors.<br>
+                                <span class="tome-badge badge-fire">Vulnerability: ᚠ Fire (+50% DMG)</span> • Drops: Brimstone Ash, Bone Shards, Iron Blade.
+                            </div>
+                            <div class="tome-item-row">
+                                <strong>🦎 Mire Ghoul</strong> (HP: 38 | ATK: 8-12 | DEF: 3)<br>
+                                Amphibious predators lurking in submerged waters.<br>
+                                <span class="tome-badge badge-frost">Vulnerability: ᛋ Lightning (+40% DMG, arcs in water)</span> • Drops: Azure Spores, Toxic Bile.
+                            </div>
+                            <div class="tome-item-row">
+                                <strong>👻 Void Wraith</strong> (HP: 45 | ATK: 10-15 | DEF: 1 [Ethereal])<br>
+                                Spectral horrors that phase through walls. Drains Sanity & Aether.<br>
+                                <span class="tome-badge badge-holy">Repelled by ᚨ Aegis Ward</span> • <span class="tome-badge badge-fire">Weak to Fire</span> • Drops: Void Dust.
+                            </div>
+                            <div class="tome-item-row">
+                                <strong>🧙 Crypt Acolyte</strong> (HP: 55 | ATK: 12-18 | DEF: 2)<br>
+                                Cultist necromancers casting long-range necrotic Shadow Bolts (range 5).<br>
+                                <span class="tome-badge badge-frost">Weak to Melee rush & ᚦ Frost lock</span> • Drops: Aether Blossoms, Arcane Scrolls.
+                            </div>
+                            <div class="tome-item-row">
+                                <strong>🐙 Abyssal Leviathan</strong> (HP: 90 | ATK: 16-24 | DEF: 6)<br>
+                                Colossal subterranean apex titan with crushing blows.<br>
+                                <span class="tome-badge badge-frost">Weak to ᚦ Glacial Nova (2-turn Freeze)</span> • Drops: Panacea of the Deep, Aegis Armor.
+                            </div>
+                        </div>
+
+                        <div class="tome-box">
+                            <h4>👑 Sovereign Abyssal Lords (Boss Encounters)</h4>
+                            <div class="tome-item-row">
+                                <strong>👑 The Crypt Keeper (Depth B3 Boss)</strong><br>
+                                • <strong>Stats:</strong> 180 HP | 18-26 ATK | Bone Plating (reduces physical damage by 50%).<br>
+                                • <strong>Tactics:</strong> Wields a colossal tomb cleaver that inflicts knockback cleaves. Summons Crypt Skeleton minions when wounded below 50% HP.<br>
+                                • <strong>Weakness:</strong> <span class="tome-badge badge-fire">ᚠ Pyre Blast & Flamebrand (+75% DMG, shatters Bone Plating)</span>.<br>
+                                • <strong>Legendary Drops:</strong> <em>Keeper's Crypt Greatsword</em> (+10 Might, +3 Warding, +15 Max HP) and Ancient Runic Key!
+                            </div>
+                            <div class="tome-item-row">
+                                <strong>🐉 Abyssal Wyrm (Depth B6 Boss)</strong><br>
+                                • <strong>Stats:</strong> 280 HP | 24-34 ATK | 5 Armor | Caustic Acid Breath.<br>
+                                • <strong>Tactics:</strong> Slithers through submerged depths; spews caustic acid venom up to 5 tiles away (inflicts severe acid burn & -20 Hunger). Lunges 2 paces forward.<br>
+                                • <strong>Weakness:</strong> <span class="tome-badge badge-frost">ᚦ Glacial Nova & Frostbite (freezes scales & disables acid glands)</span>.<br>
+                                • <strong>Legendary Drops:</strong> <em>Wyrmscale Carapace</em> (+9 Warding, +40 Max HP, +2 Might) and Panacea of the Deep!
+                            </div>
+                            <div class="tome-item-row">
+                                <strong>👁️🌌 The Void Monarch (Depth B10+ Sovereign)</strong><br>
+                                • <strong>Stats:</strong> 450 HP | 32-45 Void ATK | Dread Aura.<br>
+                                • <strong>Tactics:</strong> Emits Dread Aura (-3 Sanity/turn in sight). Channels piercing Cosmic Collapse beams across rooms. Generates Gravitational Singularities dragging delvers into black holes. Phases across space with Dimensional Blink when struck.<br>
+                                • <strong>Strategy:</strong> Shield with <span class="tome-badge badge-holy">ᚨ Aegis Ward</span>, counter with <span class="tome-badge badge-frost">⚡ Tempest</span> & <span class="tome-badge badge-void">🌀 Voidsever</span>!<br>
+                                • <strong>Legendary Drops:</strong> <em>Crown of the Void Monarch</em> (+10 Light, +35 Max Aether, +35 Max Sanity, +5 Arcana, +2 Warding)!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Spell Grimoire & Arcana -->
+                <div class="tome-section" id="tomeGrimoire">
+                    <div class="tome-grid-2">
+                        <div class="tome-box">
+                            <h4>📜 The 5 Primordial Spells</h4>
+                            <div class="tome-item-row">
+                                <strong>ᚠ Pyre Blast</strong> <span class="tome-badge badge-fire">Fire • Aether: 8 • Reach: 4</span><br>
+                                Hurls a searing ball of elemental flame dealing 18-28 Fire DMG. Incinerates wooden doors without keys, clears rubble, melts flooded ice, and shatters Crypt Keeper bone armor (+50% vs undead).
+                            </div>
+                            <div class="tome-item-row">
+                                <strong>ᚦ Glacial Nova</strong> <span class="tome-badge badge-frost">Frost • Aether: 10 • Radius: 2</span><br>
+                                Unleashes a freezing shockwave dealing 15-22 Cryo DMG. Freezes adjacent flooded water into traversable solid ice walkways, encases enemies in ice for 2 turns, and extinguishes flame hazards.
+                            </div>
+                            <div class="tome-item-row">
+                                <strong>ᛋ Chain Bolt</strong> <span class="tome-badge badge-nature">Lightning • Aether: 12 • Reach: 6</span><br>
+                                Fires an ultra-fast piercing electrical arc jumping between up to 3 adjacent targets dealing 22-32 shock damage. Deals double damage to wet targets in flooded water! Blasts open wooden doors.
+                            </div>
+                            <div class="tome-item-row">
+                                <strong>ᛟ Void Warp</strong> <span class="tome-badge badge-void">Void • Aether: 15 • Reach: 3</span><br>
+                                Instant dimensional phase-shift 3 tiles in target direction. Teleports through walls, locked doors, or over bottomless abyssal chasms! Siphons residual void essence.
+                            </div>
+                            <div class="tome-item-row">
+                                <strong>ᚨ Aegis Ward</strong> <span class="tome-badge badge-holy">Holy • Aether: 14 • Self</span><br>
+                                Conjures a prismatic runic barrier absorbing up to 45 damage, cures active fear/whispers, restores +15 Sanity, and violently repels adjacent Void Wraiths.
+                            </div>
+                        </div>
+
+                        <div class="tome-box">
+                            <h4>✨ Staff Sockets & Arcana Scaling</h4>
+                            <div class="tome-item-row">
+                                <strong>Staff Socket Architecture:</strong><br>
+                                • <em>Ash Wand:</em> 1 Socket [Z]<br>
+                                • <em>Runic Quarterstaff:</em> 2 Sockets [Z, X]<br>
+                                • <em>Archmage Staff:</em> 3 Sockets [Z, X, V]<br>
+                                Equip staves in Tab 1, then inscribe discovered runes into sockets in Tab 3 (Runic Forge).
+                            </div>
+                            <div class="tome-item-row">
+                                <strong>Elemental Environmental Synergies:</strong><br>
+                                • <em>Shock Conduction:</em> Chain Bolt hitting water electrocutes all connected water tiles and wet monsters.<br>
+                                • <em>Ice Bridges:</em> Glacial Nova turns hazardous deep water pools into safe ice tiles.<br>
+                                • <em>Thermal Breach:</em> Pyre Blast melts ice barriers and burns wooden obstructions.<br>
+                                • <em>Chasm Leap:</em> Void Warp bypasses broken bridges and traps without falling into the abyss.<br>
+                                • <em>Arcana Potency:</em> Delver's Arcana stat directly scales spell damage and reduces spell failure.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 4: Runic Index & Shrines -->
+                <div class="tome-section" id="tomeRunes">
+                    <div class="tome-grid-2">
+                        <div class="tome-box">
+                            <h4>ᛟ Ancient Runes & Staff Inscription</h4>
+                            <div class="tome-item-row"><strong>ᚠ Rune of Flame:</strong> Primordial fire rune. Unlocks <em>Pyre Blast</em> spell. Passive bonus: +2 Delver Might.</div>
+                            <div class="tome-item-row"><strong>ᚦ Rune of Frost:</strong> Glacial stasis rune. Unlocks <em>Glacial Nova</em> spell. Passive bonus: +3 Warding defense.</div>
+                            <div class="tome-item-row"><strong>ᛋ Rune of Storm:</strong> Astral lightning rune. Unlocks <em>Chain Bolt</em> spell. Passive bonus: +3 Arcana power.</div>
+                            <div class="tome-item-row"><strong>ᛟ Rune of the Void:</strong> Space distortion rune. Unlocks <em>Void Warp</em> spell. Passive bonus: +5 Max Aether.</div>
+                            <div class="tome-item-row"><strong>ᚨ Rune of Warding:</strong> Sacred sanctuary rune. Unlocks <em>Aegis Ward</em> spell. Passive bonus: +15 Max Sanity.</div>
+                            <div class="tome-item-row" style="color:var(--text-dim);"><em>Inscribing:</em> Discovered runes remain permanently in your rune stash. Socket or unsocket them into your staff at will via Tab 3 without cost.</div>
+                        </div>
+
+                        <div class="tome-box">
+                            <h4>🏛️ Ancient Shrines & Relic Enchanting Altars</h4>
+                            <div class="tome-item-row">
+                                <strong>Ancient Runic Shrines:</strong><br>
+                                Glowing runic monoliths found deep in the crypts. Commune with them to receive divine blessings:<br>
+                                • <em>Purifying Radiance:</em> Cures all curses, +45 Sanity, refills torch to full.<br>
+                                • <em>Eldritch Aether:</em> Permanently adds +5 Max Aether and restores mana.<br>
+                                • <em>Iron Aegis:</em> Grants +60 Ward Barrier and permanently adds +2 Warding.<br>
+                                • <em>Primordial Runes:</em> Inscribes an unacquired Ancient Rune directly into your stash.
+                            </div>
+                            <div class="tome-item-row">
+                                <strong>Relic Enchanting Altars [I]:</strong><br>
+                                Obsidian altars that imbue your equipped weapon with permanent elemental conduits:<br>
+                                • <span class="tome-badge badge-fire">🔥 Flamebrand (Fire)</span>: Adds +10..16 Fire Damage. Deals 1.5x damage against undead and Crypt Skeletons (+2 Might).<br>
+                                • <span class="tome-badge badge-frost">❄️ Frostbite (Frost)</span>: Adds +8..14 Cryo Damage. 35% chance to Freeze enemies solid for 2 turns (+3 Warding).<br>
+                                • <span class="tome-badge badge-void">🌀 Voidsever (Void)</span>: Adds +12..20 Void Damage that completely bypasses monster armor. Siphons +4 Aether and +3 Sanity back on hit (+2 Arcana).
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 5: Alchemy Codex & Gear -->
+                <div class="tome-section" id="tomeAlchemy">
+                    <div class="tome-grid-2">
+                        <div class="tome-box">
+                            <h4>⚗️ Ancient Cauldron Alchemy Recipes [B]</h4>
+                            <div class="tome-item-row">
+                                <strong>[1] Elixir of Vitality:</strong><br>
+                                Blood Lotus + Aether Blossom &rarr; <span style="color:var(--accent-emerald);">Restores +65 HP, +10 Sanity</span>.
+                            </div>
+                            <div class="tome-item-row">
+                                <strong>[2] Draught of Lucid Mind:</strong><br>
+                                Azure Spores + Aether Blossom &rarr; <span style="color:var(--accent-cyan);">Restores +50 Sanity, +10 Aether</span>.
+                            </div>
+                            <div class="tome-item-row">
+                                <strong>[3] Aether Phial:</strong><br>
+                                Void Dust + Aether Blossom &rarr; <span style="color:var(--accent-purple);">Restores +40 Aether mana</span>.
+                            </div>
+                            <div class="tome-item-row">
+                                <strong>[4] Stoneskin Brew:</strong><br>
+                                Azure Spores + Brimstone Ash &rarr; <span style="color:var(--accent-amber);">Grants +40 Ward Barrier</span>.
+                            </div>
+                            <div class="tome-item-row">
+                                <strong>[5] Liquid Fire Flask:</strong><br>
+                                Brimstone Ash + Void Dust &rarr; <span style="color:var(--accent-crimson);">50 Fire AOE damage blast!</span>
+                            </div>
+                            <div class="tome-item-row">
+                                <strong>[6] Panacea of the Deep:</strong><br>
+                                Blood Lotus + Brimstone Ash + Void Dust &rarr; <span style="color:var(--text-gold);">+60 HP, +40 Sanity, +35 Aether, and cleanses all active hexes!</span>
+                            </div>
+                        </div>
+
+                        <div class="tome-box">
+                            <h4>🛡️ Equipment Slots & Black Market [M]</h4>
+                            <div class="tome-item-row">
+                                <strong>Delver's Gear Slots (Tab 1):</strong><br>
+                                • <em>Weapon:</em> Amplifies melee attack damage (Shortswords, Runic Longswords, Crypt Greatswords).<br>
+                                • <em>Armor:</em> Absorbs physical & elemental damage, increases Max HP (Jerkins, Shadow Cloaks, Abyssal Mail, Wyrmscale Carapace).<br>
+                                • <em>Relic:</em> Enhances exploration utility (Torch of Eld, Aether Lantern, Radiant Censer).<br>
+                                • <em>Amulet:</em> Boosts Arcana, Max Aether, and wards against eldritch curses (Star Pendant, Void Eye, Crown of Void Monarch).
+                            </div>
+                            <div class="tome-item-row">
+                                <strong>Subterranean Merchants:</strong><br>
+                                • <em>Grimhollow (B1-B6):</em> Essential provisions (Rations, Purifying Salts, Torch Pitch, Healing Salves, Cartography Floor Maps).<br>
+                                • <em>Malakor (B7+):</em> Occult relics, primordial runes, and hex cleansings.<br>
+                                • <em>Pawn Items:</em> Sell spare reagents, potions, and gear for Gold to afford high-tier survival gear.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="padding:10px 18px; background:var(--bg-panel-dark); border-top:1px solid var(--border-dungeon); display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text-dim);">
+                <span>Keys: [1-5] Switch Tome Tabs • [H / ESC] Close Manual</span>
+                <button class="action-btn" id="modalCloseBtn" style="padding:4px 14px; font-size:11px;">Close Tome</button>
             </div>
         </div>
     </div>
@@ -7763,6 +8011,27 @@
                 e.preventDefault();
             }
 
+            // Help Modal Tome active shortcuts
+            const mHelpModal = document.getElementById('modalHelp');
+            if (mHelpModal && mHelpModal.style.display === 'flex') {
+                if (e.code === 'Digit1') { switchTomeTab('tactics'); return; }
+                if (e.code === 'Digit2') { switchTomeTab('bestiary'); return; }
+                if (e.code === 'Digit3') { switchTomeTab('grimoire'); return; }
+                if (e.code === 'Digit4') { switchTomeTab('runes'); return; }
+                if (e.code === 'Digit5') { switchTomeTab('alchemy'); return; }
+                if (e.key === 'h' || e.key === 'H' || e.key === 'F1' || e.key === 'Escape') {
+                    mHelpModal.style.display = 'none';
+                    return;
+                }
+            }
+
+            if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
+                if (mHelpModal) {
+                    mHelpModal.style.display = mHelpModal.style.display === 'flex' ? 'none' : 'flex';
+                }
+                return;
+            }
+
             // Tab switching hotkeys 1, 2, 3, 4
             if (e.code === 'Digit1') { switchTab('hero'); return; }
             if (e.code === 'Digit2') { switchTab('inventory'); return; }
@@ -8051,12 +8320,31 @@
             });
         });
 
-        // Help Modal
+        // Help Modal - Delver's Tome & Survival Codex
         const modal = document.getElementById('modalHelp');
+        function switchTomeTab(tabId) {
+            document.querySelectorAll('.tome-tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-tome-tab') === tabId);
+            });
+            document.querySelectorAll('.tome-section').forEach(sec => {
+                sec.classList.toggle('active', sec.id === ('tome' + tabId.charAt(0).toUpperCase() + tabId.slice(1)));
+            });
+        }
+
+        document.querySelectorAll('.tome-tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.getAttribute('data-tome-tab');
+                switchTomeTab(tab);
+            });
+        });
+
         document.getElementById('btnHelp')?.addEventListener('click', () => {
             modal.style.display = 'flex';
         });
         document.getElementById('modalClose')?.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+        document.getElementById('modalCloseBtn')?.addEventListener('click', () => {
             modal.style.display = 'none';
         });
         modal?.addEventListener('click', (e) => {

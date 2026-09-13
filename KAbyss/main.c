@@ -524,6 +524,7 @@ static BOOL g_fovEnabled = TRUE;
 static BOOL g_crtEnabled = TRUE;
 static int g_activeTab = 0; // 0=Hero, 1=Inventory, 2=Runes, 3=Bestiary
 static BOOL g_showHelpModal = FALSE;
+static int g_helpTab = 0; // 0=Tactics, 1=Bestiary, 2=Grimoire, 3=Runes, 4=Alchemy
 static BOOL g_showEnchantModal = FALSE;
 static BOOL g_showMerchantModal = FALSE;
 static int g_merchantMode = 0; // 0=Buy, 1=Sell
@@ -5620,10 +5621,10 @@ void RenderGame(HDC hdc, HWND hwnd) {
         curLogY += 18;
     }
 
-    // 5. HELP MODAL DIALOG (When H or F1 pressed)
+    // 5. COMPREHENSIVE HELP & DELVER'S TOME MODAL (Phase 14)
     if (g_showHelpModal) {
-        RECT modalRect = {width / 2 - 310, height / 2 - 210, width / 2 + 310, height / 2 + 210};
-        HBRUSH modalBg = CreateSolidBrush(COLOR_BG_PANEL);
+        RECT modalRect = {width / 2 - 400, height / 2 - 250, width / 2 + 400, height / 2 + 250};
+        HBRUSH modalBg = CreateSolidBrush(RGB(9, 12, 20));
         FillRect(memDC, &modalRect, modalBg);
         DeleteObject(modalBg);
 
@@ -5634,33 +5635,388 @@ void RenderGame(HDC hdc, HWND hwnd) {
         SelectObject(memDC, oldMP);
         DeleteObject(glowModalPen);
 
+        // Header Title
         SelectObject(memDC, fontTitle);
         SetTextColor(memDC, COLOR_BORDER_GLOW);
-        TextOutA(memDC, modalRect.left + 20, modalRect.top + 14, "DELVER'S TOME & SURVIVAL MANUAL", 31);
+        TextOutA(memDC, modalRect.left + 20, modalRect.top + 12, "DELVER'S TOME & SURVIVAL CODEX", 30);
 
         SelectObject(memDC, fontSmall);
-        SetTextColor(memDC, COLOR_TEXT_PRIMARY);
-        int my = modalRect.top + 40;
-        TextOutA(memDC, modalRect.left + 20, my, "- WASD / Arrows / Vi / Numpad: Navigate subterranean grid", 57); my += 16;
-        TextOutA(memDC, modalRect.left + 20, my, "- Space / Num5: Rest 1 turn (+2 HP, +1 Sanity, +3 Aether, disallow when starving)", 82); my += 16;
-        TextOutA(memDC, modalRect.left + 20, my, "- Bump Combat: Walk into monsters to strike in melee", 52); my += 16;
-        TextOutA(memDC, modalRect.left + 20, my, "- Z / X / V: Cast Elemental Spells from Staff Sockets 1 / 2 / 3", 63); my += 16;
-        TextOutA(memDC, modalRect.left + 20, my, "- R / Search: Search surrounding area for secret coffers & altars", 65); my += 16;
-        TextOutA(memDC, modalRect.left + 20, my, "- E / Enter: Interact / Descend stairs / Commune with Altars", 60); my += 16;
-        TextOutA(memDC, modalRect.left + 20, my, "- T / Rekindle: Re-ignite torch via Pyre spell, Brimstone Ash, or adjacent fire", 79); my += 16;
-        TextOutA(memDC, modalRect.left + 20, my, "- Hunger & Darkness: Starving (0 food) drains HP. Pitch blackness drains Sanity!", 80); my += 16;
-        TextOutA(memDC, modalRect.left + 20, my, "- Cursed Effigies [!]: Walk into totems to shatter them for essence (beware curses)", 84); my += 16;
-        TextOutA(memDC, modalRect.left + 20, my, "- Curses & Salt: Purifying Salt / Altars purge curses (Darkness, Enfeeble, Decay)", 81); my += 16;
-        TextOutA(memDC, modalRect.left + 20, my, "- 1, 2, 3, 4: Sidebar Tabs (Delver stats / Pack & Alchemy / Rune Forge / Bestiary)", 82); my += 16;
-        TextOutA(memDC, modalRect.left + 20, my, "- I / Altar: Open Relic Enchanting Altar to imbue Flamebrand / Frostbite / Voidsever", 84); my += 16;
-        TextOutA(memDC, modalRect.left + 20, my, "- Ancient Shrines: Touch glowing runic monoliths for divine blessings & ancient runes", 85); my += 16;
-        TextOutA(memDC, modalRect.left + 20, my, "- M / Merchant: Trade Gold for relics, survival goods & sell pack items [Phase 11]", 83); my += 16;
-        TextOutA(memDC, modalRect.left + 20, my, "- Biomes: B1-3 Catacombs | B4-6 Sunken Grotto | B7-9 Crypt | B10+ Void", 70); my += 16;
-        TextOutA(memDC, modalRect.left + 20, my, "- Abyssal Lords: B3 Crypt Keeper | B6 Abyssal Wyrm | B10+ Void Monarch", 70); my += 16;
-        TextOutA(memDC, modalRect.left + 20, my, "- O: Audio & Procedural Soundscapes | C: CRT | F: FOV | Ctrl+N: New Run", 71); my += 18;
+        SetTextColor(memDC, COLOR_TEXT_DIM);
+        TextOutA(memDC, modalRect.right - 90, modalRect.top + 16, "[X / ESC]", 9);
 
+        // 5 Tab Buttons
+        const char* tabTitles[5] = {
+            "1: Tactics & Survival",
+            "2: Bestiary & Lords",
+            "3: Spell Grimoire",
+            "4: Runes & Shrines",
+            "5: Alchemy & Gear"
+        };
+        int tabY = modalRect.top + 38;
+        int tabH = 26;
+        int tabW = (modalRect.right - modalRect.left - 28) / 5;
+        for (int t = 0; t < 5; t++) {
+            int tx = modalRect.left + 14 + t * tabW;
+            RECT rTab = {tx, tabY, tx + tabW - 4, tabY + tabH};
+            BOOL isActive = (t == g_helpTab);
+            HBRUSH tBg = CreateSolidBrush(isActive ? RGB(22, 34, 54) : RGB(12, 17, 27));
+            FillRect(memDC, &rTab, tBg);
+            DeleteObject(tBg);
+
+            HPEN tPen = CreatePen(PS_SOLID, 1, isActive ? COLOR_BORDER_GLOW : RGB(30, 41, 59));
+            HPEN oldTP = (HPEN)SelectObject(memDC, tPen);
+            SelectObject(memDC, GetStockObject(NULL_BRUSH));
+            Rectangle(memDC, rTab.left, rTab.top, rTab.right, rTab.bottom);
+            SelectObject(memDC, oldTP);
+            DeleteObject(tPen);
+
+            SelectObject(memDC, isActive ? fontBold : fontSmall);
+            SetTextColor(memDC, isActive ? COLOR_BORDER_GLOW : COLOR_TEXT_DIM);
+            TextOutA(memDC, tx + 8, tabY + 5, tabTitles[t], (int)strlen(tabTitles[t]));
+        }
+
+        // Two Column Content Boxes
+        int contentTop = tabY + tabH + 10;
+        int boxH = 345;
+        int col1X = modalRect.left + 14;
+        int col1W = 380;
+        int col2X = modalRect.left + 406;
+        int col2W = 380;
+
+        // Card Box 1
+        RECT b1 = {col1X, contentTop, col1X + col1W, contentTop + boxH};
+        HBRUSH b1Bg = CreateSolidBrush(RGB(14, 20, 32));
+        FillRect(memDC, &b1, b1Bg);
+        DeleteObject(b1Bg);
+        FrameRect(memDC, &b1, (HBRUSH)GetStockObject(DKGRAY_BRUSH));
+
+        // Card Box 2
+        RECT b2 = {col2X, contentTop, col2X + col2W, contentTop + boxH};
+        HBRUSH b2Bg = CreateSolidBrush(RGB(14, 20, 32));
+        FillRect(memDC, &b2, b2Bg);
+        DeleteObject(b2Bg);
+        FrameRect(memDC, &b2, (HBRUSH)GetStockObject(DKGRAY_BRUSH));
+
+        int y1 = contentTop + 10;
+        int y2 = contentTop + 10;
+
+        if (g_helpTab == 0) {
+            // TAB 0: TACTICS & SURVIVAL
+            SelectObject(memDC, fontBold);
+            SetTextColor(memDC, COLOR_ACCENT_CYAN);
+            TextOutA(memDC, col1X + 12, y1, "CORE CONTROLS & COMMANDS", 24); y1 += 22;
+
+            SelectObject(memDC, fontSmall);
+            SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+            TextOutA(memDC, col1X + 12, y1, "- WASD / Arrows / Vi / Num: Move & Bump Attack", 46); y1 += 16;
+            TextOutA(memDC, col1X + 12, y1, "- Space / Num5: Rest 1 turn (+2 HP, +1 Sanity, +3 MP)", 53); y1 += 16;
+            TextOutA(memDC, col1X + 12, y1, "- E / Enter: Interact / Descend stairs / Open chests", 52); y1 += 16;
+            TextOutA(memDC, col1X + 12, y1, "- Z / X / V: Cast Elemental Spells from Staff Sockets", 53); y1 += 16;
+            TextOutA(memDC, col1X + 12, y1, "- R / Search: Search adjacent tiles for secret doors", 52); y1 += 16;
+            TextOutA(memDC, col1X + 12, y1, "- T / Rekindle: Re-ignite torch via Pyre or Brimstone", 53); y1 += 16;
+            TextOutA(memDC, col1X + 12, y1, "- B / Cauldron: Open Ancient Alchemy Cauldron to brew", 53); y1 += 16;
+            TextOutA(memDC, col1X + 12, y1, "- I / Altar: Relic Enchanting Altar (Flame/Frost/Void)", 54); y1 += 16;
+            TextOutA(memDC, col1X + 12, y1, "- M / Market: Subterranean Black Market merchant shop", 53); y1 += 16;
+            TextOutA(memDC, col1X + 12, y1, "- 1 - 4: Sidebar Tabs (Delver / Pack / Runes / Bestiary)", 56); y1 += 16;
+            TextOutA(memDC, col1X + 12, y1, "- O: Audio Drone & SFX | C: CRT Scanlines | F: FOV", 50); y1 += 22;
+
+            SelectObject(memDC, fontBold);
+            SetTextColor(memDC, COLOR_TEXT_GOLD);
+            TextOutA(memDC, col1X + 12, y1, "TACTICAL COMBAT & CHOKEPOINTS", 29); y1 += 20;
+
+            SelectObject(memDC, fontSmall);
+            SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+            TextOutA(memDC, col1X + 12, y1, "- Bump Combat: Walk directly into enemies to strike.", 52); y1 += 16;
+            TextOutA(memDC, col1X + 12, y1, "- Might scales physical melee; Arcana scales spells.", 52); y1 += 16;
+            TextOutA(memDC, col1X + 12, y1, "- Fall back to 1-tile doorways to avoid flanking mobs.", 54); y1 += 16;
+            TextOutA(memDC, col1X + 12, y1, "- Use corridors to isolate high-damage abyssal monsters.", 56); y1 += 16;
+
+            // Right Box: Hazards & Biomes
+            SelectObject(memDC, fontBold);
+            SetTextColor(memDC, COLOR_TEXT_GOLD);
+            TextOutA(memDC, col2X + 12, y2, "SURVIVAL HAZARDS & DELVER MECHANICS", 35); y2 += 22;
+
+            SelectObject(memDC, fontSmall);
+            SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+            TextOutA(memDC, col2X + 12, y2, "- Hunger: Drains over turns. At 0, Delver starves!", 50); y2 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col2X + 16, y2, "Starvation causes HP damage and disables resting.", 49); y2 += 18;
+
+            SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+            TextOutA(memDC, col2X + 12, y2, "- Torch Burn: Torch fuel decreases with each turn.", 50); y2 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col2X + 16, y2, "Pitch darkness drops vision to 1 tile and drains Sanity!", 56); y2 += 18;
+
+            SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+            TextOutA(memDC, col2X + 12, y2, "- Sanity & Whispers: Darkness & Horrors chip Sanity.", 52); y2 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col2X + 16, y2, "Low sanity triggers eldritch hallucinations & whispers.", 55); y2 += 18;
+
+            SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+            TextOutA(memDC, col2X + 12, y2, "- Cursed Effigies [!]: Walk into totems to shatter them.", 56); y2 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col2X + 16, y2, "Yields void essence, but beware hexes (Darkness/Decay).", 55); y2 += 18;
+
+            SelectObject(memDC, fontBold);
+            SetTextColor(memDC, COLOR_BORDER_GLOW);
+            TextOutA(memDC, col2X + 12, y2, "SUBTERRANEAN BIOME PROGRESSION", 30); y2 += 20;
+
+            SelectObject(memDC, fontSmall);
+            SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+            TextOutA(memDC, col2X + 12, y2, "* B1-B3 Catacombs: Limestone crypts. Boss: Crypt Keeper", 55); y2 += 16;
+            TextOutA(memDC, col2X + 12, y2, "* B4-B6 Sunken Grotto: Flooded caverns. Boss: Abyssal Wyrm", 58); y2 += 16;
+            TextOutA(memDC, col2X + 12, y2, "* B7-B9 Forgotten Crypt: Necrotic tombs & skull braziers", 56); y2 += 16;
+            TextOutA(memDC, col2X + 12, y2, "* B10+ Void Abyss: Cosmic chasms. Boss: Void Monarch", 52); y2 += 16;
+
+        } else if (g_helpTab == 1) {
+            // TAB 1: BESTIARY & LORDS
+            SelectObject(memDC, fontBold);
+            SetTextColor(memDC, COLOR_ACCENT_RED);
+            TextOutA(memDC, col1X + 12, y1, "CRYPT HORRORS & BESTIARY", 24); y1 += 22;
+
+            SelectObject(memDC, fontSmall);
+            SetTextColor(memDC, COLOR_TEXT_BRIGHT);
+            TextOutA(memDC, col1X + 12, y1, "1. Crypt Skeleton (HP: 22 | ATK: 5-8 | DEF: 2)", 46); y1 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col1X + 16, y1, "Undead guardians. Weak: Fire (+50% DMG). Drops: Ash/Bones.", 58); y1 += 18;
+
+            SetTextColor(memDC, COLOR_TEXT_BRIGHT);
+            TextOutA(memDC, col1X + 12, y1, "2. Mire Ghoul (HP: 38 | ATK: 8-12 | DEF: 3)", 43); y1 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col1X + 16, y1, "Swamp beasts in water. Weak: Lightning. Drops: Spores.", 54); y1 += 18;
+
+            SetTextColor(memDC, COLOR_TEXT_BRIGHT);
+            TextOutA(memDC, col1X + 12, y1, "3. Void Wraith (HP: 45 | ATK: 10-15 | Ethereal)", 47); y1 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col1X + 16, y1, "Phases walls; drains Sanity/MP. Weak: Aegis & Fire. Dust.", 57); y1 += 18;
+
+            SetTextColor(memDC, COLOR_TEXT_BRIGHT);
+            TextOutA(memDC, col1X + 12, y1, "4. Crypt Acolyte (HP: 55 | ATK: 12-18 | DEF: 2)", 47); y1 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col1X + 16, y1, "Necromancers casting Shadow Bolts. Weak: Melee rush/Frost.", 58); y1 += 18;
+
+            SetTextColor(memDC, COLOR_TEXT_BRIGHT);
+            TextOutA(memDC, col1X + 12, y1, "5. Abyssal Leviathan (HP: 90 | ATK: 16-24 | DEF: 6)", 51); y1 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col1X + 16, y1, "Armored behemoth. Weak: Glacial Nova (2t Freeze) & Void.", 56); y1 += 22;
+
+            // Right Box: Abyssal Lords
+            SelectObject(memDC, fontBold);
+            SetTextColor(memDC, COLOR_TEXT_GOLD);
+            TextOutA(memDC, col2X + 12, y2, "SOVEREIGN ABYSSAL LORDS (BOSSES)", 32); y2 += 22;
+
+            SelectObject(memDC, fontSmall);
+            SetTextColor(memDC, COLOR_ACCENT_AMBER);
+            TextOutA(memDC, col2X + 12, y2, "[B3] The Crypt Keeper (HP: 180 | ATK: 18-26)", 44); y2 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col2X + 16, y2, "Ossified titan with tomb cleaver knockback & Bone Plate.", 56); y2 += 14;
+            TextOutA(memDC, col2X + 16, y2, "Weakness: Sacred Fire (+75% DMG). Minions under 50% HP.", 55); y2 += 14;
+            TextOutA(memDC, col2X + 16, y2, "Drop: Keeper's Crypt Greatsword (+10 Might, +3 Ward).", 53); y2 += 18;
+
+            SetTextColor(memDC, COLOR_ACCENT_CYAN);
+            TextOutA(memDC, col2X + 12, y2, "[B6] Abyssal Wyrm (HP: 280 | ATK: 24-34 | Def: 5)", 49); y2 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col2X + 16, y2, "Bio-horror spewing Caustic Acid Venom (5 tiles, -20 Food).", 58); y2 += 14;
+            TextOutA(memDC, col2X + 16, y2, "Weakness: Glacial Nova & Frostbite (freezes acid glands).", 57); y2 += 14;
+            TextOutA(memDC, col2X + 16, y2, "Drop: Wyrmscale Carapace (+9 Warding, +40 Max HP).", 50); y2 += 18;
+
+            SetTextColor(memDC, COLOR_ACCENT_PURPLE);
+            TextOutA(memDC, col2X + 12, y2, "[B10+] The Void Monarch (HP: 450 | ATK: 32-45)", 46); y2 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col2X + 16, y2, "Dread Aura chips Sanity. Channels Cosmic Collapse beams.", 56); y2 += 14;
+            TextOutA(memDC, col2X + 16, y2, "Gravitational Singularity + Blink. Shield with Aegis!", 53); y2 += 14;
+            TextOutA(memDC, col2X + 16, y2, "Drop: Crown of Void Monarch (+10 Light, +35 MP/Sanity).", 55); y2 += 18;
+
+        } else if (g_helpTab == 2) {
+            // TAB 2: SPELL GRIMOIRE
+            SelectObject(memDC, fontBold);
+            SetTextColor(memDC, COLOR_TEXT_RUNE);
+            TextOutA(memDC, col1X + 12, y1, "THE 5 PRIMORDIAL SPELLS", 23); y1 += 22;
+
+            SelectObject(memDC, fontSmall);
+            SetTextColor(memDC, COLOR_ACCENT_RED);
+            TextOutA(memDC, col1X + 12, y1, "[Z] Pyre Blast (Fire | Cost: 8 MP | Reach: 4)", 45); y1 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col1X + 16, y1, "18-28 Fire DMG. Burns doors, clears rubble, melts ice.", 54); y1 += 18;
+
+            SetTextColor(memDC, COLOR_ACCENT_CYAN);
+            TextOutA(memDC, col1X + 12, y1, "[X] Glacial Nova (Frost | Cost: 10 MP | Rad: 2)", 47); y1 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col1X + 16, y1, "15-22 Cryo AOE. Freezes water to ice, freezes foes 2t.", 54); y1 += 18;
+
+            SetTextColor(memDC, COLOR_ACCENT_GREEN);
+            TextOutA(memDC, col1X + 12, y1, "[V] Chain Bolt (Lightning | Cost: 12 MP | Reach: 6)", 51); y1 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col1X + 16, y1, "22-32 DMG arcing to 3 foes. 2x DMG in flooded water!", 52); y1 += 18;
+
+            SetTextColor(memDC, COLOR_ACCENT_PURPLE);
+            TextOutA(memDC, col1X + 12, y1, "[Rune] Void Warp (Void | Cost: 15 MP | Reach: 3)", 48); y1 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col1X + 16, y1, "Instant phase-shift 3 tiles through walls & over chasms.", 56); y1 += 18;
+
+            SetTextColor(memDC, COLOR_TEXT_GOLD);
+            TextOutA(memDC, col1X + 12, y1, "[Rune] Aegis Ward (Holy | Cost: 14 MP | Self)", 45); y1 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col1X + 16, y1, "45 DMG barrier, +15 Sanity, repels adjacent Void Wraiths.", 57); y1 += 22;
+
+            // Right Box: Staff Sockets & Synergies
+            SelectObject(memDC, fontBold);
+            SetTextColor(memDC, COLOR_BORDER_GLOW);
+            TextOutA(memDC, col2X + 12, y2, "STAFF SOCKETS & ARCANUM SYNERGIES", 33); y2 += 22;
+
+            SelectObject(memDC, fontSmall);
+            SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+            TextOutA(memDC, col2X + 12, y2, "- Staff Sockets: Ash Wand (1), Runic Staff (2), Archmage (3).", 61); y2 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col2X + 16, y2, "Equip staves in Tab 1, socket discovered runes in Tab 3.", 56); y2 += 18;
+
+            SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+            TextOutA(memDC, col2X + 12, y2, "- Water & Shock: Lightning conducts across flooded tiles,", 57); y2 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col2X + 16, y2, "dealing critical shock damage to all submerged monsters.", 56); y2 += 18;
+
+            SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+            TextOutA(memDC, col2X + 12, y2, "- Ice Bridges: Cast Glacial Nova on water to create paths.", 58); y2 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col2X + 16, y2, "Allows crossing deep water hazards safely without drowning.", 59); y2 += 18;
+
+            SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+            TextOutA(memDC, col2X + 12, y2, "- Fire Breach: Pyre Blast incinerates locked wooden doors.", 58); y2 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col2X + 16, y2, "Breach locked chambers without searching for keys.", 50); y2 += 18;
+
+            SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+            TextOutA(memDC, col2X + 12, y2, "- Arcana Stat: Each point amplifies elemental spell damage.", 59); y2 += 18;
+
+        } else if (g_helpTab == 3) {
+            // TAB 3: RUNES & SHRINES
+            SelectObject(memDC, fontBold);
+            SetTextColor(memDC, COLOR_TEXT_RUNE);
+            TextOutA(memDC, col1X + 12, y1, "ANCIENT RUNES & STAFF FORGING", 29); y1 += 22;
+
+            SelectObject(memDC, fontSmall);
+            SetTextColor(memDC, COLOR_TEXT_BRIGHT);
+            TextOutA(memDC, col1X + 12, y1, "1. Rune of Flame: Unlocks Pyre Blast. Passive: +2 Might.", 56); y1 += 16;
+            TextOutA(memDC, col1X + 12, y1, "2. Rune of Frost: Unlocks Glacial Nova. Passive: +3 Ward.", 57); y1 += 16;
+            TextOutA(memDC, col1X + 12, y1, "3. Rune of Storm: Unlocks Chain Bolt. Passive: +3 Arcana.", 57); y1 += 16;
+            TextOutA(memDC, col1X + 12, y1, "4. Rune of Void: Unlocks Void Warp. Passive: +5 Max MP.", 55); y1 += 16;
+            TextOutA(memDC, col1X + 12, y1, "5. Rune of Warding: Unlocks Aegis Ward. Passive: +15 Sanity.", 60); y1 += 20;
+
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col1X + 12, y1, "Runes remain in your stash permanently once discovered.", 55); y1 += 15;
+            TextOutA(memDC, col1X + 12, y1, "Open Tab 3 to socket or unsocket into staves freely.", 52); y1 += 24;
+
+            SelectObject(memDC, fontBold);
+            SetTextColor(memDC, COLOR_BORDER_GLOW);
+            TextOutA(memDC, col1X + 12, y1, "ANCIENT RUNIC SHRINES", 21); y1 += 20;
+
+            SelectObject(memDC, fontSmall);
+            SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+            TextOutA(memDC, col1X + 12, y1, "- Purifying Radiance: Cures all curses, +45 Sanity, torch.", 58); y1 += 15;
+            TextOutA(memDC, col1X + 12, y1, "- Eldritch Aether: +5 Max Aether permanently, full MP restore.", 62); y1 += 15;
+            TextOutA(memDC, col1X + 12, y1, "- Iron Aegis: +60 Ward Barrier, +2 permanent Warding.", 53); y1 += 15;
+            TextOutA(memDC, col1X + 12, y1, "- Primordial Runes: Grants an unacquired Ancient Rune.", 54); y1 += 18;
+
+            // Right Box: Relic Enchanting Altars
+            SelectObject(memDC, fontBold);
+            SetTextColor(memDC, COLOR_TEXT_GOLD);
+            TextOutA(memDC, col2X + 12, y2, "RELIC ENCHANTING ALTARS [I]", 27); y2 += 22;
+
+            SelectObject(memDC, fontSmall);
+            SetTextColor(memDC, COLOR_ACCENT_RED);
+            TextOutA(memDC, col2X + 12, y2, "1. Flamebrand (Fire Enchantment):", 33); y2 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col2X + 16, y2, "Adds +10..16 Fire Damage per strike.", 36); y2 += 14;
+            TextOutA(memDC, col2X + 16, y2, "1.5x damage against undead and Crypt Skeletons (+2 Might).", 58); y2 += 18;
+
+            SetTextColor(memDC, COLOR_ACCENT_CYAN);
+            TextOutA(memDC, col2X + 12, y2, "2. Frostbite (Frost Enchantment):", 33); y2 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col2X + 16, y2, "Adds +8..14 Cryo Damage per strike.", 35); y2 += 14;
+            TextOutA(memDC, col2X + 16, y2, "35% chance to Freeze enemies solid for 2 turns (+3 Ward).", 57); y2 += 18;
+
+            SetTextColor(memDC, COLOR_ACCENT_PURPLE);
+            TextOutA(memDC, col2X + 12, y2, "3. Voidsever (Void Enchantment):", 32); y2 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col2X + 16, y2, "Adds +12..20 Void Damage that bypasses monster armor.", 53); y2 += 14;
+            TextOutA(memDC, col2X + 16, y2, "Siphons +4 Aether and +3 Sanity back on hit (+2 Arcana).", 56); y2 += 18;
+
+            SetTextColor(memDC, COLOR_TEXT_GOLD);
+            TextOutA(memDC, col2X + 12, y2, "4. Altar Benediction: +35 Sanity & cleanse maledictions.", 56); y2 += 18;
+
+        } else {
+            // TAB 4: ALCHEMY & GEAR
+            SelectObject(memDC, fontBold);
+            SetTextColor(memDC, COLOR_ACCENT_GREEN);
+            TextOutA(memDC, col1X + 12, y1, "ANCIENT ALCHEMY CAULDRON [B]", 28); y1 += 22;
+
+            SelectObject(memDC, fontSmall);
+            SetTextColor(memDC, COLOR_TEXT_BRIGHT);
+            TextOutA(memDC, col1X + 12, y1, "[1] Elixir of Vitality (Lotus + Blossom):", 41); y1 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col1X + 16, y1, "Restores +65 HP, +10 Sanity.", 29); y1 += 16;
+
+            SetTextColor(memDC, COLOR_TEXT_BRIGHT);
+            TextOutA(memDC, col1X + 12, y1, "[2] Draught of Lucid Mind (Spores + Blossom):", 45); y1 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col1X + 16, y1, "Restores +50 Sanity, +10 Aether.", 32); y1 += 16;
+
+            SetTextColor(memDC, COLOR_TEXT_BRIGHT);
+            TextOutA(memDC, col1X + 12, y1, "[3] Aether Phial (Void Dust + Blossom):", 39); y1 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col1X + 16, y1, "Restores +40 Aether mana.", 25); y1 += 16;
+
+            SetTextColor(memDC, COLOR_TEXT_BRIGHT);
+            TextOutA(memDC, col1X + 12, y1, "[4] Stoneskin Brew (Spores + Brimstone):", 40); y1 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col1X + 16, y1, "Grants +40 Ward Barrier.", 24); y1 += 16;
+
+            SetTextColor(memDC, COLOR_TEXT_BRIGHT);
+            TextOutA(memDC, col1X + 12, y1, "[5] Liquid Fire Flask (Brimstone + Dust):", 41); y1 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col1X + 16, y1, "50 Fire AOE damage explosion blast!", 36); y1 += 16;
+
+            SetTextColor(memDC, COLOR_TEXT_BRIGHT);
+            TextOutA(memDC, col1X + 12, y1, "[6] Panacea of Deep (Lotus + Ash + Dust):", 41); y1 += 15;
+            SetTextColor(memDC, COLOR_TEXT_GOLD);
+            TextOutA(memDC, col1X + 16, y1, "+60 HP, +40 Sanity, +35 MP, cures all hexes!", 44); y1 += 18;
+
+            // Right Box: Equipment & Black Market
+            SelectObject(memDC, fontBold);
+            SetTextColor(memDC, COLOR_ACCENT_AMBER);
+            TextOutA(memDC, col2X + 12, y2, "EQUIPMENT SLOTS & BLACK MARKET [M]", 34); y2 += 22;
+
+            SelectObject(memDC, fontSmall);
+            SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+            TextOutA(memDC, col2X + 12, y2, "- Weapon: Shortswords, Runic Longswords, Greatswords.", 53); y2 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col2X + 16, y2, "Amplifies base melee strike damage and enchantments.", 52); y2 += 18;
+
+            SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+            TextOutA(memDC, col2X + 12, y2, "- Armor: Leather Jerkins, Cloaks, Abyssal Mail, Carapace.", 57); y2 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col2X + 16, y2, "Grants baseline Warding defense and increases Max HP.", 53); y2 += 18;
+
+            SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+            TextOutA(memDC, col2X + 12, y2, "- Relic: Torch of Eld, Aether Lantern, Radiant Censer.", 54); y2 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col2X + 16, y2, "Extends light radius and conserves sanity in darkness.", 54); y2 += 18;
+
+            SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+            TextOutA(memDC, col2X + 12, y2, "- Amulet: Star Pendant, Void Eye, Crown of Void Monarch.", 56); y2 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col2X + 16, y2, "Boosts Arcana, Max MP, and wards against eldritch curses.", 57); y2 += 18;
+
+            SetTextColor(memDC, COLOR_TEXT_PRIMARY);
+            TextOutA(memDC, col2X + 12, y2, "- Black Market [M]: Grimhollow (B1-6) & Malakor (B7+).", 54); y2 += 15;
+            SetTextColor(memDC, COLOR_TEXT_DIM);
+            TextOutA(memDC, col2X + 16, y2, "Buy survival rations, maps, and sell excess pack items.", 55); y2 += 18;
+        }
+
+        // Modal Footer
+        SelectObject(memDC, fontSmall);
         SetTextColor(memDC, COLOR_TEXT_GOLD);
-        TextOutA(memDC, modalRect.left + 20, my, "Press [H], [F1], or [ESC] to close manual.", 42);
+        TextOutA(memDC, modalRect.left + 20, modalRect.bottom - 22, "Tabs [1-5] • [Left/Right / Tab] Cycle Tabs • [H / F1 / ESC] Close Delver's Tome", 79);
     }
 
     // 5b. ENCHANTING ALTAR MODAL DIALOG (When I pressed or Altar visited)
@@ -6052,11 +6408,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
     case WM_KEYDOWN:
         if (g_showHelpModal) {
-            if (wParam == 'H' || wParam == VK_F1 || wParam == VK_ESCAPE || wParam == VK_SPACE || wParam == VK_RETURN) {
+            if (wParam == 'H' || wParam == VK_F1 || wParam == VK_ESCAPE) {
                 g_showHelpModal = FALSE;
+                PlayAudioAsync(SND_EQUIP);
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }
+            if (wParam >= '1' && wParam <= '5') {
+                g_helpTab = (int)(wParam - '1');
+                PlayAudioAsync(SND_EQUIP);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (wParam == VK_LEFT) {
+                g_helpTab = (g_helpTab + 4) % 5;
+                PlayAudioAsync(SND_EQUIP);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (wParam == VK_RIGHT || wParam == VK_TAB) {
+                g_helpTab = (g_helpTab + 1) % 5;
+                PlayAudioAsync(SND_EQUIP);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            return 0;
         }
 
         if (g_showEnchantModal) {
@@ -6331,8 +6707,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         int mouseY = HIWORD(lParam);
 
         if (g_showHelpModal) {
-            g_showHelpModal = FALSE;
-            InvalidateRect(hwnd, NULL, FALSE);
+            RECT clientRect;
+            GetClientRect(hwnd, &clientRect);
+            int width = clientRect.right - clientRect.left;
+            int height = clientRect.bottom - clientRect.top;
+            RECT modalRect = {width / 2 - 400, height / 2 - 250, width / 2 + 400, height / 2 + 250};
+
+            // Close button [X] at top-right
+            if (mouseX >= modalRect.right - 95 && mouseX <= modalRect.right - 10 &&
+                mouseY >= modalRect.top + 8 && mouseY <= modalRect.top + 34) {
+                g_showHelpModal = FALSE;
+                PlayAudioAsync(SND_EQUIP);
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+
+            // Tabs row clicks (modalRect.top + 38 to modalRect.top + 64)
+            int tabY = modalRect.top + 38;
+            int tabW = (modalRect.right - modalRect.left - 28) / 5;
+            for (int t = 0; t < 5; t++) {
+                int tx = modalRect.left + 14 + t * tabW;
+                if (mouseX >= tx && mouseX <= tx + tabW - 4 && mouseY >= tabY && mouseY <= tabY + 26) {
+                    g_helpTab = t;
+                    PlayAudioAsync(SND_EQUIP);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+            }
+
+            // Click outside modal closes it
+            if (mouseX < modalRect.left || mouseX > modalRect.right ||
+                mouseY < modalRect.top || mouseY > modalRect.bottom) {
+                g_showHelpModal = FALSE;
+                PlayAudioAsync(SND_EQUIP);
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
             break;
         }
 

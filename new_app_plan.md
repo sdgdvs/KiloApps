@@ -54,28 +54,28 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KAbyss (Abyssal dungeon crawler with magical relics, ancient runes, and procedural crypts)
-**Phase:** 14 (next to do)
-**Status:** In Progress (Phase 13 completed: Procedural dungeon audio & atmospheric soundscapes - real-time subterranean zone drone synthesizers, torch crackle, monster growls, boss roars, elemental spell resonance, environmental water drips & drafts, and audio toggle controls)
+**App:** KCosmic (Cosmic colony fleet logistics and interstellar planetary terraforming simulation)
+**Phase:** 1 (next to do)
+**Status:** App Creation (KAbyss Phase 14 completed; KCosmic queued for Phase 1)
 
-- [x] Phase 1: Scaffold KAbyss directory (`KAbyss/`), create web HTML skeleton (`KiloOS/public/apps/kabyss.html`), register in App.jsx.
-- [x] Phase 2: Core dungeon crawl engine (tile map grid, hero character, FOV lighting, movement, turn system).
-- [x] Phase 3: Native C version (`KAbyss/main.c`, `build.bat`) using Win32 API with functional parity.
-- [x] Phase 4: Dark atmospheric subterranean theme, CRT scanlines and dungeon torchlight illumination shaders.
-- [x] Phase 5: Procedural dungeon depth generation (Catacombs, Sunken Grotto, Forgotten Crypt, Void Abyss).
-- [x] Phase 6: Relic & Ancient Rune magic system (enchanted staves, rune socketing, elemental spellcasting).
-- [x] Phase 7: Monster bestiary & tactical turn-based AI (crypt skeletons, void wraiths, abyssal leviathans).
-- [x] Phase 8: Inventory management, equipment slots, potion brewing, and ancient alchemy cauldrons.
-- [x] Phase 9: Sanity, hunger & subterranean curse hazards (torches extinguishing, cursed effigies, eldritch whispers).
-- [x] Phase 10: Ancient runic shrines & relic enchanting altars (imbue weapons with frost/fire/void enchantments).
-- [x] Phase 11: Subterranean merchants & wandering black market hermits (trade gold for relics).
-- [x] Phase 12: Boss encounters & abyssal lords (The Crypt Keeper, Abyssal Wyrm, Void Monarch).
-- [x] Phase 13: Procedural dungeon audio & atmospheric soundscapes (torch crackle, monster growls, spell casting).
-- [ ] Phase 14: Comprehensive Help & Delver's Tome (Dungeon bestiary, spell grimoire, runic index, survival tactics).
+- [ ] Phase 1: Scaffold KCosmic directory (`KCosmic/`), create web HTML skeleton (`KiloOS/public/apps/kcosmic.html`), register in App.jsx.
+- [ ] Phase 2: Core colony fleet simulation engine (orbital map, colony arks, terraforming parameters, life support, resource loops).
+- [ ] Phase 3: Native C version (`KCosmic/main.c`, `build.bat`) using Win32 API with functional parity.
+- [ ] Phase 4: Retro-futuristic stellar cartography theme, CRT vector phosphor shaders, and atmospheric planetary glow.
+- [ ] Phase 5: Procedural star systems & exoplanet classification (barren rock, toxic greenhouse, frozen tundra, ocean world, primordial gaia).
+- [ ] Phase 6: Planetary terraforming modules (atmospheric processors, orbital solar mirrors, nitrogen extractors, greenhouse seeding).
+- [ ] Phase 7: Fleet logistics & automated supply trade routes (freighter convoys, mineral shipments, fuel depots, orbital docks).
+- [ ] Phase 8: Colonist population demographics, morale, housing habitats, biosphere domed megacities, and hydroponic food farms.
+- [ ] Phase 9: Cosmic crisis events & hazards (solar flares, asteroid impacts, tectonic quakes, ecological collapses, magnetic storms).
+- [ ] Phase 10: Interstellar research tree & terraforming breakthroughs (antimatter drives, genetic adapted biomes, climate stabilization).
+- [ ] Phase 11: Orbital megastructures & planetary defense stations (orbital rings, star elevators, planetary shield grids).
+- [ ] Phase 12: Alien xenobiology & ancient precursor relics (excavate xeno-ruins, analyze artifacts, unlock precursor technologies).
+- [ ] Phase 13: Procedural cosmic audio & atmospheric soundscapes (interstellar drone synthesizers, engine hums, atmospheric entry roar, bioscan chimes).
+- [ ] Phase 14: Comprehensive Help & Fleet Admiral's Codex (Planetary classification index, terraforming formulas, logistics guide, crisis response manual).
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
-2. Implement the feature in BOTH `KiloOS/public/apps/kabyss.html` AND `KAbyss/main.c`.
+2. Implement the feature in BOTH `KiloOS/public/apps/kcosmic.html` AND `KCosmic/main.c`.
 3. Mark the phase as `[x]` in this plan file.
 4. Update the **Phase** number to the next unchecked phase.
 5. Commit and push both the code changes and this plan file update.
@@ -137,6 +137,7 @@ When starting a new app, you MUST write concrete phase descriptions for Phases 5
 Use the game/utility feature priority lists above for inspiration, but write specific descriptions tailored to the app.
 
 ## Completed Apps
+- KAbyss (Phase 14 completed: Added Comprehensive Help & Delver's Tome & Survival Codex to both versions)
 - KStarDredge (Phase 14 completed: Added Comprehensive Help & Dredger Captain's Manual & Codex to both versions)
 - KSubmarine (Phase 14 completed: Added Comprehensive Help & Captain's Submersible Manual to both versions)
 - KSanctuary (Phase 14 completed: Added Comprehensive Help & Overseer's Survival Manual & Facility Codex to both versions)
@@ -177,8 +178,8 @@ Use the game/utility feature priority lists above for inspiration, but write spe
 ## Possible Future Apps (pick from here or invent your own)
 
 ### 🎮 GAMES — DEEP FANTASY & SCI-FI (PRIORITY)
-- **KAbyss** — Abyssal dungeon crawler with magical relics, ancient runes, and procedural crypts.
-- **KCosmic** — Cosmic colony fleet logistics and interstellar planetary terraforming simulation.
+- **KChrono** — Temporal relic expeditions, paradox containment, and time-loop archaeology RPG.
+- **KStarForge** — Deep-space void shipyard constructor, fleet naval architecture, and dreadnought engineering sim.
 
 ### 🛠️ Utilities (lower priority — create 1 for every 2-3 games)
 - **KPomodoro** — Focus timer with work/break cycles, session history, daily stats.
