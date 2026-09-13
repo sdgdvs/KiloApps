@@ -1,0 +1,869 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KCosmic - Interstellar Fleet & Terraforming Simulation</title>
+    <style>
+        :root {
+            --bg-deep: #050811;
+            --bg-panel: #0a1120;
+            --bg-panel-dark: #070b16;
+            --bg-card: #0f1c33;
+            --bg-card-hover: #16284a;
+            --border-stellar: #1c3156;
+            --border-highlight: #00f0ff;
+            --text-primary: #cbd5e1;
+            --text-bright: #f8fafc;
+            --text-dim: #64748b;
+            --accent-cyan: #00f0ff;
+            --accent-blue: #38bdf8;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-purple: #a855f7;
+            --accent-rose: #f43f5e;
+            --font-mono: 'Consolas', 'Courier New', Courier, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 13px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Scanline Overlay */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 3px, 6px 100%;
+            z-index: 999;
+            opacity: 0.6;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--bg-panel-dark);
+            border-bottom: 1px solid var(--border-stellar);
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #00f0ff 20%, #1e3a8a 70%, transparent 100%);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .title {
+            font-weight: bold;
+            font-size: 15px;
+            color: var(--text-bright);
+            letter-spacing: 1px;
+            text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+        }
+
+        .subtitle {
+            color: var(--text-dim);
+            font-size: 11px;
+            margin-left: 6px;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .stat-badge {
+            background: var(--bg-card);
+            border: 1px solid var(--border-stellar);
+            padding: 4px 10px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        .stat-badge .label {
+            color: var(--text-dim);
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+
+        .stat-badge .val {
+            font-weight: bold;
+            color: var(--accent-cyan);
+        }
+
+        .stat-badge .val.green { color: var(--accent-emerald); }
+        .stat-badge .val.amber { color: var(--accent-amber); }
+        .stat-badge .val.purple { color: var(--accent-purple); }
+
+        /* Main Workspace */
+        .workspace {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 84px);
+            position: relative;
+        }
+
+        /* Canvas Viewport */
+        .viewport-container {
+            flex: 1;
+            position: relative;
+            background: radial-gradient(ellipse at center, #0a1428 0%, #03060c 80%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        canvas#stellarCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .viewport-overlay {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .overlay-card {
+            background: rgba(10, 17, 32, 0.85);
+            border: 1px solid var(--border-stellar);
+            border-left: 3px solid var(--accent-cyan);
+            border-radius: 4px;
+            padding: 8px 12px;
+            backdrop-filter: blur(4px);
+            pointer-events: auto;
+        }
+
+        .overlay-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent-cyan);
+            margin-bottom: 4px;
+        }
+
+        .overlay-text {
+            font-size: 12px;
+            color: var(--text-bright);
+        }
+
+        /* Sidebar Tabs */
+        .sidebar {
+            width: 380px;
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border-stellar);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-tabs {
+            display: flex;
+            background: var(--bg-panel-dark);
+            border-bottom: 1px solid var(--border-stellar);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 6px;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-dim);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-bright);
+            background: rgba(0, 240, 255, 0.05);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-cyan);
+            border-bottom-color: var(--accent-cyan);
+            background: rgba(0, 240, 255, 0.1);
+        }
+
+        .tab-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section-header {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent-blue);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-stellar);
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+
+        .metric-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: #070c18;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 4px;
+            border: 1px solid #14223d;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00f0ff, #10b981);
+            width: 14%;
+            transition: width 0.4s ease;
+        }
+
+        .progress-bar-fill.temp {
+            background: linear-gradient(90deg, #38bdf8, #f59e0b, #ef4444);
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .action-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-stellar);
+            color: var(--text-bright);
+            padding: 8px 10px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .action-btn:hover {
+            border-color: var(--accent-cyan);
+            background: var(--bg-card-hover);
+            box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
+        }
+
+        .action-btn .btn-title {
+            font-weight: bold;
+            color: var(--accent-cyan);
+        }
+
+        .action-btn .btn-desc {
+            font-size: 10px;
+            color: var(--text-dim);
+        }
+
+        /* Log / Footer */
+        footer {
+            background: var(--bg-panel-dark);
+            border-top: 1px solid var(--border-stellar);
+            padding: 6px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--text-dim);
+            height: 38px;
+        }
+
+        .footer-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .time-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-stellar);
+            color: var(--text-bright);
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .time-btn.active {
+            background: rgba(0, 240, 255, 0.2);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .log-line {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 50vw;
+            color: var(--text-primary);
+        }
+
+        .log-line span.highlight {
+            color: var(--accent-cyan);
+        }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+
+    <!-- Header Stats -->
+    <header>
+        <div class="brand">
+            <div class="brand-icon">KC</div>
+            <div>
+                <span class="title">KCOSMIC</span>
+                <span class="subtitle">// Fleet Logistics & Planetary Terraforming</span>
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-badge">
+                <span class="label">Cycle:</span>
+                <span class="val" id="statCycle">1.04</span>
+            </div>
+            <div class="stat-badge">
+                <span class="label">Energy:</span>
+                <span class="val green" id="statEnergy">14,250 kW</span>
+            </div>
+            <div class="stat-badge">
+                <span class="label">Minerals:</span>
+                <span class="val" id="statMinerals">8,400 t</span>
+            </div>
+            <div class="stat-badge">
+                <span class="label">Volatiles:</span>
+                <span class="val purple" id="statVolatiles">2,150 t</span>
+            </div>
+            <div class="stat-badge">
+                <span class="label">Habitability:</span>
+                <span class="val amber" id="statHabitability">18.4%</span>
+            </div>
+            <div class="stat-badge">
+                <span class="label">Colonists:</span>
+                <span class="val" id="statColonists">25,000</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="workspace">
+        <!-- Center Orbital System Viewport -->
+        <div class="viewport-container">
+            <canvas id="stellarCanvas" width="900" height="600"></canvas>
+
+            <div class="viewport-overlay">
+                <div class="overlay-card">
+                    <div class="overlay-title">Current Sector: Kepler-186e / Prime Anchor</div>
+                    <div class="overlay-text">Target: Aethelgard Prime (Class-IV Barren Greenhouse)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Management Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-tabs">
+                <button class="tab-btn active" data-tab="tab-terra">Terraform</button>
+                <button class="tab-btn" data-tab="tab-fleet">Logistics</button>
+                <button class="tab-btn" data-tab="tab-colony">Colony</button>
+                <button class="tab-btn" data-tab="tab-survey">Survey</button>
+            </div>
+
+            <!-- Tab: Terraforming -->
+            <div class="tab-content active" id="tab-terra">
+                <div class="section-header">
+                    <span>Planetary Biometrics</span>
+                    <span style="color: var(--accent-emerald);">Active Target</span>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-row">
+                        <span>Atmospheric Pressure</span>
+                        <strong id="valPressure">0.32 atm</strong>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="barPressure" style="width: 32%;"></div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-row">
+                        <span>Surface Equilibrium Temp</span>
+                        <strong id="valTemp">-48 °C</strong>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill temp" id="barTemp" style="width: 25%;"></div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-row">
+                        <span>Hydrosphere / Surface Water</span>
+                        <strong id="valWater">12.8%</strong>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="barWater" style="width: 13%;"></div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-row">
+                        <span>Oxygen Ratio (O2 / N2)</span>
+                        <strong id="valOxygen">3.1% (Low)</strong>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="barOxygen" style="width: 15%;"></div>
+                    </div>
+                </div>
+
+                <div class="section-header" style="margin-top: 14px;">
+                    <span>Orbital & Surface Interventions</span>
+                </div>
+
+                <div class="action-grid">
+                    <button class="action-btn" id="btnSolarMirror">
+                        <span class="btn-title">Orbital Solar Mirror</span>
+                        <span class="btn-desc">+1.8°C / cycle (-250 Energy)</span>
+                    </button>
+                    <button class="action-btn" id="btnAtmoProcessor">
+                        <span class="btn-title">Atmo Processor</span>
+                        <span class="btn-desc">+0.04 atm (-120 Minerals)</span>
+                    </button>
+                    <button class="action-btn" id="btnCometDrop">
+                        <span class="btn-title">Capture Comet Ice</span>
+                        <span class="btn-desc">+2.5% Water (-300 Volatiles)</span>
+                    </button>
+                    <button class="action-btn" id="btnBioseeding">
+                        <span class="btn-title">Lichen Seeding</span>
+                        <span class="btn-desc">+0.8% O2 (-100 Energy)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab: Fleet Logistics -->
+            <div class="tab-content" id="tab-fleet">
+                <div class="section-header">
+                    <span>Ark Fleet Roster</span>
+                    <span style="color: var(--accent-cyan);">4 Vessels Active</span>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-row"><strong>CSS Genesis (Flagship Ark)</strong><span style="color: var(--accent-emerald);">Stationary</span></div>
+                    <div class="metric-row"><span style="color: var(--text-dim);">Crew: 15,000 cryo-sleepers | Fuel: 94%</span></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-row"><strong>Survey Vessel Aeon</strong><span style="color: var(--accent-blue);">Scanning Orbit</span></div>
+                    <div class="metric-row"><span style="color: var(--text-dim);">Sensor Grid: 100% | Speed: 0.12 c</span></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-row"><strong>Freighter Convoy Titan-1</strong><span style="color: var(--accent-amber);">En Route Depot</span></div>
+                    <div class="metric-row"><span style="color: var(--text-dim);">Cargo: 2,400 t Rare Minerals</span></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-row"><strong>Harvester Drake</strong><span style="color: var(--accent-purple);">Scooping Ring</span></div>
+                    <div class="metric-row"><span style="color: var(--text-dim);">Yield: +85 Volatiles / min</span></div>
+                </div>
+            </div>
+
+            <!-- Tab: Colony Habitats -->
+            <div class="tab-content" id="tab-colony">
+                <div class="section-header">
+                    <span>Ground Settlement Dome Alpha</span>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-row"><span>Dome Integrity</span><strong style="color: var(--accent-emerald);">98.2%</strong></div>
+                    <div class="metric-row"><span>Hydroponic Food Output</span><strong>+420 kg/cycle</strong></div>
+                    <div class="metric-row"><span>Colonist Morale</span><strong style="color: var(--accent-cyan);">Optimistic (84%)</strong></div>
+                    <div class="metric-row"><span>Atmospheric Scrubber</span><strong>Online</strong></div>
+                </div>
+            </div>
+
+            <!-- Tab: Survey & Precursors -->
+            <div class="tab-content" id="tab-survey">
+                <div class="section-header">
+                    <span>Cartography & Relics</span>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-row"><span>Magnetic Field</span><strong>0.44 Gauss (Moderate)</strong></div>
+                    <div class="metric-row"><span>Precursor Signal</span><strong style="color: var(--accent-purple);">Detected (Sub-crust)</strong></div>
+                    <div class="metric-row"><span>Tectonic Stability</span><strong>89% Stable</strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Footer Log & Controls -->
+    <footer>
+        <div class="footer-controls">
+            <span>WARP:</span>
+            <button class="time-btn" id="btnPause">PAUSE</button>
+            <button class="time-btn active" id="btnSpeed1">1x</button>
+            <button class="time-btn" id="btnSpeed2">2x</button>
+            <button class="time-btn" id="btnSpeed5">5x</button>
+        </div>
+
+        <div class="log-line" id="logBanner">
+            <span class="highlight">[FLEET DISPATCH]</span> KCosmic orbital engine initialized. All fleet telemetry online.
+        </div>
+
+        <div>KCosmic Engine v0.1 • Phase 1</div>
+    </footer>
+
+    <script>
+        // KCosmic Simulation & Stellar Viewport Engine
+        const canvas = document.getElementById('stellarCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Simulation State
+        const sim = {
+            cycle: 1.04,
+            speed: 1,
+            paused: false,
+            energy: 14250,
+            minerals: 8400,
+            volatiles: 2150,
+            habitability: 18.4,
+            colonists: 25000,
+            pressure: 0.32,
+            temp: -48,
+            water: 12.8,
+            oxygen: 3.1,
+            time: 0
+        };
+
+        // Star System Objects
+        const stars = Array.from({ length: 120 }, () => ({
+            x: Math.random() * 2000,
+            y: Math.random() * 2000,
+            size: Math.random() * 1.6 + 0.4,
+            alpha: Math.random() * 0.8 + 0.2
+        }));
+
+        // Render Loop
+        function render() {
+            ctx.fillStyle = '#050811';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+
+            // Draw Background Stars
+            stars.forEach(s => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha * (0.6 + Math.sin(sim.time * 2 + s.x) * 0.2)})`;
+                ctx.beginPath();
+                ctx.arc((s.x % canvas.width), (s.y % canvas.height), s.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Draw Stellar Grid
+            ctx.strokeStyle = 'rgba(28, 49, 86, 0.25)';
+            ctx.lineWidth = 1;
+            const step = 60;
+            for (let x = 0; x < canvas.width; x += step) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += step) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // Central Star / Primary Sun (Off-center left)
+            const sunX = cx - 240;
+            const sunY = cy;
+            const sunRadius = 55;
+            const sunGrad = ctx.createRadialGradient(sunX, sunY, 10, sunX, sunY, sunRadius * 1.8);
+            sunGrad.addColorStop(0, '#ffffff');
+            sunGrad.addColorStop(0.3, '#38bdf8');
+            sunGrad.addColorStop(0.7, 'rgba(0, 240, 255, 0.4)');
+            sunGrad.addColorStop(1, 'rgba(0, 240, 255, 0)');
+            ctx.fillStyle = sunGrad;
+            ctx.beginPath();
+            ctx.arc(sunX, sunY, sunRadius * 1.8, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Core Sun
+            ctx.fillStyle = '#e0f2fe';
+            ctx.beginPath();
+            ctx.arc(sunX, sunY, sunRadius * 0.6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Target Planet: Aethelgard Prime
+            const orbitRadius = 260;
+            const planetAngle = sim.time * 0.15;
+            const px = sunX + Math.cos(planetAngle) * orbitRadius;
+            const py = sunY + Math.sin(planetAngle) * (orbitRadius * 0.7);
+
+            // Orbit path
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+            ctx.beginPath();
+            ctx.ellipse(sunX, sunY, orbitRadius, orbitRadius * 0.7, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Planet Body
+            const planetRadius = 38;
+
+            // Atmospheric Glow Ring
+            const atmoGrad = ctx.createRadialGradient(px, py, planetRadius * 0.9, px, py, planetRadius * 1.4);
+            atmoGrad.addColorStop(0, 'rgba(0, 240, 255, 0.4)');
+            atmoGrad.addColorStop(0.6, 'rgba(16, 185, 129, 0.25)');
+            atmoGrad.addColorStop(1, 'rgba(0, 240, 255, 0)');
+            ctx.fillStyle = atmoGrad;
+            ctx.beginPath();
+            ctx.arc(px, py, planetRadius * 1.4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Planet Surface
+            const planetGrad = ctx.createRadialGradient(px - 10, py - 10, 5, px, py, planetRadius);
+            planetGrad.addColorStop(0, '#38bdf8');
+            planetGrad.addColorStop(0.5, '#1e293b');
+            planetGrad.addColorStop(1, '#090d16');
+            ctx.fillStyle = planetGrad;
+            ctx.beginPath();
+            ctx.arc(px, py, planetRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Planetary Ring / Orbital Marker
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.5)';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(px - planetRadius - 8, py - planetRadius - 8, (planetRadius + 8) * 2, (planetRadius + 8) * 2);
+
+            // Planet Label
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = '11px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('Aethelgard Prime [Terraforming Active]', px, py + planetRadius + 22);
+
+            // Orbiting Ships (Fleet Arks & Probes)
+            for (let i = 0; i < 3; i++) {
+                const shipAngle = sim.time * 0.8 + (i * Math.PI * 2 / 3);
+                const shipDist = planetRadius + 22 + (i * 10);
+                const sx = px + Math.cos(shipAngle) * shipDist;
+                const sy = py + Math.sin(shipAngle) * (shipDist * 0.8);
+
+                ctx.fillStyle = (i === 0) ? '#00f0ff' : '#10b981';
+                ctx.beginPath();
+                ctx.arc(sx, sy, 3.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Vector trail
+                ctx.strokeStyle = 'rgba(0, 240, 255, 0.3)';
+                ctx.beginPath();
+                ctx.moveTo(sx, sy);
+                ctx.lineTo(sx - Math.cos(shipAngle) * 8, sy - Math.sin(shipAngle) * 8);
+                ctx.stroke();
+            }
+
+            // Step simulation time
+            if (!sim.paused) {
+                sim.time += 0.016 * sim.speed;
+                sim.cycle = +(sim.cycle + 0.002 * sim.speed).toFixed(2);
+                document.getElementById('statCycle').textContent = sim.cycle.toFixed(2);
+            }
+
+            requestAnimationFrame(render);
+        }
+
+        // Tab Switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                const target = document.getElementById(btn.dataset.tab);
+                if (target) target.classList.add('active');
+            });
+        });
+
+        // Time Control Handlers
+        const pauseBtn = document.getElementById('btnPause');
+        const sp1Btn = document.getElementById('btnSpeed1');
+        const sp2Btn = document.getElementById('btnSpeed2');
+        const sp5Btn = document.getElementById('btnSpeed5');
+
+        function setSpeed(speed, isPause = false) {
+            sim.speed = speed;
+            sim.paused = isPause;
+            [pauseBtn, sp1Btn, sp2Btn, sp5Btn].forEach(b => b.classList.remove('active'));
+            if (isPause) pauseBtn.classList.add('active');
+            else if (speed === 1) sp1Btn.classList.add('active');
+            else if (speed === 2) sp2Btn.classList.add('active');
+            else if (speed === 5) sp5Btn.classList.add('active');
+        }
+
+        pauseBtn.addEventListener('click', () => setSpeed(0, true));
+        sp1Btn.addEventListener('click', () => setSpeed(1));
+        sp2Btn.addEventListener('click', () => setSpeed(2));
+        sp5Btn.addEventListener('click', () => setSpeed(5));
+
+        // Interventions / Action Handlers
+        function logMsg(txt) {
+            const banner = document.getElementById('logBanner');
+            banner.innerHTML = `<span class="highlight">[FLEET DISPATCH]</span> ${txt}`;
+        }
+
+        document.getElementById('btnSolarMirror').addEventListener('click', () => {
+            if (sim.energy >= 250) {
+                sim.energy -= 250;
+                sim.temp += 1.8;
+                sim.habitability = Math.min(100, +(sim.habitability + 1.2).toFixed(1));
+                updateUI();
+                logMsg('Orbital Solar Mirror angled. Surface thermal equilibrium rising (+1.8°C).');
+            } else {
+                logMsg('Insufficient energy reserves for Solar Mirror alignment.');
+            }
+        });
+
+        document.getElementById('btnAtmoProcessor').addEventListener('click', () => {
+            if (sim.minerals >= 120) {
+                sim.minerals -= 120;
+                sim.pressure = +(sim.pressure + 0.04).toFixed(2);
+                sim.habitability = Math.min(100, +(sim.habitability + 1.5).toFixed(1));
+                updateUI();
+                logMsg('Atmospheric Processor active. Heavy gas vapor released into troposphere (+0.04 atm).');
+            } else {
+                logMsg('Insufficient mineral reserves for Atmospheric Processor feed.');
+            }
+        });
+
+        document.getElementById('btnCometDrop').addEventListener('click', () => {
+            if (sim.volatiles >= 300) {
+                sim.volatiles -= 300;
+                sim.water = +(sim.water + 2.5).toFixed(1);
+                sim.habitability = Math.min(100, +(sim.habitability + 2.0).toFixed(1));
+                updateUI();
+                logMsg('Captured comet nuclei guided into polar trajectory. Hydrosphere coverage expanded (+2.5%).');
+            } else {
+                logMsg('Insufficient volatiles for orbital comet deflection.');
+            }
+        });
+
+        document.getElementById('btnBioseeding').addEventListener('click', () => {
+            if (sim.energy >= 100) {
+                sim.energy -= 100;
+                sim.oxygen = +(sim.oxygen + 0.8).toFixed(1);
+                sim.habitability = Math.min(100, +(sim.habitability + 1.8).toFixed(1));
+                updateUI();
+                logMsg('Genetically adapted extremophile lichen seeded across equatorial plains (+0.8% O2).');
+            } else {
+                logMsg('Insufficient energy for bio-seeding dissemination.');
+            }
+        });
+
+        function updateUI() {
+            document.getElementById('statEnergy').textContent = `${sim.energy.toLocaleString()} kW`;
+            document.getElementById('statMinerals').textContent = `${sim.minerals.toLocaleString()} t`;
+            document.getElementById('statVolatiles').textContent = `${sim.volatiles.toLocaleString()} t`;
+            document.getElementById('statHabitability').textContent = `${sim.habitability.toFixed(1)}%`;
+
+            document.getElementById('valPressure').textContent = `${sim.pressure.toFixed(2)} atm`;
+            document.getElementById('barPressure').style.width = `${Math.min(100, sim.pressure * 100)}%`;
+
+            document.getElementById('valTemp').textContent = `${sim.temp.toFixed(0)} °C`;
+            const tempPercent = Math.max(0, Math.min(100, ((sim.temp + 100) / 150) * 100));
+            document.getElementById('barTemp').style.width = `${tempPercent}%`;
+
+            document.getElementById('valWater').textContent = `${sim.water.toFixed(1)}%`;
+            document.getElementById('barWater').style.width = `${Math.min(100, sim.water)}%`;
+
+            document.getElementById('valOxygen').textContent = `${sim.oxygen.toFixed(1)}% (${sim.oxygen > 15 ? 'Breathable' : 'Low'})`;
+            document.getElementById('barOxygen').style.width = `${Math.min(100, sim.oxygen * 4)}%`;
+        }
+
+        // Start render loop
+        render();
+    </script>
+</body>
+</html>
