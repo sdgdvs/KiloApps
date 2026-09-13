@@ -587,28 +587,116 @@ void DrawGDIBrick(HDC hdc, int r, int c, int type, int bx, int by, int hp) {
         MoveToEx(hdc, bx + BR_W - 6, by + 2, NULL); LineTo(hdc, bx + BR_W - 6, by + BR_H - 2);
         DeleteObject(stripePen);
     } else if (type == 4) {
-        HBRUSH yBr = CreateSolidBrush(RGB(255, 255, 0));
-        SelectObject(hdc, yBr);
-        Ellipse(hdc, bx + BR_W/2 - 3, by + BR_H/2 - 3, bx + BR_W/2 + 3, by + BR_H/2 + 3);
-        DeleteObject(yBr);
+        // --- TYPE 4: EXPLOSIVE / ORDNANCE DEMOLITION BRICK ---
+        // Dark military charcoal body
+        HBRUSH cBr = CreateSolidBrush(RGB(28, 28, 36));
+        RECT cRc = { bx + 1, by + 1, bx + BR_W - 1, by + BR_H - 1 };
+        FillRect(hdc, &cRc, cBr);
+        DeleteObject(cBr);
+
+        // Hazard chevrons on sides
+        HBRUSH hzBr = CreateSolidBrush(RGB(255, 170, 0));
+        RECT hzL = { bx + 2, by + 2, bx + 7, by + BR_H - 2 };
+        RECT hzR = { bx + BR_W - 7, by + 2, bx + BR_W - 2, by + BR_H - 2 };
+        FillRect(hdc, &hzL, hzBr);
+        FillRect(hdc, &hzR, hzBr);
+        DeleteObject(hzBr);
+
+        // Hazard hash ticks
+        HBRUSH blkBr = CreateSolidBrush(RGB(17, 17, 24));
+        RECT b1 = { bx + 3, by + 4, bx + 6, by + 6 }; FillRect(hdc, &b1, blkBr);
+        RECT b2 = { bx + 3, by + 9, bx + 6, by + 11 }; FillRect(hdc, &b2, blkBr);
+        RECT b3 = { bx + BR_W - 6, by + 4, bx + BR_W - 3, by + 6 }; FillRect(hdc, &b3, blkBr);
+        RECT b4 = { bx + BR_W - 6, by + 9, bx + BR_W - 3, by + 11 }; FillRect(hdc, &b4, blkBr);
+        DeleteObject(blkBr);
+
+        // Pulsing Bomb Warhead
+        int pulse = (frame_counter % 16 < 8);
+        HBRUSH bombBr = CreateSolidBrush(pulse ? RGB(255, 0, 50) : RGB(255, 120, 0));
+        HPEN nonePen = CreatePen(PS_NULL, 0, 0);
+        HGDIOBJ oP = SelectObject(hdc, nonePen);
+        HGDIOBJ oB = SelectObject(hdc, bombBr);
+        Ellipse(hdc, bx + BR_W/2 - 4, by + BR_H/2 - 4, bx + BR_W/2 + 5, by + BR_H/2 + 5);
+
+        // Fuse sparking cross
+        HPEN sparkPen = CreatePen(PS_SOLID, 1, RGB(255, 240, 100));
+        SelectObject(hdc, sparkPen);
+        MoveToEx(hdc, bx + BR_W/2 - 3, by + 3, NULL);
+        LineTo(hdc, bx + BR_W/2 + 4, by + 3);
+        SelectObject(hdc, oP);
+        SelectObject(hdc, oB);
+        DeleteObject(bombBr);
+        DeleteObject(nonePen);
+        DeleteObject(sparkPen);
     } else if (type == 6) {
-        SetTextColor(hdc, RGB(0, 0, 0));
+        // --- TYPE 6: CYBER CACHE BRICK ---
+        HBRUSH crateBr = CreateSolidBrush(RGB(15, 36, 46));
+        RECT cRc = { bx + 1, by + 1, bx + BR_W - 1, by + BR_H - 1 };
+        FillRect(hdc, &cRc, crateBr);
+        DeleteObject(crateBr);
+
+        HPEN cyanPen = CreatePen(PS_SOLID, 1, RGB(0, 229, 255));
+        HGDIOBJ oP = SelectObject(hdc, cyanPen);
+        HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
+        HGDIOBJ oB = SelectObject(hdc, nullBr);
+        Rectangle(hdc, bx + 3, by + 2, bx + BR_W - 3, by + BR_H - 2);
+
+        // Stencil glyph
+        SetTextColor(hdc, (frame_counter % 30 < 15) ? RGB(0, 255, 255) : RGB(255, 230, 0));
         SetBkMode(hdc, TRANSPARENT);
-        TextOutA(hdc, bx + BR_W/2 - 3, by + 1, "?", 1);
+        TextOutA(hdc, bx + BR_W/2 - 4, by + 1, "[]", 2);
+
+        SelectObject(hdc, oP);
+        SelectObject(hdc, oB);
+        DeleteObject(cyanPen);
     } else if (type == 7) {
-        HPEN phantomPen = CreatePen(PS_DOT, 1, RGB(255, 255, 255));
-        SelectObject(hdc, phantomPen);
-        MoveToEx(hdc, bx + 2, by + 2, NULL); LineTo(hdc, bx + BR_W - 2, by + BR_H - 2);
+        // --- TYPE 7: PHASE / GHOST HOLOGRAPHIC BRICK ---
+        HPEN phantomPen = CreatePen(PS_DOT, 1, RGB(0, 255, 255));
+        HGDIOBJ oP = SelectObject(hdc, phantomPen);
+        HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
+        HGDIOBJ oB = SelectObject(hdc, nullBr);
+        Rectangle(hdc, bx + 2, by + 2, bx + BR_W - 2, by + BR_H - 2);
+
+        // Scanline
+        int scanY = by + 2 + ((frame_counter * 2) % (BR_H - 4));
+        HPEN scanPen = CreatePen(PS_SOLID, 1, RGB(200, 255, 255));
+        SelectObject(hdc, scanPen);
+        MoveToEx(hdc, bx + 3, scanY, NULL);
+        LineTo(hdc, bx + BR_W - 3, scanY);
+
+        SelectObject(hdc, oP);
+        SelectObject(hdc, oB);
         DeleteObject(phantomPen);
+        DeleteObject(scanPen);
     } else if (type == 8) {
-        HBRUSH boltBr = CreateSolidBrush(RGB(40, 40, 40));
-        SelectObject(hdc, boltBr);
+        // --- TYPE 8: REINFORCED TITANIUM ARMOR BRICK ---
+        HBRUSH titBr = CreateSolidBrush(RGB(64, 70, 80));
+        RECT tRc = { bx + 1, by + 1, bx + BR_W - 1, by + BR_H - 1 };
+        FillRect(hdc, &tRc, titBr);
+        DeleteObject(titBr);
+
+        // Steel cross-brace girders
+        HPEN bracePen = CreatePen(PS_SOLID, 2, RGB(42, 46, 54));
+        HGDIOBJ oP = SelectObject(hdc, bracePen);
+        MoveToEx(hdc, bx + 3, by + 3, NULL); LineTo(hdc, bx + BR_W - 3, by + BR_H - 3);
+        MoveToEx(hdc, bx + BR_W - 3, by + 3, NULL); LineTo(hdc, bx + 3, by + BR_H - 3);
+        SelectObject(hdc, oP);
+        DeleteObject(bracePen);
+
+        // 4 Corner Industrial Hex Bolts
+        HBRUSH boltBr = CreateSolidBrush(RGB(160, 168, 180));
+        HGDIOBJ oB = SelectObject(hdc, boltBr);
+        HPEN nonePen = CreatePen(PS_NULL, 0, 0);
+        oP = SelectObject(hdc, nonePen);
         Ellipse(hdc, bx + 2, by + 2, bx + 5, by + 5);
         Ellipse(hdc, bx + BR_W - 5, by + 2, bx + BR_W - 2, by + 5);
         Ellipse(hdc, bx + 2, by + BR_H - 5, bx + 5, by + BR_H - 2);
         Ellipse(hdc, bx + BR_W - 5, by + BR_H - 5, bx + BR_W - 2, by + BR_H - 2);
+        SelectObject(hdc, oP);
+        SelectObject(hdc, oB);
         DeleteObject(boltBr);
-        
+        DeleteObject(nonePen);
+
         if (hp > 0 && hp < 4) {
             COLORREF cClr = (hp == 3) ? RGB(255, 150, 0) : ((hp == 2) ? RGB(255, 50, 0) : RGB(255, 0, 0));
             HPEN crackPen = CreatePen(PS_SOLID, 1, cClr);
@@ -666,6 +754,196 @@ void TriggerExplosion(int r, int c) {
             }
         }
     }
+}
+
+void DrawBoss(HDC hdc) {
+    if (!boss_active) return;
+    int bx = boss_x, by = boss_y, bw = boss_w, bh = boss_h;
+    int cx = bx + bw / 2, cy = by + bh / 2;
+
+    if (boss_type == 1) {
+        // --- BOSS 1: DREADNOUGHT FORTRESS CORE (Heavy Armored Warship) ---
+        // Rear Thruster flames
+        int thrust = (frame_counter % 4 < 2) ? 6 : 4;
+        HPEN thPen = CreatePen(PS_SOLID, 1, RGB(255, 100, 0));
+        HBRUSH thBr = CreateSolidBrush(RGB(255, 200, 50));
+        HGDIOBJ oP = SelectObject(hdc, thPen);
+        HGDIOBJ oB = SelectObject(hdc, thBr);
+        POINT t1[3] = { {bx + 18, by}, {bx + 26, by}, {bx + 22, by - thrust} };
+        Polygon(hdc, t1, 3);
+        POINT t2[3] = { {bx + bw - 26, by}, {bx + bw - 18, by}, {bx + bw - 22, by - thrust} };
+        Polygon(hdc, t2, 3);
+        SelectObject(hdc, oP); SelectObject(hdc, oB);
+        DeleteObject(thPen); DeleteObject(thBr);
+
+        // Angled Dreadnought Hull
+        POINT hullPts[6] = {
+            {bx + 15, by}, {bx + bw - 15, by},
+            {bx + bw, by + 12}, {bx + bw - 8, by + bh},
+            {bx + 8, by + bh}, {bx, by + 12}
+        };
+        HPEN hPen = CreatePen(PS_SOLID, 2, RGB(90, 112, 144));
+        HBRUSH hBr = CreateSolidBrush(RGB(30, 36, 48));
+        oP = SelectObject(hdc, hPen); oB = SelectObject(hdc, hBr);
+        Polygon(hdc, hullPts, 6);
+
+        // Sponson hazard plates (yellow/black)
+        HBRUSH yBr = CreateSolidBrush(RGB(255, 170, 0));
+        SelectObject(hdc, yBr);
+        RECT rL = { bx + 2, by + 14, bx + 12, by + bh - 4 }; FillRect(hdc, &rL, yBr);
+        RECT rR = { bx + bw - 12, by + 14, bx + bw - 2, by + bh - 4 }; FillRect(hdc, &rR, yBr);
+        DeleteObject(yBr);
+
+        // Black chevron stripes
+        HPEN sPen = CreatePen(PS_SOLID, 2, RGB(16, 16, 24));
+        SelectObject(hdc, sPen);
+        MoveToEx(hdc, bx + 2, by + 18, NULL); LineTo(hdc, bx + 12, by + 24);
+        MoveToEx(hdc, bx + bw - 12, by + 18, NULL); LineTo(hdc, bx + bw - 2, by + 24);
+        DeleteObject(sPen);
+
+        // Twin Plasma Rotary Cannons
+        HBRUSH cBr = CreateSolidBrush(RGB(20, 24, 32));
+        HPEN cPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 255));
+        SelectObject(hdc, cBr); SelectObject(hdc, cPen);
+        Rectangle(hdc, bx - 4, by + 8, bx + 4, by + 26);
+        Rectangle(hdc, bx + bw - 4, by + 8, bx + bw + 4, by + 26);
+        DeleteObject(cBr); DeleteObject(cPen);
+
+        // Scanning bridge visor
+        HBRUSH vBg = CreateSolidBrush(RGB(32, 5, 8));
+        HPEN vPen = CreatePen(PS_SOLID, 1, RGB(255, 0, 50));
+        SelectObject(hdc, vBg); SelectObject(hdc, vPen);
+        Rectangle(hdc, cx - 24, by + 8, cx + 24, by + 15);
+        DeleteObject(vBg); DeleteObject(vPen);
+
+        int sweep = (FastSin((frame_counter * 2) % 16) * 18) / 100;
+        HBRUSH sBr = CreateSolidBrush(RGB(255, 255, 255));
+        RECT sRc = { cx + sweep - 3, by + 9, cx + sweep + 3, by + 14 };
+        FillRect(hdc, &sRc, sBr);
+        DeleteObject(sBr);
+
+        // Pulsing core
+        int pulse = (frame_counter % 20 < 10) ? 2 : -2;
+        HPEN corePen = CreatePen(PS_SOLID, 2, RGB(255, 200, 0));
+        HBRUSH coreBr = CreateSolidBrush(RGB(255, 100, 0));
+        SelectObject(hdc, corePen); SelectObject(hdc, coreBr);
+        Ellipse(hdc, cx - 10 + pulse, cy + 4 - pulse, cx + 10 - pulse, cy + 14 + pulse);
+        DeleteObject(corePen); DeleteObject(coreBr);
+
+        SelectObject(hdc, oP); SelectObject(hdc, oB);
+        DeleteObject(hPen); DeleteObject(hBr);
+
+    } else if (boss_type == 2) {
+        // --- BOSS 2: ORBITAL CITADEL / SHIELD MATRIX (Hexagonal Cyber-Fortress) ---
+        // Hexagonal chassis
+        POINT hexPts[6] = {
+            {bx + 20, by}, {bx + bw - 20, by},
+            {bx + bw, cy}, {bx + bw - 20, by + bh},
+            {bx + 20, by + bh}, {bx, cy}
+        };
+        HPEN hexPen = CreatePen(PS_SOLID, 2, RGB(0, 220, 255));
+        HBRUSH hexBr = CreateSolidBrush(RGB(8, 24, 40));
+        HGDIOBJ oP = SelectObject(hdc, hexPen);
+        HGDIOBJ oB = SelectObject(hdc, hexBr);
+        Polygon(hdc, hexPts, 6);
+
+        // Cyan Conduit Grid
+        HPEN conPen = CreatePen(PS_SOLID, 1, RGB(0, 140, 180));
+        SelectObject(hdc, conPen);
+        MoveToEx(hdc, bx + 24, by + 4, NULL); LineTo(hdc, cx, cy); LineTo(hdc, bx + bw - 24, by + 4);
+        MoveToEx(hdc, bx + 24, by + bh - 4, NULL); LineTo(hdc, cx, cy); LineTo(hdc, bx + bw - 24, by + bh - 4);
+        MoveToEx(hdc, bx + 4, cy, NULL); LineTo(hdc, bx + bw - 4, cy);
+        DeleteObject(conPen);
+
+        // Concentric Ion Core
+        int ion_pulse = (frame_counter % 16 < 8) ? 10 : 8;
+        HBRUSH ionBr = CreateSolidBrush(RGB(0, 255, 255));
+        HPEN ionPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+        SelectObject(hdc, ionBr); SelectObject(hdc, ionPen);
+        Ellipse(hdc, cx - ion_pulse, cy - ion_pulse, cx + ion_pulse, cy + ion_pulse);
+        DeleteObject(ionBr); DeleteObject(ionPen);
+
+        // 4 Orbiting Shield Matrix Nodes
+        int rR = 46;
+        int nodes[4][2];
+        for (int i = 0; i < 4; i++) {
+            int angle_idx = (frame_counter * 2 + i * 4) % 16;
+            nodes[i][0] = cx + (FastCos(angle_idx) * rR) / 100;
+            nodes[i][1] = cy + (FastSin(angle_idx) * (rR / 2)) / 100;
+            HBRUSH nBr = CreateSolidBrush(RGB(0, 255, 255));
+            RECT nRc = { nodes[i][0] - 4, nodes[i][1] - 4, nodes[i][0] + 4, nodes[i][1] + 4 };
+            FillRect(hdc, &nRc, nBr);
+            DeleteObject(nBr);
+        }
+
+        // Lightning arc between nodes
+        if (frame_counter % 3 == 0) {
+            HPEN arcPen = CreatePen(PS_SOLID, 1, RGB(200, 255, 255));
+            SelectObject(hdc, arcPen);
+            int idx = (frame_counter / 3) % 4;
+            int nxt = (idx + 1) % 4;
+            MoveToEx(hdc, nodes[idx][0], nodes[idx][1], NULL);
+            LineTo(hdc, (nodes[idx][0] + nodes[nxt][0]) / 2, (nodes[idx][1] + nodes[nxt][1]) / 2 - 4);
+            LineTo(hdc, nodes[nxt][0], nodes[nxt][1]);
+            DeleteObject(arcPen);
+        }
+
+        SelectObject(hdc, oP); SelectObject(hdc, oB);
+        DeleteObject(hexPen); DeleteObject(hexBr);
+
+    } else {
+        // --- BOSS 3: VOID LEVIATHAN / MOTHERSHIP CORE (Alien Chitin Carapace) ---
+        POINT carPts[10] = {
+            {cx, by - 4}, {bx + bw - 10, by + 4}, {bx + bw + 4, by + bh / 2 - 2},
+            {bx + bw - 6, by + bh + 4}, {cx + 16, by + bh - 4}, {cx, by + bh + 8},
+            {cx - 16, by + bh - 4}, {bx + 6, by + bh + 4}, {bx - 4, by + bh / 2 - 2},
+            {bx + 10, by + 4}
+        };
+        HPEN carPen = CreatePen(PS_SOLID, 2, RGB(180, 50, 255));
+        HBRUSH carBr = CreateSolidBrush(RGB(30, 8, 42));
+        HGDIOBJ oP = SelectObject(hdc, carPen);
+        HGDIOBJ oB = SelectObject(hdc, carBr);
+        Polygon(hdc, carPts, 10);
+
+        // Mandibles
+        HBRUSH mBr = CreateSolidBrush(RGB(160, 32, 240));
+        SelectObject(hdc, mBr);
+        POINT m1[3] = { {bx + 18, by + bh}, {bx + 26, by + bh + 10}, {bx + 30, by + bh} };
+        Polygon(hdc, m1, 3);
+        POINT m2[3] = { {bx + bw - 18, by + bh}, {bx + bw - 26, by + bh + 10}, {bx + bw - 30, by + bh} };
+        Polygon(hdc, m2, 3);
+        DeleteObject(mBr);
+
+        // Void Singularity core
+        int vR = (frame_counter % 12 < 6) ? 14 : 11;
+        HBRUSH vBr = CreateSolidBrush(RGB(10, 0, 18));
+        HPEN vPen = CreatePen(PS_SOLID, 2, RGB(160, 0, 255));
+        SelectObject(hdc, vBr); SelectObject(hdc, vPen);
+        Ellipse(hdc, cx - vR, cy - vR, cx + vR, cy + vR);
+        DeleteObject(vBr); DeleteObject(vPen);
+
+        // Tracking optic eye pointing towards pad_x
+        int targetX = pad_x + pad_w / 2;
+        int dx = (targetX > cx + 10) ? 3 : (targetX < cx - 10 ? -3 : 0);
+        HBRUSH eyeBr = CreateSolidBrush(RGB(255, 0, 60));
+        SelectObject(hdc, eyeBr);
+        Ellipse(hdc, cx - 6, cy - 6, cx + 6, cy + 6);
+        DeleteObject(eyeBr);
+        HBRUSH pBr = CreateSolidBrush(RGB(255, 255, 0));
+        SelectObject(hdc, pBr);
+        Ellipse(hdc, cx + dx - 2, cy + 1, cx + dx + 2, cy + 5);
+        DeleteObject(pBr);
+
+        SelectObject(hdc, oP); SelectObject(hdc, oB);
+        DeleteObject(carPen); DeleteObject(carBr);
+    }
+
+    // Health Telemetry Display
+    char bStr[32];
+    wsprintfA(bStr, "BOSS: %d/%d", boss_hp, boss_max_hp);
+    SetTextColor(hdc, RGB(255, 255, 255));
+    SetBkMode(hdc, TRANSPARENT);
+    TextOutA(hdc, bx + bw / 2 - 35, by + bh - 14, bStr, lstrlenA(bStr));
 }
 
 void DrawHUDCornerReticles(HDC hdc) {
@@ -1941,41 +2219,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DeleteObject(ubBr);
                 }
 
-                if (boss_active) {
-                    HBRUSH bBr = CreateSolidBrush(RGB(255, 0, 85));
-                    RECT bRc = { boss_x, boss_y, boss_x + boss_w, boss_y + boss_h };
-                    FillRect(memDC, &bRc, bBr);
-                    DeleteObject(bBr);
-
-                    char bStr[32];
-                    wsprintfA(bStr, "BOSS HP: %d/%d", boss_hp, boss_max_hp);
-                    TextOutA(memDC, boss_x + 10, boss_y + 12, bStr, lstrlenA(bStr));
-                    
-                    if (boss_type == 2 || boss_type == 3) {
-                        int ofs = (frame_counter % 80 < 40) ? (frame_counter % 40) * 2 - 40 : 40 - (frame_counter % 40) * 2;
-                        int sx1 = boss_x + boss_w/2 + ofs;
-                        int sy1 = boss_y + boss_h + 10;
-                        int sx2 = boss_x + boss_w/2 - ofs;
-                        int sy2 = boss_y - 10;
-                        HBRUSH shBr = CreateSolidBrush(RGB(0, 255, 255));
-                        RECT s1 = {sx1-5, sy1-5, sx1+5, sy1+5}; FillRect(memDC, &s1, shBr);
-                        RECT s2 = {sx2-5, sy2-5, sx2+5, sy2+5}; FillRect(memDC, &s2, shBr);
-                        DeleteObject(shBr);
-                    }
-
-                    int pulse = (frame_counter % 20 < 10) ? 2 : -2;
-                    HPEN corePen = CreatePen(PS_SOLID, 2, RGB(255, 255, 0));
-                    HGDIOBJ oldP = SelectObject(memDC, corePen);
-                    HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
-                    HGDIOBJ oldB = SelectObject(memDC, nullBr);
-                    int cx = boss_x + boss_w / 2;
-                    int cy = boss_y + boss_h / 2;
-                    int r_boss = 15 + pulse;
-                    Ellipse(memDC, cx - r_boss, cy - r_boss, cx + r_boss, cy + r_boss);
-                    SelectObject(memDC, oldP);
-                    SelectObject(memDC, oldB);
-                    DeleteObject(corePen);
-                }
+                // Draw Boss Fortress Core with distinctive mechanical chassis
+                DrawBoss(memDC);
                 for (int i = 0; i < MAX_BOSS_BULLETS; i++) {
                     if (boss_bullets[i].active) {
                         HBRUSH bbBr = CreateSolidBrush(RGB(255, 50, 100));
@@ -2076,20 +2321,49 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteObject(tPen);
                 DeleteObject(tBr);
 
-                // Draw Orbital Satellites
+                // Magnetic tractor beam capture field between paddle and stuck ball
+                for (int i = 0; i < MAX_BALLS; i++) {
+                    if (balls[i].active && balls[i].stuck) {
+                        HPEN tPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 255));
+                        HGDIOBJ oTP = SelectObject(memDC, tPen);
+                        MoveToEx(memDC, pad_x + balls[i].stuck_offset - 6, H - 40, NULL);
+                        LineTo(memDC, (int)balls[i].x + 4, (int)balls[i].y + 4);
+                        LineTo(memDC, pad_x + balls[i].stuck_offset + 6, H - 40);
+                        SelectObject(memDC, oTP);
+                        DeleteObject(tPen);
+                    }
+                }
+
+                // Draw Detailed Orbital Satellite Drones with solar panels
                 for (int s = 0; s < MAX_SATELLITES; s++) {
                     int sx_sat = (int)satellites[s].x;
                     int sy_sat = (int)satellites[s].y;
+
+                    // Left & Right Photovoltaic Solar Wings
+                    HBRUSH panBr = CreateSolidBrush(RGB(10, 48, 80));
+                    HPEN panPen = CreatePen(PS_SOLID, 1, RGB(0, 220, 255));
+                    HGDIOBJ oB = SelectObject(memDC, panBr);
+                    HGDIOBJ oP = SelectObject(memDC, panPen);
+                    Rectangle(memDC, sx_sat - 11, sy_sat - 3, sx_sat - 5, sy_sat + 4);
+                    Rectangle(memDC, sx_sat + 5, sy_sat - 3, sx_sat + 11, sy_sat + 4);
+                    SelectObject(memDC, oB);
+                    SelectObject(memDC, oP);
+                    DeleteObject(panBr);
+                    DeleteObject(panPen);
+
+                    // Central Drone Chassis
                     HBRUSH satBr = CreateSolidBrush(dur_satellite > 0 ? RGB(255, 100, 255) : RGB(0, 255, 220));
-                    HGDIOBJ oB = SelectObject(memDC, satBr);
                     HPEN satPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-                    HGDIOBJ oP = SelectObject(memDC, satPen);
-                    
-                    Ellipse(memDC, sx_sat - 5, sy_sat - 5, sx_sat + 5, sy_sat + 5);
-                    
-                    // Drone antenna wings
-                    MoveToEx(memDC, sx_sat - 7, sy_sat, NULL); LineTo(memDC, sx_sat + 7, sy_sat);
-                    MoveToEx(memDC, sx_sat, sy_sat - 7, NULL); LineTo(memDC, sx_sat, sy_sat + 7);
+                    oB = SelectObject(memDC, satBr);
+                    oP = SelectObject(memDC, satPen);
+                    Ellipse(memDC, sx_sat - 4, sy_sat - 4, sx_sat + 5, sy_sat + 5);
+
+                    // Forward emitter muzzle
+                    SetPixel(memDC, sx_sat, sy_sat - 5, RGB(255, 255, 255));
+
+                    // Sensor Diode
+                    int dPulse = (frame_counter % 10 < 5);
+                    SetPixel(memDC, sx_sat, sy_sat, dPulse ? RGB(255, 50, 100) : RGB(0, 255, 200));
 
                     SelectObject(memDC, oB);
                     SelectObject(memDC, oP);

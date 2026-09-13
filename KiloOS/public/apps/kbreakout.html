@@ -498,25 +498,224 @@ function getBrickColor(type, r, c) {
 
 function drawBrick(r, c, type, bx, by, hp) {
     let baseColor = getBrickColor(type, r, c);
+
+    if (type === 4) {
+        // --- TYPE 4: EXPLOSIVE / ORDNANCE DEMOLITION BRICK ---
+        ctx.fillStyle = '#1c1c24';
+        ctx.fillRect(bx + 1, by + 1, BR_W - 2, BR_H - 2);
+        // Hazard chevrons on sides
+        ctx.fillStyle = '#ffaa00';
+        ctx.fillRect(bx + 2, by + 2, 5, BR_H - 4);
+        ctx.fillRect(bx + BR_W - 7, by + 2, 5, BR_H - 4);
+        ctx.fillStyle = '#111118';
+        ctx.fillRect(bx + 3, by + 4, 3, 2); ctx.fillRect(bx + 3, by + 9, 3, 2);
+        ctx.fillRect(bx + BR_W - 6, by + 4, 3, 2); ctx.fillRect(bx + BR_W - 6, by + 9, 3, 2);
+
+        // Bomb warhead core with pulsing detonator fuse
+        let bombPulse = (frame % 16 < 8) ? '#ff0033' : '#ff7700';
+        ctx.fillStyle = bombPulse;
+        ctx.beginPath();
+        ctx.arc(bx + BR_W / 2, by + BR_H / 2, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(bx + BR_W / 2 - 1, by + BR_H / 2 - 1, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+        // Fuse sparking cross
+        ctx.strokeStyle = '#ffee66';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(bx + BR_W / 2 - 3, by + 3); ctx.lineTo(bx + BR_W / 2 + 3, by + 3);
+        ctx.stroke();
+        return;
+    }
+
+    if (type === 8) {
+        // --- TYPE 8: REINFORCED TITANIUM ARMOR BRICK ---
+        let tGrad = ctx.createLinearGradient(bx, by, bx, by + BR_H);
+        tGrad.addColorStop(0, '#606670');
+        tGrad.addColorStop(0.5, '#404550');
+        tGrad.addColorStop(1, '#252930');
+        ctx.fillStyle = tGrad;
+        ctx.fillRect(bx + 1, by + 1, BR_W - 2, BR_H - 2);
+
+        // Steel cross-brace girders
+        ctx.strokeStyle = '#2a2e36';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(bx + 3, by + 3); ctx.lineTo(bx + BR_W - 3, by + BR_H - 3);
+        ctx.moveTo(bx + BR_W - 3, by + 3); ctx.lineTo(bx + 3, by + BR_H - 3);
+        ctx.stroke();
+
+        // 4 Corner Industrial Rivets / Hex Bolts
+        ctx.fillStyle = '#a0a8b4';
+        let bRad = 1.6;
+        ctx.beginPath();
+        ctx.arc(bx + 4, by + 4, bRad, 0, Math.PI * 2);
+        ctx.arc(bx + BR_W - 4, by + 4, bRad, 0, Math.PI * 2);
+        ctx.arc(bx + 4, by + BR_H - 4, bRad, 0, Math.PI * 2);
+        ctx.arc(bx + BR_W - 4, by + BR_H - 4, bRad, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Molten damage fracture cracks as armor integrity weakens
+        if (hp > 0 && hp < 4) {
+            let cClr = (hp === 3) ? '#ff9900' : (hp === 2 ? '#ff4400' : '#ff0033');
+            ctx.strokeStyle = cClr;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(bx + BR_W * 0.2, by); ctx.lineTo(bx + BR_W * 0.4, by + BR_H * 0.45); ctx.lineTo(bx + BR_W * 0.3, by + BR_H * 0.8);
+            if (hp < 3) {
+                ctx.moveTo(bx + BR_W, by + BR_H * 0.2); ctx.lineTo(bx + BR_W * 0.65, by + BR_H * 0.55); ctx.lineTo(bx + BR_W * 0.8, by + BR_H);
+            }
+            if (hp < 2) {
+                ctx.moveTo(bx + BR_W * 0.5, by + BR_H * 0.5); ctx.lineTo(bx + BR_W * 0.1, by + BR_H * 0.95);
+            }
+            ctx.stroke();
+        }
+        return;
+    }
+
+    if (type === 10) {
+        // --- TYPE 10: OPTICAL REFLECTOR PRISM BRICK ---
+        let pGrad = ctx.createLinearGradient(bx, by, bx + BR_W, by + BR_H);
+        pGrad.addColorStop(0, '#e8f8ff');
+        pGrad.addColorStop(0.3, '#70d8ff');
+        pGrad.addColorStop(0.7, '#2090e0');
+        pGrad.addColorStop(1, '#0a3860');
+        ctx.fillStyle = pGrad;
+        ctx.fillRect(bx + 1, by + 1, BR_W - 2, BR_H - 2);
+
+        // Prismatic cut facets meeting at apex
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(bx + 4, by + BR_H - 3);
+        ctx.lineTo(bx + BR_W / 2, by + 3);
+        ctx.lineTo(bx + BR_W - 4, by + BR_H - 3);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(bx + BR_W / 2, by + 3); ctx.lineTo(bx + BR_W / 2, by + BR_H - 2);
+        ctx.stroke();
+
+        // Crystalline flare highlight
+        let cPulse = Math.sin(frame * 0.2 + c * 0.5) * 0.3 + 0.7;
+        ctx.fillStyle = `rgba(255, 255, 255, ${cPulse})`;
+        ctx.beginPath();
+        ctx.arc(bx + BR_W / 2, by + 4, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+        return;
+    }
+
+    if (type === 11) {
+        // --- TYPE 11: QUANTUM RESONANCE BRICK ---
+        ctx.fillStyle = '#160824';
+        ctx.fillRect(bx + 1, by + 1, BR_W - 2, BR_H - 2);
+
+        // Spinning subatomic orbital ellipse
+        let qAng = frame * 0.1 + (r + c);
+        ctx.save();
+        ctx.translate(bx + BR_W / 2, by + BR_H / 2);
+        ctx.strokeStyle = '#b844ff';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, BR_W * 0.38, BR_H * 0.32, qAng, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Orbiting subatomic quantum lepton particle
+        let lx = Math.cos(qAng) * (BR_W * 0.38);
+        let ly = Math.sin(qAng) * (BR_H * 0.32);
+        ctx.fillStyle = '#00ffff';
+        ctx.beginPath();
+        ctx.arc(lx, ly, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pulsing antimatter core
+        let qPulse = (frame % 20 < 10) ? '#ffccff' : '#00ffff';
+        ctx.fillStyle = qPulse;
+        ctx.beginPath();
+        ctx.arc(0, 0, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        return;
+    }
+
+    if (type === 7) {
+        // --- TYPE 7: PHASE / GHOST HOLOGRAPHIC BRICK ---
+        let pAlpha = 0.45 + Math.sin(frame * 0.15 + c) * 0.25;
+        ctx.fillStyle = `rgba(30, 80, 120, ${pAlpha * 0.5})`;
+        ctx.fillRect(bx + 1, by + 1, BR_W - 2, BR_H - 2);
+
+        ctx.strokeStyle = `rgba(0, 255, 255, ${pAlpha})`;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 2]);
+        ctx.strokeRect(bx + 2, by + 2, BR_W - 4, BR_H - 4);
+        ctx.setLineDash([]);
+
+        // Vertical scanline
+        let scanY = by + ((frame * 1.5 + r * 4) % BR_H);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.beginPath();
+        ctx.moveTo(bx + 3, scanY); ctx.lineTo(bx + BR_W - 3, scanY);
+        ctx.stroke();
+        return;
+    }
+
+    if (type === 6) {
+        // --- TYPE 6: CYBER CACHE / MYSTERY CRATE BRICK ---
+        ctx.fillStyle = '#0f242e';
+        ctx.fillRect(bx + 1, by + 1, BR_W - 2, BR_H - 2);
+        ctx.strokeStyle = '#00e5ff';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(bx + 3, by + 2, BR_W - 6, BR_H - 4);
+
+        let bBlink = (frame % 30 < 15) ? '#00ffff' : '#ffea00';
+        ctx.fillStyle = bBlink;
+        ctx.font = 'bold 9px monospace';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('◈', bx + BR_W / 2, by + BR_H / 2);
+        return;
+    }
+
+    // --- STANDARD & HARD BRICKS (Types 1, 2, 3, 5, 9, etc.) ---
     ctx.fillStyle = baseColor;
     ctx.fillRect(bx + 1, by + 1, BR_W - 2, BR_H - 2);
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
     ctx.fillRect(bx + 1, by + 1, BR_W - 2, 2);
     ctx.fillRect(bx + 1, by + 1, 2, BR_H - 2);
 
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
     ctx.fillRect(bx + 1, by + BR_H - 3, BR_W - 2, 2);
     ctx.fillRect(bx + BR_W - 3, by + 1, 2, BR_H - 2);
 
-    // Sculpted brick glossy specular sheen highlight traversing block bevels
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(bx + 5, by + 5); ctx.lineTo(bx + BR_W - 5, by + 5);
+    ctx.stroke();
+
+    if (type === 9) {
+        ctx.strokeStyle = '#d0d8e0'; ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(bx + 4, by + 3); ctx.lineTo(bx + BR_W - 4, by + BR_H - 3);
+        ctx.moveTo(bx + BR_W - 4, by + 3); ctx.lineTo(bx + 4, by + BR_H - 3);
+        ctx.stroke();
+    } else if (type === 3) {
+        ctx.strokeStyle = '#ffe0a0'; ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(bx + 7, by + 3); ctx.lineTo(bx + 7, by + BR_H - 3);
+        ctx.moveTo(bx + BR_W - 7, by + 3); ctx.lineTo(bx + BR_W - 7, by + BR_H - 3);
+        ctx.stroke();
+    }
+
     let sheenPhase = ((frame * 1.5 + c * 8 + r * 14) % 180);
     if (sheenPhase >= 0 && sheenPhase <= BR_W + 10) {
         ctx.save();
         ctx.beginPath();
         ctx.rect(bx + 1, by + 1, BR_W - 2, BR_H - 2);
         ctx.clip();
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
         ctx.beginPath();
         ctx.moveTo(bx + sheenPhase - 6, by + BR_H);
         ctx.lineTo(bx + sheenPhase - 1, by + BR_H);
@@ -525,65 +724,6 @@ function drawBrick(r, c, type, bx, by, hp) {
         ctx.closePath();
         ctx.fill();
         ctx.restore();
-    }
-
-    if (type === 11) {
-        // Quantum Resonance Brick: pulsing core + diamond boundary
-        let pulse = (frame % 20 < 10) ? 1 : 0;
-        ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(bx + 5 - pulse, by + BR_H/2);
-        ctx.lineTo(bx + BR_W/2, by + 2 - pulse);
-        ctx.lineTo(bx + BR_W - 5 + pulse, by + BR_H/2);
-        ctx.lineTo(bx + BR_W/2, by + BR_H - 3 + pulse);
-        ctx.closePath();
-        ctx.stroke();
-
-        ctx.fillStyle = '#ffc8ff';
-        ctx.fillRect(bx + BR_W/2 - 2, by + BR_H/2 - 2, 4, 4);
-    } else if (type === 10) {
-        // Laser Reflector Prism
-        ctx.strokeStyle = '#00c8ff'; ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(bx + 3, by + BR_H - 3);
-        ctx.lineTo(bx + BR_W/2, by + 2);
-        ctx.lineTo(bx + BR_W - 3, by + BR_H - 3);
-        ctx.moveTo(bx + BR_W/2, by + 2);
-        ctx.lineTo(bx + BR_W/2, by + BR_H - 2);
-        ctx.stroke();
-    } else if (type === 9) {
-        ctx.strokeStyle = '#d0d8e0'; ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(bx + 4, by + 3); ctx.lineTo(bx + BR_W - 4, by + BR_H - 3);
-        ctx.moveTo(bx + BR_W - 4, by + 3); ctx.lineTo(bx + 4, by + BR_H - 3);
-        ctx.stroke();
-    } else if (type === 3) {
-        ctx.strokeStyle = '#ffe0a0'; ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(bx + 6, by + 2); ctx.lineTo(bx + 6, by + BR_H - 2);
-        ctx.moveTo(bx + BR_W - 6, by + 2); ctx.lineTo(bx + BR_W - 6, by + BR_H - 2);
-        ctx.stroke();
-    } else if (type === 4) {
-        ctx.fillStyle = '#ffff00';
-        ctx.beginPath();
-        ctx.arc(bx + BR_W/2, by + BR_H/2, 3, 0, Math.PI*2);
-        ctx.fill();
-    } else if (type === 6) {
-        ctx.fillStyle = '#000';
-        ctx.font = 'bold 10px monospace';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText('?', bx + BR_W/2, by + BR_H/2);
-    } else if (type === 7) {
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.setLineDash([2, 2]);
-        ctx.strokeRect(bx + 2, by + 2, BR_W - 4, BR_H - 4);
-        ctx.setLineDash([]);
-    } else if (type === 8) {
-        ctx.fillStyle = '#222';
-        ctx.fillRect(bx + 2, by + 2, 3, 3);
-        ctx.fillRect(bx + BR_W - 5, by + 2, 3, 3);
-        ctx.fillRect(bx + 2, by + BR_H - 5, 3, 3);
-        ctx.fillRect(bx + BR_W - 5, by + BR_H - 5, 3, 3);
     }
 }
 
@@ -1296,6 +1436,256 @@ function drawParticles4Layers(ctx) {
     }
 }
 
+function drawBoss(ctx) {
+    if (!boss_active) return;
+    ctx.save();
+    let bx = boss_x, by = boss_y, bw = boss_w, bh = boss_h;
+    let cx = bx + bw / 2, cy = by + bh / 2;
+
+    if (boss_type === 1) {
+        // --- BOSS 1: DREADNOUGHT FORTRESS CORE (Heavy Armored Warship) ---
+        let thrust = Math.sin(frame * 0.3) * 3 + 6;
+        let t1 = bx + 22, t2 = bx + bw - 22;
+        let thGrad = ctx.createLinearGradient(0, by, 0, by - thrust);
+        thGrad.addColorStop(0, '#ffffff');
+        thGrad.addColorStop(0.4, '#ff6600');
+        thGrad.addColorStop(1, 'rgba(255, 0, 0, 0)');
+        ctx.fillStyle = thGrad;
+        ctx.beginPath();
+        ctx.moveTo(t1 - 8, by); ctx.lineTo(t1 + 8, by); ctx.lineTo(t1, by - thrust);
+        ctx.moveTo(t2 - 8, by); ctx.lineTo(t2 + 8, by); ctx.lineTo(t2, by - thrust);
+        ctx.fill();
+
+        // Heavy plated chassis
+        let hullGrad = ctx.createLinearGradient(bx, by, bx, by + bh);
+        hullGrad.addColorStop(0, '#3a4454');
+        hullGrad.addColorStop(0.3, '#222834');
+        hullGrad.addColorStop(0.7, '#161a22');
+        hullGrad.addColorStop(1, '#0b0d13');
+        ctx.fillStyle = hullGrad;
+        ctx.strokeStyle = '#5a7090';
+        ctx.lineWidth = 2;
+
+        ctx.beginPath();
+        ctx.moveTo(bx + 15, by);
+        ctx.lineTo(bx + bw - 15, by);
+        ctx.lineTo(bx + bw, by + 12);
+        ctx.lineTo(bx + bw - 8, by + bh);
+        ctx.lineTo(bx + 8, by + bh);
+        ctx.lineTo(bx, by + 12);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Hazard Chevron Armor Plates on Sponsons
+        ctx.fillStyle = '#ffaa00';
+        ctx.beginPath();
+        ctx.moveTo(bx + 2, by + 14); ctx.lineTo(bx + 14, by + 14);
+        ctx.lineTo(bx + 10, by + bh - 4); ctx.lineTo(bx + 4, by + bh - 4);
+        ctx.closePath(); ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(bx + bw - 14, by + 14); ctx.lineTo(bx + bw - 2, by + 14);
+        ctx.lineTo(bx + bw - 4, by + bh - 4); ctx.lineTo(bx + bw - 10, by + bh - 4);
+        ctx.closePath(); ctx.fill();
+
+        ctx.strokeStyle = '#111'; ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(bx + 4, by + 18); ctx.lineTo(bx + 12, by + 24);
+        ctx.moveTo(bx + bw - 12, by + 18); ctx.lineTo(bx + bw - 4, by + 24);
+        ctx.stroke();
+
+        // Twin Plasma Rotary Cannons
+        ctx.fillStyle = '#1a1e28';
+        ctx.strokeStyle = '#00ffff';
+        ctx.lineWidth = 1;
+        ctx.fillRect(bx - 4, by + 8, 8, 18);
+        ctx.strokeRect(bx - 4, by + 8, 8, 18);
+        ctx.fillRect(bx + bw - 4, by + 8, 8, 18);
+        ctx.strokeRect(bx + bw - 4, by + 8, 8, 18);
+
+        let mGlow = Math.sin(frame * 0.25) * 0.4 + 0.6;
+        ctx.fillStyle = `rgba(0, 255, 255, ${mGlow})`;
+        ctx.fillRect(bx - 3, by + 24, 6, 4);
+        ctx.fillRect(bx + bw - 3, by + 24, 6, 4);
+
+        // Scanning Crimson Bridge Visor
+        let sweepX = cx + Math.sin(frame * 0.08) * 20;
+        ctx.fillStyle = '#200508';
+        ctx.fillRect(cx - 24, by + 8, 48, 6);
+        ctx.strokeStyle = '#ff0033';
+        ctx.strokeRect(cx - 24, by + 8, 48, 6);
+        let visorGrad = ctx.createRadialGradient(sweepX, by + 11, 1, sweepX, by + 11, 12);
+        visorGrad.addColorStop(0, '#ffffff');
+        visorGrad.addColorStop(0.3, '#ff0044');
+        visorGrad.addColorStop(1, 'rgba(255, 0, 50, 0)');
+        ctx.fillStyle = visorGrad;
+        ctx.fillRect(cx - 23, by + 9, 46, 4);
+
+        // Core Reactor Generator
+        let cPulse = Math.sin(frame * 0.15) * 0.3 + 0.7;
+        let cGrad = ctx.createRadialGradient(cx, cy + 5, 2, cx, cy + 5, 12);
+        cGrad.addColorStop(0, '#fffb90');
+        cGrad.addColorStop(0.4, `rgba(255, 120, 0, ${cPulse})`);
+        cGrad.addColorStop(1, 'rgba(255, 0, 0, 0)');
+        ctx.fillStyle = cGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy + 5, 12, 0, Math.PI * 2);
+        ctx.fill();
+
+    } else if (boss_type === 2) {
+        // --- BOSS 2: ORBITAL CITADEL / SHIELD MATRIX (Hexagonal Cyber-Fortress) ---
+        let ringRot = frame * 0.04;
+        let rR = 48;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(ringRot);
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.45)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, rR, 0, Math.PI * 2);
+        ctx.stroke();
+
+        let nodes = [];
+        for (let i = 0; i < 4; i++) {
+            let na = (i * Math.PI / 2);
+            let nx = Math.cos(na) * rR;
+            let ny = Math.sin(na) * rR;
+            nodes.push({x: nx, y: ny});
+            ctx.fillStyle = '#00ffff';
+            ctx.beginPath();
+            ctx.arc(nx, ny, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(nx, ny, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        if (frame % 3 === 0) {
+            ctx.strokeStyle = 'rgba(200, 255, 255, 0.7)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            let idx = (frame / 3) % 4;
+            let n1 = nodes[idx], n2 = nodes[(idx + 1) % 4];
+            ctx.moveTo(n1.x, n1.y);
+            let mx = (n1.x + n2.x) / 2 + (Math.random() - 0.5) * 8;
+            let my = (n1.y + n2.y) / 2 + (Math.random() - 0.5) * 8;
+            ctx.lineTo(mx, my);
+            ctx.lineTo(n2.x, n2.y);
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        // Main Hexagonal Citadel Chassis
+        let citGrad = ctx.createLinearGradient(bx, by, bx, by + bh);
+        citGrad.addColorStop(0, '#0a3048');
+        citGrad.addColorStop(0.5, '#051828');
+        citGrad.addColorStop(1, '#020d18');
+        ctx.fillStyle = citGrad;
+        ctx.strokeStyle = '#00e5ff';
+        ctx.lineWidth = 2;
+
+        ctx.beginPath();
+        ctx.moveTo(bx + 20, by);
+        ctx.lineTo(bx + bw - 20, by);
+        ctx.lineTo(bx + bw, cy);
+        ctx.lineTo(bx + bw - 20, by + bh);
+        ctx.lineTo(bx + 20, by + bh);
+        ctx.lineTo(bx, cy);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Cyan Conduit Grid
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(bx + 24, by + 4); ctx.lineTo(cx, cy); ctx.lineTo(bx + bw - 24, by + 4);
+        ctx.moveTo(bx + 24, by + bh - 4); ctx.lineTo(cx, cy); ctx.lineTo(bx + bw - 24, by + bh - 4);
+        ctx.moveTo(bx + 6, cy); ctx.lineTo(bx + bw - 6, cy);
+        ctx.stroke();
+
+        // Concentric Ion Core
+        let ionPulse = Math.sin(frame * 0.2) * 3 + 9;
+        ctx.fillStyle = 'rgba(0, 220, 255, 0.3)';
+        ctx.beginPath();
+        ctx.arc(cx, cy, ionPulse + 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#00ffff';
+        ctx.beginPath();
+        ctx.arc(cx, cy, ionPulse, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(cx, cy, ionPulse * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+
+    } else {
+        // --- BOSS 3: VOID LEVIATHAN / MOTHERSHIP CORE (Alien Chitin Carapace) ---
+        let bioPulse = Math.sin(frame * 0.12) * 0.35 + 0.65;
+        let vGrad = ctx.createLinearGradient(bx, by, bx, by + bh);
+        vGrad.addColorStop(0, '#2d083e');
+        vGrad.addColorStop(0.5, '#190326');
+        vGrad.addColorStop(1, '#090010');
+        ctx.fillStyle = vGrad;
+        ctx.strokeStyle = `rgba(180, 50, 255, ${bioPulse})`;
+        ctx.lineWidth = 2;
+
+        ctx.beginPath();
+        ctx.moveTo(cx, by - 4);
+        ctx.lineTo(bx + bw - 10, by + 4);
+        ctx.lineTo(bx + bw + 4, by + bh / 2 - 2);
+        ctx.lineTo(bx + bw - 6, by + bh + 4);
+        ctx.lineTo(cx + 16, by + bh - 4);
+        ctx.lineTo(cx, by + bh + 8);
+        ctx.lineTo(cx - 16, by + bh - 4);
+        ctx.lineTo(bx + 6, by + bh + 4);
+        ctx.lineTo(bx - 4, by + bh / 2 - 2);
+        ctx.lineTo(bx + 10, by + 4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Mandibles / Plasma Spikes
+        ctx.fillStyle = '#a020f0';
+        ctx.beginPath();
+        ctx.moveTo(bx + 18, by + bh); ctx.lineTo(bx + 26, by + bh + 10); ctx.lineTo(bx + 30, by + bh);
+        ctx.moveTo(bx + bw - 18, by + bh); ctx.lineTo(bx + bw - 26, by + bh + 10); ctx.lineTo(bx + bw - 30, by + bh);
+        ctx.fill();
+
+        // Pulsing Void Singularity Vortex
+        let vR = 14 + Math.sin(frame * 0.25) * 3;
+        let sGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, vR);
+        sGrad.addColorStop(0, '#000000');
+        sGrad.addColorStop(0.6, '#9900ff');
+        sGrad.addColorStop(1, 'rgba(255, 0, 128, 0)');
+        ctx.fillStyle = sGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, vR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Tracking Optic Eye pivoting towards player paddle
+        let targetX = pad_x + pad_w / 2;
+        let eyeAngle = Math.atan2(h - 40 - cy, targetX - cx);
+        let pupilDist = 3.5;
+        let pupX = cx + Math.cos(eyeAngle) * pupilDist;
+        let pupY = cy + Math.sin(eyeAngle) * pupilDist * 0.6;
+
+        ctx.fillStyle = '#ff0055';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffff00';
+        ctx.beginPath();
+        ctx.arc(pupX, pupY, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(pupX, pupY, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
 function render() {
     ctx.clearRect(0, 0, w, h);
 
@@ -1347,27 +1737,8 @@ function render() {
             }
         }
 
-        if (boss_active) {
-            ctx.save();
-            let bGrad = ctx.createLinearGradient(boss_x, boss_y, boss_x, boss_y + boss_h);
-            bGrad.addColorStop(0, '#ff0055');
-            bGrad.addColorStop(0.5, '#400018');
-            bGrad.addColorStop(1, '#100008');
-            ctx.fillStyle = bGrad;
-            ctx.strokeStyle = '#ff3377';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.roundRect(boss_x, boss_y, boss_w, boss_h, 6);
-            ctx.fill();
-            ctx.stroke();
-
-            let corePulse = Math.sin(frame * 0.2) * 0.3 + 0.7;
-            ctx.fillStyle = `rgba(255, 100, 0, ${corePulse})`;
-            ctx.beginPath();
-            ctx.arc(boss_x + boss_w / 2, boss_y + boss_h / 2, 8, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-        }
+        // Draw Boss Fortress Core with distinctive mechanical chassis
+        drawBoss(ctx);
 
         for (let gw of gravity_wells) {
             let grad = ctx.createRadialGradient(gw.x, gw.y, 4, gw.x, gw.y, 25);
@@ -1379,27 +1750,81 @@ function render() {
             ctx.fill();
         }
 
-        // Satellites
+        // Detailed Orbital Satellite Drones with solar panels and sensor optics
         for (let s of satellites) {
-            ctx.fillStyle = dur_satellite > 0 ? '#ff66ff' : '#00ffcc';
-            ctx.beginPath();
-            ctx.arc(s.x, s.y, 5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = '#fff';
+            ctx.save();
+            ctx.translate(s.x, s.y);
+            // Solar Wings Left & Right
+            ctx.fillStyle = '#0a3050';
+            ctx.strokeStyle = '#00ffff';
             ctx.lineWidth = 1;
+            ctx.fillRect(-11, -3, 6, 6);
+            ctx.strokeRect(-11, -3, 6, 6);
+            ctx.fillRect(5, -3, 6, 6);
+            ctx.strokeRect(5, -3, 6, 6);
+            // Photovoltaic grid line
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
             ctx.beginPath();
-            ctx.moveTo(s.x - 6, s.y); ctx.lineTo(s.x + 6, s.y);
-            ctx.moveTo(s.x, s.y - 6); ctx.lineTo(s.x, s.y + 6);
+            ctx.moveTo(-8, -3); ctx.lineTo(-8, 3);
+            ctx.moveTo(8, -3); ctx.lineTo(8, 3);
             ctx.stroke();
+
+            // Central Drone Chassis
+            let droneGrad = ctx.createRadialGradient(0, 0, 1, 0, 0, 5);
+            droneGrad.addColorStop(0, '#ffffff');
+            droneGrad.addColorStop(0.5, dur_satellite > 0 ? '#ff66ff' : '#00e5ff');
+            droneGrad.addColorStop(1, dur_satellite > 0 ? '#880088' : '#005577');
+            ctx.fillStyle = droneGrad;
+            ctx.beginPath();
+            ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Forward laser emitter
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(-1, -6, 2, 2);
+
+            // Blinking sensor diode
+            let dPulse = (frame % 10 < 5) ? '#ff3377' : '#00ffcc';
+            ctx.fillStyle = dPulse;
+            ctx.beginPath();
+            ctx.arc(0, 0, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // Magnetic tractor beam capture field between paddle and stuck ball
+        for (let b of balls) {
+            if (b.stuck) {
+                ctx.save();
+                let bBeamAlpha = 0.4 + Math.sin(frame * 0.3) * 0.25;
+                ctx.strokeStyle = `rgba(0, 255, 255, ${bBeamAlpha})`;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(pad_x + b.stuckOffset - 6, h - 40);
+                ctx.lineTo(b.x + 4, b.y + 4);
+                ctx.lineTo(pad_x + b.stuckOffset + 6, h - 40);
+                ctx.stroke();
+                ctx.strokeStyle = `rgba(200, 255, 255, ${bBeamAlpha * 0.8})`;
+                ctx.beginPath();
+                ctx.ellipse(b.x + 4, (b.y + 4 + h - 40) / 2, 4, 1.5, 0, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
         }
 
         // Sculpted paddle with thrusters, metallic chassis, and specular sheen
         drawSculptedPaddle(ctx, pad_x, h - 40, pad_w, pad_h);
 
-        // Lasers
+        // Enhanced Lasers with plasma envelope and incandescent core
         for (let l of lasers) {
-            ctx.fillStyle = l.type === 1 ? '#ff66ff' : (l.type === 2 ? '#00ffcc' : '#00ffff');
-            ctx.fillRect(l.x - 2, l.y - 5, 4, 10);
+            let lClr = l.type === 1 ? '#ff66ff' : (l.type === 2 ? '#00ffcc' : '#00ffff');
+            let gClr = l.type === 1 ? 'rgba(255, 50, 255, 0.35)' : (l.type === 2 ? 'rgba(0, 255, 180, 0.35)' : 'rgba(0, 220, 255, 0.35)');
+            ctx.fillStyle = gClr;
+            ctx.fillRect(l.x - 4, l.y - 7, 8, 14);
+            ctx.fillStyle = lClr;
+            ctx.fillRect(l.x - 2, l.y - 6, 4, 12);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(l.x - 1, l.y - 4, 2, 8);
         }
 
         // Ball Trails and Balls

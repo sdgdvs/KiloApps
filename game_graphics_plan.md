@@ -107,7 +107,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **⚠️ PRIORITY: If ANY game in the queue is at Loop 0 (not yet processed), work on it FIRST before continuing higher-loop games.**
 
 
-- KBreakout
 - KMaze
 - KColony
 - KFortress
@@ -153,6 +152,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSnake
 - KTetris
 - KCyber
+- KBreakout
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
 
@@ -201,6 +201,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KFortress (Loop 6): Multi-layer particles, dual shockwaves, medieval HUD, and biome-specific weather motes.
 - KColony (Loop 6): Multi-layer particles, screen-shake, cybernetic HUD brackets, and planetary biome motes.
 - KMaze (Loop 8): Screen-shake, 4-layer particles, dual shockwaves, dungeon HUD reticles, and atmospheric embers.
-- KBreakout (Loop 8): Screen-shake, multi-layer particles, dual shockwaves, metallic paddle with thruster nozzles.
+- KBreakout (Loop 9): Themed Boss Fortress sprites (Dreadnought, Citadel, Void Leviathan), explosive/titanium/prism/quantum brick sprites, orbital drone wings, and tractor beam capture.
 - KCyber (Loop 3): 3D perspective cyberspace wireframe grid, distant skyline silhouettes, matrix code streams, and darknet shop terminal.
 
