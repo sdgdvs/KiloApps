@@ -530,6 +530,112 @@ static int g_merchantMode = 0; // 0=Buy, 1=Sell
 static float g_animFlicker = 0.0f;
 static int g_frameCount = 0;
 
+// Procedural Dungeon Audio & Atmospheric Soundscape System [Phase 13]
+typedef enum {
+    SND_NONE = 0,
+    SND_STEP,
+    SND_TORCH_CRACKLE,
+    SND_MONSTER_GROWL,
+    SND_BOSS_ROAR,
+    SND_SPELL_FIRE,
+    SND_SPELL_FROST,
+    SND_SPELL_TEMPEST,
+    SND_SPELL_VOID,
+    SND_SPELL_AEGIS,
+    SND_WATER_DRIP,
+    SND_CAVERN_WIND,
+    SND_VOID_WHISPER,
+    SND_HIT,
+    SND_HURT,
+    SND_POTION,
+    SND_COIN,
+    SND_LEVELUP,
+    SND_EQUIP,
+    SND_ENCHANT,
+    SND_BOSS_DEFEATED,
+    SND_CURSE
+} SoundType;
+
+static BOOL g_audioEnabled = TRUE;
+static BOOL g_ambienceEnabled = TRUE;
+static int  g_ambientTick = 0;
+
+static DWORD WINAPI SoundThreadProc(LPVOID lpParam) {
+    int snd = (int)(intptr_t)lpParam;
+    if (!g_audioEnabled) return 0;
+
+    switch (snd) {
+    case SND_TORCH_CRACKLE:
+        Beep(140, 15); Sleep(10); Beep(190, 10); Sleep(15); Beep(110, 20);
+        break;
+    case SND_MONSTER_GROWL:
+        Beep(110, 60); Beep(85, 70); Beep(65, 90);
+        break;
+    case SND_BOSS_ROAR:
+        Beep(65, 140); Beep(50, 180); Beep(70, 160); Beep(45, 220);
+        break;
+    case SND_SPELL_FIRE:
+        Beep(220, 50); Beep(330, 60); Beep(550, 90); Beep(110, 120);
+        break;
+    case SND_SPELL_FROST:
+        Beep(880, 40); Beep(1175, 50); Beep(1760, 80);
+        break;
+    case SND_SPELL_TEMPEST:
+        Beep(1200, 25); Beep(350, 35); Beep(980, 40); Beep(180, 70);
+        break;
+    case SND_SPELL_VOID:
+        Beep(120, 80); Beep(80, 110); Beep(50, 150);
+        break;
+    case SND_SPELL_AEGIS:
+        Beep(523, 60); Beep(659, 60); Beep(784, 80); Beep(1046, 120);
+        break;
+    case SND_WATER_DRIP:
+        Beep(1500, 20); Sleep(25); Beep(2100, 30);
+        break;
+    case SND_CAVERN_WIND:
+        Beep(65, 160); Beep(55, 200);
+        break;
+    case SND_VOID_WHISPER:
+        Beep(80, 90); Beep(115, 80); Beep(60, 130);
+        break;
+    case SND_HIT:
+        Beep(320, 30); Beep(140, 50);
+        break;
+    case SND_HURT:
+        Beep(140, 40); Beep(70, 80);
+        break;
+    case SND_POTION:
+        Beep(440, 40); Beep(660, 50); Beep(880, 70);
+        break;
+    case SND_COIN:
+        Beep(987, 40); Beep(1318, 60);
+        break;
+    case SND_LEVELUP:
+        Beep(523, 60); Beep(659, 60); Beep(784, 70); Beep(1046, 120);
+        break;
+    case SND_EQUIP:
+        Beep(240, 40); Beep(480, 50);
+        break;
+    case SND_ENCHANT:
+        Beep(330, 50); Beep(495, 60); Beep(660, 70); Beep(990, 100);
+        break;
+    case SND_BOSS_DEFEATED:
+        Beep(440, 70); Beep(554, 70); Beep(659, 90); Beep(880, 160);
+        break;
+    case SND_CURSE:
+        Beep(95, 120); Beep(70, 160);
+        break;
+    default:
+        break;
+    }
+    return 0;
+}
+
+static void PlayAudioAsync(int snd) {
+    if (!g_audioEnabled) return;
+    CreateThread(NULL, 0, SoundThreadProc, (LPVOID)(intptr_t)snd, 0, NULL);
+}
+
 // Camera
 static int g_camX = 0;
 static int g_camY = 0;
@@ -1254,13 +1360,13 @@ void SpawnMonsters(int level) {
 
                         if (bossType == MONSTER_CRYPT_KEEPER) {
                             AddLog("ABYSSAL LORD RISES: The Crypt Keeper stirs in the catacomb sepulcher!", COLOR_ACCENT_AMBER);
-                            Beep(220, 60); Beep(160, 100);
+                            PlayAudioAsync(SND_BOSS_ROAR);
                         } else if (bossType == MONSTER_ABYSSAL_WYRM) {
                             AddLog("ABYSSAL LORD RISES: The sunken waters churn—The Abyssal Wyrm coils from the depths!", COLOR_ACCENT_GREEN);
-                            Beep(180, 60); Beep(240, 80);
+                            PlayAudioAsync(SND_BOSS_ROAR);
                         } else if (bossType == MONSTER_VOID_MONARCH) {
                             AddLog("ABYSSAL LORD RISES: Reality tears asunder—The Void Monarch commands the abyssal vortex!", COLOR_ACCENT_PURPLE);
-                            Beep(140, 80); Beep(280, 120);
+                            PlayAudioAsync(SND_BOSS_ROAR);
                         }
                     }
                 }
@@ -1294,11 +1400,11 @@ void DamageMonster(int idx, int dmg, const char* dmgType, BOOL isCrit) {
         if (m->isBoss) {
             snprintf(buf, sizeof(buf), "ABYSSAL LORD DEFEATED: You conquered %s! (+%d EXP, +%d Gold)", md->name, m->exp, m->essence);
             AddLog(buf, COLOR_TEXT_GOLD);
-            Beep(440, 80); Beep(554, 80); Beep(659, 120); Beep(880, 200);
+            PlayAudioAsync(SND_BOSS_DEFEATED);
         } else {
             snprintf(buf, sizeof(buf), "SLAIN: You destroyed %s! (+%d EXP, +%d Essence)", md->name, m->exp, m->essence);
             AddLog(buf, COLOR_TEXT_GOLD);
-            Beep(330, 40); Beep(165, 80);
+            PlayAudioAsync(SND_HIT);
         }
 
         // Chance to discover an unowned rune
@@ -1353,7 +1459,7 @@ void DamageMonster(int idx, int dmg, const char* dmgType, BOOL isCrit) {
         char buf[128];
         snprintf(buf, sizeof(buf), "Hit %s for %d %s DMG! (%d/%d HP)", md->name, dmg, dmgType, m->hp, m->max_hp);
         AddLog(buf, COLOR_ACCENT_RED);
-        Beep(520, 30);
+        PlayAudioAsync(m->isBoss ? SND_BOSS_ROAR : SND_MONSTER_GROWL);
 
         // Dimensional Phase Blink for Void Monarch
         if (m->type == MONSTER_VOID_MONARCH && RandInt(0, 100) < 35) {
@@ -2821,10 +2927,16 @@ void AdvanceTurn(void) {
             g_player.torchFuel = 0;
             g_player.torchLit = FALSE;
             AddLog("Your torch has burned out into cold cinder! Darkness closes in (Press T to Rekindle)!", COLOR_ACCENT_RED);
-            Beep(200, 80); Beep(150, 100);
+            PlayAudioAsync(SND_HURT);
         } else if (g_player.torchFuel == 25) {
             AddLog("Your torch is sputtering low on oil and pitch! Light is waning...", COLOR_ACCENT_AMBER);
+        } else if (rand() % 4 == 0) {
+            PlayAudioAsync(SND_TORCH_CRACKLE);
         }
+    }
+
+    if (GetDepthZone(g_depthLevel) == ZONE_SUNKEN_GROTTO && (rand() % 5 == 0)) {
+        PlayAudioAsync(SND_WATER_DRIP);
     }
 
     // 3. Darkness sanity drain
@@ -2865,7 +2977,7 @@ void AdvanceTurn(void) {
         snprintf(wBuf, sizeof(wBuf), "ELDRITCH WHISPER: \"%s\" (-1 Sanity)", g_eldritchWhispers[wIdx]);
         AddLog(wBuf, COLOR_ACCENT_PURPLE);
         if (g_player.sanity > 0) g_player.sanity--;
-        Beep(160, 40);
+        PlayAudioAsync(SND_VOID_WHISPER);
         SpawnCombatText((float)g_player.x, (float)g_player.y, "WHISPER", COLOR_ACCENT_PURPLE);
     }
 
@@ -2877,7 +2989,7 @@ void AdvanceTurn(void) {
             if (g_player.hp < 1) g_player.hp = 1;
             AddLog("PSYCHIC COLLAPSE! Total madness wracks your mind (-3 HP)!", COLOR_ACCENT_RED);
             SpawnCombatText((float)g_player.x, (float)g_player.y, "-3 MADNESS", COLOR_ACCENT_PURPLE);
-            Beep(140, 70);
+            PlayAudioAsync(SND_HURT);
         }
     }
 
@@ -2887,7 +2999,7 @@ void AdvanceTurn(void) {
         if (g_player.curseTurns <= 0) {
             g_player.curse = CURSE_NONE;
             AddLog("The subterranean curse has dissolved from your spirit!", COLOR_TEXT_GOLD);
-            Beep(587, 60); Beep(880, 80);
+            PlayAudioAsync(SND_SPELL_AEGIS);
         }
     }
 
@@ -2905,7 +3017,7 @@ void AdvanceTurn(void) {
             int snuffed = cand[RandInt(0, candCount - 1)];
             g_torches[snuffed].lit = FALSE;
             AddLog("An icy subterranean draft sweeps the crypt! A wall torch was snuffed out!", COLOR_ACCENT_AMBER);
-            Beep(240, 50);
+            PlayAudioAsync(SND_CAVERN_WIND);
         }
     }
 
@@ -3238,7 +3350,7 @@ void CastSpell(int socketIdx) {
             SpawnEmber((float)(curX * TILE_SIZE + 16), (float)(curY * TILE_SIZE + 16), TRUE);
         }
         AddLog("PYRE BLAST! You cast a roaring fireball 4 tiles ahead (35 Fire DMG)!", RGB(249, 115, 22));
-        Beep(440, 40); Beep(220, 60);
+        PlayAudioAsync(SND_SPELL_FIRE);
 
     } else if (runeIdx == RUNE_FROST) {
         int frozenCount = 0;
@@ -3283,7 +3395,7 @@ void CastSpell(int socketIdx) {
         } else {
             AddLog("GLACIAL NOVA! Sub-zero frost radiates outward (24 Cryo DMG)!", COLOR_ACCENT_CYAN);
         }
-        Beep(880, 50); Beep(1175, 70);
+        PlayAudioAsync(SND_SPELL_FROST);
 
     } else if (runeIdx == RUNE_TEMPEST) {
         int endX = g_player.x;
@@ -3323,7 +3435,7 @@ void CastSpell(int socketIdx) {
             g_numSpellFX++;
         }
         AddLog("CHAIN BOLT! Crackling electrical bolt arcs 6 tiles (42 Shock DMG)!", RGB(234, 179, 8));
-        Beep(1200, 40); Beep(700, 50);
+        PlayAudioAsync(SND_SPELL_TEMPEST);
 
     } else if (runeIdx == RUNE_VOID) {
         int targetX = g_player.x;
@@ -3363,7 +3475,7 @@ void CastSpell(int socketIdx) {
             }
 
             AddLog("VOID WARP! You phase-shift through space, slipping through obstacles!", COLOR_ACCENT_PURPLE);
-            Beep(200, 80); Beep(550, 60);
+            PlayAudioAsync(SND_SPELL_VOID);
         } else {
             AddLog("VOID WARP! Spatial distortions flare, but solid stone blocks destination.", COLOR_ACCENT_PURPLE);
         }
@@ -3374,7 +3486,7 @@ void CastSpell(int socketIdx) {
         g_player.sanity += 15;
         if (g_player.sanity > g_player.max_sanity) g_player.sanity = g_player.max_sanity;
         AddLog("AEGIS WARD! Luminous runic barrier envelops you (+35 Shield, +15 Sanity)!", COLOR_BORDER_GLOW);
-        Beep(554, 60); Beep(659, 80);
+        PlayAudioAsync(SND_SPELL_AEGIS);
     }
 
     AdvanceTurn();
@@ -4986,16 +5098,18 @@ void RenderGame(HDC hdc, HWND hwnd) {
     SelectObject(memDC, fontSmall);
     SetTextColor(memDC, COLOR_TEXT_BRIGHT);
     TextOutA(memDC, vpX + 4, 584, "[N] New", 7);
-    TextOutA(memDC, vpX + 70, 584, "[Space] Rest", 12);
-    TextOutA(memDC, vpX + 164, 584, "[R] Search", 10);
-    TextOutA(memDC, vpX + 248, 584, "[E] Descend", 11);
-    TextOutA(memDC, vpX + 338, 584, g_player.torchLit ? "[T] Rekindle" : "[T] LIGHT", g_player.torchLit ? 12 : 9);
+    TextOutA(memDC, vpX + 66, 584, "[Space] Rest", 12);
+    TextOutA(memDC, vpX + 154, 584, "[R] Search", 10);
+    TextOutA(memDC, vpX + 232, 584, "[E] Descend", 11);
+    TextOutA(memDC, vpX + 316, 584, g_player.torchLit ? "[T] Rekindle" : "[T] LIGHT", g_player.torchLit ? 12 : 9);
     SetTextColor(memDC, COLOR_TEXT_GOLD);
-    TextOutA(memDC, vpX + 434, 584, "[I] Enchant", 11);
+    TextOutA(memDC, vpX + 404, 584, "[I] Enchant", 11);
+    SetTextColor(memDC, g_audioEnabled ? COLOR_ACCENT_GREEN : COLOR_TEXT_DIM);
+    TextOutA(memDC, vpX + 484, 584, g_audioEnabled ? "[O] Audio" : "[O] Mute", 8);
     SetTextColor(memDC, COLOR_TEXT_BRIGHT);
-    TextOutA(memDC, vpX + 524, 584, g_crtEnabled ? "[C] CRT" : "[C] CRT", 7);
-    TextOutA(memDC, vpX + 586, 584, g_fovEnabled ? "[F] FOV" : "[F] FOV", 7);
-    TextOutA(memDC, vpX + 648, 584, "[H] Tome", 8);
+    TextOutA(memDC, vpX + 550, 584, g_crtEnabled ? "[C] CRT" : "[C] CRT", 7);
+    TextOutA(memDC, vpX + 606, 584, g_fovEnabled ? "[F] FOV" : "[F] FOV", 7);
+    TextOutA(memDC, vpX + 658, 584, "[H] Tome", 8);
 
     // 4. RIGHT SIDEBAR (728..1036, 46..608)
     int sbX = 728;
@@ -5543,7 +5657,7 @@ void RenderGame(HDC hdc, HWND hwnd) {
         TextOutA(memDC, modalRect.left + 20, my, "- M / Merchant: Trade Gold for relics, survival goods & sell pack items [Phase 11]", 83); my += 16;
         TextOutA(memDC, modalRect.left + 20, my, "- Biomes: B1-3 Catacombs | B4-6 Sunken Grotto | B7-9 Crypt | B10+ Void", 70); my += 16;
         TextOutA(memDC, modalRect.left + 20, my, "- Abyssal Lords: B3 Crypt Keeper | B6 Abyssal Wyrm | B10+ Void Monarch", 70); my += 16;
-        TextOutA(memDC, modalRect.left + 20, my, "- C: CRT Phosphors | F: Field of View | Ctrl+N / F2: New Descent", 64); my += 18;
+        TextOutA(memDC, modalRect.left + 20, my, "- O: Audio & Procedural Soundscapes | C: CRT | F: FOV | Ctrl+N: New Run", 71); my += 18;
 
         SetTextColor(memDC, COLOR_TEXT_GOLD);
         TextOutA(memDC, modalRect.left + 20, my, "Press [H], [F1], or [ESC] to close manual.", 42);
@@ -5917,6 +6031,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_frameCount++;
             g_animFlicker = sinf((float)g_frameCount * 0.15f) * 0.05f;
             UpdateEmbers();
+
+            g_ambientTick++;
+            if (g_audioEnabled && g_ambienceEnabled && (g_ambientTick % 160 == 0)) {
+                DepthZone z = GetDepthZone(g_depthLevel);
+                if (z == ZONE_SUNKEN_GROTTO) {
+                    PlayAudioAsync(SND_WATER_DRIP);
+                } else if (z == ZONE_VOID_ABYSS || g_player.curse == CURSE_VOID || g_player.sanity < 35) {
+                    PlayAudioAsync(SND_VOID_WHISPER);
+                } else if (g_player.torchLit && (g_ambientTick % 320 == 0)) {
+                    PlayAudioAsync(SND_TORCH_CRACKLE);
+                } else {
+                    PlayAudioAsync(SND_CAVERN_WIND);
+                }
+            }
+
             InvalidateRect(hwnd, NULL, FALSE);
         }
         break;
@@ -6093,6 +6222,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case 'C':
             g_crtEnabled = !g_crtEnabled;
             AddLog(g_crtEnabled ? "CRT Phosphors & Scanlines: ENABLED." : "CRT Scanlines: DISABLED.", COLOR_ACCENT_CYAN);
+            break;
+
+        // Audio Toggle
+        case 'O':
+            g_audioEnabled = !g_audioEnabled;
+            AddLog(g_audioEnabled ? "Audio & Procedural Sound FX: ENABLED." : "Audio & Sound FX: MUTED.", COLOR_ACCENT_CYAN);
+            if (g_audioEnabled) PlayAudioAsync(SND_TORCH_CRACKLE);
             break;
 
         // Rest
@@ -6375,26 +6511,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 // New Descent
                 ResetPlayerRun();
                 InitGame(1);
-            } else if (mouseX < vpX + 155) {
+            } else if (mouseX < vpX + 154) {
                 // Rest
                 RestTurn();
-            } else if (mouseX < vpX + 240) {
+            } else if (mouseX < vpX + 232) {
                 // Search
                 SearchArea();
-            } else if (mouseX < vpX + 330) {
+            } else if (mouseX < vpX + 316) {
                 // Descend
                 InteractTile();
-            } else if (mouseX < vpX + 425) {
+            } else if (mouseX < vpX + 404) {
                 // Rekindle Torch
                 RekindleTorch();
-            } else if (mouseX < vpX + 515) {
+            } else if (mouseX < vpX + 484) {
                 // Enchant Altar
                 g_showEnchantModal = !g_showEnchantModal;
-            } else if (mouseX < vpX + 580) {
+            } else if (mouseX < vpX + 550) {
+                // Toggle Audio
+                g_audioEnabled = !g_audioEnabled;
+                AddLog(g_audioEnabled ? "Audio & Procedural Sound FX: ENABLED." : "Audio & Sound FX: MUTED.", COLOR_ACCENT_CYAN);
+                if (g_audioEnabled) PlayAudioAsync(SND_TORCH_CRACKLE);
+            } else if (mouseX < vpX + 606) {
                 // Toggle CRT
                 g_crtEnabled = !g_crtEnabled;
                 AddLog(g_crtEnabled ? "CRT Phosphors & Scanlines: ENABLED." : "CRT Scanlines: DISABLED.", COLOR_ACCENT_CYAN);
-            } else if (mouseX < vpX + 640) {
+            } else if (mouseX < vpX + 658) {
                 // Toggle FOV
                 g_fovEnabled = !g_fovEnabled;
                 ComputeFOV();

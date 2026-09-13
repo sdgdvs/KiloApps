@@ -918,7 +918,7 @@
     <header>
         <div class="brand">
             <div class="title"><span>⚔️</span> KABYSS</div>
-            <div class="subtitle">Abyssal Crypt Crawler v0.4 - Monster Bestiary & Turn AI</div>
+            <div class="subtitle">Abyssal Crypt Crawler v0.5 - Procedural Audio & Soundscapes</div>
         </div>
         <div class="stats-bar">
             <div class="stat-badge">
@@ -992,6 +992,8 @@
                     <button id="btnMerchantTop" class="btn-action" title="Subterranean Merchant & Black Market Hermit">💰 Market [M]</button>
                     <button id="btnCauldronTop" class="btn-action" title="Brew potions at the Ancient Alchemy Cauldron">⚗️ Cauldron [B]</button>
                     <button id="btnEnchantTop" class="btn-action" title="Relic Enchanting Altar: Imbue weapon with Fire, Frost, or Void">⛩️ Enchant [I]</button>
+                    <button id="btnAudioToggle" class="btn-action" title="Toggle Sound FX & Audio [O]">🔊 Audio: On</button>
+                    <button id="btnAmbienceToggle" class="btn-action" title="Toggle Atmospheric Subterranean Soundscape Ambience">🎵 Ambience: On</button>
                     <button id="btnToggleCRT" class="btn-action" title="Toggle CRT scanlines & phosphors">📺 CRT: On</button>
                     <button id="btnToggleFOV" class="btn-action" title="Toggle full map vision (Debug)">👁️ FOV: On</button>
                     <button id="btnHelp">📖 Delver's Tome</button>
@@ -1432,6 +1434,17 @@
                     <li><strong>B:</strong> Open the Ancient Alchemy Cauldron to brew potions and elixirs!</li>
                     <li><strong>S / R:</strong> Search adjacent tiles for hidden passages, merchants, altars, shrines, and relic coffers.</li>
                     <li><strong>Mouse Click:</strong> Click on visible floor tiles to move or inspect obstacles.</li>
+                    <li><strong>O:</strong> Toggle Procedural Sound FX & Dungeon Audio on/off!</li>
+                </ul>
+                <h4>Procedural Dungeon Audio & Atmospheric Soundscapes [Phase 13]</h4>
+                <ul>
+                    <li><strong>Procedural Web Audio Engine:</strong> Generates real-time subterranean acoustic reverberations, atmospheric drone hums, and organic soundscapes completely in code without static external audio files.</li>
+                    <li><strong>Subterranean Ambient Soundscapes:</strong> Continuous low subterranean drone with slow LFO breathing modulation that adapts dynamically to your current depth zone: dusty Catacomb resonances (55Hz/82Hz), subaquatic echo reverberations in the Sunken Grotto (73Hz/110Hz), eerie diminished chords in the Forgotten Crypt (46Hz/69Hz), and cosmic sub-bass rumbles in the Void Abyss (39Hz/58Hz).</li>
+                    <li><strong>Procedural Torch Crackle:</strong> Realistic flickering flame sizzle and ember micro-pops generated dynamically as torches burn, flare, or rekindle.</li>
+                    <li><strong>Monster Growls & Vocalizations:</strong> Guttural beast growls, skeletal bone clicks, ethereal wails, and terrifying Abyssal Lord roars when horrors strike, aggro, or awaken.</li>
+                    <li><strong>Spell Casting Soundscapes:</strong> Elemental resonance swells for Pyre explosions, Glacial chimes, Tempest thunderclaps, Void gravity rifts, and Aegis sanctuary bells.</li>
+                    <li><strong>Environmental Soundscapes:</strong> Cavern water drips, echoing subterranean drafts, and eldritch void whispers when sanity is drained.</li>
+                    <li><strong>Audio Controls [O]:</strong> Press [O] or use the toolbar buttons to toggle Sound Effects (🔊 Audio: On/Off) and Atmospheric Ambience (🎵 Ambience: On/Off).</li>
                 </ul>
                 <h4>Boss Encounters & Abyssal Lords [Phase 12]</h4>
                 <ul>
@@ -1878,102 +1891,449 @@
             }
         };
 
-        // Synthesized Procedural Audio System for Magic
+        // Procedural Dungeon Audio & Atmospheric Soundscape System [Phase 13]
         const AudioSys = {
             ctx: null,
+            soundEnabled: true,
+            ambienceEnabled: true,
+            masterGain: null,
+            ambienceGain: null,
+            ambienceOsc1: null,
+            ambienceOsc2: null,
+            ambienceFilter: null,
+            ambienceLFO: null,
+            ambienceLFOGain: null,
+            ambientTimer: null,
+
             init() {
                 if (!this.ctx && (window.AudioContext || window.webkitAudioContext)) {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContextClass();
+                    this.masterGain = this.ctx.createGain();
+                    this.masterGain.gain.setValueAtTime(this.soundEnabled ? 1.0 : 0.0, this.ctx.currentTime);
+                    this.masterGain.connect(this.ctx.destination);
                 }
                 if (this.ctx && this.ctx.state === 'suspended') {
                     this.ctx.resume();
                 }
+                if (this.ambienceEnabled && !this.ambienceOsc1 && this.soundEnabled && this.ctx) {
+                    this.startAmbience();
+                }
             },
+
+            toggleSound() {
+                this.init();
+                this.soundEnabled = !this.soundEnabled;
+                if (this.masterGain && this.ctx) {
+                    this.masterGain.gain.setValueAtTime(this.soundEnabled ? 1.0 : 0.0, this.ctx.currentTime);
+                }
+                const btn = document.getElementById('btnAudioToggle');
+                if (btn) {
+                    btn.innerText = this.soundEnabled ? '🔊 Audio: On' : '🔇 Audio: Off';
+                    btn.style.borderColor = this.soundEnabled ? 'var(--accent-emerald)' : 'var(--accent-crimson)';
+                }
+                if (!this.soundEnabled) {
+                    this.stopAmbience();
+                } else if (this.ambienceEnabled) {
+                    this.startAmbience();
+                }
+                logMessage(this.soundEnabled ? '🔊 Dungeon Audio & Procedural Sound FX: ENABLED.' : '🔇 Dungeon Audio & Sound FX: MUTED.', 'magic');
+                return this.soundEnabled;
+            },
+
+            toggleAmbience() {
+                this.init();
+                this.ambienceEnabled = !this.ambienceEnabled;
+                const btn = document.getElementById('btnAmbienceToggle');
+                if (btn) {
+                    btn.innerText = this.ambienceEnabled ? '🎵 Ambience: On' : '🎵 Ambience: Off';
+                    btn.style.borderColor = this.ambienceEnabled ? 'var(--accent-cyan)' : 'var(--text-dim)';
+                }
+                if (this.ambienceEnabled && this.soundEnabled) {
+                    this.startAmbience();
+                    logMessage('🎵 Subterranean Atmospheric Ambient Soundscape: ENABLED.', 'magic');
+                } else {
+                    this.stopAmbience();
+                    logMessage('🎵 Subterranean Ambient Soundscape: PAUSED.', 'amber');
+                }
+                return this.ambienceEnabled;
+            },
+
+            startAmbience() {
+                if (!this.ctx || !this.ambienceEnabled || !this.soundEnabled) return;
+                if (this.ambienceOsc1) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    this.ambienceGain = this.ctx.createGain();
+                    this.ambienceGain.gain.setValueAtTime(0.001, now);
+                    this.ambienceGain.gain.linearRampToValueAtTime(0.085, now + 1.8);
+
+                    this.ambienceFilter = this.ctx.createBiquadFilter();
+                    this.ambienceFilter.type = 'lowpass';
+                    this.ambienceFilter.frequency.setValueAtTime(140, now);
+                    this.ambienceFilter.Q.setValueAtTime(3.0, now);
+
+                    this.ambienceOsc1 = this.ctx.createOscillator();
+                    this.ambienceOsc2 = this.ctx.createOscillator();
+                    this.ambienceOsc1.type = 'triangle';
+                    this.ambienceOsc2.type = 'sine';
+
+                    const z = (typeof getZone === 'function' && typeof depthLevel !== 'undefined') ? getZone(depthLevel) : 0;
+                    this.updateAmbienceZone(z);
+
+                    // Low-frequency oscillator for subtle subterranean breathing
+                    this.ambienceLFO = this.ctx.createOscillator();
+                    this.ambienceLFOGain = this.ctx.createGain();
+                    this.ambienceLFO.frequency.setValueAtTime(0.18, now);
+                    this.ambienceLFOGain.gain.setValueAtTime(30, now);
+                    this.ambienceLFO.connect(this.ambienceLFOGain);
+                    this.ambienceLFOGain.connect(this.ambienceFilter.frequency);
+
+                    this.ambienceOsc1.connect(this.ambienceFilter);
+                    this.ambienceOsc2.connect(this.ambienceFilter);
+                    this.ambienceFilter.connect(this.ambienceGain);
+                    this.ambienceGain.connect(this.masterGain);
+
+                    this.ambienceOsc1.start(now);
+                    this.ambienceOsc2.start(now);
+                    this.ambienceLFO.start(now);
+
+                    if (!this.ambientTimer) {
+                        this.ambientTimer = setInterval(() => {
+                            if (!this.ambienceEnabled || !this.soundEnabled) return;
+                            if (Math.random() < 0.65) {
+                                const currentZ = (typeof getZone === 'function' && typeof depthLevel !== 'undefined') ? getZone(depthLevel) : 0;
+                                if (currentZ === 1) {
+                                    this.playWaterDrip();
+                                } else if (currentZ === 3) {
+                                    this.playVoidWhisper();
+                                } else if (typeof player !== 'undefined' && player.torchLit && Math.random() < 0.5) {
+                                    this.playTorchCrackle();
+                                } else {
+                                    this.playCavernWind();
+                                }
+                            }
+                        }, 5200);
+                    }
+                } catch (e) {
+                    console.error('Ambience start error', e);
+                }
+            },
+
+            updateAmbienceZone(zoneIdx) {
+                if (!this.ctx || !this.ambienceOsc1 || !this.ambienceOsc2) return;
+                const now = this.ctx.currentTime;
+                // Zone drone configurations:
+                // Catacombs (55Hz / 82.5Hz), Sunken Grotto (73.4Hz / 110Hz), Forgotten Crypt (46.2Hz / 69.3Hz), Void Abyss (38.9Hz / 58.3Hz)
+                const freqs = [
+                    { f1: 55.0, f2: 82.5, cutoff: 160 },
+                    { f1: 73.4, f2: 110.0, cutoff: 230 },
+                    { f1: 46.2, f2: 69.3, cutoff: 135 },
+                    { f1: 38.9, f2: 58.3, cutoff: 105 }
+                ];
+                const cfg = freqs[zoneIdx] || freqs[0];
+                this.ambienceOsc1.frequency.exponentialRampToValueAtTime(cfg.f1, now + 1.2);
+                this.ambienceOsc2.frequency.exponentialRampToValueAtTime(cfg.f2, now + 1.2);
+                if (this.ambienceFilter) {
+                    this.ambienceFilter.frequency.exponentialRampToValueAtTime(cfg.cutoff, now + 1.2);
+                }
+            },
+
+            stopAmbience() {
+                if (this.ambientTimer) {
+                    clearInterval(this.ambientTimer);
+                    this.ambientTimer = null;
+                }
+                if (this.ambienceGain && this.ctx) {
+                    const now = this.ctx.currentTime;
+                    try {
+                        this.ambienceGain.gain.linearRampToValueAtTime(0.0001, now + 0.4);
+                        setTimeout(() => {
+                            if (this.ambienceOsc1) {
+                                try { this.ambienceOsc1.stop(); this.ambienceOsc1.disconnect(); } catch(e){}
+                                this.ambienceOsc1 = null;
+                            }
+                            if (this.ambienceOsc2) {
+                                try { this.ambienceOsc2.stop(); this.ambienceOsc2.disconnect(); } catch(e){}
+                                this.ambienceOsc2 = null;
+                            }
+                            if (this.ambienceLFO) {
+                                try { this.ambienceLFO.stop(); this.ambienceLFO.disconnect(); } catch(e){}
+                                this.ambienceLFO = null;
+                            }
+                        }, 450);
+                    } catch (e) {}
+                }
+            },
+
+            // --- Procedural Atmospheric Soundscape FX ---
+            playTorchCrackle() {
+                this.init();
+                if (!this.ctx || !this.soundEnabled) return;
+                const now = this.ctx.currentTime;
+                const numPops = 3 + Math.floor(Math.random() * 4);
+                for (let i = 0; i < numPops; i++) {
+                    const t = now + Math.random() * 0.25;
+                    const popLen = 0.015 + Math.random() * 0.02;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(320 + Math.random() * 1100, t);
+                    filter.Q.setValueAtTime(5.5, t);
+
+                    osc.type = Math.random() < 0.5 ? 'sawtooth' : 'triangle';
+                    osc.frequency.setValueAtTime(65 + Math.random() * 200, t);
+                    osc.frequency.exponentialRampToValueAtTime(30, t + popLen);
+
+                    gain.gain.setValueAtTime(0.08 + Math.random() * 0.05, t);
+                    gain.gain.linearRampToValueAtTime(0.001, t + popLen);
+
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.masterGain);
+
+                    osc.start(t);
+                    osc.stop(t + popLen);
+                }
+            },
+
+            playWaterDrip() {
+                this.init();
+                if (!this.ctx || !this.soundEnabled) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                const freq = 1450 + Math.random() * 750;
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now);
+                osc.frequency.exponentialRampToValueAtTime(freq * 1.55, now + 0.06);
+                gain.gain.setValueAtTime(0.13, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.19);
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                osc.start(now);
+                osc.stop(now + 0.19);
+            },
+
+            playCavernWind() {
+                this.init();
+                if (!this.ctx || !this.soundEnabled) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(110, now);
+                filter.frequency.linearRampToValueAtTime(260, now + 0.7);
+                filter.frequency.linearRampToValueAtTime(85, now + 1.5);
+                filter.Q.setValueAtTime(2.2, now);
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(62, now);
+                gain.gain.setValueAtTime(0.001, now);
+                gain.gain.linearRampToValueAtTime(0.075, now + 0.5);
+                gain.gain.linearRampToValueAtTime(0.001, now + 1.5);
+
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+                osc.start(now);
+                osc.stop(now + 1.5);
+            },
+
+            playVoidWhisper() {
+                this.init();
+                if (!this.ctx || !this.soundEnabled) return;
+                const now = this.ctx.currentTime;
+                [220, 233, 277].forEach((f, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(f, now);
+                    osc.frequency.linearRampToValueAtTime(f + (i % 2 === 0 ? 12 : -12), now + 0.75);
+                    gain.gain.setValueAtTime(0.001, now);
+                    gain.gain.linearRampToValueAtTime(0.045, now + 0.25);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.85);
+                    osc.connect(gain);
+                    gain.connect(this.masterGain);
+                    osc.start(now);
+                    osc.stop(now + 0.85);
+                });
+            },
+
+            playMonsterGrowl(type) {
+                this.init();
+                if (!this.ctx || !this.soundEnabled) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                const filter = this.ctx.createBiquadFilter();
+
+                if (type === 'SKELETON' || type === 'BONEFIEND') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, now);
+                    osc.frequency.linearRampToValueAtTime(65, now + 0.16);
+                    filter.type = 'highpass';
+                    filter.frequency.setValueAtTime(650, now);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.16);
+                } else if (type === 'WRAITH') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(390, now);
+                    osc.frequency.linearRampToValueAtTime(820, now + 0.22);
+                    osc.frequency.linearRampToValueAtTime(280, now + 0.44);
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(550, now);
+                    gain.gain.setValueAtTime(0.13, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.44);
+                } else {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(135, now);
+                    osc.frequency.exponentialRampToValueAtTime(42, now + 0.28);
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(340, now);
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.28);
+                }
+
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+                osc.start(now);
+                osc.stop(now + 0.45);
+            },
+
+            playBossRoar(bossType) {
+                this.init();
+                if (!this.ctx || !this.soundEnabled) return;
+                const now = this.ctx.currentTime;
+                [48, 72, 108].forEach((baseFreq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    const filter = this.ctx.createBiquadFilter();
+
+                    osc.type = idx === 0 ? 'sawtooth' : 'triangle';
+                    osc.frequency.setValueAtTime(baseFreq * 1.9, now);
+                    osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.55, now + 0.62);
+
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(380, now);
+                    filter.frequency.linearRampToValueAtTime(160, now + 0.62);
+
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.62);
+
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.masterGain);
+                    osc.start(now);
+                    osc.stop(now + 0.62);
+                });
+            },
+
+            playSpellCast(runeKey) {
+                this.init();
+                if (!this.ctx || !this.soundEnabled) return;
+                if (runeKey === 'PYRE') this.playPyre();
+                else if (runeKey === 'FROST') this.playFrost();
+                else if (runeKey === 'TEMPEST') this.playTempest();
+                else if (runeKey === 'VOID') this.playVoid();
+                else if (runeKey === 'AEGIS') this.playAegis();
+            },
+
             playPyre() {
                 this.init();
-                if (!this.ctx) return;
+                if (!this.ctx || !this.soundEnabled) return;
                 const now = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
                 osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(260, now);
-                osc.frequency.exponentialRampToValueAtTime(60, now + 0.3);
-                gain.gain.setValueAtTime(0.18, now);
-                gain.gain.linearRampToValueAtTime(0.001, now + 0.3);
+                osc.frequency.setValueAtTime(280, now);
+                osc.frequency.exponentialRampToValueAtTime(55, now + 0.32);
+                gain.gain.setValueAtTime(0.19, now);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.32);
                 osc.connect(gain);
-                gain.connect(this.ctx.destination);
+                gain.connect(this.masterGain);
                 osc.start(now);
-                osc.stop(now + 0.3);
+                osc.stop(now + 0.32);
+                // Ember sizzle trail
+                setTimeout(() => this.playTorchCrackle(), 60);
             },
+
             playFrost() {
                 this.init();
-                if (!this.ctx) return;
+                if (!this.ctx || !this.soundEnabled) return;
                 const now = this.ctx.currentTime;
-                [600, 880, 1175].forEach((freq, i) => {
+                [600, 880, 1175, 1760].forEach((freq, i) => {
                     const osc = this.ctx.createOscillator();
                     const gain = this.ctx.createGain();
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(freq, now + i * 0.04);
-                    gain.gain.setValueAtTime(0.12, now + i * 0.04);
-                    gain.gain.linearRampToValueAtTime(0.001, now + i * 0.04 + 0.22);
+                    osc.frequency.setValueAtTime(freq, now + i * 0.035);
+                    gain.gain.setValueAtTime(0.11, now + i * 0.035);
+                    gain.gain.linearRampToValueAtTime(0.001, now + i * 0.035 + 0.24);
                     osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start(now + i * 0.04);
-                    osc.stop(now + i * 0.04 + 0.22);
+                    gain.connect(this.masterGain);
+                    osc.start(now + i * 0.035);
+                    osc.stop(now + i * 0.035 + 0.24);
                 });
             },
+
             playTempest() {
                 this.init();
-                if (!this.ctx) return;
+                if (!this.ctx || !this.soundEnabled) return;
                 const now = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
                 osc.type = 'square';
-                osc.frequency.setValueAtTime(980, now);
-                osc.frequency.exponentialRampToValueAtTime(140, now + 0.25);
-                gain.gain.setValueAtTime(0.15, now);
-                gain.gain.linearRampToValueAtTime(0.001, now + 0.25);
+                osc.frequency.setValueAtTime(1040, now);
+                osc.frequency.exponentialRampToValueAtTime(130, now + 0.26);
+                gain.gain.setValueAtTime(0.16, now);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.26);
                 osc.connect(gain);
-                gain.connect(this.ctx.destination);
+                gain.connect(this.masterGain);
                 osc.start(now);
-                osc.stop(now + 0.25);
+                osc.stop(now + 0.26);
             },
+
             playVoid() {
                 this.init();
-                if (!this.ctx) return;
+                if (!this.ctx || !this.soundEnabled) return;
                 const now = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
                 osc.type = 'triangle';
-                osc.frequency.setValueAtTime(120, now);
-                osc.frequency.exponentialRampToValueAtTime(380, now + 0.28);
+                osc.frequency.setValueAtTime(110, now);
+                osc.frequency.exponentialRampToValueAtTime(420, now + 0.29);
                 gain.gain.setValueAtTime(0.2, now);
-                gain.gain.linearRampToValueAtTime(0.001, now + 0.3);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.31);
                 osc.connect(gain);
-                gain.connect(this.ctx.destination);
+                gain.connect(this.masterGain);
                 osc.start(now);
-                osc.stop(now + 0.3);
+                osc.stop(now + 0.31);
             },
+
             playAegis() {
                 this.init();
-                if (!this.ctx) return;
+                if (!this.ctx || !this.soundEnabled) return;
                 const now = this.ctx.currentTime;
-                [440, 554, 659].forEach((freq) => {
+                [440, 554, 659, 880].forEach((freq) => {
                     const osc = this.ctx.createOscillator();
                     const gain = this.ctx.createGain();
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(freq, now);
-                    gain.gain.setValueAtTime(0.1, now);
-                    gain.gain.linearRampToValueAtTime(0.001, now + 0.35);
+                    gain.gain.setValueAtTime(0.09, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.38);
                     osc.connect(gain);
-                    gain.connect(this.ctx.destination);
+                    gain.connect(this.masterGain);
                     osc.start(now);
-                    osc.stop(now + 0.35);
+                    osc.stop(now + 0.38);
                 });
             },
+
             playHit() {
                 this.init();
-                if (!this.ctx) return;
+                if (!this.ctx || !this.soundEnabled) return;
                 const now = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
@@ -1983,13 +2343,14 @@
                 gain.gain.setValueAtTime(0.2, now);
                 gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
                 osc.connect(gain);
-                gain.connect(this.ctx.destination);
+                gain.connect(this.masterGain);
                 osc.start(now);
                 osc.stop(now + 0.12);
             },
+
             playMonsterDeath() {
                 this.init();
-                if (!this.ctx) return;
+                if (!this.ctx || !this.soundEnabled) return;
                 const now = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
@@ -1999,13 +2360,14 @@
                 gain.gain.setValueAtTime(0.22, now);
                 gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
                 osc.connect(gain);
-                gain.connect(this.ctx.destination);
+                gain.connect(this.masterGain);
                 osc.start(now);
                 osc.stop(now + 0.35);
             },
+
             playPlayerHurt() {
                 this.init();
-                if (!this.ctx) return;
+                if (!this.ctx || !this.soundEnabled) return;
                 const now = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
@@ -2015,13 +2377,14 @@
                 gain.gain.setValueAtTime(0.25, now);
                 gain.gain.linearRampToValueAtTime(0.01, now + 0.18);
                 osc.connect(gain);
-                gain.connect(this.ctx.destination);
+                gain.connect(this.masterGain);
                 osc.start(now);
                 osc.stop(now + 0.18);
             },
+
             playShadowBolt() {
                 this.init();
-                if (!this.ctx) return;
+                if (!this.ctx || !this.soundEnabled) return;
                 const now = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
@@ -2031,13 +2394,14 @@
                 gain.gain.setValueAtTime(0.16, now);
                 gain.gain.linearRampToValueAtTime(0.01, now + 0.22);
                 osc.connect(gain);
-                gain.connect(this.ctx.destination);
+                gain.connect(this.masterGain);
                 osc.start(now);
                 osc.stop(now + 0.22);
             },
+
             playBrew() {
                 this.init();
-                if (!this.ctx) return;
+                if (!this.ctx || !this.soundEnabled) return;
                 const now = this.ctx.currentTime;
                 [220, 330, 440, 660, 880].forEach((freq, idx) => {
                     const osc = this.ctx.createOscillator();
@@ -2048,14 +2412,15 @@
                     gain.gain.setValueAtTime(0.12, now + idx * 0.05);
                     gain.gain.linearRampToValueAtTime(0.001, now + idx * 0.05 + 0.1);
                     osc.connect(gain);
-                    gain.connect(this.ctx.destination);
+                    gain.connect(this.masterGain);
                     osc.start(now + idx * 0.05);
                     osc.stop(now + idx * 0.05 + 0.1);
                 });
             },
+
             playPotion() {
                 this.init();
-                if (!this.ctx) return;
+                if (!this.ctx || !this.soundEnabled) return;
                 const now = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
@@ -2065,13 +2430,14 @@
                 gain.gain.setValueAtTime(0.15, now);
                 gain.gain.linearRampToValueAtTime(0.001, now + 0.25);
                 osc.connect(gain);
-                gain.connect(this.ctx.destination);
+                gain.connect(this.masterGain);
                 osc.start(now);
                 osc.stop(now + 0.25);
             },
+
             playEquip() {
                 this.init();
-                if (!this.ctx) return;
+                if (!this.ctx || !this.soundEnabled) return;
                 const now = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
@@ -2081,13 +2447,14 @@
                 gain.gain.setValueAtTime(0.18, now);
                 gain.gain.linearRampToValueAtTime(0.001, now + 0.15);
                 osc.connect(gain);
-                gain.connect(this.ctx.destination);
+                gain.connect(this.masterGain);
                 osc.start(now);
                 osc.stop(now + 0.15);
             },
+
             playEnchant() {
                 this.init();
-                if (!this.ctx) return;
+                if (!this.ctx || !this.soundEnabled) return;
                 const now = this.ctx.currentTime;
                 [330, 495, 660, 990].forEach((freq, idx) => {
                     const osc = this.ctx.createOscillator();
@@ -2098,14 +2465,15 @@
                     gain.gain.setValueAtTime(0.14, now + idx * 0.06);
                     gain.gain.linearRampToValueAtTime(0.001, now + idx * 0.06 + 0.25);
                     osc.connect(gain);
-                    gain.connect(this.ctx.destination);
+                    gain.connect(this.masterGain);
                     osc.start(now + idx * 0.06);
                     osc.stop(now + idx * 0.06 + 0.25);
                 });
             },
+
             playCoin() {
                 this.init();
-                if (!this.ctx) return;
+                if (!this.ctx || !this.soundEnabled) return;
                 const now = this.ctx.currentTime;
                 [987, 1318].forEach((freq, i) => {
                     const osc = this.ctx.createOscillator();
@@ -2115,14 +2483,15 @@
                     gain.gain.setValueAtTime(0.14, now + i * 0.08);
                     gain.gain.linearRampToValueAtTime(0.001, now + i * 0.08 + 0.16);
                     osc.connect(gain);
-                    gain.connect(this.ctx.destination);
+                    gain.connect(this.masterGain);
                     osc.start(now + i * 0.08);
                     osc.stop(now + i * 0.08 + 0.16);
                 });
             },
+
             playMerchant() {
                 this.init();
-                if (!this.ctx) return;
+                if (!this.ctx || !this.soundEnabled) return;
                 const now = this.ctx.currentTime;
                 [523, 659, 784, 1046].forEach((freq, i) => {
                     const osc = this.ctx.createOscillator();
@@ -2132,9 +2501,45 @@
                     gain.gain.setValueAtTime(0.12, now + i * 0.06);
                     gain.gain.linearRampToValueAtTime(0.001, now + i * 0.06 + 0.2);
                     osc.connect(gain);
-                    gain.connect(this.ctx.destination);
+                    gain.connect(this.masterGain);
                     osc.start(now + i * 0.06);
                     osc.stop(now + i * 0.06 + 0.2);
+                });
+            },
+
+            playLevelUp() {
+                this.init();
+                if (!this.ctx || !this.soundEnabled) return;
+                const now = this.ctx.currentTime;
+                [523, 659, 784, 1046, 1318].forEach((freq, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.08);
+                    gain.gain.setValueAtTime(0.15, now + i * 0.08);
+                    gain.gain.linearRampToValueAtTime(0.001, now + i * 0.08 + 0.22);
+                    osc.connect(gain);
+                    gain.connect(this.masterGain);
+                    osc.start(now + i * 0.08);
+                    osc.stop(now + i * 0.08 + 0.22);
+                });
+            },
+
+            playStairs() {
+                this.init();
+                if (!this.ctx || !this.soundEnabled) return;
+                const now = this.ctx.currentTime;
+                [260, 220, 175, 130].forEach((freq, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.09);
+                    gain.gain.setValueAtTime(0.16, now + i * 0.09);
+                    gain.gain.linearRampToValueAtTime(0.001, now + i * 0.09 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(this.masterGain);
+                    osc.start(now + i * 0.09);
+                    osc.stop(now + i * 0.09 + 0.25);
                 });
             }
         };
@@ -3369,6 +3774,8 @@
             depthLevel = level;
             const zoneIdx = getZone(depthLevel);
             const zInfo = ZONE_INFO[zoneIdx];
+            AudioSys.updateAmbienceZone(zoneIdx);
+            AudioSys.playStairs();
 
             dungeon = [];
             explored = [];
@@ -4169,10 +4576,13 @@
                                 bSpawned = true;
                                 if (bossKey === 'CRYPT_KEEPER') {
                                     logMessage(`⚠️ ABYSSAL LORD RISES: The Crypt Keeper awakens in the sepulcher! Beware his bone armor and tomb cleave!`, 'important');
+                                    AudioSys.playBossRoar('CRYPT_KEEPER');
                                 } else if (bossKey === 'ABYSSAL_WYRM') {
                                     logMessage(`⚠️ ABYSSAL LORD RISES: The sunken waters churn—The Abyssal Wyrm coils from the depths!`, 'important');
+                                    AudioSys.playBossRoar('ABYSSAL_WYRM');
                                 } else if (bossKey === 'VOID_MONARCH') {
                                     logMessage(`⚠️ ABYSSAL LORD RISES: Reality tears asunder—The Void Monarch commands the abyssal vortex!`, 'important');
+                                    AudioSys.playBossRoar('VOID_MONARCH');
                                 }
                             }
                         }
@@ -4193,11 +4603,23 @@
 
             spawnCombatText(m.x, m.y, `${isCrit ? 'CRIT! ' : ''}-${dmg} ${dmgType !== 'PHYSICAL' ? dmgType : ''}`, txtColor);
 
+            if (m.hp > 0) {
+                if (m.isBoss) {
+                    AudioSys.playBossRoar(m.type);
+                } else {
+                    AudioSys.playMonsterGrowl(m.type);
+                }
+            }
+
             if (m.hp <= 0) {
                 m.alive = false;
                 player.exp += m.exp;
                 player.essence += m.essence;
-                AudioSys.playMonsterDeath();
+                if (m.isBoss) {
+                    AudioSys.playLevelUp();
+                } else {
+                    AudioSys.playMonsterDeath();
+                }
 
                 if (m.isBoss) {
                     logMessage(`👑✦ ABYSSAL LORD DEFEATED: You have vanquished ${m.name}! (+${m.exp} EXP, +${m.essence} Gold Essence) ✦👑`, 'relic');
@@ -6054,7 +6476,14 @@
                     AudioSys.playHit();
                 } else if (player.torchFuel === 25) {
                     logMessage('Your torch is sputtering low on oil and pitch! Light is waning...', 'amber');
+                } else if (Math.random() < 0.22) {
+                    AudioSys.playTorchCrackle();
                 }
+            }
+
+            // Grotto cavern water drops
+            if (zIdx === 1 && Math.random() < 0.16) {
+                AudioSys.playWaterDrip();
             }
 
             // 3. Darkness sanity drain
@@ -6092,6 +6521,7 @@
             if ((player.sanity < 45 || player.curse === CURSES.VOID) && (turn % whisperInterval === 0)) {
                 const wIdx = Math.floor(Math.random() * ELDRITCH_WHISPERS.length);
                 logMessage(`ELDRITCH WHISPER: "${ELDRITCH_WHISPERS[wIdx]}" (-1 Sanity)`, 'relic');
+                AudioSys.playVoidWhisper();
                 if (player.sanity > 0) player.sanity--;
                 spawnCombatText(player.x, player.y, 'WHISPER', '#c084fc');
             }
@@ -6130,6 +6560,7 @@
                     const snuffed = cand[Math.floor(Math.random() * cand.length)];
                     snuffed.lit = false;
                     logMessage('An icy subterranean draft sweeps the crypt! A wall torch was snuffed out!', 'amber');
+                    AudioSys.playCavernWind();
                 }
             }
 
@@ -7361,6 +7792,14 @@
                 return;
             }
 
+            // Audio & Procedural Sound FX toggle hotkey O
+            if (e.key === 'o' || e.key === 'O') {
+                AudioSys.toggleSound();
+                return;
+            }
+
+            AudioSys.init();
+
             // Market modal active shortcuts
             const mModalActive = document.getElementById('modalMerchant');
             if (mModalActive && mModalActive.style.display === 'flex') {
@@ -7594,6 +8033,14 @@
             fovEnabled = !fovEnabled;
             document.getElementById('btnToggleFOV').innerText = fovEnabled ? '👁️ FOV: On' : '👁️ FOV: Off';
             computeFOV();
+        });
+
+        document.getElementById('btnAudioToggle')?.addEventListener('click', () => {
+            AudioSys.toggleSound();
+        });
+
+        document.getElementById('btnAmbienceToggle')?.addEventListener('click', () => {
+            AudioSys.toggleAmbience();
         });
 
         // Tab Switching
