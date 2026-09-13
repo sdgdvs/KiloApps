@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KRogue
+**Target App:** KSys
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KRogue
 - KSys
 - KTodo
 - KConverter
@@ -105,10 +104,13 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTerm
 - KSynth
 - KTask
+- KRogue
 
 ## Progress Log
 
 > 📁 **Archived Progress Log**: Older entries have been archived to [archive/usability_plan_archive.md](archive/usability_plan_archive.md) to preserve token efficiency.
+
+- KRogue: Usability and UI issues fixed (enabled vertical responsive scrolling on body preventing viewport overflow, integrated interactive toast notification system with [✕] click-to-dismiss and startup guidance, added dedicated ⚔️ New Run [Enter] toolbar button and [.] Wait Turn button, built on-screen virtual directional touch/mouse D-Pad cluster [↖↑↗←•→↙↓↘] with quick action buttons, improved canvas click navigation to step directly towards any clicked tile in web; added native floating toast banner system with auto-fade and click-to-dismiss for startup guidance, save/load, and abilities, implemented full mouse control in WM_LBUTTONDOWN for tile navigation/attacks/waiting, character creation options, and targeting, built interactive 8-button bottom HUD action bar [[A] Ability, [I] Inv, [M] Spells, [C] Sheet, [.] Wait, [F5] Save, [F9] Load, [F1] Help], styled character creation start button, and verified clean compilation across both builds).
 
 - KTask: Usability and UI issues fixed (fixed missing .toast.show CSS restoring non-blocking cybernetic toast notification system with startup welcome prompt and click-to-dismiss [✕] button, added 1-click quick filter chips [All Tasks, ⚡ High CPU, 💾 High RAM, ⭐ High Priority, ＋ Spawn Demo Task], added search clear [✕] button with Esc/Enter handling, added visual keyboard shortcut badges across tabs and header buttons [[1] Processes, [2] Performance, [3] Summary, CSV [E], JSON [J], Help [F1], Refresh [R]], added keyboard navigation with Arrow Up/Down across process cards, double-click to Deep Inspect, P to cycle priority, E/J for exports, and backdrop click dismissals for modals in web; added ShowNativeToast temporary status bar toast system with startup welcome guide and non-blocking export/priority feedback, updated native buttons with explicit shortcut badges [Refresh [F5], Priority [P], Inspect [I], CSV [C], JSON [J], Help [F1], End Task [Del]], added InspectEditProc for Escape dismissal of Deep Inspector, implemented global message loop accelerator interception for F1/H/F5/R/Del/I/P/C/J/Esc preventing child control swallowing, updated window title with shortcut hints, and verified clean compilation across both builds).
 

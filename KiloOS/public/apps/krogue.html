@@ -12,7 +12,7 @@
             text-rendering: optimizeLegibility;
             -webkit-font-smoothing: antialiased;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            min-height: 100vh; overflow: hidden; padding: 4px;
+            min-height: 100vh; overflow-y: auto; overflow-x: hidden; padding: 4px;
         }
         #game-container {
             display: flex; flex-direction: column; align-items: center;
@@ -204,7 +204,15 @@
             display: flex; align-items: center; gap: 8px;
             animation: toast-in 0.25s ease-out;
             pointer-events: auto;
+            cursor: pointer;
         }
+        .toast:hover { filter: brightness(1.1); }
+        .toast-close {
+            background: transparent; border: none; color: #a0aec0;
+            font-size: 14px; font-weight: bold; cursor: pointer;
+            margin-left: auto; padding: 0 4px; line-height: 1;
+        }
+        .toast-close:hover { color: #fff; }
         .toast-success { border-color: #38a169; color: #68d391; }
         .toast-info { border-color: #4299e1; color: #63b3ed; }
         .toast-warning { border-color: #dd6b20; color: #f6ad55; }
@@ -251,18 +259,38 @@
                 </div>
             </div>
             <div class="action-buttons">
+                <button id="btn-start-run" class="btn-action" style="border-color: #48bb78; background: #1c4532; color: #9ae6b4;" onclick="openCharSelect()">⚔️ New Run [Enter]</button>
                 <button id="btn-class-ability" class="btn-action btn-ability" onclick="useClassAbility()">[A] Berserk Slash</button>
                 <button class="btn-action btn-spell" onclick="openSpellbook()">[M] Spellbook</button>
-                <button class="btn-action btn-inv" onclick="openInventory()">[I] Inventory & Gear</button>
+                <button class="btn-action btn-inv" onclick="openInventory()">[I] Inventory</button>
+                <button class="btn-action" style="border-color: #38a169; background: #22543d;" onclick="waitTurnAction()">[.] Wait Turn</button>
                 <button class="btn-action btn-lead" onclick="openLeaderboard()">[T] Leaderboard</button>
-                <button class="btn-action" onclick="openKeybinds()">[K] Controls & Rebind</button>
+                <button class="btn-action" onclick="openKeybinds()">[K] Controls</button>
                 <button class="btn-action" style="border-color: #4299e1; background: #1a365d;" onclick="openHelp()">[H / F1] Help</button>
-                <button class="btn-action" onclick="saveGame()">[F5 / S] Quick Save</button>
-                <button class="btn-action" onclick="loadGame()">[F9 / L] Load Game</button>
+                <button class="btn-action" onclick="saveGame()">[F5 / S] Save</button>
+                <button class="btn-action" onclick="loadGame()">[F9 / L] Load</button>
+            </div>
+            <div id="virtual-dpad" style="display: flex; gap: 14px; justify-content: center; align-items: center; margin-top: 2px; flex-wrap: wrap;">
+                <div style="display: grid; grid-template-columns: repeat(3, 34px); gap: 4px;">
+                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(-1, -1)" title="North-West [Y/7]">↖</button>
+                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(0, -1)" title="North [Up/8]">↑</button>
+                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(1, -1)" title="North-East [U/9]">↗</button>
+                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(-1, 0)" title="West [Left/4]">←</button>
+                    <button class="btn-action" style="padding: 5px 0; justify-content: center; background: #22543d; border-color: #38a169;" onclick="waitTurnAction()" title="Wait [.]">•</button>
+                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(1, 0)" title="East [Right/6]">→</button>
+                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(-1, 1)" title="South-West [B/1]">↙</button>
+                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(0, 1)" title="South [Down/2]">↓</button>
+                    <button class="btn-action" style="padding: 5px 0; justify-content: center;" onclick="handlePlayerMove(1, 1)" title="South-East [N/3]">↘</button>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <button class="btn-action btn-ability" style="font-size: 11px; padding: 4px 10px;" onclick="if(state===0||state===2||state===3){openCharSelect();}else{useClassAbility();}">⚔️ Ability [A]</button>
+                    <button class="btn-action btn-inv" style="font-size: 11px; padding: 4px 10px;" onclick="openInventory()">🎒 Backpack [I]</button>
+                    <button class="btn-action btn-spell" style="font-size: 11px; padding: 4px 10px;" onclick="openSpellbook()">✨ Spells [M]</button>
+                </div>
             </div>
             <div id="msg-box"></div>
             <div class="controls-hint">
-                [Arrows/Numpad] Move | [.] Wait | [A] Ability | [M] Spells | [I] Inventory | [T] Leaderboard | [K] Keybinds | [H / F1] Help | [F5 / S] Save | [F9 / L] Load
+                [Click/Arrows/Numpad] Move | [.] Wait | [A] Ability | [M] Spells | [I] Inventory | [T] Leaderboard | [K] Keybinds | [H / F1] Help | [F5 / S] Save | [F9 / L] Load
             </div>
         </div>
 
@@ -573,14 +601,36 @@
             if (type === 'success') icon = '⚔️';
             if (type === 'warning') icon = '⚠️';
             if (type === 'error') icon = '❌';
-            toast.innerHTML = `<span>${icon}</span><span>${escapeHTML(msg)}</span>`;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.transition = 'opacity 0.3s, transform 0.3s';
+            toast.innerHTML = `<span>${icon}</span><span style="flex:1;">${escapeHTML(msg)}</span><button class="toast-close" title="Dismiss">✕</button>`;
+            
+            let dismissed = false;
+            const dismiss = () => {
+                if (dismissed) return;
+                dismissed = true;
+                toast.style.transition = 'opacity 0.25s ease-out, transform 0.25s ease-out';
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateY(-10px)';
-                setTimeout(() => toast.remove(), 300);
-            }, duration);
+                setTimeout(() => toast.remove(), 250);
+            };
+
+            const closeBtn = toast.querySelector('.toast-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dismiss();
+                });
+            }
+            toast.addEventListener('click', dismiss);
+
+            container.appendChild(toast);
+            setTimeout(dismiss, duration);
+        }
+
+        function waitTurnAction() {
+            if (state === 1 && !isAnyModalOpen()) {
+                addMsg("You pause and wait a turn.", 'msg-latest');
+                endTurn();
+            }
         }
 
         function addMsg(m, type = 'normal') {
@@ -2575,12 +2625,12 @@
             } else if (state === 1 && !isAnyModalOpen()) {
                 let dx = clickX - player.x;
                 let dy = clickY - player.y;
-                if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) {
-                    if (dx === 0 && dy === 0) {
-                        endTurn();
-                    } else {
-                        handlePlayerMove(dx, dy);
-                    }
+                if (dx === 0 && dy === 0) {
+                    waitTurnAction();
+                } else {
+                    let stepX = Math.sign(dx);
+                    let stepY = Math.sign(dy);
+                    handlePlayerMove(stepX, stepY);
                 }
             }
         });
@@ -2588,7 +2638,7 @@
         // Start Loop
         gameLoop();
         setTimeout(() => {
-            showToast("Welcome to KRogue! Press [H] or [F1] for Help.", "info", 4500);
+            showToast("Welcome to KRogue! Press [H/F1] for Help or click 'New Run' to begin.", "info", 5000);
         }, 500);
     </script>
 </body>

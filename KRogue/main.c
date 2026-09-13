@@ -638,6 +638,22 @@ char* str_chr(const char* s, char c) {
     return NULL;
 }
 
+typedef struct {
+    int active;
+    char msg[96];
+    COLORREF color;
+    DWORD expire_tick;
+} NativeToast;
+
+NativeToast g_toast = {0};
+
+void show_toast(const char* msg, COLORREF color, int duration_ms) {
+    g_toast.active = 1;
+    str_cpy(g_toast.msg, msg);
+    g_toast.color = color;
+    g_toast.expire_tick = GetTickCount() + duration_ms;
+}
+
 char* str_str(const char* haystack, const char* needle) {
     if(!*needle) return (char*)haystack;
     for(; *haystack; haystack++) {
@@ -2194,7 +2210,11 @@ void save_game() {
         DWORD written;
         WriteFile(hFile, &g, sizeof(GameState), &written, NULL);
         CloseHandle(hFile);
-        add_msg("Game saved (fake-cheat quicksave).");
+        add_msg("Game saved to save.dat.");
+        show_toast("Game Saved to save.dat!", RGB(100, 255, 100), 2500);
+    } else {
+        add_msg("Failed to save game.");
+        show_toast("Failed to save game.", RGB(255, 100, 100), 2500);
     }
 }
 
@@ -2204,10 +2224,12 @@ void load_game() {
         DWORD read;
         ReadFile(hFile, &g, sizeof(GameState), &read, NULL);
         CloseHandle(hFile);
-        add_msg("Game loaded (save scummed!).");
+        add_msg("Game loaded.");
         calc_fov_bresenham();
+        show_toast("Game Loaded Successfully!", RGB(100, 255, 100), 2500);
     } else {
         add_msg("No save file found.");
+        show_toast("No save file found.", RGB(255, 180, 50), 2500);
     }
 }
 
@@ -2651,9 +2673,45 @@ void draw_game(HDC hdc) {
         for(int i=0; i<4; i++) {
             TextOutA(memDC, 0, (H + 1 + i) * char_h, g.msgs[MAX_MSGS - 1 - i], str_len(g.msgs[MAX_MSGS - 1 - i]));
         }
-        SetTextColor(memDC, RGB(150, 150, 150));
-        const char* hint = "[Arrows]:Move | [.]:Wait | [A]:Ability | [I]:Inv | [C]:Char | [M]:Spells | [H/F1]:Help";
-        TextOutA(memDC, 0, (H + 5) * char_h, hint, str_len(hint));
+        // Interactive Clickable HUD Action Buttons
+        struct HudBtnDef {
+            const char* label;
+            COLORREF border_col;
+            COLORREF text_col;
+            int x, w;
+        };
+        static const struct HudBtnDef hud_btns[] = {
+            {"[A] Ability", RGB(220, 120, 40), RGB(255, 200, 100), 4, 96},
+            {"[I] Inv",     RGB(50, 160, 150), RGB(100, 240, 220), 104, 76},
+            {"[M] Spells",  RGB(140, 80, 220), RGB(200, 160, 255), 184, 90},
+            {"[C] Sheet",   RGB(80, 130, 200), RGB(160, 200, 255), 278, 80},
+            {"[.] Wait",    RGB(60, 150, 80),  RGB(120, 240, 140), 362, 74},
+            {"[F5] Save",   RGB(100, 100, 140),RGB(200, 200, 220), 440, 80},
+            {"[F9] Load",   RGB(100, 100, 140),RGB(200, 200, 220), 524, 80},
+            {"[F1] Help",   RGB(50, 120, 200), RGB(120, 200, 255), 608, 80},
+        };
+        int by = (H + 5) * char_h;
+        int bh = char_h - 2;
+        for (int b = 0; b < 8; b++) {
+            RECT br = {hud_btns[b].x, by, hud_btns[b].x + hud_btns[b].w, by + bh};
+            HBRUSH bb = CreateSolidBrush(RGB(22, 28, 40));
+            FillRect(memDC, &br, bb);
+            DeleteObject(bb);
+            HPEN bp = CreatePen(PS_SOLID, 1, hud_btns[b].border_col);
+            HPEN oldP = (HPEN)SelectObject(memDC, bp);
+            HBRUSH nullB = (HBRUSH)GetStockObject(NULL_BRUSH);
+            HBRUSH oldB = (HBRUSH)SelectObject(memDC, nullB);
+            Rectangle(memDC, hud_btns[b].x, by, hud_btns[b].x + hud_btns[b].w, by + bh);
+            SelectObject(memDC, oldP);
+            SelectObject(memDC, oldB);
+            DeleteObject(bp);
+            SetBkMode(memDC, TRANSPARENT);
+            SetTextColor(memDC, hud_btns[b].text_col);
+            TextOutA(memDC, hud_btns[b].x + 6, by + 1, hud_btns[b].label, str_len(hud_btns[b].label));
+        }
+        SetTextColor(memDC, RGB(140, 140, 140));
+        const char* nav_hint = "[Click/Arrows]:Move | [K]:Keys";
+        TextOutA(memDC, 694, by + 1, nav_hint, str_len(nav_hint));
         
         if(g.state == 3) {
             SetTextColor(memDC, RGB(255,0,0));
@@ -2764,8 +2822,21 @@ void draw_game(HDC hdc) {
         SetTextColor(memDC, RGB(255, 215, 0));
         TextOutA(memDC, 20, 195, "Press T: Leaderboard | Press K: Keybinds | Press H/F1: Help", 59);
 
-        SetTextColor(memDC, RGB(255, 255, 255));
-        TextOutA(memDC, 20, 225, "Press ENTER to begin your journey...", 36);
+        RECT start_r = {18, 222, 530, 248};
+        HBRUSH sb = CreateSolidBrush(RGB(20, 60, 35));
+        FillRect(memDC, &start_r, sb);
+        DeleteObject(sb);
+        HPEN sp = CreatePen(PS_SOLID, 1, RGB(60, 200, 100));
+        HPEN oldP = (HPEN)SelectObject(memDC, sp);
+        HBRUSH nullB = (HBRUSH)GetStockObject(NULL_BRUSH);
+        HBRUSH oldB = (HBRUSH)SelectObject(memDC, nullB);
+        Rectangle(memDC, start_r.left, start_r.top, start_r.right, start_r.bottom);
+        SelectObject(memDC, oldP);
+        SelectObject(memDC, oldB);
+        DeleteObject(sp);
+        SetBkMode(memDC, TRANSPARENT);
+        SetTextColor(memDC, RGB(100, 255, 140));
+        TextOutA(memDC, 26, 226, ">>> CLICK HERE or Press ENTER to Begin Journey <<<", 50);
     } else if(g.state == 11) { // Leaderboard screen
         SetTextColor(memDC, RGB(255, 215, 0));
         SetBkColor(memDC, RGB(0,0,0));
@@ -2966,6 +3037,28 @@ void draw_game(HDC hdc) {
     
     draw_gothic_filigree_corners(memDC, W * char_w, TOTAL_H * char_h);
     draw_perimeter_inlay(memDC, W * char_w, TOTAL_H * char_h, g_anim_frame);
+    if (g_toast.active) {
+        int tw = 400, th = 28;
+        int tx = W * char_w - tw - 16;
+        int ty = 8;
+        RECT tr = {tx, ty, tx + tw, ty + th};
+        HBRUSH tb = CreateSolidBrush(RGB(15, 20, 32));
+        FillRect(memDC, &tr, tb);
+        DeleteObject(tb);
+        HPEN tp = CreatePen(PS_SOLID, 1, g_toast.color);
+        HPEN oldP = (HPEN)SelectObject(memDC, tp);
+        HBRUSH nullB = (HBRUSH)GetStockObject(NULL_BRUSH);
+        HBRUSH oldB = (HBRUSH)SelectObject(memDC, nullB);
+        Rectangle(memDC, tx, ty, tx + tw, ty + th);
+        SelectObject(memDC, oldP);
+        SelectObject(memDC, oldB);
+        DeleteObject(tp);
+        SetBkMode(memDC, TRANSPARENT);
+        SetTextColor(memDC, g_toast.color);
+        TextOutA(memDC, tx + 10, ty + 5, g_toast.msg, str_len(g_toast.msg));
+        SetTextColor(memDC, RGB(180, 180, 180));
+        TextOutA(memDC, tx + tw - 24, ty + 5, "[X]", 3);
+    }
 
     int dx = 0, dy = 0;
     if (screen_shake > 0) {
@@ -3185,6 +3278,7 @@ void use_class_ability() {
     if(p->class_id == CLASS_FIGHTER) {
         if(p->mp < 8) {
             add_msg("Not enough MP for Berserk Cleave! (8 MP required)");
+            show_toast("Not enough MP for Berserk Cleave! (8 MP)", RGB(255, 100, 100), 2000);
             return;
         }
         p->mp -= 8;
@@ -3193,6 +3287,7 @@ void use_class_ability() {
         screen_shake = 12;
         spawn_fire_particles(p->x, p->y, RGB(255, 50, 50), 30);
         add_msg("WAR CRY & BERSERK CLEAVE! You unleash a raging 360-degree sweep!");
+        show_toast("Berserk Cleave unleashed!", RGB(255, 100, 50), 2200);
         for(int dy = -1; dy <= 1; dy++) {
             for(int dx = -1; dx <= 1; dx++) {
                 if(dx == 0 && dy == 0) continue;
@@ -3212,12 +3307,14 @@ void use_class_ability() {
     } else if(p->class_id == CLASS_WIZARD) {
         if(p->mp < 10) {
             add_msg("Not enough MP for Arcane Nova! (10 MP required)");
+            show_toast("Not enough MP for Arcane Nova! (10 MP)", RGB(255, 100, 100), 2000);
             return;
         }
         p->mp -= 10;
         screen_shake = 10;
         spawn_particles(p->x, p->y, RGB(0, 220, 255), 35);
         add_msg("ARCANE NOVA! Radiating magical burst blasts surrounding enemies!");
+        show_toast("Arcane Nova unleashed!", RGB(100, 200, 255), 2200);
         for(int dy = -2; dy <= 2; dy++) {
             for(int dx = -2; dx <= 2; dx++) {
                 if(dx == 0 && dy == 0) continue;
@@ -3243,6 +3340,7 @@ void use_class_ability() {
     } else if(p->class_id == CLASS_ROGUE) {
         if(p->mp < 8) {
             add_msg("Not enough MP for Shadow Step! (8 MP required)");
+            show_toast("Not enough MP for Shadow Step! (8 MP)", RGB(255, 100, 100), 2000);
             return;
         }
         p->mp -= 8;
@@ -3259,6 +3357,7 @@ void use_class_ability() {
         }
         calc_fov_bresenham();
         add_msg("SHADOW STEP! You drop a smoke bomb, vanish into stealth, and blink away!");
+        show_toast("Shadow Step activated!", RGB(160, 160, 255), 2200);
         monsters_turn();
     }
 }
@@ -3266,16 +3365,135 @@ void use_class_ability() {
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE: {
+            g_hwnd = hwnd;
             g_font = CreateFontA(-char_h, char_w, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, NONANTIALIASED_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
             load_keybinds();
             init_game();
             SetTimer(hwnd, 1, 33, NULL);
+            show_toast("Welcome to KRogue! Press 'H' or F1 for Help.", RGB(100, 220, 255), 5000);
             return 0;
         }
         case WM_TIMER: {
             update_effects();
+            if (g_toast.active && GetTickCount() > g_toast.expire_tick) {
+                g_toast.active = 0;
+            }
             InvalidateRect(hwnd, NULL, FALSE);
             return 0;
+        }
+        case WM_LBUTTONDOWN: {
+            int px = LOWORD(lParam);
+            int py = HIWORD(lParam);
+
+            // Toast dismissal
+            if (g_toast.active) {
+                int tw = 400, th = 28;
+                int tx = W * char_w - tw - 16;
+                int ty = 8;
+                if (px >= tx && px <= tx + tw && py >= ty && py <= ty + th) {
+                    g_toast.active = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+            }
+
+            if (g.state == 0) { // Playing
+                // Bottom HUD action buttons
+                int by = (H + 5) * char_h;
+                int bh = char_h - 2;
+                if (py >= by && py <= by + bh) {
+                    if (px >= 4 && px <= 100) { use_class_ability(); }
+                    else if (px >= 104 && px <= 180) { g.state = 2; }
+                    else if (px >= 184 && px <= 274) { g.state = 6; }
+                    else if (px >= 278 && px <= 358) { g.state = 5; }
+                    else if (px >= 362 && px <= 436) { monsters_turn(); show_toast("Waited a turn.", RGB(100, 200, 255), 1500); }
+                    else if (px >= 440 && px <= 520) { save_game(); }
+                    else if (px >= 524 && px <= 604) { load_game(); }
+                    else if (px >= 608 && px <= 688) { g.state = 7; }
+                    else if (px >= 694) { g.state = 12; }
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+
+                // Map Tile Navigation
+                if (py < H * char_h) {
+                    int tx = px / char_w;
+                    int ty = py / char_h;
+                    Entity* p = get_player();
+                    if (tx == p->x && ty == p->y) {
+                        monsters_turn();
+                        show_toast("Waited a turn.", RGB(100, 200, 255), 1500);
+                    } else if (tx >= 0 && tx < W && ty >= 0 && ty < H) {
+                        int dx = (tx > p->x) ? 1 : ((tx < p->x) ? -1 : 0);
+                        int dy = (ty > p->y) ? 1 : ((ty < p->y) ? -1 : 0);
+                        move_player(dx, dy);
+                    }
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+            } else if (g.state == 3) { // Targeting
+                if (py < H * char_h) {
+                    g.target_x = px / char_w;
+                    g.target_y = py / char_h;
+                    g.state = 0;
+                    if (g.targeting_mode == 0) fire_arrow();
+                    else fire_spell();
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+            } else if (g.state == 4) { // Character creation
+                if (py >= 45 && py <= 65) { g.char_race = (g.char_race + 1) % 3; }
+                else if (py >= 70 && py <= 90) { g.char_class = (g.char_class + 1) % 3; g.char_loadout = 0; }
+                else if (py >= 95 && py <= 135) { g.char_loadout = (g.char_loadout + 1) % 3; }
+                else if (py >= 140 && py <= 160) { g.difficulty = (g.difficulty + 1) % 3; }
+                else if (py >= 161 && py <= 185) { g.seed = (g.seed * 3 + 1234) % 90000 + 1000; }
+                else if (py >= 190 && py <= 210) {
+                    if (px < 160) g.state = 11;
+                    else if (px < 300) g.state = 12;
+                    else g.state = 7;
+                }
+                else if (py >= 215 && py <= 255) {
+                    finalize_character();
+                    show_toast("Welcome to Floor 1! Defeat monsters & find stairs >", RGB(100, 255, 100), 4000);
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            } else if (g.state == 2) { // Inventory
+                if (py < 50 || py > (TOTAL_H - 2) * char_h) {
+                    g.state = 0;
+                } else {
+                    int slot = (py - 80) / char_h;
+                    if (slot >= 0 && slot < MAX_INVENTORY && g.inventory[slot].active) {
+                        if (g.inventory[slot].type == 1) quaff_potion(slot);
+                        else if (g.inventory[slot].type == TYPE_FOOD) eat_food(slot);
+                        else if (g.inventory[slot].type == TYPE_SPELLBOOK) read_book(slot);
+                        else equip_item(slot);
+                        g.state = 0;
+                    }
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            } else if (g.state == 1 || g.state == 10) { // Dead / Victory
+                init_game();
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            } else if (g.state == 7 || g.state == 8 || g.state == 5) { // Help, log, char sheet
+                g.state = (g.dlevel == 0 ? 4 : 0);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            } else if (g.state == 11) { // Leaderboard
+                if (py >= 35 && py <= 55) {
+                    if (px >= 200 && px <= 320) { export_leaderboard_json(); }
+                    else if (px >= 330 && px <= 440) { import_leaderboard_json(); }
+                    else if (px >= 450 && px <= 540) { clear_leaderboard(); }
+                    else { g.state = (g.dlevel == 0 ? 4 : 0); }
+                } else {
+                    g.state = (g.dlevel == 0 ? 4 : 0);
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            break;
         }
         case WM_DESTROY: {
             KillTimer(hwnd, 1);
