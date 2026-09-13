@@ -107,7 +107,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **⚠️ PRIORITY: If ANY game in the queue is at Loop 0 (not yet processed), work on it FIRST before continuing higher-loop games.**
 
 
-- KFortress
 - KColosseum
 - KFarm
 - KAlchemy
@@ -153,6 +152,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KBreakout
 - KMaze
 - KColony
+- KFortress
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
 
@@ -198,7 +198,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KAlchemy (Loop 7): Arcane particle engine, shockwaves, alchemical filigree, and mystic dust motes.
 - KFarm (Loop 6): Seasonal weather particles, roaming livestock sprites, windmill/scarecrow, and rustic filigree.
 - KColosseum (Loop 1): Gladiator sprites, lion/chariot enemies, Roman arena environment, and particle system.
-- KFortress (Loop 6): Multi-layer particles, dual shockwaves, medieval HUD, and biome-specific weather motes.
+- KFortress (Loop 7): Procedural architectural tower sprites, animated multi-caste enemy sprites (Goblin, Orc, Hound, Gargoyle, Necromancer, Skeleton, Ogre, Wyvern, Golem), and knight/militia sprites.
 - KColony (Loop 7): 3 animated xeno-caste sprites (Swarmer, Spitter, Goliath) with tactical health gauges, hovering nanite repair drones, and overland logistics rovers.
 - KMaze (Loop 9): Themed Minotaur/Boss sprites with nostril steam, first-person adventurer lantern and war-pick, and biome-textured dungeon walls.
 - KBreakout (Loop 9): Themed Boss Fortress sprites (Dreadnought, Citadel, Void Leviathan), explosive/titanium/prism/quantum brick sprites, orbital drone wings, and tractor beam capture.
