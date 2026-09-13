@@ -641,6 +641,8 @@
     20% { opacity: 0.5; }
     80% { opacity: 0.5; }
     100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+  }
+
   /* Toast Notification */
   #toast {
     position: fixed;
@@ -656,13 +658,33 @@
     font-size: 13.5px;
     font-weight: 600;
     z-index: 10000;
-    pointer-events: none;
+    pointer-events: auto;
+    cursor: pointer;
     opacity: 0;
     transition: opacity 0.25s ease, transform 0.25s ease;
     display: flex;
     align-items: center;
     gap: 8px;
     backdrop-filter: blur(8px);
+    user-select: none;
+  }
+  #toast:hover {
+    border-color: rgba(255, 215, 0, 0.8);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.7), 0 0 16px rgba(255, 215, 0, 0.35);
+  }
+  .toast-close {
+    font-size: 14px;
+    font-weight: 800;
+    color: #94a3b8;
+    margin-left: 8px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    line-height: 1;
+  }
+  .toast-close:hover {
+    color: #fff;
+    background: rgba(239, 68, 68, 0.8);
   }
   #toast.show {
     opacity: 1;
@@ -699,12 +721,12 @@
   </div>
 
   <div class="toolbar">
-    <button class="btn btn-primary" onclick="newGame()" aria-label="Start new game (F2 or N)">⚡ New Game</button>
+    <button class="btn btn-primary" onclick="newGame()" title="Start New Game [F2 / N]" aria-label="Start new game (F2 or N)">⚡ New [F2]</button>
     
     <select id="mode-select" class="btn" onchange="changeGameMode(this.value)" aria-label="Select game mode">
-      <option value="classic">Classic Solitaire</option>
-      <option value="vegas">Vegas Money Mode</option>
-      <option value="campaign">Campaign Mode (20 Stages)</option>
+      <option value="classic">Classic [1]</option>
+      <option value="vegas">Vegas [2]</option>
+      <option value="campaign">Campaign [3]</option>
     </select>
 
     <select id="stage-select" class="btn" style="display:none;" onchange="changeStage(this.value)" aria-label="Select campaign stage">
@@ -717,17 +739,17 @@
     </select>
 
     <!-- Active Skills -->
-    <button id="wand-btn" class="btn btn-skill" onclick="useMagicWand()" title="Magic Wand [W]: Auto play 1 card to foundation" aria-label="Magic Wand skill">🪄 Wand (<span id="wand-cnt">3</span>)</button>
-    <button id="xray-btn" class="btn btn-skill" onclick="useXRayVision()" title="X-Ray Vision [X]: Reveal face-down cards for 5s" aria-label="X-Ray Vision skill">👁️ X-Ray (<span id="xray-cnt">3</span>)</button>
-    <button id="shuffle-btn" class="btn btn-skill" onclick="useShuffleStock()" title="Shuffle Stock [S]: Reshuffle waste/stock pile" aria-label="Shuffle Stock skill">🔀 Shuffle (<span id="shuf-cnt">3</span>)</button>
+    <button id="wand-btn" class="btn btn-skill" onclick="useMagicWand()" title="Magic Wand [W]: Auto play 1 card to foundation" aria-label="Magic Wand skill">🪄 Wand [W] (<span id="wand-cnt">3</span>)</button>
+    <button id="xray-btn" class="btn btn-skill" onclick="useXRayVision()" title="X-Ray Vision [X]: Reveal face-down cards for 5s" aria-label="X-Ray Vision skill">👁️ X-Ray [X] (<span id="xray-cnt">3</span>)</button>
+    <button id="shuffle-btn" class="btn btn-skill" onclick="useShuffleStock()" title="Shuffle Stock [S]: Reshuffle waste/stock pile" aria-label="Shuffle Stock skill">🔀 Shuffle [S] (<span id="shuf-cnt">3</span>)</button>
 
-    <button id="undo-btn" class="btn" onclick="undoMove()" disabled title="Free Undo (U / Ctrl+Z)" aria-label="Undo move">↩ Undo</button>
-    <button id="redo-btn" class="btn" onclick="redoMove()" disabled title="Redo (Ctrl+Y)" aria-label="Redo move">↪ Redo</button>
+    <button id="undo-btn" class="btn" onclick="undoMove()" disabled title="Undo Move [U / Ctrl+Z]" aria-label="Undo move">↩ Undo [U]</button>
+    <button id="redo-btn" class="btn" onclick="redoMove()" disabled title="Redo Move [Ctrl+Y]" aria-label="Redo move">↪ Redo [Ctrl+Y]</button>
     <button class="btn btn-warning" onclick="giveHint()" title="Smart Hint [H / Ctrl+H]" aria-label="Show hint">💡 Hint [H]</button>
-    <button id="autofinish-btn" class="btn btn-success" onclick="autoFinish()" disabled title="Auto Complete remaining cards" aria-label="Auto finish game">✨ Auto-Finish</button>
+    <button id="autofinish-btn" class="btn btn-success" onclick="autoFinish()" disabled title="Auto-Finish remaining cards [Ctrl+F]" aria-label="Auto finish game">✨ Finish [Ctrl+F]</button>
 
-    <select id="theme-select" class="btn" onchange="changeTheme(this.value)" aria-label="Select card deck theme">
-      <option value="theme-navy">Deck: Navy</option>
+    <select id="theme-select" class="btn" onchange="changeTheme(this.value)" title="Deck Theme [T to cycle]" aria-label="Select card deck theme">
+      <option value="theme-navy">Deck: Navy [T]</option>
       <option value="theme-crimson">Deck: Crimson</option>
       <option value="theme-emerald">Deck: Emerald</option>
       <option value="theme-cyber">Deck: Cyber</option>
@@ -743,7 +765,7 @@
 
     <button class="btn" onclick="openStatsModal()" title="Game Statistics" aria-label="Open statistics dialog">📊 Stats</button>
     <button class="btn" onclick="openHelpModal()" title="How to Play & Rules [F1]" aria-label="Open help and rules dialog">📖 Help [F1]</button>
-    <button class="btn" onclick="toggleSound()" aria-label="Toggle sound mute"><span id="sound-icon">🔊</span></button>
+    <button class="btn" onclick="toggleSound()" title="Toggle Sound [M]" aria-label="Toggle sound mute"><span id="sound-icon">🔊</span> [M]</button>
   </div>
 
   <div id="mode-info" class="mode-banner">
@@ -756,7 +778,7 @@
   <!-- Top Row: Stock, Waste, Foundations -->
   <div class="top-row">
     <div class="stock-waste-group">
-      <div id="stock-slot" class="slot" onclick="handleStockClick()"></div>
+      <div id="stock-slot" class="slot" onclick="handleStockClick()" title="Stock Pile [Space / D / Click to Draw]"></div>
       <div id="waste-slot" class="slot"></div>
     </div>
     <div class="foundations-group">
@@ -839,11 +861,15 @@
       <div><strong>🔀 [S] Shuffle Stock:</strong> Shuffles all remaining stock and waste cards together.</div>
 
       <div style="color:#ffd700; font-weight:700; font-size:14px; border-bottom:1px solid rgba(255,215,0,0.25); padding-bottom:3px;">Controls & Shortcuts</div>
-      <div><strong>• Left-Click:</strong> Select and move cards between tableau columns or foundations.</div>
-      <div><strong>• Double-Click / Right-Click:</strong> Instantly auto-play card to foundation.</div>
+      <div><strong>• Left-Click:</strong> Select and move cards between columns or foundations.</div>
+      <div><strong>• Double-Click / Right-Click:</strong> Fast auto-move card to foundation.</div>
+      <div><strong>• [Space] / [D]:</strong> Draw card from stock pile / recycle stock.</div>
       <div><strong>• [F1] / [?]:</strong> Open/Close Help | <strong>[H] / [Ctrl+H]:</strong> Smart Hint</div>
-      <div><strong>• [Esc]:</strong> Close Modals | <strong>[U] / [Ctrl+Z]:</strong> Undo | <strong>[Ctrl+Y]:</strong> Redo</div>
-      <div><strong>• [Ctrl+F]:</strong> Auto-Finish when all remaining cards are face-up.</div>
+      <div><strong>• [F2] / [N]:</strong> New Game | <strong>[1-3]:</strong> Modes (Classic, Vegas, Campaign)</div>
+      <div><strong>• [W] Wand:</strong> Move card | <strong>[X] X-Ray:</strong> Reveal | <strong>[S]:</strong> Shuffle Stock</div>
+      <div><strong>• [U] / [Ctrl+Z]:</strong> Undo | <strong>[Ctrl+Y]:</strong> Redo | <strong>[Ctrl+F]:</strong> Auto-Finish</div>
+      <div><strong>• [M]:</strong> Toggle Audio Mute | <strong>[T]:</strong> Cycle Card Deck Theme</div>
+      <div><strong>• [Esc]:</strong> Close Modals, Clear Selection / Dismiss Toast Notification.</div>
     </div>
     <div style="display:flex; justify-content: flex-end; margin-top: 14px;">
       <button class="btn btn-primary" onclick="closeHelpModal()">Got it!</button>
@@ -1039,7 +1065,11 @@ function showToast(msg, duration = 3000) {
     toast.id = 'toast';
     document.body.appendChild(toast);
   }
-  toast.textContent = msg;
+  toast.innerHTML = `<span style="flex:1;">${msg}</span><span class="toast-close" title="Dismiss">&times;</span>`;
+  toast.onclick = () => {
+    toast.classList.remove('show');
+    if (toastTimeout) clearTimeout(toastTimeout);
+  };
   toast.classList.add('show');
   if (toastTimeout) clearTimeout(toastTimeout);
   toastTimeout = setTimeout(() => {
@@ -1098,7 +1128,7 @@ function init() {
 
   loadSavedGame();
 
-  showToast("Welcome to KSolitaire! Press [F1] for Help & Rules, [H] for Hint, [F2]/[N] for New Game.", 4500);
+  showToast("Welcome to KSolitaire! Press [F1] for Help & Rules, [H] for Hint, [F2] New Game, [Space/D] Draw.", 4500);
 
   window.addEventListener('keydown', (e) => {
     let helpActive = document.getElementById('help-modal')?.classList.contains('active');
@@ -1106,6 +1136,11 @@ function init() {
     let anyModal = helpActive || statsActive;
 
     if (e.key === 'Escape') {
+      let toast = document.getElementById('toast');
+      if (toast && toast.classList.contains('show')) {
+        toast.classList.remove('show');
+        if (toastTimeout) clearTimeout(toastTimeout);
+      }
       if (anyModal) {
         closeHelpModal();
         closeStatsModal();
@@ -1132,6 +1167,7 @@ function init() {
     if (e.key === 'F2' || (k === 'n' && !e.ctrlKey && !e.altKey && !e.metaKey)) {
       e.preventDefault();
       newGame();
+      showToast("⚡ New Game Started [F2]", 2000);
       return;
     }
 
@@ -1149,6 +1185,24 @@ function init() {
       else if (k === 's') { useShuffleStock(); }
       else if (k === 'u') { undoMove(); }
       else if (k === 'h') { giveHint(); }
+      else if (k === ' ' || k === 'd') { e.preventDefault(); handleStockClick(); }
+      else if (k === 'm') { toggleSound(); }
+      else if (k === '1') {
+        changeGameMode('classic');
+        let sel = document.getElementById('mode-select');
+        if (sel) sel.value = 'classic';
+      }
+      else if (k === '2') {
+        changeGameMode('vegas');
+        let sel = document.getElementById('mode-select');
+        if (sel) sel.value = 'vegas';
+      }
+      else if (k === '3') {
+        changeGameMode('campaign');
+        let sel = document.getElementById('mode-select');
+        if (sel) sel.value = 'campaign';
+      }
+      else if (k === 't') { cycleDeckTheme(); }
     }
   });
 }
@@ -2873,6 +2927,17 @@ function changeDrawMode(val) {
 function changeTheme(val) {
   document.body.className = val;
   safeSetStorage('ksolitaire_theme', val);
+}
+
+function cycleDeckTheme() {
+  const themes = ['theme-navy', 'theme-crimson', 'theme-emerald', 'theme-cyber', 'theme-gold'];
+  let cur = safeGetStorage('ksolitaire_theme', 'theme-navy');
+  let idx = (themes.indexOf(cur) + 1) % themes.length;
+  let next = themes[idx];
+  changeTheme(next);
+  let themeSelect = document.getElementById('theme-select');
+  if (themeSelect) themeSelect.value = next;
+  showToast(`🎨 Deck Theme: ${next.replace('theme-', '').toUpperCase()}`, 1800);
 }
 
 function changeFelt(val) {

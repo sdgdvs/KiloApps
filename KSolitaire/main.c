@@ -271,6 +271,37 @@ typedef struct {
 } Confetti;
 Confetti confetti[200];
 
+// Native Toast Banner & Audio State
+static char nativeToastMsg[256] = "";
+static DWORD nativeToastExpire = 0;
+static RECT nativeToastRect = {0, 0, 0, 0};
+static int soundMuted = 0;
+
+void PlayGameBeep(UINT type) {
+    if (!soundMuted) MessageBeep(type);
+}
+
+void ShowNativeToast(HWND hwnd, const char *msg, int durationMs) {
+    if (!msg) return;
+    int i = 0;
+    while (msg[i] && i < 250) {
+        nativeToastMsg[i] = msg[i];
+        i++;
+    }
+    nativeToastMsg[i] = '\0';
+    nativeToastExpire = GetTickCount() + durationMs;
+    if (hwnd) InvalidateRect(hwnd, NULL, FALSE);
+}
+
+void UpdateWindowTitle(HWND hwnd) {
+    if (!hwnd) return;
+    char titleBuf[256];
+    const char *modeStr = (state.gameMode == 1) ? "Campaign" : ((state.gameMode == 2) ? "Vegas" : "Classic");
+    wsprintfA(titleBuf, "KSolitaire [%s] | Moves: %d | Score: %d | [F1] Help | [H] Hint | [F2] New | [Space] Draw",
+        modeStr, state.moves, state.score);
+    SetWindowTextA(hwnd, titleBuf);
+}
+
 // Random Seed generator
 unsigned int seed = 1337;
 unsigned int rnd() {
@@ -445,23 +476,37 @@ void PushUndoState() {
     SaveGameState();
 }
 
-void PerformUndo() {
-    if (undoCount == 0) return;
+void PerformUndo(HWND hwnd) {
+    if (undoCount == 0) {
+        ShowNativeToast(hwnd, "Nothing to Undo!", 1500);
+        return;
+    }
     if (redoCount < 256) CopyState(&redoStack[redoCount++], &state);
     CopyState(&state, &undoStack[--undoCount]);
         
     selectedType = -1;
     hintSrcType = -1;
     SaveGameState();
+    PlayGameBeep(MB_OK);
+    ShowNativeToast(hwnd, "Move Undone [U / Ctrl+Z]", 1800);
+    UpdateWindowTitle(hwnd);
+    if (hwnd) InvalidateRect(hwnd, NULL, FALSE);
 }
 
-void PerformRedo() {
-    if (redoCount == 0) return;
+void PerformRedo(HWND hwnd) {
+    if (redoCount == 0) {
+        ShowNativeToast(hwnd, "Nothing to Redo!", 1500);
+        return;
+    }
     if (undoCount < 256) CopyState(&undoStack[undoCount++], &state);
     CopyState(&state, &redoStack[--redoCount]);
     selectedType = -1;
     hintSrcType = -1;
     SaveGameState();
+    PlayGameBeep(MB_OK);
+    ShowNativeToast(hwnd, "Move Redone [Ctrl+Y]", 1800);
+    UpdateWindowTitle(hwnd);
+    if (hwnd) InvalidateRect(hwnd, NULL, FALSE);
 }
 
 // --- Solitaire Game Engine ---
@@ -640,6 +685,7 @@ void NewGame(HWND hwnd) {
     }
 
     SaveGameState();
+    UpdateWindowTitle(hwnd);
     InvalidateRect(hwnd, NULL, FALSE);
 }
 
@@ -1121,7 +1167,7 @@ int AttemptMove(int srcType, int srcPile, int srcIdx, int dstType, int dstPile, 
             state.foundation_suit[dstPile] = cardsToMove[0].suit;
         }
         state.score += (state.vegasRules ? 5 : (srcType == 0 ? 10 : (srcType == 1 ? 10 : 0)));
-        MessageBeep(MB_OK);
+        PlayGameBeep(MB_OK);
         SpawnParticles(hwnd, dstPile);
     } else if (dstType == 1) {
         for (int i = 0; i < moveCount; i++) {
@@ -1154,6 +1200,7 @@ int AttemptMove(int srcType, int srcPile, int srcIdx, int dstType, int dstPile, 
 
     state.moves++;
     ClearSelectionAndHints();
+    UpdateWindowTitle(hwnd);
     InvalidateRect(hwnd, NULL, FALSE);
     CheckWin(hwnd);
     return 1;
@@ -1162,7 +1209,8 @@ int AttemptMove(int srcType, int srcPile, int srcIdx, int dstType, int dstPile, 
 // --- Active Skills & Power-ups ---
 int UseMagicWand(HWND hwnd) {
     if (state.wandCharges <= 0 || gameWon) {
-        MessageBeep(MB_ICONHAND);
+        PlayGameBeep(MB_ICONHAND);
+        ShowNativeToast(hwnd, "No Magic Wand charges remaining!", 2500);
         return 0;
     }
     // Search tableau top cards
@@ -1180,6 +1228,7 @@ int UseMagicWand(HWND hwnd) {
                             if (state.score < 0) state.score = 0;
                         }
                         AttemptMove(1, t, state.tableau_cnt[t] - 1, 2, f, hwnd);
+                        ShowNativeToast(hwnd, "Magic Wand moved card to Foundation! [W]", 2500);
                         return 1;
                     }
                 }
@@ -1199,17 +1248,20 @@ int UseMagicWand(HWND hwnd) {
                     if (state.score < 0) state.score = 0;
                 }
                 AttemptMove(0, 0, state.waste_cnt - 1, 2, f, hwnd);
+                ShowNativeToast(hwnd, "Magic Wand moved waste card to Foundation! [W]", 2500);
                 return 1;
             }
         }
     }
-    MessageBeep(MB_ICONASTERISK);
+    PlayGameBeep(MB_ICONASTERISK);
+    ShowNativeToast(hwnd, "No cards eligible to move to Foundation!", 2500);
     return 0;
 }
 
 int UseXRayVision(HWND hwnd) {
     if (state.xrayCharges <= 0 || gameWon) {
-        MessageBeep(MB_ICONHAND);
+        PlayGameBeep(MB_ICONHAND);
+        ShowNativeToast(hwnd, "No X-Ray Vision charges remaining!", 2500);
         return 0;
     }
     state.xrayCharges--;
@@ -1220,18 +1272,21 @@ int UseXRayVision(HWND hwnd) {
         state.score -= 25;
         if (state.score < 0) state.score = 0;
     }
-    MessageBeep(MB_OK);
+    PlayGameBeep(MB_OK);
+    ShowNativeToast(hwnd, "X-Ray Vision active (revealing face-down cards for 5s) [X]", 2500);
     InvalidateRect(hwnd, NULL, FALSE);
     return 1;
 }
 
 int UseShuffleStock(HWND hwnd) {
     if (state.shuffleCharges <= 0 || gameWon) {
-        MessageBeep(MB_ICONHAND);
+        PlayGameBeep(MB_ICONHAND);
+        ShowNativeToast(hwnd, "No Shuffle Stock charges remaining!", 2500);
         return 0;
     }
     if (state.stock_cnt == 0 && state.waste_cnt == 0) {
-        MessageBeep(MB_ICONASTERISK);
+        PlayGameBeep(MB_ICONASTERISK);
+        ShowNativeToast(hwnd, "Stock and waste piles are empty!", 2500);
         return 0;
     }
     PushUndoState();
@@ -1268,7 +1323,9 @@ int UseShuffleStock(HWND hwnd) {
     SpawnFXBurst(hwnd, startX, startY + CARD_H / 2, 0, 36, 1);
     TriggerScreenShake(10);
 
-    MessageBeep(MB_OK);
+    PlayGameBeep(MB_OK);
+    ShowNativeToast(hwnd, "Stock & waste piles reshuffled! [S]", 2500);
+    UpdateWindowTitle(hwnd);
     InvalidateRect(hwnd, NULL, FALSE);
     return 1;
 }
@@ -1286,6 +1343,8 @@ void GiveHint(HWND hwnd) {
                     if (CanMoveToFoundation(c, f)) {
                         hintSrcType = 1; hintSrcPile = t; hintSrcIdx = state.tableau_cnt[t] - 1;
                         hintDstType = 2; hintDstPile = f;
+                        PlayGameBeep(MB_OK);
+                        ShowNativeToast(hwnd, "Hint: Move card to Foundation", 2500);
                         InvalidateRect(hwnd, NULL, FALSE);
                         return;
                     }
@@ -1300,6 +1359,8 @@ void GiveHint(HWND hwnd) {
             if (CanMoveToFoundation(c, f)) {
                 hintSrcType = 0; hintSrcPile = 0; hintSrcIdx = state.waste_cnt - 1;
                 hintDstType = 2; hintDstPile = f;
+                PlayGameBeep(MB_OK);
+                ShowNativeToast(hwnd, "Hint: Move waste card to Foundation", 2500);
                 InvalidateRect(hwnd, NULL, FALSE);
                 return;
             }
@@ -1317,6 +1378,8 @@ void GiveHint(HWND hwnd) {
                 if (srcT != dstT && CanMoveToTableau(c, dstT)) {
                     hintSrcType = 1; hintSrcPile = srcT; hintSrcIdx = firstFaceUp;
                     hintDstType = 1; hintDstPile = dstT;
+                    PlayGameBeep(MB_OK);
+                    ShowNativeToast(hwnd, "Hint: Move card between columns", 2500);
                     InvalidateRect(hwnd, NULL, FALSE);
                     return;
                 }
@@ -1330,13 +1393,16 @@ void GiveHint(HWND hwnd) {
             if (CanMoveToTableau(c, dstT)) {
                 hintSrcType = 0; hintSrcPile = 0; hintSrcIdx = state.waste_cnt - 1;
                 hintDstType = 1; hintDstPile = dstT;
+                PlayGameBeep(MB_OK);
+                ShowNativeToast(hwnd, "Hint: Move waste card to column", 2500);
                 InvalidateRect(hwnd, NULL, FALSE);
                 return;
             }
         }
     }
 
-    MessageBeep(MB_ICONASTERISK);
+    PlayGameBeep(MB_ICONASTERISK);
+    ShowNativeToast(hwnd, "No obvious moves! Draw [Space] or use a skill", 3000);
 }
 
 // --- Auto Finish Solver ---
@@ -1757,27 +1823,72 @@ void DrawSlotOutline(HDC hdc, int x, int y, const char *label, int isHintDst) {
     }
 }
 
+void PerformStockDraw(HWND hwnd) {
+    if (gameWon) return;
+    if (!state.gameStarted) state.gameStarted = 1;
+    ClearSelectionAndHints();
+
+    int stockX = GAP_X;
+    int stockY = GAP_Y;
+    if (state.stock_cnt == 0) {
+        if (state.waste_cnt > 0) {
+            if (state.maxStockPasses > 0 && state.stockPasses >= state.maxStockPasses) {
+                PlayGameBeep(MB_ICONHAND);
+                ShowNativeToast(hwnd, "No stock passes remaining!", 2000);
+                return;
+            }
+            PushUndoState();
+            state.stockPasses++;
+            while (state.waste_cnt > 0) {
+                Card c = state.waste[--state.waste_cnt];
+                c.faceUp = 0;
+                state.stock[state.stock_cnt++] = c;
+            }
+            PlayGameBeep(MB_OK);
+            ShowNativeToast(hwnd, "Recycled stock pile [Space]", 1800);
+        }
+    } else {
+        PushUndoState();
+        int count = (state.drawMode < state.stock_cnt) ? state.drawMode : state.stock_cnt;
+        for (int i = 0; i < count; i++) {
+            Card c = state.stock[--state.stock_cnt];
+            c.faceUp = 1;
+            state.waste[state.waste_cnt++] = c;
+        }
+        SpawnFXBurst(hwnd, stockX + CARD_W, stockY + 35 + CARD_H / 2, 0, 16, 0);
+        TriggerScreenShake(3);
+        PlayGameBeep(MB_OK);
+    }
+    state.moves++;
+    UpdateWindowTitle(hwnd);
+    InvalidateRect(hwnd, NULL, FALSE);
+}
+
 void ShowHelpDialog(HWND hwnd) {
     const char *helpText = 
         "=== KSolitaire Guide & Rules ===\n\n"
         "GOAL:\n"
         "Build 4 foundation piles up by suit from Ace to King (A, 2, 3 ... K).\n\n"
         "GAME MODES:\n"
-        "- Classic: Standard scoring (+10 to foundation, +5 tableau flip, -15 back to tableau).\n"
-        "- Vegas Money: -$52 buy-in. Earn +$5 per foundation card (-$5 if returned). Cumulative bankroll!\n"
-        "- Campaign: 20 progressive challenges with unique twists (Suit Locks, Frozen Ice Cards, Pass Caps).\n\n"
+        "- Classic [1]: Standard scoring (+10 foundation, +5 tableau flip, -15 back).\n"
+        "- Vegas Money [2]: -$52 buy-in. Earn +$5 per foundation card. Cumulative bankroll!\n"
+        "- Campaign [3]: 20 progressive challenges (Suit Locks, Frozen Cards, Pass Caps).\n\n"
         "ACTIVE SKILLS (3 charges per game):\n"
         "- [W] Magic Wand: Auto-moves 1 eligible card to foundation.\n"
         "- [X] X-Ray Vision: Temporarily reveals face-down tableau cards for 5s.\n"
         "- [S] Shuffle Stock: Reshuffles all remaining stock and waste cards.\n\n"
         "CONTROLS & SHORTCUTS:\n"
-        "- Left Click: Select & Move cards between columns\n"
+        "- Left Click: Select & move cards between columns\n"
         "- Double-Click / Right-Click: Fast auto-move card to foundation\n"
+        "- [Space] / [D]: Draw card from stock / recycle waste\n"
         "- [F1]: Help & Rules\n"
         "- [H] / [Ctrl+H]: Smart Hint\n"
-        "- [F2]: New Game\n"
+        "- [F2] / [N]: New Game\n"
+        "- [1] Classic | [2] Vegas | [3] Campaign Mode\n"
         "- [U] / [Ctrl+Z]: Undo Move | [Ctrl+Y]: Redo Move\n"
-        "- [Ctrl+F]: Auto-Finish (when all hidden cards are cleared)";
+        "- [Ctrl+F]: Auto-Finish remaining cards\n"
+        "- [T]: Cycle Deck Theme | [M]: Toggle Audio Mute\n"
+        "- [Esc]: Clear Selection, Hints & Dismiss Toast";
     MessageBoxA(hwnd, helpText, "KSolitaire - Help & Rules", MB_OK | MB_ICONINFORMATION);
 }
 
@@ -1803,19 +1914,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hGameMenu, "Game");
 
             HMENU hModeMenu = CreatePopupMenu();
-            AppendMenu(hModeMenu, MF_STRING, ID_MODE_CLASSIC, "Classic Solitaire");
-            AppendMenu(hModeMenu, MF_STRING, ID_MODE_VEGAS, "Vegas Money Mode");
-            AppendMenu(hModeMenu, MF_STRING, ID_MODE_CAMPAIGN, "Campaign Mode (20 Stages)");
+            AppendMenu(hModeMenu, MF_STRING, ID_MODE_CLASSIC, "Classic Solitaire\t1");
+            AppendMenu(hModeMenu, MF_STRING, ID_MODE_VEGAS, "Vegas Money Mode\t2");
+            AppendMenu(hModeMenu, MF_STRING, ID_MODE_CAMPAIGN, "Campaign Mode (20 Stages)\t3");
             AppendMenu(hModeMenu, MF_SEPARATOR, 0, NULL);
             AppendMenu(hModeMenu, MF_STRING, ID_STAGE_PREV, "Previous Stage");
             AppendMenu(hModeMenu, MF_STRING, ID_STAGE_NEXT, "Next Stage");
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hModeMenu, "Game Modes");
 
             HMENU hSkillMenu = CreatePopupMenu();
-            AppendMenu(hSkillMenu, MF_STRING, ID_SKILL_WAND, "Magic Wand [W]");
-            AppendMenu(hSkillMenu, MF_STRING, ID_SKILL_XRAY, "X-Ray Vision [X]");
-            AppendMenu(hSkillMenu, MF_STRING, ID_SKILL_SHUFFLE, "Shuffle Stock [S]");
-            AppendMenu(hSkillMenu, MF_STRING, ID_SKILL_UNDO, "Free Undo [U]");
+            AppendMenu(hSkillMenu, MF_STRING, ID_SKILL_WAND, "Magic Wand\tW");
+            AppendMenu(hSkillMenu, MF_STRING, ID_SKILL_XRAY, "X-Ray Vision\tX");
+            AppendMenu(hSkillMenu, MF_STRING, ID_SKILL_SHUFFLE, "Shuffle Stock\tS");
+            AppendMenu(hSkillMenu, MF_STRING, ID_SKILL_UNDO, "Free Undo\tU");
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSkillMenu, "Active Skills");
 
             HMENU hRulesMenu = CreatePopupMenu();
@@ -1824,7 +1935,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hRulesMenu, "Rules");
 
             HMENU hThemeMenu = CreatePopupMenu();
-            AppendMenu(hThemeMenu, MF_STRING, ID_THEME_BLUE, "Deck: Navy Blue");
+            AppendMenu(hThemeMenu, MF_STRING, ID_THEME_BLUE, "Deck: Navy Blue\tT");
             AppendMenu(hThemeMenu, MF_STRING, ID_THEME_CRIMSON, "Deck: Crimson Royal");
             AppendMenu(hThemeMenu, MF_STRING, ID_THEME_EMERALD, "Deck: Emerald Forest");
             AppendMenu(hThemeMenu, MF_STRING, ID_THEME_CYBER, "Deck: Cyber Dark");
@@ -1853,35 +1964,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 state.drawMode = 1;
                 NewGame(hwnd);
             }
+            UpdateWindowTitle(hwnd);
+            ShowNativeToast(hwnd, "Welcome! [F1] Help | [H] Hint | [F2] New | [Space] Draw | [W/X/S] Skills", 5000);
             SetTimer(hwnd, 1, 1000, NULL);
             SetTimer(hwnd, 5, 40, NULL); // Animation loop timer
             break;
         }
         case WM_COMMAND: {
             int id = LOWORD(wParam);
-            if (id == ID_NEW_GAME) NewGame(hwnd);
-            else if (id == ID_DRAW_1) { state.drawMode = 1; NewGame(hwnd); }
-            else if (id == ID_DRAW_3) { state.drawMode = 3; NewGame(hwnd); }
-            else if (id == ID_MODE_CLASSIC) { state.gameMode = 0; NewGame(hwnd); }
-            else if (id == ID_MODE_VEGAS) { state.gameMode = 2; NewGame(hwnd); }
-            else if (id == ID_MODE_CAMPAIGN) { state.gameMode = 1; NewGame(hwnd); }
+            if (id == ID_NEW_GAME) { NewGame(hwnd); ShowNativeToast(hwnd, "New Game Started [F2]", 2000); }
+            else if (id == ID_DRAW_1) { state.drawMode = 1; NewGame(hwnd); ShowNativeToast(hwnd, "Draw Mode: 1 Card", 2000); }
+            else if (id == ID_DRAW_3) { state.drawMode = 3; NewGame(hwnd); ShowNativeToast(hwnd, "Draw Mode: 3 Cards", 2000); }
+            else if (id == ID_MODE_CLASSIC) { state.gameMode = 0; NewGame(hwnd); ShowNativeToast(hwnd, "Mode: Classic Solitaire [1]", 2200); }
+            else if (id == ID_MODE_VEGAS) { state.gameMode = 2; NewGame(hwnd); ShowNativeToast(hwnd, "Mode: Vegas Money Mode [2]", 2200); }
+            else if (id == ID_MODE_CAMPAIGN) { state.gameMode = 1; NewGame(hwnd); ShowNativeToast(hwnd, "Mode: Campaign Mode [3]", 2200); }
             else if (id == ID_STAGE_PREV) {
-                if (state.campaignStage > 1) { state.campaignStage--; state.gameMode = 1; NewGame(hwnd); }
+                if (state.campaignStage > 1) { state.campaignStage--; state.gameMode = 1; NewGame(hwnd); ShowNativeToast(hwnd, "Previous Campaign Stage", 2000); }
             } else if (id == ID_STAGE_NEXT) {
                 if (state.campaignStage < stats.maxCampaignStage && state.campaignStage < 20) {
-                    state.campaignStage++; state.gameMode = 1; NewGame(hwnd);
+                    state.campaignStage++; state.gameMode = 1; NewGame(hwnd); ShowNativeToast(hwnd, "Next Campaign Stage", 2000);
                 }
             } else if (id == ID_SKILL_WAND) UseMagicWand(hwnd);
             else if (id == ID_SKILL_XRAY) UseXRayVision(hwnd);
             else if (id == ID_SKILL_SHUFFLE) UseShuffleStock(hwnd);
-            else if (id == ID_SKILL_UNDO) PerformUndo();
-            else if (id == ID_UNDO) PerformUndo();
-            else if (id == ID_REDO) PerformRedo();
+            else if (id == ID_SKILL_UNDO) PerformUndo(hwnd);
+            else if (id == ID_UNDO) PerformUndo(hwnd);
+            else if (id == ID_REDO) PerformRedo(hwnd);
             else if (id == ID_HINT) GiveHint(hwnd);
             else if (id == ID_HELP_RULES) ShowHelpDialog(hwnd);
             else if (id == ID_AUTOFINISH) {
                 if (CanAutoFinish()) {
                     autoFinishActive = 1;
+                    ShowNativeToast(hwnd, "Auto-Finishing...", 2000);
                     SetTimer(hwnd, 2, 100, NULL);
                 }
             } else if (id == ID_STATS) {
@@ -1895,21 +2009,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     ZeroMem(&stats, sizeof(SolitaireStats));
                     stats.maxCampaignStage = 1;
                     SaveStats();
+                    ShowNativeToast(hwnd, "Statistics Reset", 2000);
                 }
             } else if (id == ID_EXPORT_STATS) {
                 ExportStatsJSON(hwnd);
             } else if (id == ID_IMPORT_STATS) {
                 ImportStatsJSON(hwnd);
-            } else if (id == ID_THEME_BLUE) themeId = 0;
-            else if (id == ID_THEME_CRIMSON) themeId = 1;
-            else if (id == ID_THEME_EMERALD) themeId = 2;
-            else if (id == ID_THEME_CYBER) themeId = 3;
-            else if (id == ID_THEME_GOLD) themeId = 4;
-            else if (id == ID_FELT_GREEN) feltId = 0;
-            else if (id == ID_FELT_SLATE) feltId = 1;
-            else if (id == ID_FELT_INDIGO) feltId = 2;
-            else if (id == ID_FELT_CRIMSON) feltId = 3;
+            } else if (id == ID_THEME_BLUE) { themeId = 0; stats.themeId = 0; SaveStats(); ShowNativeToast(hwnd, "Deck: Navy Blue [T]", 1800); }
+            else if (id == ID_THEME_CRIMSON) { themeId = 1; stats.themeId = 1; SaveStats(); ShowNativeToast(hwnd, "Deck: Crimson Royal [T]", 1800); }
+            else if (id == ID_THEME_EMERALD) { themeId = 2; stats.themeId = 2; SaveStats(); ShowNativeToast(hwnd, "Deck: Emerald Forest [T]", 1800); }
+            else if (id == ID_THEME_CYBER) { themeId = 3; stats.themeId = 3; SaveStats(); ShowNativeToast(hwnd, "Deck: Cyber Dark [T]", 1800); }
+            else if (id == ID_THEME_GOLD) { themeId = 4; stats.themeId = 4; SaveStats(); ShowNativeToast(hwnd, "Deck: Gold Elegance [T]", 1800); }
+            else if (id == ID_FELT_GREEN) { feltId = 0; stats.feltId = 0; SaveStats(); ShowNativeToast(hwnd, "Felt: Classic Green", 1800); }
+            else if (id == ID_FELT_SLATE) { feltId = 1; stats.feltId = 1; SaveStats(); ShowNativeToast(hwnd, "Felt: Slate Dark", 1800); }
+            else if (id == ID_FELT_INDIGO) { feltId = 2; stats.feltId = 2; SaveStats(); ShowNativeToast(hwnd, "Felt: Royal Indigo", 1800); }
+            else if (id == ID_FELT_CRIMSON) { feltId = 3; stats.feltId = 3; SaveStats(); ShowNativeToast(hwnd, "Felt: Deep Crimson", 1800); }
 
+            UpdateWindowTitle(hwnd);
             InvalidateRect(hwnd, NULL, FALSE);
             break;
         }
@@ -1917,27 +2033,70 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return 1;
         case WM_KEYDOWN: {
             if (GetKeyState(VK_CONTROL) & 0x8000) {
-                if (wParam == 'Z' || wParam == 'z') PerformUndo();
-                else if (wParam == 'Y' || wParam == 'y') PerformRedo();
+                if (wParam == 'Z' || wParam == 'z') PerformUndo(hwnd);
+                else if (wParam == 'Y' || wParam == 'y') PerformRedo(hwnd);
                 else if (wParam == 'H' || wParam == 'h') GiveHint(hwnd);
                 else if (wParam == 'F' || wParam == 'f') {
                     if (CanAutoFinish()) { autoFinishActive = 1; SetTimer(hwnd, 2, 100, NULL); }
                 }
             } else {
-                if (wParam == VK_F2 || wParam == 'N' || wParam == 'n') NewGame(hwnd);
+                if (wParam == VK_F2 || wParam == 'N' || wParam == 'n') {
+                    NewGame(hwnd);
+                    ShowNativeToast(hwnd, "New Game Started [F2]", 2000);
+                }
                 else if (wParam == VK_F1 || wParam == VK_HELP) ShowHelpDialog(hwnd);
-                else if (wParam == VK_ESCAPE) ClearSelectionAndHints();
+                else if (wParam == VK_ESCAPE) {
+                    if (GetTickCount() < nativeToastExpire) {
+                        nativeToastExpire = 0;
+                        nativeToastMsg[0] = '\0';
+                    }
+                    ClearSelectionAndHints();
+                }
+                else if (wParam == VK_SPACE || wParam == 'D' || wParam == 'd') PerformStockDraw(hwnd);
+                else if (wParam == '1') {
+                    state.gameMode = 0;
+                    NewGame(hwnd);
+                    ShowNativeToast(hwnd, "Mode: Classic Solitaire [1]", 2200);
+                }
+                else if (wParam == '2') {
+                    state.gameMode = 2;
+                    NewGame(hwnd);
+                    ShowNativeToast(hwnd, "Mode: Vegas Money Mode [2]", 2200);
+                }
+                else if (wParam == '3') {
+                    state.gameMode = 1;
+                    NewGame(hwnd);
+                    ShowNativeToast(hwnd, "Mode: Campaign Mode [3]", 2200);
+                }
+                else if (wParam == 'T' || wParam == 't') {
+                    themeId = (themeId + 1) % 5;
+                    stats.themeId = themeId;
+                    SaveStats();
+                    ShowNativeToast(hwnd, "Deck Theme Cycled [T]", 1800);
+                }
+                else if (wParam == 'M' || wParam == 'm') {
+                    soundMuted = !soundMuted;
+                    ShowNativeToast(hwnd, soundMuted ? "Audio Muted [M]" : "Audio Enabled [M]", 2000);
+                }
                 else if (wParam == 'W' || wParam == 'w') UseMagicWand(hwnd);
                 else if (wParam == 'X' || wParam == 'x') UseXRayVision(hwnd);
                 else if (wParam == 'S' || wParam == 's') UseShuffleStock(hwnd);
-                else if (wParam == 'U' || wParam == 'u') PerformUndo();
+                else if (wParam == 'U' || wParam == 'u') PerformUndo(hwnd);
                 else if (wParam == 'H' || wParam == 'h') GiveHint(hwnd);
             }
+            UpdateWindowTitle(hwnd);
             InvalidateRect(hwnd, NULL, FALSE);
             break;
         }
         case WM_LBUTTONDOWN: {
             if (gameWon) return 0;
+            POINT clickPt = {LOWORD(lParam), HIWORD(lParam)};
+            if (GetTickCount() < nativeToastExpire && PtInRect(&nativeToastRect, clickPt)) {
+                nativeToastExpire = 0;
+                nativeToastMsg[0] = '\0';
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
             if (!state.gameStarted) state.gameStarted = 1;
 
             int mx = LOWORD(lParam);
@@ -1951,33 +2110,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int stockX = GAP_X;
             int stockY = GAP_Y;
             if (mx >= stockX && mx <= stockX + CARD_W && my >= stockY && my <= stockY + CARD_H) {
-                if (state.stock_cnt == 0) {
-                    if (state.waste_cnt > 0) {
-                        if (state.maxStockPasses > 0 && state.stockPasses >= state.maxStockPasses) {
-                            MessageBeep(MB_ICONHAND);
-                            return 0;
-                        }
-                        PushUndoState();
-                        state.stockPasses++;
-                        while (state.waste_cnt > 0) {
-                            Card c = state.waste[--state.waste_cnt];
-                            c.faceUp = 0;
-                            state.stock[state.stock_cnt++] = c;
-                        }
-                    }
-                } else {
-                    PushUndoState();
-                    int count = (state.drawMode < state.stock_cnt) ? state.drawMode : state.stock_cnt;
-                    for (int i = 0; i < count; i++) {
-                        Card c = state.stock[--state.stock_cnt];
-                        c.faceUp = 1;
-                        state.waste[state.waste_cnt++] = c;
-                    }
-                    SpawnFXBurst(hwnd, stockX + CARD_W, stockY + CARD_H / 2, 0, 16, 0);
-                    TriggerScreenShake(3);
-                }
-                state.moves++;
-                InvalidateRect(hwnd, NULL, FALSE);
+                PerformStockDraw(hwnd);
                 return 0;
             }
 
@@ -2153,6 +2286,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (state.xrayTimer > 0) {
                         state.xrayTimer--;
                     }
+                    UpdateWindowTitle(hwnd);
                 }
             } else if (wParam == 2) { // Auto finish step
                 if (autoFinishActive) AutoFinishStep(hwnd);
@@ -2201,6 +2335,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (wParam == 5) { // Continuous Animation & Physics Loop (33ms)
                 DWORD tick = GetTickCount();
+
+                // Auto-fade expired native toast banner
+                if (nativeToastExpire != 0 && GetTickCount() >= nativeToastExpire) {
+                    nativeToastExpire = 0;
+                    nativeToastMsg[0] = '\0';
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
 
                 // 1. Procedural Screen Shake Decay
                 if (shakeAmp > 0) {
@@ -2554,6 +2695,54 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         DeleteObject(cb);
                     }
                 }
+            }
+
+            // Draw Floating Native Toast Banner
+            if (GetTickCount() < nativeToastExpire && nativeToastMsg[0] != '\0') {
+                char fullMsg[280];
+                wsprintfA(fullMsg, " %s  [X] ", nativeToastMsg);
+                int len = lstrlenA(fullMsg);
+
+                SIZE sz;
+                GetTextExtentPoint32A(memDC, fullMsg, len, &sz);
+                int toastW = sz.cx + 28;
+                int toastH = 34;
+                int toastX = (winW - toastW) / 2;
+                int toastY = winH - 68;
+
+                nativeToastRect.left = toastX;
+                nativeToastRect.top = toastY;
+                nativeToastRect.right = toastX + toastW;
+                nativeToastRect.bottom = toastY + toastH;
+
+                // Toast Shadow
+                HBRUSH shadowBrush = CreateSolidBrush(RGB(5, 8, 15));
+                RECT shadowRc = { toastX + 3, toastY + 3, toastX + toastW + 3, toastY + toastH + 3 };
+                FillRect(memDC, &shadowRc, shadowBrush);
+                DeleteObject(shadowBrush);
+
+                // Toast Background & Golden Border
+                HBRUSH tBg = CreateSolidBrush(RGB(15, 23, 42));
+                HPEN tPen = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
+                HPEN oldPen = (HPEN)SelectObject(memDC, tPen);
+                HBRUSH oldBr = (HBRUSH)SelectObject(memDC, tBg);
+
+                RoundRect(memDC, toastX, toastY, toastX + toastW, toastY + toastH, 10, 10);
+
+                SelectObject(memDC, oldPen);
+                SelectObject(memDC, oldBr);
+                DeleteObject(tPen);
+                DeleteObject(tBg);
+
+                SetTextColor(memDC, RGB(255, 215, 0));
+                SetBkMode(memDC, TRANSPARENT);
+                RECT tr = { toastX, toastY, toastX + toastW, toastY + toastH };
+                DrawTextA(memDC, fullMsg, len, &tr, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            } else {
+                nativeToastRect.left = 0;
+                nativeToastRect.top = 0;
+                nativeToastRect.right = 0;
+                nativeToastRect.bottom = 0;
             }
 
             // Screen Shake Offset via BitBlt

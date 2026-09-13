@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KSolitaire
+**Target App:** KTerm
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KSolitaire
 - KTerm
 - KSynth
 - KTask
@@ -105,6 +104,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KSnake
 - KTetris
 - KSpace
+- KSolitaire
 
 ## Progress Log (trimmed by Director 2026-09-06 — keeping only latest entry per app)
 - KSpace: Usability and UI issues fixed (integrated click-to-dismiss toast notifications with [✕] button and real-time feedback for all 7 skills and cooldowns, implemented full pointerdown/pointermove/pointerup mouse and touch drag steering with continuous firing, added backdrop-click resume to Pause menu in web; added native floating toast banner system with auto-fade and click-to-dismiss for startup guidance, save/load, exports, and audio mute [M], implemented mouse drag steering and left-click continuous firing in WM_LBUTTONDOWN and WM_MOUSEMOVE, added clickable 7-button interactive skill toolbar at bottom matching web, fixed 15px vertical click hitbox mismatches on main menu and pause screens, added backdrop-click pause resume, updated window title with shortcut hints, and verified clean compilation across both builds).
@@ -158,7 +158,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTodo: Usability and UI issues fixed (replaced blocking browser alerts with modern dark Help modal dialog and non-blocking toast notifications with startup welcome toast, added 1/2 view switching shortcuts, Escape and backdrop-click modal dismissal, and explicit F1/H header button in web; added WS_CLIPCHILDREN to eliminate native flicker, added ShowHelpDialog with comprehensive shortcut and feature guide, updated status bar and action buttons with explicit F1/H and shortcut hints, and implemented dynamic responsive button layout in native C).
 - KSys: Usability and UI issues fixed (mapped F1 for help natively and on web, explicitly stated F1 support in UI labels/buttons, verified 1024x768 bounds, compiled successfully).
 - KType: Usability and UI issues fixed (canvas scaling relative to devicePixelRatio applied in web for crisp text, automatic toggleHelp() on load added for first-time users, native currentMode default swapped to Help screen, SetProcessDPIAware validated).
-- KSolitaire: Usability and UI issues fixed (mapped F1 to Help dialog and H to Hints across web and native with explicit toolbar and status bar labels, added non-blocking toast notifications with welcome prompt on startup and clear feedback for hints/skills/stats, added Escape key and backdrop-click modal dismissal in web, and updated window title and menu shortcuts in native C).
+- KSolitaire: Usability and UI issues fixed (fixed CSS syntax error where missing brace in @keyframes floatMote broke #toast styling, upgraded web toast notification system with interactive [✕] close button and click-to-dismiss functionality, added visible keyboard shortcut badges to toolbar buttons [⚡ New [F2], 🪄 Wand [W], 👁️ X-Ray [X], 🔀 Shuffle [S], ↩ Undo [U], ↪ Redo [Ctrl+Y], 💡 Hint [H], ✨ Finish [Ctrl+F], 🔊 [M], Deck Theme [T], Classic [1], Vegas [2], Campaign [3]], implemented Space/D stock card drawing hotkey, M mute toggle, 1-3 mode selection, T deck theme cycling, and expanded Help modal reference in web; added native floating toast banner system with auto-fade and click-to-dismiss for startup guidance, skills, hints, and modes, implemented Space/D/VK_SPACE stock drawing hotkey, 1-3 direct game mode selection, T theme cycling, M audio mute toggle, updated menus with shortcut cues, dynamic window title status synchronization, and verified clean compilation across both builds).
 - KTerm: Usability and UI issues fixed (integrated cyber-themed Help Modal dialog, non-blocking toast notifications with startup welcome toast, explicit F1/H toolbar & status bar shortcuts, and global key navigation in web; implemented dedicated authentic prompt display, Ctrl+T new tab, Ctrl+W close tab, Ctrl+C line cancel, output window key forwarding, F1 Help dialog, Segoe UI tab font, and vertical layout bounds in native C).
 - KSynth: Usability and UI issues fixed (replaced blocking alert modals with sleek cybernetic toast notifications, added startup welcome toast, made help modal non-blocking with Escape and backdrop dismissal, and updated window dimensions to 980x820 in web; added visible Help [F1] button, removed blocking startup MessageBox, fixed F1 hotkey handling across edit controls, and added transparent static control backgrounds in native C).
 - KRogue: Usability and UI issues fixed (resolved critical keybinding conflict where movement keys intercepted Ability [A] and Help [H], mapped F1 and H to Help with explicit button/HUD labels across web and native, added non-blocking toast notifications with startup welcome toast and quicksave/load feedback, added modal backdrop dismissal and enhanced Help guide in web; added WS_CLIPCHILDREN to eliminate native flicker, updated window title and in-game HUD with F1/H, and added F1 hotkey handling across character creation and game states in native C).
