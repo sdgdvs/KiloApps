@@ -737,7 +737,7 @@
       }
   }
 
-  // Procedural 16x16 Texture Generator
+  // Procedural 16x16 Texture Generator (Loop 9 High-Fidelity Themed Assets)
   const textures = new Array(50);
   function initTextures() {
       for (let t = 0; t <= 40; t++) {
@@ -745,44 +745,93 @@
           for (let y = 0; y < 16; y++) {
               for (let x = 0; x < 16; x++) {
                   let r = 0, g = 0, b = 0;
-                  if (t === 1 || t === 7) { // Stone Wall
+                  if (t === 1 || t === 7) { // Chiseled Mossy Limestone Wall
                       let isMortar = (y === 3 || y === 7 || y === 11 || y === 15);
-                      if (!isMortar) {
-                          let rowShift = (Math.floor(y / 4) % 2) * 8;
-                          if (((x + rowShift) % 8) === 7) isMortar = true;
-                      }
-                      if (isMortar) { r = 50; g = 50; b = 50; }
-                      else {
-                          let noise = ((x * 13 + y * 37) % 30) - 15;
-                          r = Math.min(255, Math.max(0, 160 + noise));
-                          g = Math.min(255, Math.max(0, 40 + noise / 2));
-                          b = Math.min(255, Math.max(0, 40 + noise / 2));
+                      let row = Math.floor(y / 4);
+                      let rowShift = (row % 2) * 8;
+                      if (!isMortar && ((x + rowShift) % 8) === 7) isMortar = true;
+                      if (isMortar) {
+                          r = 42; g = 40; b = 45; // Dark mortar crevice
+                      } else {
+                          let isTopBevel = (y % 4 === 0);
+                          let isBotBevel = (y % 4 === 2);
+                          let noise = ((x * 17 + y * 31) % 25) - 12;
+                          r = Math.min(255, Math.max(0, 148 + noise + (isTopBevel ? 25 : (isBotBevel ? -22 : 0))));
+                          g = Math.min(255, Math.max(0, 132 + noise + (isTopBevel ? 20 : (isBotBevel ? -20 : 0))));
+                          b = Math.min(255, Math.max(0, 126 + noise + (isTopBevel ? 15 : (isBotBevel ? -18 : 0))));
+                          // Lichen and damp moss patches clinging to brick bottoms and crevices
+                          if ((y % 4 === 2 || (x + rowShift) % 8 === 6) && ((x * 7 + y * 13) % 5 <= 2)) {
+                              r = Math.floor(r * 0.4);
+                              g = Math.min(255, Math.floor(g * 1.35 + 20));
+                              b = Math.floor(b * 0.35);
+                          }
                       }
                   } else if (t === 2) { // Exit Portal
                       let dist = Math.sqrt((x - 7.5)**2 + (y - 7.5)**2);
                       if (dist < 3.0) { r = 255; g = 255; b = 255; }
-                      else if (dist < 5.5) { r = 0; g = 255; b = 100; }
-                      else if (dist < 7.5) { r = 0; g = 150; b = 50; }
-                      else { r = 0; g = 50; b = 20; }
-                  } else if (t === 3) { // Key Block
-                      let isKey = (x >= 6 && x <= 9 && y >= 2 && y <= 5) || (x === 7 && y >= 6 && y <= 12) || (x >= 8 && x <= 10 && y >= 10 && y <= 12);
-                      if (isKey) { r = 255; g = 255; b = 0; }
-                      else { r = 184; g = 134; b = 11; }
-                  } else if (t === 4) { // Door Block
-                      if (x === 0 || x === 15 || y === 0 || y === 15) { r = 20; g = 40; b = 60; }
-                      else if (y === 4 || y === 11) { r = 120; g = 140; b = 160; }
-                      else if (x === 7 || x === 8) { r = (y >= 7 && y <= 9) ? 0 : 20; g = (y >= 7 && y <= 9) ? 0 : 80; b = (y >= 7 && y <= 9) ? 0 : 160; }
-                      else { r = 0; g = 70; b = 140; }
-                  } else if (t === 5) { // Coin Chest
-                      let dist = Math.sqrt((x - 7.5)**2 + (y - 7.5)**2);
-                      if (dist < 4.5) {
-                          if (dist < 2.0) { r = 255; g = 255; b = 255; }
-                          else { r = 255; g = 200; b = 0; }
-                      } else { r = 139; g = 69; b = 19; }
+                      else if (dist < 5.5) { r = 0; g = 255; b = 120; }
+                      else if (dist < 7.5) { r = 0; g = 160; b = 70; }
+                      else { r = 10; g = 40; b = 25; }
+                  } else if (t === 3) { // Ornate Golden Key
+                      let isBowOuter = (x >= 5 && x <= 10 && y >= 1 && y <= 6);
+                      let isBowInner = (x >= 7 && x <= 8 && y >= 3 && y <= 4);
+                      let isShaft = (x >= 7 && x <= 8 && y >= 6 && y <= 13);
+                      let isWard = (x >= 9 && x <= 11 && (y === 9 || y === 12 || y === 13));
+                      if (isShaft || (isBowOuter && !isBowInner) || isWard) {
+                          let isHighlight = (x === 5 || x === 7 || y === 1);
+                          r = isHighlight ? 255 : 220;
+                          g = isHighlight ? 245 : 180;
+                          b = isHighlight ? 120 : 20;
+                      } else {
+                          r = 20; g = 15; b = 10;
+                      }
+                  } else if (t === 4) { // Reinforced Dungeon Portcullis Door
+                      let isArch = (x === 0 || x === 15 || y === 0 || y === 1);
+                      let isHinges = (x <= 2 && (y === 4 || y === 11));
+                      let isStraps = (y === 4 || y === 11);
+                      let isStud = isStraps && (x === 3 || x === 7 || x === 11);
+                      let isKeyhole = (x >= 7 && x <= 8 && y >= 7 && y <= 9);
+                      if (isArch) {
+                          r = 70; g = 75; b = 85;
+                      } else if (isStud) {
+                          r = 220; g = 220; b = 240;
+                      } else if (isHinges || isStraps) {
+                          r = 45; g = 50; b = 60;
+                      } else if (isKeyhole) {
+                          r = 0; g = 180; b = 255; // Magical blue keyhole
+                      } else {
+                          let isPlankSeam = (x % 4 === 0);
+                          let woodGrain = ((x * 7 + y * 19) % 15) - 7;
+                          r = isPlankSeam ? 40 : Math.min(255, Math.max(0, 95 + woodGrain));
+                          g = isPlankSeam ? 25 : Math.min(255, Math.max(0, 55 + Math.floor(woodGrain / 2)));
+                          b = isPlankSeam ? 15 : Math.min(255, Math.max(0, 30 + Math.floor(woodGrain / 3)));
+                      }
+                  } else if (t === 5) { // Antique Iron-Banded Oak Treasure Chest
+                      let isInsideChest = (x >= 2 && x <= 13 && y >= 4 && y <= 13);
+                      let isIronBand = (x === 2 || x === 5 || x === 10 || x === 13 || y === 4 || y === 8 || y === 13);
+                      let isRivet = isIronBand && ((x === 5 || x === 10) && (y === 4 || y === 8 || y === 13));
+                      let isLockPlate = (x >= 7 && x <= 8 && y >= 7 && y <= 10);
+                      let isKeyhole = (x === 7 && y === 9);
+                      if (isKeyhole) {
+                          r = 10; g = 10; b = 10;
+                      } else if (isLockPlate) {
+                          r = 255; g = 215; b = 30; // Golden brass lock plate
+                      } else if (isRivet) {
+                          r = 210; g = 220; b = 230; // Polished iron rivet
+                      } else if (isInsideChest && isIronBand) {
+                          r = 55; g = 60; b = 70; // Forged iron band
+                      } else if (isInsideChest) {
+                          let plankShade = ((x + y * 3) % 8) - 4;
+                          r = 135 + plankShade; g = 75 + Math.floor(plankShade / 2); b = 35; // Rich dark oak wood
+                      } else {
+                          r = 12; g = 10; b = 14;
+                      }
                   } else if (t === 6) { // Lava Trap
-                      if (y >= 12 && (x % 4 === 1 || x % 4 === 2)) { r = 200; g = 200; b = 200; }
-                      else if ((x + y) % 6 < 2) { r = 255; g = 68; b = 0; }
-                      else { r = 136; g = 17; b = 0; }
+                      let dist = Math.sqrt((x - 7.5)**2 + (y - 7.5)**2);
+                      let wave = Math.sin(x * 0.8 + y * 0.8) * 20;
+                      if (y >= 13 || dist > 7.0) { r = 40; g = 25; b = 20; }
+                      else if (dist < 3.0) { r = 255; g = 250; b = 180; }
+                      else { r = 255; g = Math.min(255, Math.max(0, Math.floor(100 + wave))); b = 10; }
                   } else if (t === 8) { // Compass Block
                       if (x === 7 || y === 7 || Math.abs(x - 7) + Math.abs(y - 7) <= 4) { r = 0; g = 255; b = 255; }
                       else { r = 0; g = 68; b = 85; }
@@ -793,25 +842,94 @@
                       let dist = Math.sqrt((x - 7.5)**2 + (y - 7.5)**2);
                       if (dist < 6.0 && (Math.floor(dist * 2) % 2 === 0)) { r = 255; g = 0; b = 255; }
                       else { r = 48; g = 0; b = 68; }
-                  } else if (t === 12) { // Minotaur Monster
-                      if ((x >= 2 && x <= 5 && y <= 4) || (x >= 10 && x <= 13 && y <= 4)) { r = 50; g = 50; b = 50; }
-                      else if ((x >= 4 && x <= 6 && y >= 6 && y <= 7) || (x >= 9 && x <= 11 && y >= 6 && y <= 7)) { r = 255; g = 255; b = 0; }
-                      else if (y >= 10 && y <= 12 && x >= 5 && x <= 10) { r = 255; g = 255; b = 255; }
-                      else { r = 153; g = 0; b = 0; }
+                  } else if (t === 12) { // Minotaur Monster (Fierce Horned Beast)
+                      let isHorn = (x === 1 && y <= 2) || (x === 14 && y <= 2) ||
+                                   (x === 2 && y >= 1 && y <= 4) || (x === 13 && y >= 1 && y <= 4) ||
+                                   (x >= 3 && x <= 4 && y >= 3 && y <= 5) || (x >= 11 && x <= 12 && y >= 3 && y <= 5);
+                      let isHornTip = (y <= 1 && (x === 1 || x === 14));
+                      let isEar = (y === 5 && (x === 0 || x === 15));
+                      let isEye = (y === 7 && (x === 4 || x === 5 || x === 10 || x === 11));
+                      let isPupil = (y === 7 && (x === 5 || x === 10));
+                      let isSnout = (x >= 4 && x <= 11 && y >= 9 && y <= 13);
+                      let isNostril = (y === 10 && (x === 5 || x === 10));
+                      let isNoseRing = (y === 12 && (x === 6 || x === 9)) || (y === 13 && (x >= 7 && x <= 8));
+                      let isFang = (y === 12 && (x === 4 || x === 11));
+                      if (isHornTip) {
+                          r = 240; g = 230; b = 200; // Ivory horn tip
+                      } else if (isHorn) {
+                          r = 75; g = 60; b = 50; // Dark horn base
+                      } else if (isNoseRing) {
+                          r = 255; g = 215; b = 0; // Brass nose ring
+                      } else if (isFang) {
+                          r = 255; g = 250; b = 230; // Sharp fangs
+                      } else if (isPupil) {
+                          r = 40; g = 0; b = 0; // Dark predatory slit
+                      } else if (isEye) {
+                          r = 255; g = 180; b = 0; // Glowing amber eye
+                      } else if (isNostril) {
+                          r = 20; g = 10; b = 10; // Flared nostrils
+                      } else if (isSnout) {
+                          r = 90; g = 40; b = 30; // Heavy bull muzzle
+                      } else if (isEar || (x >= 3 && x <= 12 && y >= 5 && y <= 14)) {
+                          let fur = ((x * 11 + y * 23) % 20) - 10;
+                          r = Math.min(255, Math.max(0, 130 + fur));
+                          g = Math.min(255, Math.max(0, 35 + Math.floor(fur / 2)));
+                          b = Math.min(255, Math.max(0, 25 + Math.floor(fur / 2)));
+                      } else {
+                          r = 15; g = 10; b = 15;
+                      }
                   } else if (t === 13) { // Pickaxe Block
-                      if ((x + y === 15 || x + y === 14) && (x >= 3 && x <= 12)) { r = 136; g = 153; b = 170; }
+                      if ((x + y === 15 || x + y === 14) && (x >= 3 && x <= 12)) { r = 180; g = 190; b = 210; }
                       else if (x === y && x >= 4 && x <= 11) { r = 139; g = 69; b = 19; }
                       else { r = 92; g = 58; b = 30; }
                   } else if (t === 14) { // Stun Spray
                       if (x >= 5 && x <= 10 && y >= 4 && y <= 14) { r = 0; g = 204; b = 255; }
                       else if (x >= 6 && x <= 9 && y >= 1 && y <= 3) { r = 255; g = 255; b = 255; }
                       else { r = 0; g = 51; b = 102; }
-                  } else if (t === 15) { // Minotaur King Boss
-                      if (y <= 3 && x >= 4 && x <= 11) { r = 255; g = 215; b = 0; }
-                      else if ((x >= 1 && x <= 4 && y <= 5) || (x >= 11 && x <= 14 && y <= 5)) { r = 238; g = 238; b = 238; }
-                      else if ((x >= 4 && x <= 6 && y >= 6 && y <= 7) || (x >= 9 && x <= 11 && y >= 6 && y <= 7)) { r = 255; g = 0; b = 0; }
-                      else if (y >= 10 && y <= 13 && x >= 4 && x <= 11) { r = 255; g = 255; b = 255; }
-                      else { r = 153; g = 0; b = 0; }
+                  } else if (t === 15) { // Minotaur King Boss (Royal Spiked Gold Crown & Demonic War Paint)
+                      let isCrown = (y <= 3 && x >= 4 && x <= 11 && ((y === 3) || (y === 1 && (x === 4 || x === 7 || x === 8 || x === 11)) || (y === 2 && (x === 5 || x === 6 || x === 9 || x === 10))));
+                      let isCrownJewel = (y === 2 && (x === 7 || x === 8));
+                      let isHorn = (x === 0 && y <= 2) || (x === 15 && y <= 2) ||
+                                   (x === 1 && y >= 1 && y <= 4) || (x === 14 && y >= 1 && y <= 4) ||
+                                   (x >= 2 && x <= 3 && y >= 3 && y <= 5) || (x >= 12 && x <= 13 && y >= 3 && y <= 5);
+                      let isHornTip = (y <= 1 && (x === 0 || x === 15));
+                      let isEye = (y === 7 && (x === 4 || x === 5 || x === 10 || x === 11));
+                      let isPupil = (y === 7 && (x === 5 || x === 10));
+                      let isWarPaint = (y === 6 && (x >= 3 && x <= 12)) || (y === 8 && (x === 4 || x === 11));
+                      let isSnout = (x >= 4 && x <= 11 && y >= 9 && y <= 13);
+                      let isNostril = (y === 10 && (x === 5 || x === 10));
+                      let isNoseRing = (y === 12 && (x === 6 || x === 9)) || (y === 13 && (x >= 7 && x <= 8));
+                      let isFang = (y === 12 && (x === 4 || x === 11));
+                      if (isCrownJewel) {
+                          r = 255; g = 10; b = 50; // Ruby crown jewel
+                      } else if (isCrown) {
+                          r = 255; g = 215; b = 0; // Spiked gold crown
+                      } else if (isHornTip) {
+                          r = 255; g = 240; b = 180; // Gilded ivory horn tip
+                      } else if (isHorn) {
+                          r = 45; g = 35; b = 35; // Obsidian horns
+                      } else if (isNoseRing) {
+                          r = 255; g = 215; b = 0; // Heavy gold nose ring
+                      } else if (isFang) {
+                          r = 255; g = 255; b = 255; // Heavy fangs
+                      } else if (isWarPaint) {
+                          r = 220; g = 20; b = 30; // Crimson war paint
+                      } else if (isPupil) {
+                          r = 80; g = 0; b = 20; // Demonic eye core
+                      } else if (isEye) {
+                          r = 255; g = 0; b = 40; // Glowing blood-red eyes
+                      } else if (isNostril) {
+                          r = 10; g = 5; b = 5;
+                      } else if (isSnout) {
+                          r = 50; g = 30; b = 35;
+                      } else if (x >= 2 && x <= 13 && y >= 4 && y <= 14) {
+                          let fur = ((x * 13 + y * 29) % 16) - 8;
+                          r = Math.min(255, Math.max(0, 45 + fur));
+                          g = Math.min(255, Math.max(0, 30 + fur));
+                          b = Math.min(255, Math.max(0, 40 + fur)); // Obsidian black fur
+                      } else {
+                          r = 15; g = 8; b = 15;
+                      }
                   } else if (t === 16) {
                       if (y >= 4 && y <= 12 && x >= 4 && x <= 11) { r = 0; g = 255; b = 102; }
                       else if (y < 4 && x >= 6 && x <= 9) { r = 255; g = 204; b = 153; }
@@ -827,13 +945,26 @@
                       else if (dist <= 3.0) { r = 0; g = 136; b = 255; }
                       else if (x === 7 && y < 3) { r = 255; g = 255; b = 255; }
                       else { r = 0; g = 0; b = 0; }
-                  } else if (t === 20) {
-                      if ((x * y) % 7 === 0) { r = 0; g = 255; b = 0; } else { r = 34; g = 34; b = 34; }
-                  } else if (t === 21) {
-                      r = Math.min(255, 100 + Math.floor(x * 5)); g = 200; b = 255;
-                  } else if (t === 22) {
-                      let noise = Math.floor(Math.random() * 20);
-                      r = noise; g = noise; b = 50 + noise * 2;
+                  } else if (t === 20) { // Cyber Labyrinth Tech Wall
+                      let isBorder = (x === 0 || x === 15 || y === 0 || y === 15);
+                      let isConduit = (x === 4 || x === 11 || y === 8);
+                      let isChip = (x >= 6 && x <= 9 && y >= 4 && y <= 6);
+                      let isTrace = ((x + y * 2) % 7 === 0);
+                      if (isBorder) { r = 25; g = 35; b = 45; }
+                      else if (isChip) { r = 10; g = 180; b = 200; }
+                      else if (isConduit || isTrace) { r = 0; g = 240; b = 180; }
+                      else { r = 15; g = 22; b = 30; }
+                  } else if (t === 21) { // Frost Caverns Glacial Ice Wall
+                      let isCrack = (x === y || x + y === 15 || (x * 3 + y * 7) % 11 === 0);
+                      let facet = ((x * 13 + y * 17) % 30);
+                      if (isCrack) { r = 230; g = 250; b = 255; }
+                      else { r = 60 + facet; g = 150 + facet * 2; b = 245; }
+                  } else if (t === 22) { // Abyssal Depths Void Wall
+                      let dist = Math.sqrt((x - 7.5)**2 + (y - 7.5)**2);
+                      let swirl = Math.sin(dist * 0.8 + (x - y) * 0.3);
+                      let isStar = ((x * 23 + y * 41) % 17 === 0);
+                      if (isStar) { r = 220; g = 180; b = 255; }
+                      else { r = Math.floor(25 + swirl * 15); g = Math.floor(10 + swirl * 8); b = Math.floor(55 + swirl * 25); }
                   } else if (t === 23) {
                       let noise = ((x * 13 + y * 37) % 30) - 15;
                       r = 40 + noise; g = 60 + noise; b = 40 + noise;
@@ -842,33 +973,49 @@
                       let noise = ((x * 7 + y * 23) % 20) - 10;
                       r = 20 + noise; g = 20 + noise; b = 30 + noise;
                   } else if (t === 25) { // Spike Trap
-                      if ((x+y)%4 === 0) { r = 136; g = 136; b = 136; } else { r = 34; g = 34; b = 34; }
+                      if ((x+y)%4 === 0) { r = 180; g = 190; b = 200; } else { r = 34; g = 34; b = 34; }
                   } else if (t === 26) { // Cursed Relic
                       let dist = Math.sqrt((x - 7.5)**2 + (y - 7.5)**2);
-                      if (dist < 4.0) { r = 128; g = 0; b = 128; }
+                      if (dist < 4.0) { r = 180; g = 0; b = 220; }
                       else if (dist < 6.0) { r = 0; g = 0; b = 0; }
                       else { r = 34; g = 0; b = 34; }
-                  } else if (t === 27) { // Magma Wall
+                  } else if (t === 27) { // Inferno Citadel Magma Wall
                       let vein = ((x * 17 + y * 29) % 20);
-                      if (vein < 4) { r = 255; g = 136; b = 0; }
-                      else if (vein < 7) { r = 170; g = 34; b = 0; }
-                      else { r = 34; g = 17; b = 17; }
-                  } else if (t === 28) { // Save Shrine
-                      let dist = Math.sqrt((x - 7.5)**2 + (y - 7.5)**2);
-                      if (dist < 3.0) { r = 255; g = 255; b = 0; }
-                      else if (dist < 5.0) { r = 255; g = 136; b = 0; }
-                      else if (y >= 12) { r = 136; g = 136; b = 136; }
-                      else { r = 51; g = 34; b = 34; }
+                      if (vein < 3) { r = 255; g = 240; b = 80; }
+                      else if (vein < 6) { r = 255; g = 110; b = 0; }
+                      else if (vein < 8) { r = 180; g = 30; b = 0; }
+                      else { r = 28; g = 20; b = 22; }
+                  } else if (t === 28) { // Save Shrine Runic Altar
+                      let dist = Math.sqrt((x - 7.5)**2 + (y - 5.5)**2);
+                      let isFlame = (dist < 2.5);
+                      let isHalo = (dist < 4.5);
+                      let isPlinth = (y >= 11 && x >= 3 && x <= 12);
+                      let isRune = isPlinth && (y === 12 && (x === 5 || x === 7 || x === 10));
+                      if (isFlame) { r = 255; g = 255; b = 200; }
+                      else if (isHalo) { r = 255; g = 190; b = 40; }
+                      else if (isRune) { r = 0; g = 240; b = 255; }
+                      else if (isPlinth) { r = 120; g = 115; b = 130; }
+                      else { r = 25; g = 20; b = 25; }
                   } else if (t === 29) { // Wall Torch Sconce
-                      let dist = Math.sqrt((x - 7.5)**2 + (y - 5.0)**2);
-                      if (dist < 3.0) { r = 255; g = 255; b = 0; }
-                      else if (y >= 8 && (x === 7 || x === 8)) { r = 68; g = 68; b = 68; }
-                      else { r = 17; g = 17; b = 17; }
-                  } else if (t === 38) { // Descent Stairwell
+                      let dist = Math.sqrt((x - 7.5)**2 + (y - 4.5)**2);
+                      let isFlameCore = (dist < 2.0);
+                      let isFlameAura = (dist < 4.0);
+                      let isBracket = (y >= 9 && (x >= 6 && x <= 9));
+                      let isWoodTorch = (y >= 6 && y <= 8 && (x === 7 || x === 8));
+                      if (isFlameCore) { r = 255; g = 255; b = 180; }
+                      else if (isFlameAura) { r = 255; g = 120; b = 0; }
+                      else if (isWoodTorch) { r = 100; g = 60; b = 25; }
+                      else if (isBracket) { r = 60; g = 65; b = 75; }
+                      else { r = 18; g = 15; b = 20; }
+                  } else if (t === 38) { // Descent Stairwell Shaft
                       let dist = Math.sqrt((x - 7.5)**2 + (y - 7.5)**2);
-                      if (dist < 3.0) { r = 17; g = 17; b = 17; }
-                      else if (dist < 5.5 && ((Math.floor(dist * 2) + x + y) % 2 === 0)) { r = 0; g = 255; b = 255; }
-                      else { r = 68; g = 85; b = 102; }
+                      let isPit = (dist < 2.5);
+                      let isStair = (dist >= 2.5 && dist < 6.5);
+                      let stepShade = ((Math.floor(dist * 2.0) + x + y) % 2 === 0);
+                      if (isPit) { r = 8; g = 8; b = 12; }
+                      else if (isStair && stepShade) { r = 0; g = 240; b = 220; }
+                      else if (isStair) { r = 70; g = 85; b = 100; }
+                      else { r = 40; g = 45; b = 55; }
                   } else if (t === 39) { // Secret Illusionary Wall
                       let isMortar = (y === 3 || y === 7 || y === 11 || y === 15);
                       if (!isMortar) {
@@ -900,39 +1047,58 @@
           for (let y = 0; y < 16; y++) {
               for (let x = 0; x < 16; x++) {
                   let r = 0, g = 0, b = 0;
-                  let isHorn = false, isEye = false, isSnout = false, isTail = false;
-                  if (dir === 0) {
-                      if ((x>=2 && x<=5 && y<=4) || (x>=10 && x<=13 && y<=4)) isHorn = true;
-                      if ((x>=4 && x<=6 && y>=6 && y<=7) || (x>=9 && x<=11 && y>=6 && y<=7)) isEye = true;
-                      if (y>=10 && y<=12 && x>=5 && x<=10) isSnout = true;
-                  } else if (dir === 1 || dir === 7) {
+                  let isHorn = false, isHornTip = false, isEye = false, isSnout = false, isNoseRing = false, isTail = false;
+                  if (dir === 0) { // Facing player (Front)
+                      isHorn = (x===1 && y<=2) || (x===14 && y<=2) || (x===2 && y>=1 && y<=4) || (x===13 && y>=1 && y<=4) || (x>=3 && x<=4 && y>=3 && y<=5) || (x>=11 && x<=12 && y>=3 && y<=5);
+                      isHornTip = (y<=1 && (x===1 || x===14));
+                      isEye = (y===7 && (x===4 || x===5 || x===10 || x===11));
+                      isSnout = (x>=4 && x<=11 && y>=9 && y<=13);
+                      isNoseRing = (y===12 && (x===6 || x===9)) || (y===13 && (x>=7 && x<=8));
+                  } else if (dir === 1 || dir === 7) { // Angled front
                       let shift = (dir === 1) ? -2 : 2;
-                      if ((x>=2+shift && x<=5+shift && y<=4) || (x>=10+shift && x<=13+shift && y<=4)) isHorn = true;
-                      if ((x>=4+shift && x<=6+shift && y>=6 && y<=7) || (x>=9+shift && x<=11+shift && y>=6 && y<=7)) isEye = true;
-                      if (y>=10 && y<=12 && x>=5+shift && x<=10+shift) isSnout = true;
-                  } else if (dir === 2) {
-                      if (x>=8 && x<=12 && y<=4) isHorn = true;
-                      if (x>=10 && x<=12 && y>=6 && y<=7) isEye = true;
-                      if (y>=10 && y<=12 && x>=10 && x<=15) isSnout = true;
+                      isHorn = (x>=2+shift && x<=4+shift && y<=4) || (x>=10+shift && x<=12+shift && y<=4);
+                      isHornTip = (y<=1 && (x===2+shift || x===12+shift));
+                      isEye = (y===7 && (x===4+shift || x===10+shift));
+                      isSnout = (y>=9 && y<=13 && x>=4+shift && x<=10+shift);
+                      isNoseRing = (y===12 && (x===7+shift));
+                  } else if (dir === 2) { // Profile Left
+                      isHorn = (x>=8 && x<=12 && y<=4);
+                      isHornTip = (x===12 && y<=1);
+                      isEye = (x>=10 && x<=11 && y===7);
+                      isSnout = (y>=9 && y<=12 && x>=10 && x<=15);
+                      isNoseRing = (y===12 && x===14);
                       if (y>=12 && y<=14 && x>=0 && x<=3) isTail = true;
-                  } else if (dir === 6) {
-                      if (x>=3 && x<=7 && y<=4) isHorn = true;
-                      if (x>=3 && x<=5 && y>=6 && y<=7) isEye = true;
-                      if (y>=10 && y<=12 && x>=0 && x<=5) isSnout = true;
+                  } else if (dir === 6) { // Profile Right
+                      isHorn = (x>=3 && x<=7 && y<=4);
+                      isHornTip = (x===3 && y<=1);
+                      isEye = (x>=4 && x<=5 && y===7);
+                      isSnout = (y>=9 && y<=12 && x>=0 && x<=5);
+                      isNoseRing = (y===12 && x===1);
                       if (y>=12 && y<=14 && x>=12 && x<=15) isTail = true;
-                  } else if (dir === 3 || dir === 5) {
+                  } else if (dir === 3 || dir === 5) { // Angled back
                       let shift = (dir === 3) ? -2 : 2;
-                      if ((x>=2+shift && x<=5+shift && y<=4) || (x>=10+shift && x<=13+shift && y<=4)) isHorn = true;
+                      isHorn = (x>=2+shift && x<=5+shift && y<=4) || (x>=10+shift && x<=13+shift && y<=4);
+                      isHornTip = (y<=1 && (x===2+shift || x===13+shift));
                       if (y>=12 && y<=14 && x>=6-shift && x<=9-shift) isTail = true;
-                  } else if (dir === 4) {
-                      if ((x>=2 && x<=5 && y<=4) || (x>=10 && x<=13 && y<=4)) isHorn = true;
+                  } else if (dir === 4) { // Direct back
+                      isHorn = (x>=2 && x<=4 && y<=4) || (x>=11 && x<=13 && y<=4);
+                      isHornTip = (y<=1 && (x===2 || x===13));
                       if (y>=11 && y<=14 && x>=6 && x<=9) isTail = true;
                   }
-                  if (isHorn) { r = 50; g = 50; b = 50; }
-                  else if (isEye) { r = 255; g = 255; b = 0; }
-                  else if (isSnout) { r = 255; g = 255; b = 255; }
-                  else if (isTail) { r = 80; g = 0; b = 0; }
-                  else { r = 153; g = 0; b = 0; }
+                  if (isHornTip) { r = 240; g = 230; b = 200; }
+                  else if (isHorn) { r = 70; g = 55; b = 45; }
+                  else if (isNoseRing) { r = 255; g = 215; b = 0; }
+                  else if (isEye) { r = 255; g = 180; b = 0; }
+                  else if (isSnout) { r = 85; g = 40; b = 30; }
+                  else if (isTail) { r = 75; g = 15; b = 15; }
+                  else if (x>=2 && x<=13 && y>=4 && y<=14) {
+                      let fur = ((x * 11 + y * 23) % 18) - 9;
+                      r = Math.min(255, Math.max(0, 125 + fur));
+                      g = Math.min(255, Math.max(0, 35 + Math.floor(fur / 2)));
+                      b = Math.min(255, Math.max(0, 25 + Math.floor(fur / 2)));
+                  } else {
+                      r = 15; g = 10; b = 15;
+                  }
                   textures[30 + dir][y * 16 + x] = (255 << 24) | (b << 16) | (g << 8) | r;
               }
           }
@@ -952,12 +1118,20 @@
               else { r2 = 0; g2 = 50; b2 = 20; }
               textures[2][y * 16 + x] = (255 << 24) | (b2 << 16) | (g2 << 8) | r2;
 
-              // Key Block (t=3)
+              // Key Block (t=3) - Floating with golden specular sweep
               let bob = Math.floor(Math.sin(frameCount * 0.1) * 2.0);
               let by = y - bob;
-              let isKey = (by >= 0 && by < 16) && (((x >= 6 && x <= 9 && by >= 2 && by <= 5) || (x === 7 && by >= 6 && by <= 12) || (x >= 8 && x <= 10 && by >= 10 && by <= 12)));
-              let r3 = isKey ? 255 : 184, g3 = isKey ? 255 : 134, b3 = isKey ? 0 : 11;
-              textures[3][y * 16 + x] = (255 << 24) | (b3 << 16) | (g3 << 8) | r3;
+              let isBowOuter = (x >= 5 && x <= 10 && by >= 1 && by <= 6);
+              let isBowInner = (x >= 7 && x <= 8 && by >= 3 && by <= 4);
+              let isShaft = (x >= 7 && x <= 8 && by >= 6 && by <= 13);
+              let isWard = (x >= 9 && x <= 11 && (by === 9 || by === 12 || by === 13));
+              if (isShaft || (isBowOuter && !isBowInner) || isWard) {
+                  let glint = ((x + by + Math.floor(frameCount * 0.35)) % 9 === 0);
+                  let r3 = glint ? 255 : 225, g3 = glint ? 255 : 185, b3 = glint ? 210 : 25;
+                  textures[3][y * 16 + x] = (255 << 24) | (b3 << 16) | (g3 << 8) | r3;
+              } else {
+                  textures[3][y * 16 + x] = (255 << 24) | (15 << 16) | (15 << 8) | 20;
+              }
 
               // Teleporter Vortex (t=10, 11)
               let dx = x - 7.5, dy = y - 7.5;
@@ -970,25 +1144,35 @@
               textures[10][y * 16 + x] = (255 << 24) | (b10 << 16) | (g10 << 8) | r10;
               textures[11][y * 16 + x] = (255 << 24) | (b10 << 16) | (g10 << 8) | r10;
 
-              // Boss / Minotaur eyes breathing
+              // Boss & Minotaur breathing, glowing eyes, and nostril steam
               let m_breathe = Math.sin(frameCount * 0.15) * 1.5;
-              if ((x >= 4 && x <= 6 && y >= 6 && y <= 7) || (x >= 9 && x <= 11 && y >= 6 && y <= 7)) {
-                  let r12 = 255, g12 = m_breathe > 0 ? 136 : 255, b12 = 0;
+              let snortActive = Math.sin(frameCount * 0.22) > 0.55;
+              let isNostrilSteam = (y === 11 && (x === 4 || x === 5 || x === 10 || x === 11));
+              if (isNostrilSteam && snortActive) {
+                  textures[12][y * 16 + x] = (255 << 24) | (255 << 16) | (240 << 8) | 230; // White steam
+                  textures[15][y * 16 + x] = (255 << 24) | (80 << 16) | (140 << 8) | 255; // Fiery ember plume
+              } else if ((x >= 4 && x <= 6 && y >= 6 && y <= 7) || (x >= 9 && x <= 11 && y >= 6 && y <= 7)) {
+                  let r12 = 255, g12 = m_breathe > 0 ? 140 : 255, b12 = 0;
                   textures[12][y * 16 + x] = (255 << 24) | (b12 << 16) | (g12 << 8) | r12;
                   
-                  let r15 = bossHP <= 1 ? 255 : (m_breathe > 0 ? 255 : 136);
+                  let r15 = bossHP <= 1 ? 255 : (m_breathe > 0 ? 255 : 140);
                   let g15 = bossHP <= 1 ? 255 : 0;
-                  let b15 = 0;
+                  let b15 = bossHP <= 1 ? 40 : 0;
                   textures[15][y * 16 + x] = (255 << 24) | (b15 << 16) | (g15 << 8) | r15;
-              } else if (y >= 10 && y <= 13 && x >= 4 && x <= 11) {
-                  let rb = 255, gb = bossHP <= 1 ? 136 : 255, bb = bossHP <= 1 ? 136 : 255;
+              } else if (y === 2 && (x === 7 || x === 8)) {
+                  // Boss crown ruby pulse
+                  let cGlow = Math.sin(frameCount * 0.3) * 45;
+                  let cr = 255, cg = Math.max(0, Math.floor(20 + cGlow)), cb = Math.max(0, Math.floor(60 + cGlow));
+                  textures[15][y * 16 + x] = (255 << 24) | (cb << 16) | (cg << 8) | cr;
+              } else if (y >= 10 && y <= 13 && x >= 4 && x <= 11 && !isNostrilSteam) {
+                  let rb = 255, gb = bossHP <= 1 ? 140 : 255, bb = bossHP <= 1 ? 140 : 255;
                   textures[15][y * 16 + x] = (255 << 24) | (bb << 16) | (gb << 8) | rb;
               }
               for (let dir = 0; dir < 8; dir++) {
                   let c = textures[30 + dir][y * 16 + x];
                   let r = c & 0xFF, g = (c >> 8) & 0xFF, b = (c >> 16) & 0xFF;
-                  if ((r === 255 && g === 255 && b === 0) || (r === 255 && g === 136 && b === 0)) {
-                      textures[30 + dir][y * 16 + x] = (255 << 24) | (0 << 16) | ((m_breathe > 0 ? 136 : 255) << 8) | 255;
+                  if ((r === 255 && g === 180 && b === 0) || (r === 255 && g === 240 && b === 0)) {
+                      textures[30 + dir][y * 16 + x] = (255 << 24) | (0 << 16) | ((m_breathe > 0 ? 140 : 240) << 8) | 255;
                   }
               }
               
@@ -2681,48 +2865,200 @@
               uiCtx.restore();
           }
           
-          if (hasPickaxe > 0) {
-              let swing = Math.sin(frameCount * 0.3) * 4;
-              let bx = W - 45 + swing + bobX - swayX + recoilOffset, by = H - 40 - swing + bobY + recoilOffset * 1.5;
+          // Off-Hand Adventurer's Dungeon Lantern (when exploring without compass or holding lantern)
+          if (!hasCompass && pathfinderTimer <= 0) {
+              let lx = 32 + bobX * 0.7 - swayX, ly = H - 24 + bobY;
+              uiCtx.save();
+              uiCtx.translate(lx, ly);
               
-              uiCtx.strokeStyle = '#8b4513';
-              uiCtx.lineWidth = 4;
+              let isTorchActive = torchTimer > 0;
+              let lanternGlowRadius = isTorchActive ? 38 : 22;
+              let flameFlicker = Math.sin(frameCount * 0.35) * 1.5;
+              let radGrad = uiCtx.createRadialGradient(0, -6, 2, 0, -6, lanternGlowRadius);
+              radGrad.addColorStop(0, isTorchActive ? 'rgba(255, 230, 150, 0.45)' : 'rgba(255, 190, 80, 0.25)');
+              radGrad.addColorStop(0.5, isTorchActive ? 'rgba(255, 140, 20, 0.2)' : 'rgba(255, 120, 10, 0.1)');
+              radGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+              uiCtx.fillStyle = radGrad;
               uiCtx.beginPath();
-              uiCtx.moveTo(bx, by + 30);
-              uiCtx.lineTo(bx + 20, by);
-              uiCtx.stroke();
-              
-              // Sculpted steel blade with specular sheen highlight sweep
-              uiCtx.strokeStyle = '#b4b4c8';
-              uiCtx.lineWidth = 3;
-              uiCtx.beginPath();
-              uiCtx.moveTo(bx + 10, by - 5);
-              uiCtx.lineTo(bx + 28, by + 12);
-              uiCtx.stroke();
-
-              let sheenT = (frameCount * 0.08) % 1.0;
-              let sx = (bx + 10) + (18 * sheenT);
-              let sy = (by - 5) + (17 * sheenT);
-              uiCtx.fillStyle = '#ffffff';
-              uiCtx.beginPath();
-              uiCtx.arc(sx, sy, 2, 0, Math.PI * 2);
+              uiCtx.arc(0, -6, lanternGlowRadius, 0, Math.PI * 2);
               uiCtx.fill();
 
-              // Trailing sparks when swinging
-              if (Math.abs(swing) > 2.5 && Math.random() > 0.4) {
+              // Lantern Base Reservoir
+              uiCtx.fillStyle = '#4a3b2c';
+              uiCtx.fillRect(-7, 2, 14, 4);
+              uiCtx.fillStyle = '#c8963e';
+              uiCtx.fillRect(-8, 5, 16, 2);
+
+              // Cylindrical glass chamber
+              uiCtx.fillStyle = 'rgba(220, 240, 255, 0.15)';
+              uiCtx.fillRect(-6, -12, 12, 14);
+
+              // Dancing Oil Lamp Flame
+              let fHeight = isTorchActive ? 12 : 7;
+              let flameGrad = uiCtx.createLinearGradient(0, 2, 0, -12);
+              flameGrad.addColorStop(0, '#ff4400');
+              flameGrad.addColorStop(0.5, '#ffbb00');
+              flameGrad.addColorStop(1, '#ffffff');
+              uiCtx.fillStyle = flameGrad;
+              uiCtx.beginPath();
+              uiCtx.moveTo(-2.5, 2);
+              uiCtx.quadraticCurveTo(-3.5, -4, 0 + flameFlicker * 0.5, -fHeight - flameFlicker);
+              uiCtx.quadraticCurveTo(3.5, -4, 2.5, 2);
+              uiCtx.fill();
+
+              // Protective Cast-Iron Ribs
+              uiCtx.strokeStyle = '#2b2c30';
+              uiCtx.lineWidth = 1.2;
+              uiCtx.beginPath();
+              uiCtx.moveTo(-6, -12); uiCtx.lineTo(-6, 2);
+              uiCtx.moveTo(0, -12); uiCtx.lineTo(0, 2);
+              uiCtx.moveTo(6, -12); uiCtx.lineTo(6, 2);
+              uiCtx.stroke();
+
+              // Brass Domed Hood & Vent Cap
+              uiCtx.fillStyle = '#d4a242';
+              uiCtx.beginPath();
+              uiCtx.moveTo(-7, -12);
+              uiCtx.quadraticCurveTo(0, -18, 7, -12);
+              uiCtx.closePath();
+              uiCtx.fill();
+
+              // Top Brass Hanging Ring
+              uiCtx.strokeStyle = '#f0c050';
+              uiCtx.lineWidth = 1.5;
+              uiCtx.beginPath();
+              uiCtx.arc(0, -20, 3.5, 0, Math.PI * 2);
+              uiCtx.stroke();
+
+              // Adventurer's Leather Gauntlet Fingers holding the ring
+              uiCtx.fillStyle = '#6b4423';
+              uiCtx.beginPath();
+              uiCtx.rect(-4, -22, 8, 4);
+              uiCtx.fill();
+
+              uiCtx.restore();
+          }
+          
+          if (hasPickaxe > 0) {
+              let swing = Math.sin(frameCount * 0.3) * 4;
+              let isStriking = recoilOffset > 0;
+              let strikeProg = recoilOffset / 15.0;
+              let bx = W - 48 + swing + bobX - swayX + recoilOffset * 0.5;
+              let by = H - 42 - swing + bobY + recoilOffset * 1.6;
+              
+              uiCtx.save();
+              uiCtx.translate(bx, by);
+              let rot = strikeProg * 0.55;
+              uiCtx.rotate(rot);
+
+              // 1. Motion Blur Arc Trail during strike
+              if (isStriking && recoilOffset > 4) {
+                  uiCtx.strokeStyle = 'rgba(220, 240, 255, ' + (strikeProg * 0.4) + ')';
+                  uiCtx.lineWidth = 4;
+                  uiCtx.beginPath();
+                  uiCtx.arc(16, 2, 28, -Math.PI * 0.6, -Math.PI * 0.1);
+                  uiCtx.stroke();
+              }
+
+              // 2. Adventurer's Forearm & Leather Gauntlet
+              uiCtx.fillStyle = '#4a2e18';
+              uiCtx.beginPath();
+              uiCtx.moveTo(25, 45);
+              uiCtx.lineTo(38, 55);
+              uiCtx.lineTo(15, 26);
+              uiCtx.lineTo(8, 22);
+              uiCtx.closePath();
+              uiCtx.fill();
+
+              uiCtx.fillStyle = '#7a4d28';
+              uiCtx.beginPath();
+              uiCtx.rect(8, 14, 12, 10);
+              uiCtx.fill();
+              uiCtx.strokeStyle = '#c8963e';
+              uiCtx.lineWidth = 1;
+              uiCtx.strokeRect(10, 16, 8, 2);
+
+              // 3. Carved Oak Wood Haft with Wood Grain
+              uiCtx.fillStyle = '#8b5a2b';
+              uiCtx.beginPath();
+              uiCtx.moveTo(18, 32);
+              uiCtx.lineTo(21, 30);
+              uiCtx.lineTo(7, -6);
+              uiCtx.lineTo(4, -4);
+              uiCtx.closePath();
+              uiCtx.fill();
+              uiCtx.strokeStyle = '#b87c3e';
+              uiCtx.lineWidth = 1;
+              uiCtx.beginPath();
+              uiCtx.moveTo(5, -4);
+              uiCtx.lineTo(19, 31);
+              uiCtx.stroke();
+
+              // Brass Ferrule Collar
+              uiCtx.fillStyle = '#e6b840';
+              uiCtx.fillRect(4, -8, 5, 4);
+
+              // 4. Heavy Forged Steel War-Pick Head
+              uiCtx.fillStyle = '#3a404a';
+              uiCtx.fillRect(3, -11, 7, 6);
+              uiCtx.fillStyle = '#788494';
+              uiCtx.fillRect(4, -10, 5, 4);
+
+              // Back Chisel / Hammer Poll
+              uiCtx.fillStyle = '#5a6270';
+              uiCtx.beginPath();
+              uiCtx.moveTo(10, -11);
+              uiCtx.lineTo(19, -8);
+              uiCtx.lineTo(18, -4);
+              uiCtx.lineTo(10, -5);
+              uiCtx.closePath();
+              uiCtx.fill();
+              uiCtx.fillStyle = '#8f9aa8';
+              uiCtx.fillRect(18, -8, 2, 4);
+
+              // Tapered Curved Armor-Piercing Pick Spike
+              uiCtx.fillStyle = '#687282';
+              uiCtx.beginPath();
+              uiCtx.moveTo(3, -11);
+              uiCtx.quadraticCurveTo(-6, -12, -18, -6);
+              uiCtx.quadraticCurveTo(-5, -7, 3, -5);
+              uiCtx.closePath();
+              uiCtx.fill();
+
+              // Top Specular Sheen Ridge
+              uiCtx.strokeStyle = '#e2e8f0';
+              uiCtx.lineWidth = 1.2;
+              uiCtx.beginPath();
+              uiCtx.moveTo(3, -11);
+              uiCtx.quadraticCurveTo(-6, -12, -18, -6);
+              uiCtx.stroke();
+
+              // Animated Specular Glint sweep
+              let sheenT = (frameCount * 0.08) % 1.0;
+              let glintX = 3 - (21 * sheenT);
+              let glintY = -11 + (5 * sheenT);
+              uiCtx.fillStyle = '#ffffff';
+              uiCtx.beginPath();
+              uiCtx.arc(glintX, glintY, 1.8, 0, Math.PI * 2);
+              uiCtx.fill();
+
+              // Trailing strike sparks when swinging or hitting
+              if ((isStriking || Math.abs(swing) > 2.5) && Math.random() > 0.35) {
                   particles.push({
-                      x: bx + 28 + (Math.random() - 0.5) * 6,
-                      y: by + 12 + (Math.random() - 0.5) * 6,
-                      vx: (Math.random() - 0.5) * 2 - 1,
-                      vy: (Math.random() - 0.5) * 2 - 1,
+                      x: bx - 18 + (Math.random() - 0.5) * 6,
+                      y: by - 6 + (Math.random() - 0.5) * 6,
+                      vx: (Math.random() - 0.5) * 2 - (isStriking ? 2.5 : 1),
+                      vy: (Math.random() - 0.5) * 2 + (isStriking ? 1.5 : 0),
                       layer: 0,
-                      life: 8,
-                      maxLife: 8,
-                      size: 1.5,
-                      sparkColor: '#ffd700',
-                      color: '#ffd700'
+                      life: isStriking ? 12 : 8,
+                      maxLife: isStriking ? 12 : 8,
+                      size: isStriking ? 2.2 : 1.5,
+                      sparkColor: isStriking ? '#ffffff' : '#ffd700',
+                      color: isStriking ? '#ffaa00' : '#ffd700'
                   });
               }
+
+              uiCtx.restore();
           }
       }
       

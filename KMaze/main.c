@@ -507,151 +507,278 @@ void UpdateParticles() {
     }
 }
 
-// Procedural 16x16 Texture Generator
+// Procedural 16x16 Texture Generator (Loop 9 High-Fidelity Themed Assets)
 void InitTextures() {
     for (int t = 0; t < 40; t++) {
         for (int y = 0; y < 16; y++) {
             for (int x = 0; x < 16; x++) {
                 DWORD col = 0;
-                if (t == 1 || t == 7) { // Stone Wall
+                if (t == 1 || t == 7) { // Chiseled Mossy Limestone Wall
                     int isMortar = (y == 3 || y == 7 || y == 11 || y == 15);
-                    if (!isMortar) {
-                        int rowShift = ((y / 4) % 2) * 8;
-                        if (((x + rowShift) % 8) == 7) isMortar = 1;
-                    }
-                    if (isMortar) col = 0x00333333;
-                    else {
-                        int noise = ((x * 13 + y * 37) % 30) - 15;
-                        int r = 160 + noise; if (r < 0) r = 0; if (r > 255) r = 255;
-                        int g = 40 + noise / 2; if (g < 0) g = 0;
-                        int b = 40 + noise / 2; if (b < 0) b = 0;
+                    int row = y / 4;
+                    int rowShift = (row % 2) * 8;
+                    if (!isMortar && ((x + rowShift) % 8) == 7) isMortar = 1;
+                    if (isMortar) {
+                        col = RGB(42, 40, 45);
+                    } else {
+                        int isTopBevel = (y % 4 == 0);
+                        int isBotBevel = (y % 4 == 2);
+                        int noise = ((x * 17 + y * 31) % 25) - 12;
+                        int r = 148 + noise + (isTopBevel ? 25 : (isBotBevel ? -22 : 0));
+                        int g = 132 + noise + (isTopBevel ? 20 : (isBotBevel ? -20 : 0));
+                        int b = 126 + noise + (isTopBevel ? 15 : (isBotBevel ? -18 : 0));
+                        if (r < 0) r = 0; if (r > 255) r = 255;
+                        if (g < 0) g = 0; if (g > 255) g = 255;
+                        if (b < 0) b = 0; if (b > 255) b = 255;
+                        if ((y % 4 == 2 || (x + rowShift) % 8 == 6) && ((x * 7 + y * 13) % 5 <= 2)) {
+                            r = r * 4 / 10;
+                            g = g * 135 / 100 + 20; if (g > 255) g = 255;
+                            b = b * 35 / 100;
+                        }
                         col = RGB(r, g, b);
                     }
                 } else if (t == 2) { // Exit Portal
                     float dist = (float)sqrt((x - 7.5f) * (x - 7.5f) + (y - 7.5f) * (y - 7.5f));
-                    if (dist < 3.0f) col = 0x00FFFFFF;
-                    else if (dist < 5.5f) col = 0x0000FF66;
-                    else if (dist < 7.5f) col = 0x00009933;
-                    else col = 0x00003311;
-                } else if (t == 3) { // Key Block
-                    int isKey = 0;
-                    if ((x >= 6 && x <= 9 && y >= 2 && y <= 5) || (x == 7 && y >= 6 && y <= 12) || (x >= 8 && x <= 10 && y >= 10 && y <= 12)) isKey = 1;
-                    if (isKey) col = 0x00FFFF00;
-                    else col = 0x00B8860B;
-                } else if (t == 4) { // Steel Door
-                    if (x == 0 || x == 15 || y == 0 || y == 15) col = 0x00112233;
-                    else if (y == 4 || y == 11) col = 0x00778899;
-                    else if (x == 7 || x == 8) col = (y >= 7 && y <= 9) ? 0x00000000 : 0x00115599;
-                    else col = 0x00004488;
-                } else if (t == 5) { // Coin Chest
+                    if (dist < 3.0f) col = RGB(255, 255, 255);
+                    else if (dist < 5.5f) col = RGB(0, 255, 120);
+                    else if (dist < 7.5f) col = RGB(0, 160, 70);
+                    else col = RGB(10, 40, 25);
+                } else if (t == 3) { // Ornate Golden Key
+                    int isBowOuter = (x >= 5 && x <= 10 && y >= 1 && y <= 6);
+                    int isBowInner = (x >= 7 && x <= 8 && y >= 3 && y <= 4);
+                    int isShaft = (x >= 7 && x <= 8 && y >= 6 && y <= 13);
+                    int isWard = (x >= 9 && x <= 11 && (y == 9 || y == 12 || y == 13));
+                    if (isShaft || (isBowOuter && !isBowInner) || isWard) {
+                        int isHighlight = (x == 5 || x == 7 || y == 1);
+                        col = isHighlight ? RGB(255, 245, 120) : RGB(220, 180, 20);
+                    } else {
+                        col = RGB(20, 15, 10);
+                    }
+                } else if (t == 4) { // Reinforced Dungeon Portcullis Door
+                    int isArch = (x == 0 || x == 15 || y == 0 || y == 1);
+                    int isHinges = (x <= 2 && (y == 4 || y == 11));
+                    int isStraps = (y == 4 || y == 11);
+                    int isStud = isStraps && (x == 3 || x == 7 || x == 11);
+                    int isKeyhole = (x >= 7 && x <= 8 && y >= 7 && y <= 9);
+                    if (isArch) col = RGB(70, 75, 85);
+                    else if (isStud) col = RGB(220, 220, 240);
+                    else if (isHinges || isStraps) col = RGB(45, 50, 60);
+                    else if (isKeyhole) col = RGB(0, 180, 255);
+                    else {
+                        int isPlankSeam = (x % 4 == 0);
+                        int woodGrain = ((x * 7 + y * 19) % 15) - 7;
+                        int r = isPlankSeam ? 40 : (95 + woodGrain);
+                        int g = isPlankSeam ? 25 : (55 + woodGrain / 2);
+                        int b = isPlankSeam ? 15 : (30 + woodGrain / 3);
+                        if (r < 0) r = 0; if (r > 255) r = 255;
+                        if (g < 0) g = 0; if (g > 255) g = 255;
+                        if (b < 0) b = 0; if (b > 255) b = 255;
+                        col = RGB(r, g, b);
+                    }
+                } else if (t == 5) { // Antique Iron-Banded Oak Treasure Chest
+                    int isInsideChest = (x >= 2 && x <= 13 && y >= 4 && y <= 13);
+                    int isIronBand = (x == 2 || x == 5 || x == 10 || x == 13 || y == 4 || y == 8 || y == 13);
+                    int isRivet = isIronBand && ((x == 5 || x == 10) && (y == 4 || y == 8 || y == 13));
+                    int isLockPlate = (x >= 7 && x <= 8 && y >= 7 && y <= 10);
+                    int isKeyhole = (x == 7 && y == 9);
+                    if (isKeyhole) col = RGB(10, 10, 10);
+                    else if (isLockPlate) col = RGB(255, 215, 30);
+                    else if (isRivet) col = RGB(210, 220, 230);
+                    else if (isInsideChest && isIronBand) col = RGB(55, 60, 70);
+                    else if (isInsideChest) {
+                        int plankShade = ((x + y * 3) % 8) - 4;
+                        col = RGB(135 + plankShade, 75 + plankShade / 2, 35);
+                    } else col = RGB(12, 10, 14);
+                } else if (t == 6) { // Lava Trap
                     float dist = (float)sqrt((x - 7.5f) * (x - 7.5f) + (y - 7.5f) * (y - 7.5f));
-                    if (dist < 4.5f) col = (dist < 2.0f) ? 0x00FFFFFF : 0x00FFCC00;
-                    else col = 0x008B4513;
-                } else if (t == 6) { // Trap (Lava)
-                    if (y >= 12 && (x % 4 == 1 || x % 4 == 2)) col = 0x00CCCCCC;
-                    else if ((x + y) % 6 < 2) col = 0x000044FF;
-                    else col = 0x00001188;
+                    float wave = (float)sin(x * 0.8f + y * 0.8f) * 20.0f;
+                    if (y >= 13 || dist > 7.0f) col = RGB(40, 25, 20);
+                    else if (dist < 3.0f) col = RGB(255, 250, 180);
+                    else {
+                        int g = 100 + (int)wave; if (g < 0) g = 0; if (g > 255) g = 255;
+                        col = RGB(255, g, 10);
+                    }
                 } else if (t == 8) { // Compass Block
-                    if (x == 7 || y == 7 || abs(x - 7) + abs(y - 7) <= 4) col = 0x0000FFFF;
-                    else col = 0x00004455;
+                    if (x == 7 || y == 7 || abs(x - 7) + abs(y - 7) <= 4) col = RGB(0, 255, 255);
+                    else col = RGB(0, 68, 85);
                 } else if (t == 9) { // Speed Boost
-                    if ((x >= 6 && x <= 10 && y >= 2 && y <= 6) || (x >= 4 && x <= 8 && y >= 7 && y <= 13)) col = 0x00FFFF00;
-                    else col = 0x00708090;
+                    if ((x >= 6 && x <= 10 && y >= 2 && y <= 6) || (x >= 4 && x <= 8 && y >= 7 && y <= 13)) col = RGB(255, 255, 0);
+                    else col = RGB(112, 128, 144);
                 } else if (t == 10 || t == 11) { // Teleporter Vortex
                     float dist = (float)sqrt((x - 7.5f) * (x - 7.5f) + (y - 7.5f) * (y - 7.5f));
-                    if (dist < 6.0f && ((int)(dist * 2.0f) % 2 == 0)) col = 0x00FF00FF;
-                    else col = 0x00300044;
-                } else if (t == 12) { // Minotaur Monster
-                    if ((x >= 2 && x <= 5 && y <= 4) || (x >= 10 && x <= 13 && y <= 4)) col = 0x00333333;
-                    else if ((x >= 4 && x <= 6 && y >= 6 && y <= 7) || (x >= 9 && x <= 11 && y >= 6 && y <= 7)) col = 0x00FFFF00;
-                    else if (y >= 10 && y <= 12 && x >= 5 && x <= 10) col = 0x00FFFFFF;
-                    else col = 0x00990000;
+                    if (dist < 6.0f && ((int)(dist * 2.0f) % 2 == 0)) col = RGB(255, 0, 255);
+                    else col = RGB(48, 0, 68);
+                } else if (t == 12) { // Minotaur Monster (Fierce Horned Beast)
+                    int isHorn = (x == 1 && y <= 2) || (x == 14 && y <= 2) ||
+                                 (x == 2 && y >= 1 && y <= 4) || (x == 13 && y >= 1 && y <= 4) ||
+                                 (x >= 3 && x <= 4 && y >= 3 && y <= 5) || (x >= 11 && x <= 12 && y >= 3 && y <= 5);
+                    int isHornTip = (y <= 1 && (x == 1 || x == 14));
+                    int isEar = (y == 5 && (x == 0 || x == 15));
+                    int isEye = (y == 7 && (x == 4 || x == 5 || x == 10 || x == 11));
+                    int isPupil = (y == 7 && (x == 5 || x == 10));
+                    int isSnout = (x >= 4 && x <= 11 && y >= 9 && y <= 13);
+                    int isNostril = (y == 10 && (x == 5 || x == 10));
+                    int isNoseRing = (y == 12 && (x == 6 || x == 9)) || (y == 13 && (x >= 7 && x <= 8));
+                    int isFang = (y == 12 && (x == 4 || x == 11));
+                    if (isHornTip) col = RGB(240, 230, 200);
+                    else if (isHorn) col = RGB(75, 60, 50);
+                    else if (isNoseRing) col = RGB(255, 215, 0);
+                    else if (isFang) col = RGB(255, 250, 230);
+                    else if (isPupil) col = RGB(40, 0, 0);
+                    else if (isEye) col = RGB(255, 180, 0);
+                    else if (isNostril) col = RGB(20, 10, 10);
+                    else if (isSnout) col = RGB(90, 40, 30);
+                    else if (isEar || (x >= 3 && x <= 12 && y >= 5 && y <= 14)) {
+                        int fur = ((x * 11 + y * 23) % 20) - 10;
+                        int r = 130 + fur; if (r < 0) r = 0; if (r > 255) r = 255;
+                        int g = 35 + fur / 2; if (g < 0) g = 0; if (g > 255) g = 255;
+                        int b = 25 + fur / 2; if (b < 0) b = 0; if (b > 255) b = 255;
+                        col = RGB(r, g, b);
+                    } else col = RGB(15, 10, 15);
                 } else if (t == 13) { // Pickaxe Block
-                    if ((x + y == 15 || x + y == 14) && (x >= 3 && x <= 12)) col = 0x008899AA;
-                    else if (x == y && x >= 4 && x <= 11) col = 0x008B4513;
-                    else col = 0x005C3A1E;
+                    if ((x + y == 15 || x + y == 14) && (x >= 3 && x <= 12)) col = RGB(180, 190, 210);
+                    else if (x == y && x >= 4 && x <= 11) col = RGB(139, 69, 19);
+                    else col = RGB(92, 58, 30);
                 } else if (t == 14) { // Stun Spray
-                    if (x >= 5 && x <= 10 && y >= 4 && y <= 14) col = 0x00FFCC00;
-                    else if (x >= 6 && x <= 9 && y >= 1 && y <= 3) col = 0x0000FFFF;
-                    else col = 0x00331100;
-                } else if (t == 15) { // Minotaur King Boss
-                    if (y <= 3 && x >= 4 && x <= 11) col = 0x0000D7FF;
-                    else if ((x >= 1 && x <= 4 && y <= 5) || (x >= 11 && x <= 14 && y <= 5)) col = 0x00EEEEEE;
-                    else if ((x >= 4 && x <= 6 && y >= 6 && y <= 7) || (x >= 9 && x <= 11 && y >= 6 && y <= 7)) col = 0x000000FF;
-                    else if (y >= 10 && y <= 13 && x >= 4 && x <= 11) col = 0x00FFFFFF;
-                    else col = 0x00000099;
-                } else if (t == 16) { // NPC Merchant
-                    if (y >= 4 && y <= 12 && x >= 4 && x <= 11) col = 0x0000FF66; else if (y < 4 && x >= 6 && x <= 9) col = 0x00FFCC99; else col = 0x00222222;
-                } else if (t == 17) { // Switch
-                    float dist = (float)sqrt((x - 7.5f) * (x - 7.5f) + (y - 7.5f) * (y - 7.5f)); if (dist < 4.0f) col = 0x00FF0000; else col = 0x00555555;
-                } else if (t == 18) { // Puzzle Door
-                    if (x % 4 == 0) col = 0x00888888; else col = 0x00111111;
-                } else if (t == 19) { // Time Freeze
-                    float dist = (float)sqrt((x - 7.5f) * (x - 7.5f) + (y - 7.5f) * (y - 7.5f)); if (dist < 5.0f && dist > 3.0f) col = 0x00CCCCCC; else if (dist <= 3.0f) col = 0x000088FF; else if (x == 7 && y < 3) col = 0x00FFFFFF; else col = 0x00000000;
-                } else if (t == 20) { // Tech Wall
-                    col = ((x*y) % 7 == 0) ? 0x0000FF00 : 0x00222222;
-                } else if (t == 21) { // Ice Wall
-                    col = RGB(100 + x*5, 200, 255);
-                } else if (t == 22) { // Void Wall
-                    int noise = rand() % 20; col = RGB(noise, noise, 50 + noise*2);
-                } else if (t == 23) { // Mossy Floor
+                    if (x >= 5 && x <= 10 && y >= 4 && y <= 14) col = RGB(0, 204, 255);
+                    else if (x >= 6 && x <= 9 && y >= 1 && y <= 3) col = RGB(255, 255, 255);
+                    else col = RGB(0, 51, 102);
+                } else if (t == 15) { // Minotaur King Boss (Royal Crown & Demonic War Paint)
+                    int isCrown = (y <= 3 && x >= 4 && x <= 11 && ((y == 3) || (y == 1 && (x == 4 || x == 7 || x == 8 || x == 11)) || (y == 2 && (x == 5 || x == 6 || x == 9 || x == 10))));
+                    int isCrownJewel = (y == 2 && (x == 7 || x == 8));
+                    int isHorn = (x == 0 && y <= 2) || (x == 15 && y <= 2) ||
+                                 (x == 1 && y >= 1 && y <= 4) || (x == 14 && y >= 1 && y <= 4) ||
+                                 (x >= 2 && x <= 3 && y >= 3 && y <= 5) || (x >= 12 && x <= 13 && y >= 3 && y <= 5);
+                    int isHornTip = (y <= 1 && (x == 0 || x == 15));
+                    int isEye = (y == 7 && (x == 4 || x == 5 || x == 10 || x == 11));
+                    int isPupil = (y == 7 && (x == 5 || x == 10));
+                    int isWarPaint = (y == 6 && (x >= 3 && x <= 12)) || (y == 8 && (x == 4 || x == 11));
+                    int isSnout = (x >= 4 && x <= 11 && y >= 9 && y <= 13);
+                    int isNostril = (y == 10 && (x == 5 || x == 10));
+                    int isNoseRing = (y == 12 && (x == 6 || x == 9)) || (y == 13 && (x >= 7 && x <= 8));
+                    int isFang = (y == 12 && (x == 4 || x == 11));
+                    if (isCrownJewel) col = RGB(255, 10, 50);
+                    else if (isCrown) col = RGB(255, 215, 0);
+                    else if (isHornTip) col = RGB(255, 240, 180);
+                    else if (isHorn) col = RGB(45, 35, 35);
+                    else if (isNoseRing) col = RGB(255, 215, 0);
+                    else if (isFang) col = RGB(255, 255, 255);
+                    else if (isWarPaint) col = RGB(220, 20, 30);
+                    else if (isPupil) col = RGB(80, 0, 20);
+                    else if (isEye) col = RGB(255, 0, 40);
+                    else if (isNostril) col = RGB(10, 5, 5);
+                    else if (isSnout) col = RGB(50, 30, 35);
+                    else if (x >= 2 && x <= 13 && y >= 4 && y <= 14) {
+                        int fur = ((x * 13 + y * 29) % 16) - 8;
+                        int r = 45 + fur; if (r < 0) r = 0; if (r > 255) r = 255;
+                        int g = 30 + fur; if (g < 0) g = 0; if (g > 255) g = 255;
+                        int b = 40 + fur; if (b < 0) b = 0; if (b > 255) b = 255;
+                        col = RGB(r, g, b);
+                    } else col = RGB(15, 8, 15);
+                } else if (t == 16) {
+                    if (y >= 4 && y <= 12 && x >= 4 && x <= 11) col = RGB(0, 255, 102); else if (y < 4 && x >= 6 && x <= 9) col = RGB(255, 204, 153); else col = RGB(34, 34, 34);
+                } else if (t == 17) {
+                    float dist = (float)sqrt((x - 7.5f) * (x - 7.5f) + (y - 7.5f) * (y - 7.5f)); if (dist < 4.0f) col = RGB(255, 0, 0); else col = RGB(85, 85, 85);
+                } else if (t == 18) {
+                    if (x % 4 == 0) col = RGB(136, 136, 136); else col = RGB(17, 17, 17);
+                } else if (t == 19) {
+                    float dist = (float)sqrt((x - 7.5f) * (x - 7.5f) + (y - 7.5f) * (y - 7.5f)); if (dist < 5.0f && dist > 3.0f) col = RGB(204, 204, 204); else if (dist <= 3.0f) col = RGB(0, 136, 255); else if (x == 7 && y < 3) col = RGB(255, 255, 255); else col = RGB(0, 0, 0);
+                } else if (t == 20) { // Cyber Labyrinth Tech Wall
+                    int isBorder = (x == 0 || x == 15 || y == 0 || y == 15);
+                    int isConduit = (x == 4 || x == 11 || y == 8);
+                    int isChip = (x >= 6 && x <= 9 && y >= 4 && y <= 6);
+                    int isTrace = ((x + y * 2) % 7 == 0);
+                    if (isBorder) col = RGB(25, 35, 45);
+                    else if (isChip) col = RGB(10, 180, 200);
+                    else if (isConduit || isTrace) col = RGB(0, 240, 180);
+                    else col = RGB(15, 22, 30);
+                } else if (t == 21) { // Frost Caverns Glacial Ice Wall
+                    int isCrack = (x == y || x + y == 15 || (x * 3 + y * 7) % 11 == 0);
+                    int facet = ((x * 13 + y * 17) % 30);
+                    if (isCrack) col = RGB(230, 250, 255);
+                    else col = RGB(60 + facet, 150 + facet * 2, 245);
+                } else if (t == 22) { // Abyssal Depths Void Wall
+                    float dist = (float)sqrt((x - 7.5f) * (x - 7.5f) + (y - 7.5f) * (y - 7.5f));
+                    float swirl = (float)sin(dist * 0.8f + (x - y) * 0.3f);
+                    int isStar = ((x * 23 + y * 41) % 17 == 0);
+                    if (isStar) col = RGB(220, 180, 255);
+                    else col = RGB(25 + (int)(swirl * 15), 10 + (int)(swirl * 8), 55 + (int)(swirl * 25));
+                } else if (t == 23) {
                     int noise = ((x * 13 + y * 37) % 30) - 15;
                     int r = 40 + noise; if (r < 0) r = 0; if (r > 255) r = 255;
                     int g = 60 + noise; if (g < 0) g = 0; if (g > 255) g = 255;
                     int b = 40 + noise; if (b < 0) b = 0; if (b > 255) b = 255;
                     if ((x+y)%2 == 0) { r = (r>10)?r-10:0; g = (g>10)?g-10:0; b = (b>10)?b-10:0; }
                     col = RGB(r, g, b);
-                } else if (t == 24) { // Cave Ceiling
+                } else if (t == 24) {
                     int noise = ((x * 7 + y * 23) % 20) - 10;
                     int r = 20 + noise; if (r < 0) r = 0; if (r > 255) r = 255;
                     int g = 20 + noise; if (g < 0) g = 0; if (g > 255) g = 255;
                     int b = 30 + noise; if (b < 0) b = 0; if (b > 255) b = 255;
                     col = RGB(r, g, b);
                 } else if (t == 25) { // Spike Trap
-                    if ((x+y)%4 == 0) col = 0x00888888; else col = 0x00222222;
+                    if ((x+y)%4 == 0) col = RGB(180, 190, 200); else col = RGB(34, 34, 34);
                 } else if (t == 26) { // Cursed Relic
                     float dist = (float)sqrt((x - 7.5f) * (x - 7.5f) + (y - 7.5f) * (y - 7.5f));
-                    if (dist < 4.0f) col = 0x00800080;
-                    else if (dist < 6.0f) col = 0x00000000;
-                    else col = 0x00220022;
-                } else if (t == 27) { // Magma Wall (Inferno Biome)
+                    if (dist < 4.0f) col = RGB(180, 0, 220);
+                    else if (dist < 6.0f) col = RGB(0, 0, 0);
+                    else col = RGB(34, 0, 34);
+                } else if (t == 27) { // Inferno Citadel Magma Wall
                     int vein = ((x * 17 + y * 29) % 20);
-                    if (vein < 4) col = 0x000088FF; // Molten lava vein (RGB: 255, 136, 0)
-                    else if (vein < 7) col = 0x000022AA;
-                    else col = 0x00111122; // Obsidian crust
-                } else if (t == 28) { // Ancient Save Shrine / Campfire
+                    if (vein < 3) col = RGB(255, 240, 80);
+                    else if (vein < 6) col = RGB(255, 110, 0);
+                    else if (vein < 8) col = RGB(180, 30, 0);
+                    else col = RGB(28, 20, 22);
+                } else if (t == 28) { // Save Shrine Runic Altar
+                    float dist = (float)sqrt((x - 7.5f) * (x - 7.5f) + (y - 5.5f) * (y - 5.5f));
+                    int isFlame = (dist < 2.5f);
+                    int isHalo = (dist < 4.5f);
+                    int isPlinth = (y >= 11 && x >= 3 && x <= 12);
+                    int isRune = isPlinth && (y == 12 && (x == 5 || x == 7 || x == 10));
+                    if (isFlame) col = RGB(255, 255, 200);
+                    else if (isHalo) col = RGB(255, 190, 40);
+                    else if (isRune) col = RGB(0, 240, 255);
+                    else if (isPlinth) col = RGB(120, 115, 130);
+                    else col = RGB(25, 20, 25);
+                } else if (t == 29) { // Wall Torch Sconce
+                    float dist = (float)sqrt((x - 7.5f) * (x - 7.5f) + (y - 4.5f) * (y - 4.5f));
+                    int isFlameCore = (dist < 2.0f);
+                    int isFlameAura = (dist < 4.0f);
+                    int isBracket = (y >= 9 && (x >= 6 && x <= 9));
+                    int isWoodTorch = (y >= 6 && y <= 8 && (x == 7 || x == 8));
+                    if (isFlameCore) col = RGB(255, 255, 180);
+                    else if (isFlameAura) col = RGB(255, 120, 0);
+                    else if (isWoodTorch) col = RGB(100, 60, 25);
+                    else if (isBracket) col = RGB(60, 65, 75);
+                    else col = RGB(18, 15, 20);
+                } else if (t == 38) { // Descent Stairwell Shaft
                     float dist = (float)sqrt((x - 7.5f) * (x - 7.5f) + (y - 7.5f) * (y - 7.5f));
-                    if (dist < 3.0f) col = 0x0000FFFF; // Golden flame core
-                    else if (dist < 5.0f) col = 0x000088FF; // Amber aura
-                    else if (y >= 12) col = 0x00888888; // Stone shrine base
-                    else col = 0x00222233;
-                } else if (t == 29) { // Wall Torch Sconce / Crystal
-                    float dist = (float)sqrt((x - 7.5f) * (x - 7.5f) + (y - 5.0f) * (y - 5.0f));
-                    if (dist < 3.0f) col = 0x0000FFFF; // Bright flame
-                    else if (y >= 8 && (x == 7 || x == 8)) col = 0x00444444; // Iron sconce bracket
-                    else col = 0x00111111;
-                } else if (t == 38) { // Dungeon Descent Stairwell / Shaft
-                    float dist = (float)sqrt((x - 7.5f) * (x - 7.5f) + (y - 7.5f) * (y - 7.5f));
-                    if (dist < 3.0f) col = 0x00111111; // Deep shaft pit
-                    else if (dist < 5.5f && ((int)(dist * 2.0f + (x+y)) % 2 == 0)) col = 0x00FFFF00; // Cyan rune steps
-                    else col = 0x00665544; // Stone rim
-                } else if (t == 39) { // Secret Illusionary Fake Wall
+                    int isPit = (dist < 2.5f);
+                    int isStair = (dist >= 2.5f && dist < 6.5f);
+                    int stepShade = (((int)(dist * 2.0f) + x + y) % 2 == 0);
+                    if (isPit) col = RGB(8, 8, 12);
+                    else if (isStair && stepShade) col = RGB(0, 240, 220);
+                    else if (isStair) col = RGB(70, 85, 100);
+                    else col = RGB(40, 45, 55);
+                } else if (t == 39) { // Secret Illusionary Wall
                     int isMortar = (y == 3 || y == 7 || y == 11 || y == 15);
-                    if (isMortar) col = 0x00443355;
-                    else {
-                        int rune = ((x + y * 3) % 5 == 0);
-                        if (rune) col = 0x00DDAA00;
-                        else col = 0x00664488;
+                    if (!isMortar) {
+                        int rowShift = ((y / 4) % 2) * 8;
+                        if (((x + rowShift) % 8) == 7) isMortar = 1;
                     }
-                } else if (t == 40) { // Dungeon Lore Tablet / Ancient Runestone
-                    if (x == 0 || x == 15 || y == 0 || y >= 13) col = 0x00222222;
-                    else if ((x >= 3 && x <= 12) && (y >= 2 && y <= 11)) {
-                        int glyph = ((x * 7 + y * 13) % 4 == 0) || (x == 7) || (y == 4 || y == 8);
-                        if (glyph) col = 0x00FFFF00;
-                        else col = 0x00111822;
-                    } else col = 0x00333344;
+                    if (isMortar) col = RGB(80, 30, 110);
+                    else {
+                        int noise = ((x * 13 + y * 37) % 30) - 15;
+                        col = RGB(140 + noise, 70 + noise / 2, 190 + noise);
+                    }
+                } else if (t == 40) { // Ancient Dungeon Lore Tablet
+                    int isBorder = (x == 1 || x == 14 || y == 1 || y == 14);
+                    int isRune = (x >= 4 && x <= 11 && y >= 4 && y <= 11) && (((x + y) % 3 == 0) || ((x * y) % 5 == 0));
+                    if (isRune) col = RGB(0, 255, 230);
+                    else if (isBorder) col = RGB(160, 200, 220);
+                    else col = RGB(35, 45, 60);
                 } else {
-                    col = 0x00AA0000;
+                    col = RGB(170, 0, 0);
                 }
                 textures[t][y * 16 + x] = col;
             }
@@ -661,39 +788,57 @@ void InitTextures() {
         for (int y = 0; y < 16; y++) {
             for (int x = 0; x < 16; x++) {
                 DWORD col = 0;
-                int isHorn = 0, isEye = 0, isSnout = 0, isTail = 0;
+                int isHorn = 0, isHornTip = 0, isEye = 0, isSnout = 0, isNoseRing = 0, isTail = 0;
                 if (dir == 0) {
-                    if ((x>=2 && x<=5 && y<=4) || (x>=10 && x<=13 && y<=4)) isHorn = 1;
-                    if ((x>=4 && x<=6 && y>=6 && y<=7) || (x>=9 && x<=11 && y>=6 && y<=7)) isEye = 1;
-                    if (y>=10 && y<=12 && x>=5 && x<=10) isSnout = 1;
+                    isHorn = (x==1 && y<=2) || (x==14 && y<=2) || (x==2 && y>=1 && y<=4) || (x==13 && y>=1 && y<=4) || (x>=3 && x<=4 && y>=3 && y<=5) || (x>=11 && x<=12 && y>=3 && y<=5);
+                    isHornTip = (y<=1 && (x==1 || x==14));
+                    isEye = (y==7 && (x==4 || x==5 || x==10 || x==11));
+                    isSnout = (x>=4 && x<=11 && y>=9 && y<=13);
+                    isNoseRing = (y==12 && (x==6 || x==9)) || (y==13 && (x>=7 && x<=8));
                 } else if (dir == 1 || dir == 7) {
                     int shift = (dir == 1) ? -2 : 2;
-                    if ((x>=2+shift && x<=5+shift && y<=4) || (x>=10+shift && x<=13+shift && y<=4)) isHorn = 1;
-                    if ((x>=4+shift && x<=6+shift && y>=6 && y<=7) || (x>=9+shift && x<=11+shift && y>=6 && y<=7)) isEye = 1;
-                    if (y>=10 && y<=12 && x>=5+shift && x<=10+shift) isSnout = 1;
+                    isHorn = (x>=2+shift && x<=4+shift && y<=4) || (x>=10+shift && x<=12+shift && y<=4);
+                    isHornTip = (y<=1 && (x==2+shift || x==12+shift));
+                    isEye = (y==7 && (x==4+shift || x==10+shift));
+                    isSnout = (y>=9 && y<=13 && x>=4+shift && x<=10+shift);
+                    isNoseRing = (y==12 && (x==7+shift));
                 } else if (dir == 2) {
-                    if (x>=8 && x<=12 && y<=4) isHorn = 1;
-                    if (x>=10 && x<=12 && y>=6 && y<=7) isEye = 1;
-                    if (y>=10 && y<=12 && x>=10 && x<=15) isSnout = 1;
+                    isHorn = (x>=8 && x<=12 && y<=4);
+                    isHornTip = (x==12 && y<=1);
+                    isEye = (x>=10 && x<=11 && y==7);
+                    isSnout = (y>=9 && y<=12 && x>=10 && x<=15);
+                    isNoseRing = (y==12 && x==14);
                     if (y>=12 && y<=14 && x>=0 && x<=3) isTail = 1;
                 } else if (dir == 6) {
-                    if (x>=3 && x<=7 && y<=4) isHorn = 1;
-                    if (x>=3 && x<=5 && y>=6 && y<=7) isEye = 1;
-                    if (y>=10 && y<=12 && x>=0 && x<=5) isSnout = 1;
+                    isHorn = (x>=3 && x<=7 && y<=4);
+                    isHornTip = (x==3 && y<=1);
+                    isEye = (x>=4 && x<=5 && y==7);
+                    isSnout = (y>=9 && y<=12 && x>=0 && x<=5);
+                    isNoseRing = (y==12 && x==1);
                     if (y>=12 && y<=14 && x>=12 && x<=15) isTail = 1;
                 } else if (dir == 3 || dir == 5) {
                     int shift = (dir == 3) ? -2 : 2;
-                    if ((x>=2+shift && x<=5+shift && y<=4) || (x>=10+shift && x<=13+shift && y<=4)) isHorn = 1;
+                    isHorn = (x>=2+shift && x<=5+shift && y<=4) || (x>=10+shift && x<=13+shift && y<=4);
+                    isHornTip = (y<=1 && (x==2+shift || x==13+shift));
                     if (y>=12 && y<=14 && x>=6-shift && x<=9-shift) isTail = 1;
                 } else if (dir == 4) {
-                    if ((x>=2 && x<=5 && y<=4) || (x>=10 && x<=13 && y<=4)) isHorn = 1;
+                    isHorn = (x>=2 && x<=4 && y<=4) || (x>=11 && x<=13 && y<=4);
+                    isHornTip = (y<=1 && (x==2 || x==13));
                     if (y>=11 && y<=14 && x>=6 && x<=9) isTail = 1;
                 }
-                if (isHorn) col = RGB(50, 50, 50);
-                else if (isEye) col = RGB(255, 255, 0);
-                else if (isSnout) col = RGB(255, 255, 255);
-                else if (isTail) col = RGB(80, 0, 0);
-                else col = RGB(153, 0, 0);
+                if (isHornTip) col = RGB(240, 230, 200);
+                else if (isHorn) col = RGB(70, 55, 45);
+                else if (isNoseRing) col = RGB(255, 215, 0);
+                else if (isEye) col = RGB(255, 180, 0);
+                else if (isSnout) col = RGB(85, 40, 30);
+                else if (isTail) col = RGB(75, 15, 15);
+                else if (x>=2 && x<=13 && y>=4 && y<=14) {
+                    int fur = ((x * 11 + y * 23) % 18) - 9;
+                    int r = 125 + fur; if (r < 0) r = 0; if (r > 255) r = 255;
+                    int g = 35 + fur / 2; if (g < 0) g = 0; if (g > 255) g = 255;
+                    int b = 25 + fur / 2; if (b < 0) b = 0; if (b > 255) b = 255;
+                    col = RGB(r, g, b);
+                } else col = RGB(15, 10, 15);
                 textures[30 + dir][y * 16 + x] = col;
             }
         }
@@ -713,14 +858,19 @@ void UpdateTextures() {
             else col = 0x00003311;
             textures[2][y * 16 + x] = col;
 
-            // Key Block (t=3) - bobbing animation
+            // Key Block (t=3) - Floating with golden specular sweep
             int bob = (int)(sin(animFrameCount * 0.1f) * 2.0f);
             int by = y - bob;
-            int isKey = 0;
-            if (by >= 0 && by < 16) {
-                if ((x >= 6 && x <= 9 && by >= 2 && by <= 5) || (x == 7 && by >= 6 && by <= 12) || (x >= 8 && x <= 10 && by >= 10 && by <= 12)) isKey = 1;
+            int isBowOuter = (x >= 5 && x <= 10 && by >= 1 && by <= 6);
+            int isBowInner = (x >= 7 && x <= 8 && by >= 3 && by <= 4);
+            int isShaft = (x >= 7 && x <= 8 && by >= 6 && by <= 13);
+            int isWard = (x >= 9 && x <= 11 && (by == 9 || by == 12 || by == 13));
+            if (isShaft || (isBowOuter && !isBowInner) || isWard) {
+                int glint = ((x + by + (animFrameCount * 7 / 20)) % 9 == 0);
+                textures[3][y * 16 + x] = glint ? RGB(255, 255, 210) : RGB(225, 185, 25);
+            } else {
+                textures[3][y * 16 + x] = RGB(20, 15, 15);
             }
-            textures[3][y * 16 + x] = isKey ? 0x00FFFF00 : 0x00B8860B;
 
             // Teleporter Vortex (t=10, 11) - swirling
             float dx = x - 7.5f;
@@ -728,28 +878,38 @@ void UpdateTextures() {
             float dist = (float)sqrt(dx*dx + dy*dy);
             float angle = (float)atan2(dy, dx) + animFrameCount * 0.1f;
             if (dist < 6.0f && ((int)(dist * 2.0f + angle * 3.0f) % 2 == 0)) {
-                textures[10][y * 16 + x] = 0x00FF00FF;
-                textures[11][y * 16 + x] = 0x00FF00FF;
+                textures[10][y * 16 + x] = RGB(255, 0, 255);
+                textures[11][y * 16 + x] = RGB(255, 0, 255);
             } else {
-                textures[10][y * 16 + x] = 0x00300044;
-                textures[11][y * 16 + x] = 0x00300044;
+                textures[10][y * 16 + x] = RGB(48, 0, 68);
+                textures[11][y * 16 + x] = RGB(48, 0, 68);
             }
             
-            // Boss / Minotaur eyes breathing
+            // Boss & Minotaur breathing, glowing eyes, and nostril steam
             int m_breathe = (int)(sin(animFrameCount * 0.15f) * 1.5f);
-            if ((x >= 4 && x <= 6 && y >= 6 && y <= 7) || (x >= 9 && x <= 11 && y >= 6 && y <= 7)) {
-                if (m_breathe > 0) textures[12][y * 16 + x] = 0x000088FF;
-                else textures[12][y * 16 + x] = 0x0000FFFF;
-                if (bossHP <= 1) textures[15][y * 16 + x] = (m_breathe > 0) ? 0x0000FFFF : 0x00008888;
-                else textures[15][y * 16 + x] = (m_breathe > 0) ? 0x000000FF : 0x00000088;
-            } else if (y >= 10 && y <= 13 && x >= 4 && x <= 11) {
-                if (bossHP <= 1) textures[15][y * 16 + x] = 0x008888FF;
-                else textures[15][y * 16 + x] = 0x00FFFFFF;
+            int snortActive = (sin(animFrameCount * 0.22f) > 0.55f);
+            int isNostrilSteam = (y == 11 && (x == 4 || x == 5 || x == 10 || x == 11));
+            if (isNostrilSteam && snortActive) {
+                textures[12][y * 16 + x] = RGB(230, 240, 255); // White steam puff
+                textures[15][y * 16 + x] = RGB(255, 140, 80);  // Fiery ember plume
+            } else if ((x >= 4 && x <= 6 && y >= 6 && y <= 7) || (x >= 9 && x <= 11 && y >= 6 && y <= 7)) {
+                textures[12][y * 16 + x] = (m_breathe > 0) ? RGB(255, 140, 0) : RGB(255, 255, 0);
+                if (bossHP <= 1) textures[15][y * 16 + x] = (m_breathe > 0) ? RGB(255, 255, 40) : RGB(255, 140, 0);
+                else textures[15][y * 16 + x] = (m_breathe > 0) ? RGB(255, 0, 0) : RGB(140, 0, 0);
+            } else if (y == 2 && (x == 7 || x == 8)) {
+                // Boss crown ruby pulse
+                int cGlow = (int)(sin(animFrameCount * 0.3f) * 45.0f);
+                int cg = 20 + cGlow; if (cg < 0) cg = 0; if (cg > 255) cg = 255;
+                int cb = 60 + cGlow; if (cb < 0) cb = 0; if (cb > 255) cb = 255;
+                textures[15][y * 16 + x] = RGB(255, cg, cb);
+            } else if (y >= 10 && y <= 13 && x >= 4 && x <= 11 && !isNostrilSteam) {
+                if (bossHP <= 1) textures[15][y * 16 + x] = RGB(255, 140, 140);
+                else textures[15][y * 16 + x] = RGB(255, 255, 255);
             }
             for (int dir = 0; dir < 8; dir++) {
                 DWORD c = textures[30 + dir][y * 16 + x];
-                if ((c & 0xFFFFFF) == RGB(255, 255, 0) || (c & 0xFFFFFF) == RGB(255, 136, 0)) {
-                    textures[30 + dir][y * 16 + x] = (m_breathe > 0) ? RGB(255, 136, 0) : RGB(255, 255, 0);
+                if ((c & 0xFFFFFF) == RGB(255, 180, 0) || (c & 0xFFFFFF) == RGB(255, 240, 0)) {
+                    textures[30 + dir][y * 16 + x] = (m_breathe > 0) ? RGB(255, 140, 0) : RGB(255, 240, 0);
                 }
             }
             // Spike Trap (t=25)
@@ -2596,23 +2756,109 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DeleteObject(glassB); DeleteObject(glassP);
                 }
 
+                if (!hasCompass && pathfinderTimer <= 0) {
+                    int lx = 32 + (int)(bobX * 0.7f - swayX), ly = H - 24 + (int)bobY;
+                    int isTorchActive = (torchTimer > 0);
+                    int lanternGlow = isTorchActive ? 36 : 22;
+                    HBRUSH glowB = CreateSolidBrush(isTorchActive ? RGB(255, 180, 50) : RGB(200, 140, 40));
+                    SelectObject(hdcMem, glowB);
+                    Ellipse(hdcMem, lx - lanternGlow / 2, ly - 10 - lanternGlow / 2, lx + lanternGlow / 2, ly - 10 + lanternGlow / 2);
+                    DeleteObject(glowB);
+
+                    HBRUSH baseB = CreateSolidBrush(RGB(74, 59, 44));
+                    HPEN baseP = CreatePen(PS_SOLID, 1, RGB(200, 150, 62));
+                    SelectObject(hdcMem, baseB); SelectObject(hdcMem, baseP);
+                    Rectangle(hdcMem, lx - 7, ly + 2, lx + 7, ly + 6);
+                    DeleteObject(baseB); DeleteObject(baseP);
+
+                    HBRUSH glassB = CreateSolidBrush(RGB(20, 30, 40));
+                    SelectObject(hdcMem, glassB);
+                    Rectangle(hdcMem, lx - 6, ly - 12, lx + 6, ly + 2);
+                    DeleteObject(glassB);
+
+                    int flameFlicker = (int)(sin(animFrameCount * 0.35f) * 2.0f);
+                    HBRUSH flameB = CreateSolidBrush(isTorchActive ? RGB(255, 255, 200) : RGB(255, 200, 50));
+                    SelectObject(hdcMem, flameB);
+                    Ellipse(hdcMem, lx - 3 + flameFlicker, ly - 9, lx + 3 + flameFlicker, ly - 1);
+                    DeleteObject(flameB);
+
+                    HPEN ribP = CreatePen(PS_SOLID, 1, RGB(43, 44, 48));
+                    SelectObject(hdcMem, ribP);
+                    MoveToEx(hdcMem, lx - 6, ly - 12, NULL); LineTo(hdcMem, lx - 6, ly + 2);
+                    MoveToEx(hdcMem, lx, ly - 12, NULL); LineTo(hdcMem, lx, ly + 2);
+                    MoveToEx(hdcMem, lx + 6, ly - 12, NULL); LineTo(hdcMem, lx + 6, ly + 2);
+                    DeleteObject(ribP);
+
+                    HBRUSH hoodB = CreateSolidBrush(RGB(212, 162, 66));
+                    SelectObject(hdcMem, hoodB);
+                    Pie(hdcMem, lx - 7, ly - 18, lx + 7, ly - 6, lx + 7, ly - 12, lx - 7, ly - 12);
+                    DeleteObject(hoodB);
+
+                    HPEN ringP = CreatePen(PS_SOLID, 2, RGB(240, 192, 80));
+                    SelectObject(hdcMem, ringP);
+                    Ellipse(hdcMem, lx - 3, ly - 23, lx + 4, ly - 16);
+                    DeleteObject(ringP);
+                }
+
                 if (hasPickaxe > 0) {
                     int swing = (int)(sin(animFrameCount * 0.3f) * 4);
-                    int bx = W - 45 + swing + (int)(bobX - swayX) + recoilOffset, by = H - 40 - swing + (int)bobY + (int)(recoilOffset * 1.5f);
+                    int isStriking = (recoilOffset > 0);
+                    int bx = W - 48 + swing + (int)(bobX - swayX) + recoilOffset / 2;
+                    int by = H - 42 - swing + (int)bobY + (int)(recoilOffset * 1.6f);
                     
-                    HPEN handleP = CreatePen(PS_SOLID, 3, RGB(139, 69, 19));
-                    SelectObject(hdcMem, handleP);
-                    MoveToEx(hdcMem, bx, by + 30, NULL); LineTo(hdcMem, bx + 20, by);
-                    
-                    HPEN headP = CreatePen(PS_SOLID, 3, RGB(180, 190, 200));
-                    SelectObject(hdcMem, headP);
-                    MoveToEx(hdcMem, bx + 10, by - 5, NULL); LineTo(hdcMem, bx + 28, by + 12);
-                    DeleteObject(handleP); DeleteObject(headP);
+                    // Adventurer's Leather Sleeve & Gauntlet
+                    HBRUSH armB = CreateSolidBrush(RGB(74, 46, 24));
+                    HPEN armP = CreatePen(PS_SOLID, 1, RGB(100, 65, 35));
+                    SelectObject(hdcMem, armB); SelectObject(hdcMem, armP);
+                    POINT armPts[4] = { {bx + 25, by + 45}, {bx + 38, by + 55}, {bx + 15, by + 26}, {bx + 8, by + 22} };
+                    Polygon(hdcMem, armPts, 4);
+                    DeleteObject(armB); DeleteObject(armP);
 
-                    // Specular sheen sweep highlight across pickaxe head
+                    HBRUSH gloveB = CreateSolidBrush(RGB(122, 77, 40));
+                    SelectObject(hdcMem, gloveB);
+                    RoundRect(hdcMem, bx + 8, by + 14, bx + 20, by + 24, 4, 4);
+                    DeleteObject(gloveB);
+
+                    // Carved Oak Wood Haft
+                    HPEN handleP = CreatePen(PS_SOLID, 4, RGB(139, 90, 43));
+                    SelectObject(hdcMem, handleP);
+                    MoveToEx(hdcMem, bx + 19, by + 31, NULL); LineTo(hdcMem, bx + 5, by - 5);
+                    DeleteObject(handleP);
+
+                    // Brass Ferrule Collar
+                    HBRUSH collarB = CreateSolidBrush(RGB(230, 184, 64));
+                    SelectObject(hdcMem, collarB);
+                    Rectangle(hdcMem, bx + 4, by - 8, bx + 9, by - 4);
+                    DeleteObject(collarB);
+
+                    // Forged Steel Pickaxe Eye Collar
+                    HBRUSH eyeB = CreateSolidBrush(RGB(58, 64, 74));
+                    SelectObject(hdcMem, eyeB);
+                    Rectangle(hdcMem, bx + 3, by - 11, bx + 10, by - 5);
+                    DeleteObject(eyeB);
+
+                    // Back Chisel / Hammer Poll
+                    HPEN hammerP = CreatePen(PS_SOLID, 3, RGB(90, 98, 112));
+                    SelectObject(hdcMem, hammerP);
+                    MoveToEx(hdcMem, bx + 10, by - 8, NULL); LineTo(hdcMem, bx + 18, by - 6);
+                    DeleteObject(hammerP);
+
+                    // Tapered Curved Pick Spike
+                    HPEN spikeP = CreatePen(PS_SOLID, 3, RGB(110, 120, 135));
+                    SelectObject(hdcMem, spikeP);
+                    MoveToEx(hdcMem, bx + 3, by - 9, NULL); LineTo(hdcMem, bx - 16, by - 6);
+                    DeleteObject(spikeP);
+
+                    // Top Polished Specular Sheen Ridge
+                    HPEN sheenRidge = CreatePen(PS_SOLID, 1, RGB(230, 235, 245));
+                    SelectObject(hdcMem, sheenRidge);
+                    MoveToEx(hdcMem, bx + 3, by - 11, NULL); LineTo(hdcMem, bx - 16, by - 6);
+                    DeleteObject(sheenRidge);
+
+                    // Specular sheen sweep highlight
                     float sheenT = (float)((animFrameCount * 2) % 20) / 20.0f;
-                    int sx = (bx + 10) + (int)(18.0f * sheenT);
-                    int sy = (by - 5) + (int)(17.0f * sheenT);
+                    int sx = (bx + 3) - (int)(19.0f * sheenT);
+                    int sy = (by - 10) + (int)(4.0f * sheenT);
                     HBRUSH sheenB = CreateSolidBrush(RGB(255, 255, 255));
                     HPEN sheenP = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
                     SelectObject(hdcMem, sheenB); SelectObject(hdcMem, sheenP);
@@ -2620,16 +2866,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DeleteObject(sheenB); DeleteObject(sheenP);
 
                     // Trailing sparks when swinging
-                    if (abs(swing) > 2 && (rand() % 100 > 50) && particleCount < MAX_PARTICLES) {
-                        particles[particleCount].x = (float)(bx + 28 + (rand() % 6 - 3));
-                        particles[particleCount].y = (float)(by + 12 + (rand() % 6 - 3));
-                        particles[particleCount].vx = ((rand() % 100) / 100.0f - 0.5f) * 2.0f - 1.0f;
-                        particles[particleCount].vy = ((rand() % 100) / 100.0f - 0.5f) * 2.0f - 1.0f;
+                    if ((isStriking || abs(swing) > 2) && (rand() % 100 > 40) && particleCount < MAX_PARTICLES) {
+                        particles[particleCount].x = (float)(bx - 16 + (rand() % 6 - 3));
+                        particles[particleCount].y = (float)(by - 6 + (rand() % 6 - 3));
+                        particles[particleCount].vx = ((rand() % 100) / 100.0f - 0.5f) * 2.0f - (isStriking ? 2.0f : 1.0f);
+                        particles[particleCount].vy = ((rand() % 100) / 100.0f - 0.5f) * 2.0f + (isStriking ? 1.0f : 0.0f);
                         particles[particleCount].layer = 0;
-                        particles[particleCount].life = 8;
-                        particles[particleCount].maxLife = 8;
-                        particles[particleCount].size = 1.5f;
-                        particles[particleCount].color = RGB(255, 215, 0);
+                        particles[particleCount].life = isStriking ? 12 : 8;
+                        particles[particleCount].maxLife = isStriking ? 12 : 8;
+                        particles[particleCount].size = isStriking ? 2.0f : 1.5f;
+                        particles[particleCount].color = isStriking ? RGB(255, 255, 255) : RGB(255, 215, 0);
                         particleCount++;
                     }
                 }
