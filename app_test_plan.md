@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KMedia
+**Target App:** KMine
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KMedia
 - KMine
 - KMines
 - KMystery
@@ -173,10 +172,22 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KMatch3
 - KMaze
 - KMech
+- KMedia
 
 ## Test Reports
 
 > 📁 **Archived Reports**: Historical test reports have been archived to [archive/app_test_reports_archive.md](archive/app_test_reports_archive.md) to preserve token efficiency.
+
+- **KMedia**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
+  - ✅ Core functionality works (Multi-format HTML5 audio/video player with playlist management, synthetic WAV audio generator for instant in-browser demo playback, real-time Web Audio API frequency/time-domain oscilloscope waveform visualizer, 3-band parametric DSP equalizer Bass/Mid/Treble, GPU video post-processing filters Brightness/Contrast/Saturation, SRT and WebVTT subtitle parser with real-time overlay, fullscreen presentation, and single-frame video snapshot PNG exporter).
+  - 🔧 FIXED: Restoring saved volume on startup used `parseFloat(safeGetStorage('kmedia_vol', '1')) || 1`, where a saved 0% volume setting was treated as falsy due to `0 || 1`, blowing out audio to 100% blast on page reload. Replaced with explicit `isNaN` parsing to preserve 0% volume settings.
+  - 🔧 FIXED: Global keyboard listener checked bare keys (`h`, `p`, `n`, `s`, `m`, `f`, `u`, `e`, arrows) without verifying `!e.ctrlKey && !e.altKey && !e.metaKey`, hijacking browser accelerators: `Ctrl+H` (browser history hijacked to toggle Help), `Ctrl+P` (browser print hijacked to switch previous track), `Ctrl+N` (new window hijacked to switch next track), `Ctrl+S` (save page hijacked to stop playback), `Ctrl+F` (find in page hijacked to toggle fullscreen), `Ctrl+U` (view source hijacked to toggle mute), and `Alt+ArrowLeft`/`Alt+ArrowRight` (browser back/forward navigation hijacked for seeking). Added modifier guards across all shortcuts.
+  - 🔧 FIXED: Keyboard shortcuts (`Space`, `P`, `N`, `S`, `M`, `Arrows`, `Del`, `F`, `U`) continued to fire beneath an open Help modal (`#helpOverlay`), manipulating playlists and audio while users read documentation. Suppressed background hotkeys while Help modal is displayed.
+  - 🔧 FIXED: During active dragging of `#seekSlider`, the 200ms `setInterval` progress polling continually overwrote `UI.seekSlider.value`, causing erratic slider jitter and fighting user scrubbing. Added activeElement check to pause seek slider updates during drag.
+  - 🔧 FIXED: In playlist items, pressing `Delete` on a focused item deleted the item via `li.onkeydown` and then bubbled to `window` keydown which executed `removeTrackByIndex(currentIndex)`, deleting two tracks in one keystroke. Added `e.stopPropagation()`.
+  - 🔧 FIXED: Clicking `Clear` or removing the last track paused playback and removed `src` but failed to invoke `mediaPlayer.load()`, leaving the frozen video frame visible; and failed to reset `#seekSlider`, `#timeDisplay`, and `#waveform`. Added proper element reset and idle waveform redraw.
+  - 🔧 FIXED: In `parseSubtitles()`, cues separated by multiple blank lines or containing cue IDs caused cue lines to be misaligned or dropped. Replaced with dynamic timestamp line matching (`-->`) to robustly support all SRT and WebVTT cue variations.
+  - 🔧 FIXED: Changing tracks or reloading media reset `mediaPlayer.playbackRate` to 1.0x due to native HTML5 media element behavior. Added `loadedmetadata` event listener to persist the selected playback speed across tracks, and added audio context resumption on Play button click.
 
 - **KMech**: ISSUES FOUND ⚠️ (6 issues, 6 fixed inline)
   - ✅ Core functionality works (Tactical turn-based mech combat simulation with procedural SVG chassis and enemy sprite rendering across 3 enemy classes Scout/Goliath/Titan, hangar diagnostics and equipment cycling weapons/armor/heat sinks/specials, dynamic heat reactor management, multi-limb targeting system Head/Torso/Arms/Legs with critical multipliers, Web Audio synthesizer effects, 3-tier particle canvas physics with debris/smoke/shocks/screen shake, garage repair economy, and pilot XP leveling).
