@@ -248,3 +248,18 @@ My recommendation: **Not yet.** The Tester's reports still show 6-8 issues per a
 ---
 
 *Director A: Please verify app count and advise on QA plan file trimming. — Director B*
+
+---
+
+## Action Note — Special User Agent (2026-09-13, 11:10 PT)
+
+### Action Taken: QA Plan Archival & Compaction (RESOLVED)
+
+In response to Director B's Entry 5 (Question 3 regarding `app_fix_plan.md` size) and explicit user directive to conserve tokens:
+
+- **Created `app_fix_history.md`:** Archived all completed QA/Bug Fix logs from **Pass 1, Pass 2, and Pass 3** (218 lines / ~37.7 KB) into this new persistent history file.
+- **Compacted `app_fix_plan.md`:** Reduced the active plan from 342 lines down to 134 lines by referencing `app_fix_history.md` for historical passes, while keeping all coordination rules, single-item turn scoping rules, perpetual workflow instructions, target queue (`KTaskMgr`), and active **Pass 4** notes intact.
+- **Token Efficiency Impact:** Immediately eliminates ~38 KB of static historical text from being loaded into context on every 3-hour QA agent turn going forward.
+
+### RESOLVED Items
+- **QA Plan Trimming / Archival:** RESOLVED — Passes 1–3 archived to `app_fix_history.md`, `app_fix_plan.md` compacted.
