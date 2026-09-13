@@ -516,11 +516,11 @@
 <body>
 
 <header id="header">
-  <div id="tabStrip">
+  <div id="tabStrip" role="tablist" aria-label="Terminal Session Tabs">
     <!-- Dynamic Tabs -->
     <button class="tab-add" id="btnNewTab" title="New Session Tab (Ctrl+T)">+ New</button>
   </div>
-  <div class="toolbar-actions">
+  <div class="toolbar-actions" role="toolbar" aria-label="Terminal Actions">
     <button class="btn-action" id="btnExportLog" title="Download Session Log (Ctrl+S)">💾 Export Log</button>
     <button class="btn-action" id="btnClear" title="Clear Screen (Ctrl+L)">🧹 Clear</button>
     <button class="btn-action" id="btnZoomOut" title="Decrease Font Size (Ctrl+-)">A−</button>
@@ -529,7 +529,7 @@
   </div>
 </header>
 
-<div id="quickBar">
+<div id="quickBar" role="toolbar" aria-label="Quick Commands">
   <span class="quick-label">⚡ Quick:</span>
   <button class="quick-chip" data-cmd="help" title="Show help and commands">❓ help</button>
   <button class="quick-chip" data-cmd="dir" title="List directory contents">📁 dir</button>
@@ -553,7 +553,7 @@
   </div>
 </footer>
 
-<div id="statusbar">
+<div id="statusbar" role="status" aria-label="Terminal Status">
   <div>
     <span><span class="shortcut-tag">F1 / h</span>Help</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+T</span>New Tab</span> &nbsp;|&nbsp; 
@@ -660,6 +660,27 @@
   const tabStatusInfo = document.getElementById('tabStatusInfo');
   
   const MAX_LOG_LINES = 1000;
+  const MAX_TABS = 8;
+
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function isOptionFlag(arg) {
+    if (!arg) return false;
+    if (arg.startsWith('--')) return true;
+    if (arg.startsWith('-') && arg.length >= 2) return true;
+    if (arg.startsWith('/') && (arg.length === 2 || (arg.length === 3 && arg[2] === ':') || arg.toLowerCase() === '/help' || arg === '/?')) {
+      return true;
+    }
+    return false;
+  }
 
   // Local Fallback VFS for standalone mode
   const fallbackVFS = {
@@ -746,6 +767,11 @@
   let savedInputVal = '';
 
   function createNewTab(title = null) {
+    if (sessions.length >= MAX_TABS) {
+      showToast(`Maximum tab limit reached (${MAX_TABS} tabs)`, "warn");
+      print(`Maximum tab limit reached (${MAX_TABS} tabs). Close an existing tab to create a new one.`, "log-warn");
+      return;
+    }
     const id = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
     const sessionName = title || ('Tab ' + nextSessionNum++);
     const session = new TerminalSession(id, sessionName);
@@ -767,7 +793,7 @@
     switchTab(id);
     renderTabs();
     if (sessions.length > 1) {
-      showToast(`Opened session ${sessionName}`, "sys");
+      showToast(`Opened session ${escapeHtml(sessionName)}`, "sys");
     }
   }
 
@@ -809,7 +835,7 @@
       } else {
         renderTabs();
       }
-      showToast(`Closed ${name}`, "warn");
+      showToast(`Closed ${escapeHtml(name)}`, "warn");
     }
   }
 
@@ -822,6 +848,10 @@
       const tab = document.createElement('div');
       tab.className = 'tab' + (s.id === activeSessionId ? ' active' : '');
       tab.title = `Tab ${idx + 1}: ${s.name} (Double-click to rename | Ctrl+${idx + 1})`;
+      tab.setAttribute('role', 'tab');
+      tab.setAttribute('aria-selected', s.id === activeSessionId ? 'true' : 'false');
+      tab.setAttribute('tabindex', '0');
+      tab.setAttribute('aria-controls', 'output');
       
       const numBadge = document.createElement('span');
       numBadge.style.fontSize = '10px';
@@ -839,6 +869,9 @@
         closeBtn.className = 'tab-close';
         closeBtn.innerHTML = '&times;';
         closeBtn.title = 'Close tab (Ctrl+W)';
+        closeBtn.setAttribute('role', 'button');
+        closeBtn.setAttribute('aria-label', `Close tab ${s.name}`);
+        closeBtn.setAttribute('tabindex', '0');
         closeBtn.onclick = (e) => closeTab(s.id, e);
         tab.appendChild(closeBtn);
       }
@@ -850,7 +883,7 @@
         if (newName && newName.trim()) {
           s.name = newName.trim();
           renderTabs();
-          showToast(`Renamed tab to "${s.name}"`, "sys");
+          showToast(`Renamed tab to "${escapeHtml(s.name)}"`, "sys");
         }
       };
 
@@ -864,7 +897,7 @@
   function switchTabByIndex(idx) {
     if (idx >= 0 && idx < sessions.length) {
       switchTab(sessions[idx].id);
-      showToast(`Switched to Tab ${idx + 1}: <b>${sessions[idx].name}</b>`, "sys", 1800);
+      showToast(`Switched to Tab ${idx + 1}: <b>${escapeHtml(sessions[idx].name)}</b>`, "sys", 1800);
     }
   }
 
@@ -923,9 +956,22 @@
       const s = getActiveSession();
       const currentPath = s ? s.currentPath : '/';
       if (!path) return currentPath;
-      if (path.startsWith('/')) return path;
+      let norm = path.replace(/\\/g, '/').trim();
+      if (/^[a-zA-Z]:/.test(norm)) {
+          norm = norm.substring(2);
+      }
+      if (!norm) return '/';
+      if (norm.startsWith('/')) {
+          let parts = norm.split('/').filter(Boolean);
+          let res = [];
+          for (let p of parts) {
+              if (p === '..') res.pop();
+              else if (p !== '.') res.push(p);
+          }
+          return '/' + res.join('/');
+      }
       let parts = currentPath.split('/').filter(Boolean);
-      let newParts = path.split('/').filter(Boolean);
+      let newParts = norm.split('/').filter(Boolean);
       for (let p of newParts) {
           if (p === '..') parts.pop();
           else if (p !== '.') parts.push(p);
@@ -981,7 +1027,7 @@
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
     print(`Session log exported successfully.`, "log-system");
     showToast("💾 Session log exported successfully", "sys");
   }
@@ -1193,7 +1239,7 @@
               print("Usage: operator --help");
           }
       } else if (cmd === 'dir' || cmd === 'ls') {
-          let pathArg = args.slice(1).find(a => !a.startsWith('-') && !a.startsWith('/'));
+          let pathArg = args.slice(1).find(a => !isOptionFlag(a));
           let targetPath = pathArg ? resolvePath(pathArg) : s.currentPath;
           let node = vfs.getNode(targetPath);
           if (node && node.type === 'dir') {
@@ -1210,7 +1256,7 @@
               print("ERROR: Directory not found.");
           }
       } else if (cmd === 'cd') {
-          let pathArg = args.slice(1).find(a => !a.startsWith('-') && !a.startsWith('/'));
+          let pathArg = args.slice(1).find(a => !isOptionFlag(a));
           if (!pathArg) {
               print((s.currentPath === '/' ? 'C:\\' : 'C:' + s.currentPath.replace(/\//g, '\\')));
           } else {
@@ -1229,7 +1275,7 @@
               }
           }
       } else if (cmd === 'type' || cmd === 'cat') {
-          let fileArg = args.slice(1).find(a => !a.startsWith('-') && !a.startsWith('/'));
+          let fileArg = args.slice(1).find(a => !isOptionFlag(a));
           if (!fileArg) {
               print("Usage: type <filename>");
           } else {
@@ -1245,7 +1291,7 @@
           let textIndex = trimmed.indexOf(' ');
           print(textIndex !== -1 ? trimmed.substring(textIndex + 1) : '');
       } else if (cmd === 'mkdir') {
-          let dirArg = args.slice(1).find(a => !a.startsWith('-') && !a.startsWith('/'));
+          let dirArg = args.slice(1).find(a => !isOptionFlag(a));
           if (!dirArg) {
               print("Usage: mkdir <directory_name>");
           } else {
@@ -1348,6 +1394,7 @@
           exitReverseSearch(true);
           if (match) {
             s.history.push(match);
+            if (s.history.length > 500) s.history.shift();
             s.historyPos = s.history.length;
             execute(match);
             input.value = '';
@@ -1416,6 +1463,7 @@
           if (val.trim()) {
               if (s.history.length === 0 || s.history[s.history.length - 1] !== val) {
                   s.history.push(val);
+                  if (s.history.length > 500) s.history.shift();
               }
               s.historyPos = s.history.length;
           }
@@ -1726,6 +1774,16 @@
   // Initialize first session tab and startup toast
   createNewTab("Tab 1");
   showToast("⚡ Welcome to KTerm! Press F1 or 'h' for Help | Ctrl+T: New Tab | Ctrl+1..8: Switch Tabs", "sys", 5000);
+
+  // Teardown cleanup to avoid memory/timer leaks
+  window.addEventListener('beforeunload', () => {
+    if (toastContainer) {
+      toastContainer.querySelectorAll('.toast').forEach(t => {
+        if (t._timer) clearTimeout(t._timer);
+      });
+      toastContainer.innerHTML = '';
+    }
+  });
 </script>
 </body>
 </html>

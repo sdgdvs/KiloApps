@@ -65,6 +65,27 @@ static char* my_strstr(const char* haystack, const char* needle) {
     return NULL;
 }
 
+static char* my_strstri(const char* haystack, const char* needle) {
+    if (!haystack || !needle) return NULL;
+    if (!*needle) return (char*)haystack;
+    while (*haystack) {
+        const char* h = haystack;
+        const char* n = needle;
+        while (*h && *n) {
+            char c1 = *h;
+            char c2 = *n;
+            if (c1 >= 'A' && c1 <= 'Z') c1 += 32;
+            if (c2 >= 'A' && c2 <= 'Z') c2 += 32;
+            if (c1 != c2) break;
+            h++;
+            n++;
+        }
+        if (!*n) return (char*)haystack;
+        haystack++;
+    }
+    return NULL;
+}
+
 static char* my_strcat(char* dest, const char* src) {
     if (!dest || !src) return dest;
     char* p = dest + lstrlenA(dest);
@@ -362,7 +383,10 @@ void InitTabSession(TabSession* tab, const char* title) {
 }
 
 void AddNewTab(const char* title) {
-    if (g_tabCount >= MAX_TABS - 1) return;
+    if (g_tabCount >= MAX_TABS) {
+        SetStatusFeedback("Maximum tab limit reached (8 tabs)");
+        return;
+    }
     
     char nameBuf[64];
     if (!title || !*title) {
@@ -455,18 +479,28 @@ void ExpandEnvVars(const char* inputCmd, char* outBuf, size_t outSize) {
         wsprintfA(target2, "$%s", tab->envVars[i].name);
 
         char result[512];
-        ZeroMemory(result, sizeof(result));
+        result[0] = '\0';
         char* pos = temp;
         char* found = NULL;
         while ((found = my_strstr(pos, target1)) != NULL || (found = my_strstr(pos, target2)) != NULL) {
             size_t prefixLen = found - pos;
             size_t matchLen = (found[0] == '%') ? lstrlenA(target1) : lstrlenA(target2);
-            
-            my_strncat(result, pos, prefixLen);
-            my_strcat(result, tab->envVars[i].value);
+            size_t curLen = lstrlenA(result);
+            if (curLen + prefixLen < sizeof(result) - 1) {
+                my_strncat(result, pos, prefixLen);
+            }
+            curLen = lstrlenA(result);
+            size_t valLen = lstrlenA(tab->envVars[i].value);
+            if (curLen + valLen < sizeof(result) - 1) {
+                my_strcat(result, tab->envVars[i].value);
+            }
             pos = found + matchLen;
         }
-        my_strcat(result, pos);
+        size_t curLen = lstrlenA(result);
+        size_t remLen = lstrlenA(pos);
+        if (curLen + remLen < sizeof(result) - 1) {
+            my_strcat(result, pos);
+        }
         lstrcpynA(temp, result, sizeof(temp));
     }
     lstrcpynA(outBuf, temp, (int)outSize);
@@ -855,6 +889,7 @@ void ProcessCommand(const char* rawCmd) {
         } else {
             AppendOutput("Usage: type <filename>");
         }
+    } else if (MatchCommand(cmd, "macro")) {
         const char* args = cmd + 5;
         while (*args == ' ' || *args == '\t') args++;
         if (StringStartsWithIC(args, "record ")) {
@@ -1041,7 +1076,7 @@ void PerformReverseSearch(const char* query, BOOL cycleOlder) {
     g_searchMatchIndex = -1;
 
     for (int i = startIdx; i >= 0; i--) {
-        if (my_strstr(tab->history[i], query) != NULL) {
+        if (my_strstri(tab->history[i], query) != NULL) {
             lstrcpynA(g_searchMatch, tab->history[i], sizeof(g_searchMatch));
             g_searchMatchIndex = i;
             break;
@@ -1061,6 +1096,30 @@ void PerformReverseSearch(const char* query, BOOL cycleOlder) {
 
 LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     TabSession* tab = &g_tabs[g_activeTab];
+
+    if (g_isSearchMode) {
+        if (msg == WM_CHAR) {
+            if (wParam >= 32 && wParam <= 126) {
+                int qLen = lstrlenA(g_searchQuery);
+                if (qLen < (int)sizeof(g_searchQuery) - 2) {
+                    g_searchQuery[qLen] = (char)wParam;
+                    g_searchQuery[qLen + 1] = '\0';
+                    PerformReverseSearch(g_searchQuery, FALSE);
+                }
+                return 0;
+            } else if (wParam == VK_BACK) {
+                int qLen = lstrlenA(g_searchQuery);
+                if (qLen > 0) {
+                    g_searchQuery[qLen - 1] = '\0';
+                    PerformReverseSearch(g_searchQuery, FALSE);
+                }
+                return 0;
+            } else if (wParam == VK_RETURN || wParam == VK_ESCAPE) {
+                return 0;
+            }
+            return 0;
+        }
+    }
 
     if (msg == WM_KEYDOWN) {
         if (wParam == VK_F1) {
@@ -1104,6 +1163,8 @@ LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (g_isSearchMode) {
                 g_isSearchMode = FALSE;
                 SetWindowTextA(hIn, g_savedInput);
+                int len = lstrlenA(g_savedInput);
+                SendMessageA(hIn, EM_SETSEL, len, len);
                 return 0;
             }
             SetWindowTextA(hIn, "");
@@ -1142,14 +1203,16 @@ LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         if (g_isSearchMode) {
             if (wParam == VK_RETURN) {
                 g_isSearchMode = FALSE;
-                if (g_searchMatch[0]) {
-                    ProcessCommand(g_searchMatch);
+                char chosen[256];
+                lstrcpynA(chosen, g_searchMatch[0] ? g_searchMatch : g_savedInput, sizeof(chosen));
+                SetWindowTextA(hIn, "");
+                if (chosen[0]) {
+                    ProcessCommand(chosen);
                     if (tab->history_count < MAX_HISTORY) {
-                        lstrcpynA(tab->history[tab->history_count++], g_searchMatch, sizeof(tab->history[0]));
+                        lstrcpynA(tab->history[tab->history_count++], chosen, sizeof(tab->history[0]));
                     }
                     tab->history_pos = tab->history_count;
                 }
-                SetWindowTextA(hIn, "");
                 return 0;
             }
         }
@@ -1269,15 +1332,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hTab = CreateWindowExA(0, WC_TABCONTROLA, "", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,
                                   0, 0, 0, 0, hwnd, (HMENU)IDC_TAB, GetModuleHandle(NULL), NULL);
 
-            hBtnNewTab = CreateWindowExA(0, "BUTTON", "+ Tab", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+            hBtnNewTab = CreateWindowExA(0, "BUTTON", "+ Tab", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
                                         0, 0, 0, 0, hwnd, (HMENU)IDC_BTN_NEWTAB, GetModuleHandle(NULL), NULL);
-            hBtnCloseTab = CreateWindowExA(0, "BUTTON", "Close", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+            hBtnCloseTab = CreateWindowExA(0, "BUTTON", "Close", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
                                           0, 0, 0, 0, hwnd, (HMENU)IDC_BTN_CLOSETAB, GetModuleHandle(NULL), NULL);
-            hBtnClear = CreateWindowExA(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+            hBtnClear = CreateWindowExA(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
                                        0, 0, 0, 0, hwnd, (HMENU)IDC_BTN_CLEAR, GetModuleHandle(NULL), NULL);
-            hBtnExport = CreateWindowExA(0, "BUTTON", "Export", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+            hBtnExport = CreateWindowExA(0, "BUTTON", "Export", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
                                         0, 0, 0, 0, hwnd, (HMENU)IDC_BTN_EXPORT, GetModuleHandle(NULL), NULL);
-            hBtnHelp = CreateWindowExA(0, "BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+            hBtnHelp = CreateWindowExA(0, "BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
                                       0, 0, 0, 0, hwnd, (HMENU)IDC_BTN_HELP, GetModuleHandle(NULL), NULL);
 
             hOut = CreateWindowExA(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
@@ -1417,6 +1480,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkColor(hdc, RGB(9, 11, 16));
             return (LRESULT)g_hBgBrush;
         }
+        case WM_ERASEBKGND:
+            return 1;
         case WM_DESTROY:
             KillTimer(hwnd, 1);
             for (int i = 0; i < g_tabCount; i++) {
