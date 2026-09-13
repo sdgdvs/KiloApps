@@ -20,8 +20,26 @@ HWND hStatusText = NULL;
 HFONT g_hFont = NULL;
 WNDPROC g_OldEditProc = NULL;
 WNDPROC g_OldListProc = NULL;
+static WNDPROC g_OldInspectEditProc = NULL;
+
+static char g_toastText[128] = "Ready. Press [F1] or [H] for Help | [Del] End Task | [I] Inspect | [P] Priority | [R] Refresh";
+static int g_toastTimer = 2; // ~5 seconds (2 x 2.5s timer ticks)
 
 void ShowHelpDialog(HWND hwnd);
+
+void ShowNativeToast(const char* txt) {
+    if (!txt) return;
+    int i = 0;
+    while (txt[i] && i < (int)sizeof(g_toastText) - 1) {
+        g_toastText[i] = txt[i];
+        i++;
+    }
+    g_toastText[i] = 0;
+    g_toastTimer = 2;
+    if (hStatusText) {
+        SetWindowTextA(hStatusText, g_toastText);
+    }
+}
 
 void my_utoa(DWORD num, char* str) {
     int i = 0;
@@ -160,11 +178,11 @@ void LayoutControls(HWND hwnd) {
     
     int btnY = height - 58;
     int curX = 10;
-    MoveWindow(hBtnRefresh, curX, btnY, 85, 24, TRUE); curX += 90;
+    MoveWindow(hBtnRefresh, curX, btnY, 95, 24, TRUE); curX += 100;
     MoveWindow(hBtnPriority, curX, btnY, 85, 24, TRUE); curX += 90;
     MoveWindow(hBtnInspect, curX, btnY, 80, 24, TRUE); curX += 85;
-    MoveWindow(hBtnExportCSV, curX, btnY, 45, 24, TRUE); curX += 50;
-    MoveWindow(hBtnExportJSON, curX, btnY, 45, 24, TRUE); curX += 50;
+    MoveWindow(hBtnExportCSV, curX, btnY, 55, 24, TRUE); curX += 60;
+    MoveWindow(hBtnExportJSON, curX, btnY, 55, 24, TRUE); curX += 60;
     MoveWindow(hBtnHelp, curX, btnY, 75, 24, TRUE); curX += 80;
 
     int endTaskX = width - 115;
@@ -249,32 +267,44 @@ void RefreshList() {
     RedrawWindow(hListBox, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
 
     if (hStatusText) {
-        MEMORYSTATUSEX memStatus;
-        memStatus.dwLength = sizeof(memStatus);
-        GlobalMemoryStatusEx(&memStatus);
+        if (g_toastTimer > 0) {
+            SetWindowTextA(hStatusText, g_toastText);
+        } else {
+            MEMORYSTATUSEX memStatus;
+            memStatus.dwLength = sizeof(memStatus);
+            GlobalMemoryStatusEx(&memStatus);
 
-        char statusBuf[256] = {0};
-        char shownStr[16] = {0};
-        char totalStr[16] = {0};
-        char threadsStr[16] = {0};
-        char memLoadStr[16] = {0};
+            char statusBuf[256] = {0};
+            char shownStr[16] = {0};
+            char totalStr[16] = {0};
+            char threadsStr[16] = {0};
+            char memLoadStr[16] = {0};
 
-        my_utoa((DWORD)shownTasks, shownStr);
-        my_utoa((DWORD)totalTasks, totalStr);
-        my_utoa(totalThreads, threadsStr);
-        my_utoa(memStatus.dwMemoryLoad, memLoadStr);
+            my_utoa((DWORD)shownTasks, shownStr);
+            my_utoa((DWORD)totalTasks, totalStr);
+            my_utoa(totalThreads, threadsStr);
+            my_utoa(memStatus.dwMemoryLoad, memLoadStr);
 
-        my_strcpy(statusBuf, "Procs: ");
-        my_strcat(statusBuf, shownStr);
-        my_strcat(statusBuf, "/");
-        my_strcat(statusBuf, totalStr);
-        my_strcat(statusBuf, " | Threads: ");
-        my_strcat(statusBuf, threadsStr);
-        my_strcat(statusBuf, " | RAM Load: ");
-        my_strcat(statusBuf, memLoadStr);
-        my_strcat(statusBuf, "%");
-        SetWindowTextA(hStatusText, statusBuf);
+            my_strcpy(statusBuf, "Procs: ");
+            my_strcat(statusBuf, shownStr);
+            my_strcat(statusBuf, "/");
+            my_strcat(statusBuf, totalStr);
+            my_strcat(statusBuf, " | Threads: ");
+            my_strcat(statusBuf, threadsStr);
+            my_strcat(statusBuf, " | RAM Load: ");
+            my_strcat(statusBuf, memLoadStr);
+            my_strcat(statusBuf, "%");
+            SetWindowTextA(hStatusText, statusBuf);
+        }
     }
+}
+
+LRESULT CALLBACK InspectEditProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_KEYDOWN && wParam == VK_ESCAPE) {
+        DestroyWindow(GetParent(hwnd));
+        return 0;
+    }
+    return CallWindowProcA(g_OldInspectEditProc, hwnd, msg, wParam, lParam);
 }
 
 LRESULT CALLBACK InspectWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -293,6 +323,8 @@ LRESULT CALLBACK InspectWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 SendMessageA(hEdit, WM_SETFONT, (WPARAM)hFont, FALSE);
                 SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)hFont);
             }
+
+            g_OldInspectEditProc = (WNDPROC)SetWindowLongPtrA(hEdit, GWLP_WNDPROC, (LONG_PTR)InspectEditProc);
 
             CREATESTRUCTA* cs = (CREATESTRUCTA*)lParam;
             if (cs && cs->lpCreateParams) {
@@ -616,13 +648,13 @@ void PerformSetPriority(HWND hwnd) {
 
     if (SetPriorityClass(hProc, newPri)) {
         char msgBuf[128] = {0};
-        my_strcpy(msgBuf, "Process priority class updated to ");
+        my_strcpy(msgBuf, "PID priority updated to ");
         my_strcat(msgBuf, priName);
         my_strcat(msgBuf, ".");
-        MessageBoxA(hwnd, msgBuf, "KTask Success", MB_OK | MB_ICONINFORMATION);
+        ShowNativeToast(msgBuf);
         RefreshList();
     } else {
-        MessageBoxA(hwnd, "Failed to update priority class.", "KTask Error", MB_OK | MB_ICONERROR);
+        ShowNativeToast("Failed to update priority class.");
     }
     CloseHandle(hProc);
 }
@@ -630,14 +662,14 @@ void PerformSetPriority(HWND hwnd) {
 void PerformExportCSV(HWND hwnd) {
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hSnapshot == INVALID_HANDLE_VALUE) {
-        MessageBoxA(hwnd, "Failed to create process snapshot.", "Export Failed", MB_OK | MB_ICONERROR);
+        ShowNativeToast("Failed to create process snapshot.");
         return;
     }
 
     HANDLE hFile = CreateFileA("ktask_export.csv", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
         CloseHandle(hSnapshot);
-        MessageBoxA(hwnd, "Failed to create ktask_export.csv file.", "Export Failed", MB_OK | MB_ICONERROR);
+        ShowNativeToast("Failed to create ktask_export.csv file.");
         return;
     }
 
@@ -676,20 +708,20 @@ void PerformExportCSV(HWND hwnd) {
     CloseHandle(hFile);
     CloseHandle(hSnapshot);
 
-    MessageBoxA(hwnd, "Process list snapshot exported to 'ktask_export.csv'!", "Export Complete", MB_OK | MB_ICONINFORMATION);
+    ShowNativeToast("Snapshot exported to 'ktask_export.csv' successfully!");
 }
 
 void PerformExportJSON(HWND hwnd) {
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hSnapshot == INVALID_HANDLE_VALUE) {
-        MessageBoxA(hwnd, "Failed to create process snapshot.", "Export Failed", MB_OK | MB_ICONERROR);
+        ShowNativeToast("Failed to create process snapshot.");
         return;
     }
 
     HANDLE hFile = CreateFileA("ktask_export.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
         CloseHandle(hSnapshot);
-        MessageBoxA(hwnd, "Failed to create ktask_export.json file.", "Export Failed", MB_OK | MB_ICONERROR);
+        ShowNativeToast("Failed to create ktask_export.json file.");
         return;
     }
 
@@ -740,7 +772,7 @@ void PerformExportJSON(HWND hwnd) {
     CloseHandle(hFile);
     CloseHandle(hSnapshot);
 
-    MessageBoxA(hwnd, "Process list snapshot exported to 'ktask_export.json'!", "Export Complete", MB_OK | MB_ICONINFORMATION);
+    ShowNativeToast("Snapshot exported to 'ktask_export.json' successfully!");
 }
 
 void ShowHelpDialog(HWND hwnd) {
@@ -751,15 +783,19 @@ void ShowHelpDialog(HWND hwnd) {
         "  F5 or R   : Refresh active process list\r\n"
         "  Del       : Terminate selected process\r\n"
         "  Enter / I : Deep Inspect selected process\r\n"
+        "  P         : Cycle priority (Normal -> High -> Below Normal)\r\n"
+        "  C         : Export process list to CSV (ktask_export.csv)\r\n"
+        "  J         : Export process list to JSON (ktask_export.json)\r\n"
         "  Esc       : Clear search filter / dismiss\r\n\r\n"
         "Toolbar Buttons:\r\n"
-        "  - Refresh [F5]: Live snapshot of running processes\r\n"
-        "  - Set Priority: Cycle priority (Normal -> High -> Below Normal)\r\n"
-        "  - Inspect [I] : View Threads, Loaded DLLs, and Memory Map\r\n"
-        "  - CSV / JSON  : Export process snapshot data\r\n"
-        "  - Help [F1]   : Show shortcuts & documentation\r\n"
+        "  - Refresh [F5] : Live snapshot of running processes\r\n"
+        "  - Priority [P] : Cycle process priority class\r\n"
+        "  - Inspect [I]  : View Threads, Loaded DLLs, and Memory Map\r\n"
+        "  - CSV [C]      : Export process snapshot to CSV\r\n"
+        "  - JSON [J]     : Export process snapshot to JSON\r\n"
+        "  - Help [F1]    : Show shortcuts & documentation\r\n"
         "  - End Task [Del]: Safely terminate unresponsive process\r\n\r\n"
-        "Double-click any process to open Deep Inspector.",
+        "Double-click any process or press Enter to open Deep Inspector.",
         "KTask Help & Shortcuts", MB_OK | MB_ICONINFORMATION);
 }
 
@@ -833,13 +869,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SendMessageA(hStatusText, WM_SETFONT, (WPARAM)g_hFont, FALSE);
             }
 
-            hBtnRefresh = CreateWindowA("BUTTON", "Refresh [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 240, 85, 25, hwnd, (HMENU)1, NULL, NULL);
-            hBtnPriority = CreateWindowA("BUTTON", "Set Priority", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 100, 240, 85, 25, hwnd, (HMENU)6, NULL, NULL);
-            hBtnInspect = CreateWindowA("BUTTON", "Inspect [I]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 190, 240, 80, 25, hwnd, (HMENU)9, NULL, NULL);
-            hBtnExportCSV = CreateWindowA("BUTTON", "CSV", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 275, 240, 45, 25, hwnd, (HMENU)7, NULL, NULL);
-            hBtnExportJSON = CreateWindowA("BUTTON", "JSON", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 325, 240, 45, 25, hwnd, (HMENU)8, NULL, NULL);
-            hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 375, 240, 75, 25, hwnd, (HMENU)10, NULL, NULL);
-            hBtnEndTask = CreateWindowA("BUTTON", "End Task [Del]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 455, 240, 105, 25, hwnd, (HMENU)2, NULL, NULL);
+            hBtnRefresh = CreateWindowA("BUTTON", "Refresh [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 240, 95, 25, hwnd, (HMENU)1, NULL, NULL);
+            hBtnPriority = CreateWindowA("BUTTON", "Priority [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 110, 240, 85, 25, hwnd, (HMENU)6, NULL, NULL);
+            hBtnInspect = CreateWindowA("BUTTON", "Inspect [I]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 200, 240, 80, 25, hwnd, (HMENU)9, NULL, NULL);
+            hBtnExportCSV = CreateWindowA("BUTTON", "CSV [C]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 285, 240, 55, 25, hwnd, (HMENU)7, NULL, NULL);
+            hBtnExportJSON = CreateWindowA("BUTTON", "JSON [J]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 345, 240, 55, 25, hwnd, (HMENU)8, NULL, NULL);
+            hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 405, 240, 75, 25, hwnd, (HMENU)10, NULL, NULL);
+            hBtnEndTask = CreateWindowA("BUTTON", "End Task [Del]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 485, 240, 105, 25, hwnd, (HMENU)2, NULL, NULL);
             
             if (g_hFont) {
                 SendMessageA(hBtnRefresh, WM_SETFONT, (WPARAM)g_hFont, FALSE);
@@ -863,8 +899,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
 
         case WM_TIMER:
-            if (wParam == 1 && GetFocus() != hSearchBox) {
-                RefreshList();
+            if (wParam == 1) {
+                if (g_toastTimer > 0) {
+                    g_toastTimer--;
+                    if (g_toastTimer == 0) {
+                        RefreshList();
+                    }
+                } else if (GetFocus() != hSearchBox) {
+                    RefreshList();
+                }
             }
             break;
 
@@ -875,6 +918,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RefreshList();
             } else if (id == 1) {
                 RefreshList();
+                ShowNativeToast("Process list refreshed.");
             } else if (id == 2) {
                 PerformEndTask(hwnd);
             } else if (id == 6) {
@@ -896,12 +940,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_KEYDOWN:
             if (wParam == VK_F5 || wParam == 'R' || wParam == 'r') {
                 RefreshList();
+                ShowNativeToast("Process list refreshed.");
                 return 0;
             } else if (wParam == VK_DELETE) {
                 PerformEndTask(hwnd);
                 return 0;
             } else if (wParam == 'I' || wParam == 'i' || wParam == VK_RETURN) {
                 PerformInspectProcess(hwnd);
+                return 0;
+            } else if (wParam == 'P' || wParam == 'p') {
+                PerformSetPriority(hwnd);
+                return 0;
+            } else if (wParam == 'C' || wParam == 'c') {
+                PerformExportCSV(hwnd);
+                return 0;
+            } else if (wParam == 'J' || wParam == 'j') {
+                PerformExportJSON(hwnd);
                 return 0;
             } else if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
                 ShowHelpDialog(hwnd);
@@ -935,13 +989,31 @@ void __stdcall MainEntry() {
     RECT rc = {0, 0, 800, 600};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
     
-    HWND hwnd = CreateWindowExA(0, "KTaskClass", "KTask Process Monitor (F1/H: Help | F5/R: Refresh | Del: End Task | I/Enter: Inspect)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KTaskClass", "KTask Process Monitor (F1: Help | F5: Refresh | Del: End Task | I: Inspect | P: Priority | C: CSV | J: JSON)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN) {
+            HWND focusWnd = GetFocus();
+            if (focusWnd == hSearchBox) {
+                if (msg.wParam == VK_F1) { ShowHelpDialog(hwnd); continue; }
+                if (msg.wParam == VK_F5) { RefreshList(); ShowNativeToast("Process list refreshed."); continue; }
+                if (msg.wParam == VK_ESCAPE) { SetWindowTextA(hSearchBox, ""); RefreshList(); continue; }
+                if (msg.wParam == VK_RETURN) { RefreshList(); if (hListBox) SetFocus(hListBox); continue; }
+            } else {
+                if (msg.wParam == VK_F1 || msg.wParam == 'H' || msg.wParam == 'h') { ShowHelpDialog(hwnd); continue; }
+                if (msg.wParam == VK_F5 || msg.wParam == 'R' || msg.wParam == 'r') { RefreshList(); ShowNativeToast("Process list refreshed."); continue; }
+                if (msg.wParam == VK_DELETE) { PerformEndTask(hwnd); continue; }
+                if (msg.wParam == 'I' || msg.wParam == 'i' || msg.wParam == VK_RETURN) { PerformInspectProcess(hwnd); continue; }
+                if (msg.wParam == 'P' || msg.wParam == 'p') { PerformSetPriority(hwnd); continue; }
+                if (msg.wParam == 'C' || msg.wParam == 'c') { PerformExportCSV(hwnd); continue; }
+                if (msg.wParam == 'J' || msg.wParam == 'j') { PerformExportJSON(hwnd); continue; }
+                if (msg.wParam == VK_ESCAPE) { SetWindowTextA(hSearchBox, ""); RefreshList(); continue; }
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }

@@ -577,17 +577,70 @@
     bottom: 20px;
     right: 20px;
     background: #1e293b;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(56, 189, 248, 0.4);
     color: #fff;
     padding: 10px 16px;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 13px;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
     opacity: 0;
-    transform: translateY(10px);
-    transition: all 0.3s ease;
+    transform: translateY(12px);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: none;
     z-index: 1100;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .toast:hover {
+    border-color: var(--primary);
+  }
+
+  .chip-btn {
+    padding: 4px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .chip-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--text-main);
+  }
+
+  .chip-btn.active {
+    background: var(--primary-muted);
+    color: var(--primary);
+    border-color: rgba(56, 189, 248, 0.4);
+  }
+
+  .chip-spawn {
+    margin-left: auto;
+    background: rgba(52, 211, 153, 0.12);
+    color: var(--success);
+    border-color: rgba(52, 211, 153, 0.3);
+  }
+
+  .chip-spawn:hover {
+    background: var(--success);
+    color: #0f172a;
   }
 
   /* Deep Process Inspector Modal */
@@ -769,15 +822,15 @@
       <div class="nav-tabs" role="tablist">
         <button class="tab-btn active" id="tab-tasks-btn" onclick="switchTab('tasks')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>
-          Processes
+          [1] Processes
         </button>
         <button class="tab-btn" id="tab-charts-btn" onclick="switchTab('charts')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-          Performance
+          [2] Performance
         </button>
         <button class="tab-btn" id="tab-system-btn" onclick="switchTab('system')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect></svg>
-          Summary
+          [3] Summary
         </button>
       </div>
     </div>
@@ -785,7 +838,7 @@
     <div class="header-actions">
       <div class="input-group">
         <label for="filterSelect" class="sr-only">Filter by category</label>
-        <select id="filterSelect" class="select-ctrl" aria-label="Filter tasks by state" onchange="renderTasks()">
+        <select id="filterSelect" class="select-ctrl" aria-label="Filter tasks by state" onchange="syncFilterChips(); renderTasks();">
           <option value="all">All Categories</option>
           <option value="high-cpu">High CPU (&gt;2%)</option>
           <option value="high-mem">High Memory (&gt;25MB)</option>
@@ -801,22 +854,25 @@
         </select>
         
         <label for="searchInput" class="sr-only">Filter tasks</label>
-        <input type="text" id="searchInput" class="input-ctrl" placeholder="Filter name or PID..." aria-label="Filter tasks" oninput="renderTasks()">
+        <div style="position: relative; display: inline-flex; align-items: center;">
+          <input type="text" id="searchInput" class="input-ctrl" placeholder="Filter name or PID... (Esc: clear)" aria-label="Filter tasks" oninput="onSearchInput()">
+          <button id="searchClearBtn" onclick="clearSearch()" style="position: absolute; right: 6px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 11px; display: none; padding: 2px 4px;" title="Clear filter (Esc)">✕</button>
+        </div>
       </div>
 
-      <button class="btn-secondary" onclick="exportCSV()" title="Export Process List to CSV">
+      <button class="btn-secondary" onclick="exportCSV()" title="Export Process List to CSV (E or Ctrl+E)">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        CSV
+        CSV [E]
       </button>
 
-      <button class="btn-secondary" onclick="exportJSON()" title="Export Process List to JSON">
+      <button class="btn-secondary" onclick="exportJSON()" title="Export Process List to JSON (J or Ctrl+J)">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        JSON
+        JSON [J]
       </button>
 
       <button class="btn-secondary" id="btnHelp" onclick="openHelpModal()" title="Help & Shortcuts (F1 or H)" aria-label="Open Help & Shortcuts Dialog">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-        Help (F1)
+        Help [F1]
       </button>
       
       <label class="toggle-label">
@@ -828,7 +884,7 @@
           <polyline points="23 4 23 10 17 10"></polyline>
           <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
         </svg>
-        Refresh
+        Refresh [R]
       </button>
     </div>
   </div>
@@ -874,6 +930,16 @@
   <div class="tab-content">
     <!-- Tab Pane 1: Process List -->
     <div class="tab-pane active" id="pane-tasks">
+      <!-- Quick Filter Chips -->
+      <div class="filter-chips-bar" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 4px;">
+        <span style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Quick Filter:</span>
+        <button class="chip-btn active" id="chip-all" onclick="applyQuickFilter('all')">All Tasks</button>
+        <button class="chip-btn" id="chip-cpu" onclick="applyQuickFilter('high-cpu')">⚡ High CPU (&gt;2%)</button>
+        <button class="chip-btn" id="chip-mem" onclick="applyQuickFilter('high-mem')">💾 High RAM (&gt;25MB)</button>
+        <button class="chip-btn" id="chip-pri" onclick="applyQuickFilter('high-pri')">⭐ High Priority</button>
+        <button class="chip-btn chip-spawn" onclick="spawnDemoTask()" title="Add a synthetic background task for testing">＋ Spawn Demo Task</button>
+      </div>
+
       <div class="task-list" id="tasklist" role="region" aria-label="Task List" aria-live="polite">
         <!-- Tasks injected here -->
       </div>
@@ -1036,10 +1102,13 @@
 
   <!-- Help & Shortcuts Modal -->
   <div class="modal-overlay" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle" onclick="if(event.target===this)closeHelpModal()">
-    <div class="modal-box" style="max-width: 540px;">
-      <div class="modal-header" style="color: var(--primary);">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-        <h3 id="helpModalTitle">KTask Monitor Help & Shortcuts</h3>
+    <div class="modal-box" style="max-width: 560px;">
+      <div class="modal-header" style="color: var(--primary); justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          <h3 id="helpModalTitle">KTask Monitor Help & Shortcuts</h3>
+        </div>
+        <button class="btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="closeHelpModal()" title="Close (Esc)">✕</button>
       </div>
       <div class="modal-body">
         <p style="margin-top:0; color:var(--text-main);">
@@ -1052,15 +1121,19 @@
           <tbody>
             <tr><td><span class="help-kbd">F1</span> or <span class="help-kbd">H</span></td><td>Toggle this Help Dialog</td><td>Global</td></tr>
             <tr><td><span class="help-kbd">F5</span> or <span class="help-kbd">R</span></td><td>Refresh Process List</td><td>Global</td></tr>
+            <tr><td><span class="help-kbd">↑</span> / <span class="help-kbd">↓</span></td><td>Navigate & Select Process Card</td><td>Processes Tab</td></tr>
+            <tr><td><span class="help-kbd">Enter</span> / <span class="help-kbd">I</span></td><td>Deep Inspect Selected Process</td><td>Processes Tab</td></tr>
+            <tr><td><span class="help-kbd">Dbl-Click</span></td><td>Deep Inspect Process Card</td><td>Processes Tab</td></tr>
             <tr><td><span class="help-kbd">Delete</span></td><td>Terminate Selected Process</td><td>Processes Tab</td></tr>
-            <tr><td><span class="help-kbd">I</span></td><td>Deep Inspect Selected Process</td><td>Processes Tab</td></tr>
+            <tr><td><span class="help-kbd">P</span></td><td>Cycle Priority (Normal / High / Low)</td><td>Processes Tab</td></tr>
+            <tr><td><span class="help-kbd">E</span> / <span class="help-kbd">Ctrl+E</span></td><td>Export Process List to CSV</td><td>Global</td></tr>
+            <tr><td><span class="help-kbd">J</span> / <span class="help-kbd">Ctrl+J</span></td><td>Export Process List to JSON</td><td>Global</td></tr>
             <tr><td><span class="help-kbd">1</span> / <span class="help-kbd">2</span> / <span class="help-kbd">3</span></td><td>Switch Tabs (Processes / Charts / Summary)</td><td>Global</td></tr>
             <tr><td><span class="help-kbd">Esc</span></td><td>Close Active Modal / Clear Filter</td><td>Global</td></tr>
-            <tr><td><span class="help-kbd">Enter</span></td><td>Confirm Action in Dialog</td><td>Modals</td></tr>
           </tbody>
         </table>
         <div style="margin-top:12px; font-size:11px; color:var(--text-muted); line-height:1.5;">
-          💡 <strong>Tip:</strong> Click any process card to select it, or click <strong>Inspect</strong> to view threads, loaded DLLs, virtual memory regions, and hex headers in real time.
+          💡 <strong>Tip:</strong> Click or use Arrow keys to select any process. Double-click or press <strong>I</strong> / <strong>Enter</strong> to inspect threads, DLLs, and memory maps in real time. Use <strong>P</strong> to adjust scheduling priority.
         </div>
       </div>
       <div class="modal-footer">
@@ -1211,10 +1284,88 @@
     function showToast(message) {
       const toast = document.getElementById('toast');
       if (!toast) return;
-      toast.textContent = message;
+      toast.innerHTML = `<span style="flex:1;">${message}</span><button onclick="dismissToast(event)" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:14px; padding:0 2px; line-height:1;" title="Dismiss [✕]">✕</button>`;
+      toast.onclick = () => dismissToast();
       toast.classList.add('show');
       if (toastTimer) clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3500);
+    }
+
+    function dismissToast(e) {
+      if (e) e.stopPropagation();
+      const toast = document.getElementById('toast');
+      if (toast) toast.classList.remove('show');
+      if (toastTimer) clearTimeout(toastTimer);
+    }
+
+    function applyQuickFilter(cat) {
+      const sel = document.getElementById('filterSelect');
+      if (sel) {
+        sel.value = cat;
+      }
+      syncFilterChips();
+      renderTasks();
+      const label = cat === 'all' ? 'All Tasks' : (cat === 'high-cpu' ? 'High CPU' : (cat === 'high-mem' ? 'High Memory' : 'High Priority'));
+      showToast(`Filter applied: ${label}`);
+    }
+
+    function syncFilterChips() {
+      const current = document.getElementById('filterSelect')?.value || 'all';
+      ['all', 'cpu', 'mem', 'pri'].forEach(key => {
+        const chip = document.getElementById(`chip-${key}`);
+        if (chip) chip.classList.remove('active');
+      });
+      if (current === 'all') document.getElementById('chip-all')?.classList.add('active');
+      else if (current === 'high-cpu') document.getElementById('chip-cpu')?.classList.add('active');
+      else if (current === 'high-mem') document.getElementById('chip-mem')?.classList.add('active');
+      else if (current === 'high-pri') document.getElementById('chip-pri')?.classList.add('active');
+    }
+
+    let demoTaskCounter = 1;
+    function spawnDemoTask() {
+      const demoNames = [
+        'KMedia Player Daemon',
+        'KChat Background Sync',
+        'KNet Packet Inspector',
+        'KCrypto Key Agent',
+        'KRender 3D Worker',
+        'KAudio DSP Synthesizer'
+      ];
+      const name = demoNames[demoTaskCounter % demoNames.length];
+      const newPid = String(4000 + (demoTaskCounter * 123) % 4900);
+      demoTaskCounter++;
+      const newTask = { id: newPid, title: name };
+      allTasks.unshift(newTask);
+      taskStats[newPid] = {
+        mem: (Math.random() * 60 + 15).toFixed(1),
+        cpu: (Math.random() * 6.5 + 0.5).toFixed(1),
+        priority: demoTaskCounter % 3 === 0 ? 'High' : 'Normal'
+      };
+      renderTasks();
+      showToast(`Spawned demo process: ${name} (PID: ${newPid})`);
+    }
+
+    function onSearchInput() {
+      const search = document.getElementById('searchInput');
+      const clearBtn = document.getElementById('searchClearBtn');
+      if (clearBtn) {
+        clearBtn.style.display = (search && search.value) ? 'block' : 'none';
+      }
+      renderTasks();
+    }
+
+    function clearSearch() {
+      const search = document.getElementById('searchInput');
+      const clearBtn = document.getElementById('searchClearBtn');
+      if (search) {
+        search.value = '';
+        search.focus();
+      }
+      if (clearBtn) clearBtn.style.display = 'none';
+      renderTasks();
+      showToast('Search filter cleared.');
     }
 
     function promptKillTask(taskId, taskTitle) {
@@ -1444,6 +1595,9 @@
           card.classList.add('selected');
         }
 
+        card.dataset.taskId = taskId;
+        card.dataset.taskTitle = taskTitle;
+
         card.addEventListener('click', (e) => {
           if (e.target.closest('button') || e.target.closest('select')) return;
           selectedTaskId = taskId;
@@ -1451,8 +1605,34 @@
           card.classList.add('selected');
         });
 
+        card.addEventListener('dblclick', (e) => {
+          if (e.target.closest('button') || e.target.closest('select')) return;
+          openInspectModal(taskId, taskTitle);
+        });
+
         list.appendChild(card);
       });
+    }
+
+    function selectAdjacentTask(direction) {
+      const cards = Array.from(document.querySelectorAll('.task-card'));
+      if (cards.length === 0) return;
+      let currentIndex = cards.findIndex(c => c.classList.contains('selected'));
+      let newIndex = 0;
+      if (currentIndex === -1) {
+        newIndex = direction > 0 ? 0 : cards.length - 1;
+      } else {
+        newIndex = currentIndex + direction;
+        if (newIndex < 0) newIndex = 0;
+        if (newIndex >= cards.length) newIndex = cards.length - 1;
+      }
+      cards.forEach(c => c.classList.remove('selected'));
+      const targetCard = cards[newIndex];
+      if (targetCard) {
+        targetCard.classList.add('selected');
+        selectedTaskId = targetCard.dataset.taskId;
+        targetCard.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
     }
 
     function updateSummaryMetrics() {
@@ -1753,6 +1933,33 @@
       } else if (e.key === 'r' || e.key === 'R' || e.key === 'F5') {
         e.preventDefault();
         refresh();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        selectAdjacentTask(1);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        selectAdjacentTask(-1);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const target = allTasks.find(t => String(t.id) === String(selectedTaskId)) || allTasks[0];
+        if (target) {
+          openInspectModal(target.id, target.title);
+        }
+      } else if (e.key === 'p' || e.key === 'P') {
+        e.preventDefault();
+        const target = allTasks.find(t => String(t.id) === String(selectedTaskId)) || allTasks[0];
+        if (target) {
+          const curPri = taskStats[target.id]?.priority || 'Normal';
+          const nextPri = curPri === 'Normal' ? 'High' : (curPri === 'High' ? 'Low' : 'Normal');
+          changePriority(target.id, nextPri);
+          renderTasks();
+        }
+      } else if ((e.key === 'e' || e.key === 'E') && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        exportCSV();
+      } else if ((e.key === 'j' || e.key === 'J') && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        exportJSON();
       } else if (e.key === 'Delete') {
         e.preventDefault();
         const target = allTasks.find(t => String(t.id) === String(selectedTaskId)) || allTasks[0];
@@ -1775,6 +1982,21 @@
       }
     });
 
+    document.getElementById('searchInput')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        clearSearch();
+        document.getElementById('searchInput')?.blur();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('searchInput')?.blur();
+        const firstCard = document.querySelector('.task-card');
+        if (firstCard) {
+          firstCard.click();
+        }
+      }
+    });
+
     window.addEventListener('resize', () => {
       if (activeTab === 'charts') drawCharts();
     });
@@ -1794,7 +2016,7 @@
     } catch(e) {}
     setTimeout(refresh, 100);
     startAutoRefresh();
-    setTimeout(() => showToast('Ready. Press "H" or F1 for help & shortcuts'), 1500);
+    setTimeout(() => showToast('Ready. Press "H" or F1 for help & shortcuts'), 1200);
   </script>
 </body>
 </html>
