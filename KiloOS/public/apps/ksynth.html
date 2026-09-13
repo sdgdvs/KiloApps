@@ -133,6 +133,34 @@
     cursor: pointer;
   }
 
+  .quick-starter-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .quick-chip {
+    padding: 3px 8px;
+    font-size: 11px;
+    border-radius: 4px;
+    background: #1e2330;
+    border: 1px solid #2d3648;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .quick-chip:hover {
+    border-color: var(--accent-cyan);
+    color: #fff;
+    background: #2a3346;
+    box-shadow: 0 0 6px rgba(0, 243, 255, 0.3);
+  }
+
   /* Main Synth Layout */
   .workspace {
     display: grid;
@@ -409,8 +437,22 @@
     align-items: center;
     gap: 8px;
     pointer-events: auto;
+    cursor: pointer;
     animation: toastSlideIn 0.25s ease-out forwards;
     transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  .toast:hover {
+    filter: brightness(1.15);
+  }
+  .toast .toast-close {
+    font-size: 11px;
+    opacity: 0.6;
+    margin-left: 6px;
+    transition: opacity 0.2s;
+  }
+  .toast:hover .toast-close {
+    opacity: 1;
+    color: var(--accent-pink);
   }
   .toast.success { border-color: var(--accent-green); }
   .toast.error { border-color: var(--accent-pink); }
@@ -425,7 +467,7 @@
   <div id="toastContainer" aria-live="polite"></div>
 
   <div id="helpModal" role="dialog" aria-modal="true" aria-label="KSynth Workstation Pro Guide" onclick="if(event.target===this) toggleHelp(false)" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; justify-content:center; align-items:center; flex-direction:column; color:#fff; backdrop-filter:blur(3px);">
-    <div style="background:#161922; border:1px solid var(--accent-cyan); padding:22px; border-radius:10px; max-width:500px; width:92%; box-shadow:0 10px 30px rgba(0,243,255,0.25);">
+    <div style="background:#161922; border:1px solid var(--accent-cyan); padding:22px; border-radius:10px; max-width:540px; width:92%; box-shadow:0 10px 30px rgba(0,243,255,0.25);">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px;">
         <h2 style="color:var(--accent-cyan); font-size:17px; display:flex; align-items:center; gap:8px;">
           <span>🎹</span> KSynth Workstation Pro Guide
@@ -442,15 +484,27 @@
         </div>
         <div>
           <div style="font-weight:700; color:var(--accent-yellow); margin-bottom:4px;">Synthesizer Controls & Shortcuts</div>
-          <ul style="list-style:none; padding-left:0; display:flex; flex-direction:column; gap:4px; font-size:12px;">
+          <ul style="list-style:none; padding-left:0; display:flex; flex-direction:column; gap:5px; font-size:12px;">
+            <li><b>[Space] / [P]</b> : Play / Pause 16-step pattern sequencer</li>
+            <li><b>[1] - [6]</b> : Switch to Preset 1-6 (Lead, Bass, Pad, Chiptune, Bell, Pluck)</li>
             <li><b>[Z] / [X]</b> : Shift keyboard octave down / up (-2 to +2)</li>
-            <li><b>[Esc]</b> : Close Help guide / Stop all active sound voices (Panic)</li>
+            <li><b>[L]</b> : Toggle Arpeggiator Latch (Hold notes)</li>
+            <li><b>[C]</b> : Clear active 16-step sequencer</li>
+            <li><b>[R]</b> : Randomize sequencer pattern notes</li>
+            <li><b>[Ctrl+S]</b> : Export synth patch preset as JSON</li>
+            <li><b>[Ctrl+O]</b> : Import synth patch preset JSON</li>
+            <li><b>[Ctrl+E]</b> : Export 16-bit 44.1 kHz WAV audio preview</li>
+            <li><b>[Esc]</b> : Stop all voices (Panic) / Close modal guides</li>
             <li><b>[F1] / [?]</b> : Toggle this Help guide</li>
-            <li><b>🔊 Export WAV</b> : Synthesizes 16-bit 44.1 kHz PCM audio file of active patch</li>
-            <li><b>Dual Oscillators</b> : Morph waveforms (Saw, Square, Sine, Tri, Noise), detune, and blend</li>
-            <li><b>Resonant Filter & Delay</b> : Sculpt harmonics and add stereo-timed echoes</li>
-            <li><b>16-Step Sequencer</b> : Click steps to toggle and customize pitch per step</li>
-            <li><b>Arpeggiator</b> : Latch mode sustains pattern cycling across octaves</li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-weight:700; color:var(--accent-cyan); margin-bottom:4px;">Audio Engine Features</div>
+          <ul style="list-style:none; padding-left:0; display:flex; flex-direction:column; gap:4px; font-size:12px;">
+            <li>&bull; <b>Dual Oscillators:</b> 5 waveform types each with detune & octave mixing.</li>
+            <li>&bull; <b>Biquad Filter:</b> Lowpass, Highpass, and Bandpass with resonance.</li>
+            <li>&bull; <b>ADSR Envelope:</b> Real-time visual curve canvas with millisecond precision.</li>
+            <li>&bull; <b>Analog Echo:</b> Stereo delay unit with feedback loop damping.</li>
           </ul>
         </div>
       </div>
@@ -468,30 +522,47 @@
     </div>
     
     <div class="header-actions">
-      <label for="presetSelect" style="font-size:12px; color:var(--text-muted); font-weight:600;">PRESET:</label>
+      <label for="presetSelect" style="font-size:12px; color:var(--text-muted); font-weight:600;">PRESET [1-6]:</label>
       <select id="presetSelect" aria-label="Synthesizer Patch Preset">
-        <option value="lead">Neon Lead</option>
-        <option value="bass">Sub Punch Bass</option>
-        <option value="pad">80s Analog Pad</option>
-        <option value="chiptune">8-Bit Chiptune</option>
-        <option value="bell">Glass Bell</option>
-        <option value="pluck">Plucked Synth</option>
+        <option value="lead">1: Neon Lead</option>
+        <option value="bass">2: Sub Punch Bass</option>
+        <option value="pad">3: 80s Analog Pad</option>
+        <option value="chiptune">4: 8-Bit Chiptune</option>
+        <option value="bell">5: Glass Bell</option>
+        <option value="pluck">6: Plucked Synth</option>
       </select>
       
-      <button id="btnSavePreset" class="btn" title="Export Synth Preset as JSON">💾 Save</button>
-      <button id="btnLoadPreset" class="btn" title="Import Synth Preset JSON">📂 Load</button>
+      <button id="btnSavePreset" class="btn" title="Export Synth Preset as JSON [Ctrl+S]">💾 Save [Ctrl+S]</button>
+      <button id="btnLoadPreset" class="btn" title="Import Synth Preset JSON [Ctrl+O]">📂 Load [Ctrl+O]</button>
       <input type="file" id="presetFileInput" accept=".json" style="display:none;">
 
-      <button id="btnExportWav" class="btn" title="Export Synth Audio Preview to WAV">🔊 WAV</button>
+      <button id="btnExportWav" class="btn" title="Export Synth Audio Preview to WAV [Ctrl+E]">🔊 WAV [Ctrl+E]</button>
 
       <button id="btnExportSeq" class="btn" title="Export Sequencer Pattern">🎵 Seq Out</button>
       <button id="btnImportSeq" class="btn" title="Import Sequencer Pattern">📥 Seq In</button>
       <input type="file" id="seqFileInput" accept=".json" style="display:none;">
       
-      <button id="btnPanic" class="btn btn-danger" title="Stop All Notes & Reset Sound">🔇 Panic</button>
+      <button id="btnPanic" class="btn btn-danger" title="Stop All Notes & Reset Sound [Esc]">🔇 Panic [Esc]</button>
       <button id="btnHelp" class="btn" onclick="toggleHelp()" title="Help & Keyboard Shortcuts [F1]">❓ Help [F1]</button>
     </div>
   </header>
+
+  <!-- Quick Starter Presets & Demos Bar -->
+  <div class="quick-starter-bar">
+    <span style="color:var(--accent-yellow); font-weight:700; text-transform:uppercase; letter-spacing:0.8px; display:flex; align-items:center; gap:5px;">⚡ Quick Start:</span>
+    <button class="btn quick-chip" onclick="quickDemoBeat()" title="Start 16-step synthwave rhythm [Space]">▶ Beat Demo [Space]</button>
+    <button class="btn quick-chip" onclick="quickDemoArp()" title="Start rapid arpeggiator chord">⚡ Arp Demo</button>
+    <button class="btn quick-chip" onclick="quickPlayChord()" title="Trigger lush C-Major chord">🎹 C-Major Chord</button>
+    <button class="btn quick-chip" onclick="quickRandomPatch()" title="Generate randomized patch [R]">🎲 Randomize [R]</button>
+    <span style="color:var(--panel-border); margin:0 4px;">|</span>
+    <span style="color:var(--text-muted); font-size:10px; font-weight:600;">PRESETS:</span>
+    <button class="btn quick-chip" onclick="selectPresetByIndex(0)" title="Preset 1: Neon Lead">1: Lead</button>
+    <button class="btn quick-chip" onclick="selectPresetByIndex(1)" title="Preset 2: Sub Bass">2: Bass</button>
+    <button class="btn quick-chip" onclick="selectPresetByIndex(2)" title="Preset 3: Warm Pad">3: Pad</button>
+    <button class="btn quick-chip" onclick="selectPresetByIndex(3)" title="Preset 4: 8-Bit Chiptune">4: 8-Bit</button>
+    <button class="btn quick-chip" onclick="selectPresetByIndex(4)" title="Preset 5: Glass Bell">5: Bell</button>
+    <button class="btn quick-chip" onclick="selectPresetByIndex(5)" title="Preset 6: Plucked Synth">6: Pluck</button>
+  </div>
 
   <!-- Workspace Grid -->
   <div class="workspace">
@@ -651,7 +722,7 @@
           <input type="range" id="arpOctaves" min="1" max="3" value="2" step="1">
         </div>
         
-        <button id="btnArpHold" class="btn" style="min-width:70px;">Latch: OFF</button>
+        <button id="btnArpHold" class="btn" style="min-width:70px;" title="Toggle Arpeggiator Latch [L]">Latch: OFF [L]</button>
       </div>
     </div>
 
@@ -676,9 +747,9 @@
         <div style="display:flex; align-items:center; gap: 10px;">
           <label style="font-size:10px; color:var(--text-muted);">BPM: <span id="bpmVal" style="color:var(--accent-cyan)">120</span></label>
           <input type="range" id="seqBpm" min="50" max="220" value="120" step="1" style="width: 90px;">
-          <button id="btnSeqPlay" class="btn btn-primary">▶ Play Seq</button>
-          <button id="btnSeqClear" class="btn">Clear</button>
-          <button id="btnSeqRandom" class="btn">Randomize</button>
+          <button id="btnSeqPlay" class="btn btn-primary" title="Start / Pause Sequencer [Space / P]">▶ Play Seq [Space]</button>
+          <button id="btnSeqClear" class="btn" title="Clear all steps [C]">Clear [C]</button>
+          <button id="btnSeqRandom" class="btn" title="Randomize step pattern [R]">Random [R]</button>
         </div>
       </div>
       
@@ -708,14 +779,20 @@
     let icon = 'ℹ️';
     if (type === 'success') icon = '✅';
     else if (type === 'error') icon = '⚠️';
-    toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
-    container.appendChild(toast);
+    toast.innerHTML = `<span>${icon}</span><span style="flex:1;">${message}</span><span class="toast-close" title="Dismiss">✕</span>`;
 
-    setTimeout(() => {
+    let isRemoved = false;
+    const dismiss = () => {
+      if (isRemoved) return;
+      isRemoved = true;
       toast.style.opacity = '0';
       toast.style.transform = 'translateY(12px)';
-      setTimeout(() => toast.remove(), 300);
-    }, duration);
+      setTimeout(() => toast.remove(), 250);
+    };
+    toast.onclick = dismiss;
+    container.appendChild(toast);
+
+    setTimeout(dismiss, duration);
   }
 
   function toggleHelp(show) {
@@ -730,7 +807,7 @@
 
   window.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
-      showToast("🎵 Welcome to KSynth! Press [A-K] to play, [F1] for Help", "info", 4500);
+      showToast("🎵 Welcome to KSynth! Press [A-K] to play, [Space] for sequencer, [1-6] for presets, [F1] for Help", "info", 5000);
     }, 400);
   });
 
@@ -1201,12 +1278,15 @@
 
       if (lastNotePlayed !== null) {
         triggerNoteOff(lastNotePlayed);
+        highlightPianoKey(lastNotePlayed, false);
       }
       triggerNoteOn(noteToPlay);
+      highlightPianoKey(noteToPlay, true);
       lastNotePlayed = noteToPlay;
 
       setTimeout(() => {
         triggerNoteOff(noteToPlay);
+        highlightPianoKey(noteToPlay, false);
       }, intervalMs * 0.8);
 
     }, intervalMs);
@@ -1217,6 +1297,7 @@
       clearInterval(arpInterval);
       arpInterval = null;
     }
+    pianoContainer.querySelectorAll('.key.active').forEach(k => k.classList.remove('active'));
   }
 
   // ----------------------------------------------------
@@ -1301,12 +1382,12 @@
     ensureAudioActive();
     isSeqPlaying = !isSeqPlaying;
     if (isSeqPlaying) {
-      btnSeqPlay.innerText = '⏸ Pause';
+      btnSeqPlay.innerText = '⏸ Pause [Space]';
       btnSeqPlay.classList.remove('btn-primary');
       btnSeqPlay.style.background = 'var(--accent-pink)';
       startSequencer();
     } else {
-      btnSeqPlay.innerText = '▶ Play Seq';
+      btnSeqPlay.innerText = '▶ Play Seq [Space]';
       btnSeqPlay.classList.add('btn-primary');
       btnSeqPlay.style.background = '';
       stopSequencer();
@@ -1353,7 +1434,11 @@
       if (step.on) {
         const midiNum = noteToMidiMap[step.note] || 60;
         triggerNoteOn(midiNum);
-        setTimeout(() => triggerNoteOff(midiNum), intervalMs * 0.75);
+        highlightPianoKey(midiNum, true);
+        setTimeout(() => {
+          triggerNoteOff(midiNum);
+          highlightPianoKey(midiNum, false);
+        }, intervalMs * 0.75);
       }
     }, intervalMs);
   }
@@ -1363,6 +1448,7 @@
       clearInterval(seqTimer);
       seqTimer = null;
     }
+    pianoContainer.querySelectorAll('.key.active').forEach(k => k.classList.remove('active'));
   }
 
   // ----------------------------------------------------
@@ -1483,13 +1569,61 @@
       toggleHelp();
       return;
     }
-    if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+    const key = e.key.toLowerCase();
+    if (e.ctrlKey || e.metaKey) {
+      if (key === 's') {
+        e.preventDefault();
+        document.getElementById('btnSavePreset').click();
+        return;
+      }
+      if (key === 'o') {
+        e.preventDefault();
+        document.getElementById('btnLoadPreset').click();
+        return;
+      }
+      if (key === 'e') {
+        e.preventDefault();
+        document.getElementById('btnExportWav').click();
+        return;
+      }
+      return;
+    }
+    if (e.altKey) return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
 
     const hm = document.getElementById('helpModal');
     if (hm && hm.style.display !== 'none') return;
 
-    const key = e.key.toLowerCase();
+    if (e.code === 'Space' || key === ' ') {
+      e.preventDefault();
+      document.getElementById('btnSeqPlay').click();
+      return;
+    }
+    if (key === 'p') {
+      document.getElementById('btnSeqPlay').click();
+      return;
+    }
+    if (key === 'l') {
+      document.getElementById('btnArpHold').click();
+      showToast(`Arp Latch: ${arpHold ? 'ON' : 'OFF'}`, 'info', 1200);
+      return;
+    }
+    if (key === 'c') {
+      document.getElementById('btnSeqClear').click();
+      showToast('Sequencer pattern cleared', 'info', 1200);
+      return;
+    }
+    if (key === 'r') {
+      document.getElementById('btnSeqRandom').click();
+      showToast('Sequencer randomized', 'info', 1200);
+      return;
+    }
+    if (key >= '1' && key <= '6') {
+      selectPresetByIndex(parseInt(key) - 1);
+      return;
+    }
+
     if (key === 'z') {
       currentOctaveShift = Math.max(-2, currentOctaveShift - 1);
       renderPiano();
@@ -1648,8 +1782,101 @@
 
   document.getElementById('presetSelect').addEventListener('change', (e) => {
     const val = e.target.value;
-    if (builtInPresets[val]) applyPreset(builtInPresets[val]);
+    if (builtInPresets[val]) {
+      applyPreset(builtInPresets[val]);
+      saveCurrentPatch();
+    }
   });
+
+  function selectPresetByIndex(idx) {
+    const keys = Object.keys(builtInPresets);
+    if (idx < 0 || idx >= keys.length) return;
+    const pKey = keys[idx];
+    document.getElementById('presetSelect').value = pKey;
+    applyPreset(builtInPresets[pKey]);
+    saveCurrentPatch();
+    const names = ['Neon Lead', 'Sub Punch Bass', '80s Analog Pad', '8-Bit Chiptune', 'Glass Bell', 'Plucked Synth'];
+    showToast(`Loaded Preset: ${names[idx] || pKey}`, 'info', 1500);
+    ensureAudioActive();
+    const mid = 60 + (currentOctaveShift * 12);
+    triggerNoteOn(mid);
+    highlightPianoKey(mid, true);
+    setTimeout(() => {
+      triggerNoteOff(mid);
+      highlightPianoKey(mid, false);
+    }, 280);
+  }
+
+  function quickDemoBeat() {
+    ensureAudioActive();
+    if (!isSeqPlaying) {
+      document.getElementById('btnSeqPlay').click();
+      showToast('16-Step Beat Playing! [Space] to Pause', 'info', 2000);
+    } else {
+      document.getElementById('btnSeqPlay').click();
+    }
+  }
+
+  function quickDemoArp() {
+    ensureAudioActive();
+    if (!arpEnabled) {
+      document.getElementById('btnArpToggle').click();
+    }
+    arpHeldNotes.clear();
+    arpHeldNotes.add(60); // C4
+    arpHeldNotes.add(64); // E4
+    arpHeldNotes.add(67); // G4
+    arpHeldNotes.add(72); // C5
+    if (!arpHold) {
+      document.getElementById('btnArpHold').click();
+    }
+    showToast('Arpeggiator running C-Major chord run!', 'info', 2000);
+  }
+
+  function quickPlayChord() {
+    ensureAudioActive();
+    const chord = [60, 64, 67, 72]; // C E G C
+    chord.forEach((m) => {
+      const pitched = m + currentOctaveShift * 12;
+      triggerNoteOn(pitched);
+      highlightPianoKey(pitched, true);
+      setTimeout(() => {
+        triggerNoteOff(pitched);
+        highlightPianoKey(pitched, false);
+      }, 700);
+    });
+    showToast('Playing C-Major Chord', 'info', 1500);
+  }
+
+  function quickRandomPatch() {
+    const waves = ['sawtooth', 'square', 'sine', 'triangle', 'noise'];
+    const filters = ['lowpass', 'highpass', 'bandpass'];
+    const p = {
+      osc1Wave: waves[Math.floor(Math.random() * (waves.length - 1))],
+      osc1Oct: Math.floor(Math.random() * 3) - 1,
+      osc1Detune: Math.floor(Math.random() * 30) - 15,
+      osc1Vol: 0.5 + Math.random() * 0.4,
+      osc2Wave: waves[Math.floor(Math.random() * waves.length)],
+      osc2Oct: Math.floor(Math.random() * 3) - 1,
+      osc2Detune: Math.floor(Math.random() * 40) - 20,
+      osc2Vol: 0.3 + Math.random() * 0.5,
+      filterType: filters[Math.floor(Math.random() * filters.length)],
+      filterCutoff: 300 + Math.floor(Math.random() * 6000),
+      filterRes: 0.5 + Math.random() * 6,
+      masterVol: 0.75,
+      delayTime: 0.1 + Math.random() * 0.5,
+      delayFdbk: 0.2 + Math.random() * 0.4,
+      delayMix: 0.2 + Math.random() * 0.4,
+      attack: 0.01 + Math.random() * 0.2,
+      decay: 0.1 + Math.random() * 0.4,
+      sustain: 0.2 + Math.random() * 0.6,
+      release: 0.1 + Math.random() * 0.8
+    };
+    applyPreset(p);
+    saveCurrentPatch();
+    showToast('Random patch generated!', 'info', 1500);
+    quickPlayChord();
+  }
 
   // Export Preset JSON
   document.getElementById('btnSavePreset').addEventListener('click', () => {

@@ -9,11 +9,19 @@
 HWND hComboPreset, hComboWave, hBtnPlay, hBtnSeq, hBtnExportWav, hBtnHelp, hFreq, hAttack, hDecay, hSustain, hRelease;
 HWND hDelayTime, hDelayFdbk, hDelayMix;
 HWND hComboArp, hArpBpm, hArpOct;
-HWND hScopeWnd;
+HWND hScopeWnd, hPianoWnd, hStatusText;
 
-HWAVEOUT hWaveOut;
+HWAVEOUT hWaveOut = NULL;
 WAVEHDR waveHdr;
 static int g_octaveShift = 0;
+static int g_activePianoKey = -1;
+static WNDPROC g_oldEditProc = NULL;
+
+void UpdateStatusText(const char* text) {
+    if (hStatusText) {
+        SetWindowTextA(hStatusText, text);
+    }
+}
 
 int GetDPI() {
     HDC hdc = GetDC(NULL);
@@ -287,6 +295,11 @@ void ApplyPreset(int idx) {
     SetWindowTextA(hDecay, p.decay);
     SetWindowTextA(hSustain, p.sustain);
     SetWindowTextA(hRelease, p.release);
+
+    char stat[64];
+    static const char* names[] = { "Neon Lead", "Sub Bass", "Warm Pad", "8-Bit Chiptune", "Glass Bell", "Noise Gen" };
+    wsprintfA(stat, "Preset [%d]: %s", idx + 1, names[idx]);
+    UpdateStatusText(stat);
 }
 
 // Custom Oscilloscope Window Procedure
@@ -352,6 +365,179 @@ LRESULT CALLBACK ScopeProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
+// Interactive Virtual Piano Window Procedure
+LRESULT CALLBACK PianoProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch (msg) {
+        case WM_ERASEBKGND:
+            return 1;
+        case WM_PAINT: {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+            RECT rect;
+            GetClientRect(hwnd, &rect);
+            int w = rect.right - rect.left;
+            int h = rect.bottom - rect.top;
+
+            HDC memDC = CreateCompatibleDC(hdc);
+            HBITMAP memBM = CreateCompatibleBitmap(hdc, w, h);
+            HBITMAP oldBM = (HBITMAP)SelectObject(memDC, memBM);
+
+            // 8 white keys: C(0), D(2), E(4), F(5), G(7), A(9), B(11), C5(12)
+            static const int whiteIndices[8] = { 0, 2, 4, 5, 7, 9, 11, 12 };
+            static const char* whiteLabels[8] = { "C [A]", "D [S]", "E [D]", "F [F]", "G [G]", "A [H]", "B [J]", "C [K]" };
+
+            int whiteKeyW = w / 8;
+            for (int i = 0; i < 8; i++) {
+                int kIdx = whiteIndices[i];
+                RECT kr = { i * whiteKeyW, 0, (i == 7) ? w : (i + 1) * whiteKeyW, h };
+
+                HBRUSH hBrush;
+                if (g_activePianoKey == kIdx) {
+                    hBrush = CreateSolidBrush(RGB(0, 243, 255)); // Active Cyan
+                } else {
+                    hBrush = CreateSolidBrush(RGB(242, 245, 250)); // Crisp White Key
+                }
+                FillRect(memDC, &kr, hBrush);
+                DeleteObject(hBrush);
+
+                HPEN hPen = CreatePen(PS_SOLID, 1, RGB(175, 182, 195));
+                HPEN oldPen = (HPEN)SelectObject(memDC, hPen);
+                MoveToEx(memDC, kr.right - 1, 0, NULL);
+                LineTo(memDC, kr.right - 1, h);
+                DeleteObject(SelectObject(memDC, oldPen));
+
+                SetBkMode(memDC, TRANSPARENT);
+                SetTextColor(memDC, (g_activePianoKey == kIdx) ? RGB(0, 0, 0) : RGB(70, 80, 95));
+                RECT textR = { kr.left, h - Scale(18), kr.right, h };
+                DrawTextA(memDC, whiteLabels[i], -1, &textR, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+            }
+
+            // 5 black keys: C#(1), D#(3), F#(6), G#(8), A#(10)
+            static const int blackIndices[5] = { 1, 3, 6, 8, 10 };
+            static const int blackSlots[5] = { 1, 2, 4, 5, 6 };
+            static const char* blackLabels[5] = { "W", "E", "T", "Y", "U" };
+
+            int blackKeyW = (whiteKeyW * 6) / 10;
+            int blackKeyH = (h * 60) / 100;
+
+            for (int i = 0; i < 5; i++) {
+                int kIdx = blackIndices[i];
+                int center = blackSlots[i] * whiteKeyW;
+                RECT kr = { center - blackKeyW / 2, 0, center + blackKeyW / 2, blackKeyH };
+
+                HBRUSH hBrush;
+                if (g_activePianoKey == kIdx) {
+                    hBrush = CreateSolidBrush(RGB(255, 0, 127)); // Active Hot Pink
+                } else {
+                    hBrush = CreateSolidBrush(RGB(20, 24, 32)); // Dark Key
+                }
+                FillRect(memDC, &kr, hBrush);
+                DeleteObject(hBrush);
+
+                HPEN hPen = CreatePen(PS_SOLID, 1, RGB(10, 12, 16));
+                HPEN oldPen = (HPEN)SelectObject(memDC, hPen);
+                Rectangle(memDC, kr.left, kr.top, kr.right, kr.bottom);
+                DeleteObject(SelectObject(memDC, oldPen));
+
+                SetBkMode(memDC, TRANSPARENT);
+                SetTextColor(memDC, (g_activePianoKey == kIdx) ? RGB(0, 0, 0) : RGB(220, 225, 235));
+                RECT textR = { kr.left, blackKeyH - Scale(16), kr.right, blackKeyH };
+                DrawTextA(memDC, blackLabels[i], -1, &textR, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+            }
+
+            BitBlt(hdc, 0, 0, w, h, memDC, 0, 0, SRCCOPY);
+            SelectObject(memDC, oldBM);
+            DeleteObject(memBM);
+            DeleteDC(memDC);
+
+            EndPaint(hwnd, &ps);
+            return 0;
+        }
+        case WM_LBUTTONDOWN: {
+            int x = LOWORD(lParam);
+            int y = HIWORD(lParam);
+            RECT rect;
+            GetClientRect(hwnd, &rect);
+            int w = rect.right - rect.left;
+            int h = rect.bottom - rect.top;
+            int whiteKeyW = w / 8;
+            int blackKeyW = (whiteKeyW * 6) / 10;
+            int blackKeyH = (h * 60) / 100;
+
+            int hit = -1;
+            if (y <= blackKeyH) {
+                static const int blackIndices[5] = { 1, 3, 6, 8, 10 };
+                static const int blackSlots[5] = { 1, 2, 4, 5, 6 };
+                for (int i = 0; i < 5; i++) {
+                    int center = blackSlots[i] * whiteKeyW;
+                    if (x >= center - blackKeyW / 2 && x <= center + blackKeyW / 2) {
+                        hit = blackIndices[i];
+                        break;
+                    }
+                }
+            }
+            if (hit == -1) {
+                int slot = x / whiteKeyW;
+                if (slot < 0) slot = 0;
+                if (slot > 7) slot = 7;
+                static const int whiteIndices[8] = { 0, 2, 4, 5, 7, 9, 11, 12 };
+                hit = whiteIndices[slot];
+            }
+
+            if (hit >= 0) {
+                g_activePianoKey = hit;
+                InvalidateRect(hwnd, NULL, FALSE);
+                static const double freqs[13] = {
+                    261.63, 277.18, 293.66, 311.13, 329.63, 349.23,
+                    369.99, 392.00, 415.30, 440.00, 466.16, 493.88, 523.25
+                };
+                double mult = 1.0;
+                if (g_octaveShift == -2) mult = 0.25;
+                else if (g_octaveShift == -1) mult = 0.5;
+                else if (g_octaveShift == 1) mult = 2.0;
+                else if (g_octaveShift == 2) mult = 4.0;
+                int finalFreq = (int)(freqs[hit] * mult + 0.5);
+                char buf[32];
+                wsprintfA(buf, "%d", finalFreq);
+                SetWindowTextA(hFreq, buf);
+                PlayTone();
+                wsprintfA(buf, "Playing: %d Hz (Key %d)", finalFreq, hit);
+                UpdateStatusText(buf);
+                SetCapture(hwnd);
+            }
+            return 0;
+        }
+        case WM_LBUTTONUP: {
+            if (GetCapture() == hwnd) ReleaseCapture();
+            g_activePianoKey = -1;
+            InvalidateRect(hwnd, NULL, FALSE);
+            return 0;
+        }
+    }
+    return DefWindowProc(hwnd, msg, wParam, lParam);
+}
+
+// Subclass edit controls to handle Enter, Esc, and F1 smoothly
+LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_KEYDOWN) {
+        if (wParam == VK_RETURN) {
+            PlayTone();
+            UpdateStatusText("Updated frequency/parameters [Enter]");
+            return 0;
+        }
+        if (wParam == VK_ESCAPE) {
+            SetFocus(GetParent(hwnd));
+            UpdateStatusText("Keyboard controls active");
+            return 0;
+        }
+        if (wParam == VK_F1) {
+            PostMessage(GetParent(hwnd), WM_COMMAND, 3, 0);
+            return 0;
+        }
+    }
+    return CallWindowProc(g_oldEditProc, hwnd, msg, wParam, lParam);
+}
+
 void ExportWav(HWND hwnd) {
     if (bufferSampleCount <= 0) {
         MessageBoxA(hwnd, "No audio data synthesized yet. Play a tone first!", "Export WAV", MB_OK | MB_ICONWARNING);
@@ -403,6 +589,7 @@ void ExportWav(HWND hwnd) {
 
     char msg[128];
     wsprintfA(msg, "Exported %d samples to ksynth_output.wav!", bufferSampleCount);
+    UpdateStatusText("Exported ksynth_output.wav successfully");
     MessageBoxA(hwnd, msg, "KSynth WAV Export", MB_OK | MB_ICONINFORMATION);
 }
 
@@ -414,21 +601,27 @@ BOOL CALLBACK SetFontProc(HWND child, LPARAM hFont) {
 void ShowHelp(HWND hwnd) {
     MessageBoxA(hwnd,
         "KSynth Workstation Pro - Keyboard & Controls Guide\n\n"
-        "Musical Keys (Octave 4):\n"
-        "  White Keys: [A]=C4, [S]=D4, [D]=E4, [F]=F4, [G]=G4, [H]=A4, [J]=B4, [K]=C5\n"
-        "  Black Keys: [W]=C#4, [E]=D#4, [T]=F#4, [Y]=G#4, [U]=A#4\n\n"
+        "Interactive Piano Keyboard:\n"
+        "  White Keys: [A]=C4  [S]=D4  [D]=E4  [F]=F4  [G]=G4  [H]=A4  [J]=B4  [K]=C5\n"
+        "  Black Keys: [W]=C#4 [E]=D#4 [T]=F#4 [Y]=G#4 [U]=A#4\n"
+        "  (You can also click directly on the virtual piano keys!)\n\n"
         "Keyboard Shortcuts:\n"
-        "  [Z] / [X]     : Shift octave down / up (-2 to +2)\n"
-        "  [Tab]         : Cycle focus between controls\n"
-        "  [F1] or [?]   : Open this Help guide\n"
-        "  [Export WAV]  : Save current sound as standard 16-bit 44.1 kHz WAV file\n\n"
+        "  [Space]       : Play active tone\n"
+        "  [P]           : Play arpeggiator pattern\n"
+        "  [E] / [Ctrl+S]: Export sound to 16-bit 44.1 kHz WAV file\n"
+        "  [1] - [6]     : Direct preset switch (Lead, Bass, Pad, 8-Bit, Bell, Noise)\n"
+        "  [Z] / [X]     : Shift keyboard octave down / up (-2 to +2)\n"
+        "  [Esc]         : Panic (stop sound) / Unfocus edit fields\n"
+        "  [Enter]       : Play tone while editing frequency or ADSR fields\n"
+        "  [F1] or [?]   : Display this Help guide\n\n"
         "Synthesizer Modules:\n"
-        "  Preset      : Lead, Bass, Pad, Chiptune, Bell, Noise\n"
-        "  Waveform    : Sine, Square, Sawtooth, Triangle, Noise\n"
-        "  ADSR        : Attack, Decay, Sustain, Release times\n"
-        "  Delay       : Delay time, Feedback, and Wet/Dry Mix\n"
-        "  Arpeggiator : Up, Down, Up-Down, Random arpeggios",
-        "KSynth Workstation Help", MB_OK | MB_ICONINFORMATION);
+        "  Preset [1-6]  : 6 handcrafted sound design starting points\n"
+        "  Waveforms     : Sine, Square, Sawtooth, Triangle, Noise\n"
+        "  ADSR Envelope : Attack, Decay, Sustain, Release curves\n"
+        "  Delay Echo    : Delay time, Feedback loop, Wet/Dry mix\n"
+        "  Arpeggiator   : Up, Down, Up-Down, and Random arpeggiated runs\n"
+        "  Oscilloscope  : Real-time PCM waveform display",
+        "KSynth Workstation Pro Help", MB_OK | MB_ICONINFORMATION);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -439,14 +632,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             // Preset Selection
-            CreateScaledWindowEx(0, "STATIC", "Preset:", WS_CHILD | WS_VISIBLE, 15, 15, 80, 20, hwnd, NULL, NULL, NULL);
+            CreateScaledWindowEx(0, "STATIC", "Preset [1-6]:", WS_CHILD | WS_VISIBLE, 15, 15, 80, 20, hwnd, NULL, NULL, NULL);
             hComboPreset = CreateScaledWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 100, 12, 160, 150, hwnd, (HMENU)10, NULL, NULL);
-            SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"0: Neon Lead");
-            SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"1: Sub Bass");
-            SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"2: Warm Pad");
-            SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"3: 8-Bit Chiptune");
-            SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"4: Glass Bell");
-            SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"5: Noise Generator");
+            SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"1: Neon Lead");
+            SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"2: Sub Bass");
+            SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"3: Warm Pad");
+            SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"4: 8-Bit Chiptune");
+            SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"5: Glass Bell");
+            SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"6: Noise Generator");
             SendMessage(hComboPreset, CB_SETCURSEL, 0, 0);
 
             // Waveform Selection
@@ -497,10 +690,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hComboArp, CB_SETCURSEL, 0, 0);
 
             // Play, Arp, Export WAV & Help Buttons
-            hBtnPlay      = CreateScaledWindowEx(0, "BUTTON", "▶ Play", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 15, 360, 75, 32, hwnd, (HMENU)1, NULL, NULL);
-            hBtnSeq       = CreateScaledWindowEx(0, "BUTTON", "⚡ Arp", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 95, 360, 75, 32, hwnd, (HMENU)2, NULL, NULL);
-            hBtnExportWav = CreateScaledWindowEx(0, "BUTTON", "🔊 WAV", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 175, 360, 75, 32, hwnd, (HMENU)4, NULL, NULL);
-            hBtnHelp      = CreateScaledWindowEx(0, "BUTTON", "❓ Help", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 255, 360, 75, 32, hwnd, (HMENU)3, NULL, NULL);
+            hBtnPlay      = CreateScaledWindowEx(0, "BUTTON", "▶ Play [Space]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 15, 360, 75, 32, hwnd, (HMENU)1, NULL, NULL);
+            hBtnSeq       = CreateScaledWindowEx(0, "BUTTON", "⚡ Arp [P]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 95, 360, 75, 32, hwnd, (HMENU)2, NULL, NULL);
+            hBtnExportWav = CreateScaledWindowEx(0, "BUTTON", "🔊 WAV [E]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 175, 360, 75, 32, hwnd, (HMENU)4, NULL, NULL);
+            hBtnHelp      = CreateScaledWindowEx(0, "BUTTON", "❓ Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 255, 360, 75, 32, hwnd, (HMENU)3, NULL, NULL);
 
             // Oscilloscope Box Window
             WNDCLASS sc = {0};
@@ -509,13 +702,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             sc.lpszClassName = "KSynthScope";
             RegisterClass(&sc);
 
-            hScopeWnd = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "KSynthScope", "", WS_CHILD | WS_VISIBLE, 280, 12, 350, 230, hwnd, NULL, GetModuleHandle(NULL), NULL);
+            hScopeWnd = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "KSynthScope", "", WS_CHILD | WS_VISIBLE, 280, 12, 350, 225, hwnd, NULL, GetModuleHandle(NULL), NULL);
 
-            CreateScaledWindowEx(0, "STATIC", "Keyboard Mapping (C4 to C5):\nWhite: [A, S, D, F, G, H, J, K] (C, D, E, F, G, A, B, C)\nBlack: [W, E, T, Y, U] (C#, D#, F#, G#, A#)\nOctave Shift: [Z] Down | [X] Up | F1: Help", WS_CHILD | WS_VISIBLE, 280, 252, 350, 75, hwnd, NULL, NULL, NULL);
+            // Virtual Piano Box Window
+            WNDCLASS pc = {0};
+            pc.lpfnWndProc = PianoProc;
+            pc.hInstance = GetModuleHandle(NULL);
+            pc.lpszClassName = "KSynthPiano";
+            RegisterClass(&pc);
 
-            CreateScaledWindowEx(0, "STATIC", "KSynth Workstation | 44.1 kHz 16-bit Mono", WS_CHILD | WS_VISIBLE, 345, 368, 290, 20, hwnd, NULL, NULL, NULL);
+            hPianoWnd = CreateScaledWindowEx(WS_EX_CLIENTEDGE, "KSynthPiano", "", WS_CHILD | WS_VISIBLE, 280, 244, 350, 96, hwnd, NULL, GetModuleHandle(NULL), NULL);
+
+            // Keyboard navigation hint & Status label
+            CreateScaledWindowEx(0, "STATIC", "Keys: [A-K] Oct 4 | [Z/X] Octave Shift | [1-6] Presets", WS_CHILD | WS_VISIBLE, 280, 344, 350, 18, hwnd, NULL, NULL, NULL);
+            hStatusText = CreateScaledWindowEx(0, "STATIC", "Ready | Press [Space] or [A-K] to play sound | [F1] Help", WS_CHILD | WS_VISIBLE, 340, 366, 295, 20, hwnd, NULL, NULL, NULL);
+
+            // Subclass edit controls
+            HWND editControls[] = { hFreq, hAttack, hDecay, hSustain, hRelease, hDelayTime, hDelayFdbk, hDelayMix };
+            for (int i = 0; i < 8; i++) {
+                WNDPROC old = (WNDPROC)SetWindowLongPtr(editControls[i], GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
+                if (!g_oldEditProc) g_oldEditProc = old;
+            }
 
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
+            break;
+        }
+        case WM_TIMER: {
+            if (wParam == 100) {
+                KillTimer(hwnd, 100);
+                g_activePianoKey = -1;
+                if (hPianoWnd) InvalidateRect(hPianoWnd, NULL, FALSE);
+            }
             break;
         }
         case WM_CTLCOLORSTATIC: {
@@ -526,8 +743,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_COMMAND: {
             if (LOWORD(wParam) == 1) {
                 PlayTone();
+                UpdateStatusText("Playing synthesizer tone [Space]");
             } else if (LOWORD(wParam) == 2) {
                 PlayArpeggiator();
+                UpdateStatusText("Playing arpeggio sequence [P]");
             } else if (LOWORD(wParam) == 3) {
                 ShowHelp(hwnd);
             } else if (LOWORD(wParam) == 4) {
@@ -535,6 +754,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (HIWORD(wParam) == CBN_SELCHANGE && (HWND)lParam == hComboPreset) {
                 int sel = SendMessage(hComboPreset, CB_GETCURSEL, 0, 0);
                 ApplyPreset(sel);
+                PlayTone();
             }
             break;
         }
@@ -564,9 +784,9 @@ void* __cdecl memset(void* dest, int c, size_t count) {
 void UpdateWindowTitle(HWND hwnd) {
     char title[128];
     if (g_octaveShift == 0) {
-        wsprintfA(title, "KSynth Workstation Pro [Press F1 for Help]");
+        wsprintfA(title, "KSynth Workstation Pro [Space: Play | F1: Help]");
     } else {
-        wsprintfA(title, "KSynth Workstation Pro [Octave: %s%d | Press F1 for Help]",
+        wsprintfA(title, "KSynth Workstation Pro [Octave: %s%d | Space: Play | F1: Help]",
                   g_octaveShift > 0 ? "+" : "", g_octaveShift);
     }
     SetWindowTextA(hwnd, title);
@@ -588,7 +808,7 @@ void MainEntry() {
     int windowWidth = rect.right - rect.left;
     int windowHeight = rect.bottom - rect.top;
 
-    HWND hwnd = CreateWindowEx(0, "KSynthApp", "KSynth Workstation Pro [Press F1 for Help]", (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN,
+    HWND hwnd = CreateWindowEx(0, "KSynthApp", "KSynth Workstation Pro [Space: Play | F1: Help]", (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, windowWidth, windowHeight, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
@@ -607,10 +827,40 @@ void MainEntry() {
                               hFocus == hSustain || hFocus == hRelease || hFocus == hDelayTime ||
                               hFocus == hDelayFdbk || hFocus == hDelayMix);
             if (!isEditing) {
+                if (key == VK_SPACE) {
+                    PlayTone();
+                    UpdateStatusText("Playing synthesizer tone [Space]");
+                    continue;
+                }
+                if (key == 'P') {
+                    PlayArpeggiator();
+                    UpdateStatusText("Playing arpeggio sequence [P]");
+                    continue;
+                }
+                if (key == 'E' || (key == 'S' && (GetKeyState(VK_CONTROL) & 0x8000))) {
+                    ExportWav(hwnd);
+                    continue;
+                }
+                if (key >= '1' && key <= '6') {
+                    int pIdx = key - '1';
+                    ApplyPreset(pIdx);
+                    SendMessage(hComboPreset, CB_SETCURSEL, pIdx, 0);
+                    PlayTone();
+                    continue;
+                }
+                if (key == VK_ESCAPE) {
+                    if (hWaveOut) waveOutReset(hWaveOut);
+                    SetFocus(hwnd);
+                    UpdateStatusText("Panic: Audio Stopped | Ready");
+                    continue;
+                }
                 if (key == 'Z') {
                     if (g_octaveShift > -2) {
                         g_octaveShift--;
                         UpdateWindowTitle(hwnd);
+                        char oBuf[48];
+                        wsprintfA(oBuf, "Octave shifted to: %s%d", g_octaveShift > 0 ? "+" : "", g_octaveShift);
+                        UpdateStatusText(oBuf);
                     }
                     continue;
                 }
@@ -618,6 +868,9 @@ void MainEntry() {
                     if (g_octaveShift < 2) {
                         g_octaveShift++;
                         UpdateWindowTitle(hwnd);
+                        char oBuf[48];
+                        wsprintfA(oBuf, "Octave shifted to: %s%d", g_octaveShift > 0 ? "+" : "", g_octaveShift);
+                        UpdateStatusText(oBuf);
                     }
                     continue;
                 }
@@ -638,6 +891,29 @@ void MainEntry() {
                     wsprintfA(buf, "%d", finalFreq);
                     SetWindowTextA(hFreq, buf);
                     PlayTone();
+
+                    int noteIdx = -1;
+                    if (key == 'A') noteIdx = 0;
+                    else if (key == 'W') noteIdx = 1;
+                    else if (key == 'S') noteIdx = 2;
+                    else if (key == 'E') noteIdx = 3;
+                    else if (key == 'D') noteIdx = 4;
+                    else if (key == 'F') noteIdx = 5;
+                    else if (key == 'T') noteIdx = 6;
+                    else if (key == 'G') noteIdx = 7;
+                    else if (key == 'Y') noteIdx = 8;
+                    else if (key == 'H') noteIdx = 9;
+                    else if (key == 'U') noteIdx = 10;
+                    else if (key == 'J') noteIdx = 11;
+                    else if (key == 'K') noteIdx = 12;
+
+                    if (noteIdx >= 0) {
+                        g_activePianoKey = noteIdx;
+                        if (hPianoWnd) InvalidateRect(hPianoWnd, NULL, FALSE);
+                        SetTimer(hwnd, 100, 200, NULL);
+                    }
+                    wsprintfA(buf, "Playing: %d Hz", finalFreq);
+                    UpdateStatusText(buf);
                     continue;
                 }
             }
