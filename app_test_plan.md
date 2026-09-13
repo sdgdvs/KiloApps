@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KMech
+**Target App:** KMedia
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KMech
 - KMedia
 - KMine
 - KMines
@@ -173,10 +172,20 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KMandel
 - KMatch3
 - KMaze
+- KMech
 
 ## Test Reports
 
 > 📁 **Archived Reports**: Historical test reports have been archived to [archive/app_test_reports_archive.md](archive/app_test_reports_archive.md) to preserve token efficiency.
+
+- **KMech**: ISSUES FOUND ⚠️ (6 issues, 6 fixed inline)
+  - ✅ Core functionality works (Tactical turn-based mech combat simulation with procedural SVG chassis and enemy sprite rendering across 3 enemy classes Scout/Goliath/Titan, hangar diagnostics and equipment cycling weapons/armor/heat sinks/specials, dynamic heat reactor management, multi-limb targeting system Head/Torso/Arms/Legs with critical multipliers, Web Audio synthesizer effects, 3-tier particle canvas physics with debris/smoke/shocks/screen shake, garage repair economy, and pilot XP leveling).
+  - 🔧 FIXED: Global keyboard listener checked bare keys (`d`, `r`, `u`, `s`, `1`..`4`, `a`, `t`, `h`) without verifying `!e.ctrlKey && !e.altKey && !e.metaKey`, hijacking browser accelerators: `Ctrl+D` (bookmark hijacked to deploy/defend), `Ctrl+R` (browser reload hijacked to repair/return), `Ctrl+S` (save page hijacked to sell salvage), `Ctrl+U` (view source hijacked to consume salvage), `Ctrl+A` (select all hijacked to attack), `Ctrl+T` (new tab hijacked to cycle targeting), `Ctrl+H` (browser history hijacked to open manual), and `Ctrl+1`..`Ctrl+4` (tab switching hijacked to cycle gear). Added modifier key guards across all keyboard shortcuts.
+  - 🔧 FIXED: In `enemyTurn()`, damage was applied inside a 140ms `setTimeout()`, but `actionDefend()` synchronously set `isDefending = false` immediately after invoking `enemyTurn()`. As a result, `isDefending` was always false when damage was computed, completely breaking Defend and providing 0 damage reduction; kept `isDefending` active through the enemy attack exchange and reset it after cooling.
+  - 🔧 FIXED: In `actionAttack()`, line 1661 checked `enemyStats.hp > 0` synchronously before the player's 120ms damage timeout ran, scheduling an `enemyTurn()` at 350ms. If the player's attack destroyed the enemy, the dead enemy still fired a projectile from the grave at 350ms, inflicting damage on the victory screen and overwriting Victory with Defeat if lethal; additionally guarded `enemyTurn()` against running when `enemyStats.hp <= 0` or when post-battle actions are active.
+  - 🔧 FIXED: In `cycleArm()`, changing armor assigned `playerStats.hp = playerStats.maxHp`, granting free 100% health restoration by simply cycling armor back and forth, completely bypassing the credit repair cost and salvage parts mechanics. Clamped health with `Math.min(playerStats.hp, playerStats.maxHp)`.
+  - 🔧 FIXED: No debounce or busy lock existed during combat actions (`actionAttack()` / `actionDefend()`), allowing rapid keypresses or mouse clicks to launch multiple concurrent attacks, leading to runaway heat generation, duplicate enemy counter-attacks, and desynchronized animations. Added `isProcessingTurn` state lock during combat sequences.
+  - 🔧 FIXED: Trailing duplicate HTML and script tags (`</html>    }); </script> </body> </html>`) at the bottom of the file formed corrupted markup outside the root document. Cleaned up trailer.
 
 - **KMaze**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
   - ✅ Core gameplay works (Raycasting 3D labyrinth engine with 45 descent stages across 5 biomes Catacombs/Cyber/Frost/Abyssal/Inferno, procedural maze generator, 4-layer particle physics, Minotaur AI with footstep stealth detection, Boss combat with Overlord on floor 45, 5 relics Pickaxe/Pathfinder/Speed Shoes/Stun Spray/Time Freeze, crouch stealth mechanics, wall torch lighting, frame-by-frame replay viewer, checkpoint save/load, and stats export/import).

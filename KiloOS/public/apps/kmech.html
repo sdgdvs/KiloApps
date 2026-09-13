@@ -865,6 +865,7 @@
         let enemyStats = { maxHp: 80, hp: 80, atk: 12, def: 3, maxHeat: 100, heat: 0 };
         let isDefending = false;
         let enemyIsDefending = false;
+        let isProcessingTurn = false;
         let playerLimbDamage = [0, 0, 0, 0, 0];
 
         let currentTargetLimb = 1;
@@ -1432,7 +1433,7 @@
             equipArm = (equipArm + 1) % armors.length;
             playerStats.def = armors[equipArm].def;
             playerStats.maxHp = armors[equipArm].maxHp;
-            playerStats.hp = playerStats.maxHp;
+            playerStats.hp = Math.min(playerStats.hp, playerStats.maxHp);
             showToast(`Armor: ${armors[equipArm].name} (DEF ${playerStats.def}, HP ${playerStats.maxHp})`, 2000);
             updateGarage();
         }
@@ -1542,6 +1543,7 @@
             playerStats.heat = 0;
             isDefending = false;
             enemyIsDefending = false;
+            isProcessingTurn = false;
             playerLimbDamage = [0, 0, 0, 0, 0];
             document.getElementById('log').innerHTML = '';
             document.getElementById('battle-actions').style.display = 'flex';
@@ -1554,6 +1556,9 @@
         }
 
         function returnToGarage() {
+            playerStats.heat = 0;
+            isProcessingTurn = false;
+            isDefending = false;
             if (playerStats.hp <= 0) {
                 playerStats.hp = playerStats.maxHp;
                 document.getElementById('garage-info').innerText = "Mech reconstructed. New campaign initiated.";
@@ -1565,6 +1570,8 @@
         }
 
         function endBattle(victory) {
+            isProcessingTurn = false;
+            isDefending = false;
             document.getElementById('battle-actions').style.display = 'none';
             document.getElementById('post-battle-actions').style.display = 'flex';
             if (victory) {
@@ -1606,7 +1613,8 @@
         }
 
         function actionAttack() {
-            if (document.getElementById('battle-actions').style.display === 'none') return;
+            if (isProcessingTurn || document.getElementById('battle-actions').style.display === 'none') return;
+            isProcessingTurn = true;
             playerStats.heat += playerHeatGen;
             if (playerStats.heat > playerStats.maxHeat) {
                 playerStats.hp -= 15;
@@ -1637,6 +1645,14 @@
                 setTimeout(() => {
                     playSound('miss');
                     logMsg(`Targeting ${targetLimb.name}... Shot Missed!`);
+                    updateBattle();
+                    if (enemyStats.hp > 0 && document.getElementById('battle-actions').style.display !== 'none') {
+                        setTimeout(() => {
+                            enemyTurn();
+                        }, 250);
+                    } else {
+                        isProcessingTurn = false;
+                    }
                 }, 120);
             } else {
                 triggerAnim('player-mech-container', 'attacking', 200);
@@ -1653,40 +1669,44 @@
                         enemyStats.hp = 0;
                         updateBattle();
                         endBattle(true);
+                    } else if (document.getElementById('battle-actions').style.display !== 'none') {
+                        setTimeout(() => {
+                            enemyTurn();
+                        }, 250);
+                    } else {
+                        isProcessingTurn = false;
                     }
                 }, 120);
             }
             updateBattle();
-
-            if (enemyStats.hp > 0) {
-                setTimeout(() => {
-                    enemyTurn();
-                    if (document.getElementById('battle-actions').style.display !== 'none') {
-                        applyCooling();
-                        updateBattle();
-                    }
-                }, 350);
-            }
         }
 
         function actionDefend() {
-            if (document.getElementById('battle-actions').style.display === 'none') return;
+            if (isProcessingTurn || document.getElementById('battle-actions').style.display === 'none') return;
+            isProcessingTurn = true;
             isDefending = true;
             logMsg("Bracing for impact (Shields raised, Heat venting).");
             addShockwave(140, 70, 50, '#00ffff', 4);
-            enemyTurn();
-            isDefending = false;
-            if (document.getElementById('battle-actions').style.display !== 'none') {
-                applyCooling();
-                updateBattle();
-            }
+            setTimeout(() => {
+                enemyTurn();
+            }, 200);
         }
 
         function enemyTurn() {
+            if (enemyStats.hp <= 0 || document.getElementById('battle-actions').style.display === 'none') {
+                isProcessingTurn = false;
+                isDefending = false;
+                return;
+            }
+
             if (enemyStats.heat + 30 > enemyStats.maxHeat) {
                 enemyIsDefending = true;
                 logMsg("Enemy vents reactor heat! (Defending)");
                 addShockwave(478, 70, 50, '#ffaa00', 4);
+                applyCooling();
+                updateBattle();
+                isDefending = false;
+                isProcessingTurn = false;
                 return;
             }
 
@@ -1718,6 +1738,10 @@
                     } else {
                         logMsg(`Enemy targeted ${targetLimb.name}... Enemy missed!`);
                     }
+                    applyCooling();
+                    updateBattle();
+                    isDefending = false;
+                    isProcessingTurn = false;
                 }, 140);
             } else {
                 triggerAnim('enemy-mech-container', 'enemy-attacking', 200);
@@ -1745,7 +1769,12 @@
                         playerStats.hp = 0;
                         updateBattle();
                         endBattle(false);
+                    } else {
+                        applyCooling();
+                        updateBattle();
                     }
+                    isDefending = false;
+                    isProcessingTurn = false;
                 }, 140);
             }
             updateBattle();
@@ -1760,6 +1789,7 @@
 
         // Comprehensive keyboard navigation
         window.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.altKey || e.metaKey) return;
             const screen = getCurrentScreen();
             const key = e.key.toLowerCase();
 
@@ -1838,9 +1868,6 @@
                 }
             }
         });
-    </script>
-</body>
-</html>    });
     </script>
 </body>
 </html>
