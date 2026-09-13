@@ -11,91 +11,88 @@ The project aims to return software development to the lightweight, compute-effi
 ## ⚠️ DIRECTOR WARNING: DO NOT MODIFY PATH ⚠️
 **ATTENTION DIRECTORS:** Do NOT instruct subagents to modify, reset, or fix the `$env:Path`. This crashes agents.
 
-## Current State (as of 2026-09-10 Director B Review)
-- **Total Apps:** 96 registered in App.jsx.
+## Current State (as of 2026-09-13 07:00 UTC)
+- **Total Apps:** 95 registered in App.jsx.
 - **KiloOS Version:** 0.3.111.
-- **Games:** 43 titles. 🎯 **40 GAME MILESTONE REACHED!**
-- **Build Health:** ✅ Clean.
-- **Model:** Gemini 3.8 Flash migration pending user relaunch of Prompt A. Director B on Claude Opus 4.6.
-- **Fleet:** Prompt B runs **QA + App Tester only** (per user directive Sep 10). Feature Expander and Game Content **intentionally paused** until reliability improves across all apps. Prompt A agents still pending relaunch.
-- **Director Comms:** `director_comms.md` — 3 entries exchanged. Graphics Loop 0 priority RESOLVED.
+- **Games:** 43 titles.
+- **Build Health:** ✅ Clean — 246.49 KB JS (75.05 KB gzip), 21.77 KB CSS (5.10 KB gzip).
+- **Model:** Prompt A: Gemini 3.8 Flash ✅ (launched ~Sep 10). Prompt B: Gemini 3.7 Flash ✅.
+- **Fleet:** 5 of 7 agents active. Expander and Content paused by user (reliability-first strategy).
 
-### Strategic Direction (Sep 10 — user directive)
-**Reliability-first.** User practical testing found low usability/reliability across many apps. New strategy:
-1. **Pause content and feature expansion** until QA + Tester cycles fix broken/nonfunctional features.
-2. QA agent continues deep bug-fix passes (Pass 4+).
-3. App Tester agent performs meaningful user-perspective testing and fixes broken UX.
-4. Feature Expander and Game Content will resume **only after** several testing/QA cycles are complete.
-5. Depth-first strategy continues — no new app acceleration.
+### Strategic Direction
+**Depth-first, reliability-first.** Both Directors and user agree:
+1. Quality over quantity — no rush to 100 apps.
+2. Loop 0 priority for Graphics — process unprocessed games first. ✅ DONE — all 4 Loop 0 games processed.
+3. User paused Feature Expander and Game Content for reliability.
+4. QA + Tester running deep quality passes (Pass 4).
 
 ### Game Library (43 titles)
 K2048, KAbyss, KAlchemy, KAsteroids, KBreakout, KChess, KColony, KColosseum, KConnect4, KCyber, KDarts, KDragon, KFarm, KFortress, KFreecell, KGo, KHangman, KMatch3, KMaze, KMech, KMines, KMystery, KPac, KPong, KQuest, KReversi, KRogue, KSanctuary, KSimon, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSudoku, KTetris, KTowers, KTrader, KVoid, KWizard, KWords.
 
 ### Agent Status Summary
 
-| Agent | Status | Current Task | Speed |
+| Agent | Status | Current Task | 72h Output |
 |---|---|---|---|
-| QA & Build | ✅ Active | Pass 4 | Every 3h (Prompt B) |
-| App Tester | ✅ Active | UI audits + broken feature fixes | ~Every 2h (Prompt B) |
-| Feature Expander | ⏸️ **Paused (user directive)** | — | Paused until reliability improves |
-| Game Content | ⏸️ **Paused (user directive)** | — | Paused until reliability improves |
-| App Creator | ⏸️ Pending | KAbyss Phase 5 | Prompt A — not yet launched |
-| Game Graphics | ⏸️ Pending | Loop 9 queue | Prompt A — not yet launched |
-| Usability | ⏸️ Pending | KPac | Prompt A — not yet launched |
-| Director #1 (A) | ✅ Active | — | Every 3 days (Claude) |
-| Director #2 (B) | ✅ Active | — | Every 3 days (This conversation) |
-
-### Content Depth
-- **Deep Games:** KRogue at Loop 11 (9 class archetypes!). KSpace/KAsteroids at Loop 11.
-- **Classic Games: ALL 17 Balance Passes COMPLETE** ✅
+| Usability | ✅ **Blazing** | KTerm | 13 commits — deep modal/toast/shortcut passes |
+| QA & Build | ✅ **Blazing** | Pass 4 | 12 commits — deep quality fixes |
+| App Tester | ✅ **Blazing** | UI audits | 18 commits — systematic 7-8 issue audits |
+| App Creator | ✅ Active | KAbyss Phase 14 | 9 commits — Phases 5-13 completed! |
+| Game Graphics | ✅ Active | Loop 9 queue | 6 commits — ALL Loop 0 games processed ✅ |
+| Feature Expander | ⏸️ Paused | — | User paused (reliability-first) |
+| Game Content | ⏸️ Paused | — | User paused (reliability-first) |
 
 ### Creator
-**35 apps completed through full 14-phase lifecycle.** Currently building **KAbyss** Phase 5.
+**35 apps completed.** KAbyss at Phase 14 (final phase!) — will be the 36th completed lifecycle.
 
-### Inter-Director Communication
-A `director_comms.md` file now serves as the async communication channel between Director A (Claude) and Director B (Gemini). Both directors read and append to this file during reviews.
+### Graphics
+**Loop 0 priority WORKED!** KSanctuary, KSubmarine, KStarDredge, and KAbyss all received Loop 1 passes. Also advanced KTetris/KSnake/KBreakout to Loop 9 and KCyber to Loop 3.
+
+### QA + Tester
+**Pass 4 in deep progress.** QA finding increasingly sophisticated bugs (XSS sanitization, GDI leaks, buffer safety, audio buffer cutoff, storage persistence). Tester doing systematic UI audits catching 6-8 issues per app.
 
 ## Milestones
 
 ### Completed ✅
 1. Initial ecosystem with 50+ apps — July 7.
 2. **25 game target reached** — July 22. 🎯
-3. **ALL 17 Classic Games Balance Passes COMPLETE** — Aug 12. ✅ 🎯
-4. **🎯 90 APPS MILESTONE REACHED** — Aug 26. 🎯
-5. **Model migration to Gemini 3.7 Flash** — Aug 30. ✅
-6. **ALL 6 WORKER AGENTS ALIVE** — Aug 30. ✅ 🎯
-7. **🎯 40 GAME MILESTONE REACHED** — 43 games — Sep 3. 🎯
-8. **🎯 95 APPS MILESTONE REACHED** — Sep 5. 🎯
-9. **35 apps created through full lifecycle** — Sep 5. ✅
-10. **Strategic shift: depth-first** — Sep 6.
-11. **Director B comms channel established** — Sep 9. ✅
-12. **10 new game icons created** — Sep 9. ✅
+3. **ALL 17 Classic Games Balance Passes COMPLETE** — Aug 12. ✅
+4. **🎯 90 APPS MILESTONE** — Aug 26.
+5. **Model migration to Gemini 3.7 Flash** — Aug 30.
+6. **🎯 40+ GAME MILESTONE** — 43 games — Sep 3.
+7. **🎯 95 APPS MILESTONE** — Sep 5.
+8. **Strategic shift: depth-first** — Sep 6.
+9. **Director comms channel** — Sep 9.
+10. **10 new game icons** — Sep 9.
+11. **Prompt A launched on Gemini 3.8 Flash** — Sep 10. ✅
+12. **Graphics Loop 0 priority completed** — ALL unprocessed games got Loop 1 — Sep 11-12. ✅
+13. **KAbyss Phase 13 complete** — Sep 12. (Phase 14 next, then 36th lifecycle complete)
+14. **User paused Expander/Content — reliability-first strategy** — Sep 10.
 
 ### Active 🔄
-- Creator: KAbyss Phase 5 (Prompt A pending launch).
-- QA: Pass 4, target KPing.
-- Tester: UI audit passes across apps.
-- Graphics: Loop 9 queue (Prompt A pending launch).
-- Usability: KPac queue (Prompt A pending launch).
+- Creator: KAbyss Phase 14 (final phase).
+- QA: Pass 4 continuing.
+- Tester: UI audit sweep.
+- Graphics: Loop 9 for polished games.
+- Usability: KTerm and queue.
 
 ### Upcoming 📋
+- **KAbyss Phase 14 → 36th completed lifecycle.**
 - **100 apps milestone** — 5 apps away.
-- Prompt A launch on Gemini 3.8 Flash.
-- Graphics Loop 0 priority — process unprocessed games first.
+- QA Pass 4 completion.
 
-## Active Agent Fleet (as of 2026-09-10)
+## Active Agent Fleet (as of 2026-09-13)
 
-| Agent | Schedule | Plan File | Model | Dispatcher |
-|---|---|---|---|---|
-| App Creator | **Every 6h** (:30) | `new_app_plan.md` | Gemini 3.8 Flash | Prompt A (pending) |
-| Game Graphics | **Every 6h** (:45) | `game_graphics_plan.md` | Gemini 3.8 Flash | Prompt A (pending) |
-| Usability Agent | **Every 4h** (:15) | `usability_plan.md` | Gemini 3.8 Flash | Prompt A (pending) |
-| Feature Expander | Every 2h (:00) | `app_work_plan.md` | Gemini 3.7 Flash | Prompt B |
-| Quality & Build | Every 3h (:00) | `app_fix_plan.md` | Gemini 3.7 Flash | Prompt B |
-| Game Content | Every 2h (:30) | `game_content_plan.md` | Gemini 3.7 Flash | Prompt B |
-| App Tester | ~Every 2h | `app_test_plan.md` | Gemini 3.7 Flash | Prompt B |
-| Director #1 | Every 3 days | (reviews all) | Claude Opus 4.6 | This conversation |
-| Director #2 | Every 3 days | (reviews all) | Gemini 3.7 Flash | Prompt B |
+| Agent | Schedule | Plan File | Model | Dispatcher | Status |
+|---|---|---|---|---|---|
+| App Creator | Every 6h (:30) | `new_app_plan.md` | Gemini 3.8 Flash | Prompt A | ✅ |
+| Game Graphics | Every 6h (:45) | `game_graphics_plan.md` | Gemini 3.8 Flash | Prompt A | ✅ |
+| Usability | Every 4h (:15) | `usability_plan.md` | Gemini 3.8 Flash | Prompt A | ✅ |
+| Quality & Build | Every 3h | `app_fix_plan.md` | Gemini 3.7 Flash | Prompt B | ✅ |
+| App Tester | ~Every 2h | `app_test_plan.md` | Gemini 3.7 Flash | Prompt B | ✅ |
+| Feature Expander | Paused | `app_work_plan.md` | — | Prompt B | ⏸️ |
+| Game Content | Paused | `game_content_plan.md` | — | Prompt B | ⏸️ |
+| Director #1 | Every 3 days | (reviews all) | Claude Opus 4.6 | This conversation | ✅ |
+| Director #2 | Every 3 days | (reviews all) | Gemini 3.7 Flash | Prompt B | ✅ |
 
 ## Agent Workflow Rules
 - **Distributed Architecture:** Worker crons split across 2 dispatcher conversations.
@@ -103,6 +100,5 @@ A `director_comms.md` file now serves as the async communication channel between
 - **Self-Contained Context:** Each agent reads ONLY its own .md plan file.
 - **Continuous Deployment:** Commit and push after every turn.
 - **Coordination:** Always `git pull` first. Own your plan file only.
-- **Infinite Autonomy:** Agents never idle. When a queue/pass completes, they loop.
-- **Quota Management:** Prompt A runs at reduced speed (14 triggers/day vs old 36/day).
-- **Inter-Director Comms:** Directors communicate via `director_comms.md` (append-only log).
+- **Quota Management:** Prompt A at half-speed (14 triggers/day). Prompt B: QA+Tester only.
+- **Inter-Director Comms:** Directors communicate via `director_comms.md`.
