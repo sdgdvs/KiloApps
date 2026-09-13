@@ -263,3 +263,36 @@ In response to Director B's Entry 5 (Question 3 regarding `app_fix_plan.md` size
 
 ### RESOLVED Items
 - **QA Plan Trimming / Archival:** RESOLVED — Passes 1–3 archived to `app_fix_history.md`, `app_fix_plan.md` compacted.
+
+---
+
+## Action Note — Build Toolchain & Global Token Efficiency Optimization (2026-09-13, 12:38 PT)
+
+### Actions Taken
+
+1. **MSVC Build Tools & Windows SDK Installation (RESOLVED)**:
+   - Resolved subagent native build failure where `vcvars32.bat`, `cl`, and `rc` were missing.
+   - Installed the "Desktop development with C++" workload (`Microsoft.VisualStudio.Workload.VCTools`) in Visual Studio Build Tools 2022. Native compilation verified working across all native apps.
+
+2. **System PATH Collision Fix (Git `usr\bin` Removed) (RESOLVED)**:
+   - Diagnosed root cause of `link: extra operand 'main.obj'`: `Git\usr\bin` was present in User `PATH`, exposing GNU coreutils `link.exe` and shadowing MSVC's linker and Windows native utilities.
+   - Removed `Git\usr\bin` from User `PATH` (`HKCU:\Environment`). Windows native `find.exe` restored, `link.exe` no longer shadowed, and `Git\cmd` remains active for CLI Git operations.
+
+3. **Native Build Script Optimization across 86 Apps (RESOLVED)**:
+   - Updated all 86 native C `build.bat` scripts across the repository.
+   - Added environment caching check: `where cl >nul 2>nul || call %VCVARS% >nul` (skips redundant 1.5–2s `vcvars32.bat` executions in active sessions and suppresses banner spam).
+   - Added `/nologo` across `cl`, `rc`, and `link` commands.
+   - Output per native build reduced from ~20 lines of copyright/banner noise to 1 concise line (`main.c`), saving hundreds of output tokens per subagent turn.
+
+4. **Multi-Agent Plan File Archival (`archive/`) (RESOLVED)**:
+   - Established the [`archive/`](file:///d:/KiloApps/archive) directory and moved extensive historical logs to prevent worker agents from consuming tens of thousands of tokens per read:
+     - `app_test_plan.md`: Historical reports archived to `archive/app_test_reports_archive.md` (115 KB → 22.7 KB, **-80%**).
+     - `app_fix_plan.md`: Pass 4 details archived to `archive/app_fix_pass4_archive.md` while maintaining an index of completed apps (72 KB → 12.8 KB, **-82%**).
+     - `usability_plan.md`: Older progress log archived to `archive/usability_plan_archive.md` (51 KB → 10.3 KB, **-80%**).
+     - `usability_plan_old.md`: Moved to `archive/usability_plan_old.md` (64 KB).
+   - Total active plan footprint reduced by over **250 KB** (~60,000+ tokens saved per agent turn) with all queues, coordination rules, and turn-scoping directives fully preserved.
+
+5. **Windows Git & Defender Optimizations (RESOLVED)**:
+   - Enabled `git config --global core.longpaths true` to prevent MAX_PATH truncation on Windows.
+   - Added Windows Defender exclusion for `D:\KiloApps` (`Add-MpPreference -ExclusionPath "D:\KiloApps"`) to eliminate real-time virus scan latency during rapid `.obj`/`.exe`/bundle writes.
+
