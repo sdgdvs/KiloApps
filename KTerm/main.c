@@ -106,21 +106,36 @@ typedef struct {
     char* outputBuffer;
 } TabSession;
 
-#define IDC_PROMPT 103
+#define IDC_PROMPT       103
+#define IDC_STATUS       104
+#define IDC_BTN_NEWTAB   105
+#define IDC_BTN_CLOSETAB 106
+#define IDC_BTN_CLEAR    107
+#define IDC_BTN_EXPORT   108
+#define IDC_BTN_HELP     109
 
-HWND hTab, hOut, hIn, hPrompt;
+HWND hTab, hOut, hIn, hPrompt, hStatus;
+HWND hBtnNewTab, hBtnCloseTab, hBtnClear, hBtnExport, hBtnHelp;
+HWND g_hMainWnd = NULL;
 WNDPROC oldEditProc;
 WNDPROC oldOutProc;
 HFONT g_hFont = NULL;
 HFONT g_hTabFont = NULL;
 HBRUSH g_hBgBrush = NULL;
+HBRUSH g_hStatusBrush = NULL;
 
 void ShowHelpDialog(HWND hwnd);
 void UpdatePromptDisplay();
+void SetStatusFeedback(const char* msg);
+void UpdateStatusDisplay();
+void UpdateAppTitle();
 
 TabSession g_tabs[MAX_TABS];
 int g_tabCount = 0;
 int g_activeTab = 0;
+
+char g_statusMsg[128] = "";
+DWORD g_statusExpiry = 0;
 
 // Reverse Search State
 BOOL g_isSearchMode = FALSE;
@@ -182,24 +197,28 @@ void ShowHelpDialog(HWND hwnd) {
     const char* helpText = 
         "KTerm - Advanced Terminal Quick Reference\r\n\r\n"
         "KEYBOARD SHORTCUTS:\r\n"
-        "  F1 / 'h'         - Open this Help guide\r\n"
+        "  F1 / 'h'         - Open this Help Reference guide\r\n"
         "  Ctrl + T         - Open a new terminal tab\r\n"
         "  Ctrl + W         - Close active terminal tab\r\n"
-        "  Ctrl + R         - Incremental reverse search (Ctrl+R again cycles)\r\n"
-        "  Ctrl + L / 'cls' - Clear terminal screen\r\n"
+        "  Ctrl + Tab       - Cycle to next tab (Shift for previous)\r\n"
+        "  Ctrl + 1..8      - Jump directly to Tab 1 through 8\r\n"
+        "  Ctrl + S         - Export session output log to text file\r\n"
+        "  Ctrl + R         - Incremental reverse search (Ctrl+R cycles)\r\n"
+        "  Ctrl + L / 'cls' - Clear terminal screen output\r\n"
         "  Ctrl + C         - Cancel current input command line\r\n"
         "  Tab              - Autocomplete commands and file paths\r\n"
+        "  Escape           - Clear input command line / cancel search\r\n"
         "  Up / Down Arrow  - Navigate command history\r\n\r\n"
         "BUILT-IN COMMANDS:\r\n"
         "  help             - Show command reference\r\n"
-        "  ver              - Show OS and terminal version\r\n"
-        "  dir / ls         - List directory contents\r\n"
+        "  ver / sysinfo    - Show OS and terminal version\r\n"
+        "  dir / ls [path]  - List directory contents\r\n"
         "  cd [path]        - Change current directory\r\n"
         "  type / cat <file>- Read text file contents\r\n"
         "  echo [text]      - Print text (supports %VAR% & $VAR)\r\n"
         "  mkdir [folder]   - Create directory\r\n"
         "  date / time      - System calendar date or time\r\n"
-        "  whoami           - Display current user\r\n"
+        "  whoami           - Display current username\r\n"
         "  alias            - Custom aliases (alias name=cmd, unalias)\r\n"
         "  export / env     - Set environment variables (export VAR=val, unset)\r\n"
         "  macro            - Macro scripts (record, stop, play, list)\r\n"
@@ -208,6 +227,43 @@ void ShowHelpDialog(HWND hwnd) {
         "  exit / closetab  - Close tab session or exit application";
 
     MessageBoxA(hwnd, helpText, "KTerm - Command & Shortcut Guide", MB_OK | MB_ICONINFORMATION);
+}
+
+void SetStatusFeedback(const char* msg) {
+    if (!msg) return;
+    lstrcpynA(g_statusMsg, msg, sizeof(g_statusMsg));
+    g_statusExpiry = GetTickCount() + 3500;
+    if (hStatus) {
+        char statusText[512];
+        int cur = (g_activeTab >= 0 && g_activeTab < g_tabCount) ? (g_activeTab + 1) : 1;
+        wsprintfA(statusText, " [F1 / h] Help   [Ctrl+T] New Tab   [Ctrl+W] Close Tab   [Ctrl+1..8] Tabs   [Ctrl+S] Export   [Ctrl+L] Clear   |   %s   (Tab %d/%d)", g_statusMsg, cur, g_tabCount);
+        SetWindowTextA(hStatus, statusText);
+    }
+}
+
+void UpdateStatusDisplay() {
+    if (!hStatus) return;
+    char statusText[512];
+    int cur = (g_activeTab >= 0 && g_activeTab < g_tabCount) ? (g_activeTab + 1) : 1;
+    if (g_statusExpiry != 0 && GetTickCount() < g_statusExpiry && g_statusMsg[0]) {
+        wsprintfA(statusText, " [F1 / h] Help   [Ctrl+T] New Tab   [Ctrl+W] Close Tab   [Ctrl+1..8] Tabs   [Ctrl+S] Export   [Ctrl+L] Clear   |   %s   (Tab %d/%d)", g_statusMsg, cur, g_tabCount);
+    } else {
+        g_statusExpiry = 0;
+        g_statusMsg[0] = '\0';
+        wsprintfA(statusText, " [F1 / h] Help   [Ctrl+T] New Tab   [Ctrl+W] Close Tab   [Ctrl+1..8] Tabs   [Ctrl+S] Export   [Ctrl+L] Clear       [Tab %d of %d]", cur, g_tabCount);
+    }
+    SetWindowTextA(hStatus, statusText);
+}
+
+void UpdateAppTitle() {
+    if (!g_hMainWnd) return;
+    char title[256];
+    if (g_activeTab >= 0 && g_activeTab < g_tabCount) {
+        wsprintfA(title, "KTerm - [%s: %s] - (F1 for Help | Ctrl+T: New Tab)", g_tabs[g_activeTab].title, g_tabs[g_activeTab].currentDir);
+    } else {
+        lstrcpynA(title, "KTerm - Advanced Terminal (Press 'h' or F1 for Help | Ctrl+T: New Tab)", sizeof(title));
+    }
+    SetWindowTextA(g_hMainWnd, title);
 }
 
 void UpdatePromptDisplay() {
@@ -226,7 +282,8 @@ void UpdatePromptDisplay() {
     int h = rc.bottom;
     int tabH = 28;
     int inH = 28;
-    int outH = h - tabH - inH;
+    int statusH = 22;
+    int outH = h - tabH - inH - statusH;
     if (outH < 0) outH = 0;
 
     HDC hdc = GetDC(hPrompt);
@@ -242,6 +299,11 @@ void UpdatePromptDisplay() {
 
     MoveWindow(hPrompt, 0, tabH + outH, promptW, inH, TRUE);
     MoveWindow(hIn, promptW, tabH + outH, w - promptW, inH, TRUE);
+    if (hStatus) {
+        MoveWindow(hStatus, 0, tabH + outH + inH, w, statusH, TRUE);
+        UpdateStatusDisplay();
+    }
+    UpdateAppTitle();
 }
 
 void SaveActiveTabOutput() {
@@ -335,6 +397,9 @@ void AddNewTab(const char* title) {
         g_activeTab = tabIndex;
         LoadTabOutput(g_activeTab);
         UpdatePromptDisplay();
+        char feedback[64];
+        wsprintfA(feedback, "Opened %s", nameBuf);
+        SetStatusFeedback(feedback);
     }
 }
 
@@ -342,8 +407,12 @@ void SwitchTab(int newIdx) {
     if (newIdx < 0 || newIdx >= g_tabCount || newIdx == g_activeTab) return;
     SaveActiveTabOutput();
     g_activeTab = newIdx;
+    TabCtrl_SetCurSel(hTab, g_activeTab);
     LoadTabOutput(g_activeTab);
     UpdatePromptDisplay();
+    char feedback[64];
+    wsprintfA(feedback, "Switched to Tab %d (%s)", g_activeTab + 1, g_tabs[g_activeTab].title);
+    SetStatusFeedback(feedback);
     SetFocus(hIn);
 }
 
@@ -514,6 +583,7 @@ void ProcessCommand(const char* rawCmd) {
                     char msg[256];
                     wsprintfA(msg, "Log saved to %s", fileName);
                     AppendOutput(msg);
+                    SetStatusFeedback(msg);
                 } else {
                     AppendOutput("Failed to open file for export.");
                 }
@@ -868,7 +938,7 @@ void ProcessCommand(const char* rawCmd) {
             AppendOutput("Usage: macro <record|stop|play|list> [name]");
         }
     } else {
-        AppendOutput("Bad command or file name.");
+        AppendOutput("Bad command or file name. (Type 'help' or press F1 for available commands)");
     }
 }
 
@@ -1008,6 +1078,38 @@ LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return 0;
         }
 
+        if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == 'S') {
+            ProcessCommand("export-log");
+            return 0;
+        }
+
+        if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == VK_TAB) {
+            if (g_tabCount > 1) {
+                int dir = (GetKeyState(VK_SHIFT) & 0x8000) ? -1 : 1;
+                int nextTab = (g_activeTab + dir + g_tabCount) % g_tabCount;
+                SwitchTab(nextTab);
+            }
+            return 0;
+        }
+
+        if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam >= '1' && wParam <= '8') {
+            int target = wParam - '1';
+            if (target < g_tabCount) {
+                SwitchTab(target);
+                return 0;
+            }
+        }
+
+        if (wParam == VK_ESCAPE) {
+            if (g_isSearchMode) {
+                g_isSearchMode = FALSE;
+                SetWindowTextA(hIn, g_savedInput);
+                return 0;
+            }
+            SetWindowTextA(hIn, "");
+            return 0;
+        }
+
         if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == 'C') {
             DWORD sSel = 0, eSel = 0;
             SendMessageA(hIn, EM_GETSEL, (WPARAM)&sSel, (LPARAM)&eSel);
@@ -1038,11 +1140,6 @@ LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         if (g_isSearchMode) {
-            if (wParam == VK_ESCAPE) {
-                g_isSearchMode = FALSE;
-                SetWindowTextA(hIn, g_savedInput);
-                return 0;
-            }
             if (wParam == VK_RETURN) {
                 g_isSearchMode = FALSE;
                 if (g_searchMatch[0]) {
@@ -1125,6 +1222,25 @@ LRESULT CALLBACK OutEditProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
             ProcessCommand("closetab");
             return 0;
         }
+        if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == 'S') {
+            ProcessCommand("export-log");
+            return 0;
+        }
+        if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == VK_TAB) {
+            if (g_tabCount > 1) {
+                int dir = (GetKeyState(VK_SHIFT) & 0x8000) ? -1 : 1;
+                int nextTab = (g_activeTab + dir + g_tabCount) % g_tabCount;
+                SwitchTab(nextTab);
+            }
+            return 0;
+        }
+        if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam >= '1' && wParam <= '8') {
+            int target = wParam - '1';
+            if (target < g_tabCount) {
+                SwitchTab(target);
+                return 0;
+            }
+        }
         if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == 'L') {
             SetWindowTextA(hOut, "");
             return 0;
@@ -1153,6 +1269,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hTab = CreateWindowExA(0, WC_TABCONTROLA, "", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,
                                   0, 0, 0, 0, hwnd, (HMENU)IDC_TAB, GetModuleHandle(NULL), NULL);
 
+            hBtnNewTab = CreateWindowExA(0, "BUTTON", "+ Tab", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                        0, 0, 0, 0, hwnd, (HMENU)IDC_BTN_NEWTAB, GetModuleHandle(NULL), NULL);
+            hBtnCloseTab = CreateWindowExA(0, "BUTTON", "Close", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                          0, 0, 0, 0, hwnd, (HMENU)IDC_BTN_CLOSETAB, GetModuleHandle(NULL), NULL);
+            hBtnClear = CreateWindowExA(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                       0, 0, 0, 0, hwnd, (HMENU)IDC_BTN_CLEAR, GetModuleHandle(NULL), NULL);
+            hBtnExport = CreateWindowExA(0, "BUTTON", "Export", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                        0, 0, 0, 0, hwnd, (HMENU)IDC_BTN_EXPORT, GetModuleHandle(NULL), NULL);
+            hBtnHelp = CreateWindowExA(0, "BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                      0, 0, 0, 0, hwnd, (HMENU)IDC_BTN_HELP, GetModuleHandle(NULL), NULL);
+
             hOut = CreateWindowExA(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
                                   0, 0, 0, 0, hwnd, (HMENU)IDC_OUT, GetModuleHandle(NULL), NULL);
 
@@ -1161,29 +1288,68 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             hIn = CreateWindowExA(0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
                                  0, 0, 0, 0, hwnd, (HMENU)IDC_IN, GetModuleHandle(NULL), NULL);
+
+            hStatus = CreateWindowExA(0, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_LEFT | SS_CENTERIMAGE,
+                                      0, 0, 0, 0, hwnd, (HMENU)IDC_STATUS, GetModuleHandle(NULL), NULL);
             
             SendMessageA(hOut, EM_SETLIMITTEXT, OUT_BUF_SIZE, 0);
-
             SendMessageA(hOut, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(8, 8));
             SendMessageA(hIn, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(6, 6));
+
 #ifndef EM_SETCUEBANNER
 #define EM_SETCUEBANNER 0x1501
 #endif
-            SendMessageW(hIn, EM_SETCUEBANNER, FALSE, (LPARAM)L"Type a command... (Press 'h' or F1 for Help | Ctrl+T: New Tab)");
+            SendMessageW(hIn, EM_SETCUEBANNER, TRUE, (LPARAM)L"Type a command... (Press 'h' or F1 for Help | Ctrl+T: New Tab)");
 
             g_hFont = CreateFontA(-16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
             g_hTabFont = CreateFontA(-12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             g_hBgBrush = CreateSolidBrush(RGB(9, 11, 16));
+            g_hStatusBrush = CreateSolidBrush(RGB(18, 22, 32));
 
             SendMessageA(hTab, WM_SETFONT, (WPARAM)g_hTabFont, 0);
+            SendMessageA(hBtnNewTab, WM_SETFONT, (WPARAM)g_hTabFont, 0);
+            SendMessageA(hBtnCloseTab, WM_SETFONT, (WPARAM)g_hTabFont, 0);
+            SendMessageA(hBtnClear, WM_SETFONT, (WPARAM)g_hTabFont, 0);
+            SendMessageA(hBtnExport, WM_SETFONT, (WPARAM)g_hTabFont, 0);
+            SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)g_hTabFont, 0);
+
             SendMessageA(hOut, WM_SETFONT, (WPARAM)g_hFont, 0);
             SendMessageA(hPrompt, WM_SETFONT, (WPARAM)g_hFont, 0);
             SendMessageA(hIn, WM_SETFONT, (WPARAM)g_hFont, 0);
+            SendMessageA(hStatus, WM_SETFONT, (WPARAM)g_hTabFont, 0);
             
             oldEditProc = (WNDPROC)SetWindowLongPtrA(hIn, GWLP_WNDPROC, (LONG_PTR)EditProc);
             oldOutProc = (WNDPROC)SetWindowLongPtrA(hOut, GWLP_WNDPROC, (LONG_PTR)OutEditProc);
             
+            SetTimer(hwnd, 1, 500, NULL);
             AddNewTab("Tab 1");
+            break;
+        }
+        case WM_TIMER: {
+            if (wParam == 1) {
+                UpdateStatusDisplay();
+            }
+            break;
+        }
+        case WM_COMMAND: {
+            int id = LOWORD(wParam);
+            if (id == IDC_BTN_NEWTAB) {
+                AddNewTab(NULL);
+                SetFocus(hIn);
+            } else if (id == IDC_BTN_CLOSETAB) {
+                ProcessCommand("closetab");
+                SetFocus(hIn);
+            } else if (id == IDC_BTN_CLEAR) {
+                SetWindowTextA(hOut, "");
+                SetStatusFeedback("Screen cleared");
+                SetFocus(hIn);
+            } else if (id == IDC_BTN_EXPORT) {
+                ProcessCommand("export-log");
+                SetFocus(hIn);
+            } else if (id == IDC_BTN_HELP) {
+                ShowHelpDialog(hwnd);
+                SetFocus(hIn);
+            }
             break;
         }
         case WM_NOTIFY: {
@@ -1199,10 +1365,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int h = HIWORD(lParam);
             int tabH = 28;
             int inH = 28;
-            int outH = h - tabH - inH;
+            int statusH = 22;
+            int outH = h - tabH - inH - statusH;
             if (outH < 0) outH = 0;
 
-            MoveWindow(hTab, 0, 0, w, tabH, TRUE);
+            int btnBarW = 320;
+            int tabW = (w > btnBarW + 60) ? (w - btnBarW) : (w / 2);
+            if (tabW < 40) tabW = 40;
+            int btnX = tabW + 2;
+
+            MoveWindow(hTab, 0, 0, tabW, tabH, TRUE);
+
+            int bw1 = 56, bw2 = 56, bw3 = 54, bw4 = 60, bw5 = 76;
+            MoveWindow(hBtnNewTab, btnX, 1, bw1, 26, TRUE);
+            MoveWindow(hBtnCloseTab, btnX + bw1 + 2, 1, bw2, 26, TRUE);
+            MoveWindow(hBtnClear, btnX + bw1 + bw2 + 4, 1, bw3, 26, TRUE);
+            MoveWindow(hBtnExport, btnX + bw1 + bw2 + bw3 + 6, 1, bw4, 26, TRUE);
+            MoveWindow(hBtnHelp, btnX + bw1 + bw2 + bw3 + bw4 + 8, 1, bw5, 26, TRUE);
+
             MoveWindow(hOut, 0, tabH, w, outH, TRUE);
             UpdatePromptDisplay();
             break;
@@ -1216,18 +1396,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_SETFOCUS:
             SetFocus(hIn);
             break;
-        case WM_CTLCOLORSTATIC:
-        case WM_CTLCOLOREDIT: {
+        case WM_CTLCOLORSTATIC: {
             HDC hdc = (HDC)wParam;
             if ((HWND)lParam == hPrompt) {
                 SetTextColor(hdc, RGB(0, 217, 255));
-            } else {
-                SetTextColor(hdc, RGB(0, 255, 102));
+                SetBkColor(hdc, RGB(9, 11, 16));
+                return (LRESULT)g_hBgBrush;
+            } else if ((HWND)lParam == hStatus) {
+                SetTextColor(hdc, RGB(148, 163, 184));
+                SetBkColor(hdc, RGB(18, 22, 32));
+                return (LRESULT)g_hStatusBrush;
             }
+            SetTextColor(hdc, RGB(0, 255, 102));
+            SetBkColor(hdc, RGB(9, 11, 16));
+            return (LRESULT)g_hBgBrush;
+        }
+        case WM_CTLCOLOREDIT: {
+            HDC hdc = (HDC)wParam;
+            SetTextColor(hdc, RGB(0, 255, 102));
             SetBkColor(hdc, RGB(9, 11, 16));
             return (LRESULT)g_hBgBrush;
         }
         case WM_DESTROY:
+            KillTimer(hwnd, 1);
             for (int i = 0; i < g_tabCount; i++) {
                 if (g_tabs[i].outputBuffer) {
                     HeapFree(GetProcessHeap(), 0, g_tabs[i].outputBuffer);
@@ -1236,6 +1427,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (g_hFont) DeleteObject(g_hFont);
             if (g_hTabFont) DeleteObject(g_hTabFont);
             if (g_hBgBrush) DeleteObject(g_hBgBrush);
+            if (g_hStatusBrush) DeleteObject(g_hStatusBrush);
             PostQuitMessage(0);
             break;
         default:
@@ -1260,6 +1452,9 @@ void MainEntry() {
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
     HWND hwnd = CreateWindowExA(0, "KTermApp", "KTerm - Advanced Terminal (Press 'h' or F1 for Help | Ctrl+T: New Tab)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
+
+    g_hMainWnd = hwnd;
+    UpdateAppTitle();
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

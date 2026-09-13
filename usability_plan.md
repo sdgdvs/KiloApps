@@ -44,14 +44,13 @@
 
 ---
 
-**Target App:** KTerm
+**Target App:** KSynth
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KTerm
 - KSynth
 - KTask
 - KRogue
@@ -105,8 +104,10 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTetris
 - KSpace
 - KSolitaire
+- KTerm
 
 ## Progress Log (trimmed by Director 2026-09-06 — keeping only latest entry per app)
+- KTerm: Usability and UI issues fixed (integrated cybernetic non-blocking toast notification system with startup welcome prompt and click-to-dismiss [✕] buttons, added 1-click Quick Starter command chips [help, dir, sysinfo, date, whoami, alias, export-log, clear], added font size zoom buttons [A- / A+] with [Ctrl++/Ctrl--/Ctrl+0] hotkeys, added [Ctrl+Tab] and [Ctrl+1..8] direct tab switching shortcuts with tab numbering and double-click tab renaming, made Help modal command table rows clickable to insert/run commands directly, added [Ctrl+S] session log export accelerator and Escape clear in web; added native Windows toolbar buttons [+ Tab, Close, Clear, Export, Help (F1)] alongside tab control, added bottom status bar showing keyboard shortcuts guide and real-time toast feedback, implemented message loop accelerators for Ctrl+T, Ctrl+W, Ctrl+S, Ctrl+Tab, Ctrl+1..8, and Escape, updated cue banner to persist when focused, dynamic window title synchronization with active tab and directory path, and verified clean compilation across both builds).
 - KSpace: Usability and UI issues fixed (integrated click-to-dismiss toast notifications with [✕] button and real-time feedback for all 7 skills and cooldowns, implemented full pointerdown/pointermove/pointerup mouse and touch drag steering with continuous firing, added backdrop-click resume to Pause menu in web; added native floating toast banner system with auto-fade and click-to-dismiss for startup guidance, save/load, exports, and audio mute [M], implemented mouse drag steering and left-click continuous firing in WM_LBUTTONDOWN and WM_MOUSEMOVE, added clickable 7-button interactive skill toolbar at bottom matching web, fixed 15px vertical click hitbox mismatches on main menu and pause screens, added backdrop-click pause resume, updated window title with shortcut hints, and verified clean compilation across both builds).
 - KTetris: Usability and UI issues fixed (fixed start menu keybinding collision where [K] and [V] overlapped at same Y coordinate, redesigned start menu with hoverable cards and precise hitboxes, added interactive toast notification system with [✕] click-to-dismiss and startup guide, implemented functional Hold Reserve piece [C/Shift] with sound/toast/replay recording, added in-game interactive HUD buttons for Pause [P], Help [H/F1], and Hold reserve slot, added board touch/mouse steering with left/right/rotate/drop zones, redesigned stylized Game Paused screen with Resume and Main Menu buttons, added clickable buttons for Help/Leaderboard/Keybinds/Game Over, synchronized 520x720 window bounds in App.jsx to prevent screen overflow in web; added native floating toast banner system with continuous fade timer, implemented UseHoldPiece in native C, fixed start menu 3D button drawing without text overlap, added board click steering and touch navigation in WM_LBUTTONDOWN, added stylized Pause dialog with click-to-resume, handled VK_ESCAPE and Hold keys, updated window title with shortcut hints, and verified clean compilation across both builds).
 - KSnake: Usability and UI issues fixed (added clickable interactive Mode [M], Difficulty [1-3], and Wrap [W] option buttons on main menu, added visible in-header [P] Pause button for mouse and mobile accessibility, added canvas click/tap steering for desktop mouse play, added [✕] close buttons and backdrop-click dismissals to all modal dialogs, made toast notifications clickable to dismiss instantly with real-time feedback for mode/diff/wrap changes in web; implemented full mouse click navigation in native C for menu options, map editor tools, branch cards, pause, skills HUD [G, F, M], and grid click steering, added on-screen native floating toast notification banner with startup welcome prompt, continuous timer maintenance for smooth menu responsiveness, and verified clean compilation across both builds).

@@ -153,6 +153,52 @@
     border-color: var(--term-border);
   }
   
+  /* Quick Command Bar */
+  #quickBar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    background: rgba(18, 22, 32, 0.85);
+    border-bottom: 1px solid var(--term-border);
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-shrink: 0;
+  }
+  #quickBar::-webkit-scrollbar { display: none; }
+  .quick-label {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-right: 4px;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .quick-chip {
+    background: rgba(0, 255, 102, 0.06);
+    border: 1px solid rgba(0, 255, 102, 0.25);
+    color: #a7f3d0;
+    padding: 3px 9px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: var(--term-font);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+  }
+  .quick-chip:hover {
+    background: rgba(0, 255, 102, 0.2);
+    color: #ffffff;
+    border-color: var(--term-fg);
+    box-shadow: 0 0 8px rgba(0, 255, 102, 0.3);
+    transform: translateY(-1px);
+  }
+  .quick-chip:active {
+    transform: translateY(0);
+  }
+
   /* Output Screen */
   #output { 
     flex: 1; 
@@ -359,13 +405,19 @@
     border-collapse: collapse;
     font-size: 12px;
   }
+  .cmd-table tr {
+    transition: background 0.12s ease;
+  }
+  .cmd-table tr:hover {
+    background: rgba(0, 255, 102, 0.08);
+  }
   .cmd-table td {
-    padding: 4px 8px;
-    vertical-align: top;
+    padding: 5px 8px;
+    vertical-align: middle;
     border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   }
   .cmd-table td.code-cell {
-    width: 170px;
+    width: 175px;
     white-space: nowrap;
   }
   .cmd-table code {
@@ -404,15 +456,42 @@
     border: 1px solid var(--term-border);
     border-left: 4px solid var(--term-fg);
     color: #e2e8f0;
-    padding: 8px 14px;
-    border-radius: 4px;
+    padding: 8px 12px;
+    border-radius: 6px;
     font-size: 12px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 10px rgba(0, 255, 102, 0.1);
     animation: toastSlideIn 0.2s ease-out;
     transition: opacity 0.25s ease, transform 0.25s ease;
     pointer-events: auto;
-    max-width: 340px;
+    max-width: 380px;
     word-break: break-word;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    cursor: pointer;
+  }
+  .toast:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8), 0 0 14px rgba(0, 255, 102, 0.25);
+  }
+  .toast-close {
+    font-size: 16px;
+    line-height: 1;
+    color: #94a3b8;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0 4px;
+    border-radius: 3px;
+    transition: all 0.15s;
+    opacity: 0.7;
+    font-family: monospace;
+    flex-shrink: 0;
+  }
+  .toast-close:hover {
+    color: #ff4444;
+    opacity: 1;
+    background: rgba(255, 68, 68, 0.2);
   }
   .toast.toast-sys {
     border-left-color: var(--term-sys);
@@ -442,11 +521,25 @@
     <button class="tab-add" id="btnNewTab" title="New Session Tab (Ctrl+T)">+ New</button>
   </div>
   <div class="toolbar-actions">
-    <button class="btn-action" id="btnExportLog" title="Download Session Log">💾 Export Log</button>
+    <button class="btn-action" id="btnExportLog" title="Download Session Log (Ctrl+S)">💾 Export Log</button>
     <button class="btn-action" id="btnClear" title="Clear Screen (Ctrl+L)">🧹 Clear</button>
+    <button class="btn-action" id="btnZoomOut" title="Decrease Font Size (Ctrl+-)">A−</button>
+    <button class="btn-action" id="btnZoomIn" title="Increase Font Size (Ctrl++)">A+</button>
     <button class="btn-action" id="btnHelp" title="Show Help Reference (F1 or 'h')">❓ Help (F1)</button>
   </div>
 </header>
+
+<div id="quickBar">
+  <span class="quick-label">⚡ Quick:</span>
+  <button class="quick-chip" data-cmd="help" title="Show help and commands">❓ help</button>
+  <button class="quick-chip" data-cmd="dir" title="List directory contents">📁 dir</button>
+  <button class="quick-chip" data-cmd="sysinfo" title="System and terminal version">ℹ️ sysinfo</button>
+  <button class="quick-chip" data-cmd="date" title="Show system date">📅 date</button>
+  <button class="quick-chip" data-cmd="whoami" title="Show current username">👤 whoami</button>
+  <button class="quick-chip" data-cmd="alias" title="List defined aliases">📋 alias</button>
+  <button class="quick-chip" data-cmd="export-log" title="Export session log to file">💾 export-log</button>
+  <button class="quick-chip" data-cmd="clear" title="Clear terminal screen">🧹 clear</button>
+</div>
 
 <main id="output" role="log" aria-live="polite" aria-atomic="false" aria-label="Terminal Output"></main>
 
@@ -465,8 +558,11 @@
     <span><span class="shortcut-tag">F1 / h</span>Help</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+T</span>New Tab</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+W</span>Close Tab</span> &nbsp;|&nbsp; 
-    <span><span class="shortcut-tag">Ctrl+R</span>Reverse Search</span> &nbsp;|&nbsp; 
-    <span><span class="shortcut-tag">Tab</span>Autocomplete</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">Ctrl+Tab</span>Next Tab</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">Ctrl+1..8</span>Switch Tab</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">Ctrl+S</span>Export Log</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">Ctrl+R</span>Search</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">Tab</span>Complete</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+L</span>Clear</span>
   </div>
   <div id="tabStatusInfo">Tab 1/1</div>
@@ -482,18 +578,26 @@
       <button class="modal-close-btn" id="btnModalClose" title="Close (Escape)">&times;</button>
     </div>
     <div class="modal-body">
+      <div style="margin-bottom: 14px; padding: 8px 12px; background: rgba(0, 217, 255, 0.08); border-left: 3px solid var(--term-sys); border-radius: 4px; font-size: 12px; color: #a5f3fc;">
+        💡 <b>Tip:</b> Click any command row below to instantly insert and execute it in your active terminal tab!
+      </div>
+
       <div class="modal-section">
         <div class="modal-section-title">⌨️ Keyboard Shortcuts</div>
         <table class="cmd-table">
           <tr><td class="code-cell"><code>F1</code> or <code>h</code></td><td class="cmd-desc">Open / toggle this Help Reference guide</td></tr>
           <tr><td class="code-cell"><code>Ctrl + T</code></td><td class="cmd-desc">Open a new terminal tab session</td></tr>
           <tr><td class="code-cell"><code>Ctrl + W</code></td><td class="cmd-desc">Close the current terminal tab</td></tr>
+          <tr><td class="code-cell"><code>Ctrl + Tab</code></td><td class="cmd-desc">Cycle forward to the next tab (Shift for previous)</td></tr>
+          <tr><td class="code-cell"><code>Ctrl + 1..8</code></td><td class="cmd-desc">Directly switch to tab 1 through 8</td></tr>
+          <tr><td class="code-cell"><code>Ctrl + S</code></td><td class="cmd-desc">Export current session log to downloadable file</td></tr>
           <tr><td class="code-cell"><code>Ctrl + R</code></td><td class="cmd-desc">Incremental reverse search through command history</td></tr>
           <tr><td class="code-cell"><code>Ctrl + L</code></td><td class="cmd-desc">Clear terminal screen output (or <code>cls</code> / <code>clear</code>)</td></tr>
           <tr><td class="code-cell"><code>Ctrl + C</code></td><td class="cmd-desc">Cancel current command input line</td></tr>
           <tr><td class="code-cell"><code>Tab</code></td><td class="cmd-desc">Auto-complete commands, aliases, and file paths</td></tr>
+          <tr><td class="code-cell"><code>Ctrl + +/-</code></td><td class="cmd-desc">Increase or decrease terminal font size (0 to reset)</td></tr>
           <tr><td class="code-cell"><code>↑ / ↓ Arrows</code></td><td class="cmd-desc">Navigate through previous command history</td></tr>
-          <tr><td class="code-cell"><code>Escape</code></td><td class="cmd-desc">Dismiss this dialog or cancel reverse search</td></tr>
+          <tr><td class="code-cell"><code>Escape</code></td><td class="cmd-desc">Dismiss this dialog, cancel search, or clear input</td></tr>
         </table>
       </div>
 
@@ -717,7 +821,15 @@
     sessions.forEach((s, idx) => {
       const tab = document.createElement('div');
       tab.className = 'tab' + (s.id === activeSessionId ? ' active' : '');
+      tab.title = `Tab ${idx + 1}: ${s.name} (Double-click to rename | Ctrl+${idx + 1})`;
       
+      const numBadge = document.createElement('span');
+      numBadge.style.fontSize = '10px';
+      numBadge.style.opacity = '0.65';
+      numBadge.style.marginRight = '2px';
+      numBadge.textContent = `${idx + 1}:`;
+      tab.appendChild(numBadge);
+
       const titleSpan = document.createElement('span');
       titleSpan.textContent = s.name;
       tab.appendChild(titleSpan);
@@ -726,17 +838,34 @@
         const closeBtn = document.createElement('span');
         closeBtn.className = 'tab-close';
         closeBtn.innerHTML = '&times;';
-        closeBtn.title = 'Close tab';
+        closeBtn.title = 'Close tab (Ctrl+W)';
         closeBtn.onclick = (e) => closeTab(s.id, e);
         tab.appendChild(closeBtn);
       }
 
       tab.onclick = () => switchTab(s.id);
+      tab.ondblclick = (e) => {
+        e.stopPropagation();
+        const newName = window.prompt("Rename terminal session tab:", s.name);
+        if (newName && newName.trim()) {
+          s.name = newName.trim();
+          renderTabs();
+          showToast(`Renamed tab to "${s.name}"`, "sys");
+        }
+      };
+
       tabStrip.insertBefore(tab, btnNewTab);
     });
 
     const activeIdx = sessions.findIndex(s => s.id === activeSessionId) + 1;
     tabStatusInfo.textContent = `Tab ${activeIdx}/${sessions.length}`;
+  }
+
+  function switchTabByIndex(idx) {
+    if (idx >= 0 && idx < sessions.length) {
+      switchTab(sessions[idx].id);
+      showToast(`Switched to Tab ${idx + 1}: <b>${sessions[idx].name}</b>`, "sys", 1800);
+    }
   }
 
   function updatePrompt() {
@@ -1142,7 +1271,7 @@
               }
           }
       } else {
-          print("ERROR: Bad command or file name.");
+          print(`ERROR: Bad command or file name: "${cmd}". Type 'help' or press F1 for available commands.`, "log-error");
       }
   }
 
@@ -1359,18 +1488,93 @@
   const btnModalClose = document.getElementById('btnModalClose');
   const btnModalCloseFooter = document.getElementById('btnModalCloseFooter');
   const toastContainer = document.getElementById('toastContainer');
+  const btnZoomIn = document.getElementById('btnZoomIn');
+  const btnZoomOut = document.getElementById('btnZoomOut');
+
+  let currentFontSize = 14;
+  function setFontSize(size) {
+    currentFontSize = Math.min(24, Math.max(10, size));
+    output.style.fontSize = currentFontSize + 'px';
+    input.style.fontSize = currentFontSize + 'px';
+    measurer.style.fontSize = currentFontSize + 'px';
+    cursor.style.height = (currentFontSize + 2) + 'px';
+    updateCursor();
+    showToast(`Font Size: ${currentFontSize}px`, 'sys', 1500);
+  }
+  if (btnZoomIn) btnZoomIn.addEventListener('click', () => setFontSize(currentFontSize + 1));
+  if (btnZoomOut) btnZoomOut.addEventListener('click', () => setFontSize(currentFontSize - 1));
+
+  // Interactive Quick Command Chips
+  document.querySelectorAll('.quick-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const cmd = chip.getAttribute('data-cmd');
+      if (cmd) {
+        input.value = cmd;
+        input.focus();
+        updateCursor();
+        execute(cmd);
+        input.value = '';
+        updateCursor();
+      }
+    });
+  });
+
+  // Clickable commands in Help modal
+  document.querySelectorAll('.cmd-table tr').forEach(row => {
+    const codeEl = row.querySelector('code');
+    if (codeEl) {
+      row.style.cursor = 'pointer';
+      row.title = 'Click to run this command';
+      row.addEventListener('click', () => {
+        const raw = codeEl.textContent.trim();
+        const firstCmd = raw.split(/[\s/<\[]/)[0].trim();
+        if (firstCmd) {
+          closeHelpModal();
+          input.value = firstCmd;
+          input.focus();
+          updateCursor();
+          execute(firstCmd);
+          input.value = '';
+          updateCursor();
+        }
+      });
+    }
+  });
 
   function showToast(message, type = 'success', duration = 3500) {
     if (!toastContainer) return;
     const toast = document.createElement('div');
     toast.className = `toast ${type === 'sys' ? 'toast-sys' : type === 'warn' ? 'toast-warn' : type === 'err' ? 'toast-err' : ''}`;
-    toast.textContent = message;
+    
+    const msgSpan = document.createElement('span');
+    msgSpan.innerHTML = message;
+    toast.appendChild(msgSpan);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'toast-close';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.title = 'Dismiss';
+    closeBtn.onclick = (e) => {
+      e.stopPropagation();
+      dismissToast(toast);
+    };
+    toast.appendChild(closeBtn);
+
+    toast.onclick = () => dismissToast(toast);
+
     toastContainer.appendChild(toast);
 
-    setTimeout(() => {
-      toast.classList.add('hide');
-      setTimeout(() => toast.remove(), 260);
+    const timer = setTimeout(() => {
+      dismissToast(toast);
     }, duration);
+    toast._timer = timer;
+  }
+
+  function dismissToast(toast) {
+    if (!toast || toast.classList.contains('hide')) return;
+    if (toast._timer) clearTimeout(toast._timer);
+    toast.classList.add('hide');
+    setTimeout(() => toast.remove(), 260);
   }
 
   function openHelpModal() {
@@ -1426,6 +1630,17 @@
         closeHelpModal();
         return;
       }
+      if (isReverseSearch) {
+        e.preventDefault();
+        exitReverseSearch(false);
+        return;
+      }
+      if (input.value) {
+        e.preventDefault();
+        input.value = '';
+        updateCursor();
+        return;
+      }
     }
     if (e.ctrlKey && e.key.toLowerCase() === 't') {
       e.preventDefault();
@@ -1439,6 +1654,11 @@
       }
       return;
     }
+    if (e.ctrlKey && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      exportSessionLog();
+      return;
+    }
     if (e.ctrlKey && e.key.toLowerCase() === 'l') {
       e.preventDefault();
       output.innerHTML = '';
@@ -1447,6 +1667,44 @@
       showToast("Terminal screen cleared", "sys");
       return;
     }
+    // Ctrl + Tab / Ctrl + Shift + Tab
+    if (e.ctrlKey && e.key === 'Tab') {
+      e.preventDefault();
+      if (sessions.length > 1) {
+        const currIdx = sessions.findIndex(s => s.id === activeSessionId);
+        const nextIdx = e.shiftKey
+          ? (currIdx - 1 + sessions.length) % sessions.length
+          : (currIdx + 1) % sessions.length;
+        switchTabByIndex(nextIdx);
+      }
+      return;
+    }
+    // Ctrl + 1..8
+    if (e.ctrlKey && !e.shiftKey && !e.altKey && e.key >= '1' && e.key <= '8') {
+      const targetIdx = parseInt(e.key, 10) - 1;
+      if (targetIdx < sessions.length) {
+        e.preventDefault();
+        switchTabByIndex(targetIdx);
+        return;
+      }
+    }
+    // Font zoom hotkeys: Ctrl+=, Ctrl+-, Ctrl+0
+    if (e.ctrlKey && (e.key === '=' || e.key === '+')) {
+      e.preventDefault();
+      setFontSize(currentFontSize + 1);
+      return;
+    }
+    if (e.ctrlKey && e.key === '-') {
+      e.preventDefault();
+      setFontSize(currentFontSize - 1);
+      return;
+    }
+    if (e.ctrlKey && e.key === '0') {
+      e.preventDefault();
+      setFontSize(14);
+      return;
+    }
+
     // If modal is closed and input not focused, typing regular alphanumeric keys redirects to input
     if (helpModal && !helpModal.classList.contains('open') && document.activeElement !== input) {
       const isPrintable = e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey;
@@ -1457,8 +1715,8 @@
   });
 
   document.addEventListener('click', (e) => {
-      // Focus input if not text selected and not clicking on header/modal
-      if (e.target.closest('#header') || e.target.closest('.modal-card')) return;
+      // Focus input if not text selected and not clicking on header/modal/quickBar
+      if (e.target.closest('#header') || e.target.closest('#quickBar') || e.target.closest('.modal-card') || e.target.closest('.toast')) return;
       const selection = window.getSelection();
       if (!selection || selection.toString().length === 0) {
           input.focus();
@@ -1467,7 +1725,7 @@
 
   // Initialize first session tab and startup toast
   createNewTab("Tab 1");
-  showToast("Welcome to KTerm! Press F1 or 'h' for Help | Ctrl+T: New Tab", "sys", 5000);
+  showToast("⚡ Welcome to KTerm! Press F1 or 'h' for Help | Ctrl+T: New Tab | Ctrl+1..8: Switch Tabs", "sys", 5000);
 </script>
 </body>
 </html>
