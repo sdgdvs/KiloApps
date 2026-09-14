@@ -623,12 +623,96 @@
     background: #1e293b;
     color: #fff;
     border: 1px solid var(--accent-blue);
-    padding: 9px 15px;
+    padding: 8px 12px 8px 14px;
     border-radius: 6px;
     font-size: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.45);
     animation: fadeIn 0.2s ease-out;
     pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .toast-close {
+    cursor: pointer;
+    opacity: 0.7;
+    font-size: 14px;
+    line-height: 1;
+    padding: 2px 5px;
+    border-radius: 4px;
+    margin-left: auto;
+    transition: all 0.15s;
+  }
+  .toast-close:hover {
+    opacity: 1;
+    background: rgba(255,255,255,0.15);
+  }
+
+  /* Quick Presets Bar */
+  .quick-presets-bar {
+    display: flex;
+    gap: 5px;
+    overflow-x: auto;
+    padding: 2px 0;
+    scrollbar-width: none;
+    align-items: center;
+  }
+  .quick-presets-bar::-webkit-scrollbar { display: none; }
+
+  .preset-chip {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(59, 130, 246, 0.12);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+    font-family: inherit;
+  }
+  .preset-chip:hover {
+    background: var(--accent-blue);
+    color: #fff;
+    border-color: var(--accent-blue);
+  }
+
+  /* Unsaved dirty indicator */
+  .dirty-indicator {
+    display: none;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.15);
+    border: 1px solid rgba(251, 191, 36, 0.35);
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-weight: 600;
+    animation: fadeIn 0.15s ease-out;
+  }
+  .dirty-indicator.visible { display: inline-flex; }
+
+  /* Field label row with copy link */
+  .label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .label-copy-link {
+    font-size: 10px;
+    color: var(--accent-blue);
+    cursor: pointer;
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 500;
+    transition: color 0.15s;
+  }
+  .label-copy-link:hover {
+    text-decoration: underline;
+    color: #93c5fd;
   }
 
   @keyframes fadeIn {
@@ -654,10 +738,20 @@
 
       <div class="action-grid">
         <button class="btn btn-primary" id="btnNew"><span>+</span> Add <span class="btn-badge">N</span></button>
-        <button class="btn btn-secondary" id="btnMerge"><span>🧹</span> Merge</button>
-        <button class="btn btn-secondary" id="btnImport"><span>📥</span> Import</button>
-        <button class="btn btn-secondary" id="btnExport"><span>📤</span> Export</button>
+        <button class="btn btn-secondary" id="btnMerge"><span>🧹</span> Merge <span class="btn-badge">^M</span></button>
+        <button class="btn btn-secondary" id="btnImport"><span>📥</span> Import <span class="btn-badge">^I</span></button>
+        <button class="btn btn-secondary" id="btnExport"><span>📤</span> Export <span class="btn-badge">^E</span></button>
         <button class="btn btn-secondary" id="btnHelp" style="grid-column: span 2;"><span>❓</span> Help &amp; Guide <span class="btn-badge">F1 / H</span></button>
+      </div>
+
+      <!-- Quick Starter Templates Bar -->
+      <div class="quick-presets-bar">
+        <span style="font-size: 10px; color: var(--text-muted); align-self: center; margin-right: 2px;">Templates:</span>
+        <button class="preset-chip" id="chipClient" title="Create Client contact draft">+ 💼 Client</button>
+        <button class="preset-chip" id="chipColleague" title="Create Colleague contact draft">+ 👔 Colleague</button>
+        <button class="preset-chip" id="chipDoctor" title="Create Doctor contact draft">+ 🩺 Doctor</button>
+        <button class="preset-chip" id="chipFamily" title="Create Family contact draft">+ 🏠 Family</button>
+        <button class="preset-chip" id="chipSamples" title="Restore standard sample contacts" style="border-color: rgba(16, 185, 129, 0.4); color: #34d399; background: rgba(16, 185, 129, 0.12);">✨ Samples</button>
       </div>
 
       <div class="search-box">
@@ -667,13 +761,13 @@
       </div>
 
       <div class="category-pills" id="categoryPills" role="tablist" aria-label="Filter by category">
-        <div class="pill active" data-cat="All" role="tab" tabindex="0" aria-selected="true" title="Press 1">All <span class="pill-count" id="countAll">0</span></div>
-        <div class="pill" data-cat="Favorites" role="tab" tabindex="0" aria-selected="false" title="Press 2">★ Favs <span class="pill-count" id="countFav">0</span></div>
-        <div class="pill" data-cat="Work" role="tab" tabindex="0" aria-selected="false" title="Press 3">Work <span class="pill-count" id="countWork">0</span></div>
-        <div class="pill" data-cat="Personal" role="tab" tabindex="0" aria-selected="false" title="Press 4">Personal <span class="pill-count" id="countPersonal">0</span></div>
-        <div class="pill" data-cat="Family" role="tab" tabindex="0" aria-selected="false" title="Press 5">Family <span class="pill-count" id="countFamily">0</span></div>
-        <div class="pill" data-cat="Friends" role="tab" tabindex="0" aria-selected="false" title="Press 6">Friends <span class="pill-count" id="countFriends">0</span></div>
-        <div class="pill" data-cat="Other" role="tab" tabindex="0" aria-selected="false" title="Press 7">Other <span class="pill-count" id="countOther">0</span></div>
+        <div class="pill active" data-cat="All" role="tab" tabindex="0" aria-selected="true" title="Press 1"><span class="btn-badge" style="margin:0 2px 0 0;">1</span> All <span class="pill-count" id="countAll">0</span></div>
+        <div class="pill" data-cat="Favorites" role="tab" tabindex="0" aria-selected="false" title="Press 2"><span class="btn-badge" style="margin:0 2px 0 0;">2</span> ★ Favs <span class="pill-count" id="countFav">0</span></div>
+        <div class="pill" data-cat="Work" role="tab" tabindex="0" aria-selected="false" title="Press 3"><span class="btn-badge" style="margin:0 2px 0 0;">3</span> Work <span class="pill-count" id="countWork">0</span></div>
+        <div class="pill" data-cat="Personal" role="tab" tabindex="0" aria-selected="false" title="Press 4"><span class="btn-badge" style="margin:0 2px 0 0;">4</span> Personal <span class="pill-count" id="countPersonal">0</span></div>
+        <div class="pill" data-cat="Family" role="tab" tabindex="0" aria-selected="false" title="Press 5"><span class="btn-badge" style="margin:0 2px 0 0;">5</span> Family <span class="pill-count" id="countFamily">0</span></div>
+        <div class="pill" data-cat="Friends" role="tab" tabindex="0" aria-selected="false" title="Press 6"><span class="btn-badge" style="margin:0 2px 0 0;">6</span> Friends <span class="pill-count" id="countFriends">0</span></div>
+        <div class="pill" data-cat="Other" role="tab" tabindex="0" aria-selected="false" title="Press 7"><span class="btn-badge" style="margin:0 2px 0 0;">7</span> Other <span class="pill-count" id="countOther">0</span></div>
       </div>
 
       <div class="tag-pills" id="tagPills" style="display: none;" role="tablist" aria-label="Filter by tag">
@@ -690,9 +784,13 @@
   <div class="details-panel" id="detailsPanel">
     <div class="empty-state" id="emptyState">
       <div class="empty-state-icon">👤</div>
-      <div style="font-size: 16px; font-weight: 600;">No Contact Selected</div>
-      <div>Select a contact from the list or press <strong style="color:var(--accent-blue);">+ Add</strong> to create a new one.</div>
-      <div style="font-size: 12px; margin-top: 8px;">Press <kbd style="background:#1e293b; padding:2px 6px; border-radius:4px; border:1px solid #334155;">F1</kbd> or <kbd style="background:#1e293b; padding:2px 6px; border-radius:4px; border:1px solid #334155;">H</kbd> for Help</div>
+      <div style="font-size: 16px; font-weight: 600;" id="emptyStateTitle">No Contact Selected</div>
+      <div id="emptyStateDesc" style="text-align: center; max-width: 320px;">Select a contact from the list or click below to start:</div>
+      <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; justify-content: center;">
+        <button class="btn btn-primary" id="btnEmptyAdd"><span>+</span> Add New Contact <span class="btn-badge">N</span></button>
+        <button class="btn btn-secondary" id="btnEmptySample"><span>✨</span> Load Sample Contacts</button>
+      </div>
+      <div style="font-size: 12px; margin-top: 8px; color: var(--text-muted);">Press <kbd style="background:#1e293b; padding:2px 6px; border-radius:4px; border:1px solid #475569; color:#93c5fd;">F1</kbd> or <kbd style="background:#1e293b; padding:2px 6px; border-radius:4px; border:1px solid #475569; color:#93c5fd;">H</kbd> for Help</div>
     </div>
 
     <div id="contentView" style="display: none; width: 100%;">
@@ -709,10 +807,10 @@
           </div>
           <div class="header-tags-container" id="headerTags"></div>
           <div class="quick-actions">
-            <button class="btn btn-secondary" id="btnQuickCall" aria-label="Call contact"><span>📞</span> Call</button>
-            <button class="btn btn-secondary" id="btnQuickEmail" aria-label="Email contact"><span>✉️</span> Email</button>
-            <button class="btn btn-secondary" id="btnQuickCopy" aria-label="Copy contact information"><span>📋</span> Copy Info</button>
-            <button class="btn btn-danger" id="btnDelete" aria-label="Delete contact"><span>🗑️</span> Delete</button>
+            <button class="btn btn-secondary" id="btnQuickCall" aria-label="Call contact"><span>📞</span> Call <span class="btn-badge">Alt+C</span></button>
+            <button class="btn btn-secondary" id="btnQuickEmail" aria-label="Email contact"><span>✉️</span> Email <span class="btn-badge">Alt+M</span></button>
+            <button class="btn btn-secondary" id="btnQuickCopy" aria-label="Copy contact information"><span>📋</span> Copy Info <span class="btn-badge">C</span></button>
+            <button class="btn btn-danger" id="btnDelete" aria-label="Delete contact"><span>🗑️</span> Delete <span class="btn-badge">Del</span></button>
           </div>
         </div>
       </div>
@@ -737,11 +835,17 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label>Phone Number</label>
+            <div class="label-row">
+              <label>Phone Number</label>
+              <span class="label-copy-link" id="copyPhoneLink" title="Copy phone number">📋 Copy</span>
+            </div>
             <input type="text" id="inpPhone" placeholder="e.g. +1 555-0192">
           </div>
           <div class="form-group">
-            <label>Email Address</label>
+            <div class="label-row">
+              <label>Email Address</label>
+              <span class="label-copy-link" id="copyEmailLink" title="Copy email address">📋 Copy</span>
+            </div>
             <input type="text" id="inpEmail" placeholder="e.g. sarah@company.com">
           </div>
         </div>
@@ -772,8 +876,9 @@
           <label for="inpFav" style="font-size: 13px; font-weight: 500; color: #fff; cursor: pointer;">Add to Favorites ★</label>
         </div>
 
-        <div style="display: flex; gap: 10px; margin-top: 6px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-top: 6px;">
           <button class="btn btn-primary" id="btnSave" style="padding: 9px 20px;"><span>💾</span> Save Changes <span class="btn-badge">Ctrl+S / Enter</span></button>
+          <span class="dirty-indicator" id="dirtyIndicator">● Unsaved edits</span>
         </div>
       </div>
     </div>
@@ -784,14 +889,20 @@
 
   <!-- Help Modal -->
   <div id="helpModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
-    <div class="modal-content" style="max-width: 480px;">
+    <div class="modal-content" style="max-width: 490px;">
       <div class="modal-title" id="helpModalTitle"><span>📇</span> KContacts User Guide &amp; Shortcuts</div>
       <ul class="modal-shortcuts-list">
         <li><kbd>F1</kbd> or <kbd>H</kbd> : Open / close this help guide</li>
-        <li><kbd>Esc</kbd> : Close modals or clear current search query</li>
-        <li><kbd>1</kbd> - <kbd>7</kbd> : Quick switch categories (All, Favs, Work, Personal, etc.)</li>
+        <li><kbd>Esc</kbd> : Close modals, unfocus inputs, or clear search</li>
+        <li><kbd>1</kbd> - <kbd>7</kbd> : Quick switch categories (1=All, 2=Favs, 3=Work, 4=Personal, etc.)</li>
         <li><kbd>Ctrl+S</kbd> or <kbd>Enter</kbd> (in form) : Save contact details</li>
         <li><kbd>N</kbd> or <kbd>Ctrl+N</kbd> : Create new contact draft</li>
+        <li><kbd>C</kbd> : Quick copy contact info to clipboard</li>
+        <li><kbd>Alt+C</kbd> : Call selected contact phone</li>
+        <li><kbd>Alt+M</kbd> : Email selected contact</li>
+        <li><kbd>Ctrl+M</kbd> : Merge duplicate contacts</li>
+        <li><kbd>Ctrl+E</kbd> : Export directory (.md, .json, .vcf, .csv)</li>
+        <li><kbd>Ctrl+I</kbd> : Import contacts file</li>
         <li><kbd>/</kbd> or <kbd>Ctrl+F</kbd> : Focus search input</li>
         <li><kbd>↑</kbd> / <kbd>↓</kbd> : Navigate through contact list</li>
         <li><kbd>Delete</kbd> : Delete selected contact</li>
@@ -800,7 +911,8 @@
         <strong>Features:</strong><br>
         • <strong>Merge Duplicates:</strong> Cleans up matching contact names and consolidates tags.<br>
         • <strong>Export:</strong> Markdown Directory, JSON Database, vCard 3.0, and CSV.<br>
-        • <strong>Import:</strong> Auto-detects JSON, vCards, or CSV spreadsheets.
+        • <strong>Import:</strong> Auto-detects JSON, vCards, or CSV spreadsheets.<br>
+        • <strong>Templates:</strong> 1-click presets for Client, Colleague, Doctor, and Family.
       </div>
       <button class="btn btn-primary" id="btnCloseHelp" style="width: 100%;">Got it</button>
     </div>
@@ -810,22 +922,22 @@
   <div id="exportModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
     <div class="modal-content">
       <div class="modal-title" id="exportModalTitle"><span>📤</span> Export Contacts Directory</div>
-      <div style="font-size: 12px; color: var(--text-muted);">Choose your desired export format:</div>
+      <div style="font-size: 12px; color: var(--text-muted);">Choose your desired export format (or press <kbd>1</kbd>-<kbd>4</kbd>):</div>
       <div class="export-option-grid">
         <div class="export-card" data-fmt="md" tabindex="0" role="button" aria-label="Export as Markdown">
-          <div class="export-card-title">📝 Markdown</div>
+          <div class="export-card-title">📝 [1] Markdown</div>
           <div class="export-card-desc">Formatted directory with categories &amp; links (.md)</div>
         </div>
         <div class="export-card" data-fmt="json" tabindex="0" role="button" aria-label="Export as JSON">
-          <div class="export-card-title">📦 JSON</div>
+          <div class="export-card-title">📦 [2] JSON</div>
           <div class="export-card-desc">Full structured database backup (.json)</div>
         </div>
         <div class="export-card" data-fmt="vcf" tabindex="0" role="button" aria-label="Export as vCard">
-          <div class="export-card-title">📇 vCard 3.0</div>
+          <div class="export-card-title">📇 [3] vCard 3.0</div>
           <div class="export-card-desc">Standard address book file for phone/OS (.vcf)</div>
         </div>
         <div class="export-card" data-fmt="csv" tabindex="0" role="button" aria-label="Export as CSV">
-          <div class="export-card-title">📊 CSV</div>
+          <div class="export-card-title">📊 [4] CSV</div>
           <div class="export-card-desc">Spreadsheet table for Excel / Sheets (.csv)</div>
         </div>
       </div>
@@ -890,19 +1002,53 @@
     const inpTags = document.getElementById('inpTags');
     const inpNotes = document.getElementById('inpNotes');
     const inpFav = document.getElementById('inpFav');
+    const dirtyIndicator = document.getElementById('dirtyIndicator');
+    const copyPhoneLink = document.getElementById('copyPhoneLink');
+    const copyEmailLink = document.getElementById('copyEmailLink');
+    const btnEmptyAdd = document.getElementById('btnEmptyAdd');
+    const btnEmptySample = document.getElementById('btnEmptySample');
+    let isDirty = false;
 
-    // Utility: Toast
-    function showToast(msg) {
+    function markDirty() {
+      if (!isDirty) {
+        isDirty = true;
+        if (dirtyIndicator) dirtyIndicator.classList.add('visible');
+      }
+    }
+
+    function clearDirty() {
+      isDirty = false;
+      if (dirtyIndicator) dirtyIndicator.classList.remove('visible');
+    }
+
+    // Utility: Interactive Toast
+    function showToast(msg, duration = 2800) {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
       toast.className = 'toast';
-      toast.textContent = msg;
-      container.appendChild(toast);
-      setTimeout(() => {
+
+      const textSpan = document.createElement('span');
+      textSpan.textContent = msg;
+      toast.appendChild(textSpan);
+
+      const closeBtn = document.createElement('span');
+      closeBtn.className = 'toast-close';
+      closeBtn.textContent = '✕';
+      closeBtn.title = 'Dismiss';
+
+      let timer = null;
+      const dismiss = () => {
+        if (timer) clearTimeout(timer);
         toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.3s';
-        setTimeout(() => toast.remove(), 300);
-      }, 2500);
+        toast.style.transform = 'translateY(6px)';
+        toast.style.transition = 'all 0.2s ease-out';
+        setTimeout(() => toast.remove(), 220);
+      };
+      closeBtn.onclick = dismiss;
+      toast.appendChild(closeBtn);
+
+      container.appendChild(toast);
+      timer = setTimeout(dismiss, duration);
     }
 
     // Modal Helpers
@@ -1361,6 +1507,7 @@
       inpTags.value = (c.tags || []).join(', ');
       inpNotes.value = c.notes || '';
       inpFav.checked = !!c.fav;
+      clearDirty();
     }
 
     // Create New Contact
@@ -1423,10 +1570,33 @@
 
       saveContacts();
       updateTagPills();
+      clearDirty();
       selectContact(selectedId);
       showToast('💾 Contact updated successfully');
     }
     document.getElementById('btnSave').onclick = saveCurrentContact;
+
+    // Track input dirty state
+    [inpName, inpCategory, inpPhone, inpEmail, inpCompany, inpTitle, inpTags, inpNotes, inpFav].forEach(el => {
+      el.addEventListener('input', markDirty);
+      el.addEventListener('change', markDirty);
+    });
+
+    // Copy Phone / Email quick links
+    if (copyPhoneLink) {
+      copyPhoneLink.onclick = () => {
+        const val = inpPhone.value.trim();
+        if (!val) { showToast('⚠️ No phone number to copy'); return; }
+        navigator.clipboard.writeText(val).then(() => showToast(`📋 Copied phone: ${val}`)).catch(() => showToast('⚠️ Failed to copy'));
+      };
+    }
+    if (copyEmailLink) {
+      copyEmailLink.onclick = () => {
+        const val = inpEmail.value.trim();
+        if (!val) { showToast('⚠️ No email address to copy'); return; }
+        navigator.clipboard.writeText(val).then(() => showToast(`📋 Copied email: ${val}`)).catch(() => showToast('⚠️ Failed to copy'));
+      };
+    }
 
     // Enter key to save on inputs
     [inpName, inpPhone, inpEmail, inpCompany, inpTitle, inpTags].forEach(el => {
@@ -1895,17 +2065,185 @@
       searchInput.focus();
     };
 
+    // Quick Starter Templates & Samples
+    function createContactFromTemplate(tpl) {
+      if (contacts.length >= MAX_CONTACTS) {
+        showToast(`Contact limit (${MAX_CONTACTS}) reached.`);
+        return;
+      }
+      const newContact = {
+        id: 'c_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
+        name: tpl.name || 'New Contact',
+        phone: tpl.phone || '',
+        email: tpl.email || '',
+        category: tpl.category || 'Personal',
+        company: tpl.company || '',
+        title: tpl.title || '',
+        tags: parseTags(tpl.tags || []),
+        notes: tpl.notes || '',
+        fav: !!tpl.fav
+      };
+      contacts.unshift(newContact);
+      saveContacts();
+      updateTagPills();
+      selectContact(newContact.id);
+      showToast(`✨ Created template: "${newContact.name}"`);
+    }
+
+    const chipClient = document.getElementById('chipClient');
+    if (chipClient) {
+      chipClient.onclick = () => {
+        createContactFromTemplate({
+          name: 'Jordan Hayes',
+          category: 'Work',
+          phone: '+1 555-0321',
+          email: 'jordan.hayes@nexus.io',
+          company: 'Nexus Corp',
+          title: 'VP of Product',
+          tags: ['vip', 'client', 'lead'],
+          notes: 'Enterprise account lead for cloud rollouts.',
+          fav: true
+        });
+      };
+    }
+
+    const chipColleague = document.getElementById('chipColleague');
+    if (chipColleague) {
+      chipColleague.onclick = () => {
+        createContactFromTemplate({
+          name: 'Elena Rostova',
+          category: 'Work',
+          phone: '+1 555-0455',
+          email: 'elena.r@acme.com',
+          company: 'Acme Corp',
+          title: 'Staff Engineer',
+          tags: ['team', 'backend', 'core'],
+          notes: 'Co-lead on distributed systems architecture.',
+          fav: false
+        });
+      };
+    }
+
+    const chipDoctor = document.getElementById('chipDoctor');
+    if (chipDoctor) {
+      chipDoctor.onclick = () => {
+        createContactFromTemplate({
+          name: 'Dr. Marcus Vance',
+          category: 'Other',
+          phone: '+1 555-0811',
+          email: 'office@metromedical.org',
+          company: 'Metro Clinic',
+          title: 'Primary Physician',
+          tags: ['health', 'doctor'],
+          notes: 'Clinic hours: Mon-Thu 9am-4pm.',
+          fav: false
+        });
+      };
+    }
+
+    const chipFamily = document.getElementById('chipFamily');
+    if (chipFamily) {
+      chipFamily.onclick = () => {
+        createContactFromTemplate({
+          name: 'Sarah Connor',
+          category: 'Family',
+          phone: '+1 555-0992',
+          email: 'sarah.c@cybernet.org',
+          company: 'Family',
+          title: 'Sister',
+          tags: ['family', 'ice'],
+          notes: 'Birthday Nov 18. Emergency ICE contact.',
+          fav: true
+        });
+      };
+    }
+
+    function restoreSampleContacts() {
+      contacts = [
+        {
+          id: 'c1',
+          name: 'Alice Smith',
+          phone: '+1 555-0124',
+          email: 'alice.smith@acme.com',
+          category: 'Work',
+          company: 'Acme Corp',
+          title: 'Lead Architect',
+          tags: ['vip', 'cloud', 'architect'],
+          notes: 'Key contact for cloud infrastructure project.',
+          fav: true
+        },
+        {
+          id: 'c2',
+          name: 'Bob Jones',
+          phone: '+1 555-0189',
+          email: 'bob.jones@gmail.com',
+          category: 'Personal',
+          company: '',
+          title: '',
+          tags: ['tech', 'meetup'],
+          notes: 'Met at tech meetup in June.',
+          fav: false
+        },
+        {
+          id: 'c3',
+          name: 'Carla Rossi',
+          phone: '+1 555-0199',
+          email: 'carla@designstudio.io',
+          category: 'Work',
+          company: 'Design Studio',
+          title: 'UX Lead',
+          tags: ['vip', 'design', 'ux'],
+          notes: 'Freelance UI/UX Consultant.',
+          fav: true
+        },
+        {
+          id: 'c4',
+          name: 'David Miller',
+          phone: '+1 555-0143',
+          email: 'dmiller@familynet.org',
+          category: 'Family',
+          company: '',
+          title: '',
+          tags: ['family'],
+          notes: 'Cousin - Birthday Oct 14.',
+          fav: false
+        }
+      ];
+      saveContacts();
+      updateTagPills();
+      renderList();
+      selectContact(contacts[0].id);
+      showToast('✨ Restored 4 standard sample contacts');
+    }
+
+    const chipSamples = document.getElementById('chipSamples');
+    if (chipSamples) chipSamples.onclick = restoreSampleContacts;
+    if (btnEmptyAdd) btnEmptyAdd.onclick = createNewContact;
+    if (btnEmptySample) btnEmptySample.onclick = restoreSampleContacts;
+
     // Keyboard Navigation & Shortcuts
     const CATEGORIES_LIST = ['All', 'Favorites', 'Work', 'Personal', 'Family', 'Friends', 'Other'];
 
     document.addEventListener('keydown', (e) => {
       const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT';
 
+      // Export modal 1-4 shortcuts
+      if (exportModal.style.display === 'flex') {
+        if (e.key === '1') { e.preventDefault(); closeExport(); doExport('md'); return; }
+        if (e.key === '2') { e.preventDefault(); closeExport(); doExport('json'); return; }
+        if (e.key === '3') { e.preventDefault(); closeExport(); doExport('vcf'); return; }
+        if (e.key === '4') { e.preventDefault(); closeExport(); doExport('csv'); return; }
+      }
+
       // Global Escape
       if (e.key === 'Escape') {
         if (helpModal.style.display === 'flex') { closeHelp(); return; }
         if (exportModal.style.display === 'flex') { closeExport(); return; }
         if (deleteModal.style.display === 'flex') { closeDeleteModal(); return; }
+        if (isInput) {
+          e.target.blur();
+          return;
+        }
         if (searchInput.value) {
           searchInput.value = '';
           renderList();
@@ -1934,6 +2272,41 @@
         return;
       }
 
+      // Ctrl+M: Merge
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'm' || e.key === 'M')) {
+        e.preventDefault();
+        document.getElementById('btnMerge').click();
+        return;
+      }
+
+      // Ctrl+E: Export
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'e' || e.key === 'E')) {
+        e.preventDefault();
+        document.getElementById('btnExport').click();
+        return;
+      }
+
+      // Ctrl+I: Import
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'i' || e.key === 'I')) {
+        e.preventDefault();
+        document.getElementById('btnImport').click();
+        return;
+      }
+
+      // Alt+C: Call
+      if (e.altKey && (e.key === 'c' || e.key === 'C')) {
+        e.preventDefault();
+        document.getElementById('btnQuickCall').click();
+        return;
+      }
+
+      // Alt+M: Email
+      if (e.altKey && (e.key === 'm' || e.key === 'M')) {
+        e.preventDefault();
+        document.getElementById('btnQuickEmail').click();
+        return;
+      }
+
       // Focus search: '/' or Ctrl+F
       if (!isInput && (e.key === '/' || ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')))) {
         e.preventDefault();
@@ -1959,6 +2332,13 @@
             selectCategoryFilter(CATEGORIES_LIST[idx]);
             showToast(`Filter: ${CATEGORIES_LIST[idx]}`);
           }
+          return;
+        }
+
+        // Quick Copy contact info: C
+        if (!e.ctrlKey && !e.altKey && !e.metaKey && (e.key === 'c' || e.key === 'C') && selectedId) {
+          e.preventDefault();
+          document.getElementById('btnQuickCopy').click();
           return;
         }
 
@@ -2002,7 +2382,10 @@
     seedData();
     updateTagPills();
     renderList();
-    setTimeout(() => showToast("📇 Welcome to KContacts! Press F1 or H for Help."), 400);
+    if (contacts.length > 0) {
+      selectContact(contacts[0].id);
+    }
+    setTimeout(() => showToast("📇 Welcome to KContacts! Press F1 for Help, [N] to add, or [1-7] for categories."), 300);
   </script>
 </body>
 </html>

@@ -84,7 +84,8 @@ int contact_count = 0;
 int filtered_indices[MAX_CONTACTS];
 int filtered_count = 0;
 
-HWND hList, hEdit, hBtnNew, hBtnDel, hBtnSave, hBtnMerge, hBtnExport, hBtnImport, hBtnCall, hBtnEmail, hSearch, hComboCat, hChkFav, hBtnHelp;
+HWND hList, hEdit, hBtnNew, hBtnDel, hBtnSave, hBtnMerge, hBtnExport, hBtnImport, hBtnCall, hBtnEmail, hSearch, hComboCat, hChkFav, hBtnHelp, hBtnCopy, hBtnDemo, hStatus;
+#define TIMER_STATUS 1
 HFONT hFont, hBoldFont;
 
 int g_dpi = 0;
@@ -146,10 +147,6 @@ void RefreshList() {
     GetWindowTextA(hSearch, search_buf, sizeof(search_buf));
 
     int cat_idx = SendMessageA(hComboCat, CB_GETCURSEL, 0, 0);
-    char cat_filter[32] = {0};
-    if (cat_idx > 0) {
-        SendMessageA(hComboCat, CB_GETLBTEXT, cat_idx, (LPARAM)cat_filter);
-    }
 
     for (int i = 0; i < contact_count; i++) {
         // Search match (including tags)
@@ -162,10 +159,18 @@ void RefreshList() {
 
         // Category match
         int cat_match = 1;
-        if (my_stricmp(cat_filter, "Favorites") == 0) {
+        if (cat_idx == 1) {
             cat_match = contacts[i].fav;
-        } else if (cat_filter[0] != 0 && my_stricmp(cat_filter, "All") != 0) {
-            cat_match = (my_stricmp(contacts[i].category, cat_filter) == 0);
+        } else if (cat_idx == 2) {
+            cat_match = (my_stricmp(contacts[i].category, "Work") == 0);
+        } else if (cat_idx == 3) {
+            cat_match = (my_stricmp(contacts[i].category, "Personal") == 0);
+        } else if (cat_idx == 4) {
+            cat_match = (my_stricmp(contacts[i].category, "Family") == 0);
+        } else if (cat_idx == 5) {
+            cat_match = (my_stricmp(contacts[i].category, "Friends") == 0);
+        } else if (cat_idx == 6) {
+            cat_match = (my_stricmp(contacts[i].category, "Other") == 0 || contacts[i].category[0] == 0);
         }
 
         if (search_match && cat_match) {
@@ -181,6 +186,70 @@ void RefreshList() {
             SendMessageA(hList, LB_ADDSTRING, 0, (LPARAM)display);
         }
     }
+}
+
+void ShowNativeStatus(HWND hwnd, const char* text) {
+    if (hStatus && text) {
+        SetWindowTextA(hStatus, text);
+        SetTimer(hwnd, TIMER_STATUS, 3500, NULL);
+    }
+}
+
+void UpdateAppTitle(HWND hwnd) {
+    char title[128];
+    int list_idx = SendMessageA(hList, LB_GETCURSEL, 0, 0);
+    if (list_idx >= 0 && list_idx < filtered_count) {
+        int real_idx = filtered_indices[list_idx];
+        wsprintfA(title, "KContacts - [%s] (%d/%d) [F1 for Help]", contacts[real_idx].name, filtered_count, contact_count);
+    } else {
+        wsprintfA(title, "KContacts - %d contacts [F1 for Help]", contact_count);
+    }
+    SetWindowTextA(hwnd, title);
+}
+
+void CopyContactToClipboard(HWND hwnd) {
+    int list_idx = SendMessageA(hList, LB_GETCURSEL, 0, 0);
+    if (list_idx < 0 || list_idx >= filtered_count) {
+        ShowNativeStatus(hwnd, " No contact selected to copy.");
+        return;
+    }
+    int real_idx = filtered_indices[list_idx];
+    char buf[1024];
+    wsprintfA(buf, "Name: %s\r\nPhone: %s\r\nEmail: %s\r\nCategory: %s\r\nCompany: %s\r\nTags: %s\r\nNotes: %s",
+        contacts[real_idx].name, contacts[real_idx].phone, contacts[real_idx].email,
+        contacts[real_idx].category, contacts[real_idx].company, contacts[real_idx].tags, contacts[real_idx].notes);
+
+    int len = my_strlen(buf);
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len + 1);
+    if (hMem) {
+        char* pMem = (char*)GlobalLock(hMem);
+        if (pMem) {
+            my_strncpy(pMem, buf, len + 1);
+            GlobalUnlock(hMem);
+            if (OpenClipboard(hwnd)) {
+                EmptyClipboard();
+                SetClipboardData(CF_TEXT, hMem);
+                CloseClipboard();
+                char statusBuf[128];
+                wsprintfA(statusBuf, " Copied info for \"%s\" to clipboard!", contacts[real_idx].name);
+                ShowNativeStatus(hwnd, statusBuf);
+                return;
+            }
+        }
+        GlobalFree(hMem);
+    }
+    ShowNativeStatus(hwnd, " Failed to copy to clipboard.");
+}
+
+void ResetDemoData(HWND hwnd) {
+    LoadDemoData();
+    RefreshList();
+    if (filtered_count > 0) {
+        SendMessageA(hList, LB_SETCURSEL, 0, 0);
+        SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(1001, LBN_SELCHANGE), (LPARAM)hList);
+    }
+    ShowNativeStatus(hwnd, " Restored 4 standard sample contacts.");
+    UpdateAppTitle(hwnd);
 }
 
 void extract_field(const char* text, const char* prefix, char* out, int out_len) {
@@ -304,7 +373,7 @@ void extract_json_field(const char* obj, const char* key, char* out, int out_len
 
 void MergeDuplicates(HWND hwnd) {
     if (contact_count < 2) {
-        MessageBoxA(hwnd, "Not enough contacts to merge.", "KContacts", MB_OK | MB_ICONINFORMATION);
+        ShowNativeStatus(hwnd, " Not enough contacts to merge.");
         return;
     }
 
@@ -331,17 +400,23 @@ void MergeDuplicates(HWND hwnd) {
     }
 
     RefreshList();
-    SetWindowTextA(hEdit, "");
-    SendMessageA(hChkFav, BM_SETCHECK, BST_UNCHECKED, 0);
+    if (filtered_count > 0) {
+        SendMessageA(hList, LB_SETCURSEL, 0, 0);
+        SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(1001, LBN_SELCHANGE), (LPARAM)hList);
+    } else {
+        SetWindowTextA(hEdit, "");
+        SendMessageA(hChkFav, BM_SETCHECK, BST_UNCHECKED, 0);
+    }
 
     char msg[128];
-    wsprintfA(msg, "Duplicate scan completed.\nMerged %d contact(s).", merged);
-    MessageBoxA(hwnd, msg, "KContacts Merge", MB_OK | MB_ICONINFORMATION);
+    wsprintfA(msg, " Duplicate scan completed: merged %d contact(s).", merged);
+    ShowNativeStatus(hwnd, msg);
+    UpdateAppTitle(hwnd);
 }
 
 void ExportContacts(HWND hwnd) {
     if (contact_count == 0) {
-        MessageBoxA(hwnd, "No contacts to export.", "Export Error", MB_OK | MB_ICONWARNING);
+        ShowNativeStatus(hwnd, " No contacts to export.");
         return;
     }
 
@@ -410,14 +485,16 @@ void ExportContacts(HWND hwnd) {
                 }
             }
             CloseHandle(hFile);
-            MessageBoxA(hwnd, "Contacts exported successfully!", "KContacts Export", MB_OK | MB_ICONINFORMATION);
+            char statusMsg[128];
+            wsprintfA(statusMsg, " Exported %d contacts successfully!", contact_count);
+            ShowNativeStatus(hwnd, statusMsg);
         }
     }
 }
 
 void ImportContacts(HWND hwnd) {
     if (contact_count >= MAX_CONTACTS) {
-        MessageBoxA(hwnd, "Contact capacity reached (150 max). Cannot import.", "KContacts Import", MB_OK | MB_ICONWARNING);
+        ShowNativeStatus(hwnd, " Contact capacity reached (150 max). Cannot import.");
         return;
     }
 
@@ -550,9 +627,14 @@ void ImportContacts(HWND hwnd) {
 
                     HeapFree(GetProcessHeap(), 0, buf);
                     RefreshList();
+                    if (filtered_count > 0) {
+                        SendMessageA(hList, LB_SETCURSEL, 0, 0);
+                        SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(1001, LBN_SELCHANGE), (LPARAM)hList);
+                    }
                     char msg[128];
-                    wsprintfA(msg, "Successfully imported %d contact(s)!", imported);
-                    MessageBoxA(hwnd, msg, "KContacts Import", MB_OK | MB_ICONINFORMATION);
+                    wsprintfA(msg, " Successfully imported %d contact(s)!", imported);
+                    ShowNativeStatus(hwnd, msg);
+                    UpdateAppTitle(hwnd);
                 }
             }
             CloseHandle(hFile);
@@ -567,7 +649,11 @@ void ShowHelpDialog(HWND hwnd) {
         "  [F1] or [H]       - Show this Help Guide\n"
         "  [Ctrl+S]          - Save contact details\n"
         "  [N] or [Ctrl+N]   - Create new contact draft\n"
+        "  [Ctrl+C] or [C]   - Copy selected contact details to clipboard\n"
+        "  [Alt+C]           - Call contact phone\n"
+        "  [Alt+M]           - Email contact\n"
         "  [1] - [7]         - Quick category filter (1=All, 2=Favs, 3=Work, 4=Personal, 5=Family, 6=Friends, 7=Other)\n"
+        "  [Ctrl+D]          - Restore 4 standard sample contacts\n"
         "  [Esc]             - Clear search query and reset filter\n"
         "  [Delete]          - Delete currently selected contact\n"
         "  [Ctrl+M]          - Merge duplicate contacts\n"
@@ -580,7 +666,8 @@ void ShowHelpDialog(HWND hwnd) {
         "  * Click 'Save Details' to persist edits to memory.\n"
         "  * 'Exp' exports to Markdown Directory, JSON Database, vCard, or CSV.\n"
         "  * 'Imp' auto-detects and imports vCards, JSON, or CSV.\n"
-        "  * 'Merge' deduplicates identical contact names and merges tags/fields.",
+        "  * 'Merge' deduplicates identical contact names and merges tags/fields.\n"
+        "  * 'Demo' restores standard sample contacts.",
         "KContacts User Guide & Shortcuts", MB_OK | MB_ICONINFORMATION);
 }
 
@@ -598,35 +685,40 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hSearch = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL, S(10), S(10), S(180), S(24), hwnd, (HMENU)1011, NULL, NULL);
             SendMessageA(hSearch, EM_SETCUEBANNER, FALSE, (LPARAM)L"Search contacts...");
 
-            hComboCat = CreateWindowExA(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, S(200), S(10), S(140), S(150), hwnd, (HMENU)1012, NULL, NULL);
-            SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"All");
-            SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"Favorites");
-            SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"Work");
-            SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"Personal");
-            SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"Family");
-            SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"Friends");
-            SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"Other");
+            hComboCat = CreateWindowExA(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, S(195), S(10), S(145), S(160), hwnd, (HMENU)1012, NULL, NULL);
+            SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"[1] All");
+            SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"[2] Favorites");
+            SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"[3] Work");
+            SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"[4] Personal");
+            SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"[5] Family");
+            SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"[6] Friends");
+            SendMessageA(hComboCat, CB_ADDSTRING, 0, (LPARAM)"[7] Other");
             SendMessageA(hComboCat, CB_SETCURSEL, 0, 0);
 
             // ListBox
             hList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL | LBS_NOTIFY, S(10), S(42), S(330), S(475), hwnd, (HMENU)1001, NULL, NULL);
 
-            // Action Buttons Sidebar
-            hBtnNew = CreateWindowExA(0, "BUTTON", "+ New [N]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(10), S(525), S(65), S(28), hwnd, (HMENU)1002, NULL, NULL);
-            hBtnDel = CreateWindowExA(0, "BUTTON", "Del", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(80), S(525), S(38), S(28), hwnd, (HMENU)1003, NULL, NULL);
-            hBtnMerge = CreateWindowExA(0, "BUTTON", "Merge", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(122), S(525), S(48), S(28), hwnd, (HMENU)1005, NULL, NULL);
-            hBtnImport = CreateWindowExA(0, "BUTTON", "Imp", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(174), S(525), S(42), S(28), hwnd, (HMENU)1007, NULL, NULL);
-            hBtnExport = CreateWindowExA(0, "BUTTON", "Exp", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(220), S(525), S(42), S(28), hwnd, (HMENU)1006, NULL, NULL);
-            hBtnHelp = CreateWindowExA(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(266), S(525), S(74), S(28), hwnd, (HMENU)1013, NULL, NULL);
+            // Action Buttons Sidebar (Total width 330px)
+            hBtnNew = CreateWindowExA(0, "BUTTON", "+ New [N]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(10), S(525), S(60), S(28), hwnd, (HMENU)1002, NULL, NULL);
+            hBtnDel = CreateWindowExA(0, "BUTTON", "Del", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(72), S(525), S(36), S(28), hwnd, (HMENU)1003, NULL, NULL);
+            hBtnMerge = CreateWindowExA(0, "BUTTON", "Merge", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(110), S(525), S(50), S(28), hwnd, (HMENU)1005, NULL, NULL);
+            hBtnImport = CreateWindowExA(0, "BUTTON", "Imp", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(162), S(525), S(40), S(28), hwnd, (HMENU)1007, NULL, NULL);
+            hBtnExport = CreateWindowExA(0, "BUTTON", "Exp", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(204), S(525), S(40), S(28), hwnd, (HMENU)1006, NULL, NULL);
+            hBtnDemo = CreateWindowExA(0, "BUTTON", "Demo", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(246), S(525), S(46), S(28), hwnd, (HMENU)1015, NULL, NULL);
+            hBtnHelp = CreateWindowExA(0, "BUTTON", "Help", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(294), S(525), S(46), S(28), hwnd, (HMENU)1013, NULL, NULL);
 
-            // Details / Form View
+            // Details / Form View (Total width 470px)
             hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | ES_WANTRETURN, S(350), S(10), S(470), S(507), hwnd, NULL, NULL, NULL);
             SendMessageA(hEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(S(8), S(8)));
             
-            hChkFav = CreateWindowExA(0, "BUTTON", "Favorite *", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, S(350), S(525), S(90), S(24), hwnd, (HMENU)1010, NULL, NULL);
-            hBtnCall = CreateWindowExA(0, "BUTTON", "Call", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(450), S(525), S(48), S(28), hwnd, (HMENU)1008, NULL, NULL);
-            hBtnEmail = CreateWindowExA(0, "BUTTON", "Email", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(502), S(525), S(52), S(28), hwnd, (HMENU)1009, NULL, NULL);
-            hBtnSave = CreateWindowExA(0, "BUTTON", "Save Details [Ctrl+S]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(560), S(525), S(260), S(28), hwnd, (HMENU)1004, NULL, NULL);
+            hChkFav = CreateWindowExA(0, "BUTTON", "Fav *", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, S(350), S(525), S(78), S(26), hwnd, (HMENU)1010, NULL, NULL);
+            hBtnCall = CreateWindowExA(0, "BUTTON", "Call", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(432), S(525), S(58), S(28), hwnd, (HMENU)1008, NULL, NULL);
+            hBtnEmail = CreateWindowExA(0, "BUTTON", "Email", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(493), S(525), S(60), S(28), hwnd, (HMENU)1009, NULL, NULL);
+            hBtnCopy = CreateWindowExA(0, "BUTTON", "Copy [^C]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(556), S(525), S(82), S(28), hwnd, (HMENU)1014, NULL, NULL);
+            hBtnSave = CreateWindowExA(0, "BUTTON", "Save Details [Ctrl+S]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, S(642), S(525), S(178), S(28), hwnd, (HMENU)1004, NULL, NULL);
+
+            // Bottom Status Bar
+            hStatus = CreateWindowExA(0, "STATIC", " Ready - 4 contacts | Press F1 for Help", WS_CHILD | WS_VISIBLE | SS_LEFTNOWORDWRAP, S(10), S(558), S(810), S(20), hwnd, (HMENU)1020, NULL, NULL);
 
             // Apply Fonts
             SendMessageA(hSearch, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -638,13 +730,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hBtnMerge, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnImport, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnExport, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hBtnDemo, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnCall, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnEmail, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hBtnCopy, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnSave, WM_SETFONT, (WPARAM)hBoldFont, TRUE);
             SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hChkFav, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hStatus, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             RefreshList();
+            if (filtered_count > 0) {
+                SendMessageA(hList, LB_SETCURSEL, 0, 0);
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(1001, LBN_SELCHANGE), (LPARAM)hList);
+            }
+            UpdateAppTitle(hwnd);
+            break;
+        }
+        case WM_TIMER: {
+            if (wParam == TIMER_STATUS) {
+                KillTimer(hwnd, TIMER_STATUS);
+                char readyMsg[128];
+                wsprintfA(readyMsg, " Ready - %d contact%s | Press F1 for Help", contact_count, contact_count == 1 ? "" : "s");
+                SetWindowTextA(hStatus, readyMsg);
+            }
             break;
         }
         case WM_COMMAND: {
@@ -661,10 +770,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         contacts[real_idx].category, contacts[real_idx].company, contacts[real_idx].tags, contacts[real_idx].notes);
                     SetWindowTextA(hEdit, buf);
                     SendMessageA(hChkFav, BM_SETCHECK, contacts[real_idx].fav ? BST_CHECKED : BST_UNCHECKED, 0);
+                    UpdateAppTitle(hwnd);
                 }
             }
             else if ((control_id == 1011 && notify_code == EN_CHANGE) || (control_id == 1012 && notify_code == CBN_SELCHANGE)) {
                 RefreshList();
+                if (filtered_count > 0) {
+                    SendMessageA(hList, LB_SETCURSEL, 0, 0);
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(1001, LBN_SELCHANGE), (LPARAM)hList);
+                } else {
+                    SetWindowTextA(hEdit, "");
+                    SendMessageA(hChkFav, BM_SETCHECK, BST_UNCHECKED, 0);
+                }
+                UpdateAppTitle(hwnd);
             }
             else if (control_id == 1002) { // New
                 if (contact_count < MAX_CONTACTS) {
@@ -680,14 +798,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     RefreshList();
                     SendMessageA(hList, LB_SETCURSEL, filtered_count - 1, 0);
                     SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(1001, LBN_SELCHANGE), (LPARAM)hList);
+                    ShowNativeStatus(hwnd, " Created new contact draft.");
+                    UpdateAppTitle(hwnd);
+                    SetFocus(hEdit);
                 } else {
-                    MessageBoxA(hwnd, "Maximum contact limit (150) reached.", "KContacts", MB_OK | MB_ICONWARNING);
+                    ShowNativeStatus(hwnd, " Maximum contact limit (150) reached.");
                 }
             }
             else if (control_id == 1003) { // Del
                 int list_idx = SendMessageA(hList, LB_GETCURSEL, 0, 0);
                 if (list_idx >= 0 && list_idx < filtered_count) {
                     int real_idx = filtered_indices[list_idx];
+                    char deletedName[64];
+                    my_strncpy(deletedName, contacts[real_idx].name, sizeof(deletedName));
                     for (int i = real_idx; i < contact_count - 1; i++) {
                         contacts[i] = contacts[i+1];
                     }
@@ -702,6 +825,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         SetWindowTextA(hEdit, "");
                         SendMessageA(hChkFav, BM_SETCHECK, BST_UNCHECKED, 0);
                     }
+                    char msg[128];
+                    wsprintfA(msg, " Deleted \"%s\".", deletedName);
+                    ShowNativeStatus(hwnd, msg);
+                    UpdateAppTitle(hwnd);
                 }
             }
             else if (control_id == 1004) { // Save Details
@@ -723,15 +850,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     contacts[real_idx].fav = (SendMessageA(hChkFav, BM_GETCHECK, 0, 0) == BST_CHECKED);
                     RefreshList();
                     SendMessageA(hList, LB_SETCURSEL, list_idx, 0);
+                    char msg[128];
+                    wsprintfA(msg, " Saved details for \"%s\".", contacts[real_idx].name);
+                    ShowNativeStatus(hwnd, msg);
+                    UpdateAppTitle(hwnd);
                 }
             }
             else if (control_id == 1005) { // Merge Dups
                 MergeDuplicates(hwnd);
             }
-            else if (control_id == 1006) { // Export (Markdown / JSON / vCard / CSV)
+            else if (control_id == 1006) { // Export
                 ExportContacts(hwnd);
             }
-            else if (control_id == 1007) { // Import (JSON / vCard / CSV)
+            else if (control_id == 1007) { // Import
                 ImportContacts(hwnd);
             }
             else if (control_id == 1008) { // Call
@@ -742,8 +873,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         char url[256];
                         wsprintfA(url, "tel:%s", contacts[real_idx].phone);
                         ShellExecuteA(hwnd, "open", url, NULL, NULL, SW_SHOWNORMAL);
+                        ShowNativeStatus(hwnd, " Dialing phone number...");
                     } else {
-                        MessageBoxA(hwnd, "No phone number available for this contact.", "KContacts Call", MB_OK | MB_ICONINFORMATION);
+                        ShowNativeStatus(hwnd, " No phone number available for this contact.");
                     }
                 }
             }
@@ -755,13 +887,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         char url[256];
                         wsprintfA(url, "mailto:%s", contacts[real_idx].email);
                         ShellExecuteA(hwnd, "open", url, NULL, NULL, SW_SHOWNORMAL);
+                        ShowNativeStatus(hwnd, " Opening email client...");
                     } else {
-                        MessageBoxA(hwnd, "No email address available for this contact.", "KContacts Email", MB_OK | MB_ICONINFORMATION);
+                        ShowNativeStatus(hwnd, " No email address available for this contact.");
                     }
                 }
             }
             else if (control_id == 1013) { // Help
                 ShowHelpDialog(hwnd);
+            }
+            else if (control_id == 1014) { // Copy
+                CopyContactToClipboard(hwnd);
+            }
+            else if (control_id == 1015) { // Demo
+                ResetDemoData(hwnd);
             }
             break;
         }
@@ -785,10 +924,10 @@ void __stdcall MainEntry() {
 
     RegisterClassA(&wc);
     
-    RECT rect = {0, 0, S(830), S(565)};
+    RECT rect = {0, 0, S(830), S(588)};
     AdjustWindowRectEx(&rect, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE, 0);
 
-    HWND hwnd = CreateWindowExA(0, "KContactsClass", "KContacts - Contact Manager [Press F1 or H for Help]", (WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN) & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KContactsClass", "KContacts - Contact Manager [Press F1 for Help]", (WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN) & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
@@ -800,6 +939,7 @@ void __stdcall MainEntry() {
             GetClassNameA(msg.hwnd, className, sizeof(className));
             int isEdit = (my_stricmp(className, "EDIT") == 0);
             int ctrl = (GetKeyState(VK_CONTROL) & 0x8000);
+            int alt = (GetKeyState(VK_MENU) & 0x8000);
 
             if (msg.wParam == VK_F1 || ((msg.wParam == 'H' || msg.wParam == 'h') && !isEdit)) {
                 SendMessageA(hwnd, WM_COMMAND, 1013, 0);
@@ -825,16 +965,43 @@ void __stdcall MainEntry() {
                 SendMessageA(hwnd, WM_COMMAND, 1007, 0);
                 continue;
             }
+            if (ctrl && (msg.wParam == 'D' || msg.wParam == 'd')) {
+                SendMessageA(hwnd, WM_COMMAND, 1015, 0);
+                continue;
+            }
+            if (alt && (msg.wParam == 'C' || msg.wParam == 'c')) {
+                SendMessageA(hwnd, WM_COMMAND, 1008, 0);
+                continue;
+            }
+            if (alt && (msg.wParam == 'M' || msg.wParam == 'm')) {
+                SendMessageA(hwnd, WM_COMMAND, 1009, 0);
+                continue;
+            }
+            if (!isEdit && (msg.wParam == 'C' || msg.wParam == 'c')) {
+                SendMessageA(hwnd, WM_COMMAND, 1014, 0);
+                continue;
+            }
             if (!isEdit && msg.wParam >= '1' && msg.wParam <= '7') {
                 int catIndex = msg.wParam - '1';
                 SendMessageA(hComboCat, CB_SETCURSEL, catIndex, 0);
                 RefreshList();
+                if (filtered_count > 0) {
+                    SendMessageA(hList, LB_SETCURSEL, 0, 0);
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(1001, LBN_SELCHANGE), (LPARAM)hList);
+                }
+                UpdateAppTitle(hwnd);
                 continue;
             }
             if (msg.wParam == VK_ESCAPE) {
                 SetWindowTextA(hSearch, "");
                 SendMessageA(hComboCat, CB_SETCURSEL, 0, 0);
                 RefreshList();
+                if (filtered_count > 0) {
+                    SendMessageA(hList, LB_SETCURSEL, 0, 0);
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(1001, LBN_SELCHANGE), (LPARAM)hList);
+                }
+                SetFocus(hList);
+                UpdateAppTitle(hwnd);
                 continue;
             }
             if (!isEdit && msg.wParam == VK_DELETE) {

@@ -45,14 +45,13 @@
 
 ---
 
-**Target App:** KContacts
+**Target App:** KRead
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KContacts
 - KRead
 - KJournal
 - KBase
@@ -106,10 +105,13 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KConverter
 - KGraph
 - KTimer
+- KContacts
 
 ## Progress Log
 
 > 📁 **Archived Progress Log**: Older entries have been archived to [archive/usability_plan_archive.md](archive/usability_plan_archive.md) to preserve token efficiency.
+
+- KContacts: Usability and UI issues fixed (auto-selects first contact on startup eliminating empty screen confusion, integrated interactive toast notification system with [✕] click-to-dismiss and startup welcome guide, built 1-click Quick Starter templates bar [+ 💼 Client, + 👔 Colleague, + 🩺 Doctor, + 🏠 Family, ✨ Samples] for instant contact generation, added interactive empty state with 1-click [+ Add New Contact [N]] and [✨ Load Sample Contacts] actions, added visual keyboard shortcut badges across buttons [Add [N], Merge [^M], Import [^I], Export [^E], Help [F1/H], Call [Alt+C], Email [Alt+M], Copy Info [C], Delete [Del], Save [Ctrl+S]], added dirty unsaved edits indicator [● Unsaved edits], added 1-click individual field copy links [📋 Copy Phone, 📋 Copy Email], added numbered shortcut badges to category pills [[1]-[7]], expanded keyboard shortcuts for C, Alt+C, Alt+M, Ctrl+M, Ctrl+E, Ctrl+I, and 1-4 format export selection in web; added non-blocking ShowNativeStatus notification system in native C replacing blocking modal alerts on exports/imports/actions, added native [Copy [^C]] to Windows clipboard, added [Demo] template sample restoration button, auto-selected first contact on startup, updated category combo with numbered tags, added dynamic window title synchronization with active contact and hotkey hints, expanded message loop accelerators for F1/Ctrl+S/Ctrl+N/Ctrl+M/Ctrl+E/Ctrl+I/Ctrl+D/Alt+C/Alt+M/Ctrl+C/1-7/Esc, and verified clean compilation across both builds).
 
 - KTimer: Usability and UI issues fixed (moved #helpOverlay out of inactive interval panel to create a persistent fixed bottom help pill across all tabs, added numbered shortcut badges to nav tabs [[1] SW, [2] Timer, [3] Multi, [4] Pomo, [5] HIIT, Help [F1]], added 1-click [📋 Copy [C]] to clipboard button for Stopwatch lap splits alongside CSV/TXT exports, added quick duration nudge adjustments [-1m, +1m, +5m] to Countdown Timer, added 1-click Quick Add Presets [Tea 3m, Coffee 4m, Eggs 7m, Nap 20m, Laundry 35m] to Multi-Timer, added visual shortcut badges to all action buttons, expanded keyboard navigation with [C] copy/clear, [S] skip phase / start all, [P] pause all, [+/-] nudge duration, and updated Help modal guide in web; added non-blocking ShowNativeStatus notification system in native C replacing blocking modal alerts on exports/actions, added native [Copy [C]] to Windows clipboard for stopwatch laps, added [-1m, +1m, +5m] quick duration adjustments in native Timer, added 1-click quick add presets [+ Tea 3m, + Eggs 7m, + Nap 20m] in native Multi-Timer, added dynamic window title synchronization with active mode and hotkeys, expanded message loop accelerators for C/S/P/+/-/Del/Esc, and verified clean compilation across both builds).
 
