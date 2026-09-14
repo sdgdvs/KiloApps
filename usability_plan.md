@@ -45,14 +45,13 @@
 
 ---
 
-**Target App:** KTodo
+**Target App:** KConverter
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KTodo
 - KConverter
 - KGraph
 - KTimer
@@ -106,10 +105,13 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTask
 - KRogue
 - KSys
+- KTodo
 
 ## Progress Log
 
 > 📁 **Archived Progress Log**: Older entries have been archived to [archive/usability_plan_archive.md](archive/usability_plan_archive.md) to preserve token efficiency.
+
+- KTodo: Usability and UI issues fixed (integrated interactive toast notification system with [✕] click-to-dismiss and startup welcome guide, built 1-click Quick Presets bar [💼 Standup, 🔴 Fix Bug, 🛒 Groceries, ❤️ Workout, 🚀 Sprint Plan], added search clear [✕] button with Esc/Enter handling, implemented rich empty states with 1-click [✨ Load Demo Tasks] and [✍️ Add New Task [N]] actions, added inline title editing [✏️ / double-click] and list keyboard navigation [↑/↓ arrows, Space toggle, Del remove, Enter expand subtasks, N focus new task, / or F search, S stats, I import/export, C clear completed, 1/2 view switcher, F1 help] with visual shortcut badges on buttons in web; implemented non-blocking ShowNativeToast notification system in native status bar replacing blocking MessageBox popups for exports/imports/task actions, updated native buttons with explicit shortcut badges [Done [Space], + Checklist, Delete [Del], Clear [C], JSON [J], Export MD [E], Import MD [I], Demo, Help [F1]], implemented comprehensive global message loop accelerators for F1/H/N/F/S/E/I/J/C/D/Del/Space/Esc preventing child control event swallowing, updated min window track size and window title with shortcut hints, and verified clean compilation across both builds).
 
 - KSys: Usability and UI issues fixed (integrated non-blocking cybernetic toast notification system with startup welcome prompt and [✕] click-to-dismiss button, added responsive 1-click Quick Starter toolbar [▶ Run Benchmarks [2/R], 🔄 Refresh [R], ⚙️ Services [3], 📄 Export TXT [E], 📋 Copy Report, ❓ Help [F1]], added services search clear [✕] button and 1-click quick filter chips [All Services, Core System, Drivers, ⚡ Running Only, ⏹ Stopped Only], expanded keyboard shortcuts [C/M/D for benchmarks, S for services filter, L for clear logs, E/J/T for exports, Esc dismiss/clear, F5/R refresh] with Help modal guide and responsive header/nav wrapping in web; fixed MSVC unresolved external _memcpy intrinsic compilation error, added bottom status bar and non-blocking ShowNativeToast notification system replacing blocking MessageBox modals on report export, added dedicated controls for Inspector [Refresh [R], Run Benchmarks [2]] and Event Logs [Clear Logs [L], Export Log [E]], added global message loop accelerators for F1/H/F5/R/C/M/D/S/L/E/J/T/Esc and Left/Right tab navigation, updated window title with shortcut hints, and verified clean compilation across both builds).
 

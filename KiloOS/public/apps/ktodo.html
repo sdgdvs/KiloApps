@@ -737,28 +737,131 @@
     background: rgba(59, 130, 246, 0.05);
   }
 
+  /* Quick Presets Bar */
+  .quick-presets-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding-top: 4px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .quick-presets-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .quick-chip {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .quick-chip:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: var(--accent-blue);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+
+  /* Search Box Clear Button */
+  .search-box {
+    position: relative;
+    flex: 1;
+    min-width: 180px;
+    display: flex;
+    align-items: center;
+  }
+
+  .search-clear-btn {
+    position: absolute;
+    right: 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: none;
+    line-height: 1;
+  }
+
+  .search-clear-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  /* Task Card Selected State */
+  .task-card.selected {
+    border-color: var(--accent-blue);
+    background: rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 1px var(--accent-blue), 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  .edit-task-input {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.5) !important;
+    border: 1px solid var(--accent-blue) !important;
+    color: #fff !important;
+    padding: 4px 8px !important;
+    font-size: 13px !important;
+    border-radius: 6px !important;
+  }
+
   /* Toast Notification */
   .toast {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background: #1e293b;
+    background: #1a2234;
     border: 1px solid var(--accent-blue);
     color: #fff;
-    padding: 10px 16px;
+    padding: 10px 14px;
     border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
     font-size: 13px;
     font-weight: 600;
     transform: translateY(100px);
     opacity: 0;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 200;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    pointer-events: none;
   }
 
   .toast.show {
     transform: translateY(0);
     opacity: 1;
+    pointer-events: auto;
+  }
+
+  .toast-close {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    line-height: 1;
+  }
+
+  .toast-close:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.2);
   }
 
   .sr-only {
@@ -779,14 +882,14 @@
       <button class="btn" onclick="openHelpModal()" title="Help [F1 or H]">
         ❓ Help [F1]
       </button>
-      <button class="btn" onclick="toggleStats()" title="Toggle Productivity Statistics">
-        📊 <span id="statsToggleLabel">Stats</span>
+      <button class="btn" onclick="toggleStats()" title="Toggle Productivity Statistics [S]">
+        📊 <span id="statsToggleLabel">Stats [S]</span>
       </button>
-      <button class="btn btn-purple" onclick="openIOModal()" title="Import or Export Tasks">
-        💾 Import / Export
+      <button class="btn btn-purple" onclick="openIOModal()" title="Import or Export Tasks [I]">
+        💾 Import / Export [I]
       </button>
-      <button class="btn btn-danger" onclick="clearCompleted()" title="Remove all finished tasks">
-        🧹 Clear Finished
+      <button class="btn btn-danger" onclick="clearCompleted()" title="Remove all finished tasks [C]">
+        🧹 Clear Finished [C]
       </button>
     </div>
   </header>
@@ -799,8 +902,8 @@
         <!-- Rendered dynamically -->
       </div>
       <div class="view-switcher">
-        <button class="view-btn active" id="view-list" onclick="setViewMode('list')" title="Standard Task List">📋 List</button>
-        <button class="view-btn" id="view-kanban" onclick="setViewMode('kanban')" title="Kanban Board View">📑 Kanban</button>
+        <button class="view-btn active" id="view-list" onclick="setViewMode('list')" title="Standard Task List [1]">📋 List [1]</button>
+        <button class="view-btn" id="view-kanban" onclick="setViewMode('kanban')" title="Kanban Board View [2]">📑 Kanban [2]</button>
       </div>
     </section>
 
@@ -834,7 +937,7 @@
     <section class="creator-form">
       <div class="form-row">
         <label for="taskInput" class="sr-only">Task Description</label>
-        <input type="text" id="taskInput" class="input-task-text" placeholder="What needs to be done?" maxlength="200" onkeydown="if(event.key==='Enter') addTask()">
+        <input type="text" id="taskInput" class="input-task-text" placeholder="What needs to be done? [Press Enter to add, N to focus]" maxlength="200" onkeydown="if(event.key==='Enter') addTask()">
       </div>
       <div class="form-row">
         <label for="categorySelect" class="sr-only">Category</label>
@@ -859,13 +962,22 @@
 
         <button class="btn btn-primary" onclick="addTask()">+ Add Task</button>
       </div>
+      <div class="quick-presets-bar">
+        <span class="quick-presets-label">⚡ Quick Presets:</span>
+        <button type="button" class="quick-chip" onclick="quickAddTask('Daily standup & team sync', 'Work', 'Medium')">💼 Standup</button>
+        <button type="button" class="quick-chip" onclick="quickAddTask('Fix critical bug & test release', 'Project', 'High')">🔴 Fix Bug</button>
+        <button type="button" class="quick-chip" onclick="quickAddTask('Weekly groceries & supplies', 'Shopping', 'Low')">🛒 Groceries</button>
+        <button type="button" class="quick-chip" onclick="quickAddTask('30-min cardio & fitness workout', 'Health', 'Medium')">❤️ Workout</button>
+        <button type="button" class="quick-chip" onclick="quickAddTask('Plan sprint priorities & roadmap', 'Project', 'High')">🚀 Sprint Plan</button>
+      </div>
     </section>
 
     <!-- Search & Filters Toolbar -->
     <section class="toolbar">
       <div class="search-box">
         <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" placeholder="Search tasks, categories or subtasks..." oninput="renderAppView()">
+        <input type="text" id="searchInput" placeholder="Search tasks, categories or subtasks... [/ or F]" oninput="handleSearchInput()" onkeydown="if(event.key==='Escape'){clearSearch();event.preventDefault();}">
+        <button id="searchClearBtn" class="search-clear-btn" onclick="clearSearch()" title="Clear search [Esc]">✕</button>
       </div>
 
       <div class="filters-group" role="group" aria-label="Filter status">
@@ -951,9 +1063,17 @@
           <h4 style="color: var(--text-primary); margin-bottom: 6px; font-size: 13px;">⌨️ Keyboard Shortcuts</h4>
           <ul style="list-style: none; display: flex; flex-direction: column; gap: 4px;">
             <li><strong style="color: var(--accent-blue);">Enter</strong> (in Task field): Add task immediately</li>
+            <li><strong style="color: var(--accent-blue);">N</strong>: Focus task input to quickly create new task</li>
+            <li><strong style="color: var(--accent-blue);">/ or F</strong>: Focus search input</li>
+            <li><strong style="color: var(--accent-blue);">↑ / ↓</strong>: Navigate and select tasks in list</li>
+            <li><strong style="color: var(--accent-blue);">Space</strong>: Toggle completed on selected task</li>
+            <li><strong style="color: var(--accent-blue);">Delete</strong>: Delete selected task</li>
             <li><strong style="color: var(--accent-blue);">1 / 2</strong>: Switch between List and Kanban views</li>
-            <li><strong style="color: var(--accent-blue);">F1 or H</strong>: Open this Help guide</li>
-            <li><strong style="color: var(--accent-blue);">Escape</strong>: Close any active dialog / modal</li>
+            <li><strong style="color: var(--accent-blue);">S</strong>: Toggle productivity statistics</li>
+            <li><strong style="color: var(--accent-blue);">I</strong>: Open Import / Export dialog</li>
+            <li><strong style="color: var(--accent-blue);">C</strong>: Clear completed tasks</li>
+            <li><strong style="color: var(--accent-blue);">F1 or H</strong>: Open / close this Help guide</li>
+            <li><strong style="color: var(--accent-blue);">Escape</strong>: Close active modal or clear search</li>
           </ul>
         </div>
 
@@ -963,7 +1083,9 @@
             <li>• <strong>Views:</strong> Toggle between detailed List view and Kanban board (To Do, In Progress, Done).</li>
             <li>• <strong>Categories &amp; Tags:</strong> Group tasks by project (Work, Personal, Project, Health, Shopping).</li>
             <li>• <strong>Priorities:</strong> High, Medium, and Low with color-coded badges.</li>
+            <li>• <strong>Quick Presets:</strong> 1-click add everyday tasks (Standup, Fix Bug, Groceries, Workout, Sprint Plan).</li>
             <li>• <strong>Checklists:</strong> Click <span style="color: var(--text-primary);">📋</span> on any task card to expand and add subtasks.</li>
+            <li>• <strong>Edit Tasks:</strong> Click <span style="color: var(--text-primary);">✏️</span> or double-click any task title to edit in-place.</li>
             <li>• <strong>Markdown &amp; Backups:</strong> Click <em>💾 Import / Export</em> to backup JSON/CSV or sync GFM Markdown task lists.</li>
           </ul>
         </div>
@@ -973,7 +1095,10 @@
   </div>
 
   <!-- Toast Notification -->
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast">
+    <span id="toastText"></span>
+    <button class="toast-close" onclick="hideToast()" title="Dismiss">✕</button>
+  </div>
 
   <script>
     window.resizeTo(800, 600);
@@ -984,6 +1109,8 @@
     let currentViewMode = 'list'; // 'list' or 'kanban'
     let expandedSubtasks = new Set();
     let statsVisible = true;
+    let selectedTaskId = null;
+    let editingTaskId = null;
 
     const CATEGORIES = ['all', 'General', 'Work', 'Personal', 'Project', 'Health', 'Shopping'];
 
@@ -1029,10 +1156,97 @@
     let toastTimer = null;
     function showToast(msg) {
       const toast = document.getElementById('toast');
-      toast.textContent = msg;
+      const textEl = document.getElementById('toastText');
+      if (textEl) textEl.textContent = msg;
+      else toast.textContent = msg;
       toast.classList.add('show');
       if (toastTimer) clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
+    }
+
+    function hideToast() {
+      const toast = document.getElementById('toast');
+      if (toastTimer) clearTimeout(toastTimer);
+      toast.classList.remove('show');
+    }
+
+    function quickAddTask(text, category, priority) {
+      const newTask = {
+        id: Date.now(),
+        text: text,
+        category: category || 'General',
+        priority: priority || 'Medium',
+        dueDate: '',
+        completed: false,
+        subtasks: [],
+        createdAt: new Date().toISOString()
+      };
+      tasks.unshift(newTask);
+      selectedTaskId = newTask.id;
+      saveTasks();
+      showToast(`Added quick task: "${text}"`);
+    }
+
+    function handleSearchInput() {
+      const val = document.getElementById('searchInput').value;
+      const clearBtn = document.getElementById('searchClearBtn');
+      if (clearBtn) clearBtn.style.display = val ? 'block' : 'none';
+      renderAppView();
+    }
+
+    function clearSearch() {
+      const searchInput = document.getElementById('searchInput');
+      searchInput.value = '';
+      const clearBtn = document.getElementById('searchClearBtn');
+      if (clearBtn) clearBtn.style.display = 'none';
+      renderAppView();
+    }
+
+    function clearAllFilters() {
+      clearSearch();
+      currentFilter = 'all';
+      activeCategory = 'all';
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.id === 'filter-all');
+      });
+      renderAppView();
+      showToast('Filters reset.');
+    }
+
+    function startEditTask(id) {
+      editingTaskId = id;
+      renderAppView();
+      setTimeout(() => {
+        const input = document.getElementById(`editInput_${id}`);
+        if (input) {
+          input.focus();
+          input.select();
+        }
+      }, 50);
+    }
+
+    function saveEditTask(id) {
+      const input = document.getElementById(`editInput_${id}`);
+      if (!input) return;
+      const newText = input.value.trim();
+      editingTaskId = null;
+      if (!newText) {
+        renderAppView();
+        return;
+      }
+      const t = tasks.find(x => String(x.id) === String(id));
+      if (t && t.text !== newText) {
+        t.text = newText;
+        saveTasks();
+        showToast('Task updated!');
+      } else {
+        renderAppView();
+      }
+    }
+
+    function cancelEditTask() {
+      editingTaskId = null;
+      renderAppView();
     }
 
     function escapeHtml(unsafe) {
@@ -1292,19 +1506,48 @@
       if (filtered.length === 0) {
         const empty = document.createElement('div');
         empty.className = 'empty-state';
-        empty.textContent = tasks.length === 0
-          ? '🎉 No tasks yet! Add your first task above.'
-          : 'No matching tasks found.';
+        if (tasks.length === 0) {
+          empty.innerHTML = `
+            <div style="font-size: 32px; margin-bottom: 6px;">🎉</div>
+            <div style="font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">No tasks yet!</div>
+            <p style="font-size: 12px; margin-bottom: 14px; color: var(--text-secondary);">Add your first task above, or load sample tasks to explore.</p>
+            <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+              <button class="btn btn-primary" onclick="loadSampleTasks()">✨ Load Demo Tasks</button>
+              <button class="btn" onclick="document.getElementById('taskInput').focus()">✍️ Add New Task [N]</button>
+            </div>
+          `;
+        } else {
+          empty.innerHTML = `
+            <div style="font-size: 28px; margin-bottom: 6px;">🔍</div>
+            <div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">No matching tasks found</div>
+            <p style="font-size: 12px; margin-bottom: 12px; color: var(--text-secondary);">No tasks match the active search or filters.</p>
+            <button class="btn" onclick="clearAllFilters()">🔄 Reset All Filters [Esc]</button>
+          `;
+        }
         listEl.appendChild(empty);
         return;
       }
 
       const todayStr = getTodayString();
 
+      // Ensure selectedTaskId is valid in filtered set
+      if (!selectedTaskId || !filtered.some(t => t.id === selectedTaskId)) {
+        selectedTaskId = filtered[0].id;
+      }
+
       filtered.forEach(task => {
+        const isSelected = selectedTaskId === task.id;
+        const isEditing = editingTaskId === task.id;
         const card = document.createElement('div');
-        card.className = `task-card ${task.completed ? 'completed' : ''}`;
+        card.className = `task-card ${task.completed ? 'completed' : ''} ${isSelected ? 'selected' : ''}`;
         card.setAttribute('role', 'listitem');
+        card.onclick = (e) => {
+          if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' && !isEditing) {
+            selectedTaskId = task.id;
+            document.querySelectorAll('.task-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+          }
+        };
 
         const isExpanded = expandedSubtasks.has(task.id);
         const subCount = task.subtasks ? task.subtasks.length : 0;
@@ -1326,10 +1569,24 @@
           dateBadgeHtml = `<span class="badge ${dateClass}">${escapeHtml(dateText)}</span>`;
         }
 
+        let titleContentHtml = '';
+        if (isEditing) {
+          titleContentHtml = `
+            <input type="text" id="editInput_${task.id}" class="edit-task-input" value="${escapeHtml(task.text)}"
+              onkeydown="if(event.key==='Enter') saveEditTask(${task.id}); else if(event.key==='Escape') cancelEditTask();"
+              onblur="saveEditTask(${task.id})">
+          `;
+        } else {
+          titleContentHtml = `
+            <span class="task-title" onclick="toggleTask(${task.id})" ondblclick="startEditTask(${task.id})" title="Double-click to edit title">${escapeHtml(task.text)}</span>
+            <button class="action-icon-btn" onclick="startEditTask(${task.id})" title="Edit Task [Double Click]">✏️</button>
+          `;
+        }
+
         card.innerHTML = `
           <div class="task-header">
-            <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${task.id})">
-            <span class="task-title" onclick="toggleTask(${task.id})">${escapeHtml(task.text)}</span>
+            <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${task.id})" title="Mark complete [Space]">
+            ${titleContentHtml}
             <div class="badges">
               <span class="badge badge-prio-${escapeHtml(task.priority)}">${escapeHtml(task.priority)}</span>
               <span class="badge badge-cat">#${escapeHtml(task.category || 'General')}</span>
@@ -1338,7 +1595,7 @@
             <button class="action-icon-btn" onclick="toggleSubtaskExpand(${task.id})" title="Toggle Subtasks">
               📋 ${subDoneCount}/${subCount}
             </button>
-            <button class="action-icon-btn delete" onclick="deleteTask(${task.id})" title="Delete Task">✕</button>
+            <button class="action-icon-btn delete" onclick="deleteTask(${task.id})" title="Delete Task [Del]">✕</button>
           </div>
         `;
 
@@ -1742,8 +1999,25 @@
     document.addEventListener('keydown', (e) => {
       const isInput = ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName);
       if (e.key === 'Escape') {
-        closeIOModal();
-        closeHelpModal();
+        const io = document.getElementById('ioModal');
+        const help = document.getElementById('helpModal');
+        if (io && io.classList.contains('active')) {
+          closeIOModal();
+          return;
+        }
+        if (help && help.classList.contains('active')) {
+          closeHelpModal();
+          return;
+        }
+        if (editingTaskId) {
+          cancelEditTask();
+          return;
+        }
+        if (document.getElementById('searchInput').value) {
+          clearSearch();
+          return;
+        }
+        hideToast();
       }
       if (!isInput) {
         if (e.key === 'F1' || e.key.toLowerCase() === 'h') {
@@ -1758,10 +2032,57 @@
           setViewMode('list');
         } else if (e.key === '2') {
           setViewMode('kanban');
+        } else if (e.key.toLowerCase() === 'n') {
+          e.preventDefault();
+          const input = document.getElementById('taskInput');
+          if (input) {
+            input.focus();
+            input.select();
+          }
+        } else if (e.key === '/' || e.key.toLowerCase() === 'f') {
+          e.preventDefault();
+          const input = document.getElementById('searchInput');
+          if (input) {
+            input.focus();
+            input.select();
+          }
+        } else if (e.key.toLowerCase() === 's') {
+          toggleStats();
+        } else if (e.key.toLowerCase() === 'i') {
+          openIOModal();
+        } else if (e.key.toLowerCase() === 'c') {
+          clearCompleted();
+        } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          if (currentViewMode === 'list') {
+            const filtered = getFilteredTasks();
+            if (filtered.length > 0) {
+              e.preventDefault();
+              let curIdx = filtered.findIndex(t => t.id === selectedTaskId);
+              if (curIdx < 0) curIdx = 0;
+              if (e.key === 'ArrowDown') {
+                curIdx = (curIdx + 1) % filtered.length;
+              } else {
+                curIdx = (curIdx - 1 + filtered.length) % filtered.length;
+              }
+              selectedTaskId = filtered[curIdx].id;
+              renderListView(filtered);
+              const card = document.querySelector('.task-card.selected');
+              if (card && card.scrollIntoViewIfNeeded) card.scrollIntoViewIfNeeded(false);
+            }
+          }
+        } else if (e.key === ' ' && selectedTaskId) {
+          e.preventDefault();
+          toggleTask(selectedTaskId);
+        } else if ((e.key === 'Delete' || e.key === 'Backspace') && selectedTaskId) {
+          e.preventDefault();
+          deleteTask(selectedTaskId);
+        } else if (e.key === 'Enter' && selectedTaskId) {
+          e.preventDefault();
+          toggleSubtaskExpand(selectedTaskId);
         }
       }
     });
-    setTimeout(() => showToast("✨ Welcome to KTodo! Press [F1] or [H] for quick help."), 500);
+    setTimeout(() => showToast("✨ Welcome to KTodo! Press [F1] for shortcuts | [N] for new task | [1/2] views"), 400);
   </script>
 </body>
 </html>

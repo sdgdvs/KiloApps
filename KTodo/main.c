@@ -244,22 +244,58 @@ int GetSelectedTaskIndex() {
     return -1;
 }
 
+#define IDT_TOAST 2001
+char g_toastMsg[128] = {0};
+UINT_PTR g_toastTimer = 0;
+
+void RefreshStatusText() {
+    if (my_strlen(g_toastMsg) > 0) {
+        SetWindowTextA(hStatusText, g_toastMsg);
+        return;
+    }
+    int activeCount = 0;
+    int completedCount = 0;
+    for (int i = 0; i < g_taskCount; i++) {
+        if (g_tasks[i].completed) completedCount++;
+        else activeCount++;
+    }
+    int total = g_taskCount;
+    int rate = total > 0 ? (completedCount * 100) / total : 0;
+    char statusBuf[160];
+    wsprintfA(statusBuf, "Tasks: %d | Active: %d | Done: %d (%d%%) | [Space: Done | N: New | Del: Remove | F1: Help]",
+        total, activeCount, completedCount, rate);
+    SetWindowTextA(hStatusText, statusBuf);
+}
+
+void ShowNativeToast(const char* msg) {
+    my_strncpy(g_toastMsg, msg, sizeof(g_toastMsg));
+    if (g_toastTimer && g_hWnd) KillTimer(g_hWnd, IDT_TOAST);
+    if (g_hWnd) g_toastTimer = SetTimer(g_hWnd, IDT_TOAST, 3500, NULL);
+    RefreshStatusText();
+}
+
 void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd,
         "KTodo - Quick Help & Keyboard Shortcuts\n\n"
         "• Keyboard Shortcuts:\n"
         "  - Enter (in Task Input): Add task immediately\n"
+        "  - N: Focus Task Input to create new task\n"
+        "  - / or F: Focus Search bar\n"
         "  - Space / Enter (in Task List): Toggle task completed\n"
-        "  - Delete (in Task List): Delete selected task\n"
+        "  - Del / D: Delete selected task\n"
+        "  - C: Clear all completed tasks\n"
+        "  - S: Show productivity summary & stats\n"
+        "  - E: Export Markdown task list (.md)\n"
+        "  - I: Import Markdown task list (.md)\n"
+        "  - J: Export JSON backup\n"
+        "  - Esc: Clear search filter / reset focus\n"
         "  - F1 / H: Open this Help dialog\n\n"
         "• Task Management:\n"
-        "  - Set Category (Work, Personal, Project, Shopping, General)\n"
-        "  - Set Priority (High, Med, Low) and Due Date (YYYY-MM-DD)\n"
+        "  - Categories: Work, Personal, Project, Shopping, General\n"
+        "  - Priorities: High, Med, Low and Due Date (YYYY-MM-DD)\n"
         "  - '+ Checklist': Add subtasks to selected task\n"
         "  - Double-click a task in list to toggle completion\n"
-        "  - Search & Filter by status and category\n"
-        "  - Export / Import Markdown (.md) or JSON backup\n"
-        "  - '📊 Stats': View productivity & completion metrics",
+        "  - Search & Filter by status and category dropdowns",
         "KTodo Help", MB_OK | MB_ICONINFORMATION);
 }
 
@@ -275,13 +311,8 @@ void RefreshTaskList() {
     char filterCat[32] = {0};
     GetWindowTextA(hFilterCategory, filterCat, sizeof(filterCat) - 1);
 
-    int activeCount = 0;
-    int completedCount = 0;
-
     for (int i = 0; i < g_taskCount; i++) {
         Task* t = &g_tasks[i];
-        if (t->completed) completedCount++;
-        else activeCount++;
 
         // Status Filter
         if (my_strcmp(filterStat, "Active") == 0 && t->completed) continue;
@@ -337,12 +368,7 @@ void RefreshTaskList() {
         SendMessageA(hList, LB_SETITEMDATA, pos, (LPARAM)i);
     }
 
-    // Update status text
-    int total = g_taskCount;
-    int rate = total > 0 ? (completedCount * 100) / total : 0;
-    char statusBuf[128];
-    wsprintfA(statusBuf, "Total: %d | Active: %d | Done: %d | Rate: %d%%  [F1/H: Help | Del: Remove | Space: Toggle]", total, activeCount, completedCount, rate);
-    SetWindowTextA(hStatusText, statusBuf);
+    RefreshStatusText();
 }
 
 void DoAddTask() {
@@ -383,6 +409,7 @@ void DoAddTask() {
         SetWindowTextA(hInput, "");
         SetFocus(hInput);
         RefreshTaskList();
+        ShowNativeToast("Task added successfully!");
     }
 }
 
@@ -395,6 +422,7 @@ void DoToggleTask() {
         if (sel != LB_ERR && sel < SendMessageA(hList, LB_GETCOUNT, 0, 0)) {
             SendMessageA(hList, LB_SETCURSEL, sel, 0);
         }
+        ShowNativeToast(g_tasks[idx].completed ? "Task marked completed [Done]!" : "Task marked active.");
     }
 }
 
@@ -412,6 +440,7 @@ void DoDeleteTask() {
             if (sel >= count) sel = count - 1;
             SendMessageA(hList, LB_SETCURSEL, sel, 0);
         }
+        ShowNativeToast("Task deleted.");
     }
 }
 
@@ -422,8 +451,14 @@ void DoClearCompleted() {
             g_tasks[newCount++] = g_tasks[i];
         }
     }
+    int removed = g_taskCount - newCount;
     g_taskCount = newCount;
     RefreshTaskList();
+    if (removed > 0) {
+        ShowNativeToast("Cleared completed tasks.");
+    } else {
+        ShowNativeToast("No completed tasks to clear.");
+    }
 }
 
 void DoAddSubtask() {
@@ -449,6 +484,7 @@ void DoAddSubtask() {
         st->completed = 0;
         t->subtaskCount++;
         RefreshTaskList();
+        ShowNativeToast("Checklist item added to task.");
     }
 }
 
@@ -513,7 +549,7 @@ void DoExportData() {
         WriteFile(hFile, footer, my_strlen(footer), &written, NULL);
         CloseHandle(hFile);
 
-        MessageBoxA(g_hWnd, "Tasks successfully exported to 'ktodo_export.json'!", "Export Complete", MB_OK | MB_ICONINFORMATION);
+        ShowNativeToast("Tasks exported to 'ktodo_export.json'!");
     } else {
         MessageBoxA(g_hWnd, "Failed to create export file.", "Export Error", MB_OK | MB_ICONERROR);
     }
@@ -552,7 +588,7 @@ void DoExportMarkdown() {
             }
         }
         CloseHandle(hFile);
-        MessageBoxA(g_hWnd, "Tasks successfully exported to 'ktodo_export.md'!", "Markdown Export", MB_OK | MB_ICONINFORMATION);
+        ShowNativeToast("Tasks exported to 'ktodo_export.md'!");
     } else {
         MessageBoxA(g_hWnd, "Failed to create 'ktodo_export.md'.", "Export Error", MB_OK | MB_ICONERROR);
     }
@@ -675,8 +711,8 @@ void DoImportMarkdown() {
     RefreshTaskList();
 
     char msgBuf[128];
-    wsprintfA(msgBuf, "Successfully imported %d tasks from 'ktodo_export.md'!", importedCount);
-    MessageBoxA(g_hWnd, msgBuf, "Markdown Import Complete", MB_OK | MB_ICONINFORMATION);
+    wsprintfA(msgBuf, "Imported %d tasks from 'ktodo_export.md'!", importedCount);
+    ShowNativeToast(msgBuf);
 }
 
 void LoadSampleData() {
@@ -712,7 +748,7 @@ void LoadSampleData() {
 
     g_taskCount = 3;
     RefreshTaskList();
-    MessageBoxA(g_hWnd, "Sample tasks loaded into KTodo!", "Demo Tasks", MB_OK | MB_ICONINFORMATION);
+    ShowNativeToast("Sample tasks loaded into KTodo!");
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -767,18 +803,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL | LBS_HASSTRINGS | WS_TABSTOP, 10, 70, 445, 190, hwnd, (HMENU)ID_LIST, NULL, NULL);
 
             // Row 4: Action Buttons
-            hToggleBtn = CreateWindowA("BUTTON", "Toggle Done", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 265, 85, 26, hwnd, (HMENU)ID_TOGGLEBTN, NULL, NULL);
-            hSubtaskBtn = CreateWindowA("BUTTON", "+ Checklist", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 100, 265, 80, 26, hwnd, (HMENU)ID_SUBTASKBTN, NULL, NULL);
-            hDeleteBtn = CreateWindowA("BUTTON", "Delete", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 185, 265, 55, 26, hwnd, (HMENU)ID_DELETEBTN, NULL, NULL);
-            hClearBtn = CreateWindowA("BUTTON", "Clear Done", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 245, 265, 75, 26, hwnd, (HMENU)ID_CLEARBTN, NULL, NULL);
-            hExportBtn = CreateWindowA("BUTTON", "Export JSON", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 325, 265, 80, 26, hwnd, (HMENU)ID_EXPORTBTN, NULL, NULL);
-            hExportMDBtn = CreateWindowA("BUTTON", "Export MD", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 410, 265, 70, 26, hwnd, (HMENU)ID_EXPORTMDBTN, NULL, NULL);
-            hImportMDBtn = CreateWindowA("BUTTON", "Import MD", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 485, 265, 70, 26, hwnd, (HMENU)ID_IMPORTMDBTN, NULL, NULL);
-            hImportBtn = CreateWindowA("BUTTON", "Demo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 560, 265, 48, 26, hwnd, (HMENU)ID_IMPORTBTN, NULL, NULL);
-            hHelpBtn = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 615, 265, 75, 26, hwnd, (HMENU)ID_HELPBTN, NULL, NULL);
+            hToggleBtn = CreateWindowA("BUTTON", "Done [Space]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 265, 90, 26, hwnd, (HMENU)ID_TOGGLEBTN, NULL, NULL);
+            hSubtaskBtn = CreateWindowA("BUTTON", "+ Checklist", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 105, 265, 80, 26, hwnd, (HMENU)ID_SUBTASKBTN, NULL, NULL);
+            hDeleteBtn = CreateWindowA("BUTTON", "Delete [Del]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 190, 265, 85, 26, hwnd, (HMENU)ID_DELETEBTN, NULL, NULL);
+            hClearBtn = CreateWindowA("BUTTON", "Clear [C]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 280, 265, 70, 26, hwnd, (HMENU)ID_CLEARBTN, NULL, NULL);
+            hExportBtn = CreateWindowA("BUTTON", "JSON [J]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 355, 265, 65, 26, hwnd, (HMENU)ID_EXPORTBTN, NULL, NULL);
+            hExportMDBtn = CreateWindowA("BUTTON", "Export MD [E]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 425, 265, 95, 26, hwnd, (HMENU)ID_EXPORTMDBTN, NULL, NULL);
+            hImportMDBtn = CreateWindowA("BUTTON", "Import MD [I]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 525, 265, 95, 26, hwnd, (HMENU)ID_IMPORTMDBTN, NULL, NULL);
+            hImportBtn = CreateWindowA("BUTTON", "Demo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 625, 265, 50, 26, hwnd, (HMENU)ID_IMPORTBTN, NULL, NULL);
+            hHelpBtn = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 680, 265, 75, 26, hwnd, (HMENU)ID_HELPBTN, NULL, NULL);
 
             // Row 5: Status Bar
-            hStatusText = CreateWindowA("STATIC", "Total: 0 | Active: 0 | Done: 0 | [F1/H: Help | Del: Remove | Space: Toggle]", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 298, 445, 20, hwnd, NULL, NULL, NULL);
+            hStatusText = CreateWindowA("STATIC", "Tasks: 0 | [Space: Done | N: New | Del: Remove | F1: Help]", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 298, 445, 20, hwnd, NULL, NULL, NULL);
 
             // Setup fonts
             hFont = CreateFontA(-16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
@@ -812,8 +848,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Load sample tasks on startup
             LoadSampleData();
+            ShowNativeToast("Welcome to KTodo! [F1: Help | N: New | Space: Done]");
             break;
         }
+
+        case WM_TIMER:
+            if (wParam == IDT_TOAST) {
+                g_toastMsg[0] = '\0';
+                KillTimer(hwnd, IDT_TOAST);
+                g_toastTimer = 0;
+                RefreshStatusText();
+            }
+            break;
 
         case WM_USER + 1:
             RefreshTaskList();
@@ -821,8 +867,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_GETMINMAXINFO: {
             LPMINMAXINFO mmi = (LPMINMAXINFO)lParam;
-            mmi->ptMinTrackSize.x = 640;
-            mmi->ptMinTrackSize.y = 360;
+            mmi->ptMinTrackSize.x = 750;
+            mmi->ptMinTrackSize.y = 380;
             break;
         }
 
@@ -850,14 +896,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 MoveWindow(hList, 10, 70, cx - 20, listHeight, TRUE);
 
                 int btnY = cy - 60;
-                int btnW[9] = { 85, 80, 55, 75, 80, 70, 70, 48, 75 };
+                int btnW[9] = { 90, 80, 85, 70, 65, 95, 95, 50, 75 };
                 HWND btns[9] = { hToggleBtn, hSubtaskBtn, hDeleteBtn, hClearBtn, hExportBtn, hExportMDBtn, hImportMDBtn, hImportBtn, hHelpBtn };
                 int totalBtnW = 0;
                 for (int b = 0; b < 9; b++) totalBtnW += btnW[b];
                 int avail = cx - 20 - totalBtnW;
                 int gap = avail / 8;
-                if (gap < 3) gap = 3;
-                if (gap > 12) gap = 12;
+                if (gap < 2) gap = 2;
+                if (gap > 10) gap = 10;
                 int curX = 10;
                 for (int b = 0; b < 9; b++) {
                     MoveWindow(btns[b], curX, btnY, btnW[b], 26, TRUE);
@@ -906,6 +952,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         case WM_DESTROY:
+            if (g_toastTimer) {
+                KillTimer(hwnd, IDT_TOAST);
+                g_toastTimer = 0;
+            }
             if (hFont && hFont != GetStockObject(DEFAULT_GUI_FONT)) {
                 DeleteObject(hFont);
                 hFont = NULL;
@@ -935,19 +985,73 @@ void __stdcall MainEntry() {
     
     RECT r = {0, 0, 800, 600};
     AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW, FALSE);
-    HWND hwnd = CreateWindowExA(0, "KTodoClass", "KTodo - Smart Task & Productivity Manager", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KTodoClass", "KTodo - Smart Task & Productivity Manager [F1: Help | Space: Done | N: New | Del: Remove]", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
-        if (msg.message == WM_KEYDOWN && (msg.wParam == VK_F1 || msg.wParam == 'H')) {
-            char className[256] = {0};
+        if (msg.message == WM_KEYDOWN) {
             HWND hFocus = GetFocus();
+            char className[32] = {0};
             if (hFocus) GetClassNameA(hFocus, className, sizeof(className));
-            if (msg.wParam == VK_F1 || (msg.wParam == 'H' && my_stristr(className, "EDIT") == 0)) {
-                ShowHelpDialog(msg.hwnd);
+            int isEdit = (my_strcmp(className, "Edit") == 0 || my_strcmp(className, "EDIT") == 0);
+
+            if (msg.wParam == VK_F1 || (!isEdit && (msg.wParam == 'H' || msg.wParam == 'h'))) {
+                ShowHelpDialog(hwnd);
+                continue;
+            }
+            if (!isEdit) {
+                if (msg.wParam == 'N' || msg.wParam == 'n') {
+                    SetFocus(hInput);
+                    SendMessageA(hInput, EM_SETSEL, 0, -1);
+                    continue;
+                }
+                if (msg.wParam == 'F' || msg.wParam == 'f' || msg.wParam == 191 /* '/' */) {
+                    SetFocus(hSearch);
+                    SendMessageA(hSearch, EM_SETSEL, 0, -1);
+                    continue;
+                }
+                if (msg.wParam == 'S' || msg.wParam == 's') {
+                    DoShowStats();
+                    continue;
+                }
+                if (msg.wParam == 'E' || msg.wParam == 'e') {
+                    DoExportMarkdown();
+                    continue;
+                }
+                if (msg.wParam == 'I' || msg.wParam == 'i') {
+                    DoImportMarkdown();
+                    continue;
+                }
+                if (msg.wParam == 'J' || msg.wParam == 'j') {
+                    DoExportData();
+                    continue;
+                }
+                if (msg.wParam == 'C' || msg.wParam == 'c') {
+                    DoClearCompleted();
+                    continue;
+                }
+                if (msg.wParam == 'D' || msg.wParam == 'd') {
+                    DoDeleteTask();
+                    continue;
+                }
+                if (msg.wParam == VK_ESCAPE) {
+                    SetWindowTextA(hSearch, "");
+                    RefreshTaskList();
+                    SetFocus(hList);
+                    continue;
+                }
+            } else {
+                if (msg.wParam == VK_ESCAPE) {
+                    if (hFocus == hSearch) {
+                        SetWindowTextA(hSearch, "");
+                        RefreshTaskList();
+                    }
+                    SetFocus(hList);
+                    continue;
+                }
             }
         }
         TranslateMessage(&msg);
