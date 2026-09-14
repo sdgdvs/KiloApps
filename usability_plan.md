@@ -45,14 +45,13 @@
 
 ---
 
-**Target App:** KConverter
+**Target App:** KGraph
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KConverter
 - KGraph
 - KTimer
 - KContacts
@@ -106,10 +105,13 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KRogue
 - KSys
 - KTodo
+- KConverter
 
 ## Progress Log
 
 > 📁 **Archived Progress Log**: Older entries have been archived to [archive/usability_plan_archive.md](archive/usability_plan_archive.md) to preserve token efficiency.
+
+- KConverter: Usability and UI issues fixed (integrated interactive toast notification system with [✕] click-to-dismiss and startup welcome guide, built 1-click Quick Presets bar [🌡️ 25°C ➔ °F, 🚗 100 km/h ➔ mph, ⚖️ 1 kg ➔ lb, 📏 1 m ➔ ft, 💾 1 GB ➔ MB, 🎈 1 atm ➔ psi, 🥤 1 L ➔ gal, ⏱️ 1 hr ➔ min], added search clear [✕] buttons across Batch, Smart Parser, and History views, added interactive empty state with 1-click [✨ Load Standard Favorites] button, added visual shortcut badges and hotkeys [X/S for swap, P for pin, C for copy, I// for focus input, ArrowLeft/Right for tab cycling, Esc for clear/blur] with updated Help modal guide in web; fixed critical native Batch mode UX bug where input value and source unit controls were hidden and covered by batch output, repositioned batch output list below shared input controls for live batch calculations, added bottom status bar and non-blocking ShowNativeStatus notification system replacing blocking MessageBox modals for pin/export/favorites, added 1-click [📋 Copy [C]] to Windows clipboard and [✨ Defaults] favorites loader, implemented message loop accelerators for F1/H/1-5/X/P/C/Enter/Esc, updated window title with shortcut hints, and verified clean compilation across both builds).
 
 - KTodo: Usability and UI issues fixed (integrated interactive toast notification system with [✕] click-to-dismiss and startup welcome guide, built 1-click Quick Presets bar [💼 Standup, 🔴 Fix Bug, 🛒 Groceries, ❤️ Workout, 🚀 Sprint Plan], added search clear [✕] button with Esc/Enter handling, implemented rich empty states with 1-click [✨ Load Demo Tasks] and [✍️ Add New Task [N]] actions, added inline title editing [✏️ / double-click] and list keyboard navigation [↑/↓ arrows, Space toggle, Del remove, Enter expand subtasks, N focus new task, / or F search, S stats, I import/export, C clear completed, 1/2 view switcher, F1 help] with visual shortcut badges on buttons in web; implemented non-blocking ShowNativeToast notification system in native status bar replacing blocking MessageBox popups for exports/imports/task actions, updated native buttons with explicit shortcut badges [Done [Space], + Checklist, Delete [Del], Clear [C], JSON [J], Export MD [E], Import MD [I], Demo, Help [F1]], implemented comprehensive global message loop accelerators for F1/H/N/F/S/E/I/J/C/D/Del/Space/Esc preventing child control event swallowing, updated min window track size and window title with shortcut hints, and verified clean compilation across both builds).
 

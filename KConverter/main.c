@@ -34,8 +34,12 @@ HMODULE hMsvcrt = NULL;
 HWND hCategory, hInput, hOutput, hFrom, hTo, hPrecision, hFormat;
 HWND hBatchOutput, hHistoryOutput, hFavCombo, hFormulaStatic;
 HWND hBtnSingle, hBtnBatch, hBtnFavs, hBtnHistory, hBtnExpress, hBtnHelp;
-HWND hBtnLoadFav = NULL, hBtnRemoveFav = NULL;
+HWND hBtnLoadFav = NULL, hBtnRemoveFav = NULL, hBtnDemoFavs = NULL;
 HWND hExpressInput, hExpressOutput, hExpressPresetBtns[6];
+HWND hLblInput = NULL, hLblFrom = NULL, hLblTo = NULL, hLblResult = NULL;
+HWND hBtnSwap = NULL, hBtnPin = NULL, hBtnConvert = NULL, hBtnCopyResult = NULL;
+HWND hBtnExportHistory = NULL, hBtnClearHistory = NULL, hBtnEvaluateExpress = NULL;
+HWND hStatusBar = NULL;
 HFONT hFont = NULL, hFontBold = NULL;
 HBRUSH hStaticBkBrush = NULL;
 WNDPROC OldEditProc = NULL;
@@ -45,6 +49,9 @@ char historyBuffer[4096];
 int currentMode = 0; // 0=Single, 1=Batch, 2=Favs, 3=History, 4=Express
 
 void ShowHelpDialog(HWND hwnd);
+void ShowNativeStatus(const char* msg);
+void CopyToClipboardNative(HWND hwnd, const char* text);
+void LoadDefaultFavoritesNative();
 
 // Categories and Units
 const char* catNames[] = {"Length", "Weight", "Temperature", "Data Storage", "Speed", "Area", "Volume", "Time", "Pressure"};
@@ -516,6 +523,55 @@ void DoExpressParse() {
     AppendHistory(logLine);
 }
 
+void ShowNativeStatus(const char* msg) {
+    if (hStatusBar && msg) {
+        char buf[256];
+        m_sprintf(buf, " %s", msg);
+        SetWindowTextA(hStatusBar, buf);
+    }
+}
+
+void CopyToClipboardNative(HWND hwnd, const char* text) {
+    if (!text || !*text) return;
+    if (!OpenClipboard(hwnd)) return;
+    EmptyClipboard();
+    int len = lstrlenA(text) + 1;
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len);
+    if (hMem) {
+        char* pMem = (char*)GlobalLock(hMem);
+        if (pMem) {
+            lstrcpyA(pMem, text);
+            GlobalUnlock(hMem);
+            SetClipboardData(CF_TEXT, hMem);
+        }
+    }
+    CloseClipboard();
+    ShowNativeStatus("📋 Copied result to Windows clipboard!");
+}
+
+void LoadDefaultFavoritesNative() {
+    struct { int cat; int from; int to; } defs[] = {
+        { 0, 0, 6 }, // Length: Meters -> Feet
+        { 2, 0, 1 }, // Temp: Celsius -> Fahrenheit
+        { 1, 0, 4 }, // Weight: Kilograms -> Pounds
+        { 4, 1, 2 }, // Speed: Km/hour -> Miles/hour
+        { 3, 3, 2 }, // Data: Gigabytes -> Megabytes
+        { 8, 4, 3 }  // Pressure: Atm -> PSI
+    };
+    for (int i = 0; i < 6; i++) {
+        char favItem[128];
+        int c = defs[i].cat;
+        int f = defs[i].from;
+        int t = defs[i].to;
+        m_sprintf(favItem, "%s: %s -> %s", catNames[c], GetUnitName(c, f), GetUnitName(c, t));
+        int idx = (int)SendMessageA(hFavCombo, CB_ADDSTRING, 0, (LPARAM)favItem);
+        LPARAM packed = (LPARAM)((c & 0xFF) | ((f & 0xFF) << 8) | ((t & 0xFF) << 16));
+        SendMessageA(hFavCombo, CB_SETITEMDATA, (WPARAM)idx, packed);
+    }
+    SendMessageA(hFavCombo, CB_SETCURSEL, 0, 0);
+    ShowNativeStatus("⭐ Standard favorite pairs loaded!");
+}
+
 void UpdateViewVisibility() {
     BOOL isSingle = (currentMode == 0);
     BOOL isBatch = (currentMode == 1);
@@ -523,26 +579,41 @@ void UpdateViewVisibility() {
     BOOL isHistory = (currentMode == 3);
     BOOL isExpress = (currentMode == 4);
 
-    ShowWindow(hInput, isSingle ? SW_SHOW : SW_HIDE);
-    ShowWindow(hFrom, isSingle ? SW_SHOW : SW_HIDE);
+    if (hLblInput) ShowWindow(hLblInput, (isSingle || isBatch) ? SW_SHOW : SW_HIDE);
+    ShowWindow(hInput, (isSingle || isBatch) ? SW_SHOW : SW_HIDE);
+    if (hLblFrom) ShowWindow(hLblFrom, (isSingle || isBatch) ? SW_SHOW : SW_HIDE);
+    ShowWindow(hFrom, (isSingle || isBatch) ? SW_SHOW : SW_HIDE);
+
+    if (hBtnSwap) ShowWindow(hBtnSwap, isSingle ? SW_SHOW : SW_HIDE);
+    if (hBtnPin) ShowWindow(hBtnPin, isSingle ? SW_SHOW : SW_HIDE);
+    if (hLblTo) ShowWindow(hLblTo, isSingle ? SW_SHOW : SW_HIDE);
     ShowWindow(hTo, isSingle ? SW_SHOW : SW_HIDE);
+    if (hLblResult) ShowWindow(hLblResult, isSingle ? SW_SHOW : SW_HIDE);
     ShowWindow(hOutput, isSingle ? SW_SHOW : SW_HIDE);
+    if (hBtnCopyResult) ShowWindow(hBtnCopyResult, isSingle ? SW_SHOW : SW_HIDE);
+    if (hBtnConvert) ShowWindow(hBtnConvert, isSingle ? SW_SHOW : SW_HIDE);
     ShowWindow(hFormulaStatic, isSingle ? SW_SHOW : SW_HIDE);
 
     ShowWindow(hBatchOutput, isBatch ? SW_SHOW : SW_HIDE);
+
     ShowWindow(hFavCombo, isFav ? SW_SHOW : SW_HIDE);
     if (hBtnLoadFav) ShowWindow(hBtnLoadFav, isFav ? SW_SHOW : SW_HIDE);
     if (hBtnRemoveFav) ShowWindow(hBtnRemoveFav, isFav ? SW_SHOW : SW_HIDE);
+    if (hBtnDemoFavs) ShowWindow(hBtnDemoFavs, isFav ? SW_SHOW : SW_HIDE);
+
     ShowWindow(hHistoryOutput, isHistory ? SW_SHOW : SW_HIDE);
+    if (hBtnExportHistory) ShowWindow(hBtnExportHistory, isHistory ? SW_SHOW : SW_HIDE);
+    if (hBtnClearHistory) ShowWindow(hBtnClearHistory, isHistory ? SW_SHOW : SW_HIDE);
 
     ShowWindow(hExpressInput, isExpress ? SW_SHOW : SW_HIDE);
+    if (hBtnEvaluateExpress) ShowWindow(hBtnEvaluateExpress, isExpress ? SW_SHOW : SW_HIDE);
     ShowWindow(hExpressOutput, isExpress ? SW_SHOW : SW_HIDE);
     for (int i = 0; i < 6; i++) {
         if (hExpressPresetBtns[i]) ShowWindow(hExpressPresetBtns[i], isExpress ? SW_SHOW : SW_HIDE);
     }
 }
 
-// Subclass Edit Proc to handle ENTER and F1 keys in Input box
+// Subclass Edit Proc to handle ENTER, ESC, and F1 keys in Input box
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == WM_KEYDOWN) {
         if (wParam == VK_RETURN) {
@@ -555,6 +626,14 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         } else if (wParam == VK_F1) {
             ShowHelpDialog(GetParent(hwnd));
             return 0;
+        } else if (wParam == VK_ESCAPE) {
+            if (hwnd == hInput) {
+                SetWindowTextA(hInput, "1");
+                DoConvert();
+            } else if (hwnd == hExpressInput) {
+                SetWindowTextA(hExpressInput, "");
+            }
+            return 0;
         }
     }
     return CallWindowProcA(OldEditProc, hwnd, msg, wParam, lParam);
@@ -565,16 +644,17 @@ void ShowHelpDialog(HWND hwnd) {
         "========================================\r\n"
         "   KCONVERTER PRO - QUICK GUIDE\r\n"
         "========================================\r\n\r\n"
-        "NAVIGATION & SHORTCUTS:\r\n"
+        "KEYBOARD SHORTCUTS:\r\n"
         "  [F1] or [H]  : Display this Help guide\r\n"
-        "  [1] - [5]    : Switch Tab Modes:\r\n"
-        "                 1: Single, 2: Batch, 3: Favs, 4: History, 5: Parser\r\n"
+        "  [1] - [5]    : Switch Tab Modes (Single, Batch, Favs, History, Parser)\r\n"
         "  [Enter]      : Calculate / Evaluate active expression\r\n"
-        "  [⇄ Swap]    : Invert From and To units\r\n"
-        "  [⭐ Pin]     : Save conversion pair to Favorites\r\n\r\n"
+        "  [X] or [S]   : Swap From and To units\r\n"
+        "  [P]          : Pin current conversion pair to Favorites\r\n"
+        "  [C]          : Copy conversion result to Windows Clipboard\r\n"
+        "  [Esc]        : Reset input or clear expression\r\n\r\n"
         "FEATURES:\r\n"
         "  - Single Convert : Bi-directional unit conversion with live formula\r\n"
-        "  - Batch Mode     : See conversion to all units in the category at once\r\n"
+        "  - Batch Mode     : Real-time calculation across all units in category\r\n"
         "  - Favorites      : Instant recall of pinned unit pairs\r\n"
         "  - History Log    : Conversion audit trail with export to text\r\n"
         "  - Smart Parser   : Evaluates phrases like '100 km/h to m/s' or '50 psi to bar'\r\n\r\n"
@@ -610,48 +690,54 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 465, 8, 80, 24, hwnd, (HMENU)6001, NULL, NULL);
 
             // Mode Tab Buttons
-            hBtnSingle = CreateWindowA("BUTTON", "[1] Single", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 38, 75, 24, hwnd, (HMENU)2001, NULL, NULL);
-            hBtnBatch = CreateWindowA("BUTTON", "[2] Batch", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 90, 38, 75, 24, hwnd, (HMENU)2002, NULL, NULL);
-            hBtnFavs = CreateWindowA("BUTTON", "[3] Favs", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 170, 38, 70, 24, hwnd, (HMENU)2003, NULL, NULL);
-            hBtnHistory = CreateWindowA("BUTTON", "[4] History", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 245, 38, 80, 24, hwnd, (HMENU)2004, NULL, NULL);
-            hBtnExpress = CreateWindowA("BUTTON", "[5] Parser ⚡", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 330, 38, 95, 24, hwnd, (HMENU)2005, NULL, NULL);
+            hBtnSingle = CreateWindowA("BUTTON", "[1] Single", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 38, 80, 24, hwnd, (HMENU)2001, NULL, NULL);
+            hBtnBatch = CreateWindowA("BUTTON", "[2] Batch", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 95, 38, 80, 24, hwnd, (HMENU)2002, NULL, NULL);
+            hBtnFavs = CreateWindowA("BUTTON", "[3] Favs", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 180, 38, 75, 24, hwnd, (HMENU)2003, NULL, NULL);
+            hBtnHistory = CreateWindowA("BUTTON", "[4] History", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 260, 38, 85, 24, hwnd, (HMENU)2004, NULL, NULL);
+            hBtnExpress = CreateWindowA("BUTTON", "[5] Parser ⚡", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 350, 38, 100, 24, hwnd, (HMENU)2005, NULL, NULL);
 
-            // Single View Controls
-            CreateWindowA("STATIC", "Input:", WS_CHILD | WS_VISIBLE, 10, 72, 45, 20, hwnd, NULL, NULL, NULL);
-            hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "1", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 60, 70, 100, 24, hwnd, (HMENU)1005, NULL, NULL);
+            // Single & Batch shared input row
+            hLblInput = CreateWindowA("STATIC", "Input:", WS_CHILD | WS_VISIBLE, 10, 72, 45, 20, hwnd, NULL, NULL, NULL);
+            hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "1", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 60, 70, 95, 24, hwnd, (HMENU)1005, NULL, NULL);
             OldEditProc = (WNDPROC)SetWindowLongPtrA(hInput, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
 
-            CreateWindowA("STATIC", "From:", WS_CHILD | WS_VISIBLE, 170, 72, 40, 20, hwnd, NULL, NULL, NULL);
-            hFrom = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 215, 70, 140, 150, hwnd, (HMENU)1006, NULL, NULL);
+            hLblFrom = CreateWindowA("STATIC", "From:", WS_CHILD | WS_VISIBLE, 165, 72, 40, 20, hwnd, NULL, NULL, NULL);
+            hFrom = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 210, 70, 145, 150, hwnd, (HMENU)1006, NULL, NULL);
 
-            CreateWindowA("BUTTON", "⇄ Swap", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 365, 70, 65, 24, hwnd, (HMENU)3001, NULL, NULL);
-            CreateWindowA("BUTTON", "⭐ Pin", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 435, 70, 55, 24, hwnd, (HMENU)3002, NULL, NULL);
+            hBtnSwap = CreateWindowA("BUTTON", "⇄ Swap [X]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 365, 70, 90, 24, hwnd, (HMENU)3001, NULL, NULL);
+            hBtnPin = CreateWindowA("BUTTON", "⭐ Pin [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 460, 70, 85, 24, hwnd, (HMENU)3002, NULL, NULL);
 
-            CreateWindowA("STATIC", "To:", WS_CHILD | WS_VISIBLE, 170, 102, 40, 20, hwnd, NULL, NULL, NULL);
-            hTo = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 215, 100, 140, 150, hwnd, (HMENU)1007, NULL, NULL);
+            // Single View row 2
+            hLblTo = CreateWindowA("STATIC", "To:", WS_CHILD | WS_VISIBLE, 165, 102, 40, 20, hwnd, NULL, NULL, NULL);
+            hTo = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 210, 100, 145, 150, hwnd, (HMENU)1007, NULL, NULL);
 
-            CreateWindowA("STATIC", "Result:", WS_CHILD | WS_VISIBLE, 10, 132, 50, 20, hwnd, NULL, NULL, NULL);
-            hOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_READONLY | ES_AUTOHSCROLL | WS_TABSTOP, 60, 130, 295, 24, hwnd, NULL, NULL, NULL);
-            CreateWindowA("BUTTON", "Convert", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 365, 100, 125, 54, hwnd, (HMENU)1001, NULL, NULL);
+            hBtnConvert = CreateWindowA("BUTTON", "Convert", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 365, 100, 90, 24, hwnd, (HMENU)1001, NULL, NULL);
+            hBtnCopyResult = CreateWindowA("BUTTON", "📋 Copy [C]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 460, 100, 85, 24, hwnd, (HMENU)3006, NULL, NULL);
 
-            hFormulaStatic = CreateWindowA("STATIC", "Formula: 1 Meter = 1 Meter", WS_CHILD | WS_VISIBLE, 10, 164, 520, 20, hwnd, NULL, NULL, NULL);
+            // Single View row 3: Result & Formula
+            hLblResult = CreateWindowA("STATIC", "Result:", WS_CHILD | WS_VISIBLE, 10, 132, 50, 20, hwnd, NULL, NULL, NULL);
+            hOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_READONLY | ES_AUTOHSCROLL | WS_TABSTOP, 60, 130, 485, 24, hwnd, NULL, NULL, NULL);
 
-            // Batch View Output
-            hBatchOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_BORDER | ES_MULTILINE | ES_READONLY | WS_VSCROLL | WS_TABSTOP, 10, 70, 560, 260, hwnd, NULL, NULL, NULL);
+            hFormulaStatic = CreateWindowA("STATIC", "Formula: 1 Meter = 1 Meter", WS_CHILD | WS_VISIBLE, 10, 164, 535, 20, hwnd, NULL, NULL, NULL);
+
+            // Batch View Output (positioned below Input/From at Y=102)
+            hBatchOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_BORDER | ES_MULTILINE | ES_READONLY | WS_VSCROLL | WS_TABSTOP, 10, 102, 625, 280, hwnd, NULL, NULL, NULL);
 
             // Favorites View
-            hFavCombo = CreateWindowA("COMBOBOX", NULL, WS_CHILD | CBS_DROPDOWNLIST | WS_TABSTOP, 10, 70, 360, 150, hwnd, (HMENU)3003, NULL, NULL);
-            hBtnLoadFav = CreateWindowA("BUTTON", "Load", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, 380, 68, 80, 26, hwnd, (HMENU)3004, NULL, NULL);
-            hBtnRemoveFav = CreateWindowA("BUTTON", "Remove", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, 470, 68, 80, 26, hwnd, (HMENU)3005, NULL, NULL);
+            hFavCombo = CreateWindowA("COMBOBOX", NULL, WS_CHILD | CBS_DROPDOWNLIST | WS_TABSTOP, 10, 70, 340, 150, hwnd, (HMENU)3003, NULL, NULL);
+            hBtnLoadFav = CreateWindowA("BUTTON", "Load [Enter]", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, 360, 68, 90, 26, hwnd, (HMENU)3004, NULL, NULL);
+            hBtnRemoveFav = CreateWindowA("BUTTON", "Remove", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, 455, 68, 75, 26, hwnd, (HMENU)3005, NULL, NULL);
+            hBtnDemoFavs = CreateWindowA("BUTTON", "✨ Defaults", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, 535, 68, 90, 26, hwnd, (HMENU)3007, NULL, NULL);
 
             // History Log View
-            hHistoryOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_BORDER | ES_MULTILINE | ES_READONLY | WS_VSCROLL | WS_TABSTOP, 10, 70, 560, 260, hwnd, NULL, NULL, NULL);
-            CreateWindowA("BUTTON", "Export History Log", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 340, 140, 26, hwnd, (HMENU)4001, NULL, NULL);
+            hHistoryOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_BORDER | ES_MULTILINE | ES_READONLY | WS_VSCROLL | WS_TABSTOP, 10, 70, 625, 275, hwnd, NULL, NULL, NULL);
+            hBtnExportHistory = CreateWindowA("BUTTON", "Export Log", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 352, 120, 26, hwnd, (HMENU)4001, NULL, NULL);
+            hBtnClearHistory = CreateWindowA("BUTTON", "Clear Log", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 135, 352, 95, 26, hwnd, (HMENU)4002, NULL, NULL);
 
             // Smart Parser View Controls
-            hExpressInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "100 km/h to m/s", WS_CHILD | ES_AUTOHSCROLL | WS_TABSTOP, 10, 70, 390, 24, hwnd, (HMENU)5010, NULL, NULL);
+            hExpressInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "100 km/h to m/s", WS_CHILD | ES_AUTOHSCROLL | WS_TABSTOP, 10, 70, 420, 24, hwnd, (HMENU)5010, NULL, NULL);
             SetWindowLongPtrA(hExpressInput, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
-            CreateWindowA("BUTTON", "Evaluate", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, 410, 70, 80, 24, hwnd, (HMENU)5000, NULL, NULL);
+            hBtnEvaluateExpress = CreateWindowA("BUTTON", "Evaluate", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, 435, 70, 80, 24, hwnd, (HMENU)5000, NULL, NULL);
 
             hExpressPresetBtns[0] = CreateWindowA("BUTTON", "100km/h->m/s", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, 10, 98, 90, 22, hwnd, (HMENU)5001, NULL, NULL);
             hExpressPresetBtns[1] = CreateWindowA("BUTTON", "50psi->bar", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, 105, 98, 75, 22, hwnd, (HMENU)5002, NULL, NULL);
@@ -660,7 +746,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hExpressPresetBtns[4] = CreateWindowA("BUTTON", "5000m2->acre", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, 335, 98, 90, 22, hwnd, (HMENU)5005, NULL, NULL);
             hExpressPresetBtns[5] = CreateWindowA("BUTTON", "5gal->l", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, 430, 98, 55, 22, hwnd, (HMENU)5006, NULL, NULL);
 
-            hExpressOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_BORDER | ES_MULTILINE | ES_READONLY | WS_VSCROLL | WS_TABSTOP, 10, 126, 560, 204, hwnd, NULL, NULL, NULL);
+            hExpressOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_BORDER | ES_MULTILINE | ES_READONLY | WS_VSCROLL | WS_TABSTOP, 10, 126, 625, 250, hwnd, NULL, NULL, NULL);
+
+            // Bottom Status Bar
+            hStatusBar = CreateWindowExA(WS_EX_STATICEDGE, "STATIC", " Ready. [F1] Help | [1-5] Tabs | [X] Swap | [P] Pin | [C] Copy | [Enter] Calc", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 392, 625, 22, hwnd, NULL, NULL, NULL);
 
             RegisterHotKey(hwnd, 1, 0, VK_F1);
 
@@ -697,9 +786,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hBtnFavs, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnHistory, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnExpress, WM_SETFONT, (WPARAM)hFont, TRUE);
+            if (hLblInput) SendMessageA(hLblInput, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hInput, WM_SETFONT, (WPARAM)hFont, TRUE);
+            if (hLblFrom) SendMessageA(hLblFrom, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hFrom, WM_SETFONT, (WPARAM)hFont, TRUE);
+            if (hBtnSwap) SendMessageA(hBtnSwap, WM_SETFONT, (WPARAM)hFont, TRUE);
+            if (hBtnPin) SendMessageA(hBtnPin, WM_SETFONT, (WPARAM)hFont, TRUE);
+            if (hLblTo) SendMessageA(hLblTo, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hTo, WM_SETFONT, (WPARAM)hFont, TRUE);
+            if (hBtnConvert) SendMessageA(hBtnConvert, WM_SETFONT, (WPARAM)hFont, TRUE);
+            if (hBtnCopyResult) SendMessageA(hBtnCopyResult, WM_SETFONT, (WPARAM)hFont, TRUE);
+            if (hLblResult) SendMessageA(hLblResult, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hOutput, WM_SETFONT, (WPARAM)hFontBold, TRUE);
             SendMessageA(hFormulaStatic, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBatchOutput, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -707,12 +804,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hFavCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
             if (hBtnLoadFav) SendMessageA(hBtnLoadFav, WM_SETFONT, (WPARAM)hFont, TRUE);
             if (hBtnRemoveFav) SendMessageA(hBtnRemoveFav, WM_SETFONT, (WPARAM)hFont, TRUE);
+            if (hBtnDemoFavs) SendMessageA(hBtnDemoFavs, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hExpressInput, WM_SETFONT, (WPARAM)hFont, TRUE);
+            if (hBtnEvaluateExpress) SendMessageA(hBtnEvaluateExpress, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hExpressOutput, WM_SETFONT, (WPARAM)hFont, TRUE);
             for (int i = 0; i < 6; i++) {
                 if (hExpressPresetBtns[i]) SendMessageA(hExpressPresetBtns[i], WM_SETFONT, (WPARAM)hFont, TRUE);
             }
+            if (hBtnExportHistory) SendMessageA(hBtnExportHistory, WM_SETFONT, (WPARAM)hFont, TRUE);
+            if (hBtnClearHistory) SendMessageA(hBtnClearHistory, WM_SETFONT, (WPARAM)hFont, TRUE);
+            if (hStatusBar) SendMessageA(hStatusBar, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+            LoadDefaultFavoritesNative();
             UpdateViewVisibility();
             DoConvert();
             DoExpressParse();
@@ -734,6 +837,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SendMessageA(hFrom, CB_SETCURSEL, tIdx, 0);
                 SendMessageA(hTo, CB_SETCURSEL, fIdx, 0);
                 DoConvert();
+                ShowNativeStatus("⇄ Swapped From and To units");
             } else if (wmId == 3002) { // Pin Fav Button
                 int cIdx = (int)SendMessageA(hCategory, CB_GETCURSEL, 0, 0);
                 int fIdx = (int)SendMessageA(hFrom, CB_GETCURSEL, 0, 0);
@@ -745,8 +849,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     LPARAM packed = (LPARAM)((cIdx & 0xFF) | ((fIdx & 0xFF) << 8) | ((tIdx & 0xFF) << 16));
                     SendMessageA(hFavCombo, CB_SETITEMDATA, (WPARAM)idx, packed);
                     SendMessageA(hFavCombo, CB_SETCURSEL, (WPARAM)idx, 0);
-                    MessageBoxA(hwnd, "Pinned to Favorites list!", "KConverter", MB_OK | MB_ICONINFORMATION);
+                    ShowNativeStatus("⭐ Pinned to Favorites list!");
                 }
+            } else if (wmId == 3006) { // Copy Result Button
+                char outText[256];
+                GetWindowTextA(hOutput, outText, 255);
+                CopyToClipboardNative(hwnd, outText);
+            } else if (wmId == 3007) { // Demo Favs Button
+                LoadDefaultFavoritesNative();
             } else if (wmId == 3004 || (wmId == 3003 && wmEvent == CBN_SELCHANGE)) { // Load Favorite
                 int sel = (int)SendMessageA(hFavCombo, CB_GETCURSEL, 0, 0);
                 if (sel != CB_ERR) {
@@ -762,6 +872,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         currentMode = 0;
                         UpdateViewVisibility();
                         DoConvert();
+                        ShowNativeStatus("⭐ Loaded favorite conversion pair.");
                     }
                 }
             } else if (wmId == 3005) { // Remove Favorite
@@ -773,6 +884,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int newSel = (sel >= count) ? count - 1 : sel;
                         SendMessageA(hFavCombo, CB_SETCURSEL, (WPARAM)newSel, 0);
                     }
+                    ShowNativeStatus("Favorite item removed.");
                 }
             } else if (wmId >= 2001 && wmId <= 2005) { // Mode tabs
                 currentMode = wmId - 2001;
@@ -788,17 +900,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (currentMode == 4) DoExpressParse();
             } else if (wmId == 4001) { // Export History
                 if (historyBuffer[0] == '\0') {
-                    MessageBoxA(hwnd, "History log is empty!", "KConverter", MB_OK | MB_ICONWARNING);
+                    ShowNativeStatus("⚠️ History log is empty!");
                 } else {
                     if (m_fopen && m_fputs && m_fclose) {
                         void* f = m_fopen("kconverter_history.txt", "w");
                         if (f) {
                             m_fputs(historyBuffer, f);
                             m_fclose(f);
-                            MessageBoxA(hwnd, "History exported to kconverter_history.txt", "KConverter", MB_OK | MB_ICONINFORMATION);
+                            ShowNativeStatus("📥 History exported to kconverter_history.txt");
                         }
                     }
                 }
+            } else if (wmId == 4002) { // Clear History
+                historyBuffer[0] = '\0';
+                SetWindowTextA(hHistoryOutput, "");
+                ShowNativeStatus("🗑️ History log cleared.");
             } else if (wmId == 5000) { // Evaluate Express
                 DoExpressParse();
             } else if (wmId == 5010 && wmEvent == EN_CHANGE) { // Live express parse
@@ -812,6 +928,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (wmId == 5006) pText = "5 gal to l";
                 SetWindowTextA(hExpressInput, pText);
                 DoExpressParse();
+                ShowNativeStatus("⚡ Loaded expression preset.");
             }
             break;
         }
@@ -823,31 +940,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 return 0;
             }
             if (!isEditing) {
-                if (wParam == '1') {
-                    currentMode = 0;
+                if (wParam >= '1' && wParam <= '5') {
+                    currentMode = (int)(wParam - '1');
                     UpdateViewVisibility();
-                    DoConvert();
-                    return 0;
-                } else if (wParam == '2') {
-                    currentMode = 1;
-                    UpdateViewVisibility();
-                    DoConvert();
-                    return 0;
-                } else if (wParam == '3') {
-                    currentMode = 2;
-                    UpdateViewVisibility();
-                    return 0;
-                } else if (wParam == '4') {
-                    currentMode = 3;
-                    UpdateViewVisibility();
-                    return 0;
-                } else if (wParam == '5') {
-                    currentMode = 4;
-                    UpdateViewVisibility();
-                    DoExpressParse();
+                    if (currentMode == 4) DoExpressParse();
+                    else DoConvert();
                     return 0;
                 } else if (wParam == 'H' || wParam == 'h') {
                     ShowHelpDialog(hwnd);
+                    return 0;
+                } else if (wParam == 'X' || wParam == 'x') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(3001, 0), 0);
+                    return 0;
+                } else if (wParam == 'P' || wParam == 'p') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(3002, 0), 0);
+                    return 0;
+                } else if (wParam == 'C' || wParam == 'c') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(3006, 0), 0);
                     return 0;
                 }
             }
@@ -894,9 +1003,9 @@ void __stdcall MainEntry() {
 
     RegisterClassA(&wc);
     
-    RECT rect = { 0, 0, 660, 480 };
+    RECT rect = { 0, 0, 660, 440 };
     AdjustWindowRect(&rect, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
-    HWND hwnd = CreateWindowExA(0, "KConvClass", "KConverter Pro - [F1] Help", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KConvClass", "KConverter Pro - [F1] Help | [1-5] Tabs | [X] Swap | [P] Pin | [C] Copy", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
@@ -917,6 +1026,36 @@ void __stdcall MainEntry() {
                 }
                 if (msg.wParam == 'H' || msg.wParam == 'h') {
                     ShowHelpDialog(hwnd);
+                    continue;
+                }
+                if (msg.wParam == 'X' || msg.wParam == 'x') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(3001, 0), 0);
+                    continue;
+                }
+                if (msg.wParam == 'P' || msg.wParam == 'p') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(3002, 0), 0);
+                    continue;
+                }
+                if (msg.wParam == 'C' || msg.wParam == 'c') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(3006, 0), 0);
+                    continue;
+                }
+            } else {
+                if (msg.wParam == VK_RETURN) {
+                    if (hFoc == hExpressInput) {
+                        DoExpressParse();
+                    } else {
+                        DoConvert();
+                    }
+                    continue;
+                }
+                if (msg.wParam == VK_ESCAPE) {
+                    if (hFoc == hInput) {
+                        SetWindowTextA(hInput, "1");
+                        DoConvert();
+                    } else if (hFoc == hExpressInput) {
+                        SetWindowTextA(hExpressInput, "");
+                    }
                     continue;
                 }
             }

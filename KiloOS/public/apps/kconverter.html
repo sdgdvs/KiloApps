@@ -368,30 +368,119 @@
   /* Toast Notification */
   .toast {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: #10b981;
-    color: #fff;
-    padding: 8px 16px;
+    bottom: 24px;
+    right: 24px;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(56, 189, 248, 0.5);
+    color: var(--text-primary);
+    padding: 10px 16px;
     border-radius: var(--radius-md);
     font-size: 13px;
     font-weight: 500;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
     opacity: 0;
-    transform: translateY(10px);
-    transition: all 0.3s ease;
+    transform: translateY(12px) scale(0.98);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: none;
-    z-index: 1000;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    backdrop-filter: blur(12px);
   }
 
   .toast.show {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
   }
 
   .toast.success { border-color: #10b981; }
   .toast.warning { border-color: #f59e0b; color: #fef3c7; }
   .toast.error { border-color: #ef4444; color: #fca5a5; }
+
+  .toast-close-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    margin-left: 6px;
+    line-height: 1;
+  }
+  .toast-close-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  /* Quick Presets Bar */
+  .quick-presets-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid var(--panel-border);
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+  }
+  .preset-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent-blue);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+  .preset-chip {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  .preset-chip:hover {
+    background: rgba(56, 189, 248, 0.25);
+    border-color: var(--accent-blue);
+    transform: translateY(-1px);
+    color: #fff;
+  }
+
+  /* Search Input Wrapper */
+  .search-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+  .search-input-wrap input {
+    width: 100%;
+    padding-right: 28px;
+  }
+  .search-clear-btn {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .search-clear-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.15);
+  }
 
   /* Hidden view state */
   .view-pane {
@@ -567,6 +656,19 @@
 
       <!-- VIEW 1: SINGLE CONVERSION -->
       <section id="view-single" class="view-pane active">
+        <!-- Quick Presets Bar -->
+        <div class="quick-presets-bar">
+          <span class="preset-label">⚡ Quick Presets:</span>
+          <button class="btn-sm preset-chip" onclick="applyPreset('temp', 25, 'c', 'f')">🌡️ 25°C ➔ °F</button>
+          <button class="btn-sm preset-chip" onclick="applyPreset('speed', 100, 'kph', 'mph')">🚗 100 km/h ➔ mph</button>
+          <button class="btn-sm preset-chip" onclick="applyPreset('weight', 1, 'kg', 'lb')">⚖️ 1 kg ➔ lb</button>
+          <button class="btn-sm preset-chip" onclick="applyPreset('length', 1, 'm', 'ft')">📏 1 m ➔ ft</button>
+          <button class="btn-sm preset-chip" onclick="applyPreset('data', 1, 'gb', 'mb')">💾 1 GB ➔ MB</button>
+          <button class="btn-sm preset-chip" onclick="applyPreset('pressure', 1, 'atm', 'psi')">🎈 1 atm ➔ psi</button>
+          <button class="btn-sm preset-chip" onclick="applyPreset('volume', 1, 'l', 'gal')">🥤 1 L ➔ gal</button>
+          <button class="btn-sm preset-chip" onclick="applyPreset('time', 1, 'hr', 'min')">⏱️ 1 hr ➔ min</button>
+        </div>
+
         <div class="convert-grid">
           <div class="row">
             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -575,20 +677,20 @@
                 <button class="btn-sm" onclick="setInputValue(1)">1</button>
                 <button class="btn-sm" onclick="setInputValue(10)">10</button>
                 <button class="btn-sm" onclick="setInputValue(100)">100</button>
-                <button class="btn-sm" onclick="clearInputValue()" title="Clear Value">✕</button>
+                <button class="btn-sm" onclick="clearInputValue()" title="Clear Value [Esc]">✕</button>
               </div>
             </div>
             <input type="number" id="inputVal" value="1" step="any" oninput="convert()" aria-label="Value to convert" />
             <select id="unitFrom" onchange="convert()" aria-label="Unit from"></select>
           </div>
 
-          <button class="swap-btn" onclick="swapUnits()" title="Swap Units (⇄)" aria-label="Swap units">⇄</button>
+          <button class="swap-btn" onclick="swapUnits()" title="Swap Units (⇄ / X)" aria-label="Swap units">⇄</button>
 
           <div class="row">
             <label for="outputVal">To (Result)</label>
             <div style="display: flex; gap: 6px;">
               <input type="text" id="outputVal" readonly style="flex:1; background: rgba(0,0,0,0.4);" aria-label="Converted output" aria-live="polite" />
-              <button onclick="copyToClipboard(document.getElementById('outputVal').value)" title="Copy Result" aria-label="Copy result">📋 Copy</button>
+              <button onclick="copyToClipboard(document.getElementById('outputVal').value)" title="Copy Result [C]" aria-label="Copy result">📋 Copy [C]</button>
             </div>
             <select id="unitTo" onchange="convert()" aria-label="Unit to"></select>
           </div>
@@ -597,7 +699,7 @@
         <div class="formula-badge">
           <span id="formulaText">1 Meter = 1.0000 Meter</span>
           <div style="display: flex; gap: 6px;">
-            <button class="btn-sm" onclick="pinCurrentFavorite()" title="Pin to Favorites">⭐ Pin Pair</button>
+            <button class="btn-sm" onclick="pinCurrentFavorite()" title="Pin to Favorites [P]">⭐ Pin [P]</button>
             <button class="btn-sm" onclick="copyFormula()" title="Copy Equation">📋 Copy Eq</button>
           </div>
         </div>
@@ -616,7 +718,10 @@
           </div>
           <div class="row" style="flex: 1.5; min-width: 200px;">
             <label for="batchSearch">Filter Results</label>
-            <input type="text" id="batchSearch" placeholder="Search unit name..." oninput="renderBatch()" aria-label="Filter batch units" />
+            <div class="search-input-wrap">
+              <input type="text" id="batchSearch" placeholder="Search unit name..." oninput="renderBatch()" aria-label="Filter batch units" />
+              <button class="search-clear-btn" onclick="clearBatchSearch()" title="Clear filter">✕</button>
+            </div>
           </div>
         </div>
 
@@ -639,7 +744,10 @@
         <div class="row" style="background: var(--card-bg); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--panel-border);">
           <label for="expressInput">Natural Language & Engineering Expression Parser</label>
           <div style="display: flex; gap: 8px; margin-top: 6px;">
-            <input type="text" id="expressInput" placeholder="e.g. 100 km/h to m/s or 50 psi to bar" value="100 km/h to m/s" style="flex: 1; font-size: 15px; font-weight: 500;" oninput="parseExpressInput()" aria-label="Expression input" />
+            <div class="search-input-wrap" style="flex: 1;">
+              <input type="text" id="expressInput" placeholder="e.g. 100 km/h to m/s or 50 psi to bar" value="100 km/h to m/s" style="font-size: 15px; font-weight: 500;" oninput="parseExpressInput()" aria-label="Expression input" />
+              <button class="search-clear-btn" onclick="clearExpressInput()" title="Clear expression">✕</button>
+            </div>
             <button onclick="parseExpressInput()" style="padding: 8px 16px;">⚡ Evaluate</button>
           </div>
           <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
@@ -661,7 +769,10 @@
       <section id="view-fav" class="view-pane">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <label>Pinned Favorite Conversions</label>
-          <span style="font-size: 12px; color: var(--text-muted);">Click any favorite to convert</span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button class="btn-sm" onclick="loadDemoFavorites()" title="Load recommended pairs">✨ Load Standard Favorites</button>
+            <span style="font-size: 12px; color: var(--text-muted);">Click any favorite to convert</span>
+          </div>
         </div>
         <div class="fav-grid" id="favContainer"></div>
       </section>
@@ -709,7 +820,10 @@
       <!-- VIEW 5: HISTORY LOG -->
       <section id="view-history" class="view-pane">
         <div style="display: flex; gap: 8px; justify-content: space-between; align-items: center; flex-wrap: wrap;">
-          <input type="text" id="historySearch" class="search-box" placeholder="Search conversion history..." oninput="renderHistory()" style="flex:1; max-width: 300px; margin-bottom: 0;" />
+          <div class="search-input-wrap" style="flex:1; max-width: 320px;">
+            <input type="text" id="historySearch" class="search-box" placeholder="Search conversion history..." oninput="renderHistory()" style="margin-bottom: 0;" />
+            <button class="search-clear-btn" onclick="clearHistorySearch()" title="Clear search">✕</button>
+          </div>
           <div style="display: flex; gap: 6px;">
             <button class="btn-sm" onclick="exportHistoryCSV()">📥 Export CSV</button>
             <button class="btn-sm" onclick="exportHistoryJSON()">📥 Export JSON</button>
@@ -747,25 +861,22 @@
         <div>
           <div class="modal-section-title">Navigation & Shortcuts</div>
           <p style="margin: 4px 0;">
-            <span class="key-badge">1</span> Single Convert &nbsp;|&nbsp;
-            <span class="key-badge">2</span> Batch Mode &nbsp;|&nbsp;
-            <span class="key-badge">3</span> Smart Parser &nbsp;|&nbsp;
-            <span class="key-badge">4</span> Favorites &nbsp;|&nbsp;
-            <span class="key-badge">5</span> Custom Units &nbsp;|&nbsp;
-            <span class="key-badge">6</span> History Log
-          </p>
-          <p style="margin: 4px 0;">
-            <span class="key-badge">H</span> or <span class="key-badge">F1</span> Toggle this Help Dialog &nbsp;|&nbsp;
-            <span class="key-badge">Esc</span> Close Modal &nbsp;|&nbsp;
-            <span class="key-badge">Enter</span> Evaluate / Calculate
+            <span class="key-badge">1</span> - <span class="key-badge">6</span> Switch Tabs &nbsp;|&nbsp;
+            <span class="key-badge">←</span> / <span class="key-badge">→</span> Cycle Tabs &nbsp;|&nbsp;
+            <span class="key-badge">X</span> or <span class="key-badge">S</span> Swap Units &nbsp;|&nbsp;
+            <span class="key-badge">P</span> Pin to Favs &nbsp;|&nbsp;
+            <span class="key-badge">C</span> Copy Result &nbsp;|&nbsp;
+            <span class="key-badge">I</span> or <span class="key-badge">/</span> Focus Input &nbsp;|&nbsp;
+            <span class="key-badge">H</span> / <span class="key-badge">F1</span> Help &nbsp;|&nbsp;
+            <span class="key-badge">Esc</span> Clear / Close
           </p>
         </div>
 
         <div>
           <div class="modal-section-title">Key Features</div>
           <ul style="margin: 4px 0 0 18px; padding: 0;">
-            <li><strong>Single Convert:</strong> Instant bi-directional unit conversion with live formula breakdown.</li>
-            <li><strong>Batch Mode:</strong> Simultaneously view conversions across all units in the selected category.</li>
+            <li><strong>Single Convert:</strong> Instant bi-directional unit conversion with 1-click Quick Presets.</li>
+            <li><strong>Batch Mode:</strong> Simultaneously view conversions across all units in the selected category with instant filter search.</li>
             <li><strong>Smart Parser:</strong> Evaluate natural language strings like <code>100 km/h to m/s</code> or <code>50 psi to bar</code>.</li>
             <li><strong>Favorites:</strong> Pin frequent conversion pairs with ⭐ for 1-click loading.</li>
             <li><strong>Custom Units:</strong> Add proprietary or custom engineering scale factors.</li>
@@ -783,7 +894,10 @@
     </div>
   </div>
 
-  <div id="toast" class="toast">Copied to clipboard!</div>
+  <div id="toast" class="toast">
+    <span id="toastMsg">Copied to clipboard!</span>
+    <button class="toast-close-btn" onclick="dismissToast(event)" title="Dismiss [✕]">✕</button>
+  </div>
 
   <script>
     // System Built-in Base Units & Multipliers
@@ -1175,10 +1289,18 @@
       document.addEventListener('keydown', (e) => {
         const isEditing = e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA';
         
-        // Escape closes Help Modal
+        // Escape closes Help Modal, dismisses toast, or unfocuses
         if (e.key === 'Escape') {
-          toggleHelpModal(false);
-          return;
+          const helpModal = document.getElementById('helpModal');
+          if (helpModal && helpModal.classList.contains('open')) {
+            toggleHelpModal(false);
+            return;
+          }
+          dismissToast();
+          if (isEditing) {
+            e.target.blur();
+            return;
+          }
         }
 
         // F1 or H for help (guarded against Ctrl/Alt/Meta shortcuts)
@@ -1188,16 +1310,39 @@
           return;
         }
 
-        // 1-6 view switching when not editing and help modal is closed
         const helpModal = document.getElementById('helpModal');
         const helpOpen = helpModal && helpModal.classList.contains('open');
-        if (!isEditing && !helpOpen && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        if (helpOpen) return;
+
+        // View switching, shortcuts and navigation when not typing
+        if (!isEditing && !e.ctrlKey && !e.altKey && !e.metaKey) {
           if (e.key === '1') switchView('single');
           else if (e.key === '2') switchView('batch');
           else if (e.key === '3') switchView('express');
           else if (e.key === '4') switchView('fav');
           else if (e.key === '5') switchView('custom');
           else if (e.key === '6') switchView('history');
+          else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            cycleTab(-1);
+          } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            cycleTab(1);
+          } else if (e.key === 'x' || e.key === 'X' || e.key === 's' || e.key === 'S') {
+            e.preventDefault();
+            swapUnits();
+          } else if (e.key === 'p' || e.key === 'P') {
+            e.preventDefault();
+            pinCurrentFavorite();
+          } else if (e.key === 'c' || e.key === 'C') {
+            e.preventDefault();
+            const out = document.getElementById('outputVal');
+            if (out && out.value) copyToClipboard(out.value);
+          } else if (e.key === '/' || e.key === 'i' || e.key === 'I') {
+            e.preventDefault();
+            const inp = document.getElementById('inputVal');
+            if (inp) { inp.focus(); inp.select(); }
+          }
         }
       });
 
@@ -1207,15 +1352,75 @@
       }, 350);
     };
 
+    const viewNames = ['single', 'batch', 'express', 'fav', 'custom', 'history'];
+    function cycleTab(direction) {
+      const currentActive = viewNames.find(v => {
+        const p = document.getElementById(`view-${v}`);
+        return p && p.classList.contains('active');
+      }) || 'single';
+      let idx = viewNames.indexOf(currentActive) + direction;
+      if (idx < 0) idx = viewNames.length - 1;
+      if (idx >= viewNames.length) idx = 0;
+      switchView(viewNames[idx]);
+    }
+
+    function applyPreset(cat, val, fromKey, toKey) {
+      selectCategory(cat);
+      document.getElementById('inputVal').value = val;
+      document.getElementById('unitFrom').value = fromKey;
+      document.getElementById('unitTo').value = toKey;
+      convert();
+      showToast(`⚡ Loaded Preset: ${val} ${fromKey.toUpperCase()} ➔ ${toKey.toUpperCase()}`, 'info');
+    }
+
+    function clearBatchSearch() {
+      const el = document.getElementById('batchSearch');
+      if (el) { el.value = ''; renderBatch(); el.focus(); }
+    }
+
+    function clearExpressInput() {
+      const el = document.getElementById('expressInput');
+      if (el) { el.value = ''; el.focus(); }
+    }
+
+    function clearHistorySearch() {
+      const el = document.getElementById('historySearch');
+      if (el) { el.value = ''; renderHistory(); el.focus(); }
+    }
+
+    function loadDemoFavorites() {
+      favorites = [
+        { id: 1, category: 'length', categoryName: 'Length', fromKey: 'm', toKey: 'ft', fromName: 'Meters', toName: 'Feet' },
+        { id: 2, category: 'temp', categoryName: 'Temperature', fromKey: 'c', toKey: 'f', fromName: 'Celsius', toName: 'Fahrenheit' },
+        { id: 3, category: 'weight', categoryName: 'Weight', fromKey: 'kg', toKey: 'lb', fromName: 'Kilograms', toName: 'Pounds' },
+        { id: 4, category: 'speed', categoryName: 'Speed', fromKey: 'kph', toKey: 'mph', fromName: 'Km/hour', toName: 'Miles/hour' },
+        { id: 5, category: 'data', categoryName: 'Data Storage', fromKey: 'gb', toKey: 'mb', fromName: 'Gigabytes (GB)', toName: 'Megabytes (MB)' },
+        { id: 6, category: 'pressure', categoryName: 'Pressure', fromKey: 'atm', toKey: 'psi', fromName: 'Atmosphere (atm)', toName: 'PSI (lb/in²)' }
+      ];
+      safeSetStorage('kconv_favs', favorites);
+      renderFavorites();
+      showToast('⭐ Standard favorites loaded!', 'success');
+    }
+
     let toastTimer = null;
     function showToast(msg, type = 'info') {
       const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      if (!toast) return;
       toast.className = 'toast show ' + type;
-      toast.innerText = msg || 'Copied to clipboard!';
+      if (toastMsg) toastMsg.innerText = msg || 'Action completed!';
+      else toast.innerText = msg || 'Action completed!';
       if (toastTimer) clearTimeout(toastTimer);
       toastTimer = setTimeout(() => {
         toast.classList.remove('show');
-      }, 2500);
+      }, 3200);
+    }
+
+    function dismissToast(e) {
+      if (e && e.stopPropagation) e.stopPropagation();
+      const toast = document.getElementById('toast');
+      if (toast) toast.classList.remove('show');
+      if (toastTimer) clearTimeout(toastTimer);
     }
 
     function toggleHelpModal(forceOpen) {
@@ -1750,7 +1955,13 @@
       container.innerHTML = '';
 
       if (favorites.length === 0) {
-        container.innerHTML = '<div style="color: var(--text-muted); font-size: 13px;">No pinned favorites yet. Click "⭐ Pin Pair" in Single Convert mode!</div>';
+        container.innerHTML = `
+          <div style="grid-column: 1 / -1; background: var(--card-bg); padding: 20px; border-radius: var(--radius-md); border: 1px dashed var(--panel-border); text-align: center; color: var(--text-secondary);">
+            <div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">⭐ No Pinned Favorites Yet</div>
+            <div style="font-size: 12px; margin-bottom: 12px;">Pin frequent conversion pairs in Single Convert mode, or quickly load popular favorites.</div>
+            <button class="btn-sm" onclick="loadDemoFavorites()">✨ Load Standard Favorites</button>
+          </div>
+        `;
         return;
       }
 
